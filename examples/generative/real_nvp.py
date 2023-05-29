@@ -160,7 +160,6 @@ class RealNVP(keras.Model):
 
     def train_step(self, data):
         with tf.GradientTape() as tape:
-
             loss = self.log_loss(data)
 
         g = tape.gradient(loss, self.trainable_variables)

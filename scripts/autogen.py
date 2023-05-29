@@ -30,20 +30,23 @@ import jinja2
 import requests
 import multiprocessing
 import autogen_utils
+import keras_nlp
+import keras_cv
 
 from master import MASTER
 import tutobooks
 import generate_tf_guides
-from render_nlp_tags import render_keras_nlp_tags
+import render_tags
 
 EXAMPLES_GH_LOCATION = Path("keras-team") / "keras-io" / "blob" / "master" / "examples"
 GUIDES_GH_LOCATION = Path("keras-team") / "keras-io" / "blob" / "master" / "guides"
 PROJECT_URL = {
     "keras": "https://github.com/keras-team/keras/tree/v2.12.0/",
     "keras_tuner": "https://github.com/keras-team/keras-tuner/tree/v1.3.3/",
-    "keras_cv": "https://github.com/keras-team/keras-cv/tree/v0.4.2/",
-    "keras_nlp": "https://github.com/keras-team/keras-nlp/tree/v0.4.1/",
+    "keras_cv": "https://github.com/keras-team/keras-cv/tree/v0.5.0/",
+    "keras_nlp": "https://github.com/keras-team/keras-nlp/tree/v0.5.1/",
 }
+USE_MULTIPROCESSING = False
 
 
 class KerasIO:
@@ -368,7 +371,9 @@ class KerasIO:
         """
         # Guides
         copy_inner_contents(
-            Path(self.guides_dir) / "md", Path(self.templates_dir) / "guides", ext=".md"
+            Path(self.guides_dir) / "md",
+            Path(self.templates_dir) / "guides",
+            ext=".md",
         )
         # Special cases
         shutil.copyfile(
@@ -512,7 +517,9 @@ class KerasIO:
                 )
             template = template.replace("{{toc}}", toc)
         if "keras_nlp/" in path_stack and "models/" in path_stack:
-            template = render_keras_nlp_tags(template)
+            template = render_tags.render_tags(template, keras_nlp)
+        if "keras_cv/" in path_stack and "models/" in path_stack:
+            template = render_tags.render_tags(template, keras_cv)
         source_path = Path(self.md_sources_dir) / Path(*path_stack)
         if path.endswith("/"):
             md_source_path = source_path / "index.md"
@@ -707,21 +714,28 @@ class KerasIO:
             print("Clearing", self.site_dir)
             shutil.rmtree(self.site_dir)
 
-        for src_location, _, fnames in os.walk(self.md_sources_dir):
-            pool = multiprocessing.Pool(processes=8)
-            workers = [
-                pool.apply_async(
-                    self.render_single_file, args=(src_location, fname, self.nav)
-                )
-                for fname in fnames
-            ]
+        if USE_MULTIPROCESSING:
+            for src_location, _, fnames in os.walk(self.md_sources_dir):
+                pool = multiprocessing.Pool(processes=8)
+                workers = [
+                    pool.apply_async(
+                        self.render_single_file,
+                        args=(src_location, fname, self.nav),
+                    )
+                    for fname in fnames
+                ]
 
-            for worker in workers:
-                url = worker.get()
-                if url is not None:
-                    all_urls_list.append(url)
-            pool.close()
-            pool.join()
+                for worker in workers:
+                    url = worker.get()
+                    if url is not None:
+                        all_urls_list.append(url)
+                pool.close()
+                pool.join()
+        else:
+            for src_location, _, fnames in os.walk(self.md_sources_dir):
+                for fname in fnames:
+                    print("...Rendering", fname)
+                    self.render_single_file(src_location, fname, self.nav)
 
         # Images & css
         shutil.copytree(Path(self.theme_dir) / "css", Path(self.site_dir) / "css")
@@ -765,7 +779,8 @@ class KerasIO:
 
         # Favicon
         shutil.copyfile(
-            Path(self.theme_dir) / "favicon.ico", Path(self.site_dir) / "favicon.ico"
+            Path(self.theme_dir) / "favicon.ico",
+            Path(self.site_dir) / "favicon.ico",
         )
 
         # Tutobooks
@@ -774,7 +789,7 @@ class KerasIO:
         autogen_utils.save_file(Path(self.site_dir) / "sitemap.txt", sitemap)
 
         # Redirects
-        # shutil.copytree(self.redirects_dir, self.site_dir, dirs_exist_ok=True)
+        shutil.copytree(self.redirects_dir, self.site_dir, dirs_exist_ok=True)
 
         # Examples landing page
         self.generate_examples_landing_page()
@@ -818,7 +833,9 @@ class KerasIO:
         # Convert Keras symbols to links to the Keras docs
         for symbol, symbol_url in self._map_of_symbol_names_to_api_urls.items():
             md_content = re.sub(
-                r"`((tf\.|)" + symbol + ")`", r"[`\1`](" + symbol_url + ")", md_content
+                r"`((tf\.|)" + symbol + ")`",
+                r"[`\1`](" + symbol_url + ")",
+                md_content,
             )
 
         # Convert TF symbols to links to tensorflow.org
@@ -873,7 +890,13 @@ class KerasIO:
         return relative_url
 
     def render_single_docs_page_from_html(
-        self, target_path, title, html_content, location_history, outline, local_nav
+        self,
+        target_path,
+        title,
+        html_content,
+        location_history,
+        outline,
+        local_nav,
     ):
         base_template = jinja2.Template(open(Path(self.theme_dir) / "base.html").read())
         docs_template = jinja2.Template(open(Path(self.theme_dir) / "docs.html").read())
@@ -1044,6 +1067,7 @@ def get_working_dir(arg):
         return None
     return arg[len("--working_dir=") :]
 
+
 if __name__ == "__main__":
     keras_io = KerasIO(
         master=MASTER,
@@ -1060,7 +1084,13 @@ if __name__ == "__main__":
     )
 
     cmd = sys.argv[1]
-    if cmd not in {"make", "serve", "add_example", "add_guide", "generate_tf_guides"}:
+    if cmd not in {
+        "make",
+        "serve",
+        "add_example",
+        "add_guide",
+        "generate_tf_guides",
+    }:
         raise ValueError(
             "Must specify command `make`, `serve`, `add_example`, `add_guide` or `generate_tf_guides`."
         )

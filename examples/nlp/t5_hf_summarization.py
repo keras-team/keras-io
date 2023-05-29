@@ -106,7 +106,7 @@ raw_datasets = load_dataset("xsum", split="train")
 """
 The dataset has the following fields:
 
-- **document**: the original BBC article to me summarized
+- **document**: the original BBC article to be summarized
 - **summary**: the single sentence summary of the BBC article
 - **id**: ID of the document-summary pair
 """
@@ -187,7 +187,7 @@ def preprocess_function(examples):
 """
 To apply this function on all the pairs of sentences in our dataset, we just use the
 `map` method of our `dataset` object we created earlier. This will apply the function on
-all the elements of all the splits in `dataset`, so our training, validation and testing
+all the elements of all the splits in `dataset`, so our training and testing
 data will be preprocessed in one single command.
 """
 
@@ -202,7 +202,7 @@ sequence-to-sequence (both the input and output are text sequences), we use the
 tokenizer, the `from_pretrained` method will download and cache the model for us.
 
 The `from_pretrained()` method expects the name of a model from the Hugging Face Model Hub. As
-mentioned earlier, we will use the `t5-base` model checkpoint.
+mentioned earlier, we will use the `t5-small` model checkpoint.
 """
 
 from transformers import TFAutoModelForSeq2SeqLM, DataCollatorForSeq2Seq

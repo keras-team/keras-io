@@ -76,8 +76,8 @@ _________________________________________________________________
 )
 print(len(x_train), "Training sequences")
 print(len(x_val), "Validation sequences")
-x_train = keras.preprocessing.sequence.pad_sequences(x_train, maxlen=maxlen)
-x_val = keras.preprocessing.sequence.pad_sequences(x_val, maxlen=maxlen)
+x_train = keras.utils.pad_sequences(x_train, maxlen=maxlen)
+x_val = keras.utils.pad_sequences(x_val, maxlen=maxlen)
 
 ```
 

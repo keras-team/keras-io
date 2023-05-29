@@ -17,7 +17,7 @@ contain, and how they're connected.
 - A set of weights values (the "state of the model").
 - An optimizer (defined by compiling the model).
 - A set of losses and metrics (defined by compiling the model or calling
-`add_loss()` or `add_metric()`).
+`add_loss()`).
 
 The Keras API makes it possible to save all of these pieces to disk at once,
 or to only selectively save some of them:
@@ -286,12 +286,11 @@ must be passed to the `custom_objects` argument when loading.
 
 H5 limitations:
 
-- External losses & metrics added via `model.add_loss()`
-& `model.add_metric()` are not saved (unlike SavedModel).
+- External losses added via `model.add_loss()` are not saved (unlike SavedModel).
 If you have such losses & metrics on your model and you want to resume training,
 you need to add these losses back yourself after loading the model.
-Note that this does not apply to losses/metrics created *inside* layers via
-`self.add_loss()` & `self.add_metric()`. As long as the layer gets loaded,
+Note that this does not apply to losses/metrics created *inside* layers, e.g.
+`self.add_loss()`. As long as the layer gets loaded,
 these losses & metrics are kept, since they are part of the `call` method of the layer.
 - The *computation graph of custom objects* such as custom layers
 is not included in the saved file. At loading time, Keras will need access
@@ -604,6 +603,7 @@ x = keras.layers.Dense(64, activation="relu", name="dense_2")(x)
 outputs = keras.layers.Dense(10, name="predictions")(x)
 functional_model = keras.Model(inputs=inputs, outputs=outputs, name="3_layer_mlp")
 
+
 # Define a subclassed model with the same architecture
 class SubclassedModel(keras.Model):
     def __init__(self, output_dim, name=None):
@@ -822,6 +822,7 @@ last_dense = functional_model.layers[-1]
 ckpt_path = tf.train.Checkpoint(
     dense=first_dense, kernel=last_dense.kernel, bias=last_dense.bias
 ).save("ckpt")
+
 
 # Define the subclassed model.
 class ContrivedModel(keras.Model):

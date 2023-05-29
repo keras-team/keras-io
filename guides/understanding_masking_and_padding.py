@@ -75,9 +75,7 @@ raw_inputs = [
 # We recommend using "post" padding when working with RNN layers
 # (in order to be able to use the
 # CuDNN implementation of the layers).
-padded_inputs = tf.keras.utils.pad_sequences(
-    raw_inputs, padding="post"
-)
+padded_inputs = tf.keras.utils.pad_sequences(raw_inputs, padding="post")
 print(padded_inputs)
 
 

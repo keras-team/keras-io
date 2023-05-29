@@ -30,8 +30,8 @@ You'll learn how to:
 - Implement a sequence-to-sequence Transformer model using KerasNLP's
 `keras_nlp.layers.TransformerEncoder`, `keras_nlp.layers.TransformerDecoder` and
 `keras_nlp.layers.TokenAndPositionEmbedding` layers, and train it.
-- Use `keras_nlp.utils.top_p_search` function to generate translations
-of unseen input sentences using the top-p decoding strategy!
+- Use `keras_nlp.samplers` to generate translations of unseen input sentences
+ using the top-p decoding strategy!
 
 Don't worry if you aren't familiar with KerasNLP. This tutorial will start with
 the basics. Let's dive right in!
@@ -143,7 +143,7 @@ training it on a corpus gives us a vocabulary of subwords. A subword tokenizer
 is a compromise between word tokenizers (word tokenizers need very large
 vocabularies for good coverage of input words), and character tokenizers
 (characters don't really encode meaning like words do). Luckily, KerasNLP
-makes it very simple to train WordPiece on a corpus with the 
+makes it very simple to train WordPiece on a corpus with the
 `keras_nlp.tokenizers.compute_word_piece_vocabulary` utility.
 """
 
@@ -406,7 +406,7 @@ as well as the target token `"[START]"`. The model outputs probabilities of the
 next token. We then we repeatedly generated the next token conditioned on the
 tokens generated so far, until we hit the token `"[END]"`.
 
-For decoding, we will use the `keras_nlp.utils.greedy_search` function from
+For decoding, we will use the `keras_nlp.samplers` module from
 KerasNLP. Greedy Decoding is a text decoding method which outputs the most
 likely next token at each time step, i.e., the token with the highest probability.
 """
@@ -422,18 +422,23 @@ def decode_sequences(input_sentences):
 
     # Define a function that outputs the next token's probability given the
     # input sequence.
-    def token_probability_fn(decoder_input_tokens):
-        return transformer([encoder_input_tokens, decoder_input_tokens])[:, -1, :]
+    def next(prompt, cache, index):
+        logits = transformer([encoder_input_tokens, prompt])[:, index - 1, :]
+        # Ignore hidden states for now; only needed for contrastive search.
+        hidden_states = None
+        return logits, hidden_states, cache
 
-    # Set the prompt to the "[START]" token.
-    prompt = tf.fill((batch_size, 1), spa_tokenizer.token_to_id("[START]"))
+    # Build a prompt of length 40 with a start token and padding tokens.
+    length = 40
+    start = tf.fill((batch_size, 1), spa_tokenizer.token_to_id("[START]"))
+    pad = tf.fill((batch_size, length - 1), spa_tokenizer.token_to_id("[PAD]"))
+    prompt = tf.concat((start, pad), axis=-1)
 
-    generated_tokens = keras_nlp.utils.top_p_search(
-        token_probability_fn,
+    generated_tokens = keras_nlp.samplers.GreedySampler()(
+        next,
         prompt,
-        p=0.1,
-        max_length=40,
         end_token_id=spa_tokenizer.token_to_id("[END]"),
+        index=1,  # Start sampling after start token.
     )
     generated_sentences = spa_tokenizer.detokenize(generated_tokens)
     return generated_sentences

@@ -21,7 +21,7 @@ to help explain a classification decision. In the academic paper
 by Touvron et. al, the authors propose to set up an equivalent visualization for
 convnets. They propose to substitute the global average pooling layer
 of a convnet with a Transformer layer. The self-attention layer of the
-Transformer would produces attention maps that correspond to the
+Transformer would produce attention maps that correspond to the
 most attended patches of the image for the classification decision.
 
 In this example, we minimally implement the ideas of
@@ -32,7 +32,7 @@ minor modifications (to adjust the implementation with CIFAR10):
 - The simple design for the attention-based pooling layer, such that
     it explicitly provides the weights (importance) of the different
     patches.
-- The novel architecture of convnet called the **PatchConvNet** which
+- The novel architecture of convnet is called the **PatchConvNet** which
     deviates from the age old pyramidal architecture.
 """
 
@@ -440,7 +440,7 @@ class PatchConvNet(keras.Model):
         ]
         grads = tape.gradient(total_loss, train_vars)
         trainable_variable_list = []
-        for (grad, var) in zip(grads, train_vars):
+        for grad, var in zip(grads, train_vars):
             for g, v in zip(grad, var):
                 trainable_variable_list.append((g, v))
         self.optimizer.apply_gradients(trainable_variable_list)

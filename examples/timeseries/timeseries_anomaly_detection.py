@@ -105,6 +105,7 @@ training data.
 
 TIME_STEPS = 288
 
+
 # Generated training sequences for use in the model.
 def create_sequences(values, time_steps=TIME_STEPS):
     output = []

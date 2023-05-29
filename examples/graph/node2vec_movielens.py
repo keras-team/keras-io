@@ -438,7 +438,6 @@ num_epochs = 10
 
 
 def create_model(vocabulary_size, embedding_dim):
-
     inputs = {
         "target": layers.Input(name="target", shape=(), dtype="int32"),
         "context": layers.Input(name="context", shape=(), dtype="int32"),

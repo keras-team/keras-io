@@ -632,7 +632,7 @@ def plot_results(images, titles, figure_size=(12, 12)):
 
 
 def infer(original_image):
-    image = keras.preprocessing.image.img_to_array(original_image)
+    image = keras.utils.img_to_array(original_image)
     image = image.astype("float32") / 255.0
     image = np.expand_dims(image, axis=0)
     output = model.predict(image)

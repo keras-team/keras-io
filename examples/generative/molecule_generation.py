@@ -187,7 +187,7 @@ def graph_to_molecule(graph):
     # Add bonds between atoms in molecule; based on the upper triangles
     # of the [symmetric] adjacency tensor
     (bonds_ij, atoms_i, atoms_j) = np.where(np.triu(adjacency) == 1)
-    for (bond_ij, atom_i, atom_j) in zip(bonds_ij, atoms_i, atoms_j):
+    for bond_ij, atom_i, atom_j in zip(bonds_ij, atoms_i, atoms_j):
         if atom_i == atom_j or bond_ij == BOND_DIM - 1:
             continue
         bond_type = bond_mapping[bond_ij]
@@ -440,7 +440,6 @@ class MoleculeGenerator(keras.Model):
     def _compute_loss(
         self, z_log_var, z_mean, qed_true, qed_pred, graph_real, graph_generated
     ):
-
         adjacency_real, features_real = graph_real
         adjacency_gen, features_gen = graph_generated
 

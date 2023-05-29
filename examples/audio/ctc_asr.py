@@ -336,6 +336,7 @@ model.summary(line_length=110)
 ## Training and Evaluating
 """
 
+
 # A utility function to decode the output of the network
 def decode_batch_predictions(pred):
     input_len = np.ones(pred.shape[0]) * pred.shape[1]

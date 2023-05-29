@@ -524,7 +524,6 @@ Finally, we implement a utility for running our experiments and launch model tra
 
 
 def run_experiment(epochs):
-
     segmentation_model = get_shape_segmentation_model(num_points, num_classes)
     segmentation_model.compile(
         optimizer=keras.optimizers.Adam(learning_rate=lr_schedule),

@@ -50,6 +50,7 @@ data = data.astype(np.float32)
 ## Create two classes for the requisite Layers for the model
 """
 
+
 # The first layer is the PixelCNN layer. This layer simply
 # builds on the 2D convolutional layer, but includes masking.
 class PixelConvLayer(layers.Layer):
@@ -179,7 +180,7 @@ def deprocess_image(x):
 
 # Iterate over the generated images and plot them with matplotlib.
 for i, pic in enumerate(pixels):
-    keras.preprocessing.image.save_img(
+    keras.utils.save_img(
         "generated_image_{}.png".format(i), deprocess_image(np.squeeze(pic, -1))
     )
 

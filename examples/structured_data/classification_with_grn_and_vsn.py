@@ -212,7 +212,6 @@ def process(features, target):
 
 
 def get_dataset_from_csv(csv_file_path, shuffle=False, batch_size=128):
-
     dataset = tf.data.experimental.make_csv_dataset(
         csv_file_path,
         batch_size=batch_size,

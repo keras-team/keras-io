@@ -254,7 +254,6 @@ class SpatialConsistencyLoss(keras.losses.Loss):
         )
 
     def call(self, y_true, y_pred):
-
         original_mean = tf.reduce_mean(y_true, 3, keepdims=True)
         enhanced_mean = tf.reduce_mean(y_pred, 3, keepdims=True)
         original_pool = tf.nn.avg_pool2d(
@@ -430,7 +429,7 @@ def plot_results(images, titles, figure_size=(12, 12)):
 
 
 def infer(original_image):
-    image = keras.preprocessing.image.img_to_array(original_image)
+    image = keras.utils.img_to_array(original_image)
     image = image.astype("float32") / 255.0
     image = np.expand_dims(image, axis=0)
     output_image = zero_dce_model(image)

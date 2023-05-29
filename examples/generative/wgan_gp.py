@@ -371,7 +371,7 @@ class GANMonitor(keras.callbacks.Callback):
 
         for i in range(self.num_img):
             img = generated_images[i].numpy()
-            img = keras.preprocessing.image.array_to_img(img)
+            img = keras.utils.array_to_img(img)
             img.save("generated_img_{i}_{epoch}.png".format(i=i, epoch=epoch))
 
 
@@ -387,6 +387,7 @@ generator_optimizer = keras.optimizers.Adam(
 discriminator_optimizer = keras.optimizers.Adam(
     learning_rate=0.0002, beta_1=0.5, beta_2=0.9
 )
+
 
 # Define the loss functions for the discriminator,
 # which should be (fake_loss - real_loss).

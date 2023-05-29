@@ -2,7 +2,7 @@
 
 **Author:** [fchollet](https://twitter.com/fchollet)<br>
 **Date created:** 2021/05/26<br>
-**Last modified:** 2022/02/25<br>
+**Last modified:** 2023/02/25<br>
 **Description:** Implementing a sequence-to-sequene Transformer and training it on a machine translation task.
 
 

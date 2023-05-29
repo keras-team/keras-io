@@ -67,8 +67,6 @@ are only active during training.
 - `tf.keras.layers.RandomTranslation`
 - `tf.keras.layers.RandomRotation`
 - `tf.keras.layers.RandomZoom`
-- `tf.keras.layers.RandomHeight`
-- `tf.keras.layers.RandomWidth`
 - `tf.keras.layers.RandomContrast`
 
 """

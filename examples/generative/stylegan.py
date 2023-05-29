@@ -81,7 +81,6 @@ with ZipFile("celeba_gan/data.zip", "r") as zipobj:
 ds_train = keras.utils.image_dataset_from_directory(
     "celeba_gan", label_mode=None, image_size=(64, 64), batch_size=32
 )
-ds_train = ds_train.map(lambda x: x / 255.0)
 
 
 def resize_image(res, image):
@@ -373,7 +372,6 @@ class Generator:
             rgb = self.to_rgb[0](x)
         else:
             for i in range(1, num_stages - 1):
-
                 x = self.g_blocks[i]([x, w[:, i], self.noise_inputs[i]])
 
             old_rgb = self.to_rgb[num_stages - 2](x)
@@ -551,7 +549,6 @@ class StyleGAN(tf.keras.Model):
         return loss
 
     def train_step(self, real_images):
-
         self.train_step_counter.assign_add(1)
 
         if self.phase == "TRANSITION":
@@ -698,8 +695,8 @@ def train(
             steps = int(train_step_ratio[res_log2] * steps_per_epoch)
 
             style_gan.compile(
-                d_optimizer=tf.keras.optimizers.Adam(**opt_cfg),
-                g_optimizer=tf.keras.optimizers.Adam(**opt_cfg),
+                d_optimizer=tf.keras.optimizers.legacy.Adam(**opt_cfg),
+                g_optimizer=tf.keras.optimizers.legacy.Adam(**opt_cfg),
                 loss_weights={"gradient_penalty": 10, "drift": 0.001},
                 steps_per_epoch=steps,
                 res=res,
