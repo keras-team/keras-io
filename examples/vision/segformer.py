@@ -33,7 +33,7 @@ To run this example, we need to install the `transformers` library:
 """
 
 """shell
-!pip install transformers -q
+pip install transformers -q
 """
 
 """
