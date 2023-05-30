@@ -118,7 +118,7 @@ classes.
 ### Callback for tracking GPU memory usage
 
 We'll define a custom callback function which tracks GPU memory usage. The
-callback function uses TensorFlow's `tf.config.experimental.get_memory_info()`
+callback function uses TensorFlow's `tf.config.experimental.get_memory_info`
 API.
 
 Here, we assume that we are using a single GPU, `GPU:0`.
