@@ -10,7 +10,7 @@ Accelerator: GPU
 ## Introduction
 
 Recurrent neural networks (RNN) are a class of neural networks that are powerful for
-modelling sequence data such as time series or natural language.
+modeling sequence data such as time series or natural language.
 
 Schematically, a RNN layer uses a `for` loop to iterate over the timesteps of a
 sequence, while maintaining an internal state that encodes information about the
@@ -23,7 +23,7 @@ The Keras RNN API is designed with a focus on:
 having to make difficult configuration choices.
 
 - **Ease of customization**: You can also define your own RNN cell layer (the inner
-part of the `for` loop) with custom behaviour, and use it with the generic
+part of the `for` loop) with custom behavior, and use it with the generic
 `keras.layers.RNN` layer (the `for` loop itself). This allows you to quickly
 prototype different research ideas in a flexible way with minimal code.
 
@@ -68,7 +68,7 @@ model = keras.Sequential()
 # output embedding dimension of size 64.
 model.add(layers.Embedding(input_dim=1000, output_dim=64))
 
-# Add an LSTM layer with 128 internal units.
+# Add a LSTM layer with 128 internal units.
 model.add(layers.LSTM(128))
 
 # Add a Dense layer with 10 units.
