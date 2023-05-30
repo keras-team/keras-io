@@ -9,7 +9,7 @@ Accelerator: GPU
 """
 ## Introduction
 
-Recurrent neural networks (RNN) are a class of neural networks that are powerful for
+Recurrent neural networks (RNN) are a class of neural networks that is powerful for
 modeling sequence data such as time series or natural language.
 
 Schematically, a RNN layer uses a `for` loop to iterate over the timesteps of a
