@@ -23,9 +23,9 @@ tasks.
 """
 If you're interested in learning about object detection using KerasCV, I highly suggest
 taking a look at the guide created by lukewood. This resource, available at 
-[OD With KerasCV](https://keras.io/guides/keras_cv/object_detection_keras_cv/#object-detection-introduction), 
-provides a comprehensive overview of the fundamental concepts and techniques required 
-for building object detection models with KerasCV.
+[Object Detection With KerasCV](https://keras.io/guides/keras_cv/object_detection_keras_cv/#object-detection-introduction), 
+provides a comprehensive overview of the fundamental concepts and techniques
+required for building object detection models with KerasCV.
 """
 
 """shell
@@ -75,9 +75,8 @@ datasets, including the object detection dataset. This can be a great option for
 who want to quickly start working with the data without having to manually download and
 preprocess it.
 
-You can view various OD datasets here 
-[TensorFlow
-Datasets](https://www.tensorflow.org/datasets/catalog/overview#object_detection)
+You can view various object detection datasets here 
+[TensorFlow Datasets](https://www.tensorflow.org/datasets/catalog/overview#object_detection)
 
 However, in this code example, we will demonstrate how to load the dataset from scratch
 using TensorFlow's `tf.data` pipeline. This approach provides more flexibility and allows
@@ -347,9 +346,6 @@ efficient, enabling better training and more accurate object detection results.
 augmenter = keras.Sequential(
     layers=[
         keras_cv.layers.RandomFlip(mode="horizontal", bounding_box_format="xyxy"),
-        keras_cv.layers.RandomTranslation(
-            height_factor=0.2, width_factor=0.2, bounding_box_format="xyxy"
-        ),
         keras_cv.layers.RandomShear(
             x_factor=0.2, y_factor=0.2, bounding_box_format="xyxy"
         ),
@@ -412,9 +408,7 @@ visualize_dataset(
 
 """
 We need to extract the inputs from the preprocessing dictionary and get them ready to be
-fed into the model. If we're using TPU, we need to make sure that the bounding box
-Tensors are Dense rather than Ragged. If we're training on GPU, we don't need to make
-this change and can skip the `bounding_box.to_dense()` call.
+fed into the model.
 """
 
 
@@ -473,8 +467,8 @@ Speed<br><sup>A100 TensorRT<br>(ms) | params<br><sup>(M) | FLOPs<br><sup>(B) |
 """
 
 """
-You can read more about YOLOV8 and its architecture in this [RoboFlow
-Blog](https://blog.roboflow.com/whats-new-in-yolov8/)
+You can read more about YOLOV8 and its architecture in this 
+[RoboFlow Blog](https://blog.roboflow.com/whats-new-in-yolov8/)
 """
 
 """
@@ -565,18 +559,22 @@ yolo.compile(
 ## COCO Metric Callback
 
 We will be using `BoxCOCOMetrics` from KerasCV to evaluate the model and calculate the
-Map(Mean Average Precision) score, Recall and Precision.
+Map(Mean Average Precision) score, Recall and Precision. We also save our model when the
+mAP score improves.
 """
 
 
 class EvaluateCOCOMetricsCallback(keras.callbacks.Callback):
-    def __init__(self, data):
+    def __init__(self, data, save_path):
         super().__init__()
         self.data = data
         self.metrics = keras_cv.metrics.BoxCOCOMetrics(
             bounding_box_format="xyxy",
             evaluate_freq=1e9,
         )
+
+        self.save_path = save_path
+        self.best_map = -1.0
 
     def on_epoch_end(self, epoch, logs):
         self.metrics.reset_state()
@@ -587,6 +585,12 @@ class EvaluateCOCOMetricsCallback(keras.callbacks.Callback):
 
         metrics = self.metrics.result(force=True)
         logs.update(metrics)
+
+        current_map = metrics["MaP"]
+        if current_map > self.best_map:
+            self.best_map = current_map
+            self.model.save(self.save_path)  # Save the model when mAP improves
+
         return logs
 
 
@@ -597,8 +601,8 @@ class EvaluateCOCOMetricsCallback(keras.callbacks.Callback):
 yolo.fit(
     train_ds,
     validation_data=val_ds,
-    epochs=EPOCH,
-    callbacks=[EvaluateCOCOMetricsCallback(val_ds)],
+    epochs=3,
+    callbacks=[EvaluateCOCOMetricsCallback(val_ds, "model.h5")],
 )
 
 """
