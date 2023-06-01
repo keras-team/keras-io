@@ -161,6 +161,8 @@ class GPUMemoryCallback(keras.callbacks.Callback):
 
 
 """
+### Function for text generation
+
 Here is a helper function to generate text.
 """
 
@@ -429,24 +431,14 @@ We will now override the original query/value projection matrices with our
 new LoRA layers.
 """
 
-gpt2_backbone_layer_name = [
-    layer.name for layer in list(lora_model.layers) if "GPT2Backbone" in str(layer)
-][0]
-
-for layer_idx in range(lora_model.get_layer(gpt2_backbone_layer_name).num_layers):
+for layer_idx in range(lora_model.backbone.num_layers):
     # Change query dense layer.
-    original_query_layer = (
-        lora_model.get_layer(gpt2_backbone_layer_name)
-        .get_layer(f"transformer_layer_{layer_idx}")
-        ._self_attention_layer._query_dense
-    )
+    decoder_layer = lora_model.backbone.get_layer(f"transformer_layer_{layer_idx}")
+    self_attention_layer = decoder_layer._self_attention_layer
 
-    (
-        lora_model.get_layer(gpt2_backbone_layer_name)
-        .get_layer(f"transformer_layer_{layer_idx}")
-        ._self_attention_layer._query_dense
-    ) = LoraLayer(
-        original_query_layer,
+    # Change query dense layer.
+    self_attention_layer._query_dense = LoraLayer(
+        self_attention_layer._query_dense,
         rank=RANK,
         alpha=ALPHA,
         layer_idx=layer_idx,
@@ -454,18 +446,8 @@ for layer_idx in range(lora_model.get_layer(gpt2_backbone_layer_name).num_layers
     )
 
     # Change value dense layer.
-    original_value_layer = (
-        lora_model.get_layer(gpt2_backbone_layer_name)
-        .get_layer(f"transformer_layer_{layer_idx}")
-        ._self_attention_layer._value_dense
-    )
-
-    (
-        lora_model.get_layer(gpt2_backbone_layer_name)
-        .get_layer(f"transformer_layer_{layer_idx}")
-        ._self_attention_layer._value_dense
-    ) = LoraLayer(
-        original_value_layer,
+    self_attention_layer._value_dense = LoraLayer(
+        self_attention_layer._value_dense,
         rank=RANK,
         alpha=ALPHA,
         layer_idx=layer_idx,
@@ -578,23 +560,21 @@ doing the same computation as the original model!
 # Freeze the whole model.
 lora_model.trainable = False
 
-for layer_idx in range(lora_model.get_layer(gpt2_backbone_layer_name).num_layers):
-    query_lora_layer = (
-        lora_model.get_layer(gpt2_backbone_layer_name)
-        .get_layer(f"transformer_layer_{layer_idx}")
-        ._self_attention_layer._query_dense
-    )
+for layer_idx in range(lora_model.backbone.num_layers):
+    self_attention_layer = lora_model.backbone.get_layer(
+        f"transformer_layer_{layer_idx}"
+    )._self_attention_layer
+
+    # Merge query dense layer.
+    query_lora_layer = self_attention_layer._query_dense
 
     A_weights = query_lora_layer.A.kernel  # (768, 1) (a, b)
     B_weights = query_lora_layer.B.kernel  # (1, 12, 64) (b, c, d)
     increment_weights = tf.einsum("ab,bcd->acd", A_weights, B_weights) * (ALPHA / RANK)
     query_lora_layer.original_layer.kernel.assign_add(increment_weights)
 
-    value_lora_layer = (
-        lora_model.get_layer(gpt2_backbone_layer_name)
-        .get_layer(f"transformer_layer_{layer_idx}")
-        ._self_attention_layer._value_dense
-    )
+    # Merge value dense layer.
+    value_lora_layer = self_attention_layer._value_dense
 
     A_weights = value_lora_layer.A.kernel  # (768, 1) (a, b)
     B_weights = value_lora_layer.B.kernel  # (1, 12, 64) (b, c, d)
