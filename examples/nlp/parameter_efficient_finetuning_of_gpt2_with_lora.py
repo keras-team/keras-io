@@ -78,8 +78,9 @@ ALPHA = 32.0
 """
 ## Dataset
 
-Let's load the Reddit dataset. We will fine-tune both the GPT-2 model and the
-LoRA GPT-2 model on a subset of this dataset.
+Let's load a Reddit dataset. We will fine-tune both the GPT-2 model and the
+LoRA GPT-2 model on a subset of this dataset. The aim is to produce text similar
+in style to Reddit posts.
 """
 
 reddit_ds = tfds.load("reddit_tifu", split="train", as_supervised=True)
@@ -128,14 +129,12 @@ Here, we assume that we are using a single GPU, `GPU:0`.
 class GPUMemoryCallback(keras.callbacks.Callback):
     def __init__(
         self,
-        target_batches=[10, 100, 200, 500],
-        subtract_value=0,
+        target_batches,
         print_stats=False,
         **kwargs,
     ):
         super().__init__(**kwargs)
         self.target_batches = target_batches
-        self.subtract_value = subtract_value
         self.print_stats = print_stats
 
         self.memory_usage = []
@@ -144,21 +143,21 @@ class GPUMemoryCallback(keras.callbacks.Callback):
     def _compute_memory_usage(self):
         memory_stats = tf.config.experimental.get_memory_info("GPU:0")
         # Convert bytes to GB and store in list.
-        peak_usage = round((memory_stats["peak"] - self.subtract_value) / (2**30), 3)
+        peak_usage = round(memory_stats["peak"] / (2**30), 3)
         self.memory_usage.append(peak_usage)
 
     def on_epoch_begin(self, epoch, logs=None):
         self._compute_memory_usage()
-        self.labels.append(f"Epoch {epoch} beginning")
+        self.labels.append(f"epoch {epoch} start")
 
     def on_train_batch_begin(self, batch, logs=None):
         if batch in self.target_batches:
             self._compute_memory_usage()
-            self.labels.append(f"Batch {batch}")
+            self.labels.append(f"batch {batch}")
 
     def on_epoch_end(self, epoch, logs=None):
         self._compute_memory_usage()
-        self.labels.append(f"Epoch {epoch} end")
+        self.labels.append(f"epoch {epoch} end")
 
 
 """
@@ -181,8 +180,9 @@ def generate_text(model, input_text, max_length=200):
 ## Fine-tune GPT-2
 
 Let's load the model and preprocessor first. We use a sequence length of 128
-instead of 1024 (which is the default sequence length) to speed up training and
-generation.
+instead of 1024 (which is the default sequence length). This will limit our
+ability to predict long sequences, but will allow us to run this example quickly
+on Colab.
 """
 
 preprocessor = keras_nlp.models.GPT2CausalLMPreprocessor.from_preset(
@@ -205,13 +205,17 @@ gpu_memory_callback = GPUMemoryCallback(
     print_stats=True,
 )
 
-# Linearly decaying learning rate.
-learning_rate = keras.optimizers.schedules.PolynomialDecay(
-    5e-5,
-    decay_steps=train_ds.cardinality() * EPOCHS,
-    end_learning_rate=0.0,
+optimizer = keras.optimizers.AdamW(
+    learning_rate=5e-5,
+    weight_decay=0.01,
+    epsilon=1e-6,
+    global_clipnorm=1.0,  # Gradient clipping.
 )
-optimizer = keras.optimizers.Adam(learning_rate)
+# Exclude layernorm and bias terms from weight decay.
+optimizer.exclude_from_weight_decay(var_names=["bias"])
+optimizer.exclude_from_weight_decay(var_names=["gamma"])
+optimizer.exclude_from_weight_decay(var_names=["beta"])
+
 loss = keras.losses.SparseCategoricalCrossentropy(from_logits=True)
 
 gpt2_lm.compile(
@@ -257,9 +261,9 @@ and 4 are shown to work well.
 
 #### LoRA equation
 
-The original equation is `output = W0x + b0`, where `x` is the input, W0 and b0
-are the weight matrix and bias terms of the original dense layer (frozen). The
-LoRA equation is: `output = W0x + b0 + BAx`, where `A` and `B` are the
+The original equation is `output = W0x + b0`, where `x` is the input, `W0` and
+`b0` are the weight matrix and bias terms of the original dense layer (frozen).
+The LoRA equation is: `output = W0x + b0 + BAx`, where `A` and `B` are the
 rank-decomposition matrices.
 
 LoRA is based on the idea that updates to the weights of the pre-trained
@@ -273,6 +277,28 @@ Let's do some quick math. Suppose `n` is 768, and `rank` is 4. `W0` has
 `768 x 768 = 589,824` parameters, whereas the LoRA layers, `A` and `B` together
 have `768 x 4 + 4 x 768 = 6,144` parameters. So, for the dense layer, we go from
 `589,824` trainable parameters to `6,144` trainable parameters!
+
+#### Why does LoRA reduce memory footprint?
+
+Even though the total number of parameters increase (since we are adding LoRA
+layers), the memory footprint reduces, because the number of trainable
+parameters reduces. Let's dive deeper into this.
+
+The memory usage of a model can be split into four parts:
+- Model memory: This is the memory required to store the model weights. This
+will be slightly higher for LoRA than GPT-2.
+- Forward pass memory: This mostly depends on batch size, sequence length, etc.
+We keep this constant for both models for a fair comparison.
+- Backward pass memory: This is the memory required to store the gradients.
+Note that the gradients are computed only for the trainable parameters.
+- Optimizer memory: This is the memory required to store the optimizer state.
+For example, the Adam optimizer stores the "1st moment vectors" and
+"2nd moment vectors" for the trainable parameters.
+
+Since, with LoRA, there is a huge reduction in the number of trainable
+parameters, the optimizer memory and the memory required to store the gradients
+for LoRA is much less than GPT-2. This is where most of the memory savings
+happen.
 
 #### Why is LoRA so popular?
 
@@ -387,9 +413,6 @@ del learning_rate
 
 # This resets "peak" memory usage to "current" memory usage.
 tf.config.experimental.reset_memory_stats("GPU:0")
-# We will subtract this from the total memory usage when calculating the
-# memory usage for LoRA.
-current_memory_usage = tf.config.experimental.get_memory_info("GPU:0")
 
 # Load the original model.
 preprocessor = keras_nlp.models.GPT2CausalLMPreprocessor.from_preset(
@@ -450,7 +473,8 @@ for layer_idx in range(lora_model.get_layer(gpt2_backbone_layer_name).num_layers
     )
 
 """
-Let's now do a forward pass to make sure it is going through.
+Let's now do a forward pass to make sure we still have a valid chain of
+computation.
 """
 
 lora_model(preprocessor(["they are going to ban LoRA in EU, lol"])[0])
@@ -486,23 +510,24 @@ lora_model.summary()
 ### Fine-tune LoRA GPT-2
 
 Now that we have hacked and verified the LoRA GPT-2 model, let's train it!
-Remember to subtract the current memory usage from the total memory usage to
-get the correct value for LoRA.
 """
 
 gpu_memory_callback = GPUMemoryCallback(
     target_batches=[5, 10, 25, 50, 100, 150, 200, 300, 400, 500],
-    subtract_value=current_memory_usage["current"],
     print_stats=True,
 )
 
-# Linearly decaying learning rate.
-learning_rate = keras.optimizers.schedules.PolynomialDecay(
-    5e-5,
-    decay_steps=train_ds.cardinality() * EPOCHS,
-    end_learning_rate=0.0,
+optimizer = keras.optimizers.AdamW(
+    learning_rate=5e-5,
+    weight_decay=0.01,
+    epsilon=1e-6,
+    global_clipnorm=1.0,  # Gradient clipping.
 )
-optimizer = keras.optimizers.Adam(learning_rate)
+# Exclude layernorm and bias terms from weight decay.
+optimizer.exclude_from_weight_decay(var_names=["bias"])
+optimizer.exclude_from_weight_decay(var_names=["gamma"])
+optimizer.exclude_from_weight_decay(var_names=["beta"])
+
 loss = keras.losses.SparseCategoricalCrossentropy(from_logits=True)
 
 lora_model.compile(
@@ -523,7 +548,7 @@ lora_model_memory_labels = gpu_memory_callback.labels
 And we are done fine-tuning the model! Before we generate text, let's compare
 the training time and memory usage of the two models. The training time of GPT-2
 on a 16 GB Tesla T4 (Colab) is 7 minutes, and for LoRA, it is 5 minutes, a 30%
-decrease. The memory usage of LoRA GPT-2 is roughly 3 times less than GPT-2.
+decrease. The memory usage of LoRA GPT-2 is roughly 37% times less than GPT-2.
 """
 
 plt.plot(gpt2_lm_memory_labels, gpt2_lm_memory_usage, label="GPT-2")
