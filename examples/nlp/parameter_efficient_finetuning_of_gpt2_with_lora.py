@@ -285,6 +285,7 @@ layers), the memory footprint reduces, because the number of trainable
 parameters reduces. Let's dive deeper into this.
 
 The memory usage of a model can be split into four parts:
+
 - Model memory: This is the memory required to store the model weights. This
 will be slightly higher for LoRA than GPT-2.
 - Forward pass memory: This mostly depends on batch size, sequence length, etc.
