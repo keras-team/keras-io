@@ -409,7 +409,6 @@ do a couple of things before doing that:
 del gpt2_lm
 del optimizer
 del loss
-del learning_rate
 
 # This resets "peak" memory usage to "current" memory usage.
 tf.config.experimental.reset_memory_stats("GPU:0")
