@@ -232,7 +232,6 @@ We are all set to train the model!
 
 gpt2_lm.fit(train_ds, epochs=EPOCHS, callbacks=[gpu_memory_callback])
 gpt2_lm_memory_usage = gpu_memory_callback.memory_usage
-gpt2_lm_memory_labels = gpu_memory_callback.labels
 
 """
 As a final step, let's generate some text. We will harness the power of XLA. The
@@ -272,6 +271,8 @@ LoRA is based on the idea that updates to the weights of the pre-trained
 language model have a low "intrinsic rank" since pre-trained language models are
 over-parametrized. Predictive performance of full fine-tuning can be replicated
 even by constraining `W0`'s updates to low-rank decomposition matrices.
+
+<img src="https://i.imgur.com/f4TFqMi.png" alt="drawing" height="250"/>
 
 #### Number of trainable parameters
 
@@ -524,17 +525,19 @@ lora_model.fit(
     callbacks=[gpu_memory_callback],
 )
 lora_model_memory_usage = gpu_memory_callback.memory_usage
-lora_model_memory_labels = gpu_memory_callback.labels
 
 """
 And we are done fine-tuning the model! Before we generate text, let's compare
 the training time and memory usage of the two models. The training time of GPT-2
 on a 16 GB Tesla T4 (Colab) is 7 minutes, and for LoRA, it is 5 minutes, a 30%
-decrease. The memory usage of LoRA GPT-2 is roughly 37% times less than GPT-2.
+decrease. The memory usage of LoRA GPT-2 is roughly 35% times less than GPT-2.
 """
 
-plt.plot(gpt2_lm_memory_labels, gpt2_lm_memory_usage, label="GPT-2")
-plt.plot(lora_model_memory_labels, lora_model_memory_usage, label="LoRA GPT-2")
+plt.bar(
+    ["GPT-2", "LoRA GPT-2"],
+    [max(gpt2_lm_memory_usage), max(lora_model_memory_usage)],
+    color=["red", "blue"],
+)
 
 plt.xticks(rotation=90)
 
