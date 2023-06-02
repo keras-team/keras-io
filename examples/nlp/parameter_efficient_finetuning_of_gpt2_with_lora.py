@@ -272,7 +272,10 @@ language model have a low "intrinsic rank" since pre-trained language models are
 over-parametrized. Predictive performance of full fine-tuning can be replicated
 even by constraining `W0`'s updates to low-rank decomposition matrices.
 
-<img src="https://i.imgur.com/f4TFqMi.png" alt="drawing" height="250"/>
+<p align="center">
+  <img src="https://i.imgur.com/f4TFqMi.png" alt="lora_diagram" height="250"/>
+</p>
+<br>
 
 #### Number of trainable parameters
 
@@ -542,9 +545,9 @@ plt.bar(
 plt.xticks(rotation=90)
 
 plt.xlabel("Time")
-plt.ylabel("GPU Memory Usage")
+plt.ylabel("GPU Memory Usage (in GB)")
 
-plt.title("GPU Memory Usage (in GB)")
+plt.title("GPU Memory Usage Comparison")
 plt.legend()
 plt.show()
 
