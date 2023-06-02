@@ -11,8 +11,8 @@ Accelerator: GPU
 ## Introduction
 
 Large Language Models (LLMs) have been shown to be effective at a variety of NLP
-tasks. An LLM is first pre-trained on a large corpus of text using general
-pre-training tasks. Pre-training helps LLMs learn general-purpose knowledge,
+tasks. An LLM is first pre-trained on a large corpus of text in a
+self-supervised fashion. Pre-training helps LLMs learn general-purpose knowledge,
 such as statistical relationships between words. An LLM can then be fine-tuned
 on a downstream task of interest (such as sentiment analysis).
 
@@ -26,7 +26,8 @@ decrease in training time and GPU memory usage, while maintaining the quality
 of the outputs.
 
 In this example, we will explain LoRA in technical terms, show how the technical
-explanation translates to code, hack KerasNLP's GPT-2 model and fine-tune
+explanation translates to code, hack KerasNLP's
+[GPT-2 model](https://keras.io/api/keras_nlp/models/gpt2/) and fine-tune
 it on the next token prediction task using LoRA. We will compare LoRA GPT-2
 with a fully fine-tuned GPT-2 in terms of the quality of the generated text,
 training time and GPU memory usage.
@@ -179,6 +180,29 @@ def generate_text(model, input_text, max_length=200):
 
 
 """
+### Define optimizer and loss
+
+We will use AdamW optimizer and cross-entropy loss for training both models.
+"""
+
+
+def get_optimizer_and_loss():
+    optimizer = keras.optimizers.AdamW(
+        learning_rate=5e-5,
+        weight_decay=0.01,
+        epsilon=1e-6,
+        global_clipnorm=1.0,  # Gradient clipping.
+    )
+    # Exclude layernorm and bias terms from weight decay.
+    optimizer.exclude_from_weight_decay(var_names=["bias"])
+    optimizer.exclude_from_weight_decay(var_names=["gamma"])
+    optimizer.exclude_from_weight_decay(var_names=["beta"])
+
+    loss = keras.losses.SparseCategoricalCrossentropy(from_logits=True)
+    return optimizer, loss
+
+
+"""
 ## Fine-tune GPT-2
 
 Let's load the model and preprocessor first. We use a sequence length of 128
@@ -207,18 +231,7 @@ gpu_memory_callback = GPUMemoryCallback(
     print_stats=True,
 )
 
-optimizer = keras.optimizers.AdamW(
-    learning_rate=5e-5,
-    weight_decay=0.01,
-    epsilon=1e-6,
-    global_clipnorm=1.0,  # Gradient clipping.
-)
-# Exclude layernorm and bias terms from weight decay.
-optimizer.exclude_from_weight_decay(var_names=["bias"])
-optimizer.exclude_from_weight_decay(var_names=["gamma"])
-optimizer.exclude_from_weight_decay(var_names=["beta"])
-
-loss = keras.losses.SparseCategoricalCrossentropy(from_logits=True)
+optimizer, loss = get_optimizer_and_loss()
 
 gpt2_lm.compile(
     optimizer=optimizer,
@@ -309,9 +322,8 @@ happen.
 
 #### Why is LoRA so popular?
 
-- Reduces the number of trainable parameters by a huge margin;
-- Faster training;
-- Reduces GPU memory usage; and
+- Reduces GPU memory usage;
+- Faster training; and
 - No additional inference latency.
 
 ### Create LoRA layer
@@ -331,7 +343,6 @@ class LoraLayer(keras.layers.Layer):
         original_layer,
         rank=8,
         alpha=32,
-        layer_idx=0,
         trainable=False,
         **kwargs,
     ):
@@ -347,7 +358,6 @@ class LoraLayer(keras.layers.Layer):
 
         self.rank = rank
         self.alpha = alpha
-        self.layer_idx = layer_idx
 
         self._scale = alpha / rank
 
@@ -373,7 +383,7 @@ class LoraLayer(keras.layers.Layer):
                 scale=math.sqrt(5), mode="fan_in", distribution="uniform"
             ),
             trainable=trainable,
-            name=f"A_{layer_idx}",
+            name=f"lora_A",
         )
         # B has the same `equation` and `output_shape` as the original layer.
         # `equation = abc,cde->abde`, where `a`: batch size, `b`: sequence
@@ -385,7 +395,7 @@ class LoraLayer(keras.layers.Layer):
             output_shape=original_layer_config["output_shape"],
             kernel_initializer="zeros",
             trainable=trainable,
-            name=f"B_{layer_idx}",
+            name=f"lora_B",
         )
 
     def call(self, inputs):
@@ -445,7 +455,6 @@ for layer_idx in range(lora_model.backbone.num_layers):
         self_attention_layer._query_dense,
         rank=RANK,
         alpha=ALPHA,
-        layer_idx=layer_idx,
         trainable=True,
     )
 
@@ -454,7 +463,6 @@ for layer_idx in range(lora_model.backbone.num_layers):
         self_attention_layer._value_dense,
         rank=RANK,
         alpha=ALPHA,
-        layer_idx=layer_idx,
         trainable=True,
     )
 
@@ -463,21 +471,21 @@ Let's now do a forward pass to make sure we still have a valid chain of
 computation.
 """
 
-lora_model(preprocessor(["they are going to ban LoRA in EU, lol"])[0])
+lora_model(preprocessor(["LoRA is very useful for quick LLM finetuning"])[0])
 pass
 
 """
 Freeze the entire LLM, only the LoRA layers should be trainable.
 """
 
-for l in lora_model._flatten_layers():
-    lst_of_layers = list(l._flatten_layers())
+for layer in lora_model._flatten_layers():
+    lst_of_sublayers = list(layer._flatten_layers())
 
-    if len(lst_of_layers) == 1:  # "leaves of the model"
-        if "A_" in l.name or "B_" in l.name:
-            l.trainable = True
+    if len(lst_of_sublayers) == 1:  # "leaves of the model"
+        if layer.name in ["lora_A", "lora_B"]:
+            layer.trainable = True
         else:
-            l.trainable = False
+            layer.trainable = False
 
 """
 Print the model's summary and see if the number of non-trainable parameters and
@@ -503,18 +511,7 @@ gpu_memory_callback = GPUMemoryCallback(
     print_stats=True,
 )
 
-optimizer = keras.optimizers.AdamW(
-    learning_rate=5e-5,
-    weight_decay=0.01,
-    epsilon=1e-6,
-    global_clipnorm=1.0,  # Gradient clipping.
-)
-# Exclude layernorm and bias terms from weight decay.
-optimizer.exclude_from_weight_decay(var_names=["bias"])
-optimizer.exclude_from_weight_decay(var_names=["gamma"])
-optimizer.exclude_from_weight_decay(var_names=["beta"])
-
-loss = keras.losses.SparseCategoricalCrossentropy(from_logits=True)
+optimizer, loss = get_optimizer_and_loss()
 
 lora_model.compile(
     optimizer=optimizer,
@@ -563,9 +560,6 @@ we merge the weights of the original model and the adapter, we will be essential
 doing the same computation as the original model!
 """
 
-# Freeze the whole model.
-lora_model.trainable = False
-
 for layer_idx in range(lora_model.backbone.num_layers):
     self_attention_layer = lora_model.backbone.get_layer(
         f"transformer_layer_{layer_idx}"
@@ -591,6 +585,7 @@ for layer_idx in range(lora_model.backbone.num_layers):
 We are now all set to generate text with our LoRA model :).
 """
 
+# Freezing weights not necessary during generation since no weights are updated.
 generate_text(lora_model, "I like basketball", max_length=MAX_GENERATION_LENGTH)
 generate_text(
     lora_model, "That Italian restaurant is", max_length=MAX_GENERATION_LENGTH
