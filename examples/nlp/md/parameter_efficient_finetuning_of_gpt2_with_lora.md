@@ -14,8 +14,8 @@
 ## Introduction
 
 Large Language Models (LLMs) have been shown to be effective at a variety of NLP
-tasks. An LLM is first pre-trained on a large corpus of text using general
-pre-training tasks. Pre-training helps LLMs learn general-purpose knowledge,
+tasks. An LLM is first pre-trained on a large corpus of text in a
+self-supervised fashion. Pre-training helps LLMs learn general-purpose knowledge,
 such as statistical relationships between words. An LLM can then be fine-tuned
 on a downstream task of interest (such as sentiment analysis).
 
@@ -29,7 +29,8 @@ decrease in training time and GPU memory usage, while maintaining the quality
 of the outputs.
 
 In this example, we will explain LoRA in technical terms, show how the technical
-explanation translates to code, hack KerasNLP's GPT-2 model and fine-tune
+explanation translates to code, hack KerasNLP's
+[GPT-2 model](https://keras.io/api/keras_nlp/models/gpt2/) and fine-tune
 it on the next token prediction task using LoRA. We will compare LoRA GPT-2
 with a fully fine-tuned GPT-2 in terms of the quality of the generated text,
 training time and GPU memory usage.
@@ -107,7 +108,7 @@ Generating splits...:   0%|          | 0/1 [00:00<?, ? splits/s]
 
 Generating train examples...:   0%|          | 0/79740 [00:00<?, ? examples/s]
 
-Shuffling /root/tensorflow_datasets/reddit_tifu/short/1.1.2.incomplete9MNSWE/reddit_tifu-train.tfrecord*...:  …
+Shuffling /root/tensorflow_datasets/reddit_tifu/short/1.1.2.incompleteDJBRZB/reddit_tifu-train.tfrecord*...:  …
 
 Dataset reddit_tifu downloaded and prepared to /root/tensorflow_datasets/reddit_tifu/short/1.1.2. Subsequent calls will reuse this data.
 
@@ -216,6 +217,30 @@ def generate_text(model, input_text, max_length=200):
 
 ```
 
+### Define optimizer and loss
+
+We will use AdamW optimizer and cross-entropy loss for training both models.
+
+
+```python
+
+def get_optimizer_and_loss():
+    optimizer = keras.optimizers.AdamW(
+        learning_rate=5e-5,
+        weight_decay=0.01,
+        epsilon=1e-6,
+        global_clipnorm=1.0,  # Gradient clipping.
+    )
+    # Exclude layernorm and bias terms from weight decay.
+    optimizer.exclude_from_weight_decay(var_names=["bias"])
+    optimizer.exclude_from_weight_decay(var_names=["gamma"])
+    optimizer.exclude_from_weight_decay(var_names=["beta"])
+
+    loss = keras.losses.SparseCategoricalCrossentropy(from_logits=True)
+    return optimizer, loss
+
+```
+
 ---
 ## Fine-tune GPT-2
 
@@ -244,7 +269,7 @@ Downloading data from https://storage.googleapis.com/keras-nlp/models/gpt2_base_
 Downloading data from https://storage.googleapis.com/keras-nlp/models/gpt2_base_en/v1/merges.txt
 456318/456318 [==============================] - 0s 0us/step
 Downloading data from https://storage.googleapis.com/keras-nlp/models/gpt2_base_en/v1/model.h5
-497986112/497986112 [==============================] - 3s 0us/step
+497986112/497986112 [==============================] - 2s 0us/step
 
 WARNING:tensorflow:The following Variables were used in a Lambda layer's call (tf.linalg.matmul), but are not present in its tracked objects:   <tf.Variable 'token_embedding/embeddings:0' shape=(50257, 768) dtype=float32>. This is a strong indication that the Lambda layer should be rewritten as a subclassed Layer.
 
@@ -286,18 +311,7 @@ gpu_memory_callback = GPUMemoryCallback(
     print_stats=True,
 )
 
-optimizer = keras.optimizers.AdamW(
-    learning_rate=5e-5,
-    weight_decay=0.01,
-    epsilon=1e-6,
-    global_clipnorm=1.0,  # Gradient clipping.
-)
-# Exclude layernorm and bias terms from weight decay.
-optimizer.exclude_from_weight_decay(var_names=["bias"])
-optimizer.exclude_from_weight_decay(var_names=["gamma"])
-optimizer.exclude_from_weight_decay(var_names=["beta"])
-
-loss = keras.losses.SparseCategoricalCrossentropy(from_logits=True)
+optimizer, loss = get_optimizer_and_loss()
 
 gpt2_lm.compile(
     optimizer=optimizer,
@@ -312,12 +326,11 @@ We are all set to train the model!
 ```python
 gpt2_lm.fit(train_ds, epochs=EPOCHS, callbacks=[gpu_memory_callback])
 gpt2_lm_memory_usage = gpu_memory_callback.memory_usage
-gpt2_lm_memory_labels = gpu_memory_callback.labels
 ```
 
 <div class="k-default-codeblock">
 ```
-500/500 [==============================] - 447s 691ms/step - loss: 3.2987 - accuracy: 0.3268
+500/500 [==============================] - 422s 644ms/step - loss: 3.2987 - accuracy: 0.3268
 
 ```
 </div>
@@ -341,45 +354,34 @@ I like basketball because it's easy and fun, but it doesn't really have much to 
     
 <div class="k-default-codeblock">
 ```
-so i was playing with the boys in my school, and one of our players is really cute, and he's pretty loud. i was just trying to keep my voice quiet and to keep the conversation going, but when my mom asked me to stop, i said "i don't want to listen to him. it's a bad idea."
+so i was playing with the boys in my school, and one of our players is really cute, and he's pretty loud. i was just trying to keep my voice quiet and to keep the conversation going, but it wasn't working.
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-she said "what do you mean?"
+i was trying to make a good impression on him, and as he was trying to make a good impression on me, i started to get a little nervous.
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-so i'm like "what?"
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-i said "it's not that bad."
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-Total Time Elapsed: 20.19s
+so i start to make a joke about how loud my earphones are, and how loud my earphones are
+Total Time Elapsed: 21.98s
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
 Output:
-That Italian restaurant is called "the restaurant that has the biggest assholes". it was in my neighborhood for a couple of years and i was there when i was a kid.
+That Italian restaurant is closed this week. i went here a while back to see a movie in the morning. i was in a hurry and decided that the best time would be around 8:00, so i headed out. i got a good deal on the food, so i was hungry. 
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-i was sitting in a restaurant with my dad and my younger brothers when they started making a sandwich. my dad was talking to his brother and his sister, while the younger brother was talking to the younger brother and the older brother, who was sitting on my dad's shoulder. the younger brother was talking to his sister about the sandwich and how he wanted to be the first one in line and he was the first one who was
-Total Time Elapsed: 1.43s
+fast-forward to 5:30 and i'm hungry and hungry. i'm sitting down, so i'm eating a lot of food. i decide to go into the kitchen. i'm not hungry, so i go in, take a bite out of the chicken, and then i'm like "what the fuck" and i get up and go to
+Total Time Elapsed: 1.14s
 
 ```
 </div>
@@ -413,6 +415,11 @@ language model have a low "intrinsic rank" since pre-trained language models are
 over-parametrized. Predictive performance of full fine-tuning can be replicated
 even by constraining `W0`'s updates to low-rank decomposition matrices.
 
+<p align="center">
+  <img src="https://i.imgur.com/f4TFqMi.png" alt="lora_diagram" height="250"/>
+</p>
+<br>
+
 #### Number of trainable parameters
 
 Let's do some quick math. Suppose `n` is 768, and `rank` is 4. `W0` has
@@ -445,9 +452,8 @@ happen.
 
 #### Why is LoRA so popular?
 
-- Reduces the number of trainable parameters by a huge margin;
-- Faster training;
-- Reduces GPU memory usage; and
+- Reduces GPU memory usage;
+- Faster training; and
 - No additional inference latency.
 
 ### Create LoRA layer
@@ -468,7 +474,6 @@ class LoraLayer(keras.layers.Layer):
         original_layer,
         rank=8,
         alpha=32,
-        layer_idx=0,
         trainable=False,
         **kwargs,
     ):
@@ -484,7 +489,6 @@ class LoraLayer(keras.layers.Layer):
 
         self.rank = rank
         self.alpha = alpha
-        self.layer_idx = layer_idx
 
         self._scale = alpha / rank
 
@@ -510,7 +514,7 @@ class LoraLayer(keras.layers.Layer):
                 scale=math.sqrt(5), mode="fan_in", distribution="uniform"
             ),
             trainable=trainable,
-            name=f"A_{layer_idx}",
+            name=f"lora_A",
         )
         # B has the same `equation` and `output_shape` as the original layer.
         # `equation = abc,cde->abde`, where `a`: batch size, `b`: sequence
@@ -522,7 +526,7 @@ class LoraLayer(keras.layers.Layer):
             output_shape=original_layer_config["output_shape"],
             kernel_initializer="zeros",
             trainable=trainable,
-            name=f"B_{layer_idx}",
+            name=f"lora_B",
         )
 
     def call(self, inputs):
@@ -590,7 +594,6 @@ for layer_idx in range(lora_model.backbone.num_layers):
         self_attention_layer._query_dense,
         rank=RANK,
         alpha=ALPHA,
-        layer_idx=layer_idx,
         trainable=True,
     )
 
@@ -599,7 +602,6 @@ for layer_idx in range(lora_model.backbone.num_layers):
         self_attention_layer._value_dense,
         rank=RANK,
         alpha=ALPHA,
-        layer_idx=layer_idx,
         trainable=True,
     )
 ```
@@ -609,7 +611,7 @@ computation.
 
 
 ```python
-lora_model(preprocessor(["they are going to ban LoRA in EU, lol"])[0])
+lora_model(preprocessor(["LoRA is very useful for quick LLM finetuning"])[0])
 pass
 ```
 
@@ -617,14 +619,14 @@ Freeze the entire LLM, only the LoRA layers should be trainable.
 
 
 ```python
-for l in lora_model._flatten_layers():
-    lst_of_layers = list(l._flatten_layers())
+for layer in lora_model._flatten_layers():
+    lst_of_sublayers = list(layer._flatten_layers())
 
-    if len(lst_of_layers) == 1:  # "leaves of the model"
-        if "A_" in l.name or "B_" in l.name:
-            l.trainable = True
+    if len(lst_of_sublayers) == 1:  # "leaves of the model"
+        if layer.name in ["lora_A", "lora_B"]:
+            layer.trainable = True
         else:
-            l.trainable = False
+            layer.trainable = False
 ```
 
 Print the model's summary and see if the number of non-trainable parameters and
@@ -683,18 +685,7 @@ gpu_memory_callback = GPUMemoryCallback(
     print_stats=True,
 )
 
-optimizer = keras.optimizers.AdamW(
-    learning_rate=5e-5,
-    weight_decay=0.01,
-    epsilon=1e-6,
-    global_clipnorm=1.0,  # Gradient clipping.
-)
-# Exclude layernorm and bias terms from weight decay.
-optimizer.exclude_from_weight_decay(var_names=["bias"])
-optimizer.exclude_from_weight_decay(var_names=["gamma"])
-optimizer.exclude_from_weight_decay(var_names=["beta"])
-
-loss = keras.losses.SparseCategoricalCrossentropy(from_logits=True)
+optimizer, loss = get_optimizer_and_loss()
 
 lora_model.compile(
     optimizer=optimizer,
@@ -708,38 +699,45 @@ lora_model.fit(
     callbacks=[gpu_memory_callback],
 )
 lora_model_memory_usage = gpu_memory_callback.memory_usage
-lora_model_memory_labels = gpu_memory_callback.labels
 ```
 
 <div class="k-default-codeblock">
 ```
-500/500 [==============================] - 323s 534ms/step - loss: 3.5392 - accuracy: 0.3008
+500/500 [==============================] - 317s 516ms/step - loss: 3.5363 - accuracy: 0.3012
 
 ```
 </div>
 And we are done fine-tuning the model! Before we generate text, let's compare
 the training time and memory usage of the two models. The training time of GPT-2
 on a 16 GB Tesla T4 (Colab) is 7 minutes, and for LoRA, it is 5 minutes, a 30%
-decrease. The memory usage of LoRA GPT-2 is roughly 37% times less than GPT-2.
+decrease. The memory usage of LoRA GPT-2 is roughly 35% times less than GPT-2.
 
 
 ```python
-plt.plot(gpt2_lm_memory_labels, gpt2_lm_memory_usage, label="GPT-2")
-plt.plot(lora_model_memory_labels, lora_model_memory_usage, label="LoRA GPT-2")
+plt.bar(
+    ["GPT-2", "LoRA GPT-2"],
+    [max(gpt2_lm_memory_usage), max(lora_model_memory_usage)],
+    color=["red", "blue"],
+)
 
 plt.xticks(rotation=90)
 
 plt.xlabel("Time")
-plt.ylabel("GPU Memory Usage")
+plt.ylabel("GPU Memory Usage (in GB)")
 
-plt.title("GPU Memory Usage (in GB)")
+plt.title("GPU Memory Usage Comparison")
 plt.legend()
 plt.show()
 ```
 
+<div class="k-default-codeblock">
+```
+WARNING:matplotlib.legend:No artists with labels found to put in legend.  Note that artists whose label start with an underscore are ignored when legend() is called with no argument.
 
+```
+</div>
     
-![png](/img/examples/nlp/parameter_efficient_finetuning_of_gpt2_with_lora/parameter_efficient_finetuning_of_gpt2_with_lora_41_0.png)
+![png](/img/examples/nlp/parameter_efficient_finetuning_of_gpt2_with_lora/parameter_efficient_finetuning_of_gpt2_with_lora_43_1.png)
     
 
 
@@ -755,9 +753,6 @@ doing the same computation as the original model!
 
 
 ```python
-# Freeze the whole model.
-lora_model.trainable = False
-
 for layer_idx in range(lora_model.backbone.num_layers):
     self_attention_layer = lora_model.backbone.get_layer(
         f"transformer_layer_{layer_idx}"
@@ -784,6 +779,7 @@ We are now all set to generate text with our LoRA model :).
 
 
 ```python
+# Freezing weights not necessary during generation since no weights are updated.
 generate_text(lora_model, "I like basketball", max_length=MAX_GENERATION_LENGTH)
 generate_text(
     lora_model, "That Italian restaurant is", max_length=MAX_GENERATION_LENGTH
@@ -795,63 +791,31 @@ generate_text(
 ```
 Output:
 I like basketball.
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-It's a lot like the game of hockey. You're playing a team with an average age of 15, which is about 15 years old. The team consists mainly of young players. You play the game with them, and they get to play with you.
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-The game has a lot of rules, so the team is very composed of players who are very well educated. It also includes a lot of players who have been through college or college-level sports.
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-The players are usually very well-rounded. I've never seen a team that has been so well-rounded.
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-They're usually very well-rounded.
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-They're very skilled. They're also very good at their jobs
-Total Time Elapsed: 19.06s
+i was in high school, so my mom was a senior. 
+  
+    i had just graduated and i had a few days to spare, so     i went to the gym and got a bunch of workout shorts.     
+                                               
+Total Time Elapsed: 22.88s
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
 Output:
-That Italian restaurant is located in the center of the town, and is a popular place for people to get a drink in and get some fresh air and a good laugh. The food is great and everything is prepared in a friendly atmosphere.
+That Italian restaurant is a little over a mile from here and is a bit of a tourist destination. the place is pretty small but i'm sure it was a place of fun and relaxation, so i decided to go and get some drinks for a few people to enjoy.  
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-The food is great, the atmosphere is very welcoming, and everything is delicious. The staff is always friendly and always happy to help.
+i was in a bar in front of a huge restaurant. i was in the middle of a table with two people who had been drinking and chatting about some stuff.    
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-I have been in this restaurant for 3 years and have never been disappointed with the service. The food is delicious, everything is fresh and tasty. I have never had an issue with this restaurant and the atmosphere is always welcoming. The staff is also always attentive to the customers and always happy to help.
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-The food is good. The service was great and it is the perfect atmosphere to have a good time.
-Total Time Elapsed: 0.87s
+the waiter
+Total Time Elapsed: 0.71s
 
 ```
 </div>
