@@ -38,6 +38,8 @@ import tutobooks
 import generate_tf_guides
 import render_tags
 
+sys.path.append("/Users/abheesht/Work/repos/keras-tuner")
+
 EXAMPLES_GH_LOCATION = Path("keras-team") / "keras-io" / "blob" / "master" / "examples"
 GUIDES_GH_LOCATION = Path("keras-team") / "keras-io" / "blob" / "master" / "guides"
 PROJECT_URL = {

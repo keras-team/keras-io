@@ -346,7 +346,6 @@ class LoraLayer(keras.layers.Layer):
         trainable=False,
         **kwargs,
     ):
-
         # We want to keep the name of this layer the same as the original
         # dense layer.
         original_layer_config = original_layer.get_config()
