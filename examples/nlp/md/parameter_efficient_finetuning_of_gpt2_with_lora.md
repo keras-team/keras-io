@@ -1,6 +1,6 @@
 # Parameter-efficient fine-tuning of GPT-2 with LoRA
 
-**Author:** [Abheesht Sharma](https://github.com/abheesht17/)<br>
+**Author:** [Abheesht Sharma](https://github.com/abheesht17/), [Matthew Watson](https://github.com/mattdangerw/)<br>
 **Date created:** 2023/05/27<br>
 **Last modified:** 2023/05/27<br>
 **Description:** Use KerasNLP to fine-tune a GPT-2 LLM with LoRA.
@@ -108,7 +108,7 @@ Generating splits...:   0%|          | 0/1 [00:00<?, ? splits/s]
 
 Generating train examples...:   0%|          | 0/79740 [00:00<?, ? examples/s]
 
-Shuffling /root/tensorflow_datasets/reddit_tifu/short/1.1.2.incompleteDJBRZB/reddit_tifu-train.tfrecord*...:  …
+Shuffling /root/tensorflow_datasets/reddit_tifu/short/1.1.2.incomplete96NERD/reddit_tifu-train.tfrecord*...:  …
 
 Dataset reddit_tifu downloaded and prepared to /root/tensorflow_datasets/reddit_tifu/short/1.1.2. Subsequent calls will reuse this data.
 
@@ -269,7 +269,7 @@ Downloading data from https://storage.googleapis.com/keras-nlp/models/gpt2_base_
 Downloading data from https://storage.googleapis.com/keras-nlp/models/gpt2_base_en/v1/merges.txt
 456318/456318 [==============================] - 0s 0us/step
 Downloading data from https://storage.googleapis.com/keras-nlp/models/gpt2_base_en/v1/model.h5
-497986112/497986112 [==============================] - 2s 0us/step
+497986112/497986112 [==============================] - 3s 0us/step
 
 WARNING:tensorflow:The following Variables were used in a Lambda layer's call (tf.linalg.matmul), but are not present in its tracked objects:   <tf.Variable 'token_embedding/embeddings:0' shape=(50257, 768) dtype=float32>. This is a strong indication that the Lambda layer should be rewritten as a subclassed Layer.
 
@@ -330,7 +330,7 @@ gpt2_lm_memory_usage = gpu_memory_callback.memory_usage
 
 <div class="k-default-codeblock">
 ```
-500/500 [==============================] - 422s 644ms/step - loss: 3.2987 - accuracy: 0.3268
+500/500 [==============================] - 418s 632ms/step - loss: 3.2987 - accuracy: 0.3268
 
 ```
 </div>
@@ -367,7 +367,7 @@ i was trying to make a good impression on him, and as he was trying to make a go
 <div class="k-default-codeblock">
 ```
 so i start to make a joke about how loud my earphones are, and how loud my earphones are
-Total Time Elapsed: 21.98s
+Total Time Elapsed: 21.47s
 ```
 </div>
     
@@ -380,8 +380,8 @@ That Italian restaurant is closed this week. i went here a while back to see a m
     
 <div class="k-default-codeblock">
 ```
-fast-forward to 5:30 and i'm hungry and hungry. i'm sitting down, so i'm eating a lot of food. i decide to go into the kitchen. i'm not hungry, so i go in, take a bite out of the chicken, and then i'm like "what the fuck" and i get up and go to
-Total Time Elapsed: 1.14s
+fast-forward to 5:30 and i'm hungry and hungry. i'm sitting down to get ready for work. my mom comes in and tells me to sit down. i'm hungry so i grab a bowl of rice and sit down. my mom comes out and tells us to eat. we're hungry
+Total Time Elapsed: 1.43s
 
 ```
 </div>
@@ -477,7 +477,6 @@ class LoraLayer(keras.layers.Layer):
         trainable=False,
         **kwargs,
     ):
-
         # We want to keep the name of this layer the same as the original
         # dense layer.
         original_layer_config = original_layer.get_config()
@@ -703,7 +702,7 @@ lora_model_memory_usage = gpu_memory_callback.memory_usage
 
 <div class="k-default-codeblock">
 ```
-500/500 [==============================] - 317s 516ms/step - loss: 3.5363 - accuracy: 0.3012
+500/500 [==============================] - 311s 505ms/step - loss: 3.5401 - accuracy: 0.3007
 
 ```
 </div>
@@ -791,31 +790,26 @@ generate_text(
 ```
 Output:
 I like basketball.
-i was in high school, so my mom was a senior. 
-  
-    i had just graduated and i had a few days to spare, so     i went to the gym and got a bunch of workout shorts.     
-                                               
-Total Time Elapsed: 22.88s
+i was in high school and a few years back. my mom was in the gym with her boyfriend and a few buddies. we had been having a great time with them. i was having a great time with the group and were having fun. 
+```
+</div>
+    
+    
+<div class="k-default-codeblock">
+```
+i was having fun, so my mom and the rest of the group went to
+Total Time Elapsed: 21.65s
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
 Output:
-That Italian restaurant is a little over a mile from here and is a bit of a tourist destination. the place is pretty small but i'm sure it was a place of fun and relaxation, so i decided to go and get some drinks for a few people to enjoy.  
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-i was in a bar in front of a huge restaurant. i was in the middle of a table with two people who had been drinking and chatting about some stuff.    
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-the waiter
-Total Time Elapsed: 0.71s
+That Italian restaurant is located in a small town, so my girlfriend was visiting. 
+ 
+  i have never eaten before so i decided to take a few days off to eat. 
+      i'm in my early 30s and i'm a little older than most people around here.      today i'm in a car with a passenger in a white van.    i was driving the car and the passenger was a young man.      i thought
+Total Time Elapsed: 0.72s
 
 ```
 </div>
