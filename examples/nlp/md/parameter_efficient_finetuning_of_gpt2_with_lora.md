@@ -108,7 +108,7 @@ Generating splits...:   0%|          | 0/1 [00:00<?, ? splits/s]
 
 Generating train examples...:   0%|          | 0/79740 [00:00<?, ? examples/s]
 
-Shuffling /root/tensorflow_datasets/reddit_tifu/short/1.1.2.incomplete96NERD/reddit_tifu-train.tfrecord*...:  …
+Shuffling /root/tensorflow_datasets/reddit_tifu/short/1.1.2.incompleteS7YOTP/reddit_tifu-train.tfrecord*...:  …
 
 Dataset reddit_tifu downloaded and prepared to /root/tensorflow_datasets/reddit_tifu/short/1.1.2. Subsequent calls will reuse this data.
 
@@ -265,11 +265,11 @@ gpt2_lm.summary()
 <div class="k-default-codeblock">
 ```
 Downloading data from https://storage.googleapis.com/keras-nlp/models/gpt2_base_en/v1/vocab.json
-1042301/1042301 [==============================] - 0s 0us/step
+1042301/1042301 [==============================] - 1s 1us/step
 Downloading data from https://storage.googleapis.com/keras-nlp/models/gpt2_base_en/v1/merges.txt
-456318/456318 [==============================] - 0s 0us/step
+456318/456318 [==============================] - 1s 1us/step
 Downloading data from https://storage.googleapis.com/keras-nlp/models/gpt2_base_en/v1/model.h5
-497986112/497986112 [==============================] - 3s 0us/step
+497986112/497986112 [==============================] - 26s 0us/step
 
 WARNING:tensorflow:The following Variables were used in a Lambda layer's call (tf.linalg.matmul), but are not present in its tracked objects:   <tf.Variable 'token_embedding/embeddings:0' shape=(50257, 768) dtype=float32>. This is a strong indication that the Lambda layer should be rewritten as a subclassed Layer.
 
@@ -330,7 +330,7 @@ gpt2_lm_memory_usage = gpu_memory_callback.memory_usage
 
 <div class="k-default-codeblock">
 ```
-500/500 [==============================] - 418s 632ms/step - loss: 3.2987 - accuracy: 0.3268
+500/500 [==============================] - 435s 661ms/step - loss: 3.2986 - accuracy: 0.3268
 
 ```
 </div>
@@ -354,34 +354,40 @@ I like basketball because it's easy and fun, but it doesn't really have much to 
     
 <div class="k-default-codeblock">
 ```
-so i was playing with the boys in my school, and one of our players is really cute, and he's pretty loud. i was just trying to keep my voice quiet and to keep the conversation going, but it wasn't working.
+so i was playing with the boys in my school, and one of our players is really cute, and he's pretty loud. i was just trying to keep my voice quiet and to keep the conversation going, but when my mom asked me to stop, i said "i don't want to listen to him. it's a bad idea."
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-i was trying to make a good impression on him, and as he was trying to make a good impression on me, i started to get a little nervous.
+she said "what do you mean?"
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-so i start to make a joke about how loud my earphones are, and how loud my earphones are
-Total Time Elapsed: 21.47s
+so i'm like "what?"
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+i said "it's not your voice, it's your
+Total Time Elapsed: 20.45s
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
 Output:
-That Italian restaurant is closed this week. i went here a while back to see a movie in the morning. i was in a hurry and decided that the best time would be around 8:00, so i headed out. i got a good deal on the food, so i was hungry. 
+That Italian restaurant is in my hometown.  they have a great deal on a variety of dishes, but i usually just eat the food that i'm given.  they usually have a nice selection of food, and usually have a variety of drinks that you can drink.  so i'm sitting in a small table and i see my favorite drink in front of me, a beer, a glass of water. 
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-fast-forward to 5:30 and i'm hungry and hungry. i'm sitting down to get ready for work. my mom comes in and tells me to sit down. i'm hungry so i grab a bowl of rice and sit down. my mom comes out and tells us to eat. we're hungry
-Total Time Elapsed: 1.43s
+my mom is in the middle of eating, and i'm sitting next to her and she's just looking at me with a smile.  i'm just so happy i'm eating
+Total Time Elapsed: 1.09s
 
 ```
 </div>
@@ -702,7 +708,7 @@ lora_model_memory_usage = gpu_memory_callback.memory_usage
 
 <div class="k-default-codeblock">
 ```
-500/500 [==============================] - 311s 505ms/step - loss: 3.5401 - accuracy: 0.3007
+500/500 [==============================] - 314s 513ms/step - loss: 3.5352 - accuracy: 0.3013
 
 ```
 </div>
@@ -718,8 +724,6 @@ plt.bar(
     [max(gpt2_lm_memory_usage), max(lora_model_memory_usage)],
     color=["red", "blue"],
 )
-
-plt.xticks(rotation=90)
 
 plt.xlabel("Time")
 plt.ylabel("GPU Memory Usage (in GB)")
@@ -790,26 +794,22 @@ generate_text(
 ```
 Output:
 I like basketball.
-i was in high school and a few years back. my mom was in the gym with her boyfriend and a few buddies. we had been having a great time with them. i was having a great time with the group and were having fun. 
-```
-</div>
-    
-    
-<div class="k-default-codeblock">
-```
-i was having fun, so my mom and the rest of the group went to
-Total Time Elapsed: 21.65s
+i was in the middle school class when i got my first class assignment, and my first class assignment was about a month ago (the class is in the middle of a summer semester). i was sitting with my friends at the bar, chatting with them about the school, and my friend said something to me, "well, this is my first year in school, so we'll be getting the assignment for the summer semester.  
+Total Time Elapsed: 23.86s
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
 Output:
-That Italian restaurant is located in a small town, so my girlfriend was visiting. 
- 
-  i have never eaten before so i decided to take a few days off to eat. 
-      i'm in my early 30s and i'm a little older than most people around here.      today i'm in a car with a passenger in a white van.    i was driving the car and the passenger was a young man.      i thought
-Total Time Elapsed: 0.72s
+That Italian restaurant is located at my place and i'm a little over halfway through. 
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+i was going to a party and had some fun with some friends.         i'm not a fan of music, and my friends are not really into music.          i was going to the bar and was having a good time.                                                                                                                      
+Total Time Elapsed: 1.01s
 
 ```
 </div>

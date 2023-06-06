@@ -538,8 +538,6 @@ plt.bar(
     color=["red", "blue"],
 )
 
-plt.xticks(rotation=90)
-
 plt.xlabel("Time")
 plt.ylabel("GPU Memory Usage (in GB)")
 
