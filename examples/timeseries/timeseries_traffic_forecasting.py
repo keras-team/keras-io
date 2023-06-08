@@ -84,7 +84,9 @@ data_dir = data_dir.rstrip("PeMSD7_Full.zip")
 route_distances = pd.read_csv(
     os.path.join(data_dir, "PeMSD7_W_228.csv"), header=None
 ).to_numpy()
-speeds_array = pd.read_csv(os.path.join(data_dir, "PeMSD7_V_228.csv"), header=None).to_numpy()
+speeds_array = pd.read_csv(
+    os.path.join(data_dir, "PeMSD7_V_228.csv"), header=None
+).to_numpy()
 
 print(f"route_distances shape={route_distances.shape}")
 print(f"speeds_array shape={speeds_array.shape}")
