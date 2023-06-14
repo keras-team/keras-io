@@ -79,6 +79,7 @@ pip install -qqq tensorflow_addons
 ## Imports
 """
 
+import os
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -88,6 +89,7 @@ from tensorflow import keras
 from tensorflow.keras import layers
 
 from glob import glob
+
 """
 ## Data splitting
 """
