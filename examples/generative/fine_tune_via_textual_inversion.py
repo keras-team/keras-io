@@ -45,7 +45,6 @@ pip install -q tensorflow==2.11.0
 """
 
 import math
-import random
 
 import keras_cv
 import numpy as np

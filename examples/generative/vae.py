@@ -130,7 +130,7 @@ import matplotlib.pyplot as plt
 
 
 def plot_latent_space(vae, n=30, figsize=15):
-    # display a n*n 2D manifold of digits
+    # display an n*n 2D manifold of digits
     digit_size = 28
     scale = 1.0
     figure = np.zeros((digit_size * n, digit_size * n))
