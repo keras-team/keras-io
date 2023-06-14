@@ -118,7 +118,6 @@ def get_model(img_size, num_classes):
     # Entry block
     x = layers.Conv2D(32, 3, strides=2, padding="same")(inputs)
     x = layers.BatchNormalization()(x)
-    x = layers.Activation("relu")(x)
 
     previous_block_activation = x  # Set aside residual
 
