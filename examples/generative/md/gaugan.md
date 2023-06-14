@@ -98,7 +98,6 @@ To: /content/keras-io/scripts/tmp_6251400/facades_data.zip
 
 
 ```python
-import os
 import numpy as np
 import matplotlib.pyplot as plt
 
