@@ -88,7 +88,6 @@ from tensorflow import keras
 from tensorflow.keras import layers
 
 from glob import glob
-
 """
 ## Data splitting
 """
