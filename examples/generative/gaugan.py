@@ -79,10 +79,7 @@ pip install -qqq tensorflow_addons
 ## Imports
 """
 
-import os
-import random
 import numpy as np
-from tqdm import tqdm
 import matplotlib.pyplot as plt
 
 import tensorflow as tf
@@ -91,7 +88,6 @@ from tensorflow import keras
 from tensorflow.keras import layers
 
 from glob import glob
-from PIL import Image
 
 """
 ## Data splitting
@@ -814,7 +810,7 @@ by [Soon-Yau Cheong](https://www.linkedin.com/in/soonyau/) and
 * If you found this example interesting and exciting, you might want to check out
 [our repository](https://github.com/soumik12345/tf2_gans) which we are
 currently building. It will include reimplementations of popular GANs and pretrained
-models. Our focus will be on readibility and making the code as accessible as possible.
+models. Our focus will be on readability and making the code as accessible as possible.
 Our plain is to first train our implementation of GauGAN (following the code of
 this example) on a bigger dataset and then make the repository public. We welcome
 contributions!
