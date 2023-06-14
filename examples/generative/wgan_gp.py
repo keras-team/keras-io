@@ -29,7 +29,6 @@ that keeps the L2 norm of the discriminator gradients close to 1.
 ## Setup
 """
 
-import numpy as np
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
@@ -67,7 +66,7 @@ using strided convolutions, this can result in a shape with odd dimensions.
 For example,
 `(28, 28) -> Conv_s2 -> (14, 14) -> Conv_s2 -> (7, 7) -> Conv_s2 ->(3, 3)`.
 
-While peforming upsampling in the generator part of the network, we won't get
+While performing upsampling in the generator part of the network, we won't get
 the same input shape as the original images if we aren't careful. To avoid this,
 we will do something much simpler:
 - In the discriminator: "zero pad" the input to change the shape to `(32, 32, 1)`
@@ -403,7 +402,7 @@ def generator_loss(fake_img):
     return -tf.reduce_mean(fake_img)
 
 
-# Set the number of epochs for trainining.
+# Set the number of epochs for training.
 epochs = 20
 
 # Instantiate the customer `GANMonitor` Keras callback.
