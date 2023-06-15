@@ -15,8 +15,7 @@ A Keras model consists of multiple components:
 contain, and how they're connected.
 - A set of weights values (the "state of the model").
 - An optimizer (defined by compiling the model).
-- A set of losses and metrics (defined by compiling the model or calling
-`add_loss()` or `add_metric()`).
+- A set of losses and metrics (defined by compiling the model).
 
 The Keras API saves all of these pieces together in a unified format,
 marked by the `.keras` extension. This is a zip archive consisting of the
@@ -24,9 +23,9 @@ following:
 
 - a JSON-based configuration file (config.json): Records of model, layer, and
 other trackables' configuration.
-- NPZ-based state files, found in respective directories, such as
-`model/states.npz`, `model/dense_layer/states.npz`, etc.
-- a Metadata file
+- a H5-based state file, such as `model.weights.h5` (for the whole model),
+with directory keys for layers and subcomponents and their weights.
+- a Metadata file in JSON, storing things such as your Keras version.
 
 Let's take a look at how this works.
 """
