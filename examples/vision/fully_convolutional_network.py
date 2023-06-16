@@ -33,6 +33,7 @@ The FCN architecture has 3 versions of differing quality.
 All versions of the model derive their outputs through an iterative processing of
 successive intermediate pool layers of the main backbone used.
 A better idea can be gained from the figure below.
+
 | ![FCN Architecture](https://i.imgur.com/Ttros06.png) |
 | :--: |
 | **Diagram 1**: Combined Architecture Versions (Source: Paper) |
