@@ -1,8 +1,8 @@
 # Image Segmentation using Composable Fully-Convolutional Networks
 
 **Author:** [Suvaditya Mukherjee](https://twitter.com/halcyonrayes)<br>
-**Date created:** 2023/05/09<br>
-**Last modified:** 2023/05/09<br>
+**Date created:** 2023/06/16<br>
+**Last modified:** 2023/06/16<br>
 **Description:** Using the Fully-Convolutional Network for Image Segmentation.
 
 
@@ -38,7 +38,7 @@ successive intermediate pool layers of the main backbone used.
 A better idea can be gained from the figure below.
 | ![FCN Architecture](https://i.imgur.com/Ttros06.png) |
 | :--: |
-| **Diagram 1**: Combined Architecture Versions (Source: Paper)|
+| **Diagram 1**: Combined Architecture Versions (Source: Paper) |
 
 To get a better idea on Image Segmentation or find more pre-trained models, feel free to
 navigate to the [Hugging Face Image Segmentation Models](https://huggingface.co/models?pipeline_tag=image-segmentation) page,
@@ -55,8 +55,8 @@ import matplotlib.pyplot as plt
 import tensorflow_datasets as tfds
 import numpy as np
 
-keras.utils.set_random_seed(42)
-tf.random.set_seed(42)
+keras.utils.set_random_seed(27)
+tf.random.set_seed(27)
 
 AUTOTUNE = tf.data.AUTOTUNE
 ```
@@ -82,7 +82,7 @@ INPUT_HEIGHT = 224
 INPUT_WIDTH = 224
 LEARNING_RATE = 1e-3
 WEIGHT_DECAY = 1e-4
-EPOCHS = 10
+EPOCHS = 20
 BATCH_SIZE = 32
 MIXED_PRECISION = True
 SHUFFLE = True
@@ -122,42 +122,6 @@ parameter to mix our samples together.
 )
 ```
 
-<div class="k-default-codeblock">
-```
-[1mDownloading and preparing dataset oxford_iiit_pet/3.2.0 (download: 773.52 MiB, generated: 774.69 MiB, total: 1.51 GiB) to /home/tensorflow_datasets/oxford_iiit_pet/3.2.0...[0m
-
-Dl Completed...: 0 url [00:00, ? url/s]
-
-Dl Size...: 0 MiB [00:00, ? MiB/s]
-
-Extraction completed...: 0 file [00:00, ? file/s]
-
-```
-</div>
-    
-    
-    
-
-
-
-<div class="k-default-codeblock">
-```
-0 examples [00:00, ? examples/s]
-
-Shuffling and writing examples to /home/tensorflow_datasets/oxford_iiit_pet/3.2.0.incompleteHBRPOI/oxford_iiit_pet-train.tfrecord
-
-  0%|          | 0/3680 [00:00<?, ? examples/s]
-
-0 examples [00:00, ? examples/s]
-
-Shuffling and writing examples to /home/tensorflow_datasets/oxford_iiit_pet/3.2.0.incompleteHBRPOI/oxford_iiit_pet-test.tfrecord
-
-  0%|          | 0/3669 [00:00<?, ? examples/s]
-
-[1mDataset oxford_iiit_pet downloaded and prepared to /home/tensorflow_datasets/oxford_iiit_pet/3.2.0. Subsequent calls will reuse this data.[0m
-
-```
-</div>
 ---
 ## Unpack and preprocess dataset
 
@@ -335,13 +299,6 @@ x[-1] = dense_convs(x[-1])
 pool3_output, pool4_output, pool5_output = x
 ```
 
-<div class="k-default-codeblock">
-```
-Downloading data from https://storage.googleapis.com/tensorflow/keras-applications/vgg19/vgg19_weights_tf_dim_ordering_tf_kernels.h5
-574710816/574710816 [==============================] - 30s 0us/step
-
-```
-</div>
 ### FCN-32S
 
 We extend the last output, perform a `1x1 Convolution` and perform 2D Bilinear Upsampling
@@ -541,66 +498,126 @@ fcn32s_history = fcn32s_model.fit(train_ds, epochs=EPOCHS, validation_data=valid
 
 <div class="k-default-codeblock">
 ```
-Epoch 1/10
+Epoch 1/20
 
 Corrupt JPEG data: premature end of data segment
 Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
 
-98/98 [==============================] - 31s 162ms/step - loss: 0.9867 - mean_io_u: 0.2879 - sparse_categorical_accuracy: 0.6226 - val_loss: 0.8643 - val_mean_io_u: 0.3199 - val_sparse_categorical_accuracy: 0.6670
-Epoch 2/10
+98/98 [==============================] - 31s 171ms/step - loss: 0.9853 - mean_io_u: 0.3056 - sparse_categorical_accuracy: 0.6242 - val_loss: 0.7911 - val_mean_io_u: 0.4022 - val_sparse_categorical_accuracy: 0.7011
+Epoch 2/20
 
 Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
 Corrupt JPEG data: premature end of data segment
 
-98/98 [==============================] - 22s 128ms/step - loss: 0.8173 - mean_io_u: 0.3493 - sparse_categorical_accuracy: 0.6850 - val_loss: 0.7763 - val_mean_io_u: 0.3829 - val_sparse_categorical_accuracy: 0.7043
-Epoch 3/10
+98/98 [==============================] - 22s 131ms/step - loss: 0.7463 - mean_io_u: 0.3978 - sparse_categorical_accuracy: 0.7100 - val_loss: 0.7162 - val_mean_io_u: 0.3968 - val_sparse_categorical_accuracy: 0.7157
+Epoch 3/20
 
 Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
 Corrupt JPEG data: premature end of data segment
 
-98/98 [==============================] - 20s 112ms/step - loss: 0.7524 - mean_io_u: 0.3813 - sparse_categorical_accuracy: 0.7071 - val_loss: 0.7312 - val_mean_io_u: 0.3981 - val_sparse_categorical_accuracy: 0.7181
-Epoch 4/10
+98/98 [==============================] - 21s 120ms/step - loss: 0.6939 - mean_io_u: 0.4139 - sparse_categorical_accuracy: 0.7255 - val_loss: 0.6714 - val_mean_io_u: 0.4383 - val_sparse_categorical_accuracy: 0.7379
+Epoch 4/20
 
 Corrupt JPEG data: premature end of data segment
 Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
 
-98/98 [==============================] - 20s 115ms/step - loss: 0.7093 - mean_io_u: 0.4022 - sparse_categorical_accuracy: 0.7220 - val_loss: 0.6780 - val_mean_io_u: 0.4153 - val_sparse_categorical_accuracy: 0.7335
-Epoch 5/10
-
-Corrupt JPEG data: premature end of data segment
-Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
-
-98/98 [==============================] - 23s 114ms/step - loss: 0.6927 - mean_io_u: 0.4151 - sparse_categorical_accuracy: 0.7267 - val_loss: 0.6529 - val_mean_io_u: 0.4330 - val_sparse_categorical_accuracy: 0.7432
-Epoch 6/10
-
-Corrupt JPEG data: premature end of data segment
-Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
-
-98/98 [==============================] - 19s 108ms/step - loss: 0.6713 - mean_io_u: 0.4205 - sparse_categorical_accuracy: 0.7341 - val_loss: 0.6399 - val_mean_io_u: 0.4388 - val_sparse_categorical_accuracy: 0.7479
-Epoch 7/10
-
-Corrupt JPEG data: premature end of data segment
-Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
-
-98/98 [==============================] - 20s 110ms/step - loss: 0.6649 - mean_io_u: 0.4234 - sparse_categorical_accuracy: 0.7347 - val_loss: 0.6396 - val_mean_io_u: 0.4334 - val_sparse_categorical_accuracy: 0.7446
-Epoch 8/10
-
-Corrupt JPEG data: premature end of data segment
-Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
-
-98/98 [==============================] - 20s 110ms/step - loss: 0.6542 - mean_io_u: 0.4294 - sparse_categorical_accuracy: 0.7385 - val_loss: 0.6307 - val_mean_io_u: 0.4538 - val_sparse_categorical_accuracy: 0.7503
-Epoch 9/10
+98/98 [==============================] - 21s 117ms/step - loss: 0.6694 - mean_io_u: 0.4239 - sparse_categorical_accuracy: 0.7339 - val_loss: 0.6715 - val_mean_io_u: 0.4258 - val_sparse_categorical_accuracy: 0.7332
+Epoch 5/20
 
 Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
 Corrupt JPEG data: premature end of data segment
 
-98/98 [==============================] - 20s 110ms/step - loss: 0.6470 - mean_io_u: 0.4295 - sparse_categorical_accuracy: 0.7402 - val_loss: 0.6141 - val_mean_io_u: 0.4547 - val_sparse_categorical_accuracy: 0.7570
-Epoch 10/10
+98/98 [==============================] - 21s 115ms/step - loss: 0.6556 - mean_io_u: 0.4279 - sparse_categorical_accuracy: 0.7382 - val_loss: 0.6271 - val_mean_io_u: 0.4483 - val_sparse_categorical_accuracy: 0.7514
+Epoch 6/20
+
+Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
+Corrupt JPEG data: premature end of data segment
+
+98/98 [==============================] - 21s 120ms/step - loss: 0.6501 - mean_io_u: 0.4295 - sparse_categorical_accuracy: 0.7394 - val_loss: 0.6390 - val_mean_io_u: 0.4375 - val_sparse_categorical_accuracy: 0.7442
+Epoch 7/20
 
 Corrupt JPEG data: premature end of data segment
 Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
 
-98/98 [==============================] - 20s 110ms/step - loss: 0.6453 - mean_io_u: 0.4316 - sparse_categorical_accuracy: 0.7415 - val_loss: 0.6133 - val_mean_io_u: 0.4541 - val_sparse_categorical_accuracy: 0.7568
+98/98 [==============================] - 20s 109ms/step - loss: 0.6464 - mean_io_u: 0.4309 - sparse_categorical_accuracy: 0.7402 - val_loss: 0.6143 - val_mean_io_u: 0.4508 - val_sparse_categorical_accuracy: 0.7553
+Epoch 8/20
+
+Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
+Corrupt JPEG data: premature end of data segment
+
+98/98 [==============================] - 20s 108ms/step - loss: 0.6363 - mean_io_u: 0.4343 - sparse_categorical_accuracy: 0.7444 - val_loss: 0.6143 - val_mean_io_u: 0.4481 - val_sparse_categorical_accuracy: 0.7541
+Epoch 9/20
+
+Corrupt JPEG data: premature end of data segment
+Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
+
+98/98 [==============================] - 20s 108ms/step - loss: 0.6367 - mean_io_u: 0.4346 - sparse_categorical_accuracy: 0.7445 - val_loss: 0.6222 - val_mean_io_u: 0.4534 - val_sparse_categorical_accuracy: 0.7510
+Epoch 10/20
+
+Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
+Corrupt JPEG data: premature end of data segment
+
+98/98 [==============================] - 19s 108ms/step - loss: 0.6398 - mean_io_u: 0.4346 - sparse_categorical_accuracy: 0.7426 - val_loss: 0.6123 - val_mean_io_u: 0.4494 - val_sparse_categorical_accuracy: 0.7541
+Epoch 11/20
+
+Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
+Corrupt JPEG data: premature end of data segment
+
+98/98 [==============================] - 20s 110ms/step - loss: 0.6361 - mean_io_u: 0.4365 - sparse_categorical_accuracy: 0.7439 - val_loss: 0.6310 - val_mean_io_u: 0.4405 - val_sparse_categorical_accuracy: 0.7461
+Epoch 12/20
+
+Corrupt JPEG data: premature end of data segment
+Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
+
+98/98 [==============================] - 21s 110ms/step - loss: 0.6325 - mean_io_u: 0.4362 - sparse_categorical_accuracy: 0.7454 - val_loss: 0.6155 - val_mean_io_u: 0.4441 - val_sparse_categorical_accuracy: 0.7509
+Epoch 13/20
+
+Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
+Corrupt JPEG data: premature end of data segment
+
+98/98 [==============================] - 20s 112ms/step - loss: 0.6335 - mean_io_u: 0.4368 - sparse_categorical_accuracy: 0.7452 - val_loss: 0.6153 - val_mean_io_u: 0.4430 - val_sparse_categorical_accuracy: 0.7504
+Epoch 14/20
+
+Corrupt JPEG data: premature end of data segment
+Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
+
+98/98 [==============================] - 20s 113ms/step - loss: 0.6289 - mean_io_u: 0.4380 - sparse_categorical_accuracy: 0.7466 - val_loss: 0.6357 - val_mean_io_u: 0.4309 - val_sparse_categorical_accuracy: 0.7382
+Epoch 15/20
+
+Corrupt JPEG data: premature end of data segment
+Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
+
+98/98 [==============================] - 20s 113ms/step - loss: 0.6267 - mean_io_u: 0.4369 - sparse_categorical_accuracy: 0.7474 - val_loss: 0.5974 - val_mean_io_u: 0.4619 - val_sparse_categorical_accuracy: 0.7617
+Epoch 16/20
+
+Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
+Corrupt JPEG data: premature end of data segment
+
+98/98 [==============================] - 20s 109ms/step - loss: 0.6309 - mean_io_u: 0.4368 - sparse_categorical_accuracy: 0.7458 - val_loss: 0.6071 - val_mean_io_u: 0.4463 - val_sparse_categorical_accuracy: 0.7533
+Epoch 17/20
+
+Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
+Corrupt JPEG data: premature end of data segment
+
+98/98 [==============================] - 20s 112ms/step - loss: 0.6285 - mean_io_u: 0.4382 - sparse_categorical_accuracy: 0.7465 - val_loss: 0.5979 - val_mean_io_u: 0.4576 - val_sparse_categorical_accuracy: 0.7602
+Epoch 18/20
+
+Corrupt JPEG data: premature end of data segment
+Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
+
+98/98 [==============================] - 20s 111ms/step - loss: 0.6250 - mean_io_u: 0.4403 - sparse_categorical_accuracy: 0.7479 - val_loss: 0.6121 - val_mean_io_u: 0.4451 - val_sparse_categorical_accuracy: 0.7507
+Epoch 19/20
+
+Corrupt JPEG data: premature end of data segment
+Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
+
+98/98 [==============================] - 20s 111ms/step - loss: 0.6307 - mean_io_u: 0.4386 - sparse_categorical_accuracy: 0.7454 - val_loss: 0.6010 - val_mean_io_u: 0.4532 - val_sparse_categorical_accuracy: 0.7577
+Epoch 20/20
+
+Corrupt JPEG data: premature end of data segment
+Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
+
+98/98 [==============================] - 20s 114ms/step - loss: 0.6199 - mean_io_u: 0.4403 - sparse_categorical_accuracy: 0.7505 - val_loss: 0.6180 - val_mean_io_u: 0.4339 - val_sparse_categorical_accuracy: 0.7465
 
 ```
 </div>
@@ -629,66 +646,126 @@ fcn16s_history = fcn16s_model.fit(train_ds, epochs=EPOCHS, validation_data=valid
 
 <div class="k-default-codeblock">
 ```
-Epoch 1/10
+Epoch 1/20
 
 Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
 Corrupt JPEG data: premature end of data segment
 
-98/98 [==============================] - 23s 121ms/step - loss: 1.5390 - mean_io_u_1: 0.4876 - sparse_categorical_accuracy: 0.7770 - val_loss: 1.2530 - val_mean_io_u_1: 0.5901 - val_sparse_categorical_accuracy: 0.8606
-Epoch 2/10
-
-Corrupt JPEG data: premature end of data segment
-Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
-
-98/98 [==============================] - 20s 112ms/step - loss: 1.1428 - mean_io_u_1: 0.5949 - sparse_categorical_accuracy: 0.8735 - val_loss: 1.1760 - val_mean_io_u_1: 0.5959 - val_sparse_categorical_accuracy: 0.8687
-Epoch 3/10
+98/98 [==============================] - 23s 127ms/step - loss: 6.4519 - mean_io_u_1: 0.3101 - sparse_categorical_accuracy: 0.5649 - val_loss: 5.7052 - val_mean_io_u_1: 0.3842 - val_sparse_categorical_accuracy: 0.6057
+Epoch 2/20
 
 Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
 Corrupt JPEG data: premature end of data segment
 
-98/98 [==============================] - 21s 111ms/step - loss: 1.1033 - mean_io_u_1: 0.5999 - sparse_categorical_accuracy: 0.8787 - val_loss: 1.1746 - val_mean_io_u_1: 0.5964 - val_sparse_categorical_accuracy: 0.8695
-Epoch 4/10
-
-Corrupt JPEG data: premature end of data segment
-Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
-
-98/98 [==============================] - 20s 110ms/step - loss: 1.1132 - mean_io_u_1: 0.6014 - sparse_categorical_accuracy: 0.8779 - val_loss: 1.1974 - val_mean_io_u_1: 0.5983 - val_sparse_categorical_accuracy: 0.8673
-Epoch 5/10
-
-Corrupt JPEG data: premature end of data segment
-Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
-
-98/98 [==============================] - 20s 111ms/step - loss: 1.0890 - mean_io_u_1: 0.6022 - sparse_categorical_accuracy: 0.8805 - val_loss: 1.1504 - val_mean_io_u_1: 0.5992 - val_sparse_categorical_accuracy: 0.8715
-Epoch 6/10
+98/98 [==============================] - 19s 110ms/step - loss: 5.2670 - mean_io_u_1: 0.3936 - sparse_categorical_accuracy: 0.6339 - val_loss: 5.8929 - val_mean_io_u_1: 0.3864 - val_sparse_categorical_accuracy: 0.5940
+Epoch 3/20
 
 Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
 Corrupt JPEG data: premature end of data segment
 
-98/98 [==============================] - 20s 110ms/step - loss: 1.0989 - mean_io_u_1: 0.6037 - sparse_categorical_accuracy: 0.8799 - val_loss: 1.1561 - val_mean_io_u_1: 0.6002 - val_sparse_categorical_accuracy: 0.8721
-Epoch 7/10
+98/98 [==============================] - 20s 111ms/step - loss: 5.2376 - mean_io_u_1: 0.3945 - sparse_categorical_accuracy: 0.6366 - val_loss: 5.6404 - val_mean_io_u_1: 0.3889 - val_sparse_categorical_accuracy: 0.6079
+Epoch 4/20
 
 Corrupt JPEG data: premature end of data segment
 Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
 
-98/98 [==============================] - 20s 111ms/step - loss: 1.0975 - mean_io_u_1: 0.6026 - sparse_categorical_accuracy: 0.8798 - val_loss: 1.1593 - val_mean_io_u_1: 0.5980 - val_sparse_categorical_accuracy: 0.8697
-Epoch 8/10
+98/98 [==============================] - 21s 113ms/step - loss: 5.3014 - mean_io_u_1: 0.3924 - sparse_categorical_accuracy: 0.6323 - val_loss: 5.6516 - val_mean_io_u_1: 0.3874 - val_sparse_categorical_accuracy: 0.6094
+Epoch 5/20
 
 Corrupt JPEG data: premature end of data segment
 Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
 
-98/98 [==============================] - 20s 109ms/step - loss: 1.1059 - mean_io_u_1: 0.6027 - sparse_categorical_accuracy: 0.8789 - val_loss: 1.1486 - val_mean_io_u_1: 0.5997 - val_sparse_categorical_accuracy: 0.8720
-Epoch 9/10
+98/98 [==============================] - 20s 112ms/step - loss: 5.3135 - mean_io_u_1: 0.3918 - sparse_categorical_accuracy: 0.6323 - val_loss: 5.6588 - val_mean_io_u_1: 0.3903 - val_sparse_categorical_accuracy: 0.6084
+Epoch 6/20
 
 Corrupt JPEG data: premature end of data segment
 Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
 
-98/98 [==============================] - 20s 109ms/step - loss: 1.0771 - mean_io_u_1: 0.6034 - sparse_categorical_accuracy: 0.8817 - val_loss: 1.2077 - val_mean_io_u_1: 0.5970 - val_sparse_categorical_accuracy: 0.8661
-Epoch 10/10
+98/98 [==============================] - 20s 108ms/step - loss: 5.2401 - mean_io_u_1: 0.3938 - sparse_categorical_accuracy: 0.6357 - val_loss: 5.6463 - val_mean_io_u_1: 0.3868 - val_sparse_categorical_accuracy: 0.6097
+Epoch 7/20
+
+Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
+Corrupt JPEG data: premature end of data segment
+
+98/98 [==============================] - 20s 109ms/step - loss: 5.2277 - mean_io_u_1: 0.3921 - sparse_categorical_accuracy: 0.6371 - val_loss: 5.6272 - val_mean_io_u_1: 0.3796 - val_sparse_categorical_accuracy: 0.6136
+Epoch 8/20
 
 Corrupt JPEG data: premature end of data segment
 Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
 
-98/98 [==============================] - 20s 110ms/step - loss: 1.0805 - mean_io_u_1: 0.6042 - sparse_categorical_accuracy: 0.8815 - val_loss: 1.1514 - val_mean_io_u_1: 0.5999 - val_sparse_categorical_accuracy: 0.8717
+98/98 [==============================] - 20s 112ms/step - loss: 5.2479 - mean_io_u_1: 0.3910 - sparse_categorical_accuracy: 0.6360 - val_loss: 5.6303 - val_mean_io_u_1: 0.3823 - val_sparse_categorical_accuracy: 0.6108
+Epoch 9/20
+
+Corrupt JPEG data: premature end of data segment
+Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
+
+98/98 [==============================] - 21s 112ms/step - loss: 5.1940 - mean_io_u_1: 0.3913 - sparse_categorical_accuracy: 0.6388 - val_loss: 5.8818 - val_mean_io_u_1: 0.3848 - val_sparse_categorical_accuracy: 0.5912
+Epoch 10/20
+
+Corrupt JPEG data: premature end of data segment
+Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
+
+98/98 [==============================] - 20s 111ms/step - loss: 5.2457 - mean_io_u_1: 0.3898 - sparse_categorical_accuracy: 0.6358 - val_loss: 5.6423 - val_mean_io_u_1: 0.3880 - val_sparse_categorical_accuracy: 0.6087
+Epoch 11/20
+
+Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
+Corrupt JPEG data: premature end of data segment
+
+98/98 [==============================] - 20s 110ms/step - loss: 5.1808 - mean_io_u_1: 0.3905 - sparse_categorical_accuracy: 0.6400 - val_loss: 5.6175 - val_mean_io_u_1: 0.3834 - val_sparse_categorical_accuracy: 0.6090
+Epoch 12/20
+
+Corrupt JPEG data: premature end of data segment
+Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
+
+98/98 [==============================] - 20s 112ms/step - loss: 5.2730 - mean_io_u_1: 0.3907 - sparse_categorical_accuracy: 0.6341 - val_loss: 5.6322 - val_mean_io_u_1: 0.3878 - val_sparse_categorical_accuracy: 0.6109
+Epoch 13/20
+
+Corrupt JPEG data: premature end of data segment
+Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
+
+98/98 [==============================] - 20s 109ms/step - loss: 5.2501 - mean_io_u_1: 0.3904 - sparse_categorical_accuracy: 0.6359 - val_loss: 5.8711 - val_mean_io_u_1: 0.3859 - val_sparse_categorical_accuracy: 0.5950
+Epoch 14/20
+
+Corrupt JPEG data: premature end of data segment
+Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
+
+98/98 [==============================] - 20s 107ms/step - loss: 5.2407 - mean_io_u_1: 0.3926 - sparse_categorical_accuracy: 0.6362 - val_loss: 5.6387 - val_mean_io_u_1: 0.3805 - val_sparse_categorical_accuracy: 0.6122
+Epoch 15/20
+
+Corrupt JPEG data: premature end of data segment
+Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
+
+98/98 [==============================] - 20s 108ms/step - loss: 5.2280 - mean_io_u_1: 0.3909 - sparse_categorical_accuracy: 0.6370 - val_loss: 5.6382 - val_mean_io_u_1: 0.3837 - val_sparse_categorical_accuracy: 0.6112
+Epoch 16/20
+
+Corrupt JPEG data: premature end of data segment
+Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
+
+98/98 [==============================] - 20s 108ms/step - loss: 5.2232 - mean_io_u_1: 0.3899 - sparse_categorical_accuracy: 0.6369 - val_loss: 5.6285 - val_mean_io_u_1: 0.3818 - val_sparse_categorical_accuracy: 0.6101
+Epoch 17/20
+
+Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
+Corrupt JPEG data: premature end of data segment
+
+98/98 [==============================] - 20s 107ms/step - loss: 1.4671 - mean_io_u_1: 0.5928 - sparse_categorical_accuracy: 0.8210 - val_loss: 0.7661 - val_mean_io_u_1: 0.6455 - val_sparse_categorical_accuracy: 0.8504
+Epoch 18/20
+
+Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
+Corrupt JPEG data: premature end of data segment
+
+98/98 [==============================] - 20s 110ms/step - loss: 0.6795 - mean_io_u_1: 0.6508 - sparse_categorical_accuracy: 0.8664 - val_loss: 0.6913 - val_mean_io_u_1: 0.6490 - val_sparse_categorical_accuracy: 0.8562
+Epoch 19/20
+
+Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
+Corrupt JPEG data: premature end of data segment
+
+98/98 [==============================] - 20s 110ms/step - loss: 0.6498 - mean_io_u_1: 0.6530 - sparse_categorical_accuracy: 0.8663 - val_loss: 0.6834 - val_mean_io_u_1: 0.6559 - val_sparse_categorical_accuracy: 0.8577
+Epoch 20/20
+
+Corrupt JPEG data: premature end of data segment
+Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
+
+98/98 [==============================] - 20s 110ms/step - loss: 0.6305 - mean_io_u_1: 0.6563 - sparse_categorical_accuracy: 0.8681 - val_loss: 0.6529 - val_mean_io_u_1: 0.6575 - val_sparse_categorical_accuracy: 0.8657
 
 ```
 </div>
@@ -717,66 +794,126 @@ fcn8s_history = fcn8s_model.fit(train_ds, epochs=EPOCHS, validation_data=valid_d
 
 <div class="k-default-codeblock">
 ```
-Epoch 1/10
+Epoch 1/20
 
 Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
 Corrupt JPEG data: premature end of data segment
 
-98/98 [==============================] - 23s 126ms/step - loss: 4.7227 - mean_io_u_2: 0.3529 - sparse_categorical_accuracy: 0.6816 - val_loss: 3.8948 - val_mean_io_u_2: 0.3870 - val_sparse_categorical_accuracy: 0.7414
-Epoch 2/10
+98/98 [==============================] - 24s 125ms/step - loss: 8.4168 - mean_io_u_2: 0.3116 - sparse_categorical_accuracy: 0.4237 - val_loss: 7.6113 - val_mean_io_u_2: 0.3540 - val_sparse_categorical_accuracy: 0.4682
+Epoch 2/20
 
 Corrupt JPEG data: premature end of data segment
 Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
 
-98/98 [==============================] - 21s 114ms/step - loss: 3.5464 - mean_io_u_2: 0.3871 - sparse_categorical_accuracy: 0.7642 - val_loss: 3.7553 - val_mean_io_u_2: 0.3884 - val_sparse_categorical_accuracy: 0.7514
-Epoch 3/10
-
-Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
-Corrupt JPEG data: premature end of data segment
-
-98/98 [==============================] - 23s 112ms/step - loss: 3.5209 - mean_io_u_2: 0.3885 - sparse_categorical_accuracy: 0.7666 - val_loss: 3.8652 - val_mean_io_u_2: 0.3901 - val_sparse_categorical_accuracy: 0.7446
-Epoch 4/10
-
-Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
-Corrupt JPEG data: premature end of data segment
-
-98/98 [==============================] - 21s 113ms/step - loss: 3.5040 - mean_io_u_2: 0.3891 - sparse_categorical_accuracy: 0.7678 - val_loss: 3.7126 - val_mean_io_u_2: 0.3908 - val_sparse_categorical_accuracy: 0.7547
-Epoch 5/10
-
-Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
-Corrupt JPEG data: premature end of data segment
-
-98/98 [==============================] - 20s 114ms/step - loss: 3.4866 - mean_io_u_2: 0.3899 - sparse_categorical_accuracy: 0.7692 - val_loss: 3.7166 - val_mean_io_u_2: 0.3912 - val_sparse_categorical_accuracy: 0.7546
-Epoch 6/10
+98/98 [==============================] - 20s 110ms/step - loss: 8.1030 - mean_io_u_2: 0.3423 - sparse_categorical_accuracy: 0.4401 - val_loss: 7.7038 - val_mean_io_u_2: 0.3335 - val_sparse_categorical_accuracy: 0.4481
+Epoch 3/20
 
 Corrupt JPEG data: premature end of data segment
 Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
 
-98/98 [==============================] - 20s 113ms/step - loss: 3.4941 - mean_io_u_2: 0.3903 - sparse_categorical_accuracy: 0.7688 - val_loss: 3.7093 - val_mean_io_u_2: 0.3917 - val_sparse_categorical_accuracy: 0.7552
-Epoch 7/10
+98/98 [==============================] - 20s 110ms/step - loss: 8.0868 - mean_io_u_2: 0.3433 - sparse_categorical_accuracy: 0.4408 - val_loss: 7.5839 - val_mean_io_u_2: 0.3518 - val_sparse_categorical_accuracy: 0.4722
+Epoch 4/20
 
 Corrupt JPEG data: premature end of data segment
 Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
 
-98/98 [==============================] - 21s 115ms/step - loss: 3.4833 - mean_io_u_2: 0.3902 - sparse_categorical_accuracy: 0.7695 - val_loss: 3.7043 - val_mean_io_u_2: 0.3918 - val_sparse_categorical_accuracy: 0.7556
-Epoch 8/10
+98/98 [==============================] - 21s 111ms/step - loss: 8.1508 - mean_io_u_2: 0.3414 - sparse_categorical_accuracy: 0.4365 - val_loss: 7.2391 - val_mean_io_u_2: 0.3519 - val_sparse_categorical_accuracy: 0.4805
+Epoch 5/20
+
+Corrupt JPEG data: premature end of data segment
+Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
+
+98/98 [==============================] - 20s 112ms/step - loss: 8.1621 - mean_io_u_2: 0.3440 - sparse_categorical_accuracy: 0.4361 - val_loss: 7.2805 - val_mean_io_u_2: 0.3474 - val_sparse_categorical_accuracy: 0.4816
+Epoch 6/20
+
+Corrupt JPEG data: premature end of data segment
+Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
+
+98/98 [==============================] - 20s 110ms/step - loss: 8.1470 - mean_io_u_2: 0.3412 - sparse_categorical_accuracy: 0.4360 - val_loss: 7.5605 - val_mean_io_u_2: 0.3543 - val_sparse_categorical_accuracy: 0.4736
+Epoch 7/20
 
 Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
 Corrupt JPEG data: premature end of data segment
 
-98/98 [==============================] - 20s 110ms/step - loss: 3.5131 - mean_io_u_2: 0.3908 - sparse_categorical_accuracy: 0.7678 - val_loss: 3.7052 - val_mean_io_u_2: 0.3920 - val_sparse_categorical_accuracy: 0.7556
-Epoch 9/10
+98/98 [==============================] - 20s 110ms/step - loss: 8.1464 - mean_io_u_2: 0.3430 - sparse_categorical_accuracy: 0.4368 - val_loss: 7.5442 - val_mean_io_u_2: 0.3542 - val_sparse_categorical_accuracy: 0.4702
+Epoch 8/20
+
+Corrupt JPEG data: premature end of data segment
+Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
+
+98/98 [==============================] - 20s 108ms/step - loss: 8.0812 - mean_io_u_2: 0.3463 - sparse_categorical_accuracy: 0.4403 - val_loss: 7.5565 - val_mean_io_u_2: 0.3471 - val_sparse_categorical_accuracy: 0.4614
+Epoch 9/20
+
+Corrupt JPEG data: premature end of data segment
+Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
+
+98/98 [==============================] - 20s 109ms/step - loss: 8.0441 - mean_io_u_2: 0.3463 - sparse_categorical_accuracy: 0.4420 - val_loss: 7.5563 - val_mean_io_u_2: 0.3522 - val_sparse_categorical_accuracy: 0.4734
+Epoch 10/20
+
+Corrupt JPEG data: premature end of data segment
+Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
+
+98/98 [==============================] - 20s 110ms/step - loss: 8.1385 - mean_io_u_2: 0.3432 - sparse_categorical_accuracy: 0.4363 - val_loss: 7.5236 - val_mean_io_u_2: 0.3506 - val_sparse_categorical_accuracy: 0.4660
+Epoch 11/20
+
+Corrupt JPEG data: premature end of data segment
+Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
+
+98/98 [==============================] - 20s 111ms/step - loss: 8.1114 - mean_io_u_2: 0.3447 - sparse_categorical_accuracy: 0.4381 - val_loss: 7.2068 - val_mean_io_u_2: 0.3518 - val_sparse_categorical_accuracy: 0.4808
+Epoch 12/20
+
+Corrupt JPEG data: premature end of data segment
+Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
+
+98/98 [==============================] - 20s 107ms/step - loss: 8.0777 - mean_io_u_2: 0.3451 - sparse_categorical_accuracy: 0.4392 - val_loss: 7.2252 - val_mean_io_u_2: 0.3497 - val_sparse_categorical_accuracy: 0.4815
+Epoch 13/20
 
 Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
 Corrupt JPEG data: premature end of data segment
 
-98/98 [==============================] - 20s 111ms/step - loss: 3.5151 - mean_io_u_2: 0.3904 - sparse_categorical_accuracy: 0.7678 - val_loss: 3.7175 - val_mean_io_u_2: 0.3919 - val_sparse_categorical_accuracy: 0.7551
-Epoch 10/10
+98/98 [==============================] - 21s 110ms/step - loss: 8.1355 - mean_io_u_2: 0.3446 - sparse_categorical_accuracy: 0.4366 - val_loss: 7.5587 - val_mean_io_u_2: 0.3500 - val_sparse_categorical_accuracy: 0.4671
+Epoch 14/20
 
 Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
 Corrupt JPEG data: premature end of data segment
 
-98/98 [==============================] - 20s 111ms/step - loss: 3.5326 - mean_io_u_2: 0.3906 - sparse_categorical_accuracy: 0.7666 - val_loss: 3.7232 - val_mean_io_u_2: 0.3917 - val_sparse_categorical_accuracy: 0.7545
+98/98 [==============================] - 20s 107ms/step - loss: 8.1828 - mean_io_u_2: 0.3410 - sparse_categorical_accuracy: 0.4330 - val_loss: 7.2464 - val_mean_io_u_2: 0.3557 - val_sparse_categorical_accuracy: 0.4927
+Epoch 15/20
+
+Corrupt JPEG data: premature end of data segment
+Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
+
+98/98 [==============================] - 20s 108ms/step - loss: 8.1845 - mean_io_u_2: 0.3432 - sparse_categorical_accuracy: 0.4330 - val_loss: 7.2032 - val_mean_io_u_2: 0.3506 - val_sparse_categorical_accuracy: 0.4805
+Epoch 16/20
+
+Corrupt JPEG data: premature end of data segment
+Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
+
+98/98 [==============================] - 21s 109ms/step - loss: 8.1183 - mean_io_u_2: 0.3449 - sparse_categorical_accuracy: 0.4374 - val_loss: 7.6210 - val_mean_io_u_2: 0.3460 - val_sparse_categorical_accuracy: 0.4751
+Epoch 17/20
+
+Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
+Corrupt JPEG data: premature end of data segment
+
+98/98 [==============================] - 21s 111ms/step - loss: 8.1766 - mean_io_u_2: 0.3429 - sparse_categorical_accuracy: 0.4329 - val_loss: 7.5361 - val_mean_io_u_2: 0.3489 - val_sparse_categorical_accuracy: 0.4639
+Epoch 18/20
+
+Corrupt JPEG data: premature end of data segment
+Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
+
+98/98 [==============================] - 20s 109ms/step - loss: 8.0453 - mean_io_u_2: 0.3442 - sparse_categorical_accuracy: 0.4404 - val_loss: 7.1767 - val_mean_io_u_2: 0.3549 - val_sparse_categorical_accuracy: 0.4839
+Epoch 19/20
+
+Corrupt JPEG data: premature end of data segment
+Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
+
+98/98 [==============================] - 20s 109ms/step - loss: 8.0856 - mean_io_u_2: 0.3449 - sparse_categorical_accuracy: 0.4390 - val_loss: 7.1724 - val_mean_io_u_2: 0.3574 - val_sparse_categorical_accuracy: 0.4878
+Epoch 20/20
+
+Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
+Corrupt JPEG data: premature end of data segment
+
+98/98 [==============================] - 21s 109ms/step - loss: 8.1378 - mean_io_u_2: 0.3445 - sparse_categorical_accuracy: 0.4358 - val_loss: 7.5449 - val_mean_io_u_2: 0.3521 - val_sparse_categorical_accuracy: 0.4681
 
 ```
 </div>
@@ -829,6 +966,7 @@ plt.show()
 
 To understand the results and see them better, we pick a random image from the test
 dataset and perform inference on it to see the masks generated by each model.
+Note: For better results, the model must be trained for a higher number of epochs.
 
 
 ```python
