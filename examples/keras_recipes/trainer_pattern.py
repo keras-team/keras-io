@@ -34,9 +34,10 @@ x_train, x_test = x_train / 255.0, x_test / 255.0
 
 
 """
-## Define the custom training step
+## Define the Trainer class
 
-A custom training step can be created by overriding the `train_step()` method of a Model subclass:
+A custom training and evaluation step can be created by overriding
+the `train_step()` and `test_step()` method of a `Model` subclass:
 """
 
 
@@ -44,13 +45,21 @@ class MyTrainer(keras.Model):
     def __init__(self, model):
         super().__init__()
         self.model = model
+        # Create loss and metrics here.
+        self.loss_fn = keras.losses.SparseCategoricalCrossentropy()
+        self.accuracy_metric = keras.metrics.SparseCategoricalAccuracy()
+
+    @property
+    def metrics(self):
+        # List metrics here.
+        return [self.accuracy_metric]
 
     def train_step(self, data):
         x, y = data
         with tf.GradientTape() as tape:
             y_pred = self.model(x, training=True)  # Forward pass
             # Compute loss value
-            loss = self.compiled_loss(y, y_pred, regularization_losses=self.losses)
+            loss = self.loss_fn(y, y_pred)
 
         # Compute gradients
         trainable_vars = self.trainable_variables
@@ -59,10 +68,22 @@ class MyTrainer(keras.Model):
         # Update weights
         self.optimizer.apply_gradients(zip(gradients, trainable_vars))
 
-        # Update metrics configured in `compile()`
-        self.compiled_metrics.update_state(y, y_pred)
+        # Update metrics
+        for metric in self.metrics:
+            metric.update_state(y, y_pred)
 
         # Return a dict mapping metric names to current value.
+        return {m.name: m.result() for m in self.metrics}
+
+    def test_step(self, data):
+        x, y = data
+
+        # Inference step
+        y_pred = self.model(x, training=False)
+
+        # Update metrics
+        for metric in self.metrics:
+            metric.update_state(y, y_pred)
         return {m.name: m.result() for m in self.metrics}
 
     def call(self, x):
@@ -107,18 +128,12 @@ trainer_2 = MyTrainer(model_b)
 ## Compile and fit the models to the MNIST dataset
 """
 
-trainer_1.compile(
-    keras.optimizers.SGD(), loss="sparse_categorical_crossentropy", metrics=["accuracy"]
-)
+trainer_1.compile(optimizer=keras.optimizers.SGD())
 trainer_1.fit(
     x_train, y_train, epochs=5, batch_size=64, validation_data=(x_test, y_test)
 )
 
-trainer_2.compile(
-    keras.optimizers.Adam(),
-    loss="sparse_categorical_crossentropy",
-    metrics=["accuracy"],
-)
+trainer_2.compile(optimizer=keras.optimizers.Adam())
 trainer_2.fit(
     x_train, y_train, epochs=5, batch_size=64, validation_data=(x_test, y_test)
 )

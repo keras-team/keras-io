@@ -28,7 +28,6 @@ using cycle-consistent adversarial networks.
 
 
 ```python
-import os
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -460,10 +459,10 @@ class CycleGan(keras.Model):
         #
         # 1. Pass real images through the generators and get the generated images
         # 2. Pass the generated images back to the generators to check if we
-        #    we can predict the original image from the generated image.
+        #    can predict the original image from the generated image.
         # 3. Do an identity mapping of the real images using the generators.
         # 4. Pass the generated images in 1) to the corresponding discriminators.
-        # 5. Calculate the generators total loss (adverserial + cycle + identity)
+        # 5. Calculate the generators total loss (adversarial + cycle + identity)
         # 6. Calculate the discriminators loss
         # 7. Update the weights of the generators
         # 8. Update the weights of the discriminators
@@ -491,7 +490,7 @@ class CycleGan(keras.Model):
             disc_real_y = self.disc_Y(real_y, training=True)
             disc_fake_y = self.disc_Y(fake_y, training=True)
 
-            # Generator adverserial loss
+            # Generator adversarial loss
             gen_G_loss = self.generator_loss_fn(disc_fake_y)
             gen_F_loss = self.generator_loss_fn(disc_fake_x)
 
