@@ -289,7 +289,7 @@ networks will then output (for each example in the batch) a tanh-activated vecto
 followed by a reshape and softmax to match that of a multi-dimensional adjacency/feature
 tensor.
 
-As the discriminator network will receives as input a graph (`A`, `H`) from either the
+As the discriminator network will recieves as input a graph (`A`, `H`) from either the
 generator or from the training set, we'll need to implement graph convolutional layers,
 which allows us to operate on graphs. This means that input to the discriminator network
 will first pass through graph convolutional layers, then an average-pooling layer,
@@ -755,7 +755,7 @@ looking molecules! Notice, in contrast to the
 molecules in this tutorial seems really high, which is great!
 
 **What we've learned, and prospects**. In this tutorial, a generative model for molecular
-graphs was succesfully implemented, which allowed us to generate novel molecules. In the
+graphs was successfully implemented, which allowed us to generate novel molecules. In the
 future, it would be interesting to implement generative models that can modify existing
 molecules (for instance, to optimize solubility or protein-binding of an existing
 molecule). For that however, a reconstruction loss would likely be needed, which is

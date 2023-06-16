@@ -134,14 +134,14 @@ Notice how much faster the second call is. This is because the computational
 graph is [XLA compiled](https://www.tensorflow.org/xla) in the 1st run and
 re-used in the 2nd behind the scenes.
 
-The quality of the generated text looks OK, but we can improved it via
-finetuning.
+The quality of the generated text looks OK, but we can improve it via
+fine-tuning.
 """
 
 """
 ## More on the GPT-2 model from KerasNLP
 
-Next up, we will actually fine-tune the model to update it's parameters, but
+Next up, we will actually fine-tune the model to update its parameters, but
 before we do, let's take a look at the full set of tools we have to for working
 with for GPT2.
 
@@ -232,7 +232,7 @@ gpt2_lm.compile(
 gpt2_lm.fit(train_ds, epochs=num_epochs)
 
 """
-After finetuning is finished, you can again generate text using the same
+After fine-tuning is finished, you can again generate text using the same
 *generate()* function. This time, the text will be closer to Reddit writing
 style, and the generated length will be close to our preset length in the
 training set.
@@ -251,7 +251,7 @@ print(f"TOTAL TIME ELAPSED: {end - start:.2f}s")
 ## Into the Sampling Method
 
 In KerasNLP, we offer a few sampling methods, e.g., contrastive search,
-Top-K and beam sampling. By default our `GPT2CausalLM` uses Top-k search, but
+Top-K and beam sampling. By default, our `GPT2CausalLM` uses Top-k search, but
 you can choose your own sampling method.
 
 Much like optimizer and activations, there are two ways to specify your custom
@@ -286,7 +286,7 @@ For more details on KerasNLP `Sampler` class, you can check the code
 ## Finetune on Chinese Poem Dataset
 
 We can also finetune GPT2 on non-English datasets. For readers knowing Chinese,
-this part illustrates how to finetung GPT2 on Chinese poem dataset to teach our
+this part illustrates how to fine-tune GPT2 on Chinese poem dataset to teach our
 model to become a poet!
 
 Because GPT2 uses byte-pair encoder, and the original pretraining dataset
