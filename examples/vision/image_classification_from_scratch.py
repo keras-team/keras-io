@@ -111,8 +111,10 @@ vis_ds = train_ds.take(1).unbatch()
 
 vis_ds = vis_ds.take(8)
 
+
 def get_images(image, _):
     return image
+
 
 vis_ds = vis_ds.map(get_images)
 
@@ -137,15 +139,17 @@ overfitting. For this, we can make use of KerasCV and its wide array of preproce
 layers.
 """
 
-data_augmentation = keras.Sequential([
-    keras_cv.layers.RandomFlip(),
-    keras_cv.layers.RandAugment(
-        value_range=(0, 255),
-        augmentations_per_image=2,
-        magnitude=0.5,
-        magnitude_stddev=0.15,
-    )
-])
+data_augmentation = keras.Sequential(
+    [
+        keras_cv.layers.RandomFlip(),
+        keras_cv.layers.RandAugment(
+            value_range=(0, 255),
+            augmentations_per_image=2,
+            magnitude=0.5,
+            magnitude_stddev=0.15,
+        ),
+    ]
+)
 
 """
 Let's visualize what the augmented samples look like, by applying `data_augmentation`
