@@ -139,7 +139,7 @@ class VectorQuantizer(layers.Layer):
 
 This line of code does the straight-through estimation part: `quantized = x +
 tf.stop_gradient(quantized - x)`. During backpropagation, `(quantized - x)` won't be
-included in the computation graph and th gradients obtaind for `quantized`
+included in the computation graph and the gradients obtained for `quantized`
 will be copied for `inputs`. Thanks to [this video](https://youtu.be/VZFVUrYcig0?t=1393)
 for helping me understand this technique.
 """
@@ -346,7 +346,7 @@ The authors use a PixelCNN to train these codes so that they can be used as powe
 generate novel examples. PixelCNN was proposed in
 [Conditional Image Generation with PixelCNN Decoders](https://arxiv.org/abs/1606.05328)
 by van der Oord et al. We borrow the implementation from
-[this PixelCNN example](https://keras.io/examples/generative/pixelcnn/). It's an auto-regressive
+[this PixelCNN example](https://keras.io/examples/generative/pixelcnn/). It's an autoregressive
 generative model where the outputs are conditional on the prior ones. In other words, a PixelCNN
 generates an image on a pixel-by-pixel basis. For the purpose in this example, however, its task
 is to generate code book indices instead of pixels directly. The trained VQ-VAE decoder is used

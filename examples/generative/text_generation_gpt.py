@@ -98,7 +98,7 @@ raw_val_ds = (
 We train the tokenizer from the training dataset for a vocabulary size of `VOCAB_SIZE`,
 which is a tuned hyperparameter. We want to limit the vocabulary as much as possible, as
 we will see later on
-that it has a large affect on the number of model parameters. We also don't want to include
+that it has a large effect on the number of model parameters. We also don't want to include
 *too few* vocabulary terms, or there would be too many out-of-vocabulary (OOV) sub-words. In
 addition, three tokens are reserved in the vocabulary:
 
@@ -200,7 +200,7 @@ model.compile(optimizer="adam", loss=loss_fn, metrics=[perplexity])
 """
 Let's take a look at our model summary - a large majority of the
 parameters are in the `token_and_position_embedding` and the output `dense` layer!
-This means that the vocabulary size (`VOCAB_SIZE`) has a large affect on the size of the model,
+This means that the vocabulary size (`VOCAB_SIZE`) has a large effect on the size of the model,
 while the number of Transformer decoder layers (`NUM_LAYERS`) doesn't affect it as much.
 """
 
@@ -217,7 +217,7 @@ model.fit(train_ds, validation_data=val_ds, verbose=2, epochs=EPOCHS)
 """
 ## Inference
 
-With our trained model, we can test it out to gauge it's performance. To do this
+With our trained model, we can test it out to gauge its performance. To do this
 we can seed our model with an input sequence starting with the `"[BOS]"` token,
 and progressively sample the model by making predictions for each subsequent
 token in a loop.
@@ -255,7 +255,7 @@ def next(prompt, cache, index):
 
 """
 Creating the wrapper function is the most complex part of using these functions. Now that
-it's done, let's test out the different utilties, starting with greedy search.
+it's done, let's test out the different utilities, starting with greedy search.
 """
 
 """
@@ -322,7 +322,7 @@ txt = tokenizer.detokenize(output_tokens)
 print(f"Random search generated text: \n{txt}\n")
 
 """
-Voila, no repetitions! However, with random search, we may see some nonsensical words
+Voilà, no repetitions! However, with random search, we may see some nonsensical words
 appearing since any word in the vocabulary has a chance of appearing with this sampling
 method. This is fixed by our next search utility, top-k search.
 """
@@ -332,7 +332,7 @@ method. This is fixed by our next search utility, top-k search.
 
 Similar to random search, we sample the next token from the probability distribution
 provided by the model. The only difference is that here, we select out the top `k` most
-probable tokens, and distribute the probabiltiy mass over them before sampling. This way,
+probable tokens, and distribute the probability mass over them before sampling. This way,
 we won't be sampling from low probability tokens, and hence we would have less
 nonsensical words!
 """
@@ -353,7 +353,7 @@ Even with the top-k search, there is something to improve upon. With top-k searc
 number `k` is fixed, which means it selects the same number of tokens for any probability
 distribution. Consider two scenarios, one where the probability mass is concentrated over
 2 words and another where the probability mass is evenly concentrated across 10. Should
-we choose `k=2` or `k=10`? There is not a one size fits all `k` here.
+we choose `k=2` or `k=10`? There is no one size that fits all `k` here.
 
 This is where top-p search comes in! Instead of choosing a `k`, we choose a probability
 `p` that we want the probabilities of the top tokens to sum up to. This way, we can

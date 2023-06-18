@@ -176,7 +176,7 @@ np.testing.assert_allclose(
 
 <div class="k-default-codeblock">
 ```
-1/1 [==============================] - 0s 333ms/step - loss: 0.1007
+1/1 [==============================] - 0s 487ms/step - loss: 0.0441
 
 ```
 </div>
@@ -205,7 +205,11 @@ inner_model = keras.Sequential(
 )
 
 model = keras.Sequential(
-    [keras.Input(shape=(3,)), inner_model, keras.layers.Dense(3, activation="sigmoid"),]
+    [
+        keras.Input(shape=(3,)),
+        inner_model,
+        keras.layers.Dense(3, activation="sigmoid"),
+    ]
 )
 
 model.trainable = False  # Freeze the outer model
@@ -407,7 +411,7 @@ learning & fine-tuning example. We will load the Xception model, pre-trained on
 
 First, let's fetch the cats vs. dogs dataset using TFDS. If you have your own dataset,
 you'll probably want to use the utility
-`tf.keras.utils.image_dataset_from_directory` to generate similar labeled
+`keras.utils.image_dataset_from_directory` to generate similar labeled
  dataset objects from a set of images on disk filed into class-specific folders.
 
 Transfer learning is most useful when working with very small datasets. To keep our
@@ -522,7 +526,10 @@ from tensorflow import keras
 from tensorflow.keras import layers
 
 data_augmentation = keras.Sequential(
-    [layers.RandomFlip("horizontal"), layers.RandomRotation(0.1),]
+    [
+        layers.RandomFlip("horizontal"),
+        layers.RandomRotation(0.1),
+    ]
 )
 ```
 
@@ -603,21 +610,23 @@ model.summary()
 ```
 Model: "model"
 _________________________________________________________________
-Layer (type)                 Output Shape              Param #   
+ Layer (type)                Output Shape              Param #   
 =================================================================
-input_5 (InputLayer)         [(None, 150, 150, 3)]     0         
-_________________________________________________________________
-sequential_3 (Sequential)    (None, 150, 150, 3)       0         
-_________________________________________________________________
-rescaling (Rescaling)        (None, 150, 150, 3)       0         
-_________________________________________________________________
-xception (Functional)        (None, 5, 5, 2048)        20861480  
-_________________________________________________________________
-global_average_pooling2d (Gl (None, 2048)              0         
-_________________________________________________________________
-dropout (Dropout)            (None, 2048)              0         
-_________________________________________________________________
-dense_7 (Dense)              (None, 1)                 2049      
+ input_5 (InputLayer)        [(None, 150, 150, 3)]     0         
+                                                                 
+ sequential_3 (Sequential)   (None, 150, 150, 3)       0         
+                                                                 
+ rescaling (Rescaling)       (None, 150, 150, 3)       0         
+                                                                 
+ xception (Functional)       (None, 5, 5, 2048)        20861480  
+                                                                 
+ global_average_pooling2d (G  (None, 2048)             0         
+ lobalAveragePooling2D)                                          
+                                                                 
+ dropout (Dropout)           (None, 2048)              0         
+                                                                 
+ dense_7 (Dense)             (None, 1)                 2049      
+                                                                 
 =================================================================
 Total params: 20,863,529
 Trainable params: 2,049
@@ -644,47 +653,67 @@ model.fit(train_ds, epochs=epochs, validation_data=validation_ds)
 <div class="k-default-codeblock">
 ```
 Epoch 1/20
-291/291 [==============================] - 133s 451ms/step - loss: 0.1670 - binary_accuracy: 0.9267 - val_loss: 0.0830 - val_binary_accuracy: 0.9716
-Epoch 2/20
-291/291 [==============================] - 135s 465ms/step - loss: 0.1208 - binary_accuracy: 0.9502 - val_loss: 0.0768 - val_binary_accuracy: 0.9716
-Epoch 3/20
-291/291 [==============================] - 135s 463ms/step - loss: 0.1062 - binary_accuracy: 0.9572 - val_loss: 0.0757 - val_binary_accuracy: 0.9716
-Epoch 4/20
-291/291 [==============================] - 137s 469ms/step - loss: 0.1024 - binary_accuracy: 0.9554 - val_loss: 0.0733 - val_binary_accuracy: 0.9725
-Epoch 5/20
-291/291 [==============================] - 137s 470ms/step - loss: 0.1004 - binary_accuracy: 0.9587 - val_loss: 0.0735 - val_binary_accuracy: 0.9729
-Epoch 6/20
-291/291 [==============================] - 136s 467ms/step - loss: 0.0979 - binary_accuracy: 0.9577 - val_loss: 0.0747 - val_binary_accuracy: 0.9708
-Epoch 7/20
-291/291 [==============================] - 134s 462ms/step - loss: 0.0998 - binary_accuracy: 0.9596 - val_loss: 0.0706 - val_binary_accuracy: 0.9725
-Epoch 8/20
-291/291 [==============================] - 133s 457ms/step - loss: 0.1029 - binary_accuracy: 0.9592 - val_loss: 0.0720 - val_binary_accuracy: 0.9733
-Epoch 9/20
-291/291 [==============================] - 135s 466ms/step - loss: 0.0937 - binary_accuracy: 0.9625 - val_loss: 0.0707 - val_binary_accuracy: 0.9721
-Epoch 10/20
-291/291 [==============================] - 137s 472ms/step - loss: 0.0967 - binary_accuracy: 0.9580 - val_loss: 0.0720 - val_binary_accuracy: 0.9712
-Epoch 11/20
-291/291 [==============================] - 135s 463ms/step - loss: 0.0961 - binary_accuracy: 0.9612 - val_loss: 0.0802 - val_binary_accuracy: 0.9699
-Epoch 12/20
-291/291 [==============================] - 134s 460ms/step - loss: 0.0963 - binary_accuracy: 0.9638 - val_loss: 0.0721 - val_binary_accuracy: 0.9716
-Epoch 13/20
-291/291 [==============================] - 136s 468ms/step - loss: 0.0925 - binary_accuracy: 0.9635 - val_loss: 0.0736 - val_binary_accuracy: 0.9686
-Epoch 14/20
-291/291 [==============================] - 138s 476ms/step - loss: 0.0909 - binary_accuracy: 0.9624 - val_loss: 0.0766 - val_binary_accuracy: 0.9703
-Epoch 15/20
-291/291 [==============================] - 136s 467ms/step - loss: 0.0949 - binary_accuracy: 0.9598 - val_loss: 0.0704 - val_binary_accuracy: 0.9725
-Epoch 16/20
-291/291 [==============================] - 133s 456ms/step - loss: 0.0969 - binary_accuracy: 0.9586 - val_loss: 0.0722 - val_binary_accuracy: 0.9708
-Epoch 17/20
-291/291 [==============================] - 135s 464ms/step - loss: 0.0913 - binary_accuracy: 0.9635 - val_loss: 0.0718 - val_binary_accuracy: 0.9716
-Epoch 18/20
-291/291 [==============================] - 137s 472ms/step - loss: 0.0915 - binary_accuracy: 0.9639 - val_loss: 0.0727 - val_binary_accuracy: 0.9725
-Epoch 19/20
-291/291 [==============================] - 134s 460ms/step - loss: 0.0938 - binary_accuracy: 0.9631 - val_loss: 0.0707 - val_binary_accuracy: 0.9733
-Epoch 20/20
-291/291 [==============================] - 134s 460ms/step - loss: 0.0971 - binary_accuracy: 0.9609 - val_loss: 0.0714 - val_binary_accuracy: 0.9716
+146/291 [==============>...............] - ETA: 15s - loss: 0.1993 - binary_accuracy: 0.9088
 
-<keras.callbacks.History at 0x7f4494e38f70>
+Corrupt JPEG data: 65 extraneous bytes before marker 0xd9
+
+262/291 [==========================>...] - ETA: 3s - loss: 0.1682 - binary_accuracy: 0.9264
+
+Corrupt JPEG data: 239 extraneous bytes before marker 0xd9
+
+275/291 [===========================>..] - ETA: 1s - loss: 0.1651 - binary_accuracy: 0.9277
+
+Corrupt JPEG data: 1153 extraneous bytes before marker 0xd9
+
+279/291 [===========================>..] - ETA: 1s - loss: 0.1636 - binary_accuracy: 0.9285
+
+Corrupt JPEG data: 228 extraneous bytes before marker 0xd9
+
+291/291 [==============================] - ETA: 0s - loss: 0.1622 - binary_accuracy: 0.9294
+
+Corrupt JPEG data: 2226 extraneous bytes before marker 0xd9
+
+291/291 [==============================] - 43s 138ms/step - loss: 0.1622 - binary_accuracy: 0.9294 - val_loss: 0.0807 - val_binary_accuracy: 0.9703
+Epoch 2/20
+291/291 [==============================] - 38s 131ms/step - loss: 0.1134 - binary_accuracy: 0.9517 - val_loss: 0.0745 - val_binary_accuracy: 0.9738
+Epoch 3/20
+291/291 [==============================] - 39s 135ms/step - loss: 0.1024 - binary_accuracy: 0.9568 - val_loss: 0.0739 - val_binary_accuracy: 0.9729
+Epoch 4/20
+291/291 [==============================] - 38s 130ms/step - loss: 0.0964 - binary_accuracy: 0.9617 - val_loss: 0.0720 - val_binary_accuracy: 0.9716
+Epoch 5/20
+291/291 [==============================] - 37s 128ms/step - loss: 0.0940 - binary_accuracy: 0.9629 - val_loss: 0.0707 - val_binary_accuracy: 0.9742
+Epoch 6/20
+291/291 [==============================] - 37s 128ms/step - loss: 0.0922 - binary_accuracy: 0.9620 - val_loss: 0.0702 - val_binary_accuracy: 0.9738
+Epoch 7/20
+291/291 [==============================] - 38s 129ms/step - loss: 0.0875 - binary_accuracy: 0.9638 - val_loss: 0.0704 - val_binary_accuracy: 0.9721
+Epoch 8/20
+291/291 [==============================] - 37s 128ms/step - loss: 0.0891 - binary_accuracy: 0.9627 - val_loss: 0.0716 - val_binary_accuracy: 0.9725
+Epoch 9/20
+291/291 [==============================] - 37s 128ms/step - loss: 0.0863 - binary_accuracy: 0.9649 - val_loss: 0.0744 - val_binary_accuracy: 0.9721
+Epoch 10/20
+291/291 [==============================] - 37s 128ms/step - loss: 0.0824 - binary_accuracy: 0.9648 - val_loss: 0.0735 - val_binary_accuracy: 0.9695
+Epoch 11/20
+291/291 [==============================] - 37s 128ms/step - loss: 0.0815 - binary_accuracy: 0.9660 - val_loss: 0.0795 - val_binary_accuracy: 0.9699
+Epoch 12/20
+291/291 [==============================] - 37s 127ms/step - loss: 0.0774 - binary_accuracy: 0.9695 - val_loss: 0.0737 - val_binary_accuracy: 0.9708
+Epoch 13/20
+291/291 [==============================] - 37s 128ms/step - loss: 0.0780 - binary_accuracy: 0.9677 - val_loss: 0.0772 - val_binary_accuracy: 0.9703
+Epoch 14/20
+291/291 [==============================] - 38s 130ms/step - loss: 0.0769 - binary_accuracy: 0.9687 - val_loss: 0.0715 - val_binary_accuracy: 0.9716
+Epoch 15/20
+291/291 [==============================] - 37s 128ms/step - loss: 0.0772 - binary_accuracy: 0.9685 - val_loss: 0.0714 - val_binary_accuracy: 0.9712
+Epoch 16/20
+291/291 [==============================] - 37s 128ms/step - loss: 0.0782 - binary_accuracy: 0.9679 - val_loss: 0.0782 - val_binary_accuracy: 0.9716
+Epoch 17/20
+291/291 [==============================] - 38s 129ms/step - loss: 0.0689 - binary_accuracy: 0.9718 - val_loss: 0.0753 - val_binary_accuracy: 0.9708
+Epoch 18/20
+291/291 [==============================] - 38s 129ms/step - loss: 0.0685 - binary_accuracy: 0.9722 - val_loss: 0.0800 - val_binary_accuracy: 0.9695
+Epoch 19/20
+291/291 [==============================] - 38s 131ms/step - loss: 0.0716 - binary_accuracy: 0.9706 - val_loss: 0.0765 - val_binary_accuracy: 0.9708
+Epoch 20/20
+291/291 [==============================] - 38s 131ms/step - loss: 0.0752 - binary_accuracy: 0.9694 - val_loss: 0.0768 - val_binary_accuracy: 0.9716
+
+<keras.callbacks.History at 0x2f0d65f00>
 
 ```
 </div>
@@ -724,48 +753,51 @@ model.fit(train_ds, epochs=epochs, validation_data=validation_ds)
 ```
 Model: "model"
 _________________________________________________________________
-Layer (type)                 Output Shape              Param #   
+ Layer (type)                Output Shape              Param #   
 =================================================================
-input_5 (InputLayer)         [(None, 150, 150, 3)]     0         
-_________________________________________________________________
-sequential_3 (Sequential)    (None, 150, 150, 3)       0         
-_________________________________________________________________
-rescaling (Rescaling)        (None, 150, 150, 3)       0         
-_________________________________________________________________
-xception (Functional)        (None, 5, 5, 2048)        20861480  
-_________________________________________________________________
-global_average_pooling2d (Gl (None, 2048)              0         
-_________________________________________________________________
-dropout (Dropout)            (None, 2048)              0         
-_________________________________________________________________
-dense_7 (Dense)              (None, 1)                 2049      
+ input_5 (InputLayer)        [(None, 150, 150, 3)]     0         
+                                                                 
+ sequential_3 (Sequential)   (None, 150, 150, 3)       0         
+                                                                 
+ rescaling (Rescaling)       (None, 150, 150, 3)       0         
+                                                                 
+ xception (Functional)       (None, 5, 5, 2048)        20861480  
+                                                                 
+ global_average_pooling2d (G  (None, 2048)             0         
+ lobalAveragePooling2D)                                          
+                                                                 
+ dropout (Dropout)           (None, 2048)              0         
+                                                                 
+ dense_7 (Dense)             (None, 1)                 2049      
+                                                                 
 =================================================================
 Total params: 20,863,529
 Trainable params: 20,809,001
 Non-trainable params: 54,528
 _________________________________________________________________
-Epoch 1/10
-291/291 [==============================] - 567s 2s/step - loss: 0.0749 - binary_accuracy: 0.9689 - val_loss: 0.0605 - val_binary_accuracy: 0.9776
-Epoch 2/10
-291/291 [==============================] - 551s 2s/step - loss: 0.0559 - binary_accuracy: 0.9770 - val_loss: 0.0507 - val_binary_accuracy: 0.9798
-Epoch 3/10
-291/291 [==============================] - 545s 2s/step - loss: 0.0444 - binary_accuracy: 0.9832 - val_loss: 0.0502 - val_binary_accuracy: 0.9807
-Epoch 4/10
-291/291 [==============================] - 558s 2s/step - loss: 0.0365 - binary_accuracy: 0.9874 - val_loss: 0.0506 - val_binary_accuracy: 0.9807
-Epoch 5/10
-291/291 [==============================] - 550s 2s/step - loss: 0.0276 - binary_accuracy: 0.9890 - val_loss: 0.0477 - val_binary_accuracy: 0.9802
-Epoch 6/10
-291/291 [==============================] - 588s 2s/step - loss: 0.0206 - binary_accuracy: 0.9916 - val_loss: 0.0444 - val_binary_accuracy: 0.9832
-Epoch 7/10
-291/291 [==============================] - 542s 2s/step - loss: 0.0206 - binary_accuracy: 0.9923 - val_loss: 0.0502 - val_binary_accuracy: 0.9828
-Epoch 8/10
-291/291 [==============================] - 544s 2s/step - loss: 0.0153 - binary_accuracy: 0.9939 - val_loss: 0.0509 - val_binary_accuracy: 0.9819
-Epoch 9/10
-291/291 [==============================] - 548s 2s/step - loss: 0.0156 - binary_accuracy: 0.9934 - val_loss: 0.0610 - val_binary_accuracy: 0.9807
-Epoch 10/10
-291/291 [==============================] - 546s 2s/step - loss: 0.0176 - binary_accuracy: 0.9936 - val_loss: 0.0561 - val_binary_accuracy: 0.9789
 
-<keras.callbacks.History at 0x7f4495056040>
+Epoch 1/10
+291/291 [==============================] - 107s 343ms/step - loss: 0.0628 - binary_accuracy: 0.9762 - val_loss: 0.0559 - val_binary_accuracy: 0.9742
+Epoch 2/10
+291/291 [==============================] - 102s 348ms/step - loss: 0.0388 - binary_accuracy: 0.9846 - val_loss: 0.0654 - val_binary_accuracy: 0.9768
+Epoch 3/10
+291/291 [==============================] - 98s 336ms/step - loss: 0.0350 - binary_accuracy: 0.9869 - val_loss: 0.0542 - val_binary_accuracy: 0.9802
+Epoch 4/10
+291/291 [==============================] - 104s 354ms/step - loss: 0.0247 - binary_accuracy: 0.9907 - val_loss: 0.0634 - val_binary_accuracy: 0.9807
+Epoch 5/10
+291/291 [==============================] - 97s 332ms/step - loss: 0.0203 - binary_accuracy: 0.9930 - val_loss: 0.0547 - val_binary_accuracy: 0.9798
+Epoch 6/10
+291/291 [==============================] - 97s 332ms/step - loss: 0.0169 - binary_accuracy: 0.9932 - val_loss: 0.0670 - val_binary_accuracy: 0.9781
+Epoch 7/10
+291/291 [==============================] - 97s 332ms/step - loss: 0.0159 - binary_accuracy: 0.9940 - val_loss: 0.0719 - val_binary_accuracy: 0.9781
+Epoch 8/10
+291/291 [==============================] - 97s 332ms/step - loss: 0.0114 - binary_accuracy: 0.9966 - val_loss: 0.0579 - val_binary_accuracy: 0.9824
+Epoch 9/10
+291/291 [==============================] - 97s 331ms/step - loss: 0.0095 - binary_accuracy: 0.9963 - val_loss: 0.0579 - val_binary_accuracy: 0.9802
+Epoch 10/10
+291/291 [==============================] - 96s 330ms/step - loss: 0.0092 - binary_accuracy: 0.9965 - val_loss: 0.0571 - val_binary_accuracy: 0.9785
+
+<keras.callbacks.History at 0x2f0d65b10>
 
 ```
 </div>

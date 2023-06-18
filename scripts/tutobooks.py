@@ -303,6 +303,8 @@ def validate(py):
         raise ValueError("Missing `Last modified:` field.")
     if not lines[5].startswith("Description: "):
         raise ValueError("Missing `Description:` field.")
+    if not lines[6].startswith("Accelerator: "):
+        raise ValueError("Missing `Accelerator:` field.")
     description = lines[5][len("Description: ") :]
     if not description:
         raise ValueError("Missing `Description:` field content.")
@@ -312,6 +314,12 @@ def validate(py):
         raise ValueError("Description field content must end with a period.")
     if len(description) > 100:
         raise ValueError("Description field content must be less than 100 chars.")
+    accelerator = lines[6][len("Accelerator: "):]
+    accelerator_options = ["GPU", "TPU", "None"]
+    if accelerator not in accelerator_options:
+        raise ValueError(
+            f"Accelerator field content must be one of: {accelerator_options}"
+        )
     for i, line in enumerate(lines):
         if line.startswith('"""') and line.endswith('"""') and len(line) > 3:
             raise ValueError(

@@ -25,7 +25,7 @@ from tensorflow.keras import layers
 ## Introduction
 
 The Keras *functional API* is a way to create models that are more flexible
-than the `tf.keras.Sequential` API. The functional API can handle models
+than the `keras.Sequential` API. The functional API can handle models
 with non-linear topology, shared layers, and even multiple inputs or outputs.
 
 The main idea is that a deep learning model is usually
@@ -225,7 +225,7 @@ x_test = x_test.reshape(10000, 784).astype("float32") / 255
 model.compile(
     loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
     optimizer=keras.optimizers.RMSprop(),
-    metrics=["accuracy"],
+    metrics=[keras.metrics.SparseCategoricalAccuracy()],
 )
 
 history = model.fit(x_train, y_train, batch_size=64, epochs=2, validation_split=0.2)
@@ -238,12 +238,12 @@ print("Test accuracy:", test_scores[1])
 <div class="k-default-codeblock">
 ```
 Epoch 1/2
-750/750 [==============================] - 2s 2ms/step - loss: 0.3435 - accuracy: 0.9026 - val_loss: 0.1797 - val_accuracy: 0.9507
+750/750 [==============================] - 1s 864us/step - loss: 0.3421 - sparse_categorical_accuracy: 0.9024 - val_loss: 0.1965 - val_sparse_categorical_accuracy: 0.9422
 Epoch 2/2
-750/750 [==============================] - 1s 2ms/step - loss: 0.1562 - accuracy: 0.9539 - val_loss: 0.1307 - val_accuracy: 0.9603
-313/313 - 0s - loss: 0.1305 - accuracy: 0.9609 - 248ms/epoch - 793us/step
-Test loss: 0.1305118203163147
-Test accuracy: 0.9609000086784363
+750/750 [==============================] - 1s 740us/step - loss: 0.1670 - sparse_categorical_accuracy: 0.9503 - val_loss: 0.1444 - val_sparse_categorical_accuracy: 0.9558
+313/313 - 0s - loss: 0.1409 - sparse_categorical_accuracy: 0.9568 - 116ms/epoch - 372us/step
+Test loss: 0.1409202218055725
+Test accuracy: 0.9567999839782715
 
 ```
 </div>
@@ -266,18 +266,12 @@ This saved file includes the:
 
 
 ```python
-model.save("path_to_my_model")
+model.save("path_to_my_model.keras")
 del model
 # Recreate the exact same model purely from the file:
-model = keras.models.load_model("path_to_my_model")
+model = keras.models.load_model("path_to_my_model.keras")
 ```
 
-<div class="k-default-codeblock">
-```
-INFO:tensorflow:Assets written to: path_to_my_model/assets
-
-```
-</div>
 For details, read the model [serialization & saving](
     /guides/serialization_and_saving/) guide.
 
@@ -671,11 +665,11 @@ model.fit(
 <div class="k-default-codeblock">
 ```
 Epoch 1/2
-40/40 [==============================] - 3s 23ms/step - loss: 1.3256 - priority_loss: 0.7024 - department_loss: 3.1160
+40/40 [==============================] - 2s 14ms/step - loss: 1.2849 - priority_loss: 0.7165 - department_loss: 2.8422
 Epoch 2/2
-40/40 [==============================] - 1s 25ms/step - loss: 1.2926 - priority_loss: 0.6976 - department_loss: 2.9749
+40/40 [==============================] - 1s 14ms/step - loss: 1.2644 - priority_loss: 0.7011 - department_loss: 2.8168
 
-<keras.callbacks.History at 0x1300d6110>
+<keras.callbacks.History at 0x299fea020>
 
 ```
 </div>
@@ -808,9 +802,9 @@ model.fit(x_train[:1000], y_train[:1000], batch_size=64, epochs=1, validation_sp
 
 <div class="k-default-codeblock">
 ```
-13/13 [==============================] - 2s 98ms/step - loss: 2.3066 - acc: 0.1150 - val_loss: 2.2940 - val_acc: 0.1050
+13/13 [==============================] - 1s 53ms/step - loss: 2.3403 - acc: 0.1138 - val_loss: 2.2988 - val_acc: 0.1250
 
-<keras.callbacks.History at 0x1305fee10>
+<keras.callbacks.History at 0x29a3455a0>
 
 ```
 </div>
@@ -862,7 +856,7 @@ Let's look at an example. This is a VGG19 model with weights pretrained on Image
 
 
 ```python
-vgg19 = tf.keras.applications.VGG19()
+vgg19 = keras.applications.VGG19()
 ```
 
 And these are the intermediate activations of the model,
@@ -891,7 +885,7 @@ among other things.
 ---
 ## Extend the API using custom layers
 
-`tf.keras` includes a wide range of built-in layers, for example:
+`keras` includes a wide range of built-in layers, for example:
 
 - Convolutional layers: `Conv1D`, `Conv2D`, `Conv3D`, `Conv2DTranspose`
 - Pooling layers: `MaxPooling1D`, `MaxPooling2D`, `MaxPooling3D`, `AveragePooling1D`
@@ -908,7 +902,7 @@ convention since you can create weights in `__init__`, as well).
 To learn more about creating layers from scratch, read
 [custom layers and models](/guides/making_new_layers_and_models_via_subclassing) guide.
 
-The following is a basic implementation of `tf.keras.layers.Dense`:
+The following is a basic implementation of `keras.layers.Dense`:
 
 
 ```python
@@ -1091,7 +1085,7 @@ be implemented in the functional API.
 
 Choosing between the functional API or Model subclassing isn't a
 binary decision that restricts you into one category of models.
-All models in the `tf.keras` API can interact with each other, whether they're
+All models in the `keras` API can interact with each other, whether they're
 `Sequential` models, functional models, or subclassed models that are written
 from scratch.
 

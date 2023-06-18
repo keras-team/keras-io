@@ -2,7 +2,7 @@
 Title: Customizing what happens in `fit()`
 Author: [fchollet](https://twitter.com/fchollet)
 Date created: 2020/04/15
-Last modified: 2020/04/15
+Last modified: 2023/06/14
 Description: Complete guide to overriding the training step of the Model class.
 Accelerator: GPU
 """
@@ -40,7 +40,8 @@ Let's see how that works.
 
 """
 ## Setup
-Requires TensorFlow 2.2 or later.
+
+Requires TensorFlow 2.8 or later.
 """
 
 import tensorflow as tf
@@ -65,12 +66,12 @@ what gets yielded by `dataset` at each batch.
 
 In the body of the `train_step` method, we implement a regular training update,
 similar to what you are already familiar with. Importantly, **we compute the loss via
-`self.compiled_loss`**, which wraps the loss(es) function(s) that were passed to
+`self.compute_loss()`**, which wraps the loss(es) function(s) that were passed to
 `compile()`.
 
-Similarly, we call `self.compiled_metrics.update_state(y, y_pred)` to update the state
-of the metrics that were passed in `compile()`, and we query results from
-`self.metrics` at the end to retrieve their current value.
+Similarly, we call `metric.update_state(y, y_pred)` on metrics from `self.metrics`,
+to update the state of the metrics that were passed in `compile()`,
+and we query results from `self.metrics` at the end to retrieve their current value.
 """
 
 
@@ -84,7 +85,7 @@ class CustomModel(keras.Model):
             y_pred = self(x, training=True)  # Forward pass
             # Compute the loss value
             # (the loss function is configured in `compile()`)
-            loss = self.compiled_loss(y, y_pred, regularization_losses=self.losses)
+            loss = self.compute_loss(y=y, y_pred=y_pred)
 
         # Compute gradients
         trainable_vars = self.trainable_variables
@@ -92,7 +93,11 @@ class CustomModel(keras.Model):
         # Update weights
         self.optimizer.apply_gradients(zip(gradients, trainable_vars))
         # Update metrics (includes the metric that tracks the loss)
-        self.compiled_metrics.update_state(y, y_pred)
+        for metric in self.metrics:
+            if metric.name == "loss":
+                metric.update_state(loss)
+            else:
+                metric.update_state(y, y_pred)
         # Return a dict mapping metric names to current value
         return {m.name: m.result() for m in self.metrics}
 
@@ -120,8 +125,7 @@ model.fit(x, y, epochs=3)
 Naturally, you could just skip passing a loss function in `compile()`, and instead do
 everything *manually* in `train_step`. Likewise for metrics.
 
-Here's a lower-level
-example, that only uses `compile()` to configure the optimizer:
+Here's a lower-level example, that only uses `compile()` to configure the optimizer:
 
 - We start by creating `Metric` instances to track our loss and a MAE score (in `__init__()`).
 - We implement a custom `train_step()` that updates the state of these metrics
@@ -194,9 +198,9 @@ weighting. If you want to support the `fit()` arguments `sample_weight` and
 `class_weight`, you'd simply do the following:
 
 - Unpack `sample_weight` from the `data` argument
-- Pass it to `compiled_loss` & `compiled_metrics` (of course, you could also just apply
+- Pass it to `compute_loss` & `update_state` (of course, you could also just apply
 it manually if you don't rely on `compile()` for losses & metrics)
-- That's it. That's the list.
+- That's it.
 """
 
 
@@ -214,11 +218,10 @@ class CustomModel(keras.Model):
             y_pred = self(x, training=True)  # Forward pass
             # Compute the loss value.
             # The loss function is configured in `compile()`.
-            loss = self.compiled_loss(
-                y,
-                y_pred,
+            loss = self.compute_loss(
+                y=y,
+                y_pred=y_pred,
                 sample_weight=sample_weight,
-                regularization_losses=self.losses,
             )
 
         # Compute gradients
@@ -230,7 +233,11 @@ class CustomModel(keras.Model):
 
         # Update the metrics.
         # Metrics are configured in `compile()`.
-        self.compiled_metrics.update_state(y, y_pred, sample_weight=sample_weight)
+        for metric in self.metrics:
+            if metric.name == "loss":
+                metric.update_state(loss)
+            else:
+                metric.update_state(y, y_pred, sample_weight=sample_weight)
 
         # Return a dict mapping metric names to current value.
         # Note that it will include the loss (tracked in self.metrics).
@@ -264,9 +271,11 @@ class CustomModel(keras.Model):
         # Compute predictions
         y_pred = self(x, training=False)
         # Updates the metrics tracking the loss
-        self.compiled_loss(y, y_pred, regularization_losses=self.losses)
+        self.compute_loss(y=y, y_pred=y_pred)
         # Update the metrics.
-        self.compiled_metrics.update_state(y, y_pred)
+        for metric in self.metrics:
+            if metric.name != "loss":
+                metric.update_state(y, y_pred)
         # Return a dict mapping metric names to current value.
         # Note that it will include the loss (tracked in self.metrics).
         return {m.name: m.result() for m in self.metrics}

@@ -36,7 +36,6 @@ from tensorflow.keras import layers
 from tensorflow.keras.layers import TextVectorization
 import numpy as np
 import os
-import re
 import string
 import random
 
@@ -94,7 +93,7 @@ class TransformerBlock(layers.Layer):
 """
 ## Implement an embedding layer
 
-Create two seperate embedding layers: one for tokens and one for token index
+Create two separate embedding layers: one for tokens and one for token index
 (positions).
 """
 
