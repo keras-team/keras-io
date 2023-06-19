@@ -1,11 +1,4 @@
 """
-Title: FILLME
-Author: FILLME
-Date created: FILLME
-Last modified: FILLME
-Description: FILLME
-"""
-"""
 # Sentence embeddings using siamese BERT-networks
 
 **Author:** [Mohammed Abu El-Nasr](https://github.com/abuelnasr0)<br>
