@@ -168,7 +168,7 @@ Create training and validation datasets.
 """
 
 augmented_train_ds = (
-    train_ds.cache()
+    train_ds
     .shuffle(BATCH_SIZE * 2)
     .map(augment_fn, num_parallel_calls=AUTOTUNE)
     .batch(BATCH_SIZE)
@@ -176,7 +176,7 @@ augmented_train_ds = (
     .prefetch(buffer_size=tf.data.AUTOTUNE)
 )
 resized_val_ds = (
-    val_ds.cache()
+    val_ds
     .map(resize_fn, num_parallel_calls=AUTOTUNE)
     .batch(BATCH_SIZE)
     .map(unpackage_inputs)
