@@ -1,6 +1,6 @@
 """
-Title: Image classification from scratch
-Author: [fchollet](https://twitter.com/fchollet)
+Title: [KerasCV] Image classification from scratch
+Author: [fchollet](https://twitter.com/fchollet), updated by [Suvaditya Mukherjee](https://twitter.com/halcyonrayes)
 Date created: 2020/04/27
 Last modified: 2023/06/17
 Description: Training an image classifier from scratch on the Kaggle Cats vs Dogs dataset.
@@ -100,11 +100,8 @@ train_ds, val_ds = tf.keras.utils.image_dataset_from_directory(
 """
 ## Visualize the data
 
-Here are the first 8 images in the training dataset. We visualize this by making
-use of the KerasCV `plot_image_gallery` utility. This utility takes a batch of images
-and plots them in a tight grid. It is useful to visualize the dataset before doing
-any data preprocessing to understand the characteristics of the dataset and how
-augmentation may be impacting the data.
+Here are the first 8 images in the training dataset, visualized using
+the KerasCV plot_image_gallery utility.
 """
 
 vis_ds = train_ds.take(1).unbatch()
