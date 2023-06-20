@@ -1,42 +1,39 @@
 """
-# Sentence embeddings using siamese BERT-networks
-
-**Author:** [Mohammed Abu El-Nasr](https://github.com/abuelnasr0)<br>
-**Date created:** 2023/05/27<br>
-**Last modified:** 2023/05/27<br>
-**Description:** fine-tune a BERT or RoBERTa model to generate sentence embeddings using
-kerasNLP
+Title: Sentence embeddings using Siamese BERT-networks
+Author: [Mohammed Abu El-Nasr](https://github.com/abuelnasr0)
+Date created: 2023/06/20
+Last modified: 2023/06/20
+Description: Fine-tune a RoBERTa model to generate sentence embeddings using KerasNLP.
 """
-
 """
 ## Introduction
-"""
 
-"""
-BERT, and RoBERTa can be used for semantic textual similarity tasks, where two sentences
-are passed to model and the network predicts whether they are similiar or not. but what
-if we have a collection of large number of sentences, and we want to find the most
-similiar pairs in that collection, that will take n*(n-1)/2 inference computations, where
-n is the number of sentences in the collection. for example if n=10000, the required time
-will be 65 hours on a V100 GPU.<br>
-A common used method to overcome the time overhead issue, is to pass one sentence to the
-model, then average the output of the model, or take the first token (the [CLS] token)
-and use them as [sentence embedding](https://en.wikipedia.org/wiki/Sentence_embedding),
-then use a vector similarity measure like cosine similarity or Manhatten / Euclidean
-distance to find close sentences (semantically similair sentences). that will reduce the
-time to find the most similiar pairs in a collection of 10,000 sentences from 65 hours to
-5 seconds!<br>
-If we use BERT or RoBERa directly that will yield rather bad sentence embeddings. but if
-we fine-tune BERT using siamese network, that will generate simantically meaningful
-sentence embeddings. this will enable BERT to be used for new tasks. these tasks include:
-- Large-scale semantic similarity comparison
-- Clustring
-- Information retrival via semantic search
-<br>
-In this example, we will show how to fine-tune a BERT or RoBERTa model using siamese
-network so they will be able to produce semantically meaningful sentence embeddings and
-use them in semantic search and clustring example.<br>
-This method of fine-tuning was introduced is sentence-bert
+BERT and RoBERTa can be used for semantic textual similarity tasks, where two sentences
+are passed to the model and the network predicts whether they are similar or not. But
+what if we have a collection of a large number of sentences and we want to find the most
+similar pairs in that collection? That will take n*(n-1)/2 inference computations, where
+n is the number of sentences in the collection. For example, if n = 10000, the required
+time will be 65 hours on a V100 GPU.
+
+A common method to overcome the time overhead issue is to pass one sentence to the model,
+then average the output of the model, or take the first token (the [CLS] token) and use
+them as [sentence embedding](https://en.wikipedia.org/wiki/Sentence_embedding), then use
+a vector similarity measure like cosine similarity or Manhatten / Euclidean distance to
+find close sentences (semantically similar sentences). That will reduce the time to find
+the most similar pairs in a collection of 10,000 sentences from 65 hours to 5 seconds!
+
+If we use BERT or RoBERa directly, that will yield rather bad sentence embeddings. But if
+we fine-tune BERT using a Siamese network, that will generate semantically meaningful
+sentence embeddings. This will enable BERT to be used for new tasks. These tasks include:
+
+- Large-scale semantic similarity comparison.
+- Clustering.
+- Information retrieval via semantic search.
+
+In this example, we will show how to fine-tune a BERT or RoBERTa model using a Siamese
+network such that it will be able to produce semantically meaningful sentence embeddings
+and use them in a semantic search and clustering example.
+This method of fine-tuning was introduced in Sentence-BERT
 ([SBERT](https://arxiv.org/abs/1908.10084))
 """
 
@@ -64,35 +61,39 @@ keras.mixed_precision.set_global_policy(policy)
 """
 [Siamese network](https://en.wikipedia.org/wiki/Siamese_neural_network) is a neural
 network architecture that contains two or more subnetworks. and the subnetworks share the
-same weights. it is used to generate feature vectors for each input and then compare them
-for simialrity.<br>
-For our example, the subnetworks will be RoBERTa model that have a pooling layer on top
-of it to produce the embeddings of the input sentences. this embeddings will then be
-compared to each other to learn to produce semantically meaningful embeddings. <br>
-the pooling stratigies used are mean, max, and cls pooling. mean pooling produces the
-best results. we will use it in our examples.
+same weights. It is used to generate feature vectors for each input and then compare them
+for similarity.
+
+For our example, the subnetwork will be a RoBERTa model that has a pooling layer on top
+of it to produce the embeddings of the input sentences. These embeddings will then be
+compared to each other to learn to produce semantically meaningful embeddings.
+
+The pooling strategies used are mean, max, and cls pooling. Mean pooling produces the
+best results. We will use it in our examples.
 """
 
 """
-### Fine-tune using Regression Objective Function
+### Fine-tune using regression objective function
 For building the siamese network with the regression objective function, the siamese
-network is asked to predict the cosine similarity between the embedddings of the two
-input sentences.<br>
-cosine similarity indicates the angle between the sentence embeddings. if the cosine
-similarity is high, that means there is a small angle between the embeddings, hence they
-are semantically similiar. and vice verce.<br>
+network is asked to predict the cosine similarity between the embeddings of the two input
+sentences.
+
+Cosine similarity indicates the angle between the sentence embeddings. If the cosine
+similarity is high, that means there is a small angle between the embeddings; hence, they
+are semantically similar. and vice-verse.
 """
 
 """
 #### Load the dataset
-We will use STSB dataset to fine-tune the model for the regression objective.<br>
+We will use the STSB dataset to fine-tune the model for the regression objective.
 STSB consists of a collection of sentence pairs that are labeled in the range [0, 5]. 0
-indicates the least semantic similarity between two sentences, 5 indicates the most
-semantic similarity between two sentences.<br>
-the range of the cosine similarity is [-1,1] and it's the output of the siamese network,
-but the labels in the dataset range is [0, 5]. we need to unify the range between the
-cosine similarity and the dataset labels, so while preparing the dataset we will divide
-the labels by 2.5 ans subtract 1.<br>
+indicates the least semantic similarity between two sentences, and 5 indicates the most
+semantic similarity between two sentences.
+
+The range of the cosine similarity is [-1,1] and it's the output of the siamese network,
+but the range of labels in the dataset is [0, 5]. We need to unify the range between the
+cosine similarity and the dataset labels, so while preparing the dataset, we will divide
+the labels by 2.5 and subtract 1.
 """
 
 TRAIN_BATCH_SIZE = 6
@@ -144,16 +145,16 @@ for x, y in stsb_train:
     break
 
 """
-####Build the encoder model
-Now, we will build the encoder model that will produce the sentence embeddings and it
+#### Build the encoder model.
+
+Now, we will build the encoder model that will produce the sentence embeddings. It
 consists of:
 
-- a preprocessor layer to tokenize and generate padding mask for the sentences.
-- a backbone model that will generate the contextual representation of each token is the
+- A preprocessor layer to tokenize and generate a padding mask for the sentences.
+- A backbone model that will generate the contextual representation of each token in the
 sentence.
-- a mean pooling layer to produce the embeddings.
-- a normalization layer to normalize the embeddings as we are using the cosine
-similarity.<br>
+- A mean pooling layer to produce the embeddings.
+- A normalization layer to normalize the embeddings as we are using cosine similarity.
 """
 
 # Mean pooling layer.
@@ -182,14 +183,16 @@ roberta_encoder = keras.Model(inputs=inputs, outputs=n_embedding)
 roberta_encoder.summary()
 
 """
-#### Build the siamese network with regrssion objective function
-It's descriped above that the the siamese network has two or more subnetworks, and for
-this siamese model we need two encoders. But we actually don't have two encoders, we have
-only one encoder, but we will pass the two sentences through it.That way we can have two
-paths to get the embeddings and also shared weights between the two paths.<br>
-After passing the the two sentences to the model and getting the normalized embeddings we
+#### Build the siamese network with regression objective function
+
+It's described above that the Siamese network has two or more subnetworks, and for this
+Siamese model, we need two encoders. But we don't have two encoders; we have only one
+encoder, but we will pass the two sentences through it. That way, we can have two paths
+to get the embeddings and also shared weights between the two paths.
+
+After passing the two sentences to the model and getting the normalized embeddings, we
 will multiply the two normalized embeddings to get the cosine similarity between the two
-sentences.<br>
+sentences.
 """
 
 
@@ -218,8 +221,7 @@ class regression_siamese(keras.Model):
 """
 
 """
-Let's first try this example before training and compare it to the output after
-training.<br>
+Let's try this example before training and compare it to the output after training.
 """
 
 sentences = [
@@ -239,8 +241,8 @@ for i, sim in enumerate(cosine_simalarities[0]):
     print(f"cosine similarity between sentence {i+1} and the query = {sim} ")
 
 """
-for the training we will use `MeanSquaredError()` as loss function, and `Adam()`
-optimizer with learning rate = 2e-5.
+For the training, we will use `MeanSquaredError()` loss function and `Adam()` optimizer
+with learning rate = 2e-5.
 """
 
 roberta_siamese = regression_siamese(roberta_encoder)
@@ -253,10 +255,10 @@ roberta_siamese.compile(
 roberta_siamese.fit(stsb_train, validation_data=stsb_valid, epochs=1)
 
 """
-Let's try the model after training, we will notice a huge differnce in the output. that
-means that the model after fine-tuning is capabale of producing semantically meaningfull
-embeddings. where the sematically similar sentences have small angle between them. and
-semantically dissimilar sentences have large angle between them.
+Let's try the model after training, we will notice a huge difference in the output. That
+means that the model after fine-tuning is capable of producing semantically meaningful
+embeddings. where the semantically similar sentences have a small angle between them. and
+semantically dissimilar sentences have a large angle between them.
 """
 
 sentences = [
@@ -274,25 +276,27 @@ query_embedding = encoder(tf.constant(query))
 cosine_simalarities = tf.matmul(query_embedding, tf.transpose(sentence_embeddings))
 for i, sim in enumerate(cosine_simalarities[0]):
     print(f"cosine similarity between sentence {i+1} and the query = {sim} ")
-
 """
 ### Fine-tune Using Triplet Objective Function
+
 For the siamese network with the triplet objective function, three sentences are passed
 to the siamese network *anchor*, *positive*, and *negative* sentences. *anchor* and
-*positive* sentences are semantically similiar, and *anchor* and *negative* sentences are
-semantically dissimilar.<br>the objective is to minimize the distance between the
-*anchor* sentence and the *positive* sentence. and to maximize the distance between the
-*anchor* sentence and the *negative* sentence.
+*positive* sentences are semantically similar, and *anchor* and *negative* sentences are
+semantically dissimilar. The objective is to minimize the distance between the *anchor*
+sentence and the *positive* sentence. and to maximize the distance between the *anchor*
+sentence and the *negative* sentence.
 """
 
 """
 #### Load the dataset
-We will use wikipedia-sections-triplets dataset for fine-tuning. this data set consists
-of senteces derived from wikipedia website. it has a collection of 3 sentences *anchor*,
-*positive*, *negative*. *anchor* and *positive* are derived from the same section.
-*anchor* and *negative* are derived from differnet sections.<br>
-this dataset has 1.8m trainig triplets. and 220,000 test triplets. We will only use 1200
-triplets for the training. and 300 for testing in this example.
+
+We will use the wikipedia-sections-triplets dataset for fine-tuning. This data set
+consists of sentences derived from wikipedia website. It has a collection of 3 sentences
+*anchor*, *positive*, *negative*. *anchor* and *positive* are derived from the same
+section. *anchor* and *negative* are derived from different sections.
+
+This dataset has 1.8 million training triplets. and 220,000 test triplets. We will only
+use 1200 triplets for the training. and 300 for testing in this example.
 """
 
 """shell
@@ -332,15 +336,15 @@ wiki_test = prepare_wiki_data(wiki_test, NUM_TEST_BATCHS)
 
 """
 #### Build the encoder model
-For this encoder model we will use RoBERTa alongside with mean pooling and we will not
-normalize the output embeddings.
-the encoder model that consists of:
 
-- a preprocessor layer to tokenize and generate padding mask for the sentences.
-- a backbone model that will generate the contextual representation of each token is the
+For this encoder model, we will use RoBERTa with mean pooling and we will not normalize
+the output embeddings.
+the encoder model consists of:
+
+- A preprocessor layer to tokenize and generate a padding mask for the sentences.
+- A backbone model that will generate the contextual representation of each token is the
 sentence.
-- a mean pooling layer to produce the embeddings.
-<br>
+- A mean pooling layer to produce the embeddings.
 """
 
 preprocessor = keras_nlp.models.RobertaPreprocessor.from_preset("roberta_base_en")
@@ -357,6 +361,7 @@ roberta_triplet_encoder.summary()
 
 """
 #### Build the siamese network with triplet objective
+
 for siamese triplet network, we will build the model with an encoder and we will pass the
 three ssentences thtough that encoder. we will get an embedding for each sentence and we
 will calculate the `positive_dist` and `negative_dist` that will be passed to the loss
@@ -393,15 +398,18 @@ class triplet_siamese(keras.Model):
 
 """
 We will use a custom loss function for the triplet objective. the loss function will
-recieve the distance between the *anchor* and the *positive* embeddings `positive_dist`,
+receive the distance between the *anchor* and the *positive* embeddings `positive_dist`,
 and the distance between the *anchor* and the *negative* embeddings `negative_dist`,
-where they are stacked together in `y_pred`.<br>
-we will use `positive_dist` and `negative_dist` to compute the loss such that
+where they are stacked together in `y_pred`.
+
+We will use `positive_dist` and `negative_dist` to compute the loss such that
 `negative_dist` is larger than `positive_dist` at least by a specific margin.
-mathimatically we will minimize this loss function: max( `positive_dist` -
-`negative_dist` + margin, 0).<br>
-and there is no `y_true` used in this loss function. note that we set the labels in the
-data set as zero but it will not be used.
+
+Mathematically, we will minimize this loss function: max('positive_dist` -
+`negative_dist` + margin, 0).
+
+and there is no `y_true` used in this loss function. Note that we set the labels in the
+data set to zero, but they will not be used.
 """
 
 
@@ -426,8 +434,9 @@ def metric(y_true, y_pred):
 
 
 """
-#### Fit the model to the data
-for the training we will use the custom `Triplet_loss()` as loss function, and `Adam()`
+#### Fit the model to the data.
+
+For the training, we will use the custom `Triplet_loss()` loss function and `Adam()`
 optimizer with learning rate = 2e-5.
 """
 
@@ -441,9 +450,9 @@ triplet_roberta.compile(
 triplet_roberta.fit(wiki_train, validation_data=wiki_test, epochs=1)
 
 """
-Let's try this model in clustring example. here we have 6 questions. first 3 questions
-about learning english, and last 3 questions about working online. let's see if the
-embeddings produced by our encoder will cluster them right.
+Let's try this model in a clustering example. Here are 6 questions. first 3 questions
+about learning English, and the last 3 questions about working online. Let's see if the
+embeddings produced by our encoder will cluster them correctly.
 """
 
 questions = [
