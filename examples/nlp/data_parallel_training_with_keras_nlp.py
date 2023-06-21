@@ -89,43 +89,35 @@ wiki_train_ds = (
     tf.data.TextLineDataset(wiki_dir + "wiki.train.tokens")
     .filter(lambda x: tf.strings.length(x) > 100)
     .batch(PRETRAINING_BATCH_SIZE)
+    .cache()
+    .prefetch(tf.data.AUTOTUNE)
 )
 wiki_val_ds = (
     tf.data.TextLineDataset(wiki_dir + "wiki.valid.token")
     .filter(lambda x: tf.strings.length(x) > 100)
     .batch(PRETRAINING_BATCH_SIZE)
+    .cache()
+    .prefetch(tf.data.AUTOTUNE)
 )
 wiki_test_ds = (
     tf.data.TextLineDataset(wiki_dir + "wiki.test.tokens")
     .filter(lambda x: tf.strings.length(x) > 100)
     .batch(PRETRAINING_BATCH_SIZE)
+    .cache()
+    .prefetch(tf.data.AUTOTUNE)
 )
 
 """
 In the above code, we download the wikitext-2 dataset and extract it. Then, we define 
 three datasets: wiki_train_ds, wiki_val_ds, and wiki_test_ds. These datasets are 
 filtered to remove short lines and are batched for efficient training.
-
-Let's define a function for decaying the learning rate. You can define any decay function you need.
-We also define a callback for printing the learning rate at the end of each epoch.
 """
-
-
-def decay(epoch):
-    if epoch < 3:
-        return 1e-3
-    elif epoch >= 3 and epoch < 7:
-        return 1e-4
-    else:
-        return 1e-5
 
 
 class PrintLR(tf.keras.callbacks.Callback):
     def on_epoch_end(self, epoch, logs=None):
         print(
-            "\nLearning rate for epoch {} is {}".format(
-                epoch + 1, model_dist.optimizer.lr.numpy()
-            )
+            f"\nLearning rate for epoch {epoch + 1} is {model_dist.optimizer.lr.numpy()}"
         )
 
 
@@ -135,7 +127,6 @@ while we train the model in later part of this tutorial We put all the callbacks
 """
 callbacks = [
     tf.keras.callbacks.TensorBoard(log_dir="./logs"),
-    tf.keras.callbacks.LearningRateScheduler(decay),
     PrintLR(),
 ]
 
@@ -169,12 +160,12 @@ with strategy.scope():
     model_dist = keras_nlp.models.BertMaskedLM.from_preset("bert_tiny_en_uncased")
     model_dist.compile(
         loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
-        optimizer=keras.optimizers.Adam(5e-5),
+        optimizer=tf.keras.optimizers.Adam(5e-5),
         weighted_metrics=keras.metrics.SparseCategoricalAccuracy(),
     )
 
 """
-Let's train our model
+Let's train our model.
 """
 model_dist.fit(
     wiki_train_ds, validation_data=wiki_val_ds, epochs=EPOCHS, callbacks=callbacks
