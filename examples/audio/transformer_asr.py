@@ -75,7 +75,6 @@ class SpeechFeatureEmbedding(layers.Layer):
         self.conv3 = tf.keras.layers.Conv1D(
             num_hid, 11, strides=2, padding="same", activation="relu"
         )
-        self.pos_emb = layers.Embedding(input_dim=maxlen, output_dim=num_hid)
 
     def call(self, x):
         x = self.conv1(x)
