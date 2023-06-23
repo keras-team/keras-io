@@ -207,7 +207,7 @@ built using the functional API as for `Sequential` models.
 
 The `Model` class offers a built-in training loop (the `fit()` method)
 and a built-in evaluation loop (the `evaluate()` method). Note
-that you can easily [customize these loops](/guides/customizing_what_happens_in_fit/)
+that you can easily [customize these loops](https://keras.io/guides/customizing_what_happens_in_fit/)
 to implement training routines beyond supervised learning
 (e.g. [GANs](https://keras.io/examples/generative/dcgan_overriding_train_step/)).
 
