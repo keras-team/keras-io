@@ -97,7 +97,8 @@ ratings = pd.read_csv(
 )
 
 movies = pd.read_csv(
-    "ml-1m/movies.dat", sep="::", names=["movie_id", "title", "genres"]
+    "ml-1m/movies.dat", sep="::", names=["movie_id", "title", "genres"],
+    encoding='latin-1'
 )
 ```
 
