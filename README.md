@@ -78,6 +78,7 @@ Author: (could be `Authors`: as well, and may contain markdown links)
 Date created: (date in yyyy/mm/dd format)
 Last modified: (date in yyyy/mm/dd format)
 Description: (one-line text description)
+Accelerator: (could be GPU, TPU, or None)
 ```
 
 To see examples of tutobooks, you can check out any `.py` file in `examples/` or `guides/`.

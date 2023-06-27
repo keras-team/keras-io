@@ -40,10 +40,9 @@ check out our
 ## Examples
 
 * [English-to-Spanish translation](/examples/nlp/neural_machine_translation_with_keras_nlp/)
-* [GPT2 text generation](/examples/nlp/gpt2_text_generation_with_kerasnlp/)
+* [GPT2 text generation](/examples/generative/gpt2_text_generation_with_kerasnlp/)
 * [GPT text generation from scratch](/examples/generative/text_generation_gpt/)
 * [Text Classification using FNet](/examples/nlp/fnet_classification_with_keras_nlp/)
-* [GPT2 Text Generation with KerasNLP](/examples/nlp/gpt2_text_generation_with_kerasnlp/)
 
 ---
 ## Installation

@@ -335,6 +335,11 @@ LAYERS_MASTER = {
                             "generate": ["tensorflow.keras.layers.Hashing"],
                         },
                         {
+                            "path": "hashed_crossing",
+                            "title": "HashedCrossing layer",
+                            "generate": ["tensorflow.keras.layers.HashedCrossing"],
+                        },
+                        {
                             "path": "string_lookup",
                             "title": "StringLookup layer",
                             "generate": ["tensorflow.keras.layers.StringLookup"],

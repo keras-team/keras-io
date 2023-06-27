@@ -352,7 +352,6 @@ hidden_units = [64, 64]
 
 
 def run_experiment(model):
-
     model.compile(
         optimizer=keras.optimizers.Adam(learning_rate=learning_rate),
         loss=keras.losses.SparseCategoricalCrossentropy(),

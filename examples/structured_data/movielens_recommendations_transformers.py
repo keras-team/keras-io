@@ -354,7 +354,6 @@ def encode_input_features(
     include_user_features=True,
     include_movie_features=True,
 ):
-
     encoded_transformer_features = []
     encoded_other_features = []
 

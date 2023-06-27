@@ -2,7 +2,7 @@
 Title: English-to-Spanish translation with a sequence-to-sequence Transformer
 Author: [fchollet](https://twitter.com/fchollet)
 Date created: 2021/05/26
-Last modified: 2022/02/25
+Last modified: 2023/02/25
 Description: Implementing a sequence-to-sequene Transformer and training it on a machine translation task.
 Accelerator: GPU
 """

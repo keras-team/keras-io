@@ -617,7 +617,7 @@ class MaskedAutoencoder(keras.Model):
         ]
         grads = tape.gradient(total_loss, train_vars)
         tv_list = []
-        for (grad, var) in zip(grads, train_vars):
+        for grad, var in zip(grads, train_vars):
             for g, v in zip(grad, var):
                 tv_list.append((g, v))
         self.optimizer.apply_gradients(tv_list)

@@ -70,7 +70,7 @@ zip_files = {
 # We see that there are 2 compressed files for each accent (except Irish):
 # - One for male speakers
 # - One for female speakers
-# However, we will using a gender agnostic dataset.
+# However, we will be using a gender agnostic dataset.
 
 # List of gender agnostic categories
 gender_agnostic_categories = [
@@ -99,7 +99,6 @@ class_names = [
 import os
 import io
 import csv
-import random
 import numpy as np
 import pandas as pd
 import tensorflow as tf
@@ -145,7 +144,7 @@ The dataset used is the
 [Crowdsourced high-quality UK and Ireland English Dialect speech data set](https://openslr.org/83/)
 which consists of a total of 17,877 high-quality audio wav files.
 
-This dataset includes over 31 hours of recording from 120 vounteers who self-identify as
+This dataset includes over 31 hours of recording from 120 volunteers who self-identify as
 native speakers of Southern England, Midlands, Northern England, Wales, Scotland and Ireland.
 
 For more info, please refer to the above link or to the following paper:
@@ -164,7 +163,7 @@ line_index_file = keras.utils.get_file(
     fname="line_index_file", origin=URL_PATH + "line_index_all.csv"
 )
 
-# Download the list of compressed files that contains the audio wav files
+# Download the list of compressed files that contain the audio wav files
 for i in zip_files:
     fname = zip_files[i].split(".")[0]
     url = URL_PATH + zip_files[i]
@@ -193,6 +192,7 @@ filename).
 accent.
 * Shuffling the samples.
 """
+
 
 # The purpose of this function is to preprocess the dataframe by applying the following:
 # - Cleaning the filename from a leading space
@@ -466,6 +466,7 @@ Let's try to compare our model's performance to Yamnet's using one of Yamnet met
 Yamnet achieved a d-prime value of 2.318.
 Let's check our model's performance.
 """
+
 
 # The following function calculates the d-prime score from the AUC
 def d_prime(auc):

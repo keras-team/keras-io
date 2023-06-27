@@ -36,7 +36,6 @@ import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
 import os
-import re
 
 # Defining hyperparameters
 
@@ -216,7 +215,7 @@ class FNetEncoder(layers.Layer):
 
 The decoder architecture remains the same as the one proposed by (Vaswani et al., 2017)
 in the original transformer architecture, consisting of an embedding, positional
-encoding, two masked multihead attention layers and finally the dense output layers.
+encoding, two masked multi-head attention layers and finally the dense output layers.
 The architecture that follows is taken from
 [Deep Learning with Python, second edition, chapter 11](https://www.manning.com/books/deep-learning-with-python-second-edition?a_aid=keras).
 

@@ -75,9 +75,7 @@ display(Image(style_reference_image_path))
 
 def preprocess_image(image_path):
     # Util function to open, resize and format pictures into appropriate tensors
-    img = keras.utils.load_img(
-        image_path, target_size=(img_nrows, img_ncols)
-    )
+    img = keras.utils.load_img(image_path, target_size=(img_nrows, img_ncols))
     img = keras.utils.img_to_array(img)
     img = np.expand_dims(img, axis=0)
     img = vgg19.preprocess_input(img)

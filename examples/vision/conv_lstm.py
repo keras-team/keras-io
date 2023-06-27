@@ -77,6 +77,7 @@ val_dataset = dataset[val_index]
 train_dataset = train_dataset / 255
 val_dataset = val_dataset / 255
 
+
 # We'll define a helper function to shift the frames, where
 # `x` is frames 0 to n - 1, and `y` is frames 1 to n.
 def create_shifted_frames(data):

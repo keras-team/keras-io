@@ -59,7 +59,7 @@ cat aclImdb/train/pos/6248_7.txt
 """
 
 """
-We are only interested in the `pos` and `neg` subfolders, so let's delete the rest:
+We are only interested in the `pos` and `neg` subfolders, so let's delete the other subfolder that has text files in it:
 """
 
 """shell
@@ -136,6 +136,7 @@ from tensorflow.keras.layers import TextVectorization
 import string
 import re
 
+
 # Having looked at our data above, we see that the raw text contains HTML break
 # tags of the form '<br />'. These tags will not be removed by the default
 # standardizer (which doesn't strip HTML). Because of this, we will need to
@@ -167,7 +168,7 @@ vectorize_layer = TextVectorization(
     output_sequence_length=sequence_length,
 )
 
-# Now that the vocab layer has been created, call `adapt` on a text-only
+# Now that the vectorize_layer has been created, call `adapt` on a text-only
 # dataset to create the vocabulary. You don't have to batch, but for very large
 # datasets this means you're not keeping spare copies of the dataset in memory.
 

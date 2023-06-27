@@ -8,6 +8,7 @@ Accelerator: NONE
 """
 """
 Adapted from Deep Learning with Python (2017).
+
 ## Setup
 """
 
@@ -28,7 +29,6 @@ You can change these to another model.
 
 To get the values for `last_conv_layer_name` use `model.summary()`
 to see the names of all layers in the model.
-
 """
 
 model_builder = keras.applications.xception.Xception
@@ -48,7 +48,6 @@ display(Image(img_path))
 
 """
 ## The Grad-CAM algorithm
-
 """
 
 
@@ -66,8 +65,8 @@ def get_img_array(img_path, size):
 def make_gradcam_heatmap(img_array, model, last_conv_layer_name, pred_index=None):
     # First, we create a model that maps the input image to the activations
     # of the last conv layer as well as the output predictions
-    grad_model = tf.keras.models.Model(
-        [model.inputs], [model.get_layer(last_conv_layer_name).output, model.output]
+    grad_model = keras.models.Model(
+        model.inputs, [model.get_layer(last_conv_layer_name).output, model.output]
     )
 
     # Then, we compute the gradient of the top predicted class for our input image
@@ -100,7 +99,6 @@ def make_gradcam_heatmap(img_array, model, last_conv_layer_name, pred_index=None
 
 """
 ## Let's test-drive it
-
 """
 
 # Prepare image
@@ -126,7 +124,6 @@ plt.show()
 
 """
 ## Create a superimposed visualization
-
 """
 
 
@@ -186,7 +183,6 @@ print("Predicted:", decode_predictions(preds, top=2)[0])
 
 """
 We generate class activation heatmap for "chow," the class index is 260
-
 """
 
 heatmap = make_gradcam_heatmap(img_array, model, last_conv_layer_name, pred_index=260)
@@ -195,7 +191,6 @@ save_and_display_gradcam(img_path, heatmap)
 
 """
 We generate class activation heatmap for "egyptian cat," the class index is 285
-
 """
 
 heatmap = make_gradcam_heatmap(img_array, model, last_conv_layer_name, pred_index=285)

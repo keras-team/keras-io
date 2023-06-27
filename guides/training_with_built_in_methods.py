@@ -250,7 +250,7 @@ model.fit(x_train, y_train_one_hot, batch_size=64, epochs=1)
 
 """
 If you need a loss function that takes in parameters beside `y_true` and `y_pred`, you
-can subclass the `tf.keras.losses.Loss` class and implement the following two methods:
+can subclass the `keras.losses.Loss` class and implement the following two methods:
 
 - `__init__(self)`: accept parameters to pass during the call of your loss function
 - `call(self, y_true, y_pred)`: use the targets (y_true) and the model predictions
@@ -284,60 +284,10 @@ y_train_one_hot = tf.one_hot(y_train, depth=10)
 model.fit(x_train, y_train_one_hot, batch_size=64, epochs=1)
 
 """
-Alternatively you could implement the loss function as a method,
-and use the `LossFunctionWrapper` to turn it into a class.
-This wrapper is a subclass of `tf.keras.losses.Loss` which handles the parsing of
-extra arguments by passing them to the `call()` and config methods.
-
-The `LossFunctionWrapper`'s `__init__()` method takes the following arguments:
-
-- `fn`: The loss function to wrap, with signature `fn(y_true, y_pred, **kwargs)`.
-- `reduction`: Type of [`tf.keras.losses.Reduction`](https://www.tensorflow.org/api_docs/python/tf/keras/losses/Reduction) to apply to loss.
-- `name`: Optional name for the instance.
-- Any other parameters will be passed to `fn` as `kwargs` through the `call()` method.
-
-We could implement the previous `CustomMSE` class using `LossFunctionWrapper`:
-"""
-
-
-from keras import losses
-
-
-def custom_mean_squared_error_expended(y_true, y_pred, regularization_factor=0.1):
-    mse = tf.math.reduce_mean(tf.square(y_true - y_pred), axis=-1)
-    reg = tf.math.reduce_mean(tf.square(0.5 - y_pred), axis=-1)
-    return mse + reg * regularization_factor
-
-
-class WrappedCustomMSE(losses.LossFunctionWrapper):
-    def __init__(
-        self,
-        reduction=tf.keras.losses.Reduction.AUTO,
-        name="custom_mse_with_regularization",
-        regularization_factor=0.1,
-    ):
-        super().__init__(
-            custom_mean_squared_error_expended,
-            name=name,
-            reduction=reduction,
-            regularization_factor=regularization_factor,
-        )
-
-
-model = get_uncompiled_model()
-model.compile(
-    optimizer=keras.optimizers.Adam(),
-    loss=WrappedCustomMSE(regularization_factor=0.2, name="mse_custom_0_2"),
-)
-
-y_train_one_hot = tf.one_hot(y_train, depth=10)
-model.fit(x_train, y_train_one_hot, batch_size=64, epochs=1)
-
-"""
 ### Custom metrics
 
 If you need a metric that isn't part of the API, you can easily create custom metrics
-by subclassing the `tf.keras.metrics.Metric` class. You will need to implement 4
+by subclassing the `keras.metrics.Metric` class. You will need to implement 4
 methods:
 
 - `__init__(self)`, in which you will create state variables for your metric.
@@ -424,27 +374,6 @@ model.compile(
 
 # The displayed loss will be much higher than before
 # due to the regularization component.
-model.fit(x_train, y_train, batch_size=64, epochs=1)
-
-"""
-In the [Functional API](/guides/functional_api/),
-you can also call `model.add_loss(loss_tensor)`.
-
-Here's a simple example:
-"""
-
-inputs = keras.Input(shape=(784,), name="digits")
-x1 = layers.Dense(64, activation="relu", name="dense_1")(inputs)
-x2 = layers.Dense(64, activation="relu", name="dense_2")(x1)
-outputs = layers.Dense(10, name="predictions")(x2)
-model = keras.Model(inputs=inputs, outputs=outputs)
-
-model.add_loss(tf.reduce_sum(x1) * 0.1)
-
-model.compile(
-    optimizer=keras.optimizers.RMSprop(1e-3),
-    loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
-)
 model.fit(x_train, y_train, batch_size=64, epochs=1)
 
 """

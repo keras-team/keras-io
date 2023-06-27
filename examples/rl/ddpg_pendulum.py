@@ -232,7 +232,7 @@ class Buffer:
 # Based on rate `tau`, which is much less than one.
 @tf.function
 def update_target(target_weights, weights, tau):
-    for (a, b) in zip(target_weights, weights):
+    for a, b in zip(target_weights, weights):
         a.assign(b * tau + a * (1 - tau))
 
 
@@ -348,7 +348,6 @@ avg_reward_list = []
 
 # Takes about 4 min to train
 for ep in range(total_episodes):
-
     prev_state = env.reset()
     episodic_reward = 0
 

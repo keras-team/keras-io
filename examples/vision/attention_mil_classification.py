@@ -97,7 +97,6 @@ positive class label is randomly placed among the instances in the positive bag.
 
 
 def create_bags(input_data, input_labels, positive_class, bag_count, instance_count):
-
     # Set up bags.
     bags = []
     bag_labels = []
@@ -109,7 +108,6 @@ def create_bags(input_data, input_labels, positive_class, bag_count, instance_co
     count = 0
 
     for _ in range(bag_count):
-
         # Pick a fixed size random subset of samples.
         index = np.random.choice(input_data.shape[0], instance_count, replace=False)
         instances_data = input_data[index]
@@ -120,7 +118,6 @@ def create_bags(input_data, input_labels, positive_class, bag_count, instance_co
 
         # Check if there is at least a positive class in the bag.
         if positive_class in instances_labels:
-
             # Positive bag will be labeled as 1.
             bag_label = 1
             count += 1
@@ -192,7 +189,6 @@ class MILAttentionLayer(layers.Layer):
         use_gated=False,
         **kwargs,
     ):
-
         super().__init__(**kwargs)
 
         self.weight_params_dim = weight_params_dim
@@ -210,7 +206,6 @@ class MILAttentionLayer(layers.Layer):
         self.u_regularizer = self.kernel_regularizer
 
     def build(self, input_shape):
-
         # Input shape.
         # List of 2D tensors with shape: (batch_size, input_dim).
         input_dim = input_shape[0][1]
@@ -245,7 +240,6 @@ class MILAttentionLayer(layers.Layer):
         self.input_built = True
 
     def call(self, inputs):
-
         # Assigning variables from the number of inputs.
         instances = [self.compute_attention_scores(instance) for instance in inputs]
 
@@ -255,7 +249,6 @@ class MILAttentionLayer(layers.Layer):
         return [alpha[i] for i in range(alpha.shape[0])]
 
     def compute_attention_scores(self, instance):
-
         # Reserve in-case "gated mechanism" used.
         original_instance = instance
 
@@ -264,7 +257,6 @@ class MILAttentionLayer(layers.Layer):
 
         # for learning non-linear relations efficiently.
         if self.use_gated:
-
             instance = instance * tf.math.sigmoid(
                 tf.tensordot(original_instance, self.u_weight_params, axes=1)
             )
@@ -284,7 +276,6 @@ for each bag (after the model has been trained) can be seen.
 
 
 def plot(data, labels, bag_class, predictions=None, attention_weights=None):
-
     """ "Utility for plotting bags and attention weights.
 
     Args:
@@ -348,7 +339,6 @@ use the softmax function to output the class probabilities.
 
 
 def create_model(instance_shape):
-
     # Extract features from inputs.
     inputs, embeddings = [], []
     shared_dense_layer_1 = layers.Dense(128, activation="relu")
@@ -398,7 +388,6 @@ Using class weights, the model will tend to give a higher weight to the rare cla
 
 
 def compute_class_weights(labels):
-
     # Count number of postive and negative bags.
     negative_count = len(np.where(labels == 0)[0])
     positive_count = len(np.where(labels == 1)[0])
@@ -419,7 +408,6 @@ The model is built and trained in this section.
 
 
 def train(train_data, train_labels, val_data, val_labels, model):
-
     # Train model.
     # Prepare callbacks.
     # Path where to save best weights.
@@ -495,7 +483,6 @@ average them together for our final prediction.
 
 
 def predict(data, labels, trained_models):
-
     # Collect info per model.
     models_predictions = []
     models_attention_weights = []
@@ -503,7 +490,6 @@ def predict(data, labels, trained_models):
     models_accuracies = []
 
     for model in trained_models:
-
         # Predict output classes on data.
         predictions = model.predict(data)
         models_predictions.append(predictions)

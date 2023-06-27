@@ -314,7 +314,6 @@ def create_vit_object_detector(
 
 
 def run_experiment(model, learning_rate, weight_decay, batch_size, num_epochs):
-
     optimizer = tfa.optimizers.AdamW(
         learning_rate=learning_rate, weight_decay=weight_decay
     )
@@ -390,6 +389,7 @@ import matplotlib.patches as patches
 
 # Saves the model in current path
 vit_object_detector.save("vit_object_detector.h5", save_format="h5")
+
 
 # To calculate IoU (intersection over union, given two bounding boxes)
 def bounding_box_intersection_over_union(box_predicted, box_truth):

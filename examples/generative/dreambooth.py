@@ -231,6 +231,7 @@ max_prompt_length = 77
 # Load the tokenizer.
 tokenizer = keras_cv.models.stable_diffusion.SimpleTokenizer()
 
+
 # Method to tokenize and pad the tokens.
 def process_text(caption):
     tokens = tokenizer.encode(caption)
@@ -595,7 +596,7 @@ dreambooth_model = keras_cv.models.StableDiffusion(
 )
 dreambooth_model.diffusion_model.load_weights(ckpt_path)
 
-# Note how the unique idenitifer and the class have been used in the prompt.
+# Note how the unique identifier and the class have been used in the prompt.
 prompt = f"A photo of {unique_id} {class_label} in a bucket"
 num_imgs_to_gen = 3
 

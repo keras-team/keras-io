@@ -101,11 +101,9 @@ for epoch in range(epochs):
 
     # Iterate over the batches of the dataset.
     for step, (x_batch_train, y_batch_train) in enumerate(train_dataset):
-
         # Open a GradientTape to record the operations run
         # during the forward pass, which enables auto-differentiation.
         with tf.GradientTape() as tape:
-
             # Run the forward pass of the layer.
             # The operations that the layer applies
             # to its inputs are going to be recorded
