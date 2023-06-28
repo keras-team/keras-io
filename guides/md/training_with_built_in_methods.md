@@ -29,11 +29,11 @@ when using built-in APIs for training & validation (such as `Model.fit()`,
 
 If you are interested in leveraging `fit()` while specifying your
 own training step function, see the
-[Customizing what happens in `fit()` guide](/guides/customizing_what_happens_in_fit/).
+[Customizing what happens in `fit()` guide](https://keras.io/guides/customizing_what_happens_in_fit/).
 
 If you are interested in writing your own training & evaluation loops from
 scratch, see the guide
-["writing a training loop from scratch"](/guides/writing_a_training_loop_from_scratch/).
+["writing a training loop from scratch"](https://keras.io/guides/writing_a_training_loop_from_scratch/).
 
 In general, whether you are using built-in loops or writing your own, model training &
 evaluation works strictly in the same way across every kind of Keras model --
