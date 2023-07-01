@@ -250,9 +250,7 @@ imdb_test_cached = (
 )
 
 classifier = keras_nlp.models.BertClassifier.from_preset(
-    "bert_tiny_en_uncased",
-    preprocessor=None,
-    num_classes=2
+    "bert_tiny_en_uncased", preprocessor=None, num_classes=2
 )
 classifier.fit(
     imdb_train_cached,
