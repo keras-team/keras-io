@@ -86,7 +86,6 @@ logical_devices
 
 
 PRETRAINING_BATCH_SIZE = 128
-EPOCHS = 5
 
 """
 First, we need to download and preprocess the wikitext-2 dataset. This dataset will be 
@@ -128,6 +127,20 @@ In the above code, we download the wikitext-2 dataset and extract it. Then, we d
 three datasets: wiki_train_ds, wiki_val_ds, and wiki_test_ds. These datasets are 
 filtered to remove short lines and are batched for efficient training.
 """
+
+EPOCHS = 3
+
+"""
+It's a common practice to use a decayed learning rate in NLP training/tuning. We'll 
+use `PolynomialDecay` schedule here.
+"""
+
+total_training_steps = sum(1 for _ in wiki_train_ds.as_numpy_iterator()) * EPOCHS
+lr_schedule = tf.keras.optimizers.schedules.PolynomialDecay(
+    5e-5,
+    decay_steps=total_training_steps,
+    end_learning_rate=0.0,
+)
 
 
 class PrintLR(tf.keras.callbacks.Callback):
@@ -175,7 +188,7 @@ with strategy.scope():
     model_dist = keras_nlp.models.BertMaskedLM.from_preset("bert_tiny_en_uncased")
     model_dist.compile(
         loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
-        optimizer=tf.keras.optimizers.AdamW(5e-5),
+        optimizer=tf.keras.optimizers.AdamW(lr_schedule),
         weighted_metrics=keras.metrics.SparseCategoricalAccuracy(),
     )
 
