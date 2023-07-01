@@ -1,17 +1,17 @@
 """
 Title: FeatureSpace avanced use cases
 Author: [Dimitre Oliveira](https://www.linkedin.com/in/dimitre-oliveira-7a1a0113a/)
-Date created: 2023/06/27
-Last modified: 2023/06/27
+Date created: 2023/07/01
+Last modified: 2023/07/01
 Description: How to use FeatureSpace for advanced preprocessing use cases.
 Accelerator: None
 """
 """
 ## Introduction
 
-This example is an extension of the [Structured data classification with
-FeatureSpace](https://keras.io/examples/structured_data/structured_data_classification_wit
-h_feature_space/) code example, and here we will extend it to cover more complex use
+This example is an extension of the
+[Structured data classification with FeatureSpace](https://keras.io/examples/structured_data/structured_data_classification_with_feature_space/)
+code example, and here we will extend it to cover more complex use
 cases of the [`keras.utils.FeatureSpace`](https://keras.io/api/utils/feature_space/)
 preprocessing utility, like feature hashing, feature crosses, handling missing values and
 integrating [Keras preprocessing layers](https://keras.io/guides/preprocessing_layers/)
@@ -25,31 +25,45 @@ features, and string categorical features.
 """
 ### The dataset
 
-[Our dataset](https://archive.ics.uci.edu/ml/datasets/heart+Disease) is provided by the
-Cleveland Clinic Foundation for Heart Disease.
-It's a CSV file with 303 rows. Each row contains information about a patient (a
-**sample**), and each column describes an attribute of the patient (a **feature**). We
-use the features to predict whether a patient has a heart disease
-(**binary classification**).
+[Our dataset](https://archive.ics.uci.edu/dataset/222/bank+marketing) is provided by a
+Portuguese banking institution.
+It's a CSV file with 4119 rows. Each row contains information about marketing campaigns
+based on phone calls, and each column describes an attribute of the client. We use the
+features to predict whether the client subscribed ('yes') or not ('no') to the product
+(bank term deposit).
 
 Here's the description of each feature:
 
 Column| Description| Feature Type
-------------|--------------------|----------------------
-Age | Age in years | Numerical
-Sex | (1 = male; 0 = female) | Categorical
-CP | Chest pain type (0, 1, 2, 3, 4) | Categorical
-Trestbpd | Resting blood pressure (in mm Hg on admission) | Numerical
-Chol | Serum cholesterol in mg/dl | Numerical
-FBS | fasting blood sugar in 120 mg/dl (1 = true; 0 = false) | Categorical
-RestECG | Resting electrocardiogram results (0, 1, 2) | Categorical
-Thalach | Maximum heart rate achieved | Numerical
-Exang | Exercise induced angina (1 = yes; 0 = no) | Categorical
-Oldpeak | ST depression induced by exercise relative to rest | Numerical
-Slope | Slope of the peak exercise ST segment | Numerical
-CA | Number of major vessels (0-3) colored by fluoroscopy | Both numerical & categorical
-Thal | 3 = normal; 6 = fixed defect; 7 = reversible defect | Categorical
-Target | Diagnosis of heart disease (1 = true; 0 = false) | Target
+------|------------|-------------
+Age | Age of the client | Numerical
+Job | Type of job | Categorical
+Marital | Marital status | Categorical
+Education | Education level of the client | Categorical
+Default | Has credit in default? | Categorical
+Housing | Has housing loan? | Categorical
+Loan | Has personal loan? | Categorical
+Contact | Contact communication type | Categorical
+Month | Last contact month of year | Categorical
+Day_of_week | Last contact day of the week | Categorical
+Duration | Last contact duration, in seconds | Numerical
+Campaign | Number of contacts performed during this campaign and for this client | Numerical
+Pdays | Number of days that passed by after the client was last contacted from a previous campaign | Numerical
+Previous | Number of contacts performed before this campaign and for this client | Numerical
+Poutcome | Outcome of the previous marketing campaign | Categorical
+Emp.var.rate | Employment variation rate | Numerical
+Cons.price.idx | Consumer price index | Numerical
+Cons.conf.idx | Consumer confidence index | Numerical
+Euribor3m | Euribor 3 month rate | Numerical
+Nr.employed | Number of employees | Numerical
+Y | Has the client subscribed a term deposit? | Target
+
+**Important note regarding the feature `duration`**:  this attribute highly affects the
+output target (e.g., if duration=0 then y='no'). Yet, the duration is not known before a
+call is performed. Also, after the end of the call y is obviously known. Thus, this input
+should only be included for benchmark purposes and should be discarded if the intention
+is to have a realistic predictive model. For this reason we will drop it.
+
 """
 
 """
@@ -58,6 +72,8 @@ Target | Diagnosis of heart disease (1 = true; 0 = false) | Target
 
 import pandas as pd
 import tensorflow as tf
+from pathlib import Path
+from zipfile import ZipFile
 from tensorflow.keras.utils import FeatureSpace
 
 """
@@ -66,20 +82,41 @@ from tensorflow.keras.utils import FeatureSpace
 Let's download the data and load it into a Pandas dataframe:
 """
 
-data_url = "http://storage.googleapis.com/download.tensorflow.org/data/heart.csv"
-dataframe = pd.read_csv(data_url)
+data_url = "https://archive.ics.uci.edu/static/public/222/bank+marketing.zip"
+data_zipped_path = tf.keras.utils.get_file("bank_marketing.zip", data_url, extract=True)
+keras_datasets_path = Path(data_zipped_path).parents[0]
+with ZipFile(f"{keras_datasets_path}/bank-additional.zip", "r") as zip:
+    # Extract files
+    zip.extractall(path=keras_datasets_path)
+
+dataframe = pd.read_csv(
+    f"{keras_datasets_path}/bank-additional/bank-additional.csv", sep=";"
+)
 
 """
-The dataset includes 303 samples with 14 columns per sample (13 features, plus the target
-label), here's a preview of a few samples:
+We will create a new feature `previously_contacted` to be able to demonstrate some useful
+preprocessing techniques, this feature is based on `pdays`. According to the dataset
+information if `pdays = 999` it means that the client was not previously contacted, so
+let's create a feature to capture that.
+"""
+
+# Droping `duration` to avoid target leak
+dataframe.drop("duration", axis=1, inplace=True)
+# Creating the new feature `previously_contacted`
+dataframe["previously_contacted"] = dataframe["pdays"].map(
+    lambda x: 0 if x == 999 else 1
+)
+
+"""
+The dataset includes 4119 samples with 21 columns per sample (20 features, plus the
+target label), here's a preview of a few samples:
 """
 
 print(f"Dataframe shape: {dataframe.shape}")
 display(dataframe.head())
 
 """
-The last column, "target", indicates whether the patient has a heart disease (1) or not
-(0).
+The column, "y", indicates whether the client has subscribed a term deposit or not.
 """
 
 """
@@ -88,11 +125,12 @@ The last column, "target", indicates whether the patient has a heart disease (1)
 Let's split the data into a training and validation set:
 """
 
-valid_dataframe = dataframe.sample(frac=0.2, random_state=42)
+valid_dataframe = dataframe.sample(frac=0.2, random_state=0)
 train_dataframe = dataframe.drop(valid_dataframe.index)
 
 print(
-    f"Using {len(train_dataframe)} samples for training and {len(valid_dataframe)} for validation"
+    f"Using {len(train_dataframe)} samples for training and "
+    f"{len(valid_dataframe)} for validation"
 )
 
 """
@@ -100,14 +138,29 @@ print(
 
 Let's generate
 [`tf.data.Dataset`](https://www.tensorflow.org/api_docs/python/tf/data/Dataset) objects
-for each dataframe:
+for each dataframe, since our target column `y` is a string we also need to encode it as
+an integer to be able to train our model with it. To achieve this we will create a
+`StringLookup` layer that will map the strings "no" and "yes" into "0" and "1"
+respectively.
 """
+
+label_lookup = tf.keras.layers.StringLookup(
+    # the order here is important since the first index will be encoded as 0
+    vocabulary=["no", "yes"],
+    num_oov_indices=0,
+)
+
+
+def encode_label(x, y):
+    encoded_y = label_lookup(y)
+    return x, encoded_y
 
 
 def dataframe_to_dataset(dataframe):
     dataframe = dataframe.copy()
-    labels = dataframe.pop("target")
+    labels = dataframe.pop("y")
     ds = tf.data.Dataset.from_tensor_slices((dict(dataframe), labels))
+    ds = ds.map(encode_label, num_parallel_calls=tf.data.AUTOTUNE)
     ds = ds.shuffle(buffer_size=len(dataframe))
     return ds
 
@@ -165,29 +218,32 @@ def example_feature_space(dataset, feature_space, feature_names):
 
 """
 **Feature hashing** means hashing or encoding a set of values into a defined number of
-bins, in this case we have `thalach` (Maximum heart rate achieved) which is a numerical
-feature that can assume a varying range of values and we will hash it into 4 bins, this
-means that any possible value of the original feature will be placed into one of those
-possible 5 bins. The output here can be a one-hot encoded vector or a single number.
+bins, in this case we have `campaign` (number of contacts performed during this campaign
+and for a client) which is a numerical feature that can assume a varying range of values
+and we will hash it into 4 bins, this means that any possible value of the original
+feature will be placed into one of those possible 4 bins. The output here can be a
+one-hot encoded vector or a single number.
 """
 
 feature_space = FeatureSpace(
     features={
-        "thalach": FeatureSpace.integer_hashed(num_bins=4, output_mode="one_hot")
+        "campaign": FeatureSpace.integer_hashed(num_bins=4, output_mode="one_hot")
     },
     output_mode="dict",
 )
-example_feature_space(train_ds_with_no_labels, feature_space, ["thalach"])
+example_feature_space(train_ds_with_no_labels, feature_space, ["campaign"])
 
 """
 **Feature hashing** can also be used for string features.
 """
 
 feature_space = FeatureSpace(
-    features={"thal": FeatureSpace.string_hashed(num_bins=2, output_mode="one_hot")},
+    features={
+        "education": FeatureSpace.string_hashed(num_bins=3, output_mode="one_hot")
+    },
     output_mode="dict",
 )
-example_feature_space(train_ds_with_no_labels, feature_space, ["thal"])
+example_feature_space(train_ds_with_no_labels, feature_space, ["education"])
 
 """
 For numerical features we can get a similar behavior by using the `float_discretized`
@@ -220,48 +276,50 @@ values after the training (values that were not seen during the `adapt()` step)
 
 feature_space = FeatureSpace(
     features={
-        "thal": FeatureSpace.string_categorical(
+        "default": FeatureSpace.string_categorical(
             num_oov_indices=1, output_mode="one_hot"
         )
     },
     output_mode="dict",
 )
-example_feature_space(train_ds_with_no_labels, feature_space, ["thal"])
+example_feature_space(train_ds_with_no_labels, feature_space, ["default"])
 
 """
-We also can do **feature indexing** for integer features, this is quite important for
-features like `sex` where values like (`1 and 0`) do not have a numerical relationship
+We also can do **feature indexing** for integer features, this can be quite important for
+some datasets where categorical features are replaced by numbers, for instance features
+like `sex` or `gender` where values like (`1 and 0`) do not have a numerical relationship
 between them, they are just different categories, this behavior can be perfectly captured
 by this transformation.
 
-For this case we want to explicitly set `num_oov_indices=0` for the feature `sex` the
-reason is that we only expect two possible values for this feature anything else would
-either wrong input or and issue with the data creation, for this reason we would probably
-just want the code to throw an error so that we can be aware of the issue and fix it.
+On this dataset we can use the feature that we created `previously_contacted`. For this
+case we want to explicitly set `num_oov_indices=0`, the reason is that we only expect two
+possible values for the feature, anything else would be either wrong input or an issue
+with the data creation, for this reason we would probably just want the code to throw an
+error so that we can be aware of the issue and fix it.
 """
 
 feature_space = FeatureSpace(
     features={
-        "sex": FeatureSpace.integer_categorical(
+        "previously_contacted": FeatureSpace.integer_categorical(
             num_oov_indices=0, output_mode="one_hot"
         )
     },
     output_mode="dict",
 )
-example_feature_space(train_ds_with_no_labels, feature_space, ["sex"])
+example_feature_space(train_ds_with_no_labels, feature_space, ["previously_contacted"])
 
 """
 ### Feature crosses (mixing features of diverse types)
 
 With **crosses** we can do feature interactions between an arbitrary number of features
 of mixed types as long as they are categorical features, you can think of instead of
-having a feature {'age': 20} and another {'sex': 0} we can have {'age_X_sex': 20_0}, but
-with `FeatureSpace` and **crosses** we can apply specific preprocessing to each
-individual feature and to the feature cross itself. This option can be very powerful for
-specific use cases, here might be a good option since age combined with gender can have
-different meanings for the health domain.
+having a feature {'age': 20} and another {'job': 'entrepreneur'} we can have
+{'age_X_job': 20_entrepreneur}, but with `FeatureSpace` and **crosses** we can apply
+specific preprocessing to each individual feature and to the feature cross itself. This
+option can be very powerful for specific use cases, here might be a good option since age
+combined with job can have different meanings for the banking domain.
 
-We will cross `age` and `sex` and hash the combination output of them into a vector
+We will cross `age` and `job` and hash the combination output of them into a vector
 representation of size 8. The output here can be a one-hot encoded vector or a single
 number.
 
@@ -270,28 +328,28 @@ space, think about crossing someone's ZIP code with its last name, the possibili
 would be in the thousands, that is why the `crossing_dim` parameter is so important it
 limits the output dimension of the cross feature.
 
-Note that the combination of possible values of the 6 bins of `age` and the 2 values of
-`sex` would be 12, so by choosing `crossing_dim` we are choosing to constrain a little
-bit the output vector.
+Note that the combination of possible values of the 6 bins of `age` and the 12 values of
+`job` would be 72, so by choosing `crossing_dim = 8` we are choosing to constrain the
+output vector.
 """
 
 feature_space = FeatureSpace(
     features={
         "age": FeatureSpace.integer_hashed(num_bins=6, output_mode="one_hot"),
-        "sex": FeatureSpace.integer_categorical(
+        "job": FeatureSpace.string_categorical(
             num_oov_indices=0, output_mode="one_hot"
         ),
     },
     crosses=[
         FeatureSpace.cross(
-            feature_names=("age", "sex"),
+            feature_names=("age", "job"),
             crossing_dim=8,
             output_mode="one_hot",
         )
     ],
     output_mode="dict",
 )
-example_feature_space(train_ds_with_no_labels, feature_space, ["age", "sex"])
+example_feature_space(train_ds_with_no_labels, feature_space, ["age", "job"])
 
 """
 ### FeatureSpace using a Keras preprocessing layer
@@ -304,22 +362,23 @@ can use sophisticated data transformations provided by the framework, you can ev
 your own custom Keras preprocessing layers and use it in the same way.
 
 Here we are going to use the
-[`tf.keras.layers.TextVectorization`](https://keras.io/api/layers/preprocessing_layers/tex
-t/text_vectorization/#textvectorization-class) preprocessing layer to create a TF-IDF
-feature from our data.
+[`tf.keras.layers.TextVectorization`](https://keras.io/api/layers/preprocessing_layers/text/text_vectorization/#textvectorization-class)
+preprocessing layer to create a TF-IDF
+feature from our data. Note that this feature is not a really good use case for TF-IDF,
+this is just for demonstration purposes.
 """
 
 custom_layer = tf.keras.layers.TextVectorization(output_mode="tf_idf")
 
 feature_space = FeatureSpace(
     features={
-        "thal": FeatureSpace.feature(
+        "education": FeatureSpace.feature(
             preprocessor=custom_layer, dtype="string", output_mode="float"
         )
     },
     output_mode="dict",
 )
-example_feature_space(train_ds_with_no_labels, feature_space, ["thal"])
+example_feature_space(train_ds_with_no_labels, feature_space, ["education"])
 
 """
 ## Configuring the final `FeatureSpace`
@@ -337,30 +396,41 @@ to the feature transformation function.
 feature_space = FeatureSpace(
     features={
         # Categorical features encoded as integers
-        "sex": FeatureSpace.integer_categorical(num_oov_indices=0),
-        "cp": FeatureSpace.integer_categorical(num_oov_indices=0),
-        "fbs": FeatureSpace.integer_categorical(num_oov_indices=0),
-        "restecg": FeatureSpace.integer_categorical(num_oov_indices=0),
-        "exang": FeatureSpace.integer_categorical(num_oov_indices=0),
-        "ca": FeatureSpace.integer_categorical(num_oov_indices=0),
+        "previously_contacted": FeatureSpace.integer_categorical(num_oov_indices=0),
         # Categorical features encoded as string
-        "thal": FeatureSpace.string_categorical(num_oov_indices=1),
+        "marital": FeatureSpace.string_categorical(num_oov_indices=0),
+        "education": FeatureSpace.string_categorical(num_oov_indices=0),
+        "default": FeatureSpace.string_categorical(num_oov_indices=0),
+        "housing": FeatureSpace.string_categorical(num_oov_indices=0),
+        "loan": FeatureSpace.string_categorical(num_oov_indices=0),
+        "contact": FeatureSpace.string_categorical(num_oov_indices=0),
+        "month": FeatureSpace.string_categorical(num_oov_indices=0),
+        "day_of_week": FeatureSpace.string_categorical(num_oov_indices=0),
+        "poutcome": FeatureSpace.string_categorical(num_oov_indices=0),
+        # Categorical features to hash and bin
+        "job": FeatureSpace.string_hashed(num_bins=3),
         # Numerical features to hash and bin
-        "age": FeatureSpace.integer_hashed(num_bins=6),
-        "thalach": FeatureSpace.integer_hashed(num_bins=4),
+        "pdays": FeatureSpace.integer_hashed(num_bins=4),
+        # Numerical features to normalize and bin
+        "age": FeatureSpace.float_discretized(num_bins=4),
         # Numerical features to normalize
-        "trestbps": FeatureSpace.float_normalized(),
-        "chol": FeatureSpace.float_normalized(),
-        "oldpeak": FeatureSpace.float_normalized(),
-        "slope": FeatureSpace.float_normalized(),
+        "campaign": FeatureSpace.float_normalized(),
+        "previous": FeatureSpace.float_normalized(),
+        "emp.var.rate": FeatureSpace.float_normalized(),
+        "cons.price.idx": FeatureSpace.float_normalized(),
+        "cons.conf.idx": FeatureSpace.float_normalized(),
+        "euribor3m": FeatureSpace.float_normalized(),
+        "nr.employed": FeatureSpace.float_normalized(),
     },
     # Specify feature cross with a custom crossing dim.
     crosses=[
+        FeatureSpace.cross(feature_names=("age", "job"), crossing_dim=8),
         FeatureSpace.cross(
-            feature_names=("age", "sex"),
-            crossing_dim=8,
-            output_mode="one_hot",
-        )
+            feature_names=("default", "housing", "loan"), crossing_dim=6
+        ),
+        FeatureSpace.cross(
+            feature_names=("poutcome", "previously_contacted"), crossing_dim=2
+        ),
     ],
     output_mode="concat",
 )
@@ -407,9 +477,8 @@ At this point we can choose to save our `FeatureSpace` component, this have many
 advantages like re-using it on different experiments that use the same model, saving time
 if you need to re-run the preprocessing step, and mainly for model deployment, where by
 loading it you can be sure that you will be applying the same preprocessing steps don't
-matter the device or environment, this is a great way to reduce [training/serving
-skew](https://developers.google.com/machine-learning/guides/rules-of-ml#training-serving_skew).
-skew](https://developers.google.com/machine-learning/guides/rules-of-ml#training-serving_skew).
+matter the device or environment, this is a great way to reduce
+[training/servingskew](https://developers.google.com/machine-learning/guides/rules-of-ml#training-serving_skew).
 """
 
 feature_space.save("myfeaturespace.keras")
@@ -418,9 +487,9 @@ feature_space.save("myfeaturespace.keras")
 ## Preprocessing with `FeatureSpace` as part of the tf.data pipeline
 
 We will opt to use our component asynchronously by making it part of the tf.data
-pipeline, as noted at the [previous
-guide](https://keras.io/examples/structured_data/structured_data_classification_with_featu
-re_space/) This enables asynchronous parallel preprocessing of the data on CPU before it
+pipeline, as noted at the
+[previous guide](https://keras.io/examples/structured_data/structured_data_classification_with_feature_space/)
+This enables asynchronous parallel preprocessing of the data on CPU before it
 hits the model. Usually, this is always the right thing to do during training.
 
 Let's create a training and validation dataset of preprocessed batches:
@@ -450,7 +519,7 @@ This model is quite trivial only for demonstration purposes so don't pay too muc
 attention to the architecture.
 """
 
-x = tf.keras.layers.Dense(32, activation="relu")(encoded_features)
+x = tf.keras.layers.Dense(64, activation="relu")(encoded_features)
 x = tf.keras.layers.Dropout(0.5)(x)
 output = tf.keras.layers.Dense(1, activation="sigmoid")(x)
 
@@ -460,7 +529,7 @@ model.compile(optimizer="adam", loss="binary_crossentropy", metrics=["accuracy"]
 """
 ## Training
 
-Let's train our model for 50 epochs. Note that feature preprocessing is happening as part
+Let's train our model for 20 epochs. Note that feature preprocessing is happening as part
 of the tf.data pipeline, not as part of the model.
 """
 
@@ -496,31 +565,38 @@ dict_inputs = loaded_feature_space.get_inputs()
 encoded_features = loaded_feature_space.get_encoded_features()
 print(encoded_features)
 
-dict_inputs
+print(dict_inputs)
 
 outputs = model(encoded_features)
 inference_model = tf.keras.Model(inputs=dict_inputs, outputs=outputs)
 
 sample = {
-    "age": 60,
-    "sex": 1,
-    "cp": 1,
-    "trestbps": 145,
-    "chol": 233,
-    "fbs": 1,
-    "restecg": 2,
-    "thalach": 150,
-    "exang": 0,
-    "oldpeak": 2.3,
-    "slope": 3,
-    "ca": 0,
-    "thal": "fixed",
+    "age": 30,
+    "job": "blue-collar",
+    "marital": "married",
+    "education": "basic.9y",
+    "default": "no",
+    "housing": "yes",
+    "loan": "no",
+    "contact": "cellular",
+    "month": "may",
+    "day_of_week": "fri",
+    "campaign": 2,
+    "pdays": 999,
+    "previous": 0,
+    "poutcome": "nonexistent",
+    "emp.var.rate": -1.8,
+    "cons.price.idx": 92.893,
+    "cons.conf.idx": -46.2,
+    "euribor3m": 1.313,
+    "nr.employed": 5099.1,
+    "previously_contacted": 0,
 }
 
 input_dict = {name: tf.convert_to_tensor([value]) for name, value in sample.items()}
 predictions = inference_model.predict(input_dict)
 
 print(
-    f"This particular patient had a {100 * predictions[0][0]:.2f}% probability "
-    "of having a heart disease, as evaluated by our model."
+    f"This particular client has a {100 * predictions[0][0]:.2f}% probability "
+    "of subscribing a term deposit, as evaluated by our model."
 )
