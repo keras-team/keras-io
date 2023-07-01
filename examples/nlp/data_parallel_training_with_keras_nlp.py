@@ -14,19 +14,20 @@ Accelerator: GPU
 ## Introduction
 
 Distributed training is a technique used to train deep learning models on multiple devices 
-or machines simultaneously. It helps to reduce training time and improve model performance 
-by leveraging the computational power of multiple resources. KerasNLP is a library that 
-provides tools and utilities for natural language processing tasks, including distributed 
+or machines simultaneously. It helps to reduce training time and allows for training larger 
+models with more data.KerasNLP is a library that provides tools and utilities for natural 
+language processing tasks, including distributed 
 training.
 
 In this tutorial, we will use KerasNLP to train a BERT-based masked language model (MLM) 
-on the wikitext-2 dataset. The MLM task involves predicting the masked words in a sentence, 
-which helps the model learn contextual representations of words. 
+on the wikitext-2 dataset (a 2 million word dataset of wikipedia articles). The MLM task 
+involves predicting the masked words in a sentence, which helps the model learn contextual 
+representations of words. 
 
 This guide focuses on data parallelism, in particular synchronous data parallelism, where 
-the different replicas of the model stay in sync after each batch they process. 
-Synchronicity keeps the model convergence behavior identical to what you would see for 
-single-device training.
+each accelerator (a GPU or TPU) holds a complete replica of the model, and sees a 
+different partial batch of the input data. Partial gradients are computed on each device, 
+aggregated, and used to compute a global gradient update.
 
 Specifically, this guide teaches you how to use the `tf.distribute` API to train Keras
 models on multiple GPUs, with minimal changes to your code, in the following two setups:
@@ -36,8 +37,8 @@ multi-device training). This is the most common setup for researchers and small-
 industry workflows.
 - On a cluster of many machines, each hosting one or multiple GPUs (multi-worker
 distributed training). This is a good setup for large-scale industry workflows, e.g.
-training high-resolution image classification models on tens of millions of images using
-20-100 GPUs.
+training high-resolution text summarization models on billion word datasets on 20-100 
+GPUs.
 
 ## Setup
 
@@ -46,8 +47,7 @@ at least TensorFlow 2.11 in order to use AdamW with mixed precision.
 """
 
 """shell
-pip install keras-nlp==0.5.2 -q
-pip install -U tensorflow -q
+pip install -U -q tensorflow keras-nlp tensorflow_datasets datasets
 """
 
 """
@@ -60,13 +60,29 @@ from tensorflow import keras
 import keras_nlp
 
 """
-A simple thing we can do right off the bat is to enable
-[mixed precision](https://keras.io/api/mixed_precision/), which will speed up training by
-running most of our computations with 16 bit (instead of 32 bit) floating point numbers.
+Before we start any training, let's configure our single GPU to show up as two logical 
+devices.
+
+When you are training with two or more phsyical GPUs, this is totally uncessary. This 
+is just a trick to show real distributed training on the default colab GPU runtime, 
+which has only one GPU availabe.
 """
 
-policy = keras.mixed_precision.Policy("mixed_float16")
-keras.mixed_precision.set_global_policy(policy)
+"""shell
+nvidia-smi --query-gpu=memory.total --format=csv,noheader
+"""
+
+physical_devices = tf.config.list_physical_devices("GPU")
+tf.config.set_logical_device_configuration(
+    physical_devices[0],
+    [
+        tf.config.LogicalDeviceConfiguration(memory_limit=15360 // 2),
+        tf.config.LogicalDeviceConfiguration(memory_limit=15360 // 2),
+    ],
+)
+
+logical_devices = tf.config.list_logical_devices("GPU")
+logical_devices
 
 
 PRETRAINING_BATCH_SIZE = 128
@@ -93,7 +109,7 @@ wiki_train_ds = (
     .prefetch(tf.data.AUTOTUNE)
 )
 wiki_val_ds = (
-    tf.data.TextLineDataset(wiki_dir + "wiki.valid.token")
+    tf.data.TextLineDataset(wiki_dir + "wiki.valid.tokens")
     .filter(lambda x: tf.strings.length(x) > 100)
     .batch(PRETRAINING_BATCH_SIZE)
     .cache()
@@ -135,9 +151,7 @@ print(tf.config.list_physical_devices("GPU"))
 
 """
 To do single-host, multi-device synchronous training with a Keras model, you would use
-the [`tf.distribute.MirroredStrategy` API](
-    https://www.tensorflow.org/api_docs/python/tf/distribute/MirroredStrategy).
-Here's how it works:
+the `tf.distribute.MirroredStrategy` API. Here's how it works:
 
 - Instantiate a `MirroredStrategy`, optionally configuring which specific devices you
 want to use (by default the strategy will use all GPUs available).
@@ -154,19 +168,22 @@ print("Number of devices: {}".format(strategy.num_replicas_in_sync))
 With the datasets prepared, we now initialize and compile our model and optimizer within
 the `strategy.scope()`:
 """
+
 with strategy.scope():
     # Everything that creates variables should be under the strategy scope.
     # In general this is only model construction & `compile()`.
     model_dist = keras_nlp.models.BertMaskedLM.from_preset("bert_tiny_en_uncased")
     model_dist.compile(
         loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
-        optimizer=tf.keras.optimizers.Adam(5e-5),
+        optimizer=tf.keras.optimizers.AdamW(5e-5),
         weighted_metrics=keras.metrics.SparseCategoricalAccuracy(),
     )
 
 """
-Let's train our model.
+After creating our model under the scope, fit will automatically run distributed training.
+Just call it normally!
 """
+
 model_dist.fit(
     wiki_train_ds, validation_data=wiki_val_ds, epochs=EPOCHS, callbacks=callbacks
 )

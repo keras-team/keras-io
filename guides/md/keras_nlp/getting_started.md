@@ -2,7 +2,7 @@
 
 **Author:** [Jonathan Bischof](https://github.com/jbischof)<br>
 **Date created:** 2022/12/15<br>
-**Last modified:** 2023/07/01<br>
+**Last modified:** 2022/12/15<br>
 **Description:** An introduction to the KerasNLP API.
 
 
@@ -308,7 +308,6 @@ imdb_test_cached = (
 classifier = keras_nlp.models.BertClassifier.from_preset(
     "bert_tiny_en_uncased",
     preprocessor=None,
-    num_classes=2
 )
 classifier.fit(
     imdb_train_cached,
