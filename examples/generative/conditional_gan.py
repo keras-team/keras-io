@@ -55,7 +55,6 @@ from tensorflow import keras
 from tensorflow.keras import layers
 
 from tensorflow_docs.vis import embed
-import matplotlib.pyplot as plt
 import tensorflow as tf
 import numpy as np
 import imageio
@@ -264,7 +263,7 @@ cond_gan.fit(dataset, epochs=20)
 ## Interpolating between classes with the trained generator
 """
 
-# We first extract the trained generator from our Conditiona GAN.
+# We first extract the trained generator from our Conditional GAN.
 trained_gen = cond_gan.generator
 
 # Choose the number of intermediate images that would be generated in
@@ -306,7 +305,7 @@ fake_images = interpolate_class(start_class, end_class)
 Here, we first sample noise from a normal distribution and then we repeat that for
 `num_interpolation` times and reshape the result accordingly.
 We then distribute it uniformly for `num_interpolation`
-with the label indentities being present in some proportion.
+with the label identities being present in some proportion.
 """
 
 fake_images *= 255.0

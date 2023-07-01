@@ -45,7 +45,7 @@ When processing past target tokens for the decoder, we compute the sum of
 position embeddings and token embeddings.
 
 When processing audio features, we apply convolutional layers to downsample
-them (via convolution stides) and process local relationships.
+them (via convolution strides) and process local relationships.
 """
 
 
@@ -75,7 +75,6 @@ class SpeechFeatureEmbedding(layers.Layer):
         self.conv3 = tf.keras.layers.Conv1D(
             num_hid, 11, strides=2, padding="same", activation="relu"
         )
-        self.pos_emb = layers.Embedding(input_dim=maxlen, output_dim=num_hid)
 
     def call(self, x):
         x = self.conv1(x)
@@ -475,7 +474,7 @@ class CustomSchedule(keras.optimizers.schedules.LearningRateSchedule):
             self.lr_after_warmup
             - (epoch - self.warmup_epochs)
             * (self.lr_after_warmup - self.final_lr)
-            / (self.decay_epochs),
+            / self.decay_epochs,
         )
         return tf.math.minimum(warmup_lr, decay_lr)
 
