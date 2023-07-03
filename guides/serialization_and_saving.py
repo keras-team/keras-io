@@ -304,7 +304,7 @@ information).
 
 - `keras.models.clone_model`
 - `get_config()` and `from_config()`
-- `keras.models.model_to_json()` and `keras.models.model_from_json()`
+- `keras.model.to_json()` and `keras.models.model_from_json()`
 """
 
 """
