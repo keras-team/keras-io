@@ -23,7 +23,7 @@ good starting point for building OCR systems.
 """
 
 """shell
-wget -q https://git.io/J0fjL -O IAM_Words.zip
+wget -q https://github.com/sayakpaul/Handwriting-Recognizer-in-Keras/releases/download/v1.0.0/IAM_Words.zip
 unzip -qq IAM_Words.zip
 
 mkdir data
@@ -44,7 +44,7 @@ head -20 data/words.txt
 ## Imports
 """
 
-from tensorflow.keras.layers.experimental.preprocessing import StringLookup
+from tensorflow.keras.layers import StringLookup
 from tensorflow import keras
 
 import matplotlib.pyplot as plt
