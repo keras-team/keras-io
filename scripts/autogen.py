@@ -45,6 +45,7 @@ PROJECT_URL = {
     "keras_tuner": "https://github.com/keras-team/keras-tuner/tree/v1.3.3/",
     "keras_cv": "https://github.com/keras-team/keras-cv/tree/v0.5.0/",
     "keras_nlp": "https://github.com/keras-team/keras-nlp/tree/v0.5.1/",
+    "keras_core": "https://github.com/keras-team/keras-core/tree/v0.0.1/",
 }
 USE_MULTIPROCESSING = False
 
@@ -172,6 +173,13 @@ class KerasIO:
         )
         # Insert --- before H2 titles
         md_content = md_content.replace("\n## ", "\n---\n## ")
+        # Clean up progress bar output
+        if "[1m" in md_content:
+            md_content = md_content.replace("[1m", " ")
+            md_content = md_content.replace("[0m [32m", " ")
+            md_content = md_content.replace("[0m[37m[0m [1m", " ")
+            md_content = md_content.replace("[0m", "")
+            md_content = md_content.replace("[37m ", "")
         return md_content
 
     def make_tutobook_sources_for_directory(
@@ -369,6 +377,11 @@ class KerasIO:
         guides/md/intro_* -> sources/getting_started/
         examples/*/md/ -> sources/examples/*/
         """
+        if not os.path.exists(Path(self.templates_dir) / "guides" / "keras_core"):
+            os.makedirs(Path(self.templates_dir) / "guides" / "keras_core")
+        if os.path.exists(Path(self.templates_dir) / "keras_core" / "guides"):
+            shutil.rmtree(Path(self.templates_dir) / "keras_core" / "guides")
+
         # Guides
         copy_inner_contents(
             Path(self.guides_dir) / "md",
@@ -387,6 +400,11 @@ class KerasIO:
             Path(self.templates_dir)
             / "getting_started"
             / "intro_to_keras_for_researchers.md",
+        )
+        # Move Keras Core guides from `guides/keras_core/` to keras_core/guides/ 
+        shutil.move(
+            Path(self.templates_dir) / "guides" / "keras_core",
+            Path(self.templates_dir) / "keras_core" / "guides",
         )
 
         # Examples
