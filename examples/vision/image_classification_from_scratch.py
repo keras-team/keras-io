@@ -240,7 +240,6 @@ def make_model(input_shape, num_classes):
     previous_block_activation = x  # Set aside residual
 
     for size in [256, 512, 728]:
-        x = layers.Activation("relu")(x)
         x = layers.SeparableConv2D(size, 3, padding="same")(x)
         x = layers.BatchNormalization()(x)
 
