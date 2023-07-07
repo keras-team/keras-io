@@ -1,8 +1,8 @@
 # Data Parallel Training with KerasNLP
 
 **Author:** Anshuman Mishra<br>
-**Date created:** 2023/06/04<br>
-**Last modified:** 2023/06/05<br>
+**Date created:** 2023/07/07<br>
+**Last modified:** 2023/07/07<br>
 **Description:** Data Parallel training with KerasNLP.
 
 
@@ -49,17 +49,6 @@ at least TensorFlow 2.11 in order to use AdamW with mixed precision.
 !pip install -U -q tensorflow keras-nlp tensorflow_datasets datasets
 ```
 
-<div class="k-default-codeblock">
-```
-[2K     [90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m [32m486.2/486.2 kB[0m [31m12.9 MB/s[0m eta [36m0:00:00[0m
-[2K     [90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m [32m110.5/110.5 kB[0m [31m12.3 MB/s[0m eta [36m0:00:00[0m
-[2K     [90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m [32m212.5/212.5 kB[0m [31m23.9 MB/s[0m eta [36m0:00:00[0m
-[2K     [90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m [32m134.3/134.3 kB[0m [31m16.2 MB/s[0m eta [36m0:00:00[0m
-[2K     [90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m [32m236.8/236.8 kB[0m [31m25.8 MB/s[0m eta [36m0:00:00[0m
-[?25h
-
-```
-</div>
 ---
 ## Imports
 
@@ -119,8 +108,11 @@ wiki_dir = os.path.expanduser("~/.keras/datasets/wikitext-2/")
 
 # Load wikitext-103 and filter out short lines.
 wiki_train_ds = (
-    tf.data.TextLineDataset(wiki_dir + "wiki.train.tokens")
+    tf.data.TextLineDataset(
+        wiki_dir + "wiki.train.tokens",
+    )
     .filter(lambda x: tf.strings.length(x) > 100)
+    .shuffle(buffer_size=500)
     .batch(PRETRAINING_BATCH_SIZE)
     .cache()
     .prefetch(tf.data.AUTOTUNE)
@@ -128,6 +120,7 @@ wiki_train_ds = (
 wiki_val_ds = (
     tf.data.TextLineDataset(wiki_dir + "wiki.valid.tokens")
     .filter(lambda x: tf.strings.length(x) > 100)
+    .shuffle(buffer_size=500)
     .batch(PRETRAINING_BATCH_SIZE)
     .cache()
     .prefetch(tf.data.AUTOTUNE)
@@ -135,19 +128,13 @@ wiki_val_ds = (
 wiki_test_ds = (
     tf.data.TextLineDataset(wiki_dir + "wiki.test.tokens")
     .filter(lambda x: tf.strings.length(x) > 100)
+    .shuffle(buffer_size=500)
     .batch(PRETRAINING_BATCH_SIZE)
     .cache()
     .prefetch(tf.data.AUTOTUNE)
 )
 ```
 
-<div class="k-default-codeblock">
-```
-Downloading data from https://s3.amazonaws.com/research.metamind.io/wikitext/wikitext-2-v1.zip
-4475746/4475746 [==============================] - 0s 0us/step
-
-```
-</div>
 In the above code, we download the wikitext-2 dataset and extract it. Then, we define
 three datasets: wiki_train_ds, wiki_val_ds, and wiki_test_ds. These datasets are
 filtered to remove short lines and are batched for efficient training.
@@ -164,7 +151,7 @@ use `PolynomialDecay` schedule here.
 ```python
 total_training_steps = sum(1 for _ in wiki_train_ds.as_numpy_iterator()) * EPOCHS
 lr_schedule = tf.keras.optimizers.schedules.PolynomialDecay(
-    5e-5,
+    initial_learning_rate=5e-5,
     decay_steps=total_training_steps,
     end_learning_rate=0.0,
 )
@@ -217,8 +204,6 @@ print("Number of devices: {}".format(strategy.num_replicas_in_sync))
 
 <div class="k-default-codeblock">
 ```
-WARNING:tensorflow:NCCL is not supported when using virtual GPUs, fallingback to reduction to one device
-
 Number of devices: 2
 
 ```
@@ -237,27 +222,10 @@ with strategy.scope():
         optimizer=tf.keras.optimizers.AdamW(lr_schedule),
         weighted_metrics=keras.metrics.SparseCategoricalAccuracy(),
     )
-```
 
-<div class="k-default-codeblock">
-```
-Downloading data from https://storage.googleapis.com/keras-nlp/models/bert_tiny_en_uncased/v1/vocab.txt
-231508/231508 [==============================] - 0s 0us/step
-Downloading data from https://storage.googleapis.com/keras-nlp/models/bert_tiny_en_uncased/v1/model.h5
-17602216/17602216 [==============================] - 0s 0us/step
-
-```
-</div>
-After creating our model under the scope, fit will automatically run distributed training.
-Just call it normally!
-
-
-```python
-model_dist.fit(
-    wiki_train_ds, validation_data=wiki_val_ds, epochs=EPOCHS, callbacks=callbacks
-)
-
-model_dist.evaluate(wiki_test_ds)
+    model_dist.fit(
+        wiki_train_ds, validation_data=wiki_val_ds, epochs=EPOCHS, callbacks=callbacks
+    )
 ```
 
 <div class="k-default-codeblock">
@@ -273,20 +241,32 @@ WARNING:tensorflow:Gradients do not exist for variables ['pooled_dense/kernel:0'
 WARNING:tensorflow:Gradients do not exist for variables ['pooled_dense/kernel:0', 'pooled_dense/bias:0'] when minimizing the loss. If you're using `model.compile()`, did you forget to provide a `loss` argument?
 WARNING:tensorflow:Gradients do not exist for variables ['pooled_dense/kernel:0', 'pooled_dense/bias:0'] when minimizing the loss. If you're using `model.compile()`, did you forget to provide a `loss` argument?
 
-    120/Unknown - 91s 529ms/step - loss: 2.0194 - sparse_categorical_accuracy: 0.0377
+    120/Unknown - 90s 568ms/step - loss: 2.0205 - sparse_categorical_accuracy: 0.0415
 Learning rate for epoch 1 is 3.33333300659433e-05
-120/120 [==============================] - 103s 624ms/step - loss: 2.0194 - sparse_categorical_accuracy: 0.0377 - val_loss: 1.8460 - val_sparse_categorical_accuracy: 0.1365
+120/120 [==============================] - 103s 677ms/step - loss: 2.0205 - sparse_categorical_accuracy: 0.0415 - val_loss: 1.8596 - val_sparse_categorical_accuracy: 0.0940
 Epoch 2/3
-120/120 [==============================] - ETA: 0s - loss: 1.8312 - sparse_categorical_accuracy: 0.1042
+120/120 [==============================] - ETA: 0s - loss: 1.8300 - sparse_categorical_accuracy: 0.0886
 Learning rate for epoch 2 is 1.680555214988999e-05
-120/120 [==============================] - 73s 608ms/step - loss: 1.8312 - sparse_categorical_accuracy: 0.1042 - val_loss: 1.7375 - val_sparse_categorical_accuracy: 0.1792
+120/120 [==============================] - 77s 643ms/step - loss: 1.8300 - sparse_categorical_accuracy: 0.0886 - val_loss: 1.7412 - val_sparse_categorical_accuracy: 0.1829
 Epoch 3/3
-120/120 [==============================] - ETA: 0s - loss: 1.7796 - sparse_categorical_accuracy: 0.1191
+120/120 [==============================] - ETA: 0s - loss: 1.7734 - sparse_categorical_accuracy: 0.1241
 Learning rate for epoch 3 is 1.388877564068025e-07
-120/120 [==============================] - 73s 610ms/step - loss: 1.7796 - sparse_categorical_accuracy: 0.1191 - val_loss: 1.7094 - val_sparse_categorical_accuracy: 0.1876
-15/15 [==============================] - 8s 281ms/step - loss: 1.7338 - sparse_categorical_accuracy: 0.1969
+120/120 [==============================] - 76s 633ms/step - loss: 1.7734 - sparse_categorical_accuracy: 0.1241 - val_loss: 1.7002 - val_sparse_categorical_accuracy: 0.2075
 
-[1.7337980270385742, 0.1968642622232437]
+```
+</div>
+After fitting our model under the scope, we evaluate it normally!
+
+
+```python
+model_dist.evaluate(wiki_test_ds)
+```
+
+<div class="k-default-codeblock">
+```
+15/15 [==============================] - 8s 292ms/step - loss: 1.7406 - sparse_categorical_accuracy: 0.2115
+
+[1.7405692338943481, 0.21145851910114288]
 
 ```
 </div>
