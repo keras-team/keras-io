@@ -1,8 +1,8 @@
 """
 Title: Data Parallel Training with KerasNLP
 Author: Anshuman Mishra
-Date created: 2023/06/04
-Last modified: 2023/06/05
+Date created: 2023/07/07
+Last modified: 2023/07/07
 Description: Data Parallel training with KerasNLP.
 Accelerator: GPU
 """
@@ -96,8 +96,11 @@ wiki_dir = os.path.expanduser("~/.keras/datasets/wikitext-2/")
 
 # Load wikitext-103 and filter out short lines.
 wiki_train_ds = (
-    tf.data.TextLineDataset(wiki_dir + "wiki.train.tokens")
+    tf.data.TextLineDataset(
+        wiki_dir + "wiki.train.tokens",
+    )
     .filter(lambda x: tf.strings.length(x) > 100)
+    .shuffle(buffer_size=500)
     .batch(PRETRAINING_BATCH_SIZE)
     .cache()
     .prefetch(tf.data.AUTOTUNE)
@@ -105,6 +108,7 @@ wiki_train_ds = (
 wiki_val_ds = (
     tf.data.TextLineDataset(wiki_dir + "wiki.valid.tokens")
     .filter(lambda x: tf.strings.length(x) > 100)
+    .shuffle(buffer_size=500)
     .batch(PRETRAINING_BATCH_SIZE)
     .cache()
     .prefetch(tf.data.AUTOTUNE)
@@ -112,6 +116,7 @@ wiki_val_ds = (
 wiki_test_ds = (
     tf.data.TextLineDataset(wiki_dir + "wiki.test.tokens")
     .filter(lambda x: tf.strings.length(x) > 100)
+    .shuffle(buffer_size=500)
     .batch(PRETRAINING_BATCH_SIZE)
     .cache()
     .prefetch(tf.data.AUTOTUNE)
@@ -132,7 +137,7 @@ use `PolynomialDecay` schedule here.
 
 total_training_steps = sum(1 for _ in wiki_train_ds.as_numpy_iterator()) * EPOCHS
 lr_schedule = tf.keras.optimizers.schedules.PolynomialDecay(
-    5e-5,
+    initial_learning_rate=5e-5,
     decay_steps=total_training_steps,
     end_learning_rate=0.0,
 )
@@ -188,14 +193,13 @@ with strategy.scope():
         weighted_metrics=keras.metrics.SparseCategoricalAccuracy(),
     )
 
-"""
-After creating our model under the scope, fit will automatically run distributed training.
-Just call it normally!
-"""
+    model_dist.fit(
+        wiki_train_ds, validation_data=wiki_val_ds, epochs=EPOCHS, callbacks=callbacks
+    )
 
-model_dist.fit(
-    wiki_train_ds, validation_data=wiki_val_ds, epochs=EPOCHS, callbacks=callbacks
-)
+"""
+After fitting our model under the scope, we evaluate it normally!
+"""
 
 model_dist.evaluate(wiki_test_ds)
 
