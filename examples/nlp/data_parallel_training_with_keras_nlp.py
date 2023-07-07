@@ -53,6 +53,8 @@ import os
 import tensorflow as tf
 from tensorflow import keras
 import keras_nlp
+import warnings
+warnings.filterwarnings("ignore")
 
 """
 Before we start any training, let's configure our single GPU to show up as two logical
