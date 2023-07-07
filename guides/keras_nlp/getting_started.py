@@ -2,7 +2,7 @@
 Title: Getting Started with KerasNLP
 Author: [Jonathan Bischof](https://github.com/jbischof)
 Date created: 2022/12/15
-Last modified: 2022/12/15
+Last modified: 2023/07/01
 Description: An introduction to the KerasNLP API.
 Accelerator: GPU
 """
@@ -250,8 +250,7 @@ imdb_test_cached = (
 )
 
 classifier = keras_nlp.models.BertClassifier.from_preset(
-    "bert_tiny_en_uncased",
-    preprocessor=None,
+    "bert_tiny_en_uncased", preprocessor=None, num_classes=2
 )
 classifier.fit(
     imdb_train_cached,
