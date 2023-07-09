@@ -55,6 +55,14 @@ import tensorflow_datasets as tfds
 from tensorflow import keras
 
 """
+Secondly, let's enable mixed precision training. This will help us reduce the
+training time.
+"""
+
+policy = keras.mixed_precision.Policy("mixed_float16")
+keras.mixed_precision.set_global_policy(policy)
+
+"""
 Let's also define our hyperparameters.
 """
 
