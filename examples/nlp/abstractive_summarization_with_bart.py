@@ -25,8 +25,8 @@ include token masking, token deletion, sentence permutation (shuffle sentences
 and train BART to fix the order), etc.
 
 In this example, we will demonstrate how to fine-tune BART on the abstractive
-summarization task using KerasNLP, generate summaries using the fine-tuned
-model, and evaluate the summaries using ROUGE score.
+summarization task (on conversations!) using KerasNLP, generate summaries using
+the fine-tuned model, and evaluate the summaries using ROUGE score.
 """
 
 """
@@ -38,13 +38,15 @@ couple of utility libraries.
 """
 
 """shell
-pip install keras-nlp -q
+pip install rouge-score -q
+pip install git+https://github.com/abheesht17/keras-nlp.git@fix-bart-mp -q
 pip install py7zr -q
 pip install gdown -q
 """
 
 import gdown
 import py7zr
+import time
 
 import keras_nlp
 import tensorflow as tf
@@ -61,7 +63,7 @@ NUM_BATCHES = 500
 EPOCHS = 1  # Can be set to a higher value for better results
 MAX_ENCODER_SEQUENCE_LENGTH = 512
 MAX_DECODER_SEQUENCE_LENGTH = 128
-MAX_GENERATION_LENGTH = 200
+MAX_GENERATION_LENGTH = 40
 
 """
 ## Dataset
@@ -123,7 +125,8 @@ means is that we don't have to worry about preprocessing the text inputs;
 everything will be done internally. The preprocessor tokenizes the encoder text
 and the decoder text, adds special tokens and pads them. To generate labels
 for auto-regressive training, the preprocessor shifts the decoder text one
-position to the right.
+position to the right. This is done because at every timestep, the model is
+trained to predict the next token.
 """
 
 preprocessor = keras_nlp.models.BartSeq2SeqLMPreprocessor.from_preset(
@@ -171,14 +174,76 @@ bart_lm.fit(train_ds, epochs=EPOCHS)
 ## Generate summaries and evaluate them!
 
 Now that the model has been trained, let's get to the fun part - actually
-generating summaries! Let's pick the first 10 samples from the validation set
-and generate summaries for them.
+generating summaries! Let's pick the first 100 samples from the validation set
+and generate summaries for them. We will use the default decoding strategy, i.e.,
+greedy search.
+
+Generation in KerasNLP is highly optimized. It is backed by the power of XLA.
+Secondly, key/value tensors in the self-attention layer and cross-attention layer
+in the decoder are cached to avoid recomputation at every timestep.
 """
 
+
+def generate_text(model, input_text, max_length=200):
+    start = time.time()
+    output = model.generate(input_text, max_length=max_length)
+    end = time.time()
+    print(f"Total Time Elapsed: {end - start:.2f}s")
+    return output
+
+
+# Load the dataset.
 val_ds = tfds.load("samsum", split="validation", as_supervised=True)
+val_ds = val_ds.take(100)
 
 dialogues = []
-summaries = []
-for dialogue, summary in val_ds.take(10):
-    dialogues.append(dialogue.numpy().decode("utf-8"))
-    summaries.append(summary.numpy().decode("utf-8"))
+ground_truth_summaries = []
+for dialogue, summary in val_ds:
+    dialogues.append(dialogue.numpy())
+    ground_truth_summaries.append(summary.numpy())
+
+# Let's make a dummy call - the first call to XLA generally takes a bit longer.
+_ = generate_text(bart_lm, "sample text", max_length=MAX_GENERATION_LENGTH)
+
+# Generate summaries.
+generated_summaries = generate_text(
+    bart_lm,
+    val_ds.map(lambda dialogue, _: dialogue).batch(8),
+    max_length=MAX_GENERATION_LENGTH,
+)
+
+"""
+Let's print the first ten summaries.
+"""
+for dialogue, generated_summary, ground_truth_summary in zip(
+    dialogues[:5], generated_summaries[:5], ground_truth_summaries[:5]
+):
+    print("Dialogue:", dialogue)
+    print("Generated Summary:", generated_summary)
+    print("Ground Truth Summary:", ground_truth_summary)
+    print("=============================")
+
+"""
+Qualitatively, the generated summaries look awesome! Let's see if that's the
+case quantitatively as well. We'll use the ROUGE-N metric for evaluation.
+ROUGE-N is based on the number of common n-grams between the reference text and
+the generated text. ROUGE-1 and ROUGE-2 use the number of common unigrams and
+bigrams, respectively.
+"""
+
+rouge_1 = keras_nlp.metrics.RougeN(order=1)
+rouge_2 = keras_nlp.metrics.RougeN(order=2)
+
+for generated_summary, ground_truth_summary in zip(
+    generated_summaries, ground_truth_summaries
+):
+    rouge_1(ground_truth_summary, generated_summary)
+    rouge_2(ground_truth_summary, generated_summary)
+
+print("ROUGE-1 Score:", rouge_1.result())
+print("ROUGE-2 Score:", rouge_2.result())
+
+"""
+We get a ROUGE-1 score of 0.45 and a ROUGE-2 score of 0.15. Not bad for a
+model trained only for 1 epoch and on 8000 examples!
+"""
