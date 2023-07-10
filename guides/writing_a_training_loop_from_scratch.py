@@ -2,7 +2,7 @@
 Title: Writing a training loop from scratch
 Author: [fchollet](https://twitter.com/fchollet)
 Date created: 2019/03/01
-Last modified: 2020/04/15
+Last modified: 2023/07/10
 Description: Complete guide to writing low-level training & evaluation loops.
 Accelerator: None
 """
