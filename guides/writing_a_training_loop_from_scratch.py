@@ -2,7 +2,7 @@
 Title: Writing a training loop from scratch
 Author: [fchollet](https://twitter.com/fchollet)
 Date created: 2019/03/01
-Last modified: 2020/04/15
+Last modified: 2023/07/10
 Description: Complete guide to writing low-level training & evaluation loops.
 Accelerator: None
 """
@@ -11,8 +11,8 @@ Accelerator: None
 """
 
 import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras import layers
+import keras
+from keras import layers
 import numpy as np
 
 """
@@ -309,6 +309,7 @@ Consider this layer, that creates an activity regularization loss:
 """
 
 
+@keras.utils.register_keras_serializable()
 class ActivityRegularizationLayer(layers.Layer):
     def call(self, inputs):
         self.add_loss(1e-2 * tf.reduce_sum(inputs))

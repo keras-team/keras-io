@@ -2,7 +2,7 @@
 Title: Making new layers and models via subclassing
 Author: [fchollet](https://twitter.com/fchollet)
 Date created: 2019/03/01
-Last modified: 2023/03/16
+Last modified: 2023/07/10
 Description: Complete guide to writing `Layer` and `Model` objects from scratch.
 Accelerator: GPU
 """
@@ -11,7 +11,7 @@ Accelerator: GPU
 """
 
 import tensorflow as tf
-from tensorflow import keras
+import keras
 
 """
 ## The `Layer` class: the combination of state (weights) and some computation
@@ -531,9 +531,9 @@ Our VAE will be a subclass of `Model`, built as a nested composition of layers
 that subclass `Layer`. It will feature a regularization loss (KL divergence).
 """
 
-from tensorflow.keras import layers
+from keras import layers
 
-
+@keras.utils.register_keras_serializable()
 class Sampling(layers.Layer):
     """Uses (z_mean, z_log_var) to sample z, the vector encoding a digit."""
 
@@ -545,6 +545,7 @@ class Sampling(layers.Layer):
         return z_mean + tf.exp(0.5 * z_log_var) * epsilon
 
 
+@keras.utils.register_keras_serializable()
 class Encoder(layers.Layer):
     """Maps MNIST digits to a triplet (z_mean, z_log_var, z)."""
 
@@ -563,6 +564,7 @@ class Encoder(layers.Layer):
         return z_mean, z_log_var, z
 
 
+@keras.utils.register_keras_serializable()
 class Decoder(layers.Layer):
     """Converts z, the encoded digit vector, back into a readable digit."""
 
@@ -576,6 +578,7 @@ class Decoder(layers.Layer):
         return self.dense_output(x)
 
 
+@keras.utils.register_keras_serializable()
 class VariationalAutoEncoder(keras.Model):
     """Combines the encoder and decoder into an end-to-end model for training."""
 
