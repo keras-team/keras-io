@@ -2,7 +2,7 @@
 
 **Author:** [fchollet](https://twitter.com/fchollet)<br>
 **Date created:** 2019/03/01<br>
-**Last modified:** 2020/04/15<br>
+**Last modified:** 2023/07/10<br>
 **Description:** Complete guide to writing low-level training & evaluation loops.
 
 
@@ -596,7 +596,7 @@ def train_step(real_images):
 
     # Assemble labels discriminating real from fake images
     labels = tf.concat(
-        [tf.ones((batch_size, 1)), tf.zeros((real_images.shape[0], 1))], axis=0
+        [tf.zeros((batch_size, 1)), tf.ones((real_images.shape[0], 1))], axis=0
     )
     # Add random noise to the labels - important trick!
     labels += 0.05 * tf.random.uniform(labels.shape)
@@ -611,7 +611,7 @@ def train_step(real_images):
     # Sample random points in the latent space
     random_latent_vectors = tf.random.normal(shape=(batch_size, latent_dim))
     # Assemble labels that say "all real images"
-    misleading_labels = tf.zeros((batch_size, 1))
+    misleading_labels = tf.ones((batch_size, 1))
 
     # Train the generator (note that we should *not* update the weights
     # of the discriminator)!
