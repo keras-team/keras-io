@@ -65,7 +65,7 @@ variables. Let's take a look at an example customizing this.
 """
 
 
-@keras.utils.register_keras_serializable(package="my_custom_package")
+@keras.saving.register_keras_serializable(package="my_custom_package")
 class LayerWithCustomVariables(keras.layers.Dense):
     def __init__(self, units, special_mode=False, **kwargs):
         super().__init__(units, **kwargs)
@@ -92,7 +92,7 @@ class LayerWithCustomVariables(keras.layers.Dense):
             return super().call(inputs)
 
 
-@keras.utils.register_keras_serializable(package="my_custom_package")
+@keras.saving.register_keras_serializable(package="my_custom_package")
 class ModelWithCustomVariables(keras.Model):
     def __init__(self, special_mode=False, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -133,7 +133,7 @@ Let's take at the basics of this workflow with a simple file `assets.txt`.
 """
 
 
-@keras.utils.register_keras_serializable(package="my_custom_package")
+@keras.saving.register_keras_serializable(package="my_custom_package")
 class LayerWithCustomAssets(keras.layers.Dense):
     def build(self, input_shape):
         if not hasattr(self, "assets"):
@@ -152,7 +152,7 @@ class LayerWithCustomAssets(keras.layers.Dense):
         self.assets = text.replace("<unk>", "little")
 
 
-@keras.utils.register_keras_serializable(package="my_custom_package")
+@keras.saving.register_keras_serializable(package="my_custom_package")
 class ModelWithCustomAssets(keras.Model):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -192,7 +192,7 @@ that can be useful to restore for your built model.
 """
 
 
-@keras.utils.register_keras_serializable(package="my_custom_package")
+@keras.saving.register_keras_serializable(package="my_custom_package")
 class LayerWithCustomBuild(keras.layers.Layer):
     def __init__(self, units=32, **kwargs):
         super().__init__(**kwargs)
@@ -268,7 +268,7 @@ Let's take a look at an example of this.
 """
 
 
-@keras.utils.register_keras_serializable(package="my_custom_package")
+@keras.saving.register_keras_serializable(package="my_custom_package")
 def small_square_sum_loss(y_true, y_pred):
     loss = tf.math.squared_difference(y_pred, y_true)
     loss = loss / 10.0
@@ -276,12 +276,12 @@ def small_square_sum_loss(y_true, y_pred):
     return loss
 
 
-@keras.utils.register_keras_serializable(package="my_custom_package")
+@keras.saving.register_keras_serializable(package="my_custom_package")
 def mean_pred(y_true, y_pred):
     return tf.reduce_mean(y_pred)
 
 
-@keras.utils.register_keras_serializable(package="my_custom_package")
+@keras.saving.register_keras_serializable(package="my_custom_package")
 class ModelWithCustomCompile(keras.Model):
     def __init__(self):
         super().__init__()
