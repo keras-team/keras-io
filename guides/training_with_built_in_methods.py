@@ -266,7 +266,7 @@ Here's how you would do it:
 """
 
 
-@keras.utils.register_keras_serializable()
+@keras.saving.register_keras_serializable()
 class CustomMSE(keras.losses.Loss):
     def __init__(self, regularization_factor=0.1, name="custom_mse"):
         super().__init__(name=name)
@@ -311,7 +311,7 @@ that counts how many samples were correctly classified as belonging to a given c
 """
 
 
-@keras.utils.register_keras_serializable()
+@keras.saving.register_keras_serializable()
 class CategoricalTruePositives(keras.metrics.Metric):
     def __init__(self, name="categorical_true_positives", **kwargs):
         super().__init__(name=name, **kwargs)
@@ -358,7 +358,7 @@ this layer is just for the sake of providing a concrete example):
 """
 
 
-@keras.utils.register_keras_serializable()
+@keras.saving.register_keras_serializable()
 class ActivityRegularizationLayer(layers.Layer):
     def call(self, inputs):
         self.add_loss(tf.reduce_sum(inputs) * 0.1)
@@ -393,7 +393,7 @@ targets & logits, and it tracks a crossentropy loss via `add_loss()`.
 """
 
 
-@keras.utils.register_keras_serializable()
+@keras.saving.register_keras_serializable()
 class LogisticEndpoint(keras.layers.Layer):
     def __init__(self, name=None):
         super().__init__(name=name)

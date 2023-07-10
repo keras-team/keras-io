@@ -607,7 +607,7 @@ method that returns the constructor arguments of the layer instance:
 """
 
 
-@keras.utils.register_keras_serializable()
+@keras.saving.register_keras_serializable()
 class CustomDense(layers.Layer):
     def __init__(self, units=32):
         super().__init__()
@@ -777,7 +777,7 @@ outputs = layers.Dense(1)(x)
 model = keras.Model(inputs, outputs)
 
 
-@keras.utils.register_keras_serializable()
+@keras.saving.register_keras_serializable()
 class CustomRNN(layers.Layer):
     def __init__(self):
         super().__init__()
@@ -832,7 +832,7 @@ input_dim = 5
 batch_size = 16
 
 
-@keras.utils.register_keras_serializable()
+@keras.saving.register_keras_serializable()
 class CustomRNN(layers.Layer):
     def __init__(self):
         super().__init__()

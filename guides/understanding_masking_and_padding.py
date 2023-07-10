@@ -290,7 +290,7 @@ Here's an example of a layer that is whitelisted for mask propagation:
 """
 
 
-@keras.utils.register_keras_serializable()
+@keras.saving.register_keras_serializable()
 class MyActivation(keras.layers.Layer):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -330,7 +330,7 @@ Here's a simple example below: a layer that computes a softmax over the time dim
 """
 
 
-@keras.utils.register_keras_serializable()
+@keras.saving.register_keras_serializable()
 class TemporalSoftmax(keras.layers.Layer):
     def call(self, inputs, mask=None):
         broadcast_float_mask = tf.expand_dims(tf.cast(mask, "float32"), -1)
