@@ -840,7 +840,7 @@ resnet50_backbone = get_backbone()
 loss_fn = RetinaNetLoss(num_classes)
 model = RetinaNet(num_classes, resnet50_backbone)
 
-optimizer = tf.optimizers.SGD(learning_rate=learning_rate_fn, momentum=0.9)
+optimizer = tf.keras.optimizers.legacy.SGD(learning_rate=learning_rate_fn, momentum=0.9)
 model.compile(loss=loss_fn, optimizer=optimizer)
 
 """
