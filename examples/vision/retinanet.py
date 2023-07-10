@@ -2,7 +2,7 @@
 Title: Object Detection with RetinaNet
 Author: [Srihari Humbarwadi](https://twitter.com/srihari_rh)
 Date created: 2020/05/17
-Last modified: 2020/07/14
+Last modified: 2023/07/10
 Description: Implementing RetinaNet: Focal Loss for Dense Object Detection.
 Accelerator: GPU
 """
