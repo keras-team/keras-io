@@ -66,7 +66,7 @@ check out
 """
 ## Setup
 
-For this tutorial we will need KerasCV which can be installed with the following command:
+For this tutorial we will need [KerasCV](https://keras.io/keras_cv/) which can be installed with the following command:
 `pip install keras-cv`
 """
 
@@ -80,6 +80,9 @@ tfds.disable_progress_bar()
 
 """
 ## Hyperparameter setup
+
+Please feel free to change the hyperparameters and train the model. Here we make the following choices
+due to hardware restrictions and good training logs.
 """
 # Dataset hyperparameters
 IMAGE_SIZE = 96
@@ -120,15 +123,18 @@ AUTOTUNE = tf.data.AUTOTUNE
 """
 ## Dataset
 
-During training we will simultaneously load a large batch of unlabeled images along with a
-smaller batch of labeled images.
+The dataset has three splits:
+- Training Unlabelled: This dataset is used to train the encoder in the contrastive setting.
+- Training Lablelled: This dataset is used to train the baseline encoder (supervised) and also
+    fine tune the pre-trained encoder.
+- Testing Labelled: This dataset is used to evaluate the models.
 """
 
 
 def prepare_dataset():
     unlabeled_train_dataset = (
         tfds.load("stl10", data_dir="dataset", split="unlabelled", as_supervised=True)
-        .map(lambda image, label: image, num_parallel_calls=AUTOTUNE)
+        .map(lambda image, _: image, num_parallel_calls=AUTOTUNE)
         .shuffle(buffer_size=2 * UNLABELED_BATCH_SIZE)
         .batch(UNLABELED_BATCH_SIZE, num_parallel_calls=AUTOTUNE)
         .prefetch(AUTOTUNE)
@@ -157,28 +163,16 @@ unlabeled_train_dataset, labeled_train_dataset, test_dataset = prepare_dataset()
 The two most important image augmentations for contrastive learning are the
 following:
 
-- Cropping: forces the model to encode different parts of the same image
-similarly, we implement it with the
-[RandomTranslation](https://keras.io/api/layers/preprocessing_layers/image_preprocessing/random_translation/)
-and
-[RandomZoom](https://keras.io/api/layers/preprocessing_layers/image_preprocessing/random_zoom/)
-layers
-- Color jitter: prevents a trivial color histogram-based solution to the task by
+- **Cropping**: forces the model to encode different parts of the same image
+similarly.
+- **Color jitter**: prevents a trivial color histogram-based solution to the task by
 distorting color histograms. A principled way to implement that is by affine
 transformations in color space.
 
-In this example we use random horizontal flips as well. Stronger augmentations
-are applied for contrastive learning, along with weaker ones for supervised
-classification to avoid overfitting on the few labeled examples.
+Stronger augmentations are applied for contrastive learning, along with weaker
+ones for supervised classification to avoid overfitting on the few labeled examples.
 
-We implement random color jitter as a custom preprocessing layer. Using
-preprocessing layers for data augmentation has the following two advantages:
-
-- The data augmentation will run on GPU in batches, so the training will not be
-bottlenecked by the data pipeline in environments with constrained CPU
-resources (such as a Colab Notebook, or a personal machine)
-- Deployment is easier as the data preprocessing pipeline is encapsulated in the
-model, and does not have to be reimplemented when deploying it
+We implement the augmentations using the KerasCV library.
 """
 
 
@@ -216,7 +210,9 @@ def get_augmenter(
 
 
 """
-### Let's visualize the Un-Augmented Images
+## Visualize the dataset
+
+Let's first visualize the original dataset.
 """
 
 # Original Images
@@ -229,7 +225,8 @@ keras_cv.visualization.plot_image_gallery(
 )
 
 """
-### Let's visualize the Augmented Images (Constrastive)
+Using the contrastive augmentation pipleine we notice how
+the dataset has changed.
 """
 
 # Contrastive Augmentations
@@ -243,7 +240,8 @@ keras_cv.visualization.plot_image_gallery(
 )
 
 """
-### Let's visualize the Augmented Images (Classification)
+Let's now apply the classification augmentation pipeline on the
+dataset.
 """
 
 # Classification Augmentations
@@ -258,6 +256,10 @@ keras_cv.visualization.plot_image_gallery(
 
 """
 ## Encoder architecture
+
+We use the `ResNet18Backbone` from the KerasCV library. Try out different
+backbones and check whether any model trains better in this paradigm. Also
+try to reason out why that happened.
 """
 
 
@@ -312,8 +314,8 @@ We pretrain an encoder on unlabeled images with a contrastive loss.
 A nonlinear projection head is attached to the top of the encoder, as it
 improves the quality of representations of the encoder.
 
-We use the InfoNCE/NT-Xent/N-pairs loss, which can be interpreted in the
-following way:
+We use the InfoNCE/NT-Xent/N-pairs loss (KerasCV already has this implemented as the `SimCLRLoss`),
+which can be interpreted in the following way:
 
 1. We treat each image in the batch as if it had its own class.
 2. Then, we have two examples (a pair of augmented views) for each "class".
@@ -323,28 +325,7 @@ following way:
   logits.
 5. Finally, we use categorical cross-entropy as the "classification" loss
 
-The following two metrics are used for monitoring the pretraining performance:
-
-- [Contrastive accuracy (SimCLR Table 5)](https://arxiv.org/abs/2002.05709):
-Self-supervised metric, the ratio of cases in which the representation of an
-image is more similar to its differently augmented version's one, than to the
-representation of any other image in the current batch. Self-supervised
-metrics can be used for hyperparameter tuning even in the case when there are
-no labeled examples.
-- [Linear probing accuracy](https://arxiv.org/abs/1603.08511): Linear probing is
-a popular metric to evaluate self-supervised classifiers. It is computed as
-the accuracy of a logistic regression classifier trained on top of the
-encoder's features. In our case, this is done by training a single dense layer
-on top of the frozen encoder. Note that contrary to traditional approach where
-the classifier is trained after the pretraining phase, in this example we
-train it during pretraining. This might slightly decrease its accuracy, but
-that way we can monitor its value during training, which helps with
-experimentation and debugging.
-
-Another widely used supervised metric is the
-[KNN accuracy](https://arxiv.org/abs/1805.01978), which is the accuracy of a KNN
-classifier trained on top of the encoder's features, which is not implemented in
-this example.
+We subclass the `ContrastiveTrainer` from the KerasCV library to build the `SimCLRTrainer`.
 """
 
 
