@@ -61,8 +61,6 @@ Here's the data:
 
 
 ```python
-keras.config.disable_traceback_filtering()
-
 # Load the data and split it between train and test sets
 (x_train, y_train), (x_test, y_test) = keras.datasets.mnist.load_data()
 
