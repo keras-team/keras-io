@@ -314,7 +314,7 @@ def validate(py):
         raise ValueError("Description field content must end with a period.")
     if len(description) > 100:
         raise ValueError("Description field content must be less than 100 chars.")
-    accelerator = lines[6][len("Accelerator: "):]
+    accelerator = lines[6][len("Accelerator: ") :]
     accelerator_options = ["GPU", "TPU", "None"]
     if accelerator not in accelerator_options:
         raise ValueError(
