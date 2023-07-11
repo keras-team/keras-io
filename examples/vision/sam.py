@@ -80,8 +80,7 @@ allows SAM to output a valid mask even when the prompt is ambiguous to understan
 makes SAM ambiguity-aware. Moreover, SAM predicts multiple masks for a single prompt.
 
 We highly encourage you to check out the [SAM paper](https://arxiv.org/abs/2304.02643)
-and the [blog
-post](https://ai.facebook.com/blog/segment-anything-foundation-model-image-segmentation/)
+and the [blog post](https://ai.facebook.com/blog/segment-anything-foundation-model-image-segmentation/)
 to learn more about the additional details of SAM and the dataset used to pre-trained it.
 """
 
