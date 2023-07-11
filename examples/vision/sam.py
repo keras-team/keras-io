@@ -32,7 +32,7 @@ a box or a mask. There are many downstream segmentation tasks, including semanti
 segmentation and edge detection. The goal of SAM is to enable all of these downstream
 segmentation tasks through prompting.
 
-In this notebook, we'll learn how to use the SAM model from 🤗 Transformers for performing
+In this example, we'll learn how to use the SAM model from 🤗 Transformers for performing
 inference and fine-tuning.
 
 
