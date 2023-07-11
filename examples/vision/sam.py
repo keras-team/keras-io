@@ -53,7 +53,6 @@ SAM has the following components:
 
 |
 ![](https://scontent.fccu31-1.fna.fbcdn.net/v/t39.2365-6/338558258_1349701259095991_4358060436604292355_n.png?_nc_cat=104&ccb=1-7&_nc_sid=ad8a9d&_nc_ohc=f0B0G6TtZG0AX-2gBP1&_nc_ht=scontent.fccu31-1.fna&oh=00_AfDSPCChiBRx_ZmE_krAlqsfSIZU3BUmRJcZIc4LVZa93w&oe=64737F89)
-![](https://scontent.fccu31-1.fna.fbcdn.net/v/t39.2365-6/338558258_1349701259095991_4358060436604292355_n.png?_nc_cat=104&ccb=1-7&_nc_sid=ad8a9d&_nc_ohc=f0B0G6TtZG0AX-2gBP1&_nc_ht=scontent.fccu31-1.fna&oh=00_AfDSPCChiBRx_ZmE_krAlqsfSIZU3BUmRJcZIc4LVZa93w&oe=64737F89)
 |:--:|
 | Image taken from the official [SAM blog
 post](https://ai.facebook.com/blog/segment-anything-foundation-model-image-segmentation/)
@@ -109,7 +108,6 @@ processor = SamProcessor.from_pretrained("facebook/sam-vit-base")
 """
 Next, we write some utility functions for visualization. Most of these functions are
 taken from [this
-notebook](https://github.com/huggingface/notebooks/blob/main/examples/segment_anything.ipynb).
 notebook](https://github.com/huggingface/notebooks/blob/main/examples/segment_anything.ipynb).
 """
 
@@ -270,12 +268,12 @@ outputs = model(**inputs)
 """
 `outputs` has got two attributes of our interest:
 
-* `outputs.pred_masks`: which denote the predicted masks.
-* `outputs.iou_scores`: which denote the IoU scores associated with the masks.
+* `outputs.pred_masks`: which denotes the predicted masks.
+* `outputs.iou_scores`: which denotes the IoU scores associated with the masks.
 """
 
 """
-Let's post-process the masks and visulize them with their IoU scores:
+Let's post-process the masks and visualize them with their IoU scores:
 """
 
 masks = processor.image_processor.post_process_masks(
@@ -292,7 +290,7 @@ And there we go!
 
 As can be noticed, all the masks are _valid_ masks for the point prompt we provided.
 
-SAM is flexbile enough to support different visual prompts and we encourage you to check
+SAM is flexible enough to support different visual prompts and we encourage you to check
 out [this
 notebook](https://github.com/huggingface/notebooks/blob/main/examples/segment_anything.ipy
 nb) to know more about them!
@@ -555,8 +553,8 @@ def train_step(inputs):
 
 
 """
-We can now run the training for three epochs. We might a warning about gradients not
-existing on IoU prediction head of mask decoder, we can safely ignore that.
+We can now run the training for three epochs. We might have a warning about gradients
+not existing on IoU prediction head of mask decoder, we can safely ignore that.
 """
 
 # run training
@@ -593,7 +591,7 @@ preprocessed_img = processor(raw_image_inference)
 outputs = sam(preprocessed_img)
 
 """
-Lastly we can visualize the results.
+Lastly, we can visualize the results.
 """
 
 infer_masks = outputs["pred_masks"]
