@@ -52,7 +52,7 @@ inference and fine-tuning.
 SAM has the following components:
 
 |
-![](https://scontent.fccu31-1.fna.fbcdn.net/v/t39.2365-6/338558258_1349701259095991_4358060436604292355_n.png?_nc_cat=104&ccb=1-7&_nc_sid=ad8a9d&_nc_ohc=f0B0G6TtZG0AX-2gBP1&_nc_ht=scontent.fccu31-1.fna&oh=00_AfDSPCChiBRx_ZmE_krAlqsfSIZU3BUmRJcZIc4LVZa93w&oe=64737F89)
+![](https://imgur.com/oLfdwuB)
 |:--:|
 | Image taken from the official [SAM blog
 post](https://ai.facebook.com/blog/segment-anything-foundation-model-image-segmentation/)
@@ -76,14 +76,14 @@ lightweight mask decoder. The decoder is responsible for predicting the mask.
 """
 
 """
-SAM was pretrained to predict a _valid_ mask for any acceptable prompt. This requirement
+SAM was pre-trained to predict a _valid_ mask for any acceptable prompt. This requirement
 allows SAM to output a valid mask even when the prompt is ambiguous to understand -- this
-makes SAM ambiguity-aware. Moreoever, SAM predicts multiple masks for a single prompt.
+makes SAM ambiguity-aware. Moreover, SAM predicts multiple masks for a single prompt.
 
 We highly encourage you to check out the [SAM paper](https://arxiv.org/abs/2304.02643)
 and the [blog
 post](https://ai.facebook.com/blog/segment-anything-foundation-model-image-segmentation/)
-to learn more about the additional details of SAM and the dataset used to pretrained it.
+to learn more about the additional details of SAM and the dataset used to pre-trained it.
 """
 
 """
