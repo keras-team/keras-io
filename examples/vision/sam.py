@@ -54,8 +54,7 @@ SAM has the following components:
 |
 ![](https://imgur.com/oLfdwuB)
 |:--:|
-| Image taken from the official [SAM blog
-post](https://ai.facebook.com/blog/segment-anything-foundation-model-image-segmentation/)
+| Image taken from the official [SAM blog post](https://ai.facebook.com/blog/segment-anything-foundation-model-image-segmentation/) |
 |
 
 """
