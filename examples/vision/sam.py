@@ -359,8 +359,8 @@ tf.shape(ground_truth_seg)
 We now write a generator class to prepare the images and the segmentation masks using the
 `processor` utilized above. We will leverage this generator class to create a
 `tf.data.Dataset` object for our training set by using
-`tf.data.Dataset.from_generator()`. Utilities of this class have been adapted from [this
-notebook](https://github.com/NielsRogge/Transformers-Tutorials/blob/master/SAM/Fine_tune_SAM_(segment_anything)_on_a_custom_dataset.ipynb).
+`tf.data.Dataset.from_generator()`. Utilities of this class have been adapted from
+[this notebook](https://github.com/NielsRogge/Transformers-Tutorials/blob/master/SAM/Fine_tune_SAM_(segment_anything)_on_a_custom_dataset.ipynb).
 
 The generator is responsible for yielding the preprocessed images and the segmentation
 masks, and some other metadata needed by the SAM model.
