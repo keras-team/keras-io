@@ -94,8 +94,7 @@ There are three checkpoints for SAM:
 * [sam-vit-huge](https://huggingface.co/facebook/sam-vit-huge).
 
 We load `sam-vit-base` in
-[`TFSamModel`](https://huggingface.co/docs/transformers/main/model_doc/sam#transformers.TF
-SamModel). We also need `SamProcessor`for the associated checkpoint.
+[`TFSamModel`](https://huggingface.co/docs/transformers/main/model_doc/sam#transformers.TFSamModel). We also need `SamProcessor`for the associated checkpoint.
 """
 
 from transformers import TFSamModel, SamProcessor
