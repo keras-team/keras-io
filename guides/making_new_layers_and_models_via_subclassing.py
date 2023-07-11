@@ -446,7 +446,7 @@ layer configured with `mask_zero=True`, and the `Masking` layer.
 
 To learn more about masking and how to write masking-enabled layers, please
 check out the guide
-["understanding padding and masking"](/guides/understanding_masking_and_padding/).
+["understanding padding and masking"](/guide/keras/understanding_masking_and_padding).
 """
 
 """
