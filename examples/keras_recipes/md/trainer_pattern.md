@@ -39,9 +39,10 @@ x_train, x_test = x_train / 255.0, x_test / 255.0
 ```
 
 ---
-## Define the custom training step
+## Define the Trainer class
 
-A custom training step can be created by overriding the `train_step()` method of a Model subclass:
+A custom training and evaluation step can be created by overriding
+the `train_step()` and `test_step()` method of a `Model` subclass:
 
 
 ```python
@@ -50,13 +51,21 @@ class MyTrainer(keras.Model):
     def __init__(self, model):
         super().__init__()
         self.model = model
+        # Create loss and metrics here.
+        self.loss_fn = keras.losses.SparseCategoricalCrossentropy()
+        self.accuracy_metric = keras.metrics.SparseCategoricalAccuracy()
+
+    @property
+    def metrics(self):
+        # List metrics here.
+        return [self.accuracy_metric]
 
     def train_step(self, data):
         x, y = data
         with tf.GradientTape() as tape:
             y_pred = self.model(x, training=True)  # Forward pass
             # Compute loss value
-            loss = self.compiled_loss(y, y_pred, regularization_losses=self.losses)
+            loss = self.loss_fn(y, y_pred)
 
         # Compute gradients
         trainable_vars = self.trainable_variables
@@ -65,10 +74,22 @@ class MyTrainer(keras.Model):
         # Update weights
         self.optimizer.apply_gradients(zip(gradients, trainable_vars))
 
-        # Update metrics configured in `compile()`
-        self.compiled_metrics.update_state(y, y_pred)
+        # Update metrics
+        for metric in self.metrics:
+            metric.update_state(y, y_pred)
 
         # Return a dict mapping metric names to current value.
+        return {m.name: m.result() for m in self.metrics}
+
+    def test_step(self, data):
+        x, y = data
+
+        # Inference step
+        y_pred = self.model(x, training=False)
+
+        # Update metrics
+        for metric in self.metrics:
+            metric.update_state(y, y_pred)
         return {m.name: m.result() for m in self.metrics}
 
     def call(self, x):
@@ -119,18 +140,12 @@ trainer_2 = MyTrainer(model_b)
 
 
 ```python
-trainer_1.compile(
-    keras.optimizers.SGD(), loss="sparse_categorical_crossentropy", metrics=["accuracy"]
-)
+trainer_1.compile(optimizer=keras.optimizers.SGD())
 trainer_1.fit(
     x_train, y_train, epochs=5, batch_size=64, validation_data=(x_test, y_test)
 )
 
-trainer_2.compile(
-    keras.optimizers.Adam(),
-    loss="sparse_categorical_crossentropy",
-    metrics=["accuracy"],
-)
+trainer_2.compile(optimizer=keras.optimizers.Adam())
 trainer_2.fit(
     x_train, y_train, epochs=5, batch_size=64, validation_data=(x_test, y_test)
 )
@@ -138,28 +153,35 @@ trainer_2.fit(
 
 <div class="k-default-codeblock">
 ```
-Epoch 1/5
-938/938 [==============================] - 1s 1ms/step - loss: 0.9075 - accuracy: 0.7650 - val_loss: 0.4641 - val_accuracy: 0.8845
-Epoch 2/5
-938/938 [==============================] - 1s 1ms/step - loss: 0.4558 - accuracy: 0.8724 - val_loss: 0.3592 - val_accuracy: 0.9044
-Epoch 3/5
-938/938 [==============================] - 1s 1ms/step - loss: 0.3855 - accuracy: 0.8913 - val_loss: 0.3178 - val_accuracy: 0.9136
-Epoch 4/5
-938/938 [==============================] - 1s 1ms/step - loss: 0.3465 - accuracy: 0.9014 - val_loss: 0.2908 - val_accuracy: 0.9194
-Epoch 5/5
-938/938 [==============================] - 1s 1ms/step - loss: 0.3200 - accuracy: 0.9086 - val_loss: 0.2711 - val_accuracy: 0.9252
-Epoch 1/5
-938/938 [==============================] - 2s 2ms/step - loss: 0.2716 - accuracy: 0.9204 - val_loss: 0.1237 - val_accuracy: 0.9626
-Epoch 2/5
-938/938 [==============================] - 2s 2ms/step - loss: 0.1270 - accuracy: 0.9625 - val_loss: 0.0869 - val_accuracy: 0.9738
-Epoch 3/5
-938/938 [==============================] - 2s 2ms/step - loss: 0.0951 - accuracy: 0.9718 - val_loss: 0.0792 - val_accuracy: 0.9747
-Epoch 4/5
-938/938 [==============================] - 2s 2ms/step - loss: 0.0760 - accuracy: 0.9767 - val_loss: 0.0680 - val_accuracy: 0.9780
-Epoch 5/5
-938/938 [==============================] - 2s 2ms/step - loss: 0.0647 - accuracy: 0.9798 - val_loss: 0.0698 - val_accuracy: 0.9782
+WARNING:absl:At this time, the v2.11+ optimizer `tf.keras.optimizers.SGD` runs slowly on M1/M2 Macs, please use the legacy Keras optimizer instead, located at `tf.keras.optimizers.legacy.SGD`.
+WARNING:absl:There is a known slowdown when using v2.11+ Keras optimizers on M1/M2 Macs. Falling back to the legacy Keras optimizer, i.e., `tf.keras.optimizers.legacy.SGD`.
 
-<keras.callbacks.History at 0x168dcb460>
+Epoch 1/5
+938/938 [==============================] - 1s 1ms/step - sparse_categorical_accuracy: 0.7627 - val_sparse_categorical_accuracy: 0.8887
+Epoch 2/5
+938/938 [==============================] - 1s 992us/step - sparse_categorical_accuracy: 0.8750 - val_sparse_categorical_accuracy: 0.9083
+Epoch 3/5
+938/938 [==============================] - 1s 1ms/step - sparse_categorical_accuracy: 0.8918 - val_sparse_categorical_accuracy: 0.9144
+Epoch 4/5
+938/938 [==============================] - 1s 983us/step - sparse_categorical_accuracy: 0.9037 - val_sparse_categorical_accuracy: 0.9216
+Epoch 5/5
+938/938 [==============================] - 1s 1ms/step - sparse_categorical_accuracy: 0.9104 - val_sparse_categorical_accuracy: 0.9273
+
+WARNING:absl:At this time, the v2.11+ optimizer `tf.keras.optimizers.Adam` runs slowly on M1/M2 Macs, please use the legacy Keras optimizer instead, located at `tf.keras.optimizers.legacy.Adam`.
+WARNING:absl:There is a known slowdown when using v2.11+ Keras optimizers on M1/M2 Macs. Falling back to the legacy Keras optimizer, i.e., `tf.keras.optimizers.legacy.Adam`.
+
+Epoch 1/5
+938/938 [==============================] - 2s 2ms/step - sparse_categorical_accuracy: 0.9194 - val_sparse_categorical_accuracy: 0.9611
+Epoch 2/5
+938/938 [==============================] - 1s 2ms/step - sparse_categorical_accuracy: 0.9617 - val_sparse_categorical_accuracy: 0.9696
+Epoch 3/5
+938/938 [==============================] - 2s 2ms/step - sparse_categorical_accuracy: 0.9711 - val_sparse_categorical_accuracy: 0.9760
+Epoch 4/5
+938/938 [==============================] - 2s 2ms/step - sparse_categorical_accuracy: 0.9769 - val_sparse_categorical_accuracy: 0.9748
+Epoch 5/5
+938/938 [==============================] - 2s 2ms/step - sparse_categorical_accuracy: 0.9792 - val_sparse_categorical_accuracy: 0.9804
+
+<keras.callbacks.History at 0x2c81f7760>
 
 ```
 </div>

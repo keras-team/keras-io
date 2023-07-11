@@ -27,15 +27,10 @@ Here's a densely-connected layer. It has a state: the variables `w` and `b`.
 class Linear(keras.layers.Layer):
     def __init__(self, units=32, input_dim=32):
         super().__init__()
-        w_init = tf.random_normal_initializer()
-        self.w = tf.Variable(
-            initial_value=w_init(shape=(input_dim, units), dtype="float32"),
-            trainable=True,
+        self.w = self.add_weight(
+            shape=(input_dim, units), initializer="random_normal", trainable=True
         )
-        b_init = tf.zeros_initializer()
-        self.b = tf.Variable(
-            initial_value=b_init(shape=(units,), dtype="float32"), trainable=True
-        )
+        self.b = self.add_weight(shape=(units,), initializer="zeros", trainable=True)
 
     def call(self, inputs):
         return tf.matmul(inputs, self.w) + self.b
@@ -59,29 +54,6 @@ being set as layer attributes:
 assert linear_layer.weights == [linear_layer.w, linear_layer.b]
 
 """
-Note you also have access to a quicker shortcut for adding weight to a layer:
-the `add_weight()` method:
-"""
-
-
-class Linear(keras.layers.Layer):
-    def __init__(self, units=32, input_dim=32):
-        super().__init__()
-        self.w = self.add_weight(
-            shape=(input_dim, units), initializer="random_normal", trainable=True
-        )
-        self.b = self.add_weight(shape=(units,), initializer="zeros", trainable=True)
-
-    def call(self, inputs):
-        return tf.matmul(inputs, self.w) + self.b
-
-
-x = tf.ones((2, 2))
-linear_layer = Linear(4, 2)
-y = linear_layer(x)
-print(y)
-
-"""
 ## Layers can have non-trainable weights
 
 Besides trainable weights, you can add non-trainable weights to a layer as
@@ -95,7 +67,9 @@ Here's how to add and use a non-trainable weight:
 class ComputeSum(keras.layers.Layer):
     def __init__(self, input_dim):
         super().__init__()
-        self.total = tf.Variable(initial_value=tf.zeros((input_dim,)), trainable=False)
+        self.total = self.add_weight(
+            initializer="zeros", shape=(input_dim,), trainable=False
+        )
 
     def call(self, inputs):
         self.total.assign_add(tf.reduce_sum(inputs, axis=0))
@@ -281,7 +255,7 @@ class OuterLayerWithKernelRegularizer(keras.layers.Layer):
     def __init__(self):
         super().__init__()
         self.dense = keras.layers.Dense(
-            32, kernel_regularizer=tf.keras.regularizers.l2(1e-3)
+            32, kernel_regularizer=keras.regularizers.l2(1e-3)
         )
 
     def call(self, inputs):
@@ -301,20 +275,20 @@ like this:
 
 ```python
 # Instantiate an optimizer.
-optimizer = tf.keras.optimizers.SGD(learning_rate=1e-3)
+optimizer = keras.optimizers.SGD(learning_rate=1e-3)
 loss_fn = keras.losses.SparseCategoricalCrossentropy(from_logits=True)
 
 # Iterate over the batches of a dataset.
 for x_batch_train, y_batch_train in train_dataset:
-  with tf.GradientTape() as tape:
-    logits = layer(x_batch_train)  # Logits for this minibatch
-    # Loss value for this minibatch
-    loss_value = loss_fn(y_batch_train, logits)
-    # Add extra losses created during this forward pass:
-    loss_value += sum(model.losses)
+    with tf.GradientTape() as tape:
+        logits = layer(x_batch_train)  # Logits for this minibatch
+        # Loss value for this minibatch
+        loss_value = loss_fn(y_batch_train, logits)
+        # Add extra losses created during this forward pass:
+        loss_value += sum(model.losses)
 
-  grads = tape.gradient(loss_value, model.trainable_weights)
-  optimizer.apply_gradients(zip(grads, model.trainable_weights))
+    grads = tape.gradient(loss_value, model.trainable_weights)
+    optimizer.apply_gradients(zip(grads, model.trainable_weights))
 ```
 """
 
@@ -450,7 +424,7 @@ class CustomDropout(keras.layers.Layer):
         super().__init__(**kwargs)
         self.rate = rate
 
-    def call(self, inputs, training=None):
+    def call(self, inputs, training=False):
         if training:
             return tf.nn.dropout(inputs, rate=self.rate)
         return inputs
@@ -514,7 +488,7 @@ a `Model` that we could train with `fit()`, and that we could save with
 
 """
 ```python
-class ResNet(tf.keras.Model):
+class ResNet(keras.Model):
 
     def __init__(self, num_classes=1000):
         super().__init__()
@@ -533,7 +507,7 @@ class ResNet(tf.keras.Model):
 resnet = ResNet()
 dataset = ...
 resnet.fit(dataset, epochs=10)
-resnet.save(filepath)
+resnet.save(filepath.keras)
 ```
 """
 
@@ -567,7 +541,7 @@ class Sampling(layers.Layer):
         z_mean, z_log_var = inputs
         batch = tf.shape(z_mean)[0]
         dim = tf.shape(z_mean)[1]
-        epsilon = tf.keras.backend.random_normal(shape=(batch, dim))
+        epsilon = keras.backend.random_normal(shape=(batch, dim))
         return z_mean + tf.exp(0.5 * z_log_var) * epsilon
 
 
@@ -636,12 +610,12 @@ Let's write a simple training loop on MNIST:
 original_dim = 784
 vae = VariationalAutoEncoder(original_dim, 64, 32)
 
-optimizer = tf.keras.optimizers.Adam(learning_rate=1e-3)
-mse_loss_fn = tf.keras.losses.MeanSquaredError()
+optimizer = keras.optimizers.Adam(learning_rate=1e-3)
+mse_loss_fn = keras.losses.MeanSquaredError()
 
-loss_metric = tf.keras.metrics.Mean()
+loss_metric = keras.metrics.Mean()
 
-(x_train, _), _ = tf.keras.datasets.mnist.load_data()
+(x_train, _), _ = keras.datasets.mnist.load_data()
 x_train = x_train.reshape(60000, 784).astype("float32") / 255
 
 train_dataset = tf.data.Dataset.from_tensor_slices(x_train)
@@ -676,54 +650,7 @@ loops. So you could also have trained it like this:
 
 vae = VariationalAutoEncoder(784, 64, 32)
 
-optimizer = tf.keras.optimizers.Adam(learning_rate=1e-3)
+optimizer = keras.optimizers.Adam(learning_rate=1e-3)
 
-vae.compile(optimizer, loss=tf.keras.losses.MeanSquaredError())
+vae.compile(optimizer, loss=keras.losses.MeanSquaredError())
 vae.fit(x_train, x_train, epochs=2, batch_size=64)
-
-"""
-## Beyond object-oriented development: the Functional API
-
-Was this example too much object-oriented development for you? You can also
-build models using the [Functional API](/guides/functional_api/). Importantly,
-choosing one style or another does not prevent you from leveraging components
-written in the other style: you can always mix-and-match.
-
-For instance, the Functional API example below reuses the same `Sampling` layer
-we defined in the example above:
-"""
-
-original_dim = 784
-intermediate_dim = 64
-latent_dim = 32
-
-# Define encoder model.
-original_inputs = tf.keras.Input(shape=(original_dim,), name="encoder_input")
-x = layers.Dense(intermediate_dim, activation="relu")(original_inputs)
-z_mean = layers.Dense(latent_dim, name="z_mean")(x)
-z_log_var = layers.Dense(latent_dim, name="z_log_var")(x)
-z = Sampling()((z_mean, z_log_var))
-encoder = tf.keras.Model(inputs=original_inputs, outputs=z, name="encoder")
-
-# Define decoder model.
-latent_inputs = tf.keras.Input(shape=(latent_dim,), name="z_sampling")
-x = layers.Dense(intermediate_dim, activation="relu")(latent_inputs)
-outputs = layers.Dense(original_dim, activation="sigmoid")(x)
-decoder = tf.keras.Model(inputs=latent_inputs, outputs=outputs, name="decoder")
-
-# Define VAE model.
-outputs = decoder(z)
-vae = tf.keras.Model(inputs=original_inputs, outputs=outputs, name="vae")
-
-# Add KL divergence regularization loss.
-kl_loss = -0.5 * tf.reduce_mean(z_log_var - tf.square(z_mean) - tf.exp(z_log_var) + 1)
-vae.add_loss(kl_loss)
-
-# Train.
-optimizer = tf.keras.optimizers.Adam(learning_rate=1e-3)
-vae.compile(optimizer, loss=tf.keras.losses.MeanSquaredError())
-vae.fit(x_train, x_train, epochs=3, batch_size=64)
-
-"""
-For more information, make sure to read the [Functional API guide](/guides/functional_api/).
-"""

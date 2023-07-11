@@ -213,8 +213,8 @@ print(id2label)
 </div>
 Before we can feed the audio utterance samples to our model, we need to
 pre-process them. This is done by a Hugging Face Transformers "Feature Extractor"
-which will (as the name indicates) re-sample your the inputs to sampling rate
-the the model expects (in-case they exist with a different sampling rate), as well
+which will (as the name indicates) re-sample your inputs to the sampling rate
+the model expects (in-case they exist with a different sampling rate), as well
 as generate the other inputs that model requires.
 
 To do all of this, we instantiate our `Feature Extractor` with the
@@ -222,7 +222,7 @@ To do all of this, we instantiate our `Feature Extractor` with the
 
 We get a `Feature Extractor` that corresponds to the model architecture we want to use.
 We download the config that was used when pretraining this specific checkpoint.
-This will be cached so it's not downloaded again the next time we run the cell.
+This will be cached so that it's not downloaded again the next time we run the cell.
 
 The `from_pretrained()` method expects the name of a model from the Hugging Face Hub. This is
 exactly similar to `MODEL_CHECKPOINT` and we just pass that.
@@ -271,7 +271,7 @@ test = processed_speech_commands_v1["test"].shuffle(seed=42).with_format("numpy"
 ## Defining the Wav2Vec 2.0 with Classification-Head
 
 We now define our model. To be precise, we define a Wav2Vec 2.0 model and add a
-Classification-Head on top to output a probability ditribution of all classes for each
+Classification-Head on top to output a probability distribution of all classes for each
 input audio sample. Since the model might get complex we first define the Wav2Vec
 2.0 model with Classification-Head as a Keras layer and then build the model using that.
 
@@ -427,7 +427,7 @@ Epoch 2/2
 Great! Now that we have trained our model, we predict the classes
 for audio samples in the test set using the `model.predict()` method! We see
 the model predictions are not that great as it has been trained on a very small
-number of samples for just 1 epoch. For best results, we reccomend training on
+number of samples for just 1 epoch. For best results, we recommend training on
 the complete dataset for at least 5 epochs!
 
 
@@ -463,7 +463,7 @@ Predicted Label is  on
 
 ```
 </div>
-Now you can push this model to Hugging Face Model Hub and also share it with with all your friends,
+Now you can push this model to Hugging Face Model Hub and also share it with all your friends,
 family, favorite pets: they can all load it with the identifier
 `"your-username/the-name-you-picked"`, for instance:
 
