@@ -104,8 +104,7 @@ processor = SamProcessor.from_pretrained("facebook/sam-vit-base")
 
 """
 Next, we write some utility functions for visualization. Most of these functions are
-taken from [this
-notebook](https://github.com/huggingface/notebooks/blob/main/examples/segment_anything.ipynb).
+taken from [this notebook](https://github.com/huggingface/notebooks/blob/main/examples/segment_anything.ipynb).
 """
 
 import numpy as np
