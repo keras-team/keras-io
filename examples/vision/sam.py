@@ -3,7 +3,7 @@ Title: Segment Anything Model with 🤗Transformers
 Authors: [Merve Noyan](https://twitter.com/mervenoyann) & [Sayak Paul](https://twitter.com/RisingSayak)
 Date created: 2023/07/11
 Last modified: 2023/07/11
-Description: Implementing Segment Anything Model using 🤗Transformers.
+Description: Fine-tuning Segment Anything Model using Keras and 🤗 Transformers.
 Accelerator: GPU
 """
 """
