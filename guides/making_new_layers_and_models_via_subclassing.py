@@ -294,7 +294,8 @@ for x_batch_train, y_batch_train in train_dataset:
 
 """
 For a detailed guide about writing training loops, see the
-[guide to writing a training loop from scratch](/guides/writing_a_training_loop_from_scratch/).
+[guide to writing a training loop from scratch](https://keras.io/keras_core/guides/writing_a_custom_training_loop_in_tensorflow/
+).
 
 These losses also work seamlessly with `fit()` (they get automatically summed
 and added to the main loss, if any):
@@ -321,7 +322,8 @@ model.fit(np.random.random((2, 3)), np.random.random((2, 3)))
 ## You can optionally enable serialization on your layers
 
 If you need your custom layers to be serializable as part of a
-[Functional model](/guides/functional_api/), you can optionally implement a `get_config()`
+[Functional model](https://www.tensorflow.org/guide/keras/functional_api
+), you can optionally implement a `get_config()`
 method:
 """
 
@@ -402,7 +404,9 @@ def from_config(cls, config):
 ```
 
 To learn more about serialization and saving, see the complete
-[guide to saving and serializing models](/guides/serialization_and_saving/).
+[guide to saving and serializing models](https://keras.io/guides/serialization_and_saving/
+
+).
 """
 
 """
@@ -446,7 +450,9 @@ layer configured with `mask_zero=True`, and the `Masking` layer.
 
 To learn more about masking and how to write masking-enabled layers, please
 check out the guide
-["understanding padding and masking"](/guides/understanding_masking_and_padding/).
+["understanding padding and masking"](https://www.tensorflow.org/guide/keras/understanding_masking_and_padding
+
+).
 """
 
 """
