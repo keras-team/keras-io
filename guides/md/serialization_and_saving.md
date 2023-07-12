@@ -353,7 +353,7 @@ The following serialization APIs are available:
 - `keras.models.clone_model(model)`: make a (randomly initialized) copy of a model.
 - `get_config()` and `cls.from_config()`: retrieve the configuration of a layer or model, and recreate
 a model instance from its config, respectively.
-- `keras.models.model_to_json()` and `keras.models.model_from_json()`: similar, but as JSON strings.
+- `keras.models.to_json()` and `keras.models.model_from_json()`: similar, but as JSON strings.
 - `keras.saving.serialize_keras_object()`: retrieve the configuration any arbitrary Keras object.
 - `keras.saving.deserialize_keras_object()`: recreate an object instance from its configuration.
 
