@@ -26,16 +26,16 @@ GPT-2 model. Running this tutorial on CPU runtime will take hours.
 
 """
 ## Install KerasNLP, Choose Backend and Import Dependencies
+
+We can choose one of "tensorflow", "jax", "torch" as the backend. Let's go
+ahead with JAX in this example.
 """
 
 """shell
 pip install -q keras-nlp
 """
 
-"""
-Let's use JAX as the backend because it's blazing fast! You can choose one of
-"tensorflow", "jax", "torch".
-"""
+import os
 
 os.environ["KERAS_BACKEND"] = "jax"
 
