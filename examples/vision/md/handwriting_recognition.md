@@ -2,7 +2,7 @@
 
 **Authors:** [A_K_Nain](https://twitter.com/A_K_Nain), [Sayak Paul](https://twitter.com/RisingSayak)<br>
 **Date created:** 2021/08/16<br>
-**Last modified:** 2021/08/16<br>
+**Last modified:** 2023/07/06<br>
 
 
 <img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/vision/ipynb/handwriting_recognition.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/vision/handwriting_recognition.py)
@@ -26,7 +26,7 @@ good starting point for building OCR systems.
 
 
 ```python
-!wget -q https://git.io/J0fjL -O IAM_Words.zip
+!wget -q https://github.com/sayakpaul/Handwriting-Recognizer-in-Keras/releases/download/v1.0.0/IAM_Words.zip
 !unzip -qq IAM_Words.zip
 !
 !mkdir data
@@ -72,7 +72,7 @@ a01-000u-00-01 ok 154 507 766 213 48 NN MOVE
 
 
 ```python
-from tensorflow.keras.layers.experimental.preprocessing import StringLookup
+from tensorflow.keras.layers import StringLookup
 from tensorflow import keras
 
 import matplotlib.pyplot as plt

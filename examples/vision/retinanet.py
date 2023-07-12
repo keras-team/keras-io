@@ -2,7 +2,7 @@
 Title: Object Detection with RetinaNet
 Author: [Srihari Humbarwadi](https://twitter.com/srihari_rh)
 Date created: 2020/05/17
-Last modified: 2020/07/14
+Last modified: 2023/07/10
 Description: Implementing RetinaNet: Focal Loss for Dense Object Detection.
 Accelerator: GPU
 """
@@ -840,7 +840,7 @@ resnet50_backbone = get_backbone()
 loss_fn = RetinaNetLoss(num_classes)
 model = RetinaNet(num_classes, resnet50_backbone)
 
-optimizer = tf.optimizers.SGD(learning_rate=learning_rate_fn, momentum=0.9)
+optimizer = tf.keras.optimizers.legacy.SGD(learning_rate=learning_rate_fn, momentum=0.9)
 model.compile(loss=loss_fn, optimizer=optimizer)
 
 """
