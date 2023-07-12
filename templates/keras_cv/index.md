@@ -2,30 +2,26 @@
 
 <a class="github-button" href="https://github.com/keras-team/keras-cv" data-size="large" data-show-count="true" aria-label="Star keras-team/keras-cv on GitHub">Star</a>
 
-KerasCV is a library of modular computer vision oriented Keras components.
-These components include models, layers, metrics, losses, callbacks, and utility
-functions.
+KerasCV is a library of modular computer vision components that work natively 
+with TensorFlow, JAX, or PyTorch. Built on [Keras Core](https://keras.io/keras_core/announcement/),
+these models, layers, metrics, callbacks, etc., can be trained and serialized
+in any framework and re-used in another without costly migrations. See "Using 
+KerasCV with Keras Core" below for more details on multi-framework KerasCV.
 
-KerasCV's primary goal is to provide a coherent, elegant, and pleasant API to
-train state of the art computer vision models. Users should be able to train
-state of the art models using only `Keras`, `KerasCV`, and TensorFlow core (i.e.
-`tf.data`) components.
+<img style="width: 440px; max-width: 90%;" src="https://storage.googleapis.com/keras-cv/guides/keras-cv-augmentations.gif">
 
-KerasCV can be understood as a horizontal extension of the Keras API: the
-components are new first-party Keras objects (layers, metrics, etc.) that are
-too specialized to be added to core Keras. They receive the same level of polish
-and backwards compatibility guarantees as the core Keras API, and they are
-maintained by the Keras team.
+KerasCV can be understood as a horizontal extension of the Keras API: the 
+components are new first-party Keras objects that are too specialized to be 
+added to core Keras. They receive the same level of polish and backwards 
+compatibility guarantees as the core Keras API, and they are maintained by the 
+Keras team.
 
-Our APIs assist in common computer vision tasks such as data-augmentation,
-classification, object detection, image generation, and more. Applied computer
-vision engineers can leverage KerasCV to quickly assemble production-grade,
-state-of-the-art training and inference pipelines for all of these common tasks.
+Our APIs assist in common computer vision tasks such as data augmentation, 
+classification, object detection, segmentation, image generation, and more.
+Applied computer vision engineers can leverage KerasCV to quickly assemble 
+production-grade, state-of-the-art training and inference pipelines for all of 
+these common tasks.
 
-In addition to API consistency, KerasCV components aim to be mixed-precision
-compatible, QAT compatible, XLA compilable, and TPU compatible. We also aim to
-provide generic model optimization tools for deployment on devices such as
-onboard GPUs, mobile, and edge chips.
 
 <img style="width: 440px; max-width: 90%;" src="/img/keras-cv-augmentations.gif">
 
@@ -50,6 +46,43 @@ pip to install directly from the master branch on github:
 ```
 pip install git+https://github.com/keras-team/keras-cv.git tensorflow --upgrade
 ```
+
+## Using KerasCV with Keras Core
+
+As of version `0.6.0`, KerasCV supports multiple backends with Keras Core out of 
+the box. There are two ways to configure KerasCV to run with multi-backend 
+support:
+
+1. Via the `KERAS_BACKEND` environment variable. If set, then KerasCV will be 
+using Keras Core with the backend specified (e.g., `KERAS_BACKEND=jax`).
+2. Via the `.keras/keras.json` and `.keras/keras_cv.json` config files (which 
+are automatically created the first time you import KerasCV):
+   - Set your backend of choice in `.keras/keras.json`; e.g., `"backend": "jax"`. 
+   - Set `"multi_backend": True` in `.keras/keras_cv.json`.
+
+Once that configuration step is done, you can just import KerasCV and start 
+using it on top of your backend of choice:
+
+```python
+import keras_cv
+import keras_core as keras
+
+filepath = keras.utils.get_file(origin="https://i.imgur.com/gCNcJJI.jpg")
+image = np.array(keras.utils.load_img(filepath))
+image_resized = ops.image.resize(image, (640, 640))[None, ...]
+
+model = keras_cv.models.YOLOV8Detector.from_preset(
+    "yolo_v8_m_pascalvoc",
+    bounding_box_format="xywh",
+)
+predictions = model.predict(image_resized)
+```
+
+Until Keras Core is officially released as Keras 3.0, KerasCV will use 
+`tf.keras` as the default backend. To restore this default behavior, simply 
+`unset KERAS_BACKEND` and ensure that  `"multi_backend": False` or is unset in 
+`.keras/keras_cv.json`. You will need to restart the Python runtime for changes 
+to take effect.
 
 ## Quickstart
 
