@@ -12,7 +12,7 @@ Accelerator: GPU
 
 Distributed training is a technique used to train deep learning models on multiple devices
 or machines simultaneously. It helps to reduce training time and allows for training larger
-models with more data.KerasNLP is a library that provides tools and utilities for natural
+models with more data. KerasNLP is a library that provides tools and utilities for natural
 language processing tasks, including distributed training.
 
 In this tutorial, we will use KerasNLP to train a BERT-based masked language model (MLM)
@@ -60,7 +60,7 @@ devices.
 
 When you are training with two or more phsyical GPUs, this is totally uncessary. This
 is just a trick to show real distributed training on the default colab GPU runtime,
-which has only one GPU availabe.
+which has only one GPU available.
 """
 
 """shell
@@ -152,7 +152,7 @@ class PrintLR(tf.keras.callbacks.Callback):
 
 """
 Let's also make a callback to TensorBoard, this will enable visualization of different
-metrics while we train the model in later part of this tutorial We put all the callbacks
+metrics while we train the model in later part of this tutorial. We put all the callbacks
 together as follows:
 """
 callbacks = [
@@ -176,7 +176,7 @@ model** inside the distribution scope.
 """
 
 strategy = tf.distribute.MirroredStrategy()
-print("Number of devices: {}".format(strategy.num_replicas_in_sync))
+print(f"Number of devices: {strategy.num_replicas_in_sync}")
 
 """
 With the datasets prepared, we now initialize and compile our model and optimizer within
