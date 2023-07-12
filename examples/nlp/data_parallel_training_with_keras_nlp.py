@@ -190,6 +190,11 @@ with strategy.scope():
     # Everything that creates variables should be under the strategy scope.
     # In general this is only model construction & `compile()`.
     model_dist = keras_nlp.models.BertMaskedLM.from_preset("bert_tiny_en_uncased")
+
+    # This line just sets pooled_dense layer as non-trainiable, we do this to avoid
+    # warnings of this layer being unused
+    model_dist.get_layer("bert_backbone").get_layer("pooled_dense").trainable = False
+
     model_dist.compile(
         loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
         optimizer=tf.keras.optimizers.AdamW(lr_schedule),
