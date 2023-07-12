@@ -15,7 +15,7 @@
 
 Distributed training is a technique used to train deep learning models on multiple devices
 or machines simultaneously. It helps to reduce training time and allows for training larger
-models with more data.KerasNLP is a library that provides tools and utilities for natural
+models with more data. KerasNLP is a library that provides tools and utilities for natural
 language processing tasks, including distributed training.
 
 In this tutorial, we will use KerasNLP to train a BERT-based masked language model (MLM)
@@ -49,6 +49,16 @@ at least TensorFlow 2.11 in order to use AdamW with mixed precision.
 !pip install -U -q tensorflow keras-nlp tensorflow_datasets datasets
 ```
 
+<div class="k-default-codeblock">
+```
+[2K     [90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m [32m110.5/110.5 kB[0m [31m11.3 MB/s[0m eta [36m0:00:00[0m
+[2K     [90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m [32m212.5/212.5 kB[0m [31m21.8 MB/s[0m eta [36m0:00:00[0m
+[2K     [90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m [32m134.3/134.3 kB[0m [31m17.1 MB/s[0m eta [36m0:00:00[0m
+[2K     [90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m [32m268.8/268.8 kB[0m [31m28.2 MB/s[0m eta [36m0:00:00[0m
+[?25h
+
+```
+</div>
 ---
 ## Imports
 
@@ -60,12 +70,18 @@ from tensorflow import keras
 import keras_nlp
 ```
 
+<div class="k-default-codeblock">
+```
+Using TensorFlow backend
+
+```
+</div>
 Before we start any training, let's configure our single GPU to show up as two logical
 devices.
 
 When you are training with two or more phsyical GPUs, this is totally uncessary. This
 is just a trick to show real distributed training on the default colab GPU runtime,
-which has only one GPU availabe.
+which has only one GPU available.
 
 
 ```python
@@ -166,7 +182,7 @@ class PrintLR(tf.keras.callbacks.Callback):
 ```
 
 Let's also make a callback to TensorBoard, this will enable visualization of different
-metrics while we train the model in later part of this tutorial We put all the callbacks
+metrics while we train the model in later part of this tutorial. We put all the callbacks
 together as follows:
 
 
@@ -199,7 +215,7 @@ model** inside the distribution scope.
 
 ```python
 strategy = tf.distribute.MirroredStrategy()
-print("Number of devices: {}".format(strategy.num_replicas_in_sync))
+print(f"Number of devices: {strategy.num_replicas_in_sync}")
 ```
 
 <div class="k-default-codeblock">
@@ -217,6 +233,11 @@ with strategy.scope():
     # Everything that creates variables should be under the strategy scope.
     # In general this is only model construction & `compile()`.
     model_dist = keras_nlp.models.BertMaskedLM.from_preset("bert_tiny_en_uncased")
+
+    # This line just sets pooled_dense layer as non-trainiable, we do this to avoid
+    # warnings of this layer being unused
+    model_dist.get_layer("bert_backbone").get_layer("pooled_dense").trainable = False
+
     model_dist.compile(
         loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
         optimizer=tf.keras.optimizers.AdamW(lr_schedule),
@@ -231,27 +252,17 @@ with strategy.scope():
 <div class="k-default-codeblock">
 ```
 Epoch 1/3
-
-WARNING:tensorflow:Gradients do not exist for variables ['pooled_dense/kernel:0', 'pooled_dense/bias:0'] when minimizing the loss. If you're using `model.compile()`, did you forget to provide a `loss` argument?
-WARNING:tensorflow:Gradients do not exist for variables ['pooled_dense/kernel:0', 'pooled_dense/bias:0'] when minimizing the loss. If you're using `model.compile()`, did you forget to provide a `loss` argument?
-WARNING:tensorflow:Gradients do not exist for variables ['pooled_dense/kernel:0', 'pooled_dense/bias:0'] when minimizing the loss. If you're using `model.compile()`, did you forget to provide a `loss` argument?
-WARNING:tensorflow:Gradients do not exist for variables ['pooled_dense/kernel:0', 'pooled_dense/bias:0'] when minimizing the loss. If you're using `model.compile()`, did you forget to provide a `loss` argument?
-WARNING:tensorflow:Gradients do not exist for variables ['pooled_dense/kernel:0', 'pooled_dense/bias:0'] when minimizing the loss. If you're using `model.compile()`, did you forget to provide a `loss` argument?
-WARNING:tensorflow:Gradients do not exist for variables ['pooled_dense/kernel:0', 'pooled_dense/bias:0'] when minimizing the loss. If you're using `model.compile()`, did you forget to provide a `loss` argument?
-WARNING:tensorflow:Gradients do not exist for variables ['pooled_dense/kernel:0', 'pooled_dense/bias:0'] when minimizing the loss. If you're using `model.compile()`, did you forget to provide a `loss` argument?
-WARNING:tensorflow:Gradients do not exist for variables ['pooled_dense/kernel:0', 'pooled_dense/bias:0'] when minimizing the loss. If you're using `model.compile()`, did you forget to provide a `loss` argument?
-
-    120/Unknown - 90s 568ms/step - loss: 2.0205 - sparse_categorical_accuracy: 0.0415
+    120/Unknown - 91s 568ms/step - loss: 1.9971 - sparse_categorical_accuracy: 0.0492
 Learning rate for epoch 1 is 3.33333300659433e-05
-120/120 [==============================] - 103s 677ms/step - loss: 2.0205 - sparse_categorical_accuracy: 0.0415 - val_loss: 1.8596 - val_sparse_categorical_accuracy: 0.0940
+120/120 [==============================] - 103s 665ms/step - loss: 1.9971 - sparse_categorical_accuracy: 0.0492 - val_loss: 1.8382 - val_sparse_categorical_accuracy: 0.0967
 Epoch 2/3
-120/120 [==============================] - ETA: 0s - loss: 1.8300 - sparse_categorical_accuracy: 0.0886
+120/120 [==============================] - ETA: 0s - loss: 1.8172 - sparse_categorical_accuracy: 0.0891
 Learning rate for epoch 2 is 1.680555214988999e-05
-120/120 [==============================] - 77s 643ms/step - loss: 1.8300 - sparse_categorical_accuracy: 0.0886 - val_loss: 1.7412 - val_sparse_categorical_accuracy: 0.1829
+120/120 [==============================] - 78s 653ms/step - loss: 1.8172 - sparse_categorical_accuracy: 0.0891 - val_loss: 1.7256 - val_sparse_categorical_accuracy: 0.1643
 Epoch 3/3
-120/120 [==============================] - ETA: 0s - loss: 1.7734 - sparse_categorical_accuracy: 0.1241
+120/120 [==============================] - ETA: 0s - loss: 1.7636 - sparse_categorical_accuracy: 0.1262
 Learning rate for epoch 3 is 1.388877564068025e-07
-120/120 [==============================] - 76s 633ms/step - loss: 1.7734 - sparse_categorical_accuracy: 0.1241 - val_loss: 1.7002 - val_sparse_categorical_accuracy: 0.2075
+120/120 [==============================] - 131s 1s/step - loss: 1.7636 - sparse_categorical_accuracy: 0.1262 - val_loss: 1.6854 - val_sparse_categorical_accuracy: 0.2097
 
 ```
 </div>
@@ -264,9 +275,9 @@ model_dist.evaluate(wiki_test_ds)
 
 <div class="k-default-codeblock">
 ```
-15/15 [==============================] - 8s 292ms/step - loss: 1.7406 - sparse_categorical_accuracy: 0.2115
+15/15 [==============================] - 7s 295ms/step - loss: 1.7176 - sparse_categorical_accuracy: 0.2164
 
-[1.7405692338943481, 0.21145851910114288]
+[1.7176165580749512, 0.21638351678848267]
 
 ```
 </div>
