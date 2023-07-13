@@ -200,7 +200,7 @@ layers, it can become impractical to separate the state creation and computation
 Layer implementers are allowed to defer weight creation to the first `__call__()`,
 but need to take care that later calls use the same weights. In addition, since
 `__call__()` is likely to be executed for the first time inside a `tf.function`,
-any variable creation that takes place in `__call__()` should be wrapped in a`tf.init_scope`.
+any variable creation that takes place in `__call__()` should be wrapped in a `tf.init_scope`.
 
 ---
 ## Layers are recursively composable
