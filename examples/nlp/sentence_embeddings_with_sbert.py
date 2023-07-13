@@ -4,6 +4,7 @@ Author: [Mohammed Abu El-Nasr](https://github.com/abuelnasr0)
 Date created: 2023/07/06
 Last modified: 2023/07/06
 Description: Fine-tune a RoBERTa model to generate sentence embeddings using KerasNLP.
+Accelerator: GPU
 """
 
 """
@@ -51,7 +52,7 @@ training. This will help us reduce the training time.
 """
 
 """shell
-!pip install keras-nlp -q
+pip install keras-nlp -q
 """
 
 import keras_nlp
@@ -297,11 +298,11 @@ example, we will only use 1200 triplets for training and 300 for testing.
 """
 
 """shell
-!wget https://sbert.net/datasets/wikipedia-sections-triplets.zip -q
-!unzip wikipedia-sections-triplets.zip  -d  wikipedia-sections-triplets
+wget https://sbert.net/datasets/wikipedia-sections-triplets.zip -q
+unzip wikipedia-sections-triplets.zip  -d  wikipedia-sections-triplets
 """
 
-NUM_TRAIN_BATCHS = 300
+NUM_TRAIN_BATCHS = 200
 NUM_TEST_BATCHS = 75
 AUTOTUNE = tf.data.experimental.AUTOTUNE
 
