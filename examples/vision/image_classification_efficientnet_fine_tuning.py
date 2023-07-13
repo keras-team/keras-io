@@ -2,7 +2,7 @@
 Title: Image classification via fine-tuning with EfficientNet
 Author: [Yixing Fu](https://github.com/yixingfu)
 Date created: 2020/06/30
-Last modified: 2020/07/16
+Last modified: 2023/07/10
 Description: Use EfficientNet with weights pre-trained on imagenet for Stanford Dogs classification.
 Accelerator: TPU
 """
@@ -363,7 +363,7 @@ def build_model(num_classes):
 
     top_dropout_rate = 0.2
     x = layers.Dropout(top_dropout_rate, name="top_dropout")(x)
-    outputs = layers.Dense(NUM_CLASSES, activation="softmax", name="pred")(x)
+    outputs = layers.Dense(num_classes, activation="softmax", name="pred")(x)
 
     # Compile
     model = tf.keras.Model(inputs, outputs, name="EfficientNet")
