@@ -481,7 +481,7 @@ def from_config(cls, config):
 ```
 
 To learn more about serialization and saving, see the complete
-[guide to saving and serializing models](/guides/serialization_and_saving/).
+[guide to saving and serializing models](https://keras.io/guides/serialization_and_saving/).
 
 ---
 ## Privileged `training` argument in the `call()` method
