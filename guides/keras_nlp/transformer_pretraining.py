@@ -1,8 +1,8 @@
 """
 Title: Pretraining a Transformer from scratch with KerasNLP
-Author: [Matthew Watson](https://github.com/mattdangerw/)
-Date created: 2022/04/18
-Last modified: 2022/04/18
+Author: [Matthew Watson](https://github.com/mattdangerw/), [Anshuman Mishra](https://github.com/shivance/
+Date created: 2023/07/15
+Last modified: 2023/07/15
 Description: Use KerasNLP to train a Transformer model from scratch.
 Accelerator: GPU
 """
@@ -32,16 +32,21 @@ faster training!
 """
 
 """shell
-pip install -q --upgrade keras-nlp tensorflow
+pip install -q --upgrade keras-nlp tensorflow keras-core
 """
 
 import os
 
 import keras_nlp
 import tensorflow as tf
-from tensorflow import keras
+import keras_core as keras
 
-policy = keras.mixed_precision.Policy("mixed_float16")
+"""
+Let's set backend of Keras as TensorFlow
+"""
+os.environ["KERAS_BACKEND"] = "tensorflow"
+
+policy = keras.mixed_precision.DTypePolicy("mixed_float16")
 keras.mixed_precision.set_global_policy(policy)
 
 """
@@ -166,7 +171,7 @@ baseline_model.compile(loss="binary_crossentropy", metrics=["accuracy"])
 baseline_model.fit(sst_train_ds, validation_data=sst_val_ds, epochs=5)
 
 """
-A bag-of-words approach can be a fast and suprisingly powerful, especially when input
+A bag-of-words approach can be a fast and surprisingly powerful, especially when input
 examples contain a large number of words. With shorter sequences, it can hit a
 performance ceiling.
 
@@ -191,7 +196,7 @@ To beat our baseline, we will leverage the `WikiText103` dataset, an unlabeled
 collection of Wikipedia articles that is much bigger than `SST-2`.
 
 We are going to train a *transformer*, a highly expressive model which will learn
-to embed each word in our input as a low dimentional vector. Our wikipedia dataset has no
+to embed each word in our input as a low dimensional vector. Our wikipedia dataset has no
 labels, so we will use an unsupervised training objective called the *Masked Language
 Modeling* (MaskedLM) objective.
 
@@ -370,7 +375,7 @@ outputs = keras_nlp.layers.MaskedLMHead(
 pretraining_model = keras.Model(inputs, outputs)
 pretraining_model.compile(
     loss="sparse_categorical_crossentropy",
-    optimizer=keras.optimizers.experimental.AdamW(PRETRAINING_LEARNING_RATE),
+    optimizer=keras.optimizers.AdamW(PRETRAINING_LEARNING_RATE),
     weighted_metrics=["sparse_categorical_accuracy"],
     jit_compile=True,
 )
@@ -383,7 +388,7 @@ pretraining_model.fit(
 )
 
 # Save this base model for further finetuning.
-encoder_model.save("encoder_model")
+encoder_model.save("encoder_model.keras")
 
 """
 ## Fine-tuning
@@ -425,14 +430,14 @@ the encoded tokens together, and use a single dense layer to make a prediction.
 """
 
 # Reload the encoder model from disk so we can restart fine-tuning from scratch.
-encoder_model = keras.models.load_model("encoder_model", compile=False)
+encoder_model = keras.models.load_model("encoder_model.keras", compile=False)
 
 # Take as input the tokenized input.
 inputs = keras.Input(shape=(SEQ_LENGTH,), dtype=tf.int32)
 
 # Encode and pool the tokens.
 encoded_tokens = encoder_model(inputs)
-pooled_tokens = keras.layers.GlobalAveragePooling1D()(encoded_tokens)
+pooled_tokens = keras.layers.GlobalAveragePooling1D()(encoded_tokens[0])
 
 # Predict an output label.
 outputs = keras.layers.Dense(1, activation="sigmoid")(pooled_tokens)
@@ -441,7 +446,7 @@ outputs = keras.layers.Dense(1, activation="sigmoid")(pooled_tokens)
 finetuning_model = keras.Model(inputs, outputs)
 finetuning_model.compile(
     loss="binary_crossentropy",
-    optimizer=keras.optimizers.experimental.AdamW(FINETUNING_LEARNING_RATE),
+    optimizer=keras.optimizers.AdamW(FINETUNING_LEARNING_RATE),
     metrics=["accuracy"],
 )
 
@@ -474,10 +479,10 @@ inputs = keras.Input(shape=(), dtype=tf.string)
 tokens = tokenizer(inputs)
 outputs = finetuning_model(tokens)
 final_model = keras.Model(inputs, outputs)
-final_model.save("final_model")
+final_model.save("final_model.keras")
 
 # This model can predict directly on raw text.
-restored_model = keras.models.load_model("final_model", compile=False)
+restored_model = keras.models.load_model("final_model.keras", compile=False)
 inference_data = tf.constant(["Terrible, no good, trash.", "So great; I loved it!"])
 print(restored_model(inference_data))
 
