@@ -114,6 +114,7 @@ VALIDATION_NUM_BATCHS = 40
 
 AUTOTUNE = tf.data.experimental.AUTOTUNE
 
+
 def change_range(x):
     return (x / 2.5) - 1
 
@@ -130,6 +131,7 @@ def prepare_dataset(dataset, num_batchs, batch_size):
     dataset = dataset.take(num_batchs)
     dataset = dataset.prefetch(AUTOTUNE)
     return dataset
+
 
 stsb_ds = tfds.load(
     "glue/stsb",
@@ -159,28 +161,20 @@ of:
 - A preprocessor layer to tokenize and generate padding masks for the sentences.
 - A backbone model that will generate the contextual representation of each token in the
 sentence.
-- A mean pooling layer to produce the embeddings.
+- A mean pooling layer to produce the embeddings. We will use `keras.layers.GlobalAveragePooling1D`
+to apply the mean pooling to the backbone output. We will pass the padding mask to the
+layer to exclude padded tokens from being averaged.
 - A normalization layer to normalize the embeddings as we are using the cosine similarity.
 """
-
-# Mean pooling layer.
-class MeanPooling(keras.layers.Layer):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-
-    def call(self, last_state, padding_mask):
-        # Only average the unpadded output.
-        mask = tf.expand_dims(tf.cast(padding_mask, "float16"), axis=-1)
-        count = tf.math.reduce_sum(mask, axis=1)
-        sum = tf.math.reduce_sum(last_state * mask, axis=1)
-        return sum / count
 
 preprocessor = keras_nlp.models.RobertaPreprocessor.from_preset("roberta_base_en")
 backbone = keras_nlp.models.RobertaBackbone.from_preset("roberta_base_en")
 inputs = keras.Input(shape=(1), dtype="string", name="sentence")
 x = preprocessor(inputs)
 h = backbone(x)
-embedding = MeanPooling(name="pooling_layer")(h, x["padding_mask"])
+embedding = keras.layers.GlobalAveragePooling1D(name="pooling_layer")(
+    h, x["padding_mask"]
+)
 n_embedding = tf.linalg.normalize(embedding, axis=1)[0]
 roberta_normal_encoder = keras.Model(inputs=inputs, outputs=n_embedding)
 
@@ -198,6 +192,7 @@ After passing the two sentences to the model and getting the normalized embeddin
 will multiply the two normalized embeddings to get the cosine similarity between the two
 sentences.
 """
+
 
 class RegressionSiamese(keras.Model):
     def __init__(self, encoder, **kwargs):
@@ -218,11 +213,10 @@ class RegressionSiamese(keras.Model):
     def get_encoder(self):
         return self.encoder
 
-"""
-#### Fit the model
-"""
 
 """
+#### Fit the model
+
 Let's try this example before training and compare it to the output after training.
 """
 
@@ -311,6 +305,7 @@ NUM_TRAIN_BATCHS = 300
 NUM_TEST_BATCHS = 75
 AUTOTUNE = tf.data.experimental.AUTOTUNE
 
+
 def prepare_wiki_data(dataset, num_batchs):
     dataset = dataset.map(
         lambda z: ((z["Sentence1"], z["Sentence2"], z["Sentence3"]), 0)
@@ -319,6 +314,7 @@ def prepare_wiki_data(dataset, num_batchs):
     dataset = dataset.take(num_batchs)
     dataset = dataset.prefetch(AUTOTUNE)
     return dataset
+
 
 wiki_train = tf.data.experimental.make_csv_dataset(
     "wikipedia-sections-triplets/train.csv",
@@ -352,7 +348,9 @@ input = keras.Input(shape=(1), dtype="string", name="sentence")
 
 x = preprocessor(input)
 h = backbone(x)
-embedding = MeanPooling(name="pooling_layer")(h, x["padding_mask"])
+embedding = keras.layers.GlobalAveragePooling1D(name="pooling_layer")(
+    h, x["padding_mask"]
+)
 
 roberta_encoder = keras.Model(inputs=input, outputs=embedding)
 
@@ -367,6 +365,7 @@ an encoder, and we will pass the three sentences through that encoder. We will g
 embedding for each sentence, and we will calculate the `positive_dist` and
 `negative_dist` that will be passed to the loss function described below.
 """
+
 
 class TripletSiamese(keras.Model):
     def __init__(self, encoder, **kwargs):
@@ -394,6 +393,7 @@ class TripletSiamese(keras.Model):
     def get_encoder(self):
         return self.encoder
 
+
 """
 We will use a custom loss function for the triplet objective. The loss function will
 receive the distance between the *anchor* and the *positive* embeddings `positive_dist`,
@@ -409,6 +409,7 @@ There is no `y_true` used in this loss function. Note that we set the labels in 
 dataset to zero, but they will not be used.
 """
 
+
 class TripletLoss(keras.losses.Loss):
     def __init__(self, margin=1, **kwargs):
         super().__init__(**kwargs)
@@ -419,6 +420,7 @@ class TripletLoss(keras.losses.Loss):
 
         losses = tf.nn.relu(positive_dist - negative_dist + self.margin)
         return tf.math.reduce_mean(losses, axis=0)
+
 
 """
 #### Fit the model
