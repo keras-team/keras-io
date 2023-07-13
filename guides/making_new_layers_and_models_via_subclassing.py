@@ -533,6 +533,7 @@ that subclass `Layer`. It will feature a regularization loss (KL divergence).
 
 from keras import layers
 
+
 @keras.saving.register_keras_serializable()
 class Sampling(layers.Layer):
     """Uses (z_mean, z_log_var) to sample z, the vector encoding a digit."""

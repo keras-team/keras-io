@@ -2,7 +2,7 @@
 
 **Author:** [fchollet](https://twitter.com/fchollet)<br>
 **Date created:** 2019/03/01<br>
-**Last modified:** 2023/03/16<br>
+**Last modified:** 2023/07/10<br>
 **Description:** Complete guide to writing `Layer` and `Model` objects from scratch.
 
 
@@ -16,7 +16,7 @@
 
 ```python
 import tensorflow as tf
-from tensorflow import keras
+import keras
 ```
 
 ---
@@ -58,8 +58,8 @@ print(y)
 <div class="k-default-codeblock">
 ```
 tf.Tensor(
-[[ 0.02132928 -0.00458615  0.00557052  0.06027826]
- [ 0.02132928 -0.00458615  0.00557052  0.06027826]], shape=(2, 4), dtype=float32)
+[[ 0.01610827 -0.0147718   0.00685983  0.00084112]
+ [ 0.01610827 -0.0147718   0.00685983  0.00084112]], shape=(2, 4), dtype=float32)
 
 ```
 </div>
@@ -322,7 +322,7 @@ print(layer.losses)
 
 <div class="k-default-codeblock">
 ```
-[<tf.Tensor: shape=(), dtype=float32, numpy=0.002511234>]
+[<tf.Tensor: shape=(), dtype=float32, numpy=0.0021933492>]
 
 ```
 </div>
@@ -375,10 +375,10 @@ model.fit(np.random.random((2, 3)), np.random.random((2, 3)))
 
 <div class="k-default-codeblock">
 ```
-1/1 [==============================] - 0s 59ms/step - loss: 0.1310
-1/1 [==============================] - 0s 26ms/step - loss: 0.0052
+1/1 [==============================] - 0s 71ms/step - loss: 0.0597
+1/1 [==============================] - 0s 31ms/step - loss: 0.0052
 
-<keras.callbacks.History at 0x2b2f14a90>
+<keras.src.callbacks.History at 0x7fea314cac10>
 
 ```
 </div>
@@ -608,9 +608,10 @@ that subclass `Layer`. It will feature a regularization loss (KL divergence).
 
 
 ```python
-from tensorflow.keras import layers
+from keras import layers
 
 
+@keras.saving.register_keras_serializable()
 class Sampling(layers.Layer):
     """Uses (z_mean, z_log_var) to sample z, the vector encoding a digit."""
 
@@ -622,6 +623,7 @@ class Sampling(layers.Layer):
         return z_mean + tf.exp(0.5 * z_log_var) * epsilon
 
 
+@keras.saving.register_keras_serializable()
 class Encoder(layers.Layer):
     """Maps MNIST digits to a triplet (z_mean, z_log_var, z)."""
 
@@ -640,6 +642,7 @@ class Encoder(layers.Layer):
         return z_mean, z_log_var, z
 
 
+@keras.saving.register_keras_serializable()
 class Decoder(layers.Layer):
     """Converts z, the encoded digit vector, back into a readable digit."""
 
@@ -653,6 +656,7 @@ class Decoder(layers.Layer):
         return self.dense_output(x)
 
 
+@keras.saving.register_keras_serializable()
 class VariationalAutoEncoder(keras.Model):
     """Combines the encoder and decoder into an end-to-end model for training."""
 
@@ -725,26 +729,26 @@ for epoch in range(epochs):
 <div class="k-default-codeblock">
 ```
 Start of epoch 0
-step 0: mean loss = 0.3409
-step 100: mean loss = 0.1260
-step 200: mean loss = 0.0994
-step 300: mean loss = 0.0894
-step 400: mean loss = 0.0844
-step 500: mean loss = 0.0810
-step 600: mean loss = 0.0789
-step 700: mean loss = 0.0772
-step 800: mean loss = 0.0761
-step 900: mean loss = 0.0750
+step 0: mean loss = 0.3628
+step 100: mean loss = 0.1272
+step 200: mean loss = 0.1000
+step 300: mean loss = 0.0898
+step 400: mean loss = 0.0847
+step 500: mean loss = 0.0812
+step 600: mean loss = 0.0791
+step 700: mean loss = 0.0774
+step 800: mean loss = 0.0762
+step 900: mean loss = 0.0752
 Start of epoch 1
-step 0: mean loss = 0.0747
-step 100: mean loss = 0.0741
-step 200: mean loss = 0.0736
-step 300: mean loss = 0.0731
+step 0: mean loss = 0.0749
+step 100: mean loss = 0.0742
+step 200: mean loss = 0.0737
+step 300: mean loss = 0.0732
 step 400: mean loss = 0.0728
-step 500: mean loss = 0.0723
+step 500: mean loss = 0.0724
 step 600: mean loss = 0.0721
 step 700: mean loss = 0.0718
-step 800: mean loss = 0.0715
+step 800: mean loss = 0.0716
 step 900: mean loss = 0.0713
 
 ```
@@ -765,11 +769,11 @@ vae.fit(x_train, x_train, epochs=2, batch_size=64)
 <div class="k-default-codeblock">
 ```
 Epoch 1/2
-938/938 [==============================] - 2s 1ms/step - loss: 0.0749
+938/938 [==============================] - 3s 2ms/step - loss: 0.0745
 Epoch 2/2
-938/938 [==============================] - 1s 1ms/step - loss: 0.0676
+938/938 [==============================] - 2s 2ms/step - loss: 0.0676
 
-<keras.callbacks.History at 0x2b30357e0>
+<keras.src.callbacks.History at 0x7fe95046e850>
 
 ```
 </div>

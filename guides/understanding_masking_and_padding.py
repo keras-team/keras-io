@@ -267,7 +267,7 @@ mask = layer.compute_mask(x)
 print(mask)
 
 """
-Note: For more details about format limitations related to masking, see the 
+Note: For more details about format limitations related to masking, see the
 [serialization guide](/guides/serialization_and_saving).
 """
 

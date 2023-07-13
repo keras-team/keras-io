@@ -283,6 +283,7 @@ class CustomMSE(keras.losses.Loss):
             "name": self.name,
         }
 
+
 model = get_uncompiled_model()
 model.compile(optimizer=keras.optimizers.Adam(), loss=CustomMSE())
 
@@ -1011,7 +1012,7 @@ callbacks = [
         # the current checkpoint if and only if
         # the `val_loss` score has improved.
         # The saved model name will include the current epoch.
-        filepath="mymodel_{epoch}.keras",
+        filepath="mymodel_{epoch}",
         save_best_only=True,  # Only save a model if `val_loss` has improved.
         monitor="val_loss",
         verbose=1,
@@ -1052,7 +1053,7 @@ callbacks = [
     # This callback saves the model every 100 batches.
     # We include the training loss in the saved model name.
     keras.callbacks.ModelCheckpoint(
-        filepath=checkpoint_dir + "/model-loss={loss:.2f}.keras", save_freq=100
+        filepath=checkpoint_dir + "/model-loss={loss:.2f}", save_freq=100
     )
 ]
 model.fit(x_train, y_train, epochs=1, callbacks=callbacks)
