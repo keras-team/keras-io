@@ -2,7 +2,7 @@
 Title: Highly accurate boundaries segmentation using BASNet
 Author: [Hamid Ali](https://github.com/hamidriasat)
 Date created: 2023/05/30
-Last modified: 2023/06/19
+Last modified: 2023/07/13
 Description: Boundaries aware segmentation model trained on the DUTS dataset.
 Accelerator: GPU
 """
@@ -430,7 +430,7 @@ evaluated on DUTS-TE dataset and achieved a mean absolute error of `0.042`.
 
 Since BASNet is a deep model and cannot be trained in a short amount of time which is a
 requirement for keras example notebook, so we will load pretrained weights from [here](https://github.com/hamidriasat/BASNet/tree/basnet_keras)
-to show model prediction. Due to computer power limitation this model was trained for 60k
+to show model prediction. Due to computer power limitation this model was trained for 120k
 iterations but it still demonstrates its capabilities. For further details about
 trainings parameters please check given link.
 """
