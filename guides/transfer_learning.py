@@ -235,7 +235,7 @@ x = base_model(inputs, training=False)
 # Convert features of shape `base_model.output_shape[1:]` to vectors
 x = keras.layers.GlobalAveragePooling2D()(x)
 # A Dense classifier with a single unit (binary classification)
-outputs = keras.layers.Dense(1)(x)
+outputs = keras.layers.Dense(1,activation='sigmoid')(x)
 model = keras.Model(inputs, outputs)
 ```
 
@@ -243,7 +243,7 @@ Train the model on new data.
 
 ```python
 model.compile(optimizer=keras.optimizers.Adam(),
-              loss=keras.losses.BinaryCrossentropy(from_logits=True),
+              loss=keras.losses.BinaryCrossentropy(from_logits=False),
               metrics=[keras.metrics.BinaryAccuracy()])
 model.fit(new_dataset, epochs=20, callbacks=..., validation_data=...)
 ```
@@ -281,7 +281,7 @@ base_model.trainable = True
 # to the `trainable` attribute of any inner layer, so that your changes
 # are take into account
 model.compile(optimizer=keras.optimizers.Adam(1e-5),  # Very low learning rate
-              loss=keras.losses.BinaryCrossentropy(from_logits=True),
+              loss=keras.losses.BinaryCrossentropy(from_logits=False),
               metrics=[keras.metrics.BinaryAccuracy()])
 
 # Train end-to-end. Be careful to stop before you overfit!
@@ -342,10 +342,10 @@ base_model.trainable = False
 inputs = keras.Input(shape=(150, 150, 3))
 x = base_model(inputs, training=False)
 x = keras.layers.GlobalAveragePooling2D()(x)
-outputs = keras.layers.Dense(1)(x)
+outputs = keras.layers.Dense(1,activation='sigmoid')(x)
 model = keras.Model(inputs, outputs)
 
-loss_fn = keras.losses.BinaryCrossentropy(from_logits=True)
+loss_fn = keras.losses.BinaryCrossentropy(from_logits=False)
 optimizer = keras.optimizers.Adam()
 
 # Iterate over the batches of a dataset.
@@ -544,7 +544,7 @@ x = scale_layer(x)
 x = base_model(x, training=False)
 x = keras.layers.GlobalAveragePooling2D()(x)
 x = keras.layers.Dropout(0.2)(x)  # Regularize with dropout
-outputs = keras.layers.Dense(1)(x)
+outputs = keras.layers.Dense(1,activation='sigmoid')(x)
 model = keras.Model(inputs, outputs)
 
 model.summary()
@@ -555,7 +555,7 @@ model.summary()
 
 model.compile(
     optimizer=keras.optimizers.Adam(),
-    loss=keras.losses.BinaryCrossentropy(from_logits=True),
+    loss=keras.losses.BinaryCrossentropy(from_logits=False),
     metrics=[keras.metrics.BinaryAccuracy()],
 )
 
@@ -585,7 +585,7 @@ model.summary()
 
 model.compile(
     optimizer=keras.optimizers.Adam(1e-5),  # Low learning rate
-    loss=keras.losses.BinaryCrossentropy(from_logits=True),
+    loss=keras.losses.BinaryCrossentropy(from_logits=False),
     metrics=[keras.metrics.BinaryAccuracy()],
 )
 
