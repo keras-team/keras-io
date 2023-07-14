@@ -47,6 +47,21 @@ inference and fine-tuning.
 """
 
 """
+Let's import everything we need for this example.
+"""
+
+from tensorflow import keras
+from transformers import TFSamModel, SamProcessor
+import numpy as np
+import tensorflow as tf
+import matplotlib.pyplot as plt
+from tensorflow.python.ops.numpy_ops import np_config
+from PIL import Image
+import requests
+import glob
+import os
+
+"""
 ## SAM in a few words
 
 SAM has the following components:
@@ -97,8 +112,6 @@ We load `sam-vit-base` in
 [`TFSamModel`](https://huggingface.co/docs/transformers/main/model_doc/sam#transformers.TFSamModel). We also need `SamProcessor`for the associated checkpoint.
 """
 
-from transformers import TFSamModel, SamProcessor
-
 model = TFSamModel.from_pretrained("facebook/sam-vit-base")
 processor = SamProcessor.from_pretrained("facebook/sam-vit-base")
 
@@ -107,11 +120,6 @@ Next, we write some utility functions for visualization. Most of these functions
 taken from [this notebook](https://github.com/huggingface/notebooks/blob/main/examples/segment_anything.ipynb).
 """
 
-import numpy as np
-import tensorflow as tf
-import matplotlib.pyplot as plt
-
-from tensorflow.python.ops.numpy_ops import np_config
 
 np_config.enable_numpy_behavior()
 
@@ -234,8 +242,6 @@ We will segment a car image using a point prompt. Make sure to set `return_tenso
 Let's load an image of a car and segment it.
 """
 
-from PIL import Image
-import requests
 
 img_url = "https://huggingface.co/ybelkada/segment-anything/resolve/main/assets/car.png"
 raw_image = Image.open(requests.get(img_url, stream=True).raw).convert("RGB")
@@ -304,7 +310,6 @@ containing malignancy is an important task.
 Let's first get the dataset.
 """
 
-from tensorflow import keras
 
 remote_path = "https://hf.co/datasets/sayakpaul/sample-datasets/resolve/main/breast-cancer-dataset.tar.gz"
 dataset_path = keras.utils.get_file(
@@ -317,9 +322,6 @@ Let's now visualize a sample from the dataset.
 *(The `show_mask()` utility is taken from [this
 notebook](https://github.com/NielsRogge/Transformers-Tutorials/blob/master/SAM/Fine_tune_SAM_(segment_anything)_on_a_custom_dataset.ipynb))*
 """
-
-import glob
-import os
 
 
 def show_mask(mask, ax, random_color=False):
@@ -480,8 +482,6 @@ We will now write DICE loss. This implementation is based on [MONAI DICE
 loss](https://docs.monai.io/en/stable/_modules/monai/losses/dice.html#DiceLoss).
 """
 
-from tensorflow.keras import backend as K
-
 
 def dice_loss(y_true, y_pred, smooth=1e-5):
     y_pred = tf.sigmoid(y_pred)
@@ -489,13 +489,12 @@ def dice_loss(y_true, y_pred, smooth=1e-5):
     if batch_size > 1:
         # reducing spatial dimensions and batch
         reduce_axis = [0] + reduce_axis
-    print(reduce_axis)
     intersection = tf.reduce_sum(y_true * y_pred, axis=reduce_axis)
     y_true_sq = tf.math.pow(y_true, 2)
     y_pred_sq = tf.math.pow(y_pred, 2)
 
-    ground_o = K.sum(y_true_sq, axis=reduce_axis)
-    pred_o = K.sum(y_pred_sq, axis=reduce_axis)
+    ground_o = tf.reduce_sum(y_true_sq, axis=reduce_axis)
+    pred_o = tf.reduce_sum(y_pred_sq, axis=reduce_axis)
     denominator = ground_o + pred_o
     # calculate DICE coefficient
     loss = 1.0 - (2.0 * intersection + 1e-5) / (denominator + 1e-5)
@@ -510,8 +509,6 @@ def dice_loss(y_true, y_pred, smooth=1e-5):
 We will now fine-tune SAM's decoder part. We will freeze the vision encoder and prompt
 encoder layers.
 """
-
-from tensorflow import keras
 
 # initialize SAM model and optimizer
 sam = TFSamModel.from_pretrained("facebook/sam-vit-base")
@@ -534,12 +531,10 @@ def train_step(inputs):
         )
 
         predicted_masks = tf.squeeze(outputs.pred_masks, 1)
-        print(inputs["ground_truth_mask"].shape)
         ground_truth_masks = tf.cast(inputs["ground_truth_mask"], tf.float32)
 
         # calculate loss over predicted and ground truth masks
         loss = dice_loss(tf.expand_dims(ground_truth_masks, 1), predicted_masks)
-        print(tf.expand_dims(ground_truth_masks, 1).shape == predicted_masks.shape)
         # update trainable variables
         trainable_vars = sam.trainable_variables
         grads = tape.gradient(loss, trainable_vars)
