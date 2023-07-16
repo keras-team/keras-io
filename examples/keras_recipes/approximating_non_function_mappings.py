@@ -157,16 +157,19 @@ plt.show()
 Mixture Density networks can alleviate this problem.
 A Mixture density is a class of complicated densities expressible in terms of simpler densities.
 They are effectively the sum of a ton of probability distributions.
+Mixture Density networks learn to parameterize a mixture density distribution
+based on a given training set.
 
+As a practitioner, all you need to know, is that Mixture Density Networks solve
+the problem of multiple values of Y for a given X.
 I'm hoping to add a tool to your kit- but I'm not going to formally explain the
 derivation of Mixture Density networks in this guide.
 The most important thing to know is that a Mixture Density network learns to
 parameterize a mixture density distribution.
-This is done by computing a loss with respect to the probability that each
-provided `y_true` value would come from the parameterized distribution.
-
-As a practitioner, all you need to know, is that Mixture Density Networks solve
-the problem of multiple values of Y for a given X.
+This is done by computing a special loss with respect to both the provided
+`y_i` label as well as the predicted distribution for the corresponding `x_i`.
+This loss function operates by computing the probability that `y_i` would be
+drawn from the predicted mixture distribution.
 
 Let's implement a Mixture density network.
 Below, a ton of helper functions are defined based on an old Keras library
