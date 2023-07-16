@@ -157,6 +157,7 @@ plt.show()
 Mixture Density networks can alleviate this problem.
 I'm going to be honest, explaining all of the concepts involved in a mixture
  density network will take a long time.
+What you should know is that a Mixture Density distribution can take on different values far from one another in geometric space, and the network learns to parameterize this distribution.
 
 I'm hoping to add a tool to your kit- but I'm not going to formally explain
 Mixture Density networks in this guide.
