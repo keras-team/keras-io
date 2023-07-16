@@ -155,12 +155,15 @@ plt.show()
 ## Mixture Density Networks
 
 Mixture Density networks can alleviate this problem.
-I'm going to be honest, explaining all of the concepts involved in a mixture
- density network will take a long time.
-What you should know is that a Mixture Density distribution can take on different values far from one another in geometric space, and the network learns to parameterize this distribution.
+A Mixture density is a class of complicated densities expressible in terms of simpler densities.
+They are effectively the sum of a ton of probability distributions.
 
-I'm hoping to add a tool to your kit- but I'm not going to formally explain
-Mixture Density networks in this guide.
+I'm hoping to add a tool to your kit- but I'm not going to formally explain the
+derivation of Mixture Density networks in this guide.
+The most important thing to know is that a Mixture Density network learns to
+parameterize a mixture density distribution.
+This is done by computing a loss with respect to the probability that each
+provided `y_true` value would come from the parameterized distribution.
 
 As a practitioner, all you need to know, is that Mixture Density Networks solve
 the problem of multiple values of Y for a given X.
