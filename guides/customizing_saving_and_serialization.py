@@ -10,13 +10,15 @@ Description: A more advanced guide on customizing saving for your layers and mod
 ## Introduction
 
 This guide covers advanced methods that can be customized in Keras saving. For most
-users, the methods outlined in the primary [Serialize, save, and export
-guide](https://keras.io/guides/save_serialize_export) are sufficient.
+users, the methods outlined in the primary
+[Serialize, save, and export guide](https://keras.io/guides/serialization_and_saving)
+are sufficient.
 """
 
 """
 ### APIs
 We will cover the following APIs:
+
 - `save_assets()` and `load_assets()`
 - `save_own_variables()` and `load_own_variables()`
 - `get_build_config()` and `build_from_config()`
@@ -37,7 +39,7 @@ import keras
 """
 ## State saving customization
 
-These methods determine how the state of your model's layers are saved when calling
+These methods determine how the state of your model's layers is saved when calling
 `model.save()`. You can override them to take full control of the state saving process.
 
 """
@@ -46,6 +48,7 @@ These methods determine how the state of your model's layers are saved when call
 
 
 ### `save_own_variables()` and `load_own_variables()`
+
 These methods save and load the state variables of the layer when `model.save()` and
 `keras.models.load_model()` are called, respectively. By default, the state variables
 saved and loaded are the weights of the layer (both trainable and non-trainable). Here is
@@ -65,44 +68,35 @@ variables. Let's take a look at an example customizing this.
 """
 
 
-@keras.saving.register_keras_serializable(package="my_custom_package")
+@keras.utils.register_keras_serializable(package="my_custom_package")
 class LayerWithCustomVariables(keras.layers.Dense):
-    def __init__(self, units, special_mode=False, **kwargs):
+    def __init__(self, units, **kwargs):
         super().__init__(units, **kwargs)
-        self.special_mode = special_mode
-        if self.special_mode:
-            self.stored_variables = tf.Variable(
-                np.random.random((10,)), name="special_arr", dtype=tf.float32
-            )
+        self.stored_variables = tf.Variable(np.random.random((10,)), name="special_arr", dtype=tf.float32)
 
     def save_own_variables(self, store):
-        if self.special_mode:
-            store["variables"] = self.stored_variables.value()
-            # Stores the value of the `tf.Variable` upon saving in `special_mode`
+        # Stores the value of the `tf.Variable` upon saving
+        store["variables"] = self.stored_variables.numpy()
 
     def load_own_variables(self, store):
-        if self.special_mode:
-            self.stored_variables.assign(store["variables"])
-            # Assigns the value of the `tf.Variable` upon loading in `special_mode`
+        # Assigns the value of the `tf.Variable` upon loading
+        self.stored_variables.assign(store["variables"])
 
     def call(self, inputs):
-        if self.special_mode:
-            return super().call(inputs) * self.stored_variables
-        else:
-            return super().call(inputs)
+        return super().call(inputs) * self.stored_variables
 
 
-@keras.saving.register_keras_serializable(package="my_custom_package")
+@keras.utils.register_keras_serializable(package="my_custom_package")
 class ModelWithCustomVariables(keras.Model):
-    def __init__(self, special_mode=False, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.custom_dense = LayerWithCustomVariables(1, special_mode)
+        self.custom_dense = LayerWithCustomVariables(1)
 
     def call(self, inputs):
         return self.custom_dense(inputs)
 
 
-model = ModelWithCustomVariables(True)
+model = ModelWithCustomVariables()
 
 ref_input = np.random.random((8, 10))
 ref_output = np.random.random((8,))
@@ -113,8 +107,8 @@ model.save("custom_vars_model.keras")
 restored_model = keras.models.load_model("custom_vars_model.keras")
 
 np.testing.assert_allclose(
-    model.custom_dense.stored_variables.value(),
-    restored_model.custom_dense.stored_variables.value(),
+    model.custom_dense.stored_variables.numpy(),
+    restored_model.custom_dense.stored_variables.numpy(),
 )
 
 """
@@ -141,14 +135,14 @@ class LayerWithCustomAssets(keras.layers.Dense):
         return super().build(input_shape)
 
     def save_assets(self, inner_path):
+        # Writes the assets (sentence) to text file at save time.
         with open(os.path.join(inner_path, "assets.txt"), "w") as f:
-            f.write(
-                self.assets
-            )  # Writes the assets (sentence) to text file at save time.
+            f.write(self.assets)
 
     def load_assets(self, inner_path):
+        # Reads the assets (sentence) from text file at load time.
         with open(os.path.join(inner_path, "assets.txt"), "r") as f:
-            text = f.read()  # Reads the assets (sentence) from text file at load time.
+            text = f.read()
         self.assets = text.replace("<unk>", "little")
 
 
