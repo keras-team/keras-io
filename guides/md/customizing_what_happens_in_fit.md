@@ -48,7 +48,7 @@ Requires TensorFlow 2.8 or later.
 
 ```python
 import tensorflow as tf
-from tensorflow import keras
+import keras
 ```
 
 ---
@@ -129,13 +129,13 @@ model.fit(x, y, epochs=3)
 <div class="k-default-codeblock">
 ```
 Epoch 1/3
-32/32 [==============================] - 0s 530us/step - loss: 1.1852
+32/32 [==============================] - 0s 988us/step - loss: 1.3511
 Epoch 2/3
-32/32 [==============================] - 0s 473us/step - loss: 0.5183
+32/32 [==============================] - 0s 865us/step - loss: 0.5966
 Epoch 3/3
-32/32 [==============================] - 0s 383us/step - loss: 0.3096
+32/32 [==============================] - 0s 981us/step - loss: 0.3255
 
-<keras.callbacks.History at 0x2c523cd90>
+<keras.callbacks.History at 0x7f7646eb6190>
 
 ```
 </div>
@@ -215,17 +215,17 @@ model.fit(x, y, epochs=5)
 <div class="k-default-codeblock">
 ```
 Epoch 1/5
-32/32 [==============================] - 0s 448us/step - loss: 0.2615 - mae: 0.4100
+32/32 [==============================] - 0s 918us/step - loss: 0.7567 - mae: 0.7519
 Epoch 2/5
-32/32 [==============================] - 0s 469us/step - loss: 0.2440 - mae: 0.3955
+32/32 [==============================] - 0s 901us/step - loss: 0.3224 - mae: 0.4571
 Epoch 3/5
-32/32 [==============================] - 0s 391us/step - loss: 0.2303 - mae: 0.3842
+32/32 [==============================] - 0s 999us/step - loss: 0.2337 - mae: 0.3865
 Epoch 4/5
-32/32 [==============================] - 0s 338us/step - loss: 0.2181 - mae: 0.3745
+32/32 [==============================] - 0s 800us/step - loss: 0.2245 - mae: 0.3796
 Epoch 5/5
-32/32 [==============================] - 0s 339us/step - loss: 0.2062 - mae: 0.3636
+32/32 [==============================] - 0s 746us/step - loss: 0.2210 - mae: 0.3768
 
-<keras.callbacks.History at 0x2c5dbfb50>
+<keras.callbacks.History at 0x7f7646f8da10>
 
 ```
 </div>
@@ -300,13 +300,13 @@ model.fit(x, y, sample_weight=sw, epochs=3)
 <div class="k-default-codeblock">
 ```
 Epoch 1/3
-32/32 [==============================] - 0s 463us/step - loss: 0.2053
+32/32 [==============================] - 0s 930us/step - loss: 0.2296
 Epoch 2/3
-32/32 [==============================] - 0s 480us/step - loss: 0.1233
+32/32 [==============================] - 0s 834us/step - loss: 0.1305
 Epoch 3/3
-32/32 [==============================] - 0s 397us/step - loss: 0.1194
+32/32 [==============================] - 0s 890us/step - loss: 0.1230
 
-<keras.callbacks.History at 0x2c612f5e0>
+<keras.callbacks.History at 0x7f764415a890>
 
 ```
 </div>
@@ -350,9 +350,9 @@ model.evaluate(x, y)
 
 <div class="k-default-codeblock">
 ```
-32/32 [==============================] - 0s 345us/step - loss: 2.3152
+32/32 [==============================] - 0s 756us/step - loss: 0.3405
 
-2.3152108192443848
+0.34045735001564026
 
 ```
 </div>
@@ -508,9 +508,9 @@ gan.fit(dataset.take(100), epochs=1)
 
 <div class="k-default-codeblock">
 ```
-100/100 [==============================] - 21s 205ms/step - d_loss: 0.4003 - g_loss: 0.8827
+100/100 [==============================] - 36s 348ms/step - d_loss: 0.4120 - g_loss: 0.8394
 
-<keras.callbacks.History at 0x2c6485c90>
+<keras.callbacks.History at 0x7f7634678f90>
 
 ```
 </div>

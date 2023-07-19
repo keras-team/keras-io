@@ -48,7 +48,7 @@ training high-resolution image classification models on tens of millions of imag
 
 ```python
 import tensorflow as tf
-from tensorflow import keras
+import keras
 ```
 
 ---
@@ -180,17 +180,16 @@ model.evaluate(test_dataset)
 
 <div class="k-default-codeblock">
 ```
-WARNING: Logging before flag parsing goes to stderr.
-W0829 16:54:57.025418 4592479680 cross_device_ops.py:1115] There are non-GPU devices in `tf.distribute.Strategy`, not using nccl allreduce.
-
+WARNING:tensorflow:There are non-GPU devices in `tf.distribute.Strategy`, not using nccl allreduce.
+INFO:tensorflow:Using MirroredStrategy with devices ('/job:localhost/replica:0/task:0/device:CPU:0',)
 Number of devices: 1
 Epoch 1/2
-1563/1563 [==============================] - 3s 2ms/step - loss: 0.3767 - sparse_categorical_accuracy: 0.8889 - val_loss: 0.1257 - val_sparse_categorical_accuracy: 0.9623
+1563/1563 [==============================] - 5s 3ms/step - loss: 0.2250 - sparse_categorical_accuracy: 0.9331 - val_loss: 0.1224 - val_sparse_categorical_accuracy: 0.9641
 Epoch 2/2
-1563/1563 [==============================] - 2s 2ms/step - loss: 0.1053 - sparse_categorical_accuracy: 0.9678 - val_loss: 0.0944 - val_sparse_categorical_accuracy: 0.9710
-313/313 [==============================] - 0s 779us/step - loss: 0.0900 - sparse_categorical_accuracy: 0.9723
+1563/1563 [==============================] - 4s 3ms/step - loss: 0.0941 - sparse_categorical_accuracy: 0.9713 - val_loss: 0.0979 - val_sparse_categorical_accuracy: 0.9709
+313/313 [==============================] - 1s 1ms/step - loss: 0.1014 - sparse_categorical_accuracy: 0.9691
 
-[0.08995261788368225, 0.9722999930381775]
+[0.10135305672883987, 0.9690999984741211]
 
 ```
 </div>
@@ -261,21 +260,34 @@ run_training(epochs=1)
 
 <div class="k-default-codeblock">
 ```
-W0829 16:55:03.609519 4592479680 cross_device_ops.py:1115] There are non-GPU devices in `tf.distribute.Strategy`, not using nccl allreduce.
-
+WARNING:tensorflow:There are non-GPU devices in `tf.distribute.Strategy`, not using nccl allreduce.
+INFO:tensorflow:Using MirroredStrategy with devices ('/job:localhost/replica:0/task:0/device:CPU:0',)
 Creating a new model
 
-W0829 16:55:03.708506 4592479680 callbacks.py:1270] Automatic model reloading for interrupted job was removed from the `ModelCheckpoint` callback in multi-worker mode, please use the `keras.callbacks.experimental.BackupAndRestore` callback instead. See this tutorial for details: https://www.tensorflow.org/tutorials/distribute/multi_worker_with_keras#backupandrestore_callback.
+WARNING:absl:Found untraced functions such as _update_step_xla while saving (showing 1 of 1). These functions will not be directly callable after loading.
 
-1563/1563 - 4s - loss: 0.2242 - sparse_categorical_accuracy: 0.9321 - val_loss: 0.1243 - val_sparse_categorical_accuracy: 0.9647
+INFO:tensorflow:Assets written to: ./ckpt/ckpt-1/assets
 
-W0829 16:55:07.981292 4592479680 cross_device_ops.py:1115] There are non-GPU devices in `tf.distribute.Strategy`, not using nccl allreduce.
+INFO:tensorflow:Assets written to: ./ckpt/ckpt-1/assets
+
+1563/1563 - 7s - loss: 0.2283 - sparse_categorical_accuracy: 0.9324 - val_loss: 0.1519 - val_sparse_categorical_accuracy: 0.9527 - 7s/epoch - 4ms/step
+WARNING:tensorflow:There are non-GPU devices in `tf.distribute.Strategy`, not using nccl allreduce.
+
+WARNING:tensorflow:There are non-GPU devices in `tf.distribute.Strategy`, not using nccl allreduce.
+
+INFO:tensorflow:Using MirroredStrategy with devices ('/job:localhost/replica:0/task:0/device:CPU:0',)
+
+INFO:tensorflow:Using MirroredStrategy with devices ('/job:localhost/replica:0/task:0/device:CPU:0',)
 
 Restoring from ./ckpt/ckpt-1
 
-W0829 16:55:08.245935 4592479680 callbacks.py:1270] Automatic model reloading for interrupted job was removed from the `ModelCheckpoint` callback in multi-worker mode, please use the `keras.callbacks.experimental.BackupAndRestore` callback instead. See this tutorial for details: https://www.tensorflow.org/tutorials/distribute/multi_worker_with_keras#backupandrestore_callback.
+WARNING:absl:Found untraced functions such as _update_step_xla while saving (showing 1 of 1). These functions will not be directly callable after loading.
 
-1563/1563 - 4s - loss: 0.0948 - sparse_categorical_accuracy: 0.9709 - val_loss: 0.1006 - val_sparse_categorical_accuracy: 0.9699
+INFO:tensorflow:Assets written to: ./ckpt/ckpt-1/assets
+
+INFO:tensorflow:Assets written to: ./ckpt/ckpt-1/assets
+
+1563/1563 - 6s - loss: 0.1017 - sparse_categorical_accuracy: 0.9692 - val_loss: 0.1018 - val_sparse_categorical_accuracy: 0.9695 - 6s/epoch - 4ms/step
 
 ```
 </div>
