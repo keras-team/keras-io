@@ -442,7 +442,7 @@ pooled_tokens = keras.layers.GlobalAveragePooling1D()(encoded_tokens[0])
 # Predict an output label.
 outputs = keras.layers.Dense(1, activation="sigmoid")(pooled_tokens)
 
-# Define and compile our finetuning model.
+# Define and compile our fine-tuning model.
 finetuning_model = keras.Model(inputs, outputs)
 finetuning_model.compile(
     loss="binary_crossentropy",
@@ -463,30 +463,7 @@ for Transformer models. You may have noticed during pretraining that our validat
 performance was still steadily increasing. Our model is still significantly undertrained.
 Training for more epochs, training a large Transformer, and training on more unlabeled
 text would all continue to boost performance significantly.
-"""
 
-"""
-### Save a model that accepts raw text
-
-The last thing we can do with our fine-tuned model is saving including our tokenization
-layer. One of the key advantages of KerasNLP is all preprocessing is done inside the
-[TensorFlow graph](https://www.tensorflow.org/guide/intro_to_graphs), making it possible
-to save and restore a model that can directly run inference on raw text!
-"""
-
-# Add our tokenization into our final model.
-inputs = keras.Input(shape=(), dtype=tf.string)
-tokens = tokenizer(inputs)
-outputs = finetuning_model(tokens)
-final_model = keras.Model(inputs, outputs)
-final_model.save("final_model.keras")
-
-# This model can predict directly on raw text.
-restored_model = keras.models.load_model("final_model.keras", compile=False)
-inference_data = tf.constant(["Terrible, no good, trash.", "So great; I loved it!"])
-print(restored_model(inference_data))
-
-"""
 One of the key goals of KerasNLP is to provide a modular approach to NLP model building.
 We have shown one approach to building a Transformer here, but KerasNLP supports an ever
 growing array of components for preprocessing text and building models. We hope it makes
