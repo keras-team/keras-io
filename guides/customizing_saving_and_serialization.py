@@ -75,12 +75,18 @@ class LayerWithCustomVariables(keras.layers.Dense):
         self.stored_variables = tf.Variable(np.random.random((10,)), name="special_arr", dtype=tf.float32)
 
     def save_own_variables(self, store):
+        super().save_own_variables(store)
         # Stores the value of the `tf.Variable` upon saving
         store["variables"] = self.stored_variables.numpy()
 
     def load_own_variables(self, store):
         # Assigns the value of the `tf.Variable` upon loading
         self.stored_variables.assign(store["variables"])
+        # Load the remaining weights
+        for i, v in enumerate(self.weights):
+            v.assign(store[f"{i}"])
+        # Note: You must specify how all variables (including layer weights)
+        # are loaded in `load_own_variables.`
 
     def call(self, inputs):
         return super().call(inputs) * self.stored_variables
@@ -129,19 +135,18 @@ Let's take at the basics of this workflow with a simple file `assets.txt`.
 
 @keras.saving.register_keras_serializable(package="my_custom_package")
 class LayerWithCustomAssets(keras.layers.Dense):
-    def build(self, input_shape):
-        if not hasattr(self, "assets"):
-            self.assets = "Mary had a <unk> lamb."
-        return super().build(input_shape)
+    def __init__(self, vocab=None, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.vocab = vocab
 
     def save_assets(self, inner_path):
         # Writes the assets (sentence) to text file at save time.
-        with open(os.path.join(inner_path, "assets.txt"), "w") as f:
-            f.write(self.assets)
+        with open(os.path.join(inner_path, "vocabulary.txt"), "w") as f:
+            f.write(self.vocab)
 
     def load_assets(self, inner_path):
         # Reads the assets (sentence) from text file at load time.
-        with open(os.path.join(inner_path, "assets.txt"), "r") as f:
+        with open(os.path.join(inner_path, "vocabulary.txt"), "r") as f:
             text = f.read()
         self.assets = text.replace("<unk>", "little")
 
@@ -150,7 +155,8 @@ class LayerWithCustomAssets(keras.layers.Dense):
 class ModelWithCustomAssets(keras.Model):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.custom_dense = LayerWithCustomAssets(1)
+        self.vocab = "Mary had a <unk> lamb."
+        self.custom_dense = LayerWithCustomAssets(vocab=self.vocab, units=5)
 
     def call(self, inputs):
         return self.custom_dense(inputs)
