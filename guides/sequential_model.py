@@ -12,8 +12,8 @@ Accelerator: GPU
 """
 
 import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras import layers
+import keras
+from keras import layers
 
 """
 ## When to use a Sequential model
