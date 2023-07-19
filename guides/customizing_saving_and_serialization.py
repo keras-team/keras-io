@@ -332,3 +332,21 @@ restored_model = keras.models.load_model("custom_compile_model.keras")
 np.testing.assert_equal(model.model_optimizer, restored_model.model_optimizer)
 np.testing.assert_equal(model.loss_fn, restored_model.loss_fn)
 np.testing.assert_equal(model.loss_metrics, restored_model.loss_metrics)
+
+"""
+## Conclusion
+
+Using the methods learned in this tutorial allows for a wide variety of use cases,
+allowing the saving and loading of complex models with exotic assets and state
+elements. To recap:
+
+- `save_own_variables` and `load_own_variables` determine how your states are saved
+and loaded.
+- `save_assets` and `load_assets` can be added to store and load any additional
+information your model needs.
+- `get_build_config` and `build_from_config` save and restore the model's built
+states.
+- `get_compile_config` and `compile_from_config` save and restore the model's
+compiled states.
+
+"""
