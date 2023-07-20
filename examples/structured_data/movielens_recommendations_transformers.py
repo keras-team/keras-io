@@ -95,7 +95,7 @@ movies = pd.read_csv(
     "ml-1m/movies.dat", 
     sep="::", 
     names=["movie_id", "title", "genres"],
-    encoding='latin-1'
+    encoding="latin-1"
 )
 
 """
