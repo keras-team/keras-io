@@ -396,6 +396,7 @@ class GAN(keras.Model):
         self.loss_fn = loss_fn
 
     def train_step(self, real_images):
+        device = "cuda" if torch.cuda.is_available() else "cpu"
         if isinstance(real_images, tuple):
             real_images = real_images[0]
         # Sample random points in the latent space
@@ -408,12 +409,16 @@ class GAN(keras.Model):
         generated_images = self.generator(random_latent_vectors)
 
         # Combine them with real images
-        real_images = torch.tensor(real_images)
+        real_images = torch.tensor(real_images, device=device)
         combined_images = torch.concat([generated_images, real_images], axis=0)
 
         # Assemble labels discriminating real from fake images
         labels = torch.concat(
-            [torch.ones((batch_size, 1)), torch.zeros((batch_size, 1))], axis=0
+            [
+                torch.ones((batch_size, 1), device=device),
+                torch.zeros((batch_size, 1), device=device),
+            ],
+            axis=0,
         )
         # Add random noise to the labels - important trick!
         labels += 0.05 * keras.random.uniform(labels.shape, seed=self.seed_generator)
