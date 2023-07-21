@@ -92,7 +92,7 @@ To enable them in other operations, rebuild TensorFlow with the appropriate comp
 ```
 </div>
 There are many other types of hyperparameters as well. We can define multiple
-hyperparameters in the function. In the following code, we tune the whether to
+hyperparameters in the function. In the following code, we tune whether to
 use a `Dropout` layer with `hp.Boolean()`, tune which activation function to
 use with `hp.Choice()`, tune the learning rate of the optimizer with
 `hp.Float()`.
