@@ -510,7 +510,7 @@ class GAN(keras.Model):
         )
 
         # Assemble labels that say "all real images"
-        misleading_labels = torch.zeros((batch_size, 1))
+        misleading_labels = torch.zeros((batch_size, 1), device=device)
 
         # Train the generator (note that we should *not* update the weights
         # of the discriminator)!
