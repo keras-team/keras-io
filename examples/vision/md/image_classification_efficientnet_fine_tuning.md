@@ -2,7 +2,7 @@
 
 **Author:** [Yixing Fu](https://github.com/yixingfu)<br>
 **Date created:** 2020/06/30<br>
-**Last modified:** 2020/07/16<br>
+**Last modified:** 2023/07/10<br>
 **Description:** Use EfficientNet with weights pre-trained on imagenet for Stanford Dogs classification.
 
 
@@ -503,7 +503,7 @@ def build_model(num_classes):
 
     top_dropout_rate = 0.2
     x = layers.Dropout(top_dropout_rate, name="top_dropout")(x)
-    outputs = layers.Dense(NUM_CLASSES, activation="softmax", name="pred")(x)
+    outputs = layers.Dense(num_classes, activation="softmax", name="pred")(x)
 
     # Compile
     model = tf.keras.Model(inputs, outputs, name="EfficientNet")

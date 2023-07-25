@@ -94,7 +94,8 @@ You set the state of a preprocessing layer by exposing it to training data, via 
 
 import numpy as np
 import tensorflow as tf
-from tensorflow.keras import layers
+import keras
+from keras import layers
 
 data = np.array(
     [

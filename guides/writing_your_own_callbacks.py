@@ -24,7 +24,7 @@ started.
 """
 
 import tensorflow as tf
-from tensorflow import keras
+import keras
 
 """
 ## Keras callbacks overview
