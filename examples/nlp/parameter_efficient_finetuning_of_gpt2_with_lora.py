@@ -37,15 +37,20 @@ training time and GPU memory usage.
 ## Setup
 
 Before we start implementing the pipeline, let's install and import all the
-libraries we need. We'll be using the KerasNLP library.
-
-Secondly, let's enable mixed precision training. This will help us reduce the
-training time.
+libraries we need. We'll be using the KerasNLP library. Also, let's choose
+a backend. We'll be going with Jax. The available options are "tensorflow",
+"jax" and "torch".
 """
 
 """shell
-pip install keras-nlp -q
+pip install keras-nlp nvidia-ml-py3 -q
 """
+
+import os
+
+os.environ["KERAS_BACKEND"] = "jax"
+
+import nvidia_smi
 
 import keras_nlp
 import matplotlib.pyplot as plt
@@ -53,10 +58,21 @@ import tensorflow as tf
 import tensorflow_datasets as tfds
 import time
 
-from tensorflow import keras
+import keras_core as keras
 
-policy = keras.mixed_precision.Policy("mixed_float16")
-keras.mixed_precision.set_global_policy(policy)
+
+"""
+Before we move on, one thing we should do is "turn on the memory growth" so that
+memory is dynamically allocated to processes at runtime.
+This will allow us to make a fairer comparison between GPT-2 and LoRA.
+"""
+
+gpu = tf.config.list_physical_devices("GPU")[0]
+try:
+    tf.config.experimental.set_visible_devices(gpu, "GPU")
+except RuntimeError as e:
+    # Memory growth must be set before GPUs have been initialized
+    print(e)
 
 """
 Let's also define our hyperparameters.
@@ -135,6 +151,9 @@ class GPUMemoryCallback(keras.callbacks.Callback):
         **kwargs,
     ):
         super().__init__(**kwargs)
+
+        nvidia_smi.nvmlInit()
+
         self.target_batches = target_batches
         self.print_stats = print_stats
 
@@ -142,10 +161,9 @@ class GPUMemoryCallback(keras.callbacks.Callback):
         self.labels = []
 
     def _compute_memory_usage(self):
-        memory_stats = tf.config.experimental.get_memory_info("GPU:0")
-        # Convert bytes to GB and store in list.
-        peak_usage = round(memory_stats["peak"] / (2**30), 3)
-        self.memory_usage.append(peak_usage)
+        handle = nvidia_smi.nvmlDeviceGetHandleByIndex(0)
+        info = nvidia_smi.nvmlDeviceGetMemoryInfo(handle)
+        self.memory_usage.append(info.used)
 
     def on_epoch_begin(self, epoch, logs=None):
         self._compute_memory_usage()
@@ -159,6 +177,10 @@ class GPUMemoryCallback(keras.callbacks.Callback):
     def on_epoch_end(self, epoch, logs=None):
         self._compute_memory_usage()
         self.labels.append(f"epoch {epoch} end")
+
+    def on_train_end(self, logs=None):
+        # Kill the nvidia_smi instance.
+        nvidia_smi.nvmlShutdown()
 
 
 """
@@ -427,7 +449,7 @@ del optimizer
 del loss
 
 # This resets "peak" memory usage to "current" memory usage.
-tf.config.experimental.reset_memory_stats("GPU:0")
+# tf.config.experimental.reset_memory_stats("GPU:0")
 
 # Load the original model.
 preprocessor = keras_nlp.models.GPT2CausalLMPreprocessor.from_preset(
@@ -567,7 +589,9 @@ for layer_idx in range(lora_model.backbone.num_layers):
 
     A_weights = query_lora_layer.A.kernel  # (768, 1) (a, b)
     B_weights = query_lora_layer.B.kernel  # (1, 12, 64) (b, c, d)
-    increment_weights = tf.einsum("ab,bcd->acd", A_weights, B_weights) * (ALPHA / RANK)
+    increment_weights = keras.ops.einsum("ab,bcd->acd", A_weights, B_weights) * (
+        ALPHA / RANK
+    )
     query_lora_layer.original_layer.kernel.assign_add(increment_weights)
 
     # Merge value dense layer.
@@ -575,7 +599,9 @@ for layer_idx in range(lora_model.backbone.num_layers):
 
     A_weights = value_lora_layer.A.kernel  # (768, 1) (a, b)
     B_weights = value_lora_layer.B.kernel  # (1, 12, 64) (b, c, d)
-    increment_weights = tf.einsum("ab,bcd->acd", A_weights, B_weights) * (ALPHA / RANK)
+    increment_weights = keras.ops.einsum("ab,bcd->acd", A_weights, B_weights) * (
+        ALPHA / RANK
+    )
     value_lora_layer.original_layer.kernel.assign_add(increment_weights)
 
 """
