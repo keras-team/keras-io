@@ -236,7 +236,7 @@ of the state variables of the target object, and return the update values as par
 of their outputs, e.g.:
 
 ```python
-updated_non_trainable_variables = layer.stateless_call(
+outputs, updated_non_trainable_variables = layer.stateless_call(
     trainable_variables,
     non_trainable_variables,
     inputs,

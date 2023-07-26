@@ -45,7 +45,7 @@ Requires TensorFlow 2.8 or later.
 """
 
 import tensorflow as tf
-from tensorflow import keras
+import keras
 
 """
 ## A first simple example

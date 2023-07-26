@@ -106,40 +106,32 @@ os.environ["KERAS_BACKEND"] = "jax"
 Note that the backend must be configured before importing `keras_core`,
 and the backend cannot be changed after the package has been imported.
 
-If you always want to use the same backend, just edit `~/.keras/keras.json` to specify your default backend.
+If you always want to use the same backend, just edit `~/.keras/keras.json` to 
+specify your default backend.
 
 ---
 
 ## Using KerasCV and KerasNLP with Keras Core
 
-As of version 0.6.0, `keras-nlp` and `keras-cv` both support multiple backends with `keras-core` out of the box.
-There are two ways to configure `keras-nlp` and `keras-cv` to run with multi-backend support:
+As of version `0.6.0`, KerasCV and KerasNLP support multiple backends with Keras 
+Core out of the box. There are two ways to configure these libraries to run with 
+multi-backend support. Using KerasCV as an example:
 
-1. Via the `KERAS_BACKEND` environment variable. If it set, then `keras-cv` and `keras-nlp` will be using
-`keras-core` with the backend specified.
-2. Via the `.keras/keras.json`, `.keras/keras_nlp.json`, `.keras/keras_cv.json` config files (which are
-automatically created the first time you import `keras-cv` or `keras-nlp`):
+1. Via the `KERAS_BACKEND` environment variable. If set, then KerasCV will be 
+using Keras Core with the backend specified (e.g., `KERAS_BACKEND=jax`).
+2. Via the `.keras/keras.json` and `.keras/keras_cv.json` config files (which 
+are automatically created the first time you import KerasCV):
+   - Set your backend of choice in `.keras/keras.json`; e.g., `"backend": "jax"`. 
+   - Set `"multi_backend": True` in `.keras/keras_cv.json`.
 
-- To make `keras-nlp` always use `keras-core`, set `"multi_backend": True` in `.keras/keras_nlp.json`.
-- To make `keras-cv` always use keras-core, set `"multi_backend": True` in `.keras/keras_cv.json`.
-
-Once that configuration step is done, you can just import `keras-nlp` and start using it on top
-of your backend of choice:
-
-```python
-import keras_nlp
-
-gpt2_lm = keras_nlp.models.GPT2CausalLM.from_preset("gpt2_base_en")
-gpt2_lm.generate("My trip to Yosemite was", max_length=200)
-```
-
-Same with `keras-cv`:
+Once that configuration step is done, you can just import KerasCV and start 
+using it on top of your backend of choice:
 
 ```python
 import keras_cv
 import keras_core as keras
 
-filepath = keras_core.utils.get_file(origin="https://i.imgur.com/gCNcJJI.jpg")
+filepath = keras.utils.get_file(origin="https://i.imgur.com/gCNcJJI.jpg")
 image = np.array(keras.utils.load_img(filepath))
 image_resized = ops.image.resize(image, (640, 640))[None, ...]
 
@@ -149,3 +141,19 @@ model = keras_cv.models.YOLOV8Detector.from_preset(
 )
 predictions = model.predict(image_resized)
 ```
+
+KerasNLP works the same way once configured with `.keras/keras_nlp.json`. For 
+example:
+
+```python
+import keras_nlp
+
+gpt2_lm = keras_nlp.models.GPT2CausalLM.from_preset("gpt2_base_en")
+gpt2_lm.generate("My trip to Yosemite was", max_length=200)
+```
+
+Until Keras Core is officially released as Keras 3.0, KerasCV and KerasNLP will 
+use `tf.keras` as the default backend. To restore this default behavior, simply 
+`unset KERAS_BACKEND` and ensure that  `"multi_backend": False` or is unset in 
+`.keras/keras_cv.json` or `.keras/keras_nlp.json`. You will need to restart the 
+Python runtime for changes to take effect.

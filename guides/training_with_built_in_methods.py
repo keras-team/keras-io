@@ -13,8 +13,8 @@ Accelerator: GPU
 """
 
 import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras import layers
+import keras
+from keras import layers
 
 """
 ## Introduction
@@ -266,6 +266,7 @@ Here's how you would do it:
 """
 
 
+@keras.saving.register_keras_serializable()
 class CustomMSE(keras.losses.Loss):
     def __init__(self, regularization_factor=0.1, name="custom_mse"):
         super().__init__(name=name)
@@ -275,6 +276,12 @@ class CustomMSE(keras.losses.Loss):
         mse = tf.math.reduce_mean(tf.square(y_true - y_pred), axis=-1)
         reg = tf.math.reduce_mean(tf.square(0.5 - y_pred), axis=-1)
         return mse + reg * self.regularization_factor
+
+    def get_config(self):
+        return {
+            "regularization_factor": self.regularization_factor,
+            "name": self.name,
+        }
 
 
 model = get_uncompiled_model()
@@ -305,6 +312,7 @@ that counts how many samples were correctly classified as belonging to a given c
 """
 
 
+@keras.saving.register_keras_serializable()
 class CategoricalTruePositives(keras.metrics.Metric):
     def __init__(self, name="categorical_true_positives", **kwargs):
         super().__init__(name=name, **kwargs)
@@ -351,6 +359,7 @@ this layer is just for the sake of providing a concrete example):
 """
 
 
+@keras.saving.register_keras_serializable()
 class ActivityRegularizationLayer(layers.Layer):
     def call(self, inputs):
         self.add_loss(tf.reduce_sum(inputs) * 0.1)
@@ -385,6 +394,7 @@ targets & logits, and it tracks a crossentropy loss via `add_loss()`.
 """
 
 
+@keras.saving.register_keras_serializable()
 class LogisticEndpoint(keras.layers.Layer):
     def __init__(self, name=None):
         super().__init__(name=name)
@@ -1002,7 +1012,7 @@ callbacks = [
         # the current checkpoint if and only if
         # the `val_loss` score has improved.
         # The saved model name will include the current epoch.
-        filepath="mymodel_{epoch}.keras",
+        filepath="mymodel_{epoch}",
         save_best_only=True,  # Only save a model if `val_loss` has improved.
         monitor="val_loss",
         verbose=1,
@@ -1043,7 +1053,7 @@ callbacks = [
     # This callback saves the model every 100 batches.
     # We include the training loss in the saved model name.
     keras.callbacks.ModelCheckpoint(
-        filepath=checkpoint_dir + "/model-loss={loss:.2f}.keras", save_freq=100
+        filepath=checkpoint_dir + "/model-loss={loss:.2f}", save_freq=100
     )
 ]
 model.fit(x_train, y_train, epochs=1, callbacks=callbacks)

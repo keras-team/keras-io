@@ -348,7 +348,6 @@ Finally, let's set up the code that will train and evaluate the model.
 learning_rate = 0.01
 batch_size = 265
 num_epochs = 10
-hidden_units = [64, 64]
 
 
 def run_experiment(model):
