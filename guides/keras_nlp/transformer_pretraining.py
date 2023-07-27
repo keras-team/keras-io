@@ -28,6 +28,11 @@ KerasNLP, simply change the `KERAS_BACKEND` environment variable below to change
 the backend you would like to use. We select the `jax` backend below, which will
 give us a particularly fast train step below.
 """
+
+"""shell
+pip install -q keras-nlp
+"""
+
 import os
 
 os.environ["KERAS_BACKEND"] = "jax"  # or "tensorflow" or "torch"

@@ -31,6 +31,10 @@ give us a particularly fast train step below.
 
 
 ```python
+!pip install -q keras-nlp
+```
+
+```python
 import os
 
 os.environ["KERAS_BACKEND"] = "jax"  # or "tensorflow" or "torch"
