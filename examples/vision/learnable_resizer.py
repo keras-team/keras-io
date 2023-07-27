@@ -132,7 +132,8 @@ def res_block(x):
     x = conv_block(x, 16, 3, 1, activation=None)
     return layers.Add()([inputs, x])
 
-#Note: user can change num_res_blocks to >1 also if needed
+
+# Note: User can change num_res_blocks to >1 also if needed
 def get_learnable_resizer(filters=16, num_res_blocks=1, interpolation=INTERPOLATION):
     inputs = layers.Input(shape=[None, None, 3])
 
@@ -152,10 +153,10 @@ def get_learnable_resizer(filters=16, num_res_blocks=1, interpolation=INTERPOLAT
     bottleneck = layers.Resizing(*TARGET_SIZE, interpolation=interpolation)(x)
 
     # Residual passes.
-    #first res_block will get bottleneck output as input
+    # First res_block will get bottleneck output as input
     x = res_block(bottleneck)
-    #remaining res_blocks will get previous res_block output as input
-    for _ in range(num_res_blocks-1):
+    # Remaining res_blocks will get previous res_block output as input
+    for _ in range(num_res_blocks - 1):
         x = res_block(x)
 
     # Projection.
