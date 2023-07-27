@@ -292,7 +292,6 @@ def make_model(input_shape, num_classes):
     x = layers.Rescaling(1.0 / 255)(inputs)
     x = layers.Conv2D(128, 3, strides=2, padding="same")(x)
     x = layers.BatchNormalization()(x)
-    x = layers.Activation("relu")(x)
 
     previous_block_activation = x  # Set aside residual
 
