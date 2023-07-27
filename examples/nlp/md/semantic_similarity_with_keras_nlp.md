@@ -1,13 +1,16 @@
-"""
-Title: Semantic Similarity with KerasNLP
-Author: [Anshuman Mishra](https://github.com/shivance/)
-Date created: 2023/02/25
-Last modified: 2023/02/25
-Description: Use pretrained models from KerasNLP for the Semantic Similarity Task.
-Accelerator: GPU
-"""
+# Semantic Similarity with KerasNLP
 
-"""
+**Author:** [Anshuman Mishra](https://github.com/shivance/)<br>
+**Date created:** 2023/02/25<br>
+**Last modified:** 2023/02/25<br>
+**Description:** Use pretrained models from KerasNLP for the Semantic Similarity Task.
+
+
+<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/nlp/ipynb/semantic_similarity_with_keras_nlp.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/nlp/semantic_similarity_with_keras_nlp.py)
+
+
+
+---
 ## Introduction
 
 Semantic similarity refers to the task of determining the degree of similarity between two
@@ -27,6 +30,7 @@ This guide is broken down into the following parts:
 4. *Performing inference* with the model.
 5  *Improving accuracy* with RoBERTa
 
+---
 ## Setup
 
 The following guide uses [Keras Core](https://keras.io/keras_core/) to work in
@@ -34,12 +38,14 @@ any of `tensorflow`, `jax` or `torch`. Support for Keras Core is baked into
 KerasNLP, simply change the `KERAS_BACKEND` environment variable below to change
 the backend you would like to use. We select the `jax` backend below, which will
 give us a particularly fast train step below.
-"""
 
-"""shell
-pip install -q keras-nlp
-"""
 
+```python
+!pip install -q keras-nlp
+```
+
+
+```python
 import os
 
 os.environ["KERAS_BACKEND"] = "jax"  # or "tensorflow" or "torch"
@@ -50,12 +56,19 @@ import tensorflow as tf
 import keras_core as keras
 import keras_nlp
 import tensorflow_datasets as tfds
+```
 
-"""
+<div class="k-default-codeblock">
+```
+Using JAX backend.
+
+```
+</div>
 To load the SNLI dataset, we use the tensorflow-datasets library, which
 contains over 550,000 samples in total. However, to ensure that this example runs
 quickly, we use only 20% of the training samples.
 
+---
 ## Overview of SNLI Dataset
 
 Every sample in the dataset contains three components: `hypothesis`, `premise`,
@@ -68,8 +81,9 @@ The dataset contains three possible similarity label values: Contradiction, Enta
 and Neutral. Contradiction represents completely dissimilar sentences, while Entailment
 denotes similar meaning sentences. Lastly, Neutral refers to sentences where no clear
 similarity or dissimilarity can be established between them.
-"""
 
+
+```python
 snli_train = tfds.load("snli", split="train[:20%]")
 snli_val = tfds.load("snli", split="validation")
 snli_test = tfds.load("snli", split="test")
@@ -78,27 +92,49 @@ snli_test = tfds.load("snli", split="test")
 # four samples:
 sample = snli_test.batch(4).take(1).get_single_element()
 sample
+```
 
-"""
+
+
+
+<div class="k-default-codeblock">
+```
+{'hypothesis': <tf.Tensor: shape=(4,), dtype=string, numpy=
+ array([b'A girl is entertaining on stage',
+        b'A group of people posing in front of a body of water.',
+        b"The group of people aren't inide of the building.",
+        b'The people are taking a carriage ride.'], dtype=object)>,
+ 'label': <tf.Tensor: shape=(4,), dtype=int64, numpy=array([0, 0, 0, 0])>,
+ 'premise': <tf.Tensor: shape=(4,), dtype=string, numpy=
+ array([b'A girl in a blue leotard hula hoops on a stage with balloon shapes in the background.',
+        b'A group of people taking pictures on a walkway in front of a large body of water.',
+        b'Many people standing outside of a place talking to each other in front of a building that has a sign that says "HI-POINTE."',
+        b'Three people are riding a carriage pulled by four horses.'],
+       dtype=object)>}
+
+```
+</div>
 ### Preprocessing
 
 In our dataset, we have identified that some samples have missing or incorrectly labeled
 data, which is denoted by a value of -1. To ensure the accuracy and reliability of our model,
 we simply filter out these samples from our dataset.
-"""
 
+
+```python
 
 def filter_labels(sample):
     return sample["label"] >= 0
 
+```
 
-"""
 Here's a utility function that splits the example into an `(x, y)` tuple that is suitable
 for `model.fit()`. By default, `keras_nlp.models.BertClassifier` will tokenize and pack
 together raw strings using a `"[SEP]"` token during training. Therefore, this label
 splitting is all the data preparation that we need to perform.
-"""
 
+
+```python
 
 def split_labels(sample):
     x = (sample["hypothesis"], sample["premise"])
@@ -122,8 +158,9 @@ test_ds = (
     .batch(16)
 )
 
+```
 
-"""
+---
 ## Establishing baseline with BERT.
 
 We use the BERT model from KerasNLP to establish a baseline for our semantic similarity
@@ -138,36 +175,56 @@ strings and concatenate them with a `"[SEP]"` separator.
 
 We use this model with pretrained weights, and we can use the `from_preset()` method
 to use our own preprocessor. For the SNLI dataset, we set `num_classes` to 3.
-"""
 
+
+```python
 bert_classifier = keras_nlp.models.BertClassifier.from_preset(
     "bert_tiny_en_uncased", num_classes=3
 )
+```
 
-"""
 Please note that the BERT Tiny model has only 4,386,307 trainable parameters.
 
 KerasNLP task models come with compilation defaults. We can now train the model we just
 instantiated by calling the `fit()` method.
-"""
 
+
+```python
 bert_classifier.fit(train_ds, validation_data=val_ds, epochs=1)
+```
 
-"""
+<div class="k-default-codeblock">
+```
+[1m6867/6867[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m49s[0m 7ms/step - loss: 0.8587 - sparse_categorical_accuracy: 0.6023 - val_loss: 0.5883 - val_sparse_categorical_accuracy: 0.7654
+
+<keras_core.src.callbacks.history.History at 0x7f16081712d0>
+
+```
+</div>
 Our BERT classifier achieved an accuracy of around 65% on the validation split. Now,
 let's evaluate its performance on the test split.
 
 ### Evaluate the performance of the trained model on test data.
-"""
 
+
+```python
 bert_classifier.evaluate(test_ds)
+```
 
-"""
+<div class="k-default-codeblock">
+```
+[1m614/614[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m2s[0m 3ms/step - loss: 0.5871 - sparse_categorical_accuracy: 0.7656
+
+[0.5927907824516296, 0.7624185681343079]
+
+```
+</div>
 Our baseline BERT model achieved a similar accuracy of around 68% on the test split.
 Now, let's try to improve its performance by recompiling the model with a different
 learning rate.
-"""
 
+
+```python
 bert_classifier = keras_nlp.models.BertClassifier.from_preset(
     "bert_tiny_en_uncased", num_classes=3
 )
@@ -179,14 +236,24 @@ bert_classifier.compile(
 
 bert_classifier.fit(train_ds, validation_data=val_ds, epochs=1)
 bert_classifier.evaluate(test_ds)
+```
 
-"""
+<div class="k-default-codeblock">
+```
+[1m6867/6867[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m49s[0m 7ms/step - accuracy: 0.6291 - loss: 0.8222 - val_accuracy: 0.7677 - val_loss: 0.5664
+[1m614/614[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m2s[0m 3ms/step - accuracy: 0.7834 - loss: 0.5510
+
+[0.5623738169670105, 0.7759568691253662]
+
+```
+</div>
 This time, we achieve around 72% validation accuracy on both the validation and test
 splits after just one epoch, which is quite impressive!
 
 Now, let's see if we can further improve the model by using a learning rate scheduler.
-"""
 
+
+```python
 
 class TriangularSchedule(keras.optimizers.schedules.LearningRateSchedule):
     """Linear ramp up for `warmup` steps, then linear decay to zero at `total` steps."""
@@ -231,18 +298,40 @@ bert_classifier.compile(
 )
 
 bert_classifier.fit(train_ds, validation_data=val_ds, epochs=epochs)
+```
 
-"""
+<div class="k-default-codeblock">
+```
+Epoch 1/3
+[1m6867/6867[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m49s[0m 7ms/step - accuracy: 0.5692 - loss: 0.9046 - val_accuracy: 0.6447 - val_loss: 0.8326
+Epoch 2/3
+[1m6867/6867[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m46s[0m 7ms/step - accuracy: 0.6456 - loss: 0.8291 - val_accuracy: 0.7090 - val_loss: 0.7116
+Epoch 3/3
+[1m6867/6867[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m46s[0m 7ms/step - accuracy: 0.7070 - loss: 0.7124 - val_accuracy: 0.7333 - val_loss: 0.6597
+
+<keras_core.src.callbacks.history.History at 0x7f14ec34d570>
+
+```
+</div>
 Great! With the learning rate scheduler and the `AdamW` optimizer, our validation
 accuracy improved to around 79% within one epoch, and it hiked to 86% in three
 epochs.
 
 Now, let's evaluate our final model on the test set and see how it performs.
-"""
 
+
+```python
 bert_classifier.evaluate(test_ds)
+```
 
-"""
+<div class="k-default-codeblock">
+```
+[1m614/614[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m2s[0m 3ms/step - accuracy: 0.7292 - loss: 0.6692
+
+[0.6788273453712463, 0.725366473197937]
+
+```
+</div>
 Our Tiny BERT model achieved an accuracy of approximately 79% on the test set
 with the use of a learning rate scheduler. This is a significant improvement over
 our previous results. Fine-tuning a pretrained BERT
@@ -252,26 +341,65 @@ small model like Tiny BERT can achieve impressive results.
 Let's save our model for now
 and move on to learning how to perform inference with it.
 
+---
 ## Save and Reload the model
-"""
+
+
+```python
 bert_classifier.save("bert_classifier.keras")
 restored_model = keras.models.load_model("bert_classifier.keras")
 restored_model.evaluate(test_ds)
+```
 
-"""
+<div class="k-default-codeblock">
+```
+/home/matt/miniconda3/envs/gpu/lib/python3.10/site-packages/keras_core/src/saving/serialization_lib.py:684: UserWarning: `compile()` was not called as part of model loading because the model's `compile()` method is custom. All subclassed Models that have `compile()` overridden should also override `get_compile_config()` and `compile_from_config(config)`. Alternatively, you can call `compile()` manually after loading.
+  instance.compile_from_config(compile_config)
+/home/matt/miniconda3/envs/gpu/lib/python3.10/site-packages/keras_core/src/saving/saving_lib.py:338: UserWarning: Skipping variable loading for optimizer 'adam', because it has 2 variables whereas the saved optimizer has 83 variables. 
+  trackable.load_own_variables(weights_store.get(inner_path))
+
+[1m614/614[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m3s[0m 4ms/step - loss: 0.6692 - sparse_categorical_accuracy: 0.7292
+
+[0.6788273453712463, 0.725366473197937]
+
+```
+</div>
+---
 ## Performing inference with the model.
 
 Let's see how to perform inference with KerasNLP models
-"""
 
+
+```python
 # Convert to Hypothesis-Premise pair, for forward pass through model
 sample = (sample["hypothesis"], sample["premise"])
 sample
+```
 
-"""
+
+
+
+<div class="k-default-codeblock">
+```
+(<tf.Tensor: shape=(4,), dtype=string, numpy=
+ array([b'A girl is entertaining on stage',
+        b'A group of people posing in front of a body of water.',
+        b"The group of people aren't inide of the building.",
+        b'The people are taking a carriage ride.'], dtype=object)>,
+ <tf.Tensor: shape=(4,), dtype=string, numpy=
+ array([b'A girl in a blue leotard hula hoops on a stage with balloon shapes in the background.',
+        b'A group of people taking pictures on a walkway in front of a large body of water.',
+        b'Many people standing outside of a place talking to each other in front of a building that has a sign that says "HI-POINTE."',
+        b'Three people are riding a carriage pulled by four horses.'],
+       dtype=object)>)
+
+```
+</div>
 The default preprocessor in KerasNLP models handles input tokenization automatically,
 so we don't need to perform tokenization explicitly.
-"""
+
+
+```python
 predictions = bert_classifier.predict(sample)
 
 
@@ -281,15 +409,23 @@ def softmax(x):
 
 # Get the class predictions with maximum probabilities
 predictions = softmax(predictions)
+```
 
-"""
+<div class="k-default-codeblock">
+```
+[1m1/1[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m1s[0m 702ms/step
+
+```
+</div>
+---
 ## Improving accuracy with RoBERTa
 
 Now that we have established a baseline, we can attempt to improve our results
 by experimenting with different models. Thanks to KerasNLP, fine-tuning a RoBERTa
 checkpoint on the same dataset is easy with just a few lines of code.
-"""
 
+
+```python
 # Inittializing a RoBERTa from preset
 roberta_classifier = keras_nlp.models.RobertaClassifier.from_preset(
     "roberta_base_en", num_classes=3
@@ -298,8 +434,17 @@ roberta_classifier = keras_nlp.models.RobertaClassifier.from_preset(
 roberta_classifier.fit(train_ds, validation_data=val_ds, epochs=1)
 
 roberta_classifier.evaluate(test_ds)
+```
 
-"""
+<div class="k-default-codeblock">
+```
+[1m6867/6867[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m2027s[0m 294ms/step - loss: 0.5688 - sparse_categorical_accuracy: 0.7601 - val_loss: 0.3243 - val_sparse_categorical_accuracy: 0.8820
+[1m614/614[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m59s[0m 93ms/step - loss: 0.3250 - sparse_categorical_accuracy: 0.8851
+
+[0.3305884897708893, 0.8821254372596741]
+
+```
+</div>
 The RoBERTa base model has significantly more trainable parameters than the BERT
 Tiny model, with almost 30 times as many at 124,645,635 parameters. As a result, it took
 approximately 1.5 hours to train on a P100 GPU. However, the performance
@@ -309,12 +454,20 @@ our P100 GPU.
 
 Despite using a different model, the steps to perform inference with RoBERTa are
 the same as with BERT!
-"""
 
+
+```python
 predictions = roberta_classifier.predict(sample)
 print(tf.math.argmax(predictions, axis=1).numpy())
+```
 
-"""
+<div class="k-default-codeblock">
+```
+[1m1/1[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m3s[0m 3s/step
+[0 0 0 0]
+
+```
+</div>
 We hope this tutorial has been helpful in demonstrating the ease and effectiveness
 of using KerasNLP and BERT for semantic similarity tasks.
 
@@ -326,4 +479,3 @@ The KerasNLP toolbox provides a range of modular building blocks for preprocessi
 text, including pretrained state-of-the-art models and low-level Transformer Encoder
 layers. We believe that this makes experimenting with natural language solutions
 more accessible and efficient.
-"""
