@@ -1,7 +1,7 @@
 """
 Title: Pretraining a Transformer from scratch with KerasNLP
-Author: [Matthew Watson](https://github.com/mattdangerw/), [Anshuman Mishra](https://github.com/shivance/
-Date created: 2023/07/15
+Author: [Matthew Watson](https://github.com/mattdangerw/)
+Date created: 2022/04/18
 Last modified: 2023/07/15
 Description: Use KerasNLP to train a Transformer model from scratch.
 Accelerator: GPU
@@ -22,32 +22,20 @@ This guide is broken into three parts:
 """
 ## Setup
 
-To begin, we can import `keras_nlp`, `keras` and `tensorflow`.
-
-A simple thing we can do right off the bat is to enable
-[mixed precision](https://keras.io/api/mixed_precision/), which will speed up training by
-running most of our computations with 16 bit (instead of 32 bit) floating point numbers.
-Training a Transformer can take a while, so it is important to pull out all the stops for
-faster training!
+The following guide uses [Keras Core](https://keras.io/keras_core/) to work in
+any of `tensorflow`, `jax` or `torch`. Support for Keras Core is baked into
+KerasNLP, simply change the `KERAS_BACKEND` environment variable below to change
+the backend you would like to use. We select the `jax` backend below, which will
+give us a particularly fast train step below.
 """
-
-"""shell
-pip install -q --upgrade keras-nlp tensorflow keras-core
-"""
-
 import os
+
+os.environ["KERAS_BACKEND"] = "jax"  # or "tensorflow" or "torch"
+
 
 import keras_nlp
 import tensorflow as tf
 import keras_core as keras
-
-"""
-Let's set backend of Keras as TensorFlow
-"""
-os.environ["KERAS_BACKEND"] = "tensorflow"
-
-policy = keras.mixed_precision.DTypePolicy("mixed_float16")
-keras.mixed_precision.set_global_policy(policy)
 
 """
 Next up, we can download two datasets.
@@ -160,15 +148,17 @@ multi_hot_layer = keras.layers.TextVectorization(
     max_tokens=4000, output_mode="multi_hot"
 )
 multi_hot_layer.adapt(sst_train_ds.map(lambda x, y: x))
+multi_hot_ds = sst_train_ds.map(lambda x, y: (multi_hot_layer(x), y))
+multi_hot_val_ds = sst_val_ds.map(lambda x, y: (multi_hot_layer(x), y))
+
 # We then learn a linear regression over that layer, and that's our entire
 # baseline model!
-regression_layer = keras.layers.Dense(1, activation="sigmoid")
 
-inputs = keras.Input(shape=(), dtype="string")
-outputs = regression_layer(multi_hot_layer(inputs))
+inputs = keras.Input(shape=(4000,), dtype="int32")
+outputs = keras.layers.Dense(1, activation="sigmoid")(inputs)
 baseline_model = keras.Model(inputs, outputs)
 baseline_model.compile(loss="binary_crossentropy", metrics=["accuracy"])
-baseline_model.fit(sst_train_ds, validation_data=sst_val_ds, epochs=5)
+baseline_model.fit(multi_hot_ds, validation_data=multi_hot_val_ds, epochs=5)
 
 """
 A bag-of-words approach can be a fast and surprisingly powerful, especially when input
@@ -356,8 +346,10 @@ intensive, so even this relatively small Transformer will take some time.
 
 # Create the pretraining model by attaching a masked language model head.
 inputs = {
-    "token_ids": keras.Input(shape=(SEQ_LENGTH,), dtype=tf.int32),
-    "mask_positions": keras.Input(shape=(PREDICTIONS_PER_SEQ,), dtype=tf.int32),
+    "token_ids": keras.Input(shape=(SEQ_LENGTH,), dtype=tf.int32, name="token_ids"),
+    "mask_positions": keras.Input(
+        shape=(PREDICTIONS_PER_SEQ,), dtype=tf.int32, name="mask_positions"
+    ),
 }
 
 # Encode the tokens.
