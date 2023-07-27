@@ -154,7 +154,7 @@ def get_learnable_resizer(filters=16, num_res_blocks=1, interpolation=INTERPOLAT
     # Residual passes.
     #first res_block will get bottleneck output as input
     x = res_block(bottleneck)
-    #remaining res_blocks will get first res_block output as input
+    #remaining res_blocks will get previous res_block output as input
     for _ in range(num_res_blocks-1):
         x = res_block(x)
 
