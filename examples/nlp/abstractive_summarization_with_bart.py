@@ -38,12 +38,14 @@ couple of utility libraries.
 """
 
 """shell
-pip install git+https://github.com/keras-team/keras-nlp.git py7zr gdown -q
+pip install git+https://github.com/keras-team/keras-nlp.git py7zr -q
 """
 
 """
-Before we move on, let's choose a backend. We'll go with JAX, since it's blazing
-fast! The available options are: "tensorflow", "torch", "jax".
+This examples uses [Keras Core](https://keras.io/keras_core/) to work in any of
+`"tensorflow"`, `"jax"` or `"torch"`. Support for Keras Core is baked into
+KerasNLP, simply change the `"KERAS_BACKEND"` environment variable to select
+the backend of your choice. We select the JAX backend below.
 """
 
 import os
@@ -53,8 +55,6 @@ os.environ["KERAS_BACKEND"] = "jax"
 """
 Import all necessary libraries.
 """
-
-import gdown
 
 import py7zr
 import time
@@ -84,13 +84,13 @@ contains around 15,000 pairs of conversations/dialogues and summaries.
 """
 
 # Download the dataset.
-gdown.download(
-    "https://drive.google.com/uc?id=1u4L2tgfbd5RLYPws47LTE9GeIJ6bZA9g",
-    "./corpus.7z",
+filename = keras.utils.get_file(
+    "corpus.7z",
+    origin="https://huggingface.co/datasets/samsum/resolve/main/data/corpus.7z",
 )
 
 # Extract the `.7z` file.
-with py7zr.SevenZipFile("./corpus.7z", mode="r") as z:
+with py7zr.SevenZipFile(filename, mode="r") as z:
     z.extractall(path="/root/tensorflow_datasets/downloads/manual")
 
 # Load data using TFDS.
