@@ -16,7 +16,7 @@
 
 ```python
 import tensorflow as tf
-from tensorflow import keras
+import keras
 ```
 
 ---
@@ -150,8 +150,8 @@ print(a)
 <div class="k-default-codeblock">
 ```
 <tf.Variable 'Variable:0' shape=(2, 2) dtype=float32, numpy=
-array([[ 0.16671172,  1.5954567 ],
-       [-1.6605558 , -2.2741935 ]], dtype=float32)>
+array([[ 0.11058521,  0.55781174],
+       [-0.7643957 , -2.106184  ]], dtype=float32)>
 
 ```
 </div>
@@ -213,8 +213,8 @@ with tf.GradientTape() as tape:
 <div class="k-default-codeblock">
 ```
 tf.Tensor(
-[[-0.01651456 -0.45326275]
- [-0.9472408   0.27827275]], shape=(2, 2), dtype=float32)
+[[0.6567579 0.4763136]
+ [0.9858142 0.3558683]], shape=(2, 2), dtype=float32)
 
 ```
 </div>
@@ -233,8 +233,8 @@ with tf.GradientTape() as tape:
 <div class="k-default-codeblock">
 ```
 tf.Tensor(
-[[-0.01651456 -0.45326275]
- [-0.9472408   0.27827275]], shape=(2, 2), dtype=float32)
+[[0.6567579 0.4763136]
+ [0.9858142 0.3558683]], shape=(2, 2), dtype=float32)
 
 ```
 </div>
@@ -254,8 +254,8 @@ with tf.GradientTape() as outer_tape:
 <div class="k-default-codeblock">
 ```
 tf.Tensor(
-[[2.1845462  0.62694204]
- [0.14898431 1.1355182 ]], shape=(2, 2), dtype=float32)
+[[1.4240768  0.9168595 ]
+ [0.02550167 1.5579035 ]], shape=(2, 2), dtype=float32)
 
 ```
 </div>
@@ -406,16 +406,16 @@ for step, (x, y) in enumerate(dataset):
 
 <div class="k-default-codeblock">
 ```
-Step: 0 Loss: 2.427023410797119
-Step: 100 Loss: 2.2823941707611084
-Step: 200 Loss: 2.113408327102661
-Step: 300 Loss: 2.1138529777526855
-Step: 400 Loss: 1.9395238161087036
-Step: 500 Loss: 1.9229991436004639
-Step: 600 Loss: 1.7781413793563843
-Step: 700 Loss: 1.6519168615341187
-Step: 800 Loss: 1.695692539215088
-Step: 900 Loss: 1.6025805473327637
+Step: 0 Loss: 2.4040849208831787
+Step: 100 Loss: 2.2059175968170166
+Step: 200 Loss: 2.1891114711761475
+Step: 300 Loss: 2.0599637031555176
+Step: 400 Loss: 2.021326780319214
+Step: 500 Loss: 1.9289535284042358
+Step: 600 Loss: 1.758760929107666
+Step: 700 Loss: 1.7004988193511963
+Step: 800 Loss: 1.7745165824890137
+Step: 900 Loss: 1.6547822952270508
 
 ```
 </div>
@@ -576,7 +576,7 @@ print(mlp.losses)  # List containing one float32 scalar
 
 <div class="k-default-codeblock">
 ```
-[<tf.Tensor: shape=(), dtype=float32, numpy=0.16779386>]
+[<tf.Tensor: shape=(), dtype=float32, numpy=0.24654198>]
 
 ```
 </div>
@@ -634,16 +634,16 @@ for step, (x, y) in enumerate(dataset):
 
 <div class="k-default-codeblock">
 ```
-Step: 0 Loss: 7.43062686920166
-Step: 100 Loss: 2.6018664836883545
-Step: 200 Loss: 2.404381036758423
-Step: 300 Loss: 2.3463292121887207
-Step: 400 Loss: 2.3480169773101807
-Step: 500 Loss: 2.3280882835388184
-Step: 600 Loss: 2.3371071815490723
-Step: 700 Loss: 2.320028066635132
-Step: 800 Loss: 2.3252615928649902
-Step: 900 Loss: 2.3202807903289795
+Step: 0 Loss: 5.629672050476074
+Step: 100 Loss: 2.6190948486328125
+Step: 200 Loss: 2.4041364192962646
+Step: 300 Loss: 2.385746479034424
+Step: 400 Loss: 2.3336474895477295
+Step: 500 Loss: 2.3487167358398438
+Step: 600 Loss: 2.3277230262756348
+Step: 700 Loss: 2.3347654342651367
+Step: 800 Loss: 2.318131446838379
+Step: 900 Loss: 2.313291549682617
 
 ```
 </div>
@@ -707,23 +707,23 @@ for epoch in range(2):
 <div class="k-default-codeblock">
 ```
 Epoch: 0 Step: 0
-Total running accuracy so far: 0.062
+Total running accuracy so far: 0.047
 Epoch: 0 Step: 200
-Total running accuracy so far: 0.780
+Total running accuracy so far: 0.751
 Epoch: 0 Step: 400
-Total running accuracy so far: 0.839
+Total running accuracy so far: 0.826
 Epoch: 0 Step: 600
-Total running accuracy so far: 0.864
+Total running accuracy so far: 0.856
 Epoch: 0 Step: 800
-Total running accuracy so far: 0.879
+Total running accuracy so far: 0.872
 Epoch: 1 Step: 0
-Total running accuracy so far: 0.938
+Total running accuracy so far: 0.891
 Epoch: 1 Step: 200
-Total running accuracy so far: 0.938
+Total running accuracy so far: 0.936
 Epoch: 1 Step: 400
-Total running accuracy so far: 0.940
+Total running accuracy so far: 0.939
 Epoch: 1 Step: 600
-Total running accuracy so far: 0.941
+Total running accuracy so far: 0.940
 Epoch: 1 Step: 800
 Total running accuracy so far: 0.941
 
@@ -856,16 +856,16 @@ for step, (x, y) in enumerate(dataset):
 
 <div class="k-default-codeblock">
 ```
-Step: 0 Loss: 2.45001220703125
-Step: 100 Loss: 0.710532546043396
-Step: 200 Loss: 0.4452784061431885
-Step: 300 Loss: 0.27961623668670654
-Step: 400 Loss: 0.24316143989562988
-Step: 500 Loss: 0.41974037885665894
-Step: 600 Loss: 0.3828802704811096
-Step: 700 Loss: 0.23548860847949982
-Step: 800 Loss: 0.3400734066963196
-Step: 900 Loss: 0.07105308771133423
+Step: 0 Loss: 2.3094160556793213
+Step: 100 Loss: 0.53387850522995
+Step: 200 Loss: 0.3349820375442505
+Step: 300 Loss: 0.23337996006011963
+Step: 400 Loss: 0.304066926240921
+Step: 500 Loss: 0.180154949426651
+Step: 600 Loss: 0.4450702667236328
+Step: 700 Loss: 0.16045540571212769
+Step: 800 Loss: 0.27985841035842896
+Step: 900 Loss: 0.19074323773384094
 
 ```
 </div>
@@ -1009,13 +1009,13 @@ model.evaluate(dataset)
 <div class="k-default-codeblock">
 ```
 Epoch 1/2
-938/938 [==============================] - 1s 644us/step - loss: 0.3969 - sparse_categorical_accuracy: 0.8850
+938/938 [==============================] - 2s 1ms/step - loss: 0.3988 - sparse_categorical_accuracy: 0.8862
 Epoch 2/2
-938/938 [==============================] - 1s 676us/step - loss: 0.1844 - sparse_categorical_accuracy: 0.9457
-938/938 [==============================] - 0s 365us/step
-938/938 [==============================] - 0s 392us/step - loss: 0.1547 - sparse_categorical_accuracy: 0.9544
+938/938 [==============================] - 1s 1ms/step - loss: 0.1866 - sparse_categorical_accuracy: 0.9461
+938/938 [==============================] - 1s 803us/step
+938/938 [==============================] - 1s 903us/step - loss: 0.1536 - sparse_categorical_accuracy: 0.9543
 
-[0.15474171936511993, 0.9544000029563904]
+[0.15355238318443298, 0.9542833566665649]
 
 ```
 </div>
@@ -1075,11 +1075,11 @@ model.fit(dataset, epochs=2)
 <div class="k-default-codeblock">
 ```
 Epoch 1/2
-938/938 [==============================] - 1s 526us/step - loss: 0.4004 - accuracy: 0.8133
+938/938 [==============================] - 1s 1ms/step - loss: 0.3952 - accuracy: 0.8208
 Epoch 2/2
-938/938 [==============================] - 0s 529us/step - loss: 0.2087 - accuracy: 0.9342
+938/938 [==============================] - 1s 1ms/step - loss: 0.2055 - accuracy: 0.9364
 
-<keras.callbacks.History at 0x17fd4ca90>
+<keras.src.callbacks.History at 0x7f12882deb10>
 
 ```
 </div>
@@ -1241,17 +1241,17 @@ for step, x in enumerate(dataset):
 
 <div class="k-default-codeblock">
 ```
-Step: 0 Loss: 0.33127039670944214
-Step: 100 Loss: 0.1260104814525878
-Step: 200 Loss: 0.09971568210801082
-Step: 300 Loss: 0.08966685249856936
-Step: 400 Loss: 0.08463007312017189
-Step: 500 Loss: 0.08153102152837727
-Step: 600 Loss: 0.07910513121033469
-Step: 700 Loss: 0.07775083866060715
-Step: 800 Loss: 0.07659739125217689
-Step: 900 Loss: 0.07564429893312391
-Step: 1000 Loss: 0.07471404487004767
+Step: 0 Loss: 0.327964723110199
+Step: 100 Loss: 0.1264294325420172
+Step: 200 Loss: 0.10020137063009822
+Step: 300 Loss: 0.08990733624989804
+Step: 400 Loss: 0.0848350128962512
+Step: 500 Loss: 0.081730601152855
+Step: 600 Loss: 0.07928250531066278
+Step: 700 Loss: 0.07791465763720058
+Step: 800 Loss: 0.07670121117217116
+Step: 900 Loss: 0.07572131670937025
+Step: 1000 Loss: 0.07478016477960212
 
 ```
 </div>
@@ -1389,17 +1389,17 @@ for step, (x, y) in enumerate(dataset):
 
 <div class="k-default-codeblock">
 ```
-Step: 0 Loss: 2.060640811920166
-Step: 100 Loss: 2.4046976123705948
-Step: 200 Loss: 2.1876569999317033
-Step: 300 Loss: 2.019978176864279
-Step: 400 Loss: 1.9071059139117952
-Step: 500 Loss: 1.808116628248916
-Step: 600 Loss: 1.7256960072624865
-Step: 700 Loss: 1.6934457229836852
-Step: 800 Loss: 1.6681389264615811
-Step: 900 Loss: 1.6016967846315413
-Step: 1000 Loss: 1.556130039097967
+Step: 0 Loss: 1.2556400299072266
+Step: 100 Loss: 2.5476599238296544
+Step: 200 Loss: 2.1573401512346457
+Step: 300 Loss: 1.918845683104201
+Step: 400 Loss: 1.8333103110458693
+Step: 500 Loss: 1.7798502995807328
+Step: 600 Loss: 1.6786754470412841
+Step: 700 Loss: 1.603073729164222
+Step: 800 Loss: 1.532632532587611
+Step: 900 Loss: 1.499125787840248
+Step: 1000 Loss: 1.4645580406379608
 
 ```
 </div>

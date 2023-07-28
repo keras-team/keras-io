@@ -70,8 +70,8 @@ VALID_SPLIT = 0.1
 SHUFFLE_SEED = 43
 
 # The sampling rate to use.
-# This is the one used in all of the audio samples.
-# We will resample all of the noise to this sampling rate.
+# This is the one used in all the audio samples.
+# We will resample all the noise to this sampling rate.
 # This will also be the output size of the audio wave samples
 # (since all samples are of 1 second long)
 SAMPLING_RATE = 16000
@@ -167,7 +167,7 @@ for folder in os.listdir(DATASET_ROOT):
 In this section:
 
 - We load all noise samples (which should have been resampled to 16000)
-- We split those noise samples to chuncks of 16000 samples which
+- We split those noise samples to chunks of 16000 samples which
 correspond to 1 second duration each
 
 

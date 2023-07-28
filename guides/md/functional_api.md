@@ -2,7 +2,7 @@
 
 **Author:** [fchollet](https://twitter.com/fchollet)<br>
 **Date created:** 2019/03/01<br>
-**Last modified:** 2020/04/12<br>
+**Last modified:** 2020/07/10<br>
 **Description:** Complete guide to the functional API.
 
 
@@ -17,8 +17,8 @@
 ```python
 import numpy as np
 import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras import layers
+import keras
+from keras import layers
 ```
 
 ---
@@ -153,9 +153,9 @@ _________________________________________________________________
  dense_2 (Dense)             (None, 10)                650       
                                                                  
 =================================================================
-Total params: 55,050
-Trainable params: 55,050
-Non-trainable params: 0
+Total params: 55050 (215.04 KB)
+Trainable params: 55050 (215.04 KB)
+Non-trainable params: 0 (0.00 Byte)
 _________________________________________________________________
 
 ```
@@ -238,12 +238,12 @@ print("Test accuracy:", test_scores[1])
 <div class="k-default-codeblock">
 ```
 Epoch 1/2
-750/750 [==============================] - 1s 864us/step - loss: 0.3421 - sparse_categorical_accuracy: 0.9024 - val_loss: 0.1965 - val_sparse_categorical_accuracy: 0.9422
+750/750 [==============================] - 2s 2ms/step - loss: 0.3565 - sparse_categorical_accuracy: 0.9000 - val_loss: 0.1902 - val_sparse_categorical_accuracy: 0.9454
 Epoch 2/2
-750/750 [==============================] - 1s 740us/step - loss: 0.1670 - sparse_categorical_accuracy: 0.9503 - val_loss: 0.1444 - val_sparse_categorical_accuracy: 0.9558
-313/313 - 0s - loss: 0.1409 - sparse_categorical_accuracy: 0.9568 - 116ms/epoch - 372us/step
-Test loss: 0.1409202218055725
-Test accuracy: 0.9567999839782715
+750/750 [==============================] - 1s 2ms/step - loss: 0.1686 - sparse_categorical_accuracy: 0.9502 - val_loss: 0.1570 - val_sparse_categorical_accuracy: 0.9538
+313/313 - 0s - loss: 0.1538 - sparse_categorical_accuracy: 0.9549 - 270ms/epoch - 862us/step
+Test loss: 0.15382027626037598
+Test accuracy: 0.9549000263214111
 
 ```
 </div>
@@ -322,20 +322,20 @@ _________________________________________________________________
                                                                  
  conv2d_1 (Conv2D)           (None, 24, 24, 32)        4640      
                                                                  
- max_pooling2d (MaxPooling2D  (None, 8, 8, 32)         0         
- )                                                               
+ max_pooling2d (MaxPooling2  (None, 8, 8, 32)          0         
+ D)                                                              
                                                                  
  conv2d_2 (Conv2D)           (None, 6, 6, 32)          9248      
                                                                  
  conv2d_3 (Conv2D)           (None, 4, 4, 16)          4624      
                                                                  
- global_max_pooling2d (Globa  (None, 16)               0         
- lMaxPooling2D)                                                  
+ global_max_pooling2d (Glob  (None, 16)                0         
+ alMaxPooling2D)                                                 
                                                                  
 =================================================================
-Total params: 18,672
-Trainable params: 18,672
-Non-trainable params: 0
+Total params: 18672 (72.94 KB)
+Trainable params: 18672 (72.94 KB)
+Non-trainable params: 0 (0.00 Byte)
 _________________________________________________________________
 Model: "autoencoder"
 _________________________________________________________________
@@ -347,37 +347,37 @@ _________________________________________________________________
                                                                  
  conv2d_1 (Conv2D)           (None, 24, 24, 32)        4640      
                                                                  
- max_pooling2d (MaxPooling2D  (None, 8, 8, 32)         0         
- )                                                               
+ max_pooling2d (MaxPooling2  (None, 8, 8, 32)          0         
+ D)                                                              
                                                                  
  conv2d_2 (Conv2D)           (None, 6, 6, 32)          9248      
                                                                  
  conv2d_3 (Conv2D)           (None, 4, 4, 16)          4624      
                                                                  
- global_max_pooling2d (Globa  (None, 16)               0         
- lMaxPooling2D)                                                  
+ global_max_pooling2d (Glob  (None, 16)                0         
+ alMaxPooling2D)                                                 
                                                                  
  reshape (Reshape)           (None, 4, 4, 1)           0         
                                                                  
- conv2d_transpose (Conv2DTra  (None, 6, 6, 16)         160       
- nspose)                                                         
+ conv2d_transpose (Conv2DTr  (None, 6, 6, 16)          160       
+ anspose)                                                        
                                                                  
- conv2d_transpose_1 (Conv2DT  (None, 8, 8, 32)         4640      
- ranspose)                                                       
+ conv2d_transpose_1 (Conv2D  (None, 8, 8, 32)          4640      
+ Transpose)                                                      
                                                                  
- up_sampling2d (UpSampling2D  (None, 24, 24, 32)       0         
- )                                                               
+ up_sampling2d (UpSampling2  (None, 24, 24, 32)        0         
+ D)                                                              
                                                                  
- conv2d_transpose_2 (Conv2DT  (None, 26, 26, 16)       4624      
- ranspose)                                                       
+ conv2d_transpose_2 (Conv2D  (None, 26, 26, 16)        4624      
+ Transpose)                                                      
                                                                  
- conv2d_transpose_3 (Conv2DT  (None, 28, 28, 1)        145       
- ranspose)                                                       
+ conv2d_transpose_3 (Conv2D  (None, 28, 28, 1)         145       
+ Transpose)                                                      
                                                                  
 =================================================================
-Total params: 28,241
-Trainable params: 28,241
-Non-trainable params: 0
+Total params: 28241 (110.32 KB)
+Trainable params: 28241 (110.32 KB)
+Non-trainable params: 0 (0.00 Byte)
 _________________________________________________________________
 
 ```
@@ -443,20 +443,20 @@ _________________________________________________________________
                                                                  
  conv2d_5 (Conv2D)           (None, 24, 24, 32)        4640      
                                                                  
- max_pooling2d_1 (MaxPooling  (None, 8, 8, 32)         0         
- 2D)                                                             
+ max_pooling2d_1 (MaxPoolin  (None, 8, 8, 32)          0         
+ g2D)                                                            
                                                                  
  conv2d_6 (Conv2D)           (None, 6, 6, 32)          9248      
                                                                  
  conv2d_7 (Conv2D)           (None, 4, 4, 16)          4624      
                                                                  
- global_max_pooling2d_1 (Glo  (None, 16)               0         
- balMaxPooling2D)                                                
+ global_max_pooling2d_1 (Gl  (None, 16)                0         
+ obalMaxPooling2D)                                               
                                                                  
 =================================================================
-Total params: 18,672
-Trainable params: 18,672
-Non-trainable params: 0
+Total params: 18672 (72.94 KB)
+Trainable params: 18672 (72.94 KB)
+Non-trainable params: 0 (0.00 Byte)
 _________________________________________________________________
 Model: "decoder"
 _________________________________________________________________
@@ -466,25 +466,25 @@ _________________________________________________________________
                                                                  
  reshape_1 (Reshape)         (None, 4, 4, 1)           0         
                                                                  
- conv2d_transpose_4 (Conv2DT  (None, 6, 6, 16)         160       
- ranspose)                                                       
+ conv2d_transpose_4 (Conv2D  (None, 6, 6, 16)          160       
+ Transpose)                                                      
                                                                  
- conv2d_transpose_5 (Conv2DT  (None, 8, 8, 32)         4640      
- ranspose)                                                       
+ conv2d_transpose_5 (Conv2D  (None, 8, 8, 32)          4640      
+ Transpose)                                                      
                                                                  
- up_sampling2d_1 (UpSampling  (None, 24, 24, 32)       0         
- 2D)                                                             
+ up_sampling2d_1 (UpSamplin  (None, 24, 24, 32)        0         
+ g2D)                                                            
                                                                  
- conv2d_transpose_6 (Conv2DT  (None, 26, 26, 16)       4624      
- ranspose)                                                       
+ conv2d_transpose_6 (Conv2D  (None, 26, 26, 16)        4624      
+ Transpose)                                                      
                                                                  
- conv2d_transpose_7 (Conv2DT  (None, 28, 28, 1)        145       
- ranspose)                                                       
+ conv2d_transpose_7 (Conv2D  (None, 28, 28, 1)         145       
+ Transpose)                                                      
                                                                  
 =================================================================
-Total params: 9,569
-Trainable params: 9,569
-Non-trainable params: 0
+Total params: 9569 (37.38 KB)
+Trainable params: 9569 (37.38 KB)
+Non-trainable params: 0 (0.00 Byte)
 _________________________________________________________________
 Model: "autoencoder"
 _________________________________________________________________
@@ -497,9 +497,9 @@ _________________________________________________________________
  decoder (Functional)        (None, 28, 28, 1)         9569      
                                                                  
 =================================================================
-Total params: 28,241
-Trainable params: 28,241
-Non-trainable params: 0
+Total params: 28241 (110.32 KB)
+Trainable params: 28241 (110.32 KB)
+Non-trainable params: 0 (0.00 Byte)
 _________________________________________________________________
 
 ```
@@ -665,11 +665,11 @@ model.fit(
 <div class="k-default-codeblock">
 ```
 Epoch 1/2
-40/40 [==============================] - 2s 14ms/step - loss: 1.2849 - priority_loss: 0.7165 - department_loss: 2.8422
+40/40 [==============================] - 4s 22ms/step - loss: 1.2697 - priority_loss: 0.6991 - department_loss: 2.8528
 Epoch 2/2
-40/40 [==============================] - 1s 14ms/step - loss: 1.2644 - priority_loss: 0.7011 - department_loss: 2.8168
+40/40 [==============================] - 1s 20ms/step - loss: 1.2804 - priority_loss: 0.6995 - department_loss: 2.9044
 
-<keras.callbacks.History at 0x299fea020>
+<keras.src.callbacks.History at 0x7f88c01e5410>
 
 ```
 </div>
@@ -719,46 +719,47 @@ model.summary()
 ```
 Model: "toy_resnet"
 __________________________________________________________________________________________________
- Layer (type)                   Output Shape         Param #     Connected to                     
+ Layer (type)                Output Shape                 Param #   Connected to                  
 ==================================================================================================
- img (InputLayer)               [(None, 32, 32, 3)]  0           []                               
+ img (InputLayer)            [(None, 32, 32, 3)]          0         []                            
                                                                                                   
- conv2d_8 (Conv2D)              (None, 30, 30, 32)   896         ['img[0][0]']                    
+ conv2d_8 (Conv2D)           (None, 30, 30, 32)           896       ['img[0][0]']                 
                                                                                                   
- conv2d_9 (Conv2D)              (None, 28, 28, 64)   18496       ['conv2d_8[0][0]']               
+ conv2d_9 (Conv2D)           (None, 28, 28, 64)           18496     ['conv2d_8[0][0]']            
                                                                                                   
- max_pooling2d_2 (MaxPooling2D)  (None, 9, 9, 64)    0           ['conv2d_9[0][0]']               
+ max_pooling2d_2 (MaxPoolin  (None, 9, 9, 64)             0         ['conv2d_9[0][0]']            
+ g2D)                                                                                             
                                                                                                   
- conv2d_10 (Conv2D)             (None, 9, 9, 64)     36928       ['max_pooling2d_2[0][0]']        
+ conv2d_10 (Conv2D)          (None, 9, 9, 64)             36928     ['max_pooling2d_2[0][0]']     
                                                                                                   
- conv2d_11 (Conv2D)             (None, 9, 9, 64)     36928       ['conv2d_10[0][0]']              
+ conv2d_11 (Conv2D)          (None, 9, 9, 64)             36928     ['conv2d_10[0][0]']           
                                                                                                   
- add (Add)                      (None, 9, 9, 64)     0           ['conv2d_11[0][0]',              
-                                                                  'max_pooling2d_2[0][0]']        
+ add (Add)                   (None, 9, 9, 64)             0         ['conv2d_11[0][0]',           
+                                                                     'max_pooling2d_2[0][0]']     
                                                                                                   
- conv2d_12 (Conv2D)             (None, 9, 9, 64)     36928       ['add[0][0]']                    
+ conv2d_12 (Conv2D)          (None, 9, 9, 64)             36928     ['add[0][0]']                 
                                                                                                   
- conv2d_13 (Conv2D)             (None, 9, 9, 64)     36928       ['conv2d_12[0][0]']              
+ conv2d_13 (Conv2D)          (None, 9, 9, 64)             36928     ['conv2d_12[0][0]']           
                                                                                                   
- add_1 (Add)                    (None, 9, 9, 64)     0           ['conv2d_13[0][0]',              
-                                                                  'add[0][0]']                    
+ add_1 (Add)                 (None, 9, 9, 64)             0         ['conv2d_13[0][0]',           
+                                                                     'add[0][0]']                 
                                                                                                   
- conv2d_14 (Conv2D)             (None, 7, 7, 64)     36928       ['add_1[0][0]']                  
+ conv2d_14 (Conv2D)          (None, 7, 7, 64)             36928     ['add_1[0][0]']               
                                                                                                   
- global_average_pooling2d (Glob  (None, 64)          0           ['conv2d_14[0][0]']              
- alAveragePooling2D)                                                                              
+ global_average_pooling2d (  (None, 64)                   0         ['conv2d_14[0][0]']           
+ GlobalAveragePooling2D)                                                                          
                                                                                                   
- dense_6 (Dense)                (None, 256)          16640       ['global_average_pooling2d[0][0]'
-                                                                 ]                                
+ dense_6 (Dense)             (None, 256)                  16640     ['global_average_pooling2d[0][
+                                                                    0]']                          
                                                                                                   
- dropout (Dropout)              (None, 256)          0           ['dense_6[0][0]']                
+ dropout (Dropout)           (None, 256)                  0         ['dense_6[0][0]']             
                                                                                                   
- dense_7 (Dense)                (None, 10)           2570        ['dropout[0][0]']                
+ dense_7 (Dense)             (None, 10)                   2570      ['dropout[0][0]']             
                                                                                                   
 ==================================================================================================
-Total params: 223,242
-Trainable params: 223,242
-Non-trainable params: 0
+Total params: 223242 (872.04 KB)
+Trainable params: 223242 (872.04 KB)
+Non-trainable params: 0 (0.00 Byte)
 __________________________________________________________________________________________________
 
 ```
@@ -802,9 +803,9 @@ model.fit(x_train[:1000], y_train[:1000], batch_size=64, epochs=1, validation_sp
 
 <div class="k-default-codeblock">
 ```
-13/13 [==============================] - 1s 53ms/step - loss: 2.3403 - acc: 0.1138 - val_loss: 2.2988 - val_acc: 0.1250
+13/13 [==============================] - 1s 49ms/step - loss: 2.3017 - acc: 0.0975 - val_loss: 2.3268 - val_acc: 0.0700
 
-<keras.callbacks.History at 0x29a3455a0>
+<keras.src.callbacks.History at 0x7f8884425bd0>
 
 ```
 </div>
@@ -938,6 +939,7 @@ method that returns the constructor arguments of the layer instance:
 
 ```python
 
+@keras.saving.register_keras_serializable()
 class CustomDense(layers.Layer):
     def __init__(self, units=32):
         super().__init__()
@@ -966,7 +968,7 @@ outputs = CustomDense(10)(inputs)
 model = keras.Model(inputs, outputs)
 config = model.get_config()
 
-new_model = keras.Model.from_config(config, custom_objects={"CustomDense": CustomDense})
+new_model = keras.Model.from_config(config)
 ```
 
 Optionally, implement the class method `from_config(cls, config)` which is used
@@ -1105,6 +1107,7 @@ outputs = layers.Dense(1)(x)
 model = keras.Model(inputs, outputs)
 
 
+@keras.saving.register_keras_serializable()
 class CustomRNN(layers.Layer):
     def __init__(self):
         super().__init__()
@@ -1166,6 +1169,7 @@ input_dim = 5
 batch_size = 16
 
 
+@keras.saving.register_keras_serializable()
 class CustomRNN(layers.Layer):
     def __init__(self):
         super().__init__()
