@@ -27,13 +27,14 @@ GPT-2 model. Running this tutorial on CPU runtime will take hours.
 """
 ## Install KerasNLP, Choose Backend and Import Dependencies
 
-We've written this example to run on top of Keras Core and it works with
-multiple backends. You can change the `"KERAS_BACKEND"` environment variable
-below to `"tensorflow"` or `"torch"` depending on which backend you want to use.
+This examples uses [Keras Core](https://keras.io/keras_core/) to work in any of
+`"tensorflow"`, `"jax"` or `"torch"`. Support for Keras Core is baked into
+KerasNLP, simply change the `"KERAS_BACKEND"` environment variable to select
+the backend of your choice. We select the JAX backend below.
 """
 
 """shell
-pip install -q keras-nlp
+pip install git+https://github.com/keras-team/keras-nlp.git -q
 """
 
 import os
