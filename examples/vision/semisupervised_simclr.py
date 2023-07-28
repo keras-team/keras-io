@@ -1,7 +1,6 @@
 """
 Title: [KerasCV] Semi-supervised image classification using contrastive pretraining with SimCLR
 Author: [András Béres](https://www.linkedin.com/in/andras-beres-789190210), updated by [Aritra Roy Gosthipaty](https://twitter.com/ariG23498)
-Reviewer: [Martin Gorner](https://twitter.com/martin_gorner)
 Date created: 2021/04/24
 Last modified: 2023/07/06
 Description: Contrastive pretraining with SimCLR for semi-supervised image classification on the STL-10 dataset.
@@ -90,7 +89,7 @@ IMAGE_CHANNELS = 3
 NUM_CLASSES = 10
 
 # Algorithm hyperparameter
-UNLABELED_BATCH_SIZE = 4096
+UNLABELED_BATCH_SIZE = 1024
 LABELED_BATCH_SIZE = 128
 TEST_BATCH_SIZE = 128
 PROJECTION_WIDTH = 128
@@ -522,4 +521,12 @@ performance at smaller batch sizes.
 
 You can use the trained model hosted on [Hugging Face Hub](https://huggingface.co/keras-io/semi-supervised-classification-simclr)
 and try the demo on [Hugging Face Spaces](https://huggingface.co/spaces/keras-io/semi-supervised-classification).
+"""
+
+"""
+## Acknowledgements
+
+I would like to thank [Martin Gorner](https://twitter.com/martin_gorner) for his thorough review.
+Google Cloud credits were provided for this project.
+
 """
