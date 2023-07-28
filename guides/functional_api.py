@@ -2,7 +2,7 @@
 Title: The Functional API
 Author: [fchollet](https://twitter.com/fchollet)
 Date created: 2019/03/01
-Last modified: 2020/04/12
+Last modified: 2020/07/10
 Description: Complete guide to the functional API.
 Accelerator: GPU
 """
@@ -12,8 +12,8 @@ Accelerator: GPU
 
 import numpy as np
 import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras import layers
+import keras
+from keras import layers
 
 """
 ## Introduction
@@ -607,6 +607,7 @@ method that returns the constructor arguments of the layer instance:
 """
 
 
+@keras.saving.register_keras_serializable()
 class CustomDense(layers.Layer):
     def __init__(self, units=32):
         super().__init__()
@@ -635,7 +636,7 @@ outputs = CustomDense(10)(inputs)
 model = keras.Model(inputs, outputs)
 config = model.get_config()
 
-new_model = keras.Model.from_config(config, custom_objects={"CustomDense": CustomDense})
+new_model = keras.Model.from_config(config)
 
 """
 Optionally, implement the class method `from_config(cls, config)` which is used
@@ -776,6 +777,7 @@ outputs = layers.Dense(1)(x)
 model = keras.Model(inputs, outputs)
 
 
+@keras.saving.register_keras_serializable()
 class CustomRNN(layers.Layer):
     def __init__(self):
         super().__init__()
@@ -830,6 +832,7 @@ input_dim = 5
 batch_size = 16
 
 
+@keras.saving.register_keras_serializable()
 class CustomRNN(layers.Layer):
     def __init__(self):
         super().__init__()

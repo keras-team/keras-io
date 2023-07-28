@@ -17,7 +17,7 @@
 ```python
 import numpy as np
 import tensorflow as tf
-from tensorflow import keras
+import keras
 ```
 
 ---
@@ -176,7 +176,7 @@ np.testing.assert_allclose(
 
 <div class="k-default-codeblock">
 ```
-1/1 [==============================] - 0s 487ms/step - loss: 0.0441
+1/1 [==============================] - 0s 321ms/step - loss: 0.0517
 
 ```
 </div>
@@ -440,6 +440,11 @@ print("Number of test samples: %d" % tf.data.experimental.cardinality(test_ds))
 
 <div class="k-default-codeblock">
 ```
+ Downloading and preparing dataset 786.68 MiB (download: 786.68 MiB, generated: Unknown size, total: 786.68 MiB) to /usr/local/google/home/nkovela/tensorflow_datasets/cats_vs_dogs/4.0.0...
+
+WARNING:absl:1738 images were corrupted and were skipped
+
+ Dataset cats_vs_dogs downloaded and prepared to /usr/local/google/home/nkovela/tensorflow_datasets/cats_vs_dogs/4.0.0. Subsequent calls will reuse this data.
 Number of training samples: 9305
 Number of validation samples: 2326
 Number of test samples: 2326
@@ -608,6 +613,8 @@ model.summary()
 
 <div class="k-default-codeblock">
 ```
+Downloading data from https://storage.googleapis.com/tensorflow/keras-applications/xception/xception_weights_tf_dim_ordering_tf_kernels_notop.h5
+83683744/83683744 [==============================] - 0s 0us/step
 Model: "model"
 _________________________________________________________________
  Layer (type)                Output Shape              Param #   
@@ -620,17 +627,17 @@ _________________________________________________________________
                                                                  
  xception (Functional)       (None, 5, 5, 2048)        20861480  
                                                                  
- global_average_pooling2d (G  (None, 2048)             0         
- lobalAveragePooling2D)                                          
+ global_average_pooling2d (  (None, 2048)              0         
+ GlobalAveragePooling2D)                                         
                                                                  
  dropout (Dropout)           (None, 2048)              0         
                                                                  
  dense_7 (Dense)             (None, 1)                 2049      
                                                                  
 =================================================================
-Total params: 20,863,529
-Trainable params: 2,049
-Non-trainable params: 20,861,480
+Total params: 20863529 (79.59 MB)
+Trainable params: 2049 (8.00 KB)
+Non-trainable params: 20861480 (79.58 MB)
 _________________________________________________________________
 
 ```
@@ -653,67 +660,67 @@ model.fit(train_ds, epochs=epochs, validation_data=validation_ds)
 <div class="k-default-codeblock">
 ```
 Epoch 1/20
-146/291 [==============>...............] - ETA: 15s - loss: 0.1993 - binary_accuracy: 0.9088
+140/291 [=============>................] - ETA: 27s - loss: 0.1976 - binary_accuracy: 0.9103
 
 Corrupt JPEG data: 65 extraneous bytes before marker 0xd9
 
-262/291 [==========================>...] - ETA: 3s - loss: 0.1682 - binary_accuracy: 0.9264
+256/291 [=========================>....] - ETA: 6s - loss: 0.1679 - binary_accuracy: 0.9265
 
 Corrupt JPEG data: 239 extraneous bytes before marker 0xd9
 
-275/291 [===========================>..] - ETA: 1s - loss: 0.1651 - binary_accuracy: 0.9277
+270/291 [==========================>...] - ETA: 3s - loss: 0.1656 - binary_accuracy: 0.9275
 
 Corrupt JPEG data: 1153 extraneous bytes before marker 0xd9
 
-279/291 [===========================>..] - ETA: 1s - loss: 0.1636 - binary_accuracy: 0.9285
+274/291 [===========================>..] - ETA: 3s - loss: 0.1642 - binary_accuracy: 0.9280
 
 Corrupt JPEG data: 228 extraneous bytes before marker 0xd9
 
-291/291 [==============================] - ETA: 0s - loss: 0.1622 - binary_accuracy: 0.9294
+291/291 [==============================] - ETA: 0s - loss: 0.1630 - binary_accuracy: 0.9290
 
 Corrupt JPEG data: 2226 extraneous bytes before marker 0xd9
 
-291/291 [==============================] - 43s 138ms/step - loss: 0.1622 - binary_accuracy: 0.9294 - val_loss: 0.0807 - val_binary_accuracy: 0.9703
+291/291 [==============================] - 68s 225ms/step - loss: 0.1630 - binary_accuracy: 0.9290 - val_loss: 0.0829 - val_binary_accuracy: 0.9699
 Epoch 2/20
-291/291 [==============================] - 38s 131ms/step - loss: 0.1134 - binary_accuracy: 0.9517 - val_loss: 0.0745 - val_binary_accuracy: 0.9738
+291/291 [==============================] - 63s 216ms/step - loss: 0.1138 - binary_accuracy: 0.9521 - val_loss: 0.0763 - val_binary_accuracy: 0.9712
 Epoch 3/20
-291/291 [==============================] - 39s 135ms/step - loss: 0.1024 - binary_accuracy: 0.9568 - val_loss: 0.0739 - val_binary_accuracy: 0.9729
+291/291 [==============================] - 63s 216ms/step - loss: 0.1113 - binary_accuracy: 0.9552 - val_loss: 0.0783 - val_binary_accuracy: 0.9682
 Epoch 4/20
-291/291 [==============================] - 38s 130ms/step - loss: 0.0964 - binary_accuracy: 0.9617 - val_loss: 0.0720 - val_binary_accuracy: 0.9716
+291/291 [==============================] - 62s 212ms/step - loss: 0.1050 - binary_accuracy: 0.9543 - val_loss: 0.0754 - val_binary_accuracy: 0.9699
 Epoch 5/20
-291/291 [==============================] - 37s 128ms/step - loss: 0.0940 - binary_accuracy: 0.9629 - val_loss: 0.0707 - val_binary_accuracy: 0.9742
+291/291 [==============================] - 62s 214ms/step - loss: 0.0972 - binary_accuracy: 0.9582 - val_loss: 0.0745 - val_binary_accuracy: 0.9699
 Epoch 6/20
-291/291 [==============================] - 37s 128ms/step - loss: 0.0922 - binary_accuracy: 0.9620 - val_loss: 0.0702 - val_binary_accuracy: 0.9738
+291/291 [==============================] - 62s 212ms/step - loss: 0.0950 - binary_accuracy: 0.9616 - val_loss: 0.0749 - val_binary_accuracy: 0.9699
 Epoch 7/20
-291/291 [==============================] - 38s 129ms/step - loss: 0.0875 - binary_accuracy: 0.9638 - val_loss: 0.0704 - val_binary_accuracy: 0.9721
+291/291 [==============================] - 62s 214ms/step - loss: 0.1020 - binary_accuracy: 0.9573 - val_loss: 0.0716 - val_binary_accuracy: 0.9712
 Epoch 8/20
-291/291 [==============================] - 37s 128ms/step - loss: 0.0891 - binary_accuracy: 0.9627 - val_loss: 0.0716 - val_binary_accuracy: 0.9725
+291/291 [==============================] - 61s 211ms/step - loss: 0.1035 - binary_accuracy: 0.9574 - val_loss: 0.0742 - val_binary_accuracy: 0.9716
 Epoch 9/20
-291/291 [==============================] - 37s 128ms/step - loss: 0.0863 - binary_accuracy: 0.9649 - val_loss: 0.0744 - val_binary_accuracy: 0.9721
+291/291 [==============================] - 62s 212ms/step - loss: 0.1030 - binary_accuracy: 0.9580 - val_loss: 0.0757 - val_binary_accuracy: 0.9716
 Epoch 10/20
-291/291 [==============================] - 37s 128ms/step - loss: 0.0824 - binary_accuracy: 0.9648 - val_loss: 0.0735 - val_binary_accuracy: 0.9695
+291/291 [==============================] - 61s 210ms/step - loss: 0.0944 - binary_accuracy: 0.9623 - val_loss: 0.0703 - val_binary_accuracy: 0.9725
 Epoch 11/20
-291/291 [==============================] - 37s 128ms/step - loss: 0.0815 - binary_accuracy: 0.9660 - val_loss: 0.0795 - val_binary_accuracy: 0.9699
+291/291 [==============================] - 62s 213ms/step - loss: 0.0947 - binary_accuracy: 0.9616 - val_loss: 0.0819 - val_binary_accuracy: 0.9673
 Epoch 12/20
-291/291 [==============================] - 37s 127ms/step - loss: 0.0774 - binary_accuracy: 0.9695 - val_loss: 0.0737 - val_binary_accuracy: 0.9708
+291/291 [==============================] - 63s 217ms/step - loss: 0.1022 - binary_accuracy: 0.9588 - val_loss: 0.0727 - val_binary_accuracy: 0.9725
 Epoch 13/20
-291/291 [==============================] - 37s 128ms/step - loss: 0.0780 - binary_accuracy: 0.9677 - val_loss: 0.0772 - val_binary_accuracy: 0.9703
+291/291 [==============================] - 61s 211ms/step - loss: 0.0941 - binary_accuracy: 0.9615 - val_loss: 0.0708 - val_binary_accuracy: 0.9729
 Epoch 14/20
-291/291 [==============================] - 38s 130ms/step - loss: 0.0769 - binary_accuracy: 0.9687 - val_loss: 0.0715 - val_binary_accuracy: 0.9716
+291/291 [==============================] - 62s 212ms/step - loss: 0.0989 - binary_accuracy: 0.9593 - val_loss: 0.0712 - val_binary_accuracy: 0.9725
 Epoch 15/20
-291/291 [==============================] - 37s 128ms/step - loss: 0.0772 - binary_accuracy: 0.9685 - val_loss: 0.0714 - val_binary_accuracy: 0.9712
+291/291 [==============================] - 61s 209ms/step - loss: 0.0960 - binary_accuracy: 0.9605 - val_loss: 0.0760 - val_binary_accuracy: 0.9690
 Epoch 16/20
-291/291 [==============================] - 37s 128ms/step - loss: 0.0782 - binary_accuracy: 0.9679 - val_loss: 0.0782 - val_binary_accuracy: 0.9716
+291/291 [==============================] - 61s 210ms/step - loss: 0.0904 - binary_accuracy: 0.9617 - val_loss: 0.0789 - val_binary_accuracy: 0.9699
 Epoch 17/20
-291/291 [==============================] - 38s 129ms/step - loss: 0.0689 - binary_accuracy: 0.9718 - val_loss: 0.0753 - val_binary_accuracy: 0.9708
+291/291 [==============================] - 62s 213ms/step - loss: 0.0926 - binary_accuracy: 0.9622 - val_loss: 0.0705 - val_binary_accuracy: 0.9742
 Epoch 18/20
-291/291 [==============================] - 38s 129ms/step - loss: 0.0685 - binary_accuracy: 0.9722 - val_loss: 0.0800 - val_binary_accuracy: 0.9695
+291/291 [==============================] - 61s 210ms/step - loss: 0.0950 - binary_accuracy: 0.9612 - val_loss: 0.0787 - val_binary_accuracy: 0.9695
 Epoch 19/20
-291/291 [==============================] - 38s 131ms/step - loss: 0.0716 - binary_accuracy: 0.9706 - val_loss: 0.0765 - val_binary_accuracy: 0.9708
+291/291 [==============================] - 62s 212ms/step - loss: 0.0957 - binary_accuracy: 0.9606 - val_loss: 0.0815 - val_binary_accuracy: 0.9699
 Epoch 20/20
-291/291 [==============================] - 38s 131ms/step - loss: 0.0752 - binary_accuracy: 0.9694 - val_loss: 0.0768 - val_binary_accuracy: 0.9716
+291/291 [==============================] - 63s 216ms/step - loss: 0.0955 - binary_accuracy: 0.9611 - val_loss: 0.0714 - val_binary_accuracy: 0.9716
 
-<keras.callbacks.History at 0x2f0d65f00>
+<keras.src.callbacks.History at 0x7f8f202e4250>
 
 ```
 </div>
@@ -763,41 +770,40 @@ _________________________________________________________________
                                                                  
  xception (Functional)       (None, 5, 5, 2048)        20861480  
                                                                  
- global_average_pooling2d (G  (None, 2048)             0         
- lobalAveragePooling2D)                                          
+ global_average_pooling2d (  (None, 2048)              0         
+ GlobalAveragePooling2D)                                         
                                                                  
  dropout (Dropout)           (None, 2048)              0         
                                                                  
  dense_7 (Dense)             (None, 1)                 2049      
                                                                  
 =================================================================
-Total params: 20,863,529
-Trainable params: 20,809,001
-Non-trainable params: 54,528
+Total params: 20863529 (79.59 MB)
+Trainable params: 20809001 (79.38 MB)
+Non-trainable params: 54528 (213.00 KB)
 _________________________________________________________________
-
 Epoch 1/10
-291/291 [==============================] - 107s 343ms/step - loss: 0.0628 - binary_accuracy: 0.9762 - val_loss: 0.0559 - val_binary_accuracy: 0.9742
+291/291 [==============================] - 309s 1s/step - loss: 0.0746 - binary_accuracy: 0.9696 - val_loss: 0.0547 - val_binary_accuracy: 0.9807
 Epoch 2/10
-291/291 [==============================] - 102s 348ms/step - loss: 0.0388 - binary_accuracy: 0.9846 - val_loss: 0.0654 - val_binary_accuracy: 0.9768
+291/291 [==============================] - 289s 992ms/step - loss: 0.0557 - binary_accuracy: 0.9789 - val_loss: 0.0499 - val_binary_accuracy: 0.9798
 Epoch 3/10
-291/291 [==============================] - 98s 336ms/step - loss: 0.0350 - binary_accuracy: 0.9869 - val_loss: 0.0542 - val_binary_accuracy: 0.9802
+291/291 [==============================] - 287s 987ms/step - loss: 0.0475 - binary_accuracy: 0.9829 - val_loss: 0.0436 - val_binary_accuracy: 0.9819
 Epoch 4/10
-291/291 [==============================] - 104s 354ms/step - loss: 0.0247 - binary_accuracy: 0.9907 - val_loss: 0.0634 - val_binary_accuracy: 0.9807
+291/291 [==============================] - 288s 988ms/step - loss: 0.0331 - binary_accuracy: 0.9867 - val_loss: 0.0649 - val_binary_accuracy: 0.9798
 Epoch 5/10
-291/291 [==============================] - 97s 332ms/step - loss: 0.0203 - binary_accuracy: 0.9930 - val_loss: 0.0547 - val_binary_accuracy: 0.9798
+291/291 [==============================] - 275s 946ms/step - loss: 0.0334 - binary_accuracy: 0.9875 - val_loss: 0.0485 - val_binary_accuracy: 0.9794
 Epoch 6/10
-291/291 [==============================] - 97s 332ms/step - loss: 0.0169 - binary_accuracy: 0.9932 - val_loss: 0.0670 - val_binary_accuracy: 0.9781
+291/291 [==============================] - 281s 966ms/step - loss: 0.0226 - binary_accuracy: 0.9912 - val_loss: 0.0464 - val_binary_accuracy: 0.9832
 Epoch 7/10
-291/291 [==============================] - 97s 332ms/step - loss: 0.0159 - binary_accuracy: 0.9940 - val_loss: 0.0719 - val_binary_accuracy: 0.9781
+291/291 [==============================] - 271s 932ms/step - loss: 0.0200 - binary_accuracy: 0.9939 - val_loss: 0.0441 - val_binary_accuracy: 0.9845
 Epoch 8/10
-291/291 [==============================] - 97s 332ms/step - loss: 0.0114 - binary_accuracy: 0.9966 - val_loss: 0.0579 - val_binary_accuracy: 0.9824
+291/291 [==============================] - 293s 1s/step - loss: 0.0153 - binary_accuracy: 0.9939 - val_loss: 0.0500 - val_binary_accuracy: 0.9824
 Epoch 9/10
-291/291 [==============================] - 97s 331ms/step - loss: 0.0095 - binary_accuracy: 0.9963 - val_loss: 0.0579 - val_binary_accuracy: 0.9802
+291/291 [==============================] - 300s 1s/step - loss: 0.0138 - binary_accuracy: 0.9960 - val_loss: 0.0459 - val_binary_accuracy: 0.9871
 Epoch 10/10
-291/291 [==============================] - 96s 330ms/step - loss: 0.0092 - binary_accuracy: 0.9965 - val_loss: 0.0571 - val_binary_accuracy: 0.9785
+291/291 [==============================] - 299s 1s/step - loss: 0.0115 - binary_accuracy: 0.9952 - val_loss: 0.0540 - val_binary_accuracy: 0.9832
 
-<keras.callbacks.History at 0x2f0d65b10>
+<keras.src.callbacks.History at 0x7f8e8c26a150>
 
 ```
 </div>

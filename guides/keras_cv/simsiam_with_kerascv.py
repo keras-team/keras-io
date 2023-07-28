@@ -209,10 +209,10 @@ augmenter = keras.Sequential(
             crop_area_factor=crop_area_factor,
             aspect_ratio_factor=aspect_ratio_factor,
         ),
-        cv_layers.MaybeApply(
+        cv_layers.RandomApply(
             cv_layers.Grayscale(output_channels=3), rate=grayscale_rate
         ),
-        cv_layers.MaybeApply(
+        cv_layers.RandomApply(
             cv_layers.RandomColorJitter(
                 value_range=(0, 255),
                 brightness_factor=brightness_factor,

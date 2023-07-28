@@ -2,7 +2,7 @@
 Title: Handwriting recognition
 Authors: [A_K_Nain](https://twitter.com/A_K_Nain), [Sayak Paul](https://twitter.com/RisingSayak)
 Date created: 2021/08/16
-Last modified: 2021/08/16
+Last modified: 2023/07/06
 Description: Training a handwriting recognition model with variable-length sequences.
 Accelerator: GPU
 """
@@ -23,7 +23,7 @@ good starting point for building OCR systems.
 """
 
 """shell
-wget -q https://git.io/J0fjL -O IAM_Words.zip
+wget -q https://github.com/sayakpaul/Handwriting-Recognizer-in-Keras/releases/download/v1.0.0/IAM_Words.zip
 unzip -qq IAM_Words.zip
 
 mkdir data
@@ -44,7 +44,7 @@ head -20 data/words.txt
 ## Imports
 """
 
-from tensorflow.keras.layers.experimental.preprocessing import StringLookup
+from tensorflow.keras.layers import StringLookup
 from tensorflow import keras
 
 import matplotlib.pyplot as plt
