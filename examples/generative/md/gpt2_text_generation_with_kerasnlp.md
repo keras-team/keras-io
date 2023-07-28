@@ -27,28 +27,33 @@ GPT-2 model. Running this tutorial on CPU runtime will take hours.
 ---
 ## Install KerasNLP, Choose Backend and Import Dependencies
 
-We can choose one of "tensorflow", "jax", "torch" as the backend. Let's go
-ahead with JAX in this example.
+This examples uses [Keras Core](https://keras.io/keras_core/) to work in any of
+`"tensorflow"`, `"jax"` or `"torch"`. Support for Keras Core is baked into
+KerasNLP, simply change the `"KERAS_BACKEND"` environment variable to select
+the backend of your choice. We select the JAX backend below.
 
 
 ```python
-!pip install -q keras-nlp
+!pip install git+https://github.com/keras-team/keras-nlp.git -q
 ```
-
 
 ```python
 import os
 
-os.environ["KERAS_BACKEND"] = "jax"
+os.environ["KERAS_BACKEND"] = "jax"  # or "tensorflow" or "torch"
 
 import keras_nlp
 import tensorflow as tf
 import keras_core as keras
 import time
 ```
-
 <div class="k-default-codeblock">
 ```
+  Installing build dependencies ... [?25l[?25hdone
+  Getting requirements to build wheel ... [?25l[?25hdone
+  Preparing metadata (pyproject.toml) ... [?25l[?25hdone
+  Building wheel for keras-nlp (pyproject.toml) ... [?25l[?25hdone
+
 Using JAX backend.
 
 ```
@@ -124,7 +129,7 @@ Downloading data from https://storage.googleapis.com/keras-nlp/models/gpt2_base_
 Downloading data from https://storage.googleapis.com/keras-nlp/models/gpt2_base_en/v1/merges.txt
  456318/456318 ━━━━━━━━━━━━━━━━━━━━ 0s 0us/step       
 Downloading data from https://storage.googleapis.com/keras-nlp/models/gpt2_base_en/v1/model.h5
- 497986112/497986112 ━━━━━━━━━━━━━━━━━━━━ 3s 0us/step
+ 497986112/497986112 ━━━━━━━━━━━━━━━━━━━━ 6s 0us/step
 
 ```
 </div>
@@ -148,14 +153,20 @@ print(f"TOTAL TIME ELAPSED: {end - start:.2f}s")
 <div class="k-default-codeblock">
 ```
 GPT-2 output:
-My trip to Yosemite was the perfect way to start. The first day I walked through the open-air park I saw the majestic view of Yosemite from the top. The view of Yosemite was breathtaking. It was the first time I ever saw the Yosemite mountains, and the first time I've experienced the views that were so beautiful. The first time I saw the Yosemite mountains was on a Sunday morning, and I was so happy I was back at the park. I walked through the open-air park, and I saw the beautiful Yosemite mountains. I was amazed by the beauty and the beauty of this place. I also was amazed at how well it was made of granite, and how much of it was made of rock. It was a great day for me.
+My trip to Yosemite was pretty awesome. The first time I went I didn't know how to go and it was pretty hard to get around. It was a bit like going on an adventure with a friend. The only things I could do were hike and climb the mountain. It's really cool to know you're not alone in this world. It's a lot of fun. I'm a little worried that I might not get to the top of the mountain in time to see the sunrise and sunset of the day. I think the weather is going to get a little warmer in the coming years.
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-The second morning of my trip I walked to the park's second-floor entrance. There I met the first lady and her husband, the first lady was very nice and they had some nice conversation with me and the couple
-TOTAL TIME ELAPSED: 27.49s
+This post is a little more in-depth on how to go on the trail. It covers how to hike on the Sierra Nevada, how to hike with the Sierra Nevada, how to hike in the Sierra Nevada, how to get to the top of the mountain, and how to get to the top with your own gear.
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+The Sierra Nevada is a very popular trail in Yosemite
+TOTAL TIME ELAPSED: 25.36s
 
 ```
 </div>
@@ -177,26 +188,80 @@ print(f"TOTAL TIME ELAPSED: {end - start:.2f}s")
 <div class="k-default-codeblock">
 ```
 GPT-2 output:
-That Italian restaurant is a good place to start. It's open every day from 9:15am to 5:30pm and has a great selection of pasta dishes. The food is delicious too. The only drawback is the price.
+That Italian restaurant is known for its delicious food, and the best part is that it has a full bar, with seating for a whole host of guests. And that's only because it's located at the heart of the neighborhood.
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-I was craving something different from what I was used to, so I ordered the Italian pasta, the Italian cheese and the Italian sauce. It was very good.
+The menu at the Italian restaurant is pretty straightforward:
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-The restaurant has a very good selection of pasta dishes and I am always looking for a great place to eat. The food is very good, the service is great, and the staff are always friendly. The service has been good and the staff is always attentive.
+The menu consists of three main dishes:
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-I've been coming here in the past few years, and I love it. It's an Italian restaurant with a great selection, but the food is very different. I'm a fan of the food, so I decided to give it a try. The food was very good. I'm sure you will like
-TOTAL TIME ELAPSED: 1.97s
+Italian sausage
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+Bolognese
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+Sausage
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+Bolognese with cheese
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+Sauce with cream
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+Italian sausage with cheese
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+Bolognese with cheese
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+And the main menu consists of a few other things.
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+There are two tables: the one that serves a menu of sausage and bolognese with cheese (the one that serves the menu of sausage and bolognese with cheese) and the one that serves the menu of sausage and bolognese with cheese. The two tables are also open 24 hours a day, 7 days a week.
+```
+</div>
+    
+    
+<div class="k-default-codeblock">
+```
+TOTAL TIME ELAPSED: 1.55s
 
 ```
 </div>
@@ -261,7 +326,7 @@ Generating splits...:   0%|          | 0/1 [00:00<?, ? splits/s]
 
 Generating train examples...:   0%|          | 0/79740 [00:00<?, ? examples/s]
 
-Shuffling /root/tensorflow_datasets/reddit_tifu/short/1.1.2.incompleteVF6MJX/reddit_tifu-train.tfrecord*...:  …
+Shuffling /root/tensorflow_datasets/reddit_tifu/short/1.1.2.incompleteHNUZEA/reddit_tifu-train.tfrecord*...:  …
 
 Dataset reddit_tifu downloaded and prepared to /root/tensorflow_datasets/reddit_tifu/short/1.1.2. Subsequent calls will reuse this data.
 
@@ -332,9 +397,9 @@ gpt2_lm.fit(train_ds, epochs=num_epochs)
 
 <div class="k-default-codeblock">
 ```
- 500/500 ━━━━━━━━━━━━━━━━━━━━ 503s 949ms/step - loss: 3.3615
+ 500/500 ━━━━━━━━━━━━━━━━━━━━ 526s 988ms/step - loss: 3.3603
 
-<keras_core.src.callbacks.history.History at 0x7f759cf29a50>
+<keras_core.src.callbacks.history.History at 0x7e1210507730>
 
 ```
 </div>
@@ -359,26 +424,26 @@ print(f"TOTAL TIME ELAPSED: {end - start:.2f}s")
 <div class="k-default-codeblock">
 ```
 GPT-2 output:
-I like basketball. i'm not a big fan of the sport. i like to watch it, but i'm not a big fan of the game. 
+I like basketball. it has the greatest shot of all time and the best shot of all time. i have to play a little bit more and get some practice time.
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-so i was playing a game of basketball with my friend, and the other guys are all playing. i was playing with my brother, and he was talking to a guy, and we're talking. the guy was a freshman, and the other guys were seniors. he was really into the game, and we were really into it. he said that he thought that the other guys were going to score points, but the other guys weren't.
+today i got the opportunity to play in a tournament in a city that is very close to my school so i was excited to see how it would go. i had just been playing with a few other guys, so i thought i would go and play a couple games with them. 
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-so we were talking, and he said,
+after a few games i was pretty confident and confident in myself. i had just gotten the opportunity and had to get some practice time. 
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-"you're not going to score points,
-TOTAL TIME ELAPSED: 20.27s
+so i go to the
+TOTAL TIME ELAPSED: 21.13s
 
 ```
 </div>
@@ -418,62 +483,38 @@ print(output)
 <div class="k-default-codeblock">
 ```
 GPT-2 output:
-I like basketball, and i'm a fan too.
+I like basketball, and this is a pretty good one. 
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-so my friend and i were sitting at his place, watching the game. i was in the midst of my favorite game of the year and he said to me "hey, how about this?   
+first off, my wife is pretty good, she is a very good basketball player and she is really, really good at playing basketball. 
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-"i'll give you one of these, and it will make you happy."
+she has an amazing game called basketball, it is a pretty fun game. 
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-he was right.
+i play it on the couch.  i'm sitting there, watching the game on the couch.  my wife is playing with her phone.  she's playing on the phone with a bunch of people. 
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-i was like "oh no!    
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-"oh my god.           
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-"oh no.              
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-"you can't make me happy."
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-he was right.
+my wife is sitting there and watching basketball.  she's sitting there watching
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
 GPT-2 output:
-I like basketball, but i don't really like the game. 
+I like basketball, but i don't like to play it. 
 ```
 </div>
     
@@ -552,8 +593,8 @@ remote: Enumerating objects: 7249, done.[K
 remote: Counting objects: 100% (54/54), done.[K
 remote: Compressing objects: 100% (40/40), done.[K
 remote: Total 7249 (delta 15), reused 40 (delta 11), pack-reused 7195[K
-Receiving objects: 100% (7249/7249), 197.90 MiB | 22.87 MiB/s, done.
-Resolving deltas: 100% (5303/5303), done.
+Receiving objects: 100% (7249/7249), 197.95 MiB | 23.27 MiB/s, done.
+Resolving deltas: 100% (5304/5304), done.
 Updating files: 100% (2285/2285), done.
 
 ```
@@ -586,7 +627,7 @@ print(paragraphs[0])
 
 <div class="k-default-codeblock">
 ```
-喝不開兮鑿不開，春風幾度長莓苔。趙州拄杖雖粗糲，未必親曾靠著來。
+毋謂支山險，此山能幾何。崎嶔十年夢，知歷幾蹉跎。
 
 ```
 </div>
@@ -624,9 +665,9 @@ gpt2_lm.fit(train_ds, epochs=num_epochs)
 
 <div class="k-default-codeblock">
 ```
- 500/500 ━━━━━━━━━━━━━━━━━━━━ 252s 451ms/step - loss: 2.4777
+ 500/500 ━━━━━━━━━━━━━━━━━━━━ 323s 591ms/step - loss: 2.8592
 
-<keras_core.src.callbacks.history.History at 0x7f75bc9441f0>
+<keras_core.src.callbacks.history.History at 0x7e11fc3fa320>
 
 ```
 </div>
@@ -640,7 +681,7 @@ print(output)
 
 <div class="k-default-codeblock">
 ```
-昨夜雨疏风骤時。臨景處臨花，處江知青自。空聽聽聞色，草馬聲聽清自。曾欲面風深，面啊詩知。積樂知
+昨夜雨疏风骤，爲臨江山院短靜。石淡山陵長爲羣，臨石山非處臨羣。美陪河埃聲爲羣，漏漏漏邊陵塘
 
 ```
 </div>
