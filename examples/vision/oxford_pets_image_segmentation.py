@@ -1,9 +1,6 @@
 """
 Title: [KerasCV] Image segmentation with a U-Net-like architecture
-Author: [fchollet](https://twitter.com/fchollet), updated by
-[Aritra Roy Gosthipaty](https://twitter.com/ariG23498) and
-[Margaret Maynard-Reid](https://twitter.com/margaretmz)
-Reviewer: [Martin Gorner](https://twitter.com/martin_gorner)
+Author: [fchollet](https://twitter.com/fchollet), updated by [Aritra Roy Gosthipaty](https://twitter.com/ariG23498) and [Margaret Maynard-Reid](https://twitter.com/margaretmz)
 Date created: 2019/03/20
 Last modified: 2023/06/19
 Description: Image segmentation model trained from scratch on the Oxford Pets dataset.
@@ -95,7 +92,9 @@ rescale_images_and_correct_masks = lambda inputs: {
     "segmentation_masks": inputs["segmentation_mask"] - 1,
 }
 
-train_ds = orig_train_ds.map(rescale_images_and_correct_masks, num_parallel_calls=AUTOTUNE)
+train_ds = orig_train_ds.map(
+    rescale_images_and_correct_masks, num_parallel_calls=AUTOTUNE
+)
 val_ds = orig_val_ds.map(rescale_images_and_correct_masks, num_parallel_calls=AUTOTUNE)
 
 """
@@ -168,16 +167,14 @@ Create training and validation datasets.
 """
 
 augmented_train_ds = (
-    train_ds
-    .shuffle(BATCH_SIZE * 2)
+    train_ds.shuffle(BATCH_SIZE * 2)
     .map(augment_fn, num_parallel_calls=AUTOTUNE)
     .batch(BATCH_SIZE)
     .map(unpackage_inputs)
     .prefetch(buffer_size=tf.data.AUTOTUNE)
 )
 resized_val_ds = (
-    val_ds
-    .map(resize_fn, num_parallel_calls=AUTOTUNE)
+    val_ds.map(resize_fn, num_parallel_calls=AUTOTUNE)
     .batch(BATCH_SIZE)
     .map(unpackage_inputs)
     .prefetch(buffer_size=tf.data.AUTOTUNE)
@@ -368,5 +365,6 @@ keras_cv.visualization.plot_segmentation_mask_gallery(
 """
 ## Acknowledgements
 
+We would like to thank [Martin Gorner](https://twitter.com/martin_gorner) for his thorough review.
 Google Cloud credits were provided for this project.
 """
