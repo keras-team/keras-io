@@ -1,6 +1,7 @@
 # Pretraining a Transformer from scratch with KerasNLP
 
 **Author:** [Matthew Watson](https://github.com/mattdangerw/)<br>
+**Converted to Keras Core by:** [Anshuman Mishra](https://github.com/shivance)<br>
 **Date created:** 2022/04/18<br>
 **Last modified:** 2023/07/15<br>
 **Description:** Use KerasNLP to train a Transformer model from scratch.
