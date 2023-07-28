@@ -154,7 +154,7 @@ instantiated by calling the `fit()` method.
 bert_classifier.fit(train_ds, validation_data=val_ds, epochs=1)
 
 """
-Our BERT classifier achieved an accuracy of around 65% on the validation split. Now,
+Our BERT classifier achieved an accuracy of around 76% on the validation split. Now,
 let's evaluate its performance on the test split.
 
 ### Evaluate the performance of the trained model on test data.
@@ -163,9 +163,9 @@ let's evaluate its performance on the test split.
 bert_classifier.evaluate(test_ds)
 
 """
-Our baseline BERT model achieved a similar accuracy of around 68% on the test split.
-Now, let's try to improve its performance by recompiling the model with a different
-learning rate.
+Our baseline BERT model achieved a similar accuracy of around 76% on the test split.
+Now, let's try to improve its performance by recompiling the model with a slightly
+higher learning rate.
 """
 
 bert_classifier = keras_nlp.models.BertClassifier.from_preset(
@@ -173,7 +173,7 @@ bert_classifier = keras_nlp.models.BertClassifier.from_preset(
 )
 bert_classifier.compile(
     loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
-    optimizer=keras.optimizers.Adam(1e-4),
+    optimizer=keras.optimizers.Adam(5e-5),
     metrics=["accuracy"],
 )
 
@@ -181,10 +181,9 @@ bert_classifier.fit(train_ds, validation_data=val_ds, epochs=1)
 bert_classifier.evaluate(test_ds)
 
 """
-This time, we achieve around 72% validation accuracy on both the validation and test
-splits after just one epoch, which is quite impressive!
-
-Now, let's see if we can further improve the model by using a learning rate scheduler.
+Just tweaking the learning rate alone was not enough to boost performance, which
+stayed right around 76%. Let's try again, but this time with
+`keras.optimizers.AdamW`, and a learning rate schedule.
 """
 
 
@@ -225,7 +224,7 @@ warmup_steps = int(total_steps * 0.2)
 bert_classifier.compile(
     loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
     optimizer=keras.optimizers.AdamW(
-        TriangularSchedule(0.001, warmup_steps, total_steps)
+        TriangularSchedule(1e-4, warmup_steps, total_steps)
     ),
     metrics=["accuracy"],
 )
@@ -233,9 +232,8 @@ bert_classifier.compile(
 bert_classifier.fit(train_ds, validation_data=val_ds, epochs=epochs)
 
 """
-Great! With the learning rate scheduler and the `AdamW` optimizer, our validation
-accuracy improved to around 79% within one epoch, and it hiked to 86% in three
-epochs.
+Success! With the learning rate scheduler and the `AdamW` optimizer, our validation
+accuracy improved to around 79%.
 
 Now, let's evaluate our final model on the test set and see how it performs.
 """

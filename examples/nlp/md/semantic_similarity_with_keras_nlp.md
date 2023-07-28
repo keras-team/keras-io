@@ -195,13 +195,13 @@ bert_classifier.fit(train_ds, validation_data=val_ds, epochs=1)
 
 <div class="k-default-codeblock">
 ```
-[1m6867/6867[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m49s[0m 7ms/step - loss: 0.8587 - sparse_categorical_accuracy: 0.6023 - val_loss: 0.5883 - val_sparse_categorical_accuracy: 0.7654
+[1m6867/6867[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m49s[0m 7ms/step - loss: 0.8584 - sparse_categorical_accuracy: 0.6049 - val_loss: 0.5857 - val_sparse_categorical_accuracy: 0.7608
 
-<keras_core.src.callbacks.history.History at 0x7f16081712d0>
+<keras_core.src.callbacks.history.History at 0x7fc6cbf41ea0>
 
 ```
 </div>
-Our BERT classifier achieved an accuracy of around 65% on the validation split. Now,
+Our BERT classifier achieved an accuracy of around 76% on the validation split. Now,
 let's evaluate its performance on the test split.
 
 ### Evaluate the performance of the trained model on test data.
@@ -213,15 +213,15 @@ bert_classifier.evaluate(test_ds)
 
 <div class="k-default-codeblock">
 ```
-[1m614/614[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m2s[0m 3ms/step - loss: 0.5871 - sparse_categorical_accuracy: 0.7656
+[1m614/614[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m2s[0m 3ms/step - loss: 0.5709 - sparse_categorical_accuracy: 0.7742
 
-[0.5927907824516296, 0.7624185681343079]
+[0.5832399725914001, 0.7678135633468628]
 
 ```
 </div>
-Our baseline BERT model achieved a similar accuracy of around 68% on the test split.
-Now, let's try to improve its performance by recompiling the model with a different
-learning rate.
+Our baseline BERT model achieved a similar accuracy of around 76% on the test split.
+Now, let's try to improve its performance by recompiling the model with a slightly
+higher learning rate.
 
 
 ```python
@@ -230,7 +230,7 @@ bert_classifier = keras_nlp.models.BertClassifier.from_preset(
 )
 bert_classifier.compile(
     loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
-    optimizer=keras.optimizers.Adam(1e-4),
+    optimizer=keras.optimizers.Adam(5e-5),
     metrics=["accuracy"],
 )
 
@@ -240,17 +240,16 @@ bert_classifier.evaluate(test_ds)
 
 <div class="k-default-codeblock">
 ```
-[1m6867/6867[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m49s[0m 7ms/step - accuracy: 0.6291 - loss: 0.8222 - val_accuracy: 0.7677 - val_loss: 0.5664
-[1m614/614[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m2s[0m 3ms/step - accuracy: 0.7834 - loss: 0.5510
+[1m6867/6867[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m49s[0m 7ms/step - accuracy: 0.5944 - loss: 0.8679 - val_accuracy: 0.7645 - val_loss: 0.5811
+[1m614/614[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m2s[0m 3ms/step - accuracy: 0.7676 - loss: 0.5742
 
-[0.5623738169670105, 0.7759568691253662]
+[0.5850245356559753, 0.762723982334137]
 
 ```
 </div>
-This time, we achieve around 72% validation accuracy on both the validation and test
-splits after just one epoch, which is quite impressive!
-
-Now, let's see if we can further improve the model by using a learning rate scheduler.
+Just tweaking the learning rate alone was not enough to boost performance, which
+stayed right around 76%. Let's try again, but this time with
+`keras.optimizers.AdamW`, and a learning rate schedule.
 
 
 ```python
@@ -292,7 +291,7 @@ warmup_steps = int(total_steps * 0.2)
 bert_classifier.compile(
     loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
     optimizer=keras.optimizers.AdamW(
-        TriangularSchedule(0.001, warmup_steps, total_steps)
+        TriangularSchedule(1e-4, warmup_steps, total_steps)
     ),
     metrics=["accuracy"],
 )
@@ -303,19 +302,18 @@ bert_classifier.fit(train_ds, validation_data=val_ds, epochs=epochs)
 <div class="k-default-codeblock">
 ```
 Epoch 1/3
-[1m6867/6867[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m49s[0m 7ms/step - accuracy: 0.5692 - loss: 0.9046 - val_accuracy: 0.6447 - val_loss: 0.8326
+[1m6867/6867[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m49s[0m 7ms/step - accuracy: 0.5340 - loss: 0.9392 - val_accuracy: 0.7620 - val_loss: 0.5826
 Epoch 2/3
-[1m6867/6867[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m46s[0m 7ms/step - accuracy: 0.6456 - loss: 0.8291 - val_accuracy: 0.7090 - val_loss: 0.7116
+[1m6867/6867[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m46s[0m 7ms/step - accuracy: 0.7314 - loss: 0.6511 - val_accuracy: 0.7871 - val_loss: 0.5338
 Epoch 3/3
-[1m6867/6867[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m46s[0m 7ms/step - accuracy: 0.7070 - loss: 0.7124 - val_accuracy: 0.7333 - val_loss: 0.6597
+[1m6867/6867[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m46s[0m 7ms/step - accuracy: 0.7719 - loss: 0.5683 - val_accuracy: 0.7913 - val_loss: 0.5251
 
-<keras_core.src.callbacks.history.History at 0x7f14ec34d570>
+<keras_core.src.callbacks.history.History at 0x7fc5d069b850>
 
 ```
 </div>
-Great! With the learning rate scheduler and the `AdamW` optimizer, our validation
-accuracy improved to around 79% within one epoch, and it hiked to 86% in three
-epochs.
+Success! With the learning rate scheduler and the `AdamW` optimizer, our validation
+accuracy improved to around 79%.
 
 Now, let's evaluate our final model on the test set and see how it performs.
 
@@ -326,9 +324,9 @@ bert_classifier.evaluate(test_ds)
 
 <div class="k-default-codeblock">
 ```
-[1m614/614[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m2s[0m 3ms/step - accuracy: 0.7292 - loss: 0.6692
+[1m614/614[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m2s[0m 3ms/step - accuracy: 0.7963 - loss: 0.5189
 
-[0.6788273453712463, 0.725366473197937]
+[0.5268478393554688, 0.791530966758728]
 
 ```
 </div>
@@ -358,9 +356,9 @@ restored_model.evaluate(test_ds)
 /home/matt/miniconda3/envs/gpu/lib/python3.10/site-packages/keras_core/src/saving/saving_lib.py:338: UserWarning: Skipping variable loading for optimizer 'adam', because it has 2 variables whereas the saved optimizer has 83 variables. 
   trackable.load_own_variables(weights_store.get(inner_path))
 
-[1m614/614[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m3s[0m 4ms/step - loss: 0.6692 - sparse_categorical_accuracy: 0.7292
+[1m614/614[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m3s[0m 4ms/step - loss: 0.5189 - sparse_categorical_accuracy: 0.7963
 
-[0.6788273453712463, 0.725366473197937]
+[0.5268478393554688, 0.791530966758728]
 
 ```
 </div>
@@ -413,7 +411,7 @@ predictions = softmax(predictions)
 
 <div class="k-default-codeblock">
 ```
-[1m1/1[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m1s[0m 702ms/step
+[1m1/1[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m1s[0m 734ms/step
 
 ```
 </div>
