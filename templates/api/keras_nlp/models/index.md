@@ -9,7 +9,7 @@ These models can be created in two ways:
 
 Below, we list all presets available in the library. For more detailed usage,
 browse the docstring for a particular class. For an in depth introduction
-to our API, see the [getting started guide](guides/keras_nlp/getting_started/).
+to our API, see the [getting started guide](/guides/keras_nlp/getting_started/).
 
 ## Backbone presets
 

@@ -74,6 +74,14 @@ KERAS_CORE_MASTER = {
                     "path": "distributed_training_with_tensorflow",
                     "title": "Distributed training with TensorFlow",
                 },
+                {
+                    "path": "distributed_training_with_jax",
+                    "title": "Distributed training with JAX",
+                },
+                {
+                    "path": "distributed_training_with_torch",
+                    "title": "Distributed training with PyTorch",
+                },
             ],
         },
         KERAS_CORE_API_MASTER,
