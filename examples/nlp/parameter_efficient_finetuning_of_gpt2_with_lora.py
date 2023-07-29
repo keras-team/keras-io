@@ -37,9 +37,12 @@ training time and GPU memory usage.
 ## Setup
 
 Before we start implementing the pipeline, let's install and import all the
-libraries we need. We'll be using the KerasNLP library. Also, let's choose
-a backend. We'll be going with Jax. The available options are "tensorflow",
-"jax" and "torch".
+libraries we need. We'll be using the KerasNLP library.
+
+This examples uses [Keras Core](https://keras.io/keras_core/) to work in any of
+`"tensorflow"`, `"jax"` or `"torch"`. Support for Keras Core is baked into
+KerasNLP, simply change the `"KERAS_BACKEND"` environment variable to select
+the backend of your choice. We select the JAX backend below.
 """
 
 """shell
@@ -48,7 +51,11 @@ pip install keras-nlp nvidia-ml-py3 -q
 
 import os
 
-os.environ["KERAS_BACKEND"] = "jax"
+os.environ["KERAS_BACKEND"] = "jax"  # or "tensorflow" or "jax"
+
+# Prevent tensorflow from allocating all available memory so we can
+# monitor memory usage growth in this guide.
+os.environ["TF_FORCE_GPU_ALLOW_GROWTH"] = "true"
 
 import nvidia_smi
 
@@ -60,19 +67,6 @@ import time
 
 import keras_core as keras
 
-
-"""
-Before we move on, one thing we should do is "turn on the memory growth" so that
-memory is dynamically allocated to processes at runtime.
-This will allow us to make a fairer comparison between GPT-2 and LoRA.
-"""
-
-gpu = tf.config.list_physical_devices("GPU")[0]
-try:
-    tf.config.experimental.set_visible_devices(gpu, "GPU")
-except RuntimeError as e:
-    # Memory growth must be set before GPUs have been initialized
-    print(e)
 
 """
 Let's also define our hyperparameters.
@@ -136,8 +130,7 @@ classes.
 ### Callback for tracking GPU memory usage
 
 We'll define a custom callback function which tracks GPU memory usage. The
-callback function uses TensorFlow's `tf.config.experimental.get_memory_info`
-API.
+callback function uses NVIDIA's Python wrapper.
 
 Here, we assume that we are using a single GPU, `GPU:0`.
 """
@@ -440,16 +433,12 @@ We will now hack the original GPT-2 model and inject LoRA layers into it. Let's
 do a couple of things before doing that:
 
 - Delete previous model;
-- Reset "peak" GPU memory usage using `tf.config.experimental.reset_memory_stats`;
 - Load a new GPT-2 model.
 """
 
 del gpt2_lm
 del optimizer
 del loss
-
-# This resets "peak" memory usage to "current" memory usage.
-# tf.config.experimental.reset_memory_stats("GPU:0")
 
 # Load the original model.
 preprocessor = keras_nlp.models.GPT2CausalLMPreprocessor.from_preset(
