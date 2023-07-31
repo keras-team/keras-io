@@ -31,8 +31,8 @@ acceptable score is reached or some other business metric is met.
 This tutorial provides a basic demonstration of how Active Learning works by
 demonstrating a ratio-based (least confidence) sampling strategy that results in lower
 overall false positive and negative rates when compared to a model trained on the entire
-dataset. This sampling falls under the domain of *uncertanity sampling*, in which new
-datasets are sampled based on the uncertanity that the model outputs for the
+dataset. This sampling falls under the domain of *uncertainty sampling*, in which new
+datasets are sampled based on the uncertainty that the model outputs for the
 corresponding label. In our example, we compare our model's false positive and false
 negative rates and annotate the new data based on their ratio.
 
@@ -207,6 +207,7 @@ test_dataset = test_dataset.batch(256).map(
 ## Creating Helper Functions
 """
 
+
 # Helper function for merging new history objects with older ones
 def append_history(losses, val_losses, accuracy, val_accuracy, history):
     losses = losses + history.history["loss"]
@@ -368,7 +369,6 @@ def train_active_learning_models(
     num_iterations=3,
     sampling_size=5000,
 ):
-
     # Creating lists for storing metrics
     losses, val_losses, accuracies, val_accuracies = [], [], [], []
 

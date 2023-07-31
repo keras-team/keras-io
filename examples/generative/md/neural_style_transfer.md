@@ -3,7 +3,7 @@
 **Author:** [fchollet](https://twitter.com/fchollet)<br>
 **Date created:** 2016/01/11<br>
 **Last modified:** 2020/05/02<br>
-**Description:** Transfering the style of a reference image to target image using gradient descent.
+**Description:** Transferring the style of a reference image to target image using gradient descent.
 
 
 <img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/generative/ipynb/neural_style_transfer.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/generative/neural_style_transfer.py)
@@ -58,7 +58,7 @@ style_weight = 1e-6
 content_weight = 2.5e-8
 
 # Dimensions of the generated picture.
-width, height = keras.preprocessing.image.load_img(base_image_path).size
+width, height = keras.utils.load_img(base_image_path).size
 img_nrows = 400
 img_ncols = int(width * img_nrows / height)
 ```
@@ -105,10 +105,10 @@ display(Image(style_reference_image_path))
 
 def preprocess_image(image_path):
     # Util function to open, resize and format pictures into appropriate tensors
-    img = keras.preprocessing.image.load_img(
+    img = keras.utils.load_img(
         image_path, target_size=(img_nrows, img_ncols)
     )
-    img = keras.preprocessing.image.img_to_array(img)
+    img = keras.utils.img_to_array(img)
     img = np.expand_dims(img, axis=0)
     img = vgg19.preprocess_input(img)
     return tf.convert_to_tensor(img)
@@ -309,7 +309,7 @@ for i in range(1, iterations + 1):
         print("Iteration %d: loss=%.2f" % (i, loss))
         img = deprocess_image(combination_image.numpy())
         fname = result_prefix + "_at_iteration_%d.png" % i
-        keras.preprocessing.image.save_img(fname, img)
+        keras.utils.save_img(fname, img)
 ```
 
 <div class="k-default-codeblock">
@@ -371,6 +371,6 @@ display(Image(result_prefix + "_at_iteration_4000.png"))
 
 
 **Example available on HuggingFace**
-| Trained Model | Demo |
-| :--: | :--: |
-| [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Model-Neural%20style%20transfer-black.svg)](https://huggingface.co/keras-io/VGG19) | [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Spaces-Neural%20style%20transfer-black.svg)](https://huggingface.co/spaces/keras-io/neural-style-transfer) |
+Trained Model | Demo 
+--- | --- 
+[![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Model-Neural%20style%20transfer-black.svg)](https://huggingface.co/keras-io/VGG19) | [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Spaces-Neural%20style%20transfer-black.svg)](https://huggingface.co/spaces/keras-io/neural-style-transfer) 

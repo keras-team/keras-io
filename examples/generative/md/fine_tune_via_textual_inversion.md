@@ -50,7 +50,6 @@ StableDiffusion instance so we can use some of its subcomponents for fine-tuning
 
 ```python
 import math
-import random
 
 import keras_cv
 import numpy as np

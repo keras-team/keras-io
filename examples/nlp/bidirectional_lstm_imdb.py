@@ -44,8 +44,8 @@ print(len(x_train), "Training sequences")
 print(len(x_val), "Validation sequences")
 # Use pad_sequence to standardize sequence length:
 # this will truncate sequences longer than 200 words and zero-pad sequences shorter than 200 words.
-x_train = keras.preprocessing.sequence.pad_sequences(x_train, maxlen=maxlen)
-x_val = keras.preprocessing.sequence.pad_sequences(x_val, maxlen=maxlen)
+x_train = keras.utils.pad_sequences(x_train, maxlen=maxlen)
+x_val = keras.utils.pad_sequences(x_val, maxlen=maxlen)
 
 """
 ## Train and evaluate the model

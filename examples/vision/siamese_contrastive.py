@@ -37,7 +37,7 @@ import matplotlib.pyplot as plt
 
 epochs = 10
 batch_size = 16
-margin = 1  # Margin for constrastive loss.
+margin = 1  # Margin for contrastive loss.
 
 """
 ## Load the MNIST dataset
@@ -207,7 +207,6 @@ def visualize(pairs, labels, to_show=6, num_col=3, predictions=None, test=False)
     # Plot the images
     fig, axes = plt.subplots(num_row, num_col, figsize=(5, 5))
     for i in range(to_show):
-
         # If the number of rows is 1, the axes array is one-dimensional
         if num_row == 1:
             ax = axes[i % num_col]
@@ -253,6 +252,7 @@ produces embeddings. A `Lambda` layer then merges them using an
 [Euclidean distance](https://en.wikipedia.org/wiki/Euclidean_distance) and the
 merged output is fed to the final network.
 """
+
 
 # Provided two tensors t1 and t2
 # Euclidean distance = sqrt(sum(square(t1-t2)))
@@ -301,25 +301,25 @@ siamese = keras.Model(inputs=[input_1, input_2], outputs=output_layer)
 
 
 """
-## Define the constrastive Loss
+## Define the contrastive Loss
 """
 
 
 def loss(margin=1):
-    """Provides 'constrastive_loss' an enclosing scope with variable 'margin'.
+    """Provides 'contrastive_loss' an enclosing scope with variable 'margin'.
 
     Arguments:
         margin: Integer, defines the baseline for distance for which pairs
                 should be classified as dissimilar. - (default is 1).
 
     Returns:
-        'constrastive_loss' function with data ('margin') attached.
+        'contrastive_loss' function with data ('margin') attached.
     """
 
     # Contrastive loss = mean( (1-true_value) * square(prediction) +
     #                         true_value * square( max(margin-prediction, 0) ))
     def contrastive_loss(y_true, y_pred):
-        """Calculates the constrastive loss.
+        """Calculates the contrastive loss.
 
         Arguments:
             y_true: List of labels, each label is of type float32.
@@ -327,7 +327,7 @@ def loss(margin=1):
                     each label is of type float32.
 
         Returns:
-            A tensor containing constrastive loss as floating point value.
+            A tensor containing contrastive loss as floating point value.
         """
 
         square_pred = tf.math.square(y_pred)
@@ -389,8 +389,8 @@ def plt_metric(history, metric, title, has_valid=True):
 # Plot the accuracy
 plt_metric(history=history.history, metric="accuracy", title="Model accuracy")
 
-# Plot the constrastive loss
-plt_metric(history=history.history, metric="loss", title="Constrastive Loss")
+# Plot the contrastive loss
+plt_metric(history=history.history, metric="loss", title="Contrastive Loss")
 
 """
 ## Evaluate the model

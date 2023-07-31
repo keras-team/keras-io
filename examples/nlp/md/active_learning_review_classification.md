@@ -35,8 +35,8 @@ acceptable score is reached or some other business metric is met.
 This tutorial provides a basic demonstration of how Active Learning works by
 demonstrating a ratio-based (least confidence) sampling strategy that results in lower
 overall false positive and negative rates when compared to a model trained on the entire
-dataset. This sampling falls under the domain of *uncertanity sampling*, in which new
-datasets are sampled based on the uncertanity that the model outputs for the
+dataset. This sampling falls under the domain of *uncertainty sampling*, in which new
+datasets are sampled based on the uncertainty that the model outputs for the
 corresponding label. In our example, we compare our model's false positive and false
 negative rates and annotate the new data based on their ratio.
 

@@ -28,7 +28,7 @@ The following resources can be helpful if you're looking for more information in
 It's highly recommended that you use a GPU with at least 30GB of memory to execute
 the code.
 
-By the end of the guide, you'll be able to generate images of interesting pokemons:
+By the end of the guide, you'll be able to generate images of interesting Pokémon:
 
 ![custom-pokemons](https://i.imgur.com/X4m614M.png)
 
@@ -228,7 +228,7 @@ RESOLUTION = 256
 AUTO = tf.data.AUTOTUNE
 POS_IDS = tf.convert_to_tensor([list(range(MAX_PROMPT_LENGTH))], dtype=tf.int32)
 
-augmenter = keras_cv.layers.Augmenter(
+augmenter = keras.Sequential(
     layers=[
         keras_cv.layers.CenterCrop(RESOLUTION, RESOLUTION),
         keras_cv.layers.RandomFlip(),

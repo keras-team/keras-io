@@ -7,6 +7,8 @@ import inspect
 import importlib
 import itertools
 
+import render_tags
+
 
 class TFKerasDocumentationGenerator:
     def __init__(self, project_url=None):
@@ -56,6 +58,7 @@ class TFKerasDocumentationGenerator:
         if doctest_lines:
             flush_docstest(usable_lines, doctest_lines)
         docstring = "\n".join(usable_lines)
+
         return process_docstring(docstring)
 
     def process_signature(self, signature):
@@ -74,9 +77,9 @@ class TFKerasDocumentationGenerator:
         else:
             signature_override = None
             object_ = element
-        return self.render_from_object(object_, signature_override)
+        return self.render_from_object(object_, signature_override, element)
 
-    def render_from_object(self, object_, signature_override: str):
+    def render_from_object(self, object_, signature_override: str, element):
         subblocks = []
         source_link = make_source_link(object_, self.project_url)
         if source_link is not None:
@@ -90,6 +93,11 @@ class TFKerasDocumentationGenerator:
         if docstring:
             docstring = self.process_docstring(docstring)
             subblocks.append(docstring)
+        # Render preset table for KerasCV and KerasNLP
+        if element.endswith("from_preset"):
+            table = render_tags.render_table(import_object(element.rsplit(".", 1)[0]))
+            if table is not None:
+                subblocks.append(table)
         return "\n\n".join(subblocks) + "\n\n----\n\n"
 
 
@@ -133,6 +141,8 @@ def make_source_link(cls, project_url):
             f"current imported package version {module_version}"
         )
     path = cls.__module__.replace(".", "/")
+    if base_module in ("keras_nlp", "keras_core", "keras"):
+        path = path.replace("/src/", "/")
     line = inspect.getsourcelines(cls)[-1]
     return (
         f'<span style="float:right;">'
@@ -167,6 +177,12 @@ def get_name(object_) -> str:
     return object_.__name__
 
 
+def get_function_name(function):
+    if hasattr(function, "__wrapped__"):
+        return get_function_name(function.__wrapped__)
+    return function.__name__
+
+
 def get_signature_start(function):
     """For the Dense layer, it should return the string 'keras.layers.Dense'"""
     if ismethod(function):
@@ -180,7 +196,7 @@ def get_signature_start(function):
                 f"It will not be included in the signature."
             )
             prefix = ""
-    return f"{prefix}{function.__name__}"
+    return f"{prefix}{get_function_name(function)}"
 
 
 def get_signature_end(function):
@@ -334,6 +350,7 @@ def reinject_strings(target, strings_to_inject):
 def process_docstring(docstring):
     if docstring[-1] != "\n":
         docstring += "\n"
+
     google_style_sections, docstring = get_google_style_sections(docstring)
     for token, google_style_section in google_style_sections.items():
         markdown_section = to_markdown(google_style_section)

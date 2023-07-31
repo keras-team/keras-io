@@ -55,6 +55,7 @@ import keras_cv
 from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy as np
+from tensorflow import keras
 from tensorflow.keras import layers
 from tabulate import tabulate
 import tensorflow_similarity as tfsim  # main package
@@ -200,7 +201,7 @@ contrast_factor = 0.8
 saturation_factor = (0.3, 0.7)
 hue_factor = 0.2
 
-augmenter = keras_cv.layers.Augmenter(
+augmenter = keras.Sequential(
     [
         cv_layers.RandomFlip("horizontal"),
         cv_layers.RandomCropAndResize(
@@ -208,10 +209,10 @@ augmenter = keras_cv.layers.Augmenter(
             crop_area_factor=crop_area_factor,
             aspect_ratio_factor=aspect_ratio_factor,
         ),
-        cv_layers.MaybeApply(
+        cv_layers.RandomApply(
             cv_layers.Grayscale(output_channels=3), rate=grayscale_rate
         ),
-        cv_layers.MaybeApply(
+        cv_layers.RandomApply(
             cv_layers.RandomColorJitter(
                 value_range=(0, 255),
                 brightness_factor=brightness_factor,
@@ -519,7 +520,7 @@ allow us to evaluate the quality of our learned representation.  First, we handl
 loading:
 """
 
-eval_augmenter = keras_cv.layers.Augmenter(
+eval_augmenter = keras.Sequential(
     [
         keras_cv.layers.RandomCropAndResize(
             (96, 96), crop_area_factor=(0.8, 1.0), aspect_ratio_factor=(1.0, 1.0)

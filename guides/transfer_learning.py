@@ -12,7 +12,7 @@ Accelerator: GPU
 
 import numpy as np
 import tensorflow as tf
-from tensorflow import keras
+import keras
 
 """
 ## Introduction
@@ -381,7 +381,7 @@ learning & fine-tuning example. We will load the Xception model, pre-trained on
 
 First, let's fetch the cats vs. dogs dataset using TFDS. If you have your own dataset,
 you'll probably want to use the utility
-`tf.keras.utils.image_dataset_from_directory` to generate similar labeled
+`keras.utils.image_dataset_from_directory` to generate similar labeled
  dataset objects from a set of images on disk filed into class-specific folders.
 
 Transfer learning is most useful when working with very small datasets. To keep our

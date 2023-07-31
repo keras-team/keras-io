@@ -2,7 +2,7 @@
 
 **Author:** [fchollet](https://twitter.com/fchollet)<br>
 **Date created:** 2020/04/15<br>
-**Last modified:** 2020/04/15<br>
+**Last modified:** 2023/06/14<br>
 **Description:** Complete guide to overriding the training step of the Model class.
 
 
@@ -42,12 +42,13 @@ Let's see how that works.
 
 ---
 ## Setup
-Requires TensorFlow 2.2 or later.
+
+Requires TensorFlow 2.8 or later.
 
 
 ```python
 import tensorflow as tf
-from tensorflow import keras
+import keras
 ```
 
 ---
@@ -69,12 +70,12 @@ what gets yielded by `dataset` at each batch.
 
 In the body of the `train_step` method, we implement a regular training update,
 similar to what you are already familiar with. Importantly, **we compute the loss via
-`self.compiled_loss`**, which wraps the loss(es) function(s) that were passed to
+`self.compute_loss()`**, which wraps the loss(es) function(s) that were passed to
 `compile()`.
 
-Similarly, we call `self.compiled_metrics.update_state(y, y_pred)` to update the state
-of the metrics that were passed in `compile()`, and we query results from
-`self.metrics` at the end to retrieve their current value.
+Similarly, we call `metric.update_state(y, y_pred)` on metrics from `self.metrics`,
+to update the state of the metrics that were passed in `compile()`,
+and we query results from `self.metrics` at the end to retrieve their current value.
 
 
 ```python
@@ -89,7 +90,7 @@ class CustomModel(keras.Model):
             y_pred = self(x, training=True)  # Forward pass
             # Compute the loss value
             # (the loss function is configured in `compile()`)
-            loss = self.compiled_loss(y, y_pred, regularization_losses=self.losses)
+            loss = self.compute_loss(y=y, y_pred=y_pred)
 
         # Compute gradients
         trainable_vars = self.trainable_variables
@@ -97,7 +98,11 @@ class CustomModel(keras.Model):
         # Update weights
         self.optimizer.apply_gradients(zip(gradients, trainable_vars))
         # Update metrics (includes the metric that tracks the loss)
-        self.compiled_metrics.update_state(y, y_pred)
+        for metric in self.metrics:
+            if metric.name == "loss":
+                metric.update_state(loss)
+            else:
+                metric.update_state(y, y_pred)
         # Return a dict mapping metric names to current value
         return {m.name: m.result() for m in self.metrics}
 
@@ -123,15 +128,14 @@ model.fit(x, y, epochs=3)
 
 <div class="k-default-codeblock">
 ```
-Metal device set to: Apple M1 Pro
 Epoch 1/3
-32/32 [==============================] - 0s 4ms/step - loss: 0.6307 - mae: 0.6654
+32/32 [==============================] - 0s 988us/step - loss: 1.3511
 Epoch 2/3
-32/32 [==============================] - 0s 4ms/step - loss: 0.2814 - mae: 0.4246
+32/32 [==============================] - 0s 865us/step - loss: 0.5966
 Epoch 3/3
-32/32 [==============================] - 0s 4ms/step - loss: 0.2329 - mae: 0.3889
+32/32 [==============================] - 0s 981us/step - loss: 0.3255
 
-<keras.callbacks.History at 0x15a357c70>
+<keras.callbacks.History at 0x7f7646eb6190>
 
 ```
 </div>
@@ -141,8 +145,7 @@ Epoch 3/3
 Naturally, you could just skip passing a loss function in `compile()`, and instead do
 everything *manually* in `train_step`. Likewise for metrics.
 
-Here's a lower-level
-example, that only uses `compile()` to configure the optimizer:
+Here's a lower-level example, that only uses `compile()` to configure the optimizer:
 
 - We start by creating `Metric` instances to track our loss and a MAE score (in `__init__()`).
 - We implement a custom `train_step()` that updates the state of these metrics
@@ -212,17 +215,17 @@ model.fit(x, y, epochs=5)
 <div class="k-default-codeblock">
 ```
 Epoch 1/5
-32/32 [==============================] - 0s 4ms/step - loss: 0.2959 - mae: 0.4333
+32/32 [==============================] - 0s 918us/step - loss: 0.7567 - mae: 0.7519
 Epoch 2/5
-32/32 [==============================] - 0s 4ms/step - loss: 0.2715 - mae: 0.4154
+32/32 [==============================] - 0s 901us/step - loss: 0.3224 - mae: 0.4571
 Epoch 3/5
-32/32 [==============================] - 0s 4ms/step - loss: 0.2560 - mae: 0.4040
+32/32 [==============================] - 0s 999us/step - loss: 0.2337 - mae: 0.3865
 Epoch 4/5
-32/32 [==============================] - 0s 4ms/step - loss: 0.2407 - mae: 0.3922
+32/32 [==============================] - 0s 800us/step - loss: 0.2245 - mae: 0.3796
 Epoch 5/5
-32/32 [==============================] - 0s 4ms/step - loss: 0.2266 - mae: 0.3809
+32/32 [==============================] - 0s 746us/step - loss: 0.2210 - mae: 0.3768
 
-<keras.callbacks.History at 0x15b0c5900>
+<keras.callbacks.History at 0x7f7646f8da10>
 
 ```
 </div>
@@ -234,9 +237,9 @@ weighting. If you want to support the `fit()` arguments `sample_weight` and
 `class_weight`, you'd simply do the following:
 
 - Unpack `sample_weight` from the `data` argument
-- Pass it to `compiled_loss` & `compiled_metrics` (of course, you could also just apply
+- Pass it to `compute_loss` & `update_state` (of course, you could also just apply
 it manually if you don't rely on `compile()` for losses & metrics)
-- That's it. That's the list.
+- That's it.
 
 
 ```python
@@ -255,11 +258,10 @@ class CustomModel(keras.Model):
             y_pred = self(x, training=True)  # Forward pass
             # Compute the loss value.
             # The loss function is configured in `compile()`.
-            loss = self.compiled_loss(
-                y,
-                y_pred,
+            loss = self.compute_loss(
+                y=y,
+                y_pred=y_pred,
                 sample_weight=sample_weight,
-                regularization_losses=self.losses,
             )
 
         # Compute gradients
@@ -271,7 +273,11 @@ class CustomModel(keras.Model):
 
         # Update the metrics.
         # Metrics are configured in `compile()`.
-        self.compiled_metrics.update_state(y, y_pred, sample_weight=sample_weight)
+        for metric in self.metrics:
+            if metric.name == "loss":
+                metric.update_state(loss)
+            else:
+                metric.update_state(y, y_pred, sample_weight=sample_weight)
 
         # Return a dict mapping metric names to current value.
         # Note that it will include the loss (tracked in self.metrics).
@@ -294,13 +300,13 @@ model.fit(x, y, sample_weight=sw, epochs=3)
 <div class="k-default-codeblock">
 ```
 Epoch 1/3
-32/32 [==============================] - 0s 5ms/step - loss: 0.1557 - mae: 0.4389
+32/32 [==============================] - 0s 930us/step - loss: 0.2296
 Epoch 2/3
-32/32 [==============================] - 0s 4ms/step - loss: 0.1320 - mae: 0.4063
+32/32 [==============================] - 0s 834us/step - loss: 0.1305
 Epoch 3/3
-32/32 [==============================] - 0s 4ms/step - loss: 0.1264 - mae: 0.3978
+32/32 [==============================] - 0s 890us/step - loss: 0.1230
 
-<keras.callbacks.History at 0x15d23b3a0>
+<keras.callbacks.History at 0x7f764415a890>
 
 ```
 </div>
@@ -320,9 +326,11 @@ class CustomModel(keras.Model):
         # Compute predictions
         y_pred = self(x, training=False)
         # Updates the metrics tracking the loss
-        self.compiled_loss(y, y_pred, regularization_losses=self.losses)
+        self.compute_loss(y=y, y_pred=y_pred)
         # Update the metrics.
-        self.compiled_metrics.update_state(y, y_pred)
+        for metric in self.metrics:
+            if metric.name != "loss":
+                metric.update_state(y, y_pred)
         # Return a dict mapping metric names to current value.
         # Note that it will include the loss (tracked in self.metrics).
         return {m.name: m.result() for m in self.metrics}
@@ -342,9 +350,9 @@ model.evaluate(x, y)
 
 <div class="k-default-codeblock">
 ```
-32/32 [==============================] - 0s 3ms/step - loss: 0.4079 - mae: 0.5194
+32/32 [==============================] - 0s 756us/step - loss: 0.3405
 
-[0.40791139006614685, 0.5194447636604309]
+0.34045735001564026
 
 ```
 </div>
@@ -500,9 +508,9 @@ gan.fit(dataset.take(100), epochs=1)
 
 <div class="k-default-codeblock">
 ```
-100/100 [==============================] - 9s 67ms/step - d_loss: 0.4685 - g_loss: 0.9918
+100/100 [==============================] - 36s 348ms/step - d_loss: 0.4120 - g_loss: 0.8394
 
-<keras.callbacks.History at 0x15d24c700>
+<keras.callbacks.History at 0x7f7634678f90>
 
 ```
 </div>

@@ -38,7 +38,7 @@ input_shape = (28, 28, 1)
 n_residual_blocks = 5
 # The data, split between train and test sets
 (x, _), (y, _) = keras.datasets.mnist.load_data()
-# Concatenate all of the images together
+# Concatenate all the images together
 data = np.concatenate((x, y), axis=0)
 # Round all pixel values less than 33% of the max 256 value to 0
 # anything above this value gets rounded up to 1 so that all values are either
@@ -49,6 +49,7 @@ data = data.astype(np.float32)
 """
 ## Create two classes for the requisite Layers for the model
 """
+
 
 # The first layer is the PixelCNN layer. This layer simply
 # builds on the 2D convolutional layer, but includes masking.
@@ -179,7 +180,7 @@ def deprocess_image(x):
 
 # Iterate over the generated images and plot them with matplotlib.
 for i, pic in enumerate(pixels):
-    keras.preprocessing.image.save_img(
+    keras.utils.save_img(
         "generated_image_{}.png".format(i), deprocess_image(np.squeeze(pic, -1))
     )
 

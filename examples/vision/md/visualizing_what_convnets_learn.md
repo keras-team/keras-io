@@ -157,7 +157,7 @@ Let's try it out with filter 0 in the target layer:
 from IPython.display import Image, display
 
 loss, img = visualize_filter(0)
-keras.preprocessing.image.save_img("0.png", img)
+keras.utils.save_img("0.png", img)
 ```
 
 This is what an input that maximizes the response of filter 0 in the target layer would
@@ -211,7 +211,7 @@ for i in range(n):
             + cropped_height,
             :,
         ] = img
-keras.preprocessing.image.save_img("stiched_filters.png", stitched_filters)
+keras.utils.save_img("stiched_filters.png", stitched_filters)
 
 from IPython.display import Image, display
 

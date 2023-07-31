@@ -2,7 +2,7 @@
 Title: Understanding masking & padding
 Authors: Scott Zhu, Francois Chollet
 Date created: 2019/07/16
-Last modified: 2020/04/14
+Last modified: 2023/07/10
 Description: Complete guide to using mask-aware sequence layers in Keras.
 Accelerator: None
 """
@@ -11,8 +11,8 @@ Accelerator: None
 """
 import numpy as np
 import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras import layers
+import keras
+from keras import layers
 
 """
 ## Introduction
@@ -75,9 +75,7 @@ raw_inputs = [
 # We recommend using "post" padding when working with RNN layers
 # (in order to be able to use the
 # CuDNN implementation of the layers).
-padded_inputs = tf.keras.utils.pad_sequences(
-    raw_inputs, padding="post"
-)
+padded_inputs = tf.keras.utils.pad_sequences(raw_inputs, padding="post")
 print(padded_inputs)
 
 
@@ -269,7 +267,7 @@ mask = layer.compute_mask(x)
 print(mask)
 
 """
-Note: For more details about format limitations related to masking, see the 
+Note: For more details about format limitations related to masking, see the
 [serialization guide](/guides/serialization_and_saving).
 """
 
@@ -292,6 +290,7 @@ Here's an example of a layer that is whitelisted for mask propagation:
 """
 
 
+@keras.saving.register_keras_serializable()
 class MyActivation(keras.layers.Layer):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -331,6 +330,7 @@ Here's a simple example below: a layer that computes a softmax over the time dim
 """
 
 
+@keras.saving.register_keras_serializable()
 class TemporalSoftmax(keras.layers.Layer):
     def call(self, inputs, mask=None):
         broadcast_float_mask = tf.expand_dims(tf.cast(mask, "float32"), -1)

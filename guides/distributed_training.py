@@ -45,7 +45,7 @@ training high-resolution image classification models on tens of millions of imag
 """
 
 import tensorflow as tf
-from tensorflow import keras
+import keras
 
 """
 ## Single-host, multi-device synchronous training

@@ -852,7 +852,7 @@ class MyTuner(keras_tuner.RandomSearch):
         return keras_code(
             units=hp.Int("units", 32, 128, 32),
             optimizer=hp.Choice("optimizer", ["adam", "adadelta"]),
-            saving_path=os.path.join("/tmp", trial.trial_id),
+            saving_path=os.path.join("/tmp", f"{trial.trial_id}.keras"),
         )
 
 
@@ -865,7 +865,7 @@ tuner = MyTuner(
 tuner.search()
 # Retraining the model
 best_hp = tuner.get_best_hyperparameters()[0]
-keras_code(**best_hp.values, saving_path="/tmp/best_model")
+keras_code(**best_hp.values, saving_path="/tmp/best_model.keras")
 
 """
 ## KerasTuner includes pre-made tunable applications: HyperResNet and HyperXception

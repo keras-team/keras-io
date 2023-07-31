@@ -18,9 +18,10 @@ import numpy as np
 """
 ## Usage of endpoint layers in the Functional API
 
-An "endpoint layer" has access to the model's targets, and creates arbitrary losses and
-metrics using `add_loss` and `add_metric`. This enables you to define losses and
- metrics that don't match the usual signature `fn(y_true, y_pred, sample_weight=None)`.
+An "endpoint layer" has access to the model's targets, and creates arbitrary losses
+in `call()` using `self.add_loss()` and `Metric.update_state()`.
+This enables you to define losses and
+metrics that don't match the usual signature `fn(y_true, y_pred, sample_weight=None)`.
 
 Note that you could have separate metrics for training and eval with this pattern.
 """
@@ -30,7 +31,7 @@ class LogisticEndpoint(keras.layers.Layer):
     def __init__(self, name=None):
         super().__init__(name=name)
         self.loss_fn = keras.losses.BinaryCrossentropy(from_logits=True)
-        self.accuracy_fn = keras.metrics.BinaryAccuracy(name="accuracy")
+        self.accuracy_metric = keras.metrics.BinaryAccuracy(name="accuracy")
 
     def call(self, logits, targets=None, sample_weight=None):
         if targets is not None:
@@ -40,8 +41,8 @@ class LogisticEndpoint(keras.layers.Layer):
             self.add_loss(loss)
 
             # Log the accuracy as a metric (we could log arbitrary metrics,
-            # including different metrics for training and inference.
-            self.add_metric(self.accuracy_fn(targets, logits, sample_weight))
+            # including different metrics for training and inference.)
+            self.accuracy_metric.update_state(targets, logits, sample_weight)
 
         # Return the inference-time prediction tensor (for `.predict()`).
         return tf.nn.softmax(logits)

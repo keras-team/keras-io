@@ -4,12 +4,16 @@ CV_GUIDES_MASTER = {
     "toc": True,
     "children": [
         {
-            "path": "cut_mix_mix_up_and_rand_augment",
-            "title": "CutMix, MixUp, and RandAugment image augmentation with KerasCV",
+            "path": "object_detection_keras_cv",
+            "title": "Use KerasCV to assemble object detection pipelines",
         },
         {
-            "path": "retina_net_overview",
-            "title": "Train an Object Detection Model on Pascal VOC 2007 using KerasCV",
+            "path": "classification_with_keras_cv",
+            "title": "Use KerasCV to train powerful image classifiers.",
+        },
+        {
+            "path": "cut_mix_mix_up_and_rand_augment",
+            "title": "CutMix, MixUp, and RandAugment image augmentation with KerasCV",
         },
         {
             "path": "generate_images_with_stable_diffusion",

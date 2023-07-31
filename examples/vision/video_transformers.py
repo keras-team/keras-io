@@ -187,9 +187,7 @@ def prepare_all_videos(df, root_dir):
                 else:
                     temp_frame_features[i, j, :] = 0.0
 
-        frame_features[
-            idx,
-        ] = temp_frame_features.squeeze()
+        frame_features[idx,] = temp_frame_features.squeeze()
 
     return frame_features, labels
 

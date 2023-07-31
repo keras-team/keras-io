@@ -518,7 +518,6 @@ class PartitionPadding(layers.Layer):
         self.batch_size = batch_size
 
     def call(self, inputs):
-
         atom_features, molecule_indicator = inputs
 
         # Obtain subgraphs
@@ -589,7 +588,6 @@ def MPNNModel(
     num_attention_heads=8,
     dense_units=512,
 ):
-
     atom_features = layers.Input((atom_dim), dtype="float32", name="atom_features")
     bond_features = layers.Input((bond_dim), dtype="float32", name="bond_features")
     pair_indices = layers.Input((2), dtype="int32", name="pair_indices")

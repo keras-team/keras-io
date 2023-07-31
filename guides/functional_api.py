@@ -2,7 +2,7 @@
 Title: The Functional API
 Author: [fchollet](https://twitter.com/fchollet)
 Date created: 2019/03/01
-Last modified: 2020/04/12
+Last modified: 2020/07/10
 Description: Complete guide to the functional API.
 Accelerator: GPU
 """
@@ -12,14 +12,14 @@ Accelerator: GPU
 
 import numpy as np
 import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras import layers
+import keras
+from keras import layers
 
 """
 ## Introduction
 
 The Keras *functional API* is a way to create models that are more flexible
-than the `tf.keras.Sequential` API. The functional API can handle models
+than the `keras.Sequential` API. The functional API can handle models
 with non-linear topology, shared layers, and even multiple inputs or outputs.
 
 The main idea is that a deep learning model is usually
@@ -151,7 +151,7 @@ x_test = x_test.reshape(10000, 784).astype("float32") / 255
 model.compile(
     loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
     optimizer=keras.optimizers.RMSprop(),
-    metrics=["accuracy"],
+    metrics=[keras.metrics.SparseCategoricalAccuracy()],
 )
 
 history = model.fit(x_train, y_train, batch_size=64, epochs=2, validation_split=0.2)
@@ -180,10 +180,10 @@ This saved file includes the:
 - optimizer and its state, if any (to restart training where you left off)
 """
 
-model.save("path_to_my_model")
+model.save("path_to_my_model.keras")
 del model
 # Recreate the exact same model purely from the file:
-model = keras.models.load_model("path_to_my_model")
+model = keras.models.load_model("path_to_my_model.keras")
 
 """
 For details, read the model [serialization & saving](
@@ -528,7 +528,7 @@ which is very useful for something like feature extraction.
 Let's look at an example. This is a VGG19 model with weights pretrained on ImageNet:
 """
 
-vgg19 = tf.keras.applications.VGG19()
+vgg19 = keras.applications.VGG19()
 
 """
 And these are the intermediate activations of the model,
@@ -556,7 +556,7 @@ among other things.
 """
 ## Extend the API using custom layers
 
-`tf.keras` includes a wide range of built-in layers, for example:
+`keras` includes a wide range of built-in layers, for example:
 
 - Convolutional layers: `Conv1D`, `Conv2D`, `Conv3D`, `Conv2DTranspose`
 - Pooling layers: `MaxPooling1D`, `MaxPooling2D`, `MaxPooling3D`, `AveragePooling1D`
@@ -573,7 +573,7 @@ convention since you can create weights in `__init__`, as well).
 To learn more about creating layers from scratch, read
 [custom layers and models](/guides/making_new_layers_and_models_via_subclassing) guide.
 
-The following is a basic implementation of `tf.keras.layers.Dense`:
+The following is a basic implementation of `keras.layers.Dense`:
 """
 
 
@@ -607,6 +607,7 @@ method that returns the constructor arguments of the layer instance:
 """
 
 
+@keras.saving.register_keras_serializable()
 class CustomDense(layers.Layer):
     def __init__(self, units=32):
         super().__init__()
@@ -635,7 +636,7 @@ outputs = CustomDense(10)(inputs)
 model = keras.Model(inputs, outputs)
 config = model.get_config()
 
-new_model = keras.Model.from_config(config, custom_objects={"CustomDense": CustomDense})
+new_model = keras.Model.from_config(config)
 
 """
 Optionally, implement the class method `from_config(cls, config)` which is used
@@ -757,7 +758,7 @@ be implemented in the functional API.
 
 Choosing between the functional API or Model subclassing isn't a
 binary decision that restricts you into one category of models.
-All models in the `tf.keras` API can interact with each other, whether they're
+All models in the `keras` API can interact with each other, whether they're
 `Sequential` models, functional models, or subclassed models that are written
 from scratch.
 
@@ -776,6 +777,7 @@ outputs = layers.Dense(1)(x)
 model = keras.Model(inputs, outputs)
 
 
+@keras.saving.register_keras_serializable()
 class CustomRNN(layers.Layer):
     def __init__(self):
         super().__init__()
@@ -830,6 +832,7 @@ input_dim = 5
 batch_size = 16
 
 
+@keras.saving.register_keras_serializable()
 class CustomRNN(layers.Layer):
     def __init__(self):
         super().__init__()

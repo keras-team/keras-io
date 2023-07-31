@@ -309,10 +309,8 @@ We get to >90% validation accuracy after training for 25 epochs on the full data
 Note that data augmentation and dropout are inactive at inference time.
 """
 
-img = keras.preprocessing.image.load_img(
-    "PetImages/Cat/6779.jpg", target_size=image_size
-)
-img_array = keras.preprocessing.image.img_to_array(img)
+img = keras.utils.load_img("PetImages/Cat/6779.jpg", target_size=image_size)
+img_array = keras.utils.img_to_array(img)
 img_array = tf.expand_dims(img_array, 0)  # Create batch axis
 
 predictions = model.predict(img_array)

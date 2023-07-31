@@ -2,7 +2,7 @@
 Title: Working with RNNs
 Authors: Scott Zhu, Francois Chollet
 Date created: 2019/07/08
-Last modified: 2020/04/14
+Last modified: 2023/07/10
 Description: Complete guide to using & customizing RNN layers.
 Accelerator: GPU
 """
@@ -35,8 +35,8 @@ prototype different research ideas in a flexible way with minimal code.
 
 import numpy as np
 import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras import layers
+import keras
+from keras import layers
 
 """
 ## Built-in RNN layers: a simple example
@@ -366,6 +366,7 @@ input_dim = 28
 units = 64
 output_size = 10  # labels are from 0 to 9
 
+
 # Build the RNN model
 def build_model(allow_cudnn_kernel=True):
     # CuDNN is only available at the layer level, and not at the cell level.
@@ -489,6 +490,7 @@ for details on writing your own layers.
 """
 
 
+@keras.saving.register_keras_serializable()
 class NestedCell(keras.layers.Layer):
     def __init__(self, unit_1, unit_2, unit_3, **kwargs):
         self.unit_1 = unit_1

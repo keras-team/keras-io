@@ -172,7 +172,7 @@ def py_to_nb(py_path, nb_path, fill_outputs=False):
     for key in NB_BASE.keys():
         notebook[key] = copy.deepcopy(NB_BASE[key])
     notebook["metadata"]["colab"]["name"] = str(py_path).split("/")[-1][:-3]
-    notebook["metadata"]["accelerator"] = attributes['accelerator']
+    notebook["metadata"]["accelerator"] = attributes["accelerator"]
     notebook["cells"] = cells
     if loc > MAX_LOC:
         raise ValueError(
@@ -303,6 +303,8 @@ def validate(py):
         raise ValueError("Missing `Last modified:` field.")
     if not lines[5].startswith("Description: "):
         raise ValueError("Missing `Description:` field.")
+    if not lines[6].startswith("Accelerator: "):
+        raise ValueError("Missing `Accelerator:` field.")
     description = lines[5][len("Description: ") :]
     if not description:
         raise ValueError("Missing `Description:` field content.")
@@ -312,6 +314,12 @@ def validate(py):
         raise ValueError("Description field content must end with a period.")
     if len(description) > 100:
         raise ValueError("Description field content must be less than 100 chars.")
+    accelerator = lines[6][len("Accelerator: ") :]
+    accelerator_options = ["GPU", "TPU", "None"]
+    if accelerator not in accelerator_options:
+        raise ValueError(
+            f"Accelerator field content must be one of: {accelerator_options}"
+        )
     for i, line in enumerate(lines):
         if line.startswith('"""') and line.endswith('"""') and len(line) > 3:
             raise ValueError(
@@ -465,7 +473,7 @@ def _parse_header(header):
         "date_created": date_created,
         "last_modified": last_modified,
         "description": description,
-        "accelerator": accelerator
+        "accelerator": accelerator,
     }
 
 

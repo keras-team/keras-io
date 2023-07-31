@@ -119,6 +119,11 @@ EXAMPLES_MASTER = {
                     "title": "Multiclass semantic segmentation using DeepLabV3+",
                     "subcategory": "Image segmentation",
                 },
+                {
+                    "path": "basnet_segmentation",
+                    "title": "Highly accurate boundaries segmentation using BASNet",
+                    "subcategory": "Image segmentation",
+                },
                 # Object Detection
                 {
                     "path": "retinanet",
@@ -615,10 +620,15 @@ EXAMPLES_MASTER = {
                 },
                 # Text generation
                 {
-                    "path": "text_generation_gpt",
-                    "title": "GPT text generation with KerasNLP",
+                    "path": "gpt2_text_generation_with_kerasnlp",
+                    "title": "GPT2 Text Generation with KerasNLP",
                     "subcategory": "Text generation",
                     "highlight": True,
+                },
+                {
+                    "path": "text_generation_gpt",
+                    "title": "GPT text generation from scratch with KerasNLP",
+                    "subcategory": "Text generation",
                 },
                 {
                     "path": "text_generation_with_miniature_gpt",

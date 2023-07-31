@@ -84,7 +84,7 @@ Being an Austrian myself this has been a straight knock in my face. Fortunately 
 
 ```
 </div>
-We are only interested in the `pos` and `neg` subfolders, so let's delete the rest:
+We are only interested in the `pos` and `neg` subfolders, so let's delete the other subfolder that has text files in it:
 
 
 ```python
@@ -222,7 +222,7 @@ vectorize_layer = TextVectorization(
     output_sequence_length=sequence_length,
 )
 
-# Now that the vocab layer has been created, call `adapt` on a text-only
+# Now that the vectorize_layer has been created, call `adapt` on a text-only
 # dataset to create the vocabulary. You don't have to batch, but for very large
 # datasets this means you're not keeping spare copies of the dataset in memory.
 

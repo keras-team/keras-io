@@ -24,7 +24,7 @@ started.
 """
 
 import tensorflow as tf
-from tensorflow import keras
+import keras
 
 """
 ## Keras callbacks overview
@@ -83,6 +83,7 @@ Called at the end of an epoch during training.
 Let's take a look at a concrete example. To get started, let's import tensorflow and
 define a simple Sequential Keras model:
 """
+
 
 # Define the Keras model to add callbacks to
 def get_model():

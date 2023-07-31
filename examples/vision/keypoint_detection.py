@@ -168,6 +168,7 @@ colours = keypoint_def["Hex colour"].values.tolist()
 colours = ["#" + colour for colour in colours]
 labels = keypoint_def["Name"].values.tolist()
 
+
 # Utility for reading an image and for getting its annotations.
 def get_dog(name):
     data = json_dict[name]
@@ -187,6 +188,7 @@ def get_dog(name):
 
 Now, we write a utility function to visualize the images and their keypoints.
 """
+
 
 # Parts of this code come from here:
 # https://github.com/benjiebob/StanfordExtra/blob/master/demo.ipynb
@@ -294,9 +296,7 @@ class KeyPointsDataset(keras.utils.Sequence):
 
             # Apply the augmentation pipeline.
             (new_image, new_kps_obj) = self.aug(image=current_image, keypoints=kps_obj)
-            batch_images[
-                i,
-            ] = new_image
+            batch_images[i,] = new_image
 
             # Parse the coordinates from the new keypoint object.
             kp_temp = []
@@ -305,9 +305,7 @@ class KeyPointsDataset(keras.utils.Sequence):
                 kp_temp.append(np.nan_to_num(keypoint.y))
 
             # More on why this reshaping later.
-            batch_keypoints[i,] = np.array(
-                kp_temp
-            ).reshape(1, 1, 24 * 2)
+            batch_keypoints[i,] = np.array(kp_temp).reshape(1, 1, 24 * 2)
 
         # Scale the coordinates to [0, 1] range.
         batch_keypoints = batch_keypoints / IMG_SIZE

@@ -1,8 +1,8 @@
 # Getting Started with KerasNLP
 
-**Author:** [jbischof](https://github.com/jbischof)<br>
+**Author:** [Jonathan Bischof](https://github.com/jbischof)<br>
 **Date created:** 2022/12/15<br>
-**Last modified:** 2022/12/15<br>
+**Last modified:** 2023/07/01<br>
 **Description:** An introduction to the KerasNLP API.
 
 
@@ -20,7 +20,7 @@ out-of-the-box and are easily customizable when more control is needed. We
 emphasize in-graph computation for all workflows so that developers can expect
 easy productionization using the TensorFlow ecosystem.
 
-This library is an extension of the core Keras API; all high level modules are
+This library is an extension of the core Keras API; all high-level modules are
 [`Layers`](/api/layers/) or [`Models`](/api/models/). If you are familiar with Keras,
 congratulations! You already understand most of KerasNLP.
 
@@ -34,7 +34,7 @@ levels of complexity:
 * Pretraining a backbone model
 * Build and train your own transformer from scratch
 
-Throughout our guide we use Professor Keras, the official Keras mascot, as a visual
+Throughout our guide, we use Professor Keras, the official Keras mascot, as a visual
 reference for the complexity of the material:
 
 <img src="https://storage.googleapis.com/keras-nlp/getting_started_guide/prof_keras_evolution.png" alt="drawing" height="250"/>
@@ -52,10 +52,12 @@ from tensorflow import keras
 # Use mixed precision for optimal performance
 keras.mixed_precision.set_global_policy("mixed_float16")
 ```
-
 <div class="k-default-codeblock">
 ```
+/bin/bash: /home/haifengj/miniconda3/lib/libtinfo.so.6: no version information available (required by /bin/bash)
+
 INFO:tensorflow:Mixed precision compatibility check (mixed_float16): OK
+Your GPU will likely run quickly with dtype policy mixed_float16 as it has compute capability of at least 7.0. Your GPU: Tesla V100-SXM2-16GB, compute capability 7.0
 
 ```
 </div>
@@ -74,10 +76,10 @@ modules:
     fox"` to `["the", "qu", "##ick", "br", "##own", "fox"]`.
   * **Inherits from**: `keras.layers.Layer`.
 * **Preprocessor**: `keras_nlp.models.XXPreprocessor`
-  * **What it does**: Converts strings to a dictonary of preprocessed tensors consumed by
+  * **What it does**: Converts strings to a dictionary of preprocessed tensors consumed by
     the backbone, starting with tokenization.
   * **Why it's important**: Each model uses special tokens and extra tensors to understand
-    the input such as deliminting input segments and identifying padding tokens. Padding each
+    the input such as delimiting input segments and identifying padding tokens. Padding each
     sequence to the same length improves computational efficiency.
   * **Has a**: `XXTokenizer`.
   * **Inherits from**: `keras.layers.Layer`.
@@ -86,7 +88,7 @@ modules:
     strings; call the preprocessor first.*
   * **Why it's important**: The backbone distills the input tokens into dense features that
     can be used in downstream tasks. It is generally pretrained on a language modeling task
-    using massive amounts of unlabeled data. Transfering this information to a new task is a
+    using massive amounts of unlabeled data. Transferring this information to a new task is a
     major breakthrough in modern NLP.
   * **Inherits from**: `keras.Model`.
 * **Task**: e.g., `keras_nlp.models.XXClassifier`
@@ -142,13 +144,17 @@ print(imdb_train.unbatch().take(1).get_single_element())
 ```
 <div class="k-default-codeblock">
 ```
+/bin/bash: /home/haifengj/miniconda3/lib/libtinfo.so.6: no version information available (required by /bin/bash)
   % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
                                  Dload  Upload   Total   Spent    Left  Speed
-100 80.2M  100 80.2M    0     0  91.2M      0 --:--:-- --:--:-- --:--:-- 91.2M
+100 80.2M  100 80.2M    0     0  56.7M      0  0:00:01  0:00:01 --:--:-- 56.7M
+/bin/bash: /home/haifengj/miniconda3/lib/libtinfo.so.6: no version information available (required by /bin/bash)
+/bin/bash: /home/haifengj/miniconda3/lib/libtinfo.so.6: no version information available (required by /bin/bash)
+/bin/bash: /home/haifengj/miniconda3/lib/libtinfo.so.6: no version information available (required by /bin/bash)
 
 Found 25000 files belonging to 2 classes.
 Found 25000 files belonging to 2 classes.
-(<tf.Tensor: shape=(), dtype=string, numpy=b"Although Kurt Russell was and is probably the closest person to look like Elvis in show-business, so many things were false in this film. First of all, the makers claimed Elvis opened his famous live shows in '69 after a 9 year hault for films by wearing a white jump-suit made in 1972. Also they claimed he sang 'burning love' which he first sung in 1972 and 'the wonder of you' which he first recorded in 1970. They also claim that he got his first guitar for christmas when all Elvis fans know he got it for his birthday. I know all movies based on past have something false but these things are so obvious to people who like Elvis.">, <tf.Tensor: shape=(), dtype=int32, numpy=1>)
+(<tf.Tensor: shape=(), dtype=string, numpy=b'This animation TV series is simply the best way for children to learn how the human body works. Yes, this is biology but they will never tell it is.<br /><br />I truly think this is the best part of this stream of "educational cartoons". I do remember you can find little books and a plastic body in several parts: skin, skeleton, and of course: organs.<br /><br /> In the same stream, you\'ll find: "Il \xc3\xa9tait une fois l\'homme" which relate the human History from the big bang to the 20th century. There is: "Il \xc3\xa9tait une fois l\'espace" as well (about the space and its exploration) but that one is more a fiction than a description of the reality since it takes place in the future.'>, <tf.Tensor: shape=(), dtype=int32, numpy=1>)
 
 ```
 </div>
@@ -161,7 +167,8 @@ The highest level module in KerasNLP is a **task**. A **task** is a `keras.Model
 consisting of a (generally pretrained) **backbone** model and task-specific layers.
 Here's an example using `keras_nlp.models.BertClassifier`.
 
-**Note**: Outputs are the logits per class (e.g., `[0, 0]` is 50% chance of positive).
+**Note**: Outputs are the logits per class (e.g., `[0, 0]` is 50% chance of positive). The output is
+[negative, positive] for binary classification.
 
 
 ```python
@@ -172,9 +179,12 @@ classifier.predict(["I love modular workflows in keras-nlp!"])
 
 <div class="k-default-codeblock">
 ```
-1/1 [==============================] - 1s 1s/step
+WARNING:tensorflow:From /home/haifengj/miniconda3/lib/python3.10/site-packages/tensorflow/python/autograph/pyct/static_analysis/liveness.py:83: Analyzer.lamba_check (from tensorflow.python.autograph.pyct.static_analysis.liveness) is deprecated and will be removed after 2023-09-23.
+Instructions for updating:
+Lambda fuctions will be no more assumed to be used in the statement where they are used, or at least in the same block. https://github.com/tensorflow/tensorflow/issues/56089
+1/1 [==============================] - 3s 3s/step
 
-array([[-1.54 ,  1.543]], dtype=float16)
+array([[-1.539,  1.542]], dtype=float16)
 
 ```
 </div>
@@ -188,27 +198,23 @@ the `tiny` architecture for demo purposes, but larger models are recommended for
 performance. For all the task-specific presets available for `BertClassifier`, see
 our keras.io [models page](https://keras.io/api/keras_nlp/models/).
 
-Let's evaluate our classifier on the IMDB dataset. We first need to compile the
-`keras.Model`. The output is `[loss, accuracy]`,
+Let's evaluate our classifier on the IMDB dataset. You will note we don't need to
+call `keras.Model.compile` here. All **task** models like `BertClassifier` ship with
+compilation defaults, meaning we can just call `keras.Model.evaluate` directly. You
+can always call compile as normal to override these defaults (e.g. to add new metrics).
 
-**Note**: We don't need an optimizer since we're not training the model.
+The output below is [loss, accuracy],
 
 
 ```python
-classifier.compile(
-    loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
-    metrics=keras.metrics.SparseCategoricalAccuracy(),
-    jit_compile=True,
-)
-
 classifier.evaluate(imdb_test)
 ```
 
 <div class="k-default-codeblock">
 ```
-1563/1563 [==============================] - 16s 10ms/step - loss: 0.4630 - sparse_categorical_accuracy: 0.7837
+1563/1563 [==============================] - 42s 25ms/step - loss: 0.4630 - sparse_categorical_accuracy: 0.7835
 
-[0.4629555940628052, 0.7836800217628479]
+[0.4629528820514679, 0.7834799885749817]
 
 ```
 </div>
@@ -221,30 +227,25 @@ Our result is 78% accuracy without training anything. Not bad!
 
 When labeled text specific to our task is available, fine-tuning a custom classifier can
 improve performance. If we want to predict IMDB review sentiment, using IMDB data should
-perform better than Rotten Tomatoes data! And for many tasks no relevant pretrained model
+perform better than Rotten Tomatoes data! And for many tasks, no relevant pretrained model
 will be available (e.g., categorizing customer reviews).
 
 The workflow for fine-tuning is almost identical to above, except that we request a
 **preset** for the **backbone**-only model rather than the entire classifier. When passed
-a **backone** **preset**, a **task** `Model` will randomly initialize all task-specific
+a **backbone** **preset**, a **task** `Model` will randomly initialize all task-specific
 layers in preparation for training. For all the **backbone** presets available for
 `BertClassifier`, see our keras.io [models page](https://keras.io/api/keras_nlp/models/).
 
-To train your classifier, use `Model.compile()` and `Model.fit()` as with any other
-`keras.Model`. Since preprocessing is included in all **tasks** by default, we again pass
-the raw data.
+To train your classifier, use `keras.Model.fit` as with any other
+`keras.Model`. As with our inference example, we can rely on the compilation
+defaults for the **task** and skip `keras.Model.compile`. As preprocessing is
+included, we again pass the raw data.
 
 
 ```python
 classifier = keras_nlp.models.BertClassifier.from_preset(
     "bert_tiny_en_uncased",
     num_classes=2,
-)
-classifier.compile(
-    loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
-    optimizer=keras.optimizers.experimental.AdamW(5e-5),
-    metrics=keras.metrics.SparseCategoricalAccuracy(),
-    jit_compile=True,
 )
 classifier.fit(
     imdb_train,
@@ -255,13 +256,13 @@ classifier.fit(
 
 <div class="k-default-codeblock">
 ```
-1563/1563 [==============================] - 183s 113ms/step - loss: 0.4156 - sparse_categorical_accuracy: 0.8085 - val_loss: 0.3088 - val_sparse_categorical_accuracy: 0.8687
+1563/1563 [==============================] - 294s 179ms/step - loss: 0.4203 - sparse_categorical_accuracy: 0.8024 - val_loss: 0.3077 - val_sparse_categorical_accuracy: 0.8700
 
-<keras.callbacks.History at 0x7f806e165580>
+<keras.callbacks.History at 0x7fbed01424d0>
 
 ```
 </div>
-Here we see significant lift in validation accuracy (0.78 -> 0.87) with a single epoch of
+Here we see a significant lift in validation accuracy (0.78 -> 0.87) with a single epoch of
 training even though the IMDB dataset is much smaller than `sst2`.
 
 ---
@@ -294,7 +295,9 @@ preprocessor = keras_nlp.models.BertPreprocessor.from_preset(
     "bert_tiny_en_uncased",
     sequence_length=512,
 )
-
+# Apply the preprocessor to every sample of train and test data using `map()`.
+# `tf.data.AUTOTUNE` and `prefetch()` are options to tune performance, see
+# https://www.tensorflow.org/guide/data_performance for details.
 imdb_train_cached = (
     imdb_train.map(preprocessor, tf.data.AUTOTUNE).cache().prefetch(tf.data.AUTOTUNE)
 )
@@ -305,12 +308,7 @@ imdb_test_cached = (
 classifier = keras_nlp.models.BertClassifier.from_preset(
     "bert_tiny_en_uncased",
     preprocessor=None,
-)
-classifier.compile(
-    loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
-    optimizer=keras.optimizers.experimental.AdamW(5e-5),
-    metrics=keras.metrics.SparseCategoricalAccuracy(),
-    jit_compile=True,
+    num_classes=2
 )
 classifier.fit(
     imdb_train_cached,
@@ -322,13 +320,13 @@ classifier.fit(
 <div class="k-default-codeblock">
 ```
 Epoch 1/3
-1563/1563 [==============================] - 172s 106ms/step - loss: 0.4133 - sparse_categorical_accuracy: 0.8096 - val_loss: 0.3109 - val_sparse_categorical_accuracy: 0.8690
+1563/1563 [==============================] - 262s 159ms/step - loss: 0.4221 - sparse_categorical_accuracy: 0.8002 - val_loss: 0.3077 - val_sparse_categorical_accuracy: 0.8699
 Epoch 2/3
-1563/1563 [==============================] - 153s 98ms/step - loss: 0.2666 - sparse_categorical_accuracy: 0.8948 - val_loss: 0.2932 - val_sparse_categorical_accuracy: 0.8792
+1563/1563 [==============================] - 225s 144ms/step - loss: 0.2673 - sparse_categorical_accuracy: 0.8923 - val_loss: 0.2935 - val_sparse_categorical_accuracy: 0.8783
 Epoch 3/3
-1563/1563 [==============================] - 154s 99ms/step - loss: 0.1961 - sparse_categorical_accuracy: 0.9255 - val_loss: 0.3505 - val_sparse_categorical_accuracy: 0.8664
+1563/1563 [==============================] - 225s 144ms/step - loss: 0.1974 - sparse_categorical_accuracy: 0.9271 - val_loss: 0.3418 - val_sparse_categorical_accuracy: 0.8686
 
-<keras.callbacks.History at 0x7f806d7fe340>
+<keras.callbacks.History at 0x7fbe99bc5960>
 
 ```
 </div>
@@ -351,7 +349,7 @@ a `tf.RaggedTensor`.
 tokenizer = keras_nlp.models.BertTokenizer.from_preset("bert_tiny_en_uncased")
 tokenizer(["I love modular workflows!", "Libraries over frameworks!"])
 
-# Write your own packer or use one our `Layers`
+# Write your own packer or use one of our `Layers`
 packer = keras_nlp.layers.MultiSegmentPacker(
     start_value=tokenizer.cls_token_id,
     end_value=tokenizer.sep_token_id,
@@ -361,6 +359,9 @@ packer = keras_nlp.layers.MultiSegmentPacker(
 )
 
 
+# This function that takes a text sample `x` and its
+# corresponding label `y` as input and converts the
+# text into a format suitable for input into a BERT model.
 def preprocessor(x, y):
     token_ids, segment_ids = packer(tokenizer(x))
     x = {
@@ -371,7 +372,7 @@ def preprocessor(x, y):
     return x, y
 
 
-imbd_train_preprocessed = imdb_train.map(preprocessor, tf.data.AUTOTUNE).prefetch(
+imdb_train_preprocessed = imdb_train.map(preprocessor, tf.data.AUTOTUNE).prefetch(
     tf.data.AUTOTUNE
 )
 imdb_test_preprocessed = imdb_test.map(preprocessor, tf.data.AUTOTUNE).prefetch(
@@ -379,19 +380,19 @@ imdb_test_preprocessed = imdb_test.map(preprocessor, tf.data.AUTOTUNE).prefetch(
 )
 
 # Preprocessed example
-print(imbd_train_preprocessed.unbatch().take(1).get_single_element())
+print(imdb_train_preprocessed.unbatch().take(1).get_single_element())
 ```
 
 <div class="k-default-codeblock">
 ```
 ({'token_ids': <tf.Tensor: shape=(64,), dtype=int32, numpy=
-array([  101,  2074,  2387,  2023,  2012,  1996,  2494,  6930,  2248,
-        2143,  2782,  1998,  2009,  2001,  6057,  2004,  3109,  1998,
-        1037,  2978, 16524,  1012,  3138,  2173,  1999,  4361,  1010,
-        2073,  2122,  2048, 23160,  2444,  1999,  2023,  2448,  1011,
-        2091,  2160,  1999,  1996,  2690,  1997,  1037, 10846,  2291,
-        1012,  2585,  2002, 13668,  6582,  1006,  9231,  1010, 14291,
-        1010, 22330, 27921,  1007,  1998,  4080,  4679,  1006, 14291,
+array([  101, 11271,  9261,  2003,  2028,  1997,  2216,  5889,  2008,
+        1045,  1005,  2310,  2763,  2464,  1999,  1037,  6474,  3152,
+        1010,  2021,  2040,  2038,  2196,  2428,  5068,  2005,  2033,
+        1012,  2411,  2358, 10893,  2094,  1010, 11937, 26243, 14287,
+        1010,  2652,  1996,  2168,  7957,  1997,  4395,  1998,  2559,
+        5399,  2066,  1996,  6660,  2104,  9250,  9465,  4811,  1010,
+        2002,  1005,  1055,  2019,  3364,  2008,  3138,  2070,  3947,
          102], dtype=int32)>, 'segment_ids': <tf.Tensor: shape=(64,), dtype=int32, numpy=
 array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -413,17 +414,17 @@ array([ True,  True,  True,  True,  True,  True,  True,  True,  True,
 <img src="https://storage.googleapis.com/keras-nlp/getting_started_guide/prof_keras_advanced.png" alt="drawing" height="250"/>
 
 For more advanced applications, an appropriate **task** `Model` may not be available. In
-this case we provide direct access to the **backbone** `Model`, which has its own
+this case, we provide direct access to the **backbone** `Model`, which has its own
 `from_preset` constructor and can be composed with custom `Layer`s. Detailed examples can
 be found at our [transfer learning guide](https://keras.io/guides/transfer_learning/).
 
 A **backbone** `Model` does not include automatic preprocessing but can be paired with a
 matching **preprocessor** using the same **preset** as shown in the previous workflow.
 
-In this workflow we experiment with freezing our backbone model and adding two trainable
-transfomer layers to adapt to the new input.
+In this workflow, we experiment with freezing our backbone model and adding two trainable
+transformer layers to adapt to the new input.
 
-**Note**: We can igonore the warning about gradients for the `pooled_dense` layer because
+**Note**: We can ignore the warning about gradients for the `pooled_dense` layer because
 we are using BERT's sequence output.
 
 
@@ -500,17 +501,17 @@ Trainable params: 396,802
 Non-trainable params: 4,385,920
 __________________________________________________________________________________________________
 Epoch 1/3
-1563/1563 [==============================] - 34s 17ms/step - loss: 0.5811 - sparse_categorical_accuracy: 0.6941 - val_loss: 0.5046 - val_sparse_categorical_accuracy: 0.7554
+1563/1563 [==============================] - 50s 23ms/step - loss: 0.5825 - sparse_categorical_accuracy: 0.6916 - val_loss: 0.5144 - val_sparse_categorical_accuracy: 0.7460
 Epoch 2/3
-1563/1563 [==============================] - 18s 11ms/step - loss: 0.4859 - sparse_categorical_accuracy: 0.7686 - val_loss: 0.4235 - val_sparse_categorical_accuracy: 0.8056
+1563/1563 [==============================] - 15s 10ms/step - loss: 0.4842 - sparse_categorical_accuracy: 0.7655 - val_loss: 0.4286 - val_sparse_categorical_accuracy: 0.8025
 Epoch 3/3
-1563/1563 [==============================] - 17s 11ms/step - loss: 0.4405 - sparse_categorical_accuracy: 0.7947 - val_loss: 0.3994 - val_sparse_categorical_accuracy: 0.8198
+1563/1563 [==============================] - 15s 10ms/step - loss: 0.4409 - sparse_categorical_accuracy: 0.7968 - val_loss: 0.4084 - val_sparse_categorical_accuracy: 0.8145
 
-<keras.callbacks.History at 0x7f7fd8458b50>
+<keras.callbacks.History at 0x7fbe20713af0>
 
 ```
 </div>
-This model achieves reasonable accuracy despite having only 10% the trainable parameters
+This model achieves reasonable accuracy despite having only 10% of the trainable parameters
 of our `BertClassifier` model. Each training step takes about 1/3 of the time---even
 accounting for cached preprocessing.
 
@@ -518,7 +519,7 @@ accounting for cached preprocessing.
 ## Pretraining a backbone model
 <img src="https://storage.googleapis.com/keras-nlp/getting_started_guide/prof_keras_expert.png" alt="drawing" height="250"/>
 
-Do you have access to large unlabeled datasets in your domain? Are they are around the
+Do you have access to large unlabeled datasets in your domain? Are they around the
 same size as used to train popular backbones such as BERT, RoBERTa, or GPT2 (XX+ GiB)? If
 so, you might benefit from domain-specific pretraining of your own backbone models.
 
@@ -531,11 +532,11 @@ layers relating to a new task.
 The KerasNLP library offers SoTA **backbones** and **tokenizers** to be trained from
 scratch without presets.
 
-In this workflow we pretrain a BERT **backbone** using our IMDB review text. We skip the
+In this workflow, we pretrain a BERT **backbone** using our IMDB review text. We skip the
 "next sentence prediction" (NSP) loss because it adds significant complexity to the data
-processing and was dropped by later models like RoBERTa. See our e2e [BERT pretraining
-example](https://github.com/keras-team/keras-nlp/tree/master/examples/bert) for
-step-by-step details on how to replicate the original paper.
+processing and was dropped by later models like RoBERTa. See our e2e
+[Transformer pretraining](https://keras.io/guides/keras_nlp/transformer_pretraining/#pretraining)
+for step-by-step details on how to replicate the original paper.
 
 ### Preprocessing
 
@@ -592,31 +593,31 @@ print(pretrain_ds.unbatch().take(1).get_single_element())
 <div class="k-default-codeblock">
 ```
 ({'token_ids': <tf.Tensor: shape=(256,), dtype=int32, numpy=
-array([  101,  9643,  1010,  9643,  1010,  9643,  1012,  1026,  7987,
-        1013,  1028,  1026,  7987,  1013,  1028,  1037,   103, 11020,
-       18537,  4844,  2012,  1996,  2707,  1998,  1037,  2261, 11808,
-       24534,  7760,   103,  2025,   103,  2204,  3185,   103,   103,
-        2320,  2153,  1045,  1005,   103, 15261,  2012,  1996,   103,
-        1998,   103,   103,  2070,   103,   103,  1999, 10910,  1037,
-        3185,  2537,  1998,   103,  2027,  2123,  1005,  1056,  2031,
-        1996,  6620,  2000, 13776,  2008,  2054,  2027,  2031,  2081,
-        2003,  2019,   103,  8632,  1997, 10231,  1012,  1026,  7987,
-        1013,   103,  1026,  7987,  1013,  1028, 20323,  2970,  1998,
-        2699,  2000,  2228,   103,   103,  2417, 21564,  2075,  3444,
-        2061,  2008,  1045,  2071,   103,  2560,  5703,  2026,  6256,
-         103,  1996,  2069,  2028,   103,  2071,  2228,  1997,  2001,
-        2008,   103,  3098,   103,  2011,  5061,   103,  3492,  2204,
-        1012,   103,   103,  1012,  1045,  4687,   103,  2016,  2038,
-        2464,  2023,  1029,  1026,  7987,   103,  1028, 26907,   103,
-        1013,  1028,  3422,  2023,  2012,   103,  2566,  4014,   103,
-         103, 29556,  2089,  3102,  2017,  1012,   102,     0,     0,
-           0,     0,     0,     0,     0,     0,     0,     0,     0,
-           0,     0,     0,     0,     0,     0,     0,     0,     0,
-           0,     0,     0,     0,     0,     0,     0,     0,     0,
-           0,     0,     0,     0,     0,     0,     0,     0,     0,
-           0,     0,     0,     0,     0,     0,     0,     0,     0,
-           0,     0,     0,     0,     0,     0,     0,     0,     0,
-           0,     0,     0,     0,     0,     0,     0,     0,     0,
+array([  101,  2064,  2151,  3185,  2468,  2062, 15743,  2084,  2023,
+        1029,   103,  2064,  2102,  2903,  7631,   103,   103,  2023,
+        5896,   103,   103,  2049,  7020,  9541,  9541,  2080, 21425,
+        2008,  2017,  2064,  2425,   103,  5436,  3574,  1996,   103,
+        2013,  1996,   103,  2184,   103,  1012,  1996,  2877,  3883,
+        3849,  2066,  2016,  4122,  2000,  2022,   103,  1006,  2021,
+        2016,  2987,   103,  1056,  2191,  2009,  1010,   103, 10658,
+        2038,  2062, 23041,  4813,  1007,  1012,   103,  7987,  1013,
+        1028,   103,  7987,  1013,  1028,  1996,   103,   103,   103,
+         103,   103,  2839,  5235,  1998,  3464,  1999,  1037,  1037,
+        2189,  2082,  3084,  1996, 11588,   103,  1996,  3850,  3117,
+        4025,   103,  1037,   103,  8308,  1012,   103,   103,  2102,
+         103,   103,  2006,  8114,   684,  2791,  1997,   103,  3494,
+        2021,  1996,  2028,  2204,  2518,  1997,  1996,   103,  2003,
+        5506,   103,   103, 26402,  2836,  2029,  9020,  2000,   103,
+        2166,  2000,  1037, 11463,  2080,   103,  2066,  2028,  1011,
+        8789,  2839, 28350,  1026,  7987,  1013,  1028,  1026,  7987,
+        1013, 15799,  1996,  3185,  2003,  2061, 18178,   103,  2100,
+         103,  2009, 12668,  2000,   103,  4091,   103,  1045,  2064,
+        2228,  2070,  2410,   103,  2214, 29168,  1011, 15896,  3057,
+       11273,  1000,  1051,  1010,  2079,  2507,  2149,  1037,  3338,
+         999,  2065,  2057,   103,  8867,  7122,  2045,  2003,  2467,
+        1996,   103, 24287,  2338,  5023,  4873,  1999,  1996, 14832,
+        1000,  1012,  1045,  2435,   103,  1016,  2612,   103,  2028,
+        2069,  7286,  3448,  5506,   103,   103,   102,     0,     0,
            0,     0,     0,     0,     0,     0,     0,     0,     0,
            0,     0,     0,     0,     0,     0,     0,     0,     0,
            0,     0,     0,     0,     0,     0,     0,     0,     0,
@@ -650,35 +651,35 @@ array([ True,  True,  True,  True,  True,  True,  True,  True,  True,
         True,  True,  True,  True,  True,  True,  True,  True,  True,
         True,  True,  True,  True,  True,  True,  True,  True,  True,
         True,  True,  True,  True,  True,  True,  True,  True,  True,
+        True,  True,  True,  True,  True,  True,  True,  True,  True,
+        True,  True,  True,  True,  True,  True,  True,  True,  True,
+        True,  True,  True,  True,  True,  True,  True,  True,  True,
+        True,  True,  True,  True,  True,  True,  True,  True,  True,
+        True,  True,  True,  True,  True,  True,  True,  True,  True,
+        True,  True,  True,  True,  True,  True,  True,  True,  True,
+        True,  True,  True,  True,  True,  True,  True,  True,  True,
         True,  True,  True,  True,  True,  True,  True, False, False,
        False, False, False, False, False, False, False, False, False,
        False, False, False, False, False, False, False, False, False,
        False, False, False, False, False, False, False, False, False,
-       False, False, False, False, False, False, False, False, False,
-       False, False, False, False, False, False, False, False, False,
-       False, False, False, False, False, False, False, False, False,
-       False, False, False, False, False, False, False, False, False,
-       False, False, False, False, False, False, False, False, False,
-       False, False, False, False, False, False, False, False, False,
-       False, False, False, False, False, False, False, False, False,
        False, False, False, False])>, 'mask_positions': <tf.Tensor: shape=(64,), dtype=int64, numpy=
-array([ 15,  16,  19,  29,  31,  34,  35,  40,  44,  46,  47,  49,  50,
-        57,  66,  74,  82,  86,  87,  88,  93,  94, 103, 108, 112, 118,
-       120, 122, 123, 126, 127, 128, 132, 140, 142, 143, 146, 149, 152,
-       153,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
-         0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0])>}, <tf.Tensor: shape=(64,), dtype=int32, numpy=
-array([ 1037, 24707, 17674,  2515,  1037,  2191,  1012,  1049,  9128,
-        8066,  2008,  2111,  2031,  2664, 19148, 14395,  1028,  1028,
-        1045,  2938,  1997,  1037,  2012,  2021,  1045,  1996,  2650,
-        5061,  2001,  1012,  1012,  1012,  2065,  1013,  1026,  7987,
-        3422,  2115,  1010,  1996,     0,     0,     0,     0,     0,
-           0,     0,     0,     0,     0,     0,     0,     0,     0,
-           0,     0,     0,     0,     0,     0,     0,     0,     0,
+array([ 10,  14,  15,  16,  19,  20,  31,  33,  35,  38,  40,  51,  56,
+        58,  61,  65,  69,  73,  78,  79,  80,  81,  82,  95, 100, 102,
+       105, 106, 108, 109, 111, 112, 115, 121, 124, 126, 127, 128, 129,
+       134, 140, 146, 154, 160, 162, 166, 168, 174, 192, 199, 208, 211,
+       214, 217, 220, 221,   0,   0,   0,   0,   0,   0,   0,   0])>}, <tf.Tensor: shape=(64,), dtype=int32, numpy=
+array([ 2017,  1037,  3538,  1997,  1012,  1998,  1996,  1998,  4566,
+        2034,  2781, 22635,  1005,  2191,  1996,  3772,  1026,  1026,
+       19413, 11493,  7971,  2008,  1996,  1997,  2066,  3439,  1045,
+        2180,  2130,  7615,  1996,  8467,  1996,  2518,  2143,  5506,
+        5054,  1005,  1055,  3288,  1011,  1012,  1028,  2229,  2008,
+        2115,  1012,  2095,  2215,  3428,  1012,  2009,  1997,  2005,
+        5054,  1012,     0,     0,     0,     0,     0,     0,     0,
            0], dtype=int32)>, <tf.Tensor: shape=(64,), dtype=float16, numpy=
 array([1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1.,
        1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1.,
-       1., 1., 1., 1., 1., 1., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.,
-       0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.], dtype=float16)>)
+       1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1.,
+       1., 1., 1., 1., 1., 0., 0., 0., 0., 0., 0., 0., 0.], dtype=float16)>)
 
 ```
 </div>
@@ -735,6 +736,9 @@ pretraining_model.fit(
 
 <div class="k-default-codeblock">
 ```
+/home/haifengj/miniconda3/lib/python3.10/site-packages/keras/engine/functional.py:638: UserWarning: Input dict contained keys ['mask_positions'] which did not match any model input. They will be ignored by the model.
+  inputs = self._flatten_to_reference_inputs(inputs)
+
 Model: "model_1"
 __________________________________________________________________________________________________
  Layer (type)                   Output Shape         Param #     Connected to                     
@@ -760,20 +764,16 @@ Total params: 4,433,210
 Trainable params: 4,433,210
 Non-trainable params: 0
 __________________________________________________________________________________________________
-
-/home/matt/miniconda3/envs/keras-io/lib/python3.9/site-packages/keras/engine/functional.py:638: UserWarning: Input dict contained keys ['mask_positions'] which did not match any model input. They will be ignored by the model.
-  inputs = self._flatten_to_reference_inputs(inputs)
-
 Epoch 1/3
 WARNING:tensorflow:Gradients do not exist for variables ['pooled_dense/kernel:0', 'pooled_dense/bias:0'] when minimizing the loss. If you're using `model.compile()`, did you forget to provide a `loss` argument?
 WARNING:tensorflow:Gradients do not exist for variables ['pooled_dense/kernel:0', 'pooled_dense/bias:0'] when minimizing the loss. If you're using `model.compile()`, did you forget to provide a `loss` argument?
-1563/1563 [==============================] - 68s 39ms/step - loss: 5.2595 - sparse_categorical_accuracy: 0.0866 - val_loss: 4.9751 - val_sparse_categorical_accuracy: 0.1144
+1563/1563 [==============================] - 103s 57ms/step - loss: 5.2620 - sparse_categorical_accuracy: 0.0866 - val_loss: 4.9799 - val_sparse_categorical_accuracy: 0.1172
 Epoch 2/3
-1563/1563 [==============================] - 58s 37ms/step - loss: 4.9573 - sparse_categorical_accuracy: 0.1244 - val_loss: 4.8743 - val_sparse_categorical_accuracy: 0.1310
+1563/1563 [==============================] - 77s 49ms/step - loss: 4.9584 - sparse_categorical_accuracy: 0.1241 - val_loss: 4.8639 - val_sparse_categorical_accuracy: 0.1327
 Epoch 3/3
-1563/1563 [==============================] - 57s 37ms/step - loss: 4.8230 - sparse_categorical_accuracy: 0.1440 - val_loss: 4.6139 - val_sparse_categorical_accuracy: 0.1837
+1563/1563 [==============================] - 77s 49ms/step - loss: 4.7992 - sparse_categorical_accuracy: 0.1480 - val_loss: 4.5584 - val_sparse_categorical_accuracy: 0.1919
 
-<keras.callbacks.History at 0x7f806dfd3bb0>
+<keras.callbacks.History at 0x7fbe2ca08700>
 
 ```
 </div>
@@ -788,13 +788,13 @@ low-level modules used to build SoTA architectures in our `models` API. This inc
 `keras_nlp.tokenizers` API which allows you to train your own subword tokenizer using
 `WordPieceTokenizer`, `BytePairTokenizer`, or `SentencePieceTokenizer`.
 
-In this workflow we train a custom tokenizer on the IMDB data and design a backbone with
-custom transformer architecture. For simplicity we then train directly on the
+In this workflow, we train a custom tokenizer on the IMDB data and design a backbone with
+custom transformer architecture. For simplicity, we then train directly on the
 classification task. Interested in more details? We wrote an entire guide to pretraining
 and finetuning a custom transformer on
 [keras.io](https://keras.io/guides/keras_nlp/transformer_pretraining/),
 
-### Train custom vocabulary from IMBD data
+### Train custom vocabulary from IMDB data
 
 
 ```python
@@ -813,7 +813,7 @@ tokenizer = keras_nlp.tokenizers.WordPieceTokenizer(
 )
 ```
 
-### Preprocess data with custom tokenizer
+### Preprocess data with a custom tokenizer
 
 
 ```python
@@ -843,63 +843,63 @@ print(imdb_preproc_train_ds.unbatch().take(1).get_single_element())
 <div class="k-default-codeblock">
 ```
 (<tf.Tensor: shape=(512,), dtype=int32, numpy=
-array([    1,   715,   137,    98,   199,    99,   943,    16,    51,
-        1776,   148,   971, 11048,    18,    51, 11564,   236,    96,
-         176,   932,    98,    96,   110,  1661,   138,    96,   457,
-         153,   120,    43,   536,    99,   158,    18,  3213,    16,
-         102,   157, 16673,   148,    16,    97,    51,   549,    96,
-         110,   274,    43,   318,    18,    96,   429,   416,    98,
-          96,   110,   160,   163, 14683,    97,  1203,    96,   535,
-         149,    18,  2895,    16,   353,   131,   162,  1952,    98,
-        1796,  2085,    16,   124,   162,   115,  4000,   133, 10280,
+array([    1,    51,    11,    55,  4588,    98,   104,   112,    97,
+         102,   230,  1571,   538,   163,   105,   128,   201,     6,
+        2116,     6,  4596,   102,  2053,    96,   895,  1733,  2508,
+          18,    43,   903,   745,   100,   303, 10439,  1639,    31,
+         103,   937,   126,  1225,   112,  4406,   114,    96,  1767,
+          11,    61,  1897,    97,   234,   120,  7017,   114,   184,
+         298,  1417,    18,  1507,   107,    43, 11524,  1955,    16,
+         104,   100,    43, 17039,  3669,    99,  9709,   165,    96,
+        7133,   409,    18,   228,   104,   112,   139,   184,  1640,
+         102,  2894, 18115,    99,    96,  2603,    16,   354,   128,
+         321,   107,    96,   195,   117,  2102,    18,    32,   101,
+          19,    34,    32,   101,    19,    34,   103,    96,  1733,
+         409,  9709,    11,    61, 12297,   100,  1300,  6172,    30,
+         129,    96,   176,   229,   116,   100,  1096,   107,    43,
+         909,  1210,    16,  1466,  3025,  2576,    16,  8945,   125,
+        2082,   281,   180,    97,   206,  2248,   114,   118,   298,
+         198,  2345,    12,   104,   100,  3346,    97, 16468,   272,
+         378,    18,    13,   113,   689,   227,  2091,  2640,   104,
+        9476, 15084, 15535,  7658,    99,  1790,    96,   121,  1865,
+          99,    96,  8485,    98,  5044,    18,  1733,  2781,  1729,
+        1518,  8597, 15031, 10060,   136,  9709,    97, 13478, 12297,
+          98,   118,  2035,   651,   146,   116,  2219,    43,   452,
+       15038,    99,  2392,   180,   129,    96,  1865,  1916,  1986,
+        8210,   136,    18,    18,    18,  3731,    11,    61,   409,
+        7411,    96,   295,    16,  5700,    43, 12297,   127,  4198,
+          96,    65,  1986,  8210,   136,     6,   231,   235,    97,
+        1216,   163,   150,   144,     5,     6,  3731,  9150,   136,
+       12297,    11,    61,   196,   107,  9709,  3992,   102,    18,
+         161,   158,   118,  6712,   107,    96,  3571,    98,   118,
+        9969, 13378,    18, 12297,   100,   128,  8058,    99,  1694,
+          98,    96,  2852,   113,   689,   227,  1733,   657,   232,
+        9474,    12,   116,   218,   128,   109,  2099,   195,    13,
+         329,   196,  1034,  8550,  5948,    96,   204,    99,   184,
+        3720,  1282,    18,  3731,    11,    61,   112,   220,  6088,
+          96, 13699,   293,  4229,  9173,   136,    97, 10650,   917,
+        3745,   103,    43,   264, 12994,  6867,   229,   105,   117,
+         436,  2042,   103,  1733,    11,    61,   409,    18,  4749,
+         161,   158,  3256,  3196, 16112,  3829,  1429,   237,   109,
+       13434,   993,  8330,    97,  8158,    16,  1132,   237,    96,
+         421,    98, 17038,    18,   108,   152,  4364,    96, 15623,
+         100,   144,  1508,   103,    96,  1225,   409,   165,    96,
+         511,   297,    18,    32,   101,    19,    34,    32,   101,
+          19,    34,  9709,    11,    61,  4975,   100,   126,   766,
+       12015,   103,    96,  3077,    97,  3731,   260,  3590,    99,
+         104,   103,   121,    98,   152,   607,   229,    30,   146,
+       12297,  3381,    96,     6,  8158,   245, 13380,     6,   704,
+          16,   325,   254, 10081,   175, 15963,   452,    18,    96,
+       16947,  3444,   100,  3055,   272, 14726,  1571,  2946,  9553,
+         109,    96,  4075,   850,   317,   146,  1695,   397,    16,
+        2667,    99,   118,   459,   111,  5122,    99,    96,    65,
+        1986,  8210,   136,    16, 12297,   100,  8366,  4079,    18,
+         104,   100,   121,    98,    96,   182,  3391,  9302,    98,
+          96,   112,    97,  5853,   163,  2101,    51,   158,   102,
           18,    32,   101,    19,    34,    32,   101,    19,    34,
-          51,   153,   119,    99,   225,    16,   242,    17,    96,
-         248,   122,   119,  1273,  2007,  2630,    16,   128,   120,
-        3010,   138,   113,   119,  1216,  2062,   239,  2495,   133,
-         159,  2857,   580,    18,    32,   101,    19,    34,    32,
-         101,    19,    34,    51,   157,   549,   104,   110,    16,
-          97,   171,   119,    99,   752,   641,    43,  1131,   108,
-         152,   298,  1722,    18,     2,     0,     0,     0,     0,
-           0,     0,     0,     0,     0,     0,     0,     0,     0,
-           0,     0,     0,     0,     0,     0,     0,     0,     0,
-           0,     0,     0,     0,     0,     0,     0,     0,     0,
-           0,     0,     0,     0,     0,     0,     0,     0,     0,
-           0,     0,     0,     0,     0,     0,     0,     0,     0,
-           0,     0,     0,     0,     0,     0,     0,     0,     0,
-           0,     0,     0,     0,     0,     0,     0,     0,     0,
-           0,     0,     0,     0,     0,     0,     0,     0,     0,
-           0,     0,     0,     0,     0,     0,     0,     0,     0,
-           0,     0,     0,     0,     0,     0,     0,     0,     0,
-           0,     0,     0,     0,     0,     0,     0,     0,     0,
-           0,     0,     0,     0,     0,     0,     0,     0,     0,
-           0,     0,     0,     0,     0,     0,     0,     0,     0,
-           0,     0,     0,     0,     0,     0,     0,     0,     0,
-           0,     0,     0,     0,     0,     0,     0,     0,     0,
-           0,     0,     0,     0,     0,     0,     0,     0,     0,
-           0,     0,     0,     0,     0,     0,     0,     0,     0,
-           0,     0,     0,     0,     0,     0,     0,     0,     0,
-           0,     0,     0,     0,     0,     0,     0,     0,     0,
-           0,     0,     0,     0,     0,     0,     0,     0,     0,
-           0,     0,     0,     0,     0,     0,     0,     0,     0,
-           0,     0,     0,     0,     0,     0,     0,     0,     0,
-           0,     0,     0,     0,     0,     0,     0,     0,     0,
-           0,     0,     0,     0,     0,     0,     0,     0,     0,
-           0,     0,     0,     0,     0,     0,     0,     0,     0,
-           0,     0,     0,     0,     0,     0,     0,     0,     0,
-           0,     0,     0,     0,     0,     0,     0,     0,     0,
-           0,     0,     0,     0,     0,     0,     0,     0,     0,
-           0,     0,     0,     0,     0,     0,     0,     0,     0,
-           0,     0,     0,     0,     0,     0,     0,     0,     0,
-           0,     0,     0,     0,     0,     0,     0,     0,     0,
-           0,     0,     0,     0,     0,     0,     0,     0,     0,
-           0,     0,     0,     0,     0,     0,     0,     0,     0,
-           0,     0,     0,     0,     0,     0,     0,     0,     0,
-           0,     0,     0,     0,     0,     0,     0,     0,     0,
-           0,     0,     0,     0,     0,     0,     0,     0,     0,
-           0,     0,     0,     0,     0,     0,     0,     0,     0,
-           0,     0,     0,     0,     0,     0,     0,     0,     0,
-           0,     0,     0,     0,     0,     0,     0,     0,     0,
-           0,     0,     0,     0,     0,     0,     0,     0],
+          96,   164, 10410,   446,    19,   149, 13468,  6236,   104,
+         112,    11,    61,   573,  1598,   111,   160,   102,   169,
+        6076,   102,   294,   119, 17262,   328,   109,     2],
       dtype=int32)>, <tf.Tensor: shape=(), dtype=int32, numpy=1>)
 
 ```
@@ -981,13 +981,13 @@ model.fit(
 <div class="k-default-codeblock">
 ```
 Epoch 1/3
-1563/1563 [==============================] - 81s 50ms/step - loss: 0.6350 - sparse_categorical_accuracy: 0.6133 - val_loss: 0.4307 - val_sparse_categorical_accuracy: 0.8206
+1563/1563 [==============================] - 128s 77ms/step - loss: 0.6113 - sparse_categorical_accuracy: 0.6411 - val_loss: 0.4020 - val_sparse_categorical_accuracy: 0.8279
 Epoch 2/3
-1563/1563 [==============================] - 77s 49ms/step - loss: 0.3256 - sparse_categorical_accuracy: 0.8674 - val_loss: 0.3166 - val_sparse_categorical_accuracy: 0.8699
+1563/1563 [==============================] - 117s 75ms/step - loss: 0.3117 - sparse_categorical_accuracy: 0.8729 - val_loss: 0.3062 - val_sparse_categorical_accuracy: 0.8786
 Epoch 3/3
-1563/1563 [==============================] - 77s 49ms/step - loss: 0.2482 - sparse_categorical_accuracy: 0.9009 - val_loss: 0.2934 - val_sparse_categorical_accuracy: 0.8816
+1563/1563 [==============================] - 135s 87ms/step - loss: 0.2381 - sparse_categorical_accuracy: 0.9066 - val_loss: 0.3113 - val_sparse_categorical_accuracy: 0.8734
 
-<keras.callbacks.History at 0x7f7fc0fee760>
+<keras.callbacks.History at 0x7fba26e94490>
 
 ```
 </div>
