@@ -284,10 +284,10 @@ matching **preprocessor** as the **task**.
 In this workflow we train the model over three epochs using `tf.data.Dataset.cache()`,
 which computes the preprocessing once and caches the result before fitting begins.
 
-**Note:** that we can use `tf.data` for preprocessing while running on the
+**Note:** we can use `tf.data` for preprocessing while running on the
 Jax or PyTorch backend. The input dataset will automatically be converted to
 backend native tensor types during fit. In fact, given the efficiency of `tf.data`
-for running preprocessing, this is good practice, on all backends.
+for running preprocessing, this is good practice on all backends.
 
 
 ```python
