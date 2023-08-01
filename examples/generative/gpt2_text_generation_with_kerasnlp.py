@@ -6,8 +6,8 @@ Last modified: 04/17/2023
 Description: Use KerasNLP GPT2 model and `samplers` to do text generation.
 Accelerator: GPU
 """
-"""
 
+"""
 In this tutorial, you will learn to use [KerasNLP](https://keras.io/keras_nlp/) to load a
 pre-trained Large Language Model (LLM) - [GPT-2 model](https://openai.com/research/better-language-models)
 (originally invented by OpenAI), finetune it to a specific text style, and
@@ -25,16 +25,25 @@ GPT-2 model. Running this tutorial on CPU runtime will take hours.
 """
 
 """
-## Install KerasNLP and Import Dependencies
+## Install KerasNLP, Choose Backend and Import Dependencies
+
+This examples uses [Keras Core](https://keras.io/keras_core/) to work in any of
+`"tensorflow"`, `"jax"` or `"torch"`. Support for Keras Core is baked into
+KerasNLP, simply change the `"KERAS_BACKEND"` environment variable to select
+the backend of your choice. We select the JAX backend below.
 """
 
 """shell
-pip install -q keras-nlp
+pip install git+https://github.com/keras-team/keras-nlp.git -q
 """
+
+import os
+
+os.environ["KERAS_BACKEND"] = "jax"  # or "tensorflow" or "torch"
 
 import keras_nlp
 import tensorflow as tf
-from tensorflow import keras
+import keras_core as keras
 import time
 
 """
