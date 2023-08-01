@@ -10,8 +10,8 @@ pandas
 jupyter
 tensorflow~=2.13.0
 tensorflow_datasets
-keras-core==0.1.0
+keras-core==0.1.3
 keras-tuner==1.3.5
-keras-cv==0.5.1
-keras-nlp==0.5.2
+keras-cv==0.6.1
+keras-nlp==0.6.1
 pycocotools
