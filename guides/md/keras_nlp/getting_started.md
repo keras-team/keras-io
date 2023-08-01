@@ -16,13 +16,18 @@
 KerasNLP is a natural language processing library that supports users through
 their entire development cycle. Our workflows are built from modular components
 that have state-of-the-art preset weights and architectures when used
-out-of-the-box and are easily customizable when more control is needed. We
-emphasize in-graph computation for all workflows so that developers can expect
-easy productionization using the TensorFlow ecosystem.
+out-of-the-box and are easily customizable when more control is needed.
 
 This library is an extension of the core Keras API; all high-level modules are
 [`Layers`](/api/layers/) or [`Models`](/api/models/). If you are familiar with Keras,
 congratulations! You already understand most of KerasNLP.
+
+KerasNLP uses the [Keras Core](https://keras.io/keras_core/) library to work
+with any of TensorFlow, Pytorch and Jax. In the guide below, we will use the
+`jax` backend for training our models, and [tf.data](https://www.tensorflow.org/guide/data)
+for efficiently running our input preprocessing. But feel free to mix things up!
+This guide runs in TensorFlow or PyTorch backends with zero changes, simply update
+the `KERAS_BACKEND` below.
 
 This guide demonstrates our modular approach using a sentiment analysis example at six
 levels of complexity:
@@ -41,23 +46,22 @@ reference for the complexity of the material:
 
 
 ```python
-!pip install -q --upgrade keras-nlp tensorflow
+!pip install -q --upgrade keras-nlp
 ```
+
 
 ```python
-import keras_nlp
-import tensorflow as tf
-from tensorflow import keras
+import os
 
-# Use mixed precision for optimal performance
-keras.mixed_precision.set_global_policy("mixed_float16")
+os.environ["KERAS_BACKEND"] = "jax"  # or "tensorflow" or "torch"
+
+import keras_nlp
+import keras_core as keras
 ```
+
 <div class="k-default-codeblock">
 ```
-/bin/bash: /home/haifengj/miniconda3/lib/libtinfo.so.6: no version information available (required by /bin/bash)
-
-INFO:tensorflow:Mixed precision compatibility check (mixed_float16): OK
-Your GPU will likely run quickly with dtype policy mixed_float16 as it has compute capability of at least 7.0. Your GPU: Tesla V100-SXM2-16GB, compute capability 7.0
+Using JAX backend.
 
 ```
 </div>
@@ -70,7 +74,7 @@ task-specific output. For each `XX` architecture (e.g., `Bert`), we offer the fo
 modules:
 
 * **Tokenizer**: `keras_nlp.models.XXTokenizer`
-  * **What it does**: Converts strings to `tf.RaggedTensor`s of token ids.
+  * **What it does**: Converts strings to sequences of token ids.
   * **Why it's important**: The raw bytes of a string are too high dimensional to be useful
     features so we first map them to a small number of tokens, for example `"The quick brown
     fox"` to `["the", "qu", "##ick", "br", "##own", "fox"]`.
@@ -129,11 +133,11 @@ powerful `tf.data.Dataset` format for examples.
 
 ```python
 BATCH_SIZE = 16
-imdb_train = tf.keras.utils.text_dataset_from_directory(
+imdb_train = keras.utils.text_dataset_from_directory(
     "aclImdb/train",
     batch_size=BATCH_SIZE,
 )
-imdb_test = tf.keras.utils.text_dataset_from_directory(
+imdb_test = keras.utils.text_dataset_from_directory(
     "aclImdb/test",
     batch_size=BATCH_SIZE,
 )
@@ -141,20 +145,17 @@ imdb_test = tf.keras.utils.text_dataset_from_directory(
 # Inspect first review
 # Format is (review text tensor, label tensor)
 print(imdb_train.unbatch().take(1).get_single_element())
+
 ```
 <div class="k-default-codeblock">
 ```
-/bin/bash: /home/haifengj/miniconda3/lib/libtinfo.so.6: no version information available (required by /bin/bash)
   % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
                                  Dload  Upload   Total   Spent    Left  Speed
-100 80.2M  100 80.2M    0     0  56.7M      0  0:00:01  0:00:01 --:--:-- 56.7M
-/bin/bash: /home/haifengj/miniconda3/lib/libtinfo.so.6: no version information available (required by /bin/bash)
-/bin/bash: /home/haifengj/miniconda3/lib/libtinfo.so.6: no version information available (required by /bin/bash)
-/bin/bash: /home/haifengj/miniconda3/lib/libtinfo.so.6: no version information available (required by /bin/bash)
+100 80.2M  100 80.2M    0     0  3709k      0  0:00:22  0:00:22 --:--:-- 4677k
 
 Found 25000 files belonging to 2 classes.
 Found 25000 files belonging to 2 classes.
-(<tf.Tensor: shape=(), dtype=string, numpy=b'This animation TV series is simply the best way for children to learn how the human body works. Yes, this is biology but they will never tell it is.<br /><br />I truly think this is the best part of this stream of "educational cartoons". I do remember you can find little books and a plastic body in several parts: skin, skeleton, and of course: organs.<br /><br /> In the same stream, you\'ll find: "Il \xc3\xa9tait une fois l\'homme" which relate the human History from the big bang to the 20th century. There is: "Il \xc3\xa9tait une fois l\'espace" as well (about the space and its exploration) but that one is more a fiction than a description of the reality since it takes place in the future.'>, <tf.Tensor: shape=(), dtype=int32, numpy=1>)
+(<tf.Tensor: shape=(), dtype=string, numpy=b'John Thaw, of Inspector Morse fame, plays old Tom Oakley in this movie. Tom lives in a tiny English village during 1939 and the start of the Second World War. A bit of a recluse, Tom has not yet recovered from the death of his wife and son while he was serving during the First World War. If you can imagine Inspector Morse old and retired, twice as crochety as when he was a policeman, then you\'ve got Tom Oakley\'s character.<br /><br />Yet this heart of flint is about to melt. London children are evacuated in advance of the blitz. Young William (Willie) Beech is billeted with the protesting Tom. Willie is played to good effect by Nick Robinson.<br /><br />This boy is in need of care with a capital C. Behind in school, still wetting the bed, and unable to read are the smallest of his problems. He comes from a horrific background in London, with a mother who cannot cope, to put it mildly.<br /><br />Slowly, yet steadily, man and boy warm to each other. Tom discovers again his ability to love and care. And the boy learns to accept this love and caring. See Tom and Willie building a bomb shelter at the end of their garden. See Willie\'s joy at what is probably his first ever birthday party thrown by Tom.<br /><br />Not to give away the ending, but Willie is adopted by Tom after much struggle, and the pair begin a new life much richer for their mutual love.<br /><br />In this movie, Thaw and Robinson are following in a long line of movies where man meets boy and develop a mutual love. See the late Dirk Bogarde and Jon Whiteley in "Spanish Gardener". Or Clark Gable and Carlo Angeletti in "It Started in Naples". Or Robert Ulrich and Kenny Vadas in "Captains Courageous". Or Mel Gibson and Nick Stahl in "Man Without a Face".<br /><br />Two points of interest. This is the only appearance of Thaw that I know of where he sings. Only a verse of a hymn, New Jerusalem, but he does sing.<br /><br />Second, young Robinson also starred in a second movie featuring "Tom" in the title, "Tom\'s Midnight Garden", which is based on a classic children\'s novel.'>, <tf.Tensor: shape=(), dtype=int32, numpy=1>)
 
 ```
 </div>
@@ -179,12 +180,9 @@ classifier.predict(["I love modular workflows in keras-nlp!"])
 
 <div class="k-default-codeblock">
 ```
-WARNING:tensorflow:From /home/haifengj/miniconda3/lib/python3.10/site-packages/tensorflow/python/autograph/pyct/static_analysis/liveness.py:83: Analyzer.lamba_check (from tensorflow.python.autograph.pyct.static_analysis.liveness) is deprecated and will be removed after 2023-09-23.
-Instructions for updating:
-Lambda fuctions will be no more assumed to be used in the statement where they are used, or at least in the same block. https://github.com/tensorflow/tensorflow/issues/56089
-1/1 [==============================] - 3s 3s/step
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 1s 882ms/step
 
-array([[-1.539,  1.542]], dtype=float16)
+array([[-1.5376465,  1.5407037]], dtype=float32)
 
 ```
 </div>
@@ -212,9 +210,9 @@ classifier.evaluate(imdb_test)
 
 <div class="k-default-codeblock">
 ```
-1563/1563 [==============================] - 42s 25ms/step - loss: 0.4630 - sparse_categorical_accuracy: 0.7835
+ 1563/1563 ━━━━━━━━━━━━━━━━━━━━ 6s 4ms/step - loss: 0.4566 - sparse_categorical_accuracy: 0.7885
 
-[0.4629528820514679, 0.7834799885749817]
+[0.46291637420654297, 0.7834799885749817]
 
 ```
 </div>
@@ -256,9 +254,9 @@ classifier.fit(
 
 <div class="k-default-codeblock">
 ```
-1563/1563 [==============================] - 294s 179ms/step - loss: 0.4203 - sparse_categorical_accuracy: 0.8024 - val_loss: 0.3077 - val_sparse_categorical_accuracy: 0.8700
+ 1563/1563 ━━━━━━━━━━━━━━━━━━━━ 19s 11ms/step - loss: 0.5128 - sparse_categorical_accuracy: 0.7350 - val_loss: 0.2974 - val_sparse_categorical_accuracy: 0.8746
 
-<keras.callbacks.History at 0x7fbed01424d0>
+<keras_core.src.callbacks.history.History at 0x7f86a0649db0>
 
 ```
 </div>
@@ -286,18 +284,25 @@ matching **preprocessor** as the **task**.
 In this workflow we train the model over three epochs using `tf.data.Dataset.cache()`,
 which computes the preprocessing once and caches the result before fitting begins.
 
-**Note:** this code only works if your data fits in memory. If not, pass a `filename` to
-`cache()`.
+**Note:** we can use `tf.data` for preprocessing while running on the
+Jax or PyTorch backend. The input dataset will automatically be converted to
+backend native tensor types during fit. In fact, given the efficiency of `tf.data`
+for running preprocessing, this is good practice on all backends.
 
 
 ```python
+import tensorflow as tf
+
 preprocessor = keras_nlp.models.BertPreprocessor.from_preset(
     "bert_tiny_en_uncased",
     sequence_length=512,
 )
+
 # Apply the preprocessor to every sample of train and test data using `map()`.
 # `tf.data.AUTOTUNE` and `prefetch()` are options to tune performance, see
 # https://www.tensorflow.org/guide/data_performance for details.
+
+# Note: only call `cache()` if you training data fits in CPU memory!
 imdb_train_cached = (
     imdb_train.map(preprocessor, tf.data.AUTOTUNE).cache().prefetch(tf.data.AUTOTUNE)
 )
@@ -306,9 +311,7 @@ imdb_test_cached = (
 )
 
 classifier = keras_nlp.models.BertClassifier.from_preset(
-    "bert_tiny_en_uncased",
-    preprocessor=None,
-    num_classes=2
+    "bert_tiny_en_uncased", preprocessor=None, num_classes=2
 )
 classifier.fit(
     imdb_train_cached,
@@ -320,13 +323,13 @@ classifier.fit(
 <div class="k-default-codeblock">
 ```
 Epoch 1/3
-1563/1563 [==============================] - 262s 159ms/step - loss: 0.4221 - sparse_categorical_accuracy: 0.8002 - val_loss: 0.3077 - val_sparse_categorical_accuracy: 0.8699
+ 1563/1563 ━━━━━━━━━━━━━━━━━━━━ 18s 11ms/step - loss: 0.5338 - sparse_categorical_accuracy: 0.7117 - val_loss: 0.3015 - val_sparse_categorical_accuracy: 0.8737
 Epoch 2/3
-1563/1563 [==============================] - 225s 144ms/step - loss: 0.2673 - sparse_categorical_accuracy: 0.8923 - val_loss: 0.2935 - val_sparse_categorical_accuracy: 0.8783
+ 1563/1563 ━━━━━━━━━━━━━━━━━━━━ 15s 9ms/step - loss: 0.2855 - sparse_categorical_accuracy: 0.8829 - val_loss: 0.3053 - val_sparse_categorical_accuracy: 0.8771
 Epoch 3/3
-1563/1563 [==============================] - 225s 144ms/step - loss: 0.1974 - sparse_categorical_accuracy: 0.9271 - val_loss: 0.3418 - val_sparse_categorical_accuracy: 0.8686
+ 1563/1563 ━━━━━━━━━━━━━━━━━━━━ 15s 9ms/step - loss: 0.2094 - sparse_categorical_accuracy: 0.9215 - val_loss: 0.3238 - val_sparse_categorical_accuracy: 0.8756
 
-<keras.callbacks.History at 0x7fbe99bc5960>
+<keras_core.src.callbacks.history.History at 0x7f864c4a3b80>
 
 ```
 </div>
@@ -342,7 +345,9 @@ In cases where custom preprocessing is required, we offer direct access to the
 constructor to get the vocabulary matching pretraining.
 
 **Note:** `BertTokenizer` does not pad sequences by default, so the output is
-a `tf.RaggedTensor`.
+ragged (each sequence has varying length). The `MultiSegmentPacker` below
+handles padding these ragged sequences to dense tensor types (e.g. `tf.Tensor`
+or `torch.Tensor`).
 
 
 ```python
@@ -386,13 +391,13 @@ print(imdb_train_preprocessed.unbatch().take(1).get_single_element())
 <div class="k-default-codeblock">
 ```
 ({'token_ids': <tf.Tensor: shape=(64,), dtype=int32, numpy=
-array([  101, 11271,  9261,  2003,  2028,  1997,  2216,  5889,  2008,
-        1045,  1005,  2310,  2763,  2464,  1999,  1037,  6474,  3152,
-        1010,  2021,  2040,  2038,  2196,  2428,  5068,  2005,  2033,
-        1012,  2411,  2358, 10893,  2094,  1010, 11937, 26243, 14287,
-        1010,  2652,  1996,  2168,  7957,  1997,  4395,  1998,  2559,
-        5399,  2066,  1996,  6660,  2104,  9250,  9465,  4811,  1010,
-        2002,  1005,  1055,  2019,  3364,  2008,  3138,  2070,  3947,
+array([  101,  1996,  2466,  1997, 12311,  5163,  2038,  2042,  4372,
+        4095, 21332,  2098,  1999, 10661,  1998,  4654, 27609,  3370,
+        2005,  2051,  2041,  1997,  2192,  1010,  1998,  2023,  2143,
+        2003,  2053,  6453,  1012,  2054, 21312, 12311,  5163,  2038,
+        1037,  4568,  2173,  1999,  2381,  2003,  1996,  3947,  2002,
+        2253,  2000,  1999,  2344,  2000,  2130,  1996, 10238,  2114,
+        1996, 19809,  5933,  2032,  1012,  2076,  2195,  7465,  1010,
          102], dtype=int32)>, 'segment_ids': <tf.Tensor: shape=(64,), dtype=int32, numpy=
 array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -454,8 +459,8 @@ outputs = keras.layers.Dense(2)(sequence[:, backbone.cls_token_index, :])
 model = keras.Model(inputs, outputs)
 model.compile(
     loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
-    optimizer=keras.optimizers.experimental.AdamW(5e-5),
-    metrics=keras.metrics.SparseCategoricalAccuracy(),
+    optimizer=keras.optimizers.AdamW(5e-5),
+    metrics=[keras.metrics.SparseCategoricalAccuracy()],
     jit_compile=True,
 )
 model.summary()
@@ -466,48 +471,72 @@ model.fit(
 )
 ```
 
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold">Model: "functional_1"</span>
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">┏━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━┓
+┃<span style="font-weight: bold"> Layer (type)        </span>┃<span style="font-weight: bold"> Output Shape      </span>┃<span style="font-weight: bold"> Param # </span>┃<span style="font-weight: bold"> Connected to         </span>┃
+┡━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━┩
+│ padding_mask        │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>)      │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ -                    │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">InputLayer</span>)        │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ segment_ids         │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>)      │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ -                    │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">InputLayer</span>)        │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ token_ids           │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>)      │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ -                    │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">InputLayer</span>)        │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ bert_backbone_3     │ [(<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">128</span>),     │ <span style="color: #00af00; text-decoration-color: #00af00">4,385,…</span> │ padding_mask[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>],  │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">BertBackbone</span>)      │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>,      │         │ segment_ids[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>],   │
+│                     │ <span style="color: #00af00; text-decoration-color: #00af00">128</span>)]             │         │ token_ids[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>]      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ transformer_encoder │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">128</span>) │ <span style="color: #00af00; text-decoration-color: #00af00">198,272</span> │ bert_backbone_3[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">…</span> │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">TransformerEncode…</span> │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ transformer_encode… │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">128</span>) │ <span style="color: #00af00; text-decoration-color: #00af00">198,272</span> │ transformer_encoder… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">TransformerEncode…</span> │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ get_item_4          │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">128</span>)       │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ transformer_encoder… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">GetItem</span>)           │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ dense_20 (<span style="color: #0087ff; text-decoration-color: #0087ff">Dense</span>)    │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">2</span>)         │     <span style="color: #00af00; text-decoration-color: #00af00">258</span> │ get_item_4[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>]     │
+└─────────────────────┴───────────────────┴─────────┴──────────────────────┘
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Total params: </span><span style="color: #00af00; text-decoration-color: #00af00">4,782,722</span> (145.96 MB)
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Trainable params: </span><span style="color: #00af00; text-decoration-color: #00af00">396,802</span> (12.11 MB)
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Non-trainable params: </span><span style="color: #00af00; text-decoration-color: #00af00">4,385,920</span> (133.85 MB)
+</pre>
+
+
+
 <div class="k-default-codeblock">
 ```
-Model: "model"
-__________________________________________________________________________________________________
- Layer (type)                   Output Shape         Param #     Connected to                     
-==================================================================================================
- padding_mask (InputLayer)      [(None, None)]       0           []                               
-                                                                                                  
- segment_ids (InputLayer)       [(None, None)]       0           []                               
-                                                                                                  
- token_ids (InputLayer)         [(None, None)]       0           []                               
-                                                                                                  
- bert_backbone_3 (BertBackbone)  {'sequence_output':  4385920    ['padding_mask[0][0]',           
-                                 (None, None, 128),               'segment_ids[0][0]',            
-                                 'pooled_output': (               'token_ids[0][0]']              
-                                None, 128)}                                                       
-                                                                                                  
- transformer_encoder (Transform  (None, None, 128)   198272      ['bert_backbone_3[0][1]']        
- erEncoder)                                                                                       
-                                                                                                  
- transformer_encoder_1 (Transfo  (None, None, 128)   198272      ['transformer_encoder[0][0]']    
- rmerEncoder)                                                                                     
-                                                                                                  
- tf.__operators__.getitem_4 (Sl  (None, 128)         0           ['transformer_encoder_1[0][0]']  
- icingOpLambda)                                                                                   
-                                                                                                  
- dense (Dense)                  (None, 2)            258         ['tf.__operators__.getitem_4[0][0
-                                                                 ]']                              
-                                                                                                  
-==================================================================================================
-Total params: 4,782,722
-Trainable params: 396,802
-Non-trainable params: 4,385,920
-__________________________________________________________________________________________________
 Epoch 1/3
-1563/1563 [==============================] - 50s 23ms/step - loss: 0.5825 - sparse_categorical_accuracy: 0.6916 - val_loss: 0.5144 - val_sparse_categorical_accuracy: 0.7460
+ 1563/1563 ━━━━━━━━━━━━━━━━━━━━ 23s 14ms/step - loss: 0.6078 - sparse_categorical_accuracy: 0.6726 - val_loss: 0.5193 - val_sparse_categorical_accuracy: 0.7432
 Epoch 2/3
-1563/1563 [==============================] - 15s 10ms/step - loss: 0.4842 - sparse_categorical_accuracy: 0.7655 - val_loss: 0.4286 - val_sparse_categorical_accuracy: 0.8025
+ 1563/1563 ━━━━━━━━━━━━━━━━━━━━ 19s 12ms/step - loss: 0.5087 - sparse_categorical_accuracy: 0.7498 - val_loss: 0.4267 - val_sparse_categorical_accuracy: 0.8032
 Epoch 3/3
-1563/1563 [==============================] - 15s 10ms/step - loss: 0.4409 - sparse_categorical_accuracy: 0.7968 - val_loss: 0.4084 - val_sparse_categorical_accuracy: 0.8145
+ 1563/1563 ━━━━━━━━━━━━━━━━━━━━ 19s 12ms/step - loss: 0.4424 - sparse_categorical_accuracy: 0.7942 - val_loss: 0.3937 - val_sparse_categorical_accuracy: 0.8229
 
-<keras.callbacks.History at 0x7fbe20713af0>
+<keras_core.src.callbacks.history.History at 0x7f860c194ac0>
 
 ```
 </div>
@@ -593,31 +622,31 @@ print(pretrain_ds.unbatch().take(1).get_single_element())
 <div class="k-default-codeblock">
 ```
 ({'token_ids': <tf.Tensor: shape=(256,), dtype=int32, numpy=
-array([  101,  2064,  2151,  3185,  2468,  2062, 15743,  2084,  2023,
-        1029,   103,  2064,  2102,  2903,  7631,   103,   103,  2023,
-        5896,   103,   103,  2049,  7020,  9541,  9541,  2080, 21425,
-        2008,  2017,  2064,  2425,   103,  5436,  3574,  1996,   103,
-        2013,  1996,   103,  2184,   103,  1012,  1996,  2877,  3883,
-        3849,  2066,  2016,  4122,  2000,  2022,   103,  1006,  2021,
-        2016,  2987,   103,  1056,  2191,  2009,  1010,   103, 10658,
-        2038,  2062, 23041,  4813,  1007,  1012,   103,  7987,  1013,
-        1028,   103,  7987,  1013,  1028,  1996,   103,   103,   103,
-         103,   103,  2839,  5235,  1998,  3464,  1999,  1037,  1037,
-        2189,  2082,  3084,  1996, 11588,   103,  1996,  3850,  3117,
-        4025,   103,  1037,   103,  8308,  1012,   103,   103,  2102,
-         103,   103,  2006,  8114,   684,  2791,  1997,   103,  3494,
-        2021,  1996,  2028,  2204,  2518,  1997,  1996,   103,  2003,
-        5506,   103,   103, 26402,  2836,  2029,  9020,  2000,   103,
-        2166,  2000,  1037, 11463,  2080,   103,  2066,  2028,  1011,
-        8789,  2839, 28350,  1026,  7987,  1013,  1028,  1026,  7987,
-        1013, 15799,  1996,  3185,  2003,  2061, 18178,   103,  2100,
-         103,  2009, 12668,  2000,   103,  4091,   103,  1045,  2064,
-        2228,  2070,  2410,   103,  2214, 29168,  1011, 15896,  3057,
-       11273,  1000,  1051,  1010,  2079,  2507,  2149,  1037,  3338,
-         999,  2065,  2057,   103,  8867,  7122,  2045,  2003,  2467,
-        1996,   103, 24287,  2338,  5023,  4873,  1999,  1996, 14832,
-        1000,  1012,  1045,  2435,   103,  1016,  2612,   103,  2028,
-        2069,  7286,  3448,  5506,   103,   103,   102,     0,     0,
+array([  101,  1996,   103,  5236,  5195,  1012,  1045,   103,  1996,
+        4364,  5613,  2012,  1996,  2927,   103,  2028,   103,  7112,
+       16562,  2140,  1005,  1055,  5691,  2001,   103,  2098,  2000,
+       12934,  5076,   103,  2010,  3596,  2000,  3153,  2189,  2012,
+        1996,   103,  1997,  2023,  5236,  3185,  1012,  1996,  5436,
+         103, 21425,  1010,  1996,   103,  2020,  4189,  1998,  5076,
+        4490,  2055,   103,  2092,   103,  1996, 10682,  2002, 10299,
+         103,  2070,  4066,   103,   103,  1999,  2028,   103,  1012,
+         102,     0,     0,     0,     0,     0,     0,     0,     0,
+           0,     0,     0,     0,     0,     0,     0,     0,     0,
+           0,     0,     0,     0,     0,     0,     0,     0,     0,
+           0,     0,     0,     0,     0,     0,     0,     0,     0,
+           0,     0,     0,     0,     0,     0,     0,     0,     0,
+           0,     0,     0,     0,     0,     0,     0,     0,     0,
+           0,     0,     0,     0,     0,     0,     0,     0,     0,
+           0,     0,     0,     0,     0,     0,     0,     0,     0,
+           0,     0,     0,     0,     0,     0,     0,     0,     0,
+           0,     0,     0,     0,     0,     0,     0,     0,     0,
+           0,     0,     0,     0,     0,     0,     0,     0,     0,
+           0,     0,     0,     0,     0,     0,     0,     0,     0,
+           0,     0,     0,     0,     0,     0,     0,     0,     0,
+           0,     0,     0,     0,     0,     0,     0,     0,     0,
+           0,     0,     0,     0,     0,     0,     0,     0,     0,
+           0,     0,     0,     0,     0,     0,     0,     0,     0,
+           0,     0,     0,     0,     0,     0,     0,     0,     0,
            0,     0,     0,     0,     0,     0,     0,     0,     0,
            0,     0,     0,     0,     0,     0,     0,     0,     0,
            0,     0,     0,     0,     0,     0,     0,     0,     0,
@@ -642,44 +671,41 @@ array([ True,  True,  True,  True,  True,  True,  True,  True,  True,
         True,  True,  True,  True,  True,  True,  True,  True,  True,
         True,  True,  True,  True,  True,  True,  True,  True,  True,
         True,  True,  True,  True,  True,  True,  True,  True,  True,
-        True,  True,  True,  True,  True,  True,  True,  True,  True,
-        True,  True,  True,  True,  True,  True,  True,  True,  True,
-        True,  True,  True,  True,  True,  True,  True,  True,  True,
-        True,  True,  True,  True,  True,  True,  True,  True,  True,
-        True,  True,  True,  True,  True,  True,  True,  True,  True,
-        True,  True,  True,  True,  True,  True,  True,  True,  True,
-        True,  True,  True,  True,  True,  True,  True,  True,  True,
-        True,  True,  True,  True,  True,  True,  True,  True,  True,
-        True,  True,  True,  True,  True,  True,  True,  True,  True,
-        True,  True,  True,  True,  True,  True,  True,  True,  True,
-        True,  True,  True,  True,  True,  True,  True,  True,  True,
-        True,  True,  True,  True,  True,  True,  True,  True,  True,
-        True,  True,  True,  True,  True,  True,  True,  True,  True,
-        True,  True,  True,  True,  True,  True,  True,  True,  True,
-        True,  True,  True,  True,  True,  True,  True,  True,  True,
-        True,  True,  True,  True,  True,  True,  True,  True,  True,
-        True,  True,  True,  True,  True,  True,  True, False, False,
+        True, False, False, False, False, False, False, False, False,
+       False, False, False, False, False, False, False, False, False,
+       False, False, False, False, False, False, False, False, False,
+       False, False, False, False, False, False, False, False, False,
+       False, False, False, False, False, False, False, False, False,
+       False, False, False, False, False, False, False, False, False,
+       False, False, False, False, False, False, False, False, False,
+       False, False, False, False, False, False, False, False, False,
+       False, False, False, False, False, False, False, False, False,
+       False, False, False, False, False, False, False, False, False,
+       False, False, False, False, False, False, False, False, False,
+       False, False, False, False, False, False, False, False, False,
+       False, False, False, False, False, False, False, False, False,
+       False, False, False, False, False, False, False, False, False,
+       False, False, False, False, False, False, False, False, False,
+       False, False, False, False, False, False, False, False, False,
+       False, False, False, False, False, False, False, False, False,
        False, False, False, False, False, False, False, False, False,
        False, False, False, False, False, False, False, False, False,
        False, False, False, False, False, False, False, False, False,
        False, False, False, False])>, 'mask_positions': <tf.Tensor: shape=(64,), dtype=int64, numpy=
-array([ 10,  14,  15,  16,  19,  20,  31,  33,  35,  38,  40,  51,  56,
-        58,  61,  65,  69,  73,  78,  79,  80,  81,  82,  95, 100, 102,
-       105, 106, 108, 109, 111, 112, 115, 121, 124, 126, 127, 128, 129,
-       134, 140, 146, 154, 160, 162, 166, 168, 174, 192, 199, 208, 211,
-       214, 217, 220, 221,   0,   0,   0,   0,   0,   0,   0,   0])>}, <tf.Tensor: shape=(64,), dtype=int32, numpy=
-array([ 2017,  1037,  3538,  1997,  1012,  1998,  1996,  1998,  4566,
-        2034,  2781, 22635,  1005,  2191,  1996,  3772,  1026,  1026,
-       19413, 11493,  7971,  2008,  1996,  1997,  2066,  3439,  1045,
-        2180,  2130,  7615,  1996,  8467,  1996,  2518,  2143,  5506,
-        5054,  1005,  1055,  3288,  1011,  1012,  1028,  2229,  2008,
-        2115,  1012,  2095,  2215,  3428,  1012,  2009,  1997,  2005,
-        5054,  1012,     0,     0,     0,     0,     0,     0,     0,
-           0], dtype=int32)>, <tf.Tensor: shape=(64,), dtype=float16, numpy=
+array([ 2,  7, 12, 14, 16, 24, 29, 37, 45, 49, 50, 56, 58, 59, 63, 66, 67,
+       70,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
+        0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
+        0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0])>}, <tf.Tensor: shape=(64,), dtype=int32, numpy=
+array([6669, 2228, 1996, 1997, 1997, 7848, 2725, 2927, 2003, 9590, 2020,
+       2004, 2004, 1996, 2007, 1997, 5195, 3496,    0,    0,    0,    0,
+          0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
+          0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
+          0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
+          0,    0,    0,    0,    0,    0,    0,    0,    0], dtype=int32)>, <tf.Tensor: shape=(64,), dtype=float32, numpy=
 array([1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1.,
-       1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1.,
-       1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1.,
-       1., 1., 1., 1., 1., 0., 0., 0., 0., 0., 0., 0., 0.], dtype=float16)>)
+       1., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.,
+       0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.,
+       0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.], dtype=float32)>)
 
 ```
 </div>
@@ -702,10 +728,10 @@ mlm_head = keras_nlp.layers.MaskedLMHead(
 )
 
 inputs = {
-    "token_ids": keras.Input(shape=(None,), dtype=tf.int32),
-    "segment_ids": keras.Input(shape=(None,), dtype=tf.int32),
-    "padding_mask": keras.Input(shape=(None,), dtype=tf.int32),
-    "mask_positions": keras.Input(shape=(None,), dtype=tf.int32),
+    "token_ids": keras.Input(shape=(None,), dtype=tf.int32, name="token_ids"),
+    "segment_ids": keras.Input(shape=(None,), dtype=tf.int32, name="segment_ids"),
+    "padding_mask": keras.Input(shape=(None,), dtype=tf.int32, name="padding_mask"),
+    "mask_positions": keras.Input(shape=(None,), dtype=tf.int32, name="mask_positions"),
 }
 
 # Encoded token sequence
@@ -721,8 +747,8 @@ pretraining_model = keras.Model(inputs, outputs)
 pretraining_model.summary()
 pretraining_model.compile(
     loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
-    optimizer=keras.optimizers.experimental.AdamW(learning_rate=5e-4),
-    weighted_metrics=keras.metrics.SparseCategoricalAccuracy(),
+    optimizer=keras.optimizers.AdamW(learning_rate=5e-4),
+    weighted_metrics=[keras.metrics.SparseCategoricalAccuracy()],
     jit_compile=True,
 )
 
@@ -734,46 +760,68 @@ pretraining_model.fit(
 )
 ```
 
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold">Model: "functional_3"</span>
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">┏━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━┓
+┃<span style="font-weight: bold"> Layer (type)        </span>┃<span style="font-weight: bold"> Output Shape      </span>┃<span style="font-weight: bold"> Param # </span>┃<span style="font-weight: bold"> Connected to         </span>┃
+┡━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━┩
+│ mask_positions      │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>)      │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ -                    │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">InputLayer</span>)        │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ padding_mask        │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>)      │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ -                    │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">InputLayer</span>)        │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ segment_ids         │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>)      │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ -                    │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">InputLayer</span>)        │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ token_ids           │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>)      │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ -                    │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">InputLayer</span>)        │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ bert_backbone_4     │ [(<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">128</span>),     │ <span style="color: #00af00; text-decoration-color: #00af00">4,385,…</span> │ mask_positions[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">BertBackbone</span>)      │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>,      │         │ padding_mask[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>],  │
+│                     │ <span style="color: #00af00; text-decoration-color: #00af00">128</span>)]             │         │ segment_ids[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>],   │
+│                     │                   │         │ token_ids[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>]      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ masked_lm_head      │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">30522</span>)     │ <span style="color: #00af00; text-decoration-color: #00af00">3,954,…</span> │ bert_backbone_4[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">…</span> │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">MaskedLMHead</span>)      │                   │         │ mask_positions[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>] │
+└─────────────────────┴───────────────────┴─────────┴──────────────────────┘
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Total params: </span><span style="color: #00af00; text-decoration-color: #00af00">4,433,210</span> (135.29 MB)
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Trainable params: </span><span style="color: #00af00; text-decoration-color: #00af00">4,433,210</span> (135.29 MB)
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Non-trainable params: </span><span style="color: #00af00; text-decoration-color: #00af00">0</span> (0.00 B)
+</pre>
+
+
+
 <div class="k-default-codeblock">
 ```
-/home/haifengj/miniconda3/lib/python3.10/site-packages/keras/engine/functional.py:638: UserWarning: Input dict contained keys ['mask_positions'] which did not match any model input. They will be ignored by the model.
-  inputs = self._flatten_to_reference_inputs(inputs)
-
-Model: "model_1"
-__________________________________________________________________________________________________
- Layer (type)                   Output Shape         Param #     Connected to                     
-==================================================================================================
- input_4 (InputLayer)           [(None, None)]       0           []                               
-                                                                                                  
- input_3 (InputLayer)           [(None, None)]       0           []                               
-                                                                                                  
- input_2 (InputLayer)           [(None, None)]       0           []                               
-                                                                                                  
- input_1 (InputLayer)           [(None, None)]       0           []                               
-                                                                                                  
- bert_backbone_4 (BertBackbone)  {'sequence_output':  4385920    ['input_4[0][0]',                
-                                 (None, None, 128),               'input_3[0][0]',                
-                                 'pooled_output': (               'input_2[0][0]',                
-                                None, 128)}                       'input_1[0][0]']                
-                                                                                                  
- masked_lm_head (MaskedLMHead)  (None, None, 30522)  3954106     ['bert_backbone_4[0][1]',        
-                                                                  'input_4[0][0]']                
-                                                                                                  
-==================================================================================================
-Total params: 4,433,210
-Trainable params: 4,433,210
-Non-trainable params: 0
-__________________________________________________________________________________________________
 Epoch 1/3
-WARNING:tensorflow:Gradients do not exist for variables ['pooled_dense/kernel:0', 'pooled_dense/bias:0'] when minimizing the loss. If you're using `model.compile()`, did you forget to provide a `loss` argument?
-WARNING:tensorflow:Gradients do not exist for variables ['pooled_dense/kernel:0', 'pooled_dense/bias:0'] when minimizing the loss. If you're using `model.compile()`, did you forget to provide a `loss` argument?
-1563/1563 [==============================] - 103s 57ms/step - loss: 5.2620 - sparse_categorical_accuracy: 0.0866 - val_loss: 4.9799 - val_sparse_categorical_accuracy: 0.1172
+ 1563/1563 ━━━━━━━━━━━━━━━━━━━━ 21s 12ms/step - loss: 5.6220 - sparse_categorical_accuracy: 0.0615 - val_loss: 4.9762 - val_sparse_categorical_accuracy: 0.1155
 Epoch 2/3
-1563/1563 [==============================] - 77s 49ms/step - loss: 4.9584 - sparse_categorical_accuracy: 0.1241 - val_loss: 4.8639 - val_sparse_categorical_accuracy: 0.1327
+ 1563/1563 ━━━━━━━━━━━━━━━━━━━━ 16s 10ms/step - loss: 4.9844 - sparse_categorical_accuracy: 0.1214 - val_loss: 4.8706 - val_sparse_categorical_accuracy: 0.1321
 Epoch 3/3
-1563/1563 [==============================] - 77s 49ms/step - loss: 4.7992 - sparse_categorical_accuracy: 0.1480 - val_loss: 4.5584 - val_sparse_categorical_accuracy: 0.1919
+ 1563/1563 ━━━━━━━━━━━━━━━━━━━━ 16s 10ms/step - loss: 4.8614 - sparse_categorical_accuracy: 0.1385 - val_loss: 4.4897 - val_sparse_categorical_accuracy: 0.2069
 
-<keras.callbacks.History at 0x7fbe2ca08700>
+<keras_core.src.callbacks.history.History at 0x7f862c356e30>
 
 ```
 </div>
@@ -843,63 +891,63 @@ print(imdb_preproc_train_ds.unbatch().take(1).get_single_element())
 <div class="k-default-codeblock">
 ```
 (<tf.Tensor: shape=(512,), dtype=int32, numpy=
-array([    1,    51,    11,    55,  4588,    98,   104,   112,    97,
-         102,   230,  1571,   538,   163,   105,   128,   201,     6,
-        2116,     6,  4596,   102,  2053,    96,   895,  1733,  2508,
-          18,    43,   903,   745,   100,   303, 10439,  1639,    31,
-         103,   937,   126,  1225,   112,  4406,   114,    96,  1767,
-          11,    61,  1897,    97,   234,   120,  7017,   114,   184,
-         298,  1417,    18,  1507,   107,    43, 11524,  1955,    16,
-         104,   100,    43, 17039,  3669,    99,  9709,   165,    96,
-        7133,   409,    18,   228,   104,   112,   139,   184,  1640,
-         102,  2894, 18115,    99,    96,  2603,    16,   354,   128,
-         321,   107,    96,   195,   117,  2102,    18,    32,   101,
-          19,    34,    32,   101,    19,    34,   103,    96,  1733,
-         409,  9709,    11,    61, 12297,   100,  1300,  6172,    30,
-         129,    96,   176,   229,   116,   100,  1096,   107,    43,
-         909,  1210,    16,  1466,  3025,  2576,    16,  8945,   125,
-        2082,   281,   180,    97,   206,  2248,   114,   118,   298,
-         198,  2345,    12,   104,   100,  3346,    97, 16468,   272,
-         378,    18,    13,   113,   689,   227,  2091,  2640,   104,
-        9476, 15084, 15535,  7658,    99,  1790,    96,   121,  1865,
-          99,    96,  8485,    98,  5044,    18,  1733,  2781,  1729,
-        1518,  8597, 15031, 10060,   136,  9709,    97, 13478, 12297,
-          98,   118,  2035,   651,   146,   116,  2219,    43,   452,
-       15038,    99,  2392,   180,   129,    96,  1865,  1916,  1986,
-        8210,   136,    18,    18,    18,  3731,    11,    61,   409,
-        7411,    96,   295,    16,  5700,    43, 12297,   127,  4198,
-          96,    65,  1986,  8210,   136,     6,   231,   235,    97,
-        1216,   163,   150,   144,     5,     6,  3731,  9150,   136,
-       12297,    11,    61,   196,   107,  9709,  3992,   102,    18,
-         161,   158,   118,  6712,   107,    96,  3571,    98,   118,
-        9969, 13378,    18, 12297,   100,   128,  8058,    99,  1694,
-          98,    96,  2852,   113,   689,   227,  1733,   657,   232,
-        9474,    12,   116,   218,   128,   109,  2099,   195,    13,
-         329,   196,  1034,  8550,  5948,    96,   204,    99,   184,
-        3720,  1282,    18,  3731,    11,    61,   112,   220,  6088,
-          96, 13699,   293,  4229,  9173,   136,    97, 10650,   917,
-        3745,   103,    43,   264, 12994,  6867,   229,   105,   117,
-         436,  2042,   103,  1733,    11,    61,   409,    18,  4749,
-         161,   158,  3256,  3196, 16112,  3829,  1429,   237,   109,
-       13434,   993,  8330,    97,  8158,    16,  1132,   237,    96,
-         421,    98, 17038,    18,   108,   152,  4364,    96, 15623,
-         100,   144,  1508,   103,    96,  1225,   409,   165,    96,
-         511,   297,    18,    32,   101,    19,    34,    32,   101,
-          19,    34,  9709,    11,    61,  4975,   100,   126,   766,
-       12015,   103,    96,  3077,    97,  3731,   260,  3590,    99,
-         104,   103,   121,    98,   152,   607,   229,    30,   146,
-       12297,  3381,    96,     6,  8158,   245, 13380,     6,   704,
-          16,   325,   254, 10081,   175, 15963,   452,    18,    96,
-       16947,  3444,   100,  3055,   272, 14726,  1571,  2946,  9553,
-         109,    96,  4075,   850,   317,   146,  1695,   397,    16,
-        2667,    99,   118,   459,   111,  5122,    99,    96,    65,
-        1986,  8210,   136,    16, 12297,   100,  8366,  4079,    18,
-         104,   100,   121,    98,    96,   182,  3391,  9302,    98,
-          96,   112,    97,  5853,   163,  2101,    51,   158,   102,
-          18,    32,   101,    19,    34,    32,   101,    19,    34,
-          96,   164, 10410,   446,    19,   149, 13468,  6236,   104,
-         112,    11,    61,   573,  1598,   111,   160,   102,   169,
-        6076,   102,   294,   119, 17262,   328,   109,     2],
+array([    1,    51,   549,   104,   110,    18,   103,   285,    51,
+         549,   203,   126,   611,   103,   104,   110,    18,    51,
+        6195,   136,  2743,   107,    43,  2943,  2467,   103,    96,
+         429,   416,    98,    96,   110,    18,   113,   294,   472,
+         163,   144,   790,   103,    96, 11386,   226,   146,    96,
+        2090,   106, 10633,   408,   114,   112,    18,    51,   106,
+          96,   757,   103,    96,  1107,  3703,   109,   152,  1051,
+       10275,   114,   152,   487,   103,  2246,    99,   140,   161,
+         162,   240,   114,    96,   110, 16526,    18,   103,   285,
+         124,  1520,   657,   163,    43,   264,   304,   128,   102,
+          11,    61,   347,    99,   805,   105,  1433,    18,  3627,
+         148,    99,   461,  1944,   407,    18,   746,   102,   308,
+          99,  2027,   609,    18, 13687,  8042,  6969,  3929,   853,
+       17549,    16, 15274,    51,   549,   104,   110,    18,   103,
+         285,    51,   549,   203,   126,   611,   103,   104,   110,
+          18,    51,  6195,   136,  2743,   107,    43,  2943,  2467,
+         103,    96,   429,   416,    98,    96,   110,    18,   113,
+         294,   472,   163,   144,   790,   103,    96, 11386,   226,
+         146,    96,  2090,   106, 10633,   408,   114,   112,    18,
+          51,   106,    96,   757,   103,    96,  1107,  3703,   109,
+         152,  1051, 10275,   114,   152,   487,   103,  2246,    99,
+         140,   161,   162,   240,   114,    96,   110, 16526,    18,
+         103,   285,   124,  1520,   657,   163,    43,   264,   304,
+         128,   102,    11,    61,   347,    99,   805,   105,  1433,
+          18,  3627,   148,    99,   461,  1944,   407,    18,   746,
+         102,   308,    99,  2027,   609,    18, 13687,  8042,  6969,
+        3929,    32,   101,    19,    34,    32,   101,    19,    34,
+         853, 17549,    16, 15274,     2,     0,     0,     0,     0,
+           0,     0,     0,     0,     0,     0,     0,     0,     0,
+           0,     0,     0,     0,     0,     0,     0,     0,     0,
+           0,     0,     0,     0,     0,     0,     0,     0,     0,
+           0,     0,     0,     0,     0,     0,     0,     0,     0,
+           0,     0,     0,     0,     0,     0,     0,     0,     0,
+           0,     0,     0,     0,     0,     0,     0,     0,     0,
+           0,     0,     0,     0,     0,     0,     0,     0,     0,
+           0,     0,     0,     0,     0,     0,     0,     0,     0,
+           0,     0,     0,     0,     0,     0,     0,     0,     0,
+           0,     0,     0,     0,     0,     0,     0,     0,     0,
+           0,     0,     0,     0,     0,     0,     0,     0,     0,
+           0,     0,     0,     0,     0,     0,     0,     0,     0,
+           0,     0,     0,     0,     0,     0,     0,     0,     0,
+           0,     0,     0,     0,     0,     0,     0,     0,     0,
+           0,     0,     0,     0,     0,     0,     0,     0,     0,
+           0,     0,     0,     0,     0,     0,     0,     0,     0,
+           0,     0,     0,     0,     0,     0,     0,     0,     0,
+           0,     0,     0,     0,     0,     0,     0,     0,     0,
+           0,     0,     0,     0,     0,     0,     0,     0,     0,
+           0,     0,     0,     0,     0,     0,     0,     0,     0,
+           0,     0,     0,     0,     0,     0,     0,     0,     0,
+           0,     0,     0,     0,     0,     0,     0,     0,     0,
+           0,     0,     0,     0,     0,     0,     0,     0,     0,
+           0,     0,     0,     0,     0,     0,     0,     0,     0,
+           0,     0,     0,     0,     0,     0,     0,     0,     0,
+           0,     0,     0,     0,     0,     0,     0,     0,     0,
+           0,     0,     0,     0,     0,     0,     0,     0,     0,
+           0,     0,     0,     0,     0,     0,     0,     0,     0,
+           0,     0,     0,     0,     0,     0,     0,     0],
       dtype=int32)>, <tf.Tensor: shape=(), dtype=int32, numpy=1>)
 
 ```
@@ -933,42 +981,58 @@ model = keras.Model(
 model.summary()
 ```
 
-<div class="k-default-codeblock">
-```
-Model: "model_2"
-_________________________________________________________________
- Layer (type)                Output Shape              Param #   
-=================================================================
- token_ids (InputLayer)      [(None, None)]            0         
-                                                                 
- token_and_position_embeddin  (None, None, 64)         1259648   
- g (TokenAndPositionEmbeddin                                     
- g)                                                              
-                                                                 
- transformer_encoder_2 (Tran  (None, None, 64)         33472     
- sformerEncoder)                                                 
-                                                                 
- tf.__operators__.getitem_6   (None, 64)               0         
- (SlicingOpLambda)                                               
-                                                                 
- dense_1 (Dense)             (None, 2)                 130       
-                                                                 
-=================================================================
-Total params: 1,293,250
-Trainable params: 1,293,250
-Non-trainable params: 0
-_________________________________________________________________
 
-```
-</div>
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold">Model: "functional_5"</span>
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━┓
+┃<span style="font-weight: bold"> Layer (type)                    </span>┃<span style="font-weight: bold"> Output Shape              </span>┃<span style="font-weight: bold">    Param # </span>┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━┩
+│ token_ids (<span style="color: #0087ff; text-decoration-color: #0087ff">InputLayer</span>)          │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>)              │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ token_and_position_embedding    │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">64</span>)          │  <span style="color: #00af00; text-decoration-color: #00af00">1,259,648</span> │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">TokenAndPositionEmbedding</span>)     │                           │            │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ transformer_encoder_2           │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">64</span>)          │     <span style="color: #00af00; text-decoration-color: #00af00">33,472</span> │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">TransformerEncoder</span>)            │                           │            │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ get_item_6 (<span style="color: #0087ff; text-decoration-color: #0087ff">GetItem</span>)            │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">64</span>)                │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ dense_28 (<span style="color: #0087ff; text-decoration-color: #0087ff">Dense</span>)                │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">2</span>)                 │        <span style="color: #00af00; text-decoration-color: #00af00">130</span> │
+└─────────────────────────────────┴───────────────────────────┴────────────┘
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Total params: </span><span style="color: #00af00; text-decoration-color: #00af00">1,293,250</span> (39.47 MB)
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Trainable params: </span><span style="color: #00af00; text-decoration-color: #00af00">1,293,250</span> (39.47 MB)
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Non-trainable params: </span><span style="color: #00af00; text-decoration-color: #00af00">0</span> (0.00 B)
+</pre>
+
+
+
 ### Train the transformer directly on the classification objective
 
 
 ```python
 model.compile(
     loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
-    optimizer=keras.optimizers.experimental.AdamW(5e-5),
-    metrics=keras.metrics.SparseCategoricalAccuracy(),
+    optimizer=keras.optimizers.AdamW(5e-5),
+    metrics=[keras.metrics.SparseCategoricalAccuracy()],
     jit_compile=True,
 )
 model.fit(
@@ -981,13 +1045,13 @@ model.fit(
 <div class="k-default-codeblock">
 ```
 Epoch 1/3
-1563/1563 [==============================] - 128s 77ms/step - loss: 0.6113 - sparse_categorical_accuracy: 0.6411 - val_loss: 0.4020 - val_sparse_categorical_accuracy: 0.8279
+ 1563/1563 ━━━━━━━━━━━━━━━━━━━━ 7s 4ms/step - loss: 0.6688 - sparse_categorical_accuracy: 0.5758 - val_loss: 0.3674 - val_sparse_categorical_accuracy: 0.8507
 Epoch 2/3
-1563/1563 [==============================] - 117s 75ms/step - loss: 0.3117 - sparse_categorical_accuracy: 0.8729 - val_loss: 0.3062 - val_sparse_categorical_accuracy: 0.8786
+ 1563/1563 ━━━━━━━━━━━━━━━━━━━━ 5s 3ms/step - loss: 0.3126 - sparse_categorical_accuracy: 0.8725 - val_loss: 0.3138 - val_sparse_categorical_accuracy: 0.8729
 Epoch 3/3
-1563/1563 [==============================] - 135s 87ms/step - loss: 0.2381 - sparse_categorical_accuracy: 0.9066 - val_loss: 0.3113 - val_sparse_categorical_accuracy: 0.8734
+ 1563/1563 ━━━━━━━━━━━━━━━━━━━━ 5s 3ms/step - loss: 0.2226 - sparse_categorical_accuracy: 0.9151 - val_loss: 0.4513 - val_sparse_categorical_accuracy: 0.8125
 
-<keras.callbacks.History at 0x7fba26e94490>
+<keras_core.src.callbacks.history.History at 0x7f8520133970>
 
 ```
 </div>
