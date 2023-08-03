@@ -1,11 +1,10 @@
-# -*- coding: utf-8 -*-
 """
 Title: Approximating non-Function Mappings with Mixture Density Networks
 Author: [lukewood](https://twitter.com/luke_wood_ml)
 Date created: 2023/07/15
 Last modified: 2023/07/15
 Description: Approximate non one to one mapping using mixture density networks.
-Accelerator: CPU
+Accelerator: None
 """
 
 """
@@ -113,7 +112,7 @@ model = keras_core.Sequential(
     [
         layers.Dense(N_HIDDEN, activation="relu"),
         layers.Dense(N_HIDDEN, activation="relu"),
-        layers.Dense(1, activation="relu"),
+        layers.Dense(1),
     ]
 )
 
@@ -124,7 +123,9 @@ These tend to be reasonable prototyping choices:
 
 model.compile(optimizer="adam", loss="mse")
 
-"""We can fit this model quite easy"""
+"""
+We can fit this model quite easy
+"""
 
 model.fit(
     x,
@@ -383,7 +384,9 @@ y_samples = np.apply_along_axis(
     sample_from_output, 1, y_pred_mixture, 1, N_MIXES, temp=1.0
 )
 
-"""Finally, we can visualize our network outputs"""
+"""
+Finally, we can visualize our network outputs
+"""
 
 plt.scatter(x, y, alpha=0.05, color="blue", label="Ground Truth")
 plt.scatter(
@@ -395,7 +398,8 @@ plt.scatter(
 )
 plt.show()
 
-"""Beautiful.  Love to see it
+"""
+Beautiful.  Love to see it
 
 # Conclusions
 
