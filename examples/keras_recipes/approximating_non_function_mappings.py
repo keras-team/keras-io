@@ -39,7 +39,6 @@ pip install -q --upgrade tensorflow-probability keras-core
 
 import numpy as np
 import matplotlib.pyplot as plt
-from collections import OrderedDict
 import math
 import random
 from keras_core import callbacks
