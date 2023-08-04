@@ -1,22 +1,23 @@
-"""
-Title: Customizing Saving and Serialization
-Author: Neel Kovelamudi
-Date created: 2023/03/15
-Last modified: 2023/03/15
-Description: A more advanced guide on customizing saving for your layers and models.
-Accelerator: None
-"""
+# Customizing Saving and Serialization
 
-"""
+**Author:** Neel Kovelamudi<br>
+**Date created:** 2023/03/15<br>
+**Last modified:** 2023/03/15<br>
+**Description:** A more advanced guide on customizing saving for your layers and models.
+
+
+<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/guides/ipynb/customizing_saving_and_serialization.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/guides/customizing_saving_and_serialization.py)
+
+
+
+---
 ## Introduction
 
 This guide covers advanced methods that can be customized in Keras saving. For most
 users, the methods outlined in the primary
 [Serialize, save, and export guide](https://keras.io/guides/serialization_and_saving)
 are sufficient.
-"""
 
-"""
 ### APIs
 We will cover the following APIs:
 
@@ -32,26 +33,22 @@ When restoring a model, these get executed in the following order:
 - `load_own_variables()`
 - `load_assets()`
 
-"""
-
-"""
+---
 ## Setup
-"""
 
+
+```python
 import os
 import numpy as np
 import tensorflow as tf
 import keras
+```
 
-"""
+---
 ## State saving customization
 
 These methods determine how the state of your model's layers is saved when calling
 `model.save()`. You can override them to take full control of the state saving process.
-
-"""
-
-"""
 
 
 ### `save_own_variables()` and `load_own_variables()`
@@ -72,8 +69,9 @@ The store used by these methods is a dictionary that can be populated with the l
 variables. Let's take a look at an example customizing this.
 
 **Example:**
-"""
 
+
+```python
 
 @keras.utils.register_keras_serializable(package="my_custom_package")
 class LayerWithCustomVariables(keras.layers.Dense):
@@ -115,8 +113,14 @@ np.testing.assert_allclose(
     model.layers[0].stored_variables.numpy(),
     restored_model.layers[0].stored_variables.numpy(),
 )
+```
 
-"""
+<div class="k-default-codeblock">
+```
+1/1 [==============================] - 0s 418ms/step - loss: 0.7132
+
+```
+</div>
 ### `save_assets()` and `load_assets()`
 
 These methods can be added to your model class definition to store and load any
@@ -129,8 +133,9 @@ saving.
 Let's take at the basics of this workflow with a simple file `assets.txt`.
 
 **Example:**
-"""
 
+
+```python
 
 @keras.saving.register_keras_serializable(package="my_custom_package")
 class LayerWithCustomAssets(keras.layers.Dense):
@@ -163,12 +168,11 @@ restored_model = keras.models.load_model("custom_assets_model.keras")
 np.testing.assert_string_equal(
     restored_model.layers[0].vocab, "Mary had a little lamb."
 )
+```
 
-"""
+---
 ## `build` and `compile` saving customization
-"""
 
-"""
 ### `get_build_config()` and `build_from_config()`
 
 These methods work together to save the layer's built states and restore them upon
@@ -179,8 +183,9 @@ but overriding these methods can be used to include further Variables and Lookup
 that can be useful to restore for your built model.
 
 **Example:**
-"""
 
+
+```python
 
 @keras.saving.register_keras_serializable(package="my_custom_package")
 class LayerWithCustomBuild(keras.layers.Layer):
@@ -241,8 +246,8 @@ restored_model = keras.models.load_model("custom_build_model.keras")
 
 np.testing.assert_equal(restored_model.layers[0].layer_init, "random_normal")
 np.testing.assert_equal(restored_model.built, True)
+```
 
-"""
 ### `get_compile_config()` and `compile_from_config()`
 
 These methods work together to save the information with which the model was compiled
@@ -255,8 +260,9 @@ optimizers, custom losses, etc., as these will need to be deserialized prior to 
 Let's take a look at an example of this.
 
 **Example:**
-"""
 
+
+```python
 
 @keras.saving.register_keras_serializable(package="my_custom_package")
 def small_square_sum_loss(y_true, y_pred):
@@ -322,8 +328,17 @@ restored_model = keras.models.load_model("custom_compile_model.keras")
 np.testing.assert_equal(model.model_optimizer, restored_model.model_optimizer)
 np.testing.assert_equal(model.loss_fn, restored_model.loss_fn)
 np.testing.assert_equal(model.loss_metrics, restored_model.loss_metrics)
+```
 
-"""
+<div class="k-default-codeblock">
+```
+1/1 [==============================] - 0s 386ms/step - loss: 0.0704 - accuracy: 0.0000e+00 - mean_pred: 0.2500
+
+WARNING:absl:Skipping variable loading for optimizer 'SGD', because it has 1 variables whereas the saved optimizer has 5 variables. 
+
+```
+</div>
+---
 ## Conclusion
 
 Using the methods learned in this tutorial allows for a wide variety of use cases,
@@ -338,5 +353,3 @@ information your model needs.
 states.
 - `get_compile_config` and `compile_from_config` save and restore the model's
 compiled states.
-
-"""
