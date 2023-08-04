@@ -1,8 +1,8 @@
 """
-Title: Image classification from scratch
-Author: [fchollet](https://twitter.com/fchollet)
+Title: [KerasCV] Image classification from scratch
+Author: [fchollet](https://twitter.com/fchollet), updated by [Suvaditya Mukherjee](https://twitter.com/halcyonrayes)
 Date created: 2020/04/27
-Last modified: 2022/11/10
+Last modified: 2023/06/17
 Description: Training an image classifier from scratch on the Kaggle Cats vs Dogs dataset.
 Accelerator: GPU
 """
@@ -25,6 +25,7 @@ we use Keras image preprocessing layers for image standardization and data augme
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
+import keras_cv
 
 """
 ## Load the data: the Cats vs Dogs dataset
@@ -99,19 +100,30 @@ train_ds, val_ds = tf.keras.utils.image_dataset_from_directory(
 """
 ## Visualize the data
 
-Here are the first 9 images in the training dataset. As you can see, label 1 is "dog"
-and label 0 is "cat".
+Here are the first 8 images in the training dataset, visualized using
+the KerasCV plot_image_gallery utility.
 """
 
-import matplotlib.pyplot as plt
+vis_ds = train_ds.take(1).unbatch()
 
-plt.figure(figsize=(10, 10))
-for images, labels in train_ds.take(1):
-    for i in range(9):
-        ax = plt.subplot(3, 3, i + 1)
-        plt.imshow(images[i].numpy().astype("uint8"))
-        plt.title(int(labels[i]))
-        plt.axis("off")
+vis_ds = vis_ds.take(8)
+
+
+def get_images(image, _):
+    return image
+
+
+vis_ds = vis_ds.map(get_images)
+
+vis_ds = vis_ds.apply(tf.data.experimental.dense_to_ragged_batch(8))
+
+keras_cv.visualization.plot_image_gallery(
+    next(iter(vis_ds.take(1))),
+    value_range=(0, 255),
+    scale=3,
+    rows=4,
+    cols=2,
+)
 
 """
 ## Using image data augmentation
@@ -120,28 +132,36 @@ When you don't have a large image dataset, it's a good practice to artificially
 introduce sample diversity by applying random yet realistic transformations to the
 training images, such as random horizontal flipping or small random rotations. This
 helps expose the model to different aspects of the training data while slowing down
-overfitting.
+overfitting. For this, we can make use of KerasCV and its wide array of preprocessing
+layers.
 """
 
 data_augmentation = keras.Sequential(
     [
-        layers.RandomFlip("horizontal"),
-        layers.RandomRotation(0.1),
+        keras_cv.layers.RandomFlip(),
+        keras_cv.layers.RandAugment(
+            value_range=(0, 255),
+            augmentations_per_image=2,
+            magnitude=0.5,
+            magnitude_stddev=0.15,
+        ),
     ]
 )
 
 """
 Let's visualize what the augmented samples look like, by applying `data_augmentation`
-repeatedly to the first image in the dataset:
+repeatedly to the first few images in the dataset:
 """
 
-plt.figure(figsize=(10, 10))
-for images, _ in train_ds.take(1):
-    for i in range(9):
-        augmented_images = data_augmentation(images)
-        ax = plt.subplot(3, 3, i + 1)
-        plt.imshow(augmented_images[0].numpy().astype("uint8"))
-        plt.axis("off")
+vis_ds = vis_ds.map(data_augmentation)
+
+keras_cv.visualization.plot_image_gallery(
+    next(iter(vis_ds.take(1))),
+    value_range=(0, 255),
+    scale=3,
+    rows=4,
+    cols=2,
+)
 
 """
 ## Standardizing the data

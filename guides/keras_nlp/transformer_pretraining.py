@@ -1,8 +1,9 @@
 """
 Title: Pretraining a Transformer from scratch with KerasNLP
 Author: [Matthew Watson](https://github.com/mattdangerw/)
+Converted to Keras Core by: [Anshuman Mishra](https://github.com/shivance)
 Date created: 2022/04/18
-Last modified: 2022/04/18
+Last modified: 2023/07/15
 Description: Use KerasNLP to train a Transformer model from scratch.
 Accelerator: GPU
 """
@@ -22,27 +23,25 @@ This guide is broken into three parts:
 """
 ## Setup
 
-To begin, we can import `keras_nlp`, `keras` and `tensorflow`.
-
-A simple thing we can do right off the bat is to enable
-[mixed precision](https://keras.io/api/mixed_precision/), which will speed up training by
-running most of our computations with 16 bit (instead of 32 bit) floating point numbers.
-Training a Transformer can take a while, so it is important to pull out all the stops for
-faster training!
+The following guide uses [Keras Core](https://keras.io/keras_core/) to work in
+any of `tensorflow`, `jax` or `torch`. Support for Keras Core is baked into
+KerasNLP, simply change the `KERAS_BACKEND` environment variable below to change
+the backend you would like to use. We select the `jax` backend below, which will
+give us a particularly fast train step below.
 """
 
 """shell
-pip install -q --upgrade keras-nlp tensorflow
+pip install -q keras-nlp
 """
 
 import os
 
+os.environ["KERAS_BACKEND"] = "jax"  # or "tensorflow" or "torch"
+
+
 import keras_nlp
 import tensorflow as tf
-from tensorflow import keras
-
-policy = keras.mixed_precision.Policy("mixed_float16")
-keras.mixed_precision.set_global_policy(policy)
+import keras_core as keras
 
 """
 Next up, we can download two datasets.
@@ -155,18 +154,20 @@ multi_hot_layer = keras.layers.TextVectorization(
     max_tokens=4000, output_mode="multi_hot"
 )
 multi_hot_layer.adapt(sst_train_ds.map(lambda x, y: x))
+multi_hot_ds = sst_train_ds.map(lambda x, y: (multi_hot_layer(x), y))
+multi_hot_val_ds = sst_val_ds.map(lambda x, y: (multi_hot_layer(x), y))
+
 # We then learn a linear regression over that layer, and that's our entire
 # baseline model!
-regression_layer = keras.layers.Dense(1, activation="sigmoid")
 
-inputs = keras.Input(shape=(), dtype="string")
-outputs = regression_layer(multi_hot_layer(inputs))
+inputs = keras.Input(shape=(4000,), dtype="int32")
+outputs = keras.layers.Dense(1, activation="sigmoid")(inputs)
 baseline_model = keras.Model(inputs, outputs)
 baseline_model.compile(loss="binary_crossentropy", metrics=["accuracy"])
-baseline_model.fit(sst_train_ds, validation_data=sst_val_ds, epochs=5)
+baseline_model.fit(multi_hot_ds, validation_data=multi_hot_val_ds, epochs=5)
 
 """
-A bag-of-words approach can be a fast and suprisingly powerful, especially when input
+A bag-of-words approach can be a fast and surprisingly powerful, especially when input
 examples contain a large number of words. With shorter sequences, it can hit a
 performance ceiling.
 
@@ -191,7 +192,7 @@ To beat our baseline, we will leverage the `WikiText103` dataset, an unlabeled
 collection of Wikipedia articles that is much bigger than `SST-2`.
 
 We are going to train a *transformer*, a highly expressive model which will learn
-to embed each word in our input as a low dimentional vector. Our wikipedia dataset has no
+to embed each word in our input as a low dimensional vector. Our wikipedia dataset has no
 labels, so we will use an unsupervised training objective called the *Masked Language
 Modeling* (MaskedLM) objective.
 
@@ -351,8 +352,10 @@ intensive, so even this relatively small Transformer will take some time.
 
 # Create the pretraining model by attaching a masked language model head.
 inputs = {
-    "token_ids": keras.Input(shape=(SEQ_LENGTH,), dtype=tf.int32),
-    "mask_positions": keras.Input(shape=(PREDICTIONS_PER_SEQ,), dtype=tf.int32),
+    "token_ids": keras.Input(shape=(SEQ_LENGTH,), dtype=tf.int32, name="token_ids"),
+    "mask_positions": keras.Input(
+        shape=(PREDICTIONS_PER_SEQ,), dtype=tf.int32, name="mask_positions"
+    ),
 }
 
 # Encode the tokens.
@@ -370,7 +373,7 @@ outputs = keras_nlp.layers.MaskedLMHead(
 pretraining_model = keras.Model(inputs, outputs)
 pretraining_model.compile(
     loss="sparse_categorical_crossentropy",
-    optimizer=keras.optimizers.experimental.AdamW(PRETRAINING_LEARNING_RATE),
+    optimizer=keras.optimizers.AdamW(PRETRAINING_LEARNING_RATE),
     weighted_metrics=["sparse_categorical_accuracy"],
     jit_compile=True,
 )
@@ -383,7 +386,7 @@ pretraining_model.fit(
 )
 
 # Save this base model for further finetuning.
-encoder_model.save("encoder_model")
+encoder_model.save("encoder_model.keras")
 
 """
 ## Fine-tuning
@@ -425,23 +428,23 @@ the encoded tokens together, and use a single dense layer to make a prediction.
 """
 
 # Reload the encoder model from disk so we can restart fine-tuning from scratch.
-encoder_model = keras.models.load_model("encoder_model", compile=False)
+encoder_model = keras.models.load_model("encoder_model.keras", compile=False)
 
 # Take as input the tokenized input.
 inputs = keras.Input(shape=(SEQ_LENGTH,), dtype=tf.int32)
 
 # Encode and pool the tokens.
 encoded_tokens = encoder_model(inputs)
-pooled_tokens = keras.layers.GlobalAveragePooling1D()(encoded_tokens)
+pooled_tokens = keras.layers.GlobalAveragePooling1D()(encoded_tokens[0])
 
 # Predict an output label.
 outputs = keras.layers.Dense(1, activation="sigmoid")(pooled_tokens)
 
-# Define and compile our finetuning model.
+# Define and compile our fine-tuning model.
 finetuning_model = keras.Model(inputs, outputs)
 finetuning_model.compile(
     loss="binary_crossentropy",
-    optimizer=keras.optimizers.experimental.AdamW(FINETUNING_LEARNING_RATE),
+    optimizer=keras.optimizers.AdamW(FINETUNING_LEARNING_RATE),
     metrics=["accuracy"],
 )
 
@@ -458,30 +461,7 @@ for Transformer models. You may have noticed during pretraining that our validat
 performance was still steadily increasing. Our model is still significantly undertrained.
 Training for more epochs, training a large Transformer, and training on more unlabeled
 text would all continue to boost performance significantly.
-"""
 
-"""
-### Save a model that accepts raw text
-
-The last thing we can do with our fine-tuned model is saving including our tokenization
-layer. One of the key advantages of KerasNLP is all preprocessing is done inside the
-[TensorFlow graph](https://www.tensorflow.org/guide/intro_to_graphs), making it possible
-to save and restore a model that can directly run inference on raw text!
-"""
-
-# Add our tokenization into our final model.
-inputs = keras.Input(shape=(), dtype=tf.string)
-tokens = tokenizer(inputs)
-outputs = finetuning_model(tokens)
-final_model = keras.Model(inputs, outputs)
-final_model.save("final_model")
-
-# This model can predict directly on raw text.
-restored_model = keras.models.load_model("final_model", compile=False)
-inference_data = tf.constant(["Terrible, no good, trash.", "So great; I loved it!"])
-print(restored_model(inference_data))
-
-"""
 One of the key goals of KerasNLP is to provide a modular approach to NLP model building.
 We have shown one approach to building a Transformer here, but KerasNLP supports an ever
 growing array of components for preprocessing text and building models. We hope it makes

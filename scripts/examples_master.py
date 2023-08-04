@@ -119,6 +119,11 @@ EXAMPLES_MASTER = {
                     "title": "Multiclass semantic segmentation using DeepLabV3+",
                     "subcategory": "Image segmentation",
                 },
+                {
+                    "path": "basnet_segmentation",
+                    "title": "Highly accurate boundaries segmentation using BASNet",
+                    "subcategory": "Image segmentation",
+                },
                 # Object Detection
                 {
                     "path": "retinanet",

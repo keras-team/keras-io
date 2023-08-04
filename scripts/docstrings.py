@@ -132,7 +132,7 @@ def make_source_link(cls, project_url):
     base_module = cls.__module__.split(".")[0]
     project_url = project_url[base_module]
     assert project_url.endswith("/"), f"{base_module} not found"
-    project_url_version = project_url.split("/")[-2].replace("v", "")
+    project_url_version = project_url.split("/")[-2].removeprefix("v")
     module_version = importlib.import_module(base_module).__version__
     if module_version != project_url_version:
         raise RuntimeError(

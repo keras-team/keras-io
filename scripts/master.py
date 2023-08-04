@@ -97,9 +97,7 @@ MASTER = {
                         {
                             "path": "adafactor",
                             "title": "Adafactor",
-                            "generate": [
-                                "tensorflow.keras.optimizers.Adafactor"
-                            ],
+                            "generate": ["tensorflow.keras.optimizers.Adafactor"],
                         },
                         {
                             "path": "Nadam",
