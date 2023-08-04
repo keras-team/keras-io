@@ -24,6 +24,12 @@ We will cover the following APIs:
 - `get_build_config()` and `build_from_config()`
 - `get_compile_config()` and `compile_from_config()`
 
+When restoring a model, these get executed in the following order:
+
+- `build_from_config()`
+- `compile_from_config()`
+- `load_own_variables()`
+- `load_assets()`
 
 """
 
@@ -92,17 +98,9 @@ class LayerWithCustomVariables(keras.layers.Dense):
         return super().call(inputs) * self.stored_variables
 
 
-@keras.utils.register_keras_serializable(package="my_custom_package")
-class ModelWithCustomVariables(keras.Model):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.custom_dense = LayerWithCustomVariables(1)
-
-    def call(self, inputs):
-        return self.custom_dense(inputs)
-
-
-model = ModelWithCustomVariables()
+model = keras.Sequential([
+    LayerWithCustomVariables(1)
+])
 
 ref_input = np.random.random((8, 10))
 ref_output = np.random.random((8,))
@@ -113,8 +111,8 @@ model.save("custom_vars_model.keras")
 restored_model = keras.models.load_model("custom_vars_model.keras")
 
 np.testing.assert_allclose(
-    model.custom_dense.stored_variables.numpy(),
-    restored_model.custom_dense.stored_variables.numpy(),
+    model.layers[0].stored_variables.numpy(),
+    restored_model.layers[0].stored_variables.numpy()
 )
 
 """
@@ -140,29 +138,20 @@ class LayerWithCustomAssets(keras.layers.Dense):
         self.vocab = vocab
 
     def save_assets(self, inner_path):
-        # Writes the assets (sentence) to text file at save time.
+        # Writes the vocab (sentence) to text file at save time.
         with open(os.path.join(inner_path, "vocabulary.txt"), "w") as f:
             f.write(self.vocab)
 
     def load_assets(self, inner_path):
-        # Reads the assets (sentence) from text file at load time.
+        # Reads the vocab (sentence) from text file at load time.
         with open(os.path.join(inner_path, "vocabulary.txt"), "r") as f:
             text = f.read()
-        self.assets = text.replace("<unk>", "little")
+        self.vocab = text.replace("<unk>", "little")
 
 
-@keras.saving.register_keras_serializable(package="my_custom_package")
-class ModelWithCustomAssets(keras.Model):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.vocab = "Mary had a <unk> lamb."
-        self.custom_dense = LayerWithCustomAssets(vocab=self.vocab, units=5)
-
-    def call(self, inputs):
-        return self.custom_dense(inputs)
-
-
-model = ModelWithCustomAssets()
+model = keras.Sequential([
+    LayerWithCustomAssets(vocab='Mary had a <unk> lamb.', units=5)
+])
 
 x = np.random.random((10, 10))
 y = model(x)
@@ -171,7 +160,7 @@ model.save("custom_assets_model.keras")
 restored_model = keras.models.load_model("custom_assets_model.keras")
 
 np.testing.assert_string_equal(
-    restored_model.custom_dense.assets, "Mary had a little lamb."
+    restored_model.layers[0].vocab, "Mary had a little lamb."
 )
 
 """
