@@ -391,7 +391,7 @@ Neural Networks are universal function approximators - but they can only
 approximate functions.  Mixture Density networks can approximate arbitrary
 x->y mappings using some neat probability tricks.
 
-For more examples with `tensorflow_probability` 
+For more examples with `tensorflow_probability`
 [start here](https://www.tensorflow.org/probability/examples/Probabilistic_Layers_Regression).
 
 One more pretty graphic for the road:
