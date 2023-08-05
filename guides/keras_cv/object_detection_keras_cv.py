@@ -152,7 +152,7 @@ image = keras.utils.load_img(filepath)
 image = np.array(image)
 
 visualization.plot_image_gallery(
-    [image],
+    np.array([image]),
     value_range=(0, 255),
     rows=1,
     cols=1,
