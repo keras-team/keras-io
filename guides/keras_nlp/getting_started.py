@@ -2,7 +2,7 @@
 Title: Getting Started with KerasNLP
 Author: [Jonathan Bischof](https://github.com/jbischof)
 Date created: 2022/12/15
-Last modified: 2022/12/15
+Last modified: 2023/07/01
 Description: An introduction to the KerasNLP API.
 Accelerator: GPU
 """
@@ -12,13 +12,18 @@ Accelerator: GPU
 KerasNLP is a natural language processing library that supports users through
 their entire development cycle. Our workflows are built from modular components
 that have state-of-the-art preset weights and architectures when used
-out-of-the-box and are easily customizable when more control is needed. We
-emphasize in-graph computation for all workflows so that developers can expect
-easy productionization using the TensorFlow ecosystem.
+out-of-the-box and are easily customizable when more control is needed.
 
 This library is an extension of the core Keras API; all high-level modules are
 [`Layers`](/api/layers/) or [`Models`](/api/models/). If you are familiar with Keras,
 congratulations! You already understand most of KerasNLP.
+
+KerasNLP uses the [Keras Core](https://keras.io/keras_core/) library to work
+with any of TensorFlow, Pytorch and Jax. In the guide below, we will use the
+`jax` backend for training our models, and [tf.data](https://www.tensorflow.org/guide/data)
+for efficiently running our input preprocessing. But feel free to mix things up!
+This guide runs in TensorFlow or PyTorch backends with zero changes, simply update
+the `KERAS_BACKEND` below.
 
 This guide demonstrates our modular approach using a sentiment analysis example at six
 levels of complexity:
@@ -37,15 +42,15 @@ reference for the complexity of the material:
 """
 
 """shell
-pip install -q --upgrade keras-nlp tensorflow
+pip install -q --upgrade keras-nlp
 """
 
-import keras_nlp
-import tensorflow as tf
-from tensorflow import keras
+import os
 
-# Use mixed precision for optimal performance
-keras.mixed_precision.set_global_policy("mixed_float16")
+os.environ["KERAS_BACKEND"] = "jax"  # or "tensorflow" or "torch"
+
+import keras_nlp
+import keras_core as keras
 
 """
 ## API quickstart
@@ -56,7 +61,7 @@ task-specific output. For each `XX` architecture (e.g., `Bert`), we offer the fo
 modules:
 
 * **Tokenizer**: `keras_nlp.models.XXTokenizer`
-  * **What it does**: Converts strings to `tf.RaggedTensor`s of token ids.
+  * **What it does**: Converts strings to sequences of token ids.
   * **Why it's important**: The raw bytes of a string are too high dimensional to be useful
     features so we first map them to a small number of tokens, for example `"The quick brown
     fox"` to `["the", "qu", "##ick", "br", "##own", "fox"]`.
@@ -115,11 +120,11 @@ rm -r aclImdb/train/unsup
 """
 
 BATCH_SIZE = 16
-imdb_train = tf.keras.utils.text_dataset_from_directory(
+imdb_train = keras.utils.text_dataset_from_directory(
     "aclImdb/train",
     batch_size=BATCH_SIZE,
 )
-imdb_test = tf.keras.utils.text_dataset_from_directory(
+imdb_test = keras.utils.text_dataset_from_directory(
     "aclImdb/test",
     batch_size=BATCH_SIZE,
 )
@@ -231,17 +236,24 @@ matching **preprocessor** as the **task**.
 In this workflow we train the model over three epochs using `tf.data.Dataset.cache()`,
 which computes the preprocessing once and caches the result before fitting begins.
 
-**Note:** this code only works if your data fits in memory. If not, pass a `filename` to
-`cache()`.
+**Note:** we can use `tf.data` for preprocessing while running on the
+Jax or PyTorch backend. The input dataset will automatically be converted to
+backend native tensor types during fit. In fact, given the efficiency of `tf.data`
+for running preprocessing, this is good practice on all backends.
 """
+
+import tensorflow as tf
 
 preprocessor = keras_nlp.models.BertPreprocessor.from_preset(
     "bert_tiny_en_uncased",
     sequence_length=512,
 )
+
 # Apply the preprocessor to every sample of train and test data using `map()`.
 # `tf.data.AUTOTUNE` and `prefetch()` are options to tune performance, see
 # https://www.tensorflow.org/guide/data_performance for details.
+
+# Note: only call `cache()` if you training data fits in CPU memory!
 imdb_train_cached = (
     imdb_train.map(preprocessor, tf.data.AUTOTUNE).cache().prefetch(tf.data.AUTOTUNE)
 )
@@ -250,8 +262,7 @@ imdb_test_cached = (
 )
 
 classifier = keras_nlp.models.BertClassifier.from_preset(
-    "bert_tiny_en_uncased",
-    preprocessor=None,
+    "bert_tiny_en_uncased", preprocessor=None, num_classes=2
 )
 classifier.fit(
     imdb_train_cached,
@@ -274,7 +285,9 @@ In cases where custom preprocessing is required, we offer direct access to the
 constructor to get the vocabulary matching pretraining.
 
 **Note:** `BertTokenizer` does not pad sequences by default, so the output is
-a `tf.RaggedTensor`.
+ragged (each sequence has varying length). The `MultiSegmentPacker` below
+handles padding these ragged sequences to dense tensor types (e.g. `tf.Tensor`
+or `torch.Tensor`).
 """
 
 tokenizer = keras_nlp.models.BertTokenizer.from_preset("bert_tiny_en_uncased")
@@ -357,8 +370,8 @@ outputs = keras.layers.Dense(2)(sequence[:, backbone.cls_token_index, :])
 model = keras.Model(inputs, outputs)
 model.compile(
     loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
-    optimizer=keras.optimizers.experimental.AdamW(5e-5),
-    metrics=keras.metrics.SparseCategoricalAccuracy(),
+    optimizer=keras.optimizers.AdamW(5e-5),
+    metrics=[keras.metrics.SparseCategoricalAccuracy()],
     jit_compile=True,
 )
 model.summary()
@@ -468,10 +481,10 @@ mlm_head = keras_nlp.layers.MaskedLMHead(
 )
 
 inputs = {
-    "token_ids": keras.Input(shape=(None,), dtype=tf.int32),
-    "segment_ids": keras.Input(shape=(None,), dtype=tf.int32),
-    "padding_mask": keras.Input(shape=(None,), dtype=tf.int32),
-    "mask_positions": keras.Input(shape=(None,), dtype=tf.int32),
+    "token_ids": keras.Input(shape=(None,), dtype=tf.int32, name="token_ids"),
+    "segment_ids": keras.Input(shape=(None,), dtype=tf.int32, name="segment_ids"),
+    "padding_mask": keras.Input(shape=(None,), dtype=tf.int32, name="padding_mask"),
+    "mask_positions": keras.Input(shape=(None,), dtype=tf.int32, name="mask_positions"),
 }
 
 # Encoded token sequence
@@ -487,8 +500,8 @@ pretraining_model = keras.Model(inputs, outputs)
 pretraining_model.summary()
 pretraining_model.compile(
     loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
-    optimizer=keras.optimizers.experimental.AdamW(learning_rate=5e-4),
-    weighted_metrics=keras.metrics.SparseCategoricalAccuracy(),
+    optimizer=keras.optimizers.AdamW(learning_rate=5e-4),
+    weighted_metrics=[keras.metrics.SparseCategoricalAccuracy()],
     jit_compile=True,
 )
 
@@ -598,8 +611,8 @@ model.summary()
 
 model.compile(
     loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
-    optimizer=keras.optimizers.experimental.AdamW(5e-5),
-    metrics=keras.metrics.SparseCategoricalAccuracy(),
+    optimizer=keras.optimizers.AdamW(5e-5),
+    metrics=[keras.metrics.SparseCategoricalAccuracy()],
     jit_compile=True,
 )
 model.fit(

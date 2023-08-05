@@ -1,5 +1,5 @@
 LAYERS_MASTER = {
-    "path": "layers/",  # TODO
+    "path": "layers/",
     "title": "Layers API",
     "toc": True,
     "children": [
@@ -18,8 +18,6 @@ LAYERS_MASTER = {
                 "tensorflow.keras.Model.get_config",
                 "tensorflow.keras.layers.Layer.add_loss",
                 "tensorflow.keras.layers.Layer.losses",
-                "tensorflow.keras.layers.Layer.metrics",
-                "tensorflow.keras.layers.Layer.dynamic",
             ],
         },
         {
@@ -483,11 +481,6 @@ LAYERS_MASTER = {
                     "path": "activity_regularization",
                     "title": "ActivityRegularization layer",
                     "generate": ["tensorflow.keras.layers.ActivityRegularization"],
-                },
-                {
-                    "path": "alpha_dropout",
-                    "title": "AlphaDropout layer",
-                    "generate": ["tensorflow.keras.layers.AlphaDropout"],
                 },
             ],
         },

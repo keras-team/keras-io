@@ -41,10 +41,11 @@ import render_tags
 EXAMPLES_GH_LOCATION = Path("keras-team") / "keras-io" / "blob" / "master" / "examples"
 GUIDES_GH_LOCATION = Path("keras-team") / "keras-io" / "blob" / "master" / "guides"
 PROJECT_URL = {
-    "keras": "https://github.com/keras-team/keras/tree/v2.12.0/",
-    "keras_tuner": "https://github.com/keras-team/keras-tuner/tree/v1.3.3/",
-    "keras_cv": "https://github.com/keras-team/keras-cv/tree/v0.5.0/",
-    "keras_nlp": "https://github.com/keras-team/keras-nlp/tree/v0.5.1/",
+    "keras": "https://github.com/keras-team/keras/tree/v2.13.1/",
+    "keras_tuner": "https://github.com/keras-team/keras-tuner/tree/v1.3.5/",
+    "keras_cv": "https://github.com/keras-team/keras-cv/tree/v0.6.1/",
+    "keras_nlp": "https://github.com/keras-team/keras-nlp/tree/v0.6.1/",
+    "keras_core": "https://github.com/keras-team/keras-core/tree/v0.1.3/",
 }
 USE_MULTIPROCESSING = False
 
@@ -172,6 +173,13 @@ class KerasIO:
         )
         # Insert --- before H2 titles
         md_content = md_content.replace("\n## ", "\n---\n## ")
+        # Clean up progress bar output
+        if "[1m" in md_content:
+            md_content = md_content.replace("[1m", " ")
+            md_content = md_content.replace("[0m [32m", " ")
+            md_content = md_content.replace("[0m[37m[0m [1m", " ")
+            md_content = md_content.replace("[0m", "")
+            md_content = md_content.replace("[37m ", "")
         return md_content
 
     def make_tutobook_sources_for_directory(
@@ -369,6 +377,11 @@ class KerasIO:
         guides/md/intro_* -> sources/getting_started/
         examples/*/md/ -> sources/examples/*/
         """
+        if not os.path.exists(Path(self.templates_dir) / "guides" / "keras_core"):
+            os.makedirs(Path(self.templates_dir) / "guides" / "keras_core")
+        if os.path.exists(Path(self.templates_dir) / "keras_core" / "guides"):
+            shutil.rmtree(Path(self.templates_dir) / "keras_core" / "guides")
+
         # Guides
         copy_inner_contents(
             Path(self.guides_dir) / "md",
@@ -387,6 +400,11 @@ class KerasIO:
             Path(self.templates_dir)
             / "getting_started"
             / "intro_to_keras_for_researchers.md",
+        )
+        # Move Keras Core guides from `guides/keras_core/` to keras_core/guides/
+        shutil.move(
+            Path(self.templates_dir) / "guides" / "keras_core",
+            Path(self.templates_dir) / "keras_core" / "guides",
         )
 
         # Examples
@@ -504,10 +522,9 @@ class KerasIO:
         if entry.get("toc"):
             if not children:
                 raise ValueError(
-                    "For template %s, "
+                    f"For template {template_path}, "
                     "a table of contents was requested but "
-                    "the entry had no "
-                    "children" % (template_path,)
+                    "the entry had no children."
                 )
             toc = generate_md_toc(children, parent_url)
             if "{{toc}}" not in template:
@@ -747,6 +764,22 @@ class KerasIO:
         )
         landing_page = landing_template.render({"base_url": self.url})
         autogen_utils.save_file(Path(self.site_dir) / "index.html", landing_page)
+
+        # Keras Core announcement page
+        keras_core_template = jinja2.Template(
+            open(Path(self.theme_dir) / "keras_core.html").read()
+        )
+        md_content = open(
+            Path(self.templates_dir) / "keras_core" / "announcement.md"
+        ).read()
+        content = autogen_utils.render_markdown_to_html(md_content)
+        keras_core_page = keras_core_template.render(
+            {"base_url": self.url, "content": content}
+        )
+        autogen_utils.save_file(
+            Path(self.site_dir) / "keras_core" / "announcement" / "index.html",
+            keras_core_page,
+        )
 
         # Search page
         search_main = open(Path(self.theme_dir) / "search.html").read()
@@ -1024,6 +1057,8 @@ def generate_md_toc(entries, url, depth=2):
     for entry in entries:
         title = entry["title"]
         path = entry["path"]
+        if not path.endswith("/"):
+            path += "/"
         full_url = url + path
         children = entry.get("children")
         generate = entry.get("generate")
@@ -1035,7 +1070,6 @@ def generate_md_toc(entries, url, depth=2):
             title=title, full_url=full_url
         )
         if children:
-            assert path.endswith("/"), f"{path} should end with /"
             for child in children:
                 if child.get("skip_from_toc", False):
                     continue
@@ -1051,7 +1085,7 @@ def generate_md_toc(entries, url, depth=2):
                 obj = docstrings.import_object(gen)
                 obj_name = docstrings.get_name(obj)
                 obj_type = docstrings.get_type(obj)
-                link = "{full_url}/#{obj_name}-{obj_type}".format(
+                link = "{full_url}#{obj_name}-{obj_type}".format(
                     full_url=full_url, obj_name=obj_name, obj_type=obj_type
                 ).lower()
                 name = gen.split(".")[-1]

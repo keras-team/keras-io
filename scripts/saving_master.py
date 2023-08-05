@@ -28,7 +28,7 @@ SAVING_MASTER = {
             "generate": [
                 "tensorflow.keras.Model.get_config",
                 "tensorflow.keras.Model.from_config",
-                "tensorflow.keras.models.clone_model",  # TODO: move somewhere else?
+                "tensorflow.keras.models.clone_model",
             ],
         },
         {

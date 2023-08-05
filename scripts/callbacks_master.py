@@ -5,7 +5,7 @@ kept: ProgbarLogger
 
 CALLBACKS_MASTER = {
     "path": "callbacks/",
-    "title": "Callbacks API",  # TODO
+    "title": "Callbacks API",
     "toc": True,
     "children": [
         {

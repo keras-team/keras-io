@@ -132,18 +132,17 @@ def make_source_link(cls, project_url):
     base_module = cls.__module__.split(".")[0]
     project_url = project_url[base_module]
     assert project_url.endswith("/"), f"{base_module} not found"
-    project_url_version = project_url.split("/")[-2].replace("v", "")
+    project_url_version = project_url.split("/")[-2].removeprefix("v")
     module_version = importlib.import_module(base_module).__version__
-    # TODO: reenable this check before merge.
-    if False and module_version != project_url_version:
+    if module_version != project_url_version:
         raise RuntimeError(
             f"For project {base_module}, URL {project_url} "
             f"has version number {project_url_version} which does not match the "
             f"current imported package version {module_version}"
         )
     path = cls.__module__.replace(".", "/")
-    if base_module == "keras_nlp":
-        path = path.replace("src/", "")
+    if base_module in ("keras_nlp", "keras_core", "keras"):
+        path = path.replace("/src/", "/")
     line = inspect.getsourcelines(cls)[-1]
     return (
         f'<span style="float:right;">'
@@ -178,6 +177,12 @@ def get_name(object_) -> str:
     return object_.__name__
 
 
+def get_function_name(function):
+    if hasattr(function, "__wrapped__"):
+        return get_function_name(function.__wrapped__)
+    return function.__name__
+
+
 def get_signature_start(function):
     """For the Dense layer, it should return the string 'keras.layers.Dense'"""
     if ismethod(function):
@@ -191,7 +196,7 @@ def get_signature_start(function):
                 f"It will not be included in the signature."
             )
             prefix = ""
-    return f"{prefix}{function.__name__}"
+    return f"{prefix}{get_function_name(function)}"
 
 
 def get_signature_end(function):
