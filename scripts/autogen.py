@@ -30,7 +30,7 @@ import jinja2
 import requests
 import multiprocessing
 import autogen_utils
-import keras_nlp
+# import keras_nlp
 import keras_cv
 
 from master import MASTER
@@ -1079,6 +1079,14 @@ if __name__ == "__main__":
         guides_dir=os.path.join("..", "guides"),
         examples_dir=os.path.join("..", "examples"),
         redirects_dir=os.path.join("..", "redirects"),
+
+        # templates_dir=os.path.join(".", "templates"),
+        # md_sources_dir=os.path.join(".", "sources"),
+        # site_dir=os.path.join(".", "site"),
+        # theme_dir=os.path.join(".", "theme"),
+        # guides_dir=os.path.join(".", "guides"),
+        # examples_dir=os.path.join(".", "examples"),
+        # redirects_dir=os.path.join(".", "redirects"),
         refresh_guides=False,
         refresh_examples=False,
     )
