@@ -1,8 +1,8 @@
 """
-Title: FeatureSpace avanced use cases
+Title: FeatureSpace advanced use cases
 Author: [Dimitre Oliveira](https://www.linkedin.com/in/dimitre-oliveira-7a1a0113a/)
 Date created: 2023/07/01
-Last modified: 2023/07/01
+Last modified: 2023/08/04
 Description: How to use FeatureSpace for advanced preprocessing use cases.
 Accelerator: None
 """
@@ -12,7 +12,7 @@ Accelerator: None
 This example is an extension of the
 [Structured data classification with FeatureSpace](https://keras.io/examples/structured_data/structured_data_classification_with_feature_space/)
 code example, and here we will extend it to cover more complex use
-cases of the [`keras.utils.FeatureSpace`](https://keras.io/api/utils/feature_space/)
+cases of the [keras.utils.FeatureSpace](https://keras.io/api/utils/feature_space/)
 preprocessing utility, like feature hashing, feature crosses, handling missing values and
 integrating [Keras preprocessing layers](https://keras.io/guides/preprocessing_layers/)
 with FeatureSpace.
@@ -113,7 +113,7 @@ target label), here's a preview of a few samples:
 """
 
 print(f"Dataframe shape: {dataframe.shape}")
-display(dataframe.head())
+dataframe.head().T
 
 """
 The column, "y", indicates whether the client has subscribed a term deposit or not.
@@ -137,7 +137,7 @@ print(
 ## Generating TF datasets
 
 Let's generate
-[`tf.data.Dataset`](https://www.tensorflow.org/api_docs/python/tf/data/Dataset) objects
+[tf.data.Dataset](https://www.tensorflow.org/api_docs/python/tf/data/Dataset) objects
 for each dataframe, since our target column `y` is a string we also need to encode it as
 an integer to be able to train our model with it. To achieve this we will create a
 `StringLookup` layer that will map the strings "no" and "yes" into "0" and "1"
@@ -362,7 +362,7 @@ can use sophisticated data transformations provided by the framework, you can ev
 your own custom Keras preprocessing layers and use it in the same way.
 
 Here we are going to use the
-[`tf.keras.layers.TextVectorization`](https://keras.io/api/layers/preprocessing_layers/text/text_vectorization/#textvectorization-class)
+[tf.keras.layers.TextVectorization](https://keras.io/api/layers/preprocessing_layers/text/text_vectorization/#textvectorization-class)
 preprocessing layer to create a TF-IDF
 feature from our data. Note that this feature is not a really good use case for TF-IDF,
 this is just for demonstration purposes.
@@ -478,7 +478,7 @@ advantages like re-using it on different experiments that use the same model, sa
 if you need to re-run the preprocessing step, and mainly for model deployment, where by
 loading it you can be sure that you will be applying the same preprocessing steps don't
 matter the device or environment, this is a great way to reduce
-[training/servingskew](https://developers.google.com/machine-learning/guides/rules-of-ml#training-serving_skew).
+[training-serving skew](https://developers.google.com/machine-learning/guides/rules-of-ml#training-serving_skew).
 """
 
 feature_space.save("myfeaturespace.keras")
