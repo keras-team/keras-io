@@ -25,21 +25,39 @@ Change runtime type** and choose the GPU Hardware Accelerator runtime
 GPT-2 model. Running this tutorial on CPU runtime will take hours.
 
 ---
-## Install KerasNLP and Import Dependencies
+## Install KerasNLP, Choose Backend and Import Dependencies
+
+This examples uses [Keras Core](https://keras.io/keras_core/) to work in any of
+`"tensorflow"`, `"jax"` or `"torch"`. Support for Keras Core is baked into
+KerasNLP, simply change the `"KERAS_BACKEND"` environment variable to select
+the backend of your choice. We select the JAX backend below.
 
 
 ```python
-!pip install -q keras-nlp
+!pip install git+https://github.com/keras-team/keras-nlp.git -q
 ```
 
-
 ```python
+import os
+
+os.environ["KERAS_BACKEND"] = "jax"  # or "tensorflow" or "torch"
+
 import keras_nlp
 import tensorflow as tf
-from tensorflow import keras
+import keras_core as keras
 import time
 ```
+<div class="k-default-codeblock">
+```
+  Installing build dependencies ... [?25l[?25hdone
+  Getting requirements to build wheel ... [?25l[?25hdone
+  Preparing metadata (pyproject.toml) ... [?25l[?25hdone
+  Building wheel for keras-nlp (pyproject.toml) ... [?25l[?25hdone
 
+Using JAX backend.
+
+```
+</div>
 ---
 ## Introduction to Generative Large Language Models (LLMs)
 
@@ -106,7 +124,12 @@ gpt2_lm = keras_nlp.models.GPT2CausalLM.from_preset(
 
 <div class="k-default-codeblock">
 ```
-WARNING:tensorflow:The following Variables were used in a Lambda layer's call (tf.linalg.matmul), but are not present in its tracked objects:   <tf.Variable 'token_embedding/embeddings:0' shape=(50257, 768) dtype=float32>. This is a strong indication that the Lambda layer should be rewritten as a subclassed Layer.
+Downloading data from https://storage.googleapis.com/keras-nlp/models/gpt2_base_en/v1/vocab.json
+ 1042301/1042301 ━━━━━━━━━━━━━━━━━━━━ 0s 0us/step       
+Downloading data from https://storage.googleapis.com/keras-nlp/models/gpt2_base_en/v1/merges.txt
+ 456318/456318 ━━━━━━━━━━━━━━━━━━━━ 0s 0us/step       
+Downloading data from https://storage.googleapis.com/keras-nlp/models/gpt2_base_en/v1/model.h5
+ 497986112/497986112 ━━━━━━━━━━━━━━━━━━━━ 6s 0us/step
 
 ```
 </div>
@@ -130,19 +153,20 @@ print(f"TOTAL TIME ELAPSED: {end - start:.2f}s")
 <div class="k-default-codeblock">
 ```
 GPT-2 output:
-My trip to Yosemite was one of the best experiences of my life. I was so close to the top of the mountains, I could feel the sun shining through my eyes. I was so close to the top of the mountains, the sun had a nice view of the valley and I couldn't believe the sun came out of nowhere. The sun shone in all directions and I could feel it. I was so close to the top of the mountains, it felt like I was in the middle of a volcano. It was amazing to see all of that. I felt like a volcano. I felt so close to all of the things. I felt like an island in a sea of lava.
+My trip to Yosemite was pretty awesome. The first time I went I didn't know how to go and it was pretty hard to get around. It was a bit like going on an adventure with a friend. The only things I could do were hike and climb the mountain. It's really cool to know you're not alone in this world. It's a lot of fun. I'm a little worried that I might not get to the top of the mountain in time to see the sunrise and sunset of the day. I think the weather is going to get a little warmer in the coming years.
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-I didn't know what I was doing. I just thought I was going to get out of here and go home and see my family. I thought that I could go home and see my parents and I was just happy that I was here. I was so happy that I was here.
+This post is a little more in-depth on how to go on the trail. It covers how to hike on the Sierra Nevada, how to hike with the Sierra Nevada, how to hike in the Sierra Nevada, how to get to the top of the mountain, and how to get to the top with your own gear.
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-TOTAL TIME ELAPSED: 18.25s
+The Sierra Nevada is a very popular trail in Yosemite
+TOTAL TIME ELAPSED: 25.36s
 
 ```
 </div>
@@ -164,32 +188,80 @@ print(f"TOTAL TIME ELAPSED: {end - start:.2f}s")
 <div class="k-default-codeblock">
 ```
 GPT-2 output:
-That Italian restaurant is now closed, according to a report from Bloomberg.
+That Italian restaurant is known for its delicious food, and the best part is that it has a full bar, with seating for a whole host of guests. And that's only because it's located at the heart of the neighborhood.
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-The eatery is located at 5100 N. Broadway in New York City, according to the New York Post. The restaurant is open from 11 a.m. to 4 p.m.
+The menu at the Italian restaurant is pretty straightforward:
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-"The owner is very upset and we are trying to find out what happened to our place," an Italian restaurant employee said in an email to the Post. "He said he is going to close the restaurant. We are not going to let him get away from us."
+The menu consists of three main dishes:
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-"I don't know what the problem is but it's sad and it makes me feel like I have to go," the Italian owner told the Post.
+Italian sausage
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-The restaurant, which has a large Italian menu, was closed in April after the owner, who is Italian, told the Post that the restaurant was "not a good place," but that he was "working on a new restaurant."
-TOTAL TIME ELAPSED: 1.71s
+Bolognese
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+Sausage
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+Bolognese with cheese
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+Sauce with cream
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+Italian sausage with cheese
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+Bolognese with cheese
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+And the main menu consists of a few other things.
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+There are two tables: the one that serves a menu of sausage and bolognese with cheese (the one that serves the menu of sausage and bolognese with cheese) and the one that serves the menu of sausage and bolognese with cheese. The two tables are also open 24 hours a day, 7 days a week.
+```
+</div>
+    
+    
+<div class="k-default-codeblock">
+```
+TOTAL TIME ELAPSED: 1.55s
 
 ```
 </div>
@@ -240,6 +312,26 @@ import tensorflow_datasets as tfds
 reddit_ds = tfds.load("reddit_tifu", split="train", as_supervised=True)
 ```
 
+<div class="k-default-codeblock">
+```
+Downloading and preparing dataset 639.54 MiB (download: 639.54 MiB, generated: 141.46 MiB, total: 781.00 MiB) to /root/tensorflow_datasets/reddit_tifu/short/1.1.2...
+
+Dl Completed...: 0 url [00:00, ? url/s]
+
+Dl Size...: 0 MiB [00:00, ? MiB/s]
+
+Extraction completed...: 0 file [00:00, ? file/s]
+
+Generating splits...:   0%|          | 0/1 [00:00<?, ? splits/s]
+
+Generating train examples...:   0%|          | 0/79740 [00:00<?, ? examples/s]
+
+Shuffling /root/tensorflow_datasets/reddit_tifu/short/1.1.2.incompleteHNUZEA/reddit_tifu-train.tfrecord*...:  …
+
+Dataset reddit_tifu downloaded and prepared to /root/tensorflow_datasets/reddit_tifu/short/1.1.2. Subsequent calls will reuse this data.
+
+```
+</div>
 Let's take a look inside sample data from the reddit TensorFlow Dataset. There
 are two features:
 
@@ -305,9 +397,9 @@ gpt2_lm.fit(train_ds, epochs=num_epochs)
 
 <div class="k-default-codeblock">
 ```
-500/500 [==============================] - 212s 311ms/step - loss: 3.3057 - accuracy: 0.3265
+ 500/500 ━━━━━━━━━━━━━━━━━━━━ 526s 988ms/step - loss: 3.3603
 
-<keras.callbacks.History at 0x7f3fead74b20>
+<keras_core.src.callbacks.history.History at 0x7e1210507730>
 
 ```
 </div>
@@ -332,26 +424,26 @@ print(f"TOTAL TIME ELAPSED: {end - start:.2f}s")
 <div class="k-default-codeblock">
 ```
 GPT-2 output:
-I like basketball. i've been a big fan of it since high school, and it's been pretty cool to me.
+I like basketball. it has the greatest shot of all time and the best shot of all time. i have to play a little bit more and get some practice time.
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-i've been playing basketball with my brother since high school, and my dad is a big fan of the game.
+today i got the opportunity to play in a tournament in a city that is very close to my school so i was excited to see how it would go. i had just been playing with a few other guys, so i thought i would go and play a couple games with them. 
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-so, i'm in the middle of a game, and i get a little frustrated, so i just try to play basketball. so, i start to go up on the court, and when i see the basket, i'm like, "what the hell, this kid has to go!" so i start to get up and go up on the floor.
+after a few games i was pretty confident and confident in myself. i had just gotten the opportunity and had to get some practice time. 
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-it's like a giant
-TOTAL TIME ELAPSED: 16.22s
+so i go to the
+TOTAL TIME ELAPSED: 21.13s
 
 ```
 </div>
@@ -391,44 +483,31 @@ print(output)
 <div class="k-default-codeblock">
 ```
 GPT-2 output:
-I like basketball and it's a good sport to have.
+I like basketball, and this is a pretty good one. 
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-i was playing basketball in my hometown of texas and was playing a little bit of a game.
+first off, my wife is pretty good, she is a very good basketball player and she is really, really good at playing basketball. 
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-my team had won the title and i was just getting ready to go out to the court. 
+she has an amazing game called basketball, it is a pretty fun game. 
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-i was sitting there watching my team play and was about to jump on the court, when the ball came in the other direction.
+i play it on the couch.  i'm sitting there, watching the game on the couch.  my wife is playing with her phone.  she's playing on the phone with a bunch of people. 
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-so my buddy was standing right behind me and was looking at me with a look of surprise on his face.
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-so he looked up at me and said "hey guys, you're going to have to play the next game, right?"
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-so i was like "yeah, i know, i guess i'll go." 
-so i
+my wife is sitting there and watching basketball.  she's sitting there watching
 ```
 </div>
     
@@ -510,13 +589,13 @@ Chinese dataset.
 <div class="k-default-codeblock">
 ```
 Cloning into 'chinese-poetry'...
-remote: Enumerating objects: 7222, done.[K
-remote: Counting objects: 100% (27/27), done.[K
-remote: Compressing objects: 100% (19/19), done.[K
-remote: Total 7222 (delta 5), reused 20 (delta 5), pack-reused 7195[K
-Receiving objects: 100% (7222/7222), 197.75 MiB | 15.15 MiB/s, done.
-Resolving deltas: 100% (5295/5295), done.
-Checking out files: 100% (2283/2283), done.
+remote: Enumerating objects: 7249, done.[K
+remote: Counting objects: 100% (54/54), done.[K
+remote: Compressing objects: 100% (40/40), done.[K
+remote: Total 7249 (delta 15), reused 40 (delta 11), pack-reused 7195[K
+Receiving objects: 100% (7249/7249), 197.95 MiB | 23.27 MiB/s, done.
+Resolving deltas: 100% (5304/5304), done.
+Updating files: 100% (2285/2285), done.
 
 ```
 </div>
@@ -548,7 +627,7 @@ print(paragraphs[0])
 
 <div class="k-default-codeblock">
 ```
-十月十六誰宗旨，無聲三昧重拈起。十方三世側耳聽，刹刹塵塵俱解義。雙林樹開榮枯枝，寶塔佛分生滅理。一絲不挂露堂堂，要識雲菴今日是。
+毋謂支山險，此山能幾何。崎嶔十年夢，知歷幾蹉跎。
 
 ```
 </div>
@@ -586,9 +665,9 @@ gpt2_lm.fit(train_ds, epochs=num_epochs)
 
 <div class="k-default-codeblock">
 ```
-500/500 [==============================] - 160s 211ms/step - loss: 2.4432 - accuracy: 0.2811
+ 500/500 ━━━━━━━━━━━━━━━━━━━━ 323s 591ms/step - loss: 2.8592
 
-<keras.callbacks.History at 0x7f40802d8e20>
+<keras_core.src.callbacks.history.History at 0x7e11fc3fa320>
 
 ```
 </div>
@@ -602,11 +681,7 @@ print(output)
 
 <div class="k-default-codeblock">
 ```
-WARNING:tensorflow:5 out of the last 6 calls to <bound method GPT2CausalLM.generate_step of <keras_nlp.models.gpt2.gpt2_causal_lm.GPT2CausalLM object at 0x7f40804406a0>> triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
-
-WARNING:tensorflow:5 out of the last 6 calls to <bound method GPT2CausalLM.generate_step of <keras_nlp.models.gpt2.gpt2_causal_lm.GPT2CausalLM object at 0x7f40804406a0>> triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
-
-昨夜雨疏风骤紛，白萬聞城清山。江清知非頭自花，爲花萬屋清清除。白處樂深紅花，清處馬自自自。
+昨夜雨疏风骤，爲臨江山院短靜。石淡山陵長爲羣，臨石山非處臨羣。美陪河埃聲爲羣，漏漏漏邊陵塘
 
 ```
 </div>

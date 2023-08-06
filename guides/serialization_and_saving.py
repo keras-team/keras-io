@@ -133,8 +133,8 @@ When saving a model that includes custom objects, such as a subclassed Layer,
 you **must** define a `get_config()` method on the object class.
 If the arguments passed to the constructor (`__init__()` method) of the custom object
 aren't Python objects (anything other than base types like ints, strings,
-etc.), then you **must** also explicitly deserialize these arguments in the `from_config()`
-class method.
+etc.), then you **must** serialize these arguments in `get_config()` method and
+also explicitly deserialize these arguments in the `from_config()` class method.
 
 Like this:
 
@@ -142,7 +142,7 @@ Like this:
 class CustomLayer(keras.layers.Layer):
     def __init__(self, sublayer, **kwargs):
         super().__init__(**kwargs)
-        self.sublayer = layer
+        self.sublayer = sublayer
 
     def call(self, x):
         return self.sublayer(x)

@@ -81,8 +81,11 @@ def render_backbone_table(symbols):
                 f"{preset} | "
                 f"{format_path(metadata)} | "
                 f"{format_param_count(metadata)} | "
-                f"{metadata['description']} \n"
+                f"{metadata['description']}"
             )
+            if "model_card" in metadata:
+                table += f" [Model Card]({metadata['model_card']})"
+            table += "\n"
     return table
 
 
