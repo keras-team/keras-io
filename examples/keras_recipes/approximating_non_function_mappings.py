@@ -1,11 +1,10 @@
-# -*- coding: utf-8 -*-
 """
 Title: Approximating non-Function Mappings with Mixture Density Networks
 Author: [lukewood](https://twitter.com/luke_wood_ml)
 Date created: 2023/07/15
 Last modified: 2023/07/15
 Description: Approximate non one to one mapping using mixture density networks.
-Accelerator: CPU
+Accelerator: None
 """
 
 """
@@ -44,7 +43,6 @@ pip install -q --upgrade tensorflow-probability keras-core
 
 import numpy as np
 import matplotlib.pyplot as plt
-from collections import OrderedDict
 import math
 import random
 from keras_core import callbacks
@@ -64,41 +62,26 @@ def normalize(x):
     return (x - np.min(x)) / (np.max(x) - np.min(x))
 
 
-def create_noisy_spiral(n, max_jitter=0.2, size_range=[5, 10]):
-    R_X = random.choice(range(size_range[0], size_range[1], 10))
-    R_Y = random.choice(range(size_range[0], size_range[1], 10))
-    X_0 = random.random() * 100 - 50
-    Y_0 = random.random() * 100 - 50
+def create_noisy_spiral(n, jitter_std=0.2, revolutions=2):
+    angle = np.random.uniform(0, 2 * np.pi * revolutions, [n])
+    r = angle
 
-    randomized_jitter = lambda: random.uniform(-max_jitter / 2, max_jitter / 2)
-    x = lambda _t: _t / 360.0 * math.cos(_t / 90.0 * math.pi) * R_X + X_0
-    y = lambda _t: _t / 360.0 * math.sin(_t / 90.0 * math.pi) * R_Y + Y_0
+    x = r * np.cos(angle)
+    y = r * np.sin(angle)
 
-    out = np.zeros([n, 2])
-
-    for i in range(n):
-        t = 360.0 / n * i
-        out[i, 0] = x(t) + randomized_jitter()
-        out[i, 1] = y(t) + randomized_jitter()
-    out = out.astype("float32")
-    return (normalize(out[:, 0]) * 10) - 5, (normalize(out[:, 1]) * 10) - 5
+    result = np.stack([x, y], axis=1)
+    result = result + np.random.normal(scale=jitter_std, size=[n, 2])
+    result = 5 * normalize(result)
+    return result
 
 
 """
 Next, lets invoke this function many times to construct a sample dataset:
 """
 
-xs = []
-ys = []
+xy = create_noisy_spiral(10000)
 
-for _ in range(10):
-    x, y = create_noisy_spiral(1000)
-    xs.append(x)
-    ys.append(y)
-
-x = np.concatenate(xs, axis=0)
-y = np.concatenate(ys, axis=0)
-x = np.expand_dims(x, axis=1)
+x, y = xy[:, 0:1], xy[:, 1:]
 
 plt.scatter(x, y)
 plt.show()
@@ -120,7 +103,7 @@ model = keras_core.Sequential(
     [
         layers.Dense(N_HIDDEN, activation="relu"),
         layers.Dense(N_HIDDEN, activation="relu"),
-        layers.Dense(1, activation="relu"),
+        layers.Dense(1),
     ]
 )
 
@@ -131,7 +114,9 @@ These tend to be reasonable prototyping choices:
 
 model.compile(optimizer="adam", loss="mse")
 
-"""We can fit this model quite easy"""
+"""
+We can fit this model quite easy
+"""
 
 model.fit(
     x,
@@ -139,7 +124,7 @@ model.fit(
     epochs=300,
     batch_size=128,
     validation_split=0.15,
-    callbacks=[callbacks.EarlyStopping(monitor="val_loss", patience=5)],
+    callbacks=[callbacks.EarlyStopping(monitor="val_loss", patience=10)],
 )
 
 """
@@ -392,7 +377,9 @@ y_samples = np.apply_along_axis(
     sample_from_output, 1, y_pred_mixture, 1, N_MIXES, temp=1.0
 )
 
-"""Finally, we can visualize our network outputs"""
+"""
+Finally, we can visualize our network outputs
+"""
 
 plt.scatter(x, y, alpha=0.05, color="blue", label="Ground Truth")
 plt.scatter(
@@ -404,13 +391,17 @@ plt.scatter(
 )
 plt.show()
 
-"""Beautiful.  Love to see it
+"""
+Beautiful.  Love to see it
 
 # Conclusions
 
 Neural Networks are universal function approximators - but they can only
 approximate functions.  Mixture Density networks can approximate arbitrary
 x->y mappings using some neat probability tricks.
+
+For more examples with `tensorflow_probability`
+[start here](https://www.tensorflow.org/probability/examples/Probabilistic_Layers_Regression).
 
 One more pretty graphic for the road:
 """
@@ -420,8 +411,13 @@ fig.set_figheight(3)
 fig.set_figwidth(12)
 axs[0].set_title("Ground Truth")
 axs[0].scatter(x, y, alpha=0.05, color="blue")
+xlim = axs[0].get_xlim()
+ylim = axs[0].get_ylim()
+
 axs[1].set_title("Normal Model prediction")
 axs[1].scatter(x, y_pred, alpha=0.05, color="red")
+axs[1].set_xlim(xlim)
+axs[1].set_ylim(ylim)
 axs[2].scatter(
     x,
     y_samples[:, :, 0],
@@ -430,4 +426,6 @@ axs[2].scatter(
     label="Mixture Density Network prediction",
 )
 axs[2].set_title("Mixture Density Network prediction")
+axs[2].set_xlim(xlim)
+axs[2].set_ylim(ylim)
 plt.show()
