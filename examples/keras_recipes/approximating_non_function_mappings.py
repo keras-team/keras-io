@@ -14,9 +14,13 @@ Accelerator: CPU
 Neural networks are universal function approximators. Key word: function!
 While powerful function approximators, neural networks are not able to
 approximate non-functions.
-One important restriction to remember about functions - they have one input, one
-output!
-Neural networks suffer greatly when the training set has multiple values of Y for a single X.
+One important characteristic of functions is that they map one input to a
+unique output.
+Neural networks do not perform well when the training set has multiple values of
+Y for a single X.
+Instead of learning the proper distribution, a naive neural network will
+interpret the problem as a function and learn the geometric mean of all `Y` in
+the training set.
 
 In this guide I'll show you how to approximate the class of non-functions
 consisting of mappings from `x -> y` such that multiple `y` may exist for a
@@ -101,8 +105,11 @@ plt.show()
 
 """
 As you can see, there's multiple possible values for Y with respect to a given
-X.  Normal neural networks will simply learn the mean of these points with
+X.
+Normal neural networks will simply learn the mean of these points with
 respect to geometric space.
+In the context of our spiral, however, the geometric mean of the each Y occurs
+with a probability of zero.
 
 We can quickly show this with a simple linear model:
 """
@@ -155,8 +162,10 @@ plt.show()
 ## Mixture Density Networks
 
 Mixture Density networks can alleviate this problem.
-A Mixture density is a class of complicated densities expressible in terms of simpler densities.
-They are effectively the sum of a ton of probability distributions.
+A mixture density is a class of complicated densities expressible in terms of simpler densities.
+Effectively, a mixture density is the sum of various probability distributions.
+By summing various distributions, mixture densitry distributions can
+model arbitrarily complex distributions.
 Mixture Density networks learn to parameterize a mixture density distribution
 based on a given training set.
 
