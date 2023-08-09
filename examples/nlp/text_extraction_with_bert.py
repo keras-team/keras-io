@@ -4,6 +4,7 @@ Author: [Apoorv Nandan](https://twitter.com/NandanApoorv)
 Date created: 2020/05/23
 Last modified: 2020/05/23
 Description: Fine tune pretrained BERT from HuggingFace Transformers on SQuAD.
+Accelerator: TPU
 """
 """
 ## Introduction

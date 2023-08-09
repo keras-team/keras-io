@@ -10,6 +10,11 @@
 
 
 
+
+```python
+!pip install keras-tuner -q
+```
+
 ---
 ## Introduction
 
@@ -89,13 +94,13 @@ is not supported, but support for this is on the roadmap.
 When the enviroment variables described above are set, the example below will
 run distributed tuning and use data parallelism within each trial via
 `tf.distribute`. The example loads MNIST from `tensorflow_datasets` and uses
-[Hyperband](https://arxiv.org/pdf/1603.06560.pdf) for the hyperparameter
+[Hyperband](https://arxiv.org/abs/1603.06560) for the hyperparameter
 search.
 
 
 ```python
 
-import keras_tuner as kt
+import keras_tuner
 import tensorflow as tf
 import numpy as np
 
@@ -135,7 +140,7 @@ def build_model(hp):
     return model
 
 
-tuner = kt.Hyperband(
+tuner = keras_tuner.Hyperband(
     hypermodel=build_model,
     objective="val_accuracy",
     max_epochs=2,
@@ -167,15 +172,15 @@ tuner.search(
 
 <div class="k-default-codeblock">
 ```
-Trial 2 Complete [00h 00m 03s]
-val_accuracy: 0.4699999988079071
+Trial 2 Complete [00h 00m 12s]
+val_accuracy: 0.800000011920929
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-Best val_accuracy So Far: 0.5099999904632568
-Total elapsed time: 00h 00m 06s
+Best val_accuracy So Far: 0.800000011920929
+Total elapsed time: 00h 00m 19s
 INFO:tensorflow:Oracle triggered exit
 
 ```

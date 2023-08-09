@@ -4,6 +4,7 @@ Author: [Amogh Joshi](https://github.com/amogh7joshi)
 Date created: 2021/06/02
 Last modified: 2021/06/05
 Description: How to build and train a convolutional LSTM model for next-frame video prediction.
+Accelerator: GPU
 """
 
 """
@@ -75,6 +76,7 @@ val_dataset = dataset[val_index]
 # Normalize the data to the 0-1 range.
 train_dataset = train_dataset / 255
 val_dataset = val_dataset / 255
+
 
 # We'll define a helper function to shift the frames, where
 # `x` is frames 0 to n - 1, and `y` is frames 1 to n.
@@ -158,7 +160,8 @@ x = layers.Conv3D(
 # Next, we will build the complete model and compile it.
 model = keras.models.Model(inp, x)
 model.compile(
-    loss=keras.losses.binary_crossentropy, optimizer=keras.optimizers.Adam(),
+    loss=keras.losses.binary_crossentropy,
+    optimizer=keras.optimizers.Adam(),
 )
 
 """
@@ -239,6 +242,9 @@ plt.show()
 Finally, we'll pick a few examples from the validation set
 and construct some GIFs with them to see the model's
 predicted videos.
+
+You can use the trained model hosted on [Hugging Face Hub](https://huggingface.co/keras-io/conv-lstm)
+and try the demo on [Hugging Face Spaces](https://huggingface.co/spaces/keras-io/conv-lstm).
 """
 
 # Select a few random examples from the dataset.

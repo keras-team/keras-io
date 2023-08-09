@@ -40,17 +40,29 @@ then any model loaded from this repository will get built according to the Tenso
 | [EfficientNetB5](efficientnet/#efficientnetb5-function) | 118 | 83.6% | 96.7% | 30.6M | 312 | 579.2 | 25.3 |
 | [EfficientNetB6](efficientnet/#efficientnetb6-function) | 166 | 84.0% | 96.8% | 43.3M | 360 | 958.1 | 40.4 |
 | [EfficientNetB7](efficientnet/#efficientnetb7-function) | 256 | 84.3% | 97.0% | 66.7M | 438 | 1578.9 | 61.6 | 
+| [EfficientNetV2B0](efficientnet_v2/#efficientnetv2b0-function) | 29 | 78.7% | 94.3% | 7.2M | - | - | - |
+| [EfficientNetV2B1](efficientnet_v2/#efficientnetv2b1-function) | 34 | 79.8% | 95.0% | 8.2M | - | - | - |
+| [EfficientNetV2B2](efficientnet_v2/#efficientnetv2b2-function) | 42 | 80.5% | 95.1% | 10.2M | - | - | - |
+| [EfficientNetV2B3](efficientnet_v2/#efficientnetv2b3-function) | 59 | 82.0% | 95.8% | 14.5M | - | - | - |
+| [EfficientNetV2S](efficientnet_v2/#efficientnetv2s-function) | 88 | 83.9% | 96.7% | 21.6M | - | - | - |
+| [EfficientNetV2M](efficientnet_v2/#efficientnetv2m-function) | 220 | 85.3% | 97.4% | 54.4M | - | - | - |
+| [EfficientNetV2L](efficientnet_v2/#efficientnetv2l-function) | 479 | 85.7% | 97.5% | 119.0M | - | - | - |
+| [ConvNeXtTiny](convnext/#convnexttiny-function) | 109.42 | 81.3% | - | 28.6M | - | - | - |
+| [ConvNeXtSmall](convnext/#convnextsmall-function) | 192.29 | 82.3% | - | 50.2M | - | - | - |
+| [ConvNeXtBase](convnext/#convnextbase-function) | 338.58 | 85.3% | - | 88.5M | - | - | - |
+| [ConvNeXtLarge](convnext/#convnextlarge-function) | 755.07 | 86.3% | - | 197.7M | - | - | - |
+| [ConvNeXtXLarge](convnext/#convnextxlarge-function) | 1310 | 86.7% | - | 350.1M | - | - | - |
 
-<br>
 The top-1 and top-5 accuracy refers to the model's performance on the ImageNet validation dataset.
 
 Depth refers to the topological depth of the network. This includes activation layers, batch normalization layers etc.
 
 Time per inference step is the average of 30 batches and 10 repetitions.
-   - CPU: AMD EPYC Processor (with IBPB) (92 core)
-   - Ram: 1.7T
-   - GPU: Tesla A100
-   - Batch size: 32
+
+- CPU: AMD EPYC Processor (with IBPB) (92 core)
+- RAM: 1.7T
+- GPU: Tesla A100
+- Batch size: 32
 
 Depth counts the number of layers with parameters.
 

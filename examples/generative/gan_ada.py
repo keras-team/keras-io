@@ -4,6 +4,7 @@ Author: [András Béres](https://www.linkedin.com/in/andras-beres-789190210)
 Date created: 2021/10/28
 Last modified: 2021/10/28
 Description: Generating images from limited data using the Caltech Birds dataset.
+Accelerator: GPU
 """
 """
 ## Introduction
@@ -51,7 +52,7 @@ images is impossible to infer, and this information is destroyed.
 
 A simple trick to make data augmentations invertible is to only apply them with some
 probability. That way the original version of the images will be more common, and the
-data distribution can be infered. By properly choosing this probability, one can
+data distribution can be inferred. By properly choosing this probability, one can
 effectively regularize the discriminator without making the augmentations leaky.
 
 """
@@ -288,10 +289,11 @@ value (1000 in this case) so that the augmentation strength is only adjusted slo
 
 The main motivation for this procedure is that the optimal value of the target accuracy
 is similar across different dataset sizes (see [figure 4 and 5 in the paper](https://arxiv.org/abs/2006.06676)),
-so it does not have to be retuned, because the
+so it does not have to be re-tuned, because the
 process automatically applies stronger data augmentation when it is needed.
 
 """
+
 
 # "hard sigmoid", useful for binary accuracy calculation from logits
 def step(values):
@@ -348,7 +350,7 @@ class AdaptiveAugmenter(keras.Model):
     def update(self, real_logits):
         current_accuracy = tf.reduce_mean(step(real_logits))
 
-        # the augmentation probability is updated based on the dicriminator's
+        # the augmentation probability is updated based on the discriminator's
         # accuracy on real images
         accuracy_error = current_accuracy - target_accuracy
         self.probability.assign(
@@ -383,6 +385,7 @@ in GANs. We also disable the bias in the fully connected and convolutional layer
 the following batch normalization makes it redundant.
 """
 
+
 # DCGAN generator
 def get_generator():
     noise_input = keras.Input(shape=(noise_size,))
@@ -392,12 +395,20 @@ def get_generator():
     x = layers.Reshape(target_shape=(4, 4, width))(x)
     for _ in range(depth - 1):
         x = layers.Conv2DTranspose(
-            width, kernel_size=4, strides=2, padding="same", use_bias=False,
+            width,
+            kernel_size=4,
+            strides=2,
+            padding="same",
+            use_bias=False,
         )(x)
         x = layers.BatchNormalization(scale=False)(x)
         x = layers.ReLU()(x)
     image_output = layers.Conv2DTranspose(
-        3, kernel_size=4, strides=2, padding="same", activation="sigmoid",
+        3,
+        kernel_size=4,
+        strides=2,
+        padding="same",
+        activation="sigmoid",
     )(x)
 
     return keras.Model(noise_input, image_output, name="generator")
@@ -409,7 +420,11 @@ def get_discriminator():
     x = image_input
     for _ in range(depth):
         x = layers.Conv2D(
-            width, kernel_size=4, strides=2, padding="same", use_bias=False,
+            width,
+            kernel_size=4,
+            strides=2,
+            padding="same",
+            use_bias=False,
         )(x)
         x = layers.BatchNormalization(scale=False)(x)
         x = layers.LeakyReLU(alpha=leaky_relu_slope)(x)
@@ -639,7 +654,7 @@ discriminator augmentation might not be necessary).
 ## GAN tips and tricks
 
 My goal with this example was to find a good tradeoff between ease of implementation and
-generation quality for GANs. During preparation I have run numerous ablations using
+generation quality for GANs. During preparation, I have run numerous ablations using
 [this repository](https://github.com/beresandras/gan-flavours-keras).
 
 In this section I list the lessons learned and my recommendations in my subjective order
@@ -654,7 +669,7 @@ I recommend checking out the [DCGAN paper](https://arxiv.org/abs/1511.06434), th
 * **resolution**: Training GANs at higher resolutions tends to get more difficult, I
 recommend experimenting at 32x32 or 64x64 resolutions initially.
 * **initialization**: If you see strong colorful patterns early on in the training, the
-initalization might be the issue. Set the kernel_initializer parameters of layers to
+initialization might be the issue. Set the kernel_initializer parameters of layers to
 [random normal](https://keras.io/api/layers/initializers/#randomnormal-class), and
 decrease the standard deviation (recommended value: 0.02, following DCGAN) until the
 issue disappears.
@@ -675,7 +690,7 @@ disabling batch normalization's learnable scale parameters along with it.
 * **[residual connections](https://keras.io/guides/functional_api/#a-toy-resnet-model)**:
 While residual discriminators behave similarly, residual generators are more difficult to
 train in my experience. They are however necessary for training large and deep
-architectures. I recommend starting with non-resiudal architectures.
+architectures. I recommend starting with non-residual architectures.
 * **dropout**: Using dropout before the last layer of the discriminator improves
 generation quality in my experience. Recommended dropout rate is below 0.5.
 * **[leaky ReLU](https://keras.io/api/layers/activation_layers/leaky_relu/)**: Use leaky

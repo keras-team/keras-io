@@ -4,6 +4,7 @@ Author: [fchollet](https://twitter.com/fchollet)
 Date created: 2015/06/15
 Last modified: 2020/04/30
 Description: Generate text from Nietzsche's writings with a character-level LSTM.
+Accelerator: GPU
 """
 """
 ## Introduction

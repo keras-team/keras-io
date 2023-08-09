@@ -6,7 +6,7 @@
 **Description:** Image classification with a Transformer that leverages external attention.
 
 
-<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/vision/ipynb/EANet.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/vision/EANet.py)
+<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/vision/ipynb/EANet.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/vision/eanet.py)
 
 
 
@@ -123,7 +123,7 @@ data_augmentation.layers[0].adapt(x_train)
 
 class PatchExtract(layers.Layer):
     def __init__(self, patch_size, **kwargs):
-        super(PatchExtract, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.patch_size = patch_size
 
     def call(self, images):
@@ -142,7 +142,7 @@ class PatchExtract(layers.Layer):
 
 class PatchEmbedding(layers.Layer):
     def __init__(self, num_patch, embed_dim, **kwargs):
-        super(PatchEmbedding, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.num_patch = num_patch
         self.proj = layers.Dense(embed_dim)
         self.pos_embed = layers.Embedding(input_dim=num_patch, output_dim=embed_dim)

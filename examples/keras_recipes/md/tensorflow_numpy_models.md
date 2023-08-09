@@ -83,7 +83,7 @@ First let's define a simple `TNPForwardFeedRegressionNetwork` class.
 
 class TNPForwardFeedRegressionNetwork(keras.Model):
     def __init__(self, blocks=None, **kwargs):
-        super(TNPForwardFeedRegressionNetwork, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         if not isinstance(blocks, list):
             raise ValueError(f"blocks must be a list, got blocks={blocks}")
         self.blocks = blocks

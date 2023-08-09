@@ -4,6 +4,7 @@ Author: [Sayak Paul](https://twitter.com/RisingSayak)
 Date created: 2021/06/30
 Last modified: 2021/06/30
 Description: Compact Convolutional Transformers for efficient image classification.
+Accelerator: GPU
 """
 """
 As discussed in the [Vision Transformers (ViT)](https://arxiv.org/abs/2010.11929) paper,
@@ -116,7 +117,7 @@ class CCTTokenizer(layers.Layer):
         positional_emb=positional_emb,
         **kwargs,
     ):
-        super(CCTTokenizer, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
         # This is our tokenizer.
         self.conv_model = keras.Sequential()
@@ -178,16 +179,17 @@ layer. In CCT, stochastic depth is used just before the residual blocks of a Tra
 encoder.
 """
 
+
 # Referred from: github.com:rwightman/pytorch-image-models.
 class StochasticDepth(layers.Layer):
     def __init__(self, drop_prop, **kwargs):
-        super(StochasticDepth, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.drop_prob = drop_prop
 
     def call(self, x, training=None):
         if training:
             keep_prob = 1 - self.drop_prob
-            shape = (tf.shape(x)[0],) + (1,) * (len(tf.shape(x)) - 1)
+            shape = (tf.shape(x)[0],) + (1,) * (tf.shape(x).shape[0] - 1)
             random_tensor = keep_prob + tf.random.uniform(shape, 0, 1)
             random_tensor = tf.floor(random_tensor)
             return (x / keep_prob) * random_tensor
@@ -243,7 +245,6 @@ def create_cct_model(
     projection_dim=projection_dim,
     transformer_units=transformer_units,
 ):
-
     inputs = layers.Input(input_shape)
 
     # Augment data.

@@ -2,8 +2,9 @@
 Title: Image similarity estimation using a Siamese Network with a contrastive loss
 Author: Mehdi
 Date created: 2021/05/06
-Last modified: 2021/05/06
+Last modified: 2022/09/10
 Description: Similarity learning using a siamese network trained with a contrastive loss.
+Accelerator: GPU
 """
 
 """
@@ -36,7 +37,7 @@ import matplotlib.pyplot as plt
 
 epochs = 10
 batch_size = 16
-margin = 1  # Margin for constrastive loss.
+margin = 1  # Margin for contrastive loss.
 
 """
 ## Load the MNIST dataset
@@ -100,7 +101,7 @@ def make_pairs(x, y):
         x2 = x[idx2]
 
         pairs += [[x1, x2]]
-        labels += [1]
+        labels += [0]
 
         # add a non-matching example
         label2 = random.randint(0, num_classes - 1)
@@ -111,7 +112,7 @@ def make_pairs(x, y):
         x2 = x[idx2]
 
         pairs += [[x1, x2]]
-        labels += [0]
+        labels += [1]
 
     return np.array(pairs), np.array(labels).astype("float32")
 
@@ -206,7 +207,6 @@ def visualize(pairs, labels, to_show=6, num_col=3, predictions=None, test=False)
     # Plot the images
     fig, axes = plt.subplots(num_row, num_col, figsize=(5, 5))
     for i in range(to_show):
-
         # If the number of rows is 1, the axes array is one-dimensional
         if num_row == 1:
             ax = axes[i % num_col]
@@ -247,11 +247,12 @@ visualize(pairs_test[:-1], labels_test[:-1], to_show=4, num_col=4)
 """
 ## Define the model
 
-There are be two input layers, each leading to its own network, which
+There are two input layers, each leading to its own network, which
 produces embeddings. A `Lambda` layer then merges them using an
 [Euclidean distance](https://en.wikipedia.org/wiki/Euclidean_distance) and the
 merged output is fed to the final network.
 """
+
 
 # Provided two tensors t1 and t2
 # Euclidean distance = sqrt(sum(square(t1-t2)))
@@ -300,34 +301,34 @@ siamese = keras.Model(inputs=[input_1, input_2], outputs=output_layer)
 
 
 """
-## Define the constrastive Loss
+## Define the contrastive Loss
 """
 
 
 def loss(margin=1):
-    """Provides 'constrastive_loss' an enclosing scope with variable 'margin'.
+    """Provides 'contrastive_loss' an enclosing scope with variable 'margin'.
 
-  Arguments:
-      margin: Integer, defines the baseline for distance for which pairs
-              should be classified as dissimilar. - (default is 1).
+    Arguments:
+        margin: Integer, defines the baseline for distance for which pairs
+                should be classified as dissimilar. - (default is 1).
 
-  Returns:
-      'constrastive_loss' function with data ('margin') attached.
-  """
+    Returns:
+        'contrastive_loss' function with data ('margin') attached.
+    """
 
     # Contrastive loss = mean( (1-true_value) * square(prediction) +
     #                         true_value * square( max(margin-prediction, 0) ))
     def contrastive_loss(y_true, y_pred):
-        """Calculates the constrastive loss.
+        """Calculates the contrastive loss.
 
-      Arguments:
-          y_true: List of labels, each label is of type float32.
-          y_pred: List of predictions of same length as of y_true,
-                  each label is of type float32.
+        Arguments:
+            y_true: List of labels, each label is of type float32.
+            y_pred: List of predictions of same length as of y_true,
+                    each label is of type float32.
 
-      Returns:
-          A tensor containing constrastive loss as floating point value.
-      """
+        Returns:
+            A tensor containing contrastive loss as floating point value.
+        """
 
         square_pred = tf.math.square(y_pred)
         margin_square = tf.math.square(tf.math.maximum(margin - (y_pred), 0))
@@ -388,8 +389,8 @@ def plt_metric(history, metric, title, has_valid=True):
 # Plot the accuracy
 plt_metric(history=history.history, metric="accuracy", title="Model accuracy")
 
-# Plot the constrastive loss
-plt_metric(history=history.history, metric="loss", title="Constrastive Loss")
+# Plot the contrastive loss
+plt_metric(history=history.history, metric="loss", title="Contrastive Loss")
 
 """
 ## Evaluate the model
@@ -404,3 +405,10 @@ print("test loss, test acc:", results)
 
 predictions = siamese.predict([x_test_1, x_test_2])
 visualize(pairs_test, labels_test, to_show=3, predictions=predictions, test=True)
+
+"""
+**Example available on HuggingFace**
+| Trained Model | Demo |
+| :--: | :--: |
+| [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Model-Siamese%20Network-black.svg)](https://huggingface.co/keras-io/siamese-contrastive) | [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Spaces-Siamese%20Network-black.svg)](https://huggingface.co/spaces/keras-io/siamese-contrastive) |
+"""

@@ -42,7 +42,6 @@ from tensorflow.keras import layers
 from tensorflow.keras.layers import TextVectorization
 import numpy as np
 import os
-import re
 import string
 import random
 
@@ -73,7 +72,7 @@ def causal_attention_mask(batch_size, n_dest, n_src, dtype):
 
 class TransformerBlock(layers.Layer):
     def __init__(self, embed_dim, num_heads, ff_dim, rate=0.1):
-        super(TransformerBlock, self).__init__()
+        super().__init__()
         self.att = layers.MultiHeadAttention(num_heads, embed_dim)
         self.ffn = keras.Sequential(
             [layers.Dense(ff_dim, activation="relu"), layers.Dense(embed_dim),]
@@ -100,7 +99,7 @@ class TransformerBlock(layers.Layer):
 ---
 ## Implement an embedding layer
 
-Create two seperate embedding layers: one for tokens and one for token index
+Create two separate embedding layers: one for tokens and one for token index
 (positions).
 
 
@@ -108,7 +107,7 @@ Create two seperate embedding layers: one for tokens and one for token index
 
 class TokenAndPositionEmbedding(layers.Layer):
     def __init__(self, maxlen, vocab_size, embed_dim):
-        super(TokenAndPositionEmbedding, self).__init__()
+        super().__init__()
         self.token_emb = layers.Embedding(input_dim=vocab_size, output_dim=embed_dim)
         self.pos_emb = layers.Embedding(input_dim=maxlen, output_dim=embed_dim)
 

@@ -2,7 +2,7 @@
 
 **Author:** [Srihari Humbarwadi](https://twitter.com/srihari_rh)<br>
 **Date created:** 2020/05/17<br>
-**Last modified:** 2020/07/14<br>
+**Last modified:** 2023/07/10<br>
 **Description:** Implementing RetinaNet: Focal Loss for Dense Object Detection.
 
 
@@ -67,7 +67,8 @@ with zipfile.ZipFile("data.zip", "r") as z_fp:
 <div class="k-default-codeblock">
 ```
 Downloading data from https://github.com/srihari-humbarwadi/datasets/releases/download/v0.1.0/data.zip
-560529408/560525318 [==============================] - 304s 1us/step
+560529408/560525318 [==============================] - 7s 0us/step
+560537600/560525318 [==============================] - 7s 0us/step
 
 ```
 </div>
@@ -591,7 +592,7 @@ class FeaturePyramid(keras.layers.Layer):
     """
 
     def __init__(self, backbone=None, **kwargs):
-        super(FeaturePyramid, self).__init__(name="FeaturePyramid", **kwargs)
+        super().__init__(name="FeaturePyramid", **kwargs)
         self.backbone = backbone if backbone else get_backbone()
         self.conv_c3_1x1 = keras.layers.Conv2D(256, 1, 1, "same")
         self.conv_c4_1x1 = keras.layers.Conv2D(256, 1, 1, "same")
@@ -676,7 +677,7 @@ class RetinaNet(keras.Model):
     """
 
     def __init__(self, num_classes, backbone=None, **kwargs):
-        super(RetinaNet, self).__init__(name="RetinaNet", **kwargs)
+        super().__init__(name="RetinaNet", **kwargs)
         self.fpn = FeaturePyramid(backbone)
         self.num_classes = num_classes
 
@@ -732,7 +733,7 @@ class DecodePredictions(tf.keras.layers.Layer):
         box_variance=[0.1, 0.1, 0.2, 0.2],
         **kwargs
     ):
-        super(DecodePredictions, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.num_classes = num_classes
         self.confidence_threshold = confidence_threshold
         self.nms_iou_threshold = nms_iou_threshold
@@ -785,7 +786,7 @@ class RetinaNetBoxLoss(tf.losses.Loss):
     """Implements Smooth L1 loss"""
 
     def __init__(self, delta):
-        super(RetinaNetBoxLoss, self).__init__(
+        super().__init__(
             reduction="none", name="RetinaNetBoxLoss"
         )
         self._delta = delta
@@ -806,7 +807,7 @@ class RetinaNetClassificationLoss(tf.losses.Loss):
     """Implements Focal loss"""
 
     def __init__(self, alpha, gamma):
-        super(RetinaNetClassificationLoss, self).__init__(
+        super().__init__(
             reduction="none", name="RetinaNetClassificationLoss"
         )
         self._alpha = alpha
@@ -827,7 +828,7 @@ class RetinaNetLoss(tf.losses.Loss):
     """Wrapper to combine both the losses"""
 
     def __init__(self, num_classes=80, alpha=0.25, gamma=2.0, delta=1.0):
-        super(RetinaNetLoss, self).__init__(reduction="auto", name="RetinaNetLoss")
+        super().__init__(reduction="auto", name="RetinaNetLoss")
         self._clf_loss = RetinaNetClassificationLoss(alpha, gamma)
         self._box_loss = RetinaNetBoxLoss(delta)
         self._num_classes = num_classes
@@ -883,10 +884,18 @@ resnet50_backbone = get_backbone()
 loss_fn = RetinaNetLoss(num_classes)
 model = RetinaNet(num_classes, resnet50_backbone)
 
-optimizer = tf.optimizers.SGD(learning_rate=learning_rate_fn, momentum=0.9)
+optimizer = tf.keras.optimizers.legacy.SGD(learning_rate=learning_rate_fn, momentum=0.9)
 model.compile(loss=loss_fn, optimizer=optimizer)
 ```
 
+<div class="k-default-codeblock">
+```
+Downloading data from https://storage.googleapis.com/tensorflow/keras-applications/resnet/resnet50_weights_tf_dim_ordering_tf_kernels_notop.h5
+94773248/94765736 [==============================] - 0s 0us/step
+94781440/94765736 [==============================] - 0s 0us/step
+
+```
+</div>
 ---
 ## Setting up callbacks
 
@@ -981,11 +990,11 @@ model.fit(
 
 <div class="k-default-codeblock">
 ```
-100/100 [==============================] - ETA: 0s - loss: 4.0953
-Epoch 00001: saving model to retinanet/weights_epoch_1
-100/100 [==============================] - 68s 679ms/step - loss: 4.0953 - val_loss: 4.0821
+    100/Unknown - 290s 3s/step - loss: 4.0817
+Epoch 1: saving model to retinanet/weights_epoch_1
+100/100 [==============================] - 336s 3s/step - loss: 4.0817 - val_loss: 4.1082
 
-<tensorflow.python.keras.callbacks.History at 0x7f87005239d0>
+<keras.callbacks.History at 0x7f4c7e0428d0>
 
 ```
 </div>
@@ -1006,7 +1015,7 @@ model.load_weights(latest_checkpoint)
 
 <div class="k-default-codeblock">
 ```
-<tensorflow.python.training.tracking.util.CheckpointLoadStatus at 0x7f86e0531910>
+<tensorflow.python.training.tracking.util.CheckpointLoadStatus at 0x7f4c6823d0d0>
 
 ```
 </div>
@@ -1059,3 +1068,9 @@ for sample in val_dataset.take(2):
 
 ![png](/img/examples/vision/retinanet/retinanet_44_1.png)
 
+
+Example available on HuggingFace.
+
+| Trained Model | Demo |
+| :--: | :--: |
+| [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Model-Object%20Detection%20With%20Retinanet-black.svg)](https://huggingface.co/keras-io/Object-Detection-RetinaNet) | [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Spaces-Object%20Detection%20With%20Retinanet-black.svg)](https://huggingface.co/spaces/keras-io/Object-Detection-Using-RetinaNet) |

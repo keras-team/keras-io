@@ -4,6 +4,7 @@ Authors: [Mandolini Giorgio Maria](https://www.linkedin.com/in/giorgio-maria-man
 Date created: 2020/08/10
 Last modified: 2020/08/10
 Description: Estimating the density distribution of the "double moon" dataset.
+Accelerator: GPU
 """
 
 """
@@ -21,12 +22,12 @@ the determinant of the Jacobian, are easy to obtain (more details in the referen
 
 **Requirements:**
 
-* Tensorflow 2.3
-* Tensorflow probability 0.11.0
+* Tensorflow 2.9.1
+* Tensorflow probability 0.17.0
 
 **Reference:**
 
-[Density estimation using Real NVP](https://arxiv.org/pdf/1605.08803.pdf)
+[Density estimation using Real NVP](https://arxiv.org/abs/1605.08803)
 """
 
 """
@@ -105,7 +106,7 @@ def Coupling(input_shape):
 
 class RealNVP(keras.Model):
     def __init__(self, num_coupling_layers):
-        super(RealNVP, self).__init__()
+        super().__init__()
 
         self.num_coupling_layers = num_coupling_layers
 
@@ -159,7 +160,6 @@ class RealNVP(keras.Model):
 
     def train_step(self, data):
         with tf.GradientTape() as tape:
-
             loss = self.log_loss(data)
 
         g = tape.gradient(loss, self.trainable_variables)

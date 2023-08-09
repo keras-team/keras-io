@@ -4,6 +4,7 @@ Author: [Apoorv Nandan](https://twitter.com/NandanApoorv)
 Date created: 2020/05/10
 Last modified: 2020/05/10
 Description: Implement a Transformer block as a Keras layer and use it for text classification.
+Accelerator: GPU
 """
 """
 ## Setup
@@ -21,10 +22,13 @@ from tensorflow.keras import layers
 
 class TransformerBlock(layers.Layer):
     def __init__(self, embed_dim, num_heads, ff_dim, rate=0.1):
-        super(TransformerBlock, self).__init__()
+        super().__init__()
         self.att = layers.MultiHeadAttention(num_heads=num_heads, key_dim=embed_dim)
         self.ffn = keras.Sequential(
-            [layers.Dense(ff_dim, activation="relu"), layers.Dense(embed_dim),]
+            [
+                layers.Dense(ff_dim, activation="relu"),
+                layers.Dense(embed_dim),
+            ]
         )
         self.layernorm1 = layers.LayerNormalization(epsilon=1e-6)
         self.layernorm2 = layers.LayerNormalization(epsilon=1e-6)
@@ -49,7 +53,7 @@ Two seperate embedding layers, one for tokens, one for token index (positions).
 
 class TokenAndPositionEmbedding(layers.Layer):
     def __init__(self, maxlen, vocab_size, embed_dim):
-        super(TokenAndPositionEmbedding, self).__init__()
+        super().__init__()
         self.token_emb = layers.Embedding(input_dim=vocab_size, output_dim=embed_dim)
         self.pos_emb = layers.Embedding(input_dim=maxlen, output_dim=embed_dim)
 
@@ -70,8 +74,8 @@ maxlen = 200  # Only consider the first 200 words of each movie review
 (x_train, y_train), (x_val, y_val) = keras.datasets.imdb.load_data(num_words=vocab_size)
 print(len(x_train), "Training sequences")
 print(len(x_val), "Validation sequences")
-x_train = keras.preprocessing.sequence.pad_sequences(x_train, maxlen=maxlen)
-x_val = keras.preprocessing.sequence.pad_sequences(x_val, maxlen=maxlen)
+x_train = keras.utils.pad_sequences(x_train, maxlen=maxlen)
+x_val = keras.utils.pad_sequences(x_val, maxlen=maxlen)
 
 """
 ## Create classifier model using transformer layer

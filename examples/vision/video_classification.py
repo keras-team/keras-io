@@ -4,6 +4,7 @@ Author: [Sayak Paul](https://twitter.com/RisingSayak)
 Date created: 2021/05/28
 Last modified: 2021/06/05
 Description: Training a video classifier with transfer learning and a recurrent model on the UCF101 dataset.
+Accelerator: GPU
 """
 """
 This example demonstrates video classification, an important use-case with
@@ -201,7 +202,13 @@ def prepare_all_videos(df, root_dir):
         frames = frames[None, ...]
 
         # Initialize placeholders to store the masks and features of the current video.
-        temp_frame_mask = np.zeros(shape=(1, MAX_SEQ_LENGTH,), dtype="bool")
+        temp_frame_mask = np.zeros(
+            shape=(
+                1,
+                MAX_SEQ_LENGTH,
+            ),
+            dtype="bool",
+        )
         temp_frame_features = np.zeros(
             shape=(1, MAX_SEQ_LENGTH, NUM_FEATURES), dtype="float32"
         )
@@ -239,6 +246,7 @@ executed.
 Now, we can feed this data to a sequence model consisting of recurrent layers like `GRU`.
 
 """
+
 
 # Utility for our sequence model.
 def get_sequence_model():
@@ -304,7 +312,13 @@ data from the UCF101 dataset using [the notebook](https://colab.research.google.
 
 def prepare_single_video(frames):
     frames = frames[None, ...]
-    frame_mask = np.zeros(shape=(1, MAX_SEQ_LENGTH,), dtype="bool")
+    frame_mask = np.zeros(
+        shape=(
+            1,
+            MAX_SEQ_LENGTH,
+        ),
+        dtype="bool",
+    )
     frame_features = np.zeros(shape=(1, MAX_SEQ_LENGTH, NUM_FEATURES), dtype="float32")
 
     for i, batch in enumerate(frames):

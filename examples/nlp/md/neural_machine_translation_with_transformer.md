@@ -2,7 +2,7 @@
 
 **Author:** [fchollet](https://twitter.com/fchollet)<br>
 **Date created:** 2021/05/26<br>
-**Last modified:** 2021/05/26<br>
+**Last modified:** 2023/02/25<br>
 **Description:** Implementing a sequence-to-sequene Transformer and training it on a machine translation task.
 
 
@@ -256,7 +256,7 @@ result in a model that cannot be used at inference time).
 
 class TransformerEncoder(layers.Layer):
     def __init__(self, embed_dim, dense_dim, num_heads, **kwargs):
-        super(TransformerEncoder, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.embed_dim = embed_dim
         self.dense_dim = dense_dim
         self.num_heads = num_heads
@@ -272,7 +272,7 @@ class TransformerEncoder(layers.Layer):
 
     def call(self, inputs, mask=None):
         if mask is not None:
-            padding_mask = tf.cast(mask[:, tf.newaxis, tf.newaxis, :], dtype="int32")
+            padding_mask = tf.cast(mask[:, tf.newaxis, :], dtype="int32")
         attention_output = self.attention(
             query=inputs, value=inputs, key=inputs, attention_mask=padding_mask
         )
@@ -283,7 +283,7 @@ class TransformerEncoder(layers.Layer):
 
 class PositionalEmbedding(layers.Layer):
     def __init__(self, sequence_length, vocab_size, embed_dim, **kwargs):
-        super(PositionalEmbedding, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.token_embeddings = layers.Embedding(
             input_dim=vocab_size, output_dim=embed_dim
         )
@@ -307,7 +307,7 @@ class PositionalEmbedding(layers.Layer):
 
 class TransformerDecoder(layers.Layer):
     def __init__(self, embed_dim, latent_dim, num_heads, **kwargs):
-        super(TransformerDecoder, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.embed_dim = embed_dim
         self.latent_dim = latent_dim
         self.num_heads = num_heads

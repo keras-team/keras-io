@@ -4,6 +4,7 @@ Author: [Khalid Salama](https://www.linkedin.com/in/khalid-salama-24403144/)
 Date created: 2021/05/15
 Last modified: 2021/05/15
 Description: Implementing the node2vec model to generate embeddings for movies from the MovieLens dataset.
+Accelerator: GPU
 """
 
 """
@@ -437,7 +438,6 @@ num_epochs = 10
 
 
 def create_model(vocabulary_size, embedding_dim):
-
     inputs = {
         "target": layers.Input(name="target", shape=(), dtype="int32"),
         "context": layers.Input(name="context", shape=(), dtype="int32"),
@@ -482,7 +482,10 @@ Let's plot the model.
 """
 
 keras.utils.plot_model(
-    model, show_shapes=True, show_dtype=True, show_layer_names=True,
+    model,
+    show_shapes=True,
+    show_dtype=True,
+    show_layer_names=True,
 )
 
 """
@@ -584,4 +587,13 @@ out_m.close()
 """
 Download the `embeddings.tsv` and `metadata.tsv` to analyze the obtained embeddings
 in the [Embedding Projector](https://projector.tensorflow.org/).
+"""
+
+"""
+
+**Example available on HuggingFace**
+
+| Trained Model | Demo |
+| :--: | :--: |
+| [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Model%3A%20-Node2Vec%20Movielens-black.svg)](https://huggingface.co/keras-io/Node2Vec_MovieLens) | [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Spaces%3A-Node2Vec%20Movielens-black.svg)](https://huggingface.co/spaces/keras-io/Node2Vec_MovieLens) |
 """

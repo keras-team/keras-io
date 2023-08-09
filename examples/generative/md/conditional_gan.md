@@ -65,7 +65,6 @@ from tensorflow import keras
 from tensorflow.keras import layers
 
 from tensorflow_docs.vis import embed
-import matplotlib.pyplot as plt
 import tensorflow as tf
 import numpy as np
 import imageio
@@ -186,7 +185,7 @@ generator = keras.Sequential(
 
 class ConditionalGAN(keras.Model):
     def __init__(self, discriminator, generator, latent_dim):
-        super(ConditionalGAN, self).__init__()
+        super().__init__()
         self.discriminator = discriminator
         self.generator = generator
         self.latent_dim = latent_dim
@@ -198,7 +197,7 @@ class ConditionalGAN(keras.Model):
         return [self.gen_loss_tracker, self.disc_loss_tracker]
 
     def compile(self, d_optimizer, g_optimizer, loss_fn):
-        super(ConditionalGAN, self).compile()
+        super().compile()
         self.d_optimizer = d_optimizer
         self.g_optimizer = g_optimizer
         self.loss_fn = loss_fn
@@ -342,7 +341,7 @@ Epoch 18/20
 
 
 ```python
-# We first extract the trained generator from our Conditiona GAN.
+# We first extract the trained generator from our Conditional GAN.
 trained_gen = cond_gan.generator
 
 # Choose the number of intermediate images that would be generated in
@@ -384,7 +383,7 @@ fake_images = interpolate_class(start_class, end_class)
 Here, we first sample noise from a normal distribution and then we repeat that for
 `num_interpolation` times and reshape the result accordingly.
 We then distribute it uniformly for `num_interpolation`
-with the label indentities being present in some proportion.
+with the label identities being present in some proportion.
 
 
 ```python
@@ -407,3 +406,5 @@ We can further improve the performance of this model with recipes like
 Conditional generation is also widely used in many modern image generation architectures like
 [VQ-GANs](https://arxiv.org/abs/2012.09841), [DALL-E](https://openai.com/blog/dall-e/),
 etc.
+
+You can use the trained model hosted on [Hugging Face Hub](https://huggingface.co/keras-io/conditional-gan) and try the demo on [Hugging Face Spaces](https://huggingface.co/spaces/keras-io/conditional-GAN).

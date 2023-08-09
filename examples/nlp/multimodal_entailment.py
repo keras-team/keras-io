@@ -4,6 +4,7 @@ Author: [Sayak Paul](https://twitter.com/RisingSayak)
 Date created: 2021/08/08
 Last modified: 2021/08/15
 Description: Training a multimodal model for predicting entailment.
+Accelerator: GPU
 """
 """
 ## Introduction
@@ -225,15 +226,15 @@ preprocessing.
 def make_bert_preprocessing_model(sentence_features, seq_length=128):
     """Returns Model mapping string features to BERT inputs.
 
-  Args:
-    sentence_features: A list with the names of string-valued features.
-    seq_length: An integer that defines the sequence length of BERT inputs.
+    Args:
+      sentence_features: A list with the names of string-valued features.
+      seq_length: An integer that defines the sequence length of BERT inputs.
 
-  Returns:
-    A Keras Model that can be called on a list or dict of string Tensors
-    (with the order or names, resp., given by sentence_features) and
-    returns a dict of tensors for input to BERT.
-  """
+    Returns:
+      A Keras Model that can be called on a list or dict of string Tensors
+      (with the order or names, resp., given by sentence_features) and
+      returns a dict of tensors for input to BERT.
+    """
 
     input_segments = [
         tf.keras.layers.Input(shape=(), dtype=tf.string, name=ft)
@@ -459,7 +460,10 @@ def create_text_encoder(
     num_projection_layers, projection_dims, dropout_rate, trainable=False
 ):
     # Load the pre-trained BERT model to be used as the base encoder.
-    bert = hub.KerasLayer(bert_model_path, name="bert",)
+    bert = hub.KerasLayer(
+        bert_model_path,
+        name="bert",
+    )
     # Set the trainability of the base encoder.
     bert.trainable = trainable
 
@@ -638,4 +642,7 @@ approaches that have been proposed to tackle the entailment problem.
 from the
 [Recognizing Multimodal Entailment](https://multimodal-entailment.github.io/)
 tutorial provides a comprehensive overview.
+
+You can use the trained model hosted on [Hugging Face Hub](https://huggingface.co/keras-io/multimodal-entailment)
+and try the demo on [Hugging Face Spaces](https://huggingface.co/spaces/keras-io/multimodal_entailment)
 """

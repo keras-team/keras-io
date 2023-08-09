@@ -92,9 +92,9 @@ using `Dataset` objects, since they will take care of performance-critical detai
 
 Keras features a range of utilities to help you turn raw data on disk into a `Dataset`:
 
-- `tf.keras.preprocessing.image_dataset_from_directory` turns image files sorted into
+- `keras.utils.image_dataset_from_directory` turns image files sorted into
  class-specific folders into a labeled dataset of image tensors.
-- `tf.keras.preprocessing.text_dataset_from_directory` does the same for text files.
+- `keras.utils.text_dataset_from_directory` does the same for text files.
 
 In addition, the TensorFlow `tf.data` includes other similar utilities, such as
 `tf.data.experimental.make_csv_dataset` to load structured data from CSV files.
@@ -117,7 +117,7 @@ Then you can do:
 
 ```python
 # Create a dataset.
-dataset = keras.preprocessing.image_dataset_from_directory(
+dataset = keras.utils.image_dataset_from_directory(
   'path/to/main_directory', batch_size=64, image_size=(200, 200))
 
 # For demonstration, iterate over the batches yielded by the dataset.
@@ -139,7 +139,7 @@ Likewise for text: if you have `.txt` documents sorted by class in different fol
  you can do:
 
 ```python
-dataset = keras.preprocessing.text_dataset_from_directory(
+dataset = keras.utils.text_dataset_from_directory(
   'path/to/main_directory', batch_size=64)
 
 # For demonstration, iterate over the batches yielded by the dataset.
@@ -155,7 +155,7 @@ for data, labels in dataset:
 ---
 ## Data preprocessing with Keras
 
-Once your data is in the form of string/int/float NumpPy arrays, or a `Dataset` object
+Once your data is in the form of string/int/float NumPy arrays, or a `Dataset` object
  (or Python generator) that yields batches of string/int/float tensors,
 it is time to **preprocess** the data. This can mean:
 
@@ -294,7 +294,7 @@ print("mean: %.4f" % np.mean(normalized_data))
 
 <div class="k-default-codeblock">
 ```
-var: 1.0000
+var: 1.0006
 mean: -0.0000
 
 ```
@@ -423,27 +423,31 @@ model.summary()
 ```
 Model: "model"
 _________________________________________________________________
-Layer (type)                 Output Shape              Param #   
+ Layer (type)                Output Shape              Param #   
 =================================================================
-input_1 (InputLayer)         [(None, None, None, 3)]   0         
-_________________________________________________________________
-center_crop_1 (CenterCrop)   (None, 150, 150, 3)       0         
-_________________________________________________________________
-rescaling_1 (Rescaling)      (None, 150, 150, 3)       0         
-_________________________________________________________________
-conv2d (Conv2D)              (None, 148, 148, 32)      896       
-_________________________________________________________________
-max_pooling2d (MaxPooling2D) (None, 49, 49, 32)        0         
-_________________________________________________________________
-conv2d_1 (Conv2D)            (None, 47, 47, 32)        9248      
-_________________________________________________________________
-max_pooling2d_1 (MaxPooling2 (None, 15, 15, 32)        0         
-_________________________________________________________________
-conv2d_2 (Conv2D)            (None, 13, 13, 32)        9248      
-_________________________________________________________________
-global_average_pooling2d (Gl (None, 32)                0         
-_________________________________________________________________
-dense (Dense)                (None, 10)                330       
+ input_1 (InputLayer)        [(None, None, None, 3)]   0         
+                                                                 
+ center_crop_1 (CenterCrop)  (None, 150, 150, 3)       0         
+                                                                 
+ rescaling_1 (Rescaling)     (None, 150, 150, 3)       0         
+                                                                 
+ conv2d (Conv2D)             (None, 148, 148, 32)      896       
+                                                                 
+ max_pooling2d (MaxPooling2D  (None, 49, 49, 32)       0         
+ )                                                               
+                                                                 
+ conv2d_1 (Conv2D)           (None, 47, 47, 32)        9248      
+                                                                 
+ max_pooling2d_1 (MaxPooling  (None, 15, 15, 32)       0         
+ 2D)                                                             
+                                                                 
+ conv2d_2 (Conv2D)           (None, 13, 13, 32)        9248      
+                                                                 
+ global_average_pooling2d (G  (None, 32)               0         
+ lobalAveragePooling2D)                                          
+                                                                 
+ dense (Dense)               (None, 10)                330       
+                                                                 
 =================================================================
 Total params: 19,722
 Trainable params: 19,722
@@ -543,28 +547,29 @@ history = model.fit(dataset, epochs=1)
 ```
 Model: "model_1"
 _________________________________________________________________
-Layer (type)                 Output Shape              Param #   
+ Layer (type)                Output Shape              Param #   
 =================================================================
-input_2 (InputLayer)         [(None, 28, 28)]          0         
-_________________________________________________________________
-rescaling_2 (Rescaling)      (None, 28, 28)            0         
-_________________________________________________________________
-flatten (Flatten)            (None, 784)               0         
-_________________________________________________________________
-dense_1 (Dense)              (None, 128)               100480    
-_________________________________________________________________
-dense_2 (Dense)              (None, 128)               16512     
-_________________________________________________________________
-dense_3 (Dense)              (None, 10)                1290      
+ input_2 (InputLayer)        [(None, 28, 28)]          0         
+                                                                 
+ rescaling_2 (Rescaling)     (None, 28, 28)            0         
+                                                                 
+ flatten (Flatten)           (None, 784)               0         
+                                                                 
+ dense_1 (Dense)             (None, 128)               100480    
+                                                                 
+ dense_2 (Dense)             (None, 128)               16512     
+                                                                 
+ dense_3 (Dense)             (None, 10)                1290      
+                                                                 
 =================================================================
 Total params: 118,282
 Trainable params: 118,282
 Non-trainable params: 0
 _________________________________________________________________
 Fit on NumPy data
-938/938 [==============================] - 1s 940us/step - loss: 0.4771
+938/938 [==============================] - 1s 932us/step - loss: 0.2619
 Fit on Dataset
-938/938 [==============================] - 1s 942us/step - loss: 0.1138
+938/938 [==============================] - 1s 917us/step - loss: 0.1121
 
 ```
 </div>
@@ -580,7 +585,7 @@ print(history.history)
 
 <div class="k-default-codeblock">
 ```
-{'loss': [0.11384169012308121]}
+{'loss': [0.11213372647762299]}
 
 ```
 </div>
@@ -611,7 +616,7 @@ history = model.fit(dataset, epochs=1)
 
 <div class="k-default-codeblock">
 ```
-938/938 [==============================] - 1s 929us/step - loss: 0.0835 - acc: 0.9748
+938/938 [==============================] - 1s 924us/step - loss: 0.0797 - acc: 0.9749
 
 ```
 </div>
@@ -628,14 +633,14 @@ history = model.fit(dataset, epochs=1, validation_data=val_dataset)
 
 <div class="k-default-codeblock">
 ```
-938/938 [==============================] - 1s 1ms/step - loss: 0.0563 - acc: 0.9829 - val_loss: 0.1041 - val_acc: 0.9692
+938/938 [==============================] - 1s 1ms/step - loss: 0.0543 - acc: 0.9834 - val_loss: 0.0879 - val_acc: 0.9743
 
 ```
 </div>
 ### Using callbacks for checkpointing (and more)
 
 If training goes on for more than a few minutes, it's important to save your model at
- regular intervals during training. You can then use your saved models
+regular intervals during training. You can then use your saved models
 to restart training in case your training process crashes (this is important for
 multi-worker distributed training, since with many workers at least one of them is
  bound to fail at some point).
@@ -713,8 +718,8 @@ print("acc: %.2f" % acc)
 
 <div class="k-default-codeblock">
 ```
-157/157 [==============================] - 0s 688us/step - loss: 0.1041 - acc: 0.9692
-loss: 0.10
+157/157 [==============================] - 0s 487us/step - loss: 0.0879 - acc: 0.9743
+loss: 0.09
 acc: 0.97
 
 ```
@@ -730,6 +735,7 @@ print(predictions.shape)
 
 <div class="k-default-codeblock">
 ```
+157/157 [==============================] - 0s 467us/step
 (10000, 10)
 
 ```
@@ -748,25 +754,28 @@ Here's a simple example that reimplements what `fit()` normally does:
 
 ```python
 class CustomModel(keras.Model):
-  def train_step(self, data):
-    # Unpack the data. Its structure depends on your model and
-    # on what you pass to `fit()`.
-    x, y = data
-    with tf.GradientTape() as tape:
-      y_pred = self(x, training=True)  # Forward pass
-      # Compute the loss value
-      # (the loss function is configured in `compile()`)
-      loss = self.compiled_loss(y, y_pred,
-                                regularization_losses=self.losses)
-    # Compute gradients
-    trainable_vars = self.trainable_variables
-    gradients = tape.gradient(loss, trainable_vars)
-    # Update weights
-    self.optimizer.apply_gradients(zip(gradients, trainable_vars))
-    # Update metrics (includes the metric that tracks the loss)
-    self.compiled_metrics.update_state(y, y_pred)
-    # Return a dict mapping metric names to current value
-    return {m.name: m.result() for m in self.metrics}
+    def train_step(self, data):
+        # Unpack the data. Its structure depends on your model and
+        # on what you pass to `fit()`.
+        x, y = data
+        with tf.GradientTape() as tape:
+            y_pred = self(x, training=True)  # Forward pass
+            # Compute the loss value
+            # (the loss function is configured in `compile()`)
+            loss = self.compute_loss(y=y, y_pred=y_pred)
+        # Compute gradients
+        trainable_vars = self.trainable_variables
+        gradients = tape.gradient(loss, trainable_vars)
+        # Update weights
+        self.optimizer.apply_gradients(zip(gradients, trainable_vars))
+        # Update metrics (includes the metric that tracks the loss)
+        for metric in self.metrics:
+            if metric.name == "loss":
+                metric.update_state(loss)
+            else:
+                metric.update_state(y, y_pred)
+        # Return a dict mapping metric names to current value
+        return {m.name: m.result() for m in self.metrics}
 
 # Construct and compile an instance of CustomModel
 inputs = keras.Input(shape=(32,))
@@ -830,10 +839,10 @@ strategy = tf.distribute.MirroredStrategy()
 
 # Open a strategy scope.
 with strategy.scope():
-  # Everything that creates variables should be under the strategy scope.
-  # In general this is only model construction & `compile()`.
-  model = Model(...)
-  model.compile(...)
+    # Everything that creates variables should be under the strategy scope.
+    # In general this is only model construction & `compile()`.
+    model = Model(...)
+    model.compile(...)
 
 # Train the model on all available devices.
 train_dataset, val_dataset, test_dataset = get_dataset()
@@ -899,9 +908,9 @@ model.fit(dataset)
 
 <div class="k-default-codeblock">
 ```
-1/1 [==============================] - 0s 13ms/step - loss: 0.5028
+1/1 [==============================] - 0s 17ms/step - loss: 0.4942
 
-<tensorflow.python.keras.callbacks.History at 0x147777490>
+<keras.callbacks.History at 0x2bf9db730>
 
 ```
 </div>
@@ -925,9 +934,9 @@ model.fit(dataset)
 
 <div class="k-default-codeblock">
 ```
-1/1 [==============================] - 0s 16ms/step - loss: 0.5258
+1/1 [==============================] - 0s 8ms/step - loss: 0.4899
 
-<tensorflow.python.keras.callbacks.History at 0x1477b1910>
+<keras.callbacks.History at 0x2bfa2a2f0>
 
 ```
 </div>
@@ -968,7 +977,7 @@ def build_model(hp):
     inputs = keras.Input(shape=(784,))
     x = layers.Dense(
         units=hp.Int('units', min_value=32, max_value=512, step=32),
-        activation='relu'))(inputs)
+        activation='relu')(inputs)
     outputs = layers.Dense(10, activation='softmax')(x)
     model = keras.Model(inputs, outputs)
     model.compile(
@@ -990,12 +999,12 @@ Next, instantiate a tuner object specifying your optimization objective and othe
 import keras_tuner
 
 tuner = keras_tuner.tuners.Hyperband(
-  build_model,
-  objective='val_loss',
-  max_epochs=100,
-  max_trials=200,
-  executions_per_trial=2,
-  directory='my_dir')
+    build_model,
+    objective='val_loss',
+    max_epochs=100,
+    max_trials=200,
+    executions_per_trial=2,
+    directory='my_dir')
 ```
 
 Finally, start the search with the `search()` method, which takes the same arguments as

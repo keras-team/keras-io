@@ -19,10 +19,10 @@ mixing numerical, categorical, and text features, doing feature engineering with
 
 ---
 
-## StyleGAN2
+## Text-to-image
 
-- [Paper](https://arxiv.org/abs/1912.04958)
-- [Reference TF implementation](https://github.com/NVlabs/stylegan2)
+A text-to-image diffusion model in the style of Imagen, using a frozen BERT encoder from KerasNLP
+and a multi-stage diffusion model.
 
 
 ---
@@ -91,7 +91,7 @@ mixing numerical, categorical, and text features, doing feature engineering with
 
 ---
 
-## Standalone Mixute-of-Experts (MoE) layer
+## Standalone Mixture-of-Experts (MoE) layer
 
 MoE layers provide a flexible way to scale deep models to train on larger datasets. The aim of this example should be to show 
 how replace the regular layers (such as `Dense`, `Conv2D`) with compatible MoE layers. 
@@ -102,3 +102,14 @@ References:
 * [Switch Transformers on keras.io](https://keras.io/examples/nlp/text_classification_with_switch_transformer/)
 * [Keras implementation of Dense and Conv2D MoE layers](https://github.com/eminorhan/mixture-of-experts)
 
+---
+
+## Guide to report the efficiency of a Keras model
+
+It's often important to report the efficiency of a model. But what factors should be included when reporting the efficiency
+of a deep learning model? [The Efficiency Misnomer](https://openreview.net/forum?id=iulEMLYh1uR) paper discusses this thoroughly and provides guidelines for practitioners on how to properly report model efficiency. 
+
+The objectives of this guide will include the following:
+
+* What factors to consider when reporting model efficiency?
+* How to calculate certain metrics like FLOPS, number of examples a model can process per second (both in training and inference mode), etc?

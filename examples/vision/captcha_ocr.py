@@ -4,6 +4,7 @@ Author: [A_K_Nain](https://twitter.com/A_K_Nain)
 Date created: 2020/06/14
 Last modified: 2020/06/26
 Description: How to implement an OCR model using CNNs, RNNs and CTC loss.
+Accelerator: GPU
 """
 
 """
@@ -62,6 +63,7 @@ data_dir = Path("./captcha_images_v2/")
 images = sorted(list(map(str, list(data_dir.glob("*.png")))))
 labels = [img.split(os.path.sep)[-1].split(".png")[0] for img in images]
 characters = set(char for label in labels for char in label)
+characters = sorted(list(characters))
 
 print("Number of images found: ", len(images))
 print("Number of labels found: ", len(labels))
@@ -288,6 +290,9 @@ history = model.fit(
 
 """
 ## Inference
+
+You can use the trained model hosted on [Hugging Face Hub](https://huggingface.co/keras-io/ocr-for-captcha)
+and try the demo on [Hugging Face Spaces](https://huggingface.co/spaces/keras-io/ocr-for-captcha).
 """
 
 
@@ -296,6 +301,7 @@ prediction_model = keras.models.Model(
     model.get_layer(name="image").input, model.get_layer(name="dense2").output
 )
 prediction_model.summary()
+
 
 # A utility function to decode the output of the network
 def decode_batch_predictions(pred):

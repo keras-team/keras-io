@@ -963,3 +963,5 @@ approaches that have been proposed to tackle the entailment problem.
 from the
 [Recognizing Multimodal Entailment](https://multimodal-entailment.github.io/)
 tutorial provides a comprehensive overview.
+
+You can use the trained model hosted on [Hugging Face Hub](https://huggingface.co/keras-io/multimodal-entailment) and try the demo on [Hugging Face Spaces](https://huggingface.co/spaces/keras-io/multimodal_entailment)

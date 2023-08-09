@@ -261,7 +261,7 @@ crops and random brightness for augmenting the input images.
 
 class RandomResizedCrop(layers.Layer):
     def __init__(self, scale, ratio):
-        super(RandomResizedCrop, self).__init__()
+        super().__init__()
         self.scale = scale
         self.log_ratio = (tf.math.log(ratio[0]), tf.math.log(ratio[1]))
 
@@ -303,7 +303,7 @@ class RandomResizedCrop(layers.Layer):
 
 class RandomBrightness(layers.Layer):
     def __init__(self, brightness):
-        super(RandomBrightness, self).__init__()
+        super().__init__()
         self.brightness = brightness
 
     def blend(self, images_1, images_2, ratios):
@@ -386,7 +386,7 @@ class NNCLR(keras.Model):
     def __init__(
         self, temperature, queue_size,
     ):
-        super(NNCLR, self).__init__()
+        super().__init__()
         self.probe_accuracy = keras.metrics.SparseCategoricalAccuracy()
         self.correlation_accuracy = keras.metrics.SparseCategoricalAccuracy()
         self.contrastive_accuracy = keras.metrics.SparseCategoricalAccuracy()
@@ -417,7 +417,7 @@ class NNCLR(keras.Model):
         )
 
     def compile(self, contrastive_optimizer, probe_optimizer, **kwargs):
-        super(NNCLR, self).compile(**kwargs)
+        super().compile(**kwargs)
         self.contrastive_optimizer = contrastive_optimizer
         self.probe_optimizer = probe_optimizer
 

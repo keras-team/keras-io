@@ -4,6 +4,7 @@ Author: [akensert](http://github.com/akensert)
 Date created: 2021/08/16
 Last modified: 2021/12/27
 Description: Implementation of an MPNN to predict blood-brain barrier permeability.
+Accelerator: GPU
 """
 """
 ## Introduction
@@ -353,8 +354,7 @@ completely separated from the other subgraphs.
 
 
 def prepare_batch(x_batch, y_batch):
-    """Merges (sub)graphs of batch into a single global (disconnected) graph
-    """
+    """Merges (sub)graphs of batch into a single global (disconnected) graph"""
 
     atom_features, bond_features, pair_indices = x_batch
 
@@ -428,7 +428,9 @@ class EdgeNetwork(layers.Layer):
             name="kernel",
         )
         self.bias = self.add_weight(
-            shape=(self.atom_dim * self.atom_dim), initializer="zeros", name="bias",
+            shape=(self.atom_dim * self.atom_dim),
+            initializer="zeros",
+            name="bias",
         )
         self.built = True
 
@@ -516,7 +518,6 @@ class PartitionPadding(layers.Layer):
         self.batch_size = batch_size
 
     def call(self, inputs):
-
         atom_features, molecule_indicator = inputs
 
         # Obtain subgraphs
@@ -550,7 +551,10 @@ class TransformerEncoderReadout(layers.Layer):
         self.partition_padding = PartitionPadding(batch_size)
         self.attention = layers.MultiHeadAttention(num_heads, embed_dim)
         self.dense_proj = keras.Sequential(
-            [layers.Dense(dense_dim, activation="relu"), layers.Dense(embed_dim),]
+            [
+                layers.Dense(dense_dim, activation="relu"),
+                layers.Dense(embed_dim),
+            ]
         )
         self.layernorm_1 = layers.LayerNormalization()
         self.layernorm_2 = layers.LayerNormalization()
@@ -584,7 +588,6 @@ def MPNNModel(
     num_attention_heads=8,
     dense_units=512,
 ):
-
     atom_features = layers.Input((atom_dim), dtype="float32", name="atom_features")
     bond_features = layers.Input((bond_dim), dtype="float32", name="bond_features")
     pair_indices = layers.Input((2), dtype="int32", name="pair_indices")
@@ -609,7 +612,8 @@ def MPNNModel(
 
 
 mpnn = MPNNModel(
-    atom_dim=x_train[0][0][0].shape[0], bond_dim=x_train[1][0][0].shape[0],
+    atom_dim=x_train[0][0][0].shape[0],
+    bond_dim=x_train[1][0][0].shape[0],
 )
 
 mpnn.compile(
@@ -661,4 +665,10 @@ In this tutorial, we demonstarted a message passing neural network (MPNN) to
 predict blood-brain barrier permeability (BBBP) for a number of different molecules. We
 first had to construct graphs from SMILES, then build a Keras model that could
 operate on these graphs, and finally train the model to make the predictions.
+
+Example available on HuggingFace
+
+| Trained Model | Demo |
+| :--: | :--: |
+| [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Model-mpnn%20molecular%20graphs-black.svg)](https://huggingface.co/keras-io/MPNN-for-molecular-property-prediction) | [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Spaces-mpnn%20molecular%20graphs-black.svg)](https://huggingface.co/spaces/keras-io/molecular-property-prediction) |
 """

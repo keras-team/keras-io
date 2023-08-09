@@ -10,16 +10,21 @@
 
 
 
+
+```python
+!pip install keras-tuner -q
+```
+
+---
 ## Introduction
 
-The `HyperModel` class in KerasTuner provides a convenient way to
-define your search space in a reusable object.
-You can override `HyperModel.build()` to define and hypertune the
-model itself. To hypertune the training process
-(e.g. by selecting the proper batch size, number of training epochs, or data augmentation setup),
-you can override `HyperModel.fit()`, where you can access:
+The `HyperModel` class in KerasTuner provides a convenient way to define your
+search space in a reusable object. You can override `HyperModel.build()` to
+define and hypertune the model itself. To hypertune the training process (e.g.
+by selecting the proper batch size, number of training epochs, or data
+augmentation setup), you can override `HyperModel.fit()`, where you can access:
 
-- The `hp` object, which is an instance of `kt.HyperParameters`
+- The `hp` object, which is an instance of `keras_tuner.HyperParameters`
 - The model built by `HyperModel.build()`
 
 A basic example is shown in the "tune model training" section of
@@ -38,7 +43,7 @@ validation. Here, we just use some random data for demonstration purposes.
 
 
 ```python
-import keras_tuner as kt
+import keras_tuner
 import tensorflow as tf
 from tensorflow import keras
 import numpy as np
@@ -52,8 +57,8 @@ y_val = np.random.randint(0, 10, (1000, 1))
 
 <div class="k-default-codeblock">
 ```
-2022-01-19 01:20:19.057173: W tensorflow/stream_executor/platform/default/dso_loader.cc:64] Could not load dynamic library 'libcudart.so.11.0'; dlerror: libcudart.so.11.0: cannot open shared object file: No such file or directory
-2022-01-19 01:20:19.057240: I tensorflow/stream_executor/cuda/cudart_stub.cc:29] Ignore above cudart dlerror if you do not have a GPU set up on your machine.
+2022-04-28 03:52:39.878525: W tensorflow/stream_executor/platform/default/dso_loader.cc:64] Could not load dynamic library 'libcudart.so.11.0'; dlerror: libcudart.so.11.0: cannot open shared object file: No such file or directory
+2022-04-28 03:52:39.878598: I tensorflow/stream_executor/cuda/cudart_stub.cc:29] Ignore above cudart dlerror if you do not have a GPU set up on your machine.
 
 ```
 </div>
@@ -103,7 +108,7 @@ validation loss for the tuner to make a record.
 
 ```python
 
-class MyHyperModel(kt.HyperModel):
+class MyHyperModel(keras_tuner.HyperModel):
     def build(self, hp):
         """Builds a convolutional model."""
         inputs = keras.Input(shape=(28, 28, 1))
@@ -188,16 +193,15 @@ class MyHyperModel(kt.HyperModel):
 ```
 
 Now, we can initialize the tuner. Here, we use `Objective("my_metric", "min")`
-as our metric to be minimized. The objective name should be consistent
-with the one you use as the key in the
-`logs` passed to the 'on_epoch_end()' method of the callbacks.
-The callbacks need to use
-this value in the `logs` to find the best epoch to checkpoint the model.
+as our metric to be minimized. The objective name should be consistent with the
+one you use as the key in the `logs` passed to the 'on_epoch_end()' method of
+the callbacks. The callbacks need to use this value in the `logs` to find the
+best epoch to checkpoint the model.
 
 
 ```python
-tuner = kt.RandomSearch(
-    objective=kt.Objective("my_metric", "min"),
+tuner = keras_tuner.RandomSearch(
+    objective=keras_tuner.Objective("my_metric", "min"),
     max_trials=2,
     hypermodel=MyHyperModel(),
     directory="results",
@@ -209,10 +213,10 @@ tuner = kt.RandomSearch(
 
 <div class="k-default-codeblock">
 ```
-2022-01-19 01:20:31.621176: W tensorflow/stream_executor/platform/default/dso_loader.cc:64] Could not load dynamic library 'libcuda.so.1'; dlerror: libcuda.so.1: cannot open shared object file: No such file or directory
-2022-01-19 01:20:31.621248: W tensorflow/stream_executor/cuda/cuda_driver.cc:269] failed call to cuInit: UNKNOWN ERROR (303)
-2022-01-19 01:20:31.621299: I tensorflow/stream_executor/cuda/cuda_diagnostics.cc:156] kernel driver does not appear to be running on this host (haifengj.c.googlers.com): /proc/driver/nvidia/version does not exist
-2022-01-19 01:20:31.621899: I tensorflow/core/platform/cpu_feature_guard.cc:151] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  AVX2 FMA
+2022-04-28 03:52:53.901311: W tensorflow/stream_executor/platform/default/dso_loader.cc:64] Could not load dynamic library 'libcuda.so.1'; dlerror: libcuda.so.1: cannot open shared object file: No such file or directory
+2022-04-28 03:52:53.901376: W tensorflow/stream_executor/cuda/cuda_driver.cc:269] failed call to cuInit: UNKNOWN ERROR (303)
+2022-04-28 03:52:53.901404: I tensorflow/stream_executor/cuda/cuda_diagnostics.cc:156] kernel driver does not appear to be running on this host (haifengj.c.googlers.com): /proc/driver/nvidia/version does not exist
+2022-04-28 03:52:53.925937: I tensorflow/core/platform/cpu_feature_guard.cc:151] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  AVX2 FMA
 To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
 
 ```
@@ -228,13 +232,13 @@ tuner.search(x=x_train, y=y_train, validation_data=(x_val, y_val))
 <div class="k-default-codeblock">
 ```
 Trial 2 Complete [00h 00m 01s]
-my_metric: 2.331902503967285
+my_metric: 2.3018624782562256
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-Best my_metric So Far: 2.3066577911376953
+Best my_metric So Far: 2.3018624782562256
 Total elapsed time: 00h 00m 04s
 INFO:tensorflow:Oracle triggered exit
 
@@ -253,7 +257,7 @@ best_model.summary()
 
 <div class="k-default-codeblock">
 ```
-{'units': 32, 'batch_size': 64, 'learning_rate': 0.001}
+{'units': 32, 'batch_size': 96, 'learning_rate': 0.0019721491098115516}
 Model: "model"
 _________________________________________________________________
  Layer (type)                Output Shape              Param #   

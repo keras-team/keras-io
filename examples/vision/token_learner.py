@@ -4,6 +4,7 @@ Authors: [Aritra Roy Gosthipaty](https://twitter.com/ariG23498), [Sayak Paul](ht
 Date created: 2021/12/10
 Last modified: 2021/12/15
 Description: Adaptively generating a smaller number of tokens for Vision Transformers.
+Accelerator: GPU
 """
 """
 ## Introduction
@@ -512,4 +513,8 @@ We are grateful to [JarvisLabs](https://jarvislabs.ai/) and
 [Google Developers Experts](https://developers.google.com/programs/experts/)
 program for helping with GPU credits. Also, we are thankful to Michael Ryoo (first
 author of TokenLearner) for fruitful discussions.
+
+| Trained Model | Demo |
+| :--: | :--: |
+| [![Generic badge](https://img.shields.io/badge/🤗%20Model-TokenLearner-black.svg)](https://huggingface.co/keras-io/learning_to_tokenize_in_ViT) | [![Generic badge](https://img.shields.io/badge/🤗%20Spaces-TokenLearner-black.svg)](https://huggingface.co/spaces/keras-io/token_learner) |
 """

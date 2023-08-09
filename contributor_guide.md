@@ -30,8 +30,8 @@ you should import the following:
 
 ```python
 import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras import layers
+import keras
+from keras import layers
 ```
 
 Then access objects from these modules:
@@ -45,6 +45,8 @@ keras.optimizers.Adam(...)
 layers.Layer(...)
 layers.Conv2D(...)
 ```
+
+Note: As of `2.13` prefer `import keras` over `from tensorflow import keras`.
 
 
 ### Extra dependencies

@@ -4,6 +4,7 @@ Author: [Victor Basu](https://www.linkedin.com/in/victor-basu-520958147)
 Date created: 2021/08/30
 Last modified: 2021/08/30
 Description: Implement a depth estimation model with a convnet.
+Accelerator: GPU
 """
 
 """
@@ -134,7 +135,6 @@ class DataGenerator(tf.keras.utils.Sequence):
         return x, y
 
     def on_epoch_end(self):
-
         """
         Updates indexes after each epoch
         """
@@ -169,7 +169,6 @@ class DataGenerator(tf.keras.utils.Sequence):
         return image_, depth_map
 
     def data_generation(self, batch):
-
         x = np.empty((self.batch_size, *self.dim, self.n_channels))
         y = np.empty((self.batch_size, *self.dim, 1))
 
@@ -371,7 +370,7 @@ class DepthEstimationModel(tf.keras.Model):
         ssim_loss = tf.reduce_mean(
             1
             - tf.image.ssim(
-                target, pred, max_val=WIDTH, filter_size=7, k1=0.01 ** 2, k2=0.03 ** 2
+                target, pred, max_val=WIDTH, filter_size=7, k1=0.01**2, k2=0.03**2
             )
         )
         # Point-wise depth
@@ -433,7 +432,10 @@ class DepthEstimationModel(tf.keras.Model):
 ## Model training
 """
 
-optimizer = tf.keras.optimizers.Adam(learning_rate=LR, amsgrad=False,)
+optimizer = tf.keras.optimizers.Adam(
+    learning_rate=LR,
+    amsgrad=False,
+)
 model = DepthEstimationModel()
 # Define the loss function
 cross_entropy = tf.keras.losses.SparseCategoricalCrossentropy(
@@ -449,7 +451,9 @@ validation_loader = DataGenerator(
     data=df[260:].reset_index(drop="true"), batch_size=BATCH_SIZE, dim=(HEIGHT, WIDTH)
 )
 model.fit(
-    train_loader, epochs=EPOCHS, validation_data=validation_loader,
+    train_loader,
+    epochs=EPOCHS,
+    validation_data=validation_loader,
 )
 
 """
@@ -496,4 +500,7 @@ The following papers go deeper into possible approaches for depth estimation.
 3. [Deeper Depth Prediction with Fully Convolutional Residual Networks](https://arxiv.org/pdf/1606.00373v2.pdf)
 
 You can also find helpful implementations in the papers with code depth estimation task.
+
+You can use the trained model hosted on [Hugging Face Hub](https://huggingface.co/spaces/keras-io/Monocular-Depth-Estimation)
+and try the demo on [Hugging Face Spaces](https://huggingface.co/keras-io/monocular-depth-estimation).
 """

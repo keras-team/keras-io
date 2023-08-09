@@ -4,6 +4,7 @@ Author: [fchollet](https://twitter.com/fchollet)
 Date created: 2020/05/29
 Last modified: 2020/05/29
 Description: Displaying the visual patterns that convnet filters respond to.
+Accelerator: GPU
 """
 """
 ## Introduction
@@ -137,7 +138,7 @@ Let's try it out with filter 0 in the target layer:
 from IPython.display import Image, display
 
 loss, img = visualize_filter(0)
-keras.preprocessing.image.save_img("0.png", img)
+keras.utils.save_img("0.png", img)
 
 """
 This is what an input that maximizes the response of filter 0 in the target layer would
@@ -182,7 +183,7 @@ for i in range(n):
             + cropped_height,
             :,
         ] = img
-keras.preprocessing.image.save_img("stiched_filters.png", stitched_filters)
+keras.utils.save_img("stiched_filters.png", stitched_filters)
 
 from IPython.display import Image, display
 
@@ -195,4 +196,8 @@ basis" of texture filters such as these.
 See also
 [this old blog post](https://blog.keras.io/how-convolutional-neural-networks-see-the-world.html)
 for analysis and interpretation.
+
+Example available on HuggingFace.
+
+[![Generic badge](https://img.shields.io/badge/🤗%20Spaces-What%20Convnets%20Learn-black.svg)](https://huggingface.co/spaces/keras-io/what-convnets-learn)
 """

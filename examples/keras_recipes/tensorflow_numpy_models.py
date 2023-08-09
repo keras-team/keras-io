@@ -4,6 +4,7 @@ Author: [lukewood](https://lukewood.xyz)
 Date created: 2021/08/28
 Last modified: 2021/08/28
 Description: Overview of how to use the TensorFlow NumPy API to write Keras models.
+Accelerator: GPU
 """
 """
 ## Introduction
@@ -74,7 +75,7 @@ First let's define a simple `TNPForwardFeedRegressionNetwork` class.
 
 class TNPForwardFeedRegressionNetwork(keras.Model):
     def __init__(self, blocks=None, **kwargs):
-        super(TNPForwardFeedRegressionNetwork, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         if not isinstance(blocks, list):
             raise ValueError(f"blocks must be a list, got blocks={blocks}")
         self.blocks = blocks
@@ -200,7 +201,12 @@ model.compile(
     loss="mean_squared_error",
     metrics=[keras.metrics.MeanAbsolutePercentageError()],
 )
-model.build((None, 13,))
+model.build(
+    (
+        None,
+        13,
+    )
+)
 model.summary()
 
 evaluate_model(model)
@@ -228,7 +234,12 @@ model.compile(
     loss="mean_squared_error",
     metrics=[keras.metrics.MeanAbsolutePercentageError()],
 )
-model.build((None, 13,))
+model.build(
+    (
+        None,
+        13,
+    )
+)
 model.summary()
 
 evaluate_model(model)
@@ -262,7 +273,12 @@ with strategy.scope():
         loss="mean_squared_error",
         metrics=[keras.metrics.MeanAbsolutePercentageError()],
     )
-    model.build((None, 13,))
+    model.build(
+        (
+            None,
+            13,
+        )
+    )
     model.summary()
     evaluate_model(model)
 

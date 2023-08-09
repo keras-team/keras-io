@@ -4,6 +4,7 @@ Author: Haifeng Jin
 Date created: 2021/06/25
 Last modified: 2021/06/05
 Description: Using TensorBoard to visualize the hyperparameter tuning process in KerasTuner.
+Accelerator: GPU
 """
 
 """shell
@@ -35,7 +36,7 @@ The first step is to download and format the data.
 """
 
 import numpy as np
-import keras_tuner as kt
+import keras_tuner
 from tensorflow import keras
 from tensorflow.keras import layers
 
@@ -71,8 +72,9 @@ def build_model(hp):
         for i in range(hp.Int("mlp_layers", 1, 3)):
             # Number of units of each layer are
             # different hyperparameters with different names.
-            output_node = layers.Dense(
-                units=hp.Int(f"units_{i}", 32, 128, step=32), activation="relu",
+            x = layers.Dense(
+                units=hp.Int(f"units_{i}", 32, 128, step=32),
+                activation="relu",
             )(x)
     else:
         # Number of layers of the CNN is also a hyperparameter.
@@ -96,7 +98,9 @@ def build_model(hp):
 
     # Compile the model.
     model.compile(
-        loss="sparse_categorical_crossentropy", metrics=["accuracy"], optimizer="adam",
+        loss="sparse_categorical_crossentropy",
+        metrics=["accuracy"],
+        optimizer="adam",
     )
     return model
 
@@ -108,7 +112,7 @@ CNN and MLP.
 
 
 # Initialize the `HyperParameters` and set the values.
-hp = kt.HyperParameters()
+hp = keras_tuner.HyperParameters()
 hp.values["model_type"] = "cnn"
 # Build the model using the `HyperParameters`.
 model = build_model(hp)
@@ -128,7 +132,7 @@ Initialize the `RandomSearch` tuner with 10 trials and using validation
 accuracy as the metric for selecting models.
 """
 
-tuner = kt.RandomSearch(
+tuner = keras_tuner.RandomSearch(
     build_model,
     max_trials=10,
     # Do not resume the previous search in the same directory.

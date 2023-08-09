@@ -4,24 +4,23 @@ Authors: Tom O'Malley, Haifeng Jin
 Date created: 2019/10/28
 Last modified: 2022/01/12
 Description: Use `HyperModel.fit()` to tune training hyperparameters (such as batch size).
+Accelerator: GPU
 """
 
-"""
-## shell
+"""shell
 pip install keras-tuner -q
 """
 
 """
 ## Introduction
 
-The `HyperModel` class in KerasTuner provides a convenient way to
-define your search space in a reusable object.
-You can override `HyperModel.build()` to define and hypertune the
-model itself. To hypertune the training process
-(e.g. by selecting the proper batch size, number of training epochs, or data augmentation setup),
-you can override `HyperModel.fit()`, where you can access:
+The `HyperModel` class in KerasTuner provides a convenient way to define your
+search space in a reusable object. You can override `HyperModel.build()` to
+define and hypertune the model itself. To hypertune the training process (e.g.
+by selecting the proper batch size, number of training epochs, or data
+augmentation setup), you can override `HyperModel.fit()`, where you can access:
 
-- The `hp` object, which is an instance of `kt.HyperParameters`
+- The `hp` object, which is an instance of `keras_tuner.HyperParameters`
 - The model built by `HyperModel.build()`
 
 A basic example is shown in the "tune model training" section of
@@ -38,7 +37,7 @@ First, we import the libraries we need, and we create datasets for training and
 validation. Here, we just use some random data for demonstration purposes.
 """
 
-import keras_tuner as kt
+import keras_tuner
 import tensorflow as tf
 from tensorflow import keras
 import numpy as np
@@ -95,7 +94,7 @@ validation loss for the tuner to make a record.
 """
 
 
-class MyHyperModel(kt.HyperModel):
+class MyHyperModel(keras_tuner.HyperModel):
     def build(self, hp):
         """Builds a convolutional model."""
         inputs = keras.Input(shape=(28, 28, 1))
@@ -180,15 +179,14 @@ class MyHyperModel(kt.HyperModel):
 
 """
 Now, we can initialize the tuner. Here, we use `Objective("my_metric", "min")`
-as our metric to be minimized. The objective name should be consistent
-with the one you use as the key in the
-`logs` passed to the 'on_epoch_end()' method of the callbacks.
-The callbacks need to use
-this value in the `logs` to find the best epoch to checkpoint the model.
+as our metric to be minimized. The objective name should be consistent with the
+one you use as the key in the `logs` passed to the 'on_epoch_end()' method of
+the callbacks. The callbacks need to use this value in the `logs` to find the
+best epoch to checkpoint the model.
 
 """
-tuner = kt.RandomSearch(
-    objective=kt.Objective("my_metric", "min"),
+tuner = keras_tuner.RandomSearch(
+    objective=keras_tuner.Objective("my_metric", "min"),
     max_trials=2,
     hypermodel=MyHyperModel(),
     directory="results",

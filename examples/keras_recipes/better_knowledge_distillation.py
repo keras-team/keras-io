@@ -4,6 +4,7 @@ Author: [Sayak Paul](https://twitter.com/RisingSayak)
 Date created: 2021/08/01
 Last modified: 2021/08/01
 Description: Training better student models via knowledge distillation with function matching.
+Accelerator: GPU
 """
 """
 ## Introduction
@@ -291,7 +292,7 @@ on knowledge distillation.
 
 class Distiller(tf.keras.Model):
     def __init__(self, student, teacher):
-        super(Distiller, self).__init__()
+        super().__init__()
         self.student = student
         self.teacher = teacher
         self.loss_tracker = keras.metrics.Mean(name="distillation_loss")
@@ -303,9 +304,13 @@ class Distiller(tf.keras.Model):
         return metrics
 
     def compile(
-        self, optimizer, metrics, distillation_loss_fn, temperature=TEMPERATURE,
+        self,
+        optimizer,
+        metrics,
+        distillation_loss_fn,
+        temperature=TEMPERATURE,
     ):
-        super(Distiller, self).compile(optimizer=optimizer, metrics=metrics)
+        super().compile(optimizer=optimizer, metrics=metrics)
         self.distillation_loss_fn = distillation_loss_fn
         self.temperature = temperature
 
@@ -373,7 +378,7 @@ class WarmUpCosine(keras.optimizers.schedules.LearningRateSchedule):
     def __init__(
         self, learning_rate_base, total_steps, warmup_learning_rate, warmup_steps
     ):
-        super(WarmUpCosine, self).__init__()
+        super().__init__()
 
         self.learning_rate_base = learning_rate_base
         self.total_steps = total_steps

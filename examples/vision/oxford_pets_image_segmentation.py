@@ -1,113 +1,218 @@
 """
-Title: Image segmentation with a U-Net-like architecture
-Author: [fchollet](https://twitter.com/fchollet)
+Title: [KerasCV] Image segmentation with a U-Net-like architecture
+Author: [fchollet](https://twitter.com/fchollet), updated by [Aritra Roy Gosthipaty](https://twitter.com/ariG23498) and [Margaret Maynard-Reid](https://twitter.com/margaretmz)
 Date created: 2019/03/20
-Last modified: 2020/04/20
+Last modified: 2023/06/19
 Description: Image segmentation model trained from scratch on the Oxford Pets dataset.
+Accelerator: GPU
 """
+
+"""
+This tutorial uses a U-Net like architecture for image segmentation. Data processing and
+augmentations are implemented with [KerasCV](https://keras.io/keras_cv/).
+
+U-Net was introduced in the paper,
+[U-Net: Convolutional Networks for Biomedical Image Segmentation](https://arxiv.org/abs/1505.04597/).
+Although U-Net is a model for image
+segmentation, it's also used in generative models such as Pix2Pix and diffusion models.
+So it's important to have a solid understanding of its architecture.
+"""
+
+"""
+## Setup and Imports
+
+First let's set up install and imports of the dependencies.
+
+To run this tutorial, you will need to install keras-cv with the following command:
+`pip install keras-cv`
+"""
+
+import random
+
+import keras
+import keras_cv
+import numpy as np
+import tensorflow as tf
+import tensorflow_datasets as tfds
+from matplotlib import pyplot as plt
+
+"""
+## Configuration
+
+Please feel free to tweak the configurations yourself and note how the model training
+changes. This is an excellent exercise to get a better understanding of the training
+pipeline.
+"""
+
+# Image Config
+HEIGHT = 160
+WIDTH = 160
+NUM_CLASSES = 3
+
+# Augmentation Config
+ROTATION_FACTOR = (-0.2, 0.2)
+
+# Training Config
+BATCH_SIZE = 128
+EPOCHS = 50
+LEARNING_RATE = 1e-4
+AUTOTUNE = tf.data.AUTOTUNE
+
 """
 ## Download the data
+
+We download
+[the Oxford-IIT Pet dataset](https://www.tensorflow.org/datasets/catalog/oxford_iiit_pet)
+with TensorFlow
+Datasets (TFDS) with one line of code. Combine the training and test data, and then split
+the combined data into 80% training dataset and 20% test dataset (used later on for both
+validation and testing).
 """
 
-"""shell
-curl -O https://www.robots.ox.ac.uk/~vgg/data/pets/data/images.tar.gz
-curl -O https://www.robots.ox.ac.uk/~vgg/data/pets/data/annotations.tar.gz
-tar -xf images.tar.gz
-tar -xf annotations.tar.gz
-"""
-
-"""
-## Prepare paths of input images and target segmentation masks
-"""
-
-import os
-
-input_dir = "images/"
-target_dir = "annotations/trimaps/"
-img_size = (160, 160)
-num_classes = 3
-batch_size = 32
-
-input_img_paths = sorted(
-    [
-        os.path.join(input_dir, fname)
-        for fname in os.listdir(input_dir)
-        if fname.endswith(".jpg")
-    ]
-)
-target_img_paths = sorted(
-    [
-        os.path.join(target_dir, fname)
-        for fname in os.listdir(target_dir)
-        if fname.endswith(".png") and not fname.startswith(".")
-    ]
+tfds.disable_progress_bar()
+orig_train_ds, orig_val_ds = tfds.load(
+    name="oxford_iiit_pet",
+    split=["train+test[:80%]", "test[80%:]"],
 )
 
-print("Number of samples:", len(input_img_paths))
-
-for input_path, target_path in zip(input_img_paths[:10], target_img_paths[:10]):
-    print(input_path, "|", target_path)
-
 """
-## What does one input image and corresponding segmentation mask look like?
-"""
+## Preprocess the data
 
-from IPython.display import Image, display
-from tensorflow.keras.preprocessing.image import load_img
-import PIL
-from PIL import ImageOps
+Here we processes the images and segmentation masks in the inputs **dictionary**, mapping
+the image pixel intensities from `[0, 255]` to the range `[0.0, 1.0]` and adjusting
+segmentation masks indices from 1-based to 0-based.
 
-# Display input image #7
-display(Image(filename=input_img_paths[9]))
-
-# Display auto-contrast version of corresponding target (per-pixel categories)
-img = PIL.ImageOps.autocontrast(load_img(target_img_paths[9]))
-display(img)
-
-"""
-## Prepare `Sequence` class to load & vectorize batches of data
+Also note the renaming of the keys of the dictionary. The processed datasets are
+formatted suitably for KerasCV layers, which expect inputs in a specific dictionary
+format.
 """
 
-from tensorflow import keras
-import numpy as np
-from tensorflow.keras.preprocessing.image import load_img
+rescale_images_and_correct_masks = lambda inputs: {
+    "images": tf.cast(inputs["image"], dtype=tf.float32) / 255.0,
+    "segmentation_masks": inputs["segmentation_mask"] - 1,
+}
+
+train_ds = orig_train_ds.map(
+    rescale_images_and_correct_masks, num_parallel_calls=AUTOTUNE
+)
+val_ds = orig_val_ds.map(rescale_images_and_correct_masks, num_parallel_calls=AUTOTUNE)
+
+"""
+## Utility Function
+
+The `unpackage_inputs` is a utility function that is used to unpack the inputs from the
+dictionary format to a tuple of `(images, segmentation_masks)`. This will be used later
+on for visualizing the images and segmentation masks and also the model predictions.
+"""
 
 
-class OxfordPets(keras.utils.Sequence):
-    """Helper to iterate over the data (as Numpy arrays)."""
-
-    def __init__(self, batch_size, img_size, input_img_paths, target_img_paths):
-        self.batch_size = batch_size
-        self.img_size = img_size
-        self.input_img_paths = input_img_paths
-        self.target_img_paths = target_img_paths
-
-    def __len__(self):
-        return len(self.target_img_paths) // self.batch_size
-
-    def __getitem__(self, idx):
-        """Returns tuple (input, target) correspond to batch #idx."""
-        i = idx * self.batch_size
-        batch_input_img_paths = self.input_img_paths[i : i + self.batch_size]
-        batch_target_img_paths = self.target_img_paths[i : i + self.batch_size]
-        x = np.zeros((self.batch_size,) + self.img_size + (3,), dtype="float32")
-        for j, path in enumerate(batch_input_img_paths):
-            img = load_img(path, target_size=self.img_size)
-            x[j] = img
-        y = np.zeros((self.batch_size,) + self.img_size + (1,), dtype="uint8")
-        for j, path in enumerate(batch_target_img_paths):
-            img = load_img(path, target_size=self.img_size, color_mode="grayscale")
-            y[j] = np.expand_dims(img, 2)
-            # Ground truth labels are 1, 2, 3. Subtract one to make them 0, 1, 2:
-            y[j] -= 1
-        return x, y
+def unpackage_inputs(inputs):
+    images = inputs["images"]
+    segmentation_masks = inputs["segmentation_masks"]
+    return images, segmentation_masks
 
 
 """
-## Prepare U-Net Xception-style model
+Let's visualized a few images and their segmentation masks from the training data, with
+the `keras_cv.visualization.plot_segmentation_mask_gallery` API.
 """
 
-from tensorflow.keras import layers
+plot_train_ds = train_ds.map(unpackage_inputs).ragged_batch(4)
+images, segmentation_masks = next(iter(plot_train_ds.take(1)))
+
+keras_cv.visualization.plot_segmentation_mask_gallery(
+    images,
+    value_range=(0, 1),
+    num_classes=3,
+    y_true=segmentation_masks,
+    y_pred=None,
+    scale=4,
+    rows=2,
+    cols=2,
+)
+
+"""
+## Data Augmentation
+
+We resize both the images and masks to the width/height as specified. Then use KerasCV's
+`RandomFlip`, `RandomRotation` and `RandAugment` to apply image augmentation of random
+flip, random rotation and RandAugment to the train dataset. Here is
+[a tutorial with more details on RandAugment](https://keras.io/examples/vision/randaugment/).
+
+We only apply the resizing operation to the validation dataset
+"""
+
+resize_fn = keras_cv.layers.Resizing(
+    HEIGHT,
+    WIDTH,
+)
+
+augment_fn = keras.Sequential(
+    [
+        resize_fn,
+        keras_cv.layers.RandomFlip(),
+        keras_cv.layers.RandomRotation(
+            factor=ROTATION_FACTOR,
+            segmentation_classes=NUM_CLASSES,
+        ),
+        keras_cv.layers.RandAugment(
+            value_range=(0, 1),
+            geometric=False,
+        ),
+    ]
+)
+
+"""
+Create training and validation datasets.
+"""
+
+augmented_train_ds = (
+    train_ds.shuffle(BATCH_SIZE * 2)
+    .map(augment_fn, num_parallel_calls=AUTOTUNE)
+    .batch(BATCH_SIZE)
+    .map(unpackage_inputs)
+    .prefetch(buffer_size=tf.data.AUTOTUNE)
+)
+resized_val_ds = (
+    val_ds.map(resize_fn, num_parallel_calls=AUTOTUNE)
+    .batch(BATCH_SIZE)
+    .map(unpackage_inputs)
+    .prefetch(buffer_size=tf.data.AUTOTUNE)
+)
+
+"""
+## Visualize the data
+
+Now let's again visualize a few of the images and their segmentation masks with the
+`keras_cv.visualization.plot_segmentation_mask_gallery` API. Note the effects from the
+data augmentation.
+"""
+
+images, segmentation_masks = next(iter(augmented_train_ds.take(1)))
+
+keras_cv.visualization.plot_segmentation_mask_gallery(
+    images,
+    value_range=(0, 1),
+    num_classes=3,
+    y_true=segmentation_masks,
+    y_pred=None,
+    scale=4,
+    rows=2,
+    cols=2,
+)
+
+"""
+## Model architecture
+
+The U-Net consists of an encoder for downsampling and a decoder for upsampling with skip
+connections.
+
+The model architecture shapes like the letter U hence the name U-Net.
+
+![unet.png](https://i.imgur.com/PgGRty2.png)
+
+We create a function `get_model` to define a U-Net like architecture.
+"""
 
 
 def get_model(img_size, num_classes):
@@ -116,130 +221,150 @@ def get_model(img_size, num_classes):
     ### [First half of the network: downsampling inputs] ###
 
     # Entry block
-    x = layers.Conv2D(32, 3, strides=2, padding="same")(inputs)
-    x = layers.BatchNormalization()(x)
-    x = layers.Activation("relu")(x)
+    x = keras.layers.Conv2D(32, 3, strides=2, padding="same")(inputs)
+    x = keras.layers.BatchNormalization()(x)
+    x = keras.layers.Activation("relu")(x)
 
     previous_block_activation = x  # Set aside residual
 
     # Blocks 1, 2, 3 are identical apart from the feature depth.
     for filters in [64, 128, 256]:
-        x = layers.Activation("relu")(x)
-        x = layers.SeparableConv2D(filters, 3, padding="same")(x)
-        x = layers.BatchNormalization()(x)
+        x = keras.layers.Activation("relu")(x)
+        x = keras.layers.SeparableConv2D(filters, 3, padding="same")(x)
+        x = keras.layers.BatchNormalization()(x)
 
-        x = layers.Activation("relu")(x)
-        x = layers.SeparableConv2D(filters, 3, padding="same")(x)
-        x = layers.BatchNormalization()(x)
+        x = keras.layers.Activation("relu")(x)
+        x = keras.layers.SeparableConv2D(filters, 3, padding="same")(x)
+        x = keras.layers.BatchNormalization()(x)
 
-        x = layers.MaxPooling2D(3, strides=2, padding="same")(x)
+        x = keras.layers.MaxPooling2D(3, strides=2, padding="same")(x)
 
         # Project residual
-        residual = layers.Conv2D(filters, 1, strides=2, padding="same")(
+        residual = keras.layers.Conv2D(filters, 1, strides=2, padding="same")(
             previous_block_activation
         )
-        x = layers.add([x, residual])  # Add back residual
+        x = keras.layers.add([x, residual])  # Add back residual
         previous_block_activation = x  # Set aside next residual
 
     ### [Second half of the network: upsampling inputs] ###
 
     for filters in [256, 128, 64, 32]:
-        x = layers.Activation("relu")(x)
-        x = layers.Conv2DTranspose(filters, 3, padding="same")(x)
-        x = layers.BatchNormalization()(x)
+        x = keras.layers.Activation("relu")(x)
+        x = keras.layers.Conv2DTranspose(filters, 3, padding="same")(x)
+        x = keras.layers.BatchNormalization()(x)
 
-        x = layers.Activation("relu")(x)
-        x = layers.Conv2DTranspose(filters, 3, padding="same")(x)
-        x = layers.BatchNormalization()(x)
+        x = keras.layers.Activation("relu")(x)
+        x = keras.layers.Conv2DTranspose(filters, 3, padding="same")(x)
+        x = keras.layers.BatchNormalization()(x)
 
-        x = layers.UpSampling2D(2)(x)
+        x = keras.layers.UpSampling2D(2)(x)
 
         # Project residual
-        residual = layers.UpSampling2D(2)(previous_block_activation)
-        residual = layers.Conv2D(filters, 1, padding="same")(residual)
-        x = layers.add([x, residual])  # Add back residual
+        residual = keras.layers.UpSampling2D(2)(previous_block_activation)
+        residual = keras.layers.Conv2D(filters, 1, padding="same")(residual)
+        x = keras.layers.add([x, residual])  # Add back residual
         previous_block_activation = x  # Set aside next residual
 
     # Add a per-pixel classification layer
-    outputs = layers.Conv2D(num_classes, 3, activation="softmax", padding="same")(x)
+    outputs = keras.layers.Conv2D(num_classes, 3, activation="softmax", padding="same")(
+        x
+    )
 
     # Define the model
     model = keras.Model(inputs, outputs)
     return model
 
 
-# Free up RAM in case the model definition cells were run multiple times
-keras.backend.clear_session()
+# Taking a batch of test inputs to measure model's progress.
+test_images, test_masks = next(iter(resized_val_ds))
 
-# Build model
-model = get_model(img_size, num_classes)
-model.summary()
 
 """
-## Set aside a validation split
+We subclass `Callback` to monitor the model training progress: training and validation
+loss, and visually inspect the images, predicted masks and ground truth masks.
 """
 
-import random
 
-# Split our img paths into a training and a validation set
-val_samples = 1000
-random.Random(1337).shuffle(input_img_paths)
-random.Random(1337).shuffle(target_img_paths)
-train_input_img_paths = input_img_paths[:-val_samples]
-train_target_img_paths = target_img_paths[:-val_samples]
-val_input_img_paths = input_img_paths[-val_samples:]
-val_target_img_paths = target_img_paths[-val_samples:]
+class DisplayCallback(keras.callbacks.Callback):
+    def __init__(self, epoch_interval=None):
+        self.epoch_interval = epoch_interval
 
-# Instantiate data Sequences for each split
-train_gen = OxfordPets(
-    batch_size, img_size, train_input_img_paths, train_target_img_paths
-)
-val_gen = OxfordPets(batch_size, img_size, val_input_img_paths, val_target_img_paths)
+    def on_epoch_end(self, epoch, logs=None):
+        if self.epoch_interval and epoch % self.epoch_interval == 0:
+            pred_masks = self.model.predict(test_images)
+            pred_masks = tf.math.argmax(pred_masks, axis=-1)
+            pred_masks = pred_masks[..., tf.newaxis]
+
+            # Randomly select an image from the test batch
+            random_index = random.randint(0, BATCH_SIZE - 1)
+            random_image = test_images[random_index]
+            random_pred_mask = pred_masks[random_index]
+            random_true_mask = test_masks[random_index]
+
+            fig, ax = plt.subplots(nrows=1, ncols=3, figsize=(10, 5))
+            ax[0].imshow(random_image)
+            ax[0].set_title(f"Image: {epoch:03d}")
+
+            ax[1].imshow(random_true_mask)
+            ax[1].set_title(f"Ground Truth Mask: {epoch:03d}")
+
+            ax[2].imshow(random_pred_mask)
+            ax[2].set_title(
+                f"Predicted Mask: {epoch:03d}",
+            )
+
+            plt.show()
+            plt.close()
+
+
+callbacks = [DisplayCallback(5)]
 
 """
 ## Train the model
+
+Now let's create the model, compile and train it for 50 epochs by calling `model.fit()`.
 """
 
-# Configure the model for training.
-# We use the "sparse" version of categorical_crossentropy
-# because our target data is integers.
-model.compile(optimizer="rmsprop", loss="sparse_categorical_crossentropy")
+# Build model
+model = get_model(img_size=(HEIGHT, WIDTH), num_classes=NUM_CLASSES)
 
-callbacks = [
-    keras.callbacks.ModelCheckpoint("oxford_segmentation.h5", save_best_only=True)
-]
+model.compile(
+    optimizer=keras.optimizers.Adam(LEARNING_RATE),
+    loss="sparse_categorical_crossentropy",
+    metrics=["accuracy"],
+)
 
 # Train the model, doing validation at the end of each epoch.
-epochs = 15
-model.fit(train_gen, epochs=epochs, validation_data=val_gen, callbacks=callbacks)
+history = model.fit(
+    augmented_train_ds,
+    epochs=EPOCHS,
+    validation_data=resized_val_ds,
+    callbacks=callbacks,
+)
 
 """
-## Visualize predictions
+## Prediction with trained model
+Now that the model training of U-Net has completed, let's test it by making predications
+on a few sample images.
 """
 
-# Generate predictions for all images in the validation set
+pred_masks = model.predict(test_images)
+pred_masks = tf.math.argmax(pred_masks, axis=-1)[..., None]
 
-val_gen = OxfordPets(batch_size, img_size, val_input_img_paths, val_target_img_paths)
-val_preds = model.predict(val_gen)
+keras_cv.visualization.plot_segmentation_mask_gallery(
+    test_images,
+    value_range=(0, 1),
+    num_classes=3,
+    y_true=test_masks,
+    y_pred=pred_masks,
+    scale=4,
+    rows=2,
+    cols=2,
+)
 
+"""
+## Acknowledgements
 
-def display_mask(i):
-    """Quick utility to display a model's prediction."""
-    mask = np.argmax(val_preds[i], axis=-1)
-    mask = np.expand_dims(mask, axis=-1)
-    img = PIL.ImageOps.autocontrast(keras.preprocessing.image.array_to_img(mask))
-    display(img)
-
-
-# Display results for validation image #10
-i = 10
-
-# Display input image
-display(Image(filename=val_input_img_paths[i]))
-
-# Display ground-truth target mask
-img = PIL.ImageOps.autocontrast(load_img(val_target_img_paths[i]))
-display(img)
-
-# Display mask predicted by our model
-display_mask(i)  # Note that the model only sees inputs at 150x150.
+We would like to thank [Martin Gorner](https://twitter.com/martin_gorner) for his thorough review.
+Google Cloud credits were provided for this project.
+"""

@@ -4,6 +4,7 @@ Author: [Soumik Rakshit](http://github.com/soumik12345)
 Date created: 2021/09/18
 Last modified: 2021/09/19
 Description: Implementing Zero-Reference Deep Curve Estimation for low-light image enhancement.
+Accelerator: GPU
 """
 """
 ## Introduction
@@ -237,7 +238,7 @@ preserving the contrast between neighboring regions across the input image and i
 
 class SpatialConsistencyLoss(keras.losses.Loss):
     def __init__(self, **kwargs):
-        super(SpatialConsistencyLoss, self).__init__(reduction="none")
+        super().__init__(reduction="none")
 
         self.left_kernel = tf.constant(
             [[[[0, 0, 0]], [[-1, 1, 0]], [[0, 0, 0]]]], dtype=tf.float32
@@ -253,7 +254,6 @@ class SpatialConsistencyLoss(keras.losses.Loss):
         )
 
     def call(self, y_true, y_pred):
-
         original_mean = tf.reduce_mean(y_true, 3, keepdims=True)
         enhanced_mean = tf.reduce_mean(y_pred, 3, keepdims=True)
         original_pool = tf.nn.avg_pool2d(
@@ -305,11 +305,11 @@ We implement the Zero-DCE framework as a Keras subclassed model.
 
 class ZeroDCE(keras.Model):
     def __init__(self, **kwargs):
-        super(ZeroDCE, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.dce_model = build_dce_net()
 
     def compile(self, learning_rate, **kwargs):
-        super(ZeroDCE, self).compile(**kwargs)
+        super().compile(**kwargs)
         self.optimizer = keras.optimizers.Adam(learning_rate=learning_rate)
         self.spatial_constancy_loss = SpatialConsistencyLoss(reduction="none")
 
@@ -429,7 +429,7 @@ def plot_results(images, titles, figure_size=(12, 12)):
 
 
 def infer(original_image):
-    image = keras.preprocessing.image.img_to_array(original_image)
+    image = keras.utils.img_to_array(original_image)
     image = image.astype("float32") / 255.0
     image = np.expand_dims(image, axis=0)
     output_image = zero_dce_model(image)
@@ -443,6 +443,9 @@ def infer(original_image):
 
 We compare the test images from LOLDataset enhanced by MIRNet with images enhanced via
 the `PIL.ImageOps.autocontrast()` function.
+
+You can use the trained model hosted on [Hugging Face Hub](https://huggingface.co/keras-io/low-light-image-enhancement)
+and try the demo on [Hugging Face Spaces](https://huggingface.co/spaces/keras-io/low-light-image-enhancement).
 """
 
 for val_image_file in test_low_light_images:

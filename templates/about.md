@@ -22,13 +22,13 @@ while arbitrarily advanced workflows should be *possible* via a clear path that 
 - Scaling computation to many devices, such as clusters of hundreds of GPUs.
 - Exporting programs ("graphs") to external runtimes such as servers, browsers, mobile and embedded devices.
 
-Keras is the high-level API of TensorFlow 2: an approachable, highly-productive interface for solving machine learning problems,
+Keras is the high-level API of the TensorFlow platform: an approachable, highly-productive interface for solving machine learning problems,
 with a focus on modern deep learning. It provides essential abstractions and building blocks for developing
 and shipping machine learning solutions with high iteration velocity.
 
 Keras empowers engineers and researchers to take full advantage of the scalability
-and cross-platform capabilities of TensorFlow 2: you can run Keras on TPU or on large clusters of GPUs,
-and you can export your Keras models to run in the browser or on a mobile device. 
+and cross-platform capabilities of the TensorFlow platform: you can run Keras on TPU or on large clusters of GPUs,
+and you can export your Keras models to run in the browser or on a mobile device.
 
 ---
 
@@ -138,9 +138,9 @@ For more in-depth tutorials about Keras, you can check out:
 Keras comes packaged with TensorFlow 2 as `tensorflow.keras`.
 To start using Keras, simply [install TensorFlow 2](https://www.tensorflow.org/install).
 
-Keras/TensorFlow are compatible with:
+Keras and TensorFlow are compatible with:
 
-- Python 3.6–3.9
+- Python 3.7–3.10
 - Ubuntu 16.04 or later
 - Windows 7 or later
 - macOS 10.12.6 (Sierra) or later.
@@ -154,7 +154,6 @@ You can ask questions and join the development discussion:
 
 - In the [TensorFlow forum](https://discuss.tensorflow.org/).
 - On the [Keras Google group](https://groups.google.com/forum/#!forum/keras-users).
-- On the [Keras Slack channel](https://kerasteam.slack.com). Use [this link](https://keras-slack-autojoin.herokuapp.com/) to request an invitation to the channel.
 
 You can also post **bug reports and feature requests** (only) in [GitHub issues](https://github.com/keras-team/keras/issues).
 Make sure to read [our guidelines](https://github.com/keras-team/keras/blob/master/CONTRIBUTING.md) first.
@@ -169,7 +168,3 @@ Keras (κέρας) means _horn_ in Greek. It is a reference to a literary image 
 Keras was initially developed as part of the research effort of project ONEIROS (Open-ended Neuro-Electronic Intelligent Robot Operating System).
 
 >_"Oneiroi are beyond our unravelling - who can be sure what tale they tell? Not all that men look for comes to pass. Two gates there are that give passage to fleeting Oneiroi; one is made of horn, one of ivory. The Oneiroi that pass through sawn ivory are deceitful, bearing a message that will not be fulfilled; those that come out through polished horn have truth behind them, to be accomplished for men who see them."_ Homer, Odyssey 19. 562 ff (Shewring translation).
-
----
-
-

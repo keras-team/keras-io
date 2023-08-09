@@ -4,6 +4,7 @@ Author: [Khalid Salama](https://www.linkedin.com/in/khalid-salama-24403144/)
 Date created: 2021/01/15
 Last modified: 2021/01/15
 Description: How to train differentiable decision trees for end-to-end learning in deep neural networks.
+Accelerator: GPU
 """
 
 """
@@ -244,9 +245,9 @@ leaves to produce the final `outputs`.
 
 class NeuralDecisionTree(keras.Model):
     def __init__(self, depth, num_features, used_features_rate, num_classes):
-        super(NeuralDecisionTree, self).__init__()
+        super().__init__()
         self.depth = depth
-        self.num_leaves = 2 ** depth
+        self.num_leaves = 2**depth
         self.num_classes = num_classes
 
         # Create a mask for the randomly selected features.
@@ -318,7 +319,7 @@ trained simultaneously. The output of the forest model is the average outputs of
 
 class NeuralDecisionForest(keras.Model):
     def __init__(self, num_trees, depth, num_features, used_features_rate, num_classes):
-        super(NeuralDecisionForest, self).__init__()
+        super().__init__()
         self.ensemble = []
         # Initialize the ensemble by adding NeuralDecisionTree instances.
         # Each tree will have its own randomly selected input features to use.
@@ -347,11 +348,9 @@ Finally, let's set up the code that will train and evaluate the model.
 learning_rate = 0.01
 batch_size = 265
 num_epochs = 10
-hidden_units = [64, 64]
 
 
 def run_experiment(model):
-
     model.compile(
         optimizer=keras.optimizers.Adam(learning_rate=learning_rate),
         loss=keras.losses.SparseCategoricalCrossentropy(),
@@ -435,3 +434,9 @@ def create_forest_model():
 forest_model = create_forest_model()
 
 run_experiment(forest_model)
+
+
+"""
+You can use the trained model hosted on [Hugging Face Hub](https://huggingface.co/keras-io/neural-decision-forest)
+and try the demo on [Hugging Face Spaces](https://huggingface.co/spaces/keras-io/Neural-Decision-Forest).
+"""
