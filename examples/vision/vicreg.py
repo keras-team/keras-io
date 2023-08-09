@@ -219,11 +219,11 @@ configed_augmenter = partial(
 def make_version():
     augment_version = (
         tf.data.Dataset.from_tensor_slices(train_features)
-            .map(configed_augmenter, tf.data.AUTOTUNE)
-            .shuffle(1000, seed=1024)
-            .batch(BATCH_SIZE, drop_remainder=True)
-            .prefetch(tf.data.AUTOTUNE)
-            .with_options(performance_options)
+        .map(configed_augmenter, tf.data.AUTOTUNE)
+        .shuffle(1000, seed=1024)
+        .batch(BATCH_SIZE, drop_remainder=True)
+        .prefetch(tf.data.AUTOTUNE)
+        .with_options(performance_options)
     )
 
     return augment_version
@@ -430,9 +430,9 @@ and projector using 12000 images, though they were unlabeled.
 def gen_lin_ds(features, labels):
     ds = (
         tf.data.Dataset.from_tensor_slices((features, labels))
-            .shuffle(1000)
-            .batch(BATCH_SIZE, drop_remainder=True)
-            .prefetch(tf.data.AUTOTUNE)
+        .shuffle(1000)
+        .batch(BATCH_SIZE, drop_remainder=True)
+        .prefetch(tf.data.AUTOTUNE)
     )
 
     return ds
