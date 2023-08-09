@@ -35,7 +35,6 @@ the a match score between the user and the movie (predicted rating).
 - [Neural Collaborative Filtering](https://dl.acm.org/doi/pdf/10.1145/3038912.3052569)
 
 
-
 ```python
 import pandas as pd
 import numpy as np
@@ -45,12 +44,10 @@ from tensorflow import keras
 from tensorflow.keras import layers
 from pathlib import Path
 import matplotlib.pyplot as plt
-
 ```
 
 ---
 ## First, load the data and apply preprocessing
-
 
 
 ```python
@@ -75,11 +72,9 @@ if not movielens_dir.exists():
 
 ratings_file = movielens_dir / "ratings.csv"
 df = pd.read_csv(ratings_file)
-
 ```
 
 First, need to perform some preprocessing to encode users and movies as integer indices.
-
 
 
 ```python
@@ -104,7 +99,6 @@ print(
         num_users, num_movies, min_rating, max_rating
     )
 )
-
 ```
 
 <div class="k-default-codeblock">
@@ -115,7 +109,6 @@ Number of users: 610, Number of Movies: 9724, Min rating: 0.5, Max rating: 5.0
 </div>
 ---
 ## Prepare training and validation data
-
 
 
 ```python
@@ -131,7 +124,6 @@ x_train, x_val, y_train, y_val = (
     y[:train_indices],
     y[train_indices:],
 )
-
 ```
 
 ---
@@ -144,14 +136,13 @@ and adds a per-movie and per-user bias. The match score is scaled to the `[0, 1]
 interval via a sigmoid (since our ratings are normalized to this range).
 
 
-
 ```python
 EMBEDDING_SIZE = 50
 
 
 class RecommenderNet(keras.Model):
     def __init__(self, num_users, num_movies, embedding_size, **kwargs):
-        super(RecommenderNet, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.num_users = num_users
         self.num_movies = num_movies
         self.embedding_size = embedding_size
@@ -184,14 +175,13 @@ class RecommenderNet(keras.Model):
 
 model = RecommenderNet(num_users, num_movies, EMBEDDING_SIZE)
 model.compile(
-    loss=tf.keras.losses.BinaryCrossentropy(), optimizer=keras.optimizers.Adam(lr=0.001)
+    loss=tf.keras.losses.BinaryCrossentropy(),
+    optimizer=keras.optimizers.Adam(learning_rate=0.001),
 )
-
 ```
 
 ---
 ## Train the model based on the data split
-
 
 
 ```python
@@ -203,27 +193,25 @@ history = model.fit(
     verbose=1,
     validation_data=(x_val, y_val),
 )
-
 ```
 
 <div class="k-default-codeblock">
 ```
 Epoch 1/5
-1418/1418 [==============================] - 6s 4ms/step - loss: 0.6368 - val_loss: 0.6206
+1418/1418 [==============================] - 9s 6ms/step - loss: 0.6358 - val_loss: 0.6200
 Epoch 2/5
-1418/1418 [==============================] - 7s 5ms/step - loss: 0.6131 - val_loss: 0.6176
+1418/1418 [==============================] - 11s 8ms/step - loss: 0.6134 - val_loss: 0.6173
 Epoch 3/5
-1418/1418 [==============================] - 6s 4ms/step - loss: 0.6083 - val_loss: 0.6146
+1418/1418 [==============================] - 14s 10ms/step - loss: 0.6082 - val_loss: 0.6156
 Epoch 4/5
-1418/1418 [==============================] - 6s 4ms/step - loss: 0.6072 - val_loss: 0.6131
+1418/1418 [==============================] - 15s 10ms/step - loss: 0.6072 - val_loss: 0.6144
 Epoch 5/5
-1418/1418 [==============================] - 6s 4ms/step - loss: 0.6075 - val_loss: 0.6150
+1418/1418 [==============================] - 13s 9ms/step - loss: 0.6074 - val_loss: 0.6147
 
 ```
 </div>
 ---
 ## Plot training and validation loss
-
 
 
 ```python
@@ -234,16 +222,16 @@ plt.ylabel("loss")
 plt.xlabel("epoch")
 plt.legend(["train", "test"], loc="upper left")
 plt.show()
-
 ```
 
 
+    
 ![png](/img/examples/structured_data/collaborative_filtering_movielens/collaborative_filtering_movielens_14_0.png)
+    
 
 
 ---
 ## Show top 10 movie recommendations to a user
-
 
 
 ```python
@@ -288,33 +276,38 @@ print("----" * 8)
 recommended_movies = movie_df[movie_df["movieId"].isin(recommended_movie_ids)]
 for row in recommended_movies.itertuples():
     print(row.title, ":", row.genres)
-
 ```
 
 <div class="k-default-codeblock">
 ```
-Showing recommendations for user: 474
+302/302 [==============================] - 0s 800us/step
+Showing recommendations for user: 213
 ====================================
 Movies with high ratings from user
 --------------------------------
-Fugitive, The (1993) : Thriller
-Remains of the Day, The (1993) : Drama|Romance
-West Side Story (1961) : Drama|Musical|Romance
-X2: X-Men United (2003) : Action|Adventure|Sci-Fi|Thriller
-Spider-Man 2 (2004) : Action|Adventure|Sci-Fi|IMAX
+Terminator 2: Judgment Day (1991) : Action|Sci-Fi
+Rocky (1976) : Drama
+Big Fish (2003) : Drama|Fantasy|Romance
+Shrek 2 (2004) : Adventure|Animation|Children|Comedy|Musical|Romance
+13 Assassins (Jûsan-nin no shikaku) (2010) : Action
 --------------------------------
 Top 10 movie recommendations
 --------------------------------
-Dazed and Confused (1993) : Comedy
-Ghost in the Shell (Kôkaku kidôtai) (1995) : Animation|Sci-Fi
-Drugstore Cowboy (1989) : Crime|Drama
-Road Warrior, The (Mad Max 2) (1981) : Action|Adventure|Sci-Fi|Thriller
-Dark Knight, The (2008) : Action|Crime|Drama|IMAX
-Inglourious Basterds (2009) : Action|Drama|War
-Up (2009) : Adventure|Animation|Children|Drama
-Dark Knight Rises, The (2012) : Action|Adventure|Crime|IMAX
-Star Wars: Episode VII - The Force Awakens (2015) : Action|Adventure|Fantasy|Sci-Fi|IMAX
-Thor: Ragnarok (2017) : Action|Adventure|Sci-Fi
+Usual Suspects, The (1995) : Crime|Mystery|Thriller
+Star Wars: Episode IV - A New Hope (1977) : Action|Adventure|Sci-Fi
+Shawshank Redemption, The (1994) : Crime|Drama
+Schindler's List (1993) : Drama|War
+Dr. Strangelove or: How I Learned to Stop Worrying and Love the Bomb (1964) : Comedy|War
+Godfather: Part II, The (1974) : Crime|Drama
+Amelie (Fabuleux destin d'Amélie Poulain, Le) (2001) : Comedy|Romance
+28 Days Later (2002) : Action|Horror|Sci-Fi
+Little Miss Sunshine (2006) : Adventure|Comedy|Drama
+Hurt Locker, The (2008) : Action|Drama|Thriller|War
 
 ```
 </div>
+**Example available on HuggingFace**
+
+| Trained Model | Demo |
+| :--: | :--: |
+| [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Model-Collaborative%20Filtering-black.svg)](https://huggingface.co/keras-io/collaborative-filtering-movielens) | [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Spaces-Collaborative%20Filtering-black.svg)](https://huggingface.co/spaces/keras-io/collaborative-filtering-movielens) |

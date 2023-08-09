@@ -16,8 +16,8 @@
 
 ```python
 import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras import layers
+import keras
+from keras import layers
 ```
 
 ---
@@ -94,9 +94,9 @@ model.layers
 
 <div class="k-default-codeblock">
 ```
-[<tensorflow.python.keras.layers.core.Dense at 0x7fbd5f285a00>,
- <tensorflow.python.keras.layers.core.Dense at 0x7fbd5f285c70>,
- <tensorflow.python.keras.layers.core.Dense at 0x7fbd5f285ee0>]
+[<keras.src.layers.core.dense.Dense at 0x7fb328d4e850>,
+ <keras.src.layers.core.dense.Dense at 0x7fb327fecb90>,
+ <keras.src.layers.core.dense.Dense at 0x7fb327f99210>]
 
 ```
 </div>
@@ -176,10 +176,10 @@ layer.weights  # Now it has weights, of shape (4, 3) and (3,)
 <div class="k-default-codeblock">
 ```
 [<tf.Variable 'dense_6/kernel:0' shape=(4, 3) dtype=float32, numpy=
- array([[-0.5312456 , -0.02559239, -0.77284306],
-        [-0.18156391,  0.7774476 , -0.05044252],
-        [-0.3559971 ,  0.43751895,  0.3434813 ],
-        [-0.25133908,  0.8889308 , -0.6510118 ]], dtype=float32)>,
+ array([[ 0.6737782 ,  0.3430692 , -0.5403261 ],
+        [ 0.747154  ,  0.46349108, -0.31388676],
+        [ 0.7401793 ,  0.18300307, -0.7164282 ],
+        [-0.26776248, -0.7867748 ,  0.3125652 ]], dtype=float32)>,
  <tf.Variable 'dense_6/bias:0' shape=(3,) dtype=float32, numpy=array([0., 0., 0.], dtype=float32)>]
 
 ```
@@ -230,17 +230,18 @@ model.summary()
 ```
 Model: "sequential_3"
 _________________________________________________________________
-Layer (type)                 Output Shape              Param #   
+ Layer (type)                Output Shape              Param #   
 =================================================================
-dense_7 (Dense)              (1, 2)                    10        
-_________________________________________________________________
-dense_8 (Dense)              (1, 3)                    9         
-_________________________________________________________________
-dense_9 (Dense)              (1, 4)                    16        
+ dense_7 (Dense)             (1, 2)                    10        
+                                                                 
+ dense_8 (Dense)             (1, 3)                    9         
+                                                                 
+ dense_9 (Dense)             (1, 4)                    16        
+                                                                 
 =================================================================
-Total params: 35
-Trainable params: 35
-Non-trainable params: 0
+Total params: 35 (140.00 Byte)
+Trainable params: 35 (140.00 Byte)
+Non-trainable params: 0 (0.00 Byte)
 _________________________________________________________________
 
 ```
@@ -263,13 +264,14 @@ model.summary()
 ```
 Model: "sequential_4"
 _________________________________________________________________
-Layer (type)                 Output Shape              Param #   
+ Layer (type)                Output Shape              Param #   
 =================================================================
-dense_10 (Dense)             (None, 2)                 10        
+ dense_10 (Dense)            (None, 2)                 10        
+                                                                 
 =================================================================
-Total params: 10
-Trainable params: 10
-Non-trainable params: 0
+Total params: 10 (40.00 Byte)
+Trainable params: 10 (40.00 Byte)
+Non-trainable params: 0 (0.00 Byte)
 _________________________________________________________________
 
 ```
@@ -287,7 +289,7 @@ model.layers
 
 <div class="k-default-codeblock">
 ```
-[<tensorflow.python.keras.layers.core.Dense at 0x7fbd5f1776d0>]
+[<keras.src.layers.core.dense.Dense at 0x7fb32a7f28d0>]
 
 ```
 </div>
@@ -306,13 +308,14 @@ model.summary()
 ```
 Model: "sequential_5"
 _________________________________________________________________
-Layer (type)                 Output Shape              Param #   
+ Layer (type)                Output Shape              Param #   
 =================================================================
-dense_11 (Dense)             (None, 2)                 10        
+ dense_11 (Dense)            (None, 2)                 10        
+                                                                 
 =================================================================
-Total params: 10
-Trainable params: 10
-Non-trainable params: 0
+Total params: 10 (40.00 Byte)
+Trainable params: 10 (40.00 Byte)
+Non-trainable params: 0 (0.00 Byte)
 _________________________________________________________________
 
 ```
@@ -366,43 +369,49 @@ model.add(layers.Dense(10))
 ```
 Model: "sequential_6"
 _________________________________________________________________
-Layer (type)                 Output Shape              Param #   
+ Layer (type)                Output Shape              Param #   
 =================================================================
-conv2d (Conv2D)              (None, 123, 123, 32)      2432      
-_________________________________________________________________
-conv2d_1 (Conv2D)            (None, 121, 121, 32)      9248      
-_________________________________________________________________
-max_pooling2d (MaxPooling2D) (None, 40, 40, 32)        0         
+ conv2d (Conv2D)             (None, 123, 123, 32)      2432      
+                                                                 
+ conv2d_1 (Conv2D)           (None, 121, 121, 32)      9248      
+                                                                 
+ max_pooling2d (MaxPooling2  (None, 40, 40, 32)        0         
+ D)                                                              
+                                                                 
 =================================================================
-Total params: 11,680
-Trainable params: 11,680
-Non-trainable params: 0
+Total params: 11680 (45.62 KB)
+Trainable params: 11680 (45.62 KB)
+Non-trainable params: 0 (0.00 Byte)
 _________________________________________________________________
 Model: "sequential_6"
 _________________________________________________________________
-Layer (type)                 Output Shape              Param #   
+ Layer (type)                Output Shape              Param #   
 =================================================================
-conv2d (Conv2D)              (None, 123, 123, 32)      2432      
-_________________________________________________________________
-conv2d_1 (Conv2D)            (None, 121, 121, 32)      9248      
-_________________________________________________________________
-max_pooling2d (MaxPooling2D) (None, 40, 40, 32)        0         
-_________________________________________________________________
-conv2d_2 (Conv2D)            (None, 38, 38, 32)        9248      
-_________________________________________________________________
-conv2d_3 (Conv2D)            (None, 36, 36, 32)        9248      
-_________________________________________________________________
-max_pooling2d_1 (MaxPooling2 (None, 12, 12, 32)        0         
-_________________________________________________________________
-conv2d_4 (Conv2D)            (None, 10, 10, 32)        9248      
-_________________________________________________________________
-conv2d_5 (Conv2D)            (None, 8, 8, 32)          9248      
-_________________________________________________________________
-max_pooling2d_2 (MaxPooling2 (None, 4, 4, 32)          0         
+ conv2d (Conv2D)             (None, 123, 123, 32)      2432      
+                                                                 
+ conv2d_1 (Conv2D)           (None, 121, 121, 32)      9248      
+                                                                 
+ max_pooling2d (MaxPooling2  (None, 40, 40, 32)        0         
+ D)                                                              
+                                                                 
+ conv2d_2 (Conv2D)           (None, 38, 38, 32)        9248      
+                                                                 
+ conv2d_3 (Conv2D)           (None, 36, 36, 32)        9248      
+                                                                 
+ max_pooling2d_1 (MaxPoolin  (None, 12, 12, 32)        0         
+ g2D)                                                            
+                                                                 
+ conv2d_4 (Conv2D)           (None, 10, 10, 32)        9248      
+                                                                 
+ conv2d_5 (Conv2D)           (None, 8, 8, 32)          9248      
+                                                                 
+ max_pooling2d_2 (MaxPoolin  (None, 4, 4, 32)          0         
+ g2D)                                                            
+                                                                 
 =================================================================
-Total params: 48,672
-Trainable params: 48,672
-Non-trainable params: 0
+Total params: 48672 (190.12 KB)
+Trainable params: 48672 (190.12 KB)
+Non-trainable params: 0 (0.00 Byte)
 _________________________________________________________________
 
 ```

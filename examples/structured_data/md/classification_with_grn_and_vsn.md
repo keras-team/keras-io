@@ -101,7 +101,7 @@ CSV_HEADER = [
     "country_of_birth_self",
     "citizenship",
     "own_business_or_self_employed",
-    "fill_inc_questionnaire_for_veteran's_admin",
+    "fill_inc_questionnaire_for_veterans_admin",
     "veterans_benefits",
     "weeks_worked_in_year",
     "year",
@@ -318,7 +318,7 @@ flexibility to suppress input that are not relevant for a given task.
 
 class GatedLinearUnit(layers.Layer):
     def __init__(self, units):
-        super(GatedLinearUnit, self).__init__()
+        super().__init__()
         self.linear = layers.Dense(units)
         self.sigmoid = layers.Dense(units, activation="sigmoid")
 
@@ -343,7 +343,7 @@ The Gated Residual Network (GRN) works as follows:
 
 class GatedResidualNetwork(layers.Layer):
     def __init__(self, units, dropout_rate):
-        super(GatedResidualNetwork, self).__init__()
+        super().__init__()
         self.units = units
         self.elu_dense = layers.Dense(units, activation="elu")
         self.linear_dense = layers.Dense(units)
@@ -382,7 +382,7 @@ number of the input features.
 
 class VariableSelection(layers.Layer):
     def __init__(self, num_features, units, dropout_rate):
-        super(VariableSelection, self).__init__()
+        super().__init__()
         self.grns = list()
         # Create a GRN for each feature independently
         for idx in range(num_features):
@@ -473,51 +473,52 @@ print(f"Test accuracy: {round(accuracy * 100, 2)}%")
 
 <div class="k-default-codeblock">
 ```
+
 Start training the model...
 Epoch 1/20
-641/641 [==============================] - 26s 22ms/step - loss: 317.7028 - accuracy: 0.9353 - val_loss: 230.1805 - val_accuracy: 0.9497
+640/640 [==============================] - 31s 29ms/step - loss: 253.8570 - accuracy: 0.9468 - val_loss: 229.4024 - val_accuracy: 0.9495
 Epoch 2/20
-641/641 [==============================] - 13s 19ms/step - loss: 231.4161 - accuracy: 0.9506 - val_loss: 224.7825 - val_accuracy: 0.9498
+640/640 [==============================] - 17s 25ms/step - loss: 229.9359 - accuracy: 0.9497 - val_loss: 223.4970 - val_accuracy: 0.9505
 Epoch 3/20
-641/641 [==============================] - 12s 19ms/step - loss: 226.8173 - accuracy: 0.9503 - val_loss: 223.0818 - val_accuracy: 0.9508
+640/640 [==============================] - 17s 25ms/step - loss: 225.5644 - accuracy: 0.9504 - val_loss: 222.0078 - val_accuracy: 0.9515
 Epoch 4/20
-641/641 [==============================] - 13s 19ms/step - loss: 224.1516 - accuracy: 0.9507 - val_loss: 221.8637 - val_accuracy: 0.9509
+640/640 [==============================] - 16s 25ms/step - loss: 222.2086 - accuracy: 0.9512 - val_loss: 218.2707 - val_accuracy: 0.9522
 Epoch 5/20
-641/641 [==============================] - 13s 19ms/step - loss: 223.9696 - accuracy: 0.9507 - val_loss: 217.8728 - val_accuracy: 0.9513
+640/640 [==============================] - 17s 25ms/step - loss: 218.0359 - accuracy: 0.9523 - val_loss: 217.3721 - val_accuracy: 0.9528
 Epoch 6/20
-641/641 [==============================] - 13s 19ms/step - loss: 220.7267 - accuracy: 0.9508 - val_loss: 220.2448 - val_accuracy: 0.9516
+640/640 [==============================] - 17s 26ms/step - loss: 214.8348 - accuracy: 0.9529 - val_loss: 210.3546 - val_accuracy: 0.9543
 Epoch 7/20
-641/641 [==============================] - 13s 19ms/step - loss: 219.7464 - accuracy: 0.9514 - val_loss: 216.4628 - val_accuracy: 0.9516
+640/640 [==============================] - 17s 26ms/step - loss: 213.0984 - accuracy: 0.9534 - val_loss: 210.2881 - val_accuracy: 0.9544
 Epoch 8/20
-641/641 [==============================] - 13s 19ms/step - loss: 218.7294 - accuracy: 0.9517 - val_loss: 215.2192 - val_accuracy: 0.9519
+640/640 [==============================] - 17s 26ms/step - loss: 211.6379 - accuracy: 0.9538 - val_loss: 209.3327 - val_accuracy: 0.9550
 Epoch 9/20
-641/641 [==============================] - 12s 19ms/step - loss: 218.3938 - accuracy: 0.9516 - val_loss: 217.1790 - val_accuracy: 0.9514
+640/640 [==============================] - 17s 26ms/step - loss: 210.7283 - accuracy: 0.9541 - val_loss: 209.5862 - val_accuracy: 0.9543
 Epoch 10/20
-641/641 [==============================] - 13s 19ms/step - loss: 217.2871 - accuracy: 0.9522 - val_loss: 213.4623 - val_accuracy: 0.9523
+640/640 [==============================] - 17s 26ms/step - loss: 209.9062 - accuracy: 0.9538 - val_loss: 210.1662 - val_accuracy: 0.9537
 Epoch 11/20
-641/641 [==============================] - 13s 19ms/step - loss: 215.0476 - accuracy: 0.9522 - val_loss: 211.6762 - val_accuracy: 0.9523
+640/640 [==============================] - 16s 25ms/step - loss: 209.6323 - accuracy: 0.9540 - val_loss: 207.9528 - val_accuracy: 0.9552
 Epoch 12/20
-641/641 [==============================] - 13s 19ms/step - loss: 213.2402 - accuracy: 0.9527 - val_loss: 212.2001 - val_accuracy: 0.9525
+640/640 [==============================] - 16s 25ms/step - loss: 208.7843 - accuracy: 0.9544 - val_loss: 207.5303 - val_accuracy: 0.9550
 Epoch 13/20
-641/641 [==============================] - 13s 20ms/step - loss: 212.8123 - accuracy: 0.9530 - val_loss: 207.9878 - val_accuracy: 0.9538
+640/640 [==============================] - 21s 32ms/step - loss: 207.9983 - accuracy: 0.9544 - val_loss: 206.8800 - val_accuracy: 0.9557
 Epoch 14/20
-641/641 [==============================] - 13s 19ms/step - loss: 208.4605 - accuracy: 0.9541 - val_loss: 208.0063 - val_accuracy: 0.9543
+640/640 [==============================] - 18s 28ms/step - loss: 207.2104 - accuracy: 0.9544 - val_loss: 216.0859 - val_accuracy: 0.9535
 Epoch 15/20
-641/641 [==============================] - 13s 19ms/step - loss: 211.9185 - accuracy: 0.9533 - val_loss: 208.2112 - val_accuracy: 0.9540
+640/640 [==============================] - 16s 25ms/step - loss: 207.2254 - accuracy: 0.9543 - val_loss: 206.7765 - val_accuracy: 0.9555
 Epoch 16/20
-641/641 [==============================] - 13s 19ms/step - loss: 207.7694 - accuracy: 0.9544 - val_loss: 207.3279 - val_accuracy: 0.9547
+640/640 [==============================] - 16s 25ms/step - loss: 206.6704 - accuracy: 0.9546 - val_loss: 206.7508 - val_accuracy: 0.9560
 Epoch 17/20
-641/641 [==============================] - 13s 19ms/step - loss: 208.6964 - accuracy: 0.9540 - val_loss: 204.3082 - val_accuracy: 0.9553
+640/640 [==============================] - 19s 30ms/step - loss: 206.1322 - accuracy: 0.9545 - val_loss: 205.9638 - val_accuracy: 0.9562
 Epoch 18/20
-641/641 [==============================] - 13s 19ms/step - loss: 207.2199 - accuracy: 0.9547 - val_loss: 206.4799 - val_accuracy: 0.9549
+640/640 [==============================] - 21s 31ms/step - loss: 205.4764 - accuracy: 0.9545 - val_loss: 206.0258 - val_accuracy: 0.9561
 Epoch 19/20
-641/641 [==============================] - 13s 19ms/step - loss: 206.7960 - accuracy: 0.9548 - val_loss: 206.0898 - val_accuracy: 0.9555
+640/640 [==============================] - 16s 25ms/step - loss: 204.3614 - accuracy: 0.9550 - val_loss: 207.1424 - val_accuracy: 0.9560
 Epoch 20/20
-641/641 [==============================] - 13s 20ms/step - loss: 206.2721 - accuracy: 0.9547 - val_loss: 206.6541 - val_accuracy: 0.9549
+640/640 [==============================] - 16s 25ms/step - loss: 203.9543 - accuracy: 0.9550 - val_loss: 206.4697 - val_accuracy: 0.9554
 Model training finished.
 Evaluating model performance...
-377/377 [==============================] - 5s 11ms/step - loss: 206.3511 - accuracy: 0.9541
-Test accuracy: 95.41%
+377/377 [==============================] - 4s 11ms/step - loss: 204.5099 - accuracy: 0.9547
+Test accuracy: 95.47%
 
 ```
 </div>
@@ -526,3 +527,9 @@ You should achieve more than 95% accuracy on the test set.
 To increase the learning capacity of the model, you can try increasing the
 `encoding_size` value, or stacking multiple GRN layers on top of the VSN layer.
 This may require to also increase the `dropout_rate` value to avoid overfitting.
+
+**Example available on HuggingFace**
+
+| Trained Model | Demo |
+| :--: | :--: |
+| [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Model-Classification%20With%20GRN%20%26%20VSN-red)](https://huggingface.co/keras-io/structured-data-classification-grn-vsn) | [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Space-Classification%20With%20GRN%20%26%20VSN-red)](https://huggingface.co/spaces/keras-io/structured-data-classification-grn-vsn) |

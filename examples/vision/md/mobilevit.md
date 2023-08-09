@@ -840,3 +840,4 @@ open("mobilevit_xxs.tflite", "wb").write(tflite_model)
 To learn more about different quantization recipes available in TFLite and running
 inference with TFLite models, check out
 [this official resource](https://www.tensorflow.org/lite/performance/post_training_quantization).
+You can use the trained model hosted on [Hugging Face Hub](https://huggingface.co/keras-io/mobile-vit-xxs) and try the demo on [Hugging Face Spaces](https://huggingface.co/spaces/keras-io/Flowers-Classification-MobileViT).

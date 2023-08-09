@@ -4,6 +4,7 @@ Author: [Sayak Paul](https://twitter.com/RisingSayak)
 Date created: 2021/03/06
 Last modified: 2021/03/06
 Description: Data augmentation using the mixup technique for image classification.
+Accelerator: GPU
 """
 """
 ## Introduction
@@ -18,7 +19,7 @@ by Zhang et al. It's implemented with the following formulas:
 (Note that the lambda values are values with the [0, 1] range and are sampled from the
 [Beta distribution](https://en.wikipedia.org/wiki/Beta_distribution).)
 
-The technique is quite systematically named - we are literally mixing up the features and
+The technique is quite systematically named. We are literally mixing up the features and
 their corresponding labels. Implementation-wise it's simple. Neural networks are prone
 to [memorizing corrupt labels](https://arxiv.org/abs/1611.03530). mixup relaxes this by
 combining different features with one another (same happens for the labels too) so that
@@ -45,7 +46,7 @@ from tensorflow.keras import layers
 """
 ## Prepare the dataset
 
-In this example, we will be using the [FashionMNIST](https://research.zalando.com/welcome/mission/research-projects/fashion-mnist/) dataset. But this same recipe can
+In this example, we will be using the [FashionMNIST](https://github.com/zalandoresearch/fashion-mnist) dataset. But this same recipe can
 be used for other classification datasets as well.
 """
 

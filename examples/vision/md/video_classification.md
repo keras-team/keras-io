@@ -608,3 +608,5 @@ equally important to decide its category. In those situations, putting a
 sequence model will likely yield better results.
 * Following [this book chapter](https://livebook.manning.com/book/deep-learning-with-python-second-edition/chapter-11),
 you can implement Transformers-based models for processing videos.
+
+You can use the trained model hosted on [Hugging Face Hub](https://huggingface.co/keras-io/video-classification-cnn-rnn) and try the demo on [Hugging Face Spaces](https://huggingface.co/spaces/keras-io/keras-video-classification-cnn-rnn).

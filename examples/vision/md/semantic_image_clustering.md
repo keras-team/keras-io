@@ -76,6 +76,9 @@ classes = [
 
 <div class="k-default-codeblock">
 ```
+Downloading data from https://www.cs.toronto.edu/~kriz/cifar-10-python.tar.gz
+170500096/170498071 [==============================] - 13s 0us/step
+170508288/170498071 [==============================] - 13s 0us/step
 x_data shape: (60000, 32, 32, 3) - y_data shape: (60000, 1)
 
 ```
@@ -129,12 +132,10 @@ data_augmentation = keras.Sequential(
             height_factor=(-0.2, 0.2), width_factor=(-0.2, 0.2), fill_mode="nearest"
         ),
         layers.RandomFlip(mode="horizontal"),
-        layers.RandomRotation(
-            factor=0.15, fill_mode="nearest"
-        ),
+        layers.RandomRotation(factor=0.15, fill_mode="nearest"),
         layers.RandomZoom(
             height_factor=(-0.3, 0.1), width_factor=(-0.3, 0.1), fill_mode="nearest"
-        )
+        ),
     ]
 )
 ```
@@ -153,9 +154,7 @@ _ = plt.axis("off")
 ```
 
 
-    
 ![png](/img/examples/vision/semantic_image_clustering/semantic_image_clustering_13_0.png)
-    
 
 
 Display a sample of augmented versions of the image
@@ -171,9 +170,7 @@ for i in range(9):
 ```
 
 
-    
 ![png](/img/examples/vision/semantic_image_clustering/semantic_image_clustering_15_0.png)
-    
 
 
 ---
@@ -213,7 +210,7 @@ class RepresentationLearner(keras.Model):
         l2_normalize=False,
         **kwargs
     ):
-        super(RepresentationLearner, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.encoder = encoder
         # Create projection head.
         self.projector = keras.Sequential(
@@ -322,105 +319,105 @@ history = representation_learner.fit(
 <div class="k-default-codeblock">
 ```
 Epoch 1/50
-118/118 [==============================] - 29s 135ms/step - loss: 41.1135
+118/118 [==============================] - 70s 351ms/step - loss: 53.4089
 Epoch 2/50
-118/118 [==============================] - 15s 125ms/step - loss: 11.7141
+118/118 [==============================] - 39s 328ms/step - loss: 13.8591
 Epoch 3/50
-118/118 [==============================] - 15s 125ms/step - loss: 11.1728
+118/118 [==============================] - 39s 333ms/step - loss: 11.8397
 Epoch 4/50
-118/118 [==============================] - 15s 125ms/step - loss: 10.9717
+118/118 [==============================] - 40s 338ms/step - loss: 11.5879
 Epoch 5/50
-118/118 [==============================] - 15s 125ms/step - loss: 10.8574
+118/118 [==============================] - 40s 341ms/step - loss: 11.1749
 Epoch 6/50
-118/118 [==============================] - 15s 125ms/step - loss: 10.9496
+118/118 [==============================] - 40s 343ms/step - loss: 10.9583
 Epoch 7/50
-118/118 [==============================] - 15s 124ms/step - loss: 10.7493
+118/118 [==============================] - 41s 344ms/step - loss: 10.8544
 Epoch 8/50
-118/118 [==============================] - 15s 124ms/step - loss: 10.5979
+118/118 [==============================] - 41s 345ms/step - loss: 10.7517
 Epoch 9/50
-118/118 [==============================] - 15s 124ms/step - loss: 10.4613
+118/118 [==============================] - 41s 346ms/step - loss: 10.6248
 Epoch 10/50
-118/118 [==============================] - 15s 125ms/step - loss: 10.2900
+118/118 [==============================] - 41s 346ms/step - loss: 10.5156
 Epoch 11/50
-118/118 [==============================] - 15s 124ms/step - loss: 10.1303
+118/118 [==============================] - 41s 346ms/step - loss: 10.4036
 Epoch 12/50
-118/118 [==============================] - 15s 124ms/step - loss: 9.9608
+118/118 [==============================] - 41s 345ms/step - loss: 10.2672
 Epoch 13/50
-118/118 [==============================] - 15s 124ms/step - loss: 9.7788
+118/118 [==============================] - 41s 346ms/step - loss: 10.1477
 Epoch 14/50
-118/118 [==============================] - 15s 124ms/step - loss: 9.5830
+118/118 [==============================] - 41s 346ms/step - loss: 10.0444
 Epoch 15/50
-118/118 [==============================] - 15s 124ms/step - loss: 9.4038
+118/118 [==============================] - 41s 346ms/step - loss: 9.9758
 Epoch 16/50
-118/118 [==============================] - 15s 124ms/step - loss: 9.1887
+118/118 [==============================] - 41s 346ms/step - loss: 9.8623
 Epoch 17/50
-118/118 [==============================] - 15s 124ms/step - loss: 9.0000
+118/118 [==============================] - 41s 345ms/step - loss: 9.7079
 Epoch 18/50
-118/118 [==============================] - 15s 124ms/step - loss: 8.7764
+118/118 [==============================] - 41s 346ms/step - loss: 9.6141
 Epoch 19/50
-118/118 [==============================] - 15s 124ms/step - loss: 8.5784
+118/118 [==============================] - 41s 346ms/step - loss: 9.4421
 Epoch 20/50
-118/118 [==============================] - 15s 124ms/step - loss: 8.3592
+118/118 [==============================] - 41s 346ms/step - loss: 9.2634
 Epoch 21/50
-118/118 [==============================] - 15s 124ms/step - loss: 8.2545
+118/118 [==============================] - 41s 346ms/step - loss: 9.1574
 Epoch 22/50
-118/118 [==============================] - 15s 124ms/step - loss: 8.1171
+118/118 [==============================] - 41s 346ms/step - loss: 9.0650
 Epoch 23/50
-118/118 [==============================] - 15s 124ms/step - loss: 7.9598
+118/118 [==============================] - 41s 346ms/step - loss: 8.8151
 Epoch 24/50
-118/118 [==============================] - 15s 124ms/step - loss: 7.8623
+118/118 [==============================] - 41s 346ms/step - loss: 8.6706
 Epoch 25/50
-118/118 [==============================] - 15s 124ms/step - loss: 7.7169
+118/118 [==============================] - 41s 346ms/step - loss: 8.4993
 Epoch 26/50
-118/118 [==============================] - 15s 124ms/step - loss: 7.5100
+118/118 [==============================] - 41s 345ms/step - loss: 8.4586
 Epoch 27/50
-118/118 [==============================] - 15s 124ms/step - loss: 7.5887
+118/118 [==============================] - 41s 345ms/step - loss: 8.3577
 Epoch 28/50
-118/118 [==============================] - 15s 124ms/step - loss: 7.3511
+118/118 [==============================] - 41s 346ms/step - loss: 8.0840
 Epoch 29/50
-118/118 [==============================] - 15s 124ms/step - loss: 7.1647
+118/118 [==============================] - 41s 346ms/step - loss: 7.9753
 Epoch 30/50
-118/118 [==============================] - 15s 124ms/step - loss: 7.1549
+118/118 [==============================] - 41s 346ms/step - loss: 7.7742
 Epoch 31/50
-118/118 [==============================] - 15s 124ms/step - loss: 7.0462
+118/118 [==============================] - 41s 346ms/step - loss: 7.6332
 Epoch 32/50
-118/118 [==============================] - 15s 124ms/step - loss: 6.8149
+118/118 [==============================] - 41s 346ms/step - loss: 7.7878
 Epoch 33/50
-118/118 [==============================] - 15s 124ms/step - loss: 6.6954
+118/118 [==============================] - 41s 346ms/step - loss: 7.6894
 Epoch 34/50
-118/118 [==============================] - 15s 124ms/step - loss: 6.5354
+118/118 [==============================] - 41s 346ms/step - loss: 7.3130
 Epoch 35/50
-118/118 [==============================] - 15s 124ms/step - loss: 6.3982
+118/118 [==============================] - 41s 346ms/step - loss: 7.2549
 Epoch 36/50
-118/118 [==============================] - 15s 124ms/step - loss: 6.4175
+118/118 [==============================] - 41s 346ms/step - loss: 7.0269
 Epoch 37/50
-118/118 [==============================] - 15s 124ms/step - loss: 6.3820
+118/118 [==============================] - 41s 346ms/step - loss: 6.7713
 Epoch 38/50
-118/118 [==============================] - 15s 124ms/step - loss: 6.2560
+118/118 [==============================] - 41s 346ms/step - loss: 6.8245
 Epoch 39/50
-118/118 [==============================] - 15s 124ms/step - loss: 6.1237
+118/118 [==============================] - 41s 346ms/step - loss: 6.7953
 Epoch 40/50
-118/118 [==============================] - 15s 124ms/step - loss: 6.0485
+118/118 [==============================] - 41s 346ms/step - loss: 6.7573
 Epoch 41/50
-118/118 [==============================] - 15s 124ms/step - loss: 5.8846
+118/118 [==============================] - 41s 346ms/step - loss: 6.7621
 Epoch 42/50
-118/118 [==============================] - 15s 124ms/step - loss: 5.7548
+118/118 [==============================] - 41s 346ms/step - loss: 6.7473
 Epoch 43/50
-118/118 [==============================] - 15s 124ms/step - loss: 6.0794
+118/118 [==============================] - 41s 346ms/step - loss: 6.3506
 Epoch 44/50
-118/118 [==============================] - 15s 124ms/step - loss: 5.9023
+118/118 [==============================] - 41s 346ms/step - loss: 6.1783
 Epoch 45/50
-118/118 [==============================] - 15s 124ms/step - loss: 5.9548
+118/118 [==============================] - 41s 345ms/step - loss: 6.0123
 Epoch 46/50
-118/118 [==============================] - 15s 124ms/step - loss: 6.0809
+118/118 [==============================] - 41s 346ms/step - loss: 5.9238
 Epoch 47/50
-118/118 [==============================] - 15s 124ms/step - loss: 5.6123
+118/118 [==============================] - 41s 345ms/step - loss: 5.9278
 Epoch 48/50
-118/118 [==============================] - 15s 124ms/step - loss: 5.5667
+118/118 [==============================] - 41s 346ms/step - loss: 5.7985
 Epoch 49/50
-118/118 [==============================] - 15s 124ms/step - loss: 5.4573
+118/118 [==============================] - 41s 346ms/step - loss: 6.0905
 Epoch 50/50
-118/118 [==============================] - 15s 124ms/step - loss: 5.4597
+118/118 [==============================] - 41s 346ms/step - loss: 5.9406
 
 ```
 </div>
@@ -435,9 +432,7 @@ plt.show()
 ```
 
 
-    
 ![png](/img/examples/vision/semantic_image_clustering/semantic_image_clustering_24_0.png)
-    
 
 
 ---
@@ -456,7 +451,7 @@ feature_vectors = tf.math.l2_normalize(feature_vectors, -1)
 
 <div class="k-default-codeblock">
 ```
-120/120 [==============================] - 4s 18ms/step
+120/120 [==============================] - 7s 35ms/step
 
 ```
 </div>
@@ -482,7 +477,7 @@ neighbours = np.reshape(np.array(neighbours), (-1, k_neighbours))
 
 <div class="k-default-codeblock">
 ```
-100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 120/120 [00:00<00:00, 304.24it/s]
+100%|██████████| 120/120 [00:01<00:00, 99.09it/s]
 
 ```
 </div>
@@ -508,9 +503,7 @@ for _ in range(nrows):
 ```
 
 
-    
 ![png](/img/examples/vision/semantic_image_clustering/semantic_image_clustering_31_0.png)
-    
 
 
 You notice that images on each row are visually similar, and belong to similar classes.
@@ -527,7 +520,7 @@ This loss tries to make sure that neighbours have the same clustering assignment
 
 class ClustersConsistencyLoss(keras.losses.Loss):
     def __init__(self):
-        super(ClustersConsistencyLoss, self).__init__()
+        super().__init__()
 
     def __call__(self, target, similarity, sample_weight=None):
         # Set targets to be ones.
@@ -550,7 +543,7 @@ assigning most of the instances to one cluster.
 
 class ClustersEntropyLoss(keras.losses.Loss):
     def __init__(self, entropy_loss_weight=1.0):
-        super(ClustersEntropyLoss, self).__init__()
+        super().__init__()
         self.entropy_loss_weight = entropy_loss_weight
 
     def __call__(self, target, cluster_probabilities, sample_weight=None):
@@ -672,107 +665,107 @@ clustering_learner.fit(x=inputs, y=labels, batch_size=512, epochs=50)
 <div class="k-default-codeblock">
 ```
 Epoch 1/50
-118/118 [==============================] - 20s 95ms/step - loss: 0.6655 - similarity_loss: 0.6642 - clustering_loss: 0.0013
+118/118 [==============================] - 41s 236ms/step - loss: 0.6638 - similarity_loss: 0.6631 - clustering_loss: 7.1000e-04
 Epoch 2/50
-118/118 [==============================] - 10s 86ms/step - loss: 0.6361 - similarity_loss: 0.6325 - clustering_loss: 0.0036
+118/118 [==============================] - 25s 209ms/step - loss: 0.6468 - similarity_loss: 0.6438 - clustering_loss: 0.0030
 Epoch 3/50
-118/118 [==============================] - 10s 85ms/step - loss: 0.6129 - similarity_loss: 0.6070 - clustering_loss: 0.0059
+118/118 [==============================] - 25s 211ms/step - loss: 0.6348 - similarity_loss: 0.6303 - clustering_loss: 0.0046
 Epoch 4/50
-118/118 [==============================] - 10s 85ms/step - loss: 0.6005 - similarity_loss: 0.5930 - clustering_loss: 0.0075
+118/118 [==============================] - 25s 212ms/step - loss: 0.6279 - similarity_loss: 0.6227 - clustering_loss: 0.0052
 Epoch 5/50
-118/118 [==============================] - 10s 85ms/step - loss: 0.5923 - similarity_loss: 0.5849 - clustering_loss: 0.0074
+118/118 [==============================] - 25s 211ms/step - loss: 0.6235 - similarity_loss: 0.6177 - clustering_loss: 0.0058
 Epoch 6/50
-118/118 [==============================] - 10s 86ms/step - loss: 0.5879 - similarity_loss: 0.5795 - clustering_loss: 0.0084
+118/118 [==============================] - 25s 212ms/step - loss: 0.6204 - similarity_loss: 0.6139 - clustering_loss: 0.0065
 Epoch 7/50
-118/118 [==============================] - 10s 85ms/step - loss: 0.5841 - similarity_loss: 0.5754 - clustering_loss: 0.0087
+118/118 [==============================] - 25s 212ms/step - loss: 0.6188 - similarity_loss: 0.6113 - clustering_loss: 0.0076
 Epoch 8/50
-118/118 [==============================] - 10s 85ms/step - loss: 0.5817 - similarity_loss: 0.5733 - clustering_loss: 0.0084
+118/118 [==============================] - 25s 212ms/step - loss: 0.6165 - similarity_loss: 0.6093 - clustering_loss: 0.0072
 Epoch 9/50
-118/118 [==============================] - 10s 85ms/step - loss: 0.5811 - similarity_loss: 0.5717 - clustering_loss: 0.0094
+118/118 [==============================] - 25s 212ms/step - loss: 0.6151 - similarity_loss: 0.6077 - clustering_loss: 0.0074
 Epoch 10/50
-118/118 [==============================] - 10s 85ms/step - loss: 0.5797 - similarity_loss: 0.5697 - clustering_loss: 0.0100
+118/118 [==============================] - 25s 212ms/step - loss: 0.6143 - similarity_loss: 0.6061 - clustering_loss: 0.0082
 Epoch 11/50
-118/118 [==============================] - 10s 86ms/step - loss: 0.5767 - similarity_loss: 0.5676 - clustering_loss: 0.0091
+118/118 [==============================] - 25s 212ms/step - loss: 0.6133 - similarity_loss: 0.6050 - clustering_loss: 0.0083
 Epoch 12/50
-118/118 [==============================] - 10s 86ms/step - loss: 0.5771 - similarity_loss: 0.5667 - clustering_loss: 0.0104
+118/118 [==============================] - 25s 212ms/step - loss: 0.6125 - similarity_loss: 0.6040 - clustering_loss: 0.0085
 Epoch 13/50
-118/118 [==============================] - 10s 86ms/step - loss: 0.5755 - similarity_loss: 0.5661 - clustering_loss: 0.0094
+118/118 [==============================] - 25s 212ms/step - loss: 0.6115 - similarity_loss: 0.6033 - clustering_loss: 0.0082
 Epoch 14/50
-118/118 [==============================] - 10s 86ms/step - loss: 0.5746 - similarity_loss: 0.5653 - clustering_loss: 0.0093
+118/118 [==============================] - 25s 211ms/step - loss: 0.6103 - similarity_loss: 0.6023 - clustering_loss: 0.0080
 Epoch 15/50
-118/118 [==============================] - 10s 86ms/step - loss: 0.5743 - similarity_loss: 0.5640 - clustering_loss: 0.0103
+118/118 [==============================] - 25s 212ms/step - loss: 0.6103 - similarity_loss: 0.6017 - clustering_loss: 0.0086
 Epoch 16/50
-118/118 [==============================] - 10s 86ms/step - loss: 0.5738 - similarity_loss: 0.5636 - clustering_loss: 0.0102
+118/118 [==============================] - 25s 212ms/step - loss: 0.6096 - similarity_loss: 0.6012 - clustering_loss: 0.0084
 Epoch 17/50
-118/118 [==============================] - 10s 86ms/step - loss: 0.5732 - similarity_loss: 0.5627 - clustering_loss: 0.0106
+118/118 [==============================] - 25s 212ms/step - loss: 0.6090 - similarity_loss: 0.6006 - clustering_loss: 0.0084
 Epoch 18/50
-118/118 [==============================] - 10s 86ms/step - loss: 0.5723 - similarity_loss: 0.5621 - clustering_loss: 0.0102
+118/118 [==============================] - 25s 212ms/step - loss: 0.6085 - similarity_loss: 0.6001 - clustering_loss: 0.0084
 Epoch 19/50
-118/118 [==============================] - 10s 86ms/step - loss: 0.5711 - similarity_loss: 0.5615 - clustering_loss: 0.0096
+118/118 [==============================] - 25s 212ms/step - loss: 0.6083 - similarity_loss: 0.5997 - clustering_loss: 0.0086
 Epoch 20/50
-118/118 [==============================] - 10s 86ms/step - loss: 0.5693 - similarity_loss: 0.5596 - clustering_loss: 0.0097
+118/118 [==============================] - 25s 212ms/step - loss: 0.6084 - similarity_loss: 0.5993 - clustering_loss: 0.0090
 Epoch 21/50
-118/118 [==============================] - 10s 86ms/step - loss: 0.5699 - similarity_loss: 0.5600 - clustering_loss: 0.0099
+118/118 [==============================] - 25s 211ms/step - loss: 0.6081 - similarity_loss: 0.5990 - clustering_loss: 0.0092
 Epoch 22/50
-118/118 [==============================] - 10s 86ms/step - loss: 0.5694 - similarity_loss: 0.5592 - clustering_loss: 0.0102
+118/118 [==============================] - 25s 212ms/step - loss: 0.6080 - similarity_loss: 0.5986 - clustering_loss: 0.0094
 Epoch 23/50
-118/118 [==============================] - 10s 86ms/step - loss: 0.5703 - similarity_loss: 0.5595 - clustering_loss: 0.0108
+118/118 [==============================] - 25s 212ms/step - loss: 0.6071 - similarity_loss: 0.5985 - clustering_loss: 0.0086
 Epoch 24/50
-118/118 [==============================] - 10s 86ms/step - loss: 0.5687 - similarity_loss: 0.5587 - clustering_loss: 0.0101
+118/118 [==============================] - 25s 211ms/step - loss: 0.6069 - similarity_loss: 0.5982 - clustering_loss: 0.0088
 Epoch 25/50
-118/118 [==============================] - 10s 86ms/step - loss: 0.5688 - similarity_loss: 0.5585 - clustering_loss: 0.0103
+118/118 [==============================] - 25s 212ms/step - loss: 0.6071 - similarity_loss: 0.5977 - clustering_loss: 0.0094
 Epoch 26/50
-118/118 [==============================] - 10s 86ms/step - loss: 0.5690 - similarity_loss: 0.5583 - clustering_loss: 0.0108
+118/118 [==============================] - 25s 212ms/step - loss: 0.6068 - similarity_loss: 0.5974 - clustering_loss: 0.0093
 Epoch 27/50
-118/118 [==============================] - 10s 86ms/step - loss: 0.5679 - similarity_loss: 0.5572 - clustering_loss: 0.0107
+118/118 [==============================] - 25s 212ms/step - loss: 0.6057 - similarity_loss: 0.5971 - clustering_loss: 0.0086
 Epoch 28/50
-118/118 [==============================] - 10s 86ms/step - loss: 0.5681 - similarity_loss: 0.5573 - clustering_loss: 0.0108
+118/118 [==============================] - 25s 212ms/step - loss: 0.6064 - similarity_loss: 0.5969 - clustering_loss: 0.0096
 Epoch 29/50
-118/118 [==============================] - 10s 86ms/step - loss: 0.5682 - similarity_loss: 0.5572 - clustering_loss: 0.0111
+118/118 [==============================] - 25s 212ms/step - loss: 0.6063 - similarity_loss: 0.5971 - clustering_loss: 0.0092
 Epoch 30/50
-118/118 [==============================] - 10s 86ms/step - loss: 0.5675 - similarity_loss: 0.5571 - clustering_loss: 0.0104
+118/118 [==============================] - 25s 212ms/step - loss: 0.6063 - similarity_loss: 0.5967 - clustering_loss: 0.0096
 Epoch 31/50
-118/118 [==============================] - 10s 86ms/step - loss: 0.5679 - similarity_loss: 0.5562 - clustering_loss: 0.0116
+118/118 [==============================] - 25s 212ms/step - loss: 0.6061 - similarity_loss: 0.5966 - clustering_loss: 0.0095
 Epoch 32/50
-118/118 [==============================] - 10s 86ms/step - loss: 0.5663 - similarity_loss: 0.5554 - clustering_loss: 0.0109
+118/118 [==============================] - 25s 211ms/step - loss: 0.6055 - similarity_loss: 0.5964 - clustering_loss: 0.0091
 Epoch 33/50
-118/118 [==============================] - 10s 86ms/step - loss: 0.5665 - similarity_loss: 0.5556 - clustering_loss: 0.0109
+118/118 [==============================] - 25s 212ms/step - loss: 0.6051 - similarity_loss: 0.5960 - clustering_loss: 0.0091
 Epoch 34/50
-118/118 [==============================] - 10s 86ms/step - loss: 0.5679 - similarity_loss: 0.5568 - clustering_loss: 0.0111
+118/118 [==============================] - 25s 212ms/step - loss: 0.6053 - similarity_loss: 0.5959 - clustering_loss: 0.0094
 Epoch 35/50
-118/118 [==============================] - 10s 86ms/step - loss: 0.5680 - similarity_loss: 0.5563 - clustering_loss: 0.0117
+118/118 [==============================] - 25s 211ms/step - loss: 0.6048 - similarity_loss: 0.5960 - clustering_loss: 0.0088
 Epoch 36/50
-118/118 [==============================] - 10s 86ms/step - loss: 0.5665 - similarity_loss: 0.5553 - clustering_loss: 0.0112
+118/118 [==============================] - 25s 212ms/step - loss: 0.6050 - similarity_loss: 0.5956 - clustering_loss: 0.0093
 Epoch 37/50
-118/118 [==============================] - 10s 86ms/step - loss: 0.5674 - similarity_loss: 0.5556 - clustering_loss: 0.0118
+118/118 [==============================] - 25s 211ms/step - loss: 0.6047 - similarity_loss: 0.5955 - clustering_loss: 0.0092
 Epoch 38/50
-118/118 [==============================] - 10s 86ms/step - loss: 0.5648 - similarity_loss: 0.5543 - clustering_loss: 0.0105
+118/118 [==============================] - 25s 212ms/step - loss: 0.6050 - similarity_loss: 0.5954 - clustering_loss: 0.0095
 Epoch 39/50
-118/118 [==============================] - 10s 86ms/step - loss: 0.5653 - similarity_loss: 0.5549 - clustering_loss: 0.0103
+118/118 [==============================] - 25s 211ms/step - loss: 0.6044 - similarity_loss: 0.5952 - clustering_loss: 0.0091
 Epoch 40/50
-118/118 [==============================] - 10s 86ms/step - loss: 0.5656 - similarity_loss: 0.5544 - clustering_loss: 0.0113
+118/118 [==============================] - 25s 211ms/step - loss: 0.6048 - similarity_loss: 0.5949 - clustering_loss: 0.0100
 Epoch 41/50
-118/118 [==============================] - 10s 86ms/step - loss: 0.5644 - similarity_loss: 0.5542 - clustering_loss: 0.0102
+118/118 [==============================] - 25s 211ms/step - loss: 0.6047 - similarity_loss: 0.5951 - clustering_loss: 0.0096
 Epoch 42/50
-118/118 [==============================] - 10s 86ms/step - loss: 0.5658 - similarity_loss: 0.5540 - clustering_loss: 0.0118
+118/118 [==============================] - 25s 212ms/step - loss: 0.6045 - similarity_loss: 0.5950 - clustering_loss: 0.0096
 Epoch 43/50
-118/118 [==============================] - 10s 86ms/step - loss: 0.5655 - similarity_loss: 0.5539 - clustering_loss: 0.0116
+118/118 [==============================] - 25s 212ms/step - loss: 0.6042 - similarity_loss: 0.5947 - clustering_loss: 0.0095
 Epoch 44/50
-118/118 [==============================] - 10s 87ms/step - loss: 0.5662 - similarity_loss: 0.5543 - clustering_loss: 0.0119
+118/118 [==============================] - 25s 212ms/step - loss: 0.6050 - similarity_loss: 0.5949 - clustering_loss: 0.0100
 Epoch 45/50
-118/118 [==============================] - 10s 86ms/step - loss: 0.5651 - similarity_loss: 0.5537 - clustering_loss: 0.0114
+118/118 [==============================] - 25s 213ms/step - loss: 0.6037 - similarity_loss: 0.5947 - clustering_loss: 0.0090
 Epoch 46/50
-118/118 [==============================] - 10s 86ms/step - loss: 0.5635 - similarity_loss: 0.5534 - clustering_loss: 0.0101
+118/118 [==============================] - 25s 212ms/step - loss: 0.6039 - similarity_loss: 0.5946 - clustering_loss: 0.0093
 Epoch 47/50
-118/118 [==============================] - 10s 86ms/step - loss: 0.5633 - similarity_loss: 0.5529 - clustering_loss: 0.0103
+118/118 [==============================] - 25s 212ms/step - loss: 0.6041 - similarity_loss: 0.5945 - clustering_loss: 0.0096
 Epoch 48/50
-118/118 [==============================] - 10s 86ms/step - loss: 0.5643 - similarity_loss: 0.5526 - clustering_loss: 0.0117
+118/118 [==============================] - 25s 212ms/step - loss: 0.6045 - similarity_loss: 0.5945 - clustering_loss: 0.0100
 Epoch 49/50
-118/118 [==============================] - 10s 86ms/step - loss: 0.5653 - similarity_loss: 0.5532 - clustering_loss: 0.0121
+118/118 [==============================] - 25s 212ms/step - loss: 0.6039 - similarity_loss: 0.5944 - clustering_loss: 0.0095
 Epoch 50/50
-118/118 [==============================] - 10s 86ms/step - loss: 0.5641 - similarity_loss: 0.5525 - clustering_loss: 0.0117
+118/118 [==============================] - 25s 212ms/step - loss: 0.6039 - similarity_loss: 0.5943 - clustering_loss: 0.0097
 
-<tensorflow.python.keras.callbacks.History at 0x7f1da373ea10>
+<keras.callbacks.History at 0x7fe89414bfd0>
 
 ```
 </div>
@@ -787,9 +780,7 @@ plt.show()
 ```
 
 
-    
 ![png](/img/examples/vision/semantic_image_clustering/semantic_image_clustering_45_0.png)
-    
 
 
 ---
@@ -811,7 +802,7 @@ cluster_confidence = tf.math.reduce_max(clustering_probs, axis=-1).numpy()
 
 <div class="k-default-codeblock">
 ```
-120/120 [==============================] - 3s 20ms/step
+120/120 [==============================] - 5s 35ms/step
 
 ```
 </div>
@@ -829,26 +820,26 @@ for c in range(num_clusters):
 
 <div class="k-default-codeblock">
 ```
-cluster 0 : 4132
-cluster 1 : 4057
-cluster 2 : 1713
-cluster 3 : 2801
-cluster 4 : 2511
-cluster 5 : 2655
-cluster 6 : 2517
-cluster 7 : 4493
-cluster 8 : 3687
-cluster 9 : 1716
-cluster 10 : 3397
-cluster 11 : 3606
-cluster 12 : 3325
-cluster 13 : 4010
-cluster 14 : 2188
-cluster 15 : 3278
-cluster 16 : 1902
-cluster 17 : 1858
-cluster 18 : 3828
-cluster 19 : 2326
+cluster 0 : 3984
+cluster 1 : 2029
+cluster 2 : 2400
+cluster 3 : 1851
+cluster 4 : 2537
+cluster 5 : 4901
+cluster 6 : 2832
+cluster 7 : 4165
+cluster 8 : 2370
+cluster 9 : 4054
+cluster 10 : 3588
+cluster 11 : 1469
+cluster 12 : 3497
+cluster 13 : 3030
+cluster 14 : 2266
+cluster 15 : 4296
+cluster 16 : 2329
+cluster 17 : 3335
+cluster 18 : 1664
+cluster 19 : 3403
 
 ```
 </div>
@@ -876,9 +867,7 @@ for c in range(num_clusters):
 ```
 
 
-    
 ![png](/img/examples/vision/semantic_image_clustering/semantic_image_clustering_53_0.png)
-    
 
 
 ### Compute clustering accuracy
@@ -909,26 +898,26 @@ for c in range(num_clusters):
 
 <div class="k-default-codeblock">
 ```
-cluster 0 label is: frog  -  accuracy: 23.11 %
-cluster 1 label is: truck  -  accuracy: 23.56 %
-cluster 2 label is: bird  -  accuracy: 29.01 %
-cluster 3 label is: dog  -  accuracy: 16.67 %
-cluster 4 label is: truck  -  accuracy: 27.8 %
-cluster 5 label is: ship  -  accuracy: 36.91 %
-cluster 6 label is: deer  -  accuracy: 27.89 %
-cluster 7 label is: dog  -  accuracy: 23.84 %
-cluster 8 label is: airplane  -  accuracy: 21.7 %
-cluster 9 label is: bird  -  accuracy: 22.38 %
-cluster 10 label is: automobile  -  accuracy: 24.76 %
-cluster 11 label is: automobile  -  accuracy: 24.15 %
-cluster 12 label is: cat  -  accuracy: 17.44 %
-cluster 13 label is: truck  -  accuracy: 23.44 %
-cluster 14 label is: ship  -  accuracy: 31.67 %
-cluster 15 label is: airplane  -  accuracy: 41.06 %
-cluster 16 label is: deer  -  accuracy: 22.77 %
-cluster 17 label is: airplane  -  accuracy: 15.18 %
-cluster 18 label is: frog  -  accuracy: 33.31 %
-cluster 19 label is: deer  -  accuracy: 18.7 %
+cluster 0 label is: frog  -  accuracy: 25.13 %
+cluster 1 label is: bird  -  accuracy: 25.78 %
+cluster 2 label is: dog  -  accuracy: 23.17 %
+cluster 3 label is: bird  -  accuracy: 19.72 %
+cluster 4 label is: ship  -  accuracy: 30.15 %
+cluster 5 label is: truck  -  accuracy: 21.93 %
+cluster 6 label is: airplane  -  accuracy: 34.82 %
+cluster 7 label is: cat  -  accuracy: 16.69 %
+cluster 8 label is: deer  -  accuracy: 24.47 %
+cluster 9 label is: dog  -  accuracy: 19.26 %
+cluster 10 label is: airplane  -  accuracy: 30.96 %
+cluster 11 label is: bird  -  accuracy: 26.89 %
+cluster 12 label is: horse  -  accuracy: 23.39 %
+cluster 13 label is: automobile  -  accuracy: 29.9 %
+cluster 14 label is: ship  -  accuracy: 27.23 %
+cluster 15 label is: frog  -  accuracy: 21.76 %
+cluster 16 label is: frog  -  accuracy: 28.98 %
+cluster 17 label is: truck  -  accuracy: 33.13 %
+cluster 18 label is: deer  -  accuracy: 18.51 %
+cluster 19 label is: airplane  -  accuracy: 25.21 %
 
 ```
 </div>
@@ -942,3 +931,8 @@ fine-tuning step through self-labeling, as described in the [original SCAN paper
 Note that unsupervised image clustering techniques are not expected to outperform the accuracy
 of supervised image classification techniques, rather showing that they can learn the semantics
 of the images and group them into clusters that are similar to their original classes.
+
+**Example available on HuggingFace**
+| Trained Model | Demo |
+| :--: | :--: |
+| [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Model-Semantic%20Image%20Clustering-black.svg)](https://huggingface.co/keras-io/semantic-image-clustering) | [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Spaces-Semantic%20Image%20Clustering-black.svg)](https://huggingface.co/spaces/keras-io/semantic-image-clustering) |

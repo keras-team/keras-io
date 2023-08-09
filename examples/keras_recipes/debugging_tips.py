@@ -4,6 +4,7 @@ Author: [fchollet](https://twitter.com/fchollet)
 Date created: 2020/05/16
 Last modified: 2020/05/16
 Description: Four simple tips to help you debug your Keras code.
+Accelerator: GPU
 """
 
 """
@@ -287,6 +288,7 @@ idea being to use larger batches and a larger learning rate than usual, since ou
 """
 
 import numpy as np
+
 
 # Construct an instance of MyModel
 def get_model():

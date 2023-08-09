@@ -9,6 +9,12 @@
 <img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/guides/ipynb/keras_tuner/visualize_tuning.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/guides/keras_tuner/visualize_tuning.py)
 
 
+
+
+```python
+!pip install keras-tuner -q
+```
+
 ---
 ## Introduction
 
@@ -33,7 +39,7 @@ The first step is to download and format the data.
 
 ```python
 import numpy as np
-import keras_tuner as kt
+import keras_tuner
 from tensorflow import keras
 from tensorflow.keras import layers
 
@@ -53,8 +59,9 @@ print(y_test.shape)
 
 <div class="k-default-codeblock">
 ```
-Downloading data from https://storage.googleapis.com/tensorflow/tf-keras-datasets/mnist.npz
-11493376/11490434 [==============================] - 0s 0us/step
+2022-04-28 04:13:37.237059: W tensorflow/stream_executor/platform/default/dso_loader.cc:64] Could not load dynamic library 'libcudart.so.11.0'; dlerror: libcudart.so.11.0: cannot open shared object file: No such file or directory
+2022-04-28 04:13:37.237117: I tensorflow/stream_executor/cuda/cudart_stub.cc:29] Ignore above cudart dlerror if you do not have a GPU set up on your machine.
+
 (60000, 28, 28, 1)
 (60000,)
 (10000, 28, 28, 1)
@@ -81,7 +88,7 @@ def build_model(hp):
         for i in range(hp.Int("mlp_layers", 1, 3)):
             # Number of units of each layer are
             # different hyperparameters with different names.
-            output_node = layers.Dense(
+            x = layers.Dense(
                 units=hp.Int(f"units_{i}", 32, 128, step=32), activation="relu",
             )(x)
     else:
@@ -119,7 +126,7 @@ CNN and MLP.
 ```python
 
 # Initialize the `HyperParameters` and set the values.
-hp = kt.HyperParameters()
+hp = keras_tuner.HyperParameters()
 hp.values["model_type"] = "cnn"
 # Build the model using the `HyperParameters`.
 model = build_model(hp)
@@ -139,17 +146,19 @@ model.summary()
 ```
 Model: "model"
 _________________________________________________________________
-Layer (type)                 Output Shape              Param #   
+ Layer (type)                Output Shape              Param #   
 =================================================================
-input_1 (InputLayer)         [(None, 28, 28, 1)]       0         
-_________________________________________________________________
-conv2d (Conv2D)              (None, 26, 26, 32)        320       
-_________________________________________________________________
-max_pooling2d (MaxPooling2D) (None, 13, 13, 32)        0         
-_________________________________________________________________
-flatten (Flatten)            (None, 5408)              0         
-_________________________________________________________________
-dense (Dense)                (None, 10)                54090     
+ input_1 (InputLayer)        [(None, 28, 28, 1)]       0         
+                                                                 
+ conv2d (Conv2D)             (None, 26, 26, 32)        320       
+                                                                 
+ max_pooling2d (MaxPooling2D  (None, 13, 13, 32)       0         
+ )                                                               
+                                                                 
+ flatten (Flatten)           (None, 5408)              0         
+                                                                 
+ dense (Dense)               (None, 10)                54090     
+                                                                 
 =================================================================
 Total params: 54,410
 Trainable params: 54,410
@@ -157,18 +166,25 @@ Non-trainable params: 0
 _________________________________________________________________
 Model: "model_1"
 _________________________________________________________________
-Layer (type)                 Output Shape              Param #   
+ Layer (type)                Output Shape              Param #   
 =================================================================
-input_2 (InputLayer)         [(None, 28, 28, 1)]       0         
-_________________________________________________________________
-flatten_1 (Flatten)          (None, 784)               0         
-_________________________________________________________________
-dense_2 (Dense)              (None, 10)                7850      
+ input_2 (InputLayer)        [(None, 28, 28, 1)]       0         
+                                                                 
+ flatten_1 (Flatten)         (None, 784)               0         
+                                                                 
+ dense_2 (Dense)             (None, 10)                7850      
+                                                                 
 =================================================================
 Total params: 7,850
 Trainable params: 7,850
 Non-trainable params: 0
 _________________________________________________________________
+
+2022-04-28 04:13:39.859939: W tensorflow/stream_executor/platform/default/dso_loader.cc:64] Could not load dynamic library 'libcuda.so.1'; dlerror: libcuda.so.1: cannot open shared object file: No such file or directory
+2022-04-28 04:13:39.860040: W tensorflow/stream_executor/cuda/cuda_driver.cc:269] failed call to cuInit: UNKNOWN ERROR (303)
+2022-04-28 04:13:39.860073: I tensorflow/stream_executor/cuda/cuda_diagnostics.cc:156] kernel driver does not appear to be running on this host (haifengj.c.googlers.com): /proc/driver/nvidia/version does not exist
+2022-04-28 04:13:39.860436: I tensorflow/core/platform/cpu_feature_guard.cc:151] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  AVX2 FMA
+To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
 
 ```
 </div>
@@ -177,7 +193,7 @@ accuracy as the metric for selecting models.
 
 
 ```python
-tuner = kt.RandomSearch(
+tuner = keras_tuner.RandomSearch(
     build_model,
     max_trials=10,
     # Do not resume the previous search in the same directory.
@@ -206,15 +222,15 @@ tuner.search(
 
 <div class="k-default-codeblock">
 ```
-Trial 10 Complete [00h 00m 04s]
-val_accuracy: 0.9230833053588867
+Trial 10 Complete [00h 00m 08s]
+val_accuracy: 0.9115833044052124
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-Best val_accuracy So Far: 0.9890000224113464
-Total elapsed time: 00h 07m 43s
+Best val_accuracy So Far: 0.984749972820282
+Total elapsed time: 00h 10m 28s
 INFO:tensorflow:Oracle triggered exit
 
 ```
@@ -240,7 +256,8 @@ table with the different hyperparameter values and evaluation metrics.
 ![Table view](https://i.imgur.com/OMcQdOw.png)
 
 On the left side, you can specify the filters for certain hyperparameters. For
-example, you can specify to only view the MLP models without the dropout layer and with 1 to 2 dense layers.
+example, you can specify to only view the MLP models without the dropout layer
+and with 1 to 2 dense layers.
 
 ![Filtered table view](https://i.imgur.com/yZpfaxN.png)
 
@@ -254,7 +271,7 @@ The axes are the hyperparameters and evaluation metrics.
 
 ![Parallel coordinates view](https://i.imgur.com/PJ7HQUQ.png)
 
-In the scatter plot matrix view, each dot is a trial.
-The plots are projections of the trials on planes with different hyperparameter and metrics as the axes.
+In the scatter plot matrix view, each dot is a trial. The plots are projections
+of the trials on planes with different hyperparameter and metrics as the axes.
 
 ![Scatter plot matrix view](https://i.imgur.com/zjPjh6o.png)

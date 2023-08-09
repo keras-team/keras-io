@@ -375,7 +375,7 @@ def multi_scale_residual_block(input_tensor, channels):
         up_sampling_module(dual_attention_unit_block(level3_skff))
     )
     # SKFF 2
-    skff_ = selective_kernel_feature_fusion(level1_dau_2, level3_dau_2, level3_dau_2)
+    skff_ = selective_kernel_feature_fusion(level1_dau_2, level2_dau_2, level3_dau_2)
     conv = layers.Conv2D(channels, kernel_size=(3, 3), padding="same")(skff_)
     return layers.Add()([input_tensor, conv])
 
@@ -632,7 +632,7 @@ def plot_results(images, titles, figure_size=(12, 12)):
 
 
 def infer(original_image):
-    image = keras.preprocessing.image.img_to_array(original_image)
+    image = keras.utils.img_to_array(original_image)
     image = image.astype("float32") / 255.0
     image = np.expand_dims(image, axis=0)
     output = model.predict(image)
@@ -652,6 +652,7 @@ def infer(original_image):
 We compare the test images from LOLDataset enhanced by MIRNet with images
 enhanced via the `PIL.ImageOps.autocontrast()` function.
 
+You can use the trained model hosted on [Hugging Face Hub](https://huggingface.co/keras-io/lowlight-enhance-mirnet) and try the demo on [Hugging Face Spaces](https://huggingface.co/spaces/keras-io/Enhance_Low_Light_Image).
 
 ```python
 
@@ -687,4 +688,3 @@ for low_light_image in random.sample(test_low_light_images, 6):
 
 
 ![png](/img/examples/vision/mirnet/mirnet_21_5.png)
-

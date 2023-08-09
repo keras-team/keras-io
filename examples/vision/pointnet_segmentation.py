@@ -4,6 +4,7 @@ Author: [Soumik Rakshit](https://github.com/soumik12345), [Sayak Paul](https://g
 Date created: 2020/10/23
 Last modified: 2020/10/24
 Description: Implementation of a PointNet-based model for segmenting point clouds.
+Accelerator: GPU
 """
 """
 ## Introduction
@@ -396,7 +397,7 @@ class OrthogonalRegularizer(keras.regularizers.Regularizer):
         return tf.reduce_sum(self.l2reg * tf.square(xxt - self.identity))
 
     def get_config(self):
-        config = super(TransformerEncoder, self).get_config()
+        config = super().get_config()
         config.update({"num_features": self.num_features, "l2reg_strength": self.l2reg})
         return config
 
@@ -523,7 +524,6 @@ Finally, we implement a utility for running our experiments and launch model tra
 
 
 def run_experiment(epochs):
-
     segmentation_model = get_shape_segmentation_model(num_points, num_classes)
     segmentation_model.compile(
         optimizer=keras.optimizers.Adam(learning_rate=lr_schedule),

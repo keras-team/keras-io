@@ -11,7 +11,6 @@
 
 
 ---
-
 ## Wasserstein GAN (WGAN) with Gradient Penalty (GP)
 
 The original [Wasserstein GAN](https://arxiv.org/abs/1701.07875) leverages the
@@ -23,30 +22,30 @@ constraint. Though weight clipping works, it can be a problematic way to enforce
 1-Lipschitz constraint and can cause undesirable behavior, e.g. a very deep WGAN
 discriminator (critic) often fails to converge.
 
-The [WGAN-GP](https://arxiv.org/pdf/1704.00028.pdf) method proposes an
+The [WGAN-GP](https://arxiv.org/abs/1704.00028) method proposes an
 alternative to weight clipping to ensure smooth training. Instead of clipping
 the weights, the authors proposed a "gradient penalty" by adding a loss term
 that keeps the L2 norm of the discriminator gradients close to 1.
 
 ---
-
 ## Setup
 
+
 ```python
-import numpy as np
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
+
 ```
 
 ---
-
 ## Prepare the Fashion-MNIST data
 
 To demonstrate how to train WGAN-GP, we will be using the
 [Fashion-MNIST](https://github.com/zalandoresearch/fashion-mnist) dataset. Each
 sample in this dataset is a 28x28 grayscale image associated with a label from
 10 classes (e.g. trouser, pullover, sneaker, etc.)
+
 
 ```python
 IMG_SHAPE = (28, 28, 1)
@@ -63,11 +62,21 @@ print(f"Shape of the images in the dataset: {train_images.shape[1:]}")
 # Reshape each sample to (28, 28, 1) and normalize the pixel values in the [-1, 1] range
 train_images = train_images.reshape(train_images.shape[0], *IMG_SHAPE).astype("float32")
 train_images = (train_images - 127.5) / 127.5
-
 ```
 
 <div class="k-default-codeblock">
 ```
+Downloading data from https://storage.googleapis.com/tensorflow/tf-keras-datasets/train-labels-idx1-ubyte.gz
+32768/29515 [=================================] - 0s 0us/step
+40960/29515 [=========================================] - 0s 0us/step
+Downloading data from https://storage.googleapis.com/tensorflow/tf-keras-datasets/train-images-idx3-ubyte.gz
+26427392/26421880 [==============================] - 0s 0us/step
+26435584/26421880 [==============================] - 0s 0us/step
+Downloading data from https://storage.googleapis.com/tensorflow/tf-keras-datasets/t10k-labels-idx1-ubyte.gz
+16384/5148 [===============================================================================================] - 0s 0us/step
+Downloading data from https://storage.googleapis.com/tensorflow/tf-keras-datasets/t10k-images-idx3-ubyte.gz
+4423680/4422102 [==============================] - 0s 0us/step
+4431872/4422102 [==============================] - 0s 0us/step
 Number of examples: 60000
 Shape of the images in the dataset: (28, 28)
 
@@ -81,12 +90,13 @@ using strided convolutions, this can result in a shape with odd dimensions.
 For example,
 `(28, 28) -> Conv_s2 -> (14, 14) -> Conv_s2 -> (7, 7) -> Conv_s2 ->(3, 3)`.
 
-While peforming upsampling in the generator part of the network, we won't get 
+While performing upsampling in the generator part of the network, we won't get
 the same input shape as the original images if we aren't careful. To avoid this,
 we will do something much simpler:
 - In the discriminator: "zero pad" the input to change the shape to `(32, 32, 1)`
 for each sample; and
 - Ihe generator: crop the final output to match the shape with input shape.
+
 
 ```python
 
@@ -172,44 +182,45 @@ def get_discriminator_model():
 
 d_model = get_discriminator_model()
 d_model.summary()
-
 ```
 
 <div class="k-default-codeblock">
 ```
 Model: "discriminator"
 _________________________________________________________________
-Layer (type)                 Output Shape              Param #   
+ Layer (type)                Output Shape              Param #   
 =================================================================
-input_1 (InputLayer)         [(None, 28, 28, 1)]       0         
-_________________________________________________________________
-zero_padding2d (ZeroPadding2 (None, 32, 32, 1)         0         
-_________________________________________________________________
-conv2d (Conv2D)              (None, 16, 16, 64)        1664      
-_________________________________________________________________
-leaky_re_lu (LeakyReLU)      (None, 16, 16, 64)        0         
-_________________________________________________________________
-conv2d_1 (Conv2D)            (None, 8, 8, 128)         204928    
-_________________________________________________________________
-leaky_re_lu_1 (LeakyReLU)    (None, 8, 8, 128)         0         
-_________________________________________________________________
-dropout (Dropout)            (None, 8, 8, 128)         0         
-_________________________________________________________________
-conv2d_2 (Conv2D)            (None, 4, 4, 256)         819456    
-_________________________________________________________________
-leaky_re_lu_2 (LeakyReLU)    (None, 4, 4, 256)         0         
-_________________________________________________________________
-dropout_1 (Dropout)          (None, 4, 4, 256)         0         
-_________________________________________________________________
-conv2d_3 (Conv2D)            (None, 2, 2, 512)         3277312   
-_________________________________________________________________
-leaky_re_lu_3 (LeakyReLU)    (None, 2, 2, 512)         0         
-_________________________________________________________________
-flatten (Flatten)            (None, 2048)              0         
-_________________________________________________________________
-dropout_2 (Dropout)          (None, 2048)              0         
-_________________________________________________________________
-dense (Dense)                (None, 1)                 2049      
+ input_1 (InputLayer)        [(None, 28, 28, 1)]       0         
+                                                                 
+ zero_padding2d (ZeroPadding  (None, 32, 32, 1)        0         
+ 2D)                                                             
+                                                                 
+ conv2d (Conv2D)             (None, 16, 16, 64)        1664      
+                                                                 
+ leaky_re_lu (LeakyReLU)     (None, 16, 16, 64)        0         
+                                                                 
+ conv2d_1 (Conv2D)           (None, 8, 8, 128)         204928    
+                                                                 
+ leaky_re_lu_1 (LeakyReLU)   (None, 8, 8, 128)         0         
+                                                                 
+ dropout (Dropout)           (None, 8, 8, 128)         0         
+                                                                 
+ conv2d_2 (Conv2D)           (None, 4, 4, 256)         819456    
+                                                                 
+ leaky_re_lu_2 (LeakyReLU)   (None, 4, 4, 256)         0         
+                                                                 
+ dropout_1 (Dropout)         (None, 4, 4, 256)         0         
+                                                                 
+ conv2d_3 (Conv2D)           (None, 2, 2, 512)         3277312   
+                                                                 
+ leaky_re_lu_3 (LeakyReLU)   (None, 2, 2, 512)         0         
+                                                                 
+ flatten (Flatten)           (None, 2048)              0         
+                                                                 
+ dropout_2 (Dropout)         (None, 2048)              0         
+                                                                 
+ dense (Dense)               (None, 1)                 2049      
+                                                                 
 =================================================================
 Total params: 4,305,409
 Trainable params: 4,305,409
@@ -220,7 +231,6 @@ _________________________________________________________________
 </div>
 ---
 ## Create the generator
-
 
 
 ```python
@@ -293,50 +303,57 @@ def get_generator_model():
 
 g_model = get_generator_model()
 g_model.summary()
-
 ```
 
 <div class="k-default-codeblock">
 ```
 Model: "generator"
 _________________________________________________________________
-Layer (type)                 Output Shape              Param #   
+ Layer (type)                Output Shape              Param #   
 =================================================================
-input_2 (InputLayer)         [(None, 128)]             0         
-_________________________________________________________________
-dense_1 (Dense)              (None, 4096)              524288    
-_________________________________________________________________
-batch_normalization (BatchNo (None, 4096)              16384     
-_________________________________________________________________
-leaky_re_lu_4 (LeakyReLU)    (None, 4096)              0         
-_________________________________________________________________
-reshape (Reshape)            (None, 4, 4, 256)         0         
-_________________________________________________________________
-up_sampling2d (UpSampling2D) (None, 8, 8, 256)         0         
-_________________________________________________________________
-conv2d_4 (Conv2D)            (None, 8, 8, 128)         294912    
-_________________________________________________________________
-batch_normalization_1 (Batch (None, 8, 8, 128)         512       
-_________________________________________________________________
-leaky_re_lu_5 (LeakyReLU)    (None, 8, 8, 128)         0         
-_________________________________________________________________
-up_sampling2d_1 (UpSampling2 (None, 16, 16, 128)       0         
-_________________________________________________________________
-conv2d_5 (Conv2D)            (None, 16, 16, 64)        73728     
-_________________________________________________________________
-batch_normalization_2 (Batch (None, 16, 16, 64)        256       
-_________________________________________________________________
-leaky_re_lu_6 (LeakyReLU)    (None, 16, 16, 64)        0         
-_________________________________________________________________
-up_sampling2d_2 (UpSampling2 (None, 32, 32, 64)        0         
-_________________________________________________________________
-conv2d_6 (Conv2D)            (None, 32, 32, 1)         576       
-_________________________________________________________________
-batch_normalization_3 (Batch (None, 32, 32, 1)         4         
-_________________________________________________________________
-activation (Activation)      (None, 32, 32, 1)         0         
-_________________________________________________________________
-cropping2d (Cropping2D)      (None, 28, 28, 1)         0         
+ input_2 (InputLayer)        [(None, 128)]             0         
+                                                                 
+ dense_1 (Dense)             (None, 4096)              524288    
+                                                                 
+ batch_normalization (BatchN  (None, 4096)             16384     
+ ormalization)                                                   
+                                                                 
+ leaky_re_lu_4 (LeakyReLU)   (None, 4096)              0         
+                                                                 
+ reshape (Reshape)           (None, 4, 4, 256)         0         
+                                                                 
+ up_sampling2d (UpSampling2D  (None, 8, 8, 256)        0         
+ )                                                               
+                                                                 
+ conv2d_4 (Conv2D)           (None, 8, 8, 128)         294912    
+                                                                 
+ batch_normalization_1 (Batc  (None, 8, 8, 128)        512       
+ hNormalization)                                                 
+                                                                 
+ leaky_re_lu_5 (LeakyReLU)   (None, 8, 8, 128)         0         
+                                                                 
+ up_sampling2d_1 (UpSampling  (None, 16, 16, 128)      0         
+ 2D)                                                             
+                                                                 
+ conv2d_5 (Conv2D)           (None, 16, 16, 64)        73728     
+                                                                 
+ batch_normalization_2 (Batc  (None, 16, 16, 64)       256       
+ hNormalization)                                                 
+                                                                 
+ leaky_re_lu_6 (LeakyReLU)   (None, 16, 16, 64)        0         
+                                                                 
+ up_sampling2d_2 (UpSampling  (None, 32, 32, 64)       0         
+ 2D)                                                             
+                                                                 
+ conv2d_6 (Conv2D)           (None, 32, 32, 1)         576       
+                                                                 
+ batch_normalization_3 (Batc  (None, 32, 32, 1)        4         
+ hNormalization)                                                 
+                                                                 
+ activation (Activation)     (None, 32, 32, 1)         0         
+                                                                 
+ cropping2d (Cropping2D)     (None, 28, 28, 1)         0         
+                                                                 
 =================================================================
 Total params: 910,660
 Trainable params: 902,082
@@ -345,15 +362,15 @@ _________________________________________________________________
 
 ```
 </div>
-
 ---
-
 ## Create the WGAN-GP model
 
 Now that we have defined our generator and discriminator, it's time to implement
 the WGAN-GP model. We will also override the `train_step` for training.
 
+
 ```python
+
 class WGAN(keras.Model):
     def __init__(
         self,
@@ -363,7 +380,7 @@ class WGAN(keras.Model):
         discriminator_extra_steps=3,
         gp_weight=10.0,
     ):
-        super(WGAN, self).__init__()
+        super().__init__()
         self.discriminator = discriminator
         self.generator = generator
         self.latent_dim = latent_dim
@@ -371,14 +388,14 @@ class WGAN(keras.Model):
         self.gp_weight = gp_weight
 
     def compile(self, d_optimizer, g_optimizer, d_loss_fn, g_loss_fn):
-        super(WGAN, self).compile()
+        super().compile()
         self.d_optimizer = d_optimizer
         self.g_optimizer = g_optimizer
         self.d_loss_fn = d_loss_fn
         self.g_loss_fn = g_loss_fn
 
     def gradient_penalty(self, batch_size, real_images, fake_images):
-        """ Calculates the gradient penalty.
+        """Calculates the gradient penalty.
 
         This loss is calculated on an interpolated image
         and added to the discriminator loss.
@@ -465,13 +482,15 @@ class WGAN(keras.Model):
             zip(gen_gradient, self.generator.trainable_variables)
         )
         return {"d_loss": d_loss, "g_loss": g_loss}
+
 ```
 
 ---
-
 ## Create a Keras callback that periodically saves generated images
 
+
 ```python
+
 class GANMonitor(keras.callbacks.Callback):
     def __init__(self, num_img=6, latent_dim=128):
         self.num_img = num_img
@@ -484,13 +503,14 @@ class GANMonitor(keras.callbacks.Callback):
 
         for i in range(self.num_img):
             img = generated_images[i].numpy()
-            img = keras.preprocessing.image.array_to_img(img)
+            img = keras.utils.array_to_img(img)
             img.save("generated_img_{i}_{epoch}.png".format(i=i, epoch=epoch))
+
 ```
 
 ---
-
 ## Train the end-to-end model
+
 
 ```python
 # Instantiate the optimizer for both networks
@@ -516,13 +536,13 @@ def generator_loss(fake_img):
     return -tf.reduce_mean(fake_img)
 
 
-# Set the number of epochs for trainining.
+# Set the number of epochs for training.
 epochs = 20
 
 # Instantiate the customer `GANMonitor` Keras callback.
 cbk = GANMonitor(num_img=3, latent_dim=noise_dim)
 
-# Instantiate the WGAN model.
+# Get the wgan model
 wgan = WGAN(
     discriminator=d_model,
     generator=g_model,
@@ -530,7 +550,7 @@ wgan = WGAN(
     discriminator_extra_steps=3,
 )
 
-# Compile the WGAN model.
+# Compile the wgan model
 wgan.compile(
     d_optimizer=discriminator_optimizer,
     g_optimizer=generator_optimizer,
@@ -538,59 +558,58 @@ wgan.compile(
     d_loss_fn=discriminator_loss,
 )
 
-# Start training the model.
+# Start training
 wgan.fit(train_images, batch_size=BATCH_SIZE, epochs=epochs, callbacks=[cbk])
 ```
 
 <div class="k-default-codeblock">
 ```
 Epoch 1/20
-118/118 [==============================] - 39s 334ms/step - d_loss: -7.6571 - g_loss: -16.9272
+118/118 [==============================] - 148s 1s/step - d_loss: -7.9642 - g_loss: -16.0514
 Epoch 2/20
-118/118 [==============================] - 39s 334ms/step - d_loss: -7.2396 - g_loss: -8.5466
+118/118 [==============================] - 132s 1s/step - d_loss: -7.4232 - g_loss: -3.8152
 Epoch 3/20
-118/118 [==============================] - 40s 335ms/step - d_loss: -6.3892 - g_loss: 1.3971
+118/118 [==============================] - 132s 1s/step - d_loss: -6.4284 - g_loss: 5.1891
 Epoch 4/20
-118/118 [==============================] - 40s 335ms/step - d_loss: -5.7705 - g_loss: 6.5997
+118/118 [==============================] - 132s 1s/step - d_loss: -5.7268 - g_loss: 9.9006
 Epoch 5/20
-118/118 [==============================] - 40s 336ms/step - d_loss: -5.2659 - g_loss: 7.4743
+118/118 [==============================] - 132s 1s/step - d_loss: -5.2645 - g_loss: 11.8388
 Epoch 6/20
-118/118 [==============================] - 40s 335ms/step - d_loss: -4.9563 - g_loss: 6.2071
+118/118 [==============================] - 132s 1s/step - d_loss: -4.8836 - g_loss: 10.5683
 Epoch 7/20
-118/118 [==============================] - 40s 335ms/step - d_loss: -4.5759 - g_loss: 6.4767
+118/118 [==============================] - 132s 1s/step - d_loss: -4.5117 - g_loss: 9.7754
 Epoch 8/20
-118/118 [==============================] - 40s 335ms/step - d_loss: -4.3748 - g_loss: 5.4304
+118/118 [==============================] - 132s 1s/step - d_loss: -4.2375 - g_loss: 10.5688
 Epoch 9/20
-118/118 [==============================] - 40s 335ms/step - d_loss: -4.1142 - g_loss: 6.4326
+118/118 [==============================] - 132s 1s/step - d_loss: -3.9687 - g_loss: 10.5467
 Epoch 10/20
-118/118 [==============================] - 40s 335ms/step - d_loss: -3.7956 - g_loss: 7.1200
+118/118 [==============================] - 132s 1s/step - d_loss: -3.7705 - g_loss: 9.7148
 Epoch 11/20
-118/118 [==============================] - 40s 335ms/step - d_loss: -3.5723 - g_loss: 7.1837
+118/118 [==============================] - 132s 1s/step - d_loss: -3.5572 - g_loss: 8.8958
 Epoch 12/20
-118/118 [==============================] - 40s 335ms/step - d_loss: -3.4374 - g_loss: 9.0537
+118/118 [==============================] - 132s 1s/step - d_loss: -3.4122 - g_loss: 9.4445
 Epoch 13/20
-118/118 [==============================] - 40s 335ms/step - d_loss: -3.3402 - g_loss: 8.4949
+118/118 [==============================] - 132s 1s/step - d_loss: -3.2676 - g_loss: 10.1362
 Epoch 14/20
-118/118 [==============================] - 40s 335ms/step - d_loss: -3.1252 - g_loss: 8.6130
+118/118 [==============================] - 132s 1s/step - d_loss: -3.1722 - g_loss: 8.1789
 Epoch 15/20
-118/118 [==============================] - 40s 336ms/step - d_loss: -3.0130 - g_loss: 9.4563
+118/118 [==============================] - 132s 1s/step - d_loss: -3.0114 - g_loss: 7.5867
 Epoch 16/20
-118/118 [==============================] - 40s 335ms/step - d_loss: -2.9330 - g_loss: 8.8075
+118/118 [==============================] - 132s 1s/step - d_loss: -2.8934 - g_loss: 7.3032
 Epoch 17/20
-118/118 [==============================] - 40s 336ms/step - d_loss: -2.7980 - g_loss: 8.0775
+118/118 [==============================] - 132s 1s/step - d_loss: -2.7569 - g_loss: 6.8547
 Epoch 18/20
-118/118 [==============================] - 40s 335ms/step - d_loss: -2.7835 - g_loss: 8.7983
+118/118 [==============================] - 132s 1s/step - d_loss: -2.6966 - g_loss: 6.6962
 Epoch 19/20
-118/118 [==============================] - 40s 335ms/step - d_loss: -2.6409 - g_loss: 7.8309
+118/118 [==============================] - 132s 1s/step - d_loss: -2.6876 - g_loss: 9.0901
 Epoch 20/20
-118/118 [==============================] - 40s 336ms/step - d_loss: -2.5134 - g_loss: 8.6653
+118/118 [==============================] - 132s 1s/step - d_loss: -2.5782 - g_loss: 8.1021
 
-<tensorflow.python.keras.callbacks.History at 0x7fc1a410a278>
+<keras.callbacks.History at 0x7faef03ccfd0>
 
 ```
 </div>
 Display the last generated images:
-
 
 
 ```python
@@ -599,7 +618,6 @@ from IPython.display import Image, display
 display(Image("generated_img_0_19.png"))
 display(Image("generated_img_1_19.png"))
 display(Image("generated_img_2_19.png"))
-
 ```
 
 
@@ -613,3 +631,9 @@ display(Image("generated_img_2_19.png"))
 
 ![png](/img/examples/generative/wgan_gp/wgan_gp_17_2.png)
 
+
+Example available on HuggingFace.
+
+| Trained Model | Demo |
+| :--: | :--: |
+| [![Generic badge](https://img.shields.io/badge/🤗%20Model-WGAN%20GP-black.svg)](https://huggingface.co/keras-io/WGAN-GP) | [![Generic badge](https://img.shields.io/badge/🤗%20Spaces-WGAN%20GP-black.svg)](https://huggingface.co/spaces/keras-io/WGAN-GP) |

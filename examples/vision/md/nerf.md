@@ -554,10 +554,10 @@ class TrainMonitor(keras.callbacks.Callback):
 
         # Plot the rgb, depth and the loss plot.
         fig, ax = plt.subplots(nrows=1, ncols=3, figsize=(20, 5))
-        ax[0].imshow(keras.preprocessing.image.array_to_img(test_recons_images[0]))
+        ax[0].imshow(keras.utils.array_to_img(test_recons_images[0]))
         ax[0].set_title(f"Predicted Image: {epoch:03d}")
 
-        ax[1].imshow(keras.preprocessing.image.array_to_img(depth_maps[0, ..., None]))
+        ax[1].imshow(keras.utils.array_to_img(depth_maps[0, ..., None]))
         ax[1].set_title(f"Depth Map: {epoch:03d}")
 
         ax[2].plot(loss_list)
@@ -851,14 +851,14 @@ fig, axes = plt.subplots(nrows=5, ncols=3, figsize=(10, 20))
 for ax, ori_img, recons_img, depth_map in zip(
     axes, test_imgs, test_recons_images, depth_maps
 ):
-    ax[0].imshow(keras.preprocessing.image.array_to_img(ori_img))
+    ax[0].imshow(keras.utils.array_to_img(ori_img))
     ax[0].set_title("Original")
 
-    ax[1].imshow(keras.preprocessing.image.array_to_img(recons_img))
+    ax[1].imshow(keras.utils.array_to_img(recons_img))
     ax[1].set_title("Reconstructed")
 
     ax[2].imshow(
-        keras.preprocessing.image.array_to_img(depth_map[..., None]), cmap="inferno"
+        keras.utils.array_to_img(depth_map[..., None]), cmap="inferno"
     )
     ax[2].set_title("Depth Map")
 ```
@@ -993,7 +993,7 @@ have also provided the outputs of the model trained for more epochs.
 ## Way forward
 
 If anyone is interested to go deeper into NeRF, we have built a 3-part blog 
-series at [PyImageSearch](www.pyimagesearch.com).
+series at [PyImageSearch](https://www.pyimagesearch.com).
 
 - [Prerequisites of NeRF](https://www.pyimagesearch.com/2021/11/10/computer-graphics-and-deep-learning-with-nerf-using-tensorflow-and-keras-part-1/)
 - [Concepts of NeRF](https://www.pyimagesearch.com/2021/11/17/computer-graphics-and-deep-learning-with-nerf-using-tensorflow-and-keras-part-2/)
@@ -1011,3 +1011,5 @@ series at [PyImageSearch](www.pyimagesearch.com).
     Mathworks for the camera calibration article.
 - [Mathew's video](https://www.youtube.com/watch?v=dPWLybp4LL0): A
     great video on NeRF.
+
+You can try the model on [Hugging Face Spaces](https://huggingface.co/spaces/keras-io/NeRF).

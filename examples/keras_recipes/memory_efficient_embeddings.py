@@ -4,6 +4,7 @@ Author: [Khalid Salama](https://www.linkedin.com/in/khalid-salama-24403144/)
 Date created: 2021/02/15
 Last modified: 2021/02/15
 Description: Using compositional & mixed-dimension embeddings for memory-efficient recommendation models.
+Accelerator: GPU
 """
 
 """
@@ -120,7 +121,11 @@ def run_experiment(model):
     # Read the test data.
     eval_dataset = get_dataset_from_csv("eval_data.csv", batch_size, shuffle=False)
     # Fit the model with the training data.
-    history = model.fit(train_dataset, epochs=num_epochs, validation_data=eval_dataset,)
+    history = model.fit(
+        train_dataset,
+        epochs=num_epochs,
+        validation_data=eval_dataset,
+    )
     return history
 
 
@@ -223,14 +228,20 @@ like `Add` and `Concatenate`.
 
 class QREmbedding(keras.layers.Layer):
     def __init__(self, vocabulary, embedding_dim, num_buckets, name=None):
-        super(QREmbedding, self).__init__(name=name)
+        super().__init__(name=name)
         self.num_buckets = num_buckets
 
         self.index_lookup = StringLookup(
             vocabulary=vocabulary, mask_token=None, num_oov_indices=0
         )
-        self.q_embeddings = layers.Embedding(num_buckets, embedding_dim,)
-        self.r_embeddings = layers.Embedding(num_buckets, embedding_dim,)
+        self.q_embeddings = layers.Embedding(
+            num_buckets,
+            embedding_dim,
+        )
+        self.r_embeddings = layers.Embedding(
+            num_buckets,
+            embedding_dim,
+        )
 
     def call(self, inputs):
         # Get the item index.
@@ -278,7 +289,7 @@ class MDEmbedding(keras.layers.Layer):
     def __init__(
         self, blocks_vocabulary, blocks_embedding_dims, base_embedding_dim, name=None
     ):
-        super(MDEmbedding, self).__init__(name=name)
+        super().__init__(name=name)
         self.num_blocks = len(blocks_vocabulary)
 
         # Create vocab to block lookup.

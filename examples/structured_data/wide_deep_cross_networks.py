@@ -4,6 +4,7 @@ Author: [Khalid Salama](https://www.linkedin.com/in/khalid-salama-24403144/)
 Date created: 2020/12/31
 Last modified: 2021/05/05
 Description: Using Wide & Deep and Deep & Cross networks for structured data classification.
+Accelerator: GPU
 """
 
 """
@@ -178,7 +179,6 @@ for training or evaluation.
 
 
 def get_dataset_from_csv(csv_file_path, batch_size, shuffle=False):
-
     dataset = tf.data.experimental.make_csv_dataset(
         csv_file_path,
         batch_size=batch_size,
@@ -206,7 +206,6 @@ hidden_units = [32, 32]
 
 
 def run_experiment(model):
-
     model.compile(
         optimizer=keras.optimizers.Adam(learning_rate=learning_rate),
         loss=keras.losses.SparseCategoricalCrossentropy(),
@@ -353,7 +352,6 @@ representations.
 
 
 def create_wide_and_deep_model():
-
     inputs = create_model_inputs()
     wide = encode_inputs(inputs)
     wide = layers.BatchNormalization()(wide)
@@ -395,7 +393,6 @@ where the degree of cross features grows with layer depth.
 
 
 def create_deep_and_cross_model():
-
     inputs = create_model_inputs()
     x0 = encode_inputs(inputs, use_embedding=True)
 

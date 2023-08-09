@@ -2,7 +2,7 @@
 
 **Author:** [Sayak Paul](https://twitter.com/RisingSayak)<br>
 **Date created:** 2021/07/21<br>
-**Last modified:** 2021/07/21<br>
+**Last modified:** 2021/06/27<br>
 
 
 <img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/generative/ipynb/vq_vae.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/generative/vq_vae.py)
@@ -10,10 +10,10 @@
 
 **Description:** Training a VQ-VAE for image reconstruction and codebook sampling for generation.
 
-In this example, we will develop a Vector Quantized Variational Autoencoder (VQ-VAE).
+In this example, we develop a Vector Quantized Variational Autoencoder (VQ-VAE).
 VQ-VAE was proposed in
 [Neural Discrete Representation Learning](https://arxiv.org/abs/1711.00937)
-by van der Oord et al. In traditional VAEs, the latent space is continuous and is sampled
+by van der Oord et al. In standard VAEs, the latent space is continuous and is sampled
 from a Gaussian distribution. It is generally harder to learn such a continuous
 distribution via gradient descent. VQ-VAEs, on the other hand,
 operate on a discrete latent space, making the optimization problem simpler. It does so
@@ -22,16 +22,20 @@ discretizing the distance between continuous embeddings and the encoded
 outputs. These discrete code words are then fed to the decoder, which is trained
 to generate reconstructed samples.
 
-For a detailed overview of VQ-VAEs, please refer to the original paper and
+For an overview of VQ-VAEs, please refer to the original paper and
 [this video explanation](https://www.youtube.com/watch?v=VZFVUrYcig0).
 If you need a refresher on VAEs, you can refer to
 [this book chapter](https://livebook.manning.com/book/deep-learning-with-python-second-edition/chapter-12/).
 VQ-VAEs are one of the main recipes behind [DALL-E](https://openai.com/blog/dall-e/)
 and the idea of a codebook is used in [VQ-GANs](https://arxiv.org/abs/2012.09841).
 
-This example uses references from the
+This example uses implementation details from the
 [official VQ-VAE tutorial](https://github.com/deepmind/sonnet/blob/master/sonnet/examples/vqvae_example.ipynb)
-from DeepMind. To run this example, you will need TensorFlow 2.5 or higher, as well as
+from DeepMind. 
+
+## Requirements
+
+To run this example, you will need TensorFlow 2.5 or higher, as well as
 TensorFlow Probability, which can be installed using the command below.
 
 
@@ -56,13 +60,12 @@ import tensorflow as tf
 ---
 ## `VectorQuantizer` layer
 
-Here, we will implement a custom layer to encapsulate the vector
-quantizer logic, which is the central component of VQ-VAEs.
-Consider an output from the encoder, with shape `(batch_size, height, width, num_channels)`.
-The vector quantizer will first
-flatten this output, only keeping the `num_channels` dimension intact. So, the shape would
-become `(batch_size * height * width, num_channels)`. The rationale behind this is to
-treat the total number of channels as the space for the latent embeddings.
+First, we implement a custom layer for the vector quantizer, which is the layer in between
+the encoder and decoder. Consider an output from the encoder, with shape `(batch_size, height, width,
+num_filters)`. The vector quantizer will first flatten this output, only keeping the
+`num_filters` dimension intact. So, the shape would become `(batch_size * height * width,
+num_filters)`. The rationale behind this is to treat the total number of filters as the size for
+the latent embeddings.
 
 An embedding table is then initialized to learn a codebook. We measure the L2-normalized
 distance between the flattened encoder outputs and code words of this codebook. We take the
@@ -73,9 +76,8 @@ mapped as one and the remaining codes are mapped as zeros.
 Since the quantization process is not differentiable, we apply a
 [straight-through estimator](https://www.hassanaskary.com/python/pytorch/deep%20learning/2020/09/19/intuitive-explanation-of-straight-through-estimators.html)
 in between the decoder and the encoder, so that the decoder gradients are directly propagated
-to the encoder. As the encoder and decoder share the same channel space, the hope is that the
-decoder gradients will still be meaningful to the encoder.
-
+to the encoder. As the encoder and decoder share the same channel space, the decoder gradients are
+still meaningful to the encoder.
 
 ```python
 
@@ -84,9 +86,9 @@ class VectorQuantizer(layers.Layer):
         super().__init__(**kwargs)
         self.embedding_dim = embedding_dim
         self.num_embeddings = num_embeddings
-        self.beta = (
-            beta  # This parameter is best kept between [0.25, 2] as per the paper.
-        )
+
+        # The `beta` parameter is best kept between [0.25, 2] as per the paper.
+        self.beta = beta
 
         # Initialize the embeddings which we will quantize.
         w_init = tf.random_uniform_initializer()
@@ -108,17 +110,17 @@ class VectorQuantizer(layers.Layer):
         encoding_indices = self.get_code_indices(flattened)
         encodings = tf.one_hot(encoding_indices, self.num_embeddings)
         quantized = tf.matmul(encodings, self.embeddings, transpose_b=True)
+
+        # Reshape the quantized values back to the original input shape
         quantized = tf.reshape(quantized, input_shape)
 
         # Calculate vector quantization loss and add that to the layer. You can learn more
         # about adding losses to different layers here:
         # https://keras.io/guides/making_new_layers_and_models_via_subclassing/. Check
         # the original paper to get a handle on the formulation of the loss function.
-        commitment_loss = self.beta * tf.reduce_mean(
-            (tf.stop_gradient(quantized) - x) ** 2
-        )
+        commitment_loss = tf.reduce_mean((tf.stop_gradient(quantized) - x) ** 2)
         codebook_loss = tf.reduce_mean((quantized - tf.stop_gradient(x)) ** 2)
-        self.add_loss(commitment_loss + codebook_loss)
+        self.add_loss(self.beta * commitment_loss + codebook_loss)
 
         # Straight-through estimator.
         quantized = x + tf.stop_gradient(quantized - x)
@@ -143,18 +145,21 @@ class VectorQuantizer(layers.Layer):
 
 This line of code does the straight-through estimation part: `quantized = x +
 tf.stop_gradient(quantized - x)`. During backpropagation, `(quantized - x)` won't be
-included in the computation graph and th gradients obtaind for `quantized`
+included in the computation graph and the gradients obtained for `quantized`
 will be copied for `inputs`. Thanks to [this video](https://youtu.be/VZFVUrYcig0?t=1393)
 for helping me understand this technique.
 
 ---
 ## Encoder and decoder
 
-We will now implement the encoder and the decoder for the VQ-VAE. We will keep them small so
-that their capacity is a good fit for the MNIST dataset, which we will use to demonstrate
-the results. The definitions of the encoder and decoder come from
+Now for the encoder and the decoder for the VQ-VAE. We will keep them small so
+that their capacity is a good fit for the MNIST dataset. The implementation of the encoder and
+decoder come from
 [this example](https://keras.io/examples/generative/vae).
 
+Note that activations _other than ReLU_ may not work for the encoder and decoder layers in the
+quantization architecture: Leaky ReLU activated layers, for example, have proven difficult to
+train, resulting in intermittent loss spikes that the model has trouble recovering from.
 
 ```python
 
@@ -169,7 +174,7 @@ def get_encoder(latent_dim=16):
 
 
 def get_decoder(latent_dim=16):
-    latent_inputs = keras.Input(shape=get_encoder().output.shape[1:])
+    latent_inputs = keras.Input(shape=get_encoder(latent_dim).output.shape[1:])
     x = layers.Conv2DTranspose(64, 3, activation="relu", strides=2, padding="same")(
         latent_inputs
     )
@@ -231,7 +236,7 @@ quantizer.
 
 class VQVAETrainer(keras.models.Model):
     def __init__(self, train_variance, latent_dim=32, num_embeddings=128, **kwargs):
-        super(VQVAETrainer, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.train_variance = train_variance
         self.latent_dim = latent_dim
         self.num_embeddings = num_embeddings
@@ -520,21 +525,21 @@ for i in range(len(test_images)):
 
 
 The figure above shows that the discrete codes have been able to capture some
-regularities from the dataset. Now, you might wonder, ***how do we use these codes to
-generate new samples?*** Specifically, how do we sample from this codebook to create
-novel examples? Since these codes are discrete and we imposed a categorical distribution
-on them, we cannot use them yet to generate anything meaningful. These codes were not
-updated during the training process as well. So, they need to be adjusted further so that
-we can use for them the subsequent image generation task. The authors use a PixelCNN to
-train these codes so that they can be used as powerful priors to generate novel examples.
-
-PixelCNN was proposed in
+regularities from the dataset. Now, how do we sample from this codebook to create
+novel images? Since these codes are discrete and we imposed a categorical distribution
+on them, we cannot use them yet to generate anything meaningful until we can generate likely
+sequences of codes that we can give to the decoder. 
+The authors use a PixelCNN to train these codes so that they can be used as powerful priors to
+generate novel examples. PixelCNN was proposed in
 [Conditional Image Generation with PixelCNN Decoders](https://arxiv.org/abs/1606.05328)
 by van der Oord et al. We will borrow code from
 [this example](https://keras.io/examples/generative/pixelcnn/)
-to develop a PixelCNN. It's an auto-regressive generative model where the current outputs
-are conditioned on the prior ones. In other words, a PixelCNN generates an image on a
-pixel-by-pixel basis.
+by van der Oord et al. We borrow the implementation from
+[this PixelCNN example](https://keras.io/examples/generative/pixelcnn/). It's an autoregressive
+generative model where the outputs are conditional on the prior ones. In other words, a PixelCNN
+generates an image on a pixel-by-pixel basis. For the purpose in this example, however, its task
+is to generate code book indices instead of pixels directly. The trained VQ-VAE decoder is used
+to map the indices generated by the PixelCNN back into the pixel space.
 
 ---
 ## PixelCNN hyperparameters
@@ -553,7 +558,28 @@ Input shape of the PixelCNN: (7, 7)
 
 ```
 </div>
-Don't worry about the input shape. It'll become clear in the following sections.
+
+This input shape represents the reduction in the resolution performed by the encoder. With "same" padding,
+this exactly halves the "resolution" of the output shape for each stride-2 convolution layer. So, with these
+two layers, we end up with an encoder output tensor of 7x7 on axes 2 and 3, with the first axis as the batch
+size and the last axis being the code book embedding size. Since the quantization layer in the autoencoder
+maps these 7x7 tensors to indices of the code book, these output layer axis sizes must be matched by the
+PixelCNN as the input shape. The task of the PixelCNN for this architecture is to generate _likely_ 7x7
+arrangements of codebook indices.
+
+Note that this shape is something to optimize for in larger-sized image domains, along with the code
+book sizes. Since the PixelCNN is autoregressive, it needs to pass over each codebook index sequentially
+in order to generate novel images from the codebook. Each stride-2 (or rather more correctly a 
+stride (2, 2)) convolution layer will divide the image generation time by four. Note, however, that there
+is probably a lower bound on this part: when the number of codes for the image to reconstruct is too small,
+it has insufficient information for the decoder to represent the level of detail in the image, so the
+output quality will suffer. This can be amended at least to some extent by using a larger code book. 
+Since the autoregressive part of the image generation procedure uses codebook indices, there is far less of 
+a performance penalty on using a larger code book as the lookup time for a larger-sized code from a larger
+code book is much smaller in comparison to iterating over a larger sequence of code book indices, although
+the size of the code book does impact on the batch size that can pass through the image generation procedure.
+Finding the sweet spot for this trade-off can require some architecture tweaking and could very well differ
+per dataset.
 
 ---
 ## PixelCNN model
@@ -561,13 +587,17 @@ Don't worry about the input shape. It'll become clear in the following sections.
 Majority of this comes from
 [this example](https://keras.io/examples/generative/pixelcnn/).
 
+## Notes
+
+Thanks to [Rein van 't Veer](https://github.com/reinvantveer) for improving this example with
+copy-edits and minor code clean-ups.
 
 ```python
 # The first layer is the PixelCNN layer. This layer simply
 # builds on the 2D convolutional layer, but includes masking.
 class PixelConvLayer(layers.Layer):
     def __init__(self, mask_type, **kwargs):
-        super(PixelConvLayer, self).__init__()
+        super().__init__()
         self.mask_type = mask_type
         self.conv = layers.Conv2D(**kwargs)
 
@@ -591,7 +621,7 @@ class PixelConvLayer(layers.Layer):
 # This is just a normal residual block, but based on the PixelConvLayer.
 class ResidualBlock(keras.layers.Layer):
     def __init__(self, filters, **kwargs):
-        super(ResidualBlock, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.conv1 = keras.layers.Conv2D(
             filters=filters, kernel_size=1, activation="relu"
         )
@@ -795,10 +825,10 @@ them to our decoder to generate novel images.
 ```python
 # Create a mini sampler model.
 inputs = layers.Input(shape=pixel_cnn.input_shape[1:])
-x = pixel_cnn(inputs, training=False)
-dist = tfp.distributions.Categorical(logits=x)
-sampled = dist.sample()
-sampler = keras.Model(inputs, sampled)
+outputs = pixel_cnn(inputs, training=False)
+categorical_layer = tfp.layers.DistributionLambda(tfp.distributions.Categorical)
+outputs = categorical_layer(outputs)
+sampler = keras.Model(inputs, outputs)
 ```
 
 We now construct a prior to generate images. Here, we will generate 10 images.

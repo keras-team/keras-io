@@ -44,7 +44,7 @@ or movie genres prediction.
 
 This example requires `networkx` package, which can be installed using the following command:
 
-```
+```shell
 pip install networkx
 ```
 
@@ -326,7 +326,7 @@ for group in tqdm(
 
 <div class="k-default-codeblock">
 ```
-Compute movie rating frequencies: 100%|██████████| 573/573 [00:00<00:00, 1041.36it/s]
+Compute movie rating frequencies: 100%|███████████████████████████████████████████████████████████████████████████| 573/573 [00:00<00:00, 1049.83it/s]
 
 ```
 </div>
@@ -360,7 +360,7 @@ for pair in tqdm(
 
 <div class="k-default-codeblock">
 ```
-Creating the movie graph: 100%|██████████| 298586/298586 [00:00<00:00, 762305.97it/s]
+Creating the movie graph: 100%|███████████████████████████████████████████████████████████████████████████| 298586/298586 [00:00<00:00, 552893.62it/s]
 
 ```
 </div>
@@ -509,11 +509,11 @@ print("Number of walks generated:", len(walks))
 
 <div class="k-default-codeblock">
 ```
-Random walks iteration 1 of 5: 100%|██████████| 1405/1405 [00:04<00:00, 296.67it/s]
-Random walks iteration 2 of 5: 100%|██████████| 1405/1405 [00:05<00:00, 274.60it/s]
-Random walks iteration 3 of 5: 100%|██████████| 1405/1405 [00:04<00:00, 281.69it/s]
-Random walks iteration 4 of 5: 100%|██████████| 1405/1405 [00:04<00:00, 285.56it/s]
-Random walks iteration 5 of 5: 100%|██████████| 1405/1405 [00:04<00:00, 301.79it/s]
+Random walks iteration 1 of 5: 100%|█████████████████████████████████████████████████████████████████████████████| 1405/1405 [00:04<00:00, 291.76it/s]
+Random walks iteration 2 of 5: 100%|█████████████████████████████████████████████████████████████████████████████| 1405/1405 [00:04<00:00, 302.56it/s]
+Random walks iteration 3 of 5: 100%|█████████████████████████████████████████████████████████████████████████████| 1405/1405 [00:04<00:00, 294.52it/s]
+Random walks iteration 4 of 5: 100%|█████████████████████████████████████████████████████████████████████████████| 1405/1405 [00:04<00:00, 304.06it/s]
+Random walks iteration 5 of 5: 100%|█████████████████████████████████████████████████████████████████████████████| 1405/1405 [00:04<00:00, 302.15it/s]
 
 Number of walks generated: 7025
 
@@ -587,7 +587,7 @@ targets, contexts, labels, weights = generate_examples(
 
 <div class="k-default-codeblock">
 ```
-Generating postive and negative examples: 100%|██████████| 7025/7025 [00:11<00:00, 638.29it/s]
+Generating postive and negative examples: 100%|██████████████████████████████████████████████████████████████████| 7025/7025 [00:11<00:00, 617.64it/s]
 
 ```
 </div>
@@ -603,10 +603,10 @@ print(f"Weights shape: {weights.shape}")
 
 <div class="k-default-codeblock">
 ```
-Targets shape: (880170,)
-Contexts shape: (880170,)
-Labels shape: (880170,)
-Weights shape: (880170,)
+Targets shape: (881412,)
+Contexts shape: (881412,)
+Labels shape: (881412,)
+Weights shape: (881412,)
 
 ```
 </div>
@@ -707,16 +707,22 @@ Let's plot the model.
 
 ```python
 keras.utils.plot_model(
-    model, show_shapes=True, show_dtype=True, show_layer_names=True,
+    model,
+    show_shapes=True,
+    show_dtype=True,
+    show_layer_names=True,
 )
 ```
 
-<div class="k-default-codeblock">
-```
-('Failed to import pydot. You must `pip install pydot` and install graphviz (https://graphviz.gitlab.io/download/), ', 'for `pydotprint` to work.')
 
-```
-</div>
+
+
+    
+![png](/img/examples/graph/node2vec_movielens/node2vec_movielens_44_0.png)
+    
+
+
+
 Now we train the model on the `dataset`.
 
 
@@ -727,25 +733,25 @@ history = model.fit(dataset, epochs=num_epochs)
 <div class="k-default-codeblock">
 ```
 Epoch 1/10
-859/859 [==============================] - 3s 3ms/step - loss: 3.4761
+860/860 [==============================] - 5s 5ms/step - loss: 2.4527
 Epoch 2/10
-859/859 [==============================] - 2s 3ms/step - loss: 3.3149
+860/860 [==============================] - 4s 5ms/step - loss: 2.3431
 Epoch 3/10
-859/859 [==============================] - 2s 3ms/step - loss: 3.2930
+860/860 [==============================] - 4s 4ms/step - loss: 2.3351
 Epoch 4/10
-859/859 [==============================] - 3s 3ms/step - loss: 3.2771
+860/860 [==============================] - 4s 4ms/step - loss: 2.3301
 Epoch 5/10
-859/859 [==============================] - 2s 3ms/step - loss: 3.2673
+860/860 [==============================] - 4s 5ms/step - loss: 2.3259
 Epoch 6/10
-859/859 [==============================] - 2s 3ms/step - loss: 3.2592
+860/860 [==============================] - 4s 4ms/step - loss: 2.3223
 Epoch 7/10
-859/859 [==============================] - 2s 3ms/step - loss: 3.2508
+860/860 [==============================] - 4s 5ms/step - loss: 2.3191
 Epoch 8/10
-859/859 [==============================] - 3s 3ms/step - loss: 3.2418
+860/860 [==============================] - 4s 4ms/step - loss: 2.3160
 Epoch 9/10
-859/859 [==============================] - 2s 3ms/step - loss: 3.2354
+860/860 [==============================] - 4s 4ms/step - loss: 2.3130
 Epoch 10/10
-859/859 [==============================] - 3s 3ms/step - loss: 3.2273
+860/860 [==============================] - 4s 5ms/step - loss: 2.3104
 
 ```
 </div>
@@ -845,9 +851,9 @@ for idx, title in enumerate(query_movies):
 Matrix, The (1999)
 ------------------
 - Matrix, The (1999)
-- Inception (2010)
-- Dark Knight, The (2008)
-- Back to the Future (1985)
+- Raiders of the Lost Ark (Indiana Jones and the Raiders of the Lost Ark) (1981)
+- Schindler's List (1993)
+- Star Wars: Episode IV - A New Hope (1977)
 - Lord of the Rings: The Fellowship of the Ring, The (2001)
 ```
 </div>
@@ -856,11 +862,11 @@ Matrix, The (1999)
 ```
 Star Wars: Episode IV - A New Hope (1977)
 -----------------------------------------
-- Star Wars: Episode V - The Empire Strikes Back (1980)
 - Star Wars: Episode IV - A New Hope (1977)
-- Back to the Future (1985)
+- Schindler's List (1993)
+- Raiders of the Lost Ark (Indiana Jones and the Raiders of the Lost Ark) (1981)
 - Matrix, The (1999)
-- Star Wars: Episode VI - Return of the Jedi (1983)
+- Pulp Fiction (1994)
 ```
 </div>
     
@@ -869,10 +875,10 @@ Star Wars: Episode IV - A New Hope (1977)
 Lion King, The (1994)
 ---------------------
 - Lion King, The (1994)
-- Beauty and the Beast (1991)
 - Jurassic Park (1993)
-- Mrs. Doubtfire (1993)
 - Independence Day (a.k.a. ID4) (1996)
+- Beauty and the Beast (1991)
+- Mrs. Doubtfire (1993)
 ```
 </div>
     
@@ -880,11 +886,11 @@ Lion King, The (1994)
 ```
 Terminator 2: Judgment Day (1991)
 ---------------------------------
+- Schindler's List (1993)
+- Jurassic Park (1993)
 - Terminator 2: Judgment Day (1991)
-- Star Wars: Episode VI - Return of the Jedi (1983)
-- Apollo 13 (1995)
-- Star Wars: Episode V - The Empire Strikes Back (1980)
-- Braveheart (1995)
+- Star Wars: Episode IV - A New Hope (1977)
+- Back to the Future (1985)
 ```
 </div>
     
@@ -892,11 +898,11 @@ Terminator 2: Judgment Day (1991)
 ```
 Godfather, The (1972)
 ---------------------
-- Godfather, The (1972)
-- Reservoir Dogs (1992)
 - Apocalypse Now (1979)
 - Fargo (1996)
-- American Beauty (1999)
+- Godfather, The (1972)
+- Schindler's List (1993)
+- Casablanca (1942)
 ```
 </div>
     
@@ -923,3 +929,9 @@ out_m.close()
 
 Download the `embeddings.tsv` and `metadata.tsv` to analyze the obtained embeddings
 in the [Embedding Projector](https://projector.tensorflow.org/).
+
+**Example available on HuggingFace**
+
+| Trained Model | Demo |
+| :--: | :--: |
+| [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Model%3A%20-Node2Vec%20Movielens-black.svg)](https://huggingface.co/keras-io/Node2Vec_MovieLens) | [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Spaces%3A-Node2Vec%20Movielens-black.svg)](https://huggingface.co/spaces/keras-io/Node2Vec_MovieLens) |

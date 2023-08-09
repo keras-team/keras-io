@@ -4,6 +4,7 @@ Author: [lukewood](https://lukewood.xyz)
 Date created: 11/03/2021
 Last modified: 11/03/2021
 Description: This example shows how to implement custom convolution layers using the `Conv.convolution_op()` API.
+Accelerator: GPU
 """
 """
 ## Introduction

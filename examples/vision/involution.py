@@ -4,6 +4,7 @@ Author: [Aritra Roy Gosthipaty](https://twitter.com/ariG23498)
 Date created: 2021/07/25
 Last modified: 2021/07/25
 Description: Deep dive into location-specific and channel-agnostic "involution" kernels.
+Accelerator: GPU
 """
 """
 ## Introduction
@@ -234,7 +235,10 @@ tutorial from Google.
 print("loading the CIFAR10 dataset...")
 (
     (train_images, train_labels),
-    (test_images, test_labels,),
+    (
+        test_images,
+        test_labels,
+    ),
 ) = keras.datasets.cifar10.load_data()
 
 # Normalize pixel values to be between 0 and 1.
@@ -442,16 +446,16 @@ for ax, test_image in zip(axes, test_images[:10]):
     inv2_kernel = tf.reduce_sum(inv2_kernel, axis=[-1, -2, -3])
     inv3_kernel = tf.reduce_sum(inv3_kernel, axis=[-1, -2, -3])
 
-    ax[0].imshow(keras.preprocessing.image.array_to_img(test_image))
+    ax[0].imshow(keras.utils.array_to_img(test_image))
     ax[0].set_title("Input Image")
 
-    ax[1].imshow(keras.preprocessing.image.array_to_img(inv1_kernel[0, ..., None]))
+    ax[1].imshow(keras.utils.array_to_img(inv1_kernel[0, ..., None]))
     ax[1].set_title("Involution Kernel 1")
 
-    ax[2].imshow(keras.preprocessing.image.array_to_img(inv2_kernel[0, ..., None]))
+    ax[2].imshow(keras.utils.array_to_img(inv2_kernel[0, ..., None]))
     ax[2].set_title("Involution Kernel 2")
 
-    ax[3].imshow(keras.preprocessing.image.array_to_img(inv3_kernel[0, ..., None]))
+    ax[3].imshow(keras.utils.array_to_img(inv3_kernel[0, ..., None]))
     ax[3].set_title("Involution Kernel 3")
 
 """
@@ -473,4 +477,7 @@ Moving forward one can:
 - Experiment with the various hyperparameters of the involution layer.
 - Build different models with the involution layer.
 - Try building a different kernel generation method altogether.
+
+You can use the trained model hosted on [Hugging Face Hub](https://huggingface.co/keras-io/involution)
+and try the demo on [Hugging Face Spaces](https://huggingface.co/spaces/keras-io/involution).
 """

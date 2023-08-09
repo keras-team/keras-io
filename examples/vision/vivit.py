@@ -4,6 +4,7 @@ Author: [Aritra Roy Gosthipaty](https://twitter.com/ariG23498), [Ayush Thakur](h
 Date created: 2022/01/12
 Last modified:  2022/01/12
 Description: A Transformer-based architecture for video classification.
+Accelerator: GPU
 """
 """
 ## Introduction
@@ -439,4 +440,7 @@ We would like to thank [Anurag Arnab](https://anuragarnab.github.io/)
 (first author of ViViT) for helpful discussion. We are grateful to
 [Weights and Biases](https://wandb.ai/site) program for helping with
 GPU credits.
+
+You can use the trained model hosted on [Hugging Face Hub](https://huggingface.co/keras-io/video-vision-transformer)
+and try the demo on [Hugging Face Spaces](https://huggingface.co/spaces/keras-io/video-vision-transformer-CT).
 """

@@ -75,8 +75,6 @@ data_augmentation = keras.Sequential(
         layers.Normalization(),
         layers.RandomFlip("horizontal"),
         layers.RandomRotation(0.02),
-        layers.RandomWidth(0.2),
-        layers.RandomHeight(0.2),
     ]
 )
 
@@ -288,7 +286,7 @@ softmax are optimized.
 
 class SupervisedContrastiveLoss(keras.losses.Loss):
     def __init__(self, temperature=1, name=None):
-        super(SupervisedContrastiveLoss, self).__init__(name=name)
+        super().__init__(name=name)
         self.temperature = temperature
 
     def __call__(self, labels, feature_vectors, sample_weight=None):
@@ -585,3 +583,5 @@ architecture, like ResNet, and multi-class problems with many labels.
 In addition, large batch sizes and multi-layer projection heads
 improve its effectiveness. See the [Supervised Contrastive Learning](https://arxiv.org/abs/2004.11362)
 paper for more details.
+
+You can use the trained model hosted on [Hugging Face Hub](https://huggingface.co/keras-io/supervised-contrastive-learning-cifar10) and try the demo on [Hugging Face Spaces](https://huggingface.co/spaces/keras-io/supervised-contrastive-learning).

@@ -4,6 +4,7 @@ Author: Amy MiHyun Jang
 Date created: 2020/07/29
 Last modified: 2020/08/07
 Description: Loading TFRecords for computer vision models.
+Accelerator: TPU
 """
 """
 ## Introduction + Set Up
@@ -82,7 +83,9 @@ def read_tfrecord(example, labeled):
             "target": tf.io.FixedLenFeature([], tf.int64),
         }
         if labeled
-        else {"image": tf.io.FixedLenFeature([], tf.string),}
+        else {
+            "image": tf.io.FixedLenFeature([], tf.string),
+        }
     )
     example = tf.io.parse_single_example(example, tfrecord_format)
     image = decode_image(example["image"])

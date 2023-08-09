@@ -4,6 +4,7 @@ Author: [Dimitre Oliveira](https://www.linkedin.com/in/dimitre-oliveira-7a1a0113
 Date created: 2021/02/27
 Last modified: 2021/02/27
 Description: Converting data to the TFRecord format.
+Accelerator: GPU
 """
 
 """
@@ -83,7 +84,10 @@ annotations_url = (
 # Download image files
 if not os.path.exists(images_dir):
     image_zip = tf.keras.utils.get_file(
-        "images.zip", cache_dir=os.path.abspath("."), origin=images_url, extract=True,
+        "images.zip",
+        cache_dir=os.path.abspath("."),
+        origin=images_url,
+        extract=True,
     )
     os.remove(image_zip)
 

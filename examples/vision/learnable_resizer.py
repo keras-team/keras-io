@@ -4,13 +4,14 @@ Author: [Sayak Paul](https://twitter.com/RisingSayak)
 Date created: 2021/04/30
 Last modified: 2021/05/13
 Description: How to optimally learn representations of images for a given resolution.
+Accelerator: GPU
 """
 """
 It is a common belief that if we constrain vision models to perceive things as humans do,
 their performance can be improved. For example, in [this work](https://arxiv.org/abs/1811.12231),
 Geirhos et al. showed that the vision models pre-trained on the ImageNet-1k dataset are
-biased toward texture whereas human beings mostly use the shape descriptor to develop a
-common perception. But does this belief always apply especially when it comes to improving
+biased towards texture, whereas human beings mostly use the shape descriptor to develop a
+common perception. But does this belief always apply, especially when it comes to improving
 the performance of vision models?
 
 It turns out it may not always be the case. When training vision models, it is common to

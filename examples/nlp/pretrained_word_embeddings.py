@@ -4,6 +4,7 @@ Author: [fchollet](https://twitter.com/fchollet)
 Date created: 2020/05/05
 Last modified: 2020/05/05
 Description: Text classification on the Newsgroup20 dataset using pre-trained GloVe word embeddings.
+Accelerator: GPU
 """
 
 """

@@ -4,6 +4,7 @@ Author: [A_K_Nain](https://twitter.com/A_K_Nain)
 Date created: 2020/08/12
 Last modified: 2020/08/12
 Description: Implementation of CycleGAN.
+Accelerator: GPU
 """
 
 """
@@ -24,14 +25,12 @@ using cycle-consistent adversarial networks.
 ## Setup
 """
 
-import os
+
 import numpy as np
 import matplotlib.pyplot as plt
-
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
-
 import tensorflow_addons as tfa
 import tensorflow_datasets as tfds
 
@@ -156,7 +155,7 @@ class ReflectionPadding2D(layers.Layer):
 
     def __init__(self, padding=(1, 1), **kwargs):
         self.padding = tuple(padding)
-        super(ReflectionPadding2D, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def call(self, input_tensor, mask=None):
         padding_width, padding_height = self.padding
@@ -401,13 +400,21 @@ class CycleGan(keras.Model):
         lambda_cycle=10.0,
         lambda_identity=0.5,
     ):
-        super(CycleGan, self).__init__()
+        super().__init__()
         self.gen_G = generator_G
         self.gen_F = generator_F
         self.disc_X = discriminator_X
         self.disc_Y = discriminator_Y
         self.lambda_cycle = lambda_cycle
         self.lambda_identity = lambda_identity
+
+    def call(self, inputs):
+        return (
+            self.disc_X(inputs),
+            self.disc_Y(inputs),
+            self.gen_G(inputs),
+            self.gen_F(inputs),
+        )
 
     def compile(
         self,
@@ -418,7 +425,7 @@ class CycleGan(keras.Model):
         gen_loss_fn,
         disc_loss_fn,
     ):
-        super(CycleGan, self).compile()
+        super().compile()
         self.gen_G_optimizer = gen_G_optimizer
         self.gen_F_optimizer = gen_F_optimizer
         self.disc_X_optimizer = disc_X_optimizer
@@ -438,10 +445,10 @@ class CycleGan(keras.Model):
         #
         # 1. Pass real images through the generators and get the generated images
         # 2. Pass the generated images back to the generators to check if we
-        #    we can predict the original image from the generated image.
+        #    can predict the original image from the generated image.
         # 3. Do an identity mapping of the real images using the generators.
         # 4. Pass the generated images in 1) to the corresponding discriminators.
-        # 5. Calculate the generators total loss (adverserial + cycle + identity)
+        # 5. Calculate the generators total loss (adversarial + cycle + identity)
         # 6. Calculate the discriminators loss
         # 7. Update the weights of the generators
         # 8. Update the weights of the discriminators
@@ -469,7 +476,7 @@ class CycleGan(keras.Model):
             disc_real_y = self.disc_Y(real_y, training=True)
             disc_fake_y = self.disc_Y(fake_y, training=True)
 
-            # Generator adverserial loss
+            # Generator adversarial loss
             gen_G_loss = self.generator_loss_fn(disc_fake_y)
             gen_F_loss = self.generator_loss_fn(disc_fake_x)
 
@@ -554,7 +561,7 @@ class GANMonitor(keras.callbacks.Callback):
             ax[i, 0].axis("off")
             ax[i, 1].axis("off")
 
-            prediction = keras.preprocessing.image.array_to_img(prediction)
+            prediction = keras.utils.array_to_img(prediction)
             prediction.save(
                 "generated_img_{i}_{epoch}.png".format(i=i, epoch=epoch + 1)
             )
@@ -571,6 +578,8 @@ class GANMonitor(keras.callbacks.Callback):
 adv_loss_fn = keras.losses.MeanSquaredError()
 
 # Define the loss function for the generators
+
+
 def generator_loss_fn(fake):
     fake_loss = adv_loss_fn(tf.ones_like(fake), fake)
     return fake_loss
@@ -590,10 +599,10 @@ cycle_gan_model = CycleGan(
 
 # Compile the model
 cycle_gan_model.compile(
-    gen_G_optimizer=keras.optimizers.Adam(learning_rate=2e-4, beta_1=0.5),
-    gen_F_optimizer=keras.optimizers.Adam(learning_rate=2e-4, beta_1=0.5),
-    disc_X_optimizer=keras.optimizers.Adam(learning_rate=2e-4, beta_1=0.5),
-    disc_Y_optimizer=keras.optimizers.Adam(learning_rate=2e-4, beta_1=0.5),
+    gen_G_optimizer=keras.optimizers.legacy.Adam(learning_rate=2e-4, beta_1=0.5),
+    gen_F_optimizer=keras.optimizers.legacy.Adam(learning_rate=2e-4, beta_1=0.5),
+    disc_X_optimizer=keras.optimizers.legacy.Adam(learning_rate=2e-4, beta_1=0.5),
+    disc_Y_optimizer=keras.optimizers.legacy.Adam(learning_rate=2e-4, beta_1=0.5),
     gen_loss_fn=generator_loss_fn,
     disc_loss_fn=discriminator_loss_fn,
 )
@@ -601,7 +610,7 @@ cycle_gan_model.compile(
 plotter = GANMonitor()
 checkpoint_filepath = "./model_checkpoints/cyclegan_checkpoints.{epoch:03d}"
 model_checkpoint_callback = keras.callbacks.ModelCheckpoint(
-    filepath=checkpoint_filepath
+    filepath=checkpoint_filepath, save_weights_only=True
 )
 
 # Here we will train the model for just one epoch as each epoch takes around
@@ -614,6 +623,9 @@ cycle_gan_model.fit(
 
 """
 Test the performance of the model.
+
+You can use the trained model hosted on [Hugging Face Hub](https://huggingface.co/keras-io/CycleGAN)
+and try the demo on [Hugging Face Spaces](https://huggingface.co/spaces/keras-io/CycleGAN).
 """
 
 
@@ -646,7 +658,7 @@ for i, img in enumerate(test_horses.take(4)):
     ax[i, 0].axis("off")
     ax[i, 1].axis("off")
 
-    prediction = keras.preprocessing.image.array_to_img(prediction)
+    prediction = keras.utils.array_to_img(prediction)
     prediction.save("predicted_img_{i}.png".format(i=i))
 plt.tight_layout()
 plt.show()

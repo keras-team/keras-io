@@ -4,6 +4,7 @@ Author: [JacoVerster](https://twitter.com/JacoVerster)
 Date created: 2021/05/20
 Last modified: 2021/06/06
 Description: Modeling the relationship between training set size and model accuracy.
+Accelerator: GPU
 """
 
 """
@@ -71,6 +72,7 @@ class_names = ds_info.features["label"].names
 
 print(f"Number of classes: {num_classes}")
 print(f"Class names: {class_names}")
+
 
 # Convert datasets to NumPy arrays
 def dataset_to_array(dataset, image_size, num_classes):
@@ -394,7 +396,7 @@ def fit_and_predict(train_acc, sample_sizes, pred_sample_size):
     mse = keras.losses.MeanSquaredError()
 
     def exp_func(x, a, b):
-        return a * x ** b
+        return a * x**b
 
     # Define variables, learning rate and number of epochs for fitting with TF
     a = tf.Variable(0.0)

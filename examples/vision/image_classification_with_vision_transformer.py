@@ -4,6 +4,7 @@ Author: [Khalid Salama](https://www.linkedin.com/in/khalid-salama-24403144/)
 Date created: 2021/01/18
 Last modified: 2021/01/18
 Description: Implementing the Vision Transformer (ViT) model for image classification.
+Accelerator: GPU
 """
 
 """
@@ -105,7 +106,7 @@ def mlp(x, hidden_units, dropout_rate):
 
 class Patches(layers.Layer):
     def __init__(self, patch_size):
-        super(Patches, self).__init__()
+        super().__init__()
         self.patch_size = patch_size
 
     def call(self, images):
@@ -161,7 +162,7 @@ embedding to the projected vector.
 
 class PatchEncoder(layers.Layer):
     def __init__(self, num_patches, projection_dim):
-        super(PatchEncoder, self).__init__()
+        super().__init__()
         self.num_patches = num_patches
         self.projection = layers.Dense(units=projection_dim)
         self.position_embedding = layers.Embedding(

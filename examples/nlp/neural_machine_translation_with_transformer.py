@@ -2,8 +2,9 @@
 Title: English-to-Spanish translation with a sequence-to-sequence Transformer
 Author: [fchollet](https://twitter.com/fchollet)
 Date created: 2021/05/26
-Last modified: 2021/05/26
+Last modified: 2023/02/25
 Description: Implementing a sequence-to-sequene Transformer and training it on a machine translation task.
+Accelerator: GPU
 """
 """
 ## Introduction
@@ -129,7 +130,9 @@ def custom_standardization(input_string):
 
 
 eng_vectorization = TextVectorization(
-    max_tokens=vocab_size, output_mode="int", output_sequence_length=sequence_length,
+    max_tokens=vocab_size,
+    output_mode="int",
+    output_sequence_length=sequence_length,
 )
 spa_vectorization = TextVectorization(
     max_tokens=vocab_size,
@@ -161,7 +164,13 @@ it provides the next words in the target sentence -- what the model will try to 
 def format_dataset(eng, spa):
     eng = eng_vectorization(eng)
     spa = spa_vectorization(spa)
-    return ({"encoder_inputs": eng, "decoder_inputs": spa[:, :-1],}, spa[:, 1:])
+    return (
+        {
+            "encoder_inputs": eng,
+            "decoder_inputs": spa[:, :-1],
+        },
+        spa[:, 1:],
+    )
 
 
 def make_dataset(pairs):
@@ -211,7 +220,7 @@ result in a model that cannot be used at inference time).
 
 class TransformerEncoder(layers.Layer):
     def __init__(self, embed_dim, dense_dim, num_heads, **kwargs):
-        super(TransformerEncoder, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.embed_dim = embed_dim
         self.dense_dim = dense_dim
         self.num_heads = num_heads
@@ -219,7 +228,10 @@ class TransformerEncoder(layers.Layer):
             num_heads=num_heads, key_dim=embed_dim
         )
         self.dense_proj = keras.Sequential(
-            [layers.Dense(dense_dim, activation="relu"), layers.Dense(embed_dim),]
+            [
+                layers.Dense(dense_dim, activation="relu"),
+                layers.Dense(embed_dim),
+            ]
         )
         self.layernorm_1 = layers.LayerNormalization()
         self.layernorm_2 = layers.LayerNormalization()
@@ -227,7 +239,7 @@ class TransformerEncoder(layers.Layer):
 
     def call(self, inputs, mask=None):
         if mask is not None:
-            padding_mask = tf.cast(mask[:, tf.newaxis, tf.newaxis, :], dtype="int32")
+            padding_mask = tf.cast(mask[:, tf.newaxis, :], dtype="int32")
         attention_output = self.attention(
             query=inputs, value=inputs, key=inputs, attention_mask=padding_mask
         )
@@ -235,10 +247,21 @@ class TransformerEncoder(layers.Layer):
         proj_output = self.dense_proj(proj_input)
         return self.layernorm_2(proj_input + proj_output)
 
+    def get_config(self):
+        config = super().get_config()
+        config.update(
+            {
+                "embed_dim": self.embed_dim,
+                "dense_dim": self.dense_dim,
+                "num_heads": self.num_heads,
+            }
+        )
+        return config
+
 
 class PositionalEmbedding(layers.Layer):
     def __init__(self, sequence_length, vocab_size, embed_dim, **kwargs):
-        super(PositionalEmbedding, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.token_embeddings = layers.Embedding(
             input_dim=vocab_size, output_dim=embed_dim
         )
@@ -259,10 +282,21 @@ class PositionalEmbedding(layers.Layer):
     def compute_mask(self, inputs, mask=None):
         return tf.math.not_equal(inputs, 0)
 
+    def get_config(self):
+        config = super().get_config()
+        config.update(
+            {
+                "sequence_length": self.sequence_length,
+                "vocab_size": self.vocab_size,
+                "embed_dim": self.embed_dim,
+            }
+        )
+        return config
+
 
 class TransformerDecoder(layers.Layer):
     def __init__(self, embed_dim, latent_dim, num_heads, **kwargs):
-        super(TransformerDecoder, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.embed_dim = embed_dim
         self.latent_dim = latent_dim
         self.num_heads = num_heads
@@ -273,7 +307,10 @@ class TransformerDecoder(layers.Layer):
             num_heads=num_heads, key_dim=embed_dim
         )
         self.dense_proj = keras.Sequential(
-            [layers.Dense(latent_dim, activation="relu"), layers.Dense(embed_dim),]
+            [
+                layers.Dense(latent_dim, activation="relu"),
+                layers.Dense(embed_dim),
+            ]
         )
         self.layernorm_1 = layers.LayerNormalization()
         self.layernorm_2 = layers.LayerNormalization()
@@ -314,6 +351,17 @@ class TransformerDecoder(layers.Layer):
             axis=0,
         )
         return tf.tile(mask, mult)
+
+    def get_config(self):
+        config = super().get_config()
+        config.update(
+            {
+                "embed_dim": self.embed_dim,
+                "latent_dim": self.latent_dim,
+                "num_heads": self.num_heads,
+            }
+        )
+        return config
 
 
 """

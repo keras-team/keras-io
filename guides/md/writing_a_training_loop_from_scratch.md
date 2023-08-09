@@ -2,7 +2,7 @@
 
 **Author:** [fchollet](https://twitter.com/fchollet)<br>
 **Date created:** 2019/03/01<br>
-**Last modified:** 2020/04/15<br>
+**Last modified:** 2023/07/10<br>
 **Description:** Complete guide to writing low-level training & evaluation loops.
 
 
@@ -16,8 +16,8 @@
 
 ```python
 import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras import layers
+import keras
+from keras import layers
 import numpy as np
 ```
 
@@ -26,14 +26,14 @@ import numpy as np
 
 Keras provides default training and evaluation loops, `fit()` and `evaluate()`.
 Their usage is covered in the guide
-[Training & evaluation with the built-in methods](/guides/training_with_built_in_methods/).
+[Training & evaluation with the built-in methods](https://keras.io/guides/training_with_built_in_methods/).
 
 If you want to customize the learning algorithm of your model while still leveraging
 the convenience of `fit()`
 (for instance, to train a GAN using `fit()`), you can subclass the `Model` class and
 implement your own `train_step()` method, which
 is called repeatedly during `fit()`. This is covered in the guide
-[Customizing what happens in `fit()`](/guides/customizing_what_happens_in_fit/).
+[Customizing what happens in `fit()`](https://keras.io/guides/customizing_what_happens_in_fit/).
 
 Now, if you want very low-level control over training & evaluation, you should write
 your own training & evaluation loops from scratch. This is what this guide is about.
@@ -108,11 +108,9 @@ for epoch in range(epochs):
 
     # Iterate over the batches of the dataset.
     for step, (x_batch_train, y_batch_train) in enumerate(train_dataset):
-
         # Open a GradientTape to record the operations run
         # during the forward pass, which enables auto-differentiation.
         with tf.GradientTape() as tape:
-
             # Run the forward pass of the layer.
             # The operations that the layer applies
             # to its inputs are going to be recorded
@@ -143,13 +141,13 @@ for epoch in range(epochs):
 <div class="k-default-codeblock">
 ```
 Start of epoch 0
-Training loss (for one batch) at step 0: 119.2370
+Training loss (for one batch) at step 0: 120.0656
 Seen so far: 64 samples
-Training loss (for one batch) at step 200: 2.1698
+Training loss (for one batch) at step 200: 1.4296
 Seen so far: 12864 samples
-Training loss (for one batch) at step 400: 1.1696
+Training loss (for one batch) at step 400: 1.0072
 Seen so far: 25664 samples
-Training loss (for one batch) at step 600: 0.8985
+Training loss (for one batch) at step 600: 0.8556
 Seen so far: 38464 samples
 ```
 </div>
@@ -157,13 +155,13 @@ Seen so far: 38464 samples
 <div class="k-default-codeblock">
 ```
 Start of epoch 1
-Training loss (for one batch) at step 0: 0.9260
+Training loss (for one batch) at step 0: 0.6670
 Seen so far: 64 samples
-Training loss (for one batch) at step 200: 1.3808
+Training loss (for one batch) at step 200: 0.3697
 Seen so far: 12864 samples
-Training loss (for one batch) at step 400: 0.5850
+Training loss (for one batch) at step 400: 0.3445
 Seen so far: 25664 samples
-Training loss (for one batch) at step 600: 0.6255
+Training loss (for one batch) at step 600: 0.4279
 Seen so far: 38464 samples
 
 ```
@@ -256,34 +254,34 @@ for epoch in range(epochs):
 <div class="k-default-codeblock">
 ```
 Start of epoch 0
-Training loss (for one batch) at step 0: 99.8348
+Training loss (for one batch) at step 0: 154.5849
 Seen so far: 64 samples
-Training loss (for one batch) at step 200: 1.7872
+Training loss (for one batch) at step 200: 1.2994
 Seen so far: 12864 samples
-Training loss (for one batch) at step 400: 1.2578
+Training loss (for one batch) at step 400: 1.0750
 Seen so far: 25664 samples
-Training loss (for one batch) at step 600: 1.2309
+Training loss (for one batch) at step 600: 1.1264
 Seen so far: 38464 samples
-Training acc over epoch: 0.6845
-Validation acc: 0.7683
-Time taken: 4.16s
+Training acc over epoch: 0.7203
+Validation acc: 0.8233
+Time taken: 7.95s
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
 Start of epoch 1
-Training loss (for one batch) at step 0: 0.7814
+Training loss (for one batch) at step 0: 1.0552
 Seen so far: 64 samples
-Training loss (for one batch) at step 200: 0.4360
+Training loss (for one batch) at step 200: 0.8037
 Seen so far: 12864 samples
-Training loss (for one batch) at step 400: 0.8505
+Training loss (for one batch) at step 400: 0.2875
 Seen so far: 25664 samples
-Training loss (for one batch) at step 600: 0.7776
+Training loss (for one batch) at step 600: 0.5536
 Seen so far: 38464 samples
-Training acc over epoch: 0.8263
-Validation acc: 0.8106
-Time taken: 4.17s
+Training acc over epoch: 0.8370
+Validation acc: 0.8622
+Time taken: 7.97s
 
 ```
 </div>
@@ -297,7 +295,7 @@ As such, our training loop above executes eagerly.
 This is great for debugging, but graph compilation has a definite performance
 advantage. Describing your computation as a static graph enables the framework
 to apply global performance optimizations. This is impossible when
-the framework is constrained to greedly execute one operation after another,
+the framework is constrained to greedily execute one operation after another,
 with no knowledge of what comes next.
 
 You can compile into a static graph any function that takes tensors as input.
@@ -374,34 +372,34 @@ for epoch in range(epochs):
 <div class="k-default-codeblock">
 ```
 Start of epoch 0
-Training loss (for one batch) at step 0: 0.5857
+Training loss (for one batch) at step 0: 0.4807
 Seen so far: 64 samples
-Training loss (for one batch) at step 200: 0.4440
+Training loss (for one batch) at step 200: 0.4289
 Seen so far: 12864 samples
-Training loss (for one batch) at step 400: 0.4354
+Training loss (for one batch) at step 400: 0.6062
 Seen so far: 25664 samples
-Training loss (for one batch) at step 600: 0.7005
+Training loss (for one batch) at step 600: 0.5791
 Seen so far: 38464 samples
-Training acc over epoch: 0.8685
-Validation acc: 0.8848
-Time taken: 1.25s
+Training acc over epoch: 0.8666
+Validation acc: 0.8798
+Time taken: 1.45s
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
 Start of epoch 1
-Training loss (for one batch) at step 0: 0.3965
+Training loss (for one batch) at step 0: 0.5122
 Seen so far: 64 samples
-Training loss (for one batch) at step 200: 0.3314
+Training loss (for one batch) at step 200: 0.4184
 Seen so far: 12864 samples
-Training loss (for one batch) at step 400: 0.2886
+Training loss (for one batch) at step 400: 0.2736
 Seen so far: 25664 samples
-Training loss (for one batch) at step 600: 0.2908
+Training loss (for one batch) at step 600: 0.5048
 Seen so far: 38464 samples
-Training acc over epoch: 0.8881
-Validation acc: 0.8955
-Time taken: 0.90s
+Training acc over epoch: 0.8823
+Validation acc: 0.8872
+Time taken: 1.11s
 
 ```
 </div>
@@ -423,6 +421,7 @@ Consider this layer, that creates an activity regularization loss:
 
 ```python
 
+@keras.saving.register_keras_serializable()
 class ActivityRegularizationLayer(layers.Layer):
     def call(self, inputs):
         self.add_loss(1e-2 * tf.reduce_sum(inputs))
@@ -536,15 +535,15 @@ _________________________________________________________________
                                                                  
  leaky_re_lu_1 (LeakyReLU)   (None, 7, 7, 128)         0         
                                                                  
- global_max_pooling2d (Globa  (None, 128)              0         
- lMaxPooling2D)                                                  
+ global_max_pooling2d (Glob  (None, 128)               0         
+ alMaxPooling2D)                                                 
                                                                  
  dense_4 (Dense)             (None, 1)                 129       
                                                                  
 =================================================================
-Total params: 74,625
-Trainable params: 74,625
-Non-trainable params: 0
+Total params: 74625 (291.50 KB)
+Trainable params: 74625 (291.50 KB)
+Non-trainable params: 0 (0.00 Byte)
 _________________________________________________________________
 
 ```
@@ -675,7 +674,7 @@ for epoch in range(epochs):
 ```
 Start epoch 0
 discriminator loss at step 0: 0.68
-adversarial loss at step 0: 0.62
+adversarial loss at step 0: 0.69
 
 ```
 </div>

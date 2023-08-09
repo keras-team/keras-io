@@ -630,7 +630,7 @@ class OrthogonalRegularizer(keras.regularizers.Regularizer):
         return tf.reduce_sum(self.l2reg * tf.square(xxt - self.identity))
 
     def get_config(self):
-        config = super(TransformerEncoder, self).get_config()
+        config = super().get_config()
         config.update({"num_features": self.num_features, "l2reg_strength": self.l2reg})
         return config
 

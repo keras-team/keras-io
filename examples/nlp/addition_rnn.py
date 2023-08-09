@@ -4,6 +4,7 @@ Author: [Smerity](https://twitter.com/Smerity) and others
 Date created: 2015/08/17
 Last modified: 2020/04/17
 Description: A model that learns to add strings of numbers, e.g. "535+61" -> "596".
+Accelerator: GPU
 """
 """
 ## Introduction
@@ -240,4 +241,10 @@ for epoch in range(1, epochs):
 
 """
 You'll get to 99+% validation accuracy after ~30 epochs.
+
+Example available on HuggingFace.
+
+| Trained Model | Demo |
+| :--: | :--: |
+| [![Generic badge](https://img.shields.io/badge/🤗%20Model-Addition%20LSTM-black.svg)](https://huggingface.co/keras-io/addition-lstm) | [![Generic badge](https://img.shields.io/badge/🤗%20Spaces-Addition%20LSTM-black.svg)](https://huggingface.co/spaces/keras-io/addition-lstm) |
 """

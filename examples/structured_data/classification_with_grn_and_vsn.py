@@ -4,6 +4,7 @@ Author: [Khalid Salama](https://www.linkedin.com/in/khalid-salama-24403144/)
 Date created: 2021/02/10
 Last modified: 2021/02/10
 Description: Using Gated Residual and Variable Selection Networks for income level prediction.
+Accelerator: GPU
 """
 
 """
@@ -96,7 +97,7 @@ CSV_HEADER = [
     "country_of_birth_self",
     "citizenship",
     "own_business_or_self_employed",
-    "fill_inc_questionnaire_for_veteran's_admin",
+    "fill_inc_questionnaire_for_veterans_admin",
     "veterans_benefits",
     "weeks_worked_in_year",
     "year",
@@ -211,7 +212,6 @@ def process(features, target):
 
 
 def get_dataset_from_csv(csv_file_path, shuffle=False, batch_size=128):
-
     dataset = tf.data.experimental.make_csv_dataset(
         csv_file_path,
         batch_size=batch_size,
@@ -294,7 +294,7 @@ flexibility to suppress input that are not relevant for a given task.
 
 class GatedLinearUnit(layers.Layer):
     def __init__(self, units):
-        super(GatedLinearUnit, self).__init__()
+        super().__init__()
         self.linear = layers.Dense(units)
         self.sigmoid = layers.Dense(units, activation="sigmoid")
 
@@ -317,7 +317,7 @@ The Gated Residual Network (GRN) works as follows:
 
 class GatedResidualNetwork(layers.Layer):
     def __init__(self, units, dropout_rate):
-        super(GatedResidualNetwork, self).__init__()
+        super().__init__()
         self.units = units
         self.elu_dense = layers.Dense(units, activation="elu")
         self.linear_dense = layers.Dense(units)
@@ -354,7 +354,7 @@ number of the input features.
 
 class VariableSelection(layers.Layer):
     def __init__(self, num_features, units, dropout_rate):
-        super(VariableSelection, self).__init__()
+        super().__init__()
         self.grns = list()
         # Create a GRN for each feature independently
         for idx in range(num_features):
@@ -444,4 +444,12 @@ You should achieve more than 95% accuracy on the test set.
 To increase the learning capacity of the model, you can try increasing the
 `encoding_size` value, or stacking multiple GRN layers on top of the VSN layer.
 This may require to also increase the `dropout_rate` value to avoid overfitting.
+"""
+
+"""
+**Example available on HuggingFace**
+
+| Trained Model | Demo |
+| :--: | :--: |
+| [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Model-Classification%20With%20GRN%20%26%20VSN-red)](https://huggingface.co/keras-io/structured-data-classification-grn-vsn) | [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Space-Classification%20With%20GRN%20%26%20VSN-red)](https://huggingface.co/spaces/keras-io/structured-data-classification-grn-vsn) |
 """

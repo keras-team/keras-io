@@ -30,14 +30,4 @@ Once TensorFlow is installed, just import Keras via:
 from tensorflow import keras
 ```
 
-The Keras codebase is also available on GitHub:
-
-```
-git clone https://github.com/keras-team/keras.git
-```
-
-You can download an archive of the Keras code below:
-
-<div class="col-md px-1">
-    <a href='https://github.com/keras-team/keras/archive/refs/heads/master.zip' class="btn btn-med btn-secondary">Download the Keras code archive</a>
-</div>
+The Keras codebase is also available on GitHub at [keras-team/keras](https://github.com/keras-team/keras).

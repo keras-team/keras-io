@@ -4,6 +4,11 @@ Authors: Tom O'Malley, Haifeng Jin
 Date created: 2019/10/24
 Last modified: 2021/06/02
 Description: Tuning the hyperparameters of the models with multiple GPUs and multiple machines.
+Accelerator: None
+"""
+
+"""shell
+pip install keras-tuner -q
 """
 
 """
@@ -87,12 +92,12 @@ is not supported, but support for this is on the roadmap.
 When the enviroment variables described above are set, the example below will
 run distributed tuning and use data parallelism within each trial via
 `tf.distribute`. The example loads MNIST from `tensorflow_datasets` and uses
-[Hyperband](https://arxiv.org/pdf/1603.06560.pdf) for the hyperparameter
+[Hyperband](https://arxiv.org/abs/1603.06560) for the hyperparameter
 search.
 """
 
 
-import keras_tuner as kt
+import keras_tuner
 import tensorflow as tf
 import numpy as np
 
@@ -132,7 +137,7 @@ def build_model(hp):
     return model
 
 
-tuner = kt.Hyperband(
+tuner = keras_tuner.Hyperband(
     hypermodel=build_model,
     objective="val_accuracy",
     max_epochs=2,

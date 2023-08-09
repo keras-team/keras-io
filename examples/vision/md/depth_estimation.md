@@ -615,3 +615,5 @@ The following papers go deeper into possible approaches for depth estimation.
 3. [Deeper Depth Prediction with Fully Convolutional Residual Networks](https://arxiv.org/pdf/1606.00373v2.pdf)
 
 You can also find helpful implementations in the papers with code depth estimation task.
+
+You can use the trained model hosted on [Hugging Face Hub](https://huggingface.co/spaces/keras-io/Monocular-Depth-Estimation) and try the demo on [Hugging Face Spaces](https://huggingface.co/keras-io/monocular-depth-estimation).

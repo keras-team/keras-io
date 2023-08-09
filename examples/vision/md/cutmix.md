@@ -486,3 +486,8 @@ You may notice it takes less time to train the model with the CutMix augmentatio
 
 You can experiment further with the CutMix technique by following the
 [original paper](https://arxiv.org/abs/1905.04899).
+Example available on HuggingFace.
+
+| Trained Model | Demo |
+| :--: | :--: |
+| [![Generic badge](https://img.shields.io/badge/🤗%20Model-CutMix%20Data%20augmentation-black.svg)](https://huggingface.co/keras-io/CutMix_data_augmentation_for_image_classification) | [![Generic badge](https://img.shields.io/badge/🤗%20Spaces-CutMix%20Data%20augmentation-black.svg)](https://huggingface.co/spaces/keras-io/CutMix_Data_Augmentation_for_Image_Classification) |

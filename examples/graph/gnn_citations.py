@@ -4,6 +4,7 @@ Author: [Khalid Salama](https://www.linkedin.com/in/khalid-salama-24403144/)
 Date created: 2021/05/30
 Last modified: 2021/05/30
 Description: Implementing a graph neural network model for predicting the topic of a paper given its citations.
+Accelerator: GPU
 """
 
 """
@@ -91,7 +92,10 @@ Now let's load the papers data into a Pandas DataFrame.
 
 column_names = ["paper_id"] + [f"term_{idx}" for idx in range(1433)] + ["subject"]
 papers = pd.read_csv(
-    os.path.join(data_dir, "cora.content"), sep="\t", header=None, names=column_names,
+    os.path.join(data_dir, "cora.content"),
+    sep="\t",
+    header=None,
+    names=column_names,
 )
 print("Papers shape:", papers.shape)
 
@@ -404,7 +408,7 @@ class GraphConvLayer(layers.Layer):
         *args,
         **kwargs,
     ):
-        super(GraphConvLayer, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
         self.aggregation_type = aggregation_type
         self.combination_type = combination_type
@@ -430,10 +434,11 @@ class GraphConvLayer(layers.Layer):
             messages = messages * tf.expand_dims(weights, -1)
         return messages
 
-    def aggregate(self, node_indices, neighbour_messages):
+    def aggregate(self, node_indices, neighbour_messages, node_repesentations):
         # node_indices shape is [num_edges].
         # neighbour_messages shape: [num_edges, representation_dim].
-        num_nodes = tf.math.reduce_max(node_indices) + 1
+        # node_repesentations shape is [num_nodes, representation_dim]
+        num_nodes = node_repesentations.shape[0]
         if self.aggregation_type == "sum":
             aggregated_message = tf.math.unsorted_segment_sum(
                 neighbour_messages, node_indices, num_segments=num_nodes
@@ -491,7 +496,9 @@ class GraphConvLayer(layers.Layer):
         # Prepare the messages of the neighbours.
         neighbour_messages = self.prepare(neighbour_repesentations, edge_weights)
         # Aggregate the neighbour messages.
-        aggregated_messages = self.aggregate(node_indices, neighbour_messages)
+        aggregated_messages = self.aggregate(
+            node_indices, neighbour_messages, node_repesentations
+        )
         # Update the node embedding with the neighbour messages.
         return self.update(node_repesentations, aggregated_messages)
 
@@ -532,7 +539,7 @@ class GNNNodeClassifier(tf.keras.Model):
         *args,
         **kwargs,
     ):
-        super(GNNNodeClassifier, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
         # Unpack graph_info to three elements: node_features, edges, and edge_weight.
         node_features, edges, edge_weights = graph_info

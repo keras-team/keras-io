@@ -4,6 +4,7 @@ Author: [Xingyu Long](https://github.com/xingyu-long)
 Date created: 2020/07/28
 Last modified: 2020/08/27
 Description: Implementing Super-Resolution using Efficient sub-pixel model on BSDS500.
+Accelerator: GPU
 """
 
 """
@@ -30,9 +31,9 @@ import numpy as np
 
 from tensorflow import keras
 from tensorflow.keras import layers
-from tensorflow.keras.preprocessing.image import load_img
-from tensorflow.keras.preprocessing.image import array_to_img
-from tensorflow.keras.preprocessing.image import img_to_array
+from tensorflow.keras.utils import load_img
+from tensorflow.keras.utils import array_to_img
+from tensorflow.keras.utils import img_to_array
 from tensorflow.keras.preprocessing import image_dataset_from_directory
 
 from IPython.display import display
@@ -189,7 +190,7 @@ def get_model(upscale_factor=3, channels=1):
     x = layers.Conv2D(64, 5, **conv_args)(inputs)
     x = layers.Conv2D(64, 3, **conv_args)(x)
     x = layers.Conv2D(32, 3, **conv_args)(x)
-    x = layers.Conv2D(channels * (upscale_factor ** 2), 3, **conv_args)(x)
+    x = layers.Conv2D(channels * (upscale_factor**2), 3, **conv_args)(x)
     outputs = tf.nn.depth_to_space(x, upscale_factor)
 
     return keras.Model(inputs, outputs)
@@ -289,7 +290,7 @@ This is the main metric we use to evaluate super-resolution performance.
 
 class ESPCNCallback(keras.callbacks.Callback):
     def __init__(self):
-        super(ESPCNCallback, self).__init__()
+        super().__init__()
         self.test_img = get_lowres_image(load_img(test_img_paths[0]), upscale_factor)
 
     # Store PSNR value in each epoch.
@@ -336,7 +337,8 @@ optimizer = keras.optimizers.Adam(learning_rate=0.001)
 epochs = 100
 
 model.compile(
-    optimizer=optimizer, loss=loss_fn,
+    optimizer=optimizer,
+    loss=loss_fn,
 )
 
 model.fit(

@@ -8,30 +8,41 @@
   <meta name="description" content="Keras documentation">
   <meta name="author" content="Keras Team">
 
-  <title>Keras: the Python deep learning API</title>
+  <title>Keras: Deep Learning for humans</title>
 
   <!-- Bootstrap core CSS -->
   <link href="css/bootstrap.min.css" rel="stylesheet">
 
   <!-- Custom fonts for this template -->
-  <link href="https://fonts.googleapis.com/css?family=Open+Sans&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css?family=Open+Sans:wght@300;400;600;800&display=swap" rel="stylesheet">
 
   <!-- Custom styles for this template -->
   <link href="css/landing.css" rel="stylesheet">
 
+  <!-- Google Tag Manager -->
+  <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+  new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+  j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+  'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+  })(window,document,'script','dataLayer','GTM-5DNGF4N');
+  </script>
   <script>
   (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
   (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
   m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
   })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
-
-  ga('create', 'UA-61785484-1', 'auto');
+  ga('create', 'UA-175165319-128', 'auto');
   ga('send', 'pageview');
   </script>
+  <!-- End Google Tag Manager -->
 
 </head>
 
 <body>
+  <!-- Google Tag Manager (noscript) -->
+  <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-5DNGF4N"
+  height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+  <!-- End Google Tag Manager (noscript) -->
 
   <!-- Masthead -->
   <header class="masthead smooth-white-bg text-center">
@@ -61,47 +72,154 @@
     
   </header>
 
+
+  <div class="masthead text-center smooth-black-bg" style="padding: 1em;">
+    <div class="row">
+      <div class="col-xl-8 mx-auto" style="font-size: 1.5rem">
+        Keras is now available for TensorFlow, JAX and PyTorch!<br>
+        <a href="/keras_core/announcement/">Read the Keras Core announcement</a>.
+      </div>
+    </div>
+  </div>
+  
+
+  <!-- Testimonials -->
+  <section class="testimonials text-center smooth-white-bg">
+    <div class="container">
+      <div class="row">
+        <div class="col-lg-4">
+          <div class="testimonial-item mx-auto mb-5">
+            <p class="font-weight-light mb-0 quote-content">
+            "Keras is one of the key building blocks in YouTube Discovery's new modeling infrastructure. It brings a clear, consistent API and a common way of expressing modeling ideas to 8 teams across the major surfaces of YouTube recommendations."
+            </p>
+            <h5><span class="quote-name">Maciej Kula</span><br><span class="quote-title">Staff Software Engineer - Google</span></h5>
+
+          </div>
+        </div>
+
+
+        <div class="col-lg-4">
+          <div class="testimonial-item mx-auto mb-5">
+            <p class="font-weight-light mb-0 quote-content">
+            "Keras has tremendously simplified the development workflow of Waymo's ML practitioners, with the benefits of a significantly simplified API, standardized interface and behaviors, easily shareable model building components, and highly improved debuggability."
+            </p>
+            <h5><span class="quote-name">Yiming Chen</span><br><span class="quote-title">Senior Software Engineer - Waymo</span></h5>
+          </div>
+        </div>
+
+        <div class="col-lg-4">
+          <div class="testimonial-item mx-auto mb-5">
+            <p class="font-weight-light mb-0 quote-content">
+            "The best thing you can say about any software library is that the abstractions it chooses feel completely natural, such that there is zero friction between thinking about what you want to do and thinking about how you want to code it. That's exactly what you get with Keras."
+            </p>
+            <h5><span class="quote-name">Matthew Carrigan</span><br><span class="quote-title">Machine Learning Engineer - Hugging Face</span></h5>
+          </div>
+        </div>
+        
+      </div>
+
+      <div class="row">
+        <div class="col-lg-4">
+          <div class="testimonial-item mx-auto mb-5">
+            <p class="font-weight-light mb-0 quote-content">
+            "Keras allows us to prototype, research and deploy deep learning models in an intuitive and streamlined manner. The functional API makes code comprehensible and stylistic, allowing for effective knowledge transfer between scientists on my team."
+            </p>
+            <h5><span class="quote-name">Aiden Arnold, PhD</span><br><span class="quote-title">Lead Data Scientist - Rune Labs</span></h5>
+          </div>
+        </div>
+        <div class="col-lg-4">
+          <div class="testimonial-item mx-auto mb-5">
+            <p class="font-weight-light mb-0 quote-content">
+            "Keras has something for every user: easy customisability for the academic; out-of-the-box, performant models and pipelines for use by the industry, and readable, modular code for the student. Keras has made it very simple to quickly iterate over experiments without worrying about low-level details."
+            </p>
+            <h5><span class="quote-name">Abheesht Sharma</span><br><span class="quote-title">Research Scientist - Amazon</span></h5>
+          </div>
+        </div>
+        <div class="col-lg-4">
+          <div class="testimonial-item mx-auto mb-5">
+            <p class="font-weight-light mb-0 quote-content">
+            "Keras is the perfect abstraction layer to build and operationalize Deep Learning models. I've been using it since 2018 to develop and deploy models for some of the largest companies in the world [...] a combination of Keras, TensorFlow, and TFX has no rival."
+            </p>
+            <h5><span class="quote-name">Santiago L. Valdarrama</span><br><span class="quote-title">Machine Learning Consultant</span></h5>
+          </div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-lg-4">
+          <div class="testimonial-item mx-auto mb-5">
+            <p class="font-weight-light mb-0 quote-content">
+            "What I personally like the most about Keras (aside from its intuitive APIs), is the ease of transitioning from research to production. I can train a Keras model, convert it to TF Lite and deploy it to mobile & edge devices."
+            </p>
+            <h5><span class="quote-name">Margaret Maynard-Reid</span><br><span class="quote-title">Machine Learning Engineer</span></h5>
+
+          </div>
+        </div>
+
+        <div class="col-lg-4">
+          <div class="testimonial-item mx-auto mb-5">
+            <p class="font-weight-light mb-0 quote-content">
+            "Keras is that sweet spot where you get flexibility for research and consistency for deployment. Keras is to Deep Learning what Ubuntu is to Operating Systems."
+            </p>
+            <h5><span class="quote-name">Aakash Nain</span><br><span class="quote-title">Research Engineer</span></h5>
+          </div>
+        </div>
+
+        <div class="col-lg-4">
+          <div class="testimonial-item mx-auto mb-5">
+            <p class="font-weight-light mb-0 quote-content">
+            "Keras's user-friendly design means it's easy to learn and easy to use [...] it allows for the rapid prototyping and deployment of models across a variety of platforms." 
+            </p>
+            <h5><span class="quote-name">Gareth Collins</span><br><span class="quote-title">Machine Learning Engineer</span></h5>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- Image Showcases -->
   <section class="showcase">
     <div class="container-fluid p-0">
 
-      <div class="row no-gutters smooth-black-bg">
-        <div class="col-lg-6 text-white showcase-img" style="background-image: url('img/showcase-api.png');"></div>
+      <div class="row no-gutters bottom-border smooth-black-bg">
+        <div class="col-lg-6 text-white showcase-img" style="background-image: url('img/showcase-api-2.png');"></div>
         <div class="col-lg-6 my-auto showcase-text">
           <h2>Deep learning for humans.</h2>
           <p class="lead mb-0">
             Keras is an API designed for human beings, not machines.
-            Keras follows best practices for reducing cognitive load: it offers consistent & simple APIs,
+            Keras follows best practices for <b>reducing cognitive load</b>: it offers consistent & simple APIs,
             it minimizes the number of user actions required for common use cases,
             and it provides clear & actionable error messages.
-            It also has extensive documentation and developer guides.
+            Keras also gives the highest priority to crafting great documentation and developer guides.
           </p>
         </div>
       </div>
-      <div class="row no-gutters smooth-white-bg">
-        <div class="col-lg-6 order-lg-2 text-white showcase-img" style="background-image: url('img/showcase-the_loop_of_progress.png');"></div>
+      <div class="row no-gutters bottom-border smooth-white-bg">
+        <div class="col-lg-6 order-lg-2 text-white showcase-img" style="background-image: url('img/showcase-superpower.png');"></div>
         <div class="col-lg-6 order-lg-1 my-auto showcase-text">
-          <h2>Iterate at the speed of thought.</h2>
+          <h2>A superpower for developers.</h2>
           <p class="lead mb-0">
-            Keras is the most used deep learning framework among top-5 winning teams on <a href='https://www.kaggle.com/'>Kaggle</a>.
-            Because Keras makes it easier to run new experiments,
-            it empowers you to try more ideas than your competition, faster.
-            And this is how you win.
+            The purpose of Keras is to give an <b>unfair advantage</b> to any developer looking to ship Machine Learning-powered apps.
+
+            Keras focuses on debugging speed, code elegance & conciseness, maintainability, and deployability.
+
+            When you choose Keras, your codebase is smaller, more readable, easier to iterate on. Your models run faster
+            thanks to XLA compilation and Autograph optimizations, and are easier to deploy across every surface (server, mobile, browser, embedded) thanks to TF Serving, TF Lite, and TF.js.
           </p>
         </div>
       </div>
-      <div class="row no-gutters smooth-black-bg">
+      <div class="row no-gutters bottom-border smooth-black-bg">
         <div class="col-lg-6 text-white showcase-img" style="background-image: url('img/showcase-tpu.jpg');"></div>
         <div class="col-lg-6 my-auto showcase-text">
           <h2>Exascale machine learning.</h2>
           <p class="lead mb-0">
-            Built on top of <a href='https://www.tensorflow.org/'>TensorFlow 2</a>, Keras is an industry-strength framework
+            Built on top of the <a href='https://www.tensorflow.org/'>TensorFlow platform</a>, Keras is an industry-strength framework
             that can scale to large clusters of GPUs or an entire <a href='https://cloud.google.com/tpu'>TPU pod</a>.
             It's not only possible; it's easy.
           </p>
         </div>
       </div>
-      <div class="row no-gutters smooth-white-bg">
+      <div class="row no-gutters bottom-border smooth-white-bg">
         <div class="col-lg-6 order-lg-2 text-white showcase-img" style="background-image: url('img/showcase-deploy.png');"></div>
         <div class="col-lg-6 order-lg-1 my-auto showcase-text">
           <h2>Deploy anywhere.</h2>
@@ -113,13 +231,13 @@
           </p>
         </div>
       </div>
-      <div class="row no-gutters smooth-black-bg">
+      <div class="row no-gutters bottom-border smooth-black-bg">
         <div class="col-lg-6 text-white showcase-img" style="background-image: url('img/showcase-tf.jpg');"></div>
         <div class="col-lg-6 my-auto showcase-text">
           <h2>A vast ecosystem.</h2>
           <p class="lead mb-0">
             Keras is a central part of the tightly-connected
-            TensorFlow 2 ecosystem, covering every step of the machine learning workflow,
+            TensorFlow ecosystem, covering every step of the machine learning workflow,
             from data management to hyperparameter training to deployment solutions.
           </p>
         </div>
@@ -136,49 +254,13 @@
           </p>
         </div>
       </div>
-      <div class="row no-gutters smooth-black-bg">
-        <div class="col-lg-6 text-white showcase-img" style="background-image: url('img/showcase-amphi.jpg');"></div>
-        <div class="col-lg-6 my-auto showcase-text">
-          <h2>An accessible superpower.</h2>
-          <p class="lead mb-0">
-            Because of its ease-of-use and focus on user experience,
-            Keras is the deep learning solution of choice for many university courses.
-            It is widely recommended as one of the best ways to learn deep learning.
-          </p>
-        </div>
-      </div>
+      
     </div>
   </section>
 
-  <!-- Testimonials -->
-  <section class="testimonials text-center smooth-white-bg">
-    <div class="container">
-      <h2 class="mb-5">Take it from our users.</h2>
-      <div class="row">
-        <div class="col-lg-4">
-          <div class="testimonial-item mx-auto mb-5 mb-lg-0">
-            <h5><span class="quote-name">Aakash Nain</span><br><span class="quote-title">Research Engineer</span></h5>
-            <p class="font-weight-light mb-0 quote-content">"
-            Keras is that sweet spot where you get flexibility for research and consistency for deployment.
-            Keras is to Deep Learning what Ubuntu is to Operating Systems."</p>
-          </div>
-        </div>
-        <div class="col-lg-4">
-          <div class="testimonial-item mx-auto mb-5 mb-lg-0">
-            <h5><span class="quote-name">Sayak Paul</span><br><span class="quote-title">Deep Learning Associate at PyImageSearch</span></h5>
-            <p class="font-weight-light mb-0 quote-content">"If you are a ML researcher or a ML engineer, Keras has got you covered by allowing you to tweak the novel bits while delegating the generic bits to the library itself."</p>
-          </div>
-        </div>
-        <div class="col-lg-4">
-          <div class="testimonial-item mx-auto mb-5 mb-lg-0">
-            <h5><span class="quote-name">Margaret Maynard-Reid</span><br><span class="quote-title">Machine Learning Engineer</span></h5>
-            <p class="font-weight-light mb-0 quote-content">"What I personally like the most about Keras (aside from its intuitive APIs), is the ease of transitioning from research to production. I can train a Keras model, convert it to TF Lite and deploy it to mobile & edge devices."</p>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
 
 </body>
-
+<footer>
+  <a href="https://policies.google.com/terms">Terms</a> | <a href="https://policies.google.com/privacy">Privacy</a>
+</footer>
 </html>

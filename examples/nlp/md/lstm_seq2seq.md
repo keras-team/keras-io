@@ -689,5 +689,5 @@ Input sentence: Hello!
 Decoded sentence: Salut !
 ```
 </div>
-    
+
 

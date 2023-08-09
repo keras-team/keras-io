@@ -9,12 +9,12 @@ jobs:
     - uses: actions/checkout@v2
     - uses: actions/setup-python@v1
       with:
-        python-version: 3.6
+        python-version: 3.9
     - name: Ensure files are formatted with black
       run: |
         pip install --upgrade pip
-        pip install black==19.10b0
-        black --check ./examples
+        pip install black~=23.3.0
+        black --check --diff ./examples
   docker-image:
     runs-on: ubuntu-latest
     steps:

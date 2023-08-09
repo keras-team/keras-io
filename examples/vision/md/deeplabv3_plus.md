@@ -2,7 +2,7 @@
 
 **Author:** [Soumik Rakshit](http://github.com/soumik12345)<br>
 **Date created:** 2021/08/31<br>
-**Last modified:** 2021/09/1<br>
+**Last modified:** 2023/01/06<br>
 
 
 <img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/vision/ipynb/deeplabv3_plus.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/vision/deeplabv3_plus.py)
@@ -48,7 +48,7 @@ from tensorflow.keras import layers
 
 
 ```python
-!gdown https://drive.google.com/uc?id=1B9A9UCJYMwTL4oBEo4RZfbMZMaZhKJaz
+!gdown "1B9A9UCJYMwTL4oBEo4RZfbMZMaZhKJaz&confirm=t"
 !unzip -q instance-level-human-parsing.zip
 ```
 
@@ -96,7 +96,7 @@ def read_image(image_path, mask=False):
         image = tf.image.decode_png(image, channels=3)
         image.set_shape([None, None, 3])
         image = tf.image.resize(images=image, size=[IMAGE_SIZE, IMAGE_SIZE])
-        image = image / 127.5 - 1
+        image = tf.keras.applications.resnet50.preprocess_input(image)
     return image
 
 
@@ -759,7 +759,7 @@ def decode_segmentation_masks(mask, colormap, n_classes):
 
 
 def get_overlay(image, colored_mask):
-    image = tf.keras.preprocessing.image.array_to_img(image)
+    image = tf.keras.utils.array_to_img(image)
     image = np.array(image).astype(np.uint8)
     overlay = cv2.addWeighted(image, 0.35, colored_mask, 0.65, 0)
     return overlay
@@ -769,7 +769,7 @@ def plot_samples_matplotlib(display_list, figsize=(5, 3)):
     _, axes = plt.subplots(nrows=1, ncols=len(display_list), figsize=figsize)
     for i in range(len(display_list)):
         if display_list[i].shape[-1] == 3:
-            axes[i].imshow(tf.keras.preprocessing.image.array_to_img(display_list[i]))
+            axes[i].imshow(tf.keras.utils.array_to_img(display_list[i]))
         else:
             axes[i].imshow(display_list[i])
     plt.show()
@@ -811,7 +811,7 @@ plot_predictions(train_images[:4], colormap, model=model)
 
 
 ### Inference on Validation Images
-
+You can use the trained model hosted on [Hugging Face Hub](https://huggingface.co/keras-io/deeplabv3p-resnet50) and try the demo on [Hugging Face Spaces](https://huggingface.co/spaces/keras-io/Human-Part-Segmentation).
 
 ```python
 plot_predictions(val_images[:4], colormap, model=model)
@@ -831,4 +831,3 @@ plot_predictions(val_images[:4], colormap, model=model)
 
 
 ![png](/img/examples/vision/deeplabv3_plus/deeplabv3_plus_18_3.png)
-

@@ -4,6 +4,7 @@ Author: [Theodoros Ntakouris](https://github.com/ntakouris)
 Date created: 2021/06/25
 Last modified: 2021/08/05
 Description: This notebook demonstrates how to do timeseries classification using a Transformer model.
+Accelerator: GPU
 """
 
 
@@ -169,4 +170,7 @@ accuracy of ~85, without hyperparameter tuning. And that is for a model
 with less than 100k parameters. Of course, parameter count and accuracy could be
 improved by a hyperparameter search and a more sophisticated learning rate
 schedule, or a different optimizer.
+
+You can use the trained model hosted on [Hugging Face Hub](https://huggingface.co/keras-io/timeseries_transformer_classification)
+and try the demo on [Hugging Face Spaces](https://huggingface.co/spaces/keras-io/timeseries_transformer_classification).
 """
