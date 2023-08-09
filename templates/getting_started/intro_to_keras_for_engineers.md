@@ -17,7 +17,7 @@
 ```python
 import numpy as np
 import tensorflow as tf
-from tensorflow import keras
+import keras
 ```
 
 ---
@@ -294,8 +294,8 @@ print("mean: %.4f" % np.mean(normalized_data))
 
 <div class="k-default-codeblock">
 ```
-var: 1.0006
-mean: -0.0000
+var: 1.0005
+mean: 0.0000
 
 ```
 </div>
@@ -433,25 +433,25 @@ _________________________________________________________________
                                                                  
  conv2d (Conv2D)             (None, 148, 148, 32)      896       
                                                                  
- max_pooling2d (MaxPooling2D  (None, 49, 49, 32)       0         
- )                                                               
+ max_pooling2d (MaxPooling2  (None, 49, 49, 32)        0         
+ D)                                                              
                                                                  
  conv2d_1 (Conv2D)           (None, 47, 47, 32)        9248      
                                                                  
- max_pooling2d_1 (MaxPooling  (None, 15, 15, 32)       0         
- 2D)                                                             
+ max_pooling2d_1 (MaxPoolin  (None, 15, 15, 32)        0         
+ g2D)                                                            
                                                                  
  conv2d_2 (Conv2D)           (None, 13, 13, 32)        9248      
                                                                  
- global_average_pooling2d (G  (None, 32)               0         
- lobalAveragePooling2D)                                          
+ global_average_pooling2d (  (None, 32)                0         
+ GlobalAveragePooling2D)                                         
                                                                  
  dense (Dense)               (None, 10)                330       
                                                                  
 =================================================================
-Total params: 19,722
-Trainable params: 19,722
-Non-trainable params: 0
+Total params: 19722 (77.04 KB)
+Trainable params: 19722 (77.04 KB)
+Non-trainable params: 0 (0.00 Byte)
 _________________________________________________________________
 
 ```
@@ -562,14 +562,14 @@ _________________________________________________________________
  dense_3 (Dense)             (None, 10)                1290      
                                                                  
 =================================================================
-Total params: 118,282
-Trainable params: 118,282
-Non-trainable params: 0
+Total params: 118282 (462.04 KB)
+Trainable params: 118282 (462.04 KB)
+Non-trainable params: 0 (0.00 Byte)
 _________________________________________________________________
 Fit on NumPy data
-938/938 [==============================] - 1s 932us/step - loss: 0.2619
+938/938 [==============================] - 2s 2ms/step - loss: 0.2642
 Fit on Dataset
-938/938 [==============================] - 1s 917us/step - loss: 0.1121
+938/938 [==============================] - 2s 2ms/step - loss: 0.1157
 
 ```
 </div>
@@ -585,7 +585,7 @@ print(history.history)
 
 <div class="k-default-codeblock">
 ```
-{'loss': [0.11213372647762299]}
+{'loss': [0.11566586047410965]}
 
 ```
 </div>
@@ -616,7 +616,7 @@ history = model.fit(dataset, epochs=1)
 
 <div class="k-default-codeblock">
 ```
-938/938 [==============================] - 1s 924us/step - loss: 0.0797 - acc: 0.9749
+938/938 [==============================] - 2s 2ms/step - loss: 0.0809 - acc: 0.9756
 
 ```
 </div>
@@ -633,7 +633,7 @@ history = model.fit(dataset, epochs=1, validation_data=val_dataset)
 
 <div class="k-default-codeblock">
 ```
-938/938 [==============================] - 1s 1ms/step - loss: 0.0543 - acc: 0.9834 - val_loss: 0.0879 - val_acc: 0.9743
+938/938 [==============================] - 2s 2ms/step - loss: 0.0571 - acc: 0.9830 - val_loss: 0.0963 - val_acc: 0.9704
 
 ```
 </div>
@@ -718,8 +718,8 @@ print("acc: %.2f" % acc)
 
 <div class="k-default-codeblock">
 ```
-157/157 [==============================] - 0s 487us/step - loss: 0.0879 - acc: 0.9743
-loss: 0.09
+157/157 [==============================] - 0s 1ms/step - loss: 0.0963 - acc: 0.9704
+loss: 0.10
 acc: 0.97
 
 ```
@@ -735,7 +735,7 @@ print(predictions.shape)
 
 <div class="k-default-codeblock">
 ```
-157/157 [==============================] - 0s 467us/step
+157/157 [==============================] - 0s 1ms/step
 (10000, 10)
 
 ```
@@ -908,9 +908,9 @@ model.fit(dataset)
 
 <div class="k-default-codeblock">
 ```
-1/1 [==============================] - 0s 17ms/step - loss: 0.4942
+1/1 [==============================] - 0s 41ms/step - loss: 0.5348
 
-<keras.callbacks.History at 0x2bf9db730>
+<keras.src.callbacks.History at 0x7f6c104565d0>
 
 ```
 </div>
@@ -934,9 +934,9 @@ model.fit(dataset)
 
 <div class="k-default-codeblock">
 ```
-1/1 [==============================] - 0s 8ms/step - loss: 0.4899
+1/1 [==============================] - 0s 24ms/step - loss: 0.5121
 
-<keras.callbacks.History at 0x2bfa2a2f0>
+<keras.src.callbacks.History at 0x7f6c104bfd10>
 
 ```
 </div>
