@@ -2,7 +2,7 @@
 Title: Object Detection with KerasCV
 Author: [lukewood](https://twitter.com/luke_wood_ml)
 Date created: 2023/04/08
-Last modified: 2023/04/08
+Last modified: 2023/08/10
 Description: Train an object detection model with KerasCV.
 Accelerator: GPU
 """
@@ -10,7 +10,7 @@ Accelerator: GPU
 """
 KerasCV offers a complete set of production grade APIs to solve object detection
 problems.
-These APIs include object detection specific
+These APIs include object-detection-specific
 data augmentation techniques, Keras native COCO metrics, bounding box format
 conversion utilities, visualization tools, pretrained object detection models,
 and everything you need to train your own state of the art object detection
@@ -42,7 +42,7 @@ and localizing objects within a given image.  Typically, your inputs are
 images, and your labels are bounding boxes with optional class
 labels.
 Object detection can be thought of as an extension of classification, however
-instead of one class label for the image, you must detect and localize and
+instead of one class label for the image, you must detect and localize an
 arbitrary number of classes.
 
 **For example:**
@@ -64,7 +64,7 @@ bounding_boxes = {
 
 Since the inception of [*You Only Look Once*](https://arxiv.org/abs/1506.02640)
 (aka YOLO),
-object detection has primarily solved using deep learning.
+object detection has primarily been solved using deep learning.
 Most deep learning architectures do this by cleverly framing the object detection
 problem as a combination of many small classification problems and
 many regression problems.
@@ -130,7 +130,7 @@ or equivalently in `xyxy` format:
 
 While this may seem simple, it is a critical piece of the KerasCV object
 detection API!
-Every component that processes bounding boxes requires
+Every component that processes bounding boxes requires a
 `bounding_box_format` argument.
 You can read more about
 KerasCV bounding box formats [in the API docs](https://keras.io/api/keras_cv/bounding_box/formats/).
@@ -152,7 +152,7 @@ image = keras.utils.load_img(filepath)
 image = np.array(image)
 
 visualization.plot_image_gallery(
-    [image],
+    np.array([image]),
     value_range=(0, 255),
     rows=1,
     cols=1,
@@ -244,7 +244,7 @@ visualization.plot_bounding_box_gallery(
 )
 
 """
-In order to support easy this easy and intuitive inference workflow, KerasCV
+In order to support this easy and intuitive inference workflow, KerasCV
 performs non-max suppression inside of the `RetinaNet` class.
 Non-max suppression is a traditional computing algorithm that solves the problem
 of a model detecting multiple boxes for the same object.
@@ -254,7 +254,7 @@ will want to customize the settings of your model's non-max
 suppression operation.
 This can be done by overriding to the `model.prediction_decoder` attribute.
 
-To show this concept off, lets temporarily disable non-max suppression on our
+To show this concept off, let's temporarily disable non-max suppression on our
 RetinaNet.  This can be done by writing to the `prediction_decoder` attribute.
 """
 
@@ -282,14 +282,15 @@ visualization.plot_bounding_box_gallery(
 
 
 """
-Next, lets re-configure `keras_cv.layers.MultiClassNonMaxSuppression` for our
+Next, let's re-configure `keras_cv.layers.MultiClassNonMaxSuppression` for our
 use case!
 In this case, we will tune the `iou_threshold` to `0.2`, and the
 `confidence_threshold` to `0.7`.
 
 Raising the `confidence_threshold` will cause the model to only output boxes
-that have a higher confidence score.  `iou_threshold` controls the threshold of
-IoU two boxes must have in order for one to be pruned out.
+that have a higher confidence score. `iou_threshold` controls the threshold of
+intersection over union (IoU) that two boxes must have in order for one to be
+pruned out.
 [More information on these parameters may be found in the TensorFlow API docs](https://www.tensorflow.org/api_docs/python/tf/image/combined_non_max_suppression)
 """
 
@@ -379,7 +380,7 @@ train_ds, ds_info = your_data_loader.load(
 )
 ```
 
-Clearly yields bounding boxes in the format `xywh`.  You can read more about
+This clearly yields bounding boxes in the format `xywh`.  You can read more about
 KerasCV bounding box formats [in the API docs](https://keras.io/api/keras_cv/bounding_box/formats/).
 
 Our data comes loaded into the format
@@ -494,8 +495,8 @@ bounding boxes, and must update them accordingly.
 Luckily, KerasCV natively supports bounding box augmentation with its extensive
 library
 of [data augmentation layers](https://keras.io/api/keras_cv/layers/preprocessing/).
-The code below loads the Pascal VOC dataset, and performs on-the-fly bounding box
-friendly data augmentation inside of a `tf.data` pipeline.
+The code below loads the Pascal VOC dataset, and performs on-the-fly,
+bounding-box-friendly data augmentation inside a `tf.data` pipeline.
 """
 augmenter = keras.Sequential(
     layers=[
@@ -512,7 +513,7 @@ visualize_dataset(
 )
 
 """
-Great!  We now have a bounding box friendly data augmentation pipeline.
+Great! We now have a bounding-box-friendly data augmentation pipeline.
 Let's format our evaluation dataset to match.  Instead of using
 `JitteredResize`, let's use the deterministic `keras_cv.layers.Resizing()`
 layer.
@@ -526,7 +527,7 @@ eval_ds = eval_ds.map(inference_resizing, num_parallel_calls=tf.data.AUTOTUNE)
 """
 Due to the fact that the resize operation differs between the train dataset,
 which uses `JitteredResize()` to resize images, and the inference dataset, which
-uses `layers.Resizing(pad_to_aspect_ratio=True)`. it is good practice to
+uses `layers.Resizing(pad_to_aspect_ratio=True)`, it is good practice to
 visualize both datasets:
 """
 
@@ -538,7 +539,7 @@ visualize_dataset(
 Finally, let's unpackage our inputs from the preprocessing dictionary, and
 prepare to feed the inputs into our model.  In order to be TPU compatible,
 bounding box Tensors need to be `Dense` instead of `Ragged`.  If training on
-GPU, you can omit the `bounding_box.to_dense()` call.  If ommitted,
+GPU, you can omit the `bounding_box.to_dense()` call.  If omitted,
 the KerasCV RetinaNet
 label encoder will automatically correctly encode Ragged training targets.
 """
@@ -609,9 +610,9 @@ pretrained_model.compile(
 ### Metric evaluation
 
 Just like any other metric, you can pass the `KerasCV` object detection metrics
-to `compile()`.  The most popular Object Detection metrics are COCO metrics,
-which were published alongside the MSCOCO dataset.  KerasCV provides an easy
-to use suite of COCO metrics. under the `keras_cv.metrics.BoxCOCOMetrics`
+to `compile()`.  The most popular object detection metrics are COCO metrics,
+which were published alongside the MSCOCO dataset. KerasCV provides an
+easy-to-use suite of COCO metrics under the `keras_cv.metrics.BoxCOCOMetrics`
 symbol:
 """
 
@@ -649,7 +650,7 @@ pretrained_model.compile(
     metrics=[coco_metrics],
 )
 coco_metrics.reset_state()
-result = pretrained_model.evaluate(eval_ds.take(40), verbose=0)
+result = pretrained_model.evaluate(eval_ds.take(1), verbose=0)
 result = coco_metrics.result(force=True)
 
 print_metrics(result)
@@ -703,7 +704,7 @@ We can now move on to model creation and training.
 ## Model creation
 
 Next, let's use the KerasCV API to construct an untrained RetinaNet model.
-In this tutorial we using a pretrained ResNet50 backbone from the imagenet
+In this tutorial we use a pretrained ResNet50 backbone from the imagenet
 dataset.
 
 KerasCV makes it easy to construct a `RetinaNet` with any of the KerasCV
@@ -745,7 +746,7 @@ model.compile(
     metrics=None,
 )
 """
-If you want to fully train the model, uncomment `.take(20)` from each
+If you want to fully train the model, remove `.take(20)` from each
 of the following dataset references.
 """
 model.fit(
@@ -833,7 +834,7 @@ KerasCV makes it easy to construct state-of-the-art object detection pipelines.
 In this guide, we started off by writing a data loader using the KerasCV
 bounding box specification.
 Following this, we assembled a production grade data augmentation pipeline using
-the module `KerasCV` preprocessing layers in <50 lines of code.
+KerasCV preprocessing layers in <50 lines of code.
 We constructed a RetinaNet and trained for an epoch.
 
 KerasCV object detection components can be used independently, but also have deep
