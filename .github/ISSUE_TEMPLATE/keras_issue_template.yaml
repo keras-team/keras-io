@@ -93,9 +93,9 @@ body:
     validations:
       required: true
   - type: textarea
-    id: code-to-reproduce or tutorial link
+    id: code-to-reproduce
     attributes:
-      label: Standalone code to reproduce the issue
+      label: Standalone code to reproduce the issue or tutorial link
       description: Provide a reproducible test case that is the bare minimum necessary to generate the problem. If possible, please share a link to Colab/Jupyter/any notebook.
       placeholder: Tell us what you see!
       value: 
