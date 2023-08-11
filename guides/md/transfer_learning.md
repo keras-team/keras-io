@@ -44,12 +44,12 @@ The most common incarnation of transfer learning in the context of deep learning
 A last, optional step, is **fine-tuning**, which consists of unfreezing the entire
 model you obtained above (or part of it), and re-training it on the new data with a
 very low learning rate. This can potentially achieve meaningful improvements, by
- incrementally adapting the pretrained features to the new data.
+ incrementally adapting the pre-trained features to the new data.
 
 First, we will go over the Keras `trainable` API in detail, which underlies most
  transfer learning & fine-tuning workflows.
 
-Then, we'll demonstrate the typical workflow by taking a model pretrained on the
+Then, we'll demonstrate the typical workflow by taking a model pre-trained on the
 ImageNet dataset, and retraining it on the Kaggle "cats vs dogs" classification
  dataset.
 
@@ -306,7 +306,7 @@ It's also critical to use a very low learning rate at this stage, because
 you are training a much larger model than in the first round of training, on a dataset
  that is typically very small.
 As a result, you are at risk of overfitting very quickly if you apply large weight
- updates. Here, you only want to readapt the pretrained weights in an incremental way.
+ updates. Here, you only want to readapt the pre-trained weights incrementally.
 
 This is how to implement fine-tuning of the whole base model:
 
@@ -348,7 +348,7 @@ the case for other layers in general, as
 [weight trainability & inference/training modes are two orthogonal concepts](
   https://keras.io/getting_started/faq/#whats-the-difference-between-the-training-argument-in-call-and-the-trainable-attribute).
 But the two are tied in the case of the `BatchNormalization` layer.
-- When you unfreeze a model that contains `BatchNormalization` layers in order to do
+- When you unfreeze a model that contains `BatchNormalization` layers to do
 fine-tuning, you should keep the `BatchNormalization` layers in inference mode by
  passing `training=False` when calling the base model.
 Otherwise the updates applied to the non-trainable weights will suddenly destroy
@@ -575,7 +575,7 @@ Note that:
  range) to the `[-1, 1]` range.
 - We add a `Dropout` layer before the classification layer, for regularization.
 - We make sure to pass `training=False` when calling the base model, so that
-it runs in inference mode, so that batchnorm statistics don't get updated
+it runs in inference mode, so that batch norm statistics don't get updated
 even after we unfreeze the base model for fine-tuning.
 
 
@@ -740,8 +740,8 @@ statistics. If they did, they would wreck havoc on the representations learned b
 ```python
 # Unfreeze the base_model. Note that it keeps running in inference mode
 # since we passed `training=False` when calling it. This means that
-# the batchnorm layers will not update their batch statistics.
-# This prevents the batchnorm layers from undoing all the training
+# the batch norm layers will not update their batch statistics.
+# This prevents the batch norm layers from undoing all the training
 # we've done so far.
 base_model.trainable = True
 model.summary()
