@@ -44,9 +44,9 @@ body:
   - type: input
     id: tfversion
     attributes:
-      label: Tensorflow Version
+      label: Keras Version
       description: 
-      placeholder: ex,. tf 2.12
+      placeholder: ex,. Keras 2.13
     validations:
       required: true
   - type: dropdown
@@ -93,7 +93,7 @@ body:
     validations:
       required: true
   - type: textarea
-    id: code-to-reproduce
+    id: code-to-reproduce / tutorial link
     attributes:
       label: Standalone code to reproduce the issue
       description: Provide a reproducible test case that is the bare minimum necessary to generate the problem. If possible, please share a link to Colab/Jupyter/any notebook.
