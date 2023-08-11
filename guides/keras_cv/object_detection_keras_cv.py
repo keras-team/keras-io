@@ -380,7 +380,7 @@ train_ds, ds_info = your_data_loader.load(
 )
 ```
 
-clearly yields bounding boxes in the format `xywh`.  You can read more about
+This clearly yields bounding boxes in the format `xywh`.  You can read more about
 KerasCV bounding box formats [in the API docs](https://keras.io/api/keras_cv/bounding_box/formats/).
 
 Our data comes loaded into the format
