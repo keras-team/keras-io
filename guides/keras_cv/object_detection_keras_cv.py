@@ -1,6 +1,6 @@
 """
 Title: Object Detection with KerasCV
-Author: [lukewood](https://twitter.com/luke_wood_ml)
+Author: [lukewood](https://twitter.com/luke_wood_ml), Ian Stenbit, Tirth Patel
 Date created: 2023/04/08
 Last modified: 2023/08/10
 Description: Train an object detection model with KerasCV.
@@ -17,11 +17,18 @@ and everything you need to train your own state of the art object detection
 models!
 
 Let's give KerasCV's object detection API a spin.
+
+With Keras Core, we can use TensorFlow, JAX, or PyTorch as our backend for
+KerasCV! Try using "jax" or "torch" as the KERAS_BACKEND and re-running this
+guide to experiment with different backends.
 """
 
 """shell
-!pip install --upgrade git+https://github.com/keras-team/keras-cv
+!pip install -U keras-core git+https://github.com/keras-team/keras-cv.git
 """
+import os
+os.environ['KERAS_BACKEND'] = 'jax'
+
 import tensorflow as tf
 import tensorflow_datasets as tfds
 from tensorflow import keras
@@ -259,13 +266,18 @@ RetinaNet.  This can be done by writing to the `prediction_decoder` attribute.
 """
 
 # The following NonMaxSuppression layer is equivalent to disabling the operation
-prediction_decoder = keras_cv.layers.MultiClassNonMaxSuppression(
+prediction_decoder = keras_cv.layers.NonMaxSuppression(
     bounding_box_format="xywh",
     from_logits=True,
     iou_threshold=1.0,
     confidence_threshold=0.0,
 )
-pretrained_model.prediction_decoder = prediction_decoder
+
+pretrained_model = keras_cv.models.YOLOV8Detector.from_preset(
+    "yolo_v8_m_pascalvoc",
+    bounding_box_format="xywh",
+    prediction_decoder=prediction_decoder,
+)
 
 y_pred = pretrained_model.predict(image_batch)
 visualization.plot_bounding_box_gallery(
@@ -294,7 +306,7 @@ pruned out.
 [More information on these parameters may be found in the TensorFlow API docs](https://www.tensorflow.org/api_docs/python/tf/image/combined_non_max_suppression)
 """
 
-prediction_decoder = keras_cv.layers.MultiClassNonMaxSuppression(
+prediction_decoder = keras_cv.layers.NonMaxSuppression(
     bounding_box_format="xywh",
     from_logits=True,
     # Decrease the required threshold to make predictions get pruned out
@@ -302,7 +314,11 @@ prediction_decoder = keras_cv.layers.MultiClassNonMaxSuppression(
     # Tune confidence threshold for predictions to pass NMS
     confidence_threshold=0.7,
 )
-pretrained_model.prediction_decoder = prediction_decoder
+pretrained_model = keras_cv.models.YOLOV8Detector.from_preset(
+    "yolo_v8_m_pascalvoc",
+    bounding_box_format="xywh",
+    prediction_decoder=prediction_decoder,
+)
 
 y_pred = pretrained_model.predict(image_batch)
 visualization.plot_bounding_box_gallery(
@@ -609,92 +625,18 @@ pretrained_model.compile(
 """
 ### Metric evaluation
 
-Just like any other metric, you can pass the `KerasCV` object detection metrics
-to `compile()`.  The most popular object detection metrics are COCO metrics,
+The most popular object detection metrics are COCO metrics,
 which were published alongside the MSCOCO dataset. KerasCV provides an
-easy-to-use suite of COCO metrics under the `keras_cv.metrics.BoxCOCOMetrics`
-symbol:
+easy-to-use suite of COCO metrics under the `keras_cv.callbacks.PyCOCOCallback`
+symbol. Note that we use a Keras callback instead of a Keras metric to compute
+COCO metrics. This is because computing COCO metrics requires storing all of a
+model's predictions for the entire evaluation dataset in memory at once, which
+is impractical to do during training time.
 """
 
-coco_metrics = keras_cv.metrics.BoxCOCOMetrics(
-    bounding_box_format="xywh", evaluate_freq=20
+coco_metrics_callback = keras_cv.callbacks.PyCOCOMetrics(
+    eval_ds.take(20), bounding_box_format="xywh"
 )
-
-"""
-Let's define a quick helper to print our metrics in a nice table:
-"""
-
-
-def print_metrics(metrics):
-    maxlen = max([len(key) for key in result.keys()])
-    print("Metrics:")
-    print("-" * (maxlen + 1))
-    for k, v in metrics.items():
-        print(f"{k.ljust(maxlen+1)}: {v.numpy():0.2f}")
-
-
-"""
-Due to the high computational cost of computing COCO metrics, the KerasCV
-`BoxCOCOMetrics` component requires an `evaluate_freq` parameter to be passed to
-its constructor.  Every `evaluate_freq`-th call to `update_state()`, the metric
-will recompute the result.  In between invocations, a cached version of the
-result will be returned.
-
-To force an evaluation, you may call `coco_metrics.result(force=True)`:
-"""
-
-pretrained_model.compile(
-    classification_loss="focal",
-    box_loss="smoothl1",
-    optimizer=optimizer,
-    metrics=[coco_metrics],
-)
-coco_metrics.reset_state()
-result = pretrained_model.evaluate(eval_ds.take(1), verbose=0)
-result = coco_metrics.result(force=True)
-
-print_metrics(result)
-
-"""
-
-**A note on TPU compatibility:**
-
-Evaluation of `BoxCOCOMetrics` require running `tf.image.non_max_suppression()`
-inside of the `model.train_step()` and `model.evaluation_step()` functions.
-Due to this, the metric suite is not compatible with TPU when used with the
-`compile()` API.
-
-Luckily, there are two workarounds that allow you to still train a RetinaNet on TPU:
-
-- The use of a custom callback
-- Using a [SideCarEvaluator](https://www.tensorflow.org/api_docs/python/tf/keras/utils/SidecarEvaluator)
-
-Let's use a custom callback to achieve TPU compatibility in this guide:
-"""
-
-
-class EvaluateCOCOMetricsCallback(keras.callbacks.Callback):
-    def __init__(self, data):
-        super().__init__()
-        self.data = data
-        self.metrics = keras_cv.metrics.BoxCOCOMetrics(
-            bounding_box_format="xywh",
-            # passing 1e9 ensures we never evaluate until
-            # `metrics.result(force=True)` is
-            # called.
-            evaluate_freq=1e9,
-        )
-
-    def on_epoch_end(self, epoch, logs):
-        self.metrics.reset_state()
-        for batch in tqdm.tqdm(self.data):
-            images, y_true = batch[0], batch[1]
-            y_pred = self.model.predict(images, verbose=0)
-            self.metrics.update_state(y_true, y_pred)
-
-        metrics = self.metrics.result(force=True)
-        logs.update(metrics)
-        return logs
 
 
 """
@@ -742,8 +684,6 @@ model.compile(
     classification_loss="focal",
     box_loss="smoothl1",
     optimizer=optimizer,
-    # We will use our custom callback to evaluate COCO metrics
-    metrics=None,
 )
 """
 If you want to fully train the model, remove `.take(20)` from each
@@ -751,10 +691,9 @@ of the following dataset references.
 """
 model.fit(
     train_ds.take(20),
-    validation_data=eval_ds.take(20),
     # Run for 10-35~ epochs to achieve good scores.
     epochs=1,
-    callbacks=[EvaluateCOCOMetricsCallback(eval_ds.take(20))],
+    callbacks=[coco_metrics_callback],
 )
 """
 
@@ -766,9 +705,10 @@ will perform a non max suppression operation for you.
 
 In this section, we will use a `keras_cv` provided preset:
 """
-model = keras_cv.models.RetinaNet.from_preset(
-    "retinanet_resnet50_pascalvoc", bounding_box_format="xywh"
+model = keras_cv.models.YOLOV8Detector.from_preset(
+    "yolo_v8_m_pascalvoc", bounding_box_format="xywh"
 )
+
 """
 Next, for convenience we construct a dataset with larger batches:
 """
@@ -804,9 +744,9 @@ You'll likely need to configure your NonMaxSuppression operation to achieve
 visually appealing results:
 """
 
-model.prediction_decoder = keras_cv.layers.MultiClassNonMaxSuppression(
+model.prediction_decoder = keras_cv.layers.NonMaxSuppression(
     bounding_box_format="xywh",
-    from_logits=True,
+    from_logits=False,
     iou_threshold=0.5,
     confidence_threshold=0.75,
 )
