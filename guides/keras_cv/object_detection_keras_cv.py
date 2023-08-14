@@ -27,12 +27,17 @@ guide to experiment with different backends.
 !pip install -U keras-core git+https://github.com/keras-team/keras-cv.git
 """
 import os
-os.environ['KERAS_BACKEND'] = 'jax'
 
-import tensorflow as tf
+os.environ["KERAS_BACKEND"] = "tensorflow"
+
+from tensorflow import data as tf_data
 import tensorflow_datasets as tfds
-from tensorflow import keras
-from tensorflow.keras import optimizers
+
+# This allows us to automatically use either tf.keras or keras core
+# depending on which backend KerasCV is using.
+from keras_cv.backend import keras
+from keras_core import ops
+from keras_core import optimizers
 import keras_cv
 import numpy as np
 from keras_cv import bounding_box
@@ -154,7 +159,7 @@ bugs (especially when combining code from many sources).
 Next let's load an image:
 """
 
-filepath = tf.keras.utils.get_file(origin="https://i.imgur.com/gCNcJJI.jpg")
+filepath = keras.utils.get_file(origin="https://i.imgur.com/gCNcJJI.jpg")
 image = keras.utils.load_img(filepath)
 image = np.array(image)
 
@@ -432,17 +437,17 @@ def unpackage_raw_tfds_inputs(inputs, bounding_box_format):
         target=bounding_box_format,
     )
     bounding_boxes = {
-        "classes": tf.cast(inputs["objects"]["label"], dtype=tf.float32),
-        "boxes": tf.cast(boxes, dtype=tf.float32),
+        "classes": inputs["objects"]["label"],
+        "boxes": boxes,
     }
-    return {"images": tf.cast(image, tf.float32), "bounding_boxes": bounding_boxes}
+    return {"images": image, "bounding_boxes": bounding_boxes}
 
 
 def load_pascal_voc(split, dataset, bounding_box_format):
     ds = tfds.load(dataset, split=split, with_info=False, shuffle_files=True)
     ds = ds.map(
         lambda x: unpackage_raw_tfds_inputs(x, bounding_box_format=bounding_box_format),
-        num_parallel_calls=tf.data.AUTOTUNE,
+        num_parallel_calls=tf_data.AUTOTUNE,
     )
     return ds
 
@@ -523,7 +528,7 @@ augmenter = keras.Sequential(
     ]
 )
 
-train_ds = train_ds.map(augmenter, num_parallel_calls=tf.data.AUTOTUNE)
+train_ds = train_ds.map(augmenter, num_parallel_calls=tf_data.AUTOTUNE)
 visualize_dataset(
     train_ds, bounding_box_format="xywh", value_range=(0, 255), rows=2, cols=2
 )
@@ -538,7 +543,7 @@ layer.
 inference_resizing = keras_cv.layers.Resizing(
     640, 640, bounding_box_format="xywh", pad_to_aspect_ratio=True
 )
-eval_ds = eval_ds.map(inference_resizing, num_parallel_calls=tf.data.AUTOTUNE)
+eval_ds = eval_ds.map(inference_resizing, num_parallel_calls=tf_data.AUTOTUNE)
 
 """
 Due to the fact that the resize operation differs between the train dataset,
@@ -567,11 +572,11 @@ def dict_to_tuple(inputs):
     )
 
 
-train_ds = train_ds.map(dict_to_tuple, num_parallel_calls=tf.data.AUTOTUNE)
-eval_ds = eval_ds.map(dict_to_tuple, num_parallel_calls=tf.data.AUTOTUNE)
+train_ds = train_ds.map(dict_to_tuple, num_parallel_calls=tf_data.AUTOTUNE)
+eval_ds = eval_ds.map(dict_to_tuple, num_parallel_calls=tf_data.AUTOTUNE)
 
-train_ds = train_ds.prefetch(tf.data.AUTOTUNE)
-eval_ds = eval_ds.prefetch(tf.data.AUTOTUNE)
+train_ds = train_ds.prefetch(tf_data.AUTOTUNE)
+eval_ds = eval_ds.prefetch(tf_data.AUTOTUNE)
 
 """
 
@@ -588,7 +593,7 @@ occur when training object detection models.
 
 base_lr = 0.005
 # including a global_clipnorm is extremely important in object detection tasks
-optimizer = tf.keras.optimizers.SGD(
+optimizer = keras.optimizers.SGD(
     learning_rate=base_lr, momentum=0.9, global_clipnorm=10.0
 )
 
@@ -602,24 +607,19 @@ translate between problems.
 """
 ### Loss functions
 
-You may not be familiar with the `"focal"` or `"smoothl1"` losses.  While not
-common in other models, these losses are more or less staples in the object
+You may not be familiar with the `"ciou"` loss.  While not
+common in other models, this loss is more or less staple in the object
 detection world.
 
-In short, ["Focal Loss"](https://arxiv.org/abs/1708.02002) places extra emphasis
-on difficult training examples.  This is useful when training the classification
-loss, as the majority of the losses are assigned to the background class.
+In short, ["Complete IoU"](https://arxiv.org/abs/1911.08287) is a flavour of the Intersection over Union loss and is used due to its convergence properties.
 
-"SmoothL1 Loss" is used to [prevent exploding gradients](https://arxiv.org/abs/1504.08083)
-that often occur when attempting to perform the box regression task.
-
-In KerasCV you can use these losses simply by passing the strings `"focal"` and
-`"smoothl1"` to `compile()`:
+In KerasCV, you can use this loss simply by passing the string `"ciou"` to `compile()`.
+We also use standard binary crossentropy loss for the class head.
 """
 
 pretrained_model.compile(
-    classification_loss="focal",
-    box_loss="smoothl1",
+    classification_loss="binary_crossentropy",
+    box_loss="ciou",
 )
 
 """
@@ -634,7 +634,7 @@ model's predictions for the entire evaluation dataset in memory at once, which
 is impractical to do during training time.
 """
 
-coco_metrics_callback = keras_cv.callbacks.PyCOCOMetrics(
+coco_metrics_callback = keras_cv.callbacks.PyCOCOCallback(
     eval_ds.take(20), bounding_box_format="xywh"
 )
 
@@ -645,22 +645,22 @@ We can now move on to model creation and training.
 
 ## Model creation
 
-Next, let's use the KerasCV API to construct an untrained RetinaNet model.
-In this tutorial we use a pretrained ResNet50 backbone from the imagenet
+Next, let's use the KerasCV API to construct an untrained YOLOV8Detector model.
+In this tutorial we using a pretrained ResNet50 backbone from the imagenet
 dataset.
 
-KerasCV makes it easy to construct a `RetinaNet` with any of the KerasCV
+KerasCV makes it easy to construct a `YOLOV8Detector` with any of the KerasCV
 backbones.  Simply use one of the presets for the architecture you'd like!
 
 For example:
 """
 
-model = keras_cv.models.RetinaNet.from_preset(
+model = keras_cv.models.YOLOV8Detector.from_preset(
     "resnet50_imagenet",
-    num_classes=len(class_mapping),
     # For more info on supported bounding box formats, visit
     # https://keras.io/api/keras_cv/bounding_box/
     bounding_box_format="xywh",
+    num_classes=20,
 )
 
 """
@@ -681,13 +681,13 @@ follow the standard Keras workflow, leveraging `compile()` and `fit()`.
 Let's compile our model:
 """
 model.compile(
-    classification_loss="focal",
-    box_loss="smoothl1",
+    classification_loss="binary_crossentropy",
+    box_loss="ciou",
     optimizer=optimizer,
 )
 """
-If you want to fully train the model, remove `.take(20)` from each
-of the following dataset references.
+If you want to fully train the model, remove `.take(20)` from all dataset
+references (below and in the initialization of the metrics callback).
 """
 model.fit(
     train_ds.take(20),
@@ -723,7 +723,6 @@ Let's create a simple function to plot our inferences:
 def visualize_detections(model, dataset, bounding_box_format):
     images, y_true = next(iter(dataset.take(1)))
     y_pred = model.predict(images)
-    y_pred = bounding_box.to_ragged(y_pred)
     visualization.plot_bounding_box_gallery(
         images,
         value_range=(0, 255),
