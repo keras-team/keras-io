@@ -177,15 +177,12 @@ class Router(layers.Layer):
         expert_gate *= expert_mask_flat
         # Combine expert outputs and scaling with router probability.
         # combine_tensor shape: [tokens_per_batch, num_experts, expert_capacity]
-        combined_tensor = (
-            tf.expand_dims(
-                expert_gate
-                * expert_mask_flat
-                * tf.squeeze(tf.one_hot(expert_index, depth=self.num_experts), 1),
-                -1,
-            )
-            * tf.squeeze(tf.one_hot(position_in_expert, depth=self.expert_capacity), 1)
-        )
+        combined_tensor = tf.expand_dims(
+            expert_gate
+            * expert_mask_flat
+            * tf.squeeze(tf.one_hot(expert_index, depth=self.num_experts), 1),
+            -1,
+        ) * tf.squeeze(tf.one_hot(position_in_expert, depth=self.expert_capacity), 1)
         # Create binary dispatch_tensor [tokens_per_batch, num_experts, expert_capacity]
         # that is 1 if the token gets routed to the corresponding expert.
         dispatch_tensor = tf.cast(combined_tensor, tf.dtypes.float32)
