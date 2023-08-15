@@ -30,7 +30,7 @@ import os
 
 os.environ["KERAS_BACKEND"] = "tensorflow"
 
-from tensorflow import data as tf_data
+import tensorflow as tf
 import tensorflow_datasets as tfds
 
 # This allows us to automatically use either tf.keras or keras core
@@ -447,7 +447,7 @@ def load_pascal_voc(split, dataset, bounding_box_format):
     ds = tfds.load(dataset, split=split, with_info=False, shuffle_files=True)
     ds = ds.map(
         lambda x: unpackage_raw_tfds_inputs(x, bounding_box_format=bounding_box_format),
-        num_parallel_calls=tf_data.AUTOTUNE,
+        num_parallel_calls=tf.data.AUTOTUNE,
     )
     return ds
 
@@ -528,7 +528,7 @@ augmenter = keras.Sequential(
     ]
 )
 
-train_ds = train_ds.map(augmenter, num_parallel_calls=tf_data.AUTOTUNE)
+train_ds = train_ds.map(augmenter, num_parallel_calls=tf.data.AUTOTUNE)
 visualize_dataset(
     train_ds, bounding_box_format="xywh", value_range=(0, 255), rows=2, cols=2
 )
@@ -543,7 +543,7 @@ layer.
 inference_resizing = keras_cv.layers.Resizing(
     640, 640, bounding_box_format="xywh", pad_to_aspect_ratio=True
 )
-eval_ds = eval_ds.map(inference_resizing, num_parallel_calls=tf_data.AUTOTUNE)
+eval_ds = eval_ds.map(inference_resizing, num_parallel_calls=tf.data.AUTOTUNE)
 
 """
 Due to the fact that the resize operation differs between the train dataset,
@@ -572,11 +572,11 @@ def dict_to_tuple(inputs):
     )
 
 
-train_ds = train_ds.map(dict_to_tuple, num_parallel_calls=tf_data.AUTOTUNE)
-eval_ds = eval_ds.map(dict_to_tuple, num_parallel_calls=tf_data.AUTOTUNE)
+train_ds = train_ds.map(dict_to_tuple, num_parallel_calls=tf.data.AUTOTUNE)
+eval_ds = eval_ds.map(dict_to_tuple, num_parallel_calls=tf.data.AUTOTUNE)
 
-train_ds = train_ds.prefetch(tf_data.AUTOTUNE)
-eval_ds = eval_ds.prefetch(tf_data.AUTOTUNE)
+train_ds = train_ds.prefetch(tf.data.AUTOTUNE)
+eval_ds = eval_ds.prefetch(tf.data.AUTOTUNE)
 
 """
 
