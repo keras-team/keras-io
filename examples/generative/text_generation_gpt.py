@@ -1,8 +1,9 @@
 """
 Title: GPT text generation from scratch with KerasNLP
 Author: [Jesse Chan](https://github.com/jessechancy)
+Converted to Keras Core by: [Anshuman Mishra](https://github.com/shivance)
 Date created: 2022/07/25
-Last modified: 2022/07/25
+Last modified: 2023/08/16
 Description: Using KerasNLP to train a mini-GPT model for text generation.
 Accelerator: GPU
 """
@@ -39,7 +40,9 @@ This example requires KerasNLP. You can install it via the following command:
 import os
 import keras_nlp
 import tensorflow as tf
-from tensorflow import keras
+import keras_core as keras
+
+os.environ["KERAS_BACKEND"] = "tensorflow"  # or "jax" or "torch"
 
 """
 ## Settings & hyperparameters
