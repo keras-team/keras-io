@@ -411,14 +411,14 @@ Here's a layer that creates an activity regularization loss:
 class ActivityRegularization(keras.layers.Layer):
     """Layer that creates an activity sparsity regularization loss."""
 
-    def __init__(self, rate=1e-2):
+    def __init__(self, rate=0.1):
         super().__init__()
         self.rate = rate
 
     def call(self, inputs):
         # We use `add_loss` to create a regularization loss
         # that depends on the inputs.
-        self.add_loss(self.rate * tf.reduce_sum(inputs))
+        self.add_loss(self.rate * tf.reduce_mean(inputs))
         return inputs
 
 
@@ -435,7 +435,7 @@ class SparseMLP(keras.layers.Layer):
     def __init__(self):
         super().__init__()
         self.linear_1 = Linear(32)
-        self.regularization = ActivityRegularization(1e-2)
+        self.regularization = ActivityRegularization(0.1)
         self.linear_3 = Linear(10)
 
     def call(self, inputs):
