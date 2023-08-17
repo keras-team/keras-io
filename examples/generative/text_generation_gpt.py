@@ -3,7 +3,7 @@ Title: GPT text generation from scratch with KerasNLP
 Author: [Jesse Chan](https://github.com/jessechancy)
 Converted to Keras Core by: [Anshuman Mishra](https://github.com/shivance)
 Date created: 2022/07/25
-Last modified: 2023/08/16
+Last modified: 2023/08/17
 Description: Using KerasNLP to train a mini-GPT model for text generation.
 Accelerator: GPU
 """
@@ -25,6 +25,14 @@ This example combines concepts from
 with KerasNLP abstractions. We will demonstrate how KerasNLP tokenization, layers and
 metrics simplify the training
 process, and then show how to generate output text using the KerasNLP sampling utilities.
+
+
+This examples uses [Keras Core](https://keras.io/keras_core/) to work in any of
+`"tensorflow"`, `"jax"` or `"torch"`. Support for Keras Core is baked into
+KerasNLP, simply change the `"KERAS_BACKEND"` environment variable to select
+the backend of your choice. We select the tensorflow backend below, but feel free
+to mix it up!
+
 
 Note: If you are running this example on a Colab,
 make sure to enable GPU runtime for faster training.
@@ -196,7 +204,7 @@ for _ in range(NUM_LAYERS):
 # Output.
 outputs = keras.layers.Dense(VOCAB_SIZE)(x)
 model = keras.Model(inputs=inputs, outputs=outputs)
-loss_fn = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
+loss_fn = keras.losses.SparseCategoricalCrossentropy(from_logits=True)
 perplexity = keras_nlp.metrics.Perplexity(from_logits=True, mask_token_id=0)
 model.compile(optimizer="adam", loss=loss_fn, metrics=[perplexity])
 
