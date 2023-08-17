@@ -4,6 +4,7 @@ Author: Sreyan Ghosh
 Date created: 2022/07/01
 Last modified: 2022/08/27
 Description: Pretraining BERT using Hugging Face Transformers on NSP and MLM.
+Accelerator: GPU
 """
 
 """
@@ -235,7 +236,6 @@ max_num_tokens = BLOCK_SIZE - tokenizer.num_special_tokens_to_add(pair=True)
 
 
 def prepare_train_features(examples):
-
     """Function to prepare features for NSP task
 
     Arguments:
@@ -276,7 +276,6 @@ def prepare_train_features(examples):
     examples["next_sentence_label"] = []
 
     for doc_index, document in enumerate(examples["tokenized_sentences"]):
-
         current_chunk = []  # a buffer stored current working segments
         current_length = 0
         i = 0

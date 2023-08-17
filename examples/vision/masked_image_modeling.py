@@ -4,6 +4,7 @@ Author: [Aritra Roy Gosthipaty](https://twitter.com/arig23498), [Sayak Paul](htt
 Date created: 2021/12/20
 Last modified: 2021/12/21
 Description: Implementing Masked Autoencoders for self-supervised pretraining.
+Accelerator: GPU
 """
 """
 ## Introduction
@@ -616,7 +617,7 @@ class MaskedAutoencoder(keras.Model):
         ]
         grads = tape.gradient(total_loss, train_vars)
         tv_list = []
-        for (grad, var) in zip(grads, train_vars):
+        for grad, var in zip(grads, train_vars):
             for g, v in zip(grad, var):
                 tv_list.append((g, v))
         self.optimizer.apply_gradients(tv_list)
@@ -724,7 +725,7 @@ class WarmUpCosine(keras.optimizers.schedules.LearningRateSchedule):
     def __init__(
         self, learning_rate_base, total_steps, warmup_learning_rate, warmup_steps
     ):
-        super(WarmUpCosine, self).__init__()
+        super().__init__()
 
         self.learning_rate_base = learning_rate_base
         self.total_steps = total_steps

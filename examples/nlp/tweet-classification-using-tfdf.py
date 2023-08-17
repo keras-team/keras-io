@@ -4,6 +4,7 @@ Author: Gitesh Chawda
 Date created: 09/05/2022
 Last modified: 09/05/2022
 Description: Using Tensorflow Decision Forests for text classification.
+Accelerator: GPU
 """
 
 """

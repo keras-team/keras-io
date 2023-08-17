@@ -4,6 +4,7 @@ Authors: Luca Invernizzi, James Long, Francois Chollet, Tom O'Malley, Haifeng Ji
 Date created: 2019/05/31
 Last modified: 2021/10/27
 Description: The basics of using KerasTuner to tune model hyperparameters.
+Accelerator: GPU
 """
 
 """shell
@@ -51,7 +52,9 @@ def build_model(hp):
     )
     model.add(layers.Dense(10, activation="softmax"))
     model.compile(
-        optimizer="adam", loss="categorical_crossentropy", metrics=["accuracy"],
+        optimizer="adam",
+        loss="categorical_crossentropy",
+        metrics=["accuracy"],
     )
     return model
 
@@ -66,7 +69,7 @@ build_model(keras_tuner.HyperParameters())
 
 """
 There are many other types of hyperparameters as well. We can define multiple
-hyperparameters in the function. In the following code, we tune the whether to
+hyperparameters in the function. In the following code, we tune whether to
 use a `Dropout` layer with `hp.Boolean()`, tune which activation function to
 use with `hp.Choice()`, tune the learning rate of the optimizer with
 `hp.Float()`.
@@ -353,7 +356,9 @@ class MyHyperModel(keras_tuner.HyperModel):
         )
         model.add(layers.Dense(10, activation="softmax"))
         model.compile(
-            optimizer="adam", loss="categorical_crossentropy", metrics=["accuracy"],
+            optimizer="adam",
+            loss="categorical_crossentropy",
+            metrics=["accuracy"],
         )
         return model
 
@@ -399,7 +404,9 @@ class MyHyperModel(keras_tuner.HyperModel):
         )
         model.add(layers.Dense(10, activation="softmax"))
         model.compile(
-            optimizer="adam", loss="categorical_crossentropy", metrics=["accuracy"],
+            optimizer="adam",
+            loss="categorical_crossentropy",
+            metrics=["accuracy"],
         )
         return model
 
@@ -440,7 +447,9 @@ class MyHyperModel(keras_tuner.HyperModel):
         outputs = layers.Dense(10, activation="softmax")(outputs)
         model = keras.Model(inputs, outputs)
         model.compile(
-            optimizer="adam", loss="categorical_crossentropy", metrics=["accuracy"],
+            optimizer="adam",
+            loss="categorical_crossentropy",
+            metrics=["accuracy"],
         )
         return model
 
@@ -499,6 +508,7 @@ There are many other built-in metrics in Keras you can use as the objective.
 Here is [a list of the built-in metrics](https://keras.io/api/metrics/).
 
 To use a built-in metric as the objective, you need to follow these steps:
+
 * Compile the model with the the built-in metric. For example, you want to use
 `MeanAbsoluteError()`. You need to compile the model with
 `metrics=[MeanAbsoluteError()]`. You may also use its name string instead:
@@ -664,7 +674,8 @@ class HyperRegressor(keras_tuner.HyperModel):
             ]
         )
         model.compile(
-            optimizer="adam", loss="mean_squared_error",
+            optimizer="adam",
+            loss="mean_squared_error",
         )
         return model
 
@@ -711,7 +722,8 @@ class HyperRegressor(keras_tuner.HyperModel):
             ]
         )
         model.compile(
-            optimizer="adam", loss="mean_squared_error",
+            optimizer="adam",
+            loss="mean_squared_error",
         )
         return model
 
@@ -805,10 +817,14 @@ import os
 def keras_code(units, optimizer, saving_path):
     # Build model
     model = keras.Sequential(
-        [layers.Dense(units=units, activation="relu"), layers.Dense(units=1),]
+        [
+            layers.Dense(units=units, activation="relu"),
+            layers.Dense(units=1),
+        ]
     )
     model.compile(
-        optimizer=optimizer, loss="mean_squared_error",
+        optimizer=optimizer,
+        loss="mean_squared_error",
     )
 
     # Prepare data
@@ -836,17 +852,20 @@ class MyTuner(keras_tuner.RandomSearch):
         return keras_code(
             units=hp.Int("units", 32, 128, 32),
             optimizer=hp.Choice("optimizer", ["adam", "adadelta"]),
-            saving_path=os.path.join("/tmp", trial.trial_id),
+            saving_path=os.path.join("/tmp", f"{trial.trial_id}.keras"),
         )
 
 
 tuner = MyTuner(
-    max_trials=3, overwrite=True, directory="my_dir", project_name="keep_code_separate",
+    max_trials=3,
+    overwrite=True,
+    directory="my_dir",
+    project_name="keep_code_separate",
 )
 tuner.search()
 # Retraining the model
 best_hp = tuner.get_best_hyperparameters()[0]
-keras_code(**best_hp.values, saving_path="/tmp/best_model")
+keras_code(**best_hp.values, saving_path="/tmp/best_model.keras")
 
 """
 ## KerasTuner includes pre-made tunable applications: HyperResNet and HyperXception

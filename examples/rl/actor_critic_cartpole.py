@@ -4,6 +4,7 @@ Author: [Apoorv Nandan](https://twitter.com/NandanApoorv)
 Date created: 2020/05/13
 Last modified: 2020/05/13
 Description: Implement Actor Critic Method in CartPole environment.
+Accelerator: NONE
 """
 """
 ## Introduction

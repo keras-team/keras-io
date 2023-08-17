@@ -1,0 +1,65 @@
+.blog-content {
+    text-align: justify;
+    padding: 2em;
+}
+
+strong {
+    font-weight: 600;
+    font-family: Arial;
+    font-size: 1.1em;
+}
+
+.irasto {
+    width: 96%;
+    margin-left: 2%;
+}
+
+h2 {
+    margin-top: 1em;
+    margin-bottom: 1em;
+}
+
+h3 {
+    font-size: 1.5rem;
+}
+
+.credits {
+    text-align: center;
+    padding: 2em;
+    padding-top: 0;
+}
+
+.credits h2 {
+    margin-top: 0;
+}
+
+.credit-header {
+    text-transform: uppercase;
+    font-weight: bolder;
+    font-family: arial;
+    font-size: 1.2em;
+    padding: 0.5em;
+    padding-top: 2em;
+}
+
+.credit-subheader {
+    text-transform: uppercase;
+    font-weight: bolder;
+    font-family: arial;
+    font-size: 0.9em;
+    padding: 0.2em;
+}
+
+.credit-name {
+    text-align: center;
+}
+
+.subtext {
+    font-size: 0.8em;
+    padding-top: 1em;
+}
+
+.subcredit-name {
+    font-size: 0.8em;
+    padding-top: 0;
+}

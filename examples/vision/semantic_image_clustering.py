@@ -4,6 +4,7 @@ Author: [Khalid Salama](https://www.linkedin.com/in/khalid-salama-24403144/)
 Date created: 2021/02/28
 Last modified: 2021/02/28
 Description: Semantic Clustering by Adopting Nearest neighbors (SCAN) algorithm.
+Accelerator: GPU
 """
 
 """
@@ -177,7 +178,7 @@ class RepresentationLearner(keras.Model):
         l2_normalize=False,
         **kwargs
     ):
-        super(RepresentationLearner, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.encoder = encoder
         # Create projection head.
         self.projector = keras.Sequential(
@@ -359,7 +360,7 @@ This loss tries to make sure that neighbours have the same clustering assignment
 
 class ClustersConsistencyLoss(keras.losses.Loss):
     def __init__(self):
-        super(ClustersConsistencyLoss, self).__init__()
+        super().__init__()
 
     def __call__(self, target, similarity, sample_weight=None):
         # Set targets to be ones.
@@ -381,7 +382,7 @@ assigning most of the instances to one cluster.
 
 class ClustersEntropyLoss(keras.losses.Loss):
     def __init__(self, entropy_loss_weight=1.0):
-        super(ClustersEntropyLoss, self).__init__()
+        super().__init__()
         self.entropy_loss_weight = entropy_loss_weight
 
     def __call__(self, target, cluster_probabilities, sample_weight=None):

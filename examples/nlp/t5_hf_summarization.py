@@ -4,6 +4,7 @@ Author: Sreyan Ghosh
 Date created: 2022/07/04
 Last modified: 2022/08/28
 Description: Training T5 using Hugging Face Transformers for Abstractive Summarization.
+Accelerator: GPU
 """
 
 """
@@ -40,11 +41,12 @@ task using Hugging Face Transformers on the `XSum` dataset loaded from Hugging F
 """
 
 """shell
-pip install transformers==4.20.0
-pip install keras_nlp==0.3.0
-pip install datasets
-pip install huggingface-hub
-pip install nltk
+!pip install transformers==4.20.0
+!pip install keras_nlp==0.3.0
+!pip install datasets
+!pip install huggingface-hub
+!pip install nltk
+!pip install rouge-score
 """
 
 """
@@ -104,7 +106,7 @@ raw_datasets = load_dataset("xsum", split="train")
 """
 The dataset has the following fields:
 
-- **document**: the original BBC article to me summarized
+- **document**: the original BBC article to be summarized
 - **summary**: the single sentence summary of the BBC article
 - **id**: ID of the document-summary pair
 """
@@ -120,7 +122,7 @@ print(raw_datasets[0])
 """
 For the sake of demonstrating the workflow, in this notebook we will only take
 small stratified balanced splits (10%) of the train as our training and test sets.
-We can easily split teh dataset using the `train_test_split` method which expects
+We can easily split the dataset using the `train_test_split` method which expects
 the split size and the name of the column relative to which you want to stratify.
 """
 
@@ -185,7 +187,7 @@ def preprocess_function(examples):
 """
 To apply this function on all the pairs of sentences in our dataset, we just use the
 `map` method of our `dataset` object we created earlier. This will apply the function on
-all the elements of all the splits in `dataset`, so our training, validation and testing
+all the elements of all the splits in `dataset`, so our training and testing
 data will be preprocessed in one single command.
 """
 
@@ -200,7 +202,7 @@ sequence-to-sequence (both the input and output are text sequences), we use the
 tokenizer, the `from_pretrained` method will download and cache the model for us.
 
 The `from_pretrained()` method expects the name of a model from the Hugging Face Model Hub. As
-mentioned earlier, we will use the `t5-base` model checkpoint.
+mentioned earlier, we will use the `t5-small` model checkpoint.
 """
 
 from transformers import TFAutoModelForSeq2SeqLM, DataCollatorForSeq2Seq

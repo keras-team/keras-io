@@ -4,18 +4,25 @@ CV_GUIDES_MASTER = {
     "toc": True,
     "children": [
         {
+            "path": "object_detection_keras_cv",
+            "title": "Use KerasCV to assemble object detection pipelines",
+        },
+        {
+            "path": "classification_with_keras_cv",
+            "title": "Use KerasCV to train powerful image classifiers.",
+        },
+        {
             "path": "cut_mix_mix_up_and_rand_augment",
             "title": "CutMix, MixUp, and RandAugment image augmentation with KerasCV",
         },
         {
-            "path": "retina_net_overview",
-            "title": "Train an Object Detection Model on Pascal VOC 2007 using KerasCV",
+            "path": "generate_images_with_stable_diffusion",
+            "title": "High-performance image generation using Stable Diffusion in KerasCV",
         },
         {
             "path": "custom_image_augmentations",
             "title": "Custom Image Augmentations with BaseImageAugmentationLayer",
         },
-        {"path": "coco_metrics", "title": "Using KerasCV COCO Metrics"},
     ],
 }
 
@@ -24,6 +31,10 @@ NLP_GUIDES_MASTER = {
     "title": "KerasNLP",
     "toc": True,
     "children": [
+        {
+            "path": "getting_started",
+            "title": "Getting Started with KerasNLP",
+        },
         {
             "path": "transformer_pretraining",
             "title": "Pretraining a Transformer from scratch with KerasNLP",

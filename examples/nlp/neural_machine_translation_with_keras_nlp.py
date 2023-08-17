@@ -2,8 +2,9 @@
 Title: English-to-Spanish translation with KerasNLP
 Author: [Abheesht Sharma](https://github.com/abheesht17/)
 Date created: 2022/05/26
-Last modified: 2022/05/26
+Last modified: 2022/12/21
 Description: Use KerasNLP to train a sequence-to-sequence Transformer model on the machine translation task.
+Accelerator: GPU
 """
 
 """
@@ -16,7 +17,8 @@ In this example, we'll use KerasNLP layers to build an encoder-decoder Transform
 model, and train it on the English-to-Spanish machine translation task.
 
 This example is based on the
-[English-to-Spanish NMT example](https://keras.io/examples/nlp/neural_machine_translation_with_transformer/)
+[English-to-Spanish NMT
+example](https://keras.io/examples/nlp/neural_machine_translation_with_transformer/)
 by [fchollet](https://twitter.com/fchollet). The original example is more low-level
 and implements layers from scratch, whereas this example uses KerasNLP to show
 some more advanced approaches, such as subword tokenization and using metrics
@@ -28,8 +30,8 @@ You'll learn how to:
 - Implement a sequence-to-sequence Transformer model using KerasNLP's
 `keras_nlp.layers.TransformerEncoder`, `keras_nlp.layers.TransformerDecoder` and
 `keras_nlp.layers.TokenAndPositionEmbedding` layers, and train it.
-- Use `keras_nlp.utils.greedy_search` function to generate translations
-of unseen input sentences using the greedy decoding strategy!
+- Use `keras_nlp.samplers` to generate translations of unseen input sentences
+ using the top-p decoding strategy!
 
 Don't worry if you aren't familiar with KerasNLP. This tutorial will start with
 the basics. Let's dive right in!
@@ -42,17 +44,19 @@ Before we start implementing the pipeline, let's import all the libraries we nee
 """
 
 """shell
-pip install -q rouge-score
+!pip install -q rouge-score
+!pip install -q git+https://github.com/keras-team/keras-nlp.git --upgrade
 """
 
 import keras_nlp
-import numpy as np
 import pathlib
 import random
 import tensorflow as tf
 
 from tensorflow import keras
-from tensorflow_text.tools.wordpiece_vocab import bert_vocab_from_dataset as bert_vocab
+from tensorflow_text.tools.wordpiece_vocab import (
+    bert_vocab_from_dataset as bert_vocab,
+)
 
 """
 Let's also define our parameters/hyperparameters.
@@ -138,25 +142,18 @@ we have. The WordPiece tokenization algorithm is a subword tokenization algorith
 training it on a corpus gives us a vocabulary of subwords. A subword tokenizer
 is a compromise between word tokenizers (word tokenizers need very large
 vocabularies for good coverage of input words), and character tokenizers
-(characters don't really encode meaning like words do). Luckily, TensorFlow Text
-makes it very simple to train WordPiece on a corpus as described in
-[this guide](https://www.tensorflow.org/text/guide/subwords_tokenizer).
+(characters don't really encode meaning like words do). Luckily, KerasNLP
+makes it very simple to train WordPiece on a corpus with the
+`keras_nlp.tokenizers.compute_word_piece_vocabulary` utility.
 """
 
 
 def train_word_piece(text_samples, vocab_size, reserved_tokens):
-    bert_vocab_args = dict(
-        # The target vocabulary size
-        vocab_size=vocab_size,
-        # Reserved tokens that must be included in the vocabulary
-        reserved_tokens=reserved_tokens,
-        # Arguments for `text.BertTokenizer`
-        bert_tokenizer_params={"lower_case": True},
-    )
-
     word_piece_ds = tf.data.Dataset.from_tensor_slices(text_samples)
-    vocab = bert_vocab.bert_vocab_from_dataset(
-        word_piece_ds.batch(1000).prefetch(2), **bert_vocab_args
+    vocab = keras_nlp.tokenizers.compute_word_piece_vocabulary(
+        word_piece_ds.batch(1000).prefetch(2),
+        vocabulary_size=vocab_size,
+        reserved_tokens=reserved_tokens,
     )
     return vocab
 
@@ -182,6 +179,7 @@ spa_vocab = train_word_piece(spa_samples, SPA_VOCAB_SIZE, reserved_tokens)
 """
 Let's see some tokens!
 """
+
 print("English Tokens: ", eng_vocab[100:110])
 print("Spanish Tokens: ", spa_vocab[100:110])
 
@@ -207,7 +205,10 @@ eng_input_ex = text_pairs[0][0]
 eng_tokens_ex = eng_tokenizer.tokenize(eng_input_ex)
 print("English sentence: ", eng_input_ex)
 print("Tokens: ", eng_tokens_ex)
-print("Recovered text after detokenizing: ", eng_tokenizer.detokenize(eng_tokens_ex))
+print(
+    "Recovered text after detokenizing: ",
+    eng_tokenizer.detokenize(eng_tokens_ex),
+)
 
 print()
 
@@ -215,7 +216,10 @@ spa_input_ex = text_pairs[0][1]
 spa_tokens_ex = spa_tokenizer.tokenize(spa_input_ex)
 print("Spanish sentence: ", spa_input_ex)
 print("Tokens: ", spa_tokens_ex)
-print("Recovered text after detokenizing: ", spa_tokenizer.detokenize(spa_tokens_ex))
+print(
+    "Recovered text after detokenizing: ",
+    spa_tokenizer.detokenize(spa_tokens_ex),
+)
 
 """
 ## Format datasets
@@ -228,8 +232,10 @@ using the source sentence and the target words 0 to N.
 As such, the training dataset will yield a tuple `(inputs, targets)`, where:
 
 - `inputs` is a dictionary with the keys `encoder_inputs` and `decoder_inputs`.
-`encoder_inputs` is the tokenized source sentence and `decoder_inputs` is the target sentence "so far",
-that is to say, the words 0 to N used to predict word N+1 (and beyond) in the target sentence.
+`encoder_inputs` is the tokenized source sentence and `decoder_inputs` is the target
+sentence "so far",
+that is to say, the words 0 to N used to predict word N+1 (and beyond) in the target
+sentence.
 - `target` is the target sentence offset by one step:
 it provides the next words in the target sentence -- what the model will try to predict.
 
@@ -400,7 +406,7 @@ as well as the target token `"[START]"`. The model outputs probabilities of the
 next token. We then we repeatedly generated the next token conditioned on the
 tokens generated so far, until we hit the token `"[END]"`.
 
-For decoding, we will use the `keras_nlp.utils.greedy_search` function from
+For decoding, we will use the `keras_nlp.samplers` module from
 KerasNLP. Greedy Decoding is a text decoding method which outputs the most
 likely next token at each time step, i.e., the token with the highest probability.
 """
@@ -416,17 +422,23 @@ def decode_sequences(input_sentences):
 
     # Define a function that outputs the next token's probability given the
     # input sequence.
-    def token_probability_fn(decoder_input_tokens):
-        return transformer([encoder_input_tokens, decoder_input_tokens])[:, -1, :]
+    def next(prompt, cache, index):
+        logits = transformer([encoder_input_tokens, prompt])[:, index - 1, :]
+        # Ignore hidden states for now; only needed for contrastive search.
+        hidden_states = None
+        return logits, hidden_states, cache
 
-    # Set the prompt to the "[START]" token.
-    prompt = tf.fill((batch_size, 1), spa_tokenizer.token_to_id("[START]"))
+    # Build a prompt of length 40 with a start token and padding tokens.
+    length = 40
+    start = tf.fill((batch_size, 1), spa_tokenizer.token_to_id("[START]"))
+    pad = tf.fill((batch_size, length - 1), spa_tokenizer.token_to_id("[PAD]"))
+    prompt = tf.concat((start, pad), axis=-1)
 
-    generated_tokens = keras_nlp.utils.greedy_search(
-        token_probability_fn,
+    generated_tokens = keras_nlp.samplers.GreedySampler()(
+        next,
         prompt,
-        max_length=40,
         end_token_id=spa_tokenizer.token_to_id("[END]"),
+        index=1,  # Start sampling after start token.
     )
     generated_sentences = spa_tokenizer.detokenize(generated_tokens)
     return generated_sentences
@@ -447,70 +459,6 @@ for i in range(2):
     print(input_sentence)
     print(translated)
     print()
-
-"""
-After 10 epochs, we get samples like these:
-
-** Example 0 **
-
-have you seen this?
-
-¿has visto esto?
-
-** Example 1 **
-
-it's very hot here.
-
-hace mucho calor aqui.
-
-** Example 2 **
-
-my mother always says she's going to visit me soon.
-
-mi madre es algo de decir que ella me va a visitar pronto.
-
-** Example 3 **
-
-you can't say that.
-
-no puedes decir eso.
-
-** Example 4 **
-
-there are always some chores to be done around the house.
-
-siempre hay algunos chance para hacer cerca de la casa.
-
-** Example 5 **
-
-sometimes the boys would play a joke on the teacher.
-
-a veces los ninos tocaria una broma con el profesor.
-
-** Example 6 **
-
-move this table toward the corner.
-
-muevile esta mesa hacia la car, se muelvale esta mesa.
-
-** Example 7 **
-
-tom has never heard mary sing.
-
-tom nunca ha oído cantar a mary.
-
-** Example 8 **
-
-tom was in town monday night.
-
-tom estaba en la noche el lunes por la noche.
-
-** Example 9 **
-
-what's happened, has happened. it's history.
-
-lo que paso, ha pasado. es historia.
-"""
 
 """
 ## Evaluating our model (quantitative analysis)
@@ -552,7 +500,7 @@ After 10 epochs, the scores are as follows:
 
 |               | **ROUGE-1** | **ROUGE-2** |
 |:-------------:|:-----------:|:-----------:|
-| **Precision** |    0.468    |    0.245    |
-|   **Recall**  |    0.456    |    0.230    |
-|  **F1 Score** |    0.457    |    0.236    |
+| **Precision** |    0.568    |    0.374    |
+|   **Recall**  |    0.615    |    0.394    |
+|  **F1 Score** |    0.579    |    0.381    |
 """

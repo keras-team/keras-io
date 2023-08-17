@@ -2,8 +2,9 @@
 Title: WGAN-GP overriding `Model.train_step`
 Author: [A_K_Nain](https://twitter.com/A_K_Nain)
 Date created: 2020/05/9
-Last modified: 2020/05/9
+Last modified: 2023/08/3
 Description: Implementation of Wasserstein GAN with Gradient Penalty.
+Accelerator: GPU
 """
 
 """
@@ -28,7 +29,6 @@ that keeps the L2 norm of the discriminator gradients close to 1.
 ## Setup
 """
 
-import numpy as np
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
@@ -66,7 +66,7 @@ using strided convolutions, this can result in a shape with odd dimensions.
 For example,
 `(28, 28) -> Conv_s2 -> (14, 14) -> Conv_s2 -> (7, 7) -> Conv_s2 ->(3, 3)`.
 
-While peforming upsampling in the generator part of the network, we won't get
+While performing upsampling in the generator part of the network, we won't get
 the same input shape as the original images if we aren't careful. To avoid this,
 we will do something much simpler:
 - In the discriminator: "zero pad" the input to change the shape to `(32, 32, 1)`
@@ -249,7 +249,7 @@ class WGAN(keras.Model):
         discriminator_extra_steps=3,
         gp_weight=10.0,
     ):
-        super(WGAN, self).__init__()
+        super().__init__()
         self.discriminator = discriminator
         self.generator = generator
         self.latent_dim = latent_dim
@@ -257,7 +257,7 @@ class WGAN(keras.Model):
         self.gp_weight = gp_weight
 
     def compile(self, d_optimizer, g_optimizer, d_loss_fn, g_loss_fn):
-        super(WGAN, self).compile()
+        super().compile()
         self.d_optimizer = d_optimizer
         self.g_optimizer = g_optimizer
         self.d_loss_fn = d_loss_fn
@@ -270,7 +270,7 @@ class WGAN(keras.Model):
         and added to the discriminator loss.
         """
         # Get the interpolated image
-        alpha = tf.random.normal([batch_size, 1, 1, 1], 0.0, 1.0)
+        alpha = tf.random.uniform([batch_size, 1, 1, 1], 0.0, 1.0)
         diff = fake_images - real_images
         interpolated = real_images + alpha * diff
 
@@ -370,7 +370,7 @@ class GANMonitor(keras.callbacks.Callback):
 
         for i in range(self.num_img):
             img = generated_images[i].numpy()
-            img = keras.preprocessing.image.array_to_img(img)
+            img = keras.utils.array_to_img(img)
             img.save("generated_img_{i}_{epoch}.png".format(i=i, epoch=epoch))
 
 
@@ -387,6 +387,7 @@ discriminator_optimizer = keras.optimizers.Adam(
     learning_rate=0.0002, beta_1=0.5, beta_2=0.9
 )
 
+
 # Define the loss functions for the discriminator,
 # which should be (fake_loss - real_loss).
 # We will add the gradient penalty later to this loss function.
@@ -401,7 +402,7 @@ def generator_loss(fake_img):
     return -tf.reduce_mean(fake_img)
 
 
-# Set the number of epochs for trainining.
+# Set the number of epochs for training.
 epochs = 20
 
 # Instantiate the customer `GANMonitor` Keras callback.

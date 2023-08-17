@@ -15,3 +15,4 @@ templates/examples/graph/*
 templates/guides/**/*.md
 templates/keras-tuner/getting_started.md
 datasets/*
+.vscode/*

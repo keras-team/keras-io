@@ -4,6 +4,7 @@ Author: [fchollet](https://twitter.com/fchollet)
 Date created: 2019/05/28
 Last modified: 2020/04/17
 Description: Demonstration of how to handle highly imbalanced classification problems.
+Accelerator: GPU
 """
 """
 ## Introduction

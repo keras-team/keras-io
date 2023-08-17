@@ -4,6 +4,7 @@ Author: [Khalid Salama](https://www.linkedin.com/in/khalid-salama-24403144/)
 Date created: 2021/05/15
 Last modified: 2021/05/15
 Description: Implementing the node2vec model to generate embeddings for movies from the MovieLens dataset.
+Accelerator: GPU
 """
 
 """
@@ -437,7 +438,6 @@ num_epochs = 10
 
 
 def create_model(vocabulary_size, embedding_dim):
-
     inputs = {
         "target": layers.Input(name="target", shape=(), dtype="int32"),
         "context": layers.Input(name="context", shape=(), dtype="int32"),

@@ -4,6 +4,7 @@ Author: Haifeng Jin
 Date created: 2021/06/25
 Last modified: 2021/06/05
 Description: Using TensorBoard to visualize the hyperparameter tuning process in KerasTuner.
+Accelerator: GPU
 """
 
 """shell
@@ -71,8 +72,9 @@ def build_model(hp):
         for i in range(hp.Int("mlp_layers", 1, 3)):
             # Number of units of each layer are
             # different hyperparameters with different names.
-            output_node = layers.Dense(
-                units=hp.Int(f"units_{i}", 32, 128, step=32), activation="relu",
+            x = layers.Dense(
+                units=hp.Int(f"units_{i}", 32, 128, step=32),
+                activation="relu",
             )(x)
     else:
         # Number of layers of the CNN is also a hyperparameter.
@@ -96,7 +98,9 @@ def build_model(hp):
 
     # Compile the model.
     model.compile(
-        loss="sparse_categorical_crossentropy", metrics=["accuracy"], optimizer="adam",
+        loss="sparse_categorical_crossentropy",
+        metrics=["accuracy"],
+        optimizer="adam",
     )
     return model
 

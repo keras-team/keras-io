@@ -4,6 +4,7 @@ Author: [András Béres](https://www.linkedin.com/in/andras-beres-789190210)
 Date created: 2022/06/24
 Last modified: 2022/06/24
 Description: Generating images of flowers with denoising diffusion implicit models.
+Accelerator: GPU
 """
 
 """
@@ -57,7 +58,7 @@ links to relevant literature to help interested readers dive deeper into the top
 the hope that this code example will become a good starting point for practitioners
 learning about diffusion models.
 
-In the following sections, we will implement a continous time version of
+In the following sections, we will implement a continuous time version of
 [Denoising Diffusion Implicit Models (DDIMs)](https://arxiv.org/abs/2010.02502)
 with deterministic sampling.
 """
@@ -75,7 +76,7 @@ from tensorflow import keras
 from keras import layers
 
 """
-## Hyperparameterers
+## Hyperparameters
 """
 
 # data
@@ -279,7 +280,7 @@ prefer the latter so that we can change the sampling schedule at inference time,
 retraining the network.
 * [Diffusion models](https://arxiv.org/abs/2006.11239) input the embedding to each
 convolution block separately. We only input it at the start of the network for
-simplicity, which in my experience barely decreases preformance, because the skip and
+simplicity, which in my experience barely decreases performance, because the skip and
 residual connections help the information propagate through the network properly.
 * In the literature it is common to use
 [attention layers](https://keras.io/api/layers/attention_layers/multi_head_attention/)
@@ -807,12 +808,11 @@ outperformed monotonic ones (such as
 the best (this is also what [Imagen uses, page 41](https://arxiv.org/abs/2205.11487)).
 * **attention**: As mentioned earlier, it is common in the literature to use
 [attention layers](https://keras.io/api/layers/attention_layers/multi_head_attention/) at low
-resolutions for better global coherence. I ommitted them for simplicity.
+resolutions for better global coherence. I omitted them for simplicity.
 * **upsampling**:
 [Bilinear and nearest neighbour upsampling](https://keras.io/api/layers/reshaping_layers/up_sampling2d/)
-in the network performed similarly, I did not try
-[transposed convolutions](https://keras.io/api/layers/convolution_layers/convolution2d_transpose/)
-however.
+in the network performed similarly, however I did not try
+[transposed convolutions](https://keras.io/api/layers/convolution_layers/convolution2d_transpose/).
 
 For a similar list about GANs check out
 [this Keras tutorial](https://keras.io/examples/generative/gan_ada/#gan-tips-and-tricks).
@@ -821,7 +821,7 @@ For a similar list about GANs check out
 """
 ## What to try next?
 
-If you would like to dive in deeper to the topic, a recommend checking out
+If you would like to dive in deeper to the topic, I recommend checking out
 [this repository](https://github.com/beresandras/clear-diffusion-keras) that I created in
 preparation for this code example, which implements a wider range of features in a
 similar style, such as:
@@ -844,7 +844,7 @@ similar style, such as:
 (blogpost)
 * [Annotated diffusion model](https://huggingface.co/blog/annotated-diffusion) (blogpost)
 * [CVPR 2022 tutorial on diffusion models](https://cvpr2022-tutorial-diffusion-models.github.io/)
-(slides avaliable)
+(slides available)
 * [Elucidating the Design Space of Diffusion-Based Generative Models](https://arxiv.org/abs/2206.00364):
 attempts unifying diffusion methods under a common framework
 * High-level video overviews: [1](https://www.youtube.com/watch?v=yTAMrHVG1ew),

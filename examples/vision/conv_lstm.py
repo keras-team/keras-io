@@ -4,6 +4,7 @@ Author: [Amogh Joshi](https://github.com/amogh7joshi)
 Date created: 2021/06/02
 Last modified: 2021/06/05
 Description: How to build and train a convolutional LSTM model for next-frame video prediction.
+Accelerator: GPU
 """
 
 """
@@ -75,6 +76,7 @@ val_dataset = dataset[val_index]
 # Normalize the data to the 0-1 range.
 train_dataset = train_dataset / 255
 val_dataset = val_dataset / 255
+
 
 # We'll define a helper function to shift the frames, where
 # `x` is frames 0 to n - 1, and `y` is frames 1 to n.

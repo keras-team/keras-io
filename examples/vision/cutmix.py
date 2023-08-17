@@ -4,6 +4,7 @@ Author: [Sayan Nath](https://twitter.com/sayannath2350)
 Date created: 2021/06/08
 Last modified: 2021/06/08
 Description: Data augmentation with CutMix for image classification on CIFAR-10.
+Accelerator: GPU
 """
 
 """

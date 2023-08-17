@@ -939,7 +939,7 @@ class GraphConvLayer(layers.Layer):
         *args,
         **kwargs,
     ):
-        super(GraphConvLayer, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
         self.aggregation_type = aggregation_type
         self.combination_type = combination_type
@@ -1071,7 +1071,7 @@ class GNNNodeClassifier(tf.keras.Model):
         *args,
         **kwargs,
     ):
-        super(GNNNodeClassifier, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
         # Unpack graph_info to three elements: node_features, edges, and edge_weight.
         node_features, edges, edge_weights = graph_info

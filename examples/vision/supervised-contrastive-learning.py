@@ -4,6 +4,7 @@ Author: [Khalid Salama](https://www.linkedin.com/in/khalid-salama-24403144/)
 Date created: 2020/11/30
 Last modified: 2020/11/30
 Description: Using supervised contrastive learning for image classification.
+Accelerator: GPU
 """
 """
 ## Introduction
@@ -60,8 +61,6 @@ data_augmentation = keras.Sequential(
         layers.Normalization(),
         layers.RandomFlip("horizontal"),
         layers.RandomRotation(0.02),
-        layers.RandomWidth(0.2),
-        layers.RandomHeight(0.2),
     ]
 )
 
@@ -108,7 +107,6 @@ plus a softmax layer with the target classes.
 
 
 def create_classifier(encoder, trainable=True):
-
     for layer in encoder.layers:
         layer.trainable = trainable
 
@@ -163,7 +161,7 @@ softmax are optimized.
 
 class SupervisedContrastiveLoss(keras.losses.Loss):
     def __init__(self, temperature=1, name=None):
-        super(SupervisedContrastiveLoss, self).__init__(name=name)
+        super().__init__(name=name)
         self.temperature = temperature
 
     def __call__(self, labels, feature_vectors, sample_weight=None):

@@ -4,6 +4,7 @@ Author: [Sayak Paul](https://twitter.com/RisingSayak)
 Date created: 2021/06/19
 Last modified: 2021/06/19
 Description: Unifying semi-supervised learning and unsupervised domain adaptation with AdaMatch.
+Accelerator: GPU
 """
 """
 ## Introduction
@@ -46,7 +47,7 @@ The following figure provides an illustration of this idea. In the present examp
 [MNIST dataset](http://yann.lecun.com/exdb/mnist/) as the source dataset, while the target dataset is
 [SVHN](http://ufldl.stanford.edu/housenumbers/), which consists of images of house
 numbers. Both datasets have various varying factors in terms of texture, viewpoint,
-appearence, etc.: their domains, or distributions, are different from one
+appearance, etc.: their domains, or distributions, are different from one
 another.
 
 ![](https://i.imgur.com/dJFSJuT.png)
@@ -257,7 +258,7 @@ we will discuss shortly).
 
 class AdaMatch(keras.Model):
     def __init__(self, model, total_steps, tau=0.9):
-        super(AdaMatch, self).__init__()
+        super().__init__()
         self.model = model
         self.tau = tau  # Denotes the confidence threshold
         self.loss_tracker = tf.keras.metrics.Mean(name="loss")

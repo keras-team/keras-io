@@ -4,6 +4,7 @@ Author: [A_K_Nain](https://twitter.com/A_K_Nain)
 Date created: 2021/05/29
 Last modified: 2021/10/31
 Description: Implement an image captioning model using a CNN and a Transformer.
+Accelerator: GPU
 """
 
 """
@@ -227,7 +228,7 @@ def process_input(img_path, captions):
 
 def make_dataset(images, captions):
     dataset = tf.data.Dataset.from_tensor_slices((images, captions))
-    dataset = dataset.shuffle(len(images))
+    dataset = dataset.shuffle(BATCH_SIZE * 8)
     dataset = dataset.map(process_input, num_parallel_calls=AUTOTUNE)
     dataset = dataset.batch(BATCH_SIZE).prefetch(AUTOTUNE)
 
@@ -617,7 +618,7 @@ def generate_caption():
         )
         sampled_token_index = np.argmax(predictions[0, i, :])
         sampled_token = index_lookup[sampled_token_index]
-        if sampled_token == " <end>":
+        if sampled_token == "<end>":
             break
         decoded_caption += " " + sampled_token
 

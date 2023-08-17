@@ -2,7 +2,7 @@
 
 **Author:** [fchollet](https://twitter.com/fchollet)<br>
 **Date created:** 2021/05/26<br>
-**Last modified:** 2022/09/15<br>
+**Last modified:** 2023/08/17<br>
 **Description:** Implementing a sequence-to-sequene Transformer and training it on a machine translation task.
 
 
@@ -92,11 +92,11 @@ for _ in range(5):
 
 <div class="k-default-codeblock">
 ```
-('My hobby is stamp collecting.', '[start] Mi pasatiempo es la filatelia. [end]')
-('I was with Tom all day.', '[start] Estuve todo el día con Tom. [end]')
-("Let's get started right away.", '[start] Comencemos en seguida. [end]')
-('I made him talk to his aunt on the phone.', '[start] Le hice hablar por teléfono con su tía. [end]')
-('We ran out of gas in the middle of the intersection.', '[start] Nos quedamos sin bencina en medio del cruce. [end]')
+("I've got to find Tom.", '[start] Tengo que encontrar a Tom. [end]')
+("I'll keep it a secret. Don't worry.", '[start] Lo mantendré en secreto. No te preocupes. [end]')
+('I have good news for you.', '[start] Tengo buenas noticias para ustedes. [end]')
+('I can see the top of the mountain.', '[start] Puedo ver la cima de la montaña. [end]')
+("Next week, we're heading to the mountain.", '[start] La próxima semana vamos a la montaña. [end]')
 
 ```
 </div>
@@ -264,7 +264,7 @@ result in a model that cannot be used at inference time).
 
 class TransformerEncoder(layers.Layer):
     def __init__(self, embed_dim, dense_dim, num_heads, **kwargs):
-        super(TransformerEncoder, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.embed_dim = embed_dim
         self.dense_dim = dense_dim
         self.num_heads = num_heads
@@ -301,7 +301,7 @@ class TransformerEncoder(layers.Layer):
 
 class PositionalEmbedding(layers.Layer):
     def __init__(self, sequence_length, vocab_size, embed_dim, **kwargs):
-        super(PositionalEmbedding, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.token_embeddings = layers.Embedding(
             input_dim=vocab_size, output_dim=embed_dim
         )
@@ -336,7 +336,7 @@ class PositionalEmbedding(layers.Layer):
 
 class TransformerDecoder(layers.Layer):
     def __init__(self, embed_dim, latent_dim, num_heads, **kwargs):
-        super(TransformerDecoder, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.embed_dim = embed_dim
         self.latent_dim = latent_dim
         self.num_heads = num_heads
@@ -438,29 +438,31 @@ transformer.fit(train_ds, epochs=epochs, validation_data=val_ds)
 ```
 Model: "transformer"
 __________________________________________________________________________________________________
- Layer (type)                   Output Shape         Param #     Connected to                     
+ Layer (type)                Output Shape                 Param #   Connected to                  
 ==================================================================================================
- encoder_inputs (InputLayer)    [(None, None)]       0           []                               
+ encoder_inputs (InputLayer  [(None, None)]               0         []                            
+ )                                                                                                
                                                                                                   
- positional_embedding (Position  (None, None, 256)   3845120     ['encoder_inputs[0][0]']         
- alEmbedding)                                                                                     
+ positional_embedding (Posi  (None, None, 256)            3845120   ['encoder_inputs[0][0]']      
+ tionalEmbedding)                                                                                 
                                                                                                   
- decoder_inputs (InputLayer)    [(None, None)]       0           []                               
+ decoder_inputs (InputLayer  [(None, None)]               0         []                            
+ )                                                                                                
                                                                                                   
- transformer_encoder (Transform  (None, None, 256)   3155456     ['positional_embedding[0][0]']   
- erEncoder)                                                                                       
+ transformer_encoder (Trans  (None, None, 256)            3155456   ['positional_embedding[0][0]']
+ formerEncoder)                                                                                   
                                                                                                   
- model_1 (Functional)           (None, None, 15000)  12959640    ['decoder_inputs[0][0]',         
-                                                                  'transformer_encoder[0][0]']    
+ model_1 (Functional)        (None, None, 15000)          1295964   ['decoder_inputs[0][0]',      
+                                                          0          'transformer_encoder[0][0]'] 
                                                                                                   
 ==================================================================================================
-Total params: 19,960,216
-Trainable params: 19,960,216
-Non-trainable params: 0
+Total params: 19960216 (76.14 MB)
+Trainable params: 19960216 (76.14 MB)
+Non-trainable params: 0 (0.00 Byte)
 __________________________________________________________________________________________________
-1302/1302 [==============================] - 544s 414ms/step - loss: 1.6122 - accuracy: 0.4443 - val_loss: 1.2147 - val_accuracy: 0.5527
+1302/1302 [==============================] - 99s 69ms/step - loss: 3.6480 - accuracy: 0.4675 - val_loss: 2.4991 - val_accuracy: 0.6096
 
-<keras.callbacks.History at 0x7f081816d600>
+<keras.src.callbacks.History at 0x14854493dcf0>
 
 ```
 </div>

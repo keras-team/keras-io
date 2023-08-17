@@ -4,6 +4,7 @@ Authors: Francois Chollet, Mark Omernick
 Date created: 2020/07/25
 Last modified: 2021/04/23
 Description: Overview of how to leverage preprocessing layers to create end-to-end models.
+Accelerator: GPU
 """
 """
 ## Keras preprocessing
@@ -66,8 +67,6 @@ are only active during training.
 - `tf.keras.layers.RandomTranslation`
 - `tf.keras.layers.RandomRotation`
 - `tf.keras.layers.RandomZoom`
-- `tf.keras.layers.RandomHeight`
-- `tf.keras.layers.RandomWidth`
 - `tf.keras.layers.RandomContrast`
 
 """
@@ -95,7 +94,8 @@ You set the state of a preprocessing layer by exposing it to training data, via 
 
 import numpy as np
 import tensorflow as tf
-from tensorflow.keras import layers
+import keras
+from keras import layers
 
 data = np.array(
     [

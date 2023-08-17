@@ -4,6 +4,7 @@ Author: [Sayak Paul](https://twitter.com/RisingSayak)
 Date created: 2021/08/08
 Last modified: 2021/08/15
 Description: Training a multimodal model for predicting entailment.
+Accelerator: GPU
 """
 """
 ## Introduction

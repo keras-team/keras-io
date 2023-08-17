@@ -4,6 +4,7 @@ Authors: [Hazem Essam](https://twitter.com/hazemessamm) and [Santiago L. Valdarr
 Date created: 2021/03/25
 Last modified: 2021/03/25
 Description: Training a Siamese Network to compare the similarity of images using a triplet loss function.
+Accelerator: GPU
 """
 
 """
@@ -280,7 +281,7 @@ class SiameseModel(Model):
     """
 
     def __init__(self, siamese_network, margin=0.5):
-        super(SiameseModel, self).__init__()
+        super().__init__()
         self.siamese_network = siamese_network
         self.margin = margin
         self.loss_tracker = metrics.Mean(name="loss")

@@ -4,6 +4,7 @@ Author: [Khalid Salama](https://www.linkedin.com/in/khalid-salama-24403144/)
 Date created: 2021/05/30
 Last modified: 2021/05/30
 Description: Implementing the MLP-Mixer, FNet, and gMLP models for CIFAR-100 image classification.
+Accelerator: GPU
 """
 
 """
@@ -176,7 +177,7 @@ data_augmentation.layers[0].adapt(x_train)
 
 class Patches(layers.Layer):
     def __init__(self, patch_size, num_patches):
-        super(Patches, self).__init__()
+        super().__init__()
         self.patch_size = patch_size
         self.num_patches = num_patches
 
@@ -215,7 +216,7 @@ instead of batch normalization.
 
 class MLPMixerLayer(layers.Layer):
     def __init__(self, num_patches, hidden_units, dropout_rate, *args, **kwargs):
-        super(MLPMixerLayer, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
         self.mlp1 = keras.Sequential(
             [
@@ -299,7 +300,7 @@ in the Transformer block with a parameter-free 2D Fourier transformation layer:
 
 class FNetLayer(layers.Layer):
     def __init__(self, num_patches, embedding_dim, dropout_rate, *args, **kwargs):
-        super(FNetLayer, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
         self.ffn = keras.Sequential(
             [
@@ -371,7 +372,7 @@ The SGU enables cross-patch interactions across the spatial (channel) dimension,
 
 class gMLPLayer(layers.Layer):
     def __init__(self, num_patches, embedding_dim, dropout_rate, *args, **kwargs):
-        super(gMLPLayer, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
         self.channel_projection1 = keras.Sequential(
             [

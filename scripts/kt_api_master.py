@@ -19,10 +19,24 @@ ORACLE_MASTER = {
             ],
         },
         {
+            "path": "synchronized",
+            "title": "@synchronized decorator",
+            "generate": [
+                "keras_tuner.synchronized",
+            ],
+        },
+        {
             "path": "random",
             "title": "RandomSearch Oracle",
             "generate": [
                 "keras_tuner.oracles.RandomSearchOracle",
+            ],
+        },
+        {
+            "path": "grid",
+            "title": "GridSearch Oracle",
+            "generate": [
+                "keras_tuner.oracles.GridSearchOracle",
             ],
         },
         {
@@ -53,6 +67,20 @@ HYPERMODEL_MASTER = {
             "generate": [
                 "keras_tuner.HyperModel",
                 "keras_tuner.HyperModel.build",
+            ],
+        },
+        {
+            "path": "hyper_efficientnet",
+            "title": "HyperEfficientNet",
+            "generate": [
+                "keras_tuner.applications.HyperEfficientNet",
+            ],
+        },
+        {
+            "path": "hyper_image_augment",
+            "title": "HyperImageAugment",
+            "generate": [
+                "keras_tuner.applications.HyperImageAugment",
             ],
         },
         {
@@ -99,10 +127,24 @@ TUNER_MASTER = {
             ],
         },
         {
+            "path": "objective",
+            "title": "Objective class",
+            "generate": [
+                "keras_tuner.Objective",
+            ],
+        },
+        {
             "path": "random",
             "title": "RandomSearch Tuner",
             "generate": [
                 "keras_tuner.RandomSearch",
+            ],
+        },
+        {
+            "path": "grid",
+            "title": "GridSearch Tuner",
+            "generate": [
+                "keras_tuner.GridSearch",
             ],
         },
         {
@@ -151,5 +193,16 @@ KT_API_MASTER = {
         TUNER_MASTER,
         ORACLE_MASTER,
         HYPERMODEL_MASTER,
+        {
+            "path": "errors",
+            "title": "Errors",
+            "generate": [
+                "keras_tuner.errors.FailedTrialError",
+                "keras_tuner.errors.FatalError",
+                "keras_tuner.errors.FatalValueError",
+                "keras_tuner.errors.FatalTypeError",
+                "keras_tuner.errors.FatalRuntimeError",
+            ],
+        },
     ],
 }

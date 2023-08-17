@@ -63,13 +63,13 @@ from tensorflow.keras import layers
 We use a real-world traffic speed dataset named `PeMSD7`. We use the version
 collected and prepared by [Yu et al., 2018](https://arxiv.org/abs/1709.04875)
 and available
-[here](https://github.com/VeritasYin/STGCN_IJCAI-18/tree/master/data_loader).
+[here](https://github.com/VeritasYin/STGCN_IJCAI-18/tree/master/dataset).
 
 The data consists of two files:
 
-- `W_228.csv` contains the distances between 228
+- `PeMSD7_W_228.csv` contains the distances between 228
 stations across the District 7 of California.
-- `V_228.csv` contains traffic
+- `PeMSD7_V_228.csv` contains traffic
 speed collected for those stations in the weekdays of May and June of 2012.
 
 The full description of the dataset can be found in
@@ -79,14 +79,14 @@ The full description of the dataset can be found in
 
 
 ```python
-url = "https://github.com/VeritasYin/STGCN_IJCAI-18/raw/master/data_loader/PeMS-M.zip"
+url = "https://github.com/VeritasYin/STGCN_IJCAI-18/raw/master/dataset/PeMSD7_Full.zip"
 data_dir = keras.utils.get_file(origin=url, extract=True, archive_format="zip")
-data_dir = data_dir.rstrip(".zip")
+data_dir = data_dir.rstrip("PeMSD7_Full.zip")
 
 route_distances = pd.read_csv(
-    os.path.join(data_dir, "W_228.csv"), header=None
+    os.path.join(data_dir, "PeMSD7_W_228.csv"), header=None
 ).to_numpy()
-speeds_array = pd.read_csv(os.path.join(data_dir, "V_228.csv"), header=None).to_numpy()
+speeds_array = pd.read_csv(os.path.join(data_dir, "PeMSD7_V_228.csv"), header=None).to_numpy()
 
 print(f"route_distances shape={route_distances.shape}")
 print(f"speeds_array shape={speeds_array.shape}")

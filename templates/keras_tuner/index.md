@@ -74,7 +74,7 @@ tuner.search(x_train, y_train, epochs=5, validation_data=(x_val, y_val))
 best_model = tuner.get_best_models()[0]
 ```
 
-To learn more about KerasTuner, check out [this starter guide](/guides/keras_tuner/getting_started/).
+To learn more about KerasTuner, check out [this starter guide](https://keras.io/guides/keras_tuner/getting_started/).
 
 
 ---

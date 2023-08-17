@@ -318,7 +318,7 @@ flexibility to suppress input that are not relevant for a given task.
 
 class GatedLinearUnit(layers.Layer):
     def __init__(self, units):
-        super(GatedLinearUnit, self).__init__()
+        super().__init__()
         self.linear = layers.Dense(units)
         self.sigmoid = layers.Dense(units, activation="sigmoid")
 
@@ -343,7 +343,7 @@ The Gated Residual Network (GRN) works as follows:
 
 class GatedResidualNetwork(layers.Layer):
     def __init__(self, units, dropout_rate):
-        super(GatedResidualNetwork, self).__init__()
+        super().__init__()
         self.units = units
         self.elu_dense = layers.Dense(units, activation="elu")
         self.linear_dense = layers.Dense(units)
@@ -382,7 +382,7 @@ number of the input features.
 
 class VariableSelection(layers.Layer):
     def __init__(self, num_features, units, dropout_rate):
-        super(VariableSelection, self).__init__()
+        super().__init__()
         self.grns = list()
         # Create a GRN for each feature independently
         for idx in range(num_features):

@@ -2,8 +2,9 @@
 Title: Investigating Vision Transformer representations
 Authors: [Aritra Roy Gosthipaty](https://twitter.com/ariG23498), [Sayak Paul](https://twitter.com/RisingSayak) (equal contribution)
 Date created: 2022/04/12
-Last modified: 2022/04/17
+Last modified: 2023/02/27
 Description: Looking into the representations learned by different Vision Transformers variants.
+Accelerator: NONE
 """
 """
 ## Introduction
@@ -58,12 +59,11 @@ import zipfile
 from io import BytesIO
 
 import cv2
-import gdown
+import os
 import matplotlib.pyplot as plt
 import numpy as np
 import requests
 import tensorflow as tf
-import tensorflow_hub as hub
 from PIL import Image
 from sklearn.preprocessing import MinMaxScaler
 from tensorflow import keras
@@ -74,6 +74,13 @@ from tensorflow import keras
 
 RESOLUTION = 224
 PATCH_SIZE = 16
+GITHUB_RELEASE = "https://github.com/sayakpaul/probing-vits/releases/download/v1.0.0/probing_vits.zip"
+FNAME = "probing_vits.zip"
+MODELS_ZIP = {
+    "vit_dino_base16": "Probing_ViTs/vit_dino_base16.zip",
+    "vit_b16_patch16_224": "Probing_ViTs/vit_b16_patch16_224.zip",
+    "vit_b16_patch16_224-i1k_pretrained": "Probing_ViTs/vit_b16_patch16_224-i1k_pretrained.zip",
+}
 
 """
 ## Data utilities
@@ -150,33 +157,30 @@ plt.show()
 """
 
 
-def get_tfhub_model(model_url: str) -> tf.keras.Model:
-    inputs = keras.Input((RESOLUTION, RESOLUTION, 3))
-    hub_module = hub.KerasLayer(model_url)
-    outputs, attention_weights = hub_module(inputs)
-    return keras.Model(inputs, outputs=[outputs, attention_weights])
+zip_path = tf.keras.utils.get_file(
+    fname=FNAME,
+    origin=GITHUB_RELEASE,
+)
+
+with zipfile.ZipFile(zip_path, "r") as zip_ref:
+    zip_ref.extractall("./")
+
+os.rename("Probing ViTs", "Probing_ViTs")
 
 
-def get_gdrive_model(model_id: str) -> tf.keras.Model:
-    model_path = gdown.download(id=model_id, quiet=False)
+def load_model(model_path: str) -> tf.keras.Model:
     with zipfile.ZipFile(model_path, "r") as zip_ref:
-        zip_ref.extractall()
+        zip_ref.extractall("Probing_ViTs/")
     model_name = model_path.split(".")[0]
+
     inputs = keras.Input((RESOLUTION, RESOLUTION, 3))
     model = keras.models.load_model(model_name, compile=False)
-    outputs, attention_weights = model(inputs)
+    outputs, attention_weights = model(inputs, training=False)
+
     return keras.Model(inputs, outputs=[outputs, attention_weights])
 
 
-def get_model(url_or_id):
-    if "https" in url_or_id:
-        loaded_model = get_tfhub_model(url_or_id)
-    else:
-        loaded_model = get_gdrive_model(url_or_id)
-    return loaded_model
-
-
-vit_base_i21k_patch16_224 = get_model("1mbtnliT3jRb3yJUHhbItWw8unfYZw8KJ")
+vit_base_i21k_patch16_224 = load_model(MODELS_ZIP["vit_b16_patch16_224-i1k_pretrained"])
 print("Model loaded.")
 
 """
@@ -456,7 +460,7 @@ yields better attention heatmaps.
 """
 
 # Load the model.
-vit_dino_base16 = get_model("16_1oDm0PeCGJ_KGBG5UKVN7TsAtiRNrN")
+vit_dino_base16 = load_model(MODELS_ZIP["vit_dino_base16"])
 print("Model loaded.")
 
 # Preprocess the same image but with normlization.

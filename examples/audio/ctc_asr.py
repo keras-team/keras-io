@@ -4,6 +4,7 @@ Authors: [Mohamed Reda Bouadjenek](https://rbouadjenek.github.io/) and [Ngoc Dun
 Date created: 2021/09/26
 Last modified: 2021/09/26
 Description: Training a CTC-based model for automatic speech recognition.
+Accelerator: GPU
 """
 
 """
@@ -186,7 +187,7 @@ appeared in the input.
 """
 
 batch_size = 32
-# Define the trainig dataset
+# Define the training dataset
 train_dataset = tf.data.Dataset.from_tensor_slices(
     (list(df_train["file_name"]), list(df_train["normalized_transcription"]))
 )
@@ -334,6 +335,7 @@ model.summary(line_length=110)
 """
 ## Training and Evaluating
 """
+
 
 # A utility function to decode the output of the network
 def decode_batch_predictions(pred):

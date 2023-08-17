@@ -4,6 +4,7 @@ Author: [Karan V. Dave](https://www.linkedin.com/in/karan-dave-811413164/)
 Date created: 2022/03/27
 Last modified: 2022/03/27
 Description: A simple Keras implementation of object detection using Vision Transformers.
+Accelerator: GPU
 """
 
 """
@@ -50,7 +51,7 @@ import shutil
 """
 ## Prepare dataset
 
-We use the [Caltech 101 Dataset](http://www.vision.caltech.edu/Image_Datasets/Caltech101/).
+We use the [Caltech 101 Dataset](https://data.caltech.edu/records/mzrjq-6wc02).
 """
 
 # Path to images and annotations
@@ -59,7 +60,7 @@ path_annot = "/Annotations/Airplanes_Side_2/"
 
 path_to_downloaded_file = keras.utils.get_file(
     fname="caltech_101_zipped",
-    origin="https://data.caltech.edu/tindfiles/serve/e41f5188-0b32-41fa-801b-d1e840915e80/",
+    origin="https://data.caltech.edu/records/mzrjq-6wc02/files/caltech-101.zip",
     extract=True,
     archive_format="zip",  # downloaded file format
     cache_dir="/",  # cache and extract in current directory
@@ -148,7 +149,7 @@ def mlp(x, hidden_units, dropout_rate):
 
 class Patches(layers.Layer):
     def __init__(self, patch_size):
-        super(Patches, self).__init__()
+        super().__init__()
         self.patch_size = patch_size
 
     #     Override function to avoid error while saving model
@@ -216,7 +217,7 @@ embedding to the projected vector.
 
 class PatchEncoder(layers.Layer):
     def __init__(self, num_patches, projection_dim):
-        super(PatchEncoder, self).__init__()
+        super().__init__()
         self.num_patches = num_patches
         self.projection = layers.Dense(units=projection_dim)
         self.position_embedding = layers.Embedding(
@@ -313,7 +314,6 @@ def create_vit_object_detector(
 
 
 def run_experiment(model, learning_rate, weight_decay, batch_size, num_epochs):
-
     optimizer = tfa.optimizers.AdamW(
         learning_rate=learning_rate, weight_decay=weight_decay
     )
@@ -389,6 +389,7 @@ import matplotlib.patches as patches
 
 # Saves the model in current path
 vit_object_detector.save("vit_object_detector.h5", save_format="h5")
+
 
 # To calculate IoU (intersection over union, given two bounding boxes)
 def bounding_box_intersection_over_union(box_predicted, box_truth):

@@ -4,6 +4,7 @@ Authors: [Mandolini Giorgio Maria](https://www.linkedin.com/in/giorgio-maria-man
 Date created: 2020/08/10
 Last modified: 2020/08/10
 Description: Estimating the density distribution of the "double moon" dataset.
+Accelerator: GPU
 """
 
 """
@@ -105,7 +106,7 @@ def Coupling(input_shape):
 
 class RealNVP(keras.Model):
     def __init__(self, num_coupling_layers):
-        super(RealNVP, self).__init__()
+        super().__init__()
 
         self.num_coupling_layers = num_coupling_layers
 
@@ -159,7 +160,6 @@ class RealNVP(keras.Model):
 
     def train_step(self, data):
         with tf.GradientTape() as tape:
-
             loss = self.log_loss(data)
 
         g = tape.gradient(loss, self.trainable_variables)

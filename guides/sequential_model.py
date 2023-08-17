@@ -4,6 +4,7 @@ Author: [fchollet](https://twitter.com/fchollet)
 Date created: 2020/04/12
 Last modified: 2020/04/12
 Description: Complete guide to the Sequential model.
+Accelerator: GPU
 """
 """
 ## Setup
@@ -11,8 +12,8 @@ Description: Complete guide to the Sequential model.
 """
 
 import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras import layers
+import keras
+from keras import layers
 
 """
 ## When to use a Sequential model

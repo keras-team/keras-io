@@ -4,13 +4,14 @@ Author: [fchollet](https://twitter.com/fchollet)
 Date created: 2020/04/01
 Last modified: 2020/10/02
 Description: Everything you need to know to use Keras & TensorFlow for deep learning research.
+Accelerator: None
 """
 """
 ## Setup
 """
 
 import tensorflow as tf
-from tensorflow import keras
+import keras
 
 """
 ## Introduction
@@ -185,7 +186,8 @@ The `Layer` class is the fundamental abstraction in Keras.
 A `Layer` encapsulates a state (weights) and some computation
 (defined in the call method).
 
-A simple layer looks like this:
+A simple layer looks like this.
+The `self.add_weight()` method gives you a shortcut for creating weights:
 """
 
 
@@ -193,16 +195,11 @@ class Linear(keras.layers.Layer):
     """y = w.x + b"""
 
     def __init__(self, units=32, input_dim=32):
-        super(Linear, self).__init__()
-        w_init = tf.random_normal_initializer()
-        self.w = tf.Variable(
-            initial_value=w_init(shape=(input_dim, units), dtype="float32"),
-            trainable=True,
+        super().__init__()
+        self.w = self.add_weight(
+            shape=(input_dim, units), initializer="random_normal", trainable=True
         )
-        b_init = tf.zeros_initializer()
-        self.b = tf.Variable(
-            initial_value=b_init(shape=(units,), dtype="float32"), trainable=True
-        )
+        self.b = self.add_weight(shape=(units,), initializer="zeros", trainable=True)
 
     def call(self, inputs):
         return tf.matmul(inputs, self.w) + self.b
@@ -234,9 +231,10 @@ built-in functionality.
 """
 
 """
-## Layer weight creation
+## Layer weight creation in `build(input_shape)`
 
-The `self.add_weight()` method gives you a shortcut for creating weights:
+It's often a good idea to defer weight creation to the `build()` method, so
+that you don't need to specify the input dim/shape at layer construction time:
 """
 
 
@@ -244,7 +242,7 @@ class Linear(keras.layers.Layer):
     """y = w.x + b"""
 
     def __init__(self, units=32):
-        super(Linear, self).__init__()
+        super().__init__()
         self.units = units
 
     def build(self, input_shape):
@@ -261,7 +259,7 @@ class Linear(keras.layers.Layer):
         return tf.matmul(inputs, self.w) + self.b
 
 
-# Instantiate our lazy layer.
+# Instantiate our layer.
 linear_layer = Linear(4)
 
 # This will also call `build(input_shape)` and create the weights.
@@ -277,7 +275,7 @@ you can modify the gradients before using them, if you need to.
 """
 
 # Prepare a dataset.
-(x_train, y_train), _ = tf.keras.datasets.mnist.load_data()
+(x_train, y_train), _ = keras.datasets.mnist.load_data()
 dataset = tf.data.Dataset.from_tensor_slices(
     (x_train.reshape(60000, 784).astype("float32") / 255, y_train)
 )
@@ -287,17 +285,15 @@ dataset = dataset.shuffle(buffer_size=1024).batch(64)
 linear_layer = Linear(10)
 
 # Instantiate a logistic loss function that expects integer targets.
-loss_fn = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
+loss_fn = keras.losses.SparseCategoricalCrossentropy(from_logits=True)
 
 # Instantiate an optimizer.
-optimizer = tf.keras.optimizers.SGD(learning_rate=1e-3)
+optimizer = keras.optimizers.SGD(learning_rate=1e-3)
 
 # Iterate over the batches of the dataset.
 for step, (x, y) in enumerate(dataset):
-
     # Open a GradientTape.
     with tf.GradientTape() as tape:
-
         # Forward pass.
         logits = linear_layer(x)
 
@@ -327,9 +323,11 @@ class ComputeSum(keras.layers.Layer):
     """Returns the sum of the inputs."""
 
     def __init__(self, input_dim):
-        super(ComputeSum, self).__init__()
+        super().__init__()
         # Create a non-trainable weight.
-        self.total = tf.Variable(initial_value=tf.zeros((input_dim,)), trainable=False)
+        self.total = self.add_weight(
+            initializer="zeros", shape=(input_dim,), trainable=False
+        )
 
     def call(self, inputs):
         self.total.assign_add(tf.reduce_sum(inputs, axis=0))
@@ -365,7 +363,7 @@ class MLP(keras.layers.Layer):
     """Simple stack of Linear layers."""
 
     def __init__(self):
-        super(MLP, self).__init__()
+        super().__init__()
         self.linear_1 = Linear(32)
         self.linear_2 = Linear(32)
         self.linear_3 = Linear(10)
@@ -414,7 +412,7 @@ class ActivityRegularization(keras.layers.Layer):
     """Layer that creates an activity sparsity regularization loss."""
 
     def __init__(self, rate=1e-2):
-        super(ActivityRegularization, self).__init__()
+        super().__init__()
         self.rate = rate
 
     def call(self, inputs):
@@ -435,7 +433,7 @@ class SparseMLP(keras.layers.Layer):
     """Stack of Linear layers with a sparsity regularization loss."""
 
     def __init__(self):
-        super(SparseMLP, self).__init__()
+        super().__init__()
         self.linear_1 = Linear(32)
         self.regularization = ActivityRegularization(1e-2)
         self.linear_3 = Linear(10)
@@ -470,7 +468,7 @@ assert len(mlp.losses) == 1  # No accumulation.
 # Let's demonstrate how to use these losses in a training loop.
 
 # Prepare a dataset.
-(x_train, y_train), _ = tf.keras.datasets.mnist.load_data()
+(x_train, y_train), _ = keras.datasets.mnist.load_data()
 dataset = tf.data.Dataset.from_tensor_slices(
     (x_train.reshape(60000, 784).astype("float32") / 255, y_train)
 )
@@ -480,12 +478,11 @@ dataset = dataset.shuffle(buffer_size=1024).batch(64)
 mlp = SparseMLP()
 
 # Loss and optimizer.
-loss_fn = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
-optimizer = tf.keras.optimizers.SGD(learning_rate=1e-3)
+loss_fn = keras.losses.SparseCategoricalCrossentropy(from_logits=True)
+optimizer = keras.optimizers.SGD(learning_rate=1e-3)
 
 for step, (x, y) in enumerate(dataset):
     with tf.GradientTape() as tape:
-
         # Forward pass.
         logits = mlp(x)
 
@@ -508,13 +505,13 @@ for step, (x, y) in enumerate(dataset):
 """
 ## Keeping track of training metrics
 
-Keras offers a broad range of built-in metrics, like `tf.keras.metrics.AUC`
-or `tf.keras.metrics.PrecisionAtRecall`. It's also easy to create your
+Keras offers a broad range of built-in metrics, like `keras.metrics.AUC`
+or `keras.metrics.PrecisionAtRecall`. It's also easy to create your
 own metrics in a few lines of code.
 
 To use a metric in a custom training loop, you would:
 
-- Instantiate the metric object, e.g. `metric = tf.keras.metrics.AUC()`
+- Instantiate the metric object, e.g. `metric = keras.metrics.AUC()`
 - Call its `metric.udpate_state(targets, predictions)` method for each batch of data
 - Query its result via `metric.result()`
 - Reset the metric's state at the end of an epoch or at the start of an evaluation via
@@ -524,7 +521,7 @@ Here's a simple example:
 """
 
 # Instantiate a metric object
-accuracy = tf.keras.metrics.SparseCategoricalAccuracy()
+accuracy = keras.metrics.SparseCategoricalAccuracy()
 
 # Prepare our layer, loss, and optimizer.
 model = keras.Sequential(
@@ -534,8 +531,8 @@ model = keras.Sequential(
         keras.layers.Dense(10),
     ]
 )
-loss_fn = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
-optimizer = tf.keras.optimizers.Adam(learning_rate=1e-3)
+loss_fn = keras.losses.SparseCategoricalCrossentropy(from_logits=True)
+optimizer = keras.optimizers.Adam(learning_rate=1e-3)
 
 for epoch in range(2):
     # Iterate over the batches of a dataset.
@@ -559,13 +556,6 @@ for epoch in range(2):
 
     # Reset the metric's state at the end of an epoch
     accuracy.reset_state()
-
-"""
-In addition to this, similarly to the `self.add_loss()` method, you have access
-to an `self.add_metric()` method on layers. It tracks the average of
-whatever quantity you pass to it. You can reset the value of these metrics
-by calling `layer.reset_metrics()` on any layer or model.
-"""
 
 """
 You can also define your own metrics by subclassing `keras.metrics.Metric`.
@@ -653,8 +643,8 @@ model = keras.Sequential(
         keras.layers.Dense(10),
     ]
 )
-loss_fn = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
-optimizer = tf.keras.optimizers.Adam(learning_rate=1e-3)
+loss_fn = keras.losses.SparseCategoricalCrossentropy(from_logits=True)
+optimizer = keras.optimizers.Adam(learning_rate=1e-3)
 
 # Create a training step function.
 
@@ -670,7 +660,7 @@ def train_on_batch(x, y):
 
 
 # Prepare a dataset.
-(x_train, y_train), _ = tf.keras.datasets.mnist.load_data()
+(x_train, y_train), _ = keras.datasets.mnist.load_data()
 dataset = tf.data.Dataset.from_tensor_slices(
     (x_train.reshape(60000, 784).astype("float32") / 255, y_train)
 )
@@ -697,7 +687,7 @@ inference modes.
 
 class Dropout(keras.layers.Layer):
     def __init__(self, rate):
-        super(Dropout, self).__init__()
+        super().__init__()
         self.rate = rate
 
     def call(self, inputs, training=None):
@@ -708,7 +698,7 @@ class Dropout(keras.layers.Layer):
 
 class MLPWithDropout(keras.layers.Layer):
     def __init__(self):
-        super(MLPWithDropout, self).__init__()
+        super().__init__()
         self.linear_1 = Linear(32)
         self.dropout = Dropout(0.5)
         self.linear_3 = Linear(10)
@@ -738,7 +728,7 @@ it the "Functional API"):
 # The functional API focused on defining per-sample transformations.
 # The model we create will automatically batch the per-sample transformations,
 # so that it can be called on batches of data.
-inputs = tf.keras.Input(shape=(16,), dtype="float32")
+inputs = keras.Input(shape=(16,), dtype="float32")
 
 # We call layers on these "type" objects
 # and they return updated types (new shapes/dtypes).
@@ -748,7 +738,7 @@ outputs = Linear(10)(x)
 
 # A functional `Model` can be defined by specifying inputs and outputs.
 # A model is itself a layer like any other.
-model = tf.keras.Model(inputs, outputs)
+model = keras.Model(inputs, outputs)
 
 # A functional model already has weights, before being called on any data.
 # That's because we defined its input shape in advance (in `Input`).
@@ -795,11 +785,11 @@ below. It leverages the built-in training infrastructure to implement the MNIST
 example above.
 """
 
-inputs = tf.keras.Input(shape=(784,), dtype="float32")
+inputs = keras.Input(shape=(784,), dtype="float32")
 x = keras.layers.Dense(32, activation="relu")(inputs)
 x = keras.layers.Dense(32, activation="relu")(x)
 outputs = keras.layers.Dense(10)(x)
-model = tf.keras.Model(inputs, outputs)
+model = keras.Model(inputs, outputs)
 
 # Specify the loss, optimizer, and metrics with `compile()`.
 model.compile(
@@ -857,7 +847,7 @@ class CustomModel(keras.Model):
         return [self.loss_tracker, self.accuracy]
 
 
-inputs = tf.keras.Input(shape=(784,), dtype="float32")
+inputs = keras.Input(shape=(784,), dtype="float32")
 x = keras.layers.Dense(32, activation="relu")(inputs)
 x = keras.layers.Dense(32, activation="relu")(x)
 outputs = keras.layers.Dense(10)(x)
@@ -904,7 +894,7 @@ class Sampling(layers.Layer):
         z_mean, z_log_var = inputs
         batch = tf.shape(z_mean)[0]
         dim = tf.shape(z_mean)[1]
-        epsilon = tf.keras.backend.random_normal(shape=(batch, dim))
+        epsilon = keras.backend.random_normal(shape=(batch, dim))
         return z_mean + tf.exp(0.5 * z_log_var) * epsilon
 
 
@@ -912,7 +902,7 @@ class Encoder(layers.Layer):
     """Maps MNIST digits to a triplet (z_mean, z_log_var, z)."""
 
     def __init__(self, latent_dim=32, intermediate_dim=64, **kwargs):
-        super(Encoder, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.dense_proj = layers.Dense(intermediate_dim, activation=tf.nn.relu)
         self.dense_mean = layers.Dense(latent_dim)
         self.dense_log_var = layers.Dense(latent_dim)
@@ -936,7 +926,7 @@ class Decoder(layers.Layer):
     """Converts z, the encoded digit vector, back into a readable digit."""
 
     def __init__(self, original_dim, intermediate_dim=64, **kwargs):
-        super(Decoder, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.dense_proj = layers.Dense(intermediate_dim, activation=tf.nn.relu)
         self.dense_output = layers.Dense(original_dim, activation=tf.nn.sigmoid)
 
@@ -955,7 +945,7 @@ class VariationalAutoEncoder(layers.Layer):
     """Combines the encoder and decoder into an end-to-end model for training."""
 
     def __init__(self, original_dim, intermediate_dim=64, latent_dim=32, **kwargs):
-        super(VariationalAutoEncoder, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.original_dim = original_dim
         self.encoder = Encoder(latent_dim=latent_dim, intermediate_dim=intermediate_dim)
         self.decoder = Decoder(original_dim, intermediate_dim=intermediate_dim)
@@ -980,11 +970,11 @@ compile into a super fast graph function.
 vae = VariationalAutoEncoder(original_dim=784, intermediate_dim=64, latent_dim=32)
 
 # Loss and optimizer.
-loss_fn = tf.keras.losses.MeanSquaredError()
-optimizer = tf.keras.optimizers.Adam(learning_rate=1e-3)
+loss_fn = keras.losses.MeanSquaredError()
+optimizer = keras.optimizers.Adam(learning_rate=1e-3)
 
 # Prepare a dataset.
-(x_train, _), _ = tf.keras.datasets.mnist.load_data()
+(x_train, _), _ = keras.datasets.mnist.load_data()
 dataset = tf.data.Dataset.from_tensor_slices(
     x_train.reshape(60000, 784).astype("float32") / 255
 )
@@ -1021,72 +1011,6 @@ for step, x in enumerate(dataset):
 """
 As you can see, building and training this type of model in Keras
 is quick and painless.
-
-Now, you may find that the code above is somewhat verbose: we handle every little detail
-on our own, by hand. This gives the most flexibility, but it's also a bit of work.
-
-Let's take a look at what the Functional API version of
-our VAE looks like:
-"""
-
-original_dim = 784
-intermediate_dim = 64
-latent_dim = 32
-
-# Define encoder model.
-original_inputs = tf.keras.Input(shape=(original_dim,), name="encoder_input")
-x = layers.Dense(intermediate_dim, activation="relu")(original_inputs)
-z_mean = layers.Dense(latent_dim, name="z_mean")(x)
-z_log_var = layers.Dense(latent_dim, name="z_log_var")(x)
-z = Sampling()((z_mean, z_log_var))
-encoder = tf.keras.Model(inputs=original_inputs, outputs=z, name="encoder")
-
-# Define decoder model.
-latent_inputs = tf.keras.Input(shape=(latent_dim,), name="z_sampling")
-x = layers.Dense(intermediate_dim, activation="relu")(latent_inputs)
-outputs = layers.Dense(original_dim, activation="sigmoid")(x)
-decoder = tf.keras.Model(inputs=latent_inputs, outputs=outputs, name="decoder")
-
-# Define VAE model.
-outputs = decoder(z)
-vae = tf.keras.Model(inputs=original_inputs, outputs=outputs, name="vae")
-
-# Add KL divergence regularization loss.
-kl_loss = -0.5 * tf.reduce_mean(z_log_var - tf.square(z_mean) - tf.exp(z_log_var) + 1)
-vae.add_loss(kl_loss)
-
-"""
-Much more concise, right?
-
-By the way, Keras also features built-in training & evaluation loops on its `Model` class
-(`fit()` and `evaluate()`). Check it out:
-"""
-
-# Loss and optimizer.
-loss_fn = tf.keras.losses.MeanSquaredError()
-optimizer = tf.keras.optimizers.Adam(learning_rate=1e-3)
-
-# Prepare a dataset.
-(x_train, _), _ = tf.keras.datasets.mnist.load_data()
-dataset = tf.data.Dataset.from_tensor_slices(
-    x_train.reshape(60000, 784).astype("float32") / 255
-)
-dataset = dataset.map(lambda x: (x, x))  # Use x_train as both inputs & targets
-dataset = dataset.shuffle(buffer_size=1024).batch(32)
-
-# Configure the model for training.
-vae.compile(optimizer, loss=loss_fn)
-
-# Actually training the model.
-vae.fit(dataset, epochs=1)
-
-"""
-The use of the Functional API and `fit` reduces our example from 65 lines to 25 lines
-(including model definition & training). The Keras philosophy is to offer you
-productivity-boosting features like
-these, while simultaneously empowering you to write everything yourself to gain absolute
-control over every little detail. Like we did in the low-level training loop two
-paragraphs earlier.
 """
 
 """
@@ -1109,7 +1033,10 @@ classes = 10
 
 # This is the main network we'll actually use to predict labels.
 main_network = keras.Sequential(
-    [keras.layers.Dense(64, activation=tf.nn.relu), keras.layers.Dense(classes),]
+    [
+        keras.layers.Dense(64, activation=tf.nn.relu),
+        keras.layers.Dense(classes),
+    ]
 )
 
 # It doesn't need to create its own weights, so let's mark its layers
@@ -1140,11 +1067,11 @@ final classification loss
 """
 
 # Loss and optimizer.
-loss_fn = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
-optimizer = tf.keras.optimizers.Adam(learning_rate=1e-4)
+loss_fn = keras.losses.SparseCategoricalCrossentropy(from_logits=True)
+optimizer = keras.optimizers.Adam(learning_rate=1e-4)
 
 # Prepare a dataset.
-(x_train, y_train), _ = tf.keras.datasets.mnist.load_data()
+(x_train, y_train), _ = keras.datasets.mnist.load_data()
 dataset = tf.data.Dataset.from_tensor_slices(
     (x_train.reshape(60000, 784).astype("float32") / 255, y_train)
 )
@@ -1220,8 +1147,6 @@ productive. Imagine trying out 25 ideas per day (20 minutes per experiment on av
 Keras has been designed to go from idea to results as fast as possible, because we
 believe this is
 the key to doing great research.
-"""
 
-"""
 We hope you enjoyed this quick introduction. Let us know what you build with Keras!
 """

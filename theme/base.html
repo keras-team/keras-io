@@ -28,29 +28,38 @@
   <link href="{{base_url}}css/docs.css" rel="stylesheet">
   <link href="{{base_url}}css/monokai.css" rel="stylesheet">
 
-  <script async defer src="https://buttons.github.io/buttons.js"></script>
-
+  <!-- Google Tag Manager -->
+  <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+  new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+  j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+  'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+  })(window,document,'script','dataLayer','GTM-5DNGF4N');
+  </script>
   <script>
   (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
   (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
   m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
   })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
-
   ga('create', 'UA-175165319-128', 'auto');
   ga('send', 'pageview');
   </script>
+  <!-- End Google Tag Manager -->
+
+  <script async defer src="https://buttons.github.io/buttons.js"></script>
 
 </head>
 
 <body>
+  <!-- Google Tag Manager (noscript) -->
+  <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-5DNGF4N"
+  height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+  <!-- End Google Tag Manager (noscript) -->
 
   <div class='k-page'>
   
     <div class="k-nav" id="nav-menu">
       <a href='{{base_url}}'><img src='{{base_url}}img/logo-small.png' class='logo-small' /></a>
-      <span class="gh-btn-container">
-        <a class="github-button" href="https://github.com/keras-team/keras" data-size="large" data-show-count="true" aria-label="Star keras-team/keras on GitHub">Star</a>
-      </span>
+
       <div class="nav flex-column nav-pills" role="tablist" aria-orientation="vertical">
 
         {% for item in nav %}
@@ -58,6 +67,11 @@
           {% if item.active %}
             {% for child in item.children %}
               <a class="nav-sublink{% if child.active %} active{% endif %}" href="{{child.url}}">{{child.title}}</a>
+                {% if child.active %}
+                  {% for grandchild in child.children %}
+                    <a class="nav-sublink2{% if grandchild.active %} active{% endif %}" href="{{grandchild.url}}">{{grandchild.title}}</a>
+                  {% endfor %}
+                {% endif %}
             {% endfor %}
           {% endif %}
         {% endfor %}

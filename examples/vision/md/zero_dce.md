@@ -266,7 +266,7 @@ preserving the contrast between neighboring regions across the input image and i
 
 class SpatialConsistencyLoss(keras.losses.Loss):
     def __init__(self, **kwargs):
-        super(SpatialConsistencyLoss, self).__init__(reduction="none")
+        super().__init__(reduction="none")
 
         self.left_kernel = tf.constant(
             [[[[0, 0, 0]], [[-1, 1, 0]], [[0, 0, 0]]]], dtype=tf.float32
@@ -335,11 +335,11 @@ We implement the Zero-DCE framework as a Keras subclassed model.
 
 class ZeroDCE(keras.Model):
     def __init__(self, **kwargs):
-        super(ZeroDCE, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.dce_model = build_dce_net()
 
     def compile(self, learning_rate, **kwargs):
-        super(ZeroDCE, self).compile(**kwargs)
+        super().compile(**kwargs)
         self.optimizer = keras.optimizers.Adam(learning_rate=learning_rate)
         self.spatial_constancy_loss = SpatialConsistencyLoss(reduction="none")
 
@@ -687,7 +687,7 @@ def plot_results(images, titles, figure_size=(12, 12)):
 
 
 def infer(original_image):
-    image = keras.preprocessing.image.img_to_array(original_image)
+    image = keras.utils.img_to_array(original_image)
     image = image.astype("float32") / 255.0
     image = np.expand_dims(image, axis=0)
     output_image = zero_dce_model(image)

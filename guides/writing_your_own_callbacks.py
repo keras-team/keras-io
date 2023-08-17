@@ -4,6 +4,7 @@ Authors: Rick Chao, Francois Chollet
 Date created: 2019/03/20
 Last modified: 2020/07/12
 Description: Complete guide to writing new Keras callbacks.
+Accelerator: GPU
 """
 """
 ## Introduction
@@ -23,7 +24,7 @@ started.
 """
 
 import tensorflow as tf
-from tensorflow import keras
+import keras
 
 """
 ## Keras callbacks overview
@@ -82,6 +83,7 @@ Called at the end of an epoch during training.
 Let's take a look at a concrete example. To get started, let's import tensorflow and
 define a simple Sequential Keras model:
 """
+
 
 # Define the Keras model to add callbacks to
 def get_model():
@@ -288,13 +290,13 @@ import numpy as np
 class EarlyStoppingAtMinLoss(keras.callbacks.Callback):
     """Stop training when the loss is at its min, i.e. the loss stops decreasing.
 
-  Arguments:
-      patience: Number of epochs to wait after min has been hit. After this
-      number of no improvement, training stops.
-  """
+    Arguments:
+        patience: Number of epochs to wait after min has been hit. After this
+        number of no improvement, training stops.
+    """
 
     def __init__(self, patience=0):
-        super(EarlyStoppingAtMinLoss, self).__init__()
+        super().__init__()
         self.patience = patience
         # best_weights to store the weights at which the minimum loss occurs.
         self.best_weights = None
@@ -351,14 +353,14 @@ See `callbacks.LearningRateScheduler` for a more general implementations.
 class CustomLearningRateScheduler(keras.callbacks.Callback):
     """Learning rate scheduler which sets the learning rate according to schedule.
 
-  Arguments:
-      schedule: a function that takes an epoch index
-          (integer, indexed from 0) and current learning rate
-          as inputs and returns a new learning rate as output (float).
-  """
+    Arguments:
+        schedule: a function that takes an epoch index
+            (integer, indexed from 0) and current learning rate
+            as inputs and returns a new learning rate as output (float).
+    """
 
     def __init__(self, schedule):
-        super(CustomLearningRateScheduler, self).__init__()
+        super().__init__()
         self.schedule = schedule
 
     def on_epoch_begin(self, epoch, logs=None):

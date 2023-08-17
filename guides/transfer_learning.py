@@ -4,6 +4,7 @@ Author: [fchollet](https://twitter.com/fchollet)
 Date created: 2020/04/15
 Last modified: 2020/05/12
 Description: Complete guide to transfer learning & fine-tuning in Keras.
+Accelerator: GPU
 """
 """
 ## Setup
@@ -11,7 +12,7 @@ Description: Complete guide to transfer learning & fine-tuning in Keras.
 
 import numpy as np
 import tensorflow as tf
-from tensorflow import keras
+import keras
 
 """
 ## Introduction
@@ -166,7 +167,11 @@ inner_model = keras.Sequential(
 )
 
 model = keras.Sequential(
-    [keras.Input(shape=(3,)), inner_model, keras.layers.Dense(3, activation="sigmoid"),]
+    [
+        keras.Input(shape=(3,)),
+        inner_model,
+        keras.layers.Dense(3, activation="sigmoid"),
+    ]
 )
 
 model.trainable = False  # Freeze the outer model
@@ -376,7 +381,7 @@ learning & fine-tuning example. We will load the Xception model, pre-trained on
 
 First, let's fetch the cats vs. dogs dataset using TFDS. If you have your own dataset,
 you'll probably want to use the utility
-`tf.keras.preprocessing.image_dataset_from_directory` to generate similar labeled
+`keras.utils.image_dataset_from_directory` to generate similar labeled
  dataset objects from a set of images on disk filed into class-specific folders.
 
 Transfer learning is most useful when working with very small datasets. To keep our
@@ -474,7 +479,10 @@ from tensorflow import keras
 from tensorflow.keras import layers
 
 data_augmentation = keras.Sequential(
-    [layers.RandomFlip("horizontal"), layers.RandomRotation(0.1),]
+    [
+        layers.RandomFlip("horizontal"),
+        layers.RandomRotation(0.1),
+    ]
 )
 
 """

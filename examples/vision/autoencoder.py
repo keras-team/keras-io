@@ -4,6 +4,7 @@ Author: [Santiago L. Valdarrama](https://twitter.com/svpino)
 Date created: 2021/03/01
 Last modified: 2021/03/01
 Description: How to train a deep convolutional autoencoder for image denoising.
+Accelerator: GPU
 """
 
 """

@@ -4,6 +4,7 @@ Author: [Khalid Salama](https://www.linkedin.com/in/khalid-salama-24403144/)
 Date created: 2020/05/10
 Last modified: 2021/02/15
 Description: Implement a Switch Transformer for text classification.
+Accelerator: GPU
 """
 
 """
@@ -43,10 +44,8 @@ num_tokens_per_example = 200  # Only consider the first 200 words of each movie 
 (x_train, y_train), (x_val, y_val) = keras.datasets.imdb.load_data(num_words=vocab_size)
 print(len(x_train), "Training sequences")
 print(len(x_val), "Validation sequences")
-x_train = keras.preprocessing.sequence.pad_sequences(
-    x_train, maxlen=num_tokens_per_example
-)
-x_val = keras.preprocessing.sequence.pad_sequences(x_val, maxlen=num_tokens_per_example)
+x_train = keras.utils.pad_sequences(x_train, maxlen=num_tokens_per_example)
+x_val = keras.utils.pad_sequences(x_val, maxlen=num_tokens_per_example)
 
 """
 ## Define hyperparameters
@@ -74,7 +73,7 @@ It consists of two seperate embedding layers, one for tokens, one for token inde
 
 class TokenAndPositionEmbedding(layers.Layer):
     def __init__(self, maxlen, vocab_size, embed_dim):
-        super(TokenAndPositionEmbedding, self).__init__()
+        super().__init__()
         self.token_emb = layers.Embedding(input_dim=vocab_size, output_dim=embed_dim)
         self.pos_emb = layers.Embedding(input_dim=maxlen, output_dim=embed_dim)
 
@@ -93,9 +92,9 @@ This is used as the Mixture of Experts in the Switch Transformer.
 """
 
 
-def create_feedforward_network(ff_dim, name=None):
+def create_feedforward_network(ff_dim, embed_dim, name=None):
     return keras.Sequential(
-        [layers.Dense(ff_dim, activation="relu"), layers.Dense(ff_dim)], name=name
+        [layers.Dense(ff_dim, activation="relu"), layers.Dense(embed_dim)], name=name
     )
 
 
@@ -137,7 +136,7 @@ class Router(layers.Layer):
         self.num_experts = num_experts
         self.route = layers.Dense(units=num_experts)
         self.expert_capacity = expert_capacity
-        super(Router, self).__init__()
+        super().__init__()
 
     def call(self, inputs, training=False):
         # inputs shape: [tokens_per_batch, embed_dim]
@@ -197,16 +196,18 @@ class Router(layers.Layer):
 
 
 class Switch(layers.Layer):
-    def __init__(self, num_experts, embed_dim, num_tokens_per_batch, capacity_factor=1):
+    def __init__(
+        self, num_experts, embed_dim, ff_dim, num_tokens_per_batch, capacity_factor=1
+    ):
         self.num_experts = num_experts
         self.embed_dim = embed_dim
         self.experts = [
-            create_feedforward_network(embed_dim) for _ in range(num_experts)
+            create_feedforward_network(ff_dim, embed_dim) for _ in range(num_experts)
         ]
 
         self.expert_capacity = num_tokens_per_batch // self.num_experts
         self.router = Router(self.num_experts, self.expert_capacity)
-        super(Switch, self).__init__()
+        super().__init__()
 
     def call(self, inputs):
         batch_size = tf.shape(inputs)[0]
@@ -249,7 +250,7 @@ class Switch(layers.Layer):
 
 class TransformerBlock(layers.Layer):
     def __init__(self, embed_dim, num_heads, ffn, dropout_rate=0.1):
-        super(TransformerBlock, self).__init__()
+        super().__init__()
         self.att = layers.MultiHeadAttention(num_heads=num_heads, key_dim=embed_dim)
         # The ffn can be either a standard feedforward network or a switch
         # layer with a Mixture of Experts.
@@ -278,8 +279,8 @@ of it to classify text.
 
 
 def create_classifier():
-    switch = Switch(num_experts, embed_dim, num_tokens_per_batch)
-    transformer_block = TransformerBlock(ff_dim, num_heads, switch)
+    switch = Switch(num_experts, embed_dim, ff_dim, num_tokens_per_batch)
+    transformer_block = TransformerBlock(embed_dim // num_heads, num_heads, switch)
 
     inputs = layers.Input(shape=(num_tokens_per_example,))
     embedding_layer = TokenAndPositionEmbedding(

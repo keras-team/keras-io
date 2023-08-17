@@ -4,6 +4,7 @@ Author: [Sayak Paul](https://twitter.com/RisingSayak)
 Date created: 2021/07/21
 Last modified: 2022/06/27
 Description: Training a VQ-VAE for image reconstruction and codebook sampling for generation.
+Accelerator: GPU
 """
 """
 In this example, we develop a Vector Quantized Variational Autoencoder (VQ-VAE).
@@ -138,7 +139,7 @@ class VectorQuantizer(layers.Layer):
 
 This line of code does the straight-through estimation part: `quantized = x +
 tf.stop_gradient(quantized - x)`. During backpropagation, `(quantized - x)` won't be
-included in the computation graph and th gradients obtaind for `quantized`
+included in the computation graph and the gradients obtained for `quantized`
 will be copied for `inputs`. Thanks to [this video](https://youtu.be/VZFVUrYcig0?t=1393)
 for helping me understand this technique.
 """
@@ -207,7 +208,7 @@ quantizer.
 
 class VQVAETrainer(keras.models.Model):
     def __init__(self, train_variance, latent_dim=32, num_embeddings=128, **kwargs):
-        super(VQVAETrainer, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.train_variance = train_variance
         self.latent_dim = latent_dim
         self.num_embeddings = num_embeddings
@@ -345,7 +346,7 @@ The authors use a PixelCNN to train these codes so that they can be used as powe
 generate novel examples. PixelCNN was proposed in
 [Conditional Image Generation with PixelCNN Decoders](https://arxiv.org/abs/1606.05328)
 by van der Oord et al. We borrow the implementation from
-[this PixelCNN example](https://keras.io/examples/generative/pixelcnn/). It's an auto-regressive
+[this PixelCNN example](https://keras.io/examples/generative/pixelcnn/). It's an autoregressive
 generative model where the outputs are conditional on the prior ones. In other words, a PixelCNN
 generates an image on a pixel-by-pixel basis. For the purpose in this example, however, its task
 is to generate code book indices instead of pixels directly. The trained VQ-VAE decoder is used
@@ -397,11 +398,12 @@ Thanks to [Rein van 't Veer](https://github.com/reinvantveer) for improving this
 copy-edits and minor code clean-ups.
 """
 
+
 # The first layer is the PixelCNN layer. This layer simply
 # builds on the 2D convolutional layer, but includes masking.
 class PixelConvLayer(layers.Layer):
     def __init__(self, mask_type, **kwargs):
-        super(PixelConvLayer, self).__init__()
+        super().__init__()
         self.mask_type = mask_type
         self.conv = layers.Conv2D(**kwargs)
 
@@ -425,7 +427,7 @@ class PixelConvLayer(layers.Layer):
 # This is just a normal residual block, but based on the PixelConvLayer.
 class ResidualBlock(keras.layers.Layer):
     def __init__(self, filters, **kwargs):
-        super(ResidualBlock, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.conv1 = keras.layers.Conv2D(
             filters=filters, kernel_size=1, activation="relu"
         )

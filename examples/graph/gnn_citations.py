@@ -4,6 +4,7 @@ Author: [Khalid Salama](https://www.linkedin.com/in/khalid-salama-24403144/)
 Date created: 2021/05/30
 Last modified: 2021/05/30
 Description: Implementing a graph neural network model for predicting the topic of a paper given its citations.
+Accelerator: GPU
 """
 
 """
@@ -407,7 +408,7 @@ class GraphConvLayer(layers.Layer):
         *args,
         **kwargs,
     ):
-        super(GraphConvLayer, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
         self.aggregation_type = aggregation_type
         self.combination_type = combination_type
@@ -538,7 +539,7 @@ class GNNNodeClassifier(tf.keras.Model):
         *args,
         **kwargs,
     ):
-        super(GNNNodeClassifier, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
         # Unpack graph_info to three elements: node_features, edges, and edge_weight.
         node_features, edges, edge_weights = graph_info

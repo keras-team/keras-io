@@ -1,5 +1,5 @@
 LAYERS_MASTER = {
-    "path": "layers/",  # TODO
+    "path": "layers/",
     "title": "Layers API",
     "toc": True,
     "children": [
@@ -17,10 +17,7 @@ LAYERS_MASTER = {
                 "tensorflow.keras.layers.Layer.set_weights",
                 "tensorflow.keras.Model.get_config",
                 "tensorflow.keras.layers.Layer.add_loss",
-                "tensorflow.keras.layers.Layer.add_metric",
                 "tensorflow.keras.layers.Layer.losses",
-                "tensorflow.keras.layers.Layer.metrics",
-                "tensorflow.keras.layers.Layer.dynamic",
             ],
         },
         {
@@ -336,6 +333,11 @@ LAYERS_MASTER = {
                             "generate": ["tensorflow.keras.layers.Hashing"],
                         },
                         {
+                            "path": "hashed_crossing",
+                            "title": "HashedCrossing layer",
+                            "generate": ["tensorflow.keras.layers.HashedCrossing"],
+                        },
+                        {
                             "path": "string_lookup",
                             "title": "StringLookup layer",
                             "generate": ["tensorflow.keras.layers.StringLookup"],
@@ -400,16 +402,6 @@ LAYERS_MASTER = {
                             "generate": ["tensorflow.keras.layers.RandomZoom"],
                         },
                         {
-                            "path": "random_height",
-                            "title": "RandomHeight layer",
-                            "generate": ["tensorflow.keras.layers.RandomHeight"],
-                        },
-                        {
-                            "path": "random_width",
-                            "title": "RandomWidth layer",
-                            "generate": ["tensorflow.keras.layers.RandomWidth"],
-                        },
-                        {
                             "path": "random_contrast",
                             "title": "RandomContrast layer",
                             "generate": ["tensorflow.keras.layers.RandomContrast"],
@@ -442,6 +434,11 @@ LAYERS_MASTER = {
                     "path": "unit_normalization",
                     "title": "UnitNormalization layer",
                     "generate": ["tensorflow.keras.layers.UnitNormalization"],
+                },
+                {
+                    "path": "group_normalization",
+                    "title": "GroupNormalization layer",
+                    "generate": ["tensorflow.keras.layers.GroupNormalization"],
                 },
             ],
         },
@@ -484,11 +481,6 @@ LAYERS_MASTER = {
                     "path": "activity_regularization",
                     "title": "ActivityRegularization layer",
                     "generate": ["tensorflow.keras.layers.ActivityRegularization"],
-                },
-                {
-                    "path": "alpha_dropout",
-                    "title": "AlphaDropout layer",
-                    "generate": ["tensorflow.keras.layers.AlphaDropout"],
                 },
             ],
         },
@@ -630,23 +622,6 @@ LAYERS_MASTER = {
                     "path": "dot",
                     "title": "Dot layer",
                     "generate": ["tensorflow.keras.layers.Dot"],
-                },
-            ],
-        },
-        {
-            "path": "locally_connected_layers/",
-            "title": "Locally-connected layers",
-            "toc": True,
-            "children": [
-                {
-                    "path": "locall_connected1d",
-                    "title": "LocallyConnected1D layer",
-                    "generate": ["tensorflow.keras.layers.LocallyConnected1D"],
-                },
-                {
-                    "path": "locall_connected2d",
-                    "title": "LocallyConnected2D layer",
-                    "generate": ["tensorflow.keras.layers.LocallyConnected2D"],
                 },
             ],
         },

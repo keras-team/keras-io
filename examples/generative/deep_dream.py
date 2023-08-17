@@ -4,6 +4,7 @@ Author: [fchollet](https://twitter.com/fchollet)
 Date created: 2016/01/13
 Last modified: 2020/05/02
 Description: Generating Deep Dreams with Keras.
+Accelerator: GPU
 """
 """
 ## Introduction
@@ -78,8 +79,8 @@ Let's set up some image preprocessing/deprocessing utilities:
 def preprocess_image(image_path):
     # Util function to open, resize and format pictures
     # into appropriate arrays.
-    img = keras.preprocessing.image.load_img(image_path)
-    img = keras.preprocessing.image.img_to_array(img)
+    img = keras.utils.load_img(image_path)
+    img = keras.utils.img_to_array(img)
     img = np.expand_dims(img, axis=0)
     img = inception_v3.preprocess_input(img)
     return img
@@ -192,7 +193,7 @@ for i, shape in enumerate(successive_shapes):
     img += lost_detail
     shrunk_original_img = tf.image.resize(original_img, shape)
 
-keras.preprocessing.image.save_img(result_prefix + ".png", deprocess_image(img.numpy()))
+keras.utils.save_img(result_prefix + ".png", deprocess_image(img.numpy()))
 
 """
 Display the result.

@@ -4,6 +4,7 @@ Author: [Aritra Roy Gosthipaty](https://twitter.com/ariG23498), [Ayush Thakur](h
 Date created: 2022/01/12
 Last modified:  2022/01/12
 Description: A Transformer-based architecture for video classification.
+Accelerator: GPU
 """
 """
 ## Introduction

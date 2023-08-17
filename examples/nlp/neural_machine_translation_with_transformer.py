@@ -2,8 +2,9 @@
 Title: English-to-Spanish translation with a sequence-to-sequence Transformer
 Author: [fchollet](https://twitter.com/fchollet)
 Date created: 2021/05/26
-Last modified: 2022/09/15
+Last modified: 2023/08/17
 Description: Implementing a sequence-to-sequene Transformer and training it on a machine translation task.
+Accelerator: GPU
 """
 """
 ## Introduction
@@ -219,7 +220,7 @@ result in a model that cannot be used at inference time).
 
 class TransformerEncoder(layers.Layer):
     def __init__(self, embed_dim, dense_dim, num_heads, **kwargs):
-        super(TransformerEncoder, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.embed_dim = embed_dim
         self.dense_dim = dense_dim
         self.num_heads = num_heads
@@ -256,7 +257,7 @@ class TransformerEncoder(layers.Layer):
 
 class PositionalEmbedding(layers.Layer):
     def __init__(self, sequence_length, vocab_size, embed_dim, **kwargs):
-        super(PositionalEmbedding, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.token_embeddings = layers.Embedding(
             input_dim=vocab_size, output_dim=embed_dim
         )
@@ -291,7 +292,7 @@ class PositionalEmbedding(layers.Layer):
 
 class TransformerDecoder(layers.Layer):
     def __init__(self, embed_dim, latent_dim, num_heads, **kwargs):
-        super(TransformerDecoder, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.embed_dim = embed_dim
         self.latent_dim = latent_dim
         self.num_heads = num_heads

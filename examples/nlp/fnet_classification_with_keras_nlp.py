@@ -2,8 +2,9 @@
 Title: Text Classification using FNet
 Author: [Abheesht Sharma](https://github.com/abheesht17/)
 Date created: 2022/06/01
-Last modified: 2022/06/01
+Last modified: 2022/12/21
 Description: Text Classification on the IMDb Dataset using `keras_nlp.layers.FNetEncoder` layer.
+Accelerator: GPU
 """
 
 """
@@ -50,12 +51,10 @@ Before we start with the implementation, let's import all the necessary packages
 """
 
 import keras_nlp
-import random
 import tensorflow as tf
 import os
 
 from tensorflow import keras
-from tensorflow_text.tools.wordpiece_vocab import bert_vocab_from_dataset as bert_vocab
 
 keras.utils.set_random_seed(42)
 
@@ -150,28 +149,20 @@ we have. The WordPiece tokenization algorithm is a subword tokenization algorith
 training it on a corpus gives us a vocabulary of subwords. A subword tokenizer
 is a compromise between word tokenizers (word tokenizers need very large
 vocabularies for good coverage of input words), and character tokenizers
-(characters don't really encode meaning like words do). Luckily, TensorFlow Text
-makes it very simple to train WordPiece on a corpus as described in
-[this guide](https://www.tensorflow.org/text/guide/subwords_tokenizer).
+(characters don't really encode meaning like words do). Luckily, KerasNLP
+makes it very simple to train WordPiece on a corpus with the 
+`keras_nlp.tokenizers.compute_word_piece_vocabulary` utility.
 
 Note: The official implementation of FNet uses the SentencePiece Tokenizer.
 """
 
 
 def train_word_piece(ds, vocab_size, reserved_tokens):
-    bert_vocab_args = dict(
-        # The target vocabulary size
-        vocab_size=vocab_size,
-        # Reserved tokens that must be included in the vocabulary
-        reserved_tokens=reserved_tokens,
-        # Arguments for `text.BertTokenizer`
-        bert_tokenizer_params={"lower_case": True},
-    )
-
-    # Extract text samples (remove the labels).
     word_piece_ds = ds.unbatch().map(lambda x, y: x)
-    vocab = bert_vocab.bert_vocab_from_dataset(
-        word_piece_ds.batch(1000).prefetch(2), **bert_vocab_args
+    vocab = keras_nlp.tokenizers.compute_word_piece_vocabulary(
+        word_piece_ds.batch(1000).prefetch(2),
+        vocabulary_size=vocab_size,
+        reserved_tokens=reserved_tokens,
     )
     return vocab
 

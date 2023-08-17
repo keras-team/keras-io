@@ -43,7 +43,7 @@ from tensorflow.keras import layers
 
 class Antirectifier(layers.Layer):
     def __init__(self, initializer="he_normal", **kwargs):
-        super(Antirectifier, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.initializer = keras.initializers.get(initializer)
 
     def build(self, input_shape):
@@ -65,7 +65,7 @@ class Antirectifier(layers.Layer):
 
     def get_config(self):
         # Implement get_config to enable serialization. This is optional.
-        base_config = super(Antirectifier, self).get_config()
+        base_config = super().get_config()
         config = {"initializer": keras.initializers.serialize(self.initializer)}
         return dict(list(base_config.items()) + list(config.items()))
 
