@@ -66,10 +66,11 @@ using it on top of your backend of choice:
 ```python
 import keras_cv
 import keras_core as keras
+import numpy as np
 
 filepath = keras.utils.get_file(origin="https://i.imgur.com/gCNcJJI.jpg")
 image = np.array(keras.utils.load_img(filepath))
-image_resized = ops.image.resize(image, (640, 640))[None, ...]
+image_resized = keras.ops.image.resize(image, (640, 640))[None, ...]
 
 model = keras_cv.models.YOLOV8Detector.from_preset(
     "yolo_v8_m_pascalvoc",
@@ -88,25 +89,27 @@ to take effect.
 
 ```python
 import tensorflow as tf
-from tensorflow import keras
 import keras_cv
 import tensorflow_datasets as tfds
+import keras_core as keras
 
 # Create a preprocessing pipeline with augmentations
 BATCH_SIZE = 16
 NUM_CLASSES = 3
-augmenter = keras.Sequential(
+augmenter = keras_cv.layers.Augmenter(
     [
         keras_cv.layers.RandomFlip(),
         keras_cv.layers.RandAugment(value_range=(0, 255)),
         keras_cv.layers.CutMix(),
-    ]
+    ],
 )
 
 def preprocess_data(images, labels, augment=False):
     labels = tf.one_hot(labels, NUM_CLASSES)
     inputs = {"images": images, "labels": labels}
-    outputs = augmenter(inputs) if augment else inputs
+    outputs = inputs
+    if augment:
+        outputs = augmenter(outputs)
     return outputs['images'], outputs['labels']
 
 train_dataset, test_dataset = tfds.load(
