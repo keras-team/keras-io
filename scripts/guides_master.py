@@ -104,6 +104,10 @@ GUIDES_MASTER = {
             "title": "Serialization & saving",
         },
         {
+            "path": "customizing_saving_and_serialization",
+            "title": "Customizing saving & serialization",
+        },
+        {
             "path": "writing_your_own_callbacks",
             "title": "Writing your own callbacks",
         },
