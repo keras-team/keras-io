@@ -2,7 +2,7 @@
 Title: WGAN-GP overriding `Model.train_step`
 Author: [A_K_Nain](https://twitter.com/A_K_Nain)
 Date created: 2020/05/9
-Last modified: 2020/05/9
+Last modified: 2023/08/3
 Description: Implementation of Wasserstein GAN with Gradient Penalty.
 Accelerator: GPU
 """
@@ -270,7 +270,7 @@ class WGAN(keras.Model):
         and added to the discriminator loss.
         """
         # Get the interpolated image
-        alpha = tf.random.normal([batch_size, 1, 1, 1], 0.0, 1.0)
+        alpha = tf.random.uniform([batch_size, 1, 1, 1], 0.0, 1.0)
         diff = fake_images - real_images
         interpolated = real_images + alpha * diff
 

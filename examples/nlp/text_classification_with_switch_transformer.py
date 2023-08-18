@@ -92,9 +92,9 @@ This is used as the Mixture of Experts in the Switch Transformer.
 """
 
 
-def create_feedforward_network(ff_dim, name=None):
+def create_feedforward_network(ff_dim, embed_dim, name=None):
     return keras.Sequential(
-        [layers.Dense(ff_dim, activation="relu"), layers.Dense(ff_dim)], name=name
+        [layers.Dense(ff_dim, activation="relu"), layers.Dense(embed_dim)], name=name
     )
 
 
@@ -196,11 +196,13 @@ class Router(layers.Layer):
 
 
 class Switch(layers.Layer):
-    def __init__(self, num_experts, embed_dim, num_tokens_per_batch, capacity_factor=1):
+    def __init__(
+        self, num_experts, embed_dim, ff_dim, num_tokens_per_batch, capacity_factor=1
+    ):
         self.num_experts = num_experts
         self.embed_dim = embed_dim
         self.experts = [
-            create_feedforward_network(embed_dim) for _ in range(num_experts)
+            create_feedforward_network(ff_dim, embed_dim) for _ in range(num_experts)
         ]
 
         self.expert_capacity = num_tokens_per_batch // self.num_experts
@@ -277,8 +279,8 @@ of it to classify text.
 
 
 def create_classifier():
-    switch = Switch(num_experts, embed_dim, num_tokens_per_batch)
-    transformer_block = TransformerBlock(ff_dim, num_heads, switch)
+    switch = Switch(num_experts, embed_dim, ff_dim, num_tokens_per_batch)
+    transformer_block = TransformerBlock(embed_dim // num_heads, num_heads, switch)
 
     inputs = layers.Input(shape=(num_tokens_per_example,))
     embedding_layer = TokenAndPositionEmbedding(

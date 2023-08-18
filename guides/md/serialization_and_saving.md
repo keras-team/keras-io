@@ -130,10 +130,9 @@ np.testing.assert_allclose(
 
 <div class="k-default-codeblock">
 ```
-4/4 [==============================] - 0s 5ms/step - loss: 1.7699
-
-4/4 [==============================] - 0s 2ms/step
-4/4 [==============================] - 0s 2ms/step
+4/4 [==============================] - 0s 3ms/step - loss: 0.3058
+4/4 [==============================] - 0s 1ms/step
+4/4 [==============================] - 0s 1ms/step
 
 ```
 </div>
@@ -146,8 +145,8 @@ When saving a model that includes custom objects, such as a subclassed Layer,
 you **must** define a `get_config()` method on the object class.
 If the arguments passed to the constructor (`__init__()` method) of the custom object
 aren't Python objects (anything other than base types like ints, strings,
-etc.), then you **must** also explicitly deserialize these arguments in the `from_config()`
-class method.
+etc.), then you **must** serialize these arguments in `get_config()` method and
+also explicitly deserialize these arguments in the `from_config()` class method.
 
 Like this:
 
@@ -155,7 +154,7 @@ Like this:
 class CustomLayer(keras.layers.Layer):
     def __init__(self, sublayer, **kwargs):
         super().__init__(**kwargs)
-        self.sublayer = layer
+        self.sublayer = sublayer
 
     def call(self, x):
         return self.sublayer(x)
@@ -262,10 +261,9 @@ np.testing.assert_allclose(
 
 <div class="k-default-codeblock">
 ```
-1/1 [==============================] - 0s 150ms/step - loss: 0.1608
-
-1/1 [==============================] - 0s 22ms/step
-1/1 [==============================] - 0s 24ms/step
+1/1 [==============================] - 0s 225ms/step - loss: 0.1698
+1/1 [==============================] - 0s 39ms/step
+1/1 [==============================] - 0s 43ms/step
 
 ```
 </div>
@@ -295,10 +293,9 @@ np.testing.assert_allclose(
 
 <div class="k-default-codeblock">
 ```
-1/1 [==============================] - 0s 149ms/step - loss: 0.5938
-
-1/1 [==============================] - 0s 24ms/step
-1/1 [==============================] - 0s 22ms/step
+1/1 [==============================] - 0s 222ms/step - loss: 0.4521
+1/1 [==============================] - 0s 40ms/step
+1/1 [==============================] - 0s 47ms/step
 
 ```
 </div>
@@ -331,10 +328,9 @@ np.testing.assert_allclose(
 
 <div class="k-default-codeblock">
 ```
-1/1 [==============================] - 0s 139ms/step - loss: 0.0937
-
-1/1 [==============================] - 0s 22ms/step
-1/1 [==============================] - 0s 22ms/step
+1/1 [==============================] - 0s 222ms/step - loss: 0.0120
+1/1 [==============================] - 0s 40ms/step
+1/1 [==============================] - 0s 40ms/step
 
 ```
 </div>
@@ -949,7 +945,7 @@ print(new_layer)
 <div class="k-default-codeblock">
 ```
 {'module': None, 'class_name': 'MyDense', 'config': {'name': 'my_dense_1', 'trainable': True, 'dtype': 'float32', 'units': 64, 'kernel_regularizer': None, 'kernel_initializer': None, 'nested_model': {'module': None, 'class_name': 'MyDense', 'config': {'name': 'my_dense', 'trainable': True, 'dtype': 'float32', 'units': 16, 'kernel_regularizer': 'l1', 'kernel_initializer': 'ones', 'nested_model': None}, 'registered_name': 'MyLayers>KernelMult'}}, 'registered_name': 'MyLayers>KernelMult'}
-<__main__.MyDense object at 0x2ec21fa30>
+<__main__.MyDense object at 0x7f53b0633ad0>
 
 ```
 </div>

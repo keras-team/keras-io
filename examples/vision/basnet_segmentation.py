@@ -34,7 +34,7 @@ structures common to real-world images in both foreground and background.
 
 """shell
 wget http://saliencydetection.net/duts/download/DUTS-TE.zip
-unzip DUTS-TE.zip
+unzip -q DUTS-TE.zip
 """
 
 import os

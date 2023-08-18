@@ -44,8 +44,12 @@ check out our
 ---
 ## Examples
 
+* [GPT-2 text generation](/examples/generative/gpt2_text_generation_with_kerasnlp/)
+* [Parameter-efficient fine-tuning of GPT-2 with LoRA](/examples/nlp/parameter_efficient_finetuning_of_gpt2_with_lora/)
+* [Semantic Similarity](/examples/nlp/semantic_similarity_with_keras_nlp/)
+* [Sentence embeddings using Siamese RoBERTa-networks](/examples/nlp/sentence_embeddings_with_sbert/)
+* [Data Parallel Training](/examples/nlp/data_parallel_training_with_keras_nlp/)
 * [English-to-Spanish translation](/examples/nlp/neural_machine_translation_with_keras_nlp/)
-* [GPT2 text generation](/examples/generative/gpt2_text_generation_with_kerasnlp/)
 * [GPT text generation from scratch](/examples/generative/text_generation_gpt/)
 * [Text Classification using FNet](/examples/nlp/fnet_classification_with_keras_nlp/)
 
@@ -110,7 +114,10 @@ imdb_train, imdb_test = tfds.load(
     batch_size=16,
 )
 # Load a BERT model.
-classifier = keras_nlp.models.BertClassifier.from_preset("bert_base_en_uncased")
+classifier = keras_nlp.models.BertClassifier.from_preset(
+    "bert_base_en_uncased", 
+    num_classes=2,
+)
 # Fine-tune on IMDb movie reviews.
 classifier.fit(imdb_train, validation_data=imdb_test)
 # Predict two new examples.
