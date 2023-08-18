@@ -2,7 +2,7 @@
 Title: Near-duplicate image search
 Author: [Sayak Paul](https://twitter.com/RisingSayak)
 Date created: 2021/09/10
-Last modified: 2021/09/10
+Last modified: 2023/08/18
 Description: Building a near-duplicate image search utility using deep learning and locality-sensitive hashing.
 Accelerator: GPU
 """
@@ -35,11 +35,21 @@ you should have a GPU runtime available._
 """
 
 """
+##Setup
+"""
+
+"""shell
+!pip install tensorrt
+"""
+
+"""
 ## Imports
 """
 
 import matplotlib.pyplot as plt
 import tensorflow as tf
+import tensorrt
+import tensorflow_hub as hub
 import numpy as np
 import time
 
@@ -90,13 +100,8 @@ The BiT-ResNet family of models is known to provide excellent transfer performan
 a wide variety of different downstream tasks.
 """
 
-"""shell
-wget -q https://git.io/JuMq0 -O flower_model_bit_0.96875.zip
-unzip -qq flower_model_bit_0.96875.zip
-"""
-
-bit_model = tf.keras.models.load_model("flower_model_bit_0.96875")
-bit_model.count_params()
+# Load model into KerasLayer
+model_url = "https://tfhub.dev/google/bit/m-r50x1/1"
 
 """
 ## Create an embedding model
@@ -111,7 +116,7 @@ embedding_model = tf.keras.Sequential(
     [
         tf.keras.layers.Input((IMAGE_SIZE, IMAGE_SIZE, 3)),
         tf.keras.layers.Rescaling(scale=1.0 / 255),
-        bit_model.layers[1],
+        hub.KerasLayer(model_url, trainable=True),
         tf.keras.layers.Normalization(mean=0, variance=1),
     ],
     name="embedding_model",
@@ -146,7 +151,8 @@ def bool2int(x):
 
 
 """
-The shape of the vectors coming out of `embedding_model` is `(2048,)`, and considering practical
+The shape of the vectors coming out of `embedding_model` is `(2048,)`, and considering
+practical
 aspects (storage, retrieval performance, etc.) it is quite large. So, there arises a need
 to reduce the dimensionality of the embedding vectors without reducing their information
 content. This is where *random projection* comes into the picture.
@@ -348,7 +354,9 @@ For NVIDIA-based GPUs, the
 [TensorRT framework](https://docs.nvidia.com/deeplearning/frameworks/tf-trt-user-guide/index.html)
 can be used to dramatically enhance the inference latency by using various model
 optimization techniques like pruning, constant folding, layer fusion, and so on. Here we
-will use the `tf.experimental.tensorrt` module to optimize our embedding model.
+will use the
+[`tf.experimental.tensorrt`](https://www.tensorflow.org/api_docs/python/tf/experimental/tensorrt)
+module to optimize our embedding model.
 """
 
 # First serialize the embedding model as a SavedModel.
@@ -444,7 +452,7 @@ def plot_images(images, labels):
     plt.figure(figsize=(20, 10))
     columns = 5
     for i, image in enumerate(images):
-        ax = plt.subplot(len(images) / columns + 1, columns, i + 1)
+        ax = plt.subplot(len(images) // columns + 1, columns, i + 1)
         if i == 0:
             ax.set_title("Query Image\n" + "Label: {}".format(labels[i]))
         else:
