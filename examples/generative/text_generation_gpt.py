@@ -1,7 +1,6 @@
 """
 Title: GPT text generation from scratch with KerasNLP
-Author: [Jesse Chan](https://github.com/jessechancy)
-Converted to Keras Core by: [Anshuman Mishra](https://github.com/shivance)
+Author: [Jesse Chan](https://github.com/jessechancy/)
 Date created: 2022/07/25
 Last modified: 2023/08/17
 Description: Using KerasNLP to train a mini-GPT model for text generation.
