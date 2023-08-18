@@ -22,10 +22,8 @@ Let's give KerasCV's object detection API a spin.
 
 
 ```python
-!!pip install --upgrade git+https://github.com/keras-team/keras-cv
+!pip install --upgrade -q git+https://github.com/keras-team/keras-cv
 ```
-
-
 
 
 ```python
@@ -42,6 +40,12 @@ from keras_cv import visualization
 import tqdm
 ```
 
+<div class="k-default-codeblock">
+```
+Using TensorFlow backend
+
+```
+</div>
 ---
 ## Object detection introduction
 
@@ -170,9 +174,9 @@ visualization.plot_image_gallery(
 ```
 
 
-
+    
 ![png](/img/guides/object_detection_keras_cv/object_detection_keras_cv_8_0.png)
-
+    
 
 
 To use the `RetinaNet` architecture with a ResNet50 backbone, you'll need to
@@ -269,9 +273,9 @@ visualization.plot_bounding_box_gallery(
 
 ```
 </div>
-
+    
 ![png](/img/guides/object_detection_keras_cv/object_detection_keras_cv_16_1.png)
-
+    
 
 
 In order to support this easy and intuitive inference workflow, KerasCV
@@ -319,9 +323,9 @@ visualization.plot_bounding_box_gallery(
 
 ```
 </div>
-
+    
 ![png](/img/guides/object_detection_keras_cv/object_detection_keras_cv_18_1.png)
-
+    
 
 
 Next, let's re-configure `keras_cv.layers.MultiClassNonMaxSuppression` for our
@@ -367,9 +371,9 @@ visualization.plot_bounding_box_gallery(
 
 ```
 </div>
-
+    
 ![png](/img/guides/object_detection_keras_cv/object_detection_keras_cv_20_1.png)
-
+    
 
 
 That looks a lot better!
@@ -437,7 +441,7 @@ train_ds, ds_info = your_data_loader.load(
 )
 ```
 
-clearly yields bounding boxes in the format `xywh`.  You can read more about
+This clearly yields bounding boxes in the format `xywh`.  You can read more about
 KerasCV bounding box formats [in the API docs](https://keras.io/api/keras_cv/bounding_box/formats/).
 
 Our data comes loaded into the format
@@ -528,9 +532,9 @@ visualize_dataset(
 ```
 
 
-
+    
 ![png](/img/guides/object_detection_keras_cv/object_detection_keras_cv_28_0.png)
-
+    
 
 
 And for the eval set:
@@ -550,9 +554,9 @@ visualize_dataset(
 ```
 
 
-
+    
 ![png](/img/guides/object_detection_keras_cv/object_detection_keras_cv_30_0.png)
-
+    
 
 
 Looks like everything is structured as expected.
@@ -590,9 +594,9 @@ visualize_dataset(
 ```
 
 
-
+    
 ![png](/img/guides/object_detection_keras_cv/object_detection_keras_cv_32_0.png)
-
+    
 
 
 Great! We now have a bounding-box-friendly data augmentation pipeline.
@@ -621,9 +625,9 @@ visualize_dataset(
 ```
 
 
-
+    
 ![png](/img/guides/object_detection_keras_cv/object_detection_keras_cv_36_0.png)
-
+    
 
 
 Finally, let's unpackage our inputs from the preprocessing dictionary, and
@@ -753,18 +757,18 @@ print_metrics(result)
 ```
 Metrics:
 ----------------------------
-MaP                         : 0.33
-MaP@[IoU=50]                : 0.53
-MaP@[IoU=75]                : 0.33
+MaP                         : 0.61
+MaP@[IoU=50]                : 0.83
+MaP@[IoU=75]                : 0.75
 MaP@[area=small]            : 0.00
-MaP@[area=medium]           : 0.00
-MaP@[area=large]            : 0.41
-Recall@[max_detections=1]   : 0.34
-Recall@[max_detections=10]  : 0.37
-Recall@[max_detections=100] : 0.37
+MaP@[area=medium]           : 0.40
+MaP@[area=large]            : 0.59
+Recall@[max_detections=1]   : 0.61
+Recall@[max_detections=10]  : 0.61
+Recall@[max_detections=100] : 0.61
 Recall@[area=small]         : 0.00
-Recall@[area=medium]        : 0.00
-Recall@[area=large]         : 0.45
+Recall@[area=medium]        : 0.40
+Recall@[area=large]         : 0.59
 
 ```
 </div>
@@ -877,15 +881,15 @@ model.fit(
 
 <div class="k-default-codeblock">
 ```
-20/20 [==============================] - ETA: 0s - loss: 1.8274 - box_loss: 0.7034 - classification_loss: 1.1240 - percent_boxes_matched_with_anchor: 0.9160
+20/20 [==============================] - ETA: 0s - loss: 1.8220 - box_loss: 0.6911 - classification_loss: 1.1309 - percent_boxes_matched_with_anchor: 0.9258
 
-100%|█████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 20/20 [23:30<00:00, 70.53s/it]
+100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 20/20 [23:28<00:00, 70.42s/it]
 
-20/20 [==============================] - 1641s 85s/step - loss: 1.8274 - box_loss: 0.7034 - classification_loss: 1.1240 - percent_boxes_matched_with_anchor: 0.9160 - val_loss: 1.7503 - val_box_loss: 0.6868 - val_classification_loss: 1.0635 - val_percent_boxes_matched_with_anchor: 0.8980 - MaP: 0.0000e+00 - MaP@[IoU=50]: 0.0000e+00 - MaP@[IoU=75]: 0.0000e+00 - MaP@[area=small]: 0.0000e+00 - MaP@[area=medium]: 0.0000e+00 - MaP@[area=large]: 0.0000e+00 - Recall@[max_detections=1]: 0.0000e+00 - Recall@[max_detections=10]: 0.0000e+00 - Recall@[max_detections=100]: 0.0000e+00 - Recall@[area=small]: 0.0000e+00 - Recall@[area=medium]: 0.0000e+00 - Recall@[area=large]: 0.0000e+00
+20/20 [==============================] - 1654s 86s/step - loss: 1.8220 - box_loss: 0.6911 - classification_loss: 1.1309 - percent_boxes_matched_with_anchor: 0.9258 - val_loss: 1.7590 - val_box_loss: 0.6807 - val_classification_loss: 1.0784 - val_percent_boxes_matched_with_anchor: 0.9086 - MaP: 0.0000e+00 - MaP@[IoU=50]: 0.0000e+00 - MaP@[IoU=75]: 0.0000e+00 - MaP@[area=small]: 0.0000e+00 - MaP@[area=medium]: 0.0000e+00 - MaP@[area=large]: 0.0000e+00 - Recall@[max_detections=1]: 0.0000e+00 - Recall@[max_detections=10]: 0.0000e+00 - Recall@[max_detections=100]: 0.0000e+00 - Recall@[area=small]: 0.0000e+00 - Recall@[area=medium]: 0.0000e+00 - Recall@[area=large]: 0.0000e+00
 
 ```
 </div>
-
+    
 
 
 
@@ -893,7 +897,7 @@ model.fit(
 
 <div class="k-default-codeblock">
 ```
-<keras.src.callbacks.History at 0x161062950>
+<keras.src.callbacks.History at 0x16d966b50>
 
 ```
 </div>
@@ -968,9 +972,9 @@ visualize_detections(model, dataset=visualization_ds, bounding_box_format="xywh"
 
 ```
 </div>
-
+    
 ![png](/img/guides/object_detection_keras_cv/object_detection_keras_cv_66_1.png)
-
+    
 
 
 Awesome!
@@ -1038,14 +1042,12 @@ visualization.plot_bounding_box_gallery(
 <div class="k-default-codeblock">
 ```
 By using this model checkpoint, you acknowledge that its usage is subject to the terms of the CreativeML Open RAIL++-M license at https://github.com/Stability-AI/stablediffusion/blob/main/LICENSE-MODEL
-50/50 [==============================] - 1807s 35s/step
-Downloading data from https://huggingface.co/fchollet/stable-diffusion/resolve/main/kcv_decoder.h5
-198180272/198180272 [==============================] - 17s 0us/step
+50/50 [==============================] - 1775s 35s/step
 1/1 [==============================] - 3s 3s/step
 
 ```
 </div>
-
+    
 ![png](/img/guides/object_detection_keras_cv/object_detection_keras_cv_70_1.png)
-
+    
 
