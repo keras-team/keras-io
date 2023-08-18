@@ -31,15 +31,15 @@ of its code:
 [Locality Sensitive Hashing for Similar Item Search](https://towardsdatascience.com/locality-sensitive-hashing-for-music-search-f2f1940ace23).
 
 _Note that in order to optimize the performance of our parser,
-you should have a GPU runtime available._
+you should have a GPU runtime available.
 """
 
 """
-##Setup
+## Setup
 """
 
 """shell
-!pip install tensorrt
+pip install tensorrt
 """
 
 """
@@ -100,7 +100,6 @@ The BiT-ResNet family of models is known to provide excellent transfer performan
 a wide variety of different downstream tasks.
 """
 
-# Load model into KerasLayer
 model_url = "https://tfhub.dev/google/bit/m-r50x1/1"
 
 """
@@ -151,8 +150,7 @@ def bool2int(x):
 
 
 """
-The shape of the vectors coming out of `embedding_model` is `(2048,)`, and considering
-practical
+The shape of the vectors coming out of `embedding_model` is `(2048,)`, and considering practical
 aspects (storage, retrieval performance, etc.) it is quite large. So, there arises a need
 to reduce the dimensionality of the embedding vectors without reducing their information
 content. This is where *random projection* comes into the picture.
@@ -354,9 +352,7 @@ For NVIDIA-based GPUs, the
 [TensorRT framework](https://docs.nvidia.com/deeplearning/frameworks/tf-trt-user-guide/index.html)
 can be used to dramatically enhance the inference latency by using various model
 optimization techniques like pruning, constant folding, layer fusion, and so on. Here we
-will use the
-[`tf.experimental.tensorrt`](https://www.tensorflow.org/api_docs/python/tf/experimental/tensorrt)
-module to optimize our embedding model.
+will use the `tf.experimental.tensorrt` module to optimize our embedding model.
 """
 
 # First serialize the embedding model as a SavedModel.
