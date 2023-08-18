@@ -22,10 +22,8 @@ Let's give KerasCV's object detection API a spin.
 
 
 ```python
-!!pip install --upgrade git+https://github.com/keras-team/keras-cv
+!pip install --upgrade -q git+https://github.com/keras-team/keras-cv
 ```
-
-
 
 
 ```python
@@ -41,53 +39,9 @@ import resource
 from keras_cv import visualization
 import tqdm
 ```
+
 <div class="k-default-codeblock">
 ```
-['Collecting git+https://github.com/keras-team/keras-cv',
- '  Cloning https://github.com/keras-team/keras-cv to /private/var/folders/bh/m84ct2pd3pnc4ldfn5cz9kc800rcrl/T/pip-req-build-ht2unu43',
- '  Running command git clone --filter=blob:none --quiet https://github.com/keras-team/keras-cv /private/var/folders/bh/m84ct2pd3pnc4ldfn5cz9kc800rcrl/T/pip-req-build-ht2unu43',
- '  Resolved https://github.com/keras-team/keras-cv to commit 2ff8e3fd764bc67342778894cc984daac95c4813',
- '  Installing build dependencies: started',
- "  Installing build dependencies: finished with status 'done'",
- '  Getting requirements to build wheel: started',
- "  Getting requirements to build wheel: finished with status 'done'",
- '  Preparing metadata (pyproject.toml): started',
- "  Preparing metadata (pyproject.toml): finished with status 'done'",
- 'Requirement already satisfied: packaging in /Users/dhuntsperger/.pyenv/versions/venv-keras-io/lib/python3.11/site-packages (from keras-cv==0.6.1) (23.1)',
- 'Requirement already satisfied: absl-py in /Users/dhuntsperger/.pyenv/versions/venv-keras-io/lib/python3.11/site-packages (from keras-cv==0.6.1) (1.4.0)',
- 'Requirement already satisfied: regex in /Users/dhuntsperger/.pyenv/versions/venv-keras-io/lib/python3.11/site-packages (from keras-cv==0.6.1) (2023.6.3)',
- 'Requirement already satisfied: tensorflow-datasets in /Users/dhuntsperger/.pyenv/versions/venv-keras-io/lib/python3.11/site-packages (from keras-cv==0.6.1) (4.9.2)',
- 'Requirement already satisfied: keras-core in /Users/dhuntsperger/.pyenv/versions/venv-keras-io/lib/python3.11/site-packages (from keras-cv==0.6.1) (0.1.3)',
- 'Requirement already satisfied: numpy in /Users/dhuntsperger/.pyenv/versions/venv-keras-io/lib/python3.11/site-packages (from keras-core->keras-cv==0.6.1) (1.24.3)',
- 'Requirement already satisfied: rich in /Users/dhuntsperger/.pyenv/versions/venv-keras-io/lib/python3.11/site-packages (from keras-core->keras-cv==0.6.1) (13.5.2)',
- 'Requirement already satisfied: namex in /Users/dhuntsperger/.pyenv/versions/venv-keras-io/lib/python3.11/site-packages (from keras-core->keras-cv==0.6.1) (0.0.7)',
- 'Requirement already satisfied: h5py in /Users/dhuntsperger/.pyenv/versions/venv-keras-io/lib/python3.11/site-packages (from keras-core->keras-cv==0.6.1) (3.9.0)',
- 'Requirement already satisfied: dm-tree in /Users/dhuntsperger/.pyenv/versions/venv-keras-io/lib/python3.11/site-packages (from keras-core->keras-cv==0.6.1) (0.1.8)',
- 'Requirement already satisfied: array-record in /Users/dhuntsperger/.pyenv/versions/venv-keras-io/lib/python3.11/site-packages (from tensorflow-datasets->keras-cv==0.6.1) (0.4.0)',
- 'Requirement already satisfied: click in /Users/dhuntsperger/.pyenv/versions/venv-keras-io/lib/python3.11/site-packages (from tensorflow-datasets->keras-cv==0.6.1) (8.1.6)',
- 'Requirement already satisfied: etils[enp,epath]>=0.9.0 in /Users/dhuntsperger/.pyenv/versions/venv-keras-io/lib/python3.11/site-packages (from tensorflow-datasets->keras-cv==0.6.1) (1.4.1)',
- 'Requirement already satisfied: promise in /Users/dhuntsperger/.pyenv/versions/venv-keras-io/lib/python3.11/site-packages (from tensorflow-datasets->keras-cv==0.6.1) (2.3)',
- 'Requirement already satisfied: protobuf>=3.20 in /Users/dhuntsperger/.pyenv/versions/venv-keras-io/lib/python3.11/site-packages (from tensorflow-datasets->keras-cv==0.6.1) (4.23.4)',
- 'Requirement already satisfied: psutil in /Users/dhuntsperger/.pyenv/versions/venv-keras-io/lib/python3.11/site-packages (from tensorflow-datasets->keras-cv==0.6.1) (5.9.5)',
- 'Requirement already satisfied: requests>=2.19.0 in /Users/dhuntsperger/.pyenv/versions/venv-keras-io/lib/python3.11/site-packages (from tensorflow-datasets->keras-cv==0.6.1) (2.31.0)',
- 'Requirement already satisfied: tensorflow-metadata in /Users/dhuntsperger/.pyenv/versions/venv-keras-io/lib/python3.11/site-packages (from tensorflow-datasets->keras-cv==0.6.1) (1.13.1)',
- 'Requirement already satisfied: termcolor in /Users/dhuntsperger/.pyenv/versions/venv-keras-io/lib/python3.11/site-packages (from tensorflow-datasets->keras-cv==0.6.1) (2.3.0)',
- 'Requirement already satisfied: toml in /Users/dhuntsperger/.pyenv/versions/venv-keras-io/lib/python3.11/site-packages (from tensorflow-datasets->keras-cv==0.6.1) (0.10.2)',
- 'Requirement already satisfied: tqdm in /Users/dhuntsperger/.pyenv/versions/venv-keras-io/lib/python3.11/site-packages (from tensorflow-datasets->keras-cv==0.6.1) (4.65.0)',
- 'Requirement already satisfied: wrapt in /Users/dhuntsperger/.pyenv/versions/venv-keras-io/lib/python3.11/site-packages (from tensorflow-datasets->keras-cv==0.6.1) (1.15.0)',
- 'Requirement already satisfied: importlib_resources in /Users/dhuntsperger/.pyenv/versions/venv-keras-io/lib/python3.11/site-packages (from etils[enp,epath]>=0.9.0->tensorflow-datasets->keras-cv==0.6.1) (6.0.1)',
- 'Requirement already satisfied: typing_extensions in /Users/dhuntsperger/.pyenv/versions/venv-keras-io/lib/python3.11/site-packages (from etils[enp,epath]>=0.9.0->tensorflow-datasets->keras-cv==0.6.1) (4.5.0)',
- 'Requirement already satisfied: zipp in /Users/dhuntsperger/.pyenv/versions/venv-keras-io/lib/python3.11/site-packages (from etils[enp,epath]>=0.9.0->tensorflow-datasets->keras-cv==0.6.1) (3.16.2)',
- 'Requirement already satisfied: charset-normalizer<4,>=2 in /Users/dhuntsperger/.pyenv/versions/venv-keras-io/lib/python3.11/site-packages (from requests>=2.19.0->tensorflow-datasets->keras-cv==0.6.1) (3.2.0)',
- 'Requirement already satisfied: idna<4,>=2.5 in /Users/dhuntsperger/.pyenv/versions/venv-keras-io/lib/python3.11/site-packages (from requests>=2.19.0->tensorflow-datasets->keras-cv==0.6.1) (3.4)',
- 'Requirement already satisfied: urllib3<3,>=1.21.1 in /Users/dhuntsperger/.pyenv/versions/venv-keras-io/lib/python3.11/site-packages (from requests>=2.19.0->tensorflow-datasets->keras-cv==0.6.1) (1.26.16)',
- 'Requirement already satisfied: certifi>=2017.4.17 in /Users/dhuntsperger/.pyenv/versions/venv-keras-io/lib/python3.11/site-packages (from requests>=2.19.0->tensorflow-datasets->keras-cv==0.6.1) (2023.7.22)',
- 'Requirement already satisfied: six in /Users/dhuntsperger/.pyenv/versions/venv-keras-io/lib/python3.11/site-packages (from promise->tensorflow-datasets->keras-cv==0.6.1) (1.16.0)',
- 'Requirement already satisfied: markdown-it-py>=2.2.0 in /Users/dhuntsperger/.pyenv/versions/venv-keras-io/lib/python3.11/site-packages (from rich->keras-core->keras-cv==0.6.1) (3.0.0)',
- 'Requirement already satisfied: pygments<3.0.0,>=2.13.0 in /Users/dhuntsperger/.pyenv/versions/venv-keras-io/lib/python3.11/site-packages (from rich->keras-core->keras-cv==0.6.1) (2.16.1)',
- 'Requirement already satisfied: googleapis-common-protos<2,>=1.52.0 in /Users/dhuntsperger/.pyenv/versions/venv-keras-io/lib/python3.11/site-packages (from tensorflow-metadata->tensorflow-datasets->keras-cv==0.6.1) (1.60.0)',
- 'Requirement already satisfied: mdurl~=0.1 in /Users/dhuntsperger/.pyenv/versions/venv-keras-io/lib/python3.11/site-packages (from markdown-it-py>=2.2.0->rich->keras-core->keras-cv==0.6.1) (0.1.2)']
-
 Using TensorFlow backend
 
 ```
@@ -487,7 +441,7 @@ train_ds, ds_info = your_data_loader.load(
 )
 ```
 
-clearly yields bounding boxes in the format `xywh`.  You can read more about
+This clearly yields bounding boxes in the format `xywh`.  You can read more about
 KerasCV bounding box formats [in the API docs](https://keras.io/api/keras_cv/bounding_box/formats/).
 
 Our data comes loaded into the format
@@ -803,18 +757,18 @@ print_metrics(result)
 ```
 Metrics:
 ----------------------------
-MaP                         : 0.33
-MaP@[IoU=50]                : 0.53
-MaP@[IoU=75]                : 0.33
+MaP                         : 0.61
+MaP@[IoU=50]                : 0.83
+MaP@[IoU=75]                : 0.75
 MaP@[area=small]            : 0.00
-MaP@[area=medium]           : 0.00
-MaP@[area=large]            : 0.41
-Recall@[max_detections=1]   : 0.34
-Recall@[max_detections=10]  : 0.37
-Recall@[max_detections=100] : 0.37
+MaP@[area=medium]           : 0.40
+MaP@[area=large]            : 0.59
+Recall@[max_detections=1]   : 0.61
+Recall@[max_detections=10]  : 0.61
+Recall@[max_detections=100] : 0.61
 Recall@[area=small]         : 0.00
-Recall@[area=medium]        : 0.00
-Recall@[area=large]         : 0.45
+Recall@[area=medium]        : 0.40
+Recall@[area=large]         : 0.59
 
 ```
 </div>
@@ -927,11 +881,11 @@ model.fit(
 
 <div class="k-default-codeblock">
 ```
-20/20 [==============================] - ETA: 0s - loss: 1.8274 - box_loss: 0.7034 - classification_loss: 1.1240 - percent_boxes_matched_with_anchor: 0.9160
+20/20 [==============================] - ETA: 0s - loss: 1.8220 - box_loss: 0.6911 - classification_loss: 1.1309 - percent_boxes_matched_with_anchor: 0.9258
 
-100%|█████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 20/20 [23:30<00:00, 70.53s/it]
+100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 20/20 [23:28<00:00, 70.42s/it]
 
-20/20 [==============================] - 1641s 85s/step - loss: 1.8274 - box_loss: 0.7034 - classification_loss: 1.1240 - percent_boxes_matched_with_anchor: 0.9160 - val_loss: 1.7503 - val_box_loss: 0.6868 - val_classification_loss: 1.0635 - val_percent_boxes_matched_with_anchor: 0.8980 - MaP: 0.0000e+00 - MaP@[IoU=50]: 0.0000e+00 - MaP@[IoU=75]: 0.0000e+00 - MaP@[area=small]: 0.0000e+00 - MaP@[area=medium]: 0.0000e+00 - MaP@[area=large]: 0.0000e+00 - Recall@[max_detections=1]: 0.0000e+00 - Recall@[max_detections=10]: 0.0000e+00 - Recall@[max_detections=100]: 0.0000e+00 - Recall@[area=small]: 0.0000e+00 - Recall@[area=medium]: 0.0000e+00 - Recall@[area=large]: 0.0000e+00
+20/20 [==============================] - 1654s 86s/step - loss: 1.8220 - box_loss: 0.6911 - classification_loss: 1.1309 - percent_boxes_matched_with_anchor: 0.9258 - val_loss: 1.7590 - val_box_loss: 0.6807 - val_classification_loss: 1.0784 - val_percent_boxes_matched_with_anchor: 0.9086 - MaP: 0.0000e+00 - MaP@[IoU=50]: 0.0000e+00 - MaP@[IoU=75]: 0.0000e+00 - MaP@[area=small]: 0.0000e+00 - MaP@[area=medium]: 0.0000e+00 - MaP@[area=large]: 0.0000e+00 - Recall@[max_detections=1]: 0.0000e+00 - Recall@[max_detections=10]: 0.0000e+00 - Recall@[max_detections=100]: 0.0000e+00 - Recall@[area=small]: 0.0000e+00 - Recall@[area=medium]: 0.0000e+00 - Recall@[area=large]: 0.0000e+00
 
 ```
 </div>
@@ -943,7 +897,7 @@ model.fit(
 
 <div class="k-default-codeblock">
 ```
-<keras.src.callbacks.History at 0x161062950>
+<keras.src.callbacks.History at 0x16d966b50>
 
 ```
 </div>
@@ -1088,9 +1042,7 @@ visualization.plot_bounding_box_gallery(
 <div class="k-default-codeblock">
 ```
 By using this model checkpoint, you acknowledge that its usage is subject to the terms of the CreativeML Open RAIL++-M license at https://github.com/Stability-AI/stablediffusion/blob/main/LICENSE-MODEL
-50/50 [==============================] - 1807s 35s/step
-Downloading data from https://huggingface.co/fchollet/stable-diffusion/resolve/main/kcv_decoder.h5
-198180272/198180272 [==============================] - 17s 0us/step
+50/50 [==============================] - 1775s 35s/step
 1/1 [==============================] - 3s 3s/step
 
 ```
