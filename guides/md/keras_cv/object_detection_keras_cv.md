@@ -41,57 +41,7 @@ import resource
 from keras_cv import visualization
 import tqdm
 ```
-<div class="k-default-codeblock">
-```
-['Collecting git+https://github.com/keras-team/keras-cv',
- '  Cloning https://github.com/keras-team/keras-cv to /private/var/folders/bh/m84ct2pd3pnc4ldfn5cz9kc800rcrl/T/pip-req-build-ht2unu43',
- '  Running command git clone --filter=blob:none --quiet https://github.com/keras-team/keras-cv /private/var/folders/bh/m84ct2pd3pnc4ldfn5cz9kc800rcrl/T/pip-req-build-ht2unu43',
- '  Resolved https://github.com/keras-team/keras-cv to commit 2ff8e3fd764bc67342778894cc984daac95c4813',
- '  Installing build dependencies: started',
- "  Installing build dependencies: finished with status 'done'",
- '  Getting requirements to build wheel: started',
- "  Getting requirements to build wheel: finished with status 'done'",
- '  Preparing metadata (pyproject.toml): started',
- "  Preparing metadata (pyproject.toml): finished with status 'done'",
- 'Requirement already satisfied: packaging in /Users/dhuntsperger/.pyenv/versions/venv-keras-io/lib/python3.11/site-packages (from keras-cv==0.6.1) (23.1)',
- 'Requirement already satisfied: absl-py in /Users/dhuntsperger/.pyenv/versions/venv-keras-io/lib/python3.11/site-packages (from keras-cv==0.6.1) (1.4.0)',
- 'Requirement already satisfied: regex in /Users/dhuntsperger/.pyenv/versions/venv-keras-io/lib/python3.11/site-packages (from keras-cv==0.6.1) (2023.6.3)',
- 'Requirement already satisfied: tensorflow-datasets in /Users/dhuntsperger/.pyenv/versions/venv-keras-io/lib/python3.11/site-packages (from keras-cv==0.6.1) (4.9.2)',
- 'Requirement already satisfied: keras-core in /Users/dhuntsperger/.pyenv/versions/venv-keras-io/lib/python3.11/site-packages (from keras-cv==0.6.1) (0.1.3)',
- 'Requirement already satisfied: numpy in /Users/dhuntsperger/.pyenv/versions/venv-keras-io/lib/python3.11/site-packages (from keras-core->keras-cv==0.6.1) (1.24.3)',
- 'Requirement already satisfied: rich in /Users/dhuntsperger/.pyenv/versions/venv-keras-io/lib/python3.11/site-packages (from keras-core->keras-cv==0.6.1) (13.5.2)',
- 'Requirement already satisfied: namex in /Users/dhuntsperger/.pyenv/versions/venv-keras-io/lib/python3.11/site-packages (from keras-core->keras-cv==0.6.1) (0.0.7)',
- 'Requirement already satisfied: h5py in /Users/dhuntsperger/.pyenv/versions/venv-keras-io/lib/python3.11/site-packages (from keras-core->keras-cv==0.6.1) (3.9.0)',
- 'Requirement already satisfied: dm-tree in /Users/dhuntsperger/.pyenv/versions/venv-keras-io/lib/python3.11/site-packages (from keras-core->keras-cv==0.6.1) (0.1.8)',
- 'Requirement already satisfied: array-record in /Users/dhuntsperger/.pyenv/versions/venv-keras-io/lib/python3.11/site-packages (from tensorflow-datasets->keras-cv==0.6.1) (0.4.0)',
- 'Requirement already satisfied: click in /Users/dhuntsperger/.pyenv/versions/venv-keras-io/lib/python3.11/site-packages (from tensorflow-datasets->keras-cv==0.6.1) (8.1.6)',
- 'Requirement already satisfied: etils[enp,epath]>=0.9.0 in /Users/dhuntsperger/.pyenv/versions/venv-keras-io/lib/python3.11/site-packages (from tensorflow-datasets->keras-cv==0.6.1) (1.4.1)',
- 'Requirement already satisfied: promise in /Users/dhuntsperger/.pyenv/versions/venv-keras-io/lib/python3.11/site-packages (from tensorflow-datasets->keras-cv==0.6.1) (2.3)',
- 'Requirement already satisfied: protobuf>=3.20 in /Users/dhuntsperger/.pyenv/versions/venv-keras-io/lib/python3.11/site-packages (from tensorflow-datasets->keras-cv==0.6.1) (4.23.4)',
- 'Requirement already satisfied: psutil in /Users/dhuntsperger/.pyenv/versions/venv-keras-io/lib/python3.11/site-packages (from tensorflow-datasets->keras-cv==0.6.1) (5.9.5)',
- 'Requirement already satisfied: requests>=2.19.0 in /Users/dhuntsperger/.pyenv/versions/venv-keras-io/lib/python3.11/site-packages (from tensorflow-datasets->keras-cv==0.6.1) (2.31.0)',
- 'Requirement already satisfied: tensorflow-metadata in /Users/dhuntsperger/.pyenv/versions/venv-keras-io/lib/python3.11/site-packages (from tensorflow-datasets->keras-cv==0.6.1) (1.13.1)',
- 'Requirement already satisfied: termcolor in /Users/dhuntsperger/.pyenv/versions/venv-keras-io/lib/python3.11/site-packages (from tensorflow-datasets->keras-cv==0.6.1) (2.3.0)',
- 'Requirement already satisfied: toml in /Users/dhuntsperger/.pyenv/versions/venv-keras-io/lib/python3.11/site-packages (from tensorflow-datasets->keras-cv==0.6.1) (0.10.2)',
- 'Requirement already satisfied: tqdm in /Users/dhuntsperger/.pyenv/versions/venv-keras-io/lib/python3.11/site-packages (from tensorflow-datasets->keras-cv==0.6.1) (4.65.0)',
- 'Requirement already satisfied: wrapt in /Users/dhuntsperger/.pyenv/versions/venv-keras-io/lib/python3.11/site-packages (from tensorflow-datasets->keras-cv==0.6.1) (1.15.0)',
- 'Requirement already satisfied: importlib_resources in /Users/dhuntsperger/.pyenv/versions/venv-keras-io/lib/python3.11/site-packages (from etils[enp,epath]>=0.9.0->tensorflow-datasets->keras-cv==0.6.1) (6.0.1)',
- 'Requirement already satisfied: typing_extensions in /Users/dhuntsperger/.pyenv/versions/venv-keras-io/lib/python3.11/site-packages (from etils[enp,epath]>=0.9.0->tensorflow-datasets->keras-cv==0.6.1) (4.5.0)',
- 'Requirement already satisfied: zipp in /Users/dhuntsperger/.pyenv/versions/venv-keras-io/lib/python3.11/site-packages (from etils[enp,epath]>=0.9.0->tensorflow-datasets->keras-cv==0.6.1) (3.16.2)',
- 'Requirement already satisfied: charset-normalizer<4,>=2 in /Users/dhuntsperger/.pyenv/versions/venv-keras-io/lib/python3.11/site-packages (from requests>=2.19.0->tensorflow-datasets->keras-cv==0.6.1) (3.2.0)',
- 'Requirement already satisfied: idna<4,>=2.5 in /Users/dhuntsperger/.pyenv/versions/venv-keras-io/lib/python3.11/site-packages (from requests>=2.19.0->tensorflow-datasets->keras-cv==0.6.1) (3.4)',
- 'Requirement already satisfied: urllib3<3,>=1.21.1 in /Users/dhuntsperger/.pyenv/versions/venv-keras-io/lib/python3.11/site-packages (from requests>=2.19.0->tensorflow-datasets->keras-cv==0.6.1) (1.26.16)',
- 'Requirement already satisfied: certifi>=2017.4.17 in /Users/dhuntsperger/.pyenv/versions/venv-keras-io/lib/python3.11/site-packages (from requests>=2.19.0->tensorflow-datasets->keras-cv==0.6.1) (2023.7.22)',
- 'Requirement already satisfied: six in /Users/dhuntsperger/.pyenv/versions/venv-keras-io/lib/python3.11/site-packages (from promise->tensorflow-datasets->keras-cv==0.6.1) (1.16.0)',
- 'Requirement already satisfied: markdown-it-py>=2.2.0 in /Users/dhuntsperger/.pyenv/versions/venv-keras-io/lib/python3.11/site-packages (from rich->keras-core->keras-cv==0.6.1) (3.0.0)',
- 'Requirement already satisfied: pygments<3.0.0,>=2.13.0 in /Users/dhuntsperger/.pyenv/versions/venv-keras-io/lib/python3.11/site-packages (from rich->keras-core->keras-cv==0.6.1) (2.16.1)',
- 'Requirement already satisfied: googleapis-common-protos<2,>=1.52.0 in /Users/dhuntsperger/.pyenv/versions/venv-keras-io/lib/python3.11/site-packages (from tensorflow-metadata->tensorflow-datasets->keras-cv==0.6.1) (1.60.0)',
- 'Requirement already satisfied: mdurl~=0.1 in /Users/dhuntsperger/.pyenv/versions/venv-keras-io/lib/python3.11/site-packages (from markdown-it-py>=2.2.0->rich->keras-core->keras-cv==0.6.1) (0.1.2)']
 
-Using TensorFlow backend
-
-```
-</div>
 ---
 ## Object detection introduction
 
@@ -220,9 +170,9 @@ visualization.plot_image_gallery(
 ```
 
 
-    
+
 ![png](/img/guides/object_detection_keras_cv/object_detection_keras_cv_8_0.png)
-    
+
 
 
 To use the `RetinaNet` architecture with a ResNet50 backbone, you'll need to
@@ -319,9 +269,9 @@ visualization.plot_bounding_box_gallery(
 
 ```
 </div>
-    
+
 ![png](/img/guides/object_detection_keras_cv/object_detection_keras_cv_16_1.png)
-    
+
 
 
 In order to support this easy and intuitive inference workflow, KerasCV
@@ -369,9 +319,9 @@ visualization.plot_bounding_box_gallery(
 
 ```
 </div>
-    
+
 ![png](/img/guides/object_detection_keras_cv/object_detection_keras_cv_18_1.png)
-    
+
 
 
 Next, let's re-configure `keras_cv.layers.MultiClassNonMaxSuppression` for our
@@ -417,9 +367,9 @@ visualization.plot_bounding_box_gallery(
 
 ```
 </div>
-    
+
 ![png](/img/guides/object_detection_keras_cv/object_detection_keras_cv_20_1.png)
-    
+
 
 
 That looks a lot better!
@@ -578,9 +528,9 @@ visualize_dataset(
 ```
 
 
-    
+
 ![png](/img/guides/object_detection_keras_cv/object_detection_keras_cv_28_0.png)
-    
+
 
 
 And for the eval set:
@@ -600,9 +550,9 @@ visualize_dataset(
 ```
 
 
-    
+
 ![png](/img/guides/object_detection_keras_cv/object_detection_keras_cv_30_0.png)
-    
+
 
 
 Looks like everything is structured as expected.
@@ -640,9 +590,9 @@ visualize_dataset(
 ```
 
 
-    
+
 ![png](/img/guides/object_detection_keras_cv/object_detection_keras_cv_32_0.png)
-    
+
 
 
 Great! We now have a bounding-box-friendly data augmentation pipeline.
@@ -671,9 +621,9 @@ visualize_dataset(
 ```
 
 
-    
+
 ![png](/img/guides/object_detection_keras_cv/object_detection_keras_cv_36_0.png)
-    
+
 
 
 Finally, let's unpackage our inputs from the preprocessing dictionary, and
@@ -935,7 +885,7 @@ model.fit(
 
 ```
 </div>
-    
+
 
 
 
@@ -1018,9 +968,9 @@ visualize_detections(model, dataset=visualization_ds, bounding_box_format="xywh"
 
 ```
 </div>
-    
+
 ![png](/img/guides/object_detection_keras_cv/object_detection_keras_cv_66_1.png)
-    
+
 
 
 Awesome!
@@ -1095,7 +1045,7 @@ Downloading data from https://huggingface.co/fchollet/stable-diffusion/resolve/m
 
 ```
 </div>
-    
+
 ![png](/img/guides/object_detection_keras_cv/object_detection_keras_cv_70_1.png)
-    
+
 
