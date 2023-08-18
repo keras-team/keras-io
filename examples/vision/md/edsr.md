@@ -635,3 +635,7 @@ be able to handle a greater range of real-world images.
 You could also improve on the given baseline EDSR model by implementing EDSR+,
 or MDSR( Multi-Scale super-resolution) and MDSR+,
 which were proposed in the same paper.
+
+| Trained Model | Demo |
+| :--: | :--: |
+| [![Generic badge](https://img.shields.io/badge/🤗%20Model-EDSR-red.svg)](https://huggingface.co/keras-io/EDSR) | [![Generic badge](https://img.shields.io/badge/🤗%20Spaces-EDSR-red.svg)](https://huggingface.co/spaces/keras-io/EDSR) |
