@@ -65,7 +65,7 @@ In the `test_step` method, we evaluate the student model on the provided dataset
 
 class Distiller(keras.Model):
     def __init__(self, student, teacher):
-        super(Distiller, self).__init__()
+        super().__init__()
         self.teacher = teacher
         self.student = student
 
@@ -91,7 +91,7 @@ class Distiller(keras.Model):
             temperature: Temperature for softening probability distributions.
                 Larger temperature gives softer distributions.
         """
-        super(Distiller, self).compile(optimizer=optimizer, metrics=metrics)
+        super().compile(optimizer=optimizer, metrics=metrics)
         self.student_loss_fn = student_loss_fn
         self.distillation_loss_fn = distillation_loss_fn
         self.alpha = alpha

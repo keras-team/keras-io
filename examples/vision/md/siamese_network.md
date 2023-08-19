@@ -23,13 +23,13 @@ two of them will be similar (_anchor_ and _positive_ samples), and the third wil
 Our goal is for the model to learn to estimate the similarity between images.
 
 For the network to learn, we use a triplet loss function. You can find an introduction to triplet loss in the
-[FaceNet paper](https://arxiv.org/abs/1503.03832) by Schroff et al,. 2015. In this example, we define the triplet
+[FaceNet paper](https://arxiv.org/pdf/1503.03832.pdf) by Schroff et al,. 2015. In this example, we define the triplet
 loss function as follows:
 
 `L(A, P, N) = max(‖f(A) - f(P)‖² - ‖f(A) - f(N)‖² + margin, 0)`
 
 This example uses the [Totally Looks Like dataset](https://sites.google.com/view/totally-looks-like-dataset)
-by [Rosenfeld et al., 2018](https://arxiv.org/abs/1803.01485).
+by [Rosenfeld et al., 2018](https://arxiv.org/pdf/1803.01485v3.pdf).
 
 ---
 ## Setup
@@ -83,10 +83,10 @@ positive_images_path = cache_dir / "right"
 
 <div class="k-default-codeblock">
 ```
-Downloading...
-From: https://drive.google.com/uc?id=1EzBZUb_mh_Dp_FKD0P4XiYYSd0QBH5zW
-To: /mnt/hdd2/keras-io/scripts/tmp_8979114/right.zip
-100%|████████████████████████████████████████| 104M/104M [00:01<00:00, 66.8MB/s]
+zsh:1: command not found: gdown
+zsh:1: command not found: gdown
+unzip:  cannot find or open left.zip, left.zip.zip or left.zip.ZIP.
+unzip:  cannot find or open right.zip, right.zip.zip or right.zip.ZIP.
 
 ```
 </div>
@@ -171,10 +171,10 @@ train_dataset = dataset.take(round(image_count * 0.8))
 val_dataset = dataset.skip(round(image_count * 0.8))
 
 train_dataset = train_dataset.batch(32, drop_remainder=False)
-train_dataset = train_dataset.prefetch(tf.data.AUTOTUNE)
+train_dataset = train_dataset.prefetch(8)
 
 val_dataset = val_dataset.batch(32, drop_remainder=False)
-val_dataset = val_dataset.prefetch(tf.data.AUTOTUNE)
+val_dataset = val_dataset.prefetch(8)
 
 ```
 
@@ -205,9 +205,7 @@ visualize(*list(train_dataset.take(1).as_numpy_iterator())[0])
 ```
 
 
-    
-![png](/img/examples/vision/siamese_network/siamese_network_12_0.png)
-    
+![png](/img/examples/vision/siamese_network/siamesenetwork_12_0.png)
 
 
 ---
@@ -245,14 +243,6 @@ for layer in base_cnn.layers:
     layer.trainable = trainable
 ```
 
-<div class="k-default-codeblock">
-```
-Downloading data from https://storage.googleapis.com/tensorflow/keras-applications/resnet/resnet50_weights_tf_dim_ordering_tf_kernels_notop.h5
-94773248/94765736 [==============================] - 2s 0us/step
-94781440/94765736 [==============================] - 2s 0us/step
-
-```
-</div>
 ---
 ## Setting up the Siamese Network model
 
@@ -320,7 +310,7 @@ class SiameseModel(Model):
     """
 
     def __init__(self, siamese_network, margin=0.5):
-        super(SiameseModel, self).__init__()
+        super().__init__()
         self.siamese_network = siamese_network
         self.margin = margin
         self.loss_tracker = metrics.Mean(name="loss")
@@ -391,27 +381,27 @@ siamese_model.fit(train_dataset, epochs=10, validation_data=val_dataset)
 <div class="k-default-codeblock">
 ```
 Epoch 1/10
-151/151 [==============================] - 35s 185ms/step - loss: 0.5050 - val_loss: 0.3854
+151/151 [==============================] - 277s 2s/step - loss: 0.5014 - val_loss: 0.3719
 Epoch 2/10
-151/151 [==============================] - 26s 170ms/step - loss: 0.3936 - val_loss: 0.3630
+151/151 [==============================] - 276s 2s/step - loss: 0.3884 - val_loss: 0.3632
 Epoch 3/10
-151/151 [==============================] - 26s 170ms/step - loss: 0.3722 - val_loss: 0.3382
+151/151 [==============================] - 287s 2s/step - loss: 0.3711 - val_loss: 0.3509
 Epoch 4/10
-151/151 [==============================] - 26s 173ms/step - loss: 0.3491 - val_loss: 0.3475
+151/151 [==============================] - 295s 2s/step - loss: 0.3585 - val_loss: 0.3287
 Epoch 5/10
-151/151 [==============================] - 26s 170ms/step - loss: 0.3451 - val_loss: 0.3252
+151/151 [==============================] - 299s 2s/step - loss: 0.3420 - val_loss: 0.3301
 Epoch 6/10
-151/151 [==============================] - 26s 171ms/step - loss: 0.3153 - val_loss: 0.3185
+151/151 [==============================] - 297s 2s/step - loss: 0.3181 - val_loss: 0.3419
 Epoch 7/10
-151/151 [==============================] - 26s 171ms/step - loss: 0.3118 - val_loss: 0.3255
+151/151 [==============================] - 290s 2s/step - loss: 0.3131 - val_loss: 0.3201
 Epoch 8/10
-151/151 [==============================] - 26s 171ms/step - loss: 0.3079 - val_loss: 0.3087
+151/151 [==============================] - 295s 2s/step - loss: 0.3102 - val_loss: 0.3152
 Epoch 9/10
-151/151 [==============================] - 26s 171ms/step - loss: 0.2974 - val_loss: 0.3082
+151/151 [==============================] - 286s 2s/step - loss: 0.2905 - val_loss: 0.2937
 Epoch 10/10
-151/151 [==============================] - 26s 172ms/step - loss: 0.2793 - val_loss: 0.3075
+151/151 [==============================] - 270s 2s/step - loss: 0.2921 - val_loss: 0.2952
 
-<keras.callbacks.History at 0x7f04dff32e80>
+<tensorflow.python.keras.callbacks.History at 0x7fc69064bd10>
 
 ```
 </div>
@@ -441,9 +431,7 @@ anchor_embedding, positive_embedding, negative_embedding = (
 ```
 
 
-    
-![png](/img/examples/vision/siamese_network/siamese_network_22_0.png)
-    
+![png](/img/examples/vision/siamese_network/siamesenetwork_22_0.png)
 
 
 Finally, we can compute the cosine similarity between the anchor and positive
@@ -467,8 +455,8 @@ print("Negative similarity", negative_similarity.numpy())
 
 <div class="k-default-codeblock">
 ```
-Positive similarity: 0.991258
-Negative similarity 0.9886112
+Positive similarity: 0.9940324
+Negative similarity 0.9918252
 
 ```
 </div>
@@ -498,9 +486,3 @@ which records every operation that you perform inside it. In this example, we us
 gradients passed to the optimizer to update the model weights at every step. For more details, check out the
 [Intro to Keras for researchers](https://keras.io/getting_started/intro_to_keras_for_researchers/)
 and [Writing a training loop from scratch](https://www.tensorflow.org/guide/keras/writing_a_training_loop_from_scratch?hl=en).
-
-
-**Example available on HuggingFace**
-| Trained Model | Demo |
-| :--: | :--: |
-| [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Model-Siamese%20Network-black.svg)](https://huggingface.co/keras-io/siamese-contrastive) | [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Spaces-Siamese%20Network-black.svg)](https://huggingface.co/spaces/keras-io/siamese-contrastive) |

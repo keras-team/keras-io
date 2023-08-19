@@ -115,7 +115,7 @@ def Coupling(input_shape):
 
 class RealNVP(keras.Model):
     def __init__(self, num_coupling_layers):
-        super(RealNVP, self).__init__()
+        super().__init__()
 
         self.num_coupling_layers = num_coupling_layers
 

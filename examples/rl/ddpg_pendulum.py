@@ -4,6 +4,7 @@ Author: [amifunny](https://github.com/amifunny)
 Date created: 2020/06/04
 Last modified: 2020/09/21
 Description: Implementing DDPG algorithm on the Inverted Pendulum Problem.
+Accelerator: NONE
 """
 """
 ## Introduction
@@ -70,7 +71,7 @@ We use [OpenAIGym](http://gym.openai.com/docs) to create the environment.
 We will use the `upper_bound` parameter to scale our actions later.
 """
 
-problem = "Pendulum-v0"
+problem = "Pendulum-v1"
 env = gym.make(problem)
 
 num_states = env.observation_space.shape[0]
@@ -231,7 +232,7 @@ class Buffer:
 # Based on rate `tau`, which is much less than one.
 @tf.function
 def update_target(target_weights, weights, tau):
-    for (a, b) in zip(target_weights, weights):
+    for a, b in zip(target_weights, weights):
         a.assign(b * tau + a * (1 - tau))
 
 
@@ -347,7 +348,6 @@ avg_reward_list = []
 
 # Takes about 4 min to train
 for ep in range(total_episodes):
-
     prev_state = env.reset()
     episodic_reward = 0
 

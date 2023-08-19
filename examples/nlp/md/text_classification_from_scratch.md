@@ -84,14 +84,14 @@ Being an Austrian myself this has been a straight knock in my face. Fortunately 
 
 ```
 </div>
-We are only interested in the `pos` and `neg` subfolders, so let's delete the rest:
+We are only interested in the `pos` and `neg` subfolders, so let's delete the other subfolder that has text files in it:
 
 
 ```python
 !rm -r aclImdb/train/unsup
 ```
 
-You can use the utility `tf.keras.preprocessing.text_dataset_from_directory` to
+You can use the utility `tf.keras.utils.text_dataset_from_directory` to
 generate a labeled `tf.data.Dataset` object from a set of text files on disk filed
  into class-specific folders.
 
@@ -113,21 +113,21 @@ get have no overlap.
 
 ```python
 batch_size = 32
-raw_train_ds = tf.keras.preprocessing.text_dataset_from_directory(
+raw_train_ds = tf.keras.utils.text_dataset_from_directory(
     "aclImdb/train",
     batch_size=batch_size,
     validation_split=0.2,
     subset="training",
     seed=1337,
 )
-raw_val_ds = tf.keras.preprocessing.text_dataset_from_directory(
+raw_val_ds = tf.keras.utils.text_dataset_from_directory(
     "aclImdb/train",
     batch_size=batch_size,
     validation_split=0.2,
     subset="validation",
     seed=1337,
 )
-raw_test_ds = tf.keras.preprocessing.text_dataset_from_directory(
+raw_test_ds = tf.keras.utils.text_dataset_from_directory(
     "aclImdb/test", batch_size=batch_size
 )
 
@@ -222,7 +222,7 @@ vectorize_layer = TextVectorization(
     output_sequence_length=sequence_length,
 )
 
-# Now that the vocab layer has been created, call `adapt` on a text-only
+# Now that the vectorize_layer has been created, call `adapt` on a text-only
 # dataset to create the vocabulary. You don't have to batch, but for very large
 # datasets this means you're not keeping spare copies of the dataset in memory.
 

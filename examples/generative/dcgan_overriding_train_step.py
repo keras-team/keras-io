@@ -4,6 +4,7 @@ Author: [fchollet](https://twitter.com/fchollet)
 Date created: 2019/04/29
 Last modified: 2021/01/01
 Description: A simple DCGAN trained using `fit()` by overriding `train_step` on CelebA images.
+Accelerator: GPU
 """
 """
 ## Setup
@@ -12,7 +13,6 @@ Description: A simple DCGAN trained using `fit()` by overriding `train_step` on 
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
-import numpy as np
 import matplotlib.pyplot as plt
 import os
 import gdown
@@ -37,7 +37,7 @@ with ZipFile("celeba_gan/data.zip", "r") as zipobj:
 Create a dataset from our folder, and rescale the images to the [0-1] range:
 """
 
-dataset = keras.preprocessing.image_dataset_from_directory(
+dataset = keras.utils.image_dataset_from_directory(
     "celeba_gan", label_mode=None, image_size=(64, 64), batch_size=32
 )
 dataset = dataset.map(lambda x: x / 255.0)
@@ -109,13 +109,13 @@ generator.summary()
 
 class GAN(keras.Model):
     def __init__(self, discriminator, generator, latent_dim):
-        super(GAN, self).__init__()
+        super().__init__()
         self.discriminator = discriminator
         self.generator = generator
         self.latent_dim = latent_dim
 
     def compile(self, d_optimizer, g_optimizer, loss_fn):
-        super(GAN, self).compile()
+        super().compile()
         self.d_optimizer = d_optimizer
         self.g_optimizer = g_optimizer
         self.loss_fn = loss_fn
@@ -192,7 +192,7 @@ class GANMonitor(keras.callbacks.Callback):
         generated_images *= 255
         generated_images.numpy()
         for i in range(self.num_img):
-            img = keras.preprocessing.image.array_to_img(generated_images[i])
+            img = keras.utils.array_to_img(generated_images[i])
             img.save("generated_img_%03d_%d.png" % (epoch, i))
 
 

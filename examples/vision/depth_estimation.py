@@ -4,6 +4,7 @@ Author: [Victor Basu](https://www.linkedin.com/in/victor-basu-520958147)
 Date created: 2021/08/30
 Last modified: 2021/08/30
 Description: Implement a depth estimation model with a convnet.
+Accelerator: GPU
 """
 
 """
@@ -134,7 +135,6 @@ class DataGenerator(tf.keras.utils.Sequence):
         return x, y
 
     def on_epoch_end(self):
-
         """
         Updates indexes after each epoch
         """
@@ -169,7 +169,6 @@ class DataGenerator(tf.keras.utils.Sequence):
         return image_, depth_map
 
     def data_generation(self, batch):
-
         x = np.empty((self.batch_size, *self.dim, self.n_channels))
         y = np.empty((self.batch_size, *self.dim, 1))
 

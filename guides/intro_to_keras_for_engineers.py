@@ -4,6 +4,7 @@ Author: [fchollet](https://twitter.com/fchollet)
 Date created: 2020/04/01
 Last modified: 2020/04/28
 Description: Everything you need to know to use Keras to build real-world machine learning solutions.
+Accelerator: None
 """
 
 """
@@ -12,7 +13,7 @@ Description: Everything you need to know to use Keras to build real-world machin
 
 import numpy as np
 import tensorflow as tf
-from tensorflow import keras
+import keras
 
 """
 ## Introduction
@@ -87,9 +88,9 @@ using `Dataset` objects, since they will take care of performance-critical detai
 
 Keras features a range of utilities to help you turn raw data on disk into a `Dataset`:
 
-- `tf.keras.preprocessing.image_dataset_from_directory` turns image files sorted into
+- `keras.utils.image_dataset_from_directory` turns image files sorted into
  class-specific folders into a labeled dataset of image tensors.
-- `tf.keras.preprocessing.text_dataset_from_directory` does the same for text files.
+- `keras.utils.text_dataset_from_directory` does the same for text files.
 
 In addition, the TensorFlow `tf.data` includes other similar utilities, such as
 `tf.data.experimental.make_csv_dataset` to load structured data from CSV files.
@@ -112,7 +113,7 @@ Then you can do:
 
 ```python
 # Create a dataset.
-dataset = keras.preprocessing.image_dataset_from_directory(
+dataset = keras.utils.image_dataset_from_directory(
   'path/to/main_directory', batch_size=64, image_size=(200, 200))
 
 # For demonstration, iterate over the batches yielded by the dataset.
@@ -134,7 +135,7 @@ Likewise for text: if you have `.txt` documents sorted by class in different fol
  you can do:
 
 ```python
-dataset = keras.preprocessing.text_dataset_from_directory(
+dataset = keras.utils.text_dataset_from_directory(
   'path/to/main_directory', batch_size=64)
 
 # For demonstration, iterate over the batches yielded by the dataset.
@@ -509,7 +510,7 @@ history = model.fit(dataset, epochs=1, validation_data=val_dataset)
 ### Using callbacks for checkpointing (and more)
 
 If training goes on for more than a few minutes, it's important to save your model at
- regular intervals during training. You can then use your saved models
+regular intervals during training. You can then use your saved models
 to restart training in case your training process crashes (this is important for
 multi-worker distributed training, since with many workers at least one of them is
  bound to fail at some point).
@@ -611,25 +612,28 @@ Here's a simple example that reimplements what `fit()` normally does:
 
 ```python
 class CustomModel(keras.Model):
-  def train_step(self, data):
-    # Unpack the data. Its structure depends on your model and
-    # on what you pass to `fit()`.
-    x, y = data
-    with tf.GradientTape() as tape:
-      y_pred = self(x, training=True)  # Forward pass
-      # Compute the loss value
-      # (the loss function is configured in `compile()`)
-      loss = self.compiled_loss(y, y_pred,
-                                regularization_losses=self.losses)
-    # Compute gradients
-    trainable_vars = self.trainable_variables
-    gradients = tape.gradient(loss, trainable_vars)
-    # Update weights
-    self.optimizer.apply_gradients(zip(gradients, trainable_vars))
-    # Update metrics (includes the metric that tracks the loss)
-    self.compiled_metrics.update_state(y, y_pred)
-    # Return a dict mapping metric names to current value
-    return {m.name: m.result() for m in self.metrics}
+    def train_step(self, data):
+        # Unpack the data. Its structure depends on your model and
+        # on what you pass to `fit()`.
+        x, y = data
+        with tf.GradientTape() as tape:
+            y_pred = self(x, training=True)  # Forward pass
+            # Compute the loss value
+            # (the loss function is configured in `compile()`)
+            loss = self.compute_loss(y=y, y_pred=y_pred)
+        # Compute gradients
+        trainable_vars = self.trainable_variables
+        gradients = tape.gradient(loss, trainable_vars)
+        # Update weights
+        self.optimizer.apply_gradients(zip(gradients, trainable_vars))
+        # Update metrics (includes the metric that tracks the loss)
+        for metric in self.metrics:
+            if metric.name == "loss":
+                metric.update_state(loss)
+            else:
+                metric.update_state(y, y_pred)
+        # Return a dict mapping metric names to current value
+        return {m.name: m.result() for m in self.metrics}
 
 # Construct and compile an instance of CustomModel
 inputs = keras.Input(shape=(32,))
@@ -695,10 +699,10 @@ strategy = tf.distribute.MirroredStrategy()
 
 # Open a strategy scope.
 with strategy.scope():
-  # Everything that creates variables should be under the strategy scope.
-  # In general this is only model construction & `compile()`.
-  model = Model(...)
-  model.compile(...)
+    # Everything that creates variables should be under the strategy scope.
+    # In general this is only model construction & `compile()`.
+    model = Model(...)
+    model.compile(...)
 
 # Train the model on all available devices.
 train_dataset, val_dataset, test_dataset = get_dataset()
@@ -817,7 +821,7 @@ def build_model(hp):
     inputs = keras.Input(shape=(784,))
     x = layers.Dense(
         units=hp.Int('units', min_value=32, max_value=512, step=32),
-        activation='relu'))(inputs)
+        activation='relu')(inputs)
     outputs = layers.Dense(10, activation='softmax')(x)
     model = keras.Model(inputs, outputs)
     model.compile(
@@ -839,12 +843,12 @@ Next, instantiate a tuner object specifying your optimization objective and othe
 import keras_tuner
 
 tuner = keras_tuner.tuners.Hyperband(
-  build_model,
-  objective='val_loss',
-  max_epochs=100,
-  max_trials=200,
-  executions_per_trial=2,
-  directory='my_dir')
+    build_model,
+    objective='val_loss',
+    max_epochs=100,
+    max_trials=200,
+    executions_per_trial=2,
+    directory='my_dir')
 ```
 
 Finally, start the search with the `search()` method, which takes the same arguments as

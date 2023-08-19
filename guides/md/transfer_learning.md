@@ -17,7 +17,7 @@
 ```python
 import numpy as np
 import tensorflow as tf
-from tensorflow import keras
+import keras
 ```
 
 ---
@@ -176,7 +176,7 @@ np.testing.assert_allclose(
 
 <div class="k-default-codeblock">
 ```
-1/1 [==============================] - 0s 333ms/step - loss: 0.1007
+1/1 [==============================] - 0s 321ms/step - loss: 0.0517
 
 ```
 </div>
@@ -205,7 +205,11 @@ inner_model = keras.Sequential(
 )
 
 model = keras.Sequential(
-    [keras.Input(shape=(3,)), inner_model, keras.layers.Dense(3, activation="sigmoid"),]
+    [
+        keras.Input(shape=(3,)),
+        inner_model,
+        keras.layers.Dense(3, activation="sigmoid"),
+    ]
 )
 
 model.trainable = False  # Freeze the outer model
@@ -407,7 +411,7 @@ learning & fine-tuning example. We will load the Xception model, pre-trained on
 
 First, let's fetch the cats vs. dogs dataset using TFDS. If you have your own dataset,
 you'll probably want to use the utility
-`tf.keras.preprocessing.image_dataset_from_directory` to generate similar labeled
+`keras.utils.image_dataset_from_directory` to generate similar labeled
  dataset objects from a set of images on disk filed into class-specific folders.
 
 Transfer learning is most useful when working with very small datasets. To keep our
@@ -436,6 +440,11 @@ print("Number of test samples: %d" % tf.data.experimental.cardinality(test_ds))
 
 <div class="k-default-codeblock">
 ```
+ Downloading and preparing dataset 786.68 MiB (download: 786.68 MiB, generated: Unknown size, total: 786.68 MiB) to /usr/local/google/home/nkovela/tensorflow_datasets/cats_vs_dogs/4.0.0...
+
+WARNING:absl:1738 images were corrupted and were skipped
+
+ Dataset cats_vs_dogs downloaded and prepared to /usr/local/google/home/nkovela/tensorflow_datasets/cats_vs_dogs/4.0.0. Subsequent calls will reuse this data.
 Number of training samples: 9305
 Number of validation samples: 2326
 Number of test samples: 2326
@@ -522,7 +531,10 @@ from tensorflow import keras
 from tensorflow.keras import layers
 
 data_augmentation = keras.Sequential(
-    [layers.RandomFlip("horizontal"), layers.RandomRotation(0.1),]
+    [
+        layers.RandomFlip("horizontal"),
+        layers.RandomRotation(0.1),
+    ]
 )
 ```
 
@@ -601,27 +613,31 @@ model.summary()
 
 <div class="k-default-codeblock">
 ```
+Downloading data from https://storage.googleapis.com/tensorflow/keras-applications/xception/xception_weights_tf_dim_ordering_tf_kernels_notop.h5
+83683744/83683744 [==============================] - 0s 0us/step
 Model: "model"
 _________________________________________________________________
-Layer (type)                 Output Shape              Param #   
+ Layer (type)                Output Shape              Param #   
 =================================================================
-input_5 (InputLayer)         [(None, 150, 150, 3)]     0         
-_________________________________________________________________
-sequential_3 (Sequential)    (None, 150, 150, 3)       0         
-_________________________________________________________________
-rescaling (Rescaling)        (None, 150, 150, 3)       0         
-_________________________________________________________________
-xception (Functional)        (None, 5, 5, 2048)        20861480  
-_________________________________________________________________
-global_average_pooling2d (Gl (None, 2048)              0         
-_________________________________________________________________
-dropout (Dropout)            (None, 2048)              0         
-_________________________________________________________________
-dense_7 (Dense)              (None, 1)                 2049      
+ input_5 (InputLayer)        [(None, 150, 150, 3)]     0         
+                                                                 
+ sequential_3 (Sequential)   (None, 150, 150, 3)       0         
+                                                                 
+ rescaling (Rescaling)       (None, 150, 150, 3)       0         
+                                                                 
+ xception (Functional)       (None, 5, 5, 2048)        20861480  
+                                                                 
+ global_average_pooling2d (  (None, 2048)              0         
+ GlobalAveragePooling2D)                                         
+                                                                 
+ dropout (Dropout)           (None, 2048)              0         
+                                                                 
+ dense_7 (Dense)             (None, 1)                 2049      
+                                                                 
 =================================================================
-Total params: 20,863,529
-Trainable params: 2,049
-Non-trainable params: 20,861,480
+Total params: 20863529 (79.59 MB)
+Trainable params: 2049 (8.00 KB)
+Non-trainable params: 20861480 (79.58 MB)
 _________________________________________________________________
 
 ```
@@ -644,47 +660,67 @@ model.fit(train_ds, epochs=epochs, validation_data=validation_ds)
 <div class="k-default-codeblock">
 ```
 Epoch 1/20
-291/291 [==============================] - 133s 451ms/step - loss: 0.1670 - binary_accuracy: 0.9267 - val_loss: 0.0830 - val_binary_accuracy: 0.9716
-Epoch 2/20
-291/291 [==============================] - 135s 465ms/step - loss: 0.1208 - binary_accuracy: 0.9502 - val_loss: 0.0768 - val_binary_accuracy: 0.9716
-Epoch 3/20
-291/291 [==============================] - 135s 463ms/step - loss: 0.1062 - binary_accuracy: 0.9572 - val_loss: 0.0757 - val_binary_accuracy: 0.9716
-Epoch 4/20
-291/291 [==============================] - 137s 469ms/step - loss: 0.1024 - binary_accuracy: 0.9554 - val_loss: 0.0733 - val_binary_accuracy: 0.9725
-Epoch 5/20
-291/291 [==============================] - 137s 470ms/step - loss: 0.1004 - binary_accuracy: 0.9587 - val_loss: 0.0735 - val_binary_accuracy: 0.9729
-Epoch 6/20
-291/291 [==============================] - 136s 467ms/step - loss: 0.0979 - binary_accuracy: 0.9577 - val_loss: 0.0747 - val_binary_accuracy: 0.9708
-Epoch 7/20
-291/291 [==============================] - 134s 462ms/step - loss: 0.0998 - binary_accuracy: 0.9596 - val_loss: 0.0706 - val_binary_accuracy: 0.9725
-Epoch 8/20
-291/291 [==============================] - 133s 457ms/step - loss: 0.1029 - binary_accuracy: 0.9592 - val_loss: 0.0720 - val_binary_accuracy: 0.9733
-Epoch 9/20
-291/291 [==============================] - 135s 466ms/step - loss: 0.0937 - binary_accuracy: 0.9625 - val_loss: 0.0707 - val_binary_accuracy: 0.9721
-Epoch 10/20
-291/291 [==============================] - 137s 472ms/step - loss: 0.0967 - binary_accuracy: 0.9580 - val_loss: 0.0720 - val_binary_accuracy: 0.9712
-Epoch 11/20
-291/291 [==============================] - 135s 463ms/step - loss: 0.0961 - binary_accuracy: 0.9612 - val_loss: 0.0802 - val_binary_accuracy: 0.9699
-Epoch 12/20
-291/291 [==============================] - 134s 460ms/step - loss: 0.0963 - binary_accuracy: 0.9638 - val_loss: 0.0721 - val_binary_accuracy: 0.9716
-Epoch 13/20
-291/291 [==============================] - 136s 468ms/step - loss: 0.0925 - binary_accuracy: 0.9635 - val_loss: 0.0736 - val_binary_accuracy: 0.9686
-Epoch 14/20
-291/291 [==============================] - 138s 476ms/step - loss: 0.0909 - binary_accuracy: 0.9624 - val_loss: 0.0766 - val_binary_accuracy: 0.9703
-Epoch 15/20
-291/291 [==============================] - 136s 467ms/step - loss: 0.0949 - binary_accuracy: 0.9598 - val_loss: 0.0704 - val_binary_accuracy: 0.9725
-Epoch 16/20
-291/291 [==============================] - 133s 456ms/step - loss: 0.0969 - binary_accuracy: 0.9586 - val_loss: 0.0722 - val_binary_accuracy: 0.9708
-Epoch 17/20
-291/291 [==============================] - 135s 464ms/step - loss: 0.0913 - binary_accuracy: 0.9635 - val_loss: 0.0718 - val_binary_accuracy: 0.9716
-Epoch 18/20
-291/291 [==============================] - 137s 472ms/step - loss: 0.0915 - binary_accuracy: 0.9639 - val_loss: 0.0727 - val_binary_accuracy: 0.9725
-Epoch 19/20
-291/291 [==============================] - 134s 460ms/step - loss: 0.0938 - binary_accuracy: 0.9631 - val_loss: 0.0707 - val_binary_accuracy: 0.9733
-Epoch 20/20
-291/291 [==============================] - 134s 460ms/step - loss: 0.0971 - binary_accuracy: 0.9609 - val_loss: 0.0714 - val_binary_accuracy: 0.9716
+140/291 [=============>................] - ETA: 27s - loss: 0.1976 - binary_accuracy: 0.9103
 
-<keras.callbacks.History at 0x7f4494e38f70>
+Corrupt JPEG data: 65 extraneous bytes before marker 0xd9
+
+256/291 [=========================>....] - ETA: 6s - loss: 0.1679 - binary_accuracy: 0.9265
+
+Corrupt JPEG data: 239 extraneous bytes before marker 0xd9
+
+270/291 [==========================>...] - ETA: 3s - loss: 0.1656 - binary_accuracy: 0.9275
+
+Corrupt JPEG data: 1153 extraneous bytes before marker 0xd9
+
+274/291 [===========================>..] - ETA: 3s - loss: 0.1642 - binary_accuracy: 0.9280
+
+Corrupt JPEG data: 228 extraneous bytes before marker 0xd9
+
+291/291 [==============================] - ETA: 0s - loss: 0.1630 - binary_accuracy: 0.9290
+
+Corrupt JPEG data: 2226 extraneous bytes before marker 0xd9
+
+291/291 [==============================] - 68s 225ms/step - loss: 0.1630 - binary_accuracy: 0.9290 - val_loss: 0.0829 - val_binary_accuracy: 0.9699
+Epoch 2/20
+291/291 [==============================] - 63s 216ms/step - loss: 0.1138 - binary_accuracy: 0.9521 - val_loss: 0.0763 - val_binary_accuracy: 0.9712
+Epoch 3/20
+291/291 [==============================] - 63s 216ms/step - loss: 0.1113 - binary_accuracy: 0.9552 - val_loss: 0.0783 - val_binary_accuracy: 0.9682
+Epoch 4/20
+291/291 [==============================] - 62s 212ms/step - loss: 0.1050 - binary_accuracy: 0.9543 - val_loss: 0.0754 - val_binary_accuracy: 0.9699
+Epoch 5/20
+291/291 [==============================] - 62s 214ms/step - loss: 0.0972 - binary_accuracy: 0.9582 - val_loss: 0.0745 - val_binary_accuracy: 0.9699
+Epoch 6/20
+291/291 [==============================] - 62s 212ms/step - loss: 0.0950 - binary_accuracy: 0.9616 - val_loss: 0.0749 - val_binary_accuracy: 0.9699
+Epoch 7/20
+291/291 [==============================] - 62s 214ms/step - loss: 0.1020 - binary_accuracy: 0.9573 - val_loss: 0.0716 - val_binary_accuracy: 0.9712
+Epoch 8/20
+291/291 [==============================] - 61s 211ms/step - loss: 0.1035 - binary_accuracy: 0.9574 - val_loss: 0.0742 - val_binary_accuracy: 0.9716
+Epoch 9/20
+291/291 [==============================] - 62s 212ms/step - loss: 0.1030 - binary_accuracy: 0.9580 - val_loss: 0.0757 - val_binary_accuracy: 0.9716
+Epoch 10/20
+291/291 [==============================] - 61s 210ms/step - loss: 0.0944 - binary_accuracy: 0.9623 - val_loss: 0.0703 - val_binary_accuracy: 0.9725
+Epoch 11/20
+291/291 [==============================] - 62s 213ms/step - loss: 0.0947 - binary_accuracy: 0.9616 - val_loss: 0.0819 - val_binary_accuracy: 0.9673
+Epoch 12/20
+291/291 [==============================] - 63s 217ms/step - loss: 0.1022 - binary_accuracy: 0.9588 - val_loss: 0.0727 - val_binary_accuracy: 0.9725
+Epoch 13/20
+291/291 [==============================] - 61s 211ms/step - loss: 0.0941 - binary_accuracy: 0.9615 - val_loss: 0.0708 - val_binary_accuracy: 0.9729
+Epoch 14/20
+291/291 [==============================] - 62s 212ms/step - loss: 0.0989 - binary_accuracy: 0.9593 - val_loss: 0.0712 - val_binary_accuracy: 0.9725
+Epoch 15/20
+291/291 [==============================] - 61s 209ms/step - loss: 0.0960 - binary_accuracy: 0.9605 - val_loss: 0.0760 - val_binary_accuracy: 0.9690
+Epoch 16/20
+291/291 [==============================] - 61s 210ms/step - loss: 0.0904 - binary_accuracy: 0.9617 - val_loss: 0.0789 - val_binary_accuracy: 0.9699
+Epoch 17/20
+291/291 [==============================] - 62s 213ms/step - loss: 0.0926 - binary_accuracy: 0.9622 - val_loss: 0.0705 - val_binary_accuracy: 0.9742
+Epoch 18/20
+291/291 [==============================] - 61s 210ms/step - loss: 0.0950 - binary_accuracy: 0.9612 - val_loss: 0.0787 - val_binary_accuracy: 0.9695
+Epoch 19/20
+291/291 [==============================] - 62s 212ms/step - loss: 0.0957 - binary_accuracy: 0.9606 - val_loss: 0.0815 - val_binary_accuracy: 0.9699
+Epoch 20/20
+291/291 [==============================] - 63s 216ms/step - loss: 0.0955 - binary_accuracy: 0.9611 - val_loss: 0.0714 - val_binary_accuracy: 0.9716
+
+<keras.src.callbacks.History at 0x7f8f202e4250>
 
 ```
 </div>
@@ -724,48 +760,50 @@ model.fit(train_ds, epochs=epochs, validation_data=validation_ds)
 ```
 Model: "model"
 _________________________________________________________________
-Layer (type)                 Output Shape              Param #   
+ Layer (type)                Output Shape              Param #   
 =================================================================
-input_5 (InputLayer)         [(None, 150, 150, 3)]     0         
-_________________________________________________________________
-sequential_3 (Sequential)    (None, 150, 150, 3)       0         
-_________________________________________________________________
-rescaling (Rescaling)        (None, 150, 150, 3)       0         
-_________________________________________________________________
-xception (Functional)        (None, 5, 5, 2048)        20861480  
-_________________________________________________________________
-global_average_pooling2d (Gl (None, 2048)              0         
-_________________________________________________________________
-dropout (Dropout)            (None, 2048)              0         
-_________________________________________________________________
-dense_7 (Dense)              (None, 1)                 2049      
+ input_5 (InputLayer)        [(None, 150, 150, 3)]     0         
+                                                                 
+ sequential_3 (Sequential)   (None, 150, 150, 3)       0         
+                                                                 
+ rescaling (Rescaling)       (None, 150, 150, 3)       0         
+                                                                 
+ xception (Functional)       (None, 5, 5, 2048)        20861480  
+                                                                 
+ global_average_pooling2d (  (None, 2048)              0         
+ GlobalAveragePooling2D)                                         
+                                                                 
+ dropout (Dropout)           (None, 2048)              0         
+                                                                 
+ dense_7 (Dense)             (None, 1)                 2049      
+                                                                 
 =================================================================
-Total params: 20,863,529
-Trainable params: 20,809,001
-Non-trainable params: 54,528
+Total params: 20863529 (79.59 MB)
+Trainable params: 20809001 (79.38 MB)
+Non-trainable params: 54528 (213.00 KB)
 _________________________________________________________________
 Epoch 1/10
-291/291 [==============================] - 567s 2s/step - loss: 0.0749 - binary_accuracy: 0.9689 - val_loss: 0.0605 - val_binary_accuracy: 0.9776
+291/291 [==============================] - 309s 1s/step - loss: 0.0746 - binary_accuracy: 0.9696 - val_loss: 0.0547 - val_binary_accuracy: 0.9807
 Epoch 2/10
-291/291 [==============================] - 551s 2s/step - loss: 0.0559 - binary_accuracy: 0.9770 - val_loss: 0.0507 - val_binary_accuracy: 0.9798
+291/291 [==============================] - 289s 992ms/step - loss: 0.0557 - binary_accuracy: 0.9789 - val_loss: 0.0499 - val_binary_accuracy: 0.9798
 Epoch 3/10
-291/291 [==============================] - 545s 2s/step - loss: 0.0444 - binary_accuracy: 0.9832 - val_loss: 0.0502 - val_binary_accuracy: 0.9807
+291/291 [==============================] - 287s 987ms/step - loss: 0.0475 - binary_accuracy: 0.9829 - val_loss: 0.0436 - val_binary_accuracy: 0.9819
 Epoch 4/10
-291/291 [==============================] - 558s 2s/step - loss: 0.0365 - binary_accuracy: 0.9874 - val_loss: 0.0506 - val_binary_accuracy: 0.9807
+291/291 [==============================] - 288s 988ms/step - loss: 0.0331 - binary_accuracy: 0.9867 - val_loss: 0.0649 - val_binary_accuracy: 0.9798
 Epoch 5/10
-291/291 [==============================] - 550s 2s/step - loss: 0.0276 - binary_accuracy: 0.9890 - val_loss: 0.0477 - val_binary_accuracy: 0.9802
+291/291 [==============================] - 275s 946ms/step - loss: 0.0334 - binary_accuracy: 0.9875 - val_loss: 0.0485 - val_binary_accuracy: 0.9794
 Epoch 6/10
-291/291 [==============================] - 588s 2s/step - loss: 0.0206 - binary_accuracy: 0.9916 - val_loss: 0.0444 - val_binary_accuracy: 0.9832
+291/291 [==============================] - 281s 966ms/step - loss: 0.0226 - binary_accuracy: 0.9912 - val_loss: 0.0464 - val_binary_accuracy: 0.9832
 Epoch 7/10
-291/291 [==============================] - 542s 2s/step - loss: 0.0206 - binary_accuracy: 0.9923 - val_loss: 0.0502 - val_binary_accuracy: 0.9828
+291/291 [==============================] - 271s 932ms/step - loss: 0.0200 - binary_accuracy: 0.9939 - val_loss: 0.0441 - val_binary_accuracy: 0.9845
 Epoch 8/10
-291/291 [==============================] - 544s 2s/step - loss: 0.0153 - binary_accuracy: 0.9939 - val_loss: 0.0509 - val_binary_accuracy: 0.9819
+291/291 [==============================] - 293s 1s/step - loss: 0.0153 - binary_accuracy: 0.9939 - val_loss: 0.0500 - val_binary_accuracy: 0.9824
 Epoch 9/10
-291/291 [==============================] - 548s 2s/step - loss: 0.0156 - binary_accuracy: 0.9934 - val_loss: 0.0610 - val_binary_accuracy: 0.9807
+291/291 [==============================] - 300s 1s/step - loss: 0.0138 - binary_accuracy: 0.9960 - val_loss: 0.0459 - val_binary_accuracy: 0.9871
 Epoch 10/10
-291/291 [==============================] - 546s 2s/step - loss: 0.0176 - binary_accuracy: 0.9936 - val_loss: 0.0561 - val_binary_accuracy: 0.9789
+291/291 [==============================] - 299s 1s/step - loss: 0.0115 - binary_accuracy: 0.9952 - val_loss: 0.0540 - val_binary_accuracy: 0.9832
 
-<keras.callbacks.History at 0x7f4495056040>
+<keras.src.callbacks.History at 0x7f8e8c26a150>
 
 ```
 </div>

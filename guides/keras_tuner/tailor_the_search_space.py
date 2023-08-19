@@ -4,6 +4,7 @@ Authors: Luca Invernizzi, James Long, Francois Chollet, Tom O'Malley, Haifeng Ji
 Date created: 2019/05/31
 Last modified: 2021/10/27
 Description: Tune a subset of the hyperparameters without changing the hypermodel.
+Accelerator: None
 """
 
 """shell
@@ -52,7 +53,7 @@ def build_model(hp):
     )
     if hp.Boolean("dropout"):
         model.add(layers.Dropout(rate=0.25))
-    model.add
+    model.add(layers.Dense(units=10, activation="softmax"))
     model.compile(
         optimizer=keras.optimizers.Adam(
             learning_rate=hp.Choice("learning_rate", values=[1e-2, 1e-3, 1e-4])
@@ -162,7 +163,9 @@ tuner = keras_tuner.RandomSearch(
     build_model,
     optimizer=keras.optimizers.Adam(1e-3),
     loss="mse",
-    metrics=["sparse_categorical_crossentropy",],
+    metrics=[
+        "sparse_categorical_crossentropy",
+    ],
     objective="val_loss",
     max_trials=3,
     overwrite=True,

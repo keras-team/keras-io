@@ -4,6 +4,7 @@ Author: [Aritra Roy Gosthipaty](https://twitter.com/ariG23498)
 Date created: 2022/01/22
 Last modified: 2022/01/22
 Description: Building a patch-convnet architecture and visualizing its attention maps.
+Accelerator: GPU
 """
 """
 ## Introduction
@@ -20,7 +21,7 @@ to help explain a classification decision. In the academic paper
 by Touvron et. al, the authors propose to set up an equivalent visualization for
 convnets. They propose to substitute the global average pooling layer
 of a convnet with a Transformer layer. The self-attention layer of the
-Transformer would produces attention maps that correspond to the
+Transformer would produce attention maps that correspond to the
 most attended patches of the image for the classification decision.
 
 In this example, we minimally implement the ideas of
@@ -31,7 +32,7 @@ minor modifications (to adjust the implementation with CIFAR10):
 - The simple design for the attention-based pooling layer, such that
     it explicitly provides the weights (importance) of the different
     patches.
-- The novel architecture of convnet called the **PatchConvNet** which
+- The novel architecture of convnet is called the **PatchConvNet** which
     deviates from the age old pyramidal architecture.
 """
 
@@ -439,7 +440,7 @@ class PatchConvNet(keras.Model):
         ]
         grads = tape.gradient(total_loss, train_vars)
         trainable_variable_list = []
-        for (grad, var) in zip(grads, train_vars):
+        for grad, var in zip(grads, train_vars):
             for g, v in zip(grad, var):
                 trainable_variable_list.append((g, v))
         self.optimizer.apply_gradients(trainable_variable_list)
@@ -524,7 +525,7 @@ class WarmUpCosine(keras.optimizers.schedules.LearningRateSchedule):
     def __init__(
         self, learning_rate_base, total_steps, warmup_learning_rate, warmup_steps
     ):
-        super(WarmUpCosine, self).__init__()
+        super().__init__()
         self.learning_rate_base = learning_rate_base
         self.total_steps = total_steps
         self.warmup_learning_rate = warmup_learning_rate

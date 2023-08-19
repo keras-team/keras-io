@@ -4,6 +4,7 @@ Author: [Ilias Chrysovergis](https://twitter.com/iliachry)
 Date created: 2021/06/24
 Last modified: 2021/06/24
 Description: Implementation of a Proximal Policy Optimization agent for the CartPole-v0 environment.
+Accelerator: NONE
 """
 
 """
@@ -161,7 +162,6 @@ def sample_action(observation):
 def train_policy(
     observation_buffer, action_buffer, logprobability_buffer, advantage_buffer
 ):
-
     with tf.GradientTape() as tape:  # Record operations for automatic differentiation.
         ratio = tf.exp(
             logprobabilities(actor(observation_buffer), action_buffer)

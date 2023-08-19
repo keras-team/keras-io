@@ -4,6 +4,7 @@ Authors: [Hazem Essam](https://twitter.com/hazemessamm) and [Santiago L. Valdarr
 Date created: 2021/03/25
 Last modified: 2021/03/25
 Description: Training a Siamese Network to compare the similarity of images using a triplet loss function.
+Accelerator: GPU
 """
 
 """
@@ -19,13 +20,13 @@ two of them will be similar (_anchor_ and _positive_ samples), and the third wil
 Our goal is for the model to learn to estimate the similarity between images.
 
 For the network to learn, we use a triplet loss function. You can find an introduction to triplet loss in the
-[FaceNet paper](https://arxiv.org/abs/1503.03832) by Schroff et al,. 2015. In this example, we define the triplet
+[FaceNet paper](https://arxiv.org/pdf/1503.03832.pdf) by Schroff et al,. 2015. In this example, we define the triplet
 loss function as follows:
 
 `L(A, P, N) = max(‖f(A) - f(P)‖² - ‖f(A) - f(N)‖² + margin, 0)`
 
 This example uses the [Totally Looks Like dataset](https://sites.google.com/view/totally-looks-like-dataset)
-by [Rosenfeld et al., 2018](https://arxiv.org/abs/1803.01485).
+by [Rosenfeld et al., 2018](https://arxiv.org/pdf/1803.01485v3.pdf).
 """
 
 """
@@ -280,7 +281,7 @@ class SiameseModel(Model):
     """
 
     def __init__(self, siamese_network, margin=0.5):
-        super(SiameseModel, self).__init__()
+        super().__init__()
         self.siamese_network = siamese_network
         self.margin = margin
         self.loss_tracker = metrics.Mean(name="loss")
@@ -412,9 +413,4 @@ gradients passed to the optimizer to update the model weights at every step. For
 [Intro to Keras for researchers](https://keras.io/getting_started/intro_to_keras_for_researchers/)
 and [Writing a training loop from scratch](https://www.tensorflow.org/guide/keras/writing_a_training_loop_from_scratch?hl=en).
 
-
-**Example available on HuggingFace**
-| Trained Model | Demo |
-| :--: | :--: |
-| [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Model-Siamese%20Network-black.svg)](https://huggingface.co/keras-io/siamese-contrastive) | [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Spaces-Siamese%20Network-black.svg)](https://huggingface.co/spaces/keras-io/siamese-contrastive) |
 """

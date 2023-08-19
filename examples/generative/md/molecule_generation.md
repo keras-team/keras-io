@@ -54,7 +54,7 @@ Alexander Kensert. Many of the functions used in the present example are from th
 ## Setup
 
 RDKit is an open source toolkit for cheminformatics and machine learning. This toolkit come in handy
-if one is into drug discovery domain. In this example, RDKit is used to conviently
+if one is into drug discovery domain. In this example, RDKit is used to conveniently
 and efficiently transform SMILES to molecule objects, and then from those obtain sets of atoms
 and bonds.
 
@@ -657,25 +657,25 @@ history = model.fit([adjacency_tensor, feature_tensor, qed_tensor], epochs=EPOCH
 <div class="k-default-codeblock">
 ```
 Epoch 1/10
-250/250 [==============================] - 10s 22ms/step - loss: 68956.5056
+250/250 [==============================] - 24s 84ms/step - loss: 68958.3946
 Epoch 2/10
-250/250 [==============================] - 5s 22ms/step - loss: 68858.0284
+250/250 [==============================] - 20s 79ms/step - loss: 68819.8421
 Epoch 3/10
-250/250 [==============================] - 6s 25ms/step - loss: 68816.3545
+250/250 [==============================] - 20s 79ms/step - loss: 68830.6720
 Epoch 4/10
-250/250 [==============================] - 5s 22ms/step - loss: 68823.8150
+250/250 [==============================] - 20s 79ms/step - loss: 68816.1486
 Epoch 5/10
-250/250 [==============================] - 5s 22ms/step - loss: 68814.6834
+250/250 [==============================] - 20s 79ms/step - loss: 68825.9977
 Epoch 6/10
-250/250 [==============================] - 5s 22ms/step - loss: 68809.4373
+250/250 [==============================] - 19s 78ms/step - loss: 68818.0771
 Epoch 7/10
-250/250 [==============================] - 5s 22ms/step - loss: 68811.7120
+250/250 [==============================] - 19s 77ms/step - loss: 68815.8525
 Epoch 8/10
-250/250 [==============================] - 5s 22ms/step - loss: 68815.0005
+250/250 [==============================] - 20s 78ms/step - loss: 68820.5459
 Epoch 9/10
-250/250 [==============================] - 5s 22ms/step - loss: 68812.8435
+250/250 [==============================] - 21s 83ms/step - loss: 68806.9465
 Epoch 10/10
-250/250 [==============================] - 5s 22ms/step - loss: 68806.4034
+250/250 [==============================] - 21s 84ms/step - loss: 68805.9879
 
 ```
 </div>
@@ -737,3 +737,9 @@ while the later paper considers SMILES inputs as graphs (a combination of adjace
 matrices and feature matrices) and seeks to generate molecules as graphs.
 
 This hybrid approach enables a new type of directed gradient-based search through chemical space.
+
+Example available on HuggingFace
+
+| Trained Model | Demo |
+| :--: | :--: |
+| [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Model-molecule%20generation%20with%20VAE-black.svg)](https://huggingface.co/keras-io/drug-molecule-generation-with-VAE) | [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Spaces-molecule%20generation%20with%20VAE-black.svg)](https://huggingface.co/spaces/keras-io/generating-drug-molecule-with-VAE) |

@@ -4,6 +4,7 @@ Author: [Sayak Paul](https://twitter.com/RisingSayak)
 Date created: 2021/05/28
 Last modified: 2021/06/05
 Description: Training a video classifier with transfer learning and a recurrent model on the UCF101 dataset.
+Accelerator: GPU
 """
 """
 This example demonstrates video classification, an important use-case with
@@ -222,12 +223,8 @@ def prepare_all_videos(df, root_dir):
                 )
             temp_frame_mask[i, :length] = 1  # 1 = not masked, 0 = masked
 
-        frame_features[
-            idx,
-        ] = temp_frame_features.squeeze()
-        frame_masks[
-            idx,
-        ] = temp_frame_mask.squeeze()
+        frame_features[idx,] = temp_frame_features.squeeze()
+        frame_masks[idx,] = temp_frame_mask.squeeze()
 
     return (frame_features, frame_masks), labels
 
@@ -249,6 +246,7 @@ executed.
 Now, we can feed this data to a sequence model consisting of recurrent layers like `GRU`.
 
 """
+
 
 # Utility for our sequence model.
 def get_sequence_model():

@@ -17,25 +17,12 @@ KerasTuner is an easy-to-use, scalable hyperparameter optimization framework tha
 
 [KerasNLP Documentation](/keras_nlp/) - [KerasNLP GitHub repository](https://github.com/keras-team/keras-nlp)
 
-KerasNLP is a simple and powerful API for building Natural Language
-Processing (NLP) models. KerasNLP provides modular building blocks following
-standard Keras interfaces (layers, metrics) that allow you to quickly and
-flexibly iterate on your task. Engineers working in applied NLP can leverage the
-library to assemble training and inference pipelines that are both
-state-of-the-art and production-grade. KerasNLP is maintained directly by the
-Keras team.
-
----
-
-## AutoKeras
-
-[AutoKeras Documentation](https://autokeras.com/) - [AutoKeras GitHub repository](https://github.com/keras-team/autokeras)
-
-AutoKeras is an AutoML system based on Keras. It is developed by [DATA Lab](http://faculty.cs.tamu.edu/xiahu/index.html) at Texas A&M University.
-The goal of AutoKeras is to make machine learning accessible for everyone. It provides high-level end-to-end APIs
-such as [`ImageClassifier`](https://autokeras.com/tutorial/image_classification/) or
-[`TextClassifier`](https://autokeras.com/tutorial/text_classification/) to solve machine learning problems in a few lines,
-as well as [flexible building blocks](https://autokeras.com/tutorial/customized/) to perform architecture search.
+KerasNLP is a natural language processing library that supports users through
+their entire development cycle. Our workflows are built from modular components 
+that have state-of-the-art preset weights and architectures when used 
+out-of-the-box and are easily customizable when more control is needed. We 
+emphasize in-graph computation for all workflows so that developers can expect 
+easy productionization using the TensorFlow ecosystem.
 
 ---
 
@@ -49,11 +36,23 @@ KerasCV can be understood as a horizontal extension of the Keras API: the compon
 
 ---
 
-## TensorFlow Cloud
+## AutoKeras
 
-Managed by the Keras team at Google, [TensorFlow Cloud](https://github.com/tensorflow/cloud) is a set of utilities to help you run large-scale
-Keras training jobs on GCP with very little configuration effort. Running your experiments on 8 or more GPUs in the cloud
-should be as easy as calling `model.fit()`.
+[AutoKeras Documentation](https://autokeras.com/) - [AutoKeras GitHub repository](https://github.com/keras-team/autokeras)
+
+AutoKeras is an AutoML system based on Keras. It is developed by [DATA Lab](http://faculty.cs.tamu.edu/xiahu/index.html) at Texas A&M University.
+The goal of AutoKeras is to make machine learning accessible for everyone. It provides high-level end-to-end APIs
+such as [`ImageClassifier`](https://autokeras.com/tutorial/image_classification/) or
+[`TextClassifier`](https://autokeras.com/tutorial/text_classification/) to solve machine learning problems in a few lines,
+as well as [flexible building blocks](https://autokeras.com/tutorial/customized/) to perform architecture search.
+
+```python
+import autokeras as ak
+
+clf = ak.ImageClassifier()
+clf.fit(x_train, y_train)
+results = clf.predict(x_test)
+```
 
 ---
 
@@ -73,12 +72,30 @@ Deploy your models on Android, iOS, or on embedded devices.
 
 ---
 
-## Model optimization toolkit
+## Model Optimization Toolkit
 
 The [TensorFlow Model Optimization Toolkit](https://www.tensorflow.org/model_optimization) is a set of utilities to make your inference models faster, more memory-efficient,
 and more power-efficient, by performing *post-training weight quantization* and *pruning-aware training*.
 It has native support for Keras models, and its pruning API is built directly on top on the Keras API.
 
+```python
+import tensorflow_model_optimization as tfmot
+
+# Define a Keras model.
+model = tf.keras.Sequential([...])
+
+# Define a training-time pruning schedule.
+pruning_schedule = tfmot.sparsity.keras.PolynomialDecay(
+                      initial_sparsity=0.0, final_sparsity=0.5,
+                      begin_step=2000, end_step=4000)
+
+# Convert your Keras model to a pruning-optimized model.
+model_for_pruning = tfmot.sparsity.keras.prune_low_magnitude(
+    model, pruning_schedule=pruning_schedule)
+
+# Fit the optimized model.
+model_for_pruning.fit(...)
+```
 
 ---
 
@@ -87,5 +104,66 @@ It has native support for Keras models, and its pruning API is built directly on
 TFX is an end-to-end platform for deploying and maintaining production machine learning pipelines.
 TFX has [native support for Keras models](https://www.tensorflow.org/tfx/guide/keras).
 
+---
+
+## TensorFlow Recommenders
+
+[TensorFlow Recommenders](https://www.tensorflow.org/recommenders) is a library for building recommender system models, built on Keras.
+It helps with the full workflow of building a recommender system: data preparation, model formulation, training, evaluation, and deployment.
+
+```python
+import tensorflow_recommenders as tfrs
+
+# Build flexible representation models with Keras.
+user_model = keras.Sequential([...])
+movie_model = keras.Sequential([...])
+
+# Define your objectives.
+task = tfrs.tasks.Retrieval(metrics=tfrs.metrics.FactorizedTopK(
+    movies.batch(128).map(movie_model)
+  )
+)
+
+# Create a retrieval model.
+model = MovielensModel(user_model, movie_model, task)
+model.compile(optimizer=keras.optimizers.Adagrad(0.5))
+
+# Train.
+model.fit(ratings.batch(4096), epochs=3)
+```
+
+---
+
+## TensorFlow Decision Forests
+
+TensorFlow Decision Forests is a library to train, run and interpret decision forest models
+(e.g., Random Forests, Gradient Boosted Trees) in TensorFlow and Keras.
+It supports classification, regression, ranking and uplifting.
+
+
+```python
+import tensorflow_decision_forests as tfdf
+
+# Train a Random Forest model.
+model = tfdf.keras.RandomForestModel()
+model.fit(training_dataset)
+
+# Summary of the model structure.
+model.summary()
+
+# Evaluate the model.
+model.evaluate(test_dataset)
+
+# Export the model to a SavedModel.
+model.save("project/model")
+```
+
+---
+
+## Model Remediation Toolkit
+
+The TensorFlow / Keras [Model Remediation Toolkit](https://www.tensorflow.org/responsible_ai/model_remediation)
+is a library of utilities for identifying and addressing fairness and bias issues in deep learning models,
+built on top of the Keras API.
 
 ---

@@ -8,7 +8,8 @@ h3,
 h4,
 h5,
 h6 {
-  font-family: 'Open Sans', sans-serif;  
+  font-family: 'Open Sans', sans-serif;
+  font-weight: bold;
 }
 
 header.masthead {
@@ -16,6 +17,11 @@ header.masthead {
   background-size: cover;
   padding-top: 8rem;
   padding-bottom: 8rem;
+}
+
+b {
+  font-weight: 400;
+  font-style: italic;
 }
 
 header.masthead .overlay {
@@ -127,7 +133,7 @@ a:hover {
 .logo {
   width: 28rem;
   max-width: 100%;
-  margin-bottom: 1rem;
+  margin-bottom: 2rem;
 }
 
 .smooth-black-bg {
@@ -145,7 +151,7 @@ a:hover {
 }
 
 .showcase .showcase-img {
-  min-height: 25rem;
+  min-height: 20rem;
   background-size: cover;
 }
 
@@ -161,8 +167,8 @@ a:hover {
 }
 
 .testimonials {
-  padding-top: 7rem;
-  padding-bottom: 7rem;
+  padding-top: 4rem;
+  padding-bottom: 4rem;
 }
 
 .testimonials .testimonial-item {
@@ -185,4 +191,19 @@ a:hover {
 .quote-name {
   font-size: 1.2rem;
   font-weight: bold;
+}
+
+.testimonial-item h5 {
+  margin-top: 1em;
+}
+
+footer {
+  float: left;
+  width: 100%;
+  padding: 1em;
+  border-top: solid 1px #bbb;
+}
+
+.bottom-border {
+  border-bottom: solid 0.7em black;
 }

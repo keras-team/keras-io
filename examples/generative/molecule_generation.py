@@ -4,6 +4,7 @@ Author: [Victor Basu](https://www.linkedin.com/in/victor-basu-520958147)
 Date created: 2022/03/10
 Last modified: 2022/03/24
 Description: Implementing a Convolutional Variational AutoEncoder (VAE) for Drug Discovery.
+Accelerator: GPU
 """
 """
 ## Introduction
@@ -50,7 +51,7 @@ Alexander Kensert. Many of the functions used in the present example are from th
 ## Setup
 
 RDKit is an open source toolkit for cheminformatics and machine learning. This toolkit come in handy
-if one is into drug discovery domain. In this example, RDKit is used to conviently
+if one is into drug discovery domain. In this example, RDKit is used to conveniently
 and efficiently transform SMILES to molecule objects, and then from those obtain sets of atoms
 and bonds.
 
@@ -186,7 +187,7 @@ def graph_to_molecule(graph):
     # Add bonds between atoms in molecule; based on the upper triangles
     # of the [symmetric] adjacency tensor
     (bonds_ij, atoms_i, atoms_j) = np.where(np.triu(adjacency) == 1)
-    for (bond_ij, atom_i, atom_j) in zip(bonds_ij, atoms_i, atoms_j):
+    for bond_ij, atom_i, atom_j in zip(bonds_ij, atoms_i, atoms_j):
         if atom_i == atom_j or bond_ij == BOND_DIM - 1:
             continue
         bond_type = bond_mapping[bond_ij]
@@ -439,7 +440,6 @@ class MoleculeGenerator(keras.Model):
     def _compute_loss(
         self, z_log_var, z_mean, qed_true, qed_pred, graph_real, graph_generated
     ):
-
         adjacency_real, features_real = graph_real
         adjacency_gen, features_gen = graph_generated
 
@@ -597,4 +597,10 @@ while the later paper considers SMILES inputs as graphs (a combination of adjace
 matrices and feature matrices) and seeks to generate molecules as graphs.
 
 This hybrid approach enables a new type of directed gradient-based search through chemical space.
+
+Example available on HuggingFace
+
+| Trained Model | Demo |
+| :--: | :--: |
+| [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Model-molecule%20generation%20with%20VAE-black.svg)](https://huggingface.co/keras-io/drug-molecule-generation-with-VAE) | [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Spaces-molecule%20generation%20with%20VAE-black.svg)](https://huggingface.co/spaces/keras-io/generating-drug-molecule-with-VAE) |
 """

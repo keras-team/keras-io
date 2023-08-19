@@ -4,6 +4,7 @@ Author: Gitesh Chawda
 Date created: 09/05/2022
 Last modified: 09/05/2022
 Description: Using Tensorflow Decision Forests for text classification.
+Accelerator: GPU
 """
 
 """
@@ -134,7 +135,7 @@ print(test_df["target"].value_counts())
 
 def create_dataset(dataframe):
     dataset = tf.data.Dataset.from_tensor_slices(
-        (df["text"].to_numpy(), df["target"].to_numpy())
+        (dataframe["text"].to_numpy(), dataframe["target"].to_numpy())
     )
     dataset = dataset.batch(100)
     dataset = dataset.prefetch(tf.data.AUTOTUNE)
@@ -209,6 +210,29 @@ model_2.compile(metrics=["Accuracy", "Recall", "Precision", "AUC"])
 # Here we do not specify epochs as, TF-DF trains exactly one epoch of the dataset
 model_2.fit(train_ds)
 
+"""
+Prints training logs of model_1
+"""
+
+logs_1 = model_1.make_inspector().training_logs()
+print(logs_1)
+
+"""
+Prints training logs of model_2
+"""
+
+logs_2 = model_2.make_inspector().training_logs()
+print(logs_2)
+
+"""
+The model.summary() method prints a variety of information about your decision tree model, including model type, task, input features, and feature importance.
+"""
+
+print("model_1 summary: ")
+print(model_1.summary())
+print()
+print("model_2 summary: ")
+print(model_2.summary())
 
 """
 ## Plotting training metrics
@@ -268,6 +292,6 @@ for index, row in test_df.iterrows():
 
 The TensorFlow Decision Forests package provides powerful models
 that work especially well with structured data. In our experiments,
-the Gradient Boosted Tree model with pretrained embeddings achieved 94%
-test accuracy while the plain Gradient Boosted Tree model had 57.31% accuracy.
+the Gradient Boosted Tree model with pretrained embeddings achieved 81.6%
+test accuracy while the plain Gradient Boosted Tree model had 54.4% accuracy.
 """

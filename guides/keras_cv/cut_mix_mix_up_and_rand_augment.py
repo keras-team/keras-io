@@ -1,9 +1,10 @@
 """
 Title: CutMix, MixUp, and RandAugment image augmentation with KerasCV
-Author: [lukewood](https://lukewood.xyz)
+Author: [lukewood](https://twitter.com/luke_wood_ml)
 Date created: 2022/04/08
 Last modified: 2022/04/08
 Description: Use KerasCV to augment images with CutMix, MixUp, RandAugment, and more.
+Accelerator: GPU
 """
 
 """
@@ -226,7 +227,7 @@ times. `RandAugment` can be thought of as a specific case of
 `RandomAugmentationPipeline` internally.
 
 In this example, we will create a custom `RandomAugmentationPipeline` by removing
-`RandomRotation` layers from the standard `RandAugment` policy, and substitutex a
+`RandomRotation` layers from the standard `RandAugment` policy, and substitute a
 `GridMask` layer in its place.
 """
 
@@ -328,8 +329,6 @@ test_dataset = test_dataset.map(preprocess_for_model, num_parallel_calls=AUTOTUN
 train_dataset = train_dataset.prefetch(AUTOTUNE)
 test_dataset = test_dataset.prefetch(AUTOTUNE)
 
-train_dataset = train_dataset
-test_dataset = test_dataset
 
 """
 Next we should create a the model itself. Notice that we use `label_smoothing=0.1` in
@@ -340,8 +339,8 @@ input_shape = IMAGE_SIZE + (3,)
 
 
 def get_model():
-    model = keras_cv.models.DenseNet121(
-        include_rescaling=True, include_top=True, classes=num_classes
+    model = keras_cv.models.ImageClassifier.from_preset(
+        "efficientnetv2_s", num_classes=num_classes
     )
     model.compile(
         loss=losses.CategoricalCrossentropy(label_smoothing=0.1),

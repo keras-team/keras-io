@@ -6,10 +6,9 @@ All of our examples are written as Jupyter notebooks and can be run in one click
 a hosted notebook environment that requires no setup and runs in the cloud. Google Colab includes GPU and TPU runtimes.
 
 
-{{toc}}
+{{examples_list}}
 
 
----
 
 ## Adding a new code example
 

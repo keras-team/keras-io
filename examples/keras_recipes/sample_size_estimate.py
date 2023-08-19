@@ -4,6 +4,7 @@ Author: [JacoVerster](https://twitter.com/JacoVerster)
 Date created: 2021/05/20
 Last modified: 2021/06/06
 Description: Modeling the relationship between training set size and model accuracy.
+Accelerator: GPU
 """
 
 """
@@ -71,6 +72,7 @@ class_names = ds_info.features["label"].names
 
 print(f"Number of classes: {num_classes}")
 print(f"Class names: {class_names}")
+
 
 # Convert datasets to NumPy arrays
 def dataset_to_array(dataset, image_size, num_classes):

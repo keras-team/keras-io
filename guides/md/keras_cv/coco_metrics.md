@@ -1,6 +1,6 @@
 # Using KerasCV COCO Metrics
 
-**Author:** [lukewood](https://lukewood.xyz)<br>
+**Author:** [lukewood](https://twitter.com/luke_wood_ml)<br>
 **Date created:** 2022/04/13<br>
 **Last modified:** 2022/04/13<br>
 **Description:** Use KerasCV COCO metrics to evaluate object detection models.
@@ -29,7 +29,7 @@ All KerasCV components that process bounding boxes, including COCO metrics, requ
 `bounding_box_format` parameter.  This parameter is used to tell the components what
 format your bounding boxes are in.  While this guide uses the `xyxy` format, a full
 list of supported formats is available in
-[the bounding_box API documentation](/api/keras_cv/bounding_box/formats).
+[the bounding_box API documentation](https://keras.io/api/keras_cv/bounding_box/formats/).
 
 The metrics expect `y_true` and be a `float` Tensor with the shape `[batch,
 num_images, num_boxes, 5]`, with the ordering of last set of axes determined by the

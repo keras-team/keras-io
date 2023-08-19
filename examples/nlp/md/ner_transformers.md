@@ -58,7 +58,7 @@ Let's start by defining a `TransformerBlock` layer:
 
 class TransformerBlock(layers.Layer):
     def __init__(self, embed_dim, num_heads, ff_dim, rate=0.1):
-        super(TransformerBlock, self).__init__()
+        super().__init__()
         self.att = keras.layers.MultiHeadAttention(
             num_heads=num_heads, key_dim=embed_dim
         )
@@ -90,7 +90,7 @@ Next, let's define a `TokenAndPositionEmbedding` layer:
 
 class TokenAndPositionEmbedding(layers.Layer):
     def __init__(self, maxlen, vocab_size, embed_dim):
-        super(TokenAndPositionEmbedding, self).__init__()
+        super().__init__()
         self.token_emb = keras.layers.Embedding(
             input_dim=vocab_size, output_dim=embed_dim
         )
@@ -115,7 +115,7 @@ class NERModel(keras.Model):
     def __init__(
         self, num_tags, vocab_size, maxlen=128, embed_dim=32, num_heads=2, ff_dim=32
     ):
-        super(NERModel, self).__init__()
+        super().__init__()
         self.embedding_layer = TokenAndPositionEmbedding(maxlen, vocab_size, embed_dim)
         self.transformer_block = TransformerBlock(embed_dim, num_heads, ff_dim)
         self.dropout1 = layers.Dropout(0.1)

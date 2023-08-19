@@ -47,6 +47,11 @@ then any model loaded from this repository will get built according to the Tenso
 | [EfficientNetV2S](efficientnet_v2/#efficientnetv2s-function) | 88 | 83.9% | 96.7% | 21.6M | - | - | - |
 | [EfficientNetV2M](efficientnet_v2/#efficientnetv2m-function) | 220 | 85.3% | 97.4% | 54.4M | - | - | - |
 | [EfficientNetV2L](efficientnet_v2/#efficientnetv2l-function) | 479 | 85.7% | 97.5% | 119.0M | - | - | - |
+| [ConvNeXtTiny](convnext/#convnexttiny-function) | 109.42 | 81.3% | - | 28.6M | - | - | - |
+| [ConvNeXtSmall](convnext/#convnextsmall-function) | 192.29 | 82.3% | - | 50.2M | - | - | - |
+| [ConvNeXtBase](convnext/#convnextbase-function) | 338.58 | 85.3% | - | 88.5M | - | - | - |
+| [ConvNeXtLarge](convnext/#convnextlarge-function) | 755.07 | 86.3% | - | 197.7M | - | - | - |
+| [ConvNeXtXLarge](convnext/#convnextxlarge-function) | 1310 | 86.7% | - | 350.1M | - | - | - |
 
 The top-1 and top-5 accuracy refers to the model's performance on the ImageNet validation dataset.
 

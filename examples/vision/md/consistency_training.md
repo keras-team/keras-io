@@ -300,14 +300,14 @@ For this part, we will borrow the `Distiller` class from [this Keras Example](ht
 # https://keras.io/examples/vision/knowledge_distillation/
 class SelfTrainer(tf.keras.Model):
     def __init__(self, student, teacher):
-        super(SelfTrainer, self).__init__()
+        super().__init__()
         self.student = student
         self.teacher = teacher
 
     def compile(
         self, optimizer, metrics, student_loss_fn, distillation_loss_fn, temperature=3,
     ):
-        super(SelfTrainer, self).compile(optimizer=optimizer, metrics=metrics)
+        super().compile(optimizer=optimizer, metrics=metrics)
         self.student_loss_fn = student_loss_fn
         self.distillation_loss_fn = distillation_loss_fn
         self.temperature = temperature

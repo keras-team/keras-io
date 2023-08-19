@@ -266,21 +266,11 @@ def process_input(img_path, captions):
 
 
 def make_dataset(images, captions):
-    if split == "train":
-        img_dataset = tf.data.Dataset.from_tensor_slices(images).map(
-            read_train_image, num_parallel_calls=AUTOTUNE
-        )
-    else:
-        img_dataset = tf.data.Dataset.from_tensor_slices(images).map(
-            read_valid_image, num_parallel_calls=AUTOTUNE
-        )
+    dataset = tf.data.Dataset.from_tensor_slices((images, captions))
+    dataset = dataset.shuffle(BATCH_SIZE * 8)
+    dataset = dataset.map(process_input, num_parallel_calls=AUTOTUNE)
+    dataset = dataset.batch(BATCH_SIZE).prefetch(AUTOTUNE)
 
-    cap_dataset = tf.data.Dataset.from_tensor_slices(captions).map(
-        vectorization, num_parallel_calls=AUTOTUNE
-    )
-
-    dataset = tf.data.Dataset.zip((img_dataset, cap_dataset))
-    dataset = dataset.batch(BATCH_SIZE).shuffle(256).prefetch(AUTOTUNE)
     return dataset
 
 
@@ -767,7 +757,7 @@ def generate_caption():
         )
         sampled_token_index = np.argmax(predictions[0, i, :])
         sampled_token = index_lookup[sampled_token_index]
-        if sampled_token == " <end>":
+        if sampled_token == "<end>":
             break
         decoded_caption += " " + sampled_token
 

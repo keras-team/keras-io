@@ -2,7 +2,7 @@
 
 **Author:** [Abheesht Sharma](https://github.com/abheesht17/)<br>
 **Date created:** 2022/06/01<br>
-**Last modified:** 2022/06/01<br>
+**Last modified:** 2022/12/21<br>
 **Description:** Text Classification on the IMDb Dataset using `keras_nlp.layers.FNetEncoder` layer.
 
 
@@ -54,12 +54,10 @@ Before we start with the implementation, let's import all the necessary packages
 
 ```python
 import keras_nlp
-import random
 import tensorflow as tf
 import os
 
 from tensorflow import keras
-from tensorflow_text.tools.wordpiece_vocab import bert_vocab_from_dataset as bert_vocab
 
 keras.utils.set_random_seed(42)
 ```
@@ -90,7 +88,7 @@ First, let's download the IMDB dataset and extract it.
 
 <div class="k-default-codeblock">
 ```
---2022-06-29 19:30:08--  http://ai.stanford.edu/~amaas/data/sentiment/aclImdb_v1.tar.gz
+--2022-12-22 21:05:11--  http://ai.stanford.edu/~amaas/data/sentiment/aclImdb_v1.tar.gz
 Resolving ai.stanford.edu (ai.stanford.edu)... 171.64.68.10
 Connecting to ai.stanford.edu (ai.stanford.edu)|171.64.68.10|:80... connected.
 HTTP request sent, awaiting response... 200 OK
@@ -101,13 +99,13 @@ Saving to: ‘aclImdb_v1.tar.gz’
     
 <div class="k-default-codeblock">
 ```
-aclImdb_v1.tar.gz   100%[===================>]  80.23M  68.4MB/s    in 1.2s    
+aclImdb_v1.tar.gz   100%[===================>]  80.23M  77.2MB/s    in 1.0s    
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-2022-06-29 19:30:09 (68.4 MB/s) - ‘aclImdb_v1.tar.gz’ saved [84125825/84125825]
+2022-12-22 21:05:12 (77.2 MB/s) - ‘aclImdb_v1.tar.gz’ saved [84125825/84125825]
 ```
 </div>
     
@@ -125,9 +123,9 @@ print(os.listdir("./aclImdb/test"))
 
 <div class="k-default-codeblock">
 ```
-['README', 'train', 'test', 'imdbEr.txt', 'imdb.vocab']
-['pos', 'urls_pos.txt', 'urls_unsup.txt', 'unsup', 'labeledBow.feat', 'urls_neg.txt', 'unsupBow.feat', 'neg']
-['pos', 'urls_pos.txt', 'labeledBow.feat', 'urls_neg.txt', 'neg']
+['test', 'README', 'imdbEr.txt', 'train', 'imdb.vocab']
+['pos', 'urls_neg.txt', 'urls_pos.txt', 'unsup', 'urls_unsup.txt', 'labeledBow.feat', 'neg', 'unsupBow.feat']
+['pos', 'urls_neg.txt', 'urls_pos.txt', 'labeledBow.feat', 'neg']
 
 ```
 </div>
@@ -182,6 +180,14 @@ val_ds = val_ds.map(lambda x, y: (tf.strings.lower(x), y))
 test_ds = test_ds.map(lambda x, y: (tf.strings.lower(x), y))
 ```
 
+<div class="k-default-codeblock">
+```
+WARNING:tensorflow:From /opt/conda/envs/myenv/lib/python3.9/site-packages/tensorflow/python/autograph/pyct/static_analysis/liveness.py:83: Analyzer.lamba_check (from tensorflow.python.autograph.pyct.static_analysis.liveness) is deprecated and will be removed after 2023-09-23.
+Instructions for updating:
+Lambda fuctions will be no more assumed to be used in the statement where they are used, or at least in the same block. https://github.com/tensorflow/tensorflow/issues/56089
+
+```
+</div>
 Let's print a few samples.
 
 
@@ -215,9 +221,9 @@ we have. The WordPiece tokenization algorithm is a subword tokenization algorith
 training it on a corpus gives us a vocabulary of subwords. A subword tokenizer
 is a compromise between word tokenizers (word tokenizers need very large
 vocabularies for good coverage of input words), and character tokenizers
-(characters don't really encode meaning like words do). Luckily, TensorFlow Text
-makes it very simple to train WordPiece on a corpus as described in
-[this guide](https://www.tensorflow.org/text/guide/subwords_tokenizer).
+(characters don't really encode meaning like words do). Luckily, KerasNLP
+makes it very simple to train WordPiece on a corpus with the 
+`keras_nlp.tokenizers.compute_word_piece_vocabulary` utility.
 
 Note: The official implementation of FNet uses the SentencePiece Tokenizer.
 
@@ -225,19 +231,11 @@ Note: The official implementation of FNet uses the SentencePiece Tokenizer.
 ```python
 
 def train_word_piece(ds, vocab_size, reserved_tokens):
-    bert_vocab_args = dict(
-        # The target vocabulary size
-        vocab_size=vocab_size,
-        # Reserved tokens that must be included in the vocabulary
-        reserved_tokens=reserved_tokens,
-        # Arguments for `text.BertTokenizer`
-        bert_tokenizer_params={"lower_case": True},
-    )
-
-    # Extract text samples (remove the labels).
     word_piece_ds = ds.unbatch().map(lambda x, y: x)
-    vocab = bert_vocab.bert_vocab_from_dataset(
-        word_piece_ds.batch(1000).prefetch(2), **bert_vocab_args
+    vocab = keras_nlp.tokenizers.compute_word_piece_vocabulary(
+        word_piece_ds.batch(1000).prefetch(2),
+        vocabulary_size=vocab_size,
+        reserved_tokens=reserved_tokens,
     )
     return vocab
 
@@ -265,7 +263,7 @@ print("Tokens: ", vocab[100:110])
 
 <div class="k-default-codeblock">
 ```
-Tokens:  ['in', 'this', 'that', 'was', 'as', 'for', 'movie', 'with', 'but', 'film']
+Tokens:  ['à', 'á', 'â', 'ã', 'ä', 'å', 'æ', 'ç', 'è', 'é']
 
 ```
 </div>
@@ -302,26 +300,26 @@ print("Recovered text after detokenizing: ", tokenizer.detokenize(input_tokens_e
 ```
 Sentence:  tf.Tensor(b'this picture seemed way to slanted, it\'s almost as bad as the drum beating of the right wing kooks who say everything is rosy in iraq. it paints a picture so unredeemable that i can\'t help but wonder about it\'s legitimacy and bias. also it seemed to meander from being about the murderous carnage of our troops to the lack of health care in the states for ptsd. to me the subject matter seemed confused, it only cared about portraying the military in a bad light, as a) an organzation that uses mind control to turn ordinary peace loving civilians into baby killers and b) an organization that once having used and spent the bodies of it\'s soldiers then discards them to the despotic bureacracy of the v.a. this is a legitimate argument, but felt off topic for me, almost like a movie in and of itself. i felt that "the war tapes" and "blood of my brother" were much more fair and let the viewer draw some conclusions of their own rather than be beaten over the head with the film makers viewpoint. f-', shape=(), dtype=string)
 Tokens:  tf.Tensor(
-[  101   532   564   184    96    58 13296    13    99     8    58   316
-   104   165   104    93  9712  3634    95    93   300  3231    50 12058
-   120   125   225   380    97    57  2058   250   100  5075    15    99
-  7850    40   532   126  2929  2418  2300 10410   102    48   140     8
-    59   434   108   689   133    99     8    58  4016  8028 13308    94
-  8514    15   170    99   564    96   482  2089   127   203   133    93
-  4679  7293    95   351  4939    96    93   667    95  3916   553   100
-    93  1801   105    55  1136   244    15    96   159    93   965   642
-   564  1658    13    99   153  3935   133  2473    93  1398   100    40
-   165   732    13   104    40    10   124 14151 13368   102  1217   426
-  1255    96   560  2074  2798  1830  9944   173   962  2276    94    41
-    10   124  8426   102   378   355   436    94  1169    93  2498    95
-    99     8    58  1445   183  4276 10675   185    96    93  6266  8489
-   809    41  2172  6501 10725    95    93    61    15    40    15   101
-    97    40  7699  4073    13   108   525   216  3251   105   159    13
-   316   128    40   106   100    94    95   516    15    48   525   102
-     3    93   422  6152     3    94     3   621    95   149   662     3
-   160   163   141  1404    94   373    93   599  2689   138  8377    95
-   155   298   341   162   117  3877   209    93   522   107    93   109
-  1293  8797    15    45    14     0     0     0     0     0     0     0
+[  145   576   608   228   140    58 13343    13   143     8    58   360
+   148   209   148   137  9759  3681   139   137   344  3276    50 12092
+   164   169   269   424   141    57  2093   292   144  5115    15   143
+  7890    40   576   170  2970  2459  2412 10452   146    48   184     8
+    59   478   152   733   177   143     8    58  4060  8069 13355   138
+  8557    15   214   143   608   140   526  2121   171   247   177   137
+  4726  7336   139   395  4985   140   137   711   139  3959   597   144
+   137  1844   149    55  1175   288    15   140   203   137  1009   686
+   608  1701    13   143   197  3979   177  2514   137  1442   144    40
+   209   776    13   148    40    10   168 14198 13928   146  1260   470
+  1300   140   604  2118  2836  1873  9991   217  1006  2318   138    41
+    10   168  8469   146   422   400   480   138  1213   137  2541   139
+   143     8    58  1487   227  4319 10720   229   140   137  6310  8532
+   862    41  2215  6547 10768   139   137    61    15    40    15   145
+   141    40  7738  4120    13   152   569   260  3297   149   203    13
+   360   172    40   150   144   138   139   561    15    48   569   146
+     3   137   466  6192     3   138     3   665   139   193   707     3
+   204   207   185  1447   138   417   137   643  2731   182  8421   139
+   199   342   385   206   161  3920   253   137   566   151   137   153
+  1340  8845    15    45    14     0     0     0     0     0     0     0
      0     0     0     0     0     0     0     0     0     0     0     0
      0     0     0     0     0     0     0     0     0     0     0     0
      0     0     0     0     0     0     0     0     0     0     0     0
@@ -463,18 +461,18 @@ Trainable params: 2,382,337
 Non-trainable params: 0
 _________________________________________________________________
 Epoch 1/3
-313/313 [==============================] - 32s 79ms/step - loss: 0.5901 - accuracy: 0.6362 - val_loss: 0.3532 - val_accuracy: 0.8418
+313/313 [==============================] - 61s 166ms/step - loss: 0.5869 - accuracy: 0.6413 - val_loss: 0.3902 - val_accuracy: 0.8250
 Epoch 2/3
-313/313 [==============================] - 23s 74ms/step - loss: 0.3087 - accuracy: 0.8701 - val_loss: 0.3383 - val_accuracy: 0.8550
+313/313 [==============================] - 9s 29ms/step - loss: 0.3223 - accuracy: 0.8643 - val_loss: 0.3706 - val_accuracy: 0.8388
 Epoch 3/3
-313/313 [==============================] - 23s 74ms/step - loss: 0.2009 - accuracy: 0.9212 - val_loss: 0.3527 - val_accuracy: 0.8574
+313/313 [==============================] - 9s 29ms/step - loss: 0.2133 - accuracy: 0.9179 - val_loss: 0.3910 - val_accuracy: 0.8470
 
-<keras.callbacks.History at 0x7f197eed2990>
+<keras.callbacks.History at 0x7f0b2c5b2fd0>
 
 ```
 </div>
 We obtain a train accuracy of around 92% and a validation accuracy of around
-83%. Moreover, for 3 epochs, it takes around 86 seconds to train the model
+85%. Moreover, for 3 epochs, it takes around 86 seconds to train the model
 (on Colab with a 16 GB Tesla T4 GPU).
 
 Let's calculate the test accuracy.
@@ -487,9 +485,9 @@ fnet_classifier.evaluate(test_ds, batch_size=BATCH_SIZE)
 
 <div class="k-default-codeblock">
 ```
-391/391 [==============================] - 16s 26ms/step - loss: 0.3792 - accuracy: 0.8434
+391/391 [==============================] - 7s 11ms/step - loss: 0.4108 - accuracy: 0.8330
 
-[0.3792116940021515, 0.8434000015258789]
+[0.4108137786388397, 0.8330000042915344]
 
 ```
 </div>
@@ -576,18 +574,18 @@ Trainable params: 2,580,481
 Non-trainable params: 0
 _________________________________________________________________
 Epoch 1/3
-313/313 [==============================] - 49s 147ms/step - loss: 0.4569 - accuracy: 0.7594 - val_loss: 0.3014 - val_accuracy: 0.8764
+313/313 [==============================] - 45s 116ms/step - loss: 0.4674 - accuracy: 0.7582 - val_loss: 0.2843 - val_accuracy: 0.8818
 Epoch 2/3
-313/313 [==============================] - 45s 145ms/step - loss: 0.2104 - accuracy: 0.9197 - val_loss: 0.3203 - val_accuracy: 0.8754
+313/313 [==============================] - 16s 51ms/step - loss: 0.2163 - accuracy: 0.9166 - val_loss: 0.3070 - val_accuracy: 0.8832
 Epoch 3/3
-313/313 [==============================] - 45s 145ms/step - loss: 0.1654 - accuracy: 0.9387 - val_loss: 0.4010 - val_accuracy: 0.8750
+313/313 [==============================] - 16s 51ms/step - loss: 0.1670 - accuracy: 0.9357 - val_loss: 0.4024 - val_accuracy: 0.8732
 
-<keras.callbacks.History at 0x7f197eedca10>
+<keras.callbacks.History at 0x7f0b2c281040>
 
 ```
 </div>
-We obtain a train accuracy of around 93% and a validation accuracy of around
-87%. It takes around 146 seconds to train the model (on Colab with a 16 GB Tesla
+We obtain a train accuracy of around 94% and a validation accuracy of around
+86.5%. It takes around 146 seconds to train the model (on Colab with a 16 GB Tesla
 T4 GPU).
 
 Let's calculate the test accuracy.
@@ -599,20 +597,20 @@ transformer_classifier.evaluate(test_ds, batch_size=BATCH_SIZE)
 
 <div class="k-default-codeblock">
 ```
-391/391 [==============================] - 21s 55ms/step - loss: 0.4929 - accuracy: 0.8472
+391/391 [==============================] - 8s 20ms/step - loss: 0.4966 - accuracy: 0.8455
 
-[0.4929230809211731, 0.8472399711608887]
+[0.49655842781066895, 0.84552001953125]
 
 ```
 </div>
 Let's make a table and compare the two models. We can see that FNet
 significantly speeds up our run time (1.7x), with only a small sacrifice in
-overall accuracy (drop of 3%).
+overall accuracy (drop of 0.75%).
 
 |                         | **FNet Classifier** | **Transformer Classifier** |
 |:-----------------------:|:-------------------:|:--------------------------:|
-|    **Training Time**    |       86 seconds    |         146 seconds        |
-|    **Train Accuracy**   |        91.54%       |           92.98%           |
-| **Validation Accuracy** |        82.98%       |           87.26%           |
-|    **Test Accuracy**    |        81.44%       |           84.31%           |
-|       **#Params**       |       2,321,921     |          2,520,065         |
+|    **Training Time**    |      86 seconds     |         146 seconds        |
+|    **Train Accuracy**   |        92.34%       |           93.85%           |
+| **Validation Accuracy** |        85.21%       |           86.42%           |
+|    **Test Accuracy**    |        83.94%       |           84.69%           |
+|       **#Params**       |      2,321,921      |          2,520,065         |

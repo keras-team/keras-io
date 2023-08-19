@@ -2,7 +2,7 @@
 
 **Author:** Mehdi<br>
 **Date created:** 2021/05/06<br>
-**Last modified:** 2021/05/06<br>
+**Last modified:** 2022/09/10<br>
 **Description:** Similarity learning using a siamese network trained with a contrastive loss.
 
 
@@ -42,7 +42,7 @@ import matplotlib.pyplot as plt
 ```python
 epochs = 10
 batch_size = 16
-margin = 1  # Margin for constrastive loss.
+margin = 1  # Margin for contrastive loss.
 ```
 
 ---
@@ -61,8 +61,8 @@ x_test = x_test.astype("float32")
 <div class="k-default-codeblock">
 ```
 Downloading data from https://storage.googleapis.com/tensorflow/tf-keras-datasets/mnist.npz
-11493376/11490434 [==============================] - 0s 0us/step
-11501568/11490434 [==============================] - 0s 0us/step
+11493376/11490434 [==============================] - 1s 0us/step
+11501568/11490434 [==============================] - 1s 0us/step
 
 ```
 </div>
@@ -121,7 +121,7 @@ def make_pairs(x, y):
         x2 = x[idx2]
 
         pairs += [[x1, x2]]
-        labels += [1]
+        labels += [0]
 
         # add a non-matching example
         label2 = random.randint(0, num_classes - 1)
@@ -132,7 +132,7 @@ def make_pairs(x, y):
         x2 = x[idx2]
 
         pairs += [[x1, x2]]
-        labels += [0]
+        labels += [1]
 
     return np.array(pairs), np.array(labels).astype("float32")
 
@@ -293,7 +293,7 @@ visualize(pairs_test[:-1], labels_test[:-1], to_show=4, num_col=4)
 ---
 ## Define the model
 
-There are be two input layers, each leading to its own network, which
+There are two input layers, each leading to its own network, which
 produces embeddings. A `Lambda` layer then merges them using an
 [Euclidean distance](https://en.wikipedia.org/wiki/Euclidean_distance) and the
 merged output is fed to the final network.
@@ -348,26 +348,26 @@ siamese = keras.Model(inputs=[input_1, input_2], outputs=output_layer)
 ```
 
 ---
-## Define the constrastive Loss
+## Define the contrastive Loss
 
 
 ```python
 
 def loss(margin=1):
-    """Provides 'constrastive_loss' an enclosing scope with variable 'margin'.
+    """Provides 'contrastive_loss' an enclosing scope with variable 'margin'.
 
     Arguments:
         margin: Integer, defines the baseline for distance for which pairs
                 should be classified as dissimilar. - (default is 1).
 
     Returns:
-        'constrastive_loss' function with data ('margin') attached.
+        'contrastive_loss' function with data ('margin') attached.
     """
 
     # Contrastive loss = mean( (1-true_value) * square(prediction) +
     #                         true_value * square( max(margin-prediction, 0) ))
     def contrastive_loss(y_true, y_pred):
-        """Calculates the constrastive loss.
+        """Calculates the contrastive loss.
 
         Arguments:
             y_true: List of labels, each label is of type float32.
@@ -375,7 +375,7 @@ def loss(margin=1):
                     each label is of type float32.
 
         Returns:
-            A tensor containing constrastive loss as floating point value.
+            A tensor containing contrastive loss as floating point value.
         """
 
         square_pred = tf.math.square(y_pred)
@@ -444,25 +444,25 @@ history = siamese.fit(
 <div class="k-default-codeblock">
 ```
 Epoch 1/10
-3750/3750 [==============================] - 28s 7ms/step - loss: 0.0918 - accuracy: 0.8755 - val_loss: 0.0374 - val_accuracy: 0.9513
+3750/3750 [==============================] - 32s 8ms/step - loss: 0.0889 - accuracy: 0.8784 - val_loss: 0.0369 - val_accuracy: 0.9520
 Epoch 2/10
-3750/3750 [==============================] - 24s 6ms/step - loss: 0.0510 - accuracy: 0.9331 - val_loss: 0.0242 - val_accuracy: 0.9686
+3750/3750 [==============================] - 34s 9ms/step - loss: 0.0522 - accuracy: 0.9308 - val_loss: 0.0299 - val_accuracy: 0.9610
 Epoch 3/10
-3750/3750 [==============================] - 24s 6ms/step - loss: 0.0417 - accuracy: 0.9457 - val_loss: 0.0196 - val_accuracy: 0.9744
+3750/3750 [==============================] - 33s 9ms/step - loss: 0.0447 - accuracy: 0.9406 - val_loss: 0.0234 - val_accuracy: 0.9700
 Epoch 4/10
-3750/3750 [==============================] - 24s 6ms/step - loss: 0.0376 - accuracy: 0.9508 - val_loss: 0.0173 - val_accuracy: 0.9778
+3750/3750 [==============================] - 34s 9ms/step - loss: 0.0388 - accuracy: 0.9496 - val_loss: 0.0216 - val_accuracy: 0.9719
 Epoch 5/10
-3750/3750 [==============================] - 24s 6ms/step - loss: 0.0355 - accuracy: 0.9538 - val_loss: 0.0176 - val_accuracy: 0.9770
+3750/3750 [==============================] - 31s 8ms/step - loss: 0.0372 - accuracy: 0.9517 - val_loss: 0.0178 - val_accuracy: 0.9768
 Epoch 6/10
-3750/3750 [==============================] - 25s 7ms/step - loss: 0.0318 - accuracy: 0.9590 - val_loss: 0.0174 - val_accuracy: 0.9772
+3750/3750 [==============================] - 33s 9ms/step - loss: 0.0331 - accuracy: 0.9572 - val_loss: 0.0186 - val_accuracy: 0.9761
 Epoch 7/10
-3750/3750 [==============================] - 25s 7ms/step - loss: 0.0310 - accuracy: 0.9602 - val_loss: 0.0151 - val_accuracy: 0.9807
+3750/3750 [==============================] - 34s 9ms/step - loss: 0.0322 - accuracy: 0.9584 - val_loss: 0.0185 - val_accuracy: 0.9766
 Epoch 8/10
-3750/3750 [==============================] - 24s 6ms/step - loss: 0.0303 - accuracy: 0.9602 - val_loss: 0.0147 - val_accuracy: 0.9808
+3750/3750 [==============================] - 35s 9ms/step - loss: 0.0309 - accuracy: 0.9598 - val_loss: 0.0167 - val_accuracy: 0.9786
 Epoch 9/10
-3750/3750 [==============================] - 24s 6ms/step - loss: 0.0293 - accuracy: 0.9622 - val_loss: 0.0137 - val_accuracy: 0.9824
+3750/3750 [==============================] - 34s 9ms/step - loss: 0.0304 - accuracy: 0.9604 - val_loss: 0.0152 - val_accuracy: 0.9804
 Epoch 10/10
-3750/3750 [==============================] - 24s 6ms/step - loss: 0.0292 - accuracy: 0.9627 - val_loss: 0.0145 - val_accuracy: 0.9813
+3750/3750 [==============================] - 31s 8ms/step - loss: 0.0304 - accuracy: 0.9607 - val_loss: 0.0146 - val_accuracy: 0.9815
 
 ```
 </div>
@@ -497,8 +497,8 @@ def plt_metric(history, metric, title, has_valid=True):
 # Plot the accuracy
 plt_metric(history=history.history, metric="accuracy", title="Model accuracy")
 
-# Plot the constrastive loss
-plt_metric(history=history.history, metric="loss", title="Constrastive Loss")
+# Plot the contrastive loss
+plt_metric(history=history.history, metric="loss", title="Contrastive Loss")
 ```
 
 
@@ -524,8 +524,8 @@ print("test loss, test acc:", results)
 
 <div class="k-default-codeblock">
 ```
-625/625 [==============================] - 1s 2ms/step - loss: 0.0126 - accuracy: 0.9835
-test loss, test acc: [0.012602493166923523, 0.9835000038146973]
+625/625 [==============================] - 2s 3ms/step - loss: 0.0132 - accuracy: 0.9830
+test loss, test acc: [0.013175321742892265, 0.9830499887466431]
 
 ```
 </div>

@@ -4,6 +4,7 @@ Author: [fchollet](https://twitter.com/fchollet)
 Date created: 2020/05/03
 Last modified: 2020/05/03
 Description: Convolutional Variational AutoEncoder (VAE) trained on MNIST digits.
+Accelerator: GPU
 """
 
 """
@@ -27,7 +28,7 @@ class Sampling(layers.Layer):
         z_mean, z_log_var = inputs
         batch = tf.shape(z_mean)[0]
         dim = tf.shape(z_mean)[1]
-        epsilon = tf.keras.backend.random_normal(shape=(batch, dim))
+        epsilon = tf.random.normal(shape=(batch, dim))
         return z_mean + tf.exp(0.5 * z_log_var) * epsilon
 
 
@@ -68,7 +69,7 @@ decoder.summary()
 
 class VAE(keras.Model):
     def __init__(self, encoder, decoder, **kwargs):
-        super(VAE, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.encoder = encoder
         self.decoder = decoder
         self.total_loss_tracker = keras.metrics.Mean(name="total_loss")
@@ -129,7 +130,7 @@ import matplotlib.pyplot as plt
 
 
 def plot_latent_space(vae, n=30, figsize=15):
-    # display a n*n 2D manifold of digits
+    # display an n*n 2D manifold of digits
     digit_size = 28
     scale = 1.0
     figure = np.zeros((digit_size * n, digit_size * n))
@@ -171,7 +172,7 @@ plot_latent_space(vae)
 
 def plot_label_clusters(vae, data, labels):
     # display a 2D plot of the digit classes in the latent space
-    z_mean, _, _ = vae.encoder.predict(data)
+    z_mean, _, _ = vae.encoder.predict(data, verbose=0)
     plt.figure(figsize=(12, 10))
     plt.scatter(z_mean[:, 0], z_mean[:, 1], c=labels)
     plt.colorbar()

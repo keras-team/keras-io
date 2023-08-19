@@ -4,6 +4,7 @@ Author: [Mohamad Merchant](https://twitter.com/mohmadmerchant1)
 Date created: 2020/08/15
 Last modified: 2020/08/29
 Description: Natural Language Inference by fine-tuning BERT model on SNLI Corpus.
+Accelerator: GPU
 """
 """
 ## Introduction
@@ -241,7 +242,7 @@ with strategy.scope():
     # Freeze the BERT model to reuse the pretrained features without modifying them.
     bert_model.trainable = False
 
-    bert_output = bert_model(
+    bert_output = bert_model.bert(
         input_ids, attention_mask=attention_masks, token_type_ids=token_type_ids
     )
     sequence_output = bert_output.last_hidden_state
@@ -385,3 +386,11 @@ Check results on some example sentence pairs
 sentence1 = "A soccer game with multiple males playing"
 sentence2 = "Some men are playing a sport"
 check_similarity(sentence1, sentence2)
+
+"""
+Example available on HuggingFace
+
+| Trained Model | Demo |
+| :--: | :--: |
+| [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Model-semantic%20similarity%20with%20bert-black.svg)](https://huggingface.co/keras-io/bert-semantic-similarity) | [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Spaces-semantic%20similarity%20with%20bert-black.svg)](https://huggingface.co/spaces/keras-io/bert-semantic-similarity) |
+"""

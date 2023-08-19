@@ -4,6 +4,7 @@ Author: [A_K_Nain](https://twitter.com/A_K_Nain)
 Date created: 2020/06/14
 Last modified: 2020/06/26
 Description: How to implement an OCR model using CNNs, RNNs and CTC loss.
+Accelerator: GPU
 """
 
 """
@@ -300,6 +301,7 @@ prediction_model = keras.models.Model(
     model.get_layer(name="image").input, model.get_layer(name="dense2").output
 )
 prediction_model.summary()
+
 
 # A utility function to decode the output of the network
 def decode_batch_predictions(pred):

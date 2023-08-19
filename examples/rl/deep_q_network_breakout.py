@@ -4,6 +4,7 @@ Author: [Jacob Chapman](https://twitter.com/jacoblchapman) and [Mathias Lechner]
 Date created: 2020/05/23
 Last modified: 2020/06/17
 Description: Play Atari Breakout with a Deep Q-Network.
+Accelerator: NONE
 """
 """
 ## Introduction
@@ -200,7 +201,6 @@ while True:  # Run until solved
 
         # Update every fourth frame and once batch size is over 32
         if frame_count % update_after_actions == 0 and len(done_history) > batch_size:
-
             # Get indices of samples for replay buffers
             indices = np.random.choice(range(len(done_history)), size=batch_size)
 

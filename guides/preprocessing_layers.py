@@ -4,6 +4,7 @@ Authors: Francois Chollet, Mark Omernick
 Date created: 2020/07/25
 Last modified: 2021/04/23
 Description: Overview of how to leverage preprocessing layers to create end-to-end models.
+Accelerator: GPU
 """
 """
 ## Keras preprocessing
@@ -28,7 +29,7 @@ handle feature normalization or feature value indexing on their own.
 
 ### Numerical features preprocessing
 
-- `tf.keras.layers.Normalization`: performs feature-wise normalize of
+- `tf.keras.layers.Normalization`: performs feature-wise normalization of
   input features.
 - `tf.keras.layers.Discretization`: turns continuous numerical features
   into integer categorical features.
@@ -52,7 +53,7 @@ These layers are for standardizing the inputs of an image model.
 
 - `tf.keras.layers.Resizing`: resizes a batch of images to a target size.
 - `tf.keras.layers.Rescaling`: rescales and offsets the values of a batch of
-  image (e.g. go from inputs in the `[0, 255]` range to inputs in the `[0, 1]`
+  images (e.g. go from inputs in the `[0, 255]` range to inputs in the `[0, 1]`
   range.
 - `tf.keras.layers.CenterCrop`: returns a center crop of a batch of images.
 
@@ -66,8 +67,6 @@ are only active during training.
 - `tf.keras.layers.RandomTranslation`
 - `tf.keras.layers.RandomRotation`
 - `tf.keras.layers.RandomZoom`
-- `tf.keras.layers.RandomHeight`
-- `tf.keras.layers.RandomWidth`
 - `tf.keras.layers.RandomContrast`
 
 """
@@ -95,7 +94,8 @@ You set the state of a preprocessing layer by exposing it to training data, via 
 
 import numpy as np
 import tensorflow as tf
-from tensorflow.keras import layers
+import keras
+from keras import layers
 
 data = np.array(
     [
@@ -196,7 +196,7 @@ you should put the `TextVectorization` layer in the `tf.data` pipeline to get th
 
 **When running on a TPU, you should always place preprocessing layers in the `tf.data` pipeline**
 (with the exception of `Normalization` and `Rescaling`, which run fine on a TPU and are commonly
-used as the first layer is an image model).
+used as the first layer in an image model).
 """
 
 """

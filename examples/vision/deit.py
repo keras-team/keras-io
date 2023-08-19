@@ -4,6 +4,7 @@ Author: [Sayak Paul](https://twitter.com/RisingSayak)
 Date created: 2022/04/05
 Last modified: 2022/04/08
 Description: Distillation of Vision Transformers through attention.
+Accelerator: GPU
 """
 """
 ## Introduction
@@ -152,6 +153,7 @@ First, we'll implement a layer for Stochastic Depth
 which is used in DeiT for regularization.
 """
 
+
 # Referred from: github.com:rwightman/pytorch-image-models.
 class StochasticDepth(layers.Layer):
     def __init__(self, drop_prop, **kwargs):
@@ -177,7 +179,7 @@ def mlp(x, dropout_rate: float, hidden_units: List):
     """FFN for a Transformer block."""
     # Iterate over the hidden units and
     # add Dense => Dropout.
-    for (idx, units) in enumerate(hidden_units):
+    for idx, units in enumerate(hidden_units):
         x = layers.Dense(
             units,
             activation=tf.nn.gelu if idx == 0 else None,
@@ -605,4 +607,11 @@ who implemented some portions of the `ViTClassifier` in another project.
 * [Google Developers Experts](https://developers.google.com/programs/experts/)
 program for supporting me with GCP credits which were used to run experiments for this
 example.
+
+Example available on HuggingFace:
+
+| Trained Model | Demo |
+| :--: | :--: |
+| [![Generic badge](https://img.shields.io/badge/🤗%20Model-DEIT-black.svg)](https://huggingface.co/keras-io/deit) | [![Generic badge](https://img.shields.io/badge/🤗%20Spaces-DEIT-black.svg)](https://huggingface.co/spaces/keras-io/deit/) |
+
 """

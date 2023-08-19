@@ -4,6 +4,7 @@ Author: [Sayak Paul](https://twitter.com/RisingSayak)
 Date created: 2021/04/13
 Last modified: 2021/04/19
 Description: Training with consistency regularization for robustness against data distribution shifts.
+Accelerator: GPU
 """
 """
 Deep learning models excel in many image recognition tasks when the data is independent
@@ -249,11 +250,12 @@ print(f"Test accuracy: {acc*100}%")
 For this part, we will borrow the `Distiller` class from [this Keras Example](https://keras.io/examples/vision/knowledge_distillation/).
 """
 
+
 # Majority of the code is taken from:
 # https://keras.io/examples/vision/knowledge_distillation/
 class SelfTrainer(tf.keras.Model):
     def __init__(self, student, teacher):
-        super(SelfTrainer, self).__init__()
+        super().__init__()
         self.student = student
         self.teacher = teacher
 
@@ -265,7 +267,7 @@ class SelfTrainer(tf.keras.Model):
         distillation_loss_fn,
         temperature=3,
     ):
-        super(SelfTrainer, self).compile(optimizer=optimizer, metrics=metrics)
+        super().compile(optimizer=optimizer, metrics=metrics)
         self.student_loss_fn = student_loss_fn
         self.distillation_loss_fn = distillation_loss_fn
         self.temperature = temperature
