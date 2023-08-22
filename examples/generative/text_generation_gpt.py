@@ -45,11 +45,12 @@ This example requires KerasNLP. You can install it via the following command:
 """
 
 import os
-import keras_nlp
-import tensorflow as tf
-import keras_core as keras
-
 os.environ["KERAS_BACKEND"] = "tensorflow"  # or "jax" or "torch"
+
+import keras_nlp
+import keras_core as keras
+import tensorflow as tf
+
 
 """
 ## Settings & hyperparameters
