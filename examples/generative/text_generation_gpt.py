@@ -210,15 +210,6 @@ perplexity = keras_nlp.metrics.Perplexity(from_logits=True, mask_token_id=0)
 model.compile(optimizer="adam", loss=loss_fn, metrics=[perplexity])
 
 """
-Let's take a look at our model summary - a large majority of the
-parameters are in the `token_and_position_embedding` and the output `dense` layer!
-This means that the vocabulary size (`VOCAB_SIZE`) has a large effect on the size of the model,
-while the number of Transformer decoder layers (`NUM_LAYERS`) doesn't affect it as much.
-"""
-
-model.summary()
-
-"""
 ## Training
 
 Now that we have our model, let's train it with the `fit()` method.
