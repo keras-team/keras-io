@@ -33,10 +33,6 @@ Segmentation](https://arxiv.org/abs/1802.02611)<br>
 Segmentation](https://arxiv.org/abs/1706.05587)<br>
 [SegFormer: Simple and Efficient Design for Semantic Segmentation with
 Transformers](https://arxiv.org/abs/2105.15203)
-
-
-
-
 """
 
 """
