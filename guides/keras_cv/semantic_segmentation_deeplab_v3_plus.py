@@ -30,9 +30,7 @@ state-of-the-art results on a variety of image segmentation benchmarks.
 [Encoder-Decoder with Atrous Separable Convolution for Semantic Image
 Segmentation](https://arxiv.org/abs/1802.02611)<br>
 [Rethinking Atrous Convolution for Semantic Image
-Segmentation](https://arxiv.org/abs/1706.05587)<br>
-[SegFormer: Simple and Efficient Design for Semantic Segmentation with
-Transformers](https://arxiv.org/abs/2105.15203)
+Segmentation](https://arxiv.org/abs/1706.05587)
 """
 
 """
