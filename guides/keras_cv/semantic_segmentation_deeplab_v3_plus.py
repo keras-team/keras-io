@@ -1,8 +1,8 @@
 """
-Title: Image Semantic Segmentation with DeepLabV3Plus
-Author: Ian Stenbit, Divyashree Sreepathihalli
+Title: Semantic Segmentation with KerasCV
+Author: Divyashree Sreepathihalli, Ian Stenbit
 Date created: 2023/08/22
-Last modified: 2023/08/23
+Last modified: 2023/08/24
 Description: Train and use DeepLabV3Plus segmentation model with KerasCV.
 Accelerator: GPU
 """
@@ -19,7 +19,7 @@ regions that correspond to different object classes or categories.
 
 
 
-KerasCV offers Deeplabv3plus and SegFormer models developed by Google for semantic
+KerasCV offers Deeplabv3plus model developed by Google for semantic
 segmentation. This guide demonstrates how to finetune and use DeepLabV3Plus model for
 image semantic segmentaion with KerasCV. It's architecture combines atrous convolutions,
 contextual information aggregation, and powerful backbones to achieve accurate and
@@ -49,7 +49,8 @@ You can install these packages with the following command:
 !pip install keras-core
 !pip install git+https://github.com/keras-team/keras-cv.git
 ```
-After installing keras-core and keras-cv, set the backend as tensorflow.
+After installing keras-core and keras-cv, set the backend for keras-core. This
+guide can be run with any backend (Tensorflow, JAX, PyTorch).
 
 ```
 %env KERAS_BACKEND=tensorflow
@@ -119,7 +120,7 @@ batch = next(iter(train_ds.take(1)))
 keras_cv.visualization.plot_segmentation_mask_gallery(
     batch["images"],
     value_range=(0, 255),
-    num_classes=21,  # The number of classes for the oxford iiit pet dataset
+    num_classes=21,  # The number of classes for the oxford iiit pet dataset. The VOC dataset also includes 1 class for the background.
     y_true=batch["segmentation_masks"],
     scale=3,
     rows=2,
@@ -140,7 +141,7 @@ batch = next(iter(eval_ds.take(1)))
 keras_cv.visualization.plot_segmentation_mask_gallery(
     batch["images"],
     value_range=(0, 255),
-    num_classes=21,  # The number of classes for the oxford iiit pet dataset
+    num_classes=21,  # The number of classes for the oxford iiit pet dataset. The VOC dataset also includes 1 class for the background.
     y_true=batch["segmentation_masks"],
     scale=3,
     rows=2,
@@ -180,9 +181,12 @@ training pipeline.
 The learning rate schedule is used by the optimizer to calculate the learning rate for
 each epoch. The optimizer then uses the learning rate to update the weights of the model.
 In this case, the learning rate schedule uses a cosine decay function. A cosine decay
-function starts high and then decreases over time, eventually reaching zero. The initial
-learning rate is 0.007 and the decay steps are 2124. This means that the learning rate
-will start at 0.007 and then decrease to zero over 2124 steps.
+function starts high and then decreases over time, eventually reaching zero. The
+cardinality of the VOC dataset is 2124 with a batch size of 4. The dataset cardinality
+is important for learning rate decay because it determines how many steps the model
+will train for. The initial learning rate is 0.007 and the decay steps are 2124.
+This means that the learning rate will start at 0.007 and then decrease to zero over
+2124 steps.
 """
 
 BATCH_SIZE = 4
