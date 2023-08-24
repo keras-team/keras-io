@@ -190,7 +190,7 @@ will start at 0.007 and then decrease to zero over 2124 steps.
 BATCH_SIZE = 4
 GLOBAL_BATCH_SIZE = BATCH_SIZE * 1
 INITIAL_LR = 0.007 * GLOBAL_BATCH_SIZE / 16
-EPOCHS = 100
+EPOCHS = 1
 NUM_CLASSES = 21
 learning_rate = keras.optimizers.schedules.CosineDecay(
     INITIAL_LR,
