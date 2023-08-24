@@ -8,27 +8,54 @@ Accelerator: GPU
 """
 
 """
+![](https://storage.googleapis.com/keras-nlp/getting_started_guide/prof_keras_intermediate.png)
+
+## Background
 Semantic segmentation is a type of computer vision task that involves assigning a
 semantic label to each individual pixel of an image, effectively dividing the image into
 regions that correspond to different object classes or categories.
 
-This guide demonstrates how to finetune DeepLabV3Plus model with KerasCV.
+![](https://miro.medium.com/v2/resize:fit:4800/format:webp/1*z6ch-2BliDGLIHpOPFY_Sw.png)
 
-![](https://storage.googleapis.com/keras-nlp/getting_started_guide/prof_keras_intermediate.png)
+
+
+KerasCV offers Deeplabv3plus and SegFormer models developed by Google for semantic
+segmentation. This guide demonstrates how to finetune and use DeepLabV3Plus model for
+image semantic segmentaion with KerasCV. It's architecture combines atrous convolutions,
+contextual information aggregation, and powerful backbones to achieve accurate and
+detailed semantic segmentation. The DeepLabV3Plus model has been shown to achieve
+state-of-the-art results on a variety of image segmentation benchmarks.
+
+### References
+[Encoder-Decoder with Atrous Separable Convolution for Semantic Image
+Segmentation](https://arxiv.org/abs/1802.02611)<br>
+[Rethinking Atrous Convolution for Semantic Image
+Segmentation](https://arxiv.org/abs/1706.05587)<br>
+[SegFormer: Simple and Efficient Design for Semantic Segmentation with
+Transformers](https://arxiv.org/abs/2105.15203)
+
+
+
+
 """
 
 """
 ## Setup and Imports
 
-First let's set up install and imports of the dependencies.
+Let's install the dependencies and import the necessary modules.
 
-To run this tutorial, you will need to install keras-cv with the following command:
+To run this tutorial, you will need to install the following packages:
+
+* `keras-cv`
+* `keras-core`
+
+You can install these packages with the following command:
 
 ```
 !pip install keras-core
 !pip install git+https://github.com/keras-team/keras-cv.git
 ```
-After installing keras-core and keras-cv, set the fbackend as tensorflow.
+After installing keras-core and keras-cv, set the backend as tensorflow.
 
 ```
 %env KERAS_BACKEND=tensorflow
@@ -36,9 +63,11 @@ After installing keras-core and keras-cv, set the fbackend as tensorflow.
 """
 
 """shell
-pip install keras-core
-pip install --upgrade -q git+https://github.com/keras-team/keras-cv
+!pip install keras-core
+!pip install git+https://github.com/keras-team/keras-cv.git
 """
+
+%env KERAS_BACKEND=tensorflow
 
 import tensorflow as tf
 import tensorflow_datasets as tfds
@@ -69,13 +98,14 @@ eval_ds = load(split="sbd_eval")
 """
 ## Preprocess the data
 
-The utility function `unpackage_tfds_inputs` is used processes the  inputs to a
-dictionary of "images" and "segmentation_masks". The images and segmentation masks are
-resized to 512x512. The resulting dataset is then batched into groups of 4 image and
-segmentation mask pair.
+The `unpackage_tfds_inputs` utility function preprocesses the inputs to a dictionary of
+`images` and `segmentation_masks`. The images and segmentation masks are resized to
+512x512. The resulting dataset is then batched into groups of 4 image and segmentation
+mask pairs.
 
-A batch of this preprocessed input training data can then be visualized using
-`keras_cv.visualization.plot_segmentation_mask_gallery`
+A batch of this preprocessed input training data can be visualized using the
+`keras_cv.visualization.plot_segmentation_mask_gallery` function. This function takes a
+batch of images and segmentation masks as input and displays them in a grid.
 """
 
 
@@ -254,3 +284,19 @@ keras_cv.visualization.plot_segmentation_mask_gallery(
     rows=1,
     cols=4,
 )
+
+
+"""
+Here are some additional tips for using the KerasCV DeepLabV3Plus model:
+
+- The model can be trained on a variety of datasets, including the COCO dataset, the
+PASCAL VOC dataset, and the Cityscapes dataset.
+- The model can be fine-tuned on a custom dataset to improve its performance on a
+specific task.
+- The model can be used to perform real-time inference on images.
+- Also, try out KerasCV's SegFormer model `keras_cv.models.segmentation.SegFormer`. The
+SegFormer model is a newer model that has been shown to achieve state-of-the-art results
+on a variety of image segmentation benchmarks. It is based on the Swin Transformer
+architecture, and it is more efficient and accurate than previous image segmentation
+models.
+"""
