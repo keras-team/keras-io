@@ -490,7 +490,7 @@ for details on writing your own layers.
 """
 
 
-@keras.utils.register_keras_serializable()
+@keras.saving.register_keras_serializable()
 class NestedCell(keras.layers.Layer):
     def __init__(self, unit_1, unit_2, unit_3, **kwargs):
         self.unit_1 = unit_1
