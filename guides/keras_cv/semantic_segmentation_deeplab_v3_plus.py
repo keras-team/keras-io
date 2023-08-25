@@ -120,7 +120,8 @@ batch = next(iter(train_ds.take(1)))
 keras_cv.visualization.plot_segmentation_mask_gallery(
     batch["images"],
     value_range=(0, 255),
-    num_classes=21,  # The number of classes for the oxford iiit pet dataset. The VOC dataset also includes 1 class for the background.
+num_classes=21,  # The number of classes for the oxford iiit pet dataset. The VOC dataset
+                 # also includes 1 class for the background.
     y_true=batch["segmentation_masks"],
     scale=3,
     rows=2,
@@ -141,7 +142,8 @@ batch = next(iter(eval_ds.take(1)))
 keras_cv.visualization.plot_segmentation_mask_gallery(
     batch["images"],
     value_range=(0, 255),
-    num_classes=21,  # The number of classes for the oxford iiit pet dataset. The VOC dataset also includes 1 class for the background.
+num_classes=21,  # The number of classes for the oxford iiit pet dataset. The VOC dataset
+                 # also includes 1 class for the background.
     y_true=batch["segmentation_masks"],
     scale=3,
     rows=2,
@@ -155,11 +157,23 @@ KerasCV provides a variety of image augmentation options. In this example, we wi
 the `RandomFlip` augmentation to augment the training dataset. The `RandomFlip`
 augmentation randomly flips the images in the training dataset horizontally or
 vertically. This can help to improve the model's robustness to changes in the orientation
-of the objects in the images.
+of the objects in the images. `RandomShear` is a transformation that changes the shape of
+an image by rotating it around a central point along x or y axis. `RandomCutout` randomly
+cuts out rectangles from images and fills them. Feel free to play around with keras_CV
+preprocessing layers.
 """
 
-train_ds = train_ds.map(keras_cv.layers.RandomFlip())
-batch = next(iter(train_ds.take(1)))
+augment_fn = keras.Sequential(
+    [
+        keras_cv.layers.RandomFlip(),
+        keras_cv.layers.RandomShear(x_factor=(0, 0.2), fill_mode="constant"),
+        keras_cv.layers.RandomCutout(
+            height_factor=0.1, width_factor=0.1, fill_mode="constant"
+        ),
+    ]
+)
+train_ds_temp = train_ds.map(augment_fn)
+batch = next(iter(train_ds_temp.take(1)))
 
 keras_cv.visualization.plot_segmentation_mask_gallery(
     batch["images"],
