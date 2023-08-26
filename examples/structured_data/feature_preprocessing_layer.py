@@ -11,7 +11,7 @@ Description: Feature Preprocessing with a custom Feature Preprocessor layer.
 
 """
 Often for structured data problems we use multiple libraries for preprocessing
-or feature engineering. We might have a full ML training pipeline consisting of
+or feature engineering. We might have a ML training pipeline consisting of
 different libraries for example Pandas for reading data and also feature engineeering,
 sklearn for encoding features for example OneHot encoding and Normalization. The
 estimator might be an sklearn classifier, xgboost or it can for example be a Keras model.
@@ -22,24 +22,16 @@ can be mapped from a dataframe to something like tf.data.Datasets type or numpy 
 before feeding it to a Keras model.
 
 In this example we will implement feature preprocessing natively with
-Keras by implementing a custom Keras layer for all feature preprocessing steps.This layer
+Keras by implementing a custom Keras layer for all feature preprocessing steps. This layer
 utilizes Keras preprocessing layers. For constructing our model we will use the Functional API.
 """
 
 """
 ## Setup
 """
-
-import tensorflow as tf
-from tensorflow.keras.layers import (
-    StringLookup,
-    IntegerLookup,
-    Normalization,
-    Embedding,
-    Discretization,
-    Reshape,
-)
 import pandas as pd
+import tensorflow as tf
+from tensorflow.keras import layers
 
 """
 ## Load data
@@ -78,7 +70,7 @@ print(f"Train dataset shape: {data_frame.shape}")
 ## Split features into different feature groups
 """
 
-NUMERIC_FEATURES = [
+NUMERICAL_FEATURES = [
     "education_num",
     "capital_gain",
     "capital_loss",
@@ -95,17 +87,58 @@ CATEGORICAL_FEATURES = [
     "occupation",
 ]
 
-DISCRETIZE_FEATURES = ["age"]
+FEATURES_TO_DISCRETIZE = ["age"]
 
-EMBEDDING_FEATURES = ["native_country"]
+FEATURES_TO_EMBED = ["native_country"]
 
 # split data frame into different feature groups
-data_dict = {
-    "numerical_features": data_frame[NUMERIC_FEATURES].values,
-    "categorical_features": data_frame[CATEGORICAL_FEATURES].values,
-    "discretize_features": data_frame[DISCRETIZE_FEATURES].values,
-    "embedding_features": data_frame[EMBEDDING_FEATURES].values,
+categorical_features = {
+    feature: data_frame[[feature]].values for feature in CATEGORICAL_FEATURES
 }
+numerical_features = {
+    feature: data_frame[[feature]].values for feature in NUMERICAL_FEATURES
+}
+discretize_features = {
+    feature: data_frame[[feature]].values for feature in FEATURES_TO_DISCRETIZE
+}
+embedding_features = {
+    feature: data_frame[[feature]].values for feature in FEATURES_TO_EMBED
+}
+
+data_dict = {
+    **numerical_features,
+    **categorical_features,
+    **discretize_features,
+    **embedding_features,
+}
+
+categorical_features_input = {
+    feature: tf.keras.Input(shape=(1,), dtype=tf.string, name=feature)
+    for feature in CATEGORICAL_FEATURES
+}
+
+numerical_features_input = {
+    feature: tf.keras.Input(shape=(1,), dtype=tf.float32, name=feature)
+    for feature in NUMERICAL_FEATURES
+}
+
+discretize_features_input = {
+    feature: tf.keras.Input(shape=(1,), dtype=tf.float32, name=feature)
+    for feature in FEATURES_TO_DISCRETIZE
+}
+
+embedding_features_input = {
+    feature: tf.keras.Input(shape=(1,), dtype=tf.string, name=feature)
+    for feature in FEATURES_TO_EMBED
+}
+
+input_dict = {
+    **numerical_features_input,
+    **categorical_features_input,
+    **discretize_features_input,
+    **embedding_features_input,
+}
+
 
 """
 ## Create Feature Preprocessing layer
@@ -121,54 +154,68 @@ class FeaturePreprocessor(tf.keras.models.Model):
     def __init__(self, *args, **kwargs):
         super(FeaturePreprocessor, self).__init__(*args, **kwargs)
         # set preprocessing layers
-        self.normalizer = Normalization()
-        self.categoric_string_lookup = StringLookup()
-        self.integer_lookup = IntegerLookup(output_mode="binary")
-        self.discretizer = Discretization(num_bins=10)
-        self.embedding_string_lookup = StringLookup()
+        self.normalizer = {
+            feature: layers.Normalization() for feature in NUMERICAL_FEATURES
+        }
+        self.categoric_string_lookup = {
+            feature: layers.StringLookup() for feature in CATEGORICAL_FEATURES
+        }
+        self.integer_lookup = {
+            feature: layers.IntegerLookup(output_mode="binary")
+            for feature in CATEGORICAL_FEATURES
+        }
+        self.discretizer = {
+            feature: layers.Discretization(num_bins=10)
+            for feature in FEATURES_TO_DISCRETIZE
+        }
+        self.embedding_string_lookup = {
+            feature: layers.StringLookup() for feature in FEATURES_TO_EMBED
+        }
 
-    def adapt(self, data={}):
+    def adapt(self, data):
         """Update layer states"""
-        self.normalizer.adapt(data["numerical_features"])
+        for feature, preprocessor in self.normalizer.items():
+            preprocessor.adapt(data[feature])
 
-        self.categoric_string_lookup.adapt(data["categorical_features"])
+        for feature, preprocessor in self.discretizer.items():
+            preprocessor.adapt(data[feature])
 
-        # apply integer lookup on string lookup layer output
-        self.integer_lookup.adapt(
-            self.categoric_string_lookup(data["categorical_features"])
-        )
+        for feature, preprocessor in self.categoric_string_lookup.items():
+            preprocessor.adapt(data[feature])
+            self.integer_lookup[feature].adapt(preprocessor(data[feature]))
 
-        self.discretizer.adapt(data["discretize_features"])
+        for feature, preprocessor in self.embedding_string_lookup.items():
+            preprocessor.adapt(data[feature])
 
-        self.embedding_string_lookup.adapt(data["embedding_features"])
+        vocabulary_size = preprocessor.vocabulary_size()
+        embedding_size = int(tf.math.sqrt(float(vocabulary_size)))
 
-        # create sequential model for string and integer lookup layers
-        self.categoric_encoding = tf.keras.models.Sequential(
-            [self.categoric_string_lookup, self.integer_lookup]
-        )
-
-        vocabulary_size = self.embedding_string_lookup.vocabulary_size()
-        embedding_size = int(tf.math.sqrt(vocabulary_size))
-        # create sequential model for embedding feature
+        # create sequential model for the embedding feature
         self.embedding = tf.keras.models.Sequential(
             [
-                self.embedding_string_lookup,
-                Embedding(input_dim=vocabulary_size, output_dim=embedding_size),
-                Reshape((-1,)),
+                tf.keras.layers.InputLayer(input_shape=(1,), dtype=tf.string),
+                self.embedding_string_lookup[FEATURES_TO_EMBED[0]],
+                layers.Embedding(input_dim=vocabulary_size, output_dim=embedding_size),
+                layers.Reshape((-1,)),
             ]
         )
 
     def call(self, inputs={}):
         """Apply adapted layers"""
-        numerical_features = self.normalizer(inputs["numerical_features"])
+        numerical_features = apply_preprocessor(inputs, self.normalizer)
 
-        categorical_features = self.categoric_encoding(inputs["categorical_features"])
-
-        discretize_features = tf.cast(
-            self.discretizer(inputs["discretize_features"]), dtype=tf.float32
+        categorical_features = {
+            feature: self.categoric_string_lookup[feature](inputs[feature])
+            for feature in CATEGORICAL_FEATURES
+        }
+        categorical_features = apply_preprocessor(
+            categorical_features, self.integer_lookup
         )
 
-        embedding_features = self.embedding(inputs["embedding_features"])
+        embedding_features = self.embedding(inputs["native_country"])
+
+        discretize_features = apply_preprocessor(inputs, self.discretizer)
+        discretize_features = tf.cast(discretize_features, dtype=tf.float32)
 
         return tf.keras.layers.concatenate(
             [
@@ -180,37 +227,31 @@ class FeaturePreprocessor(tf.keras.models.Model):
         )
 
 
+def apply_preprocessor(inputs, preprocessor_dict):
+    return tf.keras.layers.concatenate(
+        [
+            preprocessor(inputs[feature])
+            for feature, preprocessor in preprocessor_dict.items()
+        ]
+    )
+
+
 """
 ## Compile and fit model
 
 We now have a feature preprocessing layer. Lets put everything together and fit the model:
 """
 
-inputs = {
-    "numerical_features": tf.keras.Input(
-        shape=(len(NUMERIC_FEATURES),), dtype=tf.float32, name="numeric_layer"
-    ),
-    "categorical_features": tf.keras.Input(
-        shape=(len(CATEGORICAL_FEATURES),), dtype=tf.string, name="categoric_layer"
-    ),
-    "discretize_features": tf.keras.Input(
-        shape=(len(DISCRETIZE_FEATURES),), dtype=tf.float32, name="discretize_layer"
-    ),
-    "embedding_features": tf.keras.Input(
-        shape=(len(EMBEDDING_FEATURES),), dtype=tf.string, name="embedding_layer"
-    ),
-}
-
 # update preprocessing layer states
 preprocessing_layer = FeaturePreprocessor()
 preprocessing_layer.adapt(data_dict)
 
 # rest of model
-x = preprocessing_layer(inputs)
+x = preprocessing_layer(input_dict)
 x = tf.keras.layers.Dense(64, activation="relu")(x)
 x = tf.keras.layers.Dense(32, activation="relu")(x)
 outputs = tf.keras.layers.Dense(1, activation="sigmoid")(x)
-model = tf.keras.Model(inputs=inputs, outputs=outputs)
+model = tf.keras.Model(inputs=input_dict, outputs=outputs)
 
 model.compile(
     loss=tf.keras.losses.BinaryCrossentropy(),
