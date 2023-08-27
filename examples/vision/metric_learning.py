@@ -4,6 +4,7 @@ Author: [Mat Kelcey](https://twitter.com/mat_kelcey)
 Date created: 2020/06/05
 Last modified: 2020/06/09
 Description: Example of using similarity metric learning on CIFAR-10 images.
+Accelerator: GPU
 """
 """
 ## Overview
@@ -119,11 +120,12 @@ num_classes = 10
 
 
 class AnchorPositivePairs(keras.utils.Sequence):
-    def __init__(self, num_batchs):
-        self.num_batchs = num_batchs
+    def __init__(self, num_batches):
+        super().__init__()
+        self.num_batches = num_batches
 
     def __len__(self):
-        return self.num_batchs
+        return self.num_batches
 
     def __getitem__(self, _idx):
         x = np.empty((2, num_classes, height_width, height_width, 3), dtype=np.float32)
@@ -143,7 +145,7 @@ We can visualise a batch in another collage. The top row shows randomly chosen a
 from the 10 classes, the bottom row shows the corresponding 10 positives.
 """
 
-examples = next(iter(AnchorPositivePairs(num_batchs=1)))
+examples = next(iter(AnchorPositivePairs(num_batches=1)))
 
 show_collage(examples)
 
@@ -209,7 +211,7 @@ x = layers.Conv2D(filters=64, kernel_size=3, strides=2, activation="relu")(x)
 x = layers.Conv2D(filters=128, kernel_size=3, strides=2, activation="relu")(x)
 x = layers.GlobalAveragePooling2D()(x)
 embeddings = layers.Dense(units=8, activation=None)(x)
-embeddings = tf.nn.l2_normalize(embeddings, axis=-1)
+embeddings = layers.UnitNormalization()(embeddings)
 
 model = EmbeddingModel(inputs, embeddings)
 
@@ -222,7 +224,7 @@ model.compile(
     loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
 )
 
-history = model.fit(AnchorPositivePairs(num_batchs=1000), epochs=20)
+history = model.fit(AnchorPositivePairs(num_batches=1000), epochs=20)
 
 plt.plot(history.history["loss"])
 plt.show()
@@ -309,3 +311,11 @@ labels = [
 disp = ConfusionMatrixDisplay(confusion_matrix=confusion_matrix, display_labels=labels)
 disp.plot(include_values=True, cmap="viridis", ax=None, xticks_rotation="vertical")
 plt.show()
+
+"""
+Example available on HuggingFace.
+
+| Trained Model | Demo |
+| :--: | :--: |
+| [![Generic badge](https://img.shields.io/badge/🤗%20Model-Cifar10%20Metric%20Learning-black.svg)](https://huggingface.co/keras-io/cifar10_metric_learning) | [![Generic badge](https://img.shields.io/badge/🤗%20Spaces-Metric%20Learning%20for%20Image%20Similarity%20Search-black.svg)](https://huggingface.co/spaces/keras-io/metric-learning-image-similarity-search) |
+"""

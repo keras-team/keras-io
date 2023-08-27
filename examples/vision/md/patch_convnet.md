@@ -546,7 +546,7 @@ class WarmUpCosine(keras.optimizers.schedules.LearningRateSchedule):
     def __init__(
         self, learning_rate_base, total_steps, warmup_learning_rate, warmup_steps
     ):
-        super(WarmUpCosine, self).__init__()
+        super().__init__()
         self.learning_rate_base = learning_rate_base
         self.total_steps = total_steps
         self.warmup_learning_rate = warmup_learning_rate
@@ -934,3 +934,5 @@ accuracy.
 
 I would like to thank [JarvisLabs.ai](https://jarvislabs.ai/) for
 providing GPU credits for this project.
+
+You can try the model on [Hugging Face Spaces](https://huggingface.co/spaces/keras-io/patch-conv-net).

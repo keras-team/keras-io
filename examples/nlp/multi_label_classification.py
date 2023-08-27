@@ -4,6 +4,7 @@ Author: [Sayak Paul](https://twitter.com/RisingSayak), [Soumik Rakshit](https://
 Date created: 2020/09/25
 Last modified: 2020/12/23
 Description: Implementing a large-scale multi-label text classification model.
+Accelerator: GPU
 """
 """
 ## Introduction
@@ -310,17 +311,25 @@ are not disjoint. For a given abstract, we may have multiple categories. So, we 
 divide the prediction task into a series of multiple binary classification problems. This
 is also why we kept the activation function of the classification layer in our model to
 sigmoid. Researchers have used other combinations of loss function and activation
-function as well. For example, in
-[Exploring the Limits of Weakly Supervised Pretraining](https://arxiv.org/abs/1805.00932),
+function as well. For example, in [Exploring the Limits of Weakly Supervised Pretraining](https://arxiv.org/abs/1805.00932),
 Mahajan et al. used the softmax activation function and cross-entropy loss to train
 their models.
+
+There are several options of metrics that can be used in multi-label classification.
+To keep this code example narrow we decided to use the
+[binary accuracy metric](https://keras.io/api/metrics/accuracy_metrics/#binaryaccuracy-class).
+To see the explanation why this metric is used we refer to this
+[pull-request](https://github.com/keras-team/keras-io/pull/1133#issuecomment-1322736860).
+There are also other suitable metrics for multi-label classification, like
+[F1 Score](https://www.tensorflow.org/addons/api_docs/python/tfa/metrics/F1Score) or
+[Hamming loss](https://www.tensorflow.org/addons/api_docs/python/tfa/metrics/HammingLoss).
 """
 
 epochs = 20
 
 shallow_mlp_model = make_model()
 shallow_mlp_model.compile(
-    loss="binary_crossentropy", optimizer="adam", metrics=["categorical_accuracy"]
+    loss="binary_crossentropy", optimizer="adam", metrics=["binary_accuracy"]
 )
 
 history = shallow_mlp_model.fit(
@@ -340,7 +349,7 @@ def plot_result(item):
 
 
 plot_result("loss")
-plot_result("categorical_accuracy")
+plot_result("binary_accuracy")
 
 """
 While training, we notice an initial sharp fall in the loss followed by a gradual decay.
@@ -350,11 +359,11 @@ While training, we notice an initial sharp fall in the loss followed by a gradua
 ### Evaluate the model
 """
 
-_, categorical_acc = shallow_mlp_model.evaluate(test_dataset)
-print(f"Categorical accuracy on the test set: {round(categorical_acc * 100, 2)}%.")
+_, binary_acc = shallow_mlp_model.evaluate(test_dataset)
+print(f"Categorical accuracy on the test set: {round(binary_acc * 100, 2)}%.")
 
 """
-The trained model gives us an evaluation accuracy of ~87%.
+The trained model gives us an evaluation accuracy of ~99%.
 """
 
 """
@@ -409,4 +418,6 @@ even those that use Transformers ([Vaswani et al.](https://arxiv.org/abs/1706.03
 We would like to thank [Matt Watson](https://github.com/mattdangerw) for helping us
 tackle the multi-label binarization part and inverse-transforming the processed labels
 to the original form.
+
+Thanks to [Cingis Kratochvil](https://github.com/cumbalik) for suggesting and extending this code example by introducing binary accuracy as the evaluation metric.
 """

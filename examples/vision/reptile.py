@@ -4,6 +4,7 @@ Author: [ADMoreau](https://github.com/ADMoreau)
 Date created: 2020/05/21
 Last modified: 2020/05/30
 Description: Few-shot classification on the Omniglot dataset using Reptile.
+Accelerator: GPU
 """
 
 """

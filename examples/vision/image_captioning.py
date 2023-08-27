@@ -4,6 +4,7 @@ Author: [A_K_Nain](https://twitter.com/A_K_Nain)
 Date created: 2021/05/29
 Last modified: 2021/10/31
 Description: Implement an image captioning model using a CNN and a Transformer.
+Accelerator: GPU
 """
 
 """
@@ -227,7 +228,7 @@ def process_input(img_path, captions):
 
 def make_dataset(images, captions):
     dataset = tf.data.Dataset.from_tensor_slices((images, captions))
-    dataset = dataset.shuffle(len(images))
+    dataset = dataset.shuffle(BATCH_SIZE * 8)
     dataset = dataset.map(process_input, num_parallel_calls=AUTOTUNE)
     dataset = dataset.batch(BATCH_SIZE).prefetch(AUTOTUNE)
 
@@ -255,7 +256,9 @@ Our image captioning architecture consists of three models:
 
 def get_cnn_model():
     base_model = efficientnet.EfficientNetB0(
-        input_shape=(*IMAGE_SIZE, 3), include_top=False, weights="imagenet",
+        input_shape=(*IMAGE_SIZE, 3),
+        include_top=False,
+        weights="imagenet",
     )
     # We freeze our feature extractor
     base_model.trainable = False
@@ -399,7 +402,12 @@ class TransformerDecoderBlock(layers.Layer):
 
 class ImageCaptioningModel(keras.Model):
     def __init__(
-        self, cnn_model, encoder, decoder, num_captions_per_image=5, image_aug=None,
+        self,
+        cnn_model,
+        encoder,
+        decoder,
+        num_captions_per_image=5,
+        image_aug=None,
     ):
         super().__init__()
         self.cnn_model = cnn_model
@@ -518,7 +526,10 @@ cnn_model = get_cnn_model()
 encoder = TransformerEncoderBlock(embed_dim=EMBED_DIM, dense_dim=FF_DIM, num_heads=1)
 decoder = TransformerDecoderBlock(embed_dim=EMBED_DIM, ff_dim=FF_DIM, num_heads=2)
 caption_model = ImageCaptioningModel(
-    cnn_model=cnn_model, encoder=encoder, decoder=decoder, image_aug=image_augmentation,
+    cnn_model=cnn_model,
+    encoder=encoder,
+    decoder=decoder,
+    image_aug=image_augmentation,
 )
 
 """
@@ -607,7 +618,7 @@ def generate_caption():
         )
         sampled_token_index = np.argmax(predictions[0, i, :])
         sampled_token = index_lookup[sampled_token_index]
-        if sampled_token == " <end>":
+        if sampled_token == "<end>":
             break
         decoded_caption += " " + sampled_token
 

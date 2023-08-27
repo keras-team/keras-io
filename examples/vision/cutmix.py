@@ -4,6 +4,7 @@ Author: [Sayan Nath](https://twitter.com/sayannath2350)
 Date created: 2021/06/08
 Last modified: 2021/06/08
 Description: Data augmentation with CutMix for image classification on CIFAR-10.
+Accelerator: GPU
 """
 
 """
@@ -17,7 +18,7 @@ Instead of removing pixels and filling them with black or grey pixels or Gaussia
 you replace the removed regions with a patch from another image,
 while the ground truth labels are mixed proportionally to the number of pixels of combined images.
 CutMix was proposed in
-[CutMix: Regularization Strategy to Train Strong Classifiers with Localizable Features](https://arxiv.org/pdf/1905.04899.pdf)
+[CutMix: Regularization Strategy to Train Strong Classifiers with Localizable Features](https://arxiv.org/abs/1905.04899)
 (Yun et al., 2019)
 
 It's implemented via the following formulas:
@@ -373,4 +374,8 @@ You may notice it takes less time to train the model with the CutMix augmentatio
 
 You can experiment further with the CutMix technique by following the
 [original paper](https://arxiv.org/abs/1905.04899).
+Example available on HuggingFace.
+| Trained Model | Demo |
+| :--: | :--: |
+| [![Generic badge](https://img.shields.io/badge/🤗%20Model-CutMix%20Data%20augmentation-black.svg)](https://huggingface.co/keras-io/CutMix_data_augmentation_for_image_classification) | [![Generic badge](https://img.shields.io/badge/🤗%20Spaces-CutMix%20Data%20augmentation-black.svg)](https://huggingface.co/spaces/keras-io/CutMix_Data_Augmentation_for_Image_Classification) |
 """

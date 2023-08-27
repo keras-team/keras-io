@@ -1,0 +1,40 @@
+{% if legend %}
+<p><div class="example-highlight">★</div> = Good starter example</p>
+{% endif %}
+
+{% for category in categories %}
+	<h2><a href="{{category.path}}">{{category.title}}</a></h2>
+
+	{% if category.subcategories %}
+		{% for subcategory in category.subcategories %}
+
+			<h3 class="example-subcategory-title">{{subcategory.title}}</h3>
+
+			{% for example in subcategory.examples %}
+				<a href="{{example.path}}">
+					<div class="example-card">
+						{% if example.highlight %}
+						<div class="example-highlight">★</div>
+						{% endif %}
+						<div class="example-card-title">
+							{{example.title}}
+						</div>
+					</div>
+				</a>
+			{% endfor %}
+
+		{% endfor %}
+	{% else %}
+		{% for example in category.examples %}
+			<a href="{{example.path}}">
+				<div class="example-card">
+					<div class="example-card-title">
+						{{example.title}}
+					</div>
+				</div>
+			</a>
+		{% endfor %}
+	{% endif %}
+
+	<hr>
+{% endfor %}

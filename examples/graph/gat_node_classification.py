@@ -4,6 +4,7 @@ Author: [akensert](https://github.com/akensert)
 Date created: 2021/09/13
 Last modified: 2021/12/26
 Description: An implementation of a Graph Attention Network (GAT) for node classification.
+Accelerator: GPU
 """
 """
 ## Introduction
@@ -172,7 +173,6 @@ class GraphAttention(layers.Layer):
         self.kernel_regularizer = keras.regularizers.get(kernel_regularizer)
 
     def build(self, input_shape):
-
         self.kernel = self.add_weight(
             shape=(input_shape[0][-1], self.units),
             trainable=True,

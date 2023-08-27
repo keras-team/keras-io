@@ -4,6 +4,7 @@ Author: [Aritra Roy Gosthipaty](https://twitter.com/arig23498), [Ritwik Raha](ht
 Date created: 2021/11/08
 Last modified: 2021/11/08
 Description: Neural Style Transfer with Adaptive Instance Normalization.
+Accelerator: GPU
 """
 """
 # Introduction
@@ -28,7 +29,7 @@ Belongie propose
 [Adaptive Instance Normalization](https://arxiv.org/abs/1703.06868) (AdaIN),
 which allows arbitrary style transfer in real time.
 
-In this example we implement Adapative Instance Normalization
+In this example we implement Adaptive Instance Normalization
 for Neural Style Transfer. We show in the below figure the output
 of our AdaIN model trained for
 only **30 epochs**.
@@ -48,10 +49,7 @@ which we can change as we like.
 """
 
 import os
-import glob
-import imageio
 import numpy as np
-from tqdm import tqdm
 import tensorflow as tf
 from tensorflow import keras
 import matplotlib.pyplot as plt
@@ -130,7 +128,6 @@ def decode_and_resize(image_path):
 
     Args:
         image_path: The image file path.
-        size: The size of the image to be resized to.
 
     Returns:
         A resized image.
@@ -147,7 +144,6 @@ def extract_image_from_voc(element):
 
     Args:
         element: A dictionary of data.
-        size: The size of the image to be resized to.
 
     Returns:
         A resized image.
@@ -230,7 +226,7 @@ style, content = next(iter(train_ds))
 fig, axes = plt.subplots(nrows=10, ncols=2, figsize=(5, 30))
 [ax.axis("off") for ax in np.ravel(axes)]
 
-for (axis, style_image, content_image) in zip(axes, style[0:10], content[0:10]):
+for axis, style_image, content_image in zip(axes, style[0:10], content[0:10]):
     (ax_style, ax_content) = axis
     ax_style.imshow(style_image)
     ax_style.set_title("Style Image")
@@ -242,7 +238,7 @@ for (axis, style_image, content_image) in zip(axes, style[0:10], content[0:10]):
 ## Architecture
 
 The style transfer network takes a content image and a style image as
-inputs and outputs the style transfered image. The authors of AdaIN
+inputs and outputs the style transferred image. The authors of AdaIN
 propose a simple encoder-decoder structure for achieving this.
 
 ![AdaIN architecture](https://i.imgur.com/JbIfoyE.png)
@@ -252,7 +248,7 @@ encoder networks. The output from these encoder networks (feature maps)
 are then fed to the AdaIN layer. The AdaIN layer computes a combined
 feature map. This feature map is then fed into a randomly initialized
 decoder network that serves as the generator for the neural style
-transfered image.
+transferred image.
 
 ![AdaIn equation](https://i.imgur.com/hqhcBQS.png)
 
@@ -273,7 +269,9 @@ by the authors in their paper.
 
 def get_encoder():
     vgg19 = keras.applications.VGG19(
-        include_top=False, weights="imagenet", input_shape=(*IMAGE_SIZE, 3),
+        include_top=False,
+        weights="imagenet",
+        input_shape=(*IMAGE_SIZE, 3),
     )
     vgg19.trainable = False
     mini_vgg19 = keras.Model(vgg19.input, vgg19.get_layer("block4_conv1").output)
@@ -382,10 +380,10 @@ def get_decoder():
 Here we build the loss functions for the neural style transfer model.
 The authors propose to use a pretrained VGG-19 to compute the loss
 function of the network. It is important to keep in mind that this
-will be used for training only the decoder netwrok. The total
+will be used for training only the decoder network. The total
 loss (`Lt`) is a weighted combination of content loss (`Lc`) and style
 loss (`Ls`). The `lambda` term is used to vary the amount of style
-transfered.
+transferred.
 
 ![The total loss](https://i.imgur.com/Q5y1jUM.png)
 
@@ -438,7 +436,7 @@ def get_loss_net():
 """
 ## Neural Style Transfer
 
-This is the trainer module. We wrap the encoder and decoder inside of
+This is the trainer module. We wrap the encoder and decoder inside
 a `tf.keras.Model` subclass. This allows us to customize what happens
 in the `model.fit()` loop.
 """
@@ -579,15 +577,13 @@ class TrainMonitor(tf.keras.callbacks.Callback):
 
         # Plot the Style, Content and the NST image.
         fig, ax = plt.subplots(nrows=1, ncols=3, figsize=(20, 5))
-        ax[0].imshow(tf.keras.preprocessing.image.array_to_img(test_style[0]))
+        ax[0].imshow(tf.keras.utils.array_to_img(test_style[0]))
         ax[0].set_title(f"Style: {epoch:03d}")
 
-        ax[1].imshow(tf.keras.preprocessing.image.array_to_img(test_content[0]))
+        ax[1].imshow(tf.keras.utils.array_to_img(test_content[0]))
         ax[1].set_title(f"Content: {epoch:03d}")
 
-        ax[2].imshow(
-            tf.keras.preprocessing.image.array_to_img(test_reconstructed_image[0])
-        )
+        ax[2].imshow(tf.keras.utils.array_to_img(test_reconstructed_image[0]))
         ax[2].set_title(f"NST: {epoch:03d}")
 
         plt.show()
@@ -597,11 +593,11 @@ class TrainMonitor(tf.keras.callbacks.Callback):
 """
 ## Train the model
 
-In this section, we define the optimizer, the loss funtion, and the
+In this section, we define the optimizer, the loss function, and the
 trainer module. We compile the trainer module with the optimizer and
 the loss function and then train it.
 
-*Note*: We train the model for a single epoch for time constranints,
+*Note*: We train the model for a single epoch for time constraints,
 but we will need to train is for atleast 30 epochs to see good results.
 """
 

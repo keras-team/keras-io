@@ -4,6 +4,7 @@ Author: [Varun Singh](https://www.linkedin.com/in/varunsingh2/)
 Date created: Jun 23, 2021
 Last modified: Jun 24, 2021
 Description: NER using the Transformers and data from CoNLL 2003 shared task.
+Accelerator: GPU
 """
 """
 ## Introduction
@@ -50,7 +51,7 @@ Let's start by defining a `TransformerBlock` layer:
 
 class TransformerBlock(layers.Layer):
     def __init__(self, embed_dim, num_heads, ff_dim, rate=0.1):
-        super(TransformerBlock, self).__init__()
+        super().__init__()
         self.att = keras.layers.MultiHeadAttention(
             num_heads=num_heads, key_dim=embed_dim
         )
@@ -81,7 +82,7 @@ Next, let's define a `TokenAndPositionEmbedding` layer:
 
 class TokenAndPositionEmbedding(layers.Layer):
     def __init__(self, maxlen, vocab_size, embed_dim):
-        super(TokenAndPositionEmbedding, self).__init__()
+        super().__init__()
         self.token_emb = keras.layers.Embedding(
             input_dim=vocab_size, output_dim=embed_dim
         )
@@ -104,7 +105,7 @@ class NERModel(keras.Model):
     def __init__(
         self, num_tags, vocab_size, maxlen=128, embed_dim=32, num_heads=2, ff_dim=32
     ):
-        super(NERModel, self).__init__()
+        super().__init__()
         self.embedding_layer = TokenAndPositionEmbedding(maxlen, vocab_size, embed_dim)
         self.transformer_block = TransformerBlock(embed_dim, num_heads, ff_dim)
         self.dropout1 = layers.Dropout(0.1)
@@ -139,14 +140,15 @@ def export_to_file(export_file_path, data):
         for record in data:
             ner_tags = record["ner_tags"]
             tokens = record["tokens"]
-            f.write(
-                str(len(tokens))
-                + "\t"
-                + "\t".join(tokens)
-                + "\t"
-                + "\t".join(map(str, ner_tags))
-                + "\n"
-            )
+            if len(tokens) > 0:
+                f.write(
+                    str(len(tokens))
+                    + "\t"
+                    + "\t".join(tokens)
+                    + "\t"
+                    + "\t".join(map(str, ner_tags))
+                    + "\n"
+                )
 
 
 os.mkdir("data")
@@ -341,4 +343,6 @@ We trained it on the CoNLL 2003 shared task data and got an overall F1 score of 
 State of the art NER models fine-tuned on pretrained models such as BERT or ELECTRA can easily
 get much higher F1 score -between 90-95% on this dataset owing to the inherent knowledge
 of words as part of the pretraining process and the usage of subword tokenization.
-"""
+
+You can use the trained model hosted on [Hugging Face Hub](https://huggingface.co/keras-io/ner-with-transformers)
+and try the demo on [Hugging Face Spaces](https://huggingface.co/spaces/keras-io/ner_with_transformers)."""

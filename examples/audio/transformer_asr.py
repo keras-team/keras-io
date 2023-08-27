@@ -4,6 +4,7 @@ Author: [Apoorv Nandan](https://twitter.com/NandanApoorv)
 Date created: 2021/01/13
 Last modified: 2021/01/13
 Description: Training a sequence-to-sequence Transformer for automatic speech recognition.
+Accelerator: GPU
 """
 """
 ## Introduction
@@ -44,7 +45,7 @@ When processing past target tokens for the decoder, we compute the sum of
 position embeddings and token embeddings.
 
 When processing audio features, we apply convolutional layers to downsample
-them (via convolution stides) and process local relationships.
+them (via convolution strides) and process local relationships.
 """
 
 
@@ -74,7 +75,6 @@ class SpeechFeatureEmbedding(layers.Layer):
         self.conv3 = tf.keras.layers.Conv1D(
             num_hid, 11, strides=2, padding="same", activation="relu"
         )
-        self.pos_emb = layers.Embedding(input_dim=maxlen, output_dim=num_hid)
 
     def call(self, x):
         x = self.conv1(x)
@@ -307,7 +307,7 @@ with open(os.path.join(saveto, "metadata.csv"), encoding="utf-8") as f:
 
 
 def get_data(wavs, id_to_text, maxlen=50):
-    """ returns mapping of audio paths and transcription texts """
+    """returns mapping of audio paths and transcription texts"""
     data = []
     for w in wavs:
         id = w.split("/")[-1].split(".")[0]
@@ -464,7 +464,7 @@ class CustomSchedule(keras.optimizers.schedules.LearningRateSchedule):
         self.steps_per_epoch = steps_per_epoch
 
     def calculate_lr(self, epoch):
-        """ linear warm up - linear decay """
+        """linear warm up - linear decay"""
         warmup_lr = (
             self.init_lr
             + ((self.lr_after_warmup - self.init_lr) / (self.warmup_epochs - 1)) * epoch
@@ -474,7 +474,7 @@ class CustomSchedule(keras.optimizers.schedules.LearningRateSchedule):
             self.lr_after_warmup
             - (epoch - self.warmup_epochs)
             * (self.lr_after_warmup - self.final_lr)
-            / (self.decay_epochs),
+            / self.decay_epochs,
         )
         return tf.math.minimum(warmup_lr, decay_lr)
 
@@ -505,7 +505,8 @@ model = Transformer(
     num_classes=34,
 )
 loss_fn = tf.keras.losses.CategoricalCrossentropy(
-    from_logits=True, label_smoothing=0.1,
+    from_logits=True,
+    label_smoothing=0.1,
 )
 
 learning_rate = CustomSchedule(

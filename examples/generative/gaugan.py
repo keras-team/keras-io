@@ -4,6 +4,7 @@ Author: [Soumik Rakshit](https://github.com/soumik12345), [Sayak Paul](https://t
 Date created: 2021/12/26
 Last modified: 2022/01/03
 Description: Implementing a GauGAN for conditional image generation.
+Accelerator: GPU
 """
 """
 ## Introduction
@@ -78,10 +79,7 @@ pip install -qqq tensorflow_addons
 ## Imports
 """
 
-import os
-import random
 import numpy as np
-from tqdm import tqdm
 import matplotlib.pyplot as plt
 
 import tensorflow as tf
@@ -90,7 +88,6 @@ from tensorflow import keras
 from tensorflow.keras import layers
 
 from glob import glob
-from PIL import Image
 
 """
 ## Data splitting
@@ -122,7 +119,10 @@ AUTOTUNE = tf.data.AUTOTUNE
 
 def load(image_files, batch_size, is_train=True):
     def _random_crop(
-        segmentation_map, image, labels, crop_size=(IMG_HEIGHT, IMG_WIDTH),
+        segmentation_map,
+        image,
+        labels,
+        crop_size=(IMG_HEIGHT, IMG_WIDTH),
     ):
         crop_size = tf.convert_to_tensor(crop_size)
         image_shape = tf.shape(image)[:2]
@@ -810,11 +810,18 @@ by [Soon-Yau Cheong](https://www.linkedin.com/in/soonyau/) and
 * If you found this example interesting and exciting, you might want to check out
 [our repository](https://github.com/soumik12345/tf2_gans) which we are
 currently building. It will include reimplementations of popular GANs and pretrained
-models. Our focus will be on readibility and making the code as accessible as possible.
+models. Our focus will be on readability and making the code as accessible as possible.
 Our plain is to first train our implementation of GauGAN (following the code of
 this example) on a bigger dataset and then make the repository public. We welcome
 contributions!
 * Recently GauGAN2 was also released. You can check it out
 [here](https://blogs.nvidia.com/blog/2021/11/22/gaugan2-ai-art-demo/).
 
+"""
+"""
+Example available on HuggingFace.
+
+| Trained Model | Demo |
+| :--: | :--: |
+| [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Model-GauGAN%20Image%20Generation-black.svg)](https://huggingface.co/keras-io/GauGAN-Image-generation) | [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Spaces-GauGAN%20Image%20Generation-black.svg)](https://huggingface.co/spaces/keras-io/GauGAN_Conditional_Image_Generation) |
 """

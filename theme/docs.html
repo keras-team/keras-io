@@ -63,7 +63,7 @@
         <div class='k-outline'>
           {% for entry in outline %}
             <div class='k-outline-depth-{{entry.depth}}'>
-              {% if entry.depth == 2 %}▻{% endif %}
+              {% if entry.depth == 2 %} ◆  {% endif %}
               <a href='{{entry.url}}'>{{entry.title}}</a>
             </div>
           {% endfor %}

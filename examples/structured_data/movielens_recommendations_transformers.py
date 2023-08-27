@@ -4,6 +4,7 @@ Author: [Khalid Salama](https://www.linkedin.com/in/khalid-salama-24403144/)
 Date created: 2020/12/30
 Last modified: 2020/12/30
 Description: Rating rate prediction using the Behavior Sequence Transformer (BST) model on the Movielens.
+Accelerator: GPU
 """
 
 """
@@ -353,7 +354,6 @@ def encode_input_features(
     include_user_features=True,
     include_movie_features=True,
 ):
-
     encoded_transformer_features = []
     encoded_other_features = []
 

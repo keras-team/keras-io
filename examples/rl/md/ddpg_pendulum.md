@@ -80,7 +80,7 @@ We will use the `upper_bound` parameter to scale our actions later.
 
 
 ```python
-problem = "Pendulum-v0"
+problem = "Pendulum-v1"
 env = gym.make(problem)
 
 num_states = env.observation_space.shape[0]

@@ -2,7 +2,7 @@
 
 **Authors:** Scott Zhu, Francois Chollet<br>
 **Date created:** 2019/07/08<br>
-**Last modified:** 2020/04/14<br>
+**Last modified:** 2023/07/10<br>
 **Description:** Complete guide to using & customizing RNN layers.
 
 
@@ -38,8 +38,8 @@ prototype different research ideas in a flexible way with minimal code.
 ```python
 import numpy as np
 import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras import layers
+import keras
+from keras import layers
 ```
 
 ---
@@ -83,17 +83,18 @@ model.summary()
 ```
 Model: "sequential"
 _________________________________________________________________
-Layer (type)                 Output Shape              Param #   
+ Layer (type)                Output Shape              Param #   
 =================================================================
-embedding (Embedding)        (None, None, 64)          64000     
-_________________________________________________________________
-lstm (LSTM)                  (None, 128)               98816     
-_________________________________________________________________
-dense (Dense)                (None, 10)                1290      
+ embedding (Embedding)       (None, None, 64)          64000     
+                                                                 
+ lstm (LSTM)                 (None, 128)               98816     
+                                                                 
+ dense (Dense)               (None, 10)                1290      
+                                                                 
 =================================================================
-Total params: 164,106
-Trainable params: 164,106
-Non-trainable params: 0
+Total params: 164106 (641.04 KB)
+Trainable params: 164106 (641.04 KB)
+Non-trainable params: 0 (0.00 Byte)
 _________________________________________________________________
 
 ```
@@ -141,19 +142,20 @@ model.summary()
 ```
 Model: "sequential_1"
 _________________________________________________________________
-Layer (type)                 Output Shape              Param #   
+ Layer (type)                Output Shape              Param #   
 =================================================================
-embedding_1 (Embedding)      (None, None, 64)          64000     
-_________________________________________________________________
-gru (GRU)                    (None, None, 256)         247296    
-_________________________________________________________________
-simple_rnn (SimpleRNN)       (None, 128)               49280     
-_________________________________________________________________
-dense_1 (Dense)              (None, 10)                1290      
+ embedding_1 (Embedding)     (None, None, 64)          64000     
+                                                                 
+ gru (GRU)                   (None, None, 256)         247296    
+                                                                 
+ simple_rnn (SimpleRNN)      (None, 128)               49280     
+                                                                 
+ dense_1 (Dense)             (None, 10)                1290      
+                                                                 
 =================================================================
-Total params: 361,866
-Trainable params: 361,866
-Non-trainable params: 0
+Total params: 361866 (1.38 MB)
+Trainable params: 361866 (1.38 MB)
+Non-trainable params: 0 (0.00 Byte)
 _________________________________________________________________
 
 ```
@@ -209,27 +211,30 @@ model.summary()
 ```
 Model: "model"
 __________________________________________________________________________________________________
-Layer (type)                    Output Shape         Param #     Connected to                     
+ Layer (type)                Output Shape                 Param #   Connected to                  
 ==================================================================================================
-input_1 (InputLayer)            [(None, None)]       0                                            
-__________________________________________________________________________________________________
-input_2 (InputLayer)            [(None, None)]       0                                            
-__________________________________________________________________________________________________
-embedding_2 (Embedding)         (None, None, 64)     64000       input_1[0][0]                    
-__________________________________________________________________________________________________
-embedding_3 (Embedding)         (None, None, 64)     128000      input_2[0][0]                    
-__________________________________________________________________________________________________
-encoder (LSTM)                  [(None, 64), (None,  33024       embedding_2[0][0]                
-__________________________________________________________________________________________________
-decoder (LSTM)                  (None, 64)           33024       embedding_3[0][0]                
-                                                                 encoder[0][1]                    
-                                                                 encoder[0][2]                    
-__________________________________________________________________________________________________
-dense_2 (Dense)                 (None, 10)           650         decoder[0][0]                    
+ input_1 (InputLayer)        [(None, None)]               0         []                            
+                                                                                                  
+ input_2 (InputLayer)        [(None, None)]               0         []                            
+                                                                                                  
+ embedding_2 (Embedding)     (None, None, 64)             64000     ['input_1[0][0]']             
+                                                                                                  
+ embedding_3 (Embedding)     (None, None, 64)             128000    ['input_2[0][0]']             
+                                                                                                  
+ encoder (LSTM)              [(None, 64),                 33024     ['embedding_2[0][0]']         
+                              (None, 64),                                                         
+                              (None, 64)]                                                         
+                                                                                                  
+ decoder (LSTM)              (None, 64)                   33024     ['embedding_3[0][0]',         
+                                                                     'encoder[0][1]',             
+                                                                     'encoder[0][2]']             
+                                                                                                  
+ dense_2 (Dense)             (None, 10)                   650       ['decoder[0][0]']             
+                                                                                                  
 ==================================================================================================
-Total params: 258,698
-Trainable params: 258,698
-Non-trainable params: 0
+Total params: 258698 (1010.54 KB)
+Trainable params: 258698 (1010.54 KB)
+Non-trainable params: 0 (0.00 Byte)
 __________________________________________________________________________________________________
 
 ```
@@ -385,17 +390,20 @@ model.summary()
 ```
 Model: "sequential_2"
 _________________________________________________________________
-Layer (type)                 Output Shape              Param #   
+ Layer (type)                Output Shape              Param #   
 =================================================================
-bidirectional (Bidirectional (None, 5, 128)            38400     
-_________________________________________________________________
-bidirectional_1 (Bidirection (None, 64)                41216     
-_________________________________________________________________
-dense_3 (Dense)              (None, 10)                650       
+ bidirectional (Bidirection  (None, 5, 128)            38400     
+ al)                                                             
+                                                                 
+ bidirectional_1 (Bidirecti  (None, 64)                41216     
+ onal)                                                           
+                                                                 
+ dense_3 (Dense)             (None, 10)                650       
+                                                                 
 =================================================================
-Total params: 80,266
-Trainable params: 80,266
-Non-trainable params: 0
+Total params: 80266 (313.54 KB)
+Trainable params: 80266 (313.54 KB)
+Non-trainable params: 0 (0.00 Byte)
 _________________________________________________________________
 
 ```
@@ -452,6 +460,7 @@ input_dim = 28
 
 units = 64
 output_size = 10  # labels are from 0 to 9
+
 
 # Build the RNN model
 def build_model(allow_cudnn_kernel=True):
@@ -512,9 +521,9 @@ model.fit(
 
 <div class="k-default-codeblock">
 ```
-938/938 [==============================] - 12s 11ms/step - loss: 1.3152 - accuracy: 0.5698 - val_loss: 0.5888 - val_accuracy: 0.8086
+938/938 [==============================] - 15s 14ms/step - loss: 0.8905 - accuracy: 0.7191 - val_loss: 0.5095 - val_accuracy: 0.8328
 
-<tensorflow.python.keras.callbacks.History at 0x154f3e950>
+<keras.src.callbacks.History at 0x7f6fc45ddf10>
 
 ```
 </div>
@@ -536,9 +545,9 @@ noncudnn_model.fit(
 
 <div class="k-default-codeblock">
 ```
-938/938 [==============================] - 14s 14ms/step - loss: 0.4382 - accuracy: 0.8669 - val_loss: 0.3223 - val_accuracy: 0.8955
+938/938 [==============================] - 14s 14ms/step - loss: 0.3765 - accuracy: 0.8885 - val_loss: 0.3607 - val_accuracy: 0.8815
 
-<tensorflow.python.keras.callbacks.History at 0x154ce1a10>
+<keras.src.callbacks.History at 0x7f6fc44df650>
 
 ```
 </div>
@@ -573,7 +582,9 @@ Predicted result is: [3], target result is: 5
 
 ```
 </div>
+    
 ![png](/img/guides/working_with_rnns/working_with_rnns_31_1.png)
+    
 
 
 ---
@@ -602,6 +613,7 @@ for details on writing your own layers.
 
 ```python
 
+@keras.saving.register_keras_serializable()
 class NestedCell(keras.layers.Layer):
     def __init__(self, unit_1, unit_2, unit_3, **kwargs):
         self.unit_1 = unit_1
@@ -609,7 +621,7 @@ class NestedCell(keras.layers.Layer):
         self.unit_3 = unit_3
         self.state_size = [tf.TensorShape([unit_1]), tf.TensorShape([unit_2, unit_3])]
         self.output_size = [tf.TensorShape([unit_1]), tf.TensorShape([unit_2, unit_3])]
-        super(NestedCell, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def build(self, input_shapes):
         # expect input_shape to contain 2 items, [(batch, i1), (batch, i2, i3)]
@@ -697,9 +709,9 @@ model.fit(input_data, target_data, batch_size=batch_size)
 
 <div class="k-default-codeblock">
 ```
-10/10 [==============================] - 4s 263ms/step - loss: 0.9004 - rnn_1_loss: 0.3103 - rnn_1_1_loss: 0.5902 - rnn_1_accuracy: 0.1403 - rnn_1_1_accuracy: 0.0335
+10/10 [==============================] - 2s 63ms/step - loss: 0.7662 - rnn_1_loss: 0.2732 - rnn_1_1_loss: 0.4930 - rnn_1_accuracy: 0.0719 - rnn_1_1_accuracy: 0.0361
 
-<tensorflow.python.keras.callbacks.History at 0x154ce1990>
+<keras.src.callbacks.History at 0x7f6f505b8ed0>
 
 ```
 </div>

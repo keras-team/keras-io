@@ -4,6 +4,7 @@ Author: [lukewood](https://lukewood.xyz)
 Date created: 10/07/2021
 Last modified: 10/07/2021
 Description: This example shows how to use Keras callbacks to evaluate and export non-TensorFlow based metrics.
+Accelerator: GPU
 """
 """
 ## Introduction
@@ -64,7 +65,9 @@ class JaccardScoreCallback(keras.callbacks.Callback):
     def _write_metric(self, name, value):
         with self.summary_writer.as_default():
             tf.summary.scalar(
-                name, value, step=self.epoch,
+                name,
+                value,
+                step=self.epoch,
             )
             self.summary_writer.flush()
 

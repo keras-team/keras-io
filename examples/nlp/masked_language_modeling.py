@@ -4,6 +4,7 @@ Author: [Ankur Singh](https://twitter.com/ankur310794)
 Date created: 2020/09/18
 Last modified: 2020/09/18
 Description: Implement a Masked Language Model (MLM) with BERT and fine-tune it on the IMDB Reviews dataset.
+Accelerator: GPU
 """
 """
 ## Introduction
@@ -93,7 +94,6 @@ def get_text_list_from_files(files):
 
 
 def get_data_from_text_files(folder_name):
-
     pos_files = glob.glob("aclImdb/" + folder_name + "/pos/*.txt")
     pos_texts = get_text_list_from_files(pos_files)
     neg_files = glob.glob("aclImdb/" + folder_name + "/neg/*.txt")
@@ -465,7 +465,9 @@ classifer_model.summary()
 
 # Train the classifier with frozen BERT stage
 classifer_model.fit(
-    train_classifier_ds, epochs=5, validation_data=test_classifier_ds,
+    train_classifier_ds,
+    epochs=5,
+    validation_data=test_classifier_ds,
 )
 
 # Unfreeze the BERT model for fine-tuning
@@ -475,7 +477,9 @@ classifer_model.compile(
     optimizer=optimizer, loss="binary_crossentropy", metrics=["accuracy"]
 )
 classifer_model.fit(
-    train_classifier_ds, epochs=5, validation_data=test_classifier_ds,
+    train_classifier_ds,
+    epochs=5,
+    validation_data=test_classifier_ds,
 )
 
 """

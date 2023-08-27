@@ -118,7 +118,7 @@ with tf.device_scope('/cpu:0'):
 
 ### How can I distribute training across multiple machines?
 
-TensorFlow 2 enables you to write code that is mostly
+TensorFlow enables you to write code that is almost entirely
 agnostic to how you will distribute it:
 any code that can run locally can be distributed to multiple
 workers and accelerators by only adding to it a distribution strategy
@@ -141,15 +141,15 @@ using synchronous reduction of gradients across the replicas.
 multi-worker solution, where the parameters are stored on parameter servers, and
 workers update the gradients to parameter servers asynchronously.
 
-Distributed training is somewhat more involved than single-machine multi-device training. 
+Distributed training is somewhat more involved than single-machine multi-device training.
 With `ParameterServerStrategy`, you will need to launch a remote cluster of machines
-consisting "worker" and "ps", each running a `tf.distribute.Server`, then run your 
+consisting "worker" and "ps", each running a `tf.distribute.Server`, then run your
 python program on a "chief" machine that holds a `TF_CONFIG` environment variable
 that specifies how to communicate with the other machines in the cluster. With
 `MultiWorkerMirroredStrategy`, you will run the same program on each of the
-chief and workers, again with a `TF_CONFIG` environment variable that specifies 
-how to communicate with the cluster. From there, the workflow is similar to using 
-single-machine training, with the main difference being that you will use 
+chief and workers, again with a `TF_CONFIG` environment variable that specifies
+how to communicate with the cluster. From there, the workflow is similar to using
+single-machine training, with the main difference being that you will use
 `ParameterServerStrategy` or `MultiWorkerMirroredStrategy` as your distribution strategy.
 
 Importantly, you should:
@@ -161,7 +161,7 @@ it's a good idea to host your data on Google Cloud Storage).
 (e.g. by configuring a `keras.callbacks.BackupAndRestore` callback).
 
 Below, we provide a couple of code snippets that cover the basic workflow. For more information
-about CPU/GPU multi-worker training, see 
+about CPU/GPU multi-worker training, see
 [Multi-GPU and distributed training](/guides/distributed_training/); for TPU
 training, see [How can I train a Keras model on TPU?](#how-can-i-train-a-keras-model-on-tpu).
 
@@ -371,14 +371,11 @@ Whole-model saving means creating a file that will contain:
 - the training configuration (loss, optimizer)
 - the state of the optimizer, allowing you to resume training exactly where you left off.
 
-The default and recommended format to use is the TensorFlow [SavedModel format](https://www.tensorflow.org/guide/saved_model).
-In TensorFlow 2.0 and higher, you can just do: `model.save(your_file_path)`.
-
-For explicitness, you can also use `model.save(your_file_path, save_format='tf')`.
+The default and recommended way to save a whole model is to just do: `model.save(your_file_path.keras)`.
 
 Keras still supports its original HDF5-based saving format. To save a model in HDF5 format,
 use `model.save(your_file_path, save_format='h5')`. Note that this option is automatically used
-if `your_file_path` ends in `.h5` or `.keras`.
+if `your_file_path` ends in `.h5`.
 Please also see [How can I install HDF5 or h5py to save my models?](#how-can-i-install-hdf5-or-h5py-to-save-my-models) for instructions on how to install `h5py`.
 
 After saving a model in either format, you can reinstantiate it via `model = keras.models.load_model(your_file_path)`.
@@ -386,14 +383,14 @@ After saving a model in either format, you can reinstantiate it via `model = ker
 **Example:**
 
 ```python
-from tensorflow.keras.models import load_model
+from tensorflow.keras.saving import load_model
 
-model.save('my_model')  # creates a HDF5 file 'my_model.h5'
+model.save('my_model.keras')
 del model  # deletes the existing model
 
 # returns a compiled model
 # identical to the previous one
-model = load_model('my_model')
+model = load_model('my_model.keras')
 ```
 
 
@@ -466,8 +463,8 @@ model = model_from_json(json_string)
 
 **4) Handling custom layers (or other custom objects) in saved models**
 
-If the model you want to load includes custom layers or other custom classes or functions, 
-you can pass them to the loading mechanism via the `custom_objects` argument: 
+If the model you want to load includes custom layers or other custom classes or functions,
+you can pass them to the loading mechanism via the `custom_objects` argument:
 
 ```python
 from tensorflow.keras.models import load_model
@@ -571,9 +568,9 @@ On the other hand, the testing loss for an epoch is computed using the model as 
 You should use the [`tf.data` API](https://www.tensorflow.org/guide/data) to create `tf.data.Dataset` objects -- an abstraction over a data pipeline
 that can pull data from local disk, from a distributed file system, from GCS, etc., as well as efficiently apply various data transformations.
 
-For instance, the utility [`tf.keras.preprocessing.image_dataset_from_directory`](https://keras.io/api/preprocessing/image/#imagedatasetfromdirectory-function)
+For instance, the utility [`tf.keras.utils.image_dataset_from_directory`](https://keras.io/api/data_loading/image/)
 will create a dataset that reads image data from a local directory.
-Likewise, the utility [`tf.keras.preprocessing.text_dataset_from_directory`](https://keras.io/api/preprocessing/text/#textdatasetfromdirectory-function)
+Likewise, the utility [`tf.keras.utils.text_dataset_from_directory`](https://keras.io/api/data_loading/text/#text_dataset_from_directory-function)
 will create a dataset that reads text files from a local directory.
 
 Dataset objects can be directly passed to `fit()`, or can be iterated over in a custom low-level training loop.
@@ -611,12 +608,12 @@ dataset = tf.data.Dataset.from_tensor_slices((x, y)).repeat().batch(2)
 backup_callback = keras.callbacks.experimental.BackupAndRestore(
     backup_dir='/tmp/backup')
 try:
-  model.fit(dataset, epochs=20, steps_per_epoch=5, 
+  model.fit(dataset, epochs=20, steps_per_epoch=5,
             callbacks=[backup_callback, InterruptingCallback()])
 except RuntimeError:
   print('***Handling interruption***')
   # This continues at the epoch where it left off.
-  model.fit(dataset, epochs=20, steps_per_epoch=5, 
+  model.fit(dataset, epochs=20, steps_per_epoch=5,
             callbacks=[backup_callback])
 ```
 
@@ -1030,7 +1027,7 @@ updating metrics, etc. You would have to do this yourself. It's not difficult at
 ### How can I train models in mixed precision?
 
 Keras has built-in support for mixed precision training on GPU and TPU.
-See [this extensive guide](https://www.tensorflow.org/guide/keras/mixed_precision). 
+See [this extensive guide](https://www.tensorflow.org/guide/keras/mixed_precision).
 
 ---
 
@@ -1168,4 +1165,3 @@ Note that the methods `predict`, `fit`, `train_on_batch`, etc. will *all* update
 
 
 ---
-

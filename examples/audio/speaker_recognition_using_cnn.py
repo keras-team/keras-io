@@ -4,6 +4,7 @@ Author: [Fadi Badine](https://twitter.com/fadibadine)
 Date created: 14/06/2020
 Last modified: 03/07/2020
 Description: Classify speakers using Fast Fourier Transform (FFT) and a 1D Convnet.
+Accelerator: GPU
 """
 """
 ## Introduction
@@ -65,8 +66,8 @@ VALID_SPLIT = 0.1
 SHUFFLE_SEED = 43
 
 # The sampling rate to use.
-# This is the one used in all of the audio samples.
-# We will resample all of the noise to this sampling rate.
+# This is the one used in all the audio samples.
+# We will resample all the noise to this sampling rate.
 # This will also be the output size of the audio wave samples
 # (since all samples are of 1 second long)
 SAMPLING_RATE = 16000
@@ -162,7 +163,7 @@ for folder in os.listdir(DATASET_ROOT):
 In this section:
 
 - We load all noise samples (which should have been resampled to 16000)
-- We split those noise samples to chuncks of 16000 samples which
+- We split those noise samples to chunks of 16000 samples which
 correspond to 1 second duration each
 """
 
@@ -199,6 +200,7 @@ command = (
     "fi; done; done"
 )
 os.system(command)
+
 
 # Split noise into chunks of 16,000 steps each
 def load_noise_sample(path):
@@ -287,12 +289,20 @@ def audio_to_fft(audio):
 # Get the list of audio file paths along with their corresponding labels
 
 class_names = os.listdir(DATASET_AUDIO_PATH)
-print("Our class names: {}".format(class_names,))
+print(
+    "Our class names: {}".format(
+        class_names,
+    )
+)
 
 audio_paths = []
 labels = []
 for label, name in enumerate(class_names):
-    print("Processing speaker {}".format(name,))
+    print(
+        "Processing speaker {}".format(
+            name,
+        )
+    )
     dir_path = Path(DATASET_AUDIO_PATH) / name
     speaker_sample_paths = [
         os.path.join(dir_path, filepath)

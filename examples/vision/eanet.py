@@ -4,6 +4,7 @@ Author: [ZhiYong Chang](https://github.com/czy00000)
 Date created: 2021/10/19
 Last modified: 2021/10/19
 Description: Image classification with a Transformer that leverages external attention.
+Accelerator: GPU
 """
 
 """
@@ -100,7 +101,7 @@ data_augmentation.layers[0].adapt(x_train)
 
 class PatchExtract(layers.Layer):
     def __init__(self, patch_size, **kwargs):
-        super(PatchExtract, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.patch_size = patch_size
 
     def call(self, images):
@@ -119,7 +120,7 @@ class PatchExtract(layers.Layer):
 
 class PatchEmbedding(layers.Layer):
     def __init__(self, num_patch, embed_dim, **kwargs):
-        super(PatchEmbedding, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.num_patch = num_patch
         self.proj = layers.Dense(embed_dim)
         self.pos_embed = layers.Embedding(input_dim=num_patch, output_dim=embed_dim)

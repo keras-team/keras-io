@@ -4,6 +4,7 @@ Author: [Kenneth Borup](https://twitter.com/Kennethborup)
 Date created: 2020/09/01
 Last modified: 2020/09/01
 Description: Implementation of classical Knowledge Distillation.
+Accelerator: GPU
 """
 
 """
@@ -59,7 +60,7 @@ In the `test_step` method, we evaluate the student model on the provided dataset
 
 class Distiller(keras.Model):
     def __init__(self, student, teacher):
-        super(Distiller, self).__init__()
+        super().__init__()
         self.teacher = teacher
         self.student = student
 
@@ -72,7 +73,7 @@ class Distiller(keras.Model):
         alpha=0.1,
         temperature=3,
     ):
-        """ Configure the distiller.
+        """Configure the distiller.
 
         Args:
             optimizer: Keras optimizer for the student weights
@@ -85,7 +86,7 @@ class Distiller(keras.Model):
             temperature: Temperature for softening probability distributions.
                 Larger temperature gives softer distributions.
         """
-        super(Distiller, self).compile(optimizer=optimizer, metrics=metrics)
+        super().compile(optimizer=optimizer, metrics=metrics)
         self.student_loss_fn = student_loss_fn
         self.distillation_loss_fn = distillation_loss_fn
         self.alpha = alpha
@@ -104,10 +105,18 @@ class Distiller(keras.Model):
 
             # Compute losses
             student_loss = self.student_loss_fn(y, student_predictions)
-            distillation_loss = self.distillation_loss_fn(
-                tf.nn.softmax(teacher_predictions / self.temperature, axis=1),
-                tf.nn.softmax(student_predictions / self.temperature, axis=1),
+
+            # Compute scaled distillation loss from https://arxiv.org/abs/1503.02531
+            # The magnitudes of the gradients produced by the soft targets scale
+            # as 1/T^2, multiply them by T^2 when using both hard and soft targets.
+            distillation_loss = (
+                self.distillation_loss_fn(
+                    tf.nn.softmax(teacher_predictions / self.temperature, axis=1),
+                    tf.nn.softmax(student_predictions / self.temperature, axis=1),
+                )
+                * self.temperature**2
             )
+
             loss = self.alpha * student_loss + (1 - self.alpha) * distillation_loss
 
         # Compute gradients

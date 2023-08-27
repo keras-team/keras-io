@@ -4,6 +4,7 @@ Author: [Khalid Salama](https://www.linkedin.com/in/khalid-salama-24403144/)
 Date created: 2021/04/30
 Last modified: 2021/01/30
 Description: Implementing the Perceiver model for image classification.
+Accelerator: GPU
 """
 
 """
@@ -136,7 +137,7 @@ def create_ffn(hidden_units, dropout_rate):
 
 class Patches(layers.Layer):
     def __init__(self, patch_size):
-        super(Patches, self).__init__()
+        super().__init__()
         self.patch_size = patch_size
 
     def call(self, images):
@@ -166,7 +167,7 @@ Note that the orginal Perceiver paper uses the Fourier feature positional encodi
 
 class PatchEncoder(layers.Layer):
     def __init__(self, num_patches, projection_dim):
-        super(PatchEncoder, self).__init__()
+        super().__init__()
         self.num_patches = num_patches
         self.projection = layers.Dense(units=projection_dim)
         self.position_embedding = layers.Embedding(
@@ -203,7 +204,6 @@ where the `data_dim` is set to the `num_patches`.
 def create_cross_attention_module(
     latent_dim, data_dim, projection_dim, ffn_units, dropout_rate
 ):
-
     inputs = {
         # Recieve the latent array as an input of shape [1, latent_dim, projection_dim].
         "latent_array": layers.Input(shape=(latent_dim, projection_dim)),
@@ -259,7 +259,6 @@ def create_transformer_module(
     ffn_units,
     dropout_rate,
 ):
-
     # input_shape: [1, latent_dim, projection_dim]
     inputs = layers.Input(shape=(latent_dim, projection_dim))
 
@@ -310,7 +309,7 @@ class Perceiver(keras.Model):
         num_iterations,
         classifier_units,
     ):
-        super(Perceiver, self).__init__()
+        super().__init__()
 
         self.latent_dim = latent_dim
         self.data_dim = data_dim
@@ -364,7 +363,7 @@ class Perceiver(keras.Model):
             hidden_units=self.classifier_units, dropout_rate=self.dropout_rate
         )
 
-        super(Perceiver, self).build(input_shape)
+        super().build(input_shape)
 
     def call(self, inputs):
         # Augment data.
@@ -400,10 +399,10 @@ class Perceiver(keras.Model):
 
 
 def run_experiment(model):
-
     # Create LAMB optimizer with weight decay.
     optimizer = tfa.optimizers.LAMB(
-        learning_rate=learning_rate, weight_decay_rate=weight_decay,
+        learning_rate=learning_rate,
+        weight_decay_rate=weight_decay,
     )
 
     # Compile the model.

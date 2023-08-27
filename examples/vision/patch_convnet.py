@@ -4,6 +4,7 @@ Author: [Aritra Roy Gosthipaty](https://twitter.com/ariG23498)
 Date created: 2022/01/22
 Last modified: 2022/01/22
 Description: Building a patch-convnet architecture and visualizing its attention maps.
+Accelerator: GPU
 """
 """
 ## Introduction
@@ -20,7 +21,7 @@ to help explain a classification decision. In the academic paper
 by Touvron et. al, the authors propose to set up an equivalent visualization for
 convnets. They propose to substitute the global average pooling layer
 of a convnet with a Transformer layer. The self-attention layer of the
-Transformer would produces attention maps that correspond to the
+Transformer would produce attention maps that correspond to the
 most attended patches of the image for the classification decision.
 
 In this example, we minimally implement the ideas of
@@ -31,7 +32,7 @@ minor modifications (to adjust the implementation with CIFAR10):
 - The simple design for the attention-based pooling layer, such that
     it explicitly provides the weights (importance) of the different
     patches.
-- The novel architecture of convnet called the **PatchConvNet** which
+- The novel architecture of convnet is called the **PatchConvNet** which
     deviates from the age old pyramidal architecture.
 """
 
@@ -113,7 +114,10 @@ test_ds = test_ds.batch(BATCH_SIZE).prefetch(AUTO)
 
 def get_preprocessing():
     model = keras.Sequential(
-        [layers.Rescaling(1 / 255.0), layers.Resizing(IMAGE_SIZE, IMAGE_SIZE),],
+        [
+            layers.Rescaling(1 / 255.0),
+            layers.Resizing(IMAGE_SIZE, IMAGE_SIZE),
+        ],
         name="preprocessing",
     )
     return model
@@ -204,7 +208,9 @@ class SqueezeExcite(layers.Layer):
         filters = input_shape[-1]
         self.squeeze = layers.GlobalAveragePooling2D(keepdims=True)
         self.reduction = layers.Dense(
-            units=filters // self.ratio, activation="relu", use_bias=False,
+            units=filters // self.ratio,
+            activation="relu",
+            use_bias=False,
         )
         self.excite = layers.Dense(units=filters, activation="sigmoid", use_bias=False)
         self.multiply = layers.Multiply()
@@ -242,7 +248,11 @@ class Trunk(layers.Layer):
     def get_config(self):
         config = super().get_config()
         config.update(
-            {"ratio": self.ratio, "dimensions": self.dimensions, "depth": self.depth,}
+            {
+                "ratio": self.ratio,
+                "dimensions": self.dimensions,
+                "depth": self.depth,
+            }
         )
         return config
 
@@ -320,7 +330,9 @@ class AttentionPooling(layers.Layer):
 
     def build(self, input_shape):
         self.attention = layers.MultiHeadAttention(
-            num_heads=1, key_dim=self.dimensions, dropout=0.2,
+            num_heads=1,
+            key_dim=self.dimensions,
+            dropout=0.2,
         )
         self.layer_norm1 = layers.LayerNormalization(epsilon=1e-6)
         self.layer_norm2 = layers.LayerNormalization(epsilon=1e-6)
@@ -428,7 +440,7 @@ class PatchConvNet(keras.Model):
         ]
         grads = tape.gradient(total_loss, train_vars)
         trainable_variable_list = []
-        for (grad, var) in zip(grads, train_vars):
+        for grad, var in zip(grads, train_vars):
             for g, v in zip(grad, var):
                 trainable_variable_list.append((g, v))
         self.optimizer.apply_gradients(trainable_variable_list)
@@ -513,7 +525,7 @@ class WarmUpCosine(keras.optimizers.schedules.LearningRateSchedule):
     def __init__(
         self, learning_rate_base, total_steps, warmup_learning_rate, warmup_steps
     ):
-        super(WarmUpCosine, self).__init__()
+        super().__init__()
         self.learning_rate_base = learning_rate_base
         self.total_steps = total_steps
         self.warmup_learning_rate = warmup_learning_rate
@@ -591,7 +603,10 @@ patch_conv_net.compile(
     ],
 )
 history = patch_conv_net.fit(
-    train_ds, epochs=EPOCHS, validation_data=val_ds, callbacks=train_callbacks,
+    train_ds,
+    epochs=EPOCHS,
+    validation_data=val_ds,
+    callbacks=train_callbacks,
 )
 
 # Evaluate the model with the test dataset.
@@ -665,4 +680,6 @@ accuracy.
 
 I would like to thank [JarvisLabs.ai](https://jarvislabs.ai/) for
 providing GPU credits for this project.
+
+You can try the model on [Hugging Face Spaces](https://huggingface.co/spaces/keras-io/patch-conv-net).
 """

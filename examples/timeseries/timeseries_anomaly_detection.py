@@ -4,6 +4,7 @@ Author: [pavithrasv](https://github.com/pavithrasv)
 Date created: 2020/05/31
 Last modified: 2020/05/31
 Description: Detect anomalies in a timeseries using an Autoencoder.
+Accelerator: GPU
 """
 
 """
@@ -103,6 +104,7 @@ training data.
 """
 
 TIME_STEPS = 288
+
 
 # Generated training sequences for use in the model.
 def create_sequences(values, time_steps=TIME_STEPS):

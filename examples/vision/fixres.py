@@ -4,6 +4,7 @@ Author: [Sayak Paul](https://twitter.com/RisingSayak)
 Date created: 2021/10/08
 Last modified: 2021/10/10
 Description: Mitigating resolution discrepancy between training and test sets.
+Accelerator: GPU
 """
 """
 ## Introduction
@@ -251,7 +252,10 @@ def train_and_evaluate(
         callbacks = None
 
     model.fit(
-        train_ds, validation_data=val_ds, epochs=epochs, callbacks=callbacks,
+        train_ds,
+        validation_data=val_ds,
+        epochs=epochs,
+        callbacks=callbacks,
     )
 
     _, accuracy = model.evaluate(val_ds)

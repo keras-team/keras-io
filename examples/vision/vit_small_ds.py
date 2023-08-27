@@ -4,6 +4,7 @@ Author: [Aritra Roy Gosthipaty](https://twitter.com/ariG23498)
 Date created: 2022/01/07
 Last modified: 2022/01/10
 Description: Training a ViT from scratch on smaller datasets with shifted patch tokenization and locality self-attention.
+Accelerator: GPU
 """
 """
 ## Introduction
@@ -442,13 +443,14 @@ def create_vit_classifier(vanilla=False):
 ## Compile, train, and evaluate the mode
 """
 
+
 # Some code is taken from:
 # https://www.kaggle.com/ashusma/training-rfcx-tensorflow-tpu-effnet-b2.
 class WarmUpCosine(keras.optimizers.schedules.LearningRateSchedule):
     def __init__(
         self, learning_rate_base, total_steps, warmup_learning_rate, warmup_steps
     ):
-        super(WarmUpCosine, self).__init__()
+        super().__init__()
 
         self.learning_rate_base = learning_rate_base
         self.total_steps = total_steps
@@ -545,4 +547,7 @@ supplementary of the paper.
 
 I would like to thank [Jarvislabs.ai](https://jarvislabs.ai/) for
 generously helping with GPU credits.
+
+You can use the trained model hosted on [Hugging Face Hub](https://huggingface.co/keras-io/vit_small_ds_v2)
+and try the demo on [Hugging Face Spaces](https://huggingface.co/spaces/keras-io/vit-small-ds).
 """

@@ -4,6 +4,7 @@ Authors: Francois Chollet, Mark Omernick
 Date created: 2020/07/25
 Last modified: 2021/04/23
 Description: Overview of how to leverage preprocessing layers to create end-to-end models.
+Accelerator: GPU
 """
 """
 ## Keras preprocessing
@@ -28,7 +29,7 @@ handle feature normalization or feature value indexing on their own.
 
 ### Numerical features preprocessing
 
-- `tf.keras.layers.Normalization`: performs feature-wise normalize of
+- `tf.keras.layers.Normalization`: performs feature-wise normalization of
   input features.
 - `tf.keras.layers.Discretization`: turns continuous numerical features
   into integer categorical features.
@@ -39,7 +40,7 @@ handle feature normalization or feature value indexing on their own.
   into one-hot, multi-hot, or count dense representations.
 - `tf.keras.layers.Hashing`: performs categorical feature hashing, also known as
   the "hashing trick".
-- `tf.keras.layers.StringLookup`: turns string categorical values an encoded
+- `tf.keras.layers.StringLookup`: turns string categorical values into an encoded
   representation that can be read by an `Embedding` layer or `Dense` layer.
 - `tf.keras.layers.IntegerLookup`: turns integer categorical values into an
   encoded representation that can be read by an `Embedding` layer or `Dense`
@@ -52,7 +53,7 @@ These layers are for standardizing the inputs of an image model.
 
 - `tf.keras.layers.Resizing`: resizes a batch of images to a target size.
 - `tf.keras.layers.Rescaling`: rescales and offsets the values of a batch of
-  image (e.g. go from inputs in the `[0, 255]` range to inputs in the `[0, 1]`
+  images (e.g. go from inputs in the `[0, 255]` range to inputs in the `[0, 1]`
   range.
 - `tf.keras.layers.CenterCrop`: returns a center crop of a batch of images.
 
@@ -66,8 +67,6 @@ are only active during training.
 - `tf.keras.layers.RandomTranslation`
 - `tf.keras.layers.RandomRotation`
 - `tf.keras.layers.RandomZoom`
-- `tf.keras.layers.RandomHeight`
-- `tf.keras.layers.RandomWidth`
 - `tf.keras.layers.RandomContrast`
 
 """
@@ -95,9 +94,16 @@ You set the state of a preprocessing layer by exposing it to training data, via 
 
 import numpy as np
 import tensorflow as tf
-from tensorflow.keras import layers
+import keras
+from keras import layers
 
-data = np.array([[0.1, 0.2, 0.3], [0.8, 0.9, 1.0], [1.5, 1.6, 1.7],])
+data = np.array(
+    [
+        [0.1, 0.2, 0.3],
+        [0.8, 0.9, 1.0],
+        [1.5, 1.6, 1.7],
+    ]
+)
 layer = layers.Normalization()
 layer.adapt(data)
 normalized_data = layer(data)
@@ -134,7 +140,7 @@ files for the `TextVectorization`, `StringLookup`, or `IntegerLookup` layers alr
 exist, those can be loaded directly into the lookup tables by passing a path to the
 vocabulary file in the layer's constructor arguments.
 
-Here's an example where we instantiate a `StringLookup` layer with precomputed vocabulary:
+Here's an example where you instantiate a `StringLookup` layer with precomputed vocabulary:
 """
 
 vocab = ["a", "b", "c", "d"]
@@ -159,7 +165,7 @@ model = keras.Model(inputs, outputs)
 
 With this option, preprocessing will happen on device, synchronously with the rest of the
 model execution, meaning that it will benefit from GPU acceleration.
-If you're training on GPU, this is the best option for the `Normalization` layer, and for
+If you're training on a GPU, this is the best option for the `Normalization` layer, and for
 all image preprocessing and data augmentation layers.
 
 **Option 2:** apply it to your `tf.data.Dataset`, so as to obtain a dataset that yields
@@ -169,7 +175,7 @@ batches of preprocessed data, like this:
 dataset = dataset.map(lambda x, y: (preprocessing_layer(x), y))
 ```
 
-With this option, your preprocessing will happen on CPU, asynchronously, and will be
+With this option, your preprocessing will happen on a CPU, asynchronously, and will be
 buffered before going into the model.
 In addition, if you call `dataset.prefetch(tf.data.AUTOTUNE)` on your dataset,
 the preprocessing will happen efficiently in parallel with training:
@@ -181,12 +187,16 @@ model.fit(dataset, ...)
 ```
 
 This is the best option for `TextVectorization`, and all structured data preprocessing
-layers. It can also be a good option if you're training on CPU
-and you use image preprocessing layers.
+layers. It can also be a good option if you're training on a CPU and you use image preprocessing
+layers.
 
-**When running on TPU, you should always place preprocessing layers in the `tf.data` pipeline**
-(with the exception of `Normalization` and `Rescaling`, which run fine on TPU and are commonly
-used as the first layer is an image model).
+Note that the `TextVectorization` layer can only be executed on a CPU, as it is mostly a
+dictionary lookup operation. Therefore, if you are training your model on a GPU or a TPU,
+you should put the `TextVectorization` layer in the `tf.data` pipeline to get the best performance.
+
+**When running on a TPU, you should always place preprocessing layers in the `tf.data` pipeline**
+(with the exception of `Normalization` and `Rescaling`, which run fine on a TPU and are commonly
+used as the first layer in an image model).
 """
 
 """
@@ -218,6 +228,28 @@ x = preprocessing_layer(inputs)
 outputs = training_model(x)
 inference_model = keras.Model(inputs, outputs)
 ```
+"""
+
+"""
+## Preprocessing during multi-worker training
+
+Preprocessing layers are compatible with the
+[tf.distribute](https://www.tensorflow.org/api_docs/python/tf/distribute) API
+for running training across multiple machines.
+
+In general, preprocessing layers should be placed inside a `tf.distribute.Strategy.scope()`
+and called either inside or before the model as discussed above.
+
+```python
+with strategy.scope():
+    inputs = keras.Input(shape=input_shape)
+    preprocessing_layer = tf.keras.layers.Hashing(10)
+    dense_layer = tf.keras.layers.Dense(16)
+```
+
+For more details, refer to the _Data preprocessing_ section
+of the [Distributed input](https://www.tensorflow.org/tutorials/distribute/input)
+tutorial.
 """
 
 """
@@ -386,7 +418,8 @@ text_vectorizer.adapt(adapt_data)
 
 # Try out the layer
 print(
-    "Encoded text:\n", text_vectorizer(["The Brain is deeper than the sea"]).numpy(),
+    "Encoded text:\n",
+    text_vectorizer(["The Brain is deeper than the sea"]).numpy(),
 )
 
 # Create a simple model
@@ -430,7 +463,7 @@ use the `TextVectorization` layer as part of the input pipeline.
 """
 
 """
-### Encoding text as a dense matrix of ngrams with multi-hot encoding
+### Encoding text as a dense matrix of N-grams with multi-hot encoding
 
 This is how you should preprocess text to be passed to a `Dense` layer.
 """
@@ -452,7 +485,8 @@ text_vectorizer.adapt(adapt_data)
 
 # Try out the layer
 print(
-    "Encoded text:\n", text_vectorizer(["The Brain is deeper than the sea"]).numpy(),
+    "Encoded text:\n",
+    text_vectorizer(["The Brain is deeper than the sea"]).numpy(),
 )
 
 # Create a simple model
@@ -485,7 +519,7 @@ test_output = end_to_end_model(test_data)
 print("Model output:", test_output)
 
 """
-### Encoding text as a dense matrix of ngrams with TF-IDF weighting
+### Encoding text as a dense matrix of N-grams with TF-IDF weighting
 
 This is an alternative way of preprocessing text before passing it to a `Dense` layer.
 """
@@ -503,14 +537,12 @@ adapt_data = tf.constant(
 # (multi-hot with TF-IDF weighting) and ngrams=2 (index all bigrams)
 text_vectorizer = layers.TextVectorization(output_mode="tf-idf", ngrams=2)
 # Index the bigrams and learn the TF-IDF weights via `adapt()`
-
-with tf.device("CPU"):
-    # A bug that prevents this from running on GPU for now.
-    text_vectorizer.adapt(adapt_data)
+text_vectorizer.adapt(adapt_data)
 
 # Try out the layer
 print(
-    "Encoded text:\n", text_vectorizer(["The Brain is deeper than the sea"]).numpy(),
+    "Encoded text:\n",
+    text_vectorizer(["The Brain is deeper than the sea"]).numpy(),
 )
 
 # Create a simple model
@@ -551,11 +583,11 @@ print("Model output:", test_output)
 You may find yourself working with a very large vocabulary in a `TextVectorization`, a `StringLookup` layer,
 or an `IntegerLookup` layer. Typically, a vocabulary larger than 500MB would be considered "very large".
 
-In such case, for best performance, you should avoid using `adapt()`.
+In such a case, for best performance, you should avoid using `adapt()`.
 Instead, pre-compute your vocabulary in advance
 (you could use Apache Beam or TF Transform for this)
 and store it in a file. Then load the vocabulary into the layer at construction
-time by passing the filepath as the `vocabulary` argument.
+time by passing the file path as the `vocabulary` argument.
 
 
 ### Using lookup layers on a TPU pod or with `ParameterServerStrategy`.

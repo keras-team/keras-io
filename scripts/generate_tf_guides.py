@@ -79,7 +79,9 @@ CONFIG = [
 
 TF_BUTTONS_TEMPLATE = {
     "cell_type": "markdown",
-    "metadata": {"colab_type": "text",},
+    "metadata": {
+        "colab_type": "text",
+    },
     "source": [
         '<table class="tfo-notebook-buttons" align="left">\n',
         "  <td>\n",
@@ -102,13 +104,19 @@ TF_BUTTONS_TEMPLATE = {
 TF_IPYNB_CELLS_TEMPLATE = [
     {
         "cell_type": "markdown",
-        "metadata": {"colab_type": "text",},
+        "metadata": {
+            "colab_type": "text",
+        },
         "source": ["##### Copyright 2020 The TensorFlow Authors."],
     },
     {
         "cell_type": "code",
         "execution_count": 0,
-        "metadata": {"cellView": "form", "colab": {}, "colab_type": "code",},
+        "metadata": {
+            "cellView": "form",
+            "colab": {},
+            "colab_type": "code",
+        },
         "outputs": [],
         "source": [
             '#@title Licensed under the Apache License, Version 2.0 (the "License");\n',
@@ -212,7 +220,7 @@ def generate_single_tf_guide(source_dir, target_dir, title, source_name, target_
     for cell in cells:
         cell_count += 1
         str_to_hash = f"{cell_count} {cell['source']}"
-        cell_id = hashlib.sha256(str_to_hash.encode('utf-8')).hexdigest()
+        cell_id = hashlib.sha256(str_to_hash.encode("utf-8")).hexdigest()
         cell["metadata"]["id"] = cell_id[:12]
 
     notebook = {}

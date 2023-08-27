@@ -4,6 +4,7 @@ Author: [ADMoreau](https://github.com/ADMoreau)
 Date created: 2020/05/17
 Last modified: 2020/05/23
 Description: PixelCNN implemented in Keras.
+Accelerator: GPU
 """
 
 """
@@ -37,7 +38,7 @@ input_shape = (28, 28, 1)
 n_residual_blocks = 5
 # The data, split between train and test sets
 (x, _), (y, _) = keras.datasets.mnist.load_data()
-# Concatenate all of the images together
+# Concatenate all the images together
 data = np.concatenate((x, y), axis=0)
 # Round all pixel values less than 33% of the max 256 value to 0
 # anything above this value gets rounded up to 1 so that all values are either
@@ -49,11 +50,12 @@ data = data.astype(np.float32)
 ## Create two classes for the requisite Layers for the model
 """
 
+
 # The first layer is the PixelCNN layer. This layer simply
 # builds on the 2D convolutional layer, but includes masking.
 class PixelConvLayer(layers.Layer):
     def __init__(self, mask_type, **kwargs):
-        super(PixelConvLayer, self).__init__()
+        super().__init__()
         self.mask_type = mask_type
         self.conv = layers.Conv2D(**kwargs)
 
@@ -77,7 +79,7 @@ class PixelConvLayer(layers.Layer):
 # This is just a normal residual block, but based on the PixelConvLayer.
 class ResidualBlock(keras.layers.Layer):
     def __init__(self, filters, **kwargs):
-        super(ResidualBlock, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.conv1 = keras.layers.Conv2D(
             filters=filters, kernel_size=1, activation="relu"
         )
@@ -140,6 +142,9 @@ pixel_cnn.fit(
 The PixelCNN cannot generate the full image at once. Instead, it must generate each pixel in
 order, append the last generated pixel to the current image, and feed the image back into the
 model to repeat the process.
+
+You can use the trained model hosted on [Hugging Face Hub](https://huggingface.co/keras-io/pixel-cnn-mnist)
+and try the demo on [Hugging Face Spaces](https://huggingface.co/spaces/keras-io/pixelcnn-mnist-image-generation).
 """
 
 from IPython.display import Image, display
@@ -175,7 +180,7 @@ def deprocess_image(x):
 
 # Iterate over the generated images and plot them with matplotlib.
 for i, pic in enumerate(pixels):
-    keras.preprocessing.image.save_img(
+    keras.utils.save_img(
         "generated_image_{}.png".format(i), deprocess_image(np.squeeze(pic, -1))
     )
 

@@ -4,6 +4,7 @@ Author: [Sayak Paul](https://twitter.com/RisingSayak)
 Date created: 2021/10/12
 Last modified: 2021/10/12
 Description: An all-convolutional network applied to patches of images.
+Accelerator: GPU
 """
 """
 ## Introduction
@@ -90,7 +91,10 @@ image_size = 32
 auto = tf.data.AUTOTUNE
 
 data_augmentation = keras.Sequential(
-    [layers.RandomCrop(image_size, image_size), layers.RandomFlip("horizontal"),],
+    [
+        layers.RandomCrop(image_size, image_size),
+        layers.RandomFlip("horizontal"),
+    ],
     name="data_augmentation",
 )
 
@@ -309,4 +313,8 @@ like self-attention. Following works are along this line of research:
 * ConViT ([d'Ascoli et al.](https://arxiv.org/abs/2103.10697))
 * CCT ([Hassani et al.](https://arxiv.org/abs/2104.05704))
 * CoAtNet ([Dai et al.](https://arxiv.org/abs/2106.04803))
+
+| Trained Model | Demo |
+| :--: | :--: |
+| [![Generic badge](https://img.shields.io/badge/🤗%20Model-ConvMixer-black.svg)](https://huggingface.co/keras-io/conv_Mixer) | [![Generic badge](https://img.shields.io/badge/🤗%20Spaces-ConvMixer-black.svg)](https://huggingface.co/spaces/keras-io/conv_Mixer) |
 """

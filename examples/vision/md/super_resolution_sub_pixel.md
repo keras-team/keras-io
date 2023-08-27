@@ -34,9 +34,9 @@ import numpy as np
 
 from tensorflow import keras
 from tensorflow.keras import layers
-from tensorflow.keras.preprocessing.image import load_img
-from tensorflow.keras.preprocessing.image import array_to_img
-from tensorflow.keras.preprocessing.image import img_to_array
+from tensorflow.keras.utils import load_img
+from tensorflow.keras.utils import array_to_img
+from tensorflow.keras.utils import img_to_array
 from tensorflow.keras.preprocessing import image_dataset_from_directory
 
 from IPython.display import display
@@ -413,7 +413,7 @@ This is the main metric we use to evaluate super-resolution performance.
 
 class ESPCNCallback(keras.callbacks.Callback):
     def __init__(self):
-        super(ESPCNCallback, self).__init__()
+        super().__init__()
         self.test_img = get_lowres_image(load_img(test_img_paths[0]), upscale_factor)
 
     # Store PSNR value in each epoch.
@@ -1075,3 +1075,5 @@ Avg. PSNR of reconstructions is 26.6233
 
 ```
 </div>
+
+You can use the trained model hosted on [Hugging Face Hub](https://huggingface.co/keras-io/super-resolution) and try the demo on [Hugging Face Spaces](https://huggingface.co/spaces/keras-io/super-resolution).

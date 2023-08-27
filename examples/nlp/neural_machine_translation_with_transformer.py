@@ -2,8 +2,9 @@
 Title: English-to-Spanish translation with a sequence-to-sequence Transformer
 Author: [fchollet](https://twitter.com/fchollet)
 Date created: 2021/05/26
-Last modified: 2021/05/26
+Last modified: 2023/08/17
 Description: Implementing a sequence-to-sequene Transformer and training it on a machine translation task.
+Accelerator: GPU
 """
 """
 ## Introduction
@@ -129,7 +130,9 @@ def custom_standardization(input_string):
 
 
 eng_vectorization = TextVectorization(
-    max_tokens=vocab_size, output_mode="int", output_sequence_length=sequence_length,
+    max_tokens=vocab_size,
+    output_mode="int",
+    output_sequence_length=sequence_length,
 )
 spa_vectorization = TextVectorization(
     max_tokens=vocab_size,
@@ -161,7 +164,13 @@ it provides the next words in the target sentence -- what the model will try to 
 def format_dataset(eng, spa):
     eng = eng_vectorization(eng)
     spa = spa_vectorization(spa)
-    return ({"encoder_inputs": eng, "decoder_inputs": spa[:, :-1],}, spa[:, 1:])
+    return (
+        {
+            "encoder_inputs": eng,
+            "decoder_inputs": spa[:, :-1],
+        },
+        spa[:, 1:],
+    )
 
 
 def make_dataset(pairs):
@@ -201,7 +210,7 @@ to the `TransformerDecoder`, together with the target sequence so far (target wo
 The `TransformerDecoder` will then seek to predict the next words in the target sequence (N+1 and beyond).
 
 A key detail that makes this possible is causal masking
-(see method `get_causal_attention_mask()` on the `TransformerDecoder`).
+(`use_causal_mask=True` in the first attention layer of the `TransformerDecoder`).
 The `TransformerDecoder` sees the entire sequences at once, and thus we must make
 sure that it only uses information from target tokens 0 to N when predicting token N+1
 (otherwise, it could use information from the future, which would
@@ -211,7 +220,7 @@ result in a model that cannot be used at inference time).
 
 class TransformerEncoder(layers.Layer):
     def __init__(self, embed_dim, dense_dim, num_heads, **kwargs):
-        super(TransformerEncoder, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.embed_dim = embed_dim
         self.dense_dim = dense_dim
         self.num_heads = num_heads
@@ -219,26 +228,36 @@ class TransformerEncoder(layers.Layer):
             num_heads=num_heads, key_dim=embed_dim
         )
         self.dense_proj = keras.Sequential(
-            [layers.Dense(dense_dim, activation="relu"), layers.Dense(embed_dim),]
+            [
+                layers.Dense(dense_dim, activation="relu"),
+                layers.Dense(embed_dim),
+            ]
         )
         self.layernorm_1 = layers.LayerNormalization()
         self.layernorm_2 = layers.LayerNormalization()
         self.supports_masking = True
 
     def call(self, inputs, mask=None):
-        if mask is not None:
-            padding_mask = tf.cast(mask[:, tf.newaxis, tf.newaxis, :], dtype="int32")
-        attention_output = self.attention(
-            query=inputs, value=inputs, key=inputs, attention_mask=padding_mask
-        )
+        attention_output = self.attention(query=inputs, value=inputs, key=inputs)
         proj_input = self.layernorm_1(inputs + attention_output)
         proj_output = self.dense_proj(proj_input)
         return self.layernorm_2(proj_input + proj_output)
 
+    def get_config(self):
+        config = super().get_config()
+        config.update(
+            {
+                "embed_dim": self.embed_dim,
+                "dense_dim": self.dense_dim,
+                "num_heads": self.num_heads,
+            }
+        )
+        return config
+
 
 class PositionalEmbedding(layers.Layer):
     def __init__(self, sequence_length, vocab_size, embed_dim, **kwargs):
-        super(PositionalEmbedding, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.token_embeddings = layers.Embedding(
             input_dim=vocab_size, output_dim=embed_dim
         )
@@ -259,10 +278,21 @@ class PositionalEmbedding(layers.Layer):
     def compute_mask(self, inputs, mask=None):
         return tf.math.not_equal(inputs, 0)
 
+    def get_config(self):
+        config = super().get_config()
+        config.update(
+            {
+                "sequence_length": self.sequence_length,
+                "vocab_size": self.vocab_size,
+                "embed_dim": self.embed_dim,
+            }
+        )
+        return config
+
 
 class TransformerDecoder(layers.Layer):
     def __init__(self, embed_dim, latent_dim, num_heads, **kwargs):
-        super(TransformerDecoder, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.embed_dim = embed_dim
         self.latent_dim = latent_dim
         self.num_heads = num_heads
@@ -273,47 +303,43 @@ class TransformerDecoder(layers.Layer):
             num_heads=num_heads, key_dim=embed_dim
         )
         self.dense_proj = keras.Sequential(
-            [layers.Dense(latent_dim, activation="relu"), layers.Dense(embed_dim),]
+            [
+                layers.Dense(latent_dim, activation="relu"),
+                layers.Dense(embed_dim),
+            ]
         )
         self.layernorm_1 = layers.LayerNormalization()
         self.layernorm_2 = layers.LayerNormalization()
         self.layernorm_3 = layers.LayerNormalization()
+        self.add = layers.Add()  # instead of `+` to preserve mask
         self.supports_masking = True
 
     def call(self, inputs, encoder_outputs, mask=None):
-        causal_mask = self.get_causal_attention_mask(inputs)
-        if mask is not None:
-            padding_mask = tf.cast(mask[:, tf.newaxis, :], dtype="int32")
-            padding_mask = tf.minimum(padding_mask, causal_mask)
-
         attention_output_1 = self.attention_1(
-            query=inputs, value=inputs, key=inputs, attention_mask=causal_mask
+            query=inputs, value=inputs, key=inputs, use_causal_mask=True
         )
-        out_1 = self.layernorm_1(inputs + attention_output_1)
+        out_1 = self.layernorm_1(self.add([inputs, attention_output_1]))
 
         attention_output_2 = self.attention_2(
             query=out_1,
             value=encoder_outputs,
             key=encoder_outputs,
-            attention_mask=padding_mask,
         )
-        out_2 = self.layernorm_2(out_1 + attention_output_2)
+        out_2 = self.layernorm_2(self.add([out_1, attention_output_2]))
 
         proj_output = self.dense_proj(out_2)
-        return self.layernorm_3(out_2 + proj_output)
+        return self.layernorm_3(self.add([out_2, proj_output]))
 
-    def get_causal_attention_mask(self, inputs):
-        input_shape = tf.shape(inputs)
-        batch_size, sequence_length = input_shape[0], input_shape[1]
-        i = tf.range(sequence_length)[:, tf.newaxis]
-        j = tf.range(sequence_length)
-        mask = tf.cast(i >= j, dtype="int32")
-        mask = tf.reshape(mask, (1, input_shape[1], input_shape[1]))
-        mult = tf.concat(
-            [tf.expand_dims(batch_size, -1), tf.constant([1, 1], dtype=tf.int32)],
-            axis=0,
+    def get_config(self):
+        config = super().get_config()
+        config.update(
+            {
+                "embed_dim": self.embed_dim,
+                "latent_dim": self.latent_dim,
+                "num_heads": self.num_heads,
+            }
         )
-        return tf.tile(mask, mult)
+        return config
 
 
 """

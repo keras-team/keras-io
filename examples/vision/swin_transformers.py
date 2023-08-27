@@ -4,6 +4,7 @@ Author: [Rishit Dagli](https://twitter.com/rishit_dagli)
 Date created: 2021/09/08
 Last modified: 2021/09/08
 Description: Image classification using Swin Transformers, a general-purpose backbone for computer vision.
+Accelerator: GPU
 """
 """
 This example implements [Swin Transformer: Hierarchical Vision Transformer using Shifted Windows](https://arxiv.org/abs/2103.14030)
@@ -126,7 +127,7 @@ def window_reverse(windows, window_size, height, width, channels):
 
 class DropPath(layers.Layer):
     def __init__(self, drop_prob=None, **kwargs):
-        super(DropPath, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.drop_prob = drop_prob
 
     def call(self, x):
@@ -156,7 +157,7 @@ class WindowAttention(layers.Layer):
     def __init__(
         self, dim, window_size, num_heads, qkv_bias=True, dropout_rate=0.0, **kwargs
     ):
-        super(WindowAttention, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.dim = dim
         self.window_size = window_size
         self.num_heads = num_heads
@@ -267,7 +268,7 @@ class SwinTransformer(layers.Layer):
         dropout_rate=0.0,
         **kwargs,
     ):
-        super(SwinTransformer, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
         self.dim = dim  # number of input dimensions
         self.num_patch = num_patch  # number of embedded patches
@@ -391,7 +392,7 @@ images on top of which we will later use the Swin Transformer class we built.
 
 class PatchExtract(layers.Layer):
     def __init__(self, patch_size, **kwargs):
-        super(PatchExtract, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.patch_size_x = patch_size[0]
         self.patch_size_y = patch_size[0]
 
@@ -411,7 +412,7 @@ class PatchExtract(layers.Layer):
 
 class PatchEmbedding(layers.Layer):
     def __init__(self, num_patch, embed_dim, **kwargs):
-        super(PatchEmbedding, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.num_patch = num_patch
         self.proj = layers.Dense(embed_dim)
         self.pos_embed = layers.Embedding(input_dim=num_patch, output_dim=embed_dim)
@@ -423,7 +424,7 @@ class PatchEmbedding(layers.Layer):
 
 class PatchMerging(tf.keras.layers.Layer):
     def __init__(self, num_patch, embed_dim):
-        super(PatchMerging, self).__init__()
+        super().__init__()
         self.num_patch = num_patch
         self.embed_dim = embed_dim
         self.linear_trans = layers.Dense(2 * embed_dim, use_bias=False)

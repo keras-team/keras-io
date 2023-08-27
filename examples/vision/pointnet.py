@@ -4,6 +4,7 @@ Author: [David Griffiths](https://dgriffiths3.github.io)
 Date created: 2020/05/25
 Last modified: 2020/05/26
 Description: Implementation of PointNet for ModelNet10 classification.
+Accelerator: GPU
 """
 """
 # Point cloud classification
@@ -81,7 +82,6 @@ enumerate index value as the object label and use a dictionary to recall this la
 
 
 def parse_dataset(num_points=2048):
-
     train_points = []
     train_labels = []
     test_points = []
@@ -198,7 +198,6 @@ class OrthogonalRegularizer(keras.regularizers.Regularizer):
 
 
 def tnet(inputs, num_features):
-
     # Initalise bias as the indentity matrix
     bias = keras.initializers.Constant(np.eye(num_features).flatten())
     reg = OrthogonalRegularizer(num_features)

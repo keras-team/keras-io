@@ -4,6 +4,7 @@ Author: [akensert](https://github.com/akensert)
 Date created: 2021/06/30
 Last modified: 2021/06/30
 Description: Complete implementation of WGAN-GP with R-GCN to generate novel molecules.
+Accelerator: GPU
 """
 
 """
@@ -43,7 +44,7 @@ adverserial networks, see [GAN](https://arxiv.org/abs/1406.2661),
 ### Install RDKit
 
 [RDKit](https://www.rdkit.org/) is a collection of cheminformatics and machine-learning
-software written in C++ and Python. In this tutorial, RDKit is used to conviently and
+software written in C++ and Python. In this tutorial, RDKit is used to conveniently and
 efficiently transform
 [SMILES](https://en.wikipedia.org/wiki/Simplified_molecular-input_line-entry_system) to
 molecule objects, and then from those obtain sets of atoms and bonds.
@@ -205,7 +206,7 @@ def graph_to_molecule(graph):
     # Add bonds between atoms in molecule; based on the upper triangles
     # of the [symmetric] adjacency tensor
     (bonds_ij, atoms_i, atoms_j) = np.where(np.triu(adjacency) == 1)
-    for (bond_ij, atom_i, atom_j) in zip(bonds_ij, atoms_i, atoms_j):
+    for bond_ij, atom_i, atom_j in zip(bonds_ij, atoms_i, atoms_j):
         if atom_i == atom_j or bond_ij == BOND_DIM - 1:
             continue
         bond_type = bond_mapping[bond_ij]
@@ -258,7 +259,7 @@ followed by a reshape and softmax to match that of a multi-dimensional adjacency
 tensor.
 
 As the discriminator network will recieves as input a graph (`A`, `H`) from either the
-genrator or from the training set, we'll need to implement graph convolutional layers,
+generator or from the training set, we'll need to implement graph convolutional layers,
 which allows us to operate on graphs. This means that input to the discriminator network
 will first pass through graph convolutional layers, then an average-pooling layer,
 and finally a few fully-connected layers. The final output should be a scalar (for each
@@ -271,7 +272,11 @@ example in the batch) which indicates the "realness" of the associated input
 
 
 def GraphGenerator(
-    dense_units, dropout_rate, latent_dim, adjacency_shape, feature_shape,
+    dense_units,
+    dropout_rate,
+    latent_dim,
+    adjacency_shape,
+    feature_shape,
 ):
     z = keras.layers.Input(shape=(LATENT_DIM,))
     # Propagate through one or more densely connected layers
@@ -395,7 +400,6 @@ class RelationalGraphConvLayer(keras.layers.Layer):
 def GraphDiscriminator(
     gconv_units, dense_units, dropout_rate, adjacency_shape, feature_shape
 ):
-
     adjacency = keras.layers.Input(shape=adjacency_shape)
     features = keras.layers.Input(shape=feature_shape)
 
@@ -461,7 +465,6 @@ class GraphWGAN(keras.Model):
         self.metric_discriminator = keras.metrics.Mean(name="loss_dis")
 
     def train_step(self, inputs):
-
         if isinstance(inputs[0], tuple):
             inputs = inputs[0]
 
@@ -593,10 +596,16 @@ looking molecules! Notice, in contrast to the
 molecules in this tutorial seems really high, which is great!
 
 **What we've learned, and prospects**. In this tutorial, a generative model for molecular
-graphs was succesfully implemented, which allowed us to generate novel molecules. In the
+graphs was successfully implemented, which allowed us to generate novel molecules. In the
 future, it would be interesting to implement generative models that can modify existing
 molecules (for instance, to optimize solubility or protein-binding of an existing
 molecule). For that however, a reconstruction loss would likely be needed, which is
 tricky to implement as there's no easy and obvious way to compute similarity between two
 molecular graphs.
+
+Example available on HuggingFace
+
+| Trained Model | Demo |
+| :--: | :--: |
+| [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Model-wgan%20graphs-black.svg)](https://huggingface.co/keras-io/wgan-molecular-graphs) | [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Spaces-wgan%20graphs-black.svg)](https://huggingface.co/spaces/keras-io/Generating-molecular-graphs-by-WGAN-GP) |
 """

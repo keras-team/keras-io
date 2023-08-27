@@ -4,6 +4,7 @@ Author: [Sayak Paul](https://twitter.com/RisingSayak)
 Date created: 2021/06/08
 Last modified: 2021/06/08
 Description: Training a video classifier with hybrid transformers.
+Accelerator: GPU
 """
 """
 This example is a follow-up to the
@@ -260,7 +261,10 @@ class TransformerEncoder(layers.Layer):
             num_heads=num_heads, key_dim=embed_dim, dropout=0.3
         )
         self.dense_proj = keras.Sequential(
-            [layers.Dense(dense_dim, activation=tf.nn.gelu), layers.Dense(embed_dim),]
+            [
+                layers.Dense(dense_dim, activation=tf.nn.gelu),
+                layers.Dense(embed_dim),
+            ]
         )
         self.layernorm_1 = layers.LayerNormalization()
         self.layernorm_2 = layers.LayerNormalization()

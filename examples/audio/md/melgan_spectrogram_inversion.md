@@ -107,7 +107,7 @@ LJSpeech-1.1.tar.bz 100%[===================>]   2.56G  68.3MB/s    in 36s
 
 We create a `tf.data.Dataset` to load and process the audio files on the fly.
 The `preprocess()` function takes the file path as input and returns two instances of the
-wave, one for input and one as the ground truth for comparsion. The input wave will be
+wave, one for input and one as the ground truth for comparison. The input wave will be
 mapped to a spectrogram using the custom `MelSpec` layer as shown later in this example.
 
 
@@ -208,7 +208,7 @@ class MelSpec(layers.Layer):
             return audio
 
     def get_config(self):
-        config = super(MelSpec, self).get_config()
+        config = super().get_config()
         config.update(
             {
                 "frame_length": self.frame_length,
@@ -240,7 +240,7 @@ def residual_stack(input, filters):
     """Convolutional residual stack with weight normalization.
 
     Args:
-        filter: int, determines filter size for the residual stack.
+        filters: int, determines filter size for the residual stack.
 
     Returns:
         Residual stack output.
@@ -943,3 +943,9 @@ understand the reasoning behind the architecture and training process
 2. For in-depth understanding of the feature matching loss, you can refer to [Improved
 Techniques for Training GANs](https://arxiv.org/pdf/1606.03498v1.pdf) (Tim Salimans et
 al.).
+
+Example available on HuggingFace
+
+| Trained Model | Demo |
+| :--: | :--: |
+| [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Model-MelGan%20spectrogram%20inversion-black.svg)](https://huggingface.co/keras-io/MelGAN-spectrogram-inversion) | [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Spaces-MelGan%20spectrogram%20inversion-black.svg)](https://huggingface.co/spaces/keras-io/MelGAN-spectrogram-inversion) |

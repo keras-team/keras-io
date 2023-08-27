@@ -2,7 +2,7 @@
 
 **Author:** [Yixing Fu](https://github.com/yixingfu)<br>
 **Date created:** 2020/06/30<br>
-**Last modified:** 2020/07/16<br>
+**Last modified:** 2023/07/10<br>
 **Description:** Use EfficientNet with weights pre-trained on imagenet for Stanford Dogs classification.
 
 
@@ -503,7 +503,7 @@ def build_model(num_classes):
 
     top_dropout_rate = 0.2
     x = layers.Dropout(top_dropout_rate, name="top_dropout")(x)
-    outputs = layers.Dense(NUM_CLASSES, activation="softmax", name="pred")(x)
+    outputs = layers.Dense(num_classes, activation="softmax", name="pred")(x)
 
     # Compile
     model = tf.keras.Model(inputs, outputs, name="EfficientNet")
@@ -670,7 +670,7 @@ Epoch 10/10
 
 On unfreezing layers:
 
-- The `BathcNormalization` layers need to be kept frozen
+- The `BatchNormalization` layers need to be kept frozen
 ([more details](https://keras.io/guides/transfer_learning/)).
 If they are also turned to trainable, the
 first epoch after unfreezing will significantly reduce accuracy.
@@ -715,7 +715,7 @@ download the checkpoint. As example, here we download noisy-student version of B
 !tar -xf noisy_student_efficientnet-b1.tar.gz
 ```
 
-Then use the script [efficientnet_weight_update_util.py](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/efficientnet_weight_update_util.py) to convert ckpt file to h5 file.
+Then use the script [efficientnet_weight_update_util.py](https://github.com/keras-team/keras/blob/master/keras/applications/efficientnet_weight_update_util.py) to convert ckpt file to h5 file.
 ```
 !python efficientnet_weight_update_util.py --model b1 --notop --ckpt \
         efficientnet-b1/model.ckpt --o efficientnetb1_notop.h5
