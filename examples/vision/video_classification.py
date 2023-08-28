@@ -2,7 +2,7 @@
 Title: Video Classification with a CNN-RNN Architecture
 Author: [Sayak Paul](https://twitter.com/RisingSayak)
 Date created: 2021/05/28
-Last modified: 2021/06/05
+Last modified: 2023/08/28
 Description: Training a video classifier with transfer learning and a recurrent model on the UCF101 dataset.
 Accelerator: GPU
 """
@@ -40,7 +40,7 @@ to know how the subsampling was done.
 """
 
 """shell
-wget -q https://git.io/JGc31 -O ucf101_top5.tar.gz
+!wget -q https://github.com/sayakpaul/Action-Recognition-in-TensorFlow/releases/download/v1.0.0/ucf101_top5.tar.gz
 tar xf ucf101_top5.tar.gz
 """
 
@@ -348,7 +348,7 @@ def sequence_prediction(path):
 # https://www.tensorflow.org/hub/tutorials/action_recognition_with_tf_hub
 def to_gif(images):
     converted_images = images.astype(np.uint8)
-    imageio.mimsave("animation.gif", converted_images, fps=10)
+    imageio.mimsave("animation.gif", converted_images, duration=100)
     return embed.embed_file("animation.gif")
 
 
