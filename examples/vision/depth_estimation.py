@@ -437,12 +437,8 @@ optimizer = tf.keras.optimizers.Adam(
     amsgrad=False,
 )
 model = DepthEstimationModel()
-# Define the loss function
-cross_entropy = tf.keras.losses.SparseCategoricalCrossentropy(
-    from_logits=True, reduction="none"
-)
 # Compile the model
-model.compile(optimizer, loss=cross_entropy)
+model.compile(optimizer)
 
 train_loader = DataGenerator(
     data=df[:260].reset_index(drop="true"), batch_size=BATCH_SIZE, dim=(HEIGHT, WIDTH)
