@@ -416,13 +416,6 @@ Generally speaking, we recommend using eager mode to debug your code,
 then switching to compilation for any real training or inference run.
 This workflow works the same in TensorFlow, JAX, and PyTorch.
 
-### Q: Why does using Keras Core with PyTorch or JAX still requires TensorFlow?
-
-Right now, we use `tf.nest` (a Python data structure processing utility)
-extensively across the codebase, which requires the TensorFlow package.
-In the near future, we intend to turn `tf.nest` into a standalone
-package, so that you could use Keras Core without installing TensorFlow.
-
 ### Q: Can I use Keras Core components inside `tf.data` pipelines?
 
 With the TensorFlow backend, Keras Core is fully compatible with `tf.data`

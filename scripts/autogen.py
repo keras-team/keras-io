@@ -45,7 +45,7 @@ PROJECT_URL = {
     "keras_tuner": "https://github.com/keras-team/keras-tuner/tree/v1.3.5/",
     "keras_cv": "https://github.com/keras-team/keras-cv/tree/v0.6.1/",
     "keras_nlp": "https://github.com/keras-team/keras-nlp/tree/v0.6.1/",
-    "keras_core": "https://github.com/keras-team/keras-core/tree/v0.1.3/",
+    "keras_core": "https://github.com/keras-team/keras-core/tree/v0.1.5/",
 }
 USE_MULTIPROCESSING = False
 

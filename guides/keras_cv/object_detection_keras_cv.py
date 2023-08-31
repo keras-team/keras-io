@@ -264,7 +264,7 @@ of a model detecting multiple boxes for the same object.
 Non-max suppression is a highly configurable algorithm, and in most cases you
 will want to customize the settings of your model's non-max
 suppression operation.
-This can be done by overriding to the `model.prediction_decoder` attribute.
+This can be done by overriding to the `prediction_decoder` argument.
 
 To show this concept off, let's temporarily disable non-max suppression on our
 RetinaNet.  This can be done by writing to the `prediction_decoder` attribute.
@@ -710,13 +710,15 @@ model = keras_cv.models.YOLOV8Detector.from_preset(
 )
 
 """
-Next, for convenience we construct a dataset with larger batches:
+We can evaluate COCO metrics for our pre-trained YOLOV8 model using our metrics
+callback.
 """
-visualization_ds = eval_ds.unbatch()
-visualization_ds = visualization_ds.ragged_batch(16)
-visualization_ds = visualization_ds.shuffle(8)
+
+coco_metrics_callback.model = model
+coco_metrics_callback.on_epoch_end(epoch=0)
+
 """
-Let's create a simple function to plot our inferences:
+Next, let's create a simple function to plot our inferences:
 """
 
 
@@ -731,7 +733,7 @@ def visualize_detections(model, dataset, bounding_box_format):
         y_pred=y_pred,
         scale=4,
         rows=2,
-        cols=4,
+        cols=2,
         show=True,
         font_scale=0.7,
         class_mapping=class_mapping,
@@ -739,18 +741,11 @@ def visualize_detections(model, dataset, bounding_box_format):
 
 
 """
-You'll likely need to configure your NonMaxSuppression operation to achieve
-visually appealing results:
+You may need to configure your NonMaxSuppression operation to achieve
+visually appealing results.
 """
 
-model.prediction_decoder = keras_cv.layers.NonMaxSuppression(
-    bounding_box_format="xywh",
-    from_logits=False,
-    iou_threshold=0.5,
-    confidence_threshold=0.75,
-)
-
-visualize_detections(model, dataset=visualization_ds, bounding_box_format="xywh")
+visualize_detections(model, dataset=eval_ds, bounding_box_format="xywh")
 
 """
 Awesome!
@@ -761,9 +756,7 @@ detections in a `keras.callbacks.Callback` to monitor training :
 
 class VisualizeDetections(keras.callbacks.Callback):
     def on_epoch_end(self, epoch, logs):
-        visualize_detections(
-            self.model, bounding_box_format="xywh", dataset=visualization_dataset
-        )
+        visualize_detections(self.model, bounding_box_format="xywh", dataset=eval_ds)
 
 
 """
@@ -798,7 +791,8 @@ images = stable_diffusion.text_to_image(
     batch_size=4,
     seed=1231,
 )
-y_pred = model.predict(images)
+encoded_predictions = model(images)
+y_pred = model.decode_predictions(encoded_predictions, images)
 visualization.plot_bounding_box_gallery(
     images,
     value_range=(0, 255),

@@ -2,7 +2,7 @@
 Title: Timeseries classification from scratch
 Author: [hfawaz](https://github.com/hfawaz/)
 Date created: 2020/07/21
-Last modified: 2021/07/16
+Last modified: 2023/08/25
 Description: Training a timeseries classifier from scratch on the FordA dataset from the UCR/UEA archive.
 Accelerator: GPU
 """
@@ -224,4 +224,11 @@ training until it reaches almost 0.97 for both the validation and the training a
 after 200 epochs. Beyond the 200th epoch, if we continue on training, the validation
 accuracy will start decreasing while the training accuracy will continue on increasing:
 the model starts overfitting.
+
+Example available on HuggingFace:
+
+| Trained Model | Demo |
+|------|------|
+| [![🤗 Model - Timeseries classification from scratch](https://img.shields.io/badge/🤗_Model-Timeseries_classification_from_scratch-black)](https://huggingface.co/keras-io/timeseries-classification-from-scratch) | [![🤗  Spaces - Timeseries classification from scratch](https://img.shields.io/badge/🤗_Spaces-Timeseries_classification_from_scratch-black)](https://huggingface.co/spaces/keras-io/timeseries-classification-from-scratch) |
+
 """

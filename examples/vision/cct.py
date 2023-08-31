@@ -384,4 +384,10 @@ to know about the experimental setup.
 
 The authors also demonstrate the performance of Compact Convolutional Transformers on
 NLP tasks and they report competitive results there.
+
+Example available on HuggingFace:
+
+| Trained Model | Demo |
+|------|------|
+| [![🤗 Model - CCT](https://img.shields.io/badge/🤗_Model-Compact_Convolutional_Transformers-black)](https://huggingface.co/keras-io/cct) | [![🤗 Spaces - CCT](https://img.shields.io/badge/🤗_Spaces-Compact_Convolutional_Transformers-black)](https://huggingface.co/spaces/keras-io/cct) |
 """
