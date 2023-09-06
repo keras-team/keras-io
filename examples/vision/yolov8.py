@@ -6,6 +6,7 @@ Last modified: 2023/06/26
 Description: Train custom YOLOV8 object detection model with KerasCV.
 Accelerator: GPU
 """
+
 """
 ## Introduction
 """
@@ -24,14 +25,23 @@ tasks.
 """
 If you're interested in learning about object detection using KerasCV, I highly suggest
 taking a look at the guide created by lukewood. This resource, available at
-[Object Detection With KerasCV](https://keras.io/guides/keras_cv/object_detection_keras_cv/#object-detection-introduction),
+[Object Detection With
+KerasCV](https://keras.io/guides/keras_cv/object_detection_keras_cv/#object-detection-introduction),
 provides a comprehensive overview of the fundamental concepts and techniques
 required for building object detection models with KerasCV.
 """
 
 """shell
-pip install --upgrade git+https://github.com/keras-team/keras-cv -q
+!pip install keras-core -q
 """
+
+"""shell
+!pip install --upgrade git+https://github.com/keras-team/keras-cv -q
+"""
+
+import os
+
+os.environ["KERAS_BACKEND"] = "tensorflow"
 
 """
 ## Setup
@@ -42,11 +52,12 @@ from tqdm.auto import tqdm
 import xml.etree.ElementTree as ET
 
 import tensorflow as tf
-from tensorflow import keras
+from keras_cv.backend import keras
 
 import keras_cv
 from keras_cv import bounding_box
 from keras_cv import visualization
+from keras_cv.backend import ops
 
 """
 ## Load Data
@@ -68,16 +79,15 @@ context of self-driving cars.
 By narrowing down the dataset to these specific classes, we can concentrate on building a
 robust object detection model that can accurately identify and classify these important
 objects.
-"""
 
-"""
 The TensorFlow Datasets library provides a convenient way to download and use various
 datasets, including the object detection dataset. This can be a great option for those
 who want to quickly start working with the data without having to manually download and
 preprocess it.
 
 You can view various object detection datasets here
-[TensorFlow Datasets](https://www.tensorflow.org/datasets/catalog/overview#object_detection)
+[TensorFlow
+Datasets](https://www.tensorflow.org/datasets/catalog/overview#object_detection)
 
 However, in this code example, we will demonstrate how to load the dataset from scratch
 using TensorFlow's `tf.data` pipeline. This approach provides more flexibility and allows
@@ -105,6 +115,11 @@ mapping is used to encode and decode the class labels during training and infere
 object detection tasks.
 """
 
+"""shell
+!gdown 19CWdNL3ePq9XIgMeb_RjA641iGra3nWm
+!unzip data.zip
+"""
+
 class_ids = [
     "car",
     "pedestrian",
@@ -115,8 +130,8 @@ class_ids = [
 class_mapping = dict(zip(range(len(class_ids)), class_ids))
 
 # Path to images and annotations
-path_images = "/kaggle/input/dataset/data/images/"
-path_annot = "/kaggle/input/dataset/data/annotations/"
+path_images = "./data/images/"
+path_annot = "./data/annotations/"
 
 # Get all XML file paths in path_annot and sort them
 xml_files = sorted(
@@ -294,6 +309,7 @@ original aspect ratio. The bounding boxes associated with the image are specifie
 original aspect ratio.
 
 Bounding Box Formats supported by KerasCV:
+
 1.   CENTER_XYWH
 2.   XYWH
 3.   XYXY
@@ -397,9 +413,17 @@ def visualize_dataset(inputs, value_range, rows, cols, bounding_box_format):
     )
 
 
+"""
+### Visualizing Train dataset
+"""
+
 visualize_dataset(
     train_ds, bounding_box_format="xyxy", value_range=(0, 255), rows=2, cols=2
 )
+
+"""
+### Visualizing validation dataset
+"""
 
 visualize_dataset(
     val_ds, bounding_box_format="xyxy", value_range=(0, 255), rows=2, cols=2
@@ -412,7 +436,9 @@ fed into the model.
 
 
 def dict_to_tuple(inputs):
-    return inputs["images"], inputs["bounding_boxes"]
+    return inputs["images"], bounding_box.to_dense(
+        inputs["bounding_boxes"], max_boxes=32
+    )
 
 
 train_ds = train_ds.map(dict_to_tuple, num_parallel_calls=tf.data.AUTOTUNE)
@@ -431,9 +457,7 @@ such as object detection, image classification, and instance segmentation. Ultra
 the creators of YOLOv5, also developed YOLOv8, which incorporates many improvements and
 changes in architecture and developer experience compared to its predecessor. YOLOv8 is
 the latest state-of-the-art model that is highly regarded in the industry.
-"""
 
-"""
 Below table compares the performance metrics of five different YOLOv8 models with
 different sizes (measured in pixels): YOLOv8n, YOLOv8s, YOLOv8m, YOLOv8l, and YOLOv8x.
 The metrics include mean average precision (mAP) values at different
@@ -445,30 +469,25 @@ decreases. YOLOv8x has the highest mAP, parameters, and FLOPs but also the slowe
 inference speed, while YOLOv8n has the smallest size, fastest inference speed, and lowest
 mAP, parameters, and FLOPs.
 
-| Model                                                                                |
-size<br><sup>(pixels) | mAP<sup>val<br>50-95 | Speed<br><sup>CPU ONNX<br>(ms) |
-Speed<br><sup>A100 TensorRT<br>(ms) | params<br><sup>(M) | FLOPs<br><sup>(B) |
-| ------------------------------------------------------------------------------------ |
---------------------- | -------------------- | ------------------------------ |
------------------------------------ | ------------------ | ----------------- |
-| YOLOv8n | 640                   | 37.3                 | 80.4
-| 0.99                                | 3.2                | 8.7               |
-| YOLOv8s | 640                   | 44.9                 | 128.4
-| 1.20                                | 11.2               | 28.6              |
-| YOLOv8m | 640                   | 50.2                 | 234.7
-| 1.83                                | 25.9               | 78.9              |
-| YOLOv8l | 640                   | 52.9                 | 375.2
-| 2.39                                | 43.7               | 165.2             |
-| YOLOv8x | 640                   | 53.9                 | 479.1
-| 3.53                                | 68.2               | 257.8             |
-"""
+|   Model  | size<br><sup>(pixels) | mAP<sup>val<br>50-95 | Speed<br><sup>CPU
+ONNX<br>(ms) | Speed<br><sup>A100 TensorRT<br>(ms) | params<br><sup>(M) |
+FLOPs<br><sup>(B) |
+|----------|------------------------|-----------------------|---------------------------------|-------------------------------------|--------------------|---------------------|
+|----------|------------------------|-----------------------|---------------------------------|-------------------------------------|--------------------|---------------------|
+| YOLOv8n  |           640          |         37.3          |              80.4          
+|                 0.99                |        3.2         |        8.7          |
+| YOLOv8s  |           640          |         44.9          |             128.4          
+|                 1.20                |       11.2         |       28.6          |
+| YOLOv8m  |           640          |         50.2          |             234.7          
+|                 1.83                |       25.9         |       78.9          |
+| YOLOv8l  |           640          |         52.9          |             375.2          
+|                 2.39                |       43.7         |      165.2          |
+| YOLOv8x  |           640          |         53.9          |             479.1          
+|                 3.53                |       68.2         |      257.8          |
 
-"""
 You can read more about YOLOV8 and its architecture in this
 [RoboFlow Blog](https://blog.roboflow.com/whats-new-in-yolov8/)
-"""
 
-"""
 First we will create a instance of backbone which will be used by our yolov8 detector
 class.
 
@@ -490,8 +509,6 @@ YOLOV8 Backbones available in KerasCV:
     2.   yolo_v8_l_backbone_coco
     2.   yolo_v8_xl_backbone_coco
 
-
-
 """
 
 backbone = keras_cv.models.YOLOV8Backbone.from_preset(
@@ -508,7 +525,6 @@ dataset, and a finally, the feature pyramid network (FPN) depth is specified by 
 
 It is simple to build a YOLOV8 using any of the aforementioned backbones thanks to
 KerasCV.
-
 """
 
 yolo = keras_cv.models.YOLOV8Detector(
@@ -541,10 +557,9 @@ box size. Together, these loss functions help optimize the model for object dete
 minimizing the difference between the predicted and ground truth class probabilities and
 bounding boxes.
 
-
 """
 
-optimizer = tf.keras.optimizers.Adam(
+optimizer = keras.optimizers.Adam(
     learning_rate=LEARNING_RATE,
     global_clipnorm=GLOBAL_CLIPNORM,
 )
@@ -561,36 +576,9 @@ Map(Mean Average Precision) score, Recall and Precision. We also save our model 
 mAP score improves.
 """
 
-
-class EvaluateCOCOMetricsCallback(keras.callbacks.Callback):
-    def __init__(self, data, save_path):
-        super().__init__()
-        self.data = data
-        self.metrics = keras_cv.metrics.BoxCOCOMetrics(
-            bounding_box_format="xyxy",
-            evaluate_freq=1e9,
-        )
-
-        self.save_path = save_path
-        self.best_map = -1.0
-
-    def on_epoch_end(self, epoch, logs):
-        self.metrics.reset_state()
-        for batch in self.data:
-            images, y_true = batch[0], batch[1]
-            y_pred = self.model.predict(images, verbose=0)
-            self.metrics.update_state(y_true, y_pred)
-
-        metrics = self.metrics.result(force=True)
-        logs.update(metrics)
-
-        current_map = metrics["MaP"]
-        if current_map > self.best_map:
-            self.best_map = current_map
-            self.model.save(self.save_path)  # Save the model when mAP improves
-
-        return logs
-
+coco_metrics_callback = keras_cv.callbacks.PyCOCOCallback(
+    val_ds.take(2), bounding_box_format="xyxy"
+)
 
 """
 ## Train the Model
@@ -598,9 +586,10 @@ class EvaluateCOCOMetricsCallback(keras.callbacks.Callback):
 
 yolo.fit(
     train_ds,
-    validation_data=val_ds,
+    steps_per_epoch=2,
+    validation_data=val_ds.take(2),
     epochs=3,
-    callbacks=[EvaluateCOCOMetricsCallback(val_ds, "model.h5")],
+    callbacks=[coco_metrics_callback],
 )
 
 """
@@ -611,7 +600,7 @@ yolo.fit(
 def visualize_detections(model, dataset, bounding_box_format):
     images, y_true = next(iter(dataset.take(1)))
     y_pred = model.predict(images)
-    y_pred = bounding_box.to_ragged(y_pred)
+    y_pred = bounding_box.to_dense(y_pred)
     visualization.plot_bounding_box_gallery(
         images,
         value_range=(0, 255),
