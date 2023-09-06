@@ -2,7 +2,7 @@
 
 **Author:** [Sayak Paul](https://twitter.com/RisingSayak)<br>
 **Date created:** 2021/09/10<br>
-**Last modified:** 2021/09/10<br>
+**Last modified:** 2023/08/30<br>
 
 
 <img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/vision/ipynb/near_dup_search.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/vision/near_dup_search.py)
@@ -38,12 +38,20 @@ _Note that in order to optimize the performance of our parser,
 you should have a GPU runtime available._
 
 ---
+## Setup
+
+```python
+!pip install tensorrt
+```
+
+---
 ## Imports
 
 
 ```python
 import matplotlib.pyplot as plt
 import tensorflow as tf
+import tensorrt
 import numpy as np
 import time
 
@@ -96,7 +104,7 @@ a wide variety of different downstream tasks.
 
 
 ```python
-!wget -q https://git.io/JuMq0 -O flower_model_bit_0.96875.zip
+!wget -q https://github.com/sayakpaul/near-dup-parser/releases/download/v0.1.0/flower_model_bit_0.96875.zip
 !unzip -qq flower_model_bit_0.96875.zip
 ```
 
@@ -535,7 +543,7 @@ def plot_images(images, labels):
     plt.figure(figsize=(20, 10))
     columns = 5
     for (i, image) in enumerate(images):
-        ax = plt.subplot(len(images) / columns + 1, columns, i + 1)
+        ax = plt.subplot(len(images) // columns + 1, columns, i + 1)
         if i == 0:
             ax.set_title("Query Image\n" + "Label: {}".format(labels[i]))
         else:
