@@ -25,18 +25,17 @@ tasks.
 """
 If you're interested in learning about object detection using KerasCV, I highly suggest
 taking a look at the guide created by lukewood. This resource, available at
-[Object Detection With
-KerasCV](https://keras.io/guides/keras_cv/object_detection_keras_cv/#object-detection-introduction),
+[Object Detection With KerasCV](https://keras.io/guides/keras_cv/object_detection_keras_cv/#object-detection-introduction),
 provides a comprehensive overview of the fundamental concepts and techniques
 required for building object detection models with KerasCV.
 """
 
 """shell
-!pip install keras-core -q
+pip install keras-core -q
 """
 
 """shell
-!pip install --upgrade git+https://github.com/keras-team/keras-cv -q
+pip install --upgrade git+https://github.com/keras-team/keras-cv -q
 """
 
 import os
@@ -86,8 +85,7 @@ who want to quickly start working with the data without having to manually downl
 preprocess it.
 
 You can view various object detection datasets here
-[TensorFlow
-Datasets](https://www.tensorflow.org/datasets/catalog/overview#object_detection)
+[TensorFlow Datasets](https://www.tensorflow.org/datasets/catalog/overview#object_detection)
 
 However, in this code example, we will demonstrate how to load the dataset from scratch
 using TensorFlow's `tf.data` pipeline. This approach provides more flexibility and allows
