@@ -69,7 +69,8 @@ SAM has the following components:
 |
 ![](https://imgur.com/oLfdwuB)
 |:--:|
-| Image taken from the official [SAM blog post](https://ai.facebook.com/blog/segment-anything-foundation-model-image-segmentation/) |
+| Image taken from the official
+[SAM blog post](https://ai.facebook.com/blog/segment-anything-foundation-model-image-segmentation/) |
 |
 
 """
@@ -95,7 +96,8 @@ allows SAM to output a valid mask even when the prompt is ambiguous to understan
 makes SAM ambiguity-aware. Moreover, SAM predicts multiple masks for a single prompt.
 
 We highly encourage you to check out the [SAM paper](https://arxiv.org/abs/2304.02643)
-and the [blog post](https://ai.facebook.com/blog/segment-anything-foundation-model-image-segmentation/)
+and the
+[blog post](https://ai.facebook.com/blog/segment-anything-foundation-model-image-segmentation/)
 to learn more about the additional details of SAM and the dataset used to pre-trained it.
 """
 
@@ -109,7 +111,8 @@ There are three checkpoints for SAM:
 * [sam-vit-huge](https://huggingface.co/facebook/sam-vit-huge).
 
 We load `sam-vit-base` in
-[`TFSamModel`](https://huggingface.co/docs/transformers/main/model_doc/sam#transformers.TFSamModel). We also need `SamProcessor`for the associated checkpoint.
+[`TFSamModel`](https://huggingface.co/docs/transformers/main/model_doc/sam#transformers.TFSamModel).
+We also need `SamProcessor`for the associated checkpoint.
 """
 
 model = TFSamModel.from_pretrained("facebook/sam-vit-base")
@@ -117,7 +120,8 @@ processor = SamProcessor.from_pretrained("facebook/sam-vit-base")
 
 """
 Next, we write some utility functions for visualization. Most of these functions are
-taken from [this notebook](https://github.com/huggingface/notebooks/blob/main/examples/segment_anything.ipynb).
+taken from
+[this notebook](https://github.com/huggingface/notebooks/blob/main/examples/segment_anything.ipynb).
 """
 
 
@@ -319,8 +323,8 @@ dataset_path = keras.utils.get_file(
 """
 Let's now visualize a sample from the dataset.
 
-*(The `show_mask()` utility is taken from [this
-notebook](https://github.com/NielsRogge/Transformers-Tutorials/blob/master/SAM/Fine_tune_SAM_(segment_anything)_on_a_custom_dataset.ipynb))*
+*(The `show_mask()` utility is taken from
+[this notebook](https://github.com/NielsRogge/Transformers-Tutorials/blob/master/SAM/Fine_tune_SAM_(segment_anything)_on_a_custom_dataset.ipynb))*
 """
 
 
@@ -478,8 +482,8 @@ for k in sample:
 """
 
 """
-We will now write DICE loss. This implementation is based on [MONAI DICE
-loss](https://docs.monai.io/en/stable/_modules/monai/losses/dice.html#DiceLoss).
+We will now write DICE loss. This implementation is based on
+[MONAI DICE loss](https://docs.monai.io/en/stable/_modules/monai/losses/dice.html#DiceLoss).
 """
 
 

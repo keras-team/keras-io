@@ -88,7 +88,8 @@ SAM has the following components:
 |
 ![](https://imgur.com/oLfdwuB)
 |:--:|
-| Image taken from the official [SAM blog post](https://ai.facebook.com/blog/segment-anything-foundation-model-image-segmentation/) |
+| Image taken from the official
+[SAM blog post](https://ai.facebook.com/blog/segment-anything-foundation-model-image-segmentation/) |
 |
 
 The image encoder is responsible for computing image embeddings. When interacting with
@@ -109,7 +110,8 @@ allows SAM to output a valid mask even when the prompt is ambiguous to understan
 makes SAM ambiguity-aware. Moreover, SAM predicts multiple masks for a single prompt.
 
 We highly encourage you to check out the [SAM paper](https://arxiv.org/abs/2304.02643)
-and the [blog post](https://ai.facebook.com/blog/segment-anything-foundation-model-image-segmentation/)
+and the
+[blog post](https://ai.facebook.com/blog/segment-anything-foundation-model-image-segmentation/)
 to learn more about the additional details of SAM and the dataset used to pre-trained it.
 
 ---
@@ -122,7 +124,8 @@ There are three checkpoints for SAM:
 * [sam-vit-huge](https://huggingface.co/facebook/sam-vit-huge).
 
 We load `sam-vit-base` in
-[`TFSamModel`](https://huggingface.co/docs/transformers/main/model_doc/sam#transformers.TFSamModel). We also need `SamProcessor`for the associated checkpoint.
+[`TFSamModel`](https://huggingface.co/docs/transformers/main/model_doc/sam#transformers.TFSamModel).
+We also need `SamProcessor`for the associated checkpoint.
 
 
 ```python
@@ -144,7 +147,8 @@ If your task is similar to the task the model of the checkpoint was trained on, 
 ```
 </div>
 Next, we write some utility functions for visualization. Most of these functions are
-taken from [this notebook](https://github.com/huggingface/notebooks/blob/main/examples/segment_anything.ipynb).
+taken from
+[this notebook](https://github.com/huggingface/notebooks/blob/main/examples/segment_anything.ipynb).
 
 
 ```python
@@ -367,8 +371,8 @@ dataset_path = keras.utils.get_file(
 
 Let's now visualize a sample from the dataset.
 
-*(The `show_mask()` utility is taken from [this
-notebook](https://github.com/NielsRogge/Transformers-Tutorials/blob/master/SAM/Fine_tune_SAM_(segment_anything)_on_a_custom_dataset.ipynb))*
+*(The `show_mask()` utility is taken from
+[this notebook](https://github.com/NielsRogge/Transformers-Tutorials/blob/master/SAM/Fine_tune_SAM_(segment_anything)_on_a_custom_dataset.ipynb))*
 
 
 ```python
@@ -554,8 +558,8 @@ ground_truth_mask (2, 256, 256) <dtype: 'int32'> True
 </div>
 ### Training
 
-We will now write DICE loss. This implementation is based on [MONAI DICE
-loss](https://docs.monai.io/en/stable/_modules/monai/losses/dice.html#DiceLoss).
+We will now write DICE loss. This implementation is based on
+[MONAI DICE loss](https://docs.monai.io/en/stable/_modules/monai/losses/dice.html#DiceLoss).
 
 
 ```python
@@ -666,9 +670,9 @@ WARNING:tensorflow:Gradients do not exist for variables ['tf_sam_model_1/mask_de
 
 WARNING:tensorflow:Gradients do not exist for variables ['tf_sam_model_1/mask_decoder/iou_prediction_head/proj_in/kernel:0', 'tf_sam_model_1/mask_decoder/iou_prediction_head/proj_in/bias:0', 'tf_sam_model_1/mask_decoder/iou_prediction_head/proj_out/kernel:0', 'tf_sam_model_1/mask_decoder/iou_prediction_head/proj_out/bias:0', 'tf_sam_model_1/mask_decoder/iou_prediction_head/layers_._0/kernel:0', 'tf_sam_model_1/mask_decoder/iou_prediction_head/layers_._0/bias:0'] when minimizing the loss. If you're using `model.compile()`, did you forget to provide a `loss` argument?
 
-Epoch 1: Loss = 0.07599693536758423
-Epoch 2: Loss = 0.1055290699005127
-Epoch 3: Loss = 0.08525508642196655
+Epoch 1: Loss = 0.08322787284851074
+Epoch 2: Loss = 0.05677264928817749
+Epoch 3: Loss = 0.07764029502868652
 
 ```
 </div>
