@@ -245,7 +245,7 @@ def create_model():
         outputs=[start_probs, end_probs],
     )
     loss = keras.losses.SparseCategoricalCrossentropy(from_logits=False)
-    optimizer = keras.optimizers.Adam(lr=5e-5)
+    optimizer = keras.optimizers.Adam(learning_rate=5e-5)
     model.compile(optimizer=optimizer, loss=[loss, loss])
     return model
 
