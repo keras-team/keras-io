@@ -111,7 +111,8 @@ def get_data_from_text_files(folder_name):
 train_df = get_data_from_text_files("train")
 test_df = get_data_from_text_files("test")
 
-all_data = train_df.append(test_df)
+# all_data = train_df.append(test_df)
+all_data = pd.concat([train_df, test_df], ignore_index=True)
 
 """
 ## Dataset preparation
