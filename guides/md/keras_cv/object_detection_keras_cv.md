@@ -1,6 +1,6 @@
 # Object Detection with KerasCV
 
-**Author:** [lukewood](https://twitter.com/luke_wood_ml)<br>
+**Author:** [lukewood](https://twitter.com/luke_wood_ml), Ian Stenbit, Tirth Patel<br>
 **Date created:** 2023/04/08<br>
 **Last modified:** 2023/08/10<br>
 **Description:** Train an object detection model with KerasCV.
@@ -20,17 +20,31 @@ models!
 
 Let's give KerasCV's object detection API a spin.
 
+With Keras Core, we can use TensorFlow, JAX, or PyTorch as our backend for
+KerasCV! Try using "jax" or "torch" as the KERAS_BACKEND and re-running this
+guide to experiment with different backends.
+
 
 ```python
-!pip install --upgrade -q git+https://github.com/keras-team/keras-cv
+!!pip install -U keras-core git+https://github.com/keras-team/keras-cv.git
 ```
 
 
+
+
 ```python
+import os
+
+os.environ["KERAS_BACKEND"] = "tensorflow"
+
 import tensorflow as tf
 import tensorflow_datasets as tfds
-from tensorflow import keras
-from tensorflow.keras import optimizers
+
+# This allows us to automatically use either tf.keras or keras core
+# depending on which backend KerasCV is using.
+from keras_cv.backend import keras
+from keras_core import ops
+from keras_core import optimizers
 import keras_cv
 import numpy as np
 from keras_cv import bounding_box
@@ -39,9 +53,62 @@ import resource
 from keras_cv import visualization
 import tqdm
 ```
-
 <div class="k-default-codeblock">
 ```
+['DEPRECATION: Configuring installation scheme with distutils config files is deprecated and will no longer work in the near future. If you are using a Homebrew or Linuxbrew Python, please see discussion at https://github.com/Homebrew/homebrew-core/issues/76621',
+ 'Collecting git+https://github.com/keras-team/keras-cv.git',
+ '  Cloning https://github.com/keras-team/keras-cv.git to /private/var/folders/9k/fzyw_l2137g349wvh3qkdn9m00fbwl/T/pip-req-build-tq2iilta',
+ '  Running command git clone --filter=blob:none --quiet https://github.com/keras-team/keras-cv.git /private/var/folders/9k/fzyw_l2137g349wvh3qkdn9m00fbwl/T/pip-req-build-tq2iilta',
+ '  Resolved https://github.com/keras-team/keras-cv.git to commit e83f229f1b7b847cd712d5cd4810097d3e06d14e',
+ '  Installing build dependencies: started',
+ "  Installing build dependencies: finished with status 'done'",
+ '  Getting requirements to build wheel: started',
+ "  Getting requirements to build wheel: finished with status 'done'",
+ '  Preparing metadata (pyproject.toml): started',
+ "  Preparing metadata (pyproject.toml): finished with status 'done'",
+ 'Requirement already satisfied: keras-core in /opt/homebrew/lib/python3.9/site-packages (0.1.5)',
+ 'Requirement already satisfied: absl-py in /Users/ianjjohnson/Library/Python/3.9/lib/python/site-packages (from keras-core) (1.2.0)',
+ 'Requirement already satisfied: numpy in /opt/homebrew/lib/python3.9/site-packages (from keras-core) (1.23.5)',
+ 'Requirement already satisfied: rich in /opt/homebrew/lib/python3.9/site-packages (from keras-core) (13.4.2)',
+ 'Requirement already satisfied: namex in /opt/homebrew/lib/python3.9/site-packages (from keras-core) (0.0.7)',
+ 'Requirement already satisfied: h5py in /Users/ianjjohnson/Library/Python/3.9/lib/python/site-packages (from keras-core) (3.7.0)',
+ 'Requirement already satisfied: dm-tree in /opt/homebrew/lib/python3.9/site-packages (from keras-core) (0.1.8)',
+ 'Requirement already satisfied: packaging in /Users/ianjjohnson/Library/Python/3.9/lib/python/site-packages (from keras-cv==0.6.1) (21.3)',
+ 'Requirement already satisfied: regex in /Users/ianjjohnson/Library/Python/3.9/lib/python/site-packages (from keras-cv==0.6.1) (2022.9.13)',
+ 'Requirement already satisfied: tensorflow-datasets in /opt/homebrew/lib/python3.9/site-packages (from keras-cv==0.6.1) (4.9.2)',
+ 'Requirement already satisfied: pyparsing!=3.0.5,>=2.0.2 in /Users/ianjjohnson/Library/Python/3.9/lib/python/site-packages (from packaging->keras-cv==0.6.1) (3.0.9)',
+ 'Requirement already satisfied: markdown-it-py>=2.2.0 in /opt/homebrew/lib/python3.9/site-packages (from rich->keras-core) (2.2.0)',
+ 'Requirement already satisfied: pygments<3.0.0,>=2.13.0 in /opt/homebrew/lib/python3.9/site-packages (from rich->keras-core) (2.15.1)',
+ 'Requirement already satisfied: array-record in /opt/homebrew/lib/python3.9/site-packages (from tensorflow-datasets->keras-cv==0.6.1) (0.4.0)',
+ 'Requirement already satisfied: click in /Users/ianjjohnson/Library/Python/3.9/lib/python/site-packages (from tensorflow-datasets->keras-cv==0.6.1) (8.1.3)',
+ 'Requirement already satisfied: etils[enp,epath]>=0.9.0 in /opt/homebrew/lib/python3.9/site-packages (from tensorflow-datasets->keras-cv==0.6.1) (1.3.0)',
+ 'Requirement already satisfied: promise in /Users/ianjjohnson/Library/Python/3.9/lib/python/site-packages (from tensorflow-datasets->keras-cv==0.6.1) (2.3)',
+ 'Requirement already satisfied: protobuf>=3.20 in /opt/homebrew/lib/python3.9/site-packages (from tensorflow-datasets->keras-cv==0.6.1) (3.20.3)',
+ 'Requirement already satisfied: psutil in /opt/homebrew/lib/python3.9/site-packages (from tensorflow-datasets->keras-cv==0.6.1) (5.9.4)',
+ 'Requirement already satisfied: requests>=2.19.0 in /Users/ianjjohnson/Library/Python/3.9/lib/python/site-packages (from tensorflow-datasets->keras-cv==0.6.1) (2.28.1)',
+ 'Requirement already satisfied: tensorflow-metadata in /Users/ianjjohnson/Library/Python/3.9/lib/python/site-packages (from tensorflow-datasets->keras-cv==0.6.1) (1.10.0)',
+ 'Requirement already satisfied: termcolor in /Users/ianjjohnson/Library/Python/3.9/lib/python/site-packages (from tensorflow-datasets->keras-cv==0.6.1) (2.0.1)',
+ 'Requirement already satisfied: toml in /Users/ianjjohnson/Library/Python/3.9/lib/python/site-packages (from tensorflow-datasets->keras-cv==0.6.1) (0.10.2)',
+ 'Requirement already satisfied: tqdm in /Users/ianjjohnson/Library/Python/3.9/lib/python/site-packages (from tensorflow-datasets->keras-cv==0.6.1) (4.64.1)',
+ 'Requirement already satisfied: wrapt in /Users/ianjjohnson/Library/Python/3.9/lib/python/site-packages (from tensorflow-datasets->keras-cv==0.6.1) (1.14.1)',
+ 'Requirement already satisfied: importlib_resources in /Users/ianjjohnson/Library/Python/3.9/lib/python/site-packages (from etils[enp,epath]>=0.9.0->tensorflow-datasets->keras-cv==0.6.1) (5.9.0)',
+ 'Requirement already satisfied: typing_extensions in /opt/homebrew/lib/python3.9/site-packages (from etils[enp,epath]>=0.9.0->tensorflow-datasets->keras-cv==0.6.1) (4.2.0)',
+ 'Requirement already satisfied: zipp in /Users/ianjjohnson/Library/Python/3.9/lib/python/site-packages (from etils[enp,epath]>=0.9.0->tensorflow-datasets->keras-cv==0.6.1) (3.8.1)',
+ 'Requirement already satisfied: mdurl~=0.1 in /opt/homebrew/lib/python3.9/site-packages (from markdown-it-py>=2.2.0->rich->keras-core) (0.1.2)',
+ 'Requirement already satisfied: charset-normalizer<3,>=2 in /Users/ianjjohnson/Library/Python/3.9/lib/python/site-packages (from requests>=2.19.0->tensorflow-datasets->keras-cv==0.6.1) (2.1.1)',
+ 'Requirement already satisfied: idna<4,>=2.5 in /Users/ianjjohnson/Library/Python/3.9/lib/python/site-packages (from requests>=2.19.0->tensorflow-datasets->keras-cv==0.6.1) (3.4)',
+ 'Requirement already satisfied: urllib3<1.27,>=1.21.1 in /Users/ianjjohnson/Library/Python/3.9/lib/python/site-packages (from requests>=2.19.0->tensorflow-datasets->keras-cv==0.6.1) (1.26.12)',
+ 'Requirement already satisfied: certifi>=2017.4.17 in /Users/ianjjohnson/Library/Python/3.9/lib/python/site-packages (from requests>=2.19.0->tensorflow-datasets->keras-cv==0.6.1) (2022.9.24)',
+ 'Requirement already satisfied: six in /opt/homebrew/lib/python3.9/site-packages (from promise->tensorflow-datasets->keras-cv==0.6.1) (1.16.0)',
+ 'Requirement already satisfied: googleapis-common-protos<2,>=1.52.0 in /Users/ianjjohnson/Library/Python/3.9/lib/python/site-packages (from tensorflow-metadata->tensorflow-datasets->keras-cv==0.6.1) (1.56.4)',
+ 'DEPRECATION: Configuring installation scheme with distutils config files is deprecated and will no longer work in the near future. If you are using a Homebrew or Linuxbrew Python, please see discussion at https://github.com/Homebrew/homebrew-core/issues/76621',
+ '',
+ '[notice] A new release of pip is available: 22.3.1 -> 23.2.1',
+ '[notice] To update, run: python3.9 -m pip install --upgrade pip']
+
+/opt/homebrew/lib/python3.11/site-packages/tqdm/auto.py:21: TqdmWarning: IProgress not found. Please update jupyter and ipywidgets. See https://ipywidgets.readthedocs.io/en/stable/user_install.html
+  from .autonotebook import tqdm as notebook_tqdm
+
 Using TensorFlow backend
 
 ```
@@ -160,7 +227,7 @@ Next let's load an image:
 
 
 ```python
-filepath = tf.keras.utils.get_file(origin="https://i.imgur.com/gCNcJJI.jpg")
+filepath = keras.utils.get_file(origin="https://i.imgur.com/gCNcJJI.jpg")
 image = keras.utils.load_img(filepath)
 image = np.array(image)
 
@@ -174,8 +241,17 @@ visualization.plot_image_gallery(
 ```
 
 
+
+
     
 ![png](/img/guides/object_detection_keras_cv/object_detection_keras_cv_8_0.png)
+    
+
+
+
+
+    
+![png](/img/guides/object_detection_keras_cv/object_detection_keras_cv_8_1.png)
     
 
 
@@ -269,12 +345,19 @@ visualization.plot_bounding_box_gallery(
 
 <div class="k-default-codeblock">
 ```
-1/1 [==============================] - 18s 18s/step
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 6s 6s/step
 
 ```
 </div>
     
 ![png](/img/guides/object_detection_keras_cv/object_detection_keras_cv_16_1.png)
+    
+
+
+
+
+    
+![png](/img/guides/object_detection_keras_cv/object_detection_keras_cv_16_2.png)
     
 
 
@@ -286,7 +369,7 @@ of a model detecting multiple boxes for the same object.
 Non-max suppression is a highly configurable algorithm, and in most cases you
 will want to customize the settings of your model's non-max
 suppression operation.
-This can be done by overriding to the `model.prediction_decoder` attribute.
+This can be done by overriding to the `prediction_decoder` argument.
 
 To show this concept off, let's temporarily disable non-max suppression on our
 RetinaNet.  This can be done by writing to the `prediction_decoder` attribute.
@@ -294,13 +377,18 @@ RetinaNet.  This can be done by writing to the `prediction_decoder` attribute.
 
 ```python
 # The following NonMaxSuppression layer is equivalent to disabling the operation
-prediction_decoder = keras_cv.layers.MultiClassNonMaxSuppression(
+prediction_decoder = keras_cv.layers.NonMaxSuppression(
     bounding_box_format="xywh",
     from_logits=True,
     iou_threshold=1.0,
     confidence_threshold=0.0,
 )
-pretrained_model.prediction_decoder = prediction_decoder
+
+pretrained_model = keras_cv.models.YOLOV8Detector.from_preset(
+    "yolo_v8_m_pascalvoc",
+    bounding_box_format="xywh",
+    prediction_decoder=prediction_decoder,
+)
 
 y_pred = pretrained_model.predict(image_batch)
 visualization.plot_bounding_box_gallery(
@@ -319,12 +407,19 @@ visualization.plot_bounding_box_gallery(
 
 <div class="k-default-codeblock">
 ```
-1/1 [==============================] - 2s 2s/step
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 3s 3s/step
 
 ```
 </div>
     
 ![png](/img/guides/object_detection_keras_cv/object_detection_keras_cv_18_1.png)
+    
+
+
+
+
+    
+![png](/img/guides/object_detection_keras_cv/object_detection_keras_cv_18_2.png)
     
 
 
@@ -341,7 +436,7 @@ pruned out.
 
 
 ```python
-prediction_decoder = keras_cv.layers.MultiClassNonMaxSuppression(
+prediction_decoder = keras_cv.layers.NonMaxSuppression(
     bounding_box_format="xywh",
     from_logits=True,
     # Decrease the required threshold to make predictions get pruned out
@@ -349,7 +444,11 @@ prediction_decoder = keras_cv.layers.MultiClassNonMaxSuppression(
     # Tune confidence threshold for predictions to pass NMS
     confidence_threshold=0.7,
 )
-pretrained_model.prediction_decoder = prediction_decoder
+pretrained_model = keras_cv.models.YOLOV8Detector.from_preset(
+    "yolo_v8_m_pascalvoc",
+    bounding_box_format="xywh",
+    prediction_decoder=prediction_decoder,
+)
 
 y_pred = pretrained_model.predict(image_batch)
 visualization.plot_bounding_box_gallery(
@@ -367,12 +466,19 @@ visualization.plot_bounding_box_gallery(
 
 <div class="k-default-codeblock">
 ```
-1/1 [==============================] - 2s 2s/step
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 3s 3s/step
 
 ```
 </div>
     
 ![png](/img/guides/object_detection_keras_cv/object_detection_keras_cv_20_1.png)
+    
+
+
+
+
+    
+![png](/img/guides/object_detection_keras_cv/object_detection_keras_cv_20_2.png)
     
 
 
@@ -478,10 +584,10 @@ def unpackage_raw_tfds_inputs(inputs, bounding_box_format):
         target=bounding_box_format,
     )
     bounding_boxes = {
-        "classes": tf.cast(inputs["objects"]["label"], dtype=tf.float32),
-        "boxes": tf.cast(boxes, dtype=tf.float32),
+        "classes": inputs["objects"]["label"],
+        "boxes": boxes,
     }
-    return {"images": tf.cast(image, tf.float32), "bounding_boxes": bounding_boxes}
+    return {"images": image, "bounding_boxes": bounding_boxes}
 
 
 def load_pascal_voc(split, dataset, bounding_box_format):
@@ -667,7 +773,7 @@ occur when training object detection models.
 ```python
 base_lr = 0.005
 # including a global_clipnorm is extremely important in object detection tasks
-optimizer = tf.keras.optimizers.SGD(
+optimizer = keras.optimizers.SGD(
     learning_rate=base_lr, momentum=0.9, global_clipnorm=10.0
 )
 ```
@@ -679,138 +785,38 @@ translate between problems.
 
 ### Loss functions
 
-You may not be familiar with the `"focal"` or `"smoothl1"` losses.  While not
-common in other models, these losses are more or less staples in the object
+You may not be familiar with the `"ciou"` loss.  While not
+common in other models, this loss is more or less staple in the object
 detection world.
 
-In short, ["Focal Loss"](https://arxiv.org/abs/1708.02002) places extra emphasis
-on difficult training examples.  This is useful when training the classification
-loss, as the majority of the losses are assigned to the background class.
+In short, ["Complete IoU"](https://arxiv.org/abs/1911.08287) is a flavour of the Intersection over Union loss and is used due to its convergence properties.
 
-"SmoothL1 Loss" is used to [prevent exploding gradients](https://arxiv.org/abs/1504.08083)
-that often occur when attempting to perform the box regression task.
-
-In KerasCV you can use these losses simply by passing the strings `"focal"` and
-`"smoothl1"` to `compile()`:
+In KerasCV, you can use this loss simply by passing the string `"ciou"` to `compile()`.
+We also use standard binary crossentropy loss for the class head.
 
 
 ```python
 pretrained_model.compile(
-    classification_loss="focal",
-    box_loss="smoothl1",
+    classification_loss="binary_crossentropy",
+    box_loss="ciou",
 )
 ```
 
 ### Metric evaluation
 
-Just like any other metric, you can pass the `KerasCV` object detection metrics
-to `compile()`.  The most popular object detection metrics are COCO metrics,
+The most popular object detection metrics are COCO metrics,
 which were published alongside the MSCOCO dataset. KerasCV provides an
-easy-to-use suite of COCO metrics under the `keras_cv.metrics.BoxCOCOMetrics`
-symbol:
+easy-to-use suite of COCO metrics under the `keras_cv.callbacks.PyCOCOCallback`
+symbol. Note that we use a Keras callback instead of a Keras metric to compute
+COCO metrics. This is because computing COCO metrics requires storing all of a
+model's predictions for the entire evaluation dataset in memory at once, which
+is impractical to do during training time.
 
 
 ```python
-coco_metrics = keras_cv.metrics.BoxCOCOMetrics(
-    bounding_box_format="xywh", evaluate_freq=20
+coco_metrics_callback = keras_cv.callbacks.PyCOCOCallback(
+    eval_ds.take(20), bounding_box_format="xywh"
 )
-```
-
-Let's define a quick helper to print our metrics in a nice table:
-
-
-```python
-
-def print_metrics(metrics):
-    maxlen = max([len(key) for key in result.keys()])
-    print("Metrics:")
-    print("-" * (maxlen + 1))
-    for k, v in metrics.items():
-        print(f"{k.ljust(maxlen+1)}: {v.numpy():0.2f}")
-
-```
-
-Due to the high computational cost of computing COCO metrics, the KerasCV
-`BoxCOCOMetrics` component requires an `evaluate_freq` parameter to be passed to
-its constructor.  Every `evaluate_freq`-th call to `update_state()`, the metric
-will recompute the result.  In between invocations, a cached version of the
-result will be returned.
-
-To force an evaluation, you may call `coco_metrics.result(force=True)`:
-
-
-```python
-pretrained_model.compile(
-    classification_loss="focal",
-    box_loss="smoothl1",
-    optimizer=optimizer,
-    metrics=[coco_metrics],
-)
-coco_metrics.reset_state()
-result = pretrained_model.evaluate(eval_ds.take(1), verbose=0)
-result = coco_metrics.result(force=True)
-
-print_metrics(result)
-```
-
-<div class="k-default-codeblock">
-```
-Metrics:
-----------------------------
-MaP                         : 0.61
-MaP@[IoU=50]                : 0.83
-MaP@[IoU=75]                : 0.75
-MaP@[area=small]            : 0.00
-MaP@[area=medium]           : 0.40
-MaP@[area=large]            : 0.59
-Recall@[max_detections=1]   : 0.61
-Recall@[max_detections=10]  : 0.61
-Recall@[max_detections=100] : 0.61
-Recall@[area=small]         : 0.00
-Recall@[area=medium]        : 0.40
-Recall@[area=large]         : 0.59
-
-```
-</div>
-**A note on TPU compatibility:**
-
-Evaluation of `BoxCOCOMetrics` require running `tf.image.non_max_suppression()`
-inside of the `model.train_step()` and `model.evaluation_step()` functions.
-Due to this, the metric suite is not compatible with TPU when used with the
-`compile()` API.
-
-Luckily, there are two workarounds that allow you to still train a RetinaNet on TPU:
-
-- The use of a custom callback
-- Using a [SideCarEvaluator](https://www.tensorflow.org/api_docs/python/tf/keras/utils/SidecarEvaluator)
-
-Let's use a custom callback to achieve TPU compatibility in this guide:
-
-
-```python
-
-class EvaluateCOCOMetricsCallback(keras.callbacks.Callback):
-    def __init__(self, data):
-        super().__init__()
-        self.data = data
-        self.metrics = keras_cv.metrics.BoxCOCOMetrics(
-            bounding_box_format="xywh",
-            # passing 1e9 ensures we never evaluate until
-            # `metrics.result(force=True)` is
-            # called.
-            evaluate_freq=1e9,
-        )
-
-    def on_epoch_end(self, epoch, logs):
-        self.metrics.reset_state()
-        for batch in tqdm.tqdm(self.data):
-            images, y_true = batch[0], batch[1]
-            y_pred = self.model.predict(images, verbose=0)
-            self.metrics.update_state(y_true, y_pred)
-
-        metrics = self.metrics.result(force=True)
-        logs.update(metrics)
-        return logs
 
 ```
 
@@ -820,23 +826,23 @@ We can now move on to model creation and training.
 ---
 ## Model creation
 
-Next, let's use the KerasCV API to construct an untrained RetinaNet model.
-In this tutorial we use a pretrained ResNet50 backbone from the imagenet
+Next, let's use the KerasCV API to construct an untrained YOLOV8Detector model.
+In this tutorial we using a pretrained ResNet50 backbone from the imagenet
 dataset.
 
-KerasCV makes it easy to construct a `RetinaNet` with any of the KerasCV
+KerasCV makes it easy to construct a `YOLOV8Detector` with any of the KerasCV
 backbones.  Simply use one of the presets for the architecture you'd like!
 
 For example:
 
 
 ```python
-model = keras_cv.models.RetinaNet.from_preset(
+model = keras_cv.models.YOLOV8Detector.from_preset(
     "resnet50_imagenet",
-    num_classes=len(class_mapping),
     # For more info on supported bounding box formats, visit
     # https://keras.io/api/keras_cv/bounding_box/
     bounding_box_format="xywh",
+    num_classes=20,
 )
 ```
 
@@ -857,47 +863,52 @@ Let's compile our model:
 
 ```python
 model.compile(
-    classification_loss="focal",
-    box_loss="smoothl1",
+    classification_loss="binary_crossentropy",
+    box_loss="ciou",
     optimizer=optimizer,
-    # We will use our custom callback to evaluate COCO metrics
-    metrics=None,
 )
 ```
 
-If you want to fully train the model, remove `.take(20)` from each
-of the following dataset references.
+If you want to fully train the model, remove `.take(20)` from all dataset
+references (below and in the initialization of the metrics callback).
 
 
 ```python
 model.fit(
     train_ds.take(20),
-    validation_data=eval_ds.take(20),
     # Run for 10-35~ epochs to achieve good scores.
     epochs=1,
-    callbacks=[EvaluateCOCOMetricsCallback(eval_ds.take(20))],
+    callbacks=[coco_metrics_callback],
 )
 ```
 
 <div class="k-default-codeblock">
 ```
-20/20 [==============================] - ETA: 0s - loss: 1.8220 - box_loss: 0.6911 - classification_loss: 1.1309 - percent_boxes_matched_with_anchor: 0.9258
+ 20/20 ━━━━━━━━━━━━━━━━━━━━ 74s 4s/step
+creating index...
+index created!
+creating index...
+index created!
+Running per image evaluation...
+Evaluate annotation type *bbox*
+DONE (t=0.12s).
+Accumulating evaluation results...
+DONE (t=0.06s).
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.000
+ Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets=100 ] = 0.000
+ Average Precision  (AP) @[ IoU=0.75      | area=   all | maxDets=100 ] = 0.000
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.000
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.000
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.000
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=  1 ] = 0.001
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets= 10 ] = 0.003
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.005
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.000
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.000
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.007
+ 20/20 ━━━━━━━━━━━━━━━━━━━━ 614s 27s/step - loss: 378.5429 - val_AP: 2.2652e-05 - val_AP50: 1.2661e-04 - val_AP75: 0.0000e+00 - val_APs: 0.0000e+00 - val_APm: 0.0000e+00 - val_APl: 2.9049e-05 - val_ARmax1: 5.8480e-04 - val_ARmax10: 0.0025 - val_ARmax100: 0.0051 - val_ARs: 0.0000e+00 - val_ARm: 0.0000e+00 - val_ARl: 0.0070
 
-100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 20/20 [23:28<00:00, 70.42s/it]
-
-20/20 [==============================] - 1654s 86s/step - loss: 1.8220 - box_loss: 0.6911 - classification_loss: 1.1309 - percent_boxes_matched_with_anchor: 0.9258 - val_loss: 1.7590 - val_box_loss: 0.6807 - val_classification_loss: 1.0784 - val_percent_boxes_matched_with_anchor: 0.9086 - MaP: 0.0000e+00 - MaP@[IoU=50]: 0.0000e+00 - MaP@[IoU=75]: 0.0000e+00 - MaP@[area=small]: 0.0000e+00 - MaP@[area=medium]: 0.0000e+00 - MaP@[area=large]: 0.0000e+00 - Recall@[max_detections=1]: 0.0000e+00 - Recall@[max_detections=10]: 0.0000e+00 - Recall@[max_detections=100]: 0.0000e+00 - Recall@[area=small]: 0.0000e+00 - Recall@[area=medium]: 0.0000e+00 - Recall@[area=large]: 0.0000e+00
-
-```
-</div>
-    
-
-
-
-
-
-<div class="k-default-codeblock">
-```
-<keras.src.callbacks.History at 0x16d966b50>
+<keras_core.src.callbacks.history.History at 0x2d6329490>
 
 ```
 </div>
@@ -912,21 +923,48 @@ In this section, we will use a `keras_cv` provided preset:
 
 
 ```python
-model = keras_cv.models.RetinaNet.from_preset(
-    "retinanet_resnet50_pascalvoc", bounding_box_format="xywh"
+model = keras_cv.models.YOLOV8Detector.from_preset(
+    "yolo_v8_m_pascalvoc", bounding_box_format="xywh"
 )
 ```
 
-Next, for convenience we construct a dataset with larger batches:
+We can evaluate COCO metrics for our pre-trained YOLOV8 model using our metrics
+callback.
 
 
 ```python
-visualization_ds = eval_ds.unbatch()
-visualization_ds = visualization_ds.ragged_batch(16)
-visualization_ds = visualization_ds.shuffle(8)
+coco_metrics_callback.model = model
+coco_metrics_callback.on_epoch_end(epoch=0)
 ```
 
-Let's create a simple function to plot our inferences:
+<div class="k-default-codeblock">
+```
+ 20/20 ━━━━━━━━━━━━━━━━━━━━ 23s 999ms/step
+creating index...
+index created!
+creating index...
+index created!
+Running per image evaluation...
+Evaluate annotation type *bbox*
+DONE (t=0.02s).
+Accumulating evaluation results...
+DONE (t=0.03s).
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.444
+ Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets=100 ] = 0.601
+ Average Precision  (AP) @[ IoU=0.75      | area=   all | maxDets=100 ] = 0.487
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.100
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.240
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.532
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=  1 ] = 0.408
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets= 10 ] = 0.483
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.483
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.127
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.279
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.581
+
+```
+</div>
+Next, let's create a simple function to plot our inferences:
 
 
 ```python
@@ -934,7 +972,6 @@ Let's create a simple function to plot our inferences:
 def visualize_detections(model, dataset, bounding_box_format):
     images, y_true = next(iter(dataset.take(1)))
     y_pred = model.predict(images)
-    y_pred = bounding_box.to_ragged(y_pred)
     visualization.plot_bounding_box_gallery(
         images,
         value_range=(0, 255),
@@ -943,7 +980,7 @@ def visualize_detections(model, dataset, bounding_box_format):
         y_pred=y_pred,
         scale=4,
         rows=2,
-        cols=4,
+        cols=2,
         show=True,
         font_scale=0.7,
         class_mapping=class_mapping,
@@ -951,29 +988,22 @@ def visualize_detections(model, dataset, bounding_box_format):
 
 ```
 
-You'll likely need to configure your NonMaxSuppression operation to achieve
-visually appealing results:
+You may need to configure your NonMaxSuppression operation to achieve
+visually appealing results.
 
 
 ```python
-model.prediction_decoder = keras_cv.layers.MultiClassNonMaxSuppression(
-    bounding_box_format="xywh",
-    from_logits=True,
-    iou_threshold=0.5,
-    confidence_threshold=0.75,
-)
-
-visualize_detections(model, dataset=visualization_ds, bounding_box_format="xywh")
+visualize_detections(model, dataset=eval_ds, bounding_box_format="xywh")
 ```
 
 <div class="k-default-codeblock">
 ```
-1/1 [==============================] - 8s 8s/step
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 1s 1s/step
 
 ```
 </div>
     
-![png](/img/guides/object_detection_keras_cv/object_detection_keras_cv_66_1.png)
+![png](/img/guides/object_detection_keras_cv/object_detection_keras_cv_60_1.png)
     
 
 
@@ -986,9 +1016,7 @@ detections in a `keras.callbacks.Callback` to monitor training :
 
 class VisualizeDetections(keras.callbacks.Callback):
     def on_epoch_end(self, epoch, logs):
-        visualize_detections(
-            self.model, bounding_box_format="xywh", dataset=visualization_dataset
-        )
+        visualize_detections(self.model, bounding_box_format="xywh", dataset=eval_ds)
 
 ```
 
@@ -1025,7 +1053,8 @@ images = stable_diffusion.text_to_image(
     batch_size=4,
     seed=1231,
 )
-y_pred = model.predict(images)
+encoded_predictions = model(images)
+y_pred = model.decode_predictions(encoded_predictions, images)
 visualization.plot_bounding_box_gallery(
     images,
     value_range=(0, 255),
@@ -1042,12 +1071,18 @@ visualization.plot_bounding_box_gallery(
 <div class="k-default-codeblock">
 ```
 By using this model checkpoint, you acknowledge that its usage is subject to the terms of the CreativeML Open RAIL++-M license at https://github.com/Stability-AI/stablediffusion/blob/main/LICENSE-MODEL
-50/50 [==============================] - 1775s 35s/step
-1/1 [==============================] - 3s 3s/step
+ 50/50 ━━━━━━━━━━━━━━━━━━━━ 2851s 57s/step
 
 ```
 </div>
     
-![png](/img/guides/object_detection_keras_cv/object_detection_keras_cv_70_1.png)
+![png](/img/guides/object_detection_keras_cv/object_detection_keras_cv_64_1.png)
+    
+
+
+
+
+    
+![png](/img/guides/object_detection_keras_cv/object_detection_keras_cv_64_2.png)
     
 
