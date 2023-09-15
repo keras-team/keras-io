@@ -1,10 +1,9 @@
 """
-Title: Efficient Object Detection with YOLOV8 and KerasCV
+Title: Efficient Object Detection with YOLOV8 and KerasCV [JAX 🔥]
 Author: [Gitesh Chawda](https://twitter.com/gitesh12_)
 Date created: 2023/06/26
 Last modified: 2023/06/26
-Description: Train custom YOLOV8 object detection model with KerasCV.
-Accelerator: GPU
+Description: Train custom YOLOV8 object detection model with KerasCV with jax backend.
 """
 
 """
@@ -20,9 +19,7 @@ ImageNet, COCO, and Pascal VOC, which can be used for transfer learning. KerasCV
 provides a range of visualization tools for inspecting the intermediate representations
 learned by the model and for visualizing the results of object detection and segmentation
 tasks.
-"""
 
-"""
 If you're interested in learning about object detection using KerasCV, I highly suggest
 taking a look at the guide created by lukewood. This resource, available at
 [Object Detection With KerasCV](https://keras.io/guides/keras_cv/object_detection_keras_cv/#object-detection-introduction),
@@ -38,15 +35,25 @@ pip install keras-core -q
 pip install --upgrade git+https://github.com/keras-team/keras-cv -q
 """
 
-import os
-
-os.environ["KERAS_BACKEND"] = "tensorflow"
+"""shell
+pip install pycocotools -q
+"""
 
 """
 ## Setup
 """
 
+"""
+This example utilizes Keras Core, allowing it to function with any of the following
+backends: `tensorflow`, `jax`, or `torch`. KerasCV includes built-in support for Keras
+Core. You can easily switch the backend by modifying the "KERAS_BACKEND" environment
+variable. In the example below, we have chosen the JAX backend.
+"""
+
 import os
+
+os.environ["KERAS_BACKEND"] = "jax"  # or tensorflow or torch
+
 from tqdm.auto import tqdm
 import xml.etree.ElementTree as ET
 
@@ -113,11 +120,6 @@ mapping is used to encode and decode the class labels during training and infere
 object detection tasks.
 """
 
-"""shell
-!gdown 19CWdNL3ePq9XIgMeb_RjA641iGra3nWm
-!unzip data.zip
-"""
-
 class_ids = [
     "car",
     "pedestrian",
@@ -128,8 +130,8 @@ class_ids = [
 class_mapping = dict(zip(range(len(class_ids)), class_ids))
 
 # Path to images and annotations
-path_images = "./data/images/"
-path_annot = "./data/annotations/"
+path_images = "/kaggle/input/dataset/data/images/"
+path_annot = "/kaggle/input/dataset/data/annotations/"
 
 # Get all XML file paths in path_annot and sort them
 xml_files = sorted(
@@ -354,7 +356,7 @@ on-the-fly augmentation within a tf.data pipeline, the process becomes seamless 
 efficient, enabling better training and more accurate object detection results.
 """
 
-augmenter = keras.Sequential(
+augmenter = keras_cv.layers.Augmenter(
     layers=[
         keras_cv.layers.RandomFlip(mode="horizontal", bounding_box_format="xyxy"),
         keras_cv.layers.RandomShear(
@@ -584,8 +586,7 @@ coco_metrics_callback = keras_cv.callbacks.PyCOCOCallback(
 
 yolo.fit(
     train_ds,
-    steps_per_epoch=2,
-    validation_data=val_ds.take(2),
+    validation_data=val_ds,
     epochs=3,
     callbacks=[coco_metrics_callback],
 )
