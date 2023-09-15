@@ -535,7 +535,7 @@ Epoch 8/8
 ## Fine-tuning
 
 After pretraining, we can now fine-tune our model on the `SST-2` dataset. We can
-leverage the ability of the encoder we build to predict on words in context to boost our
+leverage the ability of the encoder we build to predict on words in context to boost 
 our performance on the downstream task.
 
 ### Preprocess data for classification
