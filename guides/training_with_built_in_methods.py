@@ -362,7 +362,7 @@ this layer is just for the sake of providing a concrete example):
 @keras.saving.register_keras_serializable()
 class ActivityRegularizationLayer(layers.Layer):
     def call(self, inputs):
-        self.add_loss(tf.reduce_sum(inputs) * 0.1)
+        self.add_loss(tf.reduce_mean(inputs) * 0.1)
         return inputs  # Pass-through layer.
 
 
