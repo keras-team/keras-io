@@ -755,9 +755,19 @@ MODELING_LAYERS_MASTER = {
             "generate": ["keras_nlp.layers.PositionEmbedding"],
         },
         {
+            "path": "rotary_embedding",
+            "title": "RotaryEmbedding layer",
+            "generate": ["keras_nlp.layers.RotaryEmbedding"],
+        },
+        {
             "path": "sine_position_encoding",
             "title": "SinePositionEncoding layer",
             "generate": ["keras_nlp.layers.SinePositionEncoding"],
+        },
+        {
+            "path": "reversible_embedding",
+            "title": "ReversibleEmbedding layer",
+            "generate": ["keras_nlp.layers.ReversibleEmbedding"],
         },
         {
             "path": "token_and_position_embedding",
