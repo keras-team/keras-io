@@ -3,7 +3,7 @@ Title: Efficient Object Detection with YOLOV8 and KerasCV [JAX 🔥]
 Author: [Gitesh Chawda](https://twitter.com/gitesh12_)
 Date created: 2023/06/26
 Last modified: 2023/06/26
-Description: Train custom YOLOV8 object detection model with KerasCV with jax backend.
+Description: Train custom YOLOV8 object detection model with KerasCV with JAX backend.
 """
 
 """
