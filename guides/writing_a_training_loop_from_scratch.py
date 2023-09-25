@@ -312,7 +312,7 @@ Consider this layer, that creates an activity regularization loss:
 @keras.saving.register_keras_serializable()
 class ActivityRegularizationLayer(layers.Layer):
     def call(self, inputs):
-        self.add_loss(1e-2 * tf.reduce_sum(inputs))
+        self.add_loss(0.1 * tf.reduce_mean(inputs))
         return inputs
 
 

@@ -2,7 +2,7 @@
 Title: Near-duplicate image search
 Author: [Sayak Paul](https://twitter.com/RisingSayak)
 Date created: 2021/09/10
-Last modified: 2021/09/10
+Last modified: 2023/08/30
 Description: Building a near-duplicate image search utility using deep learning and locality-sensitive hashing.
 Accelerator: GPU
 """
@@ -35,11 +35,20 @@ you should have a GPU runtime available._
 """
 
 """
+## Setup
+"""
+
+"""shell
+pip install tensorrt
+"""
+
+"""
 ## Imports
 """
 
 import matplotlib.pyplot as plt
 import tensorflow as tf
+import tensorrt
 import numpy as np
 import time
 
@@ -91,7 +100,7 @@ a wide variety of different downstream tasks.
 """
 
 """shell
-wget -q https://git.io/JuMq0 -O flower_model_bit_0.96875.zip
+wget -q https://github.com/sayakpaul/near-dup-parser/releases/download/v0.1.0/flower_model_bit_0.96875.zip
 unzip -qq flower_model_bit_0.96875.zip
 """
 
@@ -444,7 +453,7 @@ def plot_images(images, labels):
     plt.figure(figsize=(20, 10))
     columns = 5
     for i, image in enumerate(images):
-        ax = plt.subplot(len(images) / columns + 1, columns, i + 1)
+        ax = plt.subplot(len(images) // columns + 1, columns, i + 1)
         if i == 0:
             ax.set_title("Query Image\n" + "Label: {}".format(labels[i]))
         else:
