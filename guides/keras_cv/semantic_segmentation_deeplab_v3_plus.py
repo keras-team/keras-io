@@ -58,11 +58,9 @@ guide can be run with any backend (Tensorflow, JAX, PyTorch).
 """
 
 """shell
-!pip install keras-core
-!pip install git+https://github.com/keras-team/keras-cv.git
+!!pip install -q keras-core
+!!pip install -q git+https://github.com/keras-team/keras-cv.git
 """
-
-%env KERAS_BACKEND=tensorflow
 
 import tensorflow as tf
 import tensorflow_datasets as tfds
@@ -77,6 +75,51 @@ from keras_cv import visualization
 from keras_cv.backend import ops
 
 from keras_cv.datasets.pascal_voc.segmentation import load
+
+"""
+## Perform semantic segmentation with a pretrained DeepLabV3Plus model
+
+The highest level API in the KerasCV semantic segmentation API is the keras_cv.models
+API. This API includes fully pretrained semantic segmentation models, such as
+keras_cv.models.DeepLabV3Plus.
+
+Let's get started by constructing a DeepLabV3Plus pretrained on the pascalvoc dataset.
+"""
+
+model = keras_cv.models.DeepLabV3Plus.from_preset(
+    "deeplab_v3_plus_resnet50_pascalvoc",
+    num_classes=21,
+    input_shape=[512, 512, 3],
+)
+
+"""
+Let us visualize the results of this pretrained model
+"""
+
+filepath = tf.keras.utils.get_file(origin="https://i.imgur.com/A8eQsll.jpeg")
+image = keras.utils.load_img(filepath)
+
+resize = keras_cv.layers.Resizing(height=512, width=512)
+image = resize(image)
+image = keras.ops.expand_dims(np.array(image), axis=0)
+preds = ops.expand_dims(ops.argmax(model(image), axis=-1), axis=-1)
+keras_cv.visualization.plot_segmentation_mask_gallery(
+    image,
+    value_range=(0, 255),
+    num_classes=1,
+    y_true=None,
+    y_pred=preds,
+    scale=3,
+    rows=1,
+    cols=1,
+)
+
+"""
+## Train a custom semantic segmentation model
+In this guide, we'll assemble a full training pipeline for a KerasCV DeepLabV3 semantic
+segmentation model. This includes data loading, augmentation, training, metric
+evaluation, and inference!
+"""
 
 """
 ## Download the data
@@ -121,7 +164,7 @@ keras_cv.visualization.plot_segmentation_mask_gallery(
     batch["images"],
     value_range=(0, 255),
 num_classes=21,  # The number of classes for the oxford iiit pet dataset. The VOC dataset
-                 # also includes 1 class for the background.
+also includes 1 class for the background.
     y_true=batch["segmentation_masks"],
     scale=3,
     rows=2,
@@ -143,7 +186,7 @@ keras_cv.visualization.plot_segmentation_mask_gallery(
     batch["images"],
     value_range=(0, 255),
 num_classes=21,  # The number of classes for the oxford iiit pet dataset. The VOC dataset
-                 # also includes 1 class for the background.
+also includes 1 class for the background.
     y_true=batch["segmentation_masks"],
     scale=3,
     rows=2,
@@ -157,23 +200,11 @@ KerasCV provides a variety of image augmentation options. In this example, we wi
 the `RandomFlip` augmentation to augment the training dataset. The `RandomFlip`
 augmentation randomly flips the images in the training dataset horizontally or
 vertically. This can help to improve the model's robustness to changes in the orientation
-of the objects in the images. `RandomShear` is a transformation that changes the shape of
-an image by rotating it around a central point along x or y axis. `RandomCutout` randomly
-cuts out rectangles from images and fills them. Feel free to play around with keras_CV
-preprocessing layers.
+of the objects in the images.
 """
 
-augment_fn = keras.Sequential(
-    [
-        keras_cv.layers.RandomFlip(),
-        keras_cv.layers.RandomShear(x_factor=(0, 0.2), fill_mode="constant"),
-        keras_cv.layers.RandomCutout(
-            height_factor=0.1, width_factor=0.1, fill_mode="constant"
-        ),
-    ]
-)
-train_ds_temp = train_ds.map(augment_fn)
-batch = next(iter(train_ds_temp.take(1)))
+train_ds = train_ds.map(keras_cv.layers.RandomFlip())
+batch = next(iter(train_ds.take(1)))
 
 keras_cv.visualization.plot_segmentation_mask_gallery(
     batch["images"],
