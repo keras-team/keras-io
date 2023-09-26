@@ -230,7 +230,7 @@ This means that the learning rate will start at 0.007 and then decrease to zero 
 
 BATCH_SIZE = 4
 INITIAL_LR = 0.007 * BATCH_SIZE / 16
-EPOCHS = 1
+EPOCHS = 100
 NUM_CLASSES = 21
 learning_rate = keras.optimizers.schedules.CosineDecay(
     INITIAL_LR,
