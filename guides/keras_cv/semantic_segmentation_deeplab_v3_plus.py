@@ -238,9 +238,8 @@ learning_rate = keras.optimizers.schedules.CosineDecay(
 )
 
 """
-Let us create an instance of the `DeepLabV3Plus` model for semantic segmentation. The
-model architecture is initialized with `resnet50_v2_imagenet` preset and 21
-classes. `resnet50_v2_imagenet` pre-trained weights will be used as the backbone feature
+We instantiate a DeepLabV3+ model with a ResNet50 backbone pretrained on ImageNet classification:
+`resnet50_v2_imagenet` pre-trained weights will be used as the backbone feature
 extractor for the DeepLabV3Plus model. `num_classes` parameter specifies the number of
 classes that the model will be trained to segment.
 """
