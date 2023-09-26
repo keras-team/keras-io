@@ -212,6 +212,7 @@ is important for learning rate decay because it determines how many steps the mo
 will train for. The initial learning rate is 0.007 and the decay steps are 2124.
 This means that the learning rate will start at 0.007 and then decrease to zero over
 2124 steps.
+![png](/img/guides/semantic_segmentation_deeplab_v3_plus/learning_rate_schedule.png)
 """
 
 BATCH_SIZE = 4
