@@ -3,7 +3,7 @@ Title: Semantic Segmentation with KerasCV
 Author: Divyashree Sreepathihalli, Ian Stenbit
 Date created: 2023/08/22
 Last modified: 2023/08/24
-Description: Train and use DeepLabV3Plus segmentation model with KerasCV.
+Description: Train and use DeepLabv3+ segmentation model with KerasCV.
 Accelerator: GPU
 """
 
@@ -12,18 +12,19 @@ Accelerator: GPU
 
 ## Background
 Semantic segmentation is a type of computer vision task that involves assigning a
-semantic label to each individual pixel of an image, effectively dividing the image into
-regions that correspond to different object classes or categories.
+class label such as person, bike, or background to each individual pixel of an
+image, effectively dividing the image into regions that correspond to different
+fobject classes or categories.
 
 ![](https://miro.medium.com/v2/resize:fit:4800/format:webp/1*z6ch-2BliDGLIHpOPFY_Sw.png)
 
 
 
-KerasCV offers Deeplabv3plus model developed by Google for semantic
-segmentation. This guide demonstrates how to finetune and use DeepLabV3Plus model for
-image semantic segmentaion with KerasCV. It's architecture combines atrous convolutions,
+KerasCV offers DeepLabv3+ model developed by Google for semantic
+segmentation. This guide demonstrates how to finetune and use DeepLabv3+ model for
+image semantic segmentaion with KerasCV. It's architecture that combines atrous convolutions,
 contextual information aggregation, and powerful backbones to achieve accurate and
-detailed semantic segmentation. The DeepLabV3Plus model has been shown to achieve
+detailed semantic segmentation. The DeepLabv3+ model has been shown to achieve
 state-of-the-art results on a variety of image segmentation benchmarks.
 
 ### References
@@ -42,24 +43,20 @@ To run this tutorial, you will need to install the following packages:
 
 * `keras-cv`
 * `keras-core`
+"""
 
-You can install these packages with the following command:
+"""shell
+!!pip install -q keras-core
+!!pip install -q git+https://github.com/keras-team/keras-cv.git
+"""
 
-```
-!pip install keras-core
-!pip install git+https://github.com/keras-team/keras-cv.git
-```
+"""
 After installing keras-core and keras-cv, set the backend for keras-core. This
 guide can be run with any backend (Tensorflow, JAX, PyTorch).
 
 ```
 %env KERAS_BACKEND=tensorflow
 ```
-"""
-
-"""shell
-!!pip install -q keras-core
-!!pip install -q git+https://github.com/keras-team/keras-cv.git
 """
 
 import tensorflow as tf
@@ -74,16 +71,16 @@ from keras_cv import bounding_box
 from keras_cv import visualization
 from keras_cv.backend import ops
 
-from keras_cv.datasets.pascal_voc.segmentation import load
+from keras_cv.datasets.pascal_voc.segmentation import load_voc
 
 """
-## Perform semantic segmentation with a pretrained DeepLabV3Plus model
+## Perform semantic segmentation with a pretrained DeepLabv3+ model
 
-The highest level API in the KerasCV semantic segmentation API is the keras_cv.models
+The highest level API in the KerasCV semantic segmentation API is the `keras_cv.models`
 API. This API includes fully pretrained semantic segmentation models, such as
-keras_cv.models.DeepLabV3Plus.
+`keras_cv.models.DeepLabV3Plus`.
 
-Let's get started by constructing a DeepLabV3Plus pretrained on the pascalvoc dataset.
+Let's get started by constructing a DeepLabv3+ pretrained on the pascalvoc dataset.
 """
 
 model = keras_cv.models.DeepLabV3Plus.from_preset(
@@ -130,13 +127,13 @@ dataset](https://www.eecs.berkeley.edu/Research/Projects/CS/vision/grouping/sema
 with KerasCV datasets and split them into train dataset `train_ds` and `eval_ds`.
 """
 
-train_ds = load(split="sbd_train")
-eval_ds = load(split="sbd_eval")
+train_ds = load_voc(split="sbd_train")
+eval_ds = load_voc(split="sbd_eval")
 
 """
 ## Preprocess the data
 
-The `unpackage_tfds_inputs` utility function preprocesses the inputs to a dictionary of
+The `preprocess_tfds_inputs` utility function preprocesses the inputs to a dictionary of
 `images` and `segmentation_masks`. The images and segmentation masks are resized to
 512x512. The resulting dataset is then batched into groups of 4 image and segmentation
 mask pairs.
@@ -147,24 +144,24 @@ batch of images and segmentation masks as input and displays them in a grid.
 """
 
 
-def unpackage_tfds_inputs(inputs):
-    return {
+def preprocess_tfds_inputs(inputs):
+    inputs = {
         "images": inputs["image"],
         "segmentation_masks": inputs["class_segmentation"],
     }
+    outputs = inputs.map(keras_cv.layers.Resizing(height=512, width=512))
+    outputs = outputs.batch(4, drop_remainder=True)
+    return outputs
 
 
-train_ds = train_ds.map(unpackage_tfds_inputs)
-train_ds = train_ds.map(keras_cv.layers.Resizing(height=512, width=512))
-train_ds = train_ds.batch(4, drop_remainder=True)
+train_ds = train_ds.map(preprocess_tfds_inputs)
 
 batch = next(iter(train_ds.take(1)))
 
 keras_cv.visualization.plot_segmentation_mask_gallery(
     batch["images"],
     value_range=(0, 255),
-num_classes=21,  # The number of classes for the oxford iiit pet dataset. The VOC dataset
-also includes 1 class for the background.
+    num_classes=21,  # The number of classes for the oxford iiit pet dataset. The VOC dataset also includes 1 class for the background.
     y_true=batch["segmentation_masks"],
     scale=3,
     rows=2,
@@ -176,17 +173,14 @@ The preprocessing is applied to the evaluation dataset `eval_ds`. A batch of `ev
 can be visualized using `keras_cv.visualization.plot_segmentation_mask_gallery`.
 """
 
-eval_ds = eval_ds.map(unpackage_tfds_inputs)
-eval_ds = eval_ds.map(keras_cv.layers.Resizing(height=512, width=512))
-eval_ds = eval_ds.batch(4, drop_remainder=True)
+eval_ds = eval_ds.map(preprocess_tfds_inputs)
 
 batch = next(iter(eval_ds.take(1)))
 
 keras_cv.visualization.plot_segmentation_mask_gallery(
     batch["images"],
     value_range=(0, 255),
-num_classes=21,  # The number of classes for the oxford iiit pet dataset. The VOC dataset
-also includes 1 class for the background.
+    num_classes=21,  # The number of classes for the oxford iiit pet dataset. The VOC dataset also includes 1 class for the background.
     y_true=batch["segmentation_masks"],
     scale=3,
     rows=2,
@@ -285,7 +279,7 @@ model.summary()
 """
 The utility function `dict_to_tuple` effectively transforms the dictionaries of training
 and validation datasets into tuples of images and one-hot encoded segmentation masks,
-which is used during training and evaluation of the `DeepLabV3Plus` model.
+which is used during training and evaluation of the DeepLabv3+ model.
 """
 
 
@@ -301,20 +295,18 @@ eval_ds = eval_ds.map(dict_to_tuple)
 model.fit(train_ds, validation_data=eval_ds, epochs=EPOCHS)
 
 """
-## Prediction with trained model
-Now that the model training of DeepLabV3Plus has completed, let's test it by making
+## Predictions with trained model
+Now that the model training of DeepLabv3+ has completed, let's test it by making
 predications
 on a few sample images.
 """
 
-test_ds = load(split="sbd_test")
-test_ds = test_ds.map(unpackage_tfds_inputs)
-test_ds = test_ds.map(keras_cv.layers.Resizing(height=512, width=512))
-test_ds = test_ds.batch(4, drop_remainder=True)
+test_ds = load_voc(split="sbd_test")
+test_ds = test_ds.map(preprocess_tfds_inputs)
 
 images, masks = next(iter(train_ds.take(1)))
 preds = ops.expand_dims(ops.argmax(model(images), axis=-1), axis=-1)
-masks = tf.expand_dims(tf.argmax(masks, axis=-1), axis=-1)
+masks = ops.expand_dims(ops.argmax(masks, axis=-1), axis=-1)
 
 keras_cv.visualization.plot_segmentation_mask_gallery(
     images,
@@ -329,7 +321,7 @@ keras_cv.visualization.plot_segmentation_mask_gallery(
 
 
 """
-Here are some additional tips for using the KerasCV DeepLabV3Plus model:
+Here are some additional tips for using the KerasCV DeepLabv3+ model:
 
 - The model can be trained on a variety of datasets, including the COCO dataset, the
 PASCAL VOC dataset, and the Cityscapes dataset.
