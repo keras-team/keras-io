@@ -96,7 +96,7 @@ model = keras_cv.models.DeepLabV3Plus.from_preset(
 Let us visualize the results of this pretrained model
 """
 
-filepath = tf.keras.utils.get_file(origin="https://i.imgur.com/A8eQsll.jpeg")
+filepath = tf.keras.utils.get_file(origin="https://i.imgur.com/gCNcJJI.jpg")
 image = keras.utils.load_img(filepath)
 
 resize = keras_cv.layers.Resizing(height=512, width=512)
