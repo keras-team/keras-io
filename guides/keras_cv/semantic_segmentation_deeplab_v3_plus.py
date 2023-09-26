@@ -122,8 +122,7 @@ evaluation, and inference!
 ## Download the data
 
 We download
-[Pascal VOC
-dataset](https://www.eecs.berkeley.edu/Research/Projects/CS/vision/grouping/semantic_contours/benchmark.tgz)
+[Pascal VOC dataset](https://www.eecs.berkeley.edu/Research/Projects/CS/vision/grouping/semantic_contours/benchmark.tgz)
 with KerasCV datasets and split them into train dataset `train_ds` and `eval_ds`.
 """
 
@@ -156,7 +155,7 @@ def preprocess_tfds_inputs(inputs):
 
 train_ds = train_ds.map(preprocess_tfds_inputs)
 
-batch = next(iter(train_ds.take(1)))
+batch = train_ds.take(1).get_single_element()
 
 keras_cv.visualization.plot_segmentation_mask_gallery(
     batch["images"],
@@ -169,23 +168,10 @@ keras_cv.visualization.plot_segmentation_mask_gallery(
 )
 
 """
-The preprocessing is applied to the evaluation dataset `eval_ds`. A batch of `eval_ds`
-can be visualized using `keras_cv.visualization.plot_segmentation_mask_gallery`.
+The preprocessing is applied to the evaluation dataset `eval_ds`.
 """
 
 eval_ds = eval_ds.map(preprocess_tfds_inputs)
-
-batch = next(iter(eval_ds.take(1)))
-
-keras_cv.visualization.plot_segmentation_mask_gallery(
-    batch["images"],
-    value_range=(0, 255),
-    num_classes=21,  # The number of classes for the oxford iiit pet dataset. The VOC dataset also includes 1 class for the background.
-    y_true=batch["segmentation_masks"],
-    scale=3,
-    rows=2,
-    cols=2,
-)
 
 """
 ## Data Augmentation
