@@ -7,7 +7,7 @@ from keras_core_api_master import KERAS_CORE_API_MASTER
 # specifies the path to the Keras Core module, the `title` key provides a title for the module, and
 # the `children` key contains a list of sub-modules or sections within the Keras Core module.
 KERAS_CORE_MASTER = {
-    "path": "keras_core/",
+    "path": "keras_core/", 
     "title": "Keras Core: Keras for TensorFlow, JAX, and PyTorch",
     "children": [
         {
