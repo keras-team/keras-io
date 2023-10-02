@@ -1,9 +1,15 @@
+# The above code is defining a dictionary named "KERAS_CORE_API_MASTER" with several key-value pairs.
+# The "path" key is set to "api/", the "title" key is set to "Keras Core API documentation", and the
+# "toc" key is set to True. The dictionary also has a "children" key, but its value is not provided in
+# the code snippet.
 KERAS_CORE_API_MASTER = {
     "path": "api/",
     "title": "Keras Core API documentation",
     "toc": True,
     "children": [
         {
+            # The above code is defining a dictionary in Python. The dictionary has four key-value
+            # pairs:
             "path": "models/",
             "title": "Models API",
             "toc": True,
@@ -18,6 +24,11 @@ KERAS_CORE_API_MASTER = {
                     ],
                 },
                 {
+                    # The above code is defining a JSON object that describes a Python class called
+                    # "Sequential". It includes a "path" attribute that specifies the class is in the
+                    # "sequential" module. The "title" attribute provides a description of the class.
+                    # The "generate" attribute is a list of method names that are associated with the
+                    # Sequential class.
                     "path": "sequential",
                     "title": "The Sequential class",
                     "generate": [
