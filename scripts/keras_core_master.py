@@ -1,5 +1,11 @@
+# The line `from keras_core_api_master import KERAS_CORE_API_MASTER` is importing the variable
+# `KERAS_CORE_API_MASTER` from the module `keras_core_api_master`.
 from keras_core_api_master import KERAS_CORE_API_MASTER
 
+# The code is defining a dictionary named `KERAS_CORE_MASTER`. This dictionary contains information
+# about the Keras Core module, such as its path, title, and a list of children. The `path` key
+# specifies the path to the Keras Core module, the `title` key provides a title for the module, and
+# the `children` key contains a list of sub-modules or sections within the Keras Core module.
 KERAS_CORE_MASTER = {
     "path": "keras_core/",
     "title": "Keras Core: Keras for TensorFlow, JAX, and PyTorch",

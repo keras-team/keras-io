@@ -1,3 +1,6 @@
+# The above code is importing various modules from different master files. These master files contain
+# collections of classes, functions, or variables related to different aspects of programming, such as
+# guides, models, layers, callbacks, utilities, KT API, examples, CV API, NLP API, and Keras core.
 from guides_master import GUIDES_MASTER
 from models_master import MODELS_MASTER
 from layers_master import LAYERS_MASTER
