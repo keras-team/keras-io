@@ -1,6 +1,6 @@
 """
 Title: Semantic Segmentation with KerasCV
-Author: Divyashree Sreepathihalli, Ian Stenbit
+Author: [Divyashree Sreepathihalli](https://github.com/divyashreepathihalli), [Ian Stenbit](https://github.com/ianstenbit)
 Date created: 2023/08/22
 Last modified: 2023/08/24
 Description: Train and use DeepLabv3+ segmentation model with KerasCV.
@@ -20,9 +20,9 @@ fobject classes or categories.
 
 
 
-KerasCV offers DeepLabv3+ model developed by Google for semantic
+KerasCV offers the DeepLabv3+ model developed by Google for semantic
 segmentation. This guide demonstrates how to finetune and use DeepLabv3+ model for
-image semantic segmentaion with KerasCV. It's architecture that combines atrous convolutions,
+image semantic segmentaion with KerasCV. Its architecture that combines atrous convolutions,
 contextual information aggregation, and powerful backbones to achieve accurate and
 detailed semantic segmentation. The DeepLabv3+ model has been shown to achieve
 state-of-the-art results on a variety of image segmentation benchmarks.
@@ -51,8 +51,8 @@ To run this tutorial, you will need to install the following packages:
 """
 
 """
-After installing keras-core and keras-cv, set the backend for keras-core. This
-guide can be run with any backend (Tensorflow, JAX, PyTorch).
+After installing `keras-core` and `keras-cv`, set the backend for `keras-core`.
+This guide can be run with any backend (Tensorflow, JAX, PyTorch).
 
 ```
 %env KERAS_BACKEND=tensorflow
@@ -184,7 +184,7 @@ of the objects in the images.
 """
 
 train_ds = train_ds.map(keras_cv.layers.RandomFlip())
-batch = next(iter(train_ds.take(1)))
+batch = train_ds.take(1).get_single_element()
 
 keras_cv.visualization.plot_segmentation_mask_gallery(
     batch["images"],
@@ -209,9 +209,9 @@ In this case, the learning rate schedule uses a cosine decay function. A cosine 
 function starts high and then decreases over time, eventually reaching zero. The
 cardinality of the VOC dataset is 2124 with a batch size of 4. The dataset cardinality
 is important for learning rate decay because it determines how many steps the model
-will train for. The initial learning rate is 0.007 and the decay steps are 2124.
-This means that the learning rate will start at 0.007 and then decrease to zero over
-2124 steps.
+will train for. The initial learning rate is proportional to 0.007 and the decay
+steps are 2124. This means that the learning rate will start at `INITIAL_LR` and then
+decrease to zero over 2124 steps.
 ![png](/img/guides/semantic_segmentation_deeplab_v3_plus/learning_rate_schedule.png)
 """
 
@@ -227,7 +227,7 @@ learning_rate = keras.optimizers.schedules.CosineDecay(
 """
 We instantiate a DeepLabV3+ model with a ResNet50 backbone pretrained on ImageNet classification:
 `resnet50_v2_imagenet` pre-trained weights will be used as the backbone feature
-extractor for the DeepLabV3Plus model. `num_classes` parameter specifies the number of
+extractor for the DeepLabV3Plus model. The `num_classes` parameter specifies the number of
 classes that the model will be trained to segment.
 """
 
@@ -244,7 +244,22 @@ The model.compile() function sets up the training process for the model. It defi
 - the loss function - categorical cross-entropy
 - the evaluation metrics - Mean IoU and categorical accuracy
 
-that will be used during training and validation.
+Semantic segmentation evaluation metrics:
+
+Mean Intersection over Union (MeanIoU):
+MeanIoU measures how well a semantic segmentation model accurately identifies
+and delineates different objects or regions in an image. It calculates the
+overlap between predicted and actual object boundaries, providing a score
+between 0 and 1, where 1 represents a perfect match.
+
+Categorical Accuracy:
+Categorical Accuracy measures the proportion of correctly classified pixels in
+an image. It gives a simple percentage indicating how accurately the model
+predicts the categories of pixels in the entire image.
+
+In essence, MeanIoU emphasizes the accuracy of identifying specific object
+boundaries, while Categorical Accuracy gives a broad overview of overall
+pixel-level correctness.
 """
 
 model.compile(
