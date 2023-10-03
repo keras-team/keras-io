@@ -59,19 +59,15 @@ This guide can be run with any backend (Tensorflow, JAX, PyTorch).
 ```
 """
 
-import tensorflow as tf
-import tensorflow_datasets as tfds
 
 from keras_cv.backend import keras
 
 import numpy as np
 
 import keras_cv
-from keras_cv import bounding_box
-from keras_cv import visualization
 from keras_cv.backend import ops
 
-from keras_cv.datasets.pascal_voc.segmentation import load_voc
+from keras_cv.datasets.pascal_voc.segmentation import load as load_voc
 
 """
 ## Perform semantic segmentation with a pretrained DeepLabv3+ model
@@ -93,7 +89,7 @@ model = keras_cv.models.DeepLabV3Plus.from_preset(
 Let us visualize the results of this pretrained model
 """
 
-filepath = tf.keras.utils.get_file(origin="https://i.imgur.com/gCNcJJI.jpg")
+filepath = keras.utils.get_file(origin="https://i.imgur.com/gCNcJJI.jpg")
 image = keras.utils.load_img(filepath)
 
 resize = keras_cv.layers.Resizing(height=512, width=512)
@@ -285,8 +281,8 @@ which is used during training and evaluation of the DeepLabv3+ model.
 
 
 def dict_to_tuple(x):
-    return x["images"], tf.one_hot(
-        tf.cast(tf.squeeze(x["segmentation_masks"], axis=-1), tf.int32), 21
+    return x["images"], ops.one_hot(
+        ops.cast(ops.squeeze(x["segmentation_masks"], axis=-1), "int32"), 21
     )
 
 
