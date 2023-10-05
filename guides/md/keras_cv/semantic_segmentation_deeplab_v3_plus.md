@@ -131,9 +131,9 @@ keras_cv.visualization.plot_segmentation_mask_gallery(
 ```
 
 
-    
+
 ![png](/img/guides/semantic_segmentation_deeplab_v3_plus/semantic_segmentation_deeplab_v3_plus_9_0.png)
-    
+
 
 
 ---
@@ -183,9 +183,7 @@ def preprocess_tfds_inputs(inputs):
 
 
 train_ds = preprocess_tfds_inputs(train_ds)
-
 batch = train_ds.take(1).get_single_element()
-
 keras_cv.visualization.plot_segmentation_mask_gallery(
     batch["images"],
     value_range=(0, 255),
@@ -198,9 +196,9 @@ keras_cv.visualization.plot_segmentation_mask_gallery(
 ```
 
 
-    
+
 ![png](/img/guides/semantic_segmentation_deeplab_v3_plus/semantic_segmentation_deeplab_v3_plus_14_0.png)
-    
+
 
 
 The preprocessing is applied to the evaluation dataset `eval_ds`.
@@ -236,9 +234,9 @@ keras_cv.visualization.plot_segmentation_mask_gallery(
 ```
 
 
-    
+
 ![png](/img/guides/semantic_segmentation_deeplab_v3_plus/semantic_segmentation_deeplab_v3_plus_18_0.png)
-    
+
 
 
 ---
@@ -454,9 +452,9 @@ keras_cv.visualization.plot_segmentation_mask_gallery(
 ```
 
 
-    
+
 ![png](/img/guides/semantic_segmentation_deeplab_v3_plus/semantic_segmentation_deeplab_v3_plus_28_0.png)
-    
+
 
 
 Here are some additional tips for using the KerasCV DeepLabv3+ model:

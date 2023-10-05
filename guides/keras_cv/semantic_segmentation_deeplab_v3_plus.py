@@ -151,9 +151,7 @@ def preprocess_tfds_inputs(inputs):
 
 
 train_ds = preprocess_tfds_inputs(train_ds)
-
 batch = train_ds.take(1).get_single_element()
-
 keras_cv.visualization.plot_segmentation_mask_gallery(
     batch["images"],
     value_range=(0, 255),
