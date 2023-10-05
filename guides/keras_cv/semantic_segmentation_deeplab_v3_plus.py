@@ -46,8 +46,8 @@ To run this tutorial, you will need to install the following packages:
 """
 
 """shell
-!!pip install -q keras-core
-!!pip install -q git+https://github.com/keras-team/keras-cv.git
+!pip install -q keras-core
+!pip install -q git+https://github.com/keras-team/keras-cv.git
 """
 
 """
@@ -59,13 +59,12 @@ This guide can be run with any backend (Tensorflow, JAX, PyTorch).
 ```
 """
 
-
-from keras_cv.backend import keras
-
-import numpy as np
+%env KERAS_BACKEND=tensorflow
+import keras_core as keras
+from keras_core import ops
 
 import keras_cv
-from keras_cv.backend import ops
+import numpy as np
 
 from keras_cv.datasets.pascal_voc.segmentation import load as load_voc
 
@@ -140,16 +139,18 @@ batch of images and segmentation masks as input and displays them in a grid.
 
 
 def preprocess_tfds_inputs(inputs):
-    inputs = {
-        "images": inputs["image"],
-        "segmentation_masks": inputs["class_segmentation"],
-    }
-    outputs = inputs.map(keras_cv.layers.Resizing(height=512, width=512))
+    def unpackage_tfds_inputs(tfds_inputs):
+      return {
+          "images": tfds_inputs["image"],
+          "segmentation_masks": tfds_inputs["class_segmentation"],
+      }
+    outputs = inputs.map(unpackage_tfds_inputs)
+    outputs = outputs.map(keras_cv.layers.Resizing(height=512, width=512))
     outputs = outputs.batch(4, drop_remainder=True)
     return outputs
 
 
-train_ds = train_ds.map(preprocess_tfds_inputs)
+train_ds = preprocess_tfds_inputs(train_ds)
 
 batch = train_ds.take(1).get_single_element()
 
@@ -167,7 +168,7 @@ keras_cv.visualization.plot_segmentation_mask_gallery(
 The preprocessing is applied to the evaluation dataset `eval_ds`.
 """
 
-eval_ds = eval_ds.map(preprocess_tfds_inputs)
+eval_ds = preprocess_tfds_inputs(eval_ds)
 
 """
 ## Data Augmentation
@@ -213,7 +214,7 @@ decrease to zero over 2124 steps.
 
 BATCH_SIZE = 4
 INITIAL_LR = 0.007 * BATCH_SIZE / 16
-EPOCHS = 100
+EPOCHS = 1
 NUM_CLASSES = 21
 learning_rate = keras.optimizers.schedules.CosineDecay(
     INITIAL_LR,
@@ -299,7 +300,7 @@ on a few sample images.
 """
 
 test_ds = load_voc(split="sbd_test")
-test_ds = test_ds.map(preprocess_tfds_inputs)
+test_ds = preprocess_tfds_inputs(test_ds)
 
 images, masks = next(iter(train_ds.take(1)))
 preds = ops.expand_dims(ops.argmax(model(images), axis=-1), axis=-1)
