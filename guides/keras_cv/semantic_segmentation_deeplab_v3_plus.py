@@ -299,7 +299,7 @@ predications
 on a few sample images.
 """
 
-test_ds = load_voc(split="eval")
+test_ds = load_voc(split="sbd_eval")
 test_ds = preprocess_tfds_inputs(test_ds)
 
 images, masks = next(iter(train_ds.take(1)))
