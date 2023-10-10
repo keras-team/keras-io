@@ -23,6 +23,18 @@ CV_GUIDES_MASTER = {
             "path": "custom_image_augmentations",
             "title": "Custom Image Augmentations with BaseImageAugmentationLayer",
         },
+        {
+            "path": "semantic_segmentation_deeplab_v3_plus",
+            "title": "Semantic Segmentation with KerasCV",
+        },
+        {
+            "path": "coco_metrics",
+            "title": "Using KerasCV COCO Metrics",
+        },
+        {
+            "path": "simsiam_with_kerascv",
+            "title": "SimSiam Training with TensorFlow Similarity and KerasCV",
+        },
     ],
 }
 
