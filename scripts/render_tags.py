@@ -63,7 +63,7 @@ def render_backbone_table(symbols):
             continue
         presets = symbol.presets
         # Only keep the ones with pretrained weights for KerasCV Backbones.
-        if issubclass(symbol, keras_cv.models.backbones.backbone.Backbone):
+        if issubclass(symbol, keras_cv.models.Backbone):
             presets = symbol.presets_with_weights
         for preset in presets:
             if preset in added_presets:
@@ -72,10 +72,7 @@ def render_backbone_table(symbols):
                 added_presets.add(preset)
             metadata = presets[preset]["metadata"]
             # KerasCV backbones docs' URL has a "backbones/" path.
-            if (
-                issubclass(symbol, keras_cv.models.backbones.backbone.Backbone)
-                and "path" in metadata
-            ):
+            if issubclass(symbol, keras_cv.models.Backbone) and "path" in metadata:
                 metadata["path"] = "backbones/" + metadata["path"]
             table += (
                 f"{preset} | "
@@ -117,11 +114,16 @@ def render_task_table(symbols):
     for name, symbol in symbols:
         if not inspect.isclass(symbol):
             continue
-        if not issubclass(symbol, keras_cv.models.task.Task):
+        if not issubclass(symbol, keras_cv.models.Task):
             continue
         for preset in symbol.presets:
             # Do not print all backbone presets for a task
-            if preset in keras_cv.models.backbones.backbone_presets.backbone_presets:
+            if (
+                preset
+                in keras_cv.src.models.backbones.backbone_presets.backbone_presets
+            ):
+                continue
+            if preset not in symbol.presets_with_weights:
                 continue
             # Only render the ones with pretrained_weights for KerasCV.
             metadata = symbol.presets_with_weights[preset]["metadata"]
@@ -143,8 +145,9 @@ def render_table(symbol):
     for preset in symbol.presets:
         # Do not print all backbone presets for a task
         if (
-            issubclass(symbol, keras_cv.models.task.Task)
-            and preset in keras_cv.models.backbones.backbone_presets.backbone_presets
+            issubclass(symbol, keras_cv.models.Task)
+            and preset
+            in keras_cv.src.models.backbones.backbone_presets.backbone_presets
         ):
             continue
 

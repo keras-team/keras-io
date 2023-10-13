@@ -286,19 +286,19 @@ BACKBONES_MASTER = {
                 "keras_cv.models.ResNet152V2Backbone",
             ],
         },
-        {
-            "path": "csp_darknet",
-            "title": "CSPDarkNet backbones",
-            "generate": [
-                "keras_cv.models.CSPDarkNetBackbone",
-                "keras_cv.models.CSPDarkNetBackbone.from_preset",
-                "keras_cv.models.CSPDarkNetTinyBackbone",
-                "keras_cv.models.CSPDarkNetSBackbone",
-                "keras_cv.models.CSPDarkNetMBackbone",
-                "keras_cv.models.CSPDarkNetLBackbone",
-                "keras_cv.models.CSPDarkNetXLBackbone",
-            ],
-        },
+        # {
+        #     "path": "csp_darknet",
+        #     "title": "CSPDarkNet backbones",
+        #     "generate": [
+        #         "keras_cv.models.CSPDarkNetBackbone",
+        #         "keras_cv.models.CSPDarkNetBackbone.from_preset",
+        #         "keras_cv.models.CSPDarkNetTinyBackbone",
+        #         "keras_cv.models.CSPDarkNetSBackbone",
+        #         "keras_cv.models.CSPDarkNetMBackbone",
+        #         "keras_cv.models.CSPDarkNetLBackbone",
+        #         "keras_cv.models.CSPDarkNetXLBackbone",
+        #     ],
+        # },
         {
             "path": "yolo_v8",
             "title": "YOLOV8 backbones",
