@@ -1,5 +1,5 @@
 """
-Title: FeatureSpace avanced use cases
+Title: FeatureSpace advanced use cases
 Author: [Dimitre Oliveira](https://www.linkedin.com/in/dimitre-oliveira-7a1a0113a/)
 Date created: 2023/07/01
 Last modified: 2023/07/01
