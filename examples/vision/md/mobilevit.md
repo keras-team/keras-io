@@ -27,6 +27,8 @@ tasks. Their findings suggest that, performance-wise, MobileViT is better than o
 models with the same or higher complexity ([MobileNetV3](https://arxiv.org/abs/1905.02244),
 for example), while being efficient on mobile devices.
 
+Note: This example should be run with Tensorflow 2.13 and higher.
+
 ---
 ## Imports
 
@@ -34,7 +36,10 @@ for example), while being efficient on mobile devices.
 ```python
 import tensorflow as tf
 
-from keras.applications import imagenet_utils
+from keras.src.applications import imagenet_utils
+# For versions <TF2.13 change the above import to:
+# from keras.applications import imagenet_utils
+
 from tensorflow.keras import layers
 from tensorflow import keras
 
