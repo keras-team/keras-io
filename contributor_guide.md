@@ -173,7 +173,7 @@ There should be a conclusion section that recapitulates key takeaways from the e
 
 All code keywords should be formatted with backticks, e.g. `like_this` (standard Markdown code formatting).
 
-When refering to a function or method name, it should be followed with parens, like this: `my_function()` or `my_method()`.
+When referring to a function or method name, it should be followed with parens, like this: `my_function()` or `my_method()`.
 
 ### Mathematical notation
 
