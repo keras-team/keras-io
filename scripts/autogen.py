@@ -41,11 +41,11 @@ import render_tags
 EXAMPLES_GH_LOCATION = Path("keras-team") / "keras-io" / "blob" / "master" / "examples"
 GUIDES_GH_LOCATION = Path("keras-team") / "keras-io" / "blob" / "master" / "guides"
 PROJECT_URL = {
-    "keras": "https://github.com/keras-team/keras/tree/v2.13.1/",
+    "keras": "https://github.com/keras-team/keras/tree/v2.14.0/",
     "keras_tuner": "https://github.com/keras-team/keras-tuner/tree/v1.3.5/",
-    "keras_cv": "https://github.com/keras-team/keras-cv/tree/v0.6.1/",
+    "keras_cv": "https://github.com/keras-team/keras-cv/tree/v0.6.4/",
     "keras_nlp": "https://github.com/keras-team/keras-nlp/tree/v0.6.2/",
-    "keras_core": "https://github.com/keras-team/keras-core/tree/v0.1.5/",
+    "keras_core": "https://github.com/keras-team/keras-core/tree/v0.1.7/",
 }
 USE_MULTIPROCESSING = False
 

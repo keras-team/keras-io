@@ -493,9 +493,9 @@ class DreamBoothTrainer(tf.keras.Model):
 
     def get_timestep_embedding(self, timestep, dim=320, max_period=10000):
         half = dim // 2
-        log_max_preiod = tf.math.log(tf.cast(max_period, tf.float32))
+        log_max_period = tf.math.log(tf.cast(max_period, tf.float32))
         freqs = tf.math.exp(
-            -log_max_preiod * tf.range(0, half, dtype=tf.float32) / half
+            -log_max_period * tf.range(0, half, dtype=tf.float32) / half
         )
         args = tf.convert_to_tensor([timestep], dtype=tf.float32) * freqs
         embedding = tf.concat([tf.math.cos(args), tf.math.sin(args)], 0)
