@@ -57,9 +57,10 @@ from urllib.request import urlretrieve
 import numpy as np
 import pandas as pd
 import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras import layers
-from tensorflow.keras.layers import StringLookup
+import keras
+from keras import layers
+from keras.layers import StringLookup
+
 
 """
 ## Prepare the data
@@ -92,7 +93,7 @@ ratings = pd.read_csv(
 )
 
 movies = pd.read_csv(
-    "ml-1m/movies.dat", sep="::", names=["movie_id", "title", "genres"]
+    "ml-1m/movies.dat", sep="::", names=["movie_id", "title", "genres"], encoding='latin-1'
 )
 
 """
@@ -304,19 +305,19 @@ def get_dataset_from_csv(csv_file_path, shuffle=False, batch_size=128):
 
 def create_model_inputs():
     return {
-        "user_id": layers.Input(name="user_id", shape=(1,), dtype=tf.string),
+        "user_id": layers.Input(name="user_id", shape=(1,), dtype="string"),
         "sequence_movie_ids": layers.Input(
-            name="sequence_movie_ids", shape=(sequence_length - 1,), dtype=tf.string
+            name="sequence_movie_ids", shape=(sequence_length - 1,), dtype="string"
         ),
         "target_movie_id": layers.Input(
-            name="target_movie_id", shape=(1,), dtype=tf.string
+            name="target_movie_id", shape=(1,), dtype="string"
         ),
         "sequence_ratings": layers.Input(
-            name="sequence_ratings", shape=(sequence_length - 1,), dtype=tf.float32
+            name="sequence_ratings", shape=(sequence_length - 1,), dtype="float32"
         ),
-        "sex": layers.Input(name="sex", shape=(1,), dtype=tf.string),
-        "age_group": layers.Input(name="age_group", shape=(1,), dtype=tf.string),
-        "occupation": layers.Input(name="occupation", shape=(1,), dtype=tf.string),
+        "sex": layers.Input(name="sex", shape=(1,), dtype="string"),
+        "age_group": layers.Input(name="age_group", shape=(1,), dtype="string"),
+        "occupation": layers.Input(name="occupation", shape=(1,), dtype="string"),
     }
 
 
@@ -410,7 +411,7 @@ def encode_input_features(
     movie_genres_lookup = layers.Embedding(
         input_dim=genre_vectors.shape[0],
         output_dim=genre_vectors.shape[1],
-        embeddings_initializer=tf.keras.initializers.Constant(genre_vectors),
+        embeddings_initializer=keras.initializers.Constant(genre_vectors),
         trainable=False,
         name="genres_vector",
     )
@@ -447,20 +448,20 @@ def encode_input_features(
         output_dim=movie_embedding_dims,
         name="position_embedding",
     )
-    positions = tf.range(start=0, limit=sequence_length - 1, delta=1)
+    positions = keras.ops.arange(start=0, stop=sequence_length - 1, step=1)
     encodded_positions = position_embedding_encoder(positions)
     # Retrieve sequence ratings to incorporate them into the encoding of the movie.
-    sequence_ratings = tf.expand_dims(inputs["sequence_ratings"], -1)
+    sequence_ratings = keras.ops.expand_dims(inputs["sequence_ratings"], -1)
     # Add the positional encoding to the movie encodings and multiply them by rating.
     encoded_sequence_movies_with_poistion_and_rating = layers.Multiply()(
         [(encoded_sequence_movies + encodded_positions), sequence_ratings]
     )
 
     # Construct the transformer inputs.
-    for encoded_movie in tf.unstack(
+    for encoded_movie in keras.ops.unstack(
         encoded_sequence_movies_with_poistion_and_rating, axis=1
     ):
-        encoded_transformer_features.append(tf.expand_dims(encoded_movie, 1))
+        encoded_transformer_features.append(keras.ops.expand_dims(encoded_movie, 1))
     encoded_transformer_features.append(encoded_target_movie)
 
     encoded_transformer_features = layers.concatenate(
