@@ -386,29 +386,6 @@ multi_output_model.evaluate(x_test, y_test)
 
 
 """
-### Functional models with list outputs do not accept dict losses
-
-The following snippet of code will reproduce the error:
-
-```
-output_losses = {'output_1': 'categorical_crossentropy', 'output_2':
-'categorical_crossentropy'}
-multi_output_model.compile(optimizer='adam', loss=output_losses)
-multi_output_model.evaluate(x_test, y_test)
-```
-"""
-
-output_metrics = {
-    "output_1": "categorical_crossentropy",
-    "output_2": "categorical_crossentropy",
-}
-
-multi_output_model.compile(
-    optimizer="adam", loss="categorical_crossentropy", metrics=output_metrics
-)
-multi_output_model.evaluate(x_test, y_test)
-
-"""
 ### Variables tracking
 
 The following snippet of code will show that the tf.Variables are not being tracked.
