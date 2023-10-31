@@ -33,7 +33,7 @@ First, let's install the latest versions of KerasCV and TensorFlow.
 
 
 ```python
-!pip install -q -U keras_cv
+!pip install -q -U keras_cv==0.6.0
 !pip install -q -U tensorflow
 ```
 
@@ -562,7 +562,7 @@ tf.keras.mixed_precision.set_global_policy("mixed_float16")
 
 use_mp = True  # Set it to False if you're not using a GPU with tensor cores.
 
-image_encoder = keras_cv.models.stable_diffusion.ImageEncoder(resolution, resolution)
+image_encoder = keras_cv.models.stable_diffusion.ImageEncoder()
 dreambooth_trainer = DreamBoothTrainer(
     diffusion_model=keras_cv.models.stable_diffusion.DiffusionModel(
         resolution, resolution, max_prompt_length
