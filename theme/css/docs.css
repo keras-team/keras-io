@@ -74,6 +74,7 @@ blockquote {
   width: 47rem;
   background: #fff;
   float: left;
+  border-left: 1px solid #ccc;
 }
 .k-content {
   width: 48rem;
@@ -90,6 +91,7 @@ blockquote {
 }
 .nav-link {
   font-size: 1rem;
+  padding: 0.6rem 1rem;
 }
 .nav-sublink {
   font-size: 0.85rem;
@@ -272,7 +274,6 @@ blockquote {
 .nav-pills .nav-link {
   border-radius: 0;
   border-top: 1px solid #ddd;
-  background-color: #f7f6f6;
   color: #d00000;
 }
 .nav-pills .nav-sublink {
