@@ -178,6 +178,21 @@ model** inside the distribution scope.
 strategy = tf.distribute.MirroredStrategy()
 print(f"Number of devices: {strategy.num_replicas_in_sync}")
 
+## Batch Size and Learning Rate Scaling
+
+# Define batch size for a single replica (worker)
+single_worker_batch_size = 32
+
+# Calculate the total batch size for distributed training
+total_batch_size = single_worker_batch_size * strategy.num_replicas_in_sync
+
+# Define a learning rate for a single worker
+single_worker_lr = 0.001
+
+# Calculate the scaled learning rate for distributed training
+scaled_lr = single_worker_lr * math.sqrt(strategy.num_replicas_in_sync)
+
+
 """
 With the datasets prepared, we now initialize and compile our model and optimizer within
 the `strategy.scope()`:
@@ -194,7 +209,7 @@ with strategy.scope():
 
     model_dist.compile(
         loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
-        optimizer=tf.keras.optimizers.AdamW(lr_schedule),
+        optimizer=tf.keras.optimizers.AdamW(learning_rate=scaled_lr),
         weighted_metrics=keras.metrics.SparseCategoricalAccuracy(),
     )
 
