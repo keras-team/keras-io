@@ -17,6 +17,9 @@ majority of cases you can just start importing it via `import keras` in place of
 tensorflow import keras` and your existing code will run with no issue — and generally
 with slightly improved performance, thanks to XLA compilation.
 
+Commonly encountered issues and frequently asked questions can be located in
+the following links.
+
 [Known
 Issues](https://keras.io/keras_core/announcement/#:~:text=Enjoy%20the%20library!-,Known%20issues,-Keras%20Core%20is)
 
