@@ -177,9 +177,9 @@ model** inside the distribution scope.
 
 strategy = tf.distribute.MirroredStrategy()
 print(f"Number of devices: {strategy.num_replicas_in_sync}")
-
-## Batch Size and Learning Rate Scaling
-
+"""
+Batch Size and Learning Rate Scaling
+"""
 # Define batch size for a single replica (worker)
 single_worker_batch_size = 32
 
