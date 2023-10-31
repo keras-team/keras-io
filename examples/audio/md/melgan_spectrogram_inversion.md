@@ -816,8 +816,8 @@ class MelGAN(keras.Model):
             gen_audio_wave = generator(x_batch_train, training=True)
 
             # Generating the features using the discriminator
-            fake_pred = discriminator(y_batch_train)
-            real_pred = discriminator(gen_audio_wave)
+            real_pred = discriminator(y_batch_train)
+            fake_pred = discriminator(gen_audio_wave)
 
             # Calculating the generator losses
             gen_loss = generator_loss(real_pred, fake_pred)
