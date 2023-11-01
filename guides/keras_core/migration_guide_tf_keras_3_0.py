@@ -3,7 +3,8 @@ Title: Migration guide : Tensorflow to Keras 3.0
 Author: [Divyashree Sreepathihalli](https://github.com/divyashreepathihalli)
 Date created: 2023/10/23
 Last modified: 2023/10/30
-Description: Instructions on migrating your TensorFlow code to Keras 3.0
+Description: Instructions on migrating your TensorFlow code to Keras 3.0.
+Accelerator: None
 """
 
 """
@@ -125,7 +126,6 @@ class MyModel(keras.Model):
         super().__init__(*args, **kwargs)
 
     def call(self, inputs):
-
         string_input = tf.strings.as_string(inputs)
         return tf.strings.to_number(string_input)
 
