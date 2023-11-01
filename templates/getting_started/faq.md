@@ -52,7 +52,7 @@ In most cases, what you need is most likely data parallelism.
 
 Data parallelism consists in replicating the target model once on each device, and using each replica to process a different fraction of the input data.
 
-The best way to do data parallelism with Keras models is to use the `tf.distribute` API. Make sure to read our [guide about using `tf.distribute` with Keras](/guides/distributed_training/).
+The best way to do data parallelism with Keras models is to use the `tf.distribute` API. Make sure to read our [guide about using `tf.distribute` with Keras](https://github.com/keras-team/keras-io/blob/master/guides/md/distributed_training.md).
 
 The gist of it is the following:
 
@@ -289,7 +289,7 @@ It contains the following fields:
 - The default float data type.
 - The default backend. This is legacy; nowadays there is only TensorFlow.
 
-Likewise, cached dataset files, such as those downloaded with [`get_file()`](/utils/#get_file), are stored by default in `$HOME/.keras/datasets/`,
+Likewise, cached dataset files, such as those downloaded with [`get_file()`](https://github.com/keras-team/keras/blob/v2.14.0/keras/utils/data_utils.py#L193), are stored by default in `$HOME/.keras/datasets/`,
 and cached model weights files from Keras Applications are stored by default in `$HOME/.keras/models/`.
 
 
@@ -617,7 +617,7 @@ except RuntimeError:
             callbacks=[backup_callback])
 ```
 
-Find out more in the [callbacks documentation](/api/callbacks/).
+Find out more in the [callbacks documentation](https://keras.io/guides/writing_your_own_callbacks/).
 
 
 ---
@@ -634,7 +634,7 @@ early_stopping = EarlyStopping(monitor='val_loss', patience=2)
 model.fit(x, y, validation_split=0.2, callbacks=[early_stopping])
 ```
 
-Find out more in the [callbacks documentation](/api/callbacks/).
+Find out more in the [callbacks documentation](https://keras.io/guides/writing_your_own_callbacks/).
 
 ---
 
@@ -859,7 +859,7 @@ However, staring at changing ascii numbers in a console is not an optimal metric
 We recommend the use of [TensorBoard](https://www.tensorflow.org/tensorboard), which will display nice-looking graphs of your training and validation metrics, regularly
 updated during training, which you can access from your browser.
 
-You can use TensorBoard with `fit()` via the [`TensorBoard` callback](/api/callbacks/tensorboard/).
+You can use TensorBoard with `fit()` via the [`TensorBoard` callback](https://keras.io/api/callbacks/tensorboard/).
 
 ---
 
