@@ -94,6 +94,20 @@ keras.utils.get_file(
 )
 wiki_dir = os.path.expanduser("~/.keras/datasets/wikitext-2/")
 
+"""
+To do single-host, multi-device synchronous training with a Keras model, you would use
+the `tf.distribute.MirroredStrategy` API. Here's how it works:
+"""
+
+strategy = tf.distribute.MirroredStrategy()
+print(f"Number of devices: {strategy.num_replicas_in_sync}")
+
+# Define batch size for a single replica (worker)
+single_worker_batch_size = 32
+
+# Calculate the total batch size for distributed training
+total_batch_size = single_worker_batch_size * strategy.num_replicas_in_sync
+
 # Load wikitext-103 and filter out short lines.
 wiki_train_ds = (
     tf.data.TextLineDataset(
@@ -101,7 +115,7 @@ wiki_train_ds = (
     )
     .filter(lambda x: tf.strings.length(x) > 100)
     .shuffle(buffer_size=500)
-    .batch(PRETRAINING_BATCH_SIZE)
+    .batch(total_batch_size)
     .cache()
     .prefetch(tf.data.AUTOTUNE)
 )
@@ -109,7 +123,7 @@ wiki_val_ds = (
     tf.data.TextLineDataset(wiki_dir + "wiki.valid.tokens")
     .filter(lambda x: tf.strings.length(x) > 100)
     .shuffle(buffer_size=500)
-    .batch(PRETRAINING_BATCH_SIZE)
+    .batch(total_batch_size)
     .cache()
     .prefetch(tf.data.AUTOTUNE)
 )
@@ -117,7 +131,7 @@ wiki_test_ds = (
     tf.data.TextLineDataset(wiki_dir + "wiki.test.tokens")
     .filter(lambda x: tf.strings.length(x) > 100)
     .shuffle(buffer_size=500)
-    .batch(PRETRAINING_BATCH_SIZE)
+    .batch(total_batch_size)
     .cache()
     .prefetch(tf.data.AUTOTUNE)
 )
@@ -175,23 +189,16 @@ model** inside the distribution scope.
 - Train the model via `fit()` as usual.
 """
 
-strategy = tf.distribute.MirroredStrategy()
-print(f"Number of devices: {strategy.num_replicas_in_sync}")
+
 """
 Batch Size and Learning Rate Scaling
 """
-# Define batch size for a single replica (worker)
-single_worker_batch_size = 32
-
-# Calculate the total batch size for distributed training
-total_batch_size = single_worker_batch_size * strategy.num_replicas_in_sync
 
 # Define a learning rate for a single worker
 single_worker_lr = 0.001
 
 # Calculate the scaled learning rate for distributed training
 scaled_lr = single_worker_lr * math.sqrt(strategy.num_replicas_in_sync)
-
 
 """
 With the datasets prepared, we now initialize and compile our model and optimizer within
