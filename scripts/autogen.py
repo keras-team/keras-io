@@ -15,7 +15,6 @@ mdx_truly_sane_lists
 """
 
 import shutil
-import string
 import copy
 import json
 import re
@@ -30,13 +29,24 @@ import jinja2
 import requests
 import multiprocessing
 import autogen_utils
-import keras_nlp
-import keras_cv
 
 from master import MASTER
 import tutobooks
 import generate_tf_guides
 import render_tags
+
+try:
+    import keras_nlp
+except Exception as e:
+    print(f"Could not import Keras NLP. Exception: {e}")
+    keras_nlp = None
+
+try:
+    import keras_cv
+except Exception as e:
+    print(f"Could not import Keras CV. Exception: {e}")
+    keras_cv = None
+
 
 EXAMPLES_GH_LOCATION = Path("keras-team") / "keras-io" / "blob" / "master" / "examples"
 GUIDES_GH_LOCATION = Path("keras-team") / "keras-io" / "blob" / "master" / "guides"
