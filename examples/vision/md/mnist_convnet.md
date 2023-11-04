@@ -16,8 +16,8 @@
 
 ```python
 import numpy as np
-from tensorflow import keras
-from tensorflow.keras import layers
+import keras
+from keras import layers
 ```
 
 ---
@@ -77,33 +77,52 @@ model = keras.Sequential(
 model.summary()
 ```
 
-<div class="k-default-codeblock">
-```
-Model: "sequential"
-_________________________________________________________________
-Layer (type)                 Output Shape              Param #   
-=================================================================
-conv2d (Conv2D)              (None, 26, 26, 32)        320       
-_________________________________________________________________
-max_pooling2d (MaxPooling2D) (None, 13, 13, 32)        0         
-_________________________________________________________________
-conv2d_1 (Conv2D)            (None, 11, 11, 64)        18496     
-_________________________________________________________________
-max_pooling2d_1 (MaxPooling2 (None, 5, 5, 64)          0         
-_________________________________________________________________
-flatten (Flatten)            (None, 1600)              0         
-_________________________________________________________________
-dropout (Dropout)            (None, 1600)              0         
-_________________________________________________________________
-dense (Dense)                (None, 10)                16010     
-=================================================================
-Total params: 34,826
-Trainable params: 34,826
-Non-trainable params: 0
-_________________________________________________________________
 
-```
-</div>
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold">Model: "sequential"</span>
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━┓
+┃<span style="font-weight: bold"> Layer (type)                    </span>┃<span style="font-weight: bold"> Output Shape              </span>┃<span style="font-weight: bold">    Param # </span>┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━┩
+│ conv2d (<span style="color: #0087ff; text-decoration-color: #0087ff">Conv2D</span>)                 │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">26</span>, <span style="color: #00af00; text-decoration-color: #00af00">26</span>, <span style="color: #00af00; text-decoration-color: #00af00">32</span>)        │        <span style="color: #00af00; text-decoration-color: #00af00">320</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ max_pooling2d (<span style="color: #0087ff; text-decoration-color: #0087ff">MaxPooling2D</span>)    │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">13</span>, <span style="color: #00af00; text-decoration-color: #00af00">13</span>, <span style="color: #00af00; text-decoration-color: #00af00">32</span>)        │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ conv2d_1 (<span style="color: #0087ff; text-decoration-color: #0087ff">Conv2D</span>)               │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">11</span>, <span style="color: #00af00; text-decoration-color: #00af00">11</span>, <span style="color: #00af00; text-decoration-color: #00af00">64</span>)        │     <span style="color: #00af00; text-decoration-color: #00af00">18,496</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ max_pooling2d_1 (<span style="color: #0087ff; text-decoration-color: #0087ff">MaxPooling2D</span>)  │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">5</span>, <span style="color: #00af00; text-decoration-color: #00af00">5</span>, <span style="color: #00af00; text-decoration-color: #00af00">64</span>)          │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ flatten (<span style="color: #0087ff; text-decoration-color: #0087ff">Flatten</span>)               │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">1600</span>)              │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ dropout (<span style="color: #0087ff; text-decoration-color: #0087ff">Dropout</span>)               │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">1600</span>)              │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ dense (<span style="color: #0087ff; text-decoration-color: #0087ff">Dense</span>)                   │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">10</span>)                │     <span style="color: #00af00; text-decoration-color: #00af00">16,010</span> │
+└─────────────────────────────────┴───────────────────────────┴────────────┘
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Total params: </span><span style="color: #00af00; text-decoration-color: #00af00">34,826</span> (136.04 KB)
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Trainable params: </span><span style="color: #00af00; text-decoration-color: #00af00">34,826</span> (136.04 KB)
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Non-trainable params: </span><span style="color: #00af00; text-decoration-color: #00af00">0</span> (0.00 B)
+</pre>
+
+
+
 ---
 ## Train the model
 
@@ -120,29 +139,37 @@ model.fit(x_train, y_train, batch_size=batch_size, epochs=epochs, validation_spl
 <div class="k-default-codeblock">
 ```
 Epoch 1/15
-422/422 [==============================] - 13s 29ms/step - loss: 0.7840 - accuracy: 0.7643 - val_loss: 0.0780 - val_accuracy: 0.9780
+ 422/422 ━━━━━━━━━━━━━━━━━━━━ 7s 9ms/step - accuracy: 0.7668 - loss: 0.7644 - val_accuracy: 0.9803 - val_loss: 0.0815
 Epoch 2/15
-422/422 [==============================] - 13s 31ms/step - loss: 0.1199 - accuracy: 0.9639 - val_loss: 0.0559 - val_accuracy: 0.9843
+ 422/422 ━━━━━━━━━━━━━━━━━━━━ 1s 2ms/step - accuracy: 0.9627 - loss: 0.1237 - val_accuracy: 0.9833 - val_loss: 0.0623
 Epoch 3/15
-422/422 [==============================] - 14s 33ms/step - loss: 0.0845 - accuracy: 0.9737 - val_loss: 0.0469 - val_accuracy: 0.9877
+ 422/422 ━━━━━━━━━━━━━━━━━━━━ 1s 2ms/step - accuracy: 0.9732 - loss: 0.0898 - val_accuracy: 0.9850 - val_loss: 0.0539
 Epoch 4/15
-422/422 [==============================] - 14s 33ms/step - loss: 0.0762 - accuracy: 0.9756 - val_loss: 0.0398 - val_accuracy: 0.9895
+ 422/422 ━━━━━━━━━━━━━━━━━━━━ 1s 2ms/step - accuracy: 0.9761 - loss: 0.0763 - val_accuracy: 0.9880 - val_loss: 0.0421
 Epoch 5/15
-422/422 [==============================] - 15s 35ms/step - loss: 0.0621 - accuracy: 0.9812 - val_loss: 0.0378 - val_accuracy: 0.9890
+ 422/422 ━━━━━━━━━━━━━━━━━━━━ 1s 2ms/step - accuracy: 0.9795 - loss: 0.0647 - val_accuracy: 0.9887 - val_loss: 0.0389
 Epoch 6/15
-422/422 [==============================] - 17s 40ms/step - loss: 0.0547 - accuracy: 0.9825 - val_loss: 0.0360 - val_accuracy: 0.9910
+ 422/422 ━━━━━━━━━━━━━━━━━━━━ 1s 2ms/step - accuracy: 0.9824 - loss: 0.0580 - val_accuracy: 0.9903 - val_loss: 0.0345
 Epoch 7/15
-422/422 [==============================] - 17s 41ms/step - loss: 0.0497 - accuracy: 0.9840 - val_loss: 0.0311 - val_accuracy: 0.9920
+ 422/422 ━━━━━━━━━━━━━━━━━━━━ 1s 2ms/step - accuracy: 0.9828 - loss: 0.0537 - val_accuracy: 0.9895 - val_loss: 0.0371
 Epoch 8/15
-422/422 [==============================] - 16s 39ms/step - loss: 0.0443 - accuracy: 0.9862 - val_loss: 0.0346 - val_accuracy: 0.9910
+ 422/422 ━━━━━━━━━━━━━━━━━━━━ 1s 2ms/step - accuracy: 0.9838 - loss: 0.0503 - val_accuracy: 0.9907 - val_loss: 0.0340
 Epoch 9/15
-422/422 [==============================] - 17s 39ms/step - loss: 0.0436 - accuracy: 0.9860 - val_loss: 0.0325 - val_accuracy: 0.9915
+ 422/422 ━━━━━━━━━━━━━━━━━━━━ 1s 2ms/step - accuracy: 0.9861 - loss: 0.0451 - val_accuracy: 0.9907 - val_loss: 0.0330
 Epoch 10/15
-422/422 [==============================] - 16s 38ms/step - loss: 0.0407 - accuracy: 0.9865 - val_loss: 0.0301 - val_accuracy: 0.9920
+ 422/422 ━━━━━━━━━━━━━━━━━━━━ 1s 2ms/step - accuracy: 0.9866 - loss: 0.0427 - val_accuracy: 0.9917 - val_loss: 0.0298
 Epoch 11/15
-422/422 [==============================] - 16s 37ms/step - loss: 0.0406 - accuracy: 0.9874 - val_loss: 0.0303 - val_accuracy: 0.9920
+ 422/422 ━━━━━━━━━━━━━━━━━━━━ 1s 2ms/step - accuracy: 0.9871 - loss: 0.0389 - val_accuracy: 0.9920 - val_loss: 0.0297
 Epoch 12/15
-237/422 [===============>..............] - ETA: 7s - loss: 0.0398 - accuracy: 0.9877
+ 422/422 ━━━━━━━━━━━━━━━━━━━━ 1s 2ms/step - accuracy: 0.9885 - loss: 0.0371 - val_accuracy: 0.9912 - val_loss: 0.0285
+Epoch 13/15
+ 422/422 ━━━━━━━━━━━━━━━━━━━━ 1s 2ms/step - accuracy: 0.9901 - loss: 0.0332 - val_accuracy: 0.9922 - val_loss: 0.0290
+Epoch 14/15
+ 422/422 ━━━━━━━━━━━━━━━━━━━━ 1s 2ms/step - accuracy: 0.9885 - loss: 0.0340 - val_accuracy: 0.9923 - val_loss: 0.0283
+Epoch 15/15
+ 422/422 ━━━━━━━━━━━━━━━━━━━━ 1s 2ms/step - accuracy: 0.9891 - loss: 0.0326 - val_accuracy: 0.9925 - val_loss: 0.0273
+
+<keras.src.callbacks.history.History at 0x7f8497818af0>
 
 ```
 </div>
@@ -158,8 +185,8 @@ print("Test accuracy:", score[1])
 
 <div class="k-default-codeblock">
 ```
-Test loss: 0.023950600996613503
-Test accuracy: 0.9922000169754028
+Test loss: 0.02499214932322502
+Test accuracy: 0.9919000267982483
 
 ```
 </div>
