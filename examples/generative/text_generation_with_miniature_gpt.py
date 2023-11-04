@@ -30,14 +30,30 @@ with TensorFlow 2.3 or higher.
 """
 ## Setup
 """
-import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras import layers
-from tensorflow.keras.layers import TextVectorization
+# We set the backend to TensorFlow. The code works with
+# both `tensorflow` and `torch`. It does not work with JAX
+# due to the behavior of `jax.numpy.tile` in a jit scope
+# (used in `causal_attention_mask()`: `tile` in JAX does
+# not support a dynamic `reps` argument.
+# You can make the code work in JAX by wrapping the
+# inside of the `causal_attention_mask` function in
+# a decorator to prevent jit compilation:
+# `with jax.ensure_compile_time_eval():`.
+import os
+
+os.environ["KERAS_BACKEND"] = "tensorflow"
+
+import keras
+from keras import layers
+from keras import ops
+from keras.layers import TextVectorization
 import numpy as np
 import os
 import string
 import random
+import tensorflow
+import tensorflow.data as tf_data
+import tensorflow.strings as tf_strings
 
 
 """
@@ -51,15 +67,15 @@ def causal_attention_mask(batch_size, n_dest, n_src, dtype):
     This prevents flow of information from future tokens to current token.
     1's in the lower triangle, counting from the lower right corner.
     """
-    i = tf.range(n_dest)[:, None]
-    j = tf.range(n_src)
+    i = ops.arange(n_dest)[:, None]
+    j = ops.arange(n_src)
     m = i >= j - n_src + n_dest
-    mask = tf.cast(m, dtype)
-    mask = tf.reshape(mask, [1, n_dest, n_src])
-    mult = tf.concat(
-        [tf.expand_dims(batch_size, -1), tf.constant([1, 1], dtype=tf.int32)], 0
+    mask = ops.cast(m, dtype)
+    mask = ops.reshape(mask, [1, n_dest, n_src])
+    mult = ops.concatenate(
+        [ops.expand_dims(batch_size, -1), ops.convert_to_tensor([1, 1])], 0
     )
-    return tf.tile(mask, mult)
+    return ops.tile(mask, mult)
 
 
 class TransformerBlock(layers.Layer):
@@ -78,10 +94,10 @@ class TransformerBlock(layers.Layer):
         self.dropout2 = layers.Dropout(rate)
 
     def call(self, inputs):
-        input_shape = tf.shape(inputs)
+        input_shape = ops.shape(inputs)
         batch_size = input_shape[0]
         seq_len = input_shape[1]
-        causal_mask = causal_attention_mask(batch_size, seq_len, seq_len, tf.bool)
+        causal_mask = causal_attention_mask(batch_size, seq_len, seq_len, "bool")
         attention_output = self.att(inputs, inputs, attention_mask=causal_mask)
         attention_output = self.dropout1(attention_output)
         out1 = self.layernorm1(inputs + attention_output)
@@ -105,8 +121,8 @@ class TokenAndPositionEmbedding(layers.Layer):
         self.pos_emb = layers.Embedding(input_dim=maxlen, output_dim=embed_dim)
 
     def call(self, x):
-        maxlen = tf.shape(x)[-1]
-        positions = tf.range(start=0, limit=maxlen, delta=1)
+        maxlen = ops.shape(x)[-1]
+        positions = ops.arange(0, maxlen, 1)
         positions = self.pos_emb(positions)
         x = self.token_emb(x)
         return x + positions
@@ -123,14 +139,14 @@ feed_forward_dim = 256  # Hidden layer size in feed forward network inside trans
 
 
 def create_model():
-    inputs = layers.Input(shape=(maxlen,), dtype=tf.int32)
+    inputs = layers.Input(shape=(maxlen,), dtype="int32")
     embedding_layer = TokenAndPositionEmbedding(maxlen, vocab_size, embed_dim)
     x = embedding_layer(inputs)
     transformer_block = TransformerBlock(embed_dim, num_heads, feed_forward_dim)
     x = transformer_block(x)
     outputs = layers.Dense(vocab_size)(x)
     model = keras.Model(inputs=inputs, outputs=[outputs, x])
-    loss_fn = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
+    loss_fn = keras.losses.SparseCategoricalCrossentropy(from_logits=True)
     model.compile(
         "adam",
         loss=[loss_fn, None],
@@ -171,16 +187,16 @@ print(f"{len(filenames)} files")
 
 # Create a dataset from text files
 random.shuffle(filenames)
-text_ds = tf.data.TextLineDataset(filenames)
+text_ds = tf_data.TextLineDataset(filenames)
 text_ds = text_ds.shuffle(buffer_size=256)
 text_ds = text_ds.batch(batch_size)
 
 
 def custom_standardization(input_string):
     """Remove html line-break tags and handle punctuation"""
-    lowercased = tf.strings.lower(input_string)
-    stripped_html = tf.strings.regex_replace(lowercased, "<br />", " ")
-    return tf.strings.regex_replace(stripped_html, f"([{string.punctuation}])", r" \1")
+    lowercased = tf_strings.lower(input_string)
+    stripped_html = tf_strings.regex_replace(lowercased, "<br />", " ")
+    return tf_strings.regex_replace(stripped_html, f"([{string.punctuation}])", r" \1")
 
 
 # Create a vectorization layer and adapt it to the text
@@ -200,15 +216,15 @@ def prepare_lm_inputs_labels(text):
     word at position (i+1). The model will use all words up till position (i)
     to predict the next word.
     """
-    text = tf.expand_dims(text, -1)
+    text = tensorflow.expand_dims(text, -1)
     tokenized_sentences = vectorize_layer(text)
     x = tokenized_sentences[:, :-1]
     y = tokenized_sentences[:, 1:]
     return x, y
 
 
-text_ds = text_ds.map(prepare_lm_inputs_labels, num_parallel_calls=tf.data.AUTOTUNE)
-text_ds = text_ds.prefetch(tf.data.AUTOTUNE)
+text_ds = text_ds.map(prepare_lm_inputs_labels, num_parallel_calls=tf_data.AUTOTUNE)
+text_ds = text_ds.prefetch(tf_data.AUTOTUNE)
 
 
 """
@@ -240,9 +256,9 @@ class TextGenerator(keras.callbacks.Callback):
         self.k = top_k
 
     def sample_from(self, logits):
-        logits, indices = tf.math.top_k(logits, k=self.k, sorted=True)
+        logits, indices = ops.top_k(logits, k=self.k, sorted=True)
         indices = np.asarray(indices).astype("int32")
-        preds = keras.activations.softmax(tf.expand_dims(logits, 0))[0]
+        preds = keras.activations.softmax(ops.expand_dims(logits, 0))[0]
         preds = np.asarray(preds).astype("float32")
         return np.random.choice(indices, p=preds)
 
@@ -266,7 +282,7 @@ class TextGenerator(keras.callbacks.Callback):
             else:
                 x = start_tokens
             x = np.array([x])
-            y, _ = self.model.predict(x)
+            y, _ = self.model.predict(x, verbose=0)
             sample_token = self.sample_from(y[0][sample_index])
             tokens_generated.append(sample_token)
             start_tokens.append(sample_token)
