@@ -176,7 +176,7 @@ def py_to_nb(py_path, nb_path, fill_outputs=False):
     notebook["cells"] = cells
     if loc > MAX_LOC:
         raise ValueError(
-            "Found %d lines of code, but expected fewer than %d" % (loc, MAX_LOC)
+            f"Found {loc} lines of code, but expected fewer than {MAX_LOC}"
         )
 
     f = open(nb_path, "w")
@@ -452,8 +452,8 @@ def _get_next_script_element(py):
 
 def _parse_header(header):
     lines = header.split("\n")
-    if len(lines) != 6:
-        raise ValueError("Invalid header, it should be exactly 6 lines.")
+    if len(lines) not in (6, 7):
+        raise ValueError("Invalid header, it should be exactly 6 or 7 lines.")
     title = lines[0][len("Title: ") :]
     author_line = lines[1]
     if author_line.startswith("Authors"):
