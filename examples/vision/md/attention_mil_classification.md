@@ -58,9 +58,9 @@ by TensorFlow.
 
 ```python
 import numpy as np
-import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras import layers
+import keras
+from keras import layers
+from keras import ops
 from tqdm import tqdm
 from matplotlib import pyplot as plt
 
@@ -104,7 +104,6 @@ positive class label is randomly placed among the instances in the positive bag.
 ```python
 
 def create_bags(input_data, input_labels, positive_class, bag_count, instance_count):
-
     # Set up bags.
     bags = []
     bag_labels = []
@@ -116,7 +115,6 @@ def create_bags(input_data, input_labels, positive_class, bag_count, instance_co
     count = 0
 
     for _ in range(bag_count):
-
         # Pick a fixed size random subset of samples.
         index = np.random.choice(input_data.shape[0], instance_count, replace=False)
         instances_data = input_data[index]
@@ -127,7 +125,6 @@ def create_bags(input_data, input_labels, positive_class, bag_count, instance_co
 
         # Check if there is at least a positive class in the bag.
         if positive_class in instances_labels:
-
             # Positive bag will be labeled as 1.
             bag_label = 1
             count += 1
@@ -157,10 +154,10 @@ val_data, val_labels = create_bags(
 
 <div class="k-default-codeblock">
 ```
-Positive bags: 301
-Negative bags: 699
-Positive bags: 89
-Negative bags: 211
+Positive bags: 283
+Negative bags: 717
+Positive bags: 104
+Negative bags: 196
 
 ```
 </div>
@@ -210,7 +207,6 @@ class MILAttentionLayer(layers.Layer):
         use_gated=False,
         **kwargs,
     ):
-
         super().__init__(**kwargs)
 
         self.weight_params_dim = weight_params_dim
@@ -228,7 +224,6 @@ class MILAttentionLayer(layers.Layer):
         self.u_regularizer = self.kernel_regularizer
 
     def build(self, input_shape):
-
         # Input shape.
         # List of 2D tensors with shape: (batch_size, input_dim).
         input_dim = input_shape[0][1]
@@ -263,32 +258,33 @@ class MILAttentionLayer(layers.Layer):
         self.input_built = True
 
     def call(self, inputs):
-
         # Assigning variables from the number of inputs.
         instances = [self.compute_attention_scores(instance) for instance in inputs]
 
-        # Apply softmax over instances such that the output summation is equal to 1.
-        alpha = tf.math.softmax(instances, axis=0)
+        # Stack instances into a single tensor.
+        instances = ops.stack(instances)
 
+        # Apply softmax over instances such that the output summation is equal to 1.
+        alpha = ops.softmax(instances, axis=0)
+
+        # Split to recreate the same array of tensors we had as inputs.
         return [alpha[i] for i in range(alpha.shape[0])]
 
     def compute_attention_scores(self, instance):
-
         # Reserve in-case "gated mechanism" used.
         original_instance = instance
 
         # tanh(v*h_k^T)
-        instance = tf.math.tanh(tf.tensordot(instance, self.v_weight_params, axes=1))
+        instance = ops.tanh(ops.tensordot(instance, self.v_weight_params, axes=1))
 
         # for learning non-linear relations efficiently.
         if self.use_gated:
-
-            instance = instance * tf.math.sigmoid(
-                tf.tensordot(original_instance, self.u_weight_params, axes=1)
+            instance = instance * ops.sigmoid(
+                ops.tensordot(original_instance, self.u_weight_params, axes=1)
             )
 
         # w^T*(tanh(v*h_k^T)) / w^T*(tanh(v*h_k^T)*sigmoid(u*h_k^T))
-        return tf.tensordot(instance, self.w_weight_params, axes=1)
+        return ops.tensordot(instance, self.w_weight_params, axes=1)
 
 ```
 
@@ -304,8 +300,7 @@ for each bag (after the model has been trained) can be seen.
 ```python
 
 def plot(data, labels, bag_class, predictions=None, attention_weights=None):
-
-    """"Utility for plotting bags and attention weights.
+    """ "Utility for plotting bags and attention weights.
 
     Args:
       data: Input data that contains the bags of instances.
@@ -317,7 +312,7 @@ def plot(data, labels, bag_class, predictions=None, attention_weights=None):
       attention_weights: Attention weights for each instance within the input data.
       If you don't specify anything, the values won't be displayed.
     """
-
+    return  ## TODO
     labels = np.array(labels).reshape(-1)
 
     if bag_class == "positive":
@@ -360,74 +355,6 @@ plot(val_data, val_labels, "positive")
 plot(val_data, val_labels, "negative")
 ```
 
-<div class="k-default-codeblock">
-```
-The bag class label is positive
-Bag number: 0
-
-```
-</div>
-    
-![png](/img/examples/vision/attention_mil_classification/attention_mil_classification_11_1.png)
-    
-
-
-<div class="k-default-codeblock">
-```
-Bag number: 4
-
-```
-</div>
-    
-![png](/img/examples/vision/attention_mil_classification/attention_mil_classification_11_3.png)
-    
-
-
-<div class="k-default-codeblock">
-```
-Bag number: 6
-
-```
-</div>
-    
-![png](/img/examples/vision/attention_mil_classification/attention_mil_classification_11_5.png)
-    
-
-
-<div class="k-default-codeblock">
-```
-The bag class label is negative
-Bag number: 1
-
-```
-</div>
-    
-![png](/img/examples/vision/attention_mil_classification/attention_mil_classification_11_7.png)
-    
-
-
-<div class="k-default-codeblock">
-```
-Bag number: 2
-
-```
-</div>
-    
-![png](/img/examples/vision/attention_mil_classification/attention_mil_classification_11_9.png)
-    
-
-
-<div class="k-default-codeblock">
-```
-Bag number: 3
-
-```
-</div>
-    
-![png](/img/examples/vision/attention_mil_classification/attention_mil_classification_11_11.png)
-    
-
-
 ---
 ## Create model
 
@@ -438,7 +365,6 @@ use the softmax function to output the class probabilities.
 ```python
 
 def create_model(instance_shape):
-
     # Extract features from inputs.
     inputs, embeddings = [], []
     shared_dense_layer_1 = layers.Dense(128, activation="relu")
@@ -454,7 +380,7 @@ def create_model(instance_shape):
     # Invoke the attention layer.
     alpha = MILAttentionLayer(
         weight_params_dim=256,
-        kernel_regularizer=keras.regularizers.l2(0.01),
+        kernel_regularizer=keras.regularizers.L2(0.01),
         use_gated=True,
         name="alpha",
     )(embeddings)
@@ -490,7 +416,6 @@ Using class weights, the model will tend to give a higher weight to the rare cla
 ```python
 
 def compute_class_weights(labels):
-
     # Count number of postive and negative bags.
     negative_count = len(np.where(labels == 0)[0])
     positive_count = len(np.where(labels == 1)[0])
@@ -513,13 +438,12 @@ The model is built and trained in this section.
 ```python
 
 def train(train_data, train_labels, val_data, val_labels, model):
-
     # Train model.
     # Prepare callbacks.
     # Path where to save best weights.
 
     # Take the file name from the wrapper.
-    file_path = "/tmp/best_model_weights.h5"
+    file_path = "/tmp/best_model.weights.h5"
 
     # Initialize model checkpoint callback.
     model_checkpoint = keras.callbacks.ModelCheckpoint(
@@ -540,7 +464,9 @@ def train(train_data, train_labels, val_data, val_labels, model):
 
     # Compile model.
     model.compile(
-        optimizer="adam", loss="sparse_categorical_crossentropy", metrics=["accuracy"],
+        optimizer="adam",
+        loss="sparse_categorical_crossentropy",
+        metrics=["accuracy"],
     )
 
     # Fit model.
@@ -575,56 +501,86 @@ trained_models = [
 ]
 ```
 
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold">Model: "functional_1"</span>
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">┏━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━┓
+┃<span style="font-weight: bold"> Layer (type)        </span>┃<span style="font-weight: bold"> Output Shape      </span>┃<span style="font-weight: bold"> Param # </span>┃<span style="font-weight: bold"> Connected to         </span>┃
+┡━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━┩
+│ input_layer         │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">28</span>, <span style="color: #00af00; text-decoration-color: #00af00">28</span>)    │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ -                    │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">InputLayer</span>)        │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ input_layer_1       │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">28</span>, <span style="color: #00af00; text-decoration-color: #00af00">28</span>)    │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ -                    │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">InputLayer</span>)        │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ input_layer_2       │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">28</span>, <span style="color: #00af00; text-decoration-color: #00af00">28</span>)    │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ -                    │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">InputLayer</span>)        │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ flatten (<span style="color: #0087ff; text-decoration-color: #0087ff">Flatten</span>)   │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">784</span>)       │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ input_layer[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>]    │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ flatten_1 (<span style="color: #0087ff; text-decoration-color: #0087ff">Flatten</span>) │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">784</span>)       │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ input_layer_1[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>]  │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ flatten_2 (<span style="color: #0087ff; text-decoration-color: #0087ff">Flatten</span>) │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">784</span>)       │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ input_layer_2[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>]  │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ dense (<span style="color: #0087ff; text-decoration-color: #0087ff">Dense</span>)       │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">128</span>)       │ <span style="color: #00af00; text-decoration-color: #00af00">100,480</span> │ flatten[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>],       │
+│                     │                   │         │ flatten_1[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>],     │
+│                     │                   │         │ flatten_2[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>]      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ dense_1 (<span style="color: #0087ff; text-decoration-color: #0087ff">Dense</span>)     │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">64</span>)        │   <span style="color: #00af00; text-decoration-color: #00af00">8,256</span> │ dense[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>],         │
+│                     │                   │         │ dense[<span style="color: #00af00; text-decoration-color: #00af00">1</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>],         │
+│                     │                   │         │ dense[<span style="color: #00af00; text-decoration-color: #00af00">2</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>]          │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ alpha               │ [(<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>),       │  <span style="color: #00af00; text-decoration-color: #00af00">33,024</span> │ dense_1[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>],       │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">MILAttentionLayer</span>) │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>), (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, │         │ dense_1[<span style="color: #00af00; text-decoration-color: #00af00">1</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>],       │
+│                     │ <span style="color: #00af00; text-decoration-color: #00af00">1</span>)]               │         │ dense_1[<span style="color: #00af00; text-decoration-color: #00af00">2</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>]        │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ multiply (<span style="color: #0087ff; text-decoration-color: #0087ff">Multiply</span>) │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">64</span>)        │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ alpha[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>],         │
+│                     │                   │         │ dense_1[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>]        │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ multiply_1          │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">64</span>)        │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ alpha[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">1</span>],         │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Multiply</span>)          │                   │         │ dense_1[<span style="color: #00af00; text-decoration-color: #00af00">1</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>]        │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ multiply_2          │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">64</span>)        │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ alpha[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">2</span>],         │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Multiply</span>)          │                   │         │ dense_1[<span style="color: #00af00; text-decoration-color: #00af00">2</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>]        │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ concatenate         │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">192</span>)       │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ multiply[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>],      │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Concatenate</span>)       │                   │         │ multiply_1[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>],    │
+│                     │                   │         │ multiply_2[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>]     │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ dense_2 (<span style="color: #0087ff; text-decoration-color: #0087ff">Dense</span>)     │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">2</span>)         │     <span style="color: #00af00; text-decoration-color: #00af00">386</span> │ concatenate[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>]    │
+└─────────────────────┴───────────────────┴─────────┴──────────────────────┘
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Total params: </span><span style="color: #00af00; text-decoration-color: #00af00">142,146</span> (555.26 KB)
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Trainable params: </span><span style="color: #00af00; text-decoration-color: #00af00">142,146</span> (555.26 KB)
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Non-trainable params: </span><span style="color: #00af00; text-decoration-color: #00af00">0</span> (0.00 B)
+</pre>
+
+
+
 <div class="k-default-codeblock">
 ```
-Model: "model"
-__________________________________________________________________________________________________
- Layer (type)                   Output Shape         Param #     Connected to                     
-==================================================================================================
- input_1 (InputLayer)           [(None, 28, 28)]     0           []                               
-                                                                                                  
- input_2 (InputLayer)           [(None, 28, 28)]     0           []                               
-                                                                                                  
- input_3 (InputLayer)           [(None, 28, 28)]     0           []                               
-                                                                                                  
- flatten (Flatten)              (None, 784)          0           ['input_1[0][0]']                
-                                                                                                  
- flatten_1 (Flatten)            (None, 784)          0           ['input_2[0][0]']                
-                                                                                                  
- flatten_2 (Flatten)            (None, 784)          0           ['input_3[0][0]']                
-                                                                                                  
- dense (Dense)                  (None, 128)          100480      ['flatten[0][0]',                
-                                                                  'flatten_1[0][0]',              
-                                                                  'flatten_2[0][0]']              
-                                                                                                  
- dense_1 (Dense)                (None, 64)           8256        ['dense[0][0]',                  
-                                                                  'dense[1][0]',                  
-                                                                  'dense[2][0]']                  
-                                                                                                  
- alpha (MILAttentionLayer)      [(None, 1),          33024       ['dense_1[0][0]',                
-                                 (None, 1),                       'dense_1[1][0]',                
-                                 (None, 1)]                       'dense_1[2][0]']                
-                                                                                                  
- multiply (Multiply)            (None, 64)           0           ['alpha[0][0]',                  
-                                                                  'dense_1[0][0]']                
-                                                                                                  
- multiply_1 (Multiply)          (None, 64)           0           ['alpha[0][1]',                  
-                                                                  'dense_1[1][0]']                
-                                                                                                  
- multiply_2 (Multiply)          (None, 64)           0           ['alpha[0][2]',                  
-                                                                  'dense_1[2][0]']                
-                                                                                                  
- concatenate (Concatenate)      (None, 192)          0           ['multiply[0][0]',               
-                                                                  'multiply_1[0][0]',             
-                                                                  'multiply_2[0][0]']             
-                                                                                                  
- dense_2 (Dense)                (None, 2)            386         ['concatenate[0][0]']            
-                                                                                                  
-==================================================================================================
-Total params: 142,146
-Trainable params: 142,146
-Non-trainable params: 0
-__________________________________________________________________________________________________
+None
+
+100%|██████████████████████████████████████████████████████████████████████████████████| 1/1 [00:36<00:00, 36.67s/it]
+
 ```
 </div>
 ---
@@ -641,7 +597,6 @@ average them together for our final prediction.
 ```python
 
 def predict(data, labels, trained_models):
-
     # Collect info per model.
     models_predictions = []
     models_attention_weights = []
@@ -649,7 +604,6 @@ def predict(data, labels, trained_models):
     models_accuracies = []
 
     for model in trained_models:
-
         # Predict output classes on data.
         predictions = model.predict(data)
         models_predictions.append(predictions)
@@ -700,73 +654,12 @@ plot(
 
 <div class="k-default-codeblock">
 ```
-The average loss and accuracy are 0.00 and 100.00 % resp.
-The bag class label is positive
-Bag number: 0
+ 10/10 ━━━━━━━━━━━━━━━━━━━━ 1s 53ms/step
+ 10/10 ━━━━━━━━━━━━━━━━━━━━ 1s 39ms/step
+The average loss and accuracy are 0.03 and 99.00 % resp.
 
 ```
 </div>
-    
-![png](/img/examples/vision/attention_mil_classification/attention_mil_classification_19_1.png)
-    
-
-
-<div class="k-default-codeblock">
-```
-Bag number: 4
-
-```
-</div>
-    
-![png](/img/examples/vision/attention_mil_classification/attention_mil_classification_19_3.png)
-    
-
-
-<div class="k-default-codeblock">
-```
-Bag number: 6
-
-```
-</div>
-    
-![png](/img/examples/vision/attention_mil_classification/attention_mil_classification_19_5.png)
-    
-
-
-<div class="k-default-codeblock">
-```
-The bag class label is negative
-Bag number: 1
-
-```
-</div>
-    
-![png](/img/examples/vision/attention_mil_classification/attention_mil_classification_19_7.png)
-    
-
-
-<div class="k-default-codeblock">
-```
-Bag number: 2
-
-```
-</div>
-    
-![png](/img/examples/vision/attention_mil_classification/attention_mil_classification_19_9.png)
-    
-
-
-<div class="k-default-codeblock">
-```
-Bag number: 3
-
-```
-</div>
-    
-![png](/img/examples/vision/attention_mil_classification/attention_mil_classification_19_11.png)
-    
-
-
 ---
 ## Conclusion
 
@@ -788,9 +681,3 @@ the regularization techniques are necessary.
 bag sizes are fixed here.
 - In order not to rely on the random initial weights of a single model, averaging ensemble
 methods should be considered.
-
-Example available on HuggingFace.
-
-| Trained Model | Demo |
-| :--: | :--: |
-| [![Generic badge](https://img.shields.io/badge/🤗%20Model-Attention%20MIL-black.svg)](https://huggingface.co/keras-io/attention_mil) | [![Generic badge](https://img.shields.io/badge/🤗%20Spaces-Attention%20MIL-black.svg)](https://huggingface.co/spaces/keras-io/Attention_based_Deep_Multiple_Instance_Learning) |

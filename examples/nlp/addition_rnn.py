@@ -46,8 +46,8 @@ Five digits (reversed):
 ## Setup
 """
 
-from tensorflow import keras
-from tensorflow.keras import layers
+import keras
+from keras import layers
 import numpy as np
 
 # Parameters for the model and dataset.
@@ -146,8 +146,8 @@ print("Total questions:", len(questions))
 """
 
 print("Vectorization...")
-x = np.zeros((len(questions), MAXLEN, len(chars)), dtype=np.bool)
-y = np.zeros((len(questions), DIGITS + 1, len(chars)), dtype=np.bool)
+x = np.zeros((len(questions), MAXLEN, len(chars)), dtype=bool)
+y = np.zeros((len(questions), DIGITS + 1, len(chars)), dtype=bool)
 for i, sentence in enumerate(questions):
     x[i] = ctable.encode(sentence, MAXLEN)
 for i, sentence in enumerate(expected):
@@ -184,7 +184,8 @@ model = keras.Sequential()
 # "Encode" the input sequence using a LSTM, producing an output of size 128.
 # Note: In a situation where your input sequences have a variable length,
 # use input_shape=(None, num_feature).
-model.add(layers.LSTM(128, input_shape=(MAXLEN, len(chars))))
+model.add(layers.Input((MAXLEN, len(chars))))
+model.add(layers.LSTM(128))
 # As the decoder RNN's input, repeatedly provide with the last output of
 # RNN for each time step. Repeat 'DIGITS + 1' times as that's the maximum
 # length of output, e.g., when DIGITS=3, max output is 999+999=1998.

@@ -54,9 +54,9 @@ by TensorFlow.
 """
 
 import numpy as np
-import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras import layers
+import keras
+from keras import layers
+from keras import ops
 from tqdm import tqdm
 from matplotlib import pyplot as plt
 
@@ -243,9 +243,13 @@ class MILAttentionLayer(layers.Layer):
         # Assigning variables from the number of inputs.
         instances = [self.compute_attention_scores(instance) for instance in inputs]
 
-        # Apply softmax over instances such that the output summation is equal to 1.
-        alpha = tf.math.softmax(instances, axis=0)
+        # Stack instances into a single tensor.
+        instances = ops.stack(instances)
 
+        # Apply softmax over instances such that the output summation is equal to 1.
+        alpha = ops.softmax(instances, axis=0)
+
+        # Split to recreate the same array of tensors we had as inputs.
         return [alpha[i] for i in range(alpha.shape[0])]
 
     def compute_attention_scores(self, instance):
@@ -253,16 +257,16 @@ class MILAttentionLayer(layers.Layer):
         original_instance = instance
 
         # tanh(v*h_k^T)
-        instance = tf.math.tanh(tf.tensordot(instance, self.v_weight_params, axes=1))
+        instance = ops.tanh(ops.tensordot(instance, self.v_weight_params, axes=1))
 
         # for learning non-linear relations efficiently.
         if self.use_gated:
-            instance = instance * tf.math.sigmoid(
-                tf.tensordot(original_instance, self.u_weight_params, axes=1)
+            instance = instance * ops.sigmoid(
+                ops.tensordot(original_instance, self.u_weight_params, axes=1)
             )
 
         # w^T*(tanh(v*h_k^T)) / w^T*(tanh(v*h_k^T)*sigmoid(u*h_k^T))
-        return tf.tensordot(instance, self.w_weight_params, axes=1)
+        return ops.tensordot(instance, self.w_weight_params, axes=1)
 
 
 """
@@ -288,7 +292,7 @@ def plot(data, labels, bag_class, predictions=None, attention_weights=None):
       attention_weights: Attention weights for each instance within the input data.
       If you don't specify anything, the values won't be displayed.
     """
-
+    return  ## TODO
     labels = np.array(labels).reshape(-1)
 
     if bag_class == "positive":
@@ -354,7 +358,7 @@ def create_model(instance_shape):
     # Invoke the attention layer.
     alpha = MILAttentionLayer(
         weight_params_dim=256,
-        kernel_regularizer=keras.regularizers.l2(0.01),
+        kernel_regularizer=keras.regularizers.L2(0.01),
         use_gated=True,
         name="alpha",
     )(embeddings)
@@ -413,7 +417,7 @@ def train(train_data, train_labels, val_data, val_labels, model):
     # Path where to save best weights.
 
     # Take the file name from the wrapper.
-    file_path = "/tmp/best_model_weights.h5"
+    file_path = "/tmp/best_model.weights.h5"
 
     # Initialize model checkpoint callback.
     model_checkpoint = keras.callbacks.ModelCheckpoint(
@@ -557,11 +561,4 @@ the regularization techniques are necessary.
 bag sizes are fixed here.
 - In order not to rely on the random initial weights of a single model, averaging ensemble
 methods should be considered.
-
-Example available on HuggingFace.
-
-| Trained Model | Demo |
-| :--: | :--: |
-| [![Generic badge](https://img.shields.io/badge/🤗%20Model-Attention%20MIL-black.svg)](https://huggingface.co/keras-io/attention_mil) | [![Generic badge](https://img.shields.io/badge/🤗%20Spaces-Attention%20MIL-black.svg)](https://huggingface.co/spaces/keras-io/Attention_based_Deep_Multiple_Instance_Learning) |
-
 """
