@@ -65,7 +65,6 @@ blockquote {
 }
 .k-nav {
   width: 19rem;
-  border-right: 1px solid #ccc;
   float: left;
   border-bottom: 1px solid #ccc;
   display: block;
@@ -75,11 +74,13 @@ blockquote {
   background: #fff;
   float: left;
   border-left: 1px solid #ccc;
+  border-right: 1px solid #ccc;
+  min-height: 1380px;
 }
 .k-content {
-  width: 48rem;
+  width: 47rem;
   float: left;
-  padding: 1.5rem;
+  padding: 1.3rem;
   padding-top: 1rem;
 }
 .k-search-form {
@@ -292,7 +293,7 @@ blockquote {
 }
 
 .nav-link:hover {
-  background-color: #ddd;
+  background-color: #eee;
   color: #d00000;
 }
 .nav-pills .nav-link.active {
@@ -334,9 +335,6 @@ blockquote {
   font-size: 0.7rem;
   padding-left: 1rem;
 }
-
-
-
 
 
 .btn {

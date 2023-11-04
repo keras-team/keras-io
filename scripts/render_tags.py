@@ -10,9 +10,13 @@ metadata dictionary as follows:
     'path': Relative path of the model on keras.io,
 }
 """
-
-import keras_cv
 import inspect
+
+try:
+    import keras_cv
+except Exception as e:
+    print(f"Could not import Keras CV. Exception: {e}")
+    keras_cv = None
 
 
 TABLE_HEADER = (
