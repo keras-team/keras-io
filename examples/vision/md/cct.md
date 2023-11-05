@@ -2,7 +2,7 @@
 
 **Author:** [Sayak Paul](https://twitter.com/RisingSayak)<br>
 **Date created:** 2021/06/30<br>
-**Last modified:** 2021/06/30<br>
+**Last modified:** 2023/08/07<br>
 **Description:** Compact Convolutional Transformers for efficient image classification.
 
 
@@ -33,25 +33,15 @@ from  François Chollet's book *Deep Learning with Python*. This example uses
 code snippets from another example,
 [Image classification with Vision Transformer](https://keras.io/examples/vision/image_classification_with_vision_transformer/).
 
-This example requires TensorFlow 2.5 or higher, as well as TensorFlow Addons, which can
-be installed using the following command:
-
-
-```python
-!pip install -U -q tensorflow-addons
-```
-
 ---
 ## Imports
 
 
 ```python
-from tensorflow.keras import layers
-from tensorflow import keras
+from keras import layers
+import keras
 
 import matplotlib.pyplot as plt
-import tensorflow_addons as tfa
-import tensorflow as tf
 import numpy as np
 ```
 
@@ -98,8 +88,6 @@ print(f"x_test shape: {x_test.shape} - y_test shape: {y_test.shape}")
 
 <div class="k-default-codeblock">
 ```
-Downloading data from https://www.cs.toronto.edu/~kriz/cifar-10-python.tar.gz
-170498071/170498071 [==============================] - 14s 0us/step
 x_train shape: (50000, 32, 32, 3) - y_train shape: (50000, 10)
 x_test shape: (10000, 32, 32, 3) - y_test shape: (10000, 10)
 
@@ -154,7 +142,7 @@ class CCTTokenizer(layers.Layer):
             )
             self.conv_model.add(layers.ZeroPadding2D(padding))
             self.conv_model.add(
-                layers.MaxPool2D(pooling_kernel_size, pooling_stride, "same")
+                layers.MaxPooling2D(pooling_kernel_size, pooling_stride, "same")
             )
 
         self.positional_emb = positional_emb
@@ -163,28 +151,96 @@ class CCTTokenizer(layers.Layer):
         outputs = self.conv_model(images)
         # After passing the images through our mini-network the spatial dimensions
         # are flattened to form sequences.
-        reshaped = tf.reshape(
+        reshaped = keras.ops.reshape(
             outputs,
-            (-1, tf.shape(outputs)[1] * tf.shape(outputs)[2], tf.shape(outputs)[-1]),
+            (
+                -1,
+                keras.ops.shape(outputs)[1] * keras.ops.shape(outputs)[2],
+                keras.ops.shape(outputs)[-1],
+            ),
         )
         return reshaped
 
-    def positional_embedding(self, image_size):
-        # Positional embeddings are optional in CCT. Here, we calculate
-        # the number of sequences and initialize an `Embedding` layer to
-        # compute the positional embeddings later.
-        if self.positional_emb:
-            dummy_inputs = tf.ones((1, image_size, image_size, 3))
-            dummy_outputs = self.call(dummy_inputs)
-            sequence_length = tf.shape(dummy_outputs)[1]
-            projection_dim = tf.shape(dummy_outputs)[-1]
+```
 
-            embed_layer = layers.Embedding(
-                input_dim=sequence_length, output_dim=projection_dim
-            )
-            return embed_layer, sequence_length
-        else:
-            return None
+Positional embeddings are optional in CCT. If we want to use them, we can use
+the Layer defined below.
+
+
+```python
+
+class PositionEmbedding(keras.layers.Layer):
+    def __init__(
+        self,
+        sequence_length,
+        initializer="glorot_uniform",
+        **kwargs,
+    ):
+        super().__init__(**kwargs)
+        if sequence_length is None:
+            raise ValueError("`sequence_length` must be an Integer, received `None`.")
+        self.sequence_length = int(sequence_length)
+        self.initializer = keras.initializers.get(initializer)
+
+    def get_config(self):
+        config = super().get_config()
+        config.update(
+            {
+                "sequence_length": self.sequence_length,
+                "initializer": keras.initializers.serialize(self.initializer),
+            }
+        )
+        return config
+
+    def build(self, input_shape):
+        feature_size = input_shape[-1]
+        self.position_embeddings = self.add_weight(
+            name="embeddings",
+            shape=[self.sequence_length, feature_size],
+            initializer=self.initializer,
+            trainable=True,
+        )
+
+        super().build(input_shape)
+
+    def call(self, inputs, start_index=0):
+        shape = keras.ops.shape(inputs)
+        feature_length = shape[-1]
+        sequence_length = shape[-2]
+        # trim to match the length of the input sequence, which might be less
+        # than the sequence_length of the layer.
+        position_embeddings = keras.ops.convert_to_tensor(self.position_embeddings)
+        position_embeddings = keras.ops.slice(
+            position_embeddings,
+            (start_index, 0),
+            (sequence_length, feature_length),
+        )
+        return keras.ops.broadcast_to(position_embeddings, shape)
+
+    def compute_output_shape(self, input_shape):
+        return input_shape
+
+```
+
+---
+## Sequence Pooling
+Another recipe introduced in CCT is attention pooling or sequence pooling. In ViT, only
+the feature map corresponding to the class token is pooled and is then used for the
+subsequent classification task (or any other downstream task).
+
+
+```python
+
+class SequencePooling(layers.Layer):
+    def __init__(self):
+        super().__init__()
+        self.attention = layers.Dense(1)
+
+    def call(self, x):
+        attention_weights = keras.ops.softmax(self.attention(x), axis=1)
+        attention_weights = keras.ops.transpose(attention_weights, axes=(0, 2, 1))
+        weighted_representation = keras.ops.matmul(attention_weights, x)
+        return keras.ops.squeeze(weighted_representation, -2)
 
 ```
 
@@ -206,13 +262,16 @@ class StochasticDepth(layers.Layer):
     def __init__(self, drop_prop, **kwargs):
         super().__init__(**kwargs)
         self.drop_prob = drop_prop
+        self.seed_generator = keras.random.SeedGenerator(1337)
 
     def call(self, x, training=None):
         if training:
             keep_prob = 1 - self.drop_prob
-            shape = (tf.shape(x)[0],) + (1,) * (tf.shape(x).shape[0] - 1)
-            random_tensor = keep_prob + tf.random.uniform(shape, 0, 1)
-            random_tensor = tf.floor(random_tensor)
+            shape = (keras.ops.shape(x)[0],) + (1,) * (len(x.shape) - 1)
+            random_tensor = keep_prob + keras.random.uniform(
+                shape, 0, 1, seed=self.seed_generator
+            )
+            random_tensor = keras.ops.floor(random_tensor)
             return (x / keep_prob) * random_tensor
         return x
 
@@ -226,7 +285,7 @@ class StochasticDepth(layers.Layer):
 
 def mlp(x, hidden_units, dropout_rate):
     for units in hidden_units:
-        x = layers.Dense(units, activation=tf.nn.gelu)(x)
+        x = layers.Dense(units, activation=keras.ops.gelu)(x)
         x = layers.Dropout(dropout_rate)(x)
     return x
 
@@ -256,10 +315,7 @@ data_augmentation = keras.Sequential(
 ---
 ## The final CCT model
 
-Another recipe introduced in CCT is attention pooling or sequence pooling. In ViT, only
-the feature map corresponding to the class token is pooled and is then used for the
-subsequent classification task (or any other downstream task). In CCT, outputs from the
-Transformers encoder are weighted and then passed on to the final task-specific layer (in
+In CCT, outputs from the Transformers encoder are weighted and then passed on to the final task-specific layer (in
 this example, we do classification).
 
 
@@ -283,10 +339,10 @@ def create_cct_model(
 
     # Apply positional embedding.
     if positional_emb:
-        pos_embed, seq_length = cct_tokenizer.positional_embedding(image_size)
-        positions = tf.range(start=0, limit=seq_length, delta=1)
-        position_embeddings = pos_embed(positions)
-        encoded_patches += position_embeddings
+        sequence_length = encoded_patches.shape[1]
+        encoded_patches += PositionEmbedding(sequence_length=sequence_length)(
+            encoded_patches
+        )
 
     # Calculate Stochastic Depth probabilities.
     dpr = [x for x in np.linspace(0, stochastic_depth_rate, transformer_layers)]
@@ -317,11 +373,7 @@ def create_cct_model(
 
     # Apply sequence pooling.
     representation = layers.LayerNormalization(epsilon=1e-5)(encoded_patches)
-    attention_weights = tf.nn.softmax(layers.Dense(1)(representation), axis=1)
-    weighted_representation = tf.matmul(
-        attention_weights, representation, transpose_a=True
-    )
-    weighted_representation = tf.squeeze(weighted_representation, -2)
+    weighted_representation = SequencePooling()(representation)
 
     # Classify outputs.
     logits = layers.Dense(num_classes)(weighted_representation)
@@ -338,7 +390,7 @@ def create_cct_model(
 ```python
 
 def run_experiment(model):
-    optimizer = tfa.optimizers.AdamW(learning_rate=0.001, weight_decay=0.0001)
+    optimizer = keras.optimizers.AdamW(learning_rate=0.001, weight_decay=0.0001)
 
     model.compile(
         optimizer=optimizer,
@@ -351,7 +403,7 @@ def run_experiment(model):
         ],
     )
 
-    checkpoint_filepath = "/tmp/checkpoint"
+    checkpoint_filepath = "/tmp/checkpoint.weights.h5"
     checkpoint_callback = keras.callbacks.ModelCheckpoint(
         checkpoint_filepath,
         monitor="val_accuracy",
@@ -383,68 +435,68 @@ history = run_experiment(cct_model)
 <div class="k-default-codeblock">
 ```
 Epoch 1/30
-352/352 [==============================] - 19s 39ms/step - loss: 1.8898 - accuracy: 0.3386 - top-5-accuracy: 0.8355 - val_loss: 1.6695 - val_accuracy: 0.4638 - val_top-5-accuracy: 0.9092
+ 352/352 ━━━━━━━━━━━━━━━━━━━━ 90s 248ms/step - accuracy: 0.2578 - loss: 2.0882 - top-5-accuracy: 0.7553 - val_accuracy: 0.4438 - val_loss: 1.6872 - val_top-5-accuracy: 0.9046
 Epoch 2/30
-352/352 [==============================] - 13s 37ms/step - loss: 1.5330 - accuracy: 0.5158 - top-5-accuracy: 0.9369 - val_loss: 1.4373 - val_accuracy: 0.5666 - val_top-5-accuracy: 0.9480
+ 352/352 ━━━━━━━━━━━━━━━━━━━━ 91s 258ms/step - accuracy: 0.4779 - loss: 1.6074 - top-5-accuracy: 0.9261 - val_accuracy: 0.5730 - val_loss: 1.4462 - val_top-5-accuracy: 0.9562
 Epoch 3/30
-352/352 [==============================] - 14s 39ms/step - loss: 1.4146 - accuracy: 0.5774 - top-5-accuracy: 0.9548 - val_loss: 1.3599 - val_accuracy: 0.6010 - val_top-5-accuracy: 0.9616
+ 352/352 ━━━━━━━━━━━━━━━━━━━━ 92s 260ms/step - accuracy: 0.5655 - loss: 1.4371 - top-5-accuracy: 0.9501 - val_accuracy: 0.6178 - val_loss: 1.3458 - val_top-5-accuracy: 0.9626
 Epoch 4/30
-352/352 [==============================] - 13s 36ms/step - loss: 1.3421 - accuracy: 0.6116 - top-5-accuracy: 0.9619 - val_loss: 1.2986 - val_accuracy: 0.6438 - val_top-5-accuracy: 0.9666
+ 352/352 ━━━━━━━━━━━━━━━━━━━━ 92s 261ms/step - accuracy: 0.6166 - loss: 1.3343 - top-5-accuracy: 0.9613 - val_accuracy: 0.6610 - val_loss: 1.2695 - val_top-5-accuracy: 0.9706
 Epoch 5/30
-352/352 [==============================] - 13s 37ms/step - loss: 1.2772 - accuracy: 0.6445 - top-5-accuracy: 0.9677 - val_loss: 1.2459 - val_accuracy: 0.6606 - val_top-5-accuracy: 0.9720
+ 352/352 ━━━━━━━━━━━━━━━━━━━━ 92s 261ms/step - accuracy: 0.6468 - loss: 1.2814 - top-5-accuracy: 0.9672 - val_accuracy: 0.6834 - val_loss: 1.2231 - val_top-5-accuracy: 0.9716
 Epoch 6/30
-352/352 [==============================] - 13s 37ms/step - loss: 1.2494 - accuracy: 0.6551 - top-5-accuracy: 0.9711 - val_loss: 1.2579 - val_accuracy: 0.6582 - val_top-5-accuracy: 0.9686
+ 352/352 ━━━━━━━━━━━━━━━━━━━━ 92s 261ms/step - accuracy: 0.6619 - loss: 1.2412 - top-5-accuracy: 0.9708 - val_accuracy: 0.6842 - val_loss: 1.2018 - val_top-5-accuracy: 0.9744
 Epoch 7/30
-352/352 [==============================] - 13s 37ms/step - loss: 1.1945 - accuracy: 0.6826 - top-5-accuracy: 0.9760 - val_loss: 1.1633 - val_accuracy: 0.7028 - val_top-5-accuracy: 0.9760
+ 352/352 ━━━━━━━━━━━━━━━━━━━━ 93s 263ms/step - accuracy: 0.6976 - loss: 1.1775 - top-5-accuracy: 0.9752 - val_accuracy: 0.6988 - val_loss: 1.1988 - val_top-5-accuracy: 0.9752
 Epoch 8/30
-352/352 [==============================] - 13s 36ms/step - loss: 1.1729 - accuracy: 0.6946 - top-5-accuracy: 0.9769 - val_loss: 1.1754 - val_accuracy: 0.7024 - val_top-5-accuracy: 0.9756
+ 352/352 ━━━━━━━━━━━━━━━━━━━━ 93s 263ms/step - accuracy: 0.7070 - loss: 1.1579 - top-5-accuracy: 0.9774 - val_accuracy: 0.7010 - val_loss: 1.1780 - val_top-5-accuracy: 0.9732
 Epoch 9/30
-352/352 [==============================] - 13s 37ms/step - loss: 1.1481 - accuracy: 0.7079 - top-5-accuracy: 0.9782 - val_loss: 1.2000 - val_accuracy: 0.6876 - val_top-5-accuracy: 0.9752
+ 352/352 ━━━━━━━━━━━━━━━━━━━━ 95s 269ms/step - accuracy: 0.7219 - loss: 1.1255 - top-5-accuracy: 0.9795 - val_accuracy: 0.7166 - val_loss: 1.1375 - val_top-5-accuracy: 0.9784
 Epoch 10/30
-352/352 [==============================] - 13s 38ms/step - loss: 1.1227 - accuracy: 0.7192 - top-5-accuracy: 0.9793 - val_loss: 1.1666 - val_accuracy: 0.7118 - val_top-5-accuracy: 0.9764
+ 352/352 ━━━━━━━━━━━━━━━━━━━━ 93s 264ms/step - accuracy: 0.7273 - loss: 1.1087 - top-5-accuracy: 0.9801 - val_accuracy: 0.7258 - val_loss: 1.1286 - val_top-5-accuracy: 0.9814
 Epoch 11/30
-352/352 [==============================] - 13s 38ms/step - loss: 1.1003 - accuracy: 0.7295 - top-5-accuracy: 0.9815 - val_loss: 1.1461 - val_accuracy: 0.7110 - val_top-5-accuracy: 0.9792
+ 352/352 ━━━━━━━━━━━━━━━━━━━━ 93s 265ms/step - accuracy: 0.7361 - loss: 1.0863 - top-5-accuracy: 0.9828 - val_accuracy: 0.7222 - val_loss: 1.1412 - val_top-5-accuracy: 0.9766
 Epoch 12/30
-352/352 [==============================] - 13s 37ms/step - loss: 1.0836 - accuracy: 0.7370 - top-5-accuracy: 0.9821 - val_loss: 1.0968 - val_accuracy: 0.7382 - val_top-5-accuracy: 0.9790
+ 352/352 ━━━━━━━━━━━━━━━━━━━━ 93s 264ms/step - accuracy: 0.7504 - loss: 1.0644 - top-5-accuracy: 0.9834 - val_accuracy: 0.7418 - val_loss: 1.0943 - val_top-5-accuracy: 0.9812
 Epoch 13/30
-352/352 [==============================] - 13s 38ms/step - loss: 1.0673 - accuracy: 0.7460 - top-5-accuracy: 0.9838 - val_loss: 1.1011 - val_accuracy: 0.7362 - val_top-5-accuracy: 0.9820
+ 352/352 ━━━━━━━━━━━━━━━━━━━━ 94s 266ms/step - accuracy: 0.7593 - loss: 1.0422 - top-5-accuracy: 0.9856 - val_accuracy: 0.7468 - val_loss: 1.0834 - val_top-5-accuracy: 0.9818
 Epoch 14/30
-352/352 [==============================] - 14s 38ms/step - loss: 1.0483 - accuracy: 0.7545 - top-5-accuracy: 0.9856 - val_loss: 1.0798 - val_accuracy: 0.7416 - val_top-5-accuracy: 0.9828
+ 352/352 ━━━━━━━━━━━━━━━━━━━━ 93s 265ms/step - accuracy: 0.7647 - loss: 1.0307 - top-5-accuracy: 0.9868 - val_accuracy: 0.7526 - val_loss: 1.0863 - val_top-5-accuracy: 0.9822
 Epoch 15/30
-352/352 [==============================] - 14s 39ms/step - loss: 1.0355 - accuracy: 0.7616 - top-5-accuracy: 0.9848 - val_loss: 1.0628 - val_accuracy: 0.7530 - val_top-5-accuracy: 0.9834
+ 352/352 ━━━━━━━━━━━━━━━━━━━━ 93s 263ms/step - accuracy: 0.7684 - loss: 1.0231 - top-5-accuracy: 0.9863 - val_accuracy: 0.7666 - val_loss: 1.0454 - val_top-5-accuracy: 0.9834
 Epoch 16/30
-352/352 [==============================] - 13s 36ms/step - loss: 1.0251 - accuracy: 0.7653 - top-5-accuracy: 0.9860 - val_loss: 1.0934 - val_accuracy: 0.7382 - val_top-5-accuracy: 0.9816
+ 352/352 ━━━━━━━━━━━━━━━━━━━━ 94s 268ms/step - accuracy: 0.7809 - loss: 1.0007 - top-5-accuracy: 0.9859 - val_accuracy: 0.7670 - val_loss: 1.0469 - val_top-5-accuracy: 0.9838
 Epoch 17/30
-352/352 [==============================] - 13s 38ms/step - loss: 1.0128 - accuracy: 0.7718 - top-5-accuracy: 0.9866 - val_loss: 1.0550 - val_accuracy: 0.7464 - val_top-5-accuracy: 0.9850
+ 352/352 ━━━━━━━━━━━━━━━━━━━━ 94s 268ms/step - accuracy: 0.7902 - loss: 0.9795 - top-5-accuracy: 0.9895 - val_accuracy: 0.7676 - val_loss: 1.0396 - val_top-5-accuracy: 0.9836
 Epoch 18/30
-352/352 [==============================] - 14s 38ms/step - loss: 1.0080 - accuracy: 0.7737 - top-5-accuracy: 0.9873 - val_loss: 1.0278 - val_accuracy: 0.7708 - val_top-5-accuracy: 0.9864
+ 352/352 ━━━━━━━━━━━━━━━━━━━━ 106s 301ms/step - accuracy: 0.7920 - loss: 0.9693 - top-5-accuracy: 0.9889 - val_accuracy: 0.7616 - val_loss: 1.0791 - val_top-5-accuracy: 0.9828
 Epoch 19/30
-352/352 [==============================] - 13s 36ms/step - loss: 0.9888 - accuracy: 0.7838 - top-5-accuracy: 0.9877 - val_loss: 1.0681 - val_accuracy: 0.7512 - val_top-5-accuracy: 0.9848
+ 352/352 ━━━━━━━━━━━━━━━━━━━━ 93s 264ms/step - accuracy: 0.7965 - loss: 0.9631 - top-5-accuracy: 0.9893 - val_accuracy: 0.7850 - val_loss: 1.0149 - val_top-5-accuracy: 0.9842
 Epoch 20/30
-352/352 [==============================] - 13s 37ms/step - loss: 0.9853 - accuracy: 0.7846 - top-5-accuracy: 0.9884 - val_loss: 1.0195 - val_accuracy: 0.7682 - val_top-5-accuracy: 0.9872
+ 352/352 ━━━━━━━━━━━━━━━━━━━━ 93s 265ms/step - accuracy: 0.8030 - loss: 0.9529 - top-5-accuracy: 0.9899 - val_accuracy: 0.7898 - val_loss: 1.0029 - val_top-5-accuracy: 0.9852
 Epoch 21/30
-352/352 [==============================] - 15s 43ms/step - loss: 0.9814 - accuracy: 0.7867 - top-5-accuracy: 0.9891 - val_loss: 1.0201 - val_accuracy: 0.7674 - val_top-5-accuracy: 0.9860
+ 352/352 ━━━━━━━━━━━━━━━━━━━━ 92s 261ms/step - accuracy: 0.8118 - loss: 0.9322 - top-5-accuracy: 0.9903 - val_accuracy: 0.7728 - val_loss: 1.0529 - val_top-5-accuracy: 0.9850
 Epoch 22/30
-352/352 [==============================] - 15s 43ms/step - loss: 0.9641 - accuracy: 0.7953 - top-5-accuracy: 0.9890 - val_loss: 1.0406 - val_accuracy: 0.7632 - val_top-5-accuracy: 0.9858
+ 352/352 ━━━━━━━━━━━━━━━━━━━━ 91s 259ms/step - accuracy: 0.8104 - loss: 0.9308 - top-5-accuracy: 0.9906 - val_accuracy: 0.7874 - val_loss: 1.0090 - val_top-5-accuracy: 0.9876
 Epoch 23/30
-352/352 [==============================] - 17s 47ms/step - loss: 0.9589 - accuracy: 0.7971 - top-5-accuracy: 0.9894 - val_loss: 1.0279 - val_accuracy: 0.7698 - val_top-5-accuracy: 0.9844
+ 352/352 ━━━━━━━━━━━━━━━━━━━━ 92s 263ms/step - accuracy: 0.8164 - loss: 0.9193 - top-5-accuracy: 0.9911 - val_accuracy: 0.7800 - val_loss: 1.0091 - val_top-5-accuracy: 0.9844
 Epoch 24/30
-352/352 [==============================] - 14s 39ms/step - loss: 0.9559 - accuracy: 0.7964 - top-5-accuracy: 0.9901 - val_loss: 1.0162 - val_accuracy: 0.7740 - val_top-5-accuracy: 0.9856
+ 352/352 ━━━━━━━━━━━━━━━━━━━━ 94s 268ms/step - accuracy: 0.8147 - loss: 0.9184 - top-5-accuracy: 0.9919 - val_accuracy: 0.7854 - val_loss: 1.0260 - val_top-5-accuracy: 0.9856
 Epoch 25/30
-352/352 [==============================] - 13s 38ms/step - loss: 0.9467 - accuracy: 0.8029 - top-5-accuracy: 0.9898 - val_loss: 0.9973 - val_accuracy: 0.7822 - val_top-5-accuracy: 0.9852
+ 352/352 ━━━━━━━━━━━━━━━━━━━━ 92s 262ms/step - accuracy: 0.8255 - loss: 0.9000 - top-5-accuracy: 0.9914 - val_accuracy: 0.7918 - val_loss: 1.0014 - val_top-5-accuracy: 0.9842
 Epoch 26/30
-352/352 [==============================] - 13s 38ms/step - loss: 0.9455 - accuracy: 0.8016 - top-5-accuracy: 0.9893 - val_loss: 1.0363 - val_accuracy: 0.7682 - val_top-5-accuracy: 0.9820
+ 352/352 ━━━━━━━━━━━━━━━━━━━━ 90s 257ms/step - accuracy: 0.8297 - loss: 0.8865 - top-5-accuracy: 0.9933 - val_accuracy: 0.7924 - val_loss: 1.0065 - val_top-5-accuracy: 0.9834
 Epoch 27/30
-352/352 [==============================] - 13s 38ms/step - loss: 0.9414 - accuracy: 0.8055 - top-5-accuracy: 0.9900 - val_loss: 0.9891 - val_accuracy: 0.7868 - val_top-5-accuracy: 0.9866
+ 352/352 ━━━━━━━━━━━━━━━━━━━━ 92s 262ms/step - accuracy: 0.8339 - loss: 0.8837 - top-5-accuracy: 0.9931 - val_accuracy: 0.7906 - val_loss: 1.0035 - val_top-5-accuracy: 0.9870
 Epoch 28/30
-352/352 [==============================] - 13s 36ms/step - loss: 0.9357 - accuracy: 0.8069 - top-5-accuracy: 0.9908 - val_loss: 0.9991 - val_accuracy: 0.7820 - val_top-5-accuracy: 0.9882
+ 352/352 ━━━━━━━━━━━━━━━━━━━━ 92s 260ms/step - accuracy: 0.8362 - loss: 0.8781 - top-5-accuracy: 0.9934 - val_accuracy: 0.7878 - val_loss: 1.0041 - val_top-5-accuracy: 0.9850
 Epoch 29/30
-352/352 [==============================] - 13s 38ms/step - loss: 0.9243 - accuracy: 0.8122 - top-5-accuracy: 0.9904 - val_loss: 0.9807 - val_accuracy: 0.7930 - val_top-5-accuracy: 0.9882
+ 352/352 ━━━━━━━━━━━━━━━━━━━━ 92s 260ms/step - accuracy: 0.8398 - loss: 0.8707 - top-5-accuracy: 0.9942 - val_accuracy: 0.7854 - val_loss: 1.0186 - val_top-5-accuracy: 0.9858
 Epoch 30/30
-352/352 [==============================] - 13s 38ms/step - loss: 0.9232 - accuracy: 0.8124 - top-5-accuracy: 0.9908 - val_loss: 0.9839 - val_accuracy: 0.7940 - val_top-5-accuracy: 0.9872
-313/313 [==============================] - 3s 9ms/step - loss: 1.0100 - accuracy: 0.7772 - top-5-accuracy: 0.9869
-Test accuracy: 77.72%
-Test top 5 accuracy: 98.69%
+ 352/352 ━━━━━━━━━━━━━━━━━━━━ 92s 263ms/step - accuracy: 0.8438 - loss: 0.8614 - top-5-accuracy: 0.9933 - val_accuracy: 0.7892 - val_loss: 1.0123 - val_top-5-accuracy: 0.9846
+ 313/313 ━━━━━━━━━━━━━━━━━━━━ 14s 44ms/step - accuracy: 0.7752 - loss: 1.0370 - top-5-accuracy: 0.9824
+Test accuracy: 77.82%
+Test top 5 accuracy: 98.42%
 
 ```
 </div>
@@ -464,12 +516,12 @@ plt.show()
 
 
     
-![png](/img/examples/vision/cct/cct_22_0.png)
+![png](/img/examples/vision/cct/cct_25_0.png)
     
 
 
 The CCT model we just trained has just **0.4 million** parameters, and it gets us to
-~78% top-1 accuracy within 30 epochs. The plot above shows no signs of overfitting as
+~79% top-1 accuracy within 30 epochs. The plot above shows no signs of overfitting as
 well. This means we can train this network for longer (perhaps with a bit more
 regularization) and may obtain even better performance. This performance can further be
 improved by additional recipes like cosine decay learning rate schedule, other data augmentation
@@ -488,9 +540,3 @@ to know about the experimental setup.
 
 The authors also demonstrate the performance of Compact Convolutional Transformers on
 NLP tasks and they report competitive results there.
-
-Example available on HuggingFace:
-
-| Trained Model | Demo |
-|------|------|
-| [![🤗 Model - CCT](https://img.shields.io/badge/🤗_Model-Compact_Convolutional_Transformers-black)](https://huggingface.co/keras-io/cct) | [![🤗 Spaces - CCT](https://img.shields.io/badge/🤗_Spaces-Compact_Convolutional_Transformers-black)](https://huggingface.co/spaces/keras-io/cct) |

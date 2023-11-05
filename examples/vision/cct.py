@@ -2,9 +2,10 @@
 Title: Compact Convolutional Transformers
 Author: [Sayak Paul](https://twitter.com/RisingSayak)
 Date created: 2021/06/30
-Last modified: 2021/06/30
+Last modified: 2023/08/07
 Description: Compact Convolutional Transformers for efficient image classification.
 Accelerator: GPU
+Converted to Keras 3 by: [Muhammad Anas Raza](https://anasrz.com), [Guillaume Baquiast](https://www.linkedin.com/in/guillaume-baquiast-478965ba/)
 """
 """
 As discussed in the [Vision Transformers (ViT)](https://arxiv.org/abs/2010.11929) paper,
@@ -29,25 +30,16 @@ If you are unfamiliar with the concept of self-attention or Transformers, you ca
 from  François Chollet's book *Deep Learning with Python*. This example uses
 code snippets from another example,
 [Image classification with Vision Transformer](https://keras.io/examples/vision/image_classification_with_vision_transformer/).
-
-This example requires TensorFlow 2.5 or higher, as well as TensorFlow Addons, which can
-be installed using the following command:
-"""
-
-"""shell
-pip install -U -q tensorflow-addons
 """
 
 """
 ## Imports
 """
 
-from tensorflow.keras import layers
-from tensorflow import keras
+from keras import layers
+import keras
 
 import matplotlib.pyplot as plt
-import tensorflow_addons as tfa
-import tensorflow as tf
 import numpy as np
 
 """
@@ -135,7 +127,7 @@ class CCTTokenizer(layers.Layer):
             )
             self.conv_model.add(layers.ZeroPadding2D(padding))
             self.conv_model.add(
-                layers.MaxPool2D(pooling_kernel_size, pooling_stride, "same")
+                layers.MaxPooling2D(pooling_kernel_size, pooling_stride, "same")
             )
 
         self.positional_emb = positional_emb
@@ -144,28 +136,93 @@ class CCTTokenizer(layers.Layer):
         outputs = self.conv_model(images)
         # After passing the images through our mini-network the spatial dimensions
         # are flattened to form sequences.
-        reshaped = tf.reshape(
+        reshaped = keras.ops.reshape(
             outputs,
-            (-1, tf.shape(outputs)[1] * tf.shape(outputs)[2], tf.shape(outputs)[-1]),
+            (
+                -1,
+                keras.ops.shape(outputs)[1] * keras.ops.shape(outputs)[2],
+                keras.ops.shape(outputs)[-1],
+            ),
         )
         return reshaped
 
-    def positional_embedding(self, image_size):
-        # Positional embeddings are optional in CCT. Here, we calculate
-        # the number of sequences and initialize an `Embedding` layer to
-        # compute the positional embeddings later.
-        if self.positional_emb:
-            dummy_inputs = tf.ones((1, image_size, image_size, 3))
-            dummy_outputs = self.call(dummy_inputs)
-            sequence_length = tf.shape(dummy_outputs)[1]
-            projection_dim = tf.shape(dummy_outputs)[-1]
 
-            embed_layer = layers.Embedding(
-                input_dim=sequence_length, output_dim=projection_dim
-            )
-            return embed_layer, sequence_length
-        else:
-            return None
+"""
+Positional embeddings are optional in CCT. If we want to use them, we can use
+the Layer defined below.
+"""
+
+
+class PositionEmbedding(keras.layers.Layer):
+    def __init__(
+        self,
+        sequence_length,
+        initializer="glorot_uniform",
+        **kwargs,
+    ):
+        super().__init__(**kwargs)
+        if sequence_length is None:
+            raise ValueError("`sequence_length` must be an Integer, received `None`.")
+        self.sequence_length = int(sequence_length)
+        self.initializer = keras.initializers.get(initializer)
+
+    def get_config(self):
+        config = super().get_config()
+        config.update(
+            {
+                "sequence_length": self.sequence_length,
+                "initializer": keras.initializers.serialize(self.initializer),
+            }
+        )
+        return config
+
+    def build(self, input_shape):
+        feature_size = input_shape[-1]
+        self.position_embeddings = self.add_weight(
+            name="embeddings",
+            shape=[self.sequence_length, feature_size],
+            initializer=self.initializer,
+            trainable=True,
+        )
+
+        super().build(input_shape)
+
+    def call(self, inputs, start_index=0):
+        shape = keras.ops.shape(inputs)
+        feature_length = shape[-1]
+        sequence_length = shape[-2]
+        # trim to match the length of the input sequence, which might be less
+        # than the sequence_length of the layer.
+        position_embeddings = keras.ops.convert_to_tensor(self.position_embeddings)
+        position_embeddings = keras.ops.slice(
+            position_embeddings,
+            (start_index, 0),
+            (sequence_length, feature_length),
+        )
+        return keras.ops.broadcast_to(position_embeddings, shape)
+
+    def compute_output_shape(self, input_shape):
+        return input_shape
+
+
+"""
+## Sequence Pooling
+Another recipe introduced in CCT is attention pooling or sequence pooling. In ViT, only
+the feature map corresponding to the class token is pooled and is then used for the
+subsequent classification task (or any other downstream task).
+"""
+
+
+class SequencePooling(layers.Layer):
+    def __init__(self):
+        super().__init__()
+        self.attention = layers.Dense(1)
+
+    def call(self, x):
+        attention_weights = keras.ops.softmax(self.attention(x), axis=1)
+        attention_weights = keras.ops.transpose(attention_weights, axes=(0, 2, 1))
+        weighted_representation = keras.ops.matmul(attention_weights, x)
+        return keras.ops.squeeze(weighted_representation, -2)
 
 
 """
@@ -185,13 +242,16 @@ class StochasticDepth(layers.Layer):
     def __init__(self, drop_prop, **kwargs):
         super().__init__(**kwargs)
         self.drop_prob = drop_prop
+        self.seed_generator = keras.random.SeedGenerator(1337)
 
     def call(self, x, training=None):
         if training:
             keep_prob = 1 - self.drop_prob
-            shape = (tf.shape(x)[0],) + (1,) * (tf.shape(x).shape[0] - 1)
-            random_tensor = keep_prob + tf.random.uniform(shape, 0, 1)
-            random_tensor = tf.floor(random_tensor)
+            shape = (keras.ops.shape(x)[0],) + (1,) * (len(x.shape) - 1)
+            random_tensor = keep_prob + keras.random.uniform(
+                shape, 0, 1, seed=self.seed_generator
+            )
+            random_tensor = keras.ops.floor(random_tensor)
             return (x / keep_prob) * random_tensor
         return x
 
@@ -203,7 +263,7 @@ class StochasticDepth(layers.Layer):
 
 def mlp(x, hidden_units, dropout_rate):
     for units in hidden_units:
-        x = layers.Dense(units, activation=tf.nn.gelu)(x)
+        x = layers.Dense(units, activation=keras.ops.gelu)(x)
         x = layers.Dropout(dropout_rate)(x)
     return x
 
@@ -230,10 +290,7 @@ data_augmentation = keras.Sequential(
 """
 ## The final CCT model
 
-Another recipe introduced in CCT is attention pooling or sequence pooling. In ViT, only
-the feature map corresponding to the class token is pooled and is then used for the
-subsequent classification task (or any other downstream task). In CCT, outputs from the
-Transformers encoder are weighted and then passed on to the final task-specific layer (in
+In CCT, outputs from the Transformers encoder are weighted and then passed on to the final task-specific layer (in
 this example, we do classification).
 """
 
@@ -256,10 +313,10 @@ def create_cct_model(
 
     # Apply positional embedding.
     if positional_emb:
-        pos_embed, seq_length = cct_tokenizer.positional_embedding(image_size)
-        positions = tf.range(start=0, limit=seq_length, delta=1)
-        position_embeddings = pos_embed(positions)
-        encoded_patches += position_embeddings
+        sequence_length = encoded_patches.shape[1]
+        encoded_patches += PositionEmbedding(sequence_length=sequence_length)(
+            encoded_patches
+        )
 
     # Calculate Stochastic Depth probabilities.
     dpr = [x for x in np.linspace(0, stochastic_depth_rate, transformer_layers)]
@@ -290,11 +347,7 @@ def create_cct_model(
 
     # Apply sequence pooling.
     representation = layers.LayerNormalization(epsilon=1e-5)(encoded_patches)
-    attention_weights = tf.nn.softmax(layers.Dense(1)(representation), axis=1)
-    weighted_representation = tf.matmul(
-        attention_weights, representation, transpose_a=True
-    )
-    weighted_representation = tf.squeeze(weighted_representation, -2)
+    weighted_representation = SequencePooling()(representation)
 
     # Classify outputs.
     logits = layers.Dense(num_classes)(weighted_representation)
@@ -309,7 +362,7 @@ def create_cct_model(
 
 
 def run_experiment(model):
-    optimizer = tfa.optimizers.AdamW(learning_rate=0.001, weight_decay=0.0001)
+    optimizer = keras.optimizers.AdamW(learning_rate=0.001, weight_decay=0.0001)
 
     model.compile(
         optimizer=optimizer,
@@ -322,7 +375,7 @@ def run_experiment(model):
         ],
     )
 
-    checkpoint_filepath = "/tmp/checkpoint"
+    checkpoint_filepath = "/tmp/checkpoint.weights.h5"
     checkpoint_callback = keras.callbacks.ModelCheckpoint(
         checkpoint_filepath,
         monitor="val_accuracy",
@@ -365,7 +418,7 @@ plt.show()
 
 """
 The CCT model we just trained has just **0.4 million** parameters, and it gets us to
-~78% top-1 accuracy within 30 epochs. The plot above shows no signs of overfitting as
+~79% top-1 accuracy within 30 epochs. The plot above shows no signs of overfitting as
 well. This means we can train this network for longer (perhaps with a bit more
 regularization) and may obtain even better performance. This performance can further be
 improved by additional recipes like cosine decay learning rate schedule, other data augmentation
@@ -384,10 +437,4 @@ to know about the experimental setup.
 
 The authors also demonstrate the performance of Compact Convolutional Transformers on
 NLP tasks and they report competitive results there.
-
-Example available on HuggingFace:
-
-| Trained Model | Demo |
-|------|------|
-| [![🤗 Model - CCT](https://img.shields.io/badge/🤗_Model-Compact_Convolutional_Transformers-black)](https://huggingface.co/keras-io/cct) | [![🤗 Spaces - CCT](https://img.shields.io/badge/🤗_Spaces-Compact_Convolutional_Transformers-black)](https://huggingface.co/spaces/keras-io/cct) |
 """
