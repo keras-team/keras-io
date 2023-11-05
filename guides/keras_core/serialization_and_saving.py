@@ -59,8 +59,8 @@ Now, let's look at the details.
 """
 
 import numpy as np
-import keras_core as keras
-from keras_core import ops
+import keras
+from keras import ops
 
 """
 ## Saving
@@ -78,7 +78,7 @@ where you left)
 You can save a model with `model.save()` or `keras.models.save_model()` (which is equivalent).
 You can load it back with `keras.models.load_model()`.
 
-The only supported format in Keras Core is the "Keras v3" format,
+The only supported format in Keras 3 is the "Keras v3" format,
 which uses the `.keras` extension.
 
 **Example:**

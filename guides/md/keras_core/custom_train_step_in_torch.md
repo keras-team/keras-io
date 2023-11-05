@@ -6,7 +6,7 @@
 **Description:** Overriding the training step of the Model class with PyTorch.
 
 
-<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/guides/ipynb/keras_core/custom_train_step_in_torch.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/guides/keras_core/custom_train_step_in_torch.py)
+<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/guides/ipynb/keras/custom_train_step_in_torch.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/guides/keras/custom_train_step_in_torch.py)
 
 
 
@@ -51,8 +51,8 @@ import os
 os.environ["KERAS_BACKEND"] = "torch"
 
 import torch
-import keras_core as keras
-from keras_core import layers
+import keras
+from keras import layers
 import numpy as np
 ```
 
@@ -155,7 +155,7 @@ Epoch 2/3
 Epoch 3/3
  32/32 ━━━━━━━━━━━━━━━━━━━━  0s 801us/step - mean_absolute_error: 0.5979 - loss: 0.5284      
 
-<keras_core.src.callbacks.history.History at 0x29ea72200>
+<keras.src.callbacks.history.History at 0x29ea72200>
 
 ```
 </div>
@@ -254,7 +254,7 @@ Epoch 4/5
 Epoch 5/5
  32/32 ━━━━━━━━━━━━━━━━━━━━  0s 771us/step - loss: 0.2261 - mae: 0.3828      
 
-<keras_core.src.callbacks.history.History at 0x29eb17100>
+<keras.src.callbacks.history.History at 0x29eb17100>
 
 ```
 </div>
@@ -340,7 +340,7 @@ Epoch 2/3
 Epoch 3/3
  32/32 ━━━━━━━━━━━━━━━━━━━━  0s 830us/step - mean_absolute_error: 0.9759 - loss: 0.6117      
 
-<keras_core.src.callbacks.history.History at 0x29eb3ea40>
+<keras.src.callbacks.history.History at 0x29eb3ea40>
 
 ```
 </div>
@@ -564,7 +564,7 @@ gan.fit(dataloader, epochs=1)
 ```
  1094/1094 ━━━━━━━━━━━━━━━━━━━━  1384s 1s/step - d_loss: 0.4715 - g_loss: 1.3353
 
-<keras_core.src.callbacks.history.History at 0x29fa2ead0>
+<keras.src.callbacks.history.History at 0x29fa2ead0>
 
 ```
 </div>

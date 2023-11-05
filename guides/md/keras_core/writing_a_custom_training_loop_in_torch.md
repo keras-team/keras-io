@@ -6,7 +6,7 @@
 **Description:** Writing low-level training & evaluation loops in PyTorch.
 
 
-<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/guides/ipynb/keras_core/writing_a_custom_training_loop_in_torch.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/guides/keras_core/writing_a_custom_training_loop_in_torch.py)
+<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/guides/ipynb/keras/writing_a_custom_training_loop_in_torch.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/guides/keras/writing_a_custom_training_loop_in_torch.py)
 
 
 
@@ -21,7 +21,7 @@ import os
 os.environ["KERAS_BACKEND"] = "torch"
 
 import torch
-import keras_core as keras
+import keras
 import numpy as np
 ```
 
@@ -36,7 +36,7 @@ Using PyTorch backend.
 
 Keras provides default training and evaluation loops, `fit()` and `evaluate()`.
 Their usage is covered in the guide
-[Training & evaluation with the built-in methods](/keras_core/guides/training_with_built_in_methods/).
+[Training & evaluation with the built-in methods](/keras/guides/training_with_built_in_methods/).
 
 If you want to customize the learning algorithm of your model while still leveraging
 the convenience of `fit()`
@@ -53,9 +53,9 @@ your own training & evaluation loops from scratch. This is what this guide is ab
 To write a custom training loop, we need the following ingredients:
 
 - A model to train, of course.
-- An optimizer. You could either use a `keras_core.optimizers` optimizer,
+- An optimizer. You could either use a `keras.optimizers` optimizer,
 or a native PyTorch optimizer from `torch.optim`.
-- A loss function. You could either use a `keras_core.losses` loss,
+- A loss function. You could either use a `keras.losses` loss,
 or a native PyTorch loss from `torch.nn`.
 - A dataset. You could use any format: a `tf.data.Dataset`,
 a PyTorch `DataLoader`, a Python generator, etc.

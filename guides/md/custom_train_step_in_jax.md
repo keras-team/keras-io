@@ -6,7 +6,7 @@
 **Description:** Overriding the training step of the Model class with JAX.
 
 
-<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/guides/ipynb/keras_core/custom_train_step_in_jax.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/guides/keras_core/custom_train_step_in_jax.py)
+<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/guides/ipynb/custom_train_step_in_jax.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/guides/custom_train_step_in_jax.py)
 
 
 
@@ -51,16 +51,10 @@ import os
 os.environ["KERAS_BACKEND"] = "jax"
 
 import jax
-import keras_core as keras
+import keras
 import numpy as np
 ```
 
-<div class="k-default-codeblock">
-```
-Using JAX backend.
-
-```
-</div>
 ---
 ## A first simple example
 
@@ -178,13 +172,13 @@ model.fit(x, y, epochs=3)
 <div class="k-default-codeblock">
 ```
 Epoch 1/3
- 32/32 ━━━━━━━━━━━━━━━━━━━━  0s 2ms/step - mean_absolute_error: 0.6694 - loss: 0.4972
+ 32/32 ━━━━━━━━━━━━━━━━━━━━ 0s 3ms/step - mae: 0.8205 - loss: 0.7613
 Epoch 2/3
- 32/32 ━━━━━━━━━━━━━━━━━━━━  0s 134us/step - mean_absolute_error: 0.4028 - loss: 0.2233
+ 32/32 ━━━━━━━━━━━━━━━━━━━━ 0s 119us/step - mae: 0.5123 - loss: 0.3576
 Epoch 3/3
- 32/32 ━━━━━━━━━━━━━━━━━━━━  0s 124us/step - mean_absolute_error: 0.3432 - loss: 0.1972
+ 32/32 ━━━━━━━━━━━━━━━━━━━━ 0s 101us/step - mae: 0.4244 - loss: 0.2784
 
-<keras_core.src.callbacks.history.History at 0x2aafa3790>
+<keras.src.callbacks.history.History at 0x14a8e41f0>
 
 ```
 </div>
@@ -306,17 +300,17 @@ model.fit(x, y, epochs=5)
 <div class="k-default-codeblock">
 ```
 Epoch 1/5
- 32/32 ━━━━━━━━━━━━━━━━━━━━  0s 2ms/step - loss: 0.3169 - mae: 0.4524
+ 32/32 ━━━━━━━━━━━━━━━━━━━━ 0s 2ms/step - loss: 0.2970 - mae: 0.4350
 Epoch 2/5
- 32/32 ━━━━━━━━━━━━━━━━━━━━  0s 142us/step - loss: 0.2579 - mae: 0.4062      
+ 32/32 ━━━━━━━━━━━━━━━━━━━━ 0s 102us/step - loss: 0.2574 - mae: 0.3989
 Epoch 3/5
- 32/32 ━━━━━━━━━━━━━━━━━━━━  0s 136us/step - loss: 0.2606 - mae: 0.4087        
+ 32/32 ━━━━━━━━━━━━━━━━━━━━ 0s 96us/step - loss: 0.2366 - mae: 0.3871 
 Epoch 4/5
- 32/32 ━━━━━━━━━━━━━━━━━━━━  0s 139us/step - loss: 0.2271 - mae: 0.3845        
+ 32/32 ━━━━━━━━━━━━━━━━━━━━ 0s 91us/step - loss: 0.2171 - mae: 0.3647 
 Epoch 5/5
- 32/32 ━━━━━━━━━━━━━━━━━━━━  0s 129us/step - loss: 0.2366 - mae: 0.3963      
+ 32/32 ━━━━━━━━━━━━━━━━━━━━ 0s 91us/step - loss: 0.2122 - mae: 0.3634 
 
-<keras_core.src.callbacks.history.History at 0x10608f490>
+<keras.src.callbacks.history.History at 0x14c8e5de0>
 
 ```
 </div>
@@ -387,9 +381,9 @@ model.evaluate(x, y)
 
 <div class="k-default-codeblock">
 ```
- 32/32 ━━━━━━━━━━━━━━━━━━━━  0s 2ms/step - mean_absolute_error: 0.4046 - loss: 0.2537
+ 32/32 ━━━━━━━━━━━━━━━━━━━━ 0s 777us/step - mae: 0.6349 - loss: 0.5714
 
-[0.2537459433078766, 0.4102543890476227]
+[0.5714115500450134, 0.6256848573684692]
 
 ```
 </div>

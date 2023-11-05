@@ -1,12 +1,12 @@
-# Customizing what happens in `fit()` with TensorFlow
+# Customizing what happens in `fit()` with PyTorch
 
 **Author:** [fchollet](https://twitter.com/fchollet)<br>
-**Date created:** 2020/04/15<br>
+**Date created:** 2023/06/27<br>
 **Last modified:** 2023/06/27<br>
-**Description:** Overriding the training step of the Model class with TensorFlow.
+**Description:** Overriding the training step of the Model class with PyTorch.
 
 
-<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/guides/ipynb/keras/custom_train_step_in_tensorflow.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/guides/keras/custom_train_step_in_tensorflow.py)
+<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/guides/ipynb/custom_train_step_in_torch.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/guides/custom_train_step_in_torch.py)
 
 
 
@@ -47,21 +47,15 @@ Let's see how that works.
 ```python
 import os
 
-# This guide can only be run with the TF backend.
-os.environ["KERAS_BACKEND"] = "tensorflow"
+# This guide can only be run with the torch backend.
+os.environ["KERAS_BACKEND"] = "torch"
 
-import tensorflow as tf
+import torch
 import keras
 from keras import layers
 import numpy as np
 ```
 
-<div class="k-default-codeblock">
-```
-Using TensorFlow backend
-
-```
-</div>
 ---
 ## A first simple example
 
@@ -76,8 +70,9 @@ The input argument `data` is what gets passed to fit as training data:
 
 - If you pass NumPy arrays, by calling `fit(x, y, ...)`, then `data` will be the tuple
 `(x, y)`
-- If you pass a `tf.data.Dataset`, by calling `fit(dataset, ...)`, then `data` will be
-what gets yielded by `dataset` at each batch.
+- If you pass a `torch.utils.data.DataLoader` or a `tf.data.Dataset`,
+by calling `fit(dataset, ...)`, then `data` will be what gets yielded
+by `dataset` at each batch.
 
 In the body of the `train_step()` method, we implement a regular training update,
 similar to what you are already familiar with. Importantly, **we compute the loss via
@@ -97,18 +92,24 @@ class CustomModel(keras.Model):
         # on what you pass to `fit()`.
         x, y = data
 
-        with tf.GradientTape() as tape:
-            y_pred = self(x, training=True)  # Forward pass
-            # Compute the loss value
-            # (the loss function is configured in `compile()`)
-            loss = self.compute_loss(y=y, y_pred=y_pred)
+        # Call torch.nn.Module.zero_grad() to clear the leftover gradients
+        # for the weights from the previous train step.
+        self.zero_grad()
 
-        # Compute gradients
-        trainable_vars = self.trainable_variables
-        gradients = tape.gradient(loss, trainable_vars)
+        # Compute loss
+        y_pred = self(x, training=True)  # Forward pass
+        loss = self.compute_loss(y=y, y_pred=y_pred)
+
+        # Call torch.Tensor.backward() on the loss to compute gradients
+        # for the weights.
+        loss.backward()
+
+        trainable_weights = [v for v in self.trainable_weights]
+        gradients = [v.value.grad for v in trainable_weights]
 
         # Update weights
-        self.optimizer.apply(gradients, trainable_vars)
+        with torch.no_grad():
+            self.optimizer.apply(gradients, trainable_weights)
 
         # Update metrics (includes the metric that tracks the loss)
         for metric in self.metrics:
@@ -118,6 +119,7 @@ class CustomModel(keras.Model):
                 metric.update_state(y, y_pred)
 
         # Return a dict mapping metric names to current value
+        # Note that it will include the loss (tracked in self.metrics).
         return {m.name: m.result() for m in self.metrics}
 
 ```
@@ -141,13 +143,13 @@ model.fit(x, y, epochs=3)
 <div class="k-default-codeblock">
 ```
 Epoch 1/3
- 32/32 ━━━━━━━━━━━━━━━━━━━━  1s 2ms/step - mean_absolute_error: 0.9649 - loss: 1.1488           
+ 32/32 ━━━━━━━━━━━━━━━━━━━━ 0s 551us/step - mae: 0.6533 - loss: 0.6036
 Epoch 2/3
- 32/32 ━━━━━━━━━━━━━━━━━━━━  0s 347us/step - mean_absolute_error: 0.5538 - loss: 0.4467       
+ 32/32 ━━━━━━━━━━━━━━━━━━━━ 0s 522us/step - mae: 0.4013 - loss: 0.2522
 Epoch 3/3
- 32/32 ━━━━━━━━━━━━━━━━━━━━  0s 350us/step - mean_absolute_error: 0.4101 - loss: 0.2537       
+ 32/32 ━━━━━━━━━━━━━━━━━━━━ 0s 516us/step - mae: 0.3813 - loss: 0.2256
 
-<keras.src.callbacks.history.History at 0x2ba5e24d0>
+<keras.src.callbacks.history.History at 0x299b7baf0>
 
 ```
 </div>
@@ -183,17 +185,24 @@ class CustomModel(keras.Model):
     def train_step(self, data):
         x, y = data
 
-        with tf.GradientTape() as tape:
-            y_pred = self(x, training=True)  # Forward pass
-            # Compute our own loss
-            loss = self.loss_fn(y, y_pred)
+        # Call torch.nn.Module.zero_grad() to clear the leftover gradients
+        # for the weights from the previous train step.
+        self.zero_grad()
 
-        # Compute gradients
-        trainable_vars = self.trainable_variables
-        gradients = tape.gradient(loss, trainable_vars)
+        # Compute loss
+        y_pred = self(x, training=True)  # Forward pass
+        loss = self.loss_fn(y, y_pred)
+
+        # Call torch.Tensor.backward() on the loss to compute gradients
+        # for the weights.
+        loss.backward()
+
+        trainable_weights = [v for v in self.trainable_weights]
+        gradients = [v.value.grad for v in trainable_weights]
 
         # Update weights
-        self.optimizer.apply(gradients, trainable_vars)
+        with torch.no_grad():
+            self.optimizer.apply(gradients, trainable_weights)
 
         # Compute our own metrics
         self.loss_tracker.update_state(loss)
@@ -229,17 +238,17 @@ model.fit(x, y, epochs=5)
 <div class="k-default-codeblock">
 ```
 Epoch 1/5
- 32/32 ━━━━━━━━━━━━━━━━━━━━  0s 2ms/step - loss: 1.4374 - mae: 1.0975          
+ 32/32 ━━━━━━━━━━━━━━━━━━━━ 0s 461us/step - loss: 0.2470 - mae: 0.3953
 Epoch 2/5
- 32/32 ━━━━━━━━━━━━━━━━━━━━  0s 311us/step - loss: 0.6105 - mae: 0.6605       
+ 32/32 ━━━━━━━━━━━━━━━━━━━━ 0s 456us/step - loss: 0.2386 - mae: 0.3910
 Epoch 3/5
- 32/32 ━━━━━━━━━━━━━━━━━━━━  0s 318us/step - loss: 0.3020 - mae: 0.4417       
+ 32/32 ━━━━━━━━━━━━━━━━━━━━ 0s 456us/step - loss: 0.2359 - mae: 0.3901
 Epoch 4/5
- 32/32 ━━━━━━━━━━━━━━━━━━━━  0s 319us/step - loss: 0.2304 - mae: 0.3919       
+ 32/32 ━━━━━━━━━━━━━━━━━━━━ 0s 480us/step - loss: 0.2013 - mae: 0.3572
 Epoch 5/5
- 32/32 ━━━━━━━━━━━━━━━━━━━━  0s 318us/step - loss: 0.2036 - mae: 0.3687       
+ 32/32 ━━━━━━━━━━━━━━━━━━━━ 0s 463us/step - loss: 0.1903 - mae: 0.3480
 
-<keras.src.callbacks.history.History at 0x2be6981c0>
+<keras.src.callbacks.history.History at 0x299c5eec0>
 
 ```
 </div>
@@ -268,32 +277,37 @@ class CustomModel(keras.Model):
             sample_weight = None
             x, y = data
 
-        with tf.GradientTape() as tape:
-            y_pred = self(x, training=True)  # Forward pass
-            # Compute the loss value.
-            # The loss function is configured in `compile()`.
-            loss = self.compute_loss(
-                y=y,
-                y_pred=y_pred,
-                sample_weight=sample_weight,
-            )
+        # Call torch.nn.Module.zero_grad() to clear the leftover gradients
+        # for the weights from the previous train step.
+        self.zero_grad()
 
-        # Compute gradients
-        trainable_vars = self.trainable_variables
-        gradients = tape.gradient(loss, trainable_vars)
+        # Compute loss
+        y_pred = self(x, training=True)  # Forward pass
+        loss = self.compute_loss(
+            y=y,
+            y_pred=y_pred,
+            sample_weight=sample_weight,
+        )
+
+        # Call torch.Tensor.backward() on the loss to compute gradients
+        # for the weights.
+        loss.backward()
+
+        trainable_weights = [v for v in self.trainable_weights]
+        gradients = [v.value.grad for v in trainable_weights]
 
         # Update weights
-        self.optimizer.apply(gradients, trainable_vars)
+        with torch.no_grad():
+            self.optimizer.apply(gradients, trainable_weights)
 
-        # Update the metrics.
-        # Metrics are configured in `compile()`.
+        # Update metrics (includes the metric that tracks the loss)
         for metric in self.metrics:
             if metric.name == "loss":
                 metric.update_state(loss)
             else:
                 metric.update_state(y, y_pred, sample_weight=sample_weight)
 
-        # Return a dict mapping metric names to current value.
+        # Return a dict mapping metric names to current value
         # Note that it will include the loss (tracked in self.metrics).
         return {m.name: m.result() for m in self.metrics}
 
@@ -314,13 +328,13 @@ model.fit(x, y, sample_weight=sw, epochs=3)
 <div class="k-default-codeblock">
 ```
 Epoch 1/3
- 32/32 ━━━━━━━━━━━━━━━━━━━━  0s 2ms/step - mean_absolute_error: 1.3107 - loss: 0.9825
+ 32/32 ━━━━━━━━━━━━━━━━━━━━ 0s 499us/step - mae: 1.4332 - loss: 1.0769
 Epoch 2/3
- 32/32 ━━━━━━━━━━━━━━━━━━━━  0s 339us/step - mean_absolute_error: 0.8441 - loss: 0.4895       
+ 32/32 ━━━━━━━━━━━━━━━━━━━━ 0s 520us/step - mae: 0.9250 - loss: 0.5614
 Epoch 3/3
- 32/32 ━━━━━━━━━━━━━━━━━━━━  0s 334us/step - mean_absolute_error: 0.5615 - loss: 0.2406       
+ 32/32 ━━━━━━━━━━━━━━━━━━━━ 0s 502us/step - mae: 0.6069 - loss: 0.2653
 
-<keras.src.callbacks.history.History at 0x2beca8a60>
+<keras.src.callbacks.history.History at 0x299c82bf0>
 
 ```
 </div>
@@ -366,9 +380,9 @@ model.evaluate(x, y)
 
 <div class="k-default-codeblock">
 ```
- 32/32 ━━━━━━━━━━━━━━━━━━━━  0s 899us/step - mean_absolute_error: 1.3278 - loss: 1.9833       
+ 32/32 ━━━━━━━━━━━━━━━━━━━━ 0s 325us/step - mae: 0.4427 - loss: 0.2993
 
-[1.9400298595428467, 1.3052281141281128]
+[0.2726495862007141, 0.42286917567253113]
 
 ```
 </div>
@@ -435,6 +449,7 @@ class GAN(keras.Model):
         self.d_loss_tracker = keras.metrics.Mean(name="d_loss")
         self.g_loss_tracker = keras.metrics.Mean(name="g_loss")
         self.seed_generator = keras.random.SeedGenerator(1337)
+        self.built = True
 
     @property
     def metrics(self):
@@ -447,10 +462,11 @@ class GAN(keras.Model):
         self.loss_fn = loss_fn
 
     def train_step(self, real_images):
+        device = "cuda" if torch.cuda.is_available() else "cpu"
         if isinstance(real_images, tuple):
             real_images = real_images[0]
         # Sample random points in the latent space
-        batch_size = tf.shape(real_images)[0]
+        batch_size = real_images.shape[0]
         random_latent_vectors = keras.random.normal(
             shape=(batch_size, self.latent_dim), seed=self.seed_generator
         )
@@ -459,23 +475,28 @@ class GAN(keras.Model):
         generated_images = self.generator(random_latent_vectors)
 
         # Combine them with real images
-        combined_images = tf.concat([generated_images, real_images], axis=0)
+        real_images = torch.tensor(real_images, device=device)
+        combined_images = torch.concat([generated_images, real_images], axis=0)
 
         # Assemble labels discriminating real from fake images
-        labels = tf.concat(
-            [tf.ones((batch_size, 1)), tf.zeros((batch_size, 1))], axis=0
+        labels = torch.concat(
+            [
+                torch.ones((batch_size, 1), device=device),
+                torch.zeros((batch_size, 1), device=device),
+            ],
+            axis=0,
         )
         # Add random noise to the labels - important trick!
-        labels += 0.05 * keras.random.uniform(
-            tf.shape(labels), seed=self.seed_generator
-        )
+        labels += 0.05 * keras.random.uniform(labels.shape, seed=self.seed_generator)
 
         # Train the discriminator
-        with tf.GradientTape() as tape:
-            predictions = self.discriminator(combined_images)
-            d_loss = self.loss_fn(labels, predictions)
-        grads = tape.gradient(d_loss, self.discriminator.trainable_weights)
-        self.d_optimizer.apply(grads, self.discriminator.trainable_weights)
+        self.zero_grad()
+        predictions = self.discriminator(combined_images)
+        d_loss = self.loss_fn(labels, predictions)
+        d_loss.backward()
+        grads = [v.value.grad for v in self.discriminator.trainable_weights]
+        with torch.no_grad():
+            self.d_optimizer.apply(grads, self.discriminator.trainable_weights)
 
         # Sample random points in the latent space
         random_latent_vectors = keras.random.normal(
@@ -483,15 +504,17 @@ class GAN(keras.Model):
         )
 
         # Assemble labels that say "all real images"
-        misleading_labels = tf.zeros((batch_size, 1))
+        misleading_labels = torch.zeros((batch_size, 1), device=device)
 
         # Train the generator (note that we should *not* update the weights
         # of the discriminator)!
-        with tf.GradientTape() as tape:
-            predictions = self.discriminator(self.generator(random_latent_vectors))
-            g_loss = self.loss_fn(misleading_labels, predictions)
-        grads = tape.gradient(g_loss, self.generator.trainable_weights)
-        self.g_optimizer.apply(grads, self.generator.trainable_weights)
+        self.zero_grad()
+        predictions = self.discriminator(self.generator(random_latent_vectors))
+        g_loss = self.loss_fn(misleading_labels, predictions)
+        grads = g_loss.backward()
+        grads = [v.value.grad for v in self.generator.trainable_weights]
+        with torch.no_grad():
+            self.g_optimizer.apply(grads, self.generator.trainable_weights)
 
         # Update metrics and return their value.
         self.d_loss_tracker.update_state(d_loss)
@@ -513,8 +536,13 @@ batch_size = 64
 all_digits = np.concatenate([x_train, x_test])
 all_digits = all_digits.astype("float32") / 255.0
 all_digits = np.reshape(all_digits, (-1, 28, 28, 1))
-dataset = tf.data.Dataset.from_tensor_slices(all_digits)
-dataset = dataset.shuffle(buffer_size=1024).batch(batch_size)
+
+# Create a TensorDataset
+dataset = torch.utils.data.TensorDataset(
+    torch.from_numpy(all_digits), torch.from_numpy(all_digits)
+)
+# Create a DataLoader
+dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=True)
 
 gan = GAN(discriminator=discriminator, generator=generator, latent_dim=latent_dim)
 gan.compile(
@@ -523,16 +551,14 @@ gan.compile(
     loss_fn=keras.losses.BinaryCrossentropy(from_logits=True),
 )
 
-# To limit the execution time, we only train on 100 batches. You can train on
-# the entire dataset. You will need about 20 epochs to get nice results.
-gan.fit(dataset.take(100), epochs=1)
+gan.fit(dataloader, epochs=1)
 ```
 
 <div class="k-default-codeblock">
 ```
- 100/100 ━━━━━━━━━━━━━━━━━━━━  52s 508ms/step - d_loss: 0.5646 - g_loss: 0.7941
+ 1094/1094 ━━━━━━━━━━━━━━━━━━━━ 1582s 1s/step - d_loss: 0.3581 - g_loss: 2.0571
 
-<keras.src.callbacks.history.History at 0x2be90f580>
+<keras.src.callbacks.history.History at 0x299ce1840>
 
 ```
 </div>

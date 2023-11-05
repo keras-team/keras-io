@@ -6,7 +6,7 @@
 **Description:** Guide to multi-GPU training for Keras models with PyTorch.
 
 
-<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/guides/ipynb/keras_core/distributed_training_with_torch.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/guides/keras_core/distributed_training_with_torch.py)
+<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/guides/ipynb/keras/distributed_training_with_torch.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/guides/keras/distributed_training_with_torch.py)
 
 
 
@@ -50,7 +50,7 @@ os.environ["KERAS_BACKEND"] = "torch"
 
 import torch
 import numpy as np
-import keras_core as keras
+import keras
 
 
 def get_model():

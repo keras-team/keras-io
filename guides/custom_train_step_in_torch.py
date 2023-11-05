@@ -1,16 +1,13 @@
-# Customizing what happens in `fit()` with PyTorch
+"""
+Title: Customizing what happens in `fit()` with PyTorch
+Author: [fchollet](https://twitter.com/fchollet)
+Date created: 2023/06/27
+Last modified: 2023/06/27
+Description: Overriding the training step of the Model class with PyTorch.
+Accelerator: GPU
+"""
 
-**Author:** [fchollet](https://twitter.com/fchollet)<br>
-**Date created:** 2023/06/27<br>
-**Last modified:** 2023/06/27<br>
-**Description:** Overriding the training step of the Model class with PyTorch.
-
-
-<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/guides/ipynb/keras_core/custom_train_step_in_torch.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/guides/keras_core/custom_train_step_in_torch.py)
-
-
-
----
+"""
 ## Introduction
 
 When you're doing supervised learning, you can use `fit()` and everything works
@@ -39,30 +36,23 @@ API. You can do this whether you're building `Sequential` models, Functional API
 models, or subclassed models.
 
 Let's see how that works.
+"""
 
----
+"""
 ## Setup
+"""
 
-
-```python
 import os
 
 # This guide can only be run with the torch backend.
 os.environ["KERAS_BACKEND"] = "torch"
 
 import torch
-import keras_core as keras
-from keras_core import layers
+import keras
+from keras import layers
 import numpy as np
-```
 
-<div class="k-default-codeblock">
-```
-Using PyTorch backend.
-
-```
-</div>
----
+"""
 ## A first simple example
 
 Let's start from a simple example:
@@ -88,9 +78,8 @@ similar to what you are already familiar with. Importantly, **we compute the los
 Similarly, we call `metric.update_state(y, y_pred)` on metrics from `self.metrics`,
 to update the state of the metrics that were passed in `compile()`,
 and we query results from `self.metrics` at the end to retrieve their current value.
+"""
 
-
-```python
 
 class CustomModel(keras.Model):
     def train_step(self, data):
@@ -128,12 +117,11 @@ class CustomModel(keras.Model):
         # Note that it will include the loss (tracked in self.metrics).
         return {m.name: m.result() for m in self.metrics}
 
-```
 
+"""
 Let's try this out:
+"""
 
-
-```python
 # Construct and compile an instance of CustomModel
 inputs = keras.Input(shape=(32,))
 outputs = keras.layers.Dense(1)(inputs)
@@ -144,22 +132,8 @@ model.compile(optimizer="adam", loss="mse", metrics=["mae"])
 x = np.random.random((1000, 32))
 y = np.random.random((1000, 1))
 model.fit(x, y, epochs=3)
-```
 
-<div class="k-default-codeblock">
-```
-Epoch 1/3
- 32/32 ━━━━━━━━━━━━━━━━━━━━  0s 820us/step - mean_absolute_error: 1.4057 - loss: 2.2437       
-Epoch 2/3
- 32/32 ━━━━━━━━━━━━━━━━━━━━  0s 801us/step - mean_absolute_error: 0.9320 - loss: 1.0995      
-Epoch 3/3
- 32/32 ━━━━━━━━━━━━━━━━━━━━  0s 801us/step - mean_absolute_error: 0.5979 - loss: 0.5284      
-
-<keras_core.src.callbacks.history.History at 0x29ea72200>
-
-```
-</div>
----
+"""
 ## Going lower-level
 
 Naturally, you could just skip passing a loss function in `compile()`, and instead do
@@ -177,9 +151,8 @@ with per-epoch averages. Thankfully, the framework can do that for us: just list
 you want to reset in the `metrics` property of the model. The model will call `reset_states()`
 on any object listed here at the beginning of each `fit()` epoch or at the beginning of a call to
 `evaluate()`.
+"""
 
-
-```python
 
 class CustomModel(keras.Model):
     def __init__(self, *args, **kwargs):
@@ -239,26 +212,8 @@ x = np.random.random((1000, 32))
 y = np.random.random((1000, 1))
 model.fit(x, y, epochs=5)
 
-```
 
-<div class="k-default-codeblock">
-```
-Epoch 1/5
- 32/32 ━━━━━━━━━━━━━━━━━━━━  0s 786us/step - loss: 0.2928 - mae: 0.4386      
-Epoch 2/5
- 32/32 ━━━━━━━━━━━━━━━━━━━━  0s 781us/step - loss: 0.2368 - mae: 0.3919      
-Epoch 3/5
- 32/32 ━━━━━━━━━━━━━━━━━━━━  0s 759us/step - loss: 0.2300 - mae: 0.3898      
-Epoch 4/5
- 32/32 ━━━━━━━━━━━━━━━━━━━━  0s 782us/step - loss: 0.2134 - mae: 0.3738      
-Epoch 5/5
- 32/32 ━━━━━━━━━━━━━━━━━━━━  0s 771us/step - loss: 0.2261 - mae: 0.3828      
-
-<keras_core.src.callbacks.history.History at 0x29eb17100>
-
-```
-</div>
----
+"""
 ## Supporting `sample_weight` & `class_weight`
 
 You may have noticed that our first basic example didn't make any mention of sample
@@ -269,9 +224,8 @@ weighting. If you want to support the `fit()` arguments `sample_weight` and
 - Pass it to `compute_loss` & `update_state` (of course, you could also just apply
 it manually if you don't rely on `compile()` for losses & metrics)
 - That's it.
+"""
 
-
-```python
 
 class CustomModel(keras.Model):
     def train_step(self, data):
@@ -329,29 +283,14 @@ x = np.random.random((1000, 32))
 y = np.random.random((1000, 1))
 sw = np.random.random((1000, 1))
 model.fit(x, y, sample_weight=sw, epochs=3)
-```
 
-<div class="k-default-codeblock">
-```
-Epoch 1/3
- 32/32 ━━━━━━━━━━━━━━━━━━━━  0s 863us/step - mean_absolute_error: 1.9327 - loss: 2.0550      
-Epoch 2/3
- 32/32 ━━━━━━━━━━━━━━━━━━━━  0s 824us/step - mean_absolute_error: 1.4081 - loss: 1.0832      
-Epoch 3/3
- 32/32 ━━━━━━━━━━━━━━━━━━━━  0s 830us/step - mean_absolute_error: 0.9759 - loss: 0.6117      
-
-<keras_core.src.callbacks.history.History at 0x29eb3ea40>
-
-```
-</div>
----
+"""
 ## Providing your own evaluation step
 
 What if you want to do the same for calls to `model.evaluate()`? Then you would
 override `test_step` in exactly the same way. Here's what it looks like:
+"""
 
-
-```python
 
 class CustomModel(keras.Model):
     def test_step(self, data):
@@ -382,17 +321,8 @@ model.compile(loss="mse", metrics=["mae"])
 x = np.random.random((1000, 32))
 y = np.random.random((1000, 1))
 model.evaluate(x, y)
-```
 
-<div class="k-default-codeblock">
-```
- 32/32 ━━━━━━━━━━━━━━━━━━━━  0s 433us/step - mean_absolute_error: 0.6484 - loss: 0.6060        
-
-[0.5946557521820068, 0.6495584845542908]
-
-```
-</div>
----
+"""
 ## Wrapping up: an end-to-end GAN example
 
 Let's walk through an end-to-end example that leverages everything you just learned.
@@ -404,9 +334,8 @@ Let's consider:
 "real").
 - One optimizer for each.
 - A loss function to train the discriminator.
+"""
 
-
-```python
 # Create the discriminator
 discriminator = keras.Sequential(
     [
@@ -438,13 +367,12 @@ generator = keras.Sequential(
     ],
     name="generator",
 )
-```
 
+"""
 Here's a feature-complete GAN class, overriding `compile()` to use its own signature,
 and implementing the entire GAN algorithm in 17 lines in `train_step`:
+"""
 
-
-```python
 
 class GAN(keras.Model):
     def __init__(self, discriminator, generator, latent_dim):
@@ -530,12 +458,11 @@ class GAN(keras.Model):
             "g_loss": self.g_loss_tracker.result(),
         }
 
-```
 
+"""
 Let's test-drive it:
+"""
 
-
-```python
 # Prepare the dataset. We use both the training & test MNIST digits.
 batch_size = 64
 (x_train, _), (x_test, _) = keras.datasets.mnist.load_data()
@@ -558,14 +485,7 @@ gan.compile(
 )
 
 gan.fit(dataloader, epochs=1)
-```
 
-<div class="k-default-codeblock">
-```
- 1094/1094 ━━━━━━━━━━━━━━━━━━━━  1384s 1s/step - d_loss: 0.4715 - g_loss: 1.3353
-
-<keras_core.src.callbacks.history.History at 0x29fa2ead0>
-
-```
-</div>
+"""
 The ideas behind deep learning are simple, so why should their implementation be painful?
+"""

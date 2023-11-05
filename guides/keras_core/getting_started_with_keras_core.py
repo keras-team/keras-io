@@ -1,5 +1,5 @@
 """
-Title: Getting started with Keras Core
+Title: Getting started with Keras 3
 Author: [fchollet](https://twitter.com/fchollet)
 Date created: 2023/07/10
 Last modified: 2023/07/10
@@ -9,11 +9,11 @@ Accelerator: GPU
 """
 ## Introduction
 
-Keras Core is a full implementation of the Keras API that
+Keras 3 is a full implementation of the Keras API that
 works with TensorFlow, JAX, and PyTorch interchangeably.
-This notebook will walk you through key Keras Core workflows.
+This notebook will walk you through key Keras 3 workflows.
 
-First, let's install Keras Core:
+First, let's install Keras 3:
 """
 
 """shell
@@ -33,10 +33,10 @@ import os
 
 os.environ["KERAS_BACKEND"] = "jax"
 
-# Note that keras_core should only be imported after the backend
+# Note that keras should only be imported after the backend
 # has been configured. The backend cannot be changed once the
 # package is imported.
-import keras_core as keras
+import keras
 
 """
 ## A first example: A MNIST convnet
@@ -66,9 +66,9 @@ Here's our model.
 
 Different model-building options that Keras offers include:
 
-- [The Sequential API](https://keras.io/keras_core/guides/sequential_model/) (what we use below)
-- [The Functional API](https://keras.io/keras_core/guides/functional_api/) (most typical)
-- [Writing your own models yourself via subclassing](https://keras.io/keras_core/guides/making_new_layers_and_models_via_subclassing/) (for advanced use cases)
+- [The Sequential API](https://keras.io/guides/sequential_model/) (what we use below)
+- [The Functional API](https://keras.io/guides/functional_api/) (most typical)
+- [Writing your own models yourself via subclassing](https://keras.io/guides/making_new_layers_and_models_via_subclassing/) (for advanced use cases)
 """
 
 # Model parameters
@@ -158,7 +158,7 @@ That's it for the basics!
 """
 ## Writing cross-framework custom components
 
-Keras Core enables you to write custom Layers, Models, Metrics, Losses, and Optimizers
+Keras 3 enables you to write custom Layers, Models, Metrics, Losses, and Optimizers
 that work across TensorFlow, JAX, and PyTorch with the same codebase. Let's take a look
 at custom layers first.
 
@@ -220,7 +220,7 @@ class MyDropout(keras.layers.Layer):
         self.seed_generator = keras.random.SeedGenerator(1337)
 
     def call(self, inputs):
-        # Use `keras_core.random` for random ops.
+        # Use `keras.random` for random ops.
         return keras.random.dropout(inputs, self.rate, seed=self.seed_generator)
 
 
@@ -349,7 +349,7 @@ model.fit(train_dataset, epochs=1, validation_data=test_dataset)
 ## Further reading
 
 This concludes our short overview of the new multi-backend capabilities
-of Keras Core. Next, you can learn about:
+of Keras 3. Next, you can learn about:
 
 ### How to customize what happens in `fit()`
 
@@ -358,20 +358,20 @@ Want to implement a non-standard training algorithm yourself
 the power and usability of `fit()`? It's really easy to customize
 `fit()` to support arbitrary use cases.
 
-- [Customizing what happens in `fit()` with TensorFlow](http://keras.io/keras_core/guides/custom_train_step_in_tensorflow/)
-- [Customizing what happens in `fit()` with JAX](http://keras.io/keras_core/guides/custom_train_step_in_jax/)
-- [Customizing what happens in `fit()` with PyTorch](http://keras.io/keras_core/guides/custom_train_step_in_pytorch/)
+- [Customizing what happens in `fit()` with TensorFlow](http://keras.io/guides/custom_train_step_in_tensorflow/)
+- [Customizing what happens in `fit()` with JAX](http://keras.io/guides/custom_train_step_in_jax/)
+- [Customizing what happens in `fit()` with PyTorch](http://keras.io/guides/custom_train_step_in_pytorch/)
 
 ## How to write custom training loops
 
-- [Writing a training loop from scratch in TensorFlow](http://keras.io/keras_core/guides/writing_a_custom_training_loop_in_tensorflow/)
-- [Writing a training loop from scratch in JAX](http://keras.io/keras_core/guides/writing_a_custom_training_loop_in_jax/)
-- [Writing a training loop from scratch in PyTorch](http://keras.io/keras_core/guides/writing_a_custom_training_loop_in_torch/)
+- [Writing a training loop from scratch in TensorFlow](http://keras.io/guides/writing_a_custom_training_loop_in_tensorflow/)
+- [Writing a training loop from scratch in JAX](http://keras.io/guides/writing_a_custom_training_loop_in_jax/)
+- [Writing a training loop from scratch in PyTorch](http://keras.io/guides/writing_a_custom_training_loop_in_torch/)
 
 
 ## How to distribute training
 
-- [Guide to distributed training with TensorFlow](http://keras.io/keras_core/guides/distributed_training_with_tensorflow/)
+- [Guide to distributed training with TensorFlow](http://keras.io/guides/distributed_training_with_tensorflow/)
 - [JAX distributed training example](https://github.com/keras-team/keras-core/blob/main/examples/demo_jax_distributed.py)
 - [PyTorch distributed training example](https://github.com/keras-team/keras-core/blob/main/examples/demo_torch_multi_gpu.py)
 

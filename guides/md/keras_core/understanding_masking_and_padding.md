@@ -6,7 +6,7 @@
 **Description:** Complete guide to using mask-aware sequence layers in Keras.
 
 
-<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/guides/ipynb/keras_core/understanding_masking_and_padding.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/guides/keras_core/understanding_masking_and_padding.py)
+<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/guides/ipynb/keras/understanding_masking_and_padding.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/guides/keras/understanding_masking_and_padding.py)
 
 
 
@@ -16,9 +16,9 @@
 
 ```python
 import numpy as np
-import keras_core as keras
-from keras_core import ops
-from keras_core import layers
+import keras
+from keras import ops
+from keras import layers
 ```
 
 <div class="k-default-codeblock">
@@ -350,7 +350,7 @@ tf.Tensor(
 ```
 </div>
 Note: For more details about format limitations related to masking, see the
-[serialization guide](/keras_core/guides/serialization_and_saving).
+[serialization guide](/keras/guides/serialization_and_saving).
 
 ---
 ## Opting-in to mask propagation on compatible layers

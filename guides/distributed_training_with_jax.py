@@ -1,16 +1,12 @@
-# Multi-GPU distributed training with JAX
-
-**Author:** [fchollet](https://twitter.com/fchollet)<br>
-**Date created:** 2023/07/11<br>
-**Last modified:** 2023/07/11<br>
-**Description:** Guide to multi-GPU/TPU training for Keras models with JAX.
-
-
-<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/guides/ipynb/keras_core/distributed_training_with_jax.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/guides/keras_core/distributed_training_with_jax.py)
-
-
-
----
+"""
+Title: Multi-GPU distributed training with JAX
+Author: [fchollet](https://twitter.com/fchollet)
+Date created: 2023/07/11
+Last modified: 2023/07/11
+Description: Guide to multi-GPU/TPU training for Keras models with JAX.
+Accelerator: GPU
+"""
+"""
 ## Introduction
 
 There are generally two ways to distribute computation across multiple devices:
@@ -34,15 +30,15 @@ Specifically, this guide teaches you how to use `jax.sharding` APIs to train Ker
 models, with minimal changes to your code, on multiple GPUs or TPUS (typically 2 to 16)
 installed on a single machine (single host, multi-device training). This is the
 most common setup for researchers and small-scale industry workflows.
+"""
 
----
+"""
 ## Setup
 
 Let's start by defining the function that creates the model that we will train,
 and the function that creates the dataset we will train on (MNIST in this case).
+"""
 
-
-```python
 import os
 
 os.environ["KERAS_BACKEND"] = "jax"
@@ -50,7 +46,7 @@ os.environ["KERAS_BACKEND"] = "jax"
 import jax
 import numpy as np
 import tensorflow as tf
-import keras_core as keras
+import keras
 
 from jax.experimental import mesh_utils
 from jax.sharding import Mesh
@@ -111,15 +107,8 @@ def get_datasets():
     eval_data = tf.data.Dataset.from_tensor_slices((x_test, y_test))
     return train_data, eval_data
 
-```
 
-<div class="k-default-codeblock">
-```
-Using JAX backend.
-
-```
-</div>
----
+"""
 ## Single-host, multi-device synchronous training
 
 In this setup, you have one machine with several GPUs or TPUs on it (typically 2 to 16).
@@ -162,9 +151,8 @@ would use the `jax.sharding` features. Here's how it works:
   to split the batch across devices before invoking the train step.
 
 Here's the flow, where each step is split into its own utility function:
+"""
 
-
-```python
 # Config
 num_epochs = 2
 batch_size = 64
@@ -269,38 +257,7 @@ for variable, value in zip(model.trainable_variables, trainable_variables):
     variable.assign(value)
 for variable, value in zip(model.non_trainable_variables, non_trainable_variables):
     variable.assign(value)
-```
 
-<div class="k-default-codeblock">
-```
-x_train shape: (60000, 28, 28, 1)
-60000 train samples
-10000 test samples
-Running on 2 devices: [gpu(id=0), gpu(id=1)]
-Data sharding
-
-```
-</div>
-<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">┌──────────────────────────────────────────────────────────────────────────────┐
-│                                                                              │
-│                                    GPU <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">0</span>                                     │
-│                                                                              │
-│                                                                              │
-├──────────────────────────────────────────────────────────────────────────────┤
-│                                                                              │
-│                                    GPU <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">1</span>                                     │
-│                                                                              │
-│                                                                              │
-└──────────────────────────────────────────────────────────────────────────────┘
-</pre>
-
-
-
-<div class="k-default-codeblock">
-```
-Epoch 0 loss: 0.42853674
-Epoch 1 loss: 0.40374395
-
-```
-</div>
+"""
 That's it!
+"""

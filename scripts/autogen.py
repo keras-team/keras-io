@@ -405,12 +405,7 @@ class KerasIO:
             / "getting_started"
             / "intro_to_keras_for_engineers.md",
         )
-        shutil.copyfile(
-            Path(self.templates_dir) / "guides" / "intro_to_keras_for_researchers.md",
-            Path(self.templates_dir)
-            / "getting_started"
-            / "intro_to_keras_for_researchers.md",
-        )
+
         # Move Keras Core guides from `guides/keras_core/` to keras_core/guides/
         shutil.move(
             Path(self.templates_dir) / "guides" / "keras_core",

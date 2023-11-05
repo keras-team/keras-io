@@ -2,14 +2,12 @@
 Title: Save, serialize, and export models
 Authors: Neel Kovelamudi, Francois Chollet
 Date created: 2023/06/14
-Last modified: 2023/06/14
+Last modified: 2023/06/30
 Description: Complete guide to saving, serializing, and exporting models.
 Accelerator: None
 """
 
 """
-**Note: this guide assumes Keras >= 2.13**
-
 ## Introduction
 
 A Keras model consists of multiple components:
@@ -59,8 +57,8 @@ Now, let's look at the details.
 """
 
 import numpy as np
-import tensorflow as tf
 import keras
+from keras import ops
 
 """
 ## Saving
@@ -78,19 +76,8 @@ where you left)
 You can save a model with `model.save()` or `keras.models.save_model()` (which is equivalent).
 You can load it back with `keras.models.load_model()`.
 
-The recommended format is the "Keras v3" format, which uses the `.keras` extension.
-There are, however, two legacy formats that are available:
-the **TensorFlow SavedModel format** and the older Keras **H5 format**.
-
-You can switch to the SavedModel format by:
-
-- Passing `save_format='tf'` to `save()`
-- Passing a filename without an extension
-
-You can switch to the H5 format by:
-
-- Passing `save_format='h5'` to `save()`
-- Passing a filename that ends in `.h5`
+The only supported format in Keras 3 is the "Keras v3" format,
+which uses the `.keras` extension.
 
 **Example:**
 """
@@ -133,8 +120,8 @@ When saving a model that includes custom objects, such as a subclassed Layer,
 you **must** define a `get_config()` method on the object class.
 If the arguments passed to the constructor (`__init__()` method) of the custom object
 aren't Python objects (anything other than base types like ints, strings,
-etc.), then you **must** serialize these arguments in `get_config()` method and
-also explicitly deserialize these arguments in the `from_config()` class method.
+etc.), then you **must** also explicitly deserialize these arguments in the `from_config()`
+class method.
 
 Like this:
 
@@ -142,7 +129,7 @@ Like this:
 class CustomLayer(keras.layers.Layer):
     def __init__(self, sublayer, **kwargs):
         super().__init__(**kwargs)
-        self.sublayer = sublayer
+        self.sublayer = layer
 
     def call(self, x):
         return self.sublayer(x)
@@ -310,7 +297,7 @@ The following serialization APIs are available:
 - `keras.models.clone_model(model)`: make a (randomly initialized) copy of a model.
 - `get_config()` and `cls.from_config()`: retrieve the configuration of a layer or model, and recreate
 a model instance from its config, respectively.
-- `keras.models.to_json()` and `keras.models.model_from_json()`: similar, but as JSON strings.
+- `keras.models.model_to_json()` and `keras.models.model_from_json()`: similar, but as JSON strings.
 - `keras.saving.serialize_keras_object()`: retrieve the configuration any arbitrary Keras object.
 - `keras.saving.deserialize_keras_object()`: recreate an object instance from its configuration.
 
@@ -482,7 +469,7 @@ class SubclassedModel(keras.Model):
 
 subclassed_model = SubclassedModel(10)
 # Call the subclassed model once to create the weights.
-subclassed_model(tf.ones((1, 784)))
+subclassed_model(np.ones((1, 784)))
 
 # Copy weights from functional_model to subclassed_model.
 subclassed_model.set_weights(functional_model.get_weights())
@@ -599,122 +586,6 @@ model = keras.Sequential(extracted_layers)
 model.summary()
 
 """
-## Exporting
-
-Keras also lets you to create a lightweight version of your model for
-inferencing that contains the model's forward pass only (the `call()` method). This TensorFlow
-SavedModel artifact can then be served via TF-Serving, and all original code of the model
-(including custom layers) are no longer necessary to reload the artifact--it is entirely
-standalone.
-
-#### APIs
-
-- `model.export()`, which exports the model to a lightweight SavedModel artifact for
-inference
-- `artifact.serve()`, which calls the exported artifact's forward pass
-
-Lower level API for customization:
-
-- `keras.export.ExportArchive`, which can be used to customize the serving endpoints.
-This is used internally by `model.export()`.
-
-
-### Simple exporting with .export()
-
-Let's go through a simple example of `model.export()` using a Functional model.
-
-**Example:**
-"""
-
-inputs = keras.Input(shape=(16,))
-x = keras.layers.Dense(8, activation="relu")(inputs)
-x = keras.layers.BatchNormalization()(x)
-outputs = keras.layers.Dense(1, activation="sigmoid")(x)
-model = keras.Model(inputs, outputs)
-
-input_data = np.random.random((8, 16))
-output_data = model(input_data)  # **NOTE**: Make sure your model is built!
-
-# Export the model as a SavedModel artifact in a filepath.
-model.export("exported_model")
-
-# Reload the SavedModel artifact
-reloaded_artifact = tf.saved_model.load("exported_model")
-
-# Use the `.serve()` endpoint to call the forward pass on the input data
-new_output_data = reloaded_artifact.serve(input_data)
-
-"""
-### Customizing export artifacts with ExportArchive
-
-The `ExportArchive` object allows you to customize exporting the model and add additional
-endpoints for serving. Here are its associated APIs:
-
-- `track()` to register the layer(s) or model(s) to be used,
-- `add_endpoint()` method to register a new serving endpoint.
-- `write_out()` method to save the artifact.
-- `add_variable_collection` method to register a set of variables to be retrieved after
-reloading.
-
-By default, `model.export("path/to/location")` does the following:
-
-```python
-export_archive = ExportArchive()
-export_archive.track(model)
-export_archive.add_endpoint(
-    name="serve",
-    fn=model.call,
-input_signature=[tf.TensorSpec(shape=(None, 3), dtype=tf.float32)],  # `input_signature`
-changes depending on model.
-)
-export_archive.write_out("path/to/location")
-```
-
-Let's look at an example customizing this for a MultiHeadAttention layer.
-
-**Example:**
-"""
-
-layer = keras.layers.MultiHeadAttention(2, 2)
-x1 = tf.random.normal((3, 2, 2))
-x2 = tf.random.normal((3, 2, 2))
-ref_output = layer(x1, x2).numpy()  # **NOTE**: Make sure layer is built!
-
-export_archive = keras.export.ExportArchive()  # Instantiate ExportArchive object
-export_archive.track(layer)  # Register the layer to be used
-export_archive.add_endpoint(  # New endpoint `call` corresponding to `model.call`
-    "call",
-    layer.call,
-    input_signature=[  # input signature corresponding to 2 inputs
-        tf.TensorSpec(
-            shape=(None, 2, 2),
-            dtype=tf.float32,
-        ),
-        tf.TensorSpec(
-            shape=(None, 2, 2),
-            dtype=tf.float32,
-        ),
-    ],
-)
-
-# Register the layer weights as a set of variables to be retrieved
-export_archive.add_variable_collection("my_vars", layer.weights)
-np.testing.assert_equal(len(export_archive.my_vars), 8)
-# weights corresponding to 2 inputs, each of which are 2*2
-
-# Save the artifact
-export_archive.write_out("exported_mha_layer")
-
-# Reload the artifact
-revived_layer = tf.saved_model.load("exported_mha_layer")
-np.testing.assert_allclose(
-    ref_output,
-    revived_layer.call(query=x1, value=x2).numpy(),
-    atol=1e-6,
-)
-np.testing.assert_equal(len(revived_layer.my_vars), 8)
-
-"""
 ### Appendix: Handling custom objects
 
 <a name="config_methods"></a>
@@ -778,7 +649,7 @@ class MyDense(keras.layers.Layer):
         )
 
     def call(self, inputs):
-        return tf.matmul(inputs, self.kernel)
+        return ops.matmul(inputs, self.kernel)
 
 
 layer = MyDense(units=16, kernel_regularizer="l1", kernel_initializer="ones")

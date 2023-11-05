@@ -73,8 +73,8 @@ This guide can be run with any backend (Tensorflow, JAX, PyTorch).
 
 ```python
 %env KERAS_BACKEND=tensorflow
-import keras_core as keras
-from keras_core import ops
+import keras
+from keras import ops
 
 import keras_cv
 import numpy as np
@@ -419,7 +419,7 @@ model.fit(train_ds, validation_data=eval_ds, epochs=EPOCHS)
 
  2124/2124 ━━━━━━━━━━━━━━━━━━━━ 558s 242ms/step - categorical_accuracy: 0.7533 - loss: 0.9360 - mean_io_u: 0.1716 - val_categorical_accuracy: 0.8292 - val_loss: 0.5328 - val_mean_io_u: 0.4042
 
-<keras_core.src.callbacks.history.History at 0x7d3000ed9e70>
+<keras.src.callbacks.history.History at 0x7d3000ed9e70>
 
 ```
 </div>

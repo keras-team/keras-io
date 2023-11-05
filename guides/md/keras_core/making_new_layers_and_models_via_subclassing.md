@@ -6,7 +6,7 @@
 **Description:** Complete guide to writing `Layer` and `Model` objects from scratch.
 
 
-<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/guides/ipynb/keras_core/making_new_layers_and_models_via_subclassing.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/guides/keras_core/making_new_layers_and_models_via_subclassing.py)
+<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/guides/ipynb/keras/making_new_layers_and_models_via_subclassing.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/guides/keras/making_new_layers_and_models_via_subclassing.py)
 
 
 
@@ -34,9 +34,9 @@ Let's dive in.
 
 ```python
 import numpy as np
-import keras_core as keras
-from keras_core import ops
-from keras_core import layers
+import keras
+from keras import ops
+from keras import layers
 ```
 
 <div class="k-default-codeblock">
@@ -431,10 +431,10 @@ model.fit(np.random.random((2, 3)), np.random.random((2, 3)))
  1/1 ━━━━━━━━━━━━━━━━━━━━  0s 118ms/step - loss: 0.1854
  1/1 ━━━━━━━━━━━━━━━━━━━━  0s 18ms/step - loss: 0.0981
 
-/Library/Frameworks/Python.framework/Versions/3.10/lib/python3.10/site-packages/keras_core/src/backend/tensorflow/trainer.py:67: UserWarning: The model does not have any trainable weights.
+/Library/Frameworks/Python.framework/Versions/3.10/lib/python3.10/site-packages/keras/src/backend/tensorflow/trainer.py:67: UserWarning: The model does not have any trainable weights.
   warnings.warn("The model does not have any trainable weights.")
 
-<keras_core.src.callbacks.history.History at 0x28a4262f0>
+<keras.src.callbacks.history.History at 0x28a4262f0>
 
 ```
 </div>
@@ -442,7 +442,7 @@ model.fit(np.random.random((2, 3)), np.random.random((2, 3)))
 ## You can optionally enable serialization on your layers
 
 If you need your custom layers to be serializable as part of a
-[Functional model](/keras_core/guides/functional_api/),
+[Functional model](/keras/guides/functional_api/),
 you can optionally implement a `get_config()` method:
 
 
@@ -537,7 +537,7 @@ def from_config(cls, config):
 ```
 
 To learn more about serialization and saving, see the complete
-[guide to saving and serializing models](/keras_core/guides/serialization_and_saving/).
+[guide to saving and serializing models](/keras/guides/serialization_and_saving/).
 
 ---
 ## Privileged `training` argument in the `call()` method
@@ -759,7 +759,7 @@ Epoch 1/2
 Epoch 2/2
  938/938 ━━━━━━━━━━━━━━━━━━━━  1s 1ms/step - loss: 0.0676
 
-<keras_core.src.callbacks.history.History at 0x28a4dfa90>
+<keras.src.callbacks.history.History at 0x28a4dfa90>
 
 ```
 </div>

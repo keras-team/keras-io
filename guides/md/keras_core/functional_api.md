@@ -6,7 +6,7 @@
 **Description:** Complete guide to the functional API.
 
 
-<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/guides/ipynb/keras_core/functional_api.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/guides/keras_core/functional_api.py)
+<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/guides/ipynb/keras/functional_api.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/guides/keras/functional_api.py)
 
 
 
@@ -16,9 +16,9 @@
 
 ```python
 import numpy as np
-import keras_core as keras
-from keras_core import layers
-from keras_core import ops
+import keras
+from keras import layers
+from keras import ops
 ```
 
 <div class="k-default-codeblock">
@@ -234,9 +234,9 @@ and a built-in evaluation loop (the `evaluate()` method). Note
 that you can easily customize these loops to implement your own training routines.
 See also the guides on customizing what happens in `fit()`:
 
-- [Writing a custom train step with TensorFlow](/keras_core/guides/custom_train_step_in_tensorflow/)
-- [Writing a custom train step with JAX](/keras_core/guides/custom_train_step_in_jax/)
-- [Writing a custom train step with PyTorch](/keras_core/guides/custom_train_step_in_torch/)
+- [Writing a custom train step with TensorFlow](/keras/guides/custom_train_step_in_tensorflow/)
+- [Writing a custom train step with JAX](/keras/guides/custom_train_step_in_jax/)
+- [Writing a custom train step with PyTorch](/keras/guides/custom_train_step_in_torch/)
 
 Here, load the MNIST image data, reshape it into vectors,
 fit the model on the data (while monitoring performance on a validation split),
@@ -275,7 +275,7 @@ Test accuracy: 0.9575999975204468
 ```
 </div>
 For further reading, see the
-[training and evaluation](/keras_core/guides/training_with_built_in_methods/) guide.
+[training and evaluation](/keras/guides/training_with_built_in_methods/) guide.
 
 ---
 ## Save and serialize
@@ -301,7 +301,7 @@ model = keras.models.load_model("my_model.keras")
 ```
 
 For details, read the model [serialization & saving](
-    /keras_core/guides/serialization_and_saving/) guide.
+    /keras/guides/serialization_and_saving/) guide.
 
 ---
 ## Use the same graph of layers to define multiple models
@@ -797,7 +797,7 @@ Epoch 1/2
 Epoch 2/2
  40/40 ━━━━━━━━━━━━━━━━━━━━  1s 12ms/step - loss: 1.2486
 
-<keras_core.src.callbacks.history.History at 0x177be9a20>
+<keras.src.callbacks.history.History at 0x177be9a20>
 
 ```
 </div>
@@ -807,7 +807,7 @@ or a tuple of dictionaries like
 `({'title': title_data, 'body': body_data, 'tags': tags_data}, {'priority': priority_targets, 'department': dept_targets})`.
 
 For more detailed explanation, refer to the
-[training and evaluation](/keras_core/guides/training_with_built_in_methods/) guide.
+[training and evaluation](/keras/guides/training_with_built_in_methods/) guide.
 
 ### A toy ResNet model
 
@@ -959,7 +959,7 @@ model.fit(
 ```
  13/13 ━━━━━━━━━━━━━━━━━━━━  3s 131ms/step - acc: 0.0948 - loss: 2.3083 - val_acc: 0.1100 - val_loss: 2.3121
 
-<keras_core.src.callbacks.history.History at 0x1768815a0>
+<keras.src.callbacks.history.History at 0x1768815a0>
 
 ```
 </div>
@@ -1055,7 +1055,7 @@ your own layers. All layers subclass the `Layer` class and implement:
 convention since you can create weights in `__init__`, as well).
 
 To learn more about creating layers from scratch, read
-[custom layers and models](/keras_core/guides/making_new_layers_and_models_via_subclassing) guide.
+[custom layers and models](/keras/guides/making_new_layers_and_models_via_subclassing) guide.
 
 The following is a basic implementation of `keras.layers.Dense`:
 
@@ -1219,7 +1219,7 @@ Because a functional model is a data structure rather than a piece of code,
 it is safely serializable and can be saved as a single file
 that allows you to recreate the exact same model
 without having access to any of the original code.
-See the [serialization & saving guide](/keras_core/guides/serialization_and_saving/).
+See the [serialization & saving guide](/keras/guides/serialization_and_saving/).
 
 To serialize a subclassed model, it is necessary for the implementer
 to specify a `get_config()`

@@ -1,16 +1,12 @@
-# Multi-GPU distributed training with TensorFlow
-
-**Author:** [fchollet](https://twitter.com/fchollet)<br>
-**Date created:** 2020/04/28<br>
-**Last modified:** 2023/06/29<br>
-**Description:** Guide to multi-GPU training for Keras models with TensorFlow.
-
-
-<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/guides/ipynb/keras_core/distributed_training_with_tensorflow.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/guides/keras_core/distributed_training_with_tensorflow.py)
-
-
-
----
+"""
+Title: Multi-GPU distributed training with TensorFlow
+Author: [fchollet](https://twitter.com/fchollet)
+Date created: 2020/04/28
+Last modified: 2023/06/29
+Description: Guide to multi-GPU training for Keras models with TensorFlow.
+Accelerator: GPU
+"""
+"""
 ## Introduction
 
 There are generally two ways to distribute computation across multiple devices:
@@ -35,27 +31,20 @@ models on multiple GPUs, with minimal changes to your code,
 on multiple GPUs (typically 2 to 16) installed on a single machine (single host,
 multi-device training). This is the most common setup for researchers and small-scale
 industry workflows.
+"""
 
----
+"""
 ## Setup
+"""
 
-
-```python
 import os
 
 os.environ["KERAS_BACKEND"] = "tensorflow"
 
 import tensorflow as tf
-import keras_core as keras
-```
+import keras
 
-<div class="k-default-codeblock">
-```
-Using TensorFlow backend
-
-```
-</div>
----
+"""
 ## Single-host, multi-device synchronous training
 
 In this setup, you have one machine with several GPUs on it (typically 2 to 16). Each
@@ -120,9 +109,8 @@ with strategy.scope():
 ```
 
 Here's a simple end-to-end runnable example:
+"""
 
-
-```python
 
 def get_compiled_model():
     # Make a simple 2-layer densely-connected neural network.
@@ -180,21 +168,8 @@ with strategy.scope():
 
     # Test the model on all available devices.
     model.evaluate(test_dataset)
-```
 
-<div class="k-default-codeblock">
-```
-INFO:tensorflow:Using MirroredStrategy with devices ('/job:localhost/replica:0/task:0/device:GPU:0',)
-Number of devices: 1
-Epoch 1/2
- 1563/1563 ━━━━━━━━━━━━━━━━━━━━ 19s 11ms/step - loss: 0.3791 - sparse_categorical_accuracy: 0.8894 - val_loss: 0.1354 - val_sparse_categorical_accuracy: 0.9575
-Epoch 2/2
- 1563/1563 ━━━━━━━━━━━━━━━━━━━━ 18s 11ms/step - loss: 0.1065 - sparse_categorical_accuracy: 0.9674 - val_loss: 0.0958 - val_sparse_categorical_accuracy: 0.9715
- 313/313 ━━━━━━━━━━━━━━━━━━━━ 2s 5ms/step - loss: 0.1034 - sparse_categorical_accuracy: 0.9696
-
-```
-</div>
----
+"""
 ## Using callbacks to ensure fault tolerance
 
 When using distributed training, you should always make sure you have a strategy to
@@ -204,9 +179,8 @@ at regular intervals (e.g. every 100 batches or every epoch). You can then resta
 training from your saved model.
 
 Here's a simple example:
+"""
 
-
-```python
 # Prepare a directory to store all the checkpoints.
 checkpoint_dir = "./ckpt"
 if not os.path.exists(checkpoint_dir):
@@ -255,20 +229,8 @@ run_training(epochs=1)
 
 # Calling the same function again will resume from where we left off
 run_training(epochs=1)
-```
 
-<div class="k-default-codeblock">
-```
-INFO:tensorflow:Using MirroredStrategy with devices ('/job:localhost/replica:0/task:0/device:GPU:0',)
-Creating a new model
-1563/1563 - 17s - 11ms/step - loss: 0.2288 - sparse_categorical_accuracy: 0.9314 - val_loss: 0.1359 - val_sparse_categorical_accuracy: 0.9594
-INFO:tensorflow:Using MirroredStrategy with devices ('/job:localhost/replica:0/task:0/device:GPU:0',)
-Restoring from ./ckpt/ckpt-1.keras
-1563/1563 - 17s - 11ms/step - loss: 0.0955 - sparse_categorical_accuracy: 0.9706 - val_loss: 0.0879 - val_sparse_categorical_accuracy: 0.9739
-
-```
-</div>
----
+"""
 ## `tf.data` performance tips
 
 When doing distributed training, the efficiency with which you load data can often become
@@ -301,5 +263,8 @@ your data pipeline will run asynchronously from your model,
 with new samples being preprocessed and stored in a buffer while the current batch
 samples are used to train the model. The next batch will be prefetched in GPU memory by
 the time the current batch is over.
+"""
 
+"""
 That's it!
+"""

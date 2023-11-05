@@ -6,7 +6,7 @@
 **Description:** Overriding the training step of the Model class with TensorFlow.
 
 
-<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/guides/ipynb/keras_core/custom_train_step_in_tensorflow.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/guides/keras_core/custom_train_step_in_tensorflow.py)
+<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/guides/ipynb/custom_train_step_in_tensorflow.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/guides/custom_train_step_in_tensorflow.py)
 
 
 
@@ -51,17 +51,11 @@ import os
 os.environ["KERAS_BACKEND"] = "tensorflow"
 
 import tensorflow as tf
-import keras_core as keras
-from keras_core import layers
+import keras
+from keras import layers
 import numpy as np
 ```
 
-<div class="k-default-codeblock">
-```
-Using TensorFlow backend
-
-```
-</div>
 ---
 ## A first simple example
 
@@ -141,13 +135,16 @@ model.fit(x, y, epochs=3)
 <div class="k-default-codeblock">
 ```
 Epoch 1/3
- 32/32 ━━━━━━━━━━━━━━━━━━━━  1s 2ms/step - mean_absolute_error: 0.9649 - loss: 1.1488           
+ 32/32 ━━━━━━━━━━━━━━━━━━━━ 0s 2ms/step - mae: 0.5089 - loss: 0.3778   
 Epoch 2/3
- 32/32 ━━━━━━━━━━━━━━━━━━━━  0s 347us/step - mean_absolute_error: 0.5538 - loss: 0.4467       
+ 32/32 ━━━━━━━━━━━━━━━━━━━━ 0s 318us/step - mae: 0.3986 - loss: 0.2466
 Epoch 3/3
- 32/32 ━━━━━━━━━━━━━━━━━━━━  0s 350us/step - mean_absolute_error: 0.4101 - loss: 0.2537       
+ 32/32 ━━━━━━━━━━━━━━━━━━━━ 0s 372us/step - mae: 0.3848 - loss: 0.2319
 
-<keras_core.src.callbacks.history.History at 0x2ba5e24d0>
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1699222602.443035       1 device_compiler.h:187] Compiled cluster using XLA!  This line is logged at most once for the lifetime of the process.
+
+<keras.src.callbacks.history.History at 0x2a5599f00>
 
 ```
 </div>
@@ -229,17 +226,17 @@ model.fit(x, y, epochs=5)
 <div class="k-default-codeblock">
 ```
 Epoch 1/5
- 32/32 ━━━━━━━━━━━━━━━━━━━━  0s 2ms/step - loss: 1.4374 - mae: 1.0975          
+ 32/32 ━━━━━━━━━━━━━━━━━━━━ 0s 2ms/step - loss: 4.0292 - mae: 1.9270
 Epoch 2/5
- 32/32 ━━━━━━━━━━━━━━━━━━━━  0s 311us/step - loss: 0.6105 - mae: 0.6605       
+ 32/32 ━━━━━━━━━━━━━━━━━━━━ 0s 385us/step - loss: 2.2155 - mae: 1.3920
 Epoch 3/5
- 32/32 ━━━━━━━━━━━━━━━━━━━━  0s 318us/step - loss: 0.3020 - mae: 0.4417       
+ 32/32 ━━━━━━━━━━━━━━━━━━━━ 0s 336us/step - loss: 1.1863 - mae: 0.9700
 Epoch 4/5
- 32/32 ━━━━━━━━━━━━━━━━━━━━  0s 319us/step - loss: 0.2304 - mae: 0.3919       
+ 32/32 ━━━━━━━━━━━━━━━━━━━━ 0s 373us/step - loss: 0.6510 - mae: 0.6811
 Epoch 5/5
- 32/32 ━━━━━━━━━━━━━━━━━━━━  0s 318us/step - loss: 0.2036 - mae: 0.3687       
+ 32/32 ━━━━━━━━━━━━━━━━━━━━ 0s 330us/step - loss: 0.4059 - mae: 0.5094
 
-<keras_core.src.callbacks.history.History at 0x2be6981c0>
+<keras.src.callbacks.history.History at 0x2a7a02860>
 
 ```
 </div>
@@ -314,13 +311,13 @@ model.fit(x, y, sample_weight=sw, epochs=3)
 <div class="k-default-codeblock">
 ```
 Epoch 1/3
- 32/32 ━━━━━━━━━━━━━━━━━━━━  0s 2ms/step - mean_absolute_error: 1.3107 - loss: 0.9825
+ 32/32 ━━━━━━━━━━━━━━━━━━━━ 0s 2ms/step - mae: 0.4228 - loss: 0.1420
 Epoch 2/3
- 32/32 ━━━━━━━━━━━━━━━━━━━━  0s 339us/step - mean_absolute_error: 0.8441 - loss: 0.4895       
+ 32/32 ━━━━━━━━━━━━━━━━━━━━ 0s 449us/step - mae: 0.3751 - loss: 0.1058
 Epoch 3/3
- 32/32 ━━━━━━━━━━━━━━━━━━━━  0s 334us/step - mean_absolute_error: 0.5615 - loss: 0.2406       
+ 32/32 ━━━━━━━━━━━━━━━━━━━━ 0s 337us/step - mae: 0.3478 - loss: 0.0951
 
-<keras_core.src.callbacks.history.History at 0x2beca8a60>
+<keras.src.callbacks.history.History at 0x2a7491780>
 
 ```
 </div>
@@ -366,9 +363,9 @@ model.evaluate(x, y)
 
 <div class="k-default-codeblock">
 ```
- 32/32 ━━━━━━━━━━━━━━━━━━━━  0s 899us/step - mean_absolute_error: 1.3278 - loss: 1.9833       
+ 32/32 ━━━━━━━━━━━━━━━━━━━━ 0s 927us/step - mae: 0.8518 - loss: 0.9166
 
-[1.9400298595428467, 1.3052281141281128]
+[0.912325382232666, 0.8567370176315308]
 
 ```
 </div>
@@ -530,9 +527,9 @@ gan.fit(dataset.take(100), epochs=1)
 
 <div class="k-default-codeblock">
 ```
- 100/100 ━━━━━━━━━━━━━━━━━━━━  52s 508ms/step - d_loss: 0.5646 - g_loss: 0.7941
+ 100/100 ━━━━━━━━━━━━━━━━━━━━ 51s 500ms/step - d_loss: 0.5645 - g_loss: 0.7434
 
-<keras_core.src.callbacks.history.History at 0x2be90f580>
+<keras.src.callbacks.history.History at 0x14a4f1b10>
 
 ```
 </div>

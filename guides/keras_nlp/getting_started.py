@@ -18,7 +18,7 @@ This library is an extension of the core Keras API; all high-level modules are
 [`Layers`](/api/layers/) or [`Models`](/api/models/). If you are familiar with Keras,
 congratulations! You already understand most of KerasNLP.
 
-KerasNLP uses the [Keras Core](https://keras.io/keras_core/) library to work
+KerasNLP uses the [Keras 3](https://keras.io/keras/) library to work
 with any of TensorFlow, Pytorch and Jax. In the guide below, we will use the
 `jax` backend for training our models, and [tf.data](https://www.tensorflow.org/guide/data)
 for efficiently running our input preprocessing. But feel free to mix things up!
@@ -50,7 +50,7 @@ import os
 os.environ["KERAS_BACKEND"] = "jax"  # or "tensorflow" or "torch"
 
 import keras_nlp
-import keras_core as keras
+import keras
 
 """
 ## API quickstart

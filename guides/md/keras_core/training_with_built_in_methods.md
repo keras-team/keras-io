@@ -6,7 +6,7 @@
 **Description:** Complete guide to training & evaluation with `fit()` and `evaluate()`.
 
 
-<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/guides/ipynb/keras_core/training_with_built_in_methods.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/guides/keras_core/training_with_built_in_methods.py)
+<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/guides/ipynb/keras/training_with_built_in_methods.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/guides/keras/training_with_built_in_methods.py)
 
 
 
@@ -21,9 +21,9 @@ import tensorflow as tf
 
 import os
 import numpy as np
-import keras_core as keras
-from keras_core import layers
-from keras_core import ops
+import keras
+from keras import layers
+from keras import ops
 ```
 
 <div class="k-default-codeblock">
@@ -42,16 +42,16 @@ when using built-in APIs for training & validation (such as `Model.fit()`,
 If you are interested in leveraging `fit()` while specifying your
 own training step function, see the guides on customizing what happens in `fit()`:
 
-- [Writing a custom train step with TensorFlow](/keras_core/guides/custom_train_step_in_tensorflow/)
-- [Writing a custom train step with JAX](/keras_core/guides/custom_train_step_in_jax/)
-- [Writing a custom train step with PyTorch](/keras_core/guides/custom_train_step_in_torch/)
+- [Writing a custom train step with TensorFlow](/keras/guides/custom_train_step_in_tensorflow/)
+- [Writing a custom train step with JAX](/keras/guides/custom_train_step_in_jax/)
+- [Writing a custom train step with PyTorch](/keras/guides/custom_train_step_in_torch/)
 
 If you are interested in writing your own training & evaluation loops from
 scratch, see the guides on writing training loops:
 
-- [Writing a training loop with TensorFlow](/keras_core/guides/writing_a_custom_training_loop_in_tensorflow/)
-- [Writing a training loop with JAX](/keras_core/guides/writing_a_custom_training_loop_in_jax/)
-- [Writing a training loop with PyTorch](/keras_core/guides/writing_a_custom_training_loop_in_torch/)
+- [Writing a training loop with TensorFlow](/keras/guides/writing_a_custom_training_loop_in_tensorflow/)
+- [Writing a training loop with JAX](/keras/guides/writing_a_custom_training_loop_in_jax/)
+- [Writing a training loop with PyTorch](/keras/guides/writing_a_custom_training_loop_in_torch/)
 
 In general, whether you are using built-in loops or writing your own, model training &
 evaluation works strictly in the same way across every kind of Keras model --
@@ -64,7 +64,7 @@ scratch via model subclassing.
 When passing data to the built-in training loops of a model, you should either use:
 
 - NumPy arrays (if your data is small and fits in memory)
-- Subclasses of `keras_core.utils.PyDataset`
+- Subclasses of `keras.utils.PyDataset`
 - `tf.data.Dataset` objects
 - PyTorch `DataLoader` instances
 
@@ -317,7 +317,7 @@ model.fit(x_train, y_train_one_hot, batch_size=64, epochs=1)
 ```
  782/782 ━━━━━━━━━━━━━━━━━━━━ 1s 685us/step - loss: 0.0278
 
-<keras_core.src.callbacks.history.History at 0x29c59c8b0>
+<keras.src.callbacks.history.History at 0x29c59c8b0>
 
 ```
 </div>
@@ -362,7 +362,7 @@ model.fit(x_train, y_train_one_hot, batch_size=64, epochs=1)
 ```
  782/782 ━━━━━━━━━━━━━━━━━━━━ 1s 674us/step - loss: 0.0490
 
-<keras_core.src.callbacks.history.History at 0x29fb6eb30>
+<keras.src.callbacks.history.History at 0x29fb6eb30>
 
 ```
 </div>
@@ -430,7 +430,7 @@ Epoch 2/3
 Epoch 3/3
  782/782 ━━━━━━━━━━━━━━━━━━━━ 0s 573us/step - categorical_true_positives: 182916.9375 - loss: 0.1210
 
-<keras_core.src.callbacks.history.History at 0x29c59f0a0>
+<keras.src.callbacks.history.History at 0x29c59f0a0>
 
 ```
 </div>
@@ -480,7 +480,7 @@ model.fit(x_train, y_train, batch_size=64, epochs=1)
 ```
  782/782 ━━━━━━━━━━━━━━━━━━━━ 1s 613us/step - loss: 3.3124
 
-<keras_core.src.callbacks.history.History at 0x2e783ed70>
+<keras.src.callbacks.history.History at 0x2e783ed70>
 
 ```
 </div>
@@ -533,7 +533,7 @@ model.fit(data)
 ```
  1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 185ms/step - loss: 0.6956
 
-<keras_core.src.callbacks.history.History at 0x301012050>
+<keras.src.callbacks.history.History at 0x301012050>
 
 ```
 </div>
@@ -568,7 +568,7 @@ model.fit(x_train, y_train, batch_size=64, validation_split=0.2, epochs=1)
 ```
  625/625 ━━━━━━━━━━━━━━━━━━━━ 1s 815us/step - loss: 0.6194 - sparse_categorical_accuracy: 0.8338 - val_loss: 0.2295 - val_sparse_categorical_accuracy: 0.9288
 
-<keras_core.src.callbacks.history.History at 0x2db3861a0>
+<keras.src.callbacks.history.History at 0x2db3861a0>
 
 ```
 </div>
@@ -659,7 +659,7 @@ Epoch 2/3
 Epoch 3/3
  100/100 ━━━━━━━━━━━━━━━━━━━━ 0s 534us/step - loss: 0.3433 - sparse_categorical_accuracy: 0.8983
 
-<keras_core.src.callbacks.history.History at 0x2db6db7f0>
+<keras.src.callbacks.history.History at 0x2db6db7f0>
 
 ```
 </div>
@@ -684,7 +684,7 @@ model.fit(train_dataset, epochs=1, validation_data=val_dataset)
 ```
  782/782 ━━━━━━━━━━━━━━━━━━━━ 1s 833us/step - loss: 0.5701 - sparse_categorical_accuracy: 0.8368 - val_loss: 0.1895 - val_sparse_categorical_accuracy: 0.9464
 
-<keras_core.src.callbacks.history.History at 0x2e4246620>
+<keras.src.callbacks.history.History at 0x2e4246620>
 
 ```
 </div>
@@ -722,7 +722,7 @@ model.fit(
 ```
  782/782 ━━━━━━━━━━━━━━━━━━━━ 1s 986us/step - loss: 0.5521 - sparse_categorical_accuracy: 0.8478 - val_loss: 0.1775 - val_sparse_categorical_accuracy: 0.9492
 
-<keras_core.src.callbacks.history.History at 0x2e4246290>
+<keras.src.callbacks.history.History at 0x2e4246290>
 
 ```
 </div>
@@ -791,7 +791,7 @@ model.fit(train_py_dataset, batch_size=64, validation_data=val_py_dataset, epoch
 ```
  1563/1563 ━━━━━━━━━━━━━━━━━━━━ 1s 674us/step - loss: 0.4868 - sparse_categorical_accuracy: 0.8615 - val_loss: 0.1518 - val_sparse_categorical_accuracy: 0.9565
 
-<keras_core.src.callbacks.history.History at 0x3014252a0>
+<keras.src.callbacks.history.History at 0x3014252a0>
 
 ```
 </div>
@@ -848,7 +848,7 @@ model.fit(train_py_dataset, batch_size=64, validation_data=val_py_dataset, epoch
 ```
  1563/1563 ━━━━━━━━━━━━━━━━━━━━ 2s 835us/step - loss: 0.5202 - sparse_categorical_accuracy: 0.8530 - val_loss: 0.1622 - val_sparse_categorical_accuracy: 0.9550
 
-<keras_core.src.callbacks.history.History at 0x301eec1c0>
+<keras.src.callbacks.history.History at 0x301eec1c0>
 
 ```
 </div>
@@ -966,7 +966,7 @@ model.fit(x_train, y_train, class_weight=class_weight, batch_size=64, epochs=1)
 Fit with class weight
  782/782 ━━━━━━━━━━━━━━━━━━━━ 1s 693us/step - loss: 0.6355 - sparse_categorical_accuracy: 0.8401
 
-<keras_core.src.callbacks.history.History at 0x3069d8790>
+<keras.src.callbacks.history.History at 0x3069d8790>
 
 ```
 </div>
@@ -1004,7 +1004,7 @@ model.fit(x_train, y_train, sample_weight=sample_weight, batch_size=64, epochs=1
 Fit with sample weight
  782/782 ━━━━━━━━━━━━━━━━━━━━ 1s 644us/step - loss: 0.6616 - sparse_categorical_accuracy: 0.8258
 
-<keras_core.src.callbacks.history.History at 0x307024af0>
+<keras.src.callbacks.history.History at 0x307024af0>
 
 ```
 </div>
@@ -1030,7 +1030,7 @@ model.fit(train_dataset, epochs=1)
 ```
  782/782 ━━━━━━━━━━━━━━━━━━━━ 1s 638us/step - loss: 0.6212 - sparse_categorical_accuracy: 0.8459
 
-<keras_core.src.callbacks.history.History at 0x30725f1f0>
+<keras.src.callbacks.history.History at 0x30725f1f0>
 
 ```
 </div>
@@ -1224,7 +1224,7 @@ model.fit(
  4/4 ━━━━━━━━━━━━━━━━━━━━ 1s 43ms/step - loss: 25.9837
  4/4 ━━━━━━━━━━━━━━━━━━━━ 0s 43ms/step - loss: 24.7838
 
-<keras_core.src.callbacks.history.History at 0x2db6bf100>
+<keras.src.callbacks.history.History at 0x2db6bf100>
 
 ```
 </div>
@@ -1248,7 +1248,7 @@ model.fit(train_dataset, epochs=1)
 ```
  2/2 ━━━━━━━━━━━━━━━━━━━━ 0s 146ms/step - loss: 24.8490
 
-<keras_core.src.callbacks.history.History at 0x2e44eac80>
+<keras.src.callbacks.history.History at 0x2e44eac80>
 
 ```
 </div>
@@ -1316,7 +1316,7 @@ Epoch 8/20
  625/625 ━━━━━━━━━━━━━━━━━━━━ 0s 702us/step - loss: 0.0451 - sparse_categorical_accuracy: 0.9862 - val_loss: 0.1328 - val_sparse_categorical_accuracy: 0.9664
 Epoch 8: early stopping
 
-<keras_core.src.callbacks.history.History at 0x30a3f77c0>
+<keras.src.callbacks.history.History at 0x30a3f77c0>
 
 ```
 </div>
@@ -1342,7 +1342,7 @@ You can create a custom callback by extending the base class
 class property `self.model`.
 
 Make sure to read the
-[complete guide to writing custom callbacks](/keras_core/guides/writing_your_own_callbacks/).
+[complete guide to writing custom callbacks](/keras/guides/writing_your_own_callbacks/).
 
 Here's a simple example saving a list of per-batch loss values during training:
 
@@ -1404,7 +1404,7 @@ Epoch 2/2
 Epoch 2: val_loss improved from 0.23516 to 0.18252, saving model to mymodel_2.keras
  625/625 ━━━━━━━━━━━━━━━━━━━━ 0s 668us/step - loss: 0.1882 - sparse_categorical_accuracy: 0.9444 - val_loss: 0.1825 - val_sparse_categorical_accuracy: 0.9435
 
-<keras_core.src.callbacks.history.History at 0x29f81a0b0>
+<keras.src.callbacks.history.History at 0x29f81a0b0>
 
 ```
 </div>
@@ -1448,14 +1448,14 @@ model.fit(x_train, y_train, epochs=1, callbacks=callbacks)
 Creating a new model
  1563/1563 ━━━━━━━━━━━━━━━━━━━━ 1s 556us/step - loss: 0.5009 - sparse_categorical_accuracy: 0.8567
 
-<keras_core.src.callbacks.history.History at 0x30e6948b0>
+<keras.src.callbacks.history.History at 0x30e6948b0>
 
 ```
 </div>
 You call also write your own callback for saving and restoring models.
 
 For a complete guide on serialization and saving, see the
-[guide to saving and serializing Models](/keras_core/guides/serialization_and_saving/).
+[guide to saving and serializing Models](/keras/guides/serialization_and_saving/).
 
 ---
 ## Using learning rate schedules
@@ -1537,7 +1537,7 @@ keras.callbacks.TensorBoard(
 
 <div class="k-default-codeblock">
 ```
-<keras_core.src.callbacks.tensorboard.TensorBoard at 0x30e647b50>
+<keras.src.callbacks.tensorboard.TensorBoard at 0x30e647b50>
 
 ```
 </div>

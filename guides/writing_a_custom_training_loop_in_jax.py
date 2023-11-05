@@ -1,20 +1,15 @@
-# Writing a training loop from scratch in JAX
-
-**Author:** [fchollet](https://twitter.com/fchollet)<br>
-**Date created:** 2023/06/25<br>
-**Last modified:** 2023/06/25<br>
-**Description:** Writing low-level training & evaluation loops in JAX.
-
-
-<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/guides/ipynb/keras_core/writing_a_custom_training_loop_in_jax.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/guides/keras_core/writing_a_custom_training_loop_in_jax.py)
-
-
-
----
+"""
+Title: Writing a training loop from scratch in JAX
+Author: [fchollet](https://twitter.com/fchollet)
+Date created: 2023/06/25
+Last modified: 2023/06/25
+Description: Writing low-level training & evaluation loops in JAX.
+Accelerator: None
+"""
+"""
 ## Setup
+"""
 
-
-```python
 import os
 
 # This guide can only be run with the jax backend.
@@ -24,22 +19,15 @@ import jax
 
 # We import TF so we can use tf.data.
 import tensorflow as tf
-import keras_core as keras
+import keras
 import numpy as np
-```
 
-<div class="k-default-codeblock">
-```
-Using JAX backend.
-
-```
-</div>
----
+"""
 ## Introduction
 
 Keras provides default training and evaluation loops, `fit()` and `evaluate()`.
 Their usage is covered in the guide
-[Training & evaluation with the built-in methods](/keras_core/guides/training_with_built_in_methods/).
+[Training & evaluation with the built-in methods](/keras/guides/training_with_built_in_methods/).
 
 If you want to customize the learning algorithm of your model while still leveraging
 the convenience of `fit()`
@@ -49,14 +37,15 @@ is called repeatedly during `fit()`.
 
 Now, if you want very low-level control over training & evaluation, you should write
 your own training & evaluation loops from scratch. This is what this guide is about.
+"""
 
----
+"""
 ## A first end-to-end example
 
 To write a custom training loop, we need the following ingredients:
 
 - A model to train, of course.
-- An optimizer. You could either use an optimizer from `keras_core.optimizers`, or
+- An optimizer. You could either use an optimizer from `keras.optimizers`, or
 one from the `optax` package.
 - A loss function.
 - A dataset. The standard in the JAX ecosystem is to load data via `tf.data`,
@@ -65,9 +54,8 @@ so that's what we'll use.
 Let's line them up.
 
 First, let's get the model and the MNIST dataset:
+"""
 
-
-```python
 
 def get_model():
     inputs = keras.Input(shape=(784,), name="digits")
@@ -101,20 +89,19 @@ train_dataset = train_dataset.shuffle(buffer_size=1024).batch(batch_size)
 # Prepare the validation dataset.
 val_dataset = tf.data.Dataset.from_tensor_slices((x_val, y_val))
 val_dataset = val_dataset.batch(batch_size)
-```
 
+"""
 Next, here's the loss function and the optimizer.
 We'll use a Keras optimizer in this case.
+"""
 
-
-```python
 # Instantiate a loss function.
 loss_fn = keras.losses.CategoricalCrossentropy(from_logits=True)
 
 # Instantiate an optimizer.
 optimizer = keras.optimizers.Adam(learning_rate=1e-3)
-```
 
+"""
 ### Getting gradients in JAX
 
 Let's train our model using mini-batch gradient with a custom training loop.
@@ -184,9 +171,8 @@ It works just like `model.__call__`, but it requires you to explicitly
 pass the value of all the variables in the model, and it returns not just
 the `__call__` outputs but also the (potentially updated) non-trainable
 variables.
+"""
 
-
-```python
 
 def compute_loss_and_updates(trainable_variables, non_trainable_variables, x, y):
     y_pred, non_trainable_variables = model.stateless_call(
@@ -195,15 +181,14 @@ def compute_loss_and_updates(trainable_variables, non_trainable_variables, x, y)
     loss = loss_fn(y, y_pred)
     return loss, non_trainable_variables
 
-```
 
+"""
 Let's get the gradient function:
+"""
 
-
-```python
 grad_fn = jax.value_and_grad(compute_loss_and_updates, has_aux=True)
-```
 
+"""
 ### The training step function
 
 Next, let's implement the end-to-end training step, the function
@@ -220,9 +205,8 @@ To update the trainable variables, we use the optimizer's stateless method
 `stateless_apply`. It's equivalent to `optimizer.apply()`, but it requires
 always passing `trainable_variables` and `optimizer_variables`. It returns
 both the updated trainable variables and the updated optimizer_variables.
+"""
 
-
-```python
 
 def train_step(state, data):
     trainable_variables, non_trainable_variables, optimizer_variables = state
@@ -240,8 +224,8 @@ def train_step(state, data):
         optimizer_variables,
     )
 
-```
 
+"""
 ### Make it fast with `jax.jit`
 
 By default, JAX operations run eagerly,
@@ -254,9 +238,8 @@ When you have a stateless JAX function, you can compile it to XLA via the
 `@jax.jit` decorator. It will get traced during its first execution, and in
 subsequent executions you will be executing the traced graph (this is just
 like `@tf.function(jit_compile=True)`. Let's try it:
+"""
 
-
-```python
 
 @jax.jit
 def train_step(state, data):
@@ -275,8 +258,8 @@ def train_step(state, data):
         optimizer_variables,
     )
 
-```
 
+"""
 We're now ready to train our model. The training loop itself
 is trivial: we just repeatedly call `loss, state = train_step(state, data)`.
 
@@ -288,9 +271,8 @@ before passing them to our JAX function.
 the model must be built and the optimizer must be built. Since we're using a
 Functional API model, it's already built, but if it were a subclassed model
 you'd need to call it on a batch of data to build it.
+"""
 
-
-```python
 # Build optimizer variables.
 optimizer.build(model.trainable_variables)
 
@@ -307,62 +289,23 @@ for step, data in enumerate(train_dataset):
     if step % 100 == 0:
         print(f"Training loss (for 1 batch) at step {step}: {float(loss):.4f}")
         print(f"Seen so far: {(step + 1) * batch_size} samples")
-```
 
-<div class="k-default-codeblock">
-```
-Training loss (for 1 batch) at step 0: 84.6166
-Seen so far: 32 samples
-Training loss (for 1 batch) at step 100: 3.0868
-Seen so far: 3232 samples
-Training loss (for 1 batch) at step 200: 1.5257
-Seen so far: 6432 samples
-Training loss (for 1 batch) at step 300: 1.2523
-Seen so far: 9632 samples
-Training loss (for 1 batch) at step 400: 1.0554
-Seen so far: 12832 samples
-Training loss (for 1 batch) at step 500: 0.5619
-Seen so far: 16032 samples
-Training loss (for 1 batch) at step 600: 0.2830
-Seen so far: 19232 samples
-Training loss (for 1 batch) at step 700: 1.8985
-Seen so far: 22432 samples
-Training loss (for 1 batch) at step 800: 1.4941
-Seen so far: 25632 samples
-Training loss (for 1 batch) at step 900: 0.9163
-Seen so far: 28832 samples
-Training loss (for 1 batch) at step 1000: 0.4805
-Seen so far: 32032 samples
-Training loss (for 1 batch) at step 1100: 0.9318
-Seen so far: 35232 samples
-Training loss (for 1 batch) at step 1200: 0.7855
-Seen so far: 38432 samples
-Training loss (for 1 batch) at step 1300: 0.8934
-Seen so far: 41632 samples
-Training loss (for 1 batch) at step 1400: 0.1738
-Seen so far: 44832 samples
-Training loss (for 1 batch) at step 1500: 0.4585
-Seen so far: 48032 samples
-
-```
-</div>
+"""
 A key thing to notice here is that the loop is entirely stateless -- the variables
 attached to the model (`model.weights`) are never getting updated during the loop.
 Their new values are only stored in the `state` tuple. That means that at some point,
 before saving the model, you should be attaching the new variable values back to the model.
 
 Just call `variable.assign(new_value)` on each model variable you want to update:
+"""
 
-
-```python
 trainable_variables, non_trainable_variables, optimizer_variables = state
 for variable, value in zip(model.trainable_variables, trainable_variables):
     variable.assign(value)
 for variable, value in zip(model.non_trainable_variables, non_trainable_variables):
     variable.assign(value)
-```
 
----
+"""
 ## Low-level handling of metrics
 
 Let's add metrics monitoring to this basic training loop.
@@ -383,9 +326,8 @@ and vall `metric.result()`.
 
 Let's use this knowledge to compute `CategoricalAccuracy` on training and
 validation data at the end of training:
+"""
 
-
-```python
 # Get a fresh model
 model = get_model()
 
@@ -438,12 +380,11 @@ def train_step(state, data):
         metric_variables,
     )
 
-```
 
+"""
 We'll also prepare an evaluation step function:
+"""
 
-
-```python
 
 @jax.jit
 def eval_step(state, data):
@@ -462,12 +403,11 @@ def eval_step(state, data):
         metric_variables,
     )
 
-```
 
+"""
 Here are our loops:
+"""
 
-
-```python
 # Build optimizer variables.
 optimizer.build(model.trainable_variables)
 
@@ -516,74 +456,8 @@ for step, data in enumerate(val_dataset):
             variable.assign(value)
         print(f"Validation accuracy: {val_acc_metric.result()}")
         print(f"Seen so far: {(step + 1) * batch_size} samples")
-```
 
-<div class="k-default-codeblock">
-```
-Training loss (for 1 batch) at step 0: 75.1620
-Training accuracy: 0.21875
-Seen so far: 32 samples
-Training loss (for 1 batch) at step 100: 1.3136
-Training accuracy: 0.5745668411254883
-Seen so far: 3232 samples
-Training loss (for 1 batch) at step 200: 1.7583
-Training accuracy: 0.6604477763175964
-Seen so far: 6432 samples
-Training loss (for 1 batch) at step 300: 1.6611
-Training accuracy: 0.7014119625091553
-Seen so far: 9632 samples
-Training loss (for 1 batch) at step 400: 0.2884
-Training accuracy: 0.7245168089866638
-Seen so far: 12832 samples
-Training loss (for 1 batch) at step 500: 1.8711
-Training accuracy: 0.7369635701179504
-Seen so far: 16032 samples
-Training loss (for 1 batch) at step 600: 0.5198
-Training accuracy: 0.7495840191841125
-Seen so far: 19232 samples
-Training loss (for 1 batch) at step 700: 0.3589
-Training accuracy: 0.7629279494285583
-Seen so far: 22432 samples
-Training loss (for 1 batch) at step 800: 1.0192
-Training accuracy: 0.7725499272346497
-Seen so far: 25632 samples
-Training loss (for 1 batch) at step 900: 0.0986
-Training accuracy: 0.7814580798149109
-Seen so far: 28832 samples
-Training loss (for 1 batch) at step 1000: 0.8866
-Training accuracy: 0.7883054614067078
-Seen so far: 32032 samples
-Training loss (for 1 batch) at step 1100: 0.3698
-Training accuracy: 0.7952713370323181
-Seen so far: 35232 samples
-Training loss (for 1 batch) at step 1200: 0.0791
-Training accuracy: 0.8022741675376892
-Seen so far: 38432 samples
-Training loss (for 1 batch) at step 1300: 0.5151
-Training accuracy: 0.8073356747627258
-Seen so far: 41632 samples
-Training loss (for 1 batch) at step 1400: 0.7715
-Training accuracy: 0.8119646906852722
-Seen so far: 44832 samples
-Training loss (for 1 batch) at step 1500: 0.5194
-Training accuracy: 0.8161850571632385
-Seen so far: 48032 samples
-Validation loss (for 1 batch) at step 0: 0.1900
-Validation accuracy: 0.8182163238525391
-Seen so far: 32 samples
-Validation loss (for 1 batch) at step 100: 1.5203
-Validation accuracy: 0.8218364715576172
-Seen so far: 3232 samples
-Validation loss (for 1 batch) at step 200: 0.0864
-Validation accuracy: 0.8265877366065979
-Seen so far: 6432 samples
-Validation loss (for 1 batch) at step 300: 0.2329
-Validation accuracy: 0.8314998745918274
-Seen so far: 9632 samples
-
-```
-</div>
----
+"""
 ## Low-level handling of losses tracked by the model
 
 Layers & models recursively track any losses created during the forward pass
@@ -595,21 +469,19 @@ If you want to be using these loss components, you should sum them
 and add them to the main loss in your training step.
 
 Consider this layer, that creates an activity regularization loss:
+"""
 
-
-```python
 
 class ActivityRegularizationLayer(keras.layers.Layer):
     def call(self, inputs):
         self.add_loss(1e-2 * jax.numpy.sum(inputs))
         return inputs
 
-```
 
+"""
 Let's build a really simple model that uses it:
+"""
 
-
-```python
 inputs = keras.Input(shape=(784,), name="digits")
 x = keras.layers.Dense(64, activation="relu")(inputs)
 # Insert activity regularization as a layer
@@ -618,15 +490,14 @@ x = keras.layers.Dense(64, activation="relu")(x)
 outputs = keras.layers.Dense(10, name="predictions")(x)
 
 model = keras.Model(inputs=inputs, outputs=outputs)
-```
 
+"""
 Here's what our `compute_loss_and_updates` function should look like now:
 
 - Pass `return_losses=True` to `model.stateless_call()`.
 - Sum the resulting `losses` and add them to the main loss.
+"""
 
-
-```python
 
 def compute_loss_and_updates(
     trainable_variables, non_trainable_variables, metric_variables, x, y
@@ -642,6 +513,7 @@ def compute_loss_and_updates(
     )
     return loss, non_trainable_variables, metric_variables
 
-```
 
+"""
 That's it!
+"""

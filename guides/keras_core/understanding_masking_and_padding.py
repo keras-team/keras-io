@@ -10,9 +10,9 @@ Accelerator: None
 ## Setup
 """
 import numpy as np
-import keras_core as keras
-from keras_core import ops
-from keras_core import layers
+import keras
+from keras import ops
+from keras import layers
 
 """
 ## Introduction
@@ -270,7 +270,7 @@ print(mask)
 
 """
 Note: For more details about format limitations related to masking, see the
-[serialization guide](/keras_core/guides/serialization_and_saving).
+[serialization guide](/keras/guides/serialization_and_saving).
 """
 
 """

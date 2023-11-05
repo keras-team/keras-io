@@ -6,7 +6,7 @@
 **Description:** Writing low-level training & evaluation loops in JAX.
 
 
-<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/guides/ipynb/keras_core/writing_a_custom_training_loop_in_jax.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/guides/keras_core/writing_a_custom_training_loop_in_jax.py)
+<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/guides/ipynb/keras/writing_a_custom_training_loop_in_jax.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/guides/keras/writing_a_custom_training_loop_in_jax.py)
 
 
 
@@ -24,7 +24,7 @@ import jax
 
 # We import TF so we can use tf.data.
 import tensorflow as tf
-import keras_core as keras
+import keras
 import numpy as np
 ```
 
@@ -39,7 +39,7 @@ Using JAX backend.
 
 Keras provides default training and evaluation loops, `fit()` and `evaluate()`.
 Their usage is covered in the guide
-[Training & evaluation with the built-in methods](/keras_core/guides/training_with_built_in_methods/).
+[Training & evaluation with the built-in methods](/keras/guides/training_with_built_in_methods/).
 
 If you want to customize the learning algorithm of your model while still leveraging
 the convenience of `fit()`
@@ -56,7 +56,7 @@ your own training & evaluation loops from scratch. This is what this guide is ab
 To write a custom training loop, we need the following ingredients:
 
 - A model to train, of course.
-- An optimizer. You could either use an optimizer from `keras_core.optimizers`, or
+- An optimizer. You could either use an optimizer from `keras.optimizers`, or
 one from the `optax` package.
 - A loss function.
 - A dataset. The standard in the JAX ecosystem is to load data via `tf.data`,

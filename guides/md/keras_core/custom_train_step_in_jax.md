@@ -6,7 +6,7 @@
 **Description:** Overriding the training step of the Model class with JAX.
 
 
-<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/guides/ipynb/keras_core/custom_train_step_in_jax.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/guides/keras_core/custom_train_step_in_jax.py)
+<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/guides/ipynb/keras/custom_train_step_in_jax.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/guides/keras/custom_train_step_in_jax.py)
 
 
 
@@ -51,7 +51,7 @@ import os
 os.environ["KERAS_BACKEND"] = "jax"
 
 import jax
-import keras_core as keras
+import keras
 import numpy as np
 ```
 
@@ -184,7 +184,7 @@ Epoch 2/3
 Epoch 3/3
  32/32 ━━━━━━━━━━━━━━━━━━━━  0s 124us/step - mean_absolute_error: 0.3432 - loss: 0.1972
 
-<keras_core.src.callbacks.history.History at 0x2aafa3790>
+<keras.src.callbacks.history.History at 0x2aafa3790>
 
 ```
 </div>
@@ -316,7 +316,7 @@ Epoch 4/5
 Epoch 5/5
  32/32 ━━━━━━━━━━━━━━━━━━━━  0s 129us/step - loss: 0.2366 - mae: 0.3963      
 
-<keras_core.src.callbacks.history.History at 0x10608f490>
+<keras.src.callbacks.history.History at 0x10608f490>
 
 ```
 </div>

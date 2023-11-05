@@ -1,7 +1,7 @@
 # Pretraining a Transformer from scratch with KerasNLP
 
 **Author:** [Matthew Watson](https://github.com/mattdangerw/)<br>
-**Converted to Keras Core by:** [Anshuman Mishra](https://github.com/shivance)<br>
+**Converted to Keras 3 by:** [Anshuman Mishra](https://github.com/shivance)<br>
 **Date created:** 2022/04/18<br>
 **Last modified:** 2023/07/15<br>
 **Description:** Use KerasNLP to train a Transformer model from scratch.
@@ -24,8 +24,8 @@ This guide is broken into three parts:
 ---
 ## Setup
 
-The following guide uses [Keras Core](https://keras.io/keras_core/) to work in
-any of `tensorflow`, `jax` or `torch`. Support for Keras Core is baked into
+The following guide uses [Keras 3](https://keras.io/keras/) to work in
+any of `tensorflow`, `jax` or `torch`. Support for Keras 3 is baked into
 KerasNLP, simply change the `KERAS_BACKEND` environment variable below to change
 the backend you would like to use. We select the `jax` backend below, which will
 give us a particularly fast train step below.
@@ -43,7 +43,7 @@ os.environ["KERAS_BACKEND"] = "jax"  # or "tensorflow" or "torch"
 
 import keras_nlp
 import tensorflow as tf
-import keras_core as keras
+import keras
 ```
 
 <div class="k-default-codeblock">
@@ -201,7 +201,7 @@ Epoch 4/5
 Epoch 5/5
  2105/2105 ━━━━━━━━━━━━━━━━━━━━ 1s 476us/step - accuracy: 0.8100 - loss: 0.4313 - val_accuracy: 0.8036 - val_loss: 0.4530
 
-<keras_core.src.callbacks.history.History at 0x7f13902967a0>
+<keras.src.callbacks.history.History at 0x7f13902967a0>
 
 ```
 </div>
@@ -623,7 +623,7 @@ Epoch 2/3
 Epoch 3/3
  2105/2105 ━━━━━━━━━━━━━━━━━━━━ 16s 8ms/step - accuracy: 0.9176 - loss: 0.2066 - val_accuracy: 0.8549 - val_loss: 0.4142
 
-<keras_core.src.callbacks.history.History at 0x7f12d85c21a0>
+<keras.src.callbacks.history.History at 0x7f12d85c21a0>
 
 ```
 </div>

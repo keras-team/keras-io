@@ -1,7 +1,7 @@
 """
 Title: Pretraining a Transformer from scratch with KerasNLP
 Author: [Matthew Watson](https://github.com/mattdangerw/)
-Converted to Keras Core by: [Anshuman Mishra](https://github.com/shivance)
+Converted to Keras 3 by: [Anshuman Mishra](https://github.com/shivance)
 Date created: 2022/04/18
 Last modified: 2023/07/15
 Description: Use KerasNLP to train a Transformer model from scratch.
@@ -23,8 +23,8 @@ This guide is broken into three parts:
 """
 ## Setup
 
-The following guide uses [Keras Core](https://keras.io/keras_core/) to work in
-any of `tensorflow`, `jax` or `torch`. Support for Keras Core is baked into
+The following guide uses [Keras 3](https://keras.io/keras/) to work in
+any of `tensorflow`, `jax` or `torch`. Support for Keras 3 is baked into
 KerasNLP, simply change the `KERAS_BACKEND` environment variable below to change
 the backend you would like to use. We select the `jax` backend below, which will
 give us a particularly fast train step below.
@@ -41,7 +41,7 @@ os.environ["KERAS_BACKEND"] = "jax"  # or "tensorflow" or "torch"
 
 import keras_nlp
 import tensorflow as tf
-import keras_core as keras
+import keras
 
 """
 Next up, we can download two datasets.

@@ -2,19 +2,24 @@
 Title: Training & evaluation with the built-in methods
 Author: [fchollet](https://twitter.com/fchollet)
 Date created: 2019/03/01
-Last modified: 2023/03/20
+Last modified: 2023/06/25
 Description: Complete guide to training & evaluation with `fit()` and `evaluate()`.
 Accelerator: GPU
 """
-
 
 """
 ## Setup
 """
 
+# We import torch & TF so as to use torch Dataloaders & tf.data.Datasets.
+import torch
 import tensorflow as tf
+
+import os
+import numpy as np
 import keras
 from keras import layers
+from keras import ops
 
 """
 ## Introduction
@@ -24,29 +29,38 @@ when using built-in APIs for training & validation (such as `Model.fit()`,
 `Model.evaluate()` and `Model.predict()`).
 
 If you are interested in leveraging `fit()` while specifying your
-own training step function, see the
-[Customizing what happens in `fit()` guide](/guides/customizing_what_happens_in_fit/).
+own training step function, see the guides on customizing what happens in `fit()`:
+
+- [Writing a custom train step with TensorFlow](/keras/guides/custom_train_step_in_tensorflow/)
+- [Writing a custom train step with JAX](/keras/guides/custom_train_step_in_jax/)
+- [Writing a custom train step with PyTorch](/keras/guides/custom_train_step_in_torch/)
 
 If you are interested in writing your own training & evaluation loops from
-scratch, see the guide
-["writing a training loop from scratch"](/guides/writing_a_training_loop_from_scratch/).
+scratch, see the guides on writing training loops:
+
+- [Writing a training loop with TensorFlow](/keras/guides/writing_a_custom_training_loop_in_tensorflow/)
+- [Writing a training loop with JAX](/keras/guides/writing_a_custom_training_loop_in_jax/)
+- [Writing a training loop with PyTorch](/keras/guides/writing_a_custom_training_loop_in_torch/)
 
 In general, whether you are using built-in loops or writing your own, model training &
 evaluation works strictly in the same way across every kind of Keras model --
 Sequential models, models built with the Functional API, and models written from
 scratch via model subclassing.
-
-This guide doesn't cover distributed training, which is covered in our
-[guide to multi-GPU & distributed training](https://keras.io/guides/distributed_training/).
 """
 
 """
 ## API overview: a first end-to-end example
 
-When passing data to the built-in training loops of a model, you should either use
-**NumPy arrays** (if your data is small and fits in memory) or **`tf.data.Dataset`
-objects**. In the next few paragraphs, we'll use the MNIST dataset as NumPy arrays, in
-order to demonstrate how to use optimizers, losses, and metrics.
+When passing data to the built-in training loops of a model, you should either use:
+
+- NumPy arrays (if your data is small and fits in memory)
+- Subclasses of `keras.utils.PyDataset`
+- `tf.data.Dataset` objects
+- PyTorch `DataLoader` instances
+
+In the next few paragraphs, we'll use the MNIST dataset as NumPy arrays, in
+order to demonstrate how to use optimizers, losses, and metrics. Afterwards, we'll
+take a close look at each of the other options.
 
 Let's consider the following model (here, we build in with the Functional API, but it
 could be a Sequential model or a subclassed model as well):
@@ -119,7 +133,7 @@ The returned `history` object holds a record of the loss values and metric value
 during training:
 """
 
-history.history
+print(history.history)
 
 """
 We evaluate the model on the test data via `evaluate()`:
@@ -238,14 +252,14 @@ error between the real data and the predictions:
 
 
 def custom_mean_squared_error(y_true, y_pred):
-    return tf.math.reduce_mean(tf.square(y_true - y_pred), axis=-1)
+    return ops.mean(ops.square(y_true - y_pred), axis=-1)
 
 
 model = get_uncompiled_model()
 model.compile(optimizer=keras.optimizers.Adam(), loss=custom_mean_squared_error)
 
 # We need to one-hot encode the labels to use MSE
-y_train_one_hot = tf.one_hot(y_train, depth=10)
+y_train_one_hot = ops.one_hot(y_train, num_classes=10)
 model.fit(x_train, y_train_one_hot, batch_size=64, epochs=1)
 
 """
@@ -266,29 +280,23 @@ Here's how you would do it:
 """
 
 
-@keras.saving.register_keras_serializable()
 class CustomMSE(keras.losses.Loss):
     def __init__(self, regularization_factor=0.1, name="custom_mse"):
         super().__init__(name=name)
         self.regularization_factor = regularization_factor
 
     def call(self, y_true, y_pred):
-        mse = tf.math.reduce_mean(tf.square(y_true - y_pred), axis=-1)
-        reg = tf.math.reduce_mean(tf.square(0.5 - y_pred), axis=-1)
+        mse = ops.mean(ops.square(y_true - y_pred), axis=-1)
+        reg = ops.mean(ops.square(0.5 - y_pred), axis=-1)
         return mse + reg * self.regularization_factor
-
-    def get_config(self):
-        return {
-            "regularization_factor": self.regularization_factor,
-            "name": self.name,
-        }
 
 
 model = get_uncompiled_model()
 model.compile(optimizer=keras.optimizers.Adam(), loss=CustomMSE())
 
-y_train_one_hot = tf.one_hot(y_train, depth=10)
+y_train_one_hot = ops.one_hot(y_train, num_classes=10)
 model.fit(x_train, y_train_one_hot, batch_size=64, epochs=1)
+
 
 """
 ### Custom metrics
@@ -312,20 +320,21 @@ that counts how many samples were correctly classified as belonging to a given c
 """
 
 
-@keras.saving.register_keras_serializable()
 class CategoricalTruePositives(keras.metrics.Metric):
     def __init__(self, name="categorical_true_positives", **kwargs):
         super().__init__(name=name, **kwargs)
-        self.true_positives = self.add_weight(name="ctp", initializer="zeros")
+        self.true_positives = self.add_variable(
+            shape=(), name="ctp", initializer="zeros"
+        )
 
     def update_state(self, y_true, y_pred, sample_weight=None):
-        y_pred = tf.reshape(tf.argmax(y_pred, axis=1), shape=(-1, 1))
-        values = tf.cast(y_true, "int32") == tf.cast(y_pred, "int32")
-        values = tf.cast(values, "float32")
+        y_pred = ops.reshape(ops.argmax(y_pred, axis=1), (-1, 1))
+        values = ops.cast(y_true, "int32") == ops.cast(y_pred, "int32")
+        values = ops.cast(values, "float32")
         if sample_weight is not None:
-            sample_weight = tf.cast(sample_weight, "float32")
-            values = tf.multiply(values, sample_weight)
-        self.true_positives.assign_add(tf.reduce_sum(values))
+            sample_weight = ops.cast(sample_weight, "float32")
+            values = ops.multiply(values, sample_weight)
+        self.true_positives.assign_add(ops.sum(values))
 
     def result(self):
         return self.true_positives
@@ -359,10 +368,9 @@ this layer is just for the sake of providing a concrete example):
 """
 
 
-@keras.saving.register_keras_serializable()
 class ActivityRegularizationLayer(layers.Layer):
     def call(self, inputs):
-        self.add_loss(tf.reduce_mean(inputs) * 0.1)
+        self.add_loss(ops.sum(inputs) * 0.1)
         return inputs  # Pass-through layer.
 
 
@@ -394,7 +402,6 @@ targets & logits, and it tracks a crossentropy loss via `add_loss()`.
 """
 
 
-@keras.saving.register_keras_serializable()
 class LogisticEndpoint(keras.layers.Layer):
     def __init__(self, name=None):
         super().__init__(name=name)
@@ -407,15 +414,13 @@ class LogisticEndpoint(keras.layers.Layer):
         self.add_loss(loss)
 
         # Return the inference-time prediction tensor (for `.predict()`).
-        return tf.nn.softmax(logits)
+        return ops.softmax(logits)
 
 
 """
 You can use it in a model with two inputs (input data & targets), compiled without a
 `loss` argument, like this:
 """
-
-import numpy as np
 
 inputs = keras.Input(shape=(3,), name="inputs")
 targets = keras.Input(shape=(10,), name="targets")
@@ -460,21 +465,22 @@ model = get_compiled_model()
 model.fit(x_train, y_train, batch_size=64, validation_split=0.2, epochs=1)
 
 """
-## Training & evaluation from tf.data Datasets
+## Training & evaluation using `tf.data` Datasets
 
 In the past few paragraphs, you've seen how to handle losses, metrics, and optimizers,
 and you've seen how to use the `validation_data` and `validation_split` arguments in
 `fit()`, when your data is passed as NumPy arrays.
 
-Let's now take a look at the case where your data comes in the form of a
-`tf.data.Dataset` object.
+Another option is to use an iterator-like, such as a `tf.data.Dataset`, a
+PyTorch `DataLoader`, or a Keras `PyDataset`. Let's take look at the former.
 
 The `tf.data` API is a set of utilities in TensorFlow 2.0 for loading and preprocessing
-data in a way that's fast and scalable.
+data in a way that's fast and scalable. For a complete guide about creating `Datasets`,
+see the [tf.data documentation](https://www.tensorflow.org/guide/data).
 
-For a complete guide about creating `Datasets`, see the
-[tf.data documentation](https://www.tensorflow.org/guide/data).
-
+**You can use `tf.data` to train your Keras
+models regardless of the backend you're using --
+whether it's JAX, PyTorch, or TensorFlow.**
 You can pass a `Dataset` instance directly to the methods `fit()`, `evaluate()`, and
 `predict()`:
 """
@@ -507,10 +513,6 @@ next epoch.
 If you want to run training only on a specific number of batches from this Dataset, you
 can pass the `steps_per_epoch` argument, which specifies how many training steps the
 model should run using this Dataset before moving on to the next epoch.
-
-If you do this, the dataset is not reset at the end of each epoch, instead we just keep
-drawing the next batches. The dataset will eventually run out of data (unless it is an
-infinitely-looping dataset).
 """
 
 model = get_compiled_model()
@@ -523,9 +525,7 @@ train_dataset = train_dataset.shuffle(buffer_size=1024).batch(64)
 model.fit(train_dataset, epochs=3, steps_per_epoch=100)
 
 """
-### Using a validation dataset
-
-You can pass a `Dataset` instance as the `validation_data` argument in `fit()`:
+You can also pass a `Dataset` instance as the `validation_data` argument in `fit()`:
 """
 
 model = get_compiled_model()
@@ -580,33 +580,15 @@ the `Dataset` API.
 """
 
 """
-## Other input formats supported
+## Training & evaluation using `PyDataset` instances
 
-Besides NumPy arrays, eager tensors, and TensorFlow `Datasets`, it's possible to train
-a Keras model using Pandas dataframes, or from Python generators that yield batches of
-data & labels.
-
-In particular, the `keras.utils.Sequence` class offers a simple interface to build
-Python data generators that are multiprocessing-aware and can be shuffled.
-
-In general, we recommend that you use:
-
-- NumPy input data if your data is small and fits in memory
-- `Dataset` objects if you have large datasets and you need to do distributed training
-- `Sequence` objects if you have large datasets and you need to do a lot of custom
-Python-side processing that cannot be done in TensorFlow (e.g. if you rely on external libraries
-for data loading or preprocessing).
-
-
-## Using a `keras.utils.Sequence` object as input
-
-`keras.utils.Sequence` is a utility that you can subclass to obtain a Python generator with
-two important properties:
+`keras.utils.PyDataset` is a utility that you can subclass to obtain
+a Python generator with two important properties:
 
 - It works well with multiprocessing.
 - It can be shuffled (e.g. when passing `shuffle=True` in `fit()`).
 
-A `Sequence` must implement two methods:
+A `PyDataset` must implement two methods:
 
 - `__getitem__`
 - `__len__`
@@ -615,35 +597,124 @@ The method `__getitem__` should return a complete batch.
 If you want to modify your dataset between epochs, you may implement `on_epoch_end`.
 
 Here's a quick example:
+"""
 
-```python
-from skimage.io import imread
-from skimage.transform import resize
-import numpy as np
 
-# Here, `filenames` is list of path to the images
-# and `labels` are the associated labels.
-
-class CIFAR10Sequence(Sequence):
-    def __init__(self, filenames, labels, batch_size):
-        self.filenames, self.labels = filenames, labels
+class ExamplePyDataset(keras.utils.PyDataset):
+    def __init__(self, x, y, batch_size, **kwargs):
+        super().__init__(**kwargs)
+        self.x = x
+        self.y = y
         self.batch_size = batch_size
 
     def __len__(self):
-        return int(np.ceil(len(self.filenames) / float(self.batch_size)))
+        return int(np.ceil(len(self.x) / float(self.batch_size)))
 
     def __getitem__(self, idx):
-        batch_x = self.filenames[idx * self.batch_size:(idx + 1) * self.batch_size]
-        batch_y = self.labels[idx * self.batch_size:(idx + 1) * self.batch_size]
-        return np.array([
-            resize(imread(filename), (200, 200))
-               for filename in batch_x]), np.array(batch_y)
+        batch_x = self.x[idx * self.batch_size : (idx + 1) * self.batch_size]
+        batch_y = self.y[idx * self.batch_size : (idx + 1) * self.batch_size]
+        return batch_x, batch_y
 
-sequence = CIFAR10Sequence(filenames, labels, batch_size)
-model.fit(sequence, epochs=10)
-```
+
+train_py_dataset = ExamplePyDataset(x_train, y_train, batch_size=32)
+val_py_dataset = ExamplePyDataset(x_val, y_val, batch_size=32)
 
 """
+To fit the model, pass the dataset instead as the `x` argument (no need for a `y`
+argument since the dataset includes the targets), and pass the validation dataset
+as the `validation_data` argument. And no need for the `batch_size` argument, since
+the dataset is already batched!
+"""
+
+model = get_compiled_model()
+model.fit(train_py_dataset, batch_size=64, validation_data=val_py_dataset, epochs=1)
+
+"""
+Evaluating the model is just as easy:
+"""
+
+model.evaluate(val_py_dataset)
+
+"""
+Importantly, `PyDataset` objects support three common constructor arguments
+that handle the parallel processing configuration:
+
+- `workers`: Number of workers to use in multithreading or
+    multiprocessing. Typically, you'd set it to the number of
+    cores on your CPU.
+- `use_multiprocessing`: Whether to use Python multiprocessing for
+    parallelism. Setting this to `True` means that your
+    dataset will be replicated in multiple forked processes.
+    This is necessary to gain compute-level (rather than I/O level)
+    benefits from parallelism. However it can only be set to
+    `True` if your dataset can be safely pickled.
+- `max_queue_size`: Maximum number of batches to keep in the queue
+    when iterating over the dataset in a multithreaded or
+    multipricessed setting.
+    You can reduce this value to reduce the CPU memory consumption of
+    your dataset. It defaults to 10.
+
+By default, multiprocessing is disabled (`use_multiprocessing=False`) and only
+one thread is used. You should make sure to only turn on `use_multiprocessing` if
+your code is running inside a Python `if __name__ == "__main__":` block in order
+to avoid issues.
+
+Here's a 4-thread, non-multiprocessed example:
+"""
+
+train_py_dataset = ExamplePyDataset(x_train, y_train, batch_size=32, workers=4)
+val_py_dataset = ExamplePyDataset(x_val, y_val, batch_size=32, workers=4)
+
+model = get_compiled_model()
+model.fit(train_py_dataset, batch_size=64, validation_data=val_py_dataset, epochs=1)
+
+"""
+## Training & evaluation using PyTorch `DataLoader` objects
+
+All built-in training and evaluation APIs are also compatible with `torch.utils.data.Dataset` and
+`torch.utils.data.DataLoader` objects -- regardless of whether you're using the PyTorch backend,
+or the JAX or TensorFlow backends. Let's take a look at a simple example.
+
+Unlike `PyDataset` which are batch-centric, PyTorch `Dataset` objects are sample-centric:
+the `__len__` method returns the number of samples,
+and the `__getitem__` method returns a specific sample.
+"""
+
+
+class ExampleTorchDataset(torch.utils.data.Dataset):
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+
+    def __len__(self):
+        return len(self.x)
+
+    def __getitem__(self, idx):
+        return self.x[idx], self.y[idx]
+
+
+train_torch_dataset = ExampleTorchDataset(x_train, y_train)
+val_torch_dataset = ExampleTorchDataset(x_val, y_val)
+
+"""
+To use a PyTorch Dataset, you need to wrap it into a `Dataloader` which takes care
+of batching and shuffling:
+"""
+
+train_dataloader = torch.utils.data.DataLoader(
+    train_torch_dataset, batch_size=32, shuffle=True
+)
+val_dataloader = torch.utils.data.DataLoader(
+    val_torch_dataset, batch_size=32, shuffle=True
+)
+
+"""
+Now you can use them in the Keras API just like any other iterator:
+"""
+
+model = get_compiled_model()
+model.fit(train_dataloader, batch_size=64, validation_data=val_dataloader, epochs=1)
+model.evaluate(val_dataloader)
 
 """
 ## Using sample weighting and class weighting
@@ -675,8 +746,6 @@ Here's a NumPy example where we use class weights or sample weights to
 give more importance to the correct classification of class #5 (which
 is the digit "5" in the MNIST dataset).
 """
-
-import numpy as np
 
 class_weight = {
     0: 1.0,
@@ -788,7 +857,10 @@ the loss functions as a list:
 
 model.compile(
     optimizer=keras.optimizers.RMSprop(1e-3),
-    loss=[keras.losses.MeanSquaredError(), keras.losses.CategoricalCrossentropy()],
+    loss=[
+        keras.losses.MeanSquaredError(),
+        keras.losses.CategoricalCrossentropy(),
+    ],
 )
 
 """
@@ -800,7 +872,10 @@ Likewise for metrics:
 
 model.compile(
     optimizer=keras.optimizers.RMSprop(1e-3),
-    loss=[keras.losses.MeanSquaredError(), keras.losses.CategoricalCrossentropy()],
+    loss=[
+        keras.losses.MeanSquaredError(),
+        keras.losses.CategoricalCrossentropy(),
+    ],
     metrics=[
         [
             keras.metrics.MeanAbsolutePercentageError(),
@@ -880,7 +955,10 @@ names to NumPy arrays**.
 
 model.compile(
     optimizer=keras.optimizers.RMSprop(1e-3),
-    loss=[keras.losses.MeanSquaredError(), keras.losses.CategoricalCrossentropy()],
+    loss=[
+        keras.losses.MeanSquaredError(),
+        keras.losses.CategoricalCrossentropy(),
+    ],
 )
 
 # Generate dummy NumPy data
@@ -980,7 +1058,7 @@ You can create a custom callback by extending the base class
 class property `self.model`.
 
 Make sure to read the
-[complete guide to writing custom callbacks](/guides/writing_your_own_callbacks/).
+[complete guide to writing custom callbacks](/keras/guides/writing_your_own_callbacks/).
 
 Here's a simple example saving a list of per-batch loss values during training:
 """
@@ -1012,14 +1090,19 @@ callbacks = [
         # the current checkpoint if and only if
         # the `val_loss` score has improved.
         # The saved model name will include the current epoch.
-        filepath="mymodel_{epoch}",
+        filepath="mymodel_{epoch}.keras",
         save_best_only=True,  # Only save a model if `val_loss` has improved.
         monitor="val_loss",
         verbose=1,
     )
 ]
 model.fit(
-    x_train, y_train, epochs=2, batch_size=64, callbacks=callbacks, validation_split=0.2
+    x_train,
+    y_train,
+    epochs=2,
+    batch_size=64,
+    callbacks=callbacks,
+    validation_split=0.2,
 )
 
 """
@@ -1027,8 +1110,6 @@ The `ModelCheckpoint` callback can be used to implement fault-tolerance:
 the ability to restart training from the last saved state of the model in case training
 gets randomly interrupted. Here's a basic example:
 """
-
-import os
 
 # Prepare a directory to store all the checkpoints.
 checkpoint_dir = "./ckpt"
@@ -1053,7 +1134,7 @@ callbacks = [
     # This callback saves the model every 100 batches.
     # We include the training loss in the saved model name.
     keras.callbacks.ModelCheckpoint(
-        filepath=checkpoint_dir + "/model-loss={loss:.2f}", save_freq=100
+        filepath=checkpoint_dir + "/model-loss={loss:.2f}.keras", save_freq=100
     )
 ]
 model.fit(x_train, y_train, epochs=1, callbacks=callbacks)
@@ -1062,7 +1143,7 @@ model.fit(x_train, y_train, epochs=1, callbacks=callbacks)
 You call also write your own callback for saving and restoring models.
 
 For a complete guide on serialization and saving, see the
-[guide to saving and serializing Models](/guides/serialization_and_saving/).
+[guide to saving and serializing Models](/keras/guides/serialization_and_saving/).
 """
 
 """
@@ -1104,7 +1185,7 @@ on the optimizer. In fact, this is even built-in as the `ReduceLROnPlateau` call
 """
 
 """
-## Visualizing loss and metrics during training
+## Visualizing loss and metrics during training with TensorBoard
 
 The best way to keep an eye on your model during training is to use
 [TensorBoard](https://www.tensorflow.org/tensorboard) -- a browser-based application

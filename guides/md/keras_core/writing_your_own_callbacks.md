@@ -6,7 +6,7 @@
 **Description:** Complete guide to writing new Keras callbacks.
 
 
-<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/guides/ipynb/keras_core/writing_your_own_callbacks.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/guides/keras_core/writing_your_own_callbacks.py)
+<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/guides/ipynb/keras/writing_your_own_callbacks.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/guides/keras/writing_your_own_callbacks.py)
 
 
 
@@ -28,7 +28,7 @@ started.
 
 ```python
 import numpy as np
-import keras_core as keras
+import keras
 ```
 
 <div class="k-default-codeblock">
@@ -520,7 +520,7 @@ The average loss for epoch 3 is   33.64 and mean absolute error is    5.05.
 Restoring model weights from the end of the best epoch.
 Epoch 4: early stopping
 
-<keras_core.src.callbacks.history.History at 0x16c79ded0>
+<keras.src.callbacks.history.History at 0x16c79ded0>
 
 ```
 </div>
@@ -936,7 +936,7 @@ Up to batch 14, the average loss is    2.58.
 Up to batch 15, the average loss is    2.62.
 The average loss for epoch 14 is    2.62 and mean absolute error is    1.23.
 
-<keras_core.src.callbacks.history.History at 0x16c1ed300>
+<keras.src.callbacks.history.History at 0x16c1ed300>
 
 ```
 </div>

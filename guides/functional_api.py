@@ -2,7 +2,7 @@
 Title: The Functional API
 Author: [fchollet](https://twitter.com/fchollet)
 Date created: 2019/03/01
-Last modified: 2020/07/10
+Last modified: 2023/06/25
 Description: Complete guide to the functional API.
 Accelerator: GPU
 """
@@ -11,9 +11,9 @@ Accelerator: GPU
 """
 
 import numpy as np
-import tensorflow as tf
 import keras
 from keras import layers
+from keras import ops
 
 """
 ## Introduction
@@ -134,9 +134,12 @@ built using the functional API as for `Sequential` models.
 
 The `Model` class offers a built-in training loop (the `fit()` method)
 and a built-in evaluation loop (the `evaluate()` method). Note
-that you can easily [customize these loops](/guides/customizing_what_happens_in_fit/)
-to implement training routines beyond supervised learning
-(e.g. [GANs](https://keras.io/examples/generative/dcgan_overriding_train_step/)).
+that you can easily customize these loops to implement your own training routines.
+See also the guides on customizing what happens in `fit()`:
+
+- [Writing a custom train step with TensorFlow](/keras/guides/custom_train_step_in_tensorflow/)
+- [Writing a custom train step with JAX](/keras/guides/custom_train_step_in_jax/)
+- [Writing a custom train step with PyTorch](/keras/guides/custom_train_step_in_torch/)
 
 Here, load the MNIST image data, reshape it into vectors,
 fit the model on the data (while monitoring performance on a validation split),
@@ -151,7 +154,7 @@ x_test = x_test.reshape(10000, 784).astype("float32") / 255
 model.compile(
     loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
     optimizer=keras.optimizers.RMSprop(),
-    metrics=[keras.metrics.SparseCategoricalAccuracy()],
+    metrics=["accuracy"],
 )
 
 history = model.fit(x_train, y_train, batch_size=64, epochs=2, validation_split=0.2)
@@ -161,7 +164,8 @@ print("Test loss:", test_scores[0])
 print("Test accuracy:", test_scores[1])
 
 """
-For further reading, see the [training and evaluation](/guides/training_with_built_in_methods/) guide.
+For further reading, see the
+[training and evaluation](/keras/guides/training_with_built_in_methods/) guide.
 """
 
 """
@@ -176,18 +180,17 @@ from this file, even if the code that built the model is no longer available.
 This saved file includes the:
 - model architecture
 - model weight values (that were learned during training)
-- model training config, if any (as passed to `compile`)
+- model training config, if any (as passed to `compile()`)
 - optimizer and its state, if any (to restart training where you left off)
 """
 
-model.save("path_to_my_model.keras")
+model.save("my_model.keras")
 del model
 # Recreate the exact same model purely from the file:
-model = keras.models.load_model("path_to_my_model.keras")
+model = keras.models.load_model("my_model.keras")
 
 """
-For details, read the model [serialization & saving](
-    /guides/serialization_and_saving/) guide.
+For details, read the model [serialization & saving](/keras/guides/serialization_and_saving/) guide.
 """
 
 """
@@ -356,7 +359,7 @@ department_pred = layers.Dense(num_departments, name="department")(x)
 # Instantiate an end-to-end model predicting both priority and department
 model = keras.Model(
     inputs=[title_input, body_input, tags_input],
-    outputs=[priority_pred, department_pred],
+    outputs={"priority": priority_pred, "department": department_pred},
 )
 
 """
@@ -420,7 +423,8 @@ tuple of lists like `([title_data, body_data, tags_data], [priority_targets, dep
 or a tuple of dictionaries like
 `({'title': title_data, 'body': body_data, 'tags': tags_data}, {'priority': priority_targets, 'department': dept_targets})`.
 
-For more detailed explanation, refer to the [training and evaluation](/guides/training_with_built_in_methods/) guide.
+For more detailed explanation, refer to the
+[training and evaluation](/keras/guides/training_with_built_in_methods/) guide.
 """
 
 """
@@ -481,7 +485,13 @@ model.compile(
 )
 # We restrict the data to the first 1000 samples so as to limit execution time
 # on Colab. Try to train on the entire dataset until convergence!
-model.fit(x_train[:1000], y_train[:1000], batch_size=64, epochs=1, validation_split=0.2)
+model.fit(
+    x_train[:1000],
+    y_train[:1000],
+    batch_size=64,
+    epochs=1,
+    validation_split=0.2,
+)
 
 """
 ## Shared layers
@@ -571,7 +581,7 @@ your own layers. All layers subclass the `Layer` class and implement:
 convention since you can create weights in `__init__`, as well).
 
 To learn more about creating layers from scratch, read
-[custom layers and models](/guides/making_new_layers_and_models_via_subclassing) guide.
+[custom layers and models](/keras/guides/making_new_layers_and_models_via_subclassing) guide.
 
 The following is a basic implementation of `keras.layers.Dense`:
 """
@@ -593,7 +603,7 @@ class CustomDense(layers.Layer):
         )
 
     def call(self, inputs):
-        return tf.matmul(inputs, self.w) + self.b
+        return ops.matmul(inputs, self.w) + self.b
 
 
 inputs = keras.Input((4,))
@@ -602,12 +612,11 @@ outputs = CustomDense(10)(inputs)
 model = keras.Model(inputs, outputs)
 
 """
-For serialization support in your custom layer, define a `get_config`
+For serialization support in your custom layer, define a `get_config()`
 method that returns the constructor arguments of the layer instance:
 """
 
 
-@keras.saving.register_keras_serializable()
 class CustomDense(layers.Layer):
     def __init__(self, units=32):
         super().__init__()
@@ -624,7 +633,7 @@ class CustomDense(layers.Layer):
         )
 
     def call(self, inputs):
-        return tf.matmul(inputs, self.w) + self.b
+        return ops.matmul(inputs, self.w) + self.b
 
     def get_config(self):
         return {"units": self.units}
@@ -636,7 +645,7 @@ outputs = CustomDense(10)(inputs)
 model = keras.Model(inputs, outputs)
 config = model.get_config()
 
-new_model = keras.Model.from_config(config)
+new_model = keras.Model.from_config(config, custom_objects={"CustomDense": CustomDense})
 
 """
 Optionally, implement the class method `from_config(cls, config)` which is used
@@ -703,7 +712,7 @@ class MLP(keras.Model):
 mlp = MLP()
 # Necessary to create the model's state.
 # The model doesn't have a state until it's called at least once.
-_ = mlp(tf.zeros((1, 32)))
+_ = mlp(ops.zeros((1, 32)))
 ```
 
 #### Model validation while defining its connectivity graph
@@ -735,7 +744,7 @@ Because a functional model is a data structure rather than a piece of code,
 it is safely serializable and can be saved as a single file
 that allows you to recreate the exact same model
 without having access to any of the original code.
-See the [serialization & saving guide](/guides/serialization_and_saving/).
+See the [serialization & saving guide](/keras/guides/serialization_and_saving/).
 
 To serialize a subclassed model, it is necessary for the implementer
 to specify a `get_config()`
@@ -750,7 +759,6 @@ The functional API treats models as DAGs of layers.
 This is true for most deep learning architectures, but not all -- for example,
 recursive networks or Tree RNNs do not follow this assumption and cannot
 be implemented in the functional API.
-
 """
 
 """
@@ -777,7 +785,6 @@ outputs = layers.Dense(1)(x)
 model = keras.Model(inputs, outputs)
 
 
-@keras.saving.register_keras_serializable()
 class CustomRNN(layers.Layer):
     def __init__(self):
         super().__init__()
@@ -789,20 +796,20 @@ class CustomRNN(layers.Layer):
 
     def call(self, inputs):
         outputs = []
-        state = tf.zeros(shape=(inputs.shape[0], self.units))
+        state = ops.zeros(shape=(inputs.shape[0], self.units))
         for t in range(inputs.shape[1]):
             x = inputs[:, t, :]
             h = self.projection_1(x)
             y = h + self.projection_2(state)
             state = y
             outputs.append(y)
-        features = tf.stack(outputs, axis=1)
+        features = ops.stack(outputs, axis=1)
         print(features.shape)
         return self.classifier(features)
 
 
 rnn_model = CustomRNN()
-_ = rnn_model(tf.zeros((1, timesteps, input_dim)))
+_ = rnn_model(ops.zeros((1, timesteps, input_dim)))
 
 """
 You can use any subclassed layer or model in the functional API
@@ -832,7 +839,6 @@ input_dim = 5
 batch_size = 16
 
 
-@keras.saving.register_keras_serializable()
 class CustomRNN(layers.Layer):
     def __init__(self):
         super().__init__()
@@ -843,14 +849,14 @@ class CustomRNN(layers.Layer):
 
     def call(self, inputs):
         outputs = []
-        state = tf.zeros(shape=(inputs.shape[0], self.units))
+        state = ops.zeros(shape=(inputs.shape[0], self.units))
         for t in range(inputs.shape[1]):
             x = inputs[:, t, :]
             h = self.projection_1(x)
             y = h + self.projection_2(state)
             state = y
             outputs.append(y)
-        features = tf.stack(outputs, axis=1)
+        features = ops.stack(outputs, axis=1)
         return self.classifier(features)
 
 
@@ -864,4 +870,4 @@ outputs = CustomRNN()(x)
 model = keras.Model(inputs, outputs)
 
 rnn_model = CustomRNN()
-_ = rnn_model(tf.zeros((1, 10, 5)))
+_ = rnn_model(ops.zeros((1, 10, 5)))

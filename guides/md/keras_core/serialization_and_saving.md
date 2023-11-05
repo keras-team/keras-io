@@ -6,7 +6,7 @@
 **Description:** Complete guide to saving, serializing, and exporting models.
 
 
-<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/guides/ipynb/keras_core/serialization_and_saving.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/guides/keras_core/serialization_and_saving.py)
+<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/guides/ipynb/keras/serialization_and_saving.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/guides/keras/serialization_and_saving.py)
 
 
 
@@ -61,8 +61,8 @@ Now, let's look at the details.
 
 ```python
 import numpy as np
-import keras_core as keras
-from keras_core import ops
+import keras
+from keras import ops
 ```
 
 <div class="k-default-codeblock">
@@ -87,7 +87,7 @@ where you left)
 You can save a model with `model.save()` or `keras.models.save_model()` (which is equivalent).
 You can load it back with `keras.models.load_model()`.
 
-The only supported format in Keras Core is the "Keras v3" format,
+The only supported format in Keras 3 is the "Keras v3" format,
 which uses the `.keras` extension.
 
 **Example:**
@@ -383,7 +383,7 @@ print(layer_config)
 
 <div class="k-default-codeblock">
 ```
-{'name': 'dense_4', 'trainable': True, 'dtype': 'float32', 'units': 3, 'activation': 'relu', 'use_bias': True, 'kernel_initializer': {'module': 'keras_core.src.initializers.random_initializers', 'class_name': 'GlorotUniform', 'config': {'seed': None}, 'registered_name': 'GlorotUniform'}, 'bias_initializer': {'module': 'keras_core.src.initializers.constant_initializers', 'class_name': 'Zeros', 'config': {}, 'registered_name': 'Zeros'}, 'kernel_regularizer': None, 'bias_regularizer': None, 'kernel_constraint': None, 'bias_constraint': None}
+{'name': 'dense_4', 'trainable': True, 'dtype': 'float32', 'units': 3, 'activation': 'relu', 'use_bias': True, 'kernel_initializer': {'module': 'keras.src.initializers.random_initializers', 'class_name': 'GlorotUniform', 'config': {'seed': None}, 'registered_name': 'GlorotUniform'}, 'bias_initializer': {'module': 'keras.src.initializers.constant_initializers', 'class_name': 'Zeros', 'config': {}, 'registered_name': 'Zeros'}, 'kernel_regularizer': None, 'bias_regularizer': None, 'kernel_constraint': None, 'bias_constraint': None}
 
 ```
 </div>
@@ -448,7 +448,7 @@ print(config)
 
 <div class="k-default-codeblock">
 ```
-{'module': 'keras_core.src.regularizers.regularizers', 'class_name': 'L1', 'config': {'l1': 0.004999999888241291}, 'registered_name': 'L1'}
+{'module': 'keras.src.regularizers.regularizers', 'class_name': 'L1', 'config': {'l1': 0.004999999888241291}, 'registered_name': 'L1'}
 
 ```
 </div>
@@ -884,7 +884,7 @@ print(config)
 
 <div class="k-default-codeblock">
 ```
-{'module': None, 'class_name': 'MyDense', 'config': {'name': 'my_dense_2', 'trainable': True, 'dtype': 'float32', 'units': 16, 'kernel_regularizer': {'module': 'keras_core.src.regularizers.regularizers', 'class_name': 'L1L2', 'config': {'l1': 1e-05, 'l2': 0.0001}, 'registered_name': 'L1L2'}, 'kernel_initializer': 'ones', 'nested_model': None}, 'registered_name': 'MyLayers>KernelMult'}
+{'module': None, 'class_name': 'MyDense', 'config': {'name': 'my_dense_2', 'trainable': True, 'dtype': 'float32', 'units': 16, 'kernel_regularizer': {'module': 'keras.src.regularizers.regularizers', 'class_name': 'L1L2', 'config': {'l1': 1e-05, 'l2': 0.0001}, 'registered_name': 'L1L2'}, 'kernel_initializer': 'ones', 'nested_model': None}, 'registered_name': 'MyLayers>KernelMult'}
 
 ```
 </div>

@@ -6,7 +6,7 @@
 **Description:** Complete guide to transfer learning & fine-tuning in Keras.
 
 
-<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/guides/ipynb/keras_core/transfer_learning.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/guides/keras_core/transfer_learning.py)
+<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/guides/ipynb/keras/transfer_learning.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/guides/keras/transfer_learning.py)
 
 
 
@@ -16,8 +16,8 @@
 
 ```python
 import numpy as np
-import keras_core as keras
-from keras_core import layers
+import keras
+from keras import layers
 import tensorflow_datasets as tfds
 import matplotlib.pyplot as plt
 ```
@@ -101,7 +101,7 @@ In general, all weights are trainable weights. The only built-in layer that has
 non-trainable weights is the `BatchNormalization` layer. It uses non-trainable weights
  to keep track of the mean and variance of its inputs during training.
 To learn how to use non-trainable weights in your own custom layers, see the
-[guide to writing new layers from scratch](/keras_core/guides/making_new_layers_and_models_via_subclassing/).
+[guide to writing new layers from scratch](/keras/guides/making_new_layers_and_models_via_subclassing/).
 
 **Example: the `BatchNormalization` layer has 2 trainable weights and 2 non-trainable
  weights**
@@ -654,7 +654,7 @@ Corrupt JPEG data: 2226 extraneous bytes before marker 0xd9
 Epoch 2/2
  146/146 ━━━━━━━━━━━━━━━━━━━━ 38s 260ms/step - binary_accuracy: 0.9446 - loss: 0.1295 - val_binary_accuracy: 0.9709 - val_loss: 0.0809
 
-<keras_core.src.callbacks.history.History at 0x29f46bf70>
+<keras.src.callbacks.history.History at 0x29f46bf70>
 
 ```
 </div>
@@ -742,7 +742,7 @@ model.fit(train_ds, epochs=epochs, validation_data=validation_ds)
 Fitting the end-to-end model
  146/146 ━━━━━━━━━━━━━━━━━━━━ 513s 3s/step - binary_accuracy: 0.8462 - loss: 0.3728 - val_binary_accuracy: 0.9629 - val_loss: 0.1031
 
-<keras_core.src.callbacks.history.History at 0x2d488f220>
+<keras.src.callbacks.history.History at 0x2d488f220>
 
 ```
 </div>

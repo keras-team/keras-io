@@ -60,8 +60,8 @@ This guide can be run with any backend (Tensorflow, JAX, PyTorch).
 """
 
 %env KERAS_BACKEND=tensorflow
-import keras_core as keras
-from keras_core import ops
+import keras
+from keras import ops
 
 import keras_cv
 import numpy as np

@@ -11,9 +11,9 @@ Accelerator: GPU
 """
 
 import numpy as np
-import keras_core as keras
-from keras_core import layers
-from keras_core import ops
+import keras
+from keras import layers
+from keras import ops
 
 """
 ## Introduction
@@ -137,9 +137,9 @@ and a built-in evaluation loop (the `evaluate()` method). Note
 that you can easily customize these loops to implement your own training routines.
 See also the guides on customizing what happens in `fit()`:
 
-- [Writing a custom train step with TensorFlow](/keras_core/guides/custom_train_step_in_tensorflow/)
-- [Writing a custom train step with JAX](/keras_core/guides/custom_train_step_in_jax/)
-- [Writing a custom train step with PyTorch](/keras_core/guides/custom_train_step_in_torch/)
+- [Writing a custom train step with TensorFlow](/keras/guides/custom_train_step_in_tensorflow/)
+- [Writing a custom train step with JAX](/keras/guides/custom_train_step_in_jax/)
+- [Writing a custom train step with PyTorch](/keras/guides/custom_train_step_in_torch/)
 
 Here, load the MNIST image data, reshape it into vectors,
 fit the model on the data (while monitoring performance on a validation split),
@@ -165,7 +165,7 @@ print("Test accuracy:", test_scores[1])
 
 """
 For further reading, see the
-[training and evaluation](/keras_core/guides/training_with_built_in_methods/) guide.
+[training and evaluation](/keras/guides/training_with_built_in_methods/) guide.
 """
 
 """
@@ -191,7 +191,7 @@ model = keras.models.load_model("my_model.keras")
 
 """
 For details, read the model [serialization & saving](
-    /keras_core/guides/serialization_and_saving/) guide.
+    /keras/guides/serialization_and_saving/) guide.
 """
 
 """
@@ -425,7 +425,7 @@ or a tuple of dictionaries like
 `({'title': title_data, 'body': body_data, 'tags': tags_data}, {'priority': priority_targets, 'department': dept_targets})`.
 
 For more detailed explanation, refer to the
-[training and evaluation](/keras_core/guides/training_with_built_in_methods/) guide.
+[training and evaluation](/keras/guides/training_with_built_in_methods/) guide.
 """
 
 """
@@ -582,7 +582,7 @@ your own layers. All layers subclass the `Layer` class and implement:
 convention since you can create weights in `__init__`, as well).
 
 To learn more about creating layers from scratch, read
-[custom layers and models](/keras_core/guides/making_new_layers_and_models_via_subclassing) guide.
+[custom layers and models](/keras/guides/making_new_layers_and_models_via_subclassing) guide.
 
 The following is a basic implementation of `keras.layers.Dense`:
 """
@@ -745,7 +745,7 @@ Because a functional model is a data structure rather than a piece of code,
 it is safely serializable and can be saved as a single file
 that allows you to recreate the exact same model
 without having access to any of the original code.
-See the [serialization & saving guide](/keras_core/guides/serialization_and_saving/).
+See the [serialization & saving guide](/keras/guides/serialization_and_saving/).
 
 To serialize a subclassed model, it is necessary for the implementer
 to specify a `get_config()`

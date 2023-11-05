@@ -22,7 +22,7 @@ This library is an extension of the core Keras API; all high-level modules are
 [`Layers`](/api/layers/) or [`Models`](/api/models/). If you are familiar with Keras,
 congratulations! You already understand most of KerasNLP.
 
-KerasNLP uses the [Keras Core](https://keras.io/keras_core/) library to work
+KerasNLP uses the [Keras 3](https://keras.io/keras/) library to work
 with any of TensorFlow, Pytorch and Jax. In the guide below, we will use the
 `jax` backend for training our models, and [tf.data](https://www.tensorflow.org/guide/data)
 for efficiently running our input preprocessing. But feel free to mix things up!
@@ -56,7 +56,7 @@ import os
 os.environ["KERAS_BACKEND"] = "jax"  # or "tensorflow" or "torch"
 
 import keras_nlp
-import keras_core as keras
+import keras
 ```
 
 <div class="k-default-codeblock">
@@ -256,7 +256,7 @@ classifier.fit(
 ```
  1563/1563 ━━━━━━━━━━━━━━━━━━━━ 19s 11ms/step - loss: 0.5128 - sparse_categorical_accuracy: 0.7350 - val_loss: 0.2974 - val_sparse_categorical_accuracy: 0.8746
 
-<keras_core.src.callbacks.history.History at 0x7f86a0649db0>
+<keras.src.callbacks.history.History at 0x7f86a0649db0>
 
 ```
 </div>
@@ -329,7 +329,7 @@ Epoch 2/3
 Epoch 3/3
  1563/1563 ━━━━━━━━━━━━━━━━━━━━ 15s 9ms/step - loss: 0.2094 - sparse_categorical_accuracy: 0.9215 - val_loss: 0.3238 - val_sparse_categorical_accuracy: 0.8756
 
-<keras_core.src.callbacks.history.History at 0x7f864c4a3b80>
+<keras.src.callbacks.history.History at 0x7f864c4a3b80>
 
 ```
 </div>
@@ -536,7 +536,7 @@ Epoch 2/3
 Epoch 3/3
  1563/1563 ━━━━━━━━━━━━━━━━━━━━ 19s 12ms/step - loss: 0.4424 - sparse_categorical_accuracy: 0.7942 - val_loss: 0.3937 - val_sparse_categorical_accuracy: 0.8229
 
-<keras_core.src.callbacks.history.History at 0x7f860c194ac0>
+<keras.src.callbacks.history.History at 0x7f860c194ac0>
 
 ```
 </div>
@@ -821,7 +821,7 @@ Epoch 2/3
 Epoch 3/3
  1563/1563 ━━━━━━━━━━━━━━━━━━━━ 16s 10ms/step - loss: 4.8614 - sparse_categorical_accuracy: 0.1385 - val_loss: 4.4897 - val_sparse_categorical_accuracy: 0.2069
 
-<keras_core.src.callbacks.history.History at 0x7f862c356e30>
+<keras.src.callbacks.history.History at 0x7f862c356e30>
 
 ```
 </div>
@@ -1051,7 +1051,7 @@ Epoch 2/3
 Epoch 3/3
  1563/1563 ━━━━━━━━━━━━━━━━━━━━ 5s 3ms/step - loss: 0.2226 - sparse_categorical_accuracy: 0.9151 - val_loss: 0.4513 - val_sparse_categorical_accuracy: 0.8125
 
-<keras_core.src.callbacks.history.History at 0x7f8520133970>
+<keras.src.callbacks.history.History at 0x7f8520133970>
 
 ```
 </div>
