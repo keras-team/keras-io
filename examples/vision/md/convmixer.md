@@ -23,7 +23,8 @@ learning just from the training data with as minimal inductive priors as possibl
 yield great downstream performance when trained with proper regularization, data
 augmentation, and relatively large datasets.
 
-In the [Patches Are All You Need](https://openreview.net/pdf?id=TVHS5Y4dNvM) paper (note: at
+In the [Patches Are All You Need](https://openreview.net/pdf?id=TVHS5Y4dNvM) paper (note:
+at
 the time of writing, it is a submission to the ICLR 2022 conference), the authors extend
 the idea of using patches to train an all-convolutional network and demonstrate
 competitive results. Their architecture namely **ConvMixer** uses recipes from the recent
@@ -35,22 +36,15 @@ and so on.
 In this example, we will implement the ConvMixer model and demonstrate its performance on
 the CIFAR-10 dataset.
 
-To use the AdamW optimizer, we need to install TensorFlow Addons:
-
-```shell
-pip install -U -q tensorflow-addons
-```
-
 ---
 ## Imports
 
 
 ```python
-from tensorflow.keras import layers
-from tensorflow import keras
+import keras
+from keras import layers
 
 import matplotlib.pyplot as plt
-import tensorflow_addons as tfa
 import tensorflow as tf
 import numpy as np
 ```
@@ -102,16 +96,24 @@ Test data samples: 10000
 
 Our data augmentation pipeline is different from what the authors used for the CIFAR-10
 dataset, which is fine for the purpose of the example.
+Note that, it's ok to use **TF APIs for data I/O and preprocessing** with other backends
+(jax, torch) as it is feature-complete framework when it comes to data preprocessing.
 
 
 ```python
 image_size = 32
 auto = tf.data.AUTOTUNE
 
-data_augmentation = keras.Sequential(
-    [layers.RandomCrop(image_size, image_size), layers.RandomFlip("horizontal"),],
-    name="data_augmentation",
-)
+augmentation_layers = [
+    keras.layers.RandomCrop(image_size, image_size),
+    keras.layers.RandomFlip("horizontal"),
+]
+
+
+def augment_images(images):
+    for layer in augmentation_layers:
+        images = layer(images, training=True)
+    return images
 
 
 def make_datasets(images, labels, is_train=False):
@@ -121,7 +123,7 @@ def make_datasets(images, labels, is_train=False):
     dataset = dataset.batch(batch_size)
     if is_train:
         dataset = dataset.map(
-            lambda x, y: (data_augmentation(x), y), num_parallel_calls=auto
+            lambda x, y: (augment_images(x), y), num_parallel_calls=auto
         )
     return dataset.prefetch(auto)
 
@@ -131,23 +133,6 @@ val_dataset = make_datasets(x_val, y_val)
 test_dataset = make_datasets(x_test, y_test)
 ```
 
-<div class="k-default-codeblock">
-```
-2021-10-17 03:43:59.588315: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:937] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
-2021-10-17 03:43:59.596532: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:937] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
-2021-10-17 03:43:59.597211: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:937] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
-2021-10-17 03:43:59.622016: I tensorflow/core/platform/cpu_feature_guard.cc:142] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  AVX2 FMA
-To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
-2021-10-17 03:43:59.622853: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:937] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
-2021-10-17 03:43:59.623542: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:937] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
-2021-10-17 03:43:59.624174: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:937] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
-2021-10-17 03:44:00.067659: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:937] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
-2021-10-17 03:44:00.068334: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:937] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
-2021-10-17 03:44:00.068970: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:937] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
-2021-10-17 03:44:00.069615: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1510] Created device /job:localhost/replica:0/task:0/device:GPU:0 with 14684 MB memory:  -> device: 0, name: Tesla V100-SXM2-16GB, pci bus id: 0000:00:04.0, compute capability: 7.0
-
-```
-</div>
 ---
 ## ConvMixer utilities
 
@@ -230,7 +215,7 @@ parameters.
 
 
 def run_experiment(model):
-    optimizer = tfa.optimizers.AdamW(
+    optimizer = keras.optimizers.AdamW(
         learning_rate=learning_rate, weight_decay=weight_decay
     )
 
@@ -240,12 +225,12 @@ def run_experiment(model):
         metrics=["accuracy"],
     )
 
-    checkpoint_filepath = "/tmp/checkpoint"
+    checkpoint_filepath = "/tmp/checkpoint.keras"
     checkpoint_callback = keras.callbacks.ModelCheckpoint(
         checkpoint_filepath,
         monitor="val_accuracy",
         save_best_only=True,
-        save_weights_only=True,
+        save_weights_only=False,
     )
 
     history = model.fit(
@@ -274,33 +259,28 @@ history, conv_mixer_model = run_experiment(conv_mixer_model)
 
 <div class="k-default-codeblock">
 ```
-2021-10-17 03:44:01.291445: I tensorflow/compiler/mlir/mlir_graph_optimization_pass.cc:185] None of the MLIR Optimization Passes are enabled (registered 2)
-
 Epoch 1/10
-
-2021-10-17 03:44:04.721186: I tensorflow/stream_executor/cuda/cuda_dnn.cc:369] Loaded cuDNN version 8005
-
-352/352 [==============================] - 29s 70ms/step - loss: 1.2272 - accuracy: 0.5592 - val_loss: 3.9422 - val_accuracy: 0.1196
+ 352/352 ━━━━━━━━━━━━━━━━━━━━ 46s 103ms/step - accuracy: 0.4594 - loss: 1.4780 - val_accuracy: 0.1536 - val_loss: 4.0766
 Epoch 2/10
-352/352 [==============================] - 24s 69ms/step - loss: 0.7813 - accuracy: 0.7278 - val_loss: 0.8860 - val_accuracy: 0.6898
+ 352/352 ━━━━━━━━━━━━━━━━━━━━ 14s 39ms/step - accuracy: 0.6996 - loss: 0.8479 - val_accuracy: 0.7240 - val_loss: 0.7926
 Epoch 3/10
-352/352 [==============================] - 24s 68ms/step - loss: 0.5947 - accuracy: 0.7943 - val_loss: 0.6175 - val_accuracy: 0.7856
+ 352/352 ━━━━━━━━━━━━━━━━━━━━ 14s 39ms/step - accuracy: 0.7823 - loss: 0.6287 - val_accuracy: 0.7800 - val_loss: 0.6532
 Epoch 4/10
-352/352 [==============================] - 24s 69ms/step - loss: 0.4801 - accuracy: 0.8330 - val_loss: 0.5634 - val_accuracy: 0.8064
+ 352/352 ━━━━━━━━━━━━━━━━━━━━ 14s 39ms/step - accuracy: 0.8264 - loss: 0.5003 - val_accuracy: 0.8074 - val_loss: 0.5895
 Epoch 5/10
-352/352 [==============================] - 24s 68ms/step - loss: 0.4065 - accuracy: 0.8599 - val_loss: 0.5359 - val_accuracy: 0.8166
+ 352/352 ━━━━━━━━━━━━━━━━━━━━ 21s 60ms/step - accuracy: 0.8605 - loss: 0.4092 - val_accuracy: 0.7996 - val_loss: 0.6037
 Epoch 6/10
-352/352 [==============================] - 24s 68ms/step - loss: 0.3473 - accuracy: 0.8804 - val_loss: 0.5257 - val_accuracy: 0.8228
+ 352/352 ━━━━━━━━━━━━━━━━━━━━ 13s 38ms/step - accuracy: 0.8788 - loss: 0.3527 - val_accuracy: 0.8072 - val_loss: 0.6162
 Epoch 7/10
-352/352 [==============================] - 24s 68ms/step - loss: 0.3071 - accuracy: 0.8944 - val_loss: 0.4982 - val_accuracy: 0.8264
+ 352/352 ━━━━━━━━━━━━━━━━━━━━ 21s 61ms/step - accuracy: 0.8972 - loss: 0.2984 - val_accuracy: 0.8226 - val_loss: 0.5604
 Epoch 8/10
-352/352 [==============================] - 24s 68ms/step - loss: 0.2655 - accuracy: 0.9083 - val_loss: 0.5032 - val_accuracy: 0.8346
+ 352/352 ━━━━━━━━━━━━━━━━━━━━ 21s 61ms/step - accuracy: 0.9087 - loss: 0.2608 - val_accuracy: 0.8310 - val_loss: 0.5303
 Epoch 9/10
-352/352 [==============================] - 24s 68ms/step - loss: 0.2328 - accuracy: 0.9194 - val_loss: 0.5225 - val_accuracy: 0.8326
+ 352/352 ━━━━━━━━━━━━━━━━━━━━ 14s 39ms/step - accuracy: 0.9176 - loss: 0.2302 - val_accuracy: 0.8458 - val_loss: 0.5051
 Epoch 10/10
-352/352 [==============================] - 24s 68ms/step - loss: 0.2115 - accuracy: 0.9278 - val_loss: 0.5063 - val_accuracy: 0.8372
-79/79 [==============================] - 2s 19ms/step - loss: 0.5412 - accuracy: 0.8325
-Test accuracy: 83.25%
+ 352/352 ━━━━━━━━━━━━━━━━━━━━ 14s 38ms/step - accuracy: 0.9336 - loss: 0.1918 - val_accuracy: 0.8316 - val_loss: 0.5848
+ 79/79 ━━━━━━━━━━━━━━━━━━━━ 3s 32ms/step - accuracy: 0.8371 - loss: 0.5501
+Test accuracy: 83.69%
 
 ```
 </div>
@@ -377,14 +357,14 @@ visualization_plot(kernel)
 
 <div class="k-default-codeblock">
 ```
-5 <keras.layers.convolutional.DepthwiseConv2D object at 0x7f9e74854990>
-12 <keras.layers.convolutional.DepthwiseConv2D object at 0x7f9e747df910>
-19 <keras.layers.convolutional.DepthwiseConv2D object at 0x7f9e6c5c9e10>
-26 <keras.layers.convolutional.DepthwiseConv2D object at 0x7f9e74906750>
-33 <keras.layers.convolutional.DepthwiseConv2D object at 0x7f9e74902390>
-40 <keras.layers.convolutional.DepthwiseConv2D object at 0x7f9e748ee690>
-47 <keras.layers.convolutional.DepthwiseConv2D object at 0x7f9e7493dfd0>
-54 <keras.layers.convolutional.DepthwiseConv2D object at 0x7f9e6c4e8a10>
+5 <DepthwiseConv2D name=depthwise_conv2d, built=True>
+12 <DepthwiseConv2D name=depthwise_conv2d_1, built=True>
+19 <DepthwiseConv2D name=depthwise_conv2d_2, built=True>
+26 <DepthwiseConv2D name=depthwise_conv2d_3, built=True>
+33 <DepthwiseConv2D name=depthwise_conv2d_4, built=True>
+40 <DepthwiseConv2D name=depthwise_conv2d_5, built=True>
+47 <DepthwiseConv2D name=depthwise_conv2d_6, built=True>
+54 <DepthwiseConv2D name=depthwise_conv2d_7, built=True>
 
 ```
 </div>
@@ -393,7 +373,8 @@ visualization_plot(kernel)
     
 
 
-We see that different filters in the kernel have different locality spans, and this pattern
+We see that different filters in the kernel have different locality spans, and this
+pattern
 is likely to evolve with more training.
 
 ---
@@ -405,7 +386,3 @@ like self-attention. Following works are along this line of research:
 * ConViT ([d'Ascoli et al.](https://arxiv.org/abs/2103.10697))
 * CCT ([Hassani et al.](https://arxiv.org/abs/2104.05704))
 * CoAtNet ([Dai et al.](https://arxiv.org/abs/2106.04803))
-
-| Trained Model | Demo |
-| :--: | :--: |
-| [![Generic badge](https://img.shields.io/badge/🤗%20Model-ConvMixer-black.svg)](https://huggingface.co/keras-io/conv_Mixer) | [![Generic badge](https://img.shields.io/badge/🤗%20Spaces-ConvMixer-black.svg)](https://huggingface.co/spaces/keras-io/conv_Mixer) |
