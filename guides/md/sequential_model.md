@@ -2,7 +2,7 @@
 
 **Author:** [fchollet](https://twitter.com/fchollet)<br>
 **Date created:** 2020/04/12<br>
-**Last modified:** 2020/04/12<br>
+**Last modified:** 2023/06/25<br>
 **Description:** Complete guide to the Sequential model.
 
 
@@ -15,9 +15,9 @@
 
 
 ```python
-import tensorflow as tf
 import keras
 from keras import layers
+from keras import ops
 ```
 
 ---
@@ -39,7 +39,7 @@ model = keras.Sequential(
     ]
 )
 # Call model on a test input
-x = tf.ones((3, 3))
+x = ops.ones((3, 3))
 y = model(x)
 ```
 
@@ -53,7 +53,7 @@ layer2 = layers.Dense(3, activation="relu", name="layer2")
 layer3 = layers.Dense(4, name="layer3")
 
 # Call layers on a test input
-x = tf.ones((3, 3))
+x = ops.ones((3, 3))
 y = layer3(layer2(layer1(x)))
 ```
 
@@ -94,9 +94,9 @@ model.layers
 
 <div class="k-default-codeblock">
 ```
-[<keras.src.layers.core.dense.Dense at 0x7fb328d4e850>,
- <keras.src.layers.core.dense.Dense at 0x7fb327fecb90>,
- <keras.src.layers.core.dense.Dense at 0x7fb327f99210>]
+[<Dense name=dense, built=False>,
+ <Dense name=dense_1, built=False>,
+ <Dense name=dense_2, built=False>]
 
 ```
 </div>
@@ -165,7 +165,7 @@ of the weights depends on the shape of the inputs:
 
 ```python
 # Call layer on a test input
-x = tf.ones((1, 4))
+x = ops.ones((1, 4))
 y = layer(x)
 layer.weights  # Now it has weights, of shape (4, 3) and (3,)
 ```
@@ -175,12 +175,8 @@ layer.weights  # Now it has weights, of shape (4, 3) and (3,)
 
 <div class="k-default-codeblock">
 ```
-[<tf.Variable 'dense_6/kernel:0' shape=(4, 3) dtype=float32, numpy=
- array([[ 0.6737782 ,  0.3430692 , -0.5403261 ],
-        [ 0.747154  ,  0.46349108, -0.31388676],
-        [ 0.7401793 ,  0.18300307, -0.7164282 ],
-        [-0.26776248, -0.7867748 ,  0.3125652 ]], dtype=float32)>,
- <tf.Variable 'dense_6/bias:0' shape=(3,) dtype=float32, numpy=array([0., 0., 0.], dtype=float32)>]
+[<KerasVariable shape=(4, 3), dtype=float32, path=dense_6/kernel>,
+ <KerasVariable shape=(3,), dtype=float32, path=dense_6/bias>]
 
 ```
 </div>
@@ -207,7 +203,7 @@ model = keras.Sequential(
 # model.summary()
 
 # Call the model on a test input
-x = tf.ones((1, 4))
+x = ops.ones((1, 4))
 y = model(x)
 print("Number of weights after calling the model:", len(model.weights))  # 6
 ```
@@ -226,26 +222,44 @@ contents:
 model.summary()
 ```
 
-<div class="k-default-codeblock">
-```
-Model: "sequential_3"
-_________________________________________________________________
- Layer (type)                Output Shape              Param #   
-=================================================================
- dense_7 (Dense)             (1, 2)                    10        
-                                                                 
- dense_8 (Dense)             (1, 3)                    9         
-                                                                 
- dense_9 (Dense)             (1, 4)                    16        
-                                                                 
-=================================================================
-Total params: 35 (140.00 Byte)
-Trainable params: 35 (140.00 Byte)
-Non-trainable params: 0 (0.00 Byte)
-_________________________________________________________________
 
-```
-</div>
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold">Model: "sequential_3"</span>
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━┓
+┃<span style="font-weight: bold"> Layer (type)                    </span>┃<span style="font-weight: bold"> Output Shape              </span>┃<span style="font-weight: bold">    Param # </span>┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━┩
+│ dense_7 (<span style="color: #0087ff; text-decoration-color: #0087ff">Dense</span>)                 │ (<span style="color: #00af00; text-decoration-color: #00af00">1</span>, <span style="color: #00af00; text-decoration-color: #00af00">2</span>)                    │         <span style="color: #00af00; text-decoration-color: #00af00">10</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ dense_8 (<span style="color: #0087ff; text-decoration-color: #0087ff">Dense</span>)                 │ (<span style="color: #00af00; text-decoration-color: #00af00">1</span>, <span style="color: #00af00; text-decoration-color: #00af00">3</span>)                    │          <span style="color: #00af00; text-decoration-color: #00af00">9</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ dense_9 (<span style="color: #0087ff; text-decoration-color: #0087ff">Dense</span>)                 │ (<span style="color: #00af00; text-decoration-color: #00af00">1</span>, <span style="color: #00af00; text-decoration-color: #00af00">4</span>)                    │         <span style="color: #00af00; text-decoration-color: #00af00">16</span> │
+└─────────────────────────────────┴───────────────────────────┴────────────┘
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Total params: </span><span style="color: #00af00; text-decoration-color: #00af00">35</span> (140.00 B)
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Trainable params: </span><span style="color: #00af00; text-decoration-color: #00af00">35</span> (140.00 B)
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Non-trainable params: </span><span style="color: #00af00; text-decoration-color: #00af00">0</span> (0.00 B)
+</pre>
+
+
+
 However, it can be very useful when building a Sequential model incrementally
 to be able to display the summary of the model so far, including the current
 output shape. In this case, you should start your model by passing an `Input`
@@ -260,22 +274,40 @@ model.add(layers.Dense(2, activation="relu"))
 model.summary()
 ```
 
-<div class="k-default-codeblock">
-```
-Model: "sequential_4"
-_________________________________________________________________
- Layer (type)                Output Shape              Param #   
-=================================================================
- dense_10 (Dense)            (None, 2)                 10        
-                                                                 
-=================================================================
-Total params: 10 (40.00 Byte)
-Trainable params: 10 (40.00 Byte)
-Non-trainable params: 0 (0.00 Byte)
-_________________________________________________________________
 
-```
-</div>
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold">Model: "sequential_4"</span>
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━┓
+┃<span style="font-weight: bold"> Layer (type)                    </span>┃<span style="font-weight: bold"> Output Shape              </span>┃<span style="font-weight: bold">    Param # </span>┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━┩
+│ dense_10 (<span style="color: #0087ff; text-decoration-color: #0087ff">Dense</span>)                │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">2</span>)                 │         <span style="color: #00af00; text-decoration-color: #00af00">10</span> │
+└─────────────────────────────────┴───────────────────────────┴────────────┘
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Total params: </span><span style="color: #00af00; text-decoration-color: #00af00">10</span> (40.00 B)
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Trainable params: </span><span style="color: #00af00; text-decoration-color: #00af00">10</span> (40.00 B)
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Non-trainable params: </span><span style="color: #00af00; text-decoration-color: #00af00">0</span> (0.00 B)
+</pre>
+
+
+
 Note that the `Input` object is not displayed as part of `model.layers`, since
 it isn't a layer:
 
@@ -289,34 +321,7 @@ model.layers
 
 <div class="k-default-codeblock">
 ```
-[<keras.src.layers.core.dense.Dense at 0x7fb32a7f28d0>]
-
-```
-</div>
-A simple alternative is to just pass an `input_shape` argument to your first
-layer:
-
-
-```python
-model = keras.Sequential()
-model.add(layers.Dense(2, activation="relu", input_shape=(4,)))
-
-model.summary()
-```
-
-<div class="k-default-codeblock">
-```
-Model: "sequential_5"
-_________________________________________________________________
- Layer (type)                Output Shape              Param #   
-=================================================================
- dense_11 (Dense)            (None, 2)                 10        
-                                                                 
-=================================================================
-Total params: 10 (40.00 Byte)
-Trainable params: 10 (40.00 Byte)
-Non-trainable params: 0 (0.00 Byte)
-_________________________________________________________________
+[<Dense name=dense_10, built=True>]
 
 ```
 </div>
@@ -365,57 +370,94 @@ model.add(layers.GlobalMaxPooling2D())
 model.add(layers.Dense(10))
 ```
 
-<div class="k-default-codeblock">
-```
-Model: "sequential_6"
-_________________________________________________________________
- Layer (type)                Output Shape              Param #   
-=================================================================
- conv2d (Conv2D)             (None, 123, 123, 32)      2432      
-                                                                 
- conv2d_1 (Conv2D)           (None, 121, 121, 32)      9248      
-                                                                 
- max_pooling2d (MaxPooling2  (None, 40, 40, 32)        0         
- D)                                                              
-                                                                 
-=================================================================
-Total params: 11680 (45.62 KB)
-Trainable params: 11680 (45.62 KB)
-Non-trainable params: 0 (0.00 Byte)
-_________________________________________________________________
-Model: "sequential_6"
-_________________________________________________________________
- Layer (type)                Output Shape              Param #   
-=================================================================
- conv2d (Conv2D)             (None, 123, 123, 32)      2432      
-                                                                 
- conv2d_1 (Conv2D)           (None, 121, 121, 32)      9248      
-                                                                 
- max_pooling2d (MaxPooling2  (None, 40, 40, 32)        0         
- D)                                                              
-                                                                 
- conv2d_2 (Conv2D)           (None, 38, 38, 32)        9248      
-                                                                 
- conv2d_3 (Conv2D)           (None, 36, 36, 32)        9248      
-                                                                 
- max_pooling2d_1 (MaxPoolin  (None, 12, 12, 32)        0         
- g2D)                                                            
-                                                                 
- conv2d_4 (Conv2D)           (None, 10, 10, 32)        9248      
-                                                                 
- conv2d_5 (Conv2D)           (None, 8, 8, 32)          9248      
-                                                                 
- max_pooling2d_2 (MaxPoolin  (None, 4, 4, 32)          0         
- g2D)                                                            
-                                                                 
-=================================================================
-Total params: 48672 (190.12 KB)
-Trainable params: 48672 (190.12 KB)
-Non-trainable params: 0 (0.00 Byte)
-_________________________________________________________________
 
-```
-</div>
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold">Model: "sequential_5"</span>
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━┓
+┃<span style="font-weight: bold"> Layer (type)                    </span>┃<span style="font-weight: bold"> Output Shape              </span>┃<span style="font-weight: bold">    Param # </span>┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━┩
+│ conv2d (<span style="color: #0087ff; text-decoration-color: #0087ff">Conv2D</span>)                 │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">123</span>, <span style="color: #00af00; text-decoration-color: #00af00">123</span>, <span style="color: #00af00; text-decoration-color: #00af00">32</span>)      │      <span style="color: #00af00; text-decoration-color: #00af00">2,432</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ conv2d_1 (<span style="color: #0087ff; text-decoration-color: #0087ff">Conv2D</span>)               │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">121</span>, <span style="color: #00af00; text-decoration-color: #00af00">121</span>, <span style="color: #00af00; text-decoration-color: #00af00">32</span>)      │      <span style="color: #00af00; text-decoration-color: #00af00">9,248</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ max_pooling2d (<span style="color: #0087ff; text-decoration-color: #0087ff">MaxPooling2D</span>)    │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">40</span>, <span style="color: #00af00; text-decoration-color: #00af00">40</span>, <span style="color: #00af00; text-decoration-color: #00af00">32</span>)        │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │
+└─────────────────────────────────┴───────────────────────────┴────────────┘
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Total params: </span><span style="color: #00af00; text-decoration-color: #00af00">11,680</span> (45.62 KB)
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Trainable params: </span><span style="color: #00af00; text-decoration-color: #00af00">11,680</span> (45.62 KB)
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Non-trainable params: </span><span style="color: #00af00; text-decoration-color: #00af00">0</span> (0.00 B)
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold">Model: "sequential_5"</span>
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━┓
+┃<span style="font-weight: bold"> Layer (type)                    </span>┃<span style="font-weight: bold"> Output Shape              </span>┃<span style="font-weight: bold">    Param # </span>┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━┩
+│ conv2d (<span style="color: #0087ff; text-decoration-color: #0087ff">Conv2D</span>)                 │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">123</span>, <span style="color: #00af00; text-decoration-color: #00af00">123</span>, <span style="color: #00af00; text-decoration-color: #00af00">32</span>)      │      <span style="color: #00af00; text-decoration-color: #00af00">2,432</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ conv2d_1 (<span style="color: #0087ff; text-decoration-color: #0087ff">Conv2D</span>)               │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">121</span>, <span style="color: #00af00; text-decoration-color: #00af00">121</span>, <span style="color: #00af00; text-decoration-color: #00af00">32</span>)      │      <span style="color: #00af00; text-decoration-color: #00af00">9,248</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ max_pooling2d (<span style="color: #0087ff; text-decoration-color: #0087ff">MaxPooling2D</span>)    │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">40</span>, <span style="color: #00af00; text-decoration-color: #00af00">40</span>, <span style="color: #00af00; text-decoration-color: #00af00">32</span>)        │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ conv2d_2 (<span style="color: #0087ff; text-decoration-color: #0087ff">Conv2D</span>)               │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">38</span>, <span style="color: #00af00; text-decoration-color: #00af00">38</span>, <span style="color: #00af00; text-decoration-color: #00af00">32</span>)        │      <span style="color: #00af00; text-decoration-color: #00af00">9,248</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ conv2d_3 (<span style="color: #0087ff; text-decoration-color: #0087ff">Conv2D</span>)               │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">36</span>, <span style="color: #00af00; text-decoration-color: #00af00">36</span>, <span style="color: #00af00; text-decoration-color: #00af00">32</span>)        │      <span style="color: #00af00; text-decoration-color: #00af00">9,248</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ max_pooling2d_1 (<span style="color: #0087ff; text-decoration-color: #0087ff">MaxPooling2D</span>)  │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">12</span>, <span style="color: #00af00; text-decoration-color: #00af00">12</span>, <span style="color: #00af00; text-decoration-color: #00af00">32</span>)        │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ conv2d_4 (<span style="color: #0087ff; text-decoration-color: #0087ff">Conv2D</span>)               │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">10</span>, <span style="color: #00af00; text-decoration-color: #00af00">10</span>, <span style="color: #00af00; text-decoration-color: #00af00">32</span>)        │      <span style="color: #00af00; text-decoration-color: #00af00">9,248</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ conv2d_5 (<span style="color: #0087ff; text-decoration-color: #0087ff">Conv2D</span>)               │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">8</span>, <span style="color: #00af00; text-decoration-color: #00af00">8</span>, <span style="color: #00af00; text-decoration-color: #00af00">32</span>)          │      <span style="color: #00af00; text-decoration-color: #00af00">9,248</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ max_pooling2d_2 (<span style="color: #0087ff; text-decoration-color: #0087ff">MaxPooling2D</span>)  │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">4</span>, <span style="color: #00af00; text-decoration-color: #00af00">4</span>, <span style="color: #00af00; text-decoration-color: #00af00">32</span>)          │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │
+└─────────────────────────────────┴───────────────────────────┴────────────┘
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Total params: </span><span style="color: #00af00; text-decoration-color: #00af00">48,672</span> (190.12 KB)
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Trainable params: </span><span style="color: #00af00; text-decoration-color: #00af00">48,672</span> (190.12 KB)
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Non-trainable params: </span><span style="color: #00af00; text-decoration-color: #00af00">0</span> (0.00 B)
+</pre>
+
+
+
 Very practical, right?
 
 
@@ -426,20 +468,18 @@ Once your model architecture is ready, you will want to:
 
 - Train your model, evaluate it, and run inference. See our
 [guide to training & evaluation with the built-in loops](
-    /guides/training_with_built_in_methods/)
+    /keras/guides/training_with_built_in_methods/)
 - Save your model to disk and restore it. See our
-[guide to serialization & saving](/guides/serialization_and_saving/).
-- Speed up model training by leveraging multiple GPUs. See our
-[guide to multi-GPU and distributed training](https://keras.io/guides/distributed_training/).
+[guide to serialization & saving](/keras/guides/serialization_and_saving/).
 
 ---
 ## Feature extraction with a Sequential model
 
-Once a Sequential model has been built, it behaves like a [Functional API
-model](/guides/functional_api/). This means that every layer has an `input`
+Once a Sequential model has been built, it behaves like a
+[Functional API model](/keras/guides/functional_api/).
+This means that every layer has an `input`
 and `output` attribute. These attributes can be used to do neat things, like
-quickly
-creating a model that extracts the outputs of all intermediate layers in a
+quickly creating a model that extracts the outputs of all intermediate layers in a
 Sequential model:
 
 
@@ -458,7 +498,7 @@ feature_extractor = keras.Model(
 )
 
 # Call feature extractor on test input.
-x = tf.ones((1, 250, 250, 3))
+x = ops.ones((1, 250, 250, 3))
 features = feature_extractor(x)
 ```
 
@@ -479,7 +519,7 @@ feature_extractor = keras.Model(
     outputs=initial_model.get_layer(name="my_intermediate_layer").output,
 )
 # Call feature extractor on test input.
-x = tf.ones((1, 250, 250, 3))
+x = ops.ones((1, 250, 250, 3))
 features = feature_extractor(x)
 ```
 
@@ -488,7 +528,7 @@ features = feature_extractor(x)
 
 Transfer learning consists of freezing the bottom layers in a model and only training
 the top layers. If you aren't familiar with it, make sure to read our [guide
-to transfer learning](/guides/transfer_learning/).
+to transfer learning](/keras/guides/transfer_learning/).
 
 Here are two common transfer learning blueprint involving Sequential models.
 
@@ -549,6 +589,5 @@ That's about all you need to know about Sequential models!
 
 To find out more about building models in Keras, see:
 
-- [Guide to the Functional API](/guides/functional_api/)
-- [Guide to making new Layers & Models via subclassing](
-    /guides/making_new_layers_and_models_via_subclassing/)
+- [Guide to the Functional API](/keras/guides/functional_api/)
+- [Guide to making new Layers & Models via subclassing](/keras/guides/making_new_layers_and_models_via_subclassing/)

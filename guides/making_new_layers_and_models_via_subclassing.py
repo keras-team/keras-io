@@ -469,10 +469,13 @@ class CustomDropout(keras.layers.Layer):
     def __init__(self, rate, **kwargs):
         super().__init__(**kwargs)
         self.rate = rate
+        self.seed_generator = keras.random.SeedGenerator(1337)
 
     def call(self, inputs, training=None):
         if training:
-            return keras.random.dropout(inputs, rate=self.rate)
+            return keras.random.dropout(
+                inputs, rate=self.rate, seed=self.seed_generator
+            )
         return inputs
 
 
@@ -582,11 +585,15 @@ that subclass `Layer`. It will feature a regularization loss (KL divergence).
 class Sampling(layers.Layer):
     """Uses (z_mean, z_log_var) to sample z, the vector encoding a digit."""
 
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.seed_generator = keras.random.SeedGenerator(1337)
+
     def call(self, inputs):
         z_mean, z_log_var = inputs
         batch = ops.shape(z_mean)[0]
         dim = ops.shape(z_mean)[1]
-        epsilon = keras.random.normal(shape=(batch, dim))
+        epsilon = keras.random.normal(shape=(batch, dim), seed=self.seed_generator)
         return z_mean + ops.exp(0.5 * z_log_var) * epsilon
 
 
