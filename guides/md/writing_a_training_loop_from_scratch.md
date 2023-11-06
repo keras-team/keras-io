@@ -2,11 +2,11 @@
 
 **Author:** [fchollet](https://twitter.com/fchollet)<br>
 **Date created:** 2019/03/01<br>
-**Last modified:** 2020/04/15<br>
+**Last modified:** 2023/07/10<br>
 **Description:** Complete guide to writing low-level training & evaluation loops.
 
 
-<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/guidesipynb/writing_a_training_loop_from_scratch.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/guideswriting_a_training_loop_from_scratch.py)
+<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/guides/ipynb/writing_a_training_loop_from_scratch.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/guides/writing_a_training_loop_from_scratch.py)
 
 
 
@@ -16,8 +16,8 @@
 
 ```python
 import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras import layers
+import keras
+from keras import layers
 import numpy as np
 ```
 
@@ -26,14 +26,14 @@ import numpy as np
 
 Keras provides default training and evaluation loops, `fit()` and `evaluate()`.
 Their usage is covered in the guide
-[Training & evaluation with the built-in methods](/guides/training_with_built_in_methods/).
+[Training & evaluation with the built-in methods](https://keras.io/guides/training_with_built_in_methods/).
 
 If you want to customize the learning algorithm of your model while still leveraging
 the convenience of `fit()`
 (for instance, to train a GAN using `fit()`), you can subclass the `Model` class and
 implement your own `train_step()` method, which
 is called repeatedly during `fit()`. This is covered in the guide
-[Customizing what happens in `fit()`](/guides/customizing_what_happens_in_fit/).
+[Customizing what happens in `fit()`](https://keras.io/guides/customizing_what_happens_in_fit/).
 
 Now, if you want very low-level control over training & evaluation, you should write
 your own training & evaluation loops from scratch. This is what this guide is about.
@@ -73,8 +73,20 @@ batch_size = 64
 (x_train, y_train), (x_test, y_test) = keras.datasets.mnist.load_data()
 x_train = np.reshape(x_train, (-1, 784))
 x_test = np.reshape(x_test, (-1, 784))
+
+# Reserve 10,000 samples for validation.
+x_val = x_train[-10000:]
+y_val = y_train[-10000:]
+x_train = x_train[:-10000]
+y_train = y_train[:-10000]
+
+# Prepare the training dataset.
 train_dataset = tf.data.Dataset.from_tensor_slices((x_train, y_train))
 train_dataset = train_dataset.shuffle(buffer_size=1024).batch(batch_size)
+
+# Prepare the validation dataset.
+val_dataset = tf.data.Dataset.from_tensor_slices((x_val, y_val))
+val_dataset = val_dataset.batch(batch_size)
 ```
 
 Here's our training loop:
@@ -96,11 +108,9 @@ for epoch in range(epochs):
 
     # Iterate over the batches of the dataset.
     for step, (x_batch_train, y_batch_train) in enumerate(train_dataset):
-
         # Open a GradientTape to record the operations run
         # during the forward pass, which enables auto-differentiation.
         with tf.GradientTape() as tape:
-
             # Run the forward pass of the layer.
             # The operations that the layer applies
             # to its inputs are going to be recorded
@@ -124,39 +134,35 @@ for epoch in range(epochs):
                 "Training loss (for one batch) at step %d: %.4f"
                 % (step, float(loss_value))
             )
-            print("Seen so far: %s samples" % ((step + 1) * 64))
+            print("Seen so far: %s samples" % ((step + 1) * batch_size))
 ```
 
     
 <div class="k-default-codeblock">
 ```
 Start of epoch 0
-Training loss (for one batch) at step 0: 113.8568
+Training loss (for one batch) at step 0: 120.0656
 Seen so far: 64 samples
-Training loss (for one batch) at step 200: 1.8656
+Training loss (for one batch) at step 200: 1.4296
 Seen so far: 12864 samples
-Training loss (for one batch) at step 400: 0.9388
+Training loss (for one batch) at step 400: 1.0072
 Seen so far: 25664 samples
-Training loss (for one batch) at step 600: 0.5900
+Training loss (for one batch) at step 600: 0.8556
 Seen so far: 38464 samples
-Training loss (for one batch) at step 800: 0.6859
-Seen so far: 51264 samples
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
 Start of epoch 1
-Training loss (for one batch) at step 0: 0.6952
+Training loss (for one batch) at step 0: 0.6670
 Seen so far: 64 samples
-Training loss (for one batch) at step 200: 0.9020
+Training loss (for one batch) at step 200: 0.3697
 Seen so far: 12864 samples
-Training loss (for one batch) at step 400: 0.3637
+Training loss (for one batch) at step 400: 0.3445
 Seen so far: 25664 samples
-Training loss (for one batch) at step 600: 0.5506
+Training loss (for one batch) at step 600: 0.4279
 Seen so far: 38464 samples
-Training loss (for one batch) at step 800: 0.4058
-Seen so far: 51264 samples
 
 ```
 </div>
@@ -194,20 +200,6 @@ loss_fn = keras.losses.SparseCategoricalCrossentropy(from_logits=True)
 # Prepare the metrics.
 train_acc_metric = keras.metrics.SparseCategoricalAccuracy()
 val_acc_metric = keras.metrics.SparseCategoricalAccuracy()
-
-# Prepare the training dataset.
-batch_size = 64
-train_dataset = tf.data.Dataset.from_tensor_slices((x_train, y_train))
-train_dataset = train_dataset.shuffle(buffer_size=1024).batch(batch_size)
-
-# Prepare the validation dataset.
-# Reserve 10,000 samples for validation.
-x_val = x_train[-10000:]
-y_val = y_train[-10000:]
-x_train = x_train[:-10000]
-y_train = y_train[:-10000]
-val_dataset = tf.data.Dataset.from_tensor_slices((x_val, y_val))
-val_dataset = val_dataset.batch(64)
 ```
 
 Here's our training & evaluation loop:
@@ -238,7 +230,7 @@ for epoch in range(epochs):
                 "Training loss (for one batch) at step %d: %.4f"
                 % (step, float(loss_value))
             )
-            print("Seen so far: %d samples" % ((step + 1) * 64))
+            print("Seen so far: %d samples" % ((step + 1) * batch_size))
 
     # Display metrics at the end of each epoch.
     train_acc = train_acc_metric.result()
@@ -262,52 +254,48 @@ for epoch in range(epochs):
 <div class="k-default-codeblock">
 ```
 Start of epoch 0
-Training loss (for one batch) at step 0: 113.7423
+Training loss (for one batch) at step 0: 154.5849
 Seen so far: 64 samples
-Training loss (for one batch) at step 200: 1.3798
+Training loss (for one batch) at step 200: 1.2994
 Seen so far: 12864 samples
-Training loss (for one batch) at step 400: 1.1403
+Training loss (for one batch) at step 400: 1.0750
 Seen so far: 25664 samples
-Training loss (for one batch) at step 600: 1.2430
+Training loss (for one batch) at step 600: 1.1264
 Seen so far: 38464 samples
-Training loss (for one batch) at step 800: 1.3247
-Seen so far: 51264 samples
-Training acc over epoch: 0.6776
-Validation acc: 0.8365
-Time taken: 4.62s
+Training acc over epoch: 0.7203
+Validation acc: 0.8233
+Time taken: 7.95s
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
 Start of epoch 1
-Training loss (for one batch) at step 0: 0.6545
+Training loss (for one batch) at step 0: 1.0552
 Seen so far: 64 samples
-Training loss (for one batch) at step 200: 0.5363
+Training loss (for one batch) at step 200: 0.8037
 Seen so far: 12864 samples
-Training loss (for one batch) at step 400: 0.7577
+Training loss (for one batch) at step 400: 0.2875
 Seen so far: 25664 samples
-Training loss (for one batch) at step 600: 0.9408
+Training loss (for one batch) at step 600: 0.5536
 Seen so far: 38464 samples
-Training loss (for one batch) at step 800: 1.0253
-Seen so far: 51264 samples
-Training acc over epoch: 0.8417
-Validation acc: 0.8878
-Time taken: 4.95s
+Training acc over epoch: 0.8370
+Validation acc: 0.8622
+Time taken: 7.97s
 
 ```
 </div>
 ---
 ## Speeding-up your training step with `tf.function`
 
-The default runtime in TensorFlow 2.0 is
-[eager execution](https://www.tensorflow.org/guide/eager). As such, our training loop
-above executes eagerly.
+The default runtime in TensorFlow 2 is
+[eager execution](https://www.tensorflow.org/guide/eager).
+As such, our training loop above executes eagerly.
 
 This is great for debugging, but graph compilation has a definite performance
 advantage. Describing your computation as a static graph enables the framework
 to apply global performance optimizations. This is impossible when
-the framework is constrained to greedly execute one operation after another,
+the framework is constrained to greedily execute one operation after another,
 with no knowledge of what comes next.
 
 You can compile into a static graph any function that takes tensors as input.
@@ -361,7 +349,7 @@ for epoch in range(epochs):
                 "Training loss (for one batch) at step %d: %.4f"
                 % (step, float(loss_value))
             )
-            print("Seen so far: %d samples" % ((step + 1) * 64))
+            print("Seen so far: %d samples" % ((step + 1) * batch_size))
 
     # Display metrics at the end of each epoch.
     train_acc = train_acc_metric.result()
@@ -384,38 +372,34 @@ for epoch in range(epochs):
 <div class="k-default-codeblock">
 ```
 Start of epoch 0
-Training loss (for one batch) at step 0: 1.1119
+Training loss (for one batch) at step 0: 0.4807
 Seen so far: 64 samples
-Training loss (for one batch) at step 200: 0.3739
+Training loss (for one batch) at step 200: 0.4289
 Seen so far: 12864 samples
-Training loss (for one batch) at step 400: 0.6159
+Training loss (for one batch) at step 400: 0.6062
 Seen so far: 25664 samples
-Training loss (for one batch) at step 600: 0.5043
+Training loss (for one batch) at step 600: 0.5791
 Seen so far: 38464 samples
-Training loss (for one batch) at step 800: 0.3522
-Seen so far: 51264 samples
-Training acc over epoch: 0.8737
-Validation acc: 0.9044
-Time taken: 1.12s
+Training acc over epoch: 0.8666
+Validation acc: 0.8798
+Time taken: 1.45s
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
 Start of epoch 1
-Training loss (for one batch) at step 0: 1.0275
+Training loss (for one batch) at step 0: 0.5122
 Seen so far: 64 samples
-Training loss (for one batch) at step 200: 0.3680
+Training loss (for one batch) at step 200: 0.4184
 Seen so far: 12864 samples
-Training loss (for one batch) at step 400: 0.6758
+Training loss (for one batch) at step 400: 0.2736
 Seen so far: 25664 samples
-Training loss (for one batch) at step 600: 0.2383
+Training loss (for one batch) at step 600: 0.5048
 Seen so far: 38464 samples
-Training loss (for one batch) at step 800: 0.3972
-Seen so far: 51264 samples
-Training acc over epoch: 0.8899
-Validation acc: 0.9160
-Time taken: 0.78s
+Training acc over epoch: 0.8823
+Validation acc: 0.8872
+Time taken: 1.11s
 
 ```
 </div>
@@ -437,6 +421,7 @@ Consider this layer, that creates an activity regularization loss:
 
 ```python
 
+@keras.saving.register_keras_serializable()
 class ActivityRegularizationLayer(layers.Layer):
     def call(self, inputs):
         self.add_loss(1e-2 * tf.reduce_sum(inputs))
@@ -540,23 +525,25 @@ discriminator.summary()
 ```
 Model: "discriminator"
 _________________________________________________________________
-Layer (type)                 Output Shape              Param #   
+ Layer (type)                Output Shape              Param #   
 =================================================================
-conv2d (Conv2D)              (None, 14, 14, 64)        640       
-_________________________________________________________________
-leaky_re_lu (LeakyReLU)      (None, 14, 14, 64)        0         
-_________________________________________________________________
-conv2d_1 (Conv2D)            (None, 7, 7, 128)         73856     
-_________________________________________________________________
-leaky_re_lu_1 (LeakyReLU)    (None, 7, 7, 128)         0         
-_________________________________________________________________
-global_max_pooling2d (Global (None, 128)               0         
-_________________________________________________________________
-dense_4 (Dense)              (None, 1)                 129       
+ conv2d (Conv2D)             (None, 14, 14, 64)        640       
+                                                                 
+ leaky_re_lu (LeakyReLU)     (None, 14, 14, 64)        0         
+                                                                 
+ conv2d_1 (Conv2D)           (None, 7, 7, 128)         73856     
+                                                                 
+ leaky_re_lu_1 (LeakyReLU)   (None, 7, 7, 128)         0         
+                                                                 
+ global_max_pooling2d (Glob  (None, 128)               0         
+ alMaxPooling2D)                                                 
+                                                                 
+ dense_4 (Dense)             (None, 1)                 129       
+                                                                 
 =================================================================
-Total params: 74,625
-Trainable params: 74,625
-Non-trainable params: 0
+Total params: 74625 (291.50 KB)
+Trainable params: 74625 (291.50 KB)
+Non-trainable params: 0 (0.00 Byte)
 _________________________________________________________________
 
 ```
@@ -673,9 +660,7 @@ for epoch in range(epochs):
             print("adversarial loss at step %d: %.2f" % (step, g_loss))
 
             # Save one generated image
-            img = tf.keras.preprocessing.image.array_to_img(
-                generated_images[0] * 255.0, scale=False
-            )
+            img = keras.utils.array_to_img(generated_images[0] * 255.0, scale=False)
             img.save(os.path.join(save_dir, "generated_img" + str(step) + ".png"))
 
         # To limit execution time we stop after 10 steps.
@@ -688,8 +673,8 @@ for epoch in range(epochs):
 <div class="k-default-codeblock">
 ```
 Start epoch 0
-discriminator loss at step 0: 0.70
-adversarial loss at step 0: 0.72
+discriminator loss at step 0: 0.68
+adversarial loss at step 0: 0.69
 
 ```
 </div>

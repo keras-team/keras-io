@@ -6,7 +6,7 @@
 **Description:** Guide to multi-GPU & distributed training for Keras models.
 
 
-<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/guidesipynb/distributed_training.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/guidesdistributed_training.py)
+<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/guides/ipynb/distributed_training.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/guides/distributed_training.py)
 
 
 
@@ -48,7 +48,7 @@ training high-resolution image classification models on tens of millions of imag
 
 ```python
 import tensorflow as tf
-from tensorflow import keras
+import keras
 ```
 
 ---
@@ -180,22 +180,16 @@ model.evaluate(test_dataset)
 
 <div class="k-default-codeblock">
 ```
-WARNING: Logging before flag parsing goes to stderr.
-W0814 09:55:55.262259 4750663104 cross_device_ops.py:1202] There are non-GPU devices in `tf.distribute.Strategy`, not using nccl allreduce.
-
+WARNING:tensorflow:There are non-GPU devices in `tf.distribute.Strategy`, not using nccl allreduce.
+INFO:tensorflow:Using MirroredStrategy with devices ('/job:localhost/replica:0/task:0/device:CPU:0',)
 Number of devices: 1
-
-W0814 09:55:55.961071 4750663104 deprecation.py:323] From /usr/local/lib/python3.7/site-packages/tensorflow/python/data/ops/multi_device_iterator_ops.py:601: get_next_as_optional (from tensorflow.python.data.ops.iterator_ops) is deprecated and will be removed in a future version.
-Instructions for updating:
-Use `tf.data.Iterator.get_next_as_optional()` instead.
-
 Epoch 1/2
-1563/1563 [==============================] - 3s 2ms/step - loss: 0.2290 - sparse_categorical_accuracy: 0.9323 - val_loss: 0.1623 - val_sparse_categorical_accuracy: 0.9498
+1563/1563 [==============================] - 5s 3ms/step - loss: 0.2250 - sparse_categorical_accuracy: 0.9331 - val_loss: 0.1224 - val_sparse_categorical_accuracy: 0.9641
 Epoch 2/2
-1563/1563 [==============================] - 2s 1ms/step - loss: 0.0946 - sparse_categorical_accuracy: 0.9709 - val_loss: 0.1025 - val_sparse_categorical_accuracy: 0.9683
-313/313 [==============================] - 0s 802us/step - loss: 0.1029 - sparse_categorical_accuracy: 0.9677
+1563/1563 [==============================] - 4s 3ms/step - loss: 0.0941 - sparse_categorical_accuracy: 0.9713 - val_loss: 0.0979 - val_sparse_categorical_accuracy: 0.9709
+313/313 [==============================] - 1s 1ms/step - loss: 0.1014 - sparse_categorical_accuracy: 0.9691
 
-[0.1029156744480133, 0.9677000045776367]
+[0.10135305672883987, 0.9690999984741211]
 
 ```
 </div>
@@ -266,15 +260,34 @@ run_training(epochs=1)
 
 <div class="k-default-codeblock">
 ```
-W0814 09:56:01.662528 4750663104 cross_device_ops.py:1202] There are non-GPU devices in `tf.distribute.Strategy`, not using nccl allreduce.
-
+WARNING:tensorflow:There are non-GPU devices in `tf.distribute.Strategy`, not using nccl allreduce.
+INFO:tensorflow:Using MirroredStrategy with devices ('/job:localhost/replica:0/task:0/device:CPU:0',)
 Creating a new model
-1563/1563 - 3s - loss: 0.2276 - sparse_categorical_accuracy: 0.9320 - val_loss: 0.1319 - val_sparse_categorical_accuracy: 0.9579
 
-W0814 09:56:04.756444 4750663104 cross_device_ops.py:1202] There are non-GPU devices in `tf.distribute.Strategy`, not using nccl allreduce.
+WARNING:absl:Found untraced functions such as _update_step_xla while saving (showing 1 of 1). These functions will not be directly callable after loading.
+
+INFO:tensorflow:Assets written to: ./ckpt/ckpt-1/assets
+
+INFO:tensorflow:Assets written to: ./ckpt/ckpt-1/assets
+
+1563/1563 - 7s - loss: 0.2283 - sparse_categorical_accuracy: 0.9324 - val_loss: 0.1519 - val_sparse_categorical_accuracy: 0.9527 - 7s/epoch - 4ms/step
+WARNING:tensorflow:There are non-GPU devices in `tf.distribute.Strategy`, not using nccl allreduce.
+
+WARNING:tensorflow:There are non-GPU devices in `tf.distribute.Strategy`, not using nccl allreduce.
+
+INFO:tensorflow:Using MirroredStrategy with devices ('/job:localhost/replica:0/task:0/device:CPU:0',)
+
+INFO:tensorflow:Using MirroredStrategy with devices ('/job:localhost/replica:0/task:0/device:CPU:0',)
 
 Restoring from ./ckpt/ckpt-1
-1563/1563 - 3s - loss: 0.0976 - sparse_categorical_accuracy: 0.9698 - val_loss: 0.1005 - val_sparse_categorical_accuracy: 0.9690
+
+WARNING:absl:Found untraced functions such as _update_step_xla while saving (showing 1 of 1). These functions will not be directly callable after loading.
+
+INFO:tensorflow:Assets written to: ./ckpt/ckpt-1/assets
+
+INFO:tensorflow:Assets written to: ./ckpt/ckpt-1/assets
+
+1563/1563 - 6s - loss: 0.1017 - sparse_categorical_accuracy: 0.9692 - val_loss: 0.1018 - val_sparse_categorical_accuracy: 0.9695 - 6s/epoch - 4ms/step
 
 ```
 </div>

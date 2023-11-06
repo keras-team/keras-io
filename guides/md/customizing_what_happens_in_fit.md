@@ -2,7 +2,7 @@
 
 **Author:** [fchollet](https://twitter.com/fchollet)<br>
 **Date created:** 2020/04/15<br>
-**Last modified:** 2020/04/15<br>
+**Last modified:** 2023/06/14<br>
 **Description:** Complete guide to overriding the training step of the Model class.
 
 
@@ -26,7 +26,7 @@ or step fusing?
 A core principle of Keras is **progressive disclosure of complexity**. You should
 always be able to get into lower-level workflows in a gradual way. You shouldn't fall
 off a cliff if the high-level functionality doesn't exactly match your use case. You
-should be able to gain more control over the small details while retaing a
+should be able to gain more control over the small details while retaining a
 commensurate amount of high-level convenience.
 
 When you need to customize what `fit()` does, you should **override the training step
@@ -42,12 +42,13 @@ Let's see how that works.
 
 ---
 ## Setup
-Requires TensorFlow 2.2 or later.
+
+Requires TensorFlow 2.8 or later.
 
 
 ```python
 import tensorflow as tf
-from tensorflow import keras
+import keras
 ```
 
 ---
@@ -69,12 +70,12 @@ what gets yielded by `dataset` at each batch.
 
 In the body of the `train_step` method, we implement a regular training update,
 similar to what you are already familiar with. Importantly, **we compute the loss via
-`self.compiled_loss`**, which wraps the loss(es) function(s) that were passed to
+`self.compute_loss()`**, which wraps the loss(es) function(s) that were passed to
 `compile()`.
 
-Similarly, we call `self.compiled_metrics.update_state(y, y_pred)` to update the state
-of the metrics that were passed in `compile()`, and we query results from
-`self.metrics` at the end to retrieve their current value.
+Similarly, we call `metric.update_state(y, y_pred)` on metrics from `self.metrics`,
+to update the state of the metrics that were passed in `compile()`,
+and we query results from `self.metrics` at the end to retrieve their current value.
 
 
 ```python
@@ -89,7 +90,7 @@ class CustomModel(keras.Model):
             y_pred = self(x, training=True)  # Forward pass
             # Compute the loss value
             # (the loss function is configured in `compile()`)
-            loss = self.compiled_loss(y, y_pred, regularization_losses=self.losses)
+            loss = self.compute_loss(y=y, y_pred=y_pred)
 
         # Compute gradients
         trainable_vars = self.trainable_variables
@@ -97,7 +98,11 @@ class CustomModel(keras.Model):
         # Update weights
         self.optimizer.apply_gradients(zip(gradients, trainable_vars))
         # Update metrics (includes the metric that tracks the loss)
-        self.compiled_metrics.update_state(y, y_pred)
+        for metric in self.metrics:
+            if metric.name == "loss":
+                metric.update_state(loss)
+            else:
+                metric.update_state(y, y_pred)
         # Return a dict mapping metric names to current value
         return {m.name: m.result() for m in self.metrics}
 
@@ -124,13 +129,13 @@ model.fit(x, y, epochs=3)
 <div class="k-default-codeblock">
 ```
 Epoch 1/3
-32/32 [==============================] - 0s 610us/step - loss: 0.3650 - mae: 0.4867
+32/32 [==============================] - 0s 988us/step - loss: 1.3511
 Epoch 2/3
-32/32 [==============================] - 0s 500us/step - loss: 0.2719 - mae: 0.4231
+32/32 [==============================] - 0s 865us/step - loss: 0.5966
 Epoch 3/3
-32/32 [==============================] - 0s 421us/step - loss: 0.2630 - mae: 0.4156
+32/32 [==============================] - 0s 981us/step - loss: 0.3255
 
-<tensorflow.python.keras.callbacks.History at 0x1124199d0>
+<keras.callbacks.History at 0x7f7646eb6190>
 
 ```
 </div>
@@ -138,16 +143,30 @@ Epoch 3/3
 ## Going lower-level
 
 Naturally, you could just skip passing a loss function in `compile()`, and instead do
-everything *manually* in `train_step`. Likewise for metrics. Here's a lower-level
-example, that only uses `compile()` to configure the optimizer:
+everything *manually* in `train_step`. Likewise for metrics.
+
+Here's a lower-level example, that only uses `compile()` to configure the optimizer:
+
+- We start by creating `Metric` instances to track our loss and a MAE score (in `__init__()`).
+- We implement a custom `train_step()` that updates the state of these metrics
+(by calling `update_state()` on them), then query them (via `result()`) to return their current average value,
+to be displayed by the progress bar and to be pass to any callback.
+- Note that we would need to call `reset_states()` on our metrics between each epoch! Otherwise
+calling `result()` would return an average since the start of training, whereas we usually work
+with per-epoch averages. Thankfully, the framework can do that for us: just list any metric
+you want to reset in the `metrics` property of the model. The model will call `reset_states()`
+on any object listed here at the beginning of each `fit()` epoch or at the beginning of a call to
+`evaluate()`.
 
 
 ```python
-mae_metric = keras.metrics.MeanAbsoluteError(name="mae")
-loss_tracker = keras.metrics.Mean(name="loss")
-
 
 class CustomModel(keras.Model):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.loss_tracker = keras.metrics.Mean(name="loss")
+        self.mae_metric = keras.metrics.MeanAbsoluteError(name="mae")
+
     def train_step(self, data):
         x, y = data
 
@@ -164,9 +183,18 @@ class CustomModel(keras.Model):
         self.optimizer.apply_gradients(zip(gradients, trainable_vars))
 
         # Compute our own metrics
-        loss_tracker.update_state(loss)
-        mae_metric.update_state(y, y_pred)
-        return {"loss": loss_tracker.result(), "mae": mae_metric.result()}
+        self.loss_tracker.update_state(loss)
+        self.mae_metric.update_state(y, y_pred)
+        return {"loss": self.loss_tracker.result(), "mae": self.mae_metric.result()}
+
+    @property
+    def metrics(self):
+        # We list our `Metric` objects here so that `reset_states()` can be
+        # called automatically at the start of each epoch
+        # or at the start of `evaluate()`.
+        # If you don't implement this property, you have to call
+        # `reset_states()` yourself at the time of your choosing.
+        return [self.loss_tracker, self.mae_metric]
 
 
 # Construct an instance of CustomModel
@@ -180,20 +208,27 @@ model.compile(optimizer="adam")
 # Just use `fit` as usual -- you can use callbacks, etc.
 x = np.random.random((1000, 32))
 y = np.random.random((1000, 1))
-model.fit(x, y, epochs=1)
+model.fit(x, y, epochs=5)
+
 ```
 
 <div class="k-default-codeblock">
 ```
-32/32 [==============================] - 0s 550us/step - loss: 0.2319 - mae: 0.3889
+Epoch 1/5
+32/32 [==============================] - 0s 918us/step - loss: 0.7567 - mae: 0.7519
+Epoch 2/5
+32/32 [==============================] - 0s 901us/step - loss: 0.3224 - mae: 0.4571
+Epoch 3/5
+32/32 [==============================] - 0s 999us/step - loss: 0.2337 - mae: 0.3865
+Epoch 4/5
+32/32 [==============================] - 0s 800us/step - loss: 0.2245 - mae: 0.3796
+Epoch 5/5
+32/32 [==============================] - 0s 746us/step - loss: 0.2210 - mae: 0.3768
 
-<tensorflow.python.keras.callbacks.History at 0x153a95350>
+<keras.callbacks.History at 0x7f7646f8da10>
 
 ```
 </div>
-Note that with this setup, you will need to manually call `reset_states()` on your
-metrics after each epoch, or between training and evaluation.
-
 ---
 ## Supporting `sample_weight` & `class_weight`
 
@@ -202,9 +237,9 @@ weighting. If you want to support the `fit()` arguments `sample_weight` and
 `class_weight`, you'd simply do the following:
 
 - Unpack `sample_weight` from the `data` argument
-- Pass it to `compiled_loss` & `compiled_metrics` (of course, you could also just apply
+- Pass it to `compute_loss` & `update_state` (of course, you could also just apply
 it manually if you don't rely on `compile()` for losses & metrics)
-- That's it. That's the list.
+- That's it.
 
 
 ```python
@@ -216,17 +251,17 @@ class CustomModel(keras.Model):
         if len(data) == 3:
             x, y, sample_weight = data
         else:
+            sample_weight = None
             x, y = data
 
         with tf.GradientTape() as tape:
             y_pred = self(x, training=True)  # Forward pass
             # Compute the loss value.
             # The loss function is configured in `compile()`.
-            loss = self.compiled_loss(
-                y,
-                y_pred,
+            loss = self.compute_loss(
+                y=y,
+                y_pred=y_pred,
                 sample_weight=sample_weight,
-                regularization_losses=self.losses,
             )
 
         # Compute gradients
@@ -238,7 +273,11 @@ class CustomModel(keras.Model):
 
         # Update the metrics.
         # Metrics are configured in `compile()`.
-        self.compiled_metrics.update_state(y, y_pred, sample_weight=sample_weight)
+        for metric in self.metrics:
+            if metric.name == "loss":
+                metric.update_state(loss)
+            else:
+                metric.update_state(y, y_pred, sample_weight=sample_weight)
 
         # Return a dict mapping metric names to current value.
         # Note that it will include the loss (tracked in self.metrics).
@@ -261,13 +300,13 @@ model.fit(x, y, sample_weight=sw, epochs=3)
 <div class="k-default-codeblock">
 ```
 Epoch 1/3
-32/32 [==============================] - 0s 546us/step - loss: 0.2295 - mae: 0.5567
+32/32 [==============================] - 0s 930us/step - loss: 0.2296
 Epoch 2/3
-32/32 [==============================] - 0s 452us/step - loss: 0.1311 - mae: 0.4185
+32/32 [==============================] - 0s 834us/step - loss: 0.1305
 Epoch 3/3
-32/32 [==============================] - 0s 420us/step - loss: 0.1247 - mae: 0.4071
+32/32 [==============================] - 0s 890us/step - loss: 0.1230
 
-<tensorflow.python.keras.callbacks.History at 0x153b18910>
+<keras.callbacks.History at 0x7f764415a890>
 
 ```
 </div>
@@ -287,9 +326,11 @@ class CustomModel(keras.Model):
         # Compute predictions
         y_pred = self(x, training=False)
         # Updates the metrics tracking the loss
-        self.compiled_loss(y, y_pred, regularization_losses=self.losses)
+        self.compute_loss(y=y, y_pred=y_pred)
         # Update the metrics.
-        self.compiled_metrics.update_state(y, y_pred)
+        for metric in self.metrics:
+            if metric.name != "loss":
+                metric.update_state(y, y_pred)
         # Return a dict mapping metric names to current value.
         # Note that it will include the loss (tracked in self.metrics).
         return {m.name: m.result() for m in self.metrics}
@@ -309,9 +350,9 @@ model.evaluate(x, y)
 
 <div class="k-default-codeblock">
 ```
-32/32 [==============================] - 0s 457us/step - loss: 1.6966 - mae: 1.2076
+32/32 [==============================] - 0s 756us/step - loss: 0.3405
 
-[1.6965508460998535, 1.2076295614242554]
+0.34045735001564026
 
 ```
 </div>
@@ -374,13 +415,15 @@ and implementing the entire GAN algorithm in 17 lines in `train_step`:
 
 class GAN(keras.Model):
     def __init__(self, discriminator, generator, latent_dim):
-        super(GAN, self).__init__()
+        super().__init__()
         self.discriminator = discriminator
         self.generator = generator
         self.latent_dim = latent_dim
+        self.d_loss_tracker = keras.metrics.Mean(name="d_loss")
+        self.g_loss_tracker = keras.metrics.Mean(name="g_loss")
 
     def compile(self, d_optimizer, g_optimizer, loss_fn):
-        super(GAN, self).compile()
+        super().compile()
         self.d_optimizer = d_optimizer
         self.g_optimizer = g_optimizer
         self.loss_fn = loss_fn
@@ -427,7 +470,14 @@ class GAN(keras.Model):
             g_loss = self.loss_fn(misleading_labels, predictions)
         grads = tape.gradient(g_loss, self.generator.trainable_weights)
         self.g_optimizer.apply_gradients(zip(grads, self.generator.trainable_weights))
-        return {"d_loss": d_loss, "g_loss": g_loss}
+
+        # Update metrics and return their value.
+        self.d_loss_tracker.update_state(d_loss)
+        self.g_loss_tracker.update_state(g_loss)
+        return {
+            "d_loss": self.d_loss_tracker.result(),
+            "g_loss": self.g_loss_tracker.result(),
+        }
 
 ```
 
@@ -451,17 +501,17 @@ gan.compile(
     loss_fn=keras.losses.BinaryCrossentropy(from_logits=True),
 )
 
-# To limit execution time, we only train on 100 batches. You can train on
+# To limit the execution time, we only train on 100 batches. You can train on
 # the entire dataset. You will need about 20 epochs to get nice results.
 gan.fit(dataset.take(100), epochs=1)
 ```
 
 <div class="k-default-codeblock">
 ```
-100/100 [==============================] - 56s 557ms/step - d_loss: 0.4902 - g_loss: 0.8928
+100/100 [==============================] - 36s 348ms/step - d_loss: 0.4120 - g_loss: 0.8394
 
-<tensorflow.python.keras.callbacks.History at 0x153cb1810>
+<keras.callbacks.History at 0x7f7634678f90>
 
 ```
 </div>
-The idea behind deep learning are simple, so why should their implementation be painful?
+The ideas behind deep learning are simple, so why should their implementation be painful?

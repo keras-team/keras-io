@@ -63,6 +63,7 @@ Finally, submit a PR adding `examples/your_example.py`.
 import os
 import sys
 import json
+import copy
 import random
 import shutil
 import tempfile
@@ -169,8 +170,9 @@ def py_to_nb(py_path, nb_path, fill_outputs=False):
             cells.append(cell)
     notebook = {}
     for key in NB_BASE.keys():
-        notebook[key] = NB_BASE[key]
+        notebook[key] = copy.deepcopy(NB_BASE[key])
     notebook["metadata"]["colab"]["name"] = str(py_path).split("/")[-1][:-3]
+    notebook["metadata"]["accelerator"] = attributes["accelerator"]
     notebook["cells"] = cells
     if loc > MAX_LOC:
         raise ValueError(
@@ -301,6 +303,8 @@ def validate(py):
         raise ValueError("Missing `Last modified:` field.")
     if not lines[5].startswith("Description: "):
         raise ValueError("Missing `Description:` field.")
+    if not lines[6].startswith("Accelerator: "):
+        raise ValueError("Missing `Accelerator:` field.")
     description = lines[5][len("Description: ") :]
     if not description:
         raise ValueError("Missing `Description:` field content.")
@@ -310,6 +314,12 @@ def validate(py):
         raise ValueError("Description field content must end with a period.")
     if len(description) > 100:
         raise ValueError("Description field content must be less than 100 chars.")
+    accelerator = lines[6][len("Accelerator: ") :]
+    accelerator_options = ["GPU", "TPU", "None"]
+    if accelerator not in accelerator_options:
+        raise ValueError(
+            f"Accelerator field content must be one of: {accelerator_options}"
+        )
     for i, line in enumerate(lines):
         if line.startswith('"""') and line.endswith('"""') and len(line) > 3:
             raise ValueError(
@@ -334,9 +344,29 @@ def validate(py):
     os.remove(fpath)
     if formatted != pre_formatting:
         raise ValueError(
-            "You python file did not follow `black` conventions. "
+            "Your python file did not follow `black` conventions. "
             "Run `black your_file.py` to autoformat it."
         )
+
+    # Extra checks.
+    if "//arxiv.org/pdf/" in py:
+        raise ValueError(
+            "Do not link to arXiv PDFs directly. " "Instead, link to the abstract page."
+        )
+
+
+def count_locs_in_file(py_path):
+    f = open(py_path)
+    py = f.read()
+    f.close()
+    _get_next_script_element(py)  # Header
+    loc = 0
+    while py:
+        e, cell_type, py, _ = _get_next_script_element(py)
+        lines = e.split("\n")
+        if cell_type == "code":
+            loc += _count_locs(lines)
+    return loc
 
 
 def _count_locs(lines):
@@ -422,6 +452,8 @@ def _get_next_script_element(py):
 
 def _parse_header(header):
     lines = header.split("\n")
+    if len(lines) != 6:
+        raise ValueError("Invalid header, it should be exactly 6 lines.")
     title = lines[0][len("Title: ") :]
     author_line = lines[1]
     if author_line.startswith("Authors"):
@@ -433,6 +465,7 @@ def _parse_header(header):
     date_created = lines[2][len("Date created: ") :]
     last_modified = lines[3][len("Last modified: ") :]
     description = lines[4][len("Description: ") :]
+    accelerator = lines[5][len("Accelerator: ") :]
     return {
         "title": title,
         "author": author,
@@ -440,6 +473,7 @@ def _parse_header(header):
         "date_created": date_created,
         "last_modified": last_modified,
         "description": description,
+        "accelerator": accelerator,
     }
 
 
@@ -497,6 +531,7 @@ def _make_output_code_blocks(md):
 
 NB_BASE = {
     "metadata": {
+        "accelerator": "GPU",
         "colab": {
             "collapsed_sections": [],
             "name": "",  # FILL ME
@@ -526,34 +561,40 @@ NB_BASE = {
 
 if __name__ == "__main__":
     cmd = sys.argv[1]
-    if cmd not in {"nb2py", "py2nb"}:
+    if cmd not in {"nb2py", "py2nb", "count_loc"}:
         raise ValueError(
             "Specify a command: either "
             "`nb2py source_filename.ipynb target_filename.py` or "
-            "`py2nb source_filename.py target_file name.ipynb"
+            "`py2nb source_filename.py target_file name.ipynb` or "
+            "`count_loc source_filename.py`."
         )
-    if len(sys.argv) < 4:
-        raise ValueError("Specify a source filename and a target filename")
-    source = sys.argv[2]
-    target = sys.argv[3]
+    if cmd == "count_loc":
+        source = sys.argv[2]
+        loc = count_locs_in_file(source)
+        print(f"Counted {loc} lines of code in {source}.")
+    else:
+        if len(sys.argv) < 4:
+            raise ValueError("Specify a source filename and a target filename")
+        source = sys.argv[2]
+        target = sys.argv[3]
 
-    if cmd == "py2nb":
-        if not source.endswith(".py"):
-            raise ValueError(
-                "The source filename should be a Python file. Got:", source
-            )
-        if not target.endswith(".ipynb"):
-            raise ValueError(
-                "The target filename should be a notebook file. Got:", target
-            )
-        py_to_nb(source, target)
-    if cmd == "nb2py":
-        if not source.endswith(".ipynb"):
-            raise ValueError(
-                "The source filename should be a notebook file. Got:", source
-            )
-        if not target.endswith(".py"):
-            raise ValueError(
-                "The target filename should be a Python file. Got:", target
-            )
-        nb_to_py(source, target)
+        if cmd == "py2nb":
+            if not source.endswith(".py"):
+                raise ValueError(
+                    f"The source filename should be a Python file. Got: {source}"
+                )
+            if not target.endswith(".ipynb"):
+                raise ValueError(
+                    f"The target filename should be a notebook file. Got: {target}"
+                )
+            py_to_nb(source, target)
+        if cmd == "nb2py":
+            if not source.endswith(".ipynb"):
+                raise ValueError(
+                    f"The source filename should be a notebook file. Got: {source}"
+                )
+            if not target.endswith(".py"):
+                raise ValueError(
+                    f"The target filename should be a Python file. Got: {target}"
+                )
+            nb_to_py(source, target)

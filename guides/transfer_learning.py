@@ -4,6 +4,7 @@ Author: [fchollet](https://twitter.com/fchollet)
 Date created: 2020/04/15
 Last modified: 2020/05/12
 Description: Complete guide to transfer learning & fine-tuning in Keras.
+Accelerator: GPU
 """
 """
 ## Setup
@@ -11,7 +12,7 @@ Description: Complete guide to transfer learning & fine-tuning in Keras.
 
 import numpy as np
 import tensorflow as tf
-from tensorflow import keras
+import keras
 
 """
 ## Introduction
@@ -80,7 +81,7 @@ In general, all weights are trainable weights. The only built-in layer that has
 non-trainable weights is the `BatchNormalization` layer. It uses non-trainable weights
  to keep track of the mean and variance of its inputs during training.
 To learn how to use non-trainable weights in your own custom layers, see the
-[guide to writing new layers from scratch](making_new_layers_and_models_via_subclassing).
+[guide to writing new layers from scratch](https://keras.io/guides/making_new_layers_and_models_via_subclassing/).
 
 **Example: the `BatchNormalization` layer has 2 trainable weights and 2 non-trainable
  weights**
@@ -166,7 +167,11 @@ inner_model = keras.Sequential(
 )
 
 model = keras.Sequential(
-    [keras.Input(shape=(3,)), inner_model, keras.layers.Dense(3, activation="sigmoid"),]
+    [
+        keras.Input(shape=(3,)),
+        inner_model,
+        keras.layers.Dense(3, activation="sigmoid"),
+    ]
 )
 
 model.trainable = False  # Freeze the outer model
@@ -364,8 +369,7 @@ Likewise for fine-tuning.
 """
 
 """
-## An end-to-end example: fine-tuning an image classification model on a cats vs. dogs
- dataset
+## An end-to-end example: fine-tuning an image classification model on a cats vs. dogs dataset
 
 To solidify these concepts, let's walk you through a concrete end-to-end transfer
 learning & fine-tuning example. We will load the Xception model, pre-trained on
@@ -377,7 +381,7 @@ learning & fine-tuning example. We will load the Xception model, pre-trained on
 
 First, let's fetch the cats vs. dogs dataset using TFDS. If you have your own dataset,
 you'll probably want to use the utility
-`tf.keras.preprocessing.image_dataset_from_directory` to generate similar labeled
+`keras.utils.image_dataset_from_directory` to generate similar labeled
  dataset objects from a set of images on disk filed into class-specific folders.
 
 Transfer learning is most useful when working with very small datasets. To keep our
@@ -476,8 +480,8 @@ from tensorflow.keras import layers
 
 data_augmentation = keras.Sequential(
     [
-        layers.experimental.preprocessing.RandomFlip("horizontal"),
-        layers.experimental.preprocessing.RandomRotation(0.1),
+        layers.RandomFlip("horizontal"),
+        layers.RandomRotation(0.1),
     ]
 )
 
@@ -497,7 +501,7 @@ for images, labels in train_ds.take(1):
             tf.expand_dims(first_image, 0), training=True
         )
         plt.imshow(augmented_image[0].numpy().astype("int32"))
-        plt.title(int(labels[i]))
+        plt.title(int(labels[0]))
         plt.axis("off")
 
 """
@@ -507,7 +511,7 @@ Now let's built a model that follows the blueprint we've explained earlier.
 
 Note that:
 
-- We add a `Normalization` layer to scale input values (initially in the `[0, 255]`
+- We add a `Rescaling` layer to scale input values (initially in the `[0, 255]`
  range) to the `[-1, 1]` range.
 - We add a `Dropout` layer before the classification layer, for regularization.
 - We make sure to pass `training=False` when calling the base model, so that
@@ -528,15 +532,11 @@ base_model.trainable = False
 inputs = keras.Input(shape=(150, 150, 3))
 x = data_augmentation(inputs)  # Apply random data augmentation
 
-# Pre-trained Xception weights requires that input be normalized
-# from (0, 255) to a range (-1., +1.), the normalization layer
-# does the following, outputs = (inputs - mean) / sqrt(var)
-norm_layer = keras.layers.experimental.preprocessing.Normalization()
-mean = np.array([127.5] * 3)
-var = mean ** 2
-# Scale inputs to [-1, +1]
-x = norm_layer(x)
-norm_layer.set_weights([mean, var])
+# Pre-trained Xception weights requires that input be scaled
+# from (0, 255) to a range of (-1., +1.), the rescaling layer
+# outputs: `(inputs * scale) + offset`
+scale_layer = keras.layers.Rescaling(scale=1 / 127.5, offset=-1)
+x = scale_layer(x)
 
 # The base model contains batchnorm layers. We want to keep them in inference mode
 # when we unfreeze the base model for fine-tuning, so we make sure that the

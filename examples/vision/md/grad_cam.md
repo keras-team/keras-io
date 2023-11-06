@@ -2,7 +2,7 @@
 
 **Author:** [fchollet](https://twitter.com/fchollet)<br>
 **Date created:** 2020/04/26<br>
-**Last modified:** 2020/05/14<br>
+**Last modified:** 2021/03/07<br>
 **Description:** How to obtain a class activation heatmap for an image classification model.
 
 
@@ -16,17 +16,15 @@ Adapted from Deep Learning with Python (2017).
 ## Setup
 
 
-
 ```python
 import numpy as np
 import tensorflow as tf
 from tensorflow import keras
 
 # Display
-from IPython.display import Image
+from IPython.display import Image, display
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
-
 
 ```
 
@@ -35,9 +33,8 @@ import matplotlib.cm as cm
 
 You can change these to another model.
 
-To get the values for `last_conv_layer_name` and `classifier_layer_names`, use
- `model.summary()` to see the names of all layers in the model.
-
+To get the values for `last_conv_layer_name` use `model.summary()`
+to see the names of all layers in the model.
 
 
 ```python
@@ -47,73 +44,57 @@ preprocess_input = keras.applications.xception.preprocess_input
 decode_predictions = keras.applications.xception.decode_predictions
 
 last_conv_layer_name = "block14_sepconv2_act"
-classifier_layer_names = [
-    "avg_pool",
-    "predictions",
-]
 
 # The local path to our target image
 img_path = keras.utils.get_file(
-    "african_elephant.jpg", " https://i.imgur.com/Bvro0YD.png"
+    "african_elephant.jpg", "https://i.imgur.com/Bvro0YD.png"
 )
 
 display(Image(img_path))
 
-
 ```
 
 
+    
 ![jpeg](/img/examples/vision/grad_cam/grad_cam_4_0.jpg)
+    
 
 
 ---
 ## The Grad-CAM algorithm
 
 
-
 ```python
 
 def get_img_array(img_path, size):
     # `img` is a PIL image of size 299x299
-    img = keras.preprocessing.image.load_img(img_path, target_size=size)
+    img = keras.utils.load_img(img_path, target_size=size)
     # `array` is a float32 Numpy array of shape (299, 299, 3)
-    array = keras.preprocessing.image.img_to_array(img)
+    array = keras.utils.img_to_array(img)
     # We add a dimension to transform our array into a "batch"
     # of size (1, 299, 299, 3)
     array = np.expand_dims(array, axis=0)
     return array
 
 
-def make_gradcam_heatmap(
-    img_array, model, last_conv_layer_name, classifier_layer_names
-):
+def make_gradcam_heatmap(img_array, model, last_conv_layer_name, pred_index=None):
     # First, we create a model that maps the input image to the activations
-    # of the last conv layer
-    last_conv_layer = model.get_layer(last_conv_layer_name)
-    last_conv_layer_model = keras.Model(model.inputs, last_conv_layer.output)
-
-    # Second, we create a model that maps the activations of the last conv
-    # layer to the final class predictions
-    classifier_input = keras.Input(shape=last_conv_layer.output.shape[1:])
-    x = classifier_input
-    for layer_name in classifier_layer_names:
-        x = model.get_layer(layer_name)(x)
-    classifier_model = keras.Model(classifier_input, x)
+    # of the last conv layer as well as the output predictions
+    grad_model = keras.models.Model(
+        model.inputs, [model.get_layer(last_conv_layer_name).output, model.output]
+    )
 
     # Then, we compute the gradient of the top predicted class for our input image
     # with respect to the activations of the last conv layer
     with tf.GradientTape() as tape:
-        # Compute activations of the last conv layer and make the tape watch it
-        last_conv_layer_output = last_conv_layer_model(img_array)
-        tape.watch(last_conv_layer_output)
-        # Compute class predictions
-        preds = classifier_model(last_conv_layer_output)
-        top_pred_index = tf.argmax(preds[0])
-        top_class_channel = preds[:, top_pred_index]
+        last_conv_layer_output, preds = grad_model(img_array)
+        if pred_index is None:
+            pred_index = tf.argmax(preds[0])
+        class_channel = preds[:, pred_index]
 
-    # This is the gradient of the top predicted class with regard to
-    # the output feature map of the last conv layer
-    grads = tape.gradient(top_class_channel, last_conv_layer_output)
+    # This is the gradient of the output neuron (top predicted or chosen)
+    # with regard to the output feature map of the last conv layer
+    grads = tape.gradient(class_channel, last_conv_layer_output)
 
     # This is a vector where each entry is the mean intensity of the gradient
     # over a specific feature map channel
@@ -121,25 +102,19 @@ def make_gradcam_heatmap(
 
     # We multiply each channel in the feature map array
     # by "how important this channel is" with regard to the top predicted class
-    last_conv_layer_output = last_conv_layer_output.numpy()[0]
-    pooled_grads = pooled_grads.numpy()
-    for i in range(pooled_grads.shape[-1]):
-        last_conv_layer_output[:, :, i] *= pooled_grads[i]
-
-    # The channel-wise mean of the resulting feature map
-    # is our heatmap of class activation
-    heatmap = np.mean(last_conv_layer_output, axis=-1)
+    # then sum all the channels to obtain the heatmap class activation
+    last_conv_layer_output = last_conv_layer_output[0]
+    heatmap = last_conv_layer_output @ pooled_grads[..., tf.newaxis]
+    heatmap = tf.squeeze(heatmap)
 
     # For visualization purpose, we will also normalize the heatmap between 0 & 1
-    heatmap = np.maximum(heatmap, 0) / np.max(heatmap)
-    return heatmap
-
+    heatmap = tf.maximum(heatmap, 0) / tf.math.reduce_max(heatmap)
+    return heatmap.numpy()
 
 ```
 
 ---
 ## Let's test-drive it
-
 
 
 ```python
@@ -149,69 +124,160 @@ img_array = preprocess_input(get_img_array(img_path, size=img_size))
 # Make model
 model = model_builder(weights="imagenet")
 
+# Remove last layer's softmax
+model.layers[-1].activation = None
+
 # Print what the top predicted class is
 preds = model.predict(img_array)
 print("Predicted:", decode_predictions(preds, top=1)[0])
 
 # Generate class activation heatmap
-heatmap = make_gradcam_heatmap(
-    img_array, model, last_conv_layer_name, classifier_layer_names
-)
+heatmap = make_gradcam_heatmap(img_array, model, last_conv_layer_name)
 
 # Display heatmap
 plt.matshow(heatmap)
 plt.show()
 
-
 ```
 
 <div class="k-default-codeblock">
 ```
-Predicted: [('n02504458', 'African_elephant', 0.8871446)]
+1/1 [==============================] - 1s 543ms/step
+Predicted: [('n02504458', 'African_elephant', 9.86239)]
 
 ```
 </div>
+    
 ![png](/img/examples/vision/grad_cam/grad_cam_8_1.png)
+    
 
 
 ---
 ## Create a superimposed visualization
 
 
+```python
+
+def save_and_display_gradcam(img_path, heatmap, cam_path="cam.jpg", alpha=0.4):
+    # Load the original image
+    img = keras.utils.load_img(img_path)
+    img = keras.utils.img_to_array(img)
+
+    # Rescale heatmap to a range 0-255
+    heatmap = np.uint8(255 * heatmap)
+
+    # Use jet colormap to colorize heatmap
+    jet = cm.get_cmap("jet")
+
+    # Use RGB values of the colormap
+    jet_colors = jet(np.arange(256))[:, :3]
+    jet_heatmap = jet_colors[heatmap]
+
+    # Create an image with RGB colorized heatmap
+    jet_heatmap = keras.utils.array_to_img(jet_heatmap)
+    jet_heatmap = jet_heatmap.resize((img.shape[1], img.shape[0]))
+    jet_heatmap = keras.utils.img_to_array(jet_heatmap)
+
+    # Superimpose the heatmap on original image
+    superimposed_img = jet_heatmap * alpha + img
+    superimposed_img = keras.utils.array_to_img(superimposed_img)
+
+    # Save the superimposed image
+    superimposed_img.save(cam_path)
+
+    # Display Grad CAM
+    display(Image(cam_path))
+
+
+save_and_display_gradcam(img_path, heatmap)
+```
+
+<div class="k-default-codeblock">
+```
+/var/folders/8n/8w8cqnvj01xd4ghznl11nyn000_93_/T/ipykernel_7380/2203377560.py:10: MatplotlibDeprecationWarning: The get_cmap function was deprecated in Matplotlib 3.7 and will be removed two minor releases later. Use ``matplotlib.colormaps[name]`` or ``matplotlib.colormaps.get_cmap(obj)`` instead.
+  jet = cm.get_cmap("jet")
+
+```
+</div>
+    
+![jpeg](/img/examples/vision/grad_cam/grad_cam_10_1.jpg)
+    
+
+
+---
+## Let's try another image
+
+We will see how the grad cam explains the model's outputs for a multi-label image. Let's
+try an image with a cat and a dog together, and see how the grad cam behaves.
+
 
 ```python
-# We load the original image
-img = keras.preprocessing.image.load_img(img_path)
-img = keras.preprocessing.image.img_to_array(img)
+img_path = keras.utils.get_file(
+    "cat_and_dog.jpg",
+    "https://storage.googleapis.com/petbacker/images/blog/2017/dog-and-cat-cover.jpg",
+)
 
-# We rescale heatmap to a range 0-255
-heatmap = np.uint8(255 * heatmap)
+display(Image(img_path))
 
-# We use jet colormap to colorize heatmap
-jet = cm.get_cmap("jet")
+# Prepare image
+img_array = preprocess_input(get_img_array(img_path, size=img_size))
 
-# We use RGB values of the colormap
-jet_colors = jet(np.arange(256))[:, :3]
-jet_heatmap = jet_colors[heatmap]
-
-# We create an image with RGB colorized heatmap
-jet_heatmap = keras.preprocessing.image.array_to_img(jet_heatmap)
-jet_heatmap = jet_heatmap.resize((img.shape[1], img.shape[0]))
-jet_heatmap = keras.preprocessing.image.img_to_array(jet_heatmap)
-
-# Superimpose the heatmap on original image
-superimposed_img = jet_heatmap * 0.4 + img
-superimposed_img = keras.preprocessing.image.array_to_img(superimposed_img)
-
-# Save the superimposed image
-save_path = "elephant_cam.jpg"
-superimposed_img.save(save_path)
-
-# Display Grad CAM
-display(Image(save_path))
-
+# Print what the two top predicted classes are
+preds = model.predict(img_array)
+print("Predicted:", decode_predictions(preds, top=2)[0])
 ```
 
 
-![jpeg](/img/examples/vision/grad_cam/grad_cam_10_0.jpg)
+    
+![jpeg](/img/examples/vision/grad_cam/grad_cam_12_0.jpg)
+    
+
+
+<div class="k-default-codeblock">
+```
+1/1 [==============================] - 0s 154ms/step
+Predicted: [('n02112137', 'chow', 4.6112413), ('n02124075', 'Egyptian_cat', 4.3817368)]
+
+```
+</div>
+We generate class activation heatmap for "chow," the class index is 260
+
+
+```python
+heatmap = make_gradcam_heatmap(img_array, model, last_conv_layer_name, pred_index=260)
+
+save_and_display_gradcam(img_path, heatmap)
+```
+
+<div class="k-default-codeblock">
+```
+/var/folders/8n/8w8cqnvj01xd4ghznl11nyn000_93_/T/ipykernel_7380/2203377560.py:10: MatplotlibDeprecationWarning: The get_cmap function was deprecated in Matplotlib 3.7 and will be removed two minor releases later. Use ``matplotlib.colormaps[name]`` or ``matplotlib.colormaps.get_cmap(obj)`` instead.
+  jet = cm.get_cmap("jet")
+
+```
+</div>
+    
+![jpeg](/img/examples/vision/grad_cam/grad_cam_14_1.jpg)
+    
+
+
+We generate class activation heatmap for "egyptian cat," the class index is 285
+
+
+```python
+heatmap = make_gradcam_heatmap(img_array, model, last_conv_layer_name, pred_index=285)
+
+save_and_display_gradcam(img_path, heatmap)
+```
+
+<div class="k-default-codeblock">
+```
+/var/folders/8n/8w8cqnvj01xd4ghznl11nyn000_93_/T/ipykernel_7380/2203377560.py:10: MatplotlibDeprecationWarning: The get_cmap function was deprecated in Matplotlib 3.7 and will be removed two minor releases later. Use ``matplotlib.colormaps[name]`` or ``matplotlib.colormaps.get_cmap(obj)`` instead.
+  jet = cm.get_cmap("jet")
+
+```
+</div>
+    
+![jpeg](/img/examples/vision/grad_cam/grad_cam_16_1.jpg)
+    
 

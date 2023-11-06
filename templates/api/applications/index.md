@@ -12,40 +12,59 @@ then any model loaded from this repository will get built according to the Tenso
 
 ## Available models
 
-| Model | Size | Top-1 Accuracy | Top-5 Accuracy | Parameters | Depth |
-| ----- | ----: | --------------: | --------------: | ----------: | -----: |
-| [Xception](xception) | 88 MB | 0.790 | 0.945 | 22,910,480 | 126 |
-| [VGG16](vgg/#vgg16-function) | 528 MB | 0.713 | 0.901 | 138,357,544 | 23 |
-| [VGG19](vgg/#vgg19-function) | 549 MB | 0.713 | 0.900 | 143,667,240 | 26 |
-| [ResNet50](resnet/#resnet50-function) | 98 MB | 0.749 | 0.921 | 25,636,712 | - |
-| [ResNet101](resnet/#resnet101-function) | 171 MB | 0.764 | 0.928 | 44,707,176 | - |
-| [ResNet152](resnet/#resnet152-function) | 232 MB | 0.766 | 0.931 | 60,419,944 | - |
-| [ResNet50V2](resnet/#resnet50v2-function) | 98 MB | 0.760 | 0.930 | 25,613,800 | - |
-| [ResNet101V2](resnet/#resnet101v2-function) | 171 MB | 0.772 | 0.938 | 44,675,560 | - |
-| [ResNet152V2](resnet/#resnet152v2-function) | 232 MB | 0.780 | 0.942 | 60,380,648 | - |
-| [InceptionV3](inceptionv3) | 92 MB | 0.779 | 0.937 | 23,851,784 | 159 |
-| [InceptionResNetV2](inceptionresnetv2) | 215 MB | 0.803 | 0.953 | 55,873,736 | 572 |
-| [MobileNet](mobilenet) | 16 MB | 0.704 | 0.895 | 4,253,864 | 88 |
-| [MobileNetV2](mobilenet/#mobilenetv2-function) | 14 MB | 0.713 | 0.901 | 3,538,984 | 88 |
-| [DenseNet121](densenet/#densenet121-function) | 33 MB | 0.750 | 0.923 | 8,062,504 | 121 |
-| [DenseNet169](densenet/#densenet169-function) | 57 MB | 0.762 | 0.932 | 14,307,880 | 169 |
-| [DenseNet201](densenet/#densenet201-function) | 80 MB | 0.773 | 0.936 | 20,242,984 | 201 |
-| [NASNetMobile](nasnet/#nasnetmobile-function) | 23 MB | 0.744 | 0.919 | 5,326,716 | - |
-| [NASNetLarge](nasnet/#nasnetlarge-function) | 343 MB | 0.825 | 0.960 | 88,949,818 | - |
-| [EfficientNetB0](efficientnet/#efficientnetb0-function) | 29 MB | - | - | 5,330,571 | - |
-| [EfficientNetB1](efficientnet/#efficientnetb1-function) | 31 MB | - | - | 7,856,239 | - |
-| [EfficientNetB2](efficientnet/#efficientnetb2-function) | 36 MB | - | - | 9,177,569 | - |
-| [EfficientNetB3](efficientnet/#efficientnetb3-function) | 48 MB | - | - | 12,320,535 | - |
-| [EfficientNetB4](efficientnet/#efficientnetb4-function) | 75 MB | - | - | 19,466,823 | - |
-| [EfficientNetB5](efficientnet/#efficientnetb5-function) | 118 MB | - | - | 30,562,527 | - |
-| [EfficientNetB6](efficientnet/#efficientnetb6-function) | 166 MB | - | - | 43,265,143 | - |
-| [EfficientNetB7](efficientnet/#efficientnetb7-function) | 256 MB | - | - | 66,658,687 | - |
+| Model | Size (MB)| Top-1 Accuracy | Top-5 Accuracy | Parameters | Depth | Time (ms) per inference step (CPU) | Time (ms) per inference step (GPU) |
+| ----- | -------: | -------------: | -------------: |  --------: | ----: | ---------------------------------: | ---------------------------------: |
+| [Xception](xception) | 88 | 79.0% | 94.5% | 22.9M | 81 | 109.4 | 8.1 |
+| [VGG16](vgg/#vgg16-function) | 528 | 71.3% | 90.1% | 138.4M | 16 | 69.5 | 4.2 |
+| [VGG19](vgg/#vgg19-function) | 549 | 71.3% | 90.0% | 143.7M | 19 | 84.8 | 4.4 |
+| [ResNet50](resnet/#resnet50-function) | 98 | 74.9% | 92.1% | 25.6M | 107 | 58.2 | 4.6 |
+| [ResNet50V2](resnet/#resnet50v2-function) | 98 | 76.0% | 93.0% | 25.6M | 103 | 45.6 | 4.4 |
+| [ResNet101](resnet/#resnet101-function) | 171 | 76.4% | 92.8% | 44.7M | 209 | 89.6 | 5.2 |
+| [ResNet101V2](resnet/#resnet101v2-function) | 171 | 77.2% | 93.8% | 44.7M | 205 | 72.7 | 5.4 |
+| [ResNet152](resnet/#resnet152-function) | 232 | 76.6% | 93.1% | 60.4M | 311 | 127.4 | 6.5 |
+| [ResNet152V2](resnet/#resnet152v2-function) | 232 | 78.0% | 94.2% | 60.4M | 307 | 107.5 | 6.6 |
+| [InceptionV3](inceptionv3) | 92 | 77.9% | 93.7% | 23.9M | 189 | 42.2 | 6.9 |
+| [InceptionResNetV2](inceptionresnetv2) | 215 | 80.3% | 95.3% | 55.9M | 449 | 130.2 | 10.0 |
+| [MobileNet](mobilenet) | 16 | 70.4% | 89.5% | 4.3M | 55 | 22.6 | 3.4 |
+| [MobileNetV2](mobilenet/#mobilenetv2-function) | 14 | 71.3% | 90.1% | 3.5M | 105 | 25.9 | 3.8 |
+| [DenseNet121](densenet/#densenet121-function) | 33 | 75.0% | 92.3% | 8.1M | 242 | 77.1 | 5.4 |
+| [DenseNet169](densenet/#densenet169-function) | 57 | 76.2% | 93.2% | 14.3M | 338 | 96.4 | 6.3 |
+| [DenseNet201](densenet/#densenet201-function) | 80 | 77.3% | 93.6% | 20.2M | 402 | 127.2 | 6.7 |
+| [NASNetMobile](nasnet/#nasnetmobile-function) | 23 | 74.4% | 91.9% | 5.3M | 389 | 27.0 | 6.7 |
+| [NASNetLarge](nasnet/#nasnetlarge-function) | 343 | 82.5% | 96.0% | 88.9M | 533 | 344.5 | 20.0 |
+| [EfficientNetB0](efficientnet/#efficientnetb0-function) | 29 | 77.1% | 93.3% | 5.3M | 132 | 46.0 | 4.9 |
+| [EfficientNetB1](efficientnet/#efficientnetb1-function) | 31 | 79.1% | 94.4% | 7.9M | 186 | 60.2 | 5.6 |
+| [EfficientNetB2](efficientnet/#efficientnetb2-function) | 36 | 80.1% | 94.9% | 9.2M | 186 | 80.8 | 6.5 |
+| [EfficientNetB3](efficientnet/#efficientnetb3-function) | 48 | 81.6% | 95.7% | 12.3M | 210 | 140.0 | 8.8 |
+| [EfficientNetB4](efficientnet/#efficientnetb4-function) | 75 | 82.9% | 96.4% | 19.5M | 258 | 308.3 | 15.1 |
+| [EfficientNetB5](efficientnet/#efficientnetb5-function) | 118 | 83.6% | 96.7% | 30.6M | 312 | 579.2 | 25.3 |
+| [EfficientNetB6](efficientnet/#efficientnetb6-function) | 166 | 84.0% | 96.8% | 43.3M | 360 | 958.1 | 40.4 |
+| [EfficientNetB7](efficientnet/#efficientnetb7-function) | 256 | 84.3% | 97.0% | 66.7M | 438 | 1578.9 | 61.6 | 
+| [EfficientNetV2B0](efficientnet_v2/#efficientnetv2b0-function) | 29 | 78.7% | 94.3% | 7.2M | - | - | - |
+| [EfficientNetV2B1](efficientnet_v2/#efficientnetv2b1-function) | 34 | 79.8% | 95.0% | 8.2M | - | - | - |
+| [EfficientNetV2B2](efficientnet_v2/#efficientnetv2b2-function) | 42 | 80.5% | 95.1% | 10.2M | - | - | - |
+| [EfficientNetV2B3](efficientnet_v2/#efficientnetv2b3-function) | 59 | 82.0% | 95.8% | 14.5M | - | - | - |
+| [EfficientNetV2S](efficientnet_v2/#efficientnetv2s-function) | 88 | 83.9% | 96.7% | 21.6M | - | - | - |
+| [EfficientNetV2M](efficientnet_v2/#efficientnetv2m-function) | 220 | 85.3% | 97.4% | 54.4M | - | - | - |
+| [EfficientNetV2L](efficientnet_v2/#efficientnetv2l-function) | 479 | 85.7% | 97.5% | 119.0M | - | - | - |
+| [ConvNeXtTiny](convnext/#convnexttiny-function) | 109.42 | 81.3% | - | 28.6M | - | - | - |
+| [ConvNeXtSmall](convnext/#convnextsmall-function) | 192.29 | 82.3% | - | 50.2M | - | - | - |
+| [ConvNeXtBase](convnext/#convnextbase-function) | 338.58 | 85.3% | - | 88.5M | - | - | - |
+| [ConvNeXtLarge](convnext/#convnextlarge-function) | 755.07 | 86.3% | - | 197.7M | - | - | - |
+| [ConvNeXtXLarge](convnext/#convnextxlarge-function) | 1310 | 86.7% | - | 350.1M | - | - | - |
 
-<br>
 The top-1 and top-5 accuracy refers to the model's performance on the ImageNet validation dataset.
 
 Depth refers to the topological depth of the network. This includes activation layers, batch normalization layers etc.
 
+Time per inference step is the average of 30 batches and 10 repetitions.
+
+- CPU: AMD EPYC Processor (with IBPB) (92 core)
+- RAM: 1.7T
+- GPU: Tesla A100
+- Batch size: 32
+
+Depth counts the number of layers with parameters.
 
 -----
 

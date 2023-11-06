@@ -4,6 +4,7 @@ Author: [fchollet](https://twitter.com/fchollet)
 Date created: 2020/05/16
 Last modified: 2020/05/16
 Description: Four simple tips to help you debug your Keras code.
+Accelerator: GPU
 """
 
 """
@@ -130,7 +131,7 @@ kernel.shape: (10, 5)
 ```
 
 Turns out we had the wrong axis for the `concat` op! We should be concatenating `neg` and
-`pop` alongside the feature axis 1, not the batch axis 0. Here's the correct version:
+`pos` alongside the feature axis 1, not the batch axis 0. Here's the correct version:
 """
 
 
@@ -287,6 +288,7 @@ idea being to use larger batches and a larger learning rate than usual, since ou
 """
 
 import numpy as np
+
 
 # Construct an instance of MyModel
 def get_model():

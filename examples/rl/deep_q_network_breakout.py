@@ -4,12 +4,26 @@ Author: [Jacob Chapman](https://twitter.com/jacoblchapman) and [Mathias Lechner]
 Date created: 2020/05/23
 Last modified: 2020/06/17
 Description: Play Atari Breakout with a Deep Q-Network.
+Accelerator: NONE
 """
 """
 ## Introduction
 
 This script shows an implementation of Deep Q-Learning on the
 `BreakoutNoFrameskip-v4` environment.
+
+This example requires the following dependencies: `baselines`, `atari-py`, `rows`.
+They can be installed via:
+
+```
+git clone https://github.com/openai/baselines.git
+cd baselines
+pip install -e .
+git clone https://github.com/openai/atari-py
+wget http://www.atarimania.com/roms/Roms.rar
+unrar x Roms.rar .
+python -m atari_py.import_roms .
+```
 
 ### Deep Q-Learning
 
@@ -84,7 +98,13 @@ num_actions = 4
 
 def create_q_model():
     # Network defined by the Deepmind paper
-    inputs = layers.Input(shape=(84, 84, 4,))
+    inputs = layers.Input(
+        shape=(
+            84,
+            84,
+            4,
+        )
+    )
 
     # Convolutions on the frames on the screen
     layer1 = layers.Conv2D(32, 8, strides=4, activation="relu")(inputs)
@@ -181,7 +201,6 @@ while True:  # Run until solved
 
         # Update every fourth frame and once batch size is over 32
         if frame_count % update_after_actions == 0 and len(done_history) > batch_size:
-
             # Get indices of samples for replay buffers
             indices = np.random.choice(range(len(done_history)), size=batch_size)
 

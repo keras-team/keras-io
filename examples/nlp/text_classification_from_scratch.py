@@ -4,6 +4,7 @@ Authors: Mark Omernick, Francois Chollet
 Date created: 2019/11/06
 Last modified: 2020/05/17
 Description: Text sentiment classification starting from raw text files.
+Accelerator: GPU
 """
 """
 ## Introduction
@@ -50,7 +51,7 @@ ls aclImdb/train
 
 """
 The `aclImdb/train/pos` and `aclImdb/train/neg` folders contain text files, each of
- which represents on review (either positive or negative):
+ which represents one review (either positive or negative):
 """
 
 """shell
@@ -58,7 +59,7 @@ cat aclImdb/train/pos/6248_7.txt
 """
 
 """
-We are only interested in the `pos` and `neg` subfolders, so let's delete the rest:
+We are only interested in the `pos` and `neg` subfolders, so let's delete the other subfolder that has text files in it:
 """
 
 """shell
@@ -66,7 +67,7 @@ rm -r aclImdb/train/unsup
 """
 
 """
-You can use the utility `tf.keras.preprocessing.text_dataset_from_directory` to
+You can use the utility `tf.keras.utils.text_dataset_from_directory` to
 generate a labeled `tf.data.Dataset` object from a set of text files on disk filed
  into class-specific folders.
 
@@ -88,35 +89,27 @@ get have no overlap.
 """
 
 batch_size = 32
-raw_train_ds = tf.keras.preprocessing.text_dataset_from_directory(
+raw_train_ds = tf.keras.utils.text_dataset_from_directory(
     "aclImdb/train",
     batch_size=batch_size,
     validation_split=0.2,
     subset="training",
     seed=1337,
 )
-raw_val_ds = tf.keras.preprocessing.text_dataset_from_directory(
+raw_val_ds = tf.keras.utils.text_dataset_from_directory(
     "aclImdb/train",
     batch_size=batch_size,
     validation_split=0.2,
     subset="validation",
     seed=1337,
 )
-raw_test_ds = tf.keras.preprocessing.text_dataset_from_directory(
+raw_test_ds = tf.keras.utils.text_dataset_from_directory(
     "aclImdb/test", batch_size=batch_size
 )
 
-print(
-    "Number of batches in raw_train_ds: %d"
-    % tf.data.experimental.cardinality(raw_train_ds)
-)
-print(
-    "Number of batches in raw_val_ds: %d" % tf.data.experimental.cardinality(raw_val_ds)
-)
-print(
-    "Number of batches in raw_test_ds: %d"
-    % tf.data.experimental.cardinality(raw_test_ds)
-)
+print(f"Number of batches in raw_train_ds: {raw_train_ds.cardinality()}")
+print(f"Number of batches in raw_val_ds: {raw_val_ds.cardinality()}")
+print(f"Number of batches in raw_test_ds: {raw_test_ds.cardinality()}")
 
 """
 Let's preview a few samples:
@@ -139,9 +132,10 @@ for text_batch, label_batch in raw_train_ds.take(1):
 In particular, we remove `<br />` tags.
 """
 
-from tensorflow.keras.layers.experimental.preprocessing import TextVectorization
+from tensorflow.keras.layers import TextVectorization
 import string
 import re
+
 
 # Having looked at our data above, we see that the raw text contains HTML break
 # tags of the form '<br />'. These tags will not be removed by the default
@@ -151,7 +145,7 @@ def custom_standardization(input_data):
     lowercase = tf.strings.lower(input_data)
     stripped_html = tf.strings.regex_replace(lowercase, "<br />", " ")
     return tf.strings.regex_replace(
-        stripped_html, "[%s]" % re.escape(string.punctuation), ""
+        stripped_html, f"[{re.escape(string.punctuation)}]", ""
     )
 
 
@@ -174,7 +168,7 @@ vectorize_layer = TextVectorization(
     output_sequence_length=sequence_length,
 )
 
-# Now that the vocab layer has been created, call `adapt` on a text-only
+# Now that the vectorize_layer has been created, call `adapt` on a text-only
 # dataset to create the vocabulary. You don't have to batch, but for very large
 # datasets this means you're not keeping spare copies of the dataset in memory.
 

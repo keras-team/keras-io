@@ -4,6 +4,7 @@ Author: [Apoorv Nandan](https://twitter.com/NandanApoorv)
 Date created: 2020/05/13
 Last modified: 2020/05/13
 Description: Implement Actor Critic Method in CartPole environment.
+Accelerator: NONE
 """
 """
 ## Introduction
@@ -15,7 +16,7 @@ This script shows an implementation of Actor Critic method on CartPole-V0 enviro
 As an agent takes actions and moves through an environment, it learns to map
 the observed state of the environment to two possible outputs:
 
-1. Recommended action: A probabiltiy value for each action in the action space.
+1. Recommended action: A probability value for each action in the action space.
    The part of the agent responsible for this output is called the **actor**.
 2. Estimated rewards in the future: Sum of all rewards it expects to receive in the
    future. The part of the agent responsible for this output is the **critic**.

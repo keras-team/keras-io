@@ -77,16 +77,16 @@ import tensorflow as tf
 
 class ExampleRandomNormal(tf.keras.initializers.Initializer):
 
-def __init__(self, mean, stddev):
-  self.mean = mean
-  self.stddev = stddev
+    def __init__(self, mean, stddev):
+      self.mean = mean
+      self.stddev = stddev
 
-def __call__(self, shape, dtype=None)`:
-  return tf.random.normal(
-      shape, mean=self.mean, stddev=self.stddev, dtype=dtype)
+    def __call__(self, shape, dtype=None)`:
+      return tf.random.normal(
+          shape, mean=self.mean, stddev=self.stddev, dtype=dtype)
 
-def get_config(self):  # To support serialization
-  return {'mean': self.mean, 'stddev': self.stddev}
+    def get_config(self):  # To support serialization
+      return {'mean': self.mean, 'stddev': self.stddev}
 ```
 
 Note that we don't have to implement `from_config` in the example above since

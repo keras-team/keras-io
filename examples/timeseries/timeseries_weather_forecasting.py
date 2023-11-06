@@ -4,6 +4,7 @@ Authors: [Prabhanshu Attri](https://prabhanshu.com/github), [Yashika Sharma](htt
 Date created: 2020/06/23
 Last modified: 2020/07/20
 Description: This notebook demonstrates how to do timeseries forecasting using a LSTM model.
+Accelerator: GPU
 """
 
 """
@@ -172,7 +173,7 @@ drastic change is expected within 60 minutes. We do this via the `sampling_rate`
 argument in `timeseries_dataset_from_array` utility.
 
 We are tracking data from past 720 timestamps (720/6=120 hours). This data will be
-used to predict the temperature after 72 timestamps (76/6=12 hours).
+used to predict the temperature after 72 timestamps (72/6=12 hours).
 
 Since every feature has values with
 varying ranges, we do normalization to confine feature values to a range of `[0, 1]` before
@@ -299,7 +300,7 @@ model.compile(optimizer=keras.optimizers.Adam(learning_rate=learning_rate), loss
 model.summary()
 
 """
-We'll use the `ModelCheckpoint` callback to regualrly save checkpoints, and
+We'll use the `ModelCheckpoint` callback to regularly save checkpoints, and
 the `EarlyStopping` callback to interrupt training when the validation loss
 is not longer improving.
 """
@@ -380,3 +381,11 @@ for x, y in dataset_val.take(5):
         12,
         "Single Step Prediction",
     )
+
+
+"""
+**Example available on HuggingFace**
+| Trained Model | Demo |
+| :--: | :--: |
+| [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Model-Time%20Series-black.svg)](https://huggingface.co/keras-io/timeseries_forecasting_for_weather) | [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Spaces-Time%20Series-black.svg)](https://huggingface.co/spaces/keras-io/timeseries_forecasting_for_weather) |
+"""

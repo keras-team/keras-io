@@ -98,7 +98,7 @@ class Dataset:
             if label not in self.data:
                 self.data[label] = []
             self.data[label].append(image)
-            self.labels = list(self.data.keys())
+        self.labels = list(self.data.keys())
 
     def get_mini_dataset(
         self, batch_size, repetitions, shots, num_classes, split=False

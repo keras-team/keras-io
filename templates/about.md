@@ -3,25 +3,32 @@
 Keras is a deep learning API written in Python, running on top of the machine learning platform [TensorFlow](https://github.com/tensorflow/tensorflow).
 It was developed with a focus on enabling fast experimentation. *Being able to go from idea to result as fast as possible is key to doing good research.*
 
+Keras is:
+
+- **Simple** -- but not simplistic. Keras reduces developer *cognitive load* to free you to focus on the parts of the problem that really matter.
+- **Flexible** -- Keras adopts the principle of *progressive disclosure of complexity*: simple workflows should be quick and easy,
+while arbitrarily advanced workflows should be *possible* via a clear path that builds upon what you've already learned.
+- **Powerful** -- Keras provides industry-strength performance and scalability: it is used by organizations and companies including NASA, YouTube, or Waymo.
+
 ---
 
-## Keras & TensorFlow 2.0
+## Keras & TensorFlow 2
 
-[TensorFlow 2.0](https://www.tensorflow.org/) is an end-to-end, open-source machine learning platform. You can think of it as an infrastructure layer for
+[TensorFlow 2](https://www.tensorflow.org/) is an end-to-end, open-source machine learning platform. You can think of it as an infrastructure layer for
 [differentiable programming](https://en.wikipedia.org/wiki/Differentiable_programming). It combines four key abilities:
 
 - Efficiently executing low-level tensor operations on CPU, GPU, or TPU.
 - Computing the gradient of arbitrary differentiable expressions.
-- Scaling computation to many devices (e.g. the [Summit supercomputer](https://www.olcf.ornl.gov/summit/) at Oak Ridge National Lab, which spans 27,000 GPUs).
+- Scaling computation to many devices, such as clusters of hundreds of GPUs.
 - Exporting programs ("graphs") to external runtimes such as servers, browsers, mobile and embedded devices.
 
-Keras is the high-level API of TensorFlow 2.0: an approchable, highly-productive interface for solving machine learning problems,
+Keras is the high-level API of the TensorFlow platform: an approachable, highly-productive interface for solving machine learning problems,
 with a focus on modern deep learning. It provides essential abstractions and building blocks for developing
 and shipping machine learning solutions with high iteration velocity.
 
 Keras empowers engineers and researchers to take full advantage of the scalability
-and cross-platform capabilities of TensorFlow 2.0: you can run Keras on TPU or on large clusters of GPUs,
-and you can export your Keras models to run in the browser or on a mobile device. 
+and cross-platform capabilities of the TensorFlow platform: you can run Keras on TPU or on large clusters of GPUs,
+and you can export your Keras models to run in the browser or on a mobile device.
 
 ---
 
@@ -68,7 +75,7 @@ model.compile(loss=keras.losses.categorical_crossentropy,
 You can now iterate on your training data in batches:
 
 ```python
-# x_train and y_train are Numpy arrays --just like in the Scikit-Learn API.
+# x_train and y_train are Numpy arrays
 model.fit(x_train, y_train, epochs=5, batch_size=32)
 ```
 
@@ -84,10 +91,10 @@ Or generate predictions on new data:
 classes = model.predict(x_test, batch_size=128)
 ```
 
-What you just saw is the most elementary way to use Keras: it mirrors the Scikit-Learn API.
+What you just saw is the most elementary way to use Keras.
 
 However, Keras is also a highly-flexible framework suitable to iterate on state-of-the-art research ideas.
-Keras follows the principle of **progressive discloure of complexity**: it makes it easy to get started,
+Keras follows the principle of **progressive disclosure of complexity**: it makes it easy to get started,
 yet it makes it possible to handle arbitrarily advanced use cases,
 only requiring incremental learning at each step.
 
@@ -118,8 +125,6 @@ for inputs, targets in dataset:
     optimizer.apply_gradients(zip(gradients, model.trainable_weights))
 ```
 
-The ideas behind deep learning are simple, so why should their implementation be painful?
-
 For more in-depth tutorials about Keras, you can check out:
 
 - [Introduction to Keras for engineers](/getting_started/intro_to_keras_for_engineers/)
@@ -130,12 +135,12 @@ For more in-depth tutorials about Keras, you can check out:
 
 ## Installation & compatibility
 
-Keras comes packaged with TensorFlow 2.0 as `tensorflow.keras`.
-To start using Keras, simply [install TensorFlow 2.0](https://www.tensorflow.org/install).
+Keras comes packaged with TensorFlow 2 as `tensorflow.keras`.
+To start using Keras, simply [install TensorFlow 2](https://www.tensorflow.org/install).
 
-Keras/TensorFlow are compatible with:
+Keras and TensorFlow are compatible with:
 
-- Python 3.5–3.8
+- Python 3.7–3.10
 - Ubuntu 16.04 or later
 - Windows 7 or later
 - macOS 10.12.6 (Sierra) or later.
@@ -147,10 +152,11 @@ Keras/TensorFlow are compatible with:
 
 You can ask questions and join the development discussion:
 
+- In the [TensorFlow forum](https://discuss.tensorflow.org/).
 - On the [Keras Google group](https://groups.google.com/forum/#!forum/keras-users).
-- On the [Keras Slack channel](https://kerasteam.slack.com). Use [this link](https://keras-slack-autojoin.herokuapp.com/) to request an invitation to the channel.
 
-You can also post **bug reports and feature requests** (only) in [GitHub issues](https://github.com/keras-team/keras/issues). Make sure to read [our guidelines](https://github.com/keras-team/keras/blob/master/CONTRIBUTING.md) first.
+You can also post **bug reports and feature requests** (only) in [GitHub issues](https://github.com/keras-team/keras/issues).
+Make sure to read [our guidelines](https://github.com/keras-team/keras-io/blob/master/templates/contributing.md) first.
 
 ---
 
@@ -162,7 +168,3 @@ Keras (κέρας) means _horn_ in Greek. It is a reference to a literary image 
 Keras was initially developed as part of the research effort of project ONEIROS (Open-ended Neuro-Electronic Intelligent Robot Operating System).
 
 >_"Oneiroi are beyond our unravelling - who can be sure what tale they tell? Not all that men look for comes to pass. Two gates there are that give passage to fleeting Oneiroi; one is made of horn, one of ivory. The Oneiroi that pass through sawn ivory are deceitful, bearing a message that will not be fulfilled; those that come out through polished horn have truth behind them, to be accomplished for men who see them."_ Homer, Odyssey 19. 562 ff (Shewring translation).
-
----
-
-

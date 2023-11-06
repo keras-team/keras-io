@@ -21,10 +21,8 @@ specific filters in a target layer (picked somewhere in the middle of the model:
 `conv3_block4_out`). Such images represent a visualization of the
 pattern that the filter responds to.
 
-
 ---
 ## Setup
-
 
 
 ```python
@@ -38,12 +36,10 @@ img_height = 180
 # Our target layer: we will visualize the filters from this layer.
 # See `model.summary()` for list of layer names, if you want to change this.
 layer_name = "conv3_block4_out"
-
 ```
 
 ---
 ## Build a feature extraction model
-
 
 
 ```python
@@ -53,15 +49,20 @@ model = keras.applications.ResNet50V2(weights="imagenet", include_top=False)
 # Set up a model that returns the activation values for our target layer
 layer = model.get_layer(name=layer_name)
 feature_extractor = keras.Model(inputs=model.inputs, outputs=layer.output)
-
 ```
 
+<div class="k-default-codeblock">
+```
+2022-06-13 21:18:46.774381: I tensorflow/core/platform/cpu_feature_guard.cc:193] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  AVX2 FMA
+To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
+
+```
+</div>
 ---
 ## Set up the gradient ascent process
 
 The "loss" we will maximize is simply the mean of the activation of a specific filter in
 our target layer. To avoid border effects, we exclude border pixels.
-
 
 
 ```python
@@ -72,13 +73,11 @@ def compute_loss(input_image, filter_index):
     filter_activation = activation[:, 2:-2, 2:-2, filter_index]
     return tf.reduce_mean(filter_activation)
 
-
 ```
 
 Our gradient ascent function simply computes the gradients of the loss above
 with regard to the input image, and update the update image so as to move it
 towards a state that will activate the target filter more strongly.
-
 
 
 ```python
@@ -95,7 +94,6 @@ def gradient_ascent_step(img, filter_index, learning_rate):
     img += learning_rate * grads
     return loss, img
 
-
 ```
 
 ---
@@ -107,7 +105,6 @@ Our process is as follow:
 - Repeatedly apply the gradient ascent step function defined above
 - Convert the resulting input image back to a displayable form, by normalizing it,
 center-cropping it, and restricting it to the [0, 255] range.
-
 
 
 ```python
@@ -151,33 +148,30 @@ def deprocess_image(img):
     img = np.clip(img, 0, 255).astype("uint8")
     return img
 
-
 ```
 
 Let's try it out with filter 0 in the target layer:
-
 
 
 ```python
 from IPython.display import Image, display
 
 loss, img = visualize_filter(0)
-keras.preprocessing.image.save_img("0.png", img)
-
+keras.utils.save_img("0.png", img)
 ```
 
 This is what an input that maximizes the response of filter 0 in the target layer would
 look like:
 
 
-
 ```python
 display(Image("0.png"))
-
 ```
 
 
+    
 ![png](/img/examples/vision/visualizing_what_convnets_learn/visualizing_what_convnets_learn_15_0.png)
+    
 
 
 ---
@@ -186,7 +180,6 @@ display(Image("0.png"))
 Now, let's make a 8x8 grid of the first 64 filters
 in the target layer to get of feel for the range
 of different visual patterns that the model has learned.
-
 
 
 ```python
@@ -218,12 +211,11 @@ for i in range(n):
             + cropped_height,
             :,
         ] = img
-keras.preprocessing.image.save_img("stiched_filters.png", stitched_filters)
+keras.utils.save_img("stiched_filters.png", stitched_filters)
 
 from IPython.display import Image, display
 
 display(Image("stiched_filters.png"))
-
 ```
 
 <div class="k-default-codeblock">
@@ -295,7 +287,9 @@ Processing filter 63
 
 ```
 </div>
+    
 ![png](/img/examples/vision/visualizing_what_convnets_learn/visualizing_what_convnets_learn_17_1.png)
+    
 
 
 Image classification models see the world by decomposing their inputs over a "vector
@@ -305,3 +299,6 @@ See also
 [this old blog post](https://blog.keras.io/how-convolutional-neural-networks-see-the-world.html)
 for analysis and interpretation.
 
+Example available on HuggingFace.
+
+[![Generic badge](https://img.shields.io/badge/🤗%20Spaces-What%20Convnets%20Learn-black.svg)](https://huggingface.co/spaces/keras-io/what-convnets-learn)

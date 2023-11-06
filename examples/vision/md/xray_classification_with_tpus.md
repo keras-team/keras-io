@@ -2,10 +2,10 @@
 
 **Author:** Amy MiHyun Jang<br>
 **Date created:** 2020/07/28<br>
-**Last modified:** 2020/08/05<br>
+**Last modified:** 2020/08/24<br>
 
 
-<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/visionipynb/xray_classification_with_tpus.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/visionxray_classification_with_tpus.py)
+<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/vision/ipynb/xray_classification_with_tpus.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/vision/xray_classification_with_tpus.py)
 
 
 **Description:** Medical image classification on TPU.
@@ -27,11 +27,9 @@ import tensorflow as tf
 import matplotlib.pyplot as plt
 
 try:
-    tpu = tf.distribute.cluster_resolver.TPUClusterResolver()
+    tpu = tf.distribute.cluster_resolver.TPUClusterResolver.connect()
     print("Device:", tpu.master())
-    tf.config.experimental_connect_to_cluster(tpu)
-    tf.tpu.experimental.initialize_tpu_system(tpu)
-    strategy = tf.distribute.experimental.TPUStrategy(tpu)
+    strategy = tf.distribute.TPUStrategy(tpu)
 except:
     strategy = tf.distribute.get_strategy()
 print("Number of replicas:", strategy.num_replicas_in_sync)
@@ -39,41 +37,121 @@ print("Number of replicas:", strategy.num_replicas_in_sync)
 
 <div class="k-default-codeblock">
 ```
+Device: grpc://10.0.27.122:8470
+INFO:tensorflow:Initializing the TPU system: grpc://10.0.27.122:8470
+
+INFO:tensorflow:Initializing the TPU system: grpc://10.0.27.122:8470
+
+INFO:tensorflow:Clearing out eager caches
+
+INFO:tensorflow:Clearing out eager caches
+
+INFO:tensorflow:Finished initializing TPU system.
+
+INFO:tensorflow:Finished initializing TPU system.
+WARNING:absl:`tf.distribute.TPUStrategy` is deprecated, please use  the non experimental symbol `tf.distribute.TPUStrategy` instead.
+
+INFO:tensorflow:Found TPU system:
+
+INFO:tensorflow:Found TPU system:
+
+INFO:tensorflow:*** Num TPU Cores: 8
+
+INFO:tensorflow:*** Num TPU Cores: 8
+
+INFO:tensorflow:*** Num TPU Workers: 1
+
+INFO:tensorflow:*** Num TPU Workers: 1
+
+INFO:tensorflow:*** Num TPU Cores Per Worker: 8
+
+INFO:tensorflow:*** Num TPU Cores Per Worker: 8
+
+INFO:tensorflow:*** Available Device: _DeviceAttributes(/job:localhost/replica:0/task:0/device:CPU:0, CPU, 0, 0)
+
+INFO:tensorflow:*** Available Device: _DeviceAttributes(/job:localhost/replica:0/task:0/device:CPU:0, CPU, 0, 0)
+
+INFO:tensorflow:*** Available Device: _DeviceAttributes(/job:localhost/replica:0/task:0/device:XLA_CPU:0, XLA_CPU, 0, 0)
+
+INFO:tensorflow:*** Available Device: _DeviceAttributes(/job:localhost/replica:0/task:0/device:XLA_CPU:0, XLA_CPU, 0, 0)
+
+INFO:tensorflow:*** Available Device: _DeviceAttributes(/job:worker/replica:0/task:0/device:CPU:0, CPU, 0, 0)
+
+INFO:tensorflow:*** Available Device: _DeviceAttributes(/job:worker/replica:0/task:0/device:CPU:0, CPU, 0, 0)
+
+INFO:tensorflow:*** Available Device: _DeviceAttributes(/job:worker/replica:0/task:0/device:TPU:0, TPU, 0, 0)
+
+INFO:tensorflow:*** Available Device: _DeviceAttributes(/job:worker/replica:0/task:0/device:TPU:0, TPU, 0, 0)
+
+INFO:tensorflow:*** Available Device: _DeviceAttributes(/job:worker/replica:0/task:0/device:TPU:1, TPU, 0, 0)
+
+INFO:tensorflow:*** Available Device: _DeviceAttributes(/job:worker/replica:0/task:0/device:TPU:1, TPU, 0, 0)
+
+INFO:tensorflow:*** Available Device: _DeviceAttributes(/job:worker/replica:0/task:0/device:TPU:2, TPU, 0, 0)
+
+INFO:tensorflow:*** Available Device: _DeviceAttributes(/job:worker/replica:0/task:0/device:TPU:2, TPU, 0, 0)
+
+INFO:tensorflow:*** Available Device: _DeviceAttributes(/job:worker/replica:0/task:0/device:TPU:3, TPU, 0, 0)
+
+INFO:tensorflow:*** Available Device: _DeviceAttributes(/job:worker/replica:0/task:0/device:TPU:3, TPU, 0, 0)
+
+INFO:tensorflow:*** Available Device: _DeviceAttributes(/job:worker/replica:0/task:0/device:TPU:4, TPU, 0, 0)
+
+INFO:tensorflow:*** Available Device: _DeviceAttributes(/job:worker/replica:0/task:0/device:TPU:4, TPU, 0, 0)
+
+INFO:tensorflow:*** Available Device: _DeviceAttributes(/job:worker/replica:0/task:0/device:TPU:5, TPU, 0, 0)
+
+INFO:tensorflow:*** Available Device: _DeviceAttributes(/job:worker/replica:0/task:0/device:TPU:5, TPU, 0, 0)
+
+INFO:tensorflow:*** Available Device: _DeviceAttributes(/job:worker/replica:0/task:0/device:TPU:6, TPU, 0, 0)
+
+INFO:tensorflow:*** Available Device: _DeviceAttributes(/job:worker/replica:0/task:0/device:TPU:6, TPU, 0, 0)
+
+INFO:tensorflow:*** Available Device: _DeviceAttributes(/job:worker/replica:0/task:0/device:TPU:7, TPU, 0, 0)
+
+INFO:tensorflow:*** Available Device: _DeviceAttributes(/job:worker/replica:0/task:0/device:TPU:7, TPU, 0, 0)
+
+INFO:tensorflow:*** Available Device: _DeviceAttributes(/job:worker/replica:0/task:0/device:TPU_SYSTEM:0, TPU_SYSTEM, 0, 0)
+
+INFO:tensorflow:*** Available Device: _DeviceAttributes(/job:worker/replica:0/task:0/device:TPU_SYSTEM:0, TPU_SYSTEM, 0, 0)
+
+INFO:tensorflow:*** Available Device: _DeviceAttributes(/job:worker/replica:0/task:0/device:XLA_CPU:0, XLA_CPU, 0, 0)
+
+INFO:tensorflow:*** Available Device: _DeviceAttributes(/job:worker/replica:0/task:0/device:XLA_CPU:0, XLA_CPU, 0, 0)
+
 Number of replicas: 8
+
 ```
 </div>
-
 We need a Google Cloud link to our data to load the data using a TPU.
 Below, we define key configuration parameters we'll use in this example.
 To run on TPU, this example must be on Colab with the TPU runtime selected.
 
 
 ```python
-AUTOTUNE = tf.data.experimental.AUTOTUNE
-GCS_PATH = "gs://kds-7c9306925365b635aa934a70a0d94688c717d8c2eda0e47466736307"
+AUTOTUNE = tf.data.AUTOTUNE
 BATCH_SIZE = 25 * strategy.num_replicas_in_sync
 IMAGE_SIZE = [180, 180]
+CLASS_NAMES = ["NORMAL", "PNEUMONIA"]
 ```
 
 ---
 ## Load the data
 
 The Chest X-ray data we are using from
-[*Cell*](https://www.kaggle.com/paultimothymooney/chest-xray-pneumonia) divides the data
-into training, validation, and test files. There are only 16 files in the validation folder,
-and we would prefer to have a less extreme division between the training and the validation set.
-We will append the validation files and create a new split that resembles the standard
-80:20 division instead.
+[*Cell*](https://www.cell.com/cell/fulltext/S0092-8674(18)30154-5) divides the data into
+training and test files. Let's first load in the training TFRecords.
 
 
 ```python
-filenames = tf.io.gfile.glob(str(GCS_PATH + "/chest_xray/train/*/*"))
-filenames.extend(tf.io.gfile.glob(str(GCS_PATH + "/chest_xray/val/*/*")))
+train_images = tf.data.TFRecordDataset(
+    "gs://download.tensorflow.org/data/ChestXRay2017/train/images.tfrec"
+)
+train_paths = tf.data.TFRecordDataset(
+    "gs://download.tensorflow.org/data/ChestXRay2017/train/paths.tfrec"
+)
 
-random.shuffle(filenames)
-split_ind = int(0.8 * len(filenames))
-
-train_filenames, val_filenames = filenames[:split_ind], filenames[split_ind:]
+ds = tf.data.Dataset.zip((train_images, train_paths))
 ```
 
 Let's count how many healthy/normal chest X-rays we have and how many
@@ -81,19 +159,29 @@ pneumonia chest X-rays we have:
 
 
 ```python
-COUNT_NORMAL = len([filename for filename in train_filenames if "NORMAL" in filename])
+COUNT_NORMAL = len(
+    [
+        filename
+        for filename in train_paths
+        if "NORMAL" in filename.numpy().decode("utf-8")
+    ]
+)
 print("Normal images count in training set: " + str(COUNT_NORMAL))
 
 COUNT_PNEUMONIA = len(
-    [filename for filename in train_filenames if "PNEUMONIA" in filename]
+    [
+        filename
+        for filename in train_paths
+        if "PNEUMONIA" in filename.numpy().decode("utf-8")
+    ]
 )
 print("Pneumonia images count in training set: " + str(COUNT_PNEUMONIA))
 ```
 
 <div class="k-default-codeblock">
 ```
-Normal images count in training set: 1076
-Pneumonia images count in training set: 3109
+Normal images count in training set: 1349
+Pneumonia images count in training set: 3883
 
 ```
 </div>
@@ -101,63 +189,8 @@ Notice that there are way more images that are classified as pneumonia than norm
 shows that we have an imbalance in our data. We will correct for this imbalance later on
 in our notebook.
 
-
-```python
-train_list_ds = tf.data.Dataset.from_tensor_slices(train_filenames)
-val_list_ds = tf.data.Dataset.from_tensor_slices(val_filenames)
-
-for f in train_list_ds.take(5):
-    print(f.numpy())
-```
-
-<div class="k-default-codeblock">
-```
-b'gs://kds-7c9306925365b635aa934a70a0d94688c717d8c2eda0e47466736307/chest_xray/train/PNEUMONIA/person141_virus_287.jpeg'
-b'gs://kds-7c9306925365b635aa934a70a0d94688c717d8c2eda0e47466736307/chest_xray/train/NORMAL/IM-0586-0001.jpeg'
-b'gs://kds-7c9306925365b635aa934a70a0d94688c717d8c2eda0e47466736307/chest_xray/train/NORMAL/NORMAL2-IM-1126-0001.jpeg'
-b'gs://kds-7c9306925365b635aa934a70a0d94688c717d8c2eda0e47466736307/chest_xray/train/PNEUMONIA/person640_virus_1221.jpeg'
-b'gs://kds-7c9306925365b635aa934a70a0d94688c717d8c2eda0e47466736307/chest_xray/train/PNEUMONIA/person505_bacteria_2135.jpeg'
-
-```
-</div>
-Run the following cell to see how many images we have in our training dataset and how
-many images we have in our validation set. Verify that the ratio of images is 80:20.
-
-
-```python
-TRAIN_IMG_COUNT = tf.data.experimental.cardinality(train_list_ds).numpy()
-print("Training images count: " + str(TRAIN_IMG_COUNT))
-
-VAL_IMG_COUNT = tf.data.experimental.cardinality(val_list_ds).numpy()
-print("Validating images count: " + str(VAL_IMG_COUNT))
-```
-
-<div class="k-default-codeblock">
-```
-Training images count: 4185
-Validating images count: 1047
-
-```
-</div>
-As expected, we have two labels for our images.
-
-
-```python
-CLASS_NAMES = [
-    str(tf.strings.split(item, os.path.sep)[-1].numpy())[2:-1]
-    for item in tf.io.gfile.glob(str(GCS_PATH + "/chest_xray/train/*"))
-]
-print("Class names: %s" % (CLASS_NAMES,))
-```
-
-<div class="k-default-codeblock">
-```
-Class names: ['NORMAL', 'PNEUMONIA']
-
-```
-</div>
-Currently, our dataset is just a list of filenames. We want to map each filename to the
-corresponding (image, label) pair. The following methods will help us do that.
+We want to map each filename to the corresponding (image, label) pair. The following
+methods will help us do that.
 
 As we only have two labels, we will encode the label so that `1` or `True` indicates
 pneumonia and `0` or `False` indicates normal.
@@ -167,7 +200,7 @@ pneumonia and `0` or `False` indicates normal.
 
 def get_label(file_path):
     # convert the path to a list of path components
-    parts = tf.strings.split(file_path, os.path.sep)
+    parts = tf.strings.split(file_path, "/")
     # The second to last is the class-directory
     return parts[-2] == "PNEUMONIA"
 
@@ -179,17 +212,23 @@ def decode_img(img):
     return tf.image.resize(img, IMAGE_SIZE)
 
 
-def process_path(file_path):
-    label = get_label(file_path)
+def process_path(image, path):
+    label = get_label(path)
     # load the raw data from the file as a string
-    img = tf.io.read_file(file_path)
-    img = decode_img(img)
+    img = decode_img(image)
     return img, label
 
 
-train_ds = train_list_ds.map(process_path, num_parallel_calls=AUTOTUNE)
+ds = ds.map(process_path, num_parallel_calls=AUTOTUNE)
+```
 
-val_ds = val_list_ds.map(process_path, num_parallel_calls=AUTOTUNE)
+Let's split the data into a training and validation datasets.
+
+
+```python
+ds = ds.shuffle(10000)
+train_ds = ds.take(4200)
+val_ds = ds.skip(4200)
 ```
 
 Let's visualize the shape of an (image, label) pair.
@@ -204,7 +243,7 @@ for image, label in train_ds.take(1):
 <div class="k-default-codeblock">
 ```
 Image shape:  (180, 180, 3)
-Label:  True
+Label:  False
 
 ```
 </div>
@@ -212,20 +251,18 @@ Load and format the test data as well.
 
 
 ```python
-test_list_ds = tf.data.Dataset.list_files(str(GCS_PATH + "/chest_xray/test/*/*"))
-TEST_IMG_COUNT = test_list_ds.cardinality().numpy()
-test_ds = test_list_ds.map(process_path, num_parallel_calls=AUTOTUNE)
+test_images = tf.data.TFRecordDataset(
+    "gs://download.tensorflow.org/data/ChestXRay2017/test/images.tfrec"
+)
+test_paths = tf.data.TFRecordDataset(
+    "gs://download.tensorflow.org/data/ChestXRay2017/test/paths.tfrec"
+)
+test_ds = tf.data.Dataset.zip((test_images, test_paths))
+
+test_ds = test_ds.map(process_path, num_parallel_calls=AUTOTUNE)
 test_ds = test_ds.batch(BATCH_SIZE)
-
-print("Testing images count: " + str(TEST_IMG_COUNT))
 ```
 
-<div class="k-default-codeblock">
-```
-Testing images count: 624
-
-```
-</div>
 ---
 ## Visualize the dataset
 
@@ -238,7 +275,7 @@ because the dataset is not very large and we want to train on TPU.
 
 ```python
 
-def prepare_for_training(ds, cache=True, shuffle_buffer_size=1000):
+def prepare_for_training(ds, cache=True):
     # This is a small dataset, only load it once, and keep it in memory.
     # use `.cache(filename)` to cache preprocessing work for datasets that don't
     # fit in memory.
@@ -248,7 +285,6 @@ def prepare_for_training(ds, cache=True, shuffle_buffer_size=1000):
         else:
             ds = ds.cache()
 
-    ds = ds.shuffle(buffer_size=shuffle_buffer_size)
     ds = ds.batch(BATCH_SIZE)
 
     # `prefetch` lets the dataset fetch batches in the background while the model
@@ -296,7 +332,7 @@ show_batch(image_batch.numpy(), label_batch.numpy())
 ```
 
 
-![png](/img/examples/vision/xray_classification_with_tpus/xray_classification_with_tpus_28_0.png)
+![png](/img/examples/vision/xray_classification_with_tpus/xray_classification_with_tpus_25_0.png)
 
 
 ---
@@ -313,7 +349,6 @@ The architecture for this CNN has been inspired by this
 ```python
 from tensorflow import keras
 from tensorflow.keras import layers
-from tensorflow.keras.layers.experimental import preprocessing
 
 
 def conv_block(filters, inputs):
@@ -349,7 +384,7 @@ presence of pneumonia.
 
 def build_model():
     inputs = keras.Input(shape=(IMAGE_SIZE[0], IMAGE_SIZE[1], 3))
-    x = preprocessing.Rescaling(1.0 / 255)(inputs)
+    x = layers.Rescaling(1.0 / 255)(inputs)
     x = layers.Conv2D(16, 3, activation="relu", padding="same")(x)
     x = layers.Conv2D(16, 3, activation="relu", padding="same")(x)
     x = layers.MaxPool2D()(x)
@@ -386,6 +421,7 @@ as pneumonia than normal. We will correct for that by using class weighting:
 initial_bias = np.log([COUNT_PNEUMONIA / COUNT_NORMAL])
 print("Initial bias: {:.5f}".format(initial_bias[0]))
 
+TRAIN_IMG_COUNT = COUNT_NORMAL + COUNT_PNEUMONIA
 weight_for_0 = (1 / COUNT_NORMAL) * (TRAIN_IMG_COUNT) / 2.0
 weight_for_1 = (1 / COUNT_PNEUMONIA) * (TRAIN_IMG_COUNT) / 2.0
 
@@ -397,7 +433,7 @@ print("Weight for class 1: {:.2f}".format(weight_for_1))
 
 <div class="k-default-codeblock">
 ```
-Initial bias: 1.06105
+Initial bias: 1.05724
 Weight for class 0: 1.94
 Weight for class 1: 0.67
 
@@ -485,63 +521,83 @@ history = model.fit(
 <div class="k-default-codeblock">
 ```
 Epoch 1/100
-21/21 [==============================] - 744s 35s/step - loss: 0.5928 - binary_accuracy: 0.6671 - precision: 0.8861 - recall: 0.6333 - val_loss: 0.9497 - val_binary_accuracy: 0.7393 - val_precision: 0.7393 - val_recall: 1.0000
+WARNING:tensorflow:From /usr/local/lib/python3.6/dist-packages/tensorflow/python/data/ops/multi_device_iterator_ops.py:601: get_next_as_optional (from tensorflow.python.data.ops.iterator_ops) is deprecated and will be removed in a future version.
+Instructions for updating:
+Use `tf.data.Iterator.get_next_as_optional()` instead.
+
+WARNING:tensorflow:From /usr/local/lib/python3.6/dist-packages/tensorflow/python/data/ops/multi_device_iterator_ops.py:601: get_next_as_optional (from tensorflow.python.data.ops.iterator_ops) is deprecated and will be removed in a future version.
+Instructions for updating:
+Use `tf.data.Iterator.get_next_as_optional()` instead.
+
+21/21 [==============================] - 12s 568ms/step - loss: 0.5857 - binary_accuracy: 0.6960 - precision: 0.8887 - recall: 0.6733 - val_loss: 34.0149 - val_binary_accuracy: 0.7180 - val_precision: 0.7180 - val_recall: 1.0000
 Epoch 2/100
-21/21 [==============================] - 3s 165ms/step - loss: 0.2691 - binary_accuracy: 0.8961 - precision: 0.9636 - recall: 0.8939 - val_loss: 0.6038 - val_binary_accuracy: 0.7383 - val_precision: 0.7395 - val_recall: 0.9974
+21/21 [==============================] - 3s 128ms/step - loss: 0.2916 - binary_accuracy: 0.8755 - precision: 0.9540 - recall: 0.8738 - val_loss: 97.5194 - val_binary_accuracy: 0.7180 - val_precision: 0.7180 - val_recall: 1.0000
 Epoch 3/100
-21/21 [==============================] - 3s 166ms/step - loss: 0.2079 - binary_accuracy: 0.9200 - precision: 0.9714 - recall: 0.9193 - val_loss: 0.5108 - val_binary_accuracy: 0.7708 - val_precision: 0.7638 - val_recall: 0.9987
+21/21 [==============================] - 4s 167ms/step - loss: 0.2384 - binary_accuracy: 0.9002 - precision: 0.9663 - recall: 0.8964 - val_loss: 27.7902 - val_binary_accuracy: 0.7180 - val_precision: 0.7180 - val_recall: 1.0000
 Epoch 4/100
-21/21 [==============================] - 3s 123ms/step - loss: 0.1723 - binary_accuracy: 0.9312 - precision: 0.9770 - recall: 0.9292 - val_loss: 1.1205 - val_binary_accuracy: 0.7393 - val_precision: 0.7393 - val_recall: 1.0000
+21/21 [==============================] - 4s 173ms/step - loss: 0.2046 - binary_accuracy: 0.9145 - precision: 0.9725 - recall: 0.9102 - val_loss: 10.8302 - val_binary_accuracy: 0.7180 - val_precision: 0.7180 - val_recall: 1.0000
 Epoch 5/100
-21/21 [==============================] - 3s 125ms/step - loss: 0.1617 - binary_accuracy: 0.9448 - precision: 0.9800 - recall: 0.9450 - val_loss: 1.3290 - val_binary_accuracy: 0.7402 - val_precision: 0.7400 - val_recall: 1.0000
+21/21 [==============================] - 4s 174ms/step - loss: 0.1841 - binary_accuracy: 0.9279 - precision: 0.9733 - recall: 0.9279 - val_loss: 3.5860 - val_binary_accuracy: 0.7103 - val_precision: 0.7162 - val_recall: 0.9879
 Epoch 6/100
-21/21 [==============================] - 3s 137ms/step - loss: 0.1568 - binary_accuracy: 0.9405 - precision: 0.9821 - recall: 0.9370 - val_loss: 1.3986 - val_binary_accuracy: 0.7402 - val_precision: 0.7400 - val_recall: 1.0000
+21/21 [==============================] - 4s 185ms/step - loss: 0.1600 - binary_accuracy: 0.9362 - precision: 0.9791 - recall: 0.9337 - val_loss: 0.3014 - val_binary_accuracy: 0.8895 - val_precision: 0.8973 - val_recall: 0.9555
 Epoch 7/100
-21/21 [==============================] - 3s 139ms/step - loss: 0.1255 - binary_accuracy: 0.9484 - precision: 0.9830 - recall: 0.9469 - val_loss: 1.4712 - val_binary_accuracy: 0.7393 - val_precision: 0.7393 - val_recall: 1.0000
+21/21 [==============================] - 3s 130ms/step - loss: 0.1567 - binary_accuracy: 0.9393 - precision: 0.9798 - recall: 0.9372 - val_loss: 0.6763 - val_binary_accuracy: 0.7810 - val_precision: 0.7760 - val_recall: 0.9771
 Epoch 8/100
-21/21 [==============================] - 4s 170ms/step - loss: 0.1194 - binary_accuracy: 0.9565 - precision: 0.9854 - recall: 0.9556 - val_loss: 0.4464 - val_binary_accuracy: 0.8586 - val_precision: 0.8395 - val_recall: 1.0000
+21/21 [==============================] - 3s 131ms/step - loss: 0.1532 - binary_accuracy: 0.9421 - precision: 0.9825 - recall: 0.9385 - val_loss: 0.3169 - val_binary_accuracy: 0.8895 - val_precision: 0.8684 - val_recall: 0.9973
 Epoch 9/100
-21/21 [==============================] - 4s 169ms/step - loss: 0.1232 - binary_accuracy: 0.9570 - precision: 0.9848 - recall: 0.9569 - val_loss: 0.3975 - val_binary_accuracy: 0.8462 - val_precision: 0.8278 - val_recall: 1.0000
+21/21 [==============================] - 4s 184ms/step - loss: 0.1457 - binary_accuracy: 0.9431 - precision: 0.9822 - recall: 0.9401 - val_loss: 0.2064 - val_binary_accuracy: 0.9273 - val_precision: 0.9840 - val_recall: 0.9136
 Epoch 10/100
-21/21 [==============================] - 3s 125ms/step - loss: 0.1207 - binary_accuracy: 0.9546 - precision: 0.9870 - recall: 0.9514 - val_loss: 2.5951 - val_binary_accuracy: 0.7393 - val_precision: 0.7393 - val_recall: 1.0000
+21/21 [==============================] - 3s 132ms/step - loss: 0.1201 - binary_accuracy: 0.9521 - precision: 0.9869 - recall: 0.9479 - val_loss: 0.4364 - val_binary_accuracy: 0.8605 - val_precision: 0.8443 - val_recall: 0.9879
 Epoch 11/100
-21/21 [==============================] - 3s 125ms/step - loss: 0.1138 - binary_accuracy: 0.9594 - precision: 0.9871 - recall: 0.9579 - val_loss: 0.6879 - val_binary_accuracy: 0.7727 - val_precision: 0.7648 - val_recall: 1.0000
+21/21 [==============================] - 3s 127ms/step - loss: 0.1200 - binary_accuracy: 0.9510 - precision: 0.9863 - recall: 0.9469 - val_loss: 0.5197 - val_binary_accuracy: 0.8508 - val_precision: 1.0000 - val_recall: 0.7922
 Epoch 12/100
-21/21 [==============================] - 3s 124ms/step - loss: 0.1003 - binary_accuracy: 0.9661 - precision: 0.9907 - recall: 0.9633 - val_loss: 0.4012 - val_binary_accuracy: 0.9083 - val_precision: 0.8915 - val_recall: 0.9974
+21/21 [==============================] - 4s 186ms/step - loss: 0.1077 - binary_accuracy: 0.9581 - precision: 0.9870 - recall: 0.9559 - val_loss: 0.1349 - val_binary_accuracy: 0.9486 - val_precision: 0.9587 - val_recall: 0.9703
 Epoch 13/100
-21/21 [==============================] - 3s 166ms/step - loss: 0.1110 - binary_accuracy: 0.9642 - precision: 0.9884 - recall: 0.9630 - val_loss: 0.2690 - val_binary_accuracy: 0.8978 - val_precision: 0.9826 - val_recall: 0.8773
+21/21 [==============================] - 4s 173ms/step - loss: 0.0918 - binary_accuracy: 0.9650 - precision: 0.9914 - recall: 0.9611 - val_loss: 0.0926 - val_binary_accuracy: 0.9700 - val_precision: 0.9837 - val_recall: 0.9744
 Epoch 14/100
-21/21 [==============================] - 3s 143ms/step - loss: 0.1127 - binary_accuracy: 0.9572 - precision: 0.9887 - recall: 0.9534 - val_loss: 0.5987 - val_binary_accuracy: 0.8357 - val_precision: 0.9934 - val_recall: 0.7829
+21/21 [==============================] - 3s 130ms/step - loss: 0.0996 - binary_accuracy: 0.9612 - precision: 0.9913 - recall: 0.9559 - val_loss: 0.1811 - val_binary_accuracy: 0.9419 - val_precision: 0.9956 - val_recall: 0.9231
 Epoch 15/100
-21/21 [==============================] - 3s 127ms/step - loss: 0.0995 - binary_accuracy: 0.9591 - precision: 0.9864 - recall: 0.9582 - val_loss: 2.8717 - val_binary_accuracy: 0.3830 - val_precision: 1.0000 - val_recall: 0.1654
+21/21 [==============================] - 3s 129ms/step - loss: 0.0898 - binary_accuracy: 0.9643 - precision: 0.9901 - recall: 0.9614 - val_loss: 0.1525 - val_binary_accuracy: 0.9486 - val_precision: 0.9986 - val_recall: 0.9298
 Epoch 16/100
-21/21 [==============================] - 3s 130ms/step - loss: 0.1019 - binary_accuracy: 0.9634 - precision: 0.9907 - recall: 0.9598 - val_loss: 7.2178 - val_binary_accuracy: 0.3734 - val_precision: 1.0000 - val_recall: 0.1525
+21/21 [==============================] - 3s 128ms/step - loss: 0.0941 - binary_accuracy: 0.9621 - precision: 0.9904 - recall: 0.9582 - val_loss: 0.5101 - val_binary_accuracy: 0.8527 - val_precision: 1.0000 - val_recall: 0.7949
 Epoch 17/100
-21/21 [==============================] - 3s 126ms/step - loss: 0.1027 - binary_accuracy: 0.9625 - precision: 0.9910 - recall: 0.9582 - val_loss: 2.4284 - val_binary_accuracy: 0.6495 - val_precision: 1.0000 - val_recall: 0.5258
+21/21 [==============================] - 3s 125ms/step - loss: 0.0798 - binary_accuracy: 0.9636 - precision: 0.9897 - recall: 0.9607 - val_loss: 0.1239 - val_binary_accuracy: 0.9622 - val_precision: 0.9875 - val_recall: 0.9595
 Epoch 18/100
-21/21 [==============================] - 3s 125ms/step - loss: 0.0887 - binary_accuracy: 0.9654 - precision: 0.9920 - recall: 0.9611 - val_loss: 0.3605 - val_binary_accuracy: 0.9265 - val_precision: 1.0000 - val_recall: 0.9005
+21/21 [==============================] - 3s 126ms/step - loss: 0.0821 - binary_accuracy: 0.9657 - precision: 0.9911 - recall: 0.9623 - val_loss: 0.1597 - val_binary_accuracy: 0.9322 - val_precision: 0.9956 - val_recall: 0.9096
 Epoch 19/100
-21/21 [==============================] - 3s 166ms/step - loss: 0.0664 - binary_accuracy: 0.9756 - precision: 0.9944 - recall: 0.9727 - val_loss: 0.2604 - val_binary_accuracy: 0.9580 - val_precision: 0.9932 - val_recall: 0.9496
+21/21 [==============================] - 3s 143ms/step - loss: 0.0800 - binary_accuracy: 0.9657 - precision: 0.9917 - recall: 0.9617 - val_loss: 0.2538 - val_binary_accuracy: 0.9109 - val_precision: 1.0000 - val_recall: 0.8758
 Epoch 20/100
-21/21 [==============================] - 3s 140ms/step - loss: 0.0689 - binary_accuracy: 0.9744 - precision: 0.9931 - recall: 0.9723 - val_loss: 2.5697 - val_binary_accuracy: 0.7622 - val_precision: 1.0000 - val_recall: 0.6783
+21/21 [==============================] - 3s 127ms/step - loss: 0.0605 - binary_accuracy: 0.9738 - precision: 0.9950 - recall: 0.9694 - val_loss: 0.6594 - val_binary_accuracy: 0.8566 - val_precision: 1.0000 - val_recall: 0.8003
 Epoch 21/100
-21/21 [==============================] - 3s 125ms/step - loss: 0.0639 - binary_accuracy: 0.9778 - precision: 0.9957 - recall: 0.9743 - val_loss: 0.8325 - val_binary_accuracy: 0.8682 - val_precision: 1.0000 - val_recall: 0.8217
+21/21 [==============================] - 4s 167ms/step - loss: 0.0726 - binary_accuracy: 0.9733 - precision: 0.9937 - recall: 0.9701 - val_loss: 0.0593 - val_binary_accuracy: 0.9816 - val_precision: 0.9945 - val_recall: 0.9798
 Epoch 22/100
-21/21 [==============================] - 3s 126ms/step - loss: 0.0793 - binary_accuracy: 0.9761 - precision: 0.9931 - recall: 0.9746 - val_loss: 12.2000 - val_binary_accuracy: 0.2961 - val_precision: 1.0000 - val_recall: 0.0478
+21/21 [==============================] - 3s 126ms/step - loss: 0.0577 - binary_accuracy: 0.9783 - precision: 0.9951 - recall: 0.9755 - val_loss: 0.1087 - val_binary_accuracy: 0.9729 - val_precision: 0.9931 - val_recall: 0.9690
 Epoch 23/100
-21/21 [==============================] - 3s 127ms/step - loss: 0.0760 - binary_accuracy: 0.9716 - precision: 0.9934 - recall: 0.9682 - val_loss: 3.6567 - val_binary_accuracy: 0.3992 - val_precision: 1.0000 - val_recall: 0.1873
+21/21 [==============================] - 3s 125ms/step - loss: 0.0652 - binary_accuracy: 0.9729 - precision: 0.9924 - recall: 0.9707 - val_loss: 1.8465 - val_binary_accuracy: 0.7180 - val_precision: 0.7180 - val_recall: 1.0000
 Epoch 24/100
-21/21 [==============================] - 3s 123ms/step - loss: 0.0820 - binary_accuracy: 0.9697 - precision: 0.9931 - recall: 0.9659 - val_loss: 0.7858 - val_binary_accuracy: 0.8281 - val_precision: 0.9934 - val_recall: 0.7726
+21/21 [==============================] - 3s 124ms/step - loss: 0.0538 - binary_accuracy: 0.9783 - precision: 0.9951 - recall: 0.9755 - val_loss: 1.5769 - val_binary_accuracy: 0.7180 - val_precision: 0.7180 - val_recall: 1.0000
 Epoch 25/100
-21/21 [==============================] - 3s 123ms/step - loss: 0.0725 - binary_accuracy: 0.9718 - precision: 0.9921 - recall: 0.9698 - val_loss: 1.7016 - val_binary_accuracy: 0.6781 - val_precision: 1.0000 - val_recall: 0.5646
+21/21 [==============================] - 4s 167ms/step - loss: 0.0549 - binary_accuracy: 0.9776 - precision: 0.9954 - recall: 0.9743 - val_loss: 0.0590 - val_binary_accuracy: 0.9777 - val_precision: 0.9904 - val_recall: 0.9784
 Epoch 26/100
-21/21 [==============================] - 3s 127ms/step - loss: 0.0574 - binary_accuracy: 0.9775 - precision: 0.9957 - recall: 0.9739 - val_loss: 1.5002 - val_binary_accuracy: 0.6963 - val_precision: 1.0000 - val_recall: 0.5891
+21/21 [==============================] - 3s 131ms/step - loss: 0.0677 - binary_accuracy: 0.9719 - precision: 0.9924 - recall: 0.9694 - val_loss: 2.6008 - val_binary_accuracy: 0.6928 - val_precision: 0.9977 - val_recall: 0.5735
 Epoch 27/100
-21/21 [==============================] - 3s 126ms/step - loss: 0.0549 - binary_accuracy: 0.9809 - precision: 0.9957 - recall: 0.9784 - val_loss: 0.6662 - val_binary_accuracy: 0.8863 - val_precision: 1.0000 - val_recall: 0.8463
+21/21 [==============================] - 3s 127ms/step - loss: 0.0469 - binary_accuracy: 0.9833 - precision: 0.9971 - recall: 0.9804 - val_loss: 1.0184 - val_binary_accuracy: 0.8605 - val_precision: 0.9983 - val_recall: 0.8070
 Epoch 28/100
-21/21 [==============================] - 3s 127ms/step - loss: 0.0573 - binary_accuracy: 0.9818 - precision: 0.9964 - recall: 0.9791 - val_loss: 2.6141 - val_binary_accuracy: 0.5444 - val_precision: 1.0000 - val_recall: 0.3837
+21/21 [==============================] - 3s 126ms/step - loss: 0.0501 - binary_accuracy: 0.9790 - precision: 0.9961 - recall: 0.9755 - val_loss: 0.3737 - val_binary_accuracy: 0.9089 - val_precision: 0.9954 - val_recall: 0.8772
 Epoch 29/100
-21/21 [==============================] - 4s 185ms/step - loss: 0.0644 - binary_accuracy: 0.9759 - precision: 0.9938 - recall: 0.9736 - val_loss: 5.0325 - val_binary_accuracy: 0.6189 - val_precision: 1.0000 - val_recall: 0.4845
+21/21 [==============================] - 3s 128ms/step - loss: 0.0548 - binary_accuracy: 0.9798 - precision: 0.9941 - recall: 0.9784 - val_loss: 1.2928 - val_binary_accuracy: 0.7907 - val_precision: 1.0000 - val_recall: 0.7085
+Epoch 30/100
+21/21 [==============================] - 3s 129ms/step - loss: 0.0370 - binary_accuracy: 0.9860 - precision: 0.9980 - recall: 0.9829 - val_loss: 0.1370 - val_binary_accuracy: 0.9612 - val_precision: 0.9972 - val_recall: 0.9487
+Epoch 31/100
+21/21 [==============================] - 3s 125ms/step - loss: 0.0585 - binary_accuracy: 0.9819 - precision: 0.9951 - recall: 0.9804 - val_loss: 1.1955 - val_binary_accuracy: 0.6870 - val_precision: 0.9976 - val_recall: 0.5655
+Epoch 32/100
+21/21 [==============================] - 3s 140ms/step - loss: 0.0813 - binary_accuracy: 0.9695 - precision: 0.9934 - recall: 0.9652 - val_loss: 1.0394 - val_binary_accuracy: 0.8576 - val_precision: 0.9853 - val_recall: 0.8138
+Epoch 33/100
+21/21 [==============================] - 3s 128ms/step - loss: 0.1111 - binary_accuracy: 0.9555 - precision: 0.9870 - recall: 0.9524 - val_loss: 4.9438 - val_binary_accuracy: 0.5911 - val_precision: 1.0000 - val_recall: 0.4305
+Epoch 34/100
+21/21 [==============================] - 3s 130ms/step - loss: 0.0680 - binary_accuracy: 0.9726 - precision: 0.9921 - recall: 0.9707 - val_loss: 2.8822 - val_binary_accuracy: 0.7267 - val_precision: 0.9978 - val_recall: 0.6208
+Epoch 35/100
+21/21 [==============================] - 4s 187ms/step - loss: 0.0784 - binary_accuracy: 0.9712 - precision: 0.9892 - recall: 0.9717 - val_loss: 0.3940 - val_binary_accuracy: 0.9390 - val_precision: 0.9942 - val_recall: 0.9204
 
 ```
 </div>
@@ -567,7 +623,7 @@ for i, met in enumerate(["precision", "recall", "binary_accuracy", "loss"]):
 ```
 
 
-![png](/img/examples/vision/xray_classification_with_tpus/xray_classification_with_tpus_44_0.png)
+![png](/img/examples/vision/xray_classification_with_tpus/xray_classification_with_tpus_41_0.png)
 
 
 We see that the accuracy for our model is around 95%.
@@ -584,12 +640,12 @@ model.evaluate(test_ds, return_dict=True)
 
 <div class="k-default-codeblock">
 ```
-4/4 [==============================] - 113s 28s/step - loss: 2.7205 - binary_accuracy: 0.8141 - precision: 0.7807 - recall: 0.9769
+4/4 [==============================] - 3s 708ms/step - loss: 0.9718 - binary_accuracy: 0.7901 - precision: 0.7524 - recall: 0.9897
 
-{'binary_accuracy': 0.8141025900840759,
- 'loss': 2.720494508743286,
- 'precision': 0.7807376384735107,
- 'recall': 0.9769231081008911}
+{'binary_accuracy': 0.7900640964508057,
+ 'loss': 0.9717951416969299,
+ 'precision': 0.752436637878418,
+ 'recall': 0.9897436499595642}
 
 ```
 </div>
@@ -602,16 +658,11 @@ increase our precision.
 
 
 ```python
-img = tf.io.read_file(
-    str(GCS_PATH + "/chest_xray/test/PNEUMONIA/person100_bacteria_475.jpeg")
-)
-img = decode_img(img)
-plt.imshow(img / 255)
+for image, label in test_ds.take(1):
+    plt.imshow(image[0] / 255.0)
+    plt.title(CLASS_NAMES[label[0].numpy()])
 
-img_array = tf.keras.preprocessing.image.img_to_array(img)
-img_array = tf.expand_dims(img_array, 0)  # Create batch axis
-
-prediction = model.predict(img_array)[0]
+prediction = model.predict(test_ds.take(1))[0]
 scores = [1 - prediction, prediction]
 
 for score, name in zip(scores, CLASS_NAMES):
@@ -620,13 +671,13 @@ for score, name in zip(scores, CLASS_NAMES):
 
 <div class="k-default-codeblock">
 ```
-This image is 0.00 percent NORMAL
-This image is 100.00 percent PNEUMONIA
+/usr/local/lib/python3.6/dist-packages/ipykernel_launcher.py:3: DeprecationWarning: In future, it will be an error for 'np.bool_' scalars to be interpreted as an index
+  This is separate from the ipykernel package so we can avoid doing imports until
+
+This image is 47.19 percent NORMAL
+This image is 52.81 percent PNEUMONIA
 
 ```
 </div>
+![png](/img/examples/vision/xray_classification_with_tpus/xray_classification_with_tpus_46_2.png)
 
-![png](/img/examples/vision/xray_classification_with_tpus/xray_classification_with_tpus_49_1.png)
-
-
-Our model could accurately classify this image.

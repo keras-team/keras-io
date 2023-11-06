@@ -4,6 +4,7 @@ Author: [fchollet](https://twitter.com/fchollet)
 Date created: 2020/04/12
 Last modified: 2020/04/12
 Description: Complete guide to the Sequential model.
+Accelerator: GPU
 """
 """
 ## Setup
@@ -11,8 +12,8 @@ Description: Complete guide to the Sequential model.
 """
 
 import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras import layers
+import keras
+from keras import layers
 
 """
 ## When to use a Sequential model
@@ -254,7 +255,7 @@ Once your model architecture is ready, you will want to:
 - Save your model to disk and restore it. See our
 [guide to serialization & saving](/guides/serialization_and_saving/).
 - Speed up model training by leveraging multiple GPUs. See our
-[guide to multi-GPU and distributed training](distributed_training).
+[guide to multi-GPU and distributed training](https://keras.io/guides/distributed_training/).
 """
 
 """
@@ -321,7 +322,7 @@ last one. Like this:
 
 ```python
 model = keras.Sequential([
-    keras.Input(shape=(784))
+    keras.Input(shape=(784)),
     layers.Dense(32, activation='relu'),
     layers.Dense(32, activation='relu'),
     layers.Dense(32, activation='relu'),

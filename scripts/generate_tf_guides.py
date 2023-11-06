@@ -1,25 +1,53 @@
 from pathlib import Path
+import tutobooks
 import copy
 import json
-import random
+import hashlib
 import string
 import re
+import yaml
 
+# The order of CONFIG is also used to generate the _toc.yaml for tensorflow.org.
 CONFIG = [
+    {
+        "title": "The Sequential model",
+        "source_name": "sequential_model",
+        "target_name": "sequential_model",
+    },
     {
         "title": "The Functional API",
         "source_name": "functional_api",
         "target_name": "functional",
     },
     {
-        "title": "Training & evaluation with the built-in methods",
+        "title": "Training and evaluation with the built-in methods",
         "source_name": "training_with_built_in_methods",
         "target_name": "train_and_evaluate",
     },
     {
-        "title": "Making new Layers & Models via subclassing",
+        "title": "Making new Layers and Models via subclassing",
         "source_name": "making_new_layers_and_models_via_subclassing",
         "target_name": "custom_layers_and_models",
+    },
+    {
+        "title": "Save and load Keras models",
+        "source_name": "serialization_and_saving",
+        "target_name": "save_and_serialize",
+    },
+    {
+        "title": "Working with preprocessing layers",
+        "source_name": "preprocessing_layers",
+        "target_name": "preprocessing_layers",
+    },
+    {
+        "title": "Customize what happens in Model.fit",
+        "source_name": "customizing_what_happens_in_fit",
+        "target_name": "customizing_what_happens_in_fit",
+    },
+    {
+        "title": "Writing a training loop from scratch",
+        "source_name": "writing_a_training_loop_from_scratch",
+        "target_name": "writing_a_training_loop_from_scratch",
     },
     {
         "title": "Recurrent Neural Networks (RNN) with Keras",
@@ -32,34 +60,14 @@ CONFIG = [
         "target_name": "masking_and_padding",
     },
     {
-        "title": "Save and load Keras models",
-        "source_name": "serialization_and_saving",
-        "target_name": "save_and_serialize",
-    },
-    {
         "title": "Writing your own callbacks",
         "source_name": "writing_your_own_callbacks",
         "target_name": "custom_callback",
     },
     {
-        "title": "Writing a training loop from scratch",
-        "source_name": "writing_a_training_loop_from_scratch",
-        "target_name": "writing_a_training_loop_from_scratch",
-    },
-    {
-        "title": "Transfer learning & fine-tuning",
+        "title": "Transfer learning and fine-tuning",
         "source_name": "transfer_learning",
         "target_name": "transfer_learning",
-    },
-    {
-        "title": "The Sequential model",
-        "source_name": "sequential_model",
-        "target_name": "sequential_model",
-    },
-    {
-        "title": "Customizing what happens in `fit()`",
-        "source_name": "customizing_what_happens_in_fit",
-        "target_name": "customizing_what_happens_in_fit",
     },
     {
         "title": "Training Keras models with TensorFlow Cloud",
@@ -71,20 +79,22 @@ CONFIG = [
 
 TF_BUTTONS_TEMPLATE = {
     "cell_type": "markdown",
-    "metadata": {"colab_type": "text",},
+    "metadata": {
+        "colab_type": "text",
+    },
     "source": [
         '<table class="tfo-notebook-buttons" align="left">\n',
         "  <td>\n",
         '    <a target="_blank" href="https://www.tensorflow.org/guide/keras/TARGET_NAME"><img src="https://www.tensorflow.org/images/tf_logo_32px.png" />View on TensorFlow.org</a>\n',
         "  </td>\n",
         "  <td>\n",
-        '    <a target="_blank" href="https://colab.research.google.com/github/keras-team/keras-io/blob/master/tf/TARGET_NAME.ipynb"><img src="https://www.tensorflow.org/images/colab_logo_32px.png" />Run in Google Colab</a>\n',
+        '    <a target="_blank" href="https://colab.research.google.com/github/tensorflow/docs/blob/snapshot-keras/site/en/guide/keras/TARGET_NAME.ipynb"><img src="https://www.tensorflow.org/images/colab_logo_32px.png" />Run in Google Colab</a>\n',
         "  </td>\n",
         "  <td>\n",
         '    <a target="_blank" href="https://github.com/keras-team/keras-io/blob/master/guides/SOURCE_NAME.py"><img src="https://www.tensorflow.org/images/GitHub-Mark-32px.png" />View source on GitHub</a>\n',
         "  </td>\n",
         "  <td>\n",
-        '    <a href="https://storage.googleapis.com/tensorflow_docs/keras-io/tf/TARGET_NAME.ipynb"><img src="https://www.tensorflow.org/images/download_logo_32px.png" />Download notebook</a>\n',
+        '    <a href="https://storage.googleapis.com/tensorflow_docs/docs/site/en/guide/keras/TARGET_NAME.ipynb"><img src="https://www.tensorflow.org/images/download_logo_32px.png" />Download notebook</a>\n',
         "  </td>\n",
         "</table>",
     ],
@@ -94,13 +104,19 @@ TF_BUTTONS_TEMPLATE = {
 TF_IPYNB_CELLS_TEMPLATE = [
     {
         "cell_type": "markdown",
-        "metadata": {"colab_type": "text",},
+        "metadata": {
+            "colab_type": "text",
+        },
         "source": ["##### Copyright 2020 The TensorFlow Authors."],
     },
     {
         "cell_type": "code",
         "execution_count": 0,
-        "metadata": {"cellView": "form", "colab": {}, "colab_type": "code",},
+        "metadata": {
+            "cellView": "form",
+            "colab": {},
+            "colab_type": "code",
+        },
         "outputs": [],
         "source": [
             '#@title Licensed under the Apache License, Version 2.0 (the "License");\n',
@@ -141,8 +157,15 @@ TF_IPYNB_BASE = {
 
 
 def generate_single_tf_guide(source_dir, target_dir, title, source_name, target_name):
-    nb = (Path(source_dir) / source_name).with_suffix(".ipynb")
-    original_ipynb = json.loads(nb.read_text())
+    # Before we start, regenerate the ipynb.
+    max_loc = tutobooks.MAX_LOC
+    tutobooks.MAX_LOC = 400
+    py_path = (Path(source_dir).parent / source_name).with_suffix(".py")
+    nb_path = (Path(source_dir) / source_name).with_suffix(".ipynb")
+    tutobooks.py_to_nb(py_path, nb_path, fill_outputs=False)
+    tutobooks.MAX_LOC = max_loc
+
+    original_ipynb = json.loads(nb_path.read_text())
 
     # Skip first title cell
     cells = original_ipynb["cells"][1:]
@@ -192,8 +215,13 @@ def generate_single_tf_guide(source_dir, target_dir, title, source_name, target_
         buttons["source"][i] = buttons["source"][i].replace("SOURCE_NAME", source_name)
     header_cells.append(buttons)
     cells = header_cells + cells
+
+    cell_count = 0
     for cell in cells:
-        cell["metadata"]["id"] = random_id()
+        cell_count += 1
+        str_to_hash = f"{cell_count} {cell['source']}"
+        cell_id = hashlib.sha256(str_to_hash.encode("utf-8")).hexdigest()
+        cell["metadata"]["id"] = cell_id[:12]
 
     notebook = {}
     for key in TF_IPYNB_BASE.keys():
@@ -246,14 +274,26 @@ def generate_single_tf_guide(source_dir, target_dir, title, source_name, target_
     f.close()
 
 
-def random_id():
-    length = 12
-    letters = string.ascii_lowercase + string.ascii_uppercase + "0123456789"
-    return "".join(random.choice(letters) for i in range(length))
+def generate_toc(target_dir):
+    target_dir = Path(target_dir)
+
+    toc = []
+    for config in CONFIG:
+        toc.append(
+            {
+                "title": config["title"],
+                "path": str(Path("/guide/keras") / config["target_name"]),
+            }
+        )
+    toc_dict = {"toc": toc}
+
+    with open(str(target_dir / "_toc.yaml"), "w") as toc_file:
+        yaml.dump(toc_dict, toc_file, sort_keys=False)
 
 
 def generate_tf_guides():
-    random.seed(1337)
+    generate_toc(target_dir="../tf")
+
     for entry in CONFIG:
         generate_single_tf_guide(
             source_dir="../guides/ipynb/",

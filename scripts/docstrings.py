@@ -1,16 +1,13 @@
 """Lightweight fork of Keras-Autodocs.
 """
 import warnings
-from sphinx.util.inspect import Signature
 import black
 import re
-import os
 import inspect
 import importlib
-import shutil
-import pathlib
-from typing import Dict, Union
 import itertools
+
+import render_tags
 
 
 class TFKerasDocumentationGenerator:
@@ -26,10 +23,12 @@ class TFKerasDocumentationGenerator:
         docstring = docstring.replace("Input shape:", "# Input shape")
         docstring = docstring.replace("Output shape:", "# Output shape")
         docstring = docstring.replace("Call arguments:", "# Call arguments")
+        docstring = docstring.replace("Returns:", "# Returns")
         docstring = docstring.replace("Example:", "# Example\n")
         docstring = docstring.replace("Examples:", "# Examples\n")
 
-        docstring = re.sub(r"\nReference:\n\s*-", "\n**Reference**\n\n-", docstring)
+        docstring = re.sub(r"\nReference:\n\s*", "\n**Reference**\n\n", docstring)
+        docstring = re.sub(r"\nReferences:\n\s*", "\n**References**\n\n", docstring)
 
         # Fix typo
         docstring = docstring.replace("\n >>> ", "\n>>> ")
@@ -39,9 +38,9 @@ class TFKerasDocumentationGenerator:
         usable_lines = []
 
         def flush_docstest(usable_lines, doctest_lines):
-            usable_lines.append("```shell")
+            usable_lines.append("```python")
             usable_lines += doctest_lines
-            usable_lines.append("```endshell")
+            usable_lines.append("```")
             usable_lines.append("")
 
         for line in lines:
@@ -59,6 +58,7 @@ class TFKerasDocumentationGenerator:
         if doctest_lines:
             flush_docstest(usable_lines, doctest_lines)
         docstring = "\n".join(usable_lines)
+
         return process_docstring(docstring)
 
     def process_signature(self, signature):
@@ -77,12 +77,13 @@ class TFKerasDocumentationGenerator:
         else:
             signature_override = None
             object_ = element
-        return self.render_from_object(object_, signature_override)
+        return self.render_from_object(object_, signature_override, element)
 
-    def render_from_object(self, object_, signature_override: str):
+    def render_from_object(self, object_, signature_override: str, element):
         subblocks = []
-        if self.project_url is not None:
-            subblocks.append(make_source_link(object_, self.project_url))
+        source_link = make_source_link(object_, self.project_url)
+        if source_link is not None:
+            subblocks.append(source_link)
         signature = get_signature(object_, signature_override)
         signature = self.process_signature(signature)
         subblocks.append(f"### `{get_name(object_)}` {get_type(object_)}\n")
@@ -92,6 +93,11 @@ class TFKerasDocumentationGenerator:
         if docstring:
             docstring = self.process_docstring(docstring)
             subblocks.append(docstring)
+        # Render preset table for KerasCV and KerasNLP
+        if element.endswith("from_preset"):
+            table = render_tags.render_table(import_object(element.rsplit(".", 1)[0]))
+            if table is not None:
+                subblocks.append(table)
         return "\n\n".join(subblocks) + "\n\n----\n\n"
 
 
@@ -112,15 +118,31 @@ def import_object(string: str):
         try:
             last_object_got = importlib.import_module(".".join(seen_names))
         except ModuleNotFoundError:
+            assert last_object_got is not None, f"Failed to import path {string}"
             last_object_got = getattr(last_object_got, name)
     return last_object_got
 
 
 def make_source_link(cls, project_url):
-    if isinstance(project_url, dict):
-        base_module = cls.__module__.split(".")[0]
-        project_url = project_url[base_module]
+    if not hasattr(cls, "__module__"):
+        return None
+    if not project_url:
+        return None
+
+    base_module = cls.__module__.split(".")[0]
+    project_url = project_url[base_module]
+    assert project_url.endswith("/"), f"{base_module} not found"
+    project_url_version = project_url.split("/")[-2].removeprefix("v")
+    module_version = importlib.import_module(base_module).__version__
+    if module_version != project_url_version:
+        raise RuntimeError(
+            f"For project {base_module}, URL {project_url} "
+            f"has version number {project_url_version} which does not match the "
+            f"current imported package version {module_version}"
+        )
     path = cls.__module__.replace(".", "/")
+    if base_module in ("keras_nlp", "keras_core", "keras"):
+        path = path.replace("/src/", "/")
     line = inspect.getsourcelines(cls)[-1]
     return (
         f'<span style="float:right;">'
@@ -155,6 +177,12 @@ def get_name(object_) -> str:
     return object_.__name__
 
 
+def get_function_name(function):
+    if hasattr(function, "__wrapped__"):
+        return get_function_name(function.__wrapped__)
+    return function.__name__
+
+
 def get_signature_start(function):
     """For the Dense layer, it should return the string 'keras.layers.Dense'"""
     if ismethod(function):
@@ -168,14 +196,20 @@ def get_signature_start(function):
                 f"It will not be included in the signature."
             )
             prefix = ""
-    return f"{prefix}{function.__name__}"
+    return f"{prefix}{get_function_name(function)}"
 
 
 def get_signature_end(function):
-    signature_end = Signature(function).format_args()
+    params = inspect.signature(function).parameters.values()
+    signature_end = "(" + ", ".join([str(x) for x in params]) + ")"
     if ismethod(function):
         signature_end = signature_end.replace("(self, ", "(")
         signature_end = signature_end.replace("(self)", "()")
+        # work around case-specific bug
+        signature_end = signature_end.replace(
+            "synchronization=<VariableSynchronization.AUTO: 0>, aggregation=<VariableAggregationV2.NONE: 0>",
+            "synchronization=tf.VariableSynchronization.AUTO, aggregation=tf.VariableSynchronization.NONE",
+        )
     return signature_end
 
 
@@ -287,7 +321,13 @@ def to_markdown(google_style_section: str) -> str:
     section_title = google_style_section[2:end_first_line]
     section_body = google_style_section[end_first_line:]
     section_body = remove_indentation(section_body)
-    if section_title in ("Arguments", "Attributes", "Raises", "Call arguments"):
+    if section_title in (
+        "Arguments",
+        "Attributes",
+        "Raises",
+        "Call arguments",
+        "Returns",
+    ):
         section_body = format_as_markdown_list(section_body)
     if section_body:
         return f"__{section_title}__\n\n{section_body}\n"
@@ -310,6 +350,7 @@ def reinject_strings(target, strings_to_inject):
 def process_docstring(docstring):
     if docstring[-1] != "\n":
         docstring += "\n"
+
     google_style_sections, docstring = get_google_style_sections(docstring)
     for token, google_style_section in google_style_sections.items():
         markdown_section = to_markdown(google_style_section)

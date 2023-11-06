@@ -1,21 +1,22 @@
 """
-Title: Text Generation with miniature GPT
+Title: Text generation with a miniature GPT
 Author: [Apoorv Nandan](https://twitter.com/NandanApoorv)
 Date created: 2020/05/29
 Last modified: 2020/05/29
-Description: Implement miniature version of GPT and learn to generate text.
+Description: Implement a miniature version of GPT and train it to generate text.
+Accelerator: GPU
 """
 """
 ## Introduction
 
-This example demonstrates autoregressive language modelling using a
-a miniature version of GPT model.
-The model consists of a single transformer block with causal masking
-in the its attention layer.
-We use the text from IMDB sentiment classification dataset for training
+This example demonstrates how to implement an autoregressive language model
+using a miniature version of the GPT model.
+The model consists of a single Transformer block with causal masking
+in its attention layer.
+We use the text from the IMDB sentiment classification dataset for training
 and generate new movie reviews for a given prompt.
-When using this script with your own data, make sure it has atleast
-1M words.
+When using this script with your own dataset, make sure it has at least
+1 million words.
 
 This example should be run with `tf-nightly>=2.3.0-dev20200531` or
 with TensorFlow 2.3 or higher.
@@ -32,94 +33,11 @@ with TensorFlow 2.3 or higher.
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
-from tensorflow.keras.layers.experimental.preprocessing import TextVectorization
+from tensorflow.keras.layers import TextVectorization
 import numpy as np
 import os
-import re
 import string
 import random
-
-"""
-## Self-attention with causal masking
-
-We compute self-attention as usual, but prevent any information to flow
-from future tokens by masking the upper half of the scaled dot product matrix.
-"""
-
-
-class MultiHeadSelfAttention(layers.Layer):
-    def __init__(self, embed_dim, num_heads=8):
-        super(MultiHeadSelfAttention, self).__init__()
-        self.embed_dim = embed_dim
-        self.num_heads = num_heads
-        if embed_dim % num_heads != 0:
-            raise ValueError(
-                f"embedding dimension = {embed_dim} should be divisible by number of heads = {num_heads}"
-            )
-        self.projection_dim = embed_dim // num_heads
-        self.query_dense = layers.Dense(embed_dim)
-        self.key_dense = layers.Dense(embed_dim)
-        self.value_dense = layers.Dense(embed_dim)
-        self.combine_heads = layers.Dense(embed_dim)
-
-    @staticmethod
-    def causal_attention_mask(n_dest, n_src, dtype):
-        """
-        1's in the lower triangle, counting from the lower right corner.
-        """
-        i = tf.range(n_dest)[:, None]
-        j = tf.range(n_src)
-        m = i >= j - n_src + n_dest
-        return tf.cast(m, dtype)
-
-    def attention(self, query, key, value):
-        score = tf.matmul(query, key, transpose_b=True)
-        dim_key = tf.cast(tf.shape(key)[-1], tf.float32)
-        scaled_score = score / tf.math.sqrt(dim_key)
-
-        # prevent information flow from future tokens
-        shape = tf.shape(scaled_score)
-        dim_dest, dim_src = shape[2], shape[3]
-        attention_mask = self.causal_attention_mask(
-            dim_dest, dim_src, scaled_score.dtype
-        )
-        attention_mask = tf.reshape(attention_mask, [1, 1, dim_dest, dim_src])
-        scaled_score = scaled_score * attention_mask - 1e4 * (1 - attention_mask)
-
-        weights = tf.nn.softmax(scaled_score, axis=-1)
-        output = tf.matmul(weights, value)
-        return output, weights
-
-    def separate_heads(self, x, batch_size):
-        x = tf.reshape(x, (batch_size, -1, self.num_heads, self.projection_dim))
-        return tf.transpose(x, perm=[0, 2, 1, 3])
-
-    def call(self, inputs):
-        # x.shape = [batch_size, seq_len, embedding_dim]
-        batch_size = tf.shape(inputs)[0]
-        query = self.query_dense(inputs)  # (batch_size, seq_len, embed_dim)
-        key = self.key_dense(inputs)  # (batch_size, seq_len, embed_dim)
-        value = self.value_dense(inputs)  # (batch_size, seq_len, embed_dim)
-        query = self.separate_heads(
-            query, batch_size
-        )  # (batch_size, num_heads, seq_len, projection_dim)
-        key = self.separate_heads(
-            key, batch_size
-        )  # (batch_size, num_heads, seq_len, projection_dim)
-        value = self.separate_heads(
-            value, batch_size
-        )  # (batch_size, num_heads, seq_len, projection_dim)
-        attention, weights = self.attention(query, key, value)
-        attention = tf.transpose(
-            attention, perm=[0, 2, 1, 3]
-        )  # (batch_size, seq_len, num_heads, projection_dim)
-        concat_attention = tf.reshape(
-            attention, (batch_size, -1, self.embed_dim)
-        )  # (batch_size, seq_len, embed_dim)
-        output = self.combine_heads(
-            concat_attention
-        )  # (batch_size, seq_len, embed_dim)
-        return output
 
 
 """
@@ -127,12 +45,32 @@ class MultiHeadSelfAttention(layers.Layer):
 """
 
 
+def causal_attention_mask(batch_size, n_dest, n_src, dtype):
+    """
+    Mask the upper half of the dot product matrix in self attention.
+    This prevents flow of information from future tokens to current token.
+    1's in the lower triangle, counting from the lower right corner.
+    """
+    i = tf.range(n_dest)[:, None]
+    j = tf.range(n_src)
+    m = i >= j - n_src + n_dest
+    mask = tf.cast(m, dtype)
+    mask = tf.reshape(mask, [1, n_dest, n_src])
+    mult = tf.concat(
+        [tf.expand_dims(batch_size, -1), tf.constant([1, 1], dtype=tf.int32)], 0
+    )
+    return tf.tile(mask, mult)
+
+
 class TransformerBlock(layers.Layer):
     def __init__(self, embed_dim, num_heads, ff_dim, rate=0.1):
-        super(TransformerBlock, self).__init__()
-        self.att = MultiHeadSelfAttention(embed_dim, num_heads)
+        super().__init__()
+        self.att = layers.MultiHeadAttention(num_heads, embed_dim)
         self.ffn = keras.Sequential(
-            [layers.Dense(ff_dim, activation="relu"), layers.Dense(embed_dim),]
+            [
+                layers.Dense(ff_dim, activation="relu"),
+                layers.Dense(embed_dim),
+            ]
         )
         self.layernorm1 = layers.LayerNormalization(epsilon=1e-6)
         self.layernorm2 = layers.LayerNormalization(epsilon=1e-6)
@@ -140,7 +78,11 @@ class TransformerBlock(layers.Layer):
         self.dropout2 = layers.Dropout(rate)
 
     def call(self, inputs):
-        attention_output = self.att(inputs)
+        input_shape = tf.shape(inputs)
+        batch_size = input_shape[0]
+        seq_len = input_shape[1]
+        causal_mask = causal_attention_mask(batch_size, seq_len, seq_len, tf.bool)
+        attention_output = self.att(inputs, inputs, attention_mask=causal_mask)
         attention_output = self.dropout1(attention_output)
         out1 = self.layernorm1(inputs + attention_output)
         ffn_output = self.ffn(out1)
@@ -149,15 +91,16 @@ class TransformerBlock(layers.Layer):
 
 
 """
-## Implement embedding layer
+## Implement an embedding layer
 
-Two seperate embedding layers, one for tokens, one for token index (positions).
+Create two separate embedding layers: one for tokens and one for token index
+(positions).
 """
 
 
 class TokenAndPositionEmbedding(layers.Layer):
     def __init__(self, maxlen, vocab_size, embed_dim):
-        super(TokenAndPositionEmbedding, self).__init__()
+        super().__init__()
         self.token_emb = layers.Embedding(input_dim=vocab_size, output_dim=embed_dim)
         self.pos_emb = layers.Embedding(input_dim=maxlen, output_dim=embed_dim)
 
@@ -170,10 +113,10 @@ class TokenAndPositionEmbedding(layers.Layer):
 
 
 """
-## Implement miniature GPT model
+## Implement the miniature GPT model
 """
 vocab_size = 20000  # Only consider the top 20k words
-maxlen = 100  # Max sequence size
+maxlen = 80  # Max sequence size
 embed_dim = 256  # Embedding size for each token
 num_heads = 2  # Number of attention heads
 feed_forward_dim = 256  # Hidden layer size in feed forward network inside transformer
@@ -189,16 +132,17 @@ def create_model():
     model = keras.Model(inputs=inputs, outputs=[outputs, x])
     loss_fn = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
     model.compile(
-        "adam", loss=[loss_fn, None],
+        "adam",
+        loss=[loss_fn, None],
     )  # No loss and optimization based on word embeddings from transformer block
     return model
 
 
 """
-## Prepare data for word level language modelling
+## Prepare the data for word-level language modelling
 
-We will download IMDB data, and combine training and validation sets for
-text generation task.
+Download the IMDB dataset and combine training and validation sets for a text
+generation task.
 """
 
 """shell
@@ -207,7 +151,7 @@ tar -xf aclImdb_v1.tar.gz
 """
 
 
-batch_size = 32
+batch_size = 128
 
 # The dataset contains each review in a separate text file
 # The text files are present in four different folders
@@ -225,7 +169,7 @@ for dir in directories:
 
 print(f"{len(filenames)} files")
 
-# Create dataset from text files
+# Create a dataset from text files
 random.shuffle(filenames)
 text_ds = tf.data.TextLineDataset(filenames)
 text_ds = text_ds.shuffle(buffer_size=256)
@@ -233,13 +177,13 @@ text_ds = text_ds.batch(batch_size)
 
 
 def custom_standardization(input_string):
-    """ Remove html line-break tags and handle punctuation """
+    """Remove html line-break tags and handle punctuation"""
     lowercased = tf.strings.lower(input_string)
     stripped_html = tf.strings.regex_replace(lowercased, "<br />", " ")
     return tf.strings.regex_replace(stripped_html, f"([{string.punctuation}])", r" \1")
 
 
-# Create vectcorization layer and adapt it to the text
+# Create a vectorization layer and adapt it to the text
 vectorize_layer = TextVectorization(
     standardize=custom_standardization,
     max_tokens=vocab_size - 1,
@@ -263,25 +207,25 @@ def prepare_lm_inputs_labels(text):
     return x, y
 
 
-text_ds = text_ds.map(prepare_lm_inputs_labels)
-text_ds = text_ds.prefetch(tf.data.experimental.AUTOTUNE)
+text_ds = text_ds.map(prepare_lm_inputs_labels, num_parallel_calls=tf.data.AUTOTUNE)
+text_ds = text_ds.prefetch(tf.data.AUTOTUNE)
 
 
 """
-## Callback for generating text
+## Implement a Keras callback for generating text
 """
 
 
 class TextGenerator(keras.callbacks.Callback):
-    """Callback to generate text from trained model.
+    """A callback to generate text from a trained model.
     1. Feed some starting prompt to the model
-    2. Predict probabilities for next token
-    3. Sample next token and add it to the next input
+    2. Predict probabilities for the next token
+    3. Sample the next token and add it to the next input
 
-    # Arguments
+    Arguments:
         max_tokens: Integer, the number of tokens to be generated after prompt.
         start_tokens: List of integers, the token indices for the starting prompt.
-        index_to_word: List of strings, obtained from TextVectorization layer.
+        index_to_word: List of strings, obtained from the TextVectorization layer.
         top_k: Integer, sample from the `top_k` token predictions.
         print_every: Integer, print after this many epochs.
     """
@@ -345,11 +289,11 @@ text_gen_callback = TextGenerator(num_tokens_generated, start_tokens, vocab)
 
 
 """
-## Train
+## Train the model
 
 Note: This code should preferably be run on GPU.
 """
 
 model = create_model()
 
-model.fit(text_ds, verbose=2, epochs=30, callbacks=[text_gen_callback])
+model.fit(text_ds, verbose=2, epochs=25, callbacks=[text_gen_callback])

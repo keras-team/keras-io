@@ -2,34 +2,18 @@
     padding: 1rem;
     margin-bottom: 1rem;
     padding-bottom: 0.01rem;
-    font-size: 0.95rem;
+    font-size: 0.92rem;
 }
 @media screen and (max-width: 840px) {
     .codehilite {
         font-size: 0.85rem;
     }
 }
-.k-shell code{
-    color: white;
+.codehilite pre {
+  color: #ced4da;
 }
-.k-code-comment {
-    color: gray !important;
-}
-.k-code-comment .n {
-    color: gray !important;
-}
-.k-code-comment .p {
-    color: gray !important;
-}
-.k-code-comment .o {
-    color: gray !important;
-}
-.k-code-comment .k {
-    color: gray !important;
-}
-.k-code-comment .err {
-    color: gray !important;
-    background-color: transparent !important;
+.k-default-codeblock .codehilite pre {
+  color: #444;
 }
 .k-default-codeblock .codehilite code span {
     color: #444 !important;

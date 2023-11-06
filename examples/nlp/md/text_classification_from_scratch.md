@@ -18,16 +18,13 @@ a set of text files on disk). We demonstrate the workflow on the IMDB sentiment
 classification dataset (unprocessed version). We use the `TextVectorization` layer for
  word splitting & indexing.
 
-
 ---
 ## Setup
-
 
 
 ```python
 import tensorflow as tf
 import numpy as np
-
 ```
 
 ---
@@ -36,37 +33,31 @@ import numpy as np
 Let's download the data and inspect its structure.
 
 
-
 ```python
 !curl -O https://ai.stanford.edu/~amaas/data/sentiment/aclImdb_v1.tar.gz
 !tar -xf aclImdb_v1.tar.gz
-
 ```
 
 <div class="k-default-codeblock">
 ```
   % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
                                  Dload  Upload   Total   Spent    Left  Speed
-100 80.2M  100 80.2M    0     0  6364k      0  0:00:12  0:00:12 --:--:-- 8940k
+100 80.2M  100 80.2M    0     0  16.1M      0  0:00:04  0:00:04 --:--:-- 16.4M
 
 ```
 </div>
 The `aclImdb` folder contains a `train` and `test` subfolder:
 
 
-
 ```python
 !ls aclImdb
-
 ```
 
 ```python
 !ls aclImdb/test
-
 ```
 ```python
 !ls aclImdb/train
-
 ```
 <div class="k-default-codeblock">
 ```
@@ -80,13 +71,11 @@ labeledBow.feat [34mpos[m[m             unsupBow.feat   urls_pos.txt
 ```
 </div>
 The `aclImdb/train/pos` and `aclImdb/train/neg` folders contain text files, each of
- which represents on review (either positive or negative):
-
+ which represents one review (either positive or negative):
 
 
 ```python
 !cat aclImdb/train/pos/6248_7.txt
-
 ```
 
 <div class="k-default-codeblock">
@@ -95,16 +84,14 @@ Being an Austrian myself this has been a straight knock in my face. Fortunately 
 
 ```
 </div>
-We are only interested in the `pos` and `neg` subfolders, so let's delete the rest:
-
+We are only interested in the `pos` and `neg` subfolders, so let's delete the other subfolder that has text files in it:
 
 
 ```python
 !rm -r aclImdb/train/unsup
-
 ```
 
-You can use the utility `tf.keras.preprocessing.text_dataset_from_directory` to
+You can use the utility `tf.keras.utils.text_dataset_from_directory` to
 generate a labeled `tf.data.Dataset` object from a set of text files on disk filed
  into class-specific folders.
 
@@ -124,39 +111,29 @@ random seed, or to pass `shuffle=False`, so that the validation & training split
 get have no overlap.
 
 
-
 ```python
 batch_size = 32
-raw_train_ds = tf.keras.preprocessing.text_dataset_from_directory(
+raw_train_ds = tf.keras.utils.text_dataset_from_directory(
     "aclImdb/train",
     batch_size=batch_size,
     validation_split=0.2,
     subset="training",
     seed=1337,
 )
-raw_val_ds = tf.keras.preprocessing.text_dataset_from_directory(
+raw_val_ds = tf.keras.utils.text_dataset_from_directory(
     "aclImdb/train",
     batch_size=batch_size,
     validation_split=0.2,
     subset="validation",
     seed=1337,
 )
-raw_test_ds = tf.keras.preprocessing.text_dataset_from_directory(
+raw_test_ds = tf.keras.utils.text_dataset_from_directory(
     "aclImdb/test", batch_size=batch_size
 )
 
-print(
-    "Number of batches in raw_train_ds: %d"
-    % tf.data.experimental.cardinality(raw_train_ds)
-)
-print(
-    "Number of batches in raw_val_ds: %d" % tf.data.experimental.cardinality(raw_val_ds)
-)
-print(
-    "Number of batches in raw_test_ds: %d"
-    % tf.data.experimental.cardinality(raw_test_ds)
-)
-
+print(f"Number of batches in raw_train_ds: {raw_train_ds.cardinality()}")
+print(f"Number of batches in raw_val_ds: {raw_val_ds.cardinality()}")
+print(f"Number of batches in raw_test_ds: {raw_test_ds.cardinality()}")
 ```
 
 <div class="k-default-codeblock">
@@ -175,7 +152,6 @@ Number of batches in raw_test_ds: 782
 Let's preview a few samples:
 
 
-
 ```python
 # It's important to take a look at your raw data to ensure your normalization
 # and tokenization will work as expected. We can do that by taking a few
@@ -187,7 +163,6 @@ for text_batch, label_batch in raw_train_ds.take(1):
     for i in range(5):
         print(text_batch.numpy()[i])
         print(label_batch.numpy()[i])
-
 ```
 
 <div class="k-default-codeblock">
@@ -211,9 +186,8 @@ b"Michelle Rodriguez is the defining actress who could be the charging force for
 In particular, we remove `<br />` tags.
 
 
-
 ```python
-from tensorflow.keras.layers.experimental.preprocessing import TextVectorization
+from tensorflow.keras.layers import TextVectorization
 import string
 import re
 
@@ -225,7 +199,7 @@ def custom_standardization(input_data):
     lowercase = tf.strings.lower(input_data)
     stripped_html = tf.strings.regex_replace(lowercase, "<br />", " ")
     return tf.strings.regex_replace(
-        stripped_html, "[%s]" % re.escape(string.punctuation), ""
+        stripped_html, f"[{re.escape(string.punctuation)}]", ""
     )
 
 
@@ -248,7 +222,7 @@ vectorize_layer = TextVectorization(
     output_sequence_length=sequence_length,
 )
 
-# Now that the vocab layer has been created, call `adapt` on a text-only
+# Now that the vectorize_layer has been created, call `adapt` on a text-only
 # dataset to create the vocabulary. You don't have to batch, but for very large
 # datasets this means you're not keeping spare copies of the dataset in memory.
 
@@ -256,7 +230,6 @@ vectorize_layer = TextVectorization(
 text_ds = raw_train_ds.map(lambda x, y: x)
 # Let's call `adapt`:
 vectorize_layer.adapt(text_ds)
-
 ```
 
 ---
@@ -266,7 +239,6 @@ There are 2 ways we can use our text vectorization layer:
 
 **Option 1: Make it part of the model**, so as to obtain a model that processes raw
  strings, like this:
-
 
 ```python
 text_input = tf.keras.Input(shape=(1,), dtype=tf.string, name='text')
@@ -289,7 +261,6 @@ strings as input, like in the code snippet for option 1 above. This can be done 
 
 
 
-
 ```python
 
 def vectorize_text(text, label):
@@ -306,14 +277,12 @@ test_ds = raw_test_ds.map(vectorize_text)
 train_ds = train_ds.cache().prefetch(buffer_size=10)
 val_ds = val_ds.cache().prefetch(buffer_size=10)
 test_ds = test_ds.cache().prefetch(buffer_size=10)
-
 ```
 
 ---
 ## Build a model
 
 We choose a simple 1D convnet starting with an `Embedding` layer.
-
 
 
 ```python
@@ -343,12 +312,10 @@ model = tf.keras.Model(inputs, predictions)
 
 # Compile the model with binary crossentropy loss and an adam optimizer.
 model.compile(loss="binary_crossentropy", optimizer="adam", metrics=["accuracy"])
-
 ```
 
 ---
 ## Train the model
-
 
 
 ```python
@@ -356,19 +323,18 @@ epochs = 3
 
 # Fit the model using the train and test datasets.
 model.fit(train_ds, validation_data=val_ds, epochs=epochs)
-
 ```
 
 <div class="k-default-codeblock">
 ```
 Epoch 1/3
-625/625 [==============================] - 35s 56ms/step - loss: 0.4867 - accuracy: 0.7309 - val_loss: 0.3271 - val_accuracy: 0.8622
+625/625 [==============================] - 46s 73ms/step - loss: 0.5005 - accuracy: 0.7156 - val_loss: 0.3103 - val_accuracy: 0.8696
 Epoch 2/3
-625/625 [==============================] - 40s 64ms/step - loss: 0.2197 - accuracy: 0.9126 - val_loss: 0.3265 - val_accuracy: 0.8706
+625/625 [==============================] - 51s 81ms/step - loss: 0.2262 - accuracy: 0.9115 - val_loss: 0.3255 - val_accuracy: 0.8754
 Epoch 3/3
-625/625 [==============================] - 41s 66ms/step - loss: 0.1107 - accuracy: 0.9606 - val_loss: 0.5312 - val_accuracy: 0.8448
+625/625 [==============================] - 50s 81ms/step - loss: 0.1142 - accuracy: 0.9574 - val_loss: 0.4157 - val_accuracy: 0.8698
 
-<tensorflow.python.keras.callbacks.History at 0x147e64ed0>
+<keras.callbacks.History at 0x154613190>
 
 ```
 </div>
@@ -376,17 +342,15 @@ Epoch 3/3
 ## Evaluate the model on the test set
 
 
-
 ```python
 model.evaluate(test_ds)
-
 ```
 
 <div class="k-default-codeblock">
 ```
-782/782 [==============================] - 17s 21ms/step - loss: 0.5297 - accuracy: 0.8404
+782/782 [==============================] - 14s 18ms/step - loss: 0.4539 - accuracy: 0.8570
 
-[0.5296842455863953, 0.8404399752616882]
+[0.45387956500053406, 0.8569999933242798]
 
 ```
 </div>
@@ -395,7 +359,6 @@ model.evaluate(test_ds)
 
 If you want to obtain a model capable of processing raw strings, you can simply
 create a new model (using the weights we just trained):
-
 
 
 ```python
@@ -414,14 +377,13 @@ end_to_end_model.compile(
 
 # Test it with `raw_test_ds`, which yields raw strings
 end_to_end_model.evaluate(raw_test_ds)
-
 ```
 
 <div class="k-default-codeblock">
 ```
-782/782 [==============================] - 24s 30ms/step - loss: 0.5297 - accuracy: 0.8404
+782/782 [==============================] - 20s 25ms/step - loss: 0.4539 - accuracy: 0.8570
 
-[0.5296845436096191, 0.8404399752616882]
+[0.45387890934944153, 0.8569999933242798]
 
 ```
 </div>

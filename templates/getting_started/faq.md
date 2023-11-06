@@ -16,18 +16,19 @@ A list of frequently Asked Keras Questions.
 
 ## Training-related questions
 
-- [What do "sample", "batch", and "epoch" mean?](#what-do-sample-batch-epoch-mean)
+- [What do "sample", "batch", and "epoch" mean?](#what-do-sample-batch-and-epoch-mean)
 - [Why is my training loss much higher than my testing loss?](#why-is-my-training-loss-much-higher-than-my-testing-loss)
 - [How can I use Keras with datasets that don't fit in memory?](#how-can-i-use-keras-with-datasets-that-dont-fit-in-memory)
-- [How can I regularly save Keras models during training?](#how-can-i-regularly-save-keras-models-during-training)
+- [How can I ensure my training run can recover from program interruptions?](#how-can-i-ensure-my-training-run-can-recover-from-program-interruptions)
 - [How can I interrupt training when the validation loss isn't decreasing anymore?](#how-can-i-interrupt-training-when-the-validation-loss-isnt-decreasing-anymore)
-- [How can I freeze layers and do fine-tuning?](#how-can-i-freeze-layers-and-do-fine-tuning)
+- [How can I freeze layers and do fine-tuning?](#how-can-i-freeze-layers-and-do-finetuning)
 - [What's the difference between the `training` argument in `call()` and the `trainable` attribute?](#whats-the-difference-between-the-training-argument-in-call-and-the-trainable-attribute)
 - [In `fit()`, how is the validation split computed?](#in-fit-how-is-the-validation-split-computed)
 - [In `fit()`, is the data shuffled during training?](#in-fit-is-the-data-shuffled-during-training)
 - [What's the recommended way to monitor my metrics when training with `fit()`?](#whats-the-recommended-way-to-monitor-my-metrics-when-training-with-fit)
 - [What if I need to customize what `fit()` does?](#what-if-i-need-to-customize-what-fit-does)
 - [How can I train models in mixed precision?](#how-can-i-train-models-in-mixed-precision)
+- [What's the difference between `Model` methods `predict()` and `__call__()`?](#whats-the-difference-between-model-methods-predict-and-call)
 
 ## Modeling-related questions
 
@@ -117,20 +118,110 @@ with tf.device_scope('/cpu:0'):
 
 ### How can I distribute training across multiple machines?
 
-Like for single-machine parallelism, the best way to do distributed training with Keras is to use
-the `tf.distribute` API, in particular [`MultiWorkerMirroredStrategy`](https://www.tensorflow.org/api_docs/python/tf/distribute/experimental/MultiWorkerMirroredStrategy).
-Make sure to read our [guide about using `tf.distribute` with Keras](/guides/distributed_training/).
+TensorFlow enables you to write code that is almost entirely
+agnostic to how you will distribute it:
+any code that can run locally can be distributed to multiple
+workers and accelerators by only adding to it a distribution strategy
+(`tf.distribute.Strategy`) corresponding to your hardware of choice,
+without any other code changes.
 
-Distributed training is somewhat more involved than single-machine multi-device training. Roughly, you will need
-to launch a remote cluster of machines, then run your code on a "chief" machine that holds a `TF_CONFIG` environment variable
-that specifies how to communicate with the other machines in the cluster. From there, the workflow is similar to using single-machine
-multi-GPU training, with the main difference being that you will use `MultiWorkerMirroredStrategy` as your distribution strategy.
+This also applies to any Keras model: just
+add a `tf.distribute` distribution strategy scope enclosing the model
+building and compiling code, and the training will be distributed according to
+the `tf.distribute` distribution strategy.
+
+For distributed training across multiple machines (as opposed to training that only leverages
+multiple devices on a single machine), there are two distribution strategies you
+could use: `MultiWorkerMirroredStrategy` and `ParameterServerStrategy`:
+
+- `tf.distribute.MultiWorkerMirroredStrategy` implements a synchronous CPU/GPU
+multi-worker solution to work with Keras-style model building and training loop,
+using synchronous reduction of gradients across the replicas.
+- `tf.distribute.experimental.ParameterServerStrategy` implements an asynchronous CPU/GPU
+multi-worker solution, where the parameters are stored on parameter servers, and
+workers update the gradients to parameter servers asynchronously.
+
+Distributed training is somewhat more involved than single-machine multi-device training.
+With `ParameterServerStrategy`, you will need to launch a remote cluster of machines
+consisting "worker" and "ps", each running a `tf.distribute.Server`, then run your
+python program on a "chief" machine that holds a `TF_CONFIG` environment variable
+that specifies how to communicate with the other machines in the cluster. With
+`MultiWorkerMirroredStrategy`, you will run the same program on each of the
+chief and workers, again with a `TF_CONFIG` environment variable that specifies
+how to communicate with the cluster. From there, the workflow is similar to using
+single-machine training, with the main difference being that you will use
+`ParameterServerStrategy` or `MultiWorkerMirroredStrategy` as your distribution strategy.
 
 Importantly, you should:
 
-- Make sure your dataset is so configured that all workers in the cluster are able to efficiently pull data from it (e.g. if your custer in on GCP, it's a good idea to host your data on GCS).
-- Make sure your training is fault-tolerant (e.g. by configuring a `ModelCheckpoint` callback).
+- Make sure your dataset is so configured that all workers in the cluster are able to
+efficiently pull data from it (e.g. if your cluster is running on Google Cloud,
+it's a good idea to host your data on Google Cloud Storage).
+- Make sure your training is fault-tolerant
+(e.g. by configuring a `keras.callbacks.BackupAndRestore` callback).
 
+Below, we provide a couple of code snippets that cover the basic workflow. For more information
+about CPU/GPU multi-worker training, see
+[Multi-GPU and distributed training](/guides/distributed_training/); for TPU
+training, see [How can I train a Keras model on TPU?](#how-can-i-train-a-keras-model-on-tpu).
+
+With `ParameterServerStrategy`:
+
+```python
+cluster_resolver = ...
+if cluster_resolver.task_type in ("worker", "ps"):
+  # Start a `tf.distribute.Server` and wait.
+  ...
+elif cluster_resolver.task_type == "evaluator":
+  # Run an (optional) side-car evaluation
+  ...
+
+# Otherwise, this is the coordinator that controls the training w/ the strategy.
+strategy = tf.distribute.experimental.ParameterServerStrategy(
+    cluster_resolver=...)
+train_dataset = ...
+
+with strategy.scope():
+  model = tf.keras.Sequential([
+      layers.Conv2D(32, 3, activation='relu', input_shape=(28, 28, 1)),
+      layers.MaxPooling2D(),
+      layers.Flatten(),
+      layers.Dense(64, activation='relu'),
+      layers.Dense(10, activation='softmax')
+  ])
+  model.compile(
+      loss='sparse_categorical_crossentropy',
+      optimizer=tf.keras.optimizers.SGD(learning_rate=0.001),
+      metrics=['accuracy'],
+      steps_per_execution=10)
+
+model.fit(x=train_dataset, epochs=3, steps_per_epoch=100)
+```
+
+With `MultiWorkerMirroredStrategy`:
+
+```python
+# By default `MultiWorkerMirroredStrategy` uses cluster information
+# from `TF_CONFIG`, and "AUTO" collective op communication.
+strategy = tf.distribute.experimental.MultiWorkerMirroredStrategy()
+train_dataset = get_training_dataset()
+with strategy.scope():
+  # Define and compile the model in the scope of the strategy. Doing so
+  # ensures the variables created are distributed and initialized properly
+  # according to the strategy.
+  model = tf.keras.Sequential([
+      layers.Conv2D(32, 3, activation='relu', input_shape=(28, 28, 1)),
+      layers.MaxPooling2D(),
+      layers.Flatten(),
+      layers.Dense(64, activation='relu'),
+      layers.Dense(10, activation='softmax')
+  ])
+  model.compile(
+      loss='sparse_categorical_crossentropy',
+      optimizer=tf.keras.optimizers.SGD(learning_rate=0.001),
+      metrics=['accuracy'])
+model.fit(x=train_dataset, epochs=3, steps_per_epoch=100)
+```
 
 ---
 
@@ -207,7 +298,7 @@ and cached model weights files from Keras Applications are stored by default in 
 ### How to do hyperparameter tuning with Keras?
 
 
-We recommend using [Keras Tuner](https://keras-team.github.io/keras-tuner/).
+We recommend using [KerasTuner](https://keras.io/keras_tuner/).
 
 ---
 
@@ -228,13 +319,13 @@ $ PYTHONHASHSEED=0 python3 test_hash.py # reproducible hash
 4883664951434749476
 $ PYTHONHASHSEED=0 python3 test_hash.py # reproducible hash
 4883664951434749476
-```endshell
+```
 
-Moreover, whenrunning on a GPU, some operations have non-deterministic outputs, in particular `tf.reduce_sum()`. This is due to the fact that GPUs run many operations in parallel, so the order of execution is not always guaranteed. Due to the limited precision of floats, even adding several numbers together may give slightly different results depending on the order in which you add them. You can try to avoid the non-deterministic operations, but some may be created automatically by TensorFlow to compute the gradients, so it is much simpler to just run the code on the CPU. For this, you can set the `CUDA_VISIBLE_DEVICES` environment variable to an empty string, for example:
+Moreover, when running on a GPU, some operations have non-deterministic outputs, in particular `tf.reduce_sum()`. This is due to the fact that GPUs run many operations in parallel, so the order of execution is not always guaranteed. Due to the limited precision of floats, even adding several numbers together may give slightly different results depending on the order in which you add them. You can try to avoid the non-deterministic operations, but some may be created automatically by TensorFlow to compute the gradients, so it is much simpler to just run the code on the CPU. For this, you can set the `CUDA_VISIBLE_DEVICES` environment variable to an empty string, for example:
 
 ```shell
 $ CUDA_VISIBLE_DEVICES="" PYTHONHASHSEED=0 python your_program.py
-```endshell
+```
 
 The below snippet of code provides an example of how to obtain reproducible results:
 
@@ -275,19 +366,16 @@ by the combination of the seeds set above.
 
 Whole-model saving means creating a file that will contain:
 
-- the architecture of the model, allowing to re-create the model
+- the architecture of the model, allowing you to re-create the model
 - the weights of the model
 - the training configuration (loss, optimizer)
-- the state of the optimizer, allowing to resume training exactly where you left off.
+- the state of the optimizer, allowing you to resume training exactly where you left off.
 
-The default and recommend format to use is the TensorFlow [SavedModel format](https://www.tensorflow.org/guide/saved_model).
-In TensorFlow 2.0 and higher, you can just do: `model.save(your_file_path)`.
-
-For explicitness, you can also use `model.save(your_file_path, save_format='tf')`.
+The default and recommended way to save a whole model is to just do: `model.save(your_file_path.keras)`.
 
 Keras still supports its original HDF5-based saving format. To save a model in HDF5 format,
 use `model.save(your_file_path, save_format='h5')`. Note that this option is automatically used
-if `your_file_path` ends in `.h5` or `.keras`.
+if `your_file_path` ends in `.h5`.
 Please also see [How can I install HDF5 or h5py to save my models?](#how-can-i-install-hdf5-or-h5py-to-save-my-models) for instructions on how to install `h5py`.
 
 After saving a model in either format, you can reinstantiate it via `model = keras.models.load_model(your_file_path)`.
@@ -295,14 +383,14 @@ After saving a model in either format, you can reinstantiate it via `model = ker
 **Example:**
 
 ```python
-from tensorflow.keras.models import load_model
+from tensorflow.keras.saving import load_model
 
-model.save('my_model')  # creates a HDF5 file 'my_model.h5'
+model.save('my_model.keras')
 del model  # deletes the existing model
 
 # returns a compiled model
 # identical to the previous one
-model = load_model('my_model')
+model = load_model('my_model.keras')
 ```
 
 
@@ -345,7 +433,7 @@ model = Sequential()
 model.add(Dense(2, input_dim=3, name='dense_1'))  # will be loaded
 model.add(Dense(10, name='new_dense'))  # will not be loaded
 
-# load weights from first model; will only affect the first layer, dense_1.
+# load weights from the first model; will only affect the first layer, dense_1.
 model.load_weights(fname, by_name=True)
 ```
 
@@ -375,8 +463,8 @@ model = model_from_json(json_string)
 
 **4) Handling custom layers (or other custom objects) in saved models**
 
-If the model you want to load includes custom layers or other custom classes or functions, 
-you can pass them to the loading mechanism via the `custom_objects` argument: 
+If the model you want to load includes custom layers or other custom classes or functions,
+you can pass them to the loading mechanism via the `custom_objects` argument:
 
 ```python
 from tensorflow.keras.models import load_model
@@ -467,7 +555,10 @@ Within Keras, there is the ability to add [callbacks](/api/callbacks/) specifica
 A Keras model has two modes: training and testing. Regularization mechanisms, such as Dropout and L1/L2 weight regularization, are turned off at testing time.
 They are reflected in the training time loss but not in the test time loss.
 
-Besides, the training loss is the average of the losses over each batch of training data. Because your model is changing over time, the loss over the first batches of an epoch is generally higher than over the last batches. On the other hand, the testing loss for an epoch is computed using the model as it is at the end of the epoch, resulting in a lower loss.
+Besides, the training loss that Keras displays is the average of the losses for each batch of training data, **over the current epoch**.
+Because your model is changing over time, the loss over the first batches of an epoch is generally higher than over the last batches.
+This can bring the epoch-wise average down.
+On the other hand, the testing loss for an epoch is computed using the model as it is at the end of the epoch, resulting in a lower loss.
 
 
 ---
@@ -475,63 +566,55 @@ Besides, the training loss is the average of the losses over each batch of train
 ### How can I use Keras with datasets that don't fit in memory?
 
 You should use the [`tf.data` API](https://www.tensorflow.org/guide/data) to create `tf.data.Dataset` objects -- an abstraction over a data pipeline
-that can pull data from local disk, from a distribtued filesystem, from GCS, etc., as well as efficiently apply various data transformations.
+that can pull data from local disk, from a distributed file system, from GCS, etc., as well as efficiently apply various data transformations.
 
-For instance, the utility `tf.keras.preprocessing.image_dataset_from_directory` will create a dataset that reads image data from a local directory.
+For instance, the utility [`tf.keras.utils.image_dataset_from_directory`](https://keras.io/api/data_loading/image/)
+will create a dataset that reads image data from a local directory.
+Likewise, the utility [`tf.keras.utils.text_dataset_from_directory`](https://keras.io/api/data_loading/text/#text_dataset_from_directory-function)
+will create a dataset that reads text files from a local directory.
 
 Dataset objects can be directly passed to `fit()`, or can be iterated over in a custom low-level training loop.
 
 ```python
-model.fit(dataset, epochs=10)
+model.fit(dataset, epochs=10, validation_data=val_dataset)
 ```
 
 ---
 
-### How can I regularly save Keras models during training?
+### How can I ensure my training run can recover from program interruptions?
 
 To ensure the ability to recover from an interrupted training run at any time (fault tolerance),
-you should use a callback that regularly saves your model to disk. You should also set up
-your code to optionally reload that model at startup. Here's a simple example.
+you should use a `tf.keras.callbacks.experimental.BackupAndRestore` that regularly saves your training progress,
+including the epoch number and weights, to disk, and loads it the next time you call `Model.fit()`.
 
 ```python
-import os
+import tensorflow as tf
 from tensorflow import keras
 
-# Prepare a directory to store all the checkpoints.
-checkpoint_dir = './ckpt'
-if not os.path.exists(checkpoint_dir):
-    os.makedirs(checkpoint_dir)
+class InterruptingCallback(keras.callbacks.Callback):
+  """A callback to intentionally introduce interruption to training."""
+  def on_epoch_end(self, epoch, log=None):
+    if epoch == 15:
+      raise RuntimeError('Interruption')
 
+model = keras.Sequential([keras.layers.Dense(10)])
+optimizer = keras.optimizers.SGD()
+model.compile(optimizer, loss="mse")
 
-def make_model():
-    # Create a new linear regression model.
-    model = keras.Sequential([keras.layers.Dense(1)])
-    model.compile(optimizer='adam', loss='mse')
-    return model
+x = tf.random.uniform((24, 10))
+y = tf.random.uniform((24,))
+dataset = tf.data.Dataset.from_tensor_slices((x, y)).repeat().batch(2)
 
-
-def make_or_restore_model():
-    # Either restore the latest model, or create a fresh one
-    # if there is no checkpoint available.
-    checkpoints = [checkpoint_dir + '/' + name
-                   for name in os.listdir(checkpoint_dir)]
-    if checkpoints:
-        latest_checkpoint = max(checkpoints, key=os.path.getctime)
-        print('Restoring from', latest_checkpoint)
-        return keras.models.load_model(latest_checkpoint)
-    print('Creating a new model')
-    return make_model()
-
-
-model = make_or_restore_model()
-callbacks = [
-    # This callback saves a SavedModel every 100 batches.
-    # We include the training loss in the folder name.
-    keras.callbacks.ModelCheckpoint(
-        filepath=checkpoint_dir + '/ckpt-loss={loss:.2f}',
-        save_freq=100)
-]
-model.fit(train_data, epochs=10, callbacks=callbacks)
+backup_callback = keras.callbacks.experimental.BackupAndRestore(
+    backup_dir='/tmp/backup')
+try:
+  model.fit(dataset, epochs=20, steps_per_epoch=5,
+            callbacks=[backup_callback, InterruptingCallback()])
+except RuntimeError:
+  print('***Handling interruption***')
+  # This continues at the epoch where it left off.
+  model.fit(dataset, epochs=20, steps_per_epoch=5,
+            callbacks=[backup_callback])
 ```
 
 Find out more in the [callbacks documentation](/api/callbacks/).
@@ -565,7 +648,7 @@ All layers & models have a `layer.trainable` boolean attribute:
 >>> layer = Dense(3)
 >>> layer.trainable
 True
-```endshell
+```
 
 On all layers & models, the `trainable` attribute can be set (to True or False).
 When set to `False`, the `layer.trainable_weights` attribute is empty:
@@ -667,7 +750,6 @@ gan.compile(...)  # `discriminator` is a submodel of `gan`, which should not be 
 ```
 
 
-
 ---
 
 ### What's the difference between the `training` argument in `call()` and the `trainable` attribute?
@@ -750,7 +832,7 @@ This behavior only applies for `BatchNormalization`. For every other layer, weig
 
 If you set the `validation_split` argument in `model.fit` to e.g. 0.1, then the validation data used will be the *last 10%* of the data. If you set it to 0.25, it will be the last 25% of the data, etc. Note that the data isn't shuffled before extracting the validation split, so the validation is literally just the *last* x% of samples in the input you passed.
 
-The same validation set is used for all epochs (within a same call to `fit`).
+The same validation set is used for all epochs (within the same call to `fit`).
 
 Note that the `validation_split` option is only available if your data is passed as Numpy arrays (not `tf.data.Datasets`, which are not indexable).
 
@@ -761,7 +843,7 @@ Note that the `validation_split` option is only available if your data is passed
 
 If you pass your data as NumPy arrays and if the `shuffle` argument in `model.fit()` is set to `True` (which is the default), the training data will be globally randomly shuffled at each epoch.
 
-If you pass your data as a `tf.data.Dataset` object and if the `shuffle` argument in `model.fit()` is set ot `True`, the dataset will be locally shuffled (buffered shuffling).
+If you pass your data as a `tf.data.Dataset` object and if the `shuffle` argument in `model.fit()` is set to `True`, the dataset will be locally shuffled (buffered shuffling).
 
 When using `tf.data.Dataset` objects, prefer shuffling your data beforehand (e.g. by calling `dataset = dataset.shuffle(buffer_size)`) so as to be in control of the buffer size.
 
@@ -773,7 +855,7 @@ Validation data is never shuffled.
 ### What's the recommended way to monitor my metrics when training with `fit()`?
 
 Loss values and metric values are reported via the default progress bar displayed by calls to `fit()`.
-However, staring at changing ascii numbers in a console ins't an optimal metric-monitoring experience.
+However, staring at changing ascii numbers in a console is not an optimal metric-monitoring experience.
 We recommend the use of [TensorBoard](https://www.tensorflow.org/tensorboard), which will display nice-looking graphs of your training and validation metrics, regularly
 updated during training, which you can access from your browser.
 
@@ -785,41 +867,16 @@ You can use TensorBoard with `fit()` via the [`TensorBoard` callback](/api/callb
 
 You have two options:
 
-**1) Write a low-level custom training looop**
-
-This is a good option if you want to be in control of every last little detail. But it can be somewhat verbose. Example:
-
-```python
-# Prepare an optimizer.
-optimizer = tf.keras.optimizers.Adam()
-# Prepare a loss function.
-loss_fn = tf.keras.losses.kl_divergence
-
-# Iterate over the batches of a dataset.
-for inputs, targets in dataset:
-    # Open a GradientTape.
-    with tf.GradientTape() as tape:
-        # Forward pass.
-        predictions = model(inputs)
-        # Compute the loss value for this batch.
-        loss_value = loss_fn(targets, predictions)
-
-    # Get gradients of loss wrt the weights.
-    gradients = tape.gradient(loss_value, model.trainable_weights)
-    # Update the weights of the model.
-    optimizer.apply_gradients(zip(gradients, model.trainable_weights))
-```
-
-This examples does not include a lot of essential functionality like displaying a progress bar, calling callbacks,
-updating metrics, etc. You would have to do this yourself. It's not difficult at all, but it's a bit of work.
-
-
-**2) Subclass the `Model` class and override the `train_step` (and `test_step`) methods**
+**1) Subclass the `Model` class and override the `train_step` (and `test_step`) methods**
 
 This is a better option if you want to use custom update rules but still want to leverage the functionality provided by `fit()`,
 such as callbacks, efficient step fusing, etc.
 
-Note that this pattern does not prevent you from building models with the Functional API (or even Sequential models).
+Note that this pattern does not prevent you from building models with the
+Functional API, in which case you will use the class you created to instantiate
+the model with the `inputs` and `outputs`. Same goes for Sequential models, in
+which case you will subclass `keras.Sequential` and override its `train_step`
+instead of `keras.Model`.
 
 The example below shows a Functional model with a custom `train_step`.
 
@@ -936,12 +993,73 @@ class MyCustomModel(keras.Model):
       return {m.name: m.result() for m in self.metrics}
 ```
 
+**2) Write a low-level custom training loop**
+
+This is a good option if you want to be in control of every last little detail. But it can be somewhat verbose. Example:
+
+```python
+# Prepare an optimizer.
+optimizer = tf.keras.optimizers.Adam()
+# Prepare a loss function.
+loss_fn = tf.keras.losses.kl_divergence
+
+# Iterate over the batches of a dataset.
+for inputs, targets in dataset:
+    # Open a GradientTape.
+    with tf.GradientTape() as tape:
+        # Forward pass.
+        predictions = model(inputs)
+        # Compute the loss value for this batch.
+        loss_value = loss_fn(targets, predictions)
+
+    # Get gradients of loss wrt the weights.
+    gradients = tape.gradient(loss_value, model.trainable_weights)
+    # Update the weights of the model.
+    optimizer.apply_gradients(zip(gradients, model.trainable_weights))
+```
+
+This example does not include a lot of essential functionality like displaying a progress bar, calling callbacks,
+updating metrics, etc. You would have to do this yourself. It's not difficult at all, but it's a bit of work.
+
+
 ---
 
 ### How can I train models in mixed precision?
 
 Keras has built-in support for mixed precision training on GPU and TPU.
-See [this extensive guide](https://www.tensorflow.org/guide/keras/mixed_precision). 
+See [this extensive guide](https://www.tensorflow.org/guide/keras/mixed_precision).
+
+---
+
+### What's the difference between `Model` methods `predict()` and `__call__()`?
+
+Let's answer with an extract from
+[Deep Learning with Python, Second Edition](https://www.manning.com/books/deep-learning-with-python-second-edition?a_aid=keras):
+
+> Both `y = model.predict(x)` and `y = model(x)` (where `x` is an array of input data)
+> mean "run the model on `x` and retrieve the output `y`." Yet they aren't exactly
+> the same thing.
+
+> `predict()` loops over the data in batches
+> (in fact, you can specify the batch size via `predict(x, batch_size=64)`),
+> and it extracts the NumPy value of the outputs. It's schematically equivalent to this:
+```python
+def predict(x):
+    y_batches = []
+    for x_batch in get_batches(x):
+        y_batch = model(x).numpy()
+        y_batches.append(y_batch)
+    return np.concatenate(y_batches)
+```
+> This means that `predict()` calls can scale to very large arrays. Meanwhile,
+> `model(x)` happens in-memory and doesn't scale.
+> On the other hand, `predict()` is not differentiable: you cannot retrieve its gradient
+> if you call it in a `GradientTape` scope.
+
+> You should use `model(x)` when you need to retrieve the gradients of the model call,
+> and you should use `predict()` if you just need the output value. In other words,
+> always use `predict()` unless you're in the middle of writing a low-level gradient
+> descent loop (as we are now).
 
 ---
 
@@ -1043,8 +1161,7 @@ model.reset_states()
 model.layers[0].reset_states()
 ```
 
-Note that the methods `predict`, `fit`, `train_on_batch`, `predict_classes`, etc. will *all* update the states of the stateful layers in a model. This allows you to do not only stateful training, but also stateful prediction.
+Note that the methods `predict`, `fit`, `train_on_batch`, etc. will *all* update the states of the stateful layers in a model. This allows you to do not only stateful training, but also stateful prediction.
 
 
 ---
-

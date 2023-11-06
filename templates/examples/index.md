@@ -6,17 +6,16 @@ All of our examples are written as Jupyter notebooks and can be run in one click
 a hosted notebook environment that requires no setup and runs in the cloud. Google Colab includes GPU and TPU runtimes.
 
 
-{{toc}}
+{{examples_list}}
 
 
----
 
 ## Adding a new code example
 
 We welcome new code examples! Here are our rules:
 
 - They should be shorter than 300 lines of code (comments may be as long as you want).
-- They should demonstrate modern Keras / TensorFlow 2.0 best practices.
+- They should demonstrate modern Keras / TensorFlow 2 best practices.
 - They should be substantially different in topic from all examples listed above.
 - They should be extensively documented & commented.
 

@@ -4,6 +4,7 @@ Author: [ADMoreau](https://github.com/ADMoreau)
 Date created: 2020/05/21
 Last modified: 2020/05/30
 Description: Few-shot classification on the Omniglot dataset using Reptile.
+Accelerator: GPU
 """
 
 """
@@ -86,7 +87,7 @@ class Dataset:
             if label not in self.data:
                 self.data[label] = []
             self.data[label].append(image)
-            self.labels = list(self.data.keys())
+        self.labels = list(self.data.keys())
 
     def get_mini_dataset(
         self, batch_size, repetitions, shots, num_classes, split=False

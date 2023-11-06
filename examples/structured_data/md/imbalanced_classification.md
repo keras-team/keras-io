@@ -280,3 +280,9 @@ In the real world, one would put an even higher weight on class 1,
 so as to reflect that False Negatives are more costly than False Positives.
 
 Next time your credit card gets  declined in an online purchase -- this is why.
+
+Example available on HuggingFace.
+
+| Trained Model | Demo |
+| :--: | :--: |
+| [![Generic badge](https://img.shields.io/badge/🤗%20Model-Imbalanced%20Classification-black.svg)](https://huggingface.co/keras-io/imbalanced_classification) | [![Generic badge](https://img.shields.io/badge/🤗%20Spaces-Imbalanced%20Classification-black.svg)](https://huggingface.co/spaces/keras-io/Credit_Card_Fraud_Detection) |
