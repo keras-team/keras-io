@@ -337,7 +337,7 @@ class CategoricalTruePositives(keras.metrics.Metric):
         self.true_positives.assign_add(ops.sum(values))
 
     def result(self):
-        return self.true_positives
+        return self.true_positives.value
 
     def reset_state(self):
         # The state of the metric will be reset at the start of each epoch.
