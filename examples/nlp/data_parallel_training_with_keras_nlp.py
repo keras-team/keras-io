@@ -103,7 +103,6 @@ strategy = tf.distribute.MirroredStrategy()
 print(f"Number of devices: {strategy.num_replicas_in_sync}")
 
 # Define batch size for a single replica (worker)
-
 single_worker_batch_size = 32
 
 # Calculate the total batch size for distributed training
@@ -200,7 +199,6 @@ single_worker_lr = 0.001
 
 # Calculate the scaled learning rate for distributed training
 scaled_lr = single_worker_lr * math.sqrt(strategy.num_replicas_in_sync)
-
 
 """
 With the datasets prepared, we now initialize and compile our model and optimizer within
