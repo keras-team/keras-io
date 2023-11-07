@@ -1,4 +1,4 @@
-# About Keras
+# About Keras 3
 
 Keras is a deep learning API written in Python and capable of running on top of either [JAX](https://jax.readthedocs.io/),
 [TensorFlow](https://github.com/tensorflow/tensorflow),
@@ -11,7 +11,42 @@ Keras is:
 while arbitrarily advanced workflows should be *possible* via a clear path that builds upon what you've already learned.
 - **Powerful** -- Keras provides industry-strength performance and scalability: it is used by organizations and companies including NASA, YouTube, or Waymo.
 
-As a cross-framework API, Keras can be used to develop modular components that are compatible with any framework -- JAX, TensorFlow, or PyTorch.
+---
+
+## Keras 3 is a multi-framework deep learning API
+
+As a multi-framework API, Keras can be used to develop modular components that are compatible with any framework -- JAX, TensorFlow, or PyTorch.
+
+This approach has several key benefits:
+
+- **Always get the best performance for your models.** In our benchmarks,
+we found that JAX typically delivers the best training and inference performance
+on GPU, TPU, and CPU -- but results vary from model to model, as non-XLA
+TensorFlow is occasionally faster on GPU. The ability to dynamically select
+the backend that will deliver the best performance for your model
+*without having to change anything to your code* means you're always guaranteed
+to train and serve with the highest achievable efficiency.
+- **Maximize available ecosystem surface for your models.** Any Keras
+model can be instantiated as a PyTorch `Module`, can be exported as a TensorFlow
+`SavedModel`, or can be instantiated as a stateless JAX function. That means
+that you can use your Keras models with PyTorch ecosystem packages,
+with the full range of TensorFlow deployment & production tools, and with
+JAX large-scale TPU training infrastructure. Write one `model.py` using
+Keras APIs, and get access to everything the ML world has to offer.
+- **Maximize distribution for your open-source model releases.** Want to
+release a pretrained model? Want as many people as possible
+to be able to use it? If you implement it in pure TensorFlow or PyTorch,
+it will be usable by roughly half of the market.
+If you implement it in Keras, it is instantly usable by anyone regardless
+of their framework of choice (even if they're not Keras users).
+Twice the impact at no added development cost.
+- **Use data pipelines from any source.** The Keras
+`fit()`/`evaluate()`/`predict()` routines are compatible with `tf.data.Dataset` objects,
+with PyTorch `DataLoader` objects, with NumPy arrays, Pandas dataframes --
+regardless of the backend you're using. You can train a Keras + TensorFlow
+model on a PyTorch `DataLoader` or train a Keras + PyTorch model on a
+`tf.data.Dataset`.
+
 
 ---
 
@@ -124,131 +159,7 @@ class TokenAndPositionEmbedding(keras.Layer):
 For more in-depth tutorials about Keras, you can check out:
 
 - [Introduction to Keras for engineers](/getting_started/intro_to_keras_for_engineers/)
-- [Introduction to Keras for researchers](/getting_started/intro_to_keras_for_researchers/)
 - [Developer guides](/guides/)
-
----
-
-## Installation
-
-You can install Keras from PyPI via `pip install keras`.
-You can check your local Keras version number via `import keras; print(keras.__version__)`.
-
-To use Keras, you will also need to install a backend framework -- either JAX, TensorFlow, or PyTorch.
-
-To make sure you're able to run Keras on GPU, use the following backend-specific requirements files:
-
-- [requirements-jax-cuda.txt](https://github.com/keras-team/keras/blob/master/requirements-jax-cuda.txt)
-- [requirements-tensorflow-cuda.txt](https://github.com/keras-team/keras/blob/master/requirements-tensorflow-cuda.txt)
-- [requirements-torch-cuda.txt](https://github.com/keras-team/keras/blob/master/requirements-torch-cuda.txt)
-
-These install all CUDA-enabled dependencies via pip. They expect a NVIDIA driver to be preinstalled.
-We recommend a clean python environment for each backend to avoid CUDA version mismatches.
-As an example, here is how to create a JAX GPU environment with [Conda](https://docs.conda.io/en/latest/):
-
-```
-conda create -y -n keras-jax python=3.10
-conda activate keras-jax
-pip install -r requirements-jax-cuda.txt
-pip install keras
-```
-
-Note that it may not always be possible to use the GPU with multiple backends in the same environment due to conflicting
-dependency requirements between backends.
-The above requirements files only enable GPU usage for one target backends while keeping the other two backends CPU-only.
-We recommend using [Conda](https://docs.conda.io/en/latest/) to maintain three separate environments `keras-jax`, `keras-tensorflow`, `keras-torch`.
-
-If you want to attempt to create a "universal environment" where any backend can use the GPU, we recommend following
-[the dependency versions used by Colab](https://colab.sandbox.google.com/drive/13cpd3wCwEHpsmypY9o6XB6rXgBm5oSxu)
-(which seeks to solve this exact problem).
-
----
-
-## Configuring your backend
-
-You can export the environment variable `KERAS_BACKEND`
-or you can edit your local config file at `~/.keras/keras.json`` to configure your backend.
-Available backend options are: `"jax"`, `"tensorflow"`, `"torch"`. Example:
-
-```
-export KERAS_BACKEND="jax"
-```
-
-In Colab, you can do:
-
-```
-import os
-os.environ["KERAS_BACKEND"] = "jax"
-import keras
-```
-
-**Note:** The backend must be configured before importing Keras, and the backend cannot be changed after the package has been imported.
-
----
-
-## TensorFlow + Keras 2 backwards compatibility
-
-From TensorFlow 2.0 to TensorFlow 2.15 (included), doing `pip install tensorflow` will also
-install the corresponding version of Keras 2 -- for instance, `pip install tensorflow==2.14.0` will
-install `keras==2.14.0`. That version of Keras is then available via both `import keras` and `from tensorflow import keras`
-(the `tf.keras` namespace).
-
-Starting with TensorFlow 2.16, doing `pip install tensorflow` will install Keras 3. When you have TensorFlow >= 2.16
-and Keras 3, then by default `from tensorflow import keras` (`tf.keras`) will be Keras 3.
-
-Meanwhile, the legacy Keras 2 package is still being released regularly and is available on PyPI as `tf-keras`/`tf_keras`
-(note that `-` and `_` are equivalent in PyPI package names).
-To use it, you can install it via `pip install tf_keras` then import it via `import tf_keras as keras`.
-
-Should you want `tf.keras` to stay on Keras 2 after upgrading to TensorFlow 2.16+, you can configure your TensorFlow installation
-so that `tf.keras` points to `tf_keras`. To achieve this:
-
-1. Make sure to install `tf_keras`. Note that TensorFlow does not install by default.
-2. Export the environment variable `TF_USE_LEGACY_KERAS=1`.
-
-There are several ways to export the environment variable:
-
-1. You can simply run the shell command `export TF_USE_LEGACY_KERAS=1` before launching the Python interpreter.
-2. You can add `export TF_USE_LEGACY_KERAS=1` to your `.bashrc` file. That way the variable will still be exported when you restart your shell.
-3. You can start your Python script with:
-
-```python
-import os
-os.environ["TF_USE_LEGACY_KERAS"] = "1"
-```
-
-These lines would need to be before any `import tensorflow` statement.
-
----
-
-## Compatibility matrix
-
-### JAX compatibility
-
-The following Keras + JAX versions are compatible with each other:
-
-- `jax==0.4.20` & `keras==3.0.0`
-
-### TensorFlow compatibility
-
-The following Keras + TensorFlow versions are compatible with each other:
-
-To use Keras 2:
-
-- `tensorflow==2.13.0` & `keras==2.13.0`
-- `tensorflow==2.14.0` & `keras==2.14.0`
-- `tensorflow==2.15.0` & `keras==2.15.0`
-
-To use Keras 3:
-
-- `tensorflow==2.15.0` & `keras==3.0.0`
-- `tensorflow==2.16.0` & `keras==3.0.0`
-
-### PyTorch compatibility
-
-The following Keras + PyTorch versions are compatible with each other:
-
-- `torch==2.1.0` & `keras==3.0.0`
 
 ---
 

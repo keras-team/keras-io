@@ -71,12 +71,12 @@ pip install git+https://github.com/keras-team/keras-nlp.git --upgrade
 
 ## Using KerasNLP with Keras Core
 
-As of version `0.6.0`, KerasNLP supports multiple backends with Keras Core out 
+As of version `0.6.0`, KerasNLP supports multiple backends out 
 of the box. There are two ways to configure KerasNLP to run with multi-backend 
 support:
 
 1. Via the `KERAS_BACKEND` environment variable. If set, then KerasNLP will be 
-using Keras Core with the backend specified (e.g., `KERAS_BACKEND=jax`).
+using Keras 3 with the backend specified (e.g., `KERAS_BACKEND=jax`).
 2. Via the `.keras/keras.json` and `.keras/keras_nlp.json` config files (which 
 are automatically created the first time you import KerasNLP):
    - Set your backend of choice in `.keras/keras.json`; e.g., `"backend": "jax"`. 
@@ -91,12 +91,6 @@ import keras_nlp
 gpt2_lm = keras_nlp.models.GPT2CausalLM.from_preset("gpt2_base_en")
 gpt2_lm.generate("My trip to Yosemite was", max_length=200)
 ```
-
-Until Keras Core is officially released as Keras 3.0, KerasNLP will use 
-`tf.keras` as the default backend. To restore this default behavior, simply 
-`unset KERAS_BACKEND` and ensure that  `"multi_backend": False` or is unset in 
-`.keras/keras_nlp.json`. You will need to restart the Python runtime for changes 
-to take effect.
 
 ## Quickstart
 

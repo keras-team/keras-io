@@ -5,7 +5,6 @@ A list of frequently Asked Keras Questions.
 ## General questions
 
 - [How can I train a Keras model on multiple GPUs (on a single machine)?](#how-can-i-train-a-keras-model-on-multiple-gpus-on-a-single-machine)
-- [How can I distribute training across multiple machines?](#how-can-i-distribute-training-across-multiple-machines)
 - [How can I train a Keras model on TPU?](#how-can-i-train-a-keras-model-on-tpu)
 - [Where is the Keras configuration file stored?](#where-is-the-keras-configuration-file-stored)
 - [How to do hyperparameter tuning with Keras?](#how-to-do-hyperparameter-tuning-with-keras)
@@ -45,183 +44,17 @@ A list of frequently Asked Keras Questions.
 ### How can I train a Keras model on multiple GPUs (on a single machine)?
 
 There are two ways to run a single model on multiple GPUs: **data parallelism** and **device parallelism**.
-In most cases, what you need is most likely data parallelism.
+Keras covers both.
 
+For data parallelism, Keras supports the built-in data parallel distribution APIs of
+JAX, TensorFlow, and PyTorch. See the following guides:
 
-**1) Data parallelism**
+- [Multi-GPU distributed training with JAX](/guides/distributed_training_with_jax/)
+- [Multi-GPU distributed training with TensorFlow](/guides/distributed_training_with_tensorflow/)
+- [Multi-GPU distributed training with PyTorch](/guides/distributed_training_with_torch/)
 
-Data parallelism consists in replicating the target model once on each device, and using each replica to process a different fraction of the input data.
-
-The best way to do data parallelism with Keras models is to use the `tf.distribute` API. Make sure to read our [guide about using `tf.distribute` with Keras](/guides/distributed_training/).
-
-The gist of it is the following:
-
-a) instantiate a "distribution strategy" object, e.g. `MirroredStrategy` (which replicates your model on each available device and keeps the state of each model in sync):
-
-```python
-strategy = tf.distribute.MirroredStrategy()
-```
-
-b) Create your model and compile it under the strategy's scope:
-
-```python
-with strategy.scope():
-    # This could be any kind of model -- Functional, subclass...
-    model = tf.keras.Sequential([
-        tf.keras.layers.Conv2D(32, 3, activation='relu', input_shape=(28, 28, 1)),
-        tf.keras.layers.GlobalMaxPooling2D(),
-        tf.keras.layers.Dense(10)
-    ])
-    model.compile(loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
-                  optimizer=tf.keras.optimizers.Adam(),
-                  metrics=[tf.keras.metrics.SparseCategoricalAccuracy()])
-```
-
-Note that it's important that all state variable creation should happen under the scope.
-So in case you create any additional variables, do that under the scope.
-
-c) Call `fit()` with a `tf.data.Dataset` object as input. Distribution is broadly compatible with all callbacks, including custom callbacks.
-Note that this call does not need to be under the strategy scope, since it doesn't create new variables.
-
-```python
-model.fit(train_dataset, epochs=12, callbacks=callbacks)
-```
-
-
-**2) Model parallelism**
-
-Model parallelism consists in running different parts of a same model on different devices. It works best for models that have a parallel architecture, e.g. a model with two branches.
-
-This can be achieved by using TensorFlow device scopes. Here is a quick example:
-
-```python
-# Model where a shared LSTM is used to encode two different sequences in parallel
-input_a = keras.Input(shape=(140, 256))
-input_b = keras.Input(shape=(140, 256))
-
-shared_lstm = keras.layers.LSTM(64)
-
-# Process the first sequence on one GPU
-with tf.device_scope('/gpu:0'):
-    encoded_a = shared_lstm(input_a)
-# Process the next sequence on another GPU
-with tf.device_scope('/gpu:1'):
-    encoded_b = shared_lstm(input_b)
-
-# Concatenate results on CPU
-with tf.device_scope('/cpu:0'):
-    merged_vector = keras.layers.concatenate(
-        [encoded_a, encoded_b], axis=-1)
-```
-
----
-
-### How can I distribute training across multiple machines?
-
-TensorFlow enables you to write code that is almost entirely
-agnostic to how you will distribute it:
-any code that can run locally can be distributed to multiple
-workers and accelerators by only adding to it a distribution strategy
-(`tf.distribute.Strategy`) corresponding to your hardware of choice,
-without any other code changes.
-
-This also applies to any Keras model: just
-add a `tf.distribute` distribution strategy scope enclosing the model
-building and compiling code, and the training will be distributed according to
-the `tf.distribute` distribution strategy.
-
-For distributed training across multiple machines (as opposed to training that only leverages
-multiple devices on a single machine), there are two distribution strategies you
-could use: `MultiWorkerMirroredStrategy` and `ParameterServerStrategy`:
-
-- `tf.distribute.MultiWorkerMirroredStrategy` implements a synchronous CPU/GPU
-multi-worker solution to work with Keras-style model building and training loop,
-using synchronous reduction of gradients across the replicas.
-- `tf.distribute.experimental.ParameterServerStrategy` implements an asynchronous CPU/GPU
-multi-worker solution, where the parameters are stored on parameter servers, and
-workers update the gradients to parameter servers asynchronously.
-
-Distributed training is somewhat more involved than single-machine multi-device training.
-With `ParameterServerStrategy`, you will need to launch a remote cluster of machines
-consisting "worker" and "ps", each running a `tf.distribute.Server`, then run your
-python program on a "chief" machine that holds a `TF_CONFIG` environment variable
-that specifies how to communicate with the other machines in the cluster. With
-`MultiWorkerMirroredStrategy`, you will run the same program on each of the
-chief and workers, again with a `TF_CONFIG` environment variable that specifies
-how to communicate with the cluster. From there, the workflow is similar to using
-single-machine training, with the main difference being that you will use
-`ParameterServerStrategy` or `MultiWorkerMirroredStrategy` as your distribution strategy.
-
-Importantly, you should:
-
-- Make sure your dataset is so configured that all workers in the cluster are able to
-efficiently pull data from it (e.g. if your cluster is running on Google Cloud,
-it's a good idea to host your data on Google Cloud Storage).
-- Make sure your training is fault-tolerant
-(e.g. by configuring a `keras.callbacks.BackupAndRestore` callback).
-
-Below, we provide a couple of code snippets that cover the basic workflow. For more information
-about CPU/GPU multi-worker training, see
-[Multi-GPU and distributed training](/guides/distributed_training/); for TPU
-training, see [How can I train a Keras model on TPU?](#how-can-i-train-a-keras-model-on-tpu).
-
-With `ParameterServerStrategy`:
-
-```python
-cluster_resolver = ...
-if cluster_resolver.task_type in ("worker", "ps"):
-  # Start a `tf.distribute.Server` and wait.
-  ...
-elif cluster_resolver.task_type == "evaluator":
-  # Run an (optional) side-car evaluation
-  ...
-
-# Otherwise, this is the coordinator that controls the training w/ the strategy.
-strategy = tf.distribute.experimental.ParameterServerStrategy(
-    cluster_resolver=...)
-train_dataset = ...
-
-with strategy.scope():
-  model = tf.keras.Sequential([
-      layers.Conv2D(32, 3, activation='relu', input_shape=(28, 28, 1)),
-      layers.MaxPooling2D(),
-      layers.Flatten(),
-      layers.Dense(64, activation='relu'),
-      layers.Dense(10, activation='softmax')
-  ])
-  model.compile(
-      loss='sparse_categorical_crossentropy',
-      optimizer=tf.keras.optimizers.SGD(learning_rate=0.001),
-      metrics=['accuracy'],
-      steps_per_execution=10)
-
-model.fit(x=train_dataset, epochs=3, steps_per_epoch=100)
-```
-
-With `MultiWorkerMirroredStrategy`:
-
-```python
-# By default `MultiWorkerMirroredStrategy` uses cluster information
-# from `TF_CONFIG`, and "AUTO" collective op communication.
-strategy = tf.distribute.experimental.MultiWorkerMirroredStrategy()
-train_dataset = get_training_dataset()
-with strategy.scope():
-  # Define and compile the model in the scope of the strategy. Doing so
-  # ensures the variables created are distributed and initialized properly
-  # according to the strategy.
-  model = tf.keras.Sequential([
-      layers.Conv2D(32, 3, activation='relu', input_shape=(28, 28, 1)),
-      layers.MaxPooling2D(),
-      layers.Flatten(),
-      layers.Dense(64, activation='relu'),
-      layers.Dense(10, activation='softmax')
-  ])
-  model.compile(
-      loss='sparse_categorical_crossentropy',
-      optimizer=tf.keras.optimizers.SGD(learning_rate=0.001),
-      metrics=['accuracy'])
-model.fit(x=train_dataset, epochs=3, steps_per_epoch=100)
-```
+For model parallelism, Keras has its own distribution API, which is currently only support by the JAX backend.
+See [the documentation for the `LayoutMap` API](/api/distribution/).
 
 ---
 
@@ -287,7 +120,7 @@ It contains the following fields:
 - The image data format to be used as default by image processing layers and utilities (either `channels_last` or `channels_first`).
 - The `epsilon` numerical fuzz factor to be used to prevent division by zero in some operations.
 - The default float data type.
-- The default backend. This is legacy; nowadays there is only TensorFlow.
+- The default backend. It can be one of `"jax"`, `"tensorflow"`, `"torch"`, or `"numpy"`.
 
 Likewise, cached dataset files, such as those downloaded with [`get_file()`](/utils/#get_file), are stored by default in `$HOME/.keras/datasets/`,
 and cached model weights files from Keras Applications are stored by default in `$HOME/.keras/models/`.
@@ -296,7 +129,6 @@ and cached model weights files from Keras Applications are stored by default in 
 ---
 
 ### How to do hyperparameter tuning with Keras?
-
 
 We recommend using [KerasTuner](https://keras.io/keras_tuner/).
 
