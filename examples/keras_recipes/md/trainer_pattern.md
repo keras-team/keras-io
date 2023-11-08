@@ -28,8 +28,12 @@ by putting the custom training step in the Trainer class definition.
 
 
 ```python
+import os
+
+os.environ["KERAS_BACKEND"] = "tensorflow"
+
 import tensorflow as tf
-from tensorflow import keras
+import keras
 
 # Load MNIST dataset and standardize the data
 mnist = keras.datasets.mnist
@@ -126,6 +130,13 @@ func_output = keras.layers.Dense(10, activation="softmax")(x)
 model_b = keras.Model(func_input, func_output)
 ```
 
+<div class="k-default-codeblock">
+```
+/opt/conda/envs/keras-tensorflow/lib/python3.10/site-packages/keras/src/layers/reshaping/flatten.py:37: UserWarning: Do not pass an `input_shape`/`input_dim` argument to a layer. When using Sequential models, prefer using an `Input(shape)` object as the first layer in the model instead.
+  super().__init__(**kwargs)
+
+```
+</div>
 ---
 ## Create Trainer class objects from the models
 
@@ -153,35 +164,56 @@ trainer_2.fit(
 
 <div class="k-default-codeblock">
 ```
-WARNING:absl:At this time, the v2.11+ optimizer `tf.keras.optimizers.SGD` runs slowly on M1/M2 Macs, please use the legacy Keras optimizer instead, located at `tf.keras.optimizers.legacy.SGD`.
-WARNING:absl:There is a known slowdown when using v2.11+ Keras optimizers on M1/M2 Macs. Falling back to the legacy Keras optimizer, i.e., `tf.keras.optimizers.legacy.SGD`.
-
 Epoch 1/5
-938/938 [==============================] - 1s 1ms/step - sparse_categorical_accuracy: 0.7627 - val_sparse_categorical_accuracy: 0.8887
+ 117/938 ━━[37m━━━━━━━━━━━━━━━━━━  1s 1ms/step - sparse_categorical_accuracy: 0.2924
+
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1699473470.240132  317999 device_compiler.h:186] Compiled cluster using XLA!  This line is logged at most once for the lifetime of the process.
+W0000 00:00:1699473470.252956  317999 graph_launch.cc:671] Fallback to op-by-op mode because memset node breaks graph update
+
+ 938/938 ━━━━━━━━━━━━━━━━━━━━ 0s 2ms/step - sparse_categorical_accuracy: 0.6370
+
+W0000 00:00:1699473472.573364  317998 graph_launch.cc:671] Fallback to op-by-op mode because memset node breaks graph update
+W0000 00:00:1699473473.294878  317998 graph_launch.cc:671] Fallback to op-by-op mode because memset node breaks graph update
+
+ 938/938 ━━━━━━━━━━━━━━━━━━━━ 5s 4ms/step - sparse_categorical_accuracy: 0.6372 - val_sparse_categorical_accuracy: 0.8876
 Epoch 2/5
-938/938 [==============================] - 1s 992us/step - sparse_categorical_accuracy: 0.8750 - val_sparse_categorical_accuracy: 0.9083
+ 122/938 ━━[37m━━━━━━━━━━━━━━━━━━  1s 1ms/step - sparse_categorical_accuracy: 0.8495
+
+W0000 00:00:1699473473.652419  317999 graph_launch.cc:671] Fallback to op-by-op mode because memset node breaks graph update
+
+ 938/938 ━━━━━━━━━━━━━━━━━━━━ 1s 1ms/step - sparse_categorical_accuracy: 0.8655 - val_sparse_categorical_accuracy: 0.9070
 Epoch 3/5
-938/938 [==============================] - 1s 1ms/step - sparse_categorical_accuracy: 0.8918 - val_sparse_categorical_accuracy: 0.9144
+ 938/938 ━━━━━━━━━━━━━━━━━━━━ 1s 1ms/step - sparse_categorical_accuracy: 0.8887 - val_sparse_categorical_accuracy: 0.9161
 Epoch 4/5
-938/938 [==============================] - 1s 983us/step - sparse_categorical_accuracy: 0.9037 - val_sparse_categorical_accuracy: 0.9216
+ 938/938 ━━━━━━━━━━━━━━━━━━━━ 1s 1ms/step - sparse_categorical_accuracy: 0.9014 - val_sparse_categorical_accuracy: 0.9223
 Epoch 5/5
-938/938 [==============================] - 1s 1ms/step - sparse_categorical_accuracy: 0.9104 - val_sparse_categorical_accuracy: 0.9273
-
-WARNING:absl:At this time, the v2.11+ optimizer `tf.keras.optimizers.Adam` runs slowly on M1/M2 Macs, please use the legacy Keras optimizer instead, located at `tf.keras.optimizers.legacy.Adam`.
-WARNING:absl:There is a known slowdown when using v2.11+ Keras optimizers on M1/M2 Macs. Falling back to the legacy Keras optimizer, i.e., `tf.keras.optimizers.legacy.Adam`.
-
+ 938/938 ━━━━━━━━━━━━━━━━━━━━ 1s 1ms/step - sparse_categorical_accuracy: 0.9124 - val_sparse_categorical_accuracy: 0.9265
 Epoch 1/5
-938/938 [==============================] - 2s 2ms/step - sparse_categorical_accuracy: 0.9194 - val_sparse_categorical_accuracy: 0.9611
-Epoch 2/5
-938/938 [==============================] - 1s 2ms/step - sparse_categorical_accuracy: 0.9617 - val_sparse_categorical_accuracy: 0.9696
-Epoch 3/5
-938/938 [==============================] - 2s 2ms/step - sparse_categorical_accuracy: 0.9711 - val_sparse_categorical_accuracy: 0.9760
-Epoch 4/5
-938/938 [==============================] - 2s 2ms/step - sparse_categorical_accuracy: 0.9769 - val_sparse_categorical_accuracy: 0.9748
-Epoch 5/5
-938/938 [==============================] - 2s 2ms/step - sparse_categorical_accuracy: 0.9792 - val_sparse_categorical_accuracy: 0.9804
+ 119/938 ━━[37m━━━━━━━━━━━━━━━━━━  1s 1ms/step - sparse_categorical_accuracy: 0.6811
 
-<keras.callbacks.History at 0x2c81f7760>
+W0000 00:00:1699473481.515332  317999 graph_launch.cc:671] Fallback to op-by-op mode because memset node breaks graph update
+
+ 938/938 ━━━━━━━━━━━━━━━━━━━━ 0s 3ms/step - sparse_categorical_accuracy: 0.8617
+
+W0000 00:00:1699473484.239004  317998 graph_launch.cc:671] Fallback to op-by-op mode because memset node breaks graph update
+W0000 00:00:1699473484.581161  317997 graph_launch.cc:671] Fallback to op-by-op mode because memset node breaks graph update
+
+ 938/938 ━━━━━━━━━━━━━━━━━━━━ 5s 4ms/step - sparse_categorical_accuracy: 0.8618 - val_sparse_categorical_accuracy: 0.9633
+Epoch 2/5
+ 119/938 ━━[37m━━━━━━━━━━━━━━━━━━  1s 1ms/step - sparse_categorical_accuracy: 0.9595
+
+W0000 00:00:1699473484.934538  317999 graph_launch.cc:671] Fallback to op-by-op mode because memset node breaks graph update
+
+ 938/938 ━━━━━━━━━━━━━━━━━━━━ 1s 1ms/step - sparse_categorical_accuracy: 0.9598 - val_sparse_categorical_accuracy: 0.9696
+Epoch 3/5
+ 938/938 ━━━━━━━━━━━━━━━━━━━━ 1s 1ms/step - sparse_categorical_accuracy: 0.9722 - val_sparse_categorical_accuracy: 0.9750
+Epoch 4/5
+ 938/938 ━━━━━━━━━━━━━━━━━━━━ 1s 1ms/step - sparse_categorical_accuracy: 0.9770 - val_sparse_categorical_accuracy: 0.9770
+Epoch 5/5
+ 938/938 ━━━━━━━━━━━━━━━━━━━━ 1s 2ms/step - sparse_categorical_accuracy: 0.9805 - val_sparse_categorical_accuracy: 0.9789
+
+<keras.src.callbacks.history.History at 0x7efe405fe560>
 
 ```
 </div>
