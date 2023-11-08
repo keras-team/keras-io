@@ -27,43 +27,45 @@ Let's run through a few examples.
 
 ---
 ## Setup
-TensorFlow NumPy requires TensorFlow 2.5 or later.
 
 
 ```python
+import os
+
+os.environ["KERAS_BACKEND"] = "tensorflow"
+
 import tensorflow as tf
 import tensorflow.experimental.numpy as tnp
 import keras
-import keras.layers as layers
-import numpy as np
-```
-
-Optionally, you can call `tnp.experimental_enable_numpy_behavior()` to enable type promotion in TensorFlow.
-This allows TNP to more closely follow the NumPy standard.
-
-
-```python
-tnp.experimental_enable_numpy_behavior()
+from keras import layers
 ```
 
 To test our models we will use the Boston housing prices regression dataset.
 
 
 ```python
-(x_train, y_train), (x_test, y_test) = tf.keras.datasets.boston_housing.load_data(
+(x_train, y_train), (x_test, y_test) = keras.datasets.boston_housing.load_data(
     path="boston_housing.npz", test_split=0.2, seed=113
 )
+input_dim = x_train.shape[1]
 
 
 def evaluate_model(model: keras.Model):
-    [loss, percent_error] = model.evaluate(x_test, y_test, verbose=0)
+    loss, percent_error = model.evaluate(x_test, y_test, verbose=0)
     print("Mean absolute percent error before training: ", percent_error)
     model.fit(x_train, y_train, epochs=200, verbose=0)
-    [loss, percent_error] = model.evaluate(x_test, y_test, verbose=0)
+    loss, percent_error = model.evaluate(x_test, y_test, verbose=0)
     print("Mean absolute percent error after training:", percent_error)
 
 ```
 
+<div class="k-default-codeblock">
+```
+Downloading data from https://storage.googleapis.com/tensorflow/tf-keras-datasets/california_housing.npz
+ 743530/743530 ━━━━━━━━━━━━━━━━━━━━ 0s 0us/step
+
+```
+</div>
 ---
 ## Subclassing keras.Model with TNP
 
@@ -97,16 +99,27 @@ class TNPForwardFeedRegressionNetwork(keras.Model):
         for i, block in enumerate(self.blocks):
             self.block_weights.append(
                 self.add_weight(
-                    shape=(current_shape, block), trainable=True, name=f"block-{i}"
+                    shape=(current_shape, block),
+                    trainable=True,
+                    name=f"block-{i}",
+                    initializer="glorot_normal",
                 )
             )
             self.biases.append(
-                self.add_weight(shape=(block,), trainable=True, name=f"bias-{i}")
+                self.add_weight(
+                    shape=(block,),
+                    trainable=True,
+                    name=f"bias-{i}",
+                    initializer="zeros",
+                )
             )
             current_shape = block
 
         self.linear_layer = self.add_weight(
-            shape=(current_shape, 1), name="linear_projector", trainable=True
+            shape=(current_shape, 1),
+            name="linear_projector",
+            trainable=True,
+            initializer="glorot_normal",
         )
 
     def call(self, inputs):
@@ -138,12 +151,15 @@ evaluate_model(model)
 
 <div class="k-default-codeblock">
 ```
-Mean absolute percent error before training:  422.45343017578125
-Mean absolute percent error after training: 97.24715423583984
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1699476780.568655  331531 device_compiler.h:186] Compiled cluster using XLA!  This line is logged at most once for the lifetime of the process.
+
+Mean absolute percent error before training:  100.00450134277344
+Mean absolute percent error after training: 100.0
 
 ```
 </div>
-Great!  Our model seems to be effectively learning to solve the problem at hand.
+Great! Our model seems to be effectively learning to solve the problem at hand.
 
 We can also write our own custom loss function using TNP.
 
@@ -166,8 +182,8 @@ evaluate_model(model)
 
 <div class="k-default-codeblock">
 ```
-Mean absolute percent error before training:  79.84039306640625
-Mean absolute percent error after training: 28.658035278320312
+Mean absolute percent error before training:  99.8993911743164
+Mean absolute percent error after training: 42.862823486328125
 
 ```
 </div>
@@ -200,7 +216,7 @@ class TNPDense(keras.layers.Layer):
         self.bias = self.add_weight(
             name="bias",
             shape=(self.units,),
-            initializer="random_normal",
+            initializer="zeros",
             trainable=True,
         )
 
@@ -227,30 +243,54 @@ model.compile(
     loss="mean_squared_error",
     metrics=[keras.metrics.MeanAbsolutePercentageError()],
 )
-model.build((None, 13,))
+model.build((None, input_dim))
 model.summary()
 
 evaluate_model(model)
 ```
 
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold">Model: "sequential"</span>
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━┓
+┃<span style="font-weight: bold"> Layer (type)                    </span>┃<span style="font-weight: bold"> Output Shape              </span>┃<span style="font-weight: bold">    Param # </span>┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━┩
+│ tnp_dense (<span style="color: #0087ff; text-decoration-color: #0087ff">TNPDense</span>)            │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">3</span>)                 │         <span style="color: #00af00; text-decoration-color: #00af00">27</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ tnp_dense_1 (<span style="color: #0087ff; text-decoration-color: #0087ff">TNPDense</span>)          │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">3</span>)                 │         <span style="color: #00af00; text-decoration-color: #00af00">12</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ tnp_dense_2 (<span style="color: #0087ff; text-decoration-color: #0087ff">TNPDense</span>)          │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>)                 │          <span style="color: #00af00; text-decoration-color: #00af00">4</span> │
+└─────────────────────────────────┴───────────────────────────┴────────────┘
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Total params: </span><span style="color: #00af00; text-decoration-color: #00af00">43</span> (172.00 B)
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Trainable params: </span><span style="color: #00af00; text-decoration-color: #00af00">43</span> (172.00 B)
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Non-trainable params: </span><span style="color: #00af00; text-decoration-color: #00af00">0</span> (0.00 B)
+</pre>
+
+
+
 <div class="k-default-codeblock">
 ```
-Model: "sequential"
-_________________________________________________________________
-Layer (type)                 Output Shape              Param #   
-=================================================================
-tnp_dense (TNPDense)         (None, 3)                 42        
-_________________________________________________________________
-tnp_dense_1 (TNPDense)       (None, 3)                 12        
-_________________________________________________________________
-tnp_dense_2 (TNPDense)       (None, 1)                 4         
-=================================================================
-Total params: 58
-Trainable params: 58
-Non-trainable params: 0
-_________________________________________________________________
-Mean absolute percent error before training:  101.17143249511719
-Mean absolute percent error after training: 23.479856491088867
+Mean absolute percent error before training:  99.99999237060547
+Mean absolute percent error after training: 42.25301742553711
 
 ```
 </div>
@@ -277,30 +317,54 @@ model.compile(
     loss="mean_squared_error",
     metrics=[keras.metrics.MeanAbsolutePercentageError()],
 )
-model.build((None, 13,))
+model.build((None, input_dim))
 model.summary()
 
 evaluate_model(model)
 ```
 
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold">Model: "sequential_1"</span>
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━┓
+┃<span style="font-weight: bold"> Layer (type)                    </span>┃<span style="font-weight: bold"> Output Shape              </span>┃<span style="font-weight: bold">    Param # </span>┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━┩
+│ tnp_dense_3 (<span style="color: #0087ff; text-decoration-color: #0087ff">TNPDense</span>)          │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">3</span>)                 │         <span style="color: #00af00; text-decoration-color: #00af00">27</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ dense (<span style="color: #0087ff; text-decoration-color: #0087ff">Dense</span>)                   │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">3</span>)                 │         <span style="color: #00af00; text-decoration-color: #00af00">12</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ tnp_dense_4 (<span style="color: #0087ff; text-decoration-color: #0087ff">TNPDense</span>)          │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>)                 │          <span style="color: #00af00; text-decoration-color: #00af00">4</span> │
+└─────────────────────────────────┴───────────────────────────┴────────────┘
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Total params: </span><span style="color: #00af00; text-decoration-color: #00af00">43</span> (172.00 B)
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Trainable params: </span><span style="color: #00af00; text-decoration-color: #00af00">43</span> (172.00 B)
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Non-trainable params: </span><span style="color: #00af00; text-decoration-color: #00af00">0</span> (0.00 B)
+</pre>
+
+
+
 <div class="k-default-codeblock">
 ```
-Model: "sequential_1"
-_________________________________________________________________
-Layer (type)                 Output Shape              Param #   
-=================================================================
-tnp_dense_3 (TNPDense)       (None, 3)                 42        
-_________________________________________________________________
-dense (Dense)                (None, 3)                 12        
-_________________________________________________________________
-tnp_dense_4 (TNPDense)       (None, 1)                 4         
-=================================================================
-Total params: 58
-Trainable params: 58
-Non-trainable params: 0
-_________________________________________________________________
-Mean absolute percent error before training:  104.59967041015625
-Mean absolute percent error after training: 27.712949752807617
+Mean absolute percent error before training:  100.0
+Mean absolute percent error after training: 44.0278205871582
 
 ```
 </div>
@@ -332,30 +396,59 @@ with strategy.scope():
         loss="mean_squared_error",
         metrics=[keras.metrics.MeanAbsolutePercentageError()],
     )
-    model.build((None, 13,))
+    model.build((None, input_dim))
     model.summary()
     evaluate_model(model)
 ```
 
 <div class="k-default-codeblock">
 ```
-Running with strategy: _DefaultDistributionStrategy
-Model: "sequential_2"
-_________________________________________________________________
-Layer (type)                 Output Shape              Param #   
-=================================================================
-tnp_dense_5 (TNPDense)       (None, 3)                 42        
-_________________________________________________________________
-tnp_dense_6 (TNPDense)       (None, 3)                 12        
-_________________________________________________________________
-tnp_dense_7 (TNPDense)       (None, 1)                 4         
-=================================================================
-Total params: 58
-Trainable params: 58
-Non-trainable params: 0
-_________________________________________________________________
-Mean absolute percent error before training:  100.5331039428711
-Mean absolute percent error after training: 20.71842384338379
+INFO:tensorflow:Using MirroredStrategy with devices ('/job:localhost/replica:0/task:0/device:GPU:0',)
+Running with strategy: MirroredStrategy
+
+```
+</div>
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold">Model: "sequential_2"</span>
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━┓
+┃<span style="font-weight: bold"> Layer (type)                    </span>┃<span style="font-weight: bold"> Output Shape              </span>┃<span style="font-weight: bold">    Param # </span>┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━┩
+│ tnp_dense_5 (<span style="color: #0087ff; text-decoration-color: #0087ff">TNPDense</span>)          │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">3</span>)                 │         <span style="color: #00af00; text-decoration-color: #00af00">27</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ tnp_dense_6 (<span style="color: #0087ff; text-decoration-color: #0087ff">TNPDense</span>)          │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">3</span>)                 │         <span style="color: #00af00; text-decoration-color: #00af00">12</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ tnp_dense_7 (<span style="color: #0087ff; text-decoration-color: #0087ff">TNPDense</span>)          │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>)                 │          <span style="color: #00af00; text-decoration-color: #00af00">4</span> │
+└─────────────────────────────────┴───────────────────────────┴────────────┘
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Total params: </span><span style="color: #00af00; text-decoration-color: #00af00">43</span> (172.00 B)
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Trainable params: </span><span style="color: #00af00; text-decoration-color: #00af00">43</span> (172.00 B)
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Non-trainable params: </span><span style="color: #00af00; text-decoration-color: #00af00">0</span> (0.00 B)
+</pre>
+
+
+
+<div class="k-default-codeblock">
+```
+Mean absolute percent error before training:  99.99930572509766
+Mean absolute percent error after training: 49.11731719970703
 
 ```
 </div>
@@ -379,7 +472,10 @@ To load the TensorBoard from a Jupyter notebook, you can run the following magic
 
 ```python
 models = [
-    (TNPForwardFeedRegressionNetwork(blocks=[3, 3]), "TNPForwardFeedRegressionNetwork"),
+    (
+        TNPForwardFeedRegressionNetwork(blocks=[3, 3]),
+        "TNPForwardFeedRegressionNetwork",
+    ),
     (create_layered_tnp_model(), "layered_tnp_model"),
     (create_mixed_model(), "mixed_model"),
 ]
@@ -396,9 +492,15 @@ for model, model_name in models:
         verbose=0,
         callbacks=[keras.callbacks.TensorBoard(log_dir=f"logs/{model_name}")],
     )
-``` 
+```
 
+<div class="k-default-codeblock">
+```
+/opt/conda/envs/keras-tensorflow/lib/python3.10/site-packages/keras/src/callbacks/tensorboard.py:676: UserWarning: Model failed to serialize as JSON. Ignoring... Invalid format specifier
+  warnings.warn(f"Model failed to serialize as JSON. Ignoring... {exc}")
 
+```
+</div>
 To load the TensorBoard from a Jupyter notebook you can use the `%tensorboard` magic:
 
 ```
