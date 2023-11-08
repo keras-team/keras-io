@@ -34,7 +34,7 @@ token, keeping the remaining components of StableDiffusion frozen.
 
 This guide shows you how to fine-tune the StableDiffusion model shipped in KerasCV
 using the Textual-Inversion algorithm.  By the end of the guide, you will be able to
-write the "Gandalf the Gray as a <my-funny-cat-token>".
+write the "Gandalf the Gray as a &lt;my-funny-cat-token&gt;".
 
 ![https://i.imgur.com/rcb1Yfx.png](https://i.imgur.com/rcb1Yfx.png)
 
