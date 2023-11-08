@@ -32,18 +32,19 @@ inter-class relationships learned by the teacher.
 
 
 ```python
-import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras import layers
-import numpy as np
+import os
 
+import keras
+from keras import layers
+from keras import ops
+import numpy as np
 ```
 
 ---
 ## Construct `Distiller()` class
 
-The custom `Distiller()` class, overrides the `Model` methods `train_step`, `test_step`,
-and `compile()`. In order to use the distiller, we need:
+The custom `Distiller()` class, overrides the `Model` methods `compile`, `compute_loss`,
+and `call`. In order to use the distiller, we need:
 
 - A trained teacher model
 - A student model to train
@@ -53,12 +54,9 @@ soft student predictions and the soft teacher labels
 - An `alpha` factor to weight the student and distillation loss
 - An optimizer for the student and (optional) metrics to evaluate performance
 
-In the `train_step` method, we perform a forward pass of both the teacher and student,
-calculate the loss with weighting of the `student_loss` and `distillation_loss` by `alpha` and
-`1 - alpha`, respectively, and perform the backward pass. Note: only the student weights are updated,
-and therefore we only calculate the gradients for the student weights.
-
-In the `test_step` method, we evaluate the student model on the provided dataset.
+In the `compute_loss` method, we perform a forward pass of both the teacher and student,
+calculate the loss with weighting of the `student_loss` and `distillation_loss` by `alpha`
+and `1 - alpha`, respectively. Note: only the student weights are updated.
 
 
 ```python
@@ -78,7 +76,7 @@ class Distiller(keras.Model):
         alpha=0.1,
         temperature=3,
     ):
-        """ Configure the distiller.
+        """Configure the distiller.
 
         Args:
             optimizer: Keras optimizer for the student weights
@@ -97,67 +95,22 @@ class Distiller(keras.Model):
         self.alpha = alpha
         self.temperature = temperature
 
-    def train_step(self, data):
-        # Unpack data
-        x, y = data
+    def compute_loss(
+        self, x=None, y=None, y_pred=None, sample_weight=None, allow_empty=False
+    ):
+        teacher_pred = self.teacher(x, training=False)
+        student_loss = self.student_loss_fn(y, y_pred)
 
-        # Forward pass of teacher
-        teacher_predictions = self.teacher(x, training=False)
+        distillation_loss = self.distillation_loss_fn(
+            ops.softmax(teacher_pred / self.temperature, axis=1),
+            ops.softmax(y_pred / self.temperature, axis=1),
+        ) * (self.temperature**2)
 
-        with tf.GradientTape() as tape:
-            # Forward pass of student
-            student_predictions = self.student(x, training=True)
+        loss = self.alpha * student_loss + (1 - self.alpha) * distillation_loss
+        return loss
 
-            # Compute losses
-            student_loss = self.student_loss_fn(y, student_predictions)
-
-            # Compute scaled distillation loss from https://arxiv.org/abs/1503.02531
-            # The magnitudes of the gradients produced by the soft targets scale
-            # as 1/T^2, multiply them by T^2 when using both hard and soft targets.
-            distillation_loss = (
-                self.distillation_loss_fn(
-                    tf.nn.softmax(teacher_predictions / self.temperature, axis=1),
-                    tf.nn.softmax(student_predictions / self.temperature, axis=1),
-                )
-                * self.temperature**2
-            )
-
-            loss = self.alpha * student_loss + (1 - self.alpha) * distillation_loss
-
-        # Compute gradients
-        trainable_vars = self.student.trainable_variables
-        gradients = tape.gradient(loss, trainable_vars)
-
-        # Update weights
-        self.optimizer.apply_gradients(zip(gradients, trainable_vars))
-
-        # Update the metrics configured in `compile()`.
-        self.compiled_metrics.update_state(y, student_predictions)
-
-        # Return a dict of performance
-        results = {m.name: m.result() for m in self.metrics}
-        results.update(
-            {"student_loss": student_loss, "distillation_loss": distillation_loss}
-        )
-        return results
-
-    def test_step(self, data):
-        # Unpack the data
-        x, y = data
-
-        # Compute predictions
-        y_prediction = self.student(x, training=False)
-
-        # Calculate the loss
-        student_loss = self.student_loss_fn(y, y_prediction)
-
-        # Update the metrics.
-        self.compiled_metrics.update_state(y, y_prediction)
-
-        # Return a dict of performance
-        results = {m.name: m.result() for m in self.metrics}
-        results.update({"student_loss": student_loss})
-        return results
+    def call(self, x):
+        return self.student(x)
 
 ```
 
@@ -175,7 +128,7 @@ teacher = keras.Sequential(
     [
         keras.Input(shape=(28, 28, 1)),
         layers.Conv2D(256, (3, 3), strides=(2, 2), padding="same"),
-        layers.LeakyReLU(alpha=0.2),
+        layers.LeakyReLU(negative_slope=0.2),
         layers.MaxPooling2D(pool_size=(2, 2), strides=(1, 1), padding="same"),
         layers.Conv2D(512, (3, 3), strides=(2, 2), padding="same"),
         layers.Flatten(),
@@ -189,7 +142,7 @@ student = keras.Sequential(
     [
         keras.Input(shape=(28, 28, 1)),
         layers.Conv2D(16, (3, 3), strides=(2, 2), padding="same"),
-        layers.LeakyReLU(alpha=0.2),
+        layers.LeakyReLU(negative_slope=0.2),
         layers.MaxPooling2D(pool_size=(2, 2), strides=(1, 1), padding="same"),
         layers.Conv2D(32, (3, 3), strides=(2, 2), padding="same"),
         layers.Flatten(),
@@ -206,7 +159,8 @@ student_scratch = keras.models.clone_model(student)
 ## Prepare the dataset
 
 The dataset used for training the teacher and distilling the teacher is
-[MNIST](https://keras.io/api/datasets/mnist/), and the procedure would be equivalent for any other
+[MNIST](https://keras.io/api/datasets/mnist/), and the procedure would be equivalent for
+any other
 dataset, e.g. [CIFAR-10](https://keras.io/api/datasets/cifar10/), with a suitable choice
 of models. Both the student and teacher are trained on the training set and evaluated on
 the test set.
@@ -249,13 +203,18 @@ teacher.evaluate(x_test, y_test)
 <div class="k-default-codeblock">
 ```
 Epoch 1/5
-1875/1875 [==============================] - 248s 132ms/step - loss: 0.2438 - sparse_categorical_accuracy: 0.9220
+ 1875/1875 ━━━━━━━━━━━━━━━━━━━━ 8s 3ms/step - loss: 0.2437 - sparse_categorical_accuracy: 0.9254
 Epoch 2/5
-1875/1875 [==============================] - 263s 140ms/step - loss: 0.0881 - sparse_categorical_accuracy: 0.9738
+ 1875/1875 ━━━━━━━━━━━━━━━━━━━━ 5s 3ms/step - loss: 0.0907 - sparse_categorical_accuracy: 0.9732
 Epoch 3/5
-1875/1875 [==============================] - 245s 131ms/step - loss: 0.0650 - sparse_categorical_accuracy: 0.9811
+ 1875/1875 ━━━━━━━━━━━━━━━━━━━━ 5s 3ms/step - loss: 0.0767 - sparse_categorical_accuracy: 0.9771
+Epoch 4/5
+ 1875/1875 ━━━━━━━━━━━━━━━━━━━━ 5s 3ms/step - loss: 0.0720 - sparse_categorical_accuracy: 0.9785
 Epoch 5/5
- 363/1875 [====>.........................] - ETA: 3:18 - loss: 0.0555 - sparse_categorical_accuracy: 0.9839
+ 1875/1875 ━━━━━━━━━━━━━━━━━━━━ 5s 3ms/step - loss: 0.0611 - sparse_categorical_accuracy: 0.9823
+ 313/313 ━━━━━━━━━━━━━━━━━━━━ 1s 3ms/step - loss: 0.1086 - sparse_categorical_accuracy: 0.9725
+
+[0.08996167778968811, 0.9774000644683838]
 
 ```
 </div>
@@ -289,11 +248,14 @@ distiller.evaluate(x_test, y_test)
 <div class="k-default-codeblock">
 ```
 Epoch 1/3
-1875/1875 [==============================] - 242s 129ms/step - sparse_categorical_accuracy: 0.9761 - student_loss: 0.1526 - distillation_loss: 0.0226
+ 1875/1875 ━━━━━━━━━━━━━━━━━━━━ 8s 3ms/step - loss: 1.7962 - sparse_categorical_accuracy: 0.7333
 Epoch 2/3
-1875/1875 [==============================] - 281s 150ms/step - sparse_categorical_accuracy: 0.9863 - student_loss: 0.1384 - distillation_loss: 0.0185
+ 1875/1875 ━━━━━━━━━━━━━━━━━━━━ 8s 4ms/step - loss: 0.0321 - sparse_categorical_accuracy: 0.9472
 Epoch 3/3
- 399/1875 [=====>........................] - ETA: 3:27 - sparse_categorical_accuracy: 0.9896 - student_loss: 0.1300 - distillation_loss: 0.0182
+ 1875/1875 ━━━━━━━━━━━━━━━━━━━━ 6s 3ms/step - loss: 0.0228 - sparse_categorical_accuracy: 0.9609
+ 313/313 ━━━━━━━━━━━━━━━━━━━━ 2s 4ms/step - loss: 0.0199 - sparse_categorical_accuracy: 0.9624
+
+[0.01797667145729065, 0.9681000709533691]
 
 ```
 </div>
@@ -320,14 +282,14 @@ student_scratch.evaluate(x_test, y_test)
 <div class="k-default-codeblock">
 ```
 Epoch 1/3
-1875/1875 [==============================] - 4s 2ms/step - loss: 0.4731 - sparse_categorical_accuracy: 0.8550
+ 1875/1875 ━━━━━━━━━━━━━━━━━━━━ 4s 1ms/step - loss: 0.4568 - sparse_categorical_accuracy: 0.8658
 Epoch 2/3
-1875/1875 [==============================] - 4s 2ms/step - loss: 0.0966 - sparse_categorical_accuracy: 0.9710
+ 1875/1875 ━━━━━━━━━━━━━━━━━━━━ 3s 1ms/step - loss: 0.1011 - sparse_categorical_accuracy: 0.9681
 Epoch 3/3
-1875/1875 [==============================] - 4s 2ms/step - loss: 0.0750 - sparse_categorical_accuracy: 0.9773
-313/313 [==============================] - 0s 963us/step - loss: 0.0691 - sparse_categorical_accuracy: 0.9778
+ 1875/1875 ━━━━━━━━━━━━━━━━━━━━ 3s 1ms/step - loss: 0.0762 - sparse_categorical_accuracy: 0.9761
+ 313/313 ━━━━━━━━━━━━━━━━━━━━ 1s 2ms/step - loss: 0.0921 - sparse_categorical_accuracy: 0.9707
 
-[0.06905383616685867, 0.9778000116348267]
+[0.07710467278957367, 0.9760000705718994]
 
 ```
 </div>
