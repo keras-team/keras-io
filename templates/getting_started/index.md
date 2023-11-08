@@ -17,9 +17,19 @@ in computer vision, natural language processing, and generative AI.
 ---
 
 ## Installation
+ 
+You can install Keras from PyPI via:
 
-You can install Keras from PyPI via `pip install keras`.
-You can check your local Keras version number via `import keras; print(keras.__version__)`.
+```
+pip install keras
+```
+
+You can check your local Keras version number via:
+
+```python
+import keras
+print(keras.__version__)
+```
 
 To use Keras, you will also need to install a backend framework -- either JAX, TensorFlow, or PyTorch.
 
@@ -54,7 +64,7 @@ If you want to attempt to create a "universal environment" where any backend can
 ## Configuring your backend
 
 You can export the environment variable `KERAS_BACKEND`
-or you can edit your local config file at `~/.keras/keras.json`` to configure your backend.
+or you can edit your local config file at `~/.keras/keras.json` to configure your backend.
 Available backend options are: `"jax"`, `"tensorflow"`, `"torch"`. Example:
 
 ```
@@ -63,7 +73,7 @@ export KERAS_BACKEND="jax"
 
 In Colab, you can do:
 
-```
+```python
 import os
 os.environ["KERAS_BACKEND"] = "jax"
 import keras
@@ -83,8 +93,8 @@ install `keras==2.14.0`. That version of Keras is then available via both `impor
 Starting with TensorFlow 2.16, doing `pip install tensorflow` will install Keras 3. When you have TensorFlow >= 2.16
 and Keras 3, then by default `from tensorflow import keras` (`tf.keras`) will be Keras 3.
 
-Meanwhile, the legacy Keras 2 package is still being released regularly and is available on PyPI as `tf-keras`/`tf_keras`
-(note that `-` and `_` are equivalent in PyPI package names).
+Meanwhile, the legacy Keras 2 package is still being released regularly and is available on PyPI as `tf_keras`
+(or equivalently `tf-keras` -- note that `-` and `_` are equivalent in PyPI package names).
 To use it, you can install it via `pip install tf_keras` then import it via `import tf_keras as keras`.
 
 Should you want `tf.keras` to stay on Keras 2 after upgrading to TensorFlow 2.16+, you can configure your TensorFlow installation

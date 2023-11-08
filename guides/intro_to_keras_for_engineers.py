@@ -344,10 +344,9 @@ of Keras 3. Next, you can learn about:
 
 ### How to customize what happens in `fit()`
 
-Want to implement a non-standard training algorithm yourself
-(e.g. a GAN training routine) but still want to benefit from
-the power and usability of `fit()`? It's really easy to customize
-`fit()` to support arbitrary use cases.
+Want to implement a non-standard training algorithm yourself but still want to benefit from
+the power and usability of `fit()`? It's easy to customize
+`fit()` to support arbitrary use cases:
 
 - [Customizing what happens in `fit()` with TensorFlow](http://keras.io/guides/custom_train_step_in_tensorflow/)
 - [Customizing what happens in `fit()` with JAX](http://keras.io/guides/custom_train_step_in_jax/)
@@ -358,7 +357,6 @@ the power and usability of `fit()`? It's really easy to customize
 - [Writing a training loop from scratch in TensorFlow](http://keras.io/guides/writing_a_custom_training_loop_in_tensorflow/)
 - [Writing a training loop from scratch in JAX](http://keras.io/guides/writing_a_custom_training_loop_in_jax/)
 - [Writing a training loop from scratch in PyTorch](http://keras.io/guides/writing_a_custom_training_loop_in_torch/)
-
 
 ## How to distribute training
 
