@@ -152,6 +152,7 @@ base_learning_rate = 1e-4
 
 """
 Calculate scaled batch size and learning rate
+
 """
 scaled_batch_size = base_batch_size * strategy.num_replicas_in_sync
 scaled_learning_rate = base_learning_rate * strategy.num_replicas_in_sync
@@ -159,6 +160,7 @@ scaled_learning_rate = base_learning_rate * strategy.num_replicas_in_sync
 """
 It's a common practice to use a decayed learning rate in NLP training/tuning. We'll
 use `PolynomialDecay` schedule here.
+
 """
 
 total_training_steps = sum(1 for _ in wiki_train_ds.as_numpy_iterator()) * EPOCHS
