@@ -1526,7 +1526,7 @@ KERAS_CORE_API_MASTER = {
                         "keras_core.utils.split_dataset",
                         "keras_core.utils.get_file",
                         "keras_core.utils.Progbar",
-                        "keras_core.utils.Sequence",
+                        "keras_core.utils.PyDataset",
                         "keras_core.utils.to_categorical",
                         "keras_core.utils.normalize",
                     ],
