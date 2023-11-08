@@ -203,18 +203,18 @@ teacher.evaluate(x_test, y_test)
 <div class="k-default-codeblock">
 ```
 Epoch 1/5
- 1875/1875 ━━━━━━━━━━━━━━━━━━━━ 8s 3ms/step - loss: 0.2437 - sparse_categorical_accuracy: 0.9254
+ 1875/1875 ━━━━━━━━━━━━━━━━━━━━ 8s 3ms/step - loss: 0.2408 - sparse_categorical_accuracy: 0.9259
 Epoch 2/5
- 1875/1875 ━━━━━━━━━━━━━━━━━━━━ 5s 3ms/step - loss: 0.0907 - sparse_categorical_accuracy: 0.9732
+ 1875/1875 ━━━━━━━━━━━━━━━━━━━━ 5s 3ms/step - loss: 0.0912 - sparse_categorical_accuracy: 0.9726
 Epoch 3/5
- 1875/1875 ━━━━━━━━━━━━━━━━━━━━ 5s 3ms/step - loss: 0.0767 - sparse_categorical_accuracy: 0.9771
+ 1875/1875 ━━━━━━━━━━━━━━━━━━━━ 7s 4ms/step - loss: 0.0758 - sparse_categorical_accuracy: 0.9777
 Epoch 4/5
- 1875/1875 ━━━━━━━━━━━━━━━━━━━━ 5s 3ms/step - loss: 0.0720 - sparse_categorical_accuracy: 0.9785
+ 1875/1875 ━━━━━━━━━━━━━━━━━━━━ 5s 3ms/step - loss: 0.0690 - sparse_categorical_accuracy: 0.9797
 Epoch 5/5
- 1875/1875 ━━━━━━━━━━━━━━━━━━━━ 5s 3ms/step - loss: 0.0611 - sparse_categorical_accuracy: 0.9823
- 313/313 ━━━━━━━━━━━━━━━━━━━━ 1s 3ms/step - loss: 0.1086 - sparse_categorical_accuracy: 0.9725
+ 1875/1875 ━━━━━━━━━━━━━━━━━━━━ 5s 3ms/step - loss: 0.0582 - sparse_categorical_accuracy: 0.9825
+ 313/313 ━━━━━━━━━━━━━━━━━━━━ 1s 3ms/step - loss: 0.0931 - sparse_categorical_accuracy: 0.9760
 
-[0.08996167778968811, 0.9774000644683838]
+[0.09044107794761658, 0.978100061416626]
 
 ```
 </div>
@@ -248,14 +248,14 @@ distiller.evaluate(x_test, y_test)
 <div class="k-default-codeblock">
 ```
 Epoch 1/3
- 1875/1875 ━━━━━━━━━━━━━━━━━━━━ 8s 3ms/step - loss: 1.7962 - sparse_categorical_accuracy: 0.7333
+ 1875/1875 ━━━━━━━━━━━━━━━━━━━━ 8s 3ms/step - loss: 1.8752 - sparse_categorical_accuracy: 0.7357
 Epoch 2/3
- 1875/1875 ━━━━━━━━━━━━━━━━━━━━ 8s 4ms/step - loss: 0.0321 - sparse_categorical_accuracy: 0.9472
+ 1875/1875 ━━━━━━━━━━━━━━━━━━━━ 6s 3ms/step - loss: 0.0333 - sparse_categorical_accuracy: 0.9475
 Epoch 3/3
- 1875/1875 ━━━━━━━━━━━━━━━━━━━━ 6s 3ms/step - loss: 0.0228 - sparse_categorical_accuracy: 0.9609
- 313/313 ━━━━━━━━━━━━━━━━━━━━ 2s 4ms/step - loss: 0.0199 - sparse_categorical_accuracy: 0.9624
+ 1875/1875 ━━━━━━━━━━━━━━━━━━━━ 6s 3ms/step - loss: 0.0223 - sparse_categorical_accuracy: 0.9621
+ 313/313 ━━━━━━━━━━━━━━━━━━━━ 2s 4ms/step - loss: 0.0189 - sparse_categorical_accuracy: 0.9629
 
-[0.01797667145729065, 0.9681000709533691]
+[0.017046602442860603, 0.969200074672699]
 
 ```
 </div>
@@ -282,14 +282,14 @@ student_scratch.evaluate(x_test, y_test)
 <div class="k-default-codeblock">
 ```
 Epoch 1/3
- 1875/1875 ━━━━━━━━━━━━━━━━━━━━ 4s 1ms/step - loss: 0.4568 - sparse_categorical_accuracy: 0.8658
+ 1875/1875 ━━━━━━━━━━━━━━━━━━━━ 4s 1ms/step - loss: 0.5111 - sparse_categorical_accuracy: 0.8460
 Epoch 2/3
- 1875/1875 ━━━━━━━━━━━━━━━━━━━━ 3s 1ms/step - loss: 0.1011 - sparse_categorical_accuracy: 0.9681
+ 1875/1875 ━━━━━━━━━━━━━━━━━━━━ 3s 1ms/step - loss: 0.1039 - sparse_categorical_accuracy: 0.9687
 Epoch 3/3
- 1875/1875 ━━━━━━━━━━━━━━━━━━━━ 3s 1ms/step - loss: 0.0762 - sparse_categorical_accuracy: 0.9761
- 313/313 ━━━━━━━━━━━━━━━━━━━━ 1s 2ms/step - loss: 0.0921 - sparse_categorical_accuracy: 0.9707
+ 1875/1875 ━━━━━━━━━━━━━━━━━━━━ 3s 1ms/step - loss: 0.0748 - sparse_categorical_accuracy: 0.9780
+ 313/313 ━━━━━━━━━━━━━━━━━━━━ 1s 2ms/step - loss: 0.0744 - sparse_categorical_accuracy: 0.9737
 
-[0.07710467278957367, 0.9760000705718994]
+[0.0629437193274498, 0.9778000712394714]
 
 ```
 </div>
