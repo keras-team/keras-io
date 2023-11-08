@@ -79,55 +79,6 @@ tf.config.set_logical_device_configuration(
 logical_devices = tf.config.list_logical_devices("GPU")
 logical_devices
 
-
-PRETRAINING_BATCH_SIZE = 128
-
-"""
-First, we need to download and preprocess the wikitext-2 dataset. This dataset will be
-used for pretraining the BERT model. We will filter out short lines to ensure that the
-data has enough context for training.
-"""
-
-keras.utils.get_file(
-    origin="https://s3.amazonaws.com/research.metamind.io/wikitext/wikitext-2-v1.zip",
-    extract=True,
-)
-wiki_dir = os.path.expanduser("~/.keras/datasets/wikitext-2/")
-
-# Load wikitext-103 and filter out short lines.
-wiki_train_ds = (
-    tf.data.TextLineDataset(
-        wiki_dir + "wiki.train.tokens",
-    )
-    .filter(lambda x: tf.strings.length(x) > 100)
-    .shuffle(buffer_size=500)
-    .batch(PRETRAINING_BATCH_SIZE)
-    .cache()
-    .prefetch(tf.data.AUTOTUNE)
-)
-wiki_val_ds = (
-    tf.data.TextLineDataset(wiki_dir + "wiki.valid.tokens")
-    .filter(lambda x: tf.strings.length(x) > 100)
-    .shuffle(buffer_size=500)
-    .batch(PRETRAINING_BATCH_SIZE)
-    .cache()
-    .prefetch(tf.data.AUTOTUNE)
-)
-wiki_test_ds = (
-    tf.data.TextLineDataset(wiki_dir + "wiki.test.tokens")
-    .filter(lambda x: tf.strings.length(x) > 100)
-    .shuffle(buffer_size=500)
-    .batch(PRETRAINING_BATCH_SIZE)
-    .cache()
-    .prefetch(tf.data.AUTOTUNE)
-)
-
-"""
-In the above code, we download the wikitext-2 dataset and extract it. Then, we define
-three datasets: wiki_train_ds, wiki_val_ds, and wiki_test_ds. These datasets are
-filtered to remove short lines and are batched for efficient training.
-"""
-
 EPOCHS = 3
 
 
@@ -156,6 +107,52 @@ Calculate scaled batch size and learning rate
 """
 scaled_batch_size = base_batch_size * strategy.num_replicas_in_sync
 scaled_learning_rate = base_learning_rate * strategy.num_replicas_in_sync
+
+"""
+Now, we need to download and preprocess the wikitext-2 dataset. This dataset will be
+used for pretraining the BERT model. We will filter out short lines to ensure that the
+data has enough context for training.
+"""
+
+keras.utils.get_file(
+    origin="https://s3.amazonaws.com/research.metamind.io/wikitext/wikitext-2-v1.zip",
+    extract=True,
+)
+wiki_dir = os.path.expanduser("~/.keras/datasets/wikitext-2/")
+
+# Load wikitext-103 and filter out short lines.
+wiki_train_ds = (
+    tf.data.TextLineDataset(
+        wiki_dir + "wiki.train.tokens",
+    )
+    .filter(lambda x: tf.strings.length(x) > 100)
+    .shuffle(buffer_size=500)
+    .batch(scaled_batch_size)
+    .cache()
+    .prefetch(tf.data.AUTOTUNE)
+)
+wiki_val_ds = (
+    tf.data.TextLineDataset(wiki_dir + "wiki.valid.tokens")
+    .filter(lambda x: tf.strings.length(x) > 100)
+    .shuffle(buffer_size=500)
+    .batch(scaled_batch_size)
+    .cache()
+    .prefetch(tf.data.AUTOTUNE)
+)
+wiki_test_ds = (
+    tf.data.TextLineDataset(wiki_dir + "wiki.test.tokens")
+    .filter(lambda x: tf.strings.length(x) > 100)
+    .shuffle(buffer_size=500)
+    .batch(scaled_batch_size)
+    .cache()
+    .prefetch(tf.data.AUTOTUNE)
+)
+
+"""
+In the above code, we download the wikitext-2 dataset and extract it. Then, we define
+three datasets: wiki_train_ds, wiki_val_ds, and wiki_test_ds. These datasets are
+filtered to remove short lines and are batched for efficient training.
+"""
 
 """
 It's a common practice to use a decayed learning rate in NLP training/tuning. We'll
