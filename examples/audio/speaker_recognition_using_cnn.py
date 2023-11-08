@@ -2,9 +2,10 @@
 Title: Speaker Recognition
 Author: [Fadi Badine](https://twitter.com/fadibadine)
 Date created: 14/06/2020
-Last modified: 03/07/2020
+Last modified: 19/07/2023
 Description: Classify speakers using Fast Fourier Transform (FFT) and a 1D Convnet.
 Accelerator: GPU
+Converted to Keras 3 by: [Fadi Badine](https://twitter.com/fadibadine)
 """
 """
 ## Introduction
@@ -39,18 +40,27 @@ installed `ffmpg`.
 """
 
 import os
+
+os.environ["KERAS_BACKEND"] = "tensorflow"
+
 import shutil
 import numpy as np
 
 import tensorflow as tf
-from tensorflow import keras
+import keras
 
 from pathlib import Path
 from IPython.display import display, Audio
 
-# Get the data from https://www.kaggle.com/kongaevans/speaker-recognition-dataset/download
-# and save it to the 'Downloads' folder in your HOME directory
-DATASET_ROOT = os.path.join(os.path.expanduser("~"), "Downloads/16000_pcm_speeches")
+# Get the data from https://www.kaggle.com/kongaevans/speaker-recognition-dataset/
+# and save it to ./speaker-recognition-dataset.zip
+# then unzip it to ./16000_pcm_speeches
+"""shell
+kaggle datasets download -d kongaevans/speaker-recognition-dataset
+unzip -qq speaker-recognition-dataset.zip
+"""
+
+DATASET_ROOT = "16000_pcm_speeches"
 
 # The folders in which we will put the audio samples and the noise samples
 AUDIO_SUBFOLDER = "audio"
@@ -78,7 +88,7 @@ SAMPLING_RATE = 16000
 SCALE = 0.5
 
 BATCH_SIZE = 128
-EPOCHS = 100
+EPOCHS = 1
 
 
 """
@@ -129,14 +139,6 @@ main_directory/
 ```
 """
 
-# If folder `audio`, does not exist, create it, otherwise do nothing
-if os.path.exists(DATASET_AUDIO_PATH) is False:
-    os.makedirs(DATASET_AUDIO_PATH)
-
-# If folder `noise`, does not exist, create it, otherwise do nothing
-if os.path.exists(DATASET_NOISE_PATH) is False:
-    os.makedirs(DATASET_NOISE_PATH)
-
 for folder in os.listdir(DATASET_ROOT):
     if os.path.isdir(os.path.join(DATASET_ROOT, folder)):
         if folder in [AUDIO_SUBFOLDER, NOISE_SUBFOLDER]:
@@ -177,7 +179,8 @@ for subdir in os.listdir(DATASET_NOISE_PATH):
             for filepath in os.listdir(subdir_path)
             if filepath.endswith(".wav")
         ]
-
+if not noise_paths:
+    raise RuntimeError(f"Could not find any files at {DATASET_NOISE_PATH}")
 print(
     "Found {} files belonging to {} directories".format(
         len(noise_paths), len(os.listdir(DATASET_NOISE_PATH))
@@ -401,13 +404,15 @@ model.summary()
 
 # Compile the model using Adam's default learning rate
 model.compile(
-    optimizer="Adam", loss="sparse_categorical_crossentropy", metrics=["accuracy"]
+    optimizer="Adam",
+    loss="sparse_categorical_crossentropy",
+    metrics=["accuracy"],
 )
 
 # Add callbacks:
 # 'EarlyStopping' to stop training when the model is not enhancing anymore
 # 'ModelCheckPoint' to always keep the model that has the best val_accuracy
-model_save_filename = "model.h5"
+model_save_filename = "model.keras"
 
 earlystopping_cb = keras.callbacks.EarlyStopping(patience=10, restore_best_weights=True)
 mdlcheckpoint_cb = keras.callbacks.ModelCheckpoint(
