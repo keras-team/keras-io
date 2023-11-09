@@ -50,9 +50,15 @@ import tensorflow as tf
 import numpy as np
 
 """
-## Switching TensorFlow code to Keras 3.0 - TensorFlow backend
+## Transitioning to Keras 3.0 with TensorFlow Backend
 
-Follow these instructions to migrate your existing TensorFlow code to Keras 3.0 and run
+Suggested recommendation: Replace instances of tf.keras with keras. If you are
+still using the tensorflow backend, this change is not mandatory. Both tf.keras
+and keras will refer to the same installed version of keras by default. However,
+adopting the direct import of keras is the preferred practice, making your codebase
+more adaptable for potential framework switches in the future.
+
+Follow these instructions to migrate your existing TensorFlow code to Keras 3.0 and execute
 it with the TensorFlow backend:
 
 1.   Update imports : replace `from tensorflow import keras` to `import keras`
@@ -536,7 +542,7 @@ low usage.
 """
 
 """
-## Switching TensorFlow code to backend agnostic Keras 3.0
+## Transitioning to Keras 3.0 with Any Backend
 
 Keras 3.0 code with the TensorFlow backend will work with native TensorFlow APIs.
 However, if you want your code to be backend-agnostic, you will need to replace all of
