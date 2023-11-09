@@ -17,9 +17,7 @@ most of the base convolution layer and just customize the convolution op itself 
 This method was introduced in Keras 2.7. So before using the
 `convolution_op()` API, ensure that you are running Keras version 2.7.0 or greater.
 """
-import tensorflow.keras as keras
 
-print(keras.__version__)
 """
 ## A Simple `StandardizedConv2D` implementation
 
@@ -28,9 +26,13 @@ is to override the `convolution_op()` method on a convolution layer subclass.
 Using this approach, we can quickly implement a
 [StandardizedConv2D](https://arxiv.org/abs/1903.10520) as shown below.
 """
+import os
+
+os.environ["KERAS_BACKEND"] = "tensorflow"
+
 import tensorflow as tf
-import tensorflow.keras as keras
-import keras.layers as layers
+import keras
+from keras import layers
 import numpy as np
 
 
@@ -94,7 +96,7 @@ y_test = keras.utils.to_categorical(y_test, num_classes)
 
 model = keras.Sequential(
     [
-        keras.layers.InputLayer(input_shape=input_shape),
+        keras.layers.Input(shape=input_shape),
         StandardizedConv2DWithCall(32, kernel_size=(3, 3), activation="relu"),
         layers.MaxPooling2D(pool_size=(2, 2)),
         StandardizedConv2DWithOverride(64, kernel_size=(3, 3), activation="relu"),
