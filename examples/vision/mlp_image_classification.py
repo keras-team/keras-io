@@ -2,7 +2,7 @@
 Title: Image classification with modern MLP models
 Author: [Khalid Salama](https://www.linkedin.com/in/khalid-salama-24403144/)
 Date created: 2021/05/30
-Last modified: 2023/08/03
+Last modified: 2021/05/30
 Description: Implementing the MLP-Mixer, FNet, and gMLP models for CIFAR-100 image classification.
 Accelerator: GPU
 """
@@ -21,6 +21,14 @@ Fourier Transform.
 The purpose of the example is not to compare between these models, as they might perform differently on
 different datasets with well-tuned hyperparameters. Rather, it is to show simple implementations of their
 main building blocks.
+
+This example requires TensorFlow 2.4 or higher, as well as
+[TensorFlow Addons](https://www.tensorflow.org/addons/overview),
+which can be installed using the following command:
+
+```
+pip install -U tensorflow-addons
+```
 """
 
 """
@@ -28,8 +36,10 @@ main building blocks.
 """
 
 import numpy as np
-import keras
-from keras import layers
+import tensorflow as tf
+from tensorflow import keras
+from tensorflow.keras import layers
+import tensorflow_addons as tfa
 
 """
 ## Prepare the data
@@ -49,7 +59,7 @@ print(f"x_test shape: {x_test.shape} - y_test shape: {y_test.shape}")
 
 weight_decay = 0.0001
 batch_size = 128
-num_epochs = 1  # Recommended num_epochs = 50
+num_epochs = 50
 dropout_rate = 0.2
 image_size = 64  # We'll resize input images to this size.
 patch_size = 8  # Size of the patches to be extracted from the input images.
@@ -74,11 +84,15 @@ def build_classifier(blocks, positional_encoding=False):
     # Augment data.
     augmented = data_augmentation(inputs)
     # Create patches.
-    patches = Patches(patch_size)(augmented)
+    patches = Patches(patch_size, num_patches)(augmented)
     # Encode patches to generate a [batch_size, num_patches, embedding_dim] tensor.
     x = layers.Dense(units=embedding_dim)(patches)
     if positional_encoding:
-        x = x + PositionEmbedding(sequence_length=num_patches)(x)
+        positions = tf.range(start=0, limit=num_patches, delta=1)
+        position_embedding = layers.Embedding(
+            input_dim=num_patches, output_dim=embedding_dim
+        )(positions)
+        x = x + position_embedding
     # Process x using the module blocks.
     x = blocks(x)
     # Apply global average pooling to generate a [batch_size, embedding_dim] representation tensor.
@@ -100,7 +114,7 @@ We implement a utility function to compile, train, and evaluate a given model.
 
 def run_experiment(model):
     # Create Adam optimizer with weight decay.
-    optimizer = keras.optimizers.AdamW(
+    optimizer = tfa.optimizers.AdamW(
         learning_rate=learning_rate,
         weight_decay=weight_decay,
     )
@@ -118,7 +132,7 @@ def run_experiment(model):
         monitor="val_loss", factor=0.5, patience=5
     )
     # Create an early stopping callback.
-    early_stopping = keras.callbacks.EarlyStopping(
+    early_stopping = tf.keras.callbacks.EarlyStopping(
         monitor="val_loss", patience=10, restore_best_weights=True
     )
     # Fit the model.
@@ -162,74 +176,23 @@ data_augmentation.layers[0].adapt(x_train)
 
 
 class Patches(layers.Layer):
-    def __init__(self, patch_size, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(self, patch_size, num_patches):
+        super().__init__()
         self.patch_size = patch_size
+        self.num_patches = num_patches
 
-    def call(self, x):
-        patches = keras.ops.image.extract_patches(x, self.patch_size)
-        batch_size = keras.ops.shape(patches)[0]
-        num_patches = keras.ops.shape(patches)[1] * keras.ops.shape(patches)[2]
-        patch_dim = keras.ops.shape(patches)[3]
-        out = keras.ops.reshape(patches, (batch_size, num_patches, patch_dim))
-        return out
-
-
-"""
-## Implement position embedding as a layer
-"""
-
-
-class PositionEmbedding(keras.layers.Layer):
-    def __init__(
-        self,
-        sequence_length,
-        initializer="glorot_uniform",
-        **kwargs,
-    ):
-        super().__init__(**kwargs)
-        if sequence_length is None:
-            raise ValueError("`sequence_length` must be an Integer, received `None`.")
-        self.sequence_length = int(sequence_length)
-        self.initializer = keras.initializers.get(initializer)
-
-    def get_config(self):
-        config = super().get_config()
-        config.update(
-            {
-                "sequence_length": self.sequence_length,
-                "initializer": keras.initializers.serialize(self.initializer),
-            }
+    def call(self, images):
+        batch_size = tf.shape(images)[0]
+        patches = tf.image.extract_patches(
+            images=images,
+            sizes=[1, self.patch_size, self.patch_size, 1],
+            strides=[1, self.patch_size, self.patch_size, 1],
+            rates=[1, 1, 1, 1],
+            padding="VALID",
         )
-        return config
-
-    def build(self, input_shape):
-        feature_size = input_shape[-1]
-        self.position_embeddings = self.add_weight(
-            name="embeddings",
-            shape=[self.sequence_length, feature_size],
-            initializer=self.initializer,
-            trainable=True,
-        )
-
-        super().build(input_shape)
-
-    def call(self, inputs, start_index=0):
-        shape = keras.ops.shape(inputs)
-        feature_length = shape[-1]
-        sequence_length = shape[-2]
-        # trim to match the length of the input sequence, which might be less
-        # than the sequence_length of the layer.
-        position_embeddings = keras.ops.convert_to_tensor(self.position_embeddings)
-        position_embeddings = keras.ops.slice(
-            position_embeddings,
-            (start_index, 0),
-            (sequence_length, feature_length),
-        )
-        return keras.ops.broadcast_to(position_embeddings, shape)
-
-    def compute_output_shape(self, input_shape):
-        return input_shape
+        patch_dims = patches.shape[-1]
+        patches = tf.reshape(patches, [batch_size, self.num_patches, patch_dims])
+        return patches
 
 
 """
@@ -241,7 +204,7 @@ multi-layer perceptrons (MLPs), that contains two types of MLP layers:
 1. One applied independently to image patches, which mixes the per-location features.
 2. The other applied across patches (along channels), which mixes spatial information.
 
-This is similar to a [depthwise separable convolution based model](https://arxiv.org/abs/1610.02357)
+This is similar to a [depthwise separable convolution based model](https://arxiv.org/pdf/1610.02357.pdf)
 such as the Xception model, but with two chained dense transforms, no max pooling, and layer normalization
 instead of batch normalization.
 """
@@ -257,32 +220,31 @@ class MLPMixerLayer(layers.Layer):
 
         self.mlp1 = keras.Sequential(
             [
-                layers.Dense(units=num_patches, activation="gelu"),
+                layers.Dense(units=num_patches),
+                tfa.layers.GELU(),
                 layers.Dense(units=num_patches),
                 layers.Dropout(rate=dropout_rate),
             ]
         )
         self.mlp2 = keras.Sequential(
             [
-                layers.Dense(units=num_patches, activation="gelu"),
-                layers.Dense(units=hidden_units),
+                layers.Dense(units=num_patches),
+                tfa.layers.GELU(),
+                layers.Dense(units=embedding_dim),
                 layers.Dropout(rate=dropout_rate),
             ]
         )
         self.normalize = layers.LayerNormalization(epsilon=1e-6)
 
-    def build(self, input_shape):
-        return super().build(input_shape)
-
     def call(self, inputs):
         # Apply layer normalization.
         x = self.normalize(inputs)
         # Transpose inputs from [num_batches, num_patches, hidden_units] to [num_batches, hidden_units, num_patches].
-        x_channels = keras.ops.transpose(x, axes=(0, 2, 1))
+        x_channels = tf.linalg.matrix_transpose(x)
         # Apply mlp1 on each channel independently.
         mlp1_outputs = self.mlp1(x_channels)
         # Transpose mlp1_outputs from [num_batches, hidden_dim, num_patches] to [num_batches, num_patches, hidden_units].
-        mlp1_outputs = keras.ops.transpose(mlp1_outputs, axes=(0, 2, 1))
+        mlp1_outputs = tf.linalg.matrix_transpose(mlp1_outputs)
         # Add skip connection.
         x = mlp1_outputs + inputs
         # Apply layer normalization.
@@ -317,7 +279,7 @@ As mentioned in the [MLP-Mixer](https://arxiv.org/abs/2105.01601) paper,
 when pre-trained on large datasets, or with modern regularization schemes,
 the MLP-Mixer attains competitive scores to state-of-the-art models.
 You can obtain better results by increasing the embedding dimensions,
-increasing the number of mixer blocks, and training the model for longer.
+increasing, increasing the number of mixer blocks, and training the model for longer.
 You may also try to increase the size of the input images and use different patch sizes.
 """
 
@@ -337,12 +299,13 @@ in the Transformer block with a parameter-free 2D Fourier transformation layer:
 
 
 class FNetLayer(layers.Layer):
-    def __init__(self, embedding_dim, dropout_rate, *args, **kwargs):
+    def __init__(self, num_patches, embedding_dim, dropout_rate, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         self.ffn = keras.Sequential(
             [
-                layers.Dense(units=embedding_dim, activation="gelu"),
+                layers.Dense(units=embedding_dim),
+                tfa.layers.GELU(),
                 layers.Dropout(rate=dropout_rate),
                 layers.Dense(units=embedding_dim),
             ]
@@ -353,9 +316,10 @@ class FNetLayer(layers.Layer):
 
     def call(self, inputs):
         # Apply fourier transformations.
-        real_part = inputs
-        im_part = keras.ops.zeros_like(inputs)
-        x = keras.ops.fft2((real_part, im_part))[0]
+        x = tf.cast(
+            tf.signal.fft2d(tf.cast(inputs, dtype=tf.dtypes.complex64)),
+            dtype=tf.dtypes.float32,
+        )
         # Add skip connection.
         x = x + inputs
         # Apply layer normalization.
@@ -376,7 +340,7 @@ takes around 8 seconds per epoch.
 """
 
 fnet_blocks = keras.Sequential(
-    [FNetLayer(embedding_dim, dropout_rate) for _ in range(num_blocks)]
+    [FNetLayer(num_patches, embedding_dim, dropout_rate) for _ in range(num_blocks)]
 )
 learning_rate = 0.001
 fnet_classifier = build_classifier(fnet_blocks, positional_encoding=True)
@@ -412,7 +376,8 @@ class gMLPLayer(layers.Layer):
 
         self.channel_projection1 = keras.Sequential(
             [
-                layers.Dense(units=embedding_dim * 2, activation="gelu"),
+                layers.Dense(units=embedding_dim * 2),
+                tfa.layers.GELU(),
                 layers.Dropout(rate=dropout_rate),
             ]
         )
@@ -428,14 +393,14 @@ class gMLPLayer(layers.Layer):
 
     def spatial_gating_unit(self, x):
         # Split x along the channel dimensions.
-        # Tensors u and v will in the shape of [batch_size, num_patchs, embedding_dim].
-        u, v = keras.ops.split(x, indices_or_sections=2, axis=2)
+        # Tensors u and v will in th shape of [batch_size, num_patchs, embedding_dim].
+        u, v = tf.split(x, num_or_size_splits=2, axis=2)
         # Apply layer normalization.
         v = self.normalize2(v)
         # Apply spatial projection.
-        v_channels = keras.ops.transpose(v, axes=(0, 2, 1))
+        v_channels = tf.linalg.matrix_transpose(v)
         v_projected = self.spatial_projection(v_channels)
-        v_projected = keras.ops.transpose(v_projected, axes=(0, 2, 1))
+        v_projected = tf.linalg.matrix_transpose(v_projected)
         # Apply element-wise multiplication.
         return u * v_projected
 
