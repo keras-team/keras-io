@@ -49,9 +49,15 @@ clients, while preserving its global semantics.
 """
 ## Setup
 """
+import os
+# The distribution API is implemented for JAX backend only for now.
+os["KERAS_BACKEND"] = "jax"
 
 import keras
 from keras import distribution
+
+import jax
+import tensorflow as tf     # For dataset input.
 
 """
 ## DeviceMesh and TensorLayout
@@ -72,22 +78,22 @@ You can found more detailed concepts in [Tensorflow DTensor guide]
 (https://www.tensorflow.org/guide/dtensor_overview#dtensors_model_of_distributed_tensors)
 """
 
-from keras.distribution import DeviceMesh, TensorLayout, list_devices
+from keras.distribution import DeviceMesh, TensorLayout
 
 # Retrieve the local available gpu devices.
-devices = list_devices(device_type='gpu')   # Assume it has 8 local GPUs.
+devices = jax.devices("gpu")   # Assume it has 8 local GPUs.
 
 # Define a 2x4 device mesh with data and model parallel axes
-mesh = DeviceMesh(shape=(2, 4), axis_names=['data', 'model'], devices=devices)
+mesh = DeviceMesh(shape=(2, 4), axis_names=["data", "model"], devices=devices)
 
 # A 2D layout, which describes how a tensor is distributed across the
-# mesh. The layout can be visualized as a 2D grid with 'model' as rows and 
-# 'data' as columns, and it is a [4, 2] grid when it mapped to the physcial
+# mesh. The layout can be visualized as a 2D grid with "model" as rows and 
+# "data" as columns, and it is a [4, 2] grid when it mapped to the physcial
 # devices on the mesh.
-layout_2d = TensorLayout(axes=('model', 'data'), device_mesh=mesh)
+layout_2d = TensorLayout(axes=("model", "data"), device_mesh=mesh)
 
 # A 4D layout which could be used for data parallel of a image input.
-replicated_layout_4d = TensorLayout(axes=('data', None, None, None), 
+replicated_layout_4d = TensorLayout(axes=("data", None, None, None), 
                                     device_mesh=mesh)
 
 """
@@ -95,8 +101,8 @@ Distribution
 
 The Distribution class in Keras serves as a foundational abstract class designed
 for developing custom distribution strategies. It encapsulates the core logic 
-needed to distribute a model's variables, input data, and intermediate 
-computations across a device mesh. As an end user, you won't have to interact
+needed to distribute a model"s variables, input data, and intermediate 
+computations across a device mesh. As an end user, you won"t have to interact
 directly with this class, but its subclasses like `DataParallel` or 
 `ModelParallel`.
 """
@@ -119,17 +125,21 @@ from keras import models
 # Create with list of devices, as a shortcut, the devices can be skipped, 
 # and Keras will detect all local available devices.
 # E.g. data_parallel = DataParallel()
-data_parallel = DataParallel(devices=list_devices())
+data_parallel = DataParallel(devices=devices)
 
 # Or you can choose to create with a 1D `DeviceMesh`.
-mesh_1d = DeviceMesh(shape=(8,), axis_names=['data'], devices=list_devices())
+mesh_1d = DeviceMesh(shape=(8,), axis_names=["data"], devices=devices)
 data_parallel = DataParallel(device_mesh=mesh_1d)
+
+inputs = np.random.normal(size=(128, 28, 28, 1))
+labels = np.random.normal(size=(128, 10))
+dataset = tf.data.Dataset.from_tensor_slices((inputs, labels)).batch(16)
 
 # Note that all the model weights created under the scope are replicated to
 # all the devices of the `DeviceMesh`. This include all the weights like RNG
 # state, optimizer states, metrics, etc. The dataset feed into `model.fit` or
 # `model.evaluate` will be splitted evenly on the batch dimention, and send to
-# all the devices. You don't have to do any manual aggregration of losses, 
+# all the devices. You don"t have to do any manual aggregration of losses, 
 # since all the computation happens in a global context.
 # 
 # The `scope` can also be replaced by `keras.distribution.set_distribution()`, 
@@ -142,11 +152,6 @@ with data_parallel.scope():
     y = layers.Dense(units=10, activation="softmax")(y)
     model = models.Model(inputs=inputs, outputs=y)
 
-inputs = np.random.normal(size=(128, 28, 28, 1))
-labels = np.random.normal(size=(128, 10))
-dataset = tf.data.Dataset.from_tensor_slices((inputs, labels)).batch(16)
-
-with data_parallel.scope():
     model.compile(loss="mse")
     model.fit(dataset, epochs=3)
     model.evaluate(dataset)
@@ -163,7 +168,78 @@ Unlike the `DataParallel` model that all weights are fully replicated,
 the weights layout under `ModelParallel` usually need some customization for 
 best performances. We introduce `LayoutMap` to let you specify the 
 `TensorLayout` for any weights and intermediate tensors from global perspective.
+
+`LayoutMap` is a dict-like object that maps a string to `TensorLayout` 
+instances. It behaves differently from a normal Python dict in that the string 
+key is treated as a regex when retrieving the value. The class allows you to 
+define the naming schema of `TensorLayout` and then retrieve the corresponding 
+`TensorLayout` instance. Typically, the key used to query is the variable.path, 
+which is the identifier of the variable. As a shortcut, a tuple or list of axis 
+names is also allowed when inserting a value, and it will be converted to 
+`TensorLayout`.
+
+The `LayoutMap` can also optionally contain a DeviceMesh to populate the 
+`TensorLayout.device_mesh` if it is not set. When retrieving a layout with a 
+key, and if there isn"t an exact match, all existing keys in the layout map will 
+be treated as regex and matched against the input key again. If there are 
+multiple matches, a ValueError is raised. If no matches are found, `None` is 
+returned.
 """
 
-from keras.distribution import ModelParallel, LayoutMap
+from keras.distribution import ModelParallel, LayoutMap, TensorLayout
 
+mesh_2d = DeviceMesh(shape=(2, 4), axis_names=["data", "model"], 
+                     devices=devices)
+layout_map = LayoutMap(mesh_2d)
+# The rule below means that for any weights that match with d1/kernel, it
+# will be sharded with model dimentions (4 devices), same for the d1/bias.
+# All other weights will be fully replicated.
+layout_map["d1/kernel"] = TensorLayout([None, "model"])
+layout_map["d1/bias"] = TensorLayout(["model"])
+
+# You can also set the layout for the layer output like
+layout_map["d2/output"] = TensorLayout(["data", None])
+
+distribution = ModelParallel(mesh_2d, layout_map, batch_dim_name="data")
+
+with model_parallel.scope():
+    inputs = layers.Input(shape=[28, 28, 1])
+    y = layers.Flatten()(inputs)
+    y = layers.Dense(units=200, use_bias=False, activation="relu", name="d1")(y)
+    y = layers.Dropout(0.4)(y)
+    y = layers.Dense(units=10, activation="softmax", name="d2")(y)
+    model = models.Model(inputs=inputs, outputs=y)
+
+    # The data will be sharded across the "data" dimention of the method, which
+    # has 2 devices.
+    model.compile(loss="mse")
+    model.fit(dataset, epochs=3)
+    model.evaluate(dataset)
+
+"""
+It is also easy to change the mesh structure to tune the computation between
+more data parallel or model parallel. You can do this by adjusting the shape of 
+the mesh. And no changes are needed for any other code.
+"""
+full_data_parallel_mesh = DeviceMesh(shape=(8, 1), axis_names=["data", "model"], 
+                                     devices=devices)
+more_data_parallel_mesh = DeviceMesh(shape=(4, 2), axis_names=["data", "model"], 
+                                     devices=devices)
+more_model_parallel_mesh = DeviceMesh(shape=(2, 4), axis_names=["data", "model"], 
+                                      devices=devices)
+full_model_parallel_mesh = DeviceMesh(shape=(1, 8), axis_names=["data", "model"], 
+                                      devices=devices)
+
+"""
+### Further reading
+
+1. [JAX Distributed arrays and automatic parallelization]
+(https://jax.readthedocs.io/en/latest/notebooks/Distributed_arrays_and_automatic_parallelization.html)
+2. [JAX sharding module](https://jax.readthedocs.io/en/latest/jax.sharding.html)
+3. [Tensorflow Distributed training with DTensors]
+(https://www.tensorflow.org/tutorials/distribute/dtensor_ml_tutorial)
+4. [Tensorflow DTensor concepts]
+(https://www.tensorflow.org/guide/dtensor_overview)
+5. [Using DTensors with tf.keras]
+(https://www.tensorflow.org/tutorials/distribute/dtensor_keras_tutorial)
+"""
