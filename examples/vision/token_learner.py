@@ -1,8 +1,8 @@
 """
 Title: Learning to tokenize in Vision Transformers
-Authors: [Aritra Roy Gosthipaty](https://twitter.com/ariG23498), [Sayak Paul](https://twitter.com/RisingSayak) (equal contribution)
+Authors: [Aritra Roy Gosthipaty](https://twitter.com/ariG23498), [Sayak Paul](https://twitter.com/RisingSayak) (equal contribution), converted to Keras 3 by [Muhammad Anas Raza](https://anasrz.com)
 Date created: 2021/12/10
-Last modified: 2021/12/15
+Last modified: 2023/08/14
 Description: Adaptively generating a smaller number of tokens for Vision Transformers.
 Accelerator: GPU
 """
@@ -43,26 +43,16 @@ references:
 * [TokenLearner slides from NeurIPS 2021](https://nips.cc/media/neurips-2021/Slides/26578.pdf)
 """
 
-"""
-## Setup
-
-We need to install TensorFlow Addons to run this example. To install it, execute the
-following:
-
-```shell
-pip install tensorflow-addons
-```
-"""
 
 """
 ## Imports
 """
 
-import tensorflow as tf
+import keras
+from keras import layers
+from keras import ops
+from tensorflow import data as tf_data
 
-from tensorflow import keras
-from tensorflow.keras import layers
-import tensorflow_addons as tfa
 
 from datetime import datetime
 import matplotlib.pyplot as plt
@@ -79,7 +69,7 @@ develop intuition about the architecture is to experiment with it.
 
 # DATA
 BATCH_SIZE = 256
-AUTO = tf.data.AUTOTUNE
+AUTO = tf_data.AUTOTUNE
 INPUT_SHAPE = (32, 32, 3)
 NUM_CLASSES = 10
 
@@ -123,13 +113,13 @@ print(f"Validation samples: {len(x_val)}")
 print(f"Testing samples: {len(x_test)}")
 
 # Convert to tf.data.Dataset objects.
-train_ds = tf.data.Dataset.from_tensor_slices((x_train, y_train))
+train_ds = tf_data.Dataset.from_tensor_slices((x_train, y_train))
 train_ds = train_ds.shuffle(BATCH_SIZE * 100).batch(BATCH_SIZE).prefetch(AUTO)
 
-val_ds = tf.data.Dataset.from_tensor_slices((x_val, y_val))
+val_ds = tf_data.Dataset.from_tensor_slices((x_val, y_val))
 val_ds = val_ds.batch(BATCH_SIZE).prefetch(AUTO)
 
-test_ds = tf.data.Dataset.from_tensor_slices((x_test, y_test))
+test_ds = tf_data.Dataset.from_tensor_slices((x_test, y_test))
 test_ds = test_ds.batch(BATCH_SIZE).prefetch(AUTO)
 
 """
@@ -174,19 +164,25 @@ tokens.
 """
 
 
-def position_embedding(
-    projected_patches, num_patches=NUM_PATCHES, projection_dim=PROJECTION_DIM
-):
-    # Build the positions.
-    positions = tf.range(start=0, limit=num_patches, delta=1)
+class PatchEncoder(layers.Layer):
+    def __init__(self, num_patches, projection_dim):
+        super().__init__()
+        self.num_patches = num_patches
+        self.position_embedding = layers.Embedding(
+            input_dim=num_patches, output_dim=projection_dim
+        )
 
-    # Encode the positions with an Embedding layer.
-    encoded_positions = layers.Embedding(
-        input_dim=num_patches, output_dim=projection_dim
-    )(positions)
+    def call(self, patch):
+        positions = ops.expand_dims(
+            ops.arange(start=0, stop=self.num_patches, step=1), axis=0
+        )
+        encoded = patch + self.position_embedding(positions)
+        return encoded
 
-    # Add encoded positions to the projected patches.
-    return projected_patches + encoded_positions
+    def get_config(self):
+        config = super().get_config()
+        config.update({"num_patches": self.num_patches})
+        return config
 
 
 """
@@ -200,7 +196,7 @@ def mlp(x, dropout_rate, hidden_units):
     # Iterate over the hidden units and
     # add Dense => Dropout.
     for units in hidden_units:
-        x = layers.Dense(units, activation=tf.nn.gelu)(x)
+        x = layers.Dense(units, activation=ops.gelu)(x)
         x = layers.Dropout(dropout_rate)(x)
     return x
 
@@ -240,21 +236,21 @@ def token_learner(inputs, number_of_tokens=NUM_TOKENS):
             layers.Conv2D(
                 filters=number_of_tokens,
                 kernel_size=(3, 3),
-                activation=tf.nn.gelu,
+                activation=ops.gelu,
                 padding="same",
                 use_bias=False,
             ),
             layers.Conv2D(
                 filters=number_of_tokens,
                 kernel_size=(3, 3),
-                activation=tf.nn.gelu,
+                activation=ops.gelu,
                 padding="same",
                 use_bias=False,
             ),
             layers.Conv2D(
                 filters=number_of_tokens,
                 kernel_size=(3, 3),
-                activation=tf.nn.gelu,
+                activation=ops.gelu,
                 padding="same",
                 use_bias=False,
             ),
@@ -280,11 +276,11 @@ def token_learner(inputs, number_of_tokens=NUM_TOKENS):
 
     # Element-Wise multiplication of the attention maps and the inputs
     attended_inputs = (
-        attention_maps[..., tf.newaxis] * inputs
+        ops.expand_dims(attention_maps, axis=-1) * inputs
     )  # (B, num_tokens, H*W, C)
 
     # Global average pooling the element wise multiplication result.
-    outputs = tf.reduce_mean(attended_inputs, axis=2)  # (B, num_tokens, C)
+    outputs = ops.mean(attended_inputs, axis=2)  # (B, num_tokens, C)
     return outputs
 
 
@@ -340,7 +336,9 @@ def create_vit_classifier(use_token_learner=True, token_learner_units=NUM_TOKENS
     )  # (B, number_patches, projection_dim)
 
     # Add positional embeddings to the projected patches.
-    encoded_patches = position_embedding(
+    encoded_patches = PatchEncoder(
+        num_patches=NUM_PATCHES, projection_dim=PROJECTION_DIM
+    )(
         projected_patches
     )  # (B, number_patches, projection_dim)
     encoded_patches = layers.Dropout(0.1)(encoded_patches)
@@ -389,7 +387,7 @@ network.
 
 def run_experiment(model):
     # Initialize the AdamW optimizer.
-    optimizer = tfa.optimizers.AdamW(
+    optimizer = keras.optimizers.AdamW(
         learning_rate=LEARNING_RATE, weight_decay=WEIGHT_DECAY
     )
 
@@ -405,7 +403,7 @@ def run_experiment(model):
     )
 
     # Define callbacks
-    checkpoint_filepath = "/tmp/checkpoint"
+    checkpoint_filepath = "/tmp/checkpoint.weights.h5"
     checkpoint_callback = keras.callbacks.ModelCheckpoint(
         checkpoint_filepath,
         monitor="val_accuracy",
