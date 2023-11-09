@@ -78,7 +78,7 @@ LEARNING_RATE = 1e-3
 WEIGHT_DECAY = 1e-4
 
 # TRAINING
-EPOCHS = 20
+EPOCHS = 1
 
 # AUGMENTATION
 IMAGE_SIZE = 48  # We will resize input images to this size.
