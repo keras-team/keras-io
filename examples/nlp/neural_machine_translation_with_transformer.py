@@ -2,8 +2,8 @@
 Title: English-to-Spanish translation with a sequence-to-sequence Transformer
 Author: [fchollet](https://twitter.com/fchollet)
 Date created: 2021/05/26
-Last modified: 2023/08/17
-Description: Implementing a sequence-to-sequene Transformer and training it on a machine translation task.
+Last modified: 2023/02/25
+Description: Implementing a sequence-to-sequence Transformer and training it on a machine translation task.
 Accelerator: GPU
 """
 """
@@ -32,15 +32,32 @@ I recommend reading the book.
 ## Setup
 """
 
+# We set the backend to TensorFlow. The code works with
+# both `tensorflow` and `torch`. It does not work with JAX
+# due to the behavior of `jax.numpy.tile` in a jit scope
+# (used in `TransformerDecoder.get_causal_attention_mask()`:
+# `tile` in JAX does not support a dynamic `reps` argument.
+# You can make the code work in JAX by wrapping the
+# inside of the `get_causal_attention_mask` method in
+# a decorator to prevent jit compilation:
+# `with jax.ensure_compile_time_eval():`.
+import os
+
+os.environ["KERAS_BACKEND"] = "tensorflow"
+
 import pathlib
 import random
 import string
 import re
 import numpy as np
-import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras import layers
-from tensorflow.keras.layers import TextVectorization
+
+import tensorflow.data as tf_data
+import tensorflow.strings as tf_strings
+
+import keras
+from keras import layers
+from keras import ops
+from keras.layers import TextVectorization
 
 """
 ## Downloading the data
@@ -125,8 +142,8 @@ batch_size = 64
 
 
 def custom_standardization(input_string):
-    lowercase = tf.strings.lower(input_string)
-    return tf.strings.regex_replace(lowercase, "[%s]" % re.escape(strip_chars), "")
+    lowercase = tf_strings.lower(input_string)
+    return tf_strings.regex_replace(lowercase, "[%s]" % re.escape(strip_chars), "")
 
 
 eng_vectorization = TextVectorization(
@@ -154,7 +171,7 @@ using the source sentence and the target words 0 to N.
 As such, the training dataset will yield a tuple `(inputs, targets)`, where:
 
 - `inputs` is a dictionary with the keys `encoder_inputs` and `decoder_inputs`.
-`encoder_inputs` is the vectorized source sentence and `decoder_inputs` is the target sentence "so far",
+`encoder_inputs` is the vectorized source sentence and `encoder_inputs` is the target sentence "so far",
 that is to say, the words 0 to N used to predict word N+1 (and beyond) in the target sentence.
 - `target` is the target sentence offset by one step:
 it provides the next words in the target sentence -- what the model will try to predict.
@@ -177,10 +194,10 @@ def make_dataset(pairs):
     eng_texts, spa_texts = zip(*pairs)
     eng_texts = list(eng_texts)
     spa_texts = list(spa_texts)
-    dataset = tf.data.Dataset.from_tensor_slices((eng_texts, spa_texts))
+    dataset = tf_data.Dataset.from_tensor_slices((eng_texts, spa_texts))
     dataset = dataset.batch(batch_size)
     dataset = dataset.map(format_dataset)
-    return dataset.shuffle(2048).prefetch(16).cache()
+    return dataset.cache().shuffle(2048).prefetch(16)
 
 
 train_ds = make_dataset(train_pairs)
@@ -210,12 +227,13 @@ to the `TransformerDecoder`, together with the target sequence so far (target wo
 The `TransformerDecoder` will then seek to predict the next words in the target sequence (N+1 and beyond).
 
 A key detail that makes this possible is causal masking
-(`use_causal_mask=True` in the first attention layer of the `TransformerDecoder`).
+(see method `get_causal_attention_mask()` on the `TransformerDecoder`).
 The `TransformerDecoder` sees the entire sequences at once, and thus we must make
 sure that it only uses information from target tokens 0 to N when predicting token N+1
 (otherwise, it could use information from the future, which would
 result in a model that cannot be used at inference time).
 """
+import keras.ops as ops
 
 
 class TransformerEncoder(layers.Layer):
@@ -238,7 +256,14 @@ class TransformerEncoder(layers.Layer):
         self.supports_masking = True
 
     def call(self, inputs, mask=None):
-        attention_output = self.attention(query=inputs, value=inputs, key=inputs)
+        if mask is not None:
+            padding_mask = ops.cast(mask[:, None, :], dtype="int32")
+        else:
+            padding_mask = None
+
+        attention_output = self.attention(
+            query=inputs, value=inputs, key=inputs, attention_mask=padding_mask
+        )
         proj_input = self.layernorm_1(inputs + attention_output)
         proj_output = self.dense_proj(proj_input)
         return self.layernorm_2(proj_input + proj_output)
@@ -269,14 +294,17 @@ class PositionalEmbedding(layers.Layer):
         self.embed_dim = embed_dim
 
     def call(self, inputs):
-        length = tf.shape(inputs)[-1]
-        positions = tf.range(start=0, limit=length, delta=1)
+        length = ops.shape(inputs)[-1]
+        positions = ops.arange(0, length, 1)
         embedded_tokens = self.token_embeddings(inputs)
         embedded_positions = self.position_embeddings(positions)
         return embedded_tokens + embedded_positions
 
     def compute_mask(self, inputs, mask=None):
-        return tf.math.not_equal(inputs, 0)
+        if mask is None:
+            return None
+        else:
+            return ops.not_equal(inputs, 0)
 
     def get_config(self):
         config = super().get_config()
@@ -311,24 +339,44 @@ class TransformerDecoder(layers.Layer):
         self.layernorm_1 = layers.LayerNormalization()
         self.layernorm_2 = layers.LayerNormalization()
         self.layernorm_3 = layers.LayerNormalization()
-        self.add = layers.Add()  # instead of `+` to preserve mask
         self.supports_masking = True
 
     def call(self, inputs, encoder_outputs, mask=None):
+        causal_mask = self.get_causal_attention_mask(inputs)
+        if mask is not None:
+            padding_mask = ops.cast(mask[:, None, :], dtype="int32")
+            padding_mask = ops.minimum(padding_mask, causal_mask)
+        else:
+            padding_mask = None
+
         attention_output_1 = self.attention_1(
-            query=inputs, value=inputs, key=inputs, use_causal_mask=True
+            query=inputs, value=inputs, key=inputs, attention_mask=causal_mask
         )
-        out_1 = self.layernorm_1(self.add([inputs, attention_output_1]))
+        out_1 = self.layernorm_1(inputs + attention_output_1)
 
         attention_output_2 = self.attention_2(
             query=out_1,
             value=encoder_outputs,
             key=encoder_outputs,
+            attention_mask=padding_mask,
         )
-        out_2 = self.layernorm_2(self.add([out_1, attention_output_2]))
+        out_2 = self.layernorm_2(out_1 + attention_output_2)
 
         proj_output = self.dense_proj(out_2)
-        return self.layernorm_3(self.add([out_2, proj_output]))
+        return self.layernorm_3(out_2 + proj_output)
+
+    def get_causal_attention_mask(self, inputs):
+        input_shape = ops.shape(inputs)
+        batch_size, sequence_length = input_shape[0], input_shape[1]
+        i = ops.arange(sequence_length)[:, None]
+        j = ops.arange(sequence_length)
+        mask = ops.cast(i >= j, dtype="int32")
+        mask = ops.reshape(mask, (1, input_shape[1], input_shape[1]))
+        mult = ops.concatenate(
+            [ops.expand_dims(batch_size, -1), ops.convert_to_tensor([1, 1])],
+            axis=0,
+        )
+        return ops.tile(mask, mult)
 
     def get_config(self):
         config = super().get_config()
@@ -407,7 +455,10 @@ def decode_sequence(input_sentence):
         tokenized_target_sentence = spa_vectorization([decoded_sentence])[:, :-1]
         predictions = transformer([tokenized_input_sentence, tokenized_target_sentence])
 
-        sampled_token_index = np.argmax(predictions[0, i, :])
+        # ops.argmax(predictions[0, i, :]) is not a concrete value for jax here
+        sampled_token_index = ops.convert_to_numpy(
+            ops.argmax(predictions[0, i, :])
+        ).item(0)
         sampled_token = spa_index_lookup[sampled_token_index]
         decoded_sentence += " " + sampled_token
 
