@@ -176,6 +176,7 @@ use `tf.saved_model.save` instead of `model.save`
 """
 
 sequential_model = keras.Sequential([keras.layers.Dense(2)])
+sequential_model(np.random.rand(3, 5))
 tf.saved_model.save(sequential_model, "saved_model")
 
 """
