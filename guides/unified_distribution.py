@@ -17,16 +17,16 @@ from keras import distribution
 """
 ## Introduction
 
-The Keras distribution API is a new API interface designed to facilitate 
-distributed deep learning across a variety of backends like JAX, Tensorflow and
-Pytorch. This innovative API introduces a suite of tools enabling data and model
+The Keras distribution API is a new interface designed to facilitate 
+distributed deep learning across a variety of backends like JAX, TensorFlow and
+PyTorch. This powerful API introduces a suite of tools enabling data and model
 parallelism, allowing for efficient scaling of deep learning models on multiple
 accelerators and hosts. Whether leveraging the power of GPUs or TPUs, the API 
 provides a streamlined approach to initializing distributed environments, 
 defining device meshes, and orchestrating the layout of tensors across 
 computational resources. Through classes like `DataParallel` and 
 `ModelParallel`, it abstracts the complexity involved in parallel computation, 
-making it accessible for developers to accelerate their machine learning 
+making it easier for developers to accelerate their machine learning 
 workflows.
 
 """
@@ -35,10 +35,10 @@ workflows.
 ## How it works
 
 The Keras distribution API provides a global programming model that allows 
-developers to compose applications that operate on Tensors globally while 
-managing the distribution across devices internally. The API leverage the 
+developers to compose applications that operate on tensors globally while 
+managing the distribution across devices internally. The API leverages the 
 underlying framework to distribute the program and tensors according to the 
-sharding directives through a procedure called Single program, multiple data 
+sharding directives through a procedure called single program, multiple data 
 (SPMD) expansion.
 
 By decoupling the application from sharding directives, the API enables running
@@ -64,18 +64,18 @@ import tensorflow as tf     # For dataset input.
 
 The DeviceMesh class in Keras distribution API represents a cluster of 
 computational devices configured for distributed computation. It aligns with 
-similar concepts in [jax.sharding.Mesh]
-(https://jax.readthedocs.io/en/latest/jax.sharding.html#jax.sharding.Mesh) and 
-[tf.dtensor.Mesh]
-(https://www.tensorflow.org/api_docs/python/tf/experimental/dtensor/Mesh), 
+similar concepts in [jax.sharding.Mesh
+](https://jax.readthedocs.io/en/latest/jax.sharding.html#jax.sharding.Mesh) and 
+[tf.dtensor.Mesh
+](https://www.tensorflow.org/api_docs/python/tf/experimental/dtensor/Mesh), 
 where it's used to map the physical devices to a logical mesh structure.
 
 The `TensorLayout` class then specifies how tensors are distributed across the
 `DeviceMesh`, detailing the sharding of tensors along specified axes that 
-correspond to the axes names in the `DeviceMesh`.
+correspond to the names of the axes in the `DeviceMesh`.
 
-You can found more detailed concepts in [Tensorflow DTensor guide]
-(https://www.tensorflow.org/guide/dtensor_overview#dtensors_model_of_distributed_tensors)
+You can find more detailed concepts in [TensorFlow DTensor guide
+](https://www.tensorflow.org/guide/dtensor_overview#dtensors_model_of_distributed_tensors)
 """
 
 from keras.distribution import DeviceMesh, TensorLayout
@@ -97,18 +97,18 @@ replicated_layout_4d = TensorLayout(axes=("data", None, None, None),
                                     device_mesh=mesh)
 
 """
-Distribution
+## Distribution
 
-The Distribution class in Keras serves as a foundational abstract class designed
+The `Distribution` class in Keras serves as a foundational abstract class designed
 for developing custom distribution strategies. It encapsulates the core logic 
-needed to distribute a model"s variables, input data, and intermediate 
-computations across a device mesh. As an end user, you won"t have to interact
+needed to distribute a model's variables, input data, and intermediate 
+computations across a device mesh. As an end user, you won't have to interact
 directly with this class, but its subclasses like `DataParallel` or 
 `ModelParallel`.
 """
 
 """
-DataParallel
+## DataParallel
 
 The `DataParallel` class in the Keras distribution API is designed for the 
 data parallelism strategy in distributed training, where the model weights are 
@@ -120,7 +120,6 @@ Here is a sample usage of this class.
 
 from keras.distribution import DataParallel
 from keras import layers
-from keras import models
 
 # Create with list of devices, as a shortcut, the devices can be skipped, 
 # and Keras will detect all local available devices.
@@ -138,33 +137,33 @@ dataset = tf.data.Dataset.from_tensor_slices((inputs, labels)).batch(16)
 # Note that all the model weights created under the scope are replicated to
 # all the devices of the `DeviceMesh`. This include all the weights like RNG
 # state, optimizer states, metrics, etc. The dataset feed into `model.fit` or
-# `model.evaluate` will be splitted evenly on the batch dimention, and send to
-# all the devices. You don"t have to do any manual aggregration of losses, 
+# `model.evaluate` will be splitted evenly on the batch dimension, and send to
+# all the devices. You don't have to do any manual aggregration of losses, 
 # since all the computation happens in a global context.
 # 
 # The `scope` can also be replaced by `keras.distribution.set_distribution()`, 
 #  which sets the global distribution.
 with data_parallel.scope():
-    inputs = layers.Input(shape=[28, 28, 1])
+    inputs = layers.Input(shape=(28, 28, 1))
     y = layers.Flatten()(inputs)
     y = layers.Dense(units=200, use_bias=False, activation="relu")(y)
     y = layers.Dropout(0.4)(y)
     y = layers.Dense(units=10, activation="softmax")(y)
-    model = models.Model(inputs=inputs, outputs=y)
+    model = keras.Model(inputs=inputs, outputs=y)
 
     model.compile(loss="mse")
     model.fit(dataset, epochs=3)
     model.evaluate(dataset)
 
 """
-ModelParallel and LayoutMap
+## ModelParallel and LayoutMap
 
 ModelParallel will be mostly useful when model weights are too large to fit
-into a single accelerator. This setting allows you to spit you model weights or
+into a single accelerator. This setting allows you to spit your model weights or
 activation tensors across all the devices on the DeviceMesh, and enable the 
 horizontal scaling for the large models.
 
-Unlike the `DataParallel` model that all weights are fully replicated, 
+Unlike the `DataParallel` model where all weights are fully replicated, 
 the weights layout under `ModelParallel` usually need some customization for 
 best performances. We introduce `LayoutMap` to let you specify the 
 `TensorLayout` for any weights and intermediate tensors from global perspective.
@@ -180,7 +179,7 @@ names is also allowed when inserting a value, and it will be converted to
 
 The `LayoutMap` can also optionally contain a DeviceMesh to populate the 
 `TensorLayout.device_mesh` if it is not set. When retrieving a layout with a 
-key, and if there isn"t an exact match, all existing keys in the layout map will 
+key, and if there isn't an exact match, all existing keys in the layout map will 
 be treated as regex and matched against the input key again. If there are 
 multiple matches, a ValueError is raised. If no matches are found, `None` is 
 returned.
@@ -192,7 +191,7 @@ mesh_2d = DeviceMesh(shape=(2, 4), axis_names=["data", "model"],
                      devices=devices)
 layout_map = LayoutMap(mesh_2d)
 # The rule below means that for any weights that match with d1/kernel, it
-# will be sharded with model dimentions (4 devices), same for the d1/bias.
+# will be sharded with model dimensions (4 devices), same for the d1/bias.
 # All other weights will be fully replicated.
 layout_map["d1/kernel"] = TensorLayout([None, "model"])
 layout_map["d1/bias"] = TensorLayout(["model"])
@@ -203,14 +202,14 @@ layout_map["d2/output"] = TensorLayout(["data", None])
 distribution = ModelParallel(mesh_2d, layout_map, batch_dim_name="data")
 
 with model_parallel.scope():
-    inputs = layers.Input(shape=[28, 28, 1])
+    inputs = layers.Input(shape=(28, 28, 1))
     y = layers.Flatten()(inputs)
     y = layers.Dense(units=200, use_bias=False, activation="relu", name="d1")(y)
     y = layers.Dropout(0.4)(y)
     y = layers.Dense(units=10, activation="softmax", name="d2")(y)
-    model = models.Model(inputs=inputs, outputs=y)
+    model = keras.Model(inputs=inputs, outputs=y)
 
-    # The data will be sharded across the "data" dimention of the method, which
+    # The data will be sharded across the "data" dimension of the method, which
     # has 2 devices.
     model.compile(loss="mse")
     model.fit(dataset, epochs=3)
@@ -233,13 +232,13 @@ full_model_parallel_mesh = DeviceMesh(shape=(1, 8), axis_names=["data", "model"]
 """
 ### Further reading
 
-1. [JAX Distributed arrays and automatic parallelization]
-(https://jax.readthedocs.io/en/latest/notebooks/Distributed_arrays_and_automatic_parallelization.html)
+1. [JAX Distributed arrays and automatic parallelization
+](https://jax.readthedocs.io/en/latest/notebooks/Distributed_arrays_and_automatic_parallelization.html)
 2. [JAX sharding module](https://jax.readthedocs.io/en/latest/jax.sharding.html)
-3. [Tensorflow Distributed training with DTensors]
-(https://www.tensorflow.org/tutorials/distribute/dtensor_ml_tutorial)
-4. [Tensorflow DTensor concepts]
-(https://www.tensorflow.org/guide/dtensor_overview)
-5. [Using DTensors with tf.keras]
-(https://www.tensorflow.org/tutorials/distribute/dtensor_keras_tutorial)
+3. [TensorFlow Distributed training with DTensors
+](https://www.tensorflow.org/tutorials/distribute/dtensor_ml_tutorial)
+4. [TensorFlow DTensor concepts
+](https://www.tensorflow.org/guide/dtensor_overview)
+5. [Using DTensors with tf.keras
+](https://www.tensorflow.org/tutorials/distribute/dtensor_keras_tutorial)
 """
