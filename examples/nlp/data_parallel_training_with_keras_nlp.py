@@ -189,7 +189,6 @@ callbacks = [
 print(tf.config.list_physical_devices("GPU"))
 
 
-
 """
 With the datasets prepared, we now initialize and compile our model and optimizer within
 the `strategy.scope()`:
