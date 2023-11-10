@@ -1,8 +1,8 @@
 # Keypoint Detection with Transfer Learning
 
-**Author:** [Sayak Paul](https://twitter.com/RisingSayak)<br>
+**Author:** [Sayak Paul](https://twitter.com/RisingSayak), converted to Keras 3 by [Muhammad Anas Raza](https://anasrz.com)<br>
 **Date created:** 2021/05/02<br>
-**Last modified:** 2021/05/02<br>
+**Last modified:** 2023/07/19<br>
 **Description:** Training a keypoint detector with data augmentation and transfer learning.
 
 
@@ -58,9 +58,8 @@ After the files are downloaded, we can extract the archives.
 
 
 ```python
-from tensorflow.keras import layers
-from tensorflow import keras
-import tensorflow as tf
+from keras import layers
+import keras
 
 from imgaug.augmentables.kps import KeypointsOnImage
 from imgaug.augmentables.kps import Keypoint
@@ -172,6 +171,7 @@ colours = keypoint_def["Hex colour"].values.tolist()
 colours = ["#" + colour for colour in colours]
 labels = keypoint_def["Name"].values.tolist()
 
+
 # Utility for reading an image and for getting its annotations.
 def get_dog(name):
     data = json_dict[name]
@@ -194,6 +194,7 @@ Now, we write a utility function to visualize the images and their keypoints.
 
 
 ```python
+
 # Parts of this code come from here:
 # https://github.com/benjiebob/StanfordExtra/blob/master/demo.ipynb
 def visualize_keypoints(images, keypoints):
@@ -209,7 +210,12 @@ def visualize_keypoints(images, keypoints):
         if isinstance(current_keypoint, KeypointsOnImage):
             for idx, kp in enumerate(current_keypoint.keypoints):
                 ax_all.scatter(
-                    [kp.x], [kp.y], c=colours[idx], marker="x", s=50, linewidths=5
+                    [kp.x],
+                    [kp.y],
+                    c=colours[idx],
+                    marker="x",
+                    s=50,
+                    linewidths=5,
                 )
         else:
             current_keypoint = np.array(current_keypoint)
@@ -261,8 +267,9 @@ that applies data augmentation on batches of data using `imgaug`.
 
 ```python
 
-class KeyPointsDataset(keras.utils.Sequence):
-    def __init__(self, image_keys, aug, batch_size=BATCH_SIZE, train=True):
+class KeyPointsDataset(keras.utils.PyDataset):
+    def __init__(self, image_keys, aug, batch_size=BATCH_SIZE, train=True, **kwargs):
+        super().__init__(**kwargs)
         self.image_keys = image_keys
         self.aug = aug
         self.batch_size = batch_size
@@ -363,8 +370,12 @@ train_keys, validation_keys = (
 
 
 ```python
-train_dataset = KeyPointsDataset(train_keys, train_aug)
-validation_dataset = KeyPointsDataset(validation_keys, test_aug, train=False)
+train_dataset = KeyPointsDataset(
+    train_keys, train_aug, workers=2, use_multiprocessing=True
+)
+validation_dataset = KeyPointsDataset(
+    validation_keys, test_aug, train=False, workers=2, use_multiprocessing=True
+)
 
 print(f"Total batches in training set: {len(train_dataset)}")
 print(f"Total batches in validation set: {len(validation_dataset)}")
@@ -405,7 +416,9 @@ head for predicting coordinates.
 def get_model():
     # Load the pre-trained weights of MobileNetV2 and freeze the weights
     backbone = keras.applications.MobileNetV2(
-        weights="imagenet", include_top=False, input_shape=(IMG_SIZE, IMG_SIZE, 3)
+        weights="imagenet",
+        include_top=False,
+        input_shape=(IMG_SIZE, IMG_SIZE, 3),
     )
     backbone.trainable = False
 
@@ -434,31 +447,59 @@ get_model().summary()
 
 <div class="k-default-codeblock">
 ```
-Model: "keypoint_detector"
-_________________________________________________________________
-Layer (type)                 Output Shape              Param #   
-=================================================================
-input_2 (InputLayer)         [(None, 224, 224, 3)]     0         
-_________________________________________________________________
-tf.math.truediv (TFOpLambda) (None, 224, 224, 3)       0         
-_________________________________________________________________
-tf.math.subtract (TFOpLambda (None, 224, 224, 3)       0         
-_________________________________________________________________
-mobilenetv2_1.00_224 (Functi (None, 7, 7, 1280)        2257984   
-_________________________________________________________________
-dropout (Dropout)            (None, 7, 7, 1280)        0         
-_________________________________________________________________
-separable_conv2d (SeparableC (None, 3, 3, 48)          93488     
-_________________________________________________________________
-separable_conv2d_1 (Separabl (None, 1, 1, 48)          2784      
-=================================================================
-Total params: 2,354,256
-Trainable params: 96,272
-Non-trainable params: 2,257,984
-_________________________________________________________________
+Downloading data from https://storage.googleapis.com/tensorflow/keras-applications/mobilenet_v2/mobilenet_v2_weights_tf_dim_ordering_tf_kernels_1.0_224_no_top.h5
+ 9406464/9406464 ━━━━━━━━━━━━━━━━━━━━ 0s 0us/step
 
 ```
 </div>
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold">Model: "keypoint_detector"</span>
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━┓
+┃<span style="font-weight: bold"> Layer (type)                    </span>┃<span style="font-weight: bold"> Output Shape              </span>┃<span style="font-weight: bold">    Param # </span>┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━┩
+│ input_layer_1 (<span style="color: #0087ff; text-decoration-color: #0087ff">InputLayer</span>)      │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">224</span>, <span style="color: #00af00; text-decoration-color: #00af00">224</span>, <span style="color: #00af00; text-decoration-color: #00af00">3</span>)       │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ true_divide (<span style="color: #0087ff; text-decoration-color: #0087ff">TrueDivide</span>)        │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">224</span>, <span style="color: #00af00; text-decoration-color: #00af00">224</span>, <span style="color: #00af00; text-decoration-color: #00af00">3</span>)       │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ subtract (<span style="color: #0087ff; text-decoration-color: #0087ff">Subtract</span>)             │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">224</span>, <span style="color: #00af00; text-decoration-color: #00af00">224</span>, <span style="color: #00af00; text-decoration-color: #00af00">3</span>)       │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ mobilenetv2_1.00_224            │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">7</span>, <span style="color: #00af00; text-decoration-color: #00af00">7</span>, <span style="color: #00af00; text-decoration-color: #00af00">1280</span>)        │  <span style="color: #00af00; text-decoration-color: #00af00">2,257,984</span> │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Functional</span>)                    │                           │            │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ dropout (<span style="color: #0087ff; text-decoration-color: #0087ff">Dropout</span>)               │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">7</span>, <span style="color: #00af00; text-decoration-color: #00af00">7</span>, <span style="color: #00af00; text-decoration-color: #00af00">1280</span>)        │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ separable_conv2d                │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">3</span>, <span style="color: #00af00; text-decoration-color: #00af00">3</span>, <span style="color: #00af00; text-decoration-color: #00af00">48</span>)          │     <span style="color: #00af00; text-decoration-color: #00af00">93,488</span> │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">SeparableConv2D</span>)               │                           │            │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ separable_conv2d_1              │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>, <span style="color: #00af00; text-decoration-color: #00af00">48</span>)          │      <span style="color: #00af00; text-decoration-color: #00af00">2,784</span> │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">SeparableConv2D</span>)               │                           │            │
+└─────────────────────────────────┴───────────────────────────┴────────────┘
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Total params: </span><span style="color: #00af00; text-decoration-color: #00af00">2,354,256</span> (8.98 MB)
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Trainable params: </span><span style="color: #00af00; text-decoration-color: #00af00">96,272</span> (376.06 KB)
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Non-trainable params: </span><span style="color: #00af00; text-decoration-color: #00af00">2,257,984</span> (8.61 MB)
+</pre>
+
+
+
 Notice the output shape of the network: `(None, 1, 1, 48)`. This is why we have reshaped
 the coordinates as: `batch_keypoints[i, :] = np.array(kp_temp).reshape(1, 1, 24 * 2)`.
 
@@ -477,17 +518,17 @@ model.fit(train_dataset, validation_data=validation_dataset, epochs=EPOCHS)
 <div class="k-default-codeblock">
 ```
 Epoch 1/5
-166/166 [==============================] - 85s 486ms/step - loss: 0.1087 - val_loss: 0.0950
+ 166/166 ━━━━━━━━━━━━━━━━━━━━ 84s 415ms/step - loss: 0.1110 - val_loss: 0.0959
 Epoch 2/5
-166/166 [==============================] - 78s 471ms/step - loss: 0.0830 - val_loss: 0.0778
+ 166/166 ━━━━━━━━━━━━━━━━━━━━ 79s 472ms/step - loss: 0.0874 - val_loss: 0.0802
 Epoch 3/5
-166/166 [==============================] - 78s 468ms/step - loss: 0.0778 - val_loss: 0.0739
+ 166/166 ━━━━━━━━━━━━━━━━━━━━ 78s 463ms/step - loss: 0.0789 - val_loss: 0.0765
 Epoch 4/5
-166/166 [==============================] - 78s 470ms/step - loss: 0.0753 - val_loss: 0.0711
+ 166/166 ━━━━━━━━━━━━━━━━━━━━ 78s 467ms/step - loss: 0.0769 - val_loss: 0.0731
 Epoch 5/5
-166/166 [==============================] - 78s 468ms/step - loss: 0.0735 - val_loss: 0.0692
+ 166/166 ━━━━━━━━━━━━━━━━━━━━ 77s 464ms/step - loss: 0.0753 - val_loss: 0.0712
 
-<tensorflow.python.keras.callbacks.History at 0x7f3ac55b6050>
+<keras.src.callbacks.history.History at 0x7fb5c4299ae0>
 
 ```
 </div>
@@ -508,15 +549,20 @@ visualize_keypoints(sample_val_images, sample_val_keypoints)
 visualize_keypoints(sample_val_images, predictions)
 ```
 
+<div class="k-default-codeblock">
+```
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 7s 7s/step
 
-    
-![png](/img/examples/vision/keypoint_detection/keypoint_detection_37_0.png)
-    
-
-
-
+```
+</div>
     
 ![png](/img/examples/vision/keypoint_detection/keypoint_detection_37_1.png)
+    
+
+
+
+    
+![png](/img/examples/vision/keypoint_detection/keypoint_detection_37_2.png)
     
 
 

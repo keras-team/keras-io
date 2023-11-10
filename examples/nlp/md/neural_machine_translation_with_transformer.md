@@ -2,8 +2,8 @@
 
 **Author:** [fchollet](https://twitter.com/fchollet)<br>
 **Date created:** 2021/05/26<br>
-**Last modified:** 2023/08/17<br>
-**Description:** Implementing a sequence-to-sequene Transformer and training it on a machine translation task.
+**Last modified:** 2023/02/25<br>
+**Description:** Implementing a sequence-to-sequence Transformer and training it on a machine translation task.
 
 
 <img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/nlp/ipynb/neural_machine_translation_with_transformer.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/nlp/neural_machine_translation_with_transformer.py)
@@ -37,15 +37,32 @@ I recommend reading the book.
 
 
 ```python
+# We set the backend to TensorFlow. The code works with
+# both `tensorflow` and `torch`. It does not work with JAX
+# due to the behavior of `jax.numpy.tile` in a jit scope
+# (used in `TransformerDecoder.get_causal_attention_mask()`:
+# `tile` in JAX does not support a dynamic `reps` argument.
+# You can make the code work in JAX by wrapping the
+# inside of the `get_causal_attention_mask` method in
+# a decorator to prevent jit compilation:
+# `with jax.ensure_compile_time_eval():`.
+import os
+
+os.environ["KERAS_BACKEND"] = "tensorflow"
+
 import pathlib
 import random
 import string
 import re
 import numpy as np
-import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras import layers
-from tensorflow.keras.layers import TextVectorization
+
+import tensorflow.data as tf_data
+import tensorflow.strings as tf_strings
+
+import keras
+from keras import layers
+from keras import ops
+from keras.layers import TextVectorization
 ```
 
 ---
@@ -92,11 +109,11 @@ for _ in range(5):
 
 <div class="k-default-codeblock">
 ```
-("I've got to find Tom.", '[start] Tengo que encontrar a Tom. [end]')
-("I'll keep it a secret. Don't worry.", '[start] Lo mantendré en secreto. No te preocupes. [end]')
-('I have good news for you.', '[start] Tengo buenas noticias para ustedes. [end]')
-('I can see the top of the mountain.', '[start] Puedo ver la cima de la montaña. [end]')
-("Next week, we're heading to the mountain.", '[start] La próxima semana vamos a la montaña. [end]')
+("On Saturday nights, it's difficult to find parking around here.", '[start] Los sábados por la noche es difícil encontrar aparcamiento por aquí. [end]')
+('I was the worst student in the class.', '[start] Fui el peor estudiante en la clase. [end]')
+('There is nothing to do today.', '[start] No hay nada que hacer hoy. [end]')
+('The twins do resemble each other.', '[start] Los gemelos se parecen mutuamente. [end]')
+('They found Tom in the crowd.', '[start] Encontraron a Tom entre la multitud. [end]')
 
 ```
 </div>
@@ -157,8 +174,8 @@ batch_size = 64
 
 
 def custom_standardization(input_string):
-    lowercase = tf.strings.lower(input_string)
-    return tf.strings.regex_replace(lowercase, "[%s]" % re.escape(strip_chars), "")
+    lowercase = tf_strings.lower(input_string)
+    return tf_strings.regex_replace(lowercase, "[%s]" % re.escape(strip_chars), "")
 
 
 eng_vectorization = TextVectorization(
@@ -186,7 +203,7 @@ using the source sentence and the target words 0 to N.
 As such, the training dataset will yield a tuple `(inputs, targets)`, where:
 
 - `inputs` is a dictionary with the keys `encoder_inputs` and `decoder_inputs`.
-`encoder_inputs` is the vectorized source sentence and `decoder_inputs` is the target sentence "so far",
+`encoder_inputs` is the vectorized source sentence and `encoder_inputs` is the target sentence "so far",
 that is to say, the words 0 to N used to predict word N+1 (and beyond) in the target sentence.
 - `target` is the target sentence offset by one step:
 it provides the next words in the target sentence -- what the model will try to predict.
@@ -210,10 +227,10 @@ def make_dataset(pairs):
     eng_texts, spa_texts = zip(*pairs)
     eng_texts = list(eng_texts)
     spa_texts = list(spa_texts)
-    dataset = tf.data.Dataset.from_tensor_slices((eng_texts, spa_texts))
+    dataset = tf_data.Dataset.from_tensor_slices((eng_texts, spa_texts))
     dataset = dataset.batch(batch_size)
     dataset = dataset.map(format_dataset)
-    return dataset.shuffle(2048).prefetch(16).cache()
+    return dataset.cache().shuffle(2048).prefetch(16)
 
 
 train_ds = make_dataset(train_pairs)
@@ -253,7 +270,7 @@ to the `TransformerDecoder`, together with the target sequence so far (target wo
 The `TransformerDecoder` will then seek to predict the next words in the target sequence (N+1 and beyond).
 
 A key detail that makes this possible is causal masking
-(`use_causal_mask=True` in the first attention layer of the `TransformerDecoder`).
+(see method `get_causal_attention_mask()` on the `TransformerDecoder`).
 The `TransformerDecoder` sees the entire sequences at once, and thus we must make
 sure that it only uses information from target tokens 0 to N when predicting token N+1
 (otherwise, it could use information from the future, which would
@@ -261,6 +278,8 @@ result in a model that cannot be used at inference time).
 
 
 ```python
+import keras.ops as ops
+
 
 class TransformerEncoder(layers.Layer):
     def __init__(self, embed_dim, dense_dim, num_heads, **kwargs):
@@ -282,7 +301,14 @@ class TransformerEncoder(layers.Layer):
         self.supports_masking = True
 
     def call(self, inputs, mask=None):
-        attention_output = self.attention(query=inputs, value=inputs, key=inputs)
+        if mask is not None:
+            padding_mask = ops.cast(mask[:, None, :], dtype="int32")
+        else:
+            padding_mask = None
+
+        attention_output = self.attention(
+            query=inputs, value=inputs, key=inputs, attention_mask=padding_mask
+        )
         proj_input = self.layernorm_1(inputs + attention_output)
         proj_output = self.dense_proj(proj_input)
         return self.layernorm_2(proj_input + proj_output)
@@ -313,14 +339,17 @@ class PositionalEmbedding(layers.Layer):
         self.embed_dim = embed_dim
 
     def call(self, inputs):
-        length = tf.shape(inputs)[-1]
-        positions = tf.range(start=0, limit=length, delta=1)
+        length = ops.shape(inputs)[-1]
+        positions = ops.arange(0, length, 1)
         embedded_tokens = self.token_embeddings(inputs)
         embedded_positions = self.position_embeddings(positions)
         return embedded_tokens + embedded_positions
 
     def compute_mask(self, inputs, mask=None):
-        return tf.math.not_equal(inputs, 0)
+        if mask is None:
+            return None
+        else:
+            return ops.not_equal(inputs, 0)
 
     def get_config(self):
         config = super().get_config()
@@ -355,24 +384,44 @@ class TransformerDecoder(layers.Layer):
         self.layernorm_1 = layers.LayerNormalization()
         self.layernorm_2 = layers.LayerNormalization()
         self.layernorm_3 = layers.LayerNormalization()
-        self.add = layers.Add()  # instead of `+` to preserve mask
         self.supports_masking = True
 
     def call(self, inputs, encoder_outputs, mask=None):
+        causal_mask = self.get_causal_attention_mask(inputs)
+        if mask is not None:
+            padding_mask = ops.cast(mask[:, None, :], dtype="int32")
+            padding_mask = ops.minimum(padding_mask, causal_mask)
+        else:
+            padding_mask = None
+
         attention_output_1 = self.attention_1(
-            query=inputs, value=inputs, key=inputs, use_causal_mask=True
+            query=inputs, value=inputs, key=inputs, attention_mask=causal_mask
         )
-        out_1 = self.layernorm_1(self.add([inputs, attention_output_1]))
+        out_1 = self.layernorm_1(inputs + attention_output_1)
 
         attention_output_2 = self.attention_2(
             query=out_1,
             value=encoder_outputs,
             key=encoder_outputs,
+            attention_mask=padding_mask,
         )
-        out_2 = self.layernorm_2(self.add([out_1, attention_output_2]))
+        out_2 = self.layernorm_2(out_1 + attention_output_2)
 
         proj_output = self.dense_proj(out_2)
-        return self.layernorm_3(self.add([out_2, proj_output]))
+        return self.layernorm_3(out_2 + proj_output)
+
+    def get_causal_attention_mask(self, inputs):
+        input_shape = ops.shape(inputs)
+        batch_size, sequence_length = input_shape[0], input_shape[1]
+        i = ops.arange(sequence_length)[:, None]
+        j = ops.arange(sequence_length)
+        mask = ops.cast(i >= j, dtype="int32")
+        mask = ops.reshape(mask, (1, input_shape[1], input_shape[1]))
+        mult = ops.concatenate(
+            [ops.expand_dims(batch_size, -1), ops.convert_to_tensor([1, 1])],
+            axis=0,
+        )
+        return ops.tile(mask, mult)
 
     def get_config(self):
         config = super().get_config()
@@ -434,35 +483,63 @@ transformer.compile(
 transformer.fit(train_ds, epochs=epochs, validation_data=val_ds)
 ```
 
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold">Model: "transformer"</span>
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">┏━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━┓
+┃<span style="font-weight: bold"> Layer (type)        </span>┃<span style="font-weight: bold"> Output Shape      </span>┃<span style="font-weight: bold"> Param # </span>┃<span style="font-weight: bold"> Connected to         </span>┃
+┡━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━┩
+│ encoder_inputs      │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>)      │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ -                    │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">InputLayer</span>)        │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ positional_embeddi… │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">256</span>) │ <span style="color: #00af00; text-decoration-color: #00af00">3,845,…</span> │ encoder_inputs[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>] │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">PositionalEmbeddi…</span> │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ decoder_inputs      │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>)      │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ -                    │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">InputLayer</span>)        │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ transformer_encoder │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">256</span>) │ <span style="color: #00af00; text-decoration-color: #00af00">3,155,…</span> │ positional_embeddin… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">TransformerEncode…</span> │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ functional_5        │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>,      │ <span style="color: #00af00; text-decoration-color: #00af00">12,959…</span> │ decoder_inputs[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Functional</span>)        │ <span style="color: #00af00; text-decoration-color: #00af00">15000</span>)            │         │ transformer_encoder… │
+└─────────────────────┴───────────────────┴─────────┴──────────────────────┘
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Total params: </span><span style="color: #00af00; text-decoration-color: #00af00">19,960,216</span> (76.14 MB)
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Trainable params: </span><span style="color: #00af00; text-decoration-color: #00af00">19,960,216</span> (76.14 MB)
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Non-trainable params: </span><span style="color: #00af00; text-decoration-color: #00af00">0</span> (0.00 B)
+</pre>
+
+
+
 <div class="k-default-codeblock">
 ```
-Model: "transformer"
-__________________________________________________________________________________________________
- Layer (type)                Output Shape                 Param #   Connected to                  
-==================================================================================================
- encoder_inputs (InputLayer  [(None, None)]               0         []                            
- )                                                                                                
-                                                                                                  
- positional_embedding (Posi  (None, None, 256)            3845120   ['encoder_inputs[0][0]']      
- tionalEmbedding)                                                                                 
-                                                                                                  
- decoder_inputs (InputLayer  [(None, None)]               0         []                            
- )                                                                                                
-                                                                                                  
- transformer_encoder (Trans  (None, None, 256)            3155456   ['positional_embedding[0][0]']
- formerEncoder)                                                                                   
-                                                                                                  
- model_1 (Functional)        (None, None, 15000)          1295964   ['decoder_inputs[0][0]',      
-                                                          0          'transformer_encoder[0][0]'] 
-                                                                                                  
-==================================================================================================
-Total params: 19960216 (76.14 MB)
-Trainable params: 19960216 (76.14 MB)
-Non-trainable params: 0 (0.00 Byte)
-__________________________________________________________________________________________________
-1302/1302 [==============================] - 99s 69ms/step - loss: 3.6480 - accuracy: 0.4675 - val_loss: 2.4991 - val_accuracy: 0.6096
+    5/1302 [37m━━━━━━━━━━━━━━━━━━━━  42s 33ms/step - accuracy: 0.3558 - loss: 8.3596
 
-<keras.src.callbacks.History at 0x14854493dcf0>
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1699484373.932513   76082 device_compiler.h:187] Compiled cluster using XLA!  This line is logged at most once for the lifetime of the process.
+
+ 1302/1302 ━━━━━━━━━━━━━━━━━━━━ 64s 39ms/step - accuracy: 0.7073 - loss: 2.2372 - val_accuracy: 0.7329 - val_loss: 1.6477
+
+<keras.src.callbacks.history.History at 0x7ff611f21540>
 
 ```
 </div>
@@ -488,7 +565,10 @@ def decode_sequence(input_sentence):
         tokenized_target_sentence = spa_vectorization([decoded_sentence])[:, :-1]
         predictions = transformer([tokenized_input_sentence, tokenized_target_sentence])
 
-        sampled_token_index = np.argmax(predictions[0, i, :])
+        # ops.argmax(predictions[0, i, :]) is not a concrete value for jax here
+        sampled_token_index = ops.convert_to_numpy(
+            ops.argmax(predictions[0, i, :])
+        ).item(0)
         sampled_token = spa_index_lookup[sampled_token_index]
         decoded_sentence += " " + sampled_token
 
