@@ -2,7 +2,7 @@
 Title: Timeseries classification from scratch
 Author: [hfawaz](https://github.com/hfawaz/)
 Date created: 2020/07/21
-Last modified: 2021/07/16
+Last modified: 2023/11/10
 Description: Training a timeseries classifier from scratch on the FordA dataset from the UCR/UEA archive.
 Accelerator: GPU
 """
