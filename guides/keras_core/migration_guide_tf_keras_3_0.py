@@ -848,7 +848,6 @@ Core](https://keras.io/keras_core/guides/getting_started_with_keras_core/)
 * [The Sequential model](https://keras.io/keras_core/guides/sequential_model/)
 * [Making new layers & models via
 subclassing](https://keras.io/keras_core/guides/making_new_layers_and_models_via_subclassing/)
-subclassing](https://keras.io/keras_core/guides/making_new_layers_and_models_via_subclassing/)
 * [Training & evaluation with the built-in
 methods](https://keras.io/keras_core/guides/training_with_built_in_methods/)
 * [Writing your own
@@ -863,7 +862,6 @@ JAX](https://keras.io/keras_core/guides/custom_train_step_in_jax/)
 * [Customizing what happens in fit() with
 PyTorch](https://keras.io/keras_core/guides/custom_train_step_in_torch/)
 * [Writing a custom training loop with
-TensorFlow](https://keras.io/keras_core/guides/writing_a_custom_training_loop_in_tensorflow/)
 TensorFlow](https://keras.io/keras_core/guides/writing_a_custom_training_loop_in_tensorflow/)
 * [Writing a custom training loop with
 JAX](https://keras.io/keras_core/guides/writing_a_custom_training_loop_in_jax/)
