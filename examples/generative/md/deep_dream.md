@@ -35,17 +35,19 @@ To obtain the detail lost during upscaling, we simply
 take the original image, shrink it down, upscale it,
 and compare the result to the (resized) original image.
 
-
 ---
 ## Setup
 
 
-
 ```python
+import os
+
+os.environ["KERAS_BACKEND"] = "tensorflow"
+
 import numpy as np
 import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras.applications import inception_v3
+import keras
+from keras.applications import inception_v3
 
 base_image_path = keras.utils.get_file("sky.jpg", "https://i.imgur.com/aGBdQyK.jpg")
 result_prefix = "sky_dream"
@@ -68,26 +70,24 @@ num_octave = 3  # Number of scales at which to run gradient ascent
 octave_scale = 1.4  # Size ratio between scales
 iterations = 20  # Number of ascent steps per scale
 max_loss = 15.0
-
 ```
 
 This is our base image:
-
 
 
 ```python
 from IPython.display import Image, display
 
 display(Image(base_image_path))
-
 ```
 
 
-![jpeg](/img/examples/generative/deep_dream/deep_dream_5_0.jpeg)
+    
+![jpeg](/img/examples/generative/deep_dream/deep_dream_5_0.jpg)
+    
 
 
 Let's set up some image preprocessing/deprocessing utilities:
-
 
 
 ```python
@@ -113,7 +113,6 @@ def deprocess_image(x):
     x = np.clip(x, 0, 255).astype("uint8")
     return x
 
-
 ```
 
 ---
@@ -121,7 +120,6 @@ def deprocess_image(x):
 
 First, build a feature extraction model to retrieve the activations of our target layers
 given an input image.
-
 
 
 ```python
@@ -139,11 +137,9 @@ outputs_dict = dict(
 # Set up a model that returns the activation values for every target layer
 # (as a dict)
 feature_extractor = keras.Model(inputs=model.inputs, outputs=outputs_dict)
-
 ```
 
 The actual loss computation is very simple:
-
 
 
 ```python
@@ -160,12 +156,10 @@ def compute_loss(input_image):
         loss += coeff * tf.reduce_sum(tf.square(activation[:, 2:-2, 2:-2, :])) / scaling
     return loss
 
-
 ```
 
 ---
 ## Set up the gradient ascent loop for one octave
-
 
 
 ```python
@@ -191,12 +185,10 @@ def gradient_ascent_loop(img, iterations, learning_rate, max_loss=None):
         print("... Loss value at step %d: %.2f" % (i, loss))
     return img
 
-
 ```
 
 ---
 ## Run the training loop, iterating over different octaves
-
 
 
 ```python
@@ -205,7 +197,7 @@ original_shape = original_img.shape[1:3]
 
 successive_shapes = [original_shape]
 for i in range(1, num_octave):
-    shape = tuple([int(dim / (octave_scale ** i)) for dim in original_shape])
+    shape = tuple([int(dim / (octave_scale**i)) for dim in original_shape])
     successive_shapes.append(shape)
 successive_shapes = successive_shapes[::-1]
 shrunk_original_img = tf.image.resize(original_img, successive_shapes[0])
@@ -225,87 +217,88 @@ for i, shape in enumerate(successive_shapes):
     shrunk_original_img = tf.image.resize(original_img, shape)
 
 keras.utils.save_img(result_prefix + ".png", deprocess_image(img.numpy()))
-
 ```
 
 <div class="k-default-codeblock">
 ```
 Processing octave 0 with shape (326, 489)
-... Loss value at step 0: 0.44
-... Loss value at step 1: 0.62
-... Loss value at step 2: 0.90
-... Loss value at step 3: 1.25
+... Loss value at step 0: 0.45
+... Loss value at step 1: 0.63
+... Loss value at step 2: 0.91
+... Loss value at step 3: 1.24
 ... Loss value at step 4: 1.57
-... Loss value at step 5: 1.92
+... Loss value at step 5: 1.91
 ... Loss value at step 6: 2.20
-... Loss value at step 7: 2.52
+... Loss value at step 7: 2.50
 ... Loss value at step 8: 2.82
 ... Loss value at step 9: 3.11
-... Loss value at step 10: 3.39
-... Loss value at step 11: 3.67
-... Loss value at step 12: 3.93
-... Loss value at step 13: 4.19
-... Loss value at step 14: 4.42
-... Loss value at step 15: 4.69
-... Loss value at step 16: 4.93
-... Loss value at step 17: 5.18
+... Loss value at step 10: 3.40
+... Loss value at step 11: 3.70
+... Loss value at step 12: 3.95
+... Loss value at step 13: 4.20
+... Loss value at step 14: 4.48
+... Loss value at step 15: 4.72
+... Loss value at step 16: 4.99
+... Loss value at step 17: 5.23
 ... Loss value at step 18: 5.47
-... Loss value at step 19: 5.70
+... Loss value at step 19: 5.69
 Processing octave 1 with shape (457, 685)
-... Loss value at step 0: 1.08
-... Loss value at step 1: 1.74
-... Loss value at step 2: 2.30
-... Loss value at step 3: 2.79
-... Loss value at step 4: 3.21
-... Loss value at step 5: 3.64
-... Loss value at step 6: 4.04
-... Loss value at step 7: 4.42
-... Loss value at step 8: 4.78
-... Loss value at step 9: 5.13
-... Loss value at step 10: 5.49
-... Loss value at step 11: 5.82
-... Loss value at step 12: 6.14
-... Loss value at step 13: 6.43
-... Loss value at step 14: 6.78
-... Loss value at step 15: 7.07
-... Loss value at step 16: 7.36
-... Loss value at step 17: 7.64
-... Loss value at step 18: 7.94
-... Loss value at step 19: 8.21
+... Loss value at step 0: 1.11
+... Loss value at step 1: 1.77
+... Loss value at step 2: 2.35
+... Loss value at step 3: 2.82
+... Loss value at step 4: 3.25
+... Loss value at step 5: 3.67
+... Loss value at step 6: 4.05
+... Loss value at step 7: 4.44
+... Loss value at step 8: 4.79
+... Loss value at step 9: 5.15
+... Loss value at step 10: 5.50
+... Loss value at step 11: 5.84
+... Loss value at step 12: 6.18
+... Loss value at step 13: 6.49
+... Loss value at step 14: 6.82
+... Loss value at step 15: 7.12
+... Loss value at step 16: 7.42
+... Loss value at step 17: 7.71
+... Loss value at step 18: 8.01
+... Loss value at step 19: 8.30
 Processing octave 2 with shape (640, 960)
-... Loss value at step 0: 1.25
+... Loss value at step 0: 1.27
 ... Loss value at step 1: 2.02
-... Loss value at step 2: 2.65
-... Loss value at step 3: 3.18
-... Loss value at step 4: 3.68
-... Loss value at step 5: 4.18
-... Loss value at step 6: 4.63
-... Loss value at step 7: 5.09
-... Loss value at step 8: 5.49
-... Loss value at step 9: 5.90
-... Loss value at step 10: 6.24
-... Loss value at step 11: 6.57
-... Loss value at step 12: 6.84
-... Loss value at step 13: 7.21
-... Loss value at step 14: 7.59
-... Loss value at step 15: 7.89
-... Loss value at step 16: 8.18
-... Loss value at step 17: 8.55
-... Loss value at step 18: 8.84
-... Loss value at step 19: 9.13
+... Loss value at step 2: 2.63
+... Loss value at step 3: 3.15
+... Loss value at step 4: 3.66
+... Loss value at step 5: 4.12
+... Loss value at step 6: 4.58
+... Loss value at step 7: 5.01
+... Loss value at step 8: 5.42
+... Loss value at step 9: 5.80
+... Loss value at step 10: 6.19
+... Loss value at step 11: 6.54
+... Loss value at step 12: 6.89
+... Loss value at step 13: 7.22
+... Loss value at step 14: 7.57
+... Loss value at step 15: 7.88
+... Loss value at step 16: 8.21
+... Loss value at step 17: 8.53
+... Loss value at step 18: 8.80
+... Loss value at step 19: 9.10
 
 ```
 </div>
 Display the result.
 
-You can use the trained model hosted on [Hugging Face Hub](https://huggingface.co/keras-io/deep-dream) and try the demo on [Hugging Face Spaces](https://huggingface.co/spaces/keras-io/deep-dream).
-
+You can use the trained model hosted on [Hugging Face Hub](https://huggingface.co/keras-io/deep-dream)
+and try the demo on [Hugging Face Spaces](https://huggingface.co/spaces/keras-io/deep-dream).
 
 
 ```python
 display(Image(result_prefix + ".png"))
-
 ```
 
 
+    
 ![png](/img/examples/generative/deep_dream/deep_dream_17_0.png)
+    
+
