@@ -176,15 +176,15 @@ for i, (image, label) in enumerate(zip(sample_images[:9], sample_labels[:9])):
 
 <div class="k-default-codeblock">
 ```
-[0.0, 0.0, 0.0002901381521951407, 0.0, 0.0, 0.9997098445892334, 0.0, 0.0, 0.0, 0.0]
-[0.0, 0.0, 0.24137449264526367, 0.0, 0.0, 0.0, 0.0, 0.7586255073547363, 0.0, 0.0]
-[0.0, 0.0, 0.6768605709075928, 0.0, 0.0, 0.0, 0.0, 0.32313939929008484, 0.0, 0.0]
-[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.42785122990608215, 0.0, 0.5721487998962402, 0.0]
-[0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 2.5768944311721498e-08, 0.0]
+[0.0, 0.9964277148246765, 0.0, 0.0, 0.003572270041331649, 0.0, 0.0, 0.0, 0.0, 0.0]
+[0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+[0.0, 0.0, 0.0, 0.0, 0.9794676899909973, 0.02053229510784149, 0.0, 0.0, 0.0, 0.0]
+[0.0, 0.0, 0.0, 0.0, 0.9536369442939758, 0.0, 0.0, 0.0, 0.04636305570602417, 0.0]
 [0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
-[0.0, 0.0, 0.0, 0.0, 0.14771205186843872, 0.0, 0.0, 0.8522879481315613, 0.0, 0.0]
-[0.044922053813934326, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.9550779461860657]
-[0.0, 0.0, 0.1522132009267807, 0.8477867841720581, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.7631776928901672, 0.0, 0.0, 0.23682232201099396]
+[0.0, 0.0, 0.045958757400512695, 0.0, 0.0, 0.0, 0.9540412425994873, 0.0, 0.0, 0.0]
+[0.0, 0.0, 0.0, 0.0, 2.8015051611873787e-08, 0.0, 0.0, 1.0, 0.0, 0.0]
+[0.0, 0.0, 0.0, 0.0003173351287841797, 0.0, 0.9996826648712158, 0.0, 0.0, 0.0, 0.0]
 
 ```
 </div>
@@ -202,7 +202,8 @@ for i, (image, label) in enumerate(zip(sample_images[:9], sample_labels[:9])):
 def get_training_model():
     model = keras.Sequential(
         [
-            layers.Conv2D(16, (5, 5), activation="relu", input_shape=(28, 28, 1)),
+            layers.Input(shape=(28, 28, 1)),
+            layers.Conv2D(16, (5, 5), activation="relu"),
             layers.MaxPooling2D(pool_size=(2, 2)),
             layers.Conv2D(32, (5, 5), activation="relu"),
             layers.MaxPooling2D(pool_size=(2, 2)),
@@ -225,13 +226,6 @@ initial_model = get_training_model()
 initial_model.save_weights("initial_weights.weights.h5")
 ```
 
-<div class="k-default-codeblock">
-```
-/opt/conda/envs/keras-tensorflow/lib/python3.10/site-packages/keras/src/layers/convolutional/base_conv.py:99: UserWarning: Do not pass an `input_shape`/`input_dim` argument to a layer. When using Sequential models, prefer using an `Input(shape)` object as the first layer in the model instead.
-  super().__init__(
-
-```
-</div>
 ---
 ## 1. Train the model with the mixed up dataset
 
@@ -248,32 +242,32 @@ print("Test accuracy: {:.2f}%".format(test_acc * 100))
 <div class="k-default-codeblock">
 ```
 Epoch 1/10
-  61/907 ━[37m━━━━━━━━━━━━━━━━━━━  2s 3ms/step - accuracy: 0.1928 - loss: 2.2077
+  62/907 ━[37m━━━━━━━━━━━━━━━━━━━  2s 3ms/step - accuracy: 0.2518 - loss: 2.2072
 
 WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
-I0000 00:00:1699566038.383332  695052 device_compiler.h:187] Compiled cluster using XLA!  This line is logged at most once for the lifetime of the process.
+I0000 00:00:1699655923.381468   16749 device_compiler.h:187] Compiled cluster using XLA!  This line is logged at most once for the lifetime of the process.
 
- 907/907 ━━━━━━━━━━━━━━━━━━━━ 12s 8ms/step - accuracy: 0.5234 - loss: 1.4321 - val_accuracy: 0.7485 - val_loss: 0.6656
+ 907/907 ━━━━━━━━━━━━━━━━━━━━ 13s 9ms/step - accuracy: 0.5335 - loss: 1.4414 - val_accuracy: 0.7635 - val_loss: 0.6678
 Epoch 2/10
- 907/907 ━━━━━━━━━━━━━━━━━━━━ 11s 2ms/step - accuracy: 0.7129 - loss: 0.9673 - val_accuracy: 0.7990 - val_loss: 0.5879
+ 907/907 ━━━━━━━━━━━━━━━━━━━━ 12s 4ms/step - accuracy: 0.7168 - loss: 0.9688 - val_accuracy: 0.7925 - val_loss: 0.5849
 Epoch 3/10
- 907/907 ━━━━━━━━━━━━━━━━━━━━ 3s 2ms/step - accuracy: 0.7505 - loss: 0.8890 - val_accuracy: 0.8225 - val_loss: 0.5296
+ 907/907 ━━━━━━━━━━━━━━━━━━━━ 5s 4ms/step - accuracy: 0.7525 - loss: 0.8940 - val_accuracy: 0.8290 - val_loss: 0.5138
 Epoch 4/10
- 907/907 ━━━━━━━━━━━━━━━━━━━━ 4s 4ms/step - accuracy: 0.7767 - loss: 0.8361 - val_accuracy: 0.8425 - val_loss: 0.4690
+ 907/907 ━━━━━━━━━━━━━━━━━━━━ 4s 3ms/step - accuracy: 0.7742 - loss: 0.8431 - val_accuracy: 0.8360 - val_loss: 0.4726
 Epoch 5/10
- 907/907 ━━━━━━━━━━━━━━━━━━━━ 5s 3ms/step - accuracy: 0.7923 - loss: 0.7964 - val_accuracy: 0.8525 - val_loss: 0.4349
+ 907/907 ━━━━━━━━━━━━━━━━━━━━ 3s 3ms/step - accuracy: 0.7876 - loss: 0.8095 - val_accuracy: 0.8550 - val_loss: 0.4450
 Epoch 6/10
- 907/907 ━━━━━━━━━━━━━━━━━━━━ 4s 2ms/step - accuracy: 0.7993 - loss: 0.7705 - val_accuracy: 0.8580 - val_loss: 0.4083
+ 907/907 ━━━━━━━━━━━━━━━━━━━━ 3s 3ms/step - accuracy: 0.8029 - loss: 0.7794 - val_accuracy: 0.8560 - val_loss: 0.4178
 Epoch 7/10
- 907/907 ━━━━━━━━━━━━━━━━━━━━ 3s 2ms/step - accuracy: 0.8087 - loss: 0.7391 - val_accuracy: 0.8660 - val_loss: 0.3881
+ 907/907 ━━━━━━━━━━━━━━━━━━━━ 2s 3ms/step - accuracy: 0.8039 - loss: 0.7632 - val_accuracy: 0.8600 - val_loss: 0.4056
 Epoch 8/10
- 907/907 ━━━━━━━━━━━━━━━━━━━━ 3s 2ms/step - accuracy: 0.8129 - loss: 0.7297 - val_accuracy: 0.8615 - val_loss: 0.3804
+ 907/907 ━━━━━━━━━━━━━━━━━━━━ 3s 3ms/step - accuracy: 0.8115 - loss: 0.7465 - val_accuracy: 0.8510 - val_loss: 0.4114
 Epoch 9/10
- 907/907 ━━━━━━━━━━━━━━━━━━━━ 3s 2ms/step - accuracy: 0.8196 - loss: 0.7147 - val_accuracy: 0.8655 - val_loss: 0.3720
+ 907/907 ━━━━━━━━━━━━━━━━━━━━ 3s 3ms/step - accuracy: 0.8115 - loss: 0.7364 - val_accuracy: 0.8645 - val_loss: 0.3983
 Epoch 10/10
- 907/907 ━━━━━━━━━━━━━━━━━━━━ 3s 3ms/step - accuracy: 0.8222 - loss: 0.7018 - val_accuracy: 0.8725 - val_loss: 0.3549
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 0s 2ms/step - accuracy: 0.8673 - loss: 0.3905
-Test accuracy: 86.80%
+ 907/907 ━━━━━━━━━━━━━━━━━━━━ 3s 3ms/step - accuracy: 0.8182 - loss: 0.7237 - val_accuracy: 0.8630 - val_loss: 0.3735
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 0s 2ms/step - accuracy: 0.8610 - loss: 0.4030
+Test accuracy: 85.82%
 
 ```
 </div>
@@ -294,27 +288,27 @@ print("Test accuracy: {:.2f}%".format(test_acc * 100))
 <div class="k-default-codeblock">
 ```
 Epoch 1/10
- 907/907 ━━━━━━━━━━━━━━━━━━━━ 8s 6ms/step - accuracy: 0.5681 - loss: 1.1770 - val_accuracy: 0.7305 - val_loss: 0.7368
+ 907/907 ━━━━━━━━━━━━━━━━━━━━ 8s 6ms/step - accuracy: 0.5690 - loss: 1.1928 - val_accuracy: 0.7585 - val_loss: 0.6519
 Epoch 2/10
- 907/907 ━━━━━━━━━━━━━━━━━━━━ 5s 2ms/step - accuracy: 0.7465 - loss: 0.6636 - val_accuracy: 0.7965 - val_loss: 0.5507
+ 907/907 ━━━━━━━━━━━━━━━━━━━━ 5s 2ms/step - accuracy: 0.7525 - loss: 0.6484 - val_accuracy: 0.7860 - val_loss: 0.5799
 Epoch 3/10
- 907/907 ━━━━━━━━━━━━━━━━━━━━ 2s 2ms/step - accuracy: 0.7858 - loss: 0.5783 - val_accuracy: 0.8180 - val_loss: 0.5118
+ 907/907 ━━━━━━━━━━━━━━━━━━━━ 2s 2ms/step - accuracy: 0.7895 - loss: 0.5661 - val_accuracy: 0.8205 - val_loss: 0.5122
 Epoch 4/10
- 907/907 ━━━━━━━━━━━━━━━━━━━━ 3s 2ms/step - accuracy: 0.8120 - loss: 0.5161 - val_accuracy: 0.8385 - val_loss: 0.4411
+ 907/907 ━━━━━━━━━━━━━━━━━━━━ 3s 2ms/step - accuracy: 0.8148 - loss: 0.5126 - val_accuracy: 0.8415 - val_loss: 0.4375
 Epoch 5/10
- 907/907 ━━━━━━━━━━━━━━━━━━━━ 3s 2ms/step - accuracy: 0.8270 - loss: 0.4770 - val_accuracy: 0.8435 - val_loss: 0.4190
+ 907/907 ━━━━━━━━━━━━━━━━━━━━ 3s 2ms/step - accuracy: 0.8306 - loss: 0.4636 - val_accuracy: 0.8610 - val_loss: 0.3913
 Epoch 6/10
- 907/907 ━━━━━━━━━━━━━━━━━━━━ 3s 2ms/step - accuracy: 0.8368 - loss: 0.4458 - val_accuracy: 0.8565 - val_loss: 0.3976
+ 907/907 ━━━━━━━━━━━━━━━━━━━━ 2s 2ms/step - accuracy: 0.8433 - loss: 0.4312 - val_accuracy: 0.8680 - val_loss: 0.3734
 Epoch 7/10
- 907/907 ━━━━━━━━━━━━━━━━━━━━ 3s 2ms/step - accuracy: 0.8473 - loss: 0.4220 - val_accuracy: 0.8680 - val_loss: 0.3699
+ 907/907 ━━━━━━━━━━━━━━━━━━━━ 3s 2ms/step - accuracy: 0.8544 - loss: 0.4072 - val_accuracy: 0.8750 - val_loss: 0.3606
 Epoch 8/10
- 907/907 ━━━━━━━━━━━━━━━━━━━━ 3s 2ms/step - accuracy: 0.8508 - loss: 0.4070 - val_accuracy: 0.8700 - val_loss: 0.3672
+ 907/907 ━━━━━━━━━━━━━━━━━━━━ 3s 2ms/step - accuracy: 0.8577 - loss: 0.3913 - val_accuracy: 0.8735 - val_loss: 0.3520
 Epoch 9/10
- 907/907 ━━━━━━━━━━━━━━━━━━━━ 3s 2ms/step - accuracy: 0.8560 - loss: 0.3869 - val_accuracy: 0.8680 - val_loss: 0.3570
+ 907/907 ━━━━━━━━━━━━━━━━━━━━ 3s 2ms/step - accuracy: 0.8645 - loss: 0.3803 - val_accuracy: 0.8725 - val_loss: 0.3536
 Epoch 10/10
- 907/907 ━━━━━━━━━━━━━━━━━━━━ 3s 2ms/step - accuracy: 0.8672 - loss: 0.3690 - val_accuracy: 0.8715 - val_loss: 0.3381
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 0s 2ms/step - accuracy: 0.8678 - loss: 0.3734
-Test accuracy: 86.45%
+ 907/907 ━━━━━━━━━━━━━━━━━━━━ 3s 3ms/step - accuracy: 0.8686 - loss: 0.3597 - val_accuracy: 0.8745 - val_loss: 0.3395
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 1s 4ms/step - accuracy: 0.8705 - loss: 0.3672
+Test accuracy: 86.92%
 
 ```
 </div>
