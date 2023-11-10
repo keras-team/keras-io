@@ -523,6 +523,69 @@ inputs = {
 layer(inputs)
 
 """
+### Random seed behavior changes between Keras 2 and Keras 3.
+
+The random seed behavior has changed in Keras 3. The same seed will produce
+different random values in Keras 2 and Keras 3. Although the values generated
+are deterministic and reproducible, they will differ between Keras 2 and
+Keras 3. Therefore, when transitioning from Keras 2 to Keras 3, you may observe
+that some of your experiments are not reproducible when using random operations.
+
+
+You will need to uninstall Keras 3, reinstall TensorFlow and Keras 2,
+then restart your runtime to reproduce the following results. The following
+example uses a Dropout layer to demonstrate this behavior. Notice that the
+values chosen to be dropped out from the data will be different in Keras 2 and
+Keras 3.
+
+```python
+import numpy as np
+import tensorflow as tf
+
+# Create some dummy data
+data = np.array([[1 , 2], [3, 4]], dtype="float32")
+# let us initialize a dropout layer with seed = 42
+dropout_layer = tf.keras.layers.Dropout(rate=0.3, seed=42)
+# Apply the Dropout layer to the data
+dropout_output = dropout_layer(data, training=True)
+
+print("Original data:")
+print(data)
+print("Data after applying Dropout:")
+print(dropout_output)
+```
+Output:
+
+```python
+Original data:
+[[1. 2.]
+ [3. 4.]]
+Data after applying Dropout:
+tf.Tensor(
+[[1.4285715 2.857143 ]
+ [4.285714  0.       ]], shape=(2, 2), dtype=float32)
+ ```
+"""
+
+"""
+Before trying the following snippet of code, please reinstall Keras 3 and
+restart your runtime. The same seed in Keras 3 will behave differently
+compared to Keras 2.
+"""
+
+# Create some dummy data
+data = np.array([[1, 2], [3, 4]])
+# let us initialize a dropout layer with seed = 42
+dropout_layer = keras.layers.Dropout(rate=0.3, seed=42)
+# Apply the Dropout layer to the data
+dropout_output = dropout_layer(data, training=True)
+
+print("Original data:")
+print(data)
+print("Data after applying Dropout:")
+print(dropout_output)
+
+"""
 ### Removed features
 
 
