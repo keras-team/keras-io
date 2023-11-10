@@ -17,14 +17,18 @@ Adapted from Deep Learning with Python (2017).
 
 
 ```python
+import os
+
+os.environ["KERAS_BACKEND"] = "tensorflow"
+
 import numpy as np
 import tensorflow as tf
-from tensorflow import keras
+import keras
 
 # Display
 from IPython.display import Image, display
+import matplotlib as mpl
 import matplotlib.pyplot as plt
-import matplotlib.cm as cm
 
 ```
 
@@ -142,13 +146,14 @@ plt.show()
 
 <div class="k-default-codeblock">
 ```
-1/1 [==============================] - 1s 543ms/step
-Predicted: [('n02504458', 'African_elephant', 9.86239)]
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 3s 3s/step
+
+Predicted: [('n02504458', 'African_elephant', 9.860664)]
 
 ```
 </div>
     
-![png](/img/examples/vision/grad_cam/grad_cam_8_1.png)
+![png](/img/examples/vision/grad_cam/grad_cam_8_3.png)
     
 
 
@@ -167,7 +172,7 @@ def save_and_display_gradcam(img_path, heatmap, cam_path="cam.jpg", alpha=0.4):
     heatmap = np.uint8(255 * heatmap)
 
     # Use jet colormap to colorize heatmap
-    jet = cm.get_cmap("jet")
+    jet = mpl.colormaps["jet"]
 
     # Use RGB values of the colormap
     jet_colors = jet(np.arange(256))[:, :3]
@@ -192,15 +197,9 @@ def save_and_display_gradcam(img_path, heatmap, cam_path="cam.jpg", alpha=0.4):
 save_and_display_gradcam(img_path, heatmap)
 ```
 
-<div class="k-default-codeblock">
-```
-/var/folders/8n/8w8cqnvj01xd4ghznl11nyn000_93_/T/ipykernel_7380/2203377560.py:10: MatplotlibDeprecationWarning: The get_cmap function was deprecated in Matplotlib 3.7 and will be removed two minor releases later. Use ``matplotlib.colormaps[name]`` or ``matplotlib.colormaps.get_cmap(obj)`` instead.
-  jet = cm.get_cmap("jet")
 
-```
-</div>
     
-![jpeg](/img/examples/vision/grad_cam/grad_cam_10_1.jpg)
+![jpeg](/img/examples/vision/grad_cam/grad_cam_10_0.jpg)
     
 
 
@@ -235,8 +234,8 @@ print("Predicted:", decode_predictions(preds, top=2)[0])
 
 <div class="k-default-codeblock">
 ```
-1/1 [==============================] - 0s 154ms/step
-Predicted: [('n02112137', 'chow', 4.6112413), ('n02124075', 'Egyptian_cat', 4.3817368)]
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 11ms/step
+Predicted: [('n02112137', 'chow', 4.610808), ('n02124075', 'Egyptian_cat', 4.3835773)]
 
 ```
 </div>
@@ -249,15 +248,9 @@ heatmap = make_gradcam_heatmap(img_array, model, last_conv_layer_name, pred_inde
 save_and_display_gradcam(img_path, heatmap)
 ```
 
-<div class="k-default-codeblock">
-```
-/var/folders/8n/8w8cqnvj01xd4ghznl11nyn000_93_/T/ipykernel_7380/2203377560.py:10: MatplotlibDeprecationWarning: The get_cmap function was deprecated in Matplotlib 3.7 and will be removed two minor releases later. Use ``matplotlib.colormaps[name]`` or ``matplotlib.colormaps.get_cmap(obj)`` instead.
-  jet = cm.get_cmap("jet")
 
-```
-</div>
     
-![jpeg](/img/examples/vision/grad_cam/grad_cam_14_1.jpg)
+![jpeg](/img/examples/vision/grad_cam/grad_cam_14_0.jpg)
     
 
 
@@ -270,14 +263,8 @@ heatmap = make_gradcam_heatmap(img_array, model, last_conv_layer_name, pred_inde
 save_and_display_gradcam(img_path, heatmap)
 ```
 
-<div class="k-default-codeblock">
-```
-/var/folders/8n/8w8cqnvj01xd4ghznl11nyn000_93_/T/ipykernel_7380/2203377560.py:10: MatplotlibDeprecationWarning: The get_cmap function was deprecated in Matplotlib 3.7 and will be removed two minor releases later. Use ``matplotlib.colormaps[name]`` or ``matplotlib.colormaps.get_cmap(obj)`` instead.
-  jet = cm.get_cmap("jet")
 
-```
-</div>
     
-![jpeg](/img/examples/vision/grad_cam/grad_cam_16_1.jpg)
+![jpeg](/img/examples/vision/grad_cam/grad_cam_16_0.jpg)
     
 
