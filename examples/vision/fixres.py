@@ -27,9 +27,9 @@ to fix this discrepancy.
 ## Imports
 """
 
-from tensorflow import keras
-from tensorflow.keras import layers
-import tensorflow as tf
+import keras
+from keras import layers
+import tensorflow as tf  # just for image processing and pipeline
 
 import tensorflow_datasets as tfds
 
@@ -70,7 +70,7 @@ results.
 
 # Reference: https://github.com/facebookresearch/FixRes/blob/main/transforms_v2.py.
 
-batch_size = 128
+batch_size = 32
 auto = tf.data.AUTOTUNE
 smaller_size = 128
 bigger_size = 224
@@ -144,17 +144,16 @@ def make_dataset(
     else:
         preprocess_func = preprocess_finetune
 
+    dataset = dataset.map(
+        lambda x, y: preprocess_func(x, y, train),
+        num_parallel_calls=num_parallel_calls,
+    )
+    dataset = dataset.batch(batch_size)
+
     if train:
         dataset = dataset.shuffle(batch_size * 10)
 
-    return (
-        dataset.map(
-            lambda x, y: preprocess_func(x, y, train),
-            num_parallel_calls=num_parallel_calls,
-        )
-        .batch(batch_size)
-        .prefetch(num_parallel_calls)
-    )
+    return dataset.prefetch(num_parallel_calls)
 
 
 """
@@ -236,7 +235,12 @@ def get_training_model(num_classes=5):
 
 
 def train_and_evaluate(
-    model, train_ds, val_ds, epochs, learning_rate=1e-3, use_early_stopping=False
+    model,
+    train_ds,
+    val_ds,
+    epochs,
+    learning_rate=1e-3,
+    use_early_stopping=False,
 ):
     optimizer = keras.optimizers.Adam(learning_rate=learning_rate)
     model.compile(
