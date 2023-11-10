@@ -1,24 +1,24 @@
-# Migration guide : Tensorflow to Keras 3.0
+# Migration guide : TensorFlow-only Keras 2 code to multi-backend Keras 3
 
 **Author:** [Divyashree Sreepathihalli](https://github.com/divyashreepathihalli)<br>
 **Date created:** 2023/10/23<br>
 **Last modified:** 2023/10/30<br>
-**Description:** Instructions on migrating your TensorFlow code to Keras 3.0.
+**Description:** Instructions on migrating your Keras 2 code to multi-backend Keras 3.
 
 
 <img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/guides/ipynb/keras_core/migration_guide_tf_keras_3_0.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/guides/keras_core/migration_guide_tf_keras_3_0.py)
 
 
 
-This guide will help you migrate code from TensorFlow 2.x to keras 3.0. The overhead for
-the migration is minimal. But once you have migrated you can run Keras workflows on top
-of arbitrary frameworks — starting with TensorFlow, JAX, and PyTorch.
+This guide will help you migrate TensorFlow-only Keras 2 code to multi-backend Keras
+3 code. The overhead for the migration is minimal. But once you have migrated
+you can run Keras workflows on top of either JAX, TensorFlow, or PyTorch.
 
-Keras 3.0 is also a drop-in replacement for `tf.keras`, with near-full backwards
-compatibility with `tf.keras` code when using the TensorFlow backend. In the vast
-majority of cases you can just start importing it via `import keras` in place of `from
-tensorflow import keras` and your existing code will run with no issue — and generally
-with slightly improved performance, thanks to XLA compilation.
+Keras 3 is intended to be a drop-in replacement for Keras 2 when using the TensorFlow
+backend, with near-full backwards compatibility with `tf.keras` code when using
+the TensorFlow backend. In most cases you can just start importing it via `import keras`
+in place of `from tensorflow import keras` and your existing code will run with
+no issue — and generally with slightly improved performance, thanks to XLA compilation.
 
 Commonly encountered issues and frequently asked questions can be located in
 the following links.
@@ -33,17 +33,14 @@ Issues](https://keras.io/keras_core/announcement/#:~:text=Enjoy%20the%20library!
 
 First, lets install keras-nightly.
 
-We're going to be using the Tensorflow backend here -- but you can edit the string below
-to "tensorflow" or "torch" and hit "Restart runtime", once you have migrated your code
-and your code will run just the same!
+This example uses the TensorFlow backend (os.environ["KERAS_BACKEND"] = "tensorflow").
+After you've migrated your code, you can change the "tensorflow" string to "torch"
+and click "Restart runtime", and your code will run on the PyTorch backend!
 
 
 ```python
-!! pip install keras-nightly
+!pip install keras-nightly
 ```
-
-
-
 
 ```python
 import os
@@ -56,30 +53,33 @@ import numpy as np
 ```
 <div class="k-default-codeblock">
 ```
-['Collecting keras-nightly',
- '  Downloading keras_nightly-3.0.0.dev2023110103-py3-none-any.whl (985 kB)',
- '\x1b[?25l     \x1b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\x1b[0m \x1b[32m0.0/985.1 kB\x1b[0m \x1b[31m?\x1b[0m eta \x1b[36m-:--:--\x1b[0m',
- '\x1b[2K     \x1b[91m━━━━\x1b[0m\x1b[91m╸\x1b[0m\x1b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\x1b[0m \x1b[32m122.9/985.1 kB\x1b[0m \x1b[31m3.8 MB/s\x1b[0m eta \x1b[36m0:00:01\x1b[0m',
- '\x1b[2K     \x1b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\x1b[0m\x1b[91m╸\x1b[0m\x1b[90m━━━━━━━\x1b[0m \x1b[32m798.7/985.1 kB\x1b[0m \x1b[31m11.7 MB/s\x1b[0m eta \x1b[36m0:00:01\x1b[0m',
- '\x1b[2K     \x1b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\x1b[0m \x1b[32m985.1/985.1 kB\x1b[0m \x1b[31m11.8 MB/s\x1b[0m eta \x1b[36m0:00:00\x1b[0m',
- '\x1b[?25hRequirement already satisfied: absl-py in /usr/local/lib/python3.10/dist-packages (from keras-nightly) (1.4.0)',
- 'Requirement already satisfied: numpy in /usr/local/lib/python3.10/dist-packages (from keras-nightly) (1.23.5)',
- 'Requirement already satisfied: rich in /usr/local/lib/python3.10/dist-packages (from keras-nightly) (13.6.0)',
- 'Requirement already satisfied: namex in /usr/local/lib/python3.10/dist-packages (from keras-nightly) (0.0.7)',
- 'Requirement already satisfied: h5py in /usr/local/lib/python3.10/dist-packages (from keras-nightly) (3.9.0)',
- 'Requirement already satisfied: dm-tree in /usr/local/lib/python3.10/dist-packages (from keras-nightly) (0.1.8)',
- 'Requirement already satisfied: markdown-it-py>=2.2.0 in /usr/local/lib/python3.10/dist-packages (from rich->keras-nightly) (3.0.0)',
- 'Requirement already satisfied: pygments<3.0.0,>=2.13.0 in /usr/local/lib/python3.10/dist-packages (from rich->keras-nightly) (2.16.1)',
- 'Requirement already satisfied: mdurl~=0.1 in /usr/local/lib/python3.10/dist-packages (from markdown-it-py>=2.2.0->rich->keras-nightly) (0.1.2)',
- 'Installing collected packages: keras-nightly',
- 'Successfully installed keras-nightly-3.0.0.dev2023110103']
+Collecting keras-nightly
+  Downloading keras_nightly-3.0.0.dev2023110903-py3-none-any.whl (988 kB)
+[2K     [90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 988.7/988.7 kB [31m13.4 MB/s eta [36m0:00:00
+[?25hRequirement already satisfied: absl-py in /usr/local/lib/python3.10/dist-packages (from keras-nightly) (1.4.0)
+Requirement already satisfied: numpy in /usr/local/lib/python3.10/dist-packages (from keras-nightly) (1.23.5)
+Requirement already satisfied: rich in /usr/local/lib/python3.10/dist-packages (from keras-nightly) (13.6.0)
+Requirement already satisfied: namex in /usr/local/lib/python3.10/dist-packages (from keras-nightly) (0.0.7)
+Requirement already satisfied: h5py in /usr/local/lib/python3.10/dist-packages (from keras-nightly) (3.9.0)
+Requirement already satisfied: dm-tree in /usr/local/lib/python3.10/dist-packages (from keras-nightly) (0.1.8)
+Requirement already satisfied: markdown-it-py>=2.2.0 in /usr/local/lib/python3.10/dist-packages (from rich->keras-nightly) (3.0.0)
+Requirement already satisfied: pygments<3.0.0,>=2.13.0 in /usr/local/lib/python3.10/dist-packages (from rich->keras-nightly) (2.16.1)
+Requirement already satisfied: mdurl~=0.1 in /usr/local/lib/python3.10/dist-packages (from markdown-it-py>=2.2.0->rich->keras-nightly) (0.1.2)
+Installing collected packages: keras-nightly
+Successfully installed keras-nightly-3.0.0.dev2023110903
 
 ```
 </div>
 ---
-## Switching Tensorflow code to Keras 3.0 - Tensorflow backend
+## Transitioning to Keras 3.0 with TensorFlow Backend
 
-Follow these instructions to migrate your existing TensorFlow code to Keras 3.0 and run
+Suggested recommendation: Replace instances of `tf.keras` with `keras`. If you are
+still using the TensorFlow backend, this change is not mandatory. Both `tf.keras`
+and `keras` will refer to the same installed version of Keras by default. However,
+adopting the direct import of `keras` is the preferred practice, making your codebase
+more adaptable for potential framework switches in the future.
+
+Follow these instructions to migrate your existing TensorFlow code to Keras 3.0 and execute
 it with the TensorFlow backend:
 
 1.   Update imports : replace `from tensorflow import keras` to `import keras`
@@ -88,10 +88,10 @@ it with the TensorFlow backend:
 
 
 ---
-## Migration incompatabilities : `tf.keras` to `keras 3.0`
+## Migration incompatabilities : `keras 2` and `keras 3`
 Keras 3 is a significant milestone in the evolution of the Keras API. It features a
 number of cleanups and modernizations that have resulted in a few breaking changes
-compared to Keras 2. All APIs that were removed were dropped due to extremely low usage.
+compared to Keras 2. All APIs that were removed were dropped due to low usage.
 
 The following list provides a comprehensive overview of the breaking changes in Keras 3.
 While the majority of these changes are unlikely to affect most users, a small number of
@@ -105,32 +105,31 @@ compilation by default.
 JIT compilation can improve the performance of some models. However, it may not work with
 all TensorFlow operations. If you are using a custom model or layer and you see an
 XLA-related error, you may need to set the jit_compile argument to False. Here is a list
-of known issues encountered when using xla with tensorflow backend -
-https://www.tensorflow.org/xla/known_issues. In addition to these issues, there are some
+of [known issues](https://www.tensorflow.org/xla/known_issues) encountered when
+using xla with TensorFlow backend. In addition to these issues, there are some
 ops that are not supported by XLA.
 
 The error message you could encounter would be as follows:
 
 
-```Detected unsupported operations when trying to compile graph
-__inference_one_step_on_data_125[] on XLA_CPU_JIT```
+```python
+Detected unsupported operations when trying to compile graph
+__inference_one_step_on_data_125[] on XLA_CPU_JIT
+```
 
 The following snippet of code will reproduce the above error:
 
-```
+```python
 class MyModel(keras.Model):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-<div class="k-default-codeblock">
-```
-def call(self, inputs):
+    def call(self, inputs):
 
-    string_input = tf.strings.as_string(inputs)
-    return tf.strings.to_number(string_input)
+        string_input = tf.strings.as_string(inputs)
+        return tf.strings.to_number(string_input)
 
-```
-</div>
+
 subclass_model = MyModel()
 x_train = np.array([[1, 2, 3], [4, 5, 6]])
 
@@ -150,14 +149,11 @@ class MyModel(keras.Model):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-<div class="k-default-codeblock">
-```
-def call(self, inputs):
-    string_input = tf.strings.as_string(inputs)
-    return tf.strings.to_number(string_input)
+    def call(self, inputs):
+        string_input = tf.strings.as_string(inputs)
+        return tf.strings.to_number(string_input)
 
-```
-</div>
+
 subclass_model = MyModel()
 x_train = np.array([[1, 2, 3], [4, 5, 6]])
 
@@ -166,27 +162,24 @@ subclass_model.compile(optimizer="sgd", loss="mse", jit_compile=False)
 subclass_model.fit(x_train, x_train, epochs=1)
 ```
 
-     1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 111ms/step - loss: 0.0000e+00
+<div class="k-default-codeblock">
+```
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 238ms/step - loss: 0.0000e+00
 
+/usr/local/lib/python3.10/dist-packages/keras/src/backend/tensorflow/trainer.py:74: UserWarning: The model does not have any trainable weights.
+  warnings.warn("The model does not have any trainable weights.")
 
-    /usr/local/lib/python3.10/dist-packages/keras/src/backend/tensorflow/trainer.py:74: UserWarning: The model does not have any trainable weights.
-      warnings.warn("The model does not have any trainable weights.")
+<keras.src.callbacks.history.History at 0x7f19f0852fe0>
 
-
-
-
-
-    <keras.src.callbacks.history.History at 0x7c1e4f39a0e0>
-
-
-
+```
+</div>
 ### Saving model in TF SavedModel format
 Saving to TF SavedModel format via `model.save()` is no longer supported.
 
 
 The error message you could encounter would be as follows:
 
-```
+```python
 ValueError: Invalid filepath extension for saving. Please add either a `.keras` extension
 for the native Keras format (recommended) or a `.h5` extension. Use
 `tf.saved_model.save()` if you want to export a SavedModel for use with
@@ -195,7 +188,7 @@ TFLite/TFServing/etc. Received: filepath=saved_model.
 
 The following snippet of code will reproduce the above error:
 
-```
+```python
 sequential_model = keras.Sequential([
     keras.layers.Dense(2)
 ])
@@ -209,6 +202,7 @@ use `tf.saved_model.save` instead of `model.save`
 
 ```python
 sequential_model = keras.Sequential([keras.layers.Dense(2)])
+sequential_model(np.random.rand(3, 5))
 tf.saved_model.save(sequential_model, "saved_model")
 ```
 
@@ -216,7 +210,7 @@ tf.saved_model.save(sequential_model, "saved_model")
 Loading a TF SavedModel file via keras.models.load_model() is no longer supported
 
 if you try to use `keras.models.load_model` you would get the following error
-```
+```python
 ValueError: File format not supported: filepath=saved_model. Keras 3 only supports V3
 `.keras` files and legacy H5 format files (`.h5` extension). Note that the legacy
 SavedModel format is not supported by `load_model()` in Keras 3. In order to reload a
@@ -227,7 +221,7 @@ TensorFlow SavedModel as an inference-only layer in Keras 3, use
 
 The following snippet of code will reproduce the above error:
 
-```
+```python
 keras.models.load_model("saved_model")
 ```
 
@@ -241,13 +235,22 @@ SavedModel as a Keras layer
 keras.layers.TFSMLayer("saved_model", call_endpoint="serving_default")
 ```
 
-### Nested inputs to Model()
-Model() can no longer be passed deeply nested inputs/outputs (nested more than 1 level
-deep, e.g. lists of lists of tensors)
 
-you would encounter errors as follows:
+
+
+<div class="k-default-codeblock">
+```
+<TFSMLayer name=tfsm_layer, built=True>
 
 ```
+</div>
+### Nested inputs to Model()
+Model() can no longer be passed deeply nested inputs/outputs (nested more than 1 level
+deep, e.g. lists of lists of tensors).
+
+You would encounter errors as follows:
+
+```python
 ValueError: When providing `inputs` as a dict, all values in the dict must be
 KerasTensors. Received: inputs={'foo': <KerasTensor shape=(None, 1), dtype=float32,
 sparse=None, name=foo>, 'bar': {'baz': <KerasTensor shape=(None, 1), dtype=float32,
@@ -257,7 +260,7 @@ dtype=float32, sparse=None, name=bar>} of type <class 'dict'>
 
 The following snippet of code will reproduce the above error:
 
-```
+```python
 inputs = {
     "foo": keras.Input(shape=(1,), name="foo"),
     "bar": {
@@ -282,24 +285,22 @@ outputs = inputs["foo"] + inputs["baz"]
 keras.Model(inputs, outputs)
 ```
 
-    /usr/local/lib/python3.10/dist-packages/keras/src/models/functional.py:104: UserWarning: When providing `inputs` as a dict, all keys in the dict must match the names of the corresponding tensors. Received key 'baz' mapping to value <KerasTensor shape=(None, 1), dtype=float32, sparse=None, name=bar> which has name 'bar'. Change the tensor name to 'baz' (via `Input(..., name='baz')`)
-      warnings.warn(
+<div class="k-default-codeblock">
+```
+/usr/local/lib/python3.10/dist-packages/keras/src/models/functional.py:104: UserWarning: When providing `inputs` as a dict, all keys in the dict must match the names of the corresponding tensors. Received key 'baz' mapping to value <KerasTensor shape=(None, 1), dtype=float32, sparse=None, name=bar> which has name 'bar'. Change the tensor name to 'baz' (via `Input(..., name='baz')`)
+  warnings.warn(
 
+<Functional name=functional_2, built=True>
 
-
-
-
-    <Functional name=functional_1, built=True>
-
-
-
+```
+</div>
 ### TF autograph
 In old `tf.keras`, TF autograph is enabled by default on the `call()` method of custom
 layers. In Keras 3, it is not. This means you may have to use cond ops if you're using
 control flow, or alternatively you can decorate your `call()` method with `@tf.function`.
 
-You would encounted an error as follows
-```
+You would encounter an error as follows:
+```python
 OperatorNotAllowedInGraphError: Exception encountered when calling MyCustomLayer.call().
 
 Using a symbolic `tf.Tensor` as a Python `bool` is not allowed. You can attempt the
@@ -313,7 +314,7 @@ erence/limitations.md#access-to-source-code for more information.
 ```
 
 The following snippet of code will reproduce the above error:
-```
+```python
 class MyCustomLayer(keras.layers.Layer):
 
   def call(self, inputs):
@@ -353,27 +354,24 @@ model.compile(optimizer="adam", loss="mse")
 model.fit(data, data)
 ```
 
-     1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 302ms/step - loss: 0.1975
+<div class="k-default-codeblock">
+```
+/usr/local/lib/python3.10/dist-packages/keras/src/backend/tensorflow/trainer.py:74: UserWarning: The model does not have any trainable weights.
+  warnings.warn("The model does not have any trainable weights.")
 
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 1s 1s/step - loss: 0.5156
 
-    /usr/local/lib/python3.10/dist-packages/keras/src/backend/tensorflow/trainer.py:74: UserWarning: The model does not have any trainable weights.
-      warnings.warn("The model does not have any trainable weights.")
+<keras.src.callbacks.history.History at 0x7f19f069c2e0>
 
-
-
-
-
-    <keras.src.callbacks.history.History at 0x7c1e4c30acb0>
-
-
-
+```
+</div>
 ### TF op on a Keras tensor
 Using a TF op on a Keras tensor during functional model construction is disallowed: "A
 KerasTensor cannot be used as input to a TensorFlow function".
 
 The error you would encounter would be as follows:
 
-```
+```python
 ValueError: A KerasTensor cannot be used as input to a TensorFlow function. A KerasTensor
 is a symbolic placeholder for a shape and dtype, used when constructing Keras Functional
 models or Keras Functions. You can only use it as input to a Keras layer or a Keras
@@ -382,7 +380,7 @@ operation (from the namespaces `keras.layers` and `keras.operations`).
 
 The following snippet of code will reproduce the error:
 
-```
+```python
 input = keras.layers.Input([2, 2, 1])
 tf.squeeze(input)
 ```
@@ -400,22 +398,26 @@ keras.ops.squeeze(input)
 
 
 
-    <KerasTensor shape=(None, 2, 2), dtype=float32, sparse=None, name=keras_tensor_4>
+<div class="k-default-codeblock">
+```
+<KerasTensor shape=(None, 2, 2), dtype=float32, sparse=None, name=keras_tensor_6>
+
+```
+</div>
+### Multi-output model
+The `evaluate()` method of a multioutput model no longer returns individual output
+losses separately. Instead, you should utilize the `metrics` argument in the `compile()`
+method to keep track of these losses.
 
 
-
-### Multi output model
-Multioutput model's `evaluate()` method does not return individual output losses anymore
--> use the metrics argument in compile to track them
-
-When having multiple named outputs (for example named output_a and output_b, old tf.keras
-adds <output_a>_loss, <output_b>_loss and so on to metrics. keras_ 3.0 doesn't add them
-to metrics and needs to be done them to the output metrics by explicitly providing them
-in metrics list of individual outputs.
+When dealing with multiple named outputs, such as output_a and output_b, the old
+tf.keras would include <output_a>_loss, <output_b>_loss, and similar entries in
+metrics. However, in keras_3.0, these entries are not automatically added to metrics.
+They must be explicitly provided in the metrics list for each individual output.
 
 The following snippet of code will reproduce the above behavior:
 
-```
+```python
 from keras.layers import Input, Dense, Flatten, Softmax
 # A functional model with multiple outputs
 inputs = Input(shape=(10,))
@@ -456,38 +458,33 @@ multi_output_model.evaluate(x_test, y_test)
 
 ```
 
-     1/1 ━━━━━━━━━━━━━━━━━━━━ 1s 871ms/step - loss: 4.7891 - output_1_categorical_crossentropy: 4.7891
+<div class="k-default-codeblock">
+```
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 1s 791ms/step - loss: 4.5083 - output_1_categorical_crossentropy: 4.5083
 
+[4.508267879486084, 4.508267879486084]
 
-
-
-
-    [4.7891154289245605, 4.7891154289245605]
-
-
-
+```
+</div>
 ### Variables tracking
 
 The following snippet of code will show that the tf.Variables are not being tracked.
 
-```
+```python
 class MyCustomLayer(keras.layers.Layer):
     def __init__(self, units):
         super().__init__()
         self.units = units
 
-<div class="k-default-codeblock">
-```
-def build(self, input_shape):
-    input_dim = input_shape[-1]
-    self.w = tf.Variable(initial_value=tf.zeros([input_dim, self.units]))
-    self.b = tf.Variable(initial_value=tf.zeros([self.units,]))
+    def build(self, input_shape):
+        input_dim = input_shape[-1]
+        self.w = tf.Variable(initial_value=tf.zeros([input_dim, self.units]))
+        self.b = tf.Variable(initial_value=tf.zeros([self.units,]))
 
-def call(self, inputs):
-    return keras.ops.matmul(inputs, self.w) + self.b
+    def call(self, inputs):
+        return keras.ops.matmul(inputs, self.w) + self.b
 
-```
-</div>
+
 layer = MyCustomLayer(3)
 data = np.random.uniform(size=[3, 3])
 model = keras.models.Sequential([layer])
@@ -513,26 +510,23 @@ class MyCustomLayer(keras.layers.Layer):
         super().__init__()
         self.units = units
 
-<div class="k-default-codeblock">
-```
-def build(self, input_shape):
-    input_dim = input_shape[-1]
-    self.w = self.add_weight(
-        shape=[input_dim, self.units],
-        initializer="zeros",
-    )
-    self.b = self.add_weight(
-        shape=[
-            self.units,
-        ],
-        initializer="zeros",
-    )
+    def build(self, input_shape):
+        input_dim = input_shape[-1]
+        self.w = self.add_weight(
+            shape=[input_dim, self.units],
+            initializer="zeros",
+        )
+        self.b = self.add_weight(
+            shape=[
+                self.units,
+            ],
+            initializer="zeros",
+        )
 
-def call(self, inputs):
-    return keras.ops.matmul(inputs, self.w) + self.b
+    def call(self, inputs):
+        return keras.ops.matmul(inputs, self.w) + self.b
 
-```
-</div>
+
 layer = MyCustomLayer(3)
 data = np.random.uniform(size=[3, 3])
 model = keras.models.Sequential([layer])
@@ -543,27 +537,26 @@ for layer in model.layers:
     print(layer.trainable_variables)
 ```
 
-     1/1 ━━━━━━━━━━━━━━━━━━━━ 1s 737ms/step - loss: 0.1693
-    [<KerasVariable shape=(3, 3), dtype=float32, path=sequential_2/my_custom_layer_1/variable>, <KerasVariable shape=(3,), dtype=float32, path=sequential_2/my_custom_layer_1/variable_1>]
+<div class="k-default-codeblock">
+```
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 1s 927ms/step - loss: 0.2305
+[<KerasVariable shape=(3, 3), dtype=float32, path=sequential_2/my_custom_layer_1/variable>, <KerasVariable shape=(3,), dtype=float32, path=sequential_2/my_custom_layer_1/variable_1>]
 
-
+```
+</div>
 ### None entries are not allowed as part of nested (e.g. list/tuples) tensor arguments in
 Layer.call(), nor as part of call() return values.
 
 The following snippet of code will reproduce the error.
 
-```
+```python
 class CustomLayer(keras.layers.Layer):
     def __init__(self):
         super().__init__()
 
-<div class="k-default-codeblock">
-```
-def call(self, inputs):
-  return  inputs["foo"]
+    def call(self, inputs):
+      return  inputs["foo"]
 
-```
-</div>
 layer = CustomLayer()
 inputs = {
     "foo": keras.Input(shape=(1,), name="foo"),
@@ -585,14 +578,11 @@ class CustomLayer(keras.layers.Layer):
     def __init__(self):
         super().__init__()
 
-<div class="k-default-codeblock">
-```
-def call(self, inputs):
-    output = inputs["foo"]
-    return None
+    def call(self, inputs):
+        output = inputs["foo"]
+        return None
 
-```
-</div>
+
 layer = CustomLayer()
 inputs = {
     "foo": keras.Input(shape=(1,), name="foo"),
@@ -608,42 +598,42 @@ layer(inputs)
 
 1. Symbolic `add_loss()`: Symbolic `add_loss()` is removed (you can still use
 `add_loss()` inside the `call()` method of a layer/model).
-2. Locally-connected layers: Locally-connected layers are removed due to low usage. To
-use locally-connected layers, copy the layer implementation into your own codebase.
+2. Locally connected layers: Locally connected layers are removed due to low usage. To
+use locally connected layers, copy the layer implementation into your own codebase.
 3. Kernelized layers: Kernelized layers are removed due to low usage. To use kernelized
 layers, copy the layer implementation into your own codebase.
-4. Removed layer attributes: Layer attributes `metrics`, `dynamic` are removed
+4. Removed layer attributes: Layer attributes `metrics`, `dynamic` are removed.
 5. RNN layer args: The `constants` and `time_major` arguments in RNN layers are removed.
-The `constants` argument was a remnant of Theano and had very low usage. The `time_major`
+The `constants` argument was a remnant of Theano and had low usage. The `time_major`
 argument was also infrequently used.
-6. reset_metrics argument: The reset_metrics argument is removed from `model. *_on_batch`
-methods. This argument had very low usage.
+6. `reset_metrics` argument: The `reset_metrics` argument is removed from `model. *_on_batch`
+methods. This argument had low usage.
 7. RadialConstraint: The RadialConstraint constraint object is removed. This object had
-very low usage.
+low usage.
 
 ---
-## Switching Tensorflow code to backend agnostic keras 3.0
+## Transitioning to Keras 3.0 with Any Backend
 
 Keras 3.0 code with the TensorFlow backend will work with native TensorFlow APIs.
 However, if you want your code to be backend-agnostic, you will need to replace all of
 the `tf.*` API calls with their equivalent Keras APIs.
 
-Follow these instructions to migrate your existing TensorFlow code to Keras 3.0 and run
+Follow these instructions to migrate your existing TensorFlow code to Keras 3.0 and execute
 it with any backend of your choice :
 
-1. Update imports : replace from tensorflow import keras to import keras
+1. Update imports : replace `from tensorflow import keras` to `import keras`
 2. Update code : replace `tf.keras.*` to `keras.*`. 99% of the tf.keras.* API is
 consistent with Keras 3.0. Any differences have been called out in this guide. If an API
 is not specifically called out in this guide, that means that the API call is consistent
 with tf.keras. If you notice that the same API name results in an error and if it has not
-been called out in this document the implementation in keras 3.0 was likely dropped due
-to extremely low usage.
+been called out in this document the implementation in Keras 3.0 was likely dropped due
+to low usage.
 3. Replace any `tf.*`, `tf.math*`, `tf.linalg.*`, etc with `keras.ops.*`. Most of the ops
 should be consistent with Keras 3.0. If the names are slightly different, they will be
 highlighted in this guide. If the same name results in an error and you do not find a
 Keras 3.0 equivalent op in this guide, it is likely that the implementation of the op in
-keras 3.0 was likely dropped due to extremely low usage.
-4. If you are able to replace all the tf ops with keras, you can remove the tensorflow
+keras 3.0 was likely dropped due to low usage.
+4. If you are able to replace all the tf ops with Keras, you can remove the `tensorflow`
 import and run your code with a backend of your choice.
 
 ### Renamed API calls
@@ -674,7 +664,7 @@ Replace any `tf.*`, `tf.math*`, `tf.linalg.*`, etc with `keras.ops.*`. Most of t
 should be consistent with Keras 3.0. If the names are slightly different, they will be
 highlighted in this guide. If the same name results in an error and you do not find a
 Keras 3.0 equivalent op in this guide, it is likely that the implementation of the op in
-keras 3.0 was likely dropped due to extremely low usage.
+keras 3.0 was likely dropped due to low usage.
 
 ### Numpy ops
 
