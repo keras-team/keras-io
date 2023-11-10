@@ -1,8 +1,8 @@
 """
-Title: [KerasCV] Image classification from scratch
-Author: [fchollet](https://twitter.com/fchollet), updated by [Suvaditya Mukherjee](https://twitter.com/halcyonrayes)
+Title: Image classification from scratch
+Author: [fchollet](https://twitter.com/fchollet)
 Date created: 2020/04/27
-Last modified: 2023/06/17
+Last modified: 2023/11/09
 Description: Training an image classifier from scratch on the Kaggle Cats vs Dogs dataset.
 Accelerator: GPU
 """
@@ -12,7 +12,7 @@ Accelerator: GPU
 This example shows how to do image classification from scratch, starting from JPEG
 image files on disk, without leveraging pre-trained weights or a pre-made Keras
 Application model. We demonstrate the workflow on the Kaggle Cats vs Dogs binary
- classification dataset.
+classification dataset.
 
 We use the `image_dataset_from_directory` utility to generate the datasets, and
 we use Keras image preprocessing layers for image standardization and data augmentation.
@@ -22,10 +22,12 @@ we use Keras image preprocessing layers for image standardization and data augme
 ## Setup
 """
 
-import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras import layers
-import keras_cv
+import os
+import numpy as np
+import keras
+from keras import layers
+from tensorflow import data as tf_data
+import matplotlib.pyplot as plt
 
 """
 ## Load the data: the Cats vs Dogs dataset
@@ -46,7 +48,7 @@ ls
 
 """
 Now we have a `PetImages` folder which contain two subfolders, `Cat` and `Dog`. Each
- subfolder contains image files for each category.
+subfolder contains image files for each category.
 """
 
 """shell
@@ -61,8 +63,6 @@ occurence. Let's filter out badly-encoded images that do not feature the string 
 in their header.
 """
 
-import os
-
 num_skipped = 0
 for folder_name in ("Cat", "Dog"):
     folder_path = os.path.join("PetImages", folder_name)
@@ -70,7 +70,7 @@ for folder_name in ("Cat", "Dog"):
         fpath = os.path.join(folder_path, fname)
         try:
             fobj = open(fpath, "rb")
-            is_jfif = tf.compat.as_bytes("JFIF") in fobj.peek(10)
+            is_jfif = b"JFIF" in fobj.peek(10)
         finally:
             fobj.close()
 
@@ -79,7 +79,7 @@ for folder_name in ("Cat", "Dog"):
             # Delete corrupted image
             os.remove(fpath)
 
-print("Deleted %d images" % num_skipped)
+print(f"Deleted {num_skipped} images.")
 
 """
 ## Generate a `Dataset`
@@ -88,7 +88,7 @@ print("Deleted %d images" % num_skipped)
 image_size = (180, 180)
 batch_size = 128
 
-train_ds, val_ds = tf.keras.utils.image_dataset_from_directory(
+train_ds, val_ds = keras.utils.image_dataset_from_directory(
     "PetImages",
     validation_split=0.2,
     subset="both",
@@ -100,30 +100,17 @@ train_ds, val_ds = tf.keras.utils.image_dataset_from_directory(
 """
 ## Visualize the data
 
-Here are the first 8 images in the training dataset, visualized using
-the KerasCV plot_image_gallery utility.
+Here are the first 9 images in the training dataset.
 """
 
-vis_ds = train_ds.take(1).unbatch()
 
-vis_ds = vis_ds.take(8)
-
-
-def get_images(image, _):
-    return image
-
-
-vis_ds = vis_ds.map(get_images)
-
-vis_ds = vis_ds.apply(tf.data.experimental.dense_to_ragged_batch(8))
-
-keras_cv.visualization.plot_image_gallery(
-    next(iter(vis_ds.take(1))),
-    value_range=(0, 255),
-    scale=3,
-    rows=4,
-    cols=2,
-)
+plt.figure(figsize=(10, 10))
+for images, labels in train_ds.take(1):
+    for i in range(9):
+        ax = plt.subplot(3, 3, i + 1)
+        plt.imshow(np.array(images[i]).astype("uint8"))
+        plt.title(int(labels[i]))
+        plt.axis("off")
 
 """
 ## Using image data augmentation
@@ -132,36 +119,34 @@ When you don't have a large image dataset, it's a good practice to artificially
 introduce sample diversity by applying random yet realistic transformations to the
 training images, such as random horizontal flipping or small random rotations. This
 helps expose the model to different aspects of the training data while slowing down
-overfitting. For this, we can make use of KerasCV and its wide array of preprocessing
-layers.
+overfitting.
 """
 
-data_augmentation = keras.Sequential(
-    [
-        keras_cv.layers.RandomFlip(),
-        keras_cv.layers.RandAugment(
-            value_range=(0, 255),
-            augmentations_per_image=2,
-            magnitude=0.5,
-            magnitude_stddev=0.15,
-        ),
-    ]
-)
+data_augmentation_layers = [
+    layers.RandomFlip("horizontal"),
+    layers.RandomRotation(0.1),
+]
+
+
+def data_augmentation(images):
+    for layer in data_augmentation_layers:
+        images = layer(images)
+    return images
+
 
 """
 Let's visualize what the augmented samples look like, by applying `data_augmentation`
 repeatedly to the first few images in the dataset:
 """
 
-vis_ds = vis_ds.map(data_augmentation)
+plt.figure(figsize=(10, 10))
+for images, _ in train_ds.take(1):
+    for i in range(9):
+        augmented_images = data_augmentation(images)
+        ax = plt.subplot(3, 3, i + 1)
+        plt.imshow(np.array(augmented_images[0]).astype("uint8"))
+        plt.axis("off")
 
-keras_cv.visualization.plot_image_gallery(
-    next(iter(vis_ds.take(1))),
-    value_range=(0, 255),
-    scale=3,
-    rows=4,
-    cols=2,
-)
 
 """
 ## Standardizing the data
@@ -226,11 +211,11 @@ having I/O becoming blocking:
 # Apply `data_augmentation` to the training images.
 train_ds = train_ds.map(
     lambda img, label: (data_augmentation(img), label),
-    num_parallel_calls=tf.data.AUTOTUNE,
+    num_parallel_calls=tf_data.AUTOTUNE,
 )
 # Prefetching samples in GPU memory helps maximize GPU utilization.
-train_ds = train_ds.prefetch(tf.data.AUTOTUNE)
-val_ds = val_ds.prefetch(tf.data.AUTOTUNE)
+train_ds = train_ds.prefetch(tf_data.AUTOTUNE)
+val_ds = val_ds.prefetch(tf_data.AUTOTUNE)
 
 """
 ## Build a model
@@ -333,7 +318,7 @@ img = keras.utils.load_img("PetImages/Cat/6779.jpg", target_size=image_size)
 plt.imshow(img)
 
 img_array = keras.utils.img_to_array(img)
-img_array = tf.expand_dims(img_array, 0)  # Create batch axis
+img_array = keras.ops.expand_dims(img_array, 0)  # Create batch axis
 
 predictions = model.predict(img_array)
 score = float(predictions[0])
