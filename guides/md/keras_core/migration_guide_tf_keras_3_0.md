@@ -54,8 +54,8 @@ import numpy as np
 <div class="k-default-codeblock">
 ```
 Collecting keras-nightly
-  Downloading keras_nightly-3.0.0.dev2023110903-py3-none-any.whl (988 kB)
-[2K     [90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 988.7/988.7 kB [31m13.4 MB/s eta [36m0:00:00
+  Downloading keras_nightly-3.0.0.dev2023111003-py3-none-any.whl (988 kB)
+[2K     [90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 988.7/988.7 kB [31m5.4 MB/s eta [36m0:00:00
 [?25hRequirement already satisfied: absl-py in /usr/local/lib/python3.10/dist-packages (from keras-nightly) (1.4.0)
 Requirement already satisfied: numpy in /usr/local/lib/python3.10/dist-packages (from keras-nightly) (1.23.5)
 Requirement already satisfied: rich in /usr/local/lib/python3.10/dist-packages (from keras-nightly) (13.6.0)
@@ -66,7 +66,7 @@ Requirement already satisfied: markdown-it-py>=2.2.0 in /usr/local/lib/python3.1
 Requirement already satisfied: pygments<3.0.0,>=2.13.0 in /usr/local/lib/python3.10/dist-packages (from rich->keras-nightly) (2.16.1)
 Requirement already satisfied: mdurl~=0.1 in /usr/local/lib/python3.10/dist-packages (from markdown-it-py>=2.2.0->rich->keras-nightly) (0.1.2)
 Installing collected packages: keras-nightly
-Successfully installed keras-nightly-3.0.0.dev2023110903
+Successfully installed keras-nightly-3.0.0.dev2023111003
 
 ```
 </div>
@@ -164,12 +164,12 @@ subclass_model.fit(x_train, x_train, epochs=1)
 
 <div class="k-default-codeblock">
 ```
- 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 238ms/step - loss: 0.0000e+00
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 448ms/step - loss: 0.0000e+00
 
 /usr/local/lib/python3.10/dist-packages/keras/src/backend/tensorflow/trainer.py:74: UserWarning: The model does not have any trainable weights.
   warnings.warn("The model does not have any trainable weights.")
 
-<keras.src.callbacks.history.History at 0x7f19f0852fe0>
+<keras.src.callbacks.history.History at 0x7e0cab31b2b0>
 
 ```
 </div>
@@ -359,9 +359,9 @@ model.fit(data, data)
 /usr/local/lib/python3.10/dist-packages/keras/src/backend/tensorflow/trainer.py:74: UserWarning: The model does not have any trainable weights.
   warnings.warn("The model does not have any trainable weights.")
 
- 1/1 ━━━━━━━━━━━━━━━━━━━━ 1s 1s/step - loss: 0.5156
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 1s 1s/step - loss: 0.5492
 
-<keras.src.callbacks.history.History at 0x7f19f069c2e0>
+<keras.src.callbacks.history.History at 0x7e0ca8425870>
 
 ```
 </div>
@@ -460,9 +460,9 @@ multi_output_model.evaluate(x_test, y_test)
 
 <div class="k-default-codeblock">
 ```
- 1/1 ━━━━━━━━━━━━━━━━━━━━ 1s 791ms/step - loss: 4.5083 - output_1_categorical_crossentropy: 4.5083
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 1s 1s/step - loss: 4.2409 - output_1_categorical_crossentropy: 4.2409
 
-[4.508267879486084, 4.508267879486084]
+[4.240889072418213, 4.240889072418213]
 
 ```
 </div>
@@ -539,7 +539,7 @@ for layer in model.layers:
 
 <div class="k-default-codeblock">
 ```
- 1/1 ━━━━━━━━━━━━━━━━━━━━ 1s 927ms/step - loss: 0.2305
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 1s 1s/step - loss: 0.4048
 [<KerasVariable shape=(3, 3), dtype=float32, path=sequential_2/my_custom_layer_1/variable>, <KerasVariable shape=(3,), dtype=float32, path=sequential_2/my_custom_layer_1/variable_1>]
 
 ```
@@ -592,6 +592,77 @@ inputs = {
 }
 layer(inputs)
 ```
+
+### Random seed behavior changes between Keras 2 and Keras 3.
+
+The random seed behavior has changed in Keras 3. The same seed will produce
+different random values in Keras 2 and Keras 3. Although the values generated
+are deterministic and reproducible, they will differ between Keras 2 and
+Keras 3. Therefore, when transitioning from Keras 2 to Keras 3, you may observe
+that some of your experiments are not reproducible when using random operations.
+
+
+You will need to uninstall Keras 3, reinstall TensorFlow and Keras 2,
+then restart your runtime to reproduce the following results. The following
+example uses a Dropout layer to demonstrate this behavior. Notice that the
+values chosen to be dropped out from the data will be different in Keras 2 and
+Keras 3.
+
+```python
+import numpy as np
+import tensorflow as tf
+
+# Create some dummy data
+data = np.array([[1 , 2], [3, 4]], dtype="float32")
+# let us initialize a dropout layer with seed = 42
+dropout_layer = tf.keras.layers.Dropout(rate=0.3, seed=42)
+# Apply the Dropout layer to the data
+dropout_output = dropout_layer(data, training=True)
+
+print("Original data:")
+print(data)
+print("Data after applying Dropout:")
+print(dropout_output)
+```
+Output:
+
+```python
+Original data:
+[[1. 2.]
+ [3. 4.]]
+Data after applying Dropout:
+tf.Tensor(
+[[1.4285715 2.857143 ]
+ [4.285714  0.       ]], shape=(2, 2), dtype=float32)
+ ```
+
+Before trying the following snippet of code, please reinstall Keras 3 and
+restart your runtime. The same seed in Keras 3 will behave differently
+compared to Keras 2.
+
+
+```python
+# Create some dummy data
+data = np.array([[1, 2], [3, 4]])
+# let us initialize a dropout layer with seed = 42
+dropout_layer = keras.layers.Dropout(rate=0.3, seed=42)
+# Apply the Dropout layer to the data
+dropout_output = dropout_layer(data, training=True)
+
+print("Original data:")
+print(data)
+print("Data after applying Dropout:")
+print(dropout_output)
+```
+
+    Original data:
+    [[1 2]
+     [3 4]]
+    Data after applying Dropout:
+    tf.Tensor(
+    [[0.       2.857143]
+     [4.285714 0.      ]], shape=(2, 2), dtype=float32)
+
 
 ### Removed features
 
