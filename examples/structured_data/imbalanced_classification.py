@@ -85,13 +85,12 @@ val_features /= std
 ## Build a binary classification model
 """
 
-from tensorflow import keras
+import keras
 
 model = keras.Sequential(
     [
-        keras.layers.Dense(
-            256, activation="relu", input_shape=(train_features.shape[-1],)
-        ),
+        keras.Input(shape=train_features.shape[1:]),
+        keras.layers.Dense(256, activation="relu"),
         keras.layers.Dense(256, activation="relu"),
         keras.layers.Dropout(0.3),
         keras.layers.Dense(256, activation="relu"),
@@ -118,7 +117,7 @@ model.compile(
     optimizer=keras.optimizers.Adam(1e-2), loss="binary_crossentropy", metrics=metrics
 )
 
-callbacks = [keras.callbacks.ModelCheckpoint("fraud_model_at_epoch_{epoch}.h5")]
+callbacks = [keras.callbacks.ModelCheckpoint("fraud_model_at_epoch_{epoch}.keras")]
 class_weight = {0: weight_for_0, 1: weight_for_1}
 
 model.fit(
