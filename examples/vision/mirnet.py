@@ -2,9 +2,10 @@
 Title: Low-light image enhancement using MIRNet
 Author: [Soumik Rakshit](http://github.com/soumik12345)
 Date created: 2021/09/11
-Last modified: 2021/09/15
+Last modified: 2023/07/15
 Description: Implementing the MIRNet architecture for low-light image enhancement.
 Accelerator: GPU
+Converted to Keras 3 by: [Soumik Rakshit](http://github.com/soumik12345)
 """
 """
 ## Introduction
@@ -33,20 +34,23 @@ consists of a low-light input image and its corresponding well-exposed reference
 """
 
 import os
-import cv2
+
+os.environ["KERAS_BACKEND"] = "tensorflow"
+
 import random
 import numpy as np
 from glob import glob
 from PIL import Image, ImageOps
 import matplotlib.pyplot as plt
 
+import keras
+from keras import layers
+
 import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras import layers
 
 """shell
-gdown https://drive.google.com/uc?id=1DdGIJ4PZPlF2ikl8mNM9V-PdVxVLbQi6
-unzip -q lol_dataset.zip
+wget https://huggingface.co/datasets/geekyrakshit/LoL-Dataset/resolve/main/lol_dataset.zip
+unzip -q lol_dataset.zip && rm lol_dataset.zip
 """
 
 """
@@ -81,14 +85,15 @@ def random_crop(low_image, enhanced_image):
     low_h = tf.random.uniform(
         shape=(), maxval=low_image_shape[0] - IMAGE_SIZE + 1, dtype=tf.int32
     )
-    enhanced_w = low_w
-    enhanced_h = low_h
     low_image_cropped = low_image[
         low_h : low_h + IMAGE_SIZE, low_w : low_w + IMAGE_SIZE
     ]
     enhanced_image_cropped = enhanced_image[
-        enhanced_h : enhanced_h + IMAGE_SIZE, enhanced_w : enhanced_w + IMAGE_SIZE
+        low_h : low_h + IMAGE_SIZE, low_w : low_w + IMAGE_SIZE
     ]
+    # in order to avoid `NONE` during shape inference
+    low_image_cropped.set_shape([IMAGE_SIZE, IMAGE_SIZE, 3])
+    enhanced_image_cropped.set_shape([IMAGE_SIZE, IMAGE_SIZE, 3])
     return low_image_cropped, enhanced_image_cropped
 
 
@@ -120,8 +125,8 @@ train_dataset = get_dataset(train_low_light_images, train_enhanced_images)
 val_dataset = get_dataset(val_low_light_images, val_enhanced_images)
 
 
-print("Train Dataset:", train_dataset)
-print("Val Dataset:", val_dataset)
+print("Train Dataset:", train_dataset.element_spec)
+print("Val Dataset:", val_dataset.element_spec)
 
 """
 ## MIRNet Model
@@ -178,7 +183,7 @@ def selective_kernel_feature_fusion(
         [multi_scale_feature_1, multi_scale_feature_2, multi_scale_feature_3]
     )
     gap = layers.GlobalAveragePooling2D()(combined_feature)
-    channel_wise_statistics = tf.reshape(gap, shape=(-1, 1, 1, channels))
+    channel_wise_statistics = layers.Reshape((1, 1, channels))(gap)
     compact_feature_representation = layers.Conv2D(
         filters=channels // 8, kernel_size=(1, 1), activation="relu"
     )(channel_wise_statistics)
@@ -230,21 +235,33 @@ then used to rescale the input feature map.
 """
 
 
+class ChannelPooling(layers.Layer):
+    def __init__(self, axis=-1, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.axis = axis
+        self.concat = layers.Concatenate(axis=self.axis)
+
+    def call(self, inputs):
+        average_pooling = tf.expand_dims(tf.reduce_mean(inputs, axis=-1), axis=-1)
+        max_pooling = tf.expand_dims(tf.reduce_max(inputs, axis=-1), axis=-1)
+        return self.concat([average_pooling, max_pooling])
+
+    def get_config(self):
+        config = super().get_config()
+        config.update({"axis": self.axis})
+
+
 def spatial_attention_block(input_tensor):
-    average_pooling = tf.reduce_max(input_tensor, axis=-1)
-    average_pooling = tf.expand_dims(average_pooling, axis=-1)
-    max_pooling = tf.reduce_mean(input_tensor, axis=-1)
-    max_pooling = tf.expand_dims(max_pooling, axis=-1)
-    concatenated = layers.Concatenate(axis=-1)([average_pooling, max_pooling])
-    feature_map = layers.Conv2D(1, kernel_size=(1, 1))(concatenated)
-    feature_map = tf.nn.sigmoid(feature_map)
+    compressed_feature_map = ChannelPooling(axis=-1)(input_tensor)
+    feature_map = layers.Conv2D(1, kernel_size=(1, 1))(compressed_feature_map)
+    feature_map = keras.activations.sigmoid(feature_map)
     return input_tensor * feature_map
 
 
 def channel_attention_block(input_tensor):
     channels = list(input_tensor.shape)[-1]
     average_pooling = layers.GlobalAveragePooling2D()(input_tensor)
-    feature_descriptor = tf.reshape(average_pooling, shape=(-1, 1, 1, channels))
+    feature_descriptor = layers.Reshape((1, 1, channels))(average_pooling)
     feature_activations = layers.Conv2D(
         filters=channels // 8, kernel_size=(1, 1), activation="relu"
     )(feature_descriptor)
@@ -336,7 +353,9 @@ def multi_scale_residual_block(input_tensor, channels):
         up_sampling_module(up_sampling_module(level3_dau)),
     )
     level2_skff = selective_kernel_feature_fusion(
-        down_sampling_module(level1_dau), level2_dau, up_sampling_module(level3_dau)
+        down_sampling_module(level1_dau),
+        level2_dau,
+        up_sampling_module(level3_dau),
     )
     level3_skff = selective_kernel_feature_fusion(
         down_sampling_module(down_sampling_module(level1_dau)),
@@ -401,7 +420,9 @@ def peak_signal_noise_ratio(y_true, y_pred):
 
 optimizer = keras.optimizers.Adam(learning_rate=1e-4)
 model.compile(
-    optimizer=optimizer, loss=charbonnier_loss, metrics=[peak_signal_noise_ratio]
+    optimizer=optimizer,
+    loss=charbonnier_loss,
+    metrics=[peak_signal_noise_ratio],
 )
 
 history = model.fit(
@@ -420,24 +441,20 @@ history = model.fit(
     ],
 )
 
-plt.plot(history.history["loss"], label="train_loss")
-plt.plot(history.history["val_loss"], label="val_loss")
-plt.xlabel("Epochs")
-plt.ylabel("Loss")
-plt.title("Train and Validation Losses Over Epochs", fontsize=14)
-plt.legend()
-plt.grid()
-plt.show()
+
+def plot_history(value, name):
+    plt.plot(history.history[value], label=f"train_{name.lower()}")
+    plt.plot(history.history[f"val_{value}"], label=f"val_{name.lower()}")
+    plt.xlabel("Epochs")
+    plt.ylabel(name)
+    plt.title(f"Train and Validation {name} Over Epochs", fontsize=14)
+    plt.legend()
+    plt.grid()
+    plt.show()
 
 
-plt.plot(history.history["peak_signal_noise_ratio"], label="train_psnr")
-plt.plot(history.history["val_peak_signal_noise_ratio"], label="val_psnr")
-plt.xlabel("Epochs")
-plt.ylabel("PSNR")
-plt.title("Train and Validation PSNR Over Epochs", fontsize=14)
-plt.legend()
-plt.grid()
-plt.show()
+plot_history("loss", "Loss")
+plot_history("peak_signal_noise_ratio", "PSNR")
 
 """
 ## Inference
@@ -457,7 +474,7 @@ def infer(original_image):
     image = keras.utils.img_to_array(original_image)
     image = image.astype("float32") / 255.0
     image = np.expand_dims(image, axis=0)
-    output = model.predict(image)
+    output = model.predict(image, verbose=0)
     output_image = output[0] * 255.0
     output_image = output_image.clip(0, 255)
     output_image = output_image.reshape(
