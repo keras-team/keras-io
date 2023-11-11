@@ -199,27 +199,31 @@ score = model.evaluate(x_test, y_test, verbose=0)
 <div class="k-default-codeblock">
 ```
 Epoch 1/20
- 399/399 ━━━━━━━━━━━━━━━━━━━━ 69s 173ms/step - acc: 0.5508 - loss: 1.2521 - val_acc: 0.9650 - val_loss: 0.1225
+ 399/399 ━━━━━━━━━━━━━━━━━━━━ 74s 184ms/step - acc: 0.4980 - loss: 1.3832 - val_acc: 0.9609 - val_loss: 0.1513
 Epoch 2/20
- 399/399 ━━━━━━━━━━━━━━━━━━━━ 66s 166ms/step - acc: 0.9337 - loss: 0.2255 - val_acc: 0.9803 - val_loss: 0.0708
+ 399/399 ━━━━━━━━━━━━━━━━━━━━ 74s 186ms/step - acc: 0.9245 - loss: 0.2487 - val_acc: 0.9702 - val_loss: 0.0999
 Epoch 3/20
- 399/399 ━━━━━━━━━━━━━━━━━━━━ 66s 165ms/step - acc: 0.9550 - loss: 0.1521 - val_acc: 0.9792 - val_loss: 0.0732
+ 399/399 ━━━━━━━━━━━━━━━━━━━━ 70s 175ms/step - acc: 0.9515 - loss: 0.1647 - val_acc: 0.9816 - val_loss: 0.0608
 Epoch 4/20
- 399/399 ━━━━━━━━━━━━━━━━━━━━ 66s 166ms/step - acc: 0.9622 - loss: 0.1226 - val_acc: 0.9851 - val_loss: 0.0489
+ 399/399 ━━━━━━━━━━━━━━━━━━━━ 69s 174ms/step - acc: 0.9622 - loss: 0.1247 - val_acc: 0.9833 - val_loss: 0.0541
 Epoch 5/20
- 399/399 ━━━━━━━━━━━━━━━━━━━━ 68s 171ms/step - acc: 0.9704 - loss: 0.0998 - val_acc: 0.9866 - val_loss: 0.0454
+ 399/399 ━━━━━━━━━━━━━━━━━━━━ 68s 171ms/step - acc: 0.9685 - loss: 0.1083 - val_acc: 0.9860 - val_loss: 0.0468
 Epoch 6/20
- 399/399 ━━━━━━━━━━━━━━━━━━━━ 70s 174ms/step - acc: 0.9733 - loss: 0.0877 - val_acc: 0.9881 - val_loss: 0.0421
+ 399/399 ━━━━━━━━━━━━━━━━━━━━ 70s 176ms/step - acc: 0.9710 - loss: 0.0955 - val_acc: 0.9897 - val_loss: 0.0400
 Epoch 7/20
- 399/399 ━━━━━━━━━━━━━━━━━━━━ 70s 174ms/step - acc: 0.9776 - loss: 0.0760 - val_acc: 0.9882 - val_loss: 0.0404
+ 399/399 ━━━━━━━━━━━━━━━━━━━━ 69s 172ms/step - acc: 0.9742 - loss: 0.0853 - val_acc: 0.9888 - val_loss: 0.0388
 Epoch 8/20
- 399/399 ━━━━━━━━━━━━━━━━━━━━ 69s 173ms/step - acc: 0.9796 - loss: 0.0660 - val_acc: 0.9902 - val_loss: 0.0357
+ 399/399 ━━━━━━━━━━━━━━━━━━━━ 68s 169ms/step - acc: 0.9789 - loss: 0.0738 - val_acc: 0.9902 - val_loss: 0.0387
 Epoch 9/20
- 399/399 ━━━━━━━━━━━━━━━━━━━━ 70s 175ms/step - acc: 0.9814 - loss: 0.0606 - val_acc: 0.9913 - val_loss: 0.0311
+ 399/399 ━━━━━━━━━━━━━━━━━━━━ 75s 187ms/step - acc: 0.9789 - loss: 0.0691 - val_acc: 0.9907 - val_loss: 0.0341
 Epoch 10/20
- 399/399 ━━━━━━━━━━━━━━━━━━━━ 69s 173ms/step - acc: 0.9838 - loss: 0.0563 - val_acc: 0.9890 - val_loss: 0.0469
+ 399/399 ━━━━━━━━━━━━━━━━━━━━ 77s 194ms/step - acc: 0.9806 - loss: 0.0636 - val_acc: 0.9907 - val_loss: 0.0348
 Epoch 11/20
- 399/399 ━━━━━━━━━━━━━━━━━━━━ 70s 175ms/step - acc: 0.9828 - loss: 0.0568 - val_acc: 0.9886 - val_loss: 0.0362
+ 399/399 ━━━━━━━━━━━━━━━━━━━━ 74s 186ms/step - acc: 0.9812 - loss: 0.0610 - val_acc: 0.9926 - val_loss: 0.0271
+Epoch 12/20
+ 399/399 ━━━━━━━━━━━━━━━━━━━━ 219s 550ms/step - acc: 0.9820 - loss: 0.0590 - val_acc: 0.9912 - val_loss: 0.0294
+Epoch 13/20
+ 399/399 ━━━━━━━━━━━━━━━━━━━━ 70s 176ms/step - acc: 0.9843 - loss: 0.0504 - val_acc: 0.9918 - val_loss: 0.0316
 
 ```
 </div>
@@ -247,7 +251,7 @@ predictions = model.predict(x_test)
 
 <div class="k-default-codeblock">
 ```
- 313/313 ━━━━━━━━━━━━━━━━━━━━ 3s 10ms/step
+ 313/313 ━━━━━━━━━━━━━━━━━━━━ 3s 9ms/step
 
 ```
 </div>
@@ -373,9 +377,9 @@ model.fit(
 
 <div class="k-default-codeblock">
 ```
- 399/399 ━━━━━━━━━━━━━━━━━━━━ 71s 176ms/step - acc: 0.5174 - loss: 1.3425 - val_acc: 0.9327 - val_loss: 0.2291
+ 399/399 ━━━━━━━━━━━━━━━━━━━━ 70s 174ms/step - acc: 0.5104 - loss: 1.3473 - val_acc: 0.9256 - val_loss: 0.2484
 
-<keras.src.callbacks.history.History at 0x29e2f3760>
+<keras.src.callbacks.history.History at 0x105608670>
 
 ```
 </div>
@@ -429,9 +433,9 @@ model.fit(train_dataloader, epochs=1, validation_data=val_dataloader)
 
 <div class="k-default-codeblock">
 ```
- 469/469 ━━━━━━━━━━━━━━━━━━━━ 83s 176ms/step - acc: 0.5925 - loss: 1.1421 - val_acc: 0.9405 - val_loss: 0.2044
+ 469/469 ━━━━━━━━━━━━━━━━━━━━ 81s 172ms/step - acc: 0.5502 - loss: 1.2550 - val_acc: 0.9419 - val_loss: 0.1972
 
-<keras.src.callbacks.history.History at 0x2a627cd30>
+<keras.src.callbacks.history.History at 0x2b3385480>
 
 ```
 </div>
@@ -465,9 +469,9 @@ model.fit(train_dataset, epochs=1, validation_data=test_dataset)
 
 <div class="k-default-codeblock">
 ```
- 469/469 ━━━━━━━━━━━━━━━━━━━━ 89s 189ms/step - acc: 0.5588 - loss: 1.2422 - val_acc: 0.9078 - val_loss: 0.2901
+ 469/469 ━━━━━━━━━━━━━━━━━━━━ 81s 172ms/step - acc: 0.5771 - loss: 1.1948 - val_acc: 0.9229 - val_loss: 0.2502
 
-<keras.src.callbacks.history.History at 0x2a6786b90>
+<keras.src.callbacks.history.History at 0x2b33e7df0>
 
 ```
 </div>
@@ -479,10 +483,9 @@ of Keras 3. Next, you can learn about:
 
 ### How to customize what happens in `fit()`
 
-Want to implement a non-standard training algorithm yourself
-(e.g. a GAN training routine) but still want to benefit from
-the power and usability of `fit()`? It's really easy to customize
-`fit()` to support arbitrary use cases.
+Want to implement a non-standard training algorithm yourself but still want to benefit from
+the power and usability of `fit()`? It's easy to customize
+`fit()` to support arbitrary use cases:
 
 - [Customizing what happens in `fit()` with TensorFlow](http://keras.io/guides/custom_train_step_in_tensorflow/)
 - [Customizing what happens in `fit()` with JAX](http://keras.io/guides/custom_train_step_in_jax/)
@@ -494,7 +497,6 @@ the power and usability of `fit()`? It's really easy to customize
 - [Writing a training loop from scratch in TensorFlow](http://keras.io/guides/writing_a_custom_training_loop_in_tensorflow/)
 - [Writing a training loop from scratch in JAX](http://keras.io/guides/writing_a_custom_training_loop_in_jax/)
 - [Writing a training loop from scratch in PyTorch](http://keras.io/guides/writing_a_custom_training_loop_in_torch/)
-
 
 ---
 ## How to distribute training

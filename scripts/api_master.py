@@ -1512,9 +1512,40 @@ API_MASTER = {
                     "title": "LayoutMap API",
                     "generate": [
                         "keras.distribution.LayoutMap",
+                        "keras.distribution.DeviceMesh",
+                        "keras.distribution.TensorLayout",
                         "keras.distribution.distribute_tensor",
-                        "keras.distribution.distribution",
+                    ],
+                },
+                {
+                    "path": "data_parallel",
+                    "title": "DataParallel API",
+                    "generate": [
+                        "keras.distribution.DataParallel",
+                    ],
+                },
+                {
+                    "path": "model_parallel",
+                    "title": "ModelParallel API",
+                    "generate": [
+                        "keras.distribution.ModelParallel",
+                    ],
+                },
+                {
+                    "path": "model_parallel",
+                    "title": "ModelParallel API",
+                    "generate": [
+                        "keras.distribution.ModelParallel",
+                    ],
+                },
+                {
+                    "path": "distribution_utils",
+                    "title": "Distribution utilities",
+                    "generate": [
                         "keras.distribution.set_distribution",
+                        "keras.distribution.distribution",
+                        "keras.distribution.list_devices",
+                        "keras.distribution.initialize",
                     ],
                 },
             ],

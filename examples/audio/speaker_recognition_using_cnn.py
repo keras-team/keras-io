@@ -88,7 +88,7 @@ SAMPLING_RATE = 16000
 SCALE = 0.5
 
 BATCH_SIZE = 128
-EPOCHS = 1
+EPOCHS = 1  # For a real training run, use EPOCHS = 100
 
 
 """

@@ -9,6 +9,7 @@ PyYAML
 pandas
 jupyter
 pycocotools
+pydot
 tensorflow~=2.14.0
 tensorflow_datasets
 keras-core==0.1.7

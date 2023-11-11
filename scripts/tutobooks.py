@@ -69,7 +69,7 @@ import shutil
 import tempfile
 from pathlib import Path
 
-TIMEOUT = 60 * 60
+TIMEOUT = 2 * 60 * 60  # 2 hours
 MAX_LOC = 300
 
 
@@ -318,7 +318,8 @@ def validate(py):
     accelerator_options = ["GPU", "TPU", "None"]
     if accelerator not in accelerator_options:
         raise ValueError(
-            f"Accelerator field content must be one of: {accelerator_options}"
+            f"Accelerator field content must be one of: {accelerator_options}. "
+            f"Received: accelerator={accelerator}"
         )
     for i, line in enumerate(lines):
         if line.startswith('"""') and line.endswith('"""') and len(line) > 3:
