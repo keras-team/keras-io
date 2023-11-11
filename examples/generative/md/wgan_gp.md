@@ -32,9 +32,13 @@ that keeps the L2 norm of the discriminator gradients close to 1.
 
 
 ```python
+import os
+
+os.environ["KERAS_BACKEND"] = "tensorflow"
+
+import keras
 import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras import layers
+from keras import layers
 
 ```
 
@@ -67,16 +71,13 @@ train_images = (train_images - 127.5) / 127.5
 <div class="k-default-codeblock">
 ```
 Downloading data from https://storage.googleapis.com/tensorflow/tf-keras-datasets/train-labels-idx1-ubyte.gz
-32768/29515 [=================================] - 0s 0us/step
-40960/29515 [=========================================] - 0s 0us/step
+ 29515/29515 ━━━━━━━━━━━━━━━━━━━━ 0s 0us/step
 Downloading data from https://storage.googleapis.com/tensorflow/tf-keras-datasets/train-images-idx3-ubyte.gz
-26427392/26421880 [==============================] - 0s 0us/step
-26435584/26421880 [==============================] - 0s 0us/step
+ 26421880/26421880 ━━━━━━━━━━━━━━━━━━━━ 0s 0us/step
 Downloading data from https://storage.googleapis.com/tensorflow/tf-keras-datasets/t10k-labels-idx1-ubyte.gz
-16384/5148 [===============================================================================================] - 0s 0us/step
+ 5148/5148 ━━━━━━━━━━━━━━━━━━━━ 0s 0us/step
 Downloading data from https://storage.googleapis.com/tensorflow/tf-keras-datasets/t10k-images-idx3-ubyte.gz
-4423680/4422102 [==============================] - 0s 0us/step
-4431872/4422102 [==============================] - 0s 0us/step
+ 4422102/4422102 ━━━━━━━━━━━━━━━━━━━━ 0s 0us/step
 Number of examples: 60000
 Shape of the images in the dataset: (28, 28)
 
@@ -184,51 +185,68 @@ d_model = get_discriminator_model()
 d_model.summary()
 ```
 
-<div class="k-default-codeblock">
-```
-Model: "discriminator"
-_________________________________________________________________
- Layer (type)                Output Shape              Param #   
-=================================================================
- input_1 (InputLayer)        [(None, 28, 28, 1)]       0         
-                                                                 
- zero_padding2d (ZeroPadding  (None, 32, 32, 1)        0         
- 2D)                                                             
-                                                                 
- conv2d (Conv2D)             (None, 16, 16, 64)        1664      
-                                                                 
- leaky_re_lu (LeakyReLU)     (None, 16, 16, 64)        0         
-                                                                 
- conv2d_1 (Conv2D)           (None, 8, 8, 128)         204928    
-                                                                 
- leaky_re_lu_1 (LeakyReLU)   (None, 8, 8, 128)         0         
-                                                                 
- dropout (Dropout)           (None, 8, 8, 128)         0         
-                                                                 
- conv2d_2 (Conv2D)           (None, 4, 4, 256)         819456    
-                                                                 
- leaky_re_lu_2 (LeakyReLU)   (None, 4, 4, 256)         0         
-                                                                 
- dropout_1 (Dropout)         (None, 4, 4, 256)         0         
-                                                                 
- conv2d_3 (Conv2D)           (None, 2, 2, 512)         3277312   
-                                                                 
- leaky_re_lu_3 (LeakyReLU)   (None, 2, 2, 512)         0         
-                                                                 
- flatten (Flatten)           (None, 2048)              0         
-                                                                 
- dropout_2 (Dropout)         (None, 2048)              0         
-                                                                 
- dense (Dense)               (None, 1)                 2049      
-                                                                 
-=================================================================
-Total params: 4,305,409
-Trainable params: 4,305,409
-Non-trainable params: 0
-_________________________________________________________________
 
-```
-</div>
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold">Model: "discriminator"</span>
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━┓
+┃<span style="font-weight: bold"> Layer (type)                    </span>┃<span style="font-weight: bold"> Output Shape              </span>┃<span style="font-weight: bold">    Param # </span>┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━┩
+│ input_layer (<span style="color: #0087ff; text-decoration-color: #0087ff">InputLayer</span>)        │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">28</span>, <span style="color: #00af00; text-decoration-color: #00af00">28</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>)         │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ zero_padding2d (<span style="color: #0087ff; text-decoration-color: #0087ff">ZeroPadding2D</span>)  │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">32</span>, <span style="color: #00af00; text-decoration-color: #00af00">32</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>)         │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ conv2d (<span style="color: #0087ff; text-decoration-color: #0087ff">Conv2D</span>)                 │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">16</span>, <span style="color: #00af00; text-decoration-color: #00af00">16</span>, <span style="color: #00af00; text-decoration-color: #00af00">64</span>)        │      <span style="color: #00af00; text-decoration-color: #00af00">1,664</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ leaky_re_lu (<span style="color: #0087ff; text-decoration-color: #0087ff">LeakyReLU</span>)         │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">16</span>, <span style="color: #00af00; text-decoration-color: #00af00">16</span>, <span style="color: #00af00; text-decoration-color: #00af00">64</span>)        │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ conv2d_1 (<span style="color: #0087ff; text-decoration-color: #0087ff">Conv2D</span>)               │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">8</span>, <span style="color: #00af00; text-decoration-color: #00af00">8</span>, <span style="color: #00af00; text-decoration-color: #00af00">128</span>)         │    <span style="color: #00af00; text-decoration-color: #00af00">204,928</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ leaky_re_lu_1 (<span style="color: #0087ff; text-decoration-color: #0087ff">LeakyReLU</span>)       │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">8</span>, <span style="color: #00af00; text-decoration-color: #00af00">8</span>, <span style="color: #00af00; text-decoration-color: #00af00">128</span>)         │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ dropout (<span style="color: #0087ff; text-decoration-color: #0087ff">Dropout</span>)               │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">8</span>, <span style="color: #00af00; text-decoration-color: #00af00">8</span>, <span style="color: #00af00; text-decoration-color: #00af00">128</span>)         │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ conv2d_2 (<span style="color: #0087ff; text-decoration-color: #0087ff">Conv2D</span>)               │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">4</span>, <span style="color: #00af00; text-decoration-color: #00af00">4</span>, <span style="color: #00af00; text-decoration-color: #00af00">256</span>)         │    <span style="color: #00af00; text-decoration-color: #00af00">819,456</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ leaky_re_lu_2 (<span style="color: #0087ff; text-decoration-color: #0087ff">LeakyReLU</span>)       │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">4</span>, <span style="color: #00af00; text-decoration-color: #00af00">4</span>, <span style="color: #00af00; text-decoration-color: #00af00">256</span>)         │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ dropout_1 (<span style="color: #0087ff; text-decoration-color: #0087ff">Dropout</span>)             │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">4</span>, <span style="color: #00af00; text-decoration-color: #00af00">4</span>, <span style="color: #00af00; text-decoration-color: #00af00">256</span>)         │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ conv2d_3 (<span style="color: #0087ff; text-decoration-color: #0087ff">Conv2D</span>)               │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">2</span>, <span style="color: #00af00; text-decoration-color: #00af00">2</span>, <span style="color: #00af00; text-decoration-color: #00af00">512</span>)         │  <span style="color: #00af00; text-decoration-color: #00af00">3,277,312</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ leaky_re_lu_3 (<span style="color: #0087ff; text-decoration-color: #0087ff">LeakyReLU</span>)       │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">2</span>, <span style="color: #00af00; text-decoration-color: #00af00">2</span>, <span style="color: #00af00; text-decoration-color: #00af00">512</span>)         │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ flatten (<span style="color: #0087ff; text-decoration-color: #0087ff">Flatten</span>)               │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">2048</span>)              │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ dropout_2 (<span style="color: #0087ff; text-decoration-color: #0087ff">Dropout</span>)             │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">2048</span>)              │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ dense (<span style="color: #0087ff; text-decoration-color: #0087ff">Dense</span>)                   │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>)                 │      <span style="color: #00af00; text-decoration-color: #00af00">2,049</span> │
+└─────────────────────────────────┴───────────────────────────┴────────────┘
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Total params: </span><span style="color: #00af00; text-decoration-color: #00af00">4,305,409</span> (16.42 MB)
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Trainable params: </span><span style="color: #00af00; text-decoration-color: #00af00">4,305,409</span> (16.42 MB)
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Non-trainable params: </span><span style="color: #00af00; text-decoration-color: #00af00">0</span> (0.00 B)
+</pre>
+
+
+
 ---
 ## Create the generator
 
@@ -305,63 +323,78 @@ g_model = get_generator_model()
 g_model.summary()
 ```
 
-<div class="k-default-codeblock">
-```
-Model: "generator"
-_________________________________________________________________
- Layer (type)                Output Shape              Param #   
-=================================================================
- input_2 (InputLayer)        [(None, 128)]             0         
-                                                                 
- dense_1 (Dense)             (None, 4096)              524288    
-                                                                 
- batch_normalization (BatchN  (None, 4096)             16384     
- ormalization)                                                   
-                                                                 
- leaky_re_lu_4 (LeakyReLU)   (None, 4096)              0         
-                                                                 
- reshape (Reshape)           (None, 4, 4, 256)         0         
-                                                                 
- up_sampling2d (UpSampling2D  (None, 8, 8, 256)        0         
- )                                                               
-                                                                 
- conv2d_4 (Conv2D)           (None, 8, 8, 128)         294912    
-                                                                 
- batch_normalization_1 (Batc  (None, 8, 8, 128)        512       
- hNormalization)                                                 
-                                                                 
- leaky_re_lu_5 (LeakyReLU)   (None, 8, 8, 128)         0         
-                                                                 
- up_sampling2d_1 (UpSampling  (None, 16, 16, 128)      0         
- 2D)                                                             
-                                                                 
- conv2d_5 (Conv2D)           (None, 16, 16, 64)        73728     
-                                                                 
- batch_normalization_2 (Batc  (None, 16, 16, 64)       256       
- hNormalization)                                                 
-                                                                 
- leaky_re_lu_6 (LeakyReLU)   (None, 16, 16, 64)        0         
-                                                                 
- up_sampling2d_2 (UpSampling  (None, 32, 32, 64)       0         
- 2D)                                                             
-                                                                 
- conv2d_6 (Conv2D)           (None, 32, 32, 1)         576       
-                                                                 
- batch_normalization_3 (Batc  (None, 32, 32, 1)        4         
- hNormalization)                                                 
-                                                                 
- activation (Activation)     (None, 32, 32, 1)         0         
-                                                                 
- cropping2d (Cropping2D)     (None, 28, 28, 1)         0         
-                                                                 
-=================================================================
-Total params: 910,660
-Trainable params: 902,082
-Non-trainable params: 8,578
-_________________________________________________________________
 
-```
-</div>
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold">Model: "generator"</span>
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━┓
+┃<span style="font-weight: bold"> Layer (type)                    </span>┃<span style="font-weight: bold"> Output Shape              </span>┃<span style="font-weight: bold">    Param # </span>┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━┩
+│ input_layer_1 (<span style="color: #0087ff; text-decoration-color: #0087ff">InputLayer</span>)      │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">128</span>)               │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ dense_1 (<span style="color: #0087ff; text-decoration-color: #0087ff">Dense</span>)                 │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">4096</span>)              │    <span style="color: #00af00; text-decoration-color: #00af00">524,288</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ batch_normalization             │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">4096</span>)              │     <span style="color: #00af00; text-decoration-color: #00af00">16,384</span> │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">BatchNormalization</span>)            │                           │            │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ leaky_re_lu_4 (<span style="color: #0087ff; text-decoration-color: #0087ff">LeakyReLU</span>)       │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">4096</span>)              │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ reshape (<span style="color: #0087ff; text-decoration-color: #0087ff">Reshape</span>)               │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">4</span>, <span style="color: #00af00; text-decoration-color: #00af00">4</span>, <span style="color: #00af00; text-decoration-color: #00af00">256</span>)         │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ up_sampling2d (<span style="color: #0087ff; text-decoration-color: #0087ff">UpSampling2D</span>)    │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">8</span>, <span style="color: #00af00; text-decoration-color: #00af00">8</span>, <span style="color: #00af00; text-decoration-color: #00af00">256</span>)         │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ conv2d_4 (<span style="color: #0087ff; text-decoration-color: #0087ff">Conv2D</span>)               │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">8</span>, <span style="color: #00af00; text-decoration-color: #00af00">8</span>, <span style="color: #00af00; text-decoration-color: #00af00">128</span>)         │    <span style="color: #00af00; text-decoration-color: #00af00">294,912</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ batch_normalization_1           │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">8</span>, <span style="color: #00af00; text-decoration-color: #00af00">8</span>, <span style="color: #00af00; text-decoration-color: #00af00">128</span>)         │        <span style="color: #00af00; text-decoration-color: #00af00">512</span> │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">BatchNormalization</span>)            │                           │            │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ leaky_re_lu_5 (<span style="color: #0087ff; text-decoration-color: #0087ff">LeakyReLU</span>)       │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">8</span>, <span style="color: #00af00; text-decoration-color: #00af00">8</span>, <span style="color: #00af00; text-decoration-color: #00af00">128</span>)         │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ up_sampling2d_1 (<span style="color: #0087ff; text-decoration-color: #0087ff">UpSampling2D</span>)  │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">16</span>, <span style="color: #00af00; text-decoration-color: #00af00">16</span>, <span style="color: #00af00; text-decoration-color: #00af00">128</span>)       │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ conv2d_5 (<span style="color: #0087ff; text-decoration-color: #0087ff">Conv2D</span>)               │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">16</span>, <span style="color: #00af00; text-decoration-color: #00af00">16</span>, <span style="color: #00af00; text-decoration-color: #00af00">64</span>)        │     <span style="color: #00af00; text-decoration-color: #00af00">73,728</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ batch_normalization_2           │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">16</span>, <span style="color: #00af00; text-decoration-color: #00af00">16</span>, <span style="color: #00af00; text-decoration-color: #00af00">64</span>)        │        <span style="color: #00af00; text-decoration-color: #00af00">256</span> │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">BatchNormalization</span>)            │                           │            │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ leaky_re_lu_6 (<span style="color: #0087ff; text-decoration-color: #0087ff">LeakyReLU</span>)       │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">16</span>, <span style="color: #00af00; text-decoration-color: #00af00">16</span>, <span style="color: #00af00; text-decoration-color: #00af00">64</span>)        │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ up_sampling2d_2 (<span style="color: #0087ff; text-decoration-color: #0087ff">UpSampling2D</span>)  │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">32</span>, <span style="color: #00af00; text-decoration-color: #00af00">32</span>, <span style="color: #00af00; text-decoration-color: #00af00">64</span>)        │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ conv2d_6 (<span style="color: #0087ff; text-decoration-color: #0087ff">Conv2D</span>)               │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">32</span>, <span style="color: #00af00; text-decoration-color: #00af00">32</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>)         │        <span style="color: #00af00; text-decoration-color: #00af00">576</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ batch_normalization_3           │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">32</span>, <span style="color: #00af00; text-decoration-color: #00af00">32</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>)         │          <span style="color: #00af00; text-decoration-color: #00af00">4</span> │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">BatchNormalization</span>)            │                           │            │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ activation (<span style="color: #0087ff; text-decoration-color: #0087ff">Activation</span>)         │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">32</span>, <span style="color: #00af00; text-decoration-color: #00af00">32</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>)         │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ cropping2d (<span style="color: #0087ff; text-decoration-color: #0087ff">Cropping2D</span>)         │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">28</span>, <span style="color: #00af00; text-decoration-color: #00af00">28</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>)         │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │
+└─────────────────────────────────┴───────────────────────────┴────────────┘
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Total params: </span><span style="color: #00af00; text-decoration-color: #00af00">910,660</span> (3.47 MB)
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Trainable params: </span><span style="color: #00af00; text-decoration-color: #00af00">902,082</span> (3.44 MB)
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Non-trainable params: </span><span style="color: #00af00; text-decoration-color: #00af00">8,578</span> (33.51 KB)
+</pre>
+
+
+
 ---
 ## Create the WGAN-GP model
 
@@ -522,6 +555,7 @@ discriminator_optimizer = keras.optimizers.Adam(
     learning_rate=0.0002, beta_1=0.5, beta_2=0.9
 )
 
+
 # Define the loss functions for the discriminator,
 # which should be (fake_loss - real_loss).
 # We will add the gradient penalty later to this loss function.
@@ -565,47 +599,47 @@ wgan.fit(train_images, batch_size=BATCH_SIZE, epochs=epochs, callbacks=[cbk])
 <div class="k-default-codeblock">
 ```
 Epoch 1/20
-118/118 [==============================] - 148s 1s/step - d_loss: -7.9642 - g_loss: -16.0514
+ 118/118 ━━━━━━━━━━━━━━━━━━━━ 79s 345ms/step - d_loss: -7.7597 - g_loss: -17.2858 - loss: 0.0000e+00
 Epoch 2/20
-118/118 [==============================] - 132s 1s/step - d_loss: -7.4232 - g_loss: -3.8152
+ 118/118 ━━━━━━━━━━━━━━━━━━━━ 14s 118ms/step - d_loss: -7.0841 - g_loss: -13.8542 - loss: 0.0000e+00
 Epoch 3/20
-118/118 [==============================] - 132s 1s/step - d_loss: -6.4284 - g_loss: 5.1891
+ 118/118 ━━━━━━━━━━━━━━━━━━━━ 14s 118ms/step - d_loss: -6.1011 - g_loss: -13.2763 - loss: 0.0000e+00
 Epoch 4/20
-118/118 [==============================] - 132s 1s/step - d_loss: -5.7268 - g_loss: 9.9006
+ 118/118 ━━━━━━━━━━━━━━━━━━━━ 14s 119ms/step - d_loss: -5.5292 - g_loss: -13.3122 - loss: 0.0000e+00
 Epoch 5/20
-118/118 [==============================] - 132s 1s/step - d_loss: -5.2645 - g_loss: 11.8388
+ 118/118 ━━━━━━━━━━━━━━━━━━━━ 14s 119ms/step - d_loss: -5.1012 - g_loss: -12.1395 - loss: 0.0000e+00
 Epoch 6/20
-118/118 [==============================] - 132s 1s/step - d_loss: -4.8836 - g_loss: 10.5683
+ 118/118 ━━━━━━━━━━━━━━━━━━━━ 14s 119ms/step - d_loss: -4.7557 - g_loss: -11.2559 - loss: 0.0000e+00
 Epoch 7/20
-118/118 [==============================] - 132s 1s/step - d_loss: -4.5117 - g_loss: 9.7754
+ 118/118 ━━━━━━━━━━━━━━━━━━━━ 14s 119ms/step - d_loss: -4.4727 - g_loss: -10.3075 - loss: 0.0000e+00
 Epoch 8/20
-118/118 [==============================] - 132s 1s/step - d_loss: -4.2375 - g_loss: 10.5688
+ 118/118 ━━━━━━━━━━━━━━━━━━━━ 14s 119ms/step - d_loss: -4.2056 - g_loss: -10.0340 - loss: 0.0000e+00
 Epoch 9/20
-118/118 [==============================] - 132s 1s/step - d_loss: -3.9687 - g_loss: 10.5467
+ 118/118 ━━━━━━━━━━━━━━━━━━━━ 14s 120ms/step - d_loss: -4.0116 - g_loss: -9.9283 - loss: 0.0000e+00
 Epoch 10/20
-118/118 [==============================] - 132s 1s/step - d_loss: -3.7705 - g_loss: 9.7148
+ 118/118 ━━━━━━━━━━━━━━━━━━━━ 14s 120ms/step - d_loss: -3.8050 - g_loss: -9.7392 - loss: 0.0000e+00
 Epoch 11/20
-118/118 [==============================] - 132s 1s/step - d_loss: -3.5572 - g_loss: 8.8958
+ 118/118 ━━━━━━━━━━━━━━━━━━━━ 14s 120ms/step - d_loss: -3.6608 - g_loss: -9.4686 - loss: 0.0000e+00
 Epoch 12/20
-118/118 [==============================] - 132s 1s/step - d_loss: -3.4122 - g_loss: 9.4445
+ 118/118 ━━━━━━━━━━━━━━━━━━━━ 14s 121ms/step - d_loss: -3.4623 - g_loss: -8.9601 - loss: 0.0000e+00
 Epoch 13/20
-118/118 [==============================] - 132s 1s/step - d_loss: -3.2676 - g_loss: 10.1362
+ 118/118 ━━━━━━━━━━━━━━━━━━━━ 14s 120ms/step - d_loss: -3.3659 - g_loss: -8.4620 - loss: 0.0000e+00
 Epoch 14/20
-118/118 [==============================] - 132s 1s/step - d_loss: -3.1722 - g_loss: 8.1789
+ 118/118 ━━━━━━━━━━━━━━━━━━━━ 14s 120ms/step - d_loss: -3.2486 - g_loss: -7.9598 - loss: 0.0000e+00
 Epoch 15/20
-118/118 [==============================] - 132s 1s/step - d_loss: -3.0114 - g_loss: 7.5867
+ 118/118 ━━━━━━━━━━━━━━━━━━━━ 14s 120ms/step - d_loss: -3.1436 - g_loss: -7.5392 - loss: 0.0000e+00
 Epoch 16/20
-118/118 [==============================] - 132s 1s/step - d_loss: -2.8934 - g_loss: 7.3032
+ 118/118 ━━━━━━━━━━━━━━━━━━━━ 14s 120ms/step - d_loss: -3.0370 - g_loss: -7.3694 - loss: 0.0000e+00
 Epoch 17/20
-118/118 [==============================] - 132s 1s/step - d_loss: -2.7569 - g_loss: 6.8547
+ 118/118 ━━━━━━━━━━━━━━━━━━━━ 14s 120ms/step - d_loss: -2.9256 - g_loss: -7.6105 - loss: 0.0000e+00
 Epoch 18/20
-118/118 [==============================] - 132s 1s/step - d_loss: -2.6966 - g_loss: 6.6962
+ 118/118 ━━━━━━━━━━━━━━━━━━━━ 14s 120ms/step - d_loss: -2.8976 - g_loss: -6.5240 - loss: 0.0000e+00
 Epoch 19/20
-118/118 [==============================] - 132s 1s/step - d_loss: -2.6876 - g_loss: 9.0901
+ 118/118 ━━━━━━━━━━━━━━━━━━━━ 14s 120ms/step - d_loss: -2.7944 - g_loss: -6.6281 - loss: 0.0000e+00
 Epoch 20/20
-118/118 [==============================] - 132s 1s/step - d_loss: -2.5782 - g_loss: 8.1021
+ 118/118 ━━━━━━━━━━━━━━━━━━━━ 14s 120ms/step - d_loss: -2.7175 - g_loss: -6.5900 - loss: 0.0000e+00
 
-<keras.callbacks.History at 0x7faef03ccfd0>
+<keras.src.callbacks.history.History at 0x7fc763a8e950>
 
 ```
 </div>
@@ -621,15 +655,21 @@ display(Image("generated_img_2_19.png"))
 ```
 
 
+    
 ![png](/img/examples/generative/wgan_gp/wgan_gp_17_0.png)
+    
 
 
 
+    
 ![png](/img/examples/generative/wgan_gp/wgan_gp_17_1.png)
+    
 
 
 
+    
 ![png](/img/examples/generative/wgan_gp/wgan_gp_17_2.png)
+    
 
 
 Example available on HuggingFace.

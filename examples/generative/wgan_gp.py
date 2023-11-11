@@ -28,10 +28,13 @@ that keeps the L2 norm of the discriminator gradients close to 1.
 """
 ## Setup
 """
+import os
 
+os.environ["KERAS_BACKEND"] = "tensorflow"
+
+import keras
 import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras import layers
+from keras import layers
 
 
 """
