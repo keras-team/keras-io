@@ -2,7 +2,7 @@
 
 **Author:** [Sayak Paul](https://twitter.com/RisingSayak)<br>
 **Date created:** 2021/03/06<br>
-**Last modified:** 2021/03/06<br>
+**Last modified:** 2023/07/24<br>
 **Description:** Data augmentation using the mixup technique for image classification.
 
 
@@ -33,36 +33,45 @@ transforms for a given dataset, medical imaging datasets, for example. mixup can
 extended to a variety of data modalities such as computer vision, naturallanguage
 processing, speech, and so on.
 
-This example requires TensorFlow 2.4 or higher.
-
 ---
 ## Setup
 
 
 ```python
+import os
+
+os.environ["KERAS_BACKEND"] = "tensorflow"
+
 import numpy as np
-import tensorflow as tf
+import keras
 import matplotlib.pyplot as plt
-from tensorflow.keras import layers
+
+from keras import layers
+
+# TF imports related to tf.data preprocessing
+from tensorflow import data as tf_data
+from tensorflow import image as tf_image
+from tensorflow.random import gamma as tf_random_gamma
+
 ```
 
 ---
 ## Prepare the dataset
 
-In this example, we will be using the [FashionMNIST](https://github.com/zalandoresearch/fashion-mnist/) dataset. But this same recipe can
+In this example, we will be using the [FashionMNIST](https://github.com/zalandoresearch/fashion-mnist) dataset. But this same recipe can
 be used for other classification datasets as well.
 
 
 ```python
-(x_train, y_train), (x_test, y_test) = tf.keras.datasets.fashion_mnist.load_data()
+(x_train, y_train), (x_test, y_test) = keras.datasets.fashion_mnist.load_data()
 
 x_train = x_train.astype("float32") / 255.0
 x_train = np.reshape(x_train, (-1, 28, 28, 1))
-y_train = tf.one_hot(y_train, 10)
+y_train = keras.ops.one_hot(y_train, 10)
 
 x_test = x_test.astype("float32") / 255.0
 x_test = np.reshape(x_test, (-1, 28, 28, 1))
-y_test = tf.one_hot(y_test, 10)
+y_test = keras.ops.one_hot(y_test, 10)
 ```
 
 ---
@@ -70,7 +79,7 @@ y_test = tf.one_hot(y_test, 10)
 
 
 ```python
-AUTO = tf.data.AUTOTUNE
+AUTO = tf_data.AUTOTUNE
 BATCH_SIZE = 64
 EPOCHS = 10
 ```
@@ -86,22 +95,22 @@ x_val, y_val = x_train[:val_samples], y_train[:val_samples]
 new_x_train, new_y_train = x_train[val_samples:], y_train[val_samples:]
 
 train_ds_one = (
-    tf.data.Dataset.from_tensor_slices((new_x_train, new_y_train))
+    tf_data.Dataset.from_tensor_slices((new_x_train, new_y_train))
     .shuffle(BATCH_SIZE * 100)
     .batch(BATCH_SIZE)
 )
 train_ds_two = (
-    tf.data.Dataset.from_tensor_slices((new_x_train, new_y_train))
+    tf_data.Dataset.from_tensor_slices((new_x_train, new_y_train))
     .shuffle(BATCH_SIZE * 100)
     .batch(BATCH_SIZE)
 )
 # Because we will be mixing up the images and their corresponding labels, we will be
 # combining two shuffled datasets from the same training data.
-train_ds = tf.data.Dataset.zip((train_ds_one, train_ds_two))
+train_ds = tf_data.Dataset.zip((train_ds_one, train_ds_two))
 
-val_ds = tf.data.Dataset.from_tensor_slices((x_val, y_val)).batch(BATCH_SIZE)
+val_ds = tf_data.Dataset.from_tensor_slices((x_val, y_val)).batch(BATCH_SIZE)
 
-test_ds = tf.data.Dataset.from_tensor_slices((x_test, y_test)).batch(BATCH_SIZE)
+test_ds = tf_data.Dataset.from_tensor_slices((x_test, y_test)).batch(BATCH_SIZE)
 ```
 
 ---
@@ -116,8 +125,8 @@ the same dataset, and apply a lambda value within the [0, 1] range sampled from 
 ```python
 
 def sample_beta_distribution(size, concentration_0=0.2, concentration_1=0.2):
-    gamma_1_sample = tf.random.gamma(shape=[size], alpha=concentration_1)
-    gamma_2_sample = tf.random.gamma(shape=[size], alpha=concentration_0)
+    gamma_1_sample = tf_random_gamma(shape=[size], alpha=concentration_1)
+    gamma_2_sample = tf_random_gamma(shape=[size], alpha=concentration_0)
     return gamma_1_sample / (gamma_1_sample + gamma_2_sample)
 
 
@@ -125,12 +134,12 @@ def mix_up(ds_one, ds_two, alpha=0.2):
     # Unpack two datasets
     images_one, labels_one = ds_one
     images_two, labels_two = ds_two
-    batch_size = tf.shape(images_one)[0]
+    batch_size = keras.ops.shape(images_one)[0]
 
     # Sample lambda and reshape it to do the mixup
     l = sample_beta_distribution(batch_size, alpha, alpha)
-    x_l = tf.reshape(l, (batch_size, 1, 1, 1))
-    y_l = tf.reshape(l, (batch_size, 1))
+    x_l = keras.ops.reshape(l, (batch_size, 1, 1, 1))
+    y_l = keras.ops.reshape(l, (batch_size, 1))
 
     # Perform mixup on both images and labels by combining a pair of images/labels
     # (one from each dataset) into one image/label
@@ -151,7 +160,8 @@ certain cases, it may not help improve the performance as well.
 ```python
 # First create the new dataset using our `mix_up` utility
 train_ds_mu = train_ds.map(
-    lambda ds_one, ds_two: mix_up(ds_one, ds_two, alpha=0.2), num_parallel_calls=AUTO
+    lambda ds_one, ds_two: mix_up(ds_one, ds_two, alpha=0.2),
+    num_parallel_calls=AUTO,
 )
 
 # Let's preview 9 samples from the dataset
@@ -166,19 +176,21 @@ for i, (image, label) in enumerate(zip(sample_images[:9], sample_labels[:9])):
 
 <div class="k-default-codeblock">
 ```
-[0.01706075668334961, 0.0, 0.0, 0.9829392433166504, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
-[0.0, 0.5761554837226868, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.42384451627731323, 0.0]
-[0.0, 0.0, 0.9999957084655762, 0.0, 4.291534423828125e-06, 0.0, 0.0, 0.0, 0.0, 0.0]
-[0.0, 0.0, 0.03438800573348999, 0.0, 0.0, 0.0, 0.0, 0.0, 0.96561199426651, 0.0]
-[0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0]
-[0.0, 0.0, 0.9808260202407837, 0.0, 0.0, 0.0, 0.01917397230863571, 0.0, 0.0, 0.0]
-[0.0, 0.9999748468399048, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 2.5153160095214844e-05]
-[0.0, 0.0, 0.0, 0.0002035107754636556, 0.0, 0.9997965097427368, 0.0, 0.0, 0.0, 0.0]
-[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.2410212755203247, 0.0, 0.0, 0.7589787244796753]
+[0.0, 0.9964277148246765, 0.0, 0.0, 0.003572270041331649, 0.0, 0.0, 0.0, 0.0, 0.0]
+[0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+[0.0, 0.0, 0.0, 0.0, 0.9794676899909973, 0.02053229510784149, 0.0, 0.0, 0.0, 0.0]
+[0.0, 0.0, 0.0, 0.0, 0.9536369442939758, 0.0, 0.0, 0.0, 0.04636305570602417, 0.0]
+[0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.7631776928901672, 0.0, 0.0, 0.23682232201099396]
+[0.0, 0.0, 0.045958757400512695, 0.0, 0.0, 0.0, 0.9540412425994873, 0.0, 0.0, 0.0]
+[0.0, 0.0, 0.0, 0.0, 2.8015051611873787e-08, 0.0, 0.0, 1.0, 0.0, 0.0]
+[0.0, 0.0, 0.0, 0.0003173351287841797, 0.0, 0.9996826648712158, 0.0, 0.0, 0.0, 0.0]
 
 ```
 </div>
+    
 ![png](/img/examples/vision/mixup/mixup_15_1.png)
+    
 
 
 ---
@@ -188,14 +200,15 @@ for i, (image, label) in enumerate(zip(sample_images[:9], sample_labels[:9])):
 ```python
 
 def get_training_model():
-    model = tf.keras.Sequential(
+    model = keras.Sequential(
         [
-            layers.Conv2D(16, (5, 5), activation="relu", input_shape=(28, 28, 1)),
+            layers.Input(shape=(28, 28, 1)),
+            layers.Conv2D(16, (5, 5), activation="relu"),
             layers.MaxPooling2D(pool_size=(2, 2)),
             layers.Conv2D(32, (5, 5), activation="relu"),
             layers.MaxPooling2D(pool_size=(2, 2)),
             layers.Dropout(0.2),
-            layers.GlobalAvgPool2D(),
+            layers.GlobalAveragePooling2D(),
             layers.Dense(128, activation="relu"),
             layers.Dense(10, activation="softmax"),
         ]
@@ -210,7 +223,7 @@ network.
 
 ```python
 initial_model = get_training_model()
-initial_model.save_weights("initial_weights.h5")
+initial_model.save_weights("initial_weights.weights.h5")
 ```
 
 ---
@@ -219,7 +232,7 @@ initial_model.save_weights("initial_weights.h5")
 
 ```python
 model = get_training_model()
-model.load_weights("initial_weights.h5")
+model.load_weights("initial_weights.weights.h5")
 model.compile(loss="categorical_crossentropy", optimizer="adam", metrics=["accuracy"])
 model.fit(train_ds_mu, validation_data=val_ds, epochs=EPOCHS)
 _, test_acc = model.evaluate(test_ds)
@@ -229,27 +242,32 @@ print("Test accuracy: {:.2f}%".format(test_acc * 100))
 <div class="k-default-codeblock">
 ```
 Epoch 1/10
-907/907 [==============================] - 38s 41ms/step - loss: 1.4440 - accuracy: 0.5173 - val_loss: 0.7120 - val_accuracy: 0.7405
+  62/907 ━[37m━━━━━━━━━━━━━━━━━━━  2s 3ms/step - accuracy: 0.2518 - loss: 2.2072
+
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1699655923.381468   16749 device_compiler.h:187] Compiled cluster using XLA!  This line is logged at most once for the lifetime of the process.
+
+ 907/907 ━━━━━━━━━━━━━━━━━━━━ 13s 9ms/step - accuracy: 0.5335 - loss: 1.4414 - val_accuracy: 0.7635 - val_loss: 0.6678
 Epoch 2/10
-907/907 [==============================] - 38s 42ms/step - loss: 0.9869 - accuracy: 0.7074 - val_loss: 0.5996 - val_accuracy: 0.7780
+ 907/907 ━━━━━━━━━━━━━━━━━━━━ 12s 4ms/step - accuracy: 0.7168 - loss: 0.9688 - val_accuracy: 0.7925 - val_loss: 0.5849
 Epoch 3/10
-907/907 [==============================] - 38s 42ms/step - loss: 0.9096 - accuracy: 0.7451 - val_loss: 0.5197 - val_accuracy: 0.8285
+ 907/907 ━━━━━━━━━━━━━━━━━━━━ 5s 4ms/step - accuracy: 0.7525 - loss: 0.8940 - val_accuracy: 0.8290 - val_loss: 0.5138
 Epoch 4/10
-907/907 [==============================] - 38s 42ms/step - loss: 0.8485 - accuracy: 0.7741 - val_loss: 0.4830 - val_accuracy: 0.8380
+ 907/907 ━━━━━━━━━━━━━━━━━━━━ 4s 3ms/step - accuracy: 0.7742 - loss: 0.8431 - val_accuracy: 0.8360 - val_loss: 0.4726
 Epoch 5/10
-907/907 [==============================] - 38s 42ms/step - loss: 0.8032 - accuracy: 0.7916 - val_loss: 0.4543 - val_accuracy: 0.8445
+ 907/907 ━━━━━━━━━━━━━━━━━━━━ 3s 3ms/step - accuracy: 0.7876 - loss: 0.8095 - val_accuracy: 0.8550 - val_loss: 0.4450
 Epoch 6/10
-907/907 [==============================] - 38s 42ms/step - loss: 0.7675 - accuracy: 0.8032 - val_loss: 0.4398 - val_accuracy: 0.8470
+ 907/907 ━━━━━━━━━━━━━━━━━━━━ 3s 3ms/step - accuracy: 0.8029 - loss: 0.7794 - val_accuracy: 0.8560 - val_loss: 0.4178
 Epoch 7/10
-907/907 [==============================] - 38s 42ms/step - loss: 0.7474 - accuracy: 0.8098 - val_loss: 0.4262 - val_accuracy: 0.8495
+ 907/907 ━━━━━━━━━━━━━━━━━━━━ 2s 3ms/step - accuracy: 0.8039 - loss: 0.7632 - val_accuracy: 0.8600 - val_loss: 0.4056
 Epoch 8/10
-907/907 [==============================] - 38s 42ms/step - loss: 0.7337 - accuracy: 0.8145 - val_loss: 0.3950 - val_accuracy: 0.8650
+ 907/907 ━━━━━━━━━━━━━━━━━━━━ 3s 3ms/step - accuracy: 0.8115 - loss: 0.7465 - val_accuracy: 0.8510 - val_loss: 0.4114
 Epoch 9/10
-907/907 [==============================] - 38s 42ms/step - loss: 0.7154 - accuracy: 0.8218 - val_loss: 0.3822 - val_accuracy: 0.8725
+ 907/907 ━━━━━━━━━━━━━━━━━━━━ 3s 3ms/step - accuracy: 0.8115 - loss: 0.7364 - val_accuracy: 0.8645 - val_loss: 0.3983
 Epoch 10/10
-907/907 [==============================] - 38s 42ms/step - loss: 0.7095 - accuracy: 0.8224 - val_loss: 0.3563 - val_accuracy: 0.8720
-157/157 [==============================] - 2s 14ms/step - loss: 0.3821 - accuracy: 0.8726
-Test accuracy: 87.26%
+ 907/907 ━━━━━━━━━━━━━━━━━━━━ 3s 3ms/step - accuracy: 0.8182 - loss: 0.7237 - val_accuracy: 0.8630 - val_loss: 0.3735
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 0s 2ms/step - accuracy: 0.8610 - loss: 0.4030
+Test accuracy: 85.82%
 
 ```
 </div>
@@ -259,7 +277,7 @@ Test accuracy: 87.26%
 
 ```python
 model = get_training_model()
-model.load_weights("initial_weights.h5")
+model.load_weights("initial_weights.weights.h5")
 model.compile(loss="categorical_crossentropy", optimizer="adam", metrics=["accuracy"])
 # Notice that we are NOT using the mixed up dataset here
 model.fit(train_ds_one, validation_data=val_ds, epochs=EPOCHS)
@@ -270,27 +288,27 @@ print("Test accuracy: {:.2f}%".format(test_acc * 100))
 <div class="k-default-codeblock">
 ```
 Epoch 1/10
-907/907 [==============================] - 37s 40ms/step - loss: 1.2037 - accuracy: 0.5553 - val_loss: 0.6732 - val_accuracy: 0.7565
+ 907/907 ━━━━━━━━━━━━━━━━━━━━ 8s 6ms/step - accuracy: 0.5690 - loss: 1.1928 - val_accuracy: 0.7585 - val_loss: 0.6519
 Epoch 2/10
-907/907 [==============================] - 37s 40ms/step - loss: 0.6724 - accuracy: 0.7462 - val_loss: 0.5715 - val_accuracy: 0.7940
+ 907/907 ━━━━━━━━━━━━━━━━━━━━ 5s 2ms/step - accuracy: 0.7525 - loss: 0.6484 - val_accuracy: 0.7860 - val_loss: 0.5799
 Epoch 3/10
-907/907 [==============================] - 37s 40ms/step - loss: 0.5828 - accuracy: 0.7897 - val_loss: 0.5042 - val_accuracy: 0.8210
+ 907/907 ━━━━━━━━━━━━━━━━━━━━ 2s 2ms/step - accuracy: 0.7895 - loss: 0.5661 - val_accuracy: 0.8205 - val_loss: 0.5122
 Epoch 4/10
-907/907 [==============================] - 37s 40ms/step - loss: 0.5203 - accuracy: 0.8115 - val_loss: 0.4587 - val_accuracy: 0.8405
+ 907/907 ━━━━━━━━━━━━━━━━━━━━ 3s 2ms/step - accuracy: 0.8148 - loss: 0.5126 - val_accuracy: 0.8415 - val_loss: 0.4375
 Epoch 5/10
-907/907 [==============================] - 36s 40ms/step - loss: 0.4802 - accuracy: 0.8255 - val_loss: 0.4602 - val_accuracy: 0.8340
+ 907/907 ━━━━━━━━━━━━━━━━━━━━ 3s 2ms/step - accuracy: 0.8306 - loss: 0.4636 - val_accuracy: 0.8610 - val_loss: 0.3913
 Epoch 6/10
-907/907 [==============================] - 36s 40ms/step - loss: 0.4566 - accuracy: 0.8351 - val_loss: 0.3985 - val_accuracy: 0.8700
+ 907/907 ━━━━━━━━━━━━━━━━━━━━ 2s 2ms/step - accuracy: 0.8433 - loss: 0.4312 - val_accuracy: 0.8680 - val_loss: 0.3734
 Epoch 7/10
-907/907 [==============================] - 37s 40ms/step - loss: 0.4273 - accuracy: 0.8457 - val_loss: 0.3764 - val_accuracy: 0.8685
+ 907/907 ━━━━━━━━━━━━━━━━━━━━ 3s 2ms/step - accuracy: 0.8544 - loss: 0.4072 - val_accuracy: 0.8750 - val_loss: 0.3606
 Epoch 8/10
-907/907 [==============================] - 36s 40ms/step - loss: 0.4133 - accuracy: 0.8481 - val_loss: 0.3704 - val_accuracy: 0.8735
+ 907/907 ━━━━━━━━━━━━━━━━━━━━ 3s 2ms/step - accuracy: 0.8577 - loss: 0.3913 - val_accuracy: 0.8735 - val_loss: 0.3520
 Epoch 9/10
-907/907 [==============================] - 36s 40ms/step - loss: 0.3951 - accuracy: 0.8543 - val_loss: 0.3715 - val_accuracy: 0.8680
+ 907/907 ━━━━━━━━━━━━━━━━━━━━ 3s 2ms/step - accuracy: 0.8645 - loss: 0.3803 - val_accuracy: 0.8725 - val_loss: 0.3536
 Epoch 10/10
-907/907 [==============================] - 36s 40ms/step - loss: 0.3850 - accuracy: 0.8586 - val_loss: 0.3458 - val_accuracy: 0.8735
-157/157 [==============================] - 2s 13ms/step - loss: 0.3817 - accuracy: 0.8636
-Test accuracy: 86.36%
+ 907/907 ━━━━━━━━━━━━━━━━━━━━ 3s 3ms/step - accuracy: 0.8686 - loss: 0.3597 - val_accuracy: 0.8745 - val_loss: 0.3395
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 1s 4ms/step - accuracy: 0.8705 - loss: 0.3672
+Test accuracy: 86.92%
 
 ```
 </div>
