@@ -268,14 +268,13 @@ def make_model(input_shape, num_classes):
 
     x = layers.GlobalAveragePooling2D()(x)
     if num_classes == 2:
-        activation = "sigmoid"
         units = 1
     else:
-        activation = "softmax"
         units = num_classes
 
-    x = layers.Dropout(0.5)(x)
-    outputs = layers.Dense(units, activation=activation)(x)
+    x = layers.Dropout(0.25)(x)
+    # We specify activation=None so as to return logits
+    outputs = layers.Dense(units, activation=None)(x)
     return keras.Model(inputs, outputs)
 
 
@@ -292,9 +291,9 @@ callbacks = [
     keras.callbacks.ModelCheckpoint("save_at_{epoch}.keras"),
 ]
 model.compile(
-    optimizer=keras.optimizers.Adam(1e-3),
-    loss="binary_crossentropy",
-    metrics=["accuracy"],
+    optimizer=keras.optimizers.Adam(3e-4),
+    loss=keras.losses.BinaryCrossentropy(from_logits=True),
+    metrics=[keras.metrics.BinaryAccuracy(name="acc")],
 )
 model.fit(
     train_ds,
@@ -321,5 +320,5 @@ img_array = keras.utils.img_to_array(img)
 img_array = keras.ops.expand_dims(img_array, 0)  # Create batch axis
 
 predictions = model.predict(img_array)
-score = float(predictions[0])
+score = float(keras.ops.sigmoid(predictions[0]))
 print(f"This image is {100 * (1 - score):.2f}% cat and {100 * score:.2f}% dog.")
