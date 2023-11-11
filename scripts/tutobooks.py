@@ -69,7 +69,7 @@ import shutil
 import tempfile
 from pathlib import Path
 
-TIMEOUT = 2 * 60 * 60  # 2 hours
+TIMEOUT = 12 * 60 * 60  # 12 hours
 MAX_LOC = 300
 
 

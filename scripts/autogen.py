@@ -18,7 +18,6 @@ import socketserver
 import signal
 import docstrings
 import jinja2
-import requests
 import multiprocessing
 import autogen_utils
 
