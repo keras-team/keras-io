@@ -33,10 +33,14 @@ wget https://raw.githubusercontent.com/sighsmile/conlleval/master/conlleval.py
 """
 
 import os
+
+os.environ["KERAS_BACKEND"] = "tensorflow"
+
+import os
+import keras
 import numpy as np
 import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras import layers
+from keras import layers
 from datasets import load_dataset
 from collections import Counter
 from conlleval import evaluate
@@ -209,7 +213,7 @@ train_data = tf.data.TextLineDataset("./data/conll_train.txt")
 val_data = tf.data.TextLineDataset("./data/conll_val.txt")
 
 """
-Print out one line to make sure it looks good. The first record in the line is the number of tokens. 
+Print out one line to make sure it looks good. The first record in the line is the number of tokens.
 After that we will have all the tokens followed by all the ner tags.
 """
 
@@ -262,7 +266,7 @@ class CustomNonPaddingTokenLoss(keras.losses.Loss):
 
     def call(self, y_true, y_pred):
         loss_fn = keras.losses.SparseCategoricalCrossentropy(
-            from_logits=True, reduction=keras.losses.Reduction.NONE
+            from_logits=False, reduction=None
         )
         loss = loss_fn(y_true, y_pred)
         mask = tf.cast((y_true > 0), dtype=tf.float32)
@@ -311,7 +315,7 @@ def calculate_metrics(dataset):
     all_true_tag_ids, all_predicted_tag_ids = [], []
 
     for x, y in dataset:
-        output = ner_model.predict(x)
+        output = ner_model.predict(x, verbose=0)
         predictions = np.argmax(output, axis=-1)
         predictions = np.reshape(predictions, [-1])
 
