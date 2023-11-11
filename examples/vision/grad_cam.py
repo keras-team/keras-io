@@ -4,7 +4,7 @@ Author: [fchollet](https://twitter.com/fchollet)
 Date created: 2020/04/26
 Last modified: 2021/03/07
 Description: How to obtain a class activation heatmap for an image classification model.
-Accelerator: NONE
+Accelerator: GPU
 """
 """
 Adapted from Deep Learning with Python (2017).
@@ -12,14 +12,18 @@ Adapted from Deep Learning with Python (2017).
 ## Setup
 """
 
+import os
+
+os.environ["KERAS_BACKEND"] = "tensorflow"
+
 import numpy as np
 import tensorflow as tf
-from tensorflow import keras
+import keras
 
 # Display
 from IPython.display import Image, display
+import matplotlib as mpl
 import matplotlib.pyplot as plt
-import matplotlib.cm as cm
 
 
 """
@@ -136,7 +140,7 @@ def save_and_display_gradcam(img_path, heatmap, cam_path="cam.jpg", alpha=0.4):
     heatmap = np.uint8(255 * heatmap)
 
     # Use jet colormap to colorize heatmap
-    jet = cm.get_cmap("jet")
+    jet = mpl.colormaps["jet"]
 
     # Use RGB values of the colormap
     jet_colors = jet(np.arange(256))[:, :3]
