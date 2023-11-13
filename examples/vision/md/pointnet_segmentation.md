@@ -182,7 +182,7 @@ for point_file in tqdm(points_files):
 
 <div class="k-default-codeblock">
 ```
-100%|██████████████████████████████████████████████████████████████████████| 4045/4045 [01:33<00:00, 43.07it/s]
+100%|██████████████████████████████████████████████████████████████████████| 4045/4045 [01:30<00:00, 44.60it/s]
 
 ```
 </div>
@@ -206,161 +206,161 @@ for _ in range(5):
 
 <div class="k-default-codeblock">
 ```
-point_clouds[1528].shape: (2571, 3)
-point_cloud_labels[1528].shape: (2571, 5)
-all_labels[1528][0]: body 	point_cloud_labels[1528][0]: [0. 1. 0. 0. 0.] 
+point_clouds[3371].shape: (2571, 3)
+point_cloud_labels[3371].shape: (2571, 5)
+all_labels[3371][0]: engine 	point_cloud_labels[3371][0]: [0. 0. 0. 1. 0.] 
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-all_labels[1528][1]: engine 	point_cloud_labels[1528][1]: [0. 0. 0. 1. 0.] 
+all_labels[3371][1]: engine 	point_cloud_labels[3371][1]: [0. 0. 0. 1. 0.] 
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-all_labels[1528][2]: wing 	point_cloud_labels[1528][2]: [1. 0. 0. 0. 0.] 
+all_labels[3371][2]: body 	point_cloud_labels[3371][2]: [0. 1. 0. 0. 0.] 
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-all_labels[1528][3]: engine 	point_cloud_labels[1528][3]: [0. 0. 0. 1. 0.] 
+all_labels[3371][3]: body 	point_cloud_labels[3371][3]: [0. 1. 0. 0. 0.] 
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-all_labels[1528][4]: body 	point_cloud_labels[1528][4]: [0. 1. 0. 0. 0.] 
+all_labels[3371][4]: engine 	point_cloud_labels[3371][4]: [0. 0. 0. 1. 0.] 
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-point_clouds[2098].shape: (2571, 3)
-point_cloud_labels[2098].shape: (2571, 5)
-all_labels[2098][0]: tail 	point_cloud_labels[2098][0]: [0. 0. 1. 0. 0.] 
+point_clouds[2986].shape: (2571, 3)
+point_cloud_labels[2986].shape: (2571, 5)
+all_labels[2986][0]: body 	point_cloud_labels[2986][0]: [0. 1. 0. 0. 0.] 
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-all_labels[2098][1]: body 	point_cloud_labels[2098][1]: [0. 1. 0. 0. 0.] 
+all_labels[2986][1]: body 	point_cloud_labels[2986][1]: [0. 1. 0. 0. 0.] 
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-all_labels[2098][2]: wing 	point_cloud_labels[2098][2]: [1. 0. 0. 0. 0.] 
+all_labels[2986][2]: engine 	point_cloud_labels[2986][2]: [0. 0. 0. 1. 0.] 
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-all_labels[2098][3]: wing 	point_cloud_labels[2098][3]: [1. 0. 0. 0. 0.] 
+all_labels[2986][3]: body 	point_cloud_labels[2986][3]: [0. 1. 0. 0. 0.] 
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-all_labels[2098][4]: wing 	point_cloud_labels[2098][4]: [1. 0. 0. 0. 0.] 
+all_labels[2986][4]: wing 	point_cloud_labels[2986][4]: [1. 0. 0. 0. 0.] 
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-point_clouds[432].shape: (2571, 3)
-point_cloud_labels[432].shape: (2571, 5)
-all_labels[432][0]: wing 	point_cloud_labels[432][0]: [1. 0. 0. 0. 0.] 
+point_clouds[3228].shape: (2571, 3)
+point_cloud_labels[3228].shape: (2571, 5)
+all_labels[3228][0]: body 	point_cloud_labels[3228][0]: [0. 1. 0. 0. 0.] 
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-all_labels[432][1]: body 	point_cloud_labels[432][1]: [0. 1. 0. 0. 0.] 
+all_labels[3228][1]: body 	point_cloud_labels[3228][1]: [0. 1. 0. 0. 0.] 
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-all_labels[432][2]: tail 	point_cloud_labels[432][2]: [0. 0. 1. 0. 0.] 
+all_labels[3228][2]: wing 	point_cloud_labels[3228][2]: [1. 0. 0. 0. 0.] 
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-all_labels[432][3]: tail 	point_cloud_labels[432][3]: [0. 0. 1. 0. 0.] 
+all_labels[3228][3]: none 	point_cloud_labels[3228][3]: [0. 0. 0. 0. 1.] 
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-all_labels[432][4]: body 	point_cloud_labels[432][4]: [0. 1. 0. 0. 0.] 
+all_labels[3228][4]: body 	point_cloud_labels[3228][4]: [0. 1. 0. 0. 0.] 
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-point_clouds[3112].shape: (2571, 3)
-point_cloud_labels[3112].shape: (2571, 5)
-all_labels[3112][0]: engine 	point_cloud_labels[3112][0]: [0. 0. 0. 1. 0.] 
+point_clouds[1148].shape: (2571, 3)
+point_cloud_labels[1148].shape: (2571, 5)
+all_labels[1148][0]: body 	point_cloud_labels[1148][0]: [0. 1. 0. 0. 0.] 
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-all_labels[3112][1]: body 	point_cloud_labels[3112][1]: [0. 1. 0. 0. 0.] 
+all_labels[1148][1]: body 	point_cloud_labels[1148][1]: [0. 1. 0. 0. 0.] 
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-all_labels[3112][2]: body 	point_cloud_labels[3112][2]: [0. 1. 0. 0. 0.] 
+all_labels[1148][2]: body 	point_cloud_labels[1148][2]: [0. 1. 0. 0. 0.] 
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-all_labels[3112][3]: wing 	point_cloud_labels[3112][3]: [1. 0. 0. 0. 0.] 
+all_labels[1148][3]: body 	point_cloud_labels[1148][3]: [0. 1. 0. 0. 0.] 
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-all_labels[3112][4]: tail 	point_cloud_labels[3112][4]: [0. 0. 1. 0. 0.] 
+all_labels[1148][4]: none 	point_cloud_labels[1148][4]: [0. 0. 0. 0. 1.] 
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-point_clouds[721].shape: (2571, 3)
-point_cloud_labels[721].shape: (2571, 5)
-all_labels[721][0]: body 	point_cloud_labels[721][0]: [0. 1. 0. 0. 0.] 
+point_clouds[3058].shape: (2571, 3)
+point_cloud_labels[3058].shape: (2571, 5)
+all_labels[3058][0]: body 	point_cloud_labels[3058][0]: [0. 1. 0. 0. 0.] 
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-all_labels[721][1]: body 	point_cloud_labels[721][1]: [0. 1. 0. 0. 0.] 
+all_labels[3058][1]: body 	point_cloud_labels[3058][1]: [0. 1. 0. 0. 0.] 
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-all_labels[721][2]: body 	point_cloud_labels[721][2]: [0. 1. 0. 0. 0.] 
+all_labels[3058][2]: body 	point_cloud_labels[3058][2]: [0. 1. 0. 0. 0.] 
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-all_labels[721][3]: wing 	point_cloud_labels[721][3]: [1. 0. 0. 0. 0.] 
+all_labels[3058][3]: wing 	point_cloud_labels[3058][3]: [1. 0. 0. 0. 0.] 
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-all_labels[721][4]: wing 	point_cloud_labels[721][4]: [1. 0. 0. 0. 0.] 
+all_labels[3058][4]: body 	point_cloud_labels[3058][4]: [0. 1. 0. 0. 0.] 
 ```
 </div>
     
@@ -442,7 +442,7 @@ for index in tqdm(range(len(point_clouds))):
 
 <div class="k-default-codeblock">
 ```
-100%|█████████████████████████████████████████████████████████████████████| 3694/3694 [00:08<00:00, 442.94it/s]
+100%|█████████████████████████████████████████████████████████████████████| 3694/3694 [00:09<00:00, 406.95it/s]
 
 ```
 </div>
@@ -1025,130 +1025,130 @@ segmentation_model, history = run_experiment(epochs=EPOCHS)
 <div class="k-default-codeblock">
 ```
 Epoch 1/60
-  2/93 [37m━━━━━━━━━━━━━━━━━━━━  8s 90ms/step - accuracy: 0.2365 - loss: 60593.6914
+  2/93 [37m━━━━━━━━━━━━━━━━━━━━  8s 90ms/step - accuracy: 0.2614 - loss: 45056.8398
 
 WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
-I0000 00:00:1699913237.267667   75418 device_compiler.h:187] Compiled cluster using XLA!  This line is logged at most once for the lifetime of the process.
+I0000 00:00:1699915439.574875   84899 device_compiler.h:187] Compiled cluster using XLA!  This line is logged at most once for the lifetime of the process.
 
- 93/93 ━━━━━━━━━━━━━━━━━━━━ 52s 258ms/step - accuracy: 0.4223 - loss: 34360.9180 - val_accuracy: 0.5763 - val_loss: 619.9227
+ 93/93 ━━━━━━━━━━━━━━━━━━━━ 52s 264ms/step - accuracy: 0.4289 - loss: 27106.5859 - val_accuracy: 0.5646 - val_loss: 177.0204
 Epoch 2/60
- 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 82ms/step - accuracy: 0.6112 - loss: 296.6032 - val_accuracy: 0.7227 - val_loss: 1277.2821
+ 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 88ms/step - accuracy: 0.5699 - loss: 174.9338 - val_accuracy: 0.5871 - val_loss: 165.0334
 Epoch 3/60
- 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 82ms/step - accuracy: 0.6873 - loss: 249.2572 - val_accuracy: 0.5036 - val_loss: 1049.5068
+ 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 88ms/step - accuracy: 0.5867 - loss: 168.1794 - val_accuracy: 0.5994 - val_loss: 164.4004
 Epoch 4/60
- 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 89ms/step - accuracy: 0.6729 - loss: 230.8767 - val_accuracy: 0.5727 - val_loss: 487.3955
+ 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 88ms/step - accuracy: 0.6032 - loss: 162.2455 - val_accuracy: 0.5938 - val_loss: 151.5516
 Epoch 5/60
- 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 89ms/step - accuracy: 0.6796 - loss: 213.7575 - val_accuracy: 0.5385 - val_loss: 378.4911
+ 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 88ms/step - accuracy: 0.6066 - loss: 157.9287 - val_accuracy: 0.6101 - val_loss: 147.7037
 Epoch 6/60
- 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 82ms/step - accuracy: 0.6854 - loss: 205.6779 - val_accuracy: 0.6423 - val_loss: 452.1880
+ 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 89ms/step - accuracy: 0.6084 - loss: 157.1978 - val_accuracy: 0.5788 - val_loss: 142.9539
 Epoch 7/60
- 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 82ms/step - accuracy: 0.6749 - loss: 195.7506 - val_accuracy: 0.5215 - val_loss: 821.0649
+ 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 82ms/step - accuracy: 0.6078 - loss: 153.7355 - val_accuracy: 0.5382 - val_loss: 146.2046
 Epoch 8/60
- 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 82ms/step - accuracy: 0.6788 - loss: 189.2440 - val_accuracy: 0.5455 - val_loss: 454.4167
+ 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 88ms/step - accuracy: 0.5998 - loss: 151.1668 - val_accuracy: 0.6095 - val_loss: 142.3025
 Epoch 9/60
- 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 82ms/step - accuracy: 0.6667 - loss: 182.0321 - val_accuracy: 0.5196 - val_loss: 688.8772
+ 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 82ms/step - accuracy: 0.6003 - loss: 149.5286 - val_accuracy: 0.4593 - val_loss: 145.7563
 Epoch 10/60
- 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 82ms/step - accuracy: 0.6783 - loss: 177.1170 - val_accuracy: 0.4971 - val_loss: 518.3589
+ 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 82ms/step - accuracy: 0.5805 - loss: 147.9036 - val_accuracy: 0.4481 - val_loss: 146.9518
 Epoch 11/60
- 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 88ms/step - accuracy: 0.6644 - loss: 173.1532 - val_accuracy: 0.5635 - val_loss: 255.5077
+ 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 88ms/step - accuracy: 0.5381 - loss: 146.0593 - val_accuracy: 0.4545 - val_loss: 142.0784
 Epoch 12/60
- 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 83ms/step - accuracy: 0.6865 - loss: 167.0897 - val_accuracy: 0.5481 - val_loss: 296.9117
+ 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 88ms/step - accuracy: 0.5410 - loss: 144.8321 - val_accuracy: 0.5328 - val_loss: 137.6380
 Epoch 13/60
- 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 82ms/step - accuracy: 0.6658 - loss: 163.5538 - val_accuracy: 0.5387 - val_loss: 275.1090
+ 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 88ms/step - accuracy: 0.5709 - loss: 143.3269 - val_accuracy: 0.5294 - val_loss: 136.5852
 Epoch 14/60
- 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 88ms/step - accuracy: 0.6821 - loss: 160.2608 - val_accuracy: 0.4222 - val_loss: 174.3349
+ 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 89ms/step - accuracy: 0.5772 - loss: 141.8767 - val_accuracy: 0.5497 - val_loss: 135.4544
 Epoch 15/60
- 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 88ms/step - accuracy: 0.6859 - loss: 158.1645 - val_accuracy: 0.3103 - val_loss: 172.2444
+ 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 89ms/step - accuracy: 0.5879 - loss: 140.8921 - val_accuracy: 0.5003 - val_loss: 133.4810
 Epoch 16/60
- 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 88ms/step - accuracy: 0.6633 - loss: 156.1043 - val_accuracy: 0.3364 - val_loss: 161.8044
+ 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 88ms/step - accuracy: 0.5920 - loss: 140.2443 - val_accuracy: 0.5412 - val_loss: 133.0295
 Epoch 17/60
- 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 88ms/step - accuracy: 0.6797 - loss: 153.9997 - val_accuracy: 0.6994 - val_loss: 139.9568
+ 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 88ms/step - accuracy: 0.5783 - loss: 139.4348 - val_accuracy: 0.5209 - val_loss: 132.5571
 Epoch 18/60
- 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 82ms/step - accuracy: 0.6978 - loss: 151.6885 - val_accuracy: 0.6656 - val_loss: 143.2543
+ 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 82ms/step - accuracy: 0.5883 - loss: 139.0790 - val_accuracy: 0.5505 - val_loss: 133.5082
 Epoch 19/60
- 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 82ms/step - accuracy: 0.6999 - loss: 150.1266 - val_accuracy: 0.3026 - val_loss: 155.7120
+ 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 88ms/step - accuracy: 0.6139 - loss: 137.8931 - val_accuracy: 0.5847 - val_loss: 132.4099
 Epoch 20/60
- 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 82ms/step - accuracy: 0.5849 - loss: 148.6734 - val_accuracy: 0.6363 - val_loss: 180.5117
+ 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 88ms/step - accuracy: 0.6310 - loss: 137.8120 - val_accuracy: 0.5934 - val_loss: 130.6065
 Epoch 21/60
- 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 82ms/step - accuracy: 0.6679 - loss: 146.5881 - val_accuracy: 0.6345 - val_loss: 395.9120
+ 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 83ms/step - accuracy: 0.5902 - loss: 137.6678 - val_accuracy: 0.4813 - val_loss: 131.3547
 Epoch 22/60
- 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 82ms/step - accuracy: 0.6649 - loss: 146.1081 - val_accuracy: 0.7039 - val_loss: 685.2028
+ 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 82ms/step - accuracy: 0.5648 - loss: 137.2979 - val_accuracy: 0.5332 - val_loss: 131.1187
 Epoch 23/60
- 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 83ms/step - accuracy: 0.6826 - loss: 144.8951 - val_accuracy: 0.3394 - val_loss: 16238.5615
+ 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 88ms/step - accuracy: 0.5929 - loss: 136.5844 - val_accuracy: 0.5114 - val_loss: 130.3586
 Epoch 24/60
- 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 82ms/step - accuracy: 0.6793 - loss: 143.7758 - val_accuracy: 0.7475 - val_loss: 461.9120
+ 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 82ms/step - accuracy: 0.6006 - loss: 136.3084 - val_accuracy: 0.5323 - val_loss: 130.3759
 Epoch 25/60
- 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 82ms/step - accuracy: 0.6829 - loss: 142.8874 - val_accuracy: 0.7354 - val_loss: 389.1876
+ 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 88ms/step - accuracy: 0.5778 - loss: 136.4770 - val_accuracy: 0.5568 - val_loss: 129.6787
 Epoch 26/60
- 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 82ms/step - accuracy: 0.6660 - loss: 142.2808 - val_accuracy: 0.5573 - val_loss: 162.7916
+ 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 82ms/step - accuracy: 0.5967 - loss: 135.9159 - val_accuracy: 0.5897 - val_loss: 129.9136
 Epoch 27/60
- 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 82ms/step - accuracy: 0.6361 - loss: 141.8869 - val_accuracy: 0.6641 - val_loss: 356.4882
+ 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 88ms/step - accuracy: 0.6029 - loss: 135.6996 - val_accuracy: 0.5874 - val_loss: 129.5652
 Epoch 28/60
- 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 82ms/step - accuracy: 0.6454 - loss: 140.6412 - val_accuracy: 0.6959 - val_loss: 140.2338
+ 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 89ms/step - accuracy: 0.6147 - loss: 135.5798 - val_accuracy: 0.5825 - val_loss: 129.3924
 Epoch 29/60
- 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 88ms/step - accuracy: 0.6944 - loss: 139.9843 - val_accuracy: 0.6448 - val_loss: 136.4019
+ 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 89ms/step - accuracy: 0.6240 - loss: 135.3027 - val_accuracy: 0.5971 - val_loss: 129.3479
 Epoch 30/60
- 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 88ms/step - accuracy: 0.6928 - loss: 139.3559 - val_accuracy: 0.5963 - val_loss: 133.1277
+ 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 82ms/step - accuracy: 0.6243 - loss: 135.0411 - val_accuracy: 0.5423 - val_loss: 129.5517
 Epoch 31/60
- 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 82ms/step - accuracy: 0.6655 - loss: 138.6735 - val_accuracy: 0.4137 - val_loss: 134.6873
+ 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 88ms/step - accuracy: 0.5903 - loss: 135.2694 - val_accuracy: 0.5784 - val_loss: 129.1174
 Epoch 32/60
- 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 82ms/step - accuracy: 0.6452 - loss: 137.9693 - val_accuracy: 0.6802 - val_loss: 134.8538
+ 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 88ms/step - accuracy: 0.6304 - loss: 134.9443 - val_accuracy: 0.6286 - val_loss: 128.8607
 Epoch 33/60
- 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 82ms/step - accuracy: 0.6871 - loss: 137.5144 - val_accuracy: 0.6906 - val_loss: 135.2255
+ 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 82ms/step - accuracy: 0.6333 - loss: 134.7508 - val_accuracy: 0.5458 - val_loss: 129.4107
 Epoch 34/60
- 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 82ms/step - accuracy: 0.6970 - loss: 137.4795 - val_accuracy: 0.7147 - val_loss: 133.2552
+ 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 88ms/step - accuracy: 0.6304 - loss: 134.7249 - val_accuracy: 0.5721 - val_loss: 128.8523
 Epoch 35/60
- 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 89ms/step - accuracy: 0.7112 - loss: 136.6917 - val_accuracy: 0.6655 - val_loss: 132.3219
+ 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 82ms/step - accuracy: 0.6242 - loss: 134.5314 - val_accuracy: 0.4699 - val_loss: 129.2869
 Epoch 36/60
- 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 82ms/step - accuracy: 0.7090 - loss: 136.5884 - val_accuracy: 0.7038 - val_loss: 132.4352
+ 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 83ms/step - accuracy: 0.6025 - loss: 134.5150 - val_accuracy: 0.4833 - val_loss: 129.0307
 Epoch 37/60
- 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 88ms/step - accuracy: 0.7093 - loss: 136.2093 - val_accuracy: 0.7047 - val_loss: 131.2639
+ 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 89ms/step - accuracy: 0.5929 - loss: 134.4286 - val_accuracy: 0.5236 - val_loss: 128.6615
 Epoch 38/60
- 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 82ms/step - accuracy: 0.7034 - loss: 135.9160 - val_accuracy: 0.6617 - val_loss: 131.6248
+ 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 82ms/step - accuracy: 0.5782 - loss: 134.3386 - val_accuracy: 0.5298 - val_loss: 128.7492
 Epoch 39/60
- 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 88ms/step - accuracy: 0.7012 - loss: 135.8027 - val_accuracy: 0.6895 - val_loss: 130.8474
+ 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 88ms/step - accuracy: 0.5729 - loss: 134.3325 - val_accuracy: 0.4386 - val_loss: 128.5636
 Epoch 40/60
- 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 88ms/step - accuracy: 0.7111 - loss: 135.6284 - val_accuracy: 0.6812 - val_loss: 130.1052
+ 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 82ms/step - accuracy: 0.5760 - loss: 134.3383 - val_accuracy: 0.5084 - val_loss: 128.7564
 Epoch 41/60
- 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 82ms/step - accuracy: 0.7007 - loss: 135.3327 - val_accuracy: 0.6987 - val_loss: 130.3996
+ 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 88ms/step - accuracy: 0.5721 - loss: 134.1628 - val_accuracy: 0.4961 - val_loss: 128.5269
 Epoch 42/60
- 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 82ms/step - accuracy: 0.6932 - loss: 135.2225 - val_accuracy: 0.4794 - val_loss: 134.9909
+ 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 82ms/step - accuracy: 0.5690 - loss: 134.1635 - val_accuracy: 0.4093 - val_loss: 130.0692
 Epoch 43/60
- 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 82ms/step - accuracy: 0.6968 - loss: 135.1257 - val_accuracy: 0.6811 - val_loss: 130.4753
+ 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 82ms/step - accuracy: 0.5448 - loss: 134.3600 - val_accuracy: 0.5392 - val_loss: 128.5279
 Epoch 44/60
- 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 82ms/step - accuracy: 0.7085 - loss: 134.8500 - val_accuracy: 0.3134 - val_loss: 132.3111
+ 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 90ms/step - accuracy: 0.5660 - loss: 134.1464 - val_accuracy: 0.5553 - val_loss: 128.2351
 Epoch 45/60
- 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 88ms/step - accuracy: 0.6375 - loss: 134.9586 - val_accuracy: 0.6107 - val_loss: 130.0902
+ 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 82ms/step - accuracy: 0.5767 - loss: 133.8689 - val_accuracy: 0.5206 - val_loss: 129.2310
 Epoch 46/60
- 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 82ms/step - accuracy: 0.6549 - loss: 134.7537 - val_accuracy: 0.6863 - val_loss: 130.4394
+ 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 82ms/step - accuracy: 0.5683 - loss: 133.9469 - val_accuracy: 0.4231 - val_loss: 129.4299
 Epoch 47/60
- 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 82ms/step - accuracy: 0.6823 - loss: 134.5453 - val_accuracy: 0.2871 - val_loss: 130.5748
+ 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 83ms/step - accuracy: 0.5495 - loss: 134.0563 - val_accuracy: 0.5077 - val_loss: 128.8924
 Epoch 48/60
- 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 88ms/step - accuracy: 0.6530 - loss: 134.6266 - val_accuracy: 0.6973 - val_loss: 129.2314
+ 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 82ms/step - accuracy: 0.5529 - loss: 133.8653 - val_accuracy: 0.5309 - val_loss: 128.8935
 Epoch 49/60
- 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 81ms/step - accuracy: 0.6875 - loss: 134.4279 - val_accuracy: 0.6990 - val_loss: 129.3275
+ 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 82ms/step - accuracy: 0.5418 - loss: 134.0619 - val_accuracy: 0.5016 - val_loss: 128.4177
 Epoch 50/60
- 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 82ms/step - accuracy: 0.6808 - loss: 134.4592 - val_accuracy: 0.5313 - val_loss: 130.1603
+ 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 82ms/step - accuracy: 0.5488 - loss: 133.9711 - val_accuracy: 0.5413 - val_loss: 128.3660
 Epoch 51/60
- 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 89ms/step - accuracy: 0.6728 - loss: 134.1879 - val_accuracy: 0.5837 - val_loss: 129.1661
+ 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 82ms/step - accuracy: 0.5544 - loss: 133.7250 - val_accuracy: 0.5431 - val_loss: 128.5247
 Epoch 52/60
- 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 82ms/step - accuracy: 0.6623 - loss: 134.1135 - val_accuracy: 0.3778 - val_loss: 130.2731
+ 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 82ms/step - accuracy: 0.5521 - loss: 133.8360 - val_accuracy: 0.4832 - val_loss: 129.4478
 Epoch 53/60
- 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 81ms/step - accuracy: 0.6539 - loss: 134.0759 - val_accuracy: 0.5859 - val_loss: 129.4591
+ 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 82ms/step - accuracy: 0.5314 - loss: 134.1489 - val_accuracy: 0.5171 - val_loss: 129.2409
 Epoch 54/60
- 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 81ms/step - accuracy: 0.6358 - loss: 134.1250 - val_accuracy: 0.4497 - val_loss: 131.4630
+ 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 82ms/step - accuracy: 0.5516 - loss: 133.8537 - val_accuracy: 0.3684 - val_loss: 129.9865
 Epoch 55/60
- 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 81ms/step - accuracy: 0.6080 - loss: 134.2515 - val_accuracy: 0.5107 - val_loss: 130.7014
+ 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 82ms/step - accuracy: 0.5251 - loss: 134.2425 - val_accuracy: 0.5227 - val_loss: 130.0703
 Epoch 56/60
- 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 81ms/step - accuracy: 0.6385 - loss: 134.1326 - val_accuracy: 0.4176 - val_loss: 136.1229
+ 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 82ms/step - accuracy: 0.5328 - loss: 134.0548 - val_accuracy: 0.4842 - val_loss: 129.3774
 Epoch 57/60
- 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 81ms/step - accuracy: 0.5887 - loss: 134.7131 - val_accuracy: 0.5625 - val_loss: 129.8603
+ 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 82ms/step - accuracy: 0.5271 - loss: 134.1960 - val_accuracy: 0.5380 - val_loss: 129.7544
 Epoch 58/60
- 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 82ms/step - accuracy: 0.6660 - loss: 133.9282 - val_accuracy: 0.3891 - val_loss: 129.9966
+ 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 82ms/step - accuracy: 0.5426 - loss: 134.0238 - val_accuracy: 0.4851 - val_loss: 129.7003
 Epoch 59/60
- 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 88ms/step - accuracy: 0.6535 - loss: 134.0032 - val_accuracy: 0.5252 - val_loss: 128.9836
+ 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 82ms/step - accuracy: 0.5353 - loss: 134.1111 - val_accuracy: 0.4785 - val_loss: 134.5470
 Epoch 60/60
- 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 81ms/step - accuracy: 0.6570 - loss: 133.9301 - val_accuracy: 0.6515 - val_loss: 129.3073
+ 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 82ms/step - accuracy: 0.5336 - loss: 134.4013 - val_accuracy: 0.5247 - val_loss: 129.2143
 
 ```
 </div>
@@ -1214,9 +1214,9 @@ visualize_single_point_cloud(validation_batch[0], val_predictions, idx)
 
 <div class="k-default-codeblock">
 ```
- 1/1 ━━━━━━━━━━━━━━━━━━━━ 1s 1s/step
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 2s 2s/step
 Validation prediction shape: (32, 1024, 5)
-Index selected: 0
+Index selected: 18
 
 ```
 </div>
