@@ -32,13 +32,14 @@ the a match score between the user and the movie (predicted rating).
 """
 
 import pandas as pd
-import numpy as np
-from zipfile import ZipFile
-import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras import layers
 from pathlib import Path
 import matplotlib.pyplot as plt
+import numpy as np
+from zipfile import ZipFile
+
+import keras
+from keras import layers
+from keras import ops
 
 """
 ## First, load the data and apply preprocessing
@@ -145,16 +146,16 @@ class RecommenderNet(keras.Model):
         user_bias = self.user_bias(inputs[:, 0])
         movie_vector = self.movie_embedding(inputs[:, 1])
         movie_bias = self.movie_bias(inputs[:, 1])
-        dot_user_movie = tf.tensordot(user_vector, movie_vector, 2)
+        dot_user_movie = ops.tensordot(user_vector, movie_vector, 2)
         # Add all the components (including bias)
         x = dot_user_movie + user_bias + movie_bias
         # The sigmoid activation forces the rating to between 0 and 1
-        return tf.nn.sigmoid(x)
+        return ops.nn.sigmoid(x)
 
 
 model = RecommenderNet(num_users, num_movies, EMBEDDING_SIZE)
 model.compile(
-    loss=tf.keras.losses.BinaryCrossentropy(),
+    loss=keras.losses.BinaryCrossentropy(),
     optimizer=keras.optimizers.Adam(learning_rate=0.001),
 )
 
