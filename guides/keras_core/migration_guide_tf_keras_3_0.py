@@ -534,6 +534,7 @@ Define the call method with an optional argument. Here is an example of this
 fix:
 """
 
+
 class CustomLayer(keras.layers.Layer):
     def __init__(self):
         super().__init__()
@@ -547,8 +548,7 @@ class CustomLayer(keras.layers.Layer):
 layer = CustomLayer()
 input_1 = {
     "foo": keras.Input(shape=(1,), name="foo"),
-    "bar": {
-    },
+    "bar": {},
 }
 baz = None
 layer(input_1, input_2=baz)
@@ -565,56 +565,128 @@ that some of your experiments are not reproducible when using random operations.
 
 
 You will need to uninstall Keras 3, reinstall TensorFlow and Keras 2,
-then restart your runtime to reproduce the following results. The following
-example uses a Dropout layer to demonstrate this behavior. Notice that the
-values chosen to be dropped out from the data will be different in Keras 2 and
-Keras 3.
+then restart your runtime to reproduce the following results.
+
+The following example shows how to create a custom random layer, specifically a
+dropout layer, to demonstrate this behavior. The layer uses a seed to generate
+a random mask. In TensorFlow, the random ops are not stateless; using the same
+seed for the random op results in different values with each call.
 
 ```python
 import numpy as np
 import tensorflow as tf
+from tensorflow.keras.layers import Layer
 
-# Create some dummy data
-data = np.array([[1 , 2], [3, 4]], dtype="float32")
-# let us initialize a dropout layer with seed = 42
-dropout_layer = tf.keras.layers.Dropout(rate=0.3, seed=42)
-# Apply the Dropout layer to the data
+class CustomDropoutLayer(Layer):
+    def __init__(self, rate, seed=None, **kwargs):
+        super(CustomDropoutLayer, self).__init__(**kwargs)
+        self.rate = rate
+        self.seed = seed
+
+    def call(self, inputs, training=None):
+        if training:
+            random_mask = tf.random.uniform(
+                shape=tf.shape(inputs),
+                minval=0,
+                maxval=2,
+                seed=self.seed,
+                dtype="int32")
+            random_mask = tf.cast(random_mask, dtype=tf.float32)
+            return inputs * random_mask
+        return inputs
+
+# Test layer
+data = np.array([[1, 2], [3, 4]], dtype="float32")
+dropout_layer = CustomDropoutLayer(rate=0.3, seed=42)
 dropout_output = dropout_layer(data, training=True)
 
+print("\nCustom Dropout Layer Demo - TensorFlow Random Ops:")
 print("Original data:")
 print(data)
-print("Data after applying Dropout:")
-print(dropout_output)
+print("Data after applying Custom Dropout:")
+print(dropout_output.numpy())
+
+# call layer again
+dropout_layer = CustomDropoutLayer(rate=0.3, seed=42)
+dropout_output = dropout_layer(data, training=True)
+
+print("\nAfter Second call")
+print("Original data:")
+print(data)
+print("Data after applying Custom Dropout:")
+print(dropout_output.numpy())
 ```
 Output:
+Observe how the random value generated is not stateless and it returns a
+differnt value for each call even when the seed is set.
 
 ```python
+Custom Dropout Layer Demo - TensorFlow Random Ops:
 Original data:
 [[1. 2.]
  [3. 4.]]
-Data after applying Dropout:
-tf.Tensor(
-[[1.4285715 2.857143 ]
- [4.285714  0.       ]], shape=(2, 2), dtype=float32)
+Data after applying Custom Dropout:
+[[0. 2.]
+ [0. 4.]]
+
+After Second call
+Original data:
+[[1. 2.]
+ [3. 4.]]
+Data after applying Custom Dropout:
+[[1. 0.]
+ [0. 4.]]
  ```
 """
 
 """
 Before trying the following snippet of code, please reinstall Keras 3 and
-restart your runtime. The same seed in Keras 3 will behave differently
-compared to Keras 2.
+restart your runtime.
+
+Keras 3 has a new `keras.random` namespace with random ops. All Keras 3 random
+operations are stateless; if seeded, they return the same value every time.
+By running the following code snippet, you can observe that the random values
+remain consistent with each call.
 """
 
-# Create some dummy data
+
+class CustomDropoutLayer(keras.layers.Layer):
+    def __init__(self, rate, seed, **kwargs):
+        super(CustomDropoutLayer, self).__init__(**kwargs)
+        self.rate = rate
+        self.seed = seed
+
+    def call(self, inputs, training=None):
+        if training:
+            random_mask = keras.random.randint(
+                minval=0,
+                maxval=2,
+                shape=keras.ops.shape(inputs),
+                seed=self.seed,
+            )
+            random_mask = keras.ops.cast(random_mask, dtype="float32")
+            return inputs * random_mask
+        return inputs
+
+
+# Test layer
 data = np.array([[1, 2], [3, 4]])
-# let us initialize a dropout layer with seed = 42
-dropout_layer = keras.layers.Dropout(rate=0.3, seed=42)
-# Apply the Dropout layer to the data
+dropout_layer = CustomDropoutLayer(rate=0.3, seed=42)
 dropout_output = dropout_layer(data, training=True)
 
 print("Original data:")
 print(data)
-print("Data after applying Dropout:")
+print("Data after applying Custom Dropout:")
+print(dropout_output)
+
+# call layer again
+data = np.array([[1, 2], [3, 4]])
+dropout_layer = CustomDropoutLayer(rate=0.3, seed=42)
+dropout_output = dropout_layer(data, training=True)
+
+print("Original data:")
+print(data)
+print("Data after applying Custom Dropout:")
 print(dropout_output)
 
 """
@@ -700,10 +772,10 @@ keras 3.0 was likely dropped due to low usage.
 \textbf{TensorFlow} & \textbf{Keras 3.0} \\
 \hline
 \text{tf.abs} & \text{keras.ops.absolute} \\ \hline
-\text{tf.reduce\_all} & \text{keras.ops.all} \\ \hline
-\text{tf.reduce\_max} & \text{keras.ops.amax} \\ \hline
-\text{tf.reduce\_min} & \text{keras.ops.amin} \\ \hline
-\text{tf.reduce\_any} & \text{keras.ops.any} \\ \hline
+\text{tf.reduce_all} & \text{keras.ops.all} \\ \hline
+\text{tf.reduce_max} & \text{keras.ops.amax} \\ \hline
+\text{tf.reduce_min} & \text{keras.ops.amin} \\ \hline
+\text{tf.reduce_any} & \text{keras.ops.any} \\ \hline
 \text{tf.concat} & \text{keras.ops.append, keras.ops.concatenate,} \\
  & \text{keras.ops.hstack, keras.ops.vstack} \\ \hline
 \text{tf.range} & \text{keras.ops.arange} \\ \hline
