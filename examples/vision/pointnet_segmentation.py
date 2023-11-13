@@ -41,9 +41,9 @@ import pandas as pd
 from tqdm import tqdm
 from glob import glob
 
-import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras import layers
+import tensorflow as tf  # For tf.data
+import keras
+from keras import layers
 
 import matplotlib.pyplot as plt
 
@@ -362,13 +362,13 @@ perceptron block.
 """
 
 
-def conv_block(x: tf.Tensor, filters: int, name: str) -> tf.Tensor:
+def conv_block(x, filters, name):
     x = layers.Conv1D(filters, kernel_size=1, padding="valid", name=f"{name}_conv")(x)
     x = layers.BatchNormalization(momentum=0.0, name=f"{name}_batch_norm")(x)
     return layers.Activation("relu", name=f"{name}_relu")(x)
 
 
-def mlp_block(x: tf.Tensor, filters: int, name: str) -> tf.Tensor:
+def mlp_block(x, filters, name):
     x = layers.Dense(filters, name=f"{name}_dense")(x)
     x = layers.BatchNormalization(momentum=0.0, name=f"{name}_batch_norm")(x)
     return layers.Activation("relu", name=f"{name}_relu")(x)
@@ -388,13 +388,13 @@ class OrthogonalRegularizer(keras.regularizers.Regularizer):
     def __init__(self, num_features, l2reg=0.001):
         self.num_features = num_features
         self.l2reg = l2reg
-        self.identity = tf.eye(num_features)
+        self.identity = keras.ops.eye(num_features)
 
     def __call__(self, x):
-        x = tf.reshape(x, (-1, self.num_features, self.num_features))
-        xxt = tf.tensordot(x, x, axes=(2, 2))
-        xxt = tf.reshape(xxt, (-1, self.num_features, self.num_features))
-        return tf.reduce_sum(self.l2reg * tf.square(xxt - self.identity))
+        x = keras.ops.reshape(x, (-1, self.num_features, self.num_features))
+        xxt = keras.ops.tensordot(x, x, axes=(2, 2))
+        xxt = keras.ops.reshape(xxt, (-1, self.num_features, self.num_features))
+        return keras.ops.sum(self.l2reg * keras.ops.square(xxt - self.identity))
 
     def get_config(self):
         config = super().get_config()
@@ -407,7 +407,7 @@ The next piece is the transformation network which we explained earlier.
 """
 
 
-def transformation_net(inputs: tf.Tensor, num_features: int, name: str) -> tf.Tensor:
+def transformation_net(inputs, num_features, name):
     """
     Reference: https://keras.io/examples/vision/pointnet/#build-a-model.
 
@@ -429,7 +429,7 @@ def transformation_net(inputs: tf.Tensor, num_features: int, name: str) -> tf.Te
     )(x)
 
 
-def transformation_block(inputs: tf.Tensor, num_features: int, name: str) -> tf.Tensor:
+def transformation_block(inputs, num_features, name):
     transformed_features = transformation_net(inputs, num_features, name=name)
     transformed_features = layers.Reshape((num_features, num_features))(
         transformed_features
@@ -442,7 +442,7 @@ Finally, we piece the above blocks together and implement the segmentation model
 """
 
 
-def get_shape_segmentation_model(num_points: int, num_classes: int) -> keras.Model:
+def get_shape_segmentation_model(num_points, num_classes):
     input_points = keras.Input(shape=(None, 3))
 
     # PointNet Classification Network.
@@ -460,7 +460,7 @@ def get_shape_segmentation_model(num_points: int, num_classes: int) -> keras.Mod
     global_features = layers.MaxPool1D(pool_size=num_points, name="global_features")(
         features_2048
     )
-    global_features = tf.tile(global_features, [1, num_points, 1])
+    global_features = keras.ops.tile(global_features, [1, num_points, 1])
 
     # Segmentation head.
     segmentation_input = layers.Concatenate(name="segmentation_input")(
@@ -510,7 +510,7 @@ lr_schedule = keras.optimizers.schedules.PiecewiseConstantDecay(
     values=[INITIAL_LR, INITIAL_LR * 0.5, INITIAL_LR * 0.25],
 )
 
-steps = tf.range(total_training_steps, dtype=tf.int32)
+steps = keras.ops.range(total_training_steps, dtype="int32")
 lrs = [lr_schedule(step) for step in steps]
 
 plt.plot(lrs)
@@ -531,7 +531,7 @@ def run_experiment(epochs):
         metrics=["accuracy"],
     )
 
-    checkpoint_filepath = "/tmp/checkpoint"
+    checkpoint_filepath = "checkpoint.keras"
     checkpoint_callback = keras.callbacks.ModelCheckpoint(
         checkpoint_filepath,
         monitor="val_loss",

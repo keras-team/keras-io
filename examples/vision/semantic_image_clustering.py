@@ -19,25 +19,20 @@ two phases:
 [simCLR](https://arxiv.org/abs/2002.05709) technique.
 2. Clustering of the learned visual representation vectors to maximize the agreement
 between the cluster assignments of neighboring vectors.
-
-The example requires [TensorFlow Addons](https://www.tensorflow.org/addons),
-which you can install using the following command:
-
-```python
-pip install tensorflow-addons
-```
 """
 """
 ## Setup
 """
 
+import os
+
+os.environ["KERAS_BACKEND"] = "tensorflow"
+
 from collections import defaultdict
-import random
 import numpy as np
 import tensorflow as tf
-import tensorflow_addons as tfa
-from tensorflow import keras
-from tensorflow.keras import layers
+import keras
+from keras import layers
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 
@@ -271,7 +266,7 @@ lr_scheduler = keras.optimizers.schedules.CosineDecay(
 )
 # Compile the model.
 representation_learner.compile(
-    optimizer=tfa.optimizers.AdamW(learning_rate=lr_scheduler, weight_decay=0.0001),
+    optimizer=keras.optimizers.AdamW(learning_rate=lr_scheduler, weight_decay=0.0001),
 )
 # Fit the model.
 history = representation_learner.fit(
@@ -490,7 +485,7 @@ inputs = {"anchors": x_data, "neighbours": tf.gather(x_data, neighbours)}
 labels = tf.ones(shape=(x_data.shape[0]))
 # Compile the model.
 clustering_learner.compile(
-    optimizer=tfa.optimizers.AdamW(learning_rate=0.0005, weight_decay=0.0001),
+    optimizer=keras.optimizers.AdamW(learning_rate=0.0005, weight_decay=0.0001),
     loss=losses,
 )
 
@@ -593,11 +588,4 @@ fine-tuning step through self-labeling, as described in the [original SCAN paper
 Note that unsupervised image clustering techniques are not expected to outperform the accuracy
 of supervised image classification techniques, rather showing that they can learn the semantics
 of the images and group them into clusters that are similar to their original classes.
-"""
-
-"""
-**Example available on HuggingFace**
-| Trained Model | Demo |
-| :--: | :--: |
-| [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Model-Semantic%20Image%20Clustering-black.svg)](https://huggingface.co/keras-io/semantic-image-clustering) | [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Spaces-Semantic%20Image%20Clustering-black.svg)](https://huggingface.co/spaces/keras-io/semantic-image-clustering) |
 """
