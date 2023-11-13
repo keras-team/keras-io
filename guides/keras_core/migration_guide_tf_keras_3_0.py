@@ -21,8 +21,7 @@ no issue — and generally with slightly improved performance, thanks to XLA com
 Commonly encountered issues and frequently asked questions can be located in
 the following links.
 
-[Known
-Issues](https://keras.io/keras_core/announcement/#:~:text=Enjoy%20the%20library!-,Known%20issues,-Keras%20Core%20is)
+[Known Issues](https://keras.io/keras_core/announcement/#:~:text=Enjoy%20the%20library!-,Known%20issues,-Keras%20Core%20is)
 
 [FAQs](https://keras.io/keras_core/announcement/#:~:text=Frequently%20asked%20questions)
 """
@@ -30,9 +29,9 @@ Issues](https://keras.io/keras_core/announcement/#:~:text=Enjoy%20the%20library!
 """
 ## Setup
 
-First, lets install keras-nightly.
+First, lets install `keras-nightly`.
 
-This example uses the TensorFlow backend (os.environ["KERAS_BACKEND"] = "tensorflow").
+This example uses the TensorFlow backend (`os.environ["KERAS_BACKEND"] = "tensorflow"`).
 After you've migrated your code, you can change the "tensorflow" string to "torch"
 and click "Restart runtime", and your code will run on the PyTorch backend!
 """
@@ -80,10 +79,11 @@ them may require code changes.
 """
 
 """
-### `jit_compile` is set to `True` by default
+### `jit_compile` is set to `True` by default on GPU.
+
 The default value of the `jit_compile` argument to the Model constructor has been set to
-`True` in Keras 3. This means that models will be compiled with Just-In-Time (JIT)
-compilation by default.
+`True` on GPU in Keras 3. This means that models will be compiled with Just-In-Time (JIT)
+compilation by default on GPU.
 
 JIT compilation can improve the performance of some models. However, it may not work with
 all TensorFlow operations. If you are using a custom model or layer and you see an
@@ -97,7 +97,7 @@ The error message you could encounter would be as follows:
 
 ```python
 Detected unsupported operations when trying to compile graph
-__inference_one_step_on_data_125[] on XLA_CPU_JIT
+__inference_one_step_on_data_125[] on XLA_GPU_JIT
 ```
 
 The following snippet of code will reproduce the above error:
@@ -123,7 +123,7 @@ subclass_model.fit(x_train, x_train, epochs=1)
 """
 
 """
-Here is how you fix it:
+How you fix it:
 
 set `jit_compile=False` in `model.compile(..., jit_compile=False)`
 """
@@ -170,7 +170,7 @@ sequential_model.save("saved_model")
 """
 
 """
-Here is how you fix it:
+How you fix it:
 
 use `tf.saved_model.save` instead of `model.save`
 """
@@ -201,7 +201,7 @@ keras.models.load_model("saved_model")
 """
 
 """
-Here is how you fix it:
+How you fix it:
 
 Use `keras.layers.TFSMLayer(filepath, call_endpoint="serving_default")` to reload any TF
 SavedModel as a Keras layer
@@ -242,7 +242,7 @@ keras.Model(inputs, outputs)
 """
 
 """
-Here is how you fix it:
+How you fix it:
 
 """
 
@@ -255,7 +255,7 @@ keras.Model(inputs, outputs)
 
 """
 ### TF autograph
-In old `tf.keras`, TF autograph is enabled by default on the `call()` method of custom
+In legacy `tf.keras`, TF autograph is enabled by default on the `call()` method of custom
 layers. In Keras 3, it is not. This means you may have to use cond ops if you're using
 control flow, or alternatively you can decorate your `call()` method with `@tf.function`.
 
@@ -268,9 +268,8 @@ following resolutions to the problem: If you are running in Graph mode, use Eage
 execution mode or decorate this function with @tf.function. If you are using AutoGraph,
 you can try decorating this function with @tf.function. If that does not work, then you
 may be using an unsupported feature or your source code may not be visible to AutoGraph.
-See
-https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/autograph/g3doc/ref
-erence/limitations.md#access-to-source-code for more information.
+Here is a [link for more information](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/autograph/g3doc/ref
+erence/limitations.md#access-to-source-code).
 ```
 
 The following snippet of code will reproduce the above error:
@@ -293,7 +292,7 @@ model.fit(data, data)
 """
 
 """
-Here is how you fix it:
+How you fix it:
 
 decorate your `call()` method with `@tf.function`
 """
@@ -337,7 +336,7 @@ tf.squeeze(input)
 """
 
 """
-Here is how you fix it:
+How you fix it:
 
 use an equivalent op from `keras.ops`.
 """
@@ -360,13 +359,13 @@ They must be explicitly provided in the metrics list for each individual output.
 The following snippet of code will reproduce the above behavior:
 
 ```python
-from keras.layers import Input, Dense, Flatten, Softmax
+from keras import layers
 # A functional model with multiple outputs
-inputs = Input(shape=(10,))
-x1 = Dense(5, activation='relu')(inputs)
-x2 = Dense(5, activation='relu')(x1)
-output_1 = Dense(5, activation='softmax', name="output_1")(x1)
-output_2 = Dense(5, activation='softmax', name="output_2")(x2)
+inputs = layers.Input(shape=(10,))
+x1 = layers.Dense(5, activation='relu')(inputs)
+x2 = layers.Dense(5, activation='relu')(x1)
+output_1 = layers.Dense(5, activation='softmax', name="output_1")(x1)
+output_2 = layers.Dense(5, activation='softmax', name="output_2")(x2)
 model = keras.Model(inputs=inputs, outputs=[output_1, output_2])
 model.compile(optimizer='adam', loss='categorical_crossentropy')
 # dummy data
@@ -379,14 +378,14 @@ model.evaluate(x_test, y_test)
 
 """
 
-from keras.layers import Input, Dense, Flatten, Softmax
+from keras import layers
 
 # A functional model with multiple outputs
-inputs = Input(shape=(10,))
-x1 = Dense(5, activation="relu")(inputs)
-x2 = Dense(5, activation="relu")(x1)
-output_1 = Dense(5, activation="softmax", name="output_1")(x1)
-output_2 = Dense(5, activation="softmax", name="output_2")(x2)
+inputs = layers.Input(shape=(10,))
+x1 = layers.Dense(5, activation="relu")(inputs)
+x2 = layers.Dense(5, activation="relu")(x1)
+output_1 = layers.Dense(5, activation="softmax", name="output_1")(x1)
+output_2 = layers.Dense(5, activation="softmax", name="output_2")(x2)
 # dummy data
 x_test = np.random.uniform(size=[10, 10])
 y_test = np.random.uniform(size=[10, 5])
@@ -434,9 +433,10 @@ for layer in model.layers:
 """
 
 """
-Here is how you fix it:
+How you fix it:
 
-use `self.add_weight()` method or use a `keras.Variable` instead.
+use `self.add_weight()` method or opt for a `keras.Variable` instead. If you
+are currently using `tf.variable`, you can switch to `keras.Variable`.
 
 """
 
@@ -606,7 +606,7 @@ low usage.
 """
 
 """
-## Transitioning to Keras 3.0 with Any Backend
+## Transitioning to backend-agnostic Keras 3
 
 Keras 3.0 code with the TensorFlow backend will work with native TensorFlow APIs.
 However, if you want your code to be backend-agnostic, you will need to replace all of
@@ -648,10 +648,6 @@ import and run your code with a backend of your choice.
 \text{keras.mixed_precision.LossScaleOptimizer}\\
 \text{keras.optimizers.LossScaleOptimizer}  \\ \hline
 \text{tf.keras.utils.to_ordinal} & \text{No equivalent} \\ \hline
-\text{tf.keras.backend.rnn} & \text{keras.layers.rnn} \\ \hline
-\text{tf.linalg.normalize} \\
-\text{tf.math.l2_normalize} & \text{keras.utils.normalize} \\ \hline
-\hline
 \end{array}
 
 """
@@ -819,7 +815,7 @@ strides=1,} \\
 \hline
 \end{array}
 
-#### MISC ops
+#### Miscellaneous ops
 
 \begin{array}{|c|c|}
 \hline
@@ -842,36 +838,22 @@ successfully transitioning your code from TensorFlow to Keras 3.0. Explore a var
 developer guides to help you begin, craft custom training loops, and establish
 distributed training setups. Take a look!
 
-* [Getting started with Keras
-Core](https://keras.io/keras_core/guides/getting_started_with_keras_core/)
+* [Getting started with Keras Core](https://keras.io/keras_core/guides/getting_started_with_keras_core/)
 * [The Functional API](https://keras.io/keras_core/guides/functional_api/)
 * [The Sequential model](https://keras.io/keras_core/guides/sequential_model/)
-* [Making new layers & models via
-subclassing](https://keras.io/keras_core/guides/making_new_layers_and_models_via_subclassing/)
-* [Training & evaluation with the built-in
-methods](https://keras.io/keras_core/guides/training_with_built_in_methods/)
-* [Writing your own
-callbacks](https://keras.io/keras_core/guides/writing_your_own_callbacks/)
+* [Making new layers & models via subclassing](https://keras.io/keras_core/guides/making_new_layers_and_models_via_subclassing/)
+* [Training & evaluation with the built-in methods](https://keras.io/keras_core/guides/training_with_built_in_methods/)
+* [Writing your own callbacks](https://keras.io/keras_core/guides/writing_your_own_callbacks/)
 * [Transfer learning](https://keras.io/keras_core/guides/transfer_learning/)
-* [Understanding masking &
-padding](https://keras.io/keras_core/guides/understanding_masking_and_padding/)
-* [Customizing what happens in fit() with
-TensorFlow](https://keras.io/keras_core/guides/custom_train_step_in_tensorflow/)
-* [Customizing what happens in fit() with
-JAX](https://keras.io/keras_core/guides/custom_train_step_in_jax/)
-* [Customizing what happens in fit() with
-PyTorch](https://keras.io/keras_core/guides/custom_train_step_in_torch/)
-* [Writing a custom training loop with
-TensorFlow](https://keras.io/keras_core/guides/writing_a_custom_training_loop_in_tensorflow/)
-* [Writing a custom training loop with
-JAX](https://keras.io/keras_core/guides/writing_a_custom_training_loop_in_jax/)
-* [Writing a custom training loop with
-PyTorch](https://keras.io/keras_core/guides/writing_a_custom_training_loop_in_torch/)
-* [Distributed training with
-TensorFlow](https://keras.io/keras_core/guides/distributed_training_with_tensorflow/)
-* [Distributed training with
-JAX](https://keras.io/keras_core/guides/distributed_training_with_jax/)
-* [Distributed training with
-PyTorch](https://keras.io/keras_core/guides/distributed_training_with_torch/)
+* [Understanding masking & padding](https://keras.io/keras_core/guides/understanding_masking_and_padding/)
+* [Customizing what happens in fit() with TensorFlow](https://keras.io/keras_core/guides/custom_train_step_in_tensorflow/)
+* [Customizing what happens in fit() with JAX](https://keras.io/keras_core/guides/custom_train_step_in_jax/)
+* [Customizing what happens in fit() with PyTorch](https://keras.io/keras_core/guides/custom_train_step_in_torch/)
+* [Writing a custom training loop with TensorFlow](https://keras.io/keras_core/guides/writing_a_custom_training_loop_in_tensorflow/)
+* [Writing a custom training loop with JAX](https://keras.io/keras_core/guides/writing_a_custom_training_loop_in_jax/)
+* [Writing a custom training loop with PyTorch](https://keras.io/keras_core/guides/writing_a_custom_training_loop_in_torch/)
+* [Distributed training with TensorFlow](https://keras.io/keras_core/guides/distributed_training_with_tensorflow/)
+* [Distributed training with JAX](https://keras.io/keras_core/guides/distributed_training_with_jax/)
+* [Distributed training with PyTorch](https://keras.io/keras_core/guides/distributed_training_with_torch/)
 
 """
