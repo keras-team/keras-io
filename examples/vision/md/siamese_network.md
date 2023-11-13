@@ -42,13 +42,14 @@ import os
 import random
 import tensorflow as tf
 from pathlib import Path
-from tensorflow.keras import applications
-from tensorflow.keras import layers
-from tensorflow.keras import losses
-from tensorflow.keras import optimizers
-from tensorflow.keras import metrics
-from tensorflow.keras import Model
-from tensorflow.keras.applications import resnet
+from keras import applications
+from keras import layers
+from keras import losses
+from keras import ops
+from keras import optimizers
+from keras import metrics
+from keras import Model
+from keras.applications import resnet
 
 
 target_shape = (200, 200)
@@ -87,16 +88,16 @@ positive_images_path = cache_dir / "right"
   warnings.warn(
 Downloading...
 From (uriginal): https://drive.google.com/uc?id=1jvkbTr_giSP3Ru8OwGNCg6B4PvVbcO34
-From (redirected): https://drive.google.com/uc?id=1jvkbTr_giSP3Ru8OwGNCg6B4PvVbcO34&confirm=t&uuid=1c7b239f-cc48-40fc-8d14-c9ae68cb2f52
-To: /home/scottzhu/keras-io/scripts/tmp_1378270/left.zip
-100%|█████████████████████████████████████████| 104M/104M [00:00<00:00, 250MB/s]
+From (redirected): https://drive.google.com/uc?id=1jvkbTr_giSP3Ru8OwGNCg6B4PvVbcO34&confirm=t&uuid=be98abe4-8be7-4c5f-a8f9-ca95d178fbda
+To: /home/scottzhu/keras-io/scripts/tmp_9629511/left.zip
+100%|█████████████████████████████████████████| 104M/104M [00:00<00:00, 278MB/s]
 /home/scottzhu/.local/lib/python3.10/site-packages/gdown/cli.py:126: FutureWarning: Option `--id` was deprecated in version 4.3.1 and will be removed in 5.0. You don't need to pass it anymore to use a file ID.
   warnings.warn(
 Downloading...
 From (uriginal): https://drive.google.com/uc?id=1EzBZUb_mh_Dp_FKD0P4XiYYSd0QBH5zW
-From (redirected): https://drive.google.com/uc?id=1EzBZUb_mh_Dp_FKD0P4XiYYSd0QBH5zW&confirm=t&uuid=81bcf109-25dc-4a54-b9b9-c91a158dc5cb
-To: /home/scottzhu/keras-io/scripts/tmp_1378270/right.zip
-100%|█████████████████████████████████████████| 104M/104M [00:00<00:00, 232MB/s]
+From (redirected): https://drive.google.com/uc?id=1EzBZUb_mh_Dp_FKD0P4XiYYSd0QBH5zW&confirm=t&uuid=0eb1b2e2-beee-462a-a9b8-c0bf21bea257
+To: /home/scottzhu/keras-io/scripts/tmp_9629511/right.zip
+100%|█████████████████████████████████████████| 104M/104M [00:00<00:00, 285MB/s]
 
 ```
 </div>
@@ -280,8 +281,8 @@ class DistanceLayer(layers.Layer):
         super().__init__(**kwargs)
 
     def call(self, anchor, positive, negative):
-        ap_distance = tf.reduce_sum(tf.square(anchor - positive), -1)
-        an_distance = tf.reduce_sum(tf.square(anchor - negative), -1)
+        ap_distance = ops.sum(tf.square(anchor - positive), -1)
+        an_distance = ops.sum(tf.square(anchor - negative), -1)
         return (ap_distance, an_distance)
 
 
@@ -393,32 +394,32 @@ siamese_model.fit(train_dataset, epochs=10, validation_data=val_dataset)
 <div class="k-default-codeblock">
 ```
 Epoch 1/10
-   1/151 [37m━━━━━━━━━━━━━━━━━━━━  1:24:02 34s/step - loss: 1.7079
+   1/151 [37m━━━━━━━━━━━━━━━━━━━━  1:21:32 33s/step - loss: 1.5020
 
 WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
-I0000 00:00:1699918623.377653    6565 device_compiler.h:187] Compiled cluster using XLA!  This line is logged at most once for the lifetime of the process.
+I0000 00:00:1699919378.193493    9680 device_compiler.h:187] Compiled cluster using XLA!  This line is logged at most once for the lifetime of the process.
 
- 151/151 ━━━━━━━━━━━━━━━━━━━━ 81s 315ms/step - loss: 0.6269 - val_loss: 0.3830
+ 151/151 ━━━━━━━━━━━━━━━━━━━━ 80s 317ms/step - loss: 0.7004 - val_loss: 0.3704
 Epoch 2/10
- 151/151 ━━━━━━━━━━━━━━━━━━━━ 20s 135ms/step - loss: 0.3897 - val_loss: 0.3467
+ 151/151 ━━━━━━━━━━━━━━━━━━━━ 20s 136ms/step - loss: 0.3749 - val_loss: 0.3609
 Epoch 3/10
- 151/151 ━━━━━━━━━━━━━━━━━━━━ 20s 135ms/step - loss: 0.3648 - val_loss: 0.3671
+ 151/151 ━━━━━━━━━━━━━━━━━━━━ 21s 140ms/step - loss: 0.3548 - val_loss: 0.3399
 Epoch 4/10
- 151/151 ━━━━━━━━━━━━━━━━━━━━ 20s 134ms/step - loss: 0.3390 - val_loss: 0.3450
+ 151/151 ━━━━━━━━━━━━━━━━━━━━ 20s 135ms/step - loss: 0.3432 - val_loss: 0.3533
 Epoch 5/10
- 151/151 ━━━━━━━━━━━━━━━━━━━━ 20s 135ms/step - loss: 0.3595 - val_loss: 0.3290
+ 151/151 ━━━━━━━━━━━━━━━━━━━━ 20s 134ms/step - loss: 0.3299 - val_loss: 0.3522
 Epoch 6/10
- 151/151 ━━━━━━━━━━━━━━━━━━━━ 20s 134ms/step - loss: 0.3233 - val_loss: 0.3320
+ 151/151 ━━━━━━━━━━━━━━━━━━━━ 20s 135ms/step - loss: 0.3263 - val_loss: 0.3177
 Epoch 7/10
- 151/151 ━━━━━━━━━━━━━━━━━━━━ 20s 134ms/step - loss: 0.3191 - val_loss: 0.3102
+ 151/151 ━━━━━━━━━━━━━━━━━━━━ 20s 134ms/step - loss: 0.3032 - val_loss: 0.3308
 Epoch 8/10
- 151/151 ━━━━━━━━━━━━━━━━━━━━ 20s 135ms/step - loss: 0.3066 - val_loss: 0.3061
+ 151/151 ━━━━━━━━━━━━━━━━━━━━ 20s 134ms/step - loss: 0.2944 - val_loss: 0.3282
 Epoch 9/10
- 151/151 ━━━━━━━━━━━━━━━━━━━━ 20s 134ms/step - loss: 0.2871 - val_loss: 0.3057
+ 151/151 ━━━━━━━━━━━━━━━━━━━━ 20s 135ms/step - loss: 0.2893 - val_loss: 0.3046
 Epoch 10/10
- 151/151 ━━━━━━━━━━━━━━━━━━━━ 20s 135ms/step - loss: 0.2796 - val_loss: 0.2960
+ 151/151 ━━━━━━━━━━━━━━━━━━━━ 20s 134ms/step - loss: 0.2679 - val_loss: 0.2841
 
-<keras.src.callbacks.history.History at 0x7f88802c96c0>
+<keras.src.callbacks.history.History at 0x7f6945c08820>
 
 ```
 </div>
@@ -474,8 +475,8 @@ print("Negative similarity", negative_similarity.numpy())
 
 <div class="k-default-codeblock">
 ```
-Positive similarity: 0.99548966
-Negative similarity 0.9939296
+Positive similarity: 0.99608964
+Negative similarity 0.9941576
 
 ```
 </div>

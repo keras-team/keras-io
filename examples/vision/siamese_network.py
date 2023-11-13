@@ -39,13 +39,14 @@ import os
 import random
 import tensorflow as tf
 from pathlib import Path
-from tensorflow.keras import applications
-from tensorflow.keras import layers
-from tensorflow.keras import losses
-from tensorflow.keras import optimizers
-from tensorflow.keras import metrics
-from tensorflow.keras import Model
-from tensorflow.keras.applications import resnet
+from keras import applications
+from keras import layers
+from keras import losses
+from keras import ops
+from keras import optimizers
+from keras import metrics
+from keras import Model
+from keras.applications import resnet
 
 
 target_shape = (200, 200)
@@ -241,8 +242,8 @@ class DistanceLayer(layers.Layer):
         super().__init__(**kwargs)
 
     def call(self, anchor, positive, negative):
-        ap_distance = tf.reduce_sum(tf.square(anchor - positive), -1)
-        an_distance = tf.reduce_sum(tf.square(anchor - negative), -1)
+        ap_distance = ops.sum(tf.square(anchor - positive), -1)
+        an_distance = ops.sum(tf.square(anchor - negative), -1)
         return (ap_distance, an_distance)
 
 
