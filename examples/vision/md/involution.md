@@ -3,12 +3,12 @@
 **Author:** [Aritra Roy Gosthipaty](https://twitter.com/ariG23498)<br>
 **Date created:** 2021/07/25<br>
 **Last modified:** 2021/07/25<br>
+**Description:** Deep dive into location-specific and channel-agnostic "involution" kernels.
 
 
 <img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/vision/ipynb/involution.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/vision/involution.py)
 
 
-**Description:** Deep dive into location-specific and channel-agnostic "involution" kernels.
 
 ---
 ## Introduction
@@ -39,8 +39,12 @@ layer.
 
 
 ```python
+import os
+
+os.environ["KERAS_BACKEND"] = "tensorflow"
+
 import tensorflow as tf
-from tensorflow import keras
+import keras
 import matplotlib.pyplot as plt
 
 # Set seed for reproducibility.
@@ -232,6 +236,7 @@ with channel 16 and reduction ratio 2 ouput shape: (32, 256, 256, 3)
 
 ```
 </div>
+---
 ## Image Classification
 
 In this section, we will build an image-classifier model. There will
@@ -248,9 +253,12 @@ tutorial from Google.
 ```python
 # Load the CIFAR10 dataset.
 print("loading the CIFAR10 dataset...")
-(train_images, train_labels), (
-    test_images,
-    test_labels,
+(
+    (train_images, train_labels),
+    (
+        test_images,
+        test_labels,
+    ),
 ) = keras.datasets.cifar10.load_data()
 
 # Normalize pixel values to be between 0 and 1.
@@ -268,8 +276,6 @@ test_ds = tf.data.Dataset.from_tensor_slices((test_images, test_labels)).batch(2
 <div class="k-default-codeblock">
 ```
 loading the CIFAR10 dataset...
-Downloading data from https://www.cs.toronto.edu/~kriz/cifar-10-python.tar.gz
-170500096/170498071 [==============================] - 3s 0us/step
 
 ```
 </div>
@@ -303,7 +309,9 @@ plt.show()
 ```
 
 
+    
 ![png](/img/examples/vision/involution/involution_13_0.png)
+    
 
 
 ---
@@ -348,45 +356,45 @@ building the convolution model...
 compiling the convolution model...
 conv model training...
 Epoch 1/20
-196/196 [==============================] - 16s 16ms/step - loss: 1.6367 - accuracy: 0.4041 - val_loss: 1.3283 - val_accuracy: 0.5275
+ 196/196 ━━━━━━━━━━━━━━━━━━━━ 6s 15ms/step - accuracy: 0.3068 - loss: 1.9000 - val_accuracy: 0.4861 - val_loss: 1.4593
 Epoch 2/20
-196/196 [==============================] - 3s 16ms/step - loss: 1.2207 - accuracy: 0.5675 - val_loss: 1.1365 - val_accuracy: 0.5965
+ 196/196 ━━━━━━━━━━━━━━━━━━━━ 1s 4ms/step - accuracy: 0.5153 - loss: 1.3603 - val_accuracy: 0.5741 - val_loss: 1.1913
 Epoch 3/20
-196/196 [==============================] - 3s 16ms/step - loss: 1.0649 - accuracy: 0.6267 - val_loss: 1.0219 - val_accuracy: 0.6378
+ 196/196 ━━━━━━━━━━━━━━━━━━━━ 1s 5ms/step - accuracy: 0.5949 - loss: 1.1517 - val_accuracy: 0.6095 - val_loss: 1.0965
 Epoch 4/20
-196/196 [==============================] - 3s 16ms/step - loss: 0.9642 - accuracy: 0.6613 - val_loss: 0.9741 - val_accuracy: 0.6601
+ 196/196 ━━━━━━━━━━━━━━━━━━━━ 1s 5ms/step - accuracy: 0.6414 - loss: 1.0330 - val_accuracy: 0.6260 - val_loss: 1.0635
 Epoch 5/20
-196/196 [==============================] - 3s 16ms/step - loss: 0.8779 - accuracy: 0.6939 - val_loss: 0.9145 - val_accuracy: 0.6826
+ 196/196 ━━━━━━━━━━━━━━━━━━━━ 1s 5ms/step - accuracy: 0.6690 - loss: 0.9485 - val_accuracy: 0.6622 - val_loss: 0.9833
 Epoch 6/20
-196/196 [==============================] - 3s 16ms/step - loss: 0.8126 - accuracy: 0.7180 - val_loss: 0.8841 - val_accuracy: 0.6913
+ 196/196 ━━━━━━━━━━━━━━━━━━━━ 1s 5ms/step - accuracy: 0.6951 - loss: 0.8764 - val_accuracy: 0.6783 - val_loss: 0.9413
 Epoch 7/20
-196/196 [==============================] - 3s 16ms/step - loss: 0.7641 - accuracy: 0.7334 - val_loss: 0.8667 - val_accuracy: 0.7049
+ 196/196 ━━━━━━━━━━━━━━━━━━━━ 1s 5ms/step - accuracy: 0.7122 - loss: 0.8167 - val_accuracy: 0.6856 - val_loss: 0.9134
 Epoch 8/20
-196/196 [==============================] - 3s 16ms/step - loss: 0.7210 - accuracy: 0.7503 - val_loss: 0.8363 - val_accuracy: 0.7089
+ 196/196 ━━━━━━━━━━━━━━━━━━━━ 1s 4ms/step - accuracy: 0.7299 - loss: 0.7709 - val_accuracy: 0.7001 - val_loss: 0.8792
 Epoch 9/20
-196/196 [==============================] - 3s 16ms/step - loss: 0.6796 - accuracy: 0.7630 - val_loss: 0.8150 - val_accuracy: 0.7203
+ 196/196 ━━━━━━━━━━━━━━━━━━━━ 1s 4ms/step - accuracy: 0.7467 - loss: 0.7288 - val_accuracy: 0.6992 - val_loss: 0.8821
 Epoch 10/20
-196/196 [==============================] - 3s 15ms/step - loss: 0.6370 - accuracy: 0.7793 - val_loss: 0.9021 - val_accuracy: 0.6964
+ 196/196 ━━━━━━━━━━━━━━━━━━━━ 1s 4ms/step - accuracy: 0.7591 - loss: 0.6982 - val_accuracy: 0.7235 - val_loss: 0.8237
 Epoch 11/20
-196/196 [==============================] - 3s 15ms/step - loss: 0.6089 - accuracy: 0.7886 - val_loss: 0.8336 - val_accuracy: 0.7207
+ 196/196 ━━━━━━━━━━━━━━━━━━━━ 1s 4ms/step - accuracy: 0.7725 - loss: 0.6550 - val_accuracy: 0.7115 - val_loss: 0.8521
 Epoch 12/20
-196/196 [==============================] - 3s 15ms/step - loss: 0.5723 - accuracy: 0.8022 - val_loss: 0.8326 - val_accuracy: 0.7246
+ 196/196 ━━━━━━━━━━━━━━━━━━━━ 1s 5ms/step - accuracy: 0.7808 - loss: 0.6302 - val_accuracy: 0.7051 - val_loss: 0.8823
 Epoch 13/20
-196/196 [==============================] - 3s 15ms/step - loss: 0.5375 - accuracy: 0.8144 - val_loss: 0.8482 - val_accuracy: 0.7223
+ 196/196 ━━━━━━━━━━━━━━━━━━━━ 1s 5ms/step - accuracy: 0.7860 - loss: 0.6101 - val_accuracy: 0.7122 - val_loss: 0.8635
 Epoch 14/20
-196/196 [==============================] - 3s 15ms/step - loss: 0.5121 - accuracy: 0.8230 - val_loss: 0.8244 - val_accuracy: 0.7306
+ 196/196 ━━━━━━━━━━━━━━━━━━━━ 1s 5ms/step - accuracy: 0.7998 - loss: 0.5786 - val_accuracy: 0.7214 - val_loss: 0.8348
 Epoch 15/20
-196/196 [==============================] - 3s 15ms/step - loss: 0.4786 - accuracy: 0.8363 - val_loss: 0.8313 - val_accuracy: 0.7363
+ 196/196 ━━━━━━━━━━━━━━━━━━━━ 1s 5ms/step - accuracy: 0.8117 - loss: 0.5473 - val_accuracy: 0.7139 - val_loss: 0.8835
 Epoch 16/20
-196/196 [==============================] - 3s 15ms/step - loss: 0.4518 - accuracy: 0.8458 - val_loss: 0.8634 - val_accuracy: 0.7293
+ 196/196 ━━━━━━━━━━━━━━━━━━━━ 1s 5ms/step - accuracy: 0.8168 - loss: 0.5267 - val_accuracy: 0.7155 - val_loss: 0.8840
 Epoch 17/20
-196/196 [==============================] - 3s 16ms/step - loss: 0.4403 - accuracy: 0.8489 - val_loss: 0.8683 - val_accuracy: 0.7290
+ 196/196 ━━━━━━━━━━━━━━━━━━━━ 1s 5ms/step - accuracy: 0.8266 - loss: 0.5022 - val_accuracy: 0.7239 - val_loss: 0.8576
 Epoch 18/20
-196/196 [==============================] - 3s 16ms/step - loss: 0.4094 - accuracy: 0.8576 - val_loss: 0.8982 - val_accuracy: 0.7272
+ 196/196 ━━━━━━━━━━━━━━━━━━━━ 1s 5ms/step - accuracy: 0.8374 - loss: 0.4750 - val_accuracy: 0.7262 - val_loss: 0.8756
 Epoch 19/20
-196/196 [==============================] - 3s 16ms/step - loss: 0.3941 - accuracy: 0.8630 - val_loss: 0.9537 - val_accuracy: 0.7200
+ 196/196 ━━━━━━━━━━━━━━━━━━━━ 1s 5ms/step - accuracy: 0.8452 - loss: 0.4505 - val_accuracy: 0.7235 - val_loss: 0.9049
 Epoch 20/20
-196/196 [==============================] - 3s 15ms/step - loss: 0.3778 - accuracy: 0.8691 - val_loss: 0.9780 - val_accuracy: 0.7184
+ 196/196 ━━━━━━━━━━━━━━━━━━━━ 1s 4ms/step - accuracy: 0.8531 - loss: 0.4283 - val_accuracy: 0.7304 - val_loss: 0.8962
 
 ```
 </div>
@@ -438,54 +446,54 @@ building the involution model...
 compiling the involution model...
 inv model training...
 Epoch 1/20
-196/196 [==============================] - 5s 21ms/step - loss: 2.1570 - accuracy: 0.2266 - val_loss: 2.2712 - val_accuracy: 0.1557
+ 196/196 ━━━━━━━━━━━━━━━━━━━━ 9s 25ms/step - accuracy: 0.1369 - loss: 2.2728 - val_accuracy: 0.2716 - val_loss: 2.1041
 Epoch 2/20
-196/196 [==============================] - 4s 20ms/step - loss: 1.9445 - accuracy: 0.3054 - val_loss: 1.9762 - val_accuracy: 0.2963
+ 196/196 ━━━━━━━━━━━━━━━━━━━━ 1s 5ms/step - accuracy: 0.2922 - loss: 1.9489 - val_accuracy: 0.3478 - val_loss: 1.8275
 Epoch 3/20
-196/196 [==============================] - 4s 20ms/step - loss: 1.8469 - accuracy: 0.3433 - val_loss: 1.8044 - val_accuracy: 0.3669
+ 196/196 ━━━━━━━━━━━━━━━━━━━━ 1s 5ms/step - accuracy: 0.3477 - loss: 1.8098 - val_accuracy: 0.3782 - val_loss: 1.7435
 Epoch 4/20
-196/196 [==============================] - 4s 20ms/step - loss: 1.7837 - accuracy: 0.3646 - val_loss: 1.7640 - val_accuracy: 0.3761
+ 196/196 ━━━━━━━━━━━━━━━━━━━━ 1s 6ms/step - accuracy: 0.3741 - loss: 1.7420 - val_accuracy: 0.3901 - val_loss: 1.6943
 Epoch 5/20
-196/196 [==============================] - 4s 20ms/step - loss: 1.7369 - accuracy: 0.3784 - val_loss: 1.7180 - val_accuracy: 0.3907
+ 196/196 ━━━━━━━━━━━━━━━━━━━━ 1s 5ms/step - accuracy: 0.3931 - loss: 1.6942 - val_accuracy: 0.4007 - val_loss: 1.6639
 Epoch 6/20
-196/196 [==============================] - 4s 19ms/step - loss: 1.7031 - accuracy: 0.3917 - val_loss: 1.6839 - val_accuracy: 0.4004
+ 196/196 ━━━━━━━━━━━━━━━━━━━━ 1s 5ms/step - accuracy: 0.4057 - loss: 1.6622 - val_accuracy: 0.4108 - val_loss: 1.6494
 Epoch 7/20
-196/196 [==============================] - 4s 19ms/step - loss: 1.6748 - accuracy: 0.3988 - val_loss: 1.6786 - val_accuracy: 0.4037
+ 196/196 ━━━━━━━━━━━━━━━━━━━━ 1s 6ms/step - accuracy: 0.4134 - loss: 1.6374 - val_accuracy: 0.4202 - val_loss: 1.6363
 Epoch 8/20
-196/196 [==============================] - 4s 19ms/step - loss: 1.6592 - accuracy: 0.4052 - val_loss: 1.6550 - val_accuracy: 0.4103
+ 196/196 ━━━━━━━━━━━━━━━━━━━━ 1s 6ms/step - accuracy: 0.4200 - loss: 1.6166 - val_accuracy: 0.4312 - val_loss: 1.6062
 Epoch 9/20
-196/196 [==============================] - 4s 19ms/step - loss: 1.6412 - accuracy: 0.4106 - val_loss: 1.6346 - val_accuracy: 0.4158
+ 196/196 ━━━━━━━━━━━━━━━━━━━━ 1s 5ms/step - accuracy: 0.4286 - loss: 1.5949 - val_accuracy: 0.4316 - val_loss: 1.6018
 Epoch 10/20
-196/196 [==============================] - 4s 19ms/step - loss: 1.6251 - accuracy: 0.4178 - val_loss: 1.6330 - val_accuracy: 0.4145
+ 196/196 ━━━━━━━━━━━━━━━━━━━━ 1s 5ms/step - accuracy: 0.4346 - loss: 1.5794 - val_accuracy: 0.4346 - val_loss: 1.5963
 Epoch 11/20
-196/196 [==============================] - 4s 19ms/step - loss: 1.6124 - accuracy: 0.4206 - val_loss: 1.6214 - val_accuracy: 0.4218
+ 196/196 ━━━━━━━━━━━━━━━━━━━━ 1s 6ms/step - accuracy: 0.4395 - loss: 1.5641 - val_accuracy: 0.4388 - val_loss: 1.5831
 Epoch 12/20
-196/196 [==============================] - 4s 19ms/step - loss: 1.5978 - accuracy: 0.4252 - val_loss: 1.6121 - val_accuracy: 0.4239
+ 196/196 ━━━━━━━━━━━━━━━━━━━━ 1s 5ms/step - accuracy: 0.4445 - loss: 1.5502 - val_accuracy: 0.4443 - val_loss: 1.5826
 Epoch 13/20
-196/196 [==============================] - 4s 19ms/step - loss: 1.5868 - accuracy: 0.4301 - val_loss: 1.5974 - val_accuracy: 0.4284
+ 196/196 ━━━━━━━━━━━━━━━━━━━━ 1s 6ms/step - accuracy: 0.4493 - loss: 1.5391 - val_accuracy: 0.4497 - val_loss: 1.5574
 Epoch 14/20
-196/196 [==============================] - 4s 19ms/step - loss: 1.5759 - accuracy: 0.4353 - val_loss: 1.5939 - val_accuracy: 0.4325
+ 196/196 ━━━━━━━━━━━━━━━━━━━━ 1s 6ms/step - accuracy: 0.4528 - loss: 1.5255 - val_accuracy: 0.4547 - val_loss: 1.5433
 Epoch 15/20
-196/196 [==============================] - 4s 19ms/step - loss: 1.5677 - accuracy: 0.4369 - val_loss: 1.5889 - val_accuracy: 0.4372
+ 196/196 ━━━━━━━━━━━━━━━━━━━━ 1s 4ms/step - accuracy: 0.4575 - loss: 1.5148 - val_accuracy: 0.4548 - val_loss: 1.5438
 Epoch 16/20
-196/196 [==============================] - 4s 20ms/step - loss: 1.5586 - accuracy: 0.4413 - val_loss: 1.5817 - val_accuracy: 0.4376
+ 196/196 ━━━━━━━━━━━━━━━━━━━━ 1s 6ms/step - accuracy: 0.4599 - loss: 1.5072 - val_accuracy: 0.4581 - val_loss: 1.5323
 Epoch 17/20
-196/196 [==============================] - 4s 20ms/step - loss: 1.5507 - accuracy: 0.4447 - val_loss: 1.5776 - val_accuracy: 0.4381
+ 196/196 ━━━━━━━━━━━━━━━━━━━━ 1s 6ms/step - accuracy: 0.4664 - loss: 1.4957 - val_accuracy: 0.4598 - val_loss: 1.5321
 Epoch 18/20
-196/196 [==============================] - 4s 20ms/step - loss: 1.5420 - accuracy: 0.4477 - val_loss: 1.5785 - val_accuracy: 0.4378
+ 196/196 ━━━━━━━━━━━━━━━━━━━━ 1s 6ms/step - accuracy: 0.4701 - loss: 1.4863 - val_accuracy: 0.4575 - val_loss: 1.5302
 Epoch 19/20
-196/196 [==============================] - 4s 20ms/step - loss: 1.5357 - accuracy: 0.4484 - val_loss: 1.5639 - val_accuracy: 0.4431
+ 196/196 ━━━━━━━━━━━━━━━━━━━━ 1s 6ms/step - accuracy: 0.4737 - loss: 1.4790 - val_accuracy: 0.4676 - val_loss: 1.5233
 Epoch 20/20
-196/196 [==============================] - 4s 20ms/step - loss: 1.5305 - accuracy: 0.4530 - val_loss: 1.5661 - val_accuracy: 0.4418
+ 196/196 ━━━━━━━━━━━━━━━━━━━━ 1s 6ms/step - accuracy: 0.4771 - loss: 1.4740 - val_accuracy: 0.4719 - val_loss: 1.5096
 
 ```
 </div>
+---
 ## Comparisons
 
 In this section, we will be looking at both the models and compare a
 few pointers.
 
----
 ### Parameters
 
 One can see that with a similar architecture the parameters in a CNN
@@ -498,74 +506,131 @@ conv_model.summary()
 inv_model.summary()
 ```
 
-<div class="k-default-codeblock">
-```
-Model: "sequential_3"
-_________________________________________________________________
-Layer (type)                 Output Shape              Param #   
-=================================================================
-conv2d_6 (Conv2D)            (None, 32, 32, 32)        896       
-_________________________________________________________________
-relu1 (ReLU)                 (None, 32, 32, 32)        0         
-_________________________________________________________________
-max_pooling2d (MaxPooling2D) (None, 16, 16, 32)        0         
-_________________________________________________________________
-conv2d_7 (Conv2D)            (None, 16, 16, 64)        18496     
-_________________________________________________________________
-relu2 (ReLU)                 (None, 16, 16, 64)        0         
-_________________________________________________________________
-max_pooling2d_1 (MaxPooling2 (None, 8, 8, 64)          0         
-_________________________________________________________________
-conv2d_8 (Conv2D)            (None, 8, 8, 64)          36928     
-_________________________________________________________________
-relu3 (ReLU)                 (None, 8, 8, 64)          0         
-_________________________________________________________________
-flatten (Flatten)            (None, 4096)              0         
-_________________________________________________________________
-dense (Dense)                (None, 64)                262208    
-_________________________________________________________________
-dense_1 (Dense)              (None, 10)                650       
-=================================================================
-Total params: 319,178
-Trainable params: 319,178
-Non-trainable params: 0
-_________________________________________________________________
-Model: "inv_model"
-_________________________________________________________________
-Layer (type)                 Output Shape              Param #   
-=================================================================
-input_1 (InputLayer)         [(None, 32, 32, 3)]       0         
-_________________________________________________________________
-inv_1 (Involution)           ((None, 32, 32, 3), (None 26        
-_________________________________________________________________
-re_lu_3 (ReLU)               (None, 32, 32, 3)         0         
-_________________________________________________________________
-max_pooling2d_2 (MaxPooling2 (None, 16, 16, 3)         0         
-_________________________________________________________________
-inv_2 (Involution)           ((None, 16, 16, 3), (None 26        
-_________________________________________________________________
-re_lu_4 (ReLU)               (None, 16, 16, 3)         0         
-_________________________________________________________________
-max_pooling2d_3 (MaxPooling2 (None, 8, 8, 3)           0         
-_________________________________________________________________
-inv_3 (Involution)           ((None, 8, 8, 3), (None,  26        
-_________________________________________________________________
-re_lu_5 (ReLU)               (None, 8, 8, 3)           0         
-_________________________________________________________________
-flatten_1 (Flatten)          (None, 192)               0         
-_________________________________________________________________
-dense_2 (Dense)              (None, 64)                12352     
-_________________________________________________________________
-dense_3 (Dense)              (None, 10)                650       
-=================================================================
-Total params: 13,080
-Trainable params: 13,074
-Non-trainable params: 6
-_________________________________________________________________
 
-```
-</div>
----
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold">Model: "sequential_3"</span>
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━┓
+┃<span style="font-weight: bold"> Layer (type)                    </span>┃<span style="font-weight: bold"> Output Shape              </span>┃<span style="font-weight: bold">    Param # </span>┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━┩
+│ conv2d_6 (<span style="color: #0087ff; text-decoration-color: #0087ff">Conv2D</span>)               │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">32</span>, <span style="color: #00af00; text-decoration-color: #00af00">32</span>, <span style="color: #00af00; text-decoration-color: #00af00">32</span>)        │        <span style="color: #00af00; text-decoration-color: #00af00">896</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ relu1 (<span style="color: #0087ff; text-decoration-color: #0087ff">ReLU</span>)                    │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">32</span>, <span style="color: #00af00; text-decoration-color: #00af00">32</span>, <span style="color: #00af00; text-decoration-color: #00af00">32</span>)        │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ max_pooling2d (<span style="color: #0087ff; text-decoration-color: #0087ff">MaxPooling2D</span>)    │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">16</span>, <span style="color: #00af00; text-decoration-color: #00af00">16</span>, <span style="color: #00af00; text-decoration-color: #00af00">32</span>)        │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ conv2d_7 (<span style="color: #0087ff; text-decoration-color: #0087ff">Conv2D</span>)               │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">16</span>, <span style="color: #00af00; text-decoration-color: #00af00">16</span>, <span style="color: #00af00; text-decoration-color: #00af00">64</span>)        │     <span style="color: #00af00; text-decoration-color: #00af00">18,496</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ relu2 (<span style="color: #0087ff; text-decoration-color: #0087ff">ReLU</span>)                    │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">16</span>, <span style="color: #00af00; text-decoration-color: #00af00">16</span>, <span style="color: #00af00; text-decoration-color: #00af00">64</span>)        │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ max_pooling2d_1 (<span style="color: #0087ff; text-decoration-color: #0087ff">MaxPooling2D</span>)  │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">8</span>, <span style="color: #00af00; text-decoration-color: #00af00">8</span>, <span style="color: #00af00; text-decoration-color: #00af00">64</span>)          │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ conv2d_8 (<span style="color: #0087ff; text-decoration-color: #0087ff">Conv2D</span>)               │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">8</span>, <span style="color: #00af00; text-decoration-color: #00af00">8</span>, <span style="color: #00af00; text-decoration-color: #00af00">64</span>)          │     <span style="color: #00af00; text-decoration-color: #00af00">36,928</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ relu3 (<span style="color: #0087ff; text-decoration-color: #0087ff">ReLU</span>)                    │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">8</span>, <span style="color: #00af00; text-decoration-color: #00af00">8</span>, <span style="color: #00af00; text-decoration-color: #00af00">64</span>)          │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ flatten (<span style="color: #0087ff; text-decoration-color: #0087ff">Flatten</span>)               │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">4096</span>)              │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ dense (<span style="color: #0087ff; text-decoration-color: #0087ff">Dense</span>)                   │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">64</span>)                │    <span style="color: #00af00; text-decoration-color: #00af00">262,208</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ dense_1 (<span style="color: #0087ff; text-decoration-color: #0087ff">Dense</span>)                 │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">10</span>)                │        <span style="color: #00af00; text-decoration-color: #00af00">650</span> │
+└─────────────────────────────────┴───────────────────────────┴────────────┘
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Total params: </span><span style="color: #00af00; text-decoration-color: #00af00">957,536</span> (3.65 MB)
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Trainable params: </span><span style="color: #00af00; text-decoration-color: #00af00">319,178</span> (1.22 MB)
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Non-trainable params: </span><span style="color: #00af00; text-decoration-color: #00af00">0</span> (0.00 B)
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Optimizer params: </span><span style="color: #00af00; text-decoration-color: #00af00">638,358</span> (2.44 MB)
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold">Model: "inv_model"</span>
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━┓
+┃<span style="font-weight: bold"> Layer (type)                    </span>┃<span style="font-weight: bold"> Output Shape              </span>┃<span style="font-weight: bold">    Param # </span>┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━┩
+│ input_layer_4 (<span style="color: #0087ff; text-decoration-color: #0087ff">InputLayer</span>)      │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">32</span>, <span style="color: #00af00; text-decoration-color: #00af00">32</span>, <span style="color: #00af00; text-decoration-color: #00af00">3</span>)         │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ inv_1 (<span style="color: #0087ff; text-decoration-color: #0087ff">Involution</span>)              │ [(<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">32</span>, <span style="color: #00af00; text-decoration-color: #00af00">32</span>, <span style="color: #00af00; text-decoration-color: #00af00">3</span>),       │         <span style="color: #00af00; text-decoration-color: #00af00">26</span> │
+│                                 │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">32</span>, <span style="color: #00af00; text-decoration-color: #00af00">32</span>, <span style="color: #00af00; text-decoration-color: #00af00">9</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>)]  │            │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ re_lu_4 (<span style="color: #0087ff; text-decoration-color: #0087ff">ReLU</span>)                  │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">32</span>, <span style="color: #00af00; text-decoration-color: #00af00">32</span>, <span style="color: #00af00; text-decoration-color: #00af00">3</span>)         │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ max_pooling2d_2 (<span style="color: #0087ff; text-decoration-color: #0087ff">MaxPooling2D</span>)  │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">16</span>, <span style="color: #00af00; text-decoration-color: #00af00">16</span>, <span style="color: #00af00; text-decoration-color: #00af00">3</span>)         │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ inv_2 (<span style="color: #0087ff; text-decoration-color: #0087ff">Involution</span>)              │ [(<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">16</span>, <span style="color: #00af00; text-decoration-color: #00af00">16</span>, <span style="color: #00af00; text-decoration-color: #00af00">3</span>),       │         <span style="color: #00af00; text-decoration-color: #00af00">26</span> │
+│                                 │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">16</span>, <span style="color: #00af00; text-decoration-color: #00af00">16</span>, <span style="color: #00af00; text-decoration-color: #00af00">9</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>)]  │            │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ re_lu_6 (<span style="color: #0087ff; text-decoration-color: #0087ff">ReLU</span>)                  │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">16</span>, <span style="color: #00af00; text-decoration-color: #00af00">16</span>, <span style="color: #00af00; text-decoration-color: #00af00">3</span>)         │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ max_pooling2d_3 (<span style="color: #0087ff; text-decoration-color: #0087ff">MaxPooling2D</span>)  │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">8</span>, <span style="color: #00af00; text-decoration-color: #00af00">8</span>, <span style="color: #00af00; text-decoration-color: #00af00">3</span>)           │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ inv_3 (<span style="color: #0087ff; text-decoration-color: #0087ff">Involution</span>)              │ [(<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">8</span>, <span style="color: #00af00; text-decoration-color: #00af00">8</span>, <span style="color: #00af00; text-decoration-color: #00af00">3</span>), (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>,  │         <span style="color: #00af00; text-decoration-color: #00af00">26</span> │
+│                                 │ <span style="color: #00af00; text-decoration-color: #00af00">8</span>, <span style="color: #00af00; text-decoration-color: #00af00">8</span>, <span style="color: #00af00; text-decoration-color: #00af00">9</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>)]           │            │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ re_lu_8 (<span style="color: #0087ff; text-decoration-color: #0087ff">ReLU</span>)                  │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">8</span>, <span style="color: #00af00; text-decoration-color: #00af00">8</span>, <span style="color: #00af00; text-decoration-color: #00af00">3</span>)           │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ flatten_1 (<span style="color: #0087ff; text-decoration-color: #0087ff">Flatten</span>)             │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">192</span>)               │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ dense_2 (<span style="color: #0087ff; text-decoration-color: #0087ff">Dense</span>)                 │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">64</span>)                │     <span style="color: #00af00; text-decoration-color: #00af00">12,352</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ dense_3 (<span style="color: #0087ff; text-decoration-color: #0087ff">Dense</span>)                 │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">10</span>)                │        <span style="color: #00af00; text-decoration-color: #00af00">650</span> │
+└─────────────────────────────────┴───────────────────────────┴────────────┘
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Total params: </span><span style="color: #00af00; text-decoration-color: #00af00">39,230</span> (153.25 KB)
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Trainable params: </span><span style="color: #00af00; text-decoration-color: #00af00">13,074</span> (51.07 KB)
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Non-trainable params: </span><span style="color: #00af00; text-decoration-color: #00af00">6</span> (24.00 B)
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Optimizer params: </span><span style="color: #00af00; text-decoration-color: #00af00">26,150</span> (102.15 KB)
+</pre>
+
+
+
 ### Loss and Accuracy Plots
 
 Here, the loss and the accuracy plots demonstrate that INNs are slow
@@ -607,13 +672,18 @@ plt.show()
 ```
 
 
+    
 ![png](/img/examples/vision/involution/involution_22_0.png)
+    
 
 
 
+    
 ![png](/img/examples/vision/involution/involution_22_1.png)
+    
 
 
+---
 ## Visualizing Involution Kernels
 
 To visualize the kernels, we take the sum of **K×K** values from each
@@ -634,18 +704,13 @@ in which self-attention belongs.
 
 ```python
 layer_names = ["inv_1", "inv_2", "inv_3"]
-outputs = [inv_model.get_layer(name).output for name in layer_names]
+outputs = [inv_model.get_layer(name).output[1] for name in layer_names]
 vis_model = keras.Model(inv_model.input, outputs)
 
 fig, axes = plt.subplots(nrows=10, ncols=4, figsize=(10, 30))
 
 for ax, test_image in zip(axes, test_images[:10]):
-    (inv1_out, inv2_out, inv3_out) = vis_model.predict(test_image[None, ...])
-
-    _, inv1_kernel = inv1_out
-    _, inv2_kernel = inv2_out
-    _, inv3_kernel = inv3_out
-
+    (inv1_kernel, inv2_kernel, inv3_kernel) = vis_model.predict(test_image[None, ...])
     inv1_kernel = tf.reduce_sum(inv1_kernel, axis=[-1, -2, -3])
     inv2_kernel = tf.reduce_sum(inv2_kernel, axis=[-1, -2, -3])
     inv3_kernel = tf.reduce_sum(inv3_kernel, axis=[-1, -2, -3])
@@ -663,10 +728,27 @@ for ax, test_image in zip(axes, test_images[:10]):
     ax[3].set_title("Involution Kernel 3")
 ```
 
+<div class="k-default-codeblock">
+```
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 1s 503ms/step
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 11ms/step
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 11ms/step
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 9ms/step
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 11ms/step
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 9ms/step
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 9ms/step
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 9ms/step
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 10ms/step
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 9ms/step
 
-![png](/img/examples/vision/involution/involution_24_0.png)
+```
+</div>
+    
+![png](/img/examples/vision/involution/involution_24_1.png)
+    
 
 
+---
 ## Conclusions
 
 In this example, the main focus was to build an `Involution` layer which
@@ -686,4 +768,5 @@ Moving forward one can:
 - Build different models with the involution layer.
 - Try building a different kernel generation method altogether.
 
-You can use the trained model hosted on [Hugging Face Hub](https://huggingface.co/keras-io/involution) and try the demo on [Hugging Face Spaces](https://huggingface.co/spaces/keras-io/involution).
+You can use the trained model hosted on [Hugging Face Hub](https://huggingface.co/keras-io/involution)
+and try the demo on [Hugging Face Spaces](https://huggingface.co/spaces/keras-io/involution).

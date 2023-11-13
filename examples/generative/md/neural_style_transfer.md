@@ -41,10 +41,14 @@ keeping the generated image close enough to the original one.
 
 
 ```python
+import os
+
+os.environ["KERAS_BACKEND"] = "tensorflow"
+
+import keras
 import numpy as np
 import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras.applications import vgg19
+from keras.applications import vgg19
 
 base_image_path = keras.utils.get_file("paris.jpg", "https://i.imgur.com/F28w3Ac.jpg")
 style_reference_image_path = keras.utils.get_file(
@@ -66,11 +70,9 @@ img_ncols = int(width * img_nrows / height)
 <div class="k-default-codeblock">
 ```
 Downloading data from https://i.imgur.com/F28w3Ac.jpg
-106496/102437 [===============================] - 0s 0us/step
-114688/102437 [=================================] - 0s 0us/step
+ 102437/102437 ━━━━━━━━━━━━━━━━━━━━ 0s 0us/step
 Downloading data from https://i.imgur.com/9ooB60I.jpg
-942080/935806 [==============================] - 0s 0us/step
-950272/935806 [==============================] - 0s 0us/step
+ 935806/935806 ━━━━━━━━━━━━━━━━━━━━ 0s 0us/step
 
 ```
 </div>
@@ -105,9 +107,7 @@ display(Image(style_reference_image_path))
 
 def preprocess_image(image_path):
     # Util function to open, resize and format pictures into appropriate tensors
-    img = keras.utils.load_img(
-        image_path, target_size=(img_nrows, img_ncols)
-    )
+    img = keras.utils.load_img(image_path, target_size=(img_nrows, img_ncols))
     img = keras.utils.img_to_array(img)
     img = np.expand_dims(img, axis=0)
     img = vgg19.preprocess_input(img)
@@ -211,8 +211,7 @@ feature_extractor = keras.Model(inputs=model.inputs, outputs=outputs_dict)
 <div class="k-default-codeblock">
 ```
 Downloading data from https://storage.googleapis.com/tensorflow/keras-applications/vgg19/vgg19_weights_tf_dim_ordering_tf_kernels_notop.h5
-80142336/80134624 [==============================] - 1s 0us/step
-80150528/80134624 [==============================] - 1s 0us/step
+ 80134624/80134624 ━━━━━━━━━━━━━━━━━━━━ 2s 0us/step
 
 ```
 </div>
@@ -314,46 +313,46 @@ for i in range(1, iterations + 1):
 
 <div class="k-default-codeblock">
 ```
-Iteration 100: loss=11021.84
-Iteration 200: loss=8516.83
-Iteration 300: loss=7572.59
-Iteration 400: loss=7062.75
-Iteration 500: loss=6734.12
-Iteration 600: loss=6498.55
-Iteration 700: loss=6319.12
-Iteration 800: loss=6176.68
-Iteration 900: loss=6060.16
-Iteration 1000: loss=5962.53
-Iteration 1100: loss=5879.59
-Iteration 1200: loss=5808.41
-Iteration 1300: loss=5746.57
-Iteration 1400: loss=5692.11
-Iteration 1500: loss=5643.77
-Iteration 1600: loss=5600.53
-Iteration 1700: loss=5561.75
-Iteration 1800: loss=5526.84
-Iteration 1900: loss=5495.23
-Iteration 2000: loss=5466.59
-Iteration 2100: loss=5440.56
-Iteration 2200: loss=5416.80
-Iteration 2300: loss=5395.01
-Iteration 2400: loss=5375.02
-Iteration 2500: loss=5356.57
-Iteration 2600: loss=5339.50
-Iteration 2700: loss=5323.70
-Iteration 2800: loss=5309.09
-Iteration 2900: loss=5295.48
-Iteration 3000: loss=5282.80
-Iteration 3100: loss=5270.98
-Iteration 3200: loss=5259.91
-Iteration 3300: loss=5249.54
-Iteration 3400: loss=5239.84
-Iteration 3500: loss=5230.77
-Iteration 3600: loss=5222.23
-Iteration 3700: loss=5214.22
-Iteration 3800: loss=5206.67
-Iteration 3900: loss=5199.56
-Iteration 4000: loss=5192.88
+Iteration 100: loss=11021.63
+Iteration 200: loss=8516.82
+Iteration 300: loss=7572.36
+Iteration 400: loss=7062.23
+Iteration 500: loss=6733.57
+Iteration 600: loss=6498.27
+Iteration 700: loss=6319.11
+Iteration 800: loss=6176.94
+Iteration 900: loss=6060.49
+Iteration 1000: loss=5963.24
+Iteration 1100: loss=5880.51
+Iteration 1200: loss=5809.23
+Iteration 1300: loss=5747.35
+Iteration 1400: loss=5692.95
+Iteration 1500: loss=5644.84
+Iteration 1600: loss=5601.82
+Iteration 1700: loss=5563.18
+Iteration 1800: loss=5528.38
+Iteration 1900: loss=5496.89
+Iteration 2000: loss=5468.20
+Iteration 2100: loss=5441.97
+Iteration 2200: loss=5418.02
+Iteration 2300: loss=5396.11
+Iteration 2400: loss=5376.00
+Iteration 2500: loss=5357.49
+Iteration 2600: loss=5340.36
+Iteration 2700: loss=5324.49
+Iteration 2800: loss=5309.77
+Iteration 2900: loss=5296.08
+Iteration 3000: loss=5283.33
+Iteration 3100: loss=5271.47
+Iteration 3200: loss=5260.39
+Iteration 3300: loss=5250.02
+Iteration 3400: loss=5240.29
+Iteration 3500: loss=5231.18
+Iteration 3600: loss=5222.65
+Iteration 3700: loss=5214.61
+Iteration 3800: loss=5207.08
+Iteration 3900: loss=5199.98
+Iteration 4000: loss=5193.27
 
 ```
 </div>
@@ -371,6 +370,6 @@ display(Image(result_prefix + "_at_iteration_4000.png"))
 
 
 **Example available on HuggingFace**
-Trained Model | Demo 
---- | --- 
-[![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Model-Neural%20style%20transfer-black.svg)](https://huggingface.co/keras-io/VGG19) | [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Spaces-Neural%20style%20transfer-black.svg)](https://huggingface.co/spaces/keras-io/neural-style-transfer) 
+Trained Model | Demo
+--- | ---
+[![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Model-Neural%20style%20transfer-black.svg)](https://huggingface.co/keras-io/VGG19) | [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Spaces-Neural%20style%20transfer-black.svg)](https://huggingface.co/spaces/keras-io/neural-style-transfer)

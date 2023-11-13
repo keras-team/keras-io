@@ -2,7 +2,7 @@
 
 **Author:** [fchollet](https://twitter.com/fchollet)<br>
 **Date created:** 2020/04/27<br>
-**Last modified:** 2022/11/10<br>
+**Last modified:** 2023/11/09<br>
 **Description:** Training an image classifier from scratch on the Kaggle Cats vs Dogs dataset.
 
 
@@ -16,7 +16,7 @@
 This example shows how to do image classification from scratch, starting from JPEG
 image files on disk, without leveraging pre-trained weights or a pre-made Keras
 Application model. We demonstrate the workflow on the Kaggle Cats vs Dogs binary
- classification dataset.
+classification dataset.
 
 We use the `image_dataset_from_directory` utility to generate the datasets, and
 we use Keras image preprocessing layers for image standardization and data augmentation.
@@ -26,9 +26,12 @@ we use Keras image preprocessing layers for image standardization and data augme
 
 
 ```python
-import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras import layers
+import os
+import numpy as np
+import keras
+from keras import layers
+from tensorflow import data as tf_data
+import matplotlib.pyplot as plt
 ```
 
 ---
@@ -51,7 +54,7 @@ First, let's download the 786M ZIP archive of the raw data:
 ```
   % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
                                  Dload  Upload   Total   Spent    Left  Speed
-100  786M  100  786M    0     0   182M      0  0:00:04  0:00:04 --:--:--  195M
+100  786M  100  786M    0     0  73.1M      0  0:00:10  0:00:10 --:--:-- 68.0M
 
  CDLA-Permissive-2.0.pdf		   kagglecatsanddogs_5340.zip
  PetImages				  'readme[1].txt'
@@ -60,7 +63,7 @@ First, let's download the 786M ZIP archive of the raw data:
 ```
 </div>
 Now we have a `PetImages` folder which contain two subfolders, `Cat` and `Dog`. Each
- subfolder contains image files for each category.
+subfolder contains image files for each category.
 
 
 ```python
@@ -81,8 +84,6 @@ in their header.
 
 
 ```python
-import os
-
 num_skipped = 0
 for folder_name in ("Cat", "Dog"):
     folder_path = os.path.join("PetImages", folder_name)
@@ -90,7 +91,7 @@ for folder_name in ("Cat", "Dog"):
         fpath = os.path.join(folder_path, fname)
         try:
             fobj = open(fpath, "rb")
-            is_jfif = tf.compat.as_bytes("JFIF") in fobj.peek(10)
+            is_jfif = b"JFIF" in fobj.peek(10)
         finally:
             fobj.close()
 
@@ -99,12 +100,12 @@ for folder_name in ("Cat", "Dog"):
             # Delete corrupted image
             os.remove(fpath)
 
-print("Deleted %d images" % num_skipped)
+print(f"Deleted {num_skipped} images.")
 ```
 
 <div class="k-default-codeblock">
 ```
-Deleted 1590 images
+Deleted 1590 images.
 
 ```
 </div>
@@ -116,7 +117,7 @@ Deleted 1590 images
 image_size = (180, 180)
 batch_size = 128
 
-train_ds, val_ds = tf.keras.utils.image_dataset_from_directory(
+train_ds, val_ds = keras.utils.image_dataset_from_directory(
     "PetImages",
     validation_split=0.2,
     subset="both",
@@ -137,18 +138,16 @@ Using 4682 files for validation.
 ---
 ## Visualize the data
 
-Here are the first 9 images in the training dataset. As you can see, label 1 is "dog"
-and label 0 is "cat".
+Here are the first 9 images in the training dataset.
 
 
 ```python
-import matplotlib.pyplot as plt
 
 plt.figure(figsize=(10, 10))
 for images, labels in train_ds.take(1):
     for i in range(9):
         ax = plt.subplot(3, 3, i + 1)
-        plt.imshow(images[i].numpy().astype("uint8"))
+        plt.imshow(np.array(images[i]).astype("uint8"))
         plt.title(int(labels[i]))
         plt.axis("off")
 ```
@@ -175,16 +174,21 @@ overfitting.
 
 
 ```python
-data_augmentation = keras.Sequential(
-    [
-        layers.RandomFlip("horizontal"),
-        layers.RandomRotation(0.1),
-    ]
-)
+data_augmentation_layers = [
+    layers.RandomFlip("horizontal"),
+    layers.RandomRotation(0.1),
+]
+
+
+def data_augmentation(images):
+    for layer in data_augmentation_layers:
+        images = layer(images)
+    return images
+
 ```
 
 Let's visualize what the augmented samples look like, by applying `data_augmentation`
-repeatedly to the first image in the dataset:
+repeatedly to the first few images in the dataset:
 
 
 ```python
@@ -193,11 +197,21 @@ for images, _ in train_ds.take(1):
     for i in range(9):
         augmented_images = data_augmentation(images)
         ax = plt.subplot(3, 3, i + 1)
-        plt.imshow(augmented_images[0].numpy().astype("uint8"))
+        plt.imshow(np.array(augmented_images[0]).astype("uint8"))
         plt.axis("off")
+
 ```
+
+<div class="k-default-codeblock">
+```
+Corrupt JPEG data: 2226 extraneous bytes before marker 0xd9
+
+```
+</div>
     
-![png](/img/examples/vision/image_classification_from_scratch/image_classification_from_scratch_18_2.png)
+![png](/img/examples/vision/image_classification_from_scratch/image_classification_from_scratch_18_1.png)
+    
+
 
 ---
 ## Standardizing the data
@@ -261,11 +275,11 @@ having I/O becoming blocking:
 # Apply `data_augmentation` to the training images.
 train_ds = train_ds.map(
     lambda img, label: (data_augmentation(img), label),
-    num_parallel_calls=tf.data.AUTOTUNE,
+    num_parallel_calls=tf_data.AUTOTUNE,
 )
 # Prefetching samples in GPU memory helps maximize GPU utilization.
-train_ds = train_ds.prefetch(tf.data.AUTOTUNE)
-val_ds = val_ds.prefetch(tf.data.AUTOTUNE)
+train_ds = train_ds.prefetch(tf_data.AUTOTUNE)
+val_ds = val_ds.prefetch(tf_data.AUTOTUNE)
 ```
 
 ---
@@ -320,14 +334,13 @@ def make_model(input_shape, num_classes):
 
     x = layers.GlobalAveragePooling2D()(x)
     if num_classes == 2:
-        activation = "sigmoid"
         units = 1
     else:
-        activation = "softmax"
         units = num_classes
 
-    x = layers.Dropout(0.5)(x)
-    outputs = layers.Dense(units, activation=activation)(x)
+    x = layers.Dropout(0.25)(x)
+    # We specify activation=None so as to return logits
+    outputs = layers.Dense(units, activation=None)(x)
     return keras.Model(inputs, outputs)
 
 
@@ -335,9 +348,12 @@ model = make_model(input_shape=image_size + (3,), num_classes=2)
 keras.utils.plot_model(model, show_shapes=True)
 ```
 
-![png](/img/examples/vision/image_classification_from_scratch/image_classification_from_scratch_24_0.png)
-    
+<div class="k-default-codeblock">
+```
+You must install graphviz (see instructions at https://graphviz.gitlab.io/download/) for `plot_model` to work.
 
+```
+</div>
 ---
 ## Train the model
 
@@ -349,9 +365,9 @@ callbacks = [
     keras.callbacks.ModelCheckpoint("save_at_{epoch}.keras"),
 ]
 model.compile(
-    optimizer=keras.optimizers.Adam(1e-3),
-    loss="binary_crossentropy",
-    metrics=["accuracy"],
+    optimizer=keras.optimizers.Adam(3e-4),
+    loss=keras.losses.BinaryCrossentropy(from_logits=True),
+    metrics=[keras.metrics.BinaryAccuracy(name="acc")],
 )
 model.fit(
     train_ds,
@@ -364,57 +380,11 @@ model.fit(
 <div class="k-default-codeblock">
 ```
 Epoch 1/25
-147/147 [==============================] - 116s 746ms/step - loss: 0.6531 - accuracy: 0.6416 - val_loss: 0.7669 - val_accuracy: 0.4957
-Epoch 2/25
-147/147 [==============================] - 109s 737ms/step - loss: 0.5026 - accuracy: 0.7559 - val_loss: 1.3825 - val_accuracy: 0.4957
-Epoch 3/25
-147/147 [==============================] - 109s 738ms/step - loss: 0.3928 - accuracy: 0.8243 - val_loss: 1.6816 - val_accuracy: 0.4957
-Epoch 4/25
-147/147 [==============================] - 109s 736ms/step - loss: 0.3307 - accuracy: 0.8588 - val_loss: 0.5025 - val_accuracy: 0.7520
-Epoch 5/25
-147/147 [==============================] - 109s 734ms/step - loss: 0.2758 - accuracy: 0.8860 - val_loss: 0.3462 - val_accuracy: 0.8545
-Epoch 6/25
-147/147 [==============================] - 109s 735ms/step - loss: 0.2357 - accuracy: 0.9023 - val_loss: 0.2712 - val_accuracy: 0.8825
-Epoch 7/25
-147/147 [==============================] - 109s 734ms/step - loss: 0.2011 - accuracy: 0.9201 - val_loss: 0.2131 - val_accuracy: 0.9135
-Epoch 8/25
-147/147 [==============================] - 109s 735ms/step - loss: 0.1787 - accuracy: 0.9275 - val_loss: 0.1969 - val_accuracy: 0.9227
-Epoch 9/25
-147/147 [==============================] - 109s 734ms/step - loss: 0.1650 - accuracy: 0.9321 - val_loss: 0.2306 - val_accuracy: 0.9178
-Epoch 10/25
-147/147 [==============================] - 109s 734ms/step - loss: 0.1474 - accuracy: 0.9408 - val_loss: 0.2430 - val_accuracy: 0.9107
-Epoch 11/25
-147/147 [==============================] - 109s 735ms/step - loss: 0.1352 - accuracy: 0.9461 - val_loss: 0.2783 - val_accuracy: 0.8768
-Epoch 12/25
-147/147 [==============================] - 109s 734ms/step - loss: 0.1291 - accuracy: 0.9474 - val_loss: 0.4632 - val_accuracy: 0.8419
-Epoch 13/25
-147/147 [==============================] - 109s 735ms/step - loss: 0.1208 - accuracy: 0.9521 - val_loss: 0.3907 - val_accuracy: 0.8456
-Epoch 14/25
-147/147 [==============================] - 110s 739ms/step - loss: 0.1162 - accuracy: 0.9553 - val_loss: 0.1503 - val_accuracy: 0.9417
-Epoch 15/25
-147/147 [==============================] - 109s 735ms/step - loss: 0.1037 - accuracy: 0.9598 - val_loss: 0.1484 - val_accuracy: 0.9406
-Epoch 16/25
-147/147 [==============================] - 109s 734ms/step - loss: 0.1018 - accuracy: 0.9605 - val_loss: 0.2480 - val_accuracy: 0.9054
-Epoch 17/25
-147/147 [==============================] - 109s 739ms/step - loss: 0.0949 - accuracy: 0.9629 - val_loss: 0.1585 - val_accuracy: 0.9378
-Epoch 18/25
-147/147 [==============================] - 109s 736ms/step - loss: 0.0941 - accuracy: 0.9622 - val_loss: 0.1452 - val_accuracy: 0.9432
-Epoch 19/25
-147/147 [==============================] - 109s 734ms/step - loss: 0.0862 - accuracy: 0.9668 - val_loss: 0.2644 - val_accuracy: 0.8904
-Epoch 20/25
-147/147 [==============================] - 109s 734ms/step - loss: 0.0889 - accuracy: 0.9656 - val_loss: 0.2335 - val_accuracy: 0.9182
-Epoch 21/25
-147/147 [==============================] - 109s 735ms/step - loss: 0.0792 - accuracy: 0.9687 - val_loss: 0.5037 - val_accuracy: 0.8751
-Epoch 22/25
-147/147 [==============================] - 109s 734ms/step - loss: 0.0651 - accuracy: 0.9737 - val_loss: 0.1103 - val_accuracy: 0.9551
-Epoch 23/25
-147/147 [==============================] - 109s 735ms/step - loss: 0.0641 - accuracy: 0.9751 - val_loss: 0.1846 - val_accuracy: 0.9299
-Epoch 24/25
-147/147 [==============================] - 109s 735ms/step - loss: 0.0709 - accuracy: 0.9735 - val_loss: 0.1151 - val_accuracy: 0.9575
+...
 Epoch 25/25
-147/147 [==============================] - 109s 737ms/step - loss: 0.0612 - accuracy: 0.9768 - val_loss: 0.1259 - val_accuracy: 0.9510
+ 147/147 ━━━━━━━━━━━━━━━━━━━━ 57s 378ms/step - acc: 0.9657 - loss: 0.0878 - val_acc: 0.9037 - val_loss: 0.2279
 
-<keras.callbacks.History at 0x7fd3941c87b8>
+<keras.src.callbacks.history.History at 0x7fd1a06f6f20>
 
 ```
 </div>
@@ -424,24 +394,29 @@ We get to >90% validation accuracy after training for 25 epochs on the full data
 ---
 ## Run inference on new data
 
+Note that data augmentation and dropout are inactive at inference time.
+
+
 ```python
-img = keras.utils.load_img(
-    "PetImages/Cat/6779.jpg", target_size=image_size
-)
+img = keras.utils.load_img("PetImages/Cat/6779.jpg", target_size=image_size)
 plt.imshow(img)
 
 img_array = keras.utils.img_to_array(img)
-img_array = tf.expand_dims(img_array, 0)  # Create batch axis
+img_array = keras.ops.expand_dims(img_array, 0)  # Create batch axis
 
 predictions = model.predict(img_array)
-score = float(predictions[0])
+score = float(keras.ops.sigmoid(predictions[0][0]))
 print(f"This image is {100 * (1 - score):.2f}% cat and {100 * score:.2f}% dog.")
 ```
 
 <div class="k-default-codeblock">
 ```
-1/1 [==============================] - 0s 446ms/step
-This image is 85.28% cat and 14.72% dog.
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 2s 2s/step
+This image is 87.42% cat and 12.58% dog.
 
 ```
 </div>
+    
+![png](/img/examples/vision/image_classification_from_scratch/image_classification_from_scratch_29_2.png)
+    
+

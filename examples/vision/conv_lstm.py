@@ -2,7 +2,7 @@
 Title: Next-Frame Video Prediction with Convolutional LSTMs
 Author: [Amogh Joshi](https://github.com/amogh7joshi)
 Date created: 2021/06/02
-Last modified: 2021/06/05
+Last modified: 2023/11/10
 Description: How to build and train a convolutional LSTM model for next-frame video prediction.
 Accelerator: GPU
 """
@@ -25,9 +25,8 @@ of predicting what video frames come next given a series of past frames.
 import numpy as np
 import matplotlib.pyplot as plt
 
-import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras import layers
+import keras
+from keras import layers
 
 import io
 import imageio
@@ -279,7 +278,7 @@ for example in examples:
 
         # Construct a GIF from the frames.
         with io.BytesIO() as gif:
-            imageio.mimsave(gif, current_frames, "GIF", fps=5)
+            imageio.mimsave(gif, current_frames, "GIF", duration=200)
             predicted_videos.append(gif.getvalue())
 
 # Display the videos.

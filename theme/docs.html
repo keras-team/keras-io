@@ -21,9 +21,18 @@
               document.getElementById("nav-menu").style.display = "block";
               document.getElementById("dropdown-nav").style.display = "none";
             }
+
+            var navmenu = document.getElementById("nav-menu");
+            var menuheight = navmenu.clientHeight;
+            var kmain = document.getElementById("k-main-id");
+            kmain.style.minHeight = (menuheight + 100) + 'px';
           }
 
           window.onresize = resetMobileUI;
+
+          window.addEventListener("load", (event) => {
+            resetMobileUI()
+          });
         </script>
         <div id='dropdown-nav' onclick="displayDropdownMenu();">
           <svg viewBox="-20 -20 120 120" width="60" height="60">
@@ -50,7 +59,7 @@
         </script>
 
       </div>
-      <div class='k-main-inner'>
+      <div class='k-main-inner' id='k-main-id'>
         <div class='k-location-slug'>
             » {% for part in location_history %}
                 <a href='{{part.url}}'>{{part.title}}</a> /

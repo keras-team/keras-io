@@ -37,11 +37,14 @@ keeping the generated image close enough to the original one.
 """
 ## Setup
 """
+import os
 
+os.environ["KERAS_BACKEND"] = "tensorflow"
+
+import keras
 import numpy as np
 import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras.applications import vgg19
+from keras.applications import vgg19
 
 base_image_path = keras.utils.get_file("paris.jpg", "https://i.imgur.com/F28w3Ac.jpg")
 style_reference_image_path = keras.utils.get_file(
@@ -271,7 +274,7 @@ display(Image(result_prefix + "_at_iteration_4000.png"))
 
 """
 **Example available on HuggingFace**
-Trained Model | Demo 
---- | --- 
+Trained Model | Demo
+--- | ---
 [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Model-Neural%20style%20transfer-black.svg)](https://huggingface.co/keras-io/VGG19) | [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Spaces-Neural%20style%20transfer-black.svg)](https://huggingface.co/spaces/keras-io/neural-style-transfer)
 """

@@ -29,20 +29,47 @@ HuggingFace's datasets library which contains a processed version of this datase
 
 We also download the script used to evaluate NER models.
 
+
 ```python
 !pip3 install datasets
 !wget https://raw.githubusercontent.com/sighsmile/conlleval/master/conlleval.py
 ```
 
+<div class="k-default-codeblock">
+```
+Resolving raw.githubusercontent.com (raw.githubusercontent.com)... 185.199.108.133, 185.199.110.133, 185.199.111.133, ...
+Connecting to raw.githubusercontent.com (raw.githubusercontent.com)|185.199.108.133|:443... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: 7502 (7.3K) [text/plain]
+Saving to: ‘conlleval.py’
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+conlleval.py        100%[===================>]   7.33K  --.-KB/s    in 0s      
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+2023-11-10 16:58:25 (217 MB/s) - ‘conlleval.py’ saved [7502/7502]
+```
+</div>
+    
 
 
 
 ```python
 import os
+
+os.environ["KERAS_BACKEND"] = "tensorflow"
+
+import os
+import keras
 import numpy as np
 import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras import layers
+from keras import layers
 from datasets import load_dataset
 from collections import Counter
 from conlleval import evaluate
@@ -221,9 +248,7 @@ vocab_size = 20000
 vocabulary = [token for token, count in counter.most_common(vocab_size - 2)]
 
 # The StringLook class will convert tokens to token IDs
-lookup_layer = keras.layers.StringLookup(
-    vocabulary=vocabulary
-)
+lookup_layer = keras.layers.StringLookup(vocabulary=vocabulary)
 ```
 
 <div class="k-default-codeblock">
@@ -302,7 +327,7 @@ class CustomNonPaddingTokenLoss(keras.losses.Loss):
 
     def call(self, y_true, y_pred):
         loss_fn = keras.losses.SparseCategoricalCrossentropy(
-            from_logits=True, reduction=keras.losses.Reduction.NONE
+            from_logits=False, reduction=None
         )
         loss = loss_fn(y_true, y_pred)
         mask = tf.cast((y_true > 0), dtype=tf.float32)
@@ -345,26 +370,27 @@ print(prediction)
 <div class="k-default-codeblock">
 ```
 Epoch 1/10
-439/439 [==============================] - 13s 26ms/step - loss: 0.9300
+ 439/439 ━━━━━━━━━━━━━━━━━━━━ 300s 671ms/step - loss: 0.9260
 Epoch 2/10
-439/439 [==============================] - 11s 24ms/step - loss: 0.2997
+ 439/439 ━━━━━━━━━━━━━━━━━━━━ 1s 3ms/step - loss: 0.2909
 Epoch 3/10
-439/439 [==============================] - 11s 24ms/step - loss: 0.1544
+ 439/439 ━━━━━━━━━━━━━━━━━━━━ 1s 3ms/step - loss: 0.1589
 Epoch 4/10
-439/439 [==============================] - 11s 25ms/step - loss: 0.1129
+ 439/439 ━━━━━━━━━━━━━━━━━━━━ 1s 3ms/step - loss: 0.1176
 Epoch 5/10
-439/439 [==============================] - 11s 25ms/step - loss: 0.0875
+ 439/439 ━━━━━━━━━━━━━━━━━━━━ 1s 3ms/step - loss: 0.0941
 Epoch 6/10
-439/439 [==============================] - 11s 25ms/step - loss: 0.0696
+ 439/439 ━━━━━━━━━━━━━━━━━━━━ 1s 3ms/step - loss: 0.0747
 Epoch 7/10
-439/439 [==============================] - 11s 25ms/step - loss: 0.0597
+ 439/439 ━━━━━━━━━━━━━━━━━━━━ 1s 3ms/step - loss: 0.0597
 Epoch 8/10
-439/439 [==============================] - 11s 25ms/step - loss: 0.0509
+ 439/439 ━━━━━━━━━━━━━━━━━━━━ 1s 3ms/step - loss: 0.0534
 Epoch 9/10
-439/439 [==============================] - 11s 25ms/step - loss: 0.0461
+ 439/439 ━━━━━━━━━━━━━━━━━━━━ 1s 3ms/step - loss: 0.0459
 Epoch 10/10
-439/439 [==============================] - 11s 25ms/step - loss: 0.0408
-tf.Tensor([[  989 10951   205   629     7  3939   216  5774]], shape=(1, 8), dtype=int64)
+ 439/439 ━━━━━━━━━━━━━━━━━━━━ 1s 3ms/step - loss: 0.0408
+tf.Tensor([[  988 10950   204   628     6  3938   215  5773]], shape=(1, 8), dtype=int64)
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 1s 600ms/step
 ['B-ORG', 'O', 'B-MISC', 'O', 'O', 'O', 'B-MISC', 'O']
 
 ```
@@ -382,7 +408,7 @@ def calculate_metrics(dataset):
     all_true_tag_ids, all_predicted_tag_ids = [], []
 
     for x, y in dataset:
-        output = ner_model.predict(x)
+        output = ner_model.predict(x, verbose=0)
         predictions = np.argmax(output, axis=-1)
         predictions = np.reshape(predictions, [-1])
 
@@ -409,13 +435,13 @@ calculate_metrics(val_dataset)
 
 <div class="k-default-codeblock">
 ```
-processed 51362 tokens with 5942 phrases; found: 5504 phrases; correct: 3855.
-accuracy:  63.28%; (non-O)
-accuracy:  93.22%; precision:  70.04%; recall:  64.88%; FB1:  67.36
-              LOC: precision:  85.67%; recall:  78.12%; FB1:  81.72  1675
-             MISC: precision:  73.15%; recall:  65.29%; FB1:  69.00  823
-              ORG: precision:  56.05%; recall:  63.53%; FB1:  59.56  1520
-              PER: precision:  65.01%; recall:  52.44%; FB1:  58.05  1486
+processed 51362 tokens with 5942 phrases; found: 5659 phrases; correct: 3941.
+accuracy:  64.49%; (non-O)
+accuracy:  93.23%; precision:  69.64%; recall:  66.32%; FB1:  67.94
+              LOC: precision:  82.77%; recall:  79.26%; FB1:  80.98  1759
+             MISC: precision:  74.94%; recall:  68.11%; FB1:  71.36  838
+              ORG: precision:  55.94%; recall:  65.32%; FB1:  60.27  1566
+              PER: precision:  65.57%; recall:  53.26%; FB1:  58.78  1496
 
 ```
 </div>
@@ -428,4 +454,5 @@ State of the art NER models fine-tuned on pretrained models such as BERT or ELEC
 get much higher F1 score -between 90-95% on this dataset owing to the inherent knowledge
 of words as part of the pretraining process and the usage of subword tokenization.
 
-You can use the trained model hosted on [Hugging Face Hub](https://huggingface.co/keras-io/ner-with-transformers) and try the demo on [Hugging Face Spaces](https://huggingface.co/spaces/keras-io/ner_with_transformers).
+You can use the trained model hosted on [Hugging Face Hub](https://huggingface.co/keras-io/ner-with-transformers)
+and try the demo on [Hugging Face Spaces](https://huggingface.co/spaces/keras-io/ner_with_transformers)."""

@@ -4,14 +4,6 @@ USAGE:
 
 python autogen.py make
 python autogen.py serve
-
-DEPENDENCIES:
-
-pygments
-jinja2
-markdown
-requests
-mdx_truly_sane_lists
 """
 
 import shutil
@@ -26,7 +18,6 @@ import socketserver
 import signal
 import docstrings
 import jinja2
-import requests
 import multiprocessing
 import autogen_utils
 
@@ -51,11 +42,12 @@ except Exception as e:
 EXAMPLES_GH_LOCATION = Path("keras-team") / "keras-io" / "blob" / "master" / "examples"
 GUIDES_GH_LOCATION = Path("keras-team") / "keras-io" / "blob" / "master" / "guides"
 PROJECT_URL = {
-    "keras": "https://github.com/keras-team/keras/tree/v2.14.0/",
+    "keras": "https://github.com/keras-team/keras/tree/v3.0.0/",
     "keras_tuner": "https://github.com/keras-team/keras-tuner/tree/v1.4.5/",
     "keras_cv": "https://github.com/keras-team/keras-cv/tree/v0.6.4/",
     "keras_nlp": "https://github.com/keras-team/keras-nlp/tree/v0.6.2/",
     "keras_core": "https://github.com/keras-team/keras-core/tree/v0.1.7/",
+    "tf_keras": "https://github.com/keras-team/tf_keras/tree/v2.14.1/",
 }
 USE_MULTIPROCESSING = False
 
@@ -129,27 +121,6 @@ class KerasIO:
 
         # Recursively generate all md sources based on the MASTER tree
         self.make_md_source_for_entry(self.master, path_stack=[], title_stack=[])
-
-        # Pull some content from GitHub (governance, contributing)
-        # This enables us to keep a single source of truth for that content.
-        self.sync_external_readmes_to_sources()  # Overwrite e.g. sources/governance.md
-
-    def sync_external_readmes_to_sources(self):
-        # TODO keras-team/keras/CONTRIBUTING -> contributing.md
-
-        # keras-team/governance/README -> governance.md
-        r = requests.get(
-            "https://raw.githubusercontent.com/keras-team/"
-            "governance/master/README.md"
-        )
-        content = r.text
-        content = content[content.find("---\n") + 4 :]
-        content = content.replace("\n#", "\n##")
-        fpath = Path(self.md_sources_dir) / "governance.md"
-        md = open(fpath).read()
-        assert "{{sig_readme}}" in md
-        md = md.replace("{{sig_readme}}", content)
-        autogen_utils.save_file(fpath, md)
 
     def preprocess_tutobook_md_source(
         self, md_content, fname, github_repo_dir, img_dir, site_img_dir
@@ -458,6 +429,10 @@ class KerasIO:
         path_stack = []
 
         def make_nav_index_for_entry(entry, path_stack, max_depth):
+            if not isinstance(entry, dict):
+                raise ValueError(
+                    "Incorrectly formatted entry: "
+                    f"{entry}")
             path = entry["path"]
             if path != "/":
                 path_stack.append(path)
@@ -769,22 +744,6 @@ class KerasIO:
         )
         landing_page = landing_template.render({"base_url": self.url})
         autogen_utils.save_file(Path(self.site_dir) / "index.html", landing_page)
-
-        # Keras Core announcement page
-        keras_core_template = jinja2.Template(
-            open(Path(self.theme_dir) / "keras_core.html").read()
-        )
-        md_content = open(
-            Path(self.templates_dir) / "keras_core" / "announcement.md"
-        ).read()
-        content = autogen_utils.render_markdown_to_html(md_content)
-        keras_core_page = keras_core_template.render(
-            {"base_url": self.url, "content": content}
-        )
-        autogen_utils.save_file(
-            Path(self.site_dir) / "keras_core" / "announcement" / "index.html",
-            keras_core_page,
-        )
 
         # Search page
         search_main = open(Path(self.theme_dir) / "search.html").read()

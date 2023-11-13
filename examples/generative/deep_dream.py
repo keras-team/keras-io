@@ -35,11 +35,14 @@ and compare the result to the (resized) original image.
 """
 ## Setup
 """
+import os
+
+os.environ["KERAS_BACKEND"] = "tensorflow"
 
 import numpy as np
 import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras.applications import inception_v3
+import keras
+from keras.applications import inception_v3
 
 base_image_path = keras.utils.get_file("sky.jpg", "https://i.imgur.com/aGBdQyK.jpg")
 result_prefix = "sky_dream"

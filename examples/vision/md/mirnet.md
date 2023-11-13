@@ -2,13 +2,13 @@
 
 **Author:** [Soumik Rakshit](http://github.com/soumik12345)<br>
 **Date created:** 2021/09/11<br>
-**Last modified:** 2021/09/15<br>
+**Last modified:** 2023/07/15<br>
+**Description:** Implementing the MIRNet architecture for low-light image enhancement.
 
 
 <img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/vision/ipynb/mirnet.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/vision/mirnet.py)
 
 
-**Description:** Implementing the MIRNet architecture for low-light image enhancement.
 
 ---
 ## Introduction
@@ -37,33 +37,57 @@ consists of a low-light input image and its corresponding well-exposed reference
 
 ```python
 import os
-import cv2
+
+os.environ["KERAS_BACKEND"] = "tensorflow"
+
 import random
 import numpy as np
 from glob import glob
 from PIL import Image, ImageOps
 import matplotlib.pyplot as plt
 
+import keras
+from keras import layers
+
 import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras import layers
 ```
 
 
 ```python
-!gdown https://drive.google.com/uc?id=1DdGIJ4PZPlF2ikl8mNM9V-PdVxVLbQi6
-!unzip -q lol_dataset.zip
+!wget https://huggingface.co/datasets/geekyrakshit/LoL-Dataset/resolve/main/lol_dataset.zip
+!unzip -q lol_dataset.zip && rm lol_dataset.zip
 ```
 
 <div class="k-default-codeblock">
 ```
-Downloading...
-From: https://drive.google.com/uc?id=1DdGIJ4PZPlF2ikl8mNM9V-PdVxVLbQi6
-To: /content/keras-io/scripts/tmp_2614641/lol_dataset.zip
-347MB [00:03, 108MB/s]
-
+--2023-11-10 23:10:00--  https://huggingface.co/datasets/geekyrakshit/LoL-Dataset/resolve/main/lol_dataset.zip
+Resolving huggingface.co (huggingface.co)... 3.163.189.74, 3.163.189.37, 3.163.189.114, ...
+Connecting to huggingface.co (huggingface.co)|3.163.189.74|:443... connected.
+HTTP request sent, awaiting response... 302 Found
+Location: https://cdn-lfs.huggingface.co/repos/d9/09/d909ef7668bb417b7065a311bd55a3084cc83a1f918e13cb41c5503328432db2/419fddc48958cd0f5599939ee0248852a37ceb8bb738c9b9525e95b25a89de9a?response-content-disposition=attachment%3B+filename*%3DUTF-8%27%27lol_dataset.zip%3B+filename%3D%22lol_dataset.zip%22%3B&response-content-type=application%2Fzip&Expires=1699917000&Policy=eyJTdGF0ZW1lbnQiOlt7IkNvbmRpdGlvbiI6eyJEYXRlTGVzc1RoYW4iOnsiQVdTOkVwb2NoVGltZSI6MTY5OTkxNzAwMH19LCJSZXNvdXJjZSI6Imh0dHBzOi8vY2RuLWxmcy5odWdnaW5nZmFjZS5jby9yZXBvcy9kOS8wOS9kOTA5ZWY3NjY4YmI0MTdiNzA2NWEzMTFiZDU1YTMwODRjYzgzYTFmOTE4ZTEzY2I0MWM1NTAzMzI4NDMyZGIyLzQxOWZkZGM0ODk1OGNkMGY1NTk5OTM5ZWUwMjQ4ODUyYTM3Y2ViOGJiNzM4YzliOTUyNWU5NWIyNWE4OWRlOWE%7EcmVzcG9uc2UtY29udGVudC1kaXNwb3NpdGlvbj0qJnJlc3BvbnNlLWNvbnRlbnQtdHlwZT0qIn1dfQ__&Signature=xyZ1oUBOnWdy6-vCAFzqZsDMetsPu6OSluyOoTS%7EKRZ6lvAy8yUwQgp5WjcZGJ7Jnex0IdnsPiUzsxaxjM-eZjUcQGPdGj4WhSV5DUBxr8xkwTEospYSg1fX%7EE2I1KkP9gBsXvinsKIOAZzchbg9f28xxdlvTbZ0h4ndcUfbDPknwlU1CIZNa5qjU6NqLMH2bPQmI1AIVau2DgQC%7E1n2dgTZsMfHTVmoM2ivsAl%7E9XgQ3m247ke2aj5BmgssZF52VWKTE-vwYDtbuiem73pS6gS-dZlmXYPE1OSRr2tsDo1cgPEBBtuK3hEnYcOq8jjEZk3AEAbFAJoHKLVIERZ30g__&Key-Pair-Id=KVTP0A1DKRTAX [following]
+--2023-11-10 23:10:00--  https://cdn-lfs.huggingface.co/repos/d9/09/d909ef7668bb417b7065a311bd55a3084cc83a1f918e13cb41c5503328432db2/419fddc48958cd0f5599939ee0248852a37ceb8bb738c9b9525e95b25a89de9a?response-content-disposition=attachment%3B+filename*%3DUTF-8%27%27lol_dataset.zip%3B+filename%3D%22lol_dataset.zip%22%3B&response-content-type=application%2Fzip&Expires=1699917000&Policy=eyJTdGF0ZW1lbnQiOlt7IkNvbmRpdGlvbiI6eyJEYXRlTGVzc1RoYW4iOnsiQVdTOkVwb2NoVGltZSI6MTY5OTkxNzAwMH19LCJSZXNvdXJjZSI6Imh0dHBzOi8vY2RuLWxmcy5odWdnaW5nZmFjZS5jby9yZXBvcy9kOS8wOS9kOTA5ZWY3NjY4YmI0MTdiNzA2NWEzMTFiZDU1YTMwODRjYzgzYTFmOTE4ZTEzY2I0MWM1NTAzMzI4NDMyZGIyLzQxOWZkZGM0ODk1OGNkMGY1NTk5OTM5ZWUwMjQ4ODUyYTM3Y2ViOGJiNzM4YzliOTUyNWU5NWIyNWE4OWRlOWE%7EcmVzcG9uc2UtY29udGVudC1kaXNwb3NpdGlvbj0qJnJlc3BvbnNlLWNvbnRlbnQtdHlwZT0qIn1dfQ__&Signature=xyZ1oUBOnWdy6-vCAFzqZsDMetsPu6OSluyOoTS%7EKRZ6lvAy8yUwQgp5WjcZGJ7Jnex0IdnsPiUzsxaxjM-eZjUcQGPdGj4WhSV5DUBxr8xkwTEospYSg1fX%7EE2I1KkP9gBsXvinsKIOAZzchbg9f28xxdlvTbZ0h4ndcUfbDPknwlU1CIZNa5qjU6NqLMH2bPQmI1AIVau2DgQC%7E1n2dgTZsMfHTVmoM2ivsAl%7E9XgQ3m247ke2aj5BmgssZF52VWKTE-vwYDtbuiem73pS6gS-dZlmXYPE1OSRr2tsDo1cgPEBBtuK3hEnYcOq8jjEZk3AEAbFAJoHKLVIERZ30g__&Key-Pair-Id=KVTP0A1DKRTAX
+Resolving cdn-lfs.huggingface.co (cdn-lfs.huggingface.co)... 108.138.94.122, 108.138.94.14, 108.138.94.25, ...
+Connecting to cdn-lfs.huggingface.co (cdn-lfs.huggingface.co)|108.138.94.122|:443... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: 347171015 (331M) [application/zip]
+Saving to: ‘lol_dataset.zip’
 ```
 </div>
+    
+<div class="k-default-codeblock">
+```
+lol_dataset.zip     100%[===================>] 331.09M   316MB/s    in 1.0s    
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+2023-11-10 23:10:01 (316 MB/s) - ‘lol_dataset.zip’ saved [347171015/347171015]
+```
+</div>
+    
+
+
 ---
 ## Creating a TensorFlow Dataset
 
@@ -97,14 +121,15 @@ def random_crop(low_image, enhanced_image):
     low_h = tf.random.uniform(
         shape=(), maxval=low_image_shape[0] - IMAGE_SIZE + 1, dtype=tf.int32
     )
-    enhanced_w = low_w
-    enhanced_h = low_h
     low_image_cropped = low_image[
         low_h : low_h + IMAGE_SIZE, low_w : low_w + IMAGE_SIZE
     ]
     enhanced_image_cropped = enhanced_image[
-        enhanced_h : enhanced_h + IMAGE_SIZE, enhanced_w : enhanced_w + IMAGE_SIZE
+        low_h : low_h + IMAGE_SIZE, low_w : low_w + IMAGE_SIZE
     ]
+    # in order to avoid `NONE` during shape inference
+    low_image_cropped.set_shape([IMAGE_SIZE, IMAGE_SIZE, 3])
+    enhanced_image_cropped.set_shape([IMAGE_SIZE, IMAGE_SIZE, 3])
     return low_image_cropped, enhanced_image_cropped
 
 
@@ -136,14 +161,14 @@ train_dataset = get_dataset(train_low_light_images, train_enhanced_images)
 val_dataset = get_dataset(val_low_light_images, val_enhanced_images)
 
 
-print("Train Dataset:", train_dataset)
-print("Val Dataset:", val_dataset)
+print("Train Dataset:", train_dataset.element_spec)
+print("Val Dataset:", val_dataset.element_spec)
 ```
 
 <div class="k-default-codeblock">
 ```
-Train Dataset: <BatchDataset shapes: ((4, None, None, 3), (4, None, None, 3)), types: (tf.float32, tf.float32)>
-Val Dataset: <BatchDataset shapes: ((4, None, None, 3), (4, None, None, 3)), types: (tf.float32, tf.float32)>
+Train Dataset: (TensorSpec(shape=(4, 128, 128, 3), dtype=tf.float32, name=None), TensorSpec(shape=(4, 128, 128, 3), dtype=tf.float32, name=None))
+Val Dataset: (TensorSpec(shape=(4, 128, 128, 3), dtype=tf.float32, name=None), TensorSpec(shape=(4, 128, 128, 3), dtype=tf.float32, name=None))
 
 ```
 </div>
@@ -201,7 +226,7 @@ def selective_kernel_feature_fusion(
         [multi_scale_feature_1, multi_scale_feature_2, multi_scale_feature_3]
     )
     gap = layers.GlobalAveragePooling2D()(combined_feature)
-    channel_wise_statistics = tf.reshape(gap, shape=(-1, 1, 1, channels))
+    channel_wise_statistics = layers.Reshape((1, 1, channels))(gap)
     compact_feature_representation = layers.Conv2D(
         filters=channels // 8, kernel_size=(1, 1), activation="relu"
     )(channel_wise_statistics)
@@ -254,21 +279,33 @@ then used to rescale the input feature map.
 
 ```python
 
+class ChannelPooling(layers.Layer):
+    def __init__(self, axis=-1, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.axis = axis
+        self.concat = layers.Concatenate(axis=self.axis)
+
+    def call(self, inputs):
+        average_pooling = tf.expand_dims(tf.reduce_mean(inputs, axis=-1), axis=-1)
+        max_pooling = tf.expand_dims(tf.reduce_max(inputs, axis=-1), axis=-1)
+        return self.concat([average_pooling, max_pooling])
+
+    def get_config(self):
+        config = super().get_config()
+        config.update({"axis": self.axis})
+
+
 def spatial_attention_block(input_tensor):
-    average_pooling = tf.reduce_max(input_tensor, axis=-1)
-    average_pooling = tf.expand_dims(average_pooling, axis=-1)
-    max_pooling = tf.reduce_mean(input_tensor, axis=-1)
-    max_pooling = tf.expand_dims(max_pooling, axis=-1)
-    concatenated = layers.Concatenate(axis=-1)([average_pooling, max_pooling])
-    feature_map = layers.Conv2D(1, kernel_size=(1, 1))(concatenated)
-    feature_map = tf.nn.sigmoid(feature_map)
+    compressed_feature_map = ChannelPooling(axis=-1)(input_tensor)
+    feature_map = layers.Conv2D(1, kernel_size=(1, 1))(compressed_feature_map)
+    feature_map = keras.activations.sigmoid(feature_map)
     return input_tensor * feature_map
 
 
 def channel_attention_block(input_tensor):
     channels = list(input_tensor.shape)[-1]
     average_pooling = layers.GlobalAveragePooling2D()(input_tensor)
-    feature_descriptor = tf.reshape(average_pooling, shape=(-1, 1, 1, channels))
+    feature_descriptor = layers.Reshape((1, 1, channels))(average_pooling)
     feature_activations = layers.Conv2D(
         filters=channels // 8, kernel_size=(1, 1), activation="relu"
     )(feature_descriptor)
@@ -361,7 +398,9 @@ def multi_scale_residual_block(input_tensor, channels):
         up_sampling_module(up_sampling_module(level3_dau)),
     )
     level2_skff = selective_kernel_feature_fusion(
-        down_sampling_module(level1_dau), level2_dau, up_sampling_module(level3_dau)
+        down_sampling_module(level1_dau),
+        level2_dau,
+        up_sampling_module(level3_dau),
     )
     level3_skff = selective_kernel_feature_fusion(
         down_sampling_module(down_sampling_module(level1_dau)),
@@ -429,7 +468,9 @@ def peak_signal_noise_ratio(y_true, y_pred):
 
 optimizer = keras.optimizers.Adam(learning_rate=1e-4)
 model.compile(
-    optimizer=optimizer, loss=charbonnier_loss, metrics=[peak_signal_noise_ratio]
+    optimizer=optimizer,
+    loss=charbonnier_loss,
+    metrics=[peak_signal_noise_ratio],
 )
 
 history = model.fit(
@@ -448,172 +489,150 @@ history = model.fit(
     ],
 )
 
-plt.plot(history.history["loss"], label="train_loss")
-plt.plot(history.history["val_loss"], label="val_loss")
-plt.xlabel("Epochs")
-plt.ylabel("Loss")
-plt.title("Train and Validation Losses Over Epochs", fontsize=14)
-plt.legend()
-plt.grid()
-plt.show()
+
+def plot_history(value, name):
+    plt.plot(history.history[value], label=f"train_{name.lower()}")
+    plt.plot(history.history[f"val_{value}"], label=f"val_{name.lower()}")
+    plt.xlabel("Epochs")
+    plt.ylabel(name)
+    plt.title(f"Train and Validation {name} Over Epochs", fontsize=14)
+    plt.legend()
+    plt.grid()
+    plt.show()
 
 
-plt.plot(history.history["peak_signal_noise_ratio"], label="train_psnr")
-plt.plot(history.history["val_peak_signal_noise_ratio"], label="val_psnr")
-plt.xlabel("Epochs")
-plt.ylabel("PSNR")
-plt.title("Train and Validation PSNR Over Epochs", fontsize=14)
-plt.legend()
-plt.grid()
-plt.show()
+plot_history("loss", "Loss")
+plot_history("peak_signal_noise_ratio", "PSNR")
 ```
 
 <div class="k-default-codeblock">
 ```
 Epoch 1/50
-75/75 [==============================] - 109s 731ms/step - loss: 0.2125 - peak_signal_noise_ratio: 62.0458 - val_loss: 0.1592 - val_peak_signal_noise_ratio: 64.1833
+
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1699658204.480352   77759 device_compiler.h:187] Compiled cluster using XLA!  This line is logged at most once for the lifetime of the process.
+
+ 75/75 ━━━━━━━━━━━━━━━━━━━━ 445s 686ms/step - loss: 0.2162 - peak_signal_noise_ratio: 61.5549 - val_loss: 0.1358 - val_peak_signal_noise_ratio: 65.2699 - learning_rate: 1.0000e-04
 Epoch 2/50
-75/75 [==============================] - 49s 651ms/step - loss: 0.1764 - peak_signal_noise_ratio: 63.1356 - val_loss: 0.1257 - val_peak_signal_noise_ratio: 65.6498
+ 75/75 ━━━━━━━━━━━━━━━━━━━━ 29s 385ms/step - loss: 0.1745 - peak_signal_noise_ratio: 63.1785 - val_loss: 0.1237 - val_peak_signal_noise_ratio: 65.8360 - learning_rate: 1.0000e-04
 Epoch 3/50
-75/75 [==============================] - 49s 652ms/step - loss: 0.1724 - peak_signal_noise_ratio: 63.3172 - val_loss: 0.1245 - val_peak_signal_noise_ratio: 65.6902
+ 75/75 ━━━━━━━━━━━━━━━━━━━━ 29s 386ms/step - loss: 0.1681 - peak_signal_noise_ratio: 63.4903 - val_loss: 0.1205 - val_peak_signal_noise_ratio: 65.9048 - learning_rate: 1.0000e-04
 Epoch 4/50
-75/75 [==============================] - 49s 653ms/step - loss: 0.1670 - peak_signal_noise_ratio: 63.4917 - val_loss: 0.1206 - val_peak_signal_noise_ratio: 65.8893
+ 75/75 ━━━━━━━━━━━━━━━━━━━━ 29s 385ms/step - loss: 0.1668 - peak_signal_noise_ratio: 63.4793 - val_loss: 0.1185 - val_peak_signal_noise_ratio: 66.0290 - learning_rate: 1.0000e-04
 Epoch 5/50
-75/75 [==============================] - 49s 653ms/step - loss: 0.1651 - peak_signal_noise_ratio: 63.6555 - val_loss: 0.1333 - val_peak_signal_noise_ratio: 65.6338
+ 75/75 ━━━━━━━━━━━━━━━━━━━━ 29s 383ms/step - loss: 0.1564 - peak_signal_noise_ratio: 63.9205 - val_loss: 0.1217 - val_peak_signal_noise_ratio: 66.1207 - learning_rate: 1.0000e-04
 Epoch 6/50
-75/75 [==============================] - 49s 654ms/step - loss: 0.1572 - peak_signal_noise_ratio: 64.1984 - val_loss: 0.1142 - val_peak_signal_noise_ratio: 66.7711
+ 75/75 ━━━━━━━━━━━━━━━━━━━━ 29s 384ms/step - loss: 0.1601 - peak_signal_noise_ratio: 63.9336 - val_loss: 0.1166 - val_peak_signal_noise_ratio: 66.6102 - learning_rate: 1.0000e-04
 Epoch 7/50
-75/75 [==============================] - 49s 654ms/step - loss: 0.1592 - peak_signal_noise_ratio: 64.0062 - val_loss: 0.1205 - val_peak_signal_noise_ratio: 66.1075
+ 75/75 ━━━━━━━━━━━━━━━━━━━━ 29s 385ms/step - loss: 0.1600 - peak_signal_noise_ratio: 63.9043 - val_loss: 0.1335 - val_peak_signal_noise_ratio: 65.5639 - learning_rate: 1.0000e-04
 Epoch 8/50
-75/75 [==============================] - 49s 654ms/step - loss: 0.1493 - peak_signal_noise_ratio: 64.4675 - val_loss: 0.1170 - val_peak_signal_noise_ratio: 66.1355
+ 75/75 ━━━━━━━━━━━━━━━━━━━━ 29s 382ms/step - loss: 0.1609 - peak_signal_noise_ratio: 64.0606 - val_loss: 0.1135 - val_peak_signal_noise_ratio: 66.9369 - learning_rate: 1.0000e-04
 Epoch 9/50
-75/75 [==============================] - 49s 654ms/step - loss: 0.1446 - peak_signal_noise_ratio: 64.7416 - val_loss: 0.1301 - val_peak_signal_noise_ratio: 66.0207
+ 75/75 ━━━━━━━━━━━━━━━━━━━━ 29s 384ms/step - loss: 0.1539 - peak_signal_noise_ratio: 64.3915 - val_loss: 0.1165 - val_peak_signal_noise_ratio: 66.9783 - learning_rate: 1.0000e-04
 Epoch 10/50
-75/75 [==============================] - 49s 655ms/step - loss: 0.1539 - peak_signal_noise_ratio: 64.3999 - val_loss: 0.1220 - val_peak_signal_noise_ratio: 66.7203
+ 75/75 ━━━━━━━━━━━━━━━━━━━━ 43s 409ms/step - loss: 0.1536 - peak_signal_noise_ratio: 64.4491 - val_loss: 0.1118 - val_peak_signal_noise_ratio: 66.8747 - learning_rate: 1.0000e-04
 Epoch 11/50
-75/75 [==============================] - 49s 654ms/step - loss: 0.1451 - peak_signal_noise_ratio: 64.7352 - val_loss: 0.1219 - val_peak_signal_noise_ratio: 66.3140
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-Epoch 00011: ReduceLROnPlateau reducing learning rate to 4.999999873689376e-05.
+ 75/75 ━━━━━━━━━━━━━━━━━━━━ 29s 383ms/step - loss: 0.1449 - peak_signal_noise_ratio: 64.6579 - val_loss: 0.1167 - val_peak_signal_noise_ratio: 66.9626 - learning_rate: 1.0000e-04
 Epoch 12/50
-75/75 [==============================] - 49s 651ms/step - loss: 0.1492 - peak_signal_noise_ratio: 64.7238 - val_loss: 0.1204 - val_peak_signal_noise_ratio: 66.4726
+ 75/75 ━━━━━━━━━━━━━━━━━━━━ 29s 383ms/step - loss: 0.1501 - peak_signal_noise_ratio: 64.7929 - val_loss: 0.1143 - val_peak_signal_noise_ratio: 66.9400 - learning_rate: 1.0000e-04
 Epoch 13/50
-75/75 [==============================] - 49s 651ms/step - loss: 0.1456 - peak_signal_noise_ratio: 64.9666 - val_loss: 0.1109 - val_peak_signal_noise_ratio: 67.1270
+ 75/75 ━━━━━━━━━━━━━━━━━━━━ 29s 380ms/step - loss: 0.1510 - peak_signal_noise_ratio: 64.6816 - val_loss: 0.1302 - val_peak_signal_noise_ratio: 66.0576 - learning_rate: 1.0000e-04
 Epoch 14/50
-75/75 [==============================] - 49s 651ms/step - loss: 0.1372 - peak_signal_noise_ratio: 65.3932 - val_loss: 0.1150 - val_peak_signal_noise_ratio: 66.9255
+ 75/75 ━━━━━━━━━━━━━━━━━━━━ 29s 383ms/step - loss: 0.1632 - peak_signal_noise_ratio: 63.9234 - val_loss: 0.1146 - val_peak_signal_noise_ratio: 67.0321 - learning_rate: 1.0000e-04
 Epoch 15/50
-75/75 [==============================] - 49s 650ms/step - loss: 0.1340 - peak_signal_noise_ratio: 65.5611 - val_loss: 0.1111 - val_peak_signal_noise_ratio: 67.2009
+ 75/75 ━━━━━━━━━━━━━━━━━━━━ 28s 379ms/step - loss: 0.1486 - peak_signal_noise_ratio: 64.7125 - val_loss: 0.1284 - val_peak_signal_noise_ratio: 66.2105 - learning_rate: 1.0000e-04
 Epoch 16/50
-75/75 [==============================] - 49s 651ms/step - loss: 0.1377 - peak_signal_noise_ratio: 65.3355 - val_loss: 0.1140 - val_peak_signal_noise_ratio: 67.0495
+ 75/75 ━━━━━━━━━━━━━━━━━━━━ 28s 379ms/step - loss: 0.1482 - peak_signal_noise_ratio: 64.8123 - val_loss: 0.1176 - val_peak_signal_noise_ratio: 66.8114 - learning_rate: 1.0000e-04
 Epoch 17/50
-75/75 [==============================] - 49s 651ms/step - loss: 0.1340 - peak_signal_noise_ratio: 65.6484 - val_loss: 0.1132 - val_peak_signal_noise_ratio: 67.0257
+ 75/75 ━━━━━━━━━━━━━━━━━━━━ 29s 381ms/step - loss: 0.1459 - peak_signal_noise_ratio: 64.7795 - val_loss: 0.1092 - val_peak_signal_noise_ratio: 67.4173 - learning_rate: 1.0000e-04
 Epoch 18/50
-75/75 [==============================] - 49s 651ms/step - loss: 0.1360 - peak_signal_noise_ratio: 65.4871 - val_loss: 0.1070 - val_peak_signal_noise_ratio: 67.4185
+ 75/75 ━━━━━━━━━━━━━━━━━━━━ 28s 378ms/step - loss: 0.1482 - peak_signal_noise_ratio: 64.8821 - val_loss: 0.1175 - val_peak_signal_noise_ratio: 67.0296 - learning_rate: 1.0000e-04
 Epoch 19/50
-75/75 [==============================] - 49s 649ms/step - loss: 0.1349 - peak_signal_noise_ratio: 65.4856 - val_loss: 0.1112 - val_peak_signal_noise_ratio: 67.2248
+ 75/75 ━━━━━━━━━━━━━━━━━━━━ 29s 381ms/step - loss: 0.1524 - peak_signal_noise_ratio: 64.7275 - val_loss: 0.1028 - val_peak_signal_noise_ratio: 67.8485 - learning_rate: 1.0000e-04
 Epoch 20/50
-75/75 [==============================] - 49s 651ms/step - loss: 0.1273 - peak_signal_noise_ratio: 66.0817 - val_loss: 0.1185 - val_peak_signal_noise_ratio: 67.0208
+ 75/75 ━━━━━━━━━━━━━━━━━━━━ 28s 379ms/step - loss: 0.1350 - peak_signal_noise_ratio: 65.6166 - val_loss: 0.1040 - val_peak_signal_noise_ratio: 67.8551 - learning_rate: 1.0000e-04
 Epoch 21/50
-75/75 [==============================] - 49s 656ms/step - loss: 0.1393 - peak_signal_noise_ratio: 65.3710 - val_loss: 0.1102 - val_peak_signal_noise_ratio: 67.0362
+ 75/75 ━━━━━━━━━━━━━━━━━━━━ 29s 380ms/step - loss: 0.1383 - peak_signal_noise_ratio: 65.5167 - val_loss: 0.1071 - val_peak_signal_noise_ratio: 67.5902 - learning_rate: 1.0000e-04
 Epoch 22/50
-75/75 [==============================] - 49s 653ms/step - loss: 0.1326 - peak_signal_noise_ratio: 65.8781 - val_loss: 0.1059 - val_peak_signal_noise_ratio: 67.4949
+ 75/75 ━━━━━━━━━━━━━━━━━━━━ 28s 379ms/step - loss: 0.1393 - peak_signal_noise_ratio: 65.6293 - val_loss: 0.1096 - val_peak_signal_noise_ratio: 67.2940 - learning_rate: 1.0000e-04
 Epoch 23/50
-75/75 [==============================] - 49s 653ms/step - loss: 0.1260 - peak_signal_noise_ratio: 66.1770 - val_loss: 0.1187 - val_peak_signal_noise_ratio: 66.6312
+ 75/75 ━━━━━━━━━━━━━━━━━━━━ 29s 383ms/step - loss: 0.1399 - peak_signal_noise_ratio: 65.5146 - val_loss: 0.1044 - val_peak_signal_noise_ratio: 67.6932 - learning_rate: 1.0000e-04
 Epoch 24/50
-75/75 [==============================] - 49s 650ms/step - loss: 0.1331 - peak_signal_noise_ratio: 65.8160 - val_loss: 0.1075 - val_peak_signal_noise_ratio: 67.2668
+ 75/75 ━━━━━━━━━━━━━━━━━━━━ 28s 378ms/step - loss: 0.1390 - peak_signal_noise_ratio: 65.7525 - val_loss: 0.1135 - val_peak_signal_noise_ratio: 66.9891 - learning_rate: 1.0000e-04
 Epoch 25/50
-75/75 [==============================] - 49s 654ms/step - loss: 0.1288 - peak_signal_noise_ratio: 66.0734 - val_loss: 0.1027 - val_peak_signal_noise_ratio: 67.9508
+ 75/75 ━━━━━━━━━━━━━━━━━━━━ 0s 326ms/step - loss: 0.1333 - peak_signal_noise_ratio: 65.8340
+Epoch 25: ReduceLROnPlateau reducing learning rate to 4.999999873689376e-05.
+ 75/75 ━━━━━━━━━━━━━━━━━━━━ 28s 380ms/step - loss: 0.1332 - peak_signal_noise_ratio: 65.8348 - val_loss: 0.1252 - val_peak_signal_noise_ratio: 66.5684 - learning_rate: 1.0000e-04
 Epoch 26/50
-75/75 [==============================] - 49s 654ms/step - loss: 0.1306 - peak_signal_noise_ratio: 66.0349 - val_loss: 0.1076 - val_peak_signal_noise_ratio: 67.3821
+ 75/75 ━━━━━━━━━━━━━━━━━━━━ 29s 381ms/step - loss: 0.1547 - peak_signal_noise_ratio: 64.8968 - val_loss: 0.1105 - val_peak_signal_noise_ratio: 67.0688 - learning_rate: 5.0000e-05
 Epoch 27/50
-75/75 [==============================] - 49s 655ms/step - loss: 0.1356 - peak_signal_noise_ratio: 65.7978 - val_loss: 0.1079 - val_peak_signal_noise_ratio: 67.4785
+ 75/75 ━━━━━━━━━━━━━━━━━━━━ 28s 380ms/step - loss: 0.1269 - peak_signal_noise_ratio: 66.3882 - val_loss: 0.1035 - val_peak_signal_noise_ratio: 67.7006 - learning_rate: 5.0000e-05
 Epoch 28/50
-75/75 [==============================] - 49s 655ms/step - loss: 0.1270 - peak_signal_noise_ratio: 66.2681 - val_loss: 0.1116 - val_peak_signal_noise_ratio: 67.3327
+ 75/75 ━━━━━━━━━━━━━━━━━━━━ 30s 405ms/step - loss: 0.1243 - peak_signal_noise_ratio: 66.5826 - val_loss: 0.1063 - val_peak_signal_noise_ratio: 67.2497 - learning_rate: 5.0000e-05
 Epoch 29/50
-75/75 [==============================] - 49s 654ms/step - loss: 0.1297 - peak_signal_noise_ratio: 66.0506 - val_loss: 0.1057 - val_peak_signal_noise_ratio: 67.5432
+ 75/75 ━━━━━━━━━━━━━━━━━━━━ 29s 383ms/step - loss: 0.1292 - peak_signal_noise_ratio: 66.1734 - val_loss: 0.1064 - val_peak_signal_noise_ratio: 67.3989 - learning_rate: 5.0000e-05
 Epoch 30/50
-75/75 [==============================] - 49s 654ms/step - loss: 0.1275 - peak_signal_noise_ratio: 66.3542 - val_loss: 0.1034 - val_peak_signal_noise_ratio: 67.4624
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-Epoch 00030: ReduceLROnPlateau reducing learning rate to 2.499999936844688e-05.
+ 75/75 ━━━━━━━━━━━━━━━━━━━━ 0s 328ms/step - loss: 0.1304 - peak_signal_noise_ratio: 66.1267
+Epoch 30: ReduceLROnPlateau reducing learning rate to 2.499999936844688e-05.
+ 75/75 ━━━━━━━━━━━━━━━━━━━━ 29s 382ms/step - loss: 0.1304 - peak_signal_noise_ratio: 66.1294 - val_loss: 0.1109 - val_peak_signal_noise_ratio: 66.8935 - learning_rate: 5.0000e-05
 Epoch 31/50
-75/75 [==============================] - 49s 654ms/step - loss: 0.1258 - peak_signal_noise_ratio: 66.2724 - val_loss: 0.1066 - val_peak_signal_noise_ratio: 67.5729
+ 75/75 ━━━━━━━━━━━━━━━━━━━━ 29s 381ms/step - loss: 0.1141 - peak_signal_noise_ratio: 67.1338 - val_loss: 0.1145 - val_peak_signal_noise_ratio: 66.8367 - learning_rate: 2.5000e-05
 Epoch 32/50
-75/75 [==============================] - 49s 653ms/step - loss: 0.1153 - peak_signal_noise_ratio: 67.0384 - val_loss: 0.1064 - val_peak_signal_noise_ratio: 67.4336
+ 75/75 ━━━━━━━━━━━━━━━━━━━━ 28s 380ms/step - loss: 0.1141 - peak_signal_noise_ratio: 66.9369 - val_loss: 0.1132 - val_peak_signal_noise_ratio: 66.9264 - learning_rate: 2.5000e-05
 Epoch 33/50
-75/75 [==============================] - 49s 653ms/step - loss: 0.1189 - peak_signal_noise_ratio: 66.7662 - val_loss: 0.1062 - val_peak_signal_noise_ratio: 67.5128
+ 75/75 ━━━━━━━━━━━━━━━━━━━━ 28s 380ms/step - loss: 0.1184 - peak_signal_noise_ratio: 66.7723 - val_loss: 0.1090 - val_peak_signal_noise_ratio: 67.1115 - learning_rate: 2.5000e-05
 Epoch 34/50
-75/75 [==============================] - 49s 654ms/step - loss: 0.1159 - peak_signal_noise_ratio: 66.9257 - val_loss: 0.1003 - val_peak_signal_noise_ratio: 67.8672
+ 75/75 ━━━━━━━━━━━━━━━━━━━━ 29s 380ms/step - loss: 0.1243 - peak_signal_noise_ratio: 66.4147 - val_loss: 0.1080 - val_peak_signal_noise_ratio: 67.2300 - learning_rate: 2.5000e-05
 Epoch 35/50
-75/75 [==============================] - 49s 653ms/step - loss: 0.1191 - peak_signal_noise_ratio: 66.7690 - val_loss: 0.1043 - val_peak_signal_noise_ratio: 67.4840
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-Epoch 00035: ReduceLROnPlateau reducing learning rate to 1.249999968422344e-05.
+ 75/75 ━━━━━━━━━━━━━━━━━━━━ 0s 325ms/step - loss: 0.1230 - peak_signal_noise_ratio: 66.7113
+Epoch 35: ReduceLROnPlateau reducing learning rate to 1.249999968422344e-05.
+ 75/75 ━━━━━━━━━━━━━━━━━━━━ 29s 381ms/step - loss: 0.1229 - peak_signal_noise_ratio: 66.7121 - val_loss: 0.1038 - val_peak_signal_noise_ratio: 67.5288 - learning_rate: 2.5000e-05
 Epoch 36/50
-75/75 [==============================] - 49s 651ms/step - loss: 0.1158 - peak_signal_noise_ratio: 67.0264 - val_loss: 0.1057 - val_peak_signal_noise_ratio: 67.6526
+ 75/75 ━━━━━━━━━━━━━━━━━━━━ 28s 380ms/step - loss: 0.1181 - peak_signal_noise_ratio: 66.9202 - val_loss: 0.1030 - val_peak_signal_noise_ratio: 67.6249 - learning_rate: 1.2500e-05
 Epoch 37/50
-75/75 [==============================] - 49s 652ms/step - loss: 0.1128 - peak_signal_noise_ratio: 67.1950 - val_loss: 0.1104 - val_peak_signal_noise_ratio: 67.1770
+ 75/75 ━━━━━━━━━━━━━━━━━━━━ 28s 380ms/step - loss: 0.1086 - peak_signal_noise_ratio: 67.5034 - val_loss: 0.1016 - val_peak_signal_noise_ratio: 67.6940 - learning_rate: 1.2500e-05
 Epoch 38/50
-75/75 [==============================] - 49s 652ms/step - loss: 0.1200 - peak_signal_noise_ratio: 66.7623 - val_loss: 0.1048 - val_peak_signal_noise_ratio: 67.7003
+ 75/75 ━━━━━━━━━━━━━━━━━━━━ 28s 380ms/step - loss: 0.1127 - peak_signal_noise_ratio: 67.3735 - val_loss: 0.1004 - val_peak_signal_noise_ratio: 68.0042 - learning_rate: 1.2500e-05
 Epoch 39/50
-75/75 [==============================] - 49s 651ms/step - loss: 0.1112 - peak_signal_noise_ratio: 67.3895 - val_loss: 0.1031 - val_peak_signal_noise_ratio: 67.6530
+ 75/75 ━━━━━━━━━━━━━━━━━━━━ 28s 379ms/step - loss: 0.1135 - peak_signal_noise_ratio: 67.3436 - val_loss: 0.1150 - val_peak_signal_noise_ratio: 66.9541 - learning_rate: 1.2500e-05
 Epoch 40/50
-75/75 [==============================] - 49s 650ms/step - loss: 0.1125 - peak_signal_noise_ratio: 67.1694 - val_loss: 0.1034 - val_peak_signal_noise_ratio: 67.6437
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-Epoch 00040: ReduceLROnPlateau reducing learning rate to 6.24999984211172e-06.
+ 75/75 ━━━━━━━━━━━━━━━━━━━━ 29s 381ms/step - loss: 0.1152 - peak_signal_noise_ratio: 67.1675 - val_loss: 0.1093 - val_peak_signal_noise_ratio: 67.2030 - learning_rate: 1.2500e-05
 Epoch 41/50
-75/75 [==============================] - 49s 650ms/step - loss: 0.1131 - peak_signal_noise_ratio: 67.2471 - val_loss: 0.1152 - val_peak_signal_noise_ratio: 66.8625
+ 75/75 ━━━━━━━━━━━━━━━━━━━━ 28s 378ms/step - loss: 0.1191 - peak_signal_noise_ratio: 66.7586 - val_loss: 0.1095 - val_peak_signal_noise_ratio: 67.2424 - learning_rate: 1.2500e-05
 Epoch 42/50
-75/75 [==============================] - 49s 650ms/step - loss: 0.1069 - peak_signal_noise_ratio: 67.5794 - val_loss: 0.1119 - val_peak_signal_noise_ratio: 67.1944
+ 75/75 ━━━━━━━━━━━━━━━━━━━━ 30s 405ms/step - loss: 0.1062 - peak_signal_noise_ratio: 67.6856 - val_loss: 0.1092 - val_peak_signal_noise_ratio: 67.2187 - learning_rate: 1.2500e-05
 Epoch 43/50
-75/75 [==============================] - 49s 651ms/step - loss: 0.1118 - peak_signal_noise_ratio: 67.2779 - val_loss: 0.1147 - val_peak_signal_noise_ratio: 66.9731
+ 75/75 ━━━━━━━━━━━━━━━━━━━━ 0s 323ms/step - loss: 0.1099 - peak_signal_noise_ratio: 67.6400
+Epoch 43: ReduceLROnPlateau reducing learning rate to 6.24999984211172e-06.
+ 75/75 ━━━━━━━━━━━━━━━━━━━━ 28s 377ms/step - loss: 0.1099 - peak_signal_noise_ratio: 67.6378 - val_loss: 0.1079 - val_peak_signal_noise_ratio: 67.4591 - learning_rate: 1.2500e-05
 Epoch 44/50
-75/75 [==============================] - 48s 647ms/step - loss: 0.1101 - peak_signal_noise_ratio: 67.2777 - val_loss: 0.1107 - val_peak_signal_noise_ratio: 67.2580
+ 75/75 ━━━━━━━━━━━━━━━━━━━━ 28s 378ms/step - loss: 0.1155 - peak_signal_noise_ratio: 67.0911 - val_loss: 0.1019 - val_peak_signal_noise_ratio: 67.8073 - learning_rate: 6.2500e-06
 Epoch 45/50
-75/75 [==============================] - 49s 649ms/step - loss: 0.1076 - peak_signal_noise_ratio: 67.6359 - val_loss: 0.1103 - val_peak_signal_noise_ratio: 67.2720
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-Epoch 00045: ReduceLROnPlateau reducing learning rate to 3.12499992105586e-06.
+ 75/75 ━━━━━━━━━━━━━━━━━━━━ 28s 377ms/step - loss: 0.1145 - peak_signal_noise_ratio: 67.1876 - val_loss: 0.1067 - val_peak_signal_noise_ratio: 67.4283 - learning_rate: 6.2500e-06
 Epoch 46/50
-75/75 [==============================] - 49s 648ms/step - loss: 0.1066 - peak_signal_noise_ratio: 67.4869 - val_loss: 0.1077 - val_peak_signal_noise_ratio: 67.4986
+ 75/75 ━━━━━━━━━━━━━━━━━━━━ 29s 384ms/step - loss: 0.1077 - peak_signal_noise_ratio: 67.7168 - val_loss: 0.1114 - val_peak_signal_noise_ratio: 67.1392 - learning_rate: 6.2500e-06
 Epoch 47/50
-75/75 [==============================] - 49s 649ms/step - loss: 0.1072 - peak_signal_noise_ratio: 67.4890 - val_loss: 0.1140 - val_peak_signal_noise_ratio: 67.1755
+ 75/75 ━━━━━━━━━━━━━━━━━━━━ 28s 377ms/step - loss: 0.1117 - peak_signal_noise_ratio: 67.3210 - val_loss: 0.1081 - val_peak_signal_noise_ratio: 67.3622 - learning_rate: 6.2500e-06
 Epoch 48/50
-75/75 [==============================] - 49s 649ms/step - loss: 0.1065 - peak_signal_noise_ratio: 67.6796 - val_loss: 0.1091 - val_peak_signal_noise_ratio: 67.3442
+ 75/75 ━━━━━━━━━━━━━━━━━━━━ 0s 326ms/step - loss: 0.1074 - peak_signal_noise_ratio: 67.7986
+Epoch 48: ReduceLROnPlateau reducing learning rate to 3.12499992105586e-06.
+ 75/75 ━━━━━━━━━━━━━━━━━━━━ 29s 380ms/step - loss: 0.1074 - peak_signal_noise_ratio: 67.7992 - val_loss: 0.1101 - val_peak_signal_noise_ratio: 67.3376 - learning_rate: 6.2500e-06
 Epoch 49/50
-75/75 [==============================] - 49s 648ms/step - loss: 0.1098 - peak_signal_noise_ratio: 67.3909 - val_loss: 0.1082 - val_peak_signal_noise_ratio: 67.4616
+ 75/75 ━━━━━━━━━━━━━━━━━━━━ 28s 380ms/step - loss: 0.1081 - peak_signal_noise_ratio: 67.5032 - val_loss: 0.1121 - val_peak_signal_noise_ratio: 67.0685 - learning_rate: 3.1250e-06
 Epoch 50/50
-75/75 [==============================] - 49s 648ms/step - loss: 0.1090 - peak_signal_noise_ratio: 67.5139 - val_loss: 0.1124 - val_peak_signal_noise_ratio: 67.1488
+ 75/75 ━━━━━━━━━━━━━━━━━━━━ 28s 378ms/step - loss: 0.1077 - peak_signal_noise_ratio: 67.6709 - val_loss: 0.1084 - val_peak_signal_noise_ratio: 67.6183 - learning_rate: 3.1250e-06
+
 ```
 </div>
     
-<div class="k-default-codeblock">
-```
-Epoch 00050: ReduceLROnPlateau reducing learning rate to 1.56249996052793e-06.
-
-```
-</div>
-![png](/img/examples/vision/mirnet/mirnet_17_1.png)
+![png](/img/examples/vision/mirnet/mirnet_17_3.png)
+    
 
 
 
-![png](/img/examples/vision/mirnet/mirnet_17_2.png)
+    
+![png](/img/examples/vision/mirnet/mirnet_17_4.png)
+    
 
 
 ---
@@ -635,7 +654,7 @@ def infer(original_image):
     image = keras.utils.img_to_array(original_image)
     image = image.astype("float32") / 255.0
     image = np.expand_dims(image, axis=0)
-    output = model.predict(image)
+    output = model.predict(image, verbose=0)
     output_image = output[0] * 255.0
     output_image = output_image.clip(0, 255)
     output_image = output_image.reshape(
@@ -652,7 +671,9 @@ def infer(original_image):
 We compare the test images from LOLDataset enhanced by MIRNet with images
 enhanced via the `PIL.ImageOps.autocontrast()` function.
 
-You can use the trained model hosted on [Hugging Face Hub](https://huggingface.co/keras-io/lowlight-enhance-mirnet) and try the demo on [Hugging Face Spaces](https://huggingface.co/spaces/keras-io/Enhance_Low_Light_Image).
+You can use the trained model hosted on [Hugging Face Hub](https://huggingface.co/keras-io/lowlight-enhance-mirnet)
+and try the demo on [Hugging Face Spaces](https://huggingface.co/spaces/keras-io/Enhance_Low_Light_Image).
+
 
 ```python
 
@@ -667,24 +688,37 @@ for low_light_image in random.sample(test_low_light_images, 6):
 ```
 
 
+    
 ![png](/img/examples/vision/mirnet/mirnet_21_0.png)
+    
 
 
 
+    
 ![png](/img/examples/vision/mirnet/mirnet_21_1.png)
+    
 
 
 
+    
 ![png](/img/examples/vision/mirnet/mirnet_21_2.png)
+    
 
 
 
+    
 ![png](/img/examples/vision/mirnet/mirnet_21_3.png)
+    
 
 
 
+    
 ![png](/img/examples/vision/mirnet/mirnet_21_4.png)
+    
 
 
 
+    
 ![png](/img/examples/vision/mirnet/mirnet_21_5.png)
+    
+

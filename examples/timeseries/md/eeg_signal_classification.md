@@ -51,6 +51,52 @@ First, lets install our dependencies:
 !pip install matplotlib -q
 ```
 
+<div class="k-default-codeblock">
+```
+  [1;31merror:  subprocess-exited-with-error
+  
+  [31m× python setup.py egg_info did not run successfully.
+  [31m│ exit code: [1;36m1
+  [31m╰─> [31m[18 lines of output]
+  [31m    The 'sklearn' PyPI package is deprecated, use 'scikit-learn'
+  [31m    rather than 'sklearn' for pip commands.
+  [31m    
+  [31m    Here is how to fix this error in the main use cases:
+  [31m    - use 'pip install scikit-learn' rather than 'pip install sklearn'
+  [31m    - replace 'sklearn' by 'scikit-learn' in your pip requirements files
+  [31m      (requirements.txt, setup.py, setup.cfg, Pipfile, etc ...)
+  [31m    - if the 'sklearn' package is used by one of your dependencies,
+  [31m      it would be great if you take some time to track which package uses
+  [31m      'sklearn' instead of 'scikit-learn' and report it to their issue tracker
+  [31m    - as a last resort, set the environment variable
+  [31m      SKLEARN_ALLOW_DEPRECATED_SKLEARN_PACKAGE_INSTALL=True to avoid this error
+  [31m    
+  [31m    More information is available at
+  [31m    https://github.com/scikit-learn/sklearn-pypi-package
+  [31m    
+  [31m    If the previous advice does not cover your use case, feel free to report it at
+  [31m    https://github.com/scikit-learn/sklearn-pypi-package/issues/new
+  [31m    [31m[end of output]
+  
+  [1;35mnote: This error originates from a subprocess, and is likely not a problem with pip.
+[1;31merror:  metadata-generation-failed
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+[31m× Encountered error while generating package metadata.
+[31m╰─> See above for output.
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+[1;35mnote: This is an issue with the package mentioned above, not pip.
+[1;36mhint: See above for details.
+
+```
+</div>
 Next, lets download our dataset.
 The gdown package makes it easy to download the data from Google Drive:
 
@@ -66,8 +112,8 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import json
 import numpy as np
-from tensorflow import keras
-from tensorflow.keras import layers
+import keras
+from keras import layers
 import tensorflow as tf
 from sklearn import preprocessing, model_selection
 import random
@@ -79,9 +125,10 @@ SHUFFLE_BUFFER_SIZE = BATCH_SIZE * 2
 <div class="k-default-codeblock">
 ```
 Downloading...
-From: https://drive.google.com/uc?id=1V5B7Bt6aJm0UHbR7cRKBEK8jx7lYPVuX
-To: /home/suvaditya/Programming/personal/oss/keras-io/scripts/tmp_8705318/eeg-data.csv
-100%|████████████████████████████████████████| 106M/106M [00:05<00:00, 17.7MB/s]
+From (uriginal): https://drive.google.com/uc?id=1V5B7Bt6aJm0UHbR7cRKBEK8jx7lYPVuX
+From (redirected): https://drive.google.com/uc?id=1V5B7Bt6aJm0UHbR7cRKBEK8jx7lYPVuX&confirm=t&uuid=4d50d1e7-44b5-4984-aa04-cb4e08803cb8
+To: /home/fchollet/keras-io/scripts/tmp_3333846/eeg-data.csv
+100%|█████████████████████████████████████████| 106M/106M [00:00<00:00, 259MB/s]
 
 ```
 </div>
@@ -126,6 +173,26 @@ eeg.head()
 ```
 
 
+
+
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+<div class="k-default-codeblock">
+```
+.dataframe tbody tr th {
+    vertical-align: top;
+}
+
+.dataframe thead th {
+    text-align: right;
+}
+```
+</div>
+</style>
 <table border="1" class="dataframe">
   <thead>
     <tr style="text-align: right;">
@@ -180,6 +247,8 @@ eeg.head()
     </tr>
   </tbody>
 </table>
+</div>
+
 
 
 In the data, the samples recorded are given a score from 0 to 128 based on how
@@ -197,17 +266,30 @@ def convert_string_data_to_values(value_string):
 eeg["raw_values"] = eeg["raw_values"].apply(convert_string_data_to_values)
 
 eeg = eeg.loc[eeg["signal_quality"] < QUALITY_THRESHOLD]
-print(eeg.shape)
 eeg.head()
 ```
 
+
+
+
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
 <div class="k-default-codeblock">
 ```
-(9954, 5)
+.dataframe tbody tr th {
+    vertical-align: top;
+}
 
+.dataframe thead th {
+    text-align: right;
+}
 ```
 </div>
-
+</style>
 <table border="1" class="dataframe">
   <thead>
     <tr style="text-align: right;">
@@ -262,6 +344,8 @@ eeg.head()
     </tr>
   </tbody>
 </table>
+</div>
+
 
 
 ---
@@ -285,7 +369,7 @@ view_eeg_plot(7)
 
 
     
-![png](/img/examples/timeseries/eeg_signal_classification/eeg_signal_15_0.png)
+![png](/img/examples/timeseries/eeg_signal_classification/eeg_signal_classification_15_0.png)
     
 
 
@@ -449,7 +533,7 @@ plt.show()
 
 
     
-![png](/img/examples/timeseries/eeg_signal_classification/eeg_signal_22_0.png)
+![png](/img/examples/timeseries/eeg_signal_classification/eeg_signal_classification_22_0.png)
     
 
 
@@ -612,7 +696,11 @@ def create_model():
     x = layers.BatchNormalization()(x)
 
     x = layers.Conv1D(
-        filters=1024, kernel_size=7, strides=2, activation="relu", padding="same"
+        filters=1024,
+        kernel_size=7,
+        strides=2,
+        activation="relu",
+        padding="same",
     )(x)
     x = layers.BatchNormalization()(x)
 
@@ -647,77 +735,93 @@ def create_model():
 
 ```python
 conv_model = create_model()
-
-print(conv_model.summary())
+conv_model.summary()
 ```
 
-<div class="k-default-codeblock">
-```
-Model: "model"
-_________________________________________________________________
- Layer (type)                Output Shape              Param #   
-=================================================================
- input_1 (InputLayer)        [(None, 512, 1)]          0         
-                                                                 
- conv1d (Conv1D)             (None, 256, 32)           128       
-                                                                 
- batch_normalization (BatchN  (None, 256, 32)          128       
- ormalization)                                                   
-                                                                 
- conv1d_1 (Conv1D)           (None, 128, 64)           6208      
-                                                                 
- batch_normalization_1 (Batc  (None, 128, 64)          256       
- hNormalization)                                                 
-                                                                 
- conv1d_2 (Conv1D)           (None, 64, 128)           41088     
-                                                                 
- batch_normalization_2 (Batc  (None, 64, 128)          512       
- hNormalization)                                                 
-                                                                 
- conv1d_3 (Conv1D)           (None, 32, 256)           164096    
-                                                                 
- batch_normalization_3 (Batc  (None, 32, 256)          1024      
- hNormalization)                                                 
-                                                                 
- conv1d_4 (Conv1D)           (None, 16, 512)           918016    
-                                                                 
- batch_normalization_4 (Batc  (None, 16, 512)          2048      
- hNormalization)                                                 
-                                                                 
- conv1d_5 (Conv1D)           (None, 8, 1024)           3671040   
-                                                                 
- batch_normalization_5 (Batc  (None, 8, 1024)          4096      
- hNormalization)                                                 
-                                                                 
- dropout (Dropout)           (None, 8, 1024)           0         
-                                                                 
- flatten (Flatten)           (None, 8192)              0         
-                                                                 
- dense (Dense)               (None, 4096)              33558528  
-                                                                 
- dropout_1 (Dropout)         (None, 4096)              0         
-                                                                 
- dense_1 (Dense)             (None, 2048)              8390656   
-                                                                 
- dropout_2 (Dropout)         (None, 2048)              0         
-                                                                 
- dense_2 (Dense)             (None, 1024)              2098176   
-                                                                 
- dropout_3 (Dropout)         (None, 1024)              0         
-                                                                 
- dense_3 (Dense)             (None, 128)               131200    
-                                                                 
- dense_4 (Dense)             (None, 19)                2451      
-                                                                 
-=================================================================
-Total params: 48,989,651
-Trainable params: 48,985,619
-Non-trainable params: 4,032
-_________________________________________________________________
-None
 
-```
-</div>
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold">Model: "functional_1"</span>
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━┓
+┃<span style="font-weight: bold"> Layer (type)                    </span>┃<span style="font-weight: bold"> Output Shape              </span>┃<span style="font-weight: bold">    Param # </span>┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━┩
+│ input_layer (<span style="color: #0087ff; text-decoration-color: #0087ff">InputLayer</span>)        │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">512</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>)            │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ conv1d (<span style="color: #0087ff; text-decoration-color: #0087ff">Conv1D</span>)                 │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">256</span>, <span style="color: #00af00; text-decoration-color: #00af00">32</span>)           │        <span style="color: #00af00; text-decoration-color: #00af00">128</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ batch_normalization             │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">256</span>, <span style="color: #00af00; text-decoration-color: #00af00">32</span>)           │        <span style="color: #00af00; text-decoration-color: #00af00">128</span> │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">BatchNormalization</span>)            │                           │            │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ conv1d_1 (<span style="color: #0087ff; text-decoration-color: #0087ff">Conv1D</span>)               │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">128</span>, <span style="color: #00af00; text-decoration-color: #00af00">64</span>)           │      <span style="color: #00af00; text-decoration-color: #00af00">6,208</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ batch_normalization_1           │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">128</span>, <span style="color: #00af00; text-decoration-color: #00af00">64</span>)           │        <span style="color: #00af00; text-decoration-color: #00af00">256</span> │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">BatchNormalization</span>)            │                           │            │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ conv1d_2 (<span style="color: #0087ff; text-decoration-color: #0087ff">Conv1D</span>)               │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">64</span>, <span style="color: #00af00; text-decoration-color: #00af00">128</span>)           │     <span style="color: #00af00; text-decoration-color: #00af00">41,088</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ batch_normalization_2           │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">64</span>, <span style="color: #00af00; text-decoration-color: #00af00">128</span>)           │        <span style="color: #00af00; text-decoration-color: #00af00">512</span> │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">BatchNormalization</span>)            │                           │            │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ conv1d_3 (<span style="color: #0087ff; text-decoration-color: #0087ff">Conv1D</span>)               │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">32</span>, <span style="color: #00af00; text-decoration-color: #00af00">256</span>)           │    <span style="color: #00af00; text-decoration-color: #00af00">164,096</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ batch_normalization_3           │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">32</span>, <span style="color: #00af00; text-decoration-color: #00af00">256</span>)           │      <span style="color: #00af00; text-decoration-color: #00af00">1,024</span> │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">BatchNormalization</span>)            │                           │            │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ conv1d_4 (<span style="color: #0087ff; text-decoration-color: #0087ff">Conv1D</span>)               │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">16</span>, <span style="color: #00af00; text-decoration-color: #00af00">512</span>)           │    <span style="color: #00af00; text-decoration-color: #00af00">918,016</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ batch_normalization_4           │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">16</span>, <span style="color: #00af00; text-decoration-color: #00af00">512</span>)           │      <span style="color: #00af00; text-decoration-color: #00af00">2,048</span> │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">BatchNormalization</span>)            │                           │            │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ conv1d_5 (<span style="color: #0087ff; text-decoration-color: #0087ff">Conv1D</span>)               │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">8</span>, <span style="color: #00af00; text-decoration-color: #00af00">1024</span>)           │  <span style="color: #00af00; text-decoration-color: #00af00">3,671,040</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ batch_normalization_5           │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">8</span>, <span style="color: #00af00; text-decoration-color: #00af00">1024</span>)           │      <span style="color: #00af00; text-decoration-color: #00af00">4,096</span> │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">BatchNormalization</span>)            │                           │            │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ dropout (<span style="color: #0087ff; text-decoration-color: #0087ff">Dropout</span>)               │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">8</span>, <span style="color: #00af00; text-decoration-color: #00af00">1024</span>)           │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ flatten (<span style="color: #0087ff; text-decoration-color: #0087ff">Flatten</span>)               │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">8192</span>)              │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ dense (<span style="color: #0087ff; text-decoration-color: #0087ff">Dense</span>)                   │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">4096</span>)              │ <span style="color: #00af00; text-decoration-color: #00af00">33,558,528</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ dropout_1 (<span style="color: #0087ff; text-decoration-color: #0087ff">Dropout</span>)             │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">4096</span>)              │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ dense_1 (<span style="color: #0087ff; text-decoration-color: #0087ff">Dense</span>)                 │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">2048</span>)              │  <span style="color: #00af00; text-decoration-color: #00af00">8,390,656</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ dropout_2 (<span style="color: #0087ff; text-decoration-color: #0087ff">Dropout</span>)             │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">2048</span>)              │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ dense_2 (<span style="color: #0087ff; text-decoration-color: #0087ff">Dense</span>)                 │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">1024</span>)              │  <span style="color: #00af00; text-decoration-color: #00af00">2,098,176</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ dropout_3 (<span style="color: #0087ff; text-decoration-color: #0087ff">Dropout</span>)             │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">1024</span>)              │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ dense_3 (<span style="color: #0087ff; text-decoration-color: #0087ff">Dense</span>)                 │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">128</span>)               │    <span style="color: #00af00; text-decoration-color: #00af00">131,200</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ dense_4 (<span style="color: #0087ff; text-decoration-color: #0087ff">Dense</span>)                 │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">19</span>)                │      <span style="color: #00af00; text-decoration-color: #00af00">2,451</span> │
+└─────────────────────────────────┴───────────────────────────┴────────────┘
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Total params: </span><span style="color: #00af00; text-decoration-color: #00af00">48,989,651</span> (186.88 MB)
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Trainable params: </span><span style="color: #00af00; text-decoration-color: #00af00">48,985,619</span> (186.87 MB)
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Non-trainable params: </span><span style="color: #00af00; text-decoration-color: #00af00">4,032</span> (15.75 KB)
+</pre>
+
+
+
 ---
 ## Define callbacks, optimizer, loss and metrics
 
@@ -735,7 +839,7 @@ epochs = 30
 
 callbacks = [
     keras.callbacks.ModelCheckpoint(
-        "best_model.h5", save_best_only=True, monitor="loss"
+        "best_model.keras", save_best_only=True, monitor="loss"
     ),
     keras.callbacks.ReduceLROnPlateau(
         monitor="val_top_k_categorical_accuracy",
@@ -784,65 +888,77 @@ conv_model_history = conv_model.fit(
 <div class="k-default-codeblock">
 ```
 Epoch 1/30
-133/133 [==============================] - 11s 63ms/step - loss: 12.8625 - top_k_categorical_accuracy: 0.2747 - auc: 0.6495 - precision: 0.0806 - recall: 5.9102e-04 - val_loss: 3.9201 - val_top_k_categorical_accuracy: 0.2610 - val_auc: 0.6191 - val_precision: 0.0000e+00 - val_recall: 0.0000e+00 - lr: 0.0010
+   8/133 ━[37m━━━━━━━━━━━━━━━━━━━  1s 16ms/step - auc: 0.5550 - loss: 45.5990 - precision: 0.0183 - recall: 0.0049 - top_k_categorical_accuracy: 0.2154
+
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1699421521.552287    4412 device_compiler.h:186] Compiled cluster using XLA!  This line is logged at most once for the lifetime of the process.
+W0000 00:00:1699421521.578522    4412 graph_launch.cc:671] Fallback to op-by-op mode because memset node breaks graph update
+
+ 133/133 ━━━━━━━━━━━━━━━━━━━━ 0s 134ms/step - auc: 0.6119 - loss: 24.8582 - precision: 0.0465 - recall: 0.0022 - top_k_categorical_accuracy: 0.2479
+
+W0000 00:00:1699421539.207966    4409 graph_launch.cc:671] Fallback to op-by-op mode because memset node breaks graph update
+W0000 00:00:1699421541.374400    4408 graph_launch.cc:671] Fallback to op-by-op mode because memset node breaks graph update
+W0000 00:00:1699421542.991471    4406 graph_launch.cc:671] Fallback to op-by-op mode because memset node breaks graph update
+
+ 133/133 ━━━━━━━━━━━━━━━━━━━━ 44s 180ms/step - auc: 0.6122 - loss: 24.7734 - precision: 0.0466 - recall: 0.0022 - top_k_categorical_accuracy: 0.2481 - val_auc: 0.6470 - val_loss: 4.1950 - val_precision: 0.0000e+00 - val_recall: 0.0000e+00 - val_top_k_categorical_accuracy: 0.2610 - learning_rate: 0.0010
 Epoch 2/30
-133/133 [==============================] - 8s 58ms/step - loss: 3.1074 - top_k_categorical_accuracy: 0.3106 - auc: 0.6959 - precision: 0.0000e+00 - recall: 0.0000e+00 - val_loss: 3.1456 - val_top_k_categorical_accuracy: 0.2610 - val_auc: 0.6480 - val_precision: 0.0000e+00 - val_recall: 0.0000e+00 - lr: 0.0010
+ 133/133 ━━━━━━━━━━━━━━━━━━━━ 8s 63ms/step - auc: 0.6958 - loss: 3.5651 - precision: 0.0000e+00 - recall: 0.0000e+00 - top_k_categorical_accuracy: 0.3162 - val_auc: 0.6364 - val_loss: 3.3169 - val_precision: 0.0000e+00 - val_recall: 0.0000e+00 - val_top_k_categorical_accuracy: 0.2436 - learning_rate: 0.0010
 Epoch 3/30
-133/133 [==============================] - 8s 58ms/step - loss: 2.7097 - top_k_categorical_accuracy: 0.3190 - auc: 0.7112 - precision: 0.3000 - recall: 3.5461e-04 - val_loss: 3.1122 - val_top_k_categorical_accuracy: 0.2222 - val_auc: 0.6147 - val_precision: 0.0000e+00 - val_recall: 0.0000e+00 - lr: 0.0010
+ 133/133 ━━━━━━━━━━━━━━━━━━━━ 8s 63ms/step - auc: 0.7068 - loss: 2.8805 - precision: 0.1910 - recall: 1.2846e-04 - top_k_categorical_accuracy: 0.3220 - val_auc: 0.6313 - val_loss: 3.0662 - val_precision: 0.0000e+00 - val_recall: 0.0000e+00 - val_top_k_categorical_accuracy: 0.2503 - learning_rate: 0.0010
 Epoch 4/30
-133/133 [==============================] - 8s 59ms/step - loss: 2.5204 - top_k_categorical_accuracy: 0.3603 - auc: 0.7473 - precision: 0.4706 - recall: 0.0019 - val_loss: 2.9930 - val_top_k_categorical_accuracy: 0.2697 - val_auc: 0.6289 - val_precision: 0.0000e+00 - val_recall: 0.0000e+00 - lr: 2.0000e-04
+ 133/133 ━━━━━━━━━━━━━━━━━━━━ 8s 63ms/step - auc: 0.7370 - loss: 2.6265 - precision: 0.0719 - recall: 2.8215e-04 - top_k_categorical_accuracy: 0.3572 - val_auc: 0.5952 - val_loss: 3.1744 - val_precision: 0.0000e+00 - val_recall: 0.0000e+00 - val_top_k_categorical_accuracy: 0.2282 - learning_rate: 2.0000e-04
 Epoch 5/30
-133/133 [==============================] - 8s 59ms/step - loss: 2.3726 - top_k_categorical_accuracy: 0.4090 - auc: 0.7879 - precision: 0.5238 - recall: 0.0052 - val_loss: 3.0241 - val_top_k_categorical_accuracy: 0.3039 - val_auc: 0.6718 - val_precision: 0.0000e+00 - val_recall: 0.0000e+00 - lr: 2.0000e-04
+ 133/133 ━━━━━━━━━━━━━━━━━━━━ 9s 65ms/step - auc: 0.7703 - loss: 2.4886 - precision: 0.3738 - recall: 0.0022 - top_k_categorical_accuracy: 0.4029 - val_auc: 0.6320 - val_loss: 3.3036 - val_precision: 0.0000e+00 - val_recall: 0.0000e+00 - val_top_k_categorical_accuracy: 0.2564 - learning_rate: 2.0000e-04
 Epoch 6/30
-133/133 [==============================] - 8s 60ms/step - loss: 2.2426 - top_k_categorical_accuracy: 0.4736 - auc: 0.8214 - precision: 0.5230 - recall: 0.0108 - val_loss: 3.4078 - val_top_k_categorical_accuracy: 0.3112 - val_auc: 0.6652 - val_precision: 0.1053 - val_recall: 0.0013 - lr: 2.0000e-04
+ 133/133 ━━━━━━━━━━━━━━━━━━━━ 9s 66ms/step - auc: 0.8187 - loss: 2.3009 - precision: 0.6264 - recall: 0.0082 - top_k_categorical_accuracy: 0.4852 - val_auc: 0.6743 - val_loss: 3.4905 - val_precision: 0.1957 - val_recall: 0.0060 - val_top_k_categorical_accuracy: 0.3179 - learning_rate: 4.0000e-05
 Epoch 7/30
-133/133 [==============================] - 8s 59ms/step - loss: 2.1656 - top_k_categorical_accuracy: 0.5063 - auc: 0.8391 - precision: 0.5207 - recall: 0.0104 - val_loss: 3.4816 - val_top_k_categorical_accuracy: 0.2871 - val_auc: 0.6571 - val_precision: 0.1944 - val_recall: 0.0047 - lr: 2.0000e-04
+ 133/133 ━━━━━━━━━━━━━━━━━━━━ 8s 63ms/step - auc: 0.8577 - loss: 2.1272 - precision: 0.6079 - recall: 0.0307 - top_k_categorical_accuracy: 0.5553 - val_auc: 0.6674 - val_loss: 3.8436 - val_precision: 0.2184 - val_recall: 0.0127 - val_top_k_categorical_accuracy: 0.3286 - learning_rate: 4.0000e-05
 Epoch 8/30
-133/133 [==============================] - 8s 59ms/step - loss: 2.0417 - top_k_categorical_accuracy: 0.5721 - auc: 0.8654 - precision: 0.5032 - recall: 0.0184 - val_loss: 3.8548 - val_top_k_categorical_accuracy: 0.2979 - val_auc: 0.6512 - val_precision: 0.2308 - val_recall: 0.0100 - lr: 2.0000e-04
+ 133/133 ━━━━━━━━━━━━━━━━━━━━ 8s 63ms/step - auc: 0.8875 - loss: 1.9671 - precision: 0.6614 - recall: 0.0580 - top_k_categorical_accuracy: 0.6400 - val_auc: 0.6577 - val_loss: 4.2607 - val_precision: 0.2212 - val_recall: 0.0167 - val_top_k_categorical_accuracy: 0.3186 - learning_rate: 4.0000e-05
 Epoch 9/30
-133/133 [==============================] - 8s 59ms/step - loss: 1.8322 - top_k_categorical_accuracy: 0.6704 - auc: 0.9003 - precision: 0.5526 - recall: 0.0242 - val_loss: 3.9738 - val_top_k_categorical_accuracy: 0.2972 - val_auc: 0.6630 - val_precision: 0.3333 - val_recall: 6.6934e-04 - lr: 4.0000e-05
+ 133/133 ━━━━━━━━━━━━━━━━━━━━ 8s 63ms/step - auc: 0.9143 - loss: 1.7926 - precision: 0.6770 - recall: 0.0992 - top_k_categorical_accuracy: 0.7189 - val_auc: 0.6465 - val_loss: 4.8088 - val_precision: 0.1780 - val_recall: 0.0228 - val_top_k_categorical_accuracy: 0.3112 - learning_rate: 4.0000e-05
 Epoch 10/30
-133/133 [==============================] - 8s 59ms/step - loss: 1.6351 - top_k_categorical_accuracy: 0.7643 - auc: 0.9261 - precision: 0.5908 - recall: 0.0473 - val_loss: 4.4714 - val_top_k_categorical_accuracy: 0.2945 - val_auc: 0.6523 - val_precision: 0.1944 - val_recall: 0.0047 - lr: 4.0000e-05
+ 133/133 ━━━━━━━━━━━━━━━━━━━━ 8s 63ms/step - auc: 0.9347 - loss: 1.6323 - precision: 0.6741 - recall: 0.1508 - top_k_categorical_accuracy: 0.7832 - val_auc: 0.6483 - val_loss: 4.8556 - val_precision: 0.2424 - val_recall: 0.0268 - val_top_k_categorical_accuracy: 0.3072 - learning_rate: 8.0000e-06
 Epoch 11/30
-133/133 [==============================] - 8s 59ms/step - loss: 1.4918 - top_k_categorical_accuracy: 0.8257 - auc: 0.9418 - precision: 0.6353 - recall: 0.0861 - val_loss: 4.5518 - val_top_k_categorical_accuracy: 0.3153 - val_auc: 0.6513 - val_precision: 0.1930 - val_recall: 0.0074 - lr: 8.0000e-06
+ 133/133 ━━━━━━━━━━━━━━━━━━━━ 9s 64ms/step - auc: 0.9442 - loss: 1.5469 - precision: 0.6985 - recall: 0.1855 - top_k_categorical_accuracy: 0.8095 - val_auc: 0.6443 - val_loss: 5.0003 - val_precision: 0.2216 - val_recall: 0.0288 - val_top_k_categorical_accuracy: 0.3052 - learning_rate: 8.0000e-06
 Epoch 12/30
-133/133 [==============================] - 8s 58ms/step - loss: 1.4434 - top_k_categorical_accuracy: 0.8461 - auc: 0.9467 - precision: 0.6641 - recall: 0.1024 - val_loss: 4.6866 - val_top_k_categorical_accuracy: 0.3099 - val_auc: 0.6517 - val_precision: 0.1944 - val_recall: 0.0094 - lr: 8.0000e-06
+ 133/133 ━━━━━━━━━━━━━━━━━━━━ 9s 64ms/step - auc: 0.9490 - loss: 1.4935 - precision: 0.7196 - recall: 0.2063 - top_k_categorical_accuracy: 0.8293 - val_auc: 0.6411 - val_loss: 5.0008 - val_precision: 0.2383 - val_recall: 0.0341 - val_top_k_categorical_accuracy: 0.3112 - learning_rate: 1.6000e-06
 Epoch 13/30
-133/133 [==============================] - 8s 58ms/step - loss: 1.4034 - top_k_categorical_accuracy: 0.8583 - auc: 0.9503 - precision: 0.6641 - recall: 0.1234 - val_loss: 4.8320 - val_top_k_categorical_accuracy: 0.3186 - val_auc: 0.6484 - val_precision: 0.1682 - val_recall: 0.0120 - lr: 8.0000e-06
+ 133/133 ━━━━━━━━━━━━━━━━━━━━ 9s 65ms/step - auc: 0.9514 - loss: 1.4739 - precision: 0.7071 - recall: 0.2147 - top_k_categorical_accuracy: 0.8371 - val_auc: 0.6411 - val_loss: 5.0279 - val_precision: 0.2356 - val_recall: 0.0355 - val_top_k_categorical_accuracy: 0.3126 - learning_rate: 1.6000e-06
 Epoch 14/30
-133/133 [==============================] - 8s 59ms/step - loss: 1.3726 - top_k_categorical_accuracy: 0.8743 - auc: 0.9530 - precision: 0.6652 - recall: 0.1416 - val_loss: 4.9853 - val_top_k_categorical_accuracy: 0.3166 - val_auc: 0.6464 - val_precision: 0.1679 - val_recall: 0.0147 - lr: 8.0000e-06
+ 133/133 ━━━━━━━━━━━━━━━━━━━━ 2s 14ms/step - auc: 0.9512 - loss: 1.4739 - precision: 0.7102 - recall: 0.2141 - top_k_categorical_accuracy: 0.8349 - val_auc: 0.6407 - val_loss: 5.0457 - val_precision: 0.2340 - val_recall: 0.0368 - val_top_k_categorical_accuracy: 0.3099 - learning_rate: 1.0000e-06
 Epoch 15/30
-133/133 [==============================] - 8s 59ms/step - loss: 1.3389 - top_k_categorical_accuracy: 0.8800 - auc: 0.9556 - precision: 0.6668 - recall: 0.1587 - val_loss: 5.1136 - val_top_k_categorical_accuracy: 0.3220 - val_auc: 0.6452 - val_precision: 0.1491 - val_recall: 0.0161 - lr: 8.0000e-06
+ 133/133 ━━━━━━━━━━━━━━━━━━━━ 9s 64ms/step - auc: 0.9533 - loss: 1.4524 - precision: 0.7206 - recall: 0.2240 - top_k_categorical_accuracy: 0.8421 - val_auc: 0.6400 - val_loss: 5.0557 - val_precision: 0.2292 - val_recall: 0.0368 - val_top_k_categorical_accuracy: 0.3092 - learning_rate: 1.0000e-06
 Epoch 16/30
-133/133 [==============================] - 8s 59ms/step - loss: 1.3102 - top_k_categorical_accuracy: 0.8909 - auc: 0.9581 - precision: 0.6685 - recall: 0.1819 - val_loss: 5.2552 - val_top_k_categorical_accuracy: 0.3246 - val_auc: 0.6442 - val_precision: 0.1717 - val_recall: 0.0228 - lr: 8.0000e-06
+ 133/133 ━━━━━━━━━━━━━━━━━━━━ 8s 63ms/step - auc: 0.9536 - loss: 1.4489 - precision: 0.7201 - recall: 0.2218 - top_k_categorical_accuracy: 0.8367 - val_auc: 0.6401 - val_loss: 5.0850 - val_precision: 0.2336 - val_recall: 0.0382 - val_top_k_categorical_accuracy: 0.3072 - learning_rate: 1.0000e-06
 Epoch 17/30
-133/133 [==============================] - 8s 60ms/step - loss: 1.2734 - top_k_categorical_accuracy: 0.9048 - auc: 0.9609 - precision: 0.6883 - recall: 0.2078 - val_loss: 5.4066 - val_top_k_categorical_accuracy: 0.3226 - val_auc: 0.6419 - val_precision: 0.1799 - val_recall: 0.0288 - lr: 8.0000e-06
+ 133/133 ━━━━━━━━━━━━━━━━━━━━ 8s 63ms/step - auc: 0.9542 - loss: 1.4429 - precision: 0.7207 - recall: 0.2353 - top_k_categorical_accuracy: 0.8404 - val_auc: 0.6397 - val_loss: 5.1047 - val_precision: 0.2249 - val_recall: 0.0375 - val_top_k_categorical_accuracy: 0.3086 - learning_rate: 1.0000e-06
 Epoch 18/30
-133/133 [==============================] - 8s 59ms/step - loss: 1.2415 - top_k_categorical_accuracy: 0.9092 - auc: 0.9633 - precision: 0.6850 - recall: 0.2247 - val_loss: 5.5507 - val_top_k_categorical_accuracy: 0.3213 - val_auc: 0.6390 - val_precision: 0.1707 - val_recall: 0.0328 - lr: 8.0000e-06
+ 133/133 ━━━━━━━━━━━━━━━━━━━━ 8s 63ms/step - auc: 0.9547 - loss: 1.4353 - precision: 0.7195 - recall: 0.2323 - top_k_categorical_accuracy: 0.8455 - val_auc: 0.6389 - val_loss: 5.1215 - val_precision: 0.2305 - val_recall: 0.0395 - val_top_k_categorical_accuracy: 0.3072 - learning_rate: 1.0000e-06
 Epoch 19/30
-133/133 [==============================] - 8s 59ms/step - loss: 1.2207 - top_k_categorical_accuracy: 0.9155 - auc: 0.9650 - precision: 0.7097 - recall: 0.2482 - val_loss: 5.5749 - val_top_k_categorical_accuracy: 0.3186 - val_auc: 0.6396 - val_precision: 0.1736 - val_recall: 0.0335 - lr: 1.6000e-06
+ 133/133 ━━━━━━━━━━━━━━━━━━━━ 8s 63ms/step - auc: 0.9554 - loss: 1.4271 - precision: 0.7254 - recall: 0.2326 - top_k_categorical_accuracy: 0.8492 - val_auc: 0.6386 - val_loss: 5.1395 - val_precision: 0.2269 - val_recall: 0.0395 - val_top_k_categorical_accuracy: 0.3072 - learning_rate: 1.0000e-06
 Epoch 20/30
-133/133 [==============================] - 8s 62ms/step - loss: 1.2110 - top_k_categorical_accuracy: 0.9186 - auc: 0.9657 - precision: 0.7066 - recall: 0.2491 - val_loss: 5.6133 - val_top_k_categorical_accuracy: 0.3173 - val_auc: 0.6400 - val_precision: 0.1650 - val_recall: 0.0328 - lr: 1.6000e-06
+ 133/133 ━━━━━━━━━━━━━━━━━━━━ 8s 63ms/step - auc: 0.9559 - loss: 1.4221 - precision: 0.7248 - recall: 0.2471 - top_k_categorical_accuracy: 0.8439 - val_auc: 0.6385 - val_loss: 5.1655 - val_precision: 0.2264 - val_recall: 0.0402 - val_top_k_categorical_accuracy: 0.3052 - learning_rate: 1.0000e-06
 Epoch 21/30
-133/133 [==============================] - 8s 59ms/step - loss: 1.2038 - top_k_categorical_accuracy: 0.9181 - auc: 0.9663 - precision: 0.7131 - recall: 0.2595 - val_loss: 5.6321 - val_top_k_categorical_accuracy: 0.3173 - val_auc: 0.6397 - val_precision: 0.1577 - val_recall: 0.0315 - lr: 1.0000e-06
+ 133/133 ━━━━━━━━━━━━━━━━━━━━ 8s 64ms/step - auc: 0.9565 - loss: 1.4170 - precision: 0.7169 - recall: 0.2421 - top_k_categorical_accuracy: 0.8543 - val_auc: 0.6385 - val_loss: 5.1851 - val_precision: 0.2271 - val_recall: 0.0415 - val_top_k_categorical_accuracy: 0.3072 - learning_rate: 1.0000e-06
 Epoch 22/30
-133/133 [==============================] - 8s 59ms/step - loss: 1.1998 - top_k_categorical_accuracy: 0.9229 - auc: 0.9666 - precision: 0.6866 - recall: 0.2538 - val_loss: 5.6516 - val_top_k_categorical_accuracy: 0.3193 - val_auc: 0.6403 - val_precision: 0.1589 - val_recall: 0.0321 - lr: 1.0000e-06
+ 133/133 ━━━━━━━━━━━━━━━━━━━━ 8s 63ms/step - auc: 0.9577 - loss: 1.4029 - precision: 0.7305 - recall: 0.2518 - top_k_categorical_accuracy: 0.8536 - val_auc: 0.6384 - val_loss: 5.2043 - val_precision: 0.2279 - val_recall: 0.0415 - val_top_k_categorical_accuracy: 0.3059 - learning_rate: 1.0000e-06
 Epoch 23/30
-133/133 [==============================] - 8s 60ms/step - loss: 1.1948 - top_k_categorical_accuracy: 0.9206 - auc: 0.9668 - precision: 0.7076 - recall: 0.2606 - val_loss: 5.6690 - val_top_k_categorical_accuracy: 0.3199 - val_auc: 0.6397 - val_precision: 0.1607 - val_recall: 0.0328 - lr: 1.0000e-06
+ 133/133 ━━━━━━━━━━━━━━━━━━━━ 8s 63ms/step - auc: 0.9574 - loss: 1.4048 - precision: 0.7285 - recall: 0.2575 - top_k_categorical_accuracy: 0.8527 - val_auc: 0.6382 - val_loss: 5.2247 - val_precision: 0.2308 - val_recall: 0.0442 - val_top_k_categorical_accuracy: 0.3106 - learning_rate: 1.0000e-06
 Epoch 24/30
-133/133 [==============================] - 7s 51ms/step - loss: 1.1970 - top_k_categorical_accuracy: 0.9233 - auc: 0.9666 - precision: 0.6933 - recall: 0.2595 - val_loss: 5.6968 - val_top_k_categorical_accuracy: 0.3206 - val_auc: 0.6391 - val_precision: 0.1608 - val_recall: 0.0335 - lr: 1.0000e-06
+ 133/133 ━━━━━━━━━━━━━━━━━━━━ 8s 63ms/step - auc: 0.9579 - loss: 1.3998 - precision: 0.7426 - recall: 0.2588 - top_k_categorical_accuracy: 0.8503 - val_auc: 0.6386 - val_loss: 5.2479 - val_precision: 0.2308 - val_recall: 0.0442 - val_top_k_categorical_accuracy: 0.3092 - learning_rate: 1.0000e-06
 Epoch 25/30
-133/133 [==============================] - 8s 60ms/step - loss: 1.1919 - top_k_categorical_accuracy: 0.9240 - auc: 0.9670 - precision: 0.7035 - recall: 0.2636 - val_loss: 5.7125 - val_top_k_categorical_accuracy: 0.3199 - val_auc: 0.6398 - val_precision: 0.1546 - val_recall: 0.0328 - lr: 1.0000e-06
+ 133/133 ━━━━━━━━━━━━━━━━━━━━ 8s 63ms/step - auc: 0.9585 - loss: 1.3918 - precision: 0.7348 - recall: 0.2609 - top_k_categorical_accuracy: 0.8607 - val_auc: 0.6378 - val_loss: 5.2648 - val_precision: 0.2287 - val_recall: 0.0448 - val_top_k_categorical_accuracy: 0.3106 - learning_rate: 1.0000e-06
 Epoch 26/30
-133/133 [==============================] - 8s 59ms/step - loss: 1.1896 - top_k_categorical_accuracy: 0.9227 - auc: 0.9671 - precision: 0.6973 - recall: 0.2661 - val_loss: 5.7305 - val_top_k_categorical_accuracy: 0.3206 - val_auc: 0.6388 - val_precision: 0.1567 - val_recall: 0.0335 - lr: 1.0000e-06
+ 133/133 ━━━━━━━━━━━━━━━━━━━━ 8s 63ms/step - auc: 0.9587 - loss: 1.3881 - precision: 0.7425 - recall: 0.2669 - top_k_categorical_accuracy: 0.8544 - val_auc: 0.6380 - val_loss: 5.2877 - val_precision: 0.2226 - val_recall: 0.0448 - val_top_k_categorical_accuracy: 0.3099 - learning_rate: 1.0000e-06
 Epoch 27/30
-133/133 [==============================] - 8s 59ms/step - loss: 1.1820 - top_k_categorical_accuracy: 0.9234 - auc: 0.9677 - precision: 0.7033 - recall: 0.2690 - val_loss: 5.7487 - val_top_k_categorical_accuracy: 0.3226 - val_auc: 0.6381 - val_precision: 0.1610 - val_recall: 0.0348 - lr: 1.0000e-06
+ 133/133 ━━━━━━━━━━━━━━━━━━━━ 8s 63ms/step - auc: 0.9590 - loss: 1.3834 - precision: 0.7469 - recall: 0.2665 - top_k_categorical_accuracy: 0.8599 - val_auc: 0.6379 - val_loss: 5.3021 - val_precision: 0.2252 - val_recall: 0.0455 - val_top_k_categorical_accuracy: 0.3072 - learning_rate: 1.0000e-06
 Epoch 28/30
-133/133 [==============================] - 8s 59ms/step - loss: 1.1780 - top_k_categorical_accuracy: 0.9251 - auc: 0.9680 - precision: 0.7105 - recall: 0.2701 - val_loss: 5.7676 - val_top_k_categorical_accuracy: 0.3193 - val_auc: 0.6391 - val_precision: 0.1560 - val_recall: 0.0341 - lr: 1.0000e-06
+ 133/133 ━━━━━━━━━━━━━━━━━━━━ 8s 64ms/step - auc: 0.9597 - loss: 1.3763 - precision: 0.7600 - recall: 0.2701 - top_k_categorical_accuracy: 0.8628 - val_auc: 0.6380 - val_loss: 5.3241 - val_precision: 0.2244 - val_recall: 0.0469 - val_top_k_categorical_accuracy: 0.3119 - learning_rate: 1.0000e-06
 Epoch 29/30
-133/133 [==============================] - 8s 58ms/step - loss: 1.1737 - top_k_categorical_accuracy: 0.9275 - auc: 0.9684 - precision: 0.7024 - recall: 0.2765 - val_loss: 5.7901 - val_top_k_categorical_accuracy: 0.3193 - val_auc: 0.6391 - val_precision: 0.1518 - val_recall: 0.0341 - lr: 1.0000e-06
+ 133/133 ━━━━━━━━━━━━━━━━━━━━ 8s 63ms/step - auc: 0.9601 - loss: 1.3692 - precision: 0.7549 - recall: 0.2761 - top_k_categorical_accuracy: 0.8634 - val_auc: 0.6372 - val_loss: 5.3494 - val_precision: 0.2229 - val_recall: 0.0469 - val_top_k_categorical_accuracy: 0.3119 - learning_rate: 1.0000e-06
 Epoch 30/30
-133/133 [==============================] - 8s 58ms/step - loss: 1.1725 - top_k_categorical_accuracy: 0.9252 - auc: 0.9685 - precision: 0.7119 - recall: 0.2780 - val_loss: 5.8028 - val_top_k_categorical_accuracy: 0.3199 - val_auc: 0.6382 - val_precision: 0.1450 - val_recall: 0.0328 - lr: 1.0000e-06
+ 133/133 ━━━━━━━━━━━━━━━━━━━━ 8s 63ms/step - auc: 0.9604 - loss: 1.3694 - precision: 0.7447 - recall: 0.2723 - top_k_categorical_accuracy: 0.8648 - val_auc: 0.6372 - val_loss: 5.3667 - val_precision: 0.2226 - val_recall: 0.0475 - val_top_k_categorical_accuracy: 0.3119 - learning_rate: 1.0000e-06
 
 ```
 </div>
@@ -858,7 +974,7 @@ plot_history_metrics(conv_model_history)
 
 
     
-![png](/img/examples/timeseries/eeg_signal_classification/eeg_signal_48_0.png)
+![png](/img/examples/timeseries/eeg_signal_classification/eeg_signal_classification_48_0.png)
     
 
 
@@ -913,16 +1029,18 @@ view_evaluated_eeg_plots(conv_model)
 
 <div class="k-default-codeblock">
 ```
-24/24 [==============================] - 0s 9ms/step - loss: 5.8028 - top_k_categorical_accuracy: 0.3199 - auc: 0.6382 - precision: 0.1450 - recall: 0.0328
-Loss : 5.802786827087402
-Top 3 Categorical Accuracy : 0.31994643807411194
-Area under the Curve (ROC) : 0.6381803750991821
-Precision : 0.14497041702270508
-Recall : 0.032797858119010925
+ 24/24 ━━━━━━━━━━━━━━━━━━━━ 0s 4ms/step - auc: 0.6438 - loss: 5.3150 - precision: 0.2589 - recall: 0.0565 - top_k_categorical_accuracy: 0.3281
+Loss : 5.366718769073486
+Top 3 Categorical Accuracy : 0.6372398138046265
+Area under the Curve (ROC) : 0.222570538520813
+Precision : 0.04752342775464058
+Recall : 0.311914324760437
+
+W0000 00:00:1699421785.101645    4408 graph_launch.cc:671] Fallback to op-by-op mode because memset node breaks graph update
 
 ```
 </div>
     
-![png](/img/examples/timeseries/eeg_signal_classification/eeg_signal_50_1.png)
+![png](/img/examples/timeseries/eeg_signal_classification/eeg_signal_classification_50_2.png)
     
 

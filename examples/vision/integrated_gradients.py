@@ -4,7 +4,7 @@ Author: [A_K_Nain](https://twitter.com/A_K_Nain)
 Date created: 2020/06/02
 Last modified: 2020/06/02
 Description: How to obtain integrated gradients for a classification model.
-Accelerator: NONE
+Accelerator: None
 """
 
 """
@@ -55,12 +55,13 @@ consider reading this excellent
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy import ndimage
-from IPython.display import Image
+from IPython.display import Image, display
 
 import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras import layers
-from tensorflow.keras.applications import xception
+import keras
+from keras import layers
+from keras.applications import xception
+
 
 # Size of the input image
 img_size = (299, 299, 3)
@@ -284,7 +285,10 @@ class GradVisualizer:
         return opened
 
     def draw_outlines(
-        self, attributions, percentage=90, connected_component_structure=np.ones((3, 3))
+        self,
+        attributions,
+        percentage=90,
+        connected_component_structure=np.ones((3, 3)),
     ):
         # 1. Binarize the attributions.
         attributions = self.binarize(attributions)
@@ -293,7 +297,7 @@ class GradVisualizer:
         attributions = ndimage.binary_fill_holes(attributions)
 
         # 3. Compute connected components
-        connected_components, num_comp = ndimage.measurements.label(
+        connected_components, num_comp = ndimage.label(
             attributions, structure=connected_component_structure
         )
 
@@ -449,7 +453,6 @@ class GradVisualizer:
 
 """
 ## Let's test-drive it
-You can try the model on [Hugging Face Spaces](https://huggingface.co/spaces/keras-io/integrated_gradients).
 """
 
 # 1. Convert the image to numpy array

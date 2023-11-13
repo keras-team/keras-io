@@ -23,8 +23,14 @@ classification dataset (unprocessed version). We use the `TextVectorization` lay
 
 
 ```python
+import os
+
+os.environ["KERAS_BACKEND"] = "tensorflow"
+
+import keras
 import tensorflow as tf
 import numpy as np
+from keras import layers
 ```
 
 ---
@@ -42,7 +48,7 @@ Let's download the data and inspect its structure.
 ```
   % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
                                  Dload  Upload   Total   Spent    Left  Speed
-100 80.2M  100 80.2M    0     0  16.1M      0  0:00:04  0:00:04 --:--:-- 16.4M
+100 80.2M  100 80.2M    0     0  87.7M      0 --:--:-- --:--:-- --:--:-- 87.7M
 
 ```
 </div>
@@ -61,12 +67,12 @@ The `aclImdb` folder contains a `train` and `test` subfolder:
 ```
 <div class="k-default-codeblock">
 ```
-README     imdb.vocab imdbEr.txt [34mtest[m[m       [34mtrain[m[m
+imdbEr.txt  imdb.vocab	README	test  train
 
-labeledBow.feat [34mneg[m[m             [34mpos[m[m             urls_neg.txt    urls_pos.txt
+labeledBow.feat  neg  pos  urls_neg.txt  urls_pos.txt
 
-labeledBow.feat [34mpos[m[m             unsupBow.feat   urls_pos.txt
-[34mneg[m[m             [34munsup[m[m           urls_neg.txt    urls_unsup.txt
+labeledBow.feat  pos	unsupBow.feat  urls_pos.txt
+neg		 unsup	urls_neg.txt   urls_unsup.txt
 
 ```
 </div>
@@ -91,7 +97,7 @@ We are only interested in the `pos` and `neg` subfolders, so let's delete the ot
 !rm -r aclImdb/train/unsup
 ```
 
-You can use the utility `tf.keras.utils.text_dataset_from_directory` to
+You can use the utility `keras.utils.text_dataset_from_directory` to
 generate a labeled `tf.data.Dataset` object from a set of text files on disk filed
  into class-specific folders.
 
@@ -113,21 +119,21 @@ get have no overlap.
 
 ```python
 batch_size = 32
-raw_train_ds = tf.keras.utils.text_dataset_from_directory(
+raw_train_ds = keras.utils.text_dataset_from_directory(
     "aclImdb/train",
     batch_size=batch_size,
     validation_split=0.2,
     subset="training",
     seed=1337,
 )
-raw_val_ds = tf.keras.utils.text_dataset_from_directory(
+raw_val_ds = keras.utils.text_dataset_from_directory(
     "aclImdb/train",
     batch_size=batch_size,
     validation_split=0.2,
     subset="validation",
     seed=1337,
 )
-raw_test_ds = tf.keras.utils.text_dataset_from_directory(
+raw_test_ds = keras.utils.text_dataset_from_directory(
     "aclImdb/test", batch_size=batch_size
 )
 
@@ -187,9 +193,9 @@ In particular, we remove `<br />` tags.
 
 
 ```python
-from tensorflow.keras.layers import TextVectorization
 import string
 import re
+
 
 # Having looked at our data above, we see that the raw text contains HTML break
 # tags of the form '<br />'. These tags will not be removed by the default
@@ -215,7 +221,7 @@ sequence_length = 500
 # and the custom standardization defined above.
 # We also set an explicit maximum sequence length, since the CNNs later in our
 # model won't support ragged sequences.
-vectorize_layer = TextVectorization(
+vectorize_layer = keras.layers.TextVectorization(
     standardize=custom_standardization,
     max_tokens=max_features,
     output_mode="int",
@@ -241,7 +247,7 @@ There are 2 ways we can use our text vectorization layer:
  strings, like this:
 
 ```python
-text_input = tf.keras.Input(shape=(1,), dtype=tf.string, name='text')
+text_input = keras.Input(shape=(1,), dtype=tf.string, name='text')
 x = vectorize_layer(text_input)
 x = layers.Embedding(max_features + 1, embedding_dim)(x)
 ...
@@ -286,10 +292,8 @@ We choose a simple 1D convnet starting with an `Embedding` layer.
 
 
 ```python
-from tensorflow.keras import layers
-
 # A integer input for vocab indices.
-inputs = tf.keras.Input(shape=(None,), dtype="int64")
+inputs = keras.Input(shape=(None,), dtype="int64")
 
 # Next, we add a layer to map those vocab indices into a space of dimensionality
 # 'embedding_dim'.
@@ -308,7 +312,7 @@ x = layers.Dropout(0.5)(x)
 # We project onto a single unit output layer, and squash it with a sigmoid:
 predictions = layers.Dense(1, activation="sigmoid", name="predictions")(x)
 
-model = tf.keras.Model(inputs, predictions)
+model = keras.Model(inputs, predictions)
 
 # Compile the model with binary crossentropy loss and an adam optimizer.
 model.compile(loss="binary_crossentropy", optimizer="adam", metrics=["accuracy"])
@@ -328,13 +332,13 @@ model.fit(train_ds, validation_data=val_ds, epochs=epochs)
 <div class="k-default-codeblock">
 ```
 Epoch 1/3
-625/625 [==============================] - 46s 73ms/step - loss: 0.5005 - accuracy: 0.7156 - val_loss: 0.3103 - val_accuracy: 0.8696
+ 625/625 ━━━━━━━━━━━━━━━━━━━━ 5s 4ms/step - accuracy: 0.6082 - loss: 0.6121 - val_accuracy: 0.8589 - val_loss: 0.3313
 Epoch 2/3
-625/625 [==============================] - 51s 81ms/step - loss: 0.2262 - accuracy: 0.9115 - val_loss: 0.3255 - val_accuracy: 0.8754
+ 625/625 ━━━━━━━━━━━━━━━━━━━━ 2s 3ms/step - accuracy: 0.8855 - loss: 0.2748 - val_accuracy: 0.8662 - val_loss: 0.3499
 Epoch 3/3
-625/625 [==============================] - 50s 81ms/step - loss: 0.1142 - accuracy: 0.9574 - val_loss: 0.4157 - val_accuracy: 0.8698
+ 625/625 ━━━━━━━━━━━━━━━━━━━━ 2s 3ms/step - accuracy: 0.9463 - loss: 0.1432 - val_accuracy: 0.8758 - val_loss: 0.3789
 
-<keras.callbacks.History at 0x154613190>
+<keras.src.callbacks.history.History at 0x7ff434de94b0>
 
 ```
 </div>
@@ -348,9 +352,9 @@ model.evaluate(test_ds)
 
 <div class="k-default-codeblock">
 ```
-782/782 [==============================] - 14s 18ms/step - loss: 0.4539 - accuracy: 0.8570
+ 782/782 ━━━━━━━━━━━━━━━━━━━━ 2s 2ms/step - accuracy: 0.8634 - loss: 0.3848
 
-[0.45387956500053406, 0.8569999933242798]
+[0.3857516348361969, 0.8642103672027588]
 
 ```
 </div>
@@ -363,14 +367,14 @@ create a new model (using the weights we just trained):
 
 ```python
 # A string input
-inputs = tf.keras.Input(shape=(1,), dtype="string")
+inputs = keras.Input(shape=(1,), dtype="string")
 # Turn strings into vocab indices
 indices = vectorize_layer(inputs)
 # Turn vocab indices into predictions
 outputs = model(indices)
 
 # Our end to end model
-end_to_end_model = tf.keras.Model(inputs, outputs)
+end_to_end_model = keras.Model(inputs, outputs)
 end_to_end_model.compile(
     loss="binary_crossentropy", optimizer="adam", metrics=["accuracy"]
 )
@@ -381,9 +385,9 @@ end_to_end_model.evaluate(raw_test_ds)
 
 <div class="k-default-codeblock">
 ```
-782/782 [==============================] - 20s 25ms/step - loss: 0.4539 - accuracy: 0.8570
+ 782/782 ━━━━━━━━━━━━━━━━━━━━ 5s 5ms/step - accuracy: 0.8636 - loss: 0.3829
 
-[0.45387890934944153, 0.8569999933242798]
+[0.38630548119544983, 0.8639705777168274]
 
 ```
 </div>

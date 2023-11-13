@@ -1,8 +1,8 @@
 """
 Title: Keypoint Detection with Transfer Learning
-Author: [Sayak Paul](https://twitter.com/RisingSayak)
+Author: [Sayak Paul](https://twitter.com/RisingSayak), converted to Keras 3 by [Muhammad Anas Raza](https://anasrz.com)
 Date created: 2021/05/02
-Last modified: 2021/05/02
+Last modified: 2023/07/19
 Description: Training a keypoint detector with data augmentation and transfer learning.
 Accelerator: GPU
 """
@@ -56,10 +56,8 @@ unzip -qq ~/stanfordextra_v12.zip
 """
 ## Imports
 """
-
-from tensorflow.keras import layers
-from tensorflow import keras
-import tensorflow as tf
+from keras import layers
+import keras
 
 from imgaug.augmentables.kps import KeypointsOnImage
 from imgaug.augmentables.kps import Keypoint
@@ -205,7 +203,12 @@ def visualize_keypoints(images, keypoints):
         if isinstance(current_keypoint, KeypointsOnImage):
             for idx, kp in enumerate(current_keypoint.keypoints):
                 ax_all.scatter(
-                    [kp.x], [kp.y], c=colours[idx], marker="x", s=50, linewidths=5
+                    [kp.x],
+                    [kp.y],
+                    c=colours[idx],
+                    marker="x",
+                    s=50,
+                    linewidths=5,
                 )
         else:
             current_keypoint = np.array(current_keypoint)
@@ -251,8 +254,9 @@ that applies data augmentation on batches of data using `imgaug`.
 """
 
 
-class KeyPointsDataset(keras.utils.Sequence):
-    def __init__(self, image_keys, aug, batch_size=BATCH_SIZE, train=True):
+class KeyPointsDataset(keras.utils.PyDataset):
+    def __init__(self, image_keys, aug, batch_size=BATCH_SIZE, train=True, **kwargs):
+        super().__init__(**kwargs)
         self.image_keys = image_keys
         self.aug = aug
         self.batch_size = batch_size
@@ -349,8 +353,12 @@ train_keys, validation_keys = (
 ## Data generator investigation
 """
 
-train_dataset = KeyPointsDataset(train_keys, train_aug)
-validation_dataset = KeyPointsDataset(validation_keys, test_aug, train=False)
+train_dataset = KeyPointsDataset(
+    train_keys, train_aug, workers=2, use_multiprocessing=True
+)
+validation_dataset = KeyPointsDataset(
+    validation_keys, test_aug, train=False, workers=2, use_multiprocessing=True
+)
 
 print(f"Total batches in training set: {len(train_dataset)}")
 print(f"Total batches in validation set: {len(validation_dataset)}")
@@ -377,7 +385,9 @@ head for predicting coordinates.
 def get_model():
     # Load the pre-trained weights of MobileNetV2 and freeze the weights
     backbone = keras.applications.MobileNetV2(
-        weights="imagenet", include_top=False, input_shape=(IMG_SIZE, IMG_SIZE, 3)
+        weights="imagenet",
+        include_top=False,
+        input_shape=(IMG_SIZE, IMG_SIZE, 3),
     )
     backbone.trainable = False
 
