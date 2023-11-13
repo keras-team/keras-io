@@ -41,8 +41,10 @@ This example requires KerasNLP. You can install it via the following command:
 ```python
 import os
 import keras_nlp
-import tensorflow as tf
-from tensorflow import keras
+import keras
+
+import tensorflow.data as tf_data
+import tensorflow.strings as tf_strings
 ```
 
 ---
@@ -52,18 +54,18 @@ from tensorflow import keras
 ```python
 # Data
 BATCH_SIZE = 64
-SEQ_LEN = 128
-MIN_TRAINING_SEQ_LEN = 450
+MIN_STRING_LEN = 512  # Strings shorter than this will be discarded
+SEQ_LEN = 128  # Length of training sequences, in tokens
 
 # Model
 EMBED_DIM = 256
-FEED_FORWARD_DIM = 256
+FEED_FORWARD_DIM = 128
 NUM_HEADS = 3
 NUM_LAYERS = 2
 VOCAB_SIZE = 5000  # Limits parameters in model.
 
 # Training
-EPOCHS = 6
+EPOCHS = 5
 
 # Inference
 NUM_TOKENS_TO_GENERATE = 80
@@ -86,20 +88,27 @@ dir = os.path.expanduser("~/.keras/datasets/simplebooks/")
 
 # Load simplebooks-92 train set and filter out short lines.
 raw_train_ds = (
-    tf.data.TextLineDataset(dir + "simplebooks-92-raw/train.txt")
-    .filter(lambda x: tf.strings.length(x) > MIN_TRAINING_SEQ_LEN)
+    tf_data.TextLineDataset(dir + "simplebooks-92-raw/train.txt")
+    .filter(lambda x: tf_strings.length(x) > MIN_STRING_LEN)
     .batch(BATCH_SIZE)
     .shuffle(buffer_size=256)
 )
 
 # Load simplebooks-92 validation set and filter out short lines.
 raw_val_ds = (
-    tf.data.TextLineDataset(dir + "simplebooks-92-raw/valid.txt")
-    .filter(lambda x: tf.strings.length(x) > MIN_TRAINING_SEQ_LEN)
+    tf_data.TextLineDataset(dir + "simplebooks-92-raw/valid.txt")
+    .filter(lambda x: tf_strings.length(x) > MIN_STRING_LEN)
     .batch(BATCH_SIZE)
 )
 ```
 
+<div class="k-default-codeblock">
+```
+Downloading data from https://dldata-public.s3.us-east-2.amazonaws.com/simplebooks.zip
+ 282386239/282386239 ━━━━━━━━━━━━━━━━━━━━ 7s 0us/step
+
+```
+</div>
 ---
 ## Train the tokenizer
 
@@ -168,11 +177,11 @@ def preprocess(inputs):
 
 
 # Tokenize and split into train and label sequences.
-train_ds = raw_train_ds.map(preprocess, num_parallel_calls=tf.data.AUTOTUNE).prefetch(
-    tf.data.AUTOTUNE
+train_ds = raw_train_ds.map(preprocess, num_parallel_calls=tf_data.AUTOTUNE).prefetch(
+    tf_data.AUTOTUNE
 )
-val_ds = raw_val_ds.map(preprocess, num_parallel_calls=tf.data.AUTOTUNE).prefetch(
-    tf.data.AUTOTUNE
+val_ds = raw_val_ds.map(preprocess, num_parallel_calls=tf_data.AUTOTUNE).prefetch(
+    tf_data.AUTOTUNE
 )
 ```
 
@@ -189,7 +198,7 @@ The layer has no cross-attention when run with decoder sequence only.
 
 
 ```python
-inputs = keras.layers.Input(shape=(None,), dtype=tf.int32)
+inputs = keras.layers.Input(shape=(None,), dtype="int32")
 # Embedding.
 embedding_layer = keras_nlp.layers.TokenAndPositionEmbedding(
     vocabulary_size=VOCAB_SIZE,
@@ -208,7 +217,7 @@ for _ in range(NUM_LAYERS):
 # Output.
 outputs = keras.layers.Dense(VOCAB_SIZE)(x)
 model = keras.Model(inputs=inputs, outputs=outputs)
-loss_fn = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
+loss_fn = keras.losses.SparseCategoricalCrossentropy(from_logits=True)
 perplexity = keras_nlp.metrics.Perplexity(from_logits=True, mask_token_id=0)
 model.compile(optimizer="adam", loss=loss_fn, metrics=[perplexity])
 ```
@@ -223,34 +232,51 @@ while the number of Transformer decoder layers (`NUM_LAYERS`) doesn't affect it 
 model.summary()
 ```
 
-<div class="k-default-codeblock">
-```
-Model: "model"
-_________________________________________________________________
- Layer (type)                Output Shape              Param #   
-=================================================================
- input_1 (InputLayer)        [(None, None)]            0         
-                                                                 
- token_and_position_embeddin  (None, None, 256)        1312768   
- g (TokenAndPositionEmbeddin                                     
- g)                                                              
-                                                                 
- transformer_decoder (Transf  (None, None, 256)        394749    
- ormerDecoder)                                                   
-                                                                 
- transformer_decoder_1 (Tran  (None, None, 256)        394749    
- sformerDecoder)                                                 
-                                                                 
- dense (Dense)               (None, None, 5000)        1285000   
-                                                                 
-=================================================================
-Total params: 3,387,266
-Trainable params: 3,387,266
-Non-trainable params: 0
-_________________________________________________________________
 
-```
-</div>
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold">Model: "functional_1"</span>
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━┓
+┃<span style="font-weight: bold"> Layer (type)                    </span>┃<span style="font-weight: bold"> Output Shape              </span>┃<span style="font-weight: bold">    Param # </span>┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━┩
+│ input_layer (<span style="color: #0087ff; text-decoration-color: #0087ff">InputLayer</span>)        │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>)              │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ token_and_position_embedding    │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">256</span>)         │  <span style="color: #00af00; text-decoration-color: #00af00">1,312,768</span> │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">TokenAndPositionEmbedding</span>)     │                           │            │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ transformer_decoder             │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">256</span>)         │    <span style="color: #00af00; text-decoration-color: #00af00">329,085</span> │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">TransformerDecoder</span>)            │                           │            │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ transformer_decoder_1           │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">256</span>)         │    <span style="color: #00af00; text-decoration-color: #00af00">329,085</span> │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">TransformerDecoder</span>)            │                           │            │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ dense (<span style="color: #0087ff; text-decoration-color: #0087ff">Dense</span>)                   │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">5000</span>)        │  <span style="color: #00af00; text-decoration-color: #00af00">1,285,000</span> │
+└─────────────────────────────────┴───────────────────────────┴────────────┘
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Total params: </span><span style="color: #00af00; text-decoration-color: #00af00">3,255,938</span> (12.42 MB)
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Trainable params: </span><span style="color: #00af00; text-decoration-color: #00af00">3,255,938</span> (12.42 MB)
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Non-trainable params: </span><span style="color: #00af00; text-decoration-color: #00af00">0</span> (0.00 B)
+</pre>
+
+
+
 ---
 ## Training
 
@@ -258,25 +284,43 @@ Now that we have our model, let's train it with the `fit()` method.
 
 
 ```python
-model.fit(train_ds, validation_data=val_ds, verbose=2, epochs=EPOCHS)
+model.fit(train_ds, validation_data=val_ds, epochs=EPOCHS)
 ```
 
 <div class="k-default-codeblock">
 ```
-Epoch 1/6
-3169/3169 - 132s - loss: 4.5592 - perplexity: 95.8829 - val_loss: 4.1382 - val_perplexity: 63.2792 - 132s/epoch - 42ms/step
-Epoch 2/6
-3169/3169 - 63s - loss: 4.0597 - perplexity: 58.1860 - val_loss: 4.0272 - val_perplexity: 56.6228 - 63s/epoch - 20ms/step
-Epoch 3/6
-3169/3169 - 64s - loss: 3.9437 - perplexity: 51.8076 - val_loss: 3.9825 - val_perplexity: 54.1286 - 64s/epoch - 20ms/step
-Epoch 4/6
-3169/3169 - 64s - loss: 3.8803 - perplexity: 48.6225 - val_loss: 3.9078 - val_perplexity: 50.1429 - 64s/epoch - 20ms/step
-Epoch 5/6
-3169/3169 - 64s - loss: 3.8357 - perplexity: 46.5021 - val_loss: 3.8531 - val_perplexity: 47.4559 - 64s/epoch - 20ms/step
-Epoch 6/6
-3169/3169 - 64s - loss: 3.8020 - perplexity: 44.9577 - val_loss: 3.8446 - val_perplexity: 47.1300 - 64s/epoch - 20ms/step
+Epoch 1/5
 
-<keras.callbacks.History at 0x7f414008a970>
+/opt/conda/envs/keras-tensorflow/lib/python3.10/site-packages/keras/src/layers/layer.py:861: UserWarning: Layer 'position_embedding' (of type PositionEmbedding) was passed an input with a mask attached to it. However, this layer does not support masking and will therefore destroy the mask information. Downstream layers will not see the mask.
+  warnings.warn(
+/opt/conda/envs/keras-tensorflow/lib/python3.10/site-packages/keras/src/layers/layer.py:861: UserWarning: Layer 'query' (of type EinsumDense) was passed an input with a mask attached to it. However, this layer does not support masking and will therefore destroy the mask information. Downstream layers will not see the mask.
+  warnings.warn(
+/opt/conda/envs/keras-tensorflow/lib/python3.10/site-packages/keras/src/layers/layer.py:861: UserWarning: Layer 'key' (of type EinsumDense) was passed an input with a mask attached to it. However, this layer does not support masking and will therefore destroy the mask information. Downstream layers will not see the mask.
+  warnings.warn(
+/opt/conda/envs/keras-tensorflow/lib/python3.10/site-packages/keras/src/layers/layer.py:861: UserWarning: Layer 'value' (of type EinsumDense) was passed an input with a mask attached to it. However, this layer does not support masking and will therefore destroy the mask information. Downstream layers will not see the mask.
+  warnings.warn(
+
+      7/Unknown  55s 25ms/step - loss: 8.2081 - perplexity: 3778.3420
+
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1699907982.650569   34813 device_compiler.h:187] Compiled cluster using XLA!  This line is logged at most once for the lifetime of the process.
+
+   2443/Unknown  213s 65ms/step - loss: 5.0013 - perplexity: 180.1717
+
+/opt/conda/envs/keras-tensorflow/lib/python3.10/contextlib.py:153: UserWarning: Your input ran out of data; interrupting training. Make sure that your dataset or generator can generate at least `steps_per_epoch * epochs` batches. You may need to use the `.repeat()` function when building your dataset.
+  self.gen.throw(typ, value, traceback)
+
+ 2445/2445 ━━━━━━━━━━━━━━━━━━━━ 216s 66ms/step - loss: 5.0008 - perplexity: 180.0715 - val_loss: 4.2176 - val_perplexity: 68.0438
+Epoch 2/5
+ 2445/2445 ━━━━━━━━━━━━━━━━━━━━ 127s 48ms/step - loss: 4.1699 - perplexity: 64.7740 - val_loss: 4.0553 - val_perplexity: 57.7996
+Epoch 3/5
+ 2445/2445 ━━━━━━━━━━━━━━━━━━━━ 126s 47ms/step - loss: 4.0286 - perplexity: 56.2138 - val_loss: 4.0134 - val_perplexity: 55.4446
+Epoch 4/5
+ 2445/2445 ━━━━━━━━━━━━━━━━━━━━ 134s 50ms/step - loss: 3.9576 - perplexity: 52.3643 - val_loss: 3.9900 - val_perplexity: 54.1153
+Epoch 5/5
+ 2445/2445 ━━━━━━━━━━━━━━━━━━━━ 135s 51ms/step - loss: 3.9080 - perplexity: 49.8242 - val_loss: 3.9500 - val_perplexity: 52.0006
+
+<keras.src.callbacks.history.History at 0x7f7de0365ba0>
 
 ```
 </div>
@@ -361,7 +405,7 @@ print(f"Greedy search generated text: \n{txt}\n")
 <div class="k-default-codeblock">
 ```
 Greedy search generated text: 
-[b'[BOS] " i have been a good deal of trouble , " the captain said , " but i have been a good deal more than i have been when i have been a good deal worse than i have been . i have been a good deal worse than i have been when i have been a boy , and have been a boy , and i have been a boy , and have been a boy , and have been a boy , and i have been a boy , and i have been a boy , and i have been a boy , and i have been a boy , and i have been a boy , and i have been a boy , and']
+[b'[BOS] " i \' m going to tell you , " said the boy , " i \' ll tell you , and you \' ll be a good friend , and you \' ll be a good friend , and you \' ll be a good friend , and you \' ll be a good friend , and you \' ll be a good friend , and you \' ll be a good friend , and you \' ll be a good friend , and you \' ll be a good friend , and you \' ll be a good friend , and you \' ll be a good friend , and you \' ll be a good friend , and you \' ll be a good']
 ```
 </div>
     
@@ -395,7 +439,7 @@ print(f"Beam search generated text: \n{txt}\n")
 <div class="k-default-codeblock">
 ```
 Beam search generated text: 
-[b'[BOS] " well , i don \' t know what to do , " he said . " i don \' t know what to do . i don \' t know what to do , but i don \' t know what to do . i don \' t know what to do . i don \' t know what to do , but i don \' t know what to do . i don \' t know what to do , but i don \' t know what to do . i don \' t know what to do , but i don \' t know what to do . i don \' t know what to do , but i don \' t want to']
+[b'[BOS] " i don \' t know anything about it , " she said . " i don \' t know anything about it . i don \' t know anything about it , but i don \' t know anything about it . i don \' t know anything about it , but i don \' t know anything about it . i don \' t know anything about it , but i don \' t know it . i don \' t know it , but i don \' t know it . i don \' t know it , but i don \' t know it . i don \' t know it , but i don \' t know it . i don \'']
 ```
 </div>
     
@@ -424,7 +468,7 @@ print(f"Random search generated text: \n{txt}\n")
 <div class="k-default-codeblock">
 ```
 Random search generated text: 
-[b"[BOS] the boat was convoying in the hand and mercer , there has been room at home . ages before miss m ' r smiling , miss penfold , edith , and miss penfold had endeavored to stare icy . the principal had mind to set his own house to fetch two children besides , and helen was as hot as savage as you allen . we were only as silly at large an honest site - looking man back with thirts the gate , and this was a neat tower , and it was full of calm - faced than once upon the g"]
+[b'[BOS] eleanor . like ice , not children would have suspicious forehead . they will see him , no goods in her plums . i have made a stump one , on the occasion , - - it is sacred , and one is unholy - plaything - - the partial consequences , and one refuge in a style of a boy , who was his grandmother . it was a young gentleman who bore off upon the middle of the day , rush and as he maltreated the female society , were growing at once . in and out of the craid little plays , stopping']
 ```
 </div>
     
@@ -457,7 +501,7 @@ print(f"Top-K search generated text: \n{txt}\n")
 <div class="k-default-codeblock">
 ```
 Top-K search generated text: 
-[b'[BOS] " that is , indeed , " she said ; " i think the saxon is to be sublican , as a matter to the french . the french will be able to give up as many of us as you can carry off the french . if you can see a french force at a time they will be in the first place . but now , as they are , i think it is , you know , we must not think of doing it , and , in the course of time the fight , it is as likely , and i will not do so , as you would have done , but as you see that']
+[b'[BOS] " the young man was not the one , and the boy went away to the green forest . they were a little girl \' s wife , and the child loved him as much as he did , and he had often heard of a little girl who lived near the house . they were too tired to go , and when they went down to the barns and get into the barn , and they got the first of the barns that they had been taught to do so , and the little people went to their homes . she did , she told them that she had been a very clever , and they had made the first . she knew they']
 ```
 </div>
     
@@ -493,7 +537,7 @@ print(f"Top-P search generated text: \n{txt}\n")
 <div class="k-default-codeblock">
 ```
 Top-P search generated text: 
-[b'[BOS] " i don \' t know what to do , " said the gracious discussion . " it was the general of the conde , that i was , at least , and i was going to have arrested , and he had just got a little idea of the situation . it was a man , but i had not told him , but he was as good as his head , and i could see the way of a chatterer , and had the first thing i thought of was the old man who had no fear of any prosperity . " [PAD] , i know , that']
+[b'[BOS] the children were both born in the spring , and the youngest sister were very much like the other children , but they did not see them . they were very happy , and their mother was a beautiful one . the youngest was one of the youngest sister of the youngest , and the youngest baby was very fond of the children . when they came home , they would see a little girl in the house , and had the beautiful family , and the children of the children had to sit and look on their backs , and the eldest children were very long , and they were so bright and happy , as they were , they had never noticed their hair ,']
 ```
 </div>
     
@@ -532,24 +576,24 @@ model.fit(train_ds.take(1), verbose=2, epochs=2, callbacks=[text_generation_call
 ```
 Epoch 1/2
 Top-K search generated text: 
-[b'[BOS] " but now i am glad to find your mother in this state of the situation , sir . i am sure of the chum of your own . i have come to ask you to take your own place , and that is why i must go to the king . i think that it will be very good and kind of positive and inquisitive as i have done . i am glad , however , that i may be glad to see that you are not very likely to have some money with me ; and i have never seen before , as i am sure that you are not very sure i should go to school']
+[b"[BOS] the young man was in the middle of a month , and he was able to take the crotch , but a long time , for he felt very well for himself in the sepoys ' s hands were chalks . he was the only boy , and he had a few years before been married , and the man said he was a tall one . he was a very handsome , and he was a very handsome young fellow , and a handsome , noble young man , but a boy , and man . he was a very handsome man , and was tall and handsome , and he looked like a gentleman . he was an"]
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-1/1 - 4s - loss: 3.8255 - perplexity: 45.9749 - 4s/epoch - 4s/step
+1/1 - 16s - 16s/step - loss: 3.9454 - perplexity: 51.6987
 Epoch 2/2
 Top-K search generated text: 
-[b'[BOS] " well , sir , the admiral was a man of the king , and his men would , if a man would say that the whole army of his men would be in charge , but it would be , in all haste to take his place , and be on arriving at brussels . it would be a hard thing to be done , if it were to be a great , and the country would be in the best of alleville , and the army would be in no hurry , for that country was in no way a little way to make the country road . [PAD] , in all respects the french , the country']
+[b'[BOS] " well , it is true . it is true that i should go to the house of a collector , in the matter of prussia that there is no other way there . there is no chance of being in the habit of being in the way of an invasion . i know not what i have done , but i have seen the man in the middle of a day . the next morning i shall take him to my father , for i am not the very day of the town , which would have been a little more than the one \' s daughter , i think it over and the whole affair will be']
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-1/1 - 4s - loss: 3.5802 - perplexity: 35.9931 - 4s/epoch - 4s/step
+1/1 - 17s - 17s/step - loss: 3.7860 - perplexity: 44.0932
 
-<keras.callbacks.History at 0x7f412bfff8e0>
+<keras.src.callbacks.history.History at 0x7f7de0325600>
 
 ```
 </div>
