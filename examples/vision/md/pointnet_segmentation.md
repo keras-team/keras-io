@@ -45,9 +45,9 @@ import pandas as pd
 from tqdm import tqdm
 from glob import glob
 
-import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras import layers
+import tensorflow as tf  # For tf.data
+import keras
+from keras import layers
 
 import matplotlib.pyplot as plt
 ```
@@ -182,7 +182,7 @@ for point_file in tqdm(points_files):
 
 <div class="k-default-codeblock">
 ```
-100%|█████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 4045/4045 [03:35<00:00, 18.76it/s]
+100%|██████████████████████████████████████████████████████████████████████| 4045/4045 [01:30<00:00, 44.76it/s]
 
 ```
 </div>
@@ -206,161 +206,161 @@ for _ in range(5):
 
 <div class="k-default-codeblock">
 ```
-point_clouds[475].shape: (2602, 3)
-point_cloud_labels[475].shape: (2602, 5)
-all_labels[475][0]: body 	point_cloud_labels[475][0]: [0. 1. 0. 0. 0.] 
+point_clouds[870].shape: (2571, 3)
+point_cloud_labels[870].shape: (2571, 5)
+all_labels[870][0]: body 	point_cloud_labels[870][0]: [0. 1. 0. 0. 0.] 
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-all_labels[475][1]: engine 	point_cloud_labels[475][1]: [0. 0. 0. 1. 0.] 
+all_labels[870][1]: engine 	point_cloud_labels[870][1]: [0. 0. 0. 1. 0.] 
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-all_labels[475][2]: body 	point_cloud_labels[475][2]: [0. 1. 0. 0. 0.] 
+all_labels[870][2]: body 	point_cloud_labels[870][2]: [0. 1. 0. 0. 0.] 
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-all_labels[475][3]: body 	point_cloud_labels[475][3]: [0. 1. 0. 0. 0.] 
+all_labels[870][3]: body 	point_cloud_labels[870][3]: [0. 1. 0. 0. 0.] 
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-all_labels[475][4]: wing 	point_cloud_labels[475][4]: [1. 0. 0. 0. 0.] 
+all_labels[870][4]: body 	point_cloud_labels[870][4]: [0. 1. 0. 0. 0.] 
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-point_clouds[2712].shape: (2602, 3)
-point_cloud_labels[2712].shape: (2602, 5)
-all_labels[2712][0]: tail 	point_cloud_labels[2712][0]: [0. 0. 1. 0. 0.] 
+point_clouds[2544].shape: (2571, 3)
+point_cloud_labels[2544].shape: (2571, 5)
+all_labels[2544][0]: tail 	point_cloud_labels[2544][0]: [0. 0. 1. 0. 0.] 
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-all_labels[2712][1]: wing 	point_cloud_labels[2712][1]: [1. 0. 0. 0. 0.] 
+all_labels[2544][1]: wing 	point_cloud_labels[2544][1]: [1. 0. 0. 0. 0.] 
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-all_labels[2712][2]: engine 	point_cloud_labels[2712][2]: [0. 0. 0. 1. 0.] 
+all_labels[2544][2]: body 	point_cloud_labels[2544][2]: [0. 1. 0. 0. 0.] 
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-all_labels[2712][3]: wing 	point_cloud_labels[2712][3]: [1. 0. 0. 0. 0.] 
+all_labels[2544][3]: body 	point_cloud_labels[2544][3]: [0. 1. 0. 0. 0.] 
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-all_labels[2712][4]: wing 	point_cloud_labels[2712][4]: [1. 0. 0. 0. 0.] 
+all_labels[2544][4]: body 	point_cloud_labels[2544][4]: [0. 1. 0. 0. 0.] 
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-point_clouds[1413].shape: (2602, 3)
-point_cloud_labels[1413].shape: (2602, 5)
-all_labels[1413][0]: body 	point_cloud_labels[1413][0]: [0. 1. 0. 0. 0.] 
+point_clouds[1606].shape: (2571, 3)
+point_cloud_labels[1606].shape: (2571, 5)
+all_labels[1606][0]: tail 	point_cloud_labels[1606][0]: [0. 0. 1. 0. 0.] 
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-all_labels[1413][1]: tail 	point_cloud_labels[1413][1]: [0. 0. 1. 0. 0.] 
+all_labels[1606][1]: wing 	point_cloud_labels[1606][1]: [1. 0. 0. 0. 0.] 
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-all_labels[1413][2]: tail 	point_cloud_labels[1413][2]: [0. 0. 1. 0. 0.] 
+all_labels[1606][2]: body 	point_cloud_labels[1606][2]: [0. 1. 0. 0. 0.] 
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-all_labels[1413][3]: tail 	point_cloud_labels[1413][3]: [0. 0. 1. 0. 0.] 
+all_labels[1606][3]: wing 	point_cloud_labels[1606][3]: [1. 0. 0. 0. 0.] 
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-all_labels[1413][4]: tail 	point_cloud_labels[1413][4]: [0. 0. 1. 0. 0.] 
+all_labels[1606][4]: wing 	point_cloud_labels[1606][4]: [1. 0. 0. 0. 0.] 
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-point_clouds[1207].shape: (2602, 3)
-point_cloud_labels[1207].shape: (2602, 5)
-all_labels[1207][0]: tail 	point_cloud_labels[1207][0]: [0. 0. 1. 0. 0.] 
+point_clouds[2631].shape: (2571, 3)
+point_cloud_labels[2631].shape: (2571, 5)
+all_labels[2631][0]: wing 	point_cloud_labels[2631][0]: [1. 0. 0. 0. 0.] 
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-all_labels[1207][1]: wing 	point_cloud_labels[1207][1]: [1. 0. 0. 0. 0.] 
+all_labels[2631][1]: wing 	point_cloud_labels[2631][1]: [1. 0. 0. 0. 0.] 
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-all_labels[1207][2]: wing 	point_cloud_labels[1207][2]: [1. 0. 0. 0. 0.] 
+all_labels[2631][2]: wing 	point_cloud_labels[2631][2]: [1. 0. 0. 0. 0.] 
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-all_labels[1207][3]: body 	point_cloud_labels[1207][3]: [0. 1. 0. 0. 0.] 
+all_labels[2631][3]: wing 	point_cloud_labels[2631][3]: [1. 0. 0. 0. 0.] 
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-all_labels[1207][4]: body 	point_cloud_labels[1207][4]: [0. 1. 0. 0. 0.] 
+all_labels[2631][4]: wing 	point_cloud_labels[2631][4]: [1. 0. 0. 0. 0.] 
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-point_clouds[2492].shape: (2602, 3)
-point_cloud_labels[2492].shape: (2602, 5)
-all_labels[2492][0]: engine 	point_cloud_labels[2492][0]: [0. 0. 0. 1. 0.] 
+point_clouds[476].shape: (2571, 3)
+point_cloud_labels[476].shape: (2571, 5)
+all_labels[476][0]: none 	point_cloud_labels[476][0]: [0. 0. 0. 0. 1.] 
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-all_labels[2492][1]: body 	point_cloud_labels[2492][1]: [0. 1. 0. 0. 0.] 
+all_labels[476][1]: body 	point_cloud_labels[476][1]: [0. 1. 0. 0. 0.] 
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-all_labels[2492][2]: body 	point_cloud_labels[2492][2]: [0. 1. 0. 0. 0.] 
+all_labels[476][2]: engine 	point_cloud_labels[476][2]: [0. 0. 0. 1. 0.] 
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-all_labels[2492][3]: body 	point_cloud_labels[2492][3]: [0. 1. 0. 0. 0.] 
+all_labels[476][3]: body 	point_cloud_labels[476][3]: [0. 1. 0. 0. 0.] 
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-all_labels[2492][4]: engine 	point_cloud_labels[2492][4]: [0. 0. 0. 1. 0.] 
+all_labels[476][4]: engine 	point_cloud_labels[476][4]: [0. 0. 0. 1. 0.] 
 ```
 </div>
     
@@ -442,7 +442,7 @@ for index in tqdm(range(len(point_clouds))):
 
 <div class="k-default-codeblock">
 ```
-100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 3694/3694 [00:07<00:00, 478.67it/s]
+100%|█████████████████████████████████████████████████████████████████████| 3694/3694 [00:08<00:00, 440.87it/s]
 
 ```
 </div>
@@ -483,7 +483,7 @@ def load_data(point_cloud_batch, label_cloud_batch):
 
 def augment(point_cloud_batch, label_cloud_batch):
     noise = tf.random.uniform(
-        tf.shape(label_cloud_batch), -0.005, 0.005, dtype=tf.float64
+        tf.shape(label_cloud_batch), -0.001, 0.001, dtype=tf.float64
     )
     point_cloud_batch += noise[:, :, :3]
     return point_cloud_batch, label_cloud_batch
@@ -528,9 +528,8 @@ Num train point clouds: 2955
 Num train point cloud labels: 2955
 Num val point clouds: 739
 Num val point cloud labels: 739
-
-Train Dataset: <ParallelMapDataset shapes: ((None, 1024, 3), (None, 1024, 5)), types: (tf.float64, tf.float32)>
-Validation Dataset: <BatchDataset shapes: ((None, 1024, 3), (None, 1024, 5)), types: (tf.float64, tf.float32)>
+Train Dataset: <_ParallelMapDataset element_spec=(TensorSpec(shape=(None, 1024, 3), dtype=tf.float64, name=None), TensorSpec(shape=(None, 1024, 5), dtype=tf.float64, name=None))>
+Validation Dataset: <_BatchDataset element_spec=(TensorSpec(shape=(None, 1024, 3), dtype=tf.float64, name=None), TensorSpec(shape=(None, 1024, 5), dtype=tf.float64, name=None))>
 
 ```
 </div>
@@ -594,15 +593,15 @@ perceptron block.
 
 ```python
 
-def conv_block(x: tf.Tensor, filters: int, name: str) -> tf.Tensor:
+def conv_block(x, filters, name):
     x = layers.Conv1D(filters, kernel_size=1, padding="valid", name=f"{name}_conv")(x)
-    x = layers.BatchNormalization(momentum=0.0, name=f"{name}_batch_norm")(x)
+    x = layers.BatchNormalization(momentum=0.9, name=f"{name}_batch_norm")(x)
     return layers.Activation("relu", name=f"{name}_relu")(x)
 
 
-def mlp_block(x: tf.Tensor, filters: int, name: str) -> tf.Tensor:
+def mlp_block(x, filters, name):
     x = layers.Dense(filters, name=f"{name}_dense")(x)
-    x = layers.BatchNormalization(momentum=0.0, name=f"{name}_batch_norm")(x)
+    x = layers.BatchNormalization(momentum=0.9, name=f"{name}_batch_norm")(x)
     return layers.Activation("relu", name=f"{name}_relu")(x)
 
 ```
@@ -621,13 +620,13 @@ class OrthogonalRegularizer(keras.regularizers.Regularizer):
     def __init__(self, num_features, l2reg=0.001):
         self.num_features = num_features
         self.l2reg = l2reg
-        self.identity = tf.eye(num_features)
+        self.identity = keras.ops.eye(num_features)
 
     def __call__(self, x):
-        x = tf.reshape(x, (-1, self.num_features, self.num_features))
-        xxt = tf.tensordot(x, x, axes=(2, 2))
-        xxt = tf.reshape(xxt, (-1, self.num_features, self.num_features))
-        return tf.reduce_sum(self.l2reg * tf.square(xxt - self.identity))
+        x = keras.ops.reshape(x, (-1, self.num_features, self.num_features))
+        xxt = keras.ops.tensordot(x, x, axes=(2, 2))
+        xxt = keras.ops.reshape(xxt, (-1, self.num_features, self.num_features))
+        return keras.ops.sum(self.l2reg * keras.ops.square(xxt - self.identity))
 
     def get_config(self):
         config = super().get_config()
@@ -641,7 +640,7 @@ The next piece is the transformation network which we explained earlier.
 
 ```python
 
-def transformation_net(inputs: tf.Tensor, num_features: int, name: str) -> tf.Tensor:
+def transformation_net(inputs, num_features, name):
     """
     Reference: https://keras.io/examples/vision/pointnet/#build-a-model.
 
@@ -663,7 +662,7 @@ def transformation_net(inputs: tf.Tensor, num_features: int, name: str) -> tf.Te
     )(x)
 
 
-def transformation_block(inputs: tf.Tensor, num_features: int, name: str) -> tf.Tensor:
+def transformation_block(inputs, num_features, name):
     transformed_features = transformation_net(inputs, num_features, name=name)
     transformed_features = layers.Reshape((num_features, num_features))(
         transformed_features
@@ -677,7 +676,7 @@ Finally, we piece the above blocks together and implement the segmentation model
 
 ```python
 
-def get_shape_segmentation_model(num_points: int, num_classes: int) -> keras.Model:
+def get_shape_segmentation_model(num_points, num_classes):
     input_points = keras.Input(shape=(None, 3))
 
     # PointNet Classification Network.
@@ -695,7 +694,7 @@ def get_shape_segmentation_model(num_points: int, num_classes: int) -> keras.Mod
     global_features = layers.MaxPool1D(pool_size=num_points, name="global_features")(
         features_2048
     )
-    global_features = tf.tile(global_features, [1, num_points, 1])
+    global_features = keras.ops.tile(global_features, [1, num_points, 1])
 
     # Segmentation head.
     segmentation_input = layers.Concatenate(name="segmentation_input")(
@@ -732,155 +731,228 @@ segmentation_model = get_shape_segmentation_model(num_points, num_classes)
 segmentation_model.summary()
 ```
 
-<div class="k-default-codeblock">
-```
-2021-10-25 01:26:33.563133: I tensorflow/compiler/mlir/mlir_graph_optimization_pass.cc:185] None of the MLIR Optimization Passes are enabled (registered 2)
 
-Model: "model"
-__________________________________________________________________________________________________
-Layer (type)                    Output Shape         Param #     Connected to                     
-==================================================================================================
-input_1 (InputLayer)            [(None, None, 3)]    0                                            
-__________________________________________________________________________________________________
-input_transformation_block_1_co (None, None, 64)     256         input_1[0][0]                    
-__________________________________________________________________________________________________
-input_transformation_block_1_ba (None, None, 64)     256         input_transformation_block_1_conv
-__________________________________________________________________________________________________
-input_transformation_block_1_re (None, None, 64)     0           input_transformation_block_1_batc
-__________________________________________________________________________________________________
-input_transformation_block_2_co (None, None, 128)    8320        input_transformation_block_1_relu
-__________________________________________________________________________________________________
-input_transformation_block_2_ba (None, None, 128)    512         input_transformation_block_2_conv
-__________________________________________________________________________________________________
-input_transformation_block_2_re (None, None, 128)    0           input_transformation_block_2_batc
-__________________________________________________________________________________________________
-input_transformation_block_3_co (None, None, 1024)   132096      input_transformation_block_2_relu
-__________________________________________________________________________________________________
-input_transformation_block_3_ba (None, None, 1024)   4096        input_transformation_block_3_conv
-__________________________________________________________________________________________________
-input_transformation_block_3_re (None, None, 1024)   0           input_transformation_block_3_batc
-__________________________________________________________________________________________________
-global_max_pooling1d (GlobalMax (None, 1024)         0           input_transformation_block_3_relu
-__________________________________________________________________________________________________
-input_transformation_block_1_1_ (None, 512)          524800      global_max_pooling1d[0][0]       
-__________________________________________________________________________________________________
-input_transformation_block_1_1_ (None, 512)          2048        input_transformation_block_1_1_de
-__________________________________________________________________________________________________
-input_transformation_block_1_1_ (None, 512)          0           input_transformation_block_1_1_ba
-__________________________________________________________________________________________________
-input_transformation_block_2_1_ (None, 256)          131328      input_transformation_block_1_1_re
-__________________________________________________________________________________________________
-input_transformation_block_2_1_ (None, 256)          1024        input_transformation_block_2_1_de
-__________________________________________________________________________________________________
-input_transformation_block_2_1_ (None, 256)          0           input_transformation_block_2_1_ba
-__________________________________________________________________________________________________
-input_transformation_block_fina (None, 9)            2313        input_transformation_block_2_1_re
-__________________________________________________________________________________________________
-reshape (Reshape)               (None, 3, 3)         0           input_transformation_block_final[
-__________________________________________________________________________________________________
-input_transformation_block_mm ( (None, None, 3)      0           input_1[0][0]                    
-                                                                 reshape[0][0]                    
-__________________________________________________________________________________________________
-features_64_conv (Conv1D)       (None, None, 64)     256         input_transformation_block_mm[0][
-__________________________________________________________________________________________________
-features_64_batch_norm (BatchNo (None, None, 64)     256         features_64_conv[0][0]           
-__________________________________________________________________________________________________
-features_64_relu (Activation)   (None, None, 64)     0           features_64_batch_norm[0][0]     
-__________________________________________________________________________________________________
-features_128_1_conv (Conv1D)    (None, None, 128)    8320        features_64_relu[0][0]           
-__________________________________________________________________________________________________
-features_128_1_batch_norm (Batc (None, None, 128)    512         features_128_1_conv[0][0]        
-__________________________________________________________________________________________________
-features_128_1_relu (Activation (None, None, 128)    0           features_128_1_batch_norm[0][0]  
-__________________________________________________________________________________________________
-features_128_2_conv (Conv1D)    (None, None, 128)    16512       features_128_1_relu[0][0]        
-__________________________________________________________________________________________________
-features_128_2_batch_norm (Batc (None, None, 128)    512         features_128_2_conv[0][0]        
-__________________________________________________________________________________________________
-features_128_2_relu (Activation (None, None, 128)    0           features_128_2_batch_norm[0][0]  
-__________________________________________________________________________________________________
-transformed_features_1_conv (Co (None, None, 64)     8256        features_128_2_relu[0][0]        
-__________________________________________________________________________________________________
-transformed_features_1_batch_no (None, None, 64)     256         transformed_features_1_conv[0][0]
-__________________________________________________________________________________________________
-transformed_features_1_relu (Ac (None, None, 64)     0           transformed_features_1_batch_norm
-__________________________________________________________________________________________________
-transformed_features_2_conv (Co (None, None, 128)    8320        transformed_features_1_relu[0][0]
-__________________________________________________________________________________________________
-transformed_features_2_batch_no (None, None, 128)    512         transformed_features_2_conv[0][0]
-__________________________________________________________________________________________________
-transformed_features_2_relu (Ac (None, None, 128)    0           transformed_features_2_batch_norm
-__________________________________________________________________________________________________
-transformed_features_3_conv (Co (None, None, 1024)   132096      transformed_features_2_relu[0][0]
-__________________________________________________________________________________________________
-transformed_features_3_batch_no (None, None, 1024)   4096        transformed_features_3_conv[0][0]
-__________________________________________________________________________________________________
-transformed_features_3_relu (Ac (None, None, 1024)   0           transformed_features_3_batch_norm
-__________________________________________________________________________________________________
-global_max_pooling1d_1 (GlobalM (None, 1024)         0           transformed_features_3_relu[0][0]
-__________________________________________________________________________________________________
-transformed_features_1_1_dense  (None, 512)          524800      global_max_pooling1d_1[0][0]     
-__________________________________________________________________________________________________
-transformed_features_1_1_batch_ (None, 512)          2048        transformed_features_1_1_dense[0]
-__________________________________________________________________________________________________
-transformed_features_1_1_relu ( (None, 512)          0           transformed_features_1_1_batch_no
-__________________________________________________________________________________________________
-transformed_features_2_1_dense  (None, 256)          131328      transformed_features_1_1_relu[0][
-__________________________________________________________________________________________________
-transformed_features_2_1_batch_ (None, 256)          1024        transformed_features_2_1_dense[0]
-__________________________________________________________________________________________________
-transformed_features_2_1_relu ( (None, 256)          0           transformed_features_2_1_batch_no
-__________________________________________________________________________________________________
-transformed_features_final (Den (None, 16384)        4210688     transformed_features_2_1_relu[0][
-__________________________________________________________________________________________________
-reshape_1 (Reshape)             (None, 128, 128)     0           transformed_features_final[0][0] 
-__________________________________________________________________________________________________
-transformed_features_mm (Dot)   (None, None, 128)    0           features_128_2_relu[0][0]        
-                                                                 reshape_1[0][0]                  
-__________________________________________________________________________________________________
-features_512_conv (Conv1D)      (None, None, 512)    66048       transformed_features_mm[0][0]    
-__________________________________________________________________________________________________
-features_512_batch_norm (BatchN (None, None, 512)    2048        features_512_conv[0][0]          
-__________________________________________________________________________________________________
-features_512_relu (Activation)  (None, None, 512)    0           features_512_batch_norm[0][0]    
-__________________________________________________________________________________________________
-pre_maxpool_block_conv (Conv1D) (None, None, 2048)   1050624     features_512_relu[0][0]          
-__________________________________________________________________________________________________
-pre_maxpool_block_batch_norm (B (None, None, 2048)   8192        pre_maxpool_block_conv[0][0]     
-__________________________________________________________________________________________________
-pre_maxpool_block_relu (Activat (None, None, 2048)   0           pre_maxpool_block_batch_norm[0][0
-__________________________________________________________________________________________________
-global_features (MaxPooling1D)  (None, None, 2048)   0           pre_maxpool_block_relu[0][0]     
-__________________________________________________________________________________________________
-tf.tile (TFOpLambda)            (None, None, 2048)   0           global_features[0][0]            
-__________________________________________________________________________________________________
-segmentation_input (Concatenate (None, None, 3008)   0           features_64_relu[0][0]           
-                                                                 features_128_1_relu[0][0]        
-                                                                 features_128_2_relu[0][0]        
-                                                                 transformed_features_mm[0][0]    
-                                                                 features_512_relu[0][0]          
-                                                                 tf.tile[0][0]                    
-__________________________________________________________________________________________________
-segmentation_features_conv (Con (None, None, 128)    385152      segmentation_input[0][0]         
-__________________________________________________________________________________________________
-segmentation_features_batch_nor (None, None, 128)    512         segmentation_features_conv[0][0] 
-__________________________________________________________________________________________________
-segmentation_features_relu (Act (None, None, 128)    0           segmentation_features_batch_norm[
-__________________________________________________________________________________________________
-segmentation_head (Conv1D)      (None, None, 5)      645         segmentation_features_relu[0][0] 
-==================================================================================================
-Total params: 7,370,062
-Trainable params: 7,356,110
-Non-trainable params: 13,952
-__________________________________________________________________________________________________
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold">Model: "functional_1"</span>
+</pre>
 
-```
-</div>
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">┏━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━┓
+┃<span style="font-weight: bold"> Layer (type)        </span>┃<span style="font-weight: bold"> Output Shape      </span>┃<span style="font-weight: bold"> Param # </span>┃<span style="font-weight: bold"> Connected to         </span>┃
+┡━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━┩
+│ input_layer         │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">3</span>)   │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ -                    │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">InputLayer</span>)        │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ input_transformati… │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">64</span>)  │     <span style="color: #00af00; text-decoration-color: #00af00">256</span> │ input_layer[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>]    │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Conv1D</span>)            │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ input_transformati… │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">64</span>)  │     <span style="color: #00af00; text-decoration-color: #00af00">256</span> │ input_transformatio… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">BatchNormalizatio…</span> │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ input_transformati… │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">64</span>)  │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ input_transformatio… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Activation</span>)        │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ input_transformati… │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">128</span>) │   <span style="color: #00af00; text-decoration-color: #00af00">8,320</span> │ input_transformatio… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Conv1D</span>)            │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ input_transformati… │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">128</span>) │     <span style="color: #00af00; text-decoration-color: #00af00">512</span> │ input_transformatio… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">BatchNormalizatio…</span> │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ input_transformati… │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">128</span>) │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ input_transformatio… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Activation</span>)        │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ input_transformati… │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>,      │ <span style="color: #00af00; text-decoration-color: #00af00">132,096</span> │ input_transformatio… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Conv1D</span>)            │ <span style="color: #00af00; text-decoration-color: #00af00">1024</span>)             │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ input_transformati… │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>,      │   <span style="color: #00af00; text-decoration-color: #00af00">4,096</span> │ input_transformatio… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">BatchNormalizatio…</span> │ <span style="color: #00af00; text-decoration-color: #00af00">1024</span>)             │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ input_transformati… │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>,      │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ input_transformatio… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Activation</span>)        │ <span style="color: #00af00; text-decoration-color: #00af00">1024</span>)             │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ global_max_pooling… │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">1024</span>)      │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ input_transformatio… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">GlobalMaxPooling1…</span> │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ input_transformati… │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">512</span>)       │ <span style="color: #00af00; text-decoration-color: #00af00">524,800</span> │ global_max_pooling1… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Dense</span>)             │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ input_transformati… │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">512</span>)       │   <span style="color: #00af00; text-decoration-color: #00af00">2,048</span> │ input_transformatio… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">BatchNormalizatio…</span> │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ input_transformati… │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">512</span>)       │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ input_transformatio… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Activation</span>)        │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ input_transformati… │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">256</span>)       │ <span style="color: #00af00; text-decoration-color: #00af00">131,328</span> │ input_transformatio… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Dense</span>)             │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ input_transformati… │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">256</span>)       │   <span style="color: #00af00; text-decoration-color: #00af00">1,024</span> │ input_transformatio… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">BatchNormalizatio…</span> │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ input_transformati… │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">256</span>)       │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ input_transformatio… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Activation</span>)        │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ input_transformati… │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">9</span>)         │   <span style="color: #00af00; text-decoration-color: #00af00">2,313</span> │ input_transformatio… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Dense</span>)             │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ reshape (<span style="color: #0087ff; text-decoration-color: #0087ff">Reshape</span>)   │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">3</span>, <span style="color: #00af00; text-decoration-color: #00af00">3</span>)      │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ input_transformatio… │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ input_transformati… │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">3</span>)   │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ input_layer[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>],   │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Dot</span>)               │                   │         │ reshape[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>]        │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ features_64_conv    │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">64</span>)  │     <span style="color: #00af00; text-decoration-color: #00af00">256</span> │ input_transformatio… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Conv1D</span>)            │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ features_64_batch_… │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">64</span>)  │     <span style="color: #00af00; text-decoration-color: #00af00">256</span> │ features_64_conv[<span style="color: #00af00; text-decoration-color: #00af00">0</span>]… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">BatchNormalizatio…</span> │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ features_64_relu    │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">64</span>)  │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ features_64_batch_n… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Activation</span>)        │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ features_128_1_conv │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">128</span>) │   <span style="color: #00af00; text-decoration-color: #00af00">8,320</span> │ features_64_relu[<span style="color: #00af00; text-decoration-color: #00af00">0</span>]… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Conv1D</span>)            │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ features_128_1_bat… │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">128</span>) │     <span style="color: #00af00; text-decoration-color: #00af00">512</span> │ features_128_1_conv… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">BatchNormalizatio…</span> │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ features_128_1_relu │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">128</span>) │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ features_128_1_batc… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Activation</span>)        │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ features_128_2_conv │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">128</span>) │  <span style="color: #00af00; text-decoration-color: #00af00">16,512</span> │ features_128_1_relu… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Conv1D</span>)            │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ features_128_2_bat… │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">128</span>) │     <span style="color: #00af00; text-decoration-color: #00af00">512</span> │ features_128_2_conv… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">BatchNormalizatio…</span> │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ features_128_2_relu │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">128</span>) │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ features_128_2_batc… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Activation</span>)        │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ transformed_featur… │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">64</span>)  │   <span style="color: #00af00; text-decoration-color: #00af00">8,256</span> │ features_128_2_relu… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Conv1D</span>)            │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ transformed_featur… │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">64</span>)  │     <span style="color: #00af00; text-decoration-color: #00af00">256</span> │ transformed_feature… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">BatchNormalizatio…</span> │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ transformed_featur… │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">64</span>)  │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ transformed_feature… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Activation</span>)        │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ transformed_featur… │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">128</span>) │   <span style="color: #00af00; text-decoration-color: #00af00">8,320</span> │ transformed_feature… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Conv1D</span>)            │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ transformed_featur… │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">128</span>) │     <span style="color: #00af00; text-decoration-color: #00af00">512</span> │ transformed_feature… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">BatchNormalizatio…</span> │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ transformed_featur… │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">128</span>) │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ transformed_feature… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Activation</span>)        │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ transformed_featur… │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>,      │ <span style="color: #00af00; text-decoration-color: #00af00">132,096</span> │ transformed_feature… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Conv1D</span>)            │ <span style="color: #00af00; text-decoration-color: #00af00">1024</span>)             │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ transformed_featur… │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>,      │   <span style="color: #00af00; text-decoration-color: #00af00">4,096</span> │ transformed_feature… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">BatchNormalizatio…</span> │ <span style="color: #00af00; text-decoration-color: #00af00">1024</span>)             │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ transformed_featur… │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>,      │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ transformed_feature… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Activation</span>)        │ <span style="color: #00af00; text-decoration-color: #00af00">1024</span>)             │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ global_max_pooling… │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">1024</span>)      │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ transformed_feature… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">GlobalMaxPooling1…</span> │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ transformed_featur… │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">512</span>)       │ <span style="color: #00af00; text-decoration-color: #00af00">524,800</span> │ global_max_pooling1… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Dense</span>)             │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ transformed_featur… │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">512</span>)       │   <span style="color: #00af00; text-decoration-color: #00af00">2,048</span> │ transformed_feature… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">BatchNormalizatio…</span> │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ transformed_featur… │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">512</span>)       │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ transformed_feature… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Activation</span>)        │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ transformed_featur… │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">256</span>)       │ <span style="color: #00af00; text-decoration-color: #00af00">131,328</span> │ transformed_feature… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Dense</span>)             │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ transformed_featur… │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">256</span>)       │   <span style="color: #00af00; text-decoration-color: #00af00">1,024</span> │ transformed_feature… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">BatchNormalizatio…</span> │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ transformed_featur… │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">256</span>)       │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ transformed_feature… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Activation</span>)        │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ transformed_featur… │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">16384</span>)     │ <span style="color: #00af00; text-decoration-color: #00af00">4,210,…</span> │ transformed_feature… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Dense</span>)             │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ reshape_1 (<span style="color: #0087ff; text-decoration-color: #0087ff">Reshape</span>) │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">128</span>, <span style="color: #00af00; text-decoration-color: #00af00">128</span>)  │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ transformed_feature… │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ transformed_featur… │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">128</span>) │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ features_128_2_relu… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Dot</span>)               │                   │         │ reshape_1[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>]      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ features_512_conv   │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">512</span>) │  <span style="color: #00af00; text-decoration-color: #00af00">66,048</span> │ transformed_feature… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Conv1D</span>)            │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ features_512_batch… │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">512</span>) │   <span style="color: #00af00; text-decoration-color: #00af00">2,048</span> │ features_512_conv[<span style="color: #00af00; text-decoration-color: #00af00">0</span>… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">BatchNormalizatio…</span> │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ features_512_relu   │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">512</span>) │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ features_512_batch_… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Activation</span>)        │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ pre_maxpool_block_… │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>,      │ <span style="color: #00af00; text-decoration-color: #00af00">1,050,…</span> │ features_512_relu[<span style="color: #00af00; text-decoration-color: #00af00">0</span>… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Conv1D</span>)            │ <span style="color: #00af00; text-decoration-color: #00af00">2048</span>)             │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ pre_maxpool_block_… │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>,      │   <span style="color: #00af00; text-decoration-color: #00af00">8,192</span> │ pre_maxpool_block_c… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">BatchNormalizatio…</span> │ <span style="color: #00af00; text-decoration-color: #00af00">2048</span>)             │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ pre_maxpool_block_… │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>,      │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ pre_maxpool_block_b… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Activation</span>)        │ <span style="color: #00af00; text-decoration-color: #00af00">2048</span>)             │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ global_features     │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>,      │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ pre_maxpool_block_r… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">MaxPooling1D</span>)      │ <span style="color: #00af00; text-decoration-color: #00af00">2048</span>)             │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ tile (<span style="color: #0087ff; text-decoration-color: #0087ff">Tile</span>)         │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>,      │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ global_features[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">…</span> │
+│                     │ <span style="color: #00af00; text-decoration-color: #00af00">2048</span>)             │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ segmentation_input  │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>,      │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ features_64_relu[<span style="color: #00af00; text-decoration-color: #00af00">0</span>]… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Concatenate</span>)       │ <span style="color: #00af00; text-decoration-color: #00af00">3008</span>)             │         │ features_128_1_relu… │
+│                     │                   │         │ features_128_2_relu… │
+│                     │                   │         │ transformed_feature… │
+│                     │                   │         │ features_512_relu[<span style="color: #00af00; text-decoration-color: #00af00">0</span>… │
+│                     │                   │         │ tile[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>]           │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ segmentation_featu… │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">128</span>) │ <span style="color: #00af00; text-decoration-color: #00af00">385,152</span> │ segmentation_input[<span style="color: #00af00; text-decoration-color: #00af00">…</span> │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Conv1D</span>)            │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ segmentation_featu… │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">128</span>) │     <span style="color: #00af00; text-decoration-color: #00af00">512</span> │ segmentation_featur… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">BatchNormalizatio…</span> │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ segmentation_featu… │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">128</span>) │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ segmentation_featur… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Activation</span>)        │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ segmentation_head   │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">5</span>)   │     <span style="color: #00af00; text-decoration-color: #00af00">645</span> │ segmentation_featur… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Conv1D</span>)            │                   │         │                      │
+└─────────────────────┴───────────────────┴─────────┴──────────────────────┘
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Total params: </span><span style="color: #00af00; text-decoration-color: #00af00">7,370,062</span> (28.11 MB)
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Trainable params: </span><span style="color: #00af00; text-decoration-color: #00af00">7,356,110</span> (28.06 MB)
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Non-trainable params: </span><span style="color: #00af00; text-decoration-color: #00af00">13,952</span> (54.50 KB)
+</pre>
+
+
+
 ---
 ## Training
 
 For the training the authors recommend using a learning rate schedule that decays the
-initial learning rate by half every 20 epochs. In this example, we resort to 15 epochs.
+initial learning rate by half every 20 epochs. In this example, we use 5 epochs.
 
 
 ```python
@@ -888,12 +960,14 @@ training_step_size = total_training_examples // BATCH_SIZE
 total_training_steps = training_step_size * EPOCHS
 print(f"Total training steps: {total_training_steps}.")
 
-lr_schedule = keras.optimizers.schedules.PiecewiseConstantDecay(
-    boundaries=[training_step_size * 15, training_step_size * 15],
-    values=[INITIAL_LR, INITIAL_LR * 0.5, INITIAL_LR * 0.25],
+lr_schedule = keras.optimizers.schedules.ExponentialDecay(
+    initial_learning_rate=0.003,
+    decay_steps=total_training_steps * 5,
+    decay_rate=0.5,
+    staircase=True,
 )
 
-steps = tf.range(total_training_steps, dtype=tf.int32)
+steps = range(total_training_steps)
 lrs = [lr_schedule(step) for step in steps]
 
 plt.plot(lrs)
@@ -919,7 +993,6 @@ Finally, we implement a utility for running our experiments and launch model tra
 ```python
 
 def run_experiment(epochs):
-
     segmentation_model = get_shape_segmentation_model(num_points, num_classes)
     segmentation_model.compile(
         optimizer=keras.optimizers.Adam(learning_rate=lr_schedule),
@@ -927,7 +1000,7 @@ def run_experiment(epochs):
         metrics=["accuracy"],
     )
 
-    checkpoint_filepath = "/tmp/checkpoint"
+    checkpoint_filepath = "checkpoint.weights.h5"
     checkpoint_callback = keras.callbacks.ModelCheckpoint(
         checkpoint_filepath,
         monitor="val_loss",
@@ -952,125 +1025,130 @@ segmentation_model, history = run_experiment(epochs=EPOCHS)
 <div class="k-default-codeblock">
 ```
 Epoch 1/60
-93/93 [==============================] - 28s 127ms/step - loss: 5.3556 - accuracy: 0.7448 - val_loss: 5.8386 - val_accuracy: 0.7471
+  2/93 [37m━━━━━━━━━━━━━━━━━━━━  8s 89ms/step - accuracy: 0.2447 - loss: 38445.4219
+
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1699909180.210442   44021 device_compiler.h:187] Compiled cluster using XLA!  This line is logged at most once for the lifetime of the process.
+
+ 93/93 ━━━━━━━━━━━━━━━━━━━━ 53s 263ms/step - accuracy: 0.4253 - loss: 22954.8379 - val_accuracy: 0.5177 - val_loss: 249.0238
 Epoch 2/60
-93/93 [==============================] - 11s 117ms/step - loss: 4.7077 - accuracy: 0.8181 - val_loss: 5.2614 - val_accuracy: 0.7793
+ 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 83ms/step - accuracy: 0.5406 - loss: 229.0525 - val_accuracy: 0.5746 - val_loss: 276.5862
 Epoch 3/60
-93/93 [==============================] - 11s 118ms/step - loss: 4.6566 - accuracy: 0.8301 - val_loss: 4.7907 - val_accuracy: 0.8269
+ 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 89ms/step - accuracy: 0.5732 - loss: 205.3257 - val_accuracy: 0.5971 - val_loss: 223.2920
 Epoch 4/60
-93/93 [==============================] - 11s 117ms/step - loss: 4.6059 - accuracy: 0.8406 - val_loss: 4.6031 - val_accuracy: 0.8482
+ 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 90ms/step - accuracy: 0.5843 - loss: 187.0971 - val_accuracy: 0.6006 - val_loss: 186.5830
 Epoch 5/60
-93/93 [==============================] - 11s 118ms/step - loss: 4.5828 - accuracy: 0.8444 - val_loss: 4.7692 - val_accuracy: 0.8220
+ 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 83ms/step - accuracy: 0.5940 - loss: 176.8398 - val_accuracy: 0.5978 - val_loss: 213.0645
 Epoch 6/60
-93/93 [==============================] - 11s 118ms/step - loss: 4.6150 - accuracy: 0.8408 - val_loss: 5.4460 - val_accuracy: 0.8192
+ 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 82ms/step - accuracy: 0.5997 - loss: 167.5612 - val_accuracy: 0.5451 - val_loss: 206.5210
 Epoch 7/60
-93/93 [==============================] - 11s 117ms/step - loss: 67.5943 - accuracy: 0.7378 - val_loss: 1617.1846 - val_accuracy: 0.5191
+ 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 82ms/step - accuracy: 0.5866 - loss: 162.1273 - val_accuracy: 0.5441 - val_loss: 327.7806
 Epoch 8/60
-93/93 [==============================] - 11s 117ms/step - loss: 15.2910 - accuracy: 0.6651 - val_loss: 8.1014 - val_accuracy: 0.7046
+ 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 89ms/step - accuracy: 0.5927 - loss: 157.2384 - val_accuracy: 0.5030 - val_loss: 166.9655
 Epoch 9/60
-93/93 [==============================] - 11s 117ms/step - loss: 6.8878 - accuracy: 0.7368 - val_loss: 14.2311 - val_accuracy: 0.6949
+ 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 83ms/step - accuracy: 0.5989 - loss: 154.5029 - val_accuracy: 0.3436 - val_loss: 232.8854
 Epoch 10/60
-93/93 [==============================] - 11s 117ms/step - loss: 5.8362 - accuracy: 0.7549 - val_loss: 14.6942 - val_accuracy: 0.6350
+ 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 89ms/step - accuracy: 0.5744 - loss: 149.9212 - val_accuracy: 0.5486 - val_loss: 154.1069
 Epoch 11/60
-93/93 [==============================] - 11s 117ms/step - loss: 5.4777 - accuracy: 0.7648 - val_loss: 44.1037 - val_accuracy: 0.6422
+ 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 82ms/step - accuracy: 0.6063 - loss: 147.6728 - val_accuracy: 0.5465 - val_loss: 156.9993
 Epoch 12/60
-93/93 [==============================] - 11s 117ms/step - loss: 5.2688 - accuracy: 0.7712 - val_loss: 4.9977 - val_accuracy: 0.7692
+ 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 82ms/step - accuracy: 0.6105 - loss: 144.5985 - val_accuracy: 0.5557 - val_loss: 163.5978
 Epoch 13/60
-93/93 [==============================] - 11s 117ms/step - loss: 5.1041 - accuracy: 0.7837 - val_loss: 6.0642 - val_accuracy: 0.7577
+ 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 89ms/step - accuracy: 0.6115 - loss: 144.2452 - val_accuracy: 0.6111 - val_loss: 142.2575
 Epoch 14/60
-93/93 [==============================] - 11s 117ms/step - loss: 5.0011 - accuracy: 0.7862 - val_loss: 4.9313 - val_accuracy: 0.7840
+ 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 82ms/step - accuracy: 0.6218 - loss: 142.2341 - val_accuracy: 0.5811 - val_loss: 142.2919
 Epoch 15/60
-93/93 [==============================] - 11s 117ms/step - loss: 4.8910 - accuracy: 0.7953 - val_loss: 5.8368 - val_accuracy: 0.7725
+ 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 89ms/step - accuracy: 0.6297 - loss: 140.9803 - val_accuracy: 0.5725 - val_loss: 138.4410
 Epoch 16/60
-93/93 [==============================] - 11s 117ms/step - loss: 4.8698 - accuracy: 0.8074 - val_loss: 73.0260 - val_accuracy: 0.7251
+ 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 83ms/step - accuracy: 0.6097 - loss: 139.7953 - val_accuracy: 0.5535 - val_loss: 139.9276
 Epoch 17/60
-93/93 [==============================] - 11s 117ms/step - loss: 4.8299 - accuracy: 0.8109 - val_loss: 17.1503 - val_accuracy: 0.7415
+ 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 83ms/step - accuracy: 0.6251 - loss: 139.6507 - val_accuracy: 0.5115 - val_loss: 138.9859
 Epoch 18/60
-93/93 [==============================] - 11s 117ms/step - loss: 4.8147 - accuracy: 0.8111 - val_loss: 62.2765 - val_accuracy: 0.7344
+ 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 83ms/step - accuracy: 0.5609 - loss: 138.9100 - val_accuracy: 0.5255 - val_loss: 143.7915
 Epoch 19/60
-93/93 [==============================] - 11s 117ms/step - loss: 4.8316 - accuracy: 0.8141 - val_loss: 5.2200 - val_accuracy: 0.7890
+ 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 89ms/step - accuracy: 0.5735 - loss: 138.7701 - val_accuracy: 0.4182 - val_loss: 135.4600
 Epoch 20/60
-93/93 [==============================] - 11s 117ms/step - loss: 4.7853 - accuracy: 0.8142 - val_loss: 5.7062 - val_accuracy: 0.7719
+ 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 88ms/step - accuracy: 0.5843 - loss: 137.5981 - val_accuracy: 0.5826 - val_loss: 133.3290
 Epoch 21/60
-93/93 [==============================] - 11s 117ms/step - loss: 4.7753 - accuracy: 0.8157 - val_loss: 6.2089 - val_accuracy: 0.7839
+ 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 82ms/step - accuracy: 0.6139 - loss: 136.7469 - val_accuracy: 0.5816 - val_loss: 137.2458
 Epoch 22/60
-93/93 [==============================] - 11s 117ms/step - loss: 4.7681 - accuracy: 0.8161 - val_loss: 5.1077 - val_accuracy: 0.8021
+ 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 89ms/step - accuracy: 0.6118 - loss: 136.4584 - val_accuracy: 0.5745 - val_loss: 132.5730
 Epoch 23/60
-93/93 [==============================] - 11s 117ms/step - loss: 4.7554 - accuracy: 0.8187 - val_loss: 4.7912 - val_accuracy: 0.7912
+ 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 89ms/step - accuracy: 0.6196 - loss: 136.4953 - val_accuracy: 0.6182 - val_loss: 130.9066
 Epoch 24/60
-93/93 [==============================] - 11s 117ms/step - loss: 4.7355 - accuracy: 0.8197 - val_loss: 4.9164 - val_accuracy: 0.7978
+ 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 83ms/step - accuracy: 0.6203 - loss: 135.5345 - val_accuracy: 0.6071 - val_loss: 131.5336
 Epoch 25/60
-93/93 [==============================] - 11s 117ms/step - loss: 4.7483 - accuracy: 0.8197 - val_loss: 13.4724 - val_accuracy: 0.7631
+ 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 89ms/step - accuracy: 0.6211 - loss: 135.5145 - val_accuracy: 0.5433 - val_loss: 130.4864
 Epoch 26/60
-93/93 [==============================] - 11s 117ms/step - loss: 4.7200 - accuracy: 0.8218 - val_loss: 8.3074 - val_accuracy: 0.7596
+ 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 82ms/step - accuracy: 0.6126 - loss: 135.3613 - val_accuracy: 0.6213 - val_loss: 130.5183
 Epoch 27/60
-93/93 [==============================] - 11s 118ms/step - loss: 4.7192 - accuracy: 0.8231 - val_loss: 12.4468 - val_accuracy: 0.7591
+ 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 82ms/step - accuracy: 0.6079 - loss: 134.9247 - val_accuracy: 0.5933 - val_loss: 131.0984
 Epoch 28/60
-93/93 [==============================] - 11s 117ms/step - loss: 4.7151 - accuracy: 0.8241 - val_loss: 23.8681 - val_accuracy: 0.7689
+ 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 89ms/step - accuracy: 0.6190 - loss: 134.9755 - val_accuracy: 0.6039 - val_loss: 129.9668
 Epoch 29/60
-93/93 [==============================] - 11s 117ms/step - loss: 4.7096 - accuracy: 0.8237 - val_loss: 4.9069 - val_accuracy: 0.8104
+ 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 82ms/step - accuracy: 0.5916 - loss: 134.7792 - val_accuracy: 0.5479 - val_loss: 132.7322
 Epoch 30/60
-93/93 [==============================] - 11s 117ms/step - loss: 4.6991 - accuracy: 0.8257 - val_loss: 4.9858 - val_accuracy: 0.7950
+ 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 89ms/step - accuracy: 0.5992 - loss: 134.4694 - val_accuracy: 0.5981 - val_loss: 129.7363
 Epoch 31/60
-93/93 [==============================] - 11s 117ms/step - loss: 4.6852 - accuracy: 0.8260 - val_loss: 5.0130 - val_accuracy: 0.7678
+ 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 89ms/step - accuracy: 0.5920 - loss: 134.2636 - val_accuracy: 0.5746 - val_loss: 129.5861
 Epoch 32/60
-93/93 [==============================] - 11s 117ms/step - loss: 4.6630 - accuracy: 0.8286 - val_loss: 4.8523 - val_accuracy: 0.7676
+ 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 89ms/step - accuracy: 0.6062 - loss: 134.4938 - val_accuracy: 0.5827 - val_loss: 129.4832
 Epoch 33/60
-93/93 [==============================] - 11s 117ms/step - loss: 4.6837 - accuracy: 0.8281 - val_loss: 5.4347 - val_accuracy: 0.8095
+ 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 82ms/step - accuracy: 0.6124 - loss: 133.9516 - val_accuracy: 0.5380 - val_loss: 129.7558
 Epoch 34/60
-93/93 [==============================] - 11s 117ms/step - loss: 4.6571 - accuracy: 0.8296 - val_loss: 10.4595 - val_accuracy: 0.7410
+ 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 88ms/step - accuracy: 0.5953 - loss: 134.0652 - val_accuracy: 0.5607 - val_loss: 129.4240
 Epoch 35/60
-93/93 [==============================] - 11s 117ms/step - loss: 4.6460 - accuracy: 0.8321 - val_loss: 4.9189 - val_accuracy: 0.8083
+ 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 82ms/step - accuracy: 0.6114 - loss: 133.8750 - val_accuracy: 0.4505 - val_loss: 129.5854
 Epoch 36/60
-93/93 [==============================] - 11s 117ms/step - loss: 4.6430 - accuracy: 0.8327 - val_loss: 5.8674 - val_accuracy: 0.7911
+ 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 89ms/step - accuracy: 0.5732 - loss: 133.9990 - val_accuracy: 0.5895 - val_loss: 128.8025
 Epoch 37/60
-93/93 [==============================] - 11s 117ms/step - loss: 4.6530 - accuracy: 0.8309 - val_loss: 4.7946 - val_accuracy: 0.8032
+ 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 83ms/step - accuracy: 0.5844 - loss: 133.8738 - val_accuracy: 0.6122 - val_loss: 129.1346
 Epoch 38/60
-93/93 [==============================] - 11s 117ms/step - loss: 4.6391 - accuracy: 0.8318 - val_loss: 5.0111 - val_accuracy: 0.8024
+ 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 82ms/step - accuracy: 0.6007 - loss: 133.7651 - val_accuracy: 0.5400 - val_loss: 130.0727
 Epoch 39/60
-93/93 [==============================] - 11s 117ms/step - loss: 4.6521 - accuracy: 0.8336 - val_loss: 8.1558 - val_accuracy: 0.7727
+ 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 83ms/step - accuracy: 0.6015 - loss: 133.7548 - val_accuracy: 0.5075 - val_loss: 129.5055
 Epoch 40/60
-93/93 [==============================] - 11s 117ms/step - loss: 4.6443 - accuracy: 0.8329 - val_loss: 42.8513 - val_accuracy: 0.7688
+ 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 82ms/step - accuracy: 0.6031 - loss: 133.7556 - val_accuracy: 0.5607 - val_loss: 129.0578
 Epoch 41/60
-93/93 [==============================] - 11s 117ms/step - loss: 4.6316 - accuracy: 0.8342 - val_loss: 5.0960 - val_accuracy: 0.8066
+ 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 82ms/step - accuracy: 0.5782 - loss: 134.0665 - val_accuracy: 0.5478 - val_loss: 129.5125
 Epoch 42/60
-93/93 [==============================] - 11s 117ms/step - loss: 4.6322 - accuracy: 0.8335 - val_loss: 5.0634 - val_accuracy: 0.8158
+ 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 82ms/step - accuracy: 0.5897 - loss: 133.5920 - val_accuracy: 0.5197 - val_loss: 128.8376
 Epoch 43/60
-93/93 [==============================] - 11s 117ms/step - loss: 4.6175 - accuracy: 0.8370 - val_loss: 6.0642 - val_accuracy: 0.8062
+ 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 82ms/step - accuracy: 0.6131 - loss: 133.6077 - val_accuracy: 0.5499 - val_loss: 129.0898
 Epoch 44/60
-93/93 [==============================] - 11s 117ms/step - loss: 4.6175 - accuracy: 0.8371 - val_loss: 11.1805 - val_accuracy: 0.7790
+ 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 82ms/step - accuracy: 0.6068 - loss: 133.6006 - val_accuracy: 0.3824 - val_loss: 129.8950
 Epoch 45/60
-93/93 [==============================] - 11s 117ms/step - loss: 4.6056 - accuracy: 0.8377 - val_loss: 4.7359 - val_accuracy: 0.8145
+ 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 82ms/step - accuracy: 0.5932 - loss: 133.6331 - val_accuracy: 0.5608 - val_loss: 129.4893
 Epoch 46/60
-93/93 [==============================] - 11s 117ms/step - loss: 4.6108 - accuracy: 0.8383 - val_loss: 5.7125 - val_accuracy: 0.7713
+ 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 82ms/step - accuracy: 0.5760 - loss: 134.2509 - val_accuracy: 0.3242 - val_loss: 130.0864
 Epoch 47/60
-93/93 [==============================] - 11s 117ms/step - loss: 4.6103 - accuracy: 0.8377 - val_loss: 6.3271 - val_accuracy: 0.8105
+ 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 83ms/step - accuracy: 0.5615 - loss: 133.6750 - val_accuracy: 0.5028 - val_loss: 128.8199
 Epoch 48/60
-93/93 [==============================] - 11s 117ms/step - loss: 4.6020 - accuracy: 0.8383 - val_loss: 14.2876 - val_accuracy: 0.7529
+ 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 89ms/step - accuracy: 0.5698 - loss: 133.6434 - val_accuracy: 0.5898 - val_loss: 128.0430
 Epoch 49/60
-93/93 [==============================] - 11s 117ms/step - loss: 4.6035 - accuracy: 0.8382 - val_loss: 4.8244 - val_accuracy: 0.8143
+ 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 82ms/step - accuracy: 0.5861 - loss: 133.5831 - val_accuracy: 0.6024 - val_loss: 128.7769
 Epoch 50/60
-93/93 [==============================] - 11s 117ms/step - loss: 4.6076 - accuracy: 0.8381 - val_loss: 8.2636 - val_accuracy: 0.7528
+ 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 82ms/step - accuracy: 0.5863 - loss: 133.5453 - val_accuracy: 0.5564 - val_loss: 128.5470
 Epoch 51/60
-93/93 [==============================] - 11s 117ms/step - loss: 4.5927 - accuracy: 0.8399 - val_loss: 4.6473 - val_accuracy: 0.8266
+ 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 82ms/step - accuracy: 0.6009 - loss: 133.5552 - val_accuracy: 0.6202 - val_loss: 128.9447
 Epoch 52/60
-93/93 [==============================] - 11s 117ms/step - loss: 4.5927 - accuracy: 0.8408 - val_loss: 4.6443 - val_accuracy: 0.8276
+ 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 82ms/step - accuracy: 0.6166 - loss: 133.5711 - val_accuracy: 0.5883 - val_loss: 128.7048
 Epoch 53/60
-93/93 [==============================] - 11s 117ms/step - loss: 4.5852 - accuracy: 0.8413 - val_loss: 5.1300 - val_accuracy: 0.7768
+ 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 82ms/step - accuracy: 0.6057 - loss: 133.5141 - val_accuracy: 0.5581 - val_loss: 129.2710
 Epoch 54/60
-93/93 [==============================] - 11s 117ms/step - loss: 4.5787 - accuracy: 0.8426 - val_loss: 8.9590 - val_accuracy: 0.7582
+ 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 82ms/step - accuracy: 0.6198 - loss: 133.5441 - val_accuracy: 0.5793 - val_loss: 130.1193
 Epoch 55/60
-93/93 [==============================] - 11s 117ms/step - loss: 4.5837 - accuracy: 0.8410 - val_loss: 5.1501 - val_accuracy: 0.8117
+ 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 83ms/step - accuracy: 0.5799 - loss: 133.7141 - val_accuracy: 0.5074 - val_loss: 130.0489
 Epoch 56/60
-93/93 [==============================] - 11s 117ms/step - loss: 4.5875 - accuracy: 0.8422 - val_loss: 31.3518 - val_accuracy: 0.7590
+ 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 83ms/step - accuracy: 0.6173 - loss: 133.5767 - val_accuracy: 0.5976 - val_loss: 128.6063
 Epoch 57/60
-93/93 [==============================] - 11s 117ms/step - loss: 4.5821 - accuracy: 0.8427 - val_loss: 4.8853 - val_accuracy: 0.8144
+ 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 82ms/step - accuracy: 0.6134 - loss: 133.7724 - val_accuracy: 0.5872 - val_loss: 131.2686
 Epoch 58/60
-93/93 [==============================] - 11s 117ms/step - loss: 4.5751 - accuracy: 0.8446 - val_loss: 4.6653 - val_accuracy: 0.8222
+ 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 82ms/step - accuracy: 0.6204 - loss: 1225322.3750 - val_accuracy: 0.3018 - val_loss: 1558608064020480.0000
 Epoch 59/60
-93/93 [==============================] - 11s 117ms/step - loss: 4.5752 - accuracy: 0.8447 - val_loss: 6.0078 - val_accuracy: 0.8014
+ 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 82ms/step - accuracy: 0.4591 - loss: 734390.6250 - val_accuracy: 0.4918 - val_loss: 73423.9062
 Epoch 60/60
-93/93 [==============================] - 11s 118ms/step - loss: 4.5695 - accuracy: 0.8452 - val_loss: 4.8178 - val_accuracy: 0.8192
+ 93/93 ━━━━━━━━━━━━━━━━━━━━ 8s 82ms/step - accuracy: 0.5302 - loss: 69653.5078 - val_accuracy: 0.5537 - val_loss: 88682.0078
 
 ```
 </div>
@@ -1136,8 +1214,9 @@ visualize_single_point_cloud(validation_batch[0], val_predictions, idx)
 
 <div class="k-default-codeblock">
 ```
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 1s 1s/step
 Validation prediction shape: (32, 1024, 5)
-Index selected: 24
+Index selected: 8
 
 ```
 </div>
