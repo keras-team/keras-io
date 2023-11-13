@@ -351,9 +351,9 @@ losses separately. Instead, you should utilize the `metrics` argument in the `co
 method to keep track of these losses.
 
 
-When dealing with multiple named outputs, such as output_a and output_b, the old
-tf.keras would include <output_a>_loss, <output_b>_loss, and similar entries in
-metrics. However, in keras_3.0, these entries are not automatically added to metrics.
+When dealing with multiple named outputs, such as output_a and output_b, the legacy
+`tf.keras` would include <output_a>_loss, <output_b>_loss, and similar entries in
+metrics. However, in keras 3.0, these entries are not automatically added to metrics.
 They must be explicitly provided in the metrics list for each individual output.
 
 The following snippet of code will reproduce the above behavior:
@@ -473,8 +473,12 @@ for layer in model.layers:
     print(layer.trainable_variables)
 
 """
-### None entries are not allowed as part of nested (e.g. list/tuples) tensor arguments in
-Layer.call(), nor as part of call() return values.
+### None entries are not allowed as part of nested (e.g. list/tuples) tensor
+arguments in `Layer.call()`, nor as part of `call()`'s nested return values.
+
+If the `None` in the argument is intentional and serves a specific purpose,
+ensure that the argument is optional and structure it as a separate parameter.
+For example, consider defining the `call` method with optional argument.
 
 The following snippet of code will reproduce the error.
 
@@ -498,7 +502,7 @@ layer(inputs)
 """
 
 """
-Here is how you will fix it:
+How you fix it:
 
 Replace `None` with a value or Keras Tensor
 """
@@ -521,6 +525,34 @@ inputs = {
     },
 }
 layer(inputs)
+
+
+"""
+Or
+
+Define the call method with an optional argument. Here is an example of this
+fix:
+"""
+
+class CustomLayer(keras.layers.Layer):
+    def __init__(self):
+        super().__init__()
+
+    def call(self, input_1, input_2=None):
+        output_ = input_1["foo"]
+        output_2 = input_2
+        return None
+
+
+layer = CustomLayer()
+input_1 = {
+    "foo": keras.Input(shape=(1,), name="foo"),
+    "bar": {
+    },
+}
+baz = None
+layer(input_1, input_2=baz)
+
 
 """
 ### Random seed behavior changes between Keras 2 and Keras 3.
