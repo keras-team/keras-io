@@ -46,7 +46,6 @@ PROJECT_URL = {
     "keras_tuner": "https://github.com/keras-team/keras-tuner/tree/v1.4.5/",
     "keras_cv": "https://github.com/keras-team/keras-cv/tree/v0.6.4/",
     "keras_nlp": "https://github.com/keras-team/keras-nlp/tree/v0.6.2/",
-    "keras_core": "https://github.com/keras-team/keras-core/tree/v0.1.7/",
     "tf_keras": "https://github.com/keras-team/tf_keras/tree/v2.14.1/",
 }
 USE_MULTIPROCESSING = False
@@ -358,11 +357,6 @@ class KerasIO:
         guides/md/intro_* -> sources/getting_started/
         examples/*/md/ -> sources/examples/*/
         """
-        if not os.path.exists(Path(self.templates_dir) / "guides" / "keras_core"):
-            os.makedirs(Path(self.templates_dir) / "guides" / "keras_core")
-        if os.path.exists(Path(self.templates_dir) / "keras_core" / "guides"):
-            shutil.rmtree(Path(self.templates_dir) / "keras_core" / "guides")
-
         # Guides
         copy_inner_contents(
             Path(self.guides_dir) / "md",
@@ -375,12 +369,6 @@ class KerasIO:
             Path(self.templates_dir)
             / "getting_started"
             / "intro_to_keras_for_engineers.md",
-        )
-
-        # Move Keras Core guides from `guides/keras_core/` to keras_core/guides/
-        shutil.move(
-            Path(self.templates_dir) / "guides" / "keras_core",
-            Path(self.templates_dir) / "keras_core" / "guides",
         )
 
         # Examples
