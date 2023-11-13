@@ -79,11 +79,37 @@ tf.config.set_logical_device_configuration(
 logical_devices = tf.config.list_logical_devices("GPU")
 logical_devices
 
+EPOCHS = 3
 
-PRETRAINING_BATCH_SIZE = 128
 
 """
-First, we need to download and preprocess the wikitext-2 dataset. This dataset will be
+To do single-host, multi-device synchronous training with a Keras model, you would use
+the `tf.distribute.MirroredStrategy` API. Here's how it works:
+
+- Instantiate a `MirroredStrategy`, optionally configuring which specific devices you
+want to use (by default the strategy will use all GPUs available).
+- Use the strategy object to open a scope, and within this scope, create all the Keras
+objects you need that contain variables. Typically, that means **creating & compiling the
+model** inside the distribution scope.
+- Train the model via `fit()` as usual.
+"""
+strategy = tf.distribute.MirroredStrategy()
+print(f"Number of devices: {strategy.num_replicas_in_sync}")
+
+"""Base batch size and learning rate
+"""
+base_batch_size = 32
+base_learning_rate = 1e-4
+
+"""
+Calculate scaled batch size and learning rate
+
+"""
+scaled_batch_size = base_batch_size * strategy.num_replicas_in_sync
+scaled_learning_rate = base_learning_rate * strategy.num_replicas_in_sync
+
+"""
+Now, we need to download and preprocess the wikitext-2 dataset. This dataset will be
 used for pretraining the BERT model. We will filter out short lines to ensure that the
 data has enough context for training.
 """
@@ -101,7 +127,7 @@ wiki_train_ds = (
     )
     .filter(lambda x: tf.strings.length(x) > 100)
     .shuffle(buffer_size=500)
-    .batch(PRETRAINING_BATCH_SIZE)
+    .batch(scaled_batch_size)
     .cache()
     .prefetch(tf.data.AUTOTUNE)
 )
@@ -109,7 +135,7 @@ wiki_val_ds = (
     tf.data.TextLineDataset(wiki_dir + "wiki.valid.tokens")
     .filter(lambda x: tf.strings.length(x) > 100)
     .shuffle(buffer_size=500)
-    .batch(PRETRAINING_BATCH_SIZE)
+    .batch(scaled_batch_size)
     .cache()
     .prefetch(tf.data.AUTOTUNE)
 )
@@ -117,7 +143,7 @@ wiki_test_ds = (
     tf.data.TextLineDataset(wiki_dir + "wiki.test.tokens")
     .filter(lambda x: tf.strings.length(x) > 100)
     .shuffle(buffer_size=500)
-    .batch(PRETRAINING_BATCH_SIZE)
+    .batch(scaled_batch_size)
     .cache()
     .prefetch(tf.data.AUTOTUNE)
 )
@@ -128,16 +154,15 @@ three datasets: wiki_train_ds, wiki_val_ds, and wiki_test_ds. These datasets are
 filtered to remove short lines and are batched for efficient training.
 """
 
-EPOCHS = 3
-
 """
 It's a common practice to use a decayed learning rate in NLP training/tuning. We'll
 use `PolynomialDecay` schedule here.
+
 """
 
 total_training_steps = sum(1 for _ in wiki_train_ds.as_numpy_iterator()) * EPOCHS
 lr_schedule = tf.keras.optimizers.schedules.PolynomialDecay(
-    initial_learning_rate=5e-5,
+    initial_learning_rate=scaled_learning_rate,
     decay_steps=total_training_steps,
     end_learning_rate=0.0,
 )
@@ -163,20 +188,6 @@ callbacks = [
 
 print(tf.config.list_physical_devices("GPU"))
 
-"""
-To do single-host, multi-device synchronous training with a Keras model, you would use
-the `tf.distribute.MirroredStrategy` API. Here's how it works:
-
-- Instantiate a `MirroredStrategy`, optionally configuring which specific devices you
-want to use (by default the strategy will use all GPUs available).
-- Use the strategy object to open a scope, and within this scope, create all the Keras
-objects you need that contain variables. Typically, that means **creating & compiling the
-model** inside the distribution scope.
-- Train the model via `fit()` as usual.
-"""
-
-strategy = tf.distribute.MirroredStrategy()
-print(f"Number of devices: {strategy.num_replicas_in_sync}")
 
 """
 With the datasets prepared, we now initialize and compile our model and optimizer within
@@ -194,7 +205,7 @@ with strategy.scope():
 
     model_dist.compile(
         loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
-        optimizer=tf.keras.optimizers.AdamW(lr_schedule),
+        optimizer=tf.keras.optimizers.AdamW(learning_rate=scaled_learning_rate),
         weighted_metrics=keras.metrics.SparseCategoricalAccuracy(),
     )
 
