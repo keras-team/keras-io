@@ -2,7 +2,7 @@
 Title: 3D volumetric rendering with NeRF
 Authors: [Aritra Roy Gosthipaty](https://twitter.com/arig23498), [Ritwik Raha](https://twitter.com/ritwik_raha)
 Date created: 2021/08/09
-Last modified: 2021/08/09
+Last modified: 2023/11/13
 Description: Minimal implementation of volumetric rendering as shown in NeRF.
 Accelerator: GPU
 """
@@ -54,19 +54,23 @@ implementation.
 """
 ## Setup
 """
+import os
+
+os.environ["KERAS_BACKEND"] = "tensorflow"
 
 # Setting random seed to obtain reproducible results.
 import tensorflow as tf
 
 tf.random.set_seed(42)
 
+import keras
+from keras import layers
+
 import os
 import glob
-import imageio
+import imageio.v2 as imageio
 import numpy as np
 from tqdm import tqdm
-from tensorflow import keras
-from tensorflow.keras import layers
 import matplotlib.pyplot as plt
 
 # Initialize global variables.
@@ -124,10 +128,10 @@ more about COLMAP [here](https://colmap.github.io/).
 """
 
 # Download the data if it does not already exist.
-file_name = "tiny_nerf_data.npz"
-url = "https://people.eecs.berkeley.edu/~bmild/nerf/tiny_nerf_data.npz"
-if not os.path.exists(file_name):
-    data = keras.utils.get_file(fname=file_name, origin=url)
+url = (
+    "http://cseweb.ucsd.edu/~viscomp/projects/LF/papers/ECCV20/nerf/tiny_nerf_data.npz"
+)
+data = keras.utils.get_file(origin=url)
 
 data = np.load(data)
 images = data["images"]
@@ -373,7 +377,7 @@ def get_nerf_model(num_layers, num_pos):
         num_pos: The number of dimensions of positional encoding.
 
     Returns:
-        The `tf.keras` model.
+        The `keras` model.
     """
     inputs = keras.Input(shape=(num_pos, 2 * 3 * POS_ENCODE_DIMS + 3))
     x = inputs
@@ -566,7 +570,6 @@ model.fit(
     batch_size=BATCH_SIZE,
     epochs=EPOCHS,
     callbacks=[TrainMonitor()],
-    steps_per_epoch=split_index // BATCH_SIZE,
 )
 
 
@@ -750,7 +753,7 @@ have also provided the outputs of the model trained for more epochs.
 
 ## Way forward
 
-If anyone is interested to go deeper into NeRF, we have built a 3-part blog 
+If anyone is interested to go deeper into NeRF, we have built a 3-part blog
 series at [PyImageSearch](https://pyimagesearch.com/).
 
 - [Prerequisites of NeRF](https://www.pyimagesearch.com/2021/11/10/computer-graphics-and-deep-learning-with-nerf-using-tensorflow-and-keras-part-1/)
