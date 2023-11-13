@@ -190,12 +190,6 @@ model.compile(
 )
 ```
 
-<div class="k-default-codeblock">
-```
-An NVIDIA GPU may be present on this machine, but a CUDA-enabled jaxlib is not installed. Falling back to cpu.
-
-```
-</div>
 ---
 ## Train the model based on the data split
 
