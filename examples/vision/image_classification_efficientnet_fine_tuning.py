@@ -4,7 +4,7 @@ Author: [Yixing Fu](https://github.com/yixingfu)
 Date created: 2020/06/30
 Last modified: 2023/07/10
 Description: Use EfficientNet with weights pre-trained on imagenet for Stanford Dogs classification.
-Accelerator: TPU
+Accelerator: GPU
 """
 """
 
@@ -60,16 +60,16 @@ instead of allowing arbitray choice of width / depth / resolution parameters.
 
 ## Keras implementation of EfficientNet
 
-An implementation of EfficientNet B0 to B7 has been shipped with tf.keras since TF2.3. To
-use EfficientNetB0 for classifying 1000 classes of images from imagenet, run:
+An implementation of EfficientNet B0 to B7 has been shipped with Keras since v2.3. To
+use EfficientNetB0 for classifying 1000 classes of images from ImageNet, run:
 
 ```python
 from tensorflow.keras.applications import EfficientNetB0
 model = EfficientNetB0(weights='imagenet')
 ```
 
-This model takes input images of shape (224, 224, 3), and the input data should range
-[0, 255]. Normalization is included as part of the model.
+This model takes input images of shape `(224, 224, 3)`, and the input data should be in the
+range `[0, 255]`. Normalization is included as part of the model.
 
 Because training EfficientNet on ImageNet takes a tremendous amount of resources and
 several techniques that are not a part of the model architecture itself. Hence the Keras
@@ -117,33 +117,22 @@ As an end-to-end example, we will show using pre-trained EfficientNetB0 on
 [Stanford Dogs](http://vision.stanford.edu/aditya86/ImageNetDogs/main.html) dataset.
 
 """
+
+"""
+## Setup and data loading
+"""
+
+import numpy as np
+import tensorflow_datasets as tfds
+import tensorflow as tf  # For tf.data
+import matplotlib.pyplot as plt
+import keras
+from keras import layers
+from keras.applications import EfficientNetB0
+
 # IMG_SIZE is determined by EfficientNet model choice
 IMG_SIZE = 224
-"""
-
-## Setup and data loading
-
-This example requires TensorFlow 2.3 or above.
-
-To use TPU, the TPU runtime must match current running TensorFlow
-version. If there is a mismatch, try:
-
-```python
-from cloud_tpu_client import Client
-c = Client()
-c.configure_tpu_version(tf.__version__, restart_type="always")
-```
-"""
-
-import tensorflow as tf
-
-try:
-    tpu = tf.distribute.cluster_resolver.TPUClusterResolver.connect()
-    print("Device:", tpu.master())
-    strategy = tf.distribute.TPUStrategy(tpu)
-except ValueError:
-    print("Not connected to a TPU runtime. Using CPU/GPU strategy")
-    strategy = tf.distribute.MirroredStrategy()
+BATCH_SIZE = 64
 
 
 """
@@ -165,24 +154,7 @@ etc. When the images are much smaller than the size of EfficientNet input,
 we can simply upsample the input images. It has been shown in
 [Tan and Le, 2019](https://arxiv.org/abs/1905.11946) that transfer learning
 result is better for increased resolution even if input images remain small.
-
-For TPU: if using TFDS datasets,
-a [GCS bucket](https://cloud.google.com/storage/docs/key-terms#buckets)
-location is required to save the datasets. For example:
-
-```python
-tfds.load(dataset_name, data_dir="gs://example-bucket/datapath")
-```
-
-Also, both the current environment and the TPU service account have
-proper [access](https://cloud.google.com/tpu/docs/storage-buckets#authorize_the_service_account)
-to the bucket. Alternatively, for small datasets you may try loading data
-into the memory and use `tf.data.Dataset.from_tensor_slices()`.
 """
-
-import tensorflow_datasets as tfds
-
-batch_size = 64
 
 dataset_name = "stanford_dogs"
 (ds_train, ds_test), ds_info = tfds.load(
@@ -206,7 +178,6 @@ ds_test = ds_test.map(lambda image, label: (tf.image.resize(image, size), label)
 
 The following code shows the first 9 images with their labels.
 """
-import matplotlib.pyplot as plt
 
 
 def format_label(label):
@@ -228,18 +199,19 @@ for i, (image, label) in enumerate(ds_train.take(9)):
 We can use the preprocessing layers APIs for image augmentation.
 """
 
-from tensorflow.keras.models import Sequential
-from tensorflow.keras import layers
+img_augmentation_layers = [
+    layers.RandomRotation(factor=0.15),
+    layers.RandomTranslation(height_factor=0.1, width_factor=0.1),
+    layers.RandomFlip(),
+    layers.RandomContrast(factor=0.1),
+]
 
-img_augmentation = Sequential(
-    [
-        layers.RandomRotation(factor=0.15),
-        layers.RandomTranslation(height_factor=0.1, width_factor=0.1),
-        layers.RandomFlip(),
-        layers.RandomContrast(factor=0.1),
-    ],
-    name="img_augmentation",
-)
+
+def img_augmentation(images):
+    for layer in img_augmentation_layers:
+        images = layer(images)
+    return images
+
 
 """
 This `Sequential` model object can be used both as a part of
@@ -252,8 +224,9 @@ of augmentation result of a given figure.
 for image, label in ds_train.take(1):
     for i in range(9):
         ax = plt.subplot(3, 3, i + 1)
-        aug_img = img_augmentation(tf.expand_dims(image, axis=0))
-        plt.imshow(aug_img[0].numpy().astype("uint8"))
+        aug_img = img_augmentation(np.expand_dims(image.numpy(), axis=0))
+        aug_img = np.array(aug_img)
+        plt.imshow(aug_img[0].astype("uint8"))
         plt.title("{}".format(format_label(label)))
         plt.axis("off")
 
@@ -274,17 +247,23 @@ for more information on data pipeline performance.
 
 
 # One-hot / categorical encoding
-def input_preprocess(image, label):
+def input_preprocess_train(image, label):
+    image = img_augmentation(image)
     label = tf.one_hot(label, NUM_CLASSES)
     return image, label
 
 
-ds_train = ds_train.map(input_preprocess, num_parallel_calls=tf.data.AUTOTUNE)
-ds_train = ds_train.batch(batch_size=batch_size, drop_remainder=True)
+def input_preprocess_test(image, label):
+    label = tf.one_hot(label, NUM_CLASSES)
+    return image, label
+
+
+ds_train = ds_train.map(input_preprocess_train, num_parallel_calls=tf.data.AUTOTUNE)
+ds_train = ds_train.batch(batch_size=BATCH_SIZE, drop_remainder=True)
 ds_train = ds_train.prefetch(tf.data.AUTOTUNE)
 
-ds_test = ds_test.map(input_preprocess)
-ds_test = ds_test.batch(batch_size=batch_size, drop_remainder=True)
+ds_test = ds_test.map(input_preprocess_test, num_parallel_calls=tf.data.AUTOTUNE)
+ds_test = ds_test.batch(batch_size=BATCH_SIZE, drop_remainder=True)
 
 
 """
@@ -295,27 +274,22 @@ We build an EfficientNetB0 with 120 output classes, that is initialized from scr
 Note: the accuracy will increase very slowly and may overfit.
 """
 
-from tensorflow.keras.applications import EfficientNetB0
-
-with strategy.scope():
-    inputs = layers.Input(shape=(IMG_SIZE, IMG_SIZE, 3))
-    x = img_augmentation(inputs)
-    outputs = EfficientNetB0(include_top=True, weights=None, classes=NUM_CLASSES)(x)
-
-    model = tf.keras.Model(inputs, outputs)
-    model.compile(
-        optimizer="adam", loss="categorical_crossentropy", metrics=["accuracy"]
-    )
+model = EfficientNetB0(
+    include_top=True,
+    weights=None,
+    classes=NUM_CLASSES,
+    input_shape=(IMG_SIZE, IMG_SIZE, 3),
+)
+model.compile(optimizer="adam", loss="categorical_crossentropy", metrics=["accuracy"])
 
 model.summary()
 
 epochs = 40  # @param {type: "slider", min:10, max:100}
-hist = model.fit(ds_train, epochs=epochs, validation_data=ds_test, verbose=2)
+hist = model.fit(ds_train, epochs=epochs, validation_data=ds_test)
 
 
 """
-Training the model is relatively fast (takes only 20 seconds per epoch on TPUv2 that is
-available on Colab). This might make it sounds easy to simply train EfficientNet on any
+Training the model is relatively fast. This might make it sounds easy to simply train EfficientNet on any
 dataset wanted from scratch. However, training EfficientNet on smaller datasets,
 especially those with lower resolution like CIFAR-100, faces the significant challenge of
 overfitting.
@@ -351,8 +325,7 @@ and we fine-tune it on our own dataset.
 
 def build_model(num_classes):
     inputs = layers.Input(shape=(IMG_SIZE, IMG_SIZE, 3))
-    x = img_augmentation(inputs)
-    model = EfficientNetB0(include_top=False, input_tensor=x, weights="imagenet")
+    model = EfficientNetB0(include_top=False, input_tensor=inputs, weights="imagenet")
 
     # Freeze the pretrained weights
     model.trainable = False
@@ -366,8 +339,8 @@ def build_model(num_classes):
     outputs = layers.Dense(num_classes, activation="softmax", name="pred")(x)
 
     # Compile
-    model = tf.keras.Model(inputs, outputs, name="EfficientNet")
-    optimizer = tf.keras.optimizers.Adam(learning_rate=1e-2)
+    model = keras.Model(inputs, outputs, name="EfficientNet")
+    optimizer = keras.optimizers.Adam(learning_rate=1e-2)
     model.compile(
         optimizer=optimizer, loss="categorical_crossentropy", metrics=["accuracy"]
     )
@@ -386,11 +359,10 @@ If image augmentation layers were not
 applied, the validation accuracy may only reach ~60%.
 """
 
-with strategy.scope():
-    model = build_model(num_classes=NUM_CLASSES)
+model = build_model(num_classes=NUM_CLASSES)
 
 epochs = 25  # @param {type: "slider", min:8, max:80}
-hist = model.fit(ds_train, epochs=epochs, validation_data=ds_test, verbose=2)
+hist = model.fit(ds_train, epochs=epochs, validation_data=ds_test)
 plot_hist(hist)
 
 """
@@ -425,7 +397,7 @@ def unfreeze_model(model):
         if not isinstance(layer, layers.BatchNormalization):
             layer.trainable = True
 
-    optimizer = tf.keras.optimizers.Adam(learning_rate=1e-4)
+    optimizer = keras.optimizers.Adam(learning_rate=1e-4)
     model.compile(
         optimizer=optimizer, loss="categorical_crossentropy", metrics=["accuracy"]
     )
@@ -434,7 +406,7 @@ def unfreeze_model(model):
 unfreeze_model(model)
 
 epochs = 10  # @param {type: "slider", min:8, max:50}
-hist = model.fit(ds_train, epochs=epochs, validation_data=ds_test, verbose=2)
+hist = model.fit(ds_train, epochs=epochs, validation_data=ds_test)
 plot_hist(hist)
 
 """
@@ -467,35 +439,4 @@ cross entropy) is getting significantly larger than log(NUM_CLASSES) after the s
 epoch. If so, the initial learning rate/momentum is too high.
 - Smaller batch size benefit validation accuracy, possibly due to effectively providing
 regularization.
-
-## Using the latest EfficientNet weights
-
-Since the initial paper, the EfficientNet has been improved by various methods for data
-preprocessing and for using unlabelled data to enhance learning results. These
-improvements are relatively hard and computationally costly to reproduce, and require
-extra code; but the weights are readily available in the form of TF checkpoint files. The
-model architecture has not changed, so loading the improved checkpoints is possible.
-
-To use a checkpoint provided at
-[the official model repository](https://github.com/tensorflow/tpu/tree/master/models/official/efficientnet), first
-download the checkpoint. As example, here we download noisy-student version of B1:
-
-```
-!wget https://storage.googleapis.com/cloud-tpu-checkpoints/efficientnet\
-       /noisystudent/noisy_student_efficientnet-b1.tar.gz
-!tar -xf noisy_student_efficientnet-b1.tar.gz
-```
-
-Then use the script [efficientnet_weight_update_util.py](https://github.com/keras-team/keras/blob/master/keras/applications/efficientnet_weight_update_util.py) to convert ckpt file to h5 file.
-
-```
-!python efficientnet_weight_update_util.py --model b1 --notop --ckpt \
-        efficientnet-b1/model.ckpt --o efficientnetb1_notop.h5
-```
-
-When creating model, use the following to load new weight:
-
-```python
-model = EfficientNetB1(weights="efficientnetb1_notop.h5", include_top=False)
-```
 """
