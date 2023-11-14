@@ -206,6 +206,7 @@ img_augmentation_layers = [
     layers.RandomContrast(factor=0.1),
 ]
 
+
 def img_augmentation(images):
     for layer in img_augmentation_layers:
         images = layer(images)
@@ -273,10 +274,13 @@ We build an EfficientNetB0 with 120 output classes, that is initialized from scr
 Note: the accuracy will increase very slowly and may overfit.
 """
 
-model = EfficientNetB0(include_top=True, weights=None, classes=NUM_CLASSES, input_shape=(IMG_SIZE, IMG_SIZE, 3))
-model.compile(
-    optimizer="adam", loss="categorical_crossentropy", metrics=["accuracy"]
+model = EfficientNetB0(
+    include_top=True,
+    weights=None,
+    classes=NUM_CLASSES,
+    input_shape=(IMG_SIZE, IMG_SIZE, 3),
 )
+model.compile(optimizer="adam", loss="categorical_crossentropy", metrics=["accuracy"])
 
 model.summary()
 
@@ -321,7 +325,7 @@ and we fine-tune it on our own dataset.
 
 def build_model(num_classes):
     inputs = layers.Input(shape=(IMG_SIZE, IMG_SIZE, 3))
-    model = EfficientNetB0(include_top=False, input_tensor=x, weights="imagenet")
+    model = EfficientNetB0(include_top=False, input_tensor=inputs, weights="imagenet")
 
     # Freeze the pretrained weights
     model.trainable = False
