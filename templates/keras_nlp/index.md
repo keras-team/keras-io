@@ -3,13 +3,13 @@
 <a class="github-button" href="https://github.com/keras-team/keras-nlp" data-size="large" data-show-count="true" aria-label="Star keras-team/keras-nlp on GitHub">Star</a>
 
 KerasNLP is a natural language processing library that works natively 
-with TensorFlow, JAX, or PyTorch. Built on [Keras Core](https://keras.io/keras_core/announcement/),
+with TensorFlow, JAX, or PyTorch. Built on [Keras 3](https://keras.io/getting_started/keras_3_announcement/),
 these models, layers, metrics, callbacks, etc., can be trained and serialized
 in any framework and re-used in another without costly migrations. See "Using 
-KerasNLP with Keras Core" below for more details on multi-framework KerasNLP.
+KerasNLP with Keras 3" below for more details on multi-framework KerasNLP.
 
-KerasNLP supports users through their entire development cycle. Our workflows 
-are built from modular components that have state-of-the-art preset weights and 
+KerasNLP supports users through their entire development cycle. Our workflows
+are built from modular components that have state-of-the-art preset weights and
 architectures when used out-of-the-box and are easily customizable when more 
 control is needed.
 
@@ -69,7 +69,7 @@ pip to install directly from the master branch on github:
 pip install git+https://github.com/keras-team/keras-nlp.git --upgrade
 ```
 
-## Using KerasNLP with Keras Core
+## Using KerasNLP with Keras 3
 
 As of version `0.6.0`, KerasNLP supports multiple backends out 
 of the box. There are two ways to configure KerasNLP to run with multi-backend 
