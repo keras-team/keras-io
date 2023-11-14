@@ -152,10 +152,10 @@ evaluate_model(model)
 <div class="k-default-codeblock">
 ```
 WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
-I0000 00:00:1699476780.568655  331531 device_compiler.h:186] Compiled cluster using XLA!  This line is logged at most once for the lifetime of the process.
+I0000 00:00:1699909864.025985   48611 device_compiler.h:187] Compiled cluster using XLA!  This line is logged at most once for the lifetime of the process.
 
-Mean absolute percent error before training:  100.00450134277344
-Mean absolute percent error after training: 100.0
+Mean absolute percent error before training:  99.96772766113281
+Mean absolute percent error after training: 40.94866180419922
 
 ```
 </div>
@@ -182,8 +182,8 @@ evaluate_model(model)
 
 <div class="k-default-codeblock">
 ```
-Mean absolute percent error before training:  99.8993911743164
-Mean absolute percent error after training: 42.862823486328125
+Mean absolute percent error before training:  99.99896240234375
+Mean absolute percent error after training: 52.533199310302734
 
 ```
 </div>
@@ -289,8 +289,8 @@ evaluate_model(model)
 
 <div class="k-default-codeblock">
 ```
-Mean absolute percent error before training:  99.99999237060547
-Mean absolute percent error after training: 42.25301742553711
+Mean absolute percent error before training:  100.00006866455078
+Mean absolute percent error after training: 43.57806396484375
 
 ```
 </div>
@@ -364,7 +364,7 @@ evaluate_model(model)
 <div class="k-default-codeblock">
 ```
 Mean absolute percent error before training:  100.0
-Mean absolute percent error after training: 44.0278205871582
+Mean absolute percent error after training: 55.646610260009766
 
 ```
 </div>
@@ -447,8 +447,8 @@ Running with strategy: MirroredStrategy
 
 <div class="k-default-codeblock">
 ```
-Mean absolute percent error before training:  99.99930572509766
-Mean absolute percent error after training: 49.11731719970703
+Mean absolute percent error before training:  100.0
+Mean absolute percent error after training: 44.573463439941406
 
 ```
 </div>

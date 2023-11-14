@@ -95,11 +95,14 @@ SAMPLING_RATE = 16000
 SCALE = 0.5
 
 BATCH_SIZE = 128
-EPOCHS = 1  # For a real training run, use EPOCHS = 100
+EPOCHS = 1
 
 ```
 <div class="k-default-codeblock">
 ```
+Warning: Your Kaggle API key is readable by other users on this system! To fix this, you can run 'chmod 600 /home/fchollet/.kaggle/kaggle.json'
+Downloading speaker-recognition-dataset.zip to /home/fchollet/keras-io/scripts/tmp_5022915
+ 90%|████████████████████████████████████▉    | 208M/231M [00:00<00:00, 217MB/s]
 100%|█████████████████████████████████████████| 231M/231M [00:01<00:00, 227MB/s]
 
 ```

@@ -23,25 +23,20 @@ two phases:
 2. Clustering of the learned visual representation vectors to maximize the agreement
 between the cluster assignments of neighboring vectors.
 
-The example requires [TensorFlow Addons](https://www.tensorflow.org/addons),
-which you can install using the following command:
-
-```python
-pip install tensorflow-addons
-```
-
 ---
 ## Setup
 
 
 ```python
+import os
+
+os.environ["KERAS_BACKEND"] = "tensorflow"
+
 from collections import defaultdict
-import random
 import numpy as np
 import tensorflow as tf
-import tensorflow_addons as tfa
-from tensorflow import keras
-from tensorflow.keras import layers
+import keras
+from keras import layers
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 ```
@@ -76,9 +71,6 @@ classes = [
 
 <div class="k-default-codeblock">
 ```
-Downloading data from https://www.cs.toronto.edu/~kriz/cifar-10-python.tar.gz
-170500096/170498071 [==============================] - 13s 0us/step
-170508288/170498071 [==============================] - 13s 0us/step
 x_data shape: (60000, 32, 32, 3) - y_data shape: (60000, 1)
 
 ```
@@ -154,7 +146,9 @@ _ = plt.axis("off")
 ```
 
 
+    
 ![png](/img/examples/vision/semantic_image_clustering/semantic_image_clustering_13_0.png)
+    
 
 
 Display a sample of augmented versions of the image
@@ -170,7 +164,9 @@ for i in range(9):
 ```
 
 
+    
 ![png](/img/examples/vision/semantic_image_clustering/semantic_image_clustering_15_0.png)
+    
 
 
 ---
@@ -231,21 +227,23 @@ class RepresentationLearner(keras.Model):
         return [self.loss_tracker]
 
     def compute_contrastive_loss(self, feature_vectors, batch_size):
-        num_augmentations = tf.shape(feature_vectors)[0] // batch_size
+        num_augmentations = keras.ops.shape(feature_vectors)[0] // batch_size
         if self.l2_normalize:
-            feature_vectors = tf.math.l2_normalize(feature_vectors, -1)
+            feature_vectors = keras.utils.normalize(feature_vectors)
         # The logits shape is [num_augmentations * batch_size, num_augmentations * batch_size].
         logits = (
             tf.linalg.matmul(feature_vectors, feature_vectors, transpose_b=True)
             / self.temperature
         )
         # Apply log-max trick for numerical stability.
-        logits_max = tf.math.reduce_max(logits, axis=1)
+        logits_max = keras.ops.max(logits, axis=1)
         logits = logits - logits_max
         # The shape of targets is [num_augmentations * batch_size, num_augmentations * batch_size].
         # targets is a matrix consits of num_augmentations submatrices of shape [batch_size * batch_size].
         # Each [batch_size * batch_size] submatrix is an identity matrix (diagonal entries are ones).
-        targets = tf.tile(tf.eye(batch_size), [num_augmentations, num_augmentations])
+        targets = keras.ops.tile(
+            tf.eye(batch_size), [num_augmentations, num_augmentations]
+        )
         # Compute cross entropy loss
         return keras.losses.categorical_crossentropy(
             y_true=targets, y_pred=logits, from_logits=True
@@ -265,7 +263,7 @@ class RepresentationLearner(keras.Model):
         return self.projector(features)
 
     def train_step(self, inputs):
-        batch_size = tf.shape(inputs)[0]
+        batch_size = keras.ops.shape(inputs)[0]
         # Run the forward pass and compute the contrastive loss
         with tf.GradientTape() as tape:
             feature_vectors = self(inputs, training=True)
@@ -281,7 +279,7 @@ class RepresentationLearner(keras.Model):
         return {m.name: m.result() for m in self.metrics}
 
     def test_step(self, inputs):
-        batch_size = tf.shape(inputs)[0]
+        batch_size = keras.ops.shape(inputs)[0]
         feature_vectors = self(inputs, training=False)
         loss = self.compute_contrastive_loss(feature_vectors, batch_size)
         self.loss_tracker.update_state(loss)
@@ -305,7 +303,8 @@ lr_scheduler = keras.optimizers.schedules.CosineDecay(
 )
 # Compile the model.
 representation_learner.compile(
-    optimizer=tfa.optimizers.AdamW(learning_rate=lr_scheduler, weight_decay=0.0001),
+    optimizer=keras.optimizers.AdamW(learning_rate=lr_scheduler, weight_decay=0.0001),
+    jit_compile=False,
 )
 # Fit the model.
 history = representation_learner.fit(
@@ -319,105 +318,105 @@ history = representation_learner.fit(
 <div class="k-default-codeblock">
 ```
 Epoch 1/50
-118/118 [==============================] - 70s 351ms/step - loss: 53.4089
+ 118/118 ━━━━━━━━━━━━━━━━━━━━ 78s 187ms/step - loss: 557.1537
 Epoch 2/50
-118/118 [==============================] - 39s 328ms/step - loss: 13.8591
+ 118/118 ━━━━━━━━━━━━━━━━━━━━ 19s 158ms/step - loss: 473.7576
 Epoch 3/50
-118/118 [==============================] - 39s 333ms/step - loss: 11.8397
+ 118/118 ━━━━━━━━━━━━━━━━━━━━ 19s 160ms/step - loss: 204.2021
 Epoch 4/50
-118/118 [==============================] - 40s 338ms/step - loss: 11.5879
+ 118/118 ━━━━━━━━━━━━━━━━━━━━ 19s 158ms/step - loss: 199.6705
 Epoch 5/50
-118/118 [==============================] - 40s 341ms/step - loss: 11.1749
+ 118/118 ━━━━━━━━━━━━━━━━━━━━ 19s 158ms/step - loss: 199.4409
 Epoch 6/50
-118/118 [==============================] - 40s 343ms/step - loss: 10.9583
+ 118/118 ━━━━━━━━━━━━━━━━━━━━ 19s 160ms/step - loss: 201.0644
 Epoch 7/50
-118/118 [==============================] - 41s 344ms/step - loss: 10.8544
+ 118/118 ━━━━━━━━━━━━━━━━━━━━ 19s 159ms/step - loss: 199.7465
 Epoch 8/50
-118/118 [==============================] - 41s 345ms/step - loss: 10.7517
+ 118/118 ━━━━━━━━━━━━━━━━━━━━ 19s 158ms/step - loss: 209.4148
 Epoch 9/50
-118/118 [==============================] - 41s 346ms/step - loss: 10.6248
+ 118/118 ━━━━━━━━━━━━━━━━━━━━ 19s 160ms/step - loss: 200.9096
 Epoch 10/50
-118/118 [==============================] - 41s 346ms/step - loss: 10.5156
+ 118/118 ━━━━━━━━━━━━━━━━━━━━ 19s 159ms/step - loss: 203.5660
 Epoch 11/50
-118/118 [==============================] - 41s 346ms/step - loss: 10.4036
+ 118/118 ━━━━━━━━━━━━━━━━━━━━ 19s 158ms/step - loss: 197.5067
 Epoch 12/50
-118/118 [==============================] - 41s 345ms/step - loss: 10.2672
+ 118/118 ━━━━━━━━━━━━━━━━━━━━ 19s 159ms/step - loss: 185.4315
 Epoch 13/50
-118/118 [==============================] - 41s 346ms/step - loss: 10.1477
+ 118/118 ━━━━━━━━━━━━━━━━━━━━ 19s 159ms/step - loss: 196.7072
 Epoch 14/50
-118/118 [==============================] - 41s 346ms/step - loss: 10.0444
+ 118/118 ━━━━━━━━━━━━━━━━━━━━ 19s 158ms/step - loss: 205.7930
 Epoch 15/50
-118/118 [==============================] - 41s 346ms/step - loss: 9.9758
+ 118/118 ━━━━━━━━━━━━━━━━━━━━ 19s 158ms/step - loss: 196.2166
 Epoch 16/50
-118/118 [==============================] - 41s 346ms/step - loss: 9.8623
+ 118/118 ━━━━━━━━━━━━━━━━━━━━ 19s 160ms/step - loss: 172.0755
 Epoch 17/50
-118/118 [==============================] - 41s 345ms/step - loss: 9.7079
+ 118/118 ━━━━━━━━━━━━━━━━━━━━ 19s 158ms/step - loss: 153.7445
 Epoch 18/50
-118/118 [==============================] - 41s 346ms/step - loss: 9.6141
+ 118/118 ━━━━━━━━━━━━━━━━━━━━ 19s 158ms/step - loss: 177.7372
 Epoch 19/50
-118/118 [==============================] - 41s 346ms/step - loss: 9.4421
+ 118/118 ━━━━━━━━━━━━━━━━━━━━ 19s 161ms/step - loss: 149.0251
 Epoch 20/50
-118/118 [==============================] - 41s 346ms/step - loss: 9.2634
+ 118/118 ━━━━━━━━━━━━━━━━━━━━ 19s 158ms/step - loss: 128.1759
 Epoch 21/50
-118/118 [==============================] - 41s 346ms/step - loss: 9.1574
+ 118/118 ━━━━━━━━━━━━━━━━━━━━ 19s 157ms/step - loss: 122.5469
 Epoch 22/50
-118/118 [==============================] - 41s 346ms/step - loss: 9.0650
+ 118/118 ━━━━━━━━━━━━━━━━━━━━ 19s 160ms/step - loss: 139.9140
 Epoch 23/50
-118/118 [==============================] - 41s 346ms/step - loss: 8.8151
+ 118/118 ━━━━━━━━━━━━━━━━━━━━ 19s 158ms/step - loss: 135.2490
 Epoch 24/50
-118/118 [==============================] - 41s 346ms/step - loss: 8.6706
+ 118/118 ━━━━━━━━━━━━━━━━━━━━ 19s 158ms/step - loss: 117.5860
 Epoch 25/50
-118/118 [==============================] - 41s 346ms/step - loss: 8.4993
+ 118/118 ━━━━━━━━━━━━━━━━━━━━ 19s 160ms/step - loss: 117.3953
 Epoch 26/50
-118/118 [==============================] - 41s 345ms/step - loss: 8.4586
+ 118/118 ━━━━━━━━━━━━━━━━━━━━ 19s 158ms/step - loss: 121.0800
 Epoch 27/50
-118/118 [==============================] - 41s 345ms/step - loss: 8.3577
+ 118/118 ━━━━━━━━━━━━━━━━━━━━ 19s 158ms/step - loss: 108.4165
 Epoch 28/50
-118/118 [==============================] - 41s 346ms/step - loss: 8.0840
+ 118/118 ━━━━━━━━━━━━━━━━━━━━ 19s 159ms/step - loss: 97.3604
 Epoch 29/50
-118/118 [==============================] - 41s 346ms/step - loss: 7.9753
+ 118/118 ━━━━━━━━━━━━━━━━━━━━ 19s 159ms/step - loss: 88.7970
 Epoch 30/50
-118/118 [==============================] - 41s 346ms/step - loss: 7.7742
+ 118/118 ━━━━━━━━━━━━━━━━━━━━ 19s 160ms/step - loss: 79.8381
 Epoch 31/50
-118/118 [==============================] - 41s 346ms/step - loss: 7.6332
+ 118/118 ━━━━━━━━━━━━━━━━━━━━ 19s 157ms/step - loss: 69.1802
 Epoch 32/50
-118/118 [==============================] - 41s 346ms/step - loss: 7.7878
+ 118/118 ━━━━━━━━━━━━━━━━━━━━ 21s 159ms/step - loss: 66.0070
 Epoch 33/50
-118/118 [==============================] - 41s 346ms/step - loss: 7.6894
+ 118/118 ━━━━━━━━━━━━━━━━━━━━ 19s 158ms/step - loss: 62.4077
 Epoch 34/50
-118/118 [==============================] - 41s 346ms/step - loss: 7.3130
+ 118/118 ━━━━━━━━━━━━━━━━━━━━ 19s 157ms/step - loss: 55.4975
 Epoch 35/50
-118/118 [==============================] - 41s 346ms/step - loss: 7.2549
+ 118/118 ━━━━━━━━━━━━━━━━━━━━ 19s 160ms/step - loss: 51.2528
 Epoch 36/50
-118/118 [==============================] - 41s 346ms/step - loss: 7.0269
+ 118/118 ━━━━━━━━━━━━━━━━━━━━ 19s 157ms/step - loss: 45.4217
 Epoch 37/50
-118/118 [==============================] - 41s 346ms/step - loss: 6.7713
+ 118/118 ━━━━━━━━━━━━━━━━━━━━ 19s 157ms/step - loss: 39.3580
 Epoch 38/50
-118/118 [==============================] - 41s 346ms/step - loss: 6.8245
+ 118/118 ━━━━━━━━━━━━━━━━━━━━ 19s 159ms/step - loss: 36.4156
 Epoch 39/50
-118/118 [==============================] - 41s 346ms/step - loss: 6.7953
+ 118/118 ━━━━━━━━━━━━━━━━━━━━ 19s 157ms/step - loss: 33.9250
 Epoch 40/50
-118/118 [==============================] - 41s 346ms/step - loss: 6.7573
+ 118/118 ━━━━━━━━━━━━━━━━━━━━ 19s 157ms/step - loss: 30.2516
 Epoch 41/50
-118/118 [==============================] - 41s 346ms/step - loss: 6.7621
+ 118/118 ━━━━━━━━━━━━━━━━━━━━ 19s 159ms/step - loss: 25.0412
 Epoch 42/50
-118/118 [==============================] - 41s 346ms/step - loss: 6.7473
+ 118/118 ━━━━━━━━━━━━━━━━━━━━ 19s 157ms/step - loss: 25.4968
 Epoch 43/50
-118/118 [==============================] - 41s 346ms/step - loss: 6.3506
+ 118/118 ━━━━━━━━━━━━━━━━━━━━ 19s 157ms/step - loss: 22.3305
 Epoch 44/50
-118/118 [==============================] - 41s 346ms/step - loss: 6.1783
+ 118/118 ━━━━━━━━━━━━━━━━━━━━ 19s 158ms/step - loss: 20.6767
 Epoch 45/50
-118/118 [==============================] - 41s 345ms/step - loss: 6.0123
+ 118/118 ━━━━━━━━━━━━━━━━━━━━ 19s 157ms/step - loss: 20.2187
 Epoch 46/50
-118/118 [==============================] - 41s 346ms/step - loss: 5.9238
+ 118/118 ━━━━━━━━━━━━━━━━━━━━ 18s 156ms/step - loss: 18.0097
 Epoch 47/50
-118/118 [==============================] - 41s 345ms/step - loss: 5.9278
+ 118/118 ━━━━━━━━━━━━━━━━━━━━ 18s 156ms/step - loss: 17.4783
 Epoch 48/50
-118/118 [==============================] - 41s 346ms/step - loss: 5.7985
+ 118/118 ━━━━━━━━━━━━━━━━━━━━ 19s 158ms/step - loss: 16.6550
 Epoch 49/50
-118/118 [==============================] - 41s 346ms/step - loss: 6.0905
+ 118/118 ━━━━━━━━━━━━━━━━━━━━ 18s 156ms/step - loss: 16.0668
 Epoch 50/50
-118/118 [==============================] - 41s 346ms/step - loss: 5.9406
+ 118/118 ━━━━━━━━━━━━━━━━━━━━ 18s 156ms/step - loss: 15.2431
 
 ```
 </div>
@@ -432,7 +431,9 @@ plt.show()
 ```
 
 
+    
 ![png](/img/examples/vision/semantic_image_clustering/semantic_image_clustering_24_0.png)
+    
 
 
 ---
@@ -446,12 +447,17 @@ batch_size = 500
 # Get the feature vector representations of the images.
 feature_vectors = encoder.predict(x_data, batch_size=batch_size, verbose=1)
 # Normalize the feature vectores.
-feature_vectors = tf.math.l2_normalize(feature_vectors, -1)
+feature_vectors = keras.utils.normalize(feature_vectors)
 ```
 
 <div class="k-default-codeblock">
 ```
-120/120 [==============================] - 7s 35ms/step
+  19/120 ━━━[37m━━━━━━━━━━━━━━━━━  0s 9ms/step
+
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1699918624.555770   94228 device_compiler.h:187] Compiled cluster using XLA!  This line is logged at most once for the lifetime of the process.
+
+ 120/120 ━━━━━━━━━━━━━━━━━━━━ 8s 9ms/step
 
 ```
 </div>
@@ -468,7 +474,7 @@ for batch_idx in tqdm(range(num_batches)):
     # Compute the dot similarity.
     similarities = tf.linalg.matmul(current_batch, feature_vectors, transpose_b=True)
     # Get the indices of most similar vectors.
-    _, indices = tf.math.top_k(similarities, k=k_neighbours + 1, sorted=True)
+    _, indices = keras.ops.top_k(similarities, k=k_neighbours + 1, sorted=True)
     # Add the indices to the neighbours.
     neighbours.append(indices[..., 1:])
 
@@ -477,7 +483,7 @@ neighbours = np.reshape(np.array(neighbours), (-1, k_neighbours))
 
 <div class="k-default-codeblock">
 ```
-100%|██████████| 120/120 [00:01<00:00, 99.09it/s]
+100%|████████████████████████████████████████████████████████████████████████| 120/120 [00:17<00:00,  6.99it/s]
 
 ```
 </div>
@@ -503,7 +509,9 @@ for _ in range(nrows):
 ```
 
 
+    
 ![png](/img/examples/vision/semantic_image_clustering/semantic_image_clustering_31_0.png)
+    
 
 
 You notice that images on each row are visually similar, and belong to similar classes.
@@ -524,12 +532,12 @@ class ClustersConsistencyLoss(keras.losses.Loss):
 
     def __call__(self, target, similarity, sample_weight=None):
         # Set targets to be ones.
-        target = tf.ones_like(similarity)
+        target = keras.ops.ones_like(similarity)
         # Compute cross entropy loss.
         loss = keras.losses.binary_crossentropy(
             y_true=target, y_pred=similarity, from_logits=True
         )
-        return tf.math.reduce_mean(loss)
+        return keras.ops.mean(loss)
 
 ```
 
@@ -548,17 +556,17 @@ class ClustersEntropyLoss(keras.losses.Loss):
 
     def __call__(self, target, cluster_probabilities, sample_weight=None):
         # Ideal entropy = log(num_clusters).
-        num_clusters = tf.cast(tf.shape(cluster_probabilities)[-1], tf.dtypes.float32)
-        target = tf.math.log(num_clusters)
-        # Compute the overall clusters distribution.
-        cluster_probabilities = tf.math.reduce_mean(cluster_probabilities, axis=0)
-        # Replacing zero probabilities - if any - with a very small value.
-        cluster_probabilities = tf.clip_by_value(
-            cluster_probabilities, clip_value_min=1e-8, clip_value_max=1.0
+        num_clusters = keras.ops.cast(
+            keras.ops.shape(cluster_probabilities)[-1], "float32"
         )
+        target = keras.ops.log(num_clusters)
+        # Compute the overall clusters distribution.
+        cluster_probabilities = keras.ops.mean(cluster_probabilities, axis=0)
+        # Replacing zero probabilities - if any - with a very small value.
+        cluster_probabilities = keras.ops.clip(cluster_probabilities, 1e-8, 1.0)
         # Compute the entropy over the clusters.
-        entropy = -tf.math.reduce_sum(
-            cluster_probabilities * tf.math.log(cluster_probabilities)
+        entropy = -keras.ops.sum(
+            cluster_probabilities * keras.ops.log(cluster_probabilities)
         )
         # Compute the difference between the target and the actual.
         loss = target - entropy
@@ -608,24 +616,26 @@ def create_clustering_learner(clustering_model):
         shape=tuple([k_neighbours]) + input_shape, name="neighbours"
     )
     # Changes neighbours shape to [batch_size * k_neighbours, width, height, channels]
-    neighbours_reshaped = tf.reshape(neighbours, shape=tuple([-1]) + input_shape)
+    neighbours_reshaped = keras.ops.reshape(neighbours, tuple([-1]) + input_shape)
     # anchor_clustering shape: [batch_size, num_clusters]
     anchor_clustering = clustering_model(anchor)
     # neighbours_clustering shape: [batch_size * k_neighbours, num_clusters]
     neighbours_clustering = clustering_model(neighbours_reshaped)
     # Convert neighbours_clustering shape to [batch_size, k_neighbours, num_clusters]
-    neighbours_clustering = tf.reshape(
+    neighbours_clustering = keras.ops.reshape(
         neighbours_clustering,
-        shape=(-1, k_neighbours, tf.shape(neighbours_clustering)[-1]),
+        (-1, k_neighbours, keras.ops.shape(neighbours_clustering)[-1]),
     )
     # similarity shape: [batch_size, 1, k_neighbours]
-    similarity = tf.linalg.einsum(
-        "bij,bkj->bik", tf.expand_dims(anchor_clustering, axis=1), neighbours_clustering
+    similarity = keras.ops.einsum(
+        "bij,bkj->bik",
+        keras.ops.expand_dims(anchor_clustering, axis=1),
+        neighbours_clustering,
     )
     # similarity shape:  [batch_size, k_neighbours]
-    similarity = layers.Lambda(lambda x: tf.squeeze(x, axis=1), name="similarity")(
-        similarity
-    )
+    similarity = layers.Lambda(
+        lambda x: keras.ops.squeeze(x, axis=1), name="similarity"
+    )(similarity)
     # Create the model.
     model = keras.Model(
         inputs=[anchor, neighbours],
@@ -651,11 +661,12 @@ clustering_learner = create_clustering_learner(clustering_model)
 losses = [ClustersConsistencyLoss(), ClustersEntropyLoss(entropy_loss_weight=5)]
 # Create the model inputs and labels.
 inputs = {"anchors": x_data, "neighbours": tf.gather(x_data, neighbours)}
-labels = tf.ones(shape=(x_data.shape[0]))
+labels = np.ones(shape=(x_data.shape[0]))
 # Compile the model.
 clustering_learner.compile(
-    optimizer=tfa.optimizers.AdamW(learning_rate=0.0005, weight_decay=0.0001),
+    optimizer=keras.optimizers.AdamW(learning_rate=0.0005, weight_decay=0.0001),
     loss=losses,
+    jit_compile=False,
 )
 
 # Begin training the model.
@@ -665,107 +676,107 @@ clustering_learner.fit(x=inputs, y=labels, batch_size=512, epochs=50)
 <div class="k-default-codeblock">
 ```
 Epoch 1/50
-118/118 [==============================] - 41s 236ms/step - loss: 0.6638 - similarity_loss: 0.6631 - clustering_loss: 7.1000e-04
+ 118/118 ━━━━━━━━━━━━━━━━━━━━ 31s 109ms/step - loss: 0.3133
 Epoch 2/50
-118/118 [==============================] - 25s 209ms/step - loss: 0.6468 - similarity_loss: 0.6438 - clustering_loss: 0.0030
+ 118/118 ━━━━━━━━━━━━━━━━━━━━ 10s 85ms/step - loss: 0.3133
 Epoch 3/50
-118/118 [==============================] - 25s 211ms/step - loss: 0.6348 - similarity_loss: 0.6303 - clustering_loss: 0.0046
+ 118/118 ━━━━━━━━━━━━━━━━━━━━ 10s 84ms/step - loss: 0.3133
 Epoch 4/50
-118/118 [==============================] - 25s 212ms/step - loss: 0.6279 - similarity_loss: 0.6227 - clustering_loss: 0.0052
+ 118/118 ━━━━━━━━━━━━━━━━━━━━ 10s 83ms/step - loss: 0.3133
 Epoch 5/50
-118/118 [==============================] - 25s 211ms/step - loss: 0.6235 - similarity_loss: 0.6177 - clustering_loss: 0.0058
+ 118/118 ━━━━━━━━━━━━━━━━━━━━ 10s 83ms/step - loss: 0.3133
 Epoch 6/50
-118/118 [==============================] - 25s 212ms/step - loss: 0.6204 - similarity_loss: 0.6139 - clustering_loss: 0.0065
+ 118/118 ━━━━━━━━━━━━━━━━━━━━ 10s 83ms/step - loss: 0.3133
 Epoch 7/50
-118/118 [==============================] - 25s 212ms/step - loss: 0.6188 - similarity_loss: 0.6113 - clustering_loss: 0.0076
+ 118/118 ━━━━━━━━━━━━━━━━━━━━ 10s 83ms/step - loss: 0.3133
 Epoch 8/50
-118/118 [==============================] - 25s 212ms/step - loss: 0.6165 - similarity_loss: 0.6093 - clustering_loss: 0.0072
+ 118/118 ━━━━━━━━━━━━━━━━━━━━ 10s 85ms/step - loss: 0.3133
 Epoch 9/50
-118/118 [==============================] - 25s 212ms/step - loss: 0.6151 - similarity_loss: 0.6077 - clustering_loss: 0.0074
+ 118/118 ━━━━━━━━━━━━━━━━━━━━ 10s 84ms/step - loss: 0.3133
 Epoch 10/50
-118/118 [==============================] - 25s 212ms/step - loss: 0.6143 - similarity_loss: 0.6061 - clustering_loss: 0.0082
+ 118/118 ━━━━━━━━━━━━━━━━━━━━ 10s 83ms/step - loss: 0.3133
 Epoch 11/50
-118/118 [==============================] - 25s 212ms/step - loss: 0.6133 - similarity_loss: 0.6050 - clustering_loss: 0.0083
+ 118/118 ━━━━━━━━━━━━━━━━━━━━ 10s 83ms/step - loss: 0.3133
 Epoch 12/50
-118/118 [==============================] - 25s 212ms/step - loss: 0.6125 - similarity_loss: 0.6040 - clustering_loss: 0.0085
+ 118/118 ━━━━━━━━━━━━━━━━━━━━ 10s 83ms/step - loss: 0.3133
 Epoch 13/50
-118/118 [==============================] - 25s 212ms/step - loss: 0.6115 - similarity_loss: 0.6033 - clustering_loss: 0.0082
+ 118/118 ━━━━━━━━━━━━━━━━━━━━ 10s 83ms/step - loss: 0.3133
 Epoch 14/50
-118/118 [==============================] - 25s 211ms/step - loss: 0.6103 - similarity_loss: 0.6023 - clustering_loss: 0.0080
+ 118/118 ━━━━━━━━━━━━━━━━━━━━ 10s 84ms/step - loss: 0.3133
 Epoch 15/50
-118/118 [==============================] - 25s 212ms/step - loss: 0.6103 - similarity_loss: 0.6017 - clustering_loss: 0.0086
+ 118/118 ━━━━━━━━━━━━━━━━━━━━ 10s 83ms/step - loss: 0.3133
 Epoch 16/50
-118/118 [==============================] - 25s 212ms/step - loss: 0.6096 - similarity_loss: 0.6012 - clustering_loss: 0.0084
+ 118/118 ━━━━━━━━━━━━━━━━━━━━ 10s 82ms/step - loss: 0.3133
 Epoch 17/50
-118/118 [==============================] - 25s 212ms/step - loss: 0.6090 - similarity_loss: 0.6006 - clustering_loss: 0.0084
+ 118/118 ━━━━━━━━━━━━━━━━━━━━ 10s 83ms/step - loss: 0.3133
 Epoch 18/50
-118/118 [==============================] - 25s 212ms/step - loss: 0.6085 - similarity_loss: 0.6001 - clustering_loss: 0.0084
+ 118/118 ━━━━━━━━━━━━━━━━━━━━ 10s 82ms/step - loss: 0.3133
 Epoch 19/50
-118/118 [==============================] - 25s 212ms/step - loss: 0.6083 - similarity_loss: 0.5997 - clustering_loss: 0.0086
+ 118/118 ━━━━━━━━━━━━━━━━━━━━ 10s 81ms/step - loss: 0.3133
 Epoch 20/50
-118/118 [==============================] - 25s 212ms/step - loss: 0.6084 - similarity_loss: 0.5993 - clustering_loss: 0.0090
+ 118/118 ━━━━━━━━━━━━━━━━━━━━ 10s 84ms/step - loss: 0.3133
 Epoch 21/50
-118/118 [==============================] - 25s 211ms/step - loss: 0.6081 - similarity_loss: 0.5990 - clustering_loss: 0.0092
+ 118/118 ━━━━━━━━━━━━━━━━━━━━ 10s 83ms/step - loss: 0.3133
 Epoch 22/50
-118/118 [==============================] - 25s 212ms/step - loss: 0.6080 - similarity_loss: 0.5986 - clustering_loss: 0.0094
+ 118/118 ━━━━━━━━━━━━━━━━━━━━ 10s 82ms/step - loss: 0.3133
 Epoch 23/50
-118/118 [==============================] - 25s 212ms/step - loss: 0.6071 - similarity_loss: 0.5985 - clustering_loss: 0.0086
+ 118/118 ━━━━━━━━━━━━━━━━━━━━ 10s 81ms/step - loss: 0.3133
 Epoch 24/50
-118/118 [==============================] - 25s 211ms/step - loss: 0.6069 - similarity_loss: 0.5982 - clustering_loss: 0.0088
+ 118/118 ━━━━━━━━━━━━━━━━━━━━ 10s 82ms/step - loss: 0.3133
 Epoch 25/50
-118/118 [==============================] - 25s 212ms/step - loss: 0.6071 - similarity_loss: 0.5977 - clustering_loss: 0.0094
+ 118/118 ━━━━━━━━━━━━━━━━━━━━ 10s 82ms/step - loss: 0.3133
 Epoch 26/50
-118/118 [==============================] - 25s 212ms/step - loss: 0.6068 - similarity_loss: 0.5974 - clustering_loss: 0.0093
+ 118/118 ━━━━━━━━━━━━━━━━━━━━ 10s 83ms/step - loss: 0.3133
 Epoch 27/50
-118/118 [==============================] - 25s 212ms/step - loss: 0.6057 - similarity_loss: 0.5971 - clustering_loss: 0.0086
+ 118/118 ━━━━━━━━━━━━━━━━━━━━ 10s 83ms/step - loss: 0.3133
 Epoch 28/50
-118/118 [==============================] - 25s 212ms/step - loss: 0.6064 - similarity_loss: 0.5969 - clustering_loss: 0.0096
+ 118/118 ━━━━━━━━━━━━━━━━━━━━ 10s 81ms/step - loss: 0.3133
 Epoch 29/50
-118/118 [==============================] - 25s 212ms/step - loss: 0.6063 - similarity_loss: 0.5971 - clustering_loss: 0.0092
+ 118/118 ━━━━━━━━━━━━━━━━━━━━ 10s 81ms/step - loss: 0.3133
 Epoch 30/50
-118/118 [==============================] - 25s 212ms/step - loss: 0.6063 - similarity_loss: 0.5967 - clustering_loss: 0.0096
+ 118/118 ━━━━━━━━━━━━━━━━━━━━ 10s 82ms/step - loss: 0.3133
 Epoch 31/50
-118/118 [==============================] - 25s 212ms/step - loss: 0.6061 - similarity_loss: 0.5966 - clustering_loss: 0.0095
+ 118/118 ━━━━━━━━━━━━━━━━━━━━ 10s 82ms/step - loss: 0.3133
 Epoch 32/50
-118/118 [==============================] - 25s 211ms/step - loss: 0.6055 - similarity_loss: 0.5964 - clustering_loss: 0.0091
+ 118/118 ━━━━━━━━━━━━━━━━━━━━ 10s 83ms/step - loss: 0.3133
 Epoch 33/50
-118/118 [==============================] - 25s 212ms/step - loss: 0.6051 - similarity_loss: 0.5960 - clustering_loss: 0.0091
+ 118/118 ━━━━━━━━━━━━━━━━━━━━ 10s 83ms/step - loss: 0.3133
 Epoch 34/50
-118/118 [==============================] - 25s 212ms/step - loss: 0.6053 - similarity_loss: 0.5959 - clustering_loss: 0.0094
+ 118/118 ━━━━━━━━━━━━━━━━━━━━ 10s 82ms/step - loss: 0.3133
 Epoch 35/50
-118/118 [==============================] - 25s 211ms/step - loss: 0.6048 - similarity_loss: 0.5960 - clustering_loss: 0.0088
+ 118/118 ━━━━━━━━━━━━━━━━━━━━ 10s 81ms/step - loss: 0.3133
 Epoch 36/50
-118/118 [==============================] - 25s 212ms/step - loss: 0.6050 - similarity_loss: 0.5956 - clustering_loss: 0.0093
+ 118/118 ━━━━━━━━━━━━━━━━━━━━ 10s 81ms/step - loss: 0.3133
 Epoch 37/50
-118/118 [==============================] - 25s 211ms/step - loss: 0.6047 - similarity_loss: 0.5955 - clustering_loss: 0.0092
+ 118/118 ━━━━━━━━━━━━━━━━━━━━ 10s 82ms/step - loss: 0.3133
 Epoch 38/50
-118/118 [==============================] - 25s 212ms/step - loss: 0.6050 - similarity_loss: 0.5954 - clustering_loss: 0.0095
+ 118/118 ━━━━━━━━━━━━━━━━━━━━ 10s 82ms/step - loss: 0.3133
 Epoch 39/50
-118/118 [==============================] - 25s 211ms/step - loss: 0.6044 - similarity_loss: 0.5952 - clustering_loss: 0.0091
+ 118/118 ━━━━━━━━━━━━━━━━━━━━ 10s 84ms/step - loss: 0.3133
 Epoch 40/50
-118/118 [==============================] - 25s 211ms/step - loss: 0.6048 - similarity_loss: 0.5949 - clustering_loss: 0.0100
+ 118/118 ━━━━━━━━━━━━━━━━━━━━ 10s 82ms/step - loss: 0.3133
 Epoch 41/50
-118/118 [==============================] - 25s 211ms/step - loss: 0.6047 - similarity_loss: 0.5951 - clustering_loss: 0.0096
+ 118/118 ━━━━━━━━━━━━━━━━━━━━ 10s 81ms/step - loss: 0.3133
 Epoch 42/50
-118/118 [==============================] - 25s 212ms/step - loss: 0.6045 - similarity_loss: 0.5950 - clustering_loss: 0.0096
+ 118/118 ━━━━━━━━━━━━━━━━━━━━ 10s 81ms/step - loss: 0.3133
 Epoch 43/50
-118/118 [==============================] - 25s 212ms/step - loss: 0.6042 - similarity_loss: 0.5947 - clustering_loss: 0.0095
+ 118/118 ━━━━━━━━━━━━━━━━━━━━ 10s 82ms/step - loss: 0.3133
 Epoch 44/50
-118/118 [==============================] - 25s 212ms/step - loss: 0.6050 - similarity_loss: 0.5949 - clustering_loss: 0.0100
+ 118/118 ━━━━━━━━━━━━━━━━━━━━ 10s 81ms/step - loss: 0.3133
 Epoch 45/50
-118/118 [==============================] - 25s 213ms/step - loss: 0.6037 - similarity_loss: 0.5947 - clustering_loss: 0.0090
+ 118/118 ━━━━━━━━━━━━━━━━━━━━ 10s 84ms/step - loss: 0.3133
 Epoch 46/50
-118/118 [==============================] - 25s 212ms/step - loss: 0.6039 - similarity_loss: 0.5946 - clustering_loss: 0.0093
+ 118/118 ━━━━━━━━━━━━━━━━━━━━ 10s 82ms/step - loss: 0.3133
 Epoch 47/50
-118/118 [==============================] - 25s 212ms/step - loss: 0.6041 - similarity_loss: 0.5945 - clustering_loss: 0.0096
+ 118/118 ━━━━━━━━━━━━━━━━━━━━ 10s 81ms/step - loss: 0.3133
 Epoch 48/50
-118/118 [==============================] - 25s 212ms/step - loss: 0.6045 - similarity_loss: 0.5945 - clustering_loss: 0.0100
+ 118/118 ━━━━━━━━━━━━━━━━━━━━ 10s 81ms/step - loss: 0.3133
 Epoch 49/50
-118/118 [==============================] - 25s 212ms/step - loss: 0.6039 - similarity_loss: 0.5944 - clustering_loss: 0.0095
+ 118/118 ━━━━━━━━━━━━━━━━━━━━ 10s 82ms/step - loss: 0.3133
 Epoch 50/50
-118/118 [==============================] - 25s 212ms/step - loss: 0.6039 - similarity_loss: 0.5943 - clustering_loss: 0.0097
+ 118/118 ━━━━━━━━━━━━━━━━━━━━ 10s 82ms/step - loss: 0.3133
 
-<keras.callbacks.History at 0x7fe89414bfd0>
+<keras.src.callbacks.history.History at 0x7f629171c5b0>
 
 ```
 </div>
@@ -780,7 +791,9 @@ plt.show()
 ```
 
 
+    
 ![png](/img/examples/vision/semantic_image_clustering/semantic_image_clustering_45_0.png)
+    
 
 
 ---
@@ -793,16 +806,16 @@ plt.show()
 # Get the cluster probability distribution of the input images.
 clustering_probs = clustering_model.predict(x_data, batch_size=batch_size, verbose=1)
 # Get the cluster of the highest probability.
-cluster_assignments = tf.math.argmax(clustering_probs, axis=-1).numpy()
+cluster_assignments = keras.ops.argmax(clustering_probs, axis=-1).numpy()
 # Store the clustering confidence.
 # Images with the highest clustering confidence are considered the 'prototypes'
 # of the clusters.
-cluster_confidence = tf.math.reduce_max(clustering_probs, axis=-1).numpy()
+cluster_confidence = keras.ops.max(clustering_probs, axis=-1).numpy()
 ```
 
 <div class="k-default-codeblock">
 ```
-120/120 [==============================] - 5s 35ms/step
+ 120/120 ━━━━━━━━━━━━━━━━━━━━ 5s 13ms/step
 
 ```
 </div>
@@ -814,37 +827,40 @@ clusters = defaultdict(list)
 for idx, c in enumerate(cluster_assignments):
     clusters[c].append((idx, cluster_confidence[idx]))
 
+non_empty_clusters = defaultdict(list)
+for c in clusters.keys():
+    if clusters[c]:
+        non_empty_clusters[c] = clusters[c]
+
 for c in range(num_clusters):
     print("cluster", c, ":", len(clusters[c]))
 ```
 
 <div class="k-default-codeblock">
 ```
-cluster 0 : 3984
-cluster 1 : 2029
-cluster 2 : 2400
-cluster 3 : 1851
-cluster 4 : 2537
-cluster 5 : 4901
-cluster 6 : 2832
-cluster 7 : 4165
-cluster 8 : 2370
-cluster 9 : 4054
-cluster 10 : 3588
-cluster 11 : 1469
-cluster 12 : 3497
-cluster 13 : 3030
-cluster 14 : 2266
-cluster 15 : 4296
-cluster 16 : 2329
-cluster 17 : 3335
-cluster 18 : 1664
-cluster 19 : 3403
+cluster 0 : 0
+cluster 1 : 0
+cluster 2 : 0
+cluster 3 : 0
+cluster 4 : 0
+cluster 5 : 0
+cluster 6 : 0
+cluster 7 : 0
+cluster 8 : 0
+cluster 9 : 0
+cluster 10 : 0
+cluster 11 : 0
+cluster 12 : 0
+cluster 13 : 0
+cluster 14 : 0
+cluster 15 : 0
+cluster 16 : 0
+cluster 17 : 0
+cluster 18 : 60000
+cluster 19 : 0
 
 ```
 </div>
-Notice that the clusters have roughly balanced sizes.
-
 ### Visualize cluster images
 
 Display the *prototypes*—instances with the highest clustering confidence—of each cluster:
@@ -854,12 +870,14 @@ Display the *prototypes*—instances with the highest clustering confidence—of
 num_images = 8
 plt.figure(figsize=(15, 15))
 position = 1
-for c in range(num_clusters):
-    cluster_instances = sorted(clusters[c], key=lambda kv: kv[1], reverse=True)
+for c in non_empty_clusters.keys():
+    cluster_instances = sorted(
+        non_empty_clusters[c], key=lambda kv: kv[1], reverse=True
+    )
 
     for j in range(num_images):
         image_idx = cluster_instances[j][0]
-        plt.subplot(num_clusters, num_images, position)
+        plt.subplot(len(non_empty_clusters), num_images, position)
         plt.imshow(x_data[image_idx].astype("uint8"))
         plt.title(classes[y_data[image_idx][0]])
         plt.axis("off")
@@ -867,7 +885,9 @@ for c in range(num_clusters):
 ```
 
 
-![png](/img/examples/vision/semantic_image_clustering/semantic_image_clustering_53_0.png)
+    
+![png](/img/examples/vision/semantic_image_clustering/semantic_image_clustering_52_0.png)
+    
 
 
 ### Compute clustering accuracy
@@ -898,26 +918,26 @@ for c in range(num_clusters):
 
 <div class="k-default-codeblock">
 ```
-cluster 0 label is: frog  -  accuracy: 25.13 %
-cluster 1 label is: bird  -  accuracy: 25.78 %
-cluster 2 label is: dog  -  accuracy: 23.17 %
-cluster 3 label is: bird  -  accuracy: 19.72 %
-cluster 4 label is: ship  -  accuracy: 30.15 %
-cluster 5 label is: truck  -  accuracy: 21.93 %
-cluster 6 label is: airplane  -  accuracy: 34.82 %
-cluster 7 label is: cat  -  accuracy: 16.69 %
-cluster 8 label is: deer  -  accuracy: 24.47 %
-cluster 9 label is: dog  -  accuracy: 19.26 %
-cluster 10 label is: airplane  -  accuracy: 30.96 %
-cluster 11 label is: bird  -  accuracy: 26.89 %
-cluster 12 label is: horse  -  accuracy: 23.39 %
-cluster 13 label is: automobile  -  accuracy: 29.9 %
-cluster 14 label is: ship  -  accuracy: 27.23 %
-cluster 15 label is: frog  -  accuracy: 21.76 %
-cluster 16 label is: frog  -  accuracy: 28.98 %
-cluster 17 label is: truck  -  accuracy: 33.13 %
-cluster 18 label is: deer  -  accuracy: 18.51 %
-cluster 19 label is: airplane  -  accuracy: 25.21 %
+cluster 0 label is: airplane  -  accuracy: 0 %
+cluster 1 label is: airplane  -  accuracy: 0 %
+cluster 2 label is: airplane  -  accuracy: 0 %
+cluster 3 label is: airplane  -  accuracy: 0 %
+cluster 4 label is: airplane  -  accuracy: 0 %
+cluster 5 label is: airplane  -  accuracy: 0 %
+cluster 6 label is: airplane  -  accuracy: 0 %
+cluster 7 label is: airplane  -  accuracy: 0 %
+cluster 8 label is: airplane  -  accuracy: 0 %
+cluster 9 label is: airplane  -  accuracy: 0 %
+cluster 10 label is: airplane  -  accuracy: 0 %
+cluster 11 label is: airplane  -  accuracy: 0 %
+cluster 12 label is: airplane  -  accuracy: 0 %
+cluster 13 label is: airplane  -  accuracy: 0 %
+cluster 14 label is: airplane  -  accuracy: 0 %
+cluster 15 label is: airplane  -  accuracy: 0 %
+cluster 16 label is: airplane  -  accuracy: 0 %
+cluster 17 label is: airplane  -  accuracy: 0 %
+cluster 18 label is: airplane  -  accuracy: 10.0 %
+cluster 19 label is: airplane  -  accuracy: 0 %
 
 ```
 </div>
@@ -931,8 +951,3 @@ fine-tuning step through self-labeling, as described in the [original SCAN paper
 Note that unsupervised image clustering techniques are not expected to outperform the accuracy
 of supervised image classification techniques, rather showing that they can learn the semantics
 of the images and group them into clusters that are similar to their original classes.
-
-**Example available on HuggingFace**
-| Trained Model | Demo |
-| :--: | :--: |
-| [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Model-Semantic%20Image%20Clustering-black.svg)](https://huggingface.co/keras-io/semantic-image-clustering) | [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Spaces-Semantic%20Image%20Clustering-black.svg)](https://huggingface.co/spaces/keras-io/semantic-image-clustering) |

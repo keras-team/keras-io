@@ -2,13 +2,13 @@
 
 **Authors:** [Aritra Roy Gosthipaty](https://twitter.com/arig23498), [Ritwik Raha](https://twitter.com/ritwik_raha)<br>
 **Date created:** 2021/08/09<br>
-**Last modified:** 2021/08/09<br>
+**Last modified:** 2023/11/13<br>
+**Description:** Minimal implementation of volumetric rendering as shown in NeRF.
 
 
 <img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/vision/ipynb/nerf.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/vision/nerf.py)
 
 
-**Description:** Minimal implementation of volumetric rendering as shown in NeRF.
 
 ---
 ## Introduction
@@ -59,18 +59,23 @@ implementation.
 
 
 ```python
+import os
+
+os.environ["KERAS_BACKEND"] = "tensorflow"
+
 # Setting random seed to obtain reproducible results.
 import tensorflow as tf
 
 tf.random.set_seed(42)
 
+import keras
+from keras import layers
+
 import os
 import glob
-import imageio
+import imageio.v2 as imageio
 import numpy as np
 from tqdm import tqdm
-from tensorflow import keras
-from tensorflow.keras import layers
 import matplotlib.pyplot as plt
 
 # Initialize global variables.
@@ -130,10 +135,10 @@ more about COLMAP [here](https://colmap.github.io/).
 
 ```python
 # Download the data if it does not already exist.
-file_name = "tiny_nerf_data.npz"
-url = "https://people.eecs.berkeley.edu/~bmild/nerf/tiny_nerf_data.npz"
-if not os.path.exists(file_name):
-    data = keras.utils.get_file(fname=file_name, origin=url)
+url = (
+    "http://cseweb.ucsd.edu/~viscomp/projects/LF/papers/ECCV20/nerf/tiny_nerf_data.npz"
+)
+data = keras.utils.get_file(origin=url)
 
 data = np.load(data)
 images = data["images"]
@@ -146,14 +151,10 @@ plt.imshow(images[np.random.randint(low=0, high=num_images)])
 plt.show()
 ```
 
-<div class="k-default-codeblock">
-```
-Downloading data from https://people.eecs.berkeley.edu/~bmild/nerf/tiny_nerf_data.npz
-12730368/12727482 [==============================] - 0s 0us/step
 
-```
-</div>
-![png](/img/examples/vision/nerf/nerf_5_1.png)
+    
+![png](/img/examples/vision/nerf/nerf_5_0.png)
+    
 
 
 ---
@@ -224,7 +225,7 @@ def encode_position(x):
     positions = [x]
     for i in range(POS_ENCODE_DIMS):
         for fn in [tf.sin, tf.cos]:
-            positions.append(fn(2.0 ** i * x))
+            positions.append(fn(2.0**i * x))
     return tf.concat(positions, axis=-1)
 
 
@@ -392,7 +393,7 @@ def get_nerf_model(num_layers, num_pos):
         num_pos: The number of dimensions of positional encoding.
 
     Returns:
-        The `tf.keras` model.
+        The `keras` model.
     """
     inputs = keras.Input(shape=(num_pos, 2 * 3 * POS_ENCODE_DIMS + 3))
     x = inputs
@@ -587,7 +588,6 @@ model.fit(
     batch_size=BATCH_SIZE,
     epochs=EPOCHS,
     callbacks=[TrainMonitor()],
-    steps_per_epoch=split_index // BATCH_SIZE,
 )
 
 
@@ -607,206 +607,272 @@ create_gif("images/*.png", "training.gif")
 <div class="k-default-codeblock">
 ```
 Epoch 1/20
-16/16 [==============================] - 15s 753ms/step - loss: 0.1134 - psnr: 9.7278 - val_loss: 0.0683 - val_psnr: 12.0722
+  1/16 ━[37m━━━━━━━━━━━━━━━━━━━  3:54 16s/step - loss: 0.0948 - psnr: 10.6234
+
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1699908753.457905   65271 device_compiler.h:187] Compiled cluster using XLA!  This line is logged at most once for the lifetime of the process.
+
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 1s 924ms/step
 
 ```
 </div>
-![png](/img/examples/vision/nerf/nerf_11_1.png)
-
-
-<div class="k-default-codeblock">
-```
-Epoch 2/20
-16/16 [==============================] - 13s 752ms/step - loss: 0.0648 - psnr: 12.4200 - val_loss: 0.0664 - val_psnr: 12.1765
-
-```
-</div>
+    
 ![png](/img/examples/vision/nerf/nerf_11_3.png)
+    
 
 
 <div class="k-default-codeblock">
 ```
-Epoch 3/20
-16/16 [==============================] - 13s 746ms/step - loss: 0.0607 - psnr: 12.5281 - val_loss: 0.0673 - val_psnr: 12.0121
+ 16/16 ━━━━━━━━━━━━━━━━━━━━ 29s 889ms/step - loss: 0.1091 - psnr: 9.8283 - val_loss: 0.0753 - val_psnr: 11.5686
+Epoch 2/20
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 477ms/step
 
 ```
 </div>
+    
 ![png](/img/examples/vision/nerf/nerf_11_5.png)
+    
 
 
 <div class="k-default-codeblock">
 ```
-Epoch 4/20
-16/16 [==============================] - 13s 758ms/step - loss: 0.0595 - psnr: 12.7050 - val_loss: 0.0646 - val_psnr: 12.2768
+ 16/16 ━━━━━━━━━━━━━━━━━━━━ 16s 926ms/step - loss: 0.0633 - psnr: 12.4819 - val_loss: 0.0657 - val_psnr: 12.1781
+Epoch 3/20
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 474ms/step
 
 ```
 </div>
+    
 ![png](/img/examples/vision/nerf/nerf_11_7.png)
+    
 
 
 <div class="k-default-codeblock">
 ```
-Epoch 5/20
-16/16 [==============================] - 13s 755ms/step - loss: 0.0583 - psnr: 12.7522 - val_loss: 0.0613 - val_psnr: 12.5351
+ 16/16 ━━━━━━━━━━━━━━━━━━━━ 16s 921ms/step - loss: 0.0589 - psnr: 12.6268 - val_loss: 0.0637 - val_psnr: 12.3413
+Epoch 4/20
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 470ms/step
 
 ```
 </div>
+    
 ![png](/img/examples/vision/nerf/nerf_11_9.png)
+    
 
 
 <div class="k-default-codeblock">
 ```
-Epoch 6/20
-16/16 [==============================] - 13s 749ms/step - loss: 0.0545 - psnr: 13.0654 - val_loss: 0.0553 - val_psnr: 12.9512
+ 16/16 ━━━━━━━━━━━━━━━━━━━━ 15s 915ms/step - loss: 0.0573 - psnr: 12.8150 - val_loss: 0.0617 - val_psnr: 12.4789
+Epoch 5/20
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 477ms/step
 
 ```
 </div>
+    
 ![png](/img/examples/vision/nerf/nerf_11_11.png)
+    
 
 
 <div class="k-default-codeblock">
 ```
-Epoch 7/20
-16/16 [==============================] - 13s 744ms/step - loss: 0.0480 - psnr: 13.6313 - val_loss: 0.0444 - val_psnr: 13.7838
+ 16/16 ━━━━━━━━━━━━━━━━━━━━ 15s 918ms/step - loss: 0.0552 - psnr: 12.9703 - val_loss: 0.0594 - val_psnr: 12.6457
+Epoch 6/20
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 476ms/step
 
 ```
 </div>
+    
 ![png](/img/examples/vision/nerf/nerf_11_13.png)
+    
 
 
 <div class="k-default-codeblock">
 ```
-Epoch 8/20
-16/16 [==============================] - 13s 763ms/step - loss: 0.0359 - psnr: 14.8570 - val_loss: 0.0342 - val_psnr: 14.8823
+ 16/16 ━━━━━━━━━━━━━━━━━━━━ 15s 894ms/step - loss: 0.0538 - psnr: 13.0895 - val_loss: 0.0533 - val_psnr: 13.0049
+Epoch 7/20
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 473ms/step
 
 ```
 </div>
+    
 ![png](/img/examples/vision/nerf/nerf_11_15.png)
+    
 
 
 <div class="k-default-codeblock">
 ```
-Epoch 9/20
-16/16 [==============================] - 13s 758ms/step - loss: 0.0299 - psnr: 15.5374 - val_loss: 0.0287 - val_psnr: 15.6171
+ 16/16 ━━━━━━━━━━━━━━━━━━━━ 16s 940ms/step - loss: 0.0436 - psnr: 13.9857 - val_loss: 0.0381 - val_psnr: 14.4764
+Epoch 8/20
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 475ms/step
 
 ```
 </div>
+    
 ![png](/img/examples/vision/nerf/nerf_11_17.png)
+    
 
 
 <div class="k-default-codeblock">
 ```
-Epoch 10/20
-16/16 [==============================] - 13s 779ms/step - loss: 0.0273 - psnr: 15.9051 - val_loss: 0.0266 - val_psnr: 15.9319
+ 16/16 ━━━━━━━━━━━━━━━━━━━━ 15s 919ms/step - loss: 0.0325 - psnr: 15.1856 - val_loss: 0.0294 - val_psnr: 15.5187
+Epoch 9/20
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 478ms/step
 
 ```
 </div>
+    
 ![png](/img/examples/vision/nerf/nerf_11_19.png)
+    
 
 
 <div class="k-default-codeblock">
 ```
-Epoch 11/20
-16/16 [==============================] - 13s 736ms/step - loss: 0.0255 - psnr: 16.1422 - val_loss: 0.0250 - val_psnr: 16.1568
+ 16/16 ━━━━━━━━━━━━━━━━━━━━ 16s 927ms/step - loss: 0.0276 - psnr: 15.8105 - val_loss: 0.0259 - val_psnr: 16.0297
+Epoch 10/20
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 474ms/step
 
 ```
 </div>
+    
 ![png](/img/examples/vision/nerf/nerf_11_21.png)
+    
 
 
 <div class="k-default-codeblock">
 ```
-Epoch 12/20
-16/16 [==============================] - 13s 746ms/step - loss: 0.0236 - psnr: 16.5074 - val_loss: 0.0233 - val_psnr: 16.4793
+ 16/16 ━━━━━━━━━━━━━━━━━━━━ 16s 952ms/step - loss: 0.0251 - psnr: 16.1994 - val_loss: 0.0252 - val_psnr: 16.0842
+Epoch 11/20
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 474ms/step
 
 ```
 </div>
+    
 ![png](/img/examples/vision/nerf/nerf_11_23.png)
+    
 
 
 <div class="k-default-codeblock">
 ```
-Epoch 13/20
-16/16 [==============================] - 13s 755ms/step - loss: 0.0217 - psnr: 16.8391 - val_loss: 0.0210 - val_psnr: 16.8950
+ 16/16 ━━━━━━━━━━━━━━━━━━━━ 15s 909ms/step - loss: 0.0239 - psnr: 16.3749 - val_loss: 0.0228 - val_psnr: 16.5269
+Epoch 12/20
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 474ms/step
 
 ```
 </div>
+    
 ![png](/img/examples/vision/nerf/nerf_11_25.png)
+    
 
 
 <div class="k-default-codeblock">
 ```
-Epoch 14/20
-16/16 [==============================] - 13s 741ms/step - loss: 0.0197 - psnr: 17.2245 - val_loss: 0.0187 - val_psnr: 17.3766
+ 16/16 ━━━━━━━━━━━━━━━━━━━━ 19s 1s/step - loss: 0.0215 - psnr: 16.8117 - val_loss: 0.0186 - val_psnr: 17.3930
+Epoch 13/20
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 474ms/step
 
 ```
 </div>
+    
 ![png](/img/examples/vision/nerf/nerf_11_27.png)
+    
 
 
 <div class="k-default-codeblock">
 ```
-Epoch 15/20
-16/16 [==============================] - 13s 739ms/step - loss: 0.0179 - psnr: 17.6246 - val_loss: 0.0179 - val_psnr: 17.5445
+ 16/16 ━━━━━━━━━━━━━━━━━━━━ 16s 923ms/step - loss: 0.0188 - psnr: 17.3916 - val_loss: 0.0174 - val_psnr: 17.6570
+Epoch 14/20
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 476ms/step
 
 ```
 </div>
+    
 ![png](/img/examples/vision/nerf/nerf_11_29.png)
+    
 
 
 <div class="k-default-codeblock">
 ```
-Epoch 16/20
-16/16 [==============================] - 13s 735ms/step - loss: 0.0175 - psnr: 17.6998 - val_loss: 0.0180 - val_psnr: 17.5154
+ 16/16 ━━━━━━━━━━━━━━━━━━━━ 16s 973ms/step - loss: 0.0175 - psnr: 17.6871 - val_loss: 0.0172 - val_psnr: 17.6644
+Epoch 15/20
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 468ms/step
 
 ```
 </div>
+    
 ![png](/img/examples/vision/nerf/nerf_11_31.png)
+    
 
 
 <div class="k-default-codeblock">
 ```
-Epoch 17/20
-16/16 [==============================] - 13s 741ms/step - loss: 0.0167 - psnr: 17.9393 - val_loss: 0.0156 - val_psnr: 18.1784
+ 16/16 ━━━━━━━━━━━━━━━━━━━━ 15s 919ms/step - loss: 0.0172 - psnr: 17.7639 - val_loss: 0.0161 - val_psnr: 18.0313
+Epoch 16/20
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 477ms/step
 
 ```
 </div>
+    
 ![png](/img/examples/vision/nerf/nerf_11_33.png)
+    
 
 
 <div class="k-default-codeblock">
 ```
-Epoch 18/20
-16/16 [==============================] - 13s 750ms/step - loss: 0.0150 - psnr: 18.3875 - val_loss: 0.0151 - val_psnr: 18.2811
+ 16/16 ━━━━━━━━━━━━━━━━━━━━ 16s 915ms/step - loss: 0.0150 - psnr: 18.3860 - val_loss: 0.0151 - val_psnr: 18.2832
+Epoch 17/20
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 473ms/step
 
 ```
 </div>
+    
 ![png](/img/examples/vision/nerf/nerf_11_35.png)
+    
 
 
 <div class="k-default-codeblock">
 ```
-Epoch 19/20
-16/16 [==============================] - 13s 755ms/step - loss: 0.0141 - psnr: 18.6476 - val_loss: 0.0139 - val_psnr: 18.6216
+ 16/16 ━━━━━━━━━━━━━━━━━━━━ 16s 926ms/step - loss: 0.0154 - psnr: 18.2210 - val_loss: 0.0146 - val_psnr: 18.4284
+Epoch 18/20
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 468ms/step
 
 ```
 </div>
+    
 ![png](/img/examples/vision/nerf/nerf_11_37.png)
+    
 
 
 <div class="k-default-codeblock">
 ```
-Epoch 20/20
-16/16 [==============================] - 14s 777ms/step - loss: 0.0139 - psnr: 18.7131 - val_loss: 0.0137 - val_psnr: 18.7259
+ 16/16 ━━━━━━━━━━━━━━━━━━━━ 16s 959ms/step - loss: 0.0145 - psnr: 18.4869 - val_loss: 0.0134 - val_psnr: 18.8039
+Epoch 19/20
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 473ms/step
 
 ```
 </div>
+    
 ![png](/img/examples/vision/nerf/nerf_11_39.png)
+    
 
 
 <div class="k-default-codeblock">
 ```
-100%|██████████| 20/20 [00:00<00:00, 57.59it/s]
+ 16/16 ━━━━━━━━━━━━━━━━━━━━ 16s 933ms/step - loss: 0.0136 - psnr: 18.8040 - val_loss: 0.0138 - val_psnr: 18.6680
+Epoch 20/20
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 472ms/step
+
+```
+</div>
+    
+![png](/img/examples/vision/nerf/nerf_11_41.png)
+    
+
+
+<div class="k-default-codeblock">
+```
+ 16/16 ━━━━━━━━━━━━━━━━━━━━ 15s 916ms/step - loss: 0.0131 - psnr: 18.9661 - val_loss: 0.0132 - val_psnr: 18.8687
+
+100%|█████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 20/20 [00:00<00:00, 59.40it/s]
 
 ```
 </div>
@@ -857,14 +923,19 @@ for ax, ori_img, recons_img, depth_map in zip(
     ax[1].imshow(keras.utils.array_to_img(recons_img))
     ax[1].set_title("Reconstructed")
 
-    ax[2].imshow(
-        keras.utils.array_to_img(depth_map[..., None]), cmap="inferno"
-    )
+    ax[2].imshow(keras.utils.array_to_img(depth_map[..., None]), cmap="inferno")
     ax[2].set_title("Depth Map")
 ```
 
+<div class="k-default-codeblock">
+```
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 475ms/step
 
-![png](/img/examples/vision/nerf/nerf_14_0.png)
+```
+</div>
+    
+![png](/img/examples/vision/nerf/nerf_14_1.png)
+    
 
 
 ---
@@ -960,7 +1031,100 @@ imageio.mimwrite(rgb_video, rgb_frames, fps=30, quality=7, macro_block_size=None
 
 <div class="k-default-codeblock">
 ```
-120it [00:12,  9.24it/s]
+1it [00:01,  1.02s/it]
+
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 475ms/step
+
+6it [00:03,  1.95it/s]
+
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 478ms/step
+
+11it [00:05,  2.11it/s]
+
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 474ms/step
+
+16it [00:07,  2.17it/s]
+
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 477ms/step
+
+25it [00:10,  3.05it/s]
+
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 477ms/step
+
+27it [00:12,  2.14it/s]
+
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 479ms/step
+
+31it [00:14,  2.02it/s]
+
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 472ms/step
+
+36it [00:16,  2.11it/s]
+
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 474ms/step
+
+41it [00:18,  2.16it/s]
+
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 472ms/step
+
+46it [00:21,  2.19it/s]
+
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 475ms/step
+
+51it [00:23,  2.22it/s]
+
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 473ms/step
+
+56it [00:25,  2.24it/s]
+
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 464ms/step
+
+61it [00:27,  2.26it/s]
+
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 474ms/step
+
+66it [00:29,  2.26it/s]
+
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 476ms/step
+
+71it [00:32,  2.26it/s]
+
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 473ms/step
+
+76it [00:34,  2.26it/s]
+
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 475ms/step
+
+81it [00:36,  2.26it/s]
+
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 474ms/step
+
+86it [00:38,  2.26it/s]
+
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 476ms/step
+
+91it [00:40,  2.26it/s]
+
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 465ms/step
+
+96it [00:43,  2.27it/s]
+
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 473ms/step
+
+101it [00:45,  2.28it/s]
+
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 473ms/step
+
+106it [00:47,  2.28it/s]
+
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 473ms/step
+
+111it [00:49,  2.27it/s]
+
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 474ms/step
+
+120it [00:52,  2.31it/s]
+[swscaler @ 0x67626c0] Warning: data is not aligned! This can lead to a speed loss
 
 ```
 </div>
@@ -992,8 +1156,8 @@ have also provided the outputs of the model trained for more epochs.
 ---
 ## Way forward
 
-If anyone is interested to go deeper into NeRF, we have built a 3-part blog 
-series at [PyImageSearch](https://www.pyimagesearch.com).
+If anyone is interested to go deeper into NeRF, we have built a 3-part blog
+series at [PyImageSearch](https://pyimagesearch.com/).
 
 - [Prerequisites of NeRF](https://www.pyimagesearch.com/2021/11/10/computer-graphics-and-deep-learning-with-nerf-using-tensorflow-and-keras-part-1/)
 - [Concepts of NeRF](https://www.pyimagesearch.com/2021/11/17/computer-graphics-and-deep-learning-with-nerf-using-tensorflow-and-keras-part-2/)

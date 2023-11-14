@@ -26,9 +26,8 @@ the class segmentation of the training inputs.
 
 import random
 import numpy as np
-import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras import layers
+import keras
+from keras import ops
 import matplotlib.pyplot as plt
 
 """
@@ -213,7 +212,7 @@ def visualize(pairs, labels, to_show=6, num_col=3, predictions=None, test=False)
         else:
             ax = axes[i // num_col, i % num_col]
 
-        ax.imshow(tf.concat([pairs[i][0], pairs[i][1]], axis=1), cmap="gray")
+        ax.imshow(ops.concatenate([pairs[i][0], pairs[i][1]], axis=1), cmap="gray")
         ax.set_axis_off()
         if test:
             ax.set_title("True: {} | Pred: {:.5f}".format(labels[i], predictions[i][0]))
@@ -268,25 +267,25 @@ def euclidean_distance(vects):
     """
 
     x, y = vects
-    sum_square = tf.math.reduce_sum(tf.math.square(x - y), axis=1, keepdims=True)
-    return tf.math.sqrt(tf.math.maximum(sum_square, tf.keras.backend.epsilon()))
+    sum_square = ops.sum(ops.square(x - y), axis=1, keepdims=True)
+    return ops.sqrt(ops.maximum(sum_square, keras.backend.epsilon()))
 
 
-input = layers.Input((28, 28, 1))
-x = tf.keras.layers.BatchNormalization()(input)
-x = layers.Conv2D(4, (5, 5), activation="tanh")(x)
-x = layers.AveragePooling2D(pool_size=(2, 2))(x)
-x = layers.Conv2D(16, (5, 5), activation="tanh")(x)
-x = layers.AveragePooling2D(pool_size=(2, 2))(x)
-x = layers.Flatten()(x)
+input = keras.layers.Input((28, 28, 1))
+x = keras.layers.BatchNormalization()(input)
+x = keras.layers.Conv2D(4, (5, 5), activation="tanh")(x)
+x = keras.layers.AveragePooling2D(pool_size=(2, 2))(x)
+x = keras.layers.Conv2D(16, (5, 5), activation="tanh")(x)
+x = keras.layers.AveragePooling2D(pool_size=(2, 2))(x)
+x = keras.layers.Flatten()(x)
 
-x = tf.keras.layers.BatchNormalization()(x)
-x = layers.Dense(10, activation="tanh")(x)
+x = keras.layers.BatchNormalization()(x)
+x = keras.layers.Dense(10, activation="tanh")(x)
 embedding_network = keras.Model(input, x)
 
 
-input_1 = layers.Input((28, 28, 1))
-input_2 = layers.Input((28, 28, 1))
+input_1 = keras.layers.Input((28, 28, 1))
+input_2 = keras.layers.Input((28, 28, 1))
 
 # As mentioned above, Siamese Network share weights between
 # tower networks (sister networks). To allow this, we will use
@@ -294,9 +293,11 @@ input_2 = layers.Input((28, 28, 1))
 tower_1 = embedding_network(input_1)
 tower_2 = embedding_network(input_2)
 
-merge_layer = layers.Lambda(euclidean_distance)([tower_1, tower_2])
-normal_layer = tf.keras.layers.BatchNormalization()(merge_layer)
-output_layer = layers.Dense(1, activation="sigmoid")(normal_layer)
+merge_layer = keras.layers.Lambda(euclidean_distance, output_shape=(1,))(
+    [tower_1, tower_2]
+)
+normal_layer = keras.layers.BatchNormalization()(merge_layer)
+output_layer = keras.layers.Dense(1, activation="sigmoid")(normal_layer)
 siamese = keras.Model(inputs=[input_1, input_2], outputs=output_layer)
 
 
@@ -330,11 +331,9 @@ def loss(margin=1):
             A tensor containing contrastive loss as floating point value.
         """
 
-        square_pred = tf.math.square(y_pred)
-        margin_square = tf.math.square(tf.math.maximum(margin - (y_pred), 0))
-        return tf.math.reduce_mean(
-            (1 - y_true) * square_pred + (y_true) * margin_square
-        )
+        square_pred = ops.square(y_pred)
+        margin_square = ops.square(ops.maximum(margin - (y_pred), 0))
+        return ops.mean((1 - y_true) * square_pred + (y_true) * margin_square)
 
     return contrastive_loss
 
