@@ -23,13 +23,9 @@ unlike question answering. We will use SWAG dataset to demonstrate this example.
 
 
 ```python
-import os
-
-os.environ["KERAS_BACKEND"] = "jax"  # or "tensorflow" or "torch"
-
 import keras_nlp
 import keras
-import tensorflow as tf
+import tensorflow as tf  # For tf.data only.
 
 import numpy as np
 import pandas as pd
@@ -49,14 +45,14 @@ In this example we'll use **SWAG** dataset for multiplechoice task.
 
 <div class="k-default-codeblock">
 ```
---2023-11-10 23:44:36--  https://github.com/rowanz/swagaf/archive/refs/heads/master.zip
+--2023-11-13 20:05:24--  https://github.com/rowanz/swagaf/archive/refs/heads/master.zip
 Resolving github.com (github.com)... 192.30.255.113
 Connecting to github.com (github.com)|192.30.255.113|:443... connected.
 HTTP request sent, awaiting response... 302 Found
 Location: https://codeload.github.com/rowanz/swagaf/zip/refs/heads/master [following]
---2023-11-10 23:44:36--  https://codeload.github.com/rowanz/swagaf/zip/refs/heads/master
-Resolving codeload.github.com (codeload.github.com)... 192.30.255.120
-Connecting to codeload.github.com (codeload.github.com)|192.30.255.120|:443... connected.
+--2023-11-13 20:05:25--  https://codeload.github.com/rowanz/swagaf/zip/refs/heads/master
+Resolving codeload.github.com (codeload.github.com)... 20.29.134.24
+Connecting to codeload.github.com (codeload.github.com)|20.29.134.24|:443... connected.
 HTTP request sent, awaiting response... 200 OK
 Length: unspecified [application/zip]
 Saving to: ‘swag.zip’
@@ -65,13 +61,13 @@ Saving to: ‘swag.zip’
     
 <div class="k-default-codeblock">
 ```
-swag.zip                [       <=>          ]  19.94M  4.23MB/s    in 4.7s    
+swag.zip                [       <=>          ]  19.94M  4.25MB/s    in 4.7s    
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-2023-11-10 23:44:41 (4.23 MB/s) - ‘swag.zip’ saved [20905751]
+2023-11-13 20:05:30 (4.25 MB/s) - ‘swag.zip’ saved [20905751]
 ```
 </div>
     
@@ -668,12 +664,15 @@ Finally, let's check the model structure visually if everything is in place.
 keras.utils.plot_model(model, show_shapes=True)
 ```
 
-<div class="k-default-codeblock">
-```
-You must install pydot (`pip install pydot`) for `plot_model` to work.
 
-```
-</div>
+
+
+    
+![png](/img/examples/nlp/multiple_choice_task_with_transfer_learning/multiple_choice_task_with_transfer_learning_42_0.png)
+    
+
+
+
 ---
 ## Training
 
@@ -692,21 +691,16 @@ history = model.fit(
 
 <div class="k-default-codeblock">
 ```
-/opt/conda/envs/keras-jax/lib/python3.10/site-packages/keras/src/backend/jax/numpy.py:132: UserWarning: Explicitly requested dtype int64 requested in arange is not available, and will be truncated to dtype int32. To enable more dtypes, set the jax_enable_x64 configuration option or the JAX_ENABLE_X64 shell environment variable. See https://github.com/google/jax#current-gotchas for more.
-  return jnp.arange(start, stop, step=step, dtype=dtype)
-/opt/conda/envs/keras-jax/lib/python3.10/site-packages/keras/src/backend/jax/core.py:64: UserWarning: Explicitly requested dtype int64 requested in array is not available, and will be truncated to dtype int32. To enable more dtypes, set the jax_enable_x64 configuration option or the JAX_ENABLE_X64 shell environment variable. See https://github.com/google/jax#current-gotchas for more.
-  return jnp.array(x, dtype=dtype)
-
 Epoch 1/5
- 183/183 ━━━━━━━━━━━━━━━━━━━━ 5114s 25s/step - accuracy: 0.2530 - loss: 1.3891 - val_accuracy: 0.5125 - val_loss: 1.3757 - learning_rate: 1.0000e-06
+ 183/183 ━━━━━━━━━━━━━━━━━━━━ 5087s 25s/step - accuracy: 0.2563 - loss: 1.3884 - val_accuracy: 0.5150 - val_loss: 1.3742 - learning_rate: 1.0000e-06
 Epoch 2/5
- 183/183 ━━━━━━━━━━━━━━━━━━━━ 4552s 25s/step - accuracy: 0.3500 - loss: 1.3417 - val_accuracy: 0.7125 - val_loss: 0.9250 - learning_rate: 2.9000e-06
+ 183/183 ━━━━━━━━━━━━━━━━━━━━ 4529s 25s/step - accuracy: 0.3825 - loss: 1.3364 - val_accuracy: 0.7125 - val_loss: 0.9071 - learning_rate: 2.9000e-06
 Epoch 3/5
- 183/183 ━━━━━━━━━━━━━━━━━━━━ 4474s 24s/step - accuracy: 0.5953 - loss: 1.0234 - val_accuracy: 0.7375 - val_loss: 0.7936 - learning_rate: 4.8000e-06
+ 183/183 ━━━━━━━━━━━━━━━━━━━━ 4524s 25s/step - accuracy: 0.6144 - loss: 1.0118 - val_accuracy: 0.7425 - val_loss: 0.8017 - learning_rate: 4.8000e-06
 Epoch 4/5
- 183/183 ━━━━━━━━━━━━━━━━━━━━ 4557s 25s/step - accuracy: 0.6957 - loss: 0.8672 - val_accuracy: 0.7575 - val_loss: 0.7284 - learning_rate: 4.7230e-06
+ 183/183 ━━━━━━━━━━━━━━━━━━━━ 4522s 25s/step - accuracy: 0.6744 - loss: 0.8460 - val_accuracy: 0.7625 - val_loss: 0.7323 - learning_rate: 4.7230e-06
 Epoch 5/5
- 183/183 ━━━━━━━━━━━━━━━━━━━━ 4556s 25s/step - accuracy: 0.7213 - loss: 0.7703 - val_accuracy: 0.7625 - val_loss: 0.7213 - learning_rate: 4.4984e-06
+ 183/183 ━━━━━━━━━━━━━━━━━━━━ 4517s 25s/step - accuracy: 0.7200 - loss: 0.7458 - val_accuracy: 0.7750 - val_loss: 0.7022 - learning_rate: 4.4984e-06
 
 ```
 </div>
@@ -741,7 +735,7 @@ for i in range(0, 50, 10):
 
 <div class="k-default-codeblock">
 ```
- 50/50 ━━━━━━━━━━━━━━━━━━━━ 281s 5s/step
+ 50/50 ━━━━━━━━━━━━━━━━━━━━ 274s 5s/step
 # Predictions
 ```
 </div>
@@ -789,8 +783,8 @@ A lake reflects the mountains and the sky. Someone
     
 <div class="k-default-codeblock">
 ```
-🤖 Predicted Ending: ending3
-   >> looks in confusion at the crash site in the blue sky.
+🤖 Predicted Ending: ending1
+   >> remains by the door.
 ```
 </div>
     

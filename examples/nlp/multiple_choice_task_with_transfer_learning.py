@@ -23,13 +23,9 @@ unlike question answering. We will use SWAG dataset to demonstrate this example.
 """shell
 """
 
-import os
-
-os.environ["KERAS_BACKEND"] = "jax"  # or "tensorflow" or "torch"
-
 import keras_nlp
 import keras
-import tensorflow as tf
+import tensorflow as tf  # For tf.data only.
 
 import numpy as np
 import pandas as pd
