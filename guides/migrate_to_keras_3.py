@@ -37,7 +37,7 @@ and click "Restart runtime", and your code will run on the PyTorch backend!
 """
 
 """shell
-pip install keras-nightly
+pip install -q keras-nightly
 """
 
 import os
@@ -115,17 +115,13 @@ class MyModel(keras.Model):
 
 subclass_model = MyModel()
 x_train = np.array([[1, 2, 3], [4, 5, 6]])
-
-y_train = np.array([["1", "2", "3"], ["4", "5", "6"]])
 subclass_model.compile(optimizer="sgd", loss="mse")
-subclass_model.fit(x_train, x_train, epochs=1)
+subclass_model.predict(x_train)
 ```
 """
 
 """
-How you fix it:
-
-set `jit_compile=False` in `model.compile(..., jit_compile=False)`
+**How to fix it:** set `jit_compile=False` in `model.compile(..., jit_compile=False)`
 """
 
 
@@ -140,10 +136,8 @@ class MyModel(keras.Model):
 
 subclass_model = MyModel()
 x_train = np.array([[1, 2, 3], [4, 5, 6]])
-
-y_train = np.array([["1", "2", "3"], ["4", "5", "6"]])
 subclass_model.compile(optimizer="sgd", loss="mse", jit_compile=False)
-subclass_model.fit(x_train, x_train, epochs=1)
+subclass_model.predict(x_train)
 
 """
 ### Saving model in TF SavedModel format
@@ -170,9 +164,7 @@ sequential_model.save("saved_model")
 """
 
 """
-How you fix it:
-
-use `tf.saved_model.save` instead of `model.save`
+**How to fix it:** use `tf.saved_model.save` instead of `model.save`
 """
 
 sequential_model = keras.Sequential([keras.layers.Dense(2)])
@@ -201,9 +193,7 @@ keras.models.load_model("saved_model")
 """
 
 """
-How you fix it:
-
-Use `keras.layers.TFSMLayer(filepath, call_endpoint="serving_default")` to reload any TF
+**How to fix it:** Use `keras.layers.TFSMLayer(filepath, call_endpoint="serving_default")` to reload any TF
 SavedModel as a Keras layer
 """
 
@@ -242,13 +232,14 @@ keras.Model(inputs, outputs)
 """
 
 """
-How you fix it:
+**How to fix it:** replace nested input with either dicts, lists, and tuples
+of input tensors.
 
 """
 
 inputs = {
     "foo": keras.Input(shape=(1,), name="foo"),
-    "baz": keras.Input(shape=(1,), name="bar"),
+    "bar": keras.Input(shape=(1,), name="bar"),
 }
 outputs = inputs["foo"] + inputs["baz"]
 keras.Model(inputs, outputs)
@@ -287,14 +278,12 @@ layer = MyCustomLayer()
 data = np.random.uniform(size=[3, 3])
 model = keras.models.Sequential([layer])
 model.compile(optimizer="adam", loss="mse")
-model.fit(data, data)
+model.predict(data)
 ```
 """
 
 """
-How you fix it:
-
-decorate your `call()` method with `@tf.function`
+**How to fix it:** decorate your `call()` method with `@tf.function`
 """
 
 
@@ -311,7 +300,7 @@ layer = MyCustomLayer()
 data = np.random.uniform(size=[3, 3])
 model = keras.models.Sequential([layer])
 model.compile(optimizer="adam", loss="mse")
-model.fit(data, data)
+model.predict(data)
 
 """
 ### TF op on a Keras tensor
@@ -336,9 +325,7 @@ tf.squeeze(input)
 """
 
 """
-How you fix it:
-
-use an equivalent op from `keras.ops`.
+**How to fix it:** use an equivalent op from `keras.ops`.
 """
 
 input = keras.layers.Input([2, 2, 1])
@@ -422,7 +409,7 @@ layer = MyCustomLayer(3)
 data = np.random.uniform(size=[3, 3])
 model = keras.models.Sequential([layer])
 model.compile(optimizer="adam", loss="mse")
-model.fit(data, data)
+model.predict(data)
 # The model does not have any trainable variables
 for layer in model.layers:
     print(layer.trainable_variables)
@@ -433,9 +420,7 @@ for layer in model.layers:
 """
 
 """
-How you fix it:
-
-use `self.add_weight()` method or opt for a `keras.Variable` instead. If you
+**How to fix it:** use `self.add_weight()` method or opt for a `keras.Variable` instead. If you
 are currently using `tf.variable`, you can switch to `keras.Variable`.
 
 """
@@ -467,7 +452,7 @@ layer = MyCustomLayer(3)
 data = np.random.uniform(size=[3, 3])
 model = keras.models.Sequential([layer])
 model.compile(optimizer="adam", loss="mse")
-model.fit(data, data)
+model.predict(data)
 # Verify that the variables are now being tracked
 for layer in model.layers:
     print(layer.trainable_variables)
@@ -502,9 +487,9 @@ layer(inputs)
 """
 
 """
-How you fix it:
+**How to fix it:**
 
-Replace `None` with a value or Keras Tensor
+**Solution 1:** Replace `None` with a value or Keras Tensor
 """
 
 
@@ -528,9 +513,7 @@ layer(inputs)
 
 
 """
-Or
-
-Define the call method with an optional argument. Here is an example of this
+**Solution 2:** Define the call method with an optional argument. Here is an example of this
 fix:
 """
 
@@ -938,7 +921,7 @@ TensorFlow backend} \\
 ## Additional developer guides
 
 This wraps up the migration guide overview. We hope that this guide has been helpful in
-successfully transitioning your code from TensorFlow to Keras 3.0. Explore a variety of
+successfully transitioning your code from Keras 2 to Keras 3.0. Explore a variety of
 developer guides to help you begin, craft custom training loops, and establish
 distributed training setups. Take a look!
 
