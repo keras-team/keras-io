@@ -655,7 +655,7 @@ class NestedCell(keras.layers.Layer):
         return output, new_states
 
     def get_config(self):
-        return {"unit_1": self.unit_1, "unit_2": unit_2, "unit_3": self.unit_3}
+        return {"unit_1": self.unit_1, "unit_2": self.unit_2, "unit_3": self.unit_3}
 
 ```
 
