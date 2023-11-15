@@ -272,7 +272,8 @@ def get_code_blocks(docstring):
         index = tmp[3:].find("```") + 6
         snippet = tmp[:index]
         # Place marker in docstring for later reinjection.
-        token = f"$KERAS_AUTODOC_CODE_BLOCK_{len(code_blocks)}"
+        # Print the index with 4 digits so we know the symbol is unique.
+        token = f"$KERAS_AUTODOC_CODE_BLOCK_{len(code_blocks):04d}"
         docstring = docstring.replace(snippet, token)
         code_blocks[token] = snippet
         tmp = tmp[index:]

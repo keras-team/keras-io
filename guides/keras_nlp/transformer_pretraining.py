@@ -365,7 +365,7 @@ encoded_tokens = encoder_model(inputs["token_ids"])
 # We use the input token embedding to project from our encoded vectors to
 # vocabulary logits, which has been shown to improve training efficiency.
 outputs = keras_nlp.layers.MaskedLMHead(
-    embedding_weights=embedding_layer.token_embedding.embeddings,
+    token_embedding=embedding_layer.token_embedding,
     activation="softmax",
 )(encoded_tokens, mask_positions=inputs["mask_positions"])
 
