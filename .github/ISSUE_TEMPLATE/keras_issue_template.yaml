@@ -1,0 +1,110 @@
+name: Keras.io Issue Template.
+description: To report Keras.io related issue please use this template.
+body:
+  - type: dropdown
+    id: issue-type
+    attributes:
+      label: Issue Type
+      description: What type of issue would you like to report?
+      multiple: false
+      options:
+        - Bug
+        - Performance
+        - Documentation Feature Request
+        - Support
+        - Feature Request
+        - Documentation Bug
+        - Others
+    validations:
+      required: true
+  - type: markdown
+    attributes:
+      value: |
+      
+        Please go to TF Forum for help and support:
+        https://discuss.tensorflow.org/tag/keras
+        
+        Please make sure this issue is valid bug, a feature request, or a significant problem with the documentation (for small docs fixes please send a PR instead).
+        
+        **Here's why we have that policy:**.
+        
+        Keras developers respond to issues. We want to focus on work that benefits the whole community, e.g., fixing bugs and adding features. Support only helps individuals. GitHub also notifies thousands of people when issues are filed. We want them to see you communicating an interesting problem.
+        
+  - type: dropdown
+    id: source
+    attributes:
+      label: Source
+      description: TensorFlow/Keras installed from
+      options:
+        - source
+        - binary
+    validations:
+      required: true
+      
+  - type: input
+    id: kerasversion
+    attributes:
+      label: Keras Version
+      description: 
+      placeholder: ex,. Keras 2.14
+    validations:
+      required: true
+  - type: dropdown
+    id: Code
+    attributes:
+      label: Custom Code
+      description: 
+      options:
+        - "Yes"
+        - "No"
+    validations:
+      required: true
+  - type: input
+    id: OS
+    attributes:
+      label: OS Platform and Distribution
+      description: 
+      placeholder: e.g., Linux Ubuntu 18.04
+    validations:
+      required: false
+  - type: input
+    id: Python
+    attributes:
+      label: Python version
+      description: 
+      placeholder: e.g., 3.9
+    validations:
+      required: false
+  - type: input
+    id: GPU
+    attributes:
+      label: GPU model and memory
+      description: 
+      placeholder: 
+    validations:
+      required: false
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: Current Behavior?
+      description: Also tell us, what did you expect to happen?
+      placeholder: Tell us what you see!
+      value: "A bug happened!"
+    validations:
+      required: true
+  - type: textarea
+    id: code-to-reproduce
+    attributes:
+      label: Standalone code to reproduce the issue or tutorial link
+      description: Provide a reproducible test case that is the bare minimum necessary to generate the problem. If possible, please share a link to Colab/Jupyter/any notebook.
+      placeholder: Tell us what you see!
+      value: 
+      render: shell
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant log output
+      description: Please copy and paste any relevant log output. This will be automatically formatted into code, so no need for backticks.
+      render: shell
