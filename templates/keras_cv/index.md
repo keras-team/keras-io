@@ -3,10 +3,10 @@
 <a class="github-button" href="https://github.com/keras-team/keras-cv" data-size="large" data-show-count="true" aria-label="Star keras-team/keras-cv on GitHub">Star</a>
 
 KerasCV is a library of modular computer vision components that work natively 
-with TensorFlow, JAX, or PyTorch. Built on [Keras Core](https://keras.io/keras_core/announcement/),
+with TensorFlow, JAX, or PyTorch. Built on [Keras 3](https://keras.io/getting_started/keras_3_announcement/),
 these models, layers, metrics, callbacks, etc., can be trained and serialized
 in any framework and re-used in another without costly migrations. See "Using 
-KerasCV with Keras Core" below for more details on multi-framework KerasCV.
+KerasCV with Keras 3" below for more details on multi-framework KerasCV.
 
 <img style="width: 440px; max-width: 90%;" src="https://storage.googleapis.com/keras-cv/guides/keras-cv-augmentations.gif">
 
@@ -47,7 +47,7 @@ pip to install directly from the master branch on github:
 pip install git+https://github.com/keras-team/keras-cv.git --upgrade
 ```
 
-## Using KerasCV with Keras Core
+## Using KerasCV with Keras 3
 
 As of version `0.6.0`, KerasCV supports multiple backends out of 
 the box. There are two ways to configure KerasCV to run with multi-backend 
