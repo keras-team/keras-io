@@ -12,6 +12,7 @@
 
 ---
 ## Introduction
+
 This example demonstrates how to control randomness in Keras models. Sometimes
 you may want to reproduce the exact same results across runs, for experimentation
 purposes or to debug a problem.
@@ -22,21 +23,20 @@ purposes or to debug a problem.
 
 ```python
 import json
-
+import numpy as np
 import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras import layers
-from tensorflow.keras import initializers
+import keras
+from keras import layers
+from keras import initializers
 
 # Set the seed using keras.utils.set_random_seed. This will set:
 # 1) `numpy` seed
-# 2) `tensorflow` random seed
+# 2) backend random seed
 # 3) `python` random seed
 keras.utils.set_random_seed(812)
 
-# This will make TensorFlow ops as deterministic as possible, but it will
-# affect the overall performance, so it's not enabled by default.
-# `enable_op_determinism()` is introduced in TensorFlow 2.9.
+# If using TensorFlow, this will make GPU ops as deterministic as possible,
+# but it will affect the overall performance, so be mindful of that.
 tf.config.experimental.enable_op_determinism()
 
 ```
@@ -47,7 +47,7 @@ tf.config.experimental.enable_op_determinism()
 Most of the layers in Keras have `kernel_initializer` and `bias_initializer`
 parameters. These parameters allow you to specify the strategy used for
 initializing the weights of layer variables. The following built-in initializers
-are available as part of `tf.keras.initializers`:
+are available as part of `keras.initializers`:
 
 
 ```python
@@ -77,9 +77,7 @@ for initializer in initializers_list:
 
     for iteration in range(2):
         # In order to get same results across multiple runs from an initializer,
-        # you need to specify a seed value. Note that this is not related to
-        # keras.utils.set_random_seed or tf.config.experimental.enable_op_determinism.
-        # If you comment those lines, you will still get the same results.
+        # you can specify a seed value.
         result = float(initializer(seed=42)(shape=(1, 1)))
         print(f"\tIteration --> {iteration} // Result --> {result}")
     print("\n")
@@ -88,97 +86,97 @@ for initializer in initializers_list:
 
 <div class="k-default-codeblock">
 ```
-Running <class 'keras.initializers.initializers.RandomNormal'>
-	Iteration --> 0 // Result --> 0.000790853810030967
-	Iteration --> 1 // Result --> 0.000790853810030967
+Running <class 'keras.src.initializers.random_initializers.RandomNormal'>
+	Iteration --> 0 // Result --> 0.05609520897269249
+	Iteration --> 1 // Result --> 0.05609520897269249
 ```
 </div>
     
     
 <div class="k-default-codeblock">
 ```
-Running <class 'keras.initializers.initializers.RandomUniform'>
-	Iteration --> 0 // Result --> -0.02175668440759182
-	Iteration --> 1 // Result --> -0.02175668440759182
+Running <class 'keras.src.initializers.random_initializers.RandomUniform'>
+	Iteration --> 0 // Result --> 0.03690483793616295
+	Iteration --> 1 // Result --> 0.03690483793616295
 ```
 </div>
     
     
 <div class="k-default-codeblock">
 ```
-Running <class 'keras.initializers.initializers.TruncatedNormal'>
-	Iteration --> 0 // Result --> 0.000790853810030967
-	Iteration --> 1 // Result --> 0.000790853810030967
+Running <class 'keras.src.initializers.random_initializers.TruncatedNormal'>
+	Iteration --> 0 // Result --> 0.05230803042650223
+	Iteration --> 1 // Result --> 0.05230803042650223
 ```
 </div>
     
     
 <div class="k-default-codeblock">
 ```
-Running <class 'keras.initializers.initializers.VarianceScaling'>
-	Iteration --> 0 // Result --> 0.017981600016355515
-	Iteration --> 1 // Result --> 0.017981600016355515
+Running <class 'keras.src.initializers.random_initializers.VarianceScaling'>
+	Iteration --> 0 // Result --> 1.1893247365951538
+	Iteration --> 1 // Result --> 1.1893247365951538
 ```
 </div>
     
     
 <div class="k-default-codeblock">
 ```
-Running <class 'keras.initializers.initializers.GlorotNormal'>
-	Iteration --> 0 // Result --> 0.017981600016355515
-	Iteration --> 1 // Result --> 0.017981600016355515
+Running <class 'keras.src.initializers.random_initializers.GlorotNormal'>
+	Iteration --> 0 // Result --> 1.1893247365951538
+	Iteration --> 1 // Result --> 1.1893247365951538
 ```
 </div>
     
     
 <div class="k-default-codeblock">
 ```
-Running <class 'keras.initializers.initializers.GlorotUniform'>
-	Iteration --> 0 // Result --> -0.7536736726760864
-	Iteration --> 1 // Result --> -0.7536736726760864
+Running <class 'keras.src.initializers.random_initializers.GlorotUniform'>
+	Iteration --> 0 // Result --> 1.2784210443496704
+	Iteration --> 1 // Result --> 1.2784210443496704
 ```
 </div>
     
     
 <div class="k-default-codeblock">
 ```
-Running <class 'keras.initializers.initializers.HeNormal'>
-	Iteration --> 0 // Result --> 0.025429822504520416
-	Iteration --> 1 // Result --> 0.025429822504520416
+Running <class 'keras.src.initializers.random_initializers.HeNormal'>
+	Iteration --> 0 // Result --> 1.6819592714309692
+	Iteration --> 1 // Result --> 1.6819592714309692
 ```
 </div>
     
     
 <div class="k-default-codeblock">
 ```
-Running <class 'keras.initializers.initializers.HeUniform'>
-	Iteration --> 0 // Result --> -1.065855622291565
-	Iteration --> 1 // Result --> -1.065855622291565
+Running <class 'keras.src.initializers.random_initializers.HeUniform'>
+	Iteration --> 0 // Result --> 1.8079603910446167
+	Iteration --> 1 // Result --> 1.8079603910446167
 ```
 </div>
     
     
 <div class="k-default-codeblock">
 ```
-Running <class 'keras.initializers.initializers.LecunNormal'>
-	Iteration --> 0 // Result --> 0.017981600016355515
-	Iteration --> 1 // Result --> 0.017981600016355515
+Running <class 'keras.src.initializers.random_initializers.LecunNormal'>
+	Iteration --> 0 // Result --> 1.1893247365951538
+	Iteration --> 1 // Result --> 1.1893247365951538
 ```
 </div>
     
     
 <div class="k-default-codeblock">
 ```
-Running <class 'keras.initializers.initializers.LecunUniform'>
-	Iteration --> 0 // Result --> -0.7536736726760864
-	Iteration --> 1 // Result --> -0.7536736726760864
+Running <class 'keras.src.initializers.random_initializers.LecunUniform'>
+	Iteration --> 0 // Result --> 1.2784210443496704
+	Iteration --> 1 // Result --> 1.2784210443496704
 ```
 </div>
     
     
 <div class="k-default-codeblock">
 ```
-Running <class 'keras.initializers.initializers.Orthogonal'>
+Running <class 'keras.src.initializers.random_initializers.OrthogonalInitializer'>
 	Iteration --> 0 // Result --> 1.0
 	Iteration --> 1 // Result --> 1.0
 ```
@@ -204,7 +202,7 @@ result_1 = glorot_normal_1(shape=(input_dim, neurons))
 result_2 = glorot_normal_2(shape=(input_dim, neurons))
 
 # Check if the results are equal.
-equal = tf.experimental.numpy.allclose(result_1, result_2).numpy()
+equal = np.allclose(result_1, result_2)
 print(f"Are the results equal? {equal}")
 ```
 
@@ -230,7 +228,7 @@ result_3 = glorot_normal_3(shape=(input_dim, neurons))
 # Call the second initializer.
 result_4 = glorot_normal_4(shape=(input_dim, neurons))
 
-equal = tf.experimental.numpy.allclose(result_3, result_4).numpy()
+equal = np.allclose(result_3, result_4)
 print(f"Are the results equal? {equal}")
 ```
 
@@ -260,7 +258,7 @@ object of the Keras model.
 def train_model(train_data: tf.data.Dataset, test_data: tf.data.Dataset) -> dict:
     model = keras.Sequential(
         [
-            layers.Conv2D(32, (3, 3), activation="relu", input_shape=(32, 32, 1)),
+            layers.Conv2D(32, (3, 3), activation="relu"),
             layers.MaxPooling2D((2, 2)),
             layers.Dropout(0.2),
             layers.Conv2D(32, (3, 3), activation="relu"),
@@ -282,7 +280,7 @@ def train_model(train_data: tf.data.Dataset, test_data: tf.data.Dataset) -> dict
     # If you are using array-like objects, this will shuffle the data before
     # training. This argument is ignored when `x` is a generator or
     # `tf.data.Dataset`.
-    history = model.fit(train_data, epochs=5, validation_data=test_data)
+    history = model.fit(train_data, epochs=2, validation_data=test_data)
 
     print(f"Model accuracy on test data: {model.evaluate(test_data)[1] * 100:.2f}%")
 
@@ -300,18 +298,11 @@ train_ds = tf.data.Dataset.from_tensor_slices((train_images, train_labels))
 test_ds = tf.data.Dataset.from_tensor_slices((test_images, test_labels))
 ```
 
-<div class="k-default-codeblock">
-```
-Downloading data from https://storage.googleapis.com/tensorflow/tf-keras-datasets/mnist.npz
-11490434/11490434 [==============================] - 1s 0us/step
-
-```
-</div>
 Remember we called `tf.config.experimental.enable_op_determinism()` at the
 beginning of the function. This makes the `tf.data` operations deterministic.
 However, making `tf.data` operations deterministic comes with a performance
-cost.
-If you want to learn more about it, please check this [official guide](https://www.tensorflow.org/api_docs/python/tf/config/experimental/enable_op_determinism#determinism_and_tfdata).
+cost. If you want to learn more about it, please check this
+[official guide](https://www.tensorflow.org/api_docs/python/tf/config/experimental/enable_op_determinism#determinism_and_tfdata).
 
 Small summary what's going on here. Models have `kernel_initializer` and
 `bias_initializer` parameters. Since we set random seeds using
@@ -383,22 +374,16 @@ history = train_model(train_data, test_data)
 
 <div class="k-default-codeblock">
 ```
-Epoch 1/5
-938/938 [==============================] - 16s 5ms/step - loss: 0.6929 - accuracy: 0.7678 - val_loss: 0.1764 - val_accuracy: 0.9466
-Epoch 2/5
-938/938 [==============================] - 5s 5ms/step - loss: 0.2439 - accuracy: 0.9257 - val_loss: 0.1114 - val_accuracy: 0.9674
-Epoch 3/5
-938/938 [==============================] - 5s 5ms/step - loss: 0.1782 - accuracy: 0.9454 - val_loss: 0.0858 - val_accuracy: 0.9728
-Epoch 4/5
-938/938 [==============================] - 5s 5ms/step - loss: 0.1503 - accuracy: 0.9549 - val_loss: 0.0847 - val_accuracy: 0.9737
-Epoch 5/5
-938/938 [==============================] - 5s 5ms/step - loss: 0.1291 - accuracy: 0.9616 - val_loss: 0.0665 - val_accuracy: 0.9800
-157/157 [==============================] - 0s 2ms/step - loss: 0.0665 - accuracy: 0.9800
-Model accuracy on test data: 98.00%
+Epoch 1/2
+ 938/938 ━━━━━━━━━━━━━━━━━━━━ 26s 27ms/step - accuracy: 0.5418 - loss: 1.2867 - val_accuracy: 0.9291 - val_loss: 0.2303
+Epoch 2/2
+ 938/938 ━━━━━━━━━━━━━━━━━━━━ 25s 26ms/step - accuracy: 0.9075 - loss: 0.2983 - val_accuracy: 0.9583 - val_loss: 0.1343
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 1s 4ms/step - accuracy: 0.9512 - loss: 0.1559
+Model accuracy on test data: 95.83%
 
 ```
 </div>
-Let's save our results into a json file, and restart the kernel. After
+Let's save our results into a JSON file, and restart the kernel. After
 restarting the kernel, we should see the same results as the previous run,
 this includes metrics and loss values both on the training and test data.
 
@@ -425,14 +410,13 @@ Compare the results one by one. You will see that they are equal.
 ```python
 for key in history.keys():
     for i in range(len(history[key])):
-        if not tf.experimental.numpy.allclose(
-            history[key][i], history_loaded[key][i]
-        ).numpy():
-            print(f"{key} are not equal")
+        if not np.allclose(history[key][i], history_loaded[key][i]):
+            print(f"{key} not equal")
 ```
 
 ---
 ## Conclusion
+
 In this tutorial, you learned how to control the randomness sources in Keras and
 TensorFlow. You also learned how to reproduce the results of a model training
 process.
