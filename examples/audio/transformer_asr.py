@@ -24,18 +24,20 @@ as proposed in the paper, "Attention is All You Need".
 **References:**
 
 - [Attention is All You Need](https://papers.nips.cc/paper/2017/file/3f5ee243547dee91fbd053c1c4a845aa-Paper.pdf)
-- [Very Deep Self-Attention Networks for End-to-End Speech Recognition](https://arxiv.org/pdf/1904.13377.pdf)
+- [Very Deep Self-Attention Networks for End-to-End Speech Recognition](https://arxiv.org/abs/1904.13377)
 - [Speech Transformers](https://ieeexplore.ieee.org/document/8462506)
 - [LJSpeech Dataset](https://keithito.com/LJ-Speech-Dataset/)
 """
 
 
 import os
-import random
+
+os.environ["KERAS_BACKEND"] = "tensorflow"
+
 from glob import glob
 import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras import layers
+import keras
+from keras import layers
 
 
 """
@@ -52,7 +54,7 @@ them (via convolution strides) and process local relationships.
 class TokenEmbedding(layers.Layer):
     def __init__(self, num_vocab=1000, maxlen=100, num_hid=64):
         super().__init__()
-        self.emb = tf.keras.layers.Embedding(num_vocab, num_hid)
+        self.emb = keras.layers.Embedding(num_vocab, num_hid)
         self.pos_emb = layers.Embedding(input_dim=maxlen, output_dim=num_hid)
 
     def call(self, x):
@@ -66,13 +68,13 @@ class TokenEmbedding(layers.Layer):
 class SpeechFeatureEmbedding(layers.Layer):
     def __init__(self, num_hid=64, maxlen=100):
         super().__init__()
-        self.conv1 = tf.keras.layers.Conv1D(
+        self.conv1 = keras.layers.Conv1D(
             num_hid, 11, strides=2, padding="same", activation="relu"
         )
-        self.conv2 = tf.keras.layers.Conv1D(
+        self.conv2 = keras.layers.Conv1D(
             num_hid, 11, strides=2, padding="same", activation="relu"
         )
-        self.conv3 = tf.keras.layers.Conv1D(
+        self.conv3 = keras.layers.Conv1D(
             num_hid, 11, strides=2, padding="same", activation="relu"
         )
 
@@ -102,7 +104,7 @@ class TransformerEncoder(layers.Layer):
         self.dropout1 = layers.Dropout(rate)
         self.dropout2 = layers.Dropout(rate)
 
-    def call(self, inputs, training):
+    def call(self, inputs, training=False):
         attn_output = self.att(inputs, inputs)
         attn_output = self.dropout1(attn_output, training=training)
         out1 = self.layernorm1(inputs + attn_output)
@@ -244,7 +246,7 @@ class Transformer(keras.Model):
             preds = self([source, dec_input])
             one_hot = tf.one_hot(dec_target, depth=self.num_classes)
             mask = tf.math.logical_not(tf.math.equal(dec_target, 0))
-            loss = self.compiled_loss(one_hot, preds, sample_weight=mask)
+            loss = model.compute_loss(None, one_hot, preds, sample_weight=mask)
         trainable_vars = self.trainable_variables
         gradients = tape.gradient(loss, trainable_vars)
         self.optimizer.apply_gradients(zip(gradients, trainable_vars))
@@ -259,7 +261,7 @@ class Transformer(keras.Model):
         preds = self([source, dec_input])
         one_hot = tf.one_hot(dec_target, depth=self.num_classes)
         mask = tf.math.logical_not(tf.math.equal(dec_target, 0))
-        loss = self.compiled_loss(one_hot, preds, sample_weight=mask)
+        loss = model.compute_loss(None, one_hot, preds, sample_weight=mask)
         self.loss_metric.update_state(loss)
         return {"loss": self.loss_metric.result()}
 
@@ -480,6 +482,7 @@ class CustomSchedule(keras.optimizers.schedules.LearningRateSchedule):
 
     def __call__(self, step):
         epoch = step // self.steps_per_epoch
+        epoch = tf.cast(epoch, "float32")
         return self.calculate_lr(epoch)
 
 
@@ -504,7 +507,7 @@ model = Transformer(
     num_layers_dec=1,
     num_classes=34,
 )
-loss_fn = tf.keras.losses.CategoricalCrossentropy(
+loss_fn = keras.losses.CategoricalCrossentropy(
     from_logits=True,
     label_smoothing=0.1,
 )
