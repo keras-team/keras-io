@@ -25,8 +25,8 @@ has at least ~100k characters. ~1M is better.
 """
 ## Setup
 """
-from tensorflow import keras
-from tensorflow.keras import layers
+import keras
+from keras import layers
 
 import numpy as np
 import random
@@ -37,7 +37,8 @@ import io
 """
 
 path = keras.utils.get_file(
-    "nietzsche.txt", origin="https://s3.amazonaws.com/text-datasets/nietzsche.txt"
+    "nietzsche.txt",
+    origin="https://s3.amazonaws.com/text-datasets/nietzsche.txt",
 )
 with io.open(path, encoding="utf-8") as f:
     text = f.read().lower()
@@ -59,8 +60,8 @@ for i in range(0, len(text) - maxlen, step):
     next_chars.append(text[i + maxlen])
 print("Number of sequences:", len(sentences))
 
-x = np.zeros((len(sentences), maxlen, len(chars)), dtype=np.bool)
-y = np.zeros((len(sentences), len(chars)), dtype=np.bool)
+x = np.zeros((len(sentences), maxlen, len(chars)), dtype="bool")
+y = np.zeros((len(sentences), len(chars)), dtype="bool")
 for i, sentence in enumerate(sentences):
     for t, char in enumerate(sentence):
         x[i, t, char_indices[char]] = 1
@@ -127,4 +128,4 @@ for epoch in range(epochs):
             generated += next_char
 
         print("...Generated: ", generated)
-        print()
+        print("-")
