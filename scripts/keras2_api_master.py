@@ -1,5 +1,17 @@
+import tf_keras
+
+parts = tf_keras.__version__.split(".")
+tf_keras_version = parts[0] + "." + parts[1]
+
+# In order to refresh the pages for an old version (e.g. 2.14)
+# You will need to re-run `python autogen.py make` after updating
+# the tf_keras version in autogen.py and making sure to install
+# the targeted keras_version locally. When you do this
+# `/2.14/api/` (for instance) will be regenerated. You can then
+# just reupload, which won't affect the directories for any other
+# version number.
 KERAS2_API_MASTER = {
-    "path": "2.14/api/",
+    "path": tf_keras_version + "/api/",
     "title": "Keras 2 API documentation",
     "toc": True,
     "children": [

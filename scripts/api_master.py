@@ -74,14 +74,13 @@ API_MASTER = {
                                 "keras.models.clone_model",
                             ],
                         },
-                        # TODO
-                        # {
-                        #     "path": "export",
-                        #     "title": "Model export for inference",
-                        #     "generate": [
-                        #         "keras.export.ExportArchive",
-                        #     ],
-                        # },
+                        {
+                            "path": "export",
+                            "title": "Model export for inference",
+                            "generate": [
+                                "keras.export.ExportArchive",
+                            ],
+                        },
                         {
                             "path": "serialization_utils",
                             "title": "Serialization utilities",
@@ -849,7 +848,7 @@ API_MASTER = {
                         "keras.ops.append",
                         "keras.ops.arange",
                         "keras.ops.arccos",
-                        # "keras.ops.arccosh",
+                        "keras.ops.arccosh",
                         "keras.ops.arcsin",
                         "keras.ops.arcsinh",
                         "keras.ops.arctan",

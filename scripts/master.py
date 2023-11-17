@@ -16,10 +16,6 @@ MASTER = {
             "title": "Getting started",
             "children": [
                 {
-                    "path": "keras_3_announcement",
-                    "title": "Announcing Keras 3",
-                },
-                {
                     "path": "intro_to_keras_for_engineers",
                     "title": "Introduction to Keras for engineers",
                 },

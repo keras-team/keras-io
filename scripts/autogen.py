@@ -46,7 +46,7 @@ PROJECT_URL = {
     "keras_tuner": "https://github.com/keras-team/keras-tuner/tree/v1.4.5/",
     "keras_cv": "https://github.com/keras-team/keras-cv/tree/v0.6.4/",
     "keras_nlp": "https://github.com/keras-team/keras-nlp/tree/v0.6.2/",
-    "tf_keras": "https://github.com/keras-team/tf_keras/tree/v2.14.1/",
+    "tf_keras": "https://github.com/keras-team/tf_keras/tree/v2.15.0/",
 }
 USE_MULTIPROCESSING = False
 
@@ -761,6 +761,22 @@ class KerasIO:
             }
         )
         autogen_utils.save_file(Path(self.site_dir) / "404.html", page404)
+
+        # Keras 3 announcement page
+        keras_core_template = jinja2.Template(
+            open(Path(self.theme_dir) / "keras_3.html").read()
+        )
+        md_content = open(
+            Path(self.templates_dir) / "keras_3_announcement.md"
+        ).read()
+        content = autogen_utils.render_markdown_to_html(md_content)
+        keras_core_page = keras_core_template.render(
+            {"base_url": self.url, "content": content}
+        )
+        autogen_utils.save_file(
+            Path(self.site_dir) / "keras_3" / "index.html",
+            keras_core_page,
+        )
 
         # Favicon
         shutil.copyfile(
