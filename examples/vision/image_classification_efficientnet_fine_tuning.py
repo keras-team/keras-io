@@ -380,7 +380,6 @@ from ImageNet, this fine-tuning step can be crucial as the feature extractor als
 needs to be adjusted by a considerable amount. Such a situation can be demonstrated
 if choosing CIFAR-100 dataset instead, where fine-tuning boosts validation accuracy
 by about 10% to pass 80% on `EfficientNetB0`.
-In such a case the convergence may take more than 50 epochs.
 
 A side note on freezing/unfreezing models: setting `trainable` of a `Model` will
 simultaneously set all layers belonging to the `Model` to the same `trainable`
@@ -397,7 +396,7 @@ def unfreeze_model(model):
         if not isinstance(layer, layers.BatchNormalization):
             layer.trainable = True
 
-    optimizer = keras.optimizers.Adam(learning_rate=1e-4)
+    optimizer = keras.optimizers.Adam(learning_rate=1e-5)
     model.compile(
         optimizer=optimizer, loss="categorical_crossentropy", metrics=["accuracy"]
     )
@@ -405,7 +404,7 @@ def unfreeze_model(model):
 
 unfreeze_model(model)
 
-epochs = 10  # @param {type: "slider", min:8, max:50}
+epochs = 4  # @param {type: "slider", min:4, max:10}
 hist = model.fit(ds_train, epochs=epochs, validation_data=ds_test)
 plot_hist(hist)
 

@@ -1,7 +1,15 @@
-import tf_keras
+try:
+    import tf_keras
+except Exception as e:
+    print(f"Could not import tf_keras. Exception: {e}")
+    tf_keras = None
 
-parts = tf_keras.__version__.split(".")
-tf_keras_version = parts[0] + "." + parts[1]
+if tf_keras:
+    parts = tf_keras.__version__.split(".")
+    tf_keras_version = parts[0] + "." + parts[1]
+else:
+    tf_keras = None
+
 
 # In order to refresh the pages for an old version (e.g. 2.14)
 # You will need to re-run `python autogen.py make` after updating

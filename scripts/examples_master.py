@@ -20,6 +20,7 @@ EXAMPLES_MASTER = {
                     "title": "Simple MNIST convnet",
                     "subcategory": "Image classification",
                     "highlight": True,
+                    "keras_3": True,
                 },
                 {
                     "path": "image_classification_efficientnet_fine_tuning",

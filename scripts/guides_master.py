@@ -147,6 +147,10 @@ GUIDES_MASTER = {
             "path": "distributed_training_with_torch",
             "title": "Distributed training with PyTorch",
         },
+        {
+            "path": "migrating_to_keras_3",
+            "title": "Migrating Keras 2 code to Keras 3",
+        },
         # {
         #     "path": "preprocessing_layers",
         #     "title": "Working with preprocessing layers",
