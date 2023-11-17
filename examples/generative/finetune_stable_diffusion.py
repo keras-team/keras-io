@@ -33,8 +33,9 @@ at least TensorFlow 2.11 in order to use AdamW with mixed precision.
 """
 
 """shell
-pip install keras-cv==0.4.0 -q
+pip install keras-cv==0.6.0 -q
 pip install -U tensorflow -q
+pip install keras-core -q
 """
 
 """
@@ -375,7 +376,7 @@ USE_MP = True
 if USE_MP:
     keras.mixed_precision.set_global_policy("mixed_float16")
 
-image_encoder = ImageEncoder(RESOLUTION, RESOLUTION)
+image_encoder = ImageEncoder()
 diffusion_ft_trainer = Trainer(
     diffusion_model=DiffusionModel(RESOLUTION, RESOLUTION, MAX_PROMPT_LENGTH),
     # Remove the top layer from the encoder, which cuts off the variance and only
