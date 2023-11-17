@@ -8,7 +8,7 @@ if tf_keras:
     parts = tf_keras.__version__.split(".")
     tf_keras_version = parts[0] + "." + parts[1]
 else:
-    tf_keras = None
+    tf_keras_version = "None"
 
 
 # In order to refresh the pages for an old version (e.g. 2.14)
