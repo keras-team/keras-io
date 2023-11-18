@@ -547,6 +547,3 @@ We are grateful to [JarvisLabs](https://jarvislabs.ai/) and
 program for helping with GPU credits. Also, we are thankful to Michael Ryoo (first
 author of TokenLearner) for fruitful discussions.
 
-| Trained Model | Demo |
-| :--: | :--: |
-| [![Generic badge](https://img.shields.io/badge/🤗%20Model-TokenLearner-black.svg)](https://huggingface.co/keras-io/learning_to_tokenize_in_ViT) | [![Generic badge](https://img.shields.io/badge/🤗%20Spaces-TokenLearner-black.svg)](https://huggingface.co/spaces/keras-io/token_learner) |

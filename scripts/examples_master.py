@@ -67,6 +67,7 @@ EXAMPLES_MASTER = {
                     "path": "convmixer",
                     "title": "Image classification with ConvMixer",
                     "subcategory": "Image classification",
+                    "keras_3": True,
                 },
                 {
                     "path": "eanet",
@@ -135,6 +136,7 @@ EXAMPLES_MASTER = {
                     "path": "keypoint_detection",
                     "title": "Keypoint Detection with Transfer Learning",
                     "subcategory": "Object detection",
+                    "keras_3": True,
                 },
                 {
                     "path": "object_detection_using_vision_transformer",
@@ -304,6 +306,25 @@ EXAMPLES_MASTER = {
                     "path": "bit",
                     "title": "Image Classification using BigTransfer (BiT)",
                     "subcategory": "Image classification",
+                },
+                # Performance recipes
+                {
+                    "path": "gradient_centralization",
+                    "title": "Gradient Centralization for Better Training Performance",
+                    "subcategory": "Performance recipes",
+                    "keras_3": True,
+                },
+                {
+                    "path": "token_learner",
+                    "title": "Learning to tokenize in Vision Transformers",
+                    "subcategory": "Performance recipes",
+                    "keras_3": True,
+                },
+                {
+                    "path": "knowledge_distillation",
+                    "title": "Knowledge Distillation",
+                    "subcategory": "Performance recipes",
+                    "keras_3": True,
                 },
             ],
         },
