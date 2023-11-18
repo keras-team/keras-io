@@ -23,8 +23,8 @@ autoencoder model to detect anomalies in timeseries data.
 ```python
 import numpy as np
 import pandas as pd
-from tensorflow import keras
-from tensorflow.keras import layers
+import keras
+from keras import layers
 from matplotlib import pyplot as plt
 ```
 
@@ -32,7 +32,7 @@ from matplotlib import pyplot as plt
 ## Load the data
 
 We will use the [Numenta Anomaly Benchmark(NAB)](
-https://www.kaggle.com/boltzmannbrain/nab) dataset. It provides artifical
+https://www.kaggle.com/boltzmannbrain/nab) dataset. It provides artificial
 timeseries data containing labeled anomalous periods of behavior. Data are
 ordered, timestamped, single-valued metrics.
 
@@ -100,7 +100,9 @@ plt.show()
 ```
 
 
+    
 ![png](/img/examples/timeseries/timeseries_anomaly_detection/timeseries_anomaly_detection_9_0.png)
+    
 
 
 ### Timeseries data with anomalies
@@ -116,7 +118,9 @@ plt.show()
 ```
 
 
+    
 ![png](/img/examples/timeseries/timeseries_anomaly_detection/timeseries_anomaly_detection_11_0.png)
+    
 
 
 ---
@@ -153,6 +157,7 @@ training data.
 ```python
 TIME_STEPS = 288
 
+
 # Generated training sequences for use in the model.
 def create_sequences(values, time_steps=TIME_STEPS):
     output = []
@@ -185,18 +190,34 @@ model = keras.Sequential(
     [
         layers.Input(shape=(x_train.shape[1], x_train.shape[2])),
         layers.Conv1D(
-            filters=32, kernel_size=7, padding="same", strides=2, activation="relu"
+            filters=32,
+            kernel_size=7,
+            padding="same",
+            strides=2,
+            activation="relu",
         ),
         layers.Dropout(rate=0.2),
         layers.Conv1D(
-            filters=16, kernel_size=7, padding="same", strides=2, activation="relu"
+            filters=16,
+            kernel_size=7,
+            padding="same",
+            strides=2,
+            activation="relu",
         ),
         layers.Conv1DTranspose(
-            filters=16, kernel_size=7, padding="same", strides=2, activation="relu"
+            filters=16,
+            kernel_size=7,
+            padding="same",
+            strides=2,
+            activation="relu",
         ),
         layers.Dropout(rate=0.2),
         layers.Conv1DTranspose(
-            filters=32, kernel_size=7, padding="same", strides=2, activation="relu"
+            filters=32,
+            kernel_size=7,
+            padding="same",
+            strides=2,
+            activation="relu",
         ),
         layers.Conv1DTranspose(filters=1, kernel_size=7, padding="same"),
     ]
@@ -205,33 +226,55 @@ model.compile(optimizer=keras.optimizers.Adam(learning_rate=0.001), loss="mse")
 model.summary()
 ```
 
-<div class="k-default-codeblock">
-```
-Model: "sequential"
-_________________________________________________________________
-Layer (type)                 Output Shape              Param #   
-=================================================================
-conv1d (Conv1D)              (None, 144, 32)           256       
-_________________________________________________________________
-dropout (Dropout)            (None, 144, 32)           0         
-_________________________________________________________________
-conv1d_1 (Conv1D)            (None, 72, 16)            3600      
-_________________________________________________________________
-conv1d_transpose (Conv1DTran (None, 144, 16)           1808      
-_________________________________________________________________
-dropout_1 (Dropout)          (None, 144, 16)           0         
-_________________________________________________________________
-conv1d_transpose_1 (Conv1DTr (None, 288, 32)           3616      
-_________________________________________________________________
-conv1d_transpose_2 (Conv1DTr (None, 288, 1)            225       
-=================================================================
-Total params: 9,505
-Trainable params: 9,505
-Non-trainable params: 0
-_________________________________________________________________
 
-```
-</div>
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold">Model: "sequential"</span>
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━┓
+┃<span style="font-weight: bold"> Layer (type)                    </span>┃<span style="font-weight: bold"> Output Shape              </span>┃<span style="font-weight: bold">    Param # </span>┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━┩
+│ conv1d (<span style="color: #0087ff; text-decoration-color: #0087ff">Conv1D</span>)                 │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">144</span>, <span style="color: #00af00; text-decoration-color: #00af00">32</span>)           │        <span style="color: #00af00; text-decoration-color: #00af00">256</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ dropout (<span style="color: #0087ff; text-decoration-color: #0087ff">Dropout</span>)               │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">144</span>, <span style="color: #00af00; text-decoration-color: #00af00">32</span>)           │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ conv1d_1 (<span style="color: #0087ff; text-decoration-color: #0087ff">Conv1D</span>)               │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">72</span>, <span style="color: #00af00; text-decoration-color: #00af00">16</span>)            │      <span style="color: #00af00; text-decoration-color: #00af00">3,600</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ conv1d_transpose                │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">144</span>, <span style="color: #00af00; text-decoration-color: #00af00">16</span>)           │      <span style="color: #00af00; text-decoration-color: #00af00">1,808</span> │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Conv1DTranspose</span>)               │                           │            │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ dropout_1 (<span style="color: #0087ff; text-decoration-color: #0087ff">Dropout</span>)             │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">144</span>, <span style="color: #00af00; text-decoration-color: #00af00">16</span>)           │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ conv1d_transpose_1              │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">288</span>, <span style="color: #00af00; text-decoration-color: #00af00">32</span>)           │      <span style="color: #00af00; text-decoration-color: #00af00">3,616</span> │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Conv1DTranspose</span>)               │                           │            │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ conv1d_transpose_2              │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">288</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>)            │        <span style="color: #00af00; text-decoration-color: #00af00">225</span> │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Conv1DTranspose</span>)               │                           │            │
+└─────────────────────────────────┴───────────────────────────┴────────────┘
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Total params: </span><span style="color: #00af00; text-decoration-color: #00af00">9,505</span> (37.13 KB)
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Trainable params: </span><span style="color: #00af00; text-decoration-color: #00af00">9,505</span> (37.13 KB)
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Non-trainable params: </span><span style="color: #00af00; text-decoration-color: #00af00">0</span> (0.00 B)
+</pre>
+
+
+
 ---
 ## Train the model
 
@@ -255,35 +298,48 @@ history = model.fit(
 <div class="k-default-codeblock">
 ```
 Epoch 1/50
-27/27 [==============================] - 2s 35ms/step - loss: 0.5868 - val_loss: 0.1225
+ 26/27 ━━━━━━━━━━━━━━━━━━━[37m━  0s 4ms/step - loss: 0.8419
+
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1700346169.474466 1961179 device_compiler.h:187] Compiled cluster using XLA!  This line is logged at most once for the lifetime of the process.
+
+ 27/27 ━━━━━━━━━━━━━━━━━━━━ 10s 187ms/step - loss: 0.8262 - val_loss: 0.2280
 Epoch 2/50
-27/27 [==============================] - 1s 29ms/step - loss: 0.0882 - val_loss: 0.0404
+ 27/27 ━━━━━━━━━━━━━━━━━━━━ 0s 5ms/step - loss: 0.1485 - val_loss: 0.0513
 Epoch 3/50
-27/27 [==============================] - 1s 30ms/step - loss: 0.0594 - val_loss: 0.0359
+ 27/27 ━━━━━━━━━━━━━━━━━━━━ 0s 5ms/step - loss: 0.0659 - val_loss: 0.0389
 Epoch 4/50
-27/27 [==============================] - 1s 29ms/step - loss: 0.0486 - val_loss: 0.0287
+ 27/27 ━━━━━━━━━━━━━━━━━━━━ 0s 5ms/step - loss: 0.0563 - val_loss: 0.0341
 Epoch 5/50
-27/27 [==============================] - 1s 30ms/step - loss: 0.0398 - val_loss: 0.0231
+ 27/27 ━━━━━━━━━━━━━━━━━━━━ 0s 5ms/step - loss: 0.0489 - val_loss: 0.0298
 Epoch 6/50
-27/27 [==============================] - 1s 31ms/step - loss: 0.0337 - val_loss: 0.0208
+ 27/27 ━━━━━━━━━━━━━━━━━━━━ 0s 5ms/step - loss: 0.0434 - val_loss: 0.0272
 Epoch 7/50
-27/27 [==============================] - 1s 31ms/step - loss: 0.0299 - val_loss: 0.0182
+ 27/27 ━━━━━━━━━━━━━━━━━━━━ 0s 5ms/step - loss: 0.0386 - val_loss: 0.0258
 Epoch 8/50
-27/27 [==============================] - 1s 31ms/step - loss: 0.0271 - val_loss: 0.0187
+ 27/27 ━━━━━━━━━━━━━━━━━━━━ 0s 5ms/step - loss: 0.0349 - val_loss: 0.0241
 Epoch 9/50
-27/27 [==============================] - 1s 32ms/step - loss: 0.0251 - val_loss: 0.0190
+ 27/27 ━━━━━━━━━━━━━━━━━━━━ 0s 5ms/step - loss: 0.0319 - val_loss: 0.0230
 Epoch 10/50
-27/27 [==============================] - 1s 31ms/step - loss: 0.0235 - val_loss: 0.0179
+ 27/27 ━━━━━━━━━━━━━━━━━━━━ 0s 5ms/step - loss: 0.0297 - val_loss: 0.0236
 Epoch 11/50
-27/27 [==============================] - 1s 32ms/step - loss: 0.0224 - val_loss: 0.0189
+ 27/27 ━━━━━━━━━━━━━━━━━━━━ 0s 5ms/step - loss: 0.0279 - val_loss: 0.0233
 Epoch 12/50
-27/27 [==============================] - 1s 33ms/step - loss: 0.0214 - val_loss: 0.0199
+ 27/27 ━━━━━━━━━━━━━━━━━━━━ 0s 5ms/step - loss: 0.0264 - val_loss: 0.0225
 Epoch 13/50
-27/27 [==============================] - 1s 33ms/step - loss: 0.0206 - val_loss: 0.0194
+ 27/27 ━━━━━━━━━━━━━━━━━━━━ 0s 5ms/step - loss: 0.0255 - val_loss: 0.0228
 Epoch 14/50
-27/27 [==============================] - 1s 32ms/step - loss: 0.0199 - val_loss: 0.0208
+ 27/27 ━━━━━━━━━━━━━━━━━━━━ 0s 5ms/step - loss: 0.0245 - val_loss: 0.0223
 Epoch 15/50
-27/27 [==============================] - 1s 35ms/step - loss: 0.0192 - val_loss: 0.0204
+ 27/27 ━━━━━━━━━━━━━━━━━━━━ 0s 5ms/step - loss: 0.0236 - val_loss: 0.0234
+Epoch 16/50
+ 27/27 ━━━━━━━━━━━━━━━━━━━━ 0s 5ms/step - loss: 0.0227 - val_loss: 0.0256
+Epoch 17/50
+ 27/27 ━━━━━━━━━━━━━━━━━━━━ 0s 5ms/step - loss: 0.0219 - val_loss: 0.0240
+Epoch 18/50
+ 27/27 ━━━━━━━━━━━━━━━━━━━━ 0s 5ms/step - loss: 0.0214 - val_loss: 0.0245
+Epoch 19/50
+ 27/27 ━━━━━━━━━━━━━━━━━━━━ 0s 5ms/step - loss: 0.0207 - val_loss: 0.0250
 
 ```
 </div>
@@ -298,7 +354,9 @@ plt.show()
 ```
 
 
+    
 ![png](/img/examples/timeseries/timeseries_anomaly_detection/timeseries_anomaly_detection_21_0.png)
+    
 
 
 ---
@@ -333,13 +391,20 @@ threshold = np.max(train_mae_loss)
 print("Reconstruction error threshold: ", threshold)
 ```
 
+<div class="k-default-codeblock">
+```
+ 118/118 ━━━━━━━━━━━━━━━━━━━━ 1s 6ms/step
 
-![png](/img/examples/timeseries/timeseries_anomaly_detection/timeseries_anomaly_detection_23_0.png)
+```
+</div>
+    
+![png](/img/examples/timeseries/timeseries_anomaly_detection/timeseries_anomaly_detection_23_1.png)
+    
 
 
 <div class="k-default-codeblock">
 ```
-Reconstruction error threshold:  0.1195600905852785
+Reconstruction error threshold:  0.1232659916089631
 
 ```
 </div>
@@ -357,7 +422,9 @@ plt.show()
 ```
 
 
+    
 ![png](/img/examples/timeseries/timeseries_anomaly_detection/timeseries_anomaly_detection_25_0.png)
+    
 
 
 ### Prepare test data
@@ -391,58 +458,62 @@ print("Indices of anomaly samples: ", np.where(anomalies))
 ```
 
 
+    
 ![png](/img/examples/timeseries/timeseries_anomaly_detection/timeseries_anomaly_detection_27_0.png)
+    
 
 
 <div class="k-default-codeblock">
 ```
 Test input shape:  (3745, 288, 1)
+ 118/118 ━━━━━━━━━━━━━━━━━━━━ 0s 1ms/step
 
 ```
 </div>
+    
 ![png](/img/examples/timeseries/timeseries_anomaly_detection/timeseries_anomaly_detection_27_2.png)
+    
 
 
 <div class="k-default-codeblock">
 ```
-Number of anomaly samples:  399
-Indices of anomaly samples:  (array([ 789, 1653, 1654, 1941, 2697, 2702, 2703, 2704, 2705, 2706, 2707,
-       2708, 2709, 2710, 2711, 2712, 2713, 2714, 2715, 2716, 2717, 2718,
-       2719, 2720, 2721, 2722, 2723, 2724, 2725, 2726, 2727, 2728, 2729,
-       2730, 2731, 2732, 2733, 2734, 2735, 2736, 2737, 2738, 2739, 2740,
-       2741, 2742, 2743, 2744, 2745, 2746, 2747, 2748, 2749, 2750, 2751,
-       2752, 2753, 2754, 2755, 2756, 2757, 2758, 2759, 2760, 2761, 2762,
-       2763, 2764, 2765, 2766, 2767, 2768, 2769, 2770, 2771, 2772, 2773,
-       2774, 2775, 2776, 2777, 2778, 2779, 2780, 2781, 2782, 2783, 2784,
-       2785, 2786, 2787, 2788, 2789, 2790, 2791, 2792, 2793, 2794, 2795,
-       2796, 2797, 2798, 2799, 2800, 2801, 2802, 2803, 2804, 2805, 2806,
-       2807, 2808, 2809, 2810, 2811, 2812, 2813, 2814, 2815, 2816, 2817,
-       2818, 2819, 2820, 2821, 2822, 2823, 2824, 2825, 2826, 2827, 2828,
-       2829, 2830, 2831, 2832, 2833, 2834, 2835, 2836, 2837, 2838, 2839,
-       2840, 2841, 2842, 2843, 2844, 2845, 2846, 2847, 2848, 2849, 2850,
-       2851, 2852, 2853, 2854, 2855, 2856, 2857, 2858, 2859, 2860, 2861,
-       2862, 2863, 2864, 2865, 2866, 2867, 2868, 2869, 2870, 2871, 2872,
-       2873, 2874, 2875, 2876, 2877, 2878, 2879, 2880, 2881, 2882, 2883,
-       2884, 2885, 2886, 2887, 2888, 2889, 2890, 2891, 2892, 2893, 2894,
-       2895, 2896, 2897, 2898, 2899, 2900, 2901, 2902, 2903, 2904, 2905,
-       2906, 2907, 2908, 2909, 2910, 2911, 2912, 2913, 2914, 2915, 2916,
-       2917, 2918, 2919, 2920, 2921, 2922, 2923, 2924, 2925, 2926, 2927,
-       2928, 2929, 2930, 2931, 2932, 2933, 2934, 2935, 2936, 2937, 2938,
-       2939, 2940, 2941, 2942, 2943, 2944, 2945, 2946, 2947, 2948, 2949,
-       2950, 2951, 2952, 2953, 2954, 2955, 2956, 2957, 2958, 2959, 2960,
-       2961, 2962, 2963, 2964, 2965, 2966, 2967, 2968, 2969, 2970, 2971,
-       2972, 2973, 2974, 2975, 2976, 2977, 2978, 2979, 2980, 2981, 2982,
-       2983, 2984, 2985, 2986, 2987, 2988, 2989, 2990, 2991, 2992, 2993,
-       2994, 2995, 2996, 2997, 2998, 2999, 3000, 3001, 3002, 3003, 3004,
-       3005, 3006, 3007, 3008, 3009, 3010, 3011, 3012, 3013, 3014, 3015,
-       3016, 3017, 3018, 3019, 3020, 3021, 3022, 3023, 3024, 3025, 3026,
-       3027, 3028, 3029, 3030, 3031, 3032, 3033, 3034, 3035, 3036, 3037,
-       3038, 3039, 3040, 3041, 3042, 3043, 3044, 3045, 3046, 3047, 3048,
-       3049, 3050, 3051, 3052, 3053, 3054, 3055, 3056, 3057, 3058, 3059,
-       3060, 3061, 3062, 3063, 3064, 3065, 3066, 3067, 3068, 3069, 3070,
-       3071, 3072, 3073, 3074, 3075, 3076, 3077, 3078, 3079, 3080, 3081,
-       3082, 3083, 3084, 3085, 3086, 3087, 3088, 3089, 3090, 3091, 3092,
-       3093, 3094, 3095]),)
+Number of anomaly samples:  394
+Indices of anomaly samples:  (array([1654, 2702, 2703, 2704, 2705, 2706, 2707, 2708, 2709, 2710, 2711,
+       2712, 2713, 2714, 2715, 2716, 2717, 2718, 2719, 2720, 2721, 2722,
+       2723, 2724, 2725, 2726, 2727, 2728, 2729, 2730, 2731, 2732, 2733,
+       2734, 2735, 2736, 2737, 2738, 2739, 2740, 2741, 2742, 2743, 2744,
+       2745, 2746, 2747, 2748, 2749, 2750, 2751, 2752, 2753, 2754, 2755,
+       2756, 2757, 2758, 2759, 2760, 2761, 2762, 2763, 2764, 2765, 2766,
+       2767, 2768, 2769, 2770, 2771, 2772, 2773, 2774, 2775, 2776, 2777,
+       2778, 2779, 2780, 2781, 2782, 2783, 2784, 2785, 2786, 2787, 2788,
+       2789, 2790, 2791, 2792, 2793, 2794, 2795, 2796, 2797, 2798, 2799,
+       2800, 2801, 2802, 2803, 2804, 2805, 2806, 2807, 2808, 2809, 2810,
+       2811, 2812, 2813, 2814, 2815, 2816, 2817, 2818, 2819, 2820, 2821,
+       2822, 2823, 2824, 2825, 2826, 2827, 2828, 2829, 2830, 2831, 2832,
+       2833, 2834, 2835, 2836, 2837, 2838, 2839, 2840, 2841, 2842, 2843,
+       2844, 2845, 2846, 2847, 2848, 2849, 2850, 2851, 2852, 2853, 2854,
+       2855, 2856, 2857, 2858, 2859, 2860, 2861, 2862, 2863, 2864, 2865,
+       2866, 2867, 2868, 2869, 2870, 2871, 2872, 2873, 2874, 2875, 2876,
+       2877, 2878, 2879, 2880, 2881, 2882, 2883, 2884, 2885, 2886, 2887,
+       2888, 2889, 2890, 2891, 2892, 2893, 2894, 2895, 2896, 2897, 2898,
+       2899, 2900, 2901, 2902, 2903, 2904, 2905, 2906, 2907, 2908, 2909,
+       2910, 2911, 2912, 2913, 2914, 2915, 2916, 2917, 2918, 2919, 2920,
+       2921, 2922, 2923, 2924, 2925, 2926, 2927, 2928, 2929, 2930, 2931,
+       2932, 2933, 2934, 2935, 2936, 2937, 2938, 2939, 2940, 2941, 2942,
+       2943, 2944, 2945, 2946, 2947, 2948, 2949, 2950, 2951, 2952, 2953,
+       2954, 2955, 2956, 2957, 2958, 2959, 2960, 2961, 2962, 2963, 2964,
+       2965, 2966, 2967, 2968, 2969, 2970, 2971, 2972, 2973, 2974, 2975,
+       2976, 2977, 2978, 2979, 2980, 2981, 2982, 2983, 2984, 2985, 2986,
+       2987, 2988, 2989, 2990, 2991, 2992, 2993, 2994, 2995, 2996, 2997,
+       2998, 2999, 3000, 3001, 3002, 3003, 3004, 3005, 3006, 3007, 3008,
+       3009, 3010, 3011, 3012, 3013, 3014, 3015, 3016, 3017, 3018, 3019,
+       3020, 3021, 3022, 3023, 3024, 3025, 3026, 3027, 3028, 3029, 3030,
+       3031, 3032, 3033, 3034, 3035, 3036, 3037, 3038, 3039, 3040, 3041,
+       3042, 3043, 3044, 3045, 3046, 3047, 3048, 3049, 3050, 3051, 3052,
+       3053, 3054, 3055, 3056, 3057, 3058, 3059, 3060, 3061, 3062, 3063,
+       3064, 3065, 3066, 3067, 3068, 3069, 3070, 3071, 3072, 3073, 3074,
+       3075, 3076, 3077, 3078, 3079, 3080, 3081, 3082, 3083, 3084, 3085,
+       3086, 3087, 3088, 3089, 3090, 3091, 3092, 3093, 3094]),)
 
 ```
 </div>
@@ -491,5 +562,7 @@ plt.show()
 ```
 
 
+    
 ![png](/img/examples/timeseries/timeseries_anomaly_detection/timeseries_anomaly_detection_31_0.png)
+    
 
