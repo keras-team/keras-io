@@ -19,7 +19,6 @@ classification that operate on CNN feature maps.
 """
 
 """shell
-pip install -q git+https://github.com/keras-team/keras
 pip install -q git+https://github.com/tensorflow/docs
 """
 
@@ -55,6 +54,8 @@ import pandas as pd
 import numpy as np
 import imageio
 import cv2
+
+keras.utils.set_random_seed(1234)
 
 """
 ## Define hyperparameters

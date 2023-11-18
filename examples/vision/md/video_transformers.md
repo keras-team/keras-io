@@ -21,7 +21,6 @@ classification that operate on CNN feature maps.
 
 
 ```python
-!pip install -q git+https://github.com/keras-team/keras
 !pip install -q git+https://github.com/tensorflow/docs
 ```
 
