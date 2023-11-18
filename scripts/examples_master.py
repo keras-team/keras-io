@@ -14,6 +14,7 @@ EXAMPLES_MASTER = {
                     "title": "Image classification from scratch",
                     "subcategory": "Image classification",
                     "highlight": True,
+                    "keras_3": True,
                 },
                 {
                     "path": "mnist_convnet",
@@ -27,26 +28,25 @@ EXAMPLES_MASTER = {
                     "title": "Image classification via fine-tuning with EfficientNet",
                     "subcategory": "Image classification",
                     "highlight": True,
+                    "keras_3": True,
                 },
                 {
                     "path": "image_classification_with_vision_transformer",
                     "title": "Image classification with Vision Transformer",
                     "subcategory": "Image classification",
-                },
-                {
-                    "path": "bit",
-                    "title": "Image Classification using BigTransfer (BiT)",
-                    "subcategory": "Image classification",
+                    "keras_3": True,
                 },
                 {
                     "path": "attention_mil_classification",
                     "title": "Classification using Attention-based Deep Multiple Instance Learning",
                     "subcategory": "Image classification",
+                    "keras_3": True,
                 },
                 {
                     "path": "mlp_image_classification",
                     "title": "Image classification with modern MLP models",
                     "subcategory": "Image classification",
+                    "keras_3": True,
                 },
                 {
                     "path": "mobilevit",
@@ -299,6 +299,11 @@ EXAMPLES_MASTER = {
                     "path": "vivit",
                     "title": "Video Vision Transformer",
                     "subcategory": "Video",
+                },
+                {
+                    "path": "bit",
+                    "title": "Image Classification using BigTransfer (BiT)",
+                    "subcategory": "Image classification",
                 },
             ],
         },

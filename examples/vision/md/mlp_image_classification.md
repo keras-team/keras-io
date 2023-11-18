@@ -156,6 +156,7 @@ def run_experiment(model):
         epochs=num_epochs,
         validation_split=0.1,
         callbacks=[early_stopping, reduce_lr],
+        verbose=0,
     )
 
     _, accuracy, top_5_accuracy = model.evaluate(x_test, y_test)
@@ -345,25 +346,6 @@ history = run_experiment(mlpmixer_classifier)
 
 <div class="k-default-codeblock">
 ```
-/opt/conda/envs/keras-jax/lib/python3.10/site-packages/keras/src/backend/jax/core.py:64: UserWarning: Explicitly requested dtype int64 requested in array is not available, and will be truncated to dtype int32. To enable more dtypes, set the jax_enable_x64 configuration option or the JAX_ENABLE_X64 shell environment variable. See https://github.com/google/jax#current-gotchas for more.
-  return jnp.array(x, dtype=dtype)
-
- 352/352 ━━━━━━━━━━━━━━━━━━━━ 0s 1s/step - acc: 0.0698 - loss: 4.2279 - top5-acc: 0.2197
-
-/opt/conda/envs/keras-jax/lib/python3.10/site-packages/keras/src/backend/jax/core.py:64: UserWarning: Explicitly requested dtype int64 requested in array is not available, and will be truncated to dtype int32. To enable more dtypes, set the jax_enable_x64 configuration option or the JAX_ENABLE_X64 shell environment variable. See https://github.com/google/jax#current-gotchas for more.
-  return jnp.array(x, dtype=dtype)
-
- 352/352 ━━━━━━━━━━━━━━━━━━━━ 391s 1s/step - acc: 0.0699 - loss: 4.2271 - top5-acc: 0.2200 - val_acc: 0.0964 - val_loss: 4.3187 - val_top5-acc: 0.3076 - learning_rate: 0.0050
-
-/opt/conda/envs/keras-jax/lib/python3.10/site-packages/keras/src/backend/jax/core.py:64: UserWarning: Explicitly requested dtype int64 requested in array is not available, and will be truncated to dtype int32. To enable more dtypes, set the jax_enable_x64 configuration option or the JAX_ENABLE_X64 shell environment variable. See https://github.com/google/jax#current-gotchas for more.
-  return jnp.array(x, dtype=dtype)
-
-   4/313 [37m━━━━━━━━━━━━━━━━━━━━  26s 87ms/step - acc: 0.1022 - loss: 4.2813 - top5-acc: 0.2962
-
-/opt/conda/envs/keras-jax/lib/python3.10/site-packages/keras/src/backend/jax/core.py:64: UserWarning: Explicitly requested dtype int64 requested in array is not available, and will be truncated to dtype int32. To enable more dtypes, set the jax_enable_x64 configuration option or the JAX_ENABLE_X64 shell environment variable. See https://github.com/google/jax#current-gotchas for more.
-  return jnp.array(x, dtype=dtype)
-
- 313/313 ━━━━━━━━━━━━━━━━━━━━ 35s 103ms/step - acc: 0.0935 - loss: 4.3304 - top5-acc: 0.3025
 Test accuracy: 9.76%
 Test top 5 accuracy: 30.8%
 
@@ -444,13 +426,6 @@ history = run_experiment(fnet_classifier)
 
 <div class="k-default-codeblock">
 ```
-   1/352 [37m━━━━━━━━━━━━━━━━━━━━  13:27 2s/step - acc: 0.0000e+00 - loss: 4.6698 - top5-acc: 0.0469
-
-/opt/conda/envs/keras-jax/lib/python3.10/site-packages/keras/src/backend/jax/core.py:64: UserWarning: Explicitly requested dtype int64 requested in array is not available, and will be truncated to dtype int32. To enable more dtypes, set the jax_enable_x64 configuration option or the JAX_ENABLE_X64 shell environment variable. See https://github.com/google/jax#current-gotchas for more.
-  return jnp.array(x, dtype=dtype)
-
- 352/352 ━━━━━━━━━━━━━━━━━━━━ 303s 857ms/step - acc: 0.0511 - loss: 4.3293 - top5-acc: 0.1732 - val_acc: 0.1376 - val_loss: 3.6582 - val_top5-acc: 0.3586 - learning_rate: 0.0010
- 313/313 ━━━━━━━━━━━━━━━━━━━━ 25s 80ms/step - acc: 0.1414 - loss: 3.6741 - top5-acc: 0.3672
 Test accuracy: 13.82%
 Test top 5 accuracy: 36.15%
 
@@ -541,8 +516,6 @@ history = run_experiment(gmlp_classifier)
 
 <div class="k-default-codeblock">
 ```
- 352/352 ━━━━━━━━━━━━━━━━━━━━ 341s 963ms/step - acc: 0.0701 - loss: 4.1812 - top5-acc: 0.2239 - val_acc: 0.1648 - val_loss: 3.4969 - val_top5-acc: 0.4174 - learning_rate: 0.0030
- 313/313 ━━━━━━━━━━━━━━━━━━━━ 26s 84ms/step - acc: 0.1676 - loss: 3.4851 - top5-acc: 0.4248
 Test accuracy: 17.05%
 Test top 5 accuracy: 42.57%
 
