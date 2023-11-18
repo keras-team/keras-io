@@ -54,7 +54,7 @@ First, let's download the 786M ZIP archive of the raw data:
 ```
   % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
                                  Dload  Upload   Total   Spent    Left  Speed
-100  786M  100  786M    0     0  73.1M      0  0:00:10  0:00:10 --:--:-- 68.0M
+100  786M  100  786M    0     0  11.1M      0  0:01:10  0:01:10 --:--:-- 11.8M
 
  CDLA-Permissive-2.0.pdf		   kagglecatsanddogs_5340.zip
  PetImages				  'readme[1].txt'
@@ -348,12 +348,15 @@ model = make_model(input_shape=image_size + (3,), num_classes=2)
 keras.utils.plot_model(model, show_shapes=True)
 ```
 
-<div class="k-default-codeblock">
-```
-You must install graphviz (see instructions at https://graphviz.gitlab.io/download/) for `plot_model` to work.
 
-```
-</div>
+
+
+    
+![png](/img/examples/vision/image_classification_from_scratch/image_classification_from_scratch_24_0.png)
+    
+
+
+
 ---
 ## Train the model
 
@@ -380,11 +383,959 @@ model.fit(
 <div class="k-default-codeblock">
 ```
 Epoch 1/25
-...
-Epoch 25/25
- 147/147 ━━━━━━━━━━━━━━━━━━━━ 57s 378ms/step - acc: 0.9657 - loss: 0.0878 - val_acc: 0.9037 - val_loss: 0.2279
 
-<keras.src.callbacks.history.History at 0x7fd1a06f6f20>
+Corrupt JPEG data: 2226 extraneous bytes before marker 0xd9
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1700272973.676197 1678132 device_compiler.h:187] Compiled cluster using XLA!  This line is logged at most once for the lifetime of the process.
+
+  72/147 ━━━━━━━━━[37m━━━━━━━━━━━  23s 317ms/step - acc: 0.6092 - loss: 0.6542
+
+Corrupt JPEG data: 228 extraneous bytes before marker 0xd9
+
+  79/147 ━━━━━━━━━━[37m━━━━━━━━━━  21s 317ms/step - acc: 0.6117 - loss: 0.6518
+
+Warning: unknown JFIF revision number 0.00
+
+  98/147 ━━━━━━━━━━━━━[37m━━━━━━━  15s 316ms/step - acc: 0.6179 - loss: 0.6457
+
+Corrupt JPEG data: 128 extraneous bytes before marker 0xd9
+
+ 101/147 ━━━━━━━━━━━━━[37m━━━━━━━  14s 315ms/step - acc: 0.6189 - loss: 0.6448
+
+Corrupt JPEG data: 65 extraneous bytes before marker 0xd9
+
+ 104/147 ━━━━━━━━━━━━━━[37m━━━━━━  13s 314ms/step - acc: 0.6197 - loss: 0.6439
+
+Corrupt JPEG data: 396 extraneous bytes before marker 0xd9
+
+ 106/147 ━━━━━━━━━━━━━━[37m━━━━━━  12s 314ms/step - acc: 0.6203 - loss: 0.6434
+
+Corrupt JPEG data: 239 extraneous bytes before marker 0xd9
+
+ 147/147 ━━━━━━━━━━━━━━━━━━━━ 0s 580ms/step - acc: 0.6307 - loss: 0.6324
+
+Corrupt JPEG data: 252 extraneous bytes before marker 0xd9
+Corrupt JPEG data: 1153 extraneous bytes before marker 0xd9
+Corrupt JPEG data: 162 extraneous bytes before marker 0xd9
+Corrupt JPEG data: 214 extraneous bytes before marker 0xd9
+Corrupt JPEG data: 99 extraneous bytes before marker 0xd9
+Corrupt JPEG data: 1403 extraneous bytes before marker 0xd9
+
+ 147/147 ━━━━━━━━━━━━━━━━━━━━ 224s 771ms/step - acc: 0.6310 - loss: 0.6321 - val_acc: 0.4958 - val_loss: 0.6935
+Epoch 2/25
+
+Corrupt JPEG data: 2226 extraneous bytes before marker 0xd9
+
+  71/147 ━━━━━━━━━[37m━━━━━━━━━━━  27s 367ms/step - acc: 0.7385 - loss: 0.5128
+
+Corrupt JPEG data: 228 extraneous bytes before marker 0xd9
+
+  79/147 ━━━━━━━━━━[37m━━━━━━━━━━  24s 360ms/step - acc: 0.7394 - loss: 0.5110
+
+Warning: unknown JFIF revision number 0.00
+
+  99/147 ━━━━━━━━━━━━━[37m━━━━━━━  16s 350ms/step - acc: 0.7417 - loss: 0.5066
+
+Corrupt JPEG data: 128 extraneous bytes before marker 0xd9
+
+ 101/147 ━━━━━━━━━━━━━[37m━━━━━━━  16s 349ms/step - acc: 0.7419 - loss: 0.5061
+
+Corrupt JPEG data: 65 extraneous bytes before marker 0xd9
+
+ 104/147 ━━━━━━━━━━━━━━[37m━━━━━━  14s 348ms/step - acc: 0.7423 - loss: 0.5055
+
+Corrupt JPEG data: 396 extraneous bytes before marker 0xd9
+
+ 106/147 ━━━━━━━━━━━━━━[37m━━━━━━  14s 347ms/step - acc: 0.7425 - loss: 0.5050
+
+Corrupt JPEG data: 239 extraneous bytes before marker 0xd9
+
+ 147/147 ━━━━━━━━━━━━━━━━━━━━ 0s 336ms/step - acc: 0.7474 - loss: 0.4969
+
+Corrupt JPEG data: 252 extraneous bytes before marker 0xd9
+Corrupt JPEG data: 1153 extraneous bytes before marker 0xd9
+Corrupt JPEG data: 162 extraneous bytes before marker 0xd9
+Corrupt JPEG data: 214 extraneous bytes before marker 0xd9
+Corrupt JPEG data: 99 extraneous bytes before marker 0xd9
+Corrupt JPEG data: 1403 extraneous bytes before marker 0xd9
+
+ 147/147 ━━━━━━━━━━━━━━━━━━━━ 54s 360ms/step - acc: 0.7475 - loss: 0.4967 - val_acc: 0.4958 - val_loss: 0.7056
+Epoch 3/25
+
+Corrupt JPEG data: 2226 extraneous bytes before marker 0xd9
+
+  72/147 ━━━━━━━━━[37m━━━━━━━━━━━  24s 322ms/step - acc: 0.8073 - loss: 0.4051
+
+Corrupt JPEG data: 228 extraneous bytes before marker 0xd9
+
+  79/147 ━━━━━━━━━━[37m━━━━━━━━━━  21s 323ms/step - acc: 0.8073 - loss: 0.4047
+
+Warning: unknown JFIF revision number 0.00
+
+  99/147 ━━━━━━━━━━━━━[37m━━━━━━━  15s 321ms/step - acc: 0.8081 - loss: 0.4030
+
+Corrupt JPEG data: 128 extraneous bytes before marker 0xd9
+
+ 101/147 ━━━━━━━━━━━━━[37m━━━━━━━  14s 320ms/step - acc: 0.8081 - loss: 0.4029
+
+Corrupt JPEG data: 65 extraneous bytes before marker 0xd9
+
+ 104/147 ━━━━━━━━━━━━━━[37m━━━━━━  13s 320ms/step - acc: 0.8083 - loss: 0.4026
+
+Corrupt JPEG data: 396 extraneous bytes before marker 0xd9
+
+ 106/147 ━━━━━━━━━━━━━━[37m━━━━━━  13s 320ms/step - acc: 0.8083 - loss: 0.4024
+
+Corrupt JPEG data: 239 extraneous bytes before marker 0xd9
+
+ 147/147 ━━━━━━━━━━━━━━━━━━━━ 0s 315ms/step - acc: 0.8102 - loss: 0.3987
+
+Corrupt JPEG data: 252 extraneous bytes before marker 0xd9
+Corrupt JPEG data: 1153 extraneous bytes before marker 0xd9
+Corrupt JPEG data: 162 extraneous bytes before marker 0xd9
+Corrupt JPEG data: 214 extraneous bytes before marker 0xd9
+Corrupt JPEG data: 99 extraneous bytes before marker 0xd9
+Corrupt JPEG data: 1403 extraneous bytes before marker 0xd9
+
+ 147/147 ━━━━━━━━━━━━━━━━━━━━ 51s 340ms/step - acc: 0.8102 - loss: 0.3986 - val_acc: 0.4958 - val_loss: 0.8008
+Epoch 4/25
+
+Corrupt JPEG data: 2226 extraneous bytes before marker 0xd9
+
+  71/147 ━━━━━━━━━[37m━━━━━━━━━━━  24s 318ms/step - acc: 0.8379 - loss: 0.3511
+
+Corrupt JPEG data: 228 extraneous bytes before marker 0xd9
+
+  80/147 ━━━━━━━━━━[37m━━━━━━━━━━  21s 316ms/step - acc: 0.8382 - loss: 0.3498
+
+Warning: unknown JFIF revision number 0.00
+
+  99/147 ━━━━━━━━━━━━━[37m━━━━━━━  15s 323ms/step - acc: 0.8390 - loss: 0.3472
+
+Corrupt JPEG data: 128 extraneous bytes before marker 0xd9
+
+ 101/147 ━━━━━━━━━━━━━[37m━━━━━━━  14s 324ms/step - acc: 0.8391 - loss: 0.3469
+
+Corrupt JPEG data: 65 extraneous bytes before marker 0xd9
+
+ 104/147 ━━━━━━━━━━━━━━[37m━━━━━━  13s 323ms/step - acc: 0.8393 - loss: 0.3465
+
+Corrupt JPEG data: 396 extraneous bytes before marker 0xd9
+
+ 105/147 ━━━━━━━━━━━━━━[37m━━━━━━  13s 323ms/step - acc: 0.8394 - loss: 0.3463
+
+Corrupt JPEG data: 239 extraneous bytes before marker 0xd9
+
+ 147/147 ━━━━━━━━━━━━━━━━━━━━ 0s 317ms/step - acc: 0.8418 - loss: 0.3405
+
+Corrupt JPEG data: 252 extraneous bytes before marker 0xd9
+Corrupt JPEG data: 1153 extraneous bytes before marker 0xd9
+Corrupt JPEG data: 162 extraneous bytes before marker 0xd9
+Corrupt JPEG data: 214 extraneous bytes before marker 0xd9
+Corrupt JPEG data: 99 extraneous bytes before marker 0xd9
+Corrupt JPEG data: 1403 extraneous bytes before marker 0xd9
+
+ 147/147 ━━━━━━━━━━━━━━━━━━━━ 52s 342ms/step - acc: 0.8418 - loss: 0.3403 - val_acc: 0.4958 - val_loss: 0.8938
+Epoch 5/25
+
+Corrupt JPEG data: 2226 extraneous bytes before marker 0xd9
+
+  71/147 ━━━━━━━━━[37m━━━━━━━━━━━  23s 310ms/step - acc: 0.8641 - loss: 0.3061
+
+Corrupt JPEG data: 228 extraneous bytes before marker 0xd9
+
+  79/147 ━━━━━━━━━━[37m━━━━━━━━━━  20s 308ms/step - acc: 0.8649 - loss: 0.3045
+
+Warning: unknown JFIF revision number 0.00
+
+  98/147 ━━━━━━━━━━━━━[37m━━━━━━━  15s 309ms/step - acc: 0.8660 - loss: 0.3019
+
+Corrupt JPEG data: 128 extraneous bytes before marker 0xd9
+
+ 101/147 ━━━━━━━━━━━━━[37m━━━━━━━  14s 308ms/step - acc: 0.8662 - loss: 0.3015
+
+Corrupt JPEG data: 65 extraneous bytes before marker 0xd9
+
+ 104/147 ━━━━━━━━━━━━━━[37m━━━━━━  13s 308ms/step - acc: 0.8663 - loss: 0.3012
+
+Corrupt JPEG data: 396 extraneous bytes before marker 0xd9
+
+ 105/147 ━━━━━━━━━━━━━━[37m━━━━━━  12s 309ms/step - acc: 0.8663 - loss: 0.3011
+
+Corrupt JPEG data: 239 extraneous bytes before marker 0xd9
+
+ 147/147 ━━━━━━━━━━━━━━━━━━━━ 0s 312ms/step - acc: 0.8684 - loss: 0.2960
+
+Corrupt JPEG data: 252 extraneous bytes before marker 0xd9
+Corrupt JPEG data: 1153 extraneous bytes before marker 0xd9
+Corrupt JPEG data: 162 extraneous bytes before marker 0xd9
+Corrupt JPEG data: 214 extraneous bytes before marker 0xd9
+Corrupt JPEG data: 99 extraneous bytes before marker 0xd9
+Corrupt JPEG data: 1403 extraneous bytes before marker 0xd9
+
+ 147/147 ━━━━━━━━━━━━━━━━━━━━ 51s 336ms/step - acc: 0.8684 - loss: 0.2959 - val_acc: 0.7479 - val_loss: 0.4058
+Epoch 6/25
+
+Corrupt JPEG data: 2226 extraneous bytes before marker 0xd9
+
+  72/147 ━━━━━━━━━[37m━━━━━━━━━━━  22s 306ms/step - acc: 0.8914 - loss: 0.2597
+
+Corrupt JPEG data: 228 extraneous bytes before marker 0xd9
+
+  79/147 ━━━━━━━━━━[37m━━━━━━━━━━  20s 308ms/step - acc: 0.8914 - loss: 0.2589
+
+Warning: unknown JFIF revision number 0.00
+
+  98/147 ━━━━━━━━━━━━━[37m━━━━━━━  15s 308ms/step - acc: 0.8915 - loss: 0.2573
+
+Corrupt JPEG data: 128 extraneous bytes before marker 0xd9
+
+ 101/147 ━━━━━━━━━━━━━[37m━━━━━━━  14s 308ms/step - acc: 0.8915 - loss: 0.2571
+
+Corrupt JPEG data: 65 extraneous bytes before marker 0xd9
+
+ 104/147 ━━━━━━━━━━━━━━[37m━━━━━━  13s 308ms/step - acc: 0.8915 - loss: 0.2569
+
+Corrupt JPEG data: 396 extraneous bytes before marker 0xd9
+
+ 106/147 ━━━━━━━━━━━━━━[37m━━━━━━  12s 309ms/step - acc: 0.8916 - loss: 0.2567
+
+Corrupt JPEG data: 239 extraneous bytes before marker 0xd9
+
+ 147/147 ━━━━━━━━━━━━━━━━━━━━ 0s 308ms/step - acc: 0.8922 - loss: 0.2537
+
+Corrupt JPEG data: 252 extraneous bytes before marker 0xd9
+Corrupt JPEG data: 1153 extraneous bytes before marker 0xd9
+Corrupt JPEG data: 162 extraneous bytes before marker 0xd9
+Corrupt JPEG data: 214 extraneous bytes before marker 0xd9
+Corrupt JPEG data: 99 extraneous bytes before marker 0xd9
+Corrupt JPEG data: 1403 extraneous bytes before marker 0xd9
+
+ 147/147 ━━━━━━━━━━━━━━━━━━━━ 51s 336ms/step - acc: 0.8922 - loss: 0.2537 - val_acc: 0.6472 - val_loss: 0.7482
+Epoch 7/25
+
+Corrupt JPEG data: 2226 extraneous bytes before marker 0xd9
+
+  72/147 ━━━━━━━━━[37m━━━━━━━━━━━  23s 311ms/step - acc: 0.8952 - loss: 0.2339
+
+Corrupt JPEG data: 228 extraneous bytes before marker 0xd9
+
+  79/147 ━━━━━━━━━━[37m━━━━━━━━━━  21s 312ms/step - acc: 0.8954 - loss: 0.2334
+
+Warning: unknown JFIF revision number 0.00
+
+  99/147 ━━━━━━━━━━━━━[37m━━━━━━━  14s 311ms/step - acc: 0.8963 - loss: 0.2319
+
+Corrupt JPEG data: 128 extraneous bytes before marker 0xd9
+
+ 101/147 ━━━━━━━━━━━━━[37m━━━━━━━  14s 313ms/step - acc: 0.8964 - loss: 0.2317
+
+Corrupt JPEG data: 65 extraneous bytes before marker 0xd9
+
+ 105/147 ━━━━━━━━━━━━━━[37m━━━━━━  13s 314ms/step - acc: 0.8965 - loss: 0.2314
+
+Corrupt JPEG data: 396 extraneous bytes before marker 0xd9
+
+ 106/147 ━━━━━━━━━━━━━━[37m━━━━━━  12s 313ms/step - acc: 0.8966 - loss: 0.2314
+
+Corrupt JPEG data: 239 extraneous bytes before marker 0xd9
+
+ 147/147 ━━━━━━━━━━━━━━━━━━━━ 0s 311ms/step - acc: 0.8980 - loss: 0.2286
+
+Corrupt JPEG data: 252 extraneous bytes before marker 0xd9
+Corrupt JPEG data: 1153 extraneous bytes before marker 0xd9
+Corrupt JPEG data: 162 extraneous bytes before marker 0xd9
+Corrupt JPEG data: 214 extraneous bytes before marker 0xd9
+Corrupt JPEG data: 99 extraneous bytes before marker 0xd9
+Corrupt JPEG data: 1403 extraneous bytes before marker 0xd9
+
+ 147/147 ━━━━━━━━━━━━━━━━━━━━ 51s 335ms/step - acc: 0.8980 - loss: 0.2286 - val_acc: 0.8988 - val_loss: 0.2326
+Epoch 8/25
+
+Corrupt JPEG data: 2226 extraneous bytes before marker 0xd9
+
+  72/147 ━━━━━━━━━[37m━━━━━━━━━━━  24s 321ms/step - acc: 0.9172 - loss: 0.2058
+
+Corrupt JPEG data: 228 extraneous bytes before marker 0xd9
+
+  79/147 ━━━━━━━━━━[37m━━━━━━━━━━  21s 322ms/step - acc: 0.9170 - loss: 0.2051
+
+Warning: unknown JFIF revision number 0.00
+
+  98/147 ━━━━━━━━━━━━━[37m━━━━━━━  15s 320ms/step - acc: 0.9164 - loss: 0.2039
+
+Corrupt JPEG data: 128 extraneous bytes before marker 0xd9
+
+ 101/147 ━━━━━━━━━━━━━[37m━━━━━━━  14s 319ms/step - acc: 0.9163 - loss: 0.2038
+
+Corrupt JPEG data: 65 extraneous bytes before marker 0xd9
+
+ 104/147 ━━━━━━━━━━━━━━[37m━━━━━━  13s 320ms/step - acc: 0.9163 - loss: 0.2037
+
+Corrupt JPEG data: 396 extraneous bytes before marker 0xd9
+
+ 106/147 ━━━━━━━━━━━━━━[37m━━━━━━  13s 319ms/step - acc: 0.9162 - loss: 0.2036
+
+Corrupt JPEG data: 239 extraneous bytes before marker 0xd9
+
+ 147/147 ━━━━━━━━━━━━━━━━━━━━ 0s 316ms/step - acc: 0.9154 - loss: 0.2022
+
+Corrupt JPEG data: 252 extraneous bytes before marker 0xd9
+Corrupt JPEG data: 1153 extraneous bytes before marker 0xd9
+Corrupt JPEG data: 162 extraneous bytes before marker 0xd9
+Corrupt JPEG data: 214 extraneous bytes before marker 0xd9
+Corrupt JPEG data: 99 extraneous bytes before marker 0xd9
+Corrupt JPEG data: 1403 extraneous bytes before marker 0xd9
+
+ 147/147 ━━━━━━━━━━━━━━━━━━━━ 51s 340ms/step - acc: 0.9154 - loss: 0.2022 - val_acc: 0.8865 - val_loss: 0.2269
+Epoch 9/25
+
+Corrupt JPEG data: 2226 extraneous bytes before marker 0xd9
+
+  71/147 ━━━━━━━━━[37m━━━━━━━━━━━  24s 326ms/step - acc: 0.9174 - loss: 0.1947
+
+Corrupt JPEG data: 228 extraneous bytes before marker 0xd9
+
+  79/147 ━━━━━━━━━━[37m━━━━━━━━━━  22s 325ms/step - acc: 0.9177 - loss: 0.1936
+
+Warning: unknown JFIF revision number 0.00
+
+  99/147 ━━━━━━━━━━━━━[37m━━━━━━━  15s 322ms/step - acc: 0.9183 - loss: 0.1919
+
+Corrupt JPEG data: 128 extraneous bytes before marker 0xd9
+
+ 101/147 ━━━━━━━━━━━━━[37m━━━━━━━  14s 324ms/step - acc: 0.9184 - loss: 0.1918
+
+Corrupt JPEG data: 65 extraneous bytes before marker 0xd9
+
+ 104/147 ━━━━━━━━━━━━━━[37m━━━━━━  13s 324ms/step - acc: 0.9184 - loss: 0.1916
+
+Corrupt JPEG data: 396 extraneous bytes before marker 0xd9
+
+ 106/147 ━━━━━━━━━━━━━━[37m━━━━━━  13s 323ms/step - acc: 0.9185 - loss: 0.1915
+
+Corrupt JPEG data: 239 extraneous bytes before marker 0xd9
+
+ 147/147 ━━━━━━━━━━━━━━━━━━━━ 0s 317ms/step - acc: 0.9193 - loss: 0.1895
+
+Corrupt JPEG data: 252 extraneous bytes before marker 0xd9
+Corrupt JPEG data: 1153 extraneous bytes before marker 0xd9
+Corrupt JPEG data: 162 extraneous bytes before marker 0xd9
+Corrupt JPEG data: 214 extraneous bytes before marker 0xd9
+Corrupt JPEG data: 99 extraneous bytes before marker 0xd9
+Corrupt JPEG data: 1403 extraneous bytes before marker 0xd9
+
+ 147/147 ━━━━━━━━━━━━━━━━━━━━ 51s 341ms/step - acc: 0.9193 - loss: 0.1894 - val_acc: 0.9149 - val_loss: 0.2096
+Epoch 10/25
+
+Corrupt JPEG data: 2226 extraneous bytes before marker 0xd9
+
+  72/147 ━━━━━━━━━[37m━━━━━━━━━━━  23s 318ms/step - acc: 0.9235 - loss: 0.1772
+
+Corrupt JPEG data: 228 extraneous bytes before marker 0xd9
+
+  79/147 ━━━━━━━━━━[37m━━━━━━━━━━  22s 324ms/step - acc: 0.9235 - loss: 0.1771
+
+Warning: unknown JFIF revision number 0.00
+
+  99/147 ━━━━━━━━━━━━━[37m━━━━━━━  15s 323ms/step - acc: 0.9234 - loss: 0.1771
+
+Corrupt JPEG data: 128 extraneous bytes before marker 0xd9
+
+ 101/147 ━━━━━━━━━━━━━[37m━━━━━━━  14s 323ms/step - acc: 0.9234 - loss: 0.1771
+
+Corrupt JPEG data: 65 extraneous bytes before marker 0xd9
+
+ 104/147 ━━━━━━━━━━━━━━[37m━━━━━━  13s 324ms/step - acc: 0.9233 - loss: 0.1771
+
+Corrupt JPEG data: 396 extraneous bytes before marker 0xd9
+
+ 106/147 ━━━━━━━━━━━━━━[37m━━━━━━  13s 323ms/step - acc: 0.9233 - loss: 0.1771
+
+Corrupt JPEG data: 239 extraneous bytes before marker 0xd9
+
+ 147/147 ━━━━━━━━━━━━━━━━━━━━ 0s 318ms/step - acc: 0.9232 - loss: 0.1768
+
+Corrupt JPEG data: 252 extraneous bytes before marker 0xd9
+Corrupt JPEG data: 1153 extraneous bytes before marker 0xd9
+Corrupt JPEG data: 162 extraneous bytes before marker 0xd9
+Corrupt JPEG data: 214 extraneous bytes before marker 0xd9
+Corrupt JPEG data: 99 extraneous bytes before marker 0xd9
+Corrupt JPEG data: 1403 extraneous bytes before marker 0xd9
+
+ 147/147 ━━━━━━━━━━━━━━━━━━━━ 52s 342ms/step - acc: 0.9232 - loss: 0.1768 - val_acc: 0.9207 - val_loss: 0.1853
+Epoch 11/25
+
+Corrupt JPEG data: 2226 extraneous bytes before marker 0xd9
+
+  72/147 ━━━━━━━━━[37m━━━━━━━━━━━  23s 315ms/step - acc: 0.9313 - loss: 0.1647
+
+Corrupt JPEG data: 228 extraneous bytes before marker 0xd9
+
+  79/147 ━━━━━━━━━━[37m━━━━━━━━━━  21s 316ms/step - acc: 0.9315 - loss: 0.1642
+
+Warning: unknown JFIF revision number 0.00
+
+  99/147 ━━━━━━━━━━━━━[37m━━━━━━━  15s 315ms/step - acc: 0.9320 - loss: 0.1632
+
+Corrupt JPEG data: 128 extraneous bytes before marker 0xd9
+
+ 101/147 ━━━━━━━━━━━━━[37m━━━━━━━  14s 317ms/step - acc: 0.9320 - loss: 0.1631
+
+Corrupt JPEG data: 65 extraneous bytes before marker 0xd9
+
+ 104/147 ━━━━━━━━━━━━━━[37m━━━━━━  13s 318ms/step - acc: 0.9320 - loss: 0.1630
+
+Corrupt JPEG data: 396 extraneous bytes before marker 0xd9
+
+ 106/147 ━━━━━━━━━━━━━━[37m━━━━━━  13s 320ms/step - acc: 0.9321 - loss: 0.1629
+
+Corrupt JPEG data: 239 extraneous bytes before marker 0xd9
+
+ 147/147 ━━━━━━━━━━━━━━━━━━━━ 0s 316ms/step - acc: 0.9323 - loss: 0.1615
+
+Corrupt JPEG data: 252 extraneous bytes before marker 0xd9
+Corrupt JPEG data: 1153 extraneous bytes before marker 0xd9
+Corrupt JPEG data: 162 extraneous bytes before marker 0xd9
+Corrupt JPEG data: 214 extraneous bytes before marker 0xd9
+Corrupt JPEG data: 99 extraneous bytes before marker 0xd9
+Corrupt JPEG data: 1403 extraneous bytes before marker 0xd9
+
+ 147/147 ━━━━━━━━━━━━━━━━━━━━ 51s 341ms/step - acc: 0.9324 - loss: 0.1615 - val_acc: 0.9222 - val_loss: 0.1837
+Epoch 12/25
+
+Corrupt JPEG data: 2226 extraneous bytes before marker 0xd9
+
+  71/147 ━━━━━━━━━[37m━━━━━━━━━━━  24s 317ms/step - acc: 0.9372 - loss: 0.1513
+
+Corrupt JPEG data: 228 extraneous bytes before marker 0xd9
+
+  79/147 ━━━━━━━━━━[37m━━━━━━━━━━  21s 316ms/step - acc: 0.9375 - loss: 0.1507
+
+Warning: unknown JFIF revision number 0.00
+
+  99/147 ━━━━━━━━━━━━━[37m━━━━━━━  15s 315ms/step - acc: 0.9377 - loss: 0.1500
+
+Corrupt JPEG data: 128 extraneous bytes before marker 0xd9
+
+ 101/147 ━━━━━━━━━━━━━[37m━━━━━━━  14s 316ms/step - acc: 0.9377 - loss: 0.1500
+
+Corrupt JPEG data: 65 extraneous bytes before marker 0xd9
+
+ 104/147 ━━━━━━━━━━━━━━[37m━━━━━━  13s 315ms/step - acc: 0.9377 - loss: 0.1499
+
+Corrupt JPEG data: 396 extraneous bytes before marker 0xd9
+
+ 106/147 ━━━━━━━━━━━━━━[37m━━━━━━  12s 315ms/step - acc: 0.9377 - loss: 0.1499
+
+Corrupt JPEG data: 239 extraneous bytes before marker 0xd9
+
+ 147/147 ━━━━━━━━━━━━━━━━━━━━ 0s 318ms/step - acc: 0.9377 - loss: 0.1492
+
+Corrupt JPEG data: 252 extraneous bytes before marker 0xd9
+Corrupt JPEG data: 1153 extraneous bytes before marker 0xd9
+Corrupt JPEG data: 162 extraneous bytes before marker 0xd9
+Corrupt JPEG data: 214 extraneous bytes before marker 0xd9
+Corrupt JPEG data: 99 extraneous bytes before marker 0xd9
+Corrupt JPEG data: 1403 extraneous bytes before marker 0xd9
+
+ 147/147 ━━━━━━━━━━━━━━━━━━━━ 52s 342ms/step - acc: 0.9377 - loss: 0.1491 - val_acc: 0.8970 - val_loss: 0.2143
+Epoch 13/25
+
+Corrupt JPEG data: 2226 extraneous bytes before marker 0xd9
+
+  71/147 ━━━━━━━━━[37m━━━━━━━━━━━  23s 314ms/step - acc: 0.9423 - loss: 0.1337
+
+Corrupt JPEG data: 228 extraneous bytes before marker 0xd9
+
+  79/147 ━━━━━━━━━━[37m━━━━━━━━━━  21s 312ms/step - acc: 0.9424 - loss: 0.1340
+
+Warning: unknown JFIF revision number 0.00
+
+  99/147 ━━━━━━━━━━━━━[37m━━━━━━━  15s 314ms/step - acc: 0.9423 - loss: 0.1349
+
+Corrupt JPEG data: 128 extraneous bytes before marker 0xd9
+
+ 101/147 ━━━━━━━━━━━━━[37m━━━━━━━  14s 314ms/step - acc: 0.9423 - loss: 0.1350
+
+Corrupt JPEG data: 65 extraneous bytes before marker 0xd9
+
+ 104/147 ━━━━━━━━━━━━━━[37m━━━━━━  13s 313ms/step - acc: 0.9422 - loss: 0.1352
+
+Corrupt JPEG data: 396 extraneous bytes before marker 0xd9
+
+ 106/147 ━━━━━━━━━━━━━━[37m━━━━━━  12s 313ms/step - acc: 0.9422 - loss: 0.1353
+
+Corrupt JPEG data: 239 extraneous bytes before marker 0xd9
+
+ 147/147 ━━━━━━━━━━━━━━━━━━━━ 0s 316ms/step - acc: 0.9414 - loss: 0.1372
+
+Corrupt JPEG data: 252 extraneous bytes before marker 0xd9
+Corrupt JPEG data: 1153 extraneous bytes before marker 0xd9
+Corrupt JPEG data: 162 extraneous bytes before marker 0xd9
+Corrupt JPEG data: 214 extraneous bytes before marker 0xd9
+Corrupt JPEG data: 99 extraneous bytes before marker 0xd9
+Corrupt JPEG data: 1403 extraneous bytes before marker 0xd9
+
+ 147/147 ━━━━━━━━━━━━━━━━━━━━ 53s 353ms/step - acc: 0.9414 - loss: 0.1373 - val_acc: 0.8986 - val_loss: 0.2395
+Epoch 14/25
+
+Corrupt JPEG data: 2226 extraneous bytes before marker 0xd9
+
+  71/147 ━━━━━━━━━[37m━━━━━━━━━━━  24s 320ms/step - acc: 0.9414 - loss: 0.1373
+
+Corrupt JPEG data: 228 extraneous bytes before marker 0xd9
+
+  79/147 ━━━━━━━━━━[37m━━━━━━━━━━  21s 319ms/step - acc: 0.9416 - loss: 0.1368
+
+Warning: unknown JFIF revision number 0.00
+
+  99/147 ━━━━━━━━━━━━━[37m━━━━━━━  15s 317ms/step - acc: 0.9418 - loss: 0.1367
+
+Corrupt JPEG data: 128 extraneous bytes before marker 0xd9
+
+ 101/147 ━━━━━━━━━━━━━[37m━━━━━━━  14s 316ms/step - acc: 0.9418 - loss: 0.1367
+
+Corrupt JPEG data: 65 extraneous bytes before marker 0xd9
+
+ 104/147 ━━━━━━━━━━━━━━[37m━━━━━━  13s 316ms/step - acc: 0.9418 - loss: 0.1367
+
+Corrupt JPEG data: 396 extraneous bytes before marker 0xd9
+
+ 106/147 ━━━━━━━━━━━━━━[37m━━━━━━  12s 316ms/step - acc: 0.9418 - loss: 0.1366
+
+Corrupt JPEG data: 239 extraneous bytes before marker 0xd9
+
+ 147/147 ━━━━━━━━━━━━━━━━━━━━ 0s 312ms/step - acc: 0.9421 - loss: 0.1358
+
+Corrupt JPEG data: 252 extraneous bytes before marker 0xd9
+Corrupt JPEG data: 1153 extraneous bytes before marker 0xd9
+Corrupt JPEG data: 162 extraneous bytes before marker 0xd9
+Corrupt JPEG data: 214 extraneous bytes before marker 0xd9
+Corrupt JPEG data: 99 extraneous bytes before marker 0xd9
+Corrupt JPEG data: 1403 extraneous bytes before marker 0xd9
+
+ 147/147 ━━━━━━━━━━━━━━━━━━━━ 51s 336ms/step - acc: 0.9421 - loss: 0.1358 - val_acc: 0.8593 - val_loss: 0.3821
+Epoch 15/25
+
+Corrupt JPEG data: 2226 extraneous bytes before marker 0xd9
+
+  72/147 ━━━━━━━━━[37m━━━━━━━━━━━  24s 325ms/step - acc: 0.9465 - loss: 0.1363
+
+Corrupt JPEG data: 228 extraneous bytes before marker 0xd9
+
+  79/147 ━━━━━━━━━━[37m━━━━━━━━━━  22s 326ms/step - acc: 0.9467 - loss: 0.1357
+
+Warning: unknown JFIF revision number 0.00
+
+  99/147 ━━━━━━━━━━━━━[37m━━━━━━━  15s 323ms/step - acc: 0.9469 - loss: 0.1347
+
+Corrupt JPEG data: 128 extraneous bytes before marker 0xd9
+
+ 101/147 ━━━━━━━━━━━━━[37m━━━━━━━  14s 322ms/step - acc: 0.9468 - loss: 0.1347
+
+Corrupt JPEG data: 65 extraneous bytes before marker 0xd9
+
+ 104/147 ━━━━━━━━━━━━━━[37m━━━━━━  13s 322ms/step - acc: 0.9468 - loss: 0.1346
+
+Corrupt JPEG data: 396 extraneous bytes before marker 0xd9
+
+ 106/147 ━━━━━━━━━━━━━━[37m━━━━━━  13s 321ms/step - acc: 0.9468 - loss: 0.1346
+
+Corrupt JPEG data: 239 extraneous bytes before marker 0xd9
+
+ 147/147 ━━━━━━━━━━━━━━━━━━━━ 0s 316ms/step - acc: 0.9465 - loss: 0.1334
+
+Corrupt JPEG data: 252 extraneous bytes before marker 0xd9
+Corrupt JPEG data: 1153 extraneous bytes before marker 0xd9
+Corrupt JPEG data: 162 extraneous bytes before marker 0xd9
+Corrupt JPEG data: 214 extraneous bytes before marker 0xd9
+Corrupt JPEG data: 99 extraneous bytes before marker 0xd9
+Corrupt JPEG data: 1403 extraneous bytes before marker 0xd9
+
+ 147/147 ━━━━━━━━━━━━━━━━━━━━ 51s 340ms/step - acc: 0.9465 - loss: 0.1333 - val_acc: 0.9310 - val_loss: 0.1730
+Epoch 16/25
+
+Corrupt JPEG data: 2226 extraneous bytes before marker 0xd9
+
+  72/147 ━━━━━━━━━[37m━━━━━━━━━━━  23s 319ms/step - acc: 0.9506 - loss: 0.1212
+
+Corrupt JPEG data: 228 extraneous bytes before marker 0xd9
+
+  79/147 ━━━━━━━━━━[37m━━━━━━━━━━  21s 318ms/step - acc: 0.9501 - loss: 0.1220
+
+Warning: unknown JFIF revision number 0.00
+
+  99/147 ━━━━━━━━━━━━━[37m━━━━━━━  15s 315ms/step - acc: 0.9490 - loss: 0.1241
+
+Corrupt JPEG data: 128 extraneous bytes before marker 0xd9
+
+ 101/147 ━━━━━━━━━━━━━[37m━━━━━━━  14s 315ms/step - acc: 0.9489 - loss: 0.1243
+
+Corrupt JPEG data: 65 extraneous bytes before marker 0xd9
+
+ 104/147 ━━━━━━━━━━━━━━[37m━━━━━━  13s 314ms/step - acc: 0.9487 - loss: 0.1246
+
+Corrupt JPEG data: 396 extraneous bytes before marker 0xd9
+
+ 106/147 ━━━━━━━━━━━━━━[37m━━━━━━  12s 314ms/step - acc: 0.9487 - loss: 0.1248
+
+Corrupt JPEG data: 239 extraneous bytes before marker 0xd9
+
+ 147/147 ━━━━━━━━━━━━━━━━━━━━ 0s 311ms/step - acc: 0.9469 - loss: 0.1280
+
+Corrupt JPEG data: 252 extraneous bytes before marker 0xd9
+Corrupt JPEG data: 1153 extraneous bytes before marker 0xd9
+Corrupt JPEG data: 162 extraneous bytes before marker 0xd9
+Corrupt JPEG data: 214 extraneous bytes before marker 0xd9
+Corrupt JPEG data: 99 extraneous bytes before marker 0xd9
+Corrupt JPEG data: 1403 extraneous bytes before marker 0xd9
+
+ 147/147 ━━━━━━━━━━━━━━━━━━━━ 50s 335ms/step - acc: 0.9469 - loss: 0.1280 - val_acc: 0.9192 - val_loss: 0.1835
+Epoch 17/25
+
+Corrupt JPEG data: 2226 extraneous bytes before marker 0xd9
+
+  71/147 ━━━━━━━━━[37m━━━━━━━━━━━  23s 307ms/step - acc: 0.9521 - loss: 0.1236
+
+Corrupt JPEG data: 228 extraneous bytes before marker 0xd9
+
+  79/147 ━━━━━━━━━━[37m━━━━━━━━━━  21s 311ms/step - acc: 0.9522 - loss: 0.1230
+
+Warning: unknown JFIF revision number 0.00
+
+  98/147 ━━━━━━━━━━━━━[37m━━━━━━━  15s 316ms/step - acc: 0.9522 - loss: 0.1224
+
+Corrupt JPEG data: 128 extraneous bytes before marker 0xd9
+
+ 101/147 ━━━━━━━━━━━━━[37m━━━━━━━  14s 315ms/step - acc: 0.9522 - loss: 0.1224
+
+Corrupt JPEG data: 65 extraneous bytes before marker 0xd9
+
+ 103/147 ━━━━━━━━━━━━━━[37m━━━━━━  13s 315ms/step - acc: 0.9522 - loss: 0.1224
+
+Corrupt JPEG data: 396 extraneous bytes before marker 0xd9
+
+ 106/147 ━━━━━━━━━━━━━━[37m━━━━━━  12s 314ms/step - acc: 0.9522 - loss: 0.1223
+
+Corrupt JPEG data: 239 extraneous bytes before marker 0xd9
+
+ 147/147 ━━━━━━━━━━━━━━━━━━━━ 0s 311ms/step - acc: 0.9524 - loss: 0.1214
+
+Corrupt JPEG data: 252 extraneous bytes before marker 0xd9
+Corrupt JPEG data: 1153 extraneous bytes before marker 0xd9
+Corrupt JPEG data: 162 extraneous bytes before marker 0xd9
+Corrupt JPEG data: 214 extraneous bytes before marker 0xd9
+Corrupt JPEG data: 99 extraneous bytes before marker 0xd9
+Corrupt JPEG data: 1403 extraneous bytes before marker 0xd9
+
+ 147/147 ━━━━━━━━━━━━━━━━━━━━ 50s 335ms/step - acc: 0.9524 - loss: 0.1214 - val_acc: 0.9360 - val_loss: 0.1764
+Epoch 18/25
+
+Corrupt JPEG data: 2226 extraneous bytes before marker 0xd9
+
+  72/147 ━━━━━━━━━[37m━━━━━━━━━━━  23s 313ms/step - acc: 0.9520 - loss: 0.1121
+
+Corrupt JPEG data: 228 extraneous bytes before marker 0xd9
+
+  79/147 ━━━━━━━━━━[37m━━━━━━━━━━  21s 314ms/step - acc: 0.9521 - loss: 0.1120
+
+Warning: unknown JFIF revision number 0.00
+
+  99/147 ━━━━━━━━━━━━━[37m━━━━━━━  15s 313ms/step - acc: 0.9524 - loss: 0.1118
+
+Corrupt JPEG data: 128 extraneous bytes before marker 0xd9
+
+ 101/147 ━━━━━━━━━━━━━[37m━━━━━━━  14s 314ms/step - acc: 0.9525 - loss: 0.1119
+
+Corrupt JPEG data: 65 extraneous bytes before marker 0xd9
+
+ 104/147 ━━━━━━━━━━━━━━[37m━━━━━━  13s 314ms/step - acc: 0.9525 - loss: 0.1119
+
+Corrupt JPEG data: 396 extraneous bytes before marker 0xd9
+
+ 106/147 ━━━━━━━━━━━━━━[37m━━━━━━  12s 316ms/step - acc: 0.9525 - loss: 0.1119
+
+Corrupt JPEG data: 239 extraneous bytes before marker 0xd9
+
+ 147/147 ━━━━━━━━━━━━━━━━━━━━ 0s 316ms/step - acc: 0.9526 - loss: 0.1123
+
+Corrupt JPEG data: 252 extraneous bytes before marker 0xd9
+Corrupt JPEG data: 1153 extraneous bytes before marker 0xd9
+Corrupt JPEG data: 162 extraneous bytes before marker 0xd9
+Corrupt JPEG data: 214 extraneous bytes before marker 0xd9
+Corrupt JPEG data: 99 extraneous bytes before marker 0xd9
+Corrupt JPEG data: 1403 extraneous bytes before marker 0xd9
+
+ 147/147 ━━━━━━━━━━━━━━━━━━━━ 51s 340ms/step - acc: 0.9526 - loss: 0.1123 - val_acc: 0.9307 - val_loss: 0.1950
+Epoch 19/25
+
+Corrupt JPEG data: 2226 extraneous bytes before marker 0xd9
+
+  71/147 ━━━━━━━━━[37m━━━━━━━━━━━  23s 307ms/step - acc: 0.9511 - loss: 0.1081
+
+Corrupt JPEG data: 228 extraneous bytes before marker 0xd9
+
+  79/147 ━━━━━━━━━━[37m━━━━━━━━━━  20s 306ms/step - acc: 0.9510 - loss: 0.1086
+
+Warning: unknown JFIF revision number 0.00
+
+  99/147 ━━━━━━━━━━━━━[37m━━━━━━━  14s 307ms/step - acc: 0.9509 - loss: 0.1089
+
+Corrupt JPEG data: 128 extraneous bytes before marker 0xd9
+
+ 101/147 ━━━━━━━━━━━━━[37m━━━━━━━  14s 307ms/step - acc: 0.9509 - loss: 0.1089
+
+Corrupt JPEG data: 65 extraneous bytes before marker 0xd9
+
+ 104/147 ━━━━━━━━━━━━━━[37m━━━━━━  13s 306ms/step - acc: 0.9509 - loss: 0.1089
+
+Corrupt JPEG data: 396 extraneous bytes before marker 0xd9
+
+ 106/147 ━━━━━━━━━━━━━━[37m━━━━━━  12s 306ms/step - acc: 0.9509 - loss: 0.1089
+
+Corrupt JPEG data: 239 extraneous bytes before marker 0xd9
+
+ 147/147 ━━━━━━━━━━━━━━━━━━━━ 0s 307ms/step - acc: 0.9512 - loss: 0.1091
+
+Corrupt JPEG data: 252 extraneous bytes before marker 0xd9
+Corrupt JPEG data: 1153 extraneous bytes before marker 0xd9
+Corrupt JPEG data: 162 extraneous bytes before marker 0xd9
+Corrupt JPEG data: 214 extraneous bytes before marker 0xd9
+Corrupt JPEG data: 99 extraneous bytes before marker 0xd9
+Corrupt JPEG data: 1403 extraneous bytes before marker 0xd9
+
+ 147/147 ━━━━━━━━━━━━━━━━━━━━ 50s 331ms/step - acc: 0.9512 - loss: 0.1091 - val_acc: 0.9296 - val_loss: 0.1911
+Epoch 20/25
+
+Corrupt JPEG data: 2226 extraneous bytes before marker 0xd9
+
+  72/147 ━━━━━━━━━[37m━━━━━━━━━━━  22s 306ms/step - acc: 0.9495 - loss: 0.1230
+
+Corrupt JPEG data: 228 extraneous bytes before marker 0xd9
+
+  79/147 ━━━━━━━━━━[37m━━━━━━━━━━  20s 308ms/step - acc: 0.9502 - loss: 0.1214
+
+Warning: unknown JFIF revision number 0.00
+
+  98/147 ━━━━━━━━━━━━━[37m━━━━━━━  15s 309ms/step - acc: 0.9515 - loss: 0.1182
+
+Corrupt JPEG data: 128 extraneous bytes before marker 0xd9
+
+ 101/147 ━━━━━━━━━━━━━[37m━━━━━━━  14s 309ms/step - acc: 0.9517 - loss: 0.1178
+
+Corrupt JPEG data: 65 extraneous bytes before marker 0xd9
+
+ 104/147 ━━━━━━━━━━━━━━[37m━━━━━━  13s 308ms/step - acc: 0.9518 - loss: 0.1174
+
+Corrupt JPEG data: 396 extraneous bytes before marker 0xd9
+
+ 106/147 ━━━━━━━━━━━━━━[37m━━━━━━  12s 308ms/step - acc: 0.9520 - loss: 0.1172
+
+Corrupt JPEG data: 239 extraneous bytes before marker 0xd9
+
+ 147/147 ━━━━━━━━━━━━━━━━━━━━ 0s 307ms/step - acc: 0.9535 - loss: 0.1135
+
+Corrupt JPEG data: 252 extraneous bytes before marker 0xd9
+Corrupt JPEG data: 1153 extraneous bytes before marker 0xd9
+Corrupt JPEG data: 162 extraneous bytes before marker 0xd9
+Corrupt JPEG data: 214 extraneous bytes before marker 0xd9
+Corrupt JPEG data: 99 extraneous bytes before marker 0xd9
+Corrupt JPEG data: 1403 extraneous bytes before marker 0xd9
+
+ 147/147 ━━━━━━━━━━━━━━━━━━━━ 50s 331ms/step - acc: 0.9535 - loss: 0.1134 - val_acc: 0.9299 - val_loss: 0.1566
+Epoch 21/25
+
+Corrupt JPEG data: 2226 extraneous bytes before marker 0xd9
+
+  72/147 ━━━━━━━━━[37m━━━━━━━━━━━  23s 314ms/step - acc: 0.9569 - loss: 0.1018
+
+Corrupt JPEG data: 228 extraneous bytes before marker 0xd9
+
+  79/147 ━━━━━━━━━━[37m━━━━━━━━━━  21s 314ms/step - acc: 0.9571 - loss: 0.1017
+
+Warning: unknown JFIF revision number 0.00
+
+  99/147 ━━━━━━━━━━━━━[37m━━━━━━━  14s 311ms/step - acc: 0.9574 - loss: 0.1015
+
+Corrupt JPEG data: 128 extraneous bytes before marker 0xd9
+
+ 101/147 ━━━━━━━━━━━━━[37m━━━━━━━  14s 311ms/step - acc: 0.9574 - loss: 0.1015
+
+Corrupt JPEG data: 65 extraneous bytes before marker 0xd9
+
+ 103/147 ━━━━━━━━━━━━━━[37m━━━━━━  13s 313ms/step - acc: 0.9574 - loss: 0.1015
+
+Corrupt JPEG data: 396 extraneous bytes before marker 0xd9
+
+ 105/147 ━━━━━━━━━━━━━━[37m━━━━━━  13s 312ms/step - acc: 0.9574 - loss: 0.1016
+
+Corrupt JPEG data: 239 extraneous bytes before marker 0xd9
+
+ 147/147 ━━━━━━━━━━━━━━━━━━━━ 0s 307ms/step - acc: 0.9575 - loss: 0.1018
+
+Corrupt JPEG data: 252 extraneous bytes before marker 0xd9
+Corrupt JPEG data: 1153 extraneous bytes before marker 0xd9
+Corrupt JPEG data: 162 extraneous bytes before marker 0xd9
+Corrupt JPEG data: 214 extraneous bytes before marker 0xd9
+Corrupt JPEG data: 99 extraneous bytes before marker 0xd9
+Corrupt JPEG data: 1403 extraneous bytes before marker 0xd9
+
+ 147/147 ━━━━━━━━━━━━━━━━━━━━ 50s 331ms/step - acc: 0.9575 - loss: 0.1018 - val_acc: 0.9416 - val_loss: 0.1651
+Epoch 22/25
+
+Corrupt JPEG data: 2226 extraneous bytes before marker 0xd9
+
+  71/147 ━━━━━━━━━[37m━━━━━━━━━━━  24s 323ms/step - acc: 0.9576 - loss: 0.1048
+
+Corrupt JPEG data: 228 extraneous bytes before marker 0xd9
+
+  78/147 ━━━━━━━━━━[37m━━━━━━━━━━  22s 323ms/step - acc: 0.9578 - loss: 0.1044
+
+Warning: unknown JFIF revision number 0.00
+
+  98/147 ━━━━━━━━━━━━━[37m━━━━━━━  15s 321ms/step - acc: 0.9583 - loss: 0.1036
+
+Corrupt JPEG data: 128 extraneous bytes before marker 0xd9
+
+ 100/147 ━━━━━━━━━━━━━[37m━━━━━━━  15s 320ms/step - acc: 0.9583 - loss: 0.1035
+
+Corrupt JPEG data: 65 extraneous bytes before marker 0xd9
+
+ 103/147 ━━━━━━━━━━━━━━[37m━━━━━━  14s 320ms/step - acc: 0.9584 - loss: 0.1034
+
+Corrupt JPEG data: 396 extraneous bytes before marker 0xd9
+
+ 105/147 ━━━━━━━━━━━━━━[37m━━━━━━  13s 320ms/step - acc: 0.9584 - loss: 0.1034
+
+Corrupt JPEG data: 239 extraneous bytes before marker 0xd9
+
+ 147/147 ━━━━━━━━━━━━━━━━━━━━ 0s 314ms/step - acc: 0.9588 - loss: 0.1023
+
+Corrupt JPEG data: 252 extraneous bytes before marker 0xd9
+Corrupt JPEG data: 1153 extraneous bytes before marker 0xd9
+Corrupt JPEG data: 162 extraneous bytes before marker 0xd9
+Corrupt JPEG data: 214 extraneous bytes before marker 0xd9
+Corrupt JPEG data: 99 extraneous bytes before marker 0xd9
+Corrupt JPEG data: 1403 extraneous bytes before marker 0xd9
+
+ 147/147 ━━━━━━━━━━━━━━━━━━━━ 51s 338ms/step - acc: 0.9588 - loss: 0.1023 - val_acc: 0.9034 - val_loss: 0.2785
+Epoch 23/25
+
+Corrupt JPEG data: 2226 extraneous bytes before marker 0xd9
+
+  72/147 ━━━━━━━━━[37m━━━━━━━━━━━  23s 317ms/step - acc: 0.9637 - loss: 0.0911
+
+Corrupt JPEG data: 228 extraneous bytes before marker 0xd9
+
+  79/147 ━━━━━━━━━━[37m━━━━━━━━━━  21s 322ms/step - acc: 0.9637 - loss: 0.0911
+
+Warning: unknown JFIF revision number 0.00
+
+  99/147 ━━━━━━━━━━━━━[37m━━━━━━━  15s 320ms/step - acc: 0.9637 - loss: 0.0914
+
+Corrupt JPEG data: 128 extraneous bytes before marker 0xd9
+
+ 101/147 ━━━━━━━━━━━━━[37m━━━━━━━  14s 319ms/step - acc: 0.9637 - loss: 0.0914
+
+Corrupt JPEG data: 65 extraneous bytes before marker 0xd9
+
+ 104/147 ━━━━━━━━━━━━━━[37m━━━━━━  13s 319ms/step - acc: 0.9637 - loss: 0.0915
+
+Corrupt JPEG data: 396 extraneous bytes before marker 0xd9
+
+ 106/147 ━━━━━━━━━━━━━━[37m━━━━━━  13s 318ms/step - acc: 0.9637 - loss: 0.0915
+
+Corrupt JPEG data: 239 extraneous bytes before marker 0xd9
+
+ 147/147 ━━━━━━━━━━━━━━━━━━━━ 0s 316ms/step - acc: 0.9637 - loss: 0.0918
+
+Corrupt JPEG data: 252 extraneous bytes before marker 0xd9
+Corrupt JPEG data: 1153 extraneous bytes before marker 0xd9
+Corrupt JPEG data: 162 extraneous bytes before marker 0xd9
+Corrupt JPEG data: 214 extraneous bytes before marker 0xd9
+Corrupt JPEG data: 99 extraneous bytes before marker 0xd9
+Corrupt JPEG data: 1403 extraneous bytes before marker 0xd9
+
+ 147/147 ━━━━━━━━━━━━━━━━━━━━ 51s 339ms/step - acc: 0.9637 - loss: 0.0918 - val_acc: 0.9439 - val_loss: 0.1511
+Epoch 24/25
+
+Corrupt JPEG data: 2226 extraneous bytes before marker 0xd9
+
+  72/147 ━━━━━━━━━[37m━━━━━━━━━━━  22s 302ms/step - acc: 0.9567 - loss: 0.1011
+
+Corrupt JPEG data: 228 extraneous bytes before marker 0xd9
+
+  79/147 ━━━━━━━━━━[37m━━━━━━━━━━  20s 302ms/step - acc: 0.9572 - loss: 0.1004
+
+Warning: unknown JFIF revision number 0.00
+
+  99/147 ━━━━━━━━━━━━━[37m━━━━━━━  14s 308ms/step - acc: 0.9581 - loss: 0.0990
+
+Corrupt JPEG data: 128 extraneous bytes before marker 0xd9
+
+ 102/147 ━━━━━━━━━━━━━[37m━━━━━━━  13s 308ms/step - acc: 0.9582 - loss: 0.0989
+
+Corrupt JPEG data: 65 extraneous bytes before marker 0xd9
+
+ 104/147 ━━━━━━━━━━━━━━[37m━━━━━━  13s 310ms/step - acc: 0.9583 - loss: 0.0989
+
+Corrupt JPEG data: 396 extraneous bytes before marker 0xd9
+
+ 106/147 ━━━━━━━━━━━━━━[37m━━━━━━  12s 311ms/step - acc: 0.9584 - loss: 0.0988
+
+Corrupt JPEG data: 239 extraneous bytes before marker 0xd9
+
+ 147/147 ━━━━━━━━━━━━━━━━━━━━ 0s 307ms/step - acc: 0.9593 - loss: 0.0973
+
+Corrupt JPEG data: 252 extraneous bytes before marker 0xd9
+Corrupt JPEG data: 1153 extraneous bytes before marker 0xd9
+Corrupt JPEG data: 162 extraneous bytes before marker 0xd9
+Corrupt JPEG data: 214 extraneous bytes before marker 0xd9
+Corrupt JPEG data: 99 extraneous bytes before marker 0xd9
+Corrupt JPEG data: 1403 extraneous bytes before marker 0xd9
+
+ 147/147 ━━━━━━━━━━━━━━━━━━━━ 50s 331ms/step - acc: 0.9593 - loss: 0.0973 - val_acc: 0.9412 - val_loss: 0.1615
+Epoch 25/25
+
+Corrupt JPEG data: 2226 extraneous bytes before marker 0xd9
+
+  72/147 ━━━━━━━━━[37m━━━━━━━━━━━  23s 308ms/step - acc: 0.9645 - loss: 0.0891
+
+Corrupt JPEG data: 228 extraneous bytes before marker 0xd9
+
+  79/147 ━━━━━━━━━━[37m━━━━━━━━━━  20s 308ms/step - acc: 0.9644 - loss: 0.0892
+
+Warning: unknown JFIF revision number 0.00
+
+  99/147 ━━━━━━━━━━━━━[37m━━━━━━━  14s 308ms/step - acc: 0.9643 - loss: 0.0895
+
+Corrupt JPEG data: 128 extraneous bytes before marker 0xd9
+
+ 101/147 ━━━━━━━━━━━━━[37m━━━━━━━  14s 308ms/step - acc: 0.9643 - loss: 0.0895
+
+Corrupt JPEG data: 65 extraneous bytes before marker 0xd9
+
+ 105/147 ━━━━━━━━━━━━━━[37m━━━━━━  13s 310ms/step - acc: 0.9642 - loss: 0.0895
+
+Corrupt JPEG data: 396 extraneous bytes before marker 0xd9
+
+ 106/147 ━━━━━━━━━━━━━━[37m━━━━━━  12s 311ms/step - acc: 0.9642 - loss: 0.0896
+
+Corrupt JPEG data: 239 extraneous bytes before marker 0xd9
+
+ 147/147 ━━━━━━━━━━━━━━━━━━━━ 0s 330ms/step - acc: 0.9638 - loss: 0.0902
+
+Corrupt JPEG data: 252 extraneous bytes before marker 0xd9
+Corrupt JPEG data: 1153 extraneous bytes before marker 0xd9
+Corrupt JPEG data: 162 extraneous bytes before marker 0xd9
+Corrupt JPEG data: 214 extraneous bytes before marker 0xd9
+Corrupt JPEG data: 99 extraneous bytes before marker 0xd9
+Corrupt JPEG data: 1403 extraneous bytes before marker 0xd9
+
+ 147/147 ━━━━━━━━━━━━━━━━━━━━ 53s 354ms/step - acc: 0.9638 - loss: 0.0903 - val_acc: 0.9382 - val_loss: 0.1542
+
+<keras.src.callbacks.history.History at 0x7f41003c24a0>
 
 ```
 </div>
@@ -412,11 +1363,11 @@ print(f"This image is {100 * (1 - score):.2f}% cat and {100 * score:.2f}% dog.")
 <div class="k-default-codeblock">
 ```
  1/1 ━━━━━━━━━━━━━━━━━━━━ 2s 2s/step
-This image is 87.42% cat and 12.58% dog.
+This image is 94.30% cat and 5.70% dog.
 
 ```
 </div>
     
-![png](/img/examples/vision/image_classification_from_scratch/image_classification_from_scratch_29_2.png)
+![png](/img/examples/vision/image_classification_from_scratch/image_classification_from_scratch_29_1.png)
     
 
