@@ -62,6 +62,7 @@ EXAMPLES_MASTER = {
                     "path": "cct",
                     "title": "Compact Convolutional Transformers",
                     "subcategory": "Image classification",
+                    "keras_3": True,
                 },
                 {
                     "path": "convmixer",
@@ -73,6 +74,7 @@ EXAMPLES_MASTER = {
                     "path": "eanet",
                     "title": "Image classification with EANet (External Attention Transformer)",
                     "subcategory": "Image classification",
+                    "keras_3": True,
                 },
                 {
                     "path": "involution",
@@ -323,6 +325,12 @@ EXAMPLES_MASTER = {
                 {
                     "path": "knowledge_distillation",
                     "title": "Knowledge Distillation",
+                    "subcategory": "Performance recipes",
+                    "keras_3": True,
+                },
+                {
+                    "path": "fixres",
+                    "title": "FixRes: Fixing train-test resolution discrepancy",
                     "subcategory": "Performance recipes",
                     "keras_3": True,
                 },

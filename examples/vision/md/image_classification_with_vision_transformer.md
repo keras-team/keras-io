@@ -364,23 +364,7 @@ plot_history("top-5-accuracy")
 
 <div class="k-default-codeblock">
 ```
-/opt/conda/envs/keras-jax/lib/python3.10/site-packages/keras/src/backend/jax/core.py:64: UserWarning: Explicitly requested dtype int64 requested in array is not available, and will be truncated to dtype int32. To enable more dtypes, set the jax_enable_x64 configuration option or the JAX_ENABLE_X64 shell environment variable. See https://github.com/google/jax#current-gotchas for more.
-  return jnp.array(x, dtype=dtype)
-
- 176/176 ━━━━━━━━━━━━━━━━━━━━ 0s 3s/step - accuracy: 0.0219 - loss: 4.9106 - top-5-accuracy: 0.0920
-
-/opt/conda/envs/keras-jax/lib/python3.10/site-packages/keras/src/backend/jax/core.py:64: UserWarning: Explicitly requested dtype int64 requested in array is not available, and will be truncated to dtype int32. To enable more dtypes, set the jax_enable_x64 configuration option or the JAX_ENABLE_X64 shell environment variable. See https://github.com/google/jax#current-gotchas for more.
-  return jnp.array(x, dtype=dtype)
-
  176/176 ━━━━━━━━━━━━━━━━━━━━ 517s 3s/step - accuracy: 0.0220 - loss: 4.9085 - top-5-accuracy: 0.0922 - val_accuracy: 0.0862 - val_loss: 4.0822 - val_top-5-accuracy: 0.2620
-
-/opt/conda/envs/keras-jax/lib/python3.10/site-packages/keras/src/backend/jax/core.py:64: UserWarning: Explicitly requested dtype int64 requested in array is not available, and will be truncated to dtype int32. To enable more dtypes, set the jax_enable_x64 configuration option or the JAX_ENABLE_X64 shell environment variable. See https://github.com/google/jax#current-gotchas for more.
-  return jnp.array(x, dtype=dtype)
-
-   2/313 [37m━━━━━━━━━━━━━━━━━━━━  58s 187ms/step - accuracy: 0.0703 - loss: 4.1115 - top-5-accuracy: 0.2656
-
-/opt/conda/envs/keras-jax/lib/python3.10/site-packages/keras/src/backend/jax/core.py:64: UserWarning: Explicitly requested dtype int64 requested in array is not available, and will be truncated to dtype int32. To enable more dtypes, set the jax_enable_x64 configuration option or the JAX_ENABLE_X64 shell environment variable. See https://github.com/google/jax#current-gotchas for more.
-  return jnp.array(x, dtype=dtype)
 
  313/313 ━━━━━━━━━━━━━━━━━━━━ 67s 201ms/step - accuracy: 0.0832 - loss: 4.0683 - top-5-accuracy: 0.2661
 Test accuracy: 7.97%

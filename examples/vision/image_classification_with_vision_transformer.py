@@ -53,7 +53,7 @@ print(f"x_test shape: {x_test.shape} - y_test shape: {y_test.shape}")
 learning_rate = 0.001
 weight_decay = 0.0001
 batch_size = 256
-num_epochs = 100
+num_epochs = 10  # For real training, use num_epochs=100. 10 is a test value
 image_size = 72  # We'll resize input images to this size
 patch_size = 6  # Size of the patches to be extract from the input images
 num_patches = (image_size // patch_size) ** 2
@@ -283,7 +283,7 @@ def run_experiment(model):
         x=x_train,
         y=y_train,
         batch_size=batch_size,
-        epochs=1,  # We train for 1 epoch as example, the total epoch should be `num_epochs`.
+        epochs=num_epochs,
         validation_split=0.1,
         callbacks=[checkpoint_callback],
     )
