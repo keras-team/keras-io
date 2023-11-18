@@ -130,7 +130,7 @@ subclass_model.predict(x_train)
 
 <div class="k-default-codeblock">
 ```
- 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 12ms/step
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 41ms/step
 
 array([[1., 2., 3.],
        [4., 5., 6.]], dtype=float32)
@@ -325,11 +325,11 @@ model.predict(data)
 
 <div class="k-default-codeblock">
 ```
- 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 40ms/step
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 39ms/step
 
-array([[0.2771127 , 0.23475112, 0.11150584],
-       [0.02099622, 0.40099332, 0.2251685 ],
-       [0.23917244, 0.13874996, 0.17996185]], dtype=float32)
+array([[0.15769993, 0.4886348 , 0.41481912],
+       [0.42047974, 0.14953318, 0.26836458],
+       [0.17191862, 0.16816822, 0.15178813]], dtype=float32)
 
 ```
 </div>
@@ -427,9 +427,9 @@ multi_output_model.evaluate(x_test, y_test)
 
 <div class="k-default-codeblock">
 ```
- 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 102ms/step - loss: 3.9612 - output_1_categorical_crossentropy: 3.9612
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 97ms/step - loss: 4.2733 - output_1_categorical_crossentropy: 4.2733
 
-[3.9612457752227783, 3.9612457752227783]
+[4.273325443267822, 4.273325443267822]
 
 ```
 </div>
@@ -507,7 +507,7 @@ for layer in model.layers:
 
 <div class="k-default-codeblock">
 ```
- 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 35ms/step
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 37ms/step
 [<KerasVariable shape=(3, 3), dtype=float32, path=sequential_2/my_custom_layer_1/variable>, <KerasVariable shape=(3,), dtype=float32, path=sequential_2/my_custom_layer_1/variable_1>]
 
 ```
@@ -602,7 +602,6 @@ layer = CustomLayer()
 foo = keras.Input(shape=(1,), name="foo")
 baz = None
 layer(foo, baz=baz)
-
 ```
 
 
@@ -614,7 +613,84 @@ layer(foo, baz=baz)
 
 ```
 </div>
+### State-building issues
+
+Keras 3 is significantly more strict than Keras 2 about when state (e.g. numerical weight variables)
+can be created. Keras 3 wants all state to be created before the model can be trained. This is a requirement
+for using JAX (whereas TensorFlow was very lenient about state creation timing).
+
+Keras layers should create their state either in their constructor (`__init__()` method) or in their `build()` method.
+They should avoid creating state in `call()`.
+
+If you ignore this recommendation and create state in `call()`
+anyway (e.g. by calling a previously unbuilt layer), then Keras will attempt to build the layer automatically
+by calling the `call()` method on symbolic inputs before training.
+However, this attempt at automatic state creation may fail in certain cases.
+This will cause an error that looks like like this:
+
+```
+Layer 'frame_position_embedding' looks like it has unbuilt state,
+but Keras is not able to trace the layer `call()` in order to build it automatically.
+Possible causes:
+1. The `call()` method of your layer may be crashing.
+Try to `__call__()` the layer eagerly on some test input first to see if it works.
+E.g. `x = np.random.random((3, 4)); y = layer(x)`
+2. If the `call()` method is correct, then you may need to implement
+the `def build(self, input_shape)` method on your layer.
+It should create all variables used by the layer
+(e.g. by calling `layer.build()` on all its children layers).
+```
+
+You could reproduce this error with the following layer, when used with the JAX backend:
+
+```python
+class PositionalEmbedding(keras.layers.Layer):
+    def __init__(self, sequence_length, output_dim, **kwargs):
+        super().__init__(**kwargs)
+        self.position_embeddings = layers.Embedding(
+            input_dim=sequence_length, output_dim=output_dim
+        )
+        self.sequence_length = sequence_length
+        self.output_dim = output_dim
+
+    def call(self, inputs):
+        inputs = keras.ops.cast(inputs, self.compute_dtype)
+        length = keras.ops.shape(inputs)[1]
+        positions = keras.ops.arange(start=0, stop=length, step=1)
+        embedded_positions = self.position_embeddings(positions)
+        return inputs + embedded_positions
+```
+
+**How to fix it:** Do exactly what the error message asks. First, try to run the layer eagerly
+to see if the `call()` method is in fact correct (note: if it was working in Keras 2, then it is correct
+and does not need to be changed). If it is indeed correct, then you should implement a `build(self, input_shape)`
+method that creates all of the layer's state, including the state of sublayers. Here's the fix as applied for the layer above
+(note the `build()` method):
+
+```python
+class PositionalEmbedding(keras.layers.Layer):
+    def __init__(self, sequence_length, output_dim, **kwargs):
+        super().__init__(**kwargs)
+        self.position_embeddings = layers.Embedding(
+            input_dim=sequence_length, output_dim=output_dim
+        )
+        self.sequence_length = sequence_length
+        self.output_dim = output_dim
+
+    def build(self, input_shape):
+        self.position_embeddings.build(input_shape)
+
+    def call(self, inputs):
+        inputs = keras.ops.cast(inputs, self.compute_dtype)
+        length = keras.ops.shape(inputs)[1]
+        positions = keras.ops.arange(start=0, stop=length, step=1)
+        embedded_positions = self.position_embeddings(positions)
+        return inputs + embedded_positions
+```
+
 ### Removed features
+
+A small number of legacy features with very low usage were removed from Keras 3 as a cleanup measure:
 
 * `keras.layers.ThresholdedReLU` is removed. Instead, you can simply use the `ReLU` layer
 with the argument `threshold`.
