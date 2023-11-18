@@ -669,11 +669,3 @@ display(Image("generated_img_2_19.png"))
 
     
 ![png](/img/examples/generative/wgan_gp/wgan_gp_17_2.png)
-    
-
-
-Example available on HuggingFace.
-
-| Trained Model | Demo |
-| :--: | :--: |
-| [![Generic badge](https://img.shields.io/badge/🤗%20Model-WGAN%20GP-black.svg)](https://huggingface.co/keras-io/WGAN-GP) | [![Generic badge](https://img.shields.io/badge/🤗%20Spaces-WGAN%20GP-black.svg)](https://huggingface.co/spaces/keras-io/WGAN-GP) |
