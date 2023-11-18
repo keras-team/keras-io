@@ -230,7 +230,7 @@ for meta_iter in range(meta_iters):
                     loss = keras.losses.sparse_categorical_crossentropy(labels, preds)
                 grads = tape.gradient(loss, model.trainable_weights)
                 optimizer.apply_gradients(zip(grads, model.trainable_weights))
-            test_preds = model.predict(test_images)
+            test_preds = model.predict(test_images, verbose=0)
             test_preds = tf.argmax(test_preds).numpy()
             num_correct = (test_preds == test_labels).sum()
             # Reset the weights after getting the evaluation accuracies.

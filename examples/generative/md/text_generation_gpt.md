@@ -290,26 +290,6 @@ model.fit(train_ds, validation_data=val_ds, epochs=EPOCHS)
 <div class="k-default-codeblock">
 ```
 Epoch 1/5
-
-/opt/conda/envs/keras-tensorflow/lib/python3.10/site-packages/keras/src/layers/layer.py:861: UserWarning: Layer 'position_embedding' (of type PositionEmbedding) was passed an input with a mask attached to it. However, this layer does not support masking and will therefore destroy the mask information. Downstream layers will not see the mask.
-  warnings.warn(
-/opt/conda/envs/keras-tensorflow/lib/python3.10/site-packages/keras/src/layers/layer.py:861: UserWarning: Layer 'query' (of type EinsumDense) was passed an input with a mask attached to it. However, this layer does not support masking and will therefore destroy the mask information. Downstream layers will not see the mask.
-  warnings.warn(
-/opt/conda/envs/keras-tensorflow/lib/python3.10/site-packages/keras/src/layers/layer.py:861: UserWarning: Layer 'key' (of type EinsumDense) was passed an input with a mask attached to it. However, this layer does not support masking and will therefore destroy the mask information. Downstream layers will not see the mask.
-  warnings.warn(
-/opt/conda/envs/keras-tensorflow/lib/python3.10/site-packages/keras/src/layers/layer.py:861: UserWarning: Layer 'value' (of type EinsumDense) was passed an input with a mask attached to it. However, this layer does not support masking and will therefore destroy the mask information. Downstream layers will not see the mask.
-  warnings.warn(
-
-      7/Unknown  55s 25ms/step - loss: 8.2081 - perplexity: 3778.3420
-
-WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
-I0000 00:00:1699907982.650569   34813 device_compiler.h:187] Compiled cluster using XLA!  This line is logged at most once for the lifetime of the process.
-
-   2443/Unknown  213s 65ms/step - loss: 5.0013 - perplexity: 180.1717
-
-/opt/conda/envs/keras-tensorflow/lib/python3.10/contextlib.py:153: UserWarning: Your input ran out of data; interrupting training. Make sure that your dataset or generator can generate at least `steps_per_epoch * epochs` batches. You may need to use the `.repeat()` function when building your dataset.
-  self.gen.throw(typ, value, traceback)
-
  2445/2445 ━━━━━━━━━━━━━━━━━━━━ 216s 66ms/step - loss: 5.0008 - perplexity: 180.0715 - val_loss: 4.2176 - val_perplexity: 68.0438
 Epoch 2/5
  2445/2445 ━━━━━━━━━━━━━━━━━━━━ 127s 48ms/step - loss: 4.1699 - perplexity: 64.7740 - val_loss: 4.0553 - val_perplexity: 57.7996

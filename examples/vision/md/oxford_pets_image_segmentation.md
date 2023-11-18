@@ -538,94 +538,9 @@ model.fit(
 <div class="k-default-codeblock">
 ```
 Epoch 1/15
-  7/32 ━━━━[37m━━━━━━━━━━━━━━━━  1s 59ms/step - loss: 5.1475
-
-Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
-
  32/32 ━━━━━━━━━━━━━━━━━━━━ 43s 609ms/step - loss: 3.9478 - val_loss: 6.0979
-Epoch 2/15
-  8/32 ━━━━━[37m━━━━━━━━━━━━━━━  1s 43ms/step - loss: 1.1999
-
-Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
-
- 32/32 ━━━━━━━━━━━━━━━━━━━━ 3s 87ms/step - loss: 0.9534 - val_loss: 3.0956
-Epoch 3/15
-  8/32 ━━━━━[37m━━━━━━━━━━━━━━━  1s 45ms/step - loss: 1.1084
-
-Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
-
- 32/32 ━━━━━━━━━━━━━━━━━━━━ 3s 87ms/step - loss: 0.9001 - val_loss: 1.8516
-Epoch 4/15
-  9/32 ━━━━━[37m━━━━━━━━━━━━━━━  0s 43ms/step - loss: 0.7402
-
-Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
-
- 32/32 ━━━━━━━━━━━━━━━━━━━━ 4s 118ms/step - loss: 0.7069 - val_loss: 2.1749
-Epoch 5/15
-  9/32 ━━━━━[37m━━━━━━━━━━━━━━━  0s 41ms/step - loss: 0.6491
-
-Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
-
- 32/32 ━━━━━━━━━━━━━━━━━━━━ 3s 86ms/step - loss: 0.6339 - val_loss: 1.7128
-Epoch 6/15
-  8/32 ━━━━━[37m━━━━━━━━━━━━━━━  1s 44ms/step - loss: 0.6374
-
-Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
-
- 32/32 ━━━━━━━━━━━━━━━━━━━━ 3s 80ms/step - loss: 0.5997 - val_loss: 2.3597
-Epoch 7/15
-  8/32 ━━━━━[37m━━━━━━━━━━━━━━━  1s 44ms/step - loss: 0.5833
-
-Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
-
- 32/32 ━━━━━━━━━━━━━━━━━━━━ 3s 80ms/step - loss: 0.5604 - val_loss: 2.1711
-Epoch 8/15
-  9/32 ━━━━━[37m━━━━━━━━━━━━━━━  0s 42ms/step - loss: 0.5080
-
-Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
-
- 32/32 ━━━━━━━━━━━━━━━━━━━━ 3s 80ms/step - loss: 0.5147 - val_loss: 1.7991
-Epoch 9/15
-  9/32 ━━━━━[37m━━━━━━━━━━━━━━━  0s 41ms/step - loss: 0.5097
-
-Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
-
- 32/32 ━━━━━━━━━━━━━━━━━━━━ 3s 79ms/step - loss: 0.4904 - val_loss: 1.8208
-Epoch 10/15
-  9/32 ━━━━━[37m━━━━━━━━━━━━━━━  0s 40ms/step - loss: 0.4790
-
-Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
-
- 32/32 ━━━━━━━━━━━━━━━━━━━━ 3s 80ms/step - loss: 0.4690 - val_loss: 2.1614
-Epoch 11/15
-  9/32 ━━━━━[37m━━━━━━━━━━━━━━━  0s 41ms/step - loss: 0.4379
-
-Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
-
- 32/32 ━━━━━━━━━━━━━━━━━━━━ 3s 79ms/step - loss: 0.4363 - val_loss: 2.0975
-Epoch 12/15
-  9/32 ━━━━━[37m━━━━━━━━━━━━━━━  0s 42ms/step - loss: 0.4565
-
-Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
-
- 32/32 ━━━━━━━━━━━━━━━━━━━━ 3s 92ms/step - loss: 0.4455 - val_loss: 0.9032
-Epoch 13/15
-  8/32 ━━━━━[37m━━━━━━━━━━━━━━━  1s 60ms/step - loss: 0.3995
-
-Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
-
- 32/32 ━━━━━━━━━━━━━━━━━━━━ 3s 95ms/step - loss: 0.4312 - val_loss: 0.9447
-Epoch 14/15
-  9/32 ━━━━━[37m━━━━━━━━━━━━━━━  0s 42ms/step - loss: 0.3748
-
-Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
-
- 32/32 ━━━━━━━━━━━━━━━━━━━━ 3s 81ms/step - loss: 0.4052 - val_loss: 1.4946
+...
 Epoch 15/15
-  8/32 ━━━━━[37m━━━━━━━━━━━━━━━  1s 44ms/step - loss: 0.3767
-
-Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
-
  32/32 ━━━━━━━━━━━━━━━━━━━━ 3s 81ms/step - loss: 0.4831 - val_loss: 1.8468
 
 <keras.src.callbacks.history.History at 0x7fdc0ba85de0>

@@ -365,43 +365,9 @@ plot_history("top-5-accuracy")
 <div class="k-default-codeblock">
 ```
 Epoch 1/10
-
-/opt/conda/envs/keras-jax/lib/python3.10/site-packages/keras/src/backend/jax/core.py:64: UserWarning: Explicitly requested dtype int64 requested in array is not available, and will be truncated to dtype int32. To enable more dtypes, set the jax_enable_x64 configuration option or the JAX_ENABLE_X64 shell environment variable. See https://github.com/google/jax#current-gotchas for more.
-  return jnp.array(x, dtype=dtype)
-
- 176/176 ━━━━━━━━━━━━━━━━━━━━ 0s 3s/step - accuracy: 0.0168 - loss: 4.9533 - top-5-accuracy: 0.0754
-
-/opt/conda/envs/keras-jax/lib/python3.10/site-packages/keras/src/backend/jax/core.py:64: UserWarning: Explicitly requested dtype int64 requested in array is not available, and will be truncated to dtype int32. To enable more dtypes, set the jax_enable_x64 configuration option or the JAX_ENABLE_X64 shell environment variable. See https://github.com/google/jax#current-gotchas for more.
-  return jnp.array(x, dtype=dtype)
-
- 176/176 ━━━━━━━━━━━━━━━━━━━━ 548s 3s/step - accuracy: 0.0169 - loss: 4.9512 - top-5-accuracy: 0.0756 - val_accuracy: 0.0612 - val_loss: 4.1483 - val_top-5-accuracy: 0.2158
-Epoch 2/10
-   1/176 [37m━━━━━━━━━━━━━━━━━━━━  9:01 3s/step - accuracy: 0.0508 - loss: 4.2862 - top-5-accuracy: 0.1719
-
-/opt/conda/envs/keras-jax/lib/python3.10/site-packages/keras/src/backend/jax/core.py:64: UserWarning: Explicitly requested dtype int64 requested in array is not available, and will be truncated to dtype int32. To enable more dtypes, set the jax_enable_x64 configuration option or the JAX_ENABLE_X64 shell environment variable. See https://github.com/google/jax#current-gotchas for more.
-  return jnp.array(x, dtype=dtype)
-
- 176/176 ━━━━━━━━━━━━━━━━━━━━ 486s 3s/step - accuracy: 0.0444 - loss: 4.2754 - top-5-accuracy: 0.1728 - val_accuracy: 0.0708 - val_loss: 3.9759 - val_top-5-accuracy: 0.2596
-Epoch 3/10
- 176/176 ━━━━━━━━━━━━━━━━━━━━ 466s 3s/step - accuracy: 0.0524 - loss: 4.1685 - top-5-accuracy: 0.1971 - val_accuracy: 0.0780 - val_loss: 3.9420 - val_top-5-accuracy: 0.2828
-Epoch 4/10
- 176/176 ━━━━━━━━━━━━━━━━━━━━ 464s 3s/step - accuracy: 0.0561 - loss: 4.1708 - top-5-accuracy: 0.2084 - val_accuracy: 0.0854 - val_loss: 3.9020 - val_top-5-accuracy: 0.2928
-Epoch 5/10
- 176/176 ━━━━━━━━━━━━━━━━━━━━ 455s 3s/step - accuracy: 0.0622 - loss: 4.0647 - top-5-accuracy: 0.2338 - val_accuracy: 0.0962 - val_loss: 3.8547 - val_top-5-accuracy: 0.2946
-Epoch 6/10
- 176/176 ━━━━━━━━━━━━━━━━━━━━ 454s 3s/step - accuracy: 0.0670 - loss: 4.0250 - top-5-accuracy: 0.2441 - val_accuracy: 0.0950 - val_loss: 3.8577 - val_top-5-accuracy: 0.3084
-Epoch 7/10
- 176/176 ━━━━━━━━━━━━━━━━━━━━ 457s 3s/step - accuracy: 0.0684 - loss: 4.0103 - top-5-accuracy: 0.2508 - val_accuracy: 0.1000 - val_loss: 3.8327 - val_top-5-accuracy: 0.3040
-Epoch 8/10
- 176/176 ━━━━━━━━━━━━━━━━━━━━ 449s 3s/step - accuracy: 0.0727 - loss: 3.9884 - top-5-accuracy: 0.2583 - val_accuracy: 0.1012 - val_loss: 3.8598 - val_top-5-accuracy: 0.2964
-Epoch 9/10
- 176/176 ━━━━━━━━━━━━━━━━━━━━ 448s 3s/step - accuracy: 0.0760 - loss: 3.9827 - top-5-accuracy: 0.2604 - val_accuracy: 0.0980 - val_loss: 3.8572 - val_top-5-accuracy: 0.2990
+...
 Epoch 10/10
  176/176 ━━━━━━━━━━━━━━━━━━━━ 449s 3s/step - accuracy: 0.0790 - loss: 3.9468 - top-5-accuracy: 0.2711 - val_accuracy: 0.0986 - val_loss: 3.8537 - val_top-5-accuracy: 0.3052
-   2/313 [37m━━━━━━━━━━━━━━━━━━━━  1:01 198ms/step - accuracy: 0.0547 - loss: 3.8448 - top-5-accuracy: 0.2656
-
-/opt/conda/envs/keras-jax/lib/python3.10/site-packages/keras/src/backend/jax/core.py:64: UserWarning: Explicitly requested dtype int64 requested in array is not available, and will be truncated to dtype int32. To enable more dtypes, set the jax_enable_x64 configuration option or the JAX_ENABLE_X64 shell environment variable. See https://github.com/google/jax#current-gotchas for more.
-  return jnp.array(x, dtype=dtype)
 
  313/313 ━━━━━━━━━━━━━━━━━━━━ 66s 198ms/step - accuracy: 0.1001 - loss: 3.8428 - top-5-accuracy: 0.3107
 Test accuracy: 10.61%

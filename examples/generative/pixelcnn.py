@@ -157,7 +157,7 @@ for row in tqdm(range(rows)):
         for channel in range(channels):
             # Feed the whole array and retrieving the pixel value probabilities for the next
             # pixel.
-            probs = pixel_cnn.predict(pixels)[:, row, col, channel]
+            probs = pixel_cnn.predict(pixels, verbose=0)[:, row, col, channel]
             # Use the probabilities to pick pixel values and append the values to the image
             # frame.
             pixels[:, row, col, channel] = ops.ceil(

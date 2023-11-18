@@ -702,9 +702,3 @@ For a scenario where there are a few labeled examples and a large number of unla
 examples, a pre-training procedure can be employed to train the Transformer layers using unlabeled data.
 This is followed by fine-tuning of the pre-trained Transformer layers along with
 the top MLP layer using the labeled data.
-
-Example available on HuggingFace.
-
-| Trained Model | Demo |
-| :--: | :--: |
-| [![Generic badge](https://img.shields.io/badge/🤗%20Model-TabTransformer-black.svg)](https://huggingface.co/keras-io/tab_transformer) | [![Generic badge](https://img.shields.io/badge/🤗%20Spaces-TabTransformer-black.svg)](https://huggingface.co/spaces/keras-io/TabTransformer_Classification) |

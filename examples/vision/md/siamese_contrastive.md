@@ -557,10 +557,4 @@ visualize(pairs_test, labels_test, to_show=3, predictions=predictions, test=True
 </div>
     
 ![png](/img/examples/vision/siamese_contrastive/siamese_contrastive_40_1.png)
-    
 
-
-**Example available on HuggingFace**
-| Trained Model | Demo |
-| :--: | :--: |
-| [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Model-Siamese%20Network-black.svg)](https://huggingface.co/keras-io/siamese-contrastive) | [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Spaces-Siamese%20Network-black.svg)](https://huggingface.co/spaces/keras-io/siamese-contrastive) |
