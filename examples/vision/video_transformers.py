@@ -2,9 +2,10 @@
 Title: Video Classification with Transformers
 Author: [Sayak Paul](https://twitter.com/RisingSayak)
 Date created: 2021/06/08
-Last modified: 2021/06/08
+Last modified: 2023/22/07
 Description: Training a video classifier with hybrid transformers.
 Accelerator: GPU
+Converted to Keras 3 by: [Soumik Rakshit](http://github.com/soumik12345)
 """
 """
 This example is a follow-up to the
@@ -15,12 +16,10 @@ example. This time, we will be using a Transformer-based model
 in case you need an introduction to Transformers (with code). After reading this
 example, you will know how to develop hybrid Transformer-based models for video
 classification that operate on CNN feature maps.
-
-This example requires TensorFlow 2.5 or higher, as well as TensorFlow Docs, which can be
-installed using the following command:
 """
 
 """shell
+pip install -q git+https://github.com/keras-team/keras
 pip install -q git+https://github.com/tensorflow/docs
 """
 
@@ -36,25 +35,26 @@ even the entire dataset, please refer to
 """
 
 """shell
-wget -q https://git.io/JGc31 -O ucf101_top5.tar.gz
-tar xf ucf101_top5.tar.gz
+wget -q https://github.com/sayakpaul/Action-Recognition-in-TensorFlow/releases/download/v1.0.0/ucf101_top5.tar.gz
+tar -xf ucf101_top5.tar.gz
 """
 
 """
 ## Setup
 """
 
+import os
+import keras
+from keras import layers
+from keras.applications.densenet import DenseNet121
+
 from tensorflow_docs.vis import embed
-from tensorflow.keras import layers
-from tensorflow import keras
 
 import matplotlib.pyplot as plt
-import tensorflow as tf
 import pandas as pd
 import numpy as np
 import imageio
 import cv2
-import os
 
 """
 ## Define hyperparameters
@@ -94,13 +94,14 @@ center_crop_layer = layers.CenterCrop(IMG_SIZE, IMG_SIZE)
 
 def crop_center(frame):
     cropped = center_crop_layer(frame[None, ...])
-    cropped = cropped.numpy().squeeze()
+    cropped = keras.ops.convert_to_numpy(cropped)
+    cropped = keras.ops.squeeze(cropped)
     return cropped
 
 
 # Following method is modified from this tutorial:
 # https://www.tensorflow.org/hub/tutorials/action_recognition_with_tf_hub
-def load_video(path, max_frames=0):
+def load_video(path, max_frames=0, offload_to_cpu=False):
     cap = cv2.VideoCapture(path)
     frames = []
     try:
@@ -108,19 +109,23 @@ def load_video(path, max_frames=0):
             ret, frame = cap.read()
             if not ret:
                 break
-            frame = crop_center(frame)
             frame = frame[:, :, [2, 1, 0]]
+            frame = crop_center(frame)
+            if offload_to_cpu and keras.backend.backend() == "torch":
+                frame = frame.to("cpu")
             frames.append(frame)
 
             if len(frames) == max_frames:
                 break
     finally:
         cap.release()
+    if offload_to_cpu and keras.backend.backend() == "torch":
+        return np.array([frame.to("cpu").numpy() for frame in frames])
     return np.array(frames)
 
 
 def build_feature_extractor():
-    feature_extractor = keras.applications.DenseNet121(
+    feature_extractor = DenseNet121(
         weights="imagenet",
         include_top=False,
         pooling="avg",
@@ -198,8 +203,8 @@ complete. For this reason, to save time, here we download already preprocessed N
 """
 
 """shell
-wget -q https://git.io/JZmf4 -O top5_data_prepared.tar.gz
-tar xf top5_data_prepared.tar.gz
+!wget -q https://git.io/JZmf4 -O top5_data_prepared.tar.gz
+!tar -xf top5_data_prepared.tar.gz
 """
 
 train_data, train_labels = np.load("train_data.npy"), np.load("train_labels.npy")
@@ -234,16 +239,16 @@ class PositionalEmbedding(layers.Layer):
         self.sequence_length = sequence_length
         self.output_dim = output_dim
 
+    def build(self, input_shape):
+        self.position_embeddings.build(input_shape)
+
     def call(self, inputs):
         # The inputs are of shape: `(batch_size, frames, num_features)`
-        length = tf.shape(inputs)[1]
-        positions = tf.range(start=0, limit=length, delta=1)
+        inputs = keras.ops.cast(inputs, self.compute_dtype)
+        length = keras.ops.shape(inputs)[1]
+        positions = keras.ops.arange(start=0, stop=length, step=1)
         embedded_positions = self.position_embeddings(positions)
         return inputs + embedded_positions
-
-    def compute_mask(self, inputs, mask=None):
-        mask = tf.reduce_any(tf.cast(inputs, "bool"), axis=-1)
-        return mask
 
 
 """
@@ -262,7 +267,7 @@ class TransformerEncoder(layers.Layer):
         )
         self.dense_proj = keras.Sequential(
             [
-                layers.Dense(dense_dim, activation=tf.nn.gelu),
+                layers.Dense(dense_dim, activation=keras.activations.gelu),
                 layers.Dense(embed_dim),
             ]
         )
@@ -270,9 +275,6 @@ class TransformerEncoder(layers.Layer):
         self.layernorm_2 = layers.LayerNormalization()
 
     def call(self, inputs, mask=None):
-        if mask is not None:
-            mask = mask[:, tf.newaxis, :]
-
         attention_output = self.attention(inputs, inputs, attention_mask=mask)
         proj_input = self.layernorm_1(inputs + attention_output)
         proj_output = self.dense_proj(proj_input)
@@ -284,14 +286,14 @@ class TransformerEncoder(layers.Layer):
 """
 
 
-def get_compiled_model():
+def get_compiled_model(shape):
     sequence_length = MAX_SEQ_LENGTH
     embed_dim = NUM_FEATURES
     dense_dim = 4
     num_heads = 1
     classes = len(label_processor.get_vocabulary())
 
-    inputs = keras.Input(shape=(None, None))
+    inputs = keras.Input(shape=shape)
     x = PositionalEmbedding(
         sequence_length, embed_dim, name="frame_position_embedding"
     )(inputs)
@@ -302,18 +304,20 @@ def get_compiled_model():
     model = keras.Model(inputs, outputs)
 
     model.compile(
-        optimizer="adam", loss="sparse_categorical_crossentropy", metrics=["accuracy"]
+        optimizer="adam",
+        loss="sparse_categorical_crossentropy",
+        metrics=["accuracy"],
     )
     return model
 
 
 def run_experiment():
-    filepath = "/tmp/video_classifier"
+    filepath = "/tmp/video_classifier.weights.h5"
     checkpoint = keras.callbacks.ModelCheckpoint(
         filepath, save_weights_only=True, save_best_only=True, verbose=1
     )
 
-    model = get_compiled_model()
+    model = get_compiled_model(train_data.shape[1:])
     history = model.fit(
         train_data,
         train_labels,
@@ -369,12 +373,22 @@ def prepare_single_video(frames):
 def predict_action(path):
     class_vocab = label_processor.get_vocabulary()
 
-    frames = load_video(os.path.join("test", path))
+    frames = load_video(os.path.join("test", path), offload_to_cpu=True)
     frame_features = prepare_single_video(frames)
     probabilities = trained_model.predict(frame_features)[0]
 
+    plot_x_axis, plot_y_axis = [], []
+
     for i in np.argsort(probabilities)[::-1]:
+        plot_x_axis.append(class_vocab[i])
+        plot_y_axis.append(probabilities[i])
         print(f"  {class_vocab[i]}: {probabilities[i] * 100:5.2f}%")
+
+    plt.bar(plot_x_axis, plot_y_axis, label=plot_x_axis)
+    plt.xlabel("class_label")
+    plt.xlabel("Probability")
+    plt.show()
+
     return frames
 
 
