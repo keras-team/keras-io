@@ -46,19 +46,15 @@ As a reference, we reuse some of the code presented in
 ---
 ## Imports
 
-This example requires TensorFlow Addons, which can be installed using the following
-command:
-
-```shell
-pip install -U tensorflow-addons
-```
-
 
 ```python
-from tensorflow.keras import layers
-import tensorflow_addons as tfa
-from tensorflow import keras
+import os
+
+os.environ["KERAS_BACKEND"] = "tensorflow"
+
 import tensorflow as tf
+import keras
+from keras import layers
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -149,10 +145,6 @@ Training samples: 40000
 Validation samples: 10000
 Testing samples: 10000
 
-2021-11-24 01:10:52.088318: I tensorflow/core/platform/cpu_feature_guard.cc:151] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  AVX2 AVX512F FMA
-To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
-2021-11-24 01:10:54.356762: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1525] Created device /job:localhost/replica:0/task:0/device:GPU:0 with 38444 MB memory:  -> device: 0, name: A100-SXM4-40GB, pci bus id: 0000:00:04.0, compute capability: 8.0
-
 ```
 </div>
 ---
@@ -187,7 +179,10 @@ def get_train_augmentation_model():
 
 def get_test_augmentation_model():
     model = keras.Sequential(
-        [layers.Rescaling(1 / 255.0), layers.Resizing(IMAGE_SIZE, IMAGE_SIZE),],
+        [
+            layers.Rescaling(1 / 255.0),
+            layers.Resizing(IMAGE_SIZE, IMAGE_SIZE),
+        ],
         name="test_data_augmentation",
     )
     return model
@@ -490,14 +485,9 @@ plt.title("Original")
 plt.show()
 ```
 
-<div class="k-default-codeblock">
-```
-2021-11-24 01:11:00.182447: I tensorflow/stream_executor/cuda/cuda_blas.cc:1774] TensorFloat-32 will be used for the matrix multiplication. This will only be logged once.
 
-```
-</div>
     
-![png](/img/examples/vision/masked_image_modeling/masked_image_modeling_17_1.png)
+![png](/img/examples/vision/masked_image_modeling/masked_image_modeling_17_0.png)
     
 
 
@@ -665,7 +655,7 @@ class MaskedAutoencoder(keras.Model):
         loss_output = tf.gather(decoder_patches, mask_indices, axis=1, batch_dims=1)
 
         # Compute the total loss.
-        total_loss = self.compiled_loss(loss_patch, loss_output)
+        total_loss = self.compute_loss(y=loss_patch, y_pred=loss_output)
 
         return total_loss, loss_patch, loss_output
 
@@ -683,21 +673,27 @@ class MaskedAutoencoder(keras.Model):
         ]
         grads = tape.gradient(total_loss, train_vars)
         tv_list = []
-        for (grad, var) in zip(grads, train_vars):
+        for grad, var in zip(grads, train_vars):
             for g, v in zip(grad, var):
                 tv_list.append((g, v))
         self.optimizer.apply_gradients(tv_list)
 
         # Report progress.
-        self.compiled_metrics.update_state(loss_patch, loss_output)
-        return {m.name: m.result() for m in self.metrics}
+        results = {}
+        for metric in self.metrics:
+            metric.update_state(loss_patch, loss_output)
+            results[metric.name] = metric.result()
+        return results
 
     def test_step(self, images):
         total_loss, loss_patch, loss_output = self.calculate_loss(images, test=True)
 
         # Update the trackers.
-        self.compiled_metrics.update_state(loss_patch, loss_output)
-        return {m.name: m.result() for m in self.metrics}
+        results = {}
+        for metric in self.metrics:
+            metric.update_state(loss_patch, loss_output)
+            results[metric.name] = metric.result()
+        return results
 
 ```
 
@@ -862,14 +858,19 @@ train_callbacks = [TrainMonitor(epoch_interval=5)]
 
 
 ```python
-optimizer = tfa.optimizers.AdamW(learning_rate=scheduled_lrs, weight_decay=WEIGHT_DECAY)
+optimizer = keras.optimizers.AdamW(
+    learning_rate=scheduled_lrs, weight_decay=WEIGHT_DECAY
+)
 
 # Compile and pretrain the model.
 mae_model.compile(
     optimizer=optimizer, loss=keras.losses.MeanSquaredError(), metrics=["mae"]
 )
 history = mae_model.fit(
-    train_ds, epochs=EPOCHS, validation_data=val_ds, callbacks=train_callbacks,
+    train_ds,
+    epochs=EPOCHS,
+    validation_data=val_ds,
+    callbacks=train_callbacks,
 )
 
 # Measure its performance.
@@ -881,7 +882,7 @@ print(f"MAE: {mae:.2f}")
 <div class="k-default-codeblock">
 ```
 Epoch 1/100
-157/157 [==============================] - ETA: 0s - loss: 0.0507 - mae: 0.1811
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 0s 80ms/step - mae: 0.2035 - loss: 0.4828
 Idx chosen: 92
 
 ```
@@ -893,17 +894,17 @@ Idx chosen: 92
 
 <div class="k-default-codeblock">
 ```
-157/157 [==============================] - 19s 54ms/step - loss: 0.0507 - mae: 0.1811 - val_loss: 0.0417 - val_mae: 0.1630
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 47s 95ms/step - mae: 0.2033 - loss: 0.4828 - val_loss: 0.5225 - val_mae: 0.1600
 Epoch 2/100
-157/157 [==============================] - 7s 44ms/step - loss: 0.0385 - mae: 0.1550 - val_loss: 0.0349 - val_mae: 0.1460
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 83ms/step - mae: 0.1592 - loss: 0.5128 - val_loss: 0.5290 - val_mae: 0.1511
 Epoch 3/100
-157/157 [==============================] - 7s 44ms/step - loss: 0.0336 - mae: 0.1420 - val_loss: 0.0311 - val_mae: 0.1352
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 82ms/step - mae: 0.1530 - loss: 0.5193 - val_loss: 0.5336 - val_mae: 0.1478
 Epoch 4/100
-157/157 [==============================] - 7s 44ms/step - loss: 0.0299 - mae: 0.1325 - val_loss: 0.0302 - val_mae: 0.1321
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 82ms/step - mae: 0.1502 - loss: 0.5220 - val_loss: 0.5298 - val_mae: 0.1436
 Epoch 5/100
-157/157 [==============================] - 7s 44ms/step - loss: 0.0269 - mae: 0.1246 - val_loss: 0.0256 - val_mae: 0.1207
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 82ms/step - mae: 0.1458 - loss: 0.5245 - val_loss: 0.5296 - val_mae: 0.1405
 Epoch 6/100
-156/157 [============================>.] - ETA: 0s - loss: 0.0246 - mae: 0.1181
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 0s 81ms/step - mae: 0.1414 - loss: 0.5265
 Idx chosen: 14
 
 ```
@@ -915,17 +916,17 @@ Idx chosen: 14
 
 <div class="k-default-codeblock">
 ```
-157/157 [==============================] - 7s 46ms/step - loss: 0.0246 - mae: 0.1181 - val_loss: 0.0241 - val_mae: 0.1166
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 14s 88ms/step - mae: 0.1414 - loss: 0.5265 - val_loss: 0.5328 - val_mae: 0.1402
 Epoch 7/100
-157/157 [==============================] - 7s 44ms/step - loss: 0.0232 - mae: 0.1142 - val_loss: 0.0237 - val_mae: 0.1152
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 82ms/step - mae: 0.1399 - loss: 0.5278 - val_loss: 0.5361 - val_mae: 0.1360
 Epoch 8/100
-157/157 [==============================] - 7s 43ms/step - loss: 0.0222 - mae: 0.1113 - val_loss: 0.0216 - val_mae: 0.1088
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 82ms/step - mae: 0.1389 - loss: 0.5285 - val_loss: 0.5365 - val_mae: 0.1424
 Epoch 9/100
-157/157 [==============================] - 7s 44ms/step - loss: 0.0214 - mae: 0.1086 - val_loss: 0.0217 - val_mae: 0.1096
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 82ms/step - mae: 0.1379 - loss: 0.5295 - val_loss: 0.5312 - val_mae: 0.1345
 Epoch 10/100
-157/157 [==============================] - 7s 43ms/step - loss: 0.0206 - mae: 0.1064 - val_loss: 0.0215 - val_mae: 0.1100
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 82ms/step - mae: 0.1352 - loss: 0.5308 - val_loss: 0.5374 - val_mae: 0.1321
 Epoch 11/100
-157/157 [==============================] - ETA: 0s - loss: 0.0203 - mae: 0.1053
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 0s 81ms/step - mae: 0.1339 - loss: 0.5317
 Idx chosen: 106
 
 ```
@@ -937,17 +938,17 @@ Idx chosen: 106
 
 <div class="k-default-codeblock">
 ```
-157/157 [==============================] - 7s 46ms/step - loss: 0.0203 - mae: 0.1053 - val_loss: 0.0205 - val_mae: 0.1052
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 14s 87ms/step - mae: 0.1339 - loss: 0.5317 - val_loss: 0.5392 - val_mae: 0.1330
 Epoch 12/100
-157/157 [==============================] - 7s 44ms/step - loss: 0.0200 - mae: 0.1043 - val_loss: 0.0196 - val_mae: 0.1028
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 82ms/step - mae: 0.1321 - loss: 0.5331 - val_loss: 0.5383 - val_mae: 0.1301
 Epoch 13/100
-157/157 [==============================] - 7s 44ms/step - loss: 0.0196 - mae: 0.1030 - val_loss: 0.0198 - val_mae: 0.1043
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 82ms/step - mae: 0.1317 - loss: 0.5343 - val_loss: 0.5405 - val_mae: 0.1322
 Epoch 14/100
-157/157 [==============================] - 7s 43ms/step - loss: 0.0193 - mae: 0.1019 - val_loss: 0.0192 - val_mae: 0.1004
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 82ms/step - mae: 0.1326 - loss: 0.5338 - val_loss: 0.5404 - val_mae: 0.1280
 Epoch 15/100
-157/157 [==============================] - 7s 44ms/step - loss: 0.0191 - mae: 0.1013 - val_loss: 0.0198 - val_mae: 0.1031
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 84ms/step - mae: 0.1297 - loss: 0.5343 - val_loss: 0.5444 - val_mae: 0.1261
 Epoch 16/100
-157/157 [==============================] - ETA: 0s - loss: 0.0189 - mae: 0.1007
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 0s 82ms/step - mae: 0.1276 - loss: 0.5361
 Idx chosen: 71
 
 ```
@@ -959,17 +960,17 @@ Idx chosen: 71
 
 <div class="k-default-codeblock">
 ```
-157/157 [==============================] - 7s 46ms/step - loss: 0.0189 - mae: 0.1007 - val_loss: 0.0188 - val_mae: 0.1003
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 14s 91ms/step - mae: 0.1276 - loss: 0.5362 - val_loss: 0.5456 - val_mae: 0.1243
 Epoch 17/100
-157/157 [==============================] - 7s 44ms/step - loss: 0.0185 - mae: 0.0992 - val_loss: 0.0187 - val_mae: 0.0993
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 83ms/step - mae: 0.1262 - loss: 0.5382 - val_loss: 0.5427 - val_mae: 0.1233
 Epoch 18/100
-157/157 [==============================] - 7s 44ms/step - loss: 0.0185 - mae: 0.0992 - val_loss: 0.0192 - val_mae: 0.1021
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 81ms/step - mae: 0.1221 - loss: 0.5407 - val_loss: 0.5473 - val_mae: 0.1196
 Epoch 19/100
-157/157 [==============================] - 7s 43ms/step - loss: 0.0182 - mae: 0.0984 - val_loss: 0.0181 - val_mae: 0.0967
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 82ms/step - mae: 0.1209 - loss: 0.5412 - val_loss: 0.5511 - val_mae: 0.1176
 Epoch 20/100
-157/157 [==============================] - 7s 44ms/step - loss: 0.0180 - mae: 0.0975 - val_loss: 0.0183 - val_mae: 0.0996
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 83ms/step - mae: 0.1202 - loss: 0.5422 - val_loss: 0.5515 - val_mae: 0.1167
 Epoch 21/100
-156/157 [============================>.] - ETA: 0s - loss: 0.0180 - mae: 0.0975
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 0s 79ms/step - mae: 0.1186 - loss: 0.5430
 Idx chosen: 188
 
 ```
@@ -981,17 +982,17 @@ Idx chosen: 188
 
 <div class="k-default-codeblock">
 ```
-157/157 [==============================] - 7s 47ms/step - loss: 0.0180 - mae: 0.0975 - val_loss: 0.0185 - val_mae: 0.0992
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 85ms/step - mae: 0.1186 - loss: 0.5430 - val_loss: 0.5546 - val_mae: 0.1168
 Epoch 22/100
-157/157 [==============================] - 7s 45ms/step - loss: 0.0179 - mae: 0.0971 - val_loss: 0.0181 - val_mae: 0.0977
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 82ms/step - mae: 0.1171 - loss: 0.5446 - val_loss: 0.5500 - val_mae: 0.1155
 Epoch 23/100
-157/157 [==============================] - 7s 44ms/step - loss: 0.0178 - mae: 0.0966 - val_loss: 0.0179 - val_mae: 0.0962
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 81ms/step - mae: 0.1161 - loss: 0.5457 - val_loss: 0.5559 - val_mae: 0.1135
 Epoch 24/100
-157/157 [==============================] - 7s 44ms/step - loss: 0.0178 - mae: 0.0966 - val_loss: 0.0176 - val_mae: 0.0952
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 83ms/step - mae: 0.1135 - loss: 0.5479 - val_loss: 0.5521 - val_mae: 0.1112
 Epoch 25/100
-157/157 [==============================] - 7s 44ms/step - loss: 0.0176 - mae: 0.0960 - val_loss: 0.0182 - val_mae: 0.0984
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 82ms/step - mae: 0.1128 - loss: 0.5480 - val_loss: 0.5505 - val_mae: 0.1122
 Epoch 26/100
-157/157 [==============================] - ETA: 0s - loss: 0.0175 - mae: 0.0958
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 0s 79ms/step - mae: 0.1123 - loss: 0.5470
 Idx chosen: 20
 
 ```
@@ -1003,17 +1004,17 @@ Idx chosen: 20
 
 <div class="k-default-codeblock">
 ```
-157/157 [==============================] - 7s 46ms/step - loss: 0.0175 - mae: 0.0958 - val_loss: 0.0176 - val_mae: 0.0958
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 86ms/step - mae: 0.1123 - loss: 0.5470 - val_loss: 0.5572 - val_mae: 0.1127
 Epoch 27/100
-157/157 [==============================] - 7s 44ms/step - loss: 0.0175 - mae: 0.0957 - val_loss: 0.0175 - val_mae: 0.0948
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 82ms/step - mae: 0.1114 - loss: 0.5487 - val_loss: 0.5555 - val_mae: 0.1092
 Epoch 28/100
-157/157 [==============================] - 7s 44ms/step - loss: 0.0175 - mae: 0.0956 - val_loss: 0.0173 - val_mae: 0.0947
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 81ms/step - mae: 0.1108 - loss: 0.5492 - val_loss: 0.5569 - val_mae: 0.1110
 Epoch 29/100
-157/157 [==============================] - 7s 44ms/step - loss: 0.0172 - mae: 0.0949 - val_loss: 0.0174 - val_mae: 0.0948
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 83ms/step - mae: 0.1104 - loss: 0.5491 - val_loss: 0.5517 - val_mae: 0.1110
 Epoch 30/100
-157/157 [==============================] - 7s 44ms/step - loss: 0.0172 - mae: 0.0948 - val_loss: 0.0174 - val_mae: 0.0944
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 82ms/step - mae: 0.1099 - loss: 0.5490 - val_loss: 0.5543 - val_mae: 0.1104
 Epoch 31/100
-157/157 [==============================] - ETA: 0s - loss: 0.0172 - mae: 0.0945
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 0s 79ms/step - mae: 0.1095 - loss: 0.5501
 Idx chosen: 102
 
 ```
@@ -1025,17 +1026,17 @@ Idx chosen: 102
 
 <div class="k-default-codeblock">
 ```
-157/157 [==============================] - 7s 46ms/step - loss: 0.0172 - mae: 0.0945 - val_loss: 0.0169 - val_mae: 0.0932
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 86ms/step - mae: 0.1095 - loss: 0.5501 - val_loss: 0.5578 - val_mae: 0.1108
 Epoch 32/100
-157/157 [==============================] - 7s 44ms/step - loss: 0.0172 - mae: 0.0947 - val_loss: 0.0174 - val_mae: 0.0961
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 81ms/step - mae: 0.1089 - loss: 0.5503 - val_loss: 0.5620 - val_mae: 0.1081
 Epoch 33/100
-157/157 [==============================] - 7s 44ms/step - loss: 0.0171 - mae: 0.0945 - val_loss: 0.0171 - val_mae: 0.0937
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 81ms/step - mae: 0.1079 - loss: 0.5509 - val_loss: 0.5618 - val_mae: 0.1067
 Epoch 34/100
-157/157 [==============================] - 7s 44ms/step - loss: 0.0170 - mae: 0.0938 - val_loss: 0.0171 - val_mae: 0.0941
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 83ms/step - mae: 0.1067 - loss: 0.5524 - val_loss: 0.5627 - val_mae: 0.1059
 Epoch 35/100
-157/157 [==============================] - 7s 44ms/step - loss: 0.0170 - mae: 0.0940 - val_loss: 0.0171 - val_mae: 0.0948
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 81ms/step - mae: 0.1068 - loss: 0.5515 - val_loss: 0.5576 - val_mae: 0.1050
 Epoch 36/100
-157/157 [==============================] - ETA: 0s - loss: 0.0168 - mae: 0.0933
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 0s 79ms/step - mae: 0.1057 - loss: 0.5526
 Idx chosen: 121
 
 ```
@@ -1047,17 +1048,17 @@ Idx chosen: 121
 
 <div class="k-default-codeblock">
 ```
-157/157 [==============================] - 7s 46ms/step - loss: 0.0168 - mae: 0.0933 - val_loss: 0.0170 - val_mae: 0.0935
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 86ms/step - mae: 0.1057 - loss: 0.5526 - val_loss: 0.5627 - val_mae: 0.1050
 Epoch 37/100
-157/157 [==============================] - 7s 43ms/step - loss: 0.0169 - mae: 0.0935 - val_loss: 0.0168 - val_mae: 0.0933
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 81ms/step - mae: 0.1065 - loss: 0.5534 - val_loss: 0.5638 - val_mae: 0.1050
 Epoch 38/100
-157/157 [==============================] - 7s 44ms/step - loss: 0.0168 - mae: 0.0933 - val_loss: 0.0170 - val_mae: 0.0935
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 83ms/step - mae: 0.1055 - loss: 0.5528 - val_loss: 0.5527 - val_mae: 0.1083
 Epoch 39/100
-157/157 [==============================] - 7s 44ms/step - loss: 0.0167 - mae: 0.0931 - val_loss: 0.0169 - val_mae: 0.0934
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 20s 82ms/step - mae: 0.1056 - loss: 0.5516 - val_loss: 0.5562 - val_mae: 0.1044
 Epoch 40/100
-157/157 [==============================] - 7s 44ms/step - loss: 0.0167 - mae: 0.0930 - val_loss: 0.0169 - val_mae: 0.0934
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 82ms/step - mae: 0.1053 - loss: 0.5528 - val_loss: 0.5567 - val_mae: 0.1051
 Epoch 41/100
-157/157 [==============================] - ETA: 0s - loss: 0.0167 - mae: 0.0929
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 0s 78ms/step - mae: 0.1049 - loss: 0.5533
 Idx chosen: 210
 
 ```
@@ -1069,17 +1070,17 @@ Idx chosen: 210
 
 <div class="k-default-codeblock">
 ```
-157/157 [==============================] - 7s 46ms/step - loss: 0.0167 - mae: 0.0929 - val_loss: 0.0169 - val_mae: 0.0930
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 85ms/step - mae: 0.1049 - loss: 0.5533 - val_loss: 0.5620 - val_mae: 0.1030
 Epoch 42/100
-157/157 [==============================] - 7s 44ms/step - loss: 0.0167 - mae: 0.0928 - val_loss: 0.0170 - val_mae: 0.0941
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 83ms/step - mae: 0.1041 - loss: 0.5534 - val_loss: 0.5650 - val_mae: 0.1052
 Epoch 43/100
-157/157 [==============================] - 7s 44ms/step - loss: 0.0166 - mae: 0.0925 - val_loss: 0.0169 - val_mae: 0.0931
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 82ms/step - mae: 0.1048 - loss: 0.5526 - val_loss: 0.5619 - val_mae: 0.1027
 Epoch 44/100
-157/157 [==============================] - 7s 44ms/step - loss: 0.0165 - mae: 0.0921 - val_loss: 0.0165 - val_mae: 0.0914
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 81ms/step - mae: 0.1037 - loss: 0.5543 - val_loss: 0.5615 - val_mae: 0.1031
 Epoch 45/100
-157/157 [==============================] - 7s 44ms/step - loss: 0.0165 - mae: 0.0922 - val_loss: 0.0165 - val_mae: 0.0915
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 81ms/step - mae: 0.1036 - loss: 0.5535 - val_loss: 0.5575 - val_mae: 0.1026
 Epoch 46/100
-157/157 [==============================] - ETA: 0s - loss: 0.0165 - mae: 0.0922
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 0s 78ms/step - mae: 0.1032 - loss: 0.5537
 Idx chosen: 214
 
 ```
@@ -1091,17 +1092,17 @@ Idx chosen: 214
 
 <div class="k-default-codeblock">
 ```
-157/157 [==============================] - 7s 46ms/step - loss: 0.0165 - mae: 0.0922 - val_loss: 0.0166 - val_mae: 0.0914
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 85ms/step - mae: 0.1032 - loss: 0.5537 - val_loss: 0.5549 - val_mae: 0.1037
 Epoch 47/100
-157/157 [==============================] - 7s 44ms/step - loss: 0.0164 - mae: 0.0919 - val_loss: 0.0164 - val_mae: 0.0912
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 84ms/step - mae: 0.1035 - loss: 0.5539 - val_loss: 0.5597 - val_mae: 0.1031
 Epoch 48/100
-157/157 [==============================] - 7s 44ms/step - loss: 0.0163 - mae: 0.0914 - val_loss: 0.0166 - val_mae: 0.0923
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 81ms/step - mae: 0.1033 - loss: 0.5533 - val_loss: 0.5650 - val_mae: 0.1013
 Epoch 49/100
-157/157 [==============================] - 7s 44ms/step - loss: 0.0163 - mae: 0.0914 - val_loss: 0.0164 - val_mae: 0.0914
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 82ms/step - mae: 0.1027 - loss: 0.5543 - val_loss: 0.5571 - val_mae: 0.1028
 Epoch 50/100
-157/157 [==============================] - 7s 44ms/step - loss: 0.0162 - mae: 0.0912 - val_loss: 0.0164 - val_mae: 0.0916
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 81ms/step - mae: 0.1024 - loss: 0.5548 - val_loss: 0.5592 - val_mae: 0.1018
 Epoch 51/100
-157/157 [==============================] - ETA: 0s - loss: 0.0162 - mae: 0.0913
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 0s 78ms/step - mae: 0.1025 - loss: 0.5543
 Idx chosen: 74
 
 ```
@@ -1113,17 +1114,17 @@ Idx chosen: 74
 
 <div class="k-default-codeblock">
 ```
-157/157 [==============================] - 7s 46ms/step - loss: 0.0162 - mae: 0.0913 - val_loss: 0.0165 - val_mae: 0.0919
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 85ms/step - mae: 0.1025 - loss: 0.5543 - val_loss: 0.5645 - val_mae: 0.1007
 Epoch 52/100
-157/157 [==============================] - 7s 44ms/step - loss: 0.0162 - mae: 0.0909 - val_loss: 0.0163 - val_mae: 0.0912
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 83ms/step - mae: 0.1025 - loss: 0.5544 - val_loss: 0.5616 - val_mae: 0.1004
 Epoch 53/100
-157/157 [==============================] - 7s 44ms/step - loss: 0.0161 - mae: 0.0908 - val_loss: 0.0161 - val_mae: 0.0903
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 81ms/step - mae: 0.1014 - loss: 0.5547 - val_loss: 0.5594 - val_mae: 0.1007
 Epoch 54/100
-157/157 [==============================] - 7s 44ms/step - loss: 0.0161 - mae: 0.0908 - val_loss: 0.0162 - val_mae: 0.0901
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 81ms/step - mae: 0.1014 - loss: 0.5550 - val_loss: 0.5687 - val_mae: 0.1012
 Epoch 55/100
-157/157 [==============================] - 7s 44ms/step - loss: 0.0161 - mae: 0.0907 - val_loss: 0.0162 - val_mae: 0.0909
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 81ms/step - mae: 0.1022 - loss: 0.5551 - val_loss: 0.5572 - val_mae: 0.1018
 Epoch 56/100
-156/157 [============================>.] - ETA: 0s - loss: 0.0160 - mae: 0.0904
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 0s 79ms/step - mae: 0.1015 - loss: 0.5558
 Idx chosen: 202
 
 ```
@@ -1135,17 +1136,17 @@ Idx chosen: 202
 
 <div class="k-default-codeblock">
 ```
-157/157 [==============================] - 7s 46ms/step - loss: 0.0160 - mae: 0.0904 - val_loss: 0.0160 - val_mae: 0.0908
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 86ms/step - mae: 0.1015 - loss: 0.5558 - val_loss: 0.5619 - val_mae: 0.0996
 Epoch 57/100
-157/157 [==============================] - 7s 44ms/step - loss: 0.0159 - mae: 0.0902 - val_loss: 0.0160 - val_mae: 0.0899
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 81ms/step - mae: 0.1008 - loss: 0.5550 - val_loss: 0.5614 - val_mae: 0.0996
 Epoch 58/100
-157/157 [==============================] - 7s 44ms/step - loss: 0.0159 - mae: 0.0901 - val_loss: 0.0162 - val_mae: 0.0916
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 81ms/step - mae: 0.1004 - loss: 0.5557 - val_loss: 0.5620 - val_mae: 0.0995
 Epoch 59/100
-157/157 [==============================] - 7s 44ms/step - loss: 0.0159 - mae: 0.0898 - val_loss: 0.0160 - val_mae: 0.0903
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 81ms/step - mae: 0.1002 - loss: 0.5558 - val_loss: 0.5612 - val_mae: 0.0997
 Epoch 60/100
-157/157 [==============================] - 7s 44ms/step - loss: 0.0159 - mae: 0.0898 - val_loss: 0.0159 - val_mae: 0.0897
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 80ms/step - mae: 0.1005 - loss: 0.5563 - val_loss: 0.5598 - val_mae: 0.1000
 Epoch 61/100
-157/157 [==============================] - ETA: 0s - loss: 0.0158 - mae: 0.0894
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 0s 79ms/step - mae: 0.1001 - loss: 0.5564
 Idx chosen: 87
 
 ```
@@ -1157,17 +1158,17 @@ Idx chosen: 87
 
 <div class="k-default-codeblock">
 ```
-157/157 [==============================] - 7s 48ms/step - loss: 0.0158 - mae: 0.0894 - val_loss: 0.0160 - val_mae: 0.0895
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 86ms/step - mae: 0.1001 - loss: 0.5564 - val_loss: 0.5606 - val_mae: 0.0998
 Epoch 62/100
-157/157 [==============================] - 7s 44ms/step - loss: 0.0158 - mae: 0.0895 - val_loss: 0.0161 - val_mae: 0.0905
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 86ms/step - mae: 0.0998 - loss: 0.5562 - val_loss: 0.5643 - val_mae: 0.0988
 Epoch 63/100
-157/157 [==============================] - 7s 44ms/step - loss: 0.0157 - mae: 0.0891 - val_loss: 0.0158 - val_mae: 0.0894
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 80ms/step - mae: 0.1001 - loss: 0.5556 - val_loss: 0.5657 - val_mae: 0.0985
 Epoch 64/100
-157/157 [==============================] - 7s 44ms/step - loss: 0.0157 - mae: 0.0890 - val_loss: 0.0158 - val_mae: 0.0889
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 80ms/step - mae: 0.0998 - loss: 0.5566 - val_loss: 0.5624 - val_mae: 0.0989
 Epoch 65/100
-157/157 [==============================] - 7s 44ms/step - loss: 0.0157 - mae: 0.0890 - val_loss: 0.0159 - val_mae: 0.0893
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 80ms/step - mae: 0.0994 - loss: 0.5564 - val_loss: 0.5576 - val_mae: 0.0999
 Epoch 66/100
-157/157 [==============================] - ETA: 0s - loss: 0.0156 - mae: 0.0888
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 0s 79ms/step - mae: 0.0993 - loss: 0.5567
 Idx chosen: 116
 
 ```
@@ -1179,17 +1180,17 @@ Idx chosen: 116
 
 <div class="k-default-codeblock">
 ```
-157/157 [==============================] - 7s 47ms/step - loss: 0.0156 - mae: 0.0888 - val_loss: 0.0160 - val_mae: 0.0903
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 86ms/step - mae: 0.0993 - loss: 0.5567 - val_loss: 0.5572 - val_mae: 0.1000
 Epoch 67/100
-157/157 [==============================] - 7s 44ms/step - loss: 0.0156 - mae: 0.0886 - val_loss: 0.0156 - val_mae: 0.0881
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 80ms/step - mae: 0.0990 - loss: 0.5570 - val_loss: 0.5619 - val_mae: 0.0981
 Epoch 68/100
-157/157 [==============================] - 7s 44ms/step - loss: 0.0155 - mae: 0.0883 - val_loss: 0.0156 - val_mae: 0.0885
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 81ms/step - mae: 0.0987 - loss: 0.5578 - val_loss: 0.5644 - val_mae: 0.0973
 Epoch 69/100
-157/157 [==============================] - 7s 44ms/step - loss: 0.0154 - mae: 0.0881 - val_loss: 0.0155 - val_mae: 0.0878
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 80ms/step - mae: 0.0981 - loss: 0.5577 - val_loss: 0.5639 - val_mae: 0.0976
 Epoch 70/100
-157/157 [==============================] - 7s 44ms/step - loss: 0.0154 - mae: 0.0881 - val_loss: 0.0158 - val_mae: 0.0891
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 82ms/step - mae: 0.0986 - loss: 0.5563 - val_loss: 0.5601 - val_mae: 0.0989
 Epoch 71/100
-156/157 [============================>.] - ETA: 0s - loss: 0.0154 - mae: 0.0879
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 0s 77ms/step - mae: 0.0982 - loss: 0.5578
 Idx chosen: 99
 
 ```
@@ -1201,17 +1202,17 @@ Idx chosen: 99
 
 <div class="k-default-codeblock">
 ```
-157/157 [==============================] - 7s 46ms/step - loss: 0.0154 - mae: 0.0879 - val_loss: 0.0155 - val_mae: 0.0884
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 84ms/step - mae: 0.0982 - loss: 0.5577 - val_loss: 0.5628 - val_mae: 0.0970
 Epoch 72/100
-157/157 [==============================] - 7s 44ms/step - loss: 0.0153 - mae: 0.0877 - val_loss: 0.0154 - val_mae: 0.0878
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 80ms/step - mae: 0.0979 - loss: 0.5569 - val_loss: 0.5637 - val_mae: 0.0968
 Epoch 73/100
-157/157 [==============================] - 7s 44ms/step - loss: 0.0153 - mae: 0.0876 - val_loss: 0.0155 - val_mae: 0.0879
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 81ms/step - mae: 0.0979 - loss: 0.5575 - val_loss: 0.5606 - val_mae: 0.0975
 Epoch 74/100
-157/157 [==============================] - 7s 44ms/step - loss: 0.0152 - mae: 0.0874 - val_loss: 0.0153 - val_mae: 0.0876
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 80ms/step - mae: 0.0977 - loss: 0.5572 - val_loss: 0.5628 - val_mae: 0.0967
 Epoch 75/100
-157/157 [==============================] - 7s 44ms/step - loss: 0.0152 - mae: 0.0872 - val_loss: 0.0153 - val_mae: 0.0872
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 82ms/step - mae: 0.0975 - loss: 0.5572 - val_loss: 0.5631 - val_mae: 0.0964
 Epoch 76/100
-157/157 [==============================] - ETA: 0s - loss: 0.0151 - mae: 0.0870
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 0s 77ms/step - mae: 0.0973 - loss: 0.5580
 Idx chosen: 103
 
 ```
@@ -1223,17 +1224,17 @@ Idx chosen: 103
 
 <div class="k-default-codeblock">
 ```
-157/157 [==============================] - 7s 46ms/step - loss: 0.0151 - mae: 0.0870 - val_loss: 0.0153 - val_mae: 0.0873
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 83ms/step - mae: 0.0973 - loss: 0.5579 - val_loss: 0.5628 - val_mae: 0.0967
 Epoch 77/100
-157/157 [==============================] - 7s 44ms/step - loss: 0.0151 - mae: 0.0869 - val_loss: 0.0152 - val_mae: 0.0872
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 81ms/step - mae: 0.0974 - loss: 0.5579 - val_loss: 0.5638 - val_mae: 0.0963
 Epoch 78/100
-157/157 [==============================] - 7s 44ms/step - loss: 0.0151 - mae: 0.0867 - val_loss: 0.0152 - val_mae: 0.0869
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 80ms/step - mae: 0.0968 - loss: 0.5585 - val_loss: 0.5615 - val_mae: 0.0967
 Epoch 79/100
-157/157 [==============================] - 7s 44ms/step - loss: 0.0151 - mae: 0.0867 - val_loss: 0.0151 - val_mae: 0.0863
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 80ms/step - mae: 0.0969 - loss: 0.5578 - val_loss: 0.5641 - val_mae: 0.0959
 Epoch 80/100
-157/157 [==============================] - 7s 44ms/step - loss: 0.0150 - mae: 0.0865 - val_loss: 0.0150 - val_mae: 0.0860
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 82ms/step - mae: 0.0967 - loss: 0.5584 - val_loss: 0.5619 - val_mae: 0.0962
 Epoch 81/100
-157/157 [==============================] - ETA: 0s - loss: 0.0150 - mae: 0.0865
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 0s 77ms/step - mae: 0.0965 - loss: 0.5578
 Idx chosen: 151
 
 ```
@@ -1245,17 +1246,17 @@ Idx chosen: 151
 
 <div class="k-default-codeblock">
 ```
-157/157 [==============================] - 7s 46ms/step - loss: 0.0150 - mae: 0.0865 - val_loss: 0.0151 - val_mae: 0.0862
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 83ms/step - mae: 0.0965 - loss: 0.5578 - val_loss: 0.5651 - val_mae: 0.0957
 Epoch 82/100
-157/157 [==============================] - 7s 44ms/step - loss: 0.0149 - mae: 0.0861 - val_loss: 0.0151 - val_mae: 0.0859
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 81ms/step - mae: 0.0965 - loss: 0.5583 - val_loss: 0.5644 - val_mae: 0.0957
 Epoch 83/100
-157/157 [==============================] - 7s 44ms/step - loss: 0.0149 - mae: 0.0861 - val_loss: 0.0149 - val_mae: 0.0857
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 80ms/step - mae: 0.0962 - loss: 0.5584 - val_loss: 0.5649 - val_mae: 0.0954
 Epoch 84/100
-157/157 [==============================] - 7s 44ms/step - loss: 0.0149 - mae: 0.0860 - val_loss: 0.0151 - val_mae: 0.0865
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 81ms/step - mae: 0.0962 - loss: 0.5586 - val_loss: 0.5611 - val_mae: 0.0962
 Epoch 85/100
-157/157 [==============================] - 7s 43ms/step - loss: 0.0148 - mae: 0.0858 - val_loss: 0.0150 - val_mae: 0.0856
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 80ms/step - mae: 0.0961 - loss: 0.5582 - val_loss: 0.5638 - val_mae: 0.0956
 Epoch 86/100
-157/157 [==============================] - ETA: 0s - loss: 0.0148 - mae: 0.0856
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 0s 77ms/step - mae: 0.0961 - loss: 0.5584
 Idx chosen: 130
 
 ```
@@ -1267,17 +1268,17 @@ Idx chosen: 130
 
 <div class="k-default-codeblock">
 ```
-157/157 [==============================] - 7s 46ms/step - loss: 0.0148 - mae: 0.0856 - val_loss: 0.0149 - val_mae: 0.0855
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 83ms/step - mae: 0.0961 - loss: 0.5584 - val_loss: 0.5641 - val_mae: 0.0954
 Epoch 87/100
-157/157 [==============================] - 7s 44ms/step - loss: 0.0148 - mae: 0.0855 - val_loss: 0.0148 - val_mae: 0.0851
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 81ms/step - mae: 0.0959 - loss: 0.5580 - val_loss: 0.5641 - val_mae: 0.0953
 Epoch 88/100
-157/157 [==============================] - 7s 44ms/step - loss: 0.0148 - mae: 0.0856 - val_loss: 0.0149 - val_mae: 0.0855
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 80ms/step - mae: 0.0960 - loss: 0.5583 - val_loss: 0.5642 - val_mae: 0.0953
 Epoch 89/100
-157/157 [==============================] - 7s 44ms/step - loss: 0.0147 - mae: 0.0853 - val_loss: 0.0148 - val_mae: 0.0852
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 82ms/step - mae: 0.0958 - loss: 0.5591 - val_loss: 0.5635 - val_mae: 0.0953
 Epoch 90/100
-157/157 [==============================] - 7s 44ms/step - loss: 0.0147 - mae: 0.0853 - val_loss: 0.0148 - val_mae: 0.0850
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 80ms/step - mae: 0.0957 - loss: 0.5587 - val_loss: 0.5648 - val_mae: 0.0948
 Epoch 91/100
-157/157 [==============================] - ETA: 0s - loss: 0.0147 - mae: 0.0852
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 0s 77ms/step - mae: 0.0957 - loss: 0.5585
 Idx chosen: 149
 
 ```
@@ -1289,17 +1290,17 @@ Idx chosen: 149
 
 <div class="k-default-codeblock">
 ```
-157/157 [==============================] - 7s 46ms/step - loss: 0.0147 - mae: 0.0852 - val_loss: 0.0148 - val_mae: 0.0851
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 84ms/step - mae: 0.0957 - loss: 0.5585 - val_loss: 0.5636 - val_mae: 0.0952
 Epoch 92/100
-157/157 [==============================] - 7s 44ms/step - loss: 0.0146 - mae: 0.0851 - val_loss: 0.0147 - val_mae: 0.0849
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 81ms/step - mae: 0.0957 - loss: 0.5593 - val_loss: 0.5642 - val_mae: 0.0950
 Epoch 93/100
-157/157 [==============================] - 7s 43ms/step - loss: 0.0147 - mae: 0.0853 - val_loss: 0.0147 - val_mae: 0.0849
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 81ms/step - mae: 0.0957 - loss: 0.5598 - val_loss: 0.5635 - val_mae: 0.0950
 Epoch 94/100
-157/157 [==============================] - 7s 43ms/step - loss: 0.0147 - mae: 0.0852 - val_loss: 0.0148 - val_mae: 0.0850
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 82ms/step - mae: 0.0956 - loss: 0.5587 - val_loss: 0.5641 - val_mae: 0.0950
 Epoch 95/100
-157/157 [==============================] - 7s 44ms/step - loss: 0.0147 - mae: 0.0852 - val_loss: 0.0148 - val_mae: 0.0853
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 81ms/step - mae: 0.0955 - loss: 0.5587 - val_loss: 0.5637 - val_mae: 0.0950
 Epoch 96/100
-157/157 [==============================] - ETA: 0s - loss: 0.0147 - mae: 0.0853
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 0s 77ms/step - mae: 0.0956 - loss: 0.5585
 Idx chosen: 52
 
 ```
@@ -1311,18 +1312,18 @@ Idx chosen: 52
 
 <div class="k-default-codeblock">
 ```
-157/157 [==============================] - 7s 46ms/step - loss: 0.0147 - mae: 0.0853 - val_loss: 0.0148 - val_mae: 0.0853
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 14s 87ms/step - mae: 0.0956 - loss: 0.5585 - val_loss: 0.5643 - val_mae: 0.0950
 Epoch 97/100
-157/157 [==============================] - 7s 44ms/step - loss: 0.0148 - mae: 0.0856 - val_loss: 0.0149 - val_mae: 0.0855
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 81ms/step - mae: 0.0956 - loss: 0.5587 - val_loss: 0.5642 - val_mae: 0.0950
 Epoch 98/100
-157/157 [==============================] - 7s 43ms/step - loss: 0.0148 - mae: 0.0857 - val_loss: 0.0149 - val_mae: 0.0858
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 82ms/step - mae: 0.0954 - loss: 0.5586 - val_loss: 0.5639 - val_mae: 0.0950
 Epoch 99/100
-157/157 [==============================] - 7s 44ms/step - loss: 0.0149 - mae: 0.0863 - val_loss: 0.0150 - val_mae: 0.0865
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 80ms/step - mae: 0.0954 - loss: 0.5580 - val_loss: 0.5641 - val_mae: 0.0950
 Epoch 100/100
-157/157 [==============================] - 7s 44ms/step - loss: 0.0150 - mae: 0.0873 - val_loss: 0.0153 - val_mae: 0.0881
-40/40 [==============================] - 1s 15ms/step - loss: 0.0154 - mae: 0.0882
-Loss: 0.02
-MAE: 0.09
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 80ms/step - mae: 0.0955 - loss: 0.5587 - val_loss: 0.5639 - val_mae: 0.0951
+ 40/40 ━━━━━━━━━━━━━━━━━━━━ 1s 13ms/step - mae: 0.0955 - loss: 0.5684
+Loss: 0.57
+MAE: 0.10
 
 ```
 </div>
@@ -1366,35 +1367,52 @@ for layer in downstream_model.layers[:-1]:
 downstream_model.summary()
 ```
 
-<div class="k-default-codeblock">
-```
-Model: "linear_probe_model"
-_________________________________________________________________
- Layer (type)                Output Shape              Param #   
-=================================================================
- patches_1 (Patches)         (None, 64, 108)           0         
-                                                                 
- patch_encoder_1 (PatchEncod  (None, 64, 128)          22252     
- er)                                                             
-                                                                 
- mae_encoder (Functional)    (None, None, 128)         1981696   
-                                                                 
- batch_normalization (BatchN  (None, 64, 128)          512       
- ormalization)                                                   
-                                                                 
- global_average_pooling1d (G  (None, 128)              0         
- lobalAveragePooling1D)                                          
-                                                                 
- dense_19 (Dense)            (None, 10)                1290      
-                                                                 
-=================================================================
-Total params: 2,005,750
-Trainable params: 1,290
-Non-trainable params: 2,004,460
-_________________________________________________________________
 
-```
-</div>
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold">Model: "linear_probe_model"</span>
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━┓
+┃<span style="font-weight: bold"> Layer (type)                    </span>┃<span style="font-weight: bold"> Output Shape              </span>┃<span style="font-weight: bold">    Param # </span>┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━┩
+│ patches_1 (<span style="color: #0087ff; text-decoration-color: #0087ff">Patches</span>)             │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">64</span>, <span style="color: #00af00; text-decoration-color: #00af00">108</span>)           │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ patch_encoder_1 (<span style="color: #0087ff; text-decoration-color: #0087ff">PatchEncoder</span>)  │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">64</span>, <span style="color: #00af00; text-decoration-color: #00af00">128</span>)           │     <span style="color: #00af00; text-decoration-color: #00af00">22,144</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ mae_encoder (<span style="color: #0087ff; text-decoration-color: #0087ff">Functional</span>)        │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">64</span>, <span style="color: #00af00; text-decoration-color: #00af00">128</span>)           │  <span style="color: #00af00; text-decoration-color: #00af00">1,981,696</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ batch_normalization             │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">64</span>, <span style="color: #00af00; text-decoration-color: #00af00">128</span>)           │        <span style="color: #00af00; text-decoration-color: #00af00">512</span> │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">BatchNormalization</span>)            │                           │            │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ global_average_pooling1d        │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">128</span>)               │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">GlobalAveragePooling1D</span>)        │                           │            │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ dense_20 (<span style="color: #0087ff; text-decoration-color: #0087ff">Dense</span>)                │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">10</span>)                │      <span style="color: #00af00; text-decoration-color: #00af00">1,290</span> │
+└─────────────────────────────────┴───────────────────────────┴────────────┘
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Total params: </span><span style="color: #00af00; text-decoration-color: #00af00">2,005,642</span> (7.65 MB)
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Trainable params: </span><span style="color: #00af00; text-decoration-color: #00af00">1,290</span> (5.04 KB)
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Non-trainable params: </span><span style="color: #00af00; text-decoration-color: #00af00">2,004,352</span> (7.65 MB)
+</pre>
+
+
+
 We are using average pooling to extract learned representations from the MAE encoder.
 Another approach would be to use a learnable dummy token inside the encoder during
 pretraining (resembling the [CLS] token). Then we can extract representations from that
@@ -1457,107 +1475,112 @@ print(f"Accuracy on the test set: {accuracy}%.")
 <div class="k-default-codeblock">
 ```
 Epoch 1/50
-157/157 [==============================] - 11s 43ms/step - loss: 2.2131 - accuracy: 0.1838 - val_loss: 2.0249 - val_accuracy: 0.2986
+   7/157 [37m━━━━━━━━━━━━━━━━━━━━  3s 21ms/step - accuracy: 0.1183 - loss: 3.3939
+
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1700264823.481598   64012 device_compiler.h:187] Compiled cluster using XLA!  This line is logged at most once for the lifetime of the process.
+
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 70s 242ms/step - accuracy: 0.1967 - loss: 2.6073 - val_accuracy: 0.3631 - val_loss: 1.7846
 Epoch 2/50
-157/157 [==============================] - 6s 36ms/step - loss: 1.9065 - accuracy: 0.3498 - val_loss: 1.7813 - val_accuracy: 0.3913
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 5s 35ms/step - accuracy: 0.3521 - loss: 1.8063 - val_accuracy: 0.3677 - val_loss: 1.7301
 Epoch 3/50
-157/157 [==============================] - 6s 36ms/step - loss: 1.7443 - accuracy: 0.3995 - val_loss: 1.6705 - val_accuracy: 0.4195
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 5s 34ms/step - accuracy: 0.3580 - loss: 1.7580 - val_accuracy: 0.3649 - val_loss: 1.7326
 Epoch 4/50
-157/157 [==============================] - 6s 36ms/step - loss: 1.6645 - accuracy: 0.4201 - val_loss: 1.6107 - val_accuracy: 0.4344
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 5s 34ms/step - accuracy: 0.3617 - loss: 1.7471 - val_accuracy: 0.3810 - val_loss: 1.7353
 Epoch 5/50
-157/157 [==============================] - 6s 36ms/step - loss: 1.6169 - accuracy: 0.4320 - val_loss: 1.5747 - val_accuracy: 0.4435
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 6s 35ms/step - accuracy: 0.3547 - loss: 1.7728 - val_accuracy: 0.3526 - val_loss: 1.8496
 Epoch 6/50
-157/157 [==============================] - 6s 36ms/step - loss: 1.5843 - accuracy: 0.4364 - val_loss: 1.5476 - val_accuracy: 0.4496
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 6s 35ms/step - accuracy: 0.3546 - loss: 1.7866 - val_accuracy: 0.3896 - val_loss: 1.7583
 Epoch 7/50
-157/157 [==============================] - 6s 36ms/step - loss: 1.5634 - accuracy: 0.4418 - val_loss: 1.5294 - val_accuracy: 0.4540
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 6s 37ms/step - accuracy: 0.3587 - loss: 1.7924 - val_accuracy: 0.3674 - val_loss: 1.7729
 Epoch 8/50
-157/157 [==============================] - 6s 36ms/step - loss: 1.5462 - accuracy: 0.4452 - val_loss: 1.5158 - val_accuracy: 0.4575
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 6s 38ms/step - accuracy: 0.3616 - loss: 1.7912 - val_accuracy: 0.3685 - val_loss: 1.7928
 Epoch 9/50
-157/157 [==============================] - 6s 36ms/step - loss: 1.5365 - accuracy: 0.4468 - val_loss: 1.5068 - val_accuracy: 0.4602
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 6s 36ms/step - accuracy: 0.3707 - loss: 1.7543 - val_accuracy: 0.3568 - val_loss: 1.7943
 Epoch 10/50
-157/157 [==============================] - 6s 36ms/step - loss: 1.5237 - accuracy: 0.4541 - val_loss: 1.4971 - val_accuracy: 0.4616
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 5s 34ms/step - accuracy: 0.3719 - loss: 1.7451 - val_accuracy: 0.3859 - val_loss: 1.7230
 Epoch 11/50
-157/157 [==============================] - 6s 36ms/step - loss: 1.5171 - accuracy: 0.4539 - val_loss: 1.4902 - val_accuracy: 0.4620
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 5s 34ms/step - accuracy: 0.3781 - loss: 1.7384 - val_accuracy: 0.3711 - val_loss: 1.7608
 Epoch 12/50
-157/157 [==============================] - 6s 37ms/step - loss: 1.5127 - accuracy: 0.4552 - val_loss: 1.4850 - val_accuracy: 0.4640
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 6s 35ms/step - accuracy: 0.3791 - loss: 1.7249 - val_accuracy: 0.4004 - val_loss: 1.6961
 Epoch 13/50
-157/157 [==============================] - 6s 36ms/step - loss: 1.5027 - accuracy: 0.4590 - val_loss: 1.4796 - val_accuracy: 0.4669
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 5s 34ms/step - accuracy: 0.3818 - loss: 1.7303 - val_accuracy: 0.3501 - val_loss: 1.8506
 Epoch 14/50
-157/157 [==============================] - 6s 36ms/step - loss: 1.4985 - accuracy: 0.4587 - val_loss: 1.4747 - val_accuracy: 0.4673
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 5s 34ms/step - accuracy: 0.3841 - loss: 1.7179 - val_accuracy: 0.3810 - val_loss: 1.8033
 Epoch 15/50
-157/157 [==============================] - 6s 36ms/step - loss: 1.4975 - accuracy: 0.4588 - val_loss: 1.4694 - val_accuracy: 0.4694
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 5s 34ms/step - accuracy: 0.3818 - loss: 1.7172 - val_accuracy: 0.4168 - val_loss: 1.6507
 Epoch 16/50
-157/157 [==============================] - 6s 36ms/step - loss: 1.4933 - accuracy: 0.4596 - val_loss: 1.4661 - val_accuracy: 0.4698
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 6s 36ms/step - accuracy: 0.3851 - loss: 1.7059 - val_accuracy: 0.3806 - val_loss: 1.7581
 Epoch 17/50
-157/157 [==============================] - 6s 36ms/step - loss: 1.4889 - accuracy: 0.4608 - val_loss: 1.4628 - val_accuracy: 0.4721
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 5s 34ms/step - accuracy: 0.3747 - loss: 1.7356 - val_accuracy: 0.4094 - val_loss: 1.6466
 Epoch 18/50
-157/157 [==============================] - 6s 36ms/step - loss: 1.4869 - accuracy: 0.4659 - val_loss: 1.4623 - val_accuracy: 0.4721
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 5s 35ms/step - accuracy: 0.3828 - loss: 1.7221 - val_accuracy: 0.4015 - val_loss: 1.6757
 Epoch 19/50
-157/157 [==============================] - 6s 36ms/step - loss: 1.4826 - accuracy: 0.4639 - val_loss: 1.4585 - val_accuracy: 0.4716
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 5s 34ms/step - accuracy: 0.3889 - loss: 1.6939 - val_accuracy: 0.4102 - val_loss: 1.6392
 Epoch 20/50
-157/157 [==============================] - 6s 36ms/step - loss: 1.4813 - accuracy: 0.4653 - val_loss: 1.4559 - val_accuracy: 0.4743
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 5s 34ms/step - accuracy: 0.3943 - loss: 1.6857 - val_accuracy: 0.4028 - val_loss: 1.6518
 Epoch 21/50
-157/157 [==============================] - 6s 36ms/step - loss: 1.4824 - accuracy: 0.4644 - val_loss: 1.4542 - val_accuracy: 0.4746
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 5s 34ms/step - accuracy: 0.3870 - loss: 1.6970 - val_accuracy: 0.3949 - val_loss: 1.7283
 Epoch 22/50
-157/157 [==============================] - 6s 36ms/step - loss: 1.4768 - accuracy: 0.4667 - val_loss: 1.4526 - val_accuracy: 0.4757
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 5s 34ms/step - accuracy: 0.3893 - loss: 1.6838 - val_accuracy: 0.4207 - val_loss: 1.6292
 Epoch 23/50
-157/157 [==============================] - 6s 36ms/step - loss: 1.4775 - accuracy: 0.4644 - val_loss: 1.4507 - val_accuracy: 0.4751
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 5s 35ms/step - accuracy: 0.4005 - loss: 1.6606 - val_accuracy: 0.4152 - val_loss: 1.6320
 Epoch 24/50
-157/157 [==============================] - 6s 36ms/step - loss: 1.4750 - accuracy: 0.4670 - val_loss: 1.4481 - val_accuracy: 0.4756
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 5s 34ms/step - accuracy: 0.3978 - loss: 1.6556 - val_accuracy: 0.4042 - val_loss: 1.6657
 Epoch 25/50
-157/157 [==============================] - 6s 36ms/step - loss: 1.4726 - accuracy: 0.4663 - val_loss: 1.4467 - val_accuracy: 0.4767
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 5s 34ms/step - accuracy: 0.4029 - loss: 1.6464 - val_accuracy: 0.4198 - val_loss: 1.6033
 Epoch 26/50
-157/157 [==============================] - 6s 36ms/step - loss: 1.4706 - accuracy: 0.4681 - val_loss: 1.4450 - val_accuracy: 0.4781
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 5s 34ms/step - accuracy: 0.3974 - loss: 1.6638 - val_accuracy: 0.4278 - val_loss: 1.5731
 Epoch 27/50
-157/157 [==============================] - 6s 36ms/step - loss: 1.4660 - accuracy: 0.4706 - val_loss: 1.4456 - val_accuracy: 0.4766
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 6s 37ms/step - accuracy: 0.4035 - loss: 1.6370 - val_accuracy: 0.4302 - val_loss: 1.5663
 Epoch 28/50
-157/157 [==============================] - 6s 36ms/step - loss: 1.4664 - accuracy: 0.4707 - val_loss: 1.4443 - val_accuracy: 0.4776
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 5s 34ms/step - accuracy: 0.4027 - loss: 1.6349 - val_accuracy: 0.4458 - val_loss: 1.5349
 Epoch 29/50
-157/157 [==============================] - 6s 36ms/step - loss: 1.4678 - accuracy: 0.4674 - val_loss: 1.4411 - val_accuracy: 0.4802
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 5s 34ms/step - accuracy: 0.4054 - loss: 1.6196 - val_accuracy: 0.4349 - val_loss: 1.5709
 Epoch 30/50
-157/157 [==============================] - 6s 36ms/step - loss: 1.4654 - accuracy: 0.4704 - val_loss: 1.4411 - val_accuracy: 0.4801
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 5s 35ms/step - accuracy: 0.4070 - loss: 1.6061 - val_accuracy: 0.4297 - val_loss: 1.5578
 Epoch 31/50
-157/157 [==============================] - 6s 36ms/step - loss: 1.4655 - accuracy: 0.4702 - val_loss: 1.4402 - val_accuracy: 0.4787
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 5s 34ms/step - accuracy: 0.4105 - loss: 1.6172 - val_accuracy: 0.4250 - val_loss: 1.5735
 Epoch 32/50
-157/157 [==============================] - 6s 36ms/step - loss: 1.4620 - accuracy: 0.4735 - val_loss: 1.4402 - val_accuracy: 0.4781
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 5s 34ms/step - accuracy: 0.4197 - loss: 1.5960 - val_accuracy: 0.4259 - val_loss: 1.5677
 Epoch 33/50
-157/157 [==============================] - 6s 36ms/step - loss: 1.4668 - accuracy: 0.4699 - val_loss: 1.4397 - val_accuracy: 0.4783
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 5s 34ms/step - accuracy: 0.4156 - loss: 1.5989 - val_accuracy: 0.4400 - val_loss: 1.5395
 Epoch 34/50
-157/157 [==============================] - 6s 36ms/step - loss: 1.4619 - accuracy: 0.4724 - val_loss: 1.4382 - val_accuracy: 0.4793
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 5s 35ms/step - accuracy: 0.4214 - loss: 1.5862 - val_accuracy: 0.4486 - val_loss: 1.5237
 Epoch 35/50
-157/157 [==============================] - 6s 36ms/step - loss: 1.4652 - accuracy: 0.4697 - val_loss: 1.4374 - val_accuracy: 0.4800
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 5s 34ms/step - accuracy: 0.4208 - loss: 1.5763 - val_accuracy: 0.4188 - val_loss: 1.5925
 Epoch 36/50
-157/157 [==============================] - 6s 36ms/step - loss: 1.4618 - accuracy: 0.4707 - val_loss: 1.4372 - val_accuracy: 0.4794
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 5s 34ms/step - accuracy: 0.4227 - loss: 1.5803 - val_accuracy: 0.4525 - val_loss: 1.5174
 Epoch 37/50
-157/157 [==============================] - 6s 36ms/step - loss: 1.4606 - accuracy: 0.4710 - val_loss: 1.4369 - val_accuracy: 0.4793
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 5s 34ms/step - accuracy: 0.4267 - loss: 1.5700 - val_accuracy: 0.4463 - val_loss: 1.5330
 Epoch 38/50
-157/157 [==============================] - 6s 36ms/step - loss: 1.4613 - accuracy: 0.4706 - val_loss: 1.4363 - val_accuracy: 0.4806
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 6s 37ms/step - accuracy: 0.4283 - loss: 1.5649 - val_accuracy: 0.4348 - val_loss: 1.5482
 Epoch 39/50
-157/157 [==============================] - 6s 36ms/step - loss: 1.4631 - accuracy: 0.4713 - val_loss: 1.4361 - val_accuracy: 0.4804
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 5s 34ms/step - accuracy: 0.4332 - loss: 1.5581 - val_accuracy: 0.4486 - val_loss: 1.5251
 Epoch 40/50
-157/157 [==============================] - 6s 36ms/step - loss: 1.4620 - accuracy: 0.4695 - val_loss: 1.4357 - val_accuracy: 0.4802
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 5s 34ms/step - accuracy: 0.4290 - loss: 1.5596 - val_accuracy: 0.4489 - val_loss: 1.5221
 Epoch 41/50
-157/157 [==============================] - 6s 36ms/step - loss: 1.4639 - accuracy: 0.4706 - val_loss: 1.4355 - val_accuracy: 0.4801
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 5s 34ms/step - accuracy: 0.4318 - loss: 1.5589 - val_accuracy: 0.4494 - val_loss: 1.5202
 Epoch 42/50
-157/157 [==============================] - 6s 36ms/step - loss: 1.4588 - accuracy: 0.4735 - val_loss: 1.4352 - val_accuracy: 0.4802
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 5s 34ms/step - accuracy: 0.4317 - loss: 1.5514 - val_accuracy: 0.4505 - val_loss: 1.5184
 Epoch 43/50
-157/157 [==============================] - 6s 36ms/step - loss: 1.4573 - accuracy: 0.4734 - val_loss: 1.4352 - val_accuracy: 0.4794
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 5s 34ms/step - accuracy: 0.4353 - loss: 1.5504 - val_accuracy: 0.4561 - val_loss: 1.5081
 Epoch 44/50
-157/157 [==============================] - 6s 36ms/step - loss: 1.4597 - accuracy: 0.4723 - val_loss: 1.4350 - val_accuracy: 0.4796
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 5s 34ms/step - accuracy: 0.4369 - loss: 1.5510 - val_accuracy: 0.4581 - val_loss: 1.5092
 Epoch 45/50
-157/157 [==============================] - 6s 36ms/step - loss: 1.4572 - accuracy: 0.4741 - val_loss: 1.4349 - val_accuracy: 0.4799
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 6s 35ms/step - accuracy: 0.4379 - loss: 1.5428 - val_accuracy: 0.4555 - val_loss: 1.5099
 Epoch 46/50
-157/157 [==============================] - 6s 36ms/step - loss: 1.4561 - accuracy: 0.4756 - val_loss: 1.4348 - val_accuracy: 0.4801
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 5s 34ms/step - accuracy: 0.4421 - loss: 1.5475 - val_accuracy: 0.4579 - val_loss: 1.5073
 Epoch 47/50
-157/157 [==============================] - 6s 36ms/step - loss: 1.4593 - accuracy: 0.4730 - val_loss: 1.4348 - val_accuracy: 0.4801
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 5s 34ms/step - accuracy: 0.4434 - loss: 1.5390 - val_accuracy: 0.4593 - val_loss: 1.5052
 Epoch 48/50
-157/157 [==============================] - 6s 36ms/step - loss: 1.4613 - accuracy: 0.4733 - val_loss: 1.4348 - val_accuracy: 0.4802
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 5s 34ms/step - accuracy: 0.4418 - loss: 1.5373 - val_accuracy: 0.4600 - val_loss: 1.5038
 Epoch 49/50
-157/157 [==============================] - 6s 36ms/step - loss: 1.4591 - accuracy: 0.4710 - val_loss: 1.4348 - val_accuracy: 0.4803
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 6s 38ms/step - accuracy: 0.4400 - loss: 1.5367 - val_accuracy: 0.4596 - val_loss: 1.5045
 Epoch 50/50
-157/157 [==============================] - 6s 36ms/step - loss: 1.4566 - accuracy: 0.4766 - val_loss: 1.4348 - val_accuracy: 0.4803
-40/40 [==============================] - 1s 17ms/step - loss: 1.4375 - accuracy: 0.4790
-Accuracy on the test set: 47.9%.
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 5s 35ms/step - accuracy: 0.4448 - loss: 1.5321 - val_accuracy: 0.4595 - val_loss: 1.5048
+ 40/40 ━━━━━━━━━━━━━━━━━━━━ 3s 71ms/step - accuracy: 0.4496 - loss: 1.5088
+Accuracy on the test set: 44.66%.
 
 ```
 </div>
