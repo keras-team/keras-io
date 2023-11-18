@@ -43,19 +43,14 @@ As a reference, we reuse some of the code presented in
 
 """
 ## Imports
-
-This example requires TensorFlow Addons, which can be installed using the following
-command:
-
-```shell
-pip install -U tensorflow-addons
-```
 """
+import os
 
-from tensorflow.keras import layers
-import tensorflow_addons as tfa
-from tensorflow import keras
+os.environ["KERAS_BACKEND"] = "tensorflow"
+
 import tensorflow as tf
+import keras
+from keras import layers
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -599,7 +594,7 @@ class MaskedAutoencoder(keras.Model):
         loss_output = tf.gather(decoder_patches, mask_indices, axis=1, batch_dims=1)
 
         # Compute the total loss.
-        total_loss = self.compiled_loss(loss_patch, loss_output)
+        total_loss = self.compute_loss(y=loss_patch, y_pred=loss_output)
 
         return total_loss, loss_patch, loss_output
 
@@ -623,15 +618,21 @@ class MaskedAutoencoder(keras.Model):
         self.optimizer.apply_gradients(tv_list)
 
         # Report progress.
-        self.compiled_metrics.update_state(loss_patch, loss_output)
-        return {m.name: m.result() for m in self.metrics}
+        results = {}
+        for metric in self.metrics:
+            metric.update_state(loss_patch, loss_output)
+            results[metric.name] = metric.result()
+        return results
 
     def test_step(self, images):
         total_loss, loss_patch, loss_output = self.calculate_loss(images, test=True)
 
         # Update the trackers.
-        self.compiled_metrics.update_state(loss_patch, loss_output)
-        return {m.name: m.result() for m in self.metrics}
+        results = {}
+        for metric in self.metrics:
+            metric.update_state(loss_patch, loss_output)
+            results[metric.name] = metric.result()
+        return results
 
 
 """
@@ -785,7 +786,9 @@ train_callbacks = [TrainMonitor(epoch_interval=5)]
 ## Model compilation and training
 """
 
-optimizer = tfa.optimizers.AdamW(learning_rate=scheduled_lrs, weight_decay=WEIGHT_DECAY)
+optimizer = keras.optimizers.AdamW(
+    learning_rate=scheduled_lrs, weight_decay=WEIGHT_DECAY
+)
 
 # Compile and pretrain the model.
 mae_model.compile(
