@@ -5,6 +5,7 @@ Date created: 2021/10/19
 Last modified: 2023/07/18
 Description: Image classification with a Transformer that leverages external attention.
 Accelerator: GPU
+Converted to Keras 3: [Muhammad Anas Raza](https://anasrz.com)
 """
 
 """
@@ -53,7 +54,7 @@ learning_rate = 0.001
 label_smoothing = 0.1
 validation_split = 0.2
 batch_size = 128
-num_epochs = 1  # Recommended num_epochs = 50.
+num_epochs = 50
 patch_size = 2  # Size of the patches to be extracted from the input images.
 num_patches = (input_shape[0] // patch_size) ** 2  # Number of patch
 embedding_dim = 64  # Number of hidden units.

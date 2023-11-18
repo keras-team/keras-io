@@ -2,9 +2,10 @@
 Title: Multiclass semantic segmentation using DeepLabV3+
 Author: [Soumik Rakshit](http://github.com/soumik12345)
 Date created: 2021/08/31
-Last modified: 2023/01/06
+Last modified: 2023/07/19
 Description: Implement DeepLabV3+ architecture for Multi-class Semantic Segmentation.
 Accelerator: GPU
+Converted to Keras 3: [Muhammad Anas Raza](https://anasrz.com)
 """
 """
 ## Introduction
@@ -16,7 +17,7 @@ architecture that performs well on semantic segmentation benchmarks.
 
 ### References:
 
-- [Encoder-Decoder with Atrous Separable Convolution for Semantic Image Segmentation](https://arxiv.org/pdf/1802.02611.pdf)
+- [Encoder-Decoder with Atrous Separable Convolution for Semantic Image Segmentation](https://arxiv.org/abs/1802.02611)
 - [Rethinking Atrous Convolution for Semantic Image Segmentation](https://arxiv.org/abs/1706.05587)
 - [DeepLab: Semantic Image Segmentation with Deep Convolutional Nets, Atrous Convolution, and Fully Connected CRFs](https://arxiv.org/abs/1606.00915)
 """
@@ -30,16 +31,22 @@ Each image in CIHP is labeled with pixel-wise annotations for 20 categories, as 
 This dataset can be used for the "human part segmentation" task.
 """
 
+
+import keras
+from keras import layers
+from keras import ops
+
 import os
-import cv2
 import numpy as np
 from glob import glob
+import cv2
 from scipy.io import loadmat
 import matplotlib.pyplot as plt
 
-import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras import layers
+# For data preprocessing
+from tensorflow import image as tf_image
+from tensorflow import data as tf_data
+from tensorflow import io as tf_io
 
 """shell
 gdown "1B9A9UCJYMwTL4oBEo4RZfbMZMaZhKJaz&confirm=t"
@@ -71,16 +78,15 @@ val_masks = sorted(glob(os.path.join(DATA_DIR, "Category_ids/*")))[
 
 
 def read_image(image_path, mask=False):
-    image = tf.io.read_file(image_path)
+    image = tf_io.read_file(image_path)
     if mask:
-        image = tf.image.decode_png(image, channels=1)
+        image = tf_image.decode_png(image, channels=1)
         image.set_shape([None, None, 1])
-        image = tf.image.resize(images=image, size=[IMAGE_SIZE, IMAGE_SIZE])
+        image = tf_image.resize(images=image, size=[IMAGE_SIZE, IMAGE_SIZE])
     else:
-        image = tf.image.decode_png(image, channels=3)
+        image = tf_image.decode_png(image, channels=3)
         image.set_shape([None, None, 3])
-        image = tf.image.resize(images=image, size=[IMAGE_SIZE, IMAGE_SIZE])
-        image = tf.keras.applications.resnet50.preprocess_input(image)
+        image = tf_image.resize(images=image, size=[IMAGE_SIZE, IMAGE_SIZE])
     return image
 
 
@@ -91,8 +97,8 @@ def load_data(image_list, mask_list):
 
 
 def data_generator(image_list, mask_list):
-    dataset = tf.data.Dataset.from_tensor_slices((image_list, mask_list))
-    dataset = dataset.map(load_data, num_parallel_calls=tf.data.AUTOTUNE)
+    dataset = tf_data.Dataset.from_tensor_slices((image_list, mask_list))
+    dataset = dataset.map(load_data, num_parallel_calls=tf_data.AUTOTUNE)
     dataset = dataset.batch(BATCH_SIZE, drop_remainder=True)
     return dataset
 
@@ -140,7 +146,7 @@ def convolution_block(
         kernel_initializer=keras.initializers.HeNormal(),
     )(block_input)
     x = layers.BatchNormalization()(x)
-    return tf.nn.relu(x)
+    return ops.nn.relu(x)
 
 
 def DilatedSpatialPyramidPooling(dspp_input):
@@ -173,8 +179,9 @@ the low-level features from the `conv4_block6_2_relu` block of the backbone.
 
 def DeeplabV3Plus(image_size, num_classes):
     model_input = keras.Input(shape=(image_size, image_size, 3))
+    preprocessed = keras.applications.resnet50.preprocess_input(model_input)
     resnet50 = keras.applications.ResNet50(
-        weights="imagenet", include_top=False, input_tensor=model_input
+        weights="imagenet", include_top=False, input_tensor=preprocessed
     )
     x = resnet50.get_layer("conv4_block6_2_relu").output
     x = DilatedSpatialPyramidPooling(x)
@@ -281,7 +288,7 @@ def decode_segmentation_masks(mask, colormap, n_classes):
 
 
 def get_overlay(image, colored_mask):
-    image = tf.keras.utils.array_to_img(image)
+    image = keras.utils.array_to_img(image)
     image = np.array(image).astype(np.uint8)
     overlay = cv2.addWeighted(image, 0.35, colored_mask, 0.65, 0)
     return overlay
@@ -291,7 +298,7 @@ def plot_samples_matplotlib(display_list, figsize=(5, 3)):
     _, axes = plt.subplots(nrows=1, ncols=len(display_list), figsize=figsize)
     for i in range(len(display_list)):
         if display_list[i].shape[-1] == 3:
-            axes[i].imshow(tf.keras.utils.array_to_img(display_list[i]))
+            axes[i].imshow(keras.utils.array_to_img(display_list[i]))
         else:
             axes[i].imshow(display_list[i])
     plt.show()
@@ -316,6 +323,7 @@ plot_predictions(train_images[:4], colormap, model=model)
 
 """
 ### Inference on Validation Images
+
 You can use the trained model hosted on [Hugging Face Hub](https://huggingface.co/keras-io/deeplabv3p-resnet50)
 and try the demo on [Hugging Face Spaces](https://huggingface.co/spaces/keras-io/Human-Part-Segmentation).
 """
