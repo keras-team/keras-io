@@ -29,10 +29,10 @@
 ```
   % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
                                  Dload  Upload   Total   Spent    Left  Speed
-100  755M  100  755M    0     0  13.8M      0  0:00:54  0:00:54 --:--:-- 10.1M
+100  755M  100  755M    0     0  21.3M      0  0:00:35  0:00:35 --:--:-- 22.2M
   % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
                                  Dload  Upload   Total   Spent    Left  Speed
-100 18.2M  100 18.2M    0     0  7583k      0  0:00:02  0:00:02 --:--:-- 7583k
+100 18.2M  100 18.2M    0     0  7977k      0  0:00:02  0:00:02 --:--:-- 7974k
 
 ```
 </div>
@@ -519,118 +519,281 @@ valid_dataset = get_dataset(
 # Configure the model for training.
 # We use the "sparse" version of categorical_crossentropy
 # because our target data is integers.
-model.compile(optimizer="rmsprop", loss="sparse_categorical_crossentropy")
+model.compile(
+    optimizer=keras.optimizers.Adam(1e-4), loss="sparse_categorical_crossentropy"
+)
 
 callbacks = [
     keras.callbacks.ModelCheckpoint("oxford_segmentation.keras", save_best_only=True)
 ]
 
 # Train the model, doing validation at the end of each epoch.
-epochs = 15
+epochs = 50
 model.fit(
     train_dataset,
     epochs=epochs,
     validation_data=valid_dataset,
     callbacks=callbacks,
+    verbose=2,
 )
 ```
 
 <div class="k-default-codeblock">
 ```
-Epoch 1/15
-  3/32 ━[37m━━━━━━━━━━━━━━━━━━━  1s 43ms/step - loss: 7.4035  
+Epoch 1/50
 
 WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
-I0000 00:00:1700413872.741403 2221334 device_compiler.h:187] Compiled cluster using XLA!  This line is logged at most once for the lifetime of the process.
+I0000 00:00:1700414690.172044 2226172 device_compiler.h:187] Compiled cluster using XLA!  This line is logged at most once for the lifetime of the process.
 Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
 
- 32/32 ━━━━━━━━━━━━━━━━━━━━ 54s 679ms/step - loss: 3.6163 - val_loss: 3.0248
-Epoch 2/15
-  9/32 ━━━━━[37m━━━━━━━━━━━━━━━  1s 45ms/step - loss: 0.7911
-
-Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
-
- 32/32 ━━━━━━━━━━━━━━━━━━━━ 3s 90ms/step - loss: 0.7966 - val_loss: 1.3062
-Epoch 3/15
-  7/32 ━━━━[37m━━━━━━━━━━━━━━━━  1s 46ms/step - loss: 0.7397
+32/32 - 62s - 2s/step - loss: 1.6363 - val_loss: 2.2226
+Epoch 2/50
 
 Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
 
- 32/32 ━━━━━━━━━━━━━━━━━━━━ 3s 84ms/step - loss: 0.7186 - val_loss: 1.3786
-Epoch 4/15
-  9/32 ━━━━━[37m━━━━━━━━━━━━━━━  1s 44ms/step - loss: 0.7020
+32/32 - 3s - 94ms/step - loss: 0.9223 - val_loss: 1.8273
+Epoch 3/50
 
 Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
 
- 32/32 ━━━━━━━━━━━━━━━━━━━━ 3s 85ms/step - loss: 0.6726 - val_loss: 1.4471
-Epoch 5/15
-  9/32 ━━━━━[37m━━━━━━━━━━━━━━━  1s 44ms/step - loss: 0.6974
+32/32 - 3s - 82ms/step - loss: 0.7894 - val_loss: 2.0044
+Epoch 4/50
 
 Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
 
- 32/32 ━━━━━━━━━━━━━━━━━━━━ 3s 85ms/step - loss: 0.6430 - val_loss: 1.4061
-Epoch 6/15
-  8/32 ━━━━━[37m━━━━━━━━━━━━━━━  1s 45ms/step - loss: 0.5834
+32/32 - 3s - 83ms/step - loss: 0.7174 - val_loss: 2.3480
+Epoch 5/50
 
 Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
 
- 32/32 ━━━━━━━━━━━━━━━━━━━━ 3s 84ms/step - loss: 0.5677 - val_loss: 1.7496
-Epoch 7/15
-  8/32 ━━━━━[37m━━━━━━━━━━━━━━━  1s 44ms/step - loss: 0.5763
+32/32 - 3s - 82ms/step - loss: 0.6695 - val_loss: 2.7528
+Epoch 6/50
 
 Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
 
- 32/32 ━━━━━━━━━━━━━━━━━━━━ 3s 84ms/step - loss: 0.5442 - val_loss: 2.0912
-Epoch 8/15
-  9/32 ━━━━━[37m━━━━━━━━━━━━━━━  1s 45ms/step - loss: 0.5399
+32/32 - 3s - 83ms/step - loss: 0.6325 - val_loss: 3.1453
+Epoch 7/50
 
 Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
 
- 32/32 ━━━━━━━━━━━━━━━━━━━━ 3s 85ms/step - loss: 0.5156 - val_loss: 2.1356
-Epoch 9/15
-  8/32 ━━━━━[37m━━━━━━━━━━━━━━━  1s 44ms/step - loss: 0.5105
+32/32 - 3s - 84ms/step - loss: 0.6012 - val_loss: 3.5611
+Epoch 8/50
 
 Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
 
- 32/32 ━━━━━━━━━━━━━━━━━━━━ 3s 84ms/step - loss: 0.4844 - val_loss: 2.2115
-Epoch 10/15
-  9/32 ━━━━━[37m━━━━━━━━━━━━━━━  1s 46ms/step - loss: 0.4582
+32/32 - 3s - 87ms/step - loss: 0.5730 - val_loss: 4.0003
+Epoch 9/50
 
 Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
 
- 32/32 ━━━━━━━━━━━━━━━━━━━━ 3s 84ms/step - loss: 0.4482 - val_loss: 2.3041
-Epoch 11/15
-  9/32 ━━━━━[37m━━━━━━━━━━━━━━━  0s 42ms/step - loss: 0.4332
+32/32 - 3s - 85ms/step - loss: 0.5466 - val_loss: 4.4798
+Epoch 10/50
 
 Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
 
- 32/32 ━━━━━━━━━━━━━━━━━━━━ 3s 84ms/step - loss: 0.4246 - val_loss: 1.9903
-Epoch 12/15
-  8/32 ━━━━━[37m━━━━━━━━━━━━━━━  1s 44ms/step - loss: 0.3898
+32/32 - 3s - 86ms/step - loss: 0.5210 - val_loss: 5.0245
+Epoch 11/50
 
 Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
 
- 32/32 ━━━━━━━━━━━━━━━━━━━━ 3s 108ms/step - loss: 0.3906 - val_loss: 1.8275
-Epoch 13/15
-  7/32 ━━━━[37m━━━━━━━━━━━━━━━━  1s 59ms/step - loss: 0.4049
+32/32 - 3s - 87ms/step - loss: 0.4958 - val_loss: 5.5950
+Epoch 12/50
 
 Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
 
- 32/32 ━━━━━━━━━━━━━━━━━━━━ 3s 96ms/step - loss: 0.3918 - val_loss: 0.9744
-Epoch 14/15
-  9/32 ━━━━━[37m━━━━━━━━━━━━━━━  1s 45ms/step - loss: 0.3425
+32/32 - 3s - 87ms/step - loss: 0.4706 - val_loss: 6.1534
+Epoch 13/50
 
 Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
 
- 32/32 ━━━━━━━━━━━━━━━━━━━━ 3s 96ms/step - loss: 0.3575 - val_loss: 0.7796
-Epoch 15/15
-  8/32 ━━━━━[37m━━━━━━━━━━━━━━━  1s 47ms/step - loss: 0.3215
+32/32 - 3s - 85ms/step - loss: 0.4453 - val_loss: 6.6107
+Epoch 14/50
 
 Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
 
- 32/32 ━━━━━━━━━━━━━━━━━━━━ 3s 93ms/step - loss: 0.3335 - val_loss: 0.6974
+32/32 - 3s - 83ms/step - loss: 0.4202 - val_loss: 6.8010
+Epoch 15/50
 
-<keras.src.callbacks.history.History at 0x7feb91027d60>
+Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
+
+32/32 - 3s - 84ms/step - loss: 0.3956 - val_loss: 6.6751
+Epoch 16/50
+
+Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
+
+32/32 - 3s - 83ms/step - loss: 0.3721 - val_loss: 6.0800
+Epoch 17/50
+
+Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
+
+32/32 - 3s - 84ms/step - loss: 0.3506 - val_loss: 5.1820
+Epoch 18/50
+
+Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
+
+32/32 - 3s - 82ms/step - loss: 0.3329 - val_loss: 4.0350
+Epoch 19/50
+
+Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
+
+32/32 - 4s - 114ms/step - loss: 0.3216 - val_loss: 3.0513
+Epoch 20/50
+
+Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
+
+32/32 - 3s - 94ms/step - loss: 0.3595 - val_loss: 2.2567
+Epoch 21/50
+
+Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
+
+32/32 - 3s - 100ms/step - loss: 0.4417 - val_loss: 1.5873
+Epoch 22/50
+
+Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
+
+32/32 - 3s - 101ms/step - loss: 0.3531 - val_loss: 1.5798
+Epoch 23/50
+
+Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
+
+32/32 - 3s - 96ms/step - loss: 0.3353 - val_loss: 1.5525
+Epoch 24/50
+
+Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
+
+32/32 - 3s - 95ms/step - loss: 0.3392 - val_loss: 1.4625
+Epoch 25/50
+
+Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
+
+32/32 - 3s - 95ms/step - loss: 0.3596 - val_loss: 0.8867
+Epoch 26/50
+
+Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
+
+32/32 - 3s - 94ms/step - loss: 0.3528 - val_loss: 0.8021
+Epoch 27/50
+
+Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
+
+32/32 - 3s - 92ms/step - loss: 0.3237 - val_loss: 0.7986
+Epoch 28/50
+
+Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
+
+32/32 - 3s - 89ms/step - loss: 0.3198 - val_loss: 0.8533
+Epoch 29/50
+
+Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
+
+32/32 - 3s - 84ms/step - loss: 0.3272 - val_loss: 1.0588
+Epoch 30/50
+
+Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
+
+32/32 - 3s - 88ms/step - loss: 0.3164 - val_loss: 1.1889
+Epoch 31/50
+
+Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
+
+32/32 - 3s - 85ms/step - loss: 0.2987 - val_loss: 0.9518
+Epoch 32/50
+
+Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
+
+32/32 - 3s - 87ms/step - loss: 0.2749 - val_loss: 0.9011
+Epoch 33/50
+
+Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
+
+32/32 - 3s - 84ms/step - loss: 0.2595 - val_loss: 0.8872
+Epoch 34/50
+
+Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
+
+32/32 - 3s - 87ms/step - loss: 0.2552 - val_loss: 1.0221
+Epoch 35/50
+
+Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
+
+32/32 - 3s - 82ms/step - loss: 0.2628 - val_loss: 1.1553
+Epoch 36/50
+
+Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
+
+32/32 - 3s - 85ms/step - loss: 0.2788 - val_loss: 2.1549
+Epoch 37/50
+
+Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
+
+32/32 - 3s - 94ms/step - loss: 0.2870 - val_loss: 1.6282
+Epoch 38/50
+
+Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
+
+32/32 - 3s - 89ms/step - loss: 0.2702 - val_loss: 1.3201
+Epoch 39/50
+
+Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
+
+32/32 - 3s - 91ms/step - loss: 0.2569 - val_loss: 1.2364
+Epoch 40/50
+
+Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
+
+32/32 - 3s - 106ms/step - loss: 0.2523 - val_loss: 1.3673
+Epoch 41/50
+
+Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
+
+32/32 - 3s - 86ms/step - loss: 0.2570 - val_loss: 1.3999
+Epoch 42/50
+
+Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
+
+32/32 - 3s - 87ms/step - loss: 0.2680 - val_loss: 0.9976
+Epoch 43/50
+
+Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
+
+32/32 - 3s - 83ms/step - loss: 0.2558 - val_loss: 1.0209
+Epoch 44/50
+
+Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
+
+32/32 - 3s - 85ms/step - loss: 0.2403 - val_loss: 1.3271
+Epoch 45/50
+
+Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
+
+32/32 - 3s - 83ms/step - loss: 0.2414 - val_loss: 1.1993
+Epoch 46/50
+
+Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
+
+32/32 - 3s - 84ms/step - loss: 0.2516 - val_loss: 1.0532
+Epoch 47/50
+
+Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
+
+32/32 - 3s - 83ms/step - loss: 0.2695 - val_loss: 1.1183
+Epoch 48/50
+
+Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
+
+32/32 - 3s - 87ms/step - loss: 0.2555 - val_loss: 1.0432
+Epoch 49/50
+
+Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
+
+32/32 - 3s - 82ms/step - loss: 0.2290 - val_loss: 0.9444
+Epoch 50/50
+
+Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
+
+32/32 - 3s - 83ms/step - loss: 0.1994 - val_loss: 1.2182
+
+<keras.src.callbacks.history.History at 0x7fe01842dab0>
 
 ```
 </div>
@@ -671,7 +834,7 @@ display_mask(i)  # Note that the model only sees inputs at 150x150.
 
 <div class="k-default-codeblock">
 ```
- 32/32 ━━━━━━━━━━━━━━━━━━━━ 5s 97ms/step
+ 32/32 ━━━━━━━━━━━━━━━━━━━━ 5s 100ms/step
 
 ```
 </div>
