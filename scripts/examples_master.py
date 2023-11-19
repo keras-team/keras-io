@@ -119,6 +119,7 @@ EXAMPLES_MASTER = {
                     "title": "Image segmentation with a U-Net-like architecture",
                     "subcategory": "Image segmentation",
                     "highlight": True,
+                    "keras_3": True,
                 },
                 {
                     "path": "deeplabv3_plus",
@@ -181,7 +182,6 @@ EXAMPLES_MASTER = {
                     "path": "captcha_ocr",
                     "title": "OCR model for reading Captchas",
                     "subcategory": "OCR",
-                    "highlight": True,
                 },
                 {
                     "path": "handwriting_recognition",
@@ -501,6 +501,7 @@ EXAMPLES_MASTER = {
                     "path": "wide_deep_cross_networks",
                     "title": "Structured data learning with Wide, Deep, and Cross networks",
                     "subcategory": "Structured data classification",
+                    "keras_3": True,
                 },
                 {
                     "path": "classification_with_grn_and_vsn",
@@ -595,6 +596,7 @@ EXAMPLES_MASTER = {
                     "title": "Denoising Diffusion Implicit Models",
                     "subcategory": "Image generation",
                     "highlight": True,
+                    "keras_3": True,
                 },
                 {
                     "path": "random_walks_with_stable_diffusion",

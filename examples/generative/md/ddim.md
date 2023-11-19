@@ -170,34 +170,6 @@ train_dataset = prepare_dataset("train[:80%]+validation[:80%]+test[:80%]")
 val_dataset = prepare_dataset("train[80%:]+validation[80%:]+test[80%:]")
 ```
 
-<div class="k-default-codeblock">
-```
- Downloading and preparing dataset 328.90 MiB (download: 328.90 MiB, generated: 331.34 MiB, total: 660.25 MiB) to /home/fchollet/tensorflow_datasets/oxford_flowers102/2.1.1...
-
-Dl Completed...: 0 url [00:00, ? url/s]
-
-Dl Size...: 0 MiB [00:00, ? MiB/s]
-
-Extraction completed...: 0 file [00:00, ? file/s]
-
-Generating splits...:   0%|          | 0/3 [00:00<?, ? splits/s]
-
-Generating train examples...:   0%|          | 0/1020 [00:00<?, ? examples/s]
-
-Shuffling /home/fchollet/tensorflow_datasets/oxford_flowers102/2.1.1.incompleteMM7I7J/oxford_flowers102-train.…
-
-Generating test examples...:   0%|          | 0/6149 [00:00<?, ? examples/s]
-
-Shuffling /home/fchollet/tensorflow_datasets/oxford_flowers102/2.1.1.incompleteMM7I7J/oxford_flowers102-test.t…
-
-Generating validation examples...:   0%|          | 0/1020 [00:00<?, ? examples/s]
-
-Shuffling /home/fchollet/tensorflow_datasets/oxford_flowers102/2.1.1.incompleteMM7I7J/oxford_flowers102-valida…
-
- Dataset oxford_flowers102 downloaded and prepared to /home/fchollet/tensorflow_datasets/oxford_flowers102/2.1.1. Subsequent calls will reuse this data.
-
-```
-</div>
 ---
 ## Kernel inception distance
 
@@ -734,10 +706,6 @@ model.fit(
 ```
 Downloading data from https://storage.googleapis.com/tensorflow/keras-applications/inception_v3/inception_v3_weights_tf_dim_ordering_tf_kernels_notop.h5
  87910968/87910968 ━━━━━━━━━━━━━━━━━━━━ 0s 0us/step
-   3/511 [37m━━━━━━━━━━━━━━━━━━━━  27s 54ms/step - i_loss: 2.5041 - n_loss: 0.7962
-
-WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
-I0000 00:00:1700416850.875107 2238470 device_compiler.h:187] Compiled cluster using XLA!  This line is logged at most once for the lifetime of the process.
 
  511/511 ━━━━━━━━━━━━━━━━━━━━ 0s 48ms/step - i_loss: 0.6896 - n_loss: 0.2961
 

@@ -32,12 +32,17 @@ categorical features. Each instance is categorized into 1 of 7 classes.
 ## Setup
 """
 
+import os
+
+# Only the TensorFlow backend supports string inputs.
+os.environ["KERAS_BACKEND"] = "tensorflow"
+
 import math
 import numpy as np
 import pandas as pd
-import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras import layers
+from tensorflow import data as tf_data
+import keras
+from keras import layers
 
 """
 ## Prepare the data
@@ -179,7 +184,7 @@ for training or evaluation.
 
 
 def get_dataset_from_csv(csv_file_path, batch_size, shuffle=False):
-    dataset = tf.data.experimental.make_csv_dataset(
+    dataset = tf_data.experimental.make_csv_dataset(
         csv_file_path,
         batch_size=batch_size,
         column_names=CSV_HEADER,
@@ -239,11 +244,11 @@ def create_model_inputs():
     for feature_name in FEATURE_NAMES:
         if feature_name in NUMERIC_FEATURE_NAMES:
             inputs[feature_name] = layers.Input(
-                name=feature_name, shape=(), dtype=tf.float32
+                name=feature_name, shape=(), dtype="float32"
             )
         else:
             inputs[feature_name] = layers.Input(
-                name=feature_name, shape=(), dtype=tf.string
+                name=feature_name, shape=(), dtype="string"
             )
     return inputs
 
@@ -261,9 +266,6 @@ the model to *generalize* well to unseen feature combinations.
 """
 
 
-from tensorflow.keras.layers import StringLookup
-
-
 def encode_inputs(inputs, use_embedding=False):
     encoded_features = []
     for feature_name in inputs:
@@ -272,7 +274,7 @@ def encode_inputs(inputs, use_embedding=False):
             # Create a lookup to convert string values to an integer indices.
             # Since we are not using a mask token nor expecting any out of vocabulary
             # (oov) token, we set mask_token to None and  num_oov_indices to 0.
-            lookup = StringLookup(
+            lookup = layers.StringLookup(
                 vocabulary=vocabulary,
                 mask_token=None,
                 num_oov_indices=0,
@@ -290,10 +292,12 @@ def encode_inputs(inputs, use_embedding=False):
                 encoded_feature = embedding(encoded_feature)
             else:
                 # Convert the string input values into a one hot encoding.
-                encoded_feature = lookup(tf.expand_dims(inputs[feature_name], -1))
+                encoded_feature = lookup(
+                    keras.ops.expand_dims(inputs[feature_name], -1)
+                )
         else:
             # Use the numerical features as-is.
-            encoded_feature = tf.expand_dims(inputs[feature_name], -1)
+            encoded_feature = keras.ops.expand_dims(inputs[feature_name], -1)
 
         encoded_features.append(encoded_feature)
 
