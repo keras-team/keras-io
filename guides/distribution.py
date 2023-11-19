@@ -10,16 +10,16 @@ Accelerator: GPU
 """
 ## Introduction
 
-The Keras distribution API is a new interface designed to facilitate 
+The Keras distribution API is a new interface designed to facilitate
 distributed deep learning across a variety of backends like JAX, TensorFlow and
 PyTorch. This powerful API introduces a suite of tools enabling data and model
 parallelism, allowing for efficient scaling of deep learning models on multiple
-accelerators and hosts. Whether leveraging the power of GPUs or TPUs, the API 
-provides a streamlined approach to initializing distributed environments, 
-defining device meshes, and orchestrating the layout of tensors across 
-computational resources. Through classes like `DataParallel` and 
-`ModelParallel`, it abstracts the complexity involved in parallel computation, 
-making it easier for developers to accelerate their machine learning 
+accelerators and hosts. Whether leveraging the power of GPUs or TPUs, the API
+provides a streamlined approach to initializing distributed environments,
+defining device meshes, and orchestrating the layout of tensors across
+computational resources. Through classes like `DataParallel` and
+`ModelParallel`, it abstracts the complexity involved in parallel computation,
+making it easier for developers to accelerate their machine learning
 workflows.
 
 """
@@ -27,16 +27,16 @@ workflows.
 """
 ## How it works
 
-The Keras distribution API provides a global programming model that allows 
+The Keras distribution API provides a global programming model that allows
 developers to compose applications that operate on tensors in a global context
-(as if working with a single device) while 
-automatically managing distribution across many devices. The API leverages the 
-underlying framework (e.g. JAX) to distribute the program and tensors according to the 
-sharding directives through a procedure called single program, multiple data 
+(as if working with a single device) while
+automatically managing distribution across many devices. The API leverages the
+underlying framework (e.g. JAX) to distribute the program and tensors according to the
+sharding directives through a procedure called single program, multiple data
 (SPMD) expansion.
 
 By decoupling the application from sharding directives, the API enables running
-the same application on a single device, multiple devices, or even multiple 
+the same application on a single device, multiple devices, or even multiple
 clients, while preserving its global semantics.
 """
 
@@ -58,14 +58,14 @@ from tensorflow import data as tf_data  # For dataset input.
 """
 ## `DeviceMesh` and `TensorLayout`
 
-The `keras.distribution.DeviceMesh` class in Keras distribution API represents a cluster of 
-computational devices configured for distributed computation. It aligns with 
-similar concepts in [`jax.sharding.Mesh`](https://jax.readthedocs.io/en/latest/jax.sharding.html#jax.sharding.Mesh) and 
-[`tf.dtensor.Mesh`](https://www.tensorflow.org/api_docs/python/tf/experimental/dtensor/Mesh), 
+The `keras.distribution.DeviceMesh` class in Keras distribution API represents a cluster of
+computational devices configured for distributed computation. It aligns with
+similar concepts in [`jax.sharding.Mesh`](https://jax.readthedocs.io/en/latest/jax.sharding.html#jax.sharding.Mesh) and
+[`tf.dtensor.Mesh`](https://www.tensorflow.org/api_docs/python/tf/experimental/dtensor/Mesh),
 where it's used to map the physical devices to a logical mesh structure.
 
 The `TensorLayout` class then specifies how tensors are distributed across the
-`DeviceMesh`, detailing the sharding of tensors along specified axes that 
+`DeviceMesh`, detailing the sharding of tensors along specified axes that
 correspond to the names of the axes in the `DeviceMesh`.
 
 You can find more detailed concept explainers in the
@@ -95,18 +95,18 @@ replicated_layout_4d = keras.distribution.TensorLayout(
 ## Distribution
 
 The `Distribution` class in Keras serves as a foundational abstract class designed
-for developing custom distribution strategies. It encapsulates the core logic 
-needed to distribute a model's variables, input data, and intermediate 
+for developing custom distribution strategies. It encapsulates the core logic
+needed to distribute a model's variables, input data, and intermediate
 computations across a device mesh. As an end user, you won't have to interact
-directly with this class, but its subclasses like `DataParallel` or 
+directly with this class, but its subclasses like `DataParallel` or
 `ModelParallel`.
 """
 
 """
 ## DataParallel
 
-The `DataParallel` class in the Keras distribution API is designed for the 
-data parallelism strategy in distributed training, where the model weights are 
+The `DataParallel` class in the Keras distribution API is designed for the
+data parallelism strategy in distributed training, where the model weights are
 replicated across all devices in the `DeviceMesh`, and each device processes a
 portion of the input data.
 
@@ -154,29 +154,29 @@ model.evaluate(dataset)
 
 `ModelParallel` will be mostly useful when model weights are too large to fit
 on a single accelerator. This setting allows you to spit your model weights or
-activation tensors across all the devices on the `DeviceMesh`, and enable the 
+activation tensors across all the devices on the `DeviceMesh`, and enable the
 horizontal scaling for the large models.
 
-Unlike the `DataParallel` model where all weights are fully replicated, 
-the weights layout under `ModelParallel` usually need some customization for 
-best performances. We introduce `LayoutMap` to let you specify the 
+Unlike the `DataParallel` model where all weights are fully replicated,
+the weights layout under `ModelParallel` usually need some customization for
+best performances. We introduce `LayoutMap` to let you specify the
 `TensorLayout` for any weights and intermediate tensors from global perspective.
 
 `LayoutMap` is a dict-like object that maps a string to `TensorLayout`
-instances. It behaves differently from a normal Python dict in that the string 
-key is treated as a regex when retrieving the value. The class allows you to 
-define the naming schema of `TensorLayout` and then retrieve the corresponding 
+instances. It behaves differently from a normal Python dict in that the string
+key is treated as a regex when retrieving the value. The class allows you to
+define the naming schema of `TensorLayout` and then retrieve the corresponding
 `TensorLayout` instance. Typically, the key used to query
 is the `variable.path` attribute,  which is the identifier of the variable.
-As a shortcut, a tuple or list of axis 
-names is also allowed when inserting a value, and it will be converted to 
+As a shortcut, a tuple or list of axis
+names is also allowed when inserting a value, and it will be converted to
 `TensorLayout`.
 
-The `LayoutMap` can also optionally contain a `DeviceMesh` to populate the 
-`TensorLayout.device_mesh` if it is not set. When retrieving a layout with a 
-key, and if there isn't an exact match, all existing keys in the layout map will 
-be treated as regex and matched against the input key again. If there are 
-multiple matches, a `ValueError` is raised. If no matches are found, `None` is 
+The `LayoutMap` can also optionally contain a `DeviceMesh` to populate the
+`TensorLayout.device_mesh` if it is not set. When retrieving a layout with a
+key, and if there isn't an exact match, all existing keys in the layout map will
+be treated as regex and matched against the input key again. If there are
+multiple matches, a `ValueError` is raised. If no matches are found, `None` is
 returned.
 """
 
@@ -214,7 +214,7 @@ model.evaluate(dataset)
 
 """
 It is also easy to change the mesh structure to tune the computation between
-more data parallel or model parallel. You can do this by adjusting the shape of 
+more data parallel or model parallel. You can do this by adjusting the shape of
 the mesh. And no changes are needed for any other code.
 """
 
