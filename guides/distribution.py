@@ -47,7 +47,7 @@ clients, while preserving its global semantics.
 import os
 
 # The distribution API is only implemented for the JAX backend for now.
-os["KERAS_BACKEND"] = "jax"
+os.environ["KERAS_BACKEND"] = "jax"
 
 import keras
 from keras import layers
