@@ -49,11 +49,15 @@ Target | Diagnosis of heart disease (1 = true; 0 = false) | Target
 ## Setup
 """
 
+import os
+
+# TensorFlow is the only backend that supports string inputs.
+os.environ["KERAS_BACKEND"] = "tensorflow"
+
 import tensorflow as tf
-import numpy as np
 import pandas as pd
-from tensorflow import keras
-from tensorflow.keras import layers
+import keras
+from keras import layers
 
 """
 ## Preparing the data
@@ -88,8 +92,8 @@ val_dataframe = dataframe.sample(frac=0.2, random_state=1337)
 train_dataframe = dataframe.drop(val_dataframe.index)
 
 print(
-    "Using %d samples for training and %d for validation"
-    % (len(train_dataframe), len(val_dataframe))
+    f"Using {len(train_dataframe)} samples for training "
+    f"and {len(val_dataframe)} for validation"
 )
 
 """
@@ -171,14 +175,10 @@ then one-hot encode these integer indices.
 - `encode_integer_categorical_feature` to one-hot encode integer categorical features.
 """
 
-from tensorflow.keras.layers import IntegerLookup
-from tensorflow.keras.layers import Normalization
-from tensorflow.keras.layers import StringLookup
-
 
 def encode_numerical_feature(feature, name, dataset):
     # Create a Normalization layer for our feature
-    normalizer = Normalization()
+    normalizer = layers.Normalization()
 
     # Prepare a Dataset that only yields our feature
     feature_ds = dataset.map(lambda x, y: x[name])
@@ -193,7 +193,7 @@ def encode_numerical_feature(feature, name, dataset):
 
 
 def encode_categorical_feature(feature, name, dataset, is_string):
-    lookup_class = StringLookup if is_string else IntegerLookup
+    lookup_class = layers.StringLookup if is_string else layers.IntegerLookup
     # Create a lookup layer which will turn strings into integer indices
     lookup = lookup_class(output_mode="binary")
 
@@ -340,6 +340,7 @@ input_dict = {name: tf.convert_to_tensor([value]) for name, value in sample.item
 predictions = model.predict(input_dict)
 
 print(
-    "This particular patient had a %.1f percent probability "
-    "of having a heart disease, as evaluated by our model." % (100 * predictions[0][0],)
+    f"This particular patient had a {100 * predictions[0][0]:.1f} "
+    "percent probability of having a heart disease, "
+    "as evaluated by our model."
 )
