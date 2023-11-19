@@ -38,7 +38,7 @@ and click "Restart runtime" in Colab, and your code will run on the JAX or PyTor
 !pip install -q keras-nightly
 ```
 
-    
+
 ```python
 import os
 
@@ -48,13 +48,7 @@ import keras
 import tensorflow as tf
 import numpy as np
 ```
-<div class="k-default-codeblock">
-```
- [[34;49mnotice[1;39;49m][39;49m A new release of pip available: [31;49m22.2.2[39;49m -> [32;49m23.3.1
- [[34;49mnotice[1;39;49m][39;49m To update, run: [32;49mpip install --upgrade pip
 
-```
-</div>
 ---
 ## Going from Keras 3 to Keras 3 with the TensorFlow Backend
 
@@ -130,7 +124,7 @@ subclass_model.predict(x_train)
 
 <div class="k-default-codeblock">
 ```
- 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 41ms/step
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 44ms/step
 
 array([[1., 2., 3.],
        [4., 5., 6.]], dtype=float32)
@@ -177,7 +171,7 @@ INFO:tensorflow:Assets written to: saved_model/assets
 
 ```
 </div>
-### Load a TF SavedModel
+### Loading a TF SavedModel
 
 Loading a TF SavedModel file via keras.models.load_model() is no longer supported
 
@@ -325,11 +319,11 @@ model.predict(data)
 
 <div class="k-default-codeblock">
 ```
- 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 39ms/step
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 41ms/step
 
-array([[0.15769993, 0.4886348 , 0.41481912],
-       [0.42047974, 0.14953318, 0.26836458],
-       [0.17191862, 0.16816822, 0.15178813]], dtype=float32)
+array([[0.33270717, 1.9665219 , 0.65563697],
+       [0.07790914, 0.31452292, 1.2377782 ],
+       [0.22159861, 1.5851375 , 0.46487382]], dtype=float32)
 
 ```
 </div>
@@ -427,9 +421,9 @@ multi_output_model.evaluate(x_test, y_test)
 
 <div class="k-default-codeblock">
 ```
- 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 97ms/step - loss: 4.2733 - output_1_categorical_crossentropy: 4.2733
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 124ms/step - loss: 3.8375 - output_1_categorical_crossentropy: 3.8375
 
-[4.273325443267822, 4.273325443267822]
+[3.837531328201294, 3.837531328201294]
 
 ```
 </div>
@@ -507,7 +501,7 @@ for layer in model.layers:
 
 <div class="k-default-codeblock">
 ```
- 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 37ms/step
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 51ms/step
 [<KerasVariable shape=(3, 3), dtype=float32, path=sequential_2/my_custom_layer_1/variable>, <KerasVariable shape=(3,), dtype=float32, path=sequential_2/my_custom_layer_1/variable_1>]
 
 ```
@@ -615,7 +609,7 @@ layer(foo, baz=baz)
 </div>
 ### State-building issues
 
-Keras 3 is significantly more strict than Keras 2 about when state (e.g. numerical weight variables)
+Keras 3 is significantly stricter than Keras 2 about when state (e.g. numerical weight variables)
 can be created. Keras 3 wants all state to be created before the model can be trained. This is a requirement
 for using JAX (whereas TensorFlow was very lenient about state creation timing).
 

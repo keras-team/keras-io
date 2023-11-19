@@ -154,7 +154,7 @@ sequential_model(np.random.rand(3, 5))
 tf.saved_model.save(sequential_model, "saved_model")
 
 """
-### Load a TF SavedModel
+### Loading a TF SavedModel
 
 Loading a TF SavedModel file via keras.models.load_model() is no longer supported
 
@@ -527,7 +527,7 @@ layer(foo, baz=baz)
 """
 ### State-building issues
 
-Keras 3 is significantly more strict than Keras 2 about when state (e.g. numerical weight variables)
+Keras 3 is significantly stricter than Keras 2 about when state (e.g. numerical weight variables)
 can be created. Keras 3 wants all state to be created before the model can be trained. This is a requirement
 for using JAX (whereas TensorFlow was very lenient about state creation timing).
 

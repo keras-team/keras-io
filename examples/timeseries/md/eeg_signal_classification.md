@@ -51,52 +51,6 @@ First, lets install our dependencies:
 !pip install matplotlib -q
 ```
 
-<div class="k-default-codeblock">
-```
-  [1;31merror:  subprocess-exited-with-error
-  
-  [31m× python setup.py egg_info did not run successfully.
-  [31m│ exit code: [1;36m1
-  [31m╰─> [31m[18 lines of output]
-  [31m    The 'sklearn' PyPI package is deprecated, use 'scikit-learn'
-  [31m    rather than 'sklearn' for pip commands.
-  [31m    
-  [31m    Here is how to fix this error in the main use cases:
-  [31m    - use 'pip install scikit-learn' rather than 'pip install sklearn'
-  [31m    - replace 'sklearn' by 'scikit-learn' in your pip requirements files
-  [31m      (requirements.txt, setup.py, setup.cfg, Pipfile, etc ...)
-  [31m    - if the 'sklearn' package is used by one of your dependencies,
-  [31m      it would be great if you take some time to track which package uses
-  [31m      'sklearn' instead of 'scikit-learn' and report it to their issue tracker
-  [31m    - as a last resort, set the environment variable
-  [31m      SKLEARN_ALLOW_DEPRECATED_SKLEARN_PACKAGE_INSTALL=True to avoid this error
-  [31m    
-  [31m    More information is available at
-  [31m    https://github.com/scikit-learn/sklearn-pypi-package
-  [31m    
-  [31m    If the previous advice does not cover your use case, feel free to report it at
-  [31m    https://github.com/scikit-learn/sklearn-pypi-package/issues/new
-  [31m    [31m[end of output]
-  
-  [1;35mnote: This error originates from a subprocess, and is likely not a problem with pip.
-[1;31merror:  metadata-generation-failed
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-[31m× Encountered error while generating package metadata.
-[31m╰─> See above for output.
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-[1;35mnote: This is an issue with the package mentioned above, not pip.
-[1;36mhint: See above for details.
-
-```
-</div>
 Next, lets download our dataset.
 The gdown package makes it easy to download the data from Google Drive:
 

@@ -439,11 +439,3 @@ from IPython.display import Image, display
 display(Image("generated_img_0_19.png"))
 display(Image("generated_img_1_19.png"))
 display(Image("generated_img_2_19.png"))
-
-"""
-Example available on HuggingFace.
-
-| Trained Model | Demo |
-| :--: | :--: |
-| [![Generic badge](https://img.shields.io/badge/🤗%20Model-WGAN%20GP-black.svg)](https://huggingface.co/keras-io/WGAN-GP) | [![Generic badge](https://img.shields.io/badge/🤗%20Spaces-WGAN%20GP-black.svg)](https://huggingface.co/spaces/keras-io/WGAN-GP) |
-"""

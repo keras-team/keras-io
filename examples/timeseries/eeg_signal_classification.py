@@ -44,7 +44,7 @@ First, lets install our dependencies:
 
 """shell
 pip install gdown -q
-pip install sklearn -q
+pip install scikit-learn -q
 pip install pandas -q
 pip install numpy -q
 pip install matplotlib -q

@@ -130,13 +130,6 @@ func_output = keras.layers.Dense(10, activation="softmax")(x)
 model_b = keras.Model(func_input, func_output)
 ```
 
-<div class="k-default-codeblock">
-```
-/opt/conda/envs/keras-tensorflow/lib/python3.10/site-packages/keras/src/layers/reshaping/flatten.py:37: UserWarning: Do not pass an `input_shape`/`input_dim` argument to a layer. When using Sequential models, prefer using an `Input(shape)` object as the first layer in the model instead.
-  super().__init__(**kwargs)
-
-```
-</div>
 ---
 ## Create Trainer class objects from the models
 
@@ -165,49 +158,7 @@ trainer_2.fit(
 <div class="k-default-codeblock">
 ```
 Epoch 1/5
- 117/938 ━━[37m━━━━━━━━━━━━━━━━━━  1s 1ms/step - sparse_categorical_accuracy: 0.2924
-
-WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
-I0000 00:00:1699473470.240132  317999 device_compiler.h:186] Compiled cluster using XLA!  This line is logged at most once for the lifetime of the process.
-W0000 00:00:1699473470.252956  317999 graph_launch.cc:671] Fallback to op-by-op mode because memset node breaks graph update
-
- 938/938 ━━━━━━━━━━━━━━━━━━━━ 0s 2ms/step - sparse_categorical_accuracy: 0.6370
-
-W0000 00:00:1699473472.573364  317998 graph_launch.cc:671] Fallback to op-by-op mode because memset node breaks graph update
-W0000 00:00:1699473473.294878  317998 graph_launch.cc:671] Fallback to op-by-op mode because memset node breaks graph update
-
- 938/938 ━━━━━━━━━━━━━━━━━━━━ 5s 4ms/step - sparse_categorical_accuracy: 0.6372 - val_sparse_categorical_accuracy: 0.8876
-Epoch 2/5
- 122/938 ━━[37m━━━━━━━━━━━━━━━━━━  1s 1ms/step - sparse_categorical_accuracy: 0.8495
-
-W0000 00:00:1699473473.652419  317999 graph_launch.cc:671] Fallback to op-by-op mode because memset node breaks graph update
-
- 938/938 ━━━━━━━━━━━━━━━━━━━━ 1s 1ms/step - sparse_categorical_accuracy: 0.8655 - val_sparse_categorical_accuracy: 0.9070
-Epoch 3/5
- 938/938 ━━━━━━━━━━━━━━━━━━━━ 1s 1ms/step - sparse_categorical_accuracy: 0.8887 - val_sparse_categorical_accuracy: 0.9161
-Epoch 4/5
- 938/938 ━━━━━━━━━━━━━━━━━━━━ 1s 1ms/step - sparse_categorical_accuracy: 0.9014 - val_sparse_categorical_accuracy: 0.9223
-Epoch 5/5
- 938/938 ━━━━━━━━━━━━━━━━━━━━ 1s 1ms/step - sparse_categorical_accuracy: 0.9124 - val_sparse_categorical_accuracy: 0.9265
-Epoch 1/5
- 119/938 ━━[37m━━━━━━━━━━━━━━━━━━  1s 1ms/step - sparse_categorical_accuracy: 0.6811
-
-W0000 00:00:1699473481.515332  317999 graph_launch.cc:671] Fallback to op-by-op mode because memset node breaks graph update
-
- 938/938 ━━━━━━━━━━━━━━━━━━━━ 0s 3ms/step - sparse_categorical_accuracy: 0.8617
-
-W0000 00:00:1699473484.239004  317998 graph_launch.cc:671] Fallback to op-by-op mode because memset node breaks graph update
-W0000 00:00:1699473484.581161  317997 graph_launch.cc:671] Fallback to op-by-op mode because memset node breaks graph update
-
- 938/938 ━━━━━━━━━━━━━━━━━━━━ 5s 4ms/step - sparse_categorical_accuracy: 0.8618 - val_sparse_categorical_accuracy: 0.9633
-Epoch 2/5
- 119/938 ━━[37m━━━━━━━━━━━━━━━━━━  1s 1ms/step - sparse_categorical_accuracy: 0.9595
-
-W0000 00:00:1699473484.934538  317999 graph_launch.cc:671] Fallback to op-by-op mode because memset node breaks graph update
-
- 938/938 ━━━━━━━━━━━━━━━━━━━━ 1s 1ms/step - sparse_categorical_accuracy: 0.9598 - val_sparse_categorical_accuracy: 0.9696
-Epoch 3/5
- 938/938 ━━━━━━━━━━━━━━━━━━━━ 1s 1ms/step - sparse_categorical_accuracy: 0.9722 - val_sparse_categorical_accuracy: 0.9750
+...
 Epoch 4/5
  938/938 ━━━━━━━━━━━━━━━━━━━━ 1s 1ms/step - sparse_categorical_accuracy: 0.9770 - val_sparse_categorical_accuracy: 0.9770
 Epoch 5/5
