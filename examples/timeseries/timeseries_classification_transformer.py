@@ -62,8 +62,8 @@ You can replace your classification RNN layers with this one: the
 inputs are fully compatible!
 """
 
-from tensorflow import keras
-from tensorflow.keras import layers
+import keras
+from keras import layers
 
 """
 We include residual connections, layer normalization, and dropout.
@@ -154,7 +154,7 @@ model.fit(
     x_train,
     y_train,
     validation_split=0.2,
-    epochs=200,
+    epochs=2,
     batch_size=64,
     callbacks=callbacks,
 )
