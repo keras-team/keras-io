@@ -239,6 +239,8 @@ EXAMPLES_MASTER = {
                     "path": "image_captioning",
                     "title": "Image captioning",
                     "subcategory": "Image & Text",
+                    "highlight": True,
+                    "keras_3": True,
                 },
                 {
                     "path": "nl_image_search",
@@ -250,6 +252,7 @@ EXAMPLES_MASTER = {
                     "path": "visualizing_what_convnets_learn",
                     "title": "Visualizing what convnets learn",
                     "subcategory": "Vision models interpretability",
+                    "keras_3": True,
                 },
                 {
                     "path": "integrated_gradients",

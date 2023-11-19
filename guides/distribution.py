@@ -28,9 +28,10 @@ workflows.
 ## How it works
 
 The Keras distribution API provides a global programming model that allows 
-developers to compose applications that operate on tensors globally while 
-managing the distribution across devices internally. The API leverages the 
-underlying framework to distribute the program and tensors according to the 
+developers to compose applications that operate on tensors in a global context
+(as if working with a single device) while 
+automatically managing distribution across many devices. The API leverages the 
+underlying framework (e.g. JAX) to distribute the program and tensors according to the 
 sharding directives through a procedure called single program, multiple data 
 (SPMD) expansion.
 
@@ -42,6 +43,7 @@ clients, while preserving its global semantics.
 """
 ## Setup
 """
+
 import os
 
 # The distribution API is only implemented for the JAX backend for now.
@@ -54,12 +56,12 @@ import numpy as np
 from tensorflow import data as tf_data  # For dataset input.
 
 """
-## DeviceMesh and TensorLayout
+## `DeviceMesh` and `TensorLayout`
 
-The DeviceMesh class in Keras distribution API represents a cluster of 
+The `keras.distribution.DeviceMesh` class in Keras distribution API represents a cluster of 
 computational devices configured for distributed computation. It aligns with 
-similar concepts in [jax.sharding.Mesh](https://jax.readthedocs.io/en/latest/jax.sharding.html#jax.sharding.Mesh) and 
-[tf.dtensor.Mesh](https://www.tensorflow.org/api_docs/python/tf/experimental/dtensor/Mesh), 
+similar concepts in [`jax.sharding.Mesh`](https://jax.readthedocs.io/en/latest/jax.sharding.html#jax.sharding.Mesh) and 
+[`tf.dtensor.Mesh`](https://www.tensorflow.org/api_docs/python/tf/experimental/dtensor/Mesh), 
 where it's used to map the physical devices to a logical mesh structure.
 
 The `TensorLayout` class then specifies how tensors are distributed across the
