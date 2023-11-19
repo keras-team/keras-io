@@ -232,7 +232,7 @@ model.fit(
     epochs=epochs,
     validation_data=valid_dataset,
     callbacks=callbacks,
-    verbose=1,
+    verbose=2,
 )
 
 """
