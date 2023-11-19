@@ -217,19 +217,22 @@ valid_dataset = get_dataset(
 # Configure the model for training.
 # We use the "sparse" version of categorical_crossentropy
 # because our target data is integers.
-model.compile(optimizer="rmsprop", loss="sparse_categorical_crossentropy")
+model.compile(
+    optimizer=keras.optimizers.Adam(1e-4), loss="sparse_categorical_crossentropy"
+)
 
 callbacks = [
     keras.callbacks.ModelCheckpoint("oxford_segmentation.keras", save_best_only=True)
 ]
 
 # Train the model, doing validation at the end of each epoch.
-epochs = 15
+epochs = 50
 model.fit(
     train_dataset,
     epochs=epochs,
     validation_data=valid_dataset,
     callbacks=callbacks,
+    verbose=1,
 )
 
 """

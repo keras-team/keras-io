@@ -124,7 +124,7 @@ subclass_model.predict(x_train)
 
 <div class="k-default-codeblock">
 ```
- 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 44ms/step
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 43ms/step
 
 array([[1., 2., 3.],
        [4., 5., 6.]], dtype=float32)
@@ -173,9 +173,9 @@ INFO:tensorflow:Assets written to: saved_model/assets
 </div>
 ### Loading a TF SavedModel
 
-Loading a TF SavedModel file via keras.models.load_model() is no longer supported
+Loading a TF SavedModel file via `keras.models.load_model()` is no longer supported
+If you try to use `keras.models.load_model()` with a TF SavedModel, you will get the following error:
 
-if you try to use `keras.models.load_model` you would get the following error
 ```python
 ValueError: File format not supported: filepath=saved_model. Keras 3 only supports V3
 `.keras` files and legacy H5 format files (`.h5` extension). Note that the legacy
@@ -191,8 +191,9 @@ The following snippet of code will reproduce the above error:
 keras.models.load_model("saved_model")
 ```
 
-**How to fix it:** Use `keras.layers.TFSMLayer(filepath, call_endpoint="serving_default")` to reload any TF
-SavedModel as a Keras layer
+**How to fix it:** Use `keras.layers.TFSMLayer(filepath, call_endpoint="serving_default")` to reload a TF
+SavedModel as a Keras layer. This is not limited to SavedModels that originate from Keras -- it will work
+with any SavedModel, e.g. TF-Hub models.
 
 
 ```python
@@ -208,9 +209,9 @@ keras.layers.TFSMLayer("saved_model", call_endpoint="serving_default")
 
 ```
 </div>
-### Nested inputs to Model()
+### Using deeply nested inputs in Functional Models
 
-Model() can no longer be passed deeply nested inputs/outputs (nested more than 1 level
+`Model()` can no longer be passed deeply nested inputs/outputs (nested more than 1 level
 deep, e.g. lists of lists of tensors).
 
 You would encounter errors as follows:
@@ -260,7 +261,7 @@ keras.Model(inputs, outputs)
 </div>
 ### TF autograph
 
-In legacy `tf.keras`, TF autograph is enabled by default on the `call()` method of custom
+In Keras 2, TF autograph is enabled by default on the `call()` method of custom
 layers. In Keras 3, it is not. This means you may have to use cond ops if you're using
 control flow, or alternatively you can decorate your `call()` method with `@tf.function`.
 
@@ -319,15 +320,15 @@ model.predict(data)
 
 <div class="k-default-codeblock">
 ```
- 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 41ms/step
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 42ms/step
 
-array([[0.33270717, 1.9665219 , 0.65563697],
-       [0.07790914, 0.31452292, 1.2377782 ],
-       [0.22159861, 1.5851375 , 0.46487382]], dtype=float32)
+array([[0.13190317, 0.27134266, 0.40335554],
+       [0.05006779, 0.27680686, 0.2334947 ],
+       [0.33068854, 0.4202097 , 0.0833633 ]], dtype=float32)
 
 ```
 </div>
-### TF op on a Keras tensor
+### Calling TF ops with a `KerasTensor`
 
 Using a TF op on a Keras tensor during functional model construction is disallowed: "A
 KerasTensor cannot be used as input to a TensorFlow function".
@@ -421,15 +422,17 @@ multi_output_model.evaluate(x_test, y_test)
 
 <div class="k-default-codeblock">
 ```
- 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 124ms/step - loss: 3.8375 - output_1_categorical_crossentropy: 3.8375
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 123ms/step - loss: 3.9932 - output_1_categorical_crossentropy: 3.9932
 
-[3.837531328201294, 3.837531328201294]
+[3.993187665939331, 3.993187665939331]
 
 ```
 </div>
-### Variables tracking
+### TensorFlow variables tracking
 
-The following snippet of code will show that the tf.Variables are not being tracked.
+Setting a `tf.Variable` as an attribute of a Keras 3 layer or model will not automatically
+track the variable, unlike in Keras 2. The following snippet of code will show that the `tf.Variables`
+are not being tracked.
 
 ```python
 class MyCustomLayer(keras.layers.Layer):
@@ -455,6 +458,8 @@ model.predict(data)
 for layer in model.layers:
     print(layer.trainable_variables)
 ```
+
+You will see the following warning:
 
 ```
 UserWarning: The model does not have any trainable weights.
@@ -501,7 +506,7 @@ for layer in model.layers:
 
 <div class="k-default-codeblock">
 ```
- 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 51ms/step
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 35ms/step
 [<KerasVariable shape=(3, 3), dtype=float32, path=sequential_2/my_custom_layer_1/variable>, <KerasVariable shape=(3,), dtype=float32, path=sequential_2/my_custom_layer_1/variable_1>]
 
 ```

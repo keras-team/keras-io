@@ -459,8 +459,6 @@ run_experiment(tree_model)
 
 <div class="k-default-codeblock">
 ```
-CUDA backend failed to initialize: Found cuSOLVER version 11405, but JAX was built against version 11502, which is newer. The copy of cuSOLVER that is installed must be at least as new as the version against which JAX was built. (Set TF_CPP_MIN_LOG_LEVEL=0 and rerun for more info.)
-
 Start training the model...
 Epoch 1/10
  123/123 ━━━━━━━━━━━━━━━━━━━━ 5s 26ms/step - loss: 0.5308 - sparse_categorical_accuracy: 0.8150

@@ -156,9 +156,9 @@ tf.saved_model.save(sequential_model, "saved_model")
 """
 ### Loading a TF SavedModel
 
-Loading a TF SavedModel file via keras.models.load_model() is no longer supported
+Loading a TF SavedModel file via `keras.models.load_model()` is no longer supported
+If you try to use `keras.models.load_model()` with a TF SavedModel, you will get the following error:
 
-if you try to use `keras.models.load_model` you would get the following error
 ```python
 ValueError: File format not supported: filepath=saved_model. Keras 3 only supports V3
 `.keras` files and legacy H5 format files (`.h5` extension). Note that the legacy
@@ -176,16 +176,17 @@ keras.models.load_model("saved_model")
 """
 
 """
-**How to fix it:** Use `keras.layers.TFSMLayer(filepath, call_endpoint="serving_default")` to reload any TF
-SavedModel as a Keras layer
+**How to fix it:** Use `keras.layers.TFSMLayer(filepath, call_endpoint="serving_default")` to reload a TF
+SavedModel as a Keras layer. This is not limited to SavedModels that originate from Keras -- it will work
+with any SavedModel, e.g. TF-Hub models.
 """
 
 keras.layers.TFSMLayer("saved_model", call_endpoint="serving_default")
 
 """
-### Nested inputs to Model()
+### Using deeply nested inputs in Functional Models
 
-Model() can no longer be passed deeply nested inputs/outputs (nested more than 1 level
+`Model()` can no longer be passed deeply nested inputs/outputs (nested more than 1 level
 deep, e.g. lists of lists of tensors).
 
 You would encounter errors as follows:
@@ -228,7 +229,7 @@ keras.Model(inputs, outputs)
 """
 ### TF autograph
 
-In legacy `tf.keras`, TF autograph is enabled by default on the `call()` method of custom
+In Keras 2, TF autograph is enabled by default on the `call()` method of custom
 layers. In Keras 3, it is not. This means you may have to use cond ops if you're using
 control flow, or alternatively you can decorate your `call()` method with `@tf.function`.
 
@@ -286,7 +287,7 @@ model.compile(optimizer="adam", loss="mse")
 model.predict(data)
 
 """
-### TF op on a Keras tensor
+### Calling TF ops with a `KerasTensor`
 
 Using a TF op on a Keras tensor during functional model construction is disallowed: "A
 KerasTensor cannot be used as input to a TensorFlow function".
@@ -369,9 +370,11 @@ multi_output_model.evaluate(x_test, y_test)
 
 
 """
-### Variables tracking
+### TensorFlow variables tracking
 
-The following snippet of code will show that the tf.Variables are not being tracked.
+Setting a `tf.Variable` as an attribute of a Keras 3 layer or model will not automatically
+track the variable, unlike in Keras 2. The following snippet of code will show that the `tf.Variables`
+are not being tracked.
 
 ```python
 class MyCustomLayer(keras.layers.Layer):
@@ -398,13 +401,13 @@ for layer in model.layers:
     print(layer.trainable_variables)
 ```
 
+You will see the following warning:
+
 ```
 UserWarning: The model does not have any trainable weights.
   warnings.warn("The model does not have any trainable weights.")
 ```
-"""
 
-"""
 **How to fix it:** use `self.add_weight()` method or opt for a `keras.Variable` instead. If you
 are currently using `tf.variable`, you can switch to `keras.Variable`.
 """

@@ -482,6 +482,7 @@ EXAMPLES_MASTER = {
                     "title": "Structured data classification with FeatureSpace",
                     "subcategory": "Structured data classification",
                     "highlight": True,
+                    "keras_3": True,
                 },
                 {
                     "path": "imbalanced_classification",
@@ -494,6 +495,7 @@ EXAMPLES_MASTER = {
                     "path": "structured_data_classification_from_scratch",
                     "title": "Structured data classification from scratch",
                     "subcategory": "Structured data classification",
+                    "keras_3": True,
                 },
                 {
                     "path": "wide_deep_cross_networks",
@@ -514,6 +516,7 @@ EXAMPLES_MASTER = {
                     "path": "deep_neural_decision_forests",
                     "title": "Classification with Neural Decision Forests",
                     "subcategory": "Structured data classification",
+                    "keras_3": True,
                 },
                 {
                     "path": "tabtransformer",
@@ -553,6 +556,7 @@ EXAMPLES_MASTER = {
                     "path": "timeseries_classification_transformer",
                     "title": "Timeseries classification with a Transformer model",
                     "subcategory": "Timeseries classification",
+                    "keras_3": True,
                 },
                 {
                     "path": "eeg_signal_classification",
