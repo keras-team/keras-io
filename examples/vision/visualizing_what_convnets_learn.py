@@ -22,9 +22,13 @@ pattern that the filter responds to.
 ## Setup
 """
 
+import os
+
+os.environ["KERAS_BACKEND"] = "tensorflow"
+
+import keras
 import numpy as np
 import tensorflow as tf
-from tensorflow import keras
 
 # The dimensions of our input image
 img_width = 180
@@ -196,8 +200,4 @@ basis" of texture filters such as these.
 See also
 [this old blog post](https://blog.keras.io/how-convolutional-neural-networks-see-the-world.html)
 for analysis and interpretation.
-
-Example available on HuggingFace.
-
-[![Generic badge](https://img.shields.io/badge/🤗%20Spaces-What%20Convnets%20Learn-black.svg)](https://huggingface.co/spaces/keras-io/what-convnets-learn)
 """
