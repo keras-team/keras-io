@@ -29,10 +29,10 @@
 ```
   % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
                                  Dload  Upload   Total   Spent    Left  Speed
-100  755M  100  755M    0     0  21.2M      0  0:00:35  0:00:35 --:--:-- 22.3M
+100  755M  100  755M    0     0  13.8M      0  0:00:54  0:00:54 --:--:-- 10.1M
   % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
                                  Dload  Upload   Total   Spent    Left  Speed
-100 18.2M  100 18.2M    0     0  7568k      0  0:00:02  0:00:02 --:--:-- 7568k
+100 18.2M  100 18.2M    0     0  7583k      0  0:00:02  0:00:02 --:--:-- 7583k
 
 ```
 </div>
@@ -538,12 +538,99 @@ model.fit(
 <div class="k-default-codeblock">
 ```
 Epoch 1/15
- 32/32 ━━━━━━━━━━━━━━━━━━━━ 43s 609ms/step - loss: 3.9478 - val_loss: 6.0979
-...
-Epoch 15/15
- 32/32 ━━━━━━━━━━━━━━━━━━━━ 3s 81ms/step - loss: 0.4831 - val_loss: 1.8468
+  3/32 ━[37m━━━━━━━━━━━━━━━━━━━  1s 43ms/step - loss: 7.4035  
 
-<keras.src.callbacks.history.History at 0x7fdc0ba85de0>
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1700413872.741403 2221334 device_compiler.h:187] Compiled cluster using XLA!  This line is logged at most once for the lifetime of the process.
+Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
+
+ 32/32 ━━━━━━━━━━━━━━━━━━━━ 54s 679ms/step - loss: 3.6163 - val_loss: 3.0248
+Epoch 2/15
+  9/32 ━━━━━[37m━━━━━━━━━━━━━━━  1s 45ms/step - loss: 0.7911
+
+Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
+
+ 32/32 ━━━━━━━━━━━━━━━━━━━━ 3s 90ms/step - loss: 0.7966 - val_loss: 1.3062
+Epoch 3/15
+  7/32 ━━━━[37m━━━━━━━━━━━━━━━━  1s 46ms/step - loss: 0.7397
+
+Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
+
+ 32/32 ━━━━━━━━━━━━━━━━━━━━ 3s 84ms/step - loss: 0.7186 - val_loss: 1.3786
+Epoch 4/15
+  9/32 ━━━━━[37m━━━━━━━━━━━━━━━  1s 44ms/step - loss: 0.7020
+
+Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
+
+ 32/32 ━━━━━━━━━━━━━━━━━━━━ 3s 85ms/step - loss: 0.6726 - val_loss: 1.4471
+Epoch 5/15
+  9/32 ━━━━━[37m━━━━━━━━━━━━━━━  1s 44ms/step - loss: 0.6974
+
+Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
+
+ 32/32 ━━━━━━━━━━━━━━━━━━━━ 3s 85ms/step - loss: 0.6430 - val_loss: 1.4061
+Epoch 6/15
+  8/32 ━━━━━[37m━━━━━━━━━━━━━━━  1s 45ms/step - loss: 0.5834
+
+Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
+
+ 32/32 ━━━━━━━━━━━━━━━━━━━━ 3s 84ms/step - loss: 0.5677 - val_loss: 1.7496
+Epoch 7/15
+  8/32 ━━━━━[37m━━━━━━━━━━━━━━━  1s 44ms/step - loss: 0.5763
+
+Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
+
+ 32/32 ━━━━━━━━━━━━━━━━━━━━ 3s 84ms/step - loss: 0.5442 - val_loss: 2.0912
+Epoch 8/15
+  9/32 ━━━━━[37m━━━━━━━━━━━━━━━  1s 45ms/step - loss: 0.5399
+
+Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
+
+ 32/32 ━━━━━━━━━━━━━━━━━━━━ 3s 85ms/step - loss: 0.5156 - val_loss: 2.1356
+Epoch 9/15
+  8/32 ━━━━━[37m━━━━━━━━━━━━━━━  1s 44ms/step - loss: 0.5105
+
+Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
+
+ 32/32 ━━━━━━━━━━━━━━━━━━━━ 3s 84ms/step - loss: 0.4844 - val_loss: 2.2115
+Epoch 10/15
+  9/32 ━━━━━[37m━━━━━━━━━━━━━━━  1s 46ms/step - loss: 0.4582
+
+Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
+
+ 32/32 ━━━━━━━━━━━━━━━━━━━━ 3s 84ms/step - loss: 0.4482 - val_loss: 2.3041
+Epoch 11/15
+  9/32 ━━━━━[37m━━━━━━━━━━━━━━━  0s 42ms/step - loss: 0.4332
+
+Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
+
+ 32/32 ━━━━━━━━━━━━━━━━━━━━ 3s 84ms/step - loss: 0.4246 - val_loss: 1.9903
+Epoch 12/15
+  8/32 ━━━━━[37m━━━━━━━━━━━━━━━  1s 44ms/step - loss: 0.3898
+
+Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
+
+ 32/32 ━━━━━━━━━━━━━━━━━━━━ 3s 108ms/step - loss: 0.3906 - val_loss: 1.8275
+Epoch 13/15
+  7/32 ━━━━[37m━━━━━━━━━━━━━━━━  1s 59ms/step - loss: 0.4049
+
+Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
+
+ 32/32 ━━━━━━━━━━━━━━━━━━━━ 3s 96ms/step - loss: 0.3918 - val_loss: 0.9744
+Epoch 14/15
+  9/32 ━━━━━[37m━━━━━━━━━━━━━━━  1s 45ms/step - loss: 0.3425
+
+Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
+
+ 32/32 ━━━━━━━━━━━━━━━━━━━━ 3s 96ms/step - loss: 0.3575 - val_loss: 0.7796
+Epoch 15/15
+  8/32 ━━━━━[37m━━━━━━━━━━━━━━━  1s 47ms/step - loss: 0.3215
+
+Corrupt JPEG data: 240 extraneous bytes before marker 0xd9
+
+ 32/32 ━━━━━━━━━━━━━━━━━━━━ 3s 93ms/step - loss: 0.3335 - val_loss: 0.6974
+
+<keras.src.callbacks.history.History at 0x7feb91027d60>
 
 ```
 </div>
@@ -584,7 +671,7 @@ display_mask(i)  # Note that the model only sees inputs at 150x150.
 
 <div class="k-default-codeblock">
 ```
- 32/32 ━━━━━━━━━━━━━━━━━━━━ 3s 72ms/step
+ 32/32 ━━━━━━━━━━━━━━━━━━━━ 5s 97ms/step
 
 ```
 </div>
