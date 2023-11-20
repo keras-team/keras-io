@@ -2,9 +2,10 @@
 Title: Zero-DCE for low-light image enhancement
 Author: [Soumik Rakshit](http://github.com/soumik12345)
 Date created: 2021/09/18
-Last modified: 2021/09/19
+Last modified: 2023/07/15
 Description: Implementing Zero-Reference Deep Curve Estimation for low-light image enhancement.
 Accelerator: GPU
+Converted to Keras 3 by: [Soumik Rakshit](http://github.com/soumik12345)
 """
 """
 ## Introduction
@@ -29,7 +30,7 @@ which implicitly measure the enhancement quality and guide the training of the n
 
 ### References
 
-- [Zero-Reference Deep Curve Estimation for Low-Light Image Enhancement](https://arxiv.org/pdf/2001.06826.pdf)
+- [Zero-Reference Deep Curve Estimation for Low-Light Image Enhancement](https://arxiv.org/abs/2001.06826)
 - [Curves adjustment in Adobe Photoshop](https://helpx.adobe.com/photoshop/using/curves-adjustment.html)
 """
 
@@ -42,19 +43,23 @@ low-light input image and its corresponding well-exposed reference image.
 """
 
 import os
+
+os.environ["KERAS_BACKEND"] = "tensorflow"
+
 import random
 import numpy as np
 from glob import glob
 from PIL import Image, ImageOps
 import matplotlib.pyplot as plt
 
+import keras
+from keras import layers
+
 import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras import layers
 
 """shell
-gdown https://drive.google.com/uc?id=1DdGIJ4PZPlF2ikl8mNM9V-PdVxVLbQi6
-unzip -q lol_dataset.zip
+wget https://huggingface.co/datasets/geekyrakshit/LoL-Dataset/resolve/main/lol_dataset.zip
+unzip -q lol_dataset.zip && rm lol_dataset.zip
 """
 
 """
@@ -184,7 +189,11 @@ enhanced image.
 
 def color_constancy_loss(x):
     mean_rgb = tf.reduce_mean(x, axis=(1, 2), keepdims=True)
-    mr, mg, mb = mean_rgb[:, :, :, 0], mean_rgb[:, :, :, 1], mean_rgb[:, :, :, 2]
+    mr, mg, mb = (
+        mean_rgb[:, :, :, 0],
+        mean_rgb[:, :, :, 1],
+        mean_rgb[:, :, :, 2],
+    )
     d_rg = tf.square(mr - mg)
     d_rb = tf.square(mr - mb)
     d_gb = tf.square(mb - mg)
@@ -264,29 +273,47 @@ class SpatialConsistencyLoss(keras.losses.Loss):
         )
 
         d_original_left = tf.nn.conv2d(
-            original_pool, self.left_kernel, strides=[1, 1, 1, 1], padding="SAME"
+            original_pool,
+            self.left_kernel,
+            strides=[1, 1, 1, 1],
+            padding="SAME",
         )
         d_original_right = tf.nn.conv2d(
-            original_pool, self.right_kernel, strides=[1, 1, 1, 1], padding="SAME"
+            original_pool,
+            self.right_kernel,
+            strides=[1, 1, 1, 1],
+            padding="SAME",
         )
         d_original_up = tf.nn.conv2d(
             original_pool, self.up_kernel, strides=[1, 1, 1, 1], padding="SAME"
         )
         d_original_down = tf.nn.conv2d(
-            original_pool, self.down_kernel, strides=[1, 1, 1, 1], padding="SAME"
+            original_pool,
+            self.down_kernel,
+            strides=[1, 1, 1, 1],
+            padding="SAME",
         )
 
         d_enhanced_left = tf.nn.conv2d(
-            enhanced_pool, self.left_kernel, strides=[1, 1, 1, 1], padding="SAME"
+            enhanced_pool,
+            self.left_kernel,
+            strides=[1, 1, 1, 1],
+            padding="SAME",
         )
         d_enhanced_right = tf.nn.conv2d(
-            enhanced_pool, self.right_kernel, strides=[1, 1, 1, 1], padding="SAME"
+            enhanced_pool,
+            self.right_kernel,
+            strides=[1, 1, 1, 1],
+            padding="SAME",
         )
         d_enhanced_up = tf.nn.conv2d(
             enhanced_pool, self.up_kernel, strides=[1, 1, 1, 1], padding="SAME"
         )
         d_enhanced_down = tf.nn.conv2d(
-            enhanced_pool, self.down_kernel, strides=[1, 1, 1, 1], padding="SAME"
+            enhanced_pool,
+            self.down_kernel,
+            strides=[1, 1, 1, 1],
+            padding="SAME",
         )
 
         d_left = tf.square(d_original_left - d_enhanced_left)
@@ -312,6 +339,27 @@ class ZeroDCE(keras.Model):
         super().compile(**kwargs)
         self.optimizer = keras.optimizers.Adam(learning_rate=learning_rate)
         self.spatial_constancy_loss = SpatialConsistencyLoss(reduction="none")
+        self.total_loss_tracker = keras.metrics.Mean(name="total_loss")
+        self.illumination_smoothness_loss_tracker = keras.metrics.Mean(
+            name="illumination_smoothness_loss"
+        )
+        self.spatial_constancy_loss_tracker = keras.metrics.Mean(
+            name="spatial_constancy_loss"
+        )
+        self.color_constancy_loss_tracker = keras.metrics.Mean(
+            name="color_constancy_loss"
+        )
+        self.exposure_loss_tracker = keras.metrics.Mean(name="exposure_loss")
+
+    @property
+    def metrics(self):
+        return [
+            self.total_loss_tracker,
+            self.illumination_smoothness_loss_tracker,
+            self.spatial_constancy_loss_tracker,
+            self.color_constancy_loss_tracker,
+            self.exposure_loss_tracker,
+        ]
 
     def get_enhanced_image(self, data, output):
         r1 = output[:, :, :, :3]
@@ -350,6 +398,7 @@ class ZeroDCE(keras.Model):
             + loss_color_constancy
             + loss_exposure
         )
+
         return {
             "total_loss": total_loss,
             "illumination_smoothness_loss": loss_illumination,
@@ -362,20 +411,47 @@ class ZeroDCE(keras.Model):
         with tf.GradientTape() as tape:
             output = self.dce_model(data)
             losses = self.compute_losses(data, output)
+
         gradients = tape.gradient(
             losses["total_loss"], self.dce_model.trainable_weights
         )
         self.optimizer.apply_gradients(zip(gradients, self.dce_model.trainable_weights))
-        return losses
+
+        self.total_loss_tracker.update_state(losses["total_loss"])
+        self.illumination_smoothness_loss_tracker.update_state(
+            losses["illumination_smoothness_loss"]
+        )
+        self.spatial_constancy_loss_tracker.update_state(
+            losses["spatial_constancy_loss"]
+        )
+        self.color_constancy_loss_tracker.update_state(losses["color_constancy_loss"])
+        self.exposure_loss_tracker.update_state(losses["exposure_loss"])
+
+        return {metric.name: metric.result() for metric in self.metrics}
 
     def test_step(self, data):
         output = self.dce_model(data)
-        return self.compute_losses(data, output)
+        losses = self.compute_losses(data, output)
+
+        self.total_loss_tracker.update_state(losses["total_loss"])
+        self.illumination_smoothness_loss_tracker.update_state(
+            losses["illumination_smoothness_loss"]
+        )
+        self.spatial_constancy_loss_tracker.update_state(
+            losses["spatial_constancy_loss"]
+        )
+        self.color_constancy_loss_tracker.update_state(losses["color_constancy_loss"])
+        self.exposure_loss_tracker.update_state(losses["exposure_loss"])
+
+        return {metric.name: metric.result() for metric in self.metrics}
 
     def save_weights(self, filepath, overwrite=True, save_format=None, options=None):
         """While saving the weights, we simply save the weights of the DCE-Net"""
         self.dce_model.save_weights(
-            filepath, overwrite=overwrite, save_format=save_format, options=options
+            filepath,
+            overwrite=overwrite,
+            save_format=save_format,
+            options=options,
         )
 
     def load_weights(self, filepath, by_name=False, skip_mismatch=False, options=None):

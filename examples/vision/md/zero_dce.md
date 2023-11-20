@@ -2,13 +2,13 @@
 
 **Author:** [Soumik Rakshit](http://github.com/soumik12345)<br>
 **Date created:** 2021/09/18<br>
-**Last modified:** 2021/09/19<br>
+**Last modified:** 2023/07/15<br>
+**Description:** Implementing Zero-Reference Deep Curve Estimation for low-light image enhancement.
 
 
 <img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/vision/ipynb/zero_dce.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/vision/zero_dce.py)
 
 
-**Description:** Implementing Zero-Reference Deep Curve Estimation for low-light image enhancement.
 
 ---
 ## Introduction
@@ -33,7 +33,7 @@ which implicitly measure the enhancement quality and guide the training of the n
 
 ### References
 
-- [Zero-Reference Deep Curve Estimation for Low-Light Image Enhancement](https://arxiv.org/pdf/2001.06826.pdf)
+- [Zero-Reference Deep Curve Estimation for Low-Light Image Enhancement](https://arxiv.org/abs/2001.06826)
 - [Curves adjustment in Adobe Photoshop](https://helpx.adobe.com/photoshop/using/curves-adjustment.html)
 
 ---
@@ -46,32 +46,57 @@ low-light input image and its corresponding well-exposed reference image.
 
 ```python
 import os
+
+os.environ["KERAS_BACKEND"] = "tensorflow"
+
 import random
 import numpy as np
 from glob import glob
 from PIL import Image, ImageOps
 import matplotlib.pyplot as plt
 
+import keras
+from keras import layers
+
 import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras import layers
 ```
 
 
 ```python
-!gdown https://drive.google.com/uc?id=1DdGIJ4PZPlF2ikl8mNM9V-PdVxVLbQi6
-!unzip -q lol_dataset.zip
+!wget https://huggingface.co/datasets/geekyrakshit/LoL-Dataset/resolve/main/lol_dataset.zip
+!unzip -q lol_dataset.zip && rm lol_dataset.zip
 ```
 
 <div class="k-default-codeblock">
 ```
-Downloading...
-From: https://drive.google.com/uc?id=1DdGIJ4PZPlF2ikl8mNM9V-PdVxVLbQi6
-To: /content/keras-io/scripts/tmp_4644685/lol_dataset.zip
-347MB [00:03, 93.3MB/s]
-
+--2023-11-20 20:01:50--  https://huggingface.co/datasets/geekyrakshit/LoL-Dataset/resolve/main/lol_dataset.zip
+Resolving huggingface.co (huggingface.co)... 3.163.189.74, 3.163.189.90, 3.163.189.114, ...
+Connecting to huggingface.co (huggingface.co)|3.163.189.74|:443... connected.
+HTTP request sent, awaiting response... 302 Found
+Location: https://cdn-lfs.huggingface.co/repos/d9/09/d909ef7668bb417b7065a311bd55a3084cc83a1f918e13cb41c5503328432db2/419fddc48958cd0f5599939ee0248852a37ceb8bb738c9b9525e95b25a89de9a?response-content-disposition=attachment%3B+filename*%3DUTF-8%27%27lol_dataset.zip%3B+filename%3D%22lol_dataset.zip%22%3B&response-content-type=application%2Fzip&Expires=1700769710&Policy=eyJTdGF0ZW1lbnQiOlt7IkNvbmRpdGlvbiI6eyJEYXRlTGVzc1RoYW4iOnsiQVdTOkVwb2NoVGltZSI6MTcwMDc2OTcxMH19LCJSZXNvdXJjZSI6Imh0dHBzOi8vY2RuLWxmcy5odWdnaW5nZmFjZS5jby9yZXBvcy9kOS8wOS9kOTA5ZWY3NjY4YmI0MTdiNzA2NWEzMTFiZDU1YTMwODRjYzgzYTFmOTE4ZTEzY2I0MWM1NTAzMzI4NDMyZGIyLzQxOWZkZGM0ODk1OGNkMGY1NTk5OTM5ZWUwMjQ4ODUyYTM3Y2ViOGJiNzM4YzliOTUyNWU5NWIyNWE4OWRlOWE%7EcmVzcG9uc2UtY29udGVudC1kaXNwb3NpdGlvbj0qJnJlc3BvbnNlLWNvbnRlbnQtdHlwZT0qIn1dfQ__&Signature=VPqHlt0h6mUV7D3alDMIO61VSvUX498wZn5rIpo4u5yTYOu2s9CbO82xeGfrZguIuENVO6yiuoUAlZO4XXDsGC0Gc3MR3KIoTGuI9URA815nrdvFE616XBooGAW200KOUmVj2IoySAufi-7ORPuspaVJoKqWr8wytt0hDpNMeaWSg766kVMkJB1Aywq6yu5KHFGkqvOPDWNZZO6yfOtdX2XfbXVuiaiUlS03gRZ58H9pYn535TrE3BYP4W1u%7EehJ4OACpsRsnrsrXDr--PLH5RsxApOR2neFLySta3LiN9mtdjSpOKGn0oUapDfCWG7Ik5OMB5PGGzQBTB5J0b0O9g__&Key-Pair-Id=KVTP0A1DKRTAX [following]
+--2023-11-20 20:01:50--  https://cdn-lfs.huggingface.co/repos/d9/09/d909ef7668bb417b7065a311bd55a3084cc83a1f918e13cb41c5503328432db2/419fddc48958cd0f5599939ee0248852a37ceb8bb738c9b9525e95b25a89de9a?response-content-disposition=attachment%3B+filename*%3DUTF-8%27%27lol_dataset.zip%3B+filename%3D%22lol_dataset.zip%22%3B&response-content-type=application%2Fzip&Expires=1700769710&Policy=eyJTdGF0ZW1lbnQiOlt7IkNvbmRpdGlvbiI6eyJEYXRlTGVzc1RoYW4iOnsiQVdTOkVwb2NoVGltZSI6MTcwMDc2OTcxMH19LCJSZXNvdXJjZSI6Imh0dHBzOi8vY2RuLWxmcy5odWdnaW5nZmFjZS5jby9yZXBvcy9kOS8wOS9kOTA5ZWY3NjY4YmI0MTdiNzA2NWEzMTFiZDU1YTMwODRjYzgzYTFmOTE4ZTEzY2I0MWM1NTAzMzI4NDMyZGIyLzQxOWZkZGM0ODk1OGNkMGY1NTk5OTM5ZWUwMjQ4ODUyYTM3Y2ViOGJiNzM4YzliOTUyNWU5NWIyNWE4OWRlOWE%7EcmVzcG9uc2UtY29udGVudC1kaXNwb3NpdGlvbj0qJnJlc3BvbnNlLWNvbnRlbnQtdHlwZT0qIn1dfQ__&Signature=VPqHlt0h6mUV7D3alDMIO61VSvUX498wZn5rIpo4u5yTYOu2s9CbO82xeGfrZguIuENVO6yiuoUAlZO4XXDsGC0Gc3MR3KIoTGuI9URA815nrdvFE616XBooGAW200KOUmVj2IoySAufi-7ORPuspaVJoKqWr8wytt0hDpNMeaWSg766kVMkJB1Aywq6yu5KHFGkqvOPDWNZZO6yfOtdX2XfbXVuiaiUlS03gRZ58H9pYn535TrE3BYP4W1u%7EehJ4OACpsRsnrsrXDr--PLH5RsxApOR2neFLySta3LiN9mtdjSpOKGn0oUapDfCWG7Ik5OMB5PGGzQBTB5J0b0O9g__&Key-Pair-Id=KVTP0A1DKRTAX
+Resolving cdn-lfs.huggingface.co (cdn-lfs.huggingface.co)... 108.138.94.122, 108.138.94.25, 108.138.94.14, ...
+Connecting to cdn-lfs.huggingface.co (cdn-lfs.huggingface.co)|108.138.94.122|:443... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: 347171015 (331M) [application/zip]
+Saving to: ‘lol_dataset.zip’
 ```
 </div>
+    
+<div class="k-default-codeblock">
+```
+lol_dataset.zip     100%[===================>] 331.09M  37.4MB/s    in 9.5s    
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+2023-11-20 20:02:00 (34.9 MB/s) - ‘lol_dataset.zip’ saved [347171015/347171015]
+```
+</div>
+    
+
+
 ---
 ## Creating a TensorFlow Dataset
 
@@ -116,8 +141,8 @@ print("Validation Dataset:", val_dataset)
 
 <div class="k-default-codeblock">
 ```
-Train Dataset: <BatchDataset shapes: (16, 256, 256, 3), types: tf.float32>
-Validation Dataset: <BatchDataset shapes: (16, 256, 256, 3), types: tf.float32>
+Train Dataset: <_BatchDataset element_spec=TensorSpec(shape=(16, 256, 256, 3), dtype=tf.float32, name=None)>
+Validation Dataset: <_BatchDataset element_spec=TensorSpec(shape=(16, 256, 256, 3), dtype=tf.float32, name=None)>
 
 ```
 </div>
@@ -209,7 +234,11 @@ enhanced image.
 
 def color_constancy_loss(x):
     mean_rgb = tf.reduce_mean(x, axis=(1, 2), keepdims=True)
-    mr, mg, mb = mean_rgb[:, :, :, 0], mean_rgb[:, :, :, 1], mean_rgb[:, :, :, 2]
+    mr, mg, mb = (
+        mean_rgb[:, :, :, 0],
+        mean_rgb[:, :, :, 1],
+        mean_rgb[:, :, :, 2],
+    )
     d_rg = tf.square(mr - mg)
     d_rb = tf.square(mr - mb)
     d_gb = tf.square(mb - mg)
@@ -282,7 +311,6 @@ class SpatialConsistencyLoss(keras.losses.Loss):
         )
 
     def call(self, y_true, y_pred):
-
         original_mean = tf.reduce_mean(y_true, 3, keepdims=True)
         enhanced_mean = tf.reduce_mean(y_pred, 3, keepdims=True)
         original_pool = tf.nn.avg_pool2d(
@@ -293,29 +321,47 @@ class SpatialConsistencyLoss(keras.losses.Loss):
         )
 
         d_original_left = tf.nn.conv2d(
-            original_pool, self.left_kernel, strides=[1, 1, 1, 1], padding="SAME"
+            original_pool,
+            self.left_kernel,
+            strides=[1, 1, 1, 1],
+            padding="SAME",
         )
         d_original_right = tf.nn.conv2d(
-            original_pool, self.right_kernel, strides=[1, 1, 1, 1], padding="SAME"
+            original_pool,
+            self.right_kernel,
+            strides=[1, 1, 1, 1],
+            padding="SAME",
         )
         d_original_up = tf.nn.conv2d(
             original_pool, self.up_kernel, strides=[1, 1, 1, 1], padding="SAME"
         )
         d_original_down = tf.nn.conv2d(
-            original_pool, self.down_kernel, strides=[1, 1, 1, 1], padding="SAME"
+            original_pool,
+            self.down_kernel,
+            strides=[1, 1, 1, 1],
+            padding="SAME",
         )
 
         d_enhanced_left = tf.nn.conv2d(
-            enhanced_pool, self.left_kernel, strides=[1, 1, 1, 1], padding="SAME"
+            enhanced_pool,
+            self.left_kernel,
+            strides=[1, 1, 1, 1],
+            padding="SAME",
         )
         d_enhanced_right = tf.nn.conv2d(
-            enhanced_pool, self.right_kernel, strides=[1, 1, 1, 1], padding="SAME"
+            enhanced_pool,
+            self.right_kernel,
+            strides=[1, 1, 1, 1],
+            padding="SAME",
         )
         d_enhanced_up = tf.nn.conv2d(
             enhanced_pool, self.up_kernel, strides=[1, 1, 1, 1], padding="SAME"
         )
         d_enhanced_down = tf.nn.conv2d(
-            enhanced_pool, self.down_kernel, strides=[1, 1, 1, 1], padding="SAME"
+            enhanced_pool,
+            self.down_kernel,
+            strides=[1, 1, 1, 1],
+            padding="SAME",
         )
 
         d_left = tf.square(d_original_left - d_enhanced_left)
@@ -342,6 +388,27 @@ class ZeroDCE(keras.Model):
         super().compile(**kwargs)
         self.optimizer = keras.optimizers.Adam(learning_rate=learning_rate)
         self.spatial_constancy_loss = SpatialConsistencyLoss(reduction="none")
+        self.total_loss_tracker = keras.metrics.Mean(name="total_loss")
+        self.illumination_smoothness_loss_tracker = keras.metrics.Mean(
+            name="illumination_smoothness_loss"
+        )
+        self.spatial_constancy_loss_tracker = keras.metrics.Mean(
+            name="spatial_constancy_loss"
+        )
+        self.color_constancy_loss_tracker = keras.metrics.Mean(
+            name="color_constancy_loss"
+        )
+        self.exposure_loss_tracker = keras.metrics.Mean(name="exposure_loss")
+
+    @property
+    def metrics(self):
+        return [
+            self.total_loss_tracker,
+            self.illumination_smoothness_loss_tracker,
+            self.spatial_constancy_loss_tracker,
+            self.color_constancy_loss_tracker,
+            self.exposure_loss_tracker,
+        ]
 
     def get_enhanced_image(self, data, output):
         r1 = output[:, :, :, :3]
@@ -380,6 +447,7 @@ class ZeroDCE(keras.Model):
             + loss_color_constancy
             + loss_exposure
         )
+
         return {
             "total_loss": total_loss,
             "illumination_smoothness_loss": loss_illumination,
@@ -392,20 +460,47 @@ class ZeroDCE(keras.Model):
         with tf.GradientTape() as tape:
             output = self.dce_model(data)
             losses = self.compute_losses(data, output)
+
         gradients = tape.gradient(
             losses["total_loss"], self.dce_model.trainable_weights
         )
         self.optimizer.apply_gradients(zip(gradients, self.dce_model.trainable_weights))
-        return losses
+
+        self.total_loss_tracker.update_state(losses["total_loss"])
+        self.illumination_smoothness_loss_tracker.update_state(
+            losses["illumination_smoothness_loss"]
+        )
+        self.spatial_constancy_loss_tracker.update_state(
+            losses["spatial_constancy_loss"]
+        )
+        self.color_constancy_loss_tracker.update_state(losses["color_constancy_loss"])
+        self.exposure_loss_tracker.update_state(losses["exposure_loss"])
+
+        return {metric.name: metric.result() for metric in self.metrics}
 
     def test_step(self, data):
         output = self.dce_model(data)
-        return self.compute_losses(data, output)
+        losses = self.compute_losses(data, output)
+
+        self.total_loss_tracker.update_state(losses["total_loss"])
+        self.illumination_smoothness_loss_tracker.update_state(
+            losses["illumination_smoothness_loss"]
+        )
+        self.spatial_constancy_loss_tracker.update_state(
+            losses["spatial_constancy_loss"]
+        )
+        self.color_constancy_loss_tracker.update_state(losses["color_constancy_loss"])
+        self.exposure_loss_tracker.update_state(losses["exposure_loss"])
+
+        return {metric.name: metric.result() for metric in self.metrics}
 
     def save_weights(self, filepath, overwrite=True, save_format=None, options=None):
         """While saving the weights, we simply save the weights of the DCE-Net"""
         self.dce_model.save_weights(
-            filepath, overwrite=overwrite, save_format=save_format, options=options
+            filepath,
+            overwrite=overwrite,
+            save_format=save_format,
+            options=options,
         )
 
     def load_weights(self, filepath, by_name=False, skip_mismatch=False, options=None):
@@ -450,225 +545,240 @@ plot_result("exposure_loss")
 <div class="k-default-codeblock">
 ```
 Epoch 1/100
-25/25 [==============================] - 13s 271ms/step - total_loss: 4.8773 - illumination_smoothness_loss: 1.9298 - spatial_constancy_loss: 4.2610e-06 - color_constancy_loss: 0.0027 - exposure_loss: 2.9448 - val_total_loss: 4.3163 - val_illumination_smoothness_loss: 1.3040 - val_spatial_constancy_loss: 1.4072e-06 - val_color_constancy_loss: 5.3277e-04 - val_exposure_loss: 3.0117
+  2/25 ━[37m━━━━━━━━━━━━━━━━━━━  1s 85ms/step - color_constancy_loss: 0.0013 - exposure_loss: 3.0376 - illumination_smoothness_loss: 2.5211 - spatial_constancy_loss: 4.6834e-07 - total_loss: 5.5601     
+
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1700510538.106578 3409375 device_compiler.h:187] Compiled cluster using XLA!  This line is logged at most once for the lifetime of the process.
+
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 16s 123ms/step - color_constancy_loss: 0.0029 - exposure_loss: 2.9968 - illumination_smoothness_loss: 2.1813 - spatial_constancy_loss: 1.8559e-06 - total_loss: 5.1810 - val_color_constancy_loss: 0.0023 - val_exposure_loss: 2.9489 - val_illumination_smoothness_loss: 2.7063 - val_spatial_constancy_loss: 5.0979e-06 - val_total_loss: 5.6575
 Epoch 2/100
-25/25 [==============================] - 7s 270ms/step - total_loss: 4.1537 - illumination_smoothness_loss: 1.2237 - spatial_constancy_loss: 6.5297e-06 - color_constancy_loss: 0.0027 - exposure_loss: 2.9273 - val_total_loss: 3.8239 - val_illumination_smoothness_loss: 0.8263 - val_spatial_constancy_loss: 1.3503e-05 - val_color_constancy_loss: 4.8064e-04 - val_exposure_loss: 2.9971
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 2s 64ms/step - color_constancy_loss: 0.0030 - exposure_loss: 2.9854 - illumination_smoothness_loss: 1.2876 - spatial_constancy_loss: 6.1811e-06 - total_loss: 4.2759 - val_color_constancy_loss: 0.0023 - val_exposure_loss: 2.9381 - val_illumination_smoothness_loss: 1.8299 - val_spatial_constancy_loss: 1.3742e-05 - val_total_loss: 4.7703
 Epoch 3/100
-25/25 [==============================] - 7s 270ms/step - total_loss: 3.7458 - illumination_smoothness_loss: 0.8320 - spatial_constancy_loss: 2.9476e-05 - color_constancy_loss: 0.0028 - exposure_loss: 2.9110 - val_total_loss: 3.5389 - val_illumination_smoothness_loss: 0.5565 - val_spatial_constancy_loss: 4.3614e-05 - val_color_constancy_loss: 4.4507e-04 - val_exposure_loss: 2.9818
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 2s 64ms/step - color_constancy_loss: 0.0031 - exposure_loss: 2.9746 - illumination_smoothness_loss: 0.8735 - spatial_constancy_loss: 1.6664e-05 - total_loss: 3.8512 - val_color_constancy_loss: 0.0024 - val_exposure_loss: 2.9255 - val_illumination_smoothness_loss: 1.3135 - val_spatial_constancy_loss: 3.1783e-05 - val_total_loss: 4.2414
 Epoch 4/100
-25/25 [==============================] - 7s 271ms/step - total_loss: 3.4913 - illumination_smoothness_loss: 0.5945 - spatial_constancy_loss: 7.2733e-05 - color_constancy_loss: 0.0029 - exposure_loss: 2.8939 - val_total_loss: 3.3690 - val_illumination_smoothness_loss: 0.4014 - val_spatial_constancy_loss: 8.7945e-05 - val_color_constancy_loss: 4.3541e-04 - val_exposure_loss: 2.9671
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 2s 64ms/step - color_constancy_loss: 0.0032 - exposure_loss: 2.9623 - illumination_smoothness_loss: 0.6259 - spatial_constancy_loss: 3.7938e-05 - total_loss: 3.5914 - val_color_constancy_loss: 0.0025 - val_exposure_loss: 2.9118 - val_illumination_smoothness_loss: 0.9835 - val_spatial_constancy_loss: 6.1902e-05 - val_total_loss: 3.8979
 Epoch 5/100
-25/25 [==============================] - 7s 271ms/step - total_loss: 3.3210 - illumination_smoothness_loss: 0.4399 - spatial_constancy_loss: 1.2652e-04 - color_constancy_loss: 0.0030 - exposure_loss: 2.8781 - val_total_loss: 3.2557 - val_illumination_smoothness_loss: 0.3019 - val_spatial_constancy_loss: 1.3960e-04 - val_color_constancy_loss: 4.4128e-04 - val_exposure_loss: 2.9533
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 2s 63ms/step - color_constancy_loss: 0.0033 - exposure_loss: 2.9493 - illumination_smoothness_loss: 0.4700 - spatial_constancy_loss: 7.2080e-05 - total_loss: 3.4226 - val_color_constancy_loss: 0.0026 - val_exposure_loss: 2.8976 - val_illumination_smoothness_loss: 0.7751 - val_spatial_constancy_loss: 1.0500e-04 - val_total_loss: 3.6754
 Epoch 6/100
-25/25 [==============================] - 7s 272ms/step - total_loss: 3.1971 - illumination_smoothness_loss: 0.3310 - spatial_constancy_loss: 1.8674e-04 - color_constancy_loss: 0.0031 - exposure_loss: 2.8628 - val_total_loss: 3.1741 - val_illumination_smoothness_loss: 0.2338 - val_spatial_constancy_loss: 1.9747e-04 - val_color_constancy_loss: 4.5618e-04 - val_exposure_loss: 2.9397
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 2s 64ms/step - color_constancy_loss: 0.0034 - exposure_loss: 2.9358 - illumination_smoothness_loss: 0.3693 - spatial_constancy_loss: 1.1878e-04 - total_loss: 3.3086 - val_color_constancy_loss: 0.0027 - val_exposure_loss: 2.8829 - val_illumination_smoothness_loss: 0.6316 - val_spatial_constancy_loss: 1.6075e-04 - val_total_loss: 3.5173
 Epoch 7/100
-25/25 [==============================] - 7s 263ms/step - total_loss: 3.1008 - illumination_smoothness_loss: 0.2506 - spatial_constancy_loss: 2.5713e-04 - color_constancy_loss: 0.0032 - exposure_loss: 2.8468 - val_total_loss: 3.1062 - val_illumination_smoothness_loss: 0.1804 - val_spatial_constancy_loss: 2.6610e-04 - val_color_constancy_loss: 4.7632e-04 - val_exposure_loss: 2.9251
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 2s 65ms/step - color_constancy_loss: 0.0036 - exposure_loss: 2.9219 - illumination_smoothness_loss: 0.2996 - spatial_constancy_loss: 1.7723e-04 - total_loss: 3.2252 - val_color_constancy_loss: 0.0028 - val_exposure_loss: 2.8660 - val_illumination_smoothness_loss: 0.5261 - val_spatial_constancy_loss: 2.3790e-04 - val_total_loss: 3.3951
 Epoch 8/100
-25/25 [==============================] - 7s 272ms/step - total_loss: 3.0244 - illumination_smoothness_loss: 0.1915 - spatial_constancy_loss: 3.4287e-04 - color_constancy_loss: 0.0033 - exposure_loss: 2.8293 - val_total_loss: 3.0512 - val_illumination_smoothness_loss: 0.1415 - val_spatial_constancy_loss: 3.5449e-04 - val_color_constancy_loss: 5.0079e-04 - val_exposure_loss: 2.9088
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 2s 64ms/step - color_constancy_loss: 0.0037 - exposure_loss: 2.9056 - illumination_smoothness_loss: 0.2486 - spatial_constancy_loss: 2.5932e-04 - total_loss: 3.1582 - val_color_constancy_loss: 0.0029 - val_exposure_loss: 2.8466 - val_illumination_smoothness_loss: 0.4454 - val_spatial_constancy_loss: 3.4372e-04 - val_total_loss: 3.2952
 Epoch 9/100
-25/25 [==============================] - 7s 272ms/step - total_loss: 2.9666 - illumination_smoothness_loss: 0.1531 - spatial_constancy_loss: 4.5557e-04 - color_constancy_loss: 0.0035 - exposure_loss: 2.8096 - val_total_loss: 3.0084 - val_illumination_smoothness_loss: 0.1172 - val_spatial_constancy_loss: 4.7605e-04 - val_color_constancy_loss: 5.3119e-04 - val_exposure_loss: 2.8902
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 2s 63ms/step - color_constancy_loss: 0.0039 - exposure_loss: 2.8872 - illumination_smoothness_loss: 0.2110 - spatial_constancy_loss: 3.6800e-04 - total_loss: 3.1025 - val_color_constancy_loss: 0.0031 - val_exposure_loss: 2.8244 - val_illumination_smoothness_loss: 0.3853 - val_spatial_constancy_loss: 4.8290e-04 - val_total_loss: 3.2132
 Epoch 10/100
-25/25 [==============================] - 7s 263ms/step - total_loss: 2.9216 - illumination_smoothness_loss: 0.1294 - spatial_constancy_loss: 6.0396e-04 - color_constancy_loss: 0.0037 - exposure_loss: 2.7879 - val_total_loss: 2.9737 - val_illumination_smoothness_loss: 0.1028 - val_spatial_constancy_loss: 6.3615e-04 - val_color_constancy_loss: 5.6798e-04 - val_exposure_loss: 2.8697
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 2s 63ms/step - color_constancy_loss: 0.0041 - exposure_loss: 2.8665 - illumination_smoothness_loss: 0.1846 - spatial_constancy_loss: 5.0693e-04 - total_loss: 3.0558 - val_color_constancy_loss: 0.0033 - val_exposure_loss: 2.8002 - val_illumination_smoothness_loss: 0.3395 - val_spatial_constancy_loss: 6.5965e-04 - val_total_loss: 3.1436
 Epoch 11/100
-25/25 [==============================] - 7s 264ms/step - total_loss: 2.8823 - illumination_smoothness_loss: 0.1141 - spatial_constancy_loss: 8.0172e-04 - color_constancy_loss: 0.0039 - exposure_loss: 2.7635 - val_total_loss: 2.9422 - val_illumination_smoothness_loss: 0.0951 - val_spatial_constancy_loss: 8.5813e-04 - val_color_constancy_loss: 6.1538e-04 - val_exposure_loss: 2.8456
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 2s 64ms/step - color_constancy_loss: 0.0044 - exposure_loss: 2.8440 - illumination_smoothness_loss: 0.1654 - spatial_constancy_loss: 6.8036e-04 - total_loss: 3.0145 - val_color_constancy_loss: 0.0035 - val_exposure_loss: 2.7749 - val_illumination_smoothness_loss: 0.3031 - val_spatial_constancy_loss: 8.6824e-04 - val_total_loss: 3.0824
 Epoch 12/100
-25/25 [==============================] - 7s 273ms/step - total_loss: 2.8443 - illumination_smoothness_loss: 0.1049 - spatial_constancy_loss: 0.0011 - color_constancy_loss: 0.0043 - exposure_loss: 2.7341 - val_total_loss: 2.9096 - val_illumination_smoothness_loss: 0.0936 - val_spatial_constancy_loss: 0.0012 - val_color_constancy_loss: 6.7707e-04 - val_exposure_loss: 2.8142
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 2s 64ms/step - color_constancy_loss: 0.0047 - exposure_loss: 2.8198 - illumination_smoothness_loss: 0.1512 - spatial_constancy_loss: 8.9387e-04 - total_loss: 2.9765 - val_color_constancy_loss: 0.0038 - val_exposure_loss: 2.7463 - val_illumination_smoothness_loss: 0.2753 - val_spatial_constancy_loss: 0.0011 - val_total_loss: 3.0265
 Epoch 13/100
-25/25 [==============================] - 7s 274ms/step - total_loss: 2.7997 - illumination_smoothness_loss: 0.1031 - spatial_constancy_loss: 0.0016 - color_constancy_loss: 0.0047 - exposure_loss: 2.6903 - val_total_loss: 2.8666 - val_illumination_smoothness_loss: 0.1034 - val_spatial_constancy_loss: 0.0019 - val_color_constancy_loss: 8.0413e-04 - val_exposure_loss: 2.7604
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 2s 64ms/step - color_constancy_loss: 0.0050 - exposure_loss: 2.7928 - illumination_smoothness_loss: 0.1408 - spatial_constancy_loss: 0.0012 - total_loss: 2.9398 - val_color_constancy_loss: 0.0041 - val_exposure_loss: 2.7132 - val_illumination_smoothness_loss: 0.2537 - val_spatial_constancy_loss: 0.0015 - val_total_loss: 2.9724
 Epoch 14/100
-25/25 [==============================] - 7s 275ms/step - total_loss: 2.7249 - illumination_smoothness_loss: 0.1149 - spatial_constancy_loss: 0.0030 - color_constancy_loss: 0.0057 - exposure_loss: 2.6013 - val_total_loss: 2.7764 - val_illumination_smoothness_loss: 0.1291 - val_spatial_constancy_loss: 0.0042 - val_color_constancy_loss: 0.0011 - val_exposure_loss: 2.6419
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 2s 64ms/step - color_constancy_loss: 0.0054 - exposure_loss: 2.7600 - illumination_smoothness_loss: 0.1340 - spatial_constancy_loss: 0.0016 - total_loss: 2.9009 - val_color_constancy_loss: 0.0045 - val_exposure_loss: 2.6673 - val_illumination_smoothness_loss: 0.2389 - val_spatial_constancy_loss: 0.0021 - val_total_loss: 2.9129
 Epoch 15/100
-25/25 [==============================] - 7s 265ms/step - total_loss: 2.5184 - illumination_smoothness_loss: 0.1584 - spatial_constancy_loss: 0.0103 - color_constancy_loss: 0.0093 - exposure_loss: 2.3403 - val_total_loss: 2.4698 - val_illumination_smoothness_loss: 0.1949 - val_spatial_constancy_loss: 0.0194 - val_color_constancy_loss: 0.0031 - val_exposure_loss: 2.2524
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 2s 63ms/step - color_constancy_loss: 0.0060 - exposure_loss: 2.7115 - illumination_smoothness_loss: 0.1314 - spatial_constancy_loss: 0.0022 - total_loss: 2.8512 - val_color_constancy_loss: 0.0055 - val_exposure_loss: 2.5820 - val_illumination_smoothness_loss: 0.2374 - val_spatial_constancy_loss: 0.0035 - val_total_loss: 2.8284
 Epoch 16/100
-25/25 [==============================] - 7s 275ms/step - total_loss: 1.8216 - illumination_smoothness_loss: 0.2401 - spatial_constancy_loss: 0.0934 - color_constancy_loss: 0.0348 - exposure_loss: 1.4532 - val_total_loss: 1.6855 - val_illumination_smoothness_loss: 0.2599 - val_spatial_constancy_loss: 0.1776 - val_color_constancy_loss: 0.0229 - val_exposure_loss: 1.2250
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 2s 64ms/step - color_constancy_loss: 0.0075 - exposure_loss: 2.6129 - illumination_smoothness_loss: 0.1414 - spatial_constancy_loss: 0.0041 - total_loss: 2.7660 - val_color_constancy_loss: 0.0081 - val_exposure_loss: 2.3797 - val_illumination_smoothness_loss: 0.2453 - val_spatial_constancy_loss: 0.0083 - val_total_loss: 2.6414
 Epoch 17/100
-25/25 [==============================] - 7s 267ms/step - total_loss: 1.3387 - illumination_smoothness_loss: 0.2350 - spatial_constancy_loss: 0.2752 - color_constancy_loss: 0.0814 - exposure_loss: 0.7471 - val_total_loss: 1.5451 - val_illumination_smoothness_loss: 0.1862 - val_spatial_constancy_loss: 0.2320 - val_color_constancy_loss: 0.0331 - val_exposure_loss: 1.0938
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 2s 63ms/step - color_constancy_loss: 0.0128 - exposure_loss: 2.3149 - illumination_smoothness_loss: 0.1766 - spatial_constancy_loss: 0.0148 - total_loss: 2.5190 - val_color_constancy_loss: 0.0286 - val_exposure_loss: 1.5060 - val_illumination_smoothness_loss: 0.3288 - val_spatial_constancy_loss: 0.0648 - val_total_loss: 1.9282
 Epoch 18/100
-25/25 [==============================] - 7s 267ms/step - total_loss: 1.2646 - illumination_smoothness_loss: 0.1724 - spatial_constancy_loss: 0.2605 - color_constancy_loss: 0.0720 - exposure_loss: 0.7597 - val_total_loss: 1.5153 - val_illumination_smoothness_loss: 0.1533 - val_spatial_constancy_loss: 0.2295 - val_color_constancy_loss: 0.0343 - val_exposure_loss: 1.0981
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 2s 63ms/step - color_constancy_loss: 0.0505 - exposure_loss: 1.3386 - illumination_smoothness_loss: 0.2606 - spatial_constancy_loss: 0.1196 - total_loss: 1.7693 - val_color_constancy_loss: 0.0827 - val_exposure_loss: 0.6645 - val_illumination_smoothness_loss: 0.2964 - val_spatial_constancy_loss: 0.2687 - val_total_loss: 1.3123
 Epoch 19/100
-25/25 [==============================] - 7s 267ms/step - total_loss: 1.2439 - illumination_smoothness_loss: 0.1559 - spatial_constancy_loss: 0.2706 - color_constancy_loss: 0.0730 - exposure_loss: 0.7443 - val_total_loss: 1.4994 - val_illumination_smoothness_loss: 0.1423 - val_spatial_constancy_loss: 0.2359 - val_color_constancy_loss: 0.0363 - val_exposure_loss: 1.0850
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 2s 63ms/step - color_constancy_loss: 0.0873 - exposure_loss: 0.8174 - illumination_smoothness_loss: 0.2378 - spatial_constancy_loss: 0.2577 - total_loss: 1.4002 - val_color_constancy_loss: 0.0861 - val_exposure_loss: 0.6856 - val_illumination_smoothness_loss: 0.2464 - val_spatial_constancy_loss: 0.2539 - val_total_loss: 1.2719
 Epoch 20/100
-25/25 [==============================] - 7s 276ms/step - total_loss: 1.2311 - illumination_smoothness_loss: 0.1449 - spatial_constancy_loss: 0.2720 - color_constancy_loss: 0.0731 - exposure_loss: 0.7411 - val_total_loss: 1.4889 - val_illumination_smoothness_loss: 0.1299 - val_spatial_constancy_loss: 0.2331 - val_color_constancy_loss: 0.0358 - val_exposure_loss: 1.0901
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 2s 64ms/step - color_constancy_loss: 0.0753 - exposure_loss: 0.8584 - illumination_smoothness_loss: 0.1858 - spatial_constancy_loss: 0.2394 - total_loss: 1.3589 - val_color_constancy_loss: 0.0882 - val_exposure_loss: 0.6714 - val_illumination_smoothness_loss: 0.2195 - val_spatial_constancy_loss: 0.2620 - val_total_loss: 1.2410
 Epoch 21/100
-25/25 [==============================] - 7s 266ms/step - total_loss: 1.2262 - illumination_smoothness_loss: 0.1400 - spatial_constancy_loss: 0.2726 - color_constancy_loss: 0.0734 - exposure_loss: 0.7402 - val_total_loss: 1.4806 - val_illumination_smoothness_loss: 0.1233 - val_spatial_constancy_loss: 0.2356 - val_color_constancy_loss: 0.0371 - val_exposure_loss: 1.0847
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 2s 63ms/step - color_constancy_loss: 0.0779 - exposure_loss: 0.8382 - illumination_smoothness_loss: 0.1706 - spatial_constancy_loss: 0.2486 - total_loss: 1.3354 - val_color_constancy_loss: 0.0886 - val_exposure_loss: 0.6648 - val_illumination_smoothness_loss: 0.2072 - val_spatial_constancy_loss: 0.2643 - val_total_loss: 1.2249
 Epoch 22/100
-25/25 [==============================] - 7s 266ms/step - total_loss: 1.2202 - illumination_smoothness_loss: 0.1325 - spatial_constancy_loss: 0.2739 - color_constancy_loss: 0.0734 - exposure_loss: 0.7404 - val_total_loss: 1.4765 - val_illumination_smoothness_loss: 0.1231 - val_spatial_constancy_loss: 0.2408 - val_color_constancy_loss: 0.0381 - val_exposure_loss: 1.0745
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 2s 64ms/step - color_constancy_loss: 0.0784 - exposure_loss: 0.8337 - illumination_smoothness_loss: 0.1590 - spatial_constancy_loss: 0.2502 - total_loss: 1.3212 - val_color_constancy_loss: 0.0889 - val_exposure_loss: 0.6647 - val_illumination_smoothness_loss: 0.1934 - val_spatial_constancy_loss: 0.2653 - val_total_loss: 1.2122
 Epoch 23/100
-25/25 [==============================] - 7s 277ms/step - total_loss: 1.2122 - illumination_smoothness_loss: 0.1247 - spatial_constancy_loss: 0.2752 - color_constancy_loss: 0.0739 - exposure_loss: 0.7384 - val_total_loss: 1.4757 - val_illumination_smoothness_loss: 0.1253 - val_spatial_constancy_loss: 0.2453 - val_color_constancy_loss: 0.0393 - val_exposure_loss: 1.0658
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 2s 63ms/step - color_constancy_loss: 0.0783 - exposure_loss: 0.8329 - illumination_smoothness_loss: 0.1498 - spatial_constancy_loss: 0.2508 - total_loss: 1.3118 - val_color_constancy_loss: 0.0897 - val_exposure_loss: 0.6602 - val_illumination_smoothness_loss: 0.1834 - val_spatial_constancy_loss: 0.2671 - val_total_loss: 1.2003
 Epoch 24/100
-25/25 [==============================] - 7s 276ms/step - total_loss: 1.2015 - illumination_smoothness_loss: 0.1149 - spatial_constancy_loss: 0.2766 - color_constancy_loss: 0.0740 - exposure_loss: 0.7360 - val_total_loss: 1.4667 - val_illumination_smoothness_loss: 0.1168 - val_spatial_constancy_loss: 0.2456 - val_color_constancy_loss: 0.0390 - val_exposure_loss: 1.0652
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 2s 63ms/step - color_constancy_loss: 0.0787 - exposure_loss: 0.8283 - illumination_smoothness_loss: 0.1426 - spatial_constancy_loss: 0.2529 - total_loss: 1.3025 - val_color_constancy_loss: 0.0897 - val_exposure_loss: 0.6601 - val_illumination_smoothness_loss: 0.1754 - val_spatial_constancy_loss: 0.2671 - val_total_loss: 1.1923
 Epoch 25/100
-25/25 [==============================] - 7s 267ms/step - total_loss: 1.1940 - illumination_smoothness_loss: 0.1087 - spatial_constancy_loss: 0.2783 - color_constancy_loss: 0.0746 - exposure_loss: 0.7324 - val_total_loss: 1.4597 - val_illumination_smoothness_loss: 0.1109 - val_spatial_constancy_loss: 0.2476 - val_color_constancy_loss: 0.0399 - val_exposure_loss: 1.0613
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 2s 64ms/step - color_constancy_loss: 0.0785 - exposure_loss: 0.8294 - illumination_smoothness_loss: 0.1365 - spatial_constancy_loss: 0.2524 - total_loss: 1.2968 - val_color_constancy_loss: 0.0902 - val_exposure_loss: 0.6562 - val_illumination_smoothness_loss: 0.1672 - val_spatial_constancy_loss: 0.2692 - val_total_loss: 1.1828
 Epoch 26/100
-25/25 [==============================] - 7s 277ms/step - total_loss: 1.1878 - illumination_smoothness_loss: 0.1028 - spatial_constancy_loss: 0.2800 - color_constancy_loss: 0.0748 - exposure_loss: 0.7302 - val_total_loss: 1.4537 - val_illumination_smoothness_loss: 0.1054 - val_spatial_constancy_loss: 0.2479 - val_color_constancy_loss: 0.0398 - val_exposure_loss: 1.0606
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 2s 64ms/step - color_constancy_loss: 0.0793 - exposure_loss: 0.8229 - illumination_smoothness_loss: 0.1316 - spatial_constancy_loss: 0.2554 - total_loss: 1.2892 - val_color_constancy_loss: 0.0896 - val_exposure_loss: 0.6567 - val_illumination_smoothness_loss: 0.1606 - val_spatial_constancy_loss: 0.2699 - val_total_loss: 1.1768
 Epoch 27/100
-25/25 [==============================] - 7s 268ms/step - total_loss: 1.1827 - illumination_smoothness_loss: 0.0979 - spatial_constancy_loss: 0.2802 - color_constancy_loss: 0.0750 - exposure_loss: 0.7296 - val_total_loss: 1.4488 - val_illumination_smoothness_loss: 0.1015 - val_spatial_constancy_loss: 0.2496 - val_color_constancy_loss: 0.0404 - val_exposure_loss: 1.0573
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 2s 65ms/step - color_constancy_loss: 0.0788 - exposure_loss: 0.8285 - illumination_smoothness_loss: 0.1238 - spatial_constancy_loss: 0.2534 - total_loss: 1.2845 - val_color_constancy_loss: 0.0906 - val_exposure_loss: 0.6519 - val_illumination_smoothness_loss: 0.1574 - val_spatial_constancy_loss: 0.2725 - val_total_loss: 1.1724
 Epoch 28/100
-25/25 [==============================] - 7s 269ms/step - total_loss: 1.1774 - illumination_smoothness_loss: 0.0928 - spatial_constancy_loss: 0.2814 - color_constancy_loss: 0.0749 - exposure_loss: 0.7283 - val_total_loss: 1.4439 - val_illumination_smoothness_loss: 0.0968 - val_spatial_constancy_loss: 0.2491 - val_color_constancy_loss: 0.0397 - val_exposure_loss: 1.0583
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 2s 64ms/step - color_constancy_loss: 0.0794 - exposure_loss: 0.8247 - illumination_smoothness_loss: 0.1194 - spatial_constancy_loss: 0.2550 - total_loss: 1.2785 - val_color_constancy_loss: 0.0914 - val_exposure_loss: 0.6451 - val_illumination_smoothness_loss: 0.1542 - val_spatial_constancy_loss: 0.2783 - val_total_loss: 1.1689
 Epoch 29/100
-25/25 [==============================] - 7s 277ms/step - total_loss: 1.1720 - illumination_smoothness_loss: 0.0882 - spatial_constancy_loss: 0.2821 - color_constancy_loss: 0.0754 - exposure_loss: 0.7264 - val_total_loss: 1.4372 - val_illumination_smoothness_loss: 0.0907 - val_spatial_constancy_loss: 0.2504 - val_color_constancy_loss: 0.0405 - val_exposure_loss: 1.0557
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 2s 63ms/step - color_constancy_loss: 0.0797 - exposure_loss: 0.8203 - illumination_smoothness_loss: 0.1139 - spatial_constancy_loss: 0.2577 - total_loss: 1.2715 - val_color_constancy_loss: 0.0914 - val_exposure_loss: 0.6468 - val_illumination_smoothness_loss: 0.1435 - val_spatial_constancy_loss: 0.2775 - val_total_loss: 1.1592
 Epoch 30/100
-25/25 [==============================] - 7s 278ms/step - total_loss: 1.1660 - illumination_smoothness_loss: 0.0825 - spatial_constancy_loss: 0.2841 - color_constancy_loss: 0.0757 - exposure_loss: 0.7238 - val_total_loss: 1.4307 - val_illumination_smoothness_loss: 0.0840 - val_spatial_constancy_loss: 0.2500 - val_color_constancy_loss: 0.0406 - val_exposure_loss: 1.0561
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 2s 64ms/step - color_constancy_loss: 0.0795 - exposure_loss: 0.8199 - illumination_smoothness_loss: 0.1083 - spatial_constancy_loss: 0.2581 - total_loss: 1.2659 - val_color_constancy_loss: 0.0911 - val_exposure_loss: 0.6483 - val_illumination_smoothness_loss: 0.1336 - val_spatial_constancy_loss: 0.2768 - val_total_loss: 1.1498
 Epoch 31/100
-25/25 [==============================] - 7s 278ms/step - total_loss: 1.1626 - illumination_smoothness_loss: 0.0790 - spatial_constancy_loss: 0.2834 - color_constancy_loss: 0.0753 - exposure_loss: 0.7248 - val_total_loss: 1.4285 - val_illumination_smoothness_loss: 0.0829 - val_spatial_constancy_loss: 0.2508 - val_color_constancy_loss: 0.0399 - val_exposure_loss: 1.0549
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 2s 64ms/step - color_constancy_loss: 0.0797 - exposure_loss: 0.8194 - illumination_smoothness_loss: 0.1037 - spatial_constancy_loss: 0.2589 - total_loss: 1.2617 - val_color_constancy_loss: 0.0912 - val_exposure_loss: 0.6483 - val_illumination_smoothness_loss: 0.1289 - val_spatial_constancy_loss: 0.2772 - val_total_loss: 1.1456
 Epoch 32/100
-25/25 [==============================] - 7s 278ms/step - total_loss: 1.1576 - illumination_smoothness_loss: 0.0744 - spatial_constancy_loss: 0.2851 - color_constancy_loss: 0.0759 - exposure_loss: 0.7222 - val_total_loss: 1.4213 - val_illumination_smoothness_loss: 0.0756 - val_spatial_constancy_loss: 0.2509 - val_color_constancy_loss: 0.0403 - val_exposure_loss: 1.0545
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 2s 63ms/step - color_constancy_loss: 0.0794 - exposure_loss: 0.8226 - illumination_smoothness_loss: 0.0982 - spatial_constancy_loss: 0.2578 - total_loss: 1.2580 - val_color_constancy_loss: 0.0923 - val_exposure_loss: 0.6421 - val_illumination_smoothness_loss: 0.1251 - val_spatial_constancy_loss: 0.2814 - val_total_loss: 1.1409
 Epoch 33/100
-25/25 [==============================] - 7s 268ms/step - total_loss: 1.1529 - illumination_smoothness_loss: 0.0702 - spatial_constancy_loss: 0.2856 - color_constancy_loss: 0.0757 - exposure_loss: 0.7215 - val_total_loss: 1.4164 - val_illumination_smoothness_loss: 0.0720 - val_spatial_constancy_loss: 0.2525 - val_color_constancy_loss: 0.0403 - val_exposure_loss: 1.0515
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 2s 64ms/step - color_constancy_loss: 0.0801 - exposure_loss: 0.8188 - illumination_smoothness_loss: 0.0939 - spatial_constancy_loss: 0.2601 - total_loss: 1.2529 - val_color_constancy_loss: 0.0934 - val_exposure_loss: 0.6367 - val_illumination_smoothness_loss: 0.1261 - val_spatial_constancy_loss: 0.2853 - val_total_loss: 1.1416
 Epoch 34/100
-25/25 [==============================] - 7s 278ms/step - total_loss: 1.1486 - illumination_smoothness_loss: 0.0659 - spatial_constancy_loss: 0.2871 - color_constancy_loss: 0.0762 - exposure_loss: 0.7195 - val_total_loss: 1.4120 - val_illumination_smoothness_loss: 0.0675 - val_spatial_constancy_loss: 0.2528 - val_color_constancy_loss: 0.0410 - val_exposure_loss: 1.0507
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 2s 63ms/step - color_constancy_loss: 0.0802 - exposure_loss: 0.8173 - illumination_smoothness_loss: 0.0889 - spatial_constancy_loss: 0.2611 - total_loss: 1.2475 - val_color_constancy_loss: 0.0941 - val_exposure_loss: 0.6326 - val_illumination_smoothness_loss: 0.1227 - val_spatial_constancy_loss: 0.2883 - val_total_loss: 1.1378
 Epoch 35/100
-25/25 [==============================] - 7s 268ms/step - total_loss: 1.1439 - illumination_smoothness_loss: 0.0617 - spatial_constancy_loss: 0.2876 - color_constancy_loss: 0.0761 - exposure_loss: 0.7184 - val_total_loss: 1.4064 - val_illumination_smoothness_loss: 0.0628 - val_spatial_constancy_loss: 0.2538 - val_color_constancy_loss: 0.0408 - val_exposure_loss: 1.0490
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 2s 65ms/step - color_constancy_loss: 0.0807 - exposure_loss: 0.8134 - illumination_smoothness_loss: 0.0844 - spatial_constancy_loss: 0.2632 - total_loss: 1.2418 - val_color_constancy_loss: 0.0946 - val_exposure_loss: 0.6312 - val_illumination_smoothness_loss: 0.1180 - val_spatial_constancy_loss: 0.2893 - val_total_loss: 1.1330
 Epoch 36/100
-25/25 [==============================] - 7s 279ms/step - total_loss: 1.1393 - illumination_smoothness_loss: 0.0575 - spatial_constancy_loss: 0.2891 - color_constancy_loss: 0.0766 - exposure_loss: 0.7161 - val_total_loss: 1.4016 - val_illumination_smoothness_loss: 0.0574 - val_spatial_constancy_loss: 0.2529 - val_color_constancy_loss: 0.0408 - val_exposure_loss: 1.0505
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 2s 63ms/step - color_constancy_loss: 0.0808 - exposure_loss: 0.8119 - illumination_smoothness_loss: 0.0798 - spatial_constancy_loss: 0.2644 - total_loss: 1.2368 - val_color_constancy_loss: 0.0941 - val_exposure_loss: 0.6351 - val_illumination_smoothness_loss: 0.1096 - val_spatial_constancy_loss: 0.2865 - val_total_loss: 1.1253
 Epoch 37/100
-25/25 [==============================] - 7s 270ms/step - total_loss: 1.1360 - illumination_smoothness_loss: 0.0539 - spatial_constancy_loss: 0.2891 - color_constancy_loss: 0.0763 - exposure_loss: 0.7166 - val_total_loss: 1.3975 - val_illumination_smoothness_loss: 0.0545 - val_spatial_constancy_loss: 0.2547 - val_color_constancy_loss: 0.0410 - val_exposure_loss: 1.0473
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 2s 63ms/step - color_constancy_loss: 0.0807 - exposure_loss: 0.8127 - illumination_smoothness_loss: 0.0759 - spatial_constancy_loss: 0.2637 - total_loss: 1.2330 - val_color_constancy_loss: 0.0949 - val_exposure_loss: 0.6295 - val_illumination_smoothness_loss: 0.1088 - val_spatial_constancy_loss: 0.2904 - val_total_loss: 1.1237
 Epoch 38/100
-25/25 [==============================] - 7s 279ms/step - total_loss: 1.1327 - illumination_smoothness_loss: 0.0512 - spatial_constancy_loss: 0.2907 - color_constancy_loss: 0.0770 - exposure_loss: 0.7138 - val_total_loss: 1.3946 - val_illumination_smoothness_loss: 0.0515 - val_spatial_constancy_loss: 0.2546 - val_color_constancy_loss: 0.0414 - val_exposure_loss: 1.0471
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 2s 64ms/step - color_constancy_loss: 0.0812 - exposure_loss: 0.8091 - illumination_smoothness_loss: 0.0732 - spatial_constancy_loss: 0.2658 - total_loss: 1.2293 - val_color_constancy_loss: 0.0946 - val_exposure_loss: 0.6313 - val_illumination_smoothness_loss: 0.1022 - val_spatial_constancy_loss: 0.2893 - val_total_loss: 1.1174
 Epoch 39/100
-25/25 [==============================] - 7s 279ms/step - total_loss: 1.1283 - illumination_smoothness_loss: 0.0465 - spatial_constancy_loss: 0.2916 - color_constancy_loss: 0.0768 - exposure_loss: 0.7133 - val_total_loss: 1.3906 - val_illumination_smoothness_loss: 0.0473 - val_spatial_constancy_loss: 0.2538 - val_color_constancy_loss: 0.0411 - val_exposure_loss: 1.0485
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 2s 63ms/step - color_constancy_loss: 0.0810 - exposure_loss: 0.8100 - illumination_smoothness_loss: 0.0694 - spatial_constancy_loss: 0.2655 - total_loss: 1.2259 - val_color_constancy_loss: 0.0953 - val_exposure_loss: 0.6278 - val_illumination_smoothness_loss: 0.1015 - val_spatial_constancy_loss: 0.2918 - val_total_loss: 1.1164
 Epoch 40/100
-25/25 [==============================] - 7s 278ms/step - total_loss: 1.1257 - illumination_smoothness_loss: 0.0441 - spatial_constancy_loss: 0.2907 - color_constancy_loss: 0.0768 - exposure_loss: 0.7141 - val_total_loss: 1.3889 - val_illumination_smoothness_loss: 0.0477 - val_spatial_constancy_loss: 0.2577 - val_color_constancy_loss: 0.0419 - val_exposure_loss: 1.0416
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 2s 64ms/step - color_constancy_loss: 0.0813 - exposure_loss: 0.8077 - illumination_smoothness_loss: 0.0668 - spatial_constancy_loss: 0.2668 - total_loss: 1.2226 - val_color_constancy_loss: 0.0951 - val_exposure_loss: 0.6294 - val_illumination_smoothness_loss: 0.0950 - val_spatial_constancy_loss: 0.2907 - val_total_loss: 1.1103
 Epoch 41/100
-25/25 [==============================] - 7s 271ms/step - total_loss: 1.1225 - illumination_smoothness_loss: 0.0412 - spatial_constancy_loss: 0.2928 - color_constancy_loss: 0.0772 - exposure_loss: 0.7114 - val_total_loss: 1.3848 - val_illumination_smoothness_loss: 0.0433 - val_spatial_constancy_loss: 0.2569 - val_color_constancy_loss: 0.0417 - val_exposure_loss: 1.0428
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 2s 63ms/step - color_constancy_loss: 0.0814 - exposure_loss: 0.8074 - illumination_smoothness_loss: 0.0639 - spatial_constancy_loss: 0.2669 - total_loss: 1.2195 - val_color_constancy_loss: 0.0955 - val_exposure_loss: 0.6263 - val_illumination_smoothness_loss: 0.0946 - val_spatial_constancy_loss: 0.2930 - val_total_loss: 1.1093
 Epoch 42/100
-25/25 [==============================] - 7s 270ms/step - total_loss: 1.1202 - illumination_smoothness_loss: 0.0391 - spatial_constancy_loss: 0.2929 - color_constancy_loss: 0.0771 - exposure_loss: 0.7110 - val_total_loss: 1.3831 - val_illumination_smoothness_loss: 0.0425 - val_spatial_constancy_loss: 0.2583 - val_color_constancy_loss: 0.0420 - val_exposure_loss: 1.0403
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 2s 63ms/step - color_constancy_loss: 0.0816 - exposure_loss: 0.8056 - illumination_smoothness_loss: 0.0613 - spatial_constancy_loss: 0.2684 - total_loss: 1.2168 - val_color_constancy_loss: 0.0950 - val_exposure_loss: 0.6304 - val_illumination_smoothness_loss: 0.0876 - val_spatial_constancy_loss: 0.2900 - val_total_loss: 1.1031
 Epoch 43/100
-25/25 [==============================] - 7s 270ms/step - total_loss: 1.1177 - illumination_smoothness_loss: 0.0365 - spatial_constancy_loss: 0.2932 - color_constancy_loss: 0.0772 - exposure_loss: 0.7107 - val_total_loss: 1.3784 - val_illumination_smoothness_loss: 0.0376 - val_spatial_constancy_loss: 0.2578 - val_color_constancy_loss: 0.0418 - val_exposure_loss: 1.0412
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 2s 64ms/step - color_constancy_loss: 0.0813 - exposure_loss: 0.8074 - illumination_smoothness_loss: 0.0582 - spatial_constancy_loss: 0.2671 - total_loss: 1.2140 - val_color_constancy_loss: 0.0953 - val_exposure_loss: 0.6271 - val_illumination_smoothness_loss: 0.0859 - val_spatial_constancy_loss: 0.2925 - val_total_loss: 1.1008
 Epoch 44/100
-25/25 [==============================] - 7s 279ms/step - total_loss: 1.1155 - illumination_smoothness_loss: 0.0349 - spatial_constancy_loss: 0.2953 - color_constancy_loss: 0.0777 - exposure_loss: 0.7077 - val_total_loss: 1.3767 - val_illumination_smoothness_loss: 0.0341 - val_spatial_constancy_loss: 0.2545 - val_color_constancy_loss: 0.0413 - val_exposure_loss: 1.0467
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 2s 63ms/step - color_constancy_loss: 0.0816 - exposure_loss: 0.8048 - illumination_smoothness_loss: 0.0564 - spatial_constancy_loss: 0.2687 - total_loss: 1.2115 - val_color_constancy_loss: 0.0956 - val_exposure_loss: 0.6266 - val_illumination_smoothness_loss: 0.0837 - val_spatial_constancy_loss: 0.2930 - val_total_loss: 1.0988
 Epoch 45/100
-25/25 [==============================] - 7s 279ms/step - total_loss: 1.1133 - illumination_smoothness_loss: 0.0321 - spatial_constancy_loss: 0.2931 - color_constancy_loss: 0.0770 - exposure_loss: 0.7110 - val_total_loss: 1.3755 - val_illumination_smoothness_loss: 0.0353 - val_spatial_constancy_loss: 0.2590 - val_color_constancy_loss: 0.0424 - val_exposure_loss: 1.0387
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 2s 63ms/step - color_constancy_loss: 0.0816 - exposure_loss: 0.8045 - illumination_smoothness_loss: 0.0541 - spatial_constancy_loss: 0.2690 - total_loss: 1.2093 - val_color_constancy_loss: 0.0955 - val_exposure_loss: 0.6275 - val_illumination_smoothness_loss: 0.0796 - val_spatial_constancy_loss: 0.2923 - val_total_loss: 1.0949
 Epoch 46/100
-25/25 [==============================] - 7s 280ms/step - total_loss: 1.1112 - illumination_smoothness_loss: 0.0304 - spatial_constancy_loss: 0.2952 - color_constancy_loss: 0.0776 - exposure_loss: 0.7080 - val_total_loss: 1.3728 - val_illumination_smoothness_loss: 0.0328 - val_spatial_constancy_loss: 0.2591 - val_color_constancy_loss: 0.0424 - val_exposure_loss: 1.0385
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 2s 64ms/step - color_constancy_loss: 0.0816 - exposure_loss: 0.8043 - illumination_smoothness_loss: 0.0517 - spatial_constancy_loss: 0.2691 - total_loss: 1.2067 - val_color_constancy_loss: 0.0959 - val_exposure_loss: 0.6245 - val_illumination_smoothness_loss: 0.0790 - val_spatial_constancy_loss: 0.2945 - val_total_loss: 1.0939
 Epoch 47/100
-25/25 [==============================] - 7s 279ms/step - total_loss: 1.1094 - illumination_smoothness_loss: 0.0287 - spatial_constancy_loss: 0.2955 - color_constancy_loss: 0.0775 - exposure_loss: 0.7076 - val_total_loss: 1.3720 - val_illumination_smoothness_loss: 0.0329 - val_spatial_constancy_loss: 0.2605 - val_color_constancy_loss: 0.0425 - val_exposure_loss: 1.0361
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 2s 63ms/step - color_constancy_loss: 0.0819 - exposure_loss: 0.8025 - illumination_smoothness_loss: 0.0505 - spatial_constancy_loss: 0.2701 - total_loss: 1.2050 - val_color_constancy_loss: 0.0960 - val_exposure_loss: 0.6242 - val_illumination_smoothness_loss: 0.0764 - val_spatial_constancy_loss: 0.2949 - val_total_loss: 1.0914
 Epoch 48/100
-25/25 [==============================] - 7s 269ms/step - total_loss: 1.1079 - illumination_smoothness_loss: 0.0276 - spatial_constancy_loss: 0.2955 - color_constancy_loss: 0.0777 - exposure_loss: 0.7072 - val_total_loss: 1.3707 - val_illumination_smoothness_loss: 0.0316 - val_spatial_constancy_loss: 0.2606 - val_color_constancy_loss: 0.0426 - val_exposure_loss: 1.0359
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 2s 63ms/step - color_constancy_loss: 0.0819 - exposure_loss: 0.8021 - illumination_smoothness_loss: 0.0482 - spatial_constancy_loss: 0.2706 - total_loss: 1.2027 - val_color_constancy_loss: 0.0957 - val_exposure_loss: 0.6262 - val_illumination_smoothness_loss: 0.0721 - val_spatial_constancy_loss: 0.2934 - val_total_loss: 1.0874
 Epoch 49/100
-25/25 [==============================] - 7s 269ms/step - total_loss: 1.1056 - illumination_smoothness_loss: 0.0252 - spatial_constancy_loss: 0.2967 - color_constancy_loss: 0.0777 - exposure_loss: 0.7061 - val_total_loss: 1.3672 - val_illumination_smoothness_loss: 0.0277 - val_spatial_constancy_loss: 0.2597 - val_color_constancy_loss: 0.0426 - val_exposure_loss: 1.0372
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 2s 64ms/step - color_constancy_loss: 0.0818 - exposure_loss: 0.8027 - illumination_smoothness_loss: 0.0463 - spatial_constancy_loss: 0.2702 - total_loss: 1.2010 - val_color_constancy_loss: 0.0959 - val_exposure_loss: 0.6244 - val_illumination_smoothness_loss: 0.0712 - val_spatial_constancy_loss: 0.2947 - val_total_loss: 1.0863
 Epoch 50/100
-25/25 [==============================] - 7s 269ms/step - total_loss: 1.1047 - illumination_smoothness_loss: 0.0243 - spatial_constancy_loss: 0.2962 - color_constancy_loss: 0.0776 - exposure_loss: 0.7066 - val_total_loss: 1.3653 - val_illumination_smoothness_loss: 0.0256 - val_spatial_constancy_loss: 0.2590 - val_color_constancy_loss: 0.0423 - val_exposure_loss: 1.0383
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 2s 64ms/step - color_constancy_loss: 0.0820 - exposure_loss: 0.8015 - illumination_smoothness_loss: 0.0446 - spatial_constancy_loss: 0.2711 - total_loss: 1.1992 - val_color_constancy_loss: 0.0959 - val_exposure_loss: 0.6248 - val_illumination_smoothness_loss: 0.0688 - val_spatial_constancy_loss: 0.2945 - val_total_loss: 1.0839
 Epoch 51/100
-25/25 [==============================] - 7s 278ms/step - total_loss: 1.1038 - illumination_smoothness_loss: 0.0237 - spatial_constancy_loss: 0.2968 - color_constancy_loss: 0.0778 - exposure_loss: 0.7054 - val_total_loss: 1.3657 - val_illumination_smoothness_loss: 0.0273 - val_spatial_constancy_loss: 0.2617 - val_color_constancy_loss: 0.0431 - val_exposure_loss: 1.0335
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 2s 63ms/step - color_constancy_loss: 0.0819 - exposure_loss: 0.8019 - illumination_smoothness_loss: 0.0429 - spatial_constancy_loss: 0.2707 - total_loss: 1.1974 - val_color_constancy_loss: 0.0964 - val_exposure_loss: 0.6224 - val_illumination_smoothness_loss: 0.0677 - val_spatial_constancy_loss: 0.2964 - val_total_loss: 1.0829
 Epoch 52/100
-25/25 [==============================] - 7s 269ms/step - total_loss: 1.1020 - illumination_smoothness_loss: 0.0220 - spatial_constancy_loss: 0.2979 - color_constancy_loss: 0.0779 - exposure_loss: 0.7042 - val_total_loss: 1.3635 - val_illumination_smoothness_loss: 0.0234 - val_spatial_constancy_loss: 0.2579 - val_color_constancy_loss: 0.0422 - val_exposure_loss: 1.0400
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 2s 63ms/step - color_constancy_loss: 0.0823 - exposure_loss: 0.7996 - illumination_smoothness_loss: 0.0416 - spatial_constancy_loss: 0.2721 - total_loss: 1.1955 - val_color_constancy_loss: 0.0958 - val_exposure_loss: 0.6240 - val_illumination_smoothness_loss: 0.0644 - val_spatial_constancy_loss: 0.2951 - val_total_loss: 1.0793
 Epoch 53/100
-25/25 [==============================] - 7s 270ms/step - total_loss: 1.1012 - illumination_smoothness_loss: 0.0208 - spatial_constancy_loss: 0.2967 - color_constancy_loss: 0.0775 - exposure_loss: 0.7064 - val_total_loss: 1.3636 - val_illumination_smoothness_loss: 0.0250 - val_spatial_constancy_loss: 0.2607 - val_color_constancy_loss: 0.0428 - val_exposure_loss: 1.0352
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 2s 63ms/step - color_constancy_loss: 0.0822 - exposure_loss: 0.8004 - illumination_smoothness_loss: 0.0399 - spatial_constancy_loss: 0.2717 - total_loss: 1.1941 - val_color_constancy_loss: 0.0960 - val_exposure_loss: 0.6234 - val_illumination_smoothness_loss: 0.0633 - val_spatial_constancy_loss: 0.2957 - val_total_loss: 1.0785
 Epoch 54/100
-25/25 [==============================] - 7s 269ms/step - total_loss: 1.1002 - illumination_smoothness_loss: 0.0205 - spatial_constancy_loss: 0.2970 - color_constancy_loss: 0.0777 - exposure_loss: 0.7049 - val_total_loss: 1.3615 - val_illumination_smoothness_loss: 0.0233 - val_spatial_constancy_loss: 0.2611 - val_color_constancy_loss: 0.0427 - val_exposure_loss: 1.0345
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 2s 64ms/step - color_constancy_loss: 0.0823 - exposure_loss: 0.7997 - illumination_smoothness_loss: 0.0382 - spatial_constancy_loss: 0.2723 - total_loss: 1.1924 - val_color_constancy_loss: 0.0959 - val_exposure_loss: 0.6242 - val_illumination_smoothness_loss: 0.0591 - val_spatial_constancy_loss: 0.2951 - val_total_loss: 1.0744
 Epoch 55/100
-25/25 [==============================] - 7s 278ms/step - total_loss: 1.0989 - illumination_smoothness_loss: 0.0193 - spatial_constancy_loss: 0.2985 - color_constancy_loss: 0.0780 - exposure_loss: 0.7032 - val_total_loss: 1.3608 - val_illumination_smoothness_loss: 0.0225 - val_spatial_constancy_loss: 0.2609 - val_color_constancy_loss: 0.0428 - val_exposure_loss: 1.0346
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 2s 64ms/step - color_constancy_loss: 0.0822 - exposure_loss: 0.7999 - illumination_smoothness_loss: 0.0362 - spatial_constancy_loss: 0.2721 - total_loss: 1.1904 - val_color_constancy_loss: 0.0965 - val_exposure_loss: 0.6211 - val_illumination_smoothness_loss: 0.0603 - val_spatial_constancy_loss: 0.2974 - val_total_loss: 1.0754
 Epoch 56/100
-25/25 [==============================] - 7s 278ms/step - total_loss: 1.0986 - illumination_smoothness_loss: 0.0190 - spatial_constancy_loss: 0.2971 - color_constancy_loss: 0.0777 - exposure_loss: 0.7048 - val_total_loss: 1.3615 - val_illumination_smoothness_loss: 0.0238 - val_spatial_constancy_loss: 0.2621 - val_color_constancy_loss: 0.0430 - val_exposure_loss: 1.0327
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 2s 64ms/step - color_constancy_loss: 0.0825 - exposure_loss: 0.7983 - illumination_smoothness_loss: 0.0351 - spatial_constancy_loss: 0.2732 - total_loss: 1.1890 - val_color_constancy_loss: 0.0960 - val_exposure_loss: 0.6237 - val_illumination_smoothness_loss: 0.0547 - val_spatial_constancy_loss: 0.2955 - val_total_loss: 1.0699
 Epoch 57/100
-25/25 [==============================] - 7s 279ms/step - total_loss: 1.0977 - illumination_smoothness_loss: 0.0182 - spatial_constancy_loss: 0.2987 - color_constancy_loss: 0.0780 - exposure_loss: 0.7028 - val_total_loss: 1.3601 - val_illumination_smoothness_loss: 0.0226 - val_spatial_constancy_loss: 0.2623 - val_color_constancy_loss: 0.0431 - val_exposure_loss: 1.0321
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 2s 64ms/step - color_constancy_loss: 0.0823 - exposure_loss: 0.7987 - illumination_smoothness_loss: 0.0331 - spatial_constancy_loss: 0.2730 - total_loss: 1.1871 - val_color_constancy_loss: 0.0963 - val_exposure_loss: 0.6236 - val_illumination_smoothness_loss: 0.0540 - val_spatial_constancy_loss: 0.2956 - val_total_loss: 1.0694
 Epoch 58/100
-25/25 [==============================] - 7s 269ms/step - total_loss: 1.0971 - illumination_smoothness_loss: 0.0174 - spatial_constancy_loss: 0.2979 - color_constancy_loss: 0.0778 - exposure_loss: 0.7040 - val_total_loss: 1.3596 - val_illumination_smoothness_loss: 0.0218 - val_spatial_constancy_loss: 0.2615 - val_color_constancy_loss: 0.0428 - val_exposure_loss: 1.0334
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 2s 64ms/step - color_constancy_loss: 0.0823 - exposure_loss: 0.7990 - illumination_smoothness_loss: 0.0319 - spatial_constancy_loss: 0.2727 - total_loss: 1.1859 - val_color_constancy_loss: 0.0965 - val_exposure_loss: 0.6210 - val_illumination_smoothness_loss: 0.0537 - val_spatial_constancy_loss: 0.2976 - val_total_loss: 1.0688
 Epoch 59/100
-25/25 [==============================] - 7s 269ms/step - total_loss: 1.0974 - illumination_smoothness_loss: 0.0180 - spatial_constancy_loss: 0.2985 - color_constancy_loss: 0.0780 - exposure_loss: 0.7029 - val_total_loss: 1.3611 - val_illumination_smoothness_loss: 0.0246 - val_spatial_constancy_loss: 0.2645 - val_color_constancy_loss: 0.0437 - val_exposure_loss: 1.0282
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 2s 63ms/step - color_constancy_loss: 0.0826 - exposure_loss: 0.7969 - illumination_smoothness_loss: 0.0315 - spatial_constancy_loss: 0.2740 - total_loss: 1.1850 - val_color_constancy_loss: 0.0966 - val_exposure_loss: 0.6208 - val_illumination_smoothness_loss: 0.0530 - val_spatial_constancy_loss: 0.2978 - val_total_loss: 1.0682
 Epoch 60/100
-25/25 [==============================] - 7s 278ms/step - total_loss: 1.0956 - illumination_smoothness_loss: 0.0165 - spatial_constancy_loss: 0.2985 - color_constancy_loss: 0.0780 - exposure_loss: 0.7026 - val_total_loss: 1.3581 - val_illumination_smoothness_loss: 0.0209 - val_spatial_constancy_loss: 0.2623 - val_color_constancy_loss: 0.0430 - val_exposure_loss: 1.0320
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 2s 63ms/step - color_constancy_loss: 0.0824 - exposure_loss: 0.7971 - illumination_smoothness_loss: 0.0304 - spatial_constancy_loss: 0.2740 - total_loss: 1.1840 - val_color_constancy_loss: 0.0966 - val_exposure_loss: 0.6206 - val_illumination_smoothness_loss: 0.0516 - val_spatial_constancy_loss: 0.2979 - val_total_loss: 1.0667
 Epoch 61/100
-25/25 [==============================] - 7s 268ms/step - total_loss: 1.0953 - illumination_smoothness_loss: 0.0159 - spatial_constancy_loss: 0.2992 - color_constancy_loss: 0.0782 - exposure_loss: 0.7020 - val_total_loss: 1.3579 - val_illumination_smoothness_loss: 0.0213 - val_spatial_constancy_loss: 0.2637 - val_color_constancy_loss: 0.0436 - val_exposure_loss: 1.0293
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 2s 63ms/step - color_constancy_loss: 0.0825 - exposure_loss: 0.7969 - illumination_smoothness_loss: 0.0295 - spatial_constancy_loss: 0.2741 - total_loss: 1.1829 - val_color_constancy_loss: 0.0969 - val_exposure_loss: 0.6194 - val_illumination_smoothness_loss: 0.0506 - val_spatial_constancy_loss: 0.2988 - val_total_loss: 1.0657
 Epoch 62/100
-25/25 [==============================] - 7s 277ms/step - total_loss: 1.0945 - illumination_smoothness_loss: 0.0154 - spatial_constancy_loss: 0.2982 - color_constancy_loss: 0.0780 - exposure_loss: 0.7029 - val_total_loss: 1.3571 - val_illumination_smoothness_loss: 0.0199 - val_spatial_constancy_loss: 0.2620 - val_color_constancy_loss: 0.0429 - val_exposure_loss: 1.0323
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 2s 64ms/step - color_constancy_loss: 0.0827 - exposure_loss: 0.7954 - illumination_smoothness_loss: 0.0287 - spatial_constancy_loss: 0.2749 - total_loss: 1.1817 - val_color_constancy_loss: 0.0967 - val_exposure_loss: 0.6203 - val_illumination_smoothness_loss: 0.0494 - val_spatial_constancy_loss: 0.2981 - val_total_loss: 1.0644
 Epoch 63/100
-25/25 [==============================] - 7s 268ms/step - total_loss: 1.0948 - illumination_smoothness_loss: 0.0156 - spatial_constancy_loss: 0.2989 - color_constancy_loss: 0.0781 - exposure_loss: 0.7021 - val_total_loss: 1.3577 - val_illumination_smoothness_loss: 0.0215 - val_spatial_constancy_loss: 0.2641 - val_color_constancy_loss: 0.0435 - val_exposure_loss: 1.0287
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 2s 63ms/step - color_constancy_loss: 0.0825 - exposure_loss: 0.7966 - illumination_smoothness_loss: 0.0278 - spatial_constancy_loss: 0.2742 - total_loss: 1.1810 - val_color_constancy_loss: 0.0971 - val_exposure_loss: 0.6184 - val_illumination_smoothness_loss: 0.0491 - val_spatial_constancy_loss: 0.2996 - val_total_loss: 1.0642
 Epoch 64/100
-25/25 [==============================] - 7s 268ms/step - total_loss: 1.0935 - illumination_smoothness_loss: 0.0146 - spatial_constancy_loss: 0.2994 - color_constancy_loss: 0.0782 - exposure_loss: 0.7014 - val_total_loss: 1.3565 - val_illumination_smoothness_loss: 0.0200 - val_spatial_constancy_loss: 0.2632 - val_color_constancy_loss: 0.0433 - val_exposure_loss: 1.0300
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 2s 67ms/step - color_constancy_loss: 0.0827 - exposure_loss: 0.7949 - illumination_smoothness_loss: 0.0268 - spatial_constancy_loss: 0.2753 - total_loss: 1.1797 - val_color_constancy_loss: 0.0969 - val_exposure_loss: 0.6199 - val_illumination_smoothness_loss: 0.0460 - val_spatial_constancy_loss: 0.2984 - val_total_loss: 1.0611
 Epoch 65/100
-25/25 [==============================] - 7s 278ms/step - total_loss: 1.0933 - illumination_smoothness_loss: 0.0144 - spatial_constancy_loss: 0.2992 - color_constancy_loss: 0.0781 - exposure_loss: 0.7015 - val_total_loss: 1.3570 - val_illumination_smoothness_loss: 0.0211 - val_spatial_constancy_loss: 0.2648 - val_color_constancy_loss: 0.0439 - val_exposure_loss: 1.0273
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 2s 64ms/step - color_constancy_loss: 0.0826 - exposure_loss: 0.7957 - illumination_smoothness_loss: 0.0254 - spatial_constancy_loss: 0.2748 - total_loss: 1.1785 - val_color_constancy_loss: 0.0976 - val_exposure_loss: 0.6180 - val_illumination_smoothness_loss: 0.0464 - val_spatial_constancy_loss: 0.2998 - val_total_loss: 1.0618
 Epoch 66/100
-25/25 [==============================] - 7s 268ms/step - total_loss: 1.0927 - illumination_smoothness_loss: 0.0141 - spatial_constancy_loss: 0.2993 - color_constancy_loss: 0.0781 - exposure_loss: 0.7012 - val_total_loss: 1.3549 - val_illumination_smoothness_loss: 0.0179 - val_spatial_constancy_loss: 0.2618 - val_color_constancy_loss: 0.0429 - val_exposure_loss: 1.0323
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 2s 64ms/step - color_constancy_loss: 0.0827 - exposure_loss: 0.7948 - illumination_smoothness_loss: 0.0249 - spatial_constancy_loss: 0.2753 - total_loss: 1.1777 - val_color_constancy_loss: 0.0975 - val_exposure_loss: 0.6189 - val_illumination_smoothness_loss: 0.0448 - val_spatial_constancy_loss: 0.2991 - val_total_loss: 1.0602
 Epoch 67/100
-25/25 [==============================] - 7s 278ms/step - total_loss: 1.0930 - illumination_smoothness_loss: 0.0141 - spatial_constancy_loss: 0.2992 - color_constancy_loss: 0.0781 - exposure_loss: 0.7016 - val_total_loss: 1.3565 - val_illumination_smoothness_loss: 0.0208 - val_spatial_constancy_loss: 0.2652 - val_color_constancy_loss: 0.0441 - val_exposure_loss: 1.0265
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 2s 63ms/step - color_constancy_loss: 0.0825 - exposure_loss: 0.7954 - illumination_smoothness_loss: 0.0241 - spatial_constancy_loss: 0.2750 - total_loss: 1.1770 - val_color_constancy_loss: 0.0977 - val_exposure_loss: 0.6179 - val_illumination_smoothness_loss: 0.0441 - val_spatial_constancy_loss: 0.2998 - val_total_loss: 1.0595
 Epoch 68/100
-25/25 [==============================] - 7s 278ms/step - total_loss: 1.0919 - illumination_smoothness_loss: 0.0135 - spatial_constancy_loss: 0.3001 - color_constancy_loss: 0.0782 - exposure_loss: 0.7002 - val_total_loss: 1.3543 - val_illumination_smoothness_loss: 0.0173 - val_spatial_constancy_loss: 0.2617 - val_color_constancy_loss: 0.0429 - val_exposure_loss: 1.0323
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 2s 64ms/step - color_constancy_loss: 0.0827 - exposure_loss: 0.7946 - illumination_smoothness_loss: 0.0231 - spatial_constancy_loss: 0.2757 - total_loss: 1.1761 - val_color_constancy_loss: 0.0973 - val_exposure_loss: 0.6198 - val_illumination_smoothness_loss: 0.0410 - val_spatial_constancy_loss: 0.2980 - val_total_loss: 1.0562
 Epoch 69/100
-25/25 [==============================] - 7s 278ms/step - total_loss: 1.0925 - illumination_smoothness_loss: 0.0136 - spatial_constancy_loss: 0.2989 - color_constancy_loss: 0.0780 - exposure_loss: 0.7019 - val_total_loss: 1.3562 - val_illumination_smoothness_loss: 0.0203 - val_spatial_constancy_loss: 0.2646 - val_color_constancy_loss: 0.0440 - val_exposure_loss: 1.0272
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 2s 63ms/step - color_constancy_loss: 0.0826 - exposure_loss: 0.7947 - illumination_smoothness_loss: 0.0226 - spatial_constancy_loss: 0.2752 - total_loss: 1.1752 - val_color_constancy_loss: 0.0979 - val_exposure_loss: 0.6170 - val_illumination_smoothness_loss: 0.0435 - val_spatial_constancy_loss: 0.3003 - val_total_loss: 1.0587
 Epoch 70/100
-25/25 [==============================] - 7s 269ms/step - total_loss: 1.0916 - illumination_smoothness_loss: 0.0130 - spatial_constancy_loss: 0.3005 - color_constancy_loss: 0.0782 - exposure_loss: 0.7000 - val_total_loss: 1.3530 - val_illumination_smoothness_loss: 0.0156 - val_spatial_constancy_loss: 0.2606 - val_color_constancy_loss: 0.0428 - val_exposure_loss: 1.0341
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 2s 63ms/step - color_constancy_loss: 0.0828 - exposure_loss: 0.7940 - illumination_smoothness_loss: 0.0224 - spatial_constancy_loss: 0.2758 - total_loss: 1.1749 - val_color_constancy_loss: 0.0976 - val_exposure_loss: 0.6182 - val_illumination_smoothness_loss: 0.0414 - val_spatial_constancy_loss: 0.2994 - val_total_loss: 1.0566
 Epoch 71/100
-25/25 [==============================] - 7s 278ms/step - total_loss: 1.0918 - illumination_smoothness_loss: 0.0128 - spatial_constancy_loss: 0.2985 - color_constancy_loss: 0.0778 - exposure_loss: 0.7028 - val_total_loss: 1.3550 - val_illumination_smoothness_loss: 0.0194 - val_spatial_constancy_loss: 0.2645 - val_color_constancy_loss: 0.0439 - val_exposure_loss: 1.0273
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 2s 64ms/step - color_constancy_loss: 0.0827 - exposure_loss: 0.7941 - illumination_smoothness_loss: 0.0216 - spatial_constancy_loss: 0.2758 - total_loss: 1.1742 - val_color_constancy_loss: 0.0974 - val_exposure_loss: 0.6189 - val_illumination_smoothness_loss: 0.0389 - val_spatial_constancy_loss: 0.2986 - val_total_loss: 1.0538
 Epoch 72/100
-25/25 [==============================] - 7s 269ms/step - total_loss: 1.0911 - illumination_smoothness_loss: 0.0127 - spatial_constancy_loss: 0.3001 - color_constancy_loss: 0.0782 - exposure_loss: 0.7001 - val_total_loss: 1.3535 - val_illumination_smoothness_loss: 0.0175 - val_spatial_constancy_loss: 0.2638 - val_color_constancy_loss: 0.0438 - val_exposure_loss: 1.0284
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 2s 64ms/step - color_constancy_loss: 0.0827 - exposure_loss: 0.7941 - illumination_smoothness_loss: 0.0211 - spatial_constancy_loss: 0.2755 - total_loss: 1.1734 - val_color_constancy_loss: 0.0979 - val_exposure_loss: 0.6166 - val_illumination_smoothness_loss: 0.0420 - val_spatial_constancy_loss: 0.3005 - val_total_loss: 1.0571
 Epoch 73/100
-25/25 [==============================] - 7s 278ms/step - total_loss: 1.0906 - illumination_smoothness_loss: 0.0121 - spatial_constancy_loss: 0.2998 - color_constancy_loss: 0.0780 - exposure_loss: 0.7006 - val_total_loss: 1.3521 - val_illumination_smoothness_loss: 0.0153 - val_spatial_constancy_loss: 0.2615 - val_color_constancy_loss: 0.0430 - val_exposure_loss: 1.0323
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 2s 63ms/step - color_constancy_loss: 0.0828 - exposure_loss: 0.7935 - illumination_smoothness_loss: 0.0214 - spatial_constancy_loss: 0.2759 - total_loss: 1.1735 - val_color_constancy_loss: 0.0977 - val_exposure_loss: 0.6172 - val_illumination_smoothness_loss: 0.0401 - val_spatial_constancy_loss: 0.3001 - val_total_loss: 1.0551
 Epoch 74/100
-25/25 [==============================] - 7s 269ms/step - total_loss: 1.0914 - illumination_smoothness_loss: 0.0127 - spatial_constancy_loss: 0.2993 - color_constancy_loss: 0.0780 - exposure_loss: 0.7014 - val_total_loss: 1.3547 - val_illumination_smoothness_loss: 0.0189 - val_spatial_constancy_loss: 0.2642 - val_color_constancy_loss: 0.0441 - val_exposure_loss: 1.0275
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 2s 63ms/step - color_constancy_loss: 0.0828 - exposure_loss: 0.7935 - illumination_smoothness_loss: 0.0205 - spatial_constancy_loss: 0.2760 - total_loss: 1.1727 - val_color_constancy_loss: 0.0978 - val_exposure_loss: 0.6168 - val_illumination_smoothness_loss: 0.0395 - val_spatial_constancy_loss: 0.3005 - val_total_loss: 1.0546
 Epoch 75/100
-25/25 [==============================] - 7s 278ms/step - total_loss: 1.0908 - illumination_smoothness_loss: 0.0125 - spatial_constancy_loss: 0.2994 - color_constancy_loss: 0.0781 - exposure_loss: 0.7008 - val_total_loss: 1.3533 - val_illumination_smoothness_loss: 0.0174 - val_spatial_constancy_loss: 0.2636 - val_color_constancy_loss: 0.0436 - val_exposure_loss: 1.0286
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 2s 63ms/step - color_constancy_loss: 0.0828 - exposure_loss: 0.7924 - illumination_smoothness_loss: 0.0204 - spatial_constancy_loss: 0.2764 - total_loss: 1.1721 - val_color_constancy_loss: 0.0977 - val_exposure_loss: 0.6176 - val_illumination_smoothness_loss: 0.0385 - val_spatial_constancy_loss: 0.2997 - val_total_loss: 1.0536
 Epoch 76/100
-25/25 [==============================] - 7s 269ms/step - total_loss: 1.0909 - illumination_smoothness_loss: 0.0126 - spatial_constancy_loss: 0.2998 - color_constancy_loss: 0.0782 - exposure_loss: 0.7004 - val_total_loss: 1.3544 - val_illumination_smoothness_loss: 0.0194 - val_spatial_constancy_loss: 0.2655 - val_color_constancy_loss: 0.0442 - val_exposure_loss: 1.0253
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 2s 63ms/step - color_constancy_loss: 0.0827 - exposure_loss: 0.7933 - illumination_smoothness_loss: 0.0198 - spatial_constancy_loss: 0.2760 - total_loss: 1.1718 - val_color_constancy_loss: 0.0979 - val_exposure_loss: 0.6166 - val_illumination_smoothness_loss: 0.0376 - val_spatial_constancy_loss: 0.3002 - val_total_loss: 1.0524
 Epoch 77/100
-25/25 [==============================] - 7s 278ms/step - total_loss: 1.0897 - illumination_smoothness_loss: 0.0116 - spatial_constancy_loss: 0.3002 - color_constancy_loss: 0.0783 - exposure_loss: 0.6996 - val_total_loss: 1.3516 - val_illumination_smoothness_loss: 0.0159 - val_spatial_constancy_loss: 0.2635 - val_color_constancy_loss: 0.0436 - val_exposure_loss: 1.0286
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 2s 64ms/step - color_constancy_loss: 0.0828 - exposure_loss: 0.7925 - illumination_smoothness_loss: 0.0195 - spatial_constancy_loss: 0.2763 - total_loss: 1.1710 - val_color_constancy_loss: 0.0979 - val_exposure_loss: 0.6170 - val_illumination_smoothness_loss: 0.0384 - val_spatial_constancy_loss: 0.2999 - val_total_loss: 1.0532
 Epoch 78/100
-25/25 [==============================] - 7s 269ms/step - total_loss: 1.0900 - illumination_smoothness_loss: 0.0120 - spatial_constancy_loss: 0.2998 - color_constancy_loss: 0.0781 - exposure_loss: 0.7001 - val_total_loss: 1.3528 - val_illumination_smoothness_loss: 0.0174 - val_spatial_constancy_loss: 0.2641 - val_color_constancy_loss: 0.0437 - val_exposure_loss: 1.0277
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 2s 64ms/step - color_constancy_loss: 0.0827 - exposure_loss: 0.7929 - illumination_smoothness_loss: 0.0196 - spatial_constancy_loss: 0.2761 - total_loss: 1.1713 - val_color_constancy_loss: 0.0979 - val_exposure_loss: 0.6170 - val_illumination_smoothness_loss: 0.0369 - val_spatial_constancy_loss: 0.3000 - val_total_loss: 1.0518
 Epoch 79/100
-25/25 [==============================] - 7s 279ms/step - total_loss: 1.0904 - illumination_smoothness_loss: 0.0122 - spatial_constancy_loss: 0.2999 - color_constancy_loss: 0.0782 - exposure_loss: 0.7001 - val_total_loss: 1.3528 - val_illumination_smoothness_loss: 0.0178 - val_spatial_constancy_loss: 0.2647 - val_color_constancy_loss: 0.0439 - val_exposure_loss: 1.0264
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 2s 63ms/step - color_constancy_loss: 0.0828 - exposure_loss: 0.7922 - illumination_smoothness_loss: 0.0192 - spatial_constancy_loss: 0.2763 - total_loss: 1.1704 - val_color_constancy_loss: 0.0981 - val_exposure_loss: 0.6157 - val_illumination_smoothness_loss: 0.0380 - val_spatial_constancy_loss: 0.3009 - val_total_loss: 1.0527
 Epoch 80/100
-25/25 [==============================] - 7s 279ms/step - total_loss: 1.0895 - illumination_smoothness_loss: 0.0114 - spatial_constancy_loss: 0.2995 - color_constancy_loss: 0.0782 - exposure_loss: 0.7003 - val_total_loss: 1.3520 - val_illumination_smoothness_loss: 0.0168 - val_spatial_constancy_loss: 0.2643 - val_color_constancy_loss: 0.0438 - val_exposure_loss: 1.0270
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 2s 63ms/step - color_constancy_loss: 0.0828 - exposure_loss: 0.7918 - illumination_smoothness_loss: 0.0191 - spatial_constancy_loss: 0.2766 - total_loss: 1.1703 - val_color_constancy_loss: 0.0980 - val_exposure_loss: 0.6159 - val_illumination_smoothness_loss: 0.0373 - val_spatial_constancy_loss: 0.3004 - val_total_loss: 1.0516
 Epoch 81/100
-25/25 [==============================] - 7s 269ms/step - total_loss: 1.0895 - illumination_smoothness_loss: 0.0116 - spatial_constancy_loss: 0.3002 - color_constancy_loss: 0.0783 - exposure_loss: 0.6995 - val_total_loss: 1.3520 - val_illumination_smoothness_loss: 0.0170 - val_spatial_constancy_loss: 0.2645 - val_color_constancy_loss: 0.0439 - val_exposure_loss: 1.0267
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 2s 64ms/step - color_constancy_loss: 0.0828 - exposure_loss: 0.7917 - illumination_smoothness_loss: 0.0190 - spatial_constancy_loss: 0.2764 - total_loss: 1.1699 - val_color_constancy_loss: 0.0981 - val_exposure_loss: 0.6153 - val_illumination_smoothness_loss: 0.0373 - val_spatial_constancy_loss: 0.3009 - val_total_loss: 1.0516
 Epoch 82/100
-25/25 [==============================] - 7s 278ms/step - total_loss: 1.0898 - illumination_smoothness_loss: 0.0116 - spatial_constancy_loss: 0.3001 - color_constancy_loss: 0.0782 - exposure_loss: 0.6999 - val_total_loss: 1.3532 - val_illumination_smoothness_loss: 0.0185 - val_spatial_constancy_loss: 0.2655 - val_color_constancy_loss: 0.0443 - val_exposure_loss: 1.0249
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 2s 66ms/step - color_constancy_loss: 0.0829 - exposure_loss: 0.7915 - illumination_smoothness_loss: 0.0187 - spatial_constancy_loss: 0.2766 - total_loss: 1.1697 - val_color_constancy_loss: 0.0979 - val_exposure_loss: 0.6170 - val_illumination_smoothness_loss: 0.0348 - val_spatial_constancy_loss: 0.2996 - val_total_loss: 1.0493
 Epoch 83/100
-25/25 [==============================] - 7s 269ms/step - total_loss: 1.0888 - illumination_smoothness_loss: 0.0112 - spatial_constancy_loss: 0.3002 - color_constancy_loss: 0.0782 - exposure_loss: 0.6992 - val_total_loss: 1.3517 - val_illumination_smoothness_loss: 0.0166 - val_spatial_constancy_loss: 0.2642 - val_color_constancy_loss: 0.0438 - val_exposure_loss: 1.0271
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 2s 65ms/step - color_constancy_loss: 0.0828 - exposure_loss: 0.7918 - illumination_smoothness_loss: 0.0182 - spatial_constancy_loss: 0.2763 - total_loss: 1.1691 - val_color_constancy_loss: 0.0980 - val_exposure_loss: 0.6158 - val_illumination_smoothness_loss: 0.0358 - val_spatial_constancy_loss: 0.3004 - val_total_loss: 1.0500
 Epoch 84/100
-25/25 [==============================] - 7s 278ms/step - total_loss: 1.0887 - illumination_smoothness_loss: 0.0106 - spatial_constancy_loss: 0.3004 - color_constancy_loss: 0.0781 - exposure_loss: 0.6996 - val_total_loss: 1.3500 - val_illumination_smoothness_loss: 0.0148 - val_spatial_constancy_loss: 0.2639 - val_color_constancy_loss: 0.0439 - val_exposure_loss: 1.0275
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 2s 65ms/step - color_constancy_loss: 0.0829 - exposure_loss: 0.7911 - illumination_smoothness_loss: 0.0184 - spatial_constancy_loss: 0.2766 - total_loss: 1.1689 - val_color_constancy_loss: 0.0982 - val_exposure_loss: 0.6146 - val_illumination_smoothness_loss: 0.0366 - val_spatial_constancy_loss: 0.3010 - val_total_loss: 1.0505
 Epoch 85/100
-25/25 [==============================] - 7s 268ms/step - total_loss: 1.0886 - illumination_smoothness_loss: 0.0110 - spatial_constancy_loss: 0.3000 - color_constancy_loss: 0.0781 - exposure_loss: 0.6994 - val_total_loss: 1.3511 - val_illumination_smoothness_loss: 0.0163 - val_spatial_constancy_loss: 0.2644 - val_color_constancy_loss: 0.0438 - val_exposure_loss: 1.0266
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 2s 64ms/step - color_constancy_loss: 0.0829 - exposure_loss: 0.7907 - illumination_smoothness_loss: 0.0185 - spatial_constancy_loss: 0.2767 - total_loss: 1.1687 - val_color_constancy_loss: 0.0980 - val_exposure_loss: 0.6154 - val_illumination_smoothness_loss: 0.0361 - val_spatial_constancy_loss: 0.3006 - val_total_loss: 1.0501
 Epoch 86/100
-25/25 [==============================] - 7s 278ms/step - total_loss: 1.0889 - illumination_smoothness_loss: 0.0110 - spatial_constancy_loss: 0.3004 - color_constancy_loss: 0.0782 - exposure_loss: 0.6993 - val_total_loss: 1.3513 - val_illumination_smoothness_loss: 0.0166 - val_spatial_constancy_loss: 0.2649 - val_color_constancy_loss: 0.0442 - val_exposure_loss: 1.0257
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 2s 65ms/step - color_constancy_loss: 0.0828 - exposure_loss: 0.7910 - illumination_smoothness_loss: 0.0182 - spatial_constancy_loss: 0.2765 - total_loss: 1.1685 - val_color_constancy_loss: 0.0982 - val_exposure_loss: 0.6145 - val_illumination_smoothness_loss: 0.0356 - val_spatial_constancy_loss: 0.3009 - val_total_loss: 1.0492
 Epoch 87/100
-25/25 [==============================] - 7s 269ms/step - total_loss: 1.0885 - illumination_smoothness_loss: 0.0111 - spatial_constancy_loss: 0.3001 - color_constancy_loss: 0.0781 - exposure_loss: 0.6992 - val_total_loss: 1.3504 - val_illumination_smoothness_loss: 0.0154 - val_spatial_constancy_loss: 0.2639 - val_color_constancy_loss: 0.0437 - val_exposure_loss: 1.0274
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 2s 64ms/step - color_constancy_loss: 0.0829 - exposure_loss: 0.7902 - illumination_smoothness_loss: 0.0181 - spatial_constancy_loss: 0.2767 - total_loss: 1.1680 - val_color_constancy_loss: 0.0981 - val_exposure_loss: 0.6149 - val_illumination_smoothness_loss: 0.0357 - val_spatial_constancy_loss: 0.3007 - val_total_loss: 1.0494
 Epoch 88/100
-25/25 [==============================] - 7s 268ms/step - total_loss: 1.0889 - illumination_smoothness_loss: 0.0111 - spatial_constancy_loss: 0.3000 - color_constancy_loss: 0.0781 - exposure_loss: 0.6997 - val_total_loss: 1.3512 - val_illumination_smoothness_loss: 0.0165 - val_spatial_constancy_loss: 0.2650 - val_color_constancy_loss: 0.0443 - val_exposure_loss: 1.0254
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 2s 64ms/step - color_constancy_loss: 0.0829 - exposure_loss: 0.7904 - illumination_smoothness_loss: 0.0180 - spatial_constancy_loss: 0.2766 - total_loss: 1.1679 - val_color_constancy_loss: 0.0983 - val_exposure_loss: 0.6133 - val_illumination_smoothness_loss: 0.0359 - val_spatial_constancy_loss: 0.3015 - val_total_loss: 1.0491
 Epoch 89/100
-25/25 [==============================] - 7s 268ms/step - total_loss: 1.0883 - illumination_smoothness_loss: 0.0109 - spatial_constancy_loss: 0.3003 - color_constancy_loss: 0.0781 - exposure_loss: 0.6990 - val_total_loss: 1.3506 - val_illumination_smoothness_loss: 0.0160 - val_spatial_constancy_loss: 0.2645 - val_color_constancy_loss: 0.0439 - val_exposure_loss: 1.0262
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 2s 64ms/step - color_constancy_loss: 0.0830 - exposure_loss: 0.7893 - illumination_smoothness_loss: 0.0181 - spatial_constancy_loss: 0.2770 - total_loss: 1.1674 - val_color_constancy_loss: 0.0981 - val_exposure_loss: 0.6148 - val_illumination_smoothness_loss: 0.0350 - val_spatial_constancy_loss: 0.3006 - val_total_loss: 1.0484
 Epoch 90/100
-25/25 [==============================] - 7s 268ms/step - total_loss: 1.0883 - illumination_smoothness_loss: 0.0106 - spatial_constancy_loss: 0.3003 - color_constancy_loss: 0.0781 - exposure_loss: 0.6993 - val_total_loss: 1.3498 - val_illumination_smoothness_loss: 0.0149 - val_spatial_constancy_loss: 0.2640 - val_color_constancy_loss: 0.0440 - val_exposure_loss: 1.0270
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 2s 63ms/step - color_constancy_loss: 0.0829 - exposure_loss: 0.7901 - illumination_smoothness_loss: 0.0178 - spatial_constancy_loss: 0.2765 - total_loss: 1.1673 - val_color_constancy_loss: 0.0984 - val_exposure_loss: 0.6128 - val_illumination_smoothness_loss: 0.0358 - val_spatial_constancy_loss: 0.3017 - val_total_loss: 1.0487
 Epoch 91/100
-25/25 [==============================] - 7s 277ms/step - total_loss: 1.0883 - illumination_smoothness_loss: 0.0107 - spatial_constancy_loss: 0.3000 - color_constancy_loss: 0.0780 - exposure_loss: 0.6995 - val_total_loss: 1.3492 - val_illumination_smoothness_loss: 0.0146 - val_spatial_constancy_loss: 0.2644 - val_color_constancy_loss: 0.0440 - val_exposure_loss: 1.0262
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 2s 63ms/step - color_constancy_loss: 0.0831 - exposure_loss: 0.7886 - illumination_smoothness_loss: 0.0181 - spatial_constancy_loss: 0.2771 - total_loss: 1.1669 - val_color_constancy_loss: 0.0981 - val_exposure_loss: 0.6142 - val_illumination_smoothness_loss: 0.0351 - val_spatial_constancy_loss: 0.3007 - val_total_loss: 1.0481
 Epoch 92/100
-25/25 [==============================] - 7s 278ms/step - total_loss: 1.0884 - illumination_smoothness_loss: 0.0108 - spatial_constancy_loss: 0.3007 - color_constancy_loss: 0.0782 - exposure_loss: 0.6987 - val_total_loss: 1.3496 - val_illumination_smoothness_loss: 0.0148 - val_spatial_constancy_loss: 0.2642 - val_color_constancy_loss: 0.0441 - val_exposure_loss: 1.0265
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 2s 63ms/step - color_constancy_loss: 0.0829 - exposure_loss: 0.7895 - illumination_smoothness_loss: 0.0177 - spatial_constancy_loss: 0.2766 - total_loss: 1.1668 - val_color_constancy_loss: 0.0983 - val_exposure_loss: 0.6133 - val_illumination_smoothness_loss: 0.0349 - val_spatial_constancy_loss: 0.3011 - val_total_loss: 1.0476
 Epoch 93/100
-25/25 [==============================] - 7s 277ms/step - total_loss: 1.0878 - illumination_smoothness_loss: 0.0105 - spatial_constancy_loss: 0.2994 - color_constancy_loss: 0.0780 - exposure_loss: 0.6999 - val_total_loss: 1.3497 - val_illumination_smoothness_loss: 0.0150 - val_spatial_constancy_loss: 0.2643 - val_color_constancy_loss: 0.0440 - val_exposure_loss: 1.0263
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 2s 64ms/step - color_constancy_loss: 0.0831 - exposure_loss: 0.7884 - illumination_smoothness_loss: 0.0179 - spatial_constancy_loss: 0.2770 - total_loss: 1.1664 - val_color_constancy_loss: 0.0984 - val_exposure_loss: 0.6125 - val_illumination_smoothness_loss: 0.0355 - val_spatial_constancy_loss: 0.3014 - val_total_loss: 1.0478
 Epoch 94/100
-25/25 [==============================] - 7s 278ms/step - total_loss: 1.0876 - illumination_smoothness_loss: 0.0098 - spatial_constancy_loss: 0.3005 - color_constancy_loss: 0.0781 - exposure_loss: 0.6992 - val_total_loss: 1.3471 - val_illumination_smoothness_loss: 0.0120 - val_spatial_constancy_loss: 0.2633 - val_color_constancy_loss: 0.0439 - val_exposure_loss: 1.0279
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 2s 65ms/step - color_constancy_loss: 0.0831 - exposure_loss: 0.7882 - illumination_smoothness_loss: 0.0181 - spatial_constancy_loss: 0.2769 - total_loss: 1.1663 - val_color_constancy_loss: 0.0983 - val_exposure_loss: 0.6128 - val_illumination_smoothness_loss: 0.0349 - val_spatial_constancy_loss: 0.3012 - val_total_loss: 1.0473
 Epoch 95/100
-25/25 [==============================] - 7s 278ms/step - total_loss: 1.0876 - illumination_smoothness_loss: 0.0103 - spatial_constancy_loss: 0.3002 - color_constancy_loss: 0.0782 - exposure_loss: 0.6989 - val_total_loss: 1.3493 - val_illumination_smoothness_loss: 0.0147 - val_spatial_constancy_loss: 0.2642 - val_color_constancy_loss: 0.0441 - val_exposure_loss: 1.0263
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 2s 63ms/step - color_constancy_loss: 0.0831 - exposure_loss: 0.7881 - illumination_smoothness_loss: 0.0179 - spatial_constancy_loss: 0.2770 - total_loss: 1.1660 - val_color_constancy_loss: 0.0983 - val_exposure_loss: 0.6130 - val_illumination_smoothness_loss: 0.0341 - val_spatial_constancy_loss: 0.3009 - val_total_loss: 1.0462
 Epoch 96/100
-25/25 [==============================] - 7s 277ms/step - total_loss: 1.0880 - illumination_smoothness_loss: 0.0105 - spatial_constancy_loss: 0.3001 - color_constancy_loss: 0.0781 - exposure_loss: 0.6994 - val_total_loss: 1.3485 - val_illumination_smoothness_loss: 0.0140 - val_spatial_constancy_loss: 0.2644 - val_color_constancy_loss: 0.0440 - val_exposure_loss: 1.0261
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 2s 63ms/step - color_constancy_loss: 0.0832 - exposure_loss: 0.7874 - illumination_smoothness_loss: 0.0179 - spatial_constancy_loss: 0.2771 - total_loss: 1.1656 - val_color_constancy_loss: 0.0983 - val_exposure_loss: 0.6125 - val_illumination_smoothness_loss: 0.0353 - val_spatial_constancy_loss: 0.3010 - val_total_loss: 1.0471
 Epoch 97/100
-25/25 [==============================] - 7s 278ms/step - total_loss: 1.0878 - illumination_smoothness_loss: 0.0102 - spatial_constancy_loss: 0.3005 - color_constancy_loss: 0.0782 - exposure_loss: 0.6990 - val_total_loss: 1.3485 - val_illumination_smoothness_loss: 0.0140 - val_spatial_constancy_loss: 0.2645 - val_color_constancy_loss: 0.0443 - val_exposure_loss: 1.0257
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 2s 63ms/step - color_constancy_loss: 0.0830 - exposure_loss: 0.7882 - illumination_smoothness_loss: 0.0181 - spatial_constancy_loss: 0.2765 - total_loss: 1.1658 - val_color_constancy_loss: 0.0984 - val_exposure_loss: 0.6120 - val_illumination_smoothness_loss: 0.0346 - val_spatial_constancy_loss: 0.3014 - val_total_loss: 1.0464
 Epoch 98/100
-25/25 [==============================] - 7s 278ms/step - total_loss: 1.0875 - illumination_smoothness_loss: 0.0104 - spatial_constancy_loss: 0.3003 - color_constancy_loss: 0.0781 - exposure_loss: 0.6987 - val_total_loss: 1.3485 - val_illumination_smoothness_loss: 0.0140 - val_spatial_constancy_loss: 0.2641 - val_color_constancy_loss: 0.0440 - val_exposure_loss: 1.0264
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 2s 63ms/step - color_constancy_loss: 0.0832 - exposure_loss: 0.7869 - illumination_smoothness_loss: 0.0180 - spatial_constancy_loss: 0.2772 - total_loss: 1.1653 - val_color_constancy_loss: 0.0984 - val_exposure_loss: 0.6118 - val_illumination_smoothness_loss: 0.0344 - val_spatial_constancy_loss: 0.3012 - val_total_loss: 1.0458
 Epoch 99/100
-25/25 [==============================] - 7s 277ms/step - total_loss: 1.0879 - illumination_smoothness_loss: 0.0104 - spatial_constancy_loss: 0.3005 - color_constancy_loss: 0.0782 - exposure_loss: 0.6988 - val_total_loss: 1.3486 - val_illumination_smoothness_loss: 0.0140 - val_spatial_constancy_loss: 0.2642 - val_color_constancy_loss: 0.0443 - val_exposure_loss: 1.0260
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 2s 64ms/step - color_constancy_loss: 0.0832 - exposure_loss: 0.7863 - illumination_smoothness_loss: 0.0182 - spatial_constancy_loss: 0.2772 - total_loss: 1.1650 - val_color_constancy_loss: 0.0983 - val_exposure_loss: 0.6120 - val_illumination_smoothness_loss: 0.0343 - val_spatial_constancy_loss: 0.3007 - val_total_loss: 1.0453
 Epoch 100/100
-25/25 [==============================] - 7s 277ms/step - total_loss: 1.0873 - illumination_smoothness_loss: 0.0102 - spatial_constancy_loss: 0.3001 - color_constancy_loss: 0.0780 - exposure_loss: 0.6991 - val_total_loss: 1.3481 - val_illumination_smoothness_loss: 0.0134 - val_spatial_constancy_loss: 0.2635 - val_color_constancy_loss: 0.0439 - val_exposure_loss: 1.0273
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 2s 64ms/step - color_constancy_loss: 0.0831 - exposure_loss: 0.7873 - illumination_smoothness_loss: 0.0180 - spatial_constancy_loss: 0.2765 - total_loss: 1.1649 - val_color_constancy_loss: 0.0984 - val_exposure_loss: 0.6115 - val_illumination_smoothness_loss: 0.0341 - val_spatial_constancy_loss: 0.3011 - val_total_loss: 1.0451
 
 ```
 </div>
-![png](/img/examples/vision/zero_dce/zero_dce_21_1.png)
-
-
-
-![png](/img/examples/vision/zero_dce/zero_dce_21_2.png)
-
-
-
+    
 ![png](/img/examples/vision/zero_dce/zero_dce_21_3.png)
+    
 
 
 
+    
 ![png](/img/examples/vision/zero_dce/zero_dce_21_4.png)
+    
 
 
 
+    
 ![png](/img/examples/vision/zero_dce/zero_dce_21_5.png)
+    
+
+
+
+    
+![png](/img/examples/vision/zero_dce/zero_dce_21_6.png)
+    
+
+
+
+    
+![png](/img/examples/vision/zero_dce/zero_dce_21_7.png)
+    
 
 
 ---
@@ -702,7 +812,8 @@ def infer(original_image):
 We compare the test images from LOLDataset enhanced by MIRNet with images enhanced via
 the `PIL.ImageOps.autocontrast()` function.
 
-You can use the trained model hosted on [Hugging Face Hub](https://huggingface.co/keras-io/low-light-image-enhancement) and try the demo on [Hugging Face Spaces](https://huggingface.co/spaces/keras-io/low-light-image-enhancement).
+You can use the trained model hosted on [Hugging Face Hub](https://huggingface.co/keras-io/low-light-image-enhancement)
+and try the demo on [Hugging Face Spaces](https://huggingface.co/spaces/keras-io/low-light-image-enhancement).
 
 
 ```python
@@ -717,60 +828,31 @@ for val_image_file in test_low_light_images:
 ```
 
 
+    
 ![png](/img/examples/vision/zero_dce/zero_dce_25_0.png)
+    
 
 
 
+    
 ![png](/img/examples/vision/zero_dce/zero_dce_25_1.png)
+    
 
 
 
+    
 ![png](/img/examples/vision/zero_dce/zero_dce_25_2.png)
+    
 
 
 
+    
 ![png](/img/examples/vision/zero_dce/zero_dce_25_3.png)
+    
 
 
 
+    
 ![png](/img/examples/vision/zero_dce/zero_dce_25_4.png)
+    
 
-
-
-![png](/img/examples/vision/zero_dce/zero_dce_25_5.png)
-
-
-
-![png](/img/examples/vision/zero_dce/zero_dce_25_6.png)
-
-
-
-![png](/img/examples/vision/zero_dce/zero_dce_25_7.png)
-
-
-
-![png](/img/examples/vision/zero_dce/zero_dce_25_8.png)
-
-
-
-![png](/img/examples/vision/zero_dce/zero_dce_25_9.png)
-
-
-
-![png](/img/examples/vision/zero_dce/zero_dce_25_10.png)
-
-
-
-![png](/img/examples/vision/zero_dce/zero_dce_25_11.png)
-
-
-
-![png](/img/examples/vision/zero_dce/zero_dce_25_12.png)
-
-
-
-![png](/img/examples/vision/zero_dce/zero_dce_25_13.png)
-
-
-
-![png](/img/examples/vision/zero_dce/zero_dce_25_14.png)
