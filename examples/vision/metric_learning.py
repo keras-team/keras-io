@@ -23,7 +23,12 @@ For a more detailed overview of metric learning see:
 
 """
 ## Setup
+
+Set Keras backend to tensorflow.
 """
+import os
+
+os.environ["KERAS_BACKEND"] = "tensorflow"
 
 import random
 import matplotlib.pyplot as plt
@@ -32,8 +37,8 @@ import tensorflow as tf
 from collections import defaultdict
 from PIL import Image
 from sklearn.metrics import ConfusionMatrixDisplay
-from tensorflow import keras
-from tensorflow.keras import layers
+import keras
+from keras import layers
 
 """
 ## Dataset
@@ -42,7 +47,8 @@ For this example we will be using the
 [CIFAR-10](https://www.cs.toronto.edu/~kriz/cifar.html) dataset.
 """
 
-from tensorflow.keras.datasets import cifar10
+from keras.datasets import cifar10
+
 
 (x_train, y_train), (x_test, y_test) = cifar10.load_data()
 
@@ -171,7 +177,7 @@ class EmbeddingModel(keras.Model):
 
             # Calculate cosine similarity between anchors and positives. As they have
             # been normalised this is just the pair wise dot products.
-            similarities = tf.einsum(
+            similarities = keras.ops.einsum(
                 "ae,pe->ap", anchor_embeddings, positive_embeddings
             )
 
@@ -185,7 +191,7 @@ class EmbeddingModel(keras.Model):
             # want the main diagonal values, which correspond to the anchor/positive
             # pairs, to be high. This loss will move embeddings for the
             # anchor/positive pairs together and move all other pairs apart.
-            sparse_labels = tf.range(num_classes)
+            sparse_labels = keras.ops.arange(num_classes)
             loss = self.compiled_loss(sparse_labels, similarities)
 
         # Calculate gradients and apply via optimizer.
@@ -311,11 +317,3 @@ labels = [
 disp = ConfusionMatrixDisplay(confusion_matrix=confusion_matrix, display_labels=labels)
 disp.plot(include_values=True, cmap="viridis", ax=None, xticks_rotation="vertical")
 plt.show()
-
-"""
-Example available on HuggingFace.
-
-| Trained Model | Demo |
-| :--: | :--: |
-| [![Generic badge](https://img.shields.io/badge/🤗%20Model-Cifar10%20Metric%20Learning-black.svg)](https://huggingface.co/keras-io/cifar10_metric_learning) | [![Generic badge](https://img.shields.io/badge/🤗%20Spaces-Metric%20Learning%20for%20Image%20Similarity%20Search-black.svg)](https://huggingface.co/spaces/keras-io/metric-learning-image-similarity-search) |
-"""
