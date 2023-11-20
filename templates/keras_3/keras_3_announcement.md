@@ -9,7 +9,9 @@ You can also use Keras as a low-level cross-framework language
 to develop custom components such as layers, models, or metrics
 that can be used in native workflows in JAX, TensorFlow, or PyTorch — with one codebase.
 
-## Why use Keras 3?
+---
+
+## Welcome to multi-framework machine learning.
 
 You're already familiar with the benefits of using Keras — it enables
 high-velocity development via an obsessive focus on great UX, API design,
@@ -42,7 +44,7 @@ at arbitrary model scales and cluster scales.
 Because it keeps the model definition, training logic,
 and sharding configuration all separate from each other,
 it makes your distribution workflow easy to develop and easy to maintain.
-See our [starter guide](/getting_started/intro_to_keras_for_engineers/).
+See our [starter guide](/getting_started/distribution/).
 - **Maximize reach for your open-source model releases.** Want to
 release a pretrained model? Want as many people as possible
 to be able to use it? If you implement it in pure TensorFlow or PyTorch,
@@ -57,8 +59,9 @@ regardless of the backend you're using. You can train a Keras 3 + TensorFlow
 model on a PyTorch `DataLoader` or train a Keras 3 + PyTorch model on a
 `tf.data.Dataset`.
 
+---
 
-## The full Keras API, available for JAX, TensorFlow, and PyTorch
+## The full Keras API, available for JAX, TensorFlow, and PyTorch.
 
 Keras 3 implements the full Keras API and makes it available
 with TensorFlow, JAX, and PyTorch — over a hundred layers, dozens of metrics,
@@ -72,6 +75,8 @@ that only use built-in layers can start running in JAX and PyTorch *right away*!
 That's right, your codebase just gained a whole new set of capabilities.
 
 <img class="irasto" src="https://s3.amazonaws.com/keras.io/img/keras_3/cross_framework_keras_3.jpg" />
+
+---
 
 ## Author multi-framework layers, models, metrics...
 
@@ -97,8 +102,9 @@ with the exact same numerics.
 
 <img class="irasto" src="https://s3.amazonaws.com/keras.io/img/keras_3/custom_component_authoring_keras_3.jpg" />
 
+---
 
-## ...that works seamlessly with any JAX, TensorFlow, and PyTorch workflow
+## ...that works seamlessly with any JAX, TensorFlow, and PyTorch workflow.
 
 Keras 3 is not just intended for Keras-centric workflows
 where you define a Keras model, a Keras optimizer, a Keras loss and metrics,
@@ -126,21 +132,9 @@ and the `torch.nn.parallel.DistributedDataParallel` wrapper.
 
 <img class="irasto" src="https://s3.amazonaws.com/keras.io/img/keras-core/custom_training_loops.jpg" />
 
+---
 
-## Support for cross-framework data pipelines with all backends
-
-Multi-framework ML also means multi-framework data loading and preprocessing.
-Keras 3 models can be trained using a wide range of
-data pipelines — regardless of whether you're using the JAX, PyTorch, or
-TensorFlow backends. It just works.
-
-- `tf.data.Dataset` pipelines: the reference for scalable production ML.
-- `torch.utils.data.DataLoader` objects.
-- NumPy arrays and Pandas dataframes.
-- Keras's own `keras.utils.PyDataset` objects.
-
-
-## A new distribution API for large-scale data parallelism and model parallelism
+## A new distribution API for large-scale data parallelism and model parallelism.
 
 The models we've been working with have been getting larger and larger, so we wanted
 to provide a Kerasic solution to the multi-device model sharding problem. The API we designed
@@ -163,7 +157,9 @@ This makes it easy to quickly specify the same layout for entire categories of v
 
 <img class="irasto" src="https://s3.amazonaws.com/keras.io/img/keras_3/keras_3_model_parallel.jpg" />
 
-### Pretrained models
+---
+
+### Pretrained models.
 
 There's a wide range of pretrained models that
 you can start using today with Keras 3.
@@ -182,7 +178,23 @@ and [KerasNLP](https://keras.io/api/keras_nlp/) also work with all backends. Thi
 - SegmentAnything
 - etc.
 
-## Progressive disclosure of complexity
+---
+
+## Support for cross-framework data pipelines with all backends.
+
+Multi-framework ML also means multi-framework data loading and preprocessing.
+Keras 3 models can be trained using a wide range of
+data pipelines — regardless of whether you're using the JAX, PyTorch, or
+TensorFlow backends. It just works.
+
+- `tf.data.Dataset` pipelines: the reference for scalable production ML.
+- `torch.utils.data.DataLoader` objects.
+- NumPy arrays and Pandas dataframes.
+- Keras's own `keras.utils.PyDataset` objects.
+
+---
+
+## Progressive disclosure of complexity.
 
 *Progressive disclosure of complexity* is the design principle at the heart
 of the Keras API. Keras doesn't force you to follow
@@ -208,7 +220,9 @@ Here's how it works in PyTorch and TensorFlow:
 
 And [here's the link](http://keras.io/guides/custom_train_step_in_jax/) to the JAX version.
 
-## A new stateless API for layers, models, metrics, and optimizers
+---
+
+## A new stateless API for layers, models, metrics, and optimizers.
 
 Do you enjoy [functional programming](https://en.wikipedia.org/wiki/Functional_programming)?
 You're in for a treat.
@@ -236,6 +250,8 @@ outputs, updated_non_trainable_variables = layer.stateless_call(
 
 You never have to implement these methods yourself — they're automatically available
 as long as you've implemented the stateful version (e.g. `call()` or `update_state()`).
+
+---
 
 ## Moving from Keras 2 to Keras 3
 
@@ -282,6 +298,7 @@ We're excited for you to try out the new Keras and improve your workflows by lev
 Let us know how it goes: issues, points of friction, feature requests, or success stories —
 we're eager to hear from you!
 
+---
 
 ## FAQ
 

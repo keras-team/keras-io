@@ -216,6 +216,7 @@ EXAMPLES_MASTER = {
                     "path": "zero_dce",
                     "title": "Zero-DCE for low-light image enhancement",
                     "subcategory": "Image enhancement",
+                    "keras_3": True,
                 },
                 # Data augmentation
                 {
@@ -298,6 +299,7 @@ EXAMPLES_MASTER = {
                     "path": "metric_learning",
                     "title": "Metric learning for image similarity search",
                     "subcategory": "Image similarity search",
+                    "keras_3": True,
                 },
                 {
                     "path": "metric_learning_tf_similarity",
