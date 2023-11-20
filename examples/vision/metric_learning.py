@@ -200,7 +200,8 @@ class EmbeddingModel(keras.Model):
 
         # Update and return metrics (specifically the one for the loss value).
         for metric in self.metrics:
-            metric.update_state(sparse_labels, similarities)
+            # Calling `self.compile` will by default add a `keras.metrics.Mean` metric
+            metric.update_state(similarities)
 
         return {m.name: m.result() for m in self.metrics}
 
@@ -226,7 +227,6 @@ model = EmbeddingModel(inputs, embeddings)
 """
 Finally we run the training. On a Google Colab GPU instance this takes about a minute.
 """
-
 model.compile(
     optimizer=keras.optimizers.Adam(learning_rate=1e-3),
     loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
