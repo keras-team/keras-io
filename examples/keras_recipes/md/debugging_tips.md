@@ -30,7 +30,6 @@ common examples:
 This document provides a few simple tips to help you navigate debugging in these
 situations.
 
-
 ---
 ## Tip 1: test each part before you test the whole
 
@@ -46,10 +45,18 @@ your layer on some test data first.
 Here's a simple example. Let's write a custom layer a bug in it:
 
 
-
 ```python
+import os
+
+# The last example uses tf.GradientTape and thus requires TensorFlow.
+# However, all tips here are applicable with all backends.
+os.environ["KERAS_BACKEND"] = "tensorflow"
+
+import keras
+from keras import layers
+from keras import ops
+import numpy as np
 import tensorflow as tf
-from tensorflow.keras import layers
 
 
 class MyAntirectifier(layers.Layer):
@@ -64,14 +71,13 @@ class MyAntirectifier(layers.Layer):
 
     def call(self, inputs):
         # Take the positive part of the input
-        pos = tf.nn.relu(inputs)
+        pos = ops.relu(inputs)
         # Take the negative part of the input
-        neg = tf.nn.relu(-inputs)
+        neg = ops.relu(-inputs)
         # Concatenate the positive and negative parts
-        concatenated = tf.concat([pos, neg], axis=0)
+        concatenated = ops.concatenate([pos, neg], axis=0)
         # Project the concatenation down to the same dimensionality as the input
-        return tf.matmul(concatenated, self.kernel)
-
+        return ops.matmul(concatenated, self.kernel)
 
 ```
 
@@ -101,7 +107,6 @@ Looks like our input tensor in the `matmul` op may have an incorrect shape.
 Let's add a print statement to check the actual shapes:
 
 
-
 ```python
 
 class MyAntirectifier(layers.Layer):
@@ -115,15 +120,14 @@ class MyAntirectifier(layers.Layer):
         )
 
     def call(self, inputs):
-        pos = tf.nn.relu(inputs)
-        neg = tf.nn.relu(-inputs)
+        pos = ops.relu(inputs)
+        neg = ops.relu(-inputs)
         print("pos.shape:", pos.shape)
         print("neg.shape:", neg.shape)
-        concatenated = tf.concat([pos, neg], axis=0)
+        concatenated = ops.concatenate([pos, neg], axis=0)
         print("concatenated.shape:", concatenated.shape)
         print("kernel.shape:", self.kernel.shape)
-        return tf.matmul(concatenated, self.kernel)
-
+        return ops.matmul(concatenated, self.kernel)
 
 ```
 
@@ -140,7 +144,6 @@ Turns out we had the wrong axis for the `concat` op! We should be concatenating 
 `pos` alongside the feature axis 1, not the batch axis 0. Here's the correct version:
 
 
-
 ```python
 
 class MyAntirectifier(layers.Layer):
@@ -154,26 +157,23 @@ class MyAntirectifier(layers.Layer):
         )
 
     def call(self, inputs):
-        pos = tf.nn.relu(inputs)
-        neg = tf.nn.relu(-inputs)
+        pos = ops.relu(inputs)
+        neg = ops.relu(-inputs)
         print("pos.shape:", pos.shape)
         print("neg.shape:", neg.shape)
-        concatenated = tf.concat([pos, neg], axis=1)
+        concatenated = ops.concatenate([pos, neg], axis=1)
         print("concatenated.shape:", concatenated.shape)
         print("kernel.shape:", self.kernel.shape)
-        return tf.matmul(concatenated, self.kernel)
-
+        return ops.matmul(concatenated, self.kernel)
 
 ```
 
 Now our code works fine:
 
 
-
 ```python
-x = tf.random.normal(shape=(2, 5))
+x = keras.random.normal(shape=(2, 5))
 y = MyAntirectifier()(x)
-
 ```
 
 <div class="k-default-codeblock">
@@ -193,14 +193,10 @@ to visualize how your layers are connected and how they transform the data that 
 through them.
 
 Here's an example. Consider this model with three inputs and two outputs (lifted from the
-[Functional API
-guide](https://keras.io/guides/functional_api/#manipulate-complex-graph-topologies)):
-
+[Functional API guide](https://keras.io/guides/functional_api/#manipulate-complex-graph-topologies)):
 
 
 ```python
-from tensorflow import keras
-
 num_tags = 12  # Number of unique issue tags
 num_words = 10000  # Size of vocabulary obtained when preprocessing text data
 num_departments = 4  # Number of departments for predictions
@@ -236,72 +232,89 @@ model = keras.Model(
     inputs=[title_input, body_input, tags_input],
     outputs=[priority_pred, department_pred],
 )
-
 ```
 
 Calling `summary()` can help you check the output shape of each layer:
 
 
-
 ```python
 model.summary()
-
 ```
 
-<div class="k-default-codeblock">
-```
-Model: "functional_1"
-__________________________________________________________________________________________________
-Layer (type)                    Output Shape         Param #     Connected to                     
-==================================================================================================
-title (InputLayer)              [(None, None)]       0                                            
-__________________________________________________________________________________________________
-body (InputLayer)               [(None, None)]       0                                            
-__________________________________________________________________________________________________
-embedding (Embedding)           (None, None, 64)     640000      title[0][0]                      
-__________________________________________________________________________________________________
-embedding_1 (Embedding)         (None, None, 64)     640000      body[0][0]                       
-__________________________________________________________________________________________________
-lstm (LSTM)                     (None, 128)          98816       embedding[0][0]                  
-__________________________________________________________________________________________________
-lstm_1 (LSTM)                   (None, 32)           12416       embedding_1[0][0]                
-__________________________________________________________________________________________________
-tags (InputLayer)               [(None, 12)]         0                                            
-__________________________________________________________________________________________________
-concatenate (Concatenate)       (None, 172)          0           lstm[0][0]                       
-                                                                 lstm_1[0][0]                     
-                                                                 tags[0][0]                       
-__________________________________________________________________________________________________
-priority (Dense)                (None, 1)            173         concatenate[0][0]                
-__________________________________________________________________________________________________
-department (Dense)              (None, 4)            692         concatenate[0][0]                
-==================================================================================================
-Total params: 1,392,097
-Trainable params: 1,392,097
-Non-trainable params: 0
-__________________________________________________________________________________________________
 
-```
-</div>
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold">Model: "functional_1"</span>
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">┏━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━┓
+┃<span style="font-weight: bold"> Layer (type)        </span>┃<span style="font-weight: bold"> Output Shape      </span>┃<span style="font-weight: bold"> Param # </span>┃<span style="font-weight: bold"> Connected to         </span>┃
+┡━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━┩
+│ title (<span style="color: #0087ff; text-decoration-color: #0087ff">InputLayer</span>)  │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>)      │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ -                    │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ body (<span style="color: #0087ff; text-decoration-color: #0087ff">InputLayer</span>)   │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>)      │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ -                    │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ embedding           │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">64</span>)  │ <span style="color: #00af00; text-decoration-color: #00af00">640,000</span> │ title[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>]          │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Embedding</span>)         │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ embedding_1         │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">64</span>)  │ <span style="color: #00af00; text-decoration-color: #00af00">640,000</span> │ body[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>]           │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Embedding</span>)         │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ lstm (<span style="color: #0087ff; text-decoration-color: #0087ff">LSTM</span>)         │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">128</span>)       │  <span style="color: #00af00; text-decoration-color: #00af00">98,816</span> │ embedding[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>]      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ lstm_1 (<span style="color: #0087ff; text-decoration-color: #0087ff">LSTM</span>)       │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">32</span>)        │  <span style="color: #00af00; text-decoration-color: #00af00">12,416</span> │ embedding_1[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>]    │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ tags (<span style="color: #0087ff; text-decoration-color: #0087ff">InputLayer</span>)   │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">12</span>)        │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ -                    │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ concatenate         │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">172</span>)       │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ lstm[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>],          │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Concatenate</span>)       │                   │         │ lstm_1[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>],        │
+│                     │                   │         │ tags[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>]           │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ priority (<span style="color: #0087ff; text-decoration-color: #0087ff">Dense</span>)    │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>)         │     <span style="color: #00af00; text-decoration-color: #00af00">173</span> │ concatenate[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>]    │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ department (<span style="color: #0087ff; text-decoration-color: #0087ff">Dense</span>)  │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">4</span>)         │     <span style="color: #00af00; text-decoration-color: #00af00">692</span> │ concatenate[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>]    │
+└─────────────────────┴───────────────────┴─────────┴──────────────────────┘
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Total params: </span><span style="color: #00af00; text-decoration-color: #00af00">1,392,097</span> (5.31 MB)
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Trainable params: </span><span style="color: #00af00; text-decoration-color: #00af00">1,392,097</span> (5.31 MB)
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Non-trainable params: </span><span style="color: #00af00; text-decoration-color: #00af00">0</span> (0.00 B)
+</pre>
+
+
+
 You can also visualize the entire network topology alongside output shapes using
 `plot_model`:
 
 
-
 ```python
 keras.utils.plot_model(model, show_shapes=True)
-
 ```
 
 
 
 
+    
 ![png](/img/examples/keras_recipes/debugging_tips/debugging_tips_15_0.png)
+    
 
 
 
 With this plot, any connectivity-level error becomes immediately obvious.
-
 
 ---
 ## Tip 3: to debug what happens during `fit()`, use `run_eagerly=True`
@@ -316,12 +329,11 @@ pass `run_eagerly=True` to `compile()`. Your call to `fit()` will now get execut
 by line, without any optimization. It's slower, but it makes it possible to print the
 value of intermediate tensors, or to use a Python debugger. Great for debugging.
 
-Here's a basic example: let's write a really simple model with a custom `train_step`. Our
-model just implements gradient descent, but instead of first-order gradients, it uses a
-combination of first-order and second-order gradients. Pretty trivial so far.
+Here's a basic example: let's write a really simple model with a custom `train_step()` method.
+Our model just implements gradient descent, but instead of first-order gradients,
+it uses a combination of first-order and second-order gradients. Pretty simple so far.
 
 Can you spot what we're doing wrong?
-
 
 
 ```python
@@ -332,10 +344,10 @@ class MyModel(keras.Model):
         trainable_vars = self.trainable_variables
         with tf.GradientTape() as tape2:
             with tf.GradientTape() as tape1:
-                preds = self(inputs, training=True)  # Forward pass
+                y_pred = self(inputs, training=True)  # Forward pass
                 # Compute the loss value
                 # (the loss function is configured in `compile()`)
-                loss = self.compiled_loss(targets, preds)
+                loss = self.compute_loss(y=targets, y_pred=y_pred)
             # Compute first-order gradients
             dl_dw = tape1.gradient(loss, trainable_vars)
         # Compute second-order gradients
@@ -348,23 +360,25 @@ class MyModel(keras.Model):
         self.optimizer.apply_gradients(zip(grads, trainable_vars))
 
         # Update metrics (includes the metric that tracks the loss)
-        self.compiled_metrics.update_state(targets, preds)
+        for metric in self.metrics:
+            if metric.name == "loss":
+                metric.update_state(loss)
+            else:
+                metric.update_state(targets, y_pred)
+
         # Return a dict mapping metric names to current value
         return {m.name: m.result() for m in self.metrics}
 
-
 ```
 
-Let's train a one-layer model on MNIST with this custom training loop.
+Let's train a one-layer model on MNIST with this custom loss function.
 
 We pick, somewhat at random, a batch size of 1024 and a learning rate of 0.1. The general
 idea being to use larger batches and a larger learning rate than usual, since our
 "improved" gradients should lead us to quicker convergence.
 
 
-
 ```python
-import numpy as np
 
 # Construct an instance of MyModel
 def get_model():
@@ -383,22 +397,20 @@ model = get_model()
 model.compile(
     optimizer=keras.optimizers.SGD(learning_rate=1e-2),
     loss="sparse_categorical_crossentropy",
-    metrics=["accuracy"],
 )
 model.fit(x_train, y_train, epochs=3, batch_size=1024, validation_split=0.1)
-
 ```
 
 <div class="k-default-codeblock">
 ```
 Epoch 1/3
-53/53 [==============================] - 1s 15ms/step - loss: 2.2960 - accuracy: 0.1580 - val_loss: 2.3071 - val_accuracy: 0.0963
+ 53/53 ━━━━━━━━━━━━━━━━━━━━ 1s 7ms/step - loss: 2.3371 - val_loss: 2.2977
 Epoch 2/3
-53/53 [==============================] - 1s 13ms/step - loss: 2.3246 - accuracy: 0.0995 - val_loss: 2.3454 - val_accuracy: 0.0960
+ 53/53 ━━━━━━━━━━━━━━━━━━━━ 0s 6ms/step - loss: 2.3028 - val_loss: 2.3144
 Epoch 3/3
-53/53 [==============================] - 1s 12ms/step - loss: 2.3578 - accuracy: 0.0995 - val_loss: 2.3767 - val_accuracy: 0.0960
+ 53/53 ━━━━━━━━━━━━━━━━━━━━ 0s 7ms/step - loss: 2.3161 - val_loss: 2.3241
 
-<tensorflow.python.keras.callbacks.History at 0x151cbf0d0>
+<keras.src.callbacks.history.History at 0x17e103c10>
 
 ```
 </div>
@@ -410,8 +422,9 @@ We add various `print` statements in the `train_step` method, and we make sure t
 `run_eagerly=True` to `compile()` to run our code step-by-step, eagerly.
 
 
-
 ```python
+keras.config.disable_traceback_filtering()
+
 
 class MyModel(keras.Model):
     def train_step(self, data):
@@ -423,10 +436,10 @@ class MyModel(keras.Model):
         trainable_vars = self.trainable_variables
         with tf.GradientTape() as tape2:
             with tf.GradientTape() as tape1:
-                preds = self(inputs, training=True)  # Forward pass
+                y_pred = self(inputs, training=True)  # Forward pass
                 # Compute the loss value
                 # (the loss function is configured in `compile()`)
-                loss = self.compiled_loss(targets, preds)
+                loss = self.compute_loss(y=targets, y_pred=y_pred)
             # Compute first-order gradients
             dl_dw = tape1.gradient(loss, trainable_vars)
         # Compute second-order gradients
@@ -447,7 +460,12 @@ class MyModel(keras.Model):
         self.optimizer.apply_gradients(zip(grads, trainable_vars))
 
         # Update metrics (includes the metric that tracks the loss)
-        self.compiled_metrics.update_state(targets, preds)
+        for metric in self.metrics:
+            if metric.name == "loss":
+                metric.update_state(loss)
+            else:
+                metric.update_state(targets, y_pred)
+
         # Return a dict mapping metric names to current value
         return {m.name: m.result() for m in self.metrics}
 
@@ -456,145 +474,144 @@ model = get_model()
 model.compile(
     optimizer=keras.optimizers.SGD(learning_rate=1e-2),
     loss="sparse_categorical_crossentropy",
-    metrics=["accuracy"],
+    metrics=["sparse_categorical_accuracy"],
     run_eagerly=True,
 )
 model.step_counter = 0
 # We pass epochs=1 and steps_per_epoch=10 to only run 10 steps of training.
 model.fit(x_train, y_train, epochs=1, batch_size=1024, verbose=0, steps_per_epoch=10)
-
 ```
 
     
 <div class="k-default-codeblock">
 ```
 ----Start of step: 0
-Max of dl_dw[0]: 0.0236
-Min of dl_dw[0]: -0.0198
+Max of dl_dw[0]: 0.0244
+Min of dl_dw[0]: -0.0203
 Mean of dl_dw[0]: 0.0001
 -
-Max of d2l_dw2[0]: 2.6148
-Min of d2l_dw2[0]: -1.8798
-Mean of d2l_dw2[0]: 0.0401
+Max of d2l_dw2[0]: 2.2631
+Min of d2l_dw2[0]: -2.1039
+Mean of d2l_dw2[0]: 0.0364
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
 ----Start of step: 1
-Max of dl_dw[0]: 0.0611
-Min of dl_dw[0]: -0.0233
-Mean of dl_dw[0]: 0.0009
+Max of dl_dw[0]: 0.0385
+Min of dl_dw[0]: -0.0150
+Mean of dl_dw[0]: 0.0005
 -
-Max of d2l_dw2[0]: 8.3185
-Min of d2l_dw2[0]: -4.0696
-Mean of d2l_dw2[0]: 0.1708
+Max of d2l_dw2[0]: 3.4682
+Min of d2l_dw2[0]: -3.1531
+Mean of d2l_dw2[0]: 0.0874
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
 ----Start of step: 2
-Max of dl_dw[0]: 0.0528
-Min of dl_dw[0]: -0.0200
-Mean of dl_dw[0]: 0.0010
+Max of dl_dw[0]: 0.0540
+Min of dl_dw[0]: -0.0126
+Mean of dl_dw[0]: 0.0009
 -
-Max of d2l_dw2[0]: 3.4744
-Min of d2l_dw2[0]: -3.1926
-Mean of d2l_dw2[0]: 0.0559
+Max of d2l_dw2[0]: 4.7865
+Min of d2l_dw2[0]: -1.5529
+Mean of d2l_dw2[0]: 0.1055
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
 ----Start of step: 3
-Max of dl_dw[0]: 0.0983
-Min of dl_dw[0]: -0.0174
-Mean of dl_dw[0]: 0.0014
+Max of dl_dw[0]: 0.0348
+Min of dl_dw[0]: -0.0116
+Mean of dl_dw[0]: 0.0003
 -
-Max of d2l_dw2[0]: 2.2682
-Min of d2l_dw2[0]: -0.7935
-Mean of d2l_dw2[0]: 0.0253
+Max of d2l_dw2[0]: 4.7742
+Min of d2l_dw2[0]: -0.3098
+Mean of d2l_dw2[0]: 0.1150
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
 ----Start of step: 4
-Max of dl_dw[0]: 0.0732
-Min of dl_dw[0]: -0.0125
-Mean of dl_dw[0]: 0.0009
+Max of dl_dw[0]: 0.0064
+Min of dl_dw[0]: -0.0069
+Mean of dl_dw[0]: -0.0001
 -
-Max of d2l_dw2[0]: 5.1099
-Min of d2l_dw2[0]: -2.4236
-Mean of d2l_dw2[0]: 0.0860
+Max of d2l_dw2[0]: 0.2856
+Min of d2l_dw2[0]: -0.0784
+Mean of d2l_dw2[0]: 0.0112
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
 ----Start of step: 5
-Max of dl_dw[0]: 0.1309
-Min of dl_dw[0]: -0.0103
-Mean of dl_dw[0]: 0.0007
+Max of dl_dw[0]: 0.0064
+Min of dl_dw[0]: -0.0072
+Mean of dl_dw[0]: -0.0001
 -
-Max of d2l_dw2[0]: 5.1275
-Min of d2l_dw2[0]: -0.6684
-Mean of d2l_dw2[0]: 0.0349
+Max of d2l_dw2[0]: 0.2231
+Min of d2l_dw2[0]: -0.0754
+Mean of d2l_dw2[0]: 0.0086
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
 ----Start of step: 6
-Max of dl_dw[0]: 0.0484
-Min of dl_dw[0]: -0.0128
-Mean of dl_dw[0]: 0.0001
+Max of dl_dw[0]: 0.0037
+Min of dl_dw[0]: -0.0070
+Mean of dl_dw[0]: -0.0001
 -
-Max of d2l_dw2[0]: 5.3465
-Min of d2l_dw2[0]: -0.2145
-Mean of d2l_dw2[0]: 0.0618
+Max of d2l_dw2[0]: 0.2035
+Min of d2l_dw2[0]: -0.0475
+Mean of d2l_dw2[0]: 0.0079
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
 ----Start of step: 7
-Max of dl_dw[0]: 0.0049
-Min of dl_dw[0]: -0.0093
-Mean of dl_dw[0]: -0.0001
+Max of dl_dw[0]: 0.0032
+Min of dl_dw[0]: -0.0084
+Mean of dl_dw[0]: -0.0002
 -
-Max of d2l_dw2[0]: 0.2465
-Min of d2l_dw2[0]: -0.0313
-Mean of d2l_dw2[0]: 0.0075
+Max of d2l_dw2[0]: 0.2051
+Min of d2l_dw2[0]: -0.0486
+Mean of d2l_dw2[0]: 0.0072
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
 ----Start of step: 8
-Max of dl_dw[0]: 0.0050
-Min of dl_dw[0]: -0.0120
+Max of dl_dw[0]: 0.0034
+Min of dl_dw[0]: -0.0077
 Mean of dl_dw[0]: -0.0001
 -
-Max of d2l_dw2[0]: 0.1978
-Min of d2l_dw2[0]: -0.0291
-Mean of d2l_dw2[0]: 0.0063
+Max of d2l_dw2[0]: 0.1359
+Min of d2l_dw2[0]: -0.0555
+Mean of d2l_dw2[0]: 0.0064
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
 ----Start of step: 9
-Max of dl_dw[0]: 0.0050
-Min of dl_dw[0]: -0.0125
+Max of dl_dw[0]: 0.0028
+Min of dl_dw[0]: -0.0080
 Mean of dl_dw[0]: -0.0001
 -
-Max of d2l_dw2[0]: 0.1594
-Min of d2l_dw2[0]: -0.0238
-Mean of d2l_dw2[0]: 0.0055
+Max of d2l_dw2[0]: 0.1588
+Min of d2l_dw2[0]: -0.0516
+Mean of d2l_dw2[0]: 0.0060
 
-<tensorflow.python.keras.callbacks.History at 0x17f65f410>
+<keras.src.callbacks.history.History at 0x17f4ba3e0>
 
 ```
 </div>
@@ -608,7 +625,6 @@ magnitudes.
 This leads us to an obvious idea: let's normalize the gradients before combining them.
 
 
-
 ```python
 
 class MyModel(keras.Model):
@@ -617,10 +633,10 @@ class MyModel(keras.Model):
         trainable_vars = self.trainable_variables
         with tf.GradientTape() as tape2:
             with tf.GradientTape() as tape1:
-                preds = self(inputs, training=True)  # Forward pass
+                y_pred = self(inputs, training=True)  # Forward pass
                 # Compute the loss value
                 # (the loss function is configured in `compile()`)
-                loss = self.compiled_loss(targets, preds)
+                loss = self.compute_loss(y=targets, y_pred=y_pred)
             # Compute first-order gradients
             dl_dw = tape1.gradient(loss, trainable_vars)
         # Compute second-order gradients
@@ -636,7 +652,12 @@ class MyModel(keras.Model):
         self.optimizer.apply_gradients(zip(grads, trainable_vars))
 
         # Update metrics (includes the metric that tracks the loss)
-        self.compiled_metrics.update_state(targets, preds)
+        for metric in self.metrics:
+            if metric.name == "loss":
+                metric.update_state(loss)
+            else:
+                metric.update_state(targets, y_pred)
+
         # Return a dict mapping metric names to current value
         return {m.name: m.result() for m in self.metrics}
 
@@ -645,26 +666,25 @@ model = get_model()
 model.compile(
     optimizer=keras.optimizers.SGD(learning_rate=1e-2),
     loss="sparse_categorical_crossentropy",
-    metrics=["accuracy"],
+    metrics=["sparse_categorical_accuracy"],
 )
 model.fit(x_train, y_train, epochs=5, batch_size=1024, validation_split=0.1)
-
 ```
 
 <div class="k-default-codeblock">
 ```
 Epoch 1/5
-53/53 [==============================] - 1s 15ms/step - loss: 2.1680 - accuracy: 0.2796 - val_loss: 2.0063 - val_accuracy: 0.4688
+ 53/53 ━━━━━━━━━━━━━━━━━━━━ 1s 7ms/step - sparse_categorical_accuracy: 0.1559 - loss: 2.2965 - val_loss: 2.0463 - val_sparse_categorical_accuracy: 0.4332
 Epoch 2/5
-53/53 [==============================] - 1s 13ms/step - loss: 1.9071 - accuracy: 0.5292 - val_loss: 1.7729 - val_accuracy: 0.6312
+ 53/53 ━━━━━━━━━━━━━━━━━━━━ 0s 6ms/step - sparse_categorical_accuracy: 0.4630 - loss: 2.0027 - val_loss: 1.8197 - val_sparse_categorical_accuracy: 0.6058
 Epoch 3/5
-53/53 [==============================] - 1s 13ms/step - loss: 1.7098 - accuracy: 0.6197 - val_loss: 1.5966 - val_accuracy: 0.6785
+ 53/53 ━━━━━━━━━━━━━━━━━━━━ 0s 7ms/step - sparse_categorical_accuracy: 0.5939 - loss: 1.8014 - val_loss: 1.6402 - val_sparse_categorical_accuracy: 0.6755
 Epoch 4/5
-53/53 [==============================] - 1s 13ms/step - loss: 1.5686 - accuracy: 0.6434 - val_loss: 1.4748 - val_accuracy: 0.6875
+ 53/53 ━━━━━━━━━━━━━━━━━━━━ 0s 7ms/step - sparse_categorical_accuracy: 0.6398 - loss: 1.6405 - val_loss: 1.5065 - val_sparse_categorical_accuracy: 0.6995
 Epoch 5/5
-53/53 [==============================] - 1s 14ms/step - loss: 1.4729 - accuracy: 0.6448 - val_loss: 1.3908 - val_accuracy: 0.6862
+ 53/53 ━━━━━━━━━━━━━━━━━━━━ 0s 7ms/step - sparse_categorical_accuracy: 0.6533 - loss: 1.5231 - val_loss: 1.4114 - val_sparse_categorical_accuracy: 0.7003
 
-<tensorflow.python.keras.callbacks.History at 0x1a1105210>
+<keras.src.callbacks.history.History at 0x17f4e4100>
 
 ```
 </div>
@@ -690,7 +710,6 @@ runtime performance!
 Here's our final training run:
 
 
-
 ```python
 
 class MyModel(keras.Model):
@@ -699,10 +718,10 @@ class MyModel(keras.Model):
         trainable_vars = self.trainable_variables
         with tf.GradientTape() as tape2:
             with tf.GradientTape() as tape1:
-                preds = self(inputs, training=True)  # Forward pass
+                y_pred = self(inputs, training=True)  # Forward pass
                 # Compute the loss value
                 # (the loss function is configured in `compile()`)
-                loss = self.compiled_loss(targets, preds)
+                loss = self.compute_loss(y=targets, y_pred=y_pred)
             # Compute first-order gradients
             dl_dw = tape1.gradient(loss, trainable_vars)
         # Compute second-order gradients
@@ -718,7 +737,12 @@ class MyModel(keras.Model):
         self.optimizer.apply_gradients(zip(grads, trainable_vars))
 
         # Update metrics (includes the metric that tracks the loss)
-        self.compiled_metrics.update_state(targets, preds)
+        for metric in self.metrics:
+            if metric.name == "loss":
+                metric.update_state(loss)
+            else:
+                metric.update_state(targets, y_pred)
+
         # Return a dict mapping metric names to current value
         return {m.name: m.result() for m in self.metrics}
 
@@ -730,141 +754,115 @@ lr = learning_rate = keras.optimizers.schedules.InverseTimeDecay(
 model.compile(
     optimizer=keras.optimizers.SGD(lr),
     loss="sparse_categorical_crossentropy",
-    metrics=["accuracy"],
+    metrics=["sparse_categorical_accuracy"],
 )
 model.fit(x_train, y_train, epochs=50, batch_size=2048, validation_split=0.1)
-
 ```
 
 <div class="k-default-codeblock">
 ```
 Epoch 1/50
-27/27 [==============================] - 1s 31ms/step - loss: 1.3838 - accuracy: 0.6598 - val_loss: 0.6603 - val_accuracy: 0.8688
+ 27/27 ━━━━━━━━━━━━━━━━━━━━ 1s 14ms/step - sparse_categorical_accuracy: 0.4862 - loss: 1.7584 - val_loss: 0.6574 - val_sparse_categorical_accuracy: 0.8543
 Epoch 2/50
-27/27 [==============================] - 1s 29ms/step - loss: 0.5872 - accuracy: 0.8547 - val_loss: 0.4188 - val_accuracy: 0.8977
+ 27/27 ━━━━━━━━━━━━━━━━━━━━ 0s 10ms/step - sparse_categorical_accuracy: 0.8420 - loss: 0.6447 - val_loss: 0.4117 - val_sparse_categorical_accuracy: 0.8995
 Epoch 3/50
-27/27 [==============================] - 1s 31ms/step - loss: 0.4481 - accuracy: 0.8782 - val_loss: 0.3434 - val_accuracy: 0.9113
+ 27/27 ━━━━━━━━━━━━━━━━━━━━ 0s 10ms/step - sparse_categorical_accuracy: 0.8766 - loss: 0.4636 - val_loss: 0.3295 - val_sparse_categorical_accuracy: 0.9152
 Epoch 4/50
-27/27 [==============================] - 1s 32ms/step - loss: 0.3857 - accuracy: 0.8933 - val_loss: 0.3149 - val_accuracy: 0.9115
+ 27/27 ━━━━━━━━━━━━━━━━━━━━ 0s 10ms/step - sparse_categorical_accuracy: 0.8932 - loss: 0.3889 - val_loss: 0.2977 - val_sparse_categorical_accuracy: 0.9215
 Epoch 5/50
-27/27 [==============================] - 1s 30ms/step - loss: 0.3482 - accuracy: 0.9020 - val_loss: 0.2752 - val_accuracy: 0.9248
+ 27/27 ━━━━━━━━━━━━━━━━━━━━ 0s 10ms/step - sparse_categorical_accuracy: 0.9030 - loss: 0.3502 - val_loss: 0.2671 - val_sparse_categorical_accuracy: 0.9260
 Epoch 6/50
-27/27 [==============================] - 1s 34ms/step - loss: 0.3219 - accuracy: 0.9091 - val_loss: 0.2549 - val_accuracy: 0.9287
+ 27/27 ━━━━━━━━━━━━━━━━━━━━ 0s 11ms/step - sparse_categorical_accuracy: 0.9082 - loss: 0.3248 - val_loss: 0.2546 - val_sparse_categorical_accuracy: 0.9303
 Epoch 7/50
-27/27 [==============================] - 1s 30ms/step - loss: 0.3023 - accuracy: 0.9147 - val_loss: 0.2480 - val_accuracy: 0.9305
+ 27/27 ━━━━━━━━━━━━━━━━━━━━ 0s 11ms/step - sparse_categorical_accuracy: 0.9116 - loss: 0.3100 - val_loss: 0.2423 - val_sparse_categorical_accuracy: 0.9320
 Epoch 8/50
-27/27 [==============================] - 1s 33ms/step - loss: 0.2866 - accuracy: 0.9188 - val_loss: 0.2327 - val_accuracy: 0.9362
+ 27/27 ━━━━━━━━━━━━━━━━━━━━ 0s 11ms/step - sparse_categorical_accuracy: 0.9159 - loss: 0.2960 - val_loss: 0.2322 - val_sparse_categorical_accuracy: 0.9315
 Epoch 9/50
-27/27 [==============================] - 1s 39ms/step - loss: 0.2733 - accuracy: 0.9228 - val_loss: 0.2226 - val_accuracy: 0.9383
+ 27/27 ━━━━━━━━━━━━━━━━━━━━ 0s 11ms/step - sparse_categorical_accuracy: 0.9214 - loss: 0.2779 - val_loss: 0.2213 - val_sparse_categorical_accuracy: 0.9390
 Epoch 10/50
-27/27 [==============================] - 1s 33ms/step - loss: 0.2613 - accuracy: 0.9267 - val_loss: 0.2147 - val_accuracy: 0.9420
+ 27/27 ━━━━━━━━━━━━━━━━━━━━ 0s 11ms/step - sparse_categorical_accuracy: 0.9251 - loss: 0.2650 - val_loss: 0.2134 - val_sparse_categorical_accuracy: 0.9392
 Epoch 11/50
-27/27 [==============================] - 1s 34ms/step - loss: 0.2509 - accuracy: 0.9294 - val_loss: 0.2049 - val_accuracy: 0.9447
+ 27/27 ━━━━━━━━━━━━━━━━━━━━ 0s 12ms/step - sparse_categorical_accuracy: 0.9261 - loss: 0.2589 - val_loss: 0.2051 - val_sparse_categorical_accuracy: 0.9415
 Epoch 12/50
-27/27 [==============================] - 1s 32ms/step - loss: 0.2417 - accuracy: 0.9324 - val_loss: 0.1978 - val_accuracy: 0.9455
+ 27/27 ━━━━━━━━━━━━━━━━━━━━ 0s 12ms/step - sparse_categorical_accuracy: 0.9315 - loss: 0.2450 - val_loss: 0.1950 - val_sparse_categorical_accuracy: 0.9463
 Epoch 13/50
-27/27 [==============================] - 1s 32ms/step - loss: 0.2330 - accuracy: 0.9345 - val_loss: 0.1906 - val_accuracy: 0.9488
+ 27/27 ━━━━━━━━━━━━━━━━━━━━ 0s 12ms/step - sparse_categorical_accuracy: 0.9333 - loss: 0.2375 - val_loss: 0.1887 - val_sparse_categorical_accuracy: 0.9495
 Epoch 14/50
-27/27 [==============================] - 1s 34ms/step - loss: 0.2252 - accuracy: 0.9372 - val_loss: 0.1853 - val_accuracy: 0.9508
+ 27/27 ━━━━━━━━━━━━━━━━━━━━ 0s 12ms/step - sparse_categorical_accuracy: 0.9356 - loss: 0.2274 - val_loss: 0.1834 - val_sparse_categorical_accuracy: 0.9503
 Epoch 15/50
-27/27 [==============================] - 1s 34ms/step - loss: 0.2184 - accuracy: 0.9392 - val_loss: 0.1805 - val_accuracy: 0.9523
+ 27/27 ━━━━━━━━━━━━━━━━━━━━ 0s 12ms/step - sparse_categorical_accuracy: 0.9398 - loss: 0.2175 - val_loss: 0.1803 - val_sparse_categorical_accuracy: 0.9505
 Epoch 16/50
-27/27 [==============================] - 1s 38ms/step - loss: 0.2113 - accuracy: 0.9413 - val_loss: 0.1760 - val_accuracy: 0.9518
+ 27/27 ━━━━━━━━━━━━━━━━━━━━ 0s 12ms/step - sparse_categorical_accuracy: 0.9397 - loss: 0.2165 - val_loss: 0.1720 - val_sparse_categorical_accuracy: 0.9562
 Epoch 17/50
-27/27 [==============================] - 1s 38ms/step - loss: 0.2055 - accuracy: 0.9427 - val_loss: 0.1709 - val_accuracy: 0.9552
+ 27/27 ━━━━━━━━━━━━━━━━━━━━ 0s 13ms/step - sparse_categorical_accuracy: 0.9432 - loss: 0.2045 - val_loss: 0.1692 - val_sparse_categorical_accuracy: 0.9550
 Epoch 18/50
-27/27 [==============================] - 1s 42ms/step - loss: 0.1998 - accuracy: 0.9441 - val_loss: 0.1669 - val_accuracy: 0.9567
+ 27/27 ━━━━━━━━━━━━━━━━━━━━ 0s 12ms/step - sparse_categorical_accuracy: 0.9439 - loss: 0.2001 - val_loss: 0.1632 - val_sparse_categorical_accuracy: 0.9578
 Epoch 19/50
-27/27 [==============================] - 1s 40ms/step - loss: 0.1944 - accuracy: 0.9458 - val_loss: 0.1625 - val_accuracy: 0.9577
+ 27/27 ━━━━━━━━━━━━━━━━━━━━ 0s 12ms/step - sparse_categorical_accuracy: 0.9445 - loss: 0.1999 - val_loss: 0.1589 - val_sparse_categorical_accuracy: 0.9593
 Epoch 20/50
-27/27 [==============================] - 1s 33ms/step - loss: 0.1891 - accuracy: 0.9471 - val_loss: 0.1580 - val_accuracy: 0.9585
+ 27/27 ━━━━━━━━━━━━━━━━━━━━ 0s 12ms/step - sparse_categorical_accuracy: 0.9465 - loss: 0.1919 - val_loss: 0.1543 - val_sparse_categorical_accuracy: 0.9608
 Epoch 21/50
-27/27 [==============================] - 1s 40ms/step - loss: 0.1846 - accuracy: 0.9484 - val_loss: 0.1564 - val_accuracy: 0.9603
+ 27/27 ━━━━━━━━━━━━━━━━━━━━ 0s 11ms/step - sparse_categorical_accuracy: 0.9491 - loss: 0.1827 - val_loss: 0.1517 - val_sparse_categorical_accuracy: 0.9615
 Epoch 22/50
-27/27 [==============================] - 1s 41ms/step - loss: 0.1804 - accuracy: 0.9498 - val_loss: 0.1518 - val_accuracy: 0.9622
+ 27/27 ━━━━━━━━━━━━━━━━━━━━ 0s 11ms/step - sparse_categorical_accuracy: 0.9495 - loss: 0.1779 - val_loss: 0.1482 - val_sparse_categorical_accuracy: 0.9627
 Epoch 23/50
-27/27 [==============================] - 1s 38ms/step - loss: 0.1762 - accuracy: 0.9507 - val_loss: 0.1485 - val_accuracy: 0.9628
+ 27/27 ━━━━━━━━━━━━━━━━━━━━ 0s 12ms/step - sparse_categorical_accuracy: 0.9507 - loss: 0.1775 - val_loss: 0.1444 - val_sparse_categorical_accuracy: 0.9632
 Epoch 24/50
-27/27 [==============================] - 1s 41ms/step - loss: 0.1722 - accuracy: 0.9521 - val_loss: 0.1461 - val_accuracy: 0.9623
+ 27/27 ━━━━━━━━━━━━━━━━━━━━ 0s 12ms/step - sparse_categorical_accuracy: 0.9521 - loss: 0.1718 - val_loss: 0.1416 - val_sparse_categorical_accuracy: 0.9640
 Epoch 25/50
-27/27 [==============================] - 1s 40ms/step - loss: 0.1686 - accuracy: 0.9534 - val_loss: 0.1434 - val_accuracy: 0.9633
+ 27/27 ━━━━━━━━━━━━━━━━━━━━ 0s 12ms/step - sparse_categorical_accuracy: 0.9550 - loss: 0.1626 - val_loss: 0.1387 - val_sparse_categorical_accuracy: 0.9657
 Epoch 26/50
-27/27 [==============================] - 1s 35ms/step - loss: 0.1652 - accuracy: 0.9542 - val_loss: 0.1419 - val_accuracy: 0.9637
+ 27/27 ━━━━━━━━━━━━━━━━━━━━ 0s 12ms/step - sparse_categorical_accuracy: 0.9557 - loss: 0.1628 - val_loss: 0.1363 - val_sparse_categorical_accuracy: 0.9655
 Epoch 27/50
-27/27 [==============================] - 1s 34ms/step - loss: 0.1618 - accuracy: 0.9550 - val_loss: 0.1397 - val_accuracy: 0.9633
+ 27/27 ━━━━━━━━━━━━━━━━━━━━ 0s 12ms/step - sparse_categorical_accuracy: 0.9566 - loss: 0.1587 - val_loss: 0.1349 - val_sparse_categorical_accuracy: 0.9655
 Epoch 28/50
-27/27 [==============================] - 1s 35ms/step - loss: 0.1589 - accuracy: 0.9556 - val_loss: 0.1371 - val_accuracy: 0.9647
+ 27/27 ━━━━━━━━━━━━━━━━━━━━ 0s 12ms/step - sparse_categorical_accuracy: 0.9571 - loss: 0.1547 - val_loss: 0.1321 - val_sparse_categorical_accuracy: 0.9677
 Epoch 29/50
-27/27 [==============================] - 1s 37ms/step - loss: 0.1561 - accuracy: 0.9566 - val_loss: 0.1350 - val_accuracy: 0.9650
+ 27/27 ━━━━━━━━━━━━━━━━━━━━ 0s 12ms/step - sparse_categorical_accuracy: 0.9588 - loss: 0.1481 - val_loss: 0.1294 - val_sparse_categorical_accuracy: 0.9657
 Epoch 30/50
-27/27 [==============================] - 1s 41ms/step - loss: 0.1534 - accuracy: 0.9574 - val_loss: 0.1331 - val_accuracy: 0.9655
+ 27/27 ━━━━━━━━━━━━━━━━━━━━ 0s 12ms/step - sparse_categorical_accuracy: 0.9588 - loss: 0.1510 - val_loss: 0.1277 - val_sparse_categorical_accuracy: 0.9662
 Epoch 31/50
-27/27 [==============================] - 1s 39ms/step - loss: 0.1508 - accuracy: 0.9583 - val_loss: 0.1319 - val_accuracy: 0.9660
+ 27/27 ━━━━━━━━━━━━━━━━━━━━ 0s 12ms/step - sparse_categorical_accuracy: 0.9596 - loss: 0.1471 - val_loss: 0.1259 - val_sparse_categorical_accuracy: 0.9673
 Epoch 32/50
-27/27 [==============================] - 1s 40ms/step - loss: 0.1484 - accuracy: 0.9589 - val_loss: 0.1314 - val_accuracy: 0.9667
+ 27/27 ━━━━━━━━━━━━━━━━━━━━ 0s 12ms/step - sparse_categorical_accuracy: 0.9600 - loss: 0.1445 - val_loss: 0.1236 - val_sparse_categorical_accuracy: 0.9688
 Epoch 33/50
-27/27 [==============================] - 1s 39ms/step - loss: 0.1463 - accuracy: 0.9597 - val_loss: 0.1290 - val_accuracy: 0.9668
+ 27/27 ━━━━━━━━━━━━━━━━━━━━ 0s 12ms/step - sparse_categorical_accuracy: 0.9613 - loss: 0.1400 - val_loss: 0.1226 - val_sparse_categorical_accuracy: 0.9680
 Epoch 34/50
-27/27 [==============================] - 1s 40ms/step - loss: 0.1439 - accuracy: 0.9600 - val_loss: 0.1268 - val_accuracy: 0.9675
+ 27/27 ━━━━━━━━━━━━━━━━━━━━ 0s 12ms/step - sparse_categorical_accuracy: 0.9618 - loss: 0.1395 - val_loss: 0.1211 - val_sparse_categorical_accuracy: 0.9683
 Epoch 35/50
-27/27 [==============================] - 1s 40ms/step - loss: 0.1418 - accuracy: 0.9608 - val_loss: 0.1256 - val_accuracy: 0.9677
+ 27/27 ━━━━━━━━━━━━━━━━━━━━ 0s 12ms/step - sparse_categorical_accuracy: 0.9624 - loss: 0.1364 - val_loss: 0.1192 - val_sparse_categorical_accuracy: 0.9690
 Epoch 36/50
-27/27 [==============================] - 1s 38ms/step - loss: 0.1397 - accuracy: 0.9614 - val_loss: 0.1245 - val_accuracy: 0.9685
+ 27/27 ━━━━━━━━━━━━━━━━━━━━ 0s 12ms/step - sparse_categorical_accuracy: 0.9634 - loss: 0.1338 - val_loss: 0.1177 - val_sparse_categorical_accuracy: 0.9683
 Epoch 37/50
-27/27 [==============================] - 1s 35ms/step - loss: 0.1378 - accuracy: 0.9625 - val_loss: 0.1223 - val_accuracy: 0.9683
+ 27/27 ━━━━━━━━━━━━━━━━━━━━ 0s 16ms/step - sparse_categorical_accuracy: 0.9644 - loss: 0.1307 - val_loss: 0.1165 - val_sparse_categorical_accuracy: 0.9687
 Epoch 38/50
-27/27 [==============================] - 1s 38ms/step - loss: 0.1362 - accuracy: 0.9620 - val_loss: 0.1216 - val_accuracy: 0.9695
+ 27/27 ━━━━━━━━━━━━━━━━━━━━ 0s 13ms/step - sparse_categorical_accuracy: 0.9644 - loss: 0.1307 - val_loss: 0.1152 - val_sparse_categorical_accuracy: 0.9688
 Epoch 39/50
-27/27 [==============================] - 1s 38ms/step - loss: 0.1344 - accuracy: 0.9628 - val_loss: 0.1207 - val_accuracy: 0.9685
+ 27/27 ━━━━━━━━━━━━━━━━━━━━ 0s 12ms/step - sparse_categorical_accuracy: 0.9645 - loss: 0.1284 - val_loss: 0.1134 - val_sparse_categorical_accuracy: 0.9692
 Epoch 40/50
-27/27 [==============================] - 1s 37ms/step - loss: 0.1327 - accuracy: 0.9634 - val_loss: 0.1192 - val_accuracy: 0.9692
+ 27/27 ━━━━━━━━━━━━━━━━━━━━ 0s 12ms/step - sparse_categorical_accuracy: 0.9664 - loss: 0.1260 - val_loss: 0.1134 - val_sparse_categorical_accuracy: 0.9687
 Epoch 41/50
-27/27 [==============================] - 1s 41ms/step - loss: 0.1309 - accuracy: 0.9635 - val_loss: 0.1179 - val_accuracy: 0.9695
+ 27/27 ━━━━━━━━━━━━━━━━━━━━ 0s 12ms/step - sparse_categorical_accuracy: 0.9655 - loss: 0.1262 - val_loss: 0.1115 - val_sparse_categorical_accuracy: 0.9700
 Epoch 42/50
-27/27 [==============================] - 1s 39ms/step - loss: 0.1294 - accuracy: 0.9641 - val_loss: 0.1173 - val_accuracy: 0.9695
+ 27/27 ━━━━━━━━━━━━━━━━━━━━ 0s 12ms/step - sparse_categorical_accuracy: 0.9669 - loss: 0.1236 - val_loss: 0.1104 - val_sparse_categorical_accuracy: 0.9700
 Epoch 43/50
-27/27 [==============================] - 1s 41ms/step - loss: 0.1281 - accuracy: 0.9646 - val_loss: 0.1160 - val_accuracy: 0.9705
+ 27/27 ━━━━━━━━━━━━━━━━━━━━ 0s 12ms/step - sparse_categorical_accuracy: 0.9670 - loss: 0.1221 - val_loss: 0.1092 - val_sparse_categorical_accuracy: 0.9700
 Epoch 44/50
-27/27 [==============================] - 1s 42ms/step - loss: 0.1265 - accuracy: 0.9650 - val_loss: 0.1158 - val_accuracy: 0.9700
+ 27/27 ━━━━━━━━━━━━━━━━━━━━ 0s 12ms/step - sparse_categorical_accuracy: 0.9665 - loss: 0.1222 - val_loss: 0.1086 - val_sparse_categorical_accuracy: 0.9702
 Epoch 45/50
-27/27 [==============================] - 1s 40ms/step - loss: 0.1251 - accuracy: 0.9654 - val_loss: 0.1149 - val_accuracy: 0.9695
+ 27/27 ━━━━━━━━━━━━━━━━━━━━ 0s 12ms/step - sparse_categorical_accuracy: 0.9666 - loss: 0.1199 - val_loss: 0.1075 - val_sparse_categorical_accuracy: 0.9708
 Epoch 46/50
-27/27 [==============================] - 1s 39ms/step - loss: 0.1237 - accuracy: 0.9658 - val_loss: 0.1140 - val_accuracy: 0.9700
+ 27/27 ━━━━━━━━━━━━━━━━━━━━ 0s 12ms/step - sparse_categorical_accuracy: 0.9679 - loss: 0.1172 - val_loss: 0.1068 - val_sparse_categorical_accuracy: 0.9707
 Epoch 47/50
-27/27 [==============================] - 1s 40ms/step - loss: 0.1224 - accuracy: 0.9664 - val_loss: 0.1128 - val_accuracy: 0.9707
+ 27/27 ━━━━━━━━━━━━━━━━━━━━ 0s 11ms/step - sparse_categorical_accuracy: 0.9682 - loss: 0.1154 - val_loss: 0.1057 - val_sparse_categorical_accuracy: 0.9712
 Epoch 48/50
-27/27 [==============================] - 1s 38ms/step - loss: 0.1211 - accuracy: 0.9664 - val_loss: 0.1122 - val_accuracy: 0.9710
+ 27/27 ━━━━━━━━━━━━━━━━━━━━ 0s 12ms/step - sparse_categorical_accuracy: 0.9693 - loss: 0.1135 - val_loss: 0.1055 - val_sparse_categorical_accuracy: 0.9715
 Epoch 49/50
-27/27 [==============================] - 1s 39ms/step - loss: 0.1198 - accuracy: 0.9670 - val_loss: 0.1114 - val_accuracy: 0.9713
+ 27/27 ━━━━━━━━━━━━━━━━━━━━ 0s 12ms/step - sparse_categorical_accuracy: 0.9693 - loss: 0.1125 - val_loss: 0.1046 - val_sparse_categorical_accuracy: 0.9713
 Epoch 50/50
-27/27 [==============================] - 1s 45ms/step - loss: 0.1186 - accuracy: 0.9677 - val_loss: 0.1106 - val_accuracy: 0.9703
+ 27/27 ━━━━━━━━━━━━━━━━━━━━ 0s 12ms/step - sparse_categorical_accuracy: 0.9681 - loss: 0.1160 - val_loss: 0.1039 - val_sparse_categorical_accuracy: 0.9710
 
-<tensorflow.python.keras.callbacks.History at 0x1b79ec350>
+<keras.src.callbacks.history.History at 0x17f37aec0>
 
 ```
 </div>
----
-## Tip 4: if your code is slow, run the TensorFlow profiler
-
-One last tip -- if your code seems slower than it should be, you're going to want to plot
-how much time is spent on each computation step. Look for any bottleneck that might be
-causing less than 100% device utilization.
-
-To learn more about TensorFlow profiling, see
-[this extensive guide](https://www.tensorflow.org/guide/profiler).
-
-You can quickly profile a Keras model via the TensorBoard callback:
-
-```python
-# Profile from batches 10 to 15
-tb_callback = tf.keras.callbacks.TensorBoard(log_dir=log_dir,
-                                             profile_batch=(10, 15))
-# Train the model and use the TensorBoard Keras callback to collect
-# performance profiling data
-model.fit(dataset,
-          epochs=1,
-          callbacks=[tb_callback])
-```
-
-Then navigate to the TensorBoard app and check the "profile" tab.
-

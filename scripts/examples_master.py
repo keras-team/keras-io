@@ -783,6 +783,12 @@ EXAMPLES_MASTER = {
                     "keras_3": True,
                 },
                 {
+                    "path": "debugging_tips",
+                    "title": "Keras debugging tips",
+                    "subcategory": "Keras usage tips",
+                    "keras_3": True,
+                },
+                {
                     "path": "subclassing_conv_layers",
                     "title": "Customizing the convolution operation of a Conv2D layer",
                     "subcategory": "Keras usage tips",
