@@ -2,7 +2,7 @@
 
 **Author:** [fchollet](https://twitter.com/fchollet)<br>
 **Date created:** 2016/01/06<br>
-**Last modified:** 2020/04/20<br>
+**Last modified:** 2023/11/20<br>
 **Description:** Demonstration of custom layer creation.
 
 
@@ -21,22 +21,30 @@ of both. This avoids loss of information, at the cost of an increase in dimensio
  To fix the dimensionality increase, we linearly combine the
 features back to a space of the original size.
 
-
 ---
 ## Setup
 
 
-
 ```python
-import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras import layers
-
+import keras
+from keras import layers
+from keras import ops
 ```
 
 ---
 ## The Antirectifier layer
 
+To implement a custom layer:
+
+- Create the state variables via `add_weight()` in `__init__` or `build()`.
+Similarly, you can also create sublayers.
+- Implement the `call()` method, taking the layer's input tensor(s) and
+return the output tensor(s).
+- Optionally, you can also enable serialization by implementing `get_config()`,
+which returns a configuration dictionary.
+
+See also the guide
+[Making new layers and models via subclassing](https://keras.io/guides/making_new_layers_and_models_via_subclassing/).
 
 
 ```python
@@ -56,11 +64,11 @@ class Antirectifier(layers.Layer):
         )
 
     def call(self, inputs):
-        inputs -= tf.reduce_mean(inputs, axis=-1, keepdims=True)
-        pos = tf.nn.relu(inputs)
-        neg = tf.nn.relu(-inputs)
-        concatenated = tf.concat([pos, neg], axis=-1)
-        mixed = tf.matmul(concatenated, self.kernel)
+        inputs -= ops.mean(inputs, axis=-1, keepdims=True)
+        pos = ops.relu(inputs)
+        neg = ops.relu(-inputs)
+        concatenated = ops.concatenate([pos, neg], axis=-1)
+        mixed = ops.matmul(concatenated, self.kernel)
         return mixed
 
     def get_config(self):
@@ -69,12 +77,10 @@ class Antirectifier(layers.Layer):
         config = {"initializer": keras.initializers.serialize(self.initializer)}
         return dict(list(base_config.items()) + list(config.items()))
 
-
 ```
 
 ---
 ## Let's test-drive it on MNIST
-
 
 
 ```python
@@ -120,7 +126,6 @@ model.fit(x_train, y_train, batch_size=batch_size, epochs=epochs, validation_spl
 
 # Test the model
 model.evaluate(x_test, y_test)
-
 ```
 
 <div class="k-default-codeblock">
@@ -128,48 +133,48 @@ model.evaluate(x_test, y_test)
 60000 train samples
 10000 test samples
 Epoch 1/20
-399/399 [==============================] - 2s 5ms/step - loss: 0.3827 - sparse_categorical_accuracy: 0.8882 - val_loss: 0.1407 - val_sparse_categorical_accuracy: 0.9587
+ 399/399 ━━━━━━━━━━━━━━━━━━━━ 2s 5ms/step - loss: 0.6226 - sparse_categorical_accuracy: 0.8146 - val_loss: 0.4256 - val_sparse_categorical_accuracy: 0.8808
 Epoch 2/20
-399/399 [==============================] - 2s 5ms/step - loss: 0.1771 - sparse_categorical_accuracy: 0.9513 - val_loss: 0.1337 - val_sparse_categorical_accuracy: 0.9674
+ 399/399 ━━━━━━━━━━━━━━━━━━━━ 1s 4ms/step - loss: 0.1887 - sparse_categorical_accuracy: 0.9455 - val_loss: 0.1556 - val_sparse_categorical_accuracy: 0.9588
 Epoch 3/20
-399/399 [==============================] - 2s 5ms/step - loss: 0.1400 - sparse_categorical_accuracy: 0.9620 - val_loss: 0.1225 - val_sparse_categorical_accuracy: 0.9709
+ 399/399 ━━━━━━━━━━━━━━━━━━━━ 1s 4ms/step - loss: 0.1406 - sparse_categorical_accuracy: 0.9608 - val_loss: 0.1531 - val_sparse_categorical_accuracy: 0.9611
 Epoch 4/20
-399/399 [==============================] - 2s 5ms/step - loss: 0.1099 - sparse_categorical_accuracy: 0.9707 - val_loss: 0.1465 - val_sparse_categorical_accuracy: 0.9636
+ 399/399 ━━━━━━━━━━━━━━━━━━━━ 1s 4ms/step - loss: 0.1084 - sparse_categorical_accuracy: 0.9691 - val_loss: 0.1178 - val_sparse_categorical_accuracy: 0.9731
 Epoch 5/20
-399/399 [==============================] - 2s 5ms/step - loss: 0.0996 - sparse_categorical_accuracy: 0.9739 - val_loss: 0.1703 - val_sparse_categorical_accuracy: 0.9626
+ 399/399 ━━━━━━━━━━━━━━━━━━━━ 1s 4ms/step - loss: 0.0995 - sparse_categorical_accuracy: 0.9738 - val_loss: 0.2207 - val_sparse_categorical_accuracy: 0.9526
 Epoch 6/20
-399/399 [==============================] - 2s 5ms/step - loss: 0.0860 - sparse_categorical_accuracy: 0.9774 - val_loss: 0.1354 - val_sparse_categorical_accuracy: 0.9712
+ 399/399 ━━━━━━━━━━━━━━━━━━━━ 1s 4ms/step - loss: 0.0831 - sparse_categorical_accuracy: 0.9769 - val_loss: 0.2092 - val_sparse_categorical_accuracy: 0.9533
 Epoch 7/20
-399/399 [==============================] - 2s 5ms/step - loss: 0.0833 - sparse_categorical_accuracy: 0.9791 - val_loss: 0.2018 - val_sparse_categorical_accuracy: 0.9574
+ 399/399 ━━━━━━━━━━━━━━━━━━━━ 1s 4ms/step - loss: 0.0736 - sparse_categorical_accuracy: 0.9807 - val_loss: 0.1129 - val_sparse_categorical_accuracy: 0.9749
 Epoch 8/20
-399/399 [==============================] - 2s 5ms/step - loss: 0.0712 - sparse_categorical_accuracy: 0.9814 - val_loss: 0.1527 - val_sparse_categorical_accuracy: 0.9723
+ 399/399 ━━━━━━━━━━━━━━━━━━━━ 1s 4ms/step - loss: 0.0653 - sparse_categorical_accuracy: 0.9827 - val_loss: 0.1000 - val_sparse_categorical_accuracy: 0.9791
 Epoch 9/20
-399/399 [==============================] - 2s 5ms/step - loss: 0.0710 - sparse_categorical_accuracy: 0.9827 - val_loss: 0.1613 - val_sparse_categorical_accuracy: 0.9694
+ 399/399 ━━━━━━━━━━━━━━━━━━━━ 1s 4ms/step - loss: 0.0590 - sparse_categorical_accuracy: 0.9833 - val_loss: 0.1320 - val_sparse_categorical_accuracy: 0.9750
 Epoch 10/20
-399/399 [==============================] - 2s 5ms/step - loss: 0.0633 - sparse_categorical_accuracy: 0.9840 - val_loss: 0.1463 - val_sparse_categorical_accuracy: 0.9758
+ 399/399 ━━━━━━━━━━━━━━━━━━━━ 1s 4ms/step - loss: 0.0587 - sparse_categorical_accuracy: 0.9854 - val_loss: 0.1439 - val_sparse_categorical_accuracy: 0.9747
 Epoch 11/20
-399/399 [==============================] - 2s 5ms/step - loss: 0.0604 - sparse_categorical_accuracy: 0.9856 - val_loss: 0.1390 - val_sparse_categorical_accuracy: 0.9769
+ 399/399 ━━━━━━━━━━━━━━━━━━━━ 1s 4ms/step - loss: 0.0622 - sparse_categorical_accuracy: 0.9853 - val_loss: 0.1473 - val_sparse_categorical_accuracy: 0.9753
 Epoch 12/20
-399/399 [==============================] - 2s 5ms/step - loss: 0.0561 - sparse_categorical_accuracy: 0.9865 - val_loss: 0.1761 - val_sparse_categorical_accuracy: 0.9740
+ 399/399 ━━━━━━━━━━━━━━━━━━━━ 1s 4ms/step - loss: 0.0554 - sparse_categorical_accuracy: 0.9869 - val_loss: 0.1529 - val_sparse_categorical_accuracy: 0.9757
 Epoch 13/20
-399/399 [==============================] - 2s 5ms/step - loss: 0.0589 - sparse_categorical_accuracy: 0.9873 - val_loss: 0.1598 - val_sparse_categorical_accuracy: 0.9769
+ 399/399 ━━━━━━━━━━━━━━━━━━━━ 1s 3ms/step - loss: 0.0507 - sparse_categorical_accuracy: 0.9884 - val_loss: 0.1452 - val_sparse_categorical_accuracy: 0.9783
 Epoch 14/20
-399/399 [==============================] - 2s 5ms/step - loss: 0.0527 - sparse_categorical_accuracy: 0.9879 - val_loss: 0.1565 - val_sparse_categorical_accuracy: 0.9802
+ 399/399 ━━━━━━━━━━━━━━━━━━━━ 1s 4ms/step - loss: 0.0468 - sparse_categorical_accuracy: 0.9889 - val_loss: 0.1435 - val_sparse_categorical_accuracy: 0.9796
 Epoch 15/20
-399/399 [==============================] - 2s 5ms/step - loss: 0.0563 - sparse_categorical_accuracy: 0.9878 - val_loss: 0.1970 - val_sparse_categorical_accuracy: 0.9758
+ 399/399 ━━━━━━━━━━━━━━━━━━━━ 1s 4ms/step - loss: 0.0478 - sparse_categorical_accuracy: 0.9892 - val_loss: 0.1580 - val_sparse_categorical_accuracy: 0.9770
 Epoch 16/20
-399/399 [==============================] - 2s 5ms/step - loss: 0.0525 - sparse_categorical_accuracy: 0.9888 - val_loss: 0.1937 - val_sparse_categorical_accuracy: 0.9757
+ 399/399 ━━━━━━━━━━━━━━━━━━━━ 1s 4ms/step - loss: 0.0492 - sparse_categorical_accuracy: 0.9888 - val_loss: 0.1957 - val_sparse_categorical_accuracy: 0.9753
 Epoch 17/20
-399/399 [==============================] - 2s 5ms/step - loss: 0.0522 - sparse_categorical_accuracy: 0.9898 - val_loss: 0.1777 - val_sparse_categorical_accuracy: 0.9797
+ 399/399 ━━━━━━━━━━━━━━━━━━━━ 1s 4ms/step - loss: 0.0478 - sparse_categorical_accuracy: 0.9896 - val_loss: 0.1865 - val_sparse_categorical_accuracy: 0.9779
 Epoch 18/20
-399/399 [==============================] - 2s 5ms/step - loss: 0.0568 - sparse_categorical_accuracy: 0.9894 - val_loss: 0.1831 - val_sparse_categorical_accuracy: 0.9791
+ 399/399 ━━━━━━━━━━━━━━━━━━━━ 1s 4ms/step - loss: 0.0478 - sparse_categorical_accuracy: 0.9893 - val_loss: 0.2107 - val_sparse_categorical_accuracy: 0.9747
 Epoch 19/20
-399/399 [==============================] - 2s 5ms/step - loss: 0.0526 - sparse_categorical_accuracy: 0.9900 - val_loss: 0.1812 - val_sparse_categorical_accuracy: 0.9782
+ 399/399 ━━━━━━━━━━━━━━━━━━━━ 1s 4ms/step - loss: 0.0494 - sparse_categorical_accuracy: 0.9894 - val_loss: 0.2306 - val_sparse_categorical_accuracy: 0.9734
 Epoch 20/20
-399/399 [==============================] - 2s 5ms/step - loss: 0.0503 - sparse_categorical_accuracy: 0.9902 - val_loss: 0.2098 - val_sparse_categorical_accuracy: 0.9776
-313/313 [==============================] - 0s 731us/step - loss: 0.2002 - sparse_categorical_accuracy: 0.9776
+ 399/399 ━━━━━━━━━━━━━━━━━━━━ 1s 4ms/step - loss: 0.0473 - sparse_categorical_accuracy: 0.9910 - val_loss: 0.2201 - val_sparse_categorical_accuracy: 0.9731
+ 313/313 ━━━━━━━━━━━━━━━━━━━━ 0s 802us/step - loss: 0.2086 - sparse_categorical_accuracy: 0.9710
 
-[0.20024622976779938, 0.9775999784469604]
+[0.19070196151733398, 0.9740999937057495]
 
 ```
 </div>

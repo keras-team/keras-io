@@ -2,7 +2,7 @@
 Title: Keras debugging tips
 Author: [fchollet](https://twitter.com/fchollet)
 Date created: 2020/05/16
-Last modified: 2020/05/16
+Last modified: 2023/11/16
 Description: Four simple tips to help you debug your Keras code.
 Accelerator: GPU
 """
@@ -327,8 +327,6 @@ Time for some step-by-step printing of what's going on with our gradients.
 We add various `print` statements in the `train_step` method, and we make sure to pass
 `run_eagerly=True` to `compile()` to run our code step-by-step, eagerly.
 """
-
-keras.config.disable_traceback_filtering()
 
 
 class MyModel(keras.Model):
