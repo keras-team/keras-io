@@ -148,6 +148,10 @@ GUIDES_MASTER = {
             "title": "Distributed training with PyTorch",
         },
         {
+            "path": "distribution",
+            "title": "Distributed training with Keras 3",
+        },
+        {
             "path": "migrating_to_keras_3",
             "title": "Migrating Keras 2 code to Keras 3",
         },

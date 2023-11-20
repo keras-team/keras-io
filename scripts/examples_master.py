@@ -406,6 +406,7 @@ EXAMPLES_MASTER = {
                     "path": "pretrained_word_embeddings",
                     "title": "Using pre-trained word embeddings",
                     "subcategory": "Text classification",
+                    "keras_3": True,
                 },
                 {
                     "path": "bidirectional_lstm_imdb",

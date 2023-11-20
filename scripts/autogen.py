@@ -763,14 +763,14 @@ class KerasIO:
         autogen_utils.save_file(Path(self.site_dir) / "404.html", page404)
 
         # Keras 3 announcement page
-        keras_core_template = jinja2.Template(
+        keras_3_template = jinja2.Template(
             open(Path(self.theme_dir) / "keras_3.html").read()
         )
         md_content = open(
-            Path(self.templates_dir) / "keras_3_announcement.md"
+            Path(self.templates_dir) / "keras_3" / "keras_3_announcement.md"
         ).read()
         content = autogen_utils.render_markdown_to_html(md_content)
-        keras_core_page = keras_core_template.render(
+        keras_core_page = keras_3_template.render(
             {"base_url": self.url, "content": content}
         )
         autogen_utils.save_file(
