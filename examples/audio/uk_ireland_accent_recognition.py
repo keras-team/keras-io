@@ -2,9 +2,10 @@
 Title: English speaker accent recognition using Transfer Learning
 Author: [Fadi Badine](https://twitter.com/fadibadine)
 Date created: 2022/04/16
-Last modified: 2022/04/16
+Last modified: 2023/07/19
 Description: Training a model to classify UK & Ireland accents using feature extraction from Yamnet.
 Accelerator: GPU
+Converted to Keras 3 by: [Fadi Badine](https://twitter.com/fadibadine)
 """
 
 """
@@ -39,8 +40,12 @@ pip install -U -q tensorflow_io
 ## Configuration
 """
 
+import os
+
+os.environ["KERAS_BACKEND"] = "tensorflow"
+
 SEED = 1337
-EPOCHS = 100
+EPOCHS = 1
 BATCH_SIZE = 64
 VALIDATION_RATIO = 0.1
 MODEL_NAME = "uk_irish_accent_recognition"
@@ -97,6 +102,9 @@ class_names = [
 """
 
 import os
+
+os.environ["KERAS_BACKEND"] = "tensorflow"
+
 import io
 import csv
 import numpy as np
@@ -104,7 +112,7 @@ import pandas as pd
 import tensorflow as tf
 import tensorflow_hub as hub
 import tensorflow_io as tfio
-from tensorflow import keras
+import keras
 import matplotlib.pyplot as plt
 import seaborn as sns
 from scipy import stats
@@ -179,7 +187,9 @@ We will ignore the other two.
 """
 
 dataframe = pd.read_csv(
-    line_index_file, names=["id", "filename", "transcript"], usecols=["filename"]
+    line_index_file,
+    names=["id", "filename", "transcript"],
+    usecols=["filename"],
 )
 dataframe.head()
 
@@ -207,12 +217,14 @@ def preprocess_dataframe(dataframe):
 
     # Create gender agnostic labels based on the filename first 2 letters
     dataframe["label"] = dataframe.apply(
-        lambda row: gender_agnostic_categories.index(row["filename"][:2]), axis=1
+        lambda row: gender_agnostic_categories.index(row["filename"][:2]),
+        axis=1,
     )
 
     # Add the file path to the name
     dataframe["filename"] = dataframe.apply(
-        lambda row: os.path.join(DATASET_DESTINATION, row["filename"] + ".wav"), axis=1
+        lambda row: os.path.join(DATASET_DESTINATION, row["filename"] + ".wav"),
+        axis=1,
     )
 
     # Shuffle the samples
@@ -333,7 +345,7 @@ keras.backend.clear_session()
 
 
 def build_and_compile_model():
-    inputs = keras.layers.Input(shape=(1024), name="embedding")
+    inputs = keras.layers.Input(shape=(1024,), name="embedding")
 
     x = keras.layers.Dense(256, activation="relu", name="dense_1")(inputs)
     x = keras.layers.Dropout(0.15, name="dropout_1")(x)
@@ -408,7 +420,7 @@ early_stopping_cb = keras.callbacks.EarlyStopping(
 )
 
 model_checkpoint_cb = keras.callbacks.ModelCheckpoint(
-    MODEL_NAME + ".h5", monitor="val_auc", save_best_only=True
+    MODEL_NAME + ".keras", monitor="val_auc", save_best_only=True
 )
 
 tensorboard_cb = keras.callbacks.TensorBoard(
@@ -526,7 +538,11 @@ confusion_mtx = tf.math.confusion_matrix(
 # Plot the confusion matrix
 plt.figure(figsize=(10, 8))
 sns.heatmap(
-    confusion_mtx, xticklabels=class_names, yticklabels=class_names, annot=True, fmt="g"
+    confusion_mtx,
+    xticklabels=class_names,
+    yticklabels=class_names,
+    annot=True,
+    fmt="g",
 )
 plt.xlabel("Prediction")
 plt.ylabel("Label")
@@ -671,7 +687,10 @@ plt.xlim([0, len(audio_wav)])
 # Plot the log-mel spectrogram (returned by the model).
 plt.subplot(3, 1, 2)
 plt.imshow(
-    mel_spectrogram.numpy().T, aspect="auto", interpolation="nearest", origin="lower"
+    mel_spectrogram.numpy().T,
+    aspect="auto",
+    interpolation="nearest",
+    origin="lower",
 )
 
 # Plot and label the model output scores for the top-scoring classes.
