@@ -65,13 +65,6 @@ x_test = x_test.astype("float32") / 255.0
 y_test = np.squeeze(y_test)
 ```
 
-<div class="k-default-codeblock">
-```
-Downloading data from https://www.cs.toronto.edu/~kriz/cifar-10-python.tar.gz
- 170498071/170498071 ━━━━━━━━━━━━━━━━━━━━ 4s 0us/step
-
-```
-</div>
 To get a sense of the dataset we can visualise a grid of 25 random examples.
 
 
@@ -229,14 +222,16 @@ class EmbeddingModel(keras.Model):
             # pairs, to be high. This loss will move embeddings for the
             # anchor/positive pairs together and move all other pairs apart.
             sparse_labels = keras.ops.arange(num_classes)
-            loss = self.compiled_loss(sparse_labels, similarities)
+            loss = self.compute_loss(x=None, y=sparse_labels, y_pred=similarities)
 
         # Calculate gradients and apply via optimizer.
         gradients = tape.gradient(loss, self.trainable_variables)
         self.optimizer.apply_gradients(zip(gradients, self.trainable_variables))
 
         # Update and return metrics (specifically the one for the loss value).
-        self.compiled_metrics.update_state(sparse_labels, similarities)
+        for metric in self.metrics:
+            metric.update_state(sparse_labels, similarities)
+
         return {m.name: m.result() for m in self.metrics}
 
 ```
@@ -278,70 +273,55 @@ plt.show()
 <div class="k-default-codeblock">
 ```
 Epoch 1/20
-
-/home/grasskin/miniconda3/envs/gkeras/lib/python3.10/site-packages/keras/src/backend/tensorflow/trainer.py:604: UserWarning: `model.compiled_loss()` is deprecated. Instead, use `model.compute_loss(x, y, y_pred, sample_weight)`.
-  warnings.warn(
-/home/grasskin/miniconda3/envs/gkeras/lib/python3.10/site-packages/keras/src/backend/tensorflow/trainer.py:579: UserWarning: `model.compiled_metrics()` is deprecated. Instead, use e.g.:
-```
-for metric in self.metrics:
-    metric.update_state(y, y_pred)
-```
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-  return self._compiled_metrics_update_state(
-
-   88/1000 ━[37m━━━━━━━━━━━━━━━━━━━  1s 2ms/step - loss: 4.7080
+   82/1000 ━[37m━━━━━━━━━━━━━━━━━━━  1s 2ms/step - loss: 0.4502
 
 WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
-I0000 00:00:1700511314.609369 3417359 device_compiler.h:187] Compiled cluster using XLA!  This line is logged at most once for the lifetime of the process.
+I0000 00:00:1700522202.439460 3461065 device_compiler.h:187] Compiled cluster using XLA!  This line is logged at most once for the lifetime of the process.
 
- 1000/1000 ━━━━━━━━━━━━━━━━━━━━ 5s 2ms/step - loss: 4.7955
+ 1000/1000 ━━━━━━━━━━━━━━━━━━━━ 6s 2ms/step - loss: 0.4504
 Epoch 2/20
- 1000/1000 ━━━━━━━━━━━━━━━━━━━━ 2s 2ms/step - loss: 4.3530
+ 1000/1000 ━━━━━━━━━━━━━━━━━━━━ 2s 2ms/step - loss: 0.4509
 Epoch 3/20
- 1000/1000 ━━━━━━━━━━━━━━━━━━━━ 2s 2ms/step - loss: 3.8935
+ 1000/1000 ━━━━━━━━━━━━━━━━━━━━ 2s 2ms/step - loss: 0.4496
 Epoch 4/20
- 1000/1000 ━━━━━━━━━━━━━━━━━━━━ 2s 2ms/step - loss: 3.6425
+ 1000/1000 ━━━━━━━━━━━━━━━━━━━━ 2s 2ms/step - loss: 0.4492
 Epoch 5/20
- 1000/1000 ━━━━━━━━━━━━━━━━━━━━ 2s 2ms/step - loss: 3.4965
+ 1000/1000 ━━━━━━━━━━━━━━━━━━━━ 2s 2ms/step - loss: 0.4489
 Epoch 6/20
- 1000/1000 ━━━━━━━━━━━━━━━━━━━━ 2s 2ms/step - loss: 3.4292
+ 1000/1000 ━━━━━━━━━━━━━━━━━━━━ 2s 2ms/step - loss: 0.4474
 Epoch 7/20
- 1000/1000 ━━━━━━━━━━━━━━━━━━━━ 2s 2ms/step - loss: 3.3133
+ 1000/1000 ━━━━━━━━━━━━━━━━━━━━ 2s 2ms/step - loss: 0.4488
 Epoch 8/20
- 1000/1000 ━━━━━━━━━━━━━━━━━━━━ 2s 2ms/step - loss: 3.1287
+ 1000/1000 ━━━━━━━━━━━━━━━━━━━━ 2s 2ms/step - loss: 0.4477
 Epoch 9/20
- 1000/1000 ━━━━━━━━━━━━━━━━━━━━ 2s 2ms/step - loss: 2.9804
+ 1000/1000 ━━━━━━━━━━━━━━━━━━━━ 2s 2ms/step - loss: 0.4474
 Epoch 10/20
- 1000/1000 ━━━━━━━━━━━━━━━━━━━━ 2s 2ms/step - loss: 2.9138
+ 1000/1000 ━━━━━━━━━━━━━━━━━━━━ 2s 2ms/step - loss: 0.4465
 Epoch 11/20
- 1000/1000 ━━━━━━━━━━━━━━━━━━━━ 2s 2ms/step - loss: 2.8495
+ 1000/1000 ━━━━━━━━━━━━━━━━━━━━ 2s 2ms/step - loss: 0.4462
 Epoch 12/20
- 1000/1000 ━━━━━━━━━━━━━━━━━━━━ 2s 2ms/step - loss: 2.6828
+ 1000/1000 ━━━━━━━━━━━━━━━━━━━━ 2s 2ms/step - loss: 0.4440
 Epoch 13/20
- 1000/1000 ━━━━━━━━━━━━━━━━━━━━ 2s 2ms/step - loss: 2.5518
+ 1000/1000 ━━━━━━━━━━━━━━━━━━━━ 2s 2ms/step - loss: 0.4438
 Epoch 14/20
- 1000/1000 ━━━━━━━━━━━━━━━━━━━━ 2s 2ms/step - loss: 2.5597
+ 1000/1000 ━━━━━━━━━━━━━━━━━━━━ 2s 2ms/step - loss: 0.4434
 Epoch 15/20
- 1000/1000 ━━━━━━━━━━━━━━━━━━━━ 2s 2ms/step - loss: 2.4292
+ 1000/1000 ━━━━━━━━━━━━━━━━━━━━ 2s 2ms/step - loss: 0.4416
 Epoch 16/20
- 1000/1000 ━━━━━━━━━━━━━━━━━━━━ 2s 2ms/step - loss: 2.4419
+ 1000/1000 ━━━━━━━━━━━━━━━━━━━━ 2s 2ms/step - loss: 0.4427
 Epoch 17/20
- 1000/1000 ━━━━━━━━━━━━━━━━━━━━ 2s 2ms/step - loss: 2.2987
+ 1000/1000 ━━━━━━━━━━━━━━━━━━━━ 2s 2ms/step - loss: 0.4399
 Epoch 18/20
- 1000/1000 ━━━━━━━━━━━━━━━━━━━━ 2s 2ms/step - loss: 2.2295
+ 1000/1000 ━━━━━━━━━━━━━━━━━━━━ 2s 2ms/step - loss: 0.4388
 Epoch 19/20
- 1000/1000 ━━━━━━━━━━━━━━━━━━━━ 2s 2ms/step - loss: 2.2432
+ 1000/1000 ━━━━━━━━━━━━━━━━━━━━ 2s 2ms/step - loss: 0.4379
 Epoch 20/20
- 1000/1000 ━━━━━━━━━━━━━━━━━━━━ 2s 2ms/step - loss: 2.0215
+ 1000/1000 ━━━━━━━━━━━━━━━━━━━━ 2s 2ms/step - loss: 0.4383
 
 ```
 </div>
     
-![png](/img/examples/vision/metric_learning/metric_learning_19_5.png)
+![png](/img/examples/vision/metric_learning/metric_learning_19_3.png)
     
 
 
@@ -365,7 +345,7 @@ near_neighbours = np.argsort(gram_matrix.T)[:, -(near_neighbours_per_example + 1
 
 <div class="k-default-codeblock">
 ```
- 313/313 ━━━━━━━━━━━━━━━━━━━━ 1s 2ms/step
+ 313/313 ━━━━━━━━━━━━━━━━━━━━ 1s 3ms/step
 
 ```
 </div>
