@@ -282,6 +282,7 @@ blockquote {
   padding-right: 0.8rem;
   background-color: white;
   color: black;
+
   text-decoration: none;
 }
 .nav-pills .nav-sublink2 {
@@ -478,5 +479,6 @@ td {
   text-align: center;
   border: solid #ddd 1px;
   border-radius: 1rem;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
+  padding-top: 0.05rem;
 }
