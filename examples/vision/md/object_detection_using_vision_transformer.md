@@ -24,14 +24,10 @@ and we train it on the
 [Caltech 101 dataset](http://www.vision.caltech.edu/datasets/)
 to detect an airplane in the given image.
 
-This example requires TensorFlow 2.4 or higher, and
-[TensorFlow Addons](https://www.tensorflow.org/addons/overview),
-from which we import the `AdamW` optimizer.
-
-TensorFlow Addons can be installed via the following command:
+Keras 3 can be installed via the following command:
 
 ```
-pip install -U git+https://github.com/keras-team/keras
+pip install -U keras
 ```
 
 ---
@@ -441,35 +437,35 @@ plot_history("loss")
 <div class="k-default-codeblock">
 ```
 Epoch 1/15
- 18/18 ━━━━━━━━━━━━━━━━━━━━ 9s 107ms/step - loss: 1.0230 - val_loss: 0.3428
+ 18/18 ━━━━━━━━━━━━━━━━━━━━ 9s 108ms/step - loss: 1.0722 - val_loss: 0.3532
 Epoch 2/15
- 18/18 ━━━━━━━━━━━━━━━━━━━━ 0s 24ms/step - loss: 0.4015 - val_loss: 0.3071
+ 18/18 ━━━━━━━━━━━━━━━━━━━━ 1s 25ms/step - loss: 0.4062 - val_loss: 0.3133
 Epoch 3/15
- 18/18 ━━━━━━━━━━━━━━━━━━━━ 0s 25ms/step - loss: 0.3161 - val_loss: 0.2687
+ 18/18 ━━━━━━━━━━━━━━━━━━━━ 0s 24ms/step - loss: 0.2956 - val_loss: 0.2665
 Epoch 4/15
- 18/18 ━━━━━━━━━━━━━━━━━━━━ 0s 25ms/step - loss: 0.2721 - val_loss: 0.2320
+ 18/18 ━━━━━━━━━━━━━━━━━━━━ 0s 24ms/step - loss: 0.2578 - val_loss: 0.2219
 Epoch 5/15
- 18/18 ━━━━━━━━━━━━━━━━━━━━ 0s 25ms/step - loss: 0.2337 - val_loss: 0.1979
+ 18/18 ━━━━━━━━━━━━━━━━━━━━ 0s 24ms/step - loss: 0.2117 - val_loss: 0.1813
 Epoch 6/15
- 18/18 ━━━━━━━━━━━━━━━━━━━━ 0s 25ms/step - loss: 0.1886 - val_loss: 0.1654
+ 18/18 ━━━━━━━━━━━━━━━━━━━━ 0s 25ms/step - loss: 0.1743 - val_loss: 0.1443
 Epoch 7/15
- 18/18 ━━━━━━━━━━━━━━━━━━━━ 0s 24ms/step - loss: 0.1598 - val_loss: 0.1352
+ 18/18 ━━━━━━━━━━━━━━━━━━━━ 0s 24ms/step - loss: 0.1373 - val_loss: 0.1123
 Epoch 8/15
- 18/18 ━━━━━━━━━━━━━━━━━━━━ 0s 25ms/step - loss: 0.1305 - val_loss: 0.1079
+ 18/18 ━━━━━━━━━━━━━━━━━━━━ 0s 23ms/step - loss: 0.1072 - val_loss: 0.0851
 Epoch 9/15
- 18/18 ━━━━━━━━━━━━━━━━━━━━ 0s 25ms/step - loss: 0.1030 - val_loss: 0.0834
+ 18/18 ━━━━━━━━━━━━━━━━━━━━ 0s 24ms/step - loss: 0.0819 - val_loss: 0.0624
 Epoch 10/15
- 18/18 ━━━━━━━━━━━━━━━━━━━━ 0s 24ms/step - loss: 0.0792 - val_loss: 0.0621
+ 18/18 ━━━━━━━━━━━━━━━━━━━━ 0s 24ms/step - loss: 0.0609 - val_loss: 0.0441
 Epoch 11/15
- 18/18 ━━━━━━━━━━━━━━━━━━━━ 0s 24ms/step - loss: 0.0591 - val_loss: 0.0443
+ 18/18 ━━━━━━━━━━━━━━━━━━━━ 0s 24ms/step - loss: 0.0429 - val_loss: 0.0301
 Epoch 12/15
- 18/18 ━━━━━━━━━━━━━━━━━━━━ 0s 24ms/step - loss: 0.0456 - val_loss: 0.0303
+ 18/18 ━━━━━━━━━━━━━━━━━━━━ 0s 24ms/step - loss: 0.0324 - val_loss: 0.0198
 Epoch 13/15
- 18/18 ━━━━━━━━━━━━━━━━━━━━ 0s 25ms/step - loss: 0.0355 - val_loss: 0.0197
+ 18/18 ━━━━━━━━━━━━━━━━━━━━ 0s 24ms/step - loss: 0.0219 - val_loss: 0.0127
 Epoch 14/15
- 18/18 ━━━━━━━━━━━━━━━━━━━━ 0s 24ms/step - loss: 0.0241 - val_loss: 0.0125
+ 18/18 ━━━━━━━━━━━━━━━━━━━━ 0s 24ms/step - loss: 0.0172 - val_loss: 0.0080
 Epoch 15/15
- 18/18 ━━━━━━━━━━━━━━━━━━━━ 0s 24ms/step - loss: 0.0187 - val_loss: 0.0078
+ 18/18 ━━━━━━━━━━━━━━━━━━━━ 0s 25ms/step - loss: 0.0134 - val_loss: 0.0050
 
 ```
 </div>
@@ -608,14 +604,14 @@ plt.show()
  1/1 ━━━━━━━━━━━━━━━━━━━━ 1s 1s/step
  1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 1ms/step  
  1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 1ms/step  
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 2ms/step
  1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 1ms/step  
  1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 1ms/step  
  1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 1ms/step  
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 2ms/step
  1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 1ms/step  
  1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 1ms/step  
- 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 1ms/step  
- 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 1ms/step  
-mean_iou: 0.6489598044876755
+mean_iou: 0.6927515797633751
 
 ```
 </div>

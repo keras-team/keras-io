@@ -21,14 +21,10 @@ and we train it on the
 [Caltech 101 dataset](http://www.vision.caltech.edu/datasets/)
 to detect an airplane in the given image.
 
-This example requires TensorFlow 2.4 or higher, and
-[TensorFlow Addons](https://www.tensorflow.org/addons/overview),
-from which we import the `AdamW` optimizer.
-
-TensorFlow Addons can be installed via the following command:
+Keras 3 can be installed via the following command:
 
 ```
-pip install -U git+https://github.com/keras-team/keras
+pip install -U keras
 ```
 """
 
