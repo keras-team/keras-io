@@ -192,14 +192,20 @@ class EmbeddingModel(keras.Model):
             # pairs, to be high. This loss will move embeddings for the
             # anchor/positive pairs together and move all other pairs apart.
             sparse_labels = keras.ops.arange(num_classes)
-            loss = self.compiled_loss(sparse_labels, similarities)
+            loss = self.compute_loss(y=sparse_labels, y_pred=similarities)
 
         # Calculate gradients and apply via optimizer.
         gradients = tape.gradient(loss, self.trainable_variables)
         self.optimizer.apply_gradients(zip(gradients, self.trainable_variables))
 
         # Update and return metrics (specifically the one for the loss value).
-        self.compiled_metrics.update_state(sparse_labels, similarities)
+        for metric in self.metrics:
+            # Calling `self.compile` will by default add a `keras.metrics.Mean` loss
+            if metric.name == "loss":
+                metric.update_state(loss)
+            else:
+                metric.update_state(sparse_labels, similarities)
+
         return {m.name: m.result() for m in self.metrics}
 
 
@@ -224,7 +230,6 @@ model = EmbeddingModel(inputs, embeddings)
 """
 Finally we run the training. On a Google Colab GPU instance this takes about a minute.
 """
-
 model.compile(
     optimizer=keras.optimizers.Adam(learning_rate=1e-3),
     loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
