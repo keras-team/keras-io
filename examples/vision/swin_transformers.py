@@ -19,24 +19,22 @@ non-overlapping local windows while also allowing for cross-window connections.
 This architecture has the flexibility to model information at various scales and has
 a linear computational complexity with respect to image size.
 
-This example requires TensorFlow 2.5 or higher, as well as TensorFlow Addons,
-which can be installed using the following commands:
-"""
-
-"""shell
-pip install -U tensorflow-addons
+This example requires TensorFlow 2.5 or higher.
 """
 
 """
 ## Setup
 """
 
+import os
+
+os.environ["KERAS_BACKEND"] = "tensorflow"
+
 import matplotlib.pyplot as plt
 import numpy as np
 import tensorflow as tf
-import tensorflow_addons as tfa
-from tensorflow import keras
-from tensorflow.keras import layers
+import keras
+from keras import layers
 
 """
 ## Prepare the data
@@ -88,7 +86,7 @@ num_patch_y = input_shape[1] // patch_size[1]
 
 learning_rate = 1e-3
 batch_size = 128
-num_epochs = 40
+num_epochs = 1
 validation_split = 0.1
 weight_decay = 0.0001
 label_smoothing = 0.1
@@ -106,7 +104,15 @@ def window_partition(x, window_size):
     patch_num_y = height // window_size
     patch_num_x = width // window_size
     x = tf.reshape(
-        x, shape=(-1, patch_num_y, window_size, patch_num_x, window_size, channels)
+        x,
+        shape=(
+            -1,
+            patch_num_y,
+            window_size,
+            patch_num_x,
+            window_size,
+            channels,
+        ),
     )
     x = tf.transpose(x, (0, 1, 3, 2, 4, 5))
     windows = tf.reshape(x, shape=(-1, window_size, window_size, channels))
@@ -118,7 +124,14 @@ def window_reverse(windows, window_size, height, width, channels):
     patch_num_x = width // window_size
     x = tf.reshape(
         windows,
-        shape=(-1, patch_num_y, patch_num_x, window_size, window_size, channels),
+        shape=(
+            -1,
+            patch_num_y,
+            patch_num_x,
+            window_size,
+            window_size,
+            channels,
+        ),
     )
     x = tf.transpose(x, perm=(0, 1, 3, 2, 4, 5))
     x = tf.reshape(x, shape=(-1, height, width, channels))
@@ -155,7 +168,13 @@ whereas window-based self-attention leads to linear complexity and is easily sca
 
 class WindowAttention(layers.Layer):
     def __init__(
-        self, dim, window_size, num_heads, qkv_bias=True, dropout_rate=0.0, **kwargs
+        self,
+        dim,
+        window_size,
+        num_heads,
+        qkv_bias=True,
+        dropout_rate=0.0,
+        **kwargs,
     ):
         super().__init__(**kwargs)
         self.dim = dim
@@ -188,7 +207,8 @@ class WindowAttention(layers.Layer):
         relative_position_index = relative_coords.sum(-1)
 
         self.relative_position_index = tf.Variable(
-            initial_value=tf.convert_to_tensor(relative_position_index), trainable=False
+            initial_value=lambda: tf.convert_to_tensor(relative_position_index),
+            trainable=False,
         )
 
     def call(self, x, mask=None):
@@ -210,13 +230,14 @@ class WindowAttention(layers.Layer):
             self.relative_position_bias_table, relative_position_index_flat
         )
         relative_position_bias = tf.reshape(
-            relative_position_bias, shape=(num_window_elements, num_window_elements, -1)
+            relative_position_bias,
+            shape=(num_window_elements, num_window_elements, -1),
         )
         relative_position_bias = tf.transpose(relative_position_bias, perm=(2, 0, 1))
         attn = attn + tf.expand_dims(relative_position_bias, axis=0)
 
         if mask is not None:
-            nW = mask.get_shape()[0]
+            nW = mask.shape[0]
             mask_float = tf.cast(
                 tf.expand_dims(tf.expand_dims(mask, axis=1), axis=0), tf.float32
             )
@@ -357,7 +378,8 @@ class SwinTransformer(layers.Layer):
         attn_windows = self.attn(x_windows, mask=self.attn_mask)
 
         attn_windows = tf.reshape(
-            attn_windows, shape=(-1, self.window_size, self.window_size, channels)
+            attn_windows,
+            shape=(-1, self.window_size, self.window_size, channels),
         )
         shifted_x = window_reverse(
             attn_windows, self.window_size, height, width, channels
@@ -422,7 +444,7 @@ class PatchEmbedding(layers.Layer):
         return self.proj(patch) + self.pos_embed(pos)
 
 
-class PatchMerging(tf.keras.layers.Layer):
+class PatchMerging(keras.layers.Layer):
     def __init__(self, num_patch, embed_dim):
         super().__init__()
         self.num_patch = num_patch
@@ -431,7 +453,7 @@ class PatchMerging(tf.keras.layers.Layer):
 
     def call(self, x):
         height, width = self.num_patch
-        _, _, C = x.get_shape().as_list()
+        _, _, C = x.shape
         x = tf.reshape(x, shape=(-1, height, width, C))
         x0 = x[:, 0::2, 0::2, :]
         x1 = x[:, 1::2, 0::2, :]
@@ -488,7 +510,7 @@ In practice, you should train for 150 epochs to reach convergence.
 model = keras.Model(input, output)
 model.compile(
     loss=keras.losses.CategoricalCrossentropy(label_smoothing=label_smoothing),
-    optimizer=tfa.optimizers.AdamW(
+    optimizer=keras.optimizers.AdamW(
         learning_rate=learning_rate, weight_decay=weight_decay
     ),
     metrics=[
