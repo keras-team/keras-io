@@ -2,9 +2,9 @@
 Title: Class Attention Image Transformers with LayerScale
 Author: [Sayak Paul](https://twitter.com/RisingSayak)
 Date created: 2022/09/19
-Last modified: 2022/09/25
+Last modified: 2022/11/21
 Description: Implementing an image transformer equipped with Class Attention and LayerScale.
-Accelerator: NONE
+Accelerator: None
 """
 """
 
@@ -42,6 +42,10 @@ an implementation of Vision Transformers in Keras:
 ## Imports
 """
 
+import os
+
+os.environ["KERAS_BACKEND"] = "tensorflow"
+
 import io
 import typing
 from urllib.request import urlopen
@@ -49,9 +53,9 @@ from urllib.request import urlopen
 import matplotlib.pyplot as plt
 import numpy as np
 import PIL
-import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras import layers
+import keras
+from keras import layers
+from keras import ops
 
 """
 ## The LayerScale layer
@@ -105,7 +109,10 @@ class LayerScale(layers.Layer):
 
     def __init__(self, init_values: float, projection_dim: int, **kwargs):
         super().__init__(**kwargs)
-        self.gamma = tf.Variable(init_values * tf.ones((projection_dim,)))
+        self.gamma = self.add_weight(
+            shape=(projection_dim,),
+            initializer=keras.initializers.Constant(init_values),
+        )
 
     def call(self, x, training=False):
         return x * self.gamma
@@ -132,13 +139,16 @@ class StochasticDepth(layers.Layer):
     def __init__(self, drop_prob: float, **kwargs):
         super().__init__(**kwargs)
         self.drop_prob = drop_prob
+        self.seed_generator = keras.random.SeedGenerator(1337)
 
     def call(self, x, training=False):
         if training:
             keep_prob = 1 - self.drop_prob
-            shape = (tf.shape(x)[0],) + (1,) * (len(tf.shape(x)) - 1)
-            random_tensor = keep_prob + tf.random.uniform(shape, 0, 1)
-            random_tensor = tf.floor(random_tensor)
+            shape = (ops.shape(x)[0],) + (1,) * (len(x.shape) - 1)
+            random_tensor = keep_prob + ops.random.uniform(
+                shape, minval=0, maxval=1, seed=self.seed_generator
+            )
+            random_tensor = ops.floor(random_tensor)
             return (x / keep_prob) * random_tensor
         return x
 
@@ -210,44 +220,44 @@ class ClassAttention(layers.Layer):
 
     def call(self, x, training=False):
         batch_size, num_patches, num_channels = (
-            tf.shape(x)[0],
-            tf.shape(x)[1],
-            tf.shape(x)[2],
+            ops.shape(x)[0],
+            ops.shape(x)[1],
+            ops.shape(x)[2],
         )
 
         # Query projection. `cls_token` embeddings are queries.
-        q = tf.expand_dims(self.q(x[:, 0]), axis=1)
-        q = tf.reshape(
+        q = ops.expand_dims(self.q(x[:, 0]), axis=1)
+        q = ops.reshape(
             q, (batch_size, 1, self.num_heads, num_channels // self.num_heads)
         )  # Shape: (batch_size, 1, num_heads, dimension_per_head)
-        q = tf.transpose(q, perm=[0, 2, 1, 3])
-        scale = tf.cast(self.scale, dtype=q.dtype)
+        q = ops.transpose(q, axes=[0, 2, 1, 3])
+        scale = ops.cast(self.scale, dtype=q.dtype)
         q = q * scale
 
         # Key projection. Patch embeddings as well the cls embedding are used as keys.
         k = self.k(x)
-        k = tf.reshape(
+        k = ops.reshape(
             k, (batch_size, num_patches, self.num_heads, num_channels // self.num_heads)
         )  # Shape: (batch_size, num_tokens, num_heads, dimension_per_head)
-        k = tf.transpose(k, perm=[0, 2, 1, 3])
+        k = ops.transpose(k, axes=[0, 2, 3, 1])
 
         # Value projection. Patch embeddings as well the cls embedding are used as values.
         v = self.v(x)
-        v = tf.reshape(
+        v = ops.reshape(
             v, (batch_size, num_patches, self.num_heads, num_channels // self.num_heads)
         )
-        v = tf.transpose(v, perm=[0, 2, 1, 3])
+        v = ops.transpose(v, axes=[0, 2, 1, 3])
 
         # Calculate attention scores between cls_token embedding and patch embeddings.
-        attn = tf.matmul(q, k, transpose_b=True)
-        attn = tf.nn.softmax(attn, axis=-1)
-        attn = self.attn_drop(attn, training)
+        attn = ops.matmul(q, k)
+        attn = ops.nn.softmax(attn, axis=-1)
+        attn = self.attn_drop(attn, training=training)
 
-        x_cls = tf.matmul(attn, v)
-        x_cls = tf.transpose(x_cls, perm=[0, 2, 1, 3])
-        x_cls = tf.reshape(x_cls, (batch_size, 1, num_channels))
+        x_cls = ops.matmul(attn, v)
+        x_cls = ops.transpose(x_cls, axes=[0, 2, 1, 3])
+        x_cls = ops.reshape(x_cls, (batch_size, 1, num_channels))
         x_cls = self.proj(x_cls)
-        x_cls = self.proj_drop(x_cls, training)
+        x_cls = self.proj_drop(x_cls, training=training)
 
         return x_cls, attn
 
@@ -301,43 +311,43 @@ class TalkingHeadAttention(layers.Layer):
         self.proj_drop = layers.Dropout(dropout_rate)
 
     def call(self, x, training=False):
-        B, N, C = tf.shape(x)[0], tf.shape(x)[1], tf.shape(x)[2]
+        B, N, C = ops.shape(x)[0], ops.shape(x)[1], ops.shape(x)[2]
 
         # Project the inputs all at once.
         qkv = self.qkv(x)
 
         # Reshape the projected output so that they're segregated in terms of
         # query, key, and value projections.
-        qkv = tf.reshape(qkv, (B, N, 3, self.num_heads, C // self.num_heads))
+        qkv = ops.reshape(qkv, (B, N, 3, self.num_heads, C // self.num_heads))
 
         # Transpose so that the `num_heads` becomes the leading dimensions.
         # Helps to better segregate the representation sub-spaces.
-        qkv = tf.transpose(qkv, perm=[2, 0, 3, 1, 4])
-        scale = tf.cast(self.scale, dtype=qkv.dtype)
+        qkv = ops.transpose(qkv, axes=[2, 0, 3, 1, 4])
+        scale = ops.cast(self.scale, dtype=qkv.dtype)
         q, k, v = qkv[0] * scale, qkv[1], qkv[2]
 
         # Obtain the raw attention scores.
-        attn = tf.matmul(q, tf.transpose(k, perm=[0, 1, 3, 2]))
+        attn = ops.matmul(q, ops.transpose(k, axes=[0, 1, 3, 2]))
 
         # Linear projection of the similarities between the query and key projections.
-        attn = self.proj_l(tf.transpose(attn, perm=[0, 2, 3, 1]))
+        attn = self.proj_l(ops.transpose(attn, axes=[0, 2, 3, 1]))
 
         # Normalize the attention scores.
-        attn = tf.transpose(attn, perm=[0, 3, 1, 2])
-        attn = tf.nn.softmax(attn, axis=-1)
+        attn = ops.transpose(attn, axes=[0, 3, 1, 2])
+        attn = ops.nn.softmax(attn, axis=-1)
 
         # Linear projection on the softmaxed scores.
-        attn = self.proj_w(tf.transpose(attn, perm=[0, 2, 3, 1]))
-        attn = tf.transpose(attn, perm=[0, 3, 1, 2])
-        attn = self.attn_drop(attn, training)
+        attn = self.proj_w(ops.transpose(attn, axes=[0, 2, 3, 1]))
+        attn = ops.transpose(attn, axes=[0, 3, 1, 2])
+        attn = self.attn_drop(attn, training=training)
 
         # Final set of projections as done in the vanilla attention mechanism.
-        x = tf.matmul(attn, v)
-        x = tf.transpose(x, perm=[0, 2, 1, 3])
-        x = tf.reshape(x, (B, N, C))
+        x = ops.matmul(attn, v)
+        x = ops.transpose(x, axes=[0, 2, 1, 3])
+        x = ops.reshape(x, (B, N, C))
 
         x = self.proj(x)
-        x = self.proj_drop(x, training)
+        x = self.proj_drop(x, training=training)
 
         return x, attn
 
@@ -355,7 +365,7 @@ def mlp(x, dropout_rate: float, hidden_units: typing.List[int]):
     for idx, units in enumerate(hidden_units):
         x = layers.Dense(
             units,
-            activation=tf.nn.gelu if idx == 0 else None,
+            activation=ops.nn.gelu if idx == 0 else None,
             bias_initializer=keras.initializers.RandomNormal(stddev=1e-6),
         )(x)
         x = layers.Dropout(dropout_rate)(x)
@@ -569,8 +579,12 @@ class CaiT(keras.Model):
         )
 
         # CLS token and the positional embeddings.
-        self.cls_token = tf.Variable(tf.zeros((1, 1, projection_dim)))
-        self.pos_embed = tf.Variable(tf.zeros((1, num_patches, projection_dim)))
+        self.cls_token = self.add_weight(
+            shape=(1, 1, projection_dim), initializer="zeros"
+        )
+        self.pos_embed = self.add_weight(
+            shape=(1, num_patches, projection_dim), initializer="zeros"
+        )
 
         # Projection dropout.
         self.pos_drop = layers.Dropout(dropout_rate, name="projection_dropout")
@@ -636,19 +650,19 @@ class CaiT(keras.Model):
 
         # CA+FFN layers.
         ca_ffn_attn = {}
-        cls_tokens = tf.tile(self.cls_token, (tf.shape(x)[0], 1, 1))
+        cls_tokens = ops.tile(self.cls_token, (ops.shape(x)[0], 1, 1))
         for blk in self.blocks_token_only:
             cls_tokens, attn_scores = blk([x, cls_tokens])
             ca_ffn_attn[f"{blk.name}_att"] = attn_scores
 
-        x = tf.concat([cls_tokens, x], axis=1)
+        x = ops.concatenate([cls_tokens, x], axis=1)
         x = self.norm(x)
 
         # Always return the attention scores from the SA+FFN and CA+FFN layers
         # for convenience.
         if self.global_pool:
             x = (
-                tf.reduce_mean(x[:, 1:], axis=1)
+                ops.reduce_mean(x[:, 1:], axis=1)
                 if self.global_pool == "avg"
                 else x[:, 0]
             )
@@ -749,7 +763,7 @@ batch_size = 2
 config = get_config()
 cait_xxs24_224 = CaiT(**config)
 
-dummy_inputs = tf.ones((batch_size, image_size, image_size, num_channels))
+dummy_inputs = ops.ones((batch_size, image_size, image_size, num_channels))
 _ = cait_xxs24_224(dummy_inputs)
 
 """
@@ -776,7 +790,9 @@ as well as
 """
 
 model_gcs_path = "gs://tfhub-modules/sayakpaul/cait_xxs24_224/1/uncompressed"
-pretrained_model = keras.models.load_model(model_gcs_path)
+pretrained_model = keras.Sequential(
+    [keras.layers.TFSMLayer(model_gcs_path, call_endpoint="serving_default")]
+)
 
 """
 ## Inference utilities
@@ -795,10 +811,10 @@ norm_layer = keras.layers.Normalization(
 
 def preprocess_image(image, size=image_size):
     image = np.array(image)
-    image_resized = tf.expand_dims(image, 0)
+    image_resized = ops.expand_dims(image, 0)
     resize_size = int((256 / image_size) * size)
-    image_resized = tf.image.resize(
-        image_resized, (resize_size, resize_size), method="bicubic"
+    image_resized = ops.image.resize(
+        image_resized, (resize_size, resize_size), interpolation="bicubic"
     )
     image_resized = crop_layer(image_resized)
     return norm_layer(image_resized).numpy()
@@ -842,9 +858,11 @@ plt.show()
 ## Obtain Predictions
 """
 
-logits, sa_atn_score_dict, ca_atn_score_dict = pretrained_model.predict(
-    preprocessed_image
-)
+outputs = pretrained_model.predict(preprocessed_image)
+logits = outputs["output_1"]
+ca_ffn_block_0_att = outputs["output_3_ca_ffn_block_0_att"]
+ca_ffn_block_1_att = outputs["output_3_ca_ffn_block_1_att"]
+
 predicted_label = imagenet_labels[int(np.argmax(logits))]
 print(predicted_label)
 
@@ -864,7 +882,7 @@ layer.
 
 # (batch_size, nb_attention_heads, num_cls_token, seq_length)
 print("Shape of the attention scores from a class attention block:")
-print(ca_atn_score_dict["ca_ffn_block_0_att"].shape)
+print(ca_ffn_block_0_att.shape)
 
 """
 The shape denotes we have got attention weights for each of the individual attention
@@ -892,24 +910,21 @@ patch_size = 16
 
 
 def get_cls_attention_map(
-    attn_score_dict=ca_atn_score_dict,
-    block_key="ca_ffn_block_0_att",
+    attention_scores,
     return_saliency=False,
 ) -> np.ndarray:
     """
     Returns attention scores from a particular attention block.
 
     Args:
-        attn_score_dict: dict where the attention layer names are keys and corresponding
-            attention scores are values.
-        block_key: name of the attention block which we want to visualize.
+        attention_scores: the attention scores from the attention block to
+            visualize.
         return_saliency: a boolean flag if set to True also returns the salient
             representations of the attention block.
     """
     w_featmap = preprocessed_image.shape[2] // patch_size
     h_featmap = preprocessed_image.shape[1] // patch_size
 
-    attention_scores = attn_score_dict[block_key]
     nh = attention_scores.shape[1]  # Number of attention heads.
 
     # Taking the representations from CLS token.
@@ -929,10 +944,10 @@ def get_cls_attention_map(
         attentions = np.expand_dims(attentions, -1)
 
     # Resize the attention patches to 224x224 (224: 14x16)
-    attentions = tf.image.resize(
+    attentions = ops.image.resize(
         attentions,
         size=(h_featmap * patch_size, w_featmap * patch_size),
-        method="bicubic",
+        interpolation="bicubic",
     )
 
     return attentions
@@ -943,7 +958,7 @@ In the first CA layer, we notice that the model is focusing solely on the region
 interest.
 """
 
-attentions_ca_block_0 = get_cls_attention_map()
+attentions_ca_block_0 = get_cls_attention_map(ca_ffn_block_0_att)
 
 
 fig, axes = plt.subplots(nrows=1, ncols=4, figsize=(13, 13))
@@ -964,7 +979,7 @@ Whereas in the second CA layer, the model is trying to focus more on the context
 contains discriminative signals.
 """
 
-attentions_ca_block_1 = get_cls_attention_map(block_key="ca_ffn_block_1_att")
+attentions_ca_block_1 = get_cls_attention_map(ca_ffn_block_1_att)
 
 
 fig, axes = plt.subplots(nrows=1, ncols=4, figsize=(13, 13))
@@ -984,13 +999,13 @@ plt.show()
 Finally, we obtain the saliency map for the given image.
 """
 
-saliency_attention = get_cls_attention_map(return_saliency=True)
+saliency_attention = get_cls_attention_map(ca_ffn_block_0_att, return_saliency=True)
 
 image = np.array(image)
-image_resized = tf.expand_dims(image, 0)
+image_resized = ops.expand_dims(image, 0)
 resize_size = int((256 / 224) * image_size)
-image_resized = tf.image.resize(
-    image_resized, (resize_size, resize_size), method="bicubic"
+image_resized = ops.image.resize(
+    image_resized, (resize_size, resize_size), interpolation="bicubic"
 )
 image_resized = crop_layer(image_resized)
 
