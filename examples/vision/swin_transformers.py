@@ -35,11 +35,12 @@ import numpy as np
 import tensorflow as tf
 import keras
 from keras import layers
+from keras import ops
 
 """
 ## Prepare the data
 
-We load the CIFAR-100 dataset through `tf.keras.datasets`,
+We load the CIFAR-100 dataset through `keras.datasets`,
 normalize the images, and convert the integer labels to one-hot encoded vectors.
 """
 
@@ -103,9 +104,9 @@ def window_partition(x, window_size):
     _, height, width, channels = x.shape
     patch_num_y = height // window_size
     patch_num_x = width // window_size
-    x = tf.reshape(
+    x = ops.reshape(
         x,
-        shape=(
+        (
             -1,
             patch_num_y,
             window_size,
@@ -114,17 +115,17 @@ def window_partition(x, window_size):
             channels,
         ),
     )
-    x = tf.transpose(x, (0, 1, 3, 2, 4, 5))
-    windows = tf.reshape(x, shape=(-1, window_size, window_size, channels))
+    x = ops.transpose(x, (0, 1, 3, 2, 4, 5))
+    windows = ops.reshape(x, (-1, window_size, window_size, channels))
     return windows
 
 
 def window_reverse(windows, window_size, height, width, channels):
     patch_num_y = height // window_size
     patch_num_x = width // window_size
-    x = tf.reshape(
+    x = ops.reshape(
         windows,
-        shape=(
+        (
             -1,
             patch_num_y,
             patch_num_x,
@@ -133,8 +134,8 @@ def window_reverse(windows, window_size, height, width, channels):
             channels,
         ),
     )
-    x = tf.transpose(x, perm=(0, 1, 3, 2, 4, 5))
-    x = tf.reshape(x, shape=(-1, height, width, channels))
+    x = ops.transpose(x, (0, 1, 3, 2, 4, 5))
+    x = ops.reshape(x, (-1, height, width, channels))
     return x
 
 
@@ -215,25 +216,23 @@ class WindowAttention(layers.Layer):
         _, size, channels = x.shape
         head_dim = channels // self.num_heads
         x_qkv = self.qkv(x)
-        x_qkv = tf.reshape(x_qkv, shape=(-1, size, 3, self.num_heads, head_dim))
-        x_qkv = tf.transpose(x_qkv, perm=(2, 0, 3, 1, 4))
+        x_qkv = ops.reshape(x_qkv, (-1, size, 3, self.num_heads, head_dim))
+        x_qkv = ops.transpose(x_qkv, (2, 0, 3, 1, 4))
         q, k, v = x_qkv[0], x_qkv[1], x_qkv[2]
         q = q * self.scale
-        k = tf.transpose(k, perm=(0, 1, 3, 2))
+        k = ops.transpose(k, (0, 1, 3, 2))
         attn = q @ k
 
         num_window_elements = self.window_size[0] * self.window_size[1]
-        relative_position_index_flat = tf.reshape(
-            self.relative_position_index, shape=(-1,)
-        )
+        relative_position_index_flat = ops.reshape(self.relative_position_index, (-1,))
         relative_position_bias = tf.gather(
             self.relative_position_bias_table, relative_position_index_flat
         )
-        relative_position_bias = tf.reshape(
+        relative_position_bias = ops.reshape(
             relative_position_bias,
-            shape=(num_window_elements, num_window_elements, -1),
+            (num_window_elements, num_window_elements, -1),
         )
-        relative_position_bias = tf.transpose(relative_position_bias, perm=(2, 0, 1))
+        relative_position_bias = ops.transpose(relative_position_bias, (2, 0, 1))
         attn = attn + tf.expand_dims(relative_position_bias, axis=0)
 
         if mask is not None:
@@ -241,19 +240,16 @@ class WindowAttention(layers.Layer):
             mask_float = tf.cast(
                 tf.expand_dims(tf.expand_dims(mask, axis=1), axis=0), tf.float32
             )
-            attn = (
-                tf.reshape(attn, shape=(-1, nW, self.num_heads, size, size))
-                + mask_float
-            )
-            attn = tf.reshape(attn, shape=(-1, self.num_heads, size, size))
+            attn = ops.reshape(attn, (-1, nW, self.num_heads, size, size)) + mask_float
+            attn = ops.reshape(attn, (-1, self.num_heads, size, size))
             attn = keras.activations.softmax(attn, axis=-1)
         else:
             attn = keras.activations.softmax(attn, axis=-1)
         attn = self.dropout(attn)
 
         x_qkv = attn @ v
-        x_qkv = tf.transpose(x_qkv, perm=(0, 2, 1, 3))
-        x_qkv = tf.reshape(x_qkv, shape=(-1, size, channels))
+        x_qkv = ops.transpose(x_qkv, (0, 2, 1, 3))
+        x_qkv = ops.reshape(x_qkv, (-1, size, channels))
         x_qkv = self.proj(x_qkv)
         x_qkv = self.dropout(x_qkv)
         return x_qkv
@@ -348,8 +344,8 @@ class SwinTransformer(layers.Layer):
 
             # mask array to windows
             mask_windows = window_partition(mask_array, self.window_size)
-            mask_windows = tf.reshape(
-                mask_windows, shape=[-1, self.window_size * self.window_size]
+            mask_windows = ops.reshape(
+                mask_windows, [-1, self.window_size * self.window_size]
             )
             attn_mask = tf.expand_dims(mask_windows, axis=1) - tf.expand_dims(
                 mask_windows, axis=2
@@ -363,7 +359,7 @@ class SwinTransformer(layers.Layer):
         _, num_patches_before, channels = x.shape
         x_skip = x
         x = self.norm1(x)
-        x = tf.reshape(x, shape=(-1, height, width, channels))
+        x = ops.reshape(x, (-1, height, width, channels))
         if self.shift_size > 0:
             shifted_x = tf.roll(
                 x, shift=[-self.shift_size, -self.shift_size], axis=[1, 2]
@@ -372,14 +368,14 @@ class SwinTransformer(layers.Layer):
             shifted_x = x
 
         x_windows = window_partition(shifted_x, self.window_size)
-        x_windows = tf.reshape(
-            x_windows, shape=(-1, self.window_size * self.window_size, channels)
+        x_windows = ops.reshape(
+            x_windows, (-1, self.window_size * self.window_size, channels)
         )
         attn_windows = self.attn(x_windows, mask=self.attn_mask)
 
-        attn_windows = tf.reshape(
+        attn_windows = ops.reshape(
             attn_windows,
-            shape=(-1, self.window_size, self.window_size, channels),
+            (-1, self.window_size, self.window_size, channels),
         )
         shifted_x = window_reverse(
             attn_windows, self.window_size, height, width, channels
@@ -391,7 +387,7 @@ class SwinTransformer(layers.Layer):
         else:
             x = shifted_x
 
-        x = tf.reshape(x, shape=(-1, height * width, channels))
+        x = ops.reshape(x, (-1, height * width, channels))
         x = self.drop_path(x)
         x = x_skip + x
         x_skip = x
@@ -429,7 +425,7 @@ class PatchExtract(layers.Layer):
         )
         patch_dim = patches.shape[-1]
         patch_num = patches.shape[1]
-        return tf.reshape(patches, (batch_size, patch_num * patch_num, patch_dim))
+        return ops.reshape(patches, (batch_size, patch_num * patch_num, patch_dim))
 
 
 class PatchEmbedding(layers.Layer):
@@ -454,13 +450,13 @@ class PatchMerging(keras.layers.Layer):
     def call(self, x):
         height, width = self.num_patch
         _, _, C = x.shape
-        x = tf.reshape(x, shape=(-1, height, width, C))
+        x = ops.reshape(x, (-1, height, width, C))
         x0 = x[:, 0::2, 0::2, :]
         x1 = x[:, 1::2, 0::2, :]
         x2 = x[:, 0::2, 1::2, :]
         x3 = x[:, 1::2, 1::2, :]
         x = tf.concat((x0, x1, x2, x3), axis=-1)
-        x = tf.reshape(x, shape=(-1, (height // 2) * (width // 2), 4 * C))
+        x = ops.reshape(x, (-1, (height // 2) * (width // 2), 4 * C))
         return self.linear_trans(x)
 
 
