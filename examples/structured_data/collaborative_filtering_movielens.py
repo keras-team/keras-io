@@ -227,4 +227,3 @@ print("----" * 8)
 recommended_movies = movie_df[movie_df["movieId"].isin(recommended_movie_ids)]
 for row in recommended_movies.itertuples():
     print(row.title, ":", row.genres)
-

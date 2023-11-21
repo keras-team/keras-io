@@ -110,8 +110,12 @@ CSV_HEADER = [
 
 data_url = "https://archive.ics.uci.edu/static/public/20/census+income.zip"
 keras.utils.get_file(origin=data_url, extract=True)
-train_data_path = os.path.join(os.path.expanduser("~"), ".keras", "datasets", "adult.data")
-test_data_path = os.path.join(os.path.expanduser("~"), ".keras", "datasets", "adult.test")
+train_data_path = os.path.join(
+    os.path.expanduser("~"), ".keras", "datasets", "adult.data"
+)
+test_data_path = os.path.join(
+    os.path.expanduser("~"), ".keras", "datasets", "adult.test"
+)
 
 data = pd.read_csv(train_data_path, header=None, names=CSV_HEADER)
 test_data = pd.read_csv(test_data_path, header=None, names=CSV_HEADER)
