@@ -2,7 +2,7 @@
 
 **Authors:** [Aritra Roy Gosthipaty](https://twitter.com/ariG23498), [Sayak Paul](https://twitter.com/RisingSayak) (equal contribution)<br>
 **Date created:** 2022/04/12<br>
-**Last modified:** 2023/02/27<br>
+**Last modified:** 2023/11/20<br>
 **Description:** Looking into the representations learned by different Vision Transformers variants.
 
 
@@ -60,18 +60,22 @@ pip install -U gdown -q
 
 
 ```python
+import os
+
+os.environ["KERAS_BACKEND"] = "tensorflow"
+
 import zipfile
 from io import BytesIO
 
 import cv2
-import os
 import matplotlib.pyplot as plt
 import numpy as np
 import requests
-import tensorflow as tf
+
 from PIL import Image
 from sklearn.preprocessing import MinMaxScaler
-from tensorflow import keras
+import keras
+from keras import ops
 ```
 
 ---
@@ -111,7 +115,7 @@ rescale_layer = keras.layers.Rescaling(scale=1.0 / 127.5, offset=-1)
 def preprocess_image(image, model_type, size=RESOLUTION):
     # Turn the image into a numpy array and add batch dim.
     image = np.array(image)
-    image = tf.expand_dims(image, 0)
+    image = ops.expand_dims(image, 0)
 
     # If model type is vit rescale the image to [-1, 1].
     if model_type == "original_vit":
@@ -119,7 +123,7 @@ def preprocess_image(image, model_type, size=RESOLUTION):
 
     # Resize the image using bicubic interpolation.
     resize_size = int((256 / 224) * size)
-    image = tf.image.resize(image, (resize_size, resize_size), method="bicubic")
+    image = ops.image.resize(image, (resize_size, resize_size), interpolation="bicubic")
 
     # Crop the image.
     image = crop_layer(image)
@@ -128,7 +132,7 @@ def preprocess_image(image, model_type, size=RESOLUTION):
     if model_type != "original_vit":
         image = norm_layer(image)
 
-    return image.numpy()
+    return ops.convert_to_numpy(image)
 
 
 def load_image_from_url(url, model_type):
@@ -175,7 +179,7 @@ plt.show()
 
 ```python
 
-zip_path = tf.keras.utils.get_file(
+zip_path = keras.utils.get_file(
     fname=FNAME,
     origin=GITHUB_RELEASE,
 )
@@ -186,16 +190,16 @@ with zipfile.ZipFile(zip_path, "r") as zip_ref:
 os.rename("Probing ViTs", "Probing_ViTs")
 
 
-def load_model(model_path: str) -> tf.keras.Model:
+def load_model(model_path: str) -> keras.Model:
     with zipfile.ZipFile(model_path, "r") as zip_ref:
         zip_ref.extractall("Probing_ViTs/")
     model_name = model_path.split(".")[0]
 
     inputs = keras.Input((RESOLUTION, RESOLUTION, 3))
-    model = keras.models.load_model(model_name, compile=False)
-    outputs, attention_weights = model(inputs, training=False)
+    model = keras.layers.TFSMLayer(model_name, call_endpoint="serving_default")
+    outputs = model(inputs, training=False)
 
-    return keras.Model(inputs, outputs=[outputs, attention_weights])
+    return keras.Model(inputs, outputs=outputs)
 
 
 vit_base_i21k_patch16_224 = load_model(MODELS_ZIP["vit_b16_patch16_224-i1k_pretrained"])
@@ -223,8 +227,18 @@ We now run inference with the loaded model on our test image.
 
 
 ```python
-predictions, attention_score_dict = vit_base_i21k_patch16_224.predict(
-    preprocessed_image
+
+def split_prediction_and_attention_scores(outputs):
+    predictions = outputs["output_1"]
+    attention_score_dict = {}
+    for key, value in outputs.items():
+        if key.startswith("output_2_"):
+            attention_score_dict[key[len("output_2_") :]] = value
+    return predictions, attention_score_dict
+
+
+predictions, attention_score_dict = split_prediction_and_attention_scores(
+    vit_base_i21k_patch16_224.predict(preprocessed_image)
 )
 predicted_label = imagenet_int_to_str[int(np.argmax(predictions))]
 print(predicted_label)
@@ -232,8 +246,11 @@ print(predicted_label)
 
 <div class="k-default-codeblock">
 ```
-1/1 [==============================] - 3s 3s/step
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 5s 5s/step
 toucan
+
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1700526824.965785   75784 device_compiler.h:187] Compiled cluster using XLA!  This line is logged at most once for the lifetime of the process.
 
 ```
 </div>
@@ -331,7 +348,7 @@ mean_distances = {
 }
 
 # Get the number of heads from the mean distance output.
-num_heads = tf.shape(mean_distances["transformer_block_0_att_mean_dist"])[-1].numpy()
+num_heads = mean_distances["transformer_block_0_att_mean_dist"].shape[-1]
 
 # Print the shapes
 print(f"Num Heads: {num_heads}.")
@@ -420,18 +437,18 @@ def attention_rollout_map(image, attention_score_dict, model_type):
     num_cls_tokens = 2 if "distilled" in model_type else 1
 
     # Stack the individual attention matrices from individual Transformer blocks.
-    attn_mat = tf.stack([attention_score_dict[k] for k in attention_score_dict.keys()])
-    attn_mat = tf.squeeze(attn_mat, axis=1)
+    attn_mat = ops.stack([attention_score_dict[k] for k in attention_score_dict.keys()])
+    attn_mat = ops.squeeze(attn_mat, axis=1)
 
     # Average the attention weights across all heads.
-    attn_mat = tf.reduce_mean(attn_mat, axis=1)
+    attn_mat = ops.mean(attn_mat, axis=1)
 
     # To account for residual connections, we add an identity matrix to the
     # attention matrix and re-normalize the weights.
-    residual_attn = tf.eye(attn_mat.shape[1])
+    residual_attn = ops.eye(attn_mat.shape[1])
     aug_attn_mat = attn_mat + residual_attn
-    aug_attn_mat = aug_attn_mat / tf.reduce_sum(aug_attn_mat, axis=-1)[..., None]
-    aug_attn_mat = aug_attn_mat.numpy()
+    aug_attn_mat = aug_attn_mat / ops.sum(aug_attn_mat, axis=-1)[..., None]
+    aug_attn_mat = ops.convert_to_numpy(aug_attn_mat)
 
     # Recursively multiply the weight matrices.
     joint_attentions = np.zeros(aug_attn_mat.shape)
@@ -517,13 +534,15 @@ img_url = "https://dl.fbaipublicfiles.com/dino/img.png"
 image, preprocessed_image = load_image_from_url(img_url, model_type="dino")
 
 # Grab the predictions.
-predictions, attention_score_dict = vit_dino_base16.predict(preprocessed_image)
+predictions, attention_score_dict = split_prediction_and_attention_scores(
+    vit_dino_base16.predict(preprocessed_image)
+)
 ```
 
 <div class="k-default-codeblock">
 ```
 Model loaded.
-1/1 [==============================] - 1s 1s/step
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 4s 4s/step
 
 ```
 </div>
@@ -563,7 +582,7 @@ def attention_heatmap(attention_score_dict, image, model_type="dino"):
     attentions = attentions.transpose((1, 2, 0))
 
     # Resize the attention patches to 224x224 (224: 14x16).
-    attentions = tf.image.resize(
+    attentions = ops.image.resize(
         attentions, size=(h_featmap * PATCH_SIZE, w_featmap * PATCH_SIZE)
     )
     return attentions
@@ -576,11 +595,11 @@ we extracted from the results.
 
 ```python
 # De-normalize the image for visual clarity.
-in1k_mean = tf.constant([0.485 * 255, 0.456 * 255, 0.406 * 255])
-in1k_std = tf.constant([0.229 * 255, 0.224 * 255, 0.225 * 255])
+in1k_mean = np.array([0.485 * 255, 0.456 * 255, 0.406 * 255])
+in1k_std = np.array([0.229 * 255, 0.224 * 255, 0.225 * 255])
 preprocessed_img_orig = (preprocessed_image * in1k_std) + in1k_mean
 preprocessed_img_orig = preprocessed_img_orig / 255.0
-preprocessed_img_orig = tf.clip_by_value(preprocessed_img_orig, 0.0, 1.0).numpy()
+preprocessed_img_orig = ops.convert_to_numpy(ops.clip(preprocessed_img_orig, 0.0, 1.0))
 
 # Generate the attention heatmaps.
 attentions = attention_heatmap(attention_score_dict, preprocessed_img_orig)
@@ -628,13 +647,15 @@ learned projections.
 
 
 ```python
+
+def extract_weights(model, name):
+    for variable in model.weights:
+        if variable.name.startswith(name):
+            return variable.numpy()
+
+
 # Extract the projections.
-projections = (
-    vit_base_i21k_patch16_224.layers[1]
-    .get_layer("projection")
-    .get_layer("conv_projection")
-    .kernel.numpy()
-)
+projections = extract_weights(vit_base_i21k_patch16_224, "conv_projection/kernel")
 projection_dim = projections.shape[-1]
 patch_h, patch_w, patch_channels = projections.shape[:-1]
 
@@ -665,12 +686,12 @@ fig.tight_layout()
 
 <div class="k-default-codeblock">
 ```
-Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers).
-Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers).
-Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers).
-Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers).
-Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers).
-Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers).
+WARNING:matplotlib.image:Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers).
+WARNING:matplotlib.image:Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers).
+WARNING:matplotlib.image:Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers).
+WARNING:matplotlib.image:Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers).
+WARNING:matplotlib.image:Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers).
+WARNING:matplotlib.image:Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers).
 
 ```
 </div>
@@ -708,7 +729,7 @@ taking their dot-product.
 
 
 ```python
-position_embeddings = vit_base_i21k_patch16_224.layers[1].positional_embedding.numpy()
+position_embeddings = extract_weights(vit_base_i21k_patch16_224, "pos_embedding")
 
 # Discard the batch dimension and the position embeddings of the
 # cls token.
