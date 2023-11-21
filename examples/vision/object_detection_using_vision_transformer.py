@@ -2,7 +2,7 @@
 Title: Object detection with Vision Transformers
 Author: [Karan V. Dave](https://www.linkedin.com/in/karan-dave-811413164/)
 Date created: 2022/03/27
-Last modified: 2022/03/27
+Last modified: 2023/11/20
 Description: A simple Keras implementation of object detection using Vision Transformers.
 Accelerator: GPU
 """
@@ -28,7 +28,7 @@ from which we import the `AdamW` optimizer.
 TensorFlow Addons can be installed via the following command:
 
 ```
-pip install -U tensorflow-addons
+pip install -U git+https://github.com/keras-team/keras
 ```
 """
 
@@ -36,11 +36,15 @@ pip install -U tensorflow-addons
 ## Imports and setup
 """
 
+import os
+
+os.environ["KERAS_BACKEND"] = "jax"  # @param ["tensorflow", "jax", "torch"]
+
+
 import numpy as np
-import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras import layers
-import tensorflow_addons as tfa
+import keras
+from keras import layers
+from keras import ops
 import matplotlib.pyplot as plt
 import numpy as np
 import cv2
@@ -55,8 +59,8 @@ We use the [Caltech 101 Dataset](https://data.caltech.edu/records/mzrjq-6wc02).
 """
 
 # Path to images and annotations
-path_images = "/101_ObjectCategories/airplanes/"
-path_annot = "/Annotations/Airplanes_Side_2/"
+path_images = "./101_ObjectCategories/airplanes/"
+path_annot = "./Annotations/Airplanes_Side_2/"
 
 path_to_downloaded_file = keras.utils.get_file(
     fname="caltech_101_zipped",
@@ -65,10 +69,15 @@ path_to_downloaded_file = keras.utils.get_file(
     archive_format="zip",  # downloaded file format
     cache_dir="/",  # cache and extract in current directory
 )
+download_base_dir = os.path.dirname(path_to_downloaded_file)
 
 # Extracting tar files found inside main zip file
-shutil.unpack_archive("/datasets/caltech-101/101_ObjectCategories.tar.gz", "/")
-shutil.unpack_archive("/datasets/caltech-101/Annotations.tar", "/")
+shutil.unpack_archive(
+    os.path.join(download_base_dir, "caltech-101", "101_ObjectCategories.tar.gz"), "."
+)
+shutil.unpack_archive(
+    os.path.join(download_base_dir, "caltech-101", "Annotations.tar"), "."
+)
 
 # list of paths to images and annotations
 image_paths = [
@@ -98,10 +107,8 @@ for i in range(0, len(annot_paths)):
     )
     (w, h) = image.size[:2]
 
-    # resize train set images
-    if i < int(len(annot_paths) * 0.8):
-        # resize image if it is for training dataset
-        image = image.resize((image_size, image_size))
+    # resize images
+    image = image.resize((image_size, image_size))
 
     # convert image to array and append to list
     images.append(keras.utils.img_to_array(image))
@@ -137,7 +144,7 @@ as a reference.
 
 def mlp(x, hidden_units, dropout_rate):
     for units in hidden_units:
-        x = layers.Dense(units, activation=tf.nn.gelu)(x)
+        x = layers.Dense(units, activation=keras.activations.gelu)(x)
         x = layers.Dropout(dropout_rate)(x)
     return x
 
@@ -152,34 +159,29 @@ class Patches(layers.Layer):
         super().__init__()
         self.patch_size = patch_size
 
-    #     Override function to avoid error while saving model
-    def get_config(self):
-        config = super().get_config().copy()
-        config.update(
-            {
-                "input_shape": input_shape,
-                "patch_size": patch_size,
-                "num_patches": num_patches,
-                "projection_dim": projection_dim,
-                "num_heads": num_heads,
-                "transformer_units": transformer_units,
-                "transformer_layers": transformer_layers,
-                "mlp_head_units": mlp_head_units,
-            }
-        )
-        return config
-
     def call(self, images):
-        batch_size = tf.shape(images)[0]
-        patches = tf.image.extract_patches(
-            images=images,
-            sizes=[1, self.patch_size, self.patch_size, 1],
-            strides=[1, self.patch_size, self.patch_size, 1],
-            rates=[1, 1, 1, 1],
-            padding="VALID",
+        input_shape = ops.shape(images)
+        batch_size = input_shape[0]
+        height = input_shape[1]
+        width = input_shape[2]
+        channels = input_shape[3]
+        num_patches_h = height // self.patch_size
+        num_patches_w = width // self.patch_size
+        patches = keras.ops.image.extract_patches(images, size=self.patch_size)
+        patches = ops.reshape(
+            patches,
+            (
+                batch_size,
+                num_patches_h * num_patches_w,
+                self.patch_size * self.patch_size * channels,
+            ),
         )
-        # return patches
-        return tf.reshape(patches, [batch_size, -1, patches.shape[-1]])
+        return patches
+
+    def get_config(self):
+        config = super().get_config()
+        config.update({"patch_size": self.patch_size})
+        return config
 
 
 """
@@ -192,7 +194,7 @@ plt.figure(figsize=(4, 4))
 plt.imshow(x_train[0].astype("uint8"))
 plt.axis("off")
 
-patches = Patches(patch_size)(tf.convert_to_tensor([x_train[0]]))
+patches = Patches(patch_size)(np.expand_dims(x_train[0], axis=0))
 print(f"Image size: {image_size} X {image_size}")
 print(f"Patch size: {patch_size} X {patch_size}")
 print(f"{patches.shape[1]} patches per image \n{patches.shape[-1]} elements per patch")
@@ -202,8 +204,8 @@ n = int(np.sqrt(patches.shape[1]))
 plt.figure(figsize=(4, 4))
 for i, patch in enumerate(patches[0]):
     ax = plt.subplot(n, n, i + 1)
-    patch_img = tf.reshape(patch, (patch_size, patch_size, 3))
-    plt.imshow(patch_img.numpy().astype("uint8"))
+    patch_img = ops.reshape(patch, (patch_size, patch_size, 3))
+    plt.imshow(ops.convert_to_numpy(patch_img).astype("uint8"))
     plt.axis("off")
 
 """
@@ -242,8 +244,11 @@ class PatchEncoder(layers.Layer):
         return config
 
     def call(self, patch):
-        positions = tf.range(start=0, limit=self.num_patches, delta=1)
-        encoded = self.projection(patch) + self.position_embedding(positions)
+        positions = ops.expand_dims(
+            ops.arange(start=0, stop=self.num_patches, step=1), axis=0
+        )
+        projected_patches = self.projection(patch)
+        encoded = projected_patches + self.position_embedding(positions)
         return encoded
 
 
@@ -270,7 +275,7 @@ def create_vit_object_detector(
     transformer_layers,
     mlp_head_units,
 ):
-    inputs = layers.Input(shape=input_shape)
+    inputs = keras.Input(shape=input_shape)
     # Create patches
     patches = Patches(patch_size)(inputs)
     # Encode patches
@@ -314,14 +319,14 @@ def create_vit_object_detector(
 
 
 def run_experiment(model, learning_rate, weight_decay, batch_size, num_epochs):
-    optimizer = tfa.optimizers.AdamW(
+    optimizer = keras.optimizers.AdamW(
         learning_rate=learning_rate, weight_decay=weight_decay
     )
 
     # Compile model.
     model.compile(optimizer=optimizer, loss=keras.losses.MeanSquaredError())
 
-    checkpoint_filepath = "logs/"
+    checkpoint_filepath = "vit_object_detector.weights.h5"
     checkpoint_callback = keras.callbacks.ModelCheckpoint(
         checkpoint_filepath,
         monitor="val_loss",
@@ -348,7 +353,7 @@ input_shape = (image_size, image_size, 3)  # input image shape
 learning_rate = 0.001
 weight_decay = 0.0001
 batch_size = 32
-num_epochs = 100
+num_epochs = 15
 num_patches = (image_size // patch_size) ** 2
 projection_dim = 64
 num_heads = 4
@@ -381,6 +386,20 @@ history = run_experiment(
 )
 
 
+def plot_history(item):
+    plt.plot(history.history[item], label=item)
+    plt.plot(history.history["val_" + item], label="val_" + item)
+    plt.xlabel("Epochs")
+    plt.ylabel(item)
+    plt.title("Train and Validation {} Over Epochs".format(item), fontsize=14)
+    plt.legend()
+    plt.grid()
+    plt.show()
+
+
+plot_history("loss")
+
+
 """
 ## Evaluate the model
 """
@@ -388,7 +407,7 @@ history = run_experiment(
 import matplotlib.patches as patches
 
 # Saves the model in current path
-vit_object_detector.save("vit_object_detector.h5", save_format="h5")
+vit_object_detector.save("vit_object_detector.keras")
 
 
 # To calculate IoU (intersection over union, given two bounding boxes)
