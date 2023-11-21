@@ -192,7 +192,7 @@ class EmbeddingModel(keras.Model):
             # pairs, to be high. This loss will move embeddings for the
             # anchor/positive pairs together and move all other pairs apart.
             sparse_labels = keras.ops.arange(num_classes)
-            loss = self.compute_loss(x=None, y=sparse_labels, y_pred=similarities)
+            loss = self.compute_loss(y=sparse_labels, y_pred=similarities)
 
         # Calculate gradients and apply via optimizer.
         gradients = tape.gradient(loss, self.trainable_variables)
@@ -200,8 +200,11 @@ class EmbeddingModel(keras.Model):
 
         # Update and return metrics (specifically the one for the loss value).
         for metric in self.metrics:
-            # Calling `self.compile` will by default add a `keras.metrics.Mean` metric
-            metric.update_state(similarities)
+            # Calling `self.compile` will by default add a `keras.metrics.Mean` loss
+            if metric.name == "loss":
+                metric.update_state(loss)
+            else:
+                metric.update_state(sparse_labels, similarities)
 
         return {m.name: m.result() for m in self.metrics}
 

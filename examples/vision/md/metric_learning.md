@@ -222,7 +222,7 @@ class EmbeddingModel(keras.Model):
             # pairs, to be high. This loss will move embeddings for the
             # anchor/positive pairs together and move all other pairs apart.
             sparse_labels = keras.ops.arange(num_classes)
-            loss = self.compute_loss(x=None, y=sparse_labels, y_pred=similarities)
+            loss = self.compute_loss(y=sparse_labels, y_pred=similarities)
 
         # Calculate gradients and apply via optimizer.
         gradients = tape.gradient(loss, self.trainable_variables)
@@ -230,8 +230,11 @@ class EmbeddingModel(keras.Model):
 
         # Update and return metrics (specifically the one for the loss value).
         for metric in self.metrics:
-            # Calling `self.compile` will by default add a `keras.metrics.Mean` metric
-            metric.update_state(similarities)
+            # Calling `self.compile` will by default add a `keras.metrics.Mean` loss
+            if metric.name == "loss":
+                metric.update_state(loss)
+            else:
+                metric.update_state(sparse_labels, similarities)
 
         return {m.name: m.result() for m in self.metrics}
 
@@ -274,50 +277,50 @@ plt.show()
 <div class="k-default-codeblock">
 ```
 Epoch 1/20
-   77/1000 ━[37m━━━━━━━━━━━━━━━━━━━  1s 2ms/step - loss: 4.8609
+   77/1000 ━[37m━━━━━━━━━━━━━━━━━━━  1s 2ms/step - loss: 2.2962
 
 WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
-I0000 00:00:1700523971.416610 3468313 device_compiler.h:187] Compiled cluster using XLA!  This line is logged at most once for the lifetime of the process.
+I0000 00:00:1700589927.295343 3724442 device_compiler.h:187] Compiled cluster using XLA!  This line is logged at most once for the lifetime of the process.
 
- 1000/1000 ━━━━━━━━━━━━━━━━━━━━ 5s 2ms/step - loss: 4.6013
+ 1000/1000 ━━━━━━━━━━━━━━━━━━━━ 6s 2ms/step - loss: 2.2504
 Epoch 2/20
- 1000/1000 ━━━━━━━━━━━━━━━━━━━━ 2s 2ms/step - loss: 4.3463
+ 1000/1000 ━━━━━━━━━━━━━━━━━━━━ 2s 2ms/step - loss: 2.1068
 Epoch 3/20
- 1000/1000 ━━━━━━━━━━━━━━━━━━━━ 2s 2ms/step - loss: 3.9115
+ 1000/1000 ━━━━━━━━━━━━━━━━━━━━ 2s 2ms/step - loss: 2.0646
 Epoch 4/20
- 1000/1000 ━━━━━━━━━━━━━━━━━━━━ 2s 2ms/step - loss: 3.6687
+ 1000/1000 ━━━━━━━━━━━━━━━━━━━━ 2s 2ms/step - loss: 2.0210
 Epoch 5/20
- 1000/1000 ━━━━━━━━━━━━━━━━━━━━ 2s 2ms/step - loss: 3.5879
+ 1000/1000 ━━━━━━━━━━━━━━━━━━━━ 2s 2ms/step - loss: 1.9857
 Epoch 6/20
- 1000/1000 ━━━━━━━━━━━━━━━━━━━━ 2s 2ms/step - loss: 3.3885
+ 1000/1000 ━━━━━━━━━━━━━━━━━━━━ 2s 2ms/step - loss: 1.9543
 Epoch 7/20
- 1000/1000 ━━━━━━━━━━━━━━━━━━━━ 2s 2ms/step - loss: 3.2987
+ 1000/1000 ━━━━━━━━━━━━━━━━━━━━ 2s 2ms/step - loss: 1.9175
 Epoch 8/20
- 1000/1000 ━━━━━━━━━━━━━━━━━━━━ 2s 2ms/step - loss: 3.1591
+ 1000/1000 ━━━━━━━━━━━━━━━━━━━━ 2s 2ms/step - loss: 1.8740
 Epoch 9/20
- 1000/1000 ━━━━━━━━━━━━━━━━━━━━ 2s 2ms/step - loss: 3.0538
+ 1000/1000 ━━━━━━━━━━━━━━━━━━━━ 2s 2ms/step - loss: 1.8474
 Epoch 10/20
- 1000/1000 ━━━━━━━━━━━━━━━━━━━━ 2s 2ms/step - loss: 2.9597
+ 1000/1000 ━━━━━━━━━━━━━━━━━━━━ 2s 2ms/step - loss: 1.8380
 Epoch 11/20
- 1000/1000 ━━━━━━━━━━━━━━━━━━━━ 2s 2ms/step - loss: 2.9266
+ 1000/1000 ━━━━━━━━━━━━━━━━━━━━ 2s 2ms/step - loss: 1.8146
 Epoch 12/20
- 1000/1000 ━━━━━━━━━━━━━━━━━━━━ 2s 2ms/step - loss: 2.7713
+ 1000/1000 ━━━━━━━━━━━━━━━━━━━━ 2s 2ms/step - loss: 1.7658
 Epoch 13/20
- 1000/1000 ━━━━━━━━━━━━━━━━━━━━ 2s 2ms/step - loss: 2.6344
+ 1000/1000 ━━━━━━━━━━━━━━━━━━━━ 2s 2ms/step - loss: 1.7512
 Epoch 14/20
- 1000/1000 ━━━━━━━━━━━━━━━━━━━━ 2s 2ms/step - loss: 2.5923
+ 1000/1000 ━━━━━━━━━━━━━━━━━━━━ 2s 2ms/step - loss: 1.7671
 Epoch 15/20
- 1000/1000 ━━━━━━━━━━━━━━━━━━━━ 2s 2ms/step - loss: 2.4856
+ 1000/1000 ━━━━━━━━━━━━━━━━━━━━ 2s 2ms/step - loss: 1.7245
 Epoch 16/20
- 1000/1000 ━━━━━━━━━━━━━━━━━━━━ 2s 2ms/step - loss: 2.3869
+ 1000/1000 ━━━━━━━━━━━━━━━━━━━━ 2s 2ms/step - loss: 1.7001
 Epoch 17/20
- 1000/1000 ━━━━━━━━━━━━━━━━━━━━ 2s 2ms/step - loss: 2.3318
+ 1000/1000 ━━━━━━━━━━━━━━━━━━━━ 2s 2ms/step - loss: 1.7099
 Epoch 18/20
- 1000/1000 ━━━━━━━━━━━━━━━━━━━━ 2s 2ms/step - loss: 2.2601
+ 1000/1000 ━━━━━━━━━━━━━━━━━━━━ 2s 2ms/step - loss: 1.6775
 Epoch 19/20
- 1000/1000 ━━━━━━━━━━━━━━━━━━━━ 2s 2ms/step - loss: 2.2622
+ 1000/1000 ━━━━━━━━━━━━━━━━━━━━ 2s 2ms/step - loss: 1.6547
 Epoch 20/20
- 1000/1000 ━━━━━━━━━━━━━━━━━━━━ 2s 2ms/step - loss: 2.1565
+ 1000/1000 ━━━━━━━━━━━━━━━━━━━━ 2s 2ms/step - loss: 1.6356
 
 ```
 </div>
