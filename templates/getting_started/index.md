@@ -16,7 +16,7 @@ in computer vision, natural language processing, and generative AI.
 
 ---
 
-## Installation
+## Installing Keras 3
  
 You can install Keras from PyPI via:
 
@@ -31,7 +31,33 @@ import keras
 print(keras.__version__)
 ```
 
-To use Keras, you will also need to install a backend framework -- either JAX, TensorFlow, or PyTorch.
+To use Keras 3, you will also need to install a backend framework -- either JAX, TensorFlow, or PyTorch:
+
+- [Installing JAX](https://jax.readthedocs.io/en/latest/installation.html)
+- [Installing TensorFlow](https://www.tensorflow.org/install)
+- [Installing PyTorch](https://pytorch.org/get-started/locally/)
+
+If you install TensorFlow, critically, **you should reinstall Keras 3 afterwards**.
+This is a temporary step while TensorFlow is pinned to Keras 2, and will no longer be necessary after TensorFlow 2.16.
+The cause is that `tensorflow==2.15` will overwrite your Keras installation with `keras==2.15`.
+
+
+### Installing KerasCV and KerasNLP
+
+KerasCV and KerasNLP can be installed via pip:
+
+```
+pip install keras-cv
+pip install keras-nlp
+```
+
+Critically, **you should reinstall Keras 3 after installing KerasNLP**.
+This is a temporary step while TensorFlow is pinned to Keras 2, and will no longer be necessary after TensorFlow 2.16.
+The cause is that `keras-nlp` depends on `tensorflow-text`, which will install `tensorflow==2.15`, which will
+overwrite your Keras installation with `keras==2.15`.
+
+
+### GPU dependencies
 
 To make sure you're able to run Keras on GPU, use the following backend-specific requirements files:
 
