@@ -47,7 +47,6 @@ Before we start implementing the pipeline, let's import all the libraries we nee
 
 ```python
 !!pip install -q rouge-score
-!!pip install -q git+https://github.com/keras-team/keras-nlp.git --upgrade
 ```
 
 
@@ -57,9 +56,11 @@ Before we start implementing the pipeline, let's import all the libraries we nee
 import keras_nlp
 import pathlib
 import random
-import tensorflow as tf
 
-from tensorflow import keras
+import keras
+from keras import ops
+
+import tensorflow.data as tf_data
 from tensorflow_text.tools.wordpiece_vocab import (
     bert_vocab_from_dataset as bert_vocab,
 )
@@ -130,11 +131,11 @@ for _ in range(5):
 
 <div class="k-default-codeblock">
 ```
-('i can touch the ceiling.', 'puedo tocar el cielorraso.')
-('his brave deed earned him respect.', 'su valiente hazaña le otorgó el respeto.')
-("it won't be easy.", 'no será fácil.')
-('tom asked mary how john was doing.', 'tom preguntó a mary cómo le iba a john.')
-("i've always wanted to sing on stage.", 'siempre he querido cantar en un escenario.')
+('she came very near to being run over by a car.', 'ella estuvo muy cerca de ser atropellada por un coche.')
+("let's continue the game after lunch.", 'sigamos el juego después de almorzar.')
+('although he is very old, he is strong.', 'a pesar de ser anciano él es fuerte.')
+('i made up for lost time.', 'yo compensé el tiempo perdido.')
+('i ran so i would be on time.', 'corrí para llegar a tiempo.')
 
 ```
 </div>
@@ -188,7 +189,7 @@ makes it very simple to train WordPiece on a corpus with the
 ```python
 
 def train_word_piece(text_samples, vocab_size, reserved_tokens):
-    word_piece_ds = tf.data.Dataset.from_tensor_slices(text_samples)
+    word_piece_ds = tf_data.Dataset.from_tensor_slices(text_samples)
     vocab = keras_nlp.tokenizers.compute_word_piece_vocabulary(
         word_piece_ds.batch(1000).prefetch(2),
         vocabulary_size=vocab_size,
@@ -227,8 +228,8 @@ print("Spanish Tokens: ", spa_vocab[100:110])
 
 <div class="k-default-codeblock">
 ```
-English Tokens:  ['they', 'go', 'her', 'has', 'will', 're', 'how', 'time', 'll', 'did']
-Spanish Tokens:  ['ella', 'te', 'para', 'mary', 'las', 'más', 'al', 'yo', 'estoy', 'tu']
+English Tokens:  ['know', 'him', 'there', 'they', 'go', 'her', 'has', 'will', 'time', 're']
+Spanish Tokens:  ['mi', 'está', 'qué', 'le', 'ella', 'te', 'para', 'mary', 'las', 'más']
 
 ```
 </div>
@@ -274,17 +275,17 @@ print(
 
 <div class="k-default-codeblock">
 ```
-English sentence:  a girl phoned me.
-Tokens:  tf.Tensor([ 26 353 426 207  76  11], shape=(6,), dtype=int32)
-Recovered text after detokenizing:  tf.Tensor(b'a girl phoned me .', shape=(), dtype=string)
+English sentence:  she is almost sixty years old.
+Tokens:  tf.Tensor([ 83  69 369 525 902 235 206  12], shape=(8,), dtype=int32)
+Recovered text after detokenizing:  tf.Tensor(b'she is almost sixty years old .', shape=(), dtype=string)
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-Spanish sentence:  una chica me llamó por teléfono.
-Tokens:  tf.Tensor([ 91 544  86 833  89 377  15], shape=(7,), dtype=int32)
-Recovered text after detokenizing:  tf.Tensor(b'una chica me llam\xc3\xb3 por tel\xc3\xa9fono .', shape=(), dtype=string)
+Spanish sentence:  ella tiene casi sesenta años.
+Tokens:  tf.Tensor([ 104  118  276 4482  200   15], shape=(6,), dtype=int32)
+Recovered text after detokenizing:  tf.Tensor(b'ella tiene casi sesenta a\xc3\xb1os .', shape=(), dtype=string)
 
 ```
 </div>
@@ -314,7 +315,7 @@ This can be easily done using `keras_nlp.layers.StartEndPacker`.
 ```python
 
 def preprocess_batch(eng, spa):
-    batch_size = tf.shape(spa)[0]
+    batch_size = ops.shape(spa)[0]
 
     eng = eng_tokenizer(eng)
     spa = spa_tokenizer(spa)
@@ -348,9 +349,9 @@ def make_dataset(pairs):
     eng_texts, spa_texts = zip(*pairs)
     eng_texts = list(eng_texts)
     spa_texts = list(spa_texts)
-    dataset = tf.data.Dataset.from_tensor_slices((eng_texts, spa_texts))
+    dataset = tf_data.Dataset.from_tensor_slices((eng_texts, spa_texts))
     dataset = dataset.batch(BATCH_SIZE)
-    dataset = dataset.map(preprocess_batch, num_parallel_calls=tf.data.AUTOTUNE)
+    dataset = dataset.map(preprocess_batch, num_parallel_calls=tf_data.AUTOTUNE)
     return dataset.shuffle(2048).prefetch(16).cache()
 
 
@@ -411,13 +412,12 @@ to True. This will then be propagated to all subsequent layers.
 
 ```python
 # Encoder
-encoder_inputs = keras.Input(shape=(None,), dtype="int64", name="encoder_inputs")
+encoder_inputs = keras.Input(shape=(None,), name="encoder_inputs")
 
 x = keras_nlp.layers.TokenAndPositionEmbedding(
     vocabulary_size=ENG_VOCAB_SIZE,
     sequence_length=MAX_SEQUENCE_LENGTH,
     embedding_dim=EMBED_DIM,
-    mask_zero=True,
 )(encoder_inputs)
 
 encoder_outputs = keras_nlp.layers.TransformerEncoder(
@@ -427,14 +427,13 @@ encoder = keras.Model(encoder_inputs, encoder_outputs)
 
 
 # Decoder
-decoder_inputs = keras.Input(shape=(None,), dtype="int64", name="decoder_inputs")
+decoder_inputs = keras.Input(shape=(None,), name="decoder_inputs")
 encoded_seq_inputs = keras.Input(shape=(None, EMBED_DIM), name="decoder_state_inputs")
 
 x = keras_nlp.layers.TokenAndPositionEmbedding(
     vocabulary_size=SPA_VOCAB_SIZE,
     sequence_length=MAX_SEQUENCE_LENGTH,
     embedding_dim=EMBED_DIM,
-    mask_zero=True,
 )(decoder_inputs)
 
 x = keras_nlp.layers.TransformerDecoder(
@@ -479,33 +478,58 @@ transformer.compile(
 transformer.fit(train_ds, epochs=EPOCHS, validation_data=val_ds)
 ```
 
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold">Model: "transformer"</span>
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">┏━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━┓
+┃<span style="font-weight: bold"> Layer (type)        </span>┃<span style="font-weight: bold"> Output Shape      </span>┃<span style="font-weight: bold"> Param # </span>┃<span style="font-weight: bold"> Connected to         </span>┃
+┡━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━┩
+│ encoder_inputs      │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>)      │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ -                    │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">InputLayer</span>)        │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ token_and_position… │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">256</span>) │ <span style="color: #00af00; text-decoration-color: #00af00">3,850,…</span> │ encoder_inputs[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>] │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">TokenAndPositionE…</span> │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ decoder_inputs      │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>)      │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ -                    │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">InputLayer</span>)        │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ transformer_encoder │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">256</span>) │ <span style="color: #00af00; text-decoration-color: #00af00">1,315,…</span> │ token_and_position_… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">TransformerEncode…</span> │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ functional_3        │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>,      │ <span style="color: #00af00; text-decoration-color: #00af00">9,283,…</span> │ decoder_inputs[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Functional</span>)        │ <span style="color: #00af00; text-decoration-color: #00af00">15000</span>)            │         │ transformer_encoder… │
+└─────────────────────┴───────────────────┴─────────┴──────────────────────┘
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Total params: </span><span style="color: #00af00; text-decoration-color: #00af00">14,449,304</span> (55.12 MB)
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Trainable params: </span><span style="color: #00af00; text-decoration-color: #00af00">14,449,304</span> (55.12 MB)
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Non-trainable params: </span><span style="color: #00af00; text-decoration-color: #00af00">0</span> (0.00 B)
+</pre>
+
+
+
 <div class="k-default-codeblock">
 ```
-Model: "transformer"
-__________________________________________________________________________________________________
- Layer (type)                   Output Shape         Param #     Connected to                     
-==================================================================================================
- encoder_inputs (InputLayer)    [(None, None)]       0           []                               
-                                                                                                  
- token_and_position_embedding (  (None, None, 256)   3850240     ['encoder_inputs[0][0]']         
- TokenAndPositionEmbedding)                                                                       
-                                                                                                  
- decoder_inputs (InputLayer)    [(None, None)]       0           []                               
-                                                                                                  
- transformer_encoder (Transform  (None, None, 256)   1315072     ['token_and_position_embedding[0]
- erEncoder)                                                      [0]']                            
-                                                                                                  
- model_1 (Functional)           (None, None, 15000)  9283992     ['decoder_inputs[0][0]',         
-                                                                  'transformer_encoder[0][0]']    
-                                                                                                  
-==================================================================================================
-Total params: 14,449,304
-Trainable params: 14,449,304
-Non-trainable params: 0
-__________________________________________________________________________________________________
-1302/1302 [==============================] - 52s 36ms/step - loss: 3.8582 - accuracy: 0.4209 - val_loss: 2.9147 - val_accuracy: 0.5268
+ 1302/1302 ━━━━━━━━━━━━━━━━━━━━ 32s 21ms/step - accuracy: 0.8165 - loss: 1.4878 - val_accuracy: 0.8632 - val_loss: 0.8258
 
-<keras.callbacks.History at 0x7f013c289520>
+<keras.src.callbacks.history.History at 0x7f4030101d80>
 
 ```
 </div>
@@ -526,12 +550,13 @@ likely next token at each time step, i.e., the token with the highest probabilit
 ```python
 
 def decode_sequences(input_sentences):
-    batch_size = tf.shape(input_sentences)[0]
+    batch_size = 1
 
     # Tokenize the encoder input.
-    encoder_input_tokens = eng_tokenizer(input_sentences).to_tensor(
-        shape=(None, MAX_SEQUENCE_LENGTH)
-    )
+    encoder_input_tokens = ops.convert_to_tensor(eng_tokenizer(input_sentences))
+    if len(encoder_input_tokens[0]) < MAX_SEQUENCE_LENGTH:
+        pads = ops.full((1, MAX_SEQUENCE_LENGTH - len(encoder_input_tokens[0])), 0)
+        encoder_input_tokens = ops.concatenate([encoder_input_tokens, pads], 1)
 
     # Define a function that outputs the next token's probability given the
     # input sequence.
@@ -543,9 +568,9 @@ def decode_sequences(input_sentences):
 
     # Build a prompt of length 40 with a start token and padding tokens.
     length = 40
-    start = tf.fill((batch_size, 1), spa_tokenizer.token_to_id("[START]"))
-    pad = tf.fill((batch_size, length - 1), spa_tokenizer.token_to_id("[PAD]"))
-    prompt = tf.concat((start, pad), axis=-1)
+    start = ops.full((batch_size, 1), spa_tokenizer.token_to_id("[START]"))
+    pad = ops.full((batch_size, length - 1), spa_tokenizer.token_to_id("[PAD]"))
+    prompt = ops.concatenate((start, pad), axis=-1)
 
     generated_tokens = keras_nlp.samplers.GreedySampler()(
         next,
@@ -560,7 +585,7 @@ def decode_sequences(input_sentences):
 test_eng_texts = [pair[0] for pair in test_pairs]
 for i in range(2):
     input_sentence = random.choice(test_eng_texts)
-    translated = decode_sequences(tf.constant([input_sentence]))
+    translated = decode_sequences([input_sentence])
     translated = translated.numpy()[0].decode("utf-8")
     translated = (
         translated.replace("[PAD]", "")
@@ -577,16 +602,16 @@ for i in range(2):
 <div class="k-default-codeblock">
 ```
 ** Example 0 **
-he had his socks on inside out.
-él tenía su compla .
+you've forgotten me, haven't you?
+eres muy in , ¿ no tienes ?
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
 ** Example 1 **
-i want to buy an automobile.
-quiero comprar una procumpla .
+they went aboard the plane.
+ellos se fue un coche .
 ```
 </div>
     
@@ -613,7 +638,7 @@ for test_pair in test_pairs[:30]:
     input_sentence = test_pair[0]
     reference_sentence = test_pair[1]
 
-    translated_sentence = decode_sequences(tf.constant([input_sentence]))
+    translated_sentence = decode_sequences([input_sentence])
     translated_sentence = translated_sentence.numpy()[0].decode("utf-8")
     translated_sentence = (
         translated_sentence.replace("[PAD]", "")
@@ -631,8 +656,8 @@ print("ROUGE-2 Score: ", rouge_2.result())
 
 <div class="k-default-codeblock">
 ```
-ROUGE-1 Score:  {'precision': <tf.Tensor: shape=(), dtype=float32, numpy=0.31951058>, 'recall': <tf.Tensor: shape=(), dtype=float32, numpy=0.3090733>, 'f1_score': <tf.Tensor: shape=(), dtype=float32, numpy=0.30876765>}
-ROUGE-2 Score:  {'precision': <tf.Tensor: shape=(), dtype=float32, numpy=0.14046296>, 'recall': <tf.Tensor: shape=(), dtype=float32, numpy=0.13882938>, 'f1_score': <tf.Tensor: shape=(), dtype=float32, numpy=0.13624863>}
+ROUGE-1 Score:  {'precision': Array(0.2935714, dtype=float32), 'recall': Array(0.26239014, dtype=float32), 'f1_score': Array(0.2714645, dtype=float32)}
+ROUGE-2 Score:  {'precision': Array(0.105, dtype=float32), 'recall': Array(0.09747476, dtype=float32), 'f1_score': Array(0.09975109, dtype=float32)}
 
 ```
 </div>

@@ -45,15 +45,16 @@ Before we start implementing the pipeline, let's import all the libraries we nee
 
 """shell
 !pip install -q rouge-score
-!pip install -q git+https://github.com/keras-team/keras-nlp.git --upgrade
 """
 
 import keras_nlp
 import pathlib
 import random
-import tensorflow as tf
 
-from tensorflow import keras
+import keras
+from keras import ops
+
+import tensorflow.data as tf_data
 from tensorflow_text.tools.wordpiece_vocab import (
     bert_vocab_from_dataset as bert_vocab,
 )
@@ -149,7 +150,7 @@ makes it very simple to train WordPiece on a corpus with the
 
 
 def train_word_piece(text_samples, vocab_size, reserved_tokens):
-    word_piece_ds = tf.data.Dataset.from_tensor_slices(text_samples)
+    word_piece_ds = tf_data.Dataset.from_tensor_slices(text_samples)
     vocab = keras_nlp.tokenizers.compute_word_piece_vocabulary(
         word_piece_ds.batch(1000).prefetch(2),
         vocabulary_size=vocab_size,
@@ -246,7 +247,7 @@ This can be easily done using `keras_nlp.layers.StartEndPacker`.
 
 
 def preprocess_batch(eng, spa):
-    batch_size = tf.shape(spa)[0]
+    batch_size = ops.shape(spa)[0]
 
     eng = eng_tokenizer(eng)
     spa = spa_tokenizer(spa)
@@ -280,9 +281,9 @@ def make_dataset(pairs):
     eng_texts, spa_texts = zip(*pairs)
     eng_texts = list(eng_texts)
     spa_texts = list(spa_texts)
-    dataset = tf.data.Dataset.from_tensor_slices((eng_texts, spa_texts))
+    dataset = tf_data.Dataset.from_tensor_slices((eng_texts, spa_texts))
     dataset = dataset.batch(BATCH_SIZE)
-    dataset = dataset.map(preprocess_batch, num_parallel_calls=tf.data.AUTOTUNE)
+    dataset = dataset.map(preprocess_batch, num_parallel_calls=tf_data.AUTOTUNE)
     return dataset.shuffle(2048).prefetch(16).cache()
 
 
@@ -332,13 +333,12 @@ to True. This will then be propagated to all subsequent layers.
 """
 
 # Encoder
-encoder_inputs = keras.Input(shape=(None,), dtype="int64", name="encoder_inputs")
+encoder_inputs = keras.Input(shape=(None,), name="encoder_inputs")
 
 x = keras_nlp.layers.TokenAndPositionEmbedding(
     vocabulary_size=ENG_VOCAB_SIZE,
     sequence_length=MAX_SEQUENCE_LENGTH,
     embedding_dim=EMBED_DIM,
-    mask_zero=True,
 )(encoder_inputs)
 
 encoder_outputs = keras_nlp.layers.TransformerEncoder(
@@ -348,14 +348,13 @@ encoder = keras.Model(encoder_inputs, encoder_outputs)
 
 
 # Decoder
-decoder_inputs = keras.Input(shape=(None,), dtype="int64", name="decoder_inputs")
+decoder_inputs = keras.Input(shape=(None,), name="decoder_inputs")
 encoded_seq_inputs = keras.Input(shape=(None, EMBED_DIM), name="decoder_state_inputs")
 
 x = keras_nlp.layers.TokenAndPositionEmbedding(
     vocabulary_size=SPA_VOCAB_SIZE,
     sequence_length=MAX_SEQUENCE_LENGTH,
     embedding_dim=EMBED_DIM,
-    mask_zero=True,
 )(decoder_inputs)
 
 x = keras_nlp.layers.TransformerDecoder(
@@ -413,12 +412,13 @@ likely next token at each time step, i.e., the token with the highest probabilit
 
 
 def decode_sequences(input_sentences):
-    batch_size = tf.shape(input_sentences)[0]
+    batch_size = 1
 
     # Tokenize the encoder input.
-    encoder_input_tokens = eng_tokenizer(input_sentences).to_tensor(
-        shape=(None, MAX_SEQUENCE_LENGTH)
-    )
+    encoder_input_tokens = ops.convert_to_tensor(eng_tokenizer(input_sentences))
+    if len(encoder_input_tokens[0]) < MAX_SEQUENCE_LENGTH:
+        pads = ops.full((1, MAX_SEQUENCE_LENGTH - len(encoder_input_tokens[0])), 0)
+        encoder_input_tokens = ops.concatenate([encoder_input_tokens, pads], 1)
 
     # Define a function that outputs the next token's probability given the
     # input sequence.
@@ -430,9 +430,9 @@ def decode_sequences(input_sentences):
 
     # Build a prompt of length 40 with a start token and padding tokens.
     length = 40
-    start = tf.fill((batch_size, 1), spa_tokenizer.token_to_id("[START]"))
-    pad = tf.fill((batch_size, length - 1), spa_tokenizer.token_to_id("[PAD]"))
-    prompt = tf.concat((start, pad), axis=-1)
+    start = ops.full((batch_size, 1), spa_tokenizer.token_to_id("[START]"))
+    pad = ops.full((batch_size, length - 1), spa_tokenizer.token_to_id("[PAD]"))
+    prompt = ops.concatenate((start, pad), axis=-1)
 
     generated_tokens = keras_nlp.samplers.GreedySampler()(
         next,
@@ -447,7 +447,7 @@ def decode_sequences(input_sentences):
 test_eng_texts = [pair[0] for pair in test_pairs]
 for i in range(2):
     input_sentence = random.choice(test_eng_texts)
-    translated = decode_sequences(tf.constant([input_sentence]))
+    translated = decode_sequences([input_sentence])
     translated = translated.numpy()[0].decode("utf-8")
     translated = (
         translated.replace("[PAD]", "")
@@ -480,7 +480,7 @@ for test_pair in test_pairs[:30]:
     input_sentence = test_pair[0]
     reference_sentence = test_pair[1]
 
-    translated_sentence = decode_sequences(tf.constant([input_sentence]))
+    translated_sentence = decode_sequences([input_sentence])
     translated_sentence = translated_sentence.numpy()[0].decode("utf-8")
     translated_sentence = (
         translated_sentence.replace("[PAD]", "")
