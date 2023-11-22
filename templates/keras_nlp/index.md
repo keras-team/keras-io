@@ -2,46 +2,37 @@
 
 <a class="github-button" href="https://github.com/keras-team/keras-nlp" data-size="large" data-show-count="true" aria-label="Star keras-team/keras-nlp on GitHub">Star</a>
 
-KerasNLP is a natural language processing library that works natively 
-with TensorFlow, JAX, or PyTorch. Built on [Keras 3](https://keras.io/getting_started/keras_3_announcement/),
-these models, layers, metrics, callbacks, etc., can be trained and serialized
-in any framework and re-used in another without costly migrations. See "Using 
-KerasNLP with Keras 3" below for more details on multi-framework KerasNLP.
+KerasNLP is a natural language processing library that works natively
+with TensorFlow, JAX, or PyTorch. Built on Keras 3, these models, layers,
+metrics, and tokenizers can be trained and serialized in any framework and
+re-used in another without costly migrations.
 
 KerasNLP supports users through their entire development cycle. Our workflows
-are built from modular components that have state-of-the-art preset weights and
-architectures when used out-of-the-box and are easily customizable when more 
-control is needed.
+are built from modular components that have state-of-the-art preset weights when
+used out-of-the-box and are easily customizable when more control is needed.
 
-This library is an extension of the core Keras API; all high-level modules are 
-[`Layers`](https://keras.io/api/layers/) or 
-[`Models`](https://keras.io/api/models/) that receive that same level of polish 
-as core Keras. If you are familiar with Keras, congratulations! You already 
+This library is an extension of the core Keras API; all high-level modules are
+[`Layers`](/api/layers/) or
+[`Models`](/api/models/) that receive that same level of polish
+as core Keras. If you are familiar with Keras, congratulations! You already
 understand most of KerasNLP.
 
-See our [Getting Started guide](https://keras.io/guides/keras_nlp/getting_started) 
-for example usage of our modular API starting with evaluating pretrained models 
-and building up to designing a novel transformer architecture and training a 
-tokenizer from scratch.
-
-KerasNLP is new and growing! If you are interested in contributing, please
-check out our
-[contributing guide](https://github.com/keras-team/keras-nlp/blob/master/CONTRIBUTING.md).
+See our [Getting Started guide](/guides/keras_nlp/getting_started)
+to start learning our API. We welcome
+[contributions](https://github.com/keras-team/keras-nlp/blob/master/CONTRIBUTING.md).
 
 ---
 ## Quick links
 
 * [KerasNLP API reference](/api/keras_nlp/)
 * [KerasNLP on GitHub](https://github.com/keras-team/keras-nlp)
-* [List of available models and presets](/api/keras_nlp/models/)
----
+* [List of available pre-trained models](/api/keras_nlp/models/)
+
 ## Guides
 
 * [Getting Started with KerasNLP](/guides/keras_nlp/getting_started/)
 * [Pretraining a Transformer from scratch](/guides/keras_nlp/transformer_pretraining/)
 
-
----
 ## Examples
 
 * [GPT-2 text generation](/examples/generative/gpt2_text_generation_with_kerasnlp/)
@@ -56,48 +47,52 @@ check out our
 ---
 ## Installation
 
-To install the latest official release:
+KerasNLP supports both Keras 2 and Keras 3. We recommend Keras 3 for all new
+users, as it enables using KerasNLP models and layers with JAX, TensorFlow and
+PyTorch.
+
+### Keras 2 Installation
+
+To install the latest KerasNLP release with Keras 2, simply run:
 
 ```
-pip install keras-nlp --upgrade
+pip install --upgrade keras-nlp
 ```
 
-To install the latest unreleased changes to the library, we recommend using
-pip to install directly from the master branch on github:
+### Keras 3 Installation
+
+There are currently two ways to install Keras 3 with KerasNLP. To install the
+stable versions of KerasNLP and Keras 3, you should install Keras 3 **after**
+installing KerasNLP. This is a temporary step while TensorFlow is pinned to
+Keras 2, and will no longer be necessary after TensorFlow 2.16.
 
 ```
-pip install git+https://github.com/keras-team/keras-nlp.git --upgrade
+pip install --upgrade keras-nlp
+pip install --upgrade keras>=3
 ```
 
-## Using KerasNLP with Keras 3
+To install the latest nightly changes for both KerasNLP and Keras, you can use
+our nightly package.
 
-As of version `0.6.0`, KerasNLP supports multiple backends out 
-of the box. There are two ways to configure KerasNLP to run with multi-backend 
-support:
-
-1. Via the `KERAS_BACKEND` environment variable. If set, then KerasNLP will be 
-using Keras 3 with the backend specified (e.g., `KERAS_BACKEND=jax`).
-2. Via the `.keras/keras.json` and `.keras/keras_nlp.json` config files (which 
-are automatically created the first time you import KerasNLP):
-   - Set your backend of choice in `.keras/keras.json`; e.g., `"backend": "jax"`. 
-   - Set `"multi_backend": True` in `.keras/keras_nlp.json`.
-
-Once that configuration step is done, you can just import KerasNLP and start 
-using it on top of your backend of choice:
-
-```python
-import keras_nlp
-
-gpt2_lm = keras_nlp.models.GPT2CausalLM.from_preset("gpt2_base_en")
-gpt2_lm.generate("My trip to Yosemite was", max_length=200)
+```
+pip install --upgrade keras-nlp-nightly
 ```
 
+**Note:** Keras 3 will not function with TensorFlow 2.14 or earlier.
+
+See [Getting started with Keras](/getting_started/) for more information on
+installing Keras generally and compatibility with different frameworks.
+
+---
 ## Quickstart
 
 Fine-tune BERT on a small sentiment analysis task using the
 [`keras_nlp.models`](/api/keras_nlp/models/) API:
 
 ```python
+import os
+os.environ["KERAS_BACKEND"] = "tensorflow"  # Or "jax" or "torch"!
+
 import keras_nlp
 import tensorflow_datasets as tfds
 
@@ -118,6 +113,7 @@ classifier.fit(imdb_train, validation_data=imdb_test)
 classifier.predict(["What an amazing movie!", "A total waste of my time."])
 ```
 
+---
 ## Compatibility
 
 We follow [Semantic Versioning](https://semver.org/), and plan to
@@ -131,7 +127,7 @@ KerasNLP provides access to pre-trained models via the `keras_nlp.models` API.
 These pre-trained models are provided on an "as is" basis, without warranties
 or conditions of any kind. The following underlying models are provided by third
 parties, and subject to separate licenses:
-DistilBERT, RoBERTa, XLM-RoBERTa, DeBERTa, and GPT-2.
+BART, DeBERTa, DistilBERT, GPT-2, OPT, RoBERTa, Whisper, and XLM-RoBERTa.
 
 ## Citing KerasNLP
 
