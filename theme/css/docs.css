@@ -496,3 +496,8 @@ td {
   background: #ffedb7;
   color: black;
 }
+.k-location-slug-pointer {
+  margin-right: 0.3em;
+  color: #4f4f4f;
+  font-size: 0.9em;
+}

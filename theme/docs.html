@@ -61,7 +61,7 @@
       </div>
       <div class='k-main-inner' id='k-main-id'>
         <div class='k-location-slug'>
-            » {% for part in location_history %}
+            <span class="k-location-slug-pointer">►</span> {% for part in location_history %}
                 <a href='{{part.url}}'>{{part.title}}</a> /
               {% endfor %} {{title}}
         </div>

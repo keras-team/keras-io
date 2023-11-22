@@ -23,9 +23,6 @@ encoding with Keras preprocessing layers, in this example we
 delegate everything to `FeatureSpace`, making the workflow
 extremely quick and easy.
 
-Note that this example should be run with TensorFlow 2.12 or higher.
-Before the release of TensorFlow 2.12, you can use `tf-nightly`.
-
 ### The dataset
 
 [Our dataset](https://archive.ics.uci.edu/ml/datasets/heart+Disease) is provided by the
