@@ -2,13 +2,10 @@
 
 <a class="github-button" href="https://github.com/keras-team/keras-cv" data-size="large" data-show-count="true" aria-label="Star keras-team/keras-cv on GitHub">Star</a>
 
-KerasCV is a library of modular computer vision components that work natively 
-with TensorFlow, JAX, or PyTorch. Built on [Keras 3](https://keras.io/getting_started/keras_3_announcement/),
-these models, layers, metrics, callbacks, etc., can be trained and serialized
-in any framework and re-used in another without costly migrations. See "Using 
-KerasCV with Keras 3" below for more details on multi-framework KerasCV.
-
-<img style="width: 440px; max-width: 90%;" src="https://storage.googleapis.com/keras-cv/guides/keras-cv-augmentations.gif">
+KerasCV is a library of modular computer vision components that work natively
+with TensorFlow, JAX, or PyTorch. Built on Keras 3, these models, layers, 
+metrics, callbacks, etc., can be trained and serialized in any framework and 
+re-used in another without costly migrations.
 
 KerasCV can be understood as a horizontal extension of the Keras API: the 
 components are new first-party Keras objects that are too specialized to be 
@@ -29,63 +26,56 @@ these common tasks.
 - [List of available models and presets](https://keras.io/api/keras_cv/models/)
 - [Developer Guides](https://keras.io/guides/keras_cv/)
 - [Contributing Guide](https://github.com/keras-team/keras-cv/blob/master/.github/CONTRIBUTING.md)
-- [Call for Contributions](https://github.com/keras-team/keras-cv/issues?q=is%3Aopen+is%3Aissue+label%3Acontribution-welcome)
 - [API Design Guidelines](https://github.com/keras-team/keras-cv/blob/master/.github/API_DESIGN.md)
 
 ## Installation
 
-To install the latest official release:
+KerasCV supports both Keras 2 and Keras 3. We recommend Keras 3 for all new
+users, as it enables using KerasCV models and layers with JAX, TensorFlow and
+PyTorch.
+
+### Keras 2 Installation
+
+To install the latest KerasCV release with Keras 2, simply run:
 
 ```
-pip install keras-cv --upgrade
+pip install --upgrade keras-cv tensorflow
 ```
 
-To install the latest unreleased changes to the library, we recommend using
-pip to install directly from the master branch on github:
+### Keras 3 Installation
+
+There are currently two ways to install Keras 3 with KerasCV. To install the
+stable versions of KerasCV and Keras 3, you should install Keras 3 **after**
+installing KerasCV. This is a temporary step while TensorFlow is pinned to
+Keras 2, and will no longer be necessary after TensorFlow 2.16.
 
 ```
-pip install git+https://github.com/keras-team/keras-cv.git --upgrade
+pip install --upgrade keras-cv tensorflow
+pip install keras>=3
 ```
 
-## Using KerasCV with Keras 3
+To install the latest changes nightly for KerasCV and Keras, you can use our
+nightly package.
 
-As of version `0.6.0`, KerasCV supports multiple backends out of 
-the box. There are two ways to configure KerasCV to run with multi-backend 
-support:
-
-1. Via the `KERAS_BACKEND` environment variable. If set, then KerasCV will be 
-using Keras 3 with the backend specified (e.g., `KERAS_BACKEND=jax`).
-2. Via the `.keras/keras.json` and `.keras/keras_cv.json` config files (which 
-are automatically created the first time you import KerasCV):
-   - Set your backend of choice in `.keras/keras.json`; e.g., `"backend": "jax"`. 
-   - Set `"multi_backend": True` in `.keras/keras_cv.json`.
-
-Once that configuration step is done, you can just import KerasCV and start 
-using it on top of your backend of choice:
-
-```python
-import keras_cv
-import keras_core as keras
-import numpy as np
-
-filepath = keras.utils.get_file(origin="https://i.imgur.com/gCNcJJI.jpg")
-image = np.array(keras.utils.load_img(filepath))
-image_resized = keras.ops.image.resize(image, (640, 640))[None, ...]
-
-model = keras_cv.models.YOLOV8Detector.from_preset(
-    "yolo_v8_m_pascalvoc",
-    bounding_box_format="xywh",
-)
-predictions = model.predict(image_resized)
 ```
+pip install --upgrade keras-cv-nightly tf-nightly
+```
+
+**Note:** Keras 3 will not function with TensorFlow 2.14 or earlier.
+
+See [Getting started with Keras](/getting_started/) for more information on
+installing Keras generally and compatibility with different frameworks.
 
 ## Quickstart
 
 ```python
+import os
+os.environ["KERAS_BACKEND"] = "tensorflow"  # Or "jax" or "torch"!
+
 import tensorflow as tf
 import keras_cv
 import tensorflow_datasets as tfds
-import keras_core as keras
+import keras
 
 # Create a preprocessing pipeline with augmentations
 BATCH_SIZE = 16
@@ -158,7 +148,7 @@ Here is the BibTeX entry:
 ```bibtex
 @misc{wood2022kerascv,
   title={KerasCV},
-  author={Wood, Luke and Tan, Zhenyu and Stenbit, Ian and Bischof, Jonathan and Zhu, Scott and Chollet, Fran\c{c}ois and others},
+  author={Wood, Luke and Tan, Zhenyu and Stenbit, Ian and Bischof, Jonathan and Zhu, Scott and Chollet, Fran\c{c}ois and Sreepathihalli, Divyashree and Sampath, Ramesh and others},
   year={2022},
   howpublished={\url{https://github.com/keras-team/keras-cv}},
 }
