@@ -333,7 +333,7 @@ to True. This will then be propagated to all subsequent layers.
 """
 
 # Encoder
-encoder_inputs = keras.Input(shape=(None,), dtype="int64", name="encoder_inputs")
+encoder_inputs = keras.Input(shape=(None,), name="encoder_inputs")
 
 x = keras_nlp.layers.TokenAndPositionEmbedding(
     vocabulary_size=ENG_VOCAB_SIZE,
@@ -348,7 +348,7 @@ encoder = keras.Model(encoder_inputs, encoder_outputs)
 
 
 # Decoder
-decoder_inputs = keras.Input(shape=(None,), dtype="int64", name="decoder_inputs")
+decoder_inputs = keras.Input(shape=(None,), name="decoder_inputs")
 encoded_seq_inputs = keras.Input(shape=(None, EMBED_DIM), name="decoder_state_inputs")
 
 x = keras_nlp.layers.TokenAndPositionEmbedding(

@@ -131,11 +131,11 @@ for _ in range(5):
 
 <div class="k-default-codeblock">
 ```
-('those girls look like guys.', 'esas chicas parecen chicos.')
-('the laws have changed.', 'las leyes han cambiado.')
-('tom was leaning against a tree, sucking on a lollipop.', 'tom estaba inclinado contra un árbol, chupando una piruleta.')
-('tom went out for some fresh air.', 'tom salió a tomar aire fresco.')
-('my apartment is not far from here.', 'mi departamento no queda lejos de aquí.')
+('she came very near to being run over by a car.', 'ella estuvo muy cerca de ser atropellada por un coche.')
+("let's continue the game after lunch.", 'sigamos el juego después de almorzar.')
+('although he is very old, he is strong.', 'a pesar de ser anciano él es fuerte.')
+('i made up for lost time.', 'yo compensé el tiempo perdido.')
+('i ran so i would be on time.', 'corrí para llegar a tiempo.')
 
 ```
 </div>
@@ -228,8 +228,8 @@ print("Spanish Tokens: ", spa_vocab[100:110])
 
 <div class="k-default-codeblock">
 ```
-English Tokens:  ['him', 'they', 'there', 'go', 'her', 'has', 'will', 'how', 're', 'time']
-Spanish Tokens:  ['te', 'para', 'mary', 'las', 'más', 'al', 'yo', 'tu', 'estoy', 'muy']
+English Tokens:  ['know', 'him', 'there', 'they', 'go', 'her', 'has', 'will', 'time', 're']
+Spanish Tokens:  ['mi', 'está', 'qué', 'le', 'ella', 'te', 'para', 'mary', 'las', 'más']
 
 ```
 </div>
@@ -275,17 +275,17 @@ print(
 
 <div class="k-default-codeblock">
 ```
-English sentence:  be careful.
-Tokens:  tf.Tensor([ 91 671  12], shape=(3,), dtype=int32)
-Recovered text after detokenizing:  tf.Tensor(b'be careful .', shape=(), dtype=string)
+English sentence:  she is almost sixty years old.
+Tokens:  tf.Tensor([ 83  69 369 525 902 235 206  12], shape=(8,), dtype=int32)
+Recovered text after detokenizing:  tf.Tensor(b'she is almost sixty years old .', shape=(), dtype=string)
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-Spanish sentence:  ¡ten cuidado!
-Tokens:  tf.Tensor([  57 1429  647    4], shape=(4,), dtype=int32)
-Recovered text after detokenizing:  tf.Tensor(b'\xc2\xa1 ten cuidado !', shape=(), dtype=string)
+Spanish sentence:  ella tiene casi sesenta años.
+Tokens:  tf.Tensor([ 104  118  276 4482  200   15], shape=(6,), dtype=int32)
+Recovered text after detokenizing:  tf.Tensor(b'ella tiene casi sesenta a\xc3\xb1os .', shape=(), dtype=string)
 
 ```
 </div>
@@ -412,7 +412,7 @@ to True. This will then be propagated to all subsequent layers.
 
 ```python
 # Encoder
-encoder_inputs = keras.Input(shape=(None,), dtype="int64", name="encoder_inputs")
+encoder_inputs = keras.Input(shape=(None,), name="encoder_inputs")
 
 x = keras_nlp.layers.TokenAndPositionEmbedding(
     vocabulary_size=ENG_VOCAB_SIZE,
@@ -427,7 +427,7 @@ encoder = keras.Model(encoder_inputs, encoder_outputs)
 
 
 # Decoder
-decoder_inputs = keras.Input(shape=(None,), dtype="int64", name="decoder_inputs")
+decoder_inputs = keras.Input(shape=(None,), name="decoder_inputs")
 encoded_seq_inputs = keras.Input(shape=(None, EMBED_DIM), name="decoder_state_inputs")
 
 x = keras_nlp.layers.TokenAndPositionEmbedding(
@@ -527,12 +527,9 @@ transformer.fit(train_ds, epochs=EPOCHS, validation_data=val_ds)
 
 <div class="k-default-codeblock">
 ```
-/home/grasskin/miniconda3/envs/keras-nlp/lib/python3.10/site-packages/keras/src/backend/jax/core.py:64: UserWarning: Explicitly requested dtype int64 requested in array is not available, and will be truncated to dtype int32. To enable more dtypes, set the jax_enable_x64 configuration option or the JAX_ENABLE_X64 shell environment variable. See https://github.com/google/jax#current-gotchas for more.
-  return jnp.array(x, dtype=dtype)
+ 1302/1302 ━━━━━━━━━━━━━━━━━━━━ 32s 21ms/step - accuracy: 0.8165 - loss: 1.4878 - val_accuracy: 0.8632 - val_loss: 0.8258
 
- 1302/1302 ━━━━━━━━━━━━━━━━━━━━ 32s 21ms/step - accuracy: 0.8169 - loss: 1.4878 - val_accuracy: 0.8652 - val_loss: 0.8129
-
-<keras.src.callbacks.history.History at 0x7f5b787a5990>
+<keras.src.callbacks.history.History at 0x7f4030101d80>
 
 ```
 </div>
@@ -604,20 +601,17 @@ for i in range(2):
 
 <div class="k-default-codeblock">
 ```
-/home/grasskin/miniconda3/envs/keras-nlp/lib/python3.10/site-packages/keras/src/backend/jax/core.py:64: UserWarning: Explicitly requested dtype int64 requested in array is not available, and will be truncated to dtype int32. To enable more dtypes, set the jax_enable_x64 configuration option or the JAX_ENABLE_X64 shell environment variable. See https://github.com/google/jax#current-gotchas for more.
-  return jnp.array(x, dtype=dtype)
-
 ** Example 0 **
-people say i look about the same age as my sister.
-los días me gusta el trabajo que yo lo que yo .
+you've forgotten me, haven't you?
+eres muy in , ¿ no tienes ?
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
 ** Example 1 **
-my mother often bakes apple pies for us.
-mi madre le dijo a menudo se a los días .
+they went aboard the plane.
+ellos se fue un coche .
 ```
 </div>
     
@@ -662,8 +656,8 @@ print("ROUGE-2 Score: ", rouge_2.result())
 
 <div class="k-default-codeblock">
 ```
-ROUGE-1 Score:  {'precision': Array(0.2656938, dtype=float32), 'recall': Array(0.32251328, dtype=float32), 'f1_score': Array(0.2811907, dtype=float32)}
-ROUGE-2 Score:  {'precision': Array(0.11777779, dtype=float32), 'recall': Array(0.12388889, dtype=float32), 'f1_score': Array(0.1180715, dtype=float32)}
+ROUGE-1 Score:  {'precision': Array(0.2935714, dtype=float32), 'recall': Array(0.26239014, dtype=float32), 'f1_score': Array(0.2714645, dtype=float32)}
+ROUGE-2 Score:  {'precision': Array(0.105, dtype=float32), 'recall': Array(0.09747476, dtype=float32), 'f1_score': Array(0.09975109, dtype=float32)}
 
 ```
 </div>
