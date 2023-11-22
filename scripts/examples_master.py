@@ -265,6 +265,7 @@ EXAMPLES_MASTER = {
                     "path": "probing_vits",
                     "title": "Investigating Vision Transformer representations",
                     "subcategory": "Vision models interpretability",
+                    "keras_3": True,
                 },
                 {
                     "path": "grad_cam",
@@ -359,6 +360,12 @@ EXAMPLES_MASTER = {
                     "subcategory": "Performance recipes",
                     "keras_3": True,
                 },
+                {
+                    "path": "cait",
+                    "title": "Class Attention Image Transformers with LayerScale",
+                    "subcategory": "Performance recipes",
+                    "keras_3": True,
+                },
             ],
         },
         {
@@ -421,6 +428,7 @@ EXAMPLES_MASTER = {
                     "path": "neural_machine_translation_with_keras_nlp",
                     "title": "English-to-Spanish translation with KerasNLP",
                     "subcategory": "Machine translation",
+                    "keras_3": True,
                 },
                 {
                     "path": "neural_machine_translation_with_transformer",

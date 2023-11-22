@@ -944,9 +944,7 @@ KERAS2_API_MASTER = {
                         {
                             "path": "cosine_decay",
                             "title": "CosineDecay",
-                            "generate": [
-                                "tf_keras.optimizers.schedules.CosineDecay"
-                            ],
+                            "generate": ["tf_keras.optimizers.schedules.CosineDecay"],
                         },
                         {
                             "path": "cosine_decay_restarts",
@@ -1150,9 +1148,7 @@ KERAS2_API_MASTER = {
                 {
                     "path": "cifar100",
                     "title": "CIFAR100 small images classification dataset",
-                    "generate": [
-                        "tf_keras.datasets.cifar100.load_data"
-                    ],
+                    "generate": ["tf_keras.datasets.cifar100.load_data"],
                 },
                 {
                     "path": "imdb",
@@ -1173,16 +1169,12 @@ KERAS2_API_MASTER = {
                 {
                     "path": "fashion_mnist",
                     "title": "Fashion MNIST dataset, an alternative to MNIST",
-                    "generate": [
-                        "tf_keras.datasets.fashion_mnist.load_data"
-                    ],
+                    "generate": ["tf_keras.datasets.fashion_mnist.load_data"],
                 },
                 {
                     "path": "boston_housing",
                     "title": "Boston Housing price regression dataset",
-                    "generate": [
-                        "tf_keras.datasets.boston_housing.load_data"
-                    ],
+                    "generate": ["tf_keras.datasets.boston_housing.load_data"],
                 },
             ],
         },

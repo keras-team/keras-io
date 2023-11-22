@@ -1119,9 +1119,7 @@ API_MASTER = {
                         {
                             "path": "exponential_decay",
                             "title": "ExponentialDecay",
-                            "generate": [
-                                "keras.optimizers.schedules.ExponentialDecay"
-                            ],
+                            "generate": ["keras.optimizers.schedules.ExponentialDecay"],
                         },
                         {
                             "path": "piecewise_constant_decay",
@@ -1133,16 +1131,12 @@ API_MASTER = {
                         {
                             "path": "polynomial_decay",
                             "title": "PolynomialDecay",
-                            "generate": [
-                                "keras.optimizers.schedules.PolynomialDecay"
-                            ],
+                            "generate": ["keras.optimizers.schedules.PolynomialDecay"],
                         },
                         {
                             "path": "inverse_time_decay",
                             "title": "InverseTimeDecay",
-                            "generate": [
-                                "keras.optimizers.schedules.InverseTimeDecay"
-                            ],
+                            "generate": ["keras.optimizers.schedules.InverseTimeDecay"],
                         },
                         {
                             "path": "cosine_decay",

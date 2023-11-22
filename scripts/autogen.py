@@ -22,6 +22,7 @@ import multiprocessing
 import autogen_utils
 
 from master import MASTER
+from examples_master import EXAMPLES_MASTER
 import tutobooks
 import generate_tf_guides
 import render_tags
@@ -376,9 +377,47 @@ class KerasIO:
             dir_path = Path(self.examples_dir) / dir_name  # e.g. examples/nlp
             if os.path.isdir(dir_path):
                 dst_dir = Path(self.templates_dir) / "examples" / dir_name
-                if not os.path.exists(dst_dir):
-                    os.makedirs(dst_dir)
+                if os.path.exists(dst_dir):
+                    shutil.rmtree(dst_dir)
+                os.makedirs(dst_dir)
                 copy_inner_contents(dir_path / "md", dst_dir, ext=".md")
+
+        # Examples touch-up: add Keras version banner to each example
+        example_name_to_version = {}
+        for section in EXAMPLES_MASTER["children"]:
+            section_name = section["path"].replace("/", "")
+            for example in section["children"]:
+                example_name = section_name + "/" + example["path"]
+                if example.get("keras_3"):
+                    version = 3
+                else:
+                    version = 2
+                example_name_to_version[example_name] = version
+        for section_name in os.listdir(Path(self.templates_dir) / "examples"):
+            # e.g. templates/examples/nlp
+            dir_path = Path(self.templates_dir) / "examples" / section_name
+            if not os.path.isdir(dir_path):
+                continue
+            for example_fname in os.listdir(dir_path):
+                if example_fname.endswith(".md"):
+                    md_path = dir_path / example_fname
+                    with open(md_path) as f:
+                        md_content = f.read()
+                    example_name = (
+                        section_name + "/" + example_fname.removesuffix(".md")
+                    )
+                    version = example_name_to_version.get(example_name, 2)
+                    md_content_lines = md_content.split("\n")
+                    for i, line in enumerate(md_content_lines):
+                        if "View in Colab" in line:
+                            md_content_lines.insert(
+                                i,
+                                f"<div class='example_version_banner keras_{version}'>ⓘ This example uses Keras {version}</div>",
+                            )
+                            break
+                    md_content = "\n".join(md_content_lines) + "\n"
+                    with open(md_path, "w") as f:
+                        f.write(md_content)
 
     def sync_tutobook_media(self):
         """Copy generated `.png`s to site_dir.
@@ -418,9 +457,7 @@ class KerasIO:
 
         def make_nav_index_for_entry(entry, path_stack, max_depth):
             if not isinstance(entry, dict):
-                raise ValueError(
-                    "Incorrectly formatted entry: "
-                    f"{entry}")
+                raise ValueError("Incorrectly formatted entry: " f"{entry}")
             path = entry["path"]
             if path != "/":
                 path_stack.append(path)

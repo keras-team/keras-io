@@ -482,3 +482,17 @@ td {
   font-size: 0.85rem;
   padding-top: 0.05rem;
 }
+.example_version_banner {
+  padding: 0.5em;
+  margin-bottom: 1em;
+  text-align: center;
+  font-weight: bolder;
+  }
+.keras_3 {
+  background: #188485;
+  color: white;
+}
+.keras_2 {
+  background: #ffedb7;
+  color: black;
+}

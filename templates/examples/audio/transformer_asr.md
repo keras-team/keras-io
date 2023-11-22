@@ -6,6 +6,7 @@
 **Description:** Training a sequence-to-sequence Transformer for automatic speech recognition.
 
 
+<div class='example_version_banner keras_3'>ⓘ This example uses Keras 3</div>
 <img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/audio/ipynb/transformer_asr.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/audio/transformer_asr.py)
 
 
@@ -611,3 +612,4 @@ prediction: <as they sat in the car frazier his lunch ware mis lunch was>
 target:     <under the entry for may one, nineteen sixty,>
 prediction: <under the introus for may monee, nin the sixty,>
 ```
+
