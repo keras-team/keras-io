@@ -22,12 +22,12 @@ This library is an extension of the core Keras API; all high-level modules are
 [`Layers`](/api/layers/) or [`Models`](/api/models/). If you are familiar with Keras,
 congratulations! You already understand most of KerasNLP.
 
-KerasNLP uses the [Keras 3](https://keras.io/keras/) library to work
-with any of TensorFlow, Pytorch and Jax. In the guide below, we will use the
-`jax` backend for training our models, and [tf.data](https://www.tensorflow.org/guide/data)
-for efficiently running our input preprocessing. But feel free to mix things up!
-This guide runs in TensorFlow or PyTorch backends with zero changes, simply update
-the `KERAS_BACKEND` below.
+KerasNLP uses Keras 3 to work with any of TensorFlow, Pytorch and Jax. In the
+guide below, we will use the `jax` backend for training our models, and
+[tf.data](https://www.tensorflow.org/guide/data) for efficiently running our
+input preprocessing. But feel free to mix things up! This guide runs in
+TensorFlow or PyTorch backends with zero changes, simply update the
+`KERAS_BACKEND` below.
 
 This guide demonstrates our modular approach using a sentiment analysis example at six
 levels of complexity:
@@ -47,8 +47,8 @@ reference for the complexity of the material:
 
 ```python
 !pip install -q --upgrade keras-nlp
+!pip install -q --upgrade keras  # Upgrade to Keras 3.
 ```
-
 
 ```python
 import os
@@ -57,11 +57,13 @@ os.environ["KERAS_BACKEND"] = "jax"  # or "tensorflow" or "torch"
 
 import keras_nlp
 import keras
-```
 
+# Use mixed precision to speed up all training in this guide.
+keras.mixed_precision.set_global_policy("mixed_float16")
+```
 <div class="k-default-codeblock">
 ```
-Using JAX backend.
+
 
 ```
 </div>
@@ -151,11 +153,11 @@ print(imdb_train.unbatch().take(1).get_single_element())
 ```
   % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
                                  Dload  Upload   Total   Spent    Left  Speed
-100 80.2M  100 80.2M    0     0  3709k      0  0:00:22  0:00:22 --:--:-- 4677k
+100 80.2M  100 80.2M    0     0  88.0M      0 --:--:-- --:--:-- --:--:-- 87.9M
 
 Found 25000 files belonging to 2 classes.
 Found 25000 files belonging to 2 classes.
-(<tf.Tensor: shape=(), dtype=string, numpy=b'John Thaw, of Inspector Morse fame, plays old Tom Oakley in this movie. Tom lives in a tiny English village during 1939 and the start of the Second World War. A bit of a recluse, Tom has not yet recovered from the death of his wife and son while he was serving during the First World War. If you can imagine Inspector Morse old and retired, twice as crochety as when he was a policeman, then you\'ve got Tom Oakley\'s character.<br /><br />Yet this heart of flint is about to melt. London children are evacuated in advance of the blitz. Young William (Willie) Beech is billeted with the protesting Tom. Willie is played to good effect by Nick Robinson.<br /><br />This boy is in need of care with a capital C. Behind in school, still wetting the bed, and unable to read are the smallest of his problems. He comes from a horrific background in London, with a mother who cannot cope, to put it mildly.<br /><br />Slowly, yet steadily, man and boy warm to each other. Tom discovers again his ability to love and care. And the boy learns to accept this love and caring. See Tom and Willie building a bomb shelter at the end of their garden. See Willie\'s joy at what is probably his first ever birthday party thrown by Tom.<br /><br />Not to give away the ending, but Willie is adopted by Tom after much struggle, and the pair begin a new life much richer for their mutual love.<br /><br />In this movie, Thaw and Robinson are following in a long line of movies where man meets boy and develop a mutual love. See the late Dirk Bogarde and Jon Whiteley in "Spanish Gardener". Or Clark Gable and Carlo Angeletti in "It Started in Naples". Or Robert Ulrich and Kenny Vadas in "Captains Courageous". Or Mel Gibson and Nick Stahl in "Man Without a Face".<br /><br />Two points of interest. This is the only appearance of Thaw that I know of where he sings. Only a verse of a hymn, New Jerusalem, but he does sing.<br /><br />Second, young Robinson also starred in a second movie featuring "Tom" in the title, "Tom\'s Midnight Garden", which is based on a classic children\'s novel.'>, <tf.Tensor: shape=(), dtype=int32, numpy=1>)
+(<tf.Tensor: shape=(), dtype=string, numpy=b'This is a very, very early Bugs Bunny cartoon. As a result, the character is still in a transition period--he is not drawn as elongated as he later was and his voice isn\'t quite right. In addition, the chemistry between Elmer and Bugs is a little unusual. Elmer is some poor sap who buys Bugs from a pet shop--there is no gun or desire on his part to blast the bunny to smithereens! However, despite this, this is still a very enjoyable film. The early Bugs was definitely more sassy and cruel than his later incarnations. In later films, he messed with Elmer, Yosimite Sam and others because they started it--they messed with the rabbit. But, in this film, he is much more like Daffy Duck of the late 30s and early 40s--a jerk who just loves irritating others!! A true "anarchist" instead of the hero of the later cartoons. While this isn\'t among the best Bug Bunny cartoons, it sure is fun to watch and it\'s interesting to see just how much he\'s changed over the years.'>, <tf.Tensor: shape=(), dtype=int32, numpy=1>)
 
 ```
 </div>
@@ -180,9 +182,9 @@ classifier.predict(["I love modular workflows in keras-nlp!"])
 
 <div class="k-default-codeblock">
 ```
- 1/1 ━━━━━━━━━━━━━━━━━━━━ 1s 882ms/step
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 1s 689ms/step
 
-array([[-1.5376465,  1.5407037]], dtype=float32)
+array([[-1.539,  1.543]], dtype=float16)
 
 ```
 </div>
@@ -210,9 +212,9 @@ classifier.evaluate(imdb_test)
 
 <div class="k-default-codeblock">
 ```
- 1563/1563 ━━━━━━━━━━━━━━━━━━━━ 6s 4ms/step - loss: 0.4566 - sparse_categorical_accuracy: 0.7885
+ 1563/1563 ━━━━━━━━━━━━━━━━━━━━ 4s 2ms/step - loss: 0.4610 - sparse_categorical_accuracy: 0.7882
 
-[0.46291637420654297, 0.7834799885749817]
+[0.4630218744277954, 0.783519983291626]
 
 ```
 </div>
@@ -254,9 +256,9 @@ classifier.fit(
 
 <div class="k-default-codeblock">
 ```
- 1563/1563 ━━━━━━━━━━━━━━━━━━━━ 19s 11ms/step - loss: 0.5128 - sparse_categorical_accuracy: 0.7350 - val_loss: 0.2974 - val_sparse_categorical_accuracy: 0.8746
+ 1563/1563 ━━━━━━━━━━━━━━━━━━━━ 16s 9ms/step - loss: 0.5202 - sparse_categorical_accuracy: 0.7281 - val_loss: 0.3254 - val_sparse_categorical_accuracy: 0.8621
 
-<keras.src.callbacks.history.History at 0x7f86a0649db0>
+<keras.src.callbacks.history.History at 0x7f281ffc9f90>
 
 ```
 </div>
@@ -323,13 +325,13 @@ classifier.fit(
 <div class="k-default-codeblock">
 ```
 Epoch 1/3
- 1563/1563 ━━━━━━━━━━━━━━━━━━━━ 18s 11ms/step - loss: 0.5338 - sparse_categorical_accuracy: 0.7117 - val_loss: 0.3015 - val_sparse_categorical_accuracy: 0.8737
+ 1563/1563 ━━━━━━━━━━━━━━━━━━━━ 15s 8ms/step - loss: 0.5194 - sparse_categorical_accuracy: 0.7272 - val_loss: 0.3032 - val_sparse_categorical_accuracy: 0.8728
 Epoch 2/3
- 1563/1563 ━━━━━━━━━━━━━━━━━━━━ 15s 9ms/step - loss: 0.2855 - sparse_categorical_accuracy: 0.8829 - val_loss: 0.3053 - val_sparse_categorical_accuracy: 0.8771
+ 1563/1563 ━━━━━━━━━━━━━━━━━━━━ 10s 7ms/step - loss: 0.2871 - sparse_categorical_accuracy: 0.8805 - val_loss: 0.2809 - val_sparse_categorical_accuracy: 0.8818
 Epoch 3/3
- 1563/1563 ━━━━━━━━━━━━━━━━━━━━ 15s 9ms/step - loss: 0.2094 - sparse_categorical_accuracy: 0.9215 - val_loss: 0.3238 - val_sparse_categorical_accuracy: 0.8756
+ 1563/1563 ━━━━━━━━━━━━━━━━━━━━ 10s 7ms/step - loss: 0.2134 - sparse_categorical_accuracy: 0.9178 - val_loss: 0.3043 - val_sparse_categorical_accuracy: 0.8790
 
-<keras.src.callbacks.history.History at 0x7f864c4a3b80>
+<keras.src.callbacks.history.History at 0x7f281ffc87f0>
 
 ```
 </div>
@@ -391,14 +393,14 @@ print(imdb_train_preprocessed.unbatch().take(1).get_single_element())
 <div class="k-default-codeblock">
 ```
 ({'token_ids': <tf.Tensor: shape=(64,), dtype=int32, numpy=
-array([  101,  1996,  2466,  1997, 12311,  5163,  2038,  2042,  4372,
-        4095, 21332,  2098,  1999, 10661,  1998,  4654, 27609,  3370,
-        2005,  2051,  2041,  1997,  2192,  1010,  1998,  2023,  2143,
-        2003,  2053,  6453,  1012,  2054, 21312, 12311,  5163,  2038,
-        1037,  4568,  2173,  1999,  2381,  2003,  1996,  3947,  2002,
-        2253,  2000,  1999,  2344,  2000,  2130,  1996, 10238,  2114,
-        1996, 19809,  5933,  2032,  1012,  2076,  2195,  7465,  1010,
-         102], dtype=int32)>, 'segment_ids': <tf.Tensor: shape=(64,), dtype=int32, numpy=
+array([  101,  2023,  2003,  2941,  2028,  1997,  2026,  5440,  3152,
+        1010,  1045,  2052, 16755,  2008,  3071, 12197,  2009,  1012,
+        2045,  2003,  2070,  2307,  3772,  1999,  2009,  1998,  2009,
+        3065,  2008,  2025,  2035,  1000,  2204,  1000,  3152,  2024,
+        2137,  1012,  1012,  1012,  1012,   102,     0,     0,     0,
+           0,     0,     0,     0,     0,     0,     0,     0,     0,
+           0,     0,     0,     0,     0,     0,     0,     0,     0,
+           0], dtype=int32)>, 'segment_ids': <tf.Tensor: shape=(64,), dtype=int32, numpy=
 array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -407,10 +409,10 @@ array([ True,  True,  True,  True,  True,  True,  True,  True,  True,
         True,  True,  True,  True,  True,  True,  True,  True,  True,
         True,  True,  True,  True,  True,  True,  True,  True,  True,
         True,  True,  True,  True,  True,  True,  True,  True,  True,
-        True,  True,  True,  True,  True,  True,  True,  True,  True,
-        True,  True,  True,  True,  True,  True,  True,  True,  True,
-        True,  True,  True,  True,  True,  True,  True,  True,  True,
-        True])>}, <tf.Tensor: shape=(), dtype=int32, numpy=1>)
+        True,  True,  True,  True,  True,  True, False, False, False,
+       False, False, False, False, False, False, False, False, False,
+       False, False, False, False, False, False, False, False, False,
+       False])>}, <tf.Tensor: shape=(), dtype=int32, numpy=1>)
 
 ```
 </div>
@@ -503,26 +505,26 @@ model.fit(
 │ get_item_4          │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">128</span>)       │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ transformer_encoder… │
 │ (<span style="color: #0087ff; text-decoration-color: #0087ff">GetItem</span>)           │                   │         │                      │
 ├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
-│ dense_20 (<span style="color: #0087ff; text-decoration-color: #0087ff">Dense</span>)    │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">2</span>)         │     <span style="color: #00af00; text-decoration-color: #00af00">258</span> │ get_item_4[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>]     │
+│ dense (<span style="color: #0087ff; text-decoration-color: #0087ff">Dense</span>)       │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">2</span>)         │     <span style="color: #00af00; text-decoration-color: #00af00">258</span> │ get_item_4[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>]     │
 └─────────────────────┴───────────────────┴─────────┴──────────────────────┘
 </pre>
 
 
 
 
-<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Total params: </span><span style="color: #00af00; text-decoration-color: #00af00">4,782,722</span> (145.96 MB)
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Total params: </span><span style="color: #00af00; text-decoration-color: #00af00">4,782,722</span> (18.24 MB)
 </pre>
 
 
 
 
-<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Trainable params: </span><span style="color: #00af00; text-decoration-color: #00af00">396,802</span> (12.11 MB)
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Trainable params: </span><span style="color: #00af00; text-decoration-color: #00af00">396,802</span> (1.51 MB)
 </pre>
 
 
 
 
-<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Non-trainable params: </span><span style="color: #00af00; text-decoration-color: #00af00">4,385,920</span> (133.85 MB)
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Non-trainable params: </span><span style="color: #00af00; text-decoration-color: #00af00">4,385,920</span> (16.73 MB)
 </pre>
 
 
@@ -530,13 +532,13 @@ model.fit(
 <div class="k-default-codeblock">
 ```
 Epoch 1/3
- 1563/1563 ━━━━━━━━━━━━━━━━━━━━ 23s 14ms/step - loss: 0.6078 - sparse_categorical_accuracy: 0.6726 - val_loss: 0.5193 - val_sparse_categorical_accuracy: 0.7432
+ 1563/1563 ━━━━━━━━━━━━━━━━━━━━ 17s 10ms/step - loss: 0.6208 - sparse_categorical_accuracy: 0.6612 - val_loss: 0.6119 - val_sparse_categorical_accuracy: 0.6758
 Epoch 2/3
- 1563/1563 ━━━━━━━━━━━━━━━━━━━━ 19s 12ms/step - loss: 0.5087 - sparse_categorical_accuracy: 0.7498 - val_loss: 0.4267 - val_sparse_categorical_accuracy: 0.8032
+ 1563/1563 ━━━━━━━━━━━━━━━━━━━━ 12s 8ms/step - loss: 0.5324 - sparse_categorical_accuracy: 0.7347 - val_loss: 0.5484 - val_sparse_categorical_accuracy: 0.7320
 Epoch 3/3
- 1563/1563 ━━━━━━━━━━━━━━━━━━━━ 19s 12ms/step - loss: 0.4424 - sparse_categorical_accuracy: 0.7942 - val_loss: 0.3937 - val_sparse_categorical_accuracy: 0.8229
+ 1563/1563 ━━━━━━━━━━━━━━━━━━━━ 12s 8ms/step - loss: 0.4735 - sparse_categorical_accuracy: 0.7723 - val_loss: 0.4874 - val_sparse_categorical_accuracy: 0.7742
 
-<keras.src.callbacks.history.History at 0x7f860c194ac0>
+<keras.src.callbacks.history.History at 0x7f2790170220>
 
 ```
 </div>
@@ -622,35 +624,35 @@ print(pretrain_ds.unbatch().take(1).get_single_element())
 <div class="k-default-codeblock">
 ```
 ({'token_ids': <tf.Tensor: shape=(256,), dtype=int32, numpy=
-array([  101,  1996,   103,  5236,  5195,  1012,  1045,   103,  1996,
-        4364,  5613,  2012,  1996,  2927,   103,  2028,   103,  7112,
-       16562,  2140,  1005,  1055,  5691,  2001,   103,  2098,  2000,
-       12934,  5076,   103,  2010,  3596,  2000,  3153,  2189,  2012,
-        1996,   103,  1997,  2023,  5236,  3185,  1012,  1996,  5436,
-         103, 21425,  1010,  1996,   103,  2020,  4189,  1998,  5076,
-        4490,  2055,   103,  2092,   103,  1996, 10682,  2002, 10299,
-         103,  2070,  4066,   103,   103,  1999,  2028,   103,  1012,
-         102,     0,     0,     0,     0,     0,     0,     0,     0,
-           0,     0,     0,     0,     0,     0,     0,     0,     0,
-           0,     0,     0,     0,     0,     0,     0,     0,     0,
-           0,     0,     0,     0,     0,     0,     0,     0,     0,
-           0,     0,     0,     0,     0,     0,     0,     0,     0,
-           0,     0,     0,     0,     0,     0,     0,     0,     0,
-           0,     0,     0,     0,     0,     0,     0,     0,     0,
-           0,     0,     0,     0,     0,     0,     0,     0,     0,
-           0,     0,     0,     0,     0,     0,     0,     0,     0,
-           0,     0,     0,     0,     0,     0,     0,     0,     0,
-           0,     0,     0,     0,     0,     0,     0,     0,     0,
-           0,     0,     0,     0,     0,     0,     0,     0,     0,
-           0,     0,     0,     0,     0,     0,     0,     0,     0,
-           0,     0,     0,     0,     0,     0,     0,     0,     0,
-           0,     0,     0,     0,     0,     0,     0,     0,     0,
-           0,     0,     0,     0,     0,     0,     0,     0,     0,
-           0,     0,     0,     0,     0,     0,     0,     0,     0,
-           0,     0,     0,     0,     0,     0,     0,     0,     0,
-           0,     0,     0,     0,     0,     0,     0,     0,     0,
-           0,     0,     0,     0,     0,     0,     0,     0,     0,
-           0,     0,     0,     0], dtype=int32)>, 'segment_ids': <tf.Tensor: shape=(256,), dtype=int32, numpy=
+array([  101,   103,  2332,   103,  1006,   103,   103,  2332,  2370,
+        1007,   103,  2029,   103,  2402,  2155,  1010, 24159,  2000,
+        3541,  7081,  1010,  2424,  2041,  2055,  1996,  9004,  4528,
+         103,   103,  2037,  2188,   103,  1996,  2269,  1006,  8512,
+        3054,   103,  4246,  1007,  2059,  4858,  1555,  2055,  1996,
+       23025, 22911,  8940,  2598,  3458,  1996, 25483,  4528,  2008,
+        2038,   103,  1997, 15218,  1011,   103,  1997,   103,  2505,
+        3950,  2045,  3310,  2067,  2025,  3243,  2157,  1012,   103,
+        7987,  1013,  1028,   103,  7987,  1013,  1028,  2917,   103,
+        1000,  5469,  1000,   103,   103,  2041, 22902,  1010, 23979,
+        1010,  1998,  1999, 23606,   103,  1998,  4247,  2008,  2126,
+        2005,  1037,  2096,  1010,  2007,  1996,   103,  5409,   103,
+        2108,  3054,  3211,  4246,  1005,  1055, 22692,  2836,  1012,
+        2009,   103,  1037,  2210,  2488,   103,   103,  2203,  1010,
+        2007,   103,   103,  9599,  1012,   103,  2391,  1997,  2755,
+        1010,  1996,  2878,  3185,  2003,  2428,   103,  1010,   103,
+         103,   103,  1045,  2064,  1005,  1056,  3294, 19776,  2009,
+        1011,  2012,  2560,  2009,  2038,  2242,  2000,   103,  2009,
+       13432,  1012, 11519,  4637,  4616,  2011,  5965,  1043, 11761,
+         103,   103,  2004,   103,  7968,  3243,  4793, 11429,  1010,
+        1998,  8226,  2665, 18331,  1010,  1219,  1996,  4487, 22747,
+        8004, 12165,  4382,  5125,   103,  3597,   103,  2024,  2025,
+        2438,  2000,   103,  2417, 21564,  2143,   103,   103,  7987,
+        1013,  1028,  1026,   103,  1013,  1028,  2332,  2038,   103,
+        5156, 12081,  2004,  1996,   103,  1012,  1026, 14216,   103,
+         103,  1026,  7987,  1013,  1028,   184,  2011,  1037,  8297,
+        2036,   103,  2011,  2984,   103,  1006,  2003,  2009,  2151,
+        4687,  2008,  2016,  1005,  1055,  2018,  2053,  7731,   103,
+         103,  2144,  1029,   102], dtype=int32)>, 'segment_ids': <tf.Tensor: shape=(256,), dtype=int32, numpy=
 array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -671,41 +673,44 @@ array([ True,  True,  True,  True,  True,  True,  True,  True,  True,
         True,  True,  True,  True,  True,  True,  True,  True,  True,
         True,  True,  True,  True,  True,  True,  True,  True,  True,
         True,  True,  True,  True,  True,  True,  True,  True,  True,
-        True, False, False, False, False, False, False, False, False,
-       False, False, False, False, False, False, False, False, False,
-       False, False, False, False, False, False, False, False, False,
-       False, False, False, False, False, False, False, False, False,
-       False, False, False, False, False, False, False, False, False,
-       False, False, False, False, False, False, False, False, False,
-       False, False, False, False, False, False, False, False, False,
-       False, False, False, False, False, False, False, False, False,
-       False, False, False, False, False, False, False, False, False,
-       False, False, False, False, False, False, False, False, False,
-       False, False, False, False, False, False, False, False, False,
-       False, False, False, False, False, False, False, False, False,
-       False, False, False, False, False, False, False, False, False,
-       False, False, False, False, False, False, False, False, False,
-       False, False, False, False, False, False, False, False, False,
-       False, False, False, False, False, False, False, False, False,
-       False, False, False, False, False, False, False, False, False,
-       False, False, False, False, False, False, False, False, False,
-       False, False, False, False, False, False, False, False, False,
-       False, False, False, False, False, False, False, False, False,
-       False, False, False, False])>, 'mask_positions': <tf.Tensor: shape=(64,), dtype=int64, numpy=
-array([ 2,  7, 12, 14, 16, 24, 29, 37, 45, 49, 50, 56, 58, 59, 63, 66, 67,
-       70,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-        0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-        0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0])>}, <tf.Tensor: shape=(64,), dtype=int32, numpy=
-array([6669, 2228, 1996, 1997, 1997, 7848, 2725, 2927, 2003, 9590, 2020,
-       2004, 2004, 1996, 2007, 1997, 5195, 3496,    0,    0,    0,    0,
-          0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
-          0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
-          0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
-          0,    0,    0,    0,    0,    0,    0,    0,    0], dtype=int32)>, <tf.Tensor: shape=(64,), dtype=float32, numpy=
+        True,  True,  True,  True,  True,  True,  True,  True,  True,
+        True,  True,  True,  True,  True,  True,  True,  True,  True,
+        True,  True,  True,  True,  True,  True,  True,  True,  True,
+        True,  True,  True,  True,  True,  True,  True,  True,  True,
+        True,  True,  True,  True,  True,  True,  True,  True,  True,
+        True,  True,  True,  True,  True,  True,  True,  True,  True,
+        True,  True,  True,  True,  True,  True,  True,  True,  True,
+        True,  True,  True,  True,  True,  True,  True,  True,  True,
+        True,  True,  True,  True,  True,  True,  True,  True,  True,
+        True,  True,  True,  True,  True,  True,  True,  True,  True,
+        True,  True,  True,  True,  True,  True,  True,  True,  True,
+        True,  True,  True,  True,  True,  True,  True,  True,  True,
+        True,  True,  True,  True,  True,  True,  True,  True,  True,
+        True,  True,  True,  True,  True,  True,  True,  True,  True,
+        True,  True,  True,  True,  True,  True,  True,  True,  True,
+        True,  True,  True,  True,  True,  True,  True,  True,  True,
+        True,  True,  True,  True,  True,  True,  True,  True,  True,
+        True,  True,  True,  True,  True,  True,  True,  True,  True,
+        True,  True,  True,  True,  True,  True,  True,  True,  True,
+        True,  True,  True,  True,  True,  True,  True,  True,  True,
+        True,  True,  True,  True])>, 'mask_positions': <tf.Tensor: shape=(64,), dtype=int64, numpy=
+array([  1,   3,   5,   6,  10,  12,  13,  27,  28,  31,  37,  42,  51,
+        55,  59,  61,  65,  71,  75,  80,  83,  84,  85,  94, 105, 107,
+       108, 118, 122, 123, 127, 128, 131, 141, 143, 144, 145, 149, 160,
+       167, 170, 171, 172, 174, 176, 185, 193, 195, 200, 204, 205, 208,
+       210, 215, 220, 223, 224, 225, 230, 231, 235, 238, 251, 252])>}, <tf.Tensor: shape=(64,), dtype=int32, numpy=
+array([ 4459,  6789, 22892,  2011,  1999,  1037,  2402,  2485,  2000,
+        1012,  3211,  2041,  9004,  4204,  2069,  2607,  3310,  1026,
+        1026,  2779,  1000,  3861,  4627,  1010,  7619,  5783,  2108,
+        4152,  2646,  1996, 15958, 14888,  1999, 14888,  2029,  2003,
+        2339,  1056,  2191,  2011, 11761,  2638,  1010,  1996,  2214,
+        2004, 14674,  2860,  2428,  1012,  1026,  1028,  7987,  2010,
+        2704,  7987,  1013,  1028,  2628,  2011,  2856, 12838,  2143,
+        2147], dtype=int32)>, <tf.Tensor: shape=(64,), dtype=float16, numpy=
 array([1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1.,
-       1., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.,
-       0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.,
-       0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.], dtype=float32)>)
+       1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1.,
+       1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1.,
+       1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1.], dtype=float16)>)
 
 ```
 </div>
@@ -724,7 +729,7 @@ backbone = keras_nlp.models.BertBackbone(
 
 # Language modeling head
 mlm_head = keras_nlp.layers.MaskedLMHead(
-    embedding_weights=backbone.token_embedding.embeddings,
+    token_embedding=backbone.token_embedding,
 )
 
 inputs = {
@@ -787,21 +792,21 @@ pretraining_model.fit(
 │                     │ <span style="color: #00af00; text-decoration-color: #00af00">128</span>)]             │         │ segment_ids[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>],   │
 │                     │                   │         │ token_ids[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>]      │
 ├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
-│ masked_lm_head      │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">30522</span>)     │ <span style="color: #00af00; text-decoration-color: #00af00">3,954,…</span> │ bert_backbone_4[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">…</span> │
-│ (<span style="color: #0087ff; text-decoration-color: #0087ff">MaskedLMHead</span>)      │                   │         │ mask_positions[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>] │
+│ masked_lm_head      │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>,      │ <span style="color: #00af00; text-decoration-color: #00af00">3,954,…</span> │ bert_backbone_4[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">…</span> │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">MaskedLMHead</span>)      │ <span style="color: #00af00; text-decoration-color: #00af00">30522</span>)            │         │ mask_positions[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>] │
 └─────────────────────┴───────────────────┴─────────┴──────────────────────┘
 </pre>
 
 
 
 
-<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Total params: </span><span style="color: #00af00; text-decoration-color: #00af00">4,433,210</span> (135.29 MB)
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Total params: </span><span style="color: #00af00; text-decoration-color: #00af00">4,433,210</span> (16.91 MB)
 </pre>
 
 
 
 
-<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Trainable params: </span><span style="color: #00af00; text-decoration-color: #00af00">4,433,210</span> (135.29 MB)
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Trainable params: </span><span style="color: #00af00; text-decoration-color: #00af00">4,433,210</span> (16.91 MB)
 </pre>
 
 
@@ -815,13 +820,13 @@ pretraining_model.fit(
 <div class="k-default-codeblock">
 ```
 Epoch 1/3
- 1563/1563 ━━━━━━━━━━━━━━━━━━━━ 21s 12ms/step - loss: 5.6220 - sparse_categorical_accuracy: 0.0615 - val_loss: 4.9762 - val_sparse_categorical_accuracy: 0.1155
+ 1563/1563 ━━━━━━━━━━━━━━━━━━━━ 22s 12ms/step - loss: 5.7032 - sparse_categorical_accuracy: 0.0566 - val_loss: 5.0685 - val_sparse_categorical_accuracy: 0.1044
 Epoch 2/3
- 1563/1563 ━━━━━━━━━━━━━━━━━━━━ 16s 10ms/step - loss: 4.9844 - sparse_categorical_accuracy: 0.1214 - val_loss: 4.8706 - val_sparse_categorical_accuracy: 0.1321
+ 1563/1563 ━━━━━━━━━━━━━━━━━━━━ 13s 8ms/step - loss: 5.0701 - sparse_categorical_accuracy: 0.1096 - val_loss: 4.9363 - val_sparse_categorical_accuracy: 0.1239
 Epoch 3/3
- 1563/1563 ━━━━━━━━━━━━━━━━━━━━ 16s 10ms/step - loss: 4.8614 - sparse_categorical_accuracy: 0.1385 - val_loss: 4.4897 - val_sparse_categorical_accuracy: 0.2069
+ 1563/1563 ━━━━━━━━━━━━━━━━━━━━ 13s 8ms/step - loss: 4.9607 - sparse_categorical_accuracy: 0.1240 - val_loss: 4.7913 - val_sparse_categorical_accuracy: 0.1417
 
-<keras.src.callbacks.history.History at 0x7f862c356e30>
+<keras.src.callbacks.history.History at 0x7f2738299330>
 
 ```
 </div>
@@ -891,60 +896,60 @@ print(imdb_preproc_train_ds.unbatch().take(1).get_single_element())
 <div class="k-default-codeblock">
 ```
 (<tf.Tensor: shape=(512,), dtype=int32, numpy=
-array([    1,    51,   549,   104,   110,    18,   103,   285,    51,
-         549,   203,   126,   611,   103,   104,   110,    18,    51,
-        6195,   136,  2743,   107,    43,  2943,  2467,   103,    96,
-         429,   416,    98,    96,   110,    18,   113,   294,   472,
-         163,   144,   790,   103,    96, 11386,   226,   146,    96,
-        2090,   106, 10633,   408,   114,   112,    18,    51,   106,
-          96,   757,   103,    96,  1107,  3703,   109,   152,  1051,
-       10275,   114,   152,   487,   103,  2246,    99,   140,   161,
-         162,   240,   114,    96,   110, 16526,    18,   103,   285,
-         124,  1520,   657,   163,    43,   264,   304,   128,   102,
-          11,    61,   347,    99,   805,   105,  1433,    18,  3627,
-         148,    99,   461,  1944,   407,    18,   746,   102,   308,
-          99,  2027,   609,    18, 13687,  8042,  6969,  3929,   853,
-       17549,    16, 15274,    51,   549,   104,   110,    18,   103,
-         285,    51,   549,   203,   126,   611,   103,   104,   110,
-          18,    51,  6195,   136,  2743,   107,    43,  2943,  2467,
-         103,    96,   429,   416,    98,    96,   110,    18,   113,
-         294,   472,   163,   144,   790,   103,    96, 11386,   226,
-         146,    96,  2090,   106, 10633,   408,   114,   112,    18,
-          51,   106,    96,   757,   103,    96,  1107,  3703,   109,
-         152,  1051, 10275,   114,   152,   487,   103,  2246,    99,
-         140,   161,   162,   240,   114,    96,   110, 16526,    18,
-         103,   285,   124,  1520,   657,   163,    43,   264,   304,
-         128,   102,    11,    61,   347,    99,   805,   105,  1433,
-          18,  3627,   148,    99,   461,  1944,   407,    18,   746,
-         102,   308,    99,  2027,   609,    18, 13687,  8042,  6969,
-        3929,    32,   101,    19,    34,    32,   101,    19,    34,
-         853, 17549,    16, 15274,     2,     0,     0,     0,     0,
-           0,     0,     0,     0,     0,     0,     0,     0,     0,
-           0,     0,     0,     0,     0,     0,     0,     0,     0,
-           0,     0,     0,     0,     0,     0,     0,     0,     0,
-           0,     0,     0,     0,     0,     0,     0,     0,     0,
-           0,     0,     0,     0,     0,     0,     0,     0,     0,
-           0,     0,     0,     0,     0,     0,     0,     0,     0,
-           0,     0,     0,     0,     0,     0,     0,     0,     0,
-           0,     0,     0,     0,     0,     0,     0,     0,     0,
-           0,     0,     0,     0,     0,     0,     0,     0,     0,
-           0,     0,     0,     0,     0,     0,     0,     0,     0,
-           0,     0,     0,     0,     0,     0,     0,     0,     0,
-           0,     0,     0,     0,     0,     0,     0,     0,     0,
-           0,     0,     0,     0,     0,     0,     0,     0,     0,
-           0,     0,     0,     0,     0,     0,     0,     0,     0,
-           0,     0,     0,     0,     0,     0,     0,     0,     0,
-           0,     0,     0,     0,     0,     0,     0,     0,     0,
-           0,     0,     0,     0,     0,     0,     0,     0,     0,
-           0,     0,     0,     0,     0,     0,     0,     0,     0,
-           0,     0,     0,     0,     0,     0,     0,     0,     0,
-           0,     0,     0,     0,     0,     0,     0,     0,     0,
-           0,     0,     0,     0,     0,     0,     0,     0,     0,
-           0,     0,     0,     0,     0,     0,     0,     0,     0,
-           0,     0,     0,     0,     0,     0,     0,     0,     0,
-           0,     0,     0,     0,     0,     0,     0,     0,     0,
-           0,     0,     0,     0,     0,     0,     0,     0,     0,
-           0,     0,     0,     0,     0,     0,     0,     0,     0,
+array([    1,   102,    11,    61,    43,   771,    16,   340,   916,
+        1259,   155,    16,   135,   207,    18,   501, 10568,   344,
+          16,    51,   206,   612,   211,   232,    43,  1094,    17,
+         215,   155,   103,   238,   202,    18,   111,    16,    51,
+         143,  1583,   131,   100,    18,    32,   101,    19,    34,
+          32,   101,    19,    34,   102,    11,    61,    43,   155,
+         105,  5337,    99,   120,     6,  1289,     6,   129,    96,
+         526,    18,   111,    16,   193,    51,   197,   102,    16,
+          51,   252,    11,    62,   167,   104,   642,    98,     6,
+        8572,     6,   154,    51,   153,  1464,   119,  3005,   990,
+        2393,    18,   102,    11,    61,   233,   404,   103,   104,
+         110,    18,    18,    18,   233,  1259,    18,    18,    18,
+         154,    51,   659, 16273,   867,   192,  1632,   133,   990,
+        2393,    18,    32,   101,    19,    34,    32,   101,    19,
+          34,    96,   110,  2886,   761,   114,  4905,   293, 12337,
+          97,  2375,    18,   113,   143,   158,   179,   104,  4905,
+         610,    16, 12585,    97,   516,   725,    18,   113,   323,
+          96,   651,   146,   104,   207, 17649,    16,    96,   176,
+       16022,   136,    16,  1414,   136,    18,   113,   323,    96,
+        2184,    18,    97,   150,   651,    51,   242,   104,   100,
+       11722,    18,   113,   151,   543,   102,   171,   115,  1081,
+         103,    96,   222,    18,    18,    18,    18,   102,   659,
+        1081,    18,    18,    18,   102,    11,    61,   115,   299,
+          18,   113,   323,    96,  1579,    98,   203,  4438,  2033,
+         103,    96,   222,    18,    18,    18,    32,   101,    19,
+          34,    32,   101,    19,    34,   111,    16,    51,   455,
+         174,    99,   859,    43,  1687,  3330,    99,   104,  1021,
+          18,    18,    18,    51,   181,    11,    62,   214,   138,
+          96,   155,   100,   115,   916,    14,  1286,    14,    99,
+         296,    96,   642,   105,   224,  4598,   117,  1289,   156,
+         103,   904,    16,   111,   115,   103,  1628,    18,   113,
+         181,    11,    62,   119,    96,  1054,   155,    16,   111,
+         156, 14665,    18,   146,   110,   139,   742,    16,    96,
+        4905,   293, 12337,    97,  7042,  1104,   106,   557,   103,
+         366,    18,   128,    16,   150,  2446,   135,    96,   960,
+          98,    96,  4905,    18,   113,   323,   156,    43,  1174,
+         293,   188,    18,    18,    18,    43,   639,   293,    96,
+         455,   108,   207,    97,  1893,    99,  1081,   104,  4905,
+          18,    51,   194,   104,   440,    98, 12337,    99,  7042,
+        1104,   654,   122,    30,     6,    51,   276,    99,   663,
+          18,    18,    18,    97,   138,   113,   207,   163,    16,
+         113,   171,   172,   107,    51,  1027,   113,     6,    18,
+          32,   101,    19,    34,    32,   101,    19,    34,   104,
+         110,   171,   333, 10311,   141,  1311,   135,   140,   100,
+         207,    97,   140,   100,    99,   120,  1632,    18,    18,
+          18,    97,   210,    11,    61,    96,  6236,   293,   188,
+          18,    51,   181,    11,    62,   214,   138,    96,   421,
+          98,   104,   110,   100,     6,   207, 14129,   122,    18,
+          18,    18,   151,  1128,    97,  1632,  1675,     6,   133,
+           6,   207,   100,   404,    18,    18,    18,   150,   646,
+         179,   133,   210,     6,    18,   111,   103,   152,   744,
+          16,   104,   110,   100,   557,    43,  1120,   108,    96,
+         701,   382,   105,   102,   260,   113,   194,    18,    18,
+          18,     2,     0,     0,     0,     0,     0,     0,     0,
            0,     0,     0,     0,     0,     0,     0,     0,     0,
            0,     0,     0,     0,     0,     0,     0,     0,     0,
            0,     0,     0,     0,     0,     0,     0,     0],
@@ -1001,20 +1006,20 @@ model.summary()
 ├─────────────────────────────────┼───────────────────────────┼────────────┤
 │ get_item_6 (<span style="color: #0087ff; text-decoration-color: #0087ff">GetItem</span>)            │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">64</span>)                │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │
 ├─────────────────────────────────┼───────────────────────────┼────────────┤
-│ dense_28 (<span style="color: #0087ff; text-decoration-color: #0087ff">Dense</span>)                │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">2</span>)                 │        <span style="color: #00af00; text-decoration-color: #00af00">130</span> │
+│ dense_1 (<span style="color: #0087ff; text-decoration-color: #0087ff">Dense</span>)                 │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">2</span>)                 │        <span style="color: #00af00; text-decoration-color: #00af00">130</span> │
 └─────────────────────────────────┴───────────────────────────┴────────────┘
 </pre>
 
 
 
 
-<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Total params: </span><span style="color: #00af00; text-decoration-color: #00af00">1,293,250</span> (39.47 MB)
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Total params: </span><span style="color: #00af00; text-decoration-color: #00af00">1,293,250</span> (4.93 MB)
 </pre>
 
 
 
 
-<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Trainable params: </span><span style="color: #00af00; text-decoration-color: #00af00">1,293,250</span> (39.47 MB)
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Trainable params: </span><span style="color: #00af00; text-decoration-color: #00af00">1,293,250</span> (4.93 MB)
 </pre>
 
 
@@ -1045,13 +1050,13 @@ model.fit(
 <div class="k-default-codeblock">
 ```
 Epoch 1/3
- 1563/1563 ━━━━━━━━━━━━━━━━━━━━ 7s 4ms/step - loss: 0.6688 - sparse_categorical_accuracy: 0.5758 - val_loss: 0.3674 - val_sparse_categorical_accuracy: 0.8507
+ 1563/1563 ━━━━━━━━━━━━━━━━━━━━ 8s 4ms/step - loss: 0.7790 - sparse_categorical_accuracy: 0.5367 - val_loss: 0.4420 - val_sparse_categorical_accuracy: 0.8120
 Epoch 2/3
- 1563/1563 ━━━━━━━━━━━━━━━━━━━━ 5s 3ms/step - loss: 0.3126 - sparse_categorical_accuracy: 0.8725 - val_loss: 0.3138 - val_sparse_categorical_accuracy: 0.8729
+ 1563/1563 ━━━━━━━━━━━━━━━━━━━━ 5s 3ms/step - loss: 0.3654 - sparse_categorical_accuracy: 0.8443 - val_loss: 0.3046 - val_sparse_categorical_accuracy: 0.8752
 Epoch 3/3
- 1563/1563 ━━━━━━━━━━━━━━━━━━━━ 5s 3ms/step - loss: 0.2226 - sparse_categorical_accuracy: 0.9151 - val_loss: 0.4513 - val_sparse_categorical_accuracy: 0.8125
+ 1563/1563 ━━━━━━━━━━━━━━━━━━━━ 5s 3ms/step - loss: 0.2471 - sparse_categorical_accuracy: 0.9019 - val_loss: 0.3060 - val_sparse_categorical_accuracy: 0.8748
 
-<keras.src.callbacks.history.History at 0x7f8520133970>
+<keras.src.callbacks.history.History at 0x7f26d032a4d0>
 
 ```
 </div>
