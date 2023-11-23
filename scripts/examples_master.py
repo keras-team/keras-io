@@ -390,6 +390,7 @@ EXAMPLES_MASTER = {
                     "path": "fnet_classification_with_keras_nlp",
                     "title": "Text Classification using FNet",
                     "subcategory": "Text classification",
+                    "keras_3": True,
                 },
                 {
                     "path": "multi_label_classification",
