@@ -50,11 +50,15 @@ Fourier Transform (FFT); this reduces the time complexity from `O(n^2)`
 Before we start with the implementation, let's import all the necessary packages.
 """
 
+"""shell
+pip install -q --upgrade keras-nlp
+pip install -q --upgrade keras  # Upgrade to Keras 3.
+"""
+
 import keras_nlp
+import keras
 import tensorflow as tf
 import os
-
-from tensorflow import keras
 
 keras.utils.set_random_seed(42)
 
@@ -150,7 +154,7 @@ training it on a corpus gives us a vocabulary of subwords. A subword tokenizer
 is a compromise between word tokenizers (word tokenizers need very large
 vocabularies for good coverage of input words), and character tokenizers
 (characters don't really encode meaning like words do). Luckily, KerasNLP
-makes it very simple to train WordPiece on a corpus with the 
+makes it very simple to train WordPiece on a corpus with the
 `keras_nlp.tokenizers.compute_word_piece_vocabulary` utility.
 
 Note: The official implementation of FNet uses the SentencePiece Tokenizer.
