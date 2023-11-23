@@ -2,7 +2,7 @@
 Title: Character-level recurrent sequence-to-sequence model
 Author: [fchollet](https://twitter.com/fchollet)
 Date created: 2017/09/29
-Last modified: 2020/04/26
+Last modified: 2023/11/22
 Description: Character-level recurrent sequence-to-sequence model.
 Accelerator: GPU
 """
@@ -47,17 +47,17 @@ models are more common in this domain.
 """
 
 import numpy as np
-import tensorflow as tf
-from tensorflow import keras
+import keras
+import os
+from pathlib import Path
 
 """
 ## Download the data
 """
 
-"""shell
-!curl -O http://www.manythings.org/anki/fra-eng.zip
-!unzip fra-eng.zip
-"""
+fpath = keras.utils.get_file(origin="http://www.manythings.org/anki/fra-eng.zip")
+dirpath = Path(fpath).parent.absolute()
+os.system(f"unzip -q {fpath} -d {dirpath}")
 
 """
 ## Configuration
@@ -68,7 +68,7 @@ epochs = 100  # Number of epochs to train for.
 latent_dim = 256  # Latent dimensionality of the encoding space.
 num_samples = 10000  # Number of samples to train on.
 # Path to the data txt file on disk.
-data_path = "fra.txt"
+data_path = os.path.join(dirpath, "fra.txt")
 
 """
 ## Prepare the data
@@ -112,13 +112,16 @@ input_token_index = dict([(char, i) for i, char in enumerate(input_characters)])
 target_token_index = dict([(char, i) for i, char in enumerate(target_characters)])
 
 encoder_input_data = np.zeros(
-    (len(input_texts), max_encoder_seq_length, num_encoder_tokens), dtype="float32"
+    (len(input_texts), max_encoder_seq_length, num_encoder_tokens),
+    dtype="float32",
 )
 decoder_input_data = np.zeros(
-    (len(input_texts), max_decoder_seq_length, num_decoder_tokens), dtype="float32"
+    (len(input_texts), max_decoder_seq_length, num_decoder_tokens),
+    dtype="float32",
 )
 decoder_target_data = np.zeros(
-    (len(input_texts), max_decoder_seq_length, num_decoder_tokens), dtype="float32"
+    (len(input_texts), max_decoder_seq_length, num_decoder_tokens),
+    dtype="float32",
 )
 
 for i, (input_text, target_text) in enumerate(zip(input_texts, target_texts)):
@@ -177,7 +180,7 @@ model.fit(
     validation_split=0.2,
 )
 # Save model
-model.save("s2s")
+model.save("s2s_model.keras")
 
 """
 ## Run inference (sampling)
@@ -191,7 +194,7 @@ Output will be the next target token.
 
 # Define sampling models
 # Restore the model and construct the encoder and decoder.
-model = keras.models.load_model("s2s")
+model = keras.models.load_model("s2s_model.keras")
 
 encoder_inputs = model.input[0]  # input_1
 encoder_outputs, state_h_enc, state_c_enc = model.layers[2].output  # lstm_1
@@ -221,7 +224,7 @@ reverse_target_char_index = dict((i, char) for char, i in target_token_index.ite
 
 def decode_sequence(input_seq):
     # Encode the input as state vectors.
-    states_value = encoder_model.predict(input_seq)
+    states_value = encoder_model.predict(input_seq, verbose=0)
 
     # Generate empty target sequence of length 1.
     target_seq = np.zeros((1, 1, num_decoder_tokens))
@@ -233,7 +236,9 @@ def decode_sequence(input_seq):
     stop_condition = False
     decoded_sentence = ""
     while not stop_condition:
-        output_tokens, h, c = decoder_model.predict([target_seq] + states_value)
+        output_tokens, h, c = decoder_model.predict(
+            [target_seq] + states_value, verbose=0
+        )
 
         # Sample a token
         sampled_token_index = np.argmax(output_tokens[0, -1, :])
