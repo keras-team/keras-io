@@ -471,6 +471,7 @@ EXAMPLES_MASTER = {
                     "path": "semantic_similarity_with_bert",
                     "title": "Semantic Similarity with BERT",
                     "subcategory": "Text similarity search",
+                    "keras_3": True,
                 },
                 # Language modeling
                 {
