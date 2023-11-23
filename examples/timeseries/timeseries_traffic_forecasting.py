@@ -2,7 +2,7 @@
 Title: Traffic forecasting using graph neural networks and LSTM
 Author: [Arash Khodadadi](https://www.linkedin.com/in/arash-khodadadi-08a02490/)
 Date created: 2021/12/28
-Last modified: 2021/12/28
+Last modified: 2023/11/22
 Description: This example demonstrates how to do timeseries forecasting over graphs.
 Accelerator: GPU
 """
@@ -40,15 +40,19 @@ Joint Conference on Artificial Intelligence, 2018.
 ## Setup
 """
 
+import os
+
+os.environ["KERAS_BACKEND"] = "tensorflow"
+
 import pandas as pd
 import numpy as np
-import os
 import typing
 import matplotlib.pyplot as plt
 
 import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras import layers
+import keras
+from keras import layers
+from keras import ops
 
 """
 ## Data preparation
@@ -219,7 +223,7 @@ where `N` is the number of roads.
 
 """
 We use the Keras built-in function
-[`timeseries_dataset_from_array()`](https://www.tensorflow.org/api_docs/python/tf/keras/utils/timeseries_dataset_from_array).
+`keras.utils.timeseries_dataset_from_array`.
 The function `create_tf_dataset()` below takes as input a `numpy.ndarray` and returns a
 `tf.data.Dataset`. In this function `input_sequence_length=T` and `forecast_horizon=h`.
 
@@ -239,8 +243,6 @@ however, the last dimension of the input is always 1.
 We use the last 12 values of the speed in each road to forecast the speed for 3 time
 steps ahead:
 """
-
-from tensorflow.keras.preprocessing import timeseries_dataset_from_array
 
 batch_size = 64
 input_sequence_length = 12
@@ -280,7 +282,7 @@ def create_tf_dataset(
         A tf.data.Dataset instance.
     """
 
-    inputs = timeseries_dataset_from_array(
+    inputs = keras.utils.timeseries_dataset_from_array(
         np.expand_dims(data_array[:-forecast_horizon], axis=-1),
         None,
         sequence_length=input_sequence_length,
@@ -294,7 +296,7 @@ def create_tf_dataset(
         else input_sequence_length + forecast_horizon - 1
     )
     target_seq_length = forecast_horizon if multi_horizon else 1
-    targets = timeseries_dataset_from_array(
+    targets = keras.utils.timeseries_dataset_from_array(
         data_array[target_offset:],
         None,
         sequence_length=target_seq_length,
@@ -432,15 +434,15 @@ class GraphConv(layers.Layer):
         self.graph_info = graph_info
         self.aggregation_type = aggregation_type
         self.combination_type = combination_type
-        self.weight = tf.Variable(
-            initial_value=keras.initializers.glorot_uniform()(
-                shape=(in_feat, out_feat), dtype="float32"
-            ),
+        self.weight = self.add_weight(
+            initializer=keras.initializers.GlorotUniform(),
+            shape=(in_feat, out_feat),
+            dtype="float32",
             trainable=True,
         )
         self.activation = layers.Activation(activation)
 
-    def aggregate(self, neighbour_representations: tf.Tensor):
+    def aggregate(self, neighbour_representations):
         aggregation_func = {
             "sum": tf.math.unsorted_segment_sum,
             "mean": tf.math.unsorted_segment_mean,
@@ -456,7 +458,7 @@ class GraphConv(layers.Layer):
 
         raise ValueError(f"Invalid aggregation type: {self.aggregation_type}")
 
-    def compute_nodes_representation(self, features: tf.Tensor):
+    def compute_nodes_representation(self, features):
         """Computes each node's representation.
 
         The nodes' representations are obtained by multiplying the features tensor with
@@ -469,24 +471,23 @@ class GraphConv(layers.Layer):
         Returns:
             A tensor of shape `(num_nodes, batch_size, input_seq_len, out_feat)`
         """
-        return tf.matmul(features, self.weight)
+        return ops.matmul(features, self.weight)
 
-    def compute_aggregated_messages(self, features: tf.Tensor):
+    def compute_aggregated_messages(self, features):
         neighbour_representations = tf.gather(features, self.graph_info.edges[1])
         aggregated_messages = self.aggregate(neighbour_representations)
-        return tf.matmul(aggregated_messages, self.weight)
+        return ops.matmul(aggregated_messages, self.weight)
 
-    def update(self, nodes_representation: tf.Tensor, aggregated_messages: tf.Tensor):
+    def update(self, nodes_representation, aggregated_messages):
         if self.combination_type == "concat":
-            h = tf.concat([nodes_representation, aggregated_messages], axis=-1)
+            h = ops.concatenate([nodes_representation, aggregated_messages], axis=-1)
         elif self.combination_type == "add":
             h = nodes_representation + aggregated_messages
         else:
             raise ValueError(f"Invalid combination type: {self.combination_type}.")
-
         return self.activation(h)
 
-    def call(self, features: tf.Tensor):
+    def call(self, features):
         """Forward pass.
 
         Args:
@@ -549,19 +550,19 @@ class LSTMGC(layers.Layer):
         """Forward pass.
 
         Args:
-            inputs: tf.Tensor of shape `(batch_size, input_seq_len, num_nodes, in_feat)`
+            inputs: tensor of shape `(batch_size, input_seq_len, num_nodes, in_feat)`
 
         Returns:
             A tensor of shape `(batch_size, output_seq_len, num_nodes)`.
         """
 
         # convert shape to  (num_nodes, batch_size, input_seq_len, in_feat)
-        inputs = tf.transpose(inputs, [2, 0, 1, 3])
+        inputs = ops.transpose(inputs, [2, 0, 1, 3])
 
         gcn_out = self.graph_conv(
             inputs
         )  # gcn_out has shape: (num_nodes, batch_size, input_seq_len, out_feat)
-        shape = tf.shape(gcn_out)
+        shape = ops.shape(gcn_out)
         num_nodes, batch_size, input_seq_len, out_feat = (
             shape[0],
             shape[1],
@@ -570,7 +571,9 @@ class LSTMGC(layers.Layer):
         )
 
         # LSTM takes only 3D tensors as input
-        gcn_out = tf.reshape(gcn_out, (batch_size * num_nodes, input_seq_len, out_feat))
+        gcn_out = ops.reshape(
+            gcn_out, (batch_size * num_nodes, input_seq_len, out_feat)
+        )
         lstm_out = self.lstm(
             gcn_out
         )  # lstm_out has shape: (batch_size * num_nodes, lstm_units)
@@ -578,8 +581,8 @@ class LSTMGC(layers.Layer):
         dense_output = self.dense(
             lstm_out
         )  # dense_output has shape: (batch_size * num_nodes, output_seq_len)
-        output = tf.reshape(dense_output, (num_nodes, batch_size, self.output_seq_len))
-        return tf.transpose(
+        output = ops.reshape(dense_output, (num_nodes, batch_size, self.output_seq_len))
+        return ops.transpose(
             output, [1, 2, 0]
         )  # returns Tensor of shape (batch_size, output_seq_len, num_nodes)
 
