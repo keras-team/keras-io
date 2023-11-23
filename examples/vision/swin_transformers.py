@@ -145,13 +145,15 @@ class DropPath(layers.Layer):
         self.drop_prob = drop_prob
 
     def call(self, x):
-        input_shape = tf.shape(x)
+        input_shape = ops.shape(x)
         batch_size = input_shape[0]
         rank = x.shape.rank
         shape = (batch_size,) + (1,) * (rank - 1)
-        random_tensor = (1 - self.drop_prob) + tf.random.uniform(shape, dtype=x.dtype)
-        path_mask = tf.floor(random_tensor)
-        output = tf.math.divide(x, 1 - self.drop_prob) * path_mask
+        random_tensor = (1 - self.drop_prob) + keras.random.uniform(
+            shape, dtype=x.dtype
+        )
+        path_mask = ops.floor(random_tensor)
+        output = ops.divide(x, 1 - self.drop_prob) * path_mask
         return output
 
 
@@ -208,7 +210,7 @@ class WindowAttention(layers.Layer):
         relative_position_index = relative_coords.sum(-1)
 
         self.relative_position_index = tf.Variable(
-            initial_value=lambda: tf.convert_to_tensor(relative_position_index),
+            initial_value=lambda: ops.convert_to_tensor(relative_position_index),
             trainable=False,
         )
 
@@ -233,12 +235,12 @@ class WindowAttention(layers.Layer):
             (num_window_elements, num_window_elements, -1),
         )
         relative_position_bias = ops.transpose(relative_position_bias, (2, 0, 1))
-        attn = attn + tf.expand_dims(relative_position_bias, axis=0)
+        attn = attn + ops.expand_dims(relative_position_bias, axis=0)
 
         if mask is not None:
             nW = mask.shape[0]
-            mask_float = tf.cast(
-                tf.expand_dims(tf.expand_dims(mask, axis=1), axis=0), tf.float32
+            mask_float = ops.cast(
+                ops.expand_dims(ops.expand_dims(mask, axis=1), axis=0), "float32"
             )
             attn = ops.reshape(attn, (-1, nW, self.num_heads, size, size)) + mask_float
             attn = ops.reshape(attn, (-1, self.num_heads, size, size))
@@ -340,18 +342,18 @@ class SwinTransformer(layers.Layer):
                 for w in w_slices:
                     mask_array[:, h, w, :] = count
                     count += 1
-            mask_array = tf.convert_to_tensor(mask_array)
+            mask_array = ops.convert_to_tensor(mask_array)
 
             # mask array to windows
             mask_windows = window_partition(mask_array, self.window_size)
             mask_windows = ops.reshape(
                 mask_windows, [-1, self.window_size * self.window_size]
             )
-            attn_mask = tf.expand_dims(mask_windows, axis=1) - tf.expand_dims(
+            attn_mask = ops.expand_dims(mask_windows, axis=1) - ops.expand_dims(
                 mask_windows, axis=2
             )
-            attn_mask = tf.where(attn_mask != 0, -100.0, attn_mask)
-            attn_mask = tf.where(attn_mask == 0, 0.0, attn_mask)
+            attn_mask = ops.where(attn_mask != 0, -100.0, attn_mask)
+            attn_mask = ops.where(attn_mask == 0, 0.0, attn_mask)
             self.attn_mask = tf.Variable(initial_value=attn_mask, trainable=False)
 
     def call(self, x):
@@ -361,7 +363,7 @@ class SwinTransformer(layers.Layer):
         x = self.norm1(x)
         x = ops.reshape(x, (-1, height, width, channels))
         if self.shift_size > 0:
-            shifted_x = tf.roll(
+            shifted_x = ops.roll(
                 x, shift=[-self.shift_size, -self.shift_size], axis=[1, 2]
             )
         else:
@@ -381,7 +383,7 @@ class SwinTransformer(layers.Layer):
             attn_windows, self.window_size, height, width, channels
         )
         if self.shift_size > 0:
-            x = tf.roll(
+            x = ops.roll(
                 shifted_x, shift=[self.shift_size, self.shift_size], axis=[1, 2]
             )
         else:
@@ -415,7 +417,7 @@ class PatchExtract(layers.Layer):
         self.patch_size_y = patch_size[0]
 
     def call(self, images):
-        batch_size = tf.shape(images)[0]
+        batch_size = ops.shape(images)[0]
         patches = tf.image.extract_patches(
             images=images,
             sizes=(1, self.patch_size_x, self.patch_size_y, 1),
@@ -436,7 +438,7 @@ class PatchEmbedding(layers.Layer):
         self.pos_embed = layers.Embedding(input_dim=num_patch, output_dim=embed_dim)
 
     def call(self, patch):
-        pos = tf.range(start=0, limit=self.num_patch, delta=1)
+        pos = ops.arange(start=0, stop=self.num_patch)
         return self.proj(patch) + self.pos_embed(pos)
 
 
@@ -455,7 +457,7 @@ class PatchMerging(keras.layers.Layer):
         x1 = x[:, 1::2, 0::2, :]
         x2 = x[:, 0::2, 1::2, :]
         x3 = x[:, 1::2, 1::2, :]
-        x = tf.concat((x0, x1, x2, x3), axis=-1)
+        x = ops.concatenate((x0, x1, x2, x3), axis=-1)
         x = ops.reshape(x, (-1, (height // 2) * (width // 2), 4 * C))
         return self.linear_trans(x)
 
