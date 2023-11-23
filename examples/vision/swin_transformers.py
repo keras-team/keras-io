@@ -64,7 +64,7 @@ num_patch_y = input_shape[1] // patch_size[1]
 
 learning_rate = 1e-3
 batch_size = 128
-num_epochs = 1
+num_epochs = 40
 validation_split = 0.1
 weight_decay = 0.0001
 label_smoothing = 0.1
