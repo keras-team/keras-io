@@ -441,6 +441,7 @@ EXAMPLES_MASTER = {
                     "path": "lstm_seq2seq",
                     "title": "Character-level recurrent sequence-to-sequence model",
                     "subcategory": "Machine translation",
+                    "keras_3": True,
                 },
                 # Entailement prediction
                 {
@@ -592,11 +593,13 @@ EXAMPLES_MASTER = {
                     "path": "timeseries_traffic_forecasting",
                     "title": "Traffic forecasting using graph neural networks and LSTM",
                     "subcategory": "Timeseries forecasting",
+                    "keras_3": True,
                 },
                 {
                     "path": "timeseries_weather_forecasting",
                     "title": "Timeseries forecasting for weather prediction",
                     "subcategory": "Timeseries forecasting",
+                    "keras_3": True,
                 },
             ],
         },
@@ -643,6 +646,7 @@ EXAMPLES_MASTER = {
                     "path": "vae",
                     "title": "Variational AutoEncoder",
                     "subcategory": "Image generation",
+                    "keras_3": True,
                 },
                 {
                     "path": "dcgan_overriding_train_step",
@@ -809,6 +813,12 @@ EXAMPLES_MASTER = {
                 {
                     "path": "trainer_pattern",
                     "title": "Trainer pattern",
+                    "subcategory": "Keras usage tips",
+                    "keras_3": True,
+                },
+                {
+                    "path": "endpoint_layer_pattern",
+                    "title": "Endpoint layer pattern",
                     "subcategory": "Keras usage tips",
                     "keras_3": True,
                 },
