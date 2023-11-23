@@ -7,17 +7,19 @@ Description: Image classification using Swin Transformers, a general-purpose bac
 Accelerator: GPU
 """
 """
-This example implements [Swin Transformer: Hierarchical Vision Transformer using Shifted Windows](https://arxiv.org/abs/2103.14030)
+This example implements
+[Swin Transformer: Hierarchical Vision Transformer using Shifted Windows](https://arxiv.org/abs/2103.14030)
 by Liu et al. for image classification, and demonstrates it on the
 [CIFAR-100 dataset](https://www.cs.toronto.edu/~kriz/cifar.html).
 
-Swin Transformer (**S**hifted **Win**dow Transformer) can serve as a general-purpose backbone
-for computer vision. Swin Transformer is a hierarchical Transformer whose
-representations are computed with _shifted windows_. The shifted window scheme
-brings greater efficiency by limiting self-attention computation to
-non-overlapping local windows while also allowing for cross-window connections.
-This architecture has the flexibility to model information at various scales and has
-a linear computational complexity with respect to image size.
+Swin Transformer (**S**hifted **Win**dow Transformer) can serve as a
+general-purpose backbone for computer vision. Swin Transformer is a hierarchical
+Transformer whose representations are computed with _shifted windows_. The
+shifted window scheme brings greater efficiency by limiting self-attention
+computation to non-overlapping local windows while also allowing for
+cross-window connections. This architecture has the flexibility to model
+information at various scales and has a linear computational complexity with
+respect to image size.
 
 This example requires TensorFlow 2.5 or higher.
 """
@@ -26,58 +28,33 @@ This example requires TensorFlow 2.5 or higher.
 ## Setup
 """
 
-import os
-
-os.environ["KERAS_BACKEND"] = "tensorflow"
-
 import matplotlib.pyplot as plt
 import numpy as np
-import tensorflow as tf
+import tensorflow as tf  # For tf.data and preprocessing only.
 import keras
 from keras import layers
 from keras import ops
 
 """
-## Prepare the data
+## Configure the hyperparameters
 
-We load the CIFAR-100 dataset through `keras.datasets`,
-normalize the images, and convert the integer labels to one-hot encoded vectors.
+A key parameter to pick is the `patch_size`, the size of the input patches.
+In order to use each pixel as an individual input, you can set `patch_size` to
+`(1, 1)`. Below, we take inspiration from the original paper settings for
+training on ImageNet-1K, keeping most of the original settings for this example.
 """
 
 num_classes = 100
 input_shape = (32, 32, 3)
-
-(x_train, y_train), (x_test, y_test) = keras.datasets.cifar100.load_data()
-x_train, x_test = x_train / 255.0, x_test / 255.0
-y_train = keras.utils.to_categorical(y_train, num_classes)
-y_test = keras.utils.to_categorical(y_test, num_classes)
-print(f"x_train shape: {x_train.shape} - y_train shape: {y_train.shape}")
-print(f"x_test shape: {x_test.shape} - y_test shape: {y_test.shape}")
-
-plt.figure(figsize=(10, 10))
-for i in range(25):
-    plt.subplot(5, 5, i + 1)
-    plt.xticks([])
-    plt.yticks([])
-    plt.grid(False)
-    plt.imshow(x_train[i])
-plt.show()
-
-"""
-## Configure the hyperparameters
-
-A key parameter to pick is the `patch_size`, the size of the input patches.
-In order to use each pixel as an individual input, you can set `patch_size` to `(1, 1)`.
-Below, we take inspiration from the original paper settings
-for training on ImageNet-1K, keeping most of the original settings for this example.
-"""
 
 patch_size = (2, 2)  # 2-by-2 sized patches
 dropout_rate = 0.03  # Dropout rate
 num_heads = 8  # Attention heads
 embed_dim = 64  # Embedding dimension
 num_mlp = 256  # MLP layer size
-qkv_bias = True  # Convert embedded patches to query, key, and values with a learnable additive value
+# Convert embedded patches to query, key, and values with a learnable additive
+# value
+qkv_bias = True
 window_size = 2  # Size of attention window
 shift_size = 1  # Size of shifting window
 image_dimension = 32  # Initial image size
@@ -91,6 +68,34 @@ num_epochs = 1
 validation_split = 0.1
 weight_decay = 0.0001
 label_smoothing = 0.1
+
+"""
+## Prepare the data
+
+We load the CIFAR-100 dataset through `keras.datasets`,
+normalize the images, and convert the integer labels to one-hot encoded vectors.
+"""
+
+(x_train, y_train), (x_test, y_test) = keras.datasets.cifar100.load_data()
+x_train, x_test = x_train / 255.0, x_test / 255.0
+y_train = keras.utils.to_categorical(y_train, num_classes)
+y_test = keras.utils.to_categorical(y_test, num_classes)
+num_train_samples = int(len(x_train) * (1 - validation_split))
+num_val_samples = len(x_train) - num_train_samples
+x_train, x_val = np.split(x_train, [num_train_samples])
+y_train, y_val = np.split(y_train, [num_train_samples])
+print(f"x_train shape: {x_train.shape} - y_train shape: {y_train.shape}")
+print(f"x_test shape: {x_test.shape} - y_test shape: {y_test.shape}")
+
+plt.figure(figsize=(10, 10))
+for i in range(25):
+    plt.subplot(5, 5, i + 1)
+    plt.xticks([])
+    plt.yticks([])
+    plt.grid(False)
+    plt.imshow(x_train[i])
+plt.show()
+
 
 """
 ## Helper functions
@@ -139,33 +144,17 @@ def window_reverse(windows, window_size, height, width, channels):
     return x
 
 
-class DropPath(layers.Layer):
-    def __init__(self, drop_prob=None, **kwargs):
-        super().__init__(**kwargs)
-        self.drop_prob = drop_prob
-
-    def call(self, x):
-        input_shape = ops.shape(x)
-        batch_size = input_shape[0]
-        rank = x.shape.rank
-        shape = (batch_size,) + (1,) * (rank - 1)
-        random_tensor = (1 - self.drop_prob) + keras.random.uniform(
-            shape, dtype=x.dtype
-        )
-        path_mask = ops.floor(random_tensor)
-        output = ops.divide(x, 1 - self.drop_prob) * path_mask
-        return output
-
-
 """
 ## Window based multi-head self-attention
 
-Usually Transformers perform global self-attention, where the relationships between
-a token and all other tokens are computed. The global computation leads to quadratic
-complexity with respect to the number of tokens. Here, as the [original paper](https://arxiv.org/abs/2103.14030)
-suggests, we compute self-attention within local windows, in a non-overlapping manner.
-Global self-attention leads to quadratic computational complexity in the number of patches,
-whereas window-based self-attention leads to linear complexity and is easily scalable.
+Usually Transformers perform global self-attention, where the relationships
+between a token and all other tokens are computed. The global computation leads
+to quadratic complexity with respect to the number of tokens. Here, as the
+[original paper](https://arxiv.org/abs/2103.14030) suggests, we compute
+self-attention within local windows, in a non-overlapping manner. Global
+self-attention leads to quadratic computational complexity in the number of
+patches, whereas window-based self-attention leads to linear complexity and is
+easily scalable.
 """
 
 
@@ -188,13 +177,12 @@ class WindowAttention(layers.Layer):
         self.dropout = layers.Dropout(dropout_rate)
         self.proj = layers.Dense(dim)
 
-    def build(self, input_shape):
         num_window_elements = (2 * self.window_size[0] - 1) * (
             2 * self.window_size[1] - 1
         )
         self.relative_position_bias_table = self.add_weight(
             shape=(num_window_elements, self.num_heads),
-            initializer=tf.initializers.Zeros(),
+            initializer=keras.initializers.Zeros(),
             trainable=True,
         )
         coords_h = np.arange(self.window_size[0])
@@ -209,8 +197,10 @@ class WindowAttention(layers.Layer):
         relative_coords[:, :, 0] *= 2 * self.window_size[1] - 1
         relative_position_index = relative_coords.sum(-1)
 
-        self.relative_position_index = tf.Variable(
-            initial_value=lambda: ops.convert_to_tensor(relative_position_index),
+        self.relative_position_index = keras.Variable(
+            initializer=relative_position_index,
+            shape=relative_position_index.shape,
+            dtype="int",
             trainable=False,
         )
 
@@ -227,8 +217,10 @@ class WindowAttention(layers.Layer):
 
         num_window_elements = self.window_size[0] * self.window_size[1]
         relative_position_index_flat = ops.reshape(self.relative_position_index, (-1,))
-        relative_position_bias = tf.gather(
-            self.relative_position_bias_table, relative_position_index_flat
+        relative_position_bias = ops.take(
+            self.relative_position_bias_table,
+            relative_position_index_flat,
+            axis=0,
         )
         relative_position_bias = ops.reshape(
             relative_position_bias,
@@ -240,7 +232,8 @@ class WindowAttention(layers.Layer):
         if mask is not None:
             nW = mask.shape[0]
             mask_float = ops.cast(
-                ops.expand_dims(ops.expand_dims(mask, axis=1), axis=0), "float32"
+                ops.expand_dims(ops.expand_dims(mask, axis=1), axis=0),
+                "float32",
             )
             attn = ops.reshape(attn, (-1, nW, self.num_heads, size, size)) + mask_float
             attn = ops.reshape(attn, (-1, self.num_heads, size, size))
@@ -260,8 +253,8 @@ class WindowAttention(layers.Layer):
 """
 ## The complete Swin Transformer model
 
-Finally, we put together the complete Swin Transformer by replacing the standard multi-head
-attention (MHA) with shifted windows attention. As suggested in the
+Finally, we put together the complete Swin Transformer by replacing the standard
+multi-head attention (MHA) with shifted windows attention. As suggested in the
 original paper, we create a model comprising of a shifted window-based MHA
 layer, followed by a 2-layer MLP with GELU nonlinearity in between, applying
 `LayerNormalization` before each MSA layer and each MLP, and a residual
@@ -304,7 +297,7 @@ class SwinTransformer(layers.Layer):
             qkv_bias=qkv_bias,
             dropout_rate=dropout_rate,
         )
-        self.drop_path = DropPath(dropout_rate)
+        self.drop_path = layers.Dropout(dropout_rate)
         self.norm2 = layers.LayerNormalization(epsilon=1e-5)
 
         self.mlp = keras.Sequential(
@@ -354,9 +347,14 @@ class SwinTransformer(layers.Layer):
             )
             attn_mask = ops.where(attn_mask != 0, -100.0, attn_mask)
             attn_mask = ops.where(attn_mask == 0, 0.0, attn_mask)
-            self.attn_mask = tf.Variable(initial_value=attn_mask, trainable=False)
+            self.attn_mask = keras.Variable(
+                initializer=attn_mask,
+                shape=attn_mask.shape,
+                dtype=attn_mask.dtype,
+                trainable=False,
+            )
 
-    def call(self, x):
+    def call(self, x, training=False):
         height, width = self.num_patch
         _, num_patches_before, channels = x.shape
         x_skip = x
@@ -390,7 +388,7 @@ class SwinTransformer(layers.Layer):
             x = shifted_x
 
         x = ops.reshape(x, (-1, height * width, channels))
-        x = self.drop_path(x)
+        x = self.drop_path(x, training=training)
         x = x_skip + x
         x_skip = x
         x = self.norm2(x)
@@ -410,24 +408,19 @@ images on top of which we will later use the Swin Transformer class we built.
 """
 
 
-class PatchExtract(layers.Layer):
-    def __init__(self, patch_size, **kwargs):
-        super().__init__(**kwargs)
-        self.patch_size_x = patch_size[0]
-        self.patch_size_y = patch_size[0]
-
-    def call(self, images):
-        batch_size = ops.shape(images)[0]
-        patches = tf.image.extract_patches(
-            images=images,
-            sizes=(1, self.patch_size_x, self.patch_size_y, 1),
-            strides=(1, self.patch_size_x, self.patch_size_y, 1),
-            rates=(1, 1, 1, 1),
-            padding="VALID",
-        )
-        patch_dim = patches.shape[-1]
-        patch_num = patches.shape[1]
-        return ops.reshape(patches, (batch_size, patch_num * patch_num, patch_dim))
+# Using tf ops since it is only used in tf.data.
+def patch_extract(images):
+    batch_size = tf.shape(images)[0]
+    patches = tf.image.extract_patches(
+        images=images,
+        sizes=(1, patch_size[0], patch_size[1], 1),
+        strides=(1, patch_size[0], patch_size[1], 1),
+        rates=(1, 1, 1, 1),
+        padding="VALID",
+    )
+    patch_dim = patches.shape[-1]
+    patch_num = patches.shape[1]
+    return tf.reshape(patches, (batch_size, patch_num * patch_num, patch_dim))
 
 
 class PatchEmbedding(layers.Layer):
@@ -463,16 +456,50 @@ class PatchMerging(keras.layers.Layer):
 
 
 """
+### Prepare the tf.data.Dataset
+
+We do all the steps, which do not have trainable weights with tf.data.
+Prepare the training, validation and testing sets.
+
+"""
+
+
+def augment(x):
+    x = tf.image.random_crop(x, size=(image_dimension, image_dimension, 3))
+    x = tf.image.random_flip_left_right(x)
+    return x
+
+
+dataset = (
+    tf.data.Dataset.from_tensor_slices((x_train, y_train))
+    .map(lambda x, y: (augment(x), y))
+    .batch(batch_size=batch_size)
+    .map(lambda x, y: (patch_extract(x), y))
+    .prefetch(tf.data.experimental.AUTOTUNE)
+)
+
+dataset_val = (
+    tf.data.Dataset.from_tensor_slices((x_val, y_val))
+    .batch(batch_size=batch_size)
+    .map(lambda x, y: (patch_extract(x), y))
+    .prefetch(tf.data.experimental.AUTOTUNE)
+)
+
+dataset_test = (
+    tf.data.Dataset.from_tensor_slices((x_test, y_test))
+    .batch(batch_size=batch_size)
+    .map(lambda x, y: (patch_extract(x), y))
+    .prefetch(tf.data.experimental.AUTOTUNE)
+)
+
+"""
 ### Build the model
 
 We put together the Swin Transformer model.
 """
 
-input = layers.Input(input_shape)
-x = layers.RandomCrop(image_dimension, image_dimension)(input)
-x = layers.RandomFlip("horizontal")(x)
-x = PatchExtract(patch_size)(x)
-x = PatchEmbedding(num_patch_x * num_patch_y, embed_dim)(x)
+input = layers.Input(shape=(256, 12))
+x = PatchEmbedding(num_patch_x * num_patch_y, embed_dim)(input)
 x = SwinTransformer(
     dim=embed_dim,
     num_patch=(num_patch_x, num_patch_y),
@@ -518,11 +545,10 @@ model.compile(
 )
 
 history = model.fit(
-    x_train,
-    y_train,
+    dataset,
     batch_size=batch_size,
     epochs=num_epochs,
-    validation_split=validation_split,
+    validation_data=dataset_val,
 )
 
 """
@@ -542,32 +568,33 @@ plt.show()
 Let's display the final results of the training on CIFAR-100.
 """
 
-loss, accuracy, top_5_accuracy = model.evaluate(x_test, y_test)
+loss, accuracy, top_5_accuracy = model.evaluate(dataset_test)
 print(f"Test loss: {round(loss, 2)}")
 print(f"Test accuracy: {round(accuracy * 100, 2)}%")
 print(f"Test top 5 accuracy: {round(top_5_accuracy * 100, 2)}%")
 
 """
 The Swin Transformer model we just trained has just 152K parameters, and it gets
-us to ~75% test top-5 accuracy within just 40 epochs without any signs of overfitting
-as well as seen in above graph. This means we can train this network for longer
-(perhaps with a bit more regularization) and obtain even better performance.
-This performance can further be improved by additional techniques like cosine
-decay learning rate schedule, other data augmentation techniques. While experimenting,
-I tried training the model for 150 epochs with a slightly higher dropout and greater
-embedding dimensions which pushes the performance to ~72% test accuracy on CIFAR-100
-as you can see in the screenshot.
+us to ~75% test top-5 accuracy within just 40 epochs without any signs of
+overfitting as well as seen in above graph. This means we can train this network
+for longer (perhaps with a bit more regularization) and obtain even better
+performance. This performance can further be improved by additional techniques
+like cosine decay learning rate schedule, other data augmentation techniques.
+While experimenting, I tried training the model for 150 epochs with a slightly
+higher dropout and greater embedding dimensions which pushes the performance to
+~72% test accuracy on CIFAR-100 as you can see in the screenshot.
 
 ![Results of training for longer](https://i.imgur.com/9vnQesZ.png)
 
-The authors present a top-1 accuracy of 87.3% on ImageNet. The authors also present
-a number of experiments to study how input sizes, optimizers etc. affect the final
-performance of this model. The authors further present using this model for object detection,
-semantic segmentation and instance segmentation as well and report competitive results
-for these. You are strongly advised to also check out the
-[original paper](https://arxiv.org/abs/2103.14030).
+The authors present a top-1 accuracy of 87.3% on ImageNet. The authors also
+present a number of experiments to study how input sizes, optimizers etc. affect
+the final performance of this model. The authors further present using this
+model for object detection, semantic segmentation and instance segmentation as
+well and report competitive results for these. You are strongly advised to also
+check out the [original paper](https://arxiv.org/abs/2103.14030).
 
 This example takes inspiration from the official
 [PyTorch](https://github.com/microsoft/Swin-Transformer) and
-[TensorFlow](https://github.com/VcampSoldiers/Swin-Transformer-Tensorflow) implementations.
+[TensorFlow](https://github.com/VcampSoldiers/Swin-Transformer-Tensorflow)
+implementations.
 """
