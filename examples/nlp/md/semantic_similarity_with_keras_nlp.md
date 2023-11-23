@@ -344,11 +344,6 @@ restored_model.evaluate(test_ds)
 
 <div class="k-default-codeblock">
 ```
-/home/matt/miniconda3/envs/keras-io/lib/python3.10/site-packages/keras/src/saving/serialization_lib.py:723: UserWarning: `compile()` was not called as part of model loading because the model's `compile()` method is custom. All subclassed Models that have `compile()` overridden should also override `get_compile_config()` and `compile_from_config(config)`. Alternatively, you can call `compile()` manually after loading.
-  instance.compile_from_config(compile_config)
-/home/matt/miniconda3/envs/keras-io/lib/python3.10/site-packages/keras/src/saving/saving_lib.py:355: UserWarning: Skipping variable loading for optimizer 'adam', because it has 2 variables whereas the saved optimizer has 83 variables. 
-  trackable.load_own_variables(weights_store.get(inner_path))
-
  614/614 ━━━━━━━━━━━━━━━━━━━━ 2s 3ms/step - loss: 0.5128 - sparse_categorical_accuracy: 0.7956
 
 [0.5245093703269958, 0.7890879511833191]
