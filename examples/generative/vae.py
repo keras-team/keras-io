@@ -2,7 +2,7 @@
 Title: Variational AutoEncoder
 Author: [fchollet](https://twitter.com/fchollet)
 Date created: 2020/05/03
-Last modified: 2020/05/03
+Last modified: 2023/11/22
 Description: Convolutional Variational AutoEncoder (VAE) trained on MNIST digits.
 Accelerator: GPU
 """
@@ -11,10 +11,14 @@ Accelerator: GPU
 ## Setup
 """
 
+import os
+
+os.environ["KERAS_BACKEND"] = "tensorflow"
+
 import numpy as np
 import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras import layers
+import keras
+from keras import layers
 
 """
 ## Create a sampling layer
@@ -92,7 +96,8 @@ class VAE(keras.Model):
             reconstruction = self.decoder(z)
             reconstruction_loss = tf.reduce_mean(
                 tf.reduce_sum(
-                    keras.losses.binary_crossentropy(data, reconstruction), axis=(1, 2)
+                    keras.losses.binary_crossentropy(data, reconstruction),
+                    axis=(1, 2),
                 )
             )
             kl_loss = -0.5 * (1 + z_log_var - tf.square(z_mean) - tf.exp(z_log_var))
@@ -130,7 +135,7 @@ import matplotlib.pyplot as plt
 
 
 def plot_latent_space(vae, n=30, figsize=15):
-    # display an n*n 2D manifold of digits
+    # display a n*n 2D manifold of digits
     digit_size = 28
     scale = 1.0
     figure = np.zeros((digit_size * n, digit_size * n))
@@ -142,7 +147,7 @@ def plot_latent_space(vae, n=30, figsize=15):
     for i, yi in enumerate(grid_y):
         for j, xi in enumerate(grid_x):
             z_sample = np.array([[xi, yi]])
-            x_decoded = vae.decoder.predict(z_sample)
+            x_decoded = vae.decoder.predict(z_sample, verbose=0)
             digit = x_decoded[0].reshape(digit_size, digit_size)
             figure[
                 i * digit_size : (i + 1) * digit_size,
