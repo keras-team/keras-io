@@ -182,6 +182,7 @@ EXAMPLES_MASTER = {
                     "path": "captcha_ocr",
                     "title": "OCR model for reading Captchas",
                     "subcategory": "OCR",
+                    "keras_3": True,
                 },
                 {
                     "path": "handwriting_recognition",

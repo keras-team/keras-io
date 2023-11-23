@@ -44,16 +44,17 @@ head -20 data/words.txt
 ## Imports
 """
 
-from tensorflow.keras.layers import StringLookup
-from tensorflow import keras
+import os
+os.environ["KERAS_BACKEND"] = "tensorflow"
+
+from keras.layers import StringLookup
+import keras
 
 import matplotlib.pyplot as plt
 import tensorflow as tf
 import numpy as np
-import os
 
-np.random.seed(42)
-tf.random.set_seed(42)
+keras.utils.set_random_seed(42)
 
 """
 ## Dataset splitting
