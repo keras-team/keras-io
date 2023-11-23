@@ -248,7 +248,13 @@ blockquote {
   border: 1px solid #ced4da;
   border-radius: .1rem;
   transition: border-color .15s ease-in-out,box-shadow .15s ease-in-out;
+  outline: none;
 }
+.k-search-input:focus {
+  border-color: #d00000;
+  box-shadow: 0 0 5px rgb(173 25 25 / 50%);
+}
+
 .gsc-search-button-v2 {
   margin-top: 0;
 }
