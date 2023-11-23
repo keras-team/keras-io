@@ -44,7 +44,9 @@ Before we start implementing the pipeline, let's import all the libraries we nee
 """
 
 """shell
-!pip install -q rouge-score
+pip install -q --upgrade rouge-score
+pip install -q --upgrade keras-nlp
+pip install -q --upgrade keras  # Upgrade to Keras 3.
 """
 
 import keras_nlp

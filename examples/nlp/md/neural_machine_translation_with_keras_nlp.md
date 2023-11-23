@@ -46,7 +46,9 @@ Before we start implementing the pipeline, let's import all the libraries we nee
 
 
 ```python
-!!pip install -q rouge-score
+!pip install -q --upgrade rouge-score
+!pip install -q --upgrade keras-nlp
+!pip install -q --upgrade keras  # Upgrade to Keras 3.
 ```
 
 
@@ -67,7 +69,8 @@ from tensorflow_text.tools.wordpiece_vocab import (
 ```
 <div class="k-default-codeblock">
 ```
-[]
+['\x1b[33mWARNING: There was an error checking the latest version of pip.\x1b[0m\x1b[33m',
+ '\x1b[0m']
 
 ```
 </div>
@@ -131,11 +134,11 @@ for _ in range(5):
 
 <div class="k-default-codeblock">
 ```
-('she came very near to being run over by a car.', 'ella estuvo muy cerca de ser atropellada por un coche.')
-("let's continue the game after lunch.", 'sigamos el juego después de almorzar.')
-('although he is very old, he is strong.', 'a pesar de ser anciano él es fuerte.')
-('i made up for lost time.', 'yo compensé el tiempo perdido.')
-('i ran so i would be on time.', 'corrí para llegar a tiempo.')
+('will the coffee stain ruin the carpet?', '¿la mancha de café va a arruinar la alfombra?')
+('is it only about money?', '¿sólo se trata de dinero?')
+('most students come to school on foot.', 'la mayoría de los estudiantes vienen a la escuela de a pie.')
+("tom doesn't want to make mary angry.", 'tom no quiere hacer enojar a mary.')
+('i can fly.', 'puedo volar.')
 
 ```
 </div>
@@ -228,8 +231,8 @@ print("Spanish Tokens: ", spa_vocab[100:110])
 
 <div class="k-default-codeblock">
 ```
-English Tokens:  ['know', 'him', 'there', 'they', 'go', 'her', 'has', 'will', 'time', 're']
-Spanish Tokens:  ['mi', 'está', 'qué', 'le', 'ella', 'te', 'para', 'mary', 'las', 'más']
+English Tokens:  ['at', 'know', 'him', 'there', 'they', 'go', 'her', 'has', 'will', 're']
+Spanish Tokens:  ['qué', 'le', 'ella', 'para', 'te', 'mary', 'las', 'más', 'al', 'yo']
 
 ```
 </div>
@@ -275,17 +278,21 @@ print(
 
 <div class="k-default-codeblock">
 ```
-English sentence:  she is almost sixty years old.
-Tokens:  tf.Tensor([ 83  69 369 525 902 235 206  12], shape=(8,), dtype=int32)
-Recovered text after detokenizing:  tf.Tensor(b'she is almost sixty years old .', shape=(), dtype=string)
+English sentence:  tom thinks mary should apologize to john for not doing what she said she'd do.
+Tokens:  tf.Tensor(
+[  69  640   86  151 1274   67  309   82   97  288   85   84  181   84
+    8   29   77   11], shape=(18,), dtype=int32)
+Recovered text after detokenizing:  tf.Tensor(b"tom thinks mary should apologize to john for not doing what she said she ' d do .", shape=(), dtype=string)
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-Spanish sentence:  ella tiene casi sesenta años.
-Tokens:  tf.Tensor([ 104  118  276 4482  200   15], shape=(6,), dtype=int32)
-Recovered text after detokenizing:  tf.Tensor(b'ella tiene casi sesenta a\xc3\xb1os .', shape=(), dtype=string)
+Spanish sentence:  tom piensa que mary debería pedirle perdón a john por no hacer lo que había dicho que haría.
+Tokens:  tf.Tensor(
+[  82  704   80  105  262 1666 1894   29  314   91   81  125   92   80
+  179  464   80  915   14], shape=(19,), dtype=int32)
+Recovered text after detokenizing:  tf.Tensor(b'tom piensa que mary deber\xc3\xada pedirle perd\xc3\xb3n a john por no hacer lo que hab\xc3\xada dicho que har\xc3\xada .', shape=(), dtype=string)
 
 ```
 </div>
@@ -527,9 +534,9 @@ transformer.fit(train_ds, epochs=EPOCHS, validation_data=val_ds)
 
 <div class="k-default-codeblock">
 ```
- 1302/1302 ━━━━━━━━━━━━━━━━━━━━ 32s 21ms/step - accuracy: 0.8165 - loss: 1.4878 - val_accuracy: 0.8632 - val_loss: 0.8258
+ 1302/1302 ━━━━━━━━━━━━━━━━━━━━ 22s 15ms/step - accuracy: 0.8164 - loss: 1.4953 - val_accuracy: 0.8683 - val_loss: 0.7952
 
-<keras.src.callbacks.history.History at 0x7f4030101d80>
+<keras.src.callbacks.history.History at 0x7f6563fd2140>
 
 ```
 </div>
@@ -602,16 +609,16 @@ for i in range(2):
 <div class="k-default-codeblock">
 ```
 ** Example 0 **
-you've forgotten me, haven't you?
-eres muy in , ¿ no tienes ?
+he is always complaining.
+él siempre está en la escuela .
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
 ** Example 1 **
-they went aboard the plane.
-ellos se fue un coche .
+i think you're all wrong.
+creo que te representan todos los días .
 ```
 </div>
     
@@ -656,8 +663,8 @@ print("ROUGE-2 Score: ", rouge_2.result())
 
 <div class="k-default-codeblock">
 ```
-ROUGE-1 Score:  {'precision': Array(0.2935714, dtype=float32), 'recall': Array(0.26239014, dtype=float32), 'f1_score': Array(0.2714645, dtype=float32)}
-ROUGE-2 Score:  {'precision': Array(0.105, dtype=float32), 'recall': Array(0.09747476, dtype=float32), 'f1_score': Array(0.09975109, dtype=float32)}
+ROUGE-1 Score:  {'precision': Array(0.33075738, dtype=float32), 'recall': Array(0.33867723, dtype=float32), 'f1_score': Array(0.3302676, dtype=float32)}
+ROUGE-2 Score:  {'precision': Array(0.13534392, dtype=float32), 'recall': Array(0.13344036, dtype=float32), 'f1_score': Array(0.13272808, dtype=float32)}
 
 ```
 </div>
