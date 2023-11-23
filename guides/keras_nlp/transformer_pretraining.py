@@ -1,11 +1,11 @@
 """
 Title: Pretraining a Transformer from scratch with KerasNLP
 Author: [Matthew Watson](https://github.com/mattdangerw/)
-Converted to Keras 3 by: [Anshuman Mishra](https://github.com/shivance)
 Date created: 2022/04/18
 Last modified: 2023/07/15
 Description: Use KerasNLP to train a Transformer model from scratch.
 Accelerator: GPU
+Converted to Keras 3 by: [Anshuman Mishra](https://github.com/shivance)
 """
 
 """
@@ -23,15 +23,14 @@ This guide is broken into three parts:
 """
 ## Setup
 
-The following guide uses [Keras 3](https://keras.io/keras/) to work in
-any of `tensorflow`, `jax` or `torch`. Support for Keras 3 is baked into
-KerasNLP, simply change the `KERAS_BACKEND` environment variable below to change
-the backend you would like to use. We select the `jax` backend below, which will
-give us a particularly fast train step below.
+The following guide uses Keras 3 to work in any of `tensorflow`, `jax` or
+`torch`. We select the `jax` backend below, which will give us a particularly
+fast train step below, but feel free to mix it up.
 """
 
 """shell
-pip install -q keras-nlp
+pip install -q --upgrade keras-nlp
+pip install -q --upgrade keras  # Upgrade to Keras 3.
 """
 
 import os
@@ -392,7 +391,7 @@ encoder_model.save("encoder_model.keras")
 ## Fine-tuning
 
 After pretraining, we can now fine-tune our model on the `SST-2` dataset. We can
-leverage the ability of the encoder we build to predict on words in context to boost 
+leverage the ability of the encoder we build to predict on words in context to boost
 our performance on the downstream task.
 """
 
