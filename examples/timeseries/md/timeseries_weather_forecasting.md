@@ -2,7 +2,7 @@
 
 **Authors:** [Prabhanshu Attri](https://prabhanshu.com/github), [Yashika Sharma](https://github.com/yashika51), [Kristi Takach](https://github.com/ktakattack), [Falak Shah](https://github.com/falaktheoptimist)<br>
 **Date created:** 2020/06/23<br>
-**Last modified:** 2020/07/20<br>
+**Last modified:** 2023/11/22<br>
 **Description:** This notebook demonstrates how to do timeseries forecasting using a LSTM model.
 
 
@@ -12,14 +12,12 @@
 
 ---
 ## Setup
-This example requires TensorFlow 2.3 or higher.
 
 
 ```python
 import pandas as pd
 import matplotlib.pyplot as plt
-import tensorflow as tf
-from tensorflow import keras
+import keras
 ```
 
 ---
@@ -59,7 +57,6 @@ Index| Features      |Format             |Description
 
 ```python
 from zipfile import ZipFile
-import os
 
 uri = "https://storage.googleapis.com/tensorflow/tf-keras-datasets/jena_climate_2009_2016.csv.zip"
 zip_path = keras.utils.get_file(origin=uri, fname="jena_climate_2009_2016.csv.zip")
@@ -151,38 +148,12 @@ def show_raw_visualization(data):
 
 
 show_raw_visualization(df)
+
 ```
 
 
     
 ![png](/img/examples/timeseries/timeseries_weather_forecasting/timeseries_weather_forecasting_6_0.png)
-    
-
-
-This heat map shows the correlation between different features.
-
-
-```python
-
-def show_heatmap(data):
-    plt.matshow(data.corr())
-    plt.xticks(range(data.shape[1]), data.columns, fontsize=14, rotation=90)
-    plt.gca().xaxis.tick_bottom()
-    plt.yticks(range(data.shape[1]), data.columns, fontsize=14)
-
-    cb = plt.colorbar()
-    cb.ax.tick_params(labelsize=14)
-    plt.title("Feature Correlation Heatmap", fontsize=14)
-    plt.show()
-
-
-show_heatmap(df)
-
-```
-
-
-    
-![png](/img/examples/timeseries/timeseries_weather_forecasting/timeseries_weather_forecasting_8_0.png)
     
 
 
@@ -345,31 +316,54 @@ model.summary()
 
 <div class="k-default-codeblock">
 ```
-Model: "model"
-_________________________________________________________________
- Layer (type)                Output Shape              Param #   
-=================================================================
- input_1 (InputLayer)        [(None, 120, 7)]          0         
-                                                                 
- lstm (LSTM)                 (None, 32)                5120      
-                                                                 
- dense (Dense)               (None, 1)                 33        
-                                                                 
-=================================================================
-Total params: 5,153
-Trainable params: 5,153
-Non-trainable params: 0
-_________________________________________________________________
+CUDA backend failed to initialize: Found cuSOLVER version 11405, but JAX was built against version 11502, which is newer. The copy of cuSOLVER that is installed must be at least as new as the version against which JAX was built. (Set TF_CPP_MIN_LOG_LEVEL=0 and rerun for more info.)
 
 ```
 </div>
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold">Model: "functional_1"</span>
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━┓
+┃<span style="font-weight: bold"> Layer (type)                    </span>┃<span style="font-weight: bold"> Output Shape              </span>┃<span style="font-weight: bold">    Param # </span>┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━┩
+│ input_layer (<span style="color: #0087ff; text-decoration-color: #0087ff">InputLayer</span>)        │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">120</span>, <span style="color: #00af00; text-decoration-color: #00af00">7</span>)            │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ lstm (<span style="color: #0087ff; text-decoration-color: #0087ff">LSTM</span>)                     │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">32</span>)                │      <span style="color: #00af00; text-decoration-color: #00af00">5,120</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ dense (<span style="color: #0087ff; text-decoration-color: #0087ff">Dense</span>)                   │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>)                 │         <span style="color: #00af00; text-decoration-color: #00af00">33</span> │
+└─────────────────────────────────┴───────────────────────────┴────────────┘
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Total params: </span><span style="color: #00af00; text-decoration-color: #00af00">5,153</span> (20.13 KB)
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Trainable params: </span><span style="color: #00af00; text-decoration-color: #00af00">5,153</span> (20.13 KB)
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Non-trainable params: </span><span style="color: #00af00; text-decoration-color: #00af00">0</span> (0.00 B)
+</pre>
+
+
+
 We'll use the `ModelCheckpoint` callback to regularly save checkpoints, and
 the `EarlyStopping` callback to interrupt training when the validation loss
 is not longer improving.
 
 
 ```python
-path_checkpoint = "model_checkpoint.h5"
+path_checkpoint = "model_checkpoint.weights.h5"
 es_callback = keras.callbacks.EarlyStopping(monitor="val_loss", min_delta=0, patience=5)
 
 modelckpt_callback = keras.callbacks.ModelCheckpoint(
@@ -391,41 +385,45 @@ history = model.fit(
 <div class="k-default-codeblock">
 ```
 Epoch 1/10
-1172/1172 [==============================] - ETA: 0s - loss: 0.2101
-Epoch 1: val_loss improved from inf to 0.16601, saving model to model_checkpoint.h5
-1172/1172 [==============================] - 89s 75ms/step - loss: 0.2101 - val_loss: 0.1660
+ 1172/1172 ━━━━━━━━━━━━━━━━━━━━ 0s 70ms/step - loss: 0.3008
+Epoch 1: val_loss improved from inf to 0.15039, saving model to model_checkpoint.weights.h5
+ 1172/1172 ━━━━━━━━━━━━━━━━━━━━ 104s 88ms/step - loss: 0.3007 - val_loss: 0.1504
 Epoch 2/10
-1172/1172 [==============================] - ETA: 0s - loss: 0.1288
-Epoch 2: val_loss improved from 0.16601 to 0.14444, saving model to model_checkpoint.h5
-1172/1172 [==============================] - 87s 75ms/step - loss: 0.1288 - val_loss: 0.1444
+ 1171/1172 ━━━━━━━━━━━━━━━━━━━[37m━  0s 66ms/step - loss: 0.1397
+Epoch 2: val_loss improved from 0.15039 to 0.14231, saving model to model_checkpoint.weights.h5
+ 1172/1172 ━━━━━━━━━━━━━━━━━━━━ 97s 83ms/step - loss: 0.1396 - val_loss: 0.1423
 Epoch 3/10
-1172/1172 [==============================] - ETA: 0s - loss: 0.1147
-Epoch 3: val_loss did not improve from 0.14444
-1172/1172 [==============================] - 88s 75ms/step - loss: 0.1147 - val_loss: 0.1628
+ 1171/1172 ━━━━━━━━━━━━━━━━━━━[37m━  0s 69ms/step - loss: 0.1242
+Epoch 3: val_loss did not improve from 0.14231
+ 1172/1172 ━━━━━━━━━━━━━━━━━━━━ 101s 86ms/step - loss: 0.1242 - val_loss: 0.1513
 Epoch 4/10
-1172/1172 [==============================] - ETA: 0s - loss: 0.1166
-Epoch 4: val_loss improved from 0.14444 to 0.13036, saving model to model_checkpoint.h5
-1172/1172 [==============================] - 89s 76ms/step - loss: 0.1166 - val_loss: 0.1304
+ 1172/1172 ━━━━━━━━━━━━━━━━━━━━ 0s 68ms/step - loss: 0.1182
+Epoch 4: val_loss did not improve from 0.14231
+ 1172/1172 ━━━━━━━━━━━━━━━━━━━━ 102s 87ms/step - loss: 0.1182 - val_loss: 0.1503
 Epoch 5/10
-1172/1172 [==============================] - ETA: 0s - loss: 0.1083
-Epoch 5: val_loss did not improve from 0.13036
-1172/1172 [==============================] - 104s 89ms/step - loss: 0.1083 - val_loss: 0.1392
+ 1171/1172 ━━━━━━━━━━━━━━━━━━━[37m━  0s 67ms/step - loss: 0.1160
+Epoch 5: val_loss did not improve from 0.14231
+ 1172/1172 ━━━━━━━━━━━━━━━━━━━━ 100s 85ms/step - loss: 0.1160 - val_loss: 0.1500
 Epoch 6/10
-1172/1172 [==============================] - ETA: 0s - loss: 0.1064
-Epoch 6: val_loss did not improve from 0.13036
-1172/1172 [==============================] - 131s 112ms/step - loss: 0.1064 - val_loss: 0.1423
+ 1171/1172 ━━━━━━━━━━━━━━━━━━━[37m━  0s 69ms/step - loss: 0.1130
+Epoch 6: val_loss did not improve from 0.14231
+ 1172/1172 ━━━━━━━━━━━━━━━━━━━━ 100s 86ms/step - loss: 0.1130 - val_loss: 0.1469
 Epoch 7/10
-1172/1172 [==============================] - ETA: 0s - loss: 0.1041
-Epoch 7: val_loss did not improve from 0.13036
-1172/1172 [==============================] - 112s 96ms/step - loss: 0.1041 - val_loss: 0.1378
+ 1172/1172 ━━━━━━━━━━━━━━━━━━━━ 0s 70ms/step - loss: 0.1106
+Epoch 7: val_loss improved from 0.14231 to 0.13916, saving model to model_checkpoint.weights.h5
+ 1172/1172 ━━━━━━━━━━━━━━━━━━━━ 104s 89ms/step - loss: 0.1106 - val_loss: 0.1392
 Epoch 8/10
-1172/1172 [==============================] - ETA: 0s - loss: 0.1028
-Epoch 8: val_loss did not improve from 0.13036
-1172/1172 [==============================] - 95s 81ms/step - loss: 0.1028 - val_loss: 0.1369
+ 1171/1172 ━━━━━━━━━━━━━━━━━━━[37m━  0s 66ms/step - loss: 0.1097
+Epoch 8: val_loss improved from 0.13916 to 0.13257, saving model to model_checkpoint.weights.h5
+ 1172/1172 ━━━━━━━━━━━━━━━━━━━━ 98s 84ms/step - loss: 0.1097 - val_loss: 0.1326
 Epoch 9/10
-1172/1172 [==============================] - ETA: 0s - loss: 0.1020
-Epoch 9: val_loss did not improve from 0.13036
-1172/1172 [==============================] - 84s 72ms/step - loss: 0.1020 - val_loss: 0.1315
+ 1171/1172 ━━━━━━━━━━━━━━━━━━━[37m━  0s 68ms/step - loss: 0.1075
+Epoch 9: val_loss improved from 0.13257 to 0.13057, saving model to model_checkpoint.weights.h5
+ 1172/1172 ━━━━━━━━━━━━━━━━━━━━ 100s 85ms/step - loss: 0.1075 - val_loss: 0.1306
+Epoch 10/10
+ 1172/1172 ━━━━━━━━━━━━━━━━━━━━ 0s 66ms/step - loss: 0.1065
+Epoch 10: val_loss improved from 0.13057 to 0.12671, saving model to model_checkpoint.weights.h5
+ 1172/1172 ━━━━━━━━━━━━━━━━━━━━ 98s 84ms/step - loss: 0.1065 - val_loss: 0.1267
 
 ```
 </div>
@@ -454,7 +452,7 @@ visualize_loss(history, "Training and Validation Loss")
 
 
     
-![png](/img/examples/timeseries/timeseries_weather_forecasting/timeseries_weather_forecasting_24_0.png)
+![png](/img/examples/timeseries/timeseries_weather_forecasting/timeseries_weather_forecasting_22_0.png)
     
 
 
@@ -495,65 +493,59 @@ for x, y in dataset_val.take(5):
         12,
         "Single Step Prediction",
     )
-
 ```
 
 <div class="k-default-codeblock">
 ```
-8/8 [==============================] - 0s 11ms/step
+ 8/8 ━━━━━━━━━━━━━━━━━━━━ 0s 4ms/step  
 
 ```
 </div>
     
-![png](/img/examples/timeseries/timeseries_weather_forecasting/timeseries_weather_forecasting_26_1.png)
-    
-
-
-<div class="k-default-codeblock">
-```
-8/8 [==============================] - 0s 8ms/step
-
-```
-</div>
-    
-![png](/img/examples/timeseries/timeseries_weather_forecasting/timeseries_weather_forecasting_26_3.png)
+![png](/img/examples/timeseries/timeseries_weather_forecasting/timeseries_weather_forecasting_24_1.png)
     
 
 
 <div class="k-default-codeblock">
 ```
-8/8 [==============================] - 0s 11ms/step
+ 8/8 ━━━━━━━━━━━━━━━━━━━━ 0s 4ms/step
 
 ```
 </div>
     
-![png](/img/examples/timeseries/timeseries_weather_forecasting/timeseries_weather_forecasting_26_5.png)
+![png](/img/examples/timeseries/timeseries_weather_forecasting/timeseries_weather_forecasting_24_3.png)
     
 
 
 <div class="k-default-codeblock">
 ```
-8/8 [==============================] - 0s 8ms/step
+ 8/8 ━━━━━━━━━━━━━━━━━━━━ 0s 5ms/step
 
 ```
 </div>
     
-![png](/img/examples/timeseries/timeseries_weather_forecasting/timeseries_weather_forecasting_26_7.png)
+![png](/img/examples/timeseries/timeseries_weather_forecasting/timeseries_weather_forecasting_24_5.png)
     
 
 
 <div class="k-default-codeblock">
 ```
-8/8 [==============================] - 0s 9ms/step
+ 8/8 ━━━━━━━━━━━━━━━━━━━━ 0s 5ms/step
 
 ```
 </div>
     
-![png](/img/examples/timeseries/timeseries_weather_forecasting/timeseries_weather_forecasting_26_9.png)
+![png](/img/examples/timeseries/timeseries_weather_forecasting/timeseries_weather_forecasting_24_7.png)
     
 
 
-**Example available on HuggingFace**
-| Trained Model | Demo |
-| :--: | :--: |
-| [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Model-Time%20Series-black.svg)](https://huggingface.co/keras-io/timeseries_forecasting_for_weather) | [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Spaces-Time%20Series-black.svg)](https://huggingface.co/spaces/keras-io/timeseries_forecasting_for_weather) |
+<div class="k-default-codeblock">
+```
+ 8/8 ━━━━━━━━━━━━━━━━━━━━ 0s 4ms/step
+
+```
+</div>
+    
+![png](/img/examples/timeseries/timeseries_weather_forecasting/timeseries_weather_forecasting_24_9.png)
+    
+
