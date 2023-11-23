@@ -714,6 +714,7 @@ EXAMPLES_MASTER = {
                     "title": "GPT2 Text Generation with KerasNLP",
                     "subcategory": "Text generation",
                     "highlight": True,
+                    "keras_3": True,
                 },
                 {
                     "path": "text_generation_gpt",
