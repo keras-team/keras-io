@@ -53,15 +53,23 @@ Before we start with the implementation, let's import all the necessary packages
 
 
 ```python
+!pip install -q --upgrade keras-nlp
+!pip install -q --upgrade keras  # Upgrade to Keras 3.
+```
+
+```python
 import keras_nlp
+import keras
 import tensorflow as tf
 import os
 
-from tensorflow import keras
-
 keras.utils.set_random_seed(42)
 ```
+<div class="k-default-codeblock">
+```
 
+```
+</div>
 Let's also define our hyperparameters.
 
 
@@ -88,7 +96,7 @@ First, let's download the IMDB dataset and extract it.
 
 <div class="k-default-codeblock">
 ```
---2022-12-22 21:05:11--  http://ai.stanford.edu/~amaas/data/sentiment/aclImdb_v1.tar.gz
+--2023-11-22 17:59:33--  http://ai.stanford.edu/~amaas/data/sentiment/aclImdb_v1.tar.gz
 Resolving ai.stanford.edu (ai.stanford.edu)... 171.64.68.10
 Connecting to ai.stanford.edu (ai.stanford.edu)|171.64.68.10|:80... connected.
 HTTP request sent, awaiting response... 200 OK
@@ -99,13 +107,13 @@ Saving to: ‘aclImdb_v1.tar.gz’
     
 <div class="k-default-codeblock">
 ```
-aclImdb_v1.tar.gz   100%[===================>]  80.23M  77.2MB/s    in 1.0s    
+aclImdb_v1.tar.gz   100%[===================>]  80.23M  93.3MB/s    in 0.9s    
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-2022-12-22 21:05:12 (77.2 MB/s) - ‘aclImdb_v1.tar.gz’ saved [84125825/84125825]
+2023-11-22 17:59:34 (93.3 MB/s) - ‘aclImdb_v1.tar.gz’ saved [84125825/84125825]
 ```
 </div>
     
@@ -123,9 +131,9 @@ print(os.listdir("./aclImdb/test"))
 
 <div class="k-default-codeblock">
 ```
-['test', 'README', 'imdbEr.txt', 'train', 'imdb.vocab']
-['pos', 'urls_neg.txt', 'urls_pos.txt', 'unsup', 'urls_unsup.txt', 'labeledBow.feat', 'neg', 'unsupBow.feat']
-['pos', 'urls_neg.txt', 'urls_pos.txt', 'labeledBow.feat', 'neg']
+['README', 'imdb.vocab', 'imdbEr.txt', 'train', 'test']
+['neg', 'unsup', 'pos', 'unsupBow.feat', 'urls_unsup.txt', 'urls_neg.txt', 'urls_pos.txt', 'labeledBow.feat']
+['neg', 'pos', 'urls_neg.txt', 'urls_pos.txt', 'labeledBow.feat']
 
 ```
 </div>
@@ -180,14 +188,6 @@ val_ds = val_ds.map(lambda x, y: (tf.strings.lower(x), y))
 test_ds = test_ds.map(lambda x, y: (tf.strings.lower(x), y))
 ```
 
-<div class="k-default-codeblock">
-```
-WARNING:tensorflow:From /opt/conda/envs/myenv/lib/python3.9/site-packages/tensorflow/python/autograph/pyct/static_analysis/liveness.py:83: Analyzer.lamba_check (from tensorflow.python.autograph.pyct.static_analysis.liveness) is deprecated and will be removed after 2023-09-23.
-Instructions for updating:
-Lambda fuctions will be no more assumed to be used in the statement where they are used, or at least in the same block. https://github.com/tensorflow/tensorflow/issues/56089
-
-```
-</div>
 Let's print a few samples.
 
 
@@ -222,7 +222,7 @@ training it on a corpus gives us a vocabulary of subwords. A subword tokenizer
 is a compromise between word tokenizers (word tokenizers need very large
 vocabularies for good coverage of input words), and character tokenizers
 (characters don't really encode meaning like words do). Luckily, KerasNLP
-makes it very simple to train WordPiece on a corpus with the 
+makes it very simple to train WordPiece on a corpus with the
 `keras_nlp.tokenizers.compute_word_piece_vocabulary` utility.
 
 Note: The official implementation of FNet uses the SentencePiece Tokenizer.
@@ -299,8 +299,7 @@ print("Recovered text after detokenizing: ", tokenizer.detokenize(input_tokens_e
 <div class="k-default-codeblock">
 ```
 Sentence:  tf.Tensor(b'this picture seemed way to slanted, it\'s almost as bad as the drum beating of the right wing kooks who say everything is rosy in iraq. it paints a picture so unredeemable that i can\'t help but wonder about it\'s legitimacy and bias. also it seemed to meander from being about the murderous carnage of our troops to the lack of health care in the states for ptsd. to me the subject matter seemed confused, it only cared about portraying the military in a bad light, as a) an organzation that uses mind control to turn ordinary peace loving civilians into baby killers and b) an organization that once having used and spent the bodies of it\'s soldiers then discards them to the despotic bureacracy of the v.a. this is a legitimate argument, but felt off topic for me, almost like a movie in and of itself. i felt that "the war tapes" and "blood of my brother" were much more fair and let the viewer draw some conclusions of their own rather than be beaten over the head with the film makers viewpoint. f-', shape=(), dtype=string)
-Tokens:  tf.Tensor(
-[  145   576   608   228   140    58 13343    13   143     8    58   360
+Tokens:  [  145   576   608   228   140    58 13343    13   143     8    58   360
    148   209   148   137  9759  3681   139   137   344  3276    50 12092
    164   169   269   424   141    57  2093   292   144  5115    15   143
   7890    40   576   170  2970  2459  2412 10452   146    48   184     8
@@ -342,7 +341,7 @@ Tokens:  tf.Tensor(
      0     0     0     0     0     0     0     0     0     0     0     0
      0     0     0     0     0     0     0     0     0     0     0     0
      0     0     0     0     0     0     0     0     0     0     0     0
-     0     0     0     0     0     0     0     0], shape=(512,), dtype=int32)
+     0     0     0     0     0     0     0     0]
 Recovered text after detokenizing:  tf.Tensor(b'this picture seemed way to slanted , it \' s almost as bad as the drum beating of the right wing kooks who say everything is rosy in iraq . it paints a picture so unredeemable that i can \' t help but wonder about it \' s legitimacy and bias . also it seemed to meander from being about the murderous carnage of our troops to the lack of health care in the states for ptsd . to me the subject matter seemed confused , it only cared about portraying the military in a bad light , as a ) an organzation that uses mind control to turn ordinary peace loving civilians into baby killers and b ) an organization that once having used and spent the bodies of it \' s soldiers then discards them to the despotic bureacracy of the v . a . this is a legitimate argument , but felt off topic for me , almost like a movie in and of itself . i felt that " the war tapes " and " blood of my brother " were much more fair and let the viewer draw some conclusions of their own rather than be beaten over the head with the film makers viewpoint . f - [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD] [PAD]', shape=(), dtype=string)
 
 ```
@@ -411,6 +410,13 @@ outputs = keras.layers.Dense(1, activation="sigmoid")(x)
 fnet_classifier = keras.Model(input_ids, outputs, name="fnet_classifier")
 ```
 
+<div class="k-default-codeblock">
+```
+/home/matt/miniconda3/envs/keras-io/lib/python3.10/site-packages/keras/src/layers/layer.py:861: UserWarning: Layer 'f_net_encoder' (of type FNetEncoder) was passed an input with a mask attached to it. However, this layer does not support masking and will therefore destroy the mask information. Downstream layers will not see the mask.
+  warnings.warn(
+
+```
+</div>
 ---
 ## Training our model
 
@@ -428,46 +434,70 @@ fnet_classifier.compile(
 fnet_classifier.fit(train_ds, epochs=EPOCHS, validation_data=val_ds)
 ```
 
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold">Model: "fnet_classifier"</span>
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━┓
+┃<span style="font-weight: bold"> Layer (type)                    </span>┃<span style="font-weight: bold"> Output Shape              </span>┃<span style="font-weight: bold">    Param # </span>┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━┩
+│ input_ids (<span style="color: #0087ff; text-decoration-color: #0087ff">InputLayer</span>)          │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>)              │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ token_and_position_embedding    │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">128</span>)         │  <span style="color: #00af00; text-decoration-color: #00af00">1,985,536</span> │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">TokenAndPositionEmbedding</span>)     │                           │            │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ f_net_encoder (<span style="color: #0087ff; text-decoration-color: #0087ff">FNetEncoder</span>)     │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">128</span>)         │    <span style="color: #00af00; text-decoration-color: #00af00">132,224</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ f_net_encoder_1 (<span style="color: #0087ff; text-decoration-color: #0087ff">FNetEncoder</span>)   │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">128</span>)         │    <span style="color: #00af00; text-decoration-color: #00af00">132,224</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ f_net_encoder_2 (<span style="color: #0087ff; text-decoration-color: #0087ff">FNetEncoder</span>)   │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">128</span>)         │    <span style="color: #00af00; text-decoration-color: #00af00">132,224</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ global_average_pooling1d        │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">128</span>)               │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">GlobalAveragePooling1D</span>)        │                           │            │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ dropout (<span style="color: #0087ff; text-decoration-color: #0087ff">Dropout</span>)               │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">128</span>)               │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ dense (<span style="color: #0087ff; text-decoration-color: #0087ff">Dense</span>)                   │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>)                 │        <span style="color: #00af00; text-decoration-color: #00af00">129</span> │
+└─────────────────────────────────┴───────────────────────────┴────────────┘
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Total params: </span><span style="color: #00af00; text-decoration-color: #00af00">2,382,337</span> (9.09 MB)
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Trainable params: </span><span style="color: #00af00; text-decoration-color: #00af00">2,382,337</span> (9.09 MB)
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Non-trainable params: </span><span style="color: #00af00; text-decoration-color: #00af00">0</span> (0.00 B)
+</pre>
+
+
+
 <div class="k-default-codeblock">
 ```
-Model: "fnet_classifier"
-_________________________________________________________________
- Layer (type)                Output Shape              Param #   
-=================================================================
- input_ids (InputLayer)      [(None, None)]            0         
-                                                                 
- token_and_position_embeddin  (None, None, 128)        1985536   
- g (TokenAndPositionEmbeddin                                     
- g)                                                              
-                                                                 
- f_net_encoder (FNetEncoder)  (None, None, 128)        132224    
-                                                                 
- f_net_encoder_1 (FNetEncode  (None, None, 128)        132224    
- r)                                                              
-                                                                 
- f_net_encoder_2 (FNetEncode  (None, None, 128)        132224    
- r)                                                              
-                                                                 
- global_average_pooling1d (G  (None, 128)              0         
- lobalAveragePooling1D)                                          
-                                                                 
- dropout (Dropout)           (None, 128)               0         
-                                                                 
- dense (Dense)               (None, 1)                 129       
-                                                                 
-=================================================================
-Total params: 2,382,337
-Trainable params: 2,382,337
-Non-trainable params: 0
-_________________________________________________________________
 Epoch 1/3
-313/313 [==============================] - 61s 166ms/step - loss: 0.5869 - accuracy: 0.6413 - val_loss: 0.3902 - val_accuracy: 0.8250
-Epoch 2/3
-313/313 [==============================] - 9s 29ms/step - loss: 0.3223 - accuracy: 0.8643 - val_loss: 0.3706 - val_accuracy: 0.8388
-Epoch 3/3
-313/313 [==============================] - 9s 29ms/step - loss: 0.2133 - accuracy: 0.9179 - val_loss: 0.3910 - val_accuracy: 0.8470
 
-<keras.callbacks.History at 0x7f0b2c5b2fd0>
+/home/matt/miniconda3/envs/keras-io/lib/python3.10/site-packages/keras/src/backend/jax/core.py:64: UserWarning: Explicitly requested dtype int64 requested in array is not available, and will be truncated to dtype int32. To enable more dtypes, set the jax_enable_x64 configuration option or the JAX_ENABLE_X64 shell environment variable. See https://github.com/google/jax#current-gotchas for more.
+  return jnp.array(x, dtype=dtype)
+
+ 313/313 ━━━━━━━━━━━━━━━━━━━━ 8s 18ms/step - accuracy: 0.5916 - loss: 0.6542 - val_accuracy: 0.8479 - val_loss: 0.3536
+Epoch 2/3
+ 313/313 ━━━━━━━━━━━━━━━━━━━━ 4s 12ms/step - accuracy: 0.8776 - loss: 0.2916 - val_accuracy: 0.8532 - val_loss: 0.3387
+Epoch 3/3
+ 313/313 ━━━━━━━━━━━━━━━━━━━━ 4s 12ms/step - accuracy: 0.9442 - loss: 0.1543 - val_accuracy: 0.8534 - val_loss: 0.4018
+
+<keras.src.callbacks.history.History at 0x7feb7169c0d0>
 
 ```
 </div>
@@ -485,9 +515,9 @@ fnet_classifier.evaluate(test_ds, batch_size=BATCH_SIZE)
 
 <div class="k-default-codeblock">
 ```
-391/391 [==============================] - 7s 11ms/step - loss: 0.4108 - accuracy: 0.8330
+ 391/391 ━━━━━━━━━━━━━━━━━━━━ 3s 5ms/step - accuracy: 0.8412 - loss: 0.4281
 
-[0.4108137786388397, 0.8330000042915344]
+[0.4198716878890991, 0.8427909016609192]
 
 ```
 </div>
@@ -540,47 +570,73 @@ transformer_classifier.compile(
 transformer_classifier.fit(train_ds, epochs=EPOCHS, validation_data=val_ds)
 ```
 
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold">Model: "transformer_classifier"</span>
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">┏━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━┓
+┃<span style="font-weight: bold"> Layer (type)        </span>┃<span style="font-weight: bold"> Output Shape      </span>┃<span style="font-weight: bold"> Param # </span>┃<span style="font-weight: bold"> Connected to         </span>┃
+┡━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━┩
+│ input_ids           │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>)      │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ -                    │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">InputLayer</span>)        │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ token_and_position… │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">128</span>) │ <span style="color: #00af00; text-decoration-color: #00af00">1,985,…</span> │ input_ids[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>]      │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">TokenAndPositionE…</span> │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ transformer_encoder │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">128</span>) │ <span style="color: #00af00; text-decoration-color: #00af00">198,272</span> │ token_and_position_… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">TransformerEncode…</span> │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ transformer_encode… │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">128</span>) │ <span style="color: #00af00; text-decoration-color: #00af00">198,272</span> │ transformer_encoder… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">TransformerEncode…</span> │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ transformer_encode… │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">128</span>) │ <span style="color: #00af00; text-decoration-color: #00af00">198,272</span> │ transformer_encoder… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">TransformerEncode…</span> │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ not_equal_1         │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>)      │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ input_ids[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>]      │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">NotEqual</span>)          │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ global_average_poo… │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">128</span>)       │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ transformer_encoder… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">GlobalAveragePool…</span> │                   │         │ not_equal_1[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>]    │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ dropout_4 (<span style="color: #0087ff; text-decoration-color: #0087ff">Dropout</span>) │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">128</span>)       │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ global_average_pool… │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ dense_1 (<span style="color: #0087ff; text-decoration-color: #0087ff">Dense</span>)     │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>)         │     <span style="color: #00af00; text-decoration-color: #00af00">129</span> │ dropout_4[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>]      │
+└─────────────────────┴───────────────────┴─────────┴──────────────────────┘
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Total params: </span><span style="color: #00af00; text-decoration-color: #00af00">2,580,481</span> (9.84 MB)
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Trainable params: </span><span style="color: #00af00; text-decoration-color: #00af00">2,580,481</span> (9.84 MB)
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Non-trainable params: </span><span style="color: #00af00; text-decoration-color: #00af00">0</span> (0.00 B)
+</pre>
+
+
+
 <div class="k-default-codeblock">
 ```
-Model: "transformer_classifier"
-_________________________________________________________________
- Layer (type)                Output Shape              Param #   
-=================================================================
- input_ids (InputLayer)      [(None, None)]            0         
-                                                                 
- token_and_position_embeddin  (None, None, 128)        1985536   
- g_1 (TokenAndPositionEmbedd                                     
- ing)                                                            
-                                                                 
- transformer_encoder (Transf  (None, None, 128)        198272    
- ormerEncoder)                                                   
-                                                                 
- transformer_encoder_1 (Tran  (None, None, 128)        198272    
- sformerEncoder)                                                 
-                                                                 
- transformer_encoder_2 (Tran  (None, None, 128)        198272    
- sformerEncoder)                                                 
-                                                                 
- global_average_pooling1d_1   (None, 128)              0         
- (GlobalAveragePooling1D)                                        
-                                                                 
- dropout_1 (Dropout)         (None, 128)               0         
-                                                                 
- dense_1 (Dense)             (None, 1)                 129       
-                                                                 
-=================================================================
-Total params: 2,580,481
-Trainable params: 2,580,481
-Non-trainable params: 0
-_________________________________________________________________
 Epoch 1/3
-313/313 [==============================] - 45s 116ms/step - loss: 0.4674 - accuracy: 0.7582 - val_loss: 0.2843 - val_accuracy: 0.8818
+ 313/313 ━━━━━━━━━━━━━━━━━━━━ 14s 38ms/step - accuracy: 0.5895 - loss: 0.7401 - val_accuracy: 0.8912 - val_loss: 0.2694
 Epoch 2/3
-313/313 [==============================] - 16s 51ms/step - loss: 0.2163 - accuracy: 0.9166 - val_loss: 0.3070 - val_accuracy: 0.8832
+ 313/313 ━━━━━━━━━━━━━━━━━━━━ 9s 29ms/step - accuracy: 0.9051 - loss: 0.2382 - val_accuracy: 0.8853 - val_loss: 0.2984
 Epoch 3/3
-313/313 [==============================] - 16s 51ms/step - loss: 0.1670 - accuracy: 0.9357 - val_loss: 0.4024 - val_accuracy: 0.8732
+ 313/313 ━━━━━━━━━━━━━━━━━━━━ 9s 29ms/step - accuracy: 0.9496 - loss: 0.1366 - val_accuracy: 0.8730 - val_loss: 0.3607
 
-<keras.callbacks.History at 0x7f0b2c281040>
+<keras.src.callbacks.history.History at 0x7feaf9c56ad0>
 
 ```
 </div>
@@ -597,9 +653,9 @@ transformer_classifier.evaluate(test_ds, batch_size=BATCH_SIZE)
 
 <div class="k-default-codeblock">
 ```
-391/391 [==============================] - 8s 20ms/step - loss: 0.4966 - accuracy: 0.8455
+ 391/391 ━━━━━━━━━━━━━━━━━━━━ 4s 11ms/step - accuracy: 0.8399 - loss: 0.4579
 
-[0.49655842781066895, 0.84552001953125]
+[0.4496161639690399, 0.8423193097114563]
 
 ```
 </div>
