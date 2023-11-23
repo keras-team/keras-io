@@ -330,7 +330,7 @@ model.summary()
 
 
 # TODO restore epoch count.
-epochs = 2
+epochs = 100
 early_stopping_patience = 10
 # Add early stopping
 early_stopping = keras.callbacks.EarlyStopping(

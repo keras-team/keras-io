@@ -56,7 +56,7 @@ Let's download the data.
   % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
                                  Dload  Upload   Total   Spent    Left  Speed
   0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0
-100 8863k  100 8863k    0     0  19.6M      0 --:--:-- --:--:-- --:--:-- 19.6M
+100 8863k  100 8863k    0     0  11.9M      0 --:--:-- --:--:-- --:--:--  141M
 
 ```
 </div>
@@ -432,7 +432,7 @@ model.summary()
 ```python
 
 # TODO restore epoch count.
-epochs = 2
+epochs = 100
 early_stopping_patience = 10
 # Add early stopping
 early_stopping = keras.callbacks.EarlyStopping(
@@ -451,10 +451,206 @@ history = model.fit(
 
 <div class="k-default-codeblock">
 ```
-Epoch 1/2
- 59/59 ━━━━━━━━━━━━━━━━━━━━ 8s 78ms/step - loss: 31.6480 - val_loss: 16.4761
-Epoch 2/2
- 59/59 ━━━━━━━━━━━━━━━━━━━━ 4s 64ms/step - loss: 16.4152 - val_loss: 16.4351
+Epoch 1/100
+ 59/59 ━━━━━━━━━━━━━━━━━━━━ 22s 229ms/step - loss: 35.8756 - val_loss: 16.3966
+Epoch 2/100
+ 59/59 ━━━━━━━━━━━━━━━━━━━━ 14s 235ms/step - loss: 16.4092 - val_loss: 16.3648
+Epoch 3/100
+ 59/59 ━━━━━━━━━━━━━━━━━━━━ 13s 224ms/step - loss: 16.3922 - val_loss: 16.3571
+Epoch 4/100
+ 59/59 ━━━━━━━━━━━━━━━━━━━━ 13s 218ms/step - loss: 16.3749 - val_loss: 16.3602
+Epoch 5/100
+ 59/59 ━━━━━━━━━━━━━━━━━━━━ 20s 210ms/step - loss: 16.3756 - val_loss: 16.3513
+Epoch 6/100
+ 59/59 ━━━━━━━━━━━━━━━━━━━━ 14s 236ms/step - loss: 16.3737 - val_loss: 16.3466
+Epoch 7/100
+ 59/59 ━━━━━━━━━━━━━━━━━━━━ 13s 227ms/step - loss: 16.3591 - val_loss: 16.3479
+Epoch 8/100
+ 59/59 ━━━━━━━━━━━━━━━━━━━━ 13s 219ms/step - loss: 16.3505 - val_loss: 16.3436
+Epoch 9/100
+ 59/59 ━━━━━━━━━━━━━━━━━━━━ 13s 213ms/step - loss: 16.3440 - val_loss: 16.3386
+Epoch 10/100
+ 59/59 ━━━━━━━━━━━━━━━━━━━━ 13s 226ms/step - loss: 16.3312 - val_loss: 16.3066
+Epoch 11/100
+ 59/59 ━━━━━━━━━━━━━━━━━━━━ 13s 224ms/step - loss: 16.3077 - val_loss: 16.3288
+Epoch 12/100
+ 59/59 ━━━━━━━━━━━━━━━━━━━━ 13s 226ms/step - loss: 16.2746 - val_loss: 16.2750
+Epoch 13/100
+ 59/59 ━━━━━━━━━━━━━━━━━━━━ 13s 214ms/step - loss: 16.1853 - val_loss: 16.1606
+Epoch 14/100
+ 59/59 ━━━━━━━━━━━━━━━━━━━━ 21s 229ms/step - loss: 16.0636 - val_loss: 16.1616
+Epoch 15/100
+ 59/59 ━━━━━━━━━━━━━━━━━━━━ 13s 223ms/step - loss: 15.9873 - val_loss: 16.0928
+Epoch 16/100
+ 59/59 ━━━━━━━━━━━━━━━━━━━━ 13s 224ms/step - loss: 15.9339 - val_loss: 16.0070
+Epoch 17/100
+ 59/59 ━━━━━━━━━━━━━━━━━━━━ 13s 213ms/step - loss: 15.8379 - val_loss: 15.8443
+Epoch 18/100
+ 59/59 ━━━━━━━━━━━━━━━━━━━━ 13s 212ms/step - loss: 15.7156 - val_loss: 15.6414
+Epoch 19/100
+ 59/59 ━━━━━━━━━━━━━━━━━━━━ 21s 224ms/step - loss: 15.5618 - val_loss: 15.5937
+Epoch 20/100
+ 59/59 ━━━━━━━━━━━━━━━━━━━━ 20s 219ms/step - loss: 15.4386 - val_loss: 15.4481
+Epoch 21/100
+ 59/59 ━━━━━━━━━━━━━━━━━━━━ 13s 215ms/step - loss: 15.2270 - val_loss: 15.4191
+Epoch 22/100
+ 59/59 ━━━━━━━━━━━━━━━━━━━━ 14s 229ms/step - loss: 15.0565 - val_loss: 15.1226
+Epoch 23/100
+ 59/59 ━━━━━━━━━━━━━━━━━━━━ 13s 226ms/step - loss: 14.8641 - val_loss: 14.9598
+Epoch 24/100
+ 59/59 ━━━━━━━━━━━━━━━━━━━━ 13s 225ms/step - loss: 14.6488 - val_loss: 14.7074
+Epoch 25/100
+ 59/59 ━━━━━━━━━━━━━━━━━━━━ 20s 213ms/step - loss: 14.3843 - val_loss: 14.4713
+Epoch 26/100
+ 59/59 ━━━━━━━━━━━━━━━━━━━━ 13s 224ms/step - loss: 14.1244 - val_loss: 14.0645
+Epoch 27/100
+ 59/59 ━━━━━━━━━━━━━━━━━━━━ 13s 218ms/step - loss: 13.8279 - val_loss: 13.7670
+Epoch 28/100
+ 59/59 ━━━━━━━━━━━━━━━━━━━━ 20s 218ms/step - loss: 13.4959 - val_loss: 13.5277
+Epoch 29/100
+ 59/59 ━━━━━━━━━━━━━━━━━━━━ 12s 206ms/step - loss: 13.2192 - val_loss: 13.2536
+Epoch 30/100
+ 59/59 ━━━━━━━━━━━━━━━━━━━━ 23s 248ms/step - loss: 12.9255 - val_loss: 12.8277
+Epoch 31/100
+ 59/59 ━━━━━━━━━━━━━━━━━━━━ 19s 220ms/step - loss: 12.5599 - val_loss: 12.6968
+Epoch 32/100
+ 59/59 ━━━━━━━━━━━━━━━━━━━━ 12s 207ms/step - loss: 12.2893 - val_loss: 12.3682
+Epoch 33/100
+ 59/59 ━━━━━━━━━━━━━━━━━━━━ 12s 205ms/step - loss: 11.8148 - val_loss: 11.7916
+Epoch 34/100
+ 59/59 ━━━━━━━━━━━━━━━━━━━━ 21s 215ms/step - loss: 11.3895 - val_loss: 11.6033
+Epoch 35/100
+ 59/59 ━━━━━━━━━━━━━━━━━━━━ 13s 216ms/step - loss: 11.0912 - val_loss: 11.1269
+Epoch 36/100
+ 59/59 ━━━━━━━━━━━━━━━━━━━━ 12s 206ms/step - loss: 10.7124 - val_loss: 10.8567
+Epoch 37/100
+ 59/59 ━━━━━━━━━━━━━━━━━━━━ 12s 203ms/step - loss: 10.2611 - val_loss: 10.5215
+Epoch 38/100
+ 59/59 ━━━━━━━━━━━━━━━━━━━━ 13s 220ms/step - loss: 9.9407 - val_loss: 10.2151
+Epoch 39/100
+ 59/59 ━━━━━━━━━━━━━━━━━━━━ 13s 213ms/step - loss: 9.5958 - val_loss: 9.6870
+Epoch 40/100
+ 59/59 ━━━━━━━━━━━━━━━━━━━━ 20s 208ms/step - loss: 9.2352 - val_loss: 9.2340
+Epoch 41/100
+ 59/59 ━━━━━━━━━━━━━━━━━━━━ 12s 202ms/step - loss: 8.7480 - val_loss: 8.9227
+Epoch 42/100
+ 59/59 ━━━━━━━━━━━━━━━━━━━━ 13s 218ms/step - loss: 8.2937 - val_loss: 8.7348
+Epoch 43/100
+ 59/59 ━━━━━━━━━━━━━━━━━━━━ 13s 214ms/step - loss: 8.0500 - val_loss: 8.3136
+Epoch 44/100
+ 59/59 ━━━━━━━━━━━━━━━━━━━━ 13s 213ms/step - loss: 7.7643 - val_loss: 7.9847
+Epoch 45/100
+ 59/59 ━━━━━━━━━━━━━━━━━━━━ 12s 207ms/step - loss: 7.2927 - val_loss: 7.9830
+Epoch 46/100
+ 59/59 ━━━━━━━━━━━━━━━━━━━━ 12s 200ms/step - loss: 7.0159 - val_loss: 7.4162
+Epoch 47/100
+ 59/59 ━━━━━━━━━━━━━━━━━━━━ 13s 217ms/step - loss: 6.8198 - val_loss: 7.1488
+Epoch 48/100
+ 59/59 ━━━━━━━━━━━━━━━━━━━━ 13s 213ms/step - loss: 6.4661 - val_loss: 7.0038
+Epoch 49/100
+ 59/59 ━━━━━━━━━━━━━━━━━━━━ 20s 210ms/step - loss: 6.1844 - val_loss: 6.7504
+Epoch 50/100
+ 59/59 ━━━━━━━━━━━━━━━━━━━━ 20s 201ms/step - loss: 5.8523 - val_loss: 6.5577
+Epoch 51/100
+ 59/59 ━━━━━━━━━━━━━━━━━━━━ 13s 225ms/step - loss: 5.7405 - val_loss: 6.4001
+Epoch 52/100
+ 59/59 ━━━━━━━━━━━━━━━━━━━━ 20s 215ms/step - loss: 5.3831 - val_loss: 6.3826
+Epoch 53/100
+ 59/59 ━━━━━━━━━━━━━━━━━━━━ 12s 202ms/step - loss: 5.1238 - val_loss: 6.0649
+Epoch 54/100
+ 59/59 ━━━━━━━━━━━━━━━━━━━━ 21s 218ms/step - loss: 4.9646 - val_loss: 5.8397
+Epoch 55/100
+ 59/59 ━━━━━━━━━━━━━━━━━━━━ 20s 213ms/step - loss: 4.7486 - val_loss: 5.7926
+Epoch 56/100
+ 59/59 ━━━━━━━━━━━━━━━━━━━━ 12s 206ms/step - loss: 4.4270 - val_loss: 5.7480
+Epoch 57/100
+ 59/59 ━━━━━━━━━━━━━━━━━━━━ 12s 199ms/step - loss: 4.3954 - val_loss: 5.7311
+Epoch 58/100
+ 59/59 ━━━━━━━━━━━━━━━━━━━━ 12s 205ms/step - loss: 4.2907 - val_loss: 5.6178
+Epoch 59/100
+ 59/59 ━━━━━━━━━━━━━━━━━━━━ 21s 211ms/step - loss: 4.0034 - val_loss: 5.3565
+Epoch 60/100
+ 59/59 ━━━━━━━━━━━━━━━━━━━━ 12s 208ms/step - loss: 3.7862 - val_loss: 5.3226
+Epoch 61/100
+ 59/59 ━━━━━━━━━━━━━━━━━━━━ 12s 198ms/step - loss: 3.7867 - val_loss: 5.1675
+Epoch 62/100
+ 59/59 ━━━━━━━━━━━━━━━━━━━━ 12s 198ms/step - loss: 3.3635 - val_loss: 4.9778
+Epoch 63/100
+ 59/59 ━━━━━━━━━━━━━━━━━━━━ 13s 223ms/step - loss: 3.3120 - val_loss: 5.0680
+Epoch 64/100
+ 59/59 ━━━━━━━━━━━━━━━━━━━━ 13s 213ms/step - loss: 3.2816 - val_loss: 4.9794
+Epoch 65/100
+ 59/59 ━━━━━━━━━━━━━━━━━━━━ 12s 209ms/step - loss: 3.1493 - val_loss: 4.9307
+Epoch 66/100
+ 59/59 ━━━━━━━━━━━━━━━━━━━━ 12s 199ms/step - loss: 2.8954 - val_loss: 4.6848
+Epoch 67/100
+ 59/59 ━━━━━━━━━━━━━━━━━━━━ 12s 200ms/step - loss: 2.9579 - val_loss: 4.7673
+Epoch 68/100
+ 59/59 ━━━━━━━━━━━━━━━━━━━━ 13s 224ms/step - loss: 2.8408 - val_loss: 4.7547
+Epoch 69/100
+ 59/59 ━━━━━━━━━━━━━━━━━━━━ 13s 212ms/step - loss: 2.5937 - val_loss: 4.6363
+Epoch 70/100
+ 59/59 ━━━━━━━━━━━━━━━━━━━━ 12s 206ms/step - loss: 2.5928 - val_loss: 4.6453
+Epoch 71/100
+ 59/59 ━━━━━━━━━━━━━━━━━━━━ 12s 198ms/step - loss: 2.5662 - val_loss: 4.6460
+Epoch 72/100
+ 59/59 ━━━━━━━━━━━━━━━━━━━━ 15s 249ms/step - loss: 2.5619 - val_loss: 4.7042
+Epoch 73/100
+ 59/59 ━━━━━━━━━━━━━━━━━━━━ 18s 211ms/step - loss: 2.3146 - val_loss: 4.5853
+Epoch 74/100
+ 59/59 ━━━━━━━━━━━━━━━━━━━━ 12s 210ms/step - loss: 2.1848 - val_loss: 4.5865
+Epoch 75/100
+ 59/59 ━━━━━━━━━━━━━━━━━━━━ 20s 199ms/step - loss: 2.1284 - val_loss: 4.6487
+Epoch 76/100
+ 59/59 ━━━━━━━━━━━━━━━━━━━━ 13s 218ms/step - loss: 2.0072 - val_loss: 4.5793
+Epoch 77/100
+ 59/59 ━━━━━━━━━━━━━━━━━━━━ 12s 209ms/step - loss: 1.8963 - val_loss: 4.6183
+Epoch 78/100
+ 59/59 ━━━━━━━━━━━━━━━━━━━━ 12s 211ms/step - loss: 1.7980 - val_loss: 4.7451
+Epoch 79/100
+ 59/59 ━━━━━━━━━━━━━━━━━━━━ 12s 198ms/step - loss: 1.7276 - val_loss: 4.6344
+Epoch 80/100
+ 59/59 ━━━━━━━━━━━━━━━━━━━━ 12s 200ms/step - loss: 1.7558 - val_loss: 4.5365
+Epoch 81/100
+ 59/59 ━━━━━━━━━━━━━━━━━━━━ 13s 221ms/step - loss: 1.6611 - val_loss: 4.4597
+Epoch 82/100
+ 59/59 ━━━━━━━━━━━━━━━━━━━━ 12s 209ms/step - loss: 1.6337 - val_loss: 4.5162
+Epoch 83/100
+ 59/59 ━━━━━━━━━━━━━━━━━━━━ 12s 211ms/step - loss: 1.5404 - val_loss: 4.5297
+Epoch 84/100
+ 59/59 ━━━━━━━━━━━━━━━━━━━━ 20s 199ms/step - loss: 1.5716 - val_loss: 4.5663
+Epoch 85/100
+ 59/59 ━━━━━━━━━━━━━━━━━━━━ 13s 216ms/step - loss: 1.5106 - val_loss: 4.5341
+Epoch 86/100
+ 59/59 ━━━━━━━━━━━━━━━━━━━━ 12s 210ms/step - loss: 1.4508 - val_loss: 4.5627
+Epoch 87/100
+ 59/59 ━━━━━━━━━━━━━━━━━━━━ 12s 210ms/step - loss: 1.3580 - val_loss: 4.6142
+Epoch 88/100
+ 59/59 ━━━━━━━━━━━━━━━━━━━━ 20s 198ms/step - loss: 1.3243 - val_loss: 4.4505
+Epoch 89/100
+ 59/59 ━━━━━━━━━━━━━━━━━━━━ 12s 208ms/step - loss: 1.2391 - val_loss: 4.5890
+Epoch 90/100
+ 59/59 ━━━━━━━━━━━━━━━━━━━━ 12s 210ms/step - loss: 1.2288 - val_loss: 4.6803
+Epoch 91/100
+ 59/59 ━━━━━━━━━━━━━━━━━━━━ 20s 208ms/step - loss: 1.1559 - val_loss: 4.6009
+Epoch 92/100
+ 59/59 ━━━━━━━━━━━━━━━━━━━━ 12s 198ms/step - loss: 1.1157 - val_loss: 4.6105
+Epoch 93/100
+ 59/59 ━━━━━━━━━━━━━━━━━━━━ 12s 199ms/step - loss: 1.0949 - val_loss: 4.4293
+Epoch 94/100
+ 59/59 ━━━━━━━━━━━━━━━━━━━━ 13s 225ms/step - loss: 1.0753 - val_loss: 4.3587
+Epoch 95/100
+ 59/59 ━━━━━━━━━━━━━━━━━━━━ 12s 210ms/step - loss: 0.9857 - val_loss: 4.7014
+Epoch 96/100
+ 59/59 ━━━━━━━━━━━━━━━━━━━━ 12s 208ms/step - loss: 1.0708 - val_loss: 4.6754
+Epoch 97/100
+ 59/59 ━━━━━━━━━━━━━━━━━━━━ 12s 201ms/step - loss: 0.9798 - val_loss: 4.4668
+Epoch 98/100
+ 59/59 ━━━━━━━━━━━━━━━━━━━━ 12s 205ms/step - loss: 0.9349 - val_loss: 4.7812
+Epoch 99/100
+ 59/59 ━━━━━━━━━━━━━━━━━━━━ 21s 209ms/step - loss: 0.8769 - val_loss: 4.8273
+Epoch 100/100
+ 59/59 ━━━━━━━━━━━━━━━━━━━━ 20s 202ms/step - loss: 0.9521 - val_loss: 4.5411
 
 ```
 </div>
@@ -593,7 +789,7 @@ plt.show()
 
 <div class="k-default-codeblock">
 ```
- 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 258ms/step
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 1s 579ms/step
 
 ```
 </div>
