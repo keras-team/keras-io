@@ -42,9 +42,11 @@ import os
 os.environ["KERAS_BACKEND"] = "jax"  # or "tensorflow" or "torch"
 
 import keras_nlp
+import keras
 import tensorflow as tf
-import keras_core as keras
 import time
+
+keras.mixed_precision.set_global_policy("mixed_float16")
 
 """
 ## Introduction to Generative Large Language Models (LLMs)
