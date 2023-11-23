@@ -36,6 +36,11 @@ This example requires KerasNLP. You can install it via the following command:
 ## Setup
 """
 
+"""shell
+pip install -q --upgrade keras-nlp
+pip install -q --upgrade keras  # Upgrade to Keras 3.
+"""
+
 import os
 import keras_nlp
 import keras
