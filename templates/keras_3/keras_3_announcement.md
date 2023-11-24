@@ -163,7 +163,7 @@ being. TensorFlow and PyTorch support is coming soon. Get started with [this gui
 
 ---
 
-### Pretrained models.
+## Pretrained models.
 
 There's a wide range of pretrained models that
 you can start using today with Keras 3.

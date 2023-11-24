@@ -46,7 +46,7 @@ import tensorflow as tf
 import numpy as np
 
 """
-## Going from Keras 3 to Keras 3 with the TensorFlow Backend
+## Going from Keras 2 to Keras 3 with the TensorFlow backend
 
 First, replace your imports:
 

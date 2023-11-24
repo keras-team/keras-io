@@ -42,12 +42,13 @@ except Exception as e:
 
 EXAMPLES_GH_LOCATION = Path("keras-team") / "keras-io" / "blob" / "master" / "examples"
 GUIDES_GH_LOCATION = Path("keras-team") / "keras-io" / "blob" / "master" / "guides"
+KERAS_TEAM_GH = "https://github.com/keras-team"
 PROJECT_URL = {
-    "keras": "https://github.com/keras-team/keras/tree/v3.0.0/",
-    "keras_tuner": "https://github.com/keras-team/keras-tuner/tree/v1.4.5/",
-    "keras_cv": "https://github.com/keras-team/keras-cv/tree/v0.6.4/",
-    "keras_nlp": "https://github.com/keras-team/keras-nlp/tree/v0.6.2/",
-    "tf_keras": "https://github.com/keras-team/tf_keras/tree/v2.15.0/",
+    "keras": f"{KERAS_TEAM_GH}/keras/tree/v3.0.0/",
+    "keras_tuner": f"{KERAS_TEAM_GH}/keras-tuner/tree/v1.4.5/",
+    "keras_cv": f"{KERAS_TEAM_GH}/keras-cv/tree/v0.6.4/",
+    "keras_nlp": f"{KERAS_TEAM_GH}/keras-nlp/tree/v0.6.2/",
+    "tf_keras": f"{KERAS_TEAM_GH}/tf-keras/tree/v2.15.0/",
 }
 USE_MULTIPROCESSING = False
 
@@ -556,7 +557,7 @@ class KerasIO:
         # Save metadata file
         location_history = []
         for i in range(len(path_stack)):
-            stripped_path_stack = [s.replace("/", "") for s in path_stack[: i + 1]]
+            stripped_path_stack = [s.strip("/") for s in path_stack[: i + 1]]
             url = self.url + "/".join(stripped_path_stack)
             location_history.append(
                 {

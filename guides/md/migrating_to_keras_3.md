@@ -50,7 +50,7 @@ import numpy as np
 ```
 
 ---
-## Going from Keras 3 to Keras 3 with the TensorFlow Backend
+## Going from Keras 2 to Keras 3 with the TensorFlow backend
 
 First, replace your imports:
 
@@ -124,7 +124,7 @@ subclass_model.predict(x_train)
 
 <div class="k-default-codeblock">
 ```
- 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 43ms/step
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 45ms/step
 
 array([[1., 2., 3.],
        [4., 5., 6.]], dtype=float32)
@@ -320,11 +320,11 @@ model.predict(data)
 
 <div class="k-default-codeblock">
 ```
- 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 42ms/step
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 41ms/step
 
-array([[0.13190317, 0.27134266, 0.40335554],
-       [0.05006779, 0.27680686, 0.2334947 ],
-       [0.33068854, 0.4202097 , 0.0833633 ]], dtype=float32)
+array([[0.69081205, 1.0757748 , 0.06216738],
+       [0.86100876, 0.92610997, 1.7946503 ],
+       [1.0368572 , 1.0535108 , 1.1335285 ]], dtype=float32)
 
 ```
 </div>
@@ -422,9 +422,9 @@ multi_output_model.evaluate(x_test, y_test)
 
 <div class="k-default-codeblock">
 ```
- 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 123ms/step - loss: 3.9932 - output_1_categorical_crossentropy: 3.9932
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 111ms/step - loss: 3.7628 - output_1_categorical_crossentropy: 3.7628
 
-[3.993187665939331, 3.993187665939331]
+[3.762784481048584, 3.762784481048584]
 
 ```
 </div>
@@ -506,7 +506,7 @@ for layer in model.layers:
 
 <div class="k-default-codeblock">
 ```
- 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 35ms/step
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 30ms/step
 [<KerasVariable shape=(3, 3), dtype=float32, path=sequential_2/my_custom_layer_1/variable>, <KerasVariable shape=(3,), dtype=float32, path=sequential_2/my_custom_layer_1/variable_1>]
 
 ```
