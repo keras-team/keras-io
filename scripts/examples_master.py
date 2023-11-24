@@ -102,6 +102,7 @@ EXAMPLES_MASTER = {
                     "path": "swin_transformers",
                     "title": "Image classification with Swin Transformers",
                     "subcategory": "Image classification",
+                    "keras_3": True,
                 },
                 {
                     "path": "vit_small_ds",
@@ -182,6 +183,7 @@ EXAMPLES_MASTER = {
                     "path": "captcha_ocr",
                     "title": "OCR model for reading Captchas",
                     "subcategory": "OCR",
+                    "keras_3": True,
                 },
                 {
                     "path": "handwriting_recognition",

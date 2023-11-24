@@ -157,6 +157,10 @@ This makes it easy to quickly specify the same layout for entire categories of v
 
 <img class="irasto" src="https://s3.amazonaws.com/keras.io/img/keras_3/keras_3_model_parallel.jpg" />
 
+The new distribution API is intended to be multi-backend, but is only available for the JAX backend for the time
+being. TensorFlow and PyTorch support is coming soon. Get started with [this guide](/guides/distribution/)!
+
+
 ---
 
 ### Pretrained models.
