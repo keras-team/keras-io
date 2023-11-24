@@ -28,8 +28,12 @@ by putting the custom training step in the Trainer class definition.
 
 
 ```python
+import os
+
+os.environ["KERAS_BACKEND"] = "tensorflow"
+
 import tensorflow as tf
-from tensorflow import keras
+import keras
 
 # Load MNIST dataset and standardize the data
 mnist = keras.datasets.mnist
@@ -153,35 +157,14 @@ trainer_2.fit(
 
 <div class="k-default-codeblock">
 ```
-WARNING:absl:At this time, the v2.11+ optimizer `tf.keras.optimizers.SGD` runs slowly on M1/M2 Macs, please use the legacy Keras optimizer instead, located at `tf.keras.optimizers.legacy.SGD`.
-WARNING:absl:There is a known slowdown when using v2.11+ Keras optimizers on M1/M2 Macs. Falling back to the legacy Keras optimizer, i.e., `tf.keras.optimizers.legacy.SGD`.
-
 Epoch 1/5
-938/938 [==============================] - 1s 1ms/step - sparse_categorical_accuracy: 0.7627 - val_sparse_categorical_accuracy: 0.8887
-Epoch 2/5
-938/938 [==============================] - 1s 992us/step - sparse_categorical_accuracy: 0.8750 - val_sparse_categorical_accuracy: 0.9083
-Epoch 3/5
-938/938 [==============================] - 1s 1ms/step - sparse_categorical_accuracy: 0.8918 - val_sparse_categorical_accuracy: 0.9144
+...
 Epoch 4/5
-938/938 [==============================] - 1s 983us/step - sparse_categorical_accuracy: 0.9037 - val_sparse_categorical_accuracy: 0.9216
+ 938/938 ━━━━━━━━━━━━━━━━━━━━ 1s 1ms/step - sparse_categorical_accuracy: 0.9770 - val_sparse_categorical_accuracy: 0.9770
 Epoch 5/5
-938/938 [==============================] - 1s 1ms/step - sparse_categorical_accuracy: 0.9104 - val_sparse_categorical_accuracy: 0.9273
+ 938/938 ━━━━━━━━━━━━━━━━━━━━ 1s 2ms/step - sparse_categorical_accuracy: 0.9805 - val_sparse_categorical_accuracy: 0.9789
 
-WARNING:absl:At this time, the v2.11+ optimizer `tf.keras.optimizers.Adam` runs slowly on M1/M2 Macs, please use the legacy Keras optimizer instead, located at `tf.keras.optimizers.legacy.Adam`.
-WARNING:absl:There is a known slowdown when using v2.11+ Keras optimizers on M1/M2 Macs. Falling back to the legacy Keras optimizer, i.e., `tf.keras.optimizers.legacy.Adam`.
-
-Epoch 1/5
-938/938 [==============================] - 2s 2ms/step - sparse_categorical_accuracy: 0.9194 - val_sparse_categorical_accuracy: 0.9611
-Epoch 2/5
-938/938 [==============================] - 1s 2ms/step - sparse_categorical_accuracy: 0.9617 - val_sparse_categorical_accuracy: 0.9696
-Epoch 3/5
-938/938 [==============================] - 2s 2ms/step - sparse_categorical_accuracy: 0.9711 - val_sparse_categorical_accuracy: 0.9760
-Epoch 4/5
-938/938 [==============================] - 2s 2ms/step - sparse_categorical_accuracy: 0.9769 - val_sparse_categorical_accuracy: 0.9748
-Epoch 5/5
-938/938 [==============================] - 2s 2ms/step - sparse_categorical_accuracy: 0.9792 - val_sparse_categorical_accuracy: 0.9804
-
-<keras.callbacks.History at 0x2c81f7760>
+<keras.src.callbacks.history.History at 0x7efe405fe560>
 
 ```
 </div>

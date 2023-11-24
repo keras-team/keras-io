@@ -43,18 +43,14 @@ import os
 os.environ["KERAS_BACKEND"] = "jax"  # or "tensorflow" or "torch"
 
 import keras_nlp
+import keras
 import tensorflow as tf
-import keras_core as keras
 import time
+
+keras.mixed_precision.set_global_policy("mixed_float16")
 ```
 <div class="k-default-codeblock">
 ```
-  Installing build dependencies ... [?25l[?25hdone
-  Getting requirements to build wheel ... [?25l[?25hdone
-  Preparing metadata (pyproject.toml) ... [?25l[?25hdone
-  Building wheel for keras-nlp (pyproject.toml) ... [?25l[?25hdone
-
-Using JAX backend.
 
 ```
 </div>
@@ -122,17 +118,6 @@ gpt2_lm = keras_nlp.models.GPT2CausalLM.from_preset(
 )
 ```
 
-<div class="k-default-codeblock">
-```
-Downloading data from https://storage.googleapis.com/keras-nlp/models/gpt2_base_en/v1/vocab.json
- 1042301/1042301 ━━━━━━━━━━━━━━━━━━━━ 0s 0us/step       
-Downloading data from https://storage.googleapis.com/keras-nlp/models/gpt2_base_en/v1/merges.txt
- 456318/456318 ━━━━━━━━━━━━━━━━━━━━ 0s 0us/step       
-Downloading data from https://storage.googleapis.com/keras-nlp/models/gpt2_base_en/v1/model.h5
- 497986112/497986112 ━━━━━━━━━━━━━━━━━━━━ 6s 0us/step
-
-```
-</div>
 Once the model is loaded, you can use it to generate some text right away. Run
 the cells below to give it a try. It's as simple as calling a single function
 *generate()*:
@@ -312,26 +297,6 @@ import tensorflow_datasets as tfds
 reddit_ds = tfds.load("reddit_tifu", split="train", as_supervised=True)
 ```
 
-<div class="k-default-codeblock">
-```
-Downloading and preparing dataset 639.54 MiB (download: 639.54 MiB, generated: 141.46 MiB, total: 781.00 MiB) to /root/tensorflow_datasets/reddit_tifu/short/1.1.2...
-
-Dl Completed...: 0 url [00:00, ? url/s]
-
-Dl Size...: 0 MiB [00:00, ? MiB/s]
-
-Extraction completed...: 0 file [00:00, ? file/s]
-
-Generating splits...:   0%|          | 0/1 [00:00<?, ? splits/s]
-
-Generating train examples...:   0%|          | 0/79740 [00:00<?, ? examples/s]
-
-Shuffling /root/tensorflow_datasets/reddit_tifu/short/1.1.2.incompleteHNUZEA/reddit_tifu-train.tfrecord*...:  …
-
-Dataset reddit_tifu downloaded and prepared to /root/tensorflow_datasets/reddit_tifu/short/1.1.2. Subsequent calls will reuse this data.
-
-```
-</div>
 Let's take a look inside sample data from the reddit TensorFlow Dataset. There
 are two features:
 
@@ -397,9 +362,9 @@ gpt2_lm.fit(train_ds, epochs=num_epochs)
 
 <div class="k-default-codeblock">
 ```
- 500/500 ━━━━━━━━━━━━━━━━━━━━ 526s 988ms/step - loss: 3.3603
+ 500/500 ━━━━━━━━━━━━━━━━━━━━ 75s 120ms/step - accuracy: 0.3189 - loss: 3.3653
 
-<keras_core.src.callbacks.history.History at 0x7e1210507730>
+<keras.src.callbacks.history.History at 0x7f2af3fda410>
 
 ```
 </div>
@@ -589,13 +554,6 @@ Chinese dataset.
 <div class="k-default-codeblock">
 ```
 Cloning into 'chinese-poetry'...
-remote: Enumerating objects: 7249, done.[K
-remote: Counting objects: 100% (54/54), done.[K
-remote: Compressing objects: 100% (40/40), done.[K
-remote: Total 7249 (delta 15), reused 40 (delta 11), pack-reused 7195[K
-Receiving objects: 100% (7249/7249), 197.95 MiB | 23.27 MiB/s, done.
-Resolving deltas: 100% (5304/5304), done.
-Updating files: 100% (2285/2285), done.
 
 ```
 </div>
@@ -665,9 +623,9 @@ gpt2_lm.fit(train_ds, epochs=num_epochs)
 
 <div class="k-default-codeblock">
 ```
- 500/500 ━━━━━━━━━━━━━━━━━━━━ 323s 591ms/step - loss: 2.8592
+ 500/500 ━━━━━━━━━━━━━━━━━━━━ 49s 71ms/step - accuracy: 0.2357 - loss: 2.8196
 
-<keras_core.src.callbacks.history.History at 0x7e11fc3fa320>
+<keras.src.callbacks.history.History at 0x7f2b2c192bc0>
 
 ```
 </div>

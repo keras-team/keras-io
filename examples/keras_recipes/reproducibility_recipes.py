@@ -8,6 +8,7 @@ Accelerator: GPU
 """
 """
 ## Introduction
+
 This example demonstrates how to control randomness in Keras models. Sometimes
 you may want to reproduce the exact same results across runs, for experimentation
 purposes or to debug a problem.
@@ -17,21 +18,20 @@ purposes or to debug a problem.
 ## Setup
 """
 import json
-
+import numpy as np
 import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras import layers
-from tensorflow.keras import initializers
+import keras
+from keras import layers
+from keras import initializers
 
 # Set the seed using keras.utils.set_random_seed. This will set:
 # 1) `numpy` seed
-# 2) `tensorflow` random seed
+# 2) backend random seed
 # 3) `python` random seed
 keras.utils.set_random_seed(812)
 
-# This will make TensorFlow ops as deterministic as possible, but it will
-# affect the overall performance, so it's not enabled by default.
-# `enable_op_determinism()` is introduced in TensorFlow 2.9.
+# If using TensorFlow, this will make GPU ops as deterministic as possible,
+# but it will affect the overall performance, so be mindful of that.
 tf.config.experimental.enable_op_determinism()
 
 
@@ -41,7 +41,7 @@ tf.config.experimental.enable_op_determinism()
 Most of the layers in Keras have `kernel_initializer` and `bias_initializer`
 parameters. These parameters allow you to specify the strategy used for
 initializing the weights of layer variables. The following built-in initializers
-are available as part of `tf.keras.initializers`:
+are available as part of `keras.initializers`:
 """
 
 initializers_list = [
@@ -69,9 +69,7 @@ for initializer in initializers_list:
 
     for iteration in range(2):
         # In order to get same results across multiple runs from an initializer,
-        # you need to specify a seed value. Note that this is not related to
-        # keras.utils.set_random_seed or tf.config.experimental.enable_op_determinism.
-        # If you comment those lines, you will still get the same results.
+        # you can specify a seed value.
         result = float(initializer(seed=42)(shape=(1, 1)))
         print(f"\tIteration --> {iteration} // Result --> {result}")
     print("\n")
@@ -94,7 +92,7 @@ result_1 = glorot_normal_1(shape=(input_dim, neurons))
 result_2 = glorot_normal_2(shape=(input_dim, neurons))
 
 # Check if the results are equal.
-equal = tf.experimental.numpy.allclose(result_1, result_2).numpy()
+equal = np.allclose(result_1, result_2)
 print(f"Are the results equal? {equal}")
 
 """
@@ -113,7 +111,7 @@ result_3 = glorot_normal_3(shape=(input_dim, neurons))
 # Call the second initializer.
 result_4 = glorot_normal_4(shape=(input_dim, neurons))
 
-equal = tf.experimental.numpy.allclose(result_3, result_4).numpy()
+equal = np.allclose(result_3, result_4)
 print(f"Are the results equal? {equal}")
 
 """
@@ -137,7 +135,7 @@ object of the Keras model.
 def train_model(train_data: tf.data.Dataset, test_data: tf.data.Dataset) -> dict:
     model = keras.Sequential(
         [
-            layers.Conv2D(32, (3, 3), activation="relu", input_shape=(32, 32, 1)),
+            layers.Conv2D(32, (3, 3), activation="relu"),
             layers.MaxPooling2D((2, 2)),
             layers.Dropout(0.2),
             layers.Conv2D(32, (3, 3), activation="relu"),
@@ -159,7 +157,7 @@ def train_model(train_data: tf.data.Dataset, test_data: tf.data.Dataset) -> dict
     # If you are using array-like objects, this will shuffle the data before
     # training. This argument is ignored when `x` is a generator or
     # `tf.data.Dataset`.
-    history = model.fit(train_data, epochs=5, validation_data=test_data)
+    history = model.fit(train_data, epochs=2, validation_data=test_data)
 
     print(f"Model accuracy on test data: {model.evaluate(test_data)[1] * 100:.2f}%")
 
@@ -180,8 +178,8 @@ test_ds = tf.data.Dataset.from_tensor_slices((test_images, test_labels))
 Remember we called `tf.config.experimental.enable_op_determinism()` at the
 beginning of the function. This makes the `tf.data` operations deterministic.
 However, making `tf.data` operations deterministic comes with a performance
-cost.
-If you want to learn more about it, please check this [official guide](https://www.tensorflow.org/api_docs/python/tf/config/experimental/enable_op_determinism#determinism_and_tfdata).
+cost. If you want to learn more about it, please check this
+[official guide](https://www.tensorflow.org/api_docs/python/tf/config/experimental/enable_op_determinism#determinism_and_tfdata).
 
 Small summary what's going on here. Models have `kernel_initializer` and
 `bias_initializer` parameters. Since we set random seeds using
@@ -247,7 +245,7 @@ Train the model for the first time.
 history = train_model(train_data, test_data)
 
 """
-Let's save our results into a json file, and restart the kernel. After
+Let's save our results into a JSON file, and restart the kernel. After
 restarting the kernel, we should see the same results as the previous run,
 this includes metrics and loss values both on the training and test data.
 """
@@ -270,13 +268,12 @@ Compare the results one by one. You will see that they are equal.
 """
 for key in history.keys():
     for i in range(len(history[key])):
-        if not tf.experimental.numpy.allclose(
-            history[key][i], history_loaded[key][i]
-        ).numpy():
-            print(f"{key} are not equal")
+        if not np.allclose(history[key][i], history_loaded[key][i]):
+            print(f"{key} not equal")
 
 """
 ## Conclusion
+
 In this tutorial, you learned how to control the randomness sources in Keras and
 TensorFlow. You also learned how to reproduce the results of a model training
 process.

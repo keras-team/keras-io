@@ -59,11 +59,15 @@ TensorFlow.
 
 ```python
 import os
+
+os.environ["KERAS_BACKEND"] = "tensorflow"
+
 import json
 import shutil
 import requests
 import numpy as np
 import tensorflow as tf
+import keras
 import matplotlib.pyplot as plt
 ```
 
@@ -76,9 +80,16 @@ model that we are going to serve.
 
 
 ```python
-model = tf.keras.applications.MobileNet()
+model = keras.applications.MobileNet()
 ```
 
+<div class="k-default-codeblock">
+```
+Downloading data from https://storage.googleapis.com/tensorflow/keras-applications/mobilenet/mobilenet_1_0_224_tf.h5
+ 17225924/17225924 ━━━━━━━━━━━━━━━━━━━━ 0s 0us/step
+
+```
+</div>
 ---
 ## Preprocessing
 
@@ -231,13 +242,11 @@ print(f"SavedModel files: {os.listdir(model_export_path)}")
 
 <div class="k-default-codeblock">
 ```
-WARNING:absl:Found untraced functions such as _jit_compiled_convolution_op, _jit_compiled_convolution_op, _jit_compiled_convolution_op, _jit_compiled_convolution_op, _jit_compiled_convolution_op while saving (showing 5 of 28). These functions will not be directly callable after loading.
-
 INFO:tensorflow:Assets written to: ./model/1/assets
 
 INFO:tensorflow:Assets written to: ./model/1/assets
 
-SavedModel files: ['fingerprint.pb', 'variables', 'saved_model.pb', 'assets']
+SavedModel files: ['variables', 'saved_model.pb', 'assets', 'fingerprint.pb']
 
 ```
 </div>
@@ -259,12 +268,12 @@ in the TensorFlow Guide.
 <div class="k-default-codeblock">
 ```
 The given SavedModel SignatureDef contains the following input(s):
-  inputs['input_1'] tensor_info:
+  inputs['inputs'] tensor_info:
       dtype: DT_FLOAT
       shape: (-1, 224, 224, 3)
-      name: serving_default_input_1:0
+      name: serving_default_inputs:0
 The given SavedModel SignatureDef contains the following output(s):
-  outputs['predictions'] tensor_info:
+  outputs['output_0'] tensor_info:
       dtype: DT_FLOAT
       shape: (-1, 1000)
       name: StatefulPartitionedCall:0
@@ -380,7 +389,10 @@ servable by not specifying a particular version.
 
 ```python
 data = json.dumps(
-    {"signature_name": "serving_default", "instances": batched_img.numpy().tolist()}
+    {
+        "signature_name": "serving_default",
+        "instances": batched_img.numpy().tolist(),
+    }
 )
 url = "http://localhost:8501/v1/models/model:predict"
 
@@ -424,7 +436,7 @@ channel = grpc.insecure_channel("localhost:8500")
 ```
 
 ```shell
-!pip install -q tensorflow_serving_api
+pip install -q tensorflow_serving_api
 ```
 
 ```python
@@ -525,8 +537,6 @@ tf.saved_model.save(
 ```
 <div class="k-default-codeblock">
 ```
-WARNING:absl:Found untraced functions such as _jit_compiled_convolution_op, _jit_compiled_convolution_op, _jit_compiled_convolution_op, _jit_compiled_convolution_op, _jit_compiled_convolution_op while saving (showing 5 of 28). These functions will not be directly callable after loading.
-
 INFO:tensorflow:Assets written to: ./model/2/assets
 
 INFO:tensorflow:Assets written to: ./model/2/assets
@@ -585,7 +595,10 @@ models that share the same base parent folder.
 
 ```python
 data = json.dumps(
-    {"signature_name": "serving_default", "instances": batched_raw_img.numpy().tolist()}
+    {
+        "signature_name": "serving_default",
+        "instances": batched_raw_img.numpy().tolist(),
+    }
 )
 url_sig = "http://localhost:8501/v1/models/model/versions/2:predict"
 ```
@@ -624,6 +637,7 @@ print(f"Predicted class: {grpc_outputs}")
 ```
 
 outputs:
+
 ```
 gRPC output shape: (1, 1)
 Predicted class: [[b'banana']]

@@ -24,8 +24,12 @@ by putting the custom training step in the Trainer class definition.
 ## Setup
 """
 
+import os
+
+os.environ["KERAS_BACKEND"] = "tensorflow"
+
 import tensorflow as tf
-from tensorflow import keras
+import keras
 
 # Load MNIST dataset and standardize the data
 mnist = keras.datasets.mnist
@@ -101,7 +105,7 @@ Let's define two different models that can share our Trainer class and its custo
 # A model defined using Sequential API
 model_a = keras.models.Sequential(
     [
-        keras.layers.Flatten(input_shape=(28, 28)),
+        keras.layers.Flatten(),
         keras.layers.Dense(256, activation="relu"),
         keras.layers.Dropout(0.2),
         keras.layers.Dense(10, activation="softmax"),
@@ -110,7 +114,7 @@ model_a = keras.models.Sequential(
 
 # A model defined using Functional API
 func_input = keras.Input(shape=(28, 28, 1))
-x = keras.layers.Flatten(input_shape=(28, 28))(func_input)
+x = keras.layers.Flatten()(func_input)
 x = keras.layers.Dense(512, activation="relu")(x)
 x = keras.layers.Dropout(0.4)(x)
 func_output = keras.layers.Dense(10, activation="softmax")(x)

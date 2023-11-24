@@ -27,9 +27,6 @@ encoding with Keras preprocessing layers, in this example we
 delegate everything to `FeatureSpace`, making the workflow
 extremely quick and easy.
 
-Note that this example should be run with TensorFlow 2.12 or higher.
-Before the release of TensorFlow 2.12, you can use `tf-nightly`.
-
 ### The dataset
 
 [Our dataset](https://archive.ics.uci.edu/ml/datasets/heart+Disease) is provided by the
@@ -63,9 +60,14 @@ Target | Diagnosis of heart disease (1 = true; 0 = false) | Target
 
 
 ```python
+import os
+
+os.environ["KERAS_BACKEND"] = "tensorflow"
+
 import tensorflow as tf
 import pandas as pd
-from tensorflow import keras
+import keras
+from keras.utils import FeatureSpace
 ```
 
 ---
@@ -284,7 +286,7 @@ for x, y in train_ds.take(1):
 
 <div class="k-default-codeblock">
 ```
-Input: {'age': <tf.Tensor: shape=(), dtype=int64, numpy=47>, 'sex': <tf.Tensor: shape=(), dtype=int64, numpy=1>, 'cp': <tf.Tensor: shape=(), dtype=int64, numpy=3>, 'trestbps': <tf.Tensor: shape=(), dtype=int64, numpy=130>, 'chol': <tf.Tensor: shape=(), dtype=int64, numpy=253>, 'fbs': <tf.Tensor: shape=(), dtype=int64, numpy=0>, 'restecg': <tf.Tensor: shape=(), dtype=int64, numpy=0>, 'thalach': <tf.Tensor: shape=(), dtype=int64, numpy=179>, 'exang': <tf.Tensor: shape=(), dtype=int64, numpy=0>, 'oldpeak': <tf.Tensor: shape=(), dtype=float64, numpy=0.0>, 'slope': <tf.Tensor: shape=(), dtype=int64, numpy=1>, 'ca': <tf.Tensor: shape=(), dtype=int64, numpy=0>, 'thal': <tf.Tensor: shape=(), dtype=string, numpy=b'normal'>}
+Input: {'age': <tf.Tensor: shape=(), dtype=int64, numpy=65>, 'sex': <tf.Tensor: shape=(), dtype=int64, numpy=1>, 'cp': <tf.Tensor: shape=(), dtype=int64, numpy=1>, 'trestbps': <tf.Tensor: shape=(), dtype=int64, numpy=138>, 'chol': <tf.Tensor: shape=(), dtype=int64, numpy=282>, 'fbs': <tf.Tensor: shape=(), dtype=int64, numpy=1>, 'restecg': <tf.Tensor: shape=(), dtype=int64, numpy=2>, 'thalach': <tf.Tensor: shape=(), dtype=int64, numpy=174>, 'exang': <tf.Tensor: shape=(), dtype=int64, numpy=0>, 'oldpeak': <tf.Tensor: shape=(), dtype=float64, numpy=1.4>, 'slope': <tf.Tensor: shape=(), dtype=int64, numpy=2>, 'ca': <tf.Tensor: shape=(), dtype=int64, numpy=1>, 'thal': <tf.Tensor: shape=(), dtype=string, numpy=b'normal'>}
 Target: tf.Tensor(0, shape=(), dtype=int64)
 
 ```
@@ -323,8 +325,6 @@ the co-occurence space is too large.
 
 
 ```python
-from keras.utils import FeatureSpace
-
 feature_space = FeatureSpace(
     features={
         # Categorical features encoded as integers
@@ -390,7 +390,7 @@ feature_space = FeatureSpace(
         "ca": FeatureSpace.integer_categorical(num_oov_indices=0),
         # Categorical feature encoded as string
         "thal": FeatureSpace.string_categorical(num_oov_indices=0),
-        # Numerical features to normalize
+        # Numerical features to discretize
         "age": FeatureSpace.float_discretized(num_bins=30),
         # Numerical features to normalize
         "trestbps": FeatureSpace.float_normalized(),
@@ -522,54 +522,57 @@ as part of the tf.data pipeline, not as part of the model.
 
 ```python
 training_model.fit(
-    preprocessed_train_ds, epochs=20, validation_data=preprocessed_val_ds, verbose=2
+    preprocessed_train_ds,
+    epochs=20,
+    validation_data=preprocessed_val_ds,
+    verbose=2,
 )
 ```
 
 <div class="k-default-codeblock">
 ```
 Epoch 1/20
-8/8 - 5s - loss: 0.6999 - accuracy: 0.5413 - val_loss: 0.6163 - val_accuracy: 0.6885 - 5s/epoch - 638ms/step
+8/8 - 3s - 352ms/step - accuracy: 0.5200 - loss: 0.7407 - val_accuracy: 0.6196 - val_loss: 0.6663
 Epoch 2/20
-8/8 - 0s - loss: 0.6044 - accuracy: 0.6364 - val_loss: 0.5635 - val_accuracy: 0.7869 - 268ms/epoch - 34ms/step
+8/8 - 0s - 20ms/step - accuracy: 0.5881 - loss: 0.6874 - val_accuracy: 0.7732 - val_loss: 0.6015
 Epoch 3/20
-8/8 - 0s - loss: 0.5764 - accuracy: 0.6570 - val_loss: 0.5214 - val_accuracy: 0.8197 - 267ms/epoch - 33ms/step
+8/8 - 0s - 19ms/step - accuracy: 0.6580 - loss: 0.6192 - val_accuracy: 0.7839 - val_loss: 0.5577
 Epoch 4/20
-8/8 - 0s - loss: 0.5281 - accuracy: 0.7438 - val_loss: 0.4867 - val_accuracy: 0.8033 - 269ms/epoch - 34ms/step
+8/8 - 0s - 19ms/step - accuracy: 0.7096 - loss: 0.5721 - val_accuracy: 0.7856 - val_loss: 0.5200
 Epoch 5/20
-8/8 - 0s - loss: 0.4858 - accuracy: 0.7727 - val_loss: 0.4587 - val_accuracy: 0.7705 - 268ms/epoch - 34ms/step
+8/8 - 0s - 18ms/step - accuracy: 0.7292 - loss: 0.5553 - val_accuracy: 0.7764 - val_loss: 0.4853
 Epoch 6/20
-8/8 - 0s - loss: 0.4710 - accuracy: 0.7438 - val_loss: 0.4364 - val_accuracy: 0.7705 - 271ms/epoch - 34ms/step
+8/8 - 0s - 19ms/step - accuracy: 0.7561 - loss: 0.5103 - val_accuracy: 0.7732 - val_loss: 0.4627
 Epoch 7/20
-8/8 - 0s - loss: 0.4245 - accuracy: 0.8099 - val_loss: 0.4181 - val_accuracy: 0.7705 - 273ms/epoch - 34ms/step
+8/8 - 0s - 19ms/step - accuracy: 0.7231 - loss: 0.5374 - val_accuracy: 0.7764 - val_loss: 0.4413
 Epoch 8/20
-8/8 - 0s - loss: 0.4261 - accuracy: 0.7645 - val_loss: 0.4043 - val_accuracy: 0.7869 - 269ms/epoch - 34ms/step
+8/8 - 0s - 19ms/step - accuracy: 0.7769 - loss: 0.4564 - val_accuracy: 0.7683 - val_loss: 0.4320
 Epoch 9/20
-8/8 - 0s - loss: 0.4000 - accuracy: 0.7893 - val_loss: 0.3943 - val_accuracy: 0.7869 - 274ms/epoch - 34ms/step
+8/8 - 0s - 18ms/step - accuracy: 0.7769 - loss: 0.4324 - val_accuracy: 0.7856 - val_loss: 0.4191
 Epoch 10/20
-8/8 - 0s - loss: 0.3788 - accuracy: 0.7893 - val_loss: 0.3866 - val_accuracy: 0.7869 - 271ms/epoch - 34ms/step
+8/8 - 0s - 19ms/step - accuracy: 0.7778 - loss: 0.4340 - val_accuracy: 0.7888 - val_loss: 0.4084
 Epoch 11/20
-8/8 - 0s - loss: 0.3612 - accuracy: 0.8347 - val_loss: 0.3809 - val_accuracy: 0.8033 - 268ms/epoch - 33ms/step
+8/8 - 0s - 19ms/step - accuracy: 0.7760 - loss: 0.4124 - val_accuracy: 0.7716 - val_loss: 0.3977
 Epoch 12/20
-8/8 - 0s - loss: 0.3691 - accuracy: 0.8058 - val_loss: 0.3761 - val_accuracy: 0.8033 - 271ms/epoch - 34ms/step
+8/8 - 0s - 19ms/step - accuracy: 0.7964 - loss: 0.4125 - val_accuracy: 0.7667 - val_loss: 0.3959
 Epoch 13/20
-8/8 - 0s - loss: 0.3473 - accuracy: 0.8471 - val_loss: 0.3719 - val_accuracy: 0.7869 - 269ms/epoch - 34ms/step
+8/8 - 0s - 18ms/step - accuracy: 0.8051 - loss: 0.3979 - val_accuracy: 0.7856 - val_loss: 0.3891
 Epoch 14/20
-8/8 - 0s - loss: 0.3590 - accuracy: 0.8264 - val_loss: 0.3682 - val_accuracy: 0.7869 - 275ms/epoch - 34ms/step
+8/8 - 0s - 19ms/step - accuracy: 0.8043 - loss: 0.3891 - val_accuracy: 0.7856 - val_loss: 0.3840
 Epoch 15/20
-8/8 - 0s - loss: 0.3290 - accuracy: 0.8388 - val_loss: 0.3656 - val_accuracy: 0.8033 - 270ms/epoch - 34ms/step
+8/8 - 0s - 18ms/step - accuracy: 0.8633 - loss: 0.3571 - val_accuracy: 0.7872 - val_loss: 0.3764
 Epoch 16/20
-8/8 - 0s - loss: 0.3127 - accuracy: 0.8471 - val_loss: 0.3636 - val_accuracy: 0.8033 - 273ms/epoch - 34ms/step
+8/8 - 0s - 19ms/step - accuracy: 0.8728 - loss: 0.3548 - val_accuracy: 0.7888 - val_loss: 0.3699
 Epoch 17/20
-8/8 - 0s - loss: 0.2991 - accuracy: 0.8843 - val_loss: 0.3623 - val_accuracy: 0.8033 - 275ms/epoch - 34ms/step
+8/8 - 0s - 19ms/step - accuracy: 0.8698 - loss: 0.3171 - val_accuracy: 0.7872 - val_loss: 0.3727
 Epoch 18/20
-8/8 - 0s - loss: 0.3258 - accuracy: 0.8678 - val_loss: 0.3613 - val_accuracy: 0.8033 - 272ms/epoch - 34ms/step
+8/8 - 0s - 18ms/step - accuracy: 0.8529 - loss: 0.3454 - val_accuracy: 0.7904 - val_loss: 0.3669
 Epoch 19/20
-8/8 - 0s - loss: 0.2835 - accuracy: 0.8512 - val_loss: 0.3610 - val_accuracy: 0.8033 - 271ms/epoch - 34ms/step
+8/8 - 0s - 17ms/step - accuracy: 0.8589 - loss: 0.3359 - val_accuracy: 0.7980 - val_loss: 0.3770
 Epoch 20/20
-8/8 - 0s - loss: 0.2700 - accuracy: 0.9050 - val_loss: 0.3613 - val_accuracy: 0.8033 - 269ms/epoch - 34ms/step
+8/8 - 0s - 17ms/step - accuracy: 0.8455 - loss: 0.3113 - val_accuracy: 0.8044 - val_loss: 0.3684
 
-<keras.callbacks.History at 0x7f6850106290>
+<keras.src.callbacks.history.History at 0x7f139bb4ed10>
 
 ```
 </div>
@@ -610,8 +613,8 @@ print(
 
 <div class="k-default-codeblock">
 ```
-1/1 [==============================] - 1s 504ms/step
-This particular patient had a 56.32% probability of having a heart disease, as evaluated by our model.
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 273ms/step
+This particular patient had a 43.13% probability of having a heart disease, as evaluated by our model.
 
 ```
 </div>

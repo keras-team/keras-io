@@ -40,7 +40,6 @@ When restoring a model, these get executed in the following order:
 
 import os
 import numpy as np
-import tensorflow as tf
 import keras
 
 """
@@ -48,12 +47,9 @@ import keras
 
 These methods determine how the state of your model's layers is saved when calling
 `model.save()`. You can override them to take full control of the state saving process.
-
 """
 
 """
-
-
 ### `save_own_variables()` and `load_own_variables()`
 
 These methods save and load the state variables of the layer when `model.save()` and
@@ -76,21 +72,21 @@ variables. Let's take a look at an example customizing this.
 
 
 @keras.utils.register_keras_serializable(package="my_custom_package")
-class LayerWithCustomVariables(keras.layers.Dense):
+class LayerWithCustomVariable(keras.layers.Dense):
     def __init__(self, units, **kwargs):
         super().__init__(units, **kwargs)
-        self.stored_variables = tf.Variable(
-            np.random.random((10,)), name="special_arr", dtype=tf.float32
+        self.my_variable = keras.Variable(
+            np.random.random((units,)), name="my_variable", dtype="float32"
         )
 
     def save_own_variables(self, store):
         super().save_own_variables(store)
-        # Stores the value of the `tf.Variable` upon saving
-        store["variables"] = self.stored_variables.numpy()
+        # Stores the value of the variable upon saving
+        store["variables"] = self.my_variable.numpy()
 
     def load_own_variables(self, store):
-        # Assigns the value of the `tf.Variable` upon loading
-        self.stored_variables.assign(store["variables"])
+        # Assigns the value of the variable upon loading
+        self.my_variable.assign(store["variables"])
         # Load the remaining weights
         for i, v in enumerate(self.weights):
             v.assign(store[f"{i}"])
@@ -98,13 +94,14 @@ class LayerWithCustomVariables(keras.layers.Dense):
         # are loaded in `load_own_variables.`
 
     def call(self, inputs):
-        return super().call(inputs) * self.stored_variables
+        dense_out = super().call(inputs)
+        return dense_out + self.my_variable
 
 
-model = keras.Sequential([LayerWithCustomVariables(1)])
+model = keras.Sequential([LayerWithCustomVariable(1)])
 
 ref_input = np.random.random((8, 10))
-ref_output = np.random.random((8,))
+ref_output = np.random.random((8, 10))
 model.compile(optimizer="adam", loss="mean_squared_error")
 model.fit(ref_input, ref_output)
 
@@ -112,8 +109,8 @@ model.save("custom_vars_model.keras")
 restored_model = keras.models.load_model("custom_vars_model.keras")
 
 np.testing.assert_allclose(
-    model.layers[0].stored_variables.numpy(),
-    restored_model.layers[0].stored_variables.numpy(),
+    model.layers[0].my_variable.numpy(),
+    restored_model.layers[0].my_variable.numpy(),
 )
 
 """
@@ -166,9 +163,7 @@ np.testing.assert_string_equal(
 
 """
 ## `build` and `compile` saving customization
-"""
 
-"""
 ### `get_build_config()` and `build_from_config()`
 
 These methods work together to save the layer's built states and restore them upon
@@ -189,16 +184,17 @@ class LayerWithCustomBuild(keras.layers.Layer):
         self.units = units
 
     def call(self, inputs):
-        return tf.matmul(inputs, self.w) + self.b
+        return keras.ops.matmul(inputs, self.w) + self.b
 
     def get_config(self):
         return dict(units=self.units, **super().get_config())
 
     def build(self, input_shape, layer_init):
-        # Note the customization in overriding `build()` adds an extra argument.
+        # Note the overriding of `build()` to add an extra argument.
         # Therefore, we will need to manually call build with `layer_init` argument
         # before the first execution of `call()`.
         super().build(input_shape)
+        self._input_shape = input_shape
         self.w = self.add_weight(
             shape=(input_shape[-1], self.units),
             initializer=layer_init,
@@ -212,10 +208,10 @@ class LayerWithCustomBuild(keras.layers.Layer):
         self.layer_init = layer_init
 
     def get_build_config(self):
-        build_config = super().get_build_config()  # only gives `input_shape`
-        build_config.update(
-            {"layer_init": self.layer_init}  # Stores our initializer for `build()`
-        )
+        build_config = {
+            "layer_init": self.layer_init,
+            "input_shape": self._input_shape,
+        }  # Stores our initializer for `build()`
         return build_config
 
     def build_from_config(self, config):
@@ -260,21 +256,21 @@ Let's take a look at an example of this.
 
 @keras.saving.register_keras_serializable(package="my_custom_package")
 def small_square_sum_loss(y_true, y_pred):
-    loss = tf.math.squared_difference(y_pred, y_true)
+    loss = keras.ops.square(y_pred - y_true)
     loss = loss / 10.0
-    loss = tf.reduce_sum(loss, axis=1)
+    loss = keras.ops.sum(loss, axis=1)
     return loss
 
 
 @keras.saving.register_keras_serializable(package="my_custom_package")
 def mean_pred(y_true, y_pred):
-    return tf.reduce_mean(y_pred)
+    return keras.ops.mean(y_pred)
 
 
 @keras.saving.register_keras_serializable(package="my_custom_package")
 class ModelWithCustomCompile(keras.Model):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
         self.dense1 = keras.layers.Dense(8, activation="relu")
         self.dense2 = keras.layers.Dense(4, activation="softmax")
 
@@ -338,5 +334,4 @@ information your model needs.
 states.
 - `get_compile_config` and `compile_from_config` save and restore the model's
 compiled states.
-
 """

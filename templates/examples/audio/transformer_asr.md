@@ -3,12 +3,13 @@
 **Author:** [Apoorv Nandan](https://twitter.com/NandanApoorv)<br>
 **Date created:** 2021/01/13<br>
 **Last modified:** 2021/01/13<br>
+**Description:** Training a sequence-to-sequence Transformer for automatic speech recognition.
 
 
+<div class='example_version_banner keras_3'>ⓘ This example uses Keras 3</div>
 <img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/audio/ipynb/transformer_asr.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/audio/transformer_asr.py)
 
 
-**Description:** Training a sequence-to-sequence Transformer for automatic speech recognition.
 
 ---
 ## Introduction
@@ -28,7 +29,7 @@ as proposed in the paper, "Attention is All You Need".
 **References:**
 
 - [Attention is All You Need](https://papers.nips.cc/paper/2017/file/3f5ee243547dee91fbd053c1c4a845aa-Paper.pdf)
-- [Very Deep Self-Attention Networks for End-to-End Speech Recognition](https://arxiv.org/pdf/1904.13377.pdf)
+- [Very Deep Self-Attention Networks for End-to-End Speech Recognition](https://arxiv.org/abs/1904.13377)
 - [Speech Transformers](https://ieeexplore.ieee.org/document/8462506)
 - [LJSpeech Dataset](https://keithito.com/LJ-Speech-Dataset/)
 
@@ -36,11 +37,13 @@ as proposed in the paper, "Attention is All You Need".
 ```python
 
 import os
-import random
+
+os.environ["KERAS_BACKEND"] = "tensorflow"
+
 from glob import glob
 import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras import layers
+import keras
+from keras import layers
 
 ```
 
@@ -59,7 +62,7 @@ them (via convolution strides) and process local relationships.
 class TokenEmbedding(layers.Layer):
     def __init__(self, num_vocab=1000, maxlen=100, num_hid=64):
         super().__init__()
-        self.emb = tf.keras.layers.Embedding(num_vocab, num_hid)
+        self.emb = keras.layers.Embedding(num_vocab, num_hid)
         self.pos_emb = layers.Embedding(input_dim=maxlen, output_dim=num_hid)
 
     def call(self, x):
@@ -73,13 +76,13 @@ class TokenEmbedding(layers.Layer):
 class SpeechFeatureEmbedding(layers.Layer):
     def __init__(self, num_hid=64, maxlen=100):
         super().__init__()
-        self.conv1 = tf.keras.layers.Conv1D(
+        self.conv1 = keras.layers.Conv1D(
             num_hid, 11, strides=2, padding="same", activation="relu"
         )
-        self.conv2 = tf.keras.layers.Conv1D(
+        self.conv2 = keras.layers.Conv1D(
             num_hid, 11, strides=2, padding="same", activation="relu"
         )
-        self.conv3 = tf.keras.layers.Conv1D(
+        self.conv3 = keras.layers.Conv1D(
             num_hid, 11, strides=2, padding="same", activation="relu"
         )
 
@@ -111,7 +114,7 @@ class TransformerEncoder(layers.Layer):
         self.dropout1 = layers.Dropout(rate)
         self.dropout2 = layers.Dropout(rate)
 
-    def call(self, inputs, training):
+    def call(self, inputs, training=False):
         attn_output = self.att(inputs, inputs)
         attn_output = self.dropout1(attn_output, training=training)
         out1 = self.layernorm1(inputs + attn_output)
@@ -257,7 +260,7 @@ class Transformer(keras.Model):
             preds = self([source, dec_input])
             one_hot = tf.one_hot(dec_target, depth=self.num_classes)
             mask = tf.math.logical_not(tf.math.equal(dec_target, 0))
-            loss = self.compiled_loss(one_hot, preds, sample_weight=mask)
+            loss = model.compute_loss(None, one_hot, preds, sample_weight=mask)
         trainable_vars = self.trainable_variables
         gradients = tape.gradient(loss, trainable_vars)
         self.optimizer.apply_gradients(zip(gradients, trainable_vars))
@@ -272,7 +275,7 @@ class Transformer(keras.Model):
         preds = self([source, dec_input])
         one_hot = tf.one_hot(dec_target, depth=self.num_classes)
         mask = tf.math.logical_not(tf.math.equal(dec_target, 0))
-        loss = self.compiled_loss(one_hot, preds, sample_weight=mask)
+        loss = model.compute_loss(None, one_hot, preds, sample_weight=mask)
         self.loss_metric.update_state(loss)
         return {"loss": self.loss_metric.result()}
 
@@ -322,7 +325,7 @@ with open(os.path.join(saveto, "metadata.csv"), encoding="utf-8") as f:
 
 
 def get_data(wavs, id_to_text, maxlen=50):
-    """ returns mapping of audio paths and transcription texts """
+    """returns mapping of audio paths and transcription texts"""
     data = []
     for w in wavs:
         id = w.split("/")[-1].split(".")[0]
@@ -335,7 +338,7 @@ def get_data(wavs, id_to_text, maxlen=50):
 <div class="k-default-codeblock">
 ```
 Downloading data from https://data.keithito.com/data/speech/LJSpeech-1.1.tar.bz2
-2748579840/2748572632 [==============================] - 57s 0us/step
+ 2748572632/2748572632 ━━━━━━━━━━━━━━━━━━━━ 18s 0us/step
 
 ```
 </div>
@@ -403,9 +406,7 @@ def path_to_audio(path):
 def create_audio_ds(data):
     flist = [_["audio"] for _ in data]
     audio_ds = tf.data.Dataset.from_tensor_slices(flist)
-    audio_ds = audio_ds.map(
-        path_to_audio, num_parallel_calls=tf.data.AUTOTUNE
-    )
+    audio_ds = audio_ds.map(path_to_audio, num_parallel_calls=tf.data.AUTOTUNE)
     return audio_ds
 
 
@@ -500,7 +501,7 @@ class CustomSchedule(keras.optimizers.schedules.LearningRateSchedule):
         self.steps_per_epoch = steps_per_epoch
 
     def calculate_lr(self, epoch):
-        """ linear warm up - linear decay """
+        """linear warm up - linear decay"""
         warmup_lr = (
             self.init_lr
             + ((self.lr_after_warmup - self.init_lr) / (self.warmup_epochs - 1)) * epoch
@@ -516,6 +517,7 @@ class CustomSchedule(keras.optimizers.schedules.LearningRateSchedule):
 
     def __call__(self, step):
         epoch = step // self.steps_per_epoch
+        epoch = tf.cast(epoch, "float32")
         return self.calculate_lr(epoch)
 
 ```
@@ -542,8 +544,9 @@ model = Transformer(
     num_layers_dec=1,
     num_classes=34,
 )
-loss_fn = tf.keras.losses.CategoricalCrossentropy(
-    from_logits=True, label_smoothing=0.1,
+loss_fn = keras.losses.CategoricalCrossentropy(
+    from_logits=True,
+    label_smoothing=0.1,
 )
 
 learning_rate = CustomSchedule(
@@ -562,35 +565,43 @@ history = model.fit(ds, validation_data=val_ds, callbacks=[display_cb], epochs=1
 
 <div class="k-default-codeblock">
 ```
-203/203 [==============================] - 349s 2s/step - loss: 1.7437 - val_loss: 1.4650
-target:     <he had neither a bed to lie upon nor a coat to his back.>
-prediction: <the iaio the t h aint oohe te te an he t te o e t  as e t t he te the the o t t ie o so o  te o the te s s t tre olin o o oon cnt theaie to o te s te o soo hete te tte  o e the th s oas pe te the ad 
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-target:     <in all of these roles the president must go to the people.>
-prediction: <the iaio the t h aint oohe te te an he t te o e t  as e t t he te the the o t t ie o so o  te o the te s s t tre olin o o oon cnt theaie to o te s te o soo hete te tte  o e the th s oas pe te the ad 
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-target:     <and to have succeeded in other speculations.>
-prediction: <the iaio the t h aint oohe te te an he t te o e t  as e t t he te the the o t t ie o so o  te o the te s s t tre olin o o oon cnt theaie to o te s te o soo hete te tte  o e the th s oas pe te the ad 
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-target:     <and which certainly hold good for the vast majority of animals and plants, are of universal application.>
-prediction: <the iaio the t h aint oohe te te an he t te o e t  as e t t he te the the o t t ie o s s t te o the te s s t tre olin o o oon cnt theaie to o te s te o soo hete te tte  o e the th s oas pe te the ad 
-```
-</div>
-    
+   1/203 [37m━━━━━━━━━━━━━━━━━━━━  9:20:11 166s/step - loss: 2.2387
 
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1700071380.331418  678094 device_compiler.h:187] Compiled cluster using XLA!  This line is logged at most once for the lifetime of the process.
 
+ 203/203 ━━━━━━━━━━━━━━━━━━━━ 0s 947ms/step - loss: 1.8285target:     <the relations between lee and marina oswald are of great importance in any attempt to understand oswald#s possible motivation.>
+prediction: <the the he at the t the an of t te the ale t he t te ar the in the the s the s tan as t the t as re the te the ast he and t the s s the thee thed the the thes the s te te he t the of in anae o the or
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+target:     <he was in consequence put out of the protection of their internal law, end quote. their code was a subject of some curiosity.>
+prediction: <the the he at the t the an of t te the ale t he t te ar the in the the s the s tan as t the t as re the te the ast he and t the s s the thee thed the the thes the s te te he t the of in anae o the or
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+target:     <that is why i occasionally leave this scene of action for a few days>
+prediction: <the the he at the t the an of t te the ale t he t te ar the in the the s the s tan ase athe t as re the te the ast he and t the s s the thee thed the the thes the s te te he t the of in anse o the or
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+target:     <it probably contributed greatly to the general dissatisfaction which he exhibited with his environment,>
+prediction: <the the he at the t the an of t te the ale t he t te ar the in the the s the s tan as t the t as re the te the ast he and t the s s the thee thed the the thes the s te te he t the of in anae o the or
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+ 203/203 ━━━━━━━━━━━━━━━━━━━━ 428s 1s/step - loss: 1.8276 - val_loss: 1.5233
+
+```
+</div>
 In practice, you should train for around 100 epochs or more.
 
 Some of the predicted text at or around epoch 35 may look as follows:
@@ -601,3 +612,4 @@ prediction: <as they sat in the car frazier his lunch ware mis lunch was>
 target:     <under the entry for may one, nineteen sixty,>
 prediction: <under the introus for may monee, nin the sixty,>
 ```
+

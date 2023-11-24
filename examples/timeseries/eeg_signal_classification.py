@@ -44,7 +44,7 @@ First, lets install our dependencies:
 
 """shell
 pip install gdown -q
-pip install sklearn -q
+pip install scikit-learn -q
 pip install pandas -q
 pip install numpy -q
 pip install matplotlib -q
@@ -65,8 +65,8 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import json
 import numpy as np
-from tensorflow import keras
-from tensorflow.keras import layers
+import keras
+from keras import layers
 import tensorflow as tf
 from sklearn import preprocessing, model_selection
 import random
@@ -127,7 +127,6 @@ def convert_string_data_to_values(value_string):
 eeg["raw_values"] = eeg["raw_values"].apply(convert_string_data_to_values)
 
 eeg = eeg.loc[eeg["signal_quality"] < QUALITY_THRESHOLD]
-print(eeg.shape)
 eeg.head()
 
 """
@@ -401,7 +400,11 @@ def create_model():
     x = layers.BatchNormalization()(x)
 
     x = layers.Conv1D(
-        filters=1024, kernel_size=7, strides=2, activation="relu", padding="same"
+        filters=1024,
+        kernel_size=7,
+        strides=2,
+        activation="relu",
+        padding="same",
     )(x)
     x = layers.BatchNormalization()(x)
 
@@ -434,8 +437,7 @@ def create_model():
 """
 
 conv_model = create_model()
-
-print(conv_model.summary())
+conv_model.summary()
 
 """
 ## Define callbacks, optimizer, loss and metrics
@@ -455,7 +457,7 @@ epochs = 30
 
 callbacks = [
     keras.callbacks.ModelCheckpoint(
-        "best_model.h5", save_best_only=True, monitor="loss"
+        "best_model.keras", save_best_only=True, monitor="loss"
     ),
     keras.callbacks.ReduceLROnPlateau(
         monitor="val_top_k_categorical_accuracy",

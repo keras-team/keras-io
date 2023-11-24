@@ -41,9 +41,9 @@ import pandas as pd
 from tqdm import tqdm
 from glob import glob
 
-import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras import layers
+import tensorflow as tf  # For tf.data
+import keras
+from keras import layers
 
 import matplotlib.pyplot as plt
 
@@ -263,7 +263,7 @@ def load_data(point_cloud_batch, label_cloud_batch):
 
 def augment(point_cloud_batch, label_cloud_batch):
     noise = tf.random.uniform(
-        tf.shape(label_cloud_batch), -0.005, 0.005, dtype=tf.float64
+        tf.shape(label_cloud_batch), -0.001, 0.001, dtype=tf.float64
     )
     point_cloud_batch += noise[:, :, :3]
     return point_cloud_batch, label_cloud_batch
@@ -362,15 +362,15 @@ perceptron block.
 """
 
 
-def conv_block(x: tf.Tensor, filters: int, name: str) -> tf.Tensor:
+def conv_block(x, filters, name):
     x = layers.Conv1D(filters, kernel_size=1, padding="valid", name=f"{name}_conv")(x)
-    x = layers.BatchNormalization(momentum=0.0, name=f"{name}_batch_norm")(x)
+    x = layers.BatchNormalization(name=f"{name}_batch_norm")(x)
     return layers.Activation("relu", name=f"{name}_relu")(x)
 
 
-def mlp_block(x: tf.Tensor, filters: int, name: str) -> tf.Tensor:
+def mlp_block(x, filters, name):
     x = layers.Dense(filters, name=f"{name}_dense")(x)
-    x = layers.BatchNormalization(momentum=0.0, name=f"{name}_batch_norm")(x)
+    x = layers.BatchNormalization(name=f"{name}_batch_norm")(x)
     return layers.Activation("relu", name=f"{name}_relu")(x)
 
 
@@ -388,13 +388,13 @@ class OrthogonalRegularizer(keras.regularizers.Regularizer):
     def __init__(self, num_features, l2reg=0.001):
         self.num_features = num_features
         self.l2reg = l2reg
-        self.identity = tf.eye(num_features)
+        self.identity = keras.ops.eye(num_features)
 
     def __call__(self, x):
-        x = tf.reshape(x, (-1, self.num_features, self.num_features))
-        xxt = tf.tensordot(x, x, axes=(2, 2))
-        xxt = tf.reshape(xxt, (-1, self.num_features, self.num_features))
-        return tf.reduce_sum(self.l2reg * tf.square(xxt - self.identity))
+        x = keras.ops.reshape(x, (-1, self.num_features, self.num_features))
+        xxt = keras.ops.tensordot(x, x, axes=(2, 2))
+        xxt = keras.ops.reshape(xxt, (-1, self.num_features, self.num_features))
+        return keras.ops.sum(self.l2reg * keras.ops.square(xxt - self.identity))
 
     def get_config(self):
         config = super().get_config()
@@ -407,7 +407,7 @@ The next piece is the transformation network which we explained earlier.
 """
 
 
-def transformation_net(inputs: tf.Tensor, num_features: int, name: str) -> tf.Tensor:
+def transformation_net(inputs, num_features, name):
     """
     Reference: https://keras.io/examples/vision/pointnet/#build-a-model.
 
@@ -429,7 +429,7 @@ def transformation_net(inputs: tf.Tensor, num_features: int, name: str) -> tf.Te
     )(x)
 
 
-def transformation_block(inputs: tf.Tensor, num_features: int, name: str) -> tf.Tensor:
+def transformation_block(inputs, num_features, name):
     transformed_features = transformation_net(inputs, num_features, name=name)
     transformed_features = layers.Reshape((num_features, num_features))(
         transformed_features
@@ -442,7 +442,7 @@ Finally, we piece the above blocks together and implement the segmentation model
 """
 
 
-def get_shape_segmentation_model(num_points: int, num_classes: int) -> keras.Model:
+def get_shape_segmentation_model(num_points, num_classes):
     input_points = keras.Input(shape=(None, 3))
 
     # PointNet Classification Network.
@@ -460,7 +460,7 @@ def get_shape_segmentation_model(num_points: int, num_classes: int) -> keras.Mod
     global_features = layers.MaxPool1D(pool_size=num_points, name="global_features")(
         features_2048
     )
-    global_features = tf.tile(global_features, [1, num_points, 1])
+    global_features = keras.ops.tile(global_features, [1, num_points, 1])
 
     # Segmentation head.
     segmentation_input = layers.Concatenate(name="segmentation_input")(
@@ -498,19 +498,22 @@ segmentation_model.summary()
 ## Training
 
 For the training the authors recommend using a learning rate schedule that decays the
-initial learning rate by half every 20 epochs. In this example, we resort to 15 epochs.
+initial learning rate by half every 20 epochs. In this example, we use 5 epochs.
 """
 
-training_step_size = total_training_examples // BATCH_SIZE
-total_training_steps = training_step_size * EPOCHS
+steps_per_epoch = total_training_examples // BATCH_SIZE
+total_training_steps = steps_per_epoch * EPOCHS
+print(f"Steps per epoch: {steps_per_epoch}.")
 print(f"Total training steps: {total_training_steps}.")
 
-lr_schedule = keras.optimizers.schedules.PiecewiseConstantDecay(
-    boundaries=[training_step_size * 15, training_step_size * 15],
-    values=[INITIAL_LR, INITIAL_LR * 0.5, INITIAL_LR * 0.25],
+lr_schedule = keras.optimizers.schedules.ExponentialDecay(
+    initial_learning_rate=0.003,
+    decay_steps=steps_per_epoch * 5,
+    decay_rate=0.5,
+    staircase=True,
 )
 
-steps = tf.range(total_training_steps, dtype=tf.int32)
+steps = range(total_training_steps)
 lrs = [lr_schedule(step) for step in steps]
 
 plt.plot(lrs)
@@ -531,7 +534,7 @@ def run_experiment(epochs):
         metrics=["accuracy"],
     )
 
-    checkpoint_filepath = "/tmp/checkpoint"
+    checkpoint_filepath = "checkpoint.weights.h5"
     checkpoint_callback = keras.callbacks.ModelCheckpoint(
         checkpoint_filepath,
         monitor="val_loss",

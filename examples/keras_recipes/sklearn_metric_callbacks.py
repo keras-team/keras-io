@@ -2,7 +2,7 @@
 Title: Evaluating and exporting scikit-learn metrics in a Keras callback
 Author: [lukewood](https://lukewood.xyz)
 Date created: 10/07/2021
-Last modified: 10/07/2021
+Last modified: 11/17/2023
 Description: This example shows how to use Keras callbacks to evaluate and export non-TensorFlow based metrics.
 Accelerator: GPU
 """
@@ -29,9 +29,13 @@ writes the result to TensorBoard using the `tf.summary` API.
 This template can be modified slightly to make it work with any existing sklearn metric.
 """
 
+import os
+
+os.environ["KERAS_BACKEND"] = "tensorflow"
+
 import tensorflow as tf
-import tensorflow.keras as keras
-import tensorflow.keras.layers as layers
+import keras as keras
+from keras import layers
 from sklearn.metrics import jaccard_score
 import numpy as np
 import os
@@ -40,15 +44,12 @@ import os
 class JaccardScoreCallback(keras.callbacks.Callback):
     """Computes the Jaccard score and logs the results to TensorBoard."""
 
-    def __init__(self, model, x_test, y_test, log_dir):
-        self.model = model
+    def __init__(self, name, x_test, y_test, log_dir):
         self.x_test = x_test
         self.y_test = y_test
-        self.keras_metric = tf.keras.metrics.Mean("jaccard_score")
+        self.keras_metric = keras.metrics.Mean("jaccard_score")
         self.epoch = 0
-        self.summary_writer = tf.summary.create_file_writer(
-            os.path.join(log_dir, model.name)
-        )
+        self.summary_writer = tf.summary.create_file_writer(os.path.join(log_dir, name))
 
     def on_epoch_end(self, batch, logs=None):
         self.epoch += 1
@@ -118,7 +119,9 @@ batch_size = 128
 epochs = 15
 
 model.compile(loss="categorical_crossentropy", optimizer="adam", metrics=["accuracy"])
-callbacks = [JaccardScoreCallback(model, x_test, np.argmax(y_test, axis=-1), "logs")]
+callbacks = [
+    JaccardScoreCallback(model.name, x_test, np.argmax(y_test, axis=-1), "logs")
+]
 model.fit(
     x_train,
     y_train,

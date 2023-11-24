@@ -2,13 +2,15 @@
 
 **Author:** [ADMoreau](https://github.com/ADMoreau)<br>
 **Date created:** 2020/05/17<br>
-**Last modified:** 2020/05/26<br>
+**Last modified:** 2020/05/23<br>
 **Description:** PixelCNN implemented in Keras.
+
 
 <img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/generative/ipynb/pixelcnn.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/generative/pixelcnn.py)
 
----
 
+
+---
 ## Introduction
 
 PixelCNN is a generative model proposed in 2016 by van den Oord et al.
@@ -18,22 +20,22 @@ from an input vector where the probability distribution of prior elements dictat
 probability distribution of later elements. In the following example, images are generated
 in this fashion, pixel-by-pixel, via a masked convolution kernel that only looks at data
 from previously generated pixels (origin at the top left) to generate later pixels.
-During inference, the output of the network is used as a probability distribution
+During inference, the output of the network is used as a probability ditribution
 from which new pixel values are sampled to generate a new image
-(here, with MNIST, the pixel values range from white (0) to black (255)).
+(here, with MNIST, the pixels values are either black or white).
+
 
 ```python
 import numpy as np
-import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras import layers
+import keras
+from keras import layers
+from keras import ops
 from tqdm import tqdm
-
 ```
 
 ---
+## Getting the Data
 
-## Getting the data
 
 ```python
 # Model / data parameters
@@ -52,10 +54,11 @@ data = data.astype(np.float32)
 ```
 
 ---
-
 ## Create two classes for the requisite Layers for the model
 
+
 ```python
+
 # The first layer is the PixelCNN layer. This layer simply
 # builds on the 2D convolutional layer, but includes masking.
 class PixelConvLayer(layers.Layer):
@@ -68,7 +71,7 @@ class PixelConvLayer(layers.Layer):
         # Build the conv2d layer to initialize kernel variables
         self.conv.build(input_shape)
         # Use the initialized kernel to create the mask
-        kernel_shape = self.conv.kernel.get_shape()
+        kernel_shape = ops.shape(self.conv.kernel)
         self.mask = np.zeros(shape=kernel_shape)
         self.mask[: kernel_shape[0] // 2, ...] = 1.0
         self.mask[kernel_shape[0] // 2, : kernel_shape[1] // 2, ...] = 1.0
@@ -104,14 +107,15 @@ class ResidualBlock(keras.layers.Layer):
         x = self.pixel_conv(x)
         x = self.conv2(x)
         return keras.layers.add([inputs, x])
+
 ```
 
 ---
-
 ## Build the model based on the original paper
 
+
 ```python
-inputs = keras.Input(shape=input_shape)
+inputs = keras.Input(shape=input_shape, batch_size=128)
 x = PixelConvLayer(
     mask_type="A", filters=128, kernel_size=7, activation="relu", padding="same"
 )(inputs)
@@ -143,151 +147,179 @@ pixel_cnn.fit(
 )
 ```
 
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold">Model: "functional_1"</span>
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━┓
+┃<span style="font-weight: bold"> Layer (type)                    </span>┃<span style="font-weight: bold"> Output Shape              </span>┃<span style="font-weight: bold">    Param # </span>┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━┩
+│ input_layer (<span style="color: #0087ff; text-decoration-color: #0087ff">InputLayer</span>)        │ (<span style="color: #00af00; text-decoration-color: #00af00">128</span>, <span style="color: #00af00; text-decoration-color: #00af00">28</span>, <span style="color: #00af00; text-decoration-color: #00af00">28</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>)          │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ pixel_conv_layer                │ (<span style="color: #00af00; text-decoration-color: #00af00">128</span>, <span style="color: #00af00; text-decoration-color: #00af00">28</span>, <span style="color: #00af00; text-decoration-color: #00af00">28</span>, <span style="color: #00af00; text-decoration-color: #00af00">128</span>)        │      <span style="color: #00af00; text-decoration-color: #00af00">6,400</span> │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">PixelConvLayer</span>)                │                           │            │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ residual_block (<span style="color: #0087ff; text-decoration-color: #0087ff">ResidualBlock</span>)  │ (<span style="color: #00af00; text-decoration-color: #00af00">128</span>, <span style="color: #00af00; text-decoration-color: #00af00">28</span>, <span style="color: #00af00; text-decoration-color: #00af00">28</span>, <span style="color: #00af00; text-decoration-color: #00af00">128</span>)        │     <span style="color: #00af00; text-decoration-color: #00af00">98,624</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ residual_block_1                │ (<span style="color: #00af00; text-decoration-color: #00af00">128</span>, <span style="color: #00af00; text-decoration-color: #00af00">28</span>, <span style="color: #00af00; text-decoration-color: #00af00">28</span>, <span style="color: #00af00; text-decoration-color: #00af00">128</span>)        │     <span style="color: #00af00; text-decoration-color: #00af00">98,624</span> │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">ResidualBlock</span>)                 │                           │            │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ residual_block_2                │ (<span style="color: #00af00; text-decoration-color: #00af00">128</span>, <span style="color: #00af00; text-decoration-color: #00af00">28</span>, <span style="color: #00af00; text-decoration-color: #00af00">28</span>, <span style="color: #00af00; text-decoration-color: #00af00">128</span>)        │     <span style="color: #00af00; text-decoration-color: #00af00">98,624</span> │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">ResidualBlock</span>)                 │                           │            │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ residual_block_3                │ (<span style="color: #00af00; text-decoration-color: #00af00">128</span>, <span style="color: #00af00; text-decoration-color: #00af00">28</span>, <span style="color: #00af00; text-decoration-color: #00af00">28</span>, <span style="color: #00af00; text-decoration-color: #00af00">128</span>)        │     <span style="color: #00af00; text-decoration-color: #00af00">98,624</span> │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">ResidualBlock</span>)                 │                           │            │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ residual_block_4                │ (<span style="color: #00af00; text-decoration-color: #00af00">128</span>, <span style="color: #00af00; text-decoration-color: #00af00">28</span>, <span style="color: #00af00; text-decoration-color: #00af00">28</span>, <span style="color: #00af00; text-decoration-color: #00af00">128</span>)        │     <span style="color: #00af00; text-decoration-color: #00af00">98,624</span> │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">ResidualBlock</span>)                 │                           │            │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ pixel_conv_layer_6              │ (<span style="color: #00af00; text-decoration-color: #00af00">128</span>, <span style="color: #00af00; text-decoration-color: #00af00">28</span>, <span style="color: #00af00; text-decoration-color: #00af00">28</span>, <span style="color: #00af00; text-decoration-color: #00af00">128</span>)        │     <span style="color: #00af00; text-decoration-color: #00af00">16,512</span> │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">PixelConvLayer</span>)                │                           │            │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ pixel_conv_layer_7              │ (<span style="color: #00af00; text-decoration-color: #00af00">128</span>, <span style="color: #00af00; text-decoration-color: #00af00">28</span>, <span style="color: #00af00; text-decoration-color: #00af00">28</span>, <span style="color: #00af00; text-decoration-color: #00af00">128</span>)        │     <span style="color: #00af00; text-decoration-color: #00af00">16,512</span> │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">PixelConvLayer</span>)                │                           │            │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ conv2d_18 (<span style="color: #0087ff; text-decoration-color: #0087ff">Conv2D</span>)              │ (<span style="color: #00af00; text-decoration-color: #00af00">128</span>, <span style="color: #00af00; text-decoration-color: #00af00">28</span>, <span style="color: #00af00; text-decoration-color: #00af00">28</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>)          │        <span style="color: #00af00; text-decoration-color: #00af00">129</span> │
+└─────────────────────────────────┴───────────────────────────┴────────────┘
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Total params: </span><span style="color: #00af00; text-decoration-color: #00af00">532,673</span> (2.03 MB)
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Trainable params: </span><span style="color: #00af00; text-decoration-color: #00af00">532,673</span> (2.03 MB)
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Non-trainable params: </span><span style="color: #00af00; text-decoration-color: #00af00">0</span> (0.00 B)
+</pre>
+
+
+
 <div class="k-default-codeblock">
 ```
-Model: "model"
-_________________________________________________________________
-Layer (type)                 Output Shape              Param #   
-=================================================================
-input_1 (InputLayer)         [(None, 28, 28, 1)]       0         
-_________________________________________________________________
-pixel_conv_layer (PixelConvL (None, 28, 28, 128)       6400      
-_________________________________________________________________
-residual_block (ResidualBloc (None, 28, 28, 128)       98624     
-_________________________________________________________________
-residual_block_1 (ResidualBl (None, 28, 28, 128)       98624     
-_________________________________________________________________
-residual_block_2 (ResidualBl (None, 28, 28, 128)       98624     
-_________________________________________________________________
-residual_block_3 (ResidualBl (None, 28, 28, 128)       98624     
-_________________________________________________________________
-residual_block_4 (ResidualBl (None, 28, 28, 128)       98624     
-_________________________________________________________________
-pixel_conv_layer_6 (PixelCon (None, 28, 28, 128)       16512     
-_________________________________________________________________
-pixel_conv_layer_7 (PixelCon (None, 28, 28, 128)       16512     
-_________________________________________________________________
-conv2d_18 (Conv2D)           (None, 28, 28, 1)         129       
-=================================================================
-Total params: 532,673
-Trainable params: 532,673
-Non-trainable params: 0
-_________________________________________________________________
 Epoch 1/50
-493/493 - 18s - loss: 0.1163 - val_loss: 0.0937
+493/493 - 26s - 53ms/step - loss: 0.1137 - val_loss: 0.0933
 Epoch 2/50
-493/493 - 18s - loss: 0.0911 - val_loss: 0.0908
+493/493 - 14s - 29ms/step - loss: 0.0915 - val_loss: 0.0901
 Epoch 3/50
-493/493 - 18s - loss: 0.0889 - val_loss: 0.0890
+493/493 - 14s - 29ms/step - loss: 0.0893 - val_loss: 0.0888
 Epoch 4/50
-493/493 - 18s - loss: 0.0878 - val_loss: 0.0879
+493/493 - 14s - 29ms/step - loss: 0.0882 - val_loss: 0.0880
 Epoch 5/50
-493/493 - 18s - loss: 0.0871 - val_loss: 0.0868
+493/493 - 14s - 29ms/step - loss: 0.0874 - val_loss: 0.0870
 Epoch 6/50
-493/493 - 18s - loss: 0.0865 - val_loss: 0.0875
+493/493 - 14s - 29ms/step - loss: 0.0867 - val_loss: 0.0867
 Epoch 7/50
-493/493 - 18s - loss: 0.0861 - val_loss: 0.0857
+493/493 - 14s - 29ms/step - loss: 0.0863 - val_loss: 0.0867
 Epoch 8/50
-493/493 - 18s - loss: 0.0857 - val_loss: 0.0860
+493/493 - 14s - 29ms/step - loss: 0.0859 - val_loss: 0.0860
 Epoch 9/50
-493/493 - 18s - loss: 0.0854 - val_loss: 0.0855
+493/493 - 14s - 29ms/step - loss: 0.0855 - val_loss: 0.0856
 Epoch 10/50
-493/493 - 18s - loss: 0.0850 - val_loss: 0.0853
+493/493 - 14s - 29ms/step - loss: 0.0853 - val_loss: 0.0861
 Epoch 11/50
-493/493 - 18s - loss: 0.0848 - val_loss: 0.0849
+493/493 - 14s - 29ms/step - loss: 0.0850 - val_loss: 0.0860
 Epoch 12/50
-493/493 - 18s - loss: 0.0846 - val_loss: 0.0850
+493/493 - 14s - 29ms/step - loss: 0.0847 - val_loss: 0.0873
 Epoch 13/50
-493/493 - 18s - loss: 0.0844 - val_loss: 0.0849
+493/493 - 14s - 29ms/step - loss: 0.0846 - val_loss: 0.0852
 Epoch 14/50
-493/493 - 18s - loss: 0.0842 - val_loss: 0.0845
+493/493 - 14s - 29ms/step - loss: 0.0844 - val_loss: 0.0846
 Epoch 15/50
-493/493 - 18s - loss: 0.0840 - val_loss: 0.0850
+493/493 - 14s - 29ms/step - loss: 0.0842 - val_loss: 0.0848
 Epoch 16/50
-493/493 - 18s - loss: 0.0839 - val_loss: 0.0850
+493/493 - 14s - 29ms/step - loss: 0.0840 - val_loss: 0.0843
 Epoch 17/50
-493/493 - 18s - loss: 0.0837 - val_loss: 0.0843
+493/493 - 14s - 29ms/step - loss: 0.0838 - val_loss: 0.0847
 Epoch 18/50
-493/493 - 18s - loss: 0.0836 - val_loss: 0.0842
+493/493 - 14s - 29ms/step - loss: 0.0837 - val_loss: 0.0841
 Epoch 19/50
-493/493 - 18s - loss: 0.0835 - val_loss: 0.0840
+493/493 - 14s - 29ms/step - loss: 0.0835 - val_loss: 0.0842
 Epoch 20/50
-493/493 - 18s - loss: 0.0834 - val_loss: 0.0842
+493/493 - 14s - 29ms/step - loss: 0.0834 - val_loss: 0.0844
 Epoch 21/50
-493/493 - 18s - loss: 0.0832 - val_loss: 0.0837
+493/493 - 14s - 29ms/step - loss: 0.0834 - val_loss: 0.0843
 Epoch 22/50
-493/493 - 18s - loss: 0.0831 - val_loss: 0.0839
+493/493 - 14s - 29ms/step - loss: 0.0832 - val_loss: 0.0838
 Epoch 23/50
-493/493 - 18s - loss: 0.0830 - val_loss: 0.0835
+493/493 - 14s - 29ms/step - loss: 0.0831 - val_loss: 0.0840
 Epoch 24/50
-493/493 - 18s - loss: 0.0829 - val_loss: 0.0839
+493/493 - 14s - 29ms/step - loss: 0.0830 - val_loss: 0.0841
 Epoch 25/50
-493/493 - 18s - loss: 0.0829 - val_loss: 0.0835
+493/493 - 14s - 29ms/step - loss: 0.0829 - val_loss: 0.0837
 Epoch 26/50
-493/493 - 18s - loss: 0.0827 - val_loss: 0.0836
+493/493 - 14s - 29ms/step - loss: 0.0828 - val_loss: 0.0837
 Epoch 27/50
-493/493 - 18s - loss: 0.0827 - val_loss: 0.0834
+493/493 - 14s - 29ms/step - loss: 0.0827 - val_loss: 0.0836
 Epoch 28/50
-493/493 - 18s - loss: 0.0826 - val_loss: 0.0834
+493/493 - 14s - 29ms/step - loss: 0.0827 - val_loss: 0.0836
 Epoch 29/50
-493/493 - 18s - loss: 0.0825 - val_loss: 0.0834
+493/493 - 14s - 29ms/step - loss: 0.0825 - val_loss: 0.0838
 Epoch 30/50
-493/493 - 18s - loss: 0.0824 - val_loss: 0.0834
+493/493 - 14s - 29ms/step - loss: 0.0825 - val_loss: 0.0834
 Epoch 31/50
-493/493 - 18s - loss: 0.0823 - val_loss: 0.0832
+493/493 - 14s - 29ms/step - loss: 0.0824 - val_loss: 0.0832
 Epoch 32/50
-493/493 - 18s - loss: 0.0823 - val_loss: 0.0832
+493/493 - 14s - 29ms/step - loss: 0.0823 - val_loss: 0.0833
 Epoch 33/50
-493/493 - 18s - loss: 0.0822 - val_loss: 0.0833
+493/493 - 14s - 29ms/step - loss: 0.0822 - val_loss: 0.0836
 Epoch 34/50
-493/493 - 18s - loss: 0.0821 - val_loss: 0.0835
+493/493 - 14s - 29ms/step - loss: 0.0822 - val_loss: 0.0832
 Epoch 35/50
-493/493 - 18s - loss: 0.0821 - val_loss: 0.0834
+493/493 - 14s - 29ms/step - loss: 0.0821 - val_loss: 0.0832
 Epoch 36/50
-493/493 - 18s - loss: 0.0820 - val_loss: 0.0837
+493/493 - 14s - 29ms/step - loss: 0.0820 - val_loss: 0.0835
 Epoch 37/50
-493/493 - 18s - loss: 0.0820 - val_loss: 0.0832
+493/493 - 14s - 29ms/step - loss: 0.0820 - val_loss: 0.0834
 Epoch 38/50
-493/493 - 18s - loss: 0.0819 - val_loss: 0.0834
+493/493 - 14s - 29ms/step - loss: 0.0819 - val_loss: 0.0833
 Epoch 39/50
-493/493 - 18s - loss: 0.0818 - val_loss: 0.0834
+493/493 - 14s - 29ms/step - loss: 0.0818 - val_loss: 0.0832
 Epoch 40/50
-493/493 - 18s - loss: 0.0818 - val_loss: 0.0832
+493/493 - 14s - 29ms/step - loss: 0.0818 - val_loss: 0.0834
 Epoch 41/50
-493/493 - 18s - loss: 0.0817 - val_loss: 0.0834
+493/493 - 14s - 29ms/step - loss: 0.0817 - val_loss: 0.0832
 Epoch 42/50
-493/493 - 18s - loss: 0.0817 - val_loss: 0.0836
+493/493 - 14s - 29ms/step - loss: 0.0816 - val_loss: 0.0834
 Epoch 43/50
-493/493 - 18s - loss: 0.0816 - val_loss: 0.0833
+493/493 - 14s - 29ms/step - loss: 0.0816 - val_loss: 0.0839
 Epoch 44/50
-493/493 - 18s - loss: 0.0816 - val_loss: 0.0835
+493/493 - 14s - 29ms/step - loss: 0.0815 - val_loss: 0.0831
 Epoch 45/50
-493/493 - 18s - loss: 0.0815 - val_loss: 0.0832
+493/493 - 14s - 29ms/step - loss: 0.0815 - val_loss: 0.0832
 Epoch 46/50
-493/493 - 18s - loss: 0.0815 - val_loss: 0.0830
+493/493 - 14s - 29ms/step - loss: 0.0814 - val_loss: 0.0835
 Epoch 47/50
-493/493 - 18s - loss: 0.0814 - val_loss: 0.0831
+493/493 - 14s - 29ms/step - loss: 0.0814 - val_loss: 0.0830
 Epoch 48/50
-493/493 - 18s - loss: 0.0813 - val_loss: 0.0832
+493/493 - 14s - 29ms/step - loss: 0.0813 - val_loss: 0.0832
 Epoch 49/50
-493/493 - 18s - loss: 0.0813 - val_loss: 0.0834
+493/493 - 14s - 29ms/step - loss: 0.0812 - val_loss: 0.0833
 Epoch 50/50
-493/493 - 18s - loss: 0.0813 - val_loss: 0.0832
+493/493 - 14s - 29ms/step - loss: 0.0812 - val_loss: 0.0831
 
-<tensorflow.python.keras.callbacks.History at 0x7f1bdaeb4320>
+<keras.src.callbacks.history.History at 0x7f45e6d78760>
 
 ```
 </div>
-
 ---
-
 ## Demonstration
 
 The PixelCNN cannot generate the full image at once. Instead, it must generate each pixel in
 order, append the last generated pixel to the current image, and feed the image back into the
 model to repeat the process.
 
-You can use the trained model hosted on [Hugging Face Hub](https://huggingface.co/keras-io/pixel-cnn-mnist) and try the demo on [Hugging Face Spaces](https://huggingface.co/spaces/keras-io/pixelcnn-mnist-image-generation).
 
 ```python
 from IPython.display import Image, display
@@ -306,18 +338,20 @@ for row in tqdm(range(rows)):
             probs = pixel_cnn.predict(pixels)[:, row, col, channel]
             # Use the probabilities to pick pixel values and append the values to the image
             # frame.
-            pixels[:, row, col, channel] = tf.math.ceil(
-                probs - tf.random.uniform(probs.shape)
+            pixels[:, row, col, channel] = ops.ceil(
+                probs - keras.random.uniform(probs.shape)
             )
 
+
 def deprocess_image(x):
-    # Stack the single channeled black and white image to RGB values.
+    # Stack the single channeled black and white image to rgb values.
     x = np.stack((x, x, x), 2)
     # Undo preprocessing
     x *= 255.0
     # Convert to uint8 and clip to the valid range [0, 255]
     x = np.clip(x, 0, 255).astype("uint8")
     return x
+
 
 # Iterate over the generated images and plot them with matplotlib.
 for i, pic in enumerate(pixels):
@@ -333,20 +367,29 @@ display(Image("generated_image_3.png"))
 
 <div class="k-default-codeblock">
 ```
-100%|██████████| 28/28 [00:18<00:00,  1.51it/s]
+100%|███████████████████████████████████████████████████████████████████████████| 28/28 [00:06<00:00,  4.51it/s]
 
 ```
 </div>
-![png](/img/examples/generative/pixelcnn/pixelcnn_10_1.png)
+    
+![png](/img/examples/generative/pixelcnn/pixelcnn_10_57.png)
+    
 
 
 
-![png](/img/examples/generative/pixelcnn/pixelcnn_10_2.png)
+    
+![png](/img/examples/generative/pixelcnn/pixelcnn_10_58.png)
+    
 
 
 
-![png](/img/examples/generative/pixelcnn/pixelcnn_10_3.png)
+    
+![png](/img/examples/generative/pixelcnn/pixelcnn_10_59.png)
+    
 
 
 
-![png](/img/examples/generative/pixelcnn/pixelcnn_10_4.png)
+    
+![png](/img/examples/generative/pixelcnn/pixelcnn_10_60.png)
+    
+

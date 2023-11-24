@@ -2,7 +2,7 @@
 
 **Author:** [Khalid Salama](https://www.linkedin.com/in/khalid-salama-24403144/)<br>
 **Date created:** 2021/02/15<br>
-**Last modified:** 2021/02/15<br>
+**Last modified:** 2023/11/15<br>
 **Description:** Using compositional & mixed-dimension embeddings for memory-efficient recommendation models.
 
 
@@ -32,15 +32,17 @@ The dataset includes around 1 million ratings from 6,000 users on 4,000 movies.
 
 ```python
 import os
-import math
+
+os.environ["KERAS_BACKEND"] = "tensorflow"
+
 from zipfile import ZipFile
 from urllib.request import urlretrieve
 import numpy as np
 import pandas as pd
 import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras import layers
-from tensorflow.keras.layers import StringLookup
+import keras
+from keras import layers
+from keras.layers import StringLookup
 import matplotlib.pyplot as plt
 ```
 
@@ -73,6 +75,8 @@ print(f"Number of ratings: {len(ratings_data.index)}")
 
 <div class="k-default-codeblock">
 ```
+/var/folders/8n/8w8cqnvj01xd4ghznl11nyn000_93_/T/ipykernel_33554/2288473197.py:4: ParserWarning: Falling back to the 'python' engine because the 'c' engine does not support regex separators (separators > 1 char and different from '\s+' are interpreted as regex); you can avoid this warning by specifying engine='python'.
+  ratings_data = pd.read_csv(
 
 Number of users: 6040
 Number of movies: 3706
@@ -98,8 +102,8 @@ print("Train and eval data files are saved.")
 
 <div class="k-default-codeblock">
 ```
-Train data split: 850361
-Eval data split: 149848
+Train data split: 850573
+Eval data split: 149636
 Train and eval data files are saved.
 
 ```
@@ -142,7 +146,7 @@ def run_experiment(model):
     # Compile the model.
     model.compile(
         optimizer=keras.optimizers.Adam(learning_rate),
-        loss=tf.keras.losses.MeanSquaredError(),
+        loss=keras.losses.MeanSquaredError(),
         metrics=[keras.metrics.MeanAbsoluteError(name="mae")],
     )
     # Read the training data.
@@ -150,7 +154,11 @@ def run_experiment(model):
     # Read the test data.
     eval_dataset = get_dataset_from_csv("eval_data.csv", batch_size, shuffle=False)
     # Fit the model with the training data.
-    history = model.fit(train_dataset, epochs=num_epochs, validation_data=eval_dataset,)
+    history = model.fit(
+        train_dataset,
+        epochs=num_epochs,
+        validation_data=eval_dataset,
+    )
     return history
 
 ```
@@ -217,32 +225,61 @@ baseline_model.summary()
 
 <div class="k-default-codeblock">
 ```
-Model: "baseline_model"
-__________________________________________________________________________________________________
-Layer (type)                    Output Shape         Param #     Connected to                     
-==================================================================================================
-user_id (InputLayer)            [(None,)]            0                                            
-__________________________________________________________________________________________________
-movie_id (InputLayer)           [(None,)]            0                                            
-__________________________________________________________________________________________________
-user_embedding (Sequential)     (None, 64)           386560      user_id[0][0]                    
-__________________________________________________________________________________________________
-movie_embedding (Sequential)    (None, 64)           237184      movie_id[0][0]                   
-__________________________________________________________________________________________________
-dot_similarity (Dot)            (None, 1)            0           user_embedding[0][0]             
-                                                                 movie_embedding[0][0]            
-__________________________________________________________________________________________________
-tf.math.sigmoid (TFOpLambda)    (None, 1)            0           dot_similarity[0][0]             
-__________________________________________________________________________________________________
-tf.math.multiply (TFOpLambda)   (None, 1)            0           tf.math.sigmoid[0][0]            
-==================================================================================================
-Total params: 623,744
-Trainable params: 623,744
-Non-trainable params: 0
-__________________________________________________________________________________________________
+/Users/fchollet/Library/Python/3.10/lib/python/site-packages/numpy/core/numeric.py:2468: FutureWarning: elementwise comparison failed; returning scalar instead, but in the future will perform elementwise comparison
+  return bool(asarray(a1 == a2).all())
 
 ```
 </div>
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold">Model: "baseline_model"</span>
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">┏━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━┓
+┃<span style="font-weight: bold"> Layer (type)        </span>┃<span style="font-weight: bold"> Output Shape      </span>┃<span style="font-weight: bold"> Param # </span>┃<span style="font-weight: bold"> Connected to         </span>┃
+┡━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━┩
+│ user_id             │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>)            │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ -                    │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">InputLayer</span>)        │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ movie_id            │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>)            │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ -                    │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">InputLayer</span>)        │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ user_embedding      │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">64</span>)        │ <span style="color: #00af00; text-decoration-color: #00af00">386,560</span> │ user_id[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>]        │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Sequential</span>)        │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ movie_embedding     │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">64</span>)        │ <span style="color: #00af00; text-decoration-color: #00af00">237,184</span> │ movie_id[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>]       │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Sequential</span>)        │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ dot_similarity      │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>)         │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ user_embedding[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Dot</span>)               │                   │         │ movie_embedding[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">…</span> │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ sigmoid (<span style="color: #0087ff; text-decoration-color: #0087ff">Sigmoid</span>)   │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>)         │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ dot_similarity[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>] │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ multiply (<span style="color: #0087ff; text-decoration-color: #0087ff">Multiply</span>) │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>)         │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ sigmoid[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>]        │
+└─────────────────────┴───────────────────┴─────────┴──────────────────────┘
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Total params: </span><span style="color: #00af00; text-decoration-color: #00af00">623,744</span> (2.38 MB)
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Trainable params: </span><span style="color: #00af00; text-decoration-color: #00af00">623,744</span> (2.38 MB)
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Non-trainable params: </span><span style="color: #00af00; text-decoration-color: #00af00">0</span> (0.00 B)
+</pre>
+
+
+
 Notice that the number of trainable parameters is 623,744
 
 
@@ -261,16 +298,21 @@ plt.show()
 <div class="k-default-codeblock">
 ```
 Epoch 1/3
-6644/6644 [==============================] - 46s 7ms/step - loss: 1.4399 - mae: 0.9818 - val_loss: 0.9348 - val_mae: 0.7569
+   6629/Unknown  17s 3ms/step - loss: 1.4095 - mae: 0.9668
+
+/Library/Frameworks/Python.framework/Versions/3.10/lib/python3.10/contextlib.py:153: UserWarning: Your input ran out of data; interrupting training. Make sure that your dataset or generator can generate at least `steps_per_epoch * epochs` batches. You may need to use the `.repeat()` function when building your dataset.
+  self.gen.throw(typ, value, traceback)
+
+ 6646/6646 ━━━━━━━━━━━━━━━━━━━━ 18s 3ms/step - loss: 1.4087 - mae: 0.9665 - val_loss: 0.9032 - val_mae: 0.7438
 Epoch 2/3
-6644/6644 [==============================] - 53s 8ms/step - loss: 0.8422 - mae: 0.7246 - val_loss: 0.7991 - val_mae: 0.7076
+ 6646/6646 ━━━━━━━━━━━━━━━━━━━━ 17s 3ms/step - loss: 0.8296 - mae: 0.7193 - val_loss: 0.7807 - val_mae: 0.6976
 Epoch 3/3
-6644/6644 [==============================] - 58s 9ms/step - loss: 0.7461 - mae: 0.6819 - val_loss: 0.7564 - val_mae: 0.6869
+ 6646/6646 ━━━━━━━━━━━━━━━━━━━━ 17s 3ms/step - loss: 0.7305 - mae: 0.6744 - val_loss: 0.7446 - val_mae: 0.6808
 
 ```
 </div>
     
-![png](/img/examples/keras_recipes/memory_efficient_embeddings/memory_efficient_embeddings_17_1.png)
+![png](/img/examples/keras_recipes/memory_efficient_embeddings/memory_efficient_embeddings_17_3.png)
     
 
 
@@ -307,8 +349,14 @@ class QREmbedding(keras.layers.Layer):
         self.index_lookup = StringLookup(
             vocabulary=vocabulary, mask_token=None, num_oov_indices=0
         )
-        self.q_embeddings = layers.Embedding(num_buckets, embedding_dim,)
-        self.r_embeddings = layers.Embedding(num_buckets, embedding_dim,)
+        self.q_embeddings = layers.Embedding(
+            num_buckets,
+            embedding_dim,
+        )
+        self.r_embeddings = layers.Embedding(
+            num_buckets,
+            embedding_dim,
+        )
 
     def call(self, inputs):
         # Get the item index.
@@ -430,7 +478,7 @@ movie_frequencies.hist(bins=10)
 
 <div class="k-default-codeblock">
 ```
-<AxesSubplot:>
+<Axes: >
 
 ```
 </div>
@@ -460,7 +508,7 @@ user_embedding_num_buckets = len(user_vocabulary) // 50
 
 def create_memory_efficient_model():
     # Take the user as an input.
-    user_input = layers.Input(name="user_id", shape=(), dtype=tf.string)
+    user_input = layers.Input(name="user_id", shape=(), dtype="string")
     # Get user embedding.
     user_embedding = QREmbedding(
         vocabulary=user_vocabulary,
@@ -470,7 +518,7 @@ def create_memory_efficient_model():
     )(user_input)
 
     # Take the movie as an input.
-    movie_input = layers.Input(name="movie_id", shape=(), dtype=tf.string)
+    movie_input = layers.Input(name="movie_id", shape=(), dtype="string")
     # Get embedding.
     movie_embedding = MDEmbedding(
         blocks_vocabulary=movie_blocks_vocabulary,
@@ -498,32 +546,62 @@ memory_efficient_model.summary()
 
 <div class="k-default-codeblock">
 ```
-Model: "baseline_model"
-__________________________________________________________________________________________________
-Layer (type)                    Output Shape         Param #     Connected to                     
-==================================================================================================
-user_id (InputLayer)            [(None,)]            0                                            
-__________________________________________________________________________________________________
-movie_id (InputLayer)           [(None,)]            0                                            
-__________________________________________________________________________________________________
-user_embedding (QREmbedding)    (None, 64)           15360       user_id[0][0]                    
-__________________________________________________________________________________________________
-movie_embedding (MDEmbedding)   (None, 64)           102608      movie_id[0][0]                   
-__________________________________________________________________________________________________
-dot_similarity (Dot)            (None, 1)            0           user_embedding[0][0]             
-                                                                 movie_embedding[0][0]            
-__________________________________________________________________________________________________
-tf.math.sigmoid_1 (TFOpLambda)  (None, 1)            0           dot_similarity[0][0]             
-__________________________________________________________________________________________________
-tf.math.multiply_1 (TFOpLambda) (None, 1)            0           tf.math.sigmoid_1[0][0]          
-==================================================================================================
-Total params: 117,968
-Trainable params: 117,968
-Non-trainable params: 0
-__________________________________________________________________________________________________
+/Users/fchollet/Library/Python/3.10/lib/python/site-packages/numpy/core/numeric.py:2468: FutureWarning: elementwise comparison failed; returning scalar instead, but in the future will perform elementwise comparison
+  return bool(asarray(a1 == a2).all())
 
 ```
 </div>
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold">Model: "baseline_model"</span>
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">┏━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━┓
+┃<span style="font-weight: bold"> Layer (type)        </span>┃<span style="font-weight: bold"> Output Shape      </span>┃<span style="font-weight: bold"> Param # </span>┃<span style="font-weight: bold"> Connected to         </span>┃
+┡━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━┩
+│ user_id             │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>)            │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ -                    │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">InputLayer</span>)        │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ movie_id            │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>)            │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ -                    │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">InputLayer</span>)        │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ user_embedding      │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">64</span>)        │  <span style="color: #00af00; text-decoration-color: #00af00">15,360</span> │ user_id[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>]        │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">QREmbedding</span>)       │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ movie_embedding     │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">64</span>)        │ <span style="color: #00af00; text-decoration-color: #00af00">102,608</span> │ movie_id[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>]       │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">MDEmbedding</span>)       │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ dot_similarity      │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>)         │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ user_embedding[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Dot</span>)               │                   │         │ movie_embedding[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">…</span> │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ sigmoid_1 (<span style="color: #0087ff; text-decoration-color: #0087ff">Sigmoid</span>) │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>)         │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ dot_similarity[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>] │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ multiply_1          │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>)         │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ sigmoid_1[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>]      │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Multiply</span>)          │                   │         │                      │
+└─────────────────────┴───────────────────┴─────────┴──────────────────────┘
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Total params: </span><span style="color: #00af00; text-decoration-color: #00af00">117,968</span> (460.81 KB)
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Trainable params: </span><span style="color: #00af00; text-decoration-color: #00af00">117,968</span> (460.81 KB)
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Non-trainable params: </span><span style="color: #00af00; text-decoration-color: #00af00">0</span> (0.00 B)
+</pre>
+
+
+
 Notice that the number of trainable parameters is 117,968, which is more than 5x less than
 the number of parameters in the baseline model.
 
@@ -543,15 +621,20 @@ plt.show()
 <div class="k-default-codeblock">
 ```
 Epoch 1/3
-6644/6644 [==============================] - 10s 1ms/step - loss: 1.2632 - mae: 0.9078 - val_loss: 1.0593 - val_mae: 0.8045
+   6622/Unknown  6s 891us/step - loss: 1.1938 - mae: 0.8780
+
+/Library/Frameworks/Python.framework/Versions/3.10/lib/python3.10/contextlib.py:153: UserWarning: Your input ran out of data; interrupting training. Make sure that your dataset or generator can generate at least `steps_per_epoch * epochs` batches. You may need to use the `.repeat()` function when building your dataset.
+  self.gen.throw(typ, value, traceback)
+
+ 6646/6646 ━━━━━━━━━━━━━━━━━━━━ 7s 992us/step - loss: 1.1931 - mae: 0.8777 - val_loss: 1.1027 - val_mae: 0.8179
 Epoch 2/3
-6644/6644 [==============================] - 9s 1ms/step - loss: 0.8933 - mae: 0.7512 - val_loss: 0.8932 - val_mae: 0.7519
+ 6646/6646 ━━━━━━━━━━━━━━━━━━━━ 7s 1ms/step - loss: 0.8908 - mae: 0.7488 - val_loss: 0.9144 - val_mae: 0.7549
 Epoch 3/3
-6644/6644 [==============================] - 9s 1ms/step - loss: 0.8412 - mae: 0.7279 - val_loss: 0.8612 - val_mae: 0.7357
+ 6646/6646 ━━━━━━━━━━━━━━━━━━━━ 7s 980us/step - loss: 0.8419 - mae: 0.7278 - val_loss: 0.8806 - val_mae: 0.7419
 
 ```
 </div>
     
-![png](/img/examples/keras_recipes/memory_efficient_embeddings/memory_efficient_embeddings_28_1.png)
+![png](/img/examples/keras_recipes/memory_efficient_embeddings/memory_efficient_embeddings_28_3.png)
     
 

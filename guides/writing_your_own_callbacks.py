@@ -2,7 +2,7 @@
 Title: Writing your own callbacks
 Authors: Rick Chao, Francois Chollet
 Date created: 2019/03/20
-Last modified: 2020/07/12
+Last modified: 2023/06/25
 Description: Complete guide to writing new Keras callbacks.
 Accelerator: GPU
 """
@@ -10,9 +10,9 @@ Accelerator: GPU
 ## Introduction
 
 A callback is a powerful tool to customize the behavior of a Keras model during
-training, evaluation, or inference. Examples include `tf.keras.callbacks.TensorBoard`
+training, evaluation, or inference. Examples include `keras.callbacks.TensorBoard`
 to visualize training progress and results with TensorBoard, or
-`tf.keras.callbacks.ModelCheckpoint` to periodically save your model during training.
+`keras.callbacks.ModelCheckpoint` to periodically save your model during training.
 
 In this guide, you will learn what a Keras callback is, what it can do, and how you can
 build your own. We provide a few demos of simple callback applications to get you
@@ -23,7 +23,7 @@ started.
 ## Setup
 """
 
-import tensorflow as tf
+import numpy as np
 import keras
 
 """
@@ -88,7 +88,7 @@ define a simple Sequential Keras model:
 # Define the Keras model to add callbacks to
 def get_model():
     model = keras.Sequential()
-    model.add(keras.layers.Dense(1, input_dim=784))
+    model.add(keras.layers.Dense(1))
     model.compile(
         optimizer=keras.optimizers.RMSprop(learning_rate=0.1),
         loss="mean_squared_error",
@@ -102,7 +102,7 @@ Then, load the MNIST data for training and testing from Keras datasets API:
 """
 
 # Load example MNIST data and pre-process it
-(x_train, y_train), (x_test, y_test) = tf.keras.datasets.mnist.load_data()
+(x_train, y_train), (x_test, y_test) = keras.datasets.mnist.load_data()
 x_train = x_train.reshape(-1, 784).astype("float32") / 255.0
 x_test = x_test.reshape(-1, 784).astype("float32") / 255.0
 
@@ -204,6 +204,7 @@ res = model.predict(x_test, batch_size=128, callbacks=[CustomCallback()])
 
 """
 ### Usage of `logs` dict
+
 The `logs` dict contains the loss value, and all the metrics at the end of a batch or
 epoch. Example includes the loss and mean absolute error.
 """
@@ -271,9 +272,7 @@ Let's see this in action in a couple of examples.
 
 """
 ## Examples of Keras callback applications
-"""
 
-"""
 ### Early stopping at minimum loss
 
 This first example shows the creation of a `Callback` that stops training when the
@@ -281,10 +280,8 @@ minimum of loss has been reached, by setting the attribute `self.model.stop_trai
 (boolean). Optionally, you can provide an argument `patience` to specify how many
 epochs we should wait before stopping after having reached a local minimum.
 
-`tf.keras.callbacks.EarlyStopping` provides a more complete and general implementation.
+`keras.callbacks.EarlyStopping` provides a more complete and general implementation.
 """
-
-import numpy as np
 
 
 class EarlyStoppingAtMinLoss(keras.callbacks.Callback):
@@ -326,7 +323,7 @@ class EarlyStoppingAtMinLoss(keras.callbacks.Callback):
 
     def on_train_end(self, logs=None):
         if self.stopped_epoch > 0:
-            print("Epoch %05d: early stopping" % (self.stopped_epoch + 1))
+            print(f"Epoch {self.stopped_epoch + 1}: early stopping")
 
 
 model = get_model()
@@ -334,7 +331,6 @@ model.fit(
     x_train,
     y_train,
     batch_size=64,
-    steps_per_epoch=5,
     epochs=30,
     verbose=0,
     callbacks=[LossAndErrorPrintingCallback(), EarlyStoppingAtMinLoss()],
@@ -364,15 +360,15 @@ class CustomLearningRateScheduler(keras.callbacks.Callback):
         self.schedule = schedule
 
     def on_epoch_begin(self, epoch, logs=None):
-        if not hasattr(self.model.optimizer, "lr"):
-            raise ValueError('Optimizer must have a "lr" attribute.')
+        if not hasattr(self.model.optimizer, "learning_rate"):
+            raise ValueError('Optimizer must have a "learning_rate" attribute.')
         # Get the current learning rate from model's optimizer.
-        lr = float(tf.keras.backend.get_value(self.model.optimizer.learning_rate))
+        lr = self.model.optimizer.learning_rate
         # Call schedule function to get the scheduled learning rate.
         scheduled_lr = self.schedule(epoch, lr)
         # Set the value back to the optimizer before this epoch starts
-        tf.keras.backend.set_value(self.model.optimizer.lr, scheduled_lr)
-        print("\nEpoch %05d: Learning rate is %6.4f." % (epoch, scheduled_lr))
+        self.model.optimizer.learning_rate = scheduled_lr
+        print(f"\nEpoch {epoch}: Learning rate is {float(np.array(scheduled_lr))}.")
 
 
 LR_SCHEDULE = [
@@ -399,7 +395,6 @@ model.fit(
     x_train,
     y_train,
     batch_size=64,
-    steps_per_epoch=5,
     epochs=15,
     verbose=0,
     callbacks=[
@@ -410,6 +405,7 @@ model.fit(
 
 """
 ### Built-in Keras callbacks
+
 Be sure to check out the existing Keras callbacks by
 reading the [API docs](https://keras.io/api/callbacks/).
 Applications include logging to CSV, saving

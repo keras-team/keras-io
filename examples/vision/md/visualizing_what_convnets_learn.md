@@ -26,9 +26,13 @@ pattern that the filter responds to.
 
 
 ```python
+import os
+
+os.environ["KERAS_BACKEND"] = "tensorflow"
+
+import keras
 import numpy as np
 import tensorflow as tf
-from tensorflow import keras
 
 # The dimensions of our input image
 img_width = 180
@@ -51,13 +55,6 @@ layer = model.get_layer(name=layer_name)
 feature_extractor = keras.Model(inputs=model.inputs, outputs=layer.output)
 ```
 
-<div class="k-default-codeblock">
-```
-2022-06-13 21:18:46.774381: I tensorflow/core/platform/cpu_feature_guard.cc:193] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  AVX2 FMA
-To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
-
-```
-</div>
 ---
 ## Set up the gradient ascent process
 
@@ -298,7 +295,3 @@ basis" of texture filters such as these.
 See also
 [this old blog post](https://blog.keras.io/how-convolutional-neural-networks-see-the-world.html)
 for analysis and interpretation.
-
-Example available on HuggingFace.
-
-[![Generic badge](https://img.shields.io/badge/🤗%20Spaces-What%20Convnets%20Learn-black.svg)](https://huggingface.co/spaces/keras-io/what-convnets-learn)

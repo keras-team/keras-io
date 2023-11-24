@@ -37,13 +37,14 @@ the a match score between the user and the movie (predicted rating).
 
 ```python
 import pandas as pd
-import numpy as np
-from zipfile import ZipFile
-import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras import layers
 from pathlib import Path
 import matplotlib.pyplot as plt
+import numpy as np
+from zipfile import ZipFile
+
+import keras
+from keras import layers
+from keras import ops
 ```
 
 ---
@@ -74,6 +75,15 @@ ratings_file = movielens_dir / "ratings.csv"
 df = pd.read_csv(ratings_file)
 ```
 
+<div class="k-default-codeblock">
+```
+Downloading data from http://files.grouplens.org/datasets/movielens/ml-latest-small.zip
+ 978202/978202 ━━━━━━━━━━━━━━━━━━━━ 0s 0us/step
+Extracting all the files now...
+Done!
+
+```
+</div>
 First, need to perform some preprocessing to encode users and movies as integer indices.
 
 
@@ -166,16 +176,16 @@ class RecommenderNet(keras.Model):
         user_bias = self.user_bias(inputs[:, 0])
         movie_vector = self.movie_embedding(inputs[:, 1])
         movie_bias = self.movie_bias(inputs[:, 1])
-        dot_user_movie = tf.tensordot(user_vector, movie_vector, 2)
+        dot_user_movie = ops.tensordot(user_vector, movie_vector, 2)
         # Add all the components (including bias)
         x = dot_user_movie + user_bias + movie_bias
         # The sigmoid activation forces the rating to between 0 and 1
-        return tf.nn.sigmoid(x)
+        return ops.nn.sigmoid(x)
 
 
 model = RecommenderNet(num_users, num_movies, EMBEDDING_SIZE)
 model.compile(
-    loss=tf.keras.losses.BinaryCrossentropy(),
+    loss=keras.losses.BinaryCrossentropy(),
     optimizer=keras.optimizers.Adam(learning_rate=0.001),
 )
 ```
@@ -198,15 +208,15 @@ history = model.fit(
 <div class="k-default-codeblock">
 ```
 Epoch 1/5
-1418/1418 [==============================] - 9s 6ms/step - loss: 0.6358 - val_loss: 0.6200
+ 1418/1418 ━━━━━━━━━━━━━━━━━━━━ 2s 1ms/step - loss: 0.6591 - val_loss: 0.6201
 Epoch 2/5
-1418/1418 [==============================] - 11s 8ms/step - loss: 0.6134 - val_loss: 0.6173
+ 1418/1418 ━━━━━━━━━━━━━━━━━━━━ 1s 894us/step - loss: 0.6159 - val_loss: 0.6191
 Epoch 3/5
-1418/1418 [==============================] - 14s 10ms/step - loss: 0.6082 - val_loss: 0.6156
+ 1418/1418 ━━━━━━━━━━━━━━━━━━━━ 1s 977us/step - loss: 0.6093 - val_loss: 0.6138
 Epoch 4/5
-1418/1418 [==============================] - 15s 10ms/step - loss: 0.6072 - val_loss: 0.6144
+ 1418/1418 ━━━━━━━━━━━━━━━━━━━━ 1s 865us/step - loss: 0.6100 - val_loss: 0.6123
 Epoch 5/5
-1418/1418 [==============================] - 13s 9ms/step - loss: 0.6074 - val_loss: 0.6147
+ 1418/1418 ━━━━━━━━━━━━━━━━━━━━ 1s 854us/step - loss: 0.6072 - val_loss: 0.6121
 
 ```
 </div>
@@ -280,34 +290,29 @@ for row in recommended_movies.itertuples():
 
 <div class="k-default-codeblock">
 ```
-302/302 [==============================] - 0s 800us/step
-Showing recommendations for user: 213
+ 272/272 ━━━━━━━━━━━━━━━━━━━━ 0s 714us/step
+Showing recommendations for user: 249
 ====================================
 Movies with high ratings from user
 --------------------------------
-Terminator 2: Judgment Day (1991) : Action|Sci-Fi
-Rocky (1976) : Drama
-Big Fish (2003) : Drama|Fantasy|Romance
-Shrek 2 (2004) : Adventure|Animation|Children|Comedy|Musical|Romance
-13 Assassins (Jûsan-nin no shikaku) (2010) : Action
+Fight Club (1999) : Action|Crime|Drama|Thriller
+Serenity (2005) : Action|Adventure|Sci-Fi
+Departed, The (2006) : Crime|Drama|Thriller
+Prisoners (2013) : Drama|Mystery|Thriller
+Arrival (2016) : Sci-Fi
 --------------------------------
 Top 10 movie recommendations
 --------------------------------
-Usual Suspects, The (1995) : Crime|Mystery|Thriller
-Star Wars: Episode IV - A New Hope (1977) : Action|Adventure|Sci-Fi
-Shawshank Redemption, The (1994) : Crime|Drama
-Schindler's List (1993) : Drama|War
-Dr. Strangelove or: How I Learned to Stop Worrying and Love the Bomb (1964) : Comedy|War
-Godfather: Part II, The (1974) : Crime|Drama
-Amelie (Fabuleux destin d'Amélie Poulain, Le) (2001) : Comedy|Romance
-28 Days Later (2002) : Action|Horror|Sci-Fi
-Little Miss Sunshine (2006) : Adventure|Comedy|Drama
-Hurt Locker, The (2008) : Action|Drama|Thriller|War
+In the Name of the Father (1993) : Drama
+Monty Python and the Holy Grail (1975) : Adventure|Comedy|Fantasy
+Princess Bride, The (1987) : Action|Adventure|Comedy|Fantasy|Romance
+Lawrence of Arabia (1962) : Adventure|Drama|War
+Apocalypse Now (1979) : Action|Drama|War
+Full Metal Jacket (1987) : Drama|War
+Amadeus (1984) : Drama
+Glory (1989) : Drama|War
+Chinatown (1974) : Crime|Film-Noir|Mystery|Thriller
+City of God (Cidade de Deus) (2002) : Action|Adventure|Crime|Drama|Thriller
 
 ```
 </div>
-**Example available on HuggingFace**
-
-| Trained Model | Demo |
-| :--: | :--: |
-| [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Model-Collaborative%20Filtering-black.svg)](https://huggingface.co/keras-io/collaborative-filtering-movielens) | [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Spaces-Collaborative%20Filtering-black.svg)](https://huggingface.co/spaces/keras-io/collaborative-filtering-movielens) |

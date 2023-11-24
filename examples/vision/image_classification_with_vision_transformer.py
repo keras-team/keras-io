@@ -16,24 +16,22 @@ and demonstrates it on the CIFAR-100 dataset.
 The ViT model applies the Transformer architecture with self-attention to sequences of
 image patches, without using convolution layers.
 
-This example requires TensorFlow 2.4 or higher, as well as
-[TensorFlow Addons](https://www.tensorflow.org/addons/overview),
-which can be installed using the following command:
-
-```python
-pip install -U tensorflow-addons
-```
 """
 
 """
 ## Setup
 """
 
+import os
+
+os.environ["KERAS_BACKEND"] = "jax"  # @param ["tensorflow", "jax", "torch"]
+
+import keras
+from keras import layers
+from keras import ops
+
 import numpy as np
-import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras import layers
-import tensorflow_addons as tfa
+import matplotlib.pyplot as plt
 
 """
 ## Prepare the data
@@ -55,7 +53,7 @@ print(f"x_test shape: {x_test.shape} - y_test shape: {y_test.shape}")
 learning_rate = 0.001
 weight_decay = 0.0001
 batch_size = 256
-num_epochs = 100
+num_epochs = 10  # For real training, use num_epochs=100. 10 is a test value
 image_size = 72  # We'll resize input images to this size
 patch_size = 6  # Size of the patches to be extract from the input images
 num_patches = (image_size // patch_size) ** 2
@@ -66,7 +64,10 @@ transformer_units = [
     projection_dim,
 ]  # Size of the transformer layers
 transformer_layers = 8
-mlp_head_units = [2048, 1024]  # Size of the dense layers of the final classifier
+mlp_head_units = [
+    2048,
+    1024,
+]  # Size of the dense layers of the final classifier
 
 
 """
@@ -94,7 +95,7 @@ data_augmentation.layers[0].adapt(x_train)
 
 def mlp(x, hidden_units, dropout_rate):
     for units in hidden_units:
-        x = layers.Dense(units, activation=tf.nn.gelu)(x)
+        x = layers.Dense(units, activation=keras.activations.gelu)(x)
         x = layers.Dropout(dropout_rate)(x)
     return x
 
@@ -110,32 +111,41 @@ class Patches(layers.Layer):
         self.patch_size = patch_size
 
     def call(self, images):
-        batch_size = tf.shape(images)[0]
-        patches = tf.image.extract_patches(
-            images=images,
-            sizes=[1, self.patch_size, self.patch_size, 1],
-            strides=[1, self.patch_size, self.patch_size, 1],
-            rates=[1, 1, 1, 1],
-            padding="VALID",
+        input_shape = ops.shape(images)
+        batch_size = input_shape[0]
+        height = input_shape[1]
+        width = input_shape[2]
+        channels = input_shape[3]
+        num_patches_h = height // self.patch_size
+        num_patches_w = width // self.patch_size
+        patches = keras.ops.image.extract_patches(images, size=self.patch_size)
+        patches = ops.reshape(
+            patches,
+            (
+                batch_size,
+                num_patches_h * num_patches_w,
+                self.patch_size * self.patch_size * channels,
+            ),
         )
-        patch_dims = patches.shape[-1]
-        patches = tf.reshape(patches, [batch_size, -1, patch_dims])
         return patches
+
+    def get_config(self):
+        config = super().get_config()
+        config.update({"patch_size": self.patch_size})
+        return config
 
 
 """
 Let's display patches for a sample image
 """
 
-import matplotlib.pyplot as plt
-
 plt.figure(figsize=(4, 4))
 image = x_train[np.random.choice(range(x_train.shape[0]))]
 plt.imshow(image.astype("uint8"))
 plt.axis("off")
 
-resized_image = tf.image.resize(
-    tf.convert_to_tensor([image]), size=(image_size, image_size)
+resized_image = ops.image.resize(
+    ops.convert_to_tensor([image]), size=(image_size, image_size)
 )
 patches = Patches(patch_size)(resized_image)
 print(f"Image size: {image_size} X {image_size}")
@@ -147,8 +157,8 @@ n = int(np.sqrt(patches.shape[1]))
 plt.figure(figsize=(4, 4))
 for i, patch in enumerate(patches[0]):
     ax = plt.subplot(n, n, i + 1)
-    patch_img = tf.reshape(patch, (patch_size, patch_size, 3))
-    plt.imshow(patch_img.numpy().astype("uint8"))
+    patch_img = ops.reshape(patch, (patch_size, patch_size, 3))
+    plt.imshow(ops.convert_to_numpy(patch_img).astype("uint8"))
     plt.axis("off")
 
 """
@@ -170,9 +180,17 @@ class PatchEncoder(layers.Layer):
         )
 
     def call(self, patch):
-        positions = tf.range(start=0, limit=self.num_patches, delta=1)
-        encoded = self.projection(patch) + self.position_embedding(positions)
+        positions = ops.expand_dims(
+            ops.arange(start=0, stop=self.num_patches, step=1), axis=0
+        )
+        projected_patches = self.projection(patch)
+        encoded = projected_patches + self.position_embedding(positions)
         return encoded
+
+    def get_config(self):
+        config = super().get_config()
+        config.update({"num_patches": self.num_patches})
+        return config
 
 
 """
@@ -196,7 +214,7 @@ especially when the number of patches and the projection dimensions are large.
 
 
 def create_vit_classifier():
-    inputs = layers.Input(shape=input_shape)
+    inputs = keras.Input(shape=input_shape)
     # Augment data.
     augmented = data_augmentation(inputs)
     # Create patches.
@@ -240,7 +258,7 @@ def create_vit_classifier():
 
 
 def run_experiment(model):
-    optimizer = tfa.optimizers.AdamW(
+    optimizer = keras.optimizers.AdamW(
         learning_rate=learning_rate, weight_decay=weight_decay
     )
 
@@ -253,7 +271,7 @@ def run_experiment(model):
         ],
     )
 
-    checkpoint_filepath = "/tmp/checkpoint"
+    checkpoint_filepath = "/tmp/checkpoint.weights.h5"
     checkpoint_callback = keras.callbacks.ModelCheckpoint(
         checkpoint_filepath,
         monitor="val_accuracy",
@@ -282,6 +300,21 @@ vit_classifier = create_vit_classifier()
 history = run_experiment(vit_classifier)
 
 
+def plot_history(item):
+    plt.plot(history.history[item], label=item)
+    plt.plot(history.history["val_" + item], label="val_" + item)
+    plt.xlabel("Epochs")
+    plt.ylabel(item)
+    plt.title("Train and Validation {} Over Epochs".format(item), fontsize=14)
+    plt.legend()
+    plt.grid()
+    plt.show()
+
+
+plot_history("loss")
+plot_history("top-5-accuracy")
+
+
 """
 After 100 epochs, the ViT model achieves around 55% accuracy and
 82% top-5 accuracy on the test data. These are not competitive results on the CIFAR-100 dataset,
@@ -291,8 +324,8 @@ Note that the state of the art results reported in the
 [paper](https://arxiv.org/abs/2010.11929) are achieved by pre-training the ViT model using
 the JFT-300M dataset, then fine-tuning it on the target dataset. To improve the model quality
 without pre-training, you can try to train the model for more epochs, use a larger number of
-Transformer layers, resize the input images, change the patch size, or increase the projection dimensions. 
-Besides, as mentioned in the paper, the quality of the model is affected not only by architecture choices, 
+Transformer layers, resize the input images, change the patch size, or increase the projection dimensions.
+Besides, as mentioned in the paper, the quality of the model is affected not only by architecture choices,
 but also by parameters such as the learning rate schedule, optimizer, weight decay, etc.
 In practice, it's recommended to fine-tune a ViT model
 that was pre-trained using a large, high-resolution dataset.

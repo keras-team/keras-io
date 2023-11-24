@@ -1,901 +1,368 @@
 """
-Title: Introduction to Keras for Engineers
+Title: Introduction to Keras for engineers
 Author: [fchollet](https://twitter.com/fchollet)
-Date created: 2020/04/01
-Last modified: 2020/04/28
-Description: Everything you need to know to use Keras to build real-world machine learning solutions.
-Accelerator: None
+Date created: 2023/07/10
+Last modified: 2023/07/10
+Description: First contact with Keras 3.
+Accelerator: GPU
+"""
+"""
+## Introduction
+
+Keras 3 is a deep learning framework
+works with TensorFlow, JAX, and PyTorch interchangeably.
+This notebook will walk you through key Keras 3 workflows.
 """
 
 """
 ## Setup
+
+We're going to be using the JAX backend here -- but you can
+edit the string below to `"tensorflow"` or `"torch"` and hit
+"Restart runtime", and the whole notebook will run just the same!
+This entire guide is backend-agnostic.
 """
 
 import numpy as np
-import tensorflow as tf
+import os
+
+os.environ["KERAS_BACKEND"] = "jax"
+
+# Note that Keras should only be imported after the backend
+# has been configured. The backend cannot be changed once the
+# package is imported.
 import keras
 
 """
-## Introduction
+## A first example: A MNIST convnet
 
-Are you a machine learning engineer looking to use Keras
-to ship deep-learning powered features in real products? This guide will serve
-as your first introduction to core Keras API concepts.
+Let's start with the Hello World of ML: training a convnet
+to classify MNIST digits.
 
-In this guide, you will learn how to:
-
-- Prepare your data before training a model (by turning it into either NumPy
- arrays or `tf.data.Dataset` objects).
-- Do data preprocessing, for instance feature normalization or vocabulary
- indexing.
-- Build a model that turns your data into useful predictions,
-using the Keras Functional API.
-- Train your model with the built-in Keras `fit()` method, while being
-mindful of checkpointing, metrics monitoring, and fault tolerance.
-- Evaluate your model on a test data and how to use it for inference on new data.
-- Customize what `fit()` does, for instance to build a GAN.
-- Speed up training by leveraging multiple GPUs.
-- Refine your model through hyperparameter tuning.
-
-At the end of this guide, you will get pointers to end-to-end examples to solidify
- these concepts:
-
-- Image classification
-- Text classification
-- Credit card fraud detection
-
-
+Here's the data:
 """
 
-"""
-## Data loading & preprocessing
-
-Neural networks don't process raw data, like text files, encoded JPEG image files, or
- CSV files. They process **vectorized** & **standardized** representations.
-
-- Text files need to be read into string tensors, then split into words. Finally, the
- words need to be indexed & turned into integer tensors.
-- Images need to be read and decoded into integer tensors, then converted to floating
- point and normalized to small values (usually between 0 and 1).
-- CSV data needs to be parsed, with numerical features converted to floating point
- tensors and categorical features indexed and converted to integer tensors.
-Then each feature typically needs to be normalized to zero-mean and unit-variance.
-- Etc.
-
-Let's start with data loading.
-
-## Data loading
-
-Keras models accept three types of inputs:
-
-- **NumPy arrays**, just like Scikit-Learn and many other Python-based libraries. This
- is a good option if your data fits in memory.
-- **[TensorFlow `Dataset` objects](https://www.tensorflow.org/guide/data)**. This is a
-high-performance option that is more suitable for datasets that do not fit in memory
- and that are streamed from disk or from a distributed filesystem.
-- **Python generators** that yield batches of data (such as custom subclasses of
-the `keras.utils.Sequence` class).
-
-Before you start training a model, you will need to make your data available as one of
-these formats. If you have a large dataset and you are training on GPU(s), consider
-using `Dataset` objects, since they will take care of performance-critical details,
- such as:
-
-- Asynchronously preprocessing your data on CPU while your GPU is busy, and buffering
- it into a queue.
-- Prefetching data on GPU memory so it's immediately available when the GPU has
- finished processing the previous batch, so you can reach full GPU utilization.
-
-Keras features a range of utilities to help you turn raw data on disk into a `Dataset`:
-
-- `keras.utils.image_dataset_from_directory` turns image files sorted into
- class-specific folders into a labeled dataset of image tensors.
-- `keras.utils.text_dataset_from_directory` does the same for text files.
-
-In addition, the TensorFlow `tf.data` includes other similar utilities, such as
-`tf.data.experimental.make_csv_dataset` to load structured data from CSV files.
-
-**Example: obtaining a labeled dataset from image files on disk**
-
-Supposed you have image files sorted by class in different folders, like this:
-
-```
-main_directory/
-...class_a/
-......a_image_1.jpg
-......a_image_2.jpg
-...class_b/
-......b_image_1.jpg
-......b_image_2.jpg
-```
-
-Then you can do:
-
-```python
-# Create a dataset.
-dataset = keras.utils.image_dataset_from_directory(
-  'path/to/main_directory', batch_size=64, image_size=(200, 200))
-
-# For demonstration, iterate over the batches yielded by the dataset.
-for data, labels in dataset:
-   print(data.shape)  # (64, 200, 200, 3)
-   print(data.dtype)  # float32
-   print(labels.shape)  # (64,)
-   print(labels.dtype)  # int32
-```
-
-The label of a sample is the rank of its folder in alphanumeric order. Naturally, this
- can also be configured explicitly by passing, e.g.
-`class_names=['class_a', 'class_b']`, in which cases label `0` will be `class_a` and
- `1` will be `class_b`.
-
-**Example: obtaining a labeled dataset from text files on disk**
-
-Likewise for text: if you have `.txt` documents sorted by class in different folders,
- you can do:
-
-```python
-dataset = keras.utils.text_dataset_from_directory(
-  'path/to/main_directory', batch_size=64)
-
-# For demonstration, iterate over the batches yielded by the dataset.
-for data, labels in dataset:
-   print(data.shape)  # (64,)
-   print(data.dtype)  # string
-   print(labels.shape)  # (64,)
-   print(labels.dtype)  # int32
-```
-
-
-
-"""
-
-"""
-## Data preprocessing with Keras
-
-Once your data is in the form of string/int/float NumPy arrays, or a `Dataset` object
- (or Python generator) that yields batches of string/int/float tensors,
-it is time to **preprocess** the data. This can mean:
-
-- Tokenization of string data, followed by token indexing.
-- Feature normalization.
-- Rescaling the data to small values (in general, input values to a neural network
-should be close to zero -- typically we expect either data with zero-mean and
- unit-variance, or data in the `[0, 1]` range.
-
-### The ideal machine learning model is end-to-end
-
-In general, you should seek to do data preprocessing **as part of your model** as much
-as possible, not via an external data preprocessing pipeline. That's because external
-data preprocessing makes your models less portable when it's time to use them in
-production. Consider a model that processes text: it uses a specific tokenization
-algorithm and a specific vocabulary index. When you want to ship your model to a
-mobile app or a JavaScript app, you will need to recreate the exact same preprocessing
-setup in the target language. This can get very tricky: any small discrepancy between
-the original pipeline and the one you recreate has the potential to completely
- invalidate your model, or at least severely degrade its performance.
-
-It would be much easier to be able to simply export an end-to-end model that already
-includes preprocessing. **The ideal model should expect as input something as close as
-possible to raw data: an image model should expect RGB pixel values in the `[0, 255]`
-range, and a text model should accept strings of `utf-8` characters.** That way, the
- consumer of the exported model doesn't have
-to know about the preprocessing pipeline.
-
-### Using Keras preprocessing layers
-
-In Keras, you do in-model data preprocessing via **preprocessing layers**. This
- includes:
-
-- Vectorizing raw strings of text via the `TextVectorization` layer
-- Feature normalization via the `Normalization` layer
-- Image rescaling, cropping, or image data augmentation
-
-The key advantage of using Keras preprocessing layers is that **they can be included
- directly into your model**, either during training or after training,
-which makes your models portable.
-
-Some preprocessing layers have a state:
-
-- `TextVectorization` holds an index mapping words or tokens to integer indices
-- `Normalization` holds the mean and variance of your features
-
-The state of a preprocessing layer is obtained by calling `layer.adapt(data)` on a
- sample of the training data (or all of it).
-
-
-**Example: turning strings into sequences of integer word indices**
-
-
-"""
-
-from tensorflow.keras.layers import TextVectorization
-
-# Example training data, of dtype `string`.
-training_data = np.array([["This is the 1st sample."], ["And here's the 2nd sample."]])
-
-# Create a TextVectorization layer instance. It can be configured to either
-# return integer token indices, or a dense token representation (e.g. multi-hot
-# or TF-IDF). The text standardization and text splitting algorithms are fully
-# configurable.
-vectorizer = TextVectorization(output_mode="int")
-
-# Calling `adapt` on an array or dataset makes the layer generate a vocabulary
-# index for the data, which can then be reused when seeing new data.
-vectorizer.adapt(training_data)
-
-# After calling adapt, the layer is able to encode any n-gram it has seen before
-# in the `adapt()` data. Unknown n-grams are encoded via an "out-of-vocabulary"
-# token.
-integer_data = vectorizer(training_data)
-print(integer_data)
-
-"""
-**Example: turning strings into sequences of one-hot encoded bigrams**
-"""
-
-from tensorflow.keras.layers import TextVectorization
-
-# Example training data, of dtype `string`.
-training_data = np.array([["This is the 1st sample."], ["And here's the 2nd sample."]])
-
-# Create a TextVectorization layer instance. It can be configured to either
-# return integer token indices, or a dense token representation (e.g. multi-hot
-# or TF-IDF). The text standardization and text splitting algorithms are fully
-# configurable.
-vectorizer = TextVectorization(output_mode="binary", ngrams=2)
-
-# Calling `adapt` on an array or dataset makes the layer generate a vocabulary
-# index for the data, which can then be reused when seeing new data.
-vectorizer.adapt(training_data)
-
-# After calling adapt, the layer is able to encode any n-gram it has seen before
-# in the `adapt()` data. Unknown n-grams are encoded via an "out-of-vocabulary"
-# token.
-integer_data = vectorizer(training_data)
-print(integer_data)
-
-"""
-**Example: normalizing features**
-
-"""
-
-from tensorflow.keras.layers import Normalization
-
-# Example image data, with values in the [0, 255] range
-training_data = np.random.randint(0, 256, size=(64, 200, 200, 3)).astype("float32")
-
-normalizer = Normalization(axis=-1)
-normalizer.adapt(training_data)
-
-normalized_data = normalizer(training_data)
-print("var: %.4f" % np.var(normalized_data))
-print("mean: %.4f" % np.mean(normalized_data))
-
-"""
-**Example: rescaling & center-cropping images**
-
-Both the `Rescaling` layer and the `CenterCrop` layer are stateless, so it isn't
- necessary to call `adapt()` in this case.
-"""
-
-from tensorflow.keras.layers import CenterCrop
-from tensorflow.keras.layers import Rescaling
-
-# Example image data, with values in the [0, 255] range
-training_data = np.random.randint(0, 256, size=(64, 200, 200, 3)).astype("float32")
-
-cropper = CenterCrop(height=150, width=150)
-scaler = Rescaling(scale=1.0 / 255)
-
-output_data = scaler(cropper(training_data))
-print("shape:", output_data.shape)
-print("min:", np.min(output_data))
-print("max:", np.max(output_data))
-
-"""
-## Building models with the Keras Functional API
-
-A "layer" is a simple input-output transformation (such as the scaling &
-center-cropping transformations above). For instance, here's a linear projection layer
- that maps its inputs to a 16-dimensional feature space:
-
-```python
-dense = keras.layers.Dense(units=16)
-```
-
-A "model" is a directed acyclic graph of layers. You can think of a model as a
-"bigger layer" that encompasses multiple sublayers and that can be trained via exposure
- to data.
-
-The most common and most powerful way to build Keras models is the Functional API. To
-build models with the Functional API, you start by specifying the shape (and
-optionally the dtype) of your inputs. If any dimension of your input can vary, you can
-specify it as `None`. For instance, an input for 200x200 RGB image would have shape
-`(200, 200, 3)`, but an input for RGB images of any size would have shape `(None,
- None, 3)`.
-"""
-
-# Let's say we expect our inputs to be RGB images of arbitrary size
-inputs = keras.Input(shape=(None, None, 3))
-
-"""
-After defining your input(s), you can chain layer transformations on top of your inputs,
- until your final output:
-"""
-
-from tensorflow.keras import layers
-
-# Center-crop images to 150x150
-x = CenterCrop(height=150, width=150)(inputs)
-# Rescale images to [0, 1]
-x = Rescaling(scale=1.0 / 255)(x)
-
-# Apply some convolution and pooling layers
-x = layers.Conv2D(filters=32, kernel_size=(3, 3), activation="relu")(x)
-x = layers.MaxPooling2D(pool_size=(3, 3))(x)
-x = layers.Conv2D(filters=32, kernel_size=(3, 3), activation="relu")(x)
-x = layers.MaxPooling2D(pool_size=(3, 3))(x)
-x = layers.Conv2D(filters=32, kernel_size=(3, 3), activation="relu")(x)
-
-# Apply global average pooling to get flat feature vectors
-x = layers.GlobalAveragePooling2D()(x)
-
-# Add a dense classifier on top
-num_classes = 10
-outputs = layers.Dense(num_classes, activation="softmax")(x)
-
-"""
-Once you have defined the directed acyclic graph of layers that turns your input(s) into
- your outputs, instantiate a `Model` object:
-"""
-
-model = keras.Model(inputs=inputs, outputs=outputs)
-
-"""
-This model behaves basically like a bigger layer. You can call it on batches of data, like
- this:
-"""
-
-data = np.random.randint(0, 256, size=(64, 200, 200, 3)).astype("float32")
-processed_data = model(data)
-print(processed_data.shape)
-
-"""
-You can print a summary of how your data gets transformed at each stage of the model.
- This is useful for debugging.
-
-Note that the output shape displayed for each layer includes the **batch size**. Here
- the batch size is None, which indicates our model can process batches of any size.
-"""
-
-model.summary()
-
-"""
-The Functional API also makes it easy to build models that have multiple inputs (for
-instance, an image *and* its metadata) or multiple outputs (for instance, predicting
-the class of the image *and* the likelihood that a user will click on it). For a
- deeper dive into what you can do, see our
-[guide to the Functional API](/guides/functional_api/).
-"""
-
-"""
-## Training models with `fit()`
-
-At this point, you know:
-
-- How to prepare your data (e.g. as a NumPy array or a `tf.data.Dataset` object)
-- How to build a model that will process your data
-
-The next step is to train your model on your data. The `Model` class features a
-built-in training loop, the `fit()` method. It accepts `Dataset` objects, Python
- generators that yield batches of data, or NumPy arrays.
-
-Before you can call `fit()`, you need to specify an optimizer and a loss function (we
- assume you are already familiar with these concepts). This is the `compile()` step:
-
-```python
-model.compile(optimizer=keras.optimizers.RMSprop(learning_rate=1e-3),
-              loss=keras.losses.CategoricalCrossentropy())
-```
-
-Loss and optimizer can be specified via their string identifiers (in this case
-their default constructor argument values are used):
-
-
-```python
-model.compile(optimizer='rmsprop', loss='categorical_crossentropy')
-```
-
-Once your model is compiled, you can start "fitting" the model to the data.
-Here's what fitting a model looks like with NumPy data:
-
-```python
-model.fit(numpy_array_of_samples, numpy_array_of_labels,
-          batch_size=32, epochs=10)
-```
-
-Besides the data, you have to specify two key parameters: the `batch_size` and
-the number of epochs (iterations on the data). Here our data will get sliced on batches
- of 32 samples, and the model will iterate 10 times over the data during training.
-
-Here's what fitting a model looks like with a dataset:
-
-```python
-model.fit(dataset_of_samples_and_labels, epochs=10)
-```
-
-Since the data yielded by a dataset is expected to be already batched, you don't need to
- specify the batch size here.
-
-Let's look at it in practice with a toy example model that learns to classify MNIST
- digits:
-"""
-
-# Get the data as Numpy arrays
+# Load the data and split it between train and test sets
 (x_train, y_train), (x_test, y_test) = keras.datasets.mnist.load_data()
 
-# Build a simple model
-inputs = keras.Input(shape=(28, 28))
-x = layers.Rescaling(1.0 / 255)(inputs)
-x = layers.Flatten()(x)
-x = layers.Dense(128, activation="relu")(x)
-x = layers.Dense(128, activation="relu")(x)
-outputs = layers.Dense(10, activation="softmax")(x)
-model = keras.Model(inputs, outputs)
+# Scale images to the [0, 1] range
+x_train = x_train.astype("float32") / 255
+x_test = x_test.astype("float32") / 255
+# Make sure images have shape (28, 28, 1)
+x_train = np.expand_dims(x_train, -1)
+x_test = np.expand_dims(x_test, -1)
+print("x_train shape:", x_train.shape)
+print("y_train shape:", y_train.shape)
+print(x_train.shape[0], "train samples")
+print(x_test.shape[0], "test samples")
+
+"""
+Here's our model.
+
+Different model-building options that Keras offers include:
+
+- [The Sequential API](https://keras.io/guides/sequential_model/) (what we use below)
+- [The Functional API](https://keras.io/guides/functional_api/) (most typical)
+- [Writing your own models yourself via subclassing](https://keras.io/guides/making_new_layers_and_models_via_subclassing/) (for advanced use cases)
+"""
+
+# Model parameters
+num_classes = 10
+input_shape = (28, 28, 1)
+
+model = keras.Sequential(
+    [
+        keras.layers.Input(shape=input_shape),
+        keras.layers.Conv2D(64, kernel_size=(3, 3), activation="relu"),
+        keras.layers.Conv2D(64, kernel_size=(3, 3), activation="relu"),
+        keras.layers.MaxPooling2D(pool_size=(2, 2)),
+        keras.layers.Conv2D(128, kernel_size=(3, 3), activation="relu"),
+        keras.layers.Conv2D(128, kernel_size=(3, 3), activation="relu"),
+        keras.layers.GlobalAveragePooling2D(),
+        keras.layers.Dropout(0.5),
+        keras.layers.Dense(num_classes, activation="softmax"),
+    ]
+)
+
+"""
+Here's our model summary:
+"""
+
 model.summary()
 
-# Compile the model
-model.compile(optimizer="adam", loss="sparse_categorical_crossentropy")
-
-# Train the model for 1 epoch from Numpy data
-batch_size = 64
-print("Fit on NumPy data")
-history = model.fit(x_train, y_train, batch_size=batch_size, epochs=1)
-
-# Train the model for 1 epoch using a dataset
-dataset = tf.data.Dataset.from_tensor_slices((x_train, y_train)).batch(batch_size)
-print("Fit on Dataset")
-history = model.fit(dataset, epochs=1)
-
 """
-The `fit()` call returns a "history" object which records what happened over the course
-of training. The `history.history` dict contains per-epoch timeseries of metrics
-values (here we have only one metric, the loss, and one epoch, so we only get a single
- scalar):
-"""
-
-print(history.history)
-
-"""
-For a detailed overview of how to use `fit()`, see the
-[guide to training & evaluation with the built-in Keras methods](
-  /guides/training_with_built_in_methods/).
-"""
-
-"""
-### Keeping track of performance metrics
-
-As you're training a model, you want to keep track of metrics such as classification
-accuracy, precision, recall, AUC, etc. Besides, you want to monitor these metrics not
- only on the training data, but also on a validation set.
-
-**Monitoring metrics**
-
-You can pass a list of metric objects to `compile()`, like this:
-
-
+We use the `compile()` method to specify the optimizer, loss function,
+and the metrics to monitor. Note that with the JAX and TensorFlow backends,
+XLA compilation is turned on by default.
 """
 
 model.compile(
-    optimizer="adam",
-    loss="sparse_categorical_crossentropy",
-    metrics=[keras.metrics.SparseCategoricalAccuracy(name="acc")],
+    loss=keras.losses.SparseCategoricalCrossentropy(),
+    optimizer=keras.optimizers.Adam(learning_rate=1e-3),
+    metrics=[
+        keras.metrics.SparseCategoricalAccuracy(name="acc"),
+    ],
 )
-history = model.fit(dataset, epochs=1)
 
 """
-
-**Passing validation data to `fit()`**
-
-You can pass validation data to `fit()` to monitor your validation loss & validation
- metrics. Validation metrics get reported at the end of each epoch.
-
+Let's train and evaluate the model. We'll set aside a validation split of 15%
+of the data during training to monitor generalization on unseen data.
 """
 
-val_dataset = tf.data.Dataset.from_tensor_slices((x_test, y_test)).batch(batch_size)
-history = model.fit(dataset, epochs=1, validation_data=val_dataset)
+batch_size = 128
+epochs = 20
 
-"""
-### Using callbacks for checkpointing (and more)
-
-If training goes on for more than a few minutes, it's important to save your model at
-regular intervals during training. You can then use your saved models
-to restart training in case your training process crashes (this is important for
-multi-worker distributed training, since with many workers at least one of them is
- bound to fail at some point).
-
-An important feature of Keras is **callbacks**, configured in `fit()`. Callbacks are
- objects that get called by the model at different point during training, in particular:
-
-- At the beginning and end of each batch
-- At the beginning and end of each epoch
-
-Callbacks are a way to make model trainable entirely scriptable.
-
-You can use callbacks to periodically save your model. Here's a simple example: a
- `ModelCheckpoint` callback
-configured to save the model at the end of every epoch. The filename will include the
- current epoch.
-
-```python
 callbacks = [
-    keras.callbacks.ModelCheckpoint(
-        filepath='path/to/my/model_{epoch}',
-        save_freq='epoch')
+    keras.callbacks.ModelCheckpoint(filepath="model_at_epoch_{epoch}.keras"),
+    keras.callbacks.EarlyStopping(monitor="val_loss", patience=2),
 ]
-model.fit(dataset, epochs=2, callbacks=callbacks)
-```
+
+model.fit(
+    x_train,
+    y_train,
+    batch_size=batch_size,
+    epochs=epochs,
+    validation_split=0.15,
+    callbacks=callbacks,
+)
+score = model.evaluate(x_test, y_test, verbose=0)
+
+"""
+During training, we were saving a model at the end of each epoch. You
+can also save the model in its latest state like this:
+"""
+
+model.save("final_model.keras")
+
+"""
+And reload it like this:
+"""
+
+model = keras.saving.load_model("final_model.keras")
+
+"""
+Next, you can query predictions of class probabilities with `predict()`:
+"""
+
+predictions = model.predict(x_test)
+
+"""
+That's it for the basics!
 """
 
 """
-You can also use callbacks to do things like periodically changing the learning of your
-optimizer, streaming metrics to a Slack bot, sending yourself an email notification
- when training is complete, etc.
+## Writing cross-framework custom components
 
-For detailed overview of what callbacks are available and how to write your own, see
-the [callbacks API documentation](/api/callbacks/) and the
-[guide to writing custom callbacks](/guides/writing_your_own_callbacks/).
+Keras enables you to write custom Layers, Models, Metrics, Losses, and Optimizers
+that work across TensorFlow, JAX, and PyTorch with the same codebase. Let's take a look
+at custom layers first.
+
+The `keras.ops` namespace contains:
+
+- An implementation of the NumPy API, e.g. `keras.ops.stack` or `keras.ops.matmul`.
+- A set of neural network specific ops that are absent from NumPy, such as `keras.ops.conv`
+or `keras.ops.binary_crossentropy`.
+
+Let's make a custom `Dense` layer that works with all backends:
 """
 
-"""
-### Monitoring training progress with TensorBoard
 
-Staring at the Keras progress bar isn't the most ergonomic way to monitor how your loss
- and metrics are evolving over time. There's a better solution:
-[TensorBoard](https://www.tensorflow.org/tensorboard),
-a web application that can display real-time graphs of your metrics (and more).
+class MyDense(keras.layers.Layer):
+    def __init__(self, units, activation=None, name=None):
+        super().__init__(name=name)
+        self.units = units
+        self.activation = keras.activations.get(activation)
 
-To use TensorBoard with `fit()`, simply pass a `keras.callbacks.TensorBoard` callback
- specifying the directory where to store TensorBoard logs:
+    def build(self, input_shape):
+        input_dim = input_shape[-1]
+        self.w = self.add_weight(
+            shape=(input_dim, self.units),
+            initializer=keras.initializers.GlorotNormal(),
+            name="kernel",
+            trainable=True,
+        )
 
+        self.b = self.add_weight(
+            shape=(self.units,),
+            initializer=keras.initializers.Zeros(),
+            name="bias",
+            trainable=True,
+        )
 
-```python
-callbacks = [
-    keras.callbacks.TensorBoard(log_dir='./logs')
-]
-model.fit(dataset, epochs=2, callbacks=callbacks)
-```
+    def call(self, inputs):
+        # Use Keras ops to create backend-agnostic layers/metrics/etc.
+        x = keras.ops.matmul(inputs, self.w) + self.b
+        return self.activation(x)
 
-You can then launch a TensorBoard instance that you can open in your browser to monitor
- the logs getting written to this location:
-
-```
-tensorboard --logdir=./logs
-```
-
-What's more, you can launch an in-line TensorBoard tab when training models in Jupyter
- / Colab notebooks.
-[Here's more information](https://www.tensorflow.org/tensorboard/tensorboard_in_notebooks).
-"""
 
 """
-### After `fit()`: evaluating test performance & generating predictions on new data
-
-Once you have a trained model, you can evaluate its loss and metrics on new data via
- `evaluate()`:
+Next, let's make a custom `Dropout` layer that relies on the `keras.random`
+namespace:
 """
 
-loss, acc = model.evaluate(val_dataset)  # returns loss and metrics
-print("loss: %.2f" % loss)
-print("acc: %.2f" % acc)
+
+class MyDropout(keras.layers.Layer):
+    def __init__(self, rate, name=None):
+        super().__init__(name=name)
+        self.rate = rate
+        # Use seed_generator for managing RNG state.
+        # It is a state element and its seed variable is
+        # tracked as part of `layer.variables`.
+        self.seed_generator = keras.random.SeedGenerator(1337)
+
+    def call(self, inputs):
+        # Use `keras.random` for random ops.
+        return keras.random.dropout(inputs, self.rate, seed=self.seed_generator)
+
 
 """
-You can also generate NumPy arrays of predictions (the activations of the output
- layer(s) in the model) via `predict()`:
+Next, let's write a custom subclassed model that uses our two custom layers:
 """
 
-predictions = model.predict(val_dataset)
-print(predictions.shape)
+
+class MyModel(keras.Model):
+    def __init__(self, num_classes):
+        super().__init__()
+        self.conv_base = keras.Sequential(
+            [
+                keras.layers.Conv2D(64, kernel_size=(3, 3), activation="relu"),
+                keras.layers.Conv2D(64, kernel_size=(3, 3), activation="relu"),
+                keras.layers.MaxPooling2D(pool_size=(2, 2)),
+                keras.layers.Conv2D(128, kernel_size=(3, 3), activation="relu"),
+                keras.layers.Conv2D(128, kernel_size=(3, 3), activation="relu"),
+                keras.layers.GlobalAveragePooling2D(),
+            ]
+        )
+        self.dp = MyDropout(0.5)
+        self.dense = MyDense(num_classes, activation="softmax")
+
+    def call(self, x):
+        x = self.conv_base(x)
+        x = self.dp(x)
+        return self.dense(x)
+
 
 """
-## Using `fit()` with a custom training step
-
-By default, `fit()` is configured for **supervised learning**. If you need a different
- kind of training loop (for instance, a GAN training loop), you
-can provide your own implementation of the `Model.train_step()` method. This is the
- method that is repeatedly called during `fit()`.
-
-Metrics, callbacks, etc. will work as usual.
-
-Here's a simple example that reimplements what `fit()` normally does:
-
-```python
-class CustomModel(keras.Model):
-    def train_step(self, data):
-        # Unpack the data. Its structure depends on your model and
-        # on what you pass to `fit()`.
-        x, y = data
-        with tf.GradientTape() as tape:
-            y_pred = self(x, training=True)  # Forward pass
-            # Compute the loss value
-            # (the loss function is configured in `compile()`)
-            loss = self.compute_loss(y=y, y_pred=y_pred)
-        # Compute gradients
-        trainable_vars = self.trainable_variables
-        gradients = tape.gradient(loss, trainable_vars)
-        # Update weights
-        self.optimizer.apply_gradients(zip(gradients, trainable_vars))
-        # Update metrics (includes the metric that tracks the loss)
-        for metric in self.metrics:
-            if metric.name == "loss":
-                metric.update_state(loss)
-            else:
-                metric.update_state(y, y_pred)
-        # Return a dict mapping metric names to current value
-        return {m.name: m.result() for m in self.metrics}
-
-# Construct and compile an instance of CustomModel
-inputs = keras.Input(shape=(32,))
-outputs = keras.layers.Dense(1)(inputs)
-model = CustomModel(inputs, outputs)
-model.compile(optimizer='adam', loss='mse', metrics=[...])
-
-# Just use `fit` as usual
-model.fit(dataset, epochs=3, callbacks=...)
-```
-
-For a detailed overview of how you customize the built-in training & evaluation loops,
- see the guide:
-["Customizing what happens in `fit()`"](/guides/customizing_what_happens_in_fit/).
+Let's compile it and fit it:
 """
 
-"""
-## Debugging your model with eager execution
+model = MyModel(num_classes=10)
+model.compile(
+    loss=keras.losses.SparseCategoricalCrossentropy(),
+    optimizer=keras.optimizers.Adam(learning_rate=1e-3),
+    metrics=[
+        keras.metrics.SparseCategoricalAccuracy(name="acc"),
+    ],
+)
 
-If you write custom training steps or custom layers, you will need to debug them. The
-debugging experience is an integral part of a framework: with Keras, the debugging
- workflow is designed with the user in mind.
-
-By default, your Keras models are compiled to highly-optimized computation graphs that
-deliver fast execution times. That means that the Python code you write (e.g. in a
-custom `train_step`) is not the code you are actually executing. This introduces a
- layer of indirection that can make debugging hard.
-
-Debugging is best done step by step. You want to be able to sprinkle your code with
-`print()` statement to see what your data looks like after every operation, you want
-to be able to use `pdb`. You can achieve this by **running your model eagerly**. With
- eager execution, the Python code you write is the code that gets executed.
-
-Simply pass `run_eagerly=True` to `compile()`:
-
-```python
-model.compile(optimizer='adam', loss='mse', run_eagerly=True)
-```
-
-Of course, the downside is that it makes your model significantly slower. Make sure to
-switch it back off to get the benefits of compiled computation graphs once you are
- done debugging!
-
-In general, you will use `run_eagerly=True` every time you need to debug what's
- happening inside your `fit()` call.
-"""
+model.fit(
+    x_train,
+    y_train,
+    batch_size=batch_size,
+    epochs=1,  # For speed
+    validation_split=0.15,
+)
 
 """
-## Speeding up training with multiple GPUs
+## Training models on arbitrary data sources
 
-Keras has built-in industry-strength support for multi-GPU training and distributed
- multi-worker training, via the `tf.distribute` API.
+All Keras models can be trained and evaluated on a wide variety of data sources,
+independently of the backend you're using. This includes:
 
-If you have multiple GPUs on your machine, you can train your model on all of them by:
+- NumPy arrays
+- Pandas dataframes
+- TensorFlow `tf.data.Dataset` objects
+- PyTorch `DataLoader` objects
+- Keras `PyDataset` objects
 
-- Creating a `tf.distribute.MirroredStrategy` object
-- Building & compiling your model inside the strategy's scope
-- Calling `fit()` and `evaluate()` on a dataset as usual
+They all work whether you're using TensorFlow, JAX, or PyTorch as your Keras backend.
 
-```python
-# Create a MirroredStrategy.
-strategy = tf.distribute.MirroredStrategy()
-
-# Open a strategy scope.
-with strategy.scope():
-    # Everything that creates variables should be under the strategy scope.
-    # In general this is only model construction & `compile()`.
-    model = Model(...)
-    model.compile(...)
-
-# Train the model on all available devices.
-train_dataset, val_dataset, test_dataset = get_dataset()
-model.fit(train_dataset, epochs=2, validation_data=val_dataset)
-
-# Test the model on all available devices.
-model.evaluate(test_dataset)
-```
-
-For a detailed introduction to multi-GPU & distributed training, see
-[this guide](/guides/distributed_training/).
+Let's try it out with PyTorch `DataLoaders`:
 """
 
-"""
-## Doing preprocessing synchronously on-device vs. asynchronously on host CPU
+import torch
 
-You've learned about preprocessing, and you've seen example where we put image
- preprocessing layers (`CenterCrop` and `Rescaling`) directly inside our model.
+# Create a TensorDataset
+train_torch_dataset = torch.utils.data.TensorDataset(
+    torch.from_numpy(x_train), torch.from_numpy(y_train)
+)
+val_torch_dataset = torch.utils.data.TensorDataset(
+    torch.from_numpy(x_test), torch.from_numpy(y_test)
+)
 
-Having preprocessing happen as part of the model during training
-is great if you want to do on-device preprocessing, for instance, GPU-accelerated
-feature normalization or image augmentation. But there are kinds of preprocessing that
-are not suited to this setup: in particular, text preprocessing with the
-`TextVectorization` layer. Due to its sequential nature and due to the fact that it
- can only run on CPU, it's often a good idea to do **asynchronous preprocessing**.
+# Create a DataLoader
+train_dataloader = torch.utils.data.DataLoader(
+    train_torch_dataset, batch_size=batch_size, shuffle=True
+)
+val_dataloader = torch.utils.data.DataLoader(
+    val_torch_dataset, batch_size=batch_size, shuffle=False
+)
 
-With asynchronous preprocessing, your preprocessing operations will run on CPU, and the
-preprocessed samples will be buffered into a queue while your GPU is busy with
-previous batch of data. The next batch of preprocessed samples will then be fetched
-from the queue to the GPU memory right before the GPU becomes available again
-(prefetching). This ensures that preprocessing will not be blocking and that your GPU
- can run at full utilization.
+model = MyModel(num_classes=10)
+model.compile(
+    loss=keras.losses.SparseCategoricalCrossentropy(),
+    optimizer=keras.optimizers.Adam(learning_rate=1e-3),
+    metrics=[
+        keras.metrics.SparseCategoricalAccuracy(name="acc"),
+    ],
+)
+model.fit(train_dataloader, epochs=1, validation_data=val_dataloader)
 
-To do asynchronous preprocessing, simply use `dataset.map` to inject a preprocessing
- operation into your data pipeline:
-"""
-
-# Example training data, of dtype `string`.
-samples = np.array([["This is the 1st sample."], ["And here's the 2nd sample."]])
-labels = [[0], [1]]
-
-# Prepare a TextVectorization layer.
-vectorizer = TextVectorization(output_mode="int")
-vectorizer.adapt(samples)
-
-# Asynchronous preprocessing: the text vectorization is part of the tf.data pipeline.
-# First, create a dataset
-dataset = tf.data.Dataset.from_tensor_slices((samples, labels)).batch(2)
-# Apply text vectorization to the samples
-dataset = dataset.map(lambda x, y: (vectorizer(x), y))
-# Prefetch with a buffer size of 2 batches
-dataset = dataset.prefetch(2)
-
-# Our model should expect sequences of integers as inputs
-inputs = keras.Input(shape=(None,), dtype="int64")
-x = layers.Embedding(input_dim=10, output_dim=32)(inputs)
-outputs = layers.Dense(1)(x)
-model = keras.Model(inputs, outputs)
-
-model.compile(optimizer="adam", loss="mse", run_eagerly=True)
-model.fit(dataset)
 
 """
-Compare this to doing text vectorization as part of the model:
+Now let's try this out with `tf.data`:
 """
 
-# Our dataset will yield samples that are strings
-dataset = tf.data.Dataset.from_tensor_slices((samples, labels)).batch(2)
+import tensorflow as tf
 
-# Our model should expect strings as inputs
-inputs = keras.Input(shape=(1,), dtype="string")
-x = vectorizer(inputs)
-x = layers.Embedding(input_dim=10, output_dim=32)(x)
-outputs = layers.Dense(1)(x)
-model = keras.Model(inputs, outputs)
+train_dataset = (
+    tf.data.Dataset.from_tensor_slices((x_train, y_train))
+    .batch(batch_size)
+    .prefetch(tf.data.AUTOTUNE)
+)
+test_dataset = (
+    tf.data.Dataset.from_tensor_slices((x_test, y_test))
+    .batch(batch_size)
+    .prefetch(tf.data.AUTOTUNE)
+)
 
-model.compile(optimizer="adam", loss="mse", run_eagerly=True)
-model.fit(dataset)
-
-"""
-When training text models on CPU, you will generally not see any performance difference
-between the two setups. When training on GPU, however, doing asynchronous buffered
-preprocessing on the host CPU while the GPU is running the model itself can result in
- a significant speedup.
-
-After training, if you want to export an end-to-end model that includes the preprocessing
- layer(s), this is easy to do, since `TextVectorization` is a layer:
-
-```python
-inputs = keras.Input(shape=(1,), dtype='string')
-x = vectorizer(inputs)
-outputs = trained_model(x)
-end_to_end_model = keras.Model(inputs, outputs)
-```
-"""
+model = MyModel(num_classes=10)
+model.compile(
+    loss=keras.losses.SparseCategoricalCrossentropy(),
+    optimizer=keras.optimizers.Adam(learning_rate=1e-3),
+    metrics=[
+        keras.metrics.SparseCategoricalAccuracy(name="acc"),
+    ],
+)
+model.fit(train_dataset, epochs=1, validation_data=test_dataset)
 
 """
-## Finding the best model configuration with hyperparameter tuning
+## Further reading
 
-Once you have a working model, you're going to want to optimize its configuration --
-architecture choices, layer sizes, etc. Human intuition can only go so far, so you'll
- want to leverage a systematic approach: hyperparameter search.
+This concludes our short overview of the new multi-backend capabilities
+of Keras 3. Next, you can learn about:
 
-You can use
-[KerasTuner](https://keras.io/api/keras_tuner/tuners/) to find
- the best hyperparameter for your Keras models. It's as easy as calling `fit()`.
+### How to customize what happens in `fit()`
 
-Here how it works.
+Want to implement a non-standard training algorithm yourself but still want to benefit from
+the power and usability of `fit()`? It's easy to customize
+`fit()` to support arbitrary use cases:
 
-First, place your model definition in a function, that takes a single `hp` argument.
-Inside this function, replace any value you want to tune with a call to hyperparameter
- sampling methods, e.g. `hp.Int()` or `hp.Choice()`:
+- [Customizing what happens in `fit()` with TensorFlow](http://keras.io/guides/custom_train_step_in_tensorflow/)
+- [Customizing what happens in `fit()` with JAX](http://keras.io/guides/custom_train_step_in_jax/)
+- [Customizing what happens in `fit()` with PyTorch](http://keras.io/guides/custom_train_step_in_pytorch/)
 
-```python
-def build_model(hp):
-    inputs = keras.Input(shape=(784,))
-    x = layers.Dense(
-        units=hp.Int('units', min_value=32, max_value=512, step=32),
-        activation='relu')(inputs)
-    outputs = layers.Dense(10, activation='softmax')(x)
-    model = keras.Model(inputs, outputs)
-    model.compile(
-        optimizer=keras.optimizers.Adam(
-            hp.Choice('learning_rate',
-                      values=[1e-2, 1e-3, 1e-4])),
-        loss='sparse_categorical_crossentropy',
-        metrics=['accuracy'])
-    return model
-```
+## How to write custom training loops
 
-The function should return a compiled model.
+- [Writing a training loop from scratch in TensorFlow](http://keras.io/guides/writing_a_custom_training_loop_in_tensorflow/)
+- [Writing a training loop from scratch in JAX](http://keras.io/guides/writing_a_custom_training_loop_in_jax/)
+- [Writing a training loop from scratch in PyTorch](http://keras.io/guides/writing_a_custom_training_loop_in_torch/)
 
-Next, instantiate a tuner object specifying your optimization objective and other search
- parameters:
+## How to distribute training
 
+- [Guide to distributed training with TensorFlow](http://keras.io/guides/distributed_training_with_tensorflow/)
+- [JAX distributed training example](https://github.com/keras-team/keras/blob/main/examples/demo_jax_distributed.py)
+- [PyTorch distributed training example](https://github.com/keras-team/keras/blob/main/examples/demo_torch_multi_gpu.py)
 
-```python
-import keras_tuner
-
-tuner = keras_tuner.tuners.Hyperband(
-    build_model,
-    objective='val_loss',
-    max_epochs=100,
-    max_trials=200,
-    executions_per_trial=2,
-    directory='my_dir')
-```
-
-Finally, start the search with the `search()` method, which takes the same arguments as
- `Model.fit()`:
-
-```python
-tuner.search(dataset, validation_data=val_dataset)
-```
-
-When search is over, you can retrieve the best model(s):
-
-```python
-models = tuner.get_best_models(num_models=2)
-```
-
-Or print a summary of the results:
-
-```python
-tuner.results_summary()
-```
-
-"""
-
-"""
-## End-to-end examples
-
-To familiarize yourself with the concepts in this introduction, see the following
- end-to-end examples:
-
-- [Text classification](/examples/nlp/text_classification_from_scratch/)
-- [Image classification](/examples/vision/image_classification_from_scratch/)
-- [Credit card fraud detection](/examples/structured_data/imbalanced_classification/)
-
-"""
-
-"""
-## What to learn next
-
-- Learn more about the
-[Functional API](/guides/functional_api/).
-- Learn more about the
-[features of `fit()` and `evaluate()`](/guides/training_with_built_in_methods/).
-- Learn more about
-[callbacks](/guides/writing_your_own_callbacks/).
-- Learn more about
-[creating your own custom training steps](/guides/customizing_what_happens_in_fit/).
-- Learn more about
-[multi-GPU and distributed training](/guides/distributed_training/).
-- Learn how to do [transfer learning](/guides/transfer_learning/).
+Enjoy the library! 🚀
 """

@@ -2,7 +2,7 @@
 Title: Transfer learning & fine-tuning
 Author: [fchollet](https://twitter.com/fchollet)
 Date created: 2020/04/15
-Last modified: 2020/05/12
+Last modified: 2023/06/25
 Description: Complete guide to transfer learning & fine-tuning in Keras.
 Accelerator: GPU
 """
@@ -11,8 +11,10 @@ Accelerator: GPU
 """
 
 import numpy as np
-import tensorflow as tf
 import keras
+from keras import layers
+import tensorflow_datasets as tfds
+import matplotlib.pyplot as plt
 
 """
 ## Introduction
@@ -49,10 +51,8 @@ ImageNet dataset, and retraining it on the Kaggle "cats vs dogs" classification
 
 This is adapted from
 [Deep Learning with Python](https://www.manning.com/books/deep-learning-with-python)
- and the 2016 blog post
-["building powerful image classification models using very little
- data"](https://blog.keras.io/building-powerful-image-classification-models-using-very-little-data.html).
-
+and the 2016 blog post
+["building powerful image classification models using very little data"](https://blog.keras.io/building-powerful-image-classification-models-using-very-little-data.html).
 """
 
 """
@@ -81,7 +81,7 @@ In general, all weights are trainable weights. The only built-in layer that has
 non-trainable weights is the `BatchNormalization` layer. It uses non-trainable weights
  to keep track of the mean and variance of its inputs during training.
 To learn how to use non-trainable weights in your own custom layers, see the
-[guide to writing new layers from scratch](https://keras.io/guides/making_new_layers_and_models_via_subclassing/).
+[guide to writing new layers from scratch](/keras/guides/making_new_layers_and_models_via_subclassing/).
 
 **Example: the `BatchNormalization` layer has 2 trainable weights and 2 non-trainable
  weights**
@@ -318,54 +318,6 @@ Otherwise the updates applied to the non-trainable weights will suddenly destroy
 what the model has learned.
 
 You'll see this pattern in action in the end-to-end example at the end of this guide.
-
-
-"""
-
-"""
-## Transfer learning & fine-tuning with a custom training loop
-
-If instead of `fit()`, you are using your own low-level training loop, the workflow
-stays essentially the same. You should be careful to only take into account the list
- `model.trainable_weights` when applying gradient updates:
-
-```python
-# Create base model
-base_model = keras.applications.Xception(
-    weights='imagenet',
-    input_shape=(150, 150, 3),
-    include_top=False)
-# Freeze base model
-base_model.trainable = False
-
-# Create new model on top.
-inputs = keras.Input(shape=(150, 150, 3))
-x = base_model(inputs, training=False)
-x = keras.layers.GlobalAveragePooling2D()(x)
-outputs = keras.layers.Dense(1)(x)
-model = keras.Model(inputs, outputs)
-
-loss_fn = keras.losses.BinaryCrossentropy(from_logits=True)
-optimizer = keras.optimizers.Adam()
-
-# Iterate over the batches of a dataset.
-for inputs, targets in new_dataset:
-    # Open a GradientTape.
-    with tf.GradientTape() as tape:
-        # Forward pass.
-        predictions = model(inputs)
-        # Compute the loss value for this batch.
-        loss_value = loss_fn(targets, predictions)
-
-    # Get gradients of loss wrt the *trainable* weights.
-    gradients = tape.gradient(loss_value, model.trainable_weights)
-    # Update the weights of the model.
-    optimizer.apply_gradients(zip(gradients, model.trainable_weights))
-```
-"""
-
-"""
-Likewise for fine-tuning.
 """
 
 """
@@ -389,8 +341,6 @@ dataset small, we will use 40% of the original training data (25,000 images) for
  training, 10% for validation, and 10% for testing.
 """
 
-import tensorflow_datasets as tfds
-
 tfds.disable_progress_bar()
 
 train_ds, validation_ds, test_ds = tfds.load(
@@ -400,18 +350,14 @@ train_ds, validation_ds, test_ds = tfds.load(
     as_supervised=True,  # Include labels
 )
 
-print("Number of training samples: %d" % tf.data.experimental.cardinality(train_ds))
-print(
-    "Number of validation samples: %d" % tf.data.experimental.cardinality(validation_ds)
-)
-print("Number of test samples: %d" % tf.data.experimental.cardinality(test_ds))
+print(f"Number of training samples: {train_ds.cardinality()}")
+print(f"Number of validation samples: {validation_ds.cardinality()}")
+print(f"Number of test samples: {test_ds.cardinality()}")
 
 """
 These are the first 9 images in the training dataset -- as you can see, they're all
- different sizes.
+different sizes.
 """
-
-import matplotlib.pyplot as plt
 
 plt.figure(figsize=(10, 10))
 for i, (image, label) in enumerate(train_ds.take(9)):
@@ -429,11 +375,11 @@ We can also see that label 1 is "dog" and label 0 is "cat".
 
 Our raw images have a variety of sizes. In addition, each pixel consists of 3 integer
 values between 0 and 255 (RGB level values). This isn't a great fit for feeding a
- neural network. We need to do 2 things:
+neural network. We need to do 2 things:
 
 - Standardize to a fixed image size. We pick 150x150.
 - Normalize pixel values between -1 and 1. We'll do this using a `Normalization` layer as
- part of the model itself.
+part of the model itself.
 
 In general, it's a good practice to develop models that take raw data as input, as
 opposed to models that take already-preprocessed data. The reason being that, if your
@@ -444,63 +390,65 @@ preprocessing pipeline. This gets very tricky very quickly. So we should do the 
 
 Here, we'll do image resizing in the data pipeline (because a deep neural network can
 only process contiguous batches of data), and we'll do the input value scaling as part
- of the model, when we create it.
+of the model, when we create it.
 
 Let's resize images to 150x150:
 """
 
-size = (150, 150)
+resize_fn = keras.layers.Resizing(150, 150)
 
-train_ds = train_ds.map(lambda x, y: (tf.image.resize(x, size), y))
-validation_ds = validation_ds.map(lambda x, y: (tf.image.resize(x, size), y))
-test_ds = test_ds.map(lambda x, y: (tf.image.resize(x, size), y))
-
-"""
-Besides, let's batch the data and use caching & prefetching to optimize loading speed.
-"""
-
-batch_size = 32
-
-train_ds = train_ds.cache().batch(batch_size).prefetch(buffer_size=10)
-validation_ds = validation_ds.cache().batch(batch_size).prefetch(buffer_size=10)
-test_ds = test_ds.cache().batch(batch_size).prefetch(buffer_size=10)
+train_ds = train_ds.map(lambda x, y: (resize_fn(x), y))
+validation_ds = validation_ds.map(lambda x, y: (resize_fn(x), y))
+test_ds = test_ds.map(lambda x, y: (resize_fn(x), y))
 
 """
 ### Using random data augmentation
 
 When you don't have a large image dataset, it's a good practice to artificially
- introduce sample diversity by applying random yet realistic transformations to
+introduce sample diversity by applying random yet realistic transformations to
 the training images, such as random horizontal flipping or small random rotations. This
 helps expose the model to different aspects of the training data while slowing down
- overfitting.
+overfitting.
 """
 
-from tensorflow import keras
-from tensorflow.keras import layers
+augmentation_layers = [
+    layers.RandomFlip("horizontal"),
+    layers.RandomRotation(0.1),
+]
 
-data_augmentation = keras.Sequential(
-    [
-        layers.RandomFlip("horizontal"),
-        layers.RandomRotation(0.1),
-    ]
-)
+
+def data_augmentation(x):
+    for layer in augmentation_layers:
+        x = layer(x)
+    return x
+
+
+train_ds = train_ds.map(lambda x, y: (data_augmentation(x), y))
+
+"""
+Let's batch the data and use prefetching to optimize loading speed.
+"""
+
+from tensorflow import data as tf_data
+
+batch_size = 64
+
+train_ds = train_ds.batch(batch_size).prefetch(tf_data.AUTOTUNE).cache()
+validation_ds = validation_ds.batch(batch_size).prefetch(tf_data.AUTOTUNE).cache()
+test_ds = test_ds.batch(batch_size).prefetch(tf_data.AUTOTUNE).cache()
 
 """
 Let's visualize what the first image of the first batch looks like after various random
  transformations:
 """
 
-import numpy as np
-
 for images, labels in train_ds.take(1):
     plt.figure(figsize=(10, 10))
     first_image = images[0]
     for i in range(9):
         ax = plt.subplot(3, 3, i + 1)
-        augmented_image = data_augmentation(
-            tf.expand_dims(first_image, 0), training=True
-        )
-        plt.imshow(augmented_image[0].numpy().astype("int32"))
+        augmented_image = data_augmentation(np.expand_dims(first_image, 0))
+        plt.imshow(np.array(augmented_image[0]).astype("int32"))
         plt.title(int(labels[0]))
         plt.axis("off")
 
@@ -530,13 +478,12 @@ base_model.trainable = False
 
 # Create new model on top
 inputs = keras.Input(shape=(150, 150, 3))
-x = data_augmentation(inputs)  # Apply random data augmentation
 
 # Pre-trained Xception weights requires that input be scaled
 # from (0, 255) to a range of (-1., +1.), the rescaling layer
 # outputs: `(inputs * scale) + offset`
 scale_layer = keras.layers.Rescaling(scale=1 / 127.5, offset=-1)
-x = scale_layer(x)
+x = scale_layer(inputs)
 
 # The base model contains batchnorm layers. We want to keep them in inference mode
 # when we unfreeze the base model for fine-tuning, so we make sure that the
@@ -547,7 +494,7 @@ x = keras.layers.Dropout(0.2)(x)  # Regularize with dropout
 outputs = keras.layers.Dense(1)(x)
 model = keras.Model(inputs, outputs)
 
-model.summary()
+model.summary(show_trainable=True)
 
 """
 ## Train the top layer
@@ -559,7 +506,8 @@ model.compile(
     metrics=[keras.metrics.BinaryAccuracy()],
 )
 
-epochs = 20
+epochs = 2
+print("Fitting the top layer of the model")
 model.fit(train_ds, epochs=epochs, validation_data=validation_ds)
 
 """
@@ -581,7 +529,7 @@ statistics. If they did, they would wreck havoc on the representations learned b
 # This prevents the batchnorm layers from undoing all the training
 # we've done so far.
 base_model.trainable = True
-model.summary()
+model.summary(show_trainable=True)
 
 model.compile(
     optimizer=keras.optimizers.Adam(1e-5),  # Low learning rate
@@ -589,9 +537,14 @@ model.compile(
     metrics=[keras.metrics.BinaryAccuracy()],
 )
 
-epochs = 10
+epochs = 1
+print("Fitting the end-to-end model")
 model.fit(train_ds, epochs=epochs, validation_data=validation_ds)
 
 """
 After 10 epochs, fine-tuning gains us a nice improvement here.
+Let's evaluate the model on the test dataset:
 """
+
+print("Test dataset evaluation")
+model.evaluate(test_ds)

@@ -23,9 +23,6 @@ encoding with Keras preprocessing layers, in this example we
 delegate everything to `FeatureSpace`, making the workflow
 extremely quick and easy.
 
-Note that this example should be run with TensorFlow 2.12 or higher.
-Before the release of TensorFlow 2.12, you can use `tf-nightly`.
-
 ### The dataset
 
 [Our dataset](https://archive.ics.uci.edu/ml/datasets/heart+Disease) is provided by the
@@ -59,9 +56,14 @@ Target | Diagnosis of heart disease (1 = true; 0 = false) | Target
 ## Setup
 """
 
+import os
+
+os.environ["KERAS_BACKEND"] = "tensorflow"
+
 import tensorflow as tf
 import pandas as pd
-from tensorflow import keras
+import keras
+from keras.utils import FeatureSpace
 
 """
 ## Preparing the data
@@ -156,8 +158,6 @@ Because the resulting co-occurences are hashed
 into a fixed-sized vector, you don't need to worry about whether
 the co-occurence space is too large.
 """
-
-from keras.utils import FeatureSpace
 
 feature_space = FeatureSpace(
     features={
@@ -340,7 +340,10 @@ as part of the tf.data pipeline, not as part of the model.
 """
 
 training_model.fit(
-    preprocessed_train_ds, epochs=20, validation_data=preprocessed_val_ds, verbose=2
+    preprocessed_train_ds,
+    epochs=20,
+    validation_data=preprocessed_val_ds,
+    verbose=2,
 )
 
 """

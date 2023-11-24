@@ -2,7 +2,7 @@
 
 **Author:** [Arash Khodadadi](https://www.linkedin.com/in/arash-khodadadi-08a02490/)<br>
 **Date created:** 2021/12/28<br>
-**Last modified:** 2021/12/28<br>
+**Last modified:** 2023/11/22<br>
 **Description:** This example demonstrates how to do timeseries forecasting over graphs.
 
 
@@ -44,15 +44,19 @@ Joint Conference on Artificial Intelligence, 2018.
 
 
 ```python
+import os
+
+os.environ["KERAS_BACKEND"] = "tensorflow"
+
 import pandas as pd
 import numpy as np
-import os
 import typing
 import matplotlib.pyplot as plt
 
 import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras import layers
+import keras
+from keras import layers
+from keras import ops
 ```
 
 ---
@@ -86,7 +90,9 @@ data_dir = data_dir.rstrip("PeMSD7_Full.zip")
 route_distances = pd.read_csv(
     os.path.join(data_dir, "PeMSD7_W_228.csv"), header=None
 ).to_numpy()
-speeds_array = pd.read_csv(os.path.join(data_dir, "PeMSD7_V_228.csv"), header=None).to_numpy()
+speeds_array = pd.read_csv(
+    os.path.join(data_dir, "PeMSD7_V_228.csv"), header=None
+).to_numpy()
 
 print(f"route_distances shape={route_distances.shape}")
 print(f"speeds_array shape={speeds_array.shape}")
@@ -169,7 +175,7 @@ plt.legend(["route_0", "route_25"])
 
 <div class="k-default-codeblock">
 ```
-<matplotlib.legend.Legend at 0x7fea19dc90d0>
+<matplotlib.legend.Legend at 0x7f5a870b2050>
 
 ```
 </div>
@@ -269,7 +275,7 @@ model are `T` vectors each of size `N` and the targets are `h` vectors each of s
 where `N` is the number of roads.
 
 We use the Keras built-in function
-[`timeseries_dataset_from_array()`](https://www.tensorflow.org/api_docs/python/tf/keras/utils/timeseries_dataset_from_array).
+`keras.utils.timeseries_dataset_from_array`.
 The function `create_tf_dataset()` below takes as input a `numpy.ndarray` and returns a
 `tf.data.Dataset`. In this function `input_sequence_length=T` and `forecast_horizon=h`.
 
@@ -291,8 +297,6 @@ steps ahead:
 
 
 ```python
-from tensorflow.keras.preprocessing import timeseries_dataset_from_array
-
 batch_size = 64
 input_sequence_length = 12
 forecast_horizon = 3
@@ -331,7 +335,7 @@ def create_tf_dataset(
         A tf.data.Dataset instance.
     """
 
-    inputs = timeseries_dataset_from_array(
+    inputs = keras.utils.timeseries_dataset_from_array(
         np.expand_dims(data_array[:-forecast_horizon], axis=-1),
         None,
         sequence_length=input_sequence_length,
@@ -345,7 +349,7 @@ def create_tf_dataset(
         else input_sequence_length + forecast_horizon - 1
     )
     target_seq_length = forecast_horizon if multi_horizon else 1
-    targets = timeseries_dataset_from_array(
+    targets = keras.utils.timeseries_dataset_from_array(
         data_array[target_offset:],
         None,
         sequence_length=target_seq_length,
@@ -491,15 +495,15 @@ class GraphConv(layers.Layer):
         self.graph_info = graph_info
         self.aggregation_type = aggregation_type
         self.combination_type = combination_type
-        self.weight = tf.Variable(
-            initial_value=keras.initializers.glorot_uniform()(
-                shape=(in_feat, out_feat), dtype="float32"
-            ),
+        self.weight = self.add_weight(
+            initializer=keras.initializers.GlorotUniform(),
+            shape=(in_feat, out_feat),
+            dtype="float32",
             trainable=True,
         )
         self.activation = layers.Activation(activation)
 
-    def aggregate(self, neighbour_representations: tf.Tensor):
+    def aggregate(self, neighbour_representations):
         aggregation_func = {
             "sum": tf.math.unsorted_segment_sum,
             "mean": tf.math.unsorted_segment_mean,
@@ -515,7 +519,7 @@ class GraphConv(layers.Layer):
 
         raise ValueError(f"Invalid aggregation type: {self.aggregation_type}")
 
-    def compute_nodes_representation(self, features: tf.Tensor):
+    def compute_nodes_representation(self, features):
         """Computes each node's representation.
 
         The nodes' representations are obtained by multiplying the features tensor with
@@ -528,24 +532,23 @@ class GraphConv(layers.Layer):
         Returns:
             A tensor of shape `(num_nodes, batch_size, input_seq_len, out_feat)`
         """
-        return tf.matmul(features, self.weight)
+        return ops.matmul(features, self.weight)
 
-    def compute_aggregated_messages(self, features: tf.Tensor):
+    def compute_aggregated_messages(self, features):
         neighbour_representations = tf.gather(features, self.graph_info.edges[1])
         aggregated_messages = self.aggregate(neighbour_representations)
-        return tf.matmul(aggregated_messages, self.weight)
+        return ops.matmul(aggregated_messages, self.weight)
 
-    def update(self, nodes_representation: tf.Tensor, aggregated_messages: tf.Tensor):
+    def update(self, nodes_representation, aggregated_messages):
         if self.combination_type == "concat":
-            h = tf.concat([nodes_representation, aggregated_messages], axis=-1)
+            h = ops.concatenate([nodes_representation, aggregated_messages], axis=-1)
         elif self.combination_type == "add":
             h = nodes_representation + aggregated_messages
         else:
             raise ValueError(f"Invalid combination type: {self.combination_type}.")
-
         return self.activation(h)
 
-    def call(self, features: tf.Tensor):
+    def call(self, features):
         """Forward pass.
 
         Args:
@@ -609,19 +612,19 @@ class LSTMGC(layers.Layer):
         """Forward pass.
 
         Args:
-            inputs: tf.Tensor of shape `(batch_size, input_seq_len, num_nodes, in_feat)`
+            inputs: tensor of shape `(batch_size, input_seq_len, num_nodes, in_feat)`
 
         Returns:
             A tensor of shape `(batch_size, output_seq_len, num_nodes)`.
         """
 
         # convert shape to  (num_nodes, batch_size, input_seq_len, in_feat)
-        inputs = tf.transpose(inputs, [2, 0, 1, 3])
+        inputs = ops.transpose(inputs, [2, 0, 1, 3])
 
         gcn_out = self.graph_conv(
             inputs
         )  # gcn_out has shape: (num_nodes, batch_size, input_seq_len, out_feat)
-        shape = tf.shape(gcn_out)
+        shape = ops.shape(gcn_out)
         num_nodes, batch_size, input_seq_len, out_feat = (
             shape[0],
             shape[1],
@@ -630,7 +633,9 @@ class LSTMGC(layers.Layer):
         )
 
         # LSTM takes only 3D tensors as input
-        gcn_out = tf.reshape(gcn_out, (batch_size * num_nodes, input_seq_len, out_feat))
+        gcn_out = ops.reshape(
+            gcn_out, (batch_size * num_nodes, input_seq_len, out_feat)
+        )
         lstm_out = self.lstm(
             gcn_out
         )  # lstm_out has shape: (batch_size * num_nodes, lstm_units)
@@ -638,8 +643,8 @@ class LSTMGC(layers.Layer):
         dense_output = self.dense(
             lstm_out
         )  # dense_output has shape: (batch_size * num_nodes, output_seq_len)
-        output = tf.reshape(dense_output, (num_nodes, batch_size, self.output_seq_len))
-        return tf.transpose(
+        output = ops.reshape(dense_output, (num_nodes, batch_size, self.output_seq_len))
+        return ops.transpose(
             output, [1, 2, 0]
         )  # returns Tensor of shape (batch_size, output_seq_len, num_nodes)
 
@@ -692,47 +697,59 @@ model.fit(
 <div class="k-default-codeblock">
 ```
 Epoch 1/20
-99/99 [==============================] - 8s 69ms/step - loss: 0.5542 - val_loss: 0.2459
-Epoch 2/20
-99/99 [==============================] - 8s 84ms/step - loss: 0.1923 - val_loss: 0.1346
-Epoch 3/20
-99/99 [==============================] - 9s 92ms/step - loss: 0.1312 - val_loss: 0.1068
-Epoch 4/20
-99/99 [==============================] - 10s 100ms/step - loss: 0.1083 - val_loss: 0.0914
-Epoch 5/20
-99/99 [==============================] - 12s 120ms/step - loss: 0.0962 - val_loss: 0.0839
-Epoch 6/20
-99/99 [==============================] - 9s 94ms/step - loss: 0.0899 - val_loss: 0.0796
-Epoch 7/20
-99/99 [==============================] - 10s 102ms/step - loss: 0.0864 - val_loss: 0.0771
-Epoch 8/20
-99/99 [==============================] - 10s 103ms/step - loss: 0.0842 - val_loss: 0.0760
-Epoch 9/20
-99/99 [==============================] - 9s 91ms/step - loss: 0.0826 - val_loss: 0.0744
-Epoch 10/20
-99/99 [==============================] - 9s 95ms/step - loss: 0.0815 - val_loss: 0.0735
-Epoch 11/20
-99/99 [==============================] - 12s 118ms/step - loss: 0.0807 - val_loss: 0.0729
-Epoch 12/20
-99/99 [==============================] - 11s 106ms/step - loss: 0.0799 - val_loss: 0.0734
-Epoch 13/20
-99/99 [==============================] - 11s 114ms/step - loss: 0.0795 - val_loss: 0.0721
-Epoch 14/20
-99/99 [==============================] - 13s 133ms/step - loss: 0.0791 - val_loss: 0.0719
-Epoch 15/20
-99/99 [==============================] - 11s 114ms/step - loss: 0.0787 - val_loss: 0.0716
-Epoch 16/20
-99/99 [==============================] - 12s 118ms/step - loss: 0.0784 - val_loss: 0.0715
-Epoch 17/20
-99/99 [==============================] - 13s 131ms/step - loss: 0.0781 - val_loss: 0.0713
-Epoch 18/20
-99/99 [==============================] - 11s 111ms/step - loss: 0.0778 - val_loss: 0.0712
-Epoch 19/20
-99/99 [==============================] - 12s 121ms/step - loss: 0.0776 - val_loss: 0.0711
-Epoch 20/20
-99/99 [==============================] - 11s 116ms/step - loss: 0.0774 - val_loss: 0.0710
+  1/99 [37m━━━━━━━━━━━━━━━━━━━━  5:16 3s/step - loss: 1.0735
 
-<keras.callbacks.History at 0x7fea223a10d0>
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1700705896.341813 3354152 device_compiler.h:186] Compiled cluster using XLA!  This line is logged at most once for the lifetime of the process.
+W0000 00:00:1700705896.362213 3354152 graph_launch.cc:671] Fallback to op-by-op mode because memset node breaks graph update
+W0000 00:00:1700705896.363019 3354152 graph_launch.cc:671] Fallback to op-by-op mode because memset node breaks graph update
+
+ 44/99 ━━━━━━━━[37m━━━━━━━━━━━━  1s 32ms/step - loss: 0.7919
+
+W0000 00:00:1700705897.577991 3354154 graph_launch.cc:671] Fallback to op-by-op mode because memset node breaks graph update
+W0000 00:00:1700705897.578802 3354154 graph_launch.cc:671] Fallback to op-by-op mode because memset node breaks graph update
+
+ 99/99 ━━━━━━━━━━━━━━━━━━━━ 7s 36ms/step - loss: 0.7470 - val_loss: 0.3568
+Epoch 2/20
+ 99/99 ━━━━━━━━━━━━━━━━━━━━ 0s 5ms/step - loss: 0.2785 - val_loss: 0.1845
+Epoch 3/20
+ 99/99 ━━━━━━━━━━━━━━━━━━━━ 0s 5ms/step - loss: 0.1734 - val_loss: 0.1250
+Epoch 4/20
+ 99/99 ━━━━━━━━━━━━━━━━━━━━ 0s 5ms/step - loss: 0.1313 - val_loss: 0.1084
+Epoch 5/20
+ 99/99 ━━━━━━━━━━━━━━━━━━━━ 0s 5ms/step - loss: 0.1095 - val_loss: 0.0994
+Epoch 6/20
+ 99/99 ━━━━━━━━━━━━━━━━━━━━ 0s 5ms/step - loss: 0.0960 - val_loss: 0.0930
+Epoch 7/20
+ 99/99 ━━━━━━━━━━━━━━━━━━━━ 0s 5ms/step - loss: 0.0896 - val_loss: 0.0954
+Epoch 8/20
+ 99/99 ━━━━━━━━━━━━━━━━━━━━ 0s 5ms/step - loss: 0.0862 - val_loss: 0.0920
+Epoch 9/20
+ 99/99 ━━━━━━━━━━━━━━━━━━━━ 1s 5ms/step - loss: 0.0841 - val_loss: 0.0898
+Epoch 10/20
+ 99/99 ━━━━━━━━━━━━━━━━━━━━ 1s 5ms/step - loss: 0.0827 - val_loss: 0.0884
+Epoch 11/20
+ 99/99 ━━━━━━━━━━━━━━━━━━━━ 1s 5ms/step - loss: 0.0817 - val_loss: 0.0865
+Epoch 12/20
+ 99/99 ━━━━━━━━━━━━━━━━━━━━ 0s 5ms/step - loss: 0.0809 - val_loss: 0.0843
+Epoch 13/20
+ 99/99 ━━━━━━━━━━━━━━━━━━━━ 0s 5ms/step - loss: 0.0803 - val_loss: 0.0828
+Epoch 14/20
+ 99/99 ━━━━━━━━━━━━━━━━━━━━ 0s 5ms/step - loss: 0.0798 - val_loss: 0.0814
+Epoch 15/20
+ 99/99 ━━━━━━━━━━━━━━━━━━━━ 0s 5ms/step - loss: 0.0794 - val_loss: 0.0802
+Epoch 16/20
+ 99/99 ━━━━━━━━━━━━━━━━━━━━ 0s 5ms/step - loss: 0.0790 - val_loss: 0.0794
+Epoch 17/20
+ 99/99 ━━━━━━━━━━━━━━━━━━━━ 0s 5ms/step - loss: 0.0787 - val_loss: 0.0786
+Epoch 18/20
+ 99/99 ━━━━━━━━━━━━━━━━━━━━ 0s 5ms/step - loss: 0.0785 - val_loss: 0.0780
+Epoch 19/20
+ 99/99 ━━━━━━━━━━━━━━━━━━━━ 0s 5ms/step - loss: 0.0782 - val_loss: 0.0776
+Epoch 20/20
+ 99/99 ━━━━━━━━━━━━━━━━━━━━ 0s 5ms/step - loss: 0.0780 - val_loss: 0.0776
+
+<keras.src.callbacks.history.History at 0x7f59b8152560>
 
 ```
 </div>
@@ -761,7 +778,8 @@ print(f"naive MAE: {naive_mse}, model MAE: {model_mse}")
 
 <div class="k-default-codeblock">
 ```
-naive MAE: 0.13472308593195767, model MAE: 0.12683941463664059
+ 119/119 ━━━━━━━━━━━━━━━━━━━━ 1s 6ms/step
+naive MAE: 0.13472308593195767, model MAE: 0.13524348477186485
 
 ```
 </div>

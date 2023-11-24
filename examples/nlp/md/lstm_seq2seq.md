@@ -2,7 +2,7 @@
 
 **Author:** [fchollet](https://twitter.com/fchollet)<br>
 **Date created:** 2017/09/29<br>
-**Last modified:** 2020/04/26<br>
+**Last modified:** 2023/11/22<br>
 **Description:** Character-level recurrent sequence-to-sequence model.
 
 
@@ -45,28 +45,25 @@ models are more common in this domain.
     - Repeat until we generate the end-of-sequence character or we
         hit the character limit.
 
-
 ---
 ## Setup
 
 
-
 ```python
 import numpy as np
-import tensorflow as tf
-from tensorflow import keras
-
+import keras
+import os
+from pathlib import Path
 ```
 
 ---
 ## Download the data
 
 
-
 ```python
-!!curl -O http://www.manythings.org/anki/fra-eng.zip
-!!unzip fra-eng.zip
-
+fpath = keras.utils.get_file(origin="http://www.manythings.org/anki/fra-eng.zip")
+dirpath = Path(fpath).parent.absolute()
+os.system(f"unzip -q {fpath} -d {dirpath}")
 ```
 
 
@@ -74,15 +71,12 @@ from tensorflow import keras
 
 <div class="k-default-codeblock">
 ```
-['Archive:  fra-eng.zip',
- '  inflating: _about.txt              ',
- '  inflating: fra.txt                 ']
+0
 
 ```
 </div>
 ---
 ## Configuration
-
 
 
 ```python
@@ -91,13 +85,11 @@ epochs = 100  # Number of epochs to train for.
 latent_dim = 256  # Latent dimensionality of the encoding space.
 num_samples = 10000  # Number of samples to train on.
 # Path to the data txt file on disk.
-data_path = "fra.txt"
-
+data_path = os.path.join(dirpath, "fra.txt")
 ```
 
 ---
 ## Prepare the data
-
 
 
 ```python
@@ -139,13 +131,16 @@ input_token_index = dict([(char, i) for i, char in enumerate(input_characters)])
 target_token_index = dict([(char, i) for i, char in enumerate(target_characters)])
 
 encoder_input_data = np.zeros(
-    (len(input_texts), max_encoder_seq_length, num_encoder_tokens), dtype="float32"
+    (len(input_texts), max_encoder_seq_length, num_encoder_tokens),
+    dtype="float32",
 )
 decoder_input_data = np.zeros(
-    (len(input_texts), max_decoder_seq_length, num_decoder_tokens), dtype="float32"
+    (len(input_texts), max_decoder_seq_length, num_decoder_tokens),
+    dtype="float32",
 )
 decoder_target_data = np.zeros(
-    (len(input_texts), max_decoder_seq_length, num_decoder_tokens), dtype="float32"
+    (len(input_texts), max_decoder_seq_length, num_decoder_tokens),
+    dtype="float32",
 )
 
 for i, (input_text, target_text) in enumerate(zip(input_texts, target_texts)):
@@ -161,22 +156,20 @@ for i, (input_text, target_text) in enumerate(zip(input_texts, target_texts)):
             decoder_target_data[i, t - 1, target_token_index[char]] = 1.0
     decoder_input_data[i, t + 1 :, target_token_index[" "]] = 1.0
     decoder_target_data[i, t:, target_token_index[" "]] = 1.0
-
 ```
 
 <div class="k-default-codeblock">
 ```
 Number of samples: 10000
-Number of unique input tokens: 71
+Number of unique input tokens: 70
 Number of unique output tokens: 93
-Max sequence length for inputs: 16
+Max sequence length for inputs: 14
 Max sequence length for outputs: 59
 
 ```
 </div>
 ---
 ## Build the model
-
 
 
 ```python
@@ -202,12 +195,10 @@ decoder_outputs = decoder_dense(decoder_outputs)
 # Define the model that will turn
 # `encoder_input_data` & `decoder_input_data` into `decoder_target_data`
 model = keras.Model([encoder_inputs, decoder_inputs], decoder_outputs)
-
 ```
 
 ---
 ## Train the model
-
 
 
 ```python
@@ -222,216 +213,211 @@ model.fit(
     validation_split=0.2,
 )
 # Save model
-model.save("s2s")
-
+model.save("s2s_model.keras")
 ```
 
 <div class="k-default-codeblock">
 ```
 Epoch 1/100
-125/125 [==============================] - 2s 16ms/step - loss: 1.1806 - accuracy: 0.7246 - val_loss: 1.0825 - val_accuracy: 0.6995
+ 125/125 ━━━━━━━━━━━━━━━━━━━━ 5s 21ms/step - accuracy: 0.7338 - loss: 1.5405 - val_accuracy: 0.7138 - val_loss: 1.0745
 Epoch 2/100
-125/125 [==============================] - 1s 11ms/step - loss: 0.8599 - accuracy: 0.7671 - val_loss: 0.8524 - val_accuracy: 0.7646
+ 125/125 ━━━━━━━━━━━━━━━━━━━━ 2s 10ms/step - accuracy: 0.7470 - loss: 0.9546 - val_accuracy: 0.7188 - val_loss: 1.0219
 Epoch 3/100
-125/125 [==============================] - 1s 11ms/step - loss: 0.6867 - accuracy: 0.8069 - val_loss: 0.7129 - val_accuracy: 0.7928
+ 125/125 ━━━━━━━━━━━━━━━━━━━━ 2s 10ms/step - accuracy: 0.7590 - loss: 0.8659 - val_accuracy: 0.7482 - val_loss: 0.8677
 Epoch 4/100
-125/125 [==============================] - 1s 11ms/step - loss: 0.5982 - accuracy: 0.8262 - val_loss: 0.6547 - val_accuracy: 0.8111
+ 125/125 ━━━━━━━━━━━━━━━━━━━━ 2s 10ms/step - accuracy: 0.7878 - loss: 0.7588 - val_accuracy: 0.7744 - val_loss: 0.7864
 Epoch 5/100
-125/125 [==============================] - 1s 11ms/step - loss: 0.5490 - accuracy: 0.8398 - val_loss: 0.6407 - val_accuracy: 0.8114
+ 125/125 ━━━━━━━━━━━━━━━━━━━━ 2s 10ms/step - accuracy: 0.7957 - loss: 0.7092 - val_accuracy: 0.7904 - val_loss: 0.7256
 Epoch 6/100
-125/125 [==============================] - 1s 11ms/step - loss: 0.5140 - accuracy: 0.8489 - val_loss: 0.5834 - val_accuracy: 0.8288
+ 125/125 ━━━━━━━━━━━━━━━━━━━━ 2s 10ms/step - accuracy: 0.8151 - loss: 0.6375 - val_accuracy: 0.8003 - val_loss: 0.6926
 Epoch 7/100
-125/125 [==============================] - 1s 11ms/step - loss: 0.4854 - accuracy: 0.8569 - val_loss: 0.5577 - val_accuracy: 0.8357
+ 125/125 ━━━━━━━━━━━━━━━━━━━━ 2s 10ms/step - accuracy: 0.8217 - loss: 0.6095 - val_accuracy: 0.8081 - val_loss: 0.6633
 Epoch 8/100
-125/125 [==============================] - 1s 11ms/step - loss: 0.4613 - accuracy: 0.8632 - val_loss: 0.5384 - val_accuracy: 0.8407
+ 125/125 ━━━━━━━━━━━━━━━━━━━━ 1s 10ms/step - accuracy: 0.8299 - loss: 0.5818 - val_accuracy: 0.8146 - val_loss: 0.6355
 Epoch 9/100
-125/125 [==============================] - 1s 11ms/step - loss: 0.4405 - accuracy: 0.8691 - val_loss: 0.5255 - val_accuracy: 0.8435
+ 125/125 ━━━━━━━━━━━━━━━━━━━━ 1s 10ms/step - accuracy: 0.8346 - loss: 0.5632 - val_accuracy: 0.8179 - val_loss: 0.6285
 Epoch 10/100
-125/125 [==============================] - 1s 11ms/step - loss: 0.4219 - accuracy: 0.8743 - val_loss: 0.5049 - val_accuracy: 0.8497
+ 125/125 ━━━━━━━━━━━━━━━━━━━━ 1s 10ms/step - accuracy: 0.8378 - loss: 0.5496 - val_accuracy: 0.8233 - val_loss: 0.6056
 Epoch 11/100
-125/125 [==============================] - 1s 11ms/step - loss: 0.4042 - accuracy: 0.8791 - val_loss: 0.4986 - val_accuracy: 0.8522
+ 125/125 ━━━━━━━━━━━━━━━━━━━━ 1s 10ms/step - accuracy: 0.8450 - loss: 0.5301 - val_accuracy: 0.8300 - val_loss: 0.5913
 Epoch 12/100
-125/125 [==============================] - 1s 11ms/step - loss: 0.3888 - accuracy: 0.8836 - val_loss: 0.4854 - val_accuracy: 0.8552
+ 125/125 ━━━━━━━━━━━━━━━━━━━━ 1s 10ms/step - accuracy: 0.8487 - loss: 0.5148 - val_accuracy: 0.8324 - val_loss: 0.5805
 Epoch 13/100
-125/125 [==============================] - 1s 11ms/step - loss: 0.3735 - accuracy: 0.8883 - val_loss: 0.4754 - val_accuracy: 0.8586
+ 125/125 ━━━━━━━━━━━━━━━━━━━━ 1s 10ms/step - accuracy: 0.8537 - loss: 0.4996 - val_accuracy: 0.8354 - val_loss: 0.5718
 Epoch 14/100
-125/125 [==============================] - 1s 11ms/step - loss: 0.3595 - accuracy: 0.8915 - val_loss: 0.4753 - val_accuracy: 0.8589
+ 125/125 ━━━━━━━━━━━━━━━━━━━━ 1s 10ms/step - accuracy: 0.8570 - loss: 0.4874 - val_accuracy: 0.8388 - val_loss: 0.5535
 Epoch 15/100
-125/125 [==============================] - 1s 11ms/step - loss: 0.3467 - accuracy: 0.8956 - val_loss: 0.4611 - val_accuracy: 0.8634
+ 125/125 ━━━━━━━━━━━━━━━━━━━━ 1s 10ms/step - accuracy: 0.8603 - loss: 0.4749 - val_accuracy: 0.8428 - val_loss: 0.5451
 Epoch 16/100
-125/125 [==============================] - 1s 11ms/step - loss: 0.3346 - accuracy: 0.8991 - val_loss: 0.4535 - val_accuracy: 0.8658
+ 125/125 ━━━━━━━━━━━━━━━━━━━━ 1s 10ms/step - accuracy: 0.8636 - loss: 0.4642 - val_accuracy: 0.8448 - val_loss: 0.5332
 Epoch 17/100
-125/125 [==============================] - 1s 11ms/step - loss: 0.3231 - accuracy: 0.9025 - val_loss: 0.4504 - val_accuracy: 0.8665
+ 125/125 ━━━━━━━━━━━━━━━━━━━━ 1s 10ms/step - accuracy: 0.8658 - loss: 0.4551 - val_accuracy: 0.8473 - val_loss: 0.5260
 Epoch 18/100
-125/125 [==============================] - 1s 11ms/step - loss: 0.3120 - accuracy: 0.9059 - val_loss: 0.4442 - val_accuracy: 0.8699
+ 125/125 ━━━━━━━━━━━━━━━━━━━━ 1s 10ms/step - accuracy: 0.8689 - loss: 0.4443 - val_accuracy: 0.8465 - val_loss: 0.5236
 Epoch 19/100
-125/125 [==============================] - 1s 10ms/step - loss: 0.3015 - accuracy: 0.9088 - val_loss: 0.4439 - val_accuracy: 0.8692
+ 125/125 ━━━━━━━━━━━━━━━━━━━━ 1s 10ms/step - accuracy: 0.8711 - loss: 0.4363 - val_accuracy: 0.8531 - val_loss: 0.5078
 Epoch 20/100
-125/125 [==============================] - 1s 11ms/step - loss: 0.2917 - accuracy: 0.9118 - val_loss: 0.4415 - val_accuracy: 0.8712
+ 125/125 ━━━━━━━━━━━━━━━━━━━━ 1s 10ms/step - accuracy: 0.8731 - loss: 0.4285 - val_accuracy: 0.8508 - val_loss: 0.5121
 Epoch 21/100
-125/125 [==============================] - 1s 10ms/step - loss: 0.2821 - accuracy: 0.9147 - val_loss: 0.4372 - val_accuracy: 0.8722
+ 125/125 ━━━━━━━━━━━━━━━━━━━━ 1s 10ms/step - accuracy: 0.8759 - loss: 0.4180 - val_accuracy: 0.8546 - val_loss: 0.5005
 Epoch 22/100
-125/125 [==============================] - 1s 11ms/step - loss: 0.2731 - accuracy: 0.9174 - val_loss: 0.4424 - val_accuracy: 0.8713
+ 125/125 ━━━━━━━━━━━━━━━━━━━━ 1s 10ms/step - accuracy: 0.8788 - loss: 0.4075 - val_accuracy: 0.8550 - val_loss: 0.4981
 Epoch 23/100
-125/125 [==============================] - 1s 11ms/step - loss: 0.2642 - accuracy: 0.9201 - val_loss: 0.4371 - val_accuracy: 0.8725
+ 125/125 ━━━━━━━━━━━━━━━━━━━━ 1s 10ms/step - accuracy: 0.8799 - loss: 0.4043 - val_accuracy: 0.8563 - val_loss: 0.4918
 Epoch 24/100
-125/125 [==============================] - 1s 11ms/step - loss: 0.2561 - accuracy: 0.9226 - val_loss: 0.4400 - val_accuracy: 0.8728
+ 125/125 ━━━━━━━━━━━━━━━━━━━━ 1s 10ms/step - accuracy: 0.8820 - loss: 0.3960 - val_accuracy: 0.8584 - val_loss: 0.4870
 Epoch 25/100
-125/125 [==============================] - 1s 11ms/step - loss: 0.2481 - accuracy: 0.9245 - val_loss: 0.4358 - val_accuracy: 0.8757
+ 125/125 ━━━━━━━━━━━━━━━━━━━━ 1s 10ms/step - accuracy: 0.8830 - loss: 0.3927 - val_accuracy: 0.8605 - val_loss: 0.4794
 Epoch 26/100
-125/125 [==============================] - 1s 11ms/step - loss: 0.2404 - accuracy: 0.9270 - val_loss: 0.4407 - val_accuracy: 0.8746
+ 125/125 ━━━━━━━━━━━━━━━━━━━━ 1s 10ms/step - accuracy: 0.8852 - loss: 0.3862 - val_accuracy: 0.8607 - val_loss: 0.4784
 Epoch 27/100
-125/125 [==============================] - 1s 11ms/step - loss: 0.2332 - accuracy: 0.9294 - val_loss: 0.4462 - val_accuracy: 0.8736
+ 125/125 ━━━━━━━━━━━━━━━━━━━━ 1s 10ms/step - accuracy: 0.8877 - loss: 0.3767 - val_accuracy: 0.8616 - val_loss: 0.4753
 Epoch 28/100
-125/125 [==============================] - 1s 11ms/step - loss: 0.2263 - accuracy: 0.9310 - val_loss: 0.4436 - val_accuracy: 0.8736
+ 125/125 ━━━━━━━━━━━━━━━━━━━━ 1s 10ms/step - accuracy: 0.8890 - loss: 0.3730 - val_accuracy: 0.8633 - val_loss: 0.4685
 Epoch 29/100
-125/125 [==============================] - 1s 11ms/step - loss: 0.2194 - accuracy: 0.9328 - val_loss: 0.4411 - val_accuracy: 0.8755
+ 125/125 ━━━━━━━━━━━━━━━━━━━━ 1s 10ms/step - accuracy: 0.8897 - loss: 0.3695 - val_accuracy: 0.8633 - val_loss: 0.4685
 Epoch 30/100
-125/125 [==============================] - 1s 11ms/step - loss: 0.2126 - accuracy: 0.9351 - val_loss: 0.4457 - val_accuracy: 0.8755
+ 125/125 ━━━━━━━━━━━━━━━━━━━━ 1s 10ms/step - accuracy: 0.8924 - loss: 0.3604 - val_accuracy: 0.8648 - val_loss: 0.4664
 Epoch 31/100
-125/125 [==============================] - 1s 11ms/step - loss: 0.2069 - accuracy: 0.9370 - val_loss: 0.4498 - val_accuracy: 0.8752
+ 125/125 ━━━━━━━━━━━━━━━━━━━━ 1s 10ms/step - accuracy: 0.8946 - loss: 0.3538 - val_accuracy: 0.8658 - val_loss: 0.4613
 Epoch 32/100
-125/125 [==============================] - 1s 11ms/step - loss: 0.2010 - accuracy: 0.9388 - val_loss: 0.4518 - val_accuracy: 0.8755
+ 125/125 ━━━━━━━━━━━━━━━━━━━━ 1s 10ms/step - accuracy: 0.8948 - loss: 0.3526 - val_accuracy: 0.8668 - val_loss: 0.4618
 Epoch 33/100
-125/125 [==============================] - 1s 11ms/step - loss: 0.1953 - accuracy: 0.9404 - val_loss: 0.4545 - val_accuracy: 0.8758
+ 125/125 ━━━━━━━━━━━━━━━━━━━━ 1s 10ms/step - accuracy: 0.8972 - loss: 0.3442 - val_accuracy: 0.8662 - val_loss: 0.4597
 Epoch 34/100
-125/125 [==============================] - 1s 11ms/step - loss: 0.1897 - accuracy: 0.9423 - val_loss: 0.4547 - val_accuracy: 0.8769
+ 125/125 ━━━━━━━━━━━━━━━━━━━━ 1s 10ms/step - accuracy: 0.8969 - loss: 0.3435 - val_accuracy: 0.8672 - val_loss: 0.4594
 Epoch 35/100
-125/125 [==============================] - 1s 11ms/step - loss: 0.1846 - accuracy: 0.9435 - val_loss: 0.4582 - val_accuracy: 0.8763
+ 125/125 ━━━━━━━━━━━━━━━━━━━━ 1s 10ms/step - accuracy: 0.8996 - loss: 0.3364 - val_accuracy: 0.8673 - val_loss: 0.4569
 Epoch 36/100
-125/125 [==============================] - 1s 11ms/step - loss: 0.1794 - accuracy: 0.9451 - val_loss: 0.4653 - val_accuracy: 0.8755
+ 125/125 ━━━━━━━━━━━━━━━━━━━━ 1s 10ms/step - accuracy: 0.9003 - loss: 0.3340 - val_accuracy: 0.8677 - val_loss: 0.4601
 Epoch 37/100
-125/125 [==============================] - 1s 10ms/step - loss: 0.1747 - accuracy: 0.9464 - val_loss: 0.4633 - val_accuracy: 0.8768
+ 125/125 ━━━━━━━━━━━━━━━━━━━━ 1s 10ms/step - accuracy: 0.9024 - loss: 0.3260 - val_accuracy: 0.8671 - val_loss: 0.4569
 Epoch 38/100
-125/125 [==============================] - 1s 11ms/step - loss: 0.1700 - accuracy: 0.9479 - val_loss: 0.4665 - val_accuracy: 0.8772
+ 125/125 ━━━━━━━━━━━━━━━━━━━━ 1s 10ms/step - accuracy: 0.9048 - loss: 0.3200 - val_accuracy: 0.8685 - val_loss: 0.4540
 Epoch 39/100
-125/125 [==============================] - 1s 11ms/step - loss: 0.1657 - accuracy: 0.9493 - val_loss: 0.4725 - val_accuracy: 0.8755
+ 125/125 ━━━━━━━━━━━━━━━━━━━━ 1s 10ms/step - accuracy: 0.9051 - loss: 0.3187 - val_accuracy: 0.8692 - val_loss: 0.4545
 Epoch 40/100
-125/125 [==============================] - 1s 11ms/step - loss: 0.1612 - accuracy: 0.9504 - val_loss: 0.4799 - val_accuracy: 0.8752
+ 125/125 ━━━━━━━━━━━━━━━━━━━━ 1s 10ms/step - accuracy: 0.9071 - loss: 0.3119 - val_accuracy: 0.8708 - val_loss: 0.4490
 Epoch 41/100
-125/125 [==============================] - 1s 10ms/step - loss: 0.1576 - accuracy: 0.9516 - val_loss: 0.4777 - val_accuracy: 0.8760
+ 125/125 ━━━━━━━━━━━━━━━━━━━━ 1s 10ms/step - accuracy: 0.9085 - loss: 0.3064 - val_accuracy: 0.8706 - val_loss: 0.4506
 Epoch 42/100
-125/125 [==============================] - 1s 11ms/step - loss: 0.1531 - accuracy: 0.9530 - val_loss: 0.4842 - val_accuracy: 0.8761
+ 125/125 ━━━━━━━━━━━━━━━━━━━━ 1s 10ms/step - accuracy: 0.9092 - loss: 0.3061 - val_accuracy: 0.8711 - val_loss: 0.4484
 Epoch 43/100
-125/125 [==============================] - 1s 11ms/step - loss: 0.1495 - accuracy: 0.9542 - val_loss: 0.4879 - val_accuracy: 0.8761
+ 125/125 ━━━━━━━━━━━━━━━━━━━━ 1s 10ms/step - accuracy: 0.9100 - loss: 0.3011 - val_accuracy: 0.8718 - val_loss: 0.4485
 Epoch 44/100
-125/125 [==============================] - 1s 11ms/step - loss: 0.1456 - accuracy: 0.9552 - val_loss: 0.4933 - val_accuracy: 0.8757
+ 125/125 ━━━━━━━━━━━━━━━━━━━━ 1s 10ms/step - accuracy: 0.9101 - loss: 0.3007 - val_accuracy: 0.8716 - val_loss: 0.4509
 Epoch 45/100
-125/125 [==============================] - 1s 10ms/step - loss: 0.1419 - accuracy: 0.9562 - val_loss: 0.4988 - val_accuracy: 0.8753
+ 125/125 ━━━━━━━━━━━━━━━━━━━━ 1s 10ms/step - accuracy: 0.9126 - loss: 0.2920 - val_accuracy: 0.8723 - val_loss: 0.4474
 Epoch 46/100
-125/125 [==============================] - 1s 11ms/step - loss: 0.1385 - accuracy: 0.9574 - val_loss: 0.5012 - val_accuracy: 0.8758
+ 125/125 ━━━━━━━━━━━━━━━━━━━━ 1s 10ms/step - accuracy: 0.9144 - loss: 0.2881 - val_accuracy: 0.8714 - val_loss: 0.4505
 Epoch 47/100
-125/125 [==============================] - 1s 11ms/step - loss: 0.1356 - accuracy: 0.9581 - val_loss: 0.5040 - val_accuracy: 0.8763
+ 125/125 ━━━━━━━━━━━━━━━━━━━━ 1s 10ms/step - accuracy: 0.9155 - loss: 0.2829 - val_accuracy: 0.8727 - val_loss: 0.4487
 Epoch 48/100
-125/125 [==============================] - 1s 11ms/step - loss: 0.1325 - accuracy: 0.9591 - val_loss: 0.5114 - val_accuracy: 0.8761
+ 125/125 ━━━━━━━━━━━━━━━━━━━━ 1s 10ms/step - accuracy: 0.9158 - loss: 0.2816 - val_accuracy: 0.8725 - val_loss: 0.4519
 Epoch 49/100
-125/125 [==============================] - 1s 11ms/step - loss: 0.1291 - accuracy: 0.9601 - val_loss: 0.5151 - val_accuracy: 0.8764
+ 125/125 ━━━━━━━━━━━━━━━━━━━━ 1s 10ms/step - accuracy: 0.9174 - loss: 0.2763 - val_accuracy: 0.8739 - val_loss: 0.4454
 Epoch 50/100
-125/125 [==============================] - 1s 11ms/step - loss: 0.1263 - accuracy: 0.9607 - val_loss: 0.5214 - val_accuracy: 0.8761
+ 125/125 ━━━━━━━━━━━━━━━━━━━━ 1s 10ms/step - accuracy: 0.9188 - loss: 0.2706 - val_accuracy: 0.8738 - val_loss: 0.4473
 Epoch 51/100
-125/125 [==============================] - 1s 11ms/step - loss: 0.1232 - accuracy: 0.9621 - val_loss: 0.5210 - val_accuracy: 0.8759
+ 125/125 ━━━━━━━━━━━━━━━━━━━━ 1s 10ms/step - accuracy: 0.9199 - loss: 0.2682 - val_accuracy: 0.8716 - val_loss: 0.4542
 Epoch 52/100
-125/125 [==============================] - 1s 11ms/step - loss: 0.1205 - accuracy: 0.9626 - val_loss: 0.5232 - val_accuracy: 0.8761
+ 125/125 ━━━━━━━━━━━━━━━━━━━━ 1s 10ms/step - accuracy: 0.9202 - loss: 0.2665 - val_accuracy: 0.8725 - val_loss: 0.4533
 Epoch 53/100
-125/125 [==============================] - 1s 10ms/step - loss: 0.1177 - accuracy: 0.9633 - val_loss: 0.5329 - val_accuracy: 0.8754
+ 125/125 ━━━━━━━━━━━━━━━━━━━━ 1s 10ms/step - accuracy: 0.9228 - loss: 0.2579 - val_accuracy: 0.8735 - val_loss: 0.4485
 Epoch 54/100
-125/125 [==============================] - 1s 11ms/step - loss: 0.1152 - accuracy: 0.9644 - val_loss: 0.5317 - val_accuracy: 0.8753
+ 125/125 ━━━━━━━━━━━━━━━━━━━━ 1s 10ms/step - accuracy: 0.9230 - loss: 0.2580 - val_accuracy: 0.8735 - val_loss: 0.4507
 Epoch 55/100
-125/125 [==============================] - 1s 11ms/step - loss: 0.1132 - accuracy: 0.9648 - val_loss: 0.5418 - val_accuracy: 0.8748
+ 125/125 ━━━━━━━━━━━━━━━━━━━━ 1s 10ms/step - accuracy: 0.9237 - loss: 0.2546 - val_accuracy: 0.8737 - val_loss: 0.4579
 Epoch 56/100
-125/125 [==============================] - 1s 11ms/step - loss: 0.1102 - accuracy: 0.9658 - val_loss: 0.5456 - val_accuracy: 0.8745
+ 125/125 ━━━━━━━━━━━━━━━━━━━━ 1s 10ms/step - accuracy: 0.9253 - loss: 0.2482 - val_accuracy: 0.8749 - val_loss: 0.4496
 Epoch 57/100
-125/125 [==============================] - 1s 11ms/step - loss: 0.1083 - accuracy: 0.9663 - val_loss: 0.5438 - val_accuracy: 0.8753
+ 125/125 ━━━━━━━━━━━━━━━━━━━━ 1s 10ms/step - accuracy: 0.9264 - loss: 0.2448 - val_accuracy: 0.8755 - val_loss: 0.4503
 Epoch 58/100
-125/125 [==============================] - 1s 11ms/step - loss: 0.1058 - accuracy: 0.9669 - val_loss: 0.5519 - val_accuracy: 0.8753
+ 125/125 ━━━━━━━━━━━━━━━━━━━━ 1s 10ms/step - accuracy: 0.9271 - loss: 0.2426 - val_accuracy: 0.8747 - val_loss: 0.4526
 Epoch 59/100
-125/125 [==============================] - 1s 11ms/step - loss: 0.1035 - accuracy: 0.9675 - val_loss: 0.5543 - val_accuracy: 0.8753
+ 125/125 ━━━━━━━━━━━━━━━━━━━━ 1s 10ms/step - accuracy: 0.9289 - loss: 0.2380 - val_accuracy: 0.8750 - val_loss: 0.4543
 Epoch 60/100
-125/125 [==============================] - 1s 11ms/step - loss: 0.1017 - accuracy: 0.9679 - val_loss: 0.5619 - val_accuracy: 0.8756
+ 125/125 ━━━━━━━━━━━━━━━━━━━━ 1s 10ms/step - accuracy: 0.9292 - loss: 0.2358 - val_accuracy: 0.8745 - val_loss: 0.4563
 Epoch 61/100
-125/125 [==============================] - 1s 10ms/step - loss: 0.0993 - accuracy: 0.9686 - val_loss: 0.5680 - val_accuracy: 0.8751
+ 125/125 ━━━━━━━━━━━━━━━━━━━━ 1s 10ms/step - accuracy: 0.9297 - loss: 0.2339 - val_accuracy: 0.8750 - val_loss: 0.4555
 Epoch 62/100
-125/125 [==============================] - 1s 11ms/step - loss: 0.0975 - accuracy: 0.9690 - val_loss: 0.5768 - val_accuracy: 0.8737
+ 125/125 ━━━━━━━━━━━━━━━━━━━━ 1s 10ms/step - accuracy: 0.9308 - loss: 0.2299 - val_accuracy: 0.8741 - val_loss: 0.4590
 Epoch 63/100
-125/125 [==============================] - 1s 10ms/step - loss: 0.0954 - accuracy: 0.9697 - val_loss: 0.5800 - val_accuracy: 0.8733
+ 125/125 ━━━━━━━━━━━━━━━━━━━━ 1s 10ms/step - accuracy: 0.9324 - loss: 0.2259 - val_accuracy: 0.8761 - val_loss: 0.4611
 Epoch 64/100
-125/125 [==============================] - 1s 10ms/step - loss: 0.0936 - accuracy: 0.9700 - val_loss: 0.5782 - val_accuracy: 0.8744
+ 125/125 ━━━━━━━━━━━━━━━━━━━━ 1s 10ms/step - accuracy: 0.9329 - loss: 0.2247 - val_accuracy: 0.8751 - val_loss: 0.4608
 Epoch 65/100
-125/125 [==============================] - 1s 11ms/step - loss: 0.0918 - accuracy: 0.9709 - val_loss: 0.5832 - val_accuracy: 0.8743
+ 125/125 ━━━━━━━━━━━━━━━━━━━━ 1s 10ms/step - accuracy: 0.9344 - loss: 0.2187 - val_accuracy: 0.8756 - val_loss: 0.4628
 Epoch 66/100
-125/125 [==============================] - 1s 11ms/step - loss: 0.0897 - accuracy: 0.9714 - val_loss: 0.5863 - val_accuracy: 0.8744
+ 125/125 ━━━━━━━━━━━━━━━━━━━━ 1s 10ms/step - accuracy: 0.9354 - loss: 0.2156 - val_accuracy: 0.8750 - val_loss: 0.4664
 Epoch 67/100
-125/125 [==============================] - 1s 11ms/step - loss: 0.0880 - accuracy: 0.9718 - val_loss: 0.5912 - val_accuracy: 0.8742
+ 125/125 ━━━━━━━━━━━━━━━━━━━━ 1s 10ms/step - accuracy: 0.9360 - loss: 0.2136 - val_accuracy: 0.8751 - val_loss: 0.4665
 Epoch 68/100
-125/125 [==============================] - 1s 11ms/step - loss: 0.0863 - accuracy: 0.9722 - val_loss: 0.5972 - val_accuracy: 0.8741
+ 125/125 ━━━━━━━━━━━━━━━━━━━━ 1s 10ms/step - accuracy: 0.9370 - loss: 0.2093 - val_accuracy: 0.8751 - val_loss: 0.4688
 Epoch 69/100
-125/125 [==============================] - 1s 11ms/step - loss: 0.0850 - accuracy: 0.9727 - val_loss: 0.5969 - val_accuracy: 0.8743
+ 125/125 ━━━━━━━━━━━━━━━━━━━━ 1s 10ms/step - accuracy: 0.9385 - loss: 0.2057 - val_accuracy: 0.8747 - val_loss: 0.4757
 Epoch 70/100
-125/125 [==============================] - 1s 11ms/step - loss: 0.0832 - accuracy: 0.9732 - val_loss: 0.6046 - val_accuracy: 0.8736
+ 125/125 ━━━━━━━━━━━━━━━━━━━━ 1s 10ms/step - accuracy: 0.9388 - loss: 0.2039 - val_accuracy: 0.8752 - val_loss: 0.4748
 Epoch 71/100
-125/125 [==============================] - 1s 11ms/step - loss: 0.0815 - accuracy: 0.9738 - val_loss: 0.6037 - val_accuracy: 0.8746
+ 125/125 ━━━━━━━━━━━━━━━━━━━━ 1s 10ms/step - accuracy: 0.9393 - loss: 0.2020 - val_accuracy: 0.8749 - val_loss: 0.4749
 Epoch 72/100
-125/125 [==============================] - 1s 11ms/step - loss: 0.0799 - accuracy: 0.9741 - val_loss: 0.6092 - val_accuracy: 0.8744
+ 125/125 ━━━━━━━━━━━━━━━━━━━━ 1s 10ms/step - accuracy: 0.9403 - loss: 0.1991 - val_accuracy: 0.8756 - val_loss: 0.4754
 Epoch 73/100
-125/125 [==============================] - 1s 11ms/step - loss: 0.0785 - accuracy: 0.9746 - val_loss: 0.6118 - val_accuracy: 0.8750
+ 125/125 ━━━━━━━━━━━━━━━━━━━━ 1s 10ms/step - accuracy: 0.9417 - loss: 0.1946 - val_accuracy: 0.8752 - val_loss: 0.4774
 Epoch 74/100
-125/125 [==============================] - 1s 11ms/step - loss: 0.0769 - accuracy: 0.9751 - val_loss: 0.6150 - val_accuracy: 0.8737
+ 125/125 ━━━━━━━━━━━━━━━━━━━━ 1s 10ms/step - accuracy: 0.9427 - loss: 0.1911 - val_accuracy: 0.8746 - val_loss: 0.4809
 Epoch 75/100
-125/125 [==============================] - 1s 11ms/step - loss: 0.0753 - accuracy: 0.9754 - val_loss: 0.6196 - val_accuracy: 0.8736
+ 125/125 ━━━━━━━━━━━━━━━━━━━━ 1s 10ms/step - accuracy: 0.9430 - loss: 0.1900 - val_accuracy: 0.8746 - val_loss: 0.4809
 Epoch 76/100
-125/125 [==============================] - 1s 10ms/step - loss: 0.0742 - accuracy: 0.9759 - val_loss: 0.6237 - val_accuracy: 0.8738
+ 125/125 ━━━━━━━━━━━━━━━━━━━━ 1s 10ms/step - accuracy: 0.9443 - loss: 0.1856 - val_accuracy: 0.8749 - val_loss: 0.4836
 Epoch 77/100
-125/125 [==============================] - 1s 10ms/step - loss: 0.0731 - accuracy: 0.9760 - val_loss: 0.6310 - val_accuracy: 0.8731
+ 125/125 ━━━━━━━━━━━━━━━━━━━━ 1s 10ms/step - accuracy: 0.9438 - loss: 0.1867 - val_accuracy: 0.8759 - val_loss: 0.4866
 Epoch 78/100
-125/125 [==============================] - 1s 10ms/step - loss: 0.0719 - accuracy: 0.9765 - val_loss: 0.6335 - val_accuracy: 0.8746
+ 125/125 ━━━━━━━━━━━━━━━━━━━━ 1s 10ms/step - accuracy: 0.9454 - loss: 0.1811 - val_accuracy: 0.8751 - val_loss: 0.4869
 Epoch 79/100
-125/125 [==============================] - 1s 11ms/step - loss: 0.0702 - accuracy: 0.9770 - val_loss: 0.6366 - val_accuracy: 0.8744
+ 125/125 ━━━━━━━━━━━━━━━━━━━━ 1s 10ms/step - accuracy: 0.9462 - loss: 0.1788 - val_accuracy: 0.8767 - val_loss: 0.4899
 Epoch 80/100
-125/125 [==============================] - 1s 11ms/step - loss: 0.0692 - accuracy: 0.9773 - val_loss: 0.6368 - val_accuracy: 0.8745
+ 125/125 ━━━━━━━━━━━━━━━━━━━━ 1s 10ms/step - accuracy: 0.9467 - loss: 0.1777 - val_accuracy: 0.8754 - val_loss: 0.4932
 Epoch 81/100
-125/125 [==============================] - 1s 11ms/step - loss: 0.0678 - accuracy: 0.9777 - val_loss: 0.6472 - val_accuracy: 0.8735
+ 125/125 ━━━━━━━━━━━━━━━━━━━━ 1s 10ms/step - accuracy: 0.9474 - loss: 0.1748 - val_accuracy: 0.8758 - val_loss: 0.4932
 Epoch 82/100
-125/125 [==============================] - 1s 11ms/step - loss: 0.0669 - accuracy: 0.9778 - val_loss: 0.6474 - val_accuracy: 0.8735
+ 125/125 ━━━━━━━━━━━━━━━━━━━━ 1s 10ms/step - accuracy: 0.9481 - loss: 0.1731 - val_accuracy: 0.8751 - val_loss: 0.5027
 Epoch 83/100
-125/125 [==============================] - 1s 10ms/step - loss: 0.0653 - accuracy: 0.9783 - val_loss: 0.6466 - val_accuracy: 0.8745
+ 125/125 ━━━━━━━━━━━━━━━━━━━━ 1s 10ms/step - accuracy: 0.9484 - loss: 0.1708 - val_accuracy: 0.8748 - val_loss: 0.5012
 Epoch 84/100
-125/125 [==============================] - 1s 10ms/step - loss: 0.0645 - accuracy: 0.9787 - val_loss: 0.6576 - val_accuracy: 0.8733
+ 125/125 ━━━━━━━━━━━━━━━━━━━━ 1s 10ms/step - accuracy: 0.9491 - loss: 0.1675 - val_accuracy: 0.8748 - val_loss: 0.5091
 Epoch 85/100
-125/125 [==============================] - 1s 10ms/step - loss: 0.0633 - accuracy: 0.9790 - val_loss: 0.6539 - val_accuracy: 0.8742
+ 125/125 ━━━━━━━━━━━━━━━━━━━━ 1s 10ms/step - accuracy: 0.9514 - loss: 0.1624 - val_accuracy: 0.8744 - val_loss: 0.5082
 Epoch 86/100
-125/125 [==============================] - 1s 10ms/step - loss: 0.0626 - accuracy: 0.9792 - val_loss: 0.6609 - val_accuracy: 0.8738
+ 125/125 ━━━━━━━━━━━━━━━━━━━━ 1s 10ms/step - accuracy: 0.9508 - loss: 0.1627 - val_accuracy: 0.8733 - val_loss: 0.5159
 Epoch 87/100
-125/125 [==============================] - 1s 11ms/step - loss: 0.0614 - accuracy: 0.9794 - val_loss: 0.6641 - val_accuracy: 0.8739
+ 125/125 ━━━━━━━━━━━━━━━━━━━━ 1s 10ms/step - accuracy: 0.9517 - loss: 0.1606 - val_accuracy: 0.8749 - val_loss: 0.5139
 Epoch 88/100
-125/125 [==============================] - 1s 11ms/step - loss: 0.0602 - accuracy: 0.9799 - val_loss: 0.6677 - val_accuracy: 0.8739
+ 125/125 ━━━━━━━━━━━━━━━━━━━━ 1s 10ms/step - accuracy: 0.9519 - loss: 0.1579 - val_accuracy: 0.8746 - val_loss: 0.5189
 Epoch 89/100
-125/125 [==============================] - 1s 11ms/step - loss: 0.0594 - accuracy: 0.9801 - val_loss: 0.6659 - val_accuracy: 0.8731
+ 125/125 ━━━━━━━━━━━━━━━━━━━━ 1s 10ms/step - accuracy: 0.9526 - loss: 0.1565 - val_accuracy: 0.8752 - val_loss: 0.5171
 Epoch 90/100
-125/125 [==============================] - 1s 10ms/step - loss: 0.0581 - accuracy: 0.9803 - val_loss: 0.6744 - val_accuracy: 0.8740
+ 125/125 ━━━━━━━━━━━━━━━━━━━━ 1s 10ms/step - accuracy: 0.9531 - loss: 0.1549 - val_accuracy: 0.8750 - val_loss: 0.5169
 Epoch 91/100
-125/125 [==============================] - 1s 11ms/step - loss: 0.0575 - accuracy: 0.9806 - val_loss: 0.6722 - val_accuracy: 0.8737
+ 125/125 ━━━━━━━━━━━━━━━━━━━━ 1s 10ms/step - accuracy: 0.9543 - loss: 0.1506 - val_accuracy: 0.8740 - val_loss: 0.5182
 Epoch 92/100
-125/125 [==============================] - 1s 10ms/step - loss: 0.0568 - accuracy: 0.9808 - val_loss: 0.6778 - val_accuracy: 0.8737
+ 125/125 ━━━━━━━━━━━━━━━━━━━━ 1s 10ms/step - accuracy: 0.9547 - loss: 0.1497 - val_accuracy: 0.8752 - val_loss: 0.5207
 Epoch 93/100
-125/125 [==============================] - 1s 10ms/step - loss: 0.0557 - accuracy: 0.9814 - val_loss: 0.6837 - val_accuracy: 0.8733
+ 125/125 ━━━━━━━━━━━━━━━━━━━━ 1s 10ms/step - accuracy: 0.9554 - loss: 0.1471 - val_accuracy: 0.8750 - val_loss: 0.5293
 Epoch 94/100
-125/125 [==============================] - 1s 10ms/step - loss: 0.0548 - accuracy: 0.9814 - val_loss: 0.6906 - val_accuracy: 0.8732
+ 125/125 ━━━━━━━━━━━━━━━━━━━━ 1s 10ms/step - accuracy: 0.9560 - loss: 0.1467 - val_accuracy: 0.8749 - val_loss: 0.5298
 Epoch 95/100
-125/125 [==============================] - 1s 11ms/step - loss: 0.0543 - accuracy: 0.9816 - val_loss: 0.6913 - val_accuracy: 0.8733
+ 125/125 ━━━━━━━━━━━━━━━━━━━━ 1s 10ms/step - accuracy: 0.9563 - loss: 0.1449 - val_accuracy: 0.8746 - val_loss: 0.5309
 Epoch 96/100
-125/125 [==============================] - 1s 10ms/step - loss: 0.0536 - accuracy: 0.9816 - val_loss: 0.6955 - val_accuracy: 0.8723
+ 125/125 ━━━━━━━━━━━━━━━━━━━━ 1s 10ms/step - accuracy: 0.9571 - loss: 0.1421 - val_accuracy: 0.8728 - val_loss: 0.5391
 Epoch 97/100
-125/125 [==============================] - 1s 11ms/step - loss: 0.0531 - accuracy: 0.9817 - val_loss: 0.7001 - val_accuracy: 0.8724
+ 125/125 ━━━━━━━━━━━━━━━━━━━━ 1s 10ms/step - accuracy: 0.9577 - loss: 0.1390 - val_accuracy: 0.8755 - val_loss: 0.5318
 Epoch 98/100
-125/125 [==============================] - 1s 11ms/step - loss: 0.0521 - accuracy: 0.9821 - val_loss: 0.7017 - val_accuracy: 0.8738
+ 125/125 ━━━━━━━━━━━━━━━━━━━━ 1s 10ms/step - accuracy: 0.9583 - loss: 0.1375 - val_accuracy: 0.8744 - val_loss: 0.5433
 Epoch 99/100
-125/125 [==============================] - 1s 10ms/step - loss: 0.0512 - accuracy: 0.9822 - val_loss: 0.7069 - val_accuracy: 0.8731
+ 125/125 ━━━━━━━━━━━━━━━━━━━━ 1s 10ms/step - accuracy: 0.9591 - loss: 0.1363 - val_accuracy: 0.8746 - val_loss: 0.5359
 Epoch 100/100
-125/125 [==============================] - 1s 11ms/step - loss: 0.0506 - accuracy: 0.9826 - val_loss: 0.7050 - val_accuracy: 0.8726
-WARNING:tensorflow:From /usr/local/lib/python3.7/site-packages/tensorflow/python/training/tracking/tracking.py:105: Network.state_updates (from tensorflow.python.keras.engine.network) is deprecated and will be removed in a future version.
-Instructions for updating:
-This property should not be used in TensorFlow 2.0, as updates are applied automatically.
-INFO:tensorflow:Assets written to: s2s/assets
+ 125/125 ━━━━━━━━━━━━━━━━━━━━ 1s 10ms/step - accuracy: 0.9592 - loss: 0.1351 - val_accuracy: 0.8738 - val_loss: 0.5482
 
 ```
 </div>
@@ -445,11 +431,10 @@ Output will be the next target token.
 3. Repeat with the current target token and current states
 
 
-
 ```python
 # Define sampling models
 # Restore the model and construct the encoder and decoder.
-model = keras.models.load_model("s2s")
+model = keras.models.load_model("s2s_model.keras")
 
 encoder_inputs = model.input[0]  # input_1
 encoder_outputs, state_h_enc, state_c_enc = model.layers[2].output  # lstm_1
@@ -479,7 +464,7 @@ reverse_target_char_index = dict((i, char) for char, i in target_token_index.ite
 
 def decode_sequence(input_seq):
     # Encode the input as state vectors.
-    states_value = encoder_model.predict(input_seq)
+    states_value = encoder_model.predict(input_seq, verbose=0)
 
     # Generate empty target sequence of length 1.
     target_seq = np.zeros((1, 1, num_decoder_tokens))
@@ -491,7 +476,9 @@ def decode_sequence(input_seq):
     stop_condition = False
     decoded_sentence = ""
     while not stop_condition:
-        output_tokens, h, c = decoder_model.predict([target_seq] + states_value)
+        output_tokens, h, c = decoder_model.predict(
+            [target_seq] + states_value, verbose=0
+        )
 
         # Sample a token
         sampled_token_index = np.argmax(output_tokens[0, -1, :])
@@ -511,11 +498,9 @@ def decode_sequence(input_seq):
         states_value = [h, c]
     return decoded_sentence
 
-
 ```
 
 You can now generate decoded sentences as such:
-
 
 
 ```python
@@ -527,7 +512,6 @@ for seq_index in range(20):
     print("-")
     print("Input sentence:", input_texts[seq_index])
     print("Decoded sentence:", decoded_sentence)
-
 ```
 
 <div class="k-default-codeblock">
@@ -541,8 +525,24 @@ Decoded sentence: Va !
 <div class="k-default-codeblock">
 ```
 -
-Input sentence: Hi.
-Decoded sentence: Salut !
+Input sentence: Go.
+Decoded sentence: Va !
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+-
+Input sentence: Go.
+Decoded sentence: Va !
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+-
+Input sentence: Go.
+Decoded sentence: Va !
 ```
 </div>
     
@@ -550,7 +550,15 @@ Decoded sentence: Salut !
 ```
 -
 Input sentence: Hi.
-Decoded sentence: Salut !
+Decoded sentence: Salut.
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+-
+Input sentence: Hi.
+Decoded sentence: Salut.
 ```
 </div>
     
@@ -558,7 +566,7 @@ Decoded sentence: Salut !
 ```
 -
 Input sentence: Run!
-Decoded sentence: Cours !
+Decoded sentence: Fuyez !
 ```
 </div>
     
@@ -566,128 +574,104 @@ Decoded sentence: Cours !
 ```
 -
 Input sentence: Run!
-Decoded sentence: Cours !
+Decoded sentence: Fuyez !
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
 -
-Input sentence: Who?
-Decoded sentence: Qui ?
+Input sentence: Run!
+Decoded sentence: Fuyez !
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
 -
-Input sentence: Wow!
-Decoded sentence: Ça alors !
+Input sentence: Run!
+Decoded sentence: Fuyez !
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
 -
-Input sentence: Fire!
-Decoded sentence: Au feu !
+Input sentence: Run!
+Decoded sentence: Fuyez !
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
 -
-Input sentence: Help!
-Decoded sentence: À l'aide !
+Input sentence: Run!
+Decoded sentence: Fuyez !
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
 -
-Input sentence: Jump.
-Decoded sentence: Saute.
+Input sentence: Run!
+Decoded sentence: Fuyez !
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
 -
-Input sentence: Stop!
-Decoded sentence: Stop !
+Input sentence: Run!
+Decoded sentence: Fuyez !
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
 -
-Input sentence: Stop!
-Decoded sentence: Stop !
+Input sentence: Run.
+Decoded sentence: Courez !
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
 -
-Input sentence: Stop!
-Decoded sentence: Stop !
+Input sentence: Run.
+Decoded sentence: Courez !
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
 -
-Input sentence: Wait!
-Decoded sentence: Attendez !
+Input sentence: Run.
+Decoded sentence: Courez !
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
 -
-Input sentence: Wait!
-Decoded sentence: Attendez !
+Input sentence: Run.
+Decoded sentence: Courez !
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
 -
-Input sentence: Go on.
-Decoded sentence: Poursuis.
+Input sentence: Run.
+Decoded sentence: Courez !
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
 -
-Input sentence: Go on.
-Decoded sentence: Poursuis.
+Input sentence: Run.
+Decoded sentence: Courez !
 ```
 </div>
     
-<div class="k-default-codeblock">
-```
--
-Input sentence: Go on.
-Decoded sentence: Poursuis.
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
--
-Input sentence: Hello!
-Decoded sentence: Salut !
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
--
-Input sentence: Hello!
-Decoded sentence: Salut !
-```
-</div>
-
 

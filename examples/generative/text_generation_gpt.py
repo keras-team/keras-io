@@ -36,10 +36,17 @@ This example requires KerasNLP. You can install it via the following command:
 ## Setup
 """
 
+"""shell
+pip install -q --upgrade keras-nlp
+pip install -q --upgrade keras  # Upgrade to Keras 3.
+"""
+
 import os
 import keras_nlp
-import tensorflow as tf
-from tensorflow import keras
+import keras
+
+import tensorflow.data as tf_data
+import tensorflow.strings as tf_strings
 
 """
 ## Settings & hyperparameters
@@ -47,18 +54,18 @@ from tensorflow import keras
 
 # Data
 BATCH_SIZE = 64
-SEQ_LEN = 128
-MIN_TRAINING_SEQ_LEN = 450
+MIN_STRING_LEN = 512  # Strings shorter than this will be discarded
+SEQ_LEN = 128  # Length of training sequences, in tokens
 
 # Model
 EMBED_DIM = 256
-FEED_FORWARD_DIM = 256
+FEED_FORWARD_DIM = 128
 NUM_HEADS = 3
 NUM_LAYERS = 2
 VOCAB_SIZE = 5000  # Limits parameters in model.
 
 # Training
-EPOCHS = 6
+EPOCHS = 5
 
 # Inference
 NUM_TOKENS_TO_GENERATE = 80
@@ -79,16 +86,16 @@ dir = os.path.expanduser("~/.keras/datasets/simplebooks/")
 
 # Load simplebooks-92 train set and filter out short lines.
 raw_train_ds = (
-    tf.data.TextLineDataset(dir + "simplebooks-92-raw/train.txt")
-    .filter(lambda x: tf.strings.length(x) > MIN_TRAINING_SEQ_LEN)
+    tf_data.TextLineDataset(dir + "simplebooks-92-raw/train.txt")
+    .filter(lambda x: tf_strings.length(x) > MIN_STRING_LEN)
     .batch(BATCH_SIZE)
     .shuffle(buffer_size=256)
 )
 
 # Load simplebooks-92 validation set and filter out short lines.
 raw_val_ds = (
-    tf.data.TextLineDataset(dir + "simplebooks-92-raw/valid.txt")
-    .filter(lambda x: tf.strings.length(x) > MIN_TRAINING_SEQ_LEN)
+    tf_data.TextLineDataset(dir + "simplebooks-92-raw/valid.txt")
+    .filter(lambda x: tf_strings.length(x) > MIN_STRING_LEN)
     .batch(BATCH_SIZE)
 )
 
@@ -155,11 +162,11 @@ def preprocess(inputs):
 
 
 # Tokenize and split into train and label sequences.
-train_ds = raw_train_ds.map(preprocess, num_parallel_calls=tf.data.AUTOTUNE).prefetch(
-    tf.data.AUTOTUNE
+train_ds = raw_train_ds.map(preprocess, num_parallel_calls=tf_data.AUTOTUNE).prefetch(
+    tf_data.AUTOTUNE
 )
-val_ds = raw_val_ds.map(preprocess, num_parallel_calls=tf.data.AUTOTUNE).prefetch(
-    tf.data.AUTOTUNE
+val_ds = raw_val_ds.map(preprocess, num_parallel_calls=tf_data.AUTOTUNE).prefetch(
+    tf_data.AUTOTUNE
 )
 
 """
@@ -174,7 +181,7 @@ The layer has no cross-attention when run with decoder sequence only.
 - One final dense linear layer
 """
 
-inputs = keras.layers.Input(shape=(None,), dtype=tf.int32)
+inputs = keras.layers.Input(shape=(None,), dtype="int32")
 # Embedding.
 embedding_layer = keras_nlp.layers.TokenAndPositionEmbedding(
     vocabulary_size=VOCAB_SIZE,
@@ -193,7 +200,7 @@ for _ in range(NUM_LAYERS):
 # Output.
 outputs = keras.layers.Dense(VOCAB_SIZE)(x)
 model = keras.Model(inputs=inputs, outputs=outputs)
-loss_fn = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
+loss_fn = keras.losses.SparseCategoricalCrossentropy(from_logits=True)
 perplexity = keras_nlp.metrics.Perplexity(from_logits=True, mask_token_id=0)
 model.compile(optimizer="adam", loss=loss_fn, metrics=[perplexity])
 
@@ -212,7 +219,7 @@ model.summary()
 Now that we have our model, let's train it with the `fit()` method.
 """
 
-model.fit(train_ds, validation_data=val_ds, verbose=2, epochs=EPOCHS)
+model.fit(train_ds, validation_data=val_ds, epochs=EPOCHS)
 
 """
 ## Inference

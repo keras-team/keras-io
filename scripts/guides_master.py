@@ -96,12 +96,28 @@ GUIDES_MASTER = {
             "title": "Training & evaluation with the built-in methods",
         },
         {
-            "path": "customizing_what_happens_in_fit",
-            "title": "Customizing what happens in `fit()`",
+            "path": "custom_train_step_in_jax",
+            "title": "Customizing what happens in `fit()` with JAX",
         },
         {
-            "path": "writing_a_training_loop_from_scratch",
-            "title": "Writing a training loop from scratch",
+            "path": "custom_train_step_in_tensorflow",
+            "title": "Customizing what happens in `fit()` with TensorFlow",
+        },
+        {
+            "path": "custom_train_step_in_torch",
+            "title": "Customizing what happens in `fit()` with PyTorch",
+        },
+        {
+            "path": "writing_a_custom_training_loop_in_jax",
+            "title": "Writing a custom training loop in JAX",
+        },
+        {
+            "path": "writing_a_custom_training_loop_in_tensorflow",
+            "title": "Writing a custom training loop in TensorFlow",
+        },
+        {
+            "path": "writing_a_custom_training_loop_in_torch",
+            "title": "Writing a custom training loop in PyTorch",
         },
         {
             "path": "serialization_and_saving",
@@ -115,6 +131,42 @@ GUIDES_MASTER = {
             "path": "writing_your_own_callbacks",
             "title": "Writing your own callbacks",
         },
+        {
+            "path": "transfer_learning",
+            "title": "Transfer learning & fine-tuning",
+        },
+        {
+            "path": "distributed_training_with_jax",
+            "title": "Distributed training with JAX",
+        },
+        {
+            "path": "distributed_training_with_tensorflow",
+            "title": "Distributed training with TensorFlow",
+        },
+        {
+            "path": "distributed_training_with_torch",
+            "title": "Distributed training with PyTorch",
+        },
+        {
+            "path": "distribution",
+            "title": "Distributed training with Keras 3",
+        },
+        {
+            "path": "migrating_to_keras_3",
+            "title": "Migrating Keras 2 code to Keras 3",
+        },
+        # {
+        #     "path": "preprocessing_layers",
+        #     "title": "Working with preprocessing layers",
+        # },
+        # {
+        #     "path": "working_with_rnns",
+        #     "title": "Working with recurrent neural networks",
+        # },
+        # {
+        #     "path": "understanding_masking_and_padding",
+        #     "title": "Understanding masking & padding",
+        # },
         # {
         #     'path': 'writing_your_own_metrics',
         #     'title': 'Writing your own Metrics',
@@ -123,37 +175,20 @@ GUIDES_MASTER = {
         #     'path': 'writing_your_own_losses',
         #     'title': 'Writing your own Losses',
         # },
-        {
-            "path": "preprocessing_layers",
-            "title": "Working with preprocessing layers",
-        },
-        {
-            "path": "working_with_rnns",
-            "title": "Working with recurrent neural networks",
-        },
-        {
-            "path": "understanding_masking_and_padding",
-            "title": "Understanding masking & padding",
-        },
-        {
-            "path": "distributed_training",
-            "title": "Multi-GPU & distributed training",
-        },
         # {
         #     'path': 'tpu_training',
         #     'title': 'Training Keras models on TPU',
         # },
-        {
-            "path": "transfer_learning",
-            "title": "Transfer learning & fine-tuning",
-        },
         # {
         #     'path': 'hyperparameter_optimization',
         #     'title': 'Hyperparameter optimization',
         # },
+        # {
+        #     'path': 'mixed_precision',
+        #     'title': 'Mixed precision training',
+        # },
         KT_GUIDES_MASTER,
         CV_GUIDES_MASTER,
         NLP_GUIDES_MASTER,
-        # TODO: mixed precision
     ],
 }

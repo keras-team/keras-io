@@ -14,38 +14,39 @@ EXAMPLES_MASTER = {
                     "title": "Image classification from scratch",
                     "subcategory": "Image classification",
                     "highlight": True,
+                    "keras_3": True,
                 },
                 {
                     "path": "mnist_convnet",
                     "title": "Simple MNIST convnet",
                     "subcategory": "Image classification",
                     "highlight": True,
+                    "keras_3": True,
                 },
                 {
                     "path": "image_classification_efficientnet_fine_tuning",
                     "title": "Image classification via fine-tuning with EfficientNet",
                     "subcategory": "Image classification",
                     "highlight": True,
+                    "keras_3": True,
                 },
                 {
                     "path": "image_classification_with_vision_transformer",
                     "title": "Image classification with Vision Transformer",
                     "subcategory": "Image classification",
-                },
-                {
-                    "path": "bit",
-                    "title": "Image Classification using BigTransfer (BiT)",
-                    "subcategory": "Image classification",
+                    "keras_3": True,
                 },
                 {
                     "path": "attention_mil_classification",
                     "title": "Classification using Attention-based Deep Multiple Instance Learning",
                     "subcategory": "Image classification",
+                    "keras_3": True,
                 },
                 {
                     "path": "mlp_image_classification",
                     "title": "Image classification with modern MLP models",
                     "subcategory": "Image classification",
+                    "keras_3": True,
                 },
                 {
                     "path": "mobilevit",
@@ -61,21 +62,25 @@ EXAMPLES_MASTER = {
                     "path": "cct",
                     "title": "Compact Convolutional Transformers",
                     "subcategory": "Image classification",
+                    "keras_3": True,
                 },
                 {
                     "path": "convmixer",
                     "title": "Image classification with ConvMixer",
                     "subcategory": "Image classification",
+                    "keras_3": True,
                 },
                 {
                     "path": "eanet",
                     "title": "Image classification with EANet (External Attention Transformer)",
                     "subcategory": "Image classification",
+                    "keras_3": True,
                 },
                 {
                     "path": "involution",
                     "title": "Involutional neural networks",
                     "subcategory": "Image classification",
+                    "keras_3": True,
                 },
                 {
                     "path": "perceiver_image_classification",
@@ -86,6 +91,7 @@ EXAMPLES_MASTER = {
                     "path": "reptile",
                     "title": "Few-Shot learning with Reptile",
                     "subcategory": "Image classification",
+                    "keras_3": True,
                 },
                 {
                     "path": "semisupervised_simclr",
@@ -96,6 +102,7 @@ EXAMPLES_MASTER = {
                     "path": "swin_transformers",
                     "title": "Image classification with Swin Transformers",
                     "subcategory": "Image classification",
+                    "keras_3": True,
                 },
                 {
                     "path": "vit_small_ds",
@@ -113,6 +120,7 @@ EXAMPLES_MASTER = {
                     "title": "Image segmentation with a U-Net-like architecture",
                     "subcategory": "Image segmentation",
                     "highlight": True,
+                    "keras_3": True,
                 },
                 {
                     "path": "deeplabv3_plus",
@@ -134,6 +142,7 @@ EXAMPLES_MASTER = {
                     "path": "keypoint_detection",
                     "title": "Keypoint Detection with Transfer Learning",
                     "subcategory": "Object detection",
+                    "keras_3": True,
                 },
                 {
                     "path": "object_detection_using_vision_transformer",
@@ -155,6 +164,14 @@ EXAMPLES_MASTER = {
                     "path": "nerf",
                     "title": "3D volumetric rendering with NeRF",
                     "subcategory": "3D",
+                    "keras_3": True,
+                    "highlight": True,
+                },
+                {
+                    "path": "pointnet_segmentation",
+                    "title": "Point cloud segmentation with PointNet",
+                    "subcategory": "3D",
+                    "keras_3": True,
                 },
                 {
                     "path": "pointnet",
@@ -166,7 +183,7 @@ EXAMPLES_MASTER = {
                     "path": "captcha_ocr",
                     "title": "OCR model for reading Captchas",
                     "subcategory": "OCR",
-                    "highlight": True,
+                    "keras_3": True,
                 },
                 {
                     "path": "handwriting_recognition",
@@ -178,16 +195,19 @@ EXAMPLES_MASTER = {
                     "path": "autoencoder",
                     "title": "Convolutional autoencoder for image denoising",
                     "subcategory": "Image enhancement",
+                    "keras_3": True,
                 },
                 {
                     "path": "mirnet",
                     "title": "Low-light image enhancement using MIRNet",
                     "subcategory": "Image enhancement",
+                    "keras_3": True,
                 },
                 {
                     "path": "super_resolution_sub_pixel",
                     "title": "Image Super-Resolution using an Efficient Sub-Pixel CNN",
                     "subcategory": "Image enhancement",
+                    "keras_3": True,
                 },
                 {
                     "path": "edsr",
@@ -198,12 +218,14 @@ EXAMPLES_MASTER = {
                     "path": "zero_dce",
                     "title": "Zero-DCE for low-light image enhancement",
                     "subcategory": "Image enhancement",
+                    "keras_3": True,
                 },
                 # Data augmentation
                 {
                     "path": "cutmix",
                     "title": "CutMix data augmentation for image classification",
                     "subcategory": "Data augmentation",
+                    "keras_3": True,
                 },
                 {
                     "path": "mixup",
@@ -220,6 +242,8 @@ EXAMPLES_MASTER = {
                     "path": "image_captioning",
                     "title": "Image captioning",
                     "subcategory": "Image & Text",
+                    "highlight": True,
+                    "keras_3": True,
                 },
                 {
                     "path": "nl_image_search",
@@ -231,21 +255,25 @@ EXAMPLES_MASTER = {
                     "path": "visualizing_what_convnets_learn",
                     "title": "Visualizing what convnets learn",
                     "subcategory": "Vision models interpretability",
+                    "keras_3": True,
                 },
                 {
                     "path": "integrated_gradients",
                     "title": "Model interpretability with Integrated Gradients",
                     "subcategory": "Vision models interpretability",
+                    "keras_3": True,
                 },
                 {
                     "path": "probing_vits",
                     "title": "Investigating Vision Transformer representations",
                     "subcategory": "Vision models interpretability",
+                    "keras_3": True,
                 },
                 {
                     "path": "grad_cam",
                     "title": "Grad-CAM class activation visualization",
                     "subcategory": "Vision models interpretability",
+                    "keras_3": True,
                 },
                 # Image similarity search
                 {
@@ -262,16 +290,19 @@ EXAMPLES_MASTER = {
                     "path": "siamese_contrastive",
                     "title": "Image similarity estimation using a Siamese Network with a contrastive loss",
                     "subcategory": "Image similarity search",
+                    "keras_3": True,
                 },
                 {
                     "path": "siamese_network",
                     "title": "Image similarity estimation using a Siamese Network with a triplet loss",
                     "subcategory": "Image similarity search",
+                    "keras_3": True,
                 },
                 {
                     "path": "metric_learning",
                     "title": "Metric learning for image similarity search",
                     "subcategory": "Image similarity search",
+                    "keras_3": True,
                 },
                 {
                     "path": "metric_learning_tf_similarity",
@@ -288,16 +319,54 @@ EXAMPLES_MASTER = {
                     "path": "conv_lstm",
                     "title": "Next-Frame Video Prediction with Convolutional LSTMs",
                     "subcategory": "Video",
+                    "keras_3": True,
                 },
                 {
                     "path": "video_transformers",
                     "title": "Video Classification with Transformers",
                     "subcategory": "Video",
+                    "keras_3": True,
                 },
                 {
                     "path": "vivit",
                     "title": "Video Vision Transformer",
                     "subcategory": "Video",
+                },
+                {
+                    "path": "bit",
+                    "title": "Image Classification using BigTransfer (BiT)",
+                    "subcategory": "Image classification",
+                },
+                # Performance recipes
+                {
+                    "path": "gradient_centralization",
+                    "title": "Gradient Centralization for Better Training Performance",
+                    "subcategory": "Performance recipes",
+                    "keras_3": True,
+                },
+                {
+                    "path": "token_learner",
+                    "title": "Learning to tokenize in Vision Transformers",
+                    "subcategory": "Performance recipes",
+                    "keras_3": True,
+                },
+                {
+                    "path": "knowledge_distillation",
+                    "title": "Knowledge Distillation",
+                    "subcategory": "Performance recipes",
+                    "keras_3": True,
+                },
+                {
+                    "path": "fixres",
+                    "title": "FixRes: Fixing train-test resolution discrepancy",
+                    "subcategory": "Performance recipes",
+                    "keras_3": True,
+                },
+                {
+                    "path": "cait",
+                    "title": "Class Attention Image Transformers with LayerScale",
+                    "subcategory": "Performance recipes",
+                    "keras_3": True,
                 },
             ],
         },
@@ -312,6 +381,7 @@ EXAMPLES_MASTER = {
                     "title": "Text classification from scratch",
                     "subcategory": "Text classification",
                     "highlight": True,
+                    "keras_3": True,
                 },
                 {
                     "path": "active_learning_review_classification",
@@ -322,6 +392,7 @@ EXAMPLES_MASTER = {
                     "path": "fnet_classification_with_keras_nlp",
                     "title": "Text Classification using FNet",
                     "subcategory": "Text classification",
+                    "keras_3": True,
                 },
                 {
                     "path": "multi_label_classification",
@@ -347,28 +418,33 @@ EXAMPLES_MASTER = {
                     "path": "pretrained_word_embeddings",
                     "title": "Using pre-trained word embeddings",
                     "subcategory": "Text classification",
+                    "keras_3": True,
                 },
                 {
                     "path": "bidirectional_lstm_imdb",
                     "title": "Bidirectional LSTM on IMDB",
                     "subcategory": "Text classification",
+                    "keras_3": True,
                 },
                 # Machine translation
                 {
                     "path": "neural_machine_translation_with_keras_nlp",
                     "title": "English-to-Spanish translation with KerasNLP",
                     "subcategory": "Machine translation",
-                    "highlight": True,
+                    "keras_3": True,
                 },
                 {
                     "path": "neural_machine_translation_with_transformer",
                     "title": "English-to-Spanish translation with a sequence-to-sequence Transformer",
                     "subcategory": "Machine translation",
+                    "highlight": True,
+                    "keras_3": True,
                 },
                 {
                     "path": "lstm_seq2seq",
                     "title": "Character-level recurrent sequence-to-sequence model",
                     "subcategory": "Machine translation",
+                    "keras_3": True,
                 },
                 # Entailement prediction
                 {
@@ -381,6 +457,7 @@ EXAMPLES_MASTER = {
                     "path": "ner_transformers",
                     "title": "Named Entity Recognition using Transformers",
                     "subcategory": "Named entity recognition",
+                    "keras_3": True,
                 },
                 # Sequence-to-sequence
                 {
@@ -398,6 +475,7 @@ EXAMPLES_MASTER = {
                     "path": "semantic_similarity_with_bert",
                     "title": "Semantic Similarity with BERT",
                     "subcategory": "Text similarity search",
+                    "keras_3": True,
                 },
                 # Language modeling
                 {
@@ -423,22 +501,26 @@ EXAMPLES_MASTER = {
                     "title": "Structured data classification with FeatureSpace",
                     "subcategory": "Structured data classification",
                     "highlight": True,
+                    "keras_3": True,
                 },
                 {
                     "path": "imbalanced_classification",
                     "title": "Imbalanced classification: credit card fraud detection",
                     "subcategory": "Structured data classification",
                     "highlight": True,
+                    "keras_3": True,
                 },
                 {
                     "path": "structured_data_classification_from_scratch",
                     "title": "Structured data classification from scratch",
                     "subcategory": "Structured data classification",
+                    "keras_3": True,
                 },
                 {
                     "path": "wide_deep_cross_networks",
                     "title": "Structured data learning with Wide, Deep, and Cross networks",
                     "subcategory": "Structured data classification",
+                    "keras_3": True,
                 },
                 {
                     "path": "classification_with_grn_and_vsn",
@@ -454,22 +536,26 @@ EXAMPLES_MASTER = {
                     "path": "deep_neural_decision_forests",
                     "title": "Classification with Neural Decision Forests",
                     "subcategory": "Structured data classification",
+                    "keras_3": True,
                 },
                 {
                     "path": "tabtransformer",
                     "title": "Structured data learning with TabTransformer",
                     "subcategory": "Structured data classification",
+                    "keras_3": True,
                 },
                 # Recommendation
                 {
                     "path": "collaborative_filtering_movielens",
                     "title": "Collaborative Filtering for Movie Recommendations",
                     "subcategory": "Recommendation",
+                    "keras_3": True,
                 },
                 {
                     "path": "movielens_recommendations_transformers",
                     "title": "A Transformer-based recommendation system",
                     "subcategory": "Recommendation",
+                    "keras_3": True,
                 },
             ],
         },
@@ -484,33 +570,39 @@ EXAMPLES_MASTER = {
                     "title": "Timeseries classification from scratch",
                     "subcategory": "Timeseries classification",
                     "highlight": True,
+                    "keras_3": True,
                 },
                 {
                     "path": "timeseries_classification_transformer",
                     "title": "Timeseries classification with a Transformer model",
                     "subcategory": "Timeseries classification",
+                    "keras_3": True,
                 },
                 {
                     "path": "eeg_signal_classification",
                     "title": "Electroencephalogram Signal Classification for action identification",
                     "subcategory": "Timeseries classification",
+                    "keras_3": True,
                 },
                 # Anomaly detection
                 {
                     "path": "timeseries_anomaly_detection",
                     "title": "Timeseries anomaly detection using an Autoencoder",
                     "subcategory": "Anomaly detection",
+                    "keras_3": True,
                 },
                 # Timeseries forecasting
                 {
                     "path": "timeseries_traffic_forecasting",
                     "title": "Traffic forecasting using graph neural networks and LSTM",
                     "subcategory": "Timeseries forecasting",
+                    "keras_3": True,
                 },
                 {
                     "path": "timeseries_weather_forecasting",
                     "title": "Timeseries forecasting for weather prediction",
                     "subcategory": "Timeseries forecasting",
+                    "keras_3": True,
                 },
             ],
         },
@@ -525,6 +617,7 @@ EXAMPLES_MASTER = {
                     "title": "Denoising Diffusion Implicit Models",
                     "subcategory": "Image generation",
                     "highlight": True,
+                    "keras_3": True,
                 },
                 {
                     "path": "random_walks_with_stable_diffusion",
@@ -556,6 +649,7 @@ EXAMPLES_MASTER = {
                     "path": "vae",
                     "title": "Variational AutoEncoder",
                     "subcategory": "Image generation",
+                    "keras_3": True,
                 },
                 {
                     "path": "dcgan_overriding_train_step",
@@ -566,6 +660,7 @@ EXAMPLES_MASTER = {
                     "path": "wgan_gp",
                     "title": "WGAN-GP overriding Model.train_step",
                     "subcategory": "Image generation",
+                    "keras_3": True,
                 },
                 {
                     "path": "conditional_gan",
@@ -586,6 +681,7 @@ EXAMPLES_MASTER = {
                     "path": "deep_dream",
                     "title": "Deep Dream",
                     "subcategory": "Image generation",
+                    "keras_3": True,
                 },
                 {
                     "path": "gaugan",
@@ -596,6 +692,7 @@ EXAMPLES_MASTER = {
                     "path": "pixelcnn",
                     "title": "PixelCNN",
                     "subcategory": "Image generation",
+                    "keras_3": True,
                 },
                 {
                     "path": "stylegan",
@@ -612,6 +709,7 @@ EXAMPLES_MASTER = {
                     "path": "neural_style_transfer",
                     "title": "Neural style transfer",
                     "subcategory": "Style transfer",
+                    "keras_3": True,
                 },
                 {
                     "path": "adain",
@@ -624,21 +722,25 @@ EXAMPLES_MASTER = {
                     "title": "GPT2 Text Generation with KerasNLP",
                     "subcategory": "Text generation",
                     "highlight": True,
+                    "keras_3": True,
                 },
                 {
                     "path": "text_generation_gpt",
                     "title": "GPT text generation from scratch with KerasNLP",
                     "subcategory": "Text generation",
+                    "keras_3": True,
                 },
                 {
                     "path": "text_generation_with_miniature_gpt",
                     "title": "Text generation with a miniature GPT",
                     "subcategory": "Text generation",
+                    "keras_3": True,
                 },
                 {
                     "path": "lstm_character_level_text_generation",
                     "title": "Character-level text generation with LSTM",
                     "subcategory": "Text generation",
+                    "keras_3": True,
                 },
                 {
                     "path": "text_generation_fnet",
@@ -663,6 +765,12 @@ EXAMPLES_MASTER = {
             "title": "Audio Data",
             "toc": True,
             "children": [
+                {
+                    "path": "transformer_asr",
+                    "title": "Automatic Speech Recognition with Transformer",
+                    "subcategory": "Speech recognition",
+                    "keras_3": True,
+                },
                 # Will be autogenerated
             ],
         },
@@ -687,7 +795,67 @@ EXAMPLES_MASTER = {
             "title": "Quick Keras Recipes",
             "toc": True,
             "children": [
-                # Will be autogenerated
+                {
+                    "path": "tf_serving",
+                    "title": "Serving TensorFlow models with TFServing",
+                    "subcategory": "Serving",
+                    "keras_3": True,
+                },
+                {
+                    "path": "debugging_tips",
+                    "title": "Keras debugging tips",
+                    "subcategory": "Keras usage tips",
+                    "keras_3": True,
+                },
+                {
+                    "path": "subclassing_conv_layers",
+                    "title": "Customizing the convolution operation of a Conv2D layer",
+                    "subcategory": "Keras usage tips",
+                    "keras_3": True,
+                },
+                {
+                    "path": "trainer_pattern",
+                    "title": "Trainer pattern",
+                    "subcategory": "Keras usage tips",
+                    "keras_3": True,
+                },
+                {
+                    "path": "endpoint_layer_pattern",
+                    "title": "Endpoint layer pattern",
+                    "subcategory": "Keras usage tips",
+                    "keras_3": True,
+                },
+                {
+                    "path": "reproducibility_recipes",
+                    "title": "Reproducibility in Keras Models",
+                    "subcategory": "Keras usage tips",
+                    "keras_3": True,
+                },
+                {
+                    "path": "tensorflow_numpy_models",
+                    "title": "Writing Keras Models With TensorFlow NumPy",
+                    "subcategory": "Keras usage tips",
+                    "keras_3": True,
+                },
+                {
+                    "path": "antirectifier",
+                    "title": "Simple custom layer example: Antirectifier",
+                    "subcategory": "Keras usage tips",
+                    "keras_3": True,
+                },
+                {
+                    "path": "sample_size_estimate",
+                    "title": "Estimating required sample size for model training",
+                    "subcategory": "ML best practices",
+                    "keras_3": True,
+                },
+                {
+                    "path": "memory_efficient_embeddings",
+                    "title": "Memory-efficient embeddings for recommendation systems",
+                    "subcategory": "ML best practices",
+                    "keras_3": True,
+                },
+                # Rest will be autogenerated
             ],
         },
     ],

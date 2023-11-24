@@ -20,27 +20,23 @@ The TabTransformer is built upon self-attention based Transformers.
 The Transformer layers transform the embeddings of categorical features
 into robust contextual embeddings to achieve higher predictive accuracy.
 
-This example should be run with TensorFlow 2.7 or higher,
-as well as [TensorFlow Addons](https://www.tensorflow.org/addons/overview),
-which can be installed using the following command:
 
-```python
-pip install -U tensorflow-addons
-```
 
 ---
 ## Setup
 
 
 ```python
+import keras
+from keras import layers
+from keras import ops
+
 import math
 import numpy as np
 import pandas as pd
-import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras import layers
-import tensorflow_addons as tfa
+from tensorflow import data as tf_data
 import matplotlib.pyplot as plt
+from functools import partial
 ```
 
 ---
@@ -207,22 +203,44 @@ def prepare_example(features, target):
     return features, target_index, weights
 
 
+lookup_dict = {}
+for feature_name in CATEGORICAL_FEATURE_NAMES:
+    vocabulary = CATEGORICAL_FEATURES_WITH_VOCABULARY[feature_name]
+    # Create a lookup to convert a string values to an integer indices.
+    # Since we are not using a mask token, nor expecting any out of vocabulary
+    # (oov) token, we set mask_token to None and num_oov_indices to 0.
+    lookup = layers.StringLookup(
+        vocabulary=vocabulary, mask_token=None, num_oov_indices=0
+    )
+    lookup_dict[feature_name] = lookup
+
+
+def encode_categorical(batch_x, batch_y, weights):
+    for feature_name in CATEGORICAL_FEATURE_NAMES:
+        batch_x[feature_name] = lookup_dict[feature_name](batch_x[feature_name])
+
+    return batch_x, batch_y, weights
+
+
 def get_dataset_from_csv(csv_file_path, batch_size=128, shuffle=False):
-    dataset = tf.data.experimental.make_csv_dataset(
-        csv_file_path,
-        batch_size=batch_size,
-        column_names=CSV_HEADER,
-        column_defaults=COLUMN_DEFAULTS,
-        label_name=TARGET_FEATURE_NAME,
-        num_epochs=1,
-        header=False,
-        na_value="?",
-        shuffle=shuffle,
-    ).map(prepare_example, num_parallel_calls=tf.data.AUTOTUNE, deterministic=False)
+    dataset = (
+        tf_data.experimental.make_csv_dataset(
+            csv_file_path,
+            batch_size=batch_size,
+            column_names=CSV_HEADER,
+            column_defaults=COLUMN_DEFAULTS,
+            label_name=TARGET_FEATURE_NAME,
+            num_epochs=1,
+            header=False,
+            na_value="?",
+            shuffle=shuffle,
+        )
+        .map(prepare_example, num_parallel_calls=tf_data.AUTOTUNE, deterministic=False)
+        .map(encode_categorical)
+    )
     return dataset.cache()
 
 ```
-
 
 ---
 ## Implement a training and evaluation procedure
@@ -239,8 +257,7 @@ def run_experiment(
     weight_decay,
     batch_size,
 ):
-
-    optimizer = tfa.optimizers.AdamW(
+    optimizer = keras.optimizers.AdamW(
         learning_rate=learning_rate, weight_decay=weight_decay
     )
 
@@ -282,11 +299,11 @@ def create_model_inputs():
     for feature_name in FEATURE_NAMES:
         if feature_name in NUMERIC_FEATURE_NAMES:
             inputs[feature_name] = layers.Input(
-                name=feature_name, shape=(), dtype=tf.float32
+                name=feature_name, shape=(), dtype="float32"
             )
         else:
             inputs[feature_name] = layers.Input(
-                name=feature_name, shape=(), dtype=tf.string
+                name=feature_name, shape=(), dtype="float32"
             )
     return inputs
 
@@ -303,28 +320,17 @@ regardless their vocabulary sizes. This is required for the Transformer model.
 ```python
 
 def encode_inputs(inputs, embedding_dims):
-
     encoded_categorical_feature_list = []
     numerical_feature_list = []
 
     for feature_name in inputs:
         if feature_name in CATEGORICAL_FEATURE_NAMES:
-
-            # Get the vocabulary of the categorical feature.
             vocabulary = CATEGORICAL_FEATURES_WITH_VOCABULARY[feature_name]
-
-            # Create a lookup to convert string values to an integer indices.
-            # Since we are not using a mask token nor expecting any out of vocabulary
-            # (oov) token, we set mask_token to None and  num_oov_indices to 0.
-            lookup = layers.StringLookup(
-                vocabulary=vocabulary,
-                mask_token=None,
-                num_oov_indices=0,
-                output_mode="int",
-            )
+            # Create a lookup to convert a string values to an integer indices.
+            # Since we are not using a mask token, nor expecting any out of vocabulary
+            # (oov) token, we set mask_token to None and num_oov_indices to 0.
 
             # Convert the string input values into integer indices.
-            encoded_feature = lookup(inputs[feature_name])
 
             # Create an embedding layer with the specified dimensions.
             embedding = layers.Embedding(
@@ -332,13 +338,12 @@ def encode_inputs(inputs, embedding_dims):
             )
 
             # Convert the index values to embedding representations.
-            encoded_categorical_feature = embedding(encoded_feature)
+            encoded_categorical_feature = embedding(inputs[feature_name])
             encoded_categorical_feature_list.append(encoded_categorical_feature)
 
         else:
-
             # Use the numerical features as-is.
-            numerical_feature = tf.expand_dims(inputs[feature_name], -1)
+            numerical_feature = ops.expand_dims(inputs[feature_name], -1)
             numerical_feature_list.append(numerical_feature)
 
     return encoded_categorical_feature_list, numerical_feature_list
@@ -352,10 +357,9 @@ def encode_inputs(inputs, embedding_dims):
 ```python
 
 def create_mlp(hidden_units, dropout_rate, activation, normalization_layer, name=None):
-
     mlp_layers = []
     for units in hidden_units:
-        mlp_layers.append(normalization_layer),
+        mlp_layers.append(normalization_layer()),
         mlp_layers.append(layers.Dense(units, activation=activation))
         mlp_layers.append(layers.Dropout(dropout_rate))
 
@@ -374,7 +378,6 @@ In the first experiment, we create a simple multi-layer feed-forward network.
 def create_baseline_model(
     embedding_dims, num_mlp_blocks, mlp_hidden_units_factors, dropout_rate
 ):
-
     # Create model inputs.
     inputs = create_model_inputs()
     # encode features.
@@ -394,7 +397,7 @@ def create_baseline_model(
             hidden_units=feedforward_units,
             dropout_rate=dropout_rate,
             activation=keras.activations.gelu,
-            normalization_layer=layers.LayerNormalization(epsilon=1e-6),
+            normalization_layer=layers.LayerNormalization,
             name=f"feedforward_{layer_idx}",
         )(features)
 
@@ -407,7 +410,7 @@ def create_baseline_model(
         hidden_units=mlp_hidden_units,
         dropout_rate=dropout_rate,
         activation=keras.activations.selu,
-        normalization_layer=layers.BatchNormalization(),
+        normalization_layer=layers.BatchNormalization,
         name="MLP",
     )(features)
 
@@ -430,12 +433,14 @@ keras.utils.plot_model(baseline_model, show_shapes=True, rankdir="LR")
 
 <div class="k-default-codeblock">
 ```
-Total model weights: 109629
+An NVIDIA GPU may be present on this machine, but a CUDA-enabled jaxlib is not installed. Falling back to cpu.
+
+Total model weights: 110693
 
 ```
 </div>
     
-![png](/img/examples/structured_data/tabtransformer/tabtransformer_24_1.png)
+![png](/img/examples/structured_data/tabtransformer/tabtransformer_24_2.png)
     
 
 
@@ -459,37 +464,37 @@ history = run_experiment(
 ```
 Start training the model...
 Epoch 1/15
-123/123 [==============================] - 6s 25ms/step - loss: 110178.8203 - accuracy: 0.7478 - val_loss: 92703.0859 - val_accuracy: 0.7825
+ 123/123 ━━━━━━━━━━━━━━━━━━━━ 13s 70ms/step - accuracy: 0.6912 - loss: 127137.3984 - val_accuracy: 0.7623 - val_loss: 96156.1875
 Epoch 2/15
-123/123 [==============================] - 2s 14ms/step - loss: 90979.8125 - accuracy: 0.7675 - val_loss: 71798.9219 - val_accuracy: 0.8001
+ 123/123 ━━━━━━━━━━━━━━━━━━━━ 2s 13ms/step - accuracy: 0.7626 - loss: 102946.6797 - val_accuracy: 0.7699 - val_loss: 77236.8828
 Epoch 3/15
-123/123 [==============================] - 2s 14ms/step - loss: 77226.5547 - accuracy: 0.7902 - val_loss: 68581.0312 - val_accuracy: 0.8168
+ 123/123 ━━━━━━━━━━━━━━━━━━━━ 2s 13ms/step - accuracy: 0.7738 - loss: 82999.3281 - val_accuracy: 0.8154 - val_loss: 70085.9609
 Epoch 4/15
-123/123 [==============================] - 2s 14ms/step - loss: 72652.2422 - accuracy: 0.8004 - val_loss: 70084.0469 - val_accuracy: 0.7974
+ 123/123 ━━━━━━━━━━━━━━━━━━━━ 2s 13ms/step - accuracy: 0.7981 - loss: 75569.4375 - val_accuracy: 0.8111 - val_loss: 69759.5547
 Epoch 5/15
-123/123 [==============================] - 2s 14ms/step - loss: 71207.9375 - accuracy: 0.8033 - val_loss: 66552.1719 - val_accuracy: 0.8130
+ 123/123 ━━━━━━━━━━━━━━━━━━━━ 2s 13ms/step - accuracy: 0.8006 - loss: 74234.1641 - val_accuracy: 0.7968 - val_loss: 71532.2422
 Epoch 6/15
-123/123 [==============================] - 2s 14ms/step - loss: 69321.4375 - accuracy: 0.8091 - val_loss: 65837.0469 - val_accuracy: 0.8149
+ 123/123 ━━━━━━━━━━━━━━━━━━━━ 2s 13ms/step - accuracy: 0.8074 - loss: 71770.2891 - val_accuracy: 0.8082 - val_loss: 69105.5078
 Epoch 7/15
-123/123 [==============================] - 2s 14ms/step - loss: 68839.3359 - accuracy: 0.8099 - val_loss: 65613.0156 - val_accuracy: 0.8187
+ 123/123 ━━━━━━━━━━━━━━━━━━━━ 2s 13ms/step - accuracy: 0.8118 - loss: 70526.6797 - val_accuracy: 0.8094 - val_loss: 68746.7891
 Epoch 8/15
-123/123 [==============================] - 2s 14ms/step - loss: 68126.7344 - accuracy: 0.8124 - val_loss: 66155.8594 - val_accuracy: 0.8108
+ 123/123 ━━━━━━━━━━━━━━━━━━━━ 2s 13ms/step - accuracy: 0.8110 - loss: 70309.3750 - val_accuracy: 0.8132 - val_loss: 68305.1328
 Epoch 9/15
-123/123 [==============================] - 2s 14ms/step - loss: 67768.9844 - accuracy: 0.8147 - val_loss: 66705.8047 - val_accuracy: 0.8230
+ 123/123 ━━━━━━━━━━━━━━━━━━━━ 2s 13ms/step - accuracy: 0.8143 - loss: 69896.9141 - val_accuracy: 0.8046 - val_loss: 70013.1016
 Epoch 10/15
-123/123 [==============================] - 2s 14ms/step - loss: 67482.5859 - accuracy: 0.8151 - val_loss: 65668.3672 - val_accuracy: 0.8143
+ 123/123 ━━━━━━━━━━━━━━━━━━━━ 2s 13ms/step - accuracy: 0.8124 - loss: 69885.8281 - val_accuracy: 0.8037 - val_loss: 70305.7969
 Epoch 11/15
-123/123 [==============================] - 2s 14ms/step - loss: 66792.6875 - accuracy: 0.8181 - val_loss: 66536.3828 - val_accuracy: 0.8233
+ 123/123 ━━━━━━━━━━━━━━━━━━━━ 2s 13ms/step - accuracy: 0.8131 - loss: 69193.8203 - val_accuracy: 0.8075 - val_loss: 69615.5547
 Epoch 12/15
-123/123 [==============================] - 2s 14ms/step - loss: 65610.4531 - accuracy: 0.8229 - val_loss: 70377.7266 - val_accuracy: 0.8256
+ 123/123 ━━━━━━━━━━━━━━━━━━━━ 2s 13ms/step - accuracy: 0.8148 - loss: 68933.5703 - val_accuracy: 0.7997 - val_loss: 70789.2422
 Epoch 13/15
-123/123 [==============================] - 2s 14ms/step - loss: 63930.2500 - accuracy: 0.8282 - val_loss: 68294.8516 - val_accuracy: 0.8289
+ 123/123 ━━━━━━━━━━━━━━━━━━━━ 2s 13ms/step - accuracy: 0.8146 - loss: 68929.5078 - val_accuracy: 0.8104 - val_loss: 68525.1016
 Epoch 14/15
-123/123 [==============================] - 2s 14ms/step - loss: 63420.1562 - accuracy: 0.8323 - val_loss: 63050.5859 - val_accuracy: 0.8324
+ 123/123 ━━━━━━━━━━━━━━━━━━━━ 3s 26ms/step - accuracy: 0.8174 - loss: 68447.2500 - val_accuracy: 0.8119 - val_loss: 68787.0078
 Epoch 15/15
-123/123 [==============================] - 2s 14ms/step - loss: 62619.4531 - accuracy: 0.8345 - val_loss: 66933.7500 - val_accuracy: 0.8277
+ 123/123 ━━━━━━━━━━━━━━━━━━━━ 2s 13ms/step - accuracy: 0.8184 - loss: 68346.5391 - val_accuracy: 0.8143 - val_loss: 68101.9531
 Model training finished
-Validation accuracy: 82.77%
+Validation accuracy: 81.43%
 
 ```
 </div>
@@ -526,7 +531,6 @@ def create_tabtransformer_classifier(
     dropout_rate,
     use_column_embedding=False,
 ):
-
     # Create model inputs.
     inputs = create_model_inputs()
     # encode features.
@@ -534,7 +538,7 @@ def create_tabtransformer_classifier(
         inputs, embedding_dims
     )
     # Stack categorical feature embeddings for the Tansformer.
-    encoded_categorical_features = tf.stack(encoded_categorical_feature_list, axis=1)
+    encoded_categorical_features = ops.stack(encoded_categorical_feature_list, axis=1)
     # Concatenate numerical features.
     numerical_features = layers.concatenate(numerical_feature_list)
 
@@ -544,7 +548,7 @@ def create_tabtransformer_classifier(
         column_embedding = layers.Embedding(
             input_dim=num_columns, output_dim=embedding_dims
         )
-        column_indices = tf.range(start=0, limit=num_columns, delta=1)
+        column_indices = ops.arange(start=0, stop=num_columns, step=1)
         encoded_categorical_features = encoded_categorical_features + column_embedding(
             column_indices
         )
@@ -569,7 +573,9 @@ def create_tabtransformer_classifier(
             hidden_units=[embedding_dims],
             dropout_rate=dropout_rate,
             activation=keras.activations.gelu,
-            normalization_layer=layers.LayerNormalization(epsilon=1e-6),
+            normalization_layer=partial(
+                layers.LayerNormalization, epsilon=1e-6
+            ),  # using partial to provide keyword arguments before initialization
             name=f"feedforward_{block_idx}",
         )(x)
         # Skip connection 2.
@@ -595,7 +601,7 @@ def create_tabtransformer_classifier(
         hidden_units=mlp_hidden_units,
         dropout_rate=dropout_rate,
         activation=keras.activations.selu,
-        normalization_layer=layers.BatchNormalization(),
+        normalization_layer=layers.BatchNormalization,
         name="MLP",
     )(features)
 
@@ -619,7 +625,7 @@ keras.utils.plot_model(tabtransformer_model, show_shapes=True, rankdir="LR")
 
 <div class="k-default-codeblock">
 ```
-Total model weights: 87479
+Total model weights: 88543
 
 ```
 </div>
@@ -648,37 +654,37 @@ history = run_experiment(
 ```
 Start training the model...
 Epoch 1/15
-123/123 [==============================] - 13s 61ms/step - loss: 82503.1641 - accuracy: 0.7944 - val_loss: 64260.2305 - val_accuracy: 0.8421
+ 123/123 ━━━━━━━━━━━━━━━━━━━━ 46s 272ms/step - accuracy: 0.7504 - loss: 103329.7578 - val_accuracy: 0.7637 - val_loss: 122401.2188
 Epoch 2/15
-123/123 [==============================] - 6s 51ms/step - loss: 68677.9375 - accuracy: 0.8251 - val_loss: 63819.8633 - val_accuracy: 0.8389
+ 123/123 ━━━━━━━━━━━━━━━━━━━━ 8s 62ms/step - accuracy: 0.8033 - loss: 79797.0469 - val_accuracy: 0.7712 - val_loss: 97510.0000
 Epoch 3/15
-123/123 [==============================] - 6s 51ms/step - loss: 66703.8984 - accuracy: 0.8301 - val_loss: 63052.8789 - val_accuracy: 0.8428
+ 123/123 ━━━━━━━━━━━━━━━━━━━━ 6s 52ms/step - accuracy: 0.8202 - loss: 73736.2500 - val_accuracy: 0.8037 - val_loss: 79687.8906
 Epoch 4/15
-123/123 [==============================] - 6s 51ms/step - loss: 65287.8672 - accuracy: 0.8342 - val_loss: 61593.1484 - val_accuracy: 0.8451
+ 123/123 ━━━━━━━━━━━━━━━━━━━━ 6s 52ms/step - accuracy: 0.8247 - loss: 70282.2031 - val_accuracy: 0.8355 - val_loss: 64703.9453
 Epoch 5/15
-123/123 [==============================] - 6s 52ms/step - loss: 63968.8594 - accuracy: 0.8379 - val_loss: 61385.4531 - val_accuracy: 0.8442
+ 123/123 ━━━━━━━━━━━━━━━━━━━━ 6s 52ms/step - accuracy: 0.8317 - loss: 67661.8906 - val_accuracy: 0.8427 - val_loss: 64015.5156
 Epoch 6/15
-123/123 [==============================] - 6s 51ms/step - loss: 63645.7812 - accuracy: 0.8394 - val_loss: 61332.3281 - val_accuracy: 0.8447
+ 123/123 ━━━━━━━━━━━━━━━━━━━━ 6s 52ms/step - accuracy: 0.8333 - loss: 67486.6562 - val_accuracy: 0.8402 - val_loss: 65543.7188
 Epoch 7/15
-123/123 [==============================] - 6s 51ms/step - loss: 62778.6055 - accuracy: 0.8412 - val_loss: 61342.5352 - val_accuracy: 0.8461
+ 123/123 ━━━━━━━━━━━━━━━━━━━━ 6s 52ms/step - accuracy: 0.8359 - loss: 66328.3516 - val_accuracy: 0.8360 - val_loss: 68744.6484
 Epoch 8/15
-123/123 [==============================] - 6s 51ms/step - loss: 62815.6992 - accuracy: 0.8398 - val_loss: 61220.8242 - val_accuracy: 0.8460
+ 123/123 ━━━━━━━━━━━━━━━━━━━━ 6s 52ms/step - accuracy: 0.8354 - loss: 66040.3906 - val_accuracy: 0.8209 - val_loss: 72937.5703
 Epoch 9/15
-123/123 [==============================] - 6s 52ms/step - loss: 62191.1016 - accuracy: 0.8416 - val_loss: 61055.9102 - val_accuracy: 0.8452
+ 123/123 ━━━━━━━━━━━━━━━━━━━━ 6s 52ms/step - accuracy: 0.8376 - loss: 65606.2344 - val_accuracy: 0.8298 - val_loss: 72673.2031
 Epoch 10/15
-123/123 [==============================] - 6s 51ms/step - loss: 61992.1602 - accuracy: 0.8439 - val_loss: 61251.8047 - val_accuracy: 0.8441
+ 123/123 ━━━━━━━━━━━━━━━━━━━━ 6s 52ms/step - accuracy: 0.8395 - loss: 65170.4375 - val_accuracy: 0.8259 - val_loss: 70717.4922
 Epoch 11/15
-123/123 [==============================] - 6s 50ms/step - loss: 61745.1289 - accuracy: 0.8429 - val_loss: 61364.7695 - val_accuracy: 0.8445
+ 123/123 ━━━━━━━━━━━━━━━━━━━━ 8s 62ms/step - accuracy: 0.8395 - loss: 65003.5820 - val_accuracy: 0.8481 - val_loss: 62421.4102
 Epoch 12/15
-123/123 [==============================] - 6s 51ms/step - loss: 61696.3477 - accuracy: 0.8445 - val_loss: 61074.3594 - val_accuracy: 0.8450
+ 123/123 ━━━━━━━━━━━━━━━━━━━━ 12s 94ms/step - accuracy: 0.8396 - loss: 64860.1797 - val_accuracy: 0.8482 - val_loss: 63217.3516
 Epoch 13/15
-123/123 [==============================] - 6s 51ms/step - loss: 61569.1719 - accuracy: 0.8436 - val_loss: 61844.9688 - val_accuracy: 0.8456
+ 123/123 ━━━━━━━━━━━━━━━━━━━━ 6s 52ms/step - accuracy: 0.8412 - loss: 64597.3945 - val_accuracy: 0.8256 - val_loss: 71274.4609
 Epoch 14/15
-123/123 [==============================] - 6s 51ms/step - loss: 61343.0898 - accuracy: 0.8445 - val_loss: 61702.8828 - val_accuracy: 0.8455
+ 123/123 ━━━━━━━━━━━━━━━━━━━━ 11s 94ms/step - accuracy: 0.8419 - loss: 63789.4688 - val_accuracy: 0.8473 - val_loss: 63099.7422
 Epoch 15/15
-123/123 [==============================] - 6s 51ms/step - loss: 61355.0547 - accuracy: 0.8454 - val_loss: 61272.2852 - val_accuracy: 0.8455
+ 123/123 ━━━━━━━━━━━━━━━━━━━━ 11s 94ms/step - accuracy: 0.8427 - loss: 63856.9531 - val_accuracy: 0.8459 - val_loss: 64541.9688
 Model training finished
-Validation accuracy: 84.55%
+Validation accuracy: 84.59%
 
 ```
 </div>
@@ -696,9 +702,3 @@ For a scenario where there are a few labeled examples and a large number of unla
 examples, a pre-training procedure can be employed to train the Transformer layers using unlabeled data.
 This is followed by fine-tuning of the pre-trained Transformer layers along with
 the top MLP layer using the labeled data.
-
-Example available on HuggingFace.
-
-| Trained Model | Demo |
-| :--: | :--: |
-| [![Generic badge](https://img.shields.io/badge/🤗%20Model-TabTransformer-black.svg)](https://huggingface.co/keras-io/tab_transformer) | [![Generic badge](https://img.shields.io/badge/🤗%20Spaces-TabTransformer-black.svg)](https://huggingface.co/spaces/keras-io/TabTransformer_Classification) |

@@ -12,20 +12,20 @@ Accelerator: GPU
 """
 
 import os
+
+os.environ["KERAS_BACKEND"] = "tensorflow"
+
 import re
 import numpy as np
 import matplotlib.pyplot as plt
 
 import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras import layers
-from tensorflow.keras.applications import efficientnet
-from tensorflow.keras.layers import TextVectorization
+import keras
+from keras import layers
+from keras.applications import efficientnet
+from keras.layers import TextVectorization
 
-
-seed = 111
-np.random.seed(seed)
-tf.random.set_seed(seed)
+keras.utils.set_random_seed(111)
 
 """
 ## Download the dataset
@@ -342,7 +342,9 @@ class TransformerDecoderBlock(layers.Layer):
         self.layernorm_3 = layers.LayerNormalization()
 
         self.embedding = PositionalEmbedding(
-            embed_dim=EMBED_DIM, sequence_length=SEQ_LENGTH, vocab_size=VOCAB_SIZE
+            embed_dim=EMBED_DIM,
+            sequence_length=SEQ_LENGTH,
+            vocab_size=VOCAB_SIZE,
         )
         self.out = layers.Dense(VOCAB_SIZE, activation="softmax")
 
@@ -394,7 +396,10 @@ class TransformerDecoderBlock(layers.Layer):
         mask = tf.cast(i >= j, dtype="int32")
         mask = tf.reshape(mask, (1, input_shape[1], input_shape[1]))
         mult = tf.concat(
-            [tf.expand_dims(batch_size, -1), tf.constant([1, 1], dtype=tf.int32)],
+            [
+                tf.expand_dims(batch_size, -1),
+                tf.constant([1, 1], dtype=tf.int32),
+            ],
             axis=0,
         )
         return tf.tile(mask, mult)
@@ -484,7 +489,10 @@ class ImageCaptioningModel(keras.Model):
         self.acc_tracker.update_state(batch_acc)
 
         # 8. Return the loss and accuracy values
-        return {"loss": self.loss_tracker.result(), "acc": self.acc_tracker.result()}
+        return {
+            "loss": self.loss_tracker.result(),
+            "acc": self.acc_tracker.result(),
+        }
 
     def test_step(self, batch_data):
         batch_img, batch_seq = batch_data
@@ -513,7 +521,10 @@ class ImageCaptioningModel(keras.Model):
         self.acc_tracker.update_state(batch_acc)
 
         # 5. Return the loss and accuracy values
-        return {"loss": self.loss_tracker.result(), "acc": self.acc_tracker.result()}
+        return {
+            "loss": self.loss_tracker.result(),
+            "acc": self.acc_tracker.result(),
+        }
 
     @property
     def metrics(self):
@@ -539,7 +550,8 @@ caption_model = ImageCaptioningModel(
 
 # Define the loss function
 cross_entropy = keras.losses.SparseCategoricalCrossentropy(
-    from_logits=False, reduction="none"
+    from_logits=False,
+    reduction=None,
 )
 
 # EarlyStopping criteria

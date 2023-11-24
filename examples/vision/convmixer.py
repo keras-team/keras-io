@@ -5,6 +5,7 @@ Date created: 2021/10/12
 Last modified: 2021/10/12
 Description: An all-convolutional network applied to patches of images.
 Accelerator: GPU
+Converted to Keras 3 by: [Md Awsafur Rahman](https://awsaf49.github.io)
 """
 """
 ## Introduction
@@ -19,7 +20,8 @@ learning just from the training data with as minimal inductive priors as possibl
 yield great downstream performance when trained with proper regularization, data
 augmentation, and relatively large datasets.
 
-In the [Patches Are All You Need](https://openreview.net/pdf?id=TVHS5Y4dNvM) paper (note: at
+In the [Patches Are All You Need](https://openreview.net/pdf?id=TVHS5Y4dNvM) paper (note:
+at
 the time of writing, it is a submission to the ICLR 2022 conference), the authors extend
 the idea of using patches to train an all-convolutional network and demonstrate
 competitive results. Their architecture namely **ConvMixer** uses recipes from the recent
@@ -30,23 +32,16 @@ and so on.
 
 In this example, we will implement the ConvMixer model and demonstrate its performance on
 the CIFAR-10 dataset.
-
-To use the AdamW optimizer, we need to install TensorFlow Addons:
-
-```shell
-pip install -U -q tensorflow-addons
-```
 """
 
 """
 ## Imports
 """
 
-from tensorflow.keras import layers
-from tensorflow import keras
+import keras
+from keras import layers
 
 import matplotlib.pyplot as plt
-import tensorflow_addons as tfa
 import tensorflow as tf
 import numpy as np
 
@@ -85,18 +80,23 @@ print(f"Test data samples: {len(x_test)}")
 
 Our data augmentation pipeline is different from what the authors used for the CIFAR-10
 dataset, which is fine for the purpose of the example.
+Note that, it's ok to use **TF APIs for data I/O and preprocessing** with other backends
+(jax, torch) as it is feature-complete framework when it comes to data preprocessing.
 """
 
 image_size = 32
 auto = tf.data.AUTOTUNE
 
-data_augmentation = keras.Sequential(
-    [
-        layers.RandomCrop(image_size, image_size),
-        layers.RandomFlip("horizontal"),
-    ],
-    name="data_augmentation",
-)
+augmentation_layers = [
+    keras.layers.RandomCrop(image_size, image_size),
+    keras.layers.RandomFlip("horizontal"),
+]
+
+
+def augment_images(images):
+    for layer in augmentation_layers:
+        images = layer(images, training=True)
+    return images
 
 
 def make_datasets(images, labels, is_train=False):
@@ -106,7 +106,7 @@ def make_datasets(images, labels, is_train=False):
     dataset = dataset.batch(batch_size)
     if is_train:
         dataset = dataset.map(
-            lambda x, y: (data_augmentation(x), y), num_parallel_calls=auto
+            lambda x, y: (augment_images(x), y), num_parallel_calls=auto
         )
     return dataset.prefetch(auto)
 
@@ -196,7 +196,7 @@ parameters.
 
 
 def run_experiment(model):
-    optimizer = tfa.optimizers.AdamW(
+    optimizer = keras.optimizers.AdamW(
         learning_rate=learning_rate, weight_decay=weight_decay
     )
 
@@ -206,12 +206,12 @@ def run_experiment(model):
         metrics=["accuracy"],
     )
 
-    checkpoint_filepath = "/tmp/checkpoint"
+    checkpoint_filepath = "/tmp/checkpoint.keras"
     checkpoint_callback = keras.callbacks.ModelCheckpoint(
         checkpoint_filepath,
         monitor="val_accuracy",
         save_best_only=True,
-        save_weights_only=True,
+        save_weights_only=False,
     )
 
     history = model.fit(
@@ -300,7 +300,8 @@ kernel = np.expand_dims(kernel.squeeze(), axis=2)
 visualization_plot(kernel)
 
 """
-We see that different filters in the kernel have different locality spans, and this pattern
+We see that different filters in the kernel have different locality spans, and this
+pattern
 is likely to evolve with more training.
 """
 
@@ -313,8 +314,4 @@ like self-attention. Following works are along this line of research:
 * ConViT ([d'Ascoli et al.](https://arxiv.org/abs/2103.10697))
 * CCT ([Hassani et al.](https://arxiv.org/abs/2104.05704))
 * CoAtNet ([Dai et al.](https://arxiv.org/abs/2106.04803))
-
-| Trained Model | Demo |
-| :--: | :--: |
-| [![Generic badge](https://img.shields.io/badge/🤗%20Model-ConvMixer-black.svg)](https://huggingface.co/keras-io/conv_Mixer) | [![Generic badge](https://img.shields.io/badge/🤗%20Spaces-ConvMixer-black.svg)](https://huggingface.co/spaces/keras-io/conv_Mixer) |
 """

@@ -4,18 +4,9 @@ USAGE:
 
 python autogen.py make
 python autogen.py serve
-
-DEPENDENCIES:
-
-pygments
-jinja2
-markdown
-requests
-mdx_truly_sane_lists
 """
 
 import shutil
-import string
 import copy
 import json
 import re
@@ -27,25 +18,36 @@ import socketserver
 import signal
 import docstrings
 import jinja2
-import requests
 import multiprocessing
 import autogen_utils
-import keras_nlp
-import keras_cv
 
 from master import MASTER
+from examples_master import EXAMPLES_MASTER
 import tutobooks
 import generate_tf_guides
 import render_tags
 
+try:
+    import keras_nlp
+except Exception as e:
+    print(f"Could not import Keras NLP. Exception: {e}")
+    keras_nlp = None
+
+try:
+    import keras_cv
+except Exception as e:
+    print(f"Could not import Keras CV. Exception: {e}")
+    keras_cv = None
+
+
 EXAMPLES_GH_LOCATION = Path("keras-team") / "keras-io" / "blob" / "master" / "examples"
 GUIDES_GH_LOCATION = Path("keras-team") / "keras-io" / "blob" / "master" / "guides"
 PROJECT_URL = {
-    "keras": "https://github.com/keras-team/keras/tree/v2.14.0/",
+    "keras": "https://github.com/keras-team/keras/tree/v3.0.0/",
     "keras_tuner": "https://github.com/keras-team/keras-tuner/tree/v1.4.5/",
     "keras_cv": "https://github.com/keras-team/keras-cv/tree/v0.6.4/",
-    "keras_nlp": "https://github.com/keras-team/keras-nlp/tree/v0.6.3/",
-    "keras_core": "https://github.com/keras-team/keras-core/tree/v0.1.7/",
+    "keras_nlp": "https://github.com/keras-team/keras-nlp/tree/v0.6.2/",
+    "tf_keras": "https://github.com/keras-team/tf_keras/tree/v2.15.0/",
 }
 USE_MULTIPROCESSING = False
 
@@ -119,27 +121,6 @@ class KerasIO:
 
         # Recursively generate all md sources based on the MASTER tree
         self.make_md_source_for_entry(self.master, path_stack=[], title_stack=[])
-
-        # Pull some content from GitHub (governance, contributing)
-        # This enables us to keep a single source of truth for that content.
-        self.sync_external_readmes_to_sources()  # Overwrite e.g. sources/governance.md
-
-    def sync_external_readmes_to_sources(self):
-        # TODO keras-team/keras/CONTRIBUTING -> contributing.md
-
-        # keras-team/governance/README -> governance.md
-        r = requests.get(
-            "https://raw.githubusercontent.com/keras-team/"
-            "governance/master/README.md"
-        )
-        content = r.text
-        content = content[content.find("---\n") + 4 :]
-        content = content.replace("\n#", "\n##")
-        fpath = Path(self.md_sources_dir) / "governance.md"
-        md = open(fpath).read()
-        assert "{{sig_readme}}" in md
-        md = md.replace("{{sig_readme}}", content)
-        autogen_utils.save_file(fpath, md)
 
     def preprocess_tutobook_md_source(
         self, md_content, fname, github_repo_dir, img_dir, site_img_dir
@@ -377,11 +358,6 @@ class KerasIO:
         guides/md/intro_* -> sources/getting_started/
         examples/*/md/ -> sources/examples/*/
         """
-        if not os.path.exists(Path(self.templates_dir) / "guides" / "keras_core"):
-            os.makedirs(Path(self.templates_dir) / "guides" / "keras_core")
-        if os.path.exists(Path(self.templates_dir) / "keras_core" / "guides"):
-            shutil.rmtree(Path(self.templates_dir) / "keras_core" / "guides")
-
         # Guides
         copy_inner_contents(
             Path(self.guides_dir) / "md",
@@ -395,26 +371,53 @@ class KerasIO:
             / "getting_started"
             / "intro_to_keras_for_engineers.md",
         )
-        shutil.copyfile(
-            Path(self.templates_dir) / "guides" / "intro_to_keras_for_researchers.md",
-            Path(self.templates_dir)
-            / "getting_started"
-            / "intro_to_keras_for_researchers.md",
-        )
-        # Move Keras Core guides from `guides/keras_core/` to keras_core/guides/
-        shutil.move(
-            Path(self.templates_dir) / "guides" / "keras_core",
-            Path(self.templates_dir) / "keras_core" / "guides",
-        )
 
         # Examples
         for dir_name in os.listdir(Path(self.examples_dir)):
             dir_path = Path(self.examples_dir) / dir_name  # e.g. examples/nlp
             if os.path.isdir(dir_path):
                 dst_dir = Path(self.templates_dir) / "examples" / dir_name
-                if not os.path.exists(dst_dir):
-                    os.makedirs(dst_dir)
+                if os.path.exists(dst_dir):
+                    shutil.rmtree(dst_dir)
+                os.makedirs(dst_dir)
                 copy_inner_contents(dir_path / "md", dst_dir, ext=".md")
+
+        # Examples touch-up: add Keras version banner to each example
+        example_name_to_version = {}
+        for section in EXAMPLES_MASTER["children"]:
+            section_name = section["path"].replace("/", "")
+            for example in section["children"]:
+                example_name = section_name + "/" + example["path"]
+                if example.get("keras_3"):
+                    version = 3
+                else:
+                    version = 2
+                example_name_to_version[example_name] = version
+        for section_name in os.listdir(Path(self.templates_dir) / "examples"):
+            # e.g. templates/examples/nlp
+            dir_path = Path(self.templates_dir) / "examples" / section_name
+            if not os.path.isdir(dir_path):
+                continue
+            for example_fname in os.listdir(dir_path):
+                if example_fname.endswith(".md"):
+                    md_path = dir_path / example_fname
+                    with open(md_path) as f:
+                        md_content = f.read()
+                    example_name = (
+                        section_name + "/" + example_fname.removesuffix(".md")
+                    )
+                    version = example_name_to_version.get(example_name, 2)
+                    md_content_lines = md_content.split("\n")
+                    for i, line in enumerate(md_content_lines):
+                        if "View in Colab" in line:
+                            md_content_lines.insert(
+                                i,
+                                f"<div class='example_version_banner keras_{version}'>ⓘ This example uses Keras {version}</div>",
+                            )
+                            break
+                    md_content = "\n".join(md_content_lines) + "\n"
+                    with open(md_path, "w") as f:
+                        f.write(md_content)
 
     def sync_tutobook_media(self):
         """Copy generated `.png`s to site_dir.
@@ -453,6 +456,8 @@ class KerasIO:
         path_stack = []
 
         def make_nav_index_for_entry(entry, path_stack, max_depth):
+            if not isinstance(entry, dict):
+                raise ValueError("Incorrectly formatted entry: " f"{entry}")
             path = entry["path"]
             if path != "/":
                 path_stack.append(path)
@@ -765,22 +770,6 @@ class KerasIO:
         landing_page = landing_template.render({"base_url": self.url})
         autogen_utils.save_file(Path(self.site_dir) / "index.html", landing_page)
 
-        # Keras Core announcement page
-        keras_core_template = jinja2.Template(
-            open(Path(self.theme_dir) / "keras_core.html").read()
-        )
-        md_content = open(
-            Path(self.templates_dir) / "keras_core" / "announcement.md"
-        ).read()
-        content = autogen_utils.render_markdown_to_html(md_content)
-        keras_core_page = keras_core_template.render(
-            {"base_url": self.url, "content": content}
-        )
-        autogen_utils.save_file(
-            Path(self.site_dir) / "keras_core" / "announcement" / "index.html",
-            keras_core_page,
-        )
-
         # Search page
         search_main = open(Path(self.theme_dir) / "search.html").read()
         search_page = base_template.render(
@@ -809,6 +798,22 @@ class KerasIO:
             }
         )
         autogen_utils.save_file(Path(self.site_dir) / "404.html", page404)
+
+        # Keras 3 announcement page
+        keras_3_template = jinja2.Template(
+            open(Path(self.theme_dir) / "keras_3.html").read()
+        )
+        md_content = open(
+            Path(self.templates_dir) / "keras_3" / "keras_3_announcement.md"
+        ).read()
+        content = autogen_utils.render_markdown_to_html(md_content)
+        keras_core_page = keras_3_template.render(
+            {"base_url": self.url, "content": content}
+        )
+        autogen_utils.save_file(
+            Path(self.site_dir) / "keras_3" / "index.html",
+            keras_core_page,
+        )
 
         # Favicon
         shutil.copyfile(
@@ -911,6 +916,9 @@ class KerasIO:
             for entry in nav
         ]
         title = md_content[2 : md_content.find("\n")]
+
+        # Replace -- with —
+        html_content = html_content.replace("--", "—")
 
         self.render_single_docs_page_from_html(
             target_path,

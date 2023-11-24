@@ -3,12 +3,11 @@
 **Author:** Amy MiHyun Jang<br>
 **Date created:** 2020/07/28<br>
 **Last modified:** 2020/08/24<br>
+**Description:** Medical image classification on TPU.
 
 
 <img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/vision/ipynb/xray_classification_with_tpus.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/vision/xray_classification_with_tpus.py)
 
-
-**Description:** Medical image classification on TPU.
 
 ---
 ## Introduction + Set-up

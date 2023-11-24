@@ -6,6 +6,7 @@
 **Description:** Training Wav2Vec 2.0 using Hugging Face Transformers for Audio Classification.
 
 
+<div class='example_version_banner keras_2'>ⓘ This example uses Keras 2</div>
 <img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/audio/ipynb/wav2vec2_audiocls.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/audio/wav2vec2_audiocls.py)
 
 
@@ -478,3 +479,4 @@ from transformers import TFWav2Vec2Model
 
 model = TFWav2Vec2Model.from_pretrained("your-username/my-awesome-model", from_pt=True)
 ```
+

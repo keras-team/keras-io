@@ -17,25 +17,20 @@ The TabTransformer is built upon self-attention based Transformers.
 The Transformer layers transform the embeddings of categorical features
 into robust contextual embeddings to achieve higher predictive accuracy.
 
-This example should be run with TensorFlow 2.7 or higher,
-as well as [TensorFlow Addons](https://www.tensorflow.org/addons/overview),
-which can be installed using the following command:
 
-```python
-pip install -U tensorflow-addons
-```
 
 ## Setup
 """
+import keras
+from keras import layers
+from keras import ops
 
 import math
 import numpy as np
 import pandas as pd
-import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras import layers
-import tensorflow_addons as tfa
+from tensorflow import data as tf_data
 import matplotlib.pyplot as plt
+from functools import partial
 
 """
 ## Prepare the data
@@ -185,18 +180,41 @@ def prepare_example(features, target):
     return features, target_index, weights
 
 
+lookup_dict = {}
+for feature_name in CATEGORICAL_FEATURE_NAMES:
+    vocabulary = CATEGORICAL_FEATURES_WITH_VOCABULARY[feature_name]
+    # Create a lookup to convert a string values to an integer indices.
+    # Since we are not using a mask token, nor expecting any out of vocabulary
+    # (oov) token, we set mask_token to None and num_oov_indices to 0.
+    lookup = layers.StringLookup(
+        vocabulary=vocabulary, mask_token=None, num_oov_indices=0
+    )
+    lookup_dict[feature_name] = lookup
+
+
+def encode_categorical(batch_x, batch_y, weights):
+    for feature_name in CATEGORICAL_FEATURE_NAMES:
+        batch_x[feature_name] = lookup_dict[feature_name](batch_x[feature_name])
+
+    return batch_x, batch_y, weights
+
+
 def get_dataset_from_csv(csv_file_path, batch_size=128, shuffle=False):
-    dataset = tf.data.experimental.make_csv_dataset(
-        csv_file_path,
-        batch_size=batch_size,
-        column_names=CSV_HEADER,
-        column_defaults=COLUMN_DEFAULTS,
-        label_name=TARGET_FEATURE_NAME,
-        num_epochs=1,
-        header=False,
-        na_value="?",
-        shuffle=shuffle,
-    ).map(prepare_example, num_parallel_calls=tf.data.AUTOTUNE, deterministic=False)
+    dataset = (
+        tf_data.experimental.make_csv_dataset(
+            csv_file_path,
+            batch_size=batch_size,
+            column_names=CSV_HEADER,
+            column_defaults=COLUMN_DEFAULTS,
+            label_name=TARGET_FEATURE_NAME,
+            num_epochs=1,
+            header=False,
+            na_value="?",
+            shuffle=shuffle,
+        )
+        .map(prepare_example, num_parallel_calls=tf_data.AUTOTUNE, deterministic=False)
+        .map(encode_categorical)
+    )
     return dataset.cache()
 
 
@@ -214,7 +232,7 @@ def run_experiment(
     weight_decay,
     batch_size,
 ):
-    optimizer = tfa.optimizers.AdamW(
+    optimizer = keras.optimizers.AdamW(
         learning_rate=learning_rate, weight_decay=weight_decay
     )
 
@@ -254,11 +272,11 @@ def create_model_inputs():
     for feature_name in FEATURE_NAMES:
         if feature_name in NUMERIC_FEATURE_NAMES:
             inputs[feature_name] = layers.Input(
-                name=feature_name, shape=(), dtype=tf.float32
+                name=feature_name, shape=(), dtype="float32"
             )
         else:
             inputs[feature_name] = layers.Input(
-                name=feature_name, shape=(), dtype=tf.string
+                name=feature_name, shape=(), dtype="float32"
             )
     return inputs
 
@@ -278,21 +296,12 @@ def encode_inputs(inputs, embedding_dims):
 
     for feature_name in inputs:
         if feature_name in CATEGORICAL_FEATURE_NAMES:
-            # Get the vocabulary of the categorical feature.
             vocabulary = CATEGORICAL_FEATURES_WITH_VOCABULARY[feature_name]
-
-            # Create a lookup to convert string values to an integer indices.
-            # Since we are not using a mask token nor expecting any out of vocabulary
-            # (oov) token, we set mask_token to None and  num_oov_indices to 0.
-            lookup = layers.StringLookup(
-                vocabulary=vocabulary,
-                mask_token=None,
-                num_oov_indices=0,
-                output_mode="int",
-            )
+            # Create a lookup to convert a string values to an integer indices.
+            # Since we are not using a mask token, nor expecting any out of vocabulary
+            # (oov) token, we set mask_token to None and num_oov_indices to 0.
 
             # Convert the string input values into integer indices.
-            encoded_feature = lookup(inputs[feature_name])
 
             # Create an embedding layer with the specified dimensions.
             embedding = layers.Embedding(
@@ -300,12 +309,12 @@ def encode_inputs(inputs, embedding_dims):
             )
 
             # Convert the index values to embedding representations.
-            encoded_categorical_feature = embedding(encoded_feature)
+            encoded_categorical_feature = embedding(inputs[feature_name])
             encoded_categorical_feature_list.append(encoded_categorical_feature)
 
         else:
             # Use the numerical features as-is.
-            numerical_feature = tf.expand_dims(inputs[feature_name], -1)
+            numerical_feature = ops.expand_dims(inputs[feature_name], -1)
             numerical_feature_list.append(numerical_feature)
 
     return encoded_categorical_feature_list, numerical_feature_list
@@ -319,7 +328,7 @@ def encode_inputs(inputs, embedding_dims):
 def create_mlp(hidden_units, dropout_rate, activation, normalization_layer, name=None):
     mlp_layers = []
     for units in hidden_units:
-        mlp_layers.append(normalization_layer),
+        mlp_layers.append(normalization_layer()),
         mlp_layers.append(layers.Dense(units, activation=activation))
         mlp_layers.append(layers.Dropout(dropout_rate))
 
@@ -355,7 +364,7 @@ def create_baseline_model(
             hidden_units=feedforward_units,
             dropout_rate=dropout_rate,
             activation=keras.activations.gelu,
-            normalization_layer=layers.LayerNormalization(epsilon=1e-6),
+            normalization_layer=layers.LayerNormalization,
             name=f"feedforward_{layer_idx}",
         )(features)
 
@@ -368,7 +377,7 @@ def create_baseline_model(
         hidden_units=mlp_hidden_units,
         dropout_rate=dropout_rate,
         activation=keras.activations.selu,
-        normalization_layer=layers.BatchNormalization(),
+        normalization_layer=layers.BatchNormalization,
         name="MLP",
     )(features)
 
@@ -443,7 +452,7 @@ def create_tabtransformer_classifier(
         inputs, embedding_dims
     )
     # Stack categorical feature embeddings for the Tansformer.
-    encoded_categorical_features = tf.stack(encoded_categorical_feature_list, axis=1)
+    encoded_categorical_features = ops.stack(encoded_categorical_feature_list, axis=1)
     # Concatenate numerical features.
     numerical_features = layers.concatenate(numerical_feature_list)
 
@@ -453,7 +462,7 @@ def create_tabtransformer_classifier(
         column_embedding = layers.Embedding(
             input_dim=num_columns, output_dim=embedding_dims
         )
-        column_indices = tf.range(start=0, limit=num_columns, delta=1)
+        column_indices = ops.arange(start=0, stop=num_columns, step=1)
         encoded_categorical_features = encoded_categorical_features + column_embedding(
             column_indices
         )
@@ -478,7 +487,9 @@ def create_tabtransformer_classifier(
             hidden_units=[embedding_dims],
             dropout_rate=dropout_rate,
             activation=keras.activations.gelu,
-            normalization_layer=layers.LayerNormalization(epsilon=1e-6),
+            normalization_layer=partial(
+                layers.LayerNormalization, epsilon=1e-6
+            ),  # using partial to provide keyword arguments before initialization
             name=f"feedforward_{block_idx}",
         )(x)
         # Skip connection 2.
@@ -504,7 +515,7 @@ def create_tabtransformer_classifier(
         hidden_units=mlp_hidden_units,
         dropout_rate=dropout_rate,
         activation=keras.activations.selu,
-        normalization_layer=layers.BatchNormalization(),
+        normalization_layer=layers.BatchNormalization,
         name="MLP",
     )(features)
 
@@ -555,11 +566,5 @@ For a scenario where there are a few labeled examples and a large number of unla
 examples, a pre-training procedure can be employed to train the Transformer layers using unlabeled data.
 This is followed by fine-tuning of the pre-trained Transformer layers along with
 the top MLP layer using the labeled data.
-
-Example available on HuggingFace.
-
-| Trained Model | Demo |
-| :--: | :--: |
-| [![Generic badge](https://img.shields.io/badge/🤗%20Model-TabTransformer-black.svg)](https://huggingface.co/keras-io/tab_transformer) | [![Generic badge](https://img.shields.io/badge/🤗%20Spaces-TabTransformer-black.svg)](https://huggingface.co/spaces/keras-io/TabTransformer_Classification) |
 
 """

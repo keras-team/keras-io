@@ -33,12 +33,18 @@ and 9 categorical features.
 ## Setup
 """
 
-import tensorflow as tf
+import keras
+from keras import layers
+from keras.layers import StringLookup
+from keras import ops
+
+
+from tensorflow import data as tf_data
 import numpy as np
 import pandas as pd
-from tensorflow import keras
-from tensorflow.keras import layers
+
 import math
+
 
 """
 ## Prepare the data
@@ -138,33 +144,54 @@ TARGET_FEATURE_NAME = "income_bracket"
 TARGET_LABELS = [" <=50K", " >50K"]
 
 """
-## Create `tf.data.Dataset` objects for training and validation
+## Create `tf_data.Dataset` objects for training and validation
 
 We create an input function to read and parse the file, and convert features and labels
-into a [`tf.data.Dataset`](https://www.tensorflow.org/guide/datasets)
+into a [`tf_data.Dataset`](https://www.tensorflow.org/guide/datasets)
 for training and validation. We also preprocess the input by mapping the target label
 to an index.
 """
 
-from tensorflow.keras.layers import StringLookup
 
 target_label_lookup = StringLookup(
     vocabulary=TARGET_LABELS, mask_token=None, num_oov_indices=0
 )
 
 
+lookup_dict = {}
+for feature_name in CATEGORICAL_FEATURE_NAMES:
+    vocabulary = CATEGORICAL_FEATURES_WITH_VOCABULARY[feature_name]
+    # Create a lookup to convert a string values to an integer indices.
+    # Since we are not using a mask token, nor expecting any out of vocabulary
+    # (oov) token, we set mask_token to None and num_oov_indices to 0.
+    lookup = StringLookup(vocabulary=vocabulary, mask_token=None, num_oov_indices=0)
+    lookup_dict[feature_name] = lookup
+
+
+def encode_categorical(batch_x, batch_y):
+    for feature_name in CATEGORICAL_FEATURE_NAMES:
+        batch_x[feature_name] = lookup_dict[feature_name](batch_x[feature_name])
+
+    return batch_x, batch_y
+
+
 def get_dataset_from_csv(csv_file_path, shuffle=False, batch_size=128):
-    dataset = tf.data.experimental.make_csv_dataset(
-        csv_file_path,
-        batch_size=batch_size,
-        column_names=CSV_HEADER,
-        column_defaults=COLUMN_DEFAULTS,
-        label_name=TARGET_FEATURE_NAME,
-        num_epochs=1,
-        header=False,
-        na_value="?",
-        shuffle=shuffle,
-    ).map(lambda features, target: (features, target_label_lookup(target)))
+    dataset = (
+        tf_data.experimental.make_csv_dataset(
+            csv_file_path,
+            batch_size=batch_size,
+            column_names=CSV_HEADER,
+            column_defaults=COLUMN_DEFAULTS,
+            label_name=TARGET_FEATURE_NAME,
+            num_epochs=1,
+            header=False,
+            na_value="?",
+            shuffle=shuffle,
+        )
+        .map(lambda features, target: (features, target_label_lookup(target)))
+        .map(encode_categorical)
+    )
+
     return dataset.cache()
 
 
@@ -178,11 +205,11 @@ def create_model_inputs():
     for feature_name in FEATURE_NAMES:
         if feature_name in NUMERIC_FEATURE_NAMES:
             inputs[feature_name] = layers.Input(
-                name=feature_name, shape=(), dtype=tf.float32
+                name=feature_name, shape=(), dtype="float32"
             )
         else:
             inputs[feature_name] = layers.Input(
-                name=feature_name, shape=(), dtype=tf.string
+                name=feature_name, shape=(), dtype="int32"
             )
     return inputs
 
@@ -200,11 +227,7 @@ def encode_inputs(inputs):
             # Create a lookup to convert a string values to an integer indices.
             # Since we are not using a mask token, nor expecting any out of vocabulary
             # (oov) token, we set mask_token to None and num_oov_indices to 0.
-            lookup = StringLookup(
-                vocabulary=vocabulary, mask_token=None, num_oov_indices=0
-            )
-            # Convert the string input values into integer indices.
-            value_index = lookup(inputs[feature_name])
+            value_index = inputs[feature_name]
             embedding_dims = int(math.sqrt(lookup.vocabulary_size()))
             # Create an embedding layer with the specified dimensions.
             embedding = layers.Embedding(
@@ -216,7 +239,7 @@ def encode_inputs(inputs):
             # Use the numerical features as-is.
             encoded_feature = inputs[feature_name]
             if inputs[feature_name].shape[-1] is None:
-                encoded_feature = tf.expand_dims(encoded_feature, -1)
+                encoded_feature = keras.ops.expand_dims(encoded_feature, -1)
 
         encoded_features.append(encoded_feature)
 
@@ -253,16 +276,17 @@ class NeuralDecisionTree(keras.Model):
         # Create a mask for the randomly selected features.
         num_used_features = int(num_features * used_features_rate)
         one_hot = np.eye(num_features)
-        sampled_feature_indicies = np.random.choice(
+        sampled_feature_indices = np.random.choice(
             np.arange(num_features), num_used_features, replace=False
         )
-        self.used_features_mask = one_hot[sampled_feature_indicies]
+        self.used_features_mask = ops.convert_to_tensor(
+            one_hot[sampled_feature_indices], dtype="float32"
+        )
 
         # Initialize the weights of the classes in leaves.
-        self.pi = tf.Variable(
-            initial_value=tf.random_normal_initializer()(
-                shape=[self.num_leaves, self.num_classes]
-            ),
+        self.pi = self.add_weight(
+            initializer="random_normal",
+            shape=[self.num_leaves, self.num_classes],
             dtype="float32",
             trainable=True,
         )
@@ -273,14 +297,14 @@ class NeuralDecisionTree(keras.Model):
         )
 
     def call(self, features):
-        batch_size = tf.shape(features)[0]
+        batch_size = ops.shape(features)[0]
 
         # Apply the feature mask to the input features.
-        features = tf.matmul(
-            features, self.used_features_mask, transpose_b=True
+        features = ops.matmul(
+            features, ops.transpose(self.used_features_mask)
         )  # [batch_size, num_used_features]
         # Compute the routing probabilities.
-        decisions = tf.expand_dims(
+        decisions = ops.expand_dims(
             self.decision_fn(features), axis=2
         )  # [batch_size, num_leaves, 1]
         # Concatenate the routing probabilities with their complements.
@@ -288,14 +312,14 @@ class NeuralDecisionTree(keras.Model):
             [decisions, 1 - decisions], axis=2
         )  # [batch_size, num_leaves, 2]
 
-        mu = tf.ones([batch_size, 1, 1])
+        mu = ops.ones([batch_size, 1, 1])
 
         begin_idx = 1
         end_idx = 2
         # Traverse the tree in breadth-first order.
         for level in range(self.depth):
-            mu = tf.reshape(mu, [batch_size, -1, 1])  # [batch_size, 2 ** level, 1]
-            mu = tf.tile(mu, (1, 1, 2))  # [batch_size, 2 ** level, 2]
+            mu = ops.reshape(mu, [batch_size, -1, 1])  # [batch_size, 2 ** level, 1]
+            mu = ops.tile(mu, (1, 1, 2))  # [batch_size, 2 ** level, 2]
             level_decisions = decisions[
                 :, begin_idx:end_idx, :
             ]  # [batch_size, 2 ** level, 2]
@@ -303,9 +327,9 @@ class NeuralDecisionTree(keras.Model):
             begin_idx = end_idx
             end_idx = begin_idx + 2 ** (level + 1)
 
-        mu = tf.reshape(mu, [batch_size, self.num_leaves])  # [batch_size, num_leaves]
+        mu = ops.reshape(mu, [batch_size, self.num_leaves])  # [batch_size, num_leaves]
         probabilities = keras.activations.softmax(self.pi)  # [num_leaves, num_classes]
-        outputs = tf.matmul(mu, probabilities)  # [batch_size, num_classes]
+        outputs = ops.matmul(mu, probabilities)  # [batch_size, num_classes]
         return outputs
 
 
@@ -330,8 +354,8 @@ class NeuralDecisionForest(keras.Model):
 
     def call(self, inputs):
         # Initialize the outputs: a [batch_size, num_classes] matrix of zeros.
-        batch_size = tf.shape(inputs)[0]
-        outputs = tf.zeros([batch_size, num_classes])
+        batch_size = ops.shape(inputs)[0]
+        outputs = ops.zeros([batch_size, num_classes])
 
         # Aggregate the outputs of trees in the ensemble.
         for tree in self.ensemble:
@@ -434,9 +458,3 @@ def create_forest_model():
 forest_model = create_forest_model()
 
 run_experiment(forest_model)
-
-
-"""
-You can use the trained model hosted on [Hugging Face Hub](https://huggingface.co/keras-io/neural-decision-forest)
-and try the demo on [Hugging Face Spaces](https://huggingface.co/spaces/keras-io/Neural-Decision-Forest).
-"""

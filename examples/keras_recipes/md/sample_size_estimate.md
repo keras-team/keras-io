@@ -10,7 +10,7 @@
 
 
 
-## Introduction
+# Introduction
 
 In many real-world scenarios, the amount image data available to train a deep learning model is
 limited. This is especially true in the medical imaging domain, where dataset creation is
@@ -30,24 +30,29 @@ and training the model using the subsample. The model is then evaluated on an in
 test set. This process is repeated N times for each subsample with replacement to allow
 for the construction of a mean and confidence interval for the observed performance.
 
+---
 ## Setup
 
 
 ```python
+import os
+
+os.environ["KERAS_BACKEND"] = "tensorflow"
+
 import matplotlib.pyplot as plt
 import numpy as np
 import tensorflow as tf
-from tensorflow import keras
+import keras
+from keras import layers
 import tensorflow_datasets as tfds
-from tensorflow.keras import layers
 
 # Define seed and fixed variables
 seed = 42
-tf.random.set_seed(seed)
-np.random.seed(seed)
+keras.utils.set_random_seed(seed)
 AUTO = tf.data.AUTOTUNE
 ```
 
+---
 ## Load TensorFlow dataset and convert to NumPy arrays
 
 We'll be using the [TF Flowers dataset](https://www.tensorflow.org/datasets/catalog/tf_flowers).
@@ -75,6 +80,7 @@ class_names = ds_info.features["label"].names
 print(f"Number of classes: {num_classes}")
 print(f"Class names: {class_names}")
 
+
 # Convert datasets to NumPy arrays
 def dataset_to_array(dataset, image_size, num_classes):
     images, labels = [], []
@@ -99,6 +105,7 @@ Number of training samples: 3303
 
 ```
 </div>
+---
 ## Plot a few examples from the test set
 
 
@@ -117,6 +124,7 @@ for n in range(30):
     
 
 
+---
 ## Augmentation
 
 Define image augmentation using keras preprocessing layers and apply them to the training set.
@@ -150,6 +158,7 @@ for n in range(30):
     
 
 
+---
 ## Define model building & training functions
 
 We create a few convenience functions to build a transfer-learning model, compile and
@@ -271,6 +280,7 @@ def unfreeze(model, block_name, verbose=0):
 
 ```
 
+---
 ## Define iterative training function
 
 To train a model over several subsample sets we need to create an iterative training function.
@@ -329,6 +339,7 @@ def train_model(training_data, training_labels):
 
 ```
 
+---
 ## Train models iteratively
 
 Now that we have model building functions and supporting iterative functions we can train
@@ -393,6 +404,7 @@ train_acc = [
 sample_sizes = [165, 330, 825, 1651]
 ```
 
+---
 ## Learning curve
 
 We now plot the learning curve by fitting an exponential curve through the mean accuracy
@@ -416,14 +428,14 @@ def fit_and_predict(train_acc, sample_sizes, pred_sample_size):
                         fitted learning curve.
     """
     x = sample_sizes
-    mean_acc = [np.mean(i) for i in train_acc]
+    mean_acc = tf.convert_to_tensor([np.mean(i) for i in train_acc])
     error = [np.std(i) for i in train_acc]
 
     # Define mean squared error cost and exponential curve fit functions
     mse = keras.losses.MeanSquaredError()
 
     def exp_func(x, a, b):
-        return a * x ** b
+        return a * x**b
 
     # Define variables, learning rate and number of epochs for fitting with TF
     a = tf.Variable(0.0)
@@ -478,8 +490,8 @@ fit_and_predict(train_acc, sample_sizes, pred_sample_size=num_train_samples)
 
 <div class="k-default-codeblock">
 ```
-Curve fit weights: a = 0.6445642113685608 and b = 0.0480974055826664.
-A model accuracy of 0.9517360925674438 is predicted for 3303 samples.
+Curve fit weights: a = 0.6445642113685608 and b = 0.048097413033246994.
+A model accuracy of 0.9517362117767334 is predicted for 3303 samples.
 
 ```
 </div>
@@ -490,7 +502,7 @@ A model accuracy of 0.9517360925674438 is predicted for 3303 samples.
 
 <div class="k-default-codeblock">
 ```
-The mae for the curve fit is 0.016098812222480774.
+The mae for the curve fit is 0.016098767518997192.
 
 ```
 </div>
@@ -509,56 +521,59 @@ print(f"A model accuracy of {accuracy} is reached on {num_train_samples} images!
 
 <div class="k-default-codeblock">
 ```
+/var/folders/8n/8w8cqnvj01xd4ghznl11nyn000_93_/T/ipykernel_30919/1838736464.py:16: UserWarning: `input_shape` is undefined or non-square, or `rows` is not in [96, 128, 160, 192, 224]. Weights for input shape (224, 224) will be loaded as the default.
+  model = keras.applications.MobileNetV2(
 
-Downloading data from https://storage.googleapis.com/tensorflow/keras-applications/mobilenet_v2/mobilenet_v2_weights_tf_dim_ordering_tf_kernels_1.0_224_no_top.h5
-9412608/9406464 [==============================] - 0s 0us/step
 Trainable weights: 2
 Non_trainable weights: 260
 Epoch 1/10
-47/47 [==============================] - 34s 88ms/step - loss: 1.0756 - auc: 0.8513 - acc: 0.5821 - val_loss: 0.4947 - val_auc: 0.9761 - val_acc: 0.8429
+ 47/47 ━━━━━━━━━━━━━━━━━━━━ 18s 338ms/step - acc: 0.4305 - auc: 0.7221 - loss: 1.4585 - val_acc: 0.8218 - val_auc: 0.9700 - val_loss: 0.5043
 Epoch 2/10
-47/47 [==============================] - 3s 67ms/step - loss: 0.5470 - auc: 0.9629 - acc: 0.8022 - val_loss: 0.3746 - val_auc: 0.9854 - val_acc: 0.8882
+ 47/47 ━━━━━━━━━━━━━━━━━━━━ 15s 326ms/step - acc: 0.7666 - auc: 0.9504 - loss: 0.6287 - val_acc: 0.8792 - val_auc: 0.9838 - val_loss: 0.3733
 Epoch 3/10
-47/47 [==============================] - 3s 66ms/step - loss: 0.4495 - auc: 0.9744 - acc: 0.8445 - val_loss: 0.3474 - val_auc: 0.9861 - val_acc: 0.8882
+ 47/47 ━━━━━━━━━━━━━━━━━━━━ 16s 332ms/step - acc: 0.8252 - auc: 0.9673 - loss: 0.5039 - val_acc: 0.8852 - val_auc: 0.9880 - val_loss: 0.3182
 Epoch 4/10
-47/47 [==============================] - 3s 66ms/step - loss: 0.3914 - auc: 0.9802 - acc: 0.8647 - val_loss: 0.3171 - val_auc: 0.9882 - val_acc: 0.8912
+ 47/47 ━━━━━━━━━━━━━━━━━━━━ 16s 348ms/step - acc: 0.8458 - auc: 0.9768 - loss: 0.4264 - val_acc: 0.8822 - val_auc: 0.9893 - val_loss: 0.2956
 Epoch 5/10
-47/47 [==============================] - 3s 73ms/step - loss: 0.3631 - auc: 0.9832 - acc: 0.8681 - val_loss: 0.2983 - val_auc: 0.9895 - val_acc: 0.9003
+ 47/47 ━━━━━━━━━━━━━━━━━━━━ 16s 350ms/step - acc: 0.8661 - auc: 0.9812 - loss: 0.3821 - val_acc: 0.8912 - val_auc: 0.9903 - val_loss: 0.2755
 Epoch 6/10
-47/47 [==============================] - 3s 67ms/step - loss: 0.3242 - auc: 0.9867 - acc: 0.8856 - val_loss: 0.2915 - val_auc: 0.9898 - val_acc: 0.9003
+ 47/47 ━━━━━━━━━━━━━━━━━━━━ 16s 336ms/step - acc: 0.8656 - auc: 0.9836 - loss: 0.3555 - val_acc: 0.9003 - val_auc: 0.9906 - val_loss: 0.2701
 Epoch 7/10
-47/47 [==============================] - 3s 73ms/step - loss: 0.3016 - auc: 0.9883 - acc: 0.8930 - val_loss: 0.2912 - val_auc: 0.9895 - val_acc: 0.9033
+ 47/47 ━━━━━━━━━━━━━━━━━━━━ 16s 331ms/step - acc: 0.8800 - auc: 0.9846 - loss: 0.3430 - val_acc: 0.8943 - val_auc: 0.9914 - val_loss: 0.2548
 Epoch 8/10
-47/47 [==============================] - 3s 66ms/step - loss: 0.2765 - auc: 0.9906 - acc: 0.9017 - val_loss: 0.2824 - val_auc: 0.9900 - val_acc: 0.9033
+ 47/47 ━━━━━━━━━━━━━━━━━━━━ 16s 333ms/step - acc: 0.8917 - auc: 0.9871 - loss: 0.3143 - val_acc: 0.8973 - val_auc: 0.9917 - val_loss: 0.2494
 Epoch 9/10
-47/47 [==============================] - 3s 66ms/step - loss: 0.2721 - auc: 0.9907 - acc: 0.9028 - val_loss: 0.2804 - val_auc: 0.9899 - val_acc: 0.9033
+ 47/47 ━━━━━━━━━━━━━━━━━━━━ 15s 320ms/step - acc: 0.9003 - auc: 0.9891 - loss: 0.2906 - val_acc: 0.9063 - val_auc: 0.9908 - val_loss: 0.2463
 Epoch 10/10
-47/47 [==============================] - 3s 65ms/step - loss: 0.2564 - auc: 0.9914 - acc: 0.9098 - val_loss: 0.2913 - val_auc: 0.9891 - val_acc: 0.8973
+ 47/47 ━━━━━━━━━━━━━━━━━━━━ 15s 324ms/step - acc: 0.8997 - auc: 0.9895 - loss: 0.2839 - val_acc: 0.9124 - val_auc: 0.9912 - val_loss: 0.2394
 Trainable weights: 24
 Non-trainable weights: 238
 Epoch 1/29
-47/47 [==============================] - 9s 112ms/step - loss: 0.3316 - auc: 0.9850 - acc: 0.8789 - val_loss: 0.2392 - val_auc: 0.9915 - val_acc: 0.9033
+ 47/47 ━━━━━━━━━━━━━━━━━━━━ 27s 537ms/step - acc: 0.8457 - auc: 0.9747 - loss: 0.4365 - val_acc: 0.9094 - val_auc: 0.9916 - val_loss: 0.2692
 Epoch 2/29
-47/47 [==============================] - 4s 93ms/step - loss: 0.1497 - auc: 0.9966 - acc: 0.9478 - val_loss: 0.2797 - val_auc: 0.9906 - val_acc: 0.8731
+ 47/47 ━━━━━━━━━━━━━━━━━━━━ 24s 502ms/step - acc: 0.9223 - auc: 0.9932 - loss: 0.2198 - val_acc: 0.9033 - val_auc: 0.9891 - val_loss: 0.2826
 Epoch 3/29
-47/47 [==============================] - 4s 94ms/step - loss: 0.0981 - auc: 0.9982 - acc: 0.9640 - val_loss: 0.1795 - val_auc: 0.9960 - val_acc: 0.9366
+ 47/47 ━━━━━━━━━━━━━━━━━━━━ 25s 534ms/step - acc: 0.9499 - auc: 0.9972 - loss: 0.1399 - val_acc: 0.9003 - val_auc: 0.9910 - val_loss: 0.2804
 Epoch 4/29
-47/47 [==============================] - 4s 94ms/step - loss: 0.0652 - auc: 0.9990 - acc: 0.9788 - val_loss: 0.2161 - val_auc: 0.9924 - val_acc: 0.9275
+ 47/47 ━━━━━━━━━━━━━━━━━━━━ 26s 554ms/step - acc: 0.9590 - auc: 0.9983 - loss: 0.1130 - val_acc: 0.9396 - val_auc: 0.9968 - val_loss: 0.1510
 Epoch 5/29
-47/47 [==============================] - 4s 94ms/step - loss: 0.0327 - auc: 0.9999 - acc: 0.9896 - val_loss: 0.2161 - val_auc: 0.9919 - val_acc: 0.9517
+ 47/47 ━━━━━━━━━━━━━━━━━━━━ 25s 533ms/step - acc: 0.9805 - auc: 0.9996 - loss: 0.0538 - val_acc: 0.9486 - val_auc: 0.9914 - val_loss: 0.1795
 Epoch 6/29
-47/47 [==============================] - 4s 94ms/step - loss: 0.0269 - auc: 0.9999 - acc: 0.9923 - val_loss: 0.2485 - val_auc: 0.9894 - val_acc: 0.9335
+ 47/47 ━━━━━━━━━━━━━━━━━━━━ 24s 516ms/step - acc: 0.9949 - auc: 1.0000 - loss: 0.0226 - val_acc: 0.9124 - val_auc: 0.9833 - val_loss: 0.3186
 Epoch 7/29
-47/47 [==============================] - 4s 94ms/step - loss: 0.0174 - auc: 0.9998 - acc: 0.9956 - val_loss: 0.2692 - val_auc: 0.9871 - val_acc: 0.9215
+ 47/47 ━━━━━━━━━━━━━━━━━━━━ 25s 534ms/step - acc: 0.9900 - auc: 0.9999 - loss: 0.0297 - val_acc: 0.9275 - val_auc: 0.9881 - val_loss: 0.3017
 Epoch 8/29
-47/47 [==============================] - 4s 94ms/step - loss: 0.0253 - auc: 0.9999 - acc: 0.9913 - val_loss: 0.2645 - val_auc: 0.9864 - val_acc: 0.9275
-Restoring model weights from the end of the best epoch.
-Epoch 00008: early stopping
-12/12 [==============================] - 1s 39ms/step - loss: 0.1378 - auc: 0.9975 - acc: 0.9537
-A model accuracy of 0.9537 is reached on 3303 images!
+ 47/47 ━━━━━━━━━━━━━━━━━━━━ 25s 536ms/step - acc: 0.9910 - auc: 0.9999 - loss: 0.0228 - val_acc: 0.9426 - val_auc: 0.9927 - val_loss: 0.1938
+Epoch 9/29
+ 47/47 ━━━━━━━━━━━━━━━━━━━━ 0s 489ms/step - acc: 0.9995 - auc: 1.0000 - loss: 0.0069Restoring model weights from the end of the best epoch: 4.
+ 47/47 ━━━━━━━━━━━━━━━━━━━━ 25s 527ms/step - acc: 0.9995 - auc: 1.0000 - loss: 0.0068 - val_acc: 0.9426 - val_auc: 0.9919 - val_loss: 0.2957
+Epoch 9: early stopping
+ 12/12 ━━━━━━━━━━━━━━━━━━━━ 2s 170ms/step - acc: 0.9641 - auc: 0.9972 - loss: 0.1264
+A model accuracy of 0.9964 is reached on 3303 images!
 
 ```
 </div>
+---
 ## Conclusion
 
 We see that a model accuracy of about 94-96%* is reached using 3303 images. This is quite

@@ -2,7 +2,7 @@
 
 **Author:** [lukewood](https://lukewood.xyz)<br>
 **Date created:** 10/07/2021<br>
-**Last modified:** 10/07/2021<br>
+**Last modified:** 11/17/2023<br>
 **Description:** This example shows how to use Keras callbacks to evaluate and export non-TensorFlow based metrics.
 
 
@@ -33,9 +33,13 @@ This template can be modified slightly to make it work with any existing sklearn
 
 
 ```python
+import os
+
+os.environ["KERAS_BACKEND"] = "tensorflow"
+
 import tensorflow as tf
-import tensorflow.keras as keras
-import tensorflow.keras.layers as layers
+import keras as keras
+from keras import layers
 from sklearn.metrics import jaccard_score
 import numpy as np
 import os
@@ -44,15 +48,12 @@ import os
 class JaccardScoreCallback(keras.callbacks.Callback):
     """Computes the Jaccard score and logs the results to TensorBoard."""
 
-    def __init__(self, model, x_test, y_test, log_dir):
-        self.model = model
+    def __init__(self, name, x_test, y_test, log_dir):
         self.x_test = x_test
         self.y_test = y_test
-        self.keras_metric = tf.keras.metrics.Mean("jaccard_score")
+        self.keras_metric = keras.metrics.Mean("jaccard_score")
         self.epoch = 0
-        self.summary_writer = tf.summary.create_file_writer(
-            os.path.join(log_dir, model.name)
-        )
+        self.summary_writer = tf.summary.create_file_writer(os.path.join(log_dir, name))
 
     def on_epoch_end(self, batch, logs=None):
         self.epoch += 1
@@ -69,7 +70,9 @@ class JaccardScoreCallback(keras.callbacks.Callback):
     def _write_metric(self, name, value):
         with self.summary_writer.as_default():
             tf.summary.scalar(
-                name, value, step=self.epoch,
+                name,
+                value,
+                step=self.epoch,
             )
             self.summary_writer.flush()
 
@@ -123,7 +126,9 @@ batch_size = 128
 epochs = 15
 
 model.compile(loss="categorical_crossentropy", optimizer="adam", metrics=["accuracy"])
-callbacks = [JaccardScoreCallback(model, x_test, np.argmax(y_test, axis=-1), "logs")]
+callbacks = [
+    JaccardScoreCallback(model.name, x_test, np.argmax(y_test, axis=-1), "logs")
+]
 model.fit(
     x_train,
     y_train,
@@ -139,60 +144,103 @@ model.fit(
 x_train shape: (60000, 28, 28, 1)
 60000 train samples
 10000 test samples
-Model: "sequential"
-_________________________________________________________________
-Layer (type)                 Output Shape              Param #   
-=================================================================
-conv2d (Conv2D)              (None, 26, 26, 32)        320       
-_________________________________________________________________
-max_pooling2d (MaxPooling2D) (None, 13, 13, 32)        0         
-_________________________________________________________________
-conv2d_1 (Conv2D)            (None, 11, 11, 64)        18496     
-_________________________________________________________________
-max_pooling2d_1 (MaxPooling2 (None, 5, 5, 64)          0         
-_________________________________________________________________
-flatten (Flatten)            (None, 1600)              0         
-_________________________________________________________________
-dropout (Dropout)            (None, 1600)              0         
-_________________________________________________________________
-dense (Dense)                (None, 10)                16010     
-=================================================================
-Total params: 34,826
-Trainable params: 34,826
-Non-trainable params: 0
-_________________________________________________________________
-Epoch 1/15
-422/422 [==============================] - 6s 14ms/step - loss: 0.3661 - accuracy: 0.8895 - val_loss: 0.0823 - val_accuracy: 0.9765
-Epoch 2/15
-422/422 [==============================] - 6s 14ms/step - loss: 0.1119 - accuracy: 0.9653 - val_loss: 0.0620 - val_accuracy: 0.9823
-Epoch 3/15
-422/422 [==============================] - 6s 14ms/step - loss: 0.0841 - accuracy: 0.9742 - val_loss: 0.0488 - val_accuracy: 0.9873
-Epoch 4/15
-422/422 [==============================] - 6s 14ms/step - loss: 0.0696 - accuracy: 0.9787 - val_loss: 0.0404 - val_accuracy: 0.9888
-Epoch 5/15
-422/422 [==============================] - 6s 14ms/step - loss: 0.0615 - accuracy: 0.9813 - val_loss: 0.0406 - val_accuracy: 0.9897
-Epoch 6/15
-422/422 [==============================] - 6s 13ms/step - loss: 0.0565 - accuracy: 0.9826 - val_loss: 0.0373 - val_accuracy: 0.9900
-Epoch 7/15
-422/422 [==============================] - 6s 14ms/step - loss: 0.0520 - accuracy: 0.9833 - val_loss: 0.0369 - val_accuracy: 0.9898
-Epoch 8/15
-422/422 [==============================] - 6s 14ms/step - loss: 0.0488 - accuracy: 0.9851 - val_loss: 0.0353 - val_accuracy: 0.9905
-Epoch 9/15
-422/422 [==============================] - 6s 14ms/step - loss: 0.0440 - accuracy: 0.9861 - val_loss: 0.0347 - val_accuracy: 0.9893
-Epoch 10/15
-422/422 [==============================] - 6s 14ms/step - loss: 0.0424 - accuracy: 0.9871 - val_loss: 0.0294 - val_accuracy: 0.9907
-Epoch 11/15
-422/422 [==============================] - 6s 14ms/step - loss: 0.0402 - accuracy: 0.9874 - val_loss: 0.0340 - val_accuracy: 0.9903
-Epoch 12/15
-422/422 [==============================] - 6s 13ms/step - loss: 0.0382 - accuracy: 0.9878 - val_loss: 0.0290 - val_accuracy: 0.9917
-Epoch 13/15
-422/422 [==============================] - 6s 14ms/step - loss: 0.0358 - accuracy: 0.9886 - val_loss: 0.0286 - val_accuracy: 0.9923
-Epoch 14/15
-422/422 [==============================] - 6s 13ms/step - loss: 0.0349 - accuracy: 0.9885 - val_loss: 0.0282 - val_accuracy: 0.9918
-Epoch 15/15
-422/422 [==============================] - 6s 14ms/step - loss: 0.0323 - accuracy: 0.9899 - val_loss: 0.0283 - val_accuracy: 0.9922
 
-<tensorflow.python.keras.callbacks.History at 0x7f62fc5786d0>
+```
+</div>
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold">Model: "sequential"</span>
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━┓
+┃<span style="font-weight: bold"> Layer (type)                    </span>┃<span style="font-weight: bold"> Output Shape              </span>┃<span style="font-weight: bold">    Param # </span>┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━┩
+│ conv2d (<span style="color: #0087ff; text-decoration-color: #0087ff">Conv2D</span>)                 │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">26</span>, <span style="color: #00af00; text-decoration-color: #00af00">26</span>, <span style="color: #00af00; text-decoration-color: #00af00">32</span>)        │        <span style="color: #00af00; text-decoration-color: #00af00">320</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ max_pooling2d (<span style="color: #0087ff; text-decoration-color: #0087ff">MaxPooling2D</span>)    │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">13</span>, <span style="color: #00af00; text-decoration-color: #00af00">13</span>, <span style="color: #00af00; text-decoration-color: #00af00">32</span>)        │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ conv2d_1 (<span style="color: #0087ff; text-decoration-color: #0087ff">Conv2D</span>)               │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">11</span>, <span style="color: #00af00; text-decoration-color: #00af00">11</span>, <span style="color: #00af00; text-decoration-color: #00af00">64</span>)        │     <span style="color: #00af00; text-decoration-color: #00af00">18,496</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ max_pooling2d_1 (<span style="color: #0087ff; text-decoration-color: #0087ff">MaxPooling2D</span>)  │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">5</span>, <span style="color: #00af00; text-decoration-color: #00af00">5</span>, <span style="color: #00af00; text-decoration-color: #00af00">64</span>)          │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ flatten (<span style="color: #0087ff; text-decoration-color: #0087ff">Flatten</span>)               │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">1600</span>)              │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ dropout (<span style="color: #0087ff; text-decoration-color: #0087ff">Dropout</span>)               │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">1600</span>)              │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ dense (<span style="color: #0087ff; text-decoration-color: #0087ff">Dense</span>)                   │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">10</span>)                │     <span style="color: #00af00; text-decoration-color: #00af00">16,010</span> │
+└─────────────────────────────────┴───────────────────────────┴────────────┘
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Total params: </span><span style="color: #00af00; text-decoration-color: #00af00">34,826</span> (136.04 KB)
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Trainable params: </span><span style="color: #00af00; text-decoration-color: #00af00">34,826</span> (136.04 KB)
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Non-trainable params: </span><span style="color: #00af00; text-decoration-color: #00af00">0</span> (0.00 B)
+</pre>
+
+
+
+<div class="k-default-codeblock">
+```
+Epoch 1/15
+ 313/313 ━━━━━━━━━━━━━━━━━━━━ 1s 2ms/step
+ 422/422 ━━━━━━━━━━━━━━━━━━━━ 7s 16ms/step - accuracy: 0.7706 - loss: 0.7534 - val_accuracy: 0.9768 - val_loss: 0.0842
+Epoch 2/15
+ 313/313 ━━━━━━━━━━━━━━━━━━━━ 1s 2ms/step
+ 422/422 ━━━━━━━━━━━━━━━━━━━━ 7s 16ms/step - accuracy: 0.9627 - loss: 0.1228 - val_accuracy: 0.9862 - val_loss: 0.0533
+Epoch 3/15
+ 313/313 ━━━━━━━━━━━━━━━━━━━━ 1s 2ms/step
+ 422/422 ━━━━━━━━━━━━━━━━━━━━ 7s 16ms/step - accuracy: 0.9739 - loss: 0.0854 - val_accuracy: 0.9870 - val_loss: 0.0466
+Epoch 4/15
+ 313/313 ━━━━━━━━━━━━━━━━━━━━ 1s 2ms/step
+ 422/422 ━━━━━━━━━━━━━━━━━━━━ 7s 17ms/step - accuracy: 0.9787 - loss: 0.0676 - val_accuracy: 0.9892 - val_loss: 0.0416
+Epoch 5/15
+ 313/313 ━━━━━━━━━━━━━━━━━━━━ 1s 2ms/step
+ 422/422 ━━━━━━━━━━━━━━━━━━━━ 7s 17ms/step - accuracy: 0.9818 - loss: 0.0590 - val_accuracy: 0.9892 - val_loss: 0.0396
+Epoch 6/15
+ 313/313 ━━━━━━━━━━━━━━━━━━━━ 1s 2ms/step
+ 422/422 ━━━━━━━━━━━━━━━━━━━━ 7s 17ms/step - accuracy: 0.9834 - loss: 0.0534 - val_accuracy: 0.9920 - val_loss: 0.0341
+Epoch 7/15
+ 313/313 ━━━━━━━━━━━━━━━━━━━━ 1s 2ms/step
+ 422/422 ━━━━━━━━━━━━━━━━━━━━ 7s 17ms/step - accuracy: 0.9837 - loss: 0.0528 - val_accuracy: 0.9907 - val_loss: 0.0358
+Epoch 8/15
+ 313/313 ━━━━━━━━━━━━━━━━━━━━ 1s 2ms/step
+ 422/422 ━━━━━━━━━━━━━━━━━━━━ 8s 18ms/step - accuracy: 0.9847 - loss: 0.0466 - val_accuracy: 0.9908 - val_loss: 0.0327
+Epoch 9/15
+ 313/313 ━━━━━━━━━━━━━━━━━━━━ 1s 2ms/step
+ 422/422 ━━━━━━━━━━━━━━━━━━━━ 7s 18ms/step - accuracy: 0.9873 - loss: 0.0397 - val_accuracy: 0.9912 - val_loss: 0.0346
+Epoch 10/15
+ 313/313 ━━━━━━━━━━━━━━━━━━━━ 1s 2ms/step
+ 422/422 ━━━━━━━━━━━━━━━━━━━━ 8s 18ms/step - accuracy: 0.9862 - loss: 0.0419 - val_accuracy: 0.9913 - val_loss: 0.0315
+Epoch 11/15
+ 313/313 ━━━━━━━━━━━━━━━━━━━━ 1s 2ms/step
+ 422/422 ━━━━━━━━━━━━━━━━━━━━ 7s 17ms/step - accuracy: 0.9880 - loss: 0.0370 - val_accuracy: 0.9915 - val_loss: 0.0309
+Epoch 12/15
+ 313/313 ━━━━━━━━━━━━━━━━━━━━ 1s 2ms/step
+ 422/422 ━━━━━━━━━━━━━━━━━━━━ 7s 17ms/step - accuracy: 0.9880 - loss: 0.0377 - val_accuracy: 0.9912 - val_loss: 0.0318
+Epoch 13/15
+ 313/313 ━━━━━━━━━━━━━━━━━━━━ 1s 2ms/step
+ 422/422 ━━━━━━━━━━━━━━━━━━━━ 7s 17ms/step - accuracy: 0.9889 - loss: 0.0347 - val_accuracy: 0.9930 - val_loss: 0.0293
+Epoch 14/15
+ 313/313 ━━━━━━━━━━━━━━━━━━━━ 1s 2ms/step
+ 422/422 ━━━━━━━━━━━━━━━━━━━━ 7s 16ms/step - accuracy: 0.9896 - loss: 0.0333 - val_accuracy: 0.9913 - val_loss: 0.0326
+Epoch 15/15
+ 313/313 ━━━━━━━━━━━━━━━━━━━━ 1s 2ms/step
+ 422/422 ━━━━━━━━━━━━━━━━━━━━ 8s 18ms/step - accuracy: 0.9908 - loss: 0.0282 - val_accuracy: 0.9925 - val_loss: 0.0303
+
+<keras.src.callbacks.history.History at 0x17f0655a0>
 
 ```
 </div>

@@ -33,17 +33,20 @@ for the construction of a mean and confidence interval for the observed performa
 ## Setup
 """
 
+import os
+
+os.environ["KERAS_BACKEND"] = "tensorflow"
+
 import matplotlib.pyplot as plt
 import numpy as np
 import tensorflow as tf
-from tensorflow import keras
+import keras
+from keras import layers
 import tensorflow_datasets as tfds
-from tensorflow.keras import layers
 
 # Define seed and fixed variables
 seed = 42
-tf.random.set_seed(seed)
-np.random.seed(seed)
+keras.utils.set_random_seed(seed)
 AUTO = tf.data.AUTOTUNE
 
 """
@@ -389,7 +392,7 @@ def fit_and_predict(train_acc, sample_sizes, pred_sample_size):
                         fitted learning curve.
     """
     x = sample_sizes
-    mean_acc = [np.mean(i) for i in train_acc]
+    mean_acc = tf.convert_to_tensor([np.mean(i) for i in train_acc])
     error = [np.std(i) for i in train_acc]
 
     # Define mean squared error cost and exponential curve fit functions

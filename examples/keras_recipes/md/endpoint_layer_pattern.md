@@ -2,7 +2,7 @@
 
 **Author:** [fchollet](https://twitter.com/fchollet)<br>
 **Date created:** 2019/05/10<br>
-**Last modified:** 2019/05/10<br>
+**Last modified:** 2023/11/22<br>
 **Description:** Demonstration of the "endpoint layer" pattern (layer that handles loss management).
 
 
@@ -15,8 +15,12 @@
 
 
 ```python
+import os
+
+os.environ["KERAS_BACKEND"] = "tensorflow"
+
 import tensorflow as tf
-from tensorflow import keras
+import keras
 import numpy as np
 ```
 
@@ -73,15 +77,17 @@ model.fit(data, epochs=2)
 
 <div class="k-default-codeblock">
 ```
-WARNING:absl:At this time, the v2.11+ optimizer `tf.keras.optimizers.Adam` runs slowly on M1/M2 Macs, please use the legacy Keras optimizer instead, located at `tf.keras.optimizers.legacy.Adam`.
-WARNING:absl:There is a known slowdown when using v2.11+ Keras optimizers on M1/M2 Macs. Falling back to the legacy Keras optimizer, i.e., `tf.keras.optimizers.legacy.Adam`.
-
 Epoch 1/2
-32/32 [==============================] - 0s 513us/step - loss: 0.3746 - accuracy: 0.0000e+00
-Epoch 2/2
-32/32 [==============================] - 0s 481us/step - loss: 0.3587 - accuracy: 0.0000e+00
+ 27/32 ━━━━━━━━━━━━━━━━[37m━━━━  0s 2ms/step - loss: 0.3664   
 
-<keras.callbacks.History at 0x2bdd4ffd0>
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1700705222.380735 3351467 device_compiler.h:186] Compiled cluster using XLA!  This line is logged at most once for the lifetime of the process.
+
+ 32/32 ━━━━━━━━━━━━━━━━━━━━ 2s 31ms/step - loss: 0.3663
+Epoch 2/2
+ 32/32 ━━━━━━━━━━━━━━━━━━━━ 0s 2ms/step - loss: 0.3627 
+
+<keras.src.callbacks.history.History at 0x7f13401b1e10>
 
 ```
 </div>
@@ -104,7 +110,7 @@ preds = inference_model.predict(np.random.random((1000, 764)))
 
 <div class="k-default-codeblock">
 ```
-32/32 [==============================] - 0s 281us/step
+ 32/32 ━━━━━━━━━━━━━━━━━━━━ 0s 6ms/step
 
 ```
 </div>
@@ -145,15 +151,12 @@ model.fit(data, epochs=2)
 
 <div class="k-default-codeblock">
 ```
-WARNING:absl:At this time, the v2.11+ optimizer `tf.keras.optimizers.Adam` runs slowly on M1/M2 Macs, please use the legacy Keras optimizer instead, located at `tf.keras.optimizers.legacy.Adam`.
-WARNING:absl:There is a known slowdown when using v2.11+ Keras optimizers on M1/M2 Macs. Falling back to the legacy Keras optimizer, i.e., `tf.keras.optimizers.legacy.Adam`.
-
 Epoch 1/2
-32/32 [==============================] - 0s 586us/step - loss: 0.3591 - accuracy: 0.0000e+00
+ 32/32 ━━━━━━━━━━━━━━━━━━━━ 1s 9ms/step - loss: 0.3529
 Epoch 2/2
-32/32 [==============================] - 0s 543us/step - loss: 0.3518 - accuracy: 0.0000e+00
+ 32/32 ━━━━━━━━━━━━━━━━━━━━ 0s 1ms/step - loss: 0.3509 
 
-<keras.callbacks.History at 0x2bdea3e80>
+<keras.src.callbacks.history.History at 0x7f132c1d1450>
 
 ```
 </div>

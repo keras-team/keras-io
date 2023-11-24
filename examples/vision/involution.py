@@ -35,8 +35,12 @@ layer.
 ## Setup
 """
 
+import os
+
+os.environ["KERAS_BACKEND"] = "tensorflow"
+
 import tensorflow as tf
-from tensorflow import keras
+import keras
 import matplotlib.pyplot as plt
 
 # Set seed for reproducibility.
@@ -430,18 +434,13 @@ in which self-attention belongs.
 """
 
 layer_names = ["inv_1", "inv_2", "inv_3"]
-outputs = [inv_model.get_layer(name).output for name in layer_names]
+outputs = [inv_model.get_layer(name).output[1] for name in layer_names]
 vis_model = keras.Model(inv_model.input, outputs)
 
 fig, axes = plt.subplots(nrows=10, ncols=4, figsize=(10, 30))
 
 for ax, test_image in zip(axes, test_images[:10]):
-    (inv1_out, inv2_out, inv3_out) = vis_model.predict(test_image[None, ...])
-
-    _, inv1_kernel = inv1_out
-    _, inv2_kernel = inv2_out
-    _, inv3_kernel = inv3_out
-
+    (inv1_kernel, inv2_kernel, inv3_kernel) = vis_model.predict(test_image[None, ...])
     inv1_kernel = tf.reduce_sum(inv1_kernel, axis=[-1, -2, -3])
     inv2_kernel = tf.reduce_sum(inv2_kernel, axis=[-1, -2, -3])
     inv3_kernel = tf.reduce_sum(inv3_kernel, axis=[-1, -2, -3])

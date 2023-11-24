@@ -2,9 +2,10 @@
 Title: Few-Shot learning with Reptile
 Author: [ADMoreau](https://github.com/ADMoreau)
 Date created: 2020/05/21
-Last modified: 2020/05/30
+Last modified: 2023/07/20
 Description: Few-shot classification on the Omniglot dataset using Reptile.
 Accelerator: GPU
+Converted to Keras 3 By: [Muhammad Anas Raza](https://anasrz.com)
 """
 
 """
@@ -17,13 +18,17 @@ The algorithm works by performing Stochastic Gradient Descent using the
 difference between weights trained on a mini-batch of never-seen-before data and the
 model weights prior to training over a fixed number of meta-iterations.
 """
+import os
+
+os.environ["KERAS_BACKEND"] = "tensorflow"
+
+import keras
+from keras import layers
 
 import matplotlib.pyplot as plt
 import numpy as np
 import random
 import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras import layers
 import tensorflow_datasets as tfds
 
 """
@@ -225,7 +230,7 @@ for meta_iter in range(meta_iters):
                     loss = keras.losses.sparse_categorical_crossentropy(labels, preds)
                 grads = tape.gradient(loss, model.trainable_weights)
                 optimizer.apply_gradients(zip(grads, model.trainable_weights))
-            test_preds = model.predict(test_images)
+            test_preds = model.predict(test_images, verbose=0)
             test_preds = tf.argmax(test_preds).numpy()
             num_correct = (test_preds == test_labels).sum()
             # Reset the weights after getting the evaluation accuracies.
@@ -245,7 +250,9 @@ for meta_iter in range(meta_iters):
 # First, some preprocessing to smooth the training and testing arrays for display.
 window_length = 100
 train_s = np.r_[
-    training[window_length - 1 : 0 : -1], training, training[-1:-window_length:-1]
+    training[window_length - 1 : 0 : -1],
+    training,
+    training[-1:-window_length:-1],
 ]
 test_s = np.r_[
     testing[window_length - 1 : 0 : -1], testing, testing[-1:-window_length:-1]

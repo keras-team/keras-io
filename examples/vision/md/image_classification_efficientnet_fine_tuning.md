@@ -65,16 +65,16 @@ instead of allowing arbitray choice of width / depth / resolution parameters.
 ---
 ## Keras implementation of EfficientNet
 
-An implementation of EfficientNet B0 to B7 has been shipped with tf.keras since TF2.3. To
-use EfficientNetB0 for classifying 1000 classes of images from imagenet, run:
+An implementation of EfficientNet B0 to B7 has been shipped with Keras since v2.3. To
+use EfficientNetB0 for classifying 1000 classes of images from ImageNet, run:
 
 ```python
 from tensorflow.keras.applications import EfficientNetB0
 model = EfficientNetB0(weights='imagenet')
 ```
 
-This model takes input images of shape (224, 224, 3), and the input data should range
-[0, 255]. Normalization is included as part of the model.
+This model takes input images of shape `(224, 224, 3)`, and the input data should be in the
+range `[0, 255]`. Normalization is included as part of the model.
 
 Because training EfficientNet on ImageNet takes a tremendous amount of resources and
 several techniques that are not a part of the model architecture itself. Hence the Keras
@@ -122,47 +122,25 @@ This makes it a good model for transfer learning.
 As an end-to-end example, we will show using pre-trained EfficientNetB0 on
 [Stanford Dogs](http://vision.stanford.edu/aditya86/ImageNetDogs/main.html) dataset.
 
-
-```python
-# IMG_SIZE is determined by EfficientNet model choice
-IMG_SIZE = 224
-```
-
 ---
 ## Setup and data loading
 
-This example requires TensorFlow 2.3 or above.
-
-To use TPU, the TPU runtime must match current running TensorFlow
-version. If there is a mismatch, try:
 
 ```python
-from cloud_tpu_client import Client
-c = Client()
-c.configure_tpu_version(tf.__version__, restart_type="always")
-```
+import numpy as np
+import tensorflow_datasets as tfds
+import tensorflow as tf  # For tf.data
+import matplotlib.pyplot as plt
+import keras
+from keras import layers
+from keras.applications import EfficientNetB0
 
-
-```python
-import tensorflow as tf
-
-try:
-    tpu = tf.distribute.cluster_resolver.TPUClusterResolver.connect()
-    print("Device:", tpu.master())
-    strategy = tf.distribute.TPUStrategy(tpu)
-except ValueError:
-    print("Not connected to a TPU runtime. Using CPU/GPU strategy")
-    strategy = tf.distribute.MirroredStrategy()
+# IMG_SIZE is determined by EfficientNet model choice
+IMG_SIZE = 224
+BATCH_SIZE = 64
 
 ```
 
-<div class="k-default-codeblock">
-```
-Not connected to a TPU runtime. Using CPU/GPU strategy
-INFO:tensorflow:Using MirroredStrategy with devices ('/job:localhost/replica:0/task:0/device:GPU:0',)
-
-```
-</div>
 ### Loading data
 
 Here we load data from [tensorflow_datasets](https://www.tensorflow.org/datasets)
@@ -182,25 +160,8 @@ we can simply upsample the input images. It has been shown in
 [Tan and Le, 2019](https://arxiv.org/abs/1905.11946) that transfer learning
 result is better for increased resolution even if input images remain small.
 
-For TPU: if using TFDS datasets,
-a [GCS bucket](https://cloud.google.com/storage/docs/key-terms#buckets)
-location is required to save the datasets. For example:
 
 ```python
-tfds.load(dataset_name, data_dir="gs://example-bucket/datapath")
-```
-
-Also, both the current environment and the TPU service account have
-proper [access](https://cloud.google.com/tpu/docs/storage-buckets#authorize_the_service_account)
-to the bucket. Alternatively, for small datasets you may try loading data
-into the memory and use `tf.data.Dataset.from_tensor_slices()`.
-
-
-```python
-import tensorflow_datasets as tfds
-
-batch_size = 64
-
 dataset_name = "stanford_dogs"
 (ds_train, ds_test), ds_info = tfds.load(
     dataset_name, split=["train", "test"], with_info=True, as_supervised=True
@@ -226,8 +187,6 @@ The following code shows the first 9 images with their labels.
 
 
 ```python
-import matplotlib.pyplot as plt
-
 
 def format_label(label):
     string_label = label_info.int2str(label)
@@ -244,7 +203,9 @@ for i, (image, label) in enumerate(ds_train.take(9)):
 ```
 
 
-![png](/img/examples/vision/image_classification_efficientnet_fine_tuning/image_classification_efficientnet_fine_tuning_10_0.png)
+    
+![png](/img/examples/vision/image_classification_efficientnet_fine_tuning/image_classification_efficientnet_fine_tuning_9_0.png)
+    
 
 
 ### Data augmentation
@@ -253,18 +214,19 @@ We can use the preprocessing layers APIs for image augmentation.
 
 
 ```python
-from tensorflow.keras.models import Sequential
-from tensorflow.keras import layers
+img_augmentation_layers = [
+    layers.RandomRotation(factor=0.15),
+    layers.RandomTranslation(height_factor=0.1, width_factor=0.1),
+    layers.RandomFlip(),
+    layers.RandomContrast(factor=0.1),
+]
 
-img_augmentation = Sequential(
-    [
-        layers.RandomRotation(factor=0.15),
-        layers.RandomTranslation(height_factor=0.1, width_factor=0.1),
-        layers.RandomFlip(),
-        layers.RandomContrast(factor=0.1),
-    ],
-    name="img_augmentation",
-)
+
+def img_augmentation(images):
+    for layer in img_augmentation_layers:
+        images = layer(images)
+    return images
+
 ```
 
 This `Sequential` model object can be used both as a part of
@@ -278,15 +240,18 @@ of augmentation result of a given figure.
 for image, label in ds_train.take(1):
     for i in range(9):
         ax = plt.subplot(3, 3, i + 1)
-        aug_img = img_augmentation(tf.expand_dims(image, axis=0))
-        plt.imshow(aug_img[0].numpy().astype("uint8"))
+        aug_img = img_augmentation(np.expand_dims(image.numpy(), axis=0))
+        aug_img = np.array(aug_img)
+        plt.imshow(aug_img[0].astype("uint8"))
         plt.title("{}".format(format_label(label)))
         plt.axis("off")
 
 ```
 
 
-![png](/img/examples/vision/image_classification_efficientnet_fine_tuning/image_classification_efficientnet_fine_tuning_14_0.png)
+    
+![png](/img/examples/vision/image_classification_efficientnet_fine_tuning/image_classification_efficientnet_fine_tuning_13_0.png)
+    
 
 
 ### Prepare inputs
@@ -303,20 +268,25 @@ for more information on data pipeline performance.
 
 
 ```python
+
 # One-hot / categorical encoding
-def input_preprocess(image, label):
+def input_preprocess_train(image, label):
+    image = img_augmentation(image)
     label = tf.one_hot(label, NUM_CLASSES)
     return image, label
 
 
-ds_train = ds_train.map(
-    input_preprocess, num_parallel_calls=tf.data.AUTOTUNE
-)
-ds_train = ds_train.batch(batch_size=batch_size, drop_remainder=True)
+def input_preprocess_test(image, label):
+    label = tf.one_hot(label, NUM_CLASSES)
+    return image, label
+
+
+ds_train = ds_train.map(input_preprocess_train, num_parallel_calls=tf.data.AUTOTUNE)
+ds_train = ds_train.batch(batch_size=BATCH_SIZE, drop_remainder=True)
 ds_train = ds_train.prefetch(tf.data.AUTOTUNE)
 
-ds_test = ds_test.map(input_preprocess)
-ds_test = ds_test.batch(batch_size=batch_size, drop_remainder=True)
+ds_test = ds_test.map(input_preprocess_test, num_parallel_calls=tf.data.AUTOTUNE)
+ds_test = ds_test.batch(batch_size=BATCH_SIZE, drop_remainder=True)
 
 ```
 
@@ -329,126 +299,863 @@ Note: the accuracy will increase very slowly and may overfit.
 
 
 ```python
-from tensorflow.keras.applications import EfficientNetB0
-
-with strategy.scope():
-    inputs = layers.Input(shape=(IMG_SIZE, IMG_SIZE, 3))
-    x = img_augmentation(inputs)
-    outputs = EfficientNetB0(include_top=True, weights=None, classes=NUM_CLASSES)(x)
-
-    model = tf.keras.Model(inputs, outputs)
-    model.compile(
-        optimizer="adam", loss="categorical_crossentropy", metrics=["accuracy"]
-    )
+model = EfficientNetB0(
+    include_top=True,
+    weights=None,
+    classes=NUM_CLASSES,
+    input_shape=(IMG_SIZE, IMG_SIZE, 3),
+)
+model.compile(optimizer="adam", loss="categorical_crossentropy", metrics=["accuracy"])
 
 model.summary()
 
 epochs = 40  # @param {type: "slider", min:10, max:100}
-hist = model.fit(ds_train, epochs=epochs, validation_data=ds_test, verbose=2)
+hist = model.fit(ds_train, epochs=epochs, validation_data=ds_test)
 
 ```
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold">Model: "efficientnetb0"</span>
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">┏━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━┓
+┃<span style="font-weight: bold"> Layer (type)        </span>┃<span style="font-weight: bold"> Output Shape      </span>┃<span style="font-weight: bold"> Param # </span>┃<span style="font-weight: bold"> Connected to         </span>┃
+┡━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━┩
+│ input_layer         │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">224</span>, <span style="color: #00af00; text-decoration-color: #00af00">224</span>,  │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ -                    │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">InputLayer</span>)        │ <span style="color: #00af00; text-decoration-color: #00af00">3</span>)                │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ rescaling           │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">224</span>, <span style="color: #00af00; text-decoration-color: #00af00">224</span>,  │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ input_layer[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>]    │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Rescaling</span>)         │ <span style="color: #00af00; text-decoration-color: #00af00">3</span>)                │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ normalization       │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">224</span>, <span style="color: #00af00; text-decoration-color: #00af00">224</span>,  │       <span style="color: #00af00; text-decoration-color: #00af00">7</span> │ rescaling[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>]      │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Normalization</span>)     │ <span style="color: #00af00; text-decoration-color: #00af00">3</span>)                │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ stem_conv_pad       │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">225</span>, <span style="color: #00af00; text-decoration-color: #00af00">225</span>,  │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ normalization[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>]  │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">ZeroPadding2D</span>)     │ <span style="color: #00af00; text-decoration-color: #00af00">3</span>)                │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ stem_conv (<span style="color: #0087ff; text-decoration-color: #0087ff">Conv2D</span>)  │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">112</span>, <span style="color: #00af00; text-decoration-color: #00af00">112</span>,  │     <span style="color: #00af00; text-decoration-color: #00af00">864</span> │ stem_conv_pad[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>]  │
+│                     │ <span style="color: #00af00; text-decoration-color: #00af00">32</span>)               │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ stem_bn             │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">112</span>, <span style="color: #00af00; text-decoration-color: #00af00">112</span>,  │     <span style="color: #00af00; text-decoration-color: #00af00">128</span> │ stem_conv[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>]      │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">BatchNormalizatio…</span> │ <span style="color: #00af00; text-decoration-color: #00af00">32</span>)               │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ stem_activation     │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">112</span>, <span style="color: #00af00; text-decoration-color: #00af00">112</span>,  │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ stem_bn[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>]        │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Activation</span>)        │ <span style="color: #00af00; text-decoration-color: #00af00">32</span>)               │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block1a_dwconv      │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">112</span>, <span style="color: #00af00; text-decoration-color: #00af00">112</span>,  │     <span style="color: #00af00; text-decoration-color: #00af00">288</span> │ stem_activation[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">…</span> │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">DepthwiseConv2D</span>)   │ <span style="color: #00af00; text-decoration-color: #00af00">32</span>)               │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block1a_bn          │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">112</span>, <span style="color: #00af00; text-decoration-color: #00af00">112</span>,  │     <span style="color: #00af00; text-decoration-color: #00af00">128</span> │ block1a_dwconv[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>] │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">BatchNormalizatio…</span> │ <span style="color: #00af00; text-decoration-color: #00af00">32</span>)               │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block1a_activation  │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">112</span>, <span style="color: #00af00; text-decoration-color: #00af00">112</span>,  │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ block1a_bn[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>]     │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Activation</span>)        │ <span style="color: #00af00; text-decoration-color: #00af00">32</span>)               │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block1a_se_squeeze  │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">32</span>)        │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ block1a_activation[<span style="color: #00af00; text-decoration-color: #00af00">…</span> │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">GlobalAveragePool…</span> │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block1a_se_reshape  │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>, <span style="color: #00af00; text-decoration-color: #00af00">32</span>)  │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ block1a_se_squeeze[<span style="color: #00af00; text-decoration-color: #00af00">…</span> │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Reshape</span>)           │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block1a_se_reduce   │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>, <span style="color: #00af00; text-decoration-color: #00af00">8</span>)   │     <span style="color: #00af00; text-decoration-color: #00af00">264</span> │ block1a_se_reshape[<span style="color: #00af00; text-decoration-color: #00af00">…</span> │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Conv2D</span>)            │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block1a_se_expand   │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>, <span style="color: #00af00; text-decoration-color: #00af00">32</span>)  │     <span style="color: #00af00; text-decoration-color: #00af00">288</span> │ block1a_se_reduce[<span style="color: #00af00; text-decoration-color: #00af00">0</span>… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Conv2D</span>)            │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block1a_se_excite   │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">112</span>, <span style="color: #00af00; text-decoration-color: #00af00">112</span>,  │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ block1a_activation[<span style="color: #00af00; text-decoration-color: #00af00">…</span> │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Multiply</span>)          │ <span style="color: #00af00; text-decoration-color: #00af00">32</span>)               │         │ block1a_se_expand[<span style="color: #00af00; text-decoration-color: #00af00">0</span>… │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block1a_project_co… │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">112</span>, <span style="color: #00af00; text-decoration-color: #00af00">112</span>,  │     <span style="color: #00af00; text-decoration-color: #00af00">512</span> │ block1a_se_excite[<span style="color: #00af00; text-decoration-color: #00af00">0</span>… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Conv2D</span>)            │ <span style="color: #00af00; text-decoration-color: #00af00">16</span>)               │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block1a_project_bn  │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">112</span>, <span style="color: #00af00; text-decoration-color: #00af00">112</span>,  │      <span style="color: #00af00; text-decoration-color: #00af00">64</span> │ block1a_project_con… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">BatchNormalizatio…</span> │ <span style="color: #00af00; text-decoration-color: #00af00">16</span>)               │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block2a_expand_conv │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">112</span>, <span style="color: #00af00; text-decoration-color: #00af00">112</span>,  │   <span style="color: #00af00; text-decoration-color: #00af00">1,536</span> │ block1a_project_bn[<span style="color: #00af00; text-decoration-color: #00af00">…</span> │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Conv2D</span>)            │ <span style="color: #00af00; text-decoration-color: #00af00">96</span>)               │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block2a_expand_bn   │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">112</span>, <span style="color: #00af00; text-decoration-color: #00af00">112</span>,  │     <span style="color: #00af00; text-decoration-color: #00af00">384</span> │ block2a_expand_conv… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">BatchNormalizatio…</span> │ <span style="color: #00af00; text-decoration-color: #00af00">96</span>)               │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block2a_expand_act… │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">112</span>, <span style="color: #00af00; text-decoration-color: #00af00">112</span>,  │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ block2a_expand_bn[<span style="color: #00af00; text-decoration-color: #00af00">0</span>… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Activation</span>)        │ <span style="color: #00af00; text-decoration-color: #00af00">96</span>)               │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block2a_dwconv_pad  │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">113</span>, <span style="color: #00af00; text-decoration-color: #00af00">113</span>,  │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ block2a_expand_acti… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">ZeroPadding2D</span>)     │ <span style="color: #00af00; text-decoration-color: #00af00">96</span>)               │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block2a_dwconv      │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">56</span>, <span style="color: #00af00; text-decoration-color: #00af00">56</span>,    │     <span style="color: #00af00; text-decoration-color: #00af00">864</span> │ block2a_dwconv_pad[<span style="color: #00af00; text-decoration-color: #00af00">…</span> │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">DepthwiseConv2D</span>)   │ <span style="color: #00af00; text-decoration-color: #00af00">96</span>)               │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block2a_bn          │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">56</span>, <span style="color: #00af00; text-decoration-color: #00af00">56</span>,    │     <span style="color: #00af00; text-decoration-color: #00af00">384</span> │ block2a_dwconv[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>] │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">BatchNormalizatio…</span> │ <span style="color: #00af00; text-decoration-color: #00af00">96</span>)               │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block2a_activation  │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">56</span>, <span style="color: #00af00; text-decoration-color: #00af00">56</span>,    │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ block2a_bn[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>]     │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Activation</span>)        │ <span style="color: #00af00; text-decoration-color: #00af00">96</span>)               │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block2a_se_squeeze  │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">96</span>)        │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ block2a_activation[<span style="color: #00af00; text-decoration-color: #00af00">…</span> │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">GlobalAveragePool…</span> │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block2a_se_reshape  │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>, <span style="color: #00af00; text-decoration-color: #00af00">96</span>)  │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ block2a_se_squeeze[<span style="color: #00af00; text-decoration-color: #00af00">…</span> │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Reshape</span>)           │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block2a_se_reduce   │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>, <span style="color: #00af00; text-decoration-color: #00af00">4</span>)   │     <span style="color: #00af00; text-decoration-color: #00af00">388</span> │ block2a_se_reshape[<span style="color: #00af00; text-decoration-color: #00af00">…</span> │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Conv2D</span>)            │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block2a_se_expand   │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>, <span style="color: #00af00; text-decoration-color: #00af00">96</span>)  │     <span style="color: #00af00; text-decoration-color: #00af00">480</span> │ block2a_se_reduce[<span style="color: #00af00; text-decoration-color: #00af00">0</span>… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Conv2D</span>)            │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block2a_se_excite   │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">56</span>, <span style="color: #00af00; text-decoration-color: #00af00">56</span>,    │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ block2a_activation[<span style="color: #00af00; text-decoration-color: #00af00">…</span> │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Multiply</span>)          │ <span style="color: #00af00; text-decoration-color: #00af00">96</span>)               │         │ block2a_se_expand[<span style="color: #00af00; text-decoration-color: #00af00">0</span>… │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block2a_project_co… │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">56</span>, <span style="color: #00af00; text-decoration-color: #00af00">56</span>,    │   <span style="color: #00af00; text-decoration-color: #00af00">2,304</span> │ block2a_se_excite[<span style="color: #00af00; text-decoration-color: #00af00">0</span>… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Conv2D</span>)            │ <span style="color: #00af00; text-decoration-color: #00af00">24</span>)               │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block2a_project_bn  │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">56</span>, <span style="color: #00af00; text-decoration-color: #00af00">56</span>,    │      <span style="color: #00af00; text-decoration-color: #00af00">96</span> │ block2a_project_con… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">BatchNormalizatio…</span> │ <span style="color: #00af00; text-decoration-color: #00af00">24</span>)               │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block2b_expand_conv │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">56</span>, <span style="color: #00af00; text-decoration-color: #00af00">56</span>,    │   <span style="color: #00af00; text-decoration-color: #00af00">3,456</span> │ block2a_project_bn[<span style="color: #00af00; text-decoration-color: #00af00">…</span> │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Conv2D</span>)            │ <span style="color: #00af00; text-decoration-color: #00af00">144</span>)              │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block2b_expand_bn   │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">56</span>, <span style="color: #00af00; text-decoration-color: #00af00">56</span>,    │     <span style="color: #00af00; text-decoration-color: #00af00">576</span> │ block2b_expand_conv… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">BatchNormalizatio…</span> │ <span style="color: #00af00; text-decoration-color: #00af00">144</span>)              │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block2b_expand_act… │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">56</span>, <span style="color: #00af00; text-decoration-color: #00af00">56</span>,    │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ block2b_expand_bn[<span style="color: #00af00; text-decoration-color: #00af00">0</span>… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Activation</span>)        │ <span style="color: #00af00; text-decoration-color: #00af00">144</span>)              │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block2b_dwconv      │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">56</span>, <span style="color: #00af00; text-decoration-color: #00af00">56</span>,    │   <span style="color: #00af00; text-decoration-color: #00af00">1,296</span> │ block2b_expand_acti… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">DepthwiseConv2D</span>)   │ <span style="color: #00af00; text-decoration-color: #00af00">144</span>)              │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block2b_bn          │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">56</span>, <span style="color: #00af00; text-decoration-color: #00af00">56</span>,    │     <span style="color: #00af00; text-decoration-color: #00af00">576</span> │ block2b_dwconv[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>] │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">BatchNormalizatio…</span> │ <span style="color: #00af00; text-decoration-color: #00af00">144</span>)              │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block2b_activation  │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">56</span>, <span style="color: #00af00; text-decoration-color: #00af00">56</span>,    │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ block2b_bn[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>]     │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Activation</span>)        │ <span style="color: #00af00; text-decoration-color: #00af00">144</span>)              │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block2b_se_squeeze  │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">144</span>)       │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ block2b_activation[<span style="color: #00af00; text-decoration-color: #00af00">…</span> │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">GlobalAveragePool…</span> │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block2b_se_reshape  │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>, <span style="color: #00af00; text-decoration-color: #00af00">144</span>) │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ block2b_se_squeeze[<span style="color: #00af00; text-decoration-color: #00af00">…</span> │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Reshape</span>)           │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block2b_se_reduce   │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>, <span style="color: #00af00; text-decoration-color: #00af00">6</span>)   │     <span style="color: #00af00; text-decoration-color: #00af00">870</span> │ block2b_se_reshape[<span style="color: #00af00; text-decoration-color: #00af00">…</span> │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Conv2D</span>)            │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block2b_se_expand   │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>, <span style="color: #00af00; text-decoration-color: #00af00">144</span>) │   <span style="color: #00af00; text-decoration-color: #00af00">1,008</span> │ block2b_se_reduce[<span style="color: #00af00; text-decoration-color: #00af00">0</span>… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Conv2D</span>)            │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block2b_se_excite   │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">56</span>, <span style="color: #00af00; text-decoration-color: #00af00">56</span>,    │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ block2b_activation[<span style="color: #00af00; text-decoration-color: #00af00">…</span> │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Multiply</span>)          │ <span style="color: #00af00; text-decoration-color: #00af00">144</span>)              │         │ block2b_se_expand[<span style="color: #00af00; text-decoration-color: #00af00">0</span>… │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block2b_project_co… │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">56</span>, <span style="color: #00af00; text-decoration-color: #00af00">56</span>,    │   <span style="color: #00af00; text-decoration-color: #00af00">3,456</span> │ block2b_se_excite[<span style="color: #00af00; text-decoration-color: #00af00">0</span>… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Conv2D</span>)            │ <span style="color: #00af00; text-decoration-color: #00af00">24</span>)               │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block2b_project_bn  │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">56</span>, <span style="color: #00af00; text-decoration-color: #00af00">56</span>,    │      <span style="color: #00af00; text-decoration-color: #00af00">96</span> │ block2b_project_con… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">BatchNormalizatio…</span> │ <span style="color: #00af00; text-decoration-color: #00af00">24</span>)               │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block2b_drop        │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">56</span>, <span style="color: #00af00; text-decoration-color: #00af00">56</span>,    │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ block2b_project_bn[<span style="color: #00af00; text-decoration-color: #00af00">…</span> │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Dropout</span>)           │ <span style="color: #00af00; text-decoration-color: #00af00">24</span>)               │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block2b_add (<span style="color: #0087ff; text-decoration-color: #0087ff">Add</span>)   │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">56</span>, <span style="color: #00af00; text-decoration-color: #00af00">56</span>,    │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ block2b_drop[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>],  │
+│                     │ <span style="color: #00af00; text-decoration-color: #00af00">24</span>)               │         │ block2a_project_bn[<span style="color: #00af00; text-decoration-color: #00af00">…</span> │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block3a_expand_conv │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">56</span>, <span style="color: #00af00; text-decoration-color: #00af00">56</span>,    │   <span style="color: #00af00; text-decoration-color: #00af00">3,456</span> │ block2b_add[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>]    │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Conv2D</span>)            │ <span style="color: #00af00; text-decoration-color: #00af00">144</span>)              │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block3a_expand_bn   │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">56</span>, <span style="color: #00af00; text-decoration-color: #00af00">56</span>,    │     <span style="color: #00af00; text-decoration-color: #00af00">576</span> │ block3a_expand_conv… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">BatchNormalizatio…</span> │ <span style="color: #00af00; text-decoration-color: #00af00">144</span>)              │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block3a_expand_act… │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">56</span>, <span style="color: #00af00; text-decoration-color: #00af00">56</span>,    │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ block3a_expand_bn[<span style="color: #00af00; text-decoration-color: #00af00">0</span>… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Activation</span>)        │ <span style="color: #00af00; text-decoration-color: #00af00">144</span>)              │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block3a_dwconv_pad  │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">59</span>, <span style="color: #00af00; text-decoration-color: #00af00">59</span>,    │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ block3a_expand_acti… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">ZeroPadding2D</span>)     │ <span style="color: #00af00; text-decoration-color: #00af00">144</span>)              │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block3a_dwconv      │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">28</span>, <span style="color: #00af00; text-decoration-color: #00af00">28</span>,    │   <span style="color: #00af00; text-decoration-color: #00af00">3,600</span> │ block3a_dwconv_pad[<span style="color: #00af00; text-decoration-color: #00af00">…</span> │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">DepthwiseConv2D</span>)   │ <span style="color: #00af00; text-decoration-color: #00af00">144</span>)              │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block3a_bn          │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">28</span>, <span style="color: #00af00; text-decoration-color: #00af00">28</span>,    │     <span style="color: #00af00; text-decoration-color: #00af00">576</span> │ block3a_dwconv[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>] │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">BatchNormalizatio…</span> │ <span style="color: #00af00; text-decoration-color: #00af00">144</span>)              │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block3a_activation  │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">28</span>, <span style="color: #00af00; text-decoration-color: #00af00">28</span>,    │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ block3a_bn[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>]     │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Activation</span>)        │ <span style="color: #00af00; text-decoration-color: #00af00">144</span>)              │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block3a_se_squeeze  │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">144</span>)       │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ block3a_activation[<span style="color: #00af00; text-decoration-color: #00af00">…</span> │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">GlobalAveragePool…</span> │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block3a_se_reshape  │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>, <span style="color: #00af00; text-decoration-color: #00af00">144</span>) │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ block3a_se_squeeze[<span style="color: #00af00; text-decoration-color: #00af00">…</span> │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Reshape</span>)           │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block3a_se_reduce   │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>, <span style="color: #00af00; text-decoration-color: #00af00">6</span>)   │     <span style="color: #00af00; text-decoration-color: #00af00">870</span> │ block3a_se_reshape[<span style="color: #00af00; text-decoration-color: #00af00">…</span> │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Conv2D</span>)            │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block3a_se_expand   │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>, <span style="color: #00af00; text-decoration-color: #00af00">144</span>) │   <span style="color: #00af00; text-decoration-color: #00af00">1,008</span> │ block3a_se_reduce[<span style="color: #00af00; text-decoration-color: #00af00">0</span>… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Conv2D</span>)            │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block3a_se_excite   │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">28</span>, <span style="color: #00af00; text-decoration-color: #00af00">28</span>,    │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ block3a_activation[<span style="color: #00af00; text-decoration-color: #00af00">…</span> │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Multiply</span>)          │ <span style="color: #00af00; text-decoration-color: #00af00">144</span>)              │         │ block3a_se_expand[<span style="color: #00af00; text-decoration-color: #00af00">0</span>… │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block3a_project_co… │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">28</span>, <span style="color: #00af00; text-decoration-color: #00af00">28</span>,    │   <span style="color: #00af00; text-decoration-color: #00af00">5,760</span> │ block3a_se_excite[<span style="color: #00af00; text-decoration-color: #00af00">0</span>… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Conv2D</span>)            │ <span style="color: #00af00; text-decoration-color: #00af00">40</span>)               │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block3a_project_bn  │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">28</span>, <span style="color: #00af00; text-decoration-color: #00af00">28</span>,    │     <span style="color: #00af00; text-decoration-color: #00af00">160</span> │ block3a_project_con… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">BatchNormalizatio…</span> │ <span style="color: #00af00; text-decoration-color: #00af00">40</span>)               │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block3b_expand_conv │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">28</span>, <span style="color: #00af00; text-decoration-color: #00af00">28</span>,    │   <span style="color: #00af00; text-decoration-color: #00af00">9,600</span> │ block3a_project_bn[<span style="color: #00af00; text-decoration-color: #00af00">…</span> │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Conv2D</span>)            │ <span style="color: #00af00; text-decoration-color: #00af00">240</span>)              │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block3b_expand_bn   │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">28</span>, <span style="color: #00af00; text-decoration-color: #00af00">28</span>,    │     <span style="color: #00af00; text-decoration-color: #00af00">960</span> │ block3b_expand_conv… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">BatchNormalizatio…</span> │ <span style="color: #00af00; text-decoration-color: #00af00">240</span>)              │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block3b_expand_act… │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">28</span>, <span style="color: #00af00; text-decoration-color: #00af00">28</span>,    │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ block3b_expand_bn[<span style="color: #00af00; text-decoration-color: #00af00">0</span>… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Activation</span>)        │ <span style="color: #00af00; text-decoration-color: #00af00">240</span>)              │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block3b_dwconv      │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">28</span>, <span style="color: #00af00; text-decoration-color: #00af00">28</span>,    │   <span style="color: #00af00; text-decoration-color: #00af00">6,000</span> │ block3b_expand_acti… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">DepthwiseConv2D</span>)   │ <span style="color: #00af00; text-decoration-color: #00af00">240</span>)              │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block3b_bn          │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">28</span>, <span style="color: #00af00; text-decoration-color: #00af00">28</span>,    │     <span style="color: #00af00; text-decoration-color: #00af00">960</span> │ block3b_dwconv[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>] │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">BatchNormalizatio…</span> │ <span style="color: #00af00; text-decoration-color: #00af00">240</span>)              │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block3b_activation  │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">28</span>, <span style="color: #00af00; text-decoration-color: #00af00">28</span>,    │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ block3b_bn[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>]     │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Activation</span>)        │ <span style="color: #00af00; text-decoration-color: #00af00">240</span>)              │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block3b_se_squeeze  │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">240</span>)       │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ block3b_activation[<span style="color: #00af00; text-decoration-color: #00af00">…</span> │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">GlobalAveragePool…</span> │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block3b_se_reshape  │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>, <span style="color: #00af00; text-decoration-color: #00af00">240</span>) │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ block3b_se_squeeze[<span style="color: #00af00; text-decoration-color: #00af00">…</span> │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Reshape</span>)           │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block3b_se_reduce   │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>, <span style="color: #00af00; text-decoration-color: #00af00">10</span>)  │   <span style="color: #00af00; text-decoration-color: #00af00">2,410</span> │ block3b_se_reshape[<span style="color: #00af00; text-decoration-color: #00af00">…</span> │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Conv2D</span>)            │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block3b_se_expand   │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>, <span style="color: #00af00; text-decoration-color: #00af00">240</span>) │   <span style="color: #00af00; text-decoration-color: #00af00">2,640</span> │ block3b_se_reduce[<span style="color: #00af00; text-decoration-color: #00af00">0</span>… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Conv2D</span>)            │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block3b_se_excite   │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">28</span>, <span style="color: #00af00; text-decoration-color: #00af00">28</span>,    │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ block3b_activation[<span style="color: #00af00; text-decoration-color: #00af00">…</span> │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Multiply</span>)          │ <span style="color: #00af00; text-decoration-color: #00af00">240</span>)              │         │ block3b_se_expand[<span style="color: #00af00; text-decoration-color: #00af00">0</span>… │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block3b_project_co… │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">28</span>, <span style="color: #00af00; text-decoration-color: #00af00">28</span>,    │   <span style="color: #00af00; text-decoration-color: #00af00">9,600</span> │ block3b_se_excite[<span style="color: #00af00; text-decoration-color: #00af00">0</span>… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Conv2D</span>)            │ <span style="color: #00af00; text-decoration-color: #00af00">40</span>)               │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block3b_project_bn  │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">28</span>, <span style="color: #00af00; text-decoration-color: #00af00">28</span>,    │     <span style="color: #00af00; text-decoration-color: #00af00">160</span> │ block3b_project_con… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">BatchNormalizatio…</span> │ <span style="color: #00af00; text-decoration-color: #00af00">40</span>)               │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block3b_drop        │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">28</span>, <span style="color: #00af00; text-decoration-color: #00af00">28</span>,    │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ block3b_project_bn[<span style="color: #00af00; text-decoration-color: #00af00">…</span> │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Dropout</span>)           │ <span style="color: #00af00; text-decoration-color: #00af00">40</span>)               │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block3b_add (<span style="color: #0087ff; text-decoration-color: #0087ff">Add</span>)   │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">28</span>, <span style="color: #00af00; text-decoration-color: #00af00">28</span>,    │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ block3b_drop[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>],  │
+│                     │ <span style="color: #00af00; text-decoration-color: #00af00">40</span>)               │         │ block3a_project_bn[<span style="color: #00af00; text-decoration-color: #00af00">…</span> │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block4a_expand_conv │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">28</span>, <span style="color: #00af00; text-decoration-color: #00af00">28</span>,    │   <span style="color: #00af00; text-decoration-color: #00af00">9,600</span> │ block3b_add[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>]    │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Conv2D</span>)            │ <span style="color: #00af00; text-decoration-color: #00af00">240</span>)              │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block4a_expand_bn   │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">28</span>, <span style="color: #00af00; text-decoration-color: #00af00">28</span>,    │     <span style="color: #00af00; text-decoration-color: #00af00">960</span> │ block4a_expand_conv… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">BatchNormalizatio…</span> │ <span style="color: #00af00; text-decoration-color: #00af00">240</span>)              │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block4a_expand_act… │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">28</span>, <span style="color: #00af00; text-decoration-color: #00af00">28</span>,    │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ block4a_expand_bn[<span style="color: #00af00; text-decoration-color: #00af00">0</span>… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Activation</span>)        │ <span style="color: #00af00; text-decoration-color: #00af00">240</span>)              │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block4a_dwconv_pad  │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">29</span>, <span style="color: #00af00; text-decoration-color: #00af00">29</span>,    │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ block4a_expand_acti… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">ZeroPadding2D</span>)     │ <span style="color: #00af00; text-decoration-color: #00af00">240</span>)              │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block4a_dwconv      │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">14</span>, <span style="color: #00af00; text-decoration-color: #00af00">14</span>,    │   <span style="color: #00af00; text-decoration-color: #00af00">2,160</span> │ block4a_dwconv_pad[<span style="color: #00af00; text-decoration-color: #00af00">…</span> │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">DepthwiseConv2D</span>)   │ <span style="color: #00af00; text-decoration-color: #00af00">240</span>)              │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block4a_bn          │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">14</span>, <span style="color: #00af00; text-decoration-color: #00af00">14</span>,    │     <span style="color: #00af00; text-decoration-color: #00af00">960</span> │ block4a_dwconv[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>] │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">BatchNormalizatio…</span> │ <span style="color: #00af00; text-decoration-color: #00af00">240</span>)              │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block4a_activation  │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">14</span>, <span style="color: #00af00; text-decoration-color: #00af00">14</span>,    │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ block4a_bn[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>]     │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Activation</span>)        │ <span style="color: #00af00; text-decoration-color: #00af00">240</span>)              │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block4a_se_squeeze  │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">240</span>)       │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ block4a_activation[<span style="color: #00af00; text-decoration-color: #00af00">…</span> │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">GlobalAveragePool…</span> │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block4a_se_reshape  │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>, <span style="color: #00af00; text-decoration-color: #00af00">240</span>) │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ block4a_se_squeeze[<span style="color: #00af00; text-decoration-color: #00af00">…</span> │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Reshape</span>)           │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block4a_se_reduce   │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>, <span style="color: #00af00; text-decoration-color: #00af00">10</span>)  │   <span style="color: #00af00; text-decoration-color: #00af00">2,410</span> │ block4a_se_reshape[<span style="color: #00af00; text-decoration-color: #00af00">…</span> │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Conv2D</span>)            │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block4a_se_expand   │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>, <span style="color: #00af00; text-decoration-color: #00af00">240</span>) │   <span style="color: #00af00; text-decoration-color: #00af00">2,640</span> │ block4a_se_reduce[<span style="color: #00af00; text-decoration-color: #00af00">0</span>… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Conv2D</span>)            │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block4a_se_excite   │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">14</span>, <span style="color: #00af00; text-decoration-color: #00af00">14</span>,    │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ block4a_activation[<span style="color: #00af00; text-decoration-color: #00af00">…</span> │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Multiply</span>)          │ <span style="color: #00af00; text-decoration-color: #00af00">240</span>)              │         │ block4a_se_expand[<span style="color: #00af00; text-decoration-color: #00af00">0</span>… │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block4a_project_co… │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">14</span>, <span style="color: #00af00; text-decoration-color: #00af00">14</span>,    │  <span style="color: #00af00; text-decoration-color: #00af00">19,200</span> │ block4a_se_excite[<span style="color: #00af00; text-decoration-color: #00af00">0</span>… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Conv2D</span>)            │ <span style="color: #00af00; text-decoration-color: #00af00">80</span>)               │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block4a_project_bn  │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">14</span>, <span style="color: #00af00; text-decoration-color: #00af00">14</span>,    │     <span style="color: #00af00; text-decoration-color: #00af00">320</span> │ block4a_project_con… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">BatchNormalizatio…</span> │ <span style="color: #00af00; text-decoration-color: #00af00">80</span>)               │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block4b_expand_conv │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">14</span>, <span style="color: #00af00; text-decoration-color: #00af00">14</span>,    │  <span style="color: #00af00; text-decoration-color: #00af00">38,400</span> │ block4a_project_bn[<span style="color: #00af00; text-decoration-color: #00af00">…</span> │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Conv2D</span>)            │ <span style="color: #00af00; text-decoration-color: #00af00">480</span>)              │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block4b_expand_bn   │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">14</span>, <span style="color: #00af00; text-decoration-color: #00af00">14</span>,    │   <span style="color: #00af00; text-decoration-color: #00af00">1,920</span> │ block4b_expand_conv… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">BatchNormalizatio…</span> │ <span style="color: #00af00; text-decoration-color: #00af00">480</span>)              │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block4b_expand_act… │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">14</span>, <span style="color: #00af00; text-decoration-color: #00af00">14</span>,    │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ block4b_expand_bn[<span style="color: #00af00; text-decoration-color: #00af00">0</span>… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Activation</span>)        │ <span style="color: #00af00; text-decoration-color: #00af00">480</span>)              │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block4b_dwconv      │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">14</span>, <span style="color: #00af00; text-decoration-color: #00af00">14</span>,    │   <span style="color: #00af00; text-decoration-color: #00af00">4,320</span> │ block4b_expand_acti… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">DepthwiseConv2D</span>)   │ <span style="color: #00af00; text-decoration-color: #00af00">480</span>)              │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block4b_bn          │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">14</span>, <span style="color: #00af00; text-decoration-color: #00af00">14</span>,    │   <span style="color: #00af00; text-decoration-color: #00af00">1,920</span> │ block4b_dwconv[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>] │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">BatchNormalizatio…</span> │ <span style="color: #00af00; text-decoration-color: #00af00">480</span>)              │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block4b_activation  │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">14</span>, <span style="color: #00af00; text-decoration-color: #00af00">14</span>,    │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ block4b_bn[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>]     │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Activation</span>)        │ <span style="color: #00af00; text-decoration-color: #00af00">480</span>)              │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block4b_se_squeeze  │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">480</span>)       │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ block4b_activation[<span style="color: #00af00; text-decoration-color: #00af00">…</span> │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">GlobalAveragePool…</span> │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block4b_se_reshape  │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>, <span style="color: #00af00; text-decoration-color: #00af00">480</span>) │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ block4b_se_squeeze[<span style="color: #00af00; text-decoration-color: #00af00">…</span> │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Reshape</span>)           │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block4b_se_reduce   │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>, <span style="color: #00af00; text-decoration-color: #00af00">20</span>)  │   <span style="color: #00af00; text-decoration-color: #00af00">9,620</span> │ block4b_se_reshape[<span style="color: #00af00; text-decoration-color: #00af00">…</span> │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Conv2D</span>)            │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block4b_se_expand   │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>, <span style="color: #00af00; text-decoration-color: #00af00">480</span>) │  <span style="color: #00af00; text-decoration-color: #00af00">10,080</span> │ block4b_se_reduce[<span style="color: #00af00; text-decoration-color: #00af00">0</span>… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Conv2D</span>)            │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block4b_se_excite   │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">14</span>, <span style="color: #00af00; text-decoration-color: #00af00">14</span>,    │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ block4b_activation[<span style="color: #00af00; text-decoration-color: #00af00">…</span> │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Multiply</span>)          │ <span style="color: #00af00; text-decoration-color: #00af00">480</span>)              │         │ block4b_se_expand[<span style="color: #00af00; text-decoration-color: #00af00">0</span>… │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block4b_project_co… │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">14</span>, <span style="color: #00af00; text-decoration-color: #00af00">14</span>,    │  <span style="color: #00af00; text-decoration-color: #00af00">38,400</span> │ block4b_se_excite[<span style="color: #00af00; text-decoration-color: #00af00">0</span>… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Conv2D</span>)            │ <span style="color: #00af00; text-decoration-color: #00af00">80</span>)               │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block4b_project_bn  │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">14</span>, <span style="color: #00af00; text-decoration-color: #00af00">14</span>,    │     <span style="color: #00af00; text-decoration-color: #00af00">320</span> │ block4b_project_con… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">BatchNormalizatio…</span> │ <span style="color: #00af00; text-decoration-color: #00af00">80</span>)               │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block4b_drop        │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">14</span>, <span style="color: #00af00; text-decoration-color: #00af00">14</span>,    │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ block4b_project_bn[<span style="color: #00af00; text-decoration-color: #00af00">…</span> │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Dropout</span>)           │ <span style="color: #00af00; text-decoration-color: #00af00">80</span>)               │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block4b_add (<span style="color: #0087ff; text-decoration-color: #0087ff">Add</span>)   │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">14</span>, <span style="color: #00af00; text-decoration-color: #00af00">14</span>,    │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ block4b_drop[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>],  │
+│                     │ <span style="color: #00af00; text-decoration-color: #00af00">80</span>)               │         │ block4a_project_bn[<span style="color: #00af00; text-decoration-color: #00af00">…</span> │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block4c_expand_conv │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">14</span>, <span style="color: #00af00; text-decoration-color: #00af00">14</span>,    │  <span style="color: #00af00; text-decoration-color: #00af00">38,400</span> │ block4b_add[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>]    │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Conv2D</span>)            │ <span style="color: #00af00; text-decoration-color: #00af00">480</span>)              │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block4c_expand_bn   │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">14</span>, <span style="color: #00af00; text-decoration-color: #00af00">14</span>,    │   <span style="color: #00af00; text-decoration-color: #00af00">1,920</span> │ block4c_expand_conv… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">BatchNormalizatio…</span> │ <span style="color: #00af00; text-decoration-color: #00af00">480</span>)              │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block4c_expand_act… │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">14</span>, <span style="color: #00af00; text-decoration-color: #00af00">14</span>,    │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ block4c_expand_bn[<span style="color: #00af00; text-decoration-color: #00af00">0</span>… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Activation</span>)        │ <span style="color: #00af00; text-decoration-color: #00af00">480</span>)              │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block4c_dwconv      │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">14</span>, <span style="color: #00af00; text-decoration-color: #00af00">14</span>,    │   <span style="color: #00af00; text-decoration-color: #00af00">4,320</span> │ block4c_expand_acti… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">DepthwiseConv2D</span>)   │ <span style="color: #00af00; text-decoration-color: #00af00">480</span>)              │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block4c_bn          │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">14</span>, <span style="color: #00af00; text-decoration-color: #00af00">14</span>,    │   <span style="color: #00af00; text-decoration-color: #00af00">1,920</span> │ block4c_dwconv[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>] │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">BatchNormalizatio…</span> │ <span style="color: #00af00; text-decoration-color: #00af00">480</span>)              │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block4c_activation  │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">14</span>, <span style="color: #00af00; text-decoration-color: #00af00">14</span>,    │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ block4c_bn[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>]     │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Activation</span>)        │ <span style="color: #00af00; text-decoration-color: #00af00">480</span>)              │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block4c_se_squeeze  │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">480</span>)       │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ block4c_activation[<span style="color: #00af00; text-decoration-color: #00af00">…</span> │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">GlobalAveragePool…</span> │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block4c_se_reshape  │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>, <span style="color: #00af00; text-decoration-color: #00af00">480</span>) │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ block4c_se_squeeze[<span style="color: #00af00; text-decoration-color: #00af00">…</span> │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Reshape</span>)           │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block4c_se_reduce   │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>, <span style="color: #00af00; text-decoration-color: #00af00">20</span>)  │   <span style="color: #00af00; text-decoration-color: #00af00">9,620</span> │ block4c_se_reshape[<span style="color: #00af00; text-decoration-color: #00af00">…</span> │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Conv2D</span>)            │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block4c_se_expand   │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>, <span style="color: #00af00; text-decoration-color: #00af00">480</span>) │  <span style="color: #00af00; text-decoration-color: #00af00">10,080</span> │ block4c_se_reduce[<span style="color: #00af00; text-decoration-color: #00af00">0</span>… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Conv2D</span>)            │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block4c_se_excite   │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">14</span>, <span style="color: #00af00; text-decoration-color: #00af00">14</span>,    │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ block4c_activation[<span style="color: #00af00; text-decoration-color: #00af00">…</span> │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Multiply</span>)          │ <span style="color: #00af00; text-decoration-color: #00af00">480</span>)              │         │ block4c_se_expand[<span style="color: #00af00; text-decoration-color: #00af00">0</span>… │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block4c_project_co… │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">14</span>, <span style="color: #00af00; text-decoration-color: #00af00">14</span>,    │  <span style="color: #00af00; text-decoration-color: #00af00">38,400</span> │ block4c_se_excite[<span style="color: #00af00; text-decoration-color: #00af00">0</span>… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Conv2D</span>)            │ <span style="color: #00af00; text-decoration-color: #00af00">80</span>)               │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block4c_project_bn  │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">14</span>, <span style="color: #00af00; text-decoration-color: #00af00">14</span>,    │     <span style="color: #00af00; text-decoration-color: #00af00">320</span> │ block4c_project_con… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">BatchNormalizatio…</span> │ <span style="color: #00af00; text-decoration-color: #00af00">80</span>)               │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block4c_drop        │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">14</span>, <span style="color: #00af00; text-decoration-color: #00af00">14</span>,    │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ block4c_project_bn[<span style="color: #00af00; text-decoration-color: #00af00">…</span> │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Dropout</span>)           │ <span style="color: #00af00; text-decoration-color: #00af00">80</span>)               │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block4c_add (<span style="color: #0087ff; text-decoration-color: #0087ff">Add</span>)   │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">14</span>, <span style="color: #00af00; text-decoration-color: #00af00">14</span>,    │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ block4c_drop[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>],  │
+│                     │ <span style="color: #00af00; text-decoration-color: #00af00">80</span>)               │         │ block4b_add[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>]    │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block5a_expand_conv │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">14</span>, <span style="color: #00af00; text-decoration-color: #00af00">14</span>,    │  <span style="color: #00af00; text-decoration-color: #00af00">38,400</span> │ block4c_add[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>]    │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Conv2D</span>)            │ <span style="color: #00af00; text-decoration-color: #00af00">480</span>)              │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block5a_expand_bn   │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">14</span>, <span style="color: #00af00; text-decoration-color: #00af00">14</span>,    │   <span style="color: #00af00; text-decoration-color: #00af00">1,920</span> │ block5a_expand_conv… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">BatchNormalizatio…</span> │ <span style="color: #00af00; text-decoration-color: #00af00">480</span>)              │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block5a_expand_act… │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">14</span>, <span style="color: #00af00; text-decoration-color: #00af00">14</span>,    │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ block5a_expand_bn[<span style="color: #00af00; text-decoration-color: #00af00">0</span>… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Activation</span>)        │ <span style="color: #00af00; text-decoration-color: #00af00">480</span>)              │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block5a_dwconv      │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">14</span>, <span style="color: #00af00; text-decoration-color: #00af00">14</span>,    │  <span style="color: #00af00; text-decoration-color: #00af00">12,000</span> │ block5a_expand_acti… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">DepthwiseConv2D</span>)   │ <span style="color: #00af00; text-decoration-color: #00af00">480</span>)              │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block5a_bn          │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">14</span>, <span style="color: #00af00; text-decoration-color: #00af00">14</span>,    │   <span style="color: #00af00; text-decoration-color: #00af00">1,920</span> │ block5a_dwconv[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>] │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">BatchNormalizatio…</span> │ <span style="color: #00af00; text-decoration-color: #00af00">480</span>)              │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block5a_activation  │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">14</span>, <span style="color: #00af00; text-decoration-color: #00af00">14</span>,    │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ block5a_bn[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>]     │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Activation</span>)        │ <span style="color: #00af00; text-decoration-color: #00af00">480</span>)              │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block5a_se_squeeze  │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">480</span>)       │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ block5a_activation[<span style="color: #00af00; text-decoration-color: #00af00">…</span> │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">GlobalAveragePool…</span> │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block5a_se_reshape  │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>, <span style="color: #00af00; text-decoration-color: #00af00">480</span>) │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ block5a_se_squeeze[<span style="color: #00af00; text-decoration-color: #00af00">…</span> │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Reshape</span>)           │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block5a_se_reduce   │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>, <span style="color: #00af00; text-decoration-color: #00af00">20</span>)  │   <span style="color: #00af00; text-decoration-color: #00af00">9,620</span> │ block5a_se_reshape[<span style="color: #00af00; text-decoration-color: #00af00">…</span> │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Conv2D</span>)            │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block5a_se_expand   │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>, <span style="color: #00af00; text-decoration-color: #00af00">480</span>) │  <span style="color: #00af00; text-decoration-color: #00af00">10,080</span> │ block5a_se_reduce[<span style="color: #00af00; text-decoration-color: #00af00">0</span>… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Conv2D</span>)            │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block5a_se_excite   │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">14</span>, <span style="color: #00af00; text-decoration-color: #00af00">14</span>,    │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ block5a_activation[<span style="color: #00af00; text-decoration-color: #00af00">…</span> │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Multiply</span>)          │ <span style="color: #00af00; text-decoration-color: #00af00">480</span>)              │         │ block5a_se_expand[<span style="color: #00af00; text-decoration-color: #00af00">0</span>… │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block5a_project_co… │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">14</span>, <span style="color: #00af00; text-decoration-color: #00af00">14</span>,    │  <span style="color: #00af00; text-decoration-color: #00af00">53,760</span> │ block5a_se_excite[<span style="color: #00af00; text-decoration-color: #00af00">0</span>… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Conv2D</span>)            │ <span style="color: #00af00; text-decoration-color: #00af00">112</span>)              │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block5a_project_bn  │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">14</span>, <span style="color: #00af00; text-decoration-color: #00af00">14</span>,    │     <span style="color: #00af00; text-decoration-color: #00af00">448</span> │ block5a_project_con… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">BatchNormalizatio…</span> │ <span style="color: #00af00; text-decoration-color: #00af00">112</span>)              │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block5b_expand_conv │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">14</span>, <span style="color: #00af00; text-decoration-color: #00af00">14</span>,    │  <span style="color: #00af00; text-decoration-color: #00af00">75,264</span> │ block5a_project_bn[<span style="color: #00af00; text-decoration-color: #00af00">…</span> │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Conv2D</span>)            │ <span style="color: #00af00; text-decoration-color: #00af00">672</span>)              │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block5b_expand_bn   │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">14</span>, <span style="color: #00af00; text-decoration-color: #00af00">14</span>,    │   <span style="color: #00af00; text-decoration-color: #00af00">2,688</span> │ block5b_expand_conv… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">BatchNormalizatio…</span> │ <span style="color: #00af00; text-decoration-color: #00af00">672</span>)              │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block5b_expand_act… │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">14</span>, <span style="color: #00af00; text-decoration-color: #00af00">14</span>,    │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ block5b_expand_bn[<span style="color: #00af00; text-decoration-color: #00af00">0</span>… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Activation</span>)        │ <span style="color: #00af00; text-decoration-color: #00af00">672</span>)              │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block5b_dwconv      │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">14</span>, <span style="color: #00af00; text-decoration-color: #00af00">14</span>,    │  <span style="color: #00af00; text-decoration-color: #00af00">16,800</span> │ block5b_expand_acti… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">DepthwiseConv2D</span>)   │ <span style="color: #00af00; text-decoration-color: #00af00">672</span>)              │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block5b_bn          │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">14</span>, <span style="color: #00af00; text-decoration-color: #00af00">14</span>,    │   <span style="color: #00af00; text-decoration-color: #00af00">2,688</span> │ block5b_dwconv[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>] │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">BatchNormalizatio…</span> │ <span style="color: #00af00; text-decoration-color: #00af00">672</span>)              │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block5b_activation  │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">14</span>, <span style="color: #00af00; text-decoration-color: #00af00">14</span>,    │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ block5b_bn[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>]     │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Activation</span>)        │ <span style="color: #00af00; text-decoration-color: #00af00">672</span>)              │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block5b_se_squeeze  │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">672</span>)       │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ block5b_activation[<span style="color: #00af00; text-decoration-color: #00af00">…</span> │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">GlobalAveragePool…</span> │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block5b_se_reshape  │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>, <span style="color: #00af00; text-decoration-color: #00af00">672</span>) │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ block5b_se_squeeze[<span style="color: #00af00; text-decoration-color: #00af00">…</span> │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Reshape</span>)           │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block5b_se_reduce   │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>, <span style="color: #00af00; text-decoration-color: #00af00">28</span>)  │  <span style="color: #00af00; text-decoration-color: #00af00">18,844</span> │ block5b_se_reshape[<span style="color: #00af00; text-decoration-color: #00af00">…</span> │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Conv2D</span>)            │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block5b_se_expand   │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>, <span style="color: #00af00; text-decoration-color: #00af00">672</span>) │  <span style="color: #00af00; text-decoration-color: #00af00">19,488</span> │ block5b_se_reduce[<span style="color: #00af00; text-decoration-color: #00af00">0</span>… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Conv2D</span>)            │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block5b_se_excite   │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">14</span>, <span style="color: #00af00; text-decoration-color: #00af00">14</span>,    │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ block5b_activation[<span style="color: #00af00; text-decoration-color: #00af00">…</span> │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Multiply</span>)          │ <span style="color: #00af00; text-decoration-color: #00af00">672</span>)              │         │ block5b_se_expand[<span style="color: #00af00; text-decoration-color: #00af00">0</span>… │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block5b_project_co… │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">14</span>, <span style="color: #00af00; text-decoration-color: #00af00">14</span>,    │  <span style="color: #00af00; text-decoration-color: #00af00">75,264</span> │ block5b_se_excite[<span style="color: #00af00; text-decoration-color: #00af00">0</span>… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Conv2D</span>)            │ <span style="color: #00af00; text-decoration-color: #00af00">112</span>)              │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block5b_project_bn  │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">14</span>, <span style="color: #00af00; text-decoration-color: #00af00">14</span>,    │     <span style="color: #00af00; text-decoration-color: #00af00">448</span> │ block5b_project_con… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">BatchNormalizatio…</span> │ <span style="color: #00af00; text-decoration-color: #00af00">112</span>)              │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block5b_drop        │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">14</span>, <span style="color: #00af00; text-decoration-color: #00af00">14</span>,    │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ block5b_project_bn[<span style="color: #00af00; text-decoration-color: #00af00">…</span> │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Dropout</span>)           │ <span style="color: #00af00; text-decoration-color: #00af00">112</span>)              │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block5b_add (<span style="color: #0087ff; text-decoration-color: #0087ff">Add</span>)   │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">14</span>, <span style="color: #00af00; text-decoration-color: #00af00">14</span>,    │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ block5b_drop[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>],  │
+│                     │ <span style="color: #00af00; text-decoration-color: #00af00">112</span>)              │         │ block5a_project_bn[<span style="color: #00af00; text-decoration-color: #00af00">…</span> │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block5c_expand_conv │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">14</span>, <span style="color: #00af00; text-decoration-color: #00af00">14</span>,    │  <span style="color: #00af00; text-decoration-color: #00af00">75,264</span> │ block5b_add[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>]    │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Conv2D</span>)            │ <span style="color: #00af00; text-decoration-color: #00af00">672</span>)              │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block5c_expand_bn   │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">14</span>, <span style="color: #00af00; text-decoration-color: #00af00">14</span>,    │   <span style="color: #00af00; text-decoration-color: #00af00">2,688</span> │ block5c_expand_conv… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">BatchNormalizatio…</span> │ <span style="color: #00af00; text-decoration-color: #00af00">672</span>)              │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block5c_expand_act… │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">14</span>, <span style="color: #00af00; text-decoration-color: #00af00">14</span>,    │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ block5c_expand_bn[<span style="color: #00af00; text-decoration-color: #00af00">0</span>… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Activation</span>)        │ <span style="color: #00af00; text-decoration-color: #00af00">672</span>)              │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block5c_dwconv      │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">14</span>, <span style="color: #00af00; text-decoration-color: #00af00">14</span>,    │  <span style="color: #00af00; text-decoration-color: #00af00">16,800</span> │ block5c_expand_acti… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">DepthwiseConv2D</span>)   │ <span style="color: #00af00; text-decoration-color: #00af00">672</span>)              │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block5c_bn          │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">14</span>, <span style="color: #00af00; text-decoration-color: #00af00">14</span>,    │   <span style="color: #00af00; text-decoration-color: #00af00">2,688</span> │ block5c_dwconv[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>] │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">BatchNormalizatio…</span> │ <span style="color: #00af00; text-decoration-color: #00af00">672</span>)              │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block5c_activation  │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">14</span>, <span style="color: #00af00; text-decoration-color: #00af00">14</span>,    │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ block5c_bn[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>]     │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Activation</span>)        │ <span style="color: #00af00; text-decoration-color: #00af00">672</span>)              │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block5c_se_squeeze  │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">672</span>)       │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ block5c_activation[<span style="color: #00af00; text-decoration-color: #00af00">…</span> │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">GlobalAveragePool…</span> │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block5c_se_reshape  │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>, <span style="color: #00af00; text-decoration-color: #00af00">672</span>) │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ block5c_se_squeeze[<span style="color: #00af00; text-decoration-color: #00af00">…</span> │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Reshape</span>)           │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block5c_se_reduce   │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>, <span style="color: #00af00; text-decoration-color: #00af00">28</span>)  │  <span style="color: #00af00; text-decoration-color: #00af00">18,844</span> │ block5c_se_reshape[<span style="color: #00af00; text-decoration-color: #00af00">…</span> │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Conv2D</span>)            │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block5c_se_expand   │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>, <span style="color: #00af00; text-decoration-color: #00af00">672</span>) │  <span style="color: #00af00; text-decoration-color: #00af00">19,488</span> │ block5c_se_reduce[<span style="color: #00af00; text-decoration-color: #00af00">0</span>… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Conv2D</span>)            │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block5c_se_excite   │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">14</span>, <span style="color: #00af00; text-decoration-color: #00af00">14</span>,    │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ block5c_activation[<span style="color: #00af00; text-decoration-color: #00af00">…</span> │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Multiply</span>)          │ <span style="color: #00af00; text-decoration-color: #00af00">672</span>)              │         │ block5c_se_expand[<span style="color: #00af00; text-decoration-color: #00af00">0</span>… │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block5c_project_co… │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">14</span>, <span style="color: #00af00; text-decoration-color: #00af00">14</span>,    │  <span style="color: #00af00; text-decoration-color: #00af00">75,264</span> │ block5c_se_excite[<span style="color: #00af00; text-decoration-color: #00af00">0</span>… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Conv2D</span>)            │ <span style="color: #00af00; text-decoration-color: #00af00">112</span>)              │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block5c_project_bn  │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">14</span>, <span style="color: #00af00; text-decoration-color: #00af00">14</span>,    │     <span style="color: #00af00; text-decoration-color: #00af00">448</span> │ block5c_project_con… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">BatchNormalizatio…</span> │ <span style="color: #00af00; text-decoration-color: #00af00">112</span>)              │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block5c_drop        │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">14</span>, <span style="color: #00af00; text-decoration-color: #00af00">14</span>,    │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ block5c_project_bn[<span style="color: #00af00; text-decoration-color: #00af00">…</span> │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Dropout</span>)           │ <span style="color: #00af00; text-decoration-color: #00af00">112</span>)              │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block5c_add (<span style="color: #0087ff; text-decoration-color: #0087ff">Add</span>)   │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">14</span>, <span style="color: #00af00; text-decoration-color: #00af00">14</span>,    │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ block5c_drop[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>],  │
+│                     │ <span style="color: #00af00; text-decoration-color: #00af00">112</span>)              │         │ block5b_add[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>]    │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block6a_expand_conv │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">14</span>, <span style="color: #00af00; text-decoration-color: #00af00">14</span>,    │  <span style="color: #00af00; text-decoration-color: #00af00">75,264</span> │ block5c_add[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>]    │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Conv2D</span>)            │ <span style="color: #00af00; text-decoration-color: #00af00">672</span>)              │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block6a_expand_bn   │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">14</span>, <span style="color: #00af00; text-decoration-color: #00af00">14</span>,    │   <span style="color: #00af00; text-decoration-color: #00af00">2,688</span> │ block6a_expand_conv… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">BatchNormalizatio…</span> │ <span style="color: #00af00; text-decoration-color: #00af00">672</span>)              │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block6a_expand_act… │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">14</span>, <span style="color: #00af00; text-decoration-color: #00af00">14</span>,    │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ block6a_expand_bn[<span style="color: #00af00; text-decoration-color: #00af00">0</span>… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Activation</span>)        │ <span style="color: #00af00; text-decoration-color: #00af00">672</span>)              │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block6a_dwconv_pad  │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">17</span>, <span style="color: #00af00; text-decoration-color: #00af00">17</span>,    │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ block6a_expand_acti… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">ZeroPadding2D</span>)     │ <span style="color: #00af00; text-decoration-color: #00af00">672</span>)              │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block6a_dwconv      │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">7</span>, <span style="color: #00af00; text-decoration-color: #00af00">7</span>, <span style="color: #00af00; text-decoration-color: #00af00">672</span>) │  <span style="color: #00af00; text-decoration-color: #00af00">16,800</span> │ block6a_dwconv_pad[<span style="color: #00af00; text-decoration-color: #00af00">…</span> │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">DepthwiseConv2D</span>)   │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block6a_bn          │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">7</span>, <span style="color: #00af00; text-decoration-color: #00af00">7</span>, <span style="color: #00af00; text-decoration-color: #00af00">672</span>) │   <span style="color: #00af00; text-decoration-color: #00af00">2,688</span> │ block6a_dwconv[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>] │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">BatchNormalizatio…</span> │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block6a_activation  │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">7</span>, <span style="color: #00af00; text-decoration-color: #00af00">7</span>, <span style="color: #00af00; text-decoration-color: #00af00">672</span>) │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ block6a_bn[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>]     │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Activation</span>)        │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block6a_se_squeeze  │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">672</span>)       │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ block6a_activation[<span style="color: #00af00; text-decoration-color: #00af00">…</span> │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">GlobalAveragePool…</span> │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block6a_se_reshape  │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>, <span style="color: #00af00; text-decoration-color: #00af00">672</span>) │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ block6a_se_squeeze[<span style="color: #00af00; text-decoration-color: #00af00">…</span> │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Reshape</span>)           │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block6a_se_reduce   │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>, <span style="color: #00af00; text-decoration-color: #00af00">28</span>)  │  <span style="color: #00af00; text-decoration-color: #00af00">18,844</span> │ block6a_se_reshape[<span style="color: #00af00; text-decoration-color: #00af00">…</span> │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Conv2D</span>)            │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block6a_se_expand   │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>, <span style="color: #00af00; text-decoration-color: #00af00">672</span>) │  <span style="color: #00af00; text-decoration-color: #00af00">19,488</span> │ block6a_se_reduce[<span style="color: #00af00; text-decoration-color: #00af00">0</span>… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Conv2D</span>)            │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block6a_se_excite   │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">7</span>, <span style="color: #00af00; text-decoration-color: #00af00">7</span>, <span style="color: #00af00; text-decoration-color: #00af00">672</span>) │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ block6a_activation[<span style="color: #00af00; text-decoration-color: #00af00">…</span> │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Multiply</span>)          │                   │         │ block6a_se_expand[<span style="color: #00af00; text-decoration-color: #00af00">0</span>… │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block6a_project_co… │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">7</span>, <span style="color: #00af00; text-decoration-color: #00af00">7</span>, <span style="color: #00af00; text-decoration-color: #00af00">192</span>) │ <span style="color: #00af00; text-decoration-color: #00af00">129,024</span> │ block6a_se_excite[<span style="color: #00af00; text-decoration-color: #00af00">0</span>… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Conv2D</span>)            │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block6a_project_bn  │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">7</span>, <span style="color: #00af00; text-decoration-color: #00af00">7</span>, <span style="color: #00af00; text-decoration-color: #00af00">192</span>) │     <span style="color: #00af00; text-decoration-color: #00af00">768</span> │ block6a_project_con… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">BatchNormalizatio…</span> │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block6b_expand_conv │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">7</span>, <span style="color: #00af00; text-decoration-color: #00af00">7</span>,      │ <span style="color: #00af00; text-decoration-color: #00af00">221,184</span> │ block6a_project_bn[<span style="color: #00af00; text-decoration-color: #00af00">…</span> │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Conv2D</span>)            │ <span style="color: #00af00; text-decoration-color: #00af00">1152</span>)             │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block6b_expand_bn   │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">7</span>, <span style="color: #00af00; text-decoration-color: #00af00">7</span>,      │   <span style="color: #00af00; text-decoration-color: #00af00">4,608</span> │ block6b_expand_conv… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">BatchNormalizatio…</span> │ <span style="color: #00af00; text-decoration-color: #00af00">1152</span>)             │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block6b_expand_act… │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">7</span>, <span style="color: #00af00; text-decoration-color: #00af00">7</span>,      │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ block6b_expand_bn[<span style="color: #00af00; text-decoration-color: #00af00">0</span>… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Activation</span>)        │ <span style="color: #00af00; text-decoration-color: #00af00">1152</span>)             │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block6b_dwconv      │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">7</span>, <span style="color: #00af00; text-decoration-color: #00af00">7</span>,      │  <span style="color: #00af00; text-decoration-color: #00af00">28,800</span> │ block6b_expand_acti… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">DepthwiseConv2D</span>)   │ <span style="color: #00af00; text-decoration-color: #00af00">1152</span>)             │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block6b_bn          │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">7</span>, <span style="color: #00af00; text-decoration-color: #00af00">7</span>,      │   <span style="color: #00af00; text-decoration-color: #00af00">4,608</span> │ block6b_dwconv[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>] │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">BatchNormalizatio…</span> │ <span style="color: #00af00; text-decoration-color: #00af00">1152</span>)             │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block6b_activation  │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">7</span>, <span style="color: #00af00; text-decoration-color: #00af00">7</span>,      │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ block6b_bn[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>]     │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Activation</span>)        │ <span style="color: #00af00; text-decoration-color: #00af00">1152</span>)             │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block6b_se_squeeze  │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">1152</span>)      │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ block6b_activation[<span style="color: #00af00; text-decoration-color: #00af00">…</span> │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">GlobalAveragePool…</span> │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block6b_se_reshape  │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>,      │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ block6b_se_squeeze[<span style="color: #00af00; text-decoration-color: #00af00">…</span> │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Reshape</span>)           │ <span style="color: #00af00; text-decoration-color: #00af00">1152</span>)             │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block6b_se_reduce   │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>, <span style="color: #00af00; text-decoration-color: #00af00">48</span>)  │  <span style="color: #00af00; text-decoration-color: #00af00">55,344</span> │ block6b_se_reshape[<span style="color: #00af00; text-decoration-color: #00af00">…</span> │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Conv2D</span>)            │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block6b_se_expand   │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>,      │  <span style="color: #00af00; text-decoration-color: #00af00">56,448</span> │ block6b_se_reduce[<span style="color: #00af00; text-decoration-color: #00af00">0</span>… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Conv2D</span>)            │ <span style="color: #00af00; text-decoration-color: #00af00">1152</span>)             │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block6b_se_excite   │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">7</span>, <span style="color: #00af00; text-decoration-color: #00af00">7</span>,      │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ block6b_activation[<span style="color: #00af00; text-decoration-color: #00af00">…</span> │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Multiply</span>)          │ <span style="color: #00af00; text-decoration-color: #00af00">1152</span>)             │         │ block6b_se_expand[<span style="color: #00af00; text-decoration-color: #00af00">0</span>… │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block6b_project_co… │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">7</span>, <span style="color: #00af00; text-decoration-color: #00af00">7</span>, <span style="color: #00af00; text-decoration-color: #00af00">192</span>) │ <span style="color: #00af00; text-decoration-color: #00af00">221,184</span> │ block6b_se_excite[<span style="color: #00af00; text-decoration-color: #00af00">0</span>… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Conv2D</span>)            │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block6b_project_bn  │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">7</span>, <span style="color: #00af00; text-decoration-color: #00af00">7</span>, <span style="color: #00af00; text-decoration-color: #00af00">192</span>) │     <span style="color: #00af00; text-decoration-color: #00af00">768</span> │ block6b_project_con… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">BatchNormalizatio…</span> │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block6b_drop        │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">7</span>, <span style="color: #00af00; text-decoration-color: #00af00">7</span>, <span style="color: #00af00; text-decoration-color: #00af00">192</span>) │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ block6b_project_bn[<span style="color: #00af00; text-decoration-color: #00af00">…</span> │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Dropout</span>)           │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block6b_add (<span style="color: #0087ff; text-decoration-color: #0087ff">Add</span>)   │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">7</span>, <span style="color: #00af00; text-decoration-color: #00af00">7</span>, <span style="color: #00af00; text-decoration-color: #00af00">192</span>) │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ block6b_drop[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>],  │
+│                     │                   │         │ block6a_project_bn[<span style="color: #00af00; text-decoration-color: #00af00">…</span> │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block6c_expand_conv │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">7</span>, <span style="color: #00af00; text-decoration-color: #00af00">7</span>,      │ <span style="color: #00af00; text-decoration-color: #00af00">221,184</span> │ block6b_add[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>]    │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Conv2D</span>)            │ <span style="color: #00af00; text-decoration-color: #00af00">1152</span>)             │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block6c_expand_bn   │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">7</span>, <span style="color: #00af00; text-decoration-color: #00af00">7</span>,      │   <span style="color: #00af00; text-decoration-color: #00af00">4,608</span> │ block6c_expand_conv… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">BatchNormalizatio…</span> │ <span style="color: #00af00; text-decoration-color: #00af00">1152</span>)             │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block6c_expand_act… │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">7</span>, <span style="color: #00af00; text-decoration-color: #00af00">7</span>,      │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ block6c_expand_bn[<span style="color: #00af00; text-decoration-color: #00af00">0</span>… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Activation</span>)        │ <span style="color: #00af00; text-decoration-color: #00af00">1152</span>)             │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block6c_dwconv      │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">7</span>, <span style="color: #00af00; text-decoration-color: #00af00">7</span>,      │  <span style="color: #00af00; text-decoration-color: #00af00">28,800</span> │ block6c_expand_acti… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">DepthwiseConv2D</span>)   │ <span style="color: #00af00; text-decoration-color: #00af00">1152</span>)             │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block6c_bn          │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">7</span>, <span style="color: #00af00; text-decoration-color: #00af00">7</span>,      │   <span style="color: #00af00; text-decoration-color: #00af00">4,608</span> │ block6c_dwconv[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>] │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">BatchNormalizatio…</span> │ <span style="color: #00af00; text-decoration-color: #00af00">1152</span>)             │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block6c_activation  │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">7</span>, <span style="color: #00af00; text-decoration-color: #00af00">7</span>,      │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ block6c_bn[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>]     │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Activation</span>)        │ <span style="color: #00af00; text-decoration-color: #00af00">1152</span>)             │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block6c_se_squeeze  │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">1152</span>)      │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ block6c_activation[<span style="color: #00af00; text-decoration-color: #00af00">…</span> │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">GlobalAveragePool…</span> │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block6c_se_reshape  │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>,      │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ block6c_se_squeeze[<span style="color: #00af00; text-decoration-color: #00af00">…</span> │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Reshape</span>)           │ <span style="color: #00af00; text-decoration-color: #00af00">1152</span>)             │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block6c_se_reduce   │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>, <span style="color: #00af00; text-decoration-color: #00af00">48</span>)  │  <span style="color: #00af00; text-decoration-color: #00af00">55,344</span> │ block6c_se_reshape[<span style="color: #00af00; text-decoration-color: #00af00">…</span> │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Conv2D</span>)            │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block6c_se_expand   │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>,      │  <span style="color: #00af00; text-decoration-color: #00af00">56,448</span> │ block6c_se_reduce[<span style="color: #00af00; text-decoration-color: #00af00">0</span>… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Conv2D</span>)            │ <span style="color: #00af00; text-decoration-color: #00af00">1152</span>)             │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block6c_se_excite   │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">7</span>, <span style="color: #00af00; text-decoration-color: #00af00">7</span>,      │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ block6c_activation[<span style="color: #00af00; text-decoration-color: #00af00">…</span> │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Multiply</span>)          │ <span style="color: #00af00; text-decoration-color: #00af00">1152</span>)             │         │ block6c_se_expand[<span style="color: #00af00; text-decoration-color: #00af00">0</span>… │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block6c_project_co… │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">7</span>, <span style="color: #00af00; text-decoration-color: #00af00">7</span>, <span style="color: #00af00; text-decoration-color: #00af00">192</span>) │ <span style="color: #00af00; text-decoration-color: #00af00">221,184</span> │ block6c_se_excite[<span style="color: #00af00; text-decoration-color: #00af00">0</span>… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Conv2D</span>)            │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block6c_project_bn  │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">7</span>, <span style="color: #00af00; text-decoration-color: #00af00">7</span>, <span style="color: #00af00; text-decoration-color: #00af00">192</span>) │     <span style="color: #00af00; text-decoration-color: #00af00">768</span> │ block6c_project_con… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">BatchNormalizatio…</span> │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block6c_drop        │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">7</span>, <span style="color: #00af00; text-decoration-color: #00af00">7</span>, <span style="color: #00af00; text-decoration-color: #00af00">192</span>) │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ block6c_project_bn[<span style="color: #00af00; text-decoration-color: #00af00">…</span> │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Dropout</span>)           │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block6c_add (<span style="color: #0087ff; text-decoration-color: #0087ff">Add</span>)   │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">7</span>, <span style="color: #00af00; text-decoration-color: #00af00">7</span>, <span style="color: #00af00; text-decoration-color: #00af00">192</span>) │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ block6c_drop[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>],  │
+│                     │                   │         │ block6b_add[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>]    │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block6d_expand_conv │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">7</span>, <span style="color: #00af00; text-decoration-color: #00af00">7</span>,      │ <span style="color: #00af00; text-decoration-color: #00af00">221,184</span> │ block6c_add[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>]    │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Conv2D</span>)            │ <span style="color: #00af00; text-decoration-color: #00af00">1152</span>)             │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block6d_expand_bn   │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">7</span>, <span style="color: #00af00; text-decoration-color: #00af00">7</span>,      │   <span style="color: #00af00; text-decoration-color: #00af00">4,608</span> │ block6d_expand_conv… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">BatchNormalizatio…</span> │ <span style="color: #00af00; text-decoration-color: #00af00">1152</span>)             │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block6d_expand_act… │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">7</span>, <span style="color: #00af00; text-decoration-color: #00af00">7</span>,      │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ block6d_expand_bn[<span style="color: #00af00; text-decoration-color: #00af00">0</span>… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Activation</span>)        │ <span style="color: #00af00; text-decoration-color: #00af00">1152</span>)             │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block6d_dwconv      │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">7</span>, <span style="color: #00af00; text-decoration-color: #00af00">7</span>,      │  <span style="color: #00af00; text-decoration-color: #00af00">28,800</span> │ block6d_expand_acti… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">DepthwiseConv2D</span>)   │ <span style="color: #00af00; text-decoration-color: #00af00">1152</span>)             │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block6d_bn          │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">7</span>, <span style="color: #00af00; text-decoration-color: #00af00">7</span>,      │   <span style="color: #00af00; text-decoration-color: #00af00">4,608</span> │ block6d_dwconv[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>] │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">BatchNormalizatio…</span> │ <span style="color: #00af00; text-decoration-color: #00af00">1152</span>)             │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block6d_activation  │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">7</span>, <span style="color: #00af00; text-decoration-color: #00af00">7</span>,      │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ block6d_bn[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>]     │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Activation</span>)        │ <span style="color: #00af00; text-decoration-color: #00af00">1152</span>)             │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block6d_se_squeeze  │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">1152</span>)      │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ block6d_activation[<span style="color: #00af00; text-decoration-color: #00af00">…</span> │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">GlobalAveragePool…</span> │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block6d_se_reshape  │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>,      │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ block6d_se_squeeze[<span style="color: #00af00; text-decoration-color: #00af00">…</span> │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Reshape</span>)           │ <span style="color: #00af00; text-decoration-color: #00af00">1152</span>)             │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block6d_se_reduce   │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>, <span style="color: #00af00; text-decoration-color: #00af00">48</span>)  │  <span style="color: #00af00; text-decoration-color: #00af00">55,344</span> │ block6d_se_reshape[<span style="color: #00af00; text-decoration-color: #00af00">…</span> │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Conv2D</span>)            │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block6d_se_expand   │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>,      │  <span style="color: #00af00; text-decoration-color: #00af00">56,448</span> │ block6d_se_reduce[<span style="color: #00af00; text-decoration-color: #00af00">0</span>… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Conv2D</span>)            │ <span style="color: #00af00; text-decoration-color: #00af00">1152</span>)             │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block6d_se_excite   │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">7</span>, <span style="color: #00af00; text-decoration-color: #00af00">7</span>,      │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ block6d_activation[<span style="color: #00af00; text-decoration-color: #00af00">…</span> │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Multiply</span>)          │ <span style="color: #00af00; text-decoration-color: #00af00">1152</span>)             │         │ block6d_se_expand[<span style="color: #00af00; text-decoration-color: #00af00">0</span>… │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block6d_project_co… │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">7</span>, <span style="color: #00af00; text-decoration-color: #00af00">7</span>, <span style="color: #00af00; text-decoration-color: #00af00">192</span>) │ <span style="color: #00af00; text-decoration-color: #00af00">221,184</span> │ block6d_se_excite[<span style="color: #00af00; text-decoration-color: #00af00">0</span>… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Conv2D</span>)            │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block6d_project_bn  │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">7</span>, <span style="color: #00af00; text-decoration-color: #00af00">7</span>, <span style="color: #00af00; text-decoration-color: #00af00">192</span>) │     <span style="color: #00af00; text-decoration-color: #00af00">768</span> │ block6d_project_con… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">BatchNormalizatio…</span> │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block6d_drop        │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">7</span>, <span style="color: #00af00; text-decoration-color: #00af00">7</span>, <span style="color: #00af00; text-decoration-color: #00af00">192</span>) │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ block6d_project_bn[<span style="color: #00af00; text-decoration-color: #00af00">…</span> │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Dropout</span>)           │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block6d_add (<span style="color: #0087ff; text-decoration-color: #0087ff">Add</span>)   │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">7</span>, <span style="color: #00af00; text-decoration-color: #00af00">7</span>, <span style="color: #00af00; text-decoration-color: #00af00">192</span>) │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ block6d_drop[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>],  │
+│                     │                   │         │ block6c_add[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>]    │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block7a_expand_conv │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">7</span>, <span style="color: #00af00; text-decoration-color: #00af00">7</span>,      │ <span style="color: #00af00; text-decoration-color: #00af00">221,184</span> │ block6d_add[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>]    │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Conv2D</span>)            │ <span style="color: #00af00; text-decoration-color: #00af00">1152</span>)             │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block7a_expand_bn   │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">7</span>, <span style="color: #00af00; text-decoration-color: #00af00">7</span>,      │   <span style="color: #00af00; text-decoration-color: #00af00">4,608</span> │ block7a_expand_conv… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">BatchNormalizatio…</span> │ <span style="color: #00af00; text-decoration-color: #00af00">1152</span>)             │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block7a_expand_act… │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">7</span>, <span style="color: #00af00; text-decoration-color: #00af00">7</span>,      │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ block7a_expand_bn[<span style="color: #00af00; text-decoration-color: #00af00">0</span>… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Activation</span>)        │ <span style="color: #00af00; text-decoration-color: #00af00">1152</span>)             │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block7a_dwconv      │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">7</span>, <span style="color: #00af00; text-decoration-color: #00af00">7</span>,      │  <span style="color: #00af00; text-decoration-color: #00af00">10,368</span> │ block7a_expand_acti… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">DepthwiseConv2D</span>)   │ <span style="color: #00af00; text-decoration-color: #00af00">1152</span>)             │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block7a_bn          │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">7</span>, <span style="color: #00af00; text-decoration-color: #00af00">7</span>,      │   <span style="color: #00af00; text-decoration-color: #00af00">4,608</span> │ block7a_dwconv[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>] │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">BatchNormalizatio…</span> │ <span style="color: #00af00; text-decoration-color: #00af00">1152</span>)             │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block7a_activation  │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">7</span>, <span style="color: #00af00; text-decoration-color: #00af00">7</span>,      │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ block7a_bn[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>]     │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Activation</span>)        │ <span style="color: #00af00; text-decoration-color: #00af00">1152</span>)             │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block7a_se_squeeze  │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">1152</span>)      │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ block7a_activation[<span style="color: #00af00; text-decoration-color: #00af00">…</span> │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">GlobalAveragePool…</span> │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block7a_se_reshape  │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>,      │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ block7a_se_squeeze[<span style="color: #00af00; text-decoration-color: #00af00">…</span> │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Reshape</span>)           │ <span style="color: #00af00; text-decoration-color: #00af00">1152</span>)             │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block7a_se_reduce   │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>, <span style="color: #00af00; text-decoration-color: #00af00">48</span>)  │  <span style="color: #00af00; text-decoration-color: #00af00">55,344</span> │ block7a_se_reshape[<span style="color: #00af00; text-decoration-color: #00af00">…</span> │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Conv2D</span>)            │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block7a_se_expand   │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>,      │  <span style="color: #00af00; text-decoration-color: #00af00">56,448</span> │ block7a_se_reduce[<span style="color: #00af00; text-decoration-color: #00af00">0</span>… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Conv2D</span>)            │ <span style="color: #00af00; text-decoration-color: #00af00">1152</span>)             │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block7a_se_excite   │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">7</span>, <span style="color: #00af00; text-decoration-color: #00af00">7</span>,      │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ block7a_activation[<span style="color: #00af00; text-decoration-color: #00af00">…</span> │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Multiply</span>)          │ <span style="color: #00af00; text-decoration-color: #00af00">1152</span>)             │         │ block7a_se_expand[<span style="color: #00af00; text-decoration-color: #00af00">0</span>… │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block7a_project_co… │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">7</span>, <span style="color: #00af00; text-decoration-color: #00af00">7</span>, <span style="color: #00af00; text-decoration-color: #00af00">320</span>) │ <span style="color: #00af00; text-decoration-color: #00af00">368,640</span> │ block7a_se_excite[<span style="color: #00af00; text-decoration-color: #00af00">0</span>… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Conv2D</span>)            │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ block7a_project_bn  │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">7</span>, <span style="color: #00af00; text-decoration-color: #00af00">7</span>, <span style="color: #00af00; text-decoration-color: #00af00">320</span>) │   <span style="color: #00af00; text-decoration-color: #00af00">1,280</span> │ block7a_project_con… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">BatchNormalizatio…</span> │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ top_conv (<span style="color: #0087ff; text-decoration-color: #0087ff">Conv2D</span>)   │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">7</span>, <span style="color: #00af00; text-decoration-color: #00af00">7</span>,      │ <span style="color: #00af00; text-decoration-color: #00af00">409,600</span> │ block7a_project_bn[<span style="color: #00af00; text-decoration-color: #00af00">…</span> │
+│                     │ <span style="color: #00af00; text-decoration-color: #00af00">1280</span>)             │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ top_bn              │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">7</span>, <span style="color: #00af00; text-decoration-color: #00af00">7</span>,      │   <span style="color: #00af00; text-decoration-color: #00af00">5,120</span> │ top_conv[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>]       │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">BatchNormalizatio…</span> │ <span style="color: #00af00; text-decoration-color: #00af00">1280</span>)             │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ top_activation      │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">7</span>, <span style="color: #00af00; text-decoration-color: #00af00">7</span>,      │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ top_bn[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>]         │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Activation</span>)        │ <span style="color: #00af00; text-decoration-color: #00af00">1280</span>)             │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ avg_pool            │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">1280</span>)      │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ top_activation[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>] │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">GlobalAveragePool…</span> │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ top_dropout         │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">1280</span>)      │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ avg_pool[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>]       │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Dropout</span>)           │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ predictions (<span style="color: #0087ff; text-decoration-color: #0087ff">Dense</span>) │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">120</span>)       │ <span style="color: #00af00; text-decoration-color: #00af00">153,720</span> │ top_dropout[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>]    │
+└─────────────────────┴───────────────────┴─────────┴──────────────────────┘
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Total params: </span><span style="color: #00af00; text-decoration-color: #00af00">4,203,291</span> (16.03 MB)
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Trainable params: </span><span style="color: #00af00; text-decoration-color: #00af00">4,161,268</span> (15.87 MB)
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Non-trainable params: </span><span style="color: #00af00; text-decoration-color: #00af00">42,023</span> (164.16 KB)
+</pre>
+
+
 
 <div class="k-default-codeblock">
 ```
-Model: "functional_1"
-_________________________________________________________________
-Layer (type)                 Output Shape              Param #   
-=================================================================
-input_1 (InputLayer)         [(None, 224, 224, 3)]     0         
-_________________________________________________________________
-img_augmentation (Sequential (None, 224, 224, 3)       0         
-_________________________________________________________________
-efficientnetb0 (Functional)  (None, 120)               4203291   
-=================================================================
-Total params: 4,203,291
-Trainable params: 4,161,268
-Non-trainable params: 42,023
-_________________________________________________________________
 Epoch 1/40
-187/187 - 66s - loss: 4.9221 - accuracy: 0.0119 - val_loss: 4.9835 - val_accuracy: 0.0104
+   1/187 [37m━━━━━━━━━━━━━━━━━━━━  5:30:13 107s/step - accuracy: 0.0000e+00 - loss: 5.1065
+
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1700241724.682725 1549299 device_compiler.h:187] Compiled cluster using XLA!  This line is logged at most once for the lifetime of the process.
+
+ 187/187 ━━━━━━━━━━━━━━━━━━━━ 200s 501ms/step - accuracy: 0.0097 - loss: 5.0567 - val_accuracy: 0.0100 - val_loss: 4.9278
 Epoch 2/40
-187/187 - 63s - loss: 4.5652 - accuracy: 0.0243 - val_loss: 5.1626 - val_accuracy: 0.0145
+ 187/187 ━━━━━━━━━━━━━━━━━━━━ 95s 507ms/step - accuracy: 0.0214 - loss: 4.6918 - val_accuracy: 0.0141 - val_loss: 5.5380
 Epoch 3/40
-187/187 - 63s - loss: 4.4179 - accuracy: 0.0337 - val_loss: 4.7597 - val_accuracy: 0.0237
+ 187/187 ━━━━━━━━━━━━━━━━━━━━ 89s 474ms/step - accuracy: 0.0298 - loss: 4.4749 - val_accuracy: 0.0375 - val_loss: 4.4576
 Epoch 4/40
-187/187 - 63s - loss: 4.2964 - accuracy: 0.0421 - val_loss: 4.4028 - val_accuracy: 0.0378
+ 187/187 ━━━━━━━━━━━━━━━━━━━━ 90s 479ms/step - accuracy: 0.0423 - loss: 4.3206 - val_accuracy: 0.0391 - val_loss: 4.9898
 Epoch 5/40
-187/187 - 63s - loss: 4.1951 - accuracy: 0.0540 - val_loss: 4.3048 - val_accuracy: 0.0443
+ 187/187 ━━━━━━━━━━━━━━━━━━━━ 89s 473ms/step - accuracy: 0.0458 - loss: 4.2312 - val_accuracy: 0.0416 - val_loss: 4.3210
 Epoch 6/40
-187/187 - 63s - loss: 4.1025 - accuracy: 0.0596 - val_loss: 4.1918 - val_accuracy: 0.0526
+ 187/187 ━━━━━━━━━━━━━━━━━━━━ 141s 470ms/step - accuracy: 0.0579 - loss: 4.1162 - val_accuracy: 0.0540 - val_loss: 4.3371
 Epoch 7/40
-187/187 - 63s - loss: 4.0157 - accuracy: 0.0728 - val_loss: 4.1482 - val_accuracy: 0.0591
+ 187/187 ━━━━━━━━━━━━━━━━━━━━ 89s 476ms/step - accuracy: 0.0679 - loss: 4.0150 - val_accuracy: 0.0786 - val_loss: 3.9759
 Epoch 8/40
-187/187 - 62s - loss: 3.9344 - accuracy: 0.0844 - val_loss: 4.1088 - val_accuracy: 0.0638
+ 187/187 ━━━━━━━━━━━━━━━━━━━━ 89s 477ms/step - accuracy: 0.0828 - loss: 3.9147 - val_accuracy: 0.0651 - val_loss: 4.1641
 Epoch 9/40
-187/187 - 63s - loss: 3.8529 - accuracy: 0.0951 - val_loss: 4.0692 - val_accuracy: 0.0770
+ 187/187 ━━━━━━━━━━━━━━━━━━━━ 142s 475ms/step - accuracy: 0.0932 - loss: 3.8297 - val_accuracy: 0.0928 - val_loss: 3.8985
 Epoch 10/40
-187/187 - 63s - loss: 3.7650 - accuracy: 0.1040 - val_loss: 4.1468 - val_accuracy: 0.0719
+ 187/187 ━━━━━━━━━━━━━━━━━━━━ 88s 472ms/step - accuracy: 0.1092 - loss: 3.7321 - val_accuracy: 0.0946 - val_loss: 3.8618
 Epoch 11/40
-187/187 - 63s - loss: 3.6858 - accuracy: 0.1185 - val_loss: 4.0484 - val_accuracy: 0.0913
+ 187/187 ━━━━━━━━━━━━━━━━━━━━ 89s 476ms/step - accuracy: 0.1245 - loss: 3.6451 - val_accuracy: 0.0880 - val_loss: 3.9584
 Epoch 12/40
-187/187 - 63s - loss: 3.5942 - accuracy: 0.1326 - val_loss: 3.8047 - val_accuracy: 0.1072
+ 187/187 ━━━━━━━━━━━━━━━━━━━━ 92s 493ms/step - accuracy: 0.1457 - loss: 3.5514 - val_accuracy: 0.1096 - val_loss: 3.8184
 Epoch 13/40
-187/187 - 63s - loss: 3.5028 - accuracy: 0.1447 - val_loss: 3.9513 - val_accuracy: 0.0933
+ 187/187 ━━━━━━━━━━━━━━━━━━━━ 88s 471ms/step - accuracy: 0.1606 - loss: 3.4654 - val_accuracy: 0.1118 - val_loss: 3.8059
 Epoch 14/40
-187/187 - 63s - loss: 3.4295 - accuracy: 0.1604 - val_loss: 3.7738 - val_accuracy: 0.1220
+ 187/187 ━━━━━━━━━━━━━━━━━━━━ 87s 464ms/step - accuracy: 0.1660 - loss: 3.3826 - val_accuracy: 0.1472 - val_loss: 3.5726
 Epoch 15/40
-187/187 - 63s - loss: 3.3410 - accuracy: 0.1735 - val_loss: 3.9104 - val_accuracy: 0.1104
+ 187/187 ━━━━━━━━━━━━━━━━━━━━ 146s 485ms/step - accuracy: 0.1815 - loss: 3.2935 - val_accuracy: 0.1154 - val_loss: 3.8134
 Epoch 16/40
-187/187 - 63s - loss: 3.2511 - accuracy: 0.1890 - val_loss: 3.6904 - val_accuracy: 0.1264
+ 187/187 ━━━━━━━━━━━━━━━━━━━━ 87s 466ms/step - accuracy: 0.1942 - loss: 3.2218 - val_accuracy: 0.1540 - val_loss: 3.5051
 Epoch 17/40
-187/187 - 63s - loss: 3.1624 - accuracy: 0.2076 - val_loss: 3.4026 - val_accuracy: 0.1769
+ 187/187 ━━━━━━━━━━━━━━━━━━━━ 88s 471ms/step - accuracy: 0.2131 - loss: 3.1427 - val_accuracy: 0.1381 - val_loss: 3.7206
 Epoch 18/40
-187/187 - 63s - loss: 3.0825 - accuracy: 0.2229 - val_loss: 3.4627 - val_accuracy: 0.1744
+ 187/187 ━━━━━━━━━━━━━━━━━━━━ 87s 467ms/step - accuracy: 0.2264 - loss: 3.0461 - val_accuracy: 0.1707 - val_loss: 3.4122
 Epoch 19/40
-187/187 - 63s - loss: 3.0041 - accuracy: 0.2355 - val_loss: 3.6061 - val_accuracy: 0.1542
+ 187/187 ━━━━━━━━━━━━━━━━━━━━ 88s 470ms/step - accuracy: 0.2401 - loss: 2.9821 - val_accuracy: 0.1515 - val_loss: 3.6481
 Epoch 20/40
-187/187 - 64s - loss: 2.8945 - accuracy: 0.2552 - val_loss: 3.2769 - val_accuracy: 0.2036
+ 187/187 ━━━━━━━━━━━━━━━━━━━━ 88s 469ms/step - accuracy: 0.2613 - loss: 2.8815 - val_accuracy: 0.1783 - val_loss: 3.4767
 Epoch 21/40
-187/187 - 63s - loss: 2.8054 - accuracy: 0.2710 - val_loss: 3.5355 - val_accuracy: 0.1834
+ 187/187 ━━━━━━━━━━━━━━━━━━━━ 91s 485ms/step - accuracy: 0.2741 - loss: 2.8102 - val_accuracy: 0.1927 - val_loss: 3.3183
 Epoch 22/40
-187/187 - 63s - loss: 2.7342 - accuracy: 0.2904 - val_loss: 3.3540 - val_accuracy: 0.1973
+ 187/187 ━━━━━━━━━━━━━━━━━━━━ 90s 477ms/step - accuracy: 0.2892 - loss: 2.7408 - val_accuracy: 0.1859 - val_loss: 3.4887
 Epoch 23/40
-187/187 - 62s - loss: 2.6258 - accuracy: 0.3042 - val_loss: 3.2608 - val_accuracy: 0.2217
+ 187/187 ━━━━━━━━━━━━━━━━━━━━ 91s 485ms/step - accuracy: 0.3093 - loss: 2.6526 - val_accuracy: 0.1924 - val_loss: 3.4622
 Epoch 24/40
-187/187 - 62s - loss: 2.5453 - accuracy: 0.3218 - val_loss: 3.4611 - val_accuracy: 0.1941
+ 187/187 ━━━━━━━━━━━━━━━━━━━━ 92s 491ms/step - accuracy: 0.3201 - loss: 2.5750 - val_accuracy: 0.2253 - val_loss: 3.1873
 Epoch 25/40
-187/187 - 63s - loss: 2.4585 - accuracy: 0.3356 - val_loss: 3.4163 - val_accuracy: 0.2070
+ 187/187 ━━━━━━━━━━━━━━━━━━━━ 95s 508ms/step - accuracy: 0.3280 - loss: 2.5150 - val_accuracy: 0.2148 - val_loss: 3.3391
 Epoch 26/40
-187/187 - 62s - loss: 2.3606 - accuracy: 0.3647 - val_loss: 3.2558 - val_accuracy: 0.2392
+ 187/187 ━━━━━━━━━━━━━━━━━━━━ 92s 490ms/step - accuracy: 0.3465 - loss: 2.4402 - val_accuracy: 0.2270 - val_loss: 3.2679
 Epoch 27/40
-187/187 - 63s - loss: 2.2819 - accuracy: 0.3801 - val_loss: 3.3676 - val_accuracy: 0.2222
+ 187/187 ━━━━━━━━━━━━━━━━━━━━ 93s 494ms/step - accuracy: 0.3735 - loss: 2.3199 - val_accuracy: 0.2080 - val_loss: 3.5687
 Epoch 28/40
-187/187 - 62s - loss: 2.2114 - accuracy: 0.3933 - val_loss: 3.6578 - val_accuracy: 0.2022
+ 187/187 ━━━━━━━━━━━━━━━━━━━━ 89s 476ms/step - accuracy: 0.3837 - loss: 2.2645 - val_accuracy: 0.2374 - val_loss: 3.3592
 Epoch 29/40
-187/187 - 62s - loss: 2.0964 - accuracy: 0.4215 - val_loss: 3.5366 - val_accuracy: 0.2186
+ 187/187 ━━━━━━━━━━━━━━━━━━━━ 142s 474ms/step - accuracy: 0.3962 - loss: 2.2110 - val_accuracy: 0.2008 - val_loss: 3.6071
 Epoch 30/40
-187/187 - 63s - loss: 1.9931 - accuracy: 0.4459 - val_loss: 3.5612 - val_accuracy: 0.2310
+ 187/187 ━━━━━━━━━━━━━━━━━━━━ 87s 466ms/step - accuracy: 0.4175 - loss: 2.1086 - val_accuracy: 0.2302 - val_loss: 3.4161
 Epoch 31/40
-187/187 - 63s - loss: 1.8924 - accuracy: 0.4657 - val_loss: 3.4780 - val_accuracy: 0.2359
+ 187/187 ━━━━━━━━━━━━━━━━━━━━ 87s 465ms/step - accuracy: 0.4359 - loss: 2.0610 - val_accuracy: 0.2231 - val_loss: 3.5957
 Epoch 32/40
-187/187 - 63s - loss: 1.8095 - accuracy: 0.4874 - val_loss: 3.5776 - val_accuracy: 0.2403
+ 187/187 ━━━━━━━━━━━━━━━━━━━━ 148s 498ms/step - accuracy: 0.4463 - loss: 1.9866 - val_accuracy: 0.2234 - val_loss: 3.7263
 Epoch 33/40
-187/187 - 63s - loss: 1.7126 - accuracy: 0.5086 - val_loss: 3.6865 - val_accuracy: 0.2316
+ 187/187 ━━━━━━━━━━━━━━━━━━━━ 92s 489ms/step - accuracy: 0.4613 - loss: 1.8821 - val_accuracy: 0.2239 - val_loss: 3.6929
 Epoch 34/40
-187/187 - 63s - loss: 1.6117 - accuracy: 0.5373 - val_loss: 3.6419 - val_accuracy: 0.2513
+ 187/187 ━━━━━━━━━━━━━━━━━━━━ 139s 475ms/step - accuracy: 0.4925 - loss: 1.7858 - val_accuracy: 0.2238 - val_loss: 3.8351
 Epoch 35/40
-187/187 - 63s - loss: 1.5532 - accuracy: 0.5514 - val_loss: 3.8050 - val_accuracy: 0.2415
+ 187/187 ━━━━━━━━━━━━━━━━━━━━ 91s 485ms/step - accuracy: 0.5105 - loss: 1.7074 - val_accuracy: 0.1930 - val_loss: 4.1941
 Epoch 36/40
-187/187 - 63s - loss: 1.4479 - accuracy: 0.5809 - val_loss: 4.0113 - val_accuracy: 0.2299
+ 187/187 ━━━━━━━━━━━━━━━━━━━━ 140s 474ms/step - accuracy: 0.5334 - loss: 1.6256 - val_accuracy: 0.2098 - val_loss: 4.1464
 Epoch 37/40
-187/187 - 62s - loss: 1.3885 - accuracy: 0.5939 - val_loss: 4.1262 - val_accuracy: 0.2158
+ 187/187 ━━━━━━━━━━━━━━━━━━━━ 87s 464ms/step - accuracy: 0.5504 - loss: 1.5603 - val_accuracy: 0.2306 - val_loss: 4.0215
 Epoch 38/40
-187/187 - 63s - loss: 1.2979 - accuracy: 0.6217 - val_loss: 4.2519 - val_accuracy: 0.2344
+ 187/187 ━━━━━━━━━━━━━━━━━━━━ 90s 480ms/step - accuracy: 0.5736 - loss: 1.4419 - val_accuracy: 0.2240 - val_loss: 4.1604
 Epoch 39/40
-187/187 - 62s - loss: 1.2066 - accuracy: 0.6413 - val_loss: 4.3924 - val_accuracy: 0.2169
+ 187/187 ━━━━━━━━━━━━━━━━━━━━ 91s 486ms/step - accuracy: 0.6025 - loss: 1.3612 - val_accuracy: 0.2344 - val_loss: 4.0505
 Epoch 40/40
-187/187 - 62s - loss: 1.1348 - accuracy: 0.6618 - val_loss: 4.2216 - val_accuracy: 0.2374
+ 187/187 ━━━━━━━━━━━━━━━━━━━━ 89s 474ms/step - accuracy: 0.6199 - loss: 1.2889 - val_accuracy: 0.2151 - val_loss: 4.3660
 
 ```
 </div>
-Training the model is relatively fast (takes only 20 seconds per epoch on TPUv2 that is
-available on Colab). This might make it sounds easy to simply train EfficientNet on any
+Training the model is relatively fast. This might make it sounds easy to simply train EfficientNet on any
 dataset wanted from scratch. However, training EfficientNet on smaller datasets,
 especially those with lower resolution like CIFAR-100, faces the significant challenge of
 overfitting.
@@ -477,7 +1184,9 @@ plot_hist(hist)
 ```
 
 
-![png](/img/examples/vision/image_classification_efficientnet_fine_tuning/image_classification_efficientnet_fine_tuning_20_0.png)
+    
+![png](/img/examples/vision/image_classification_efficientnet_fine_tuning/image_classification_efficientnet_fine_tuning_19_0.png)
+    
 
 
 ---
@@ -491,8 +1200,7 @@ and we fine-tune it on our own dataset.
 
 def build_model(num_classes):
     inputs = layers.Input(shape=(IMG_SIZE, IMG_SIZE, 3))
-    x = img_augmentation(inputs)
-    model = EfficientNetB0(include_top=False, input_tensor=x, weights="imagenet")
+    model = EfficientNetB0(include_top=False, input_tensor=inputs, weights="imagenet")
 
     # Freeze the pretrained weights
     model.trainable = False
@@ -506,8 +1214,8 @@ def build_model(num_classes):
     outputs = layers.Dense(num_classes, activation="softmax", name="pred")(x)
 
     # Compile
-    model = tf.keras.Model(inputs, outputs, name="EfficientNet")
-    optimizer = tf.keras.optimizers.Adam(learning_rate=1e-2)
+    model = keras.Model(inputs, outputs, name="EfficientNet")
+    optimizer = keras.optimizers.Adam(learning_rate=1e-2)
     model.compile(
         optimizer=optimizer, loss="categorical_crossentropy", metrics=["accuracy"]
     )
@@ -527,70 +1235,71 @@ applied, the validation accuracy may only reach ~60%.
 
 
 ```python
-with strategy.scope():
-    model = build_model(num_classes=NUM_CLASSES)
+model = build_model(num_classes=NUM_CLASSES)
 
 epochs = 25  # @param {type: "slider", min:8, max:80}
-hist = model.fit(ds_train, epochs=epochs, validation_data=ds_test, verbose=2)
+hist = model.fit(ds_train, epochs=epochs, validation_data=ds_test)
 plot_hist(hist)
 ```
 
 <div class="k-default-codeblock">
 ```
 Epoch 1/25
-187/187 - 33s - loss: 3.5673 - accuracy: 0.3624 - val_loss: 1.0288 - val_accuracy: 0.6957
+ 187/187 ━━━━━━━━━━━━━━━━━━━━ 108s 432ms/step - accuracy: 0.2654 - loss: 4.3710 - val_accuracy: 0.6888 - val_loss: 1.0875
 Epoch 2/25
-187/187 - 31s - loss: 1.8503 - accuracy: 0.5232 - val_loss: 0.8439 - val_accuracy: 0.7484
+ 187/187 ━━━━━━━━━━━━━━━━━━━━ 119s 412ms/step - accuracy: 0.4863 - loss: 2.0996 - val_accuracy: 0.7282 - val_loss: 0.9072
 Epoch 3/25
-187/187 - 31s - loss: 1.5511 - accuracy: 0.5772 - val_loss: 0.7953 - val_accuracy: 0.7563
+ 187/187 ━━━━━━━━━━━━━━━━━━━━ 78s 416ms/step - accuracy: 0.5422 - loss: 1.7120 - val_accuracy: 0.7411 - val_loss: 0.8574
 Epoch 4/25
-187/187 - 31s - loss: 1.4660 - accuracy: 0.5878 - val_loss: 0.8061 - val_accuracy: 0.7535
+ 187/187 ━━━━━━━━━━━━━━━━━━━━ 77s 412ms/step - accuracy: 0.5509 - loss: 1.6472 - val_accuracy: 0.7451 - val_loss: 0.8457
 Epoch 5/25
-187/187 - 31s - loss: 1.4143 - accuracy: 0.6034 - val_loss: 0.7850 - val_accuracy: 0.7569
+ 187/187 ━━━━━━━━━━━━━━━━━━━━ 81s 431ms/step - accuracy: 0.5744 - loss: 1.5373 - val_accuracy: 0.7424 - val_loss: 0.8649
 Epoch 6/25
-187/187 - 31s - loss: 1.4000 - accuracy: 0.6054 - val_loss: 0.7846 - val_accuracy: 0.7646
+ 187/187 ━━━━━━━━━━━━━━━━━━━━ 78s 417ms/step - accuracy: 0.5715 - loss: 1.5595 - val_accuracy: 0.7374 - val_loss: 0.8736
 Epoch 7/25
-187/187 - 31s - loss: 1.3678 - accuracy: 0.6173 - val_loss: 0.7850 - val_accuracy: 0.7682
+ 187/187 ━━━━━━━━━━━━━━━━━━━━ 81s 432ms/step - accuracy: 0.5802 - loss: 1.5045 - val_accuracy: 0.7430 - val_loss: 0.8675
 Epoch 8/25
-187/187 - 31s - loss: 1.3286 - accuracy: 0.6222 - val_loss: 0.8142 - val_accuracy: 0.7608
+ 187/187 ━━━━━━━━━━━━━━━━━━━━ 77s 411ms/step - accuracy: 0.5839 - loss: 1.4972 - val_accuracy: 0.7392 - val_loss: 0.8647
 Epoch 9/25
-187/187 - 31s - loss: 1.3210 - accuracy: 0.6245 - val_loss: 0.7890 - val_accuracy: 0.7669
+ 187/187 ━━━━━━━━━━━━━━━━━━━━ 77s 411ms/step - accuracy: 0.5929 - loss: 1.4699 - val_accuracy: 0.7508 - val_loss: 0.8634
 Epoch 10/25
-187/187 - 31s - loss: 1.3086 - accuracy: 0.6278 - val_loss: 0.8368 - val_accuracy: 0.7575
+ 187/187 ━━━━━━━━━━━━━━━━━━━━ 82s 437ms/step - accuracy: 0.6040 - loss: 1.4442 - val_accuracy: 0.7520 - val_loss: 0.8480
 Epoch 11/25
-187/187 - 31s - loss: 1.2877 - accuracy: 0.6315 - val_loss: 0.8309 - val_accuracy: 0.7599
+ 187/187 ━━━━━━━━━━━━━━━━━━━━ 78s 416ms/step - accuracy: 0.5972 - loss: 1.4626 - val_accuracy: 0.7379 - val_loss: 0.8879
 Epoch 12/25
-187/187 - 31s - loss: 1.2918 - accuracy: 0.6308 - val_loss: 0.8319 - val_accuracy: 0.7535
+ 187/187 ━━━━━━━━━━━━━━━━━━━━ 79s 421ms/step - accuracy: 0.5965 - loss: 1.4700 - val_accuracy: 0.7383 - val_loss: 0.9409
 Epoch 13/25
-187/187 - 31s - loss: 1.2738 - accuracy: 0.6373 - val_loss: 0.8567 - val_accuracy: 0.7576
+ 187/187 ━━━━━━━━━━━━━━━━━━━━ 82s 420ms/step - accuracy: 0.6034 - loss: 1.4533 - val_accuracy: 0.7474 - val_loss: 0.8922
 Epoch 14/25
-187/187 - 31s - loss: 1.2837 - accuracy: 0.6410 - val_loss: 0.8004 - val_accuracy: 0.7697
+ 187/187 ━━━━━━━━━━━━━━━━━━━━ 81s 435ms/step - accuracy: 0.6053 - loss: 1.4170 - val_accuracy: 0.7416 - val_loss: 0.9119
 Epoch 15/25
-187/187 - 31s - loss: 1.2828 - accuracy: 0.6403 - val_loss: 0.8364 - val_accuracy: 0.7625
+ 187/187 ━━━━━━━━━━━━━━━━━━━━ 77s 411ms/step - accuracy: 0.6059 - loss: 1.4125 - val_accuracy: 0.7406 - val_loss: 0.9205
 Epoch 16/25
-187/187 - 31s - loss: 1.2749 - accuracy: 0.6405 - val_loss: 0.8558 - val_accuracy: 0.7565
+ 187/187 ━━━━━━━━━━━━━━━━━━━━ 82s 438ms/step - accuracy: 0.5979 - loss: 1.4554 - val_accuracy: 0.7392 - val_loss: 0.9120
 Epoch 17/25
-187/187 - 31s - loss: 1.3022 - accuracy: 0.6352 - val_loss: 0.8361 - val_accuracy: 0.7551
+ 187/187 ━━━━━━━━━━━━━━━━━━━━ 77s 411ms/step - accuracy: 0.6081 - loss: 1.4089 - val_accuracy: 0.7423 - val_loss: 0.9305
 Epoch 18/25
-187/187 - 31s - loss: 1.2848 - accuracy: 0.6394 - val_loss: 0.8958 - val_accuracy: 0.7479
+ 187/187 ━━━━━━━━━━━━━━━━━━━━ 82s 436ms/step - accuracy: 0.6041 - loss: 1.4390 - val_accuracy: 0.7380 - val_loss: 0.9644
 Epoch 19/25
-187/187 - 31s - loss: 1.2791 - accuracy: 0.6420 - val_loss: 0.8875 - val_accuracy: 0.7509
+ 187/187 ━━━━━━━━━━━━━━━━━━━━ 79s 417ms/step - accuracy: 0.6018 - loss: 1.4324 - val_accuracy: 0.7439 - val_loss: 0.9129
 Epoch 20/25
-187/187 - 30s - loss: 1.2834 - accuracy: 0.6416 - val_loss: 0.8653 - val_accuracy: 0.7607
+ 187/187 ━━━━━━━━━━━━━━━━━━━━ 81s 430ms/step - accuracy: 0.6057 - loss: 1.4342 - val_accuracy: 0.7305 - val_loss: 0.9463
 Epoch 21/25
-187/187 - 30s - loss: 1.2608 - accuracy: 0.6435 - val_loss: 0.8451 - val_accuracy: 0.7612
+ 187/187 ━━━━━━━━━━━━━━━━━━━━ 77s 410ms/step - accuracy: 0.6209 - loss: 1.3824 - val_accuracy: 0.7410 - val_loss: 0.9503
 Epoch 22/25
-187/187 - 30s - loss: 1.2780 - accuracy: 0.6390 - val_loss: 0.9035 - val_accuracy: 0.7486
+ 187/187 ━━━━━━━━━━━━━━━━━━━━ 78s 419ms/step - accuracy: 0.6170 - loss: 1.4246 - val_accuracy: 0.7336 - val_loss: 0.9606
 Epoch 23/25
-187/187 - 30s - loss: 1.2742 - accuracy: 0.6473 - val_loss: 0.8837 - val_accuracy: 0.7556
+ 187/187 ━━━━━━━━━━━━━━━━━━━━ 85s 455ms/step - accuracy: 0.6153 - loss: 1.4009 - val_accuracy: 0.7334 - val_loss: 0.9520
 Epoch 24/25
-187/187 - 30s - loss: 1.2609 - accuracy: 0.6434 - val_loss: 0.9233 - val_accuracy: 0.7524
+ 187/187 ━━━━━━━━━━━━━━━━━━━━ 82s 438ms/step - accuracy: 0.6051 - loss: 1.4343 - val_accuracy: 0.7435 - val_loss: 0.9403
 Epoch 25/25
-187/187 - 31s - loss: 1.2630 - accuracy: 0.6496 - val_loss: 0.9116 - val_accuracy: 0.7584
+ 187/187 ━━━━━━━━━━━━━━━━━━━━ 138s 416ms/step - accuracy: 0.6065 - loss: 1.4131 - val_accuracy: 0.7456 - val_loss: 0.9307
 
 ```
 </div>
-![png](/img/examples/vision/image_classification_efficientnet_fine_tuning/image_classification_efficientnet_fine_tuning_24_1.png)
+    
+![png](/img/examples/vision/image_classification_efficientnet_fine_tuning/image_classification_efficientnet_fine_tuning_23_1.png)
+    
 
 
 The second step is to unfreeze a number of layers and fit the model using smaller
@@ -607,7 +1316,6 @@ from ImageNet, this fine-tuning step can be crucial as the feature extractor als
 needs to be adjusted by a considerable amount. Such a situation can be demonstrated
 if choosing CIFAR-100 dataset instead, where fine-tuning boosts validation accuracy
 by about 10% to pass 80% on `EfficientNetB0`.
-In such a case the convergence may take more than 50 epochs.
 
 A side note on freezing/unfreezing models: setting `trainable` of a `Model` will
 simultaneously set all layers belonging to the `Model` to the same `trainable`
@@ -625,7 +1333,7 @@ def unfreeze_model(model):
         if not isinstance(layer, layers.BatchNormalization):
             layer.trainable = True
 
-    optimizer = tf.keras.optimizers.Adam(learning_rate=1e-4)
+    optimizer = keras.optimizers.Adam(learning_rate=1e-5)
     model.compile(
         optimizer=optimizer, loss="categorical_crossentropy", metrics=["accuracy"]
     )
@@ -633,37 +1341,27 @@ def unfreeze_model(model):
 
 unfreeze_model(model)
 
-epochs = 10  # @param {type: "slider", min:8, max:50}
-hist = model.fit(ds_train, epochs=epochs, validation_data=ds_test, verbose=2)
+epochs = 4  # @param {type: "slider", min:4, max:10}
+hist = model.fit(ds_train, epochs=epochs, validation_data=ds_test)
 plot_hist(hist)
 ```
 
 <div class="k-default-codeblock">
 ```
-Epoch 1/10
-187/187 - 33s - loss: 0.9956 - accuracy: 0.7080 - val_loss: 0.7644 - val_accuracy: 0.7856
-Epoch 2/10
-187/187 - 31s - loss: 0.8885 - accuracy: 0.7352 - val_loss: 0.7696 - val_accuracy: 0.7866
-Epoch 3/10
-187/187 - 31s - loss: 0.8059 - accuracy: 0.7533 - val_loss: 0.7659 - val_accuracy: 0.7885
-Epoch 4/10
-187/187 - 32s - loss: 0.7648 - accuracy: 0.7675 - val_loss: 0.7730 - val_accuracy: 0.7866
-Epoch 5/10
-187/187 - 32s - loss: 0.6982 - accuracy: 0.7833 - val_loss: 0.7691 - val_accuracy: 0.7858
-Epoch 6/10
-187/187 - 31s - loss: 0.6823 - accuracy: 0.7880 - val_loss: 0.7814 - val_accuracy: 0.7872
-Epoch 7/10
-187/187 - 31s - loss: 0.6536 - accuracy: 0.7953 - val_loss: 0.7850 - val_accuracy: 0.7873
-Epoch 8/10
-187/187 - 31s - loss: 0.6104 - accuracy: 0.8111 - val_loss: 0.7774 - val_accuracy: 0.7879
-Epoch 9/10
-187/187 - 32s - loss: 0.5990 - accuracy: 0.8067 - val_loss: 0.7925 - val_accuracy: 0.7870
-Epoch 10/10
-187/187 - 31s - loss: 0.5531 - accuracy: 0.8239 - val_loss: 0.7870 - val_accuracy: 0.7836
+Epoch 1/4
+ 187/187 ━━━━━━━━━━━━━━━━━━━━ 111s 442ms/step - accuracy: 0.6310 - loss: 1.3425 - val_accuracy: 0.7565 - val_loss: 0.8874
+Epoch 2/4
+ 187/187 ━━━━━━━━━━━━━━━━━━━━ 77s 413ms/step - accuracy: 0.6518 - loss: 1.2755 - val_accuracy: 0.7635 - val_loss: 0.8588
+Epoch 3/4
+ 187/187 ━━━━━━━━━━━━━━━━━━━━ 82s 437ms/step - accuracy: 0.6491 - loss: 1.2426 - val_accuracy: 0.7663 - val_loss: 0.8419
+Epoch 4/4
+ 187/187 ━━━━━━━━━━━━━━━━━━━━ 79s 419ms/step - accuracy: 0.6625 - loss: 1.1775 - val_accuracy: 0.7701 - val_loss: 0.8284
 
 ```
 </div>
-![png](/img/examples/vision/image_classification_efficientnet_fine_tuning/image_classification_efficientnet_fine_tuning_26_1.png)
+    
+![png](/img/examples/vision/image_classification_efficientnet_fine_tuning/image_classification_efficientnet_fine_tuning_25_1.png)
+    
 
 
 ### Tips for fine tuning EfficientNet
@@ -695,34 +1393,3 @@ cross entropy) is getting significantly larger than log(NUM_CLASSES) after the s
 epoch. If so, the initial learning rate/momentum is too high.
 - Smaller batch size benefit validation accuracy, possibly due to effectively providing
 regularization.
-
----
-## Using the latest EfficientNet weights
-
-Since the initial paper, the EfficientNet has been improved by various methods for data
-preprocessing and for using unlabelled data to enhance learning results. These
-improvements are relatively hard and computationally costly to reproduce, and require
-extra code; but the weights are readily available in the form of TF checkpoint files. The
-model architecture has not changed, so loading the improved checkpoints is possible.
-
-To use a checkpoint provided at
-[the official model repository](https://github.com/tensorflow/tpu/tree/master/models/official/efficientnet), first
-download the checkpoint. As example, here we download noisy-student version of B1:
-
-```
-!wget https://storage.googleapis.com/cloud-tpu-checkpoints/efficientnet\
-       /noisystudent/noisy_student_efficientnet-b1.tar.gz
-!tar -xf noisy_student_efficientnet-b1.tar.gz
-```
-
-Then use the script [efficientnet_weight_update_util.py](https://github.com/keras-team/keras/blob/master/keras/applications/efficientnet_weight_update_util.py) to convert ckpt file to h5 file.
-```
-!python efficientnet_weight_update_util.py --model b1 --notop --ckpt \
-        efficientnet-b1/model.ckpt --o efficientnetb1_notop.h5
-```
-
-When creating model, use the following to load new weight:
-
-```python
-model = EfficientNetB1(weights="efficientnetb1_notop.h5", include_top=False)
-```

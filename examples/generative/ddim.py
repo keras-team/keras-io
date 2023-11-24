@@ -67,13 +67,18 @@ with deterministic sampling.
 ## Setup
 """
 
+import os
+
+os.environ["KERAS_BACKEND"] = "tensorflow"
+
 import math
 import matplotlib.pyplot as plt
 import tensorflow as tf
 import tensorflow_datasets as tfds
 
-from tensorflow import keras
+import keras
 from keras import layers
+from keras import ops
 
 """
 ## Hyperparameters
@@ -122,9 +127,9 @@ next section).
 
 def preprocess_image(data):
     # center crop image
-    height = tf.shape(data["image"])[0]
-    width = tf.shape(data["image"])[1]
-    crop_size = tf.minimum(height, width)
+    height = ops.shape(data["image"])[0]
+    width = ops.shape(data["image"])[1]
+    crop_size = ops.minimum(height, width)
     image = tf.image.crop_to_bounding_box(
         data["image"],
         (height - crop_size) // 2,
@@ -136,7 +141,7 @@ def preprocess_image(data):
     # resize and clip
     # for image downsampling it is important to turn on antialiasing
     image = tf.image.resize(image, size=[image_size, image_size], antialias=True)
-    return tf.clip_by_value(image / 255.0, 0.0, 1.0)
+    return ops.clip(image / 255.0, 0.0, 1.0)
 
 
 def prepare_dataset(split):
@@ -179,6 +184,7 @@ we want to evaluate only after many iterations, but for many iterations.
 """
 
 
+@keras.saving.register_keras_serializable()
 class KID(keras.metrics.Metric):
     def __init__(self, name, **kwargs):
         super().__init__(name=name, **kwargs)
@@ -206,8 +212,10 @@ class KID(keras.metrics.Metric):
         )
 
     def polynomial_kernel(self, features_1, features_2):
-        feature_dimensions = tf.cast(tf.shape(features_1)[1], dtype=tf.float32)
-        return (features_1 @ tf.transpose(features_2) / feature_dimensions + 1.0) ** 3.0
+        feature_dimensions = ops.cast(ops.shape(features_1)[1], dtype="float32")
+        return (
+            features_1 @ ops.transpose(features_2) / feature_dimensions + 1.0
+        ) ** 3.0
 
     def update_state(self, real_images, generated_images, sample_weight=None):
         real_features = self.encoder(real_images, training=False)
@@ -221,15 +229,15 @@ class KID(keras.metrics.Metric):
         kernel_cross = self.polynomial_kernel(real_features, generated_features)
 
         # estimate the squared maximum mean discrepancy using the average kernel values
-        batch_size = tf.shape(real_features)[0]
-        batch_size_f = tf.cast(batch_size, dtype=tf.float32)
-        mean_kernel_real = tf.reduce_sum(kernel_real * (1.0 - tf.eye(batch_size))) / (
+        batch_size = real_features.shape[0]
+        batch_size_f = ops.cast(batch_size, dtype="float32")
+        mean_kernel_real = ops.sum(kernel_real * (1.0 - ops.eye(batch_size))) / (
             batch_size_f * (batch_size_f - 1.0)
         )
-        mean_kernel_generated = tf.reduce_sum(
-            kernel_generated * (1.0 - tf.eye(batch_size))
+        mean_kernel_generated = ops.sum(
+            kernel_generated * (1.0 - ops.eye(batch_size))
         ) / (batch_size_f * (batch_size_f - 1.0))
-        mean_kernel_cross = tf.reduce_mean(kernel_cross)
+        mean_kernel_cross = ops.mean(kernel_cross)
         kid = mean_kernel_real + mean_kernel_generated - 2.0 * mean_kernel_cross
 
         # update the average KID estimate
@@ -294,18 +302,19 @@ start at exactly 1.
 """
 
 
+@keras.saving.register_keras_serializable()
 def sinusoidal_embedding(x):
     embedding_min_frequency = 1.0
-    frequencies = tf.exp(
-        tf.linspace(
-            tf.math.log(embedding_min_frequency),
-            tf.math.log(embedding_max_frequency),
+    frequencies = ops.exp(
+        ops.linspace(
+            ops.log(embedding_min_frequency),
+            ops.log(embedding_max_frequency),
             embedding_dims // 2,
         )
     )
-    angular_speeds = 2.0 * math.pi * frequencies
-    embeddings = tf.concat(
-        [tf.sin(angular_speeds * x), tf.cos(angular_speeds * x)], axis=3
+    angular_speeds = ops.cast(2.0 * math.pi * frequencies, "float32")
+    embeddings = ops.concatenate(
+        [ops.sin(angular_speeds * x), ops.cos(angular_speeds * x)], axis=3
     )
     return embeddings
 
@@ -318,9 +327,7 @@ def ResidualBlock(width):
         else:
             residual = layers.Conv2D(width, kernel_size=1)(x)
         x = layers.BatchNormalization(center=False, scale=False)(x)
-        x = layers.Conv2D(
-            width, kernel_size=3, padding="same", activation=keras.activations.swish
-        )(x)
+        x = layers.Conv2D(width, kernel_size=3, padding="same", activation="swish")(x)
         x = layers.Conv2D(width, kernel_size=3, padding="same")(x)
         x = layers.Add()([x, residual])
         return x
@@ -356,7 +363,7 @@ def get_network(image_size, widths, block_depth):
     noisy_images = keras.Input(shape=(image_size, image_size, 3))
     noise_variances = keras.Input(shape=(1, 1, 1))
 
-    e = layers.Lambda(sinusoidal_embedding)(noise_variances)
+    e = layers.Lambda(sinusoidal_embedding, output_shape=(1, 1, 32))(noise_variances)
     e = layers.UpSampling2D(size=image_size, interpolation="nearest")(e)
 
     x = layers.Conv2D(widths[0], kernel_size=1)(noisy_images)
@@ -459,6 +466,7 @@ requiring more sampling steps usually.
 """
 
 
+@keras.saving.register_keras_serializable()
 class DiffusionModel(keras.Model):
     def __init__(self, image_size, widths, block_depth):
         super().__init__()
@@ -481,18 +489,18 @@ class DiffusionModel(keras.Model):
     def denormalize(self, images):
         # convert the pixel values back to 0-1 range
         images = self.normalizer.mean + images * self.normalizer.variance**0.5
-        return tf.clip_by_value(images, 0.0, 1.0)
+        return ops.clip(images, 0.0, 1.0)
 
     def diffusion_schedule(self, diffusion_times):
         # diffusion times -> angles
-        start_angle = tf.acos(max_signal_rate)
-        end_angle = tf.acos(min_signal_rate)
+        start_angle = ops.cast(ops.arccos(max_signal_rate), "float32")
+        end_angle = ops.cast(ops.arccos(min_signal_rate), "float32")
 
         diffusion_angles = start_angle + diffusion_times * (end_angle - start_angle)
 
         # angles -> signal and noise rates
-        signal_rates = tf.cos(diffusion_angles)
-        noise_rates = tf.sin(diffusion_angles)
+        signal_rates = ops.cos(diffusion_angles)
+        noise_rates = ops.sin(diffusion_angles)
         # note that their squared sum is always: sin^2(x) + cos^2(x) = 1
 
         return noise_rates, signal_rates
@@ -523,7 +531,7 @@ class DiffusionModel(keras.Model):
             noisy_images = next_noisy_images
 
             # separate the current noisy image to its components
-            diffusion_times = tf.ones((num_images, 1, 1, 1)) - step * step_size
+            diffusion_times = ops.ones((num_images, 1, 1, 1)) - step * step_size
             noise_rates, signal_rates = self.diffusion_schedule(diffusion_times)
             pred_noises, pred_images = self.denoise(
                 noisy_images, noise_rates, signal_rates, training=False
@@ -544,7 +552,9 @@ class DiffusionModel(keras.Model):
 
     def generate(self, num_images, diffusion_steps):
         # noise -> images -> denormalized images
-        initial_noise = tf.random.normal(shape=(num_images, image_size, image_size, 3))
+        initial_noise = keras.random.normal(
+            shape=(num_images, image_size, image_size, 3)
+        )
         generated_images = self.reverse_diffusion(initial_noise, diffusion_steps)
         generated_images = self.denormalize(generated_images)
         return generated_images
@@ -552,10 +562,10 @@ class DiffusionModel(keras.Model):
     def train_step(self, images):
         # normalize images to have standard deviation of 1, like the noises
         images = self.normalizer(images, training=True)
-        noises = tf.random.normal(shape=(batch_size, image_size, image_size, 3))
+        noises = keras.random.normal(shape=(batch_size, image_size, image_size, 3))
 
         # sample uniform random diffusion times
-        diffusion_times = tf.random.uniform(
+        diffusion_times = keras.random.uniform(
             shape=(batch_size, 1, 1, 1), minval=0.0, maxval=1.0
         )
         noise_rates, signal_rates = self.diffusion_schedule(diffusion_times)
@@ -587,10 +597,10 @@ class DiffusionModel(keras.Model):
     def test_step(self, images):
         # normalize images to have standard deviation of 1, like the noises
         images = self.normalizer(images, training=False)
-        noises = tf.random.normal(shape=(batch_size, image_size, image_size, 3))
+        noises = keras.random.normal(shape=(batch_size, image_size, image_size, 3))
 
         # sample uniform random diffusion times
-        diffusion_times = tf.random.uniform(
+        diffusion_times = keras.random.uniform(
             shape=(batch_size, 1, 1, 1), minval=0.0, maxval=1.0
         )
         noise_rates, signal_rates = self.diffusion_schedule(diffusion_times)
@@ -648,7 +658,7 @@ model = DiffusionModel(image_size, widths, block_depth)
 # import tensorflow_addons as tfa
 # optimizer=tfa.optimizers.AdamW
 model.compile(
-    optimizer=keras.optimizers.experimental.AdamW(
+    optimizer=keras.optimizers.AdamW(
         learning_rate=learning_rate, weight_decay=weight_decay
     ),
     loss=keras.losses.mean_absolute_error,
@@ -656,8 +666,8 @@ model.compile(
 # pixelwise mean absolute error is used as loss
 
 # save the best model based on the validation KID metric
-checkpoint_path = "checkpoints/diffusion_model"
-checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
+checkpoint_path = "checkpoints/diffusion_model.weights.h5"
+checkpoint_callback = keras.callbacks.ModelCheckpoint(
     filepath=checkpoint_path,
     save_weights_only=True,
     monitor="val_kid",
@@ -715,11 +725,6 @@ Stochastic sampling process (noisy images on top, predicted images on bottom, 80
 
 ![flowers stochastic generation gif](https://i.imgur.com/kRXOGzd.gif)
 
-Trained model and demo available on HuggingFace:
-
-| Trained Model | Demo |
-| :--: | :--: |
-| [![model badge](https://img.shields.io/badge/%F0%9F%A4%97%20Model-DDIM-black.svg)](https://huggingface.co/keras-io/denoising-diffusion-implicit-models) | [![spaces badge](https://img.shields.io/badge/%F0%9F%A4%97%20Spaces-DDIM-black.svg)](https://huggingface.co/spaces/keras-io/denoising-diffusion-implicit-models) |
 """
 
 """

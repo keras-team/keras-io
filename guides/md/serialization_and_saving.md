@@ -2,15 +2,13 @@
 
 **Authors:** Neel Kovelamudi, Francois Chollet<br>
 **Date created:** 2023/06/14<br>
-**Last modified:** 2023/06/14<br>
+**Last modified:** 2023/06/30<br>
 **Description:** Complete guide to saving, serializing, and exporting models.
 
 
 <img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/guides/ipynb/serialization_and_saving.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/guides/serialization_and_saving.py)
 
 
-
-**Note: this guide assumes Keras >= 2.13**
 
 ---
 ## Introduction
@@ -61,8 +59,8 @@ Now, let's look at the details.
 
 ```python
 import numpy as np
-import tensorflow as tf
 import keras
+from keras import ops
 ```
 
 ---
@@ -81,19 +79,8 @@ where you left)
 You can save a model with `model.save()` or `keras.models.save_model()` (which is equivalent).
 You can load it back with `keras.models.load_model()`.
 
-The recommended format is the "Keras v3" format, which uses the `.keras` extension.
-There are, however, two legacy formats that are available:
-the **TensorFlow SavedModel format** and the older Keras **H5 format**.
-
-You can switch to the SavedModel format by:
-
-- Passing `save_format='tf'` to `save()`
-- Passing a filename without an extension
-
-You can switch to the H5 format by:
-
-- Passing `save_format='h5'` to `save()`
-- Passing a filename that ends in `.h5`
+The only supported format in Keras 3 is the "Keras v3" format,
+which uses the `.keras` extension.
 
 **Example:**
 
@@ -130,9 +117,9 @@ np.testing.assert_allclose(
 
 <div class="k-default-codeblock">
 ```
-4/4 [==============================] - 0s 3ms/step - loss: 0.3058
-4/4 [==============================] - 0s 1ms/step
-4/4 [==============================] - 0s 1ms/step
+ 4/4 ━━━━━━━━━━━━━━━━━━━━ 0s 8ms/step - loss: 0.4232  
+ 4/4 ━━━━━━━━━━━━━━━━━━━━ 0s 281us/step
+ 4/4 ━━━━━━━━━━━━━━━━━━━━ 0s 373us/step
 
 ```
 </div>
@@ -145,8 +132,8 @@ When saving a model that includes custom objects, such as a subclassed Layer,
 you **must** define a `get_config()` method on the object class.
 If the arguments passed to the constructor (`__init__()` method) of the custom object
 aren't Python objects (anything other than base types like ints, strings,
-etc.), then you **must** serialize these arguments in `get_config()` method and
-also explicitly deserialize these arguments in the `from_config()` class method.
+etc.), then you **must** also explicitly deserialize these arguments in the `from_config()`
+class method.
 
 Like this:
 
@@ -154,7 +141,7 @@ Like this:
 class CustomLayer(keras.layers.Layer):
     def __init__(self, sublayer, **kwargs):
         super().__init__(**kwargs)
-        self.sublayer = sublayer
+        self.sublayer = layer
 
     def call(self, x):
         return self.sublayer(x)
@@ -261,9 +248,9 @@ np.testing.assert_allclose(
 
 <div class="k-default-codeblock">
 ```
-1/1 [==============================] - 0s 225ms/step - loss: 0.1698
-1/1 [==============================] - 0s 39ms/step
-1/1 [==============================] - 0s 43ms/step
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 46ms/step - loss: 0.2571
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 11ms/step
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 12ms/step
 
 ```
 </div>
@@ -293,9 +280,9 @@ np.testing.assert_allclose(
 
 <div class="k-default-codeblock">
 ```
-1/1 [==============================] - 0s 222ms/step - loss: 0.4521
-1/1 [==============================] - 0s 40ms/step
-1/1 [==============================] - 0s 47ms/step
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 37ms/step - loss: 0.0535
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 12ms/step
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 12ms/step
 
 ```
 </div>
@@ -328,9 +315,9 @@ np.testing.assert_allclose(
 
 <div class="k-default-codeblock">
 ```
-1/1 [==============================] - 0s 222ms/step - loss: 0.0120
-1/1 [==============================] - 0s 40ms/step
-1/1 [==============================] - 0s 40ms/step
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 40ms/step - loss: 0.0868
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 11ms/step
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 11ms/step
 
 ```
 </div>
@@ -349,7 +336,7 @@ The following serialization APIs are available:
 - `keras.models.clone_model(model)`: make a (randomly initialized) copy of a model.
 - `get_config()` and `cls.from_config()`: retrieve the configuration of a layer or model, and recreate
 a model instance from its config, respectively.
-- `keras.models.to_json()` and `keras.models.model_from_json()`: similar, but as JSON strings.
+- `keras.models.model_to_json()` and `keras.models.model_from_json()`: similar, but as JSON strings.
 - `keras.saving.serialize_keras_object()`: retrieve the configuration any arbitrary Keras object.
 - `keras.saving.deserialize_keras_object()`: recreate an object instance from its configuration.
 
@@ -386,7 +373,7 @@ print(layer_config)
 
 <div class="k-default-codeblock">
 ```
-{'name': 'dense_4', 'trainable': True, 'dtype': 'float32', 'units': 3, 'activation': 'relu', 'use_bias': True, 'kernel_initializer': {'module': 'keras.initializers', 'class_name': 'GlorotUniform', 'config': {'seed': None}, 'registered_name': None}, 'bias_initializer': {'module': 'keras.initializers', 'class_name': 'Zeros', 'config': {}, 'registered_name': None}, 'kernel_regularizer': None, 'bias_regularizer': None, 'activity_regularizer': None, 'kernel_constraint': None, 'bias_constraint': None}
+{'name': 'dense_4', 'trainable': True, 'dtype': 'float32', 'units': 3, 'activation': 'relu', 'use_bias': True, 'kernel_initializer': {'module': 'keras.src.initializers.random_initializers', 'class_name': 'GlorotUniform', 'config': {'seed': None}, 'registered_name': 'GlorotUniform'}, 'bias_initializer': {'module': 'keras.src.initializers.constant_initializers', 'class_name': 'Zeros', 'config': {}, 'registered_name': 'Zeros'}, 'kernel_regularizer': None, 'bias_regularizer': None, 'kernel_constraint': None, 'bias_constraint': None}
 
 ```
 </div>
@@ -451,7 +438,7 @@ print(config)
 
 <div class="k-default-codeblock">
 ```
-{'module': 'keras.regularizers', 'class_name': 'L1', 'config': {'l1': 0.004999999888241291}, 'registered_name': None}
+{'module': 'keras.src.regularizers.regularizers', 'class_name': 'L1', 'config': {'l1': 0.004999999888241291}, 'registered_name': 'L1'}
 
 ```
 </div>
@@ -543,7 +530,7 @@ class SubclassedModel(keras.Model):
 
 subclassed_model = SubclassedModel(10)
 # Call the subclassed model once to create the weights.
-subclassed_model(tf.ones((1, 784)))
+subclassed_model(np.ones((1, 784)))
 
 # Copy weights from functional_model to subclassed_model.
 subclassed_model.set_weights(functional_model.get_weights())
@@ -633,7 +620,7 @@ print("variable ordering changed:", variable_names != variable_names_2)
 
 <div class="k-default-codeblock">
 ```
-variables: ['nested/dense_1/kernel:0', 'nested/dense_1/bias:0', 'nested/dense_2/kernel:0', 'nested/dense_2/bias:0']
+variables: ['kernel', 'bias', 'kernel', 'bias']
 ```
 </div>
     
@@ -645,8 +632,8 @@ Changing trainable status of one of the nested layers...
     
 <div class="k-default-codeblock">
 ```
-variables: ['nested/dense_2/kernel:0', 'nested/dense_2/bias:0', 'nested/dense_1/kernel:0', 'nested/dense_1/bias:0']
-variable ordering changed: True
+variables: ['kernel', 'bias', 'kernel', 'bias']
+variable ordering changed: False
 
 ```
 </div>
@@ -683,186 +670,44 @@ model = keras.Sequential(extracted_layers)
 model.summary()
 ```
 
-<div class="k-default-codeblock">
-```
-Model: "sequential_4"
-_________________________________________________________________
- Layer (type)                Output Shape              Param #   
-=================================================================
- dense_1 (Dense)             (None, 64)                50240     
-                                                                 
- dense_2 (Dense)             (None, 64)                4160      
-                                                                 
- dense_3 (Dense)             (None, 5)                 325       
-                                                                 
-=================================================================
-Total params: 54725 (213.77 KB)
-Trainable params: 54725 (213.77 KB)
-Non-trainable params: 0 (0.00 Byte)
-_________________________________________________________________
 
-```
-</div>
----
-## Exporting
-
-Keras also lets you to create a lightweight version of your model for
-inferencing that contains the model's forward pass only (the `call()` method). This TensorFlow
-SavedModel artifact can then be served via TF-Serving, and all original code of the model
-(including custom layers) are no longer necessary to reload the artifact--it is entirely
-standalone.
-
-#### APIs
-
-- `model.export()`, which exports the model to a lightweight SavedModel artifact for
-inference
-- `artifact.serve()`, which calls the exported artifact's forward pass
-
-Lower level API for customization:
-
-- `keras.export.ExportArchive`, which can be used to customize the serving endpoints.
-This is used internally by `model.export()`.
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold">Model: "sequential_4"</span>
+</pre>
 
 
-### Simple exporting with .export()
-
-Let's go through a simple example of `model.export()` using a Functional model.
-
-**Example:**
 
 
-```python
-inputs = keras.Input(shape=(16,))
-x = keras.layers.Dense(8, activation="relu")(inputs)
-x = keras.layers.BatchNormalization()(x)
-outputs = keras.layers.Dense(1, activation="sigmoid")(x)
-model = keras.Model(inputs, outputs)
-
-input_data = np.random.random((8, 16))
-output_data = model(input_data)  # **NOTE**: Make sure your model is built!
-
-# Export the model as a SavedModel artifact in a filepath.
-model.export("exported_model")
-
-# Reload the SavedModel artifact
-reloaded_artifact = tf.saved_model.load("exported_model")
-
-# Use the `.serve()` endpoint to call the forward pass on the input data
-new_output_data = reloaded_artifact.serve(input_data)
-```
-
-<div class="k-default-codeblock">
-```
-INFO:tensorflow:Assets written to: exported_model/assets
-
-INFO:tensorflow:Assets written to: exported_model/assets
-
-Saved artifact at 'exported_model'. The following endpoints are available:
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-* Endpoint 'serve'
-  Args:
-    args_0: float32 Tensor, shape=(None, 16)
-  Returns:
-    float32 Tensor, shape=(None, 1)
-
-```
-</div>
-### Customizing export artifacts with ExportArchive
-
-The `ExportArchive` object allows you to customize exporting the model and add additional
-endpoints for serving. Here are its associated APIs:
-
-- `track()` to register the layer(s) or model(s) to be used,
-- `add_endpoint()` method to register a new serving endpoint.
-- `write_out()` method to save the artifact.
-- `add_variable_collection` method to register a set of variables to be retrieved after
-reloading.
-
-By default, `model.export("path/to/location")` does the following:
-
-```python
-export_archive = ExportArchive()
-export_archive.track(model)
-export_archive.add_endpoint(
-    name="serve",
-    fn=model.call,
-input_signature=[tf.TensorSpec(shape=(None, 3), dtype=tf.float32)],  # `input_signature`
-changes depending on model.
-)
-export_archive.write_out("path/to/location")
-```
-
-Let's look at an example customizing this for a MultiHeadAttention layer.
-
-**Example:**
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━┓
+┃<span style="font-weight: bold"> Layer (type)                    </span>┃<span style="font-weight: bold"> Output Shape              </span>┃<span style="font-weight: bold">    Param # </span>┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━┩
+│ dense_1 (<span style="color: #0087ff; text-decoration-color: #0087ff">Dense</span>)                 │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">64</span>)                │     <span style="color: #00af00; text-decoration-color: #00af00">50,240</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ dense_2 (<span style="color: #0087ff; text-decoration-color: #0087ff">Dense</span>)                 │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">64</span>)                │      <span style="color: #00af00; text-decoration-color: #00af00">4,160</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ dense_3 (<span style="color: #0087ff; text-decoration-color: #0087ff">Dense</span>)                 │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">5</span>)                 │        <span style="color: #00af00; text-decoration-color: #00af00">325</span> │
+└─────────────────────────────────┴───────────────────────────┴────────────┘
+</pre>
 
 
-```python
-layer = keras.layers.MultiHeadAttention(2, 2)
-x1 = tf.random.normal((3, 2, 2))
-x2 = tf.random.normal((3, 2, 2))
-ref_output = layer(x1, x2).numpy()  # **NOTE**: Make sure layer is built!
 
-export_archive = keras.export.ExportArchive()  # Instantiate ExportArchive object
-export_archive.track(layer)  # Register the layer to be used
-export_archive.add_endpoint(  # New endpoint `call` corresponding to `model.call`
-    "call",
-    layer.call,
-    input_signature=[  # input signature corresponding to 2 inputs
-        tf.TensorSpec(
-            shape=(None, 2, 2),
-            dtype=tf.float32,
-        ),
-        tf.TensorSpec(
-            shape=(None, 2, 2),
-            dtype=tf.float32,
-        ),
-    ],
-)
 
-# Register the layer weights as a set of variables to be retrieved
-export_archive.add_variable_collection("my_vars", layer.weights)
-np.testing.assert_equal(len(export_archive.my_vars), 8)
-# weights corresponding to 2 inputs, each of which are 2*2
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Total params: </span><span style="color: #00af00; text-decoration-color: #00af00">54,725</span> (213.77 KB)
+</pre>
 
-# Save the artifact
-export_archive.write_out("exported_mha_layer")
 
-# Reload the artifact
-revived_layer = tf.saved_model.load("exported_mha_layer")
-np.testing.assert_allclose(
-    ref_output,
-    revived_layer.call(query=x1, value=x2).numpy(),
-    atol=1e-6,
-)
-np.testing.assert_equal(len(revived_layer.my_vars), 8)
-```
 
-<div class="k-default-codeblock">
-```
-INFO:tensorflow:Assets written to: exported_mha_layer/assets
 
-INFO:tensorflow:Assets written to: exported_mha_layer/assets
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Trainable params: </span><span style="color: #00af00; text-decoration-color: #00af00">54,725</span> (213.77 KB)
+</pre>
 
-Saved artifact at 'exported_mha_layer'. The following endpoints are available:
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-* Endpoint 'call'
-  Args:
-    query: float32 Tensor, shape=(None, 2, 2)
-    value: float32 Tensor, shape=(None, 2, 2)
-  Returns:
-    float32 Tensor, shape=(None, 2, 2)
 
-```
-</div>
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Non-trainable params: </span><span style="color: #00af00; text-decoration-color: #00af00">0</span> (0.00 B)
+</pre>
+
+
+
 ### Appendix: Handling custom objects
 
 <a name="config_methods"></a>
@@ -927,7 +772,7 @@ class MyDense(keras.layers.Layer):
         )
 
     def call(self, inputs):
-        return tf.matmul(inputs, self.kernel)
+        return ops.matmul(inputs, self.kernel)
 
 
 layer = MyDense(units=16, kernel_regularizer="l1", kernel_initializer="ones")
@@ -945,7 +790,7 @@ print(new_layer)
 <div class="k-default-codeblock">
 ```
 {'module': None, 'class_name': 'MyDense', 'config': {'name': 'my_dense_1', 'trainable': True, 'dtype': 'float32', 'units': 64, 'kernel_regularizer': None, 'kernel_initializer': None, 'nested_model': {'module': None, 'class_name': 'MyDense', 'config': {'name': 'my_dense', 'trainable': True, 'dtype': 'float32', 'units': 16, 'kernel_regularizer': 'l1', 'kernel_initializer': 'ones', 'nested_model': None}, 'registered_name': 'MyLayers>KernelMult'}}, 'registered_name': 'MyLayers>KernelMult'}
-<__main__.MyDense object at 0x7f53b0633ad0>
+<MyDense name=my_dense_1, built=False>
 
 ```
 </div>
@@ -1029,7 +874,7 @@ print(config)
 
 <div class="k-default-codeblock">
 ```
-{'module': None, 'class_name': 'MyDense', 'config': {'name': 'my_dense_2', 'trainable': True, 'dtype': 'float32', 'units': 16, 'kernel_regularizer': {'module': 'keras.regularizers', 'class_name': 'L1L2', 'config': {'l1': 9.999999747378752e-06, 'l2': 9.999999747378752e-05}, 'registered_name': None}, 'kernel_initializer': 'ones', 'nested_model': None}, 'registered_name': 'MyLayers>KernelMult'}
+{'module': None, 'class_name': 'MyDense', 'config': {'name': 'my_dense_2', 'trainable': True, 'dtype': 'float32', 'units': 16, 'kernel_regularizer': {'module': 'keras.src.regularizers.regularizers', 'class_name': 'L1L2', 'config': {'l1': 1e-05, 'l2': 0.0001}, 'registered_name': 'L1L2'}, 'kernel_initializer': 'ones', 'nested_model': None}, 'registered_name': 'MyLayers>KernelMult'}
 
 ```
 </div>

@@ -85,13 +85,12 @@ val_features /= std
 ## Build a binary classification model
 """
 
-from tensorflow import keras
+import keras
 
 model = keras.Sequential(
     [
-        keras.layers.Dense(
-            256, activation="relu", input_shape=(train_features.shape[-1],)
-        ),
+        keras.Input(shape=train_features.shape[1:]),
+        keras.layers.Dense(256, activation="relu"),
         keras.layers.Dense(256, activation="relu"),
         keras.layers.Dropout(0.3),
         keras.layers.Dense(256, activation="relu"),
@@ -118,7 +117,7 @@ model.compile(
     optimizer=keras.optimizers.Adam(1e-2), loss="binary_crossentropy", metrics=metrics
 )
 
-callbacks = [keras.callbacks.ModelCheckpoint("fraud_model_at_epoch_{epoch}.h5")]
+callbacks = [keras.callbacks.ModelCheckpoint("fraud_model_at_epoch_{epoch}.keras")]
 class_weight = {0: weight_for_0, 1: weight_for_1}
 
 model.fit(
@@ -145,11 +144,5 @@ In the real world, one would put an even higher weight on class 1,
 so as to reflect that False Negatives are more costly than False Positives.
 
 Next time your credit card gets  declined in an online purchase -- this is why.
-
-Example available on HuggingFace.
-
-| Trained Model | Demo |
-| :--: | :--: |
-| [![Generic badge](https://img.shields.io/badge/🤗%20Model-Imbalanced%20Classification-black.svg)](https://huggingface.co/keras-io/imbalanced_classification) | [![Generic badge](https://img.shields.io/badge/🤗%20Spaces-Imbalanced%20Classification-black.svg)](https://huggingface.co/spaces/keras-io/Credit_Card_Fraud_Detection) |
 
 """

@@ -23,13 +23,13 @@ two of them will be similar (_anchor_ and _positive_ samples), and the third wil
 Our goal is for the model to learn to estimate the similarity between images.
 
 For the network to learn, we use a triplet loss function. You can find an introduction to triplet loss in the
-[FaceNet paper](https://arxiv.org/pdf/1503.03832.pdf) by Schroff et al,. 2015. In this example, we define the triplet
+[FaceNet paper](https://arxiv.org/abs/1503.03832) by Schroff et al,. 2015. In this example, we define the triplet
 loss function as follows:
 
 `L(A, P, N) = max(‖f(A) - f(P)‖² - ‖f(A) - f(N)‖² + margin, 0)`
 
 This example uses the [Totally Looks Like dataset](https://sites.google.com/view/totally-looks-like-dataset)
-by [Rosenfeld et al., 2018](https://arxiv.org/pdf/1803.01485v3.pdf).
+by [Rosenfeld et al., 2018](https://arxiv.org/abs/1803.01485v3).
 
 ---
 ## Setup
@@ -42,13 +42,14 @@ import os
 import random
 import tensorflow as tf
 from pathlib import Path
-from tensorflow.keras import applications
-from tensorflow.keras import layers
-from tensorflow.keras import losses
-from tensorflow.keras import optimizers
-from tensorflow.keras import metrics
-from tensorflow.keras import Model
-from tensorflow.keras.applications import resnet
+from keras import applications
+from keras import layers
+from keras import losses
+from keras import ops
+from keras import optimizers
+from keras import metrics
+from keras import Model
+from keras.applications import resnet
 
 
 target_shape = (200, 200)
@@ -83,10 +84,17 @@ positive_images_path = cache_dir / "right"
 
 <div class="k-default-codeblock">
 ```
-zsh:1: command not found: gdown
-zsh:1: command not found: gdown
-unzip:  cannot find or open left.zip, left.zip.zip or left.zip.ZIP.
-unzip:  cannot find or open right.zip, right.zip.zip or right.zip.ZIP.
+Downloading...
+From (uriginal): https://drive.google.com/uc?id=1jvkbTr_giSP3Ru8OwGNCg6B4PvVbcO34
+From (redirected): https://drive.google.com/uc?id=1jvkbTr_giSP3Ru8OwGNCg6B4PvVbcO34&confirm=t&uuid=be98abe4-8be7-4c5f-a8f9-ca95d178fbda
+To: /home/scottzhu/keras-io/scripts/tmp_9629511/left.zip
+100%|█████████████████████████████████████████| 104M/104M [00:00<00:00, 278MB/s]
+/home/scottzhu/.local/lib/python3.10/site-packages/gdown/cli.py:126: FutureWarning: Option `--id` was deprecated in version 4.3.1 and will be removed in 5.0. You don't need to pass it anymore to use a file ID.
+Downloading...
+From (uriginal): https://drive.google.com/uc?id=1EzBZUb_mh_Dp_FKD0P4XiYYSd0QBH5zW
+From (redirected): https://drive.google.com/uc?id=1EzBZUb_mh_Dp_FKD0P4XiYYSd0QBH5zW&confirm=t&uuid=0eb1b2e2-beee-462a-a9b8-c0bf21bea257
+To: /home/scottzhu/keras-io/scripts/tmp_9629511/right.zip
+100%|█████████████████████████████████████████| 104M/104M [00:00<00:00, 285MB/s]
 
 ```
 </div>
@@ -171,10 +179,10 @@ train_dataset = dataset.take(round(image_count * 0.8))
 val_dataset = dataset.skip(round(image_count * 0.8))
 
 train_dataset = train_dataset.batch(32, drop_remainder=False)
-train_dataset = train_dataset.prefetch(8)
+train_dataset = train_dataset.prefetch(tf.data.AUTOTUNE)
 
 val_dataset = val_dataset.batch(32, drop_remainder=False)
-val_dataset = val_dataset.prefetch(8)
+val_dataset = val_dataset.prefetch(tf.data.AUTOTUNE)
 
 ```
 
@@ -205,7 +213,9 @@ visualize(*list(train_dataset.take(1).as_numpy_iterator())[0])
 ```
 
 
-![png](/img/examples/vision/siamese_network/siamesenetwork_12_0.png)
+    
+![png](/img/examples/vision/siamese_network/siamese_network_12_0.png)
+    
 
 
 ---
@@ -268,8 +278,8 @@ class DistanceLayer(layers.Layer):
         super().__init__(**kwargs)
 
     def call(self, anchor, positive, negative):
-        ap_distance = tf.reduce_sum(tf.square(anchor - positive), -1)
-        an_distance = tf.reduce_sum(tf.square(anchor - negative), -1)
+        ap_distance = ops.sum(tf.square(anchor - positive), -1)
+        an_distance = ops.sum(tf.square(anchor - negative), -1)
         return (ap_distance, an_distance)
 
 
@@ -381,27 +391,32 @@ siamese_model.fit(train_dataset, epochs=10, validation_data=val_dataset)
 <div class="k-default-codeblock">
 ```
 Epoch 1/10
-151/151 [==============================] - 277s 2s/step - loss: 0.5014 - val_loss: 0.3719
-Epoch 2/10
-151/151 [==============================] - 276s 2s/step - loss: 0.3884 - val_loss: 0.3632
-Epoch 3/10
-151/151 [==============================] - 287s 2s/step - loss: 0.3711 - val_loss: 0.3509
-Epoch 4/10
-151/151 [==============================] - 295s 2s/step - loss: 0.3585 - val_loss: 0.3287
-Epoch 5/10
-151/151 [==============================] - 299s 2s/step - loss: 0.3420 - val_loss: 0.3301
-Epoch 6/10
-151/151 [==============================] - 297s 2s/step - loss: 0.3181 - val_loss: 0.3419
-Epoch 7/10
-151/151 [==============================] - 290s 2s/step - loss: 0.3131 - val_loss: 0.3201
-Epoch 8/10
-151/151 [==============================] - 295s 2s/step - loss: 0.3102 - val_loss: 0.3152
-Epoch 9/10
-151/151 [==============================] - 286s 2s/step - loss: 0.2905 - val_loss: 0.2937
-Epoch 10/10
-151/151 [==============================] - 270s 2s/step - loss: 0.2921 - val_loss: 0.2952
+   1/151 [37m━━━━━━━━━━━━━━━━━━━━  1:21:32 33s/step - loss: 1.5020
 
-<tensorflow.python.keras.callbacks.History at 0x7fc69064bd10>
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1699919378.193493    9680 device_compiler.h:187] Compiled cluster using XLA!  This line is logged at most once for the lifetime of the process.
+
+ 151/151 ━━━━━━━━━━━━━━━━━━━━ 80s 317ms/step - loss: 0.7004 - val_loss: 0.3704
+Epoch 2/10
+ 151/151 ━━━━━━━━━━━━━━━━━━━━ 20s 136ms/step - loss: 0.3749 - val_loss: 0.3609
+Epoch 3/10
+ 151/151 ━━━━━━━━━━━━━━━━━━━━ 21s 140ms/step - loss: 0.3548 - val_loss: 0.3399
+Epoch 4/10
+ 151/151 ━━━━━━━━━━━━━━━━━━━━ 20s 135ms/step - loss: 0.3432 - val_loss: 0.3533
+Epoch 5/10
+ 151/151 ━━━━━━━━━━━━━━━━━━━━ 20s 134ms/step - loss: 0.3299 - val_loss: 0.3522
+Epoch 6/10
+ 151/151 ━━━━━━━━━━━━━━━━━━━━ 20s 135ms/step - loss: 0.3263 - val_loss: 0.3177
+Epoch 7/10
+ 151/151 ━━━━━━━━━━━━━━━━━━━━ 20s 134ms/step - loss: 0.3032 - val_loss: 0.3308
+Epoch 8/10
+ 151/151 ━━━━━━━━━━━━━━━━━━━━ 20s 134ms/step - loss: 0.2944 - val_loss: 0.3282
+Epoch 9/10
+ 151/151 ━━━━━━━━━━━━━━━━━━━━ 20s 135ms/step - loss: 0.2893 - val_loss: 0.3046
+Epoch 10/10
+ 151/151 ━━━━━━━━━━━━━━━━━━━━ 20s 134ms/step - loss: 0.2679 - val_loss: 0.2841
+
+<keras.src.callbacks.history.History at 0x7f6945c08820>
 
 ```
 </div>
@@ -431,7 +446,9 @@ anchor_embedding, positive_embedding, negative_embedding = (
 ```
 
 
-![png](/img/examples/vision/siamese_network/siamesenetwork_22_0.png)
+    
+![png](/img/examples/vision/siamese_network/siamese_network_22_0.png)
+    
 
 
 Finally, we can compute the cosine similarity between the anchor and positive
@@ -455,8 +472,8 @@ print("Negative similarity", negative_similarity.numpy())
 
 <div class="k-default-codeblock">
 ```
-Positive similarity: 0.9940324
-Negative similarity 0.9918252
+Positive similarity: 0.99608964
+Negative similarity 0.9941576
 
 ```
 </div>

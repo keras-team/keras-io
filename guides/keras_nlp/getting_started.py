@@ -18,12 +18,12 @@ This library is an extension of the core Keras API; all high-level modules are
 [`Layers`](/api/layers/) or [`Models`](/api/models/). If you are familiar with Keras,
 congratulations! You already understand most of KerasNLP.
 
-KerasNLP uses the [Keras Core](https://keras.io/keras_core/) library to work
-with any of TensorFlow, Pytorch and Jax. In the guide below, we will use the
-`jax` backend for training our models, and [tf.data](https://www.tensorflow.org/guide/data)
-for efficiently running our input preprocessing. But feel free to mix things up!
-This guide runs in TensorFlow or PyTorch backends with zero changes, simply update
-the `KERAS_BACKEND` below.
+KerasNLP uses Keras 3 to work with any of TensorFlow, Pytorch and Jax. In the
+guide below, we will use the `jax` backend for training our models, and
+[tf.data](https://www.tensorflow.org/guide/data) for efficiently running our
+input preprocessing. But feel free to mix things up! This guide runs in
+TensorFlow or PyTorch backends with zero changes, simply update the
+`KERAS_BACKEND` below.
 
 This guide demonstrates our modular approach using a sentiment analysis example at six
 levels of complexity:
@@ -43,6 +43,7 @@ reference for the complexity of the material:
 
 """shell
 pip install -q --upgrade keras-nlp
+pip install -q --upgrade keras  # Upgrade to Keras 3.
 """
 
 import os
@@ -50,7 +51,10 @@ import os
 os.environ["KERAS_BACKEND"] = "jax"  # or "tensorflow" or "torch"
 
 import keras_nlp
-import keras_core as keras
+import keras
+
+# Use mixed precision to speed up all training in this guide.
+keras.mixed_precision.set_global_policy("mixed_float16")
 
 """
 ## API quickstart
@@ -477,7 +481,7 @@ backbone = keras_nlp.models.BertBackbone(
 
 # Language modeling head
 mlm_head = keras_nlp.layers.MaskedLMHead(
-    embedding_weights=backbone.token_embedding.embeddings,
+    token_embedding=backbone.token_embedding,
 )
 
 inputs = {

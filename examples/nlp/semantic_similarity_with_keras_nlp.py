@@ -37,17 +37,13 @@ give us a particularly fast train step below.
 """
 
 """shell
-pip install -q keras-nlp
+pip install -q --upgrade keras-nlp
+pip install -q --upgrade keras  # Upgrade to Keras 3.
 """
-
-import os
-
-os.environ["KERAS_BACKEND"] = "jax"  # or "tensorflow" or "torch"
-
 
 import numpy as np
 import tensorflow as tf
-import keras_core as keras
+import keras
 import keras_nlp
 import tensorflow_datasets as tfds
 

@@ -53,11 +53,15 @@ Target | Diagnosis of heart disease (1 = true; 0 = false) | Target
 
 
 ```python
+import os
+
+# TensorFlow is the only backend that supports string inputs.
+os.environ["KERAS_BACKEND"] = "tensorflow"
+
 import tensorflow as tf
-import numpy as np
 import pandas as pd
-from tensorflow import keras
-from tensorflow.keras import layers
+import keras
+from keras import layers
 ```
 
 ---
@@ -239,8 +243,8 @@ val_dataframe = dataframe.sample(frac=0.2, random_state=1337)
 train_dataframe = dataframe.drop(val_dataframe.index)
 
 print(
-    "Using %d samples for training and %d for validation"
-    % (len(train_dataframe), len(val_dataframe))
+    f"Using {len(train_dataframe)} samples for training "
+    f"and {len(val_dataframe)} for validation"
 )
 ```
 
@@ -279,8 +283,8 @@ for x, y in train_ds.take(1):
 
 <div class="k-default-codeblock">
 ```
-Input: {'age': <tf.Tensor: shape=(), dtype=int64, numpy=63>, 'sex': <tf.Tensor: shape=(), dtype=int64, numpy=1>, 'cp': <tf.Tensor: shape=(), dtype=int64, numpy=4>, 'trestbps': <tf.Tensor: shape=(), dtype=int64, numpy=130>, 'chol': <tf.Tensor: shape=(), dtype=int64, numpy=254>, 'fbs': <tf.Tensor: shape=(), dtype=int64, numpy=0>, 'restecg': <tf.Tensor: shape=(), dtype=int64, numpy=2>, 'thalach': <tf.Tensor: shape=(), dtype=int64, numpy=147>, 'exang': <tf.Tensor: shape=(), dtype=int64, numpy=0>, 'oldpeak': <tf.Tensor: shape=(), dtype=float64, numpy=1.4>, 'slope': <tf.Tensor: shape=(), dtype=int64, numpy=2>, 'ca': <tf.Tensor: shape=(), dtype=int64, numpy=1>, 'thal': <tf.Tensor: shape=(), dtype=string, numpy=b'reversible'>}
-Target: tf.Tensor(1, shape=(), dtype=int64)
+Input: {'age': <tf.Tensor: shape=(), dtype=int64, numpy=64>, 'sex': <tf.Tensor: shape=(), dtype=int64, numpy=1>, 'cp': <tf.Tensor: shape=(), dtype=int64, numpy=4>, 'trestbps': <tf.Tensor: shape=(), dtype=int64, numpy=128>, 'chol': <tf.Tensor: shape=(), dtype=int64, numpy=263>, 'fbs': <tf.Tensor: shape=(), dtype=int64, numpy=0>, 'restecg': <tf.Tensor: shape=(), dtype=int64, numpy=0>, 'thalach': <tf.Tensor: shape=(), dtype=int64, numpy=105>, 'exang': <tf.Tensor: shape=(), dtype=int64, numpy=1>, 'oldpeak': <tf.Tensor: shape=(), dtype=float64, numpy=0.2>, 'slope': <tf.Tensor: shape=(), dtype=int64, numpy=2>, 'ca': <tf.Tensor: shape=(), dtype=int64, numpy=1>, 'thal': <tf.Tensor: shape=(), dtype=string, numpy=b'reversible'>}
+Target: tf.Tensor(0, shape=(), dtype=int64)
 
 ```
 </div>
@@ -340,14 +344,10 @@ then one-hot encode these integer indices.
 
 
 ```python
-from tensorflow.keras.layers import IntegerLookup
-from tensorflow.keras.layers import Normalization
-from tensorflow.keras.layers import StringLookup
-
 
 def encode_numerical_feature(feature, name, dataset):
     # Create a Normalization layer for our feature
-    normalizer = Normalization()
+    normalizer = layers.Normalization()
 
     # Prepare a Dataset that only yields our feature
     feature_ds = dataset.map(lambda x, y: x[name])
@@ -362,7 +362,7 @@ def encode_numerical_feature(feature, name, dataset):
 
 
 def encode_categorical_feature(feature, name, dataset, is_string):
-    lookup_class = StringLookup if is_string else IntegerLookup
+    lookup_class = layers.StringLookup if is_string else layers.IntegerLookup
     # Create a lookup layer which will turn strings into integer indices
     lookup = lookup_class(output_mode="binary")
 
@@ -475,7 +475,9 @@ keras.utils.plot_model(model, show_shapes=True, rankdir="LR")
 
 
 
+    
 ![png](/img/examples/structured_data/structured_data_classification_from_scratch/structured_data_classification_from_scratch_23_0.png)
+    
 
 
 
@@ -490,107 +492,107 @@ model.fit(train_ds, epochs=50, validation_data=val_ds)
 <div class="k-default-codeblock">
 ```
 Epoch 1/50
-8/8 [==============================] - 1s 38ms/step - loss: 0.6339 - accuracy: 0.6818 - val_loss: 0.5833 - val_accuracy: 0.7213
+ 8/8 ━━━━━━━━━━━━━━━━━━━━ 5s 46ms/step - accuracy: 0.3932 - loss: 0.8749 - val_accuracy: 0.3303 - val_loss: 0.7814
 Epoch 2/50
-8/8 [==============================] - 0s 4ms/step - loss: 0.6120 - accuracy: 0.6653 - val_loss: 0.5536 - val_accuracy: 0.7705
+ 8/8 ━━━━━━━━━━━━━━━━━━━━ 1s 7ms/step - accuracy: 0.4262 - loss: 0.8375 - val_accuracy: 0.4914 - val_loss: 0.6980
 Epoch 3/50
-8/8 [==============================] - 0s 4ms/step - loss: 0.5803 - accuracy: 0.7025 - val_loss: 0.5281 - val_accuracy: 0.8033
+ 8/8 ━━━━━━━━━━━━━━━━━━━━ 0s 8ms/step - accuracy: 0.4835 - loss: 0.7350 - val_accuracy: 0.6541 - val_loss: 0.6320
 Epoch 4/50
-8/8 [==============================] - 0s 5ms/step - loss: 0.5498 - accuracy: 0.7107 - val_loss: 0.5080 - val_accuracy: 0.8197
+ 8/8 ━━━━━━━━━━━━━━━━━━━━ 0s 7ms/step - accuracy: 0.5932 - loss: 0.6665 - val_accuracy: 0.7543 - val_loss: 0.5743
 Epoch 5/50
-8/8 [==============================] - 0s 5ms/step - loss: 0.5349 - accuracy: 0.7479 - val_loss: 0.4896 - val_accuracy: 0.8197
+ 8/8 ━━━━━━━━━━━━━━━━━━━━ 0s 7ms/step - accuracy: 0.5861 - loss: 0.6600 - val_accuracy: 0.7683 - val_loss: 0.5360
 Epoch 6/50
-8/8 [==============================] - 0s 7ms/step - loss: 0.5360 - accuracy: 0.7273 - val_loss: 0.4722 - val_accuracy: 0.8033
+ 8/8 ━━━━━━━━━━━━━━━━━━━━ 0s 7ms/step - accuracy: 0.6489 - loss: 0.6020 - val_accuracy: 0.7748 - val_loss: 0.4998
 Epoch 7/50
-8/8 [==============================] - 0s 5ms/step - loss: 0.4922 - accuracy: 0.7769 - val_loss: 0.4576 - val_accuracy: 0.8197
+ 8/8 ━━━━━━━━━━━━━━━━━━━━ 0s 7ms/step - accuracy: 0.6880 - loss: 0.5668 - val_accuracy: 0.7699 - val_loss: 0.4800
 Epoch 8/50
-8/8 [==============================] - 0s 5ms/step - loss: 0.4761 - accuracy: 0.7438 - val_loss: 0.4442 - val_accuracy: 0.8197
+ 8/8 ━━━━━━━━━━━━━━━━━━━━ 0s 7ms/step - accuracy: 0.7572 - loss: 0.5009 - val_accuracy: 0.7559 - val_loss: 0.4573
 Epoch 9/50
-8/8 [==============================] - 0s 5ms/step - loss: 0.4671 - accuracy: 0.7893 - val_loss: 0.4322 - val_accuracy: 0.8361
+ 8/8 ━━━━━━━━━━━━━━━━━━━━ 0s 7ms/step - accuracy: 0.7492 - loss: 0.5192 - val_accuracy: 0.8060 - val_loss: 0.4414
 Epoch 10/50
-8/8 [==============================] - 0s 4ms/step - loss: 0.4560 - accuracy: 0.7727 - val_loss: 0.4216 - val_accuracy: 0.8197
+ 8/8 ━━━━━━━━━━━━━━━━━━━━ 0s 8ms/step - accuracy: 0.7212 - loss: 0.4973 - val_accuracy: 0.8077 - val_loss: 0.4259
 Epoch 11/50
-8/8 [==============================] - 0s 4ms/step - loss: 0.4518 - accuracy: 0.7603 - val_loss: 0.4132 - val_accuracy: 0.8197
+ 8/8 ━━━━━━━━━━━━━━━━━━━━ 0s 7ms/step - accuracy: 0.7616 - loss: 0.4704 - val_accuracy: 0.7904 - val_loss: 0.4143
 Epoch 12/50
-8/8 [==============================] - 0s 4ms/step - loss: 0.4423 - accuracy: 0.7934 - val_loss: 0.4057 - val_accuracy: 0.8197
+ 8/8 ━━━━━━━━━━━━━━━━━━━━ 0s 7ms/step - accuracy: 0.8374 - loss: 0.4342 - val_accuracy: 0.7872 - val_loss: 0.4061
 Epoch 13/50
-8/8 [==============================] - 0s 4ms/step - loss: 0.4154 - accuracy: 0.8017 - val_loss: 0.3995 - val_accuracy: 0.8033
+ 8/8 ━━━━━━━━━━━━━━━━━━━━ 0s 7ms/step - accuracy: 0.7863 - loss: 0.4630 - val_accuracy: 0.7888 - val_loss: 0.3980
 Epoch 14/50
-8/8 [==============================] - 0s 4ms/step - loss: 0.4176 - accuracy: 0.7769 - val_loss: 0.3933 - val_accuracy: 0.8033
+ 8/8 ━━━━━━━━━━━━━━━━━━━━ 0s 7ms/step - accuracy: 0.7742 - loss: 0.4492 - val_accuracy: 0.7996 - val_loss: 0.3998
 Epoch 15/50
-8/8 [==============================] - 0s 4ms/step - loss: 0.3971 - accuracy: 0.8140 - val_loss: 0.3882 - val_accuracy: 0.8033
+ 8/8 ━━━━━━━━━━━━━━━━━━━━ 0s 7ms/step - accuracy: 0.8083 - loss: 0.4280 - val_accuracy: 0.8060 - val_loss: 0.3855
 Epoch 16/50
-8/8 [==============================] - 0s 4ms/step - loss: 0.4069 - accuracy: 0.8017 - val_loss: 0.3835 - val_accuracy: 0.8033
+ 8/8 ━━━━━━━━━━━━━━━━━━━━ 0s 7ms/step - accuracy: 0.8058 - loss: 0.4191 - val_accuracy: 0.8217 - val_loss: 0.3819
 Epoch 17/50
-8/8 [==============================] - 0s 4ms/step - loss: 0.3744 - accuracy: 0.8182 - val_loss: 0.3797 - val_accuracy: 0.8033
+ 8/8 ━━━━━━━━━━━━━━━━━━━━ 0s 7ms/step - accuracy: 0.8071 - loss: 0.4111 - val_accuracy: 0.8389 - val_loss: 0.3763
 Epoch 18/50
-8/8 [==============================] - 0s 4ms/step - loss: 0.3963 - accuracy: 0.8099 - val_loss: 0.3762 - val_accuracy: 0.8033
+ 8/8 ━━━━━━━━━━━━━━━━━━━━ 0s 8ms/step - accuracy: 0.8533 - loss: 0.3676 - val_accuracy: 0.8373 - val_loss: 0.3792
 Epoch 19/50
-8/8 [==============================] - 0s 4ms/step - loss: 0.3745 - accuracy: 0.8223 - val_loss: 0.3734 - val_accuracy: 0.8033
+ 8/8 ━━━━━━━━━━━━━━━━━━━━ 0s 7ms/step - accuracy: 0.8170 - loss: 0.3850 - val_accuracy: 0.8357 - val_loss: 0.3744
 Epoch 20/50
-8/8 [==============================] - 0s 4ms/step - loss: 0.3843 - accuracy: 0.8306 - val_loss: 0.3715 - val_accuracy: 0.8197
+ 8/8 ━━━━━━━━━━━━━━━━━━━━ 0s 7ms/step - accuracy: 0.8207 - loss: 0.3767 - val_accuracy: 0.8168 - val_loss: 0.3759
 Epoch 21/50
-8/8 [==============================] - 0s 4ms/step - loss: 0.3565 - accuracy: 0.8471 - val_loss: 0.3697 - val_accuracy: 0.8197
+ 8/8 ━━━━━━━━━━━━━━━━━━━━ 0s 7ms/step - accuracy: 0.8151 - loss: 0.3596 - val_accuracy: 0.8217 - val_loss: 0.3685
 Epoch 22/50
-8/8 [==============================] - 0s 4ms/step - loss: 0.3576 - accuracy: 0.8471 - val_loss: 0.3680 - val_accuracy: 0.8197
+ 8/8 ━━━━━━━━━━━━━━━━━━━━ 0s 7ms/step - accuracy: 0.7988 - loss: 0.4087 - val_accuracy: 0.8184 - val_loss: 0.3701
 Epoch 23/50
-8/8 [==============================] - 0s 4ms/step - loss: 0.3548 - accuracy: 0.8223 - val_loss: 0.3673 - val_accuracy: 0.8197
+ 8/8 ━━━━━━━━━━━━━━━━━━━━ 0s 7ms/step - accuracy: 0.8180 - loss: 0.3632 - val_accuracy: 0.8217 - val_loss: 0.3614
 Epoch 24/50
-8/8 [==============================] - 0s 5ms/step - loss: 0.3698 - accuracy: 0.8512 - val_loss: 0.3669 - val_accuracy: 0.8197
+ 8/8 ━━━━━━━━━━━━━━━━━━━━ 0s 7ms/step - accuracy: 0.8295 - loss: 0.3504 - val_accuracy: 0.8200 - val_loss: 0.3683
 Epoch 25/50
-8/8 [==============================] - 0s 4ms/step - loss: 0.3328 - accuracy: 0.8347 - val_loss: 0.3660 - val_accuracy: 0.8197
+ 8/8 ━━━━━━━━━━━━━━━━━━━━ 0s 7ms/step - accuracy: 0.8386 - loss: 0.3864 - val_accuracy: 0.8200 - val_loss: 0.3655
 Epoch 26/50
-8/8 [==============================] - 0s 4ms/step - loss: 0.3493 - accuracy: 0.8264 - val_loss: 0.3657 - val_accuracy: 0.8197
+ 8/8 ━━━━━━━━━━━━━━━━━━━━ 0s 7ms/step - accuracy: 0.8482 - loss: 0.3345 - val_accuracy: 0.8044 - val_loss: 0.3639
 Epoch 27/50
-8/8 [==============================] - 0s 5ms/step - loss: 0.3679 - accuracy: 0.8306 - val_loss: 0.3650 - val_accuracy: 0.8361
+ 8/8 ━━━━━━━━━━━━━━━━━━━━ 0s 8ms/step - accuracy: 0.8340 - loss: 0.3470 - val_accuracy: 0.8077 - val_loss: 0.3616
 Epoch 28/50
-8/8 [==============================] - 0s 4ms/step - loss: 0.3172 - accuracy: 0.8595 - val_loss: 0.3656 - val_accuracy: 0.8361
+ 8/8 ━━━━━━━━━━━━━━━━━━━━ 0s 7ms/step - accuracy: 0.8418 - loss: 0.3684 - val_accuracy: 0.8060 - val_loss: 0.3629
 Epoch 29/50
-8/8 [==============================] - 0s 5ms/step - loss: 0.3312 - accuracy: 0.8554 - val_loss: 0.3665 - val_accuracy: 0.8361
+ 8/8 ━━━━━━━━━━━━━━━━━━━━ 0s 7ms/step - accuracy: 0.8309 - loss: 0.3147 - val_accuracy: 0.8060 - val_loss: 0.3637
 Epoch 30/50
-8/8 [==============================] - 0s 5ms/step - loss: 0.3226 - accuracy: 0.8554 - val_loss: 0.3666 - val_accuracy: 0.8361
+ 8/8 ━━━━━━━━━━━━━━━━━━━━ 0s 7ms/step - accuracy: 0.8722 - loss: 0.3151 - val_accuracy: 0.8044 - val_loss: 0.3672
 Epoch 31/50
-8/8 [==============================] - 0s 4ms/step - loss: 0.3007 - accuracy: 0.8719 - val_loss: 0.3667 - val_accuracy: 0.8361
+ 8/8 ━━━━━━━━━━━━━━━━━━━━ 0s 8ms/step - accuracy: 0.8746 - loss: 0.3043 - val_accuracy: 0.8060 - val_loss: 0.3637
 Epoch 32/50
-8/8 [==============================] - 0s 4ms/step - loss: 0.3096 - accuracy: 0.8678 - val_loss: 0.3672 - val_accuracy: 0.8361
+ 8/8 ━━━━━━━━━━━━━━━━━━━━ 0s 7ms/step - accuracy: 0.8794 - loss: 0.3245 - val_accuracy: 0.8200 - val_loss: 0.3685
 Epoch 33/50
-8/8 [==============================] - 0s 4ms/step - loss: 0.3293 - accuracy: 0.8306 - val_loss: 0.3673 - val_accuracy: 0.8361
+ 8/8 ━━━━━━━━━━━━━━━━━━━━ 0s 8ms/step - accuracy: 0.8644 - loss: 0.3541 - val_accuracy: 0.8357 - val_loss: 0.3714
 Epoch 34/50
-8/8 [==============================] - 0s 4ms/step - loss: 0.3156 - accuracy: 0.8430 - val_loss: 0.3677 - val_accuracy: 0.8361
+ 8/8 ━━━━━━━━━━━━━━━━━━━━ 0s 7ms/step - accuracy: 0.8867 - loss: 0.3007 - val_accuracy: 0.8373 - val_loss: 0.3680
 Epoch 35/50
-8/8 [==============================] - 0s 4ms/step - loss: 0.3272 - accuracy: 0.8595 - val_loss: 0.3680 - val_accuracy: 0.8361
+ 8/8 ━━━━━━━━━━━━━━━━━━━━ 0s 7ms/step - accuracy: 0.8737 - loss: 0.3168 - val_accuracy: 0.8357 - val_loss: 0.3695
 Epoch 36/50
-8/8 [==============================] - 0s 4ms/step - loss: 0.3194 - accuracy: 0.8471 - val_loss: 0.3685 - val_accuracy: 0.8361
+ 8/8 ━━━━━━━━━━━━━━━━━━━━ 0s 7ms/step - accuracy: 0.8191 - loss: 0.3298 - val_accuracy: 0.8357 - val_loss: 0.3736
 Epoch 37/50
-8/8 [==============================] - 0s 4ms/step - loss: 0.3125 - accuracy: 0.8471 - val_loss: 0.3688 - val_accuracy: 0.8361
+ 8/8 ━━━━━━━━━━━━━━━━━━━━ 0s 7ms/step - accuracy: 0.8613 - loss: 0.3543 - val_accuracy: 0.8357 - val_loss: 0.3745
 Epoch 38/50
-8/8 [==============================] - 0s 5ms/step - loss: 0.3096 - accuracy: 0.8388 - val_loss: 0.3689 - val_accuracy: 0.8361
+ 8/8 ━━━━━━━━━━━━━━━━━━━━ 0s 7ms/step - accuracy: 0.8835 - loss: 0.2835 - val_accuracy: 0.8357 - val_loss: 0.3707
 Epoch 39/50
-8/8 [==============================] - 0s 5ms/step - loss: 0.3096 - accuracy: 0.8512 - val_loss: 0.3696 - val_accuracy: 0.8525
+ 8/8 ━━━━━━━━━━━━━━━━━━━━ 0s 7ms/step - accuracy: 0.8784 - loss: 0.2893 - val_accuracy: 0.8357 - val_loss: 0.3716
 Epoch 40/50
-8/8 [==============================] - 0s 5ms/step - loss: 0.2822 - accuracy: 0.8802 - val_loss: 0.3712 - val_accuracy: 0.8525
+ 8/8 ━━━━━━━━━━━━━━━━━━━━ 0s 7ms/step - accuracy: 0.8919 - loss: 0.2587 - val_accuracy: 0.8168 - val_loss: 0.3770
 Epoch 41/50
-8/8 [==============================] - 0s 4ms/step - loss: 0.3234 - accuracy: 0.8512 - val_loss: 0.3718 - val_accuracy: 0.8525
+ 8/8 ━━━━━━━━━━━━━━━━━━━━ 0s 7ms/step - accuracy: 0.8882 - loss: 0.2660 - val_accuracy: 0.8217 - val_loss: 0.3674
 Epoch 42/50
-8/8 [==============================] - 0s 4ms/step - loss: 0.3283 - accuracy: 0.8802 - val_loss: 0.3716 - val_accuracy: 0.8525
+ 8/8 ━━━━━━━━━━━━━━━━━━━━ 0s 7ms/step - accuracy: 0.8790 - loss: 0.2931 - val_accuracy: 0.8200 - val_loss: 0.3723
 Epoch 43/50
-8/8 [==============================] - 0s 4ms/step - loss: 0.3059 - accuracy: 0.8636 - val_loss: 0.3718 - val_accuracy: 0.8525
+ 8/8 ━━━━━━━━━━━━━━━━━━━━ 0s 7ms/step - accuracy: 0.8851 - loss: 0.2892 - val_accuracy: 0.8200 - val_loss: 0.3733
 Epoch 44/50
-8/8 [==============================] - 0s 4ms/step - loss: 0.3055 - accuracy: 0.8802 - val_loss: 0.3719 - val_accuracy: 0.8525
+ 8/8 ━━━━━━━━━━━━━━━━━━━━ 0s 7ms/step - accuracy: 0.8504 - loss: 0.3189 - val_accuracy: 0.8200 - val_loss: 0.3755
 Epoch 45/50
-8/8 [==============================] - 0s 4ms/step - loss: 0.2874 - accuracy: 0.8719 - val_loss: 0.3729 - val_accuracy: 0.8525
+ 8/8 ━━━━━━━━━━━━━━━━━━━━ 0s 7ms/step - accuracy: 0.8610 - loss: 0.3116 - val_accuracy: 0.8184 - val_loss: 0.3788
 Epoch 46/50
-8/8 [==============================] - 0s 4ms/step - loss: 0.2719 - accuracy: 0.8760 - val_loss: 0.3737 - val_accuracy: 0.8361
+ 8/8 ━━━━━━━━━━━━━━━━━━━━ 0s 8ms/step - accuracy: 0.8956 - loss: 0.2544 - val_accuracy: 0.8184 - val_loss: 0.3738
 Epoch 47/50
-8/8 [==============================] - 0s 4ms/step - loss: 0.2794 - accuracy: 0.8843 - val_loss: 0.3745 - val_accuracy: 0.8361
+ 8/8 ━━━━━━━━━━━━━━━━━━━━ 0s 7ms/step - accuracy: 0.9080 - loss: 0.2895 - val_accuracy: 0.8217 - val_loss: 0.3750
 Epoch 48/50
-8/8 [==============================] - 0s 5ms/step - loss: 0.2940 - accuracy: 0.8802 - val_loss: 0.3747 - val_accuracy: 0.8361
+ 8/8 ━━━━━━━━━━━━━━━━━━━━ 0s 7ms/step - accuracy: 0.8706 - loss: 0.2993 - val_accuracy: 0.8217 - val_loss: 0.3757
 Epoch 49/50
-8/8 [==============================] - 0s 4ms/step - loss: 0.2860 - accuracy: 0.8554 - val_loss: 0.3746 - val_accuracy: 0.8525
+ 8/8 ━━━━━━━━━━━━━━━━━━━━ 0s 7ms/step - accuracy: 0.8724 - loss: 0.2979 - val_accuracy: 0.8184 - val_loss: 0.3781
 Epoch 50/50
-8/8 [==============================] - 0s 4ms/step - loss: 0.2845 - accuracy: 0.8595 - val_loss: 0.3743 - val_accuracy: 0.8361
+ 8/8 ━━━━━━━━━━━━━━━━━━━━ 0s 8ms/step - accuracy: 0.8609 - loss: 0.2937 - val_accuracy: 0.8217 - val_loss: 0.3791
 
-<keras.callbacks.History at 0x12eb51e10>
+<keras.src.callbacks.history.History at 0x7efc32e01780>
 
 ```
 </div>
@@ -628,14 +630,16 @@ input_dict = {name: tf.convert_to_tensor([value]) for name, value in sample.item
 predictions = model.predict(input_dict)
 
 print(
-    "This particular patient had a %.1f percent probability "
-    "of having a heart disease, as evaluated by our model." % (100 * predictions[0][0],)
+    f"This particular patient had a {100 * predictions[0][0]:.1f} "
+    "percent probability of having a heart disease, "
+    "as evaluated by our model."
 )
 ```
 
 <div class="k-default-codeblock">
 ```
-This particular patient had a 25.5 percent probability of having a heart disease, as evaluated by our model.
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 252ms/step
+This particular patient had a 27.6 percent probability of having a heart disease, as evaluated by our model.
 
 ```
 </div>

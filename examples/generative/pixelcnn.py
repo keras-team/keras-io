@@ -23,9 +23,9 @@ from which new pixel values are sampled to generate a new image
 """
 
 import numpy as np
-import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras import layers
+import keras
+from keras import layers
+from keras import ops
 from tqdm import tqdm
 
 """
@@ -63,7 +63,7 @@ class PixelConvLayer(layers.Layer):
         # Build the conv2d layer to initialize kernel variables
         self.conv.build(input_shape)
         # Use the initialized kernel to create the mask
-        kernel_shape = self.conv.kernel.get_shape()
+        kernel_shape = ops.shape(self.conv.kernel)
         self.mask = np.zeros(shape=kernel_shape)
         self.mask[: kernel_shape[0] // 2, ...] = 1.0
         self.mask[kernel_shape[0] // 2, : kernel_shape[1] // 2, ...] = 1.0
@@ -105,7 +105,7 @@ class ResidualBlock(keras.layers.Layer):
 ## Build the model based on the original paper
 """
 
-inputs = keras.Input(shape=input_shape)
+inputs = keras.Input(shape=input_shape, batch_size=128)
 x = PixelConvLayer(
     mask_type="A", filters=128, kernel_size=7, activation="relu", padding="same"
 )(inputs)
@@ -142,9 +142,6 @@ pixel_cnn.fit(
 The PixelCNN cannot generate the full image at once. Instead, it must generate each pixel in
 order, append the last generated pixel to the current image, and feed the image back into the
 model to repeat the process.
-
-You can use the trained model hosted on [Hugging Face Hub](https://huggingface.co/keras-io/pixel-cnn-mnist)
-and try the demo on [Hugging Face Spaces](https://huggingface.co/spaces/keras-io/pixelcnn-mnist-image-generation).
 """
 
 from IPython.display import Image, display
@@ -160,11 +157,11 @@ for row in tqdm(range(rows)):
         for channel in range(channels):
             # Feed the whole array and retrieving the pixel value probabilities for the next
             # pixel.
-            probs = pixel_cnn.predict(pixels)[:, row, col, channel]
+            probs = pixel_cnn.predict(pixels, verbose=0)[:, row, col, channel]
             # Use the probabilities to pick pixel values and append the values to the image
             # frame.
-            pixels[:, row, col, channel] = tf.math.ceil(
-                probs - tf.random.uniform(probs.shape)
+            pixels[:, row, col, channel] = ops.ceil(
+                probs - keras.random.uniform(probs.shape)
             )
 
 

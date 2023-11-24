@@ -16,20 +16,20 @@
 
 ```python
 import os
+
+os.environ["KERAS_BACKEND"] = "tensorflow"
+
 import re
 import numpy as np
 import matplotlib.pyplot as plt
 
 import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras import layers
-from tensorflow.keras.applications import efficientnet
-from tensorflow.keras.layers import TextVectorization
+import keras
+from keras import layers
+from keras.applications import efficientnet
+from keras.layers import TextVectorization
 
-
-seed = 111
-np.random.seed(seed)
-tf.random.set_seed(seed)
+keras.utils.set_random_seed(111)
 ```
 
 ---
@@ -177,8 +177,6 @@ print("Number of validation samples: ", len(valid_data))
 ```
 Number of training samples:  6114
 Number of validation samples:  1529
-Number of training samples:  6114
-Number of validation samples:  1529
 
 ```
 </div>
@@ -223,24 +221,6 @@ image_augmentation = keras.Sequential(
 
 ```
 
-<div class="k-default-codeblock">
-```
-2021-09-17 05:17:57.047819: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:937] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
-2021-09-17 05:17:57.058177: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:937] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
-2021-09-17 05:17:57.106007: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:937] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
-2021-09-17 05:17:57.107650: I tensorflow/core/platform/cpu_feature_guard.cc:142] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  AVX2 FMA
-To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
-2021-09-17 05:17:57.134387: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:937] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
-2021-09-17 05:17:57.135154: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:937] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
-2021-09-17 05:17:57.135806: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:937] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
-2021-09-17 05:17:57.680010: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:937] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
-2021-09-17 05:17:57.680785: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:937] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
-2021-09-17 05:17:57.681439: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:937] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
-2021-09-17 05:17:57.682067: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1510] Created device /job:localhost/replica:0/task:0/device:GPU:0 with 14684 MB memory:  -> device: 0, name: Tesla V100-SXM2-16GB, pci bus id: 0000:00:04.0, compute capability: 7.0
-2021-09-17 05:17:58.229404: I tensorflow/compiler/mlir/mlir_graph_optimization_pass.cc:185] None of the MLIR Optimization Passes are enabled (registered 2)
-
-```
-</div>
 ---
 ## Building a `tf.data.Dataset` pipeline for training
 
@@ -297,7 +277,9 @@ Our image captioning architecture consists of three models:
 
 def get_cnn_model():
     base_model = efficientnet.EfficientNetB0(
-        input_shape=(*IMAGE_SIZE, 3), include_top=False, weights="imagenet",
+        input_shape=(*IMAGE_SIZE, 3),
+        include_top=False,
+        weights="imagenet",
     )
     # We freeze our feature extractor
     base_model.trainable = False
@@ -381,7 +363,9 @@ class TransformerDecoderBlock(layers.Layer):
         self.layernorm_3 = layers.LayerNormalization()
 
         self.embedding = PositionalEmbedding(
-            embed_dim=EMBED_DIM, sequence_length=SEQ_LENGTH, vocab_size=VOCAB_SIZE
+            embed_dim=EMBED_DIM,
+            sequence_length=SEQ_LENGTH,
+            vocab_size=VOCAB_SIZE,
         )
         self.out = layers.Dense(VOCAB_SIZE, activation="softmax")
 
@@ -433,7 +417,10 @@ class TransformerDecoderBlock(layers.Layer):
         mask = tf.cast(i >= j, dtype="int32")
         mask = tf.reshape(mask, (1, input_shape[1], input_shape[1]))
         mult = tf.concat(
-            [tf.expand_dims(batch_size, -1), tf.constant([1, 1], dtype=tf.int32)],
+            [
+                tf.expand_dims(batch_size, -1),
+                tf.constant([1, 1], dtype=tf.int32),
+            ],
             axis=0,
         )
         return tf.tile(mask, mult)
@@ -441,7 +428,12 @@ class TransformerDecoderBlock(layers.Layer):
 
 class ImageCaptioningModel(keras.Model):
     def __init__(
-        self, cnn_model, encoder, decoder, num_captions_per_image=5, image_aug=None,
+        self,
+        cnn_model,
+        encoder,
+        decoder,
+        num_captions_per_image=5,
+        image_aug=None,
     ):
         super().__init__()
         self.cnn_model = cnn_model
@@ -518,7 +510,10 @@ class ImageCaptioningModel(keras.Model):
         self.acc_tracker.update_state(batch_acc)
 
         # 8. Return the loss and accuracy values
-        return {"loss": self.loss_tracker.result(), "acc": self.acc_tracker.result()}
+        return {
+            "loss": self.loss_tracker.result(),
+            "acc": self.acc_tracker.result(),
+        }
 
     def test_step(self, batch_data):
         batch_img, batch_seq = batch_data
@@ -547,7 +542,10 @@ class ImageCaptioningModel(keras.Model):
         self.acc_tracker.update_state(batch_acc)
 
         # 5. Return the loss and accuracy values
-        return {"loss": self.loss_tracker.result(), "acc": self.acc_tracker.result()}
+        return {
+            "loss": self.loss_tracker.result(),
+            "acc": self.acc_tracker.result(),
+        }
 
     @property
     def metrics(self):
@@ -560,7 +558,10 @@ cnn_model = get_cnn_model()
 encoder = TransformerEncoderBlock(embed_dim=EMBED_DIM, dense_dim=FF_DIM, num_heads=1)
 decoder = TransformerDecoderBlock(embed_dim=EMBED_DIM, ff_dim=FF_DIM, num_heads=2)
 caption_model = ImageCaptioningModel(
-    cnn_model=cnn_model, encoder=encoder, decoder=decoder, image_aug=image_augmentation,
+    cnn_model=cnn_model,
+    encoder=encoder,
+    decoder=decoder,
+    image_aug=image_augmentation,
 )
 ```
 
@@ -572,7 +573,8 @@ caption_model = ImageCaptioningModel(
 
 # Define the loss function
 cross_entropy = keras.losses.SparseCategoricalCrossentropy(
-    from_logits=False, reduction="none"
+    from_logits=False,
+    reduction=None,
 )
 
 # EarlyStopping criteria
@@ -619,103 +621,48 @@ caption_model.fit(
 ```
 Epoch 1/30
 
-2021-09-17 05:18:22.943796: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:175] Filling up shuffle buffer (this may take a while): 59 of 256
-2021-09-17 05:18:30.137746: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:228] Shuffle buffer filled.
-2021-09-17 05:18:30.598020: I tensorflow/stream_executor/cuda/cuda_dnn.cc:369] Loaded cuDNN version 8005
+/opt/conda/envs/keras-tensorflow/lib/python3.10/site-packages/keras/src/layers/layer.py:861: UserWarning: Layer 'query' (of type EinsumDense) was passed an input with a mask attached to it. However, this layer does not support masking and will therefore destroy the mask information. Downstream layers will not see the mask.
+  warnings.warn(
+/opt/conda/envs/keras-tensorflow/lib/python3.10/site-packages/keras/src/layers/layer.py:861: UserWarning: Layer 'key' (of type EinsumDense) was passed an input with a mask attached to it. However, this layer does not support masking and will therefore destroy the mask information. Downstream layers will not see the mask.
+  warnings.warn(
+/opt/conda/envs/keras-tensorflow/lib/python3.10/site-packages/keras/src/layers/layer.py:861: UserWarning: Layer 'value' (of type EinsumDense) was passed an input with a mask attached to it. However, this layer does not support masking and will therefore destroy the mask information. Downstream layers will not see the mask.
+  warnings.warn(
 
-96/96 [==============================] - 62s 327ms/step - loss: 28.1409 - acc: 0.1313 - val_loss: 20.4968 - val_acc: 0.3116
+ 96/96 ━━━━━━━━━━━━━━━━━━━━ 91s 477ms/step - acc: 0.1324 - loss: 35.2713 - accuracy: 0.2120 - val_accuracy: 0.3117 - val_loss: 20.4337
 Epoch 2/30
-
-2021-09-17 05:19:13.829127: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:175] Filling up shuffle buffer (this may take a while): 59 of 256
-2021-09-17 05:19:19.872802: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:228] Shuffle buffer filled.
-
-96/96 [==============================] - 43s 278ms/step - loss: 19.3393 - acc: 0.3207 - val_loss: 18.0922 - val_acc: 0.3514
+ 96/96 ━━━━━━━━━━━━━━━━━━━━ 38s 398ms/step - acc: 0.3203 - loss: 19.9756 - accuracy: 0.3300 - val_accuracy: 0.3517 - val_loss: 18.0001
 Epoch 3/30
-
-2021-09-17 05:19:56.772506: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:175] Filling up shuffle buffer (this may take a while): 61 of 256
-2021-09-17 05:20:02.481758: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:228] Shuffle buffer filled.
-
-96/96 [==============================] - 42s 278ms/step - loss: 17.4184 - acc: 0.3552 - val_loss: 17.0022 - val_acc: 0.3698
+ 96/96 ━━━━━━━━━━━━━━━━━━━━ 38s 394ms/step - acc: 0.3533 - loss: 17.7575 - accuracy: 0.3586 - val_accuracy: 0.3694 - val_loss: 16.9179
 Epoch 4/30
-
-2021-09-17 05:20:39.367542: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:175] Filling up shuffle buffer (this may take a while): 61 of 256
-2021-09-17 05:20:45.149089: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:228] Shuffle buffer filled.
-
-96/96 [==============================] - 43s 278ms/step - loss: 16.3052 - acc: 0.3760 - val_loss: 16.3026 - val_acc: 0.3845
+ 96/96 ━━━━━━━━━━━━━━━━━━━━ 38s 396ms/step - acc: 0.3721 - loss: 16.6177 - accuracy: 0.3750 - val_accuracy: 0.3781 - val_loss: 16.3415
 Epoch 5/30
-
-2021-09-17 05:21:21.930582: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:175] Filling up shuffle buffer (this may take a while): 61 of 256
-2021-09-17 05:21:27.608503: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:228] Shuffle buffer filled.
-
-96/96 [==============================] - 42s 278ms/step - loss: 15.5097 - acc: 0.3901 - val_loss: 15.8929 - val_acc: 0.3925
+ 96/96 ━━━━━━━━━━━━━━━━━━━━ 38s 394ms/step - acc: 0.3840 - loss: 15.8190 - accuracy: 0.3872 - val_accuracy: 0.3876 - val_loss: 15.8820
 Epoch 6/30
-
-2021-09-17 05:22:04.553717: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:175] Filling up shuffle buffer (this may take a while): 61 of 256
-2021-09-17 05:22:10.210087: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:228] Shuffle buffer filled.
-
-96/96 [==============================] - 42s 278ms/step - loss: 14.8596 - acc: 0.4069 - val_loss: 15.5456 - val_acc: 0.4005
+ 96/96 ━━━━━━━━━━━━━━━━━━━━ 37s 390ms/step - acc: 0.3959 - loss: 15.1802 - accuracy: 0.3973 - val_accuracy: 0.3933 - val_loss: 15.6454
 Epoch 7/30
-
-2021-09-17 05:22:47.100594: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:175] Filling up shuffle buffer (this may take a while): 62 of 256
-2021-09-17 05:22:52.466539: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:228] Shuffle buffer filled.
-
-96/96 [==============================] - 42s 277ms/step - loss: 14.3454 - acc: 0.4131 - val_loss: 15.3313 - val_acc: 0.4045
+ 96/96 ━━━━━━━━━━━━━━━━━━━━ 38s 395ms/step - acc: 0.4035 - loss: 14.7098 - accuracy: 0.4054 - val_accuracy: 0.3956 - val_loss: 15.4308
 Epoch 8/30
-
-2021-09-17 05:23:29.226300: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:175] Filling up shuffle buffer (this may take a while): 61 of 256
-2021-09-17 05:23:34.808841: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:228] Shuffle buffer filled.
-
-96/96 [==============================] - 42s 277ms/step - loss: 13.8745 - acc: 0.4251 - val_loss: 15.2011 - val_acc: 0.4078
+ 96/96 ━━━━━━━━━━━━━━━━━━━━ 38s 394ms/step - acc: 0.4128 - loss: 14.2644 - accuracy: 0.4128 - val_accuracy: 0.4001 - val_loss: 15.2675
 Epoch 9/30
-
-2021-09-17 05:24:11.615058: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:175] Filling up shuffle buffer (this may take a while): 62 of 256
-2021-09-17 05:24:17.030769: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:228] Shuffle buffer filled.
-
-96/96 [==============================] - 42s 277ms/step - loss: 13.4640 - acc: 0.4350 - val_loss: 15.0905 - val_acc: 0.4107
+ 96/96 ━━━━━━━━━━━━━━━━━━━━ 38s 393ms/step - acc: 0.4180 - loss: 13.9154 - accuracy: 0.4196 - val_accuracy: 0.4034 - val_loss: 15.1764
 Epoch 10/30
-
-2021-09-17 05:24:53.832807: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:175] Filling up shuffle buffer (this may take a while): 61 of 256
-2021-09-17 05:24:59.506573: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:228] Shuffle buffer filled.
-
-96/96 [==============================] - 42s 277ms/step - loss: 13.0922 - acc: 0.4414 - val_loss: 15.0083 - val_acc: 0.4113
+ 96/96 ━━━━━━━━━━━━━━━━━━━━ 37s 390ms/step - acc: 0.4256 - loss: 13.5624 - accuracy: 0.4261 - val_accuracy: 0.4040 - val_loss: 15.1567
 Epoch 11/30
-
-2021-09-17 05:25:36.242501: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:175] Filling up shuffle buffer (this may take a while): 62 of 256
-2021-09-17 05:25:41.723206: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:228] Shuffle buffer filled.
-
-96/96 [==============================] - 42s 277ms/step - loss: 12.7538 - acc: 0.4464 - val_loss: 14.9455 - val_acc: 0.4143
+ 96/96 ━━━━━━━━━━━━━━━━━━━━ 38s 393ms/step - acc: 0.4310 - loss: 13.2789 - accuracy: 0.4325 - val_accuracy: 0.4053 - val_loss: 15.0365
 Epoch 12/30
-
-2021-09-17 05:26:18.532009: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:175] Filling up shuffle buffer (this may take a while): 62 of 256
-2021-09-17 05:26:23.985106: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:228] Shuffle buffer filled.
-
-96/96 [==============================] - 42s 277ms/step - loss: 12.4233 - acc: 0.4547 - val_loss: 14.9816 - val_acc: 0.4133
+ 96/96 ━━━━━━━━━━━━━━━━━━━━ 38s 399ms/step - acc: 0.4366 - loss: 13.0339 - accuracy: 0.4371 - val_accuracy: 0.4084 - val_loss: 15.0476
 Epoch 13/30
-
-2021-09-17 05:27:00.696082: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:175] Filling up shuffle buffer (this may take a while): 63 of 256
-2021-09-17 05:27:05.812571: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:228] Shuffle buffer filled.
-
-96/96 [==============================] - 42s 277ms/step - loss: 12.1264 - acc: 0.4636 - val_loss: 14.9451 - val_acc: 0.4158
+ 96/96 ━━━━━━━━━━━━━━━━━━━━ 38s 392ms/step - acc: 0.4417 - loss: 12.7608 - accuracy: 0.4432 - val_accuracy: 0.4090 - val_loss: 15.0246
 Epoch 14/30
-
-2021-09-17 05:27:42.513445: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:175] Filling up shuffle buffer (this may take a while): 63 of 256
-2021-09-17 05:27:47.675342: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:228] Shuffle buffer filled.
-
-96/96 [==============================] - 42s 277ms/step - loss: 11.8244 - acc: 0.4724 - val_loss: 14.9751 - val_acc: 0.4148
+ 96/96 ━━━━━━━━━━━━━━━━━━━━ 38s 391ms/step - acc: 0.4481 - loss: 12.5039 - accuracy: 0.4485 - val_accuracy: 0.4083 - val_loss: 14.9793
 Epoch 15/30
-
-2021-09-17 05:28:24.371225: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:175] Filling up shuffle buffer (this may take a while): 63 of 256
-2021-09-17 05:28:29.829654: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:228] Shuffle buffer filled.
-
-96/96 [==============================] - 42s 277ms/step - loss: 11.5644 - acc: 0.4776 - val_loss: 15.0377 - val_acc: 0.4167
+ 96/96 ━━━━━━━━━━━━━━━━━━━━ 38s 391ms/step - acc: 0.4533 - loss: 12.2946 - accuracy: 0.4542 - val_accuracy: 0.4109 - val_loss: 15.0170
 Epoch 16/30
+ 96/96 ━━━━━━━━━━━━━━━━━━━━ 37s 387ms/step - acc: 0.4583 - loss: 12.0837 - accuracy: 0.4588 - val_accuracy: 0.4099 - val_loss: 15.1056
+Epoch 17/30
+ 96/96 ━━━━━━━━━━━━━━━━━━━━ 37s 389ms/step - acc: 0.4617 - loss: 11.8657 - accuracy: 0.4624 - val_accuracy: 0.4088 - val_loss: 15.1226
 
-2021-09-17 05:29:06.564650: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:175] Filling up shuffle buffer (this may take a while): 62 of 256
-2021-09-17 05:29:11.945996: I tensorflow/core/kernels/data/shuffle_dataset_op.cc:228] Shuffle buffer filled.
-
-96/96 [==============================] - 42s 277ms/step - loss: 11.3046 - acc: 0.4852 - val_loss: 15.0575 - val_acc: 0.4135
-
-<keras.callbacks.History at 0x7fb3d4b1b1d0>
+<keras.src.callbacks.history.History at 0x7fcd08887fa0>
 
 ```
 </div>
@@ -780,7 +727,7 @@ generate_caption()
 
 <div class="k-default-codeblock">
 ```
-Predicted Caption:  a group of dogs race in the snow
+Predicted Caption:  a black and white dog is swimming in a pool
 
 ```
 </div>
@@ -791,7 +738,7 @@ Predicted Caption:  a group of dogs race in the snow
 
 <div class="k-default-codeblock">
 ```
-Predicted Caption:  a man in a blue canoe on a lake
+Predicted Caption:  a black dog is running through the water
 
 ```
 </div>
@@ -802,7 +749,7 @@ Predicted Caption:  a man in a blue canoe on a lake
 
 <div class="k-default-codeblock">
 ```
-Predicted Caption:  a black and white dog is running through a green grass
+Predicted Caption:  a man in a green shirt and green pants is riding a bicycle
 
 ```
 </div>

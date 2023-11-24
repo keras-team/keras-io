@@ -65,7 +65,6 @@ blockquote {
 }
 .k-nav {
   width: 19rem;
-  border-right: 1px solid #ccc;
   float: left;
   border-bottom: 1px solid #ccc;
   display: block;
@@ -75,11 +74,13 @@ blockquote {
   background: #fff;
   float: left;
   border-left: 1px solid #ccc;
+  border-right: 1px solid #ccc;
+  min-height: 1000px;
 }
 .k-content {
-  width: 48rem;
+  width: 47rem;
   float: left;
-  padding: 1.5rem;
+  padding: 1.3rem;
   padding-top: 1rem;
 }
 .k-search-form {
@@ -247,7 +248,13 @@ blockquote {
   border: 1px solid #ced4da;
   border-radius: .1rem;
   transition: border-color .15s ease-in-out,box-shadow .15s ease-in-out;
+  outline: none;
 }
+.k-search-input:focus {
+  border-color: #d00000;
+  box-shadow: 0 0 5px rgb(173 25 25 / 50%);
+}
+
 .gsc-search-button-v2 {
   margin-top: 0;
 }
@@ -281,6 +288,7 @@ blockquote {
   padding-right: 0.8rem;
   background-color: white;
   color: black;
+
   text-decoration: none;
 }
 .nav-pills .nav-sublink2 {
@@ -292,7 +300,7 @@ blockquote {
 }
 
 .nav-link:hover {
-  background-color: #ddd;
+  background-color: #eee;
   color: #d00000;
 }
 .nav-pills .nav-link.active {
@@ -334,9 +342,6 @@ blockquote {
   font-size: 0.7rem;
   padding-left: 1rem;
 }
-
-
-
 
 
 .btn {
@@ -480,5 +485,25 @@ td {
   text-align: center;
   border: solid #ddd 1px;
   border-radius: 1rem;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
+  padding-top: 0.05rem;
+}
+.example_version_banner {
+  padding: 0.5em;
+  margin-bottom: 1em;
+  text-align: center;
+  font-weight: bolder;
+  }
+.keras_3 {
+  background: #188485;
+  color: white;
+}
+.keras_2 {
+  background: #ffedb7;
+  color: black;
+}
+.k-location-slug-pointer {
+  margin-right: 0.3em;
+  color: #4f4f4f;
+  font-size: 0.9em;
 }

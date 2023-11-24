@@ -2,7 +2,7 @@
 Title: Keras debugging tips
 Author: [fchollet](https://twitter.com/fchollet)
 Date created: 2020/05/16
-Last modified: 2020/05/16
+Last modified: 2023/11/16
 Description: Four simple tips to help you debug your Keras code.
 Accelerator: GPU
 """
@@ -45,8 +45,17 @@ Here's a simple example. Let's write a custom layer a bug in it:
 
 """
 
+import os
+
+# The last example uses tf.GradientTape and thus requires TensorFlow.
+# However, all tips here are applicable with all backends.
+os.environ["KERAS_BACKEND"] = "tensorflow"
+
+import keras
+from keras import layers
+from keras import ops
+import numpy as np
 import tensorflow as tf
-from tensorflow.keras import layers
 
 
 class MyAntirectifier(layers.Layer):
@@ -61,13 +70,13 @@ class MyAntirectifier(layers.Layer):
 
     def call(self, inputs):
         # Take the positive part of the input
-        pos = tf.nn.relu(inputs)
+        pos = ops.relu(inputs)
         # Take the negative part of the input
-        neg = tf.nn.relu(-inputs)
+        neg = ops.relu(-inputs)
         # Concatenate the positive and negative parts
-        concatenated = tf.concat([pos, neg], axis=0)
+        concatenated = ops.concatenate([pos, neg], axis=0)
         # Project the concatenation down to the same dimensionality as the input
-        return tf.matmul(concatenated, self.kernel)
+        return ops.matmul(concatenated, self.kernel)
 
 
 """
@@ -110,14 +119,14 @@ class MyAntirectifier(layers.Layer):
         )
 
     def call(self, inputs):
-        pos = tf.nn.relu(inputs)
-        neg = tf.nn.relu(-inputs)
+        pos = ops.relu(inputs)
+        neg = ops.relu(-inputs)
         print("pos.shape:", pos.shape)
         print("neg.shape:", neg.shape)
-        concatenated = tf.concat([pos, neg], axis=0)
+        concatenated = ops.concatenate([pos, neg], axis=0)
         print("concatenated.shape:", concatenated.shape)
         print("kernel.shape:", self.kernel.shape)
-        return tf.matmul(concatenated, self.kernel)
+        return ops.matmul(concatenated, self.kernel)
 
 
 """
@@ -146,21 +155,21 @@ class MyAntirectifier(layers.Layer):
         )
 
     def call(self, inputs):
-        pos = tf.nn.relu(inputs)
-        neg = tf.nn.relu(-inputs)
+        pos = ops.relu(inputs)
+        neg = ops.relu(-inputs)
         print("pos.shape:", pos.shape)
         print("neg.shape:", neg.shape)
-        concatenated = tf.concat([pos, neg], axis=1)
+        concatenated = ops.concatenate([pos, neg], axis=1)
         print("concatenated.shape:", concatenated.shape)
         print("kernel.shape:", self.kernel.shape)
-        return tf.matmul(concatenated, self.kernel)
+        return ops.matmul(concatenated, self.kernel)
 
 
 """
 Now our code works fine:
 """
 
-x = tf.random.normal(shape=(2, 5))
+x = keras.random.normal(shape=(2, 5))
 y = MyAntirectifier()(x)
 
 """
@@ -171,12 +180,9 @@ to visualize how your layers are connected and how they transform the data that 
 through them.
 
 Here's an example. Consider this model with three inputs and two outputs (lifted from the
-[Functional API
-guide](https://keras.io/guides/functional_api/#manipulate-complex-graph-topologies)):
+[Functional API guide](https://keras.io/guides/functional_api/#manipulate-complex-graph-topologies)):
 
 """
-
-from tensorflow import keras
 
 num_tags = 12  # Number of unique issue tags
 num_words = 10000  # Size of vocabulary obtained when preprocessing text data
@@ -244,9 +250,9 @@ pass `run_eagerly=True` to `compile()`. Your call to `fit()` will now get execut
 by line, without any optimization. It's slower, but it makes it possible to print the
 value of intermediate tensors, or to use a Python debugger. Great for debugging.
 
-Here's a basic example: let's write a really simple model with a custom `train_step`. Our
-model just implements gradient descent, but instead of first-order gradients, it uses a
-combination of first-order and second-order gradients. Pretty trivial so far.
+Here's a basic example: let's write a really simple model with a custom `train_step()` method.
+Our model just implements gradient descent, but instead of first-order gradients,
+it uses a combination of first-order and second-order gradients. Pretty simple so far.
 
 Can you spot what we're doing wrong?
 """
@@ -258,10 +264,10 @@ class MyModel(keras.Model):
         trainable_vars = self.trainable_variables
         with tf.GradientTape() as tape2:
             with tf.GradientTape() as tape1:
-                preds = self(inputs, training=True)  # Forward pass
+                y_pred = self(inputs, training=True)  # Forward pass
                 # Compute the loss value
                 # (the loss function is configured in `compile()`)
-                loss = self.compiled_loss(targets, preds)
+                loss = self.compute_loss(y=targets, y_pred=y_pred)
             # Compute first-order gradients
             dl_dw = tape1.gradient(loss, trainable_vars)
         # Compute second-order gradients
@@ -274,20 +280,23 @@ class MyModel(keras.Model):
         self.optimizer.apply_gradients(zip(grads, trainable_vars))
 
         # Update metrics (includes the metric that tracks the loss)
-        self.compiled_metrics.update_state(targets, preds)
+        for metric in self.metrics:
+            if metric.name == "loss":
+                metric.update_state(loss)
+            else:
+                metric.update_state(targets, y_pred)
+
         # Return a dict mapping metric names to current value
         return {m.name: m.result() for m in self.metrics}
 
 
 """
-Let's train a one-layer model on MNIST with this custom training loop.
+Let's train a one-layer model on MNIST with this custom loss function.
 
 We pick, somewhat at random, a batch size of 1024 and a learning rate of 0.1. The general
 idea being to use larger batches and a larger learning rate than usual, since our
 "improved" gradients should lead us to quicker convergence.
 """
-
-import numpy as np
 
 
 # Construct an instance of MyModel
@@ -307,7 +316,6 @@ model = get_model()
 model.compile(
     optimizer=keras.optimizers.SGD(learning_rate=1e-2),
     loss="sparse_categorical_crossentropy",
-    metrics=["accuracy"],
 )
 model.fit(x_train, y_train, epochs=3, batch_size=1024, validation_split=0.1)
 
@@ -331,10 +339,10 @@ class MyModel(keras.Model):
         trainable_vars = self.trainable_variables
         with tf.GradientTape() as tape2:
             with tf.GradientTape() as tape1:
-                preds = self(inputs, training=True)  # Forward pass
+                y_pred = self(inputs, training=True)  # Forward pass
                 # Compute the loss value
                 # (the loss function is configured in `compile()`)
-                loss = self.compiled_loss(targets, preds)
+                loss = self.compute_loss(y=targets, y_pred=y_pred)
             # Compute first-order gradients
             dl_dw = tape1.gradient(loss, trainable_vars)
         # Compute second-order gradients
@@ -355,7 +363,12 @@ class MyModel(keras.Model):
         self.optimizer.apply_gradients(zip(grads, trainable_vars))
 
         # Update metrics (includes the metric that tracks the loss)
-        self.compiled_metrics.update_state(targets, preds)
+        for metric in self.metrics:
+            if metric.name == "loss":
+                metric.update_state(loss)
+            else:
+                metric.update_state(targets, y_pred)
+
         # Return a dict mapping metric names to current value
         return {m.name: m.result() for m in self.metrics}
 
@@ -364,7 +377,7 @@ model = get_model()
 model.compile(
     optimizer=keras.optimizers.SGD(learning_rate=1e-2),
     loss="sparse_categorical_crossentropy",
-    metrics=["accuracy"],
+    metrics=["sparse_categorical_accuracy"],
     run_eagerly=True,
 )
 model.step_counter = 0
@@ -389,10 +402,10 @@ class MyModel(keras.Model):
         trainable_vars = self.trainable_variables
         with tf.GradientTape() as tape2:
             with tf.GradientTape() as tape1:
-                preds = self(inputs, training=True)  # Forward pass
+                y_pred = self(inputs, training=True)  # Forward pass
                 # Compute the loss value
                 # (the loss function is configured in `compile()`)
-                loss = self.compiled_loss(targets, preds)
+                loss = self.compute_loss(y=targets, y_pred=y_pred)
             # Compute first-order gradients
             dl_dw = tape1.gradient(loss, trainable_vars)
         # Compute second-order gradients
@@ -408,7 +421,12 @@ class MyModel(keras.Model):
         self.optimizer.apply_gradients(zip(grads, trainable_vars))
 
         # Update metrics (includes the metric that tracks the loss)
-        self.compiled_metrics.update_state(targets, preds)
+        for metric in self.metrics:
+            if metric.name == "loss":
+                metric.update_state(loss)
+            else:
+                metric.update_state(targets, y_pred)
+
         # Return a dict mapping metric names to current value
         return {m.name: m.result() for m in self.metrics}
 
@@ -417,7 +435,7 @@ model = get_model()
 model.compile(
     optimizer=keras.optimizers.SGD(learning_rate=1e-2),
     loss="sparse_categorical_crossentropy",
-    metrics=["accuracy"],
+    metrics=["sparse_categorical_accuracy"],
 )
 model.fit(x_train, y_train, epochs=5, batch_size=1024, validation_split=0.1)
 
@@ -451,10 +469,10 @@ class MyModel(keras.Model):
         trainable_vars = self.trainable_variables
         with tf.GradientTape() as tape2:
             with tf.GradientTape() as tape1:
-                preds = self(inputs, training=True)  # Forward pass
+                y_pred = self(inputs, training=True)  # Forward pass
                 # Compute the loss value
                 # (the loss function is configured in `compile()`)
-                loss = self.compiled_loss(targets, preds)
+                loss = self.compute_loss(y=targets, y_pred=y_pred)
             # Compute first-order gradients
             dl_dw = tape1.gradient(loss, trainable_vars)
         # Compute second-order gradients
@@ -470,7 +488,12 @@ class MyModel(keras.Model):
         self.optimizer.apply_gradients(zip(grads, trainable_vars))
 
         # Update metrics (includes the metric that tracks the loss)
-        self.compiled_metrics.update_state(targets, preds)
+        for metric in self.metrics:
+            if metric.name == "loss":
+                metric.update_state(loss)
+            else:
+                metric.update_state(targets, y_pred)
+
         # Return a dict mapping metric names to current value
         return {m.name: m.result() for m in self.metrics}
 
@@ -482,33 +505,6 @@ lr = learning_rate = keras.optimizers.schedules.InverseTimeDecay(
 model.compile(
     optimizer=keras.optimizers.SGD(lr),
     loss="sparse_categorical_crossentropy",
-    metrics=["accuracy"],
+    metrics=["sparse_categorical_accuracy"],
 )
 model.fit(x_train, y_train, epochs=50, batch_size=2048, validation_split=0.1)
-
-"""
-## Tip 4: if your code is slow, run the TensorFlow profiler
-
-One last tip -- if your code seems slower than it should be, you're going to want to plot
-how much time is spent on each computation step. Look for any bottleneck that might be
-causing less than 100% device utilization.
-
-To learn more about TensorFlow profiling, see
-[this extensive guide](https://www.tensorflow.org/guide/profiler).
-
-You can quickly profile a Keras model via the TensorBoard callback:
-
-```python
-# Profile from batches 10 to 15
-tb_callback = tf.keras.callbacks.TensorBoard(log_dir=log_dir,
-                                             profile_batch=(10, 15))
-# Train the model and use the TensorBoard Keras callback to collect
-# performance profiling data
-model.fit(dataset,
-          epochs=1,
-          callbacks=[tb_callback])
-```
-
-Then navigate to the TensorBoard app and check the "profile" tab.
-
-"""

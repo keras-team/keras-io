@@ -19,25 +19,20 @@ two phases:
 [simCLR](https://arxiv.org/abs/2002.05709) technique.
 2. Clustering of the learned visual representation vectors to maximize the agreement
 between the cluster assignments of neighboring vectors.
-
-The example requires [TensorFlow Addons](https://www.tensorflow.org/addons),
-which you can install using the following command:
-
-```python
-pip install tensorflow-addons
-```
 """
 """
 ## Setup
 """
 
+import os
+
+os.environ["KERAS_BACKEND"] = "tensorflow"
+
 from collections import defaultdict
-import random
 import numpy as np
 import tensorflow as tf
-import tensorflow_addons as tfa
-from tensorflow import keras
-from tensorflow.keras import layers
+import keras
+from keras import layers
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 
@@ -199,21 +194,23 @@ class RepresentationLearner(keras.Model):
         return [self.loss_tracker]
 
     def compute_contrastive_loss(self, feature_vectors, batch_size):
-        num_augmentations = tf.shape(feature_vectors)[0] // batch_size
+        num_augmentations = keras.ops.shape(feature_vectors)[0] // batch_size
         if self.l2_normalize:
-            feature_vectors = tf.math.l2_normalize(feature_vectors, -1)
+            feature_vectors = keras.utils.normalize(feature_vectors)
         # The logits shape is [num_augmentations * batch_size, num_augmentations * batch_size].
         logits = (
             tf.linalg.matmul(feature_vectors, feature_vectors, transpose_b=True)
             / self.temperature
         )
         # Apply log-max trick for numerical stability.
-        logits_max = tf.math.reduce_max(logits, axis=1)
+        logits_max = keras.ops.max(logits, axis=1)
         logits = logits - logits_max
         # The shape of targets is [num_augmentations * batch_size, num_augmentations * batch_size].
         # targets is a matrix consits of num_augmentations submatrices of shape [batch_size * batch_size].
         # Each [batch_size * batch_size] submatrix is an identity matrix (diagonal entries are ones).
-        targets = tf.tile(tf.eye(batch_size), [num_augmentations, num_augmentations])
+        targets = keras.ops.tile(
+            tf.eye(batch_size), [num_augmentations, num_augmentations]
+        )
         # Compute cross entropy loss
         return keras.losses.categorical_crossentropy(
             y_true=targets, y_pred=logits, from_logits=True
@@ -233,7 +230,7 @@ class RepresentationLearner(keras.Model):
         return self.projector(features)
 
     def train_step(self, inputs):
-        batch_size = tf.shape(inputs)[0]
+        batch_size = keras.ops.shape(inputs)[0]
         # Run the forward pass and compute the contrastive loss
         with tf.GradientTape() as tape:
             feature_vectors = self(inputs, training=True)
@@ -249,7 +246,7 @@ class RepresentationLearner(keras.Model):
         return {m.name: m.result() for m in self.metrics}
 
     def test_step(self, inputs):
-        batch_size = tf.shape(inputs)[0]
+        batch_size = keras.ops.shape(inputs)[0]
         feature_vectors = self(inputs, training=False)
         loss = self.compute_contrastive_loss(feature_vectors, batch_size)
         self.loss_tracker.update_state(loss)
@@ -271,7 +268,8 @@ lr_scheduler = keras.optimizers.schedules.CosineDecay(
 )
 # Compile the model.
 representation_learner.compile(
-    optimizer=tfa.optimizers.AdamW(learning_rate=lr_scheduler, weight_decay=0.0001),
+    optimizer=keras.optimizers.AdamW(learning_rate=lr_scheduler, weight_decay=0.0001),
+    jit_compile=False,
 )
 # Fit the model.
 history = representation_learner.fit(
@@ -302,7 +300,7 @@ batch_size = 500
 # Get the feature vector representations of the images.
 feature_vectors = encoder.predict(x_data, batch_size=batch_size, verbose=1)
 # Normalize the feature vectores.
-feature_vectors = tf.math.l2_normalize(feature_vectors, -1)
+feature_vectors = keras.utils.normalize(feature_vectors)
 
 """
 ### Find the *k* nearest neighbours for each embedding
@@ -317,7 +315,7 @@ for batch_idx in tqdm(range(num_batches)):
     # Compute the dot similarity.
     similarities = tf.linalg.matmul(current_batch, feature_vectors, transpose_b=True)
     # Get the indices of most similar vectors.
-    _, indices = tf.math.top_k(similarities, k=k_neighbours + 1, sorted=True)
+    _, indices = keras.ops.top_k(similarities, k=k_neighbours + 1, sorted=True)
     # Add the indices to the neighbours.
     neighbours.append(indices[..., 1:])
 
@@ -364,12 +362,12 @@ class ClustersConsistencyLoss(keras.losses.Loss):
 
     def __call__(self, target, similarity, sample_weight=None):
         # Set targets to be ones.
-        target = tf.ones_like(similarity)
+        target = keras.ops.ones_like(similarity)
         # Compute cross entropy loss.
         loss = keras.losses.binary_crossentropy(
             y_true=target, y_pred=similarity, from_logits=True
         )
-        return tf.math.reduce_mean(loss)
+        return keras.ops.mean(loss)
 
 
 """
@@ -387,17 +385,17 @@ class ClustersEntropyLoss(keras.losses.Loss):
 
     def __call__(self, target, cluster_probabilities, sample_weight=None):
         # Ideal entropy = log(num_clusters).
-        num_clusters = tf.cast(tf.shape(cluster_probabilities)[-1], tf.dtypes.float32)
-        target = tf.math.log(num_clusters)
-        # Compute the overall clusters distribution.
-        cluster_probabilities = tf.math.reduce_mean(cluster_probabilities, axis=0)
-        # Replacing zero probabilities - if any - with a very small value.
-        cluster_probabilities = tf.clip_by_value(
-            cluster_probabilities, clip_value_min=1e-8, clip_value_max=1.0
+        num_clusters = keras.ops.cast(
+            keras.ops.shape(cluster_probabilities)[-1], "float32"
         )
+        target = keras.ops.log(num_clusters)
+        # Compute the overall clusters distribution.
+        cluster_probabilities = keras.ops.mean(cluster_probabilities, axis=0)
+        # Replacing zero probabilities - if any - with a very small value.
+        cluster_probabilities = keras.ops.clip(cluster_probabilities, 1e-8, 1.0)
         # Compute the entropy over the clusters.
-        entropy = -tf.math.reduce_sum(
-            cluster_probabilities * tf.math.log(cluster_probabilities)
+        entropy = -keras.ops.sum(
+            cluster_probabilities * keras.ops.log(cluster_probabilities)
         )
         # Compute the difference between the target and the actual.
         loss = target - entropy
@@ -445,24 +443,26 @@ def create_clustering_learner(clustering_model):
         shape=tuple([k_neighbours]) + input_shape, name="neighbours"
     )
     # Changes neighbours shape to [batch_size * k_neighbours, width, height, channels]
-    neighbours_reshaped = tf.reshape(neighbours, shape=tuple([-1]) + input_shape)
+    neighbours_reshaped = keras.ops.reshape(neighbours, tuple([-1]) + input_shape)
     # anchor_clustering shape: [batch_size, num_clusters]
     anchor_clustering = clustering_model(anchor)
     # neighbours_clustering shape: [batch_size * k_neighbours, num_clusters]
     neighbours_clustering = clustering_model(neighbours_reshaped)
     # Convert neighbours_clustering shape to [batch_size, k_neighbours, num_clusters]
-    neighbours_clustering = tf.reshape(
+    neighbours_clustering = keras.ops.reshape(
         neighbours_clustering,
-        shape=(-1, k_neighbours, tf.shape(neighbours_clustering)[-1]),
+        (-1, k_neighbours, keras.ops.shape(neighbours_clustering)[-1]),
     )
     # similarity shape: [batch_size, 1, k_neighbours]
-    similarity = tf.linalg.einsum(
-        "bij,bkj->bik", tf.expand_dims(anchor_clustering, axis=1), neighbours_clustering
+    similarity = keras.ops.einsum(
+        "bij,bkj->bik",
+        keras.ops.expand_dims(anchor_clustering, axis=1),
+        neighbours_clustering,
     )
     # similarity shape:  [batch_size, k_neighbours]
-    similarity = layers.Lambda(lambda x: tf.squeeze(x, axis=1), name="similarity")(
-        similarity
-    )
+    similarity = layers.Lambda(
+        lambda x: keras.ops.squeeze(x, axis=1), name="similarity"
+    )(similarity)
     # Create the model.
     model = keras.Model(
         inputs=[anchor, neighbours],
@@ -487,11 +487,12 @@ clustering_learner = create_clustering_learner(clustering_model)
 losses = [ClustersConsistencyLoss(), ClustersEntropyLoss(entropy_loss_weight=5)]
 # Create the model inputs and labels.
 inputs = {"anchors": x_data, "neighbours": tf.gather(x_data, neighbours)}
-labels = tf.ones(shape=(x_data.shape[0]))
+labels = np.ones(shape=(x_data.shape[0]))
 # Compile the model.
 clustering_learner.compile(
-    optimizer=tfa.optimizers.AdamW(learning_rate=0.0005, weight_decay=0.0001),
+    optimizer=keras.optimizers.AdamW(learning_rate=0.0005, weight_decay=0.0001),
     loss=losses,
+    jit_compile=False,
 )
 
 # Begin training the model.
@@ -517,11 +518,11 @@ plt.show()
 # Get the cluster probability distribution of the input images.
 clustering_probs = clustering_model.predict(x_data, batch_size=batch_size, verbose=1)
 # Get the cluster of the highest probability.
-cluster_assignments = tf.math.argmax(clustering_probs, axis=-1).numpy()
+cluster_assignments = keras.ops.argmax(clustering_probs, axis=-1).numpy()
 # Store the clustering confidence.
 # Images with the highest clustering confidence are considered the 'prototypes'
 # of the clusters.
-cluster_confidence = tf.math.reduce_max(clustering_probs, axis=-1).numpy()
+cluster_confidence = keras.ops.max(clustering_probs, axis=-1).numpy()
 
 """
 Let's compute the cluster sizes
@@ -531,12 +532,13 @@ clusters = defaultdict(list)
 for idx, c in enumerate(cluster_assignments):
     clusters[c].append((idx, cluster_confidence[idx]))
 
+non_empty_clusters = defaultdict(list)
+for c in clusters.keys():
+    if clusters[c]:
+        non_empty_clusters[c] = clusters[c]
+
 for c in range(num_clusters):
     print("cluster", c, ":", len(clusters[c]))
-
-"""
-Notice that the clusters have roughly balanced sizes.
-"""
 
 """
 ### Visualize cluster images
@@ -547,12 +549,14 @@ Display the *prototypes*—instances with the highest clustering confidence—of
 num_images = 8
 plt.figure(figsize=(15, 15))
 position = 1
-for c in range(num_clusters):
-    cluster_instances = sorted(clusters[c], key=lambda kv: kv[1], reverse=True)
+for c in non_empty_clusters.keys():
+    cluster_instances = sorted(
+        non_empty_clusters[c], key=lambda kv: kv[1], reverse=True
+    )
 
     for j in range(num_images):
         image_idx = cluster_instances[j][0]
-        plt.subplot(num_clusters, num_images, position)
+        plt.subplot(len(non_empty_clusters), num_images, position)
         plt.imshow(x_data[image_idx].astype("uint8"))
         plt.title(classes[y_data[image_idx][0]])
         plt.axis("off")
@@ -593,11 +597,4 @@ fine-tuning step through self-labeling, as described in the [original SCAN paper
 Note that unsupervised image clustering techniques are not expected to outperform the accuracy
 of supervised image classification techniques, rather showing that they can learn the semantics
 of the images and group them into clusters that are similar to their original classes.
-"""
-
-"""
-**Example available on HuggingFace**
-| Trained Model | Demo |
-| :--: | :--: |
-| [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Model-Semantic%20Image%20Clustering-black.svg)](https://huggingface.co/keras-io/semantic-image-clustering) | [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Spaces-Semantic%20Image%20Clustering-black.svg)](https://huggingface.co/spaces/keras-io/semantic-image-clustering) |
 """

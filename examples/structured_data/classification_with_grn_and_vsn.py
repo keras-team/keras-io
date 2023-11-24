@@ -45,12 +45,16 @@ and 34 categorical features.
 ## Setup
 """
 
-import math
+import os
+
+# Only the TensorFlow backend supports string inputs.
+os.environ["KERAS_BACKEND"] = "tensorflow"
+
 import numpy as np
 import pandas as pd
 import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras import layers
+import keras
+from keras import layers
 
 """
 ## Prepare the data
@@ -104,11 +108,17 @@ CSV_HEADER = [
     "income_level",
 ]
 
-data_url = "https://archive.ics.uci.edu/ml/machine-learning-databases/census-income-mld/census-income.data.gz"
-data = pd.read_csv(data_url, header=None, names=CSV_HEADER)
+data_url = "https://archive.ics.uci.edu/static/public/20/census+income.zip"
+keras.utils.get_file(origin=data_url, extract=True)
+train_data_path = os.path.join(
+    os.path.expanduser("~"), ".keras", "datasets", "adult.data"
+)
+test_data_path = os.path.join(
+    os.path.expanduser("~"), ".keras", "datasets", "adult.test"
+)
 
-test_data_url = "https://archive.ics.uci.edu/ml/machine-learning-databases/census-income-mld/census-income.test.gz"
-test_data = pd.read_csv(test_data_url, header=None, names=CSV_HEADER)
+data = pd.read_csv(train_data_path, header=None, names=CSV_HEADER)
+test_data = pd.read_csv(test_data_path, header=None, names=CSV_HEADER)
 
 print(f"Data shape: {data.shape}")
 print(f"Test data shape: {test_data.shape}")
@@ -198,14 +208,12 @@ labels into a [`tf.data.Dataset`](https://www.tensorflow.org/guide/datasets) for
 training and evaluation.
 """
 
-from tensorflow.keras.layers import StringLookup
-
 
 def process(features, target):
     for feature_name in features:
         if feature_name in CATEGORICAL_FEATURES_WITH_VOCABULARY:
             # Cast categorical feature values to string.
-            features[feature_name] = tf.cast(features[feature_name], tf.dtypes.string)
+            features[feature_name] = keras.ops.cast(features[feature_name], "string")
     # Get the instance weight.
     weight = features.pop(WEIGHT_COLUMN_NAME)
     return features, target, weight
@@ -236,11 +244,11 @@ def create_model_inputs():
     for feature_name in FEATURE_NAMES:
         if feature_name in NUMERIC_FEATURE_NAMES:
             inputs[feature_name] = layers.Input(
-                name=feature_name, shape=(), dtype=tf.float32
+                name=feature_name, shape=(), dtype="float32"
             )
         else:
             inputs[feature_name] = layers.Input(
-                name=feature_name, shape=(), dtype=tf.string
+                name=feature_name, shape=(), dtype="string"
             )
     return inputs
 
@@ -265,7 +273,7 @@ def encode_inputs(inputs, encoding_size):
             # Create a lookup to convert a string values to an integer indices.
             # Since we are not using a mask token nor expecting any out of vocabulary
             # (oov) token, we set mask_token to None and  num_oov_indices to 0.
-            index = StringLookup(
+            index = layers.StringLookup(
                 vocabulary=vocabulary, mask_token=None, num_oov_indices=0
             )
             # Convert the string input values into integer indices.
@@ -278,7 +286,7 @@ def encode_inputs(inputs, encoding_size):
             encoded_feature = embedding_ecoder(value_index)
         else:
             # Project the numeric feature to encoding_size using linear transformation.
-            encoded_feature = tf.expand_dims(inputs[feature_name], -1)
+            encoded_feature = keras.ops.expand_dims(inputs[feature_name], -1)
             encoded_feature = layers.Dense(units=encoding_size)(encoded_feature)
         encoded_features.append(encoded_feature)
     return encoded_features
@@ -367,14 +375,14 @@ class VariableSelection(layers.Layer):
     def call(self, inputs):
         v = layers.concatenate(inputs)
         v = self.grn_concat(v)
-        v = tf.expand_dims(self.softmax(v), axis=-1)
+        v = keras.ops.expand_dims(self.softmax(v), axis=-1)
 
         x = []
         for idx, input in enumerate(inputs):
             x.append(self.grns[idx](input))
-        x = tf.stack(x, axis=1)
+        x = keras.ops.stack(x, axis=1)
 
-        outputs = tf.squeeze(tf.matmul(v, x, transpose_a=True), axis=1)
+        outputs = keras.ops.squeeze(tf.matmul(v, x, transpose_a=True), axis=1)
         return outputs
 
 
@@ -416,7 +424,7 @@ model.compile(
 
 
 # Create an early stopping callback.
-early_stopping = tf.keras.callbacks.EarlyStopping(
+early_stopping = keras.callbacks.EarlyStopping(
     monitor="val_loss", patience=5, restore_best_weights=True
 )
 

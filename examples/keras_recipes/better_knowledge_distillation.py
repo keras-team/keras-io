@@ -36,21 +36,17 @@ implemented in Keras, you can refer to
 You can also follow
 [this example](https://keras.io/examples/vision/consistency_training/)
 that shows an extension of knowledge distillation applied to consistency training.
-
-To follow this example, you will need TensorFlow 2.5 or higher as well as TensorFlow Addons,
-which can be installed using the command below:
-"""
-
-"""shell
-!pip install -q tensorflow-addons
 """
 
 """
 ## Imports
 """
 
-from tensorflow import keras
-import tensorflow_addons as tfa
+import os
+
+os.environ["KERAS_BACKEND"] = "tensorflow"
+
+import keras
 import tensorflow as tf
 
 import matplotlib.pyplot as plt
@@ -137,8 +133,6 @@ This should generate a folder named `T-r101x3-128` which is essentially a teache
 [`SavedModel`](https://www.tensorflow.org/guide/saved_model).
 """
 
-import os
-
 os.environ["KAGGLE_USERNAME"] = ""  # TODO: enter your Kaggle user name here
 os.environ["KAGGLE_KEY"] = ""  # TODO: enter your Kaggle API key here
 
@@ -152,11 +146,10 @@ os.environ["KAGGLE_KEY"] = ""  # TODO: enter your Kaggle API key here
 
 # Since the teacher model is not going to be trained further we make
 # it non-trainable.
-teacher_model = keras.models.load_model(
+teacher_model = keras.layers.TFSMLayer(
     "/home/jupyter/keras-io/examples/keras_recipes/T-r101x3-128"
 )
 teacher_model.trainable = False
-teacher_model.summary()
 
 """
 ## The "function matching" recipe
@@ -452,7 +445,7 @@ interested in finding out more.
 ## Training
 """
 
-optimizer = tfa.optimizers.AdamW(
+optimizer = keras.optimizers.AdamW(
     weight_decay=WEIGHT_DECAY, learning_rate=scheduled_lrs, clipnorm=CLIP_THRESHOLD
 )
 
@@ -492,12 +485,10 @@ will come into play. Let's investigate what the model trained for 1000 epochs ca
 !tar xf S-r50x1-128-1000.tar.gz
 """
 
-pretrained_student = keras.models.load_model("S-r50x1-128-1000")
-pretrained_student.summary()
+pretrained_student = keras.layers.TFSMLayer("S-r50x1-128-1000")
 
 """
-This model exactly follows what the authors have used in their student models. This is
-why the model summary is a bit different.
+This model exactly follows what the authors have used in their student models.
 """
 
 _, top1_accuracy = pretrained_student.evaluate(test_ds)

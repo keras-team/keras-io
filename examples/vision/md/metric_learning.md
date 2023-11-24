@@ -27,8 +27,14 @@ For a more detailed overview of metric learning see:
 ---
 ## Setup
 
+Set Keras backend to tensorflow.
+
 
 ```python
+import os
+
+os.environ["KERAS_BACKEND"] = "tensorflow"
+
 import random
 import matplotlib.pyplot as plt
 import numpy as np
@@ -36,8 +42,8 @@ import tensorflow as tf
 from collections import defaultdict
 from PIL import Image
 from sklearn.metrics import ConfusionMatrixDisplay
-from tensorflow import keras
-from tensorflow.keras import layers
+import keras
+from keras import layers
 ```
 
 ---
@@ -48,7 +54,8 @@ For this example we will be using the
 
 
 ```python
-from tensorflow.keras.datasets import cifar10
+from keras.datasets import cifar10
+
 
 (x_train, y_train), (x_test, y_test) = cifar10.load_data()
 
@@ -137,11 +144,12 @@ num_classes = 10
 
 
 class AnchorPositivePairs(keras.utils.Sequence):
-    def __init__(self, num_batchs):
-        self.num_batchs = num_batchs
+    def __init__(self, num_batches):
+        super().__init__()
+        self.num_batches = num_batches
 
     def __len__(self):
-        return self.num_batchs
+        return self.num_batches
 
     def __getitem__(self, _idx):
         x = np.empty((2, num_classes, height_width, height_width, 3), dtype=np.float32)
@@ -162,7 +170,7 @@ from the 10 classes, the bottom row shows the corresponding 10 positives.
 
 
 ```python
-examples = next(iter(AnchorPositivePairs(num_batchs=1)))
+examples = next(iter(AnchorPositivePairs(num_batches=1)))
 
 show_collage(examples)
 ```
@@ -199,7 +207,7 @@ class EmbeddingModel(keras.Model):
 
             # Calculate cosine similarity between anchors and positives. As they have
             # been normalised this is just the pair wise dot products.
-            similarities = tf.einsum(
+            similarities = keras.ops.einsum(
                 "ae,pe->ap", anchor_embeddings, positive_embeddings
             )
 
@@ -213,15 +221,21 @@ class EmbeddingModel(keras.Model):
             # want the main diagonal values, which correspond to the anchor/positive
             # pairs, to be high. This loss will move embeddings for the
             # anchor/positive pairs together and move all other pairs apart.
-            sparse_labels = tf.range(num_classes)
-            loss = self.compiled_loss(sparse_labels, similarities)
+            sparse_labels = keras.ops.arange(num_classes)
+            loss = self.compute_loss(y=sparse_labels, y_pred=similarities)
 
         # Calculate gradients and apply via optimizer.
         gradients = tape.gradient(loss, self.trainable_variables)
         self.optimizer.apply_gradients(zip(gradients, self.trainable_variables))
 
         # Update and return metrics (specifically the one for the loss value).
-        self.compiled_metrics.update_state(sparse_labels, similarities)
+        for metric in self.metrics:
+            # Calling `self.compile` will by default add a `keras.metrics.Mean` loss
+            if metric.name == "loss":
+                metric.update_state(loss)
+            else:
+                metric.update_state(sparse_labels, similarities)
+
         return {m.name: m.result() for m in self.metrics}
 
 ```
@@ -240,18 +254,11 @@ x = layers.Conv2D(filters=64, kernel_size=3, strides=2, activation="relu")(x)
 x = layers.Conv2D(filters=128, kernel_size=3, strides=2, activation="relu")(x)
 x = layers.GlobalAveragePooling2D()(x)
 embeddings = layers.Dense(units=8, activation=None)(x)
-embeddings = tf.nn.l2_normalize(embeddings, axis=-1)
+embeddings = layers.UnitNormalization()(embeddings)
 
 model = EmbeddingModel(inputs, embeddings)
 ```
 
-<div class="k-default-codeblock">
-```
-2022-06-13 21:07:26.824678: I tensorflow/core/platform/cpu_feature_guard.cc:193] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  AVX2 FMA
-To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
-
-```
-</div>
 Finally we run the training. On a Google Colab GPU instance this takes about a minute.
 
 
@@ -261,7 +268,7 @@ model.compile(
     loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
 )
 
-history = model.fit(AnchorPositivePairs(num_batchs=1000), epochs=20)
+history = model.fit(AnchorPositivePairs(num_batches=1000), epochs=20)
 
 plt.plot(history.history["loss"])
 plt.show()
@@ -270,50 +277,55 @@ plt.show()
 <div class="k-default-codeblock">
 ```
 Epoch 1/20
-1000/1000 [==============================] - 7s 6ms/step - loss: 2.2740
+   77/1000 ━[37m━━━━━━━━━━━━━━━━━━━  1s 2ms/step - loss: 2.2962
+
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1700589927.295343 3724442 device_compiler.h:187] Compiled cluster using XLA!  This line is logged at most once for the lifetime of the process.
+
+ 1000/1000 ━━━━━━━━━━━━━━━━━━━━ 6s 2ms/step - loss: 2.2504
 Epoch 2/20
-1000/1000 [==============================] - 6s 6ms/step - loss: 2.1762
+ 1000/1000 ━━━━━━━━━━━━━━━━━━━━ 2s 2ms/step - loss: 2.1068
 Epoch 3/20
-1000/1000 [==============================] - 6s 6ms/step - loss: 2.0811
+ 1000/1000 ━━━━━━━━━━━━━━━━━━━━ 2s 2ms/step - loss: 2.0646
 Epoch 4/20
-1000/1000 [==============================] - 6s 6ms/step - loss: 2.0416
+ 1000/1000 ━━━━━━━━━━━━━━━━━━━━ 2s 2ms/step - loss: 2.0210
 Epoch 5/20
-1000/1000 [==============================] - 6s 6ms/step - loss: 1.9767
+ 1000/1000 ━━━━━━━━━━━━━━━━━━━━ 2s 2ms/step - loss: 1.9857
 Epoch 6/20
-1000/1000 [==============================] - 6s 6ms/step - loss: 1.9448
+ 1000/1000 ━━━━━━━━━━━━━━━━━━━━ 2s 2ms/step - loss: 1.9543
 Epoch 7/20
-1000/1000 [==============================] - 6s 6ms/step - loss: 1.9335
+ 1000/1000 ━━━━━━━━━━━━━━━━━━━━ 2s 2ms/step - loss: 1.9175
 Epoch 8/20
-1000/1000 [==============================] - 6s 6ms/step - loss: 1.9019
+ 1000/1000 ━━━━━━━━━━━━━━━━━━━━ 2s 2ms/step - loss: 1.8740
 Epoch 9/20
-1000/1000 [==============================] - 6s 6ms/step - loss: 1.8717
+ 1000/1000 ━━━━━━━━━━━━━━━━━━━━ 2s 2ms/step - loss: 1.8474
 Epoch 10/20
-1000/1000 [==============================] - 6s 6ms/step - loss: 1.8428
+ 1000/1000 ━━━━━━━━━━━━━━━━━━━━ 2s 2ms/step - loss: 1.8380
 Epoch 11/20
-1000/1000 [==============================] - 6s 6ms/step - loss: 1.8102
+ 1000/1000 ━━━━━━━━━━━━━━━━━━━━ 2s 2ms/step - loss: 1.8146
 Epoch 12/20
-1000/1000 [==============================] - 6s 6ms/step - loss: 1.7954
+ 1000/1000 ━━━━━━━━━━━━━━━━━━━━ 2s 2ms/step - loss: 1.7658
 Epoch 13/20
-1000/1000 [==============================] - 6s 6ms/step - loss: 1.7830
+ 1000/1000 ━━━━━━━━━━━━━━━━━━━━ 2s 2ms/step - loss: 1.7512
 Epoch 14/20
-1000/1000 [==============================] - 6s 6ms/step - loss: 1.7546
+ 1000/1000 ━━━━━━━━━━━━━━━━━━━━ 2s 2ms/step - loss: 1.7671
 Epoch 15/20
-1000/1000 [==============================] - 6s 6ms/step - loss: 1.7338
+ 1000/1000 ━━━━━━━━━━━━━━━━━━━━ 2s 2ms/step - loss: 1.7245
 Epoch 16/20
-1000/1000 [==============================] - 6s 6ms/step - loss: 1.7219
+ 1000/1000 ━━━━━━━━━━━━━━━━━━━━ 2s 2ms/step - loss: 1.7001
 Epoch 17/20
-1000/1000 [==============================] - 6s 6ms/step - loss: 1.6842
+ 1000/1000 ━━━━━━━━━━━━━━━━━━━━ 2s 2ms/step - loss: 1.7099
 Epoch 18/20
-1000/1000 [==============================] - 6s 6ms/step - loss: 1.6762
+ 1000/1000 ━━━━━━━━━━━━━━━━━━━━ 2s 2ms/step - loss: 1.6775
 Epoch 19/20
-1000/1000 [==============================] - 6s 6ms/step - loss: 1.6680
+ 1000/1000 ━━━━━━━━━━━━━━━━━━━━ 2s 2ms/step - loss: 1.6547
 Epoch 20/20
-1000/1000 [==============================] - 6s 6ms/step - loss: 1.6607
+ 1000/1000 ━━━━━━━━━━━━━━━━━━━━ 2s 2ms/step - loss: 1.6356
 
 ```
 </div>
     
-![png](/img/examples/vision/metric_learning/metric_learning_19_1.png)
+![png](/img/examples/vision/metric_learning/metric_learning_19_3.png)
     
 
 
@@ -337,7 +349,7 @@ near_neighbours = np.argsort(gram_matrix.T)[:, -(near_neighbours_per_example + 1
 
 <div class="k-default-codeblock">
 ```
-313/313 [==============================] - 1s 2ms/step
+ 313/313 ━━━━━━━━━━━━━━━━━━━━ 1s 3ms/step
 
 ```
 </div>
@@ -424,9 +436,3 @@ plt.show()
 ![png](/img/examples/vision/metric_learning/metric_learning_25_0.png)
     
 
-
-Example available on HuggingFace.
-
-| Trained Model | Demo |
-| :--: | :--: |
-| [![Generic badge](https://img.shields.io/badge/🤗%20Model-Cifar10%20Metric%20Learning-black.svg)](https://huggingface.co/keras-io/cifar10_metric_learning) | [![Generic badge](https://img.shields.io/badge/🤗%20Spaces-Metric%20Learning%20for%20Image%20Similarity%20Search-black.svg)](https://huggingface.co/spaces/keras-io/metric-learning-image-similarity-search) |

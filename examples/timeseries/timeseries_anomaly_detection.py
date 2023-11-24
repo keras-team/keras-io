@@ -20,15 +20,15 @@ autoencoder model to detect anomalies in timeseries data.
 
 import numpy as np
 import pandas as pd
-from tensorflow import keras
-from tensorflow.keras import layers
+import keras
+from keras import layers
 from matplotlib import pyplot as plt
 
 """
 ## Load the data
 
 We will use the [Numenta Anomaly Benchmark(NAB)](
-https://www.kaggle.com/boltzmannbrain/nab) dataset. It provides artifical
+https://www.kaggle.com/boltzmannbrain/nab) dataset. It provides artificial
 timeseries data containing labeled anomalous periods of behavior. Data are
 ordered, timestamped, single-valued metrics.
 
@@ -130,18 +130,34 @@ model = keras.Sequential(
     [
         layers.Input(shape=(x_train.shape[1], x_train.shape[2])),
         layers.Conv1D(
-            filters=32, kernel_size=7, padding="same", strides=2, activation="relu"
+            filters=32,
+            kernel_size=7,
+            padding="same",
+            strides=2,
+            activation="relu",
         ),
         layers.Dropout(rate=0.2),
         layers.Conv1D(
-            filters=16, kernel_size=7, padding="same", strides=2, activation="relu"
+            filters=16,
+            kernel_size=7,
+            padding="same",
+            strides=2,
+            activation="relu",
         ),
         layers.Conv1DTranspose(
-            filters=16, kernel_size=7, padding="same", strides=2, activation="relu"
+            filters=16,
+            kernel_size=7,
+            padding="same",
+            strides=2,
+            activation="relu",
         ),
         layers.Dropout(rate=0.2),
         layers.Conv1DTranspose(
-            filters=32, kernel_size=7, padding="same", strides=2, activation="relu"
+            filters=32,
+            kernel_size=7,
+            padding="same",
+            strides=2,
+            activation="relu",
         ),
         layers.Conv1DTranspose(filters=1, kernel_size=7, padding="same"),
     ]

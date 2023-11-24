@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="description" content="Keras Core documentation">
+  <meta name="author" content="Keras Team">
+
+  <title>Keras: Deep Learning for humans</title>
+
+  <!-- Bootstrap core CSS -->
+  <link href="/css/bootstrap.min.css" rel="stylesheet">
+
+  <!-- Custom fonts for this template -->
+  <link href="https://fonts.googleapis.com/css?family=Open+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+  <!-- Custom styles for this template -->
+  <link href="/css/landing.css" rel="stylesheet">
+  <link href="/css/announcement.css" rel="stylesheet">
+  <link href="{{base_url}}css/monokai.css" rel="stylesheet">
+
+  <!-- Google Tag Manager -->
+  <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+  new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+  j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+  'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+  })(window,document,'script','dataLayer','GTM-5DNGF4N');
+  </script>
+  <script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+  ga('create', 'UA-175165319-128', 'auto');
+  ga('send', 'pageview');
+  </script>
+  <!-- End Google Tag Manager -->
+
+</head>
+
+<body>
+  <!-- Google Tag Manager (noscript) -->
+  <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-5DNGF4N"
+  height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+  <!-- End Google Tag Manager (noscript) -->
+
+    <!-- Masthead -->
+    <header class="masthead text-center">
+        
+        <div class="container">
+            <img src='/img/logo.png' class='logo' />
+        <div class="row">
+            <div class="col-xl-8 mx-auto">
+            <h1 class="mb-5">Introducing Keras 3.0</h1>
+            
+                <div class="row mx-auto">            
+                <div class="col-md px-1">
+                    <a href='{{base_url}}getting_started/' class="btn btn-block btn-lg btn-primary">Get started</a>
+                </div>
+                <div class="col-md px-1">
+                    <a href='{{base_url}}api/' class="btn btn-block btn-lg btn-secondary">API docs</a>
+                </div>
+                <div class="col-md px-1">
+                    <a href='{{base_url}}guides/' class="btn btn-block btn-lg btn-secondary">Guides</a>
+                </div>
+                <div class="col-md px-1">
+                    <a href='https://github.com/keras-team/keras/' class="btn btn-block btn-lg btn-secondary">GitHub</a>
+                </div>
+                </div>
+            </div>
+        </div>
+        
+    </header>
+
+    <div class="container">
+        <div class="row">
+            <div class="col-lg">
+                <div class="blog-content">
+                {{content|safe}}
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

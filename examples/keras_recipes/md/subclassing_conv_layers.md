@@ -21,19 +21,6 @@ most of the base convolution layer and just customize the convolution op itself 
 This method was introduced in Keras 2.7. So before using the
 `convolution_op()` API, ensure that you are running Keras version 2.7.0 or greater.
 
-
-```python
-import tensorflow.keras as keras
-
-print(keras.__version__)
-```
-
-<div class="k-default-codeblock">
-```
-2.7.0
-
-```
-</div>
 ---
 ## A Simple `StandardizedConv2D` implementation
 
@@ -44,9 +31,13 @@ Using this approach, we can quickly implement a
 
 
 ```python
+import os
+
+os.environ["KERAS_BACKEND"] = "tensorflow"
+
 import tensorflow as tf
-import tensorflow.keras as keras
-import keras.layers as layers
+import keras
+from keras import layers
 import numpy as np
 
 
@@ -113,7 +104,7 @@ y_test = keras.utils.to_categorical(y_test, num_classes)
 
 model = keras.Sequential(
     [
-        keras.layers.InputLayer(input_shape=input_shape),
+        keras.layers.Input(shape=input_shape),
         StandardizedConv2DWithCall(32, kernel_size=(3, 3), activation="relu"),
         layers.MaxPooling2D(pool_size=(2, 2)),
         StandardizedConv2DWithOverride(64, kernel_size=(3, 3), activation="relu"),
@@ -127,6 +118,62 @@ model = keras.Sequential(
 model.summary()
 ```
 
+<div class="k-default-codeblock">
+```
+x_train shape: (60000, 28, 28, 1)
+60000 train samples
+10000 test samples
+
+```
+</div>
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold">Model: "sequential"</span>
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━┓
+┃<span style="font-weight: bold"> Layer (type)                    </span>┃<span style="font-weight: bold"> Output Shape              </span>┃<span style="font-weight: bold">    Param # </span>┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━┩
+│ standardized_conv2d_with_call   │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">26</span>, <span style="color: #00af00; text-decoration-color: #00af00">26</span>, <span style="color: #00af00; text-decoration-color: #00af00">32</span>)        │        <span style="color: #00af00; text-decoration-color: #00af00">320</span> │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">StandardizedConv2DWithCall</span>)    │                           │            │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ max_pooling2d (<span style="color: #0087ff; text-decoration-color: #0087ff">MaxPooling2D</span>)    │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">13</span>, <span style="color: #00af00; text-decoration-color: #00af00">13</span>, <span style="color: #00af00; text-decoration-color: #00af00">32</span>)        │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ standardized_conv2d_with_overr… │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">11</span>, <span style="color: #00af00; text-decoration-color: #00af00">11</span>, <span style="color: #00af00; text-decoration-color: #00af00">64</span>)        │     <span style="color: #00af00; text-decoration-color: #00af00">18,496</span> │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">StandardizedConv2DWithOverrid…</span> │                           │            │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ max_pooling2d_1 (<span style="color: #0087ff; text-decoration-color: #0087ff">MaxPooling2D</span>)  │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">5</span>, <span style="color: #00af00; text-decoration-color: #00af00">5</span>, <span style="color: #00af00; text-decoration-color: #00af00">64</span>)          │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ flatten (<span style="color: #0087ff; text-decoration-color: #0087ff">Flatten</span>)               │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">1600</span>)              │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ dropout (<span style="color: #0087ff; text-decoration-color: #0087ff">Dropout</span>)               │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">1600</span>)              │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ dense (<span style="color: #0087ff; text-decoration-color: #0087ff">Dense</span>)                   │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">10</span>)                │     <span style="color: #00af00; text-decoration-color: #00af00">16,010</span> │
+└─────────────────────────────────┴───────────────────────────┴────────────┘
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Total params: </span><span style="color: #00af00; text-decoration-color: #00af00">34,826</span> (136.04 KB)
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Trainable params: </span><span style="color: #00af00; text-decoration-color: #00af00">34,826</span> (136.04 KB)
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Non-trainable params: </span><span style="color: #00af00; text-decoration-color: #00af00">0</span> (0.00 B)
+</pre>
+
+
+
+
 ```python
 batch_size = 128
 epochs = 5
@@ -135,53 +182,26 @@ model.compile(loss="categorical_crossentropy", optimizer="adam", metrics=["accur
 
 model.fit(x_train, y_train, batch_size=batch_size, epochs=5, validation_split=0.1)
 ```
+
 <div class="k-default-codeblock">
 ```
-x_train shape: (60000, 28, 28, 1)
-60000 train samples
-10000 test samples
-Model: "sequential"
-_________________________________________________________________
- Layer (type)                Output Shape              Param #   
-=================================================================
- standardized_conv2d_with_ca  (None, 26, 26, 32)       320       
- ll (StandardizedConv2DWithC                                     
- all)                                                            
-                                                                 
- max_pooling2d (MaxPooling2D  (None, 13, 13, 32)       0         
- )                                                               
-                                                                 
- standardized_conv2d_with_ov  (None, 11, 11, 64)       18496     
- erride (StandardizedConv2DW                                     
- ithOverride)                                                    
-                                                                 
- max_pooling2d_1 (MaxPooling  (None, 5, 5, 64)         0         
- 2D)                                                             
-                                                                 
- flatten (Flatten)           (None, 1600)              0         
-                                                                 
- dropout (Dropout)           (None, 1600)              0         
-                                                                 
- dense (Dense)               (None, 10)                16010     
-                                                                 
-=================================================================
-Total params: 34,826
-Trainable params: 34,826
-Non-trainable params: 0
-_________________________________________________________________
-
 Epoch 1/5
-422/422 [==============================] - 7s 15ms/step - loss: 1.8435 - accuracy: 0.8415 - val_loss: 0.1177 - val_accuracy: 0.9660
-Epoch 2/5
-422/422 [==============================] - 6s 14ms/step - loss: 0.2460 - accuracy: 0.9338 - val_loss: 0.0727 - val_accuracy: 0.9772
-Epoch 3/5
-422/422 [==============================] - 6s 14ms/step - loss: 0.1600 - accuracy: 0.9541 - val_loss: 0.0537 - val_accuracy: 0.9862
-Epoch 4/5
-422/422 [==============================] - 6s 14ms/step - loss: 0.1264 - accuracy: 0.9633 - val_loss: 0.0509 - val_accuracy: 0.9845
-Epoch 5/5
-422/422 [==============================] - 6s 14ms/step - loss: 0.1090 - accuracy: 0.9679 - val_loss: 0.0457 - val_accuracy: 0.9872
+  64/422 ━━━[37m━━━━━━━━━━━━━━━━━  0s 2ms/step - accuracy: 0.4439 - loss: 13.1274
 
-<keras.callbacks.History at 0x7f2ff6ed2f10>
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1699557098.952525   26800 device_compiler.h:187] Compiled cluster using XLA!  This line is logged at most once for the lifetime of the process.
+
+ 422/422 ━━━━━━━━━━━━━━━━━━━━ 10s 14ms/step - accuracy: 0.7277 - loss: 4.5649 - val_accuracy: 0.9690 - val_loss: 0.1140
+Epoch 2/5
+ 422/422 ━━━━━━━━━━━━━━━━━━━━ 2s 3ms/step - accuracy: 0.9311 - loss: 0.2493 - val_accuracy: 0.9798 - val_loss: 0.0795
+Epoch 3/5
+ 422/422 ━━━━━━━━━━━━━━━━━━━━ 1s 3ms/step - accuracy: 0.9531 - loss: 0.1655 - val_accuracy: 0.9838 - val_loss: 0.0610
+Epoch 4/5
+ 422/422 ━━━━━━━━━━━━━━━━━━━━ 1s 3ms/step - accuracy: 0.9652 - loss: 0.1201 - val_accuracy: 0.9847 - val_loss: 0.0577
+Epoch 5/5
+ 422/422 ━━━━━━━━━━━━━━━━━━━━ 1s 3ms/step - accuracy: 0.9687 - loss: 0.1059 - val_accuracy: 0.9870 - val_loss: 0.0525
+
+<keras.src.callbacks.history.History at 0x7fed258da200>
 
 ```
 </div>
