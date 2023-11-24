@@ -141,6 +141,20 @@ flip, random rotation and RandAugment to the train dataset. Here is
 
 We only apply the resizing operation to the validation dataset
 """
+castf32 =  lambda inputs: {
+    "images": tf.cast(inputs["images"], dtype=tf.float32),
+    "segmentation_masks":  tf.cast(inputs["segmentation_masks"], dtype=tf.float32)
+}
+
+class Cast2f32(tf.keras.layers.Layer):
+    def __init__(self):
+        super(Cast2f32, self).__init__()
+
+    def build(self, inputs):
+        pass
+
+    def call(self, inputs):
+        return castf32(inputs)
 
 resize_fn = keras_cv.layers.Resizing(
     HEIGHT,
@@ -155,6 +169,7 @@ augment_fn = keras.Sequential(
             factor=ROTATION_FACTOR,
             segmentation_classes=NUM_CLASSES,
         ),
+        Cast2f32(),
         keras_cv.layers.RandAugment(
             value_range=(0, 1),
             geometric=False,
