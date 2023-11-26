@@ -93,9 +93,6 @@ class KerasIO:
             subdir = entry["path"]  # e.g. nlp
             path = Path(self.examples_dir) / subdir  # e.g. examples/nlp
             for fname in sorted(os.listdir(path)):
-                if "object_detection_using_vision_transformer" not in fname:
-                    continue
-
                 if fname.endswith(".py"):  # e.g. examples/nlp/test.py
                     name = fname[:-3]
                     example_path = name.split("/")[-1]
@@ -104,7 +101,6 @@ class KerasIO:
                         f.readline()
                         title_line = f.readline()
                         f.close()
-                        print(title_line)
                         assert title_line.startswith("Title: ")
                         title = title_line[len("Title: ") :]
                         children.append({"path": example_path, "title": title.strip()})

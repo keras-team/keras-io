@@ -24,12 +24,6 @@ and we train it on the
 [Caltech 101 dataset](http://www.vision.caltech.edu/datasets/)
 to detect an airplane in the given image.
 
-Keras 3 can be installed via the following command:
-
-```
-pip install -U keras
-```
-
 ---
 ## Imports and setup
 
@@ -386,7 +380,7 @@ input_shape = (image_size, image_size, 3)  # input image shape
 learning_rate = 0.001
 weight_decay = 0.0001
 batch_size = 32
-num_epochs = 15
+num_epochs = 100
 num_patches = (image_size // patch_size) ** 2
 projection_dim = 64
 num_heads = 4
@@ -436,36 +430,60 @@ plot_history("loss")
 
 <div class="k-default-codeblock">
 ```
-Epoch 1/15
- 18/18 ━━━━━━━━━━━━━━━━━━━━ 9s 108ms/step - loss: 1.0722 - val_loss: 0.3532
-Epoch 2/15
- 18/18 ━━━━━━━━━━━━━━━━━━━━ 1s 25ms/step - loss: 0.4062 - val_loss: 0.3133
-Epoch 3/15
- 18/18 ━━━━━━━━━━━━━━━━━━━━ 0s 24ms/step - loss: 0.2956 - val_loss: 0.2665
-Epoch 4/15
- 18/18 ━━━━━━━━━━━━━━━━━━━━ 0s 24ms/step - loss: 0.2578 - val_loss: 0.2219
-Epoch 5/15
- 18/18 ━━━━━━━━━━━━━━━━━━━━ 0s 24ms/step - loss: 0.2117 - val_loss: 0.1813
-Epoch 6/15
- 18/18 ━━━━━━━━━━━━━━━━━━━━ 0s 25ms/step - loss: 0.1743 - val_loss: 0.1443
-Epoch 7/15
- 18/18 ━━━━━━━━━━━━━━━━━━━━ 0s 24ms/step - loss: 0.1373 - val_loss: 0.1123
-Epoch 8/15
- 18/18 ━━━━━━━━━━━━━━━━━━━━ 0s 23ms/step - loss: 0.1072 - val_loss: 0.0851
-Epoch 9/15
- 18/18 ━━━━━━━━━━━━━━━━━━━━ 0s 24ms/step - loss: 0.0819 - val_loss: 0.0624
-Epoch 10/15
- 18/18 ━━━━━━━━━━━━━━━━━━━━ 0s 24ms/step - loss: 0.0609 - val_loss: 0.0441
-Epoch 11/15
- 18/18 ━━━━━━━━━━━━━━━━━━━━ 0s 24ms/step - loss: 0.0429 - val_loss: 0.0301
-Epoch 12/15
- 18/18 ━━━━━━━━━━━━━━━━━━━━ 0s 24ms/step - loss: 0.0324 - val_loss: 0.0198
-Epoch 13/15
- 18/18 ━━━━━━━━━━━━━━━━━━━━ 0s 24ms/step - loss: 0.0219 - val_loss: 0.0127
-Epoch 14/15
- 18/18 ━━━━━━━━━━━━━━━━━━━━ 0s 24ms/step - loss: 0.0172 - val_loss: 0.0080
-Epoch 15/15
- 18/18 ━━━━━━━━━━━━━━━━━━━━ 0s 25ms/step - loss: 0.0134 - val_loss: 0.0050
+Epoch 1/100
+ 18/18 ━━━━━━━━━━━━━━━━━━━━ 9s 109ms/step - loss: 1.2097 - val_loss: 0.3468
+Epoch 2/100
+ 18/18 ━━━━━━━━━━━━━━━━━━━━ 0s 25ms/step - loss: 0.4260 - val_loss: 0.3102
+Epoch 3/100
+ 18/18 ━━━━━━━━━━━━━━━━━━━━ 0s 25ms/step - loss: 0.3268 - val_loss: 0.2727
+Epoch 4/100
+ 18/18 ━━━━━━━━━━━━━━━━━━━━ 0s 25ms/step - loss: 0.2815 - val_loss: 0.2391
+Epoch 5/100
+ 18/18 ━━━━━━━━━━━━━━━━━━━━ 0s 25ms/step - loss: 0.2290 - val_loss: 0.1735
+Epoch 6/100
+ 18/18 ━━━━━━━━━━━━━━━━━━━━ 0s 24ms/step - loss: 0.1870 - val_loss: 0.1055
+Epoch 7/100
+ 18/18 ━━━━━━━━━━━━━━━━━━━━ 0s 25ms/step - loss: 0.1401 - val_loss: 0.0610
+Epoch 8/100
+ 18/18 ━━━━━━━━━━━━━━━━━━━━ 0s 25ms/step - loss: 0.1122 - val_loss: 0.0274
+Epoch 9/100
+ 18/18 ━━━━━━━━━━━━━━━━━━━━ 0s 8ms/step - loss: 0.0924 - val_loss: 0.0296
+Epoch 10/100
+ 18/18 ━━━━━━━━━━━━━━━━━━━━ 0s 24ms/step - loss: 0.0765 - val_loss: 0.0139
+Epoch 11/100
+ 18/18 ━━━━━━━━━━━━━━━━━━━━ 0s 25ms/step - loss: 0.0597 - val_loss: 0.0111
+Epoch 12/100
+ 18/18 ━━━━━━━━━━━━━━━━━━━━ 0s 25ms/step - loss: 0.0540 - val_loss: 0.0101
+Epoch 13/100
+ 18/18 ━━━━━━━━━━━━━━━━━━━━ 0s 24ms/step - loss: 0.0432 - val_loss: 0.0053
+Epoch 14/100
+ 18/18 ━━━━━━━━━━━━━━━━━━━━ 0s 24ms/step - loss: 0.0380 - val_loss: 0.0052
+Epoch 15/100
+ 18/18 ━━━━━━━━━━━━━━━━━━━━ 0s 25ms/step - loss: 0.0334 - val_loss: 0.0030
+Epoch 16/100
+ 18/18 ━━━━━━━━━━━━━━━━━━━━ 0s 25ms/step - loss: 0.0283 - val_loss: 0.0021
+Epoch 17/100
+ 18/18 ━━━━━━━━━━━━━━━━━━━━ 0s 24ms/step - loss: 0.0228 - val_loss: 0.0012
+Epoch 18/100
+ 18/18 ━━━━━━━━━━━━━━━━━━━━ 0s 8ms/step - loss: 0.0244 - val_loss: 0.0017
+Epoch 19/100
+ 18/18 ━━━━━━━━━━━━━━━━━━━━ 0s 8ms/step - loss: 0.0195 - val_loss: 0.0016
+Epoch 20/100
+ 18/18 ━━━━━━━━━━━━━━━━━━━━ 0s 8ms/step - loss: 0.0189 - val_loss: 0.0020
+Epoch 21/100
+ 18/18 ━━━━━━━━━━━━━━━━━━━━ 0s 8ms/step - loss: 0.0191 - val_loss: 0.0019
+Epoch 22/100
+ 18/18 ━━━━━━━━━━━━━━━━━━━━ 0s 8ms/step - loss: 0.0174 - val_loss: 0.0016
+Epoch 23/100
+ 18/18 ━━━━━━━━━━━━━━━━━━━━ 0s 8ms/step - loss: 0.0157 - val_loss: 0.0020
+Epoch 24/100
+ 18/18 ━━━━━━━━━━━━━━━━━━━━ 0s 8ms/step - loss: 0.0157 - val_loss: 0.0015
+Epoch 25/100
+ 18/18 ━━━━━━━━━━━━━━━━━━━━ 0s 8ms/step - loss: 0.0139 - val_loss: 0.0023
+Epoch 26/100
+ 18/18 ━━━━━━━━━━━━━━━━━━━━ 0s 8ms/step - loss: 0.0130 - val_loss: 0.0017
+Epoch 27/100
+ 18/18 ━━━━━━━━━━━━━━━━━━━━ 0s 8ms/step - loss: 0.0157 - val_loss: 0.0014
 
 ```
 </div>
@@ -604,14 +622,14 @@ plt.show()
  1/1 ━━━━━━━━━━━━━━━━━━━━ 1s 1s/step
  1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 1ms/step  
  1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 1ms/step  
- 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 2ms/step
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 2ms/step  
  1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 1ms/step  
  1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 1ms/step  
  1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 1ms/step  
- 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 2ms/step
  1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 1ms/step  
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 2ms/step  
  1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 1ms/step  
-mean_iou: 0.6927515797633751
+mean_iou: 0.9092338486331416
 
 ```
 </div>

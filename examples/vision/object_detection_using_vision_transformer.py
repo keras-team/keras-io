@@ -20,12 +20,6 @@ In this Keras example, we implement an object detection ViT
 and we train it on the
 [Caltech 101 dataset](http://www.vision.caltech.edu/datasets/)
 to detect an airplane in the given image.
-
-Keras 3 can be installed via the following command:
-
-```
-pip install -U keras
-```
 """
 
 """
@@ -349,7 +343,7 @@ input_shape = (image_size, image_size, 3)  # input image shape
 learning_rate = 0.001
 weight_decay = 0.0001
 batch_size = 32
-num_epochs = 15
+num_epochs = 100
 num_patches = (image_size // patch_size) ** 2
 projection_dim = 64
 num_heads = 4
