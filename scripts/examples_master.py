@@ -148,6 +148,7 @@ EXAMPLES_MASTER = {
                     "path": "object_detection_using_vision_transformer",
                     "title": "Object detection with Vision Transformers",
                     "subcategory": "Object detection",
+                    "keras_3": True,
                 },
                 # 3D
                 {
