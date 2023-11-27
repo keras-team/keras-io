@@ -1,8 +1,8 @@
-# [KerasCV] Semi-supervised image classification using contrastive pretraining with SimCLR
+# Semi-supervised image classification using contrastive pretraining with SimCLR
 
-**Author:** [András Béres](https://www.linkedin.com/in/andras-beres-789190210), updated by [Aritra Roy Gosthipaty](https://twitter.com/ariG23498)<br>
+**Author:** [András Béres](https://www.linkedin.com/in/andras-beres-789190210)<br>
 **Date created:** 2021/04/24<br>
-**Last modified:** 2023/07/06<br>
+**Last modified:** 2021/04/24<br>
 **Description:** Contrastive pretraining with SimCLR for semi-supervised image classification on the STL-10 dataset.
 
 
@@ -68,108 +68,98 @@ check out
 ---
 ## Setup
 
-For this tutorial we will need [KerasCV](https://keras.io/keras_cv/) which can be installed with the following command:
-`pip install keras-cv`
-
 
 ```python
-import keras
-import keras_cv
+# Make sure we are able to handle large datasets
+import resource
+
+low, high = resource.getrlimit(resource.RLIMIT_NOFILE)
+resource.setrlimit(resource.RLIMIT_NOFILE, (high, high))
+
+import math
+import matplotlib.pyplot as plt
 import tensorflow as tf
 import tensorflow_datasets as tfds
-from matplotlib import pyplot as plt
 
-tfds.disable_progress_bar()
+import keras
+from keras import layers
 ```
 
 ---
 ## Hyperparameter setup
 
-Please feel free to change the hyperparameters and train the model. Here we make the following choices
-due to hardware restrictions and good training logs.
-
 
 ```python
 # Dataset hyperparameters
-IMAGE_SIZE = 96
-IMAGE_CHANNELS = 3
-NUM_CLASSES = 10
+unlabeled_dataset_size = 100000
+labeled_dataset_size = 5000
+image_channels = 3
 
-# Algorithm hyperparameter
-UNLABELED_BATCH_SIZE = 1024
-LABELED_BATCH_SIZE = 128
-TEST_BATCH_SIZE = 128
-PROJECTION_WIDTH = 128
-TEMPERATURE = 0.1
-
-# Stronger augmentations for contrastive
-CONTRASTIVE_AUGMENTATION = {
-    "crop_area_factor": (0.08, 1.0),
-    "aspect_ratio_factor": (3 / 4, 4 / 3),
-    "color_jitter_rate": 0.8,
-    "brightness_factor": 0.2,
-    "contrast_factor": 0.8,
-    "saturation_factor": (0.3, 0.7),
-    "hue_factor": 0.2,
+# Algorithm hyperparameters
+num_epochs = 1
+batch_size = 525  # Corresponds to 200 steps per epoch
+width = 128
+temperature = 0.1
+# Stronger augmentations for contrastive, weaker ones for supervised training
+contrastive_augmentation = {"min_area": 0.25, "brightness": 0.6, "jitter": 0.2}
+classification_augmentation = {
+    "min_area": 0.75,
+    "brightness": 0.3,
+    "jitter": 0.1,
 }
-
-# Weaker ones for supervised training
-CLASSIFICATION_AUGMENTATION = {
-    "crop_area_factor": (0.8, 1.0),
-    "aspect_ratio_factor": (3 / 4, 4 / 3),
-    "color_jitter_rate": 0.05,
-    "brightness_factor": 0.1,
-    "contrast_factor": 0.1,
-    "saturation_factor": (0.1, 0.1),
-    "hue_factor": 0.2,
-}
-
-AUTOTUNE = tf.data.AUTOTUNE
 ```
 
 ---
 ## Dataset
 
-The dataset has three splits:
-- Training Unlabelled: This dataset is used to train the encoder in the contrastive setting.
-- Training Lablelled: This dataset is used to train the baseline encoder (supervised) and also
-    fine tune the pre-trained encoder.
-- Testing Labelled: This dataset is used to evaluate the models.
+During training we will simultaneously load a large batch of unlabeled images along with a
+smaller batch of labeled images.
 
 
 ```python
 
 def prepare_dataset():
-    unlabeled_train_dataset = (
-        tfds.load("stl10", data_dir="dataset", split="unlabelled", as_supervised=True)
-        .map(lambda image, _: image, num_parallel_calls=AUTOTUNE)
-        .shuffle(buffer_size=2 * UNLABELED_BATCH_SIZE)
-        .batch(UNLABELED_BATCH_SIZE, num_parallel_calls=AUTOTUNE)
-        .prefetch(AUTOTUNE)
-    )
-    labeled_train_dataset = (
-        tfds.load("stl10", data_dir="dataset", split="train", as_supervised=True)
-        .shuffle(buffer_size=10 * LABELED_BATCH_SIZE)
-        .batch(LABELED_BATCH_SIZE, num_parallel_calls=AUTOTUNE)
-        .prefetch(AUTOTUNE)
-    )
-    test_dataset = (
-        tfds.load("stl10", data_dir="dataset", split="test", as_supervised=True)
-        .batch(TEST_BATCH_SIZE, num_parallel_calls=AUTOTUNE)
-        .prefetch(AUTOTUNE)
+    # Labeled and unlabeled samples are loaded synchronously
+    # with batch sizes selected accordingly
+    steps_per_epoch = (unlabeled_dataset_size + labeled_dataset_size) // batch_size
+    unlabeled_batch_size = unlabeled_dataset_size // steps_per_epoch
+    labeled_batch_size = labeled_dataset_size // steps_per_epoch
+    print(
+        f"batch size is {unlabeled_batch_size} (unlabeled) + {labeled_batch_size} (labeled)"
     )
 
-    return unlabeled_train_dataset, labeled_train_dataset, test_dataset
+    # Turning off shuffle to lower resource usage
+    unlabeled_train_dataset = (
+        tfds.load("stl10", split="unlabelled", as_supervised=True, shuffle_files=False)
+        .shuffle(buffer_size=10 * unlabeled_batch_size)
+        .batch(unlabeled_batch_size)
+    )
+    labeled_train_dataset = (
+        tfds.load("stl10", split="train", as_supervised=True, shuffle_files=False)
+        .shuffle(buffer_size=10 * labeled_batch_size)
+        .batch(labeled_batch_size)
+    )
+    test_dataset = (
+        tfds.load("stl10", split="test", as_supervised=True)
+        .batch(batch_size)
+        .prefetch(buffer_size=tf.data.AUTOTUNE)
+    )
+
+    # Labeled and unlabeled datasets are zipped together
+    train_dataset = tf.data.Dataset.zip(
+        (unlabeled_train_dataset, labeled_train_dataset)
+    ).prefetch(buffer_size=tf.data.AUTOTUNE)
+
+    return train_dataset, labeled_train_dataset, test_dataset
 
 
 # Load STL10 dataset
-unlabeled_train_dataset, labeled_train_dataset, test_dataset = prepare_dataset()
+train_dataset, labeled_train_dataset, test_dataset = prepare_dataset()
 ```
 
 <div class="k-default-codeblock">
 ```
- Downloading and preparing dataset 2.46 GiB (download: 2.46 GiB, generated: 1.86 GiB, total: 4.32 GiB) to dataset/stl10/1.0.0...
- Dataset stl10 downloaded and prepared to dataset/stl10/1.0.0. Subsequent calls will reuse this data.
+batch size is 500 (unlabeled) + 25 (labeled)
 
 ```
 </div>
@@ -179,149 +169,121 @@ unlabeled_train_dataset, labeled_train_dataset, test_dataset = prepare_dataset()
 The two most important image augmentations for contrastive learning are the
 following:
 
-- **Cropping**: forces the model to encode different parts of the same image
-similarly.
-- **Color jitter**: prevents a trivial color histogram-based solution to the task by
+- Cropping: forces the model to encode different parts of the same image
+similarly, we implement it with the
+[RandomTranslation](https://keras.io/api/layers/preprocessing_layers/image_preprocessing/random_translation/)
+and
+[RandomZoom](https://keras.io/api/layers/preprocessing_layers/image_preprocessing/random_zoom/)
+layers
+- Color jitter: prevents a trivial color histogram-based solution to the task by
 distorting color histograms. A principled way to implement that is by affine
 transformations in color space.
 
-Stronger augmentations are applied for contrastive learning, along with weaker
-ones for supervised classification to avoid overfitting on the few labeled examples.
+In this example we use random horizontal flips as well. Stronger augmentations
+are applied for contrastive learning, along with weaker ones for supervised
+classification to avoid overfitting on the few labeled examples.
 
-We implement the augmentations using the KerasCV library.
+We implement random color jitter as a custom preprocessing layer. Using
+preprocessing layers for data augmentation has the following two advantages:
+
+- The data augmentation will run on GPU in batches, so the training will not be
+bottlenecked by the data pipeline in environments with constrained CPU
+resources (such as a Colab Notebook, or a personal machine)
+- Deployment is easier as the data preprocessing pipeline is encapsulated in the
+model, and does not have to be reimplemented when deploying it
 
 
 ```python
 
-def get_augmenter(
-    crop_area_factor,
-    aspect_ratio_factor,
-    color_jitter_rate,
-    brightness_factor,
-    contrast_factor,
-    saturation_factor,
-    hue_factor,
-):
+# Distorts the color distibutions of images
+class RandomColorAffine(layers.Layer):
+    def __init__(self, brightness=0, jitter=0, **kwargs):
+        super().__init__(**kwargs)
+
+        self.brightness = brightness
+        self.jitter = jitter
+
+    def get_config(self):
+        config = super().get_config()
+        config.update({"brightness": self.brightness, "jitter": self.jitter})
+        return config
+
+    def call(self, images, training=True):
+        if training:
+            batch_size = tf.shape(images)[0]
+
+            # Same for all colors
+            brightness_scales = 1 + tf.random.uniform(
+                (batch_size, 1, 1, 1),
+                minval=-self.brightness,
+                maxval=self.brightness,
+            )
+            # Different for all colors
+            jitter_matrices = tf.random.uniform(
+                (batch_size, 1, 3, 3), minval=-self.jitter, maxval=self.jitter
+            )
+
+            color_transforms = (
+                tf.eye(3, batch_shape=[batch_size, 1]) * brightness_scales
+                + jitter_matrices
+            )
+            images = tf.clip_by_value(tf.matmul(images, color_transforms), 0, 1)
+        return images
+
+
+# Image augmentation module
+def get_augmenter(min_area, brightness, jitter):
+    zoom_factor = 1.0 - math.sqrt(min_area)
     return keras.Sequential(
         [
-            keras.Input(shape=(IMAGE_SIZE, IMAGE_SIZE, IMAGE_CHANNELS)),
-            keras_cv.layers.Rescaling(scale=1.0 / 255),
-            keras_cv.layers.RandomFlip("horizontal"),
-            keras_cv.layers.RandomCropAndResize(
-                target_size=(IMAGE_SIZE, IMAGE_SIZE),
-                crop_area_factor=crop_area_factor,
-                aspect_ratio_factor=aspect_ratio_factor,
-            ),
-            keras_cv.layers.RandomApply(
-                keras_cv.layers.RandomColorJitter(
-                    value_range=(0, 1),
-                    brightness_factor=brightness_factor,
-                    contrast_factor=contrast_factor,
-                    saturation_factor=saturation_factor,
-                    hue_factor=hue_factor,
-                ),
-                rate=color_jitter_rate,
-            ),
+            layers.Rescaling(1 / 255, dtype="uint8"),
+            layers.RandomFlip("horizontal"),
+            layers.RandomTranslation(zoom_factor / 2, zoom_factor / 2),
+            layers.RandomZoom((-zoom_factor, 0.0), (-zoom_factor, 0.0)),
+            RandomColorAffine(brightness, jitter),
         ]
     )
 
-```
 
----
-## Visualize the dataset
+def visualize_augmentations(num_images):
+    # Sample a batch from a dataset
+    images = next(iter(train_dataset))[0][0][:num_images]
 
-Let's first visualize the original dataset.
+    # Apply augmentations
+    augmented_images = zip(
+        images,
+        get_augmenter(**classification_augmentation)(images),
+        get_augmenter(**contrastive_augmentation)(images),
+        get_augmenter(**contrastive_augmentation)(images),
+    )
+    row_titles = [
+        "Original:",
+        "Weakly augmented:",
+        "Strongly augmented:",
+        "Strongly augmented:",
+    ]
+    plt.figure(figsize=(num_images * 2.2, 4 * 2.2), dpi=100)
+    for column, image_row in enumerate(augmented_images):
+        for row, image in enumerate(image_row):
+            plt.subplot(4, num_images, row * num_images + column + 1)
+            plt.imshow(image)
+            if column == 0:
+                plt.title(row_titles[row], loc="left")
+            plt.axis("off")
+    plt.tight_layout()
 
 
-```python
-# Original Images
-unlabeled_images = next(iter(unlabeled_train_dataset))
-keras_cv.visualization.plot_image_gallery(
-    images=unlabeled_images,
-    value_range=(0, 255),
-    rows=3,
-    cols=3,
-)
+visualize_augmentations(num_images=8)
 ```
 
 
     
-![png](/img/examples/vision/semisupervised_simclr/semisupervised_simclr_11_0.png)
-    
-
-
-Using the contrastive augmentation pipleine we notice how
-the dataset has changed.
-
-
-```python
-# Contrastive Augmentations
-contrastive_augmenter = get_augmenter(**CONTRASTIVE_AUGMENTATION)
-augmented_images = contrastive_augmenter(unlabeled_images)
-keras_cv.visualization.plot_image_gallery(
-    images=augmented_images,
-    value_range=(0, 1),
-    rows=3,
-    cols=3,
-)
-```
-
-<div class="k-default-codeblock">
-```
-WARNING:tensorflow:Using a while_loop for converting CropAndResize cause there is no registered converter for this op.
-
-WARNING:tensorflow:Using a while_loop for converting CropAndResize cause there is no registered converter for this op.
-
-WARNING:tensorflow:Using a while_loop for converting CropAndResize cause there is no registered converter for this op.
-
-WARNING:tensorflow:Using a while_loop for converting CropAndResize cause there is no registered converter for this op.
-
-```
-</div>
-    
-![png](/img/examples/vision/semisupervised_simclr/semisupervised_simclr_13_4.png)
-    
-
-
-Let's now apply the classification augmentation pipeline on the
-dataset.
-
-
-```python
-# Classification Augmentations
-classification_augmenter = get_augmenter(**CLASSIFICATION_AUGMENTATION)
-augmented_images = classification_augmenter(unlabeled_images)
-keras_cv.visualization.plot_image_gallery(
-    images=augmented_images,
-    value_range=(0, 1),
-    rows=3,
-    cols=3,
-)
-```
-
-<div class="k-default-codeblock">
-```
-WARNING:tensorflow:Using a while_loop for converting CropAndResize cause there is no registered converter for this op.
-
-WARNING:tensorflow:Using a while_loop for converting CropAndResize cause there is no registered converter for this op.
-
-WARNING:tensorflow:Using a while_loop for converting CropAndResize cause there is no registered converter for this op.
-
-WARNING:tensorflow:Using a while_loop for converting CropAndResize cause there is no registered converter for this op.
-
-```
-</div>
-    
-![png](/img/examples/vision/semisupervised_simclr/semisupervised_simclr_15_4.png)
+![png](/img/examples/vision/semisupervised_simclr/semisupervised_simclr_9_0.png)
     
 
 
 ---
 ## Encoder architecture
-
-We use the `ResNet18Backbone` from the KerasCV library. Try out different
-backbones and check whether any model trains better in this paradigm. Also
-try to reason out why that happened.
 
 
 ```python
@@ -330,9 +292,12 @@ try to reason out why that happened.
 def get_encoder():
     return keras.Sequential(
         [
-            keras.Input(shape=(IMAGE_SIZE, IMAGE_SIZE, IMAGE_CHANNELS)),
-            keras_cv.models.ResNet18Backbone(include_rescaling=False),
-            keras.layers.GlobalAveragePooling2D(name="avg_pool"),
+            layers.Conv2D(width, kernel_size=3, strides=2, activation="relu"),
+            layers.Conv2D(width, kernel_size=3, strides=2, activation="relu"),
+            layers.Conv2D(width, kernel_size=3, strides=2, activation="relu"),
+            layers.Conv2D(width, kernel_size=3, strides=2, activation="relu"),
+            layers.Flatten(),
+            layers.Dense(width, activation="relu"),
         ],
         name="encoder",
     )
@@ -349,10 +314,9 @@ A baseline supervised model is trained using random initialization.
 # Baseline supervised training with random initialization
 baseline_model = keras.Sequential(
     [
-        keras.Input(shape=(IMAGE_SIZE, IMAGE_SIZE, IMAGE_CHANNELS)),
-        get_augmenter(**CLASSIFICATION_AUGMENTATION),
+        get_augmenter(**classification_augmentation),
         get_encoder(),
-        keras.layers.Dense(NUM_CLASSES),
+        layers.Dense(10),
     ],
     name="baseline_model",
 )
@@ -363,7 +327,7 @@ baseline_model.compile(
 )
 
 baseline_history = baseline_model.fit(
-    labeled_train_dataset, epochs=20, validation_data=test_dataset
+    labeled_train_dataset, epochs=num_epochs, validation_data=test_dataset
 )
 
 print(
@@ -375,67 +339,8 @@ print(
 
 <div class="k-default-codeblock">
 ```
-WARNING:tensorflow:Using a while_loop for converting CropAndResize cause there is no registered converter for this op.
-
-WARNING:tensorflow:Using a while_loop for converting CropAndResize cause there is no registered converter for this op.
-
-WARNING:tensorflow:Using a while_loop for converting CropAndResize cause there is no registered converter for this op.
-
-WARNING:tensorflow:Using a while_loop for converting CropAndResize cause there is no registered converter for this op.
-
-Epoch 1/20
-WARNING:tensorflow:Using a while_loop for converting CropAndResize cause there is no registered converter for this op.
-
-WARNING:tensorflow:Using a while_loop for converting CropAndResize cause there is no registered converter for this op.
-
-WARNING:tensorflow:Using a while_loop for converting CropAndResize cause there is no registered converter for this op.
-
-WARNING:tensorflow:Using a while_loop for converting CropAndResize cause there is no registered converter for this op.
-
-40/40 [==============================] - ETA: 0s - loss: 1.9072 - acc: 0.3252WARNING:tensorflow:Using a while_loop for converting CropAndResize cause there is no registered converter for this op.
-
-WARNING:tensorflow:Using a while_loop for converting CropAndResize cause there is no registered converter for this op.
-
-40/40 [==============================] - 25s 265ms/step - loss: 1.9072 - acc: 0.3252 - val_loss: 4.4865 - val_acc: 0.1130
-Epoch 2/20
-40/40 [==============================] - 8s 207ms/step - loss: 1.4727 - acc: 0.4508 - val_loss: 4.0150 - val_acc: 0.1520
-Epoch 3/20
-40/40 [==============================] - 8s 208ms/step - loss: 1.3147 - acc: 0.5110 - val_loss: 3.3695 - val_acc: 0.1713
-Epoch 4/20
-40/40 [==============================] - 8s 208ms/step - loss: 1.2389 - acc: 0.5450 - val_loss: 2.9845 - val_acc: 0.1803
-Epoch 5/20
-40/40 [==============================] - 9s 211ms/step - loss: 1.1386 - acc: 0.5868 - val_loss: 5.7640 - val_acc: 0.1326
-Epoch 6/20
-40/40 [==============================] - 9s 211ms/step - loss: 1.0558 - acc: 0.6090 - val_loss: 3.6970 - val_acc: 0.1614
-Epoch 7/20
-40/40 [==============================] - 9s 213ms/step - loss: 0.9654 - acc: 0.6510 - val_loss: 3.5209 - val_acc: 0.2023
-Epoch 8/20
-40/40 [==============================] - 9s 213ms/step - loss: 0.9862 - acc: 0.6368 - val_loss: 3.3486 - val_acc: 0.2212
-Epoch 9/20
-40/40 [==============================] - 8s 206ms/step - loss: 0.8777 - acc: 0.6776 - val_loss: 2.2990 - val_acc: 0.3305
-Epoch 10/20
-40/40 [==============================] - 8s 204ms/step - loss: 0.8297 - acc: 0.7016 - val_loss: 3.6051 - val_acc: 0.2769
-Epoch 11/20
-40/40 [==============================] - 8s 205ms/step - loss: 0.7952 - acc: 0.7092 - val_loss: 1.8223 - val_acc: 0.4650
-Epoch 12/20
-40/40 [==============================] - 8s 208ms/step - loss: 0.8468 - acc: 0.6998 - val_loss: 1.6880 - val_acc: 0.5008
-Epoch 13/20
-40/40 [==============================] - 9s 213ms/step - loss: 0.7948 - acc: 0.7208 - val_loss: 1.9914 - val_acc: 0.4221
-Epoch 14/20
-40/40 [==============================] - 8s 207ms/step - loss: 0.7430 - acc: 0.7338 - val_loss: 3.7770 - val_acc: 0.3709
-Epoch 15/20
-40/40 [==============================] - 9s 217ms/step - loss: 0.7464 - acc: 0.7358 - val_loss: 4.6517 - val_acc: 0.2849
-Epoch 16/20
-40/40 [==============================] - 8s 209ms/step - loss: 0.6132 - acc: 0.7828 - val_loss: 1.5031 - val_acc: 0.5433
-Epoch 17/20
-40/40 [==============================] - 8s 202ms/step - loss: 0.6846 - acc: 0.7554 - val_loss: 1.4208 - val_acc: 0.5611
-Epoch 18/20
-40/40 [==============================] - 8s 207ms/step - loss: 0.5599 - acc: 0.8032 - val_loss: 1.2669 - val_acc: 0.5866
-Epoch 19/20
-40/40 [==============================] - 8s 210ms/step - loss: 0.4973 - acc: 0.8242 - val_loss: 2.0523 - val_acc: 0.4749
-Epoch 20/20
-40/40 [==============================] - 8s 204ms/step - loss: 0.6079 - acc: 0.7858 - val_loss: 1.8732 - val_acc: 0.5054
-Maximal validation accuracy: 58.66%
+ 200/200 ━━━━━━━━━━━━━━━━━━━━ 9s 27ms/step - acc: 0.0992 - loss: 2.3027 - val_acc: 0.1000 - val_loss: 2.3026
+Maximal validation accuracy: 10.00%
 
 ```
 </div>
@@ -446,8 +351,8 @@ We pretrain an encoder on unlabeled images with a contrastive loss.
 A nonlinear projection head is attached to the top of the encoder, as it
 improves the quality of representations of the encoder.
 
-We use the InfoNCE/NT-Xent/N-pairs loss (KerasCV already has this implemented as the `SimCLRLoss`),
-which can be interpreted in the following way:
+We use the InfoNCE/NT-Xent/N-pairs loss, which can be interpreted in the
+following way:
 
 1. We treat each image in the batch as if it had its own class.
 2. Then, we have two examples (a pair of augmented views) for each "class".
@@ -457,102 +362,319 @@ which can be interpreted in the following way:
   logits.
 5. Finally, we use categorical cross-entropy as the "classification" loss
 
-We subclass the `ContrastiveTrainer` from the KerasCV library to build the `SimCLRTrainer`.
+The following two metrics are used for monitoring the pretraining performance:
+
+- [Contrastive accuracy (SimCLR Table 5)](https://arxiv.org/abs/2002.05709):
+Self-supervised metric, the ratio of cases in which the representation of an
+image is more similar to its differently augmented version's one, than to the
+representation of any other image in the current batch. Self-supervised
+metrics can be used for hyperparameter tuning even in the case when there are
+no labeled examples.
+- [Linear probing accuracy](https://arxiv.org/abs/1603.08511): Linear probing is
+a popular metric to evaluate self-supervised classifiers. It is computed as
+the accuracy of a logistic regression classifier trained on top of the
+encoder's features. In our case, this is done by training a single dense layer
+on top of the frozen encoder. Note that contrary to traditional approach where
+the classifier is trained after the pretraining phase, in this example we
+train it during pretraining. This might slightly decrease its accuracy, but
+that way we can monitor its value during training, which helps with
+experimentation and debugging.
+
+Another widely used supervised metric is the
+[KNN accuracy](https://arxiv.org/abs/1805.01978), which is the accuracy of a KNN
+classifier trained on top of the encoder's features, which is not implemented in
+this example.
 
 
 ```python
 
-class SimCLRTrainer(keras_cv.training.ContrastiveTrainer):
-    def __init__(self, encoder, augmenter, projector, probe=None, **kwargs):
-        super().__init__(
-            encoder=encoder,
-            augmenter=augmenter,
-            projector=projector,
-            probe=probe,
-            **kwargs,
+# Define the contrastive model with model-subclassing
+class ContrastiveModel(keras.Model):
+    def __init__(self):
+        super().__init__()
+
+        self.temperature = temperature
+        self.contrastive_augmenter = get_augmenter(**contrastive_augmentation)
+        self.classification_augmenter = get_augmenter(**classification_augmentation)
+        self.encoder = get_encoder()
+        # Non-linear MLP as projection head
+        self.projection_head = keras.Sequential(
+            [
+                keras.Input(shape=(width,)),
+                layers.Dense(width, activation="relu"),
+                layers.Dense(width),
+            ],
+            name="projection_head",
+        )
+        # Single dense layer for linear probing
+        self.linear_probe = keras.Sequential(
+            [layers.Input(shape=(width,)), layers.Dense(10)],
+            name="linear_probe",
         )
 
+        self.encoder.summary()
+        self.projection_head.summary()
+        self.linear_probe.summary()
 
-simclr_model = SimCLRTrainer(
-    encoder=get_encoder(),
-    augmenter=get_augmenter(**CONTRASTIVE_AUGMENTATION),
-    projector=keras.Sequential(
-        [
-            keras.layers.Dense(PROJECTION_WIDTH, activation="relu"),
-            keras.layers.Dense(PROJECTION_WIDTH),
-            keras.layers.BatchNormalization(),
-        ],
-        name="projector",
-    ),
+    def compile(self, contrastive_optimizer, probe_optimizer, **kwargs):
+        super().compile(**kwargs)
+
+        self.contrastive_optimizer = contrastive_optimizer
+        self.probe_optimizer = probe_optimizer
+
+        # self.contrastive_loss will be defined as a method
+        self.probe_loss = keras.losses.SparseCategoricalCrossentropy(from_logits=True)
+
+        self.contrastive_loss_tracker = keras.metrics.Mean(name="c_loss")
+        self.contrastive_accuracy = keras.metrics.SparseCategoricalAccuracy(
+            name="c_acc"
+        )
+        self.probe_loss_tracker = keras.metrics.Mean(name="p_loss")
+        self.probe_accuracy = keras.metrics.SparseCategoricalAccuracy(name="p_acc")
+
+    @property
+    def metrics(self):
+        return [
+            self.contrastive_loss_tracker,
+            self.contrastive_accuracy,
+            self.probe_loss_tracker,
+            self.probe_accuracy,
+        ]
+
+    def contrastive_loss(self, projections_1, projections_2):
+        # InfoNCE loss (information noise-contrastive estimation)
+        # NT-Xent loss (normalized temperature-scaled cross entropy)
+
+        # Cosine similarity: the dot product of the l2-normalized feature vectors
+        projections_1 = tf.math.l2_normalize(projections_1, axis=1)
+        projections_2 = tf.math.l2_normalize(projections_2, axis=1)
+        similarities = (
+            tf.matmul(projections_1, projections_2, transpose_b=True) / self.temperature
+        )
+
+        # The similarity between the representations of two augmented views of the
+        # same image should be higher than their similarity with other views
+        batch_size = tf.shape(projections_1)[0]
+        contrastive_labels = tf.range(batch_size)
+        self.contrastive_accuracy.update_state(contrastive_labels, similarities)
+        self.contrastive_accuracy.update_state(
+            contrastive_labels, tf.transpose(similarities)
+        )
+
+        # The temperature-scaled similarities are used as logits for cross-entropy
+        # a symmetrized version of the loss is used here
+        loss_1_2 = keras.losses.sparse_categorical_crossentropy(
+            contrastive_labels, similarities, from_logits=True
+        )
+        loss_2_1 = keras.losses.sparse_categorical_crossentropy(
+            contrastive_labels, tf.transpose(similarities), from_logits=True
+        )
+        return (loss_1_2 + loss_2_1) / 2
+
+    def train_step(self, data):
+        (unlabeled_images, _), (labeled_images, labels) = data
+
+        # Both labeled and unlabeled images are used, without labels
+        images = tf.concat((unlabeled_images, labeled_images), axis=0)
+        # Each image is augmented twice, differently
+        augmented_images_1 = self.contrastive_augmenter(images, training=True)
+        augmented_images_2 = self.contrastive_augmenter(images, training=True)
+        with tf.GradientTape() as tape:
+            features_1 = self.encoder(augmented_images_1, training=True)
+            features_2 = self.encoder(augmented_images_2, training=True)
+            # The representations are passed through a projection mlp
+            projections_1 = self.projection_head(features_1, training=True)
+            projections_2 = self.projection_head(features_2, training=True)
+            contrastive_loss = self.contrastive_loss(projections_1, projections_2)
+        gradients = tape.gradient(
+            contrastive_loss,
+            self.encoder.trainable_weights + self.projection_head.trainable_weights,
+        )
+        self.contrastive_optimizer.apply_gradients(
+            zip(
+                gradients,
+                self.encoder.trainable_weights + self.projection_head.trainable_weights,
+            )
+        )
+        self.contrastive_loss_tracker.update_state(contrastive_loss)
+
+        # Labels are only used in evalutation for an on-the-fly logistic regression
+        preprocessed_images = self.classification_augmenter(
+            labeled_images, training=True
+        )
+        with tf.GradientTape() as tape:
+            # the encoder is used in inference mode here to avoid regularization
+            # and updating the batch normalization paramers if they are used
+            features = self.encoder(preprocessed_images, training=False)
+            class_logits = self.linear_probe(features, training=True)
+            probe_loss = self.probe_loss(labels, class_logits)
+        gradients = tape.gradient(probe_loss, self.linear_probe.trainable_weights)
+        self.probe_optimizer.apply_gradients(
+            zip(gradients, self.linear_probe.trainable_weights)
+        )
+        self.probe_loss_tracker.update_state(probe_loss)
+        self.probe_accuracy.update_state(labels, class_logits)
+
+        return {m.name: m.result() for m in self.metrics}
+
+    def test_step(self, data):
+        labeled_images, labels = data
+
+        # For testing the components are used with a training=False flag
+        preprocessed_images = self.classification_augmenter(
+            labeled_images, training=False
+        )
+        features = self.encoder(preprocessed_images, training=False)
+        class_logits = self.linear_probe(features, training=False)
+        probe_loss = self.probe_loss(labels, class_logits)
+        self.probe_loss_tracker.update_state(probe_loss)
+        self.probe_accuracy.update_state(labels, class_logits)
+
+        # Only the probe metrics are logged at test time
+        return {m.name: m.result() for m in self.metrics[2:]}
+
+
+# Contrastive pretraining
+pretraining_model = ContrastiveModel()
+pretraining_model.compile(
+    contrastive_optimizer=keras.optimizers.Adam(),
+    probe_optimizer=keras.optimizers.Adam(),
 )
 
-simclr_model.compile(
-    encoder_optimizer=keras.optimizers.Adam(),
-    encoder_loss=keras_cv.losses.SimCLRLoss(
-        temperature=TEMPERATURE,
-    ),
+pretraining_history = pretraining_model.fit(
+    train_dataset, epochs=num_epochs, validation_data=test_dataset
 )
-
-simclr_history = simclr_model.fit(
-    unlabeled_train_dataset,
-    epochs=20,
+print(
+    "Maximal validation accuracy: {:.2f}%".format(
+        max(pretraining_history.history["val_p_acc"]) * 100
+    )
 )
 ```
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold">Model: "encoder"</span>
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━┓
+┃<span style="font-weight: bold"> Layer (type)                    </span>┃<span style="font-weight: bold"> Output Shape              </span>┃<span style="font-weight: bold">    Param # </span>┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━┩
+│ conv2d_4 (<span style="color: #0087ff; text-decoration-color: #0087ff">Conv2D</span>)               │ ?                         │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │
+│                                 │                           │  (unbuilt) │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ conv2d_5 (<span style="color: #0087ff; text-decoration-color: #0087ff">Conv2D</span>)               │ ?                         │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │
+│                                 │                           │  (unbuilt) │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ conv2d_6 (<span style="color: #0087ff; text-decoration-color: #0087ff">Conv2D</span>)               │ ?                         │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │
+│                                 │                           │  (unbuilt) │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ conv2d_7 (<span style="color: #0087ff; text-decoration-color: #0087ff">Conv2D</span>)               │ ?                         │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │
+│                                 │                           │  (unbuilt) │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ flatten_1 (<span style="color: #0087ff; text-decoration-color: #0087ff">Flatten</span>)             │ ?                         │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │
+│                                 │                           │  (unbuilt) │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ dense_2 (<span style="color: #0087ff; text-decoration-color: #0087ff">Dense</span>)                 │ ?                         │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │
+│                                 │                           │  (unbuilt) │
+└─────────────────────────────────┴───────────────────────────┴────────────┘
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Total params: </span><span style="color: #00af00; text-decoration-color: #00af00">0</span> (0.00 B)
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Trainable params: </span><span style="color: #00af00; text-decoration-color: #00af00">0</span> (0.00 B)
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Non-trainable params: </span><span style="color: #00af00; text-decoration-color: #00af00">0</span> (0.00 B)
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold">Model: "projection_head"</span>
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━┓
+┃<span style="font-weight: bold"> Layer (type)                    </span>┃<span style="font-weight: bold"> Output Shape              </span>┃<span style="font-weight: bold">    Param # </span>┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━┩
+│ dense_3 (<span style="color: #0087ff; text-decoration-color: #0087ff">Dense</span>)                 │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">128</span>)               │     <span style="color: #00af00; text-decoration-color: #00af00">16,512</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ dense_4 (<span style="color: #0087ff; text-decoration-color: #0087ff">Dense</span>)                 │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">128</span>)               │     <span style="color: #00af00; text-decoration-color: #00af00">16,512</span> │
+└─────────────────────────────────┴───────────────────────────┴────────────┘
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Total params: </span><span style="color: #00af00; text-decoration-color: #00af00">33,024</span> (129.00 KB)
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Trainable params: </span><span style="color: #00af00; text-decoration-color: #00af00">33,024</span> (129.00 KB)
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Non-trainable params: </span><span style="color: #00af00; text-decoration-color: #00af00">0</span> (0.00 B)
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold">Model: "linear_probe"</span>
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━┓
+┃<span style="font-weight: bold"> Layer (type)                    </span>┃<span style="font-weight: bold"> Output Shape              </span>┃<span style="font-weight: bold">    Param # </span>┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━┩
+│ dense_5 (<span style="color: #0087ff; text-decoration-color: #0087ff">Dense</span>)                 │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">10</span>)                │      <span style="color: #00af00; text-decoration-color: #00af00">1,290</span> │
+└─────────────────────────────────┴───────────────────────────┴────────────┘
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Total params: </span><span style="color: #00af00; text-decoration-color: #00af00">1,290</span> (5.04 KB)
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Trainable params: </span><span style="color: #00af00; text-decoration-color: #00af00">1,290</span> (5.04 KB)
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Non-trainable params: </span><span style="color: #00af00; text-decoration-color: #00af00">0</span> (0.00 B)
+</pre>
+
+
 
 <div class="k-default-codeblock">
 ```
-WARNING:tensorflow:Using a while_loop for converting CropAndResize cause there is no registered converter for this op.
-
-WARNING:tensorflow:Using a while_loop for converting CropAndResize cause there is no registered converter for this op.
-
-WARNING:tensorflow:Using a while_loop for converting CropAndResize cause there is no registered converter for this op.
-
-WARNING:tensorflow:Using a while_loop for converting CropAndResize cause there is no registered converter for this op.
-
-WARNING:tensorflow:Using a while_loop for converting CropAndResize cause there is no registered converter for this op.
-
-WARNING:tensorflow:Using a while_loop for converting CropAndResize cause there is no registered converter for this op.
-
-Epoch 1/20
-98/98 [==============================] - 123s 1s/step - loss: 11.6321
-Epoch 2/20
-98/98 [==============================] - 110s 1s/step - loss: 8.3731
-Epoch 3/20
-98/98 [==============================] - 110s 1s/step - loss: 7.0380
-Epoch 4/20
-98/98 [==============================] - 111s 1s/step - loss: 6.2318
-Epoch 5/20
-98/98 [==============================] - 110s 1s/step - loss: 5.6933
-Epoch 6/20
-98/98 [==============================] - 111s 1s/step - loss: 5.2573
-Epoch 7/20
-98/98 [==============================] - 112s 1s/step - loss: 4.9030
-Epoch 8/20
-98/98 [==============================] - 110s 1s/step - loss: 4.6462
-Epoch 9/20
-98/98 [==============================] - 112s 1s/step - loss: 4.4500
-Epoch 10/20
-98/98 [==============================] - 114s 1s/step - loss: 4.2191
-Epoch 11/20
-98/98 [==============================] - 113s 1s/step - loss: 4.0687
-Epoch 12/20
-98/98 [==============================] - 112s 1s/step - loss: 3.9270
-Epoch 13/20
-98/98 [==============================] - 113s 1s/step - loss: 3.8176
-Epoch 14/20
-98/98 [==============================] - 113s 1s/step - loss: 3.6935
-Epoch 15/20
-98/98 [==============================] - 112s 1s/step - loss: 3.6033
-Epoch 16/20
-98/98 [==============================] - 112s 1s/step - loss: 3.5326
-Epoch 17/20
-98/98 [==============================] - 111s 1s/step - loss: 3.4492
-Epoch 18/20
-98/98 [==============================] - 111s 1s/step - loss: 3.4024
-Epoch 19/20
-98/98 [==============================] - 116s 1s/step - loss: 3.3422
-Epoch 20/20
-98/98 [==============================] - 113s 1s/step - loss: 3.2761
+ 200/200 ━━━━━━━━━━━━━━━━━━━━ 38s 152ms/step - c_acc: 0.0019 - c_loss: 6.2634 - p_acc: 0.1018 - p_loss: 2.3027 - val_c_acc: 0.0000e+00 - val_c_loss: 0.0000e+00 - val_p_acc: 0.1000 - val_p_loss: 2.3026
+Maximal validation accuracy: 10.00%
 
 ```
 </div>
@@ -565,95 +687,34 @@ a single randomly initalized fully connected classification layer on its top.
 
 ```python
 # Supervised finetuning of the pretrained encoder
-finetune_model = keras.Sequential(
+finetuning_model = keras.Sequential(
     [
-        keras.Input(shape=(IMAGE_SIZE, IMAGE_SIZE, IMAGE_CHANNELS)),
-        get_augmenter(**CLASSIFICATION_AUGMENTATION),
-        simclr_model.encoder,
-        keras.layers.Dense(NUM_CLASSES),
+        get_augmenter(**classification_augmentation),
+        pretraining_model.encoder,
+        layers.Dense(10),
     ],
     name="finetuning_model",
 )
-finetune_model.compile(
+finetuning_model.compile(
     optimizer=keras.optimizers.Adam(),
     loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
     metrics=[keras.metrics.SparseCategoricalAccuracy(name="acc")],
 )
 
-finetune_history = finetune_model.fit(
-    labeled_train_dataset, epochs=20, validation_data=test_dataset
+finetuning_history = finetuning_model.fit(
+    labeled_train_dataset, epochs=num_epochs, validation_data=test_dataset
 )
-
 print(
     "Maximal validation accuracy: {:.2f}%".format(
-        max(finetune_history.history["val_acc"]) * 100
+        max(finetuning_history.history["val_acc"]) * 100
     )
 )
 ```
 
 <div class="k-default-codeblock">
 ```
-WARNING:tensorflow:Using a while_loop for converting CropAndResize cause there is no registered converter for this op.
-
-WARNING:tensorflow:Using a while_loop for converting CropAndResize cause there is no registered converter for this op.
-
-WARNING:tensorflow:Using a while_loop for converting CropAndResize cause there is no registered converter for this op.
-
-WARNING:tensorflow:Using a while_loop for converting CropAndResize cause there is no registered converter for this op.
-
-Epoch 1/20
-WARNING:tensorflow:Using a while_loop for converting CropAndResize cause there is no registered converter for this op.
-
-WARNING:tensorflow:Using a while_loop for converting CropAndResize cause there is no registered converter for this op.
-
-WARNING:tensorflow:Using a while_loop for converting CropAndResize cause there is no registered converter for this op.
-
-WARNING:tensorflow:Using a while_loop for converting CropAndResize cause there is no registered converter for this op.
-
-39/40 [============================>.] - ETA: 0s - loss: 1.4232 - acc: 0.5112WARNING:tensorflow:Using a while_loop for converting CropAndResize cause there is no registered converter for this op.
-
-WARNING:tensorflow:Using a while_loop for converting CropAndResize cause there is no registered converter for this op.
-
-40/40 [==============================] - 21s 249ms/step - loss: 1.4221 - acc: 0.5118 - val_loss: 5.5473 - val_acc: 0.2649
-Epoch 2/20
-40/40 [==============================] - 9s 217ms/step - loss: 0.9671 - acc: 0.6480 - val_loss: 5.6939 - val_acc: 0.2358
-Epoch 3/20
-40/40 [==============================] - 9s 214ms/step - loss: 0.8753 - acc: 0.6822 - val_loss: 2.0208 - val_acc: 0.4498
-Epoch 4/20
-40/40 [==============================] - 9s 210ms/step - loss: 0.7816 - acc: 0.7200 - val_loss: 2.7762 - val_acc: 0.3365
-Epoch 5/20
-40/40 [==============================] - 8s 208ms/step - loss: 0.7641 - acc: 0.7222 - val_loss: 3.0242 - val_acc: 0.4688
-Epoch 6/20
-40/40 [==============================] - 9s 216ms/step - loss: 0.6752 - acc: 0.7566 - val_loss: 1.8544 - val_acc: 0.4789
-Epoch 7/20
-40/40 [==============================] - 9s 213ms/step - loss: 0.6603 - acc: 0.7590 - val_loss: 1.4286 - val_acc: 0.5669
-Epoch 8/20
-40/40 [==============================] - 9s 213ms/step - loss: 0.6717 - acc: 0.7666 - val_loss: 1.6336 - val_acc: 0.5460
-Epoch 9/20
-40/40 [==============================] - 9s 214ms/step - loss: 0.5979 - acc: 0.7878 - val_loss: 3.0925 - val_acc: 0.3101
-Epoch 10/20
-40/40 [==============================] - 8s 208ms/step - loss: 0.7213 - acc: 0.7460 - val_loss: 1.2885 - val_acc: 0.5832
-Epoch 11/20
-40/40 [==============================] - 9s 212ms/step - loss: 0.4963 - acc: 0.8282 - val_loss: 1.3040 - val_acc: 0.6034
-Epoch 12/20
-40/40 [==============================] - 8s 209ms/step - loss: 0.4354 - acc: 0.8488 - val_loss: 1.1805 - val_acc: 0.6398
-Epoch 13/20
-40/40 [==============================] - 8s 208ms/step - loss: 0.3205 - acc: 0.8894 - val_loss: 1.4723 - val_acc: 0.5899
-Epoch 14/20
-40/40 [==============================] - 8s 208ms/step - loss: 0.3937 - acc: 0.8648 - val_loss: 1.2627 - val_acc: 0.6215
-Epoch 15/20
-40/40 [==============================] - 8s 210ms/step - loss: 0.4112 - acc: 0.8582 - val_loss: 1.4905 - val_acc: 0.5803
-Epoch 16/20
-40/40 [==============================] - 9s 220ms/step - loss: 0.3344 - acc: 0.8822 - val_loss: 1.6081 - val_acc: 0.5771
-Epoch 17/20
-40/40 [==============================] - 9s 218ms/step - loss: 0.3794 - acc: 0.8694 - val_loss: 1.5366 - val_acc: 0.6008
-Epoch 18/20
-40/40 [==============================] - 8s 205ms/step - loss: 0.2635 - acc: 0.9074 - val_loss: 1.2707 - val_acc: 0.6463
-Epoch 19/20
-40/40 [==============================] - 8s 207ms/step - loss: 0.3174 - acc: 0.8844 - val_loss: 1.6366 - val_acc: 0.5904
-Epoch 20/20
-40/40 [==============================] - 9s 213ms/step - loss: 0.2809 - acc: 0.9058 - val_loss: 1.1887 - val_acc: 0.6668
-Maximal validation accuracy: 66.68%
+ 200/200 ━━━━━━━━━━━━━━━━━━━━ 6s 18ms/step - acc: 0.0987 - loss: 2.3027 - val_acc: 0.1000 - val_loss: 2.3026
+Maximal validation accuracy: 10.00%
 
 ```
 </div>
@@ -663,15 +724,20 @@ Maximal validation accuracy: 66.68%
 
 ```python
 
-# The classification accuracies of the baseline and finetuning process:
-def plot_training_curves(baseline_history, finetune_history):
+# The classification accuracies of the baseline and the pretraining + finetuning process:
+def plot_training_curves(pretraining_history, finetuning_history, baseline_history):
     for metric_key, metric_name in zip(["acc", "loss"], ["accuracy", "loss"]):
         plt.figure(figsize=(8, 5), dpi=100)
         plt.plot(
-            baseline_history.history[f"val_{metric_key}"], label="supervised baseline"
+            baseline_history.history[f"val_{metric_key}"],
+            label="supervised baseline",
         )
         plt.plot(
-            finetune_history.history[f"val_{metric_key}"],
+            pretraining_history.history[f"val_p_{metric_key}"],
+            label="self-supervised pretraining",
+        )
+        plt.plot(
+            finetuning_history.history[f"val_{metric_key}"],
             label="supervised finetuning",
         )
         plt.legend()
@@ -680,18 +746,18 @@ def plot_training_curves(baseline_history, finetune_history):
         plt.ylabel(f"validation {metric_name}")
 
 
-plot_training_curves(baseline_history, finetune_history)
+plot_training_curves(pretraining_history, finetuning_history, baseline_history)
 ```
 
 
     
-![png](/img/examples/vision/semisupervised_simclr/semisupervised_simclr_25_0.png)
+![png](/img/examples/vision/semisupervised_simclr/semisupervised_simclr_19_0.png)
     
 
 
 
     
-![png](/img/examples/vision/semisupervised_simclr/semisupervised_simclr_25_1.png)
+![png](/img/examples/vision/semisupervised_simclr/semisupervised_simclr_19_1.png)
     
 
 
@@ -792,9 +858,3 @@ performance at smaller batch sizes.
 
 You can use the trained model hosted on [Hugging Face Hub](https://huggingface.co/keras-io/semi-supervised-classification-simclr)
 and try the demo on [Hugging Face Spaces](https://huggingface.co/spaces/keras-io/semi-supervised-classification).
-
----
-## Acknowledgements
-
-I would like to thank [Martin Gorner](https://twitter.com/martin_gorner) for his thorough review.
-Google Cloud credits were provided for this project.
