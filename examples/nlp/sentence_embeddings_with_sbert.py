@@ -382,8 +382,8 @@ class TripletSiamese(keras.Model):
         ep = encoder(positive)
         en = encoder(negative)
 
-        positive_dist = keras.ops.sum(keras.ops.power(ea - ep, 2), axis=1)
-        negative_dist = keras.ops.sum(keras.ops.power(ea - en, 2), axis=1)
+        positive_dist = keras.ops.sum(keras.ops.square(ea - ep), axis=1)
+        negative_dist = keras.ops.sum(keras.ops.square(ea - en), axis=1)
 
         positive_dist = keras.ops.sqrt(positive_dist)
         negative_dist = keras.ops.sqrt(negative_dist)
