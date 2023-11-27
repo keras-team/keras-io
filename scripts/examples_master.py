@@ -473,6 +473,12 @@ EXAMPLES_MASTER = {
                 },
                 # Text similarity search
                 {
+                    "path": "semantic_similarity_with_keras_nlp",
+                    "title": "Semantic Similarity with KerasNLP",
+                    "subcategory": "Text similarity search",
+                    "keras_3": True,
+                },
+                {
                     "path": "semantic_similarity_with_bert",
                     "title": "Semantic Similarity with BERT",
                     "subcategory": "Text similarity search",
