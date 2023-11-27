@@ -484,6 +484,12 @@ EXAMPLES_MASTER = {
                     "subcategory": "Text similarity search",
                     "keras_3": True,
                 },
+                {
+                    "path": "sentence_embeddings_with_sbert",
+                    "title": "Sentence embeddings using Siamese RoBERTa-networks",
+                    "subcategory": "Text similarity search",
+                    "keras_3": True,
+                },
                 # Language modeling
                 {
                     "path": "masked_language_modeling",

@@ -49,25 +49,28 @@ This method of fine-tuning was introduced in
 Let's install and import the libraries we need. We'll be using the KerasNLP library in
 this example.
 
-We will also enable [mixed perceciosn](https://www.tensorflow.org/guide/mixed_precision)
+We will also enable [mixed precision](https://www.tensorflow.org/guide/mixed_precision)
 training. This will help us reduce the training time.
 
 
 ```python
-!pip install keras-nlp -q
+!pip install -q --upgrade keras-nlp
+!pip install -q --upgrade keras  # Upgrade to Keras 3.
 ```
 
 
 ```python
+import os
+
+os.environ["KERAS_BACKEND"] = "tensorflow"
+
+import keras
 import keras_nlp
 import tensorflow as tf
 import tensorflow_datasets as tfds
 import sklearn.cluster as cluster
 
-from tensorflow import keras
-
-policy = keras.mixed_precision.Policy("mixed_float16")
-keras.mixed_precision.set_global_policy(policy)
+keras.mixed_precision.set_global_policy("mixed_float16")
 ```
 
 ---
@@ -112,8 +115,8 @@ divide the labels by 2.5 and subtract 1.
 TRAIN_BATCH_SIZE = 6
 VALIDATION_BATCH_SIZE = 8
 
-TRAIN_NUM_BATCHS = 300
-VALIDATION_NUM_BATCHS = 40
+TRAIN_NUM_BATCHES = 300
+VALIDATION_NUM_BATCHES = 40
 
 AUTOTUNE = tf.data.experimental.AUTOTUNE
 
@@ -122,7 +125,7 @@ def change_range(x):
     return (x / 2.5) - 1
 
 
-def prepare_dataset(dataset, num_batchs, batch_size):
+def prepare_dataset(dataset, num_batches, batch_size):
     dataset = dataset.map(
         lambda z: (
             [z["sentence1"], z["sentence2"]],
@@ -131,7 +134,7 @@ def prepare_dataset(dataset, num_batchs, batch_size):
         num_parallel_calls=AUTOTUNE,
     )
     dataset = dataset.batch(batch_size)
-    dataset = dataset.take(num_batchs)
+    dataset = dataset.take(num_batches)
     dataset = dataset.prefetch(AUTOTUNE)
     return dataset
 
@@ -141,8 +144,8 @@ stsb_ds = tfds.load(
 )
 stsb_train, stsb_valid = stsb_ds["train"], stsb_ds["validation"]
 
-stsb_train = prepare_dataset(stsb_train, TRAIN_NUM_BATCHS, TRAIN_BATCH_SIZE)
-stsb_valid = prepare_dataset(stsb_valid, VALIDATION_NUM_BATCHS, VALIDATION_BATCH_SIZE)
+stsb_train = prepare_dataset(stsb_train, TRAIN_NUM_BATCHES, TRAIN_BATCH_SIZE)
+stsb_valid = prepare_dataset(stsb_valid, VALIDATION_NUM_BATCHES, VALIDATION_BATCH_SIZE)
 ```
 
 Let's see examples from the dataset of two sentenses and their similarity.
@@ -224,48 +227,65 @@ layer to exclude padded tokens from being averaged.
 ```python
 preprocessor = keras_nlp.models.RobertaPreprocessor.from_preset("roberta_base_en")
 backbone = keras_nlp.models.RobertaBackbone.from_preset("roberta_base_en")
-inputs = keras.Input(shape=(1), dtype="string", name="sentence")
+inputs = keras.Input(shape=(1,), dtype="string", name="sentence")
 x = preprocessor(inputs)
 h = backbone(x)
 embedding = keras.layers.GlobalAveragePooling1D(name="pooling_layer")(
     h, x["padding_mask"]
 )
-n_embedding = tf.linalg.normalize(embedding, axis=1)[0]
+n_embedding = keras.layers.UnitNormalization(axis=1)(embedding)
 roberta_normal_encoder = keras.Model(inputs=inputs, outputs=n_embedding)
 
 roberta_normal_encoder.summary()
 ```
 
-<div class="k-default-codeblock">
-```
-Model: "model"
-__________________________________________________________________________________________________
- Layer (type)                   Output Shape         Param #     Connected to                     
-==================================================================================================
- sentence (InputLayer)          [(None, 1)]          0           []                               
-                                                                                                  
- roberta_preprocessor (RobertaP  {'token_ids': (None  0          ['sentence[0][0]']               
- reprocessor)                   , 512),                                                           
-                                 'padding_mask': (N                                               
-                                one, 512)}                                                        
-                                                                                                  
- roberta_backbone (RobertaBackb  (None, None, 768)   124052736   ['roberta_preprocessor[0][0]',   
- one)                                                             'roberta_preprocessor[0][1]']   
-                                                                                                  
- pooling_layer (GlobalAveragePo  (None, 768)         0           ['roberta_backbone[0][0]',       
- oling1D)                                                         'roberta_preprocessor[0][0]']   
-                                                                                                  
- tf.linalg.normalize (TFOpLambd  ((None, 768),       0           ['pooling_layer[0][0]']          
- a)                              (None, 1))                                                       
-                                                                                                  
-==================================================================================================
-Total params: 124,052,736
-Trainable params: 124,052,736
-Non-trainable params: 0
-__________________________________________________________________________________________________
 
-```
-</div>
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold">Model: "functional_1"</span>
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">┏━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━┓
+┃<span style="font-weight: bold"> Layer (type)        </span>┃<span style="font-weight: bold"> Output Shape      </span>┃<span style="font-weight: bold"> Param # </span>┃<span style="font-weight: bold"> Connected to         </span>┃
+┡━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━┩
+│ sentence            │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>)         │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ -                    │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">InputLayer</span>)        │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ roberta_preprocess… │ [(<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">512</span>),     │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ sentence[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>]       │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">RobertaPreprocess…</span> │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">512</span>)]      │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ roberta_backbone    │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">512</span>, <span style="color: #00af00; text-decoration-color: #00af00">768</span>)  │ <span style="color: #00af00; text-decoration-color: #00af00">124,05…</span> │ roberta_preprocesso… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">RobertaBackbone</span>)   │                   │         │ roberta_preprocesso… │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ pooling_layer       │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">768</span>)       │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ roberta_backbone[<span style="color: #00af00; text-decoration-color: #00af00">0</span>]… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">GlobalAveragePool…</span> │                   │         │ roberta_preprocesso… │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ unit_normalization  │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">768</span>)       │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ pooling_layer[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>]  │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">UnitNormalization</span>) │                   │         │                      │
+└─────────────────────┴───────────────────┴─────────┴──────────────────────┘
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Total params: </span><span style="color: #00af00; text-decoration-color: #00af00">124,052,736</span> (473.22 MB)
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Trainable params: </span><span style="color: #00af00; text-decoration-color: #00af00">124,052,736</span> (473.22 MB)
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Non-trainable params: </span><span style="color: #00af00; text-decoration-color: #00af00">0</span> (0.00 B)
+</pre>
+
+
+
 #### Build the Siamese network with the regression objective function.
 
 It's described above that the Siamese network has two or more subnetworks, and for this
@@ -282,11 +302,11 @@ sentences.
 
 class RegressionSiamese(keras.Model):
     def __init__(self, encoder, **kwargs):
-        inputs = keras.Input(shape=(2), dtype="string", name="sentences")
-        sen1, sen2 = tf.split(inputs, num_or_size_splits=2, axis=1, name="split")
+        inputs = keras.Input(shape=(2,), dtype="string", name="sentences")
+        sen1, sen2 = keras.ops.split(inputs, 2, axis=1)
         u = encoder(sen1)
         v = encoder(sen2)
-        cosine_similarity_scores = tf.matmul(u, tf.transpose(v))
+        cosine_similarity_scores = keras.ops.matmul(u, keras.ops.transpose(v))
 
         super().__init__(
             inputs=inputs,
@@ -326,9 +346,9 @@ for i, sim in enumerate(cosine_similarity_scores[0]):
 
 <div class="k-default-codeblock">
 ```
-cosine similarity score between sentence 1 and the query = 0.966796875 
-cosine similarity score between sentence 2 and the query = 0.9765625 
-cosine similarity score between sentence 3 and the query = 0.9931640625 
+cosine similarity score between sentence 1 and the query = 0.96630859375 
+cosine similarity score between sentence 2 and the query = 0.97607421875 
+cosine similarity score between sentence 3 and the query = 0.99365234375 
 
 ```
 </div>
@@ -342,6 +362,7 @@ roberta_regression_siamese = RegressionSiamese(roberta_normal_encoder)
 roberta_regression_siamese.compile(
     loss=keras.losses.MeanSquaredError(),
     optimizer=keras.optimizers.Adam(2e-5),
+    jit_compile=False,
 )
 
 roberta_regression_siamese.fit(stsb_train, validation_data=stsb_valid, epochs=1)
@@ -349,9 +370,9 @@ roberta_regression_siamese.fit(stsb_train, validation_data=stsb_valid, epochs=1)
 
 <div class="k-default-codeblock">
 ```
-300/300 [==============================] - 541s 1s/step - loss: 0.3977 - val_loss: 0.4083
+ 300/300 ━━━━━━━━━━━━━━━━━━━━ 115s 297ms/step - loss: 0.4751 - val_loss: 0.4025
 
-<keras.callbacks.History at 0x7e03712d0190>
+<keras.src.callbacks.history.History at 0x7f5a78392140>
 
 ```
 </div>
@@ -381,9 +402,9 @@ for i, sim in enumerate(cosine_simalarities[0]):
 
 <div class="k-default-codeblock">
 ```
-cosine similarity between sentence 1 and the query = 0.1326904296875 
-cosine similarity between sentence 2 and the query = 0.458740234375 
-cosine similarity between sentence 3 and the query = 0.79931640625 
+cosine similarity between sentence 1 and the query = 0.10986328125 
+cosine similarity between sentence 2 and the query = 0.53466796875 
+cosine similarity between sentence 3 and the query = 0.83544921875 
 
 ```
 </div>
@@ -413,17 +434,17 @@ example, we will only use 1200 triplets for training and 300 for testing.
 ```
 
 ```python
-NUM_TRAIN_BATCHS = 200
-NUM_TEST_BATCHS = 75
+NUM_TRAIN_BATCHES = 200
+NUM_TEST_BATCHES = 75
 AUTOTUNE = tf.data.experimental.AUTOTUNE
 
 
-def prepare_wiki_data(dataset, num_batchs):
+def prepare_wiki_data(dataset, num_batches):
     dataset = dataset.map(
         lambda z: ((z["Sentence1"], z["Sentence2"], z["Sentence3"]), 0)
     )
     dataset = dataset.batch(6)
-    dataset = dataset.take(num_batchs)
+    dataset = dataset.take(num_batches)
     dataset = dataset.prefetch(AUTOTUNE)
     return dataset
 
@@ -439,8 +460,8 @@ wiki_test = tf.data.experimental.make_csv_dataset(
     num_epochs=1,
 )
 
-wiki_train = prepare_wiki_data(wiki_train, NUM_TRAIN_BATCHS)
-wiki_test = prepare_wiki_data(wiki_test, NUM_TEST_BATCHS)
+wiki_train = prepare_wiki_data(wiki_train, NUM_TRAIN_BATCHES)
+wiki_test = prepare_wiki_data(wiki_test, NUM_TEST_BATCHES)
 ```
 <div class="k-default-codeblock">
 ```
@@ -466,7 +487,7 @@ sentence.
 ```python
 preprocessor = keras_nlp.models.RobertaPreprocessor.from_preset("roberta_base_en")
 backbone = keras_nlp.models.RobertaBackbone.from_preset("roberta_base_en")
-input = keras.Input(shape=(1), dtype="string", name="sentence")
+input = keras.Input(shape=(1,), dtype="string", name="sentence")
 
 x = preprocessor(input)
 h = backbone(x)
@@ -480,33 +501,50 @@ roberta_encoder = keras.Model(inputs=input, outputs=embedding)
 roberta_encoder.summary()
 ```
 
-<div class="k-default-codeblock">
-```
-Model: "model_1"
-__________________________________________________________________________________________________
- Layer (type)                   Output Shape         Param #     Connected to                     
-==================================================================================================
- sentence (InputLayer)          [(None, 1)]          0           []                               
-                                                                                                  
- roberta_preprocessor_1 (Robert  {'token_ids': (None  0          ['sentence[0][0]']               
- aPreprocessor)                 , 512),                                                           
-                                 'padding_mask': (N                                               
-                                one, 512)}                                                        
-                                                                                                  
- roberta_backbone_1 (RobertaBac  (None, None, 768)   124052736   ['roberta_preprocessor_1[0][0]', 
- kbone)                                                           'roberta_preprocessor_1[0][1]'] 
-                                                                                                  
- pooling_layer (GlobalAveragePo  (None, 768)         0           ['roberta_backbone_1[0][0]',     
- oling1D)                                                         'roberta_preprocessor_1[0][0]'] 
-                                                                                                  
-==================================================================================================
-Total params: 124,052,736
-Trainable params: 124,052,736
-Non-trainable params: 0
-__________________________________________________________________________________________________
 
-```
-</div>
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold">Model: "functional_3"</span>
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">┏━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━┓
+┃<span style="font-weight: bold"> Layer (type)        </span>┃<span style="font-weight: bold"> Output Shape      </span>┃<span style="font-weight: bold"> Param # </span>┃<span style="font-weight: bold"> Connected to         </span>┃
+┡━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━┩
+│ sentence            │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>)         │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ -                    │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">InputLayer</span>)        │                   │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ roberta_preprocess… │ [(<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">512</span>),     │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ sentence[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>]       │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">RobertaPreprocess…</span> │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">512</span>)]      │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ roberta_backbone_1  │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">512</span>, <span style="color: #00af00; text-decoration-color: #00af00">768</span>)  │ <span style="color: #00af00; text-decoration-color: #00af00">124,05…</span> │ roberta_preprocesso… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">RobertaBackbone</span>)   │                   │         │ roberta_preprocesso… │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ pooling_layer       │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">768</span>)       │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ roberta_backbone_1[<span style="color: #00af00; text-decoration-color: #00af00">…</span> │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">GlobalAveragePool…</span> │                   │         │ roberta_preprocesso… │
+└─────────────────────┴───────────────────┴─────────┴──────────────────────┘
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Total params: </span><span style="color: #00af00; text-decoration-color: #00af00">124,052,736</span> (473.22 MB)
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Trainable params: </span><span style="color: #00af00; text-decoration-color: #00af00">124,052,736</span> (473.22 MB)
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Non-trainable params: </span><span style="color: #00af00; text-decoration-color: #00af00">0</span> (0.00 B)
+</pre>
+
+
+
 #### Build the Siamese network with the triplet objective function
 
 For the Siamese network with the triplet objective function, we will build the model with
@@ -519,22 +557,21 @@ embedding for each sentence, and we will calculate the `positive_dist` and
 
 class TripletSiamese(keras.Model):
     def __init__(self, encoder, **kwargs):
-
-        anchor = keras.Input(shape=(1), dtype="string")
-        positive = keras.Input(shape=(1), dtype="string")
-        negative = keras.Input(shape=(1), dtype="string")
+        anchor = keras.Input(shape=(1,), dtype="string")
+        positive = keras.Input(shape=(1,), dtype="string")
+        negative = keras.Input(shape=(1,), dtype="string")
 
         ea = encoder(anchor)
         ep = encoder(positive)
         en = encoder(negative)
 
-        positive_dist = tf.math.reduce_sum(tf.math.pow(ea - ep, 2), axis=1)
-        negative_dist = tf.math.reduce_sum(tf.math.pow(ea - en, 2), axis=1)
+        positive_dist = keras.ops.sum(keras.ops.square(ea - ep), axis=1)
+        negative_dist = keras.ops.sum(keras.ops.square(ea - en), axis=1)
 
-        positive_dist = tf.math.sqrt(positive_dist)
-        negative_dist = tf.math.sqrt(negative_dist)
+        positive_dist = keras.ops.sqrt(positive_dist)
+        negative_dist = keras.ops.sqrt(negative_dist)
 
-        output = tf.stack([positive_dist, negative_dist], axis=0)
+        output = keras.ops.stack([positive_dist, negative_dist], axis=0)
 
         super().__init__(inputs=[anchor, positive, negative], outputs=output, **kwargs)
 
@@ -569,8 +606,8 @@ class TripletLoss(keras.losses.Loss):
     def call(self, y_true, y_pred):
         positive_dist, negative_dist = tf.unstack(y_pred, axis=0)
 
-        losses = tf.nn.relu(positive_dist - negative_dist + self.margin)
-        return tf.math.reduce_mean(losses, axis=0)
+        losses = keras.ops.relu(positive_dist - negative_dist + self.margin)
+        return keras.ops.mean(losses, axis=0)
 
 ```
 
@@ -586,6 +623,7 @@ roberta_triplet_siamese = TripletSiamese(roberta_encoder)
 roberta_triplet_siamese.compile(
     loss=TripletLoss(),
     optimizer=keras.optimizers.Adam(2e-5),
+    jit_compile=False,
 )
 
 roberta_triplet_siamese.fit(wiki_train, validation_data=wiki_test, epochs=1)
@@ -593,9 +631,9 @@ roberta_triplet_siamese.fit(wiki_train, validation_data=wiki_test, epochs=1)
 
 <div class="k-default-codeblock">
 ```
-200/200 [==============================] - 641s 3s/step - loss: 0.7426 - val_loss: 0.6533
+ 200/200 ━━━━━━━━━━━━━━━━━━━━ 128s 467ms/step - loss: 0.7822 - val_loss: 0.7126
 
-<keras.callbacks.History at 0x7e033021b520>
+<keras.src.callbacks.history.History at 0x7f5c3636c580>
 
 ```
 </div>
@@ -611,7 +649,7 @@ questions = [
     "How can I improve my English?",
     "How to earn money online?",
     "How do I earn money online?",
-    "How to work and ean money through internet?",
+    "How to work and earn money through internet?",
 ]
 
 encoder = roberta_triplet_siamese.get_encoder()
@@ -629,7 +667,7 @@ sentence (How to be good at speaking English?) belongs to cluster 1
 sentence (How can I improve my English?) belongs to cluster 1
 sentence (How to earn money online?) belongs to cluster 0
 sentence (How do I earn money online?) belongs to cluster 0
-sentence (How to work and ean money through internet?) belongs to cluster 0
+sentence (How to work and earn money through internet?) belongs to cluster 0
 
 ```
 </div>

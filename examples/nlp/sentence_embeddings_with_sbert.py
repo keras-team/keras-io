@@ -47,23 +47,26 @@ This method of fine-tuning was introduced in
 Let's install and import the libraries we need. We'll be using the KerasNLP library in
 this example.
 
-We will also enable [mixed perceciosn](https://www.tensorflow.org/guide/mixed_precision)
+We will also enable [mixed precision](https://www.tensorflow.org/guide/mixed_precision)
 training. This will help us reduce the training time.
 """
 
 """shell
-pip install keras-nlp -q
+pip install -q --upgrade keras-nlp
+pip install -q --upgrade keras  # Upgrade to Keras 3.
 """
 
+import os
+
+os.environ["KERAS_BACKEND"] = "tensorflow"
+
+import keras
 import keras_nlp
 import tensorflow as tf
 import tensorflow_datasets as tfds
 import sklearn.cluster as cluster
 
-from tensorflow import keras
-
-policy = keras.mixed_precision.Policy("mixed_float16")
-keras.mixed_precision.set_global_policy(policy)
+keras.mixed_precision.set_global_policy("mixed_float16")
 
 """
 ## Fine-tune the model using siamese networks
@@ -110,8 +113,8 @@ divide the labels by 2.5 and subtract 1.
 TRAIN_BATCH_SIZE = 6
 VALIDATION_BATCH_SIZE = 8
 
-TRAIN_NUM_BATCHS = 300
-VALIDATION_NUM_BATCHS = 40
+TRAIN_NUM_BATCHES = 300
+VALIDATION_NUM_BATCHES = 40
 
 AUTOTUNE = tf.data.experimental.AUTOTUNE
 
@@ -120,7 +123,7 @@ def change_range(x):
     return (x / 2.5) - 1
 
 
-def prepare_dataset(dataset, num_batchs, batch_size):
+def prepare_dataset(dataset, num_batches, batch_size):
     dataset = dataset.map(
         lambda z: (
             [z["sentence1"], z["sentence2"]],
@@ -129,7 +132,7 @@ def prepare_dataset(dataset, num_batchs, batch_size):
         num_parallel_calls=AUTOTUNE,
     )
     dataset = dataset.batch(batch_size)
-    dataset = dataset.take(num_batchs)
+    dataset = dataset.take(num_batches)
     dataset = dataset.prefetch(AUTOTUNE)
     return dataset
 
@@ -139,8 +142,8 @@ stsb_ds = tfds.load(
 )
 stsb_train, stsb_valid = stsb_ds["train"], stsb_ds["validation"]
 
-stsb_train = prepare_dataset(stsb_train, TRAIN_NUM_BATCHS, TRAIN_BATCH_SIZE)
-stsb_valid = prepare_dataset(stsb_valid, VALIDATION_NUM_BATCHS, VALIDATION_BATCH_SIZE)
+stsb_train = prepare_dataset(stsb_train, TRAIN_NUM_BATCHES, TRAIN_BATCH_SIZE)
+stsb_valid = prepare_dataset(stsb_valid, VALIDATION_NUM_BATCHES, VALIDATION_BATCH_SIZE)
 
 """
 Let's see examples from the dataset of two sentenses and their similarity.
@@ -170,13 +173,13 @@ layer to exclude padded tokens from being averaged.
 
 preprocessor = keras_nlp.models.RobertaPreprocessor.from_preset("roberta_base_en")
 backbone = keras_nlp.models.RobertaBackbone.from_preset("roberta_base_en")
-inputs = keras.Input(shape=(1), dtype="string", name="sentence")
+inputs = keras.Input(shape=(1,), dtype="string", name="sentence")
 x = preprocessor(inputs)
 h = backbone(x)
 embedding = keras.layers.GlobalAveragePooling1D(name="pooling_layer")(
     h, x["padding_mask"]
 )
-n_embedding = tf.linalg.normalize(embedding, axis=1)[0]
+n_embedding = keras.layers.UnitNormalization(axis=1)(embedding)
 roberta_normal_encoder = keras.Model(inputs=inputs, outputs=n_embedding)
 
 roberta_normal_encoder.summary()
@@ -197,11 +200,11 @@ sentences.
 
 class RegressionSiamese(keras.Model):
     def __init__(self, encoder, **kwargs):
-        inputs = keras.Input(shape=(2), dtype="string", name="sentences")
-        sen1, sen2 = tf.split(inputs, num_or_size_splits=2, axis=1, name="split")
+        inputs = keras.Input(shape=(2,), dtype="string", name="sentences")
+        sen1, sen2 = keras.ops.split(inputs, 2, axis=1)
         u = encoder(sen1)
         v = encoder(sen2)
-        cosine_similarity_scores = tf.matmul(u, tf.transpose(v))
+        cosine_similarity_scores = keras.ops.matmul(u, keras.ops.transpose(v))
 
         super().__init__(
             inputs=inputs,
@@ -247,6 +250,7 @@ roberta_regression_siamese = RegressionSiamese(roberta_normal_encoder)
 roberta_regression_siamese.compile(
     loss=keras.losses.MeanSquaredError(),
     optimizer=keras.optimizers.Adam(2e-5),
+    jit_compile=False,
 )
 
 roberta_regression_siamese.fit(stsb_train, validation_data=stsb_valid, epochs=1)
@@ -302,17 +306,17 @@ wget https://sbert.net/datasets/wikipedia-sections-triplets.zip -q
 unzip wikipedia-sections-triplets.zip  -d  wikipedia-sections-triplets
 """
 
-NUM_TRAIN_BATCHS = 200
-NUM_TEST_BATCHS = 75
+NUM_TRAIN_BATCHES = 200
+NUM_TEST_BATCHES = 75
 AUTOTUNE = tf.data.experimental.AUTOTUNE
 
 
-def prepare_wiki_data(dataset, num_batchs):
+def prepare_wiki_data(dataset, num_batches):
     dataset = dataset.map(
         lambda z: ((z["Sentence1"], z["Sentence2"], z["Sentence3"]), 0)
     )
     dataset = dataset.batch(6)
-    dataset = dataset.take(num_batchs)
+    dataset = dataset.take(num_batches)
     dataset = dataset.prefetch(AUTOTUNE)
     return dataset
 
@@ -328,8 +332,8 @@ wiki_test = tf.data.experimental.make_csv_dataset(
     num_epochs=1,
 )
 
-wiki_train = prepare_wiki_data(wiki_train, NUM_TRAIN_BATCHS)
-wiki_test = prepare_wiki_data(wiki_test, NUM_TEST_BATCHS)
+wiki_train = prepare_wiki_data(wiki_train, NUM_TRAIN_BATCHES)
+wiki_test = prepare_wiki_data(wiki_test, NUM_TEST_BATCHES)
 
 """
 #### Build the encoder model
@@ -345,7 +349,7 @@ sentence.
 
 preprocessor = keras_nlp.models.RobertaPreprocessor.from_preset("roberta_base_en")
 backbone = keras_nlp.models.RobertaBackbone.from_preset("roberta_base_en")
-input = keras.Input(shape=(1), dtype="string", name="sentence")
+input = keras.Input(shape=(1,), dtype="string", name="sentence")
 
 x = preprocessor(input)
 h = backbone(x)
@@ -370,21 +374,21 @@ embedding for each sentence, and we will calculate the `positive_dist` and
 
 class TripletSiamese(keras.Model):
     def __init__(self, encoder, **kwargs):
-        anchor = keras.Input(shape=(1), dtype="string")
-        positive = keras.Input(shape=(1), dtype="string")
-        negative = keras.Input(shape=(1), dtype="string")
+        anchor = keras.Input(shape=(1,), dtype="string")
+        positive = keras.Input(shape=(1,), dtype="string")
+        negative = keras.Input(shape=(1,), dtype="string")
 
         ea = encoder(anchor)
         ep = encoder(positive)
         en = encoder(negative)
 
-        positive_dist = tf.math.reduce_sum(tf.math.pow(ea - ep, 2), axis=1)
-        negative_dist = tf.math.reduce_sum(tf.math.pow(ea - en, 2), axis=1)
+        positive_dist = keras.ops.sum(keras.ops.square(ea - ep), axis=1)
+        negative_dist = keras.ops.sum(keras.ops.square(ea - en), axis=1)
 
-        positive_dist = tf.math.sqrt(positive_dist)
-        negative_dist = tf.math.sqrt(negative_dist)
+        positive_dist = keras.ops.sqrt(positive_dist)
+        negative_dist = keras.ops.sqrt(negative_dist)
 
-        output = tf.stack([positive_dist, negative_dist], axis=0)
+        output = keras.ops.stack([positive_dist, negative_dist], axis=0)
 
         super().__init__(inputs=[anchor, positive, negative], outputs=output, **kwargs)
 
@@ -418,8 +422,8 @@ class TripletLoss(keras.losses.Loss):
     def call(self, y_true, y_pred):
         positive_dist, negative_dist = tf.unstack(y_pred, axis=0)
 
-        losses = tf.nn.relu(positive_dist - negative_dist + self.margin)
-        return tf.math.reduce_mean(losses, axis=0)
+        losses = keras.ops.relu(positive_dist - negative_dist + self.margin)
+        return keras.ops.mean(losses, axis=0)
 
 
 """
@@ -434,6 +438,7 @@ roberta_triplet_siamese = TripletSiamese(roberta_encoder)
 roberta_triplet_siamese.compile(
     loss=TripletLoss(),
     optimizer=keras.optimizers.Adam(2e-5),
+    jit_compile=False,
 )
 
 roberta_triplet_siamese.fit(wiki_train, validation_data=wiki_test, epochs=1)
@@ -450,7 +455,7 @@ questions = [
     "How can I improve my English?",
     "How to earn money online?",
     "How do I earn money online?",
-    "How to work and ean money through internet?",
+    "How to work and earn money through internet?",
 ]
 
 encoder = roberta_triplet_siamese.get_encoder()
