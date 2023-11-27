@@ -427,6 +427,12 @@ EXAMPLES_MASTER = {
                     "subcategory": "Text classification",
                     "keras_3": True,
                 },
+                {
+                    "path": "data_parallel_training_with_keras_nlp",
+                    "title": "Data Parallel Training with KerasNLP and tf.distribute",
+                    "subcategory": "Text classification",
+                    "keras_3": True,
+                },
                 # Machine translation
                 {
                     "path": "neural_machine_translation_with_keras_nlp",

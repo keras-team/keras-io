@@ -1,9 +1,9 @@
 """
-Title: Data Parallel Training with KerasNLP
+Title: Data Parallel Training with KerasNLP and tf.distribute
 Author: Anshuman Mishra
 Date created: 2023/07/07
 Last modified: 2023/07/07
-Description: Data Parallel training with KerasNLP.
+Description: Data Parallel training with KerasNLP and tf.distribute.
 Accelerator: GPU
 """
 
@@ -34,15 +34,11 @@ industry workflows.
 - On a cluster of many machines, each hosting one or multiple GPUs (multi-worker
 distributed training). This is a good setup for large-scale industry workflows, e.g.
 training high-resolution text summarization models on billion word datasets on 20-100 GPUs.
-
-## Setup
-
-The tutorial relies on KerasNLP 0.5.2. Additionally, we need
-at least TensorFlow 2.11 in order to use AdamW with mixed precision.
 """
 
 """shell
-pip install -U -q tensorflow keras-nlp tensorflow_datasets datasets
+pip install -q --upgrade keras-nlp
+pip install -q --upgrade keras  # Upgrade to Keras 3.
 """
 
 """
@@ -50,8 +46,11 @@ pip install -U -q tensorflow keras-nlp tensorflow_datasets datasets
 """
 
 import os
+
+os.environ["KERAS_BACKEND"] = "tensorflow"
+
 import tensorflow as tf
-from tensorflow import keras
+import keras
 import keras_nlp
 
 """
@@ -96,7 +95,8 @@ model** inside the distribution scope.
 strategy = tf.distribute.MirroredStrategy()
 print(f"Number of devices: {strategy.num_replicas_in_sync}")
 
-"""Base batch size and learning rate
+"""
+Base batch size and learning rate
 """
 base_batch_size = 32
 base_learning_rate = 1e-4
@@ -171,7 +171,7 @@ lr_schedule = tf.keras.optimizers.schedules.PolynomialDecay(
 class PrintLR(tf.keras.callbacks.Callback):
     def on_epoch_end(self, epoch, logs=None):
         print(
-            f"\nLearning rate for epoch {epoch + 1} is {model_dist.optimizer.lr.numpy()}"
+            f"\nLearning rate for epoch {epoch + 1} is {model_dist.optimizer.learning_rate.numpy()}"
         )
 
 
@@ -206,7 +206,8 @@ with strategy.scope():
     model_dist.compile(
         loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
         optimizer=tf.keras.optimizers.AdamW(learning_rate=scaled_learning_rate),
-        weighted_metrics=keras.metrics.SparseCategoricalAccuracy(),
+        weighted_metrics=[keras.metrics.SparseCategoricalAccuracy()],
+        jit_compile=False,
     )
 
     model_dist.fit(

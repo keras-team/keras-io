@@ -39,7 +39,7 @@ to start learning our API. We welcome
 * [Parameter-efficient fine-tuning of GPT-2 with LoRA](/examples/nlp/parameter_efficient_finetuning_of_gpt2_with_lora/)
 * [Semantic Similarity](/examples/nlp/semantic_similarity_with_keras_nlp/)
 * [Sentence embeddings using Siamese RoBERTa-networks](/examples/nlp/sentence_embeddings_with_sbert/)
-* [Data Parallel Training](/examples/nlp/data_parallel_training_with_keras_nlp/)
+* [Data Parallel Training with tf.distribute](/examples/nlp/data_parallel_training_with_keras_nlp/)
 * [English-to-Spanish translation](/examples/nlp/neural_machine_translation_with_keras_nlp/)
 * [GPT text generation from scratch](/examples/generative/text_generation_gpt/)
 * [Text Classification using FNet](/examples/nlp/fnet_classification_with_keras_nlp/)
