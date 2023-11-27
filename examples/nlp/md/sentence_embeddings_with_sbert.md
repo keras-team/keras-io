@@ -115,8 +115,8 @@ divide the labels by 2.5 and subtract 1.
 TRAIN_BATCH_SIZE = 6
 VALIDATION_BATCH_SIZE = 8
 
-TRAIN_NUM_BATCHS = 300
-VALIDATION_NUM_BATCHS = 40
+TRAIN_NUM_BATCHES = 300
+VALIDATION_NUM_BATCHES = 40
 
 AUTOTUNE = tf.data.experimental.AUTOTUNE
 
@@ -125,7 +125,7 @@ def change_range(x):
     return (x / 2.5) - 1
 
 
-def prepare_dataset(dataset, num_batchs, batch_size):
+def prepare_dataset(dataset, num_batches, batch_size):
     dataset = dataset.map(
         lambda z: (
             [z["sentence1"], z["sentence2"]],
@@ -134,7 +134,7 @@ def prepare_dataset(dataset, num_batchs, batch_size):
         num_parallel_calls=AUTOTUNE,
     )
     dataset = dataset.batch(batch_size)
-    dataset = dataset.take(num_batchs)
+    dataset = dataset.take(num_batches)
     dataset = dataset.prefetch(AUTOTUNE)
     return dataset
 
@@ -144,8 +144,8 @@ stsb_ds = tfds.load(
 )
 stsb_train, stsb_valid = stsb_ds["train"], stsb_ds["validation"]
 
-stsb_train = prepare_dataset(stsb_train, TRAIN_NUM_BATCHS, TRAIN_BATCH_SIZE)
-stsb_valid = prepare_dataset(stsb_valid, VALIDATION_NUM_BATCHS, VALIDATION_BATCH_SIZE)
+stsb_train = prepare_dataset(stsb_train, TRAIN_NUM_BATCHES, TRAIN_BATCH_SIZE)
+stsb_valid = prepare_dataset(stsb_valid, VALIDATION_NUM_BATCHES, VALIDATION_BATCH_SIZE)
 ```
 
 Let's see examples from the dataset of two sentenses and their similarity.
@@ -370,9 +370,9 @@ roberta_regression_siamese.fit(stsb_train, validation_data=stsb_valid, epochs=1)
 
 <div class="k-default-codeblock">
 ```
- 300/300 ━━━━━━━━━━━━━━━━━━━━ 116s 304ms/step - loss: 0.4691 - val_loss: 0.4052
+ 300/300 ━━━━━━━━━━━━━━━━━━━━ 115s 297ms/step - loss: 0.4751 - val_loss: 0.4025
 
-<keras.src.callbacks.history.History at 0x7f6d78685ab0>
+<keras.src.callbacks.history.History at 0x7f5a78392140>
 
 ```
 </div>
@@ -402,9 +402,9 @@ for i, sim in enumerate(cosine_simalarities[0]):
 
 <div class="k-default-codeblock">
 ```
-cosine similarity between sentence 1 and the query = 0.050384521484375 
-cosine similarity between sentence 2 and the query = 0.468505859375 
-cosine similarity between sentence 3 and the query = 0.669921875 
+cosine similarity between sentence 1 and the query = 0.10986328125 
+cosine similarity between sentence 2 and the query = 0.53466796875 
+cosine similarity between sentence 3 and the query = 0.83544921875 
 
 ```
 </div>
@@ -434,17 +434,17 @@ example, we will only use 1200 triplets for training and 300 for testing.
 ```
 
 ```python
-NUM_TRAIN_BATCHS = 200
-NUM_TEST_BATCHS = 75
+NUM_TRAIN_BATCHES = 200
+NUM_TEST_BATCHES = 75
 AUTOTUNE = tf.data.experimental.AUTOTUNE
 
 
-def prepare_wiki_data(dataset, num_batchs):
+def prepare_wiki_data(dataset, num_batches):
     dataset = dataset.map(
         lambda z: ((z["Sentence1"], z["Sentence2"], z["Sentence3"]), 0)
     )
     dataset = dataset.batch(6)
-    dataset = dataset.take(num_batchs)
+    dataset = dataset.take(num_batches)
     dataset = dataset.prefetch(AUTOTUNE)
     return dataset
 
@@ -460,8 +460,8 @@ wiki_test = tf.data.experimental.make_csv_dataset(
     num_epochs=1,
 )
 
-wiki_train = prepare_wiki_data(wiki_train, NUM_TRAIN_BATCHS)
-wiki_test = prepare_wiki_data(wiki_test, NUM_TEST_BATCHS)
+wiki_train = prepare_wiki_data(wiki_train, NUM_TRAIN_BATCHES)
+wiki_test = prepare_wiki_data(wiki_test, NUM_TEST_BATCHES)
 ```
 <div class="k-default-codeblock">
 ```
@@ -631,9 +631,9 @@ roberta_triplet_siamese.fit(wiki_train, validation_data=wiki_test, epochs=1)
 
 <div class="k-default-codeblock">
 ```
- 200/200 ━━━━━━━━━━━━━━━━━━━━ 128s 472ms/step - loss: 0.7984 - val_loss: 0.6179
+ 200/200 ━━━━━━━━━━━━━━━━━━━━ 128s 467ms/step - loss: 0.7822 - val_loss: 0.7126
 
-<keras.src.callbacks.history.History at 0x7f6ed2384e50>
+<keras.src.callbacks.history.History at 0x7f5c3636c580>
 
 ```
 </div>
@@ -649,7 +649,7 @@ questions = [
     "How can I improve my English?",
     "How to earn money online?",
     "How do I earn money online?",
-    "How to work and ean money through internet?",
+    "How to work and earn money through internet?",
 ]
 
 encoder = roberta_triplet_siamese.get_encoder()
@@ -667,7 +667,7 @@ sentence (How to be good at speaking English?) belongs to cluster 1
 sentence (How can I improve my English?) belongs to cluster 1
 sentence (How to earn money online?) belongs to cluster 0
 sentence (How do I earn money online?) belongs to cluster 0
-sentence (How to work and ean money through internet?) belongs to cluster 0
+sentence (How to work and earn money through internet?) belongs to cluster 0
 
 ```
 </div>

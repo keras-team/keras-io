@@ -113,8 +113,8 @@ divide the labels by 2.5 and subtract 1.
 TRAIN_BATCH_SIZE = 6
 VALIDATION_BATCH_SIZE = 8
 
-TRAIN_NUM_BATCHS = 300
-VALIDATION_NUM_BATCHS = 40
+TRAIN_NUM_BATCHES = 300
+VALIDATION_NUM_BATCHES = 40
 
 AUTOTUNE = tf.data.experimental.AUTOTUNE
 
@@ -123,7 +123,7 @@ def change_range(x):
     return (x / 2.5) - 1
 
 
-def prepare_dataset(dataset, num_batchs, batch_size):
+def prepare_dataset(dataset, num_batches, batch_size):
     dataset = dataset.map(
         lambda z: (
             [z["sentence1"], z["sentence2"]],
@@ -132,7 +132,7 @@ def prepare_dataset(dataset, num_batchs, batch_size):
         num_parallel_calls=AUTOTUNE,
     )
     dataset = dataset.batch(batch_size)
-    dataset = dataset.take(num_batchs)
+    dataset = dataset.take(num_batches)
     dataset = dataset.prefetch(AUTOTUNE)
     return dataset
 
@@ -142,8 +142,8 @@ stsb_ds = tfds.load(
 )
 stsb_train, stsb_valid = stsb_ds["train"], stsb_ds["validation"]
 
-stsb_train = prepare_dataset(stsb_train, TRAIN_NUM_BATCHS, TRAIN_BATCH_SIZE)
-stsb_valid = prepare_dataset(stsb_valid, VALIDATION_NUM_BATCHS, VALIDATION_BATCH_SIZE)
+stsb_train = prepare_dataset(stsb_train, TRAIN_NUM_BATCHES, TRAIN_BATCH_SIZE)
+stsb_valid = prepare_dataset(stsb_valid, VALIDATION_NUM_BATCHES, VALIDATION_BATCH_SIZE)
 
 """
 Let's see examples from the dataset of two sentenses and their similarity.
@@ -306,17 +306,17 @@ wget https://sbert.net/datasets/wikipedia-sections-triplets.zip -q
 unzip wikipedia-sections-triplets.zip  -d  wikipedia-sections-triplets
 """
 
-NUM_TRAIN_BATCHS = 200
-NUM_TEST_BATCHS = 75
+NUM_TRAIN_BATCHES = 200
+NUM_TEST_BATCHES = 75
 AUTOTUNE = tf.data.experimental.AUTOTUNE
 
 
-def prepare_wiki_data(dataset, num_batchs):
+def prepare_wiki_data(dataset, num_batches):
     dataset = dataset.map(
         lambda z: ((z["Sentence1"], z["Sentence2"], z["Sentence3"]), 0)
     )
     dataset = dataset.batch(6)
-    dataset = dataset.take(num_batchs)
+    dataset = dataset.take(num_batches)
     dataset = dataset.prefetch(AUTOTUNE)
     return dataset
 
@@ -332,8 +332,8 @@ wiki_test = tf.data.experimental.make_csv_dataset(
     num_epochs=1,
 )
 
-wiki_train = prepare_wiki_data(wiki_train, NUM_TRAIN_BATCHS)
-wiki_test = prepare_wiki_data(wiki_test, NUM_TEST_BATCHS)
+wiki_train = prepare_wiki_data(wiki_train, NUM_TRAIN_BATCHES)
+wiki_test = prepare_wiki_data(wiki_test, NUM_TEST_BATCHES)
 
 """
 #### Build the encoder model
@@ -455,7 +455,7 @@ questions = [
     "How can I improve my English?",
     "How to earn money online?",
     "How do I earn money online?",
-    "How to work and ean money through internet?",
+    "How to work and earn money through internet?",
 ]
 
 encoder = roberta_triplet_siamese.get_encoder()
