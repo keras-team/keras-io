@@ -31,6 +31,11 @@ explanation translates to code, hack KerasNLP's
 it on the next token prediction task using LoRA. We will compare LoRA GPT-2
 with a fully fine-tuned GPT-2 in terms of the quality of the generated text,
 training time and GPU memory usage.
+
+Note: This example runs on the TensorFlow backend purely for the
+`tf.config.experimental.get_memory_info` API to easily plot memory usage.
+Outside of the memory usage callback, this example will run on `jax` and `torch`
+backends.
 """
 
 """
@@ -44,19 +49,22 @@ training time.
 """
 
 """shell
-pip install keras-nlp -q
+pip install -q --upgrade keras-nlp
+pip install -q --upgrade keras  # Upgrade to Keras 3.
 """
 
+import os
+
+os.environ["KERAS_BACKEND"] = "tensorflow"
+
 import keras_nlp
+import keras
 import matplotlib.pyplot as plt
 import tensorflow as tf
 import tensorflow_datasets as tfds
 import time
 
-from tensorflow import keras
-
-policy = keras.mixed_precision.Policy("mixed_float16")
-keras.mixed_precision.set_global_policy(policy)
+keras.mixed_precision.set_global_policy("mixed_float16")
 
 """
 Let's also define our hyperparameters.
@@ -448,6 +456,8 @@ for layer_idx in range(lora_model.backbone.num_layers):
     # Change query dense layer.
     decoder_layer = lora_model.backbone.get_layer(f"transformer_layer_{layer_idx}")
     self_attention_layer = decoder_layer._self_attention_layer
+    # Allow mutation to Keras layer state.
+    self_attention_layer._tracker.locked = False
 
     # Change query dense layer.
     self_attention_layer._query_dense = LoraLayer(

@@ -35,6 +35,8 @@ it on the next token prediction task using LoRA. We will compare LoRA GPT-2
 with a fully fine-tuned GPT-2 in terms of the quality of the generated text,
 training time and GPU memory usage.
 
+Note: This example runs on the TensorFlow backend, purely because TensorFlow
+
 ---
 ## Setup
 
@@ -46,21 +48,24 @@ training time.
 
 
 ```python
-!pip install keras-nlp -q
+!pip install -q --upgrade keras-nlp
+!pip install -q --upgrade keras  # Upgrade to Keras 3.
 ```
 
 
 ```python
+import os
+
+os.environ["KERAS_BACKEND"] = "tensorflow"
+
 import keras_nlp
+import keras
 import matplotlib.pyplot as plt
 import tensorflow as tf
 import tensorflow_datasets as tfds
 import time
 
-from tensorflow import keras
-
-policy = keras.mixed_precision.Policy("mixed_float16")
-keras.mixed_precision.set_global_policy(policy)
+keras.mixed_precision.set_global_policy("mixed_float16")
 ```
 
 Let's also define our hyperparameters.
@@ -94,26 +99,6 @@ in style to Reddit posts.
 reddit_ds = tfds.load("reddit_tifu", split="train", as_supervised=True)
 ```
 
-<div class="k-default-codeblock">
-```
-Downloading and preparing dataset 639.54 MiB (download: 639.54 MiB, generated: 141.46 MiB, total: 781.00 MiB) to /root/tensorflow_datasets/reddit_tifu/short/1.1.2...
-
-Dl Completed...: 0 url [00:00, ? url/s]
-
-Dl Size...: 0 MiB [00:00, ? MiB/s]
-
-Extraction completed...: 0 file [00:00, ? file/s]
-
-Generating splits...:   0%|          | 0/1 [00:00<?, ? splits/s]
-
-Generating train examples...:   0%|          | 0/79740 [00:00<?, ? examples/s]
-
-Shuffling /root/tensorflow_datasets/reddit_tifu/short/1.1.2.incompleteS7YOTP/reddit_tifu-train.tfrecord*...:  …
-
-Dataset reddit_tifu downloaded and prepared to /root/tensorflow_datasets/reddit_tifu/short/1.1.2. Subsequent calls will reuse this data.
-
-```
-</div>
 The dataset has two fields: `document` and `title`.
 
 
@@ -262,45 +247,64 @@ gpt2_lm = keras_nlp.models.GPT2CausalLM.from_preset(
 gpt2_lm.summary()
 ```
 
-<div class="k-default-codeblock">
-```
-Downloading data from https://storage.googleapis.com/keras-nlp/models/gpt2_base_en/v1/vocab.json
-1042301/1042301 [==============================] - 1s 1us/step
-Downloading data from https://storage.googleapis.com/keras-nlp/models/gpt2_base_en/v1/merges.txt
-456318/456318 [==============================] - 1s 1us/step
-Downloading data from https://storage.googleapis.com/keras-nlp/models/gpt2_base_en/v1/model.h5
-497986112/497986112 [==============================] - 26s 0us/step
 
-WARNING:tensorflow:The following Variables were used in a Lambda layer's call (tf.linalg.matmul), but are not present in its tracked objects:   <tf.Variable 'token_embedding/embeddings:0' shape=(50257, 768) dtype=float32>. This is a strong indication that the Lambda layer should be rewritten as a subclassed Layer.
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold">Preprocessor: "gpt2_causal_lm_preprocessor"</span>
+</pre>
 
-Preprocessor: "gpt2_causal_lm_preprocessor"
-__________________________________________________________________________________________________
- Tokenizer (type)                                    Vocab #     
-==================================================================================================
- gpt2_tokenizer (GPT2Tokenizer)                      50257       
-__________________________________________________________________________________________________
-                                                                                                  
-Model: "gpt2_causal_lm"
-__________________________________________________________________________________________________
- Layer (type)                   Output Shape         Param #     Connected to                     
-==================================================================================================
- padding_mask (InputLayer)      [(None, None)]       0           []                               
-                                                                                                  
- token_ids (InputLayer)         [(None, None)]       0           []                               
-                                                                                                  
- gpt2_backbone (GPT2Backbone)   (None, None, 768)    124439808   ['padding_mask[0][0]',           
-                                                                  'token_ids[0][0]']              
-                                                                                                  
- tf.linalg.matmul (TFOpLambda)  (None, None, 50257)  0           ['gpt2_backbone[0][0]']          
-                                                                                                  
-==================================================================================================
-Total params: 124,439,808
-Trainable params: 124,439,808
-Non-trainable params: 0
-__________________________________________________________________________________________________
 
-```
-</div>
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃<span style="font-weight: bold"> Tokenizer (type)                                   </span>┃<span style="font-weight: bold">                                             Vocab # </span>┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│ gpt2_tokenizer (<span style="color: #0087ff; text-decoration-color: #0087ff">GPT2Tokenizer</span>)                     │                                              <span style="color: #00af00; text-decoration-color: #00af00">50,257</span> │
+└────────────────────────────────────────────────────┴─────────────────────────────────────────────────────┘
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold">Model: "gpt2_causal_lm"</span>
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃<span style="font-weight: bold"> Layer (type)                  </span>┃<span style="font-weight: bold"> Output Shape              </span>┃<span style="font-weight: bold">     Param # </span>┃<span style="font-weight: bold"> Connected to                   </span>┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│ padding_mask (<span style="color: #0087ff; text-decoration-color: #0087ff">InputLayer</span>)     │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>)              │           <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ -                              │
+├───────────────────────────────┼───────────────────────────┼─────────────┼────────────────────────────────┤
+│ token_ids (<span style="color: #0087ff; text-decoration-color: #0087ff">InputLayer</span>)        │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>)              │           <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ -                              │
+├───────────────────────────────┼───────────────────────────┼─────────────┼────────────────────────────────┤
+│ gpt2_backbone (<span style="color: #0087ff; text-decoration-color: #0087ff">GPT2Backbone</span>)  │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">768</span>)         │ <span style="color: #00af00; text-decoration-color: #00af00">124,439,808</span> │ padding_mask[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>],            │
+│                               │                           │             │ token_ids[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>]                │
+├───────────────────────────────┼───────────────────────────┼─────────────┼────────────────────────────────┤
+│ token_embedding               │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">50257</span>)       │  <span style="color: #00af00; text-decoration-color: #00af00">38,597,376</span> │ gpt2_backbone[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>]            │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">ReversibleEmbedding</span>)         │                           │             │                                │
+└───────────────────────────────┴───────────────────────────┴─────────────┴────────────────────────────────┘
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Total params: </span><span style="color: #00af00; text-decoration-color: #00af00">124,439,808</span> (474.70 MB)
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Trainable params: </span><span style="color: #00af00; text-decoration-color: #00af00">124,439,808</span> (474.70 MB)
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Non-trainable params: </span><span style="color: #00af00; text-decoration-color: #00af00">0</span> (0.00 B)
+</pre>
+
+
+
 Initialize the GPU memory tracker callback object, and compile the model. We
 use the Adam optimizer with a linearly decaying learning rate.
 
@@ -330,7 +334,11 @@ gpt2_lm_memory_usage = gpu_memory_callback.memory_usage
 
 <div class="k-default-codeblock">
 ```
-500/500 [==============================] - 435s 661ms/step - loss: 3.2986 - accuracy: 0.3268
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1701119282.714090   23930 device_compiler.h:186] Compiled cluster using XLA!  This line is logged at most once for the lifetime of the process.
+W0000 00:00:1701119282.783056   23930 graph_launch.cc:671] Fallback to op-by-op mode because memset node breaks graph update
+
+ 500/500 ━━━━━━━━━━━━━━━━━━━━ 113s 128ms/step - accuracy: 0.3187 - loss: 3.3697
 
 ```
 </div>
@@ -348,46 +356,40 @@ generate_text(gpt2_lm, "That Italian restaurant is", max_length=MAX_GENERATION_L
 <div class="k-default-codeblock">
 ```
 Output:
-I like basketball because it's easy and fun, but it doesn't really have much to offer me.
+I like basketball. i'm a big basketball fan, so my mom always tells me that i like playing the game. i'm a good basketball player, so i always say that i'm a good basketball player. 
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-so i was playing with the boys in my school, and one of our players is really cute, and he's pretty loud. i was just trying to keep my voice quiet and to keep the conversation going, but when my mom asked me to stop, i said "i don't want to listen to him. it's a bad idea."
+i was playing with my friend, and i got to the point where i didn't really know him. i was playing with my best friend, he's a good basketball player, and we both know eachother well.
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-she said "what do you mean?"
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-so i'm like "what?"
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-i said "it's not your voice, it's your
-Total Time Elapsed: 20.45s
+i was just playing with my best friend, so i was like, "oh, i know you can play the game, but i just don't know how." so i
+Total Time Elapsed: 6.62s
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
 Output:
-That Italian restaurant is in my hometown.  they have a great deal on a variety of dishes, but i usually just eat the food that i'm given.  they usually have a nice selection of food, and usually have a variety of drinks that you can drink.  so i'm sitting in a small table and i see my favorite drink in front of me, a beer, a glass of water. 
+That Italian restaurant is on the way to mexico for the first time this month.
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-my mom is in the middle of eating, and i'm sitting next to her and she's just looking at me with a smile.  i'm just so happy i'm eating
-Total Time Elapsed: 1.09s
+my girlfriend and i were having a good time. she was in the middle of getting ready for work, so we decided to head to the kitchen.
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+there were a ton of dishes, so i was just sitting on the kitchen floor. i was just trying to get the most out of my meal, so i started to pour water on my plate to make it look like i was going to pour water on my plates. i didn't want to look messy, i just didn't want to look like i was going to pour water on my plate.
+Total Time Elapsed: 0.23s
 
 ```
 </div>
@@ -578,12 +580,6 @@ lora_model = keras_nlp.models.GPT2CausalLM.from_preset(
 )
 ```
 
-<div class="k-default-codeblock">
-```
-WARNING:tensorflow:The following Variables were used in a Lambda layer's call (tf.linalg.matmul_1), but are not present in its tracked objects:   <tf.Variable 'token_embedding/embeddings:0' shape=(50257, 768) dtype=float32>. This is a strong indication that the Lambda layer should be rewritten as a subclassed Layer.
-
-```
-</div>
 We will now override the original query/value projection matrices with our
 new LoRA layers.
 
@@ -593,6 +589,8 @@ for layer_idx in range(lora_model.backbone.num_layers):
     # Change query dense layer.
     decoder_layer = lora_model.backbone.get_layer(f"transformer_layer_{layer_idx}")
     self_attention_layer = decoder_layer._self_attention_layer
+    # Allow mutation to Keras layer state.
+    self_attention_layer._tracker.locked = False
 
     # Change query dense layer.
     self_attention_layer._query_dense = LoraLayer(
@@ -648,37 +646,64 @@ parameters in the original GPT-2 model, which is `124,439,808`.
 lora_model.summary()
 ```
 
-<div class="k-default-codeblock">
-```
-Preprocessor: "gpt2_causal_lm_preprocessor_1"
-__________________________________________________________________________________________________
- Tokenizer (type)                                    Vocab #     
-==================================================================================================
- gpt2_tokenizer_1 (GPT2Tokenizer)                    50257       
-__________________________________________________________________________________________________
-                                                                                                  
-Model: "gpt2_causal_lm_1"
-__________________________________________________________________________________________________
- Layer (type)                   Output Shape         Param #     Connected to                     
-==================================================================================================
- padding_mask (InputLayer)      [(None, None)]       0           []                               
-                                                                                                  
- token_ids (InputLayer)         [(None, None)]       0           []                               
-                                                                                                  
- gpt2_backbone_1 (GPT2Backbone)  (None, None, 768)   124587264   ['padding_mask[0][0]',           
-                                                                  'token_ids[0][0]']              
-                                                                                                  
- tf.linalg.matmul_1 (TFOpLambda  (None, None, 50257)  0          ['gpt2_backbone_1[0][0]']        
- )                                                                                                
-                                                                                                  
-==================================================================================================
-Total params: 124,587,264
-Trainable params: 147,456
-Non-trainable params: 124,439,808
-__________________________________________________________________________________________________
 
-```
-</div>
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold">Preprocessor: "gpt2_causal_lm_preprocessor_1"</span>
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃<span style="font-weight: bold"> Tokenizer (type)                                   </span>┃<span style="font-weight: bold">                                             Vocab # </span>┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│ gpt2_tokenizer_1 (<span style="color: #0087ff; text-decoration-color: #0087ff">GPT2Tokenizer</span>)                   │                                              <span style="color: #00af00; text-decoration-color: #00af00">50,257</span> │
+└────────────────────────────────────────────────────┴─────────────────────────────────────────────────────┘
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold">Model: "gpt2_causal_lm_1"</span>
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃<span style="font-weight: bold"> Layer (type)                  </span>┃<span style="font-weight: bold"> Output Shape              </span>┃<span style="font-weight: bold">     Param # </span>┃<span style="font-weight: bold"> Connected to                   </span>┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│ padding_mask (<span style="color: #0087ff; text-decoration-color: #0087ff">InputLayer</span>)     │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>)              │           <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ -                              │
+├───────────────────────────────┼───────────────────────────┼─────────────┼────────────────────────────────┤
+│ token_ids (<span style="color: #0087ff; text-decoration-color: #0087ff">InputLayer</span>)        │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>)              │           <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ -                              │
+├───────────────────────────────┼───────────────────────────┼─────────────┼────────────────────────────────┤
+│ gpt2_backbone_1               │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">768</span>)         │ <span style="color: #00af00; text-decoration-color: #00af00">124,587,264</span> │ padding_mask[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>],            │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">GPT2Backbone</span>)                │                           │             │ token_ids[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>]                │
+├───────────────────────────────┼───────────────────────────┼─────────────┼────────────────────────────────┤
+│ token_embedding               │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">50257</span>)       │  <span style="color: #00af00; text-decoration-color: #00af00">38,597,376</span> │ gpt2_backbone_1[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>]          │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">ReversibleEmbedding</span>)         │                           │             │                                │
+└───────────────────────────────┴───────────────────────────┴─────────────┴────────────────────────────────┘
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Total params: </span><span style="color: #00af00; text-decoration-color: #00af00">124,587,264</span> (475.26 MB)
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Trainable params: </span><span style="color: #00af00; text-decoration-color: #00af00">147,456</span> (576.00 KB)
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Non-trainable params: </span><span style="color: #00af00; text-decoration-color: #00af00">124,439,808</span> (474.70 MB)
+</pre>
+
+
+
 ### Fine-tune LoRA GPT-2
 
 Now that we have hacked and verified the LoRA GPT-2 model, let's train it!
@@ -708,7 +733,11 @@ lora_model_memory_usage = gpu_memory_callback.memory_usage
 
 <div class="k-default-codeblock">
 ```
-500/500 [==============================] - 314s 513ms/step - loss: 3.5352 - accuracy: 0.3013
+   2/500 [37m━━━━━━━━━━━━━━━━━━━━  42s 84ms/step - accuracy: 0.2845 - loss: 3.7363   
+
+W0000 00:00:1701119397.827241   23917 graph_launch.cc:671] Fallback to op-by-op mode because memset node breaks graph update
+
+ 500/500 ━━━━━━━━━━━━━━━━━━━━ 83s 85ms/step - accuracy: 0.2928 - loss: 3.6181
 
 ```
 </div>
@@ -793,23 +822,27 @@ generate_text(
 <div class="k-default-codeblock">
 ```
 Output:
-I like basketball.
-i was in the middle school class when i got my first class assignment, and my first class assignment was about a month ago (the class is in the middle of a summer semester). i was sitting with my friends at the bar, chatting with them about the school, and my friend said something to me, "well, this is my first year in school, so we'll be getting the assignment for the summer semester.  
-Total Time Elapsed: 23.86s
+I like basketball. i was a freshman at college, and i had a really bad day. so today, my mom was sitting at her computer and watching some basketball.    
+        
+                          
+                                            
+                                                                               
+Total Time Elapsed: 7.03s
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
 Output:
-That Italian restaurant is located at my place and i'm a little over halfway through. 
+That Italian restaurant is in the city, so i decided to go to my local bar. i got a few drinks and started chatting to the bartender.
 ```
 </div>
     
+    
 <div class="k-default-codeblock">
 ```
-i was going to a party and had some fun with some friends.         i'm not a fan of music, and my friends are not really into music.          i was going to the bar and was having a good time.                                                                                                                      
-Total Time Elapsed: 1.01s
+"what happened? i was drinking a glass of    a    i had in my hand. i had a glass of                  
+Total Time Elapsed: 0.16s
 
 ```
 </div>
