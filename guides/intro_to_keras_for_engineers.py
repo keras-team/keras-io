@@ -12,6 +12,12 @@ Accelerator: GPU
 Keras 3 is a deep learning framework
 works with TensorFlow, JAX, and PyTorch interchangeably.
 This notebook will walk you through key Keras 3 workflows.
+
+Let's start by installing Keras 3:
+"""
+
+"""shell
+pip install keras --upgrade --quiet
 """
 
 """
