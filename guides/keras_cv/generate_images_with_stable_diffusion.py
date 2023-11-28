@@ -29,12 +29,17 @@ To get started, let's install a few dependencies and sort out some imports:
 """
 
 """shell
-pip install --upgrade keras-cv
+pip install -Uq keras-cv >> /dev/null
+pip install -Uq keras >> /dev/null  # Upgrade to Keras 3.
 """
+
+import os
+
+os.environ["KERAS_BACKEND"] = "jax"
 
 import time
 import keras_cv
-from tensorflow import keras
+import keras
 import matplotlib.pyplot as plt
 
 """
@@ -275,7 +280,7 @@ keras.backend.clear_session()
 """
 ### XLA Compilation
 
-TensorFlow comes with the
+TensorFlow and JAX come with the
 [XLA: Accelerated Linear Algebra](https://www.tensorflow.org/xla) compiler built-in.
 `keras_cv.models.StableDiffusion` supports a `jit_compile` argument out of the box.
 Setting this argument to `True` enables XLA compilation, resulting in a significant
