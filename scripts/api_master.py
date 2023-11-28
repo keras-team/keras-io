@@ -1635,7 +1635,7 @@ API_MASTER = {
             ],
         },
         KT_API_MASTER,
-        # CV_API_MASTER,
-        # NLP_API_MASTER,
+        CV_API_MASTER,
+        NLP_API_MASTER,
     ],
 }
