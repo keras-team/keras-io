@@ -29,15 +29,15 @@ these powerful performance boosts, and explore the performance benefits
 that they offer.
 
 **Note:** To run this guide on the `torch` backend, please set `jit_compile=False`
-everywhere. XLA compilation for StableDiffusion does not currently work with
+everywhere. XLA compilation for Stable Diffusion does not currently work with
 torch.
 
 To get started, let's install a few dependencies and sort out some imports:
 
 
 ```python
-!pip install -q —upgrade keras-cv
-!pip install -q —upgrade keras  # Upgrade to Keras 3.
+!pip install -q —-upgrade keras-cv
+!pip install -q —-upgrade keras  # Upgrade to Keras 3.
 ```
 
 ```python
@@ -48,8 +48,8 @@ import matplotlib.pyplot as plt
 ```
 <div class="k-default-codeblock">
 ```
-[31mERROR: Invalid requirement: '—upgrade'[31m
-[31mERROR: Invalid requirement: '—upgrade'[31m
+[31mERROR: Invalid requirement: '—-upgrade'[31m
+[31mERROR: Invalid requirement: '—-upgrade'[31m
 
 
 ```
@@ -275,8 +275,8 @@ keras.backend.clear_session()  # Clear session to preserve memory.
 
 <div class="k-default-codeblock">
 ```
- 50/50 ━━━━━━━━━━━━━━━━━━━━ 10s 208ms/step
-Standard model: 10.55 seconds
+ 50/50 ━━━━━━━━━━━━━━━━━━━━ 10s 209ms/step
+Standard model: 10.57 seconds
 
 ```
 </div>
@@ -347,9 +347,9 @@ keras.backend.clear_session()
 
 <div class="k-default-codeblock">
 ```
- 50/50 ━━━━━━━━━━━━━━━━━━━━ 42s 130ms/step
+ 50/50 ━━━━━━━━━━━━━━━━━━━━ 41s 130ms/step
  50/50 ━━━━━━━━━━━━━━━━━━━━ 6s 129ms/step
-Mixed precision model: 6.64 seconds
+Mixed precision model: 6.61 seconds
 
 ```
 </div>
@@ -383,7 +383,7 @@ plot_images(images)
 <div class="k-default-codeblock">
 ```
 By using this model checkpoint, you acknowledge that its usage is subject to the terms of the CreativeML Open RAIL-M license at https://raw.githubusercontent.com/CompVis/stable-diffusion/main/LICENSE
- 50/50 ━━━━━━━━━━━━━━━━━━━━ 48s 210ms/step
+ 50/50 ━━━━━━━━━━━━━━━━━━━━ 47s 209ms/step
 
 ```
 </div>
@@ -412,7 +412,7 @@ keras.backend.clear_session()
 <div class="k-default-codeblock">
 ```
  50/50 ━━━━━━━━━━━━━━━━━━━━ 10s 209ms/step
-With XLA: 10.58 seconds
+With XLA: 10.56 seconds
 
 ```
 </div>
@@ -487,8 +487,8 @@ print(f"XLA + mixed precision: {(end - start):.2f} seconds")
 
 <div class="k-default-codeblock">
 ```
- 50/50 ━━━━━━━━━━━━━━━━━━━━ 6s 130ms/step
-XLA + mixed precision: 6.65 seconds
+ 50/50 ━━━━━━━━━━━━━━━━━━━━ 7s 130ms/step
+XLA + mixed precision: 6.69 seconds
 
 ```
 </div>
@@ -510,10 +510,10 @@ for result in benchmark_result:
 <div class="k-default-codeblock">
 ```
 Model                  Runtime               
-Standard               10.547032833099365    
-Mixed Precision        6.636443376541138     
-XLA                    10.584967851638794    
-XLA + Mixed Precision  6.652373552322388     
+Standard               10.567662954330444    
+Mixed Precision        6.610702276229858     
+XLA                    10.562997579574585    
+XLA + Mixed Precision  6.686670303344727     
 
 ```
 </div>

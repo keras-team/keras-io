@@ -26,15 +26,15 @@ these powerful performance boosts, and explore the performance benefits
 that they offer.
 
 **Note:** To run this guide on the `torch` backend, please set `jit_compile=False`
-everywhere. XLA compilation for StableDiffusion does not currently work with
+everywhere. XLA compilation for Stable Diffusion does not currently work with
 torch.
 
 To get started, let's install a few dependencies and sort out some imports:
 """
 
 """shell
-pip install -q —upgrade keras-cv
-pip install -q —upgrade keras  # Upgrade to Keras 3.
+pip install -q —-upgrade keras-cv
+pip install -q —-upgrade keras  # Upgrade to Keras 3.
 """
 
 import time
