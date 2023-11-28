@@ -3,7 +3,7 @@
 **Authors:** [fchollet](https://twitter.com/fchollet), [lukewood](https://twitter.com/luke_wood_ml), [divamgupta](https://github.com/divamgupta)<br>
 **Date created:** 2022/09/25<br>
 **Last modified:** 2022/09/25<br>
-**Description:** Generate new images using KerasCV's StableDiffusion model.
+**Description:** Generate new images using KerasCV's Stable Diffusion model.
 
 
 <img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/guides/ipynb/keras_cv/generate_images_with_stable_diffusion.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/guides/keras_cv/generate_images_with_stable_diffusion.py)
@@ -28,19 +28,32 @@ In this guide, we will explore KerasCV's Stable Diffusion implementation, show h
 these powerful performance boosts, and explore the performance benefits
 that they offer.
 
+**Note:** To run this guide on the `torch` backend, please set `jit_compile=False`
+everywhere. XLA compilation for StableDiffusion does not currently work with
+torch.
+
 To get started, let's install a few dependencies and sort out some imports:
 
-```
-!pip install --upgrade keras-cv
+
+```python
+!pip install -q —upgrade keras-cv
+!pip install -q —upgrade keras  # Upgrade to Keras 3.
 ```
 
 ```python
 import time
 import keras_cv
-from tensorflow import keras
+import keras
 import matplotlib.pyplot as plt
 ```
+<div class="k-default-codeblock">
+```
+[31mERROR: Invalid requirement: '—upgrade'[31m
+[31mERROR: Invalid requirement: '—upgrade'[31m
 
+
+```
+</div>
 ---
 ## Introduction
 
@@ -53,9 +66,17 @@ First, we construct a model:
 
 
 ```python
-model = keras_cv.models.StableDiffusion(img_width=512, img_height=512)
+model = keras_cv.models.StableDiffusion(
+    img_width=512, img_height=512, jit_compile=False
+)
 ```
 
+<div class="k-default-codeblock">
+```
+By using this model checkpoint, you acknowledge that its usage is subject to the terms of the CreativeML Open RAIL-M license at https://raw.githubusercontent.com/CompVis/stable-diffusion/main/LICENSE
+
+```
+</div>
 Next, we give it a prompt:
 
 
@@ -76,7 +97,7 @@ plot_images(images)
 
 <div class="k-default-codeblock">
 ```
-25/25 [==============================] - 19s 317ms/step
+ 50/50 ━━━━━━━━━━━━━━━━━━━━ 63s 209ms/step
 
 ```
 </div>
@@ -102,7 +123,7 @@ plot_images(images)
 
 <div class="k-default-codeblock">
 ```
-25/25 [==============================] - 8s 316ms/step
+ 50/50 ━━━━━━━━━━━━━━━━━━━━ 10s 209ms/step
 
 ```
 </div>
@@ -254,8 +275,8 @@ keras.backend.clear_session()  # Clear session to preserve memory.
 
 <div class="k-default-codeblock">
 ```
-25/25 [==============================] - 8s 316ms/step
-Standard model: 8.17 seconds
+ 50/50 ━━━━━━━━━━━━━━━━━━━━ 10s 208ms/step
+Standard model: 10.55 seconds
 
 ```
 </div>
@@ -279,18 +300,11 @@ Enabling mixed precision computation in Keras
 keras.mixed_precision.set_global_policy("mixed_float16")
 ```
 
-<div class="k-default-codeblock">
-```
-INFO:tensorflow:Mixed precision compatibility check (mixed_float16): OK
-Your GPU will likely run quickly with dtype policy mixed_float16 as it has compute capability of at least 7.0. Your GPU: NVIDIA A100-SXM4-40GB, compute capability 8.0
-
-```
-</div>
 That's all.  Out of the box - it just works.
 
 
 ```python
-model = keras_cv.models.StableDiffusion()
+model = keras_cv.models.StableDiffusion(jit_compile=False)
 
 print("Compute dtype:", model.diffusion_model.compute_dtype)
 print(
@@ -301,6 +315,7 @@ print(
 
 <div class="k-default-codeblock">
 ```
+By using this model checkpoint, you acknowledge that its usage is subject to the terms of the CreativeML Open RAIL-M license at https://raw.githubusercontent.com/CompVis/stable-diffusion/main/LICENSE
 Compute dtype: float16
 Variable dtype: float32
 
@@ -332,9 +347,9 @@ keras.backend.clear_session()
 
 <div class="k-default-codeblock">
 ```
-25/25 [==============================] - 15s 226ms/step
-25/25 [==============================] - 6s 226ms/step
-Mixed precision model: 6.02 seconds
+ 50/50 ━━━━━━━━━━━━━━━━━━━━ 42s 130ms/step
+ 50/50 ━━━━━━━━━━━━━━━━━━━━ 6s 129ms/step
+Mixed precision model: 6.64 seconds
 
 ```
 </div>
@@ -345,7 +360,7 @@ Mixed precision model: 6.02 seconds
 
 ### XLA Compilation
 
-TensorFlow comes with the
+TensorFlow and JAX come with the
 [XLA: Accelerated Linear Algebra](https://www.tensorflow.org/xla) compiler built-in.
 `keras_cv.models.StableDiffusion` supports a `jit_compile` argument out of the box.
 Setting this argument to `True` enables XLA compilation, resulting in a significant
@@ -367,7 +382,8 @@ plot_images(images)
 
 <div class="k-default-codeblock">
 ```
-25/25 [==============================] - 36s 245ms/step
+By using this model checkpoint, you acknowledge that its usage is subject to the terms of the CreativeML Open RAIL-M license at https://raw.githubusercontent.com/CompVis/stable-diffusion/main/LICENSE
+ 50/50 ━━━━━━━━━━━━━━━━━━━━ 48s 210ms/step
 
 ```
 </div>
@@ -395,8 +411,8 @@ keras.backend.clear_session()
 
 <div class="k-default-codeblock">
 ```
-25/25 [==============================] - 6s 245ms/step
-With XLA: 6.27 seconds
+ 50/50 ━━━━━━━━━━━━━━━━━━━━ 10s 209ms/step
+With XLA: 10.58 seconds
 
 ```
 </div>
@@ -421,6 +437,12 @@ keras.mixed_precision.set_global_policy("mixed_float16")
 model = keras_cv.models.StableDiffusion(jit_compile=True)
 ```
 
+<div class="k-default-codeblock">
+```
+By using this model checkpoint, you acknowledge that its usage is subject to the terms of the CreativeML Open RAIL-M license at https://raw.githubusercontent.com/CompVis/stable-diffusion/main/LICENSE
+
+```
+</div>
 And to use it...
 
 
@@ -435,7 +457,7 @@ plot_images(images)
 
 <div class="k-default-codeblock">
 ```
-25/25 [==============================] - 39s 157ms/step
+ 50/50 ━━━━━━━━━━━━━━━━━━━━ 48s 130ms/step
 
 ```
 </div>
@@ -465,8 +487,8 @@ print(f"XLA + mixed precision: {(end - start):.2f} seconds")
 
 <div class="k-default-codeblock">
 ```
-25/25 [==============================] - 4s 158ms/step
-XLA + mixed precision: 4.25 seconds
+ 50/50 ━━━━━━━━━━━━━━━━━━━━ 6s 130ms/step
+XLA + mixed precision: 6.65 seconds
 
 ```
 </div>
@@ -479,19 +501,19 @@ Let's check out the results:
 
 
 ```python
-print("{:<20} {:<20}".format("Model", "Runtime"))
+print("{:<22} {:<22}".format("Model", "Runtime"))
 for result in benchmark_result:
     name, runtime = result
-    print("{:<20} {:<20}".format(name, runtime))
+    print("{:<22} {:<22}".format(name, runtime))
 ```
 
 <div class="k-default-codeblock">
 ```
-Model                 Runtime             
-Standard              8.17177152633667    
-Mixed Precision       6.022329568862915   
-XLA                   6.265935659408569   
-XLA + Mixed Precision 4.252242088317871   
+Model                  Runtime               
+Standard               10.547032833099365    
+Mixed Precision        6.636443376541138     
+XLA                    10.584967851638794    
+XLA + Mixed Precision  6.652373552322388     
 
 ```
 </div>

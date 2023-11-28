@@ -33,8 +33,8 @@ To get started, let's install a few dependencies and sort out some imports:
 """
 
 """shell
-!pip install -q —upgrade keras-cv
-!pip install -q —upgrade keras  # Upgrade to Keras 3.
+pip install -q —upgrade keras-cv
+pip install -q —upgrade keras  # Upgrade to Keras 3.
 """
 
 import time
@@ -53,7 +53,9 @@ Check out the power of `keras_cv.models.StableDiffusion()`.
 First, we construct a model:
 """
 
-model = keras_cv.models.StableDiffusion(img_width=512, img_height=512, jit_compile=False)
+model = keras_cv.models.StableDiffusion(
+    img_width=512, img_height=512, jit_compile=False
+)
 
 """
 Next, we give it a prompt:
