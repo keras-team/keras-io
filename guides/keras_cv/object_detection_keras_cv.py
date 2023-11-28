@@ -20,17 +20,21 @@ Let's give KerasCV's object detection API a spin.
 """
 
 """shell
-pip install --upgrade -q git+https://github.com/keras-team/keras-cv
+pip install -q --upgrade keras-cv
+pip install -q --upgrade keras  # Upgrade to Keras 3.
 """
+
+import os
+
+os.environ["KERAS_BACKEND"] = "jax"  # @param ["tensorflow", "jax", "torch"]
+
 import tensorflow as tf
 import tensorflow_datasets as tfds
-from tensorflow import keras
-from tensorflow.keras import optimizers
+import keras
 import keras_cv
 import numpy as np
 from keras_cv import bounding_box
 import os
-import resource
 from keras_cv import visualization
 import tqdm
 
@@ -147,7 +151,7 @@ bugs (especially when combining code from many sources).
 Next let's load an image:
 """
 
-filepath = tf.keras.utils.get_file(origin="https://i.imgur.com/gCNcJJI.jpg")
+filepath = keras.utils.get_file(origin="https://i.imgur.com/gCNcJJI.jpg")
 image = keras.utils.load_img(filepath)
 image = np.array(image)
 
@@ -259,7 +263,7 @@ RetinaNet.  This can be done by writing to the `prediction_decoder` attribute.
 """
 
 # The following NonMaxSuppression layer is equivalent to disabling the operation
-prediction_decoder = keras_cv.layers.MultiClassNonMaxSuppression(
+prediction_decoder = keras_cv.layers.NonMaxSuppression(
     bounding_box_format="xywh",
     from_logits=True,
     iou_threshold=1.0,
@@ -282,7 +286,7 @@ visualization.plot_bounding_box_gallery(
 
 
 """
-Next, let's re-configure `keras_cv.layers.MultiClassNonMaxSuppression` for our
+Next, let's re-configure `keras_cv.layers.NonMaxSuppression` for our
 use case!
 In this case, we will tune the `iou_threshold` to `0.2`, and the
 `confidence_threshold` to `0.7`.
@@ -294,7 +298,7 @@ pruned out.
 [More information on these parameters may be found in the TensorFlow API docs](https://www.tensorflow.org/api_docs/python/tf/image/combined_non_max_suppression)
 """
 
-prediction_decoder = keras_cv.layers.MultiClassNonMaxSuppression(
+prediction_decoder = keras_cv.layers.NonMaxSuppression(
     bounding_box_format="xywh",
     from_logits=True,
     # Decrease the required threshold to make predictions get pruned out
@@ -498,16 +502,21 @@ of [data augmentation layers](https://keras.io/api/keras_cv/layers/preprocessing
 The code below loads the Pascal VOC dataset, and performs on-the-fly,
 bounding-box-friendly data augmentation inside a `tf.data` pipeline.
 """
-augmenter = keras.Sequential(
-    layers=[
-        keras_cv.layers.RandomFlip(mode="horizontal", bounding_box_format="xywh"),
-        keras_cv.layers.JitteredResize(
-            target_size=(640, 640), scale_factor=(0.75, 1.3), bounding_box_format="xywh"
-        ),
-    ]
-)
+def augmenter():
+  layers=[
+      keras_cv.layers.RandomFlip(mode="horizontal", bounding_box_format="xywh"),
+      keras_cv.layers.JitteredResize(
+          target_size=(640, 640), scale_factor=(0.75, 1.3), bounding_box_format="xywh"
+      ),
+  ]
+  def augment_fn(inputs):
+    for layer in layers:
+      inputs = layer(inputs)
+    return inputs
+  return augment_fn
 
-train_ds = train_ds.map(augmenter, num_parallel_calls=tf.data.AUTOTUNE)
+
+train_ds = train_ds.map(augmenter(), num_parallel_calls=tf.data.AUTOTUNE)
 visualize_dataset(
     train_ds, bounding_box_format="xywh", value_range=(0, 255), rows=2, cols=2
 )
@@ -572,7 +581,7 @@ occur when training object detection models.
 
 base_lr = 0.005
 # including a global_clipnorm is extremely important in object detection tasks
-optimizer = tf.keras.optimizers.SGD(
+optimizer = keras.optimizers.SGD(
     learning_rate=base_lr, momentum=0.9, global_clipnorm=10.0
 )
 
@@ -804,7 +813,7 @@ You'll likely need to configure your NonMaxSuppression operation to achieve
 visually appealing results:
 """
 
-model.prediction_decoder = keras_cv.layers.MultiClassNonMaxSuppression(
+model.prediction_decoder = keras_cv.layers.NonMaxSuppression(
     bounding_box_format="xywh",
     from_logits=True,
     iou_threshold=0.5,
