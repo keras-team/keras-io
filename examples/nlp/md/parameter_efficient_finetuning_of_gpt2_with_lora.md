@@ -35,7 +35,10 @@ it on the next token prediction task using LoRA. We will compare LoRA GPT-2
 with a fully fine-tuned GPT-2 in terms of the quality of the generated text,
 training time and GPU memory usage.
 
-Note: This example runs on the TensorFlow backend, purely because TensorFlow
+Note: This example runs on the TensorFlow backend purely for the
+`tf.config.experimental.get_memory_info` API to easily plot memory usage.
+Outside of the memory usage callback, this example will run on `jax` and `torch`
+backends.
 
 ---
 ## Setup
@@ -335,10 +338,10 @@ gpt2_lm_memory_usage = gpu_memory_callback.memory_usage
 <div class="k-default-codeblock">
 ```
 WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
-I0000 00:00:1701119282.714090   23930 device_compiler.h:186] Compiled cluster using XLA!  This line is logged at most once for the lifetime of the process.
-W0000 00:00:1701119282.783056   23930 graph_launch.cc:671] Fallback to op-by-op mode because memset node breaks graph update
+I0000 00:00:1701128462.076856   38706 device_compiler.h:186] Compiled cluster using XLA!  This line is logged at most once for the lifetime of the process.
+W0000 00:00:1701128462.146837   38706 graph_launch.cc:671] Fallback to op-by-op mode because memset node breaks graph update
 
- 500/500 ━━━━━━━━━━━━━━━━━━━━ 113s 128ms/step - accuracy: 0.3187 - loss: 3.3697
+ 500/500 ━━━━━━━━━━━━━━━━━━━━ 114s 128ms/step - accuracy: 0.3183 - loss: 3.3682
 
 ```
 </div>
@@ -356,40 +359,42 @@ generate_text(gpt2_lm, "That Italian restaurant is", max_length=MAX_GENERATION_L
 <div class="k-default-codeblock">
 ```
 Output:
-I like basketball. i'm a big basketball fan, so my mom always tells me that i like playing the game. i'm a good basketball player, so i always say that i'm a good basketball player. 
+I like basketball, but this one actually happened a few months ago.
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-i was playing with my friend, and i got to the point where i didn't really know him. i was playing with my best friend, he's a good basketball player, and we both know eachother well.
+i was on my way to a party in the city when i noticed a group of guys were playing basketball. one of my friends, a guy named "jenny," was playing. jenny's mom, a very nice girl, was sitting on her couch.
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-i was just playing with my best friend, so i was like, "oh, i know you can play the game, but i just don't know how." so i
-Total Time Elapsed: 6.62s
+jenny and jenny were sitting in a circle around her, and i started to play some of my favorite basketball games. i got to the end of the circle and jenny started to run. i didn't know how jenny was doing. she ran, but it
+Total Time Elapsed: 6.66s
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
 Output:
-That Italian restaurant is on the way to mexico for the first time this month.
+That Italian restaurant is a bit of a mystery, because the place is closed. 
+so i was at my friends house and i went to grab some food, so i got the usual pizza and some chicken, but it wasn't really the pizza, so i just grabbed my friend's pizza.
+i had a lot of chicken, but i was hungry, so i decided to grab a few of the other pizza's that were already in there.
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-my girlfriend and i were having a good time. she was in the middle of getting ready for work, so we decided to head to the kitchen.
+i was eating the pizza with some friends and i was eating the pizza and then i got a knock on the door. 
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-there were a ton of dishes, so i was just sitting on the kitchen floor. i was just trying to get the most out of my meal, so i started to pour water on my plate to make it look like i was going to pour water on my plates. i didn't want to look messy, i just didn't want to look like i was going to pour water on my plate.
-Total Time Elapsed: 0.23s
+the guy in front of me is
+Total Time Elapsed: 0.22s
 
 ```
 </div>
@@ -733,11 +738,11 @@ lora_model_memory_usage = gpu_memory_callback.memory_usage
 
 <div class="k-default-codeblock">
 ```
-   2/500 [37m━━━━━━━━━━━━━━━━━━━━  42s 84ms/step - accuracy: 0.2845 - loss: 3.7363   
+   2/500 [37m━━━━━━━━━━━━━━━━━━━━  41s 84ms/step - accuracy: 0.2828 - loss: 3.7188   
 
-W0000 00:00:1701119397.827241   23917 graph_launch.cc:671] Fallback to op-by-op mode because memset node breaks graph update
+W0000 00:00:1701128576.353742   38699 graph_launch.cc:671] Fallback to op-by-op mode because memset node breaks graph update
 
- 500/500 ━━━━━━━━━━━━━━━━━━━━ 83s 85ms/step - accuracy: 0.2928 - loss: 3.6181
+ 500/500 ━━━━━━━━━━━━━━━━━━━━ 80s 81ms/step - accuracy: 0.2930 - loss: 3.6158
 
 ```
 </div>
@@ -822,27 +827,30 @@ generate_text(
 <div class="k-default-codeblock">
 ```
 Output:
-I like basketball. i was a freshman at college, and i had a really bad day. so today, my mom was sitting at her computer and watching some basketball.    
-        
-                          
-                                            
-                                                                               
-Total Time Elapsed: 7.03s
+I like basketball.    i've played this game for about a week and i'm pretty tired.     today, i'm playing with my friend, who is a really good player.       i'm a little older than the average player and i'm a bit too young.                                
+Total Time Elapsed: 6.81s
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
 Output:
-That Italian restaurant is in the city, so i decided to go to my local bar. i got a few drinks and started chatting to the bartender.
+That Italian restaurant is in the city center and is located on a street that was recently renovated for the summer.
 ```
 </div>
     
-    
 <div class="k-default-codeblock">
 ```
-"what happened? i was drinking a glass of    a    i had in my hand. i had a glass of                  
-Total Time Elapsed: 0.16s
+i was in a group of friends and had a great time. 
+```
+</div>
+    
+           
+        
+                                                                                                                                                      
+<div class="k-default-codeblock">
+```
+Total Time Elapsed: 0.32s
 
 ```
 </div>
