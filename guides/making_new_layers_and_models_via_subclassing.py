@@ -367,7 +367,7 @@ model.fit(np.random.random((2, 3)), np.random.random((2, 3)))
 ## You can optionally enable serialization on your layers
 
 If you need your custom layers to be serializable as part of a
-[Functional model](/keras/guides/functional_api/),
+[Functional model](/guides/functional_api/),
 you can optionally implement a `get_config()` method:
 """
 
@@ -448,7 +448,7 @@ def from_config(cls, config):
 ```
 
 To learn more about serialization and saving, see the complete
-[guide to saving and serializing models](/keras/guides/serialization_and_saving/).
+[guide to saving and serializing models](/guides/serialization_and_saving/).
 """
 
 """
