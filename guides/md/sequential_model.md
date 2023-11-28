@@ -468,15 +468,15 @@ Once your model architecture is ready, you will want to:
 
 - Train your model, evaluate it, and run inference. See our
 [guide to training & evaluation with the built-in loops](
-    /keras/guides/training_with_built_in_methods/)
+    /guides/training_with_built_in_methods/)
 - Save your model to disk and restore it. See our
-[guide to serialization & saving](/keras/guides/serialization_and_saving/).
+[guide to serialization & saving](/guides/serialization_and_saving/).
 
 ---
 ## Feature extraction with a Sequential model
 
 Once a Sequential model has been built, it behaves like a
-[Functional API model](/keras/guides/functional_api/).
+[Functional API model](/guides/functional_api/).
 This means that every layer has an `input`
 and `output` attribute. These attributes can be used to do neat things, like
 quickly creating a model that extracts the outputs of all intermediate layers in a
@@ -528,7 +528,7 @@ features = feature_extractor(x)
 
 Transfer learning consists of freezing the bottom layers in a model and only training
 the top layers. If you aren't familiar with it, make sure to read our [guide
-to transfer learning](/keras/guides/transfer_learning/).
+to transfer learning](/guides/transfer_learning/).
 
 Here are two common transfer learning blueprint involving Sequential models.
 
@@ -589,5 +589,5 @@ That's about all you need to know about Sequential models!
 
 To find out more about building models in Keras, see:
 
-- [Guide to the Functional API](/keras/guides/functional_api/)
-- [Guide to making new Layers & Models via subclassing](/keras/guides/making_new_layers_and_models_via_subclassing/)
+- [Guide to the Functional API](/guides/functional_api/)
+- [Guide to making new Layers & Models via subclassing](/guides/making_new_layers_and_models_via_subclassing/)

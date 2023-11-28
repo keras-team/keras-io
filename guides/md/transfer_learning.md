@@ -95,7 +95,7 @@ In general, all weights are trainable weights. The only built-in layer that has
 non-trainable weights is the `BatchNormalization` layer. It uses non-trainable weights
  to keep track of the mean and variance of its inputs during training.
 To learn how to use non-trainable weights in your own custom layers, see the
-[guide to writing new layers from scratch](/keras/guides/making_new_layers_and_models_via_subclassing/).
+[guide to writing new layers from scratch](/guides/making_new_layers_and_models_via_subclassing/).
 
 **Example: the `BatchNormalization` layer has 2 trainable weights and 2 non-trainable
  weights**

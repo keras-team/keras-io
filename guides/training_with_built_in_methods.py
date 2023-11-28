@@ -31,16 +31,16 @@ when using built-in APIs for training & validation (such as `Model.fit()`,
 If you are interested in leveraging `fit()` while specifying your
 own training step function, see the guides on customizing what happens in `fit()`:
 
-- [Writing a custom train step with TensorFlow](/keras/guides/custom_train_step_in_tensorflow/)
-- [Writing a custom train step with JAX](/keras/guides/custom_train_step_in_jax/)
-- [Writing a custom train step with PyTorch](/keras/guides/custom_train_step_in_torch/)
+- [Writing a custom train step with TensorFlow](/guides/custom_train_step_in_tensorflow/)
+- [Writing a custom train step with JAX](/guides/custom_train_step_in_jax/)
+- [Writing a custom train step with PyTorch](/guides/custom_train_step_in_torch/)
 
 If you are interested in writing your own training & evaluation loops from
 scratch, see the guides on writing training loops:
 
-- [Writing a training loop with TensorFlow](/keras/guides/writing_a_custom_training_loop_in_tensorflow/)
-- [Writing a training loop with JAX](/keras/guides/writing_a_custom_training_loop_in_jax/)
-- [Writing a training loop with PyTorch](/keras/guides/writing_a_custom_training_loop_in_torch/)
+- [Writing a training loop with TensorFlow](/guides/writing_a_custom_training_loop_in_tensorflow/)
+- [Writing a training loop with JAX](/guides/writing_a_custom_training_loop_in_jax/)
+- [Writing a training loop with PyTorch](/guides/writing_a_custom_training_loop_in_torch/)
 
 In general, whether you are using built-in loops or writing your own, model training &
 evaluation works strictly in the same way across every kind of Keras model --
@@ -1058,7 +1058,7 @@ You can create a custom callback by extending the base class
 class property `self.model`.
 
 Make sure to read the
-[complete guide to writing custom callbacks](/keras/guides/writing_your_own_callbacks/).
+[complete guide to writing custom callbacks](/guides/writing_your_own_callbacks/).
 
 Here's a simple example saving a list of per-batch loss values during training:
 """
@@ -1143,7 +1143,7 @@ model.fit(x_train, y_train, epochs=1, callbacks=callbacks)
 You call also write your own callback for saving and restoring models.
 
 For a complete guide on serialization and saving, see the
-[guide to saving and serializing Models](/keras/guides/serialization_and_saving/).
+[guide to saving and serializing Models](/guides/serialization_and_saving/).
 """
 
 """
