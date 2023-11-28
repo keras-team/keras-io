@@ -21,24 +21,40 @@ classification problems at three levels of complexity:
 - Fine-tuning a pretrained backbone
 - Training a image classifier from scratch
 
+KerasCV uses Keras 3 to work with any of TensorFlow, Pytorch and Jax. In the
+guide below, we will use the `jax` backend. This guide runs in
+TensorFlow or PyTorch backends with zero changes, simply update the
+`KERAS_BACKEND` below.
+
 We use Professor Keras, the official Keras mascot, as a
 visual reference for the complexity of the material:
 
 ![](https://storage.googleapis.com/keras-nlp/getting_started_guide/prof_keras_evolution.png)
 """
 
+"""shell
+pip install -q --upgrade keras-cv
+pip install -q --upgrade keras  # Upgrade to Keras 3.
+"""
+
+import os
+
+os.environ["KERAS_BACKEND"] = "jax"  # @param ["tensorflow", "jax", "torch"]
 
 import json
 import math
-import keras_cv
-import tensorflow as tf
-import tensorflow_datasets as tfds
+import numpy as np
+
 import keras
 from keras import losses
-import numpy as np
 from keras import optimizers
-from tensorflow.keras.optimizers import schedules
+from keras.optimizers import schedules
 from keras import metrics
+
+import keras_cv
+# Import tensorflow for `tf.data` and its preprocessing functions
+import tensorflow as tf
+import tensorflow_datasets as tfds
 
 
 """
@@ -77,11 +93,11 @@ semantic segmentation.
 Now that our classifier is built, let's apply it to this cute cat picture!
 """
 
-filepath = tf.keras.utils.get_file(origin="https://i.imgur.com/9i63gLN.jpg")
+filepath = keras.utils.get_file(origin="https://i.imgur.com/9i63gLN.jpg")
 image = keras.utils.load_img(filepath)
 image = np.array(image)
 keras_cv.visualization.plot_image_gallery(
-    [image], rows=1, cols=1, value_range=(0, 255), show=True, scale=4
+    np.array([image]), rows=1, cols=1, value_range=(0, 255), show=True, scale=4
 )
 
 """
@@ -187,7 +203,7 @@ model = keras_cv.models.ImageClassifier.from_preset(
 )
 model.compile(
     loss="categorical_crossentropy",
-    optimizer=tf.optimizers.SGD(learning_rate=0.01),
+    optimizer=keras.optimizers.SGD(learning_rate=0.01),
     metrics=["accuracy"],
 )
 
