@@ -1561,6 +1561,32 @@ API_MASTER = {
             ],
         },
         {
+            "path": "random/",
+            "title": "RNG API",
+            "toc": True,
+            "children": [
+                {
+                    "path": "seed_generator",
+                    "title": "SeedGenerator class",
+                    "generate": ["keras.random.SeedGenerator"],
+                },
+                {
+                    "path": "random_ops",
+                    "title": "Random operations",
+                    "generate": [
+                        "keras.random.categorical",
+                        "keras.random.dropout",
+                        "keras.random.gamma",
+                        "keras.random.normal",
+                        "keras.random.randint",
+                        "keras.random.shuffle",
+                        "keras.random.truncated_normal",
+                        "keras.random.uniform",
+                    ],
+                },
+            ],
+        },
+        {
             "path": "utils/",
             "title": "Utilities",
             "toc": True,
