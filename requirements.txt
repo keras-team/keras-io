@@ -14,5 +14,5 @@ tensorflow~=2.15.0
 tensorflow_datasets
 keras-tuner==1.4.6
 keras-cv==0.7.1
-tf_keras==3.0.0
+tf_keras==2.15.0
 keras-nlp==0.6.3
