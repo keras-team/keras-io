@@ -46,8 +46,8 @@ To run this tutorial, you will need to install the following packages:
 """
 
 """shell
-!pip install -q keras-core
-!pip install -q git+https://github.com/keras-team/keras-cv.git
+pip install -Uq keras-cv
+pip install -Uq keras
 """
 
 """
@@ -55,11 +55,16 @@ After installing `keras-core` and `keras-cv`, set the backend for `keras-core`.
 This guide can be run with any backend (Tensorflow, JAX, PyTorch).
 
 ```
-%env KERAS_BACKEND=tensorflow
+import os
+
+os.environ["KERAS_BACKEND"] = "jax"
 ```
 """
 
-%env KERAS_BACKEND=tensorflow
+import os
+
+os.environ["KERAS_BACKEND"] = "jax"
+
 import keras
 from keras import ops
 
@@ -237,23 +242,16 @@ model = keras_cv.models.DeepLabV3Plus.from_preset(
 The model.compile() function sets up the training process for the model. It defines the
 - optimization algorithm - Stochastic Gradient Descent (SGD)
 - the loss function - categorical cross-entropy
-- the evaluation metrics - Mean IoU and categorical accuracy
+- the evaluation metrics - categorical accuracy
 
 Semantic segmentation evaluation metrics:
-
-Mean Intersection over Union (MeanIoU):
-MeanIoU measures how well a semantic segmentation model accurately identifies
-and delineates different objects or regions in an image. It calculates the
-overlap between predicted and actual object boundaries, providing a score
-between 0 and 1, where 1 represents a perfect match.
 
 Categorical Accuracy:
 Categorical Accuracy measures the proportion of correctly classified pixels in
 an image. It gives a simple percentage indicating how accurately the model
 predicts the categories of pixels in the entire image.
 
-In essence, MeanIoU emphasizes the accuracy of identifying specific object
-boundaries, while Categorical Accuracy gives a broad overview of overall
+In essence, Categorical Accuracy gives a broad overview of overall
 pixel-level correctness.
 """
 
@@ -263,9 +261,6 @@ model.compile(
     ),
     loss=keras.losses.CategoricalCrossentropy(from_logits=False),
     metrics=[
-        keras.metrics.MeanIoU(
-            num_classes=NUM_CLASSES, sparse_y_true=False, sparse_y_pred=False
-        ),
         keras.metrics.CategoricalAccuracy(),
     ],
 )
@@ -280,8 +275,10 @@ which is used during training and evaluation of the DeepLabv3+ model.
 
 
 def dict_to_tuple(x):
-    return x["images"], ops.one_hot(
-        ops.cast(ops.squeeze(x["segmentation_masks"], axis=-1), "int32"), 21
+    import tensorflow as tf
+
+    return x["images"], tf.one_hot(
+        tf.cast(tf.squeeze(x["segmentation_masks"], axis=-1), "int32"), 21
     )
 
 
@@ -301,6 +298,8 @@ test_ds = load_voc(split="sbd_eval")
 test_ds = preprocess_tfds_inputs(test_ds)
 
 images, masks = next(iter(train_ds.take(1)))
+images = ops.convert_to_tensor(images)
+masks = ops.convert_to_tensor(masks)
 preds = ops.expand_dims(ops.argmax(model(images), axis=-1), axis=-1)
 masks = ops.expand_dims(ops.argmax(masks, axis=-1), axis=-1)
 
