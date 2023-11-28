@@ -387,8 +387,10 @@ Let's take it for a spin:
 """
 rand_augment = keras_cv.layers.RandAugment(
     augmentations_per_image=3,
-    magnitude=0.3,
     value_range=(0, 255),
+    magnitude=0.3,
+    magnitude_stddev=0.2,
+    rate=1.0,
 )
 augmenters += [rand_augment]
 
@@ -487,8 +489,18 @@ augmenters += [cut_mix_or_mix_up]
 Now let's apply our final augmenter to the training data:
 """
 
-augmenter = keras.Sequential(augmenters)
-train_ds = train_ds.map(augmenter, num_parallel_calls=tf.data.AUTOTUNE)
+def create_augmenter_fn(augmenters):
+
+  def augmenter_fn(inputs):
+    for augmenter in augmenters:
+      inputs = augmenter(inputs)
+    return inputs
+
+  return augmenter_fn
+
+
+augmenter_fn = create_augmenter_fn(augmenters)
+train_ds = train_ds.map(augmenter_fn, num_parallel_calls=tf.data.AUTOTUNE)
 
 image_batch = next(iter(train_ds.take(1)))["images"]
 keras_cv.visualization.plot_image_gallery(
