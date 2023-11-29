@@ -33,8 +33,8 @@ To get started, let's install a few dependencies and sort out some imports:
 """
 
 """shell
-pip install -q —-upgrade keras-cv
-pip install -q —-upgrade keras  # Upgrade to Keras 3.
+pip install -q --upgrade keras-cv
+pip install -q --upgrade keras  # Upgrade to Keras 3.
 """
 
 import time

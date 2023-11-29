@@ -36,9 +36,10 @@ To get started, let's install a few dependencies and sort out some imports:
 
 
 ```python
-!pip install -q —-upgrade keras-cv
-!pip install -q —-upgrade keras  # Upgrade to Keras 3.
+!pip install -q --upgrade keras-cv
+!pip install -q --upgrade keras  # Upgrade to Keras 3.
 ```
+
 
 ```python
 import time
@@ -46,14 +47,7 @@ import keras_cv
 import keras
 import matplotlib.pyplot as plt
 ```
-<div class="k-default-codeblock">
-```
-[31mERROR: Invalid requirement: '—-upgrade'[31m
-[31mERROR: Invalid requirement: '—-upgrade'[31m
 
-
-```
-</div>
 ---
 ## Introduction
 
@@ -97,7 +91,7 @@ plot_images(images)
 
 <div class="k-default-codeblock">
 ```
- 50/50 ━━━━━━━━━━━━━━━━━━━━ 63s 209ms/step
+ 50/50 ━━━━━━━━━━━━━━━━━━━━ 63s 211ms/step
 
 ```
 </div>
@@ -347,9 +341,9 @@ keras.backend.clear_session()
 
 <div class="k-default-codeblock">
 ```
- 50/50 ━━━━━━━━━━━━━━━━━━━━ 41s 130ms/step
+ 50/50 ━━━━━━━━━━━━━━━━━━━━ 42s 132ms/step
  50/50 ━━━━━━━━━━━━━━━━━━━━ 6s 129ms/step
-Mixed precision model: 6.61 seconds
+Mixed precision model: 6.65 seconds
 
 ```
 </div>
@@ -383,7 +377,7 @@ plot_images(images)
 <div class="k-default-codeblock">
 ```
 By using this model checkpoint, you acknowledge that its usage is subject to the terms of the CreativeML Open RAIL-M license at https://raw.githubusercontent.com/CompVis/stable-diffusion/main/LICENSE
- 50/50 ━━━━━━━━━━━━━━━━━━━━ 47s 209ms/step
+ 50/50 ━━━━━━━━━━━━━━━━━━━━ 48s 209ms/step
 
 ```
 </div>
@@ -411,8 +405,8 @@ keras.backend.clear_session()
 
 <div class="k-default-codeblock">
 ```
- 50/50 ━━━━━━━━━━━━━━━━━━━━ 10s 209ms/step
-With XLA: 10.56 seconds
+ 50/50 ━━━━━━━━━━━━━━━━━━━━ 11s 210ms/step
+With XLA: 10.63 seconds
 
 ```
 </div>
@@ -457,7 +451,7 @@ plot_images(images)
 
 <div class="k-default-codeblock">
 ```
- 50/50 ━━━━━━━━━━━━━━━━━━━━ 48s 130ms/step
+ 50/50 ━━━━━━━━━━━━━━━━━━━━ 48s 131ms/step
 
 ```
 </div>
@@ -487,8 +481,8 @@ print(f"XLA + mixed precision: {(end - start):.2f} seconds")
 
 <div class="k-default-codeblock">
 ```
- 50/50 ━━━━━━━━━━━━━━━━━━━━ 7s 130ms/step
-XLA + mixed precision: 6.69 seconds
+ 50/50 ━━━━━━━━━━━━━━━━━━━━ 6s 130ms/step
+XLA + mixed precision: 6.66 seconds
 
 ```
 </div>
@@ -510,10 +504,10 @@ for result in benchmark_result:
 <div class="k-default-codeblock">
 ```
 Model                  Runtime               
-Standard               10.567662954330444    
-Mixed Precision        6.610702276229858     
-XLA                    10.562997579574585    
-XLA + Mixed Precision  6.686670303344727     
+Standard               10.572920799255371    
+Mixed Precision        6.651048421859741     
+XLA                    10.632121562957764    
+XLA + Mixed Precision  6.659237861633301     
 
 ```
 </div>
