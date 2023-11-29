@@ -47,11 +47,13 @@ import numpy as np
 
 import keras
 from keras import losses
+from keras import ops
 from keras import optimizers
 from keras.optimizers import schedules
 from keras import metrics
 
 import keras_cv
+
 # Import tensorflow for `tf.data` and its preprocessing functions
 import tensorflow as tf
 import tensorflow_datasets as tfds
@@ -489,14 +491,14 @@ augmenters += [cut_mix_or_mix_up]
 Now let's apply our final augmenter to the training data:
 """
 
+
 def create_augmenter_fn(augmenters):
+    def augmenter_fn(inputs):
+        for augmenter in augmenters:
+            inputs = augmenter(inputs)
+        return inputs
 
-  def augmenter_fn(inputs):
-    for augmenter in augmenters:
-      inputs = augmenter(inputs)
-    return inputs
-
-  return augmenter_fn
+    return augmenter_fn
 
 
 augmenter_fn = create_augmenter_fn(augmenters)
@@ -576,23 +578,26 @@ def lr_warmup_cosine_decay(
         * target_lr
         * (
             1
-            + tf.cos(
-                tf.constant(math.pi)
-                * tf.cast(global_step - warmup_steps - hold, tf.float32)
-                / float(total_steps - warmup_steps - hold)
+            + ops.cos(
+                math.pi
+                * ops.convert_to_tensor(
+                    global_step - warmup_steps - hold, dtype="float32"
+                )
+                / ops.convert_to_tensor(
+                    total_steps - warmup_steps - hold, dtype="float32"
+                )
             )
         )
     )
 
-    warmup_lr = tf.cast(target_lr * (global_step / warmup_steps), tf.float32)
-    target_lr = tf.cast(target_lr, tf.float32)
+    warmup_lr = target_lr * (global_step / warmup_steps)
 
     if hold > 0:
-        learning_rate = tf.where(
+        learning_rate = ops.where(
             global_step > warmup_steps + hold, learning_rate, target_lr
         )
 
-    learning_rate = tf.where(global_step < warmup_steps, warmup_lr, learning_rate)
+    learning_rate = ops.where(global_step < warmup_steps, warmup_lr, learning_rate)
     return learning_rate
 
 
@@ -615,7 +620,7 @@ class WarmUpCosineDecay(schedules.LearningRateSchedule):
             hold=self.hold,
         )
 
-        return tf.where(step > self.total_steps, 0.0, lr, name="learning_rate")
+        return ops.where(step > self.total_steps, 0.0, lr)
 
 
 """
@@ -638,7 +643,7 @@ schedule = WarmUpCosineDecay(
     hold=hold_steps,
 )
 optimizer = optimizers.SGD(
-    decay=5e-4,
+    weight_decay=5e-4,
     learning_rate=schedule,
     momentum=0.9,
 )
@@ -649,7 +654,7 @@ At long last, we can now build our model and call `fit()`!
 Note that this preset does not come with any pretrained weights.
 """
 
-backbone = keras_cv.models.EfficientNetV2B1Backbone()
+backbone = keras_cv.models.EfficientNetV2B0Backbone()
 model = keras.Sequential(
     [
         backbone,

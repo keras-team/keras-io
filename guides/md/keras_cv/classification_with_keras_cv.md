@@ -23,6 +23,11 @@ classification problems at three levels of complexity:
 - Fine-tuning a pretrained backbone
 - Training a image classifier from scratch
 
+KerasCV uses Keras 3 to work with any of TensorFlow, Pytorch and Jax. In the
+guide below, we will use the `jax` backend. This guide runs in
+TensorFlow or PyTorch backends with zero changes, simply update the
+`KERAS_BACKEND` below.
+
 We use Professor Keras, the official Keras mascot, as a
 visual reference for the complexity of the material:
 
@@ -30,18 +35,32 @@ visual reference for the complexity of the material:
 
 
 ```python
+!pip install -q --upgrade keras-cv
+!pip install -q --upgrade keras  # Upgrade to Keras 3.
+```
+
+
+```python
+import os
+
+os.environ["KERAS_BACKEND"] = "jax"  # @param ["tensorflow", "jax", "torch"]
 
 import json
 import math
-import keras_cv
-import tensorflow as tf
-import tensorflow_datasets as tfds
+import numpy as np
+
 import keras
 from keras import losses
-import numpy as np
+from keras import ops
 from keras import optimizers
-from tensorflow.keras.optimizers import schedules
+from keras.optimizers import schedules
 from keras import metrics
+
+import keras_cv
+
+# Import tensorflow for `tf.data` and its preprocessing functions
+import tensorflow as tf
+import tensorflow_datasets as tfds
 
 ```
 
@@ -84,18 +103,18 @@ Now that our classifier is built, let's apply it to this cute cat picture!
 
 
 ```python
-filepath = tf.keras.utils.get_file(origin="https://i.imgur.com/9i63gLN.jpg")
+filepath = keras.utils.get_file(origin="https://i.imgur.com/9i63gLN.jpg")
 image = keras.utils.load_img(filepath)
 image = np.array(image)
 keras_cv.visualization.plot_image_gallery(
-    [image], rows=1, cols=1, value_range=(0, 255), show=True, scale=4
+    np.array([image]), rows=1, cols=1, value_range=(0, 255), show=True, scale=4
 )
 ```
 
 
-
-![png](/img/guides/classification_with_keras_cv/classification_with_keras_cv_6_0.png)
-
+    
+![png](/img/guides/classification_with_keras_cv/classification_with_keras_cv_7_0.png)
+    
 
 
 Next, let's get some predictions from our classifier:
@@ -107,7 +126,7 @@ predictions = classifier.predict(np.expand_dims(image, axis=0))
 
 <div class="k-default-codeblock">
 ```
-1/1 [==============================] - 4s 4s/step
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 4s 4s/step
 
 ```
 </div>
@@ -134,6 +153,13 @@ with open(classes, "rb") as f:
     classes = json.load(f)
 ```
 
+<div class="k-default-codeblock">
+```
+Downloading data from https://gist.githubusercontent.com/LukeWood/62eebcd5c5c4a4d0e0b7845780f76d55/raw/fde63e5e4c09e2fa0a3436680f436bdcb8325aac/ImagenetClassnames.json
+ 33567/33567 ━━━━━━━━━━━━━━━━━━━━ 0s 0us/step
+
+```
+</div>
 Now we can simply look up the class names via index:
 
 
@@ -208,8 +234,17 @@ keras_cv.visualization.plot_image_gallery(images, value_range=(0, 255))
 
 
 
-![png](/img/guides/classification_with_keras_cv/classification_with_keras_cv_16_0.png)
 
+    
+![png](/img/guides/classification_with_keras_cv/classification_with_keras_cv_17_0.png)
+    
+
+
+
+
+    
+![png](/img/guides/classification_with_keras_cv/classification_with_keras_cv_17_1.png)
+    
 
 
 Meow!
@@ -229,11 +264,18 @@ model = keras_cv.models.ImageClassifier.from_preset(
 )
 model.compile(
     loss="categorical_crossentropy",
-    optimizer=tf.optimizers.SGD(learning_rate=0.01),
+    optimizer=keras.optimizers.SGD(learning_rate=0.01),
     metrics=["accuracy"],
 )
 ```
 
+<div class="k-default-codeblock">
+```
+Downloading data from https://storage.googleapis.com/keras-cv/models/efficientnetv2b0/imagenet/classification-v0-notop.h5
+ 24029184/24029184 ━━━━━━━━━━━━━━━━━━━━ 1s 0us/step
+
+```
+</div>
 Here our classifier is just a simple `keras.Sequential`.
 All that is left to do is call `model.fit()`:
 
@@ -245,7 +287,59 @@ model.fit(train_dataset)
 
 <div class="k-default-codeblock">
 ```
-727/727 [==============================] - 61s 52ms/step - loss: 0.2168 - accuracy: 0.9501
+ 216/727 ━━━━━[37m━━━━━━━━━━━━━━━  15s 30ms/step - accuracy: 0.8433 - loss: 0.5113
+
+Corrupt JPEG data: 99 extraneous bytes before marker 0xd9
+
+ 254/727 ━━━━━━[37m━━━━━━━━━━━━━━  14s 30ms/step - accuracy: 0.8535 - loss: 0.4941
+
+Warning: unknown JFIF revision number 0.00
+
+ 266/727 ━━━━━━━[37m━━━━━━━━━━━━━  14s 30ms/step - accuracy: 0.8563 - loss: 0.4891
+
+Corrupt JPEG data: 396 extraneous bytes before marker 0xd9
+
+ 310/727 ━━━━━━━━[37m━━━━━━━━━━━━  12s 30ms/step - accuracy: 0.8651 - loss: 0.4719
+
+Corrupt JPEG data: 162 extraneous bytes before marker 0xd9
+
+ 358/727 ━━━━━━━━━[37m━━━━━━━━━━━  11s 30ms/step - accuracy: 0.8729 - loss: 0.4550
+
+Corrupt JPEG data: 252 extraneous bytes before marker 0xd9
+Corrupt JPEG data: 65 extraneous bytes before marker 0xd9
+
+ 374/727 ━━━━━━━━━━[37m━━━━━━━━━━  10s 30ms/step - accuracy: 0.8752 - loss: 0.4497
+
+Corrupt JPEG data: 1403 extraneous bytes before marker 0xd9
+
+ 534/727 ━━━━━━━━━━━━━━[37m━━━━━━  5s 30ms/step - accuracy: 0.8921 - loss: 0.4056
+
+Corrupt JPEG data: 214 extraneous bytes before marker 0xd9
+
+ 636/727 ━━━━━━━━━━━━━━━━━[37m━━━  2s 30ms/step - accuracy: 0.8993 - loss: 0.3837
+
+Corrupt JPEG data: 2226 extraneous bytes before marker 0xd9
+
+ 654/727 ━━━━━━━━━━━━━━━━━[37m━━━  2s 30ms/step - accuracy: 0.9004 - loss: 0.3802
+
+Corrupt JPEG data: 128 extraneous bytes before marker 0xd9
+
+ 668/727 ━━━━━━━━━━━━━━━━━━[37m━━  1s 30ms/step - accuracy: 0.9012 - loss: 0.3775
+
+Corrupt JPEG data: 239 extraneous bytes before marker 0xd9
+
+ 704/727 ━━━━━━━━━━━━━━━━━━━[37m━  0s 30ms/step - accuracy: 0.9032 - loss: 0.3709
+
+Corrupt JPEG data: 1153 extraneous bytes before marker 0xd9
+
+ 712/727 ━━━━━━━━━━━━━━━━━━━[37m━  0s 30ms/step - accuracy: 0.9036 - loss: 0.3695
+
+Corrupt JPEG data: 228 extraneous bytes before marker 0xd9
+
+ 727/727 ━━━━━━━━━━━━━━━━━━━━ 69s 62ms/step - accuracy: 0.9045 - loss: 0.3667
+
+<keras.src.callbacks.history.History at 0x7fce380df100>
+
 ```
 </div>
 Let's look at how our model performs after the fine tuning:
@@ -260,7 +354,7 @@ print("Top class is:", classes[predictions[0].argmax()])
 
 <div class="k-default-codeblock">
 ```
-1/1 [==============================] - 2s 2s/step
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 3s 3s/step
 Top class is: cat
 
 ```
@@ -301,6 +395,13 @@ eval_ds = eval_ds.map(package_inputs, num_parallel_calls=tf.data.AUTOTUNE)
 train_ds = train_ds.shuffle(BATCH_SIZE * 16)
 ```
 
+<div class="k-default-codeblock">
+```
+ Downloading and preparing dataset 125.64 MiB (download: 125.64 MiB, generated: 132.86 MiB, total: 258.50 MiB) to /usr/local/google/home/rameshsampath/tensorflow_datasets/caltech101/3.0.1...
+ Dataset caltech101 downloaded and prepared to /usr/local/google/home/rameshsampath/tensorflow_datasets/caltech101/3.0.1. Subsequent calls will reuse this data.
+
+```
+</div>
 The CalTech101 dataset has different sizes for every image, so we use the
 `ragged_batch()` API to batch them together while maintaining each individual
 image's shape information.
@@ -324,9 +425,9 @@ keras_cv.visualization.plot_image_gallery(
 ```
 
 
-
-![png](/img/guides/classification_with_keras_cv/classification_with_keras_cv_27_0.png)
-
+    
+![png](/img/guides/classification_with_keras_cv/classification_with_keras_cv_28_0.png)
+    
 
 
 ---
@@ -380,9 +481,9 @@ keras_cv.visualization.plot_image_gallery(
 ```
 
 
-
-![png](/img/guides/classification_with_keras_cv/classification_with_keras_cv_29_0.png)
-
+    
+![png](/img/guides/classification_with_keras_cv/classification_with_keras_cv_30_0.png)
+    
 
 
 Half of the images have been flipped!
@@ -427,9 +528,9 @@ keras_cv.visualization.plot_image_gallery(
 ```
 
 
-
-![png](/img/guides/classification_with_keras_cv/classification_with_keras_cv_31_0.png)
-
+    
+![png](/img/guides/classification_with_keras_cv/classification_with_keras_cv_32_0.png)
+    
 
 
 Great!  We are now working with a batch of dense images.
@@ -455,8 +556,10 @@ Let's take it for a spin:
 ```python
 rand_augment = keras_cv.layers.RandAugment(
     augmentations_per_image=3,
-    magnitude=0.3,
     value_range=(0, 255),
+    magnitude=0.3,
+    magnitude_stddev=0.2,
+    rate=1.0,
 )
 augmenters += [rand_augment]
 
@@ -471,9 +574,9 @@ keras_cv.visualization.plot_image_gallery(
 ```
 
 
-
-![png](/img/guides/classification_with_keras_cv/classification_with_keras_cv_33_0.png)
-
+    
+![png](/img/guides/classification_with_keras_cv/classification_with_keras_cv_34_0.png)
+    
 
 
 Looks great; but we're not done yet!
@@ -496,10 +599,45 @@ keras_cv.visualization.plot_image_gallery(
 )
 ```
 
+<div class="k-default-codeblock">
+```
+WARNING:tensorflow:Using a while_loop for converting RngReadAndSkip cause there is no registered converter for this op.
 
+WARNING:tensorflow:Using a while_loop for converting RngReadAndSkip cause there is no registered converter for this op.
 
-![png](/img/guides/classification_with_keras_cv/classification_with_keras_cv_35_0.png)
+WARNING:tensorflow:Using a while_loop for converting Bitcast cause there is no registered converter for this op.
 
+WARNING:tensorflow:Using a while_loop for converting Bitcast cause there is no registered converter for this op.
+
+WARNING:tensorflow:Using a while_loop for converting Bitcast cause there is no registered converter for this op.
+
+WARNING:tensorflow:Using a while_loop for converting Bitcast cause there is no registered converter for this op.
+
+WARNING:tensorflow:Using a while_loop for converting StatelessRandomUniformIntV2 cause there is no registered converter for this op.
+
+WARNING:tensorflow:Using a while_loop for converting StatelessRandomUniformIntV2 cause there is no registered converter for this op.
+
+WARNING:tensorflow:Using a while_loop for converting RngReadAndSkip cause there is no registered converter for this op.
+
+WARNING:tensorflow:Using a while_loop for converting RngReadAndSkip cause there is no registered converter for this op.
+
+WARNING:tensorflow:Using a while_loop for converting Bitcast cause there is no registered converter for this op.
+
+WARNING:tensorflow:Using a while_loop for converting Bitcast cause there is no registered converter for this op.
+
+WARNING:tensorflow:Using a while_loop for converting Bitcast cause there is no registered converter for this op.
+
+WARNING:tensorflow:Using a while_loop for converting Bitcast cause there is no registered converter for this op.
+
+WARNING:tensorflow:Using a while_loop for converting StatelessRandomUniformIntV2 cause there is no registered converter for this op.
+
+WARNING:tensorflow:Using a while_loop for converting StatelessRandomUniformIntV2 cause there is no registered converter for this op.
+
+```
+</div>
+    
+![png](/img/guides/classification_with_keras_cv/classification_with_keras_cv_36_16.png)
+    
 
 
 While this tackles the problem reasonably well, it can cause the classifier to
@@ -532,9 +670,9 @@ keras_cv.visualization.plot_image_gallery(
 ```
 
 
-
-![png](/img/guides/classification_with_keras_cv/classification_with_keras_cv_37_0.png)
-
+    
+![png](/img/guides/classification_with_keras_cv/classification_with_keras_cv_38_0.png)
+    
 
 
 Let's hold off from adding it to our augmenter for a minute - more on that
@@ -568,9 +706,9 @@ keras_cv.visualization.plot_image_gallery(
 ```
 
 
-
-![png](/img/guides/classification_with_keras_cv/classification_with_keras_cv_39_0.png)
-
+    
+![png](/img/guides/classification_with_keras_cv/classification_with_keras_cv_40_0.png)
+    
 
 
 If you look closely, you'll see that the images have been blended together.
@@ -589,8 +727,18 @@ Now let's apply our final augmenter to the training data:
 
 
 ```python
-augmenter = keras.Sequential(augmenters)
-train_ds = train_ds.map(augmenter, num_parallel_calls=tf.data.AUTOTUNE)
+
+def create_augmenter_fn(augmenters):
+    def augmenter_fn(inputs):
+        for augmenter in augmenters:
+            inputs = augmenter(inputs)
+        return inputs
+
+    return augmenter_fn
+
+
+augmenter_fn = create_augmenter_fn(augmenters)
+train_ds = train_ds.map(augmenter_fn, num_parallel_calls=tf.data.AUTOTUNE)
 
 image_batch = next(iter(train_ds.take(1)))["images"]
 keras_cv.visualization.plot_image_gallery(
@@ -602,8 +750,10 @@ keras_cv.visualization.plot_image_gallery(
 )
 ```
 
-![png](/img/guides/classification_with_keras_cv/classification_with_keras_cv_43_2.png)
 
+    
+![png](/img/guides/classification_with_keras_cv/classification_with_keras_cv_44_0.png)
+    
 
 
 We also need to resize our evaluation set to get dense batches of the image size
@@ -633,9 +783,9 @@ keras_cv.visualization.plot_image_gallery(
 ```
 
 
-
-![png](/img/guides/classification_with_keras_cv/classification_with_keras_cv_45_0.png)
-
+    
+![png](/img/guides/classification_with_keras_cv/classification_with_keras_cv_46_0.png)
+    
 
 
 Finally, lets unpackage our datasets and prepare to pass them to `model.fit()`,
@@ -681,23 +831,26 @@ def lr_warmup_cosine_decay(
         * target_lr
         * (
             1
-            + tf.cos(
-                tf.constant(math.pi)
-                * tf.cast(global_step - warmup_steps - hold, tf.float32)
-                / float(total_steps - warmup_steps - hold)
+            + ops.cos(
+                math.pi
+                * ops.convert_to_tensor(
+                    global_step - warmup_steps - hold, dtype="float32"
+                )
+                / ops.convert_to_tensor(
+                    total_steps - warmup_steps - hold, dtype="float32"
+                )
             )
         )
     )
 
-    warmup_lr = tf.cast(target_lr * (global_step / warmup_steps), tf.float32)
-    target_lr = tf.cast(target_lr, tf.float32)
+    warmup_lr = target_lr * (global_step / warmup_steps)
 
     if hold > 0:
-        learning_rate = tf.where(
+        learning_rate = ops.where(
             global_step > warmup_steps + hold, learning_rate, target_lr
         )
 
-    learning_rate = tf.where(global_step < warmup_steps, warmup_lr, learning_rate)
+    learning_rate = ops.where(global_step < warmup_steps, warmup_lr, learning_rate)
     return learning_rate
 
 
@@ -720,7 +873,7 @@ class WarmUpCosineDecay(schedules.LearningRateSchedule):
             hold=self.hold,
         )
 
-        return tf.where(step > self.total_steps, 0.0, lr, name="learning_rate")
+        return ops.where(step > self.total_steps, 0.0, lr)
 
 ```
 
@@ -744,7 +897,7 @@ schedule = WarmUpCosineDecay(
     hold=hold_steps,
 )
 optimizer = optimizers.SGD(
-    decay=5e-4,
+    weight_decay=5e-4,
     learning_rate=schedule,
     momentum=0.9,
 )
@@ -757,7 +910,7 @@ Note that this preset does not come with any pretrained weights.
 
 
 ```python
-backbone = keras_cv.models.EfficientNetV2B1Backbone()
+backbone = keras_cv.models.EfficientNetV2B0Backbone()
 model = keras.Sequential(
     [
         backbone,
@@ -804,7 +957,10 @@ model.fit(
 
 <div class="k-default-codeblock">
 ```
-96/96 [==============================] - 29s 171ms/step - loss: 8.2322 - categorical_accuracy: 0.0095 - top_k_categorical_accuracy: 0.0484 - val_loss: 4.6036 - val_categorical_accuracy: 0.0150 - val_top_k_categorical_accuracy: 0.0832
+ 96/96 ━━━━━━━━━━━━━━━━━━━━ 65s 462ms/step - categorical_accuracy: 0.0068 - loss: 6.6096 - top_k_categorical_accuracy: 0.0497 - val_categorical_accuracy: 0.0122 - val_loss: 4.7151 - val_top_k_categorical_accuracy: 0.1596
+
+<keras.src.callbacks.history.History at 0x7fc7142c2e80>
+
 ```
 </div>
 Congratulations!  You now know how to train a powerful image classifier from
