@@ -46,8 +46,8 @@ To run this tutorial, you will need to install the following packages:
 """
 
 """shell
-pip install -Uq keras-cv
-pip install -Uq keras
+pip install -q --upgrade keras-cv
+pip install -q --upgrade keras # Upgrade to Keras 3.
 """
 
 """
@@ -60,10 +60,6 @@ import os
 os.environ["KERAS_BACKEND"] = "jax"
 ```
 """
-
-import os
-
-os.environ["KERAS_BACKEND"] = "jax"
 
 import keras
 from keras import ops
@@ -145,10 +141,11 @@ batch of images and segmentation masks as input and displays them in a grid.
 
 def preprocess_tfds_inputs(inputs):
     def unpackage_tfds_inputs(tfds_inputs):
-      return {
-          "images": tfds_inputs["image"],
-          "segmentation_masks": tfds_inputs["class_segmentation"],
-      }
+        return {
+            "images": tfds_inputs["image"],
+            "segmentation_masks": tfds_inputs["class_segmentation"],
+        }
+
     outputs = inputs.map(unpackage_tfds_inputs)
     outputs = outputs.map(keras_cv.layers.Resizing(height=512, width=512))
     outputs = outputs.batch(4, drop_remainder=True)

@@ -48,31 +48,21 @@ To run this tutorial, you will need to install the following packages:
 
 
 ```python
-!!pip install -q keras-core
-!!pip install -q git+https://github.com/keras-team/keras-cv.git
+!pip install -q --upgrade keras-cv
+!pip install -q --upgrade keras # Upgrade to Keras 3.
 ```
 
-
-
-
-<div class="k-default-codeblock">
-```
-['  Installing build dependencies ... \x1b[?25l\x1b[?25hdone',
- '  Getting requirements to build wheel ... \x1b[?25l\x1b[?25hdone',
- '  Preparing metadata (pyproject.toml) ... \x1b[?25l\x1b[?25hdone']
-
-```
-</div>
 After installing `keras-core` and `keras-cv`, set the backend for `keras-core`.
 This guide can be run with any backend (Tensorflow, JAX, PyTorch).
 
 ```
-%env KERAS_BACKEND=tensorflow
+import os
+
+os.environ["KERAS_BACKEND"] = "jax"
 ```
 
 
 ```python
-%env KERAS_BACKEND=tensorflow
 import keras
 from keras import ops
 
@@ -82,13 +72,6 @@ import numpy as np
 from keras_cv.datasets.pascal_voc.segmentation import load as load_voc
 ```
 
-<div class="k-default-codeblock">
-```
-env: KERAS_BACKEND=tensorflow
-Using TensorFlow backend
-
-```
-</div>
 ---
 ## Perform semantic segmentation with a pretrained DeepLabv3+ model
 
@@ -107,6 +90,13 @@ model = keras_cv.models.DeepLabV3Plus.from_preset(
 )
 ```
 
+<div class="k-default-codeblock">
+```
+Downloading data from https://storage.googleapis.com/keras-cv/models/deeplab_v3_plus/voc/deeplabv3plus_resenet50_pascal_voc.weights.h5
+ 313992688/313992688 ━━━━━━━━━━━━━━━━━━━━ 3s 0us/step
+
+```
+</div>
 Let us visualize the results of this pretrained model
 
 
@@ -130,10 +120,16 @@ keras_cv.visualization.plot_segmentation_mask_gallery(
 )
 ```
 
+<div class="k-default-codeblock">
+```
+Downloading data from https://i.imgur.com/gCNcJJI.jpg
+ 1215963/1215963 ━━━━━━━━━━━━━━━━━━━━ 0s 0us/step
 
-
-![png](/img/guides/semantic_segmentation_deeplab_v3_plus/semantic_segmentation_deeplab_v3_plus_9_0.png)
-
+```
+</div>
+    
+![png](/img/guides/semantic_segmentation_deeplab_v3_plus/semantic_segmentation_deeplab_v3_plus_9_1.png)
+    
 
 
 ---
@@ -155,6 +151,13 @@ train_ds = load_voc(split="sbd_train")
 eval_ds = load_voc(split="sbd_eval")
 ```
 
+<div class="k-default-codeblock">
+```
+Downloading data from https://www.eecs.berkeley.edu/Research/Projects/CS/vision/grouping/semantic_contours/benchmark.tgz
+ 1419539633/1419539633 ━━━━━━━━━━━━━━━━━━━━ 20s 0us/step
+
+```
+</div>
 ---
 ## Preprocess the data
 
@@ -172,10 +175,11 @@ batch of images and segmentation masks as input and displays them in a grid.
 
 def preprocess_tfds_inputs(inputs):
     def unpackage_tfds_inputs(tfds_inputs):
-      return {
-          "images": tfds_inputs["image"],
-          "segmentation_masks": tfds_inputs["class_segmentation"],
-      }
+        return {
+            "images": tfds_inputs["image"],
+            "segmentation_masks": tfds_inputs["class_segmentation"],
+        }
+
     outputs = inputs.map(unpackage_tfds_inputs)
     outputs = outputs.map(keras_cv.layers.Resizing(height=512, width=512))
     outputs = outputs.batch(4, drop_remainder=True)
@@ -196,9 +200,9 @@ keras_cv.visualization.plot_segmentation_mask_gallery(
 ```
 
 
-
+    
 ![png](/img/guides/semantic_segmentation_deeplab_v3_plus/semantic_segmentation_deeplab_v3_plus_14_0.png)
-
+    
 
 
 The preprocessing is applied to the evaluation dataset `eval_ds`.
@@ -234,9 +238,9 @@ keras_cv.visualization.plot_segmentation_mask_gallery(
 ```
 
 
-
+    
 ![png](/img/guides/semantic_segmentation_deeplab_v3_plus/semantic_segmentation_deeplab_v3_plus_18_0.png)
-
+    
 
 
 ---
@@ -282,29 +286,29 @@ model = keras_cv.models.DeepLabV3Plus.from_preset(
 
 ```
 
+<div class="k-default-codeblock">
+```
+Downloading data from https://storage.googleapis.com/keras-cv/models/resnet50v2/imagenet/classification-v2-notop.h5
+ 94687928/94687928 ━━━━━━━━━━━━━━━━━━━━ 1s 0us/step
+
+```
+</div>
 ---
 ## Compile the model
 
 The model.compile() function sets up the training process for the model. It defines the
 - optimization algorithm - Stochastic Gradient Descent (SGD)
 - the loss function - categorical cross-entropy
-- the evaluation metrics - Mean IoU and categorical accuracy
+- the evaluation metrics - categorical accuracy
 
 Semantic segmentation evaluation metrics:
-
-Mean Intersection over Union (MeanIoU):
-MeanIoU measures how well a semantic segmentation model accurately identifies
-and delineates different objects or regions in an image. It calculates the
-overlap between predicted and actual object boundaries, providing a score
-between 0 and 1, where 1 represents a perfect match.
 
 Categorical Accuracy:
 Categorical Accuracy measures the proportion of correctly classified pixels in
 an image. It gives a simple percentage indicating how accurately the model
 predicts the categories of pixels in the entire image.
 
-In essence, MeanIoU emphasizes the accuracy of identifying specific object
-boundaries, while Categorical Accuracy gives a broad overview of overall
+In essence, Categorical Accuracy gives a broad overview of overall
 pixel-level correctness.
 
 
@@ -315,9 +319,6 @@ model.compile(
     ),
     loss=keras.losses.CategoricalCrossentropy(from_logits=False),
     metrics=[
-        keras.metrics.MeanIoU(
-            num_classes=NUM_CLASSES, sparse_y_true=False, sparse_y_pred=False
-        ),
         keras.metrics.CategoricalAccuracy(),
     ],
 )
@@ -332,43 +333,32 @@ model.summary()
 
 
 
-<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">┏━━━━━━━━━━━━━━┳━━━━━━━━━━━━┳━━━━━┳━━━━━━━━━━━━━━┓
-┃<span style="font-weight: bold">              </span>┃<span style="font-weight: bold"> Output     </span>┃<span style="font-weight: bold"> Pa… </span>┃<span style="font-weight: bold">              </span>┃
-┃<span style="font-weight: bold"> Layer (type) </span>┃<span style="font-weight: bold"> Shape      </span>┃<span style="font-weight: bold">   # </span>┃<span style="font-weight: bold"> Connected to </span>┃
-┡━━━━━━━━━━━━━━╇━━━━━━━━━━━━╇━━━━━╇━━━━━━━━━━━━━━┩
-│ input_layer… │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>,     │   <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ -            │
-│ (<span style="color: #0087ff; text-decoration-color: #0087ff">InputLayer</span>) │ <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>,      │     │              │
-│              │ <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">3</span>)   │     │              │
-├──────────────┼────────────┼─────┼──────────────┤
-│ functional_… │ [(<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>,    │ <span style="color: #00af00; text-decoration-color: #00af00">23…</span> │ input_layer… │
-│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Functional</span>) │ <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>,      │     │              │
-│              │ <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>,      │     │              │
-│              │ <span style="color: #00af00; text-decoration-color: #00af00">256</span>),      │     │              │
-│              │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>,     │     │              │
-│              │ <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>,      │     │              │
-│              │ <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>,      │     │              │
-│              │ <span style="color: #00af00; text-decoration-color: #00af00">2048</span>)]     │     │              │
-├──────────────┼────────────┼─────┼──────────────┤
-│ spatial_pyr… │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>,     │ <span style="color: #00af00; text-decoration-color: #00af00">15…</span> │ functional_… │
-│ (<span style="color: #0087ff; text-decoration-color: #0087ff">SpatialPyr…</span> │ <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>,      │     │              │
-│              │ <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">256</span>) │     │              │
-├──────────────┼────────────┼─────┼──────────────┤
-│ encoder_out… │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>,     │   <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ spatial_pyr… │
-│ (<span style="color: #0087ff; text-decoration-color: #0087ff">UpSampling…</span> │ <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>,      │     │              │
-│              │ <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">256</span>) │     │              │
-├──────────────┼────────────┼─────┼──────────────┤
-│ sequential_… │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>,     │ <span style="color: #00af00; text-decoration-color: #00af00">12…</span> │ functional_… │
-│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Sequential</span>) │ <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>,      │     │              │
-│              │ <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">48</span>)  │     │              │
-├──────────────┼────────────┼─────┼──────────────┤
-│ concatenate… │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>,     │   <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ encoder_out… │
-│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Concatenat…</span> │ <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>,      │     │ sequential_… │
-│              │ <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">304</span>) │     │              │
-├──────────────┼────────────┼─────┼──────────────┤
-│ sequential_… │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>,     │ <span style="color: #00af00; text-decoration-color: #00af00">84…</span> │ concatenate… │
-│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Sequential</span>) │ <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>,      │     │              │
-│              │ <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">21</span>)  │     │              │
-└──────────────┴────────────┴─────┴──────────────┘
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">┏━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━┓
+┃<span style="font-weight: bold"> Layer (type)        </span>┃<span style="font-weight: bold"> Output Shape      </span>┃<span style="font-weight: bold"> Param # </span>┃<span style="font-weight: bold"> Connected to         </span>┃
+┡━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━┩
+│ input_layer_9       │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>,      │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ -                    │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">InputLayer</span>)        │ <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">3</span>)          │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ functional_11       │ [(<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>,     │ <span style="color: #00af00; text-decoration-color: #00af00">23,556…</span> │ input_layer_9[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>]  │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Functional</span>)        │ <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">256</span>),       │         │                      │
+│                     │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>,      │         │                      │
+│                     │ <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">2048</span>)]      │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ spatial_pyramid_po… │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>,      │ <span style="color: #00af00; text-decoration-color: #00af00">15,538…</span> │ functional_11[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">1</span>]  │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">SpatialPyramidPoo…</span> │ <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">256</span>)        │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ encoder_output_ups… │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>,      │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ spatial_pyramid_poo… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">UpSampling2D</span>)      │ <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">256</span>)        │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ sequential_14       │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>,      │  <span style="color: #00af00; text-decoration-color: #00af00">12,480</span> │ functional_11[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>]  │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Sequential</span>)        │ <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">48</span>)         │         │                      │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ concatenate_1       │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>,      │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ encoder_output_upsa… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Concatenate</span>)       │ <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">304</span>)        │         │ sequential_14[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>]  │
+├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
+│ sequential_15       │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>,      │  <span style="color: #00af00; text-decoration-color: #00af00">84,224</span> │ concatenate_1[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>]  │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Sequential</span>)        │ <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">21</span>)         │         │                      │
+└─────────────────────┴───────────────────┴─────────┴──────────────────────┘
 </pre>
 
 
@@ -399,8 +389,10 @@ which is used during training and evaluation of the DeepLabv3+ model.
 ```python
 
 def dict_to_tuple(x):
-    return x["images"], ops.one_hot(
-        ops.cast(ops.squeeze(x["segmentation_masks"], axis=-1), "int32"), 21
+    import tensorflow as tf
+
+    return x["images"], tf.one_hot(
+        tf.cast(tf.squeeze(x["segmentation_masks"], axis=-1), "int32"), 21
     )
 
 
@@ -412,14 +404,9 @@ model.fit(train_ds, validation_data=eval_ds, epochs=EPOCHS)
 
 <div class="k-default-codeblock">
 ```
-   2124/Unknown  514s 222ms/step - categorical_accuracy: 0.7532 - loss: 0.9361 - mean_io_u: 0.1716
+ 2124/2124 ━━━━━━━━━━━━━━━━━━━━ 414s 171ms/step - categorical_accuracy: 0.7081 - loss: 1.1970 - val_categorical_accuracy: 0.7725 - val_loss: 0.8474
 
-/usr/lib/python3.10/contextlib.py:153: UserWarning: Your input ran out of data; interrupting training. Make sure that your dataset or generator can generate at least `steps_per_epoch * epochs` batches. You may need to use the `.repeat()` function when building your dataset.
-  self.gen.throw(typ, value, traceback)
-
- 2124/2124 ━━━━━━━━━━━━━━━━━━━━ 558s 242ms/step - categorical_accuracy: 0.7533 - loss: 0.9360 - mean_io_u: 0.1716 - val_categorical_accuracy: 0.8292 - val_loss: 0.5328 - val_mean_io_u: 0.4042
-
-<keras.src.callbacks.history.History at 0x7d3000ed9e70>
+<keras.src.callbacks.history.History at 0x7f6a9d17c220>
 
 ```
 </div>
@@ -435,6 +422,8 @@ test_ds = load_voc(split="sbd_eval")
 test_ds = preprocess_tfds_inputs(test_ds)
 
 images, masks = next(iter(train_ds.take(1)))
+images = ops.convert_to_tensor(images)
+masks = ops.convert_to_tensor(masks)
 preds = ops.expand_dims(ops.argmax(model(images), axis=-1), axis=-1)
 masks = ops.expand_dims(ops.argmax(masks, axis=-1), axis=-1)
 
@@ -452,9 +441,9 @@ keras_cv.visualization.plot_segmentation_mask_gallery(
 ```
 
 
-
+    
 ![png](/img/guides/semantic_segmentation_deeplab_v3_plus/semantic_segmentation_deeplab_v3_plus_28_0.png)
-
+    
 
 
 Here are some additional tips for using the KerasCV DeepLabv3+ model:
