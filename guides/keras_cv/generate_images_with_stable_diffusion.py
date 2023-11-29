@@ -25,16 +25,21 @@ In this guide, we will explore KerasCV's Stable Diffusion implementation, show h
 these powerful performance boosts, and explore the performance benefits
 that they offer.
 
+**Note:** To run this guide on the `torch` backend, please set `jit_compile=False`
+everywhere. XLA compilation for Stable Diffusion does not currently work with
+torch.
+
 To get started, let's install a few dependencies and sort out some imports:
 """
 
 """shell
-pip install --upgrade keras-cv
+pip install -q --upgrade keras-cv
+pip install -q --upgrade keras  # Upgrade to Keras 3.
 """
 
 import time
 import keras_cv
-from tensorflow import keras
+import keras
 import matplotlib.pyplot as plt
 
 """
@@ -48,7 +53,9 @@ Check out the power of `keras_cv.models.StableDiffusion()`.
 First, we construct a model:
 """
 
-model = keras_cv.models.StableDiffusion(img_width=512, img_height=512)
+model = keras_cv.models.StableDiffusion(
+    img_width=512, img_height=512, jit_compile=False
+)
 
 """
 Next, we give it a prompt:
@@ -241,7 +248,7 @@ keras.mixed_precision.set_global_policy("mixed_float16")
 That's all.  Out of the box - it just works.
 """
 
-model = keras_cv.models.StableDiffusion()
+model = keras_cv.models.StableDiffusion(jit_compile=False)
 
 print("Compute dtype:", model.diffusion_model.compute_dtype)
 print(
@@ -275,7 +282,7 @@ keras.backend.clear_session()
 """
 ### XLA Compilation
 
-TensorFlow comes with the
+TensorFlow and JAX come with the
 [XLA: Accelerated Linear Algebra](https://www.tensorflow.org/xla) compiler built-in.
 `keras_cv.models.StableDiffusion` supports a `jit_compile` argument out of the box.
 Setting this argument to `True` enables XLA compilation, resulting in a significant
