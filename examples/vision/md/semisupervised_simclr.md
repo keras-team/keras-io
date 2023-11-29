@@ -70,6 +70,11 @@ check out
 
 
 ```python
+import os
+
+os.environ["KERAS_BACKEND"] = "tensorflow"
+
+
 # Make sure we are able to handle large datasets
 import resource
 
@@ -340,46 +345,46 @@ print(
 <div class="k-default-codeblock">
 ```
 Epoch 1/20
- 200/200 ━━━━━━━━━━━━━━━━━━━━ 10s 25ms/step - acc: 0.1778 - loss: 2.1562 - val_acc: 0.3261 - val_loss: 1.7078
+ 200/200 ━━━━━━━━━━━━━━━━━━━━ 9s 25ms/step - acc: 0.2031 - loss: 2.1576 - val_acc: 0.3234 - val_loss: 1.7719
 Epoch 2/20
- 200/200 ━━━━━━━━━━━━━━━━━━━━ 3s 17ms/step - acc: 0.3583 - loss: 1.7477 - val_acc: 0.3766 - val_loss: 1.6743
+ 200/200 ━━━━━━━━━━━━━━━━━━━━ 4s 17ms/step - acc: 0.3476 - loss: 1.7792 - val_acc: 0.4042 - val_loss: 1.5626
 Epoch 3/20
- 200/200 ━━━━━━━━━━━━━━━━━━━━ 4s 21ms/step - acc: 0.4091 - loss: 1.6017 - val_acc: 0.4310 - val_loss: 1.4954
+ 200/200 ━━━━━━━━━━━━━━━━━━━━ 4s 17ms/step - acc: 0.4060 - loss: 1.6054 - val_acc: 0.4319 - val_loss: 1.4832
 Epoch 4/20
- 200/200 ━━━━━━━━━━━━━━━━━━━━ 5s 23ms/step - acc: 0.4364 - loss: 1.5322 - val_acc: 0.4581 - val_loss: 1.4656
+ 200/200 ━━━━━━━━━━━━━━━━━━━━ 4s 18ms/step - acc: 0.4347 - loss: 1.5052 - val_acc: 0.4570 - val_loss: 1.4428
 Epoch 5/20
- 200/200 ━━━━━━━━━━━━━━━━━━━━ 5s 23ms/step - acc: 0.4638 - loss: 1.4673 - val_acc: 0.4823 - val_loss: 1.3855
+ 200/200 ━━━━━━━━━━━━━━━━━━━━ 4s 18ms/step - acc: 0.4600 - loss: 1.4546 - val_acc: 0.4765 - val_loss: 1.3977
 Epoch 6/20
- 200/200 ━━━━━━━━━━━━━━━━━━━━ 4s 20ms/step - acc: 0.4935 - loss: 1.3822 - val_acc: 0.5038 - val_loss: 1.3473
+ 200/200 ━━━━━━━━━━━━━━━━━━━━ 4s 17ms/step - acc: 0.4754 - loss: 1.4015 - val_acc: 0.4740 - val_loss: 1.4082
 Epoch 7/20
- 200/200 ━━━━━━━━━━━━━━━━━━━━ 4s 17ms/step - acc: 0.4990 - loss: 1.3574 - val_acc: 0.5058 - val_loss: 1.3641
+ 200/200 ━━━━━━━━━━━━━━━━━━━━ 4s 17ms/step - acc: 0.4901 - loss: 1.3589 - val_acc: 0.4761 - val_loss: 1.4061
 Epoch 8/20
- 200/200 ━━━━━━━━━━━━━━━━━━━━ 4s 17ms/step - acc: 0.5306 - loss: 1.2743 - val_acc: 0.5084 - val_loss: 1.3376
+ 200/200 ━━━━━━━━━━━━━━━━━━━━ 4s 17ms/step - acc: 0.5110 - loss: 1.2793 - val_acc: 0.5247 - val_loss: 1.3026
 Epoch 9/20
- 200/200 ━━━━━━━━━━━━━━━━━━━━ 4s 17ms/step - acc: 0.5264 - loss: 1.2738 - val_acc: 0.5424 - val_loss: 1.2659
+ 200/200 ━━━━━━━━━━━━━━━━━━━━ 4s 17ms/step - acc: 0.5298 - loss: 1.2765 - val_acc: 0.5138 - val_loss: 1.3286
 Epoch 10/20
- 200/200 ━━━━━━━━━━━━━━━━━━━━ 4s 17ms/step - acc: 0.5751 - loss: 1.1989 - val_acc: 0.5420 - val_loss: 1.2480
+ 200/200 ━━━━━━━━━━━━━━━━━━━━ 4s 17ms/step - acc: 0.5514 - loss: 1.2078 - val_acc: 0.5543 - val_loss: 1.2227
 Epoch 11/20
- 200/200 ━━━━━━━━━━━━━━━━━━━━ 4s 17ms/step - acc: 0.5916 - loss: 1.1188 - val_acc: 0.5491 - val_loss: 1.2327
+ 200/200 ━━━━━━━━━━━━━━━━━━━━ 4s 17ms/step - acc: 0.5520 - loss: 1.1851 - val_acc: 0.5446 - val_loss: 1.2709
 Epoch 12/20
- 200/200 ━━━━━━━━━━━━━━━━━━━━ 4s 17ms/step - acc: 0.5871 - loss: 1.1249 - val_acc: 0.5476 - val_loss: 1.2465
+ 200/200 ━━━━━━━━━━━━━━━━━━━━ 4s 17ms/step - acc: 0.5851 - loss: 1.1368 - val_acc: 0.5725 - val_loss: 1.1944
 Epoch 13/20
- 200/200 ━━━━━━━━━━━━━━━━━━━━ 4s 17ms/step - acc: 0.6107 - loss: 1.0726 - val_acc: 0.5585 - val_loss: 1.2463
+ 200/200 ━━━━━━━━━━━━━━━━━━━━ 4s 18ms/step - acc: 0.5738 - loss: 1.1411 - val_acc: 0.5685 - val_loss: 1.1974
 Epoch 14/20
- 200/200 ━━━━━━━━━━━━━━━━━━━━ 5s 17ms/step - acc: 0.6059 - loss: 1.0698 - val_acc: 0.5815 - val_loss: 1.1859
+ 200/200 ━━━━━━━━━━━━━━━━━━━━ 4s 21ms/step - acc: 0.6078 - loss: 1.0308 - val_acc: 0.5899 - val_loss: 1.1769
 Epoch 15/20
- 200/200 ━━━━━━━━━━━━━━━━━━━━ 4s 21ms/step - acc: 0.6343 - loss: 1.0125 - val_acc: 0.5631 - val_loss: 1.2560
+ 200/200 ━━━━━━━━━━━━━━━━━━━━ 4s 18ms/step - acc: 0.6284 - loss: 1.0386 - val_acc: 0.5863 - val_loss: 1.1742
 Epoch 16/20
- 200/200 ━━━━━━━━━━━━━━━━━━━━ 4s 17ms/step - acc: 0.6372 - loss: 1.0090 - val_acc: 0.5995 - val_loss: 1.1302
+ 200/200 ━━━━━━━━━━━━━━━━━━━━ 4s 18ms/step - acc: 0.6450 - loss: 0.9773 - val_acc: 0.5849 - val_loss: 1.1993
 Epoch 17/20
- 200/200 ━━━━━━━━━━━━━━━━━━━━ 3s 17ms/step - acc: 0.6531 - loss: 0.9594 - val_acc: 0.5537 - val_loss: 1.2937
+ 200/200 ━━━━━━━━━━━━━━━━━━━━ 4s 17ms/step - acc: 0.6547 - loss: 0.9555 - val_acc: 0.5683 - val_loss: 1.2424
 Epoch 18/20
- 200/200 ━━━━━━━━━━━━━━━━━━━━ 4s 17ms/step - acc: 0.6706 - loss: 0.9130 - val_acc: 0.5665 - val_loss: 1.2670
+ 200/200 ━━━━━━━━━━━━━━━━━━━━ 4s 17ms/step - acc: 0.6593 - loss: 0.9084 - val_acc: 0.5990 - val_loss: 1.1458
 Epoch 19/20
- 200/200 ━━━━━━━━━━━━━━━━━━━━ 3s 17ms/step - acc: 0.6729 - loss: 0.8945 - val_acc: 0.6005 - val_loss: 1.1418
+ 200/200 ━━━━━━━━━━━━━━━━━━━━ 4s 17ms/step - acc: 0.6672 - loss: 0.9267 - val_acc: 0.5685 - val_loss: 1.2758
 Epoch 20/20
- 200/200 ━━━━━━━━━━━━━━━━━━━━ 4s 17ms/step - acc: 0.7075 - loss: 0.8153 - val_acc: 0.5851 - val_loss: 1.2535
-Maximal validation accuracy: 60.05%
+ 200/200 ━━━━━━━━━━━━━━━━━━━━ 4s 17ms/step - acc: 0.6824 - loss: 0.8863 - val_acc: 0.5969 - val_loss: 1.2035
+Maximal validation accuracy: 59.90%
 
 ```
 </div>
@@ -713,46 +718,46 @@ print(
 <div class="k-default-codeblock">
 ```
 Epoch 1/20
- 200/200 ━━━━━━━━━━━━━━━━━━━━ 38s 155ms/step - c_acc: 0.0802 - c_loss: 5.3667 - p_acc: 0.1345 - p_loss: 2.2911 - val_c_acc: 0.0000e+00 - val_c_loss: 0.0000e+00 - val_p_acc: 0.2558 - val_p_loss: 2.0893
+ 200/200 ━━━━━━━━━━━━━━━━━━━━ 34s 134ms/step - c_acc: 0.0880 - c_loss: 5.2606 - p_acc: 0.1326 - p_loss: 2.2726 - val_c_acc: 0.0000e+00 - val_c_loss: 0.0000e+00 - val_p_acc: 0.2579 - val_p_loss: 2.0671
 Epoch 2/20
- 200/200 ━━━━━━━━━━━━━━━━━━━━ 29s 140ms/step - c_acc: 0.2791 - c_loss: 3.6200 - p_acc: 0.2840 - p_loss: 2.0615 - val_c_acc: 0.0000e+00 - val_c_loss: 0.0000e+00 - val_p_acc: 0.3306 - val_p_loss: 1.9327
+ 200/200 ━━━━━━━━━━━━━━━━━━━━ 29s 139ms/step - c_acc: 0.2808 - c_loss: 3.6233 - p_acc: 0.2956 - p_loss: 2.0228 - val_c_acc: 0.0000e+00 - val_c_loss: 0.0000e+00 - val_p_acc: 0.3440 - val_p_loss: 1.9242
 Epoch 3/20
- 200/200 ━━━━━━━━━━━━━━━━━━━━ 28s 133ms/step - c_acc: 0.4089 - c_loss: 2.9509 - p_acc: 0.3513 - p_loss: 1.9077 - val_c_acc: 0.0000e+00 - val_c_loss: 0.0000e+00 - val_p_acc: 0.3555 - val_p_loss: 1.8655
+ 200/200 ━━━━━━━━━━━━━━━━━━━━ 28s 136ms/step - c_acc: 0.4097 - c_loss: 2.9369 - p_acc: 0.3671 - p_loss: 1.8674 - val_c_acc: 0.0000e+00 - val_c_loss: 0.0000e+00 - val_p_acc: 0.3876 - val_p_loss: 1.7757
 Epoch 4/20
- 200/200 ━━━━━━━━━━━━━━━━━━━━ 29s 139ms/step - c_acc: 0.4904 - c_loss: 2.5740 - p_acc: 0.3814 - p_loss: 1.8211 - val_c_acc: 0.0000e+00 - val_c_loss: 0.0000e+00 - val_p_acc: 0.3923 - val_p_loss: 1.7856
+ 200/200 ━━━━━━━━━━━━━━━━━━━━ 30s 142ms/step - c_acc: 0.4893 - c_loss: 2.5707 - p_acc: 0.3957 - p_loss: 1.7490 - val_c_acc: 0.0000e+00 - val_c_loss: 0.0000e+00 - val_p_acc: 0.3960 - val_p_loss: 1.7002
 Epoch 5/20
- 200/200 ━━━━━━━━━━━━━━━━━━━━ 29s 138ms/step - c_acc: 0.5518 - c_loss: 2.3005 - p_acc: 0.4176 - p_loss: 1.7342 - val_c_acc: 0.0000e+00 - val_c_loss: 0.0000e+00 - val_p_acc: 0.4137 - val_p_loss: 1.7032
+ 200/200 ━━━━━━━━━━━━━━━━━━━━ 28s 136ms/step - c_acc: 0.5458 - c_loss: 2.3342 - p_acc: 0.4274 - p_loss: 1.6608 - val_c_acc: 0.0000e+00 - val_c_loss: 0.0000e+00 - val_p_acc: 0.4374 - val_p_loss: 1.6145
 Epoch 6/20
- 200/200 ━━━━━━━━━━━━━━━━━━━━ 30s 143ms/step - c_acc: 0.5976 - c_loss: 2.1122 - p_acc: 0.4435 - p_loss: 1.6528 - val_c_acc: 0.0000e+00 - val_c_loss: 0.0000e+00 - val_p_acc: 0.4429 - val_p_loss: 1.5914
+ 200/200 ━━━━━━━━━━━━━━━━━━━━ 29s 140ms/step - c_acc: 0.5949 - c_loss: 2.1179 - p_acc: 0.4410 - p_loss: 1.5812 - val_c_acc: 0.0000e+00 - val_c_loss: 0.0000e+00 - val_p_acc: 0.4444 - val_p_loss: 1.5439
 Epoch 7/20
- 200/200 ━━━━━━━━━━━━━━━━━━━━ 29s 137ms/step - c_acc: 0.6240 - c_loss: 1.9754 - p_acc: 0.4536 - p_loss: 1.5819 - val_c_acc: 0.0000e+00 - val_c_loss: 0.0000e+00 - val_p_acc: 0.4577 - val_p_loss: 1.5743
+ 200/200 ━━━━━━━━━━━━━━━━━━━━ 28s 135ms/step - c_acc: 0.6273 - c_loss: 1.9861 - p_acc: 0.4633 - p_loss: 1.5076 - val_c_acc: 0.0000e+00 - val_c_loss: 0.0000e+00 - val_p_acc: 0.4695 - val_p_loss: 1.5056
 Epoch 8/20
- 200/200 ━━━━━━━━━━━━━━━━━━━━ 30s 142ms/step - c_acc: 0.6554 - c_loss: 1.8617 - p_acc: 0.4677 - p_loss: 1.5166 - val_c_acc: 0.0000e+00 - val_c_loss: 0.0000e+00 - val_p_acc: 0.4627 - val_p_loss: 1.5031
+ 200/200 ━━━━━━━━━━━━━━━━━━━━ 29s 139ms/step - c_acc: 0.6566 - c_loss: 1.8668 - p_acc: 0.4817 - p_loss: 1.4601 - val_c_acc: 0.0000e+00 - val_c_loss: 0.0000e+00 - val_p_acc: 0.4790 - val_p_loss: 1.4566
 Epoch 9/20
- 200/200 ━━━━━━━━━━━━━━━━━━━━ 28s 135ms/step - c_acc: 0.6728 - c_loss: 1.7889 - p_acc: 0.4757 - p_loss: 1.4715 - val_c_acc: 0.0000e+00 - val_c_loss: 0.0000e+00 - val_p_acc: 0.4794 - val_p_loss: 1.4673
+ 200/200 ━━━━━━━━━━━━━━━━━━━━ 28s 135ms/step - c_acc: 0.6726 - c_loss: 1.7938 - p_acc: 0.4885 - p_loss: 1.4136 - val_c_acc: 0.0000e+00 - val_c_loss: 0.0000e+00 - val_p_acc: 0.4933 - val_p_loss: 1.4163
 Epoch 10/20
- 200/200 ━━━━━━━━━━━━━━━━━━━━ 29s 139ms/step - c_acc: 0.6921 - c_loss: 1.6983 - p_acc: 0.5013 - p_loss: 1.4168 - val_c_acc: 0.0000e+00 - val_c_loss: 0.0000e+00 - val_p_acc: 0.4866 - val_p_loss: 1.4412
+ 200/200 ━━━━━━━━━━━━━━━━━━━━ 29s 139ms/step - c_acc: 0.6931 - c_loss: 1.7210 - p_acc: 0.4954 - p_loss: 1.3663 - val_c_acc: 0.0000e+00 - val_c_loss: 0.0000e+00 - val_p_acc: 0.5140 - val_p_loss: 1.3677
 Epoch 11/20
- 200/200 ━━━━━━━━━━━━━━━━━━━━ 28s 135ms/step - c_acc: 0.7030 - c_loss: 1.6700 - p_acc: 0.5041 - p_loss: 1.3928 - val_c_acc: 0.0000e+00 - val_c_loss: 0.0000e+00 - val_p_acc: 0.5005 - val_p_loss: 1.4026
+ 200/200 ━━━━━━━━━━━━━━━━━━━━ 29s 137ms/step - c_acc: 0.7055 - c_loss: 1.6619 - p_acc: 0.5210 - p_loss: 1.3376 - val_c_acc: 0.0000e+00 - val_c_loss: 0.0000e+00 - val_p_acc: 0.5155 - val_p_loss: 1.3573
 Epoch 12/20
- 200/200 ━━━━━━━━━━━━━━━━━━━━ 29s 138ms/step - c_acc: 0.7146 - c_loss: 1.6161 - p_acc: 0.5158 - p_loss: 1.3465 - val_c_acc: 0.0000e+00 - val_c_loss: 0.0000e+00 - val_p_acc: 0.5163 - val_p_loss: 1.4030
+ 200/200 ━━━━━━━━━━━━━━━━━━━━ 30s 145ms/step - c_acc: 0.7215 - c_loss: 1.6112 - p_acc: 0.5264 - p_loss: 1.2920 - val_c_acc: 0.0000e+00 - val_c_loss: 0.0000e+00 - val_p_acc: 0.5232 - val_p_loss: 1.3337
 Epoch 13/20
- 200/200 ━━━━━━━━━━━━━━━━━━━━ 28s 134ms/step - c_acc: 0.7264 - c_loss: 1.5713 - p_acc: 0.5305 - p_loss: 1.3124 - val_c_acc: 0.0000e+00 - val_c_loss: 0.0000e+00 - val_p_acc: 0.5217 - val_p_loss: 1.3409
+ 200/200 ━━━━━━━━━━━━━━━━━━━━ 31s 146ms/step - c_acc: 0.7279 - c_loss: 1.5749 - p_acc: 0.5388 - p_loss: 1.2570 - val_c_acc: 0.0000e+00 - val_c_loss: 0.0000e+00 - val_p_acc: 0.5217 - val_p_loss: 1.3155
 Epoch 14/20
- 200/200 ━━━━━━━━━━━━━━━━━━━━ 29s 137ms/step - c_acc: 0.7408 - c_loss: 1.5277 - p_acc: 0.5355 - p_loss: 1.2922 - val_c_acc: 0.0000e+00 - val_c_loss: 0.0000e+00 - val_p_acc: 0.5199 - val_p_loss: 1.3359
+ 200/200 ━━━━━━━━━━━━━━━━━━━━ 29s 140ms/step - c_acc: 0.7435 - c_loss: 1.5196 - p_acc: 0.5505 - p_loss: 1.2507 - val_c_acc: 0.0000e+00 - val_c_loss: 0.0000e+00 - val_p_acc: 0.5460 - val_p_loss: 1.2640
 Epoch 15/20
- 200/200 ━━━━━━━━━━━━━━━━━━━━ 28s 133ms/step - c_acc: 0.7441 - c_loss: 1.5061 - p_acc: 0.5518 - p_loss: 1.2834 - val_c_acc: 0.0000e+00 - val_c_loss: 0.0000e+00 - val_p_acc: 0.5356 - val_p_loss: 1.3070
+ 200/200 ━━━━━━━━━━━━━━━━━━━━ 40s 135ms/step - c_acc: 0.7477 - c_loss: 1.4979 - p_acc: 0.5653 - p_loss: 1.2188 - val_c_acc: 0.0000e+00 - val_c_loss: 0.0000e+00 - val_p_acc: 0.5594 - val_p_loss: 1.2351
 Epoch 16/20
- 200/200 ━━━━━━━━━━━━━━━━━━━━ 29s 141ms/step - c_acc: 0.7529 - c_loss: 1.4672 - p_acc: 0.5573 - p_loss: 1.2535 - val_c_acc: 0.0000e+00 - val_c_loss: 0.0000e+00 - val_p_acc: 0.5468 - val_p_loss: 1.2732
+ 200/200 ━━━━━━━━━━━━━━━━━━━━ 29s 139ms/step - c_acc: 0.7598 - c_loss: 1.4463 - p_acc: 0.5590 - p_loss: 1.1917 - val_c_acc: 0.0000e+00 - val_c_loss: 0.0000e+00 - val_p_acc: 0.5551 - val_p_loss: 1.2411
 Epoch 17/20
- 200/200 ━━━━━━━━━━━━━━━━━━━━ 29s 137ms/step - c_acc: 0.7585 - c_loss: 1.4425 - p_acc: 0.5573 - p_loss: 1.2250 - val_c_acc: 0.0000e+00 - val_c_loss: 0.0000e+00 - val_p_acc: 0.5595 - val_p_loss: 1.2567
+ 200/200 ━━━━━━━━━━━━━━━━━━━━ 28s 135ms/step - c_acc: 0.7633 - c_loss: 1.4271 - p_acc: 0.5775 - p_loss: 1.1731 - val_c_acc: 0.0000e+00 - val_c_loss: 0.0000e+00 - val_p_acc: 0.5502 - val_p_loss: 1.2428
 Epoch 18/20
- 200/200 ━━━━━━━━━━━━━━━━━━━━ 29s 141ms/step - c_acc: 0.7675 - c_loss: 1.4162 - p_acc: 0.5555 - p_loss: 1.2213 - val_c_acc: 0.0000e+00 - val_c_loss: 0.0000e+00 - val_p_acc: 0.5512 - val_p_loss: 1.2580
+ 200/200 ━━━━━━━━━━━━━━━━━━━━ 29s 140ms/step - c_acc: 0.7666 - c_loss: 1.4246 - p_acc: 0.5752 - p_loss: 1.1805 - val_c_acc: 0.0000e+00 - val_c_loss: 0.0000e+00 - val_p_acc: 0.5633 - val_p_loss: 1.2167
 Epoch 19/20
- 200/200 ━━━━━━━━━━━━━━━━━━━━ 32s 155ms/step - c_acc: 0.7733 - c_loss: 1.3948 - p_acc: 0.5696 - p_loss: 1.1949 - val_c_acc: 0.0000e+00 - val_c_loss: 0.0000e+00 - val_p_acc: 0.5472 - val_p_loss: 1.2501
+ 200/200 ━━━━━━━━━━━━━━━━━━━━ 28s 135ms/step - c_acc: 0.7708 - c_loss: 1.3928 - p_acc: 0.5814 - p_loss: 1.1677 - val_c_acc: 0.0000e+00 - val_c_loss: 0.0000e+00 - val_p_acc: 0.5665 - val_p_loss: 1.2191
 Epoch 20/20
- 200/200 ━━━━━━━━━━━━━━━━━━━━ 29s 140ms/step - c_acc: 0.7734 - c_loss: 1.3929 - p_acc: 0.5773 - p_loss: 1.1759 - val_c_acc: 0.0000e+00 - val_c_loss: 0.0000e+00 - val_p_acc: 0.5624 - val_p_loss: 1.2406
-Maximal validation accuracy: 56.24%
+ 200/200 ━━━━━━━━━━━━━━━━━━━━ 29s 140ms/step - c_acc: 0.7806 - c_loss: 1.3733 - p_acc: 0.5836 - p_loss: 1.1442 - val_c_acc: 0.0000e+00 - val_c_loss: 0.0000e+00 - val_p_acc: 0.5640 - val_p_loss: 1.2172
+Maximal validation accuracy: 56.65%
 
 ```
 </div>
@@ -792,46 +797,46 @@ print(
 <div class="k-default-codeblock">
 ```
 Epoch 1/20
- 200/200 ━━━━━━━━━━━━━━━━━━━━ 5s 18ms/step - acc: 0.2790 - loss: 1.9564 - val_acc: 0.5050 - val_loss: 1.3547
+ 200/200 ━━━━━━━━━━━━━━━━━━━━ 5s 18ms/step - acc: 0.2104 - loss: 2.0930 - val_acc: 0.4017 - val_loss: 1.5433
 Epoch 2/20
- 200/200 ━━━━━━━━━━━━━━━━━━━━ 3s 17ms/step - acc: 0.4842 - loss: 1.3999 - val_acc: 0.5339 - val_loss: 1.2820
+ 200/200 ━━━━━━━━━━━━━━━━━━━━ 4s 17ms/step - acc: 0.4037 - loss: 1.5791 - val_acc: 0.4544 - val_loss: 1.4250
 Epoch 3/20
- 200/200 ━━━━━━━━━━━━━━━━━━━━ 3s 17ms/step - acc: 0.5529 - loss: 1.2314 - val_acc: 0.5960 - val_loss: 1.1354
+ 200/200 ━━━━━━━━━━━━━━━━━━━━ 4s 17ms/step - acc: 0.4639 - loss: 1.4161 - val_acc: 0.5266 - val_loss: 1.2958
 Epoch 4/20
- 200/200 ━━━━━━━━━━━━━━━━━━━━ 3s 17ms/step - acc: 0.5883 - loss: 1.1250 - val_acc: 0.5867 - val_loss: 1.1316
+ 200/200 ━━━━━━━━━━━━━━━━━━━━ 4s 17ms/step - acc: 0.5438 - loss: 1.2686 - val_acc: 0.5655 - val_loss: 1.1711
 Epoch 5/20
- 200/200 ━━━━━━━━━━━━━━━━━━━━ 3s 17ms/step - acc: 0.6199 - loss: 1.0635 - val_acc: 0.6215 - val_loss: 1.0669
+ 200/200 ━━━━━━━━━━━━━━━━━━━━ 4s 17ms/step - acc: 0.5678 - loss: 1.1746 - val_acc: 0.5775 - val_loss: 1.1670
 Epoch 6/20
- 200/200 ━━━━━━━━━━━━━━━━━━━━ 3s 17ms/step - acc: 0.6280 - loss: 1.0143 - val_acc: 0.6394 - val_loss: 1.0138
+ 200/200 ━━━━━━━━━━━━━━━━━━━━ 4s 17ms/step - acc: 0.6096 - loss: 1.1071 - val_acc: 0.6034 - val_loss: 1.1400
 Epoch 7/20
- 200/200 ━━━━━━━━━━━━━━━━━━━━ 5s 17ms/step - acc: 0.6637 - loss: 0.9512 - val_acc: 0.5946 - val_loss: 1.1341
+ 200/200 ━━━━━━━━━━━━━━━━━━━━ 4s 17ms/step - acc: 0.6242 - loss: 1.0413 - val_acc: 0.6235 - val_loss: 1.0756
 Epoch 8/20
- 200/200 ━━━━━━━━━━━━━━━━━━━━ 3s 17ms/step - acc: 0.6639 - loss: 0.9366 - val_acc: 0.6622 - val_loss: 0.9710
+ 200/200 ━━━━━━━━━━━━━━━━━━━━ 4s 17ms/step - acc: 0.6284 - loss: 1.0264 - val_acc: 0.6030 - val_loss: 1.1048
 Epoch 9/20
- 200/200 ━━━━━━━━━━━━━━━━━━━━ 4s 17ms/step - acc: 0.7018 - loss: 0.8469 - val_acc: 0.6338 - val_loss: 1.0568
+ 200/200 ━━━━━━━━━━━━━━━━━━━━ 4s 17ms/step - acc: 0.6491 - loss: 0.9706 - val_acc: 0.5770 - val_loss: 1.2818
 Epoch 10/20
- 200/200 ━━━━━━━━━━━━━━━━━━━━ 3s 17ms/step - acc: 0.7054 - loss: 0.8137 - val_acc: 0.6175 - val_loss: 1.1042
+ 200/200 ━━━━━━━━━━━━━━━━━━━━ 4s 17ms/step - acc: 0.6754 - loss: 0.9104 - val_acc: 0.6119 - val_loss: 1.1087
 Epoch 11/20
- 200/200 ━━━━━━━━━━━━━━━━━━━━ 4s 17ms/step - acc: 0.7084 - loss: 0.8063 - val_acc: 0.6488 - val_loss: 1.0032
+ 200/200 ━━━━━━━━━━━━━━━━━━━━ 4s 20ms/step - acc: 0.6620 - loss: 0.8855 - val_acc: 0.6323 - val_loss: 1.0526
 Epoch 12/20
- 200/200 ━━━━━━━━━━━━━━━━━━━━ 4s 17ms/step - acc: 0.7254 - loss: 0.7712 - val_acc: 0.6365 - val_loss: 1.0920
+ 200/200 ━━━━━━━━━━━━━━━━━━━━ 4s 19ms/step - acc: 0.7060 - loss: 0.8179 - val_acc: 0.6406 - val_loss: 1.0565
 Epoch 13/20
- 200/200 ━━━━━━━━━━━━━━━━━━━━ 3s 17ms/step - acc: 0.7387 - loss: 0.7199 - val_acc: 0.6470 - val_loss: 1.0372
+ 200/200 ━━━━━━━━━━━━━━━━━━━━ 3s 17ms/step - acc: 0.7252 - loss: 0.7796 - val_acc: 0.6135 - val_loss: 1.1273
 Epoch 14/20
- 200/200 ━━━━━━━━━━━━━━━━━━━━ 4s 21ms/step - acc: 0.7498 - loss: 0.7110 - val_acc: 0.6416 - val_loss: 1.0901
+ 200/200 ━━━━━━━━━━━━━━━━━━━━ 4s 17ms/step - acc: 0.7176 - loss: 0.7935 - val_acc: 0.6292 - val_loss: 1.1028
 Epoch 15/20
- 200/200 ━━━━━━━━━━━━━━━━━━━━ 4s 17ms/step - acc: 0.7723 - loss: 0.6438 - val_acc: 0.6248 - val_loss: 1.1611
+ 200/200 ━━━━━━━━━━━━━━━━━━━━ 4s 17ms/step - acc: 0.7322 - loss: 0.7471 - val_acc: 0.6266 - val_loss: 1.1313
 Epoch 16/20
- 200/200 ━━━━━━━━━━━━━━━━━━━━ 3s 17ms/step - acc: 0.7661 - loss: 0.6650 - val_acc: 0.6699 - val_loss: 1.0066
+ 200/200 ━━━━━━━━━━━━━━━━━━━━ 4s 17ms/step - acc: 0.7400 - loss: 0.7218 - val_acc: 0.6332 - val_loss: 1.1064
 Epoch 17/20
- 200/200 ━━━━━━━━━━━━━━━━━━━━ 3s 17ms/step - acc: 0.7778 - loss: 0.6322 - val_acc: 0.6504 - val_loss: 1.0976
+ 200/200 ━━━━━━━━━━━━━━━━━━━━ 4s 17ms/step - acc: 0.7490 - loss: 0.6968 - val_acc: 0.6532 - val_loss: 1.0112
 Epoch 18/20
- 200/200 ━━━━━━━━━━━━━━━━━━━━ 3s 17ms/step - acc: 0.7844 - loss: 0.5973 - val_acc: 0.6466 - val_loss: 1.0941
+ 200/200 ━━━━━━━━━━━━━━━━━━━━ 4s 17ms/step - acc: 0.7491 - loss: 0.6879 - val_acc: 0.6403 - val_loss: 1.1083
 Epoch 19/20
- 200/200 ━━━━━━━━━━━━━━━━━━━━ 3s 17ms/step - acc: 0.7948 - loss: 0.5746 - val_acc: 0.6524 - val_loss: 1.1429
+ 200/200 ━━━━━━━━━━━━━━━━━━━━ 4s 17ms/step - acc: 0.7802 - loss: 0.6504 - val_acc: 0.6479 - val_loss: 1.0548
 Epoch 20/20
- 200/200 ━━━━━━━━━━━━━━━━━━━━ 3s 17ms/step - acc: 0.7984 - loss: 0.5519 - val_acc: 0.6644 - val_loss: 1.1057
-Maximal validation accuracy: 66.99%
+ 200/200 ━━━━━━━━━━━━━━━━━━━━ 3s 17ms/step - acc: 0.7800 - loss: 0.6234 - val_acc: 0.6409 - val_loss: 1.0998
+Maximal validation accuracy: 65.32%
 
 ```
 </div>

@@ -66,6 +66,11 @@ check out
 ## Setup
 """
 
+import os
+
+os.environ["KERAS_BACKEND"] = "tensorflow"
+
+
 # Make sure we are able to handle large datasets
 import resource
 
