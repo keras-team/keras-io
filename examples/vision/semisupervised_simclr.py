@@ -89,7 +89,7 @@ labeled_dataset_size = 5000
 image_channels = 3
 
 # Algorithm hyperparameters
-num_epochs = 1
+num_epochs = 20
 batch_size = 525  # Corresponds to 200 steps per epoch
 width = 128
 temperature = 0.1
@@ -219,7 +219,7 @@ def get_augmenter(min_area, brightness, jitter):
     zoom_factor = 1.0 - math.sqrt(min_area)
     return keras.Sequential(
         [
-            layers.Rescaling(1 / 255, dtype="uint8"),
+            layers.Rescaling(1 / 255),
             layers.RandomFlip("horizontal"),
             layers.RandomTranslation(zoom_factor / 2, zoom_factor / 2),
             layers.RandomZoom((-zoom_factor, 0.0), (-zoom_factor, 0.0)),
