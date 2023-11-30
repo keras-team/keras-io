@@ -613,24 +613,26 @@ bounding-box-friendly data augmentation inside a `tf.data` pipeline.
 
 
 ```python
+augmenters = [
+    keras_cv.layers.RandomFlip(mode="horizontal", bounding_box_format="xywh"),
+    keras_cv.layers.JitteredResize(
+        target_size=(640, 640), scale_factor=(0.75, 1.3), bounding_box_format="xywh"
+    ),
+]
 
-def augmenter():
-    layers = [
-        keras_cv.layers.RandomFlip(mode="horizontal", bounding_box_format="xywh"),
-        keras_cv.layers.JitteredResize(
-            target_size=(640, 640), scale_factor=(0.75, 1.3), bounding_box_format="xywh"
-        ),
-    ]
 
-    def augment_fn(inputs):
-        for layer in layers:
-            inputs = layer(inputs)
+def create_augmenter_fn(augmenters):
+    def augmenter_fn(inputs):
+        for augmenter in augmenters:
+            inputs = augmenter(inputs)
         return inputs
 
-    return augment_fn
+    return augmenter_fn
 
 
-train_ds = train_ds.map(augmenter(), num_parallel_calls=tf_data.AUTOTUNE)
+augmenter_fn = create_augmenter_fn(augmenters)
+
+train_ds = train_ds.map(augmenter_fn, num_parallel_calls=tf_data.AUTOTUNE)
 visualize_dataset(
     train_ds, bounding_box_format="xywh", value_range=(0, 255), rows=2, cols=2
 )
@@ -825,24 +827,24 @@ creating index...
 index created!
 Running per image evaluation...
 Evaluate annotation type *bbox*
-DONE (t=0.55s).
+DONE (t=0.23s).
 Accumulating evaluation results...
-DONE (t=0.09s).
+DONE (t=0.08s).
  Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.000
- Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets=100 ] = 0.001
+ Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets=100 ] = 0.000
  Average Precision  (AP) @[ IoU=0.75      | area=   all | maxDets=100 ] = 0.000
  Average Precision  (AP) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.000
  Average Precision  (AP) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.000
  Average Precision  (AP) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.000
- Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=  1 ] = 0.009
- Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets= 10 ] = 0.009
- Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.009
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=  1 ] = 0.000
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets= 10 ] = 0.003
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.007
  Average Recall     (AR) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.000
  Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.000
  Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.009
- 20/20 ━━━━━━━━━━━━━━━━━━━━ 75s 703ms/step - loss: 9424.7568 - val_AP: 2.1243e-04 - val_AP50: 7.9434e-04 - val_AP75: 0.0000e+00 - val_APs: 0.0000e+00 - val_APm: 0.0000e+00 - val_APl: 2.2545e-04 - val_ARmax1: 0.0086 - val_ARmax10: 0.0090 - val_ARmax100: 0.0090 - val_ARs: 0.0000e+00 - val_ARm: 0.0000e+00 - val_ARl: 0.0092
+ 20/20 ━━━━━━━━━━━━━━━━━━━━ 74s 692ms/step - loss: 8752.0195 - val_AP: 6.5088e-05 - val_AP50: 4.0245e-04 - val_AP75: 8.4049e-06 - val_APs: 0.0000e+00 - val_APm: 0.0000e+00 - val_APl: 6.5821e-05 - val_ARmax1: 0.0000e+00 - val_ARmax10: 0.0032 - val_ARmax100: 0.0071 - val_ARs: 0.0000e+00 - val_ARm: 0.0000e+00 - val_ARl: 0.0093
 
-<keras.src.callbacks.history.History at 0x7ff7a719c250>
+<keras.src.callbacks.history.History at 0x7f4d3c0ea880>
 
 ```
 </div>
@@ -985,15 +987,7 @@ visualization.plot_bounding_box_gallery(
 <div class="k-default-codeblock">
 ```
 By using this model checkpoint, you acknowledge that its usage is subject to the terms of the CreativeML Open RAIL++-M license at https://github.com/Stability-AI/stablediffusion/blob/main/LICENSE-MODEL
-Downloading data from https://github.com/openai/CLIP/blob/main/clip/bpe_simple_vocab_16e6.txt.gz?raw=true
- 1356917/1356917 ━━━━━━━━━━━━━━━━━━━━ 0s 0us/step
-Downloading data from https://huggingface.co/ianstenbit/keras-sd2.1/resolve/main/text_encoder_v2_1.h5
- 1361968152/1361968152 ━━━━━━━━━━━━━━━━━━━━ 32s 0us/step
-Downloading data from https://huggingface.co/ianstenbit/keras-sd2.1/resolve/main/diffusion_model_v2_1.h5
- 3464605600/3464605600 ━━━━━━━━━━━━━━━━━━━━ 86s 0us/step
- 50/50 ━━━━━━━━━━━━━━━━━━━━ 134s 359ms/step
-Downloading data from https://huggingface.co/fchollet/stable-diffusion/resolve/main/kcv_decoder.h5
- 198180272/198180272 ━━━━━━━━━━━━━━━━━━━━ 3s 0us/step
+ 50/50 ━━━━━━━━━━━━━━━━━━━━ 47s 360ms/step
  1/1 ━━━━━━━━━━━━━━━━━━━━ 9s 9s/step
 
 ```

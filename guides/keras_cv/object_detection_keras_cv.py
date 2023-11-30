@@ -511,24 +511,26 @@ The code below loads the Pascal VOC dataset, and performs on-the-fly,
 bounding-box-friendly data augmentation inside a `tf.data` pipeline.
 """
 
+augmenters = [
+    keras_cv.layers.RandomFlip(mode="horizontal", bounding_box_format="xywh"),
+    keras_cv.layers.JitteredResize(
+        target_size=(640, 640), scale_factor=(0.75, 1.3), bounding_box_format="xywh"
+    ),
+]
 
-def augmenter():
-    layers = [
-        keras_cv.layers.RandomFlip(mode="horizontal", bounding_box_format="xywh"),
-        keras_cv.layers.JitteredResize(
-            target_size=(640, 640), scale_factor=(0.75, 1.3), bounding_box_format="xywh"
-        ),
-    ]
 
-    def augment_fn(inputs):
-        for layer in layers:
-            inputs = layer(inputs)
+def create_augmenter_fn(augmenters):
+    def augmenter_fn(inputs):
+        for augmenter in augmenters:
+            inputs = augmenter(inputs)
         return inputs
 
-    return augment_fn
+    return augmenter_fn
 
 
-train_ds = train_ds.map(augmenter(), num_parallel_calls=tf_data.AUTOTUNE)
+augmenter_fn = create_augmenter_fn(augmenters)
+
+train_ds = train_ds.map(augmenter_fn, num_parallel_calls=tf_data.AUTOTUNE)
 visualize_dataset(
     train_ds, bounding_box_format="xywh", value_range=(0, 255), rows=2, cols=2
 )
