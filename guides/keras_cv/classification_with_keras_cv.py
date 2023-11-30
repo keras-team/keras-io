@@ -21,24 +21,42 @@ classification problems at three levels of complexity:
 - Fine-tuning a pretrained backbone
 - Training a image classifier from scratch
 
+KerasCV uses Keras 3 to work with any of TensorFlow, PyTorch or Jax. In the
+guide below, we will use the `jax` backend. This guide runs in
+TensorFlow or PyTorch backends with zero changes, simply update the
+`KERAS_BACKEND` below.
+
 We use Professor Keras, the official Keras mascot, as a
 visual reference for the complexity of the material:
 
 ![](https://storage.googleapis.com/keras-nlp/getting_started_guide/prof_keras_evolution.png)
 """
 
+"""shell
+pip install -q --upgrade keras-cv
+pip install -q --upgrade keras  # Upgrade to Keras 3.
+"""
+
+import os
+
+os.environ["KERAS_BACKEND"] = "jax"  # @param ["tensorflow", "jax", "torch"]
 
 import json
 import math
-import keras_cv
-import tensorflow as tf
-import tensorflow_datasets as tfds
+import numpy as np
+
 import keras
 from keras import losses
-import numpy as np
+from keras import ops
 from keras import optimizers
-from tensorflow.keras.optimizers import schedules
+from keras.optimizers import schedules
 from keras import metrics
+
+import keras_cv
+
+# Import tensorflow for `tf.data` and its preprocessing functions
+import tensorflow as tf
+import tensorflow_datasets as tfds
 
 
 """
@@ -77,11 +95,11 @@ semantic segmentation.
 Now that our classifier is built, let's apply it to this cute cat picture!
 """
 
-filepath = tf.keras.utils.get_file(origin="https://i.imgur.com/9i63gLN.jpg")
+filepath = keras.utils.get_file(origin="https://i.imgur.com/9i63gLN.jpg")
 image = keras.utils.load_img(filepath)
 image = np.array(image)
 keras_cv.visualization.plot_image_gallery(
-    [image], rows=1, cols=1, value_range=(0, 255), show=True, scale=4
+    np.array([image]), rows=1, cols=1, value_range=(0, 255), show=True, scale=4
 )
 
 """
@@ -187,7 +205,7 @@ model = keras_cv.models.ImageClassifier.from_preset(
 )
 model.compile(
     loss="categorical_crossentropy",
-    optimizer=tf.optimizers.SGD(learning_rate=0.01),
+    optimizer=keras.optimizers.SGD(learning_rate=0.01),
     metrics=["accuracy"],
 )
 
@@ -371,8 +389,10 @@ Let's take it for a spin:
 """
 rand_augment = keras_cv.layers.RandAugment(
     augmentations_per_image=3,
-    magnitude=0.3,
     value_range=(0, 255),
+    magnitude=0.3,
+    magnitude_stddev=0.2,
+    rate=1.0,
 )
 augmenters += [rand_augment]
 
@@ -471,8 +491,18 @@ augmenters += [cut_mix_or_mix_up]
 Now let's apply our final augmenter to the training data:
 """
 
-augmenter = keras.Sequential(augmenters)
-train_ds = train_ds.map(augmenter, num_parallel_calls=tf.data.AUTOTUNE)
+
+def create_augmenter_fn(augmenters):
+    def augmenter_fn(inputs):
+        for augmenter in augmenters:
+            inputs = augmenter(inputs)
+        return inputs
+
+    return augmenter_fn
+
+
+augmenter_fn = create_augmenter_fn(augmenters)
+train_ds = train_ds.map(augmenter_fn, num_parallel_calls=tf.data.AUTOTUNE)
 
 image_batch = next(iter(train_ds.take(1)))["images"]
 keras_cv.visualization.plot_image_gallery(
@@ -548,23 +578,26 @@ def lr_warmup_cosine_decay(
         * target_lr
         * (
             1
-            + tf.cos(
-                tf.constant(math.pi)
-                * tf.cast(global_step - warmup_steps - hold, tf.float32)
-                / float(total_steps - warmup_steps - hold)
+            + ops.cos(
+                math.pi
+                * ops.convert_to_tensor(
+                    global_step - warmup_steps - hold, dtype="float32"
+                )
+                / ops.convert_to_tensor(
+                    total_steps - warmup_steps - hold, dtype="float32"
+                )
             )
         )
     )
 
-    warmup_lr = tf.cast(target_lr * (global_step / warmup_steps), tf.float32)
-    target_lr = tf.cast(target_lr, tf.float32)
+    warmup_lr = target_lr * (global_step / warmup_steps)
 
     if hold > 0:
-        learning_rate = tf.where(
+        learning_rate = ops.where(
             global_step > warmup_steps + hold, learning_rate, target_lr
         )
 
-    learning_rate = tf.where(global_step < warmup_steps, warmup_lr, learning_rate)
+    learning_rate = ops.where(global_step < warmup_steps, warmup_lr, learning_rate)
     return learning_rate
 
 
@@ -587,7 +620,7 @@ class WarmUpCosineDecay(schedules.LearningRateSchedule):
             hold=self.hold,
         )
 
-        return tf.where(step > self.total_steps, 0.0, lr, name="learning_rate")
+        return ops.where(step > self.total_steps, 0.0, lr)
 
 
 """
@@ -610,7 +643,7 @@ schedule = WarmUpCosineDecay(
     hold=hold_steps,
 )
 optimizer = optimizers.SGD(
-    decay=5e-4,
+    weight_decay=5e-4,
     learning_rate=schedule,
     momentum=0.9,
 )
@@ -621,7 +654,7 @@ At long last, we can now build our model and call `fit()`!
 Note that this preset does not come with any pretrained weights.
 """
 
-backbone = keras_cv.models.EfficientNetV2B1Backbone()
+backbone = keras_cv.models.EfficientNetV2B0Backbone()
 model = keras.Sequential(
     [
         backbone,
