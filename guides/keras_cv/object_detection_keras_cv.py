@@ -248,7 +248,7 @@ visualization.plot_bounding_box_gallery(
 )
 
 """
-In order to support easy this easy and intuitive inference workflow, KerasCV
+In order to support this easy and intuitive inference workflow, KerasCV
 performs non-max suppression inside of the `YOLOV8Detector` class.
 Non-max suppression is a traditional computing algorithm that solves the problem
 of a model detecting multiple boxes for the same object.
@@ -258,7 +258,7 @@ will want to customize the settings of your model's non-max
 suppression operation.
 This can be done by overriding to the `prediction_decoder` argument.
 
-To show this concept off, lets temporarily disable non-max suppression on our
+To show this concept off, let's temporarily disable non-max suppression on our
 YOLOV8Detector.  This can be done by writing to the `prediction_decoder` attribute.
 """
 
@@ -606,9 +606,8 @@ translate between problems.
 """
 ### Loss functions
 
-You may not be familiar with the `"ciou"` loss.  While not
-common in other models, this loss is more or less staple in the object
-detection world.
+You may not be familiar with the `"ciou"` loss.  While not common in other
+models, this loss is sometimes used in the object detection world.
 
 In short, ["Complete IoU"](https://arxiv.org/abs/1911.08287) is a flavour of the Intersection over Union loss and is used due to its convergence properties.
 
@@ -645,7 +644,7 @@ We can now move on to model creation and training.
 ## Model creation
 
 Next, let's use the KerasCV API to construct an untrained YOLOV8Detector model.
-In this tutorial we using a pretrained ResNet50 backbone from the imagenet
+In this tutorial we use a pretrained ResNet50 backbone from the imagenet
 dataset.
 
 KerasCV makes it easy to construct a `YOLOV8Detector` with any of the KerasCV
@@ -707,14 +706,6 @@ In this section, we will use a `keras_cv` provided preset:
 model = keras_cv.models.YOLOV8Detector.from_preset(
     "yolo_v8_m_pascalvoc", bounding_box_format="xywh"
 )
-
-"""
-We can evaluate COCO metrics for our pre-trained YOLOV8 model using our metrics
-callback.
-"""
-
-coco_metrics_callback.model = model
-coco_metrics_callback.on_epoch_end(epoch=0)
 
 """
 Next, for convenience we construct a dataset with larger batches:
