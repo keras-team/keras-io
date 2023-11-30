@@ -275,7 +275,7 @@ visualization.plot_bounding_box_gallery(
 
 <div class="k-default-codeblock">
 ```
- 1/1 ━━━━━━━━━━━━━━━━━━━━ 9s 9s/step
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 11s 11s/step
 
 ```
 </div>
@@ -291,7 +291,7 @@ visualization.plot_bounding_box_gallery(
     
 
 
-In order to support easy this easy and intuitive inference workflow, KerasCV
+In order to support this easy and intuitive inference workflow, KerasCV
 performs non-max suppression inside of the `YOLOV8Detector` class.
 Non-max suppression is a traditional computing algorithm that solves the problem
 of a model detecting multiple boxes for the same object.
@@ -299,9 +299,9 @@ of a model detecting multiple boxes for the same object.
 Non-max suppression is a highly configurable algorithm, and in most cases you
 will want to customize the settings of your model's non-max
 suppression operation.
-This can be done by overriding to the `model.prediction_decoder` attribute.
+This can be done by overriding to the `prediction_decoder` argument.
 
-To show this concept off, lets temporarily disable non-max suppression on our
+To show this concept off, let's temporarily disable non-max suppression on our
 YOLOV8Detector.  This can be done by writing to the `prediction_decoder` attribute.
 
 
@@ -721,9 +721,8 @@ translate between problems.
 
 ### Loss functions
 
-You may not be familiar with the `"ciou"` loss.  While not
-common in other models, this loss is more or less staple in the object
-detection world.
+You may not be familiar with the `"ciou"` loss.  While not common in other
+models, this loss is sometimes used in the object detection world.
 
 In short, ["Complete IoU"](https://arxiv.org/abs/1911.08287) is a flavour of the Intersection over Union loss and is used due to its convergence properties.
 
@@ -763,7 +762,7 @@ We can now move on to model creation and training.
 ## Model creation
 
 Next, let's use the KerasCV API to construct an untrained YOLOV8Detector model.
-In this tutorial we using a pretrained ResNet50 backbone from the imagenet
+In this tutorial we use a pretrained ResNet50 backbone from the imagenet
 dataset.
 
 KerasCV makes it easy to construct a `YOLOV8Detector` with any of the KerasCV
@@ -805,8 +804,8 @@ model.compile(
 )
 ```
 
-If you want to fully train the model, remove `.take(20)` from each
-of the following dataset references.
+If you want to fully train the model, remove `.take(20)` from all dataset
+references (below and in the initialization of the metrics callback).
 
 
 ```python
@@ -820,31 +819,31 @@ model.fit(
 
 <div class="k-default-codeblock">
 ```
- 20/20 ━━━━━━━━━━━━━━━━━━━━ 7s 62ms/step
+ 20/20 ━━━━━━━━━━━━━━━━━━━━ 7s 59ms/step
 creating index...
 index created!
 creating index...
 index created!
 Running per image evaluation...
 Evaluate annotation type *bbox*
-DONE (t=0.23s).
+DONE (t=0.16s).
 Accumulating evaluation results...
-DONE (t=0.08s).
+DONE (t=0.07s).
  Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.000
  Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets=100 ] = 0.000
  Average Precision  (AP) @[ IoU=0.75      | area=   all | maxDets=100 ] = 0.000
  Average Precision  (AP) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.000
  Average Precision  (AP) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.000
  Average Precision  (AP) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.000
- Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=  1 ] = 0.000
- Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets= 10 ] = 0.003
- Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.007
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=  1 ] = 0.002
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets= 10 ] = 0.002
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.002
  Average Recall     (AR) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.000
  Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.000
- Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.009
- 20/20 ━━━━━━━━━━━━━━━━━━━━ 74s 692ms/step - loss: 8752.0195 - val_AP: 6.5088e-05 - val_AP50: 4.0245e-04 - val_AP75: 8.4049e-06 - val_APs: 0.0000e+00 - val_APm: 0.0000e+00 - val_APl: 6.5821e-05 - val_ARmax1: 0.0000e+00 - val_ARmax10: 0.0032 - val_ARmax100: 0.0071 - val_ARs: 0.0000e+00 - val_ARm: 0.0000e+00 - val_ARl: 0.0093
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.002
+ 20/20 ━━━━━━━━━━━━━━━━━━━━ 73s 681ms/step - loss: 9221.7988 - val_AP: 3.1673e-05 - val_AP50: 2.1886e-04 - val_AP75: 0.0000e+00 - val_APs: 0.0000e+00 - val_APm: 0.0000e+00 - val_APl: 3.1673e-05 - val_ARmax1: 0.0016 - val_ARmax10: 0.0021 - val_ARmax100: 0.0021 - val_ARs: 0.0000e+00 - val_ARm: 0.0000e+00 - val_ARl: 0.0021
 
-<keras.src.callbacks.history.History at 0x7f4d3c0ea880>
+<keras.src.callbacks.history.History at 0x7fb23010a850>
 
 ```
 </div>
@@ -889,7 +888,7 @@ def visualize_detections(model, dataset, bounding_box_format):
         y_pred=y_pred,
         scale=4,
         rows=2,
-        cols=4,
+        cols=2,
         show=True,
         font_scale=0.7,
         class_mapping=class_mapping,
@@ -897,8 +896,8 @@ def visualize_detections(model, dataset, bounding_box_format):
 
 ```
 
-You'll likely need to configure your NonMaxSuppression operation to achieve
-visually appealing results:
+You may need to configure your NonMaxSuppression operation to achieve
+visually appealing results.
 
 
 ```python
@@ -970,7 +969,8 @@ images = stable_diffusion.text_to_image(
     batch_size=4,
     seed=1231,
 )
-y_pred = model.predict(images)
+encoded_predictions = model(images)
+y_pred = model.decode_predictions(encoded_predictions, images)
 visualization.plot_bounding_box_gallery(
     images,
     value_range=(0, 255),
@@ -987,8 +987,7 @@ visualization.plot_bounding_box_gallery(
 <div class="k-default-codeblock">
 ```
 By using this model checkpoint, you acknowledge that its usage is subject to the terms of the CreativeML Open RAIL++-M license at https://github.com/Stability-AI/stablediffusion/blob/main/LICENSE-MODEL
- 50/50 ━━━━━━━━━━━━━━━━━━━━ 47s 360ms/step
- 1/1 ━━━━━━━━━━━━━━━━━━━━ 9s 9s/step
+ 50/50 ━━━━━━━━━━━━━━━━━━━━ 47s 356ms/step
 
 ```
 </div>
