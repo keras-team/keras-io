@@ -256,7 +256,7 @@ of a model detecting multiple boxes for the same object.
 Non-max suppression is a highly configurable algorithm, and in most cases you
 will want to customize the settings of your model's non-max
 suppression operation.
-This can be done by overriding to the `model.prediction_decoder` attribute.
+This can be done by overriding to the `prediction_decoder` argument.
 
 To show this concept off, lets temporarily disable non-max suppression on our
 YOLOV8Detector.  This can be done by writing to the `prediction_decoder` attribute.
@@ -685,8 +685,8 @@ model.compile(
     optimizer=optimizer,
 )
 """
-If you want to fully train the model, remove `.take(20)` from each
-of the following dataset references.
+If you want to fully train the model, remove `.take(20)` from all dataset
+references (below and in the initialization of the metrics callback).
 """
 model.fit(
     train_ds.take(20),
@@ -707,6 +707,15 @@ In this section, we will use a `keras_cv` provided preset:
 model = keras_cv.models.YOLOV8Detector.from_preset(
     "yolo_v8_m_pascalvoc", bounding_box_format="xywh"
 )
+
+"""
+We can evaluate COCO metrics for our pre-trained YOLOV8 model using our metrics
+callback.
+"""
+
+coco_metrics_callback.model = model
+coco_metrics_callback.on_epoch_end(epoch=0)
+
 """
 Next, for convenience we construct a dataset with larger batches:
 """
@@ -729,7 +738,7 @@ def visualize_detections(model, dataset, bounding_box_format):
         y_pred=y_pred,
         scale=4,
         rows=2,
-        cols=4,
+        cols=2,
         show=True,
         font_scale=0.7,
         class_mapping=class_mapping,
@@ -737,8 +746,8 @@ def visualize_detections(model, dataset, bounding_box_format):
 
 
 """
-You'll likely need to configure your NonMaxSuppression operation to achieve
-visually appealing results:
+You may need to configure your NonMaxSuppression operation to achieve
+visually appealing results.
 """
 
 model.prediction_decoder = keras_cv.layers.NonMaxSuppression(
@@ -795,7 +804,8 @@ images = stable_diffusion.text_to_image(
     batch_size=4,
     seed=1231,
 )
-y_pred = model.predict(images)
+encoded_predictions = model(images)
+y_pred = model.decode_predictions(encoded_predictions, images)
 visualization.plot_bounding_box_gallery(
     images,
     value_range=(0, 255),
