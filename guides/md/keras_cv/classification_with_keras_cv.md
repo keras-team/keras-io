@@ -23,7 +23,7 @@ classification problems at three levels of complexity:
 - Fine-tuning a pretrained backbone
 - Training a image classifier from scratch
 
-KerasCV uses Keras 3 to work with any of TensorFlow, Pytorch and Jax. In the
+KerasCV uses Keras 3 to work with any of TensorFlow, PyTorch or Jax. In the
 guide below, we will use the `jax` backend. This guide runs in
 TensorFlow or PyTorch backends with zero changes, simply update the
 `KERAS_BACKEND` below.
