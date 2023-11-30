@@ -28,24 +28,32 @@ through the process of customizing a KerasCV data augmentation pipeline.
 ---
 ## Imports & setup
 
-This tutorial requires you to have KerasCV installed:
+KerasCV uses Keras 3 to work with any of TensorFlow, PyTorch or Jax. In the
+guide below, we will use the `jax` backend. This guide runs in
+TensorFlow or PyTorch backends with zero changes, simply update the
+`KERAS_BACKEND` below.
 
-```shell
-pip install keras-cv
+
+```python
+!pip install -q --upgrade keras-cv
+!pip install -q --upgrade keras  # Upgrade to Keras 3.
 ```
 
 We begin by importing all required packages:
 
 
 ```python
-import keras_cv
+import os
+
+os.environ["KERAS_BACKEND"] = "jax"  # @param ["tensorflow", "jax", "torch"]
+
 import matplotlib.pyplot as plt
+
+# Import tensorflow for `tf.data` and its preprocessing map functions
 import tensorflow as tf
 import tensorflow_datasets as tfds
-from tensorflow import keras
-from tensorflow.keras import applications
-from tensorflow.keras import losses
-from tensorflow.keras import optimizers
+import keras
+import keras_cv
 ```
 
 ---
@@ -67,6 +75,13 @@ train_steps_per_epoch = dataset_info.splits["train"].num_examples // BATCH_SIZE
 val_steps_per_epoch = dataset_info.splits["test"].num_examples // BATCH_SIZE
 ```
 
+<div class="k-default-codeblock">
+```
+ Downloading and preparing dataset 328.90 MiB (download: 328.90 MiB, generated: 331.34 MiB, total: 660.25 MiB) to /usr/local/google/home/rameshsampath/tensorflow_datasets/oxford_flowers102/2.1.1...
+ Dataset oxford_flowers102 downloaded and prepared to /usr/local/google/home/rameshsampath/tensorflow_datasets/oxford_flowers102/2.1.1. Subsequent calls will reuse this data.
+
+```
+</div>
 Next, we resize the images to a constant size, `(224, 224)`, and one-hot encode the
 labels. Please note that `keras_cv.layers.CutMix` and `keras_cv.layers.MixUp` expect
 targets to be one-hot encoded. This is because they modify the values of the targets
@@ -123,9 +138,9 @@ visualize_dataset(train_dataset, title="Before Augmentation")
 ```
 
 
-
-![png](/img/guides/cut_mix_mix_up_and_rand_augment/cut_mix_mix_up_and_rand_augment_9_0.png)
-
+    
+![png](/img/guides/cut_mix_mix_up_and_rand_augment/cut_mix_mix_up_and_rand_augment_11_0.png)
+    
 
 
 Great! Now we can move onto the augmentation step.
@@ -163,7 +178,7 @@ rand_augment = keras_cv.layers.RandAugment(
     augmentations_per_image=3,
     magnitude=0.3,
     magnitude_stddev=0.2,
-    rate=0.5,
+    rate=1.0,
 )
 
 
@@ -183,9 +198,9 @@ visualize_dataset(train_dataset, title="After RandAugment")
 ```
 
 
-
-![png](/img/guides/cut_mix_mix_up_and_rand_augment/cut_mix_mix_up_and_rand_augment_15_0.png)
-
+    
+![png](/img/guides/cut_mix_mix_up_and_rand_augment/cut_mix_mix_up_and_rand_augment_17_0.png)
+    
 
 
 Try tweaking the magnitude settings to see a wider variety of results.
@@ -227,9 +242,9 @@ visualize_dataset(train_dataset, title="After CutMix and MixUp")
 ```
 
 
-
-![png](/img/guides/cut_mix_mix_up_and_rand_augment/cut_mix_mix_up_and_rand_augment_18_0.png)
-
+    
+![png](/img/guides/cut_mix_mix_up_and_rand_augment/cut_mix_mix_up_and_rand_augment_20_0.png)
+    
 
 
 Great! Looks like we have successfully added `CutMix` and `MixUp` to our preprocessing
@@ -303,9 +318,9 @@ visualize_dataset(train_dataset, title="After custom pipeline")
 ```
 
 
-
-![png](/img/guides/cut_mix_mix_up_and_rand_augment/cut_mix_mix_up_and_rand_augment_30_0.png)
-
+    
+![png](/img/guides/cut_mix_mix_up_and_rand_augment/cut_mix_mix_up_and_rand_augment_32_0.png)
+    
 
 
 Awesome! As you can see, no images were randomly rotated. You can customize the
@@ -329,9 +344,9 @@ visualize_dataset(train_dataset, title="After custom pipeline")
 ```
 
 
-
-![png](/img/guides/cut_mix_mix_up_and_rand_augment/cut_mix_mix_up_and_rand_augment_34_0.png)
-
+    
+![png](/img/guides/cut_mix_mix_up_and_rand_augment/cut_mix_mix_up_and_rand_augment_36_0.png)
+    
 
 
 Looks great! You can use `RandomAugmentationPipeline` however you want.
@@ -371,9 +386,9 @@ test_dataset = test_dataset.prefetch(AUTOTUNE)
 ```
 
 
-
-![png](/img/guides/cut_mix_mix_up_and_rand_augment/cut_mix_mix_up_and_rand_augment_37_0.png)
-
+    
+![png](/img/guides/cut_mix_mix_up_and_rand_augment/cut_mix_mix_up_and_rand_augment_39_0.png)
+    
 
 
 Next we should create a the model itself. Notice that we use `label_smoothing=0.1` in
@@ -389,8 +404,8 @@ def get_model():
         "efficientnetv2_s", num_classes=num_classes
     )
     model.compile(
-        loss=losses.CategoricalCrossentropy(label_smoothing=0.1),
-        optimizer=optimizers.SGD(momentum=0.9),
+        loss=keras.losses.CategoricalCrossentropy(label_smoothing=0.1),
+        optimizer=keras.optimizers.SGD(momentum=0.9),
         metrics=["accuracy"],
     )
     return model
@@ -401,19 +416,20 @@ Finally we train the model:
 
 
 ```python
-strategy = tf.distribute.MirroredStrategy()
-with strategy.scope():
-    model = get_model()
-    model.fit(
-        train_dataset,
-        epochs=1,
-        validation_data=test_dataset,
-    )
+model = get_model()
+model.fit(
+    train_dataset,
+    epochs=1,
+    validation_data=test_dataset,
+)
 ```
 
 <div class="k-default-codeblock">
 ```
-32/32 [==============================] - 769s 24s/step - loss: 4.7812 - accuracy: 0.0108 - val_loss: 4.6148 - val_accuracy: 0.0241
+ 32/32 ━━━━━━━━━━━━━━━━━━━━ 103s 2s/step - accuracy: 0.0059 - loss: 4.6941 - val_accuracy: 0.0114 - val_loss: 10.4028
+
+<keras.src.callbacks.history.History at 0x7fd0d00e07c0>
+
 ```
 </div>
 ---
