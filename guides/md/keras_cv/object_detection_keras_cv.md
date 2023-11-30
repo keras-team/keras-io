@@ -1,6 +1,6 @@
 # Object Detection with KerasCV
 
-**Author:** [lukewood](https://twitter.com/luke_wood_ml)<br>
+**Author:** [lukewood](https://twitter.com/luke_wood_ml), Ian Stenbit, Tirth Patel<br>
 **Date created:** 2023/04/08<br>
 **Last modified:** 2023/08/10<br>
 **Description:** Train an object detection model with KerasCV.
@@ -22,30 +22,27 @@ Let's give KerasCV's object detection API a spin.
 
 
 ```python
-!pip install --upgrade -q git+https://github.com/keras-team/keras-cv
+!pip install -q --upgrade keras-cv
+!pip install -q --upgrade keras  # Upgrade to Keras 3.
 ```
 
 
 ```python
-import tensorflow as tf
+import os
+
+os.environ["KERAS_BACKEND"] = "jax"  # @param ["tensorflow", "jax", "torch"]
+
+from tensorflow import data as tf_data
 import tensorflow_datasets as tfds
-from tensorflow import keras
-from tensorflow.keras import optimizers
+import keras
 import keras_cv
 import numpy as np
 from keras_cv import bounding_box
 import os
-import resource
 from keras_cv import visualization
 import tqdm
 ```
 
-<div class="k-default-codeblock">
-```
-Using TensorFlow backend
-
-```
-</div>
 ---
 ## Object detection introduction
 
@@ -103,15 +100,15 @@ Let's do this!
 
 The highest level API in the KerasCV Object Detection API is the `keras_cv.models` API.
 This API includes fully pretrained object detection models, such as
-`keras_cv.models.RetinaNet`.
+`keras_cv.models.YOLOV8Detector`.
 
-Let's get started by constructing a RetinaNet pretrained on the `pascalvoc`
+Let's get started by constructing a YOLOV8Detector pretrained on the `pascalvoc`
 dataset.
 
 
 ```python
-pretrained_model = keras_cv.models.RetinaNet.from_preset(
-    "retinanet_resnet50_pascalvoc", bounding_box_format="xywh"
+pretrained_model = keras_cv.models.YOLOV8Detector.from_preset(
+    "yolo_v8_m_pascalvoc", bounding_box_format="xywh"
 )
 ```
 
@@ -160,7 +157,7 @@ Next let's load an image:
 
 
 ```python
-filepath = tf.keras.utils.get_file(origin="https://i.imgur.com/gCNcJJI.jpg")
+filepath = keras.utils.get_file(origin="https://i.imgur.com/gCNcJJI.jpg")
 image = keras.utils.load_img(filepath)
 image = np.array(image)
 
@@ -174,19 +171,28 @@ visualization.plot_image_gallery(
 ```
 
 
+
+
     
 ![png](/img/guides/object_detection_keras_cv/object_detection_keras_cv_8_0.png)
     
 
 
-To use the `RetinaNet` architecture with a ResNet50 backbone, you'll need to
+
+
+    
+![png](/img/guides/object_detection_keras_cv/object_detection_keras_cv_8_1.png)
+    
+
+
+To use the `YOLOV8Detector` architecture with a ResNet50 backbone, you'll need to
 resize your image to a size that is divisible by 64.  This is to ensure
 compatibility with the number of downscaling operations done by the convolution
 layers in the ResNet.
 
 If the resize operation distorts
 the input's aspect ratio, the model will perform signficantly poorer.  For the
-pretrained `"retinanet_resnet50_pascalvoc"` preset we are using, the final
+pretrained `"yolo_v8_m_pascalvoc"` preset we are using, the final
 `MeanAveragePrecision` on the `pascalvoc/2012` evaluation set drops to `0.15`
 from `0.38` when using a naive resizing operation.
 
@@ -269,7 +275,7 @@ visualization.plot_bounding_box_gallery(
 
 <div class="k-default-codeblock">
 ```
-1/1 [==============================] - 18s 18s/step
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 9s 9s/step
 
 ```
 </div>
@@ -278,8 +284,15 @@ visualization.plot_bounding_box_gallery(
     
 
 
-In order to support this easy and intuitive inference workflow, KerasCV
-performs non-max suppression inside of the `RetinaNet` class.
+
+
+    
+![png](/img/guides/object_detection_keras_cv/object_detection_keras_cv_16_2.png)
+    
+
+
+In order to support easy this easy and intuitive inference workflow, KerasCV
+performs non-max suppression inside of the `YOLOV8Detector` class.
 Non-max suppression is a traditional computing algorithm that solves the problem
 of a model detecting multiple boxes for the same object.
 
@@ -288,19 +301,23 @@ will want to customize the settings of your model's non-max
 suppression operation.
 This can be done by overriding to the `model.prediction_decoder` attribute.
 
-To show this concept off, let's temporarily disable non-max suppression on our
-RetinaNet.  This can be done by writing to the `prediction_decoder` attribute.
+To show this concept off, lets temporarily disable non-max suppression on our
+YOLOV8Detector.  This can be done by writing to the `prediction_decoder` attribute.
 
 
 ```python
 # The following NonMaxSuppression layer is equivalent to disabling the operation
-prediction_decoder = keras_cv.layers.MultiClassNonMaxSuppression(
+prediction_decoder = keras_cv.layers.NonMaxSuppression(
     bounding_box_format="xywh",
     from_logits=True,
     iou_threshold=1.0,
     confidence_threshold=0.0,
 )
-pretrained_model.prediction_decoder = prediction_decoder
+pretrained_model = keras_cv.models.YOLOV8Detector.from_preset(
+    "yolo_v8_m_pascalvoc",
+    bounding_box_format="xywh",
+    prediction_decoder=prediction_decoder,
+)
 
 y_pred = pretrained_model.predict(image_batch)
 visualization.plot_bounding_box_gallery(
@@ -319,7 +336,7 @@ visualization.plot_bounding_box_gallery(
 
 <div class="k-default-codeblock">
 ```
-1/1 [==============================] - 2s 2s/step
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 5s 5s/step
 
 ```
 </div>
@@ -328,7 +345,14 @@ visualization.plot_bounding_box_gallery(
     
 
 
-Next, let's re-configure `keras_cv.layers.MultiClassNonMaxSuppression` for our
+
+
+    
+![png](/img/guides/object_detection_keras_cv/object_detection_keras_cv_18_2.png)
+    
+
+
+Next, let's re-configure `keras_cv.layers.NonMaxSuppression` for our
 use case!
 In this case, we will tune the `iou_threshold` to `0.2`, and the
 `confidence_threshold` to `0.7`.
@@ -341,7 +365,7 @@ pruned out.
 
 
 ```python
-prediction_decoder = keras_cv.layers.MultiClassNonMaxSuppression(
+prediction_decoder = keras_cv.layers.NonMaxSuppression(
     bounding_box_format="xywh",
     from_logits=True,
     # Decrease the required threshold to make predictions get pruned out
@@ -349,7 +373,11 @@ prediction_decoder = keras_cv.layers.MultiClassNonMaxSuppression(
     # Tune confidence threshold for predictions to pass NMS
     confidence_threshold=0.7,
 )
-pretrained_model.prediction_decoder = prediction_decoder
+pretrained_model = keras_cv.models.YOLOV8Detector.from_preset(
+    "yolo_v8_m_pascalvoc",
+    bounding_box_format="xywh",
+    prediction_decoder=prediction_decoder,
+)
 
 y_pred = pretrained_model.predict(image_batch)
 visualization.plot_bounding_box_gallery(
@@ -367,12 +395,19 @@ visualization.plot_bounding_box_gallery(
 
 <div class="k-default-codeblock">
 ```
-1/1 [==============================] - 2s 2s/step
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 5s 5s/step
 
 ```
 </div>
     
 ![png](/img/guides/object_detection_keras_cv/object_detection_keras_cv_20_1.png)
+    
+
+
+
+
+    
+![png](/img/guides/object_detection_keras_cv/object_detection_keras_cv_20_2.png)
     
 
 
@@ -478,17 +513,17 @@ def unpackage_raw_tfds_inputs(inputs, bounding_box_format):
         target=bounding_box_format,
     )
     bounding_boxes = {
-        "classes": tf.cast(inputs["objects"]["label"], dtype=tf.float32),
-        "boxes": tf.cast(boxes, dtype=tf.float32),
+        "classes": inputs["objects"]["label"],
+        "boxes": boxes,
     }
-    return {"images": tf.cast(image, tf.float32), "bounding_boxes": bounding_boxes}
+    return {"images": image, "bounding_boxes": bounding_boxes}
 
 
 def load_pascal_voc(split, dataset, bounding_box_format):
     ds = tfds.load(dataset, split=split, with_info=False, shuffle_files=True)
     ds = ds.map(
         lambda x: unpackage_raw_tfds_inputs(x, bounding_box_format=bounding_box_format),
-        num_parallel_calls=tf.data.AUTOTUNE,
+        num_parallel_calls=tf_data.AUTOTUNE,
     )
     return ds
 
@@ -578,16 +613,24 @@ bounding-box-friendly data augmentation inside a `tf.data` pipeline.
 
 
 ```python
-augmenter = keras.Sequential(
-    layers=[
+
+def augmenter():
+    layers = [
         keras_cv.layers.RandomFlip(mode="horizontal", bounding_box_format="xywh"),
         keras_cv.layers.JitteredResize(
             target_size=(640, 640), scale_factor=(0.75, 1.3), bounding_box_format="xywh"
         ),
     ]
-)
 
-train_ds = train_ds.map(augmenter, num_parallel_calls=tf.data.AUTOTUNE)
+    def augment_fn(inputs):
+        for layer in layers:
+            inputs = layer(inputs)
+        return inputs
+
+    return augment_fn
+
+
+train_ds = train_ds.map(augmenter(), num_parallel_calls=tf_data.AUTOTUNE)
 visualize_dataset(
     train_ds, bounding_box_format="xywh", value_range=(0, 255), rows=2, cols=2
 )
@@ -609,7 +652,7 @@ layer.
 inference_resizing = keras_cv.layers.Resizing(
     640, 640, bounding_box_format="xywh", pad_to_aspect_ratio=True
 )
-eval_ds = eval_ds.map(inference_resizing, num_parallel_calls=tf.data.AUTOTUNE)
+eval_ds = eval_ds.map(inference_resizing, num_parallel_calls=tf_data.AUTOTUNE)
 ```
 
 Due to the fact that the resize operation differs between the train dataset,
@@ -632,10 +675,7 @@ visualize_dataset(
 
 Finally, let's unpackage our inputs from the preprocessing dictionary, and
 prepare to feed the inputs into our model.  In order to be TPU compatible,
-bounding box Tensors need to be `Dense` instead of `Ragged`.  If training on
-GPU, you can omit the `bounding_box.to_dense()` call.  If omitted,
-the KerasCV RetinaNet
-label encoder will automatically correctly encode Ragged training targets.
+bounding box Tensors need to be `Dense` instead of `Ragged`.
 
 
 ```python
@@ -646,11 +686,11 @@ def dict_to_tuple(inputs):
     )
 
 
-train_ds = train_ds.map(dict_to_tuple, num_parallel_calls=tf.data.AUTOTUNE)
-eval_ds = eval_ds.map(dict_to_tuple, num_parallel_calls=tf.data.AUTOTUNE)
+train_ds = train_ds.map(dict_to_tuple, num_parallel_calls=tf_data.AUTOTUNE)
+eval_ds = eval_ds.map(dict_to_tuple, num_parallel_calls=tf_data.AUTOTUNE)
 
-train_ds = train_ds.prefetch(tf.data.AUTOTUNE)
-eval_ds = eval_ds.prefetch(tf.data.AUTOTUNE)
+train_ds = train_ds.prefetch(tf_data.AUTOTUNE)
+eval_ds = eval_ds.prefetch(tf_data.AUTOTUNE)
 ```
 
 ### Optimizer
@@ -667,7 +707,7 @@ occur when training object detection models.
 ```python
 base_lr = 0.005
 # including a global_clipnorm is extremely important in object detection tasks
-optimizer = tf.keras.optimizers.SGD(
+optimizer = keras.optimizers.SGD(
     learning_rate=base_lr, momentum=0.9, global_clipnorm=10.0
 )
 ```
@@ -679,138 +719,38 @@ translate between problems.
 
 ### Loss functions
 
-You may not be familiar with the `"focal"` or `"smoothl1"` losses.  While not
-common in other models, these losses are more or less staples in the object
+You may not be familiar with the `"ciou"` loss.  While not
+common in other models, this loss is more or less staple in the object
 detection world.
 
-In short, ["Focal Loss"](https://arxiv.org/abs/1708.02002) places extra emphasis
-on difficult training examples.  This is useful when training the classification
-loss, as the majority of the losses are assigned to the background class.
+In short, ["Complete IoU"](https://arxiv.org/abs/1911.08287) is a flavour of the Intersection over Union loss and is used due to its convergence properties.
 
-"SmoothL1 Loss" is used to [prevent exploding gradients](https://arxiv.org/abs/1504.08083)
-that often occur when attempting to perform the box regression task.
-
-In KerasCV you can use these losses simply by passing the strings `"focal"` and
-`"smoothl1"` to `compile()`:
+In KerasCV, you can use this loss simply by passing the string `"ciou"` to `compile()`.
+We also use standard binary crossentropy loss for the class head.
 
 
 ```python
 pretrained_model.compile(
-    classification_loss="focal",
-    box_loss="smoothl1",
+    classification_loss="binary_crossentropy",
+    box_loss="ciou",
 )
 ```
 
 ### Metric evaluation
 
-Just like any other metric, you can pass the `KerasCV` object detection metrics
-to `compile()`.  The most popular object detection metrics are COCO metrics,
+The most popular object detection metrics are COCO metrics,
 which were published alongside the MSCOCO dataset. KerasCV provides an
-easy-to-use suite of COCO metrics under the `keras_cv.metrics.BoxCOCOMetrics`
-symbol:
+easy-to-use suite of COCO metrics under the `keras_cv.callbacks.PyCOCOCallback`
+symbol. Note that we use a Keras callback instead of a Keras metric to compute
+COCO metrics. This is because computing COCO metrics requires storing all of a
+model's predictions for the entire evaluation dataset in memory at once, which
+is impractical to do during training time.
 
 
 ```python
-coco_metrics = keras_cv.metrics.BoxCOCOMetrics(
-    bounding_box_format="xywh", evaluate_freq=20
+coco_metrics_callback = keras_cv.callbacks.PyCOCOCallback(
+    eval_ds.take(20), bounding_box_format="xywh"
 )
-```
-
-Let's define a quick helper to print our metrics in a nice table:
-
-
-```python
-
-def print_metrics(metrics):
-    maxlen = max([len(key) for key in result.keys()])
-    print("Metrics:")
-    print("-" * (maxlen + 1))
-    for k, v in metrics.items():
-        print(f"{k.ljust(maxlen+1)}: {v.numpy():0.2f}")
-
-```
-
-Due to the high computational cost of computing COCO metrics, the KerasCV
-`BoxCOCOMetrics` component requires an `evaluate_freq` parameter to be passed to
-its constructor.  Every `evaluate_freq`-th call to `update_state()`, the metric
-will recompute the result.  In between invocations, a cached version of the
-result will be returned.
-
-To force an evaluation, you may call `coco_metrics.result(force=True)`:
-
-
-```python
-pretrained_model.compile(
-    classification_loss="focal",
-    box_loss="smoothl1",
-    optimizer=optimizer,
-    metrics=[coco_metrics],
-)
-coco_metrics.reset_state()
-result = pretrained_model.evaluate(eval_ds.take(1), verbose=0)
-result = coco_metrics.result(force=True)
-
-print_metrics(result)
-```
-
-<div class="k-default-codeblock">
-```
-Metrics:
-----------------------------
-MaP                         : 0.61
-MaP@[IoU=50]                : 0.83
-MaP@[IoU=75]                : 0.75
-MaP@[area=small]            : 0.00
-MaP@[area=medium]           : 0.40
-MaP@[area=large]            : 0.59
-Recall@[max_detections=1]   : 0.61
-Recall@[max_detections=10]  : 0.61
-Recall@[max_detections=100] : 0.61
-Recall@[area=small]         : 0.00
-Recall@[area=medium]        : 0.40
-Recall@[area=large]         : 0.59
-
-```
-</div>
-**A note on TPU compatibility:**
-
-Evaluation of `BoxCOCOMetrics` require running `tf.image.non_max_suppression()`
-inside of the `model.train_step()` and `model.evaluation_step()` functions.
-Due to this, the metric suite is not compatible with TPU when used with the
-`compile()` API.
-
-Luckily, there are two workarounds that allow you to still train a RetinaNet on TPU:
-
-- The use of a custom callback
-- Using a [SideCarEvaluator](https://www.tensorflow.org/api_docs/python/tf/keras/utils/SidecarEvaluator)
-
-Let's use a custom callback to achieve TPU compatibility in this guide:
-
-
-```python
-
-class EvaluateCOCOMetricsCallback(keras.callbacks.Callback):
-    def __init__(self, data):
-        super().__init__()
-        self.data = data
-        self.metrics = keras_cv.metrics.BoxCOCOMetrics(
-            bounding_box_format="xywh",
-            # passing 1e9 ensures we never evaluate until
-            # `metrics.result(force=True)` is
-            # called.
-            evaluate_freq=1e9,
-        )
-
-    def on_epoch_end(self, epoch, logs):
-        self.metrics.reset_state()
-        for batch in tqdm.tqdm(self.data):
-            images, y_true = batch[0], batch[1]
-            y_pred = self.model.predict(images, verbose=0)
-            self.metrics.update_state(y_true, y_pred)
-
-        metrics = self.metrics.result(force=True)
-        logs.update(metrics)
-        return logs
 
 ```
 
@@ -820,27 +760,27 @@ We can now move on to model creation and training.
 ---
 ## Model creation
 
-Next, let's use the KerasCV API to construct an untrained RetinaNet model.
-In this tutorial we use a pretrained ResNet50 backbone from the imagenet
+Next, let's use the KerasCV API to construct an untrained YOLOV8Detector model.
+In this tutorial we using a pretrained ResNet50 backbone from the imagenet
 dataset.
 
-KerasCV makes it easy to construct a `RetinaNet` with any of the KerasCV
+KerasCV makes it easy to construct a `YOLOV8Detector` with any of the KerasCV
 backbones.  Simply use one of the presets for the architecture you'd like!
 
 For example:
 
 
 ```python
-model = keras_cv.models.RetinaNet.from_preset(
+model = keras_cv.models.YOLOV8Detector.from_preset(
     "resnet50_imagenet",
-    num_classes=len(class_mapping),
     # For more info on supported bounding box formats, visit
     # https://keras.io/api/keras_cv/bounding_box/
     bounding_box_format="xywh",
+    num_classes=20,
 )
 ```
 
-That is all it takes to construct a KerasCV RetinaNet.  The RetinaNet accepts
+That is all it takes to construct a KerasCV YOLOv8. The YOLOv8 accepts
 tuples of dense image Tensors and bounding box dictionaries to `fit()` and
 `train_on_batch()`
 
@@ -857,11 +797,9 @@ Let's compile our model:
 
 ```python
 model.compile(
-    classification_loss="focal",
-    box_loss="smoothl1",
+    classification_loss="binary_crossentropy",
+    box_loss="ciou",
     optimizer=optimizer,
-    # We will use our custom callback to evaluate COCO metrics
-    metrics=None,
 )
 ```
 
@@ -872,32 +810,39 @@ of the following dataset references.
 ```python
 model.fit(
     train_ds.take(20),
-    validation_data=eval_ds.take(20),
     # Run for 10-35~ epochs to achieve good scores.
     epochs=1,
-    callbacks=[EvaluateCOCOMetricsCallback(eval_ds.take(20))],
+    callbacks=[coco_metrics_callback],
 )
 ```
 
 <div class="k-default-codeblock">
 ```
-20/20 [==============================] - ETA: 0s - loss: 1.8220 - box_loss: 0.6911 - classification_loss: 1.1309 - percent_boxes_matched_with_anchor: 0.9258
+ 20/20 ━━━━━━━━━━━━━━━━━━━━ 7s 62ms/step
+creating index...
+index created!
+creating index...
+index created!
+Running per image evaluation...
+Evaluate annotation type *bbox*
+DONE (t=0.55s).
+Accumulating evaluation results...
+DONE (t=0.09s).
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.000
+ Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets=100 ] = 0.001
+ Average Precision  (AP) @[ IoU=0.75      | area=   all | maxDets=100 ] = 0.000
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.000
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.000
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.000
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=  1 ] = 0.009
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets= 10 ] = 0.009
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.009
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.000
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.000
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.009
+ 20/20 ━━━━━━━━━━━━━━━━━━━━ 75s 703ms/step - loss: 9424.7568 - val_AP: 2.1243e-04 - val_AP50: 7.9434e-04 - val_AP75: 0.0000e+00 - val_APs: 0.0000e+00 - val_APm: 0.0000e+00 - val_APl: 2.2545e-04 - val_ARmax1: 0.0086 - val_ARmax10: 0.0090 - val_ARmax100: 0.0090 - val_ARs: 0.0000e+00 - val_ARm: 0.0000e+00 - val_ARl: 0.0092
 
-100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 20/20 [23:28<00:00, 70.42s/it]
-
-20/20 [==============================] - 1654s 86s/step - loss: 1.8220 - box_loss: 0.6911 - classification_loss: 1.1309 - percent_boxes_matched_with_anchor: 0.9258 - val_loss: 1.7590 - val_box_loss: 0.6807 - val_classification_loss: 1.0784 - val_percent_boxes_matched_with_anchor: 0.9086 - MaP: 0.0000e+00 - MaP@[IoU=50]: 0.0000e+00 - MaP@[IoU=75]: 0.0000e+00 - MaP@[area=small]: 0.0000e+00 - MaP@[area=medium]: 0.0000e+00 - MaP@[area=large]: 0.0000e+00 - Recall@[max_detections=1]: 0.0000e+00 - Recall@[max_detections=10]: 0.0000e+00 - Recall@[max_detections=100]: 0.0000e+00 - Recall@[area=small]: 0.0000e+00 - Recall@[area=medium]: 0.0000e+00 - Recall@[area=large]: 0.0000e+00
-
-```
-</div>
-    
-
-
-
-
-
-<div class="k-default-codeblock">
-```
-<keras.src.callbacks.History at 0x16d966b50>
+<keras.src.callbacks.history.History at 0x7ff7a719c250>
 
 ```
 </div>
@@ -905,15 +850,15 @@ model.fit(
 ## Inference and plotting results
 
 KerasCV makes object detection inference simple.  `model.predict(images)`
-returns a RaggedTensor of bounding boxes.  By default, `RetinaNet.predict()`
+returns a tensor of bounding boxes.  By default, `YOLOV8Detector.predict()`
 will perform a non max suppression operation for you.
 
 In this section, we will use a `keras_cv` provided preset:
 
 
 ```python
-model = keras_cv.models.RetinaNet.from_preset(
-    "retinanet_resnet50_pascalvoc", bounding_box_format="xywh"
+model = keras_cv.models.YOLOV8Detector.from_preset(
+    "yolo_v8_m_pascalvoc", bounding_box_format="xywh"
 )
 ```
 
@@ -934,7 +879,6 @@ Let's create a simple function to plot our inferences:
 def visualize_detections(model, dataset, bounding_box_format):
     images, y_true = next(iter(dataset.take(1)))
     y_pred = model.predict(images)
-    y_pred = bounding_box.to_ragged(y_pred)
     visualization.plot_bounding_box_gallery(
         images,
         value_range=(0, 255),
@@ -956,7 +900,7 @@ visually appealing results:
 
 
 ```python
-model.prediction_decoder = keras_cv.layers.MultiClassNonMaxSuppression(
+model.prediction_decoder = keras_cv.layers.NonMaxSuppression(
     bounding_box_format="xywh",
     from_logits=True,
     iou_threshold=0.5,
@@ -968,12 +912,12 @@ visualize_detections(model, dataset=visualization_ds, bounding_box_format="xywh"
 
 <div class="k-default-codeblock">
 ```
-1/1 [==============================] - 8s 8s/step
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 16s 16s/step
 
 ```
 </div>
     
-![png](/img/guides/object_detection_keras_cv/object_detection_keras_cv_66_1.png)
+![png](/img/guides/object_detection_keras_cv/object_detection_keras_cv_60_1.png)
     
 
 
@@ -987,7 +931,7 @@ detections in a `keras.callbacks.Callback` to monitor training :
 class VisualizeDetections(keras.callbacks.Callback):
     def on_epoch_end(self, epoch, logs):
         visualize_detections(
-            self.model, bounding_box_format="xywh", dataset=visualization_dataset
+            self.model, bounding_box_format="xywh", dataset=visualization_ds
         )
 
 ```
@@ -1000,7 +944,6 @@ In this guide, we started off by writing a data loader using the KerasCV
 bounding box specification.
 Following this, we assembled a production grade data augmentation pipeline using
 KerasCV preprocessing layers in <50 lines of code.
-We constructed a RetinaNet and trained for an epoch.
 
 KerasCV object detection components can be used independently, but also have deep
 integration with each other.
@@ -1042,12 +985,27 @@ visualization.plot_bounding_box_gallery(
 <div class="k-default-codeblock">
 ```
 By using this model checkpoint, you acknowledge that its usage is subject to the terms of the CreativeML Open RAIL++-M license at https://github.com/Stability-AI/stablediffusion/blob/main/LICENSE-MODEL
-50/50 [==============================] - 1775s 35s/step
-1/1 [==============================] - 3s 3s/step
+Downloading data from https://github.com/openai/CLIP/blob/main/clip/bpe_simple_vocab_16e6.txt.gz?raw=true
+ 1356917/1356917 ━━━━━━━━━━━━━━━━━━━━ 0s 0us/step
+Downloading data from https://huggingface.co/ianstenbit/keras-sd2.1/resolve/main/text_encoder_v2_1.h5
+ 1361968152/1361968152 ━━━━━━━━━━━━━━━━━━━━ 32s 0us/step
+Downloading data from https://huggingface.co/ianstenbit/keras-sd2.1/resolve/main/diffusion_model_v2_1.h5
+ 3464605600/3464605600 ━━━━━━━━━━━━━━━━━━━━ 86s 0us/step
+ 50/50 ━━━━━━━━━━━━━━━━━━━━ 134s 359ms/step
+Downloading data from https://huggingface.co/fchollet/stable-diffusion/resolve/main/kcv_decoder.h5
+ 198180272/198180272 ━━━━━━━━━━━━━━━━━━━━ 3s 0us/step
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 9s 9s/step
 
 ```
 </div>
     
-![png](/img/guides/object_detection_keras_cv/object_detection_keras_cv_70_1.png)
+![png](/img/guides/object_detection_keras_cv/object_detection_keras_cv_64_1.png)
+    
+
+
+
+
+    
+![png](/img/guides/object_detection_keras_cv/object_detection_keras_cv_64_2.png)
     
 
