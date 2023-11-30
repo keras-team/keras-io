@@ -599,42 +599,6 @@ keras_cv.visualization.plot_image_gallery(
 )
 ```
 
-<div class="k-default-codeblock">
-```
-WARNING:tensorflow:Using a while_loop for converting RngReadAndSkip cause there is no registered converter for this op.
-
-WARNING:tensorflow:Using a while_loop for converting RngReadAndSkip cause there is no registered converter for this op.
-
-WARNING:tensorflow:Using a while_loop for converting Bitcast cause there is no registered converter for this op.
-
-WARNING:tensorflow:Using a while_loop for converting Bitcast cause there is no registered converter for this op.
-
-WARNING:tensorflow:Using a while_loop for converting Bitcast cause there is no registered converter for this op.
-
-WARNING:tensorflow:Using a while_loop for converting Bitcast cause there is no registered converter for this op.
-
-WARNING:tensorflow:Using a while_loop for converting StatelessRandomUniformIntV2 cause there is no registered converter for this op.
-
-WARNING:tensorflow:Using a while_loop for converting StatelessRandomUniformIntV2 cause there is no registered converter for this op.
-
-WARNING:tensorflow:Using a while_loop for converting RngReadAndSkip cause there is no registered converter for this op.
-
-WARNING:tensorflow:Using a while_loop for converting RngReadAndSkip cause there is no registered converter for this op.
-
-WARNING:tensorflow:Using a while_loop for converting Bitcast cause there is no registered converter for this op.
-
-WARNING:tensorflow:Using a while_loop for converting Bitcast cause there is no registered converter for this op.
-
-WARNING:tensorflow:Using a while_loop for converting Bitcast cause there is no registered converter for this op.
-
-WARNING:tensorflow:Using a while_loop for converting Bitcast cause there is no registered converter for this op.
-
-WARNING:tensorflow:Using a while_loop for converting StatelessRandomUniformIntV2 cause there is no registered converter for this op.
-
-WARNING:tensorflow:Using a while_loop for converting StatelessRandomUniformIntV2 cause there is no registered converter for this op.
-
-```
-</div>
     
 ![png](/img/guides/classification_with_keras_cv/classification_with_keras_cv_36_16.png)
     
