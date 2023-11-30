@@ -26,23 +26,32 @@ through the process of customizing a KerasCV data augmentation pipeline.
 """
 ## Imports & setup
 
-This tutorial requires you to have KerasCV installed:
+KerasCV uses Keras 3 to work with any of TensorFlow, PyTorch or Jax. In the
+guide below, we will use the `jax` backend. This guide runs in
+TensorFlow or PyTorch backends with zero changes, simply update the
+`KERAS_BACKEND` below.
+"""
 
-```shell
-pip install keras-cv
-```
+"""shell
+pip install -q --upgrade keras-cv
+pip install -q --upgrade keras  # Upgrade to Keras 3.
+"""
 
+"""
 We begin by importing all required packages:
 """
 
-import keras_cv
+import os
+
+os.environ["KERAS_BACKEND"] = "jax"  # @param ["tensorflow", "jax", "torch"]
+
 import matplotlib.pyplot as plt
+
+# Import tensorflow for `tf.data` and its preprocessing map functions
 import tensorflow as tf
 import tensorflow_datasets as tfds
-from tensorflow import keras
-from tensorflow.keras import applications
-from tensorflow.keras import losses
-from tensorflow.keras import optimizers
+import keras
+import keras_cv
 
 """
 ## Data loading
@@ -152,7 +161,7 @@ rand_augment = keras_cv.layers.RandAugment(
     augmentations_per_image=3,
     magnitude=0.3,
     magnitude_stddev=0.2,
-    rate=0.5,
+    rate=1.0,
 )
 
 
@@ -343,8 +352,8 @@ def get_model():
         "efficientnetv2_s", num_classes=num_classes
     )
     model.compile(
-        loss=losses.CategoricalCrossentropy(label_smoothing=0.1),
-        optimizer=optimizers.SGD(momentum=0.9),
+        loss=keras.losses.CategoricalCrossentropy(label_smoothing=0.1),
+        optimizer=keras.optimizers.SGD(momentum=0.9),
         metrics=["accuracy"],
     )
     return model
@@ -354,14 +363,12 @@ def get_model():
 Finally we train the model:
 """
 
-strategy = tf.distribute.MirroredStrategy()
-with strategy.scope():
-    model = get_model()
-    model.fit(
-        train_dataset,
-        epochs=1,
-        validation_data=test_dataset,
-    )
+model = get_model()
+model.fit(
+    train_dataset,
+    epochs=1,
+    validation_data=test_dataset,
+)
 
 """
 ## Conclusion & next steps
