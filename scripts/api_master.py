@@ -761,6 +761,18 @@ API_MASTER = {
                         },
                     ],
                 },
+                {
+                    "path": "backend_specific_layers/",
+                    "title": "Backend-specific layers",
+                    "toc": True,
+                    "children": [
+                        {
+                            "path": "torch_module_wrapper",
+                            "title": "TorchModuleWrapper layer",
+                            "generate": ["keras.layers.TorchModuleWrapper"],
+                        },
+                    ],
+                }
             ],
         },
         {
@@ -778,11 +790,11 @@ API_MASTER = {
                     "title": "ModelCheckpoint",
                     "generate": ["keras.callbacks.ModelCheckpoint"],
                 },
-                # {
-                #     "path": "backup_and_restore",
-                #     "title": "BackupAndRestore",
-                #     "generate": ["keras.callbacks.BackupAndRestore"],
-                # },
+                {
+                    "path": "backup_and_restore",
+                    "title": "BackupAndRestore",
+                    "generate": ["keras.callbacks.BackupAndRestore"],
+                },
                 {
                     "path": "tensorboard",
                     "title": "TensorBoard",
