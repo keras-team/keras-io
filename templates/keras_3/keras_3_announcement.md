@@ -44,7 +44,7 @@ at arbitrary model scales and cluster scales.
 Because it keeps the model definition, training logic,
 and sharding configuration all separate from each other,
 it makes your distribution workflow easy to develop and easy to maintain.
-See our [starter guide](/getting_started/distribution/).
+See our [starter guide](/guides/distribution/).
 - **Maximize reach for your open-source model releases.** Want to
 release a pretrained model? Want as many people as possible
 to be able to use it? If you implement it in pure TensorFlow or PyTorch,
