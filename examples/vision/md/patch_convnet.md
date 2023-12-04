@@ -927,7 +927,7 @@ plot_attention(image)
 
 
     
-![png](/img/examples/vision/patch_convnet/patch_convnet_25_0.png)
+![png](/img/examples/vision/patch_convnet/patch_convnet_25_1.png)
     
 
 
