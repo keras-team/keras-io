@@ -67,11 +67,12 @@ Note that if you are running with a M1 Mac GPU you should not enable mixed preci
 !pip install keras-cv --upgrade --quiet
 ```
 
+
 ```python
 import keras_cv
-from tensorflow import keras
+import keras
 import matplotlib.pyplot as plt
-import tensorflow as tf
+from keras import ops
 import numpy as np
 import math
 from PIL import Image
@@ -83,10 +84,9 @@ keras.mixed_precision.set_global_policy("mixed_float16")
 # Instantiate the Stable Diffusion model
 model = keras_cv.models.StableDiffusion(jit_compile=True)
 ```
+
 <div class="k-default-codeblock">
 ```
-INFO:tensorflow:Mixed precision compatibility check (mixed_float16): OK
-Your GPUs will likely run quickly with dtype policy mixed_float16 as they all have compute capability of at least 7.0
 By using this model checkpoint, you acknowledge that its usage is subject to the terms of the CreativeML Open RAIL-M license at https://raw.githubusercontent.com/CompVis/stable-diffusion/main/LICENSE
 
 ```
@@ -109,10 +109,10 @@ prompt_1 = "A watercolor painting of a Golden Retriever at the beach"
 prompt_2 = "A still life DSLR photo of a bowl of fruit"
 interpolation_steps = 5
 
-encoding_1 = tf.squeeze(model.encode_text(prompt_1))
-encoding_2 = tf.squeeze(model.encode_text(prompt_2))
+encoding_1 = ops.squeeze(model.encode_text(prompt_1))
+encoding_2 = ops.squeeze(model.encode_text(prompt_2))
 
-interpolated_encodings = tf.linspace(encoding_1, encoding_2, interpolation_steps)
+interpolated_encodings = ops.linspace(encoding_1, encoding_2, interpolation_steps)
 
 # Show the size of the latent manifold
 print(f"Encoding shape: {encoding_1.shape}")
@@ -120,7 +120,12 @@ print(f"Encoding shape: {encoding_1.shape}")
 
 <div class="k-default-codeblock">
 ```
+Downloading data from https://github.com/openai/CLIP/blob/main/clip/bpe_simple_vocab_16e6.txt.gz?raw=true
+ 1356917/1356917 ━━━━━━━━━━━━━━━━━━━━ 0s 0us/step
+Downloading data from https://huggingface.co/fchollet/stable-diffusion/resolve/main/kcv_encoder.h5
+ 492466864/492466864 ━━━━━━━━━━━━━━━━━━━━ 7s 0us/step
 Encoding shape: (77, 768)
+
 ```
 </div>
 Once we've interpolated the encodings, we can generate images from each point.
@@ -130,7 +135,7 @@ keep the diffusion noise constant between images.
 
 ```python
 seed = 12345
-noise = tf.random.normal((512 // 8, 512 // 8, 4), seed=seed)
+noise = keras.random.normal((512 // 8, 512 // 8, 4), seed=seed)
 
 images = model.generate_image(
     interpolated_encodings,
@@ -141,7 +146,12 @@ images = model.generate_image(
 
 <div class="k-default-codeblock">
 ```
-25/25 [==============================] - 50s 340ms/step
+Downloading data from https://huggingface.co/fchollet/stable-diffusion/resolve/main/kcv_diffusion_model.h5
+ 3439090152/3439090152 ━━━━━━━━━━━━━━━━━━━━ 26s 0us/step
+ 50/50 ━━━━━━━━━━━━━━━━━━━━ 173s 311ms/step
+Downloading data from https://huggingface.co/fchollet/stable-diffusion/resolve/main/kcv_decoder.h5
+ 198180272/198180272 ━━━━━━━━━━━━━━━━━━━━ 1s 0us/step
+
 ```
 </div>
 Now that we've generated some interpolated images, let's take a look at them!
@@ -200,8 +210,8 @@ interpolation_steps = 150
 batch_size = 3
 batches = interpolation_steps // batch_size
 
-interpolated_encodings = tf.linspace(encoding_1, encoding_2, interpolation_steps)
-batched_encodings = tf.split(interpolated_encodings, batches)
+interpolated_encodings = ops.linspace(encoding_1, encoding_2, interpolation_steps)
+batched_encodings = ops.split(interpolated_encodings, batches)
 
 images = []
 for batch in range(batches):
@@ -220,56 +230,57 @@ export_as_gif("doggo-and-fruit-150.gif", images, rubber_band=True)
 
 <div class="k-default-codeblock">
 ```
-25/25 [==============================] - 49s 244ms/step
-25/25 [==============================] - 6s 244ms/step
-25/25 [==============================] - 6s 244ms/step
-25/25 [==============================] - 6s 245ms/step
-25/25 [==============================] - 6s 244ms/step
-25/25 [==============================] - 6s 244ms/step
-25/25 [==============================] - 6s 244ms/step
-25/25 [==============================] - 6s 244ms/step
-25/25 [==============================] - 6s 244ms/step
-25/25 [==============================] - 6s 243ms/step
-25/25 [==============================] - 6s 243ms/step
-25/25 [==============================] - 6s 243ms/step
-25/25 [==============================] - 6s 244ms/step
-25/25 [==============================] - 6s 244ms/step
-25/25 [==============================] - 6s 244ms/step
-25/25 [==============================] - 6s 243ms/step
-25/25 [==============================] - 6s 243ms/step
-25/25 [==============================] - 6s 244ms/step
-25/25 [==============================] - 6s 243ms/step
-25/25 [==============================] - 6s 243ms/step
-25/25 [==============================] - 6s 243ms/step
-25/25 [==============================] - 6s 243ms/step
-25/25 [==============================] - 6s 243ms/step
-25/25 [==============================] - 6s 243ms/step
-25/25 [==============================] - 6s 244ms/step
-25/25 [==============================] - 6s 243ms/step
-25/25 [==============================] - 6s 243ms/step
-25/25 [==============================] - 6s 244ms/step
-25/25 [==============================] - 6s 243ms/step
-25/25 [==============================] - 6s 243ms/step
-25/25 [==============================] - 6s 244ms/step
-25/25 [==============================] - 6s 244ms/step
-25/25 [==============================] - 6s 244ms/step
-25/25 [==============================] - 6s 243ms/step
-25/25 [==============================] - 6s 244ms/step
-25/25 [==============================] - 6s 244ms/step
-25/25 [==============================] - 6s 244ms/step
-25/25 [==============================] - 6s 243ms/step
-25/25 [==============================] - 6s 243ms/step
-25/25 [==============================] - 6s 243ms/step
-25/25 [==============================] - 6s 244ms/step
-25/25 [==============================] - 6s 244ms/step
-25/25 [==============================] - 6s 243ms/step
-25/25 [==============================] - 6s 244ms/step
-25/25 [==============================] - 6s 244ms/step
-25/25 [==============================] - 6s 244ms/step
-25/25 [==============================] - 6s 244ms/step
-25/25 [==============================] - 6s 244ms/step
-25/25 [==============================] - 6s 243ms/step
-25/25 [==============================] - 6s 244ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 77s 204ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 214ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 205ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 208ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 211ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 205ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 215ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 203ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 206ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 212ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 204ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 211ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 206ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 204ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 215ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 204ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 208ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 210ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 203ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 214ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 204ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 205ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 213ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 204ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 211ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 206ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 205ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 216ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 205ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 207ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 209ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 204ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 213ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 205ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 205ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 213ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 203ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 212ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 208ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 205ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 213ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 204ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 208ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 212ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 205ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 213ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 205ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 205ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 214ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 204ms/step
+
 ```
 </div>
 ![Dog to Fruit 150](/img/examples/generative/random_walks_with_stable_diffusion/dog2fruit150.gif)
@@ -291,20 +302,20 @@ interpolation_steps = 6
 batch_size = 3
 batches = (interpolation_steps**2) // batch_size
 
-encoding_1 = tf.squeeze(model.encode_text(prompt_1))
-encoding_2 = tf.squeeze(model.encode_text(prompt_2))
-encoding_3 = tf.squeeze(model.encode_text(prompt_3))
-encoding_4 = tf.squeeze(model.encode_text(prompt_4))
+encoding_1 = ops.squeeze(model.encode_text(prompt_1))
+encoding_2 = ops.squeeze(model.encode_text(prompt_2))
+encoding_3 = ops.squeeze(model.encode_text(prompt_3))
+encoding_4 = ops.squeeze(model.encode_text(prompt_4))
 
-interpolated_encodings = tf.linspace(
-    tf.linspace(encoding_1, encoding_2, interpolation_steps),
-    tf.linspace(encoding_3, encoding_4, interpolation_steps),
+interpolated_encodings = ops.linspace(
+    ops.linspace(encoding_1, encoding_2, interpolation_steps),
+    ops.linspace(encoding_3, encoding_4, interpolation_steps),
     interpolation_steps,
 )
-interpolated_encodings = tf.reshape(
+interpolated_encodings = ops.reshape(
     interpolated_encodings, (interpolation_steps**2, 77, 768)
 )
-batched_encodings = tf.split(interpolated_encodings, batches)
+batched_encodings = ops.split(interpolated_encodings, batches)
 
 images = []
 for batch in range(batches):
@@ -351,22 +362,28 @@ plot_grid(images, "4-way-interpolation.jpg", interpolation_steps)
 
 <div class="k-default-codeblock">
 ```
-25/25 [==============================] - 6s 244ms/step
-25/25 [==============================] - 6s 243ms/step
-25/25 [==============================] - 6s 244ms/step
-25/25 [==============================] - 6s 245ms/step
-25/25 [==============================] - 6s 245ms/step
-25/25 [==============================] - 6s 244ms/step
-25/25 [==============================] - 6s 244ms/step
-25/25 [==============================] - 6s 244ms/step
-25/25 [==============================] - 6s 244ms/step
-25/25 [==============================] - 6s 244ms/step
-25/25 [==============================] - 6s 244ms/step
-25/25 [==============================] - 6s 244ms/step
+ 50/50 ━━━━━━━━━━━━━━━━━━━━ 10s 209ms/step
+ 50/50 ━━━━━━━━━━━━━━━━━━━━ 10s 204ms/step
+ 50/50 ━━━━━━━━━━━━━━━━━━━━ 10s 209ms/step
+ 50/50 ━━━━━━━━━━━━━━━━━━━━ 11s 210ms/step
+ 50/50 ━━━━━━━━━━━━━━━━━━━━ 10s 210ms/step
+ 50/50 ━━━━━━━━━━━━━━━━━━━━ 10s 205ms/step
+ 50/50 ━━━━━━━━━━━━━━━━━━━━ 11s 210ms/step
+ 50/50 ━━━━━━━━━━━━━━━━━━━━ 10s 210ms/step
+ 50/50 ━━━━━━━━━━━━━━━━━━━━ 10s 208ms/step
+ 50/50 ━━━━━━━━━━━━━━━━━━━━ 10s 205ms/step
+ 50/50 ━━━━━━━━━━━━━━━━━━━━ 10s 210ms/step
+ 50/50 ━━━━━━━━━━━━━━━━━━━━ 11s 210ms/step
+
+<ipython-input-7-932c0235506a>:51: MatplotlibDeprecationWarning: Auto-removal of overlapping axes is deprecated since 3.6 and will be removed two minor releases later; explicitly call ax.remove() as needed.
+  plt.subplot(grid_size, grid_size, index + 1)
+
 ```
 </div>
-
+    
 ![png](/img/examples/generative/random_walks_with_stable_diffusion/random_walks_with_stable_diffusion_13_2.png)
+    
+
 
 We can also interpolate while allowing diffusion noise to vary by dropping
 the `diffusion_noise` parameter:
@@ -383,22 +400,27 @@ plot_grid(images, "4-way-interpolation-varying-noise.jpg", interpolation_steps)
 
 <div class="k-default-codeblock">
 ```
-25/25 [==============================] - 6s 243ms/step
-25/25 [==============================] - 6s 244ms/step
-25/25 [==============================] - 6s 243ms/step
-25/25 [==============================] - 6s 243ms/step
-25/25 [==============================] - 6s 243ms/step
-25/25 [==============================] - 6s 244ms/step
-25/25 [==============================] - 6s 243ms/step
-25/25 [==============================] - 6s 243ms/step
-25/25 [==============================] - 6s 243ms/step
-25/25 [==============================] - 6s 243ms/step
-25/25 [==============================] - 6s 243ms/step
-25/25 [==============================] - 6s 243ms/step
+ 50/50 ━━━━━━━━━━━━━━━━━━━━ 11s 215ms/step
+ 50/50 ━━━━━━━━━━━━━━━━━━━━ 13s 254ms/step
+ 50/50 ━━━━━━━━━━━━━━━━━━━━ 12s 235ms/step
+ 50/50 ━━━━━━━━━━━━━━━━━━━━ 12s 230ms/step
+ 50/50 ━━━━━━━━━━━━━━━━━━━━ 11s 214ms/step
+ 50/50 ━━━━━━━━━━━━━━━━━━━━ 10s 210ms/step
+ 50/50 ━━━━━━━━━━━━━━━━━━━━ 10s 208ms/step
+ 50/50 ━━━━━━━━━━━━━━━━━━━━ 11s 210ms/step
+ 50/50 ━━━━━━━━━━━━━━━━━━━━ 10s 209ms/step
+ 50/50 ━━━━━━━━━━━━━━━━━━━━ 10s 208ms/step
+ 50/50 ━━━━━━━━━━━━━━━━━━━━ 10s 205ms/step
+ 50/50 ━━━━━━━━━━━━━━━━━━━━ 11s 213ms/step
+
+<ipython-input-7-932c0235506a>:51: MatplotlibDeprecationWarning: Auto-removal of overlapping axes is deprecated since 3.6 and will be removed two minor releases later; explicitly call ax.remove() as needed.
+  plt.subplot(grid_size, grid_size, index + 1)
+
 ```
 </div>
-
+    
 ![png](/img/examples/generative/random_walks_with_stable_diffusion/random_walks_with_stable_diffusion_15_2.png)
+    
 
 
 Next up -- let's go for some walks!
@@ -416,18 +438,18 @@ batch_size = 3
 batches = walk_steps // batch_size
 step_size = 0.005
 
-encoding = tf.squeeze(
+encoding = ops.squeeze(
     model.encode_text("The Eiffel Tower in the style of starry night")
 )
 # Note that (77, 768) is the shape of the text encoding.
-delta = tf.ones_like(encoding) * step_size
+delta = ops.ones_like(encoding) * step_size
 
 walked_encodings = []
 for step_index in range(walk_steps):
     walked_encodings.append(encoding)
     encoding += delta
-walked_encodings = tf.stack(walked_encodings)
-batched_encodings = tf.split(walked_encodings, batches)
+walked_encodings = ops.stack(walked_encodings)
+batched_encodings = ops.split(walked_encodings, batches)
 
 images = []
 for batch in range(batches):
@@ -446,56 +468,56 @@ export_as_gif("eiffel-tower-starry-night.gif", images, rubber_band=True)
 
 <div class="k-default-codeblock">
 ```
-25/25 [==============================] - 6s 243ms/step
-25/25 [==============================] - 6s 243ms/step
-25/25 [==============================] - 6s 243ms/step
-25/25 [==============================] - 6s 244ms/step
-25/25 [==============================] - 6s 242ms/step
-25/25 [==============================] - 6s 241ms/step
-25/25 [==============================] - 6s 241ms/step
-25/25 [==============================] - 6s 243ms/step
-25/25 [==============================] - 6s 242ms/step
-25/25 [==============================] - 6s 242ms/step
-25/25 [==============================] - 6s 243ms/step
-25/25 [==============================] - 6s 243ms/step
-25/25 [==============================] - 6s 244ms/step
-25/25 [==============================] - 6s 244ms/step
-25/25 [==============================] - 6s 243ms/step
-25/25 [==============================] - 6s 242ms/step
-25/25 [==============================] - 6s 243ms/step
-25/25 [==============================] - 6s 243ms/step
-25/25 [==============================] - 6s 244ms/step
-25/25 [==============================] - 6s 242ms/step
-25/25 [==============================] - 6s 242ms/step
-25/25 [==============================] - 6s 242ms/step
-25/25 [==============================] - 6s 242ms/step
-25/25 [==============================] - 6s 241ms/step
-25/25 [==============================] - 6s 242ms/step
-25/25 [==============================] - 6s 242ms/step
-25/25 [==============================] - 6s 243ms/step
-25/25 [==============================] - 6s 243ms/step
-25/25 [==============================] - 6s 241ms/step
-25/25 [==============================] - 6s 243ms/step
-25/25 [==============================] - 6s 242ms/step
-25/25 [==============================] - 6s 242ms/step
-25/25 [==============================] - 6s 242ms/step
-25/25 [==============================] - 6s 242ms/step
-25/25 [==============================] - 6s 243ms/step
-25/25 [==============================] - 6s 242ms/step
-25/25 [==============================] - 6s 242ms/step
-25/25 [==============================] - 6s 242ms/step
-25/25 [==============================] - 6s 243ms/step
-25/25 [==============================] - 6s 243ms/step
-25/25 [==============================] - 6s 243ms/step
-25/25 [==============================] - 6s 243ms/step
-25/25 [==============================] - 6s 242ms/step
-25/25 [==============================] - 6s 242ms/step
-25/25 [==============================] - 6s 242ms/step
-25/25 [==============================] - 6s 242ms/step
-25/25 [==============================] - 6s 242ms/step
-25/25 [==============================] - 6s 242ms/step
-25/25 [==============================] - 6s 242ms/step
-25/25 [==============================] - 6s 242ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 6s 228ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 205ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 210ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 206ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 204ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 214ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 206ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 208ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 210ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 204ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 214ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 204ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 207ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 214ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 205ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 212ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 209ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 205ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 218ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 206ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 210ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 210ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 206ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 215ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 206ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 207ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 214ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 207ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 213ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 209ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 206ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 218ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 205ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 209ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 210ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 206ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 214ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 206ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 206ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 216ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 206ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 213ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 206ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 205ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 218ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 206ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 210ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 210ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 206ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 217ms/step
 
 ```
 </div>
@@ -522,20 +544,20 @@ we began our walk, so we get a "loopable" result!
 
 ```python
 prompt = "An oil paintings of cows in a field next to a windmill in Holland"
-encoding = tf.squeeze(model.encode_text(prompt))
+encoding = ops.squeeze(model.encode_text(prompt))
 walk_steps = 150
 batch_size = 3
 batches = walk_steps // batch_size
 
-walk_noise_x = tf.random.normal(noise.shape, dtype=tf.float64)
-walk_noise_y = tf.random.normal(noise.shape, dtype=tf.float64)
+walk_noise_x = keras.random.normal(noise.shape, dtype="float64")
+walk_noise_y = keras.random.normal(noise.shape, dtype="float64")
 
-walk_scale_x = tf.cos(tf.linspace(0, 2, walk_steps) * math.pi)
-walk_scale_y = tf.sin(tf.linspace(0, 2, walk_steps) * math.pi)
-noise_x = tf.tensordot(walk_scale_x, walk_noise_x, axes=0)
-noise_y = tf.tensordot(walk_scale_y, walk_noise_y, axes=0)
-noise = tf.add(noise_x, noise_y)
-batched_noise = tf.split(noise, batches)
+walk_scale_x = ops.cos(ops.linspace(0, 2, walk_steps) * math.pi)
+walk_scale_y = ops.sin(ops.linspace(0, 2, walk_steps) * math.pi)
+noise_x = ops.tensordot(walk_scale_x, walk_noise_x, axes=0)
+noise_y = ops.tensordot(walk_scale_y, walk_noise_y, axes=0)
+noise = ops.add(noise_x, noise_y)
+batched_noise = ops.split(noise, batches)
 
 images = []
 for batch in range(batches):
@@ -554,56 +576,56 @@ export_as_gif("cows.gif", images)
 
 <div class="k-default-codeblock">
 ```
-25/25 [==============================] - 38s 240ms/step
-25/25 [==============================] - 6s 240ms/step
-25/25 [==============================] - 6s 240ms/step
-25/25 [==============================] - 6s 239ms/step
-25/25 [==============================] - 6s 239ms/step
-25/25 [==============================] - 6s 239ms/step
-25/25 [==============================] - 6s 239ms/step
-25/25 [==============================] - 6s 240ms/step
-25/25 [==============================] - 6s 240ms/step
-25/25 [==============================] - 6s 240ms/step
-25/25 [==============================] - 6s 239ms/step
-25/25 [==============================] - 6s 240ms/step
-25/25 [==============================] - 6s 241ms/step
-25/25 [==============================] - 6s 239ms/step
-25/25 [==============================] - 6s 240ms/step
-25/25 [==============================] - 6s 240ms/step
-25/25 [==============================] - 6s 240ms/step
-25/25 [==============================] - 6s 239ms/step
-25/25 [==============================] - 6s 239ms/step
-25/25 [==============================] - 6s 239ms/step
-25/25 [==============================] - 6s 239ms/step
-25/25 [==============================] - 6s 239ms/step
-25/25 [==============================] - 6s 239ms/step
-25/25 [==============================] - 6s 239ms/step
-25/25 [==============================] - 6s 238ms/step
-25/25 [==============================] - 6s 239ms/step
-25/25 [==============================] - 6s 239ms/step
-25/25 [==============================] - 6s 239ms/step
-25/25 [==============================] - 6s 239ms/step
-25/25 [==============================] - 6s 239ms/step
-25/25 [==============================] - 6s 239ms/step
-25/25 [==============================] - 6s 239ms/step
-25/25 [==============================] - 6s 241ms/step
-25/25 [==============================] - 6s 240ms/step
-25/25 [==============================] - 6s 240ms/step
-25/25 [==============================] - 6s 240ms/step
-25/25 [==============================] - 6s 240ms/step
-25/25 [==============================] - 6s 240ms/step
-25/25 [==============================] - 6s 240ms/step
-25/25 [==============================] - 6s 241ms/step
-25/25 [==============================] - 6s 241ms/step
-25/25 [==============================] - 6s 240ms/step
-25/25 [==============================] - 6s 240ms/step
-25/25 [==============================] - 6s 241ms/step
-25/25 [==============================] - 6s 243ms/step
-25/25 [==============================] - 6s 243ms/step
-25/25 [==============================] - 6s 241ms/step
-25/25 [==============================] - 6s 240ms/step
-25/25 [==============================] - 6s 241ms/step
-25/25 [==============================] - 6s 241ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 35s 216ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 205ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 216ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 204ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 210ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 208ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 205ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 215ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 204ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 207ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 214ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 206ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 213ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 207ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 205ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 216ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 206ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 209ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 212ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 205ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 216ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 206ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 209ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 213ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 206ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 212ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 207ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 206ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 218ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 207ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 211ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 210ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 206ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 217ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 204ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 208ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 214ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 206ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 212ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 207ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 206ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 215ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 206ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 212ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 209ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 205ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 216ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 205ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 206ms/step
+ 25/25 ━━━━━━━━━━━━━━━━━━━━ 5s 214ms/step
 
 ```
 </div>
