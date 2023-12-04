@@ -120,10 +120,12 @@ test_ds = test_ds.batch(BATCH_SIZE).prefetch(AUTO)
 
 <div class="k-default-codeblock">
 ```
+Downloading data from https://www.cs.toronto.edu/~kriz/cifar-10-python.tar.gz
+170500096/170498071 [==============================] - 16s 0us/step
+170508288/170498071 [==============================] - 16s 0us/step
 Training samples: 40000
 Validation samples: 10000
 Testing samples: 10000
-
 ```
 </div>
 ---
@@ -669,9 +671,9 @@ Epoch 5/50
 
 ```
 </div>
-    
+
 ![png](/img/examples/vision/patch_convnet/patch_conv_net_23_3.png)
-    
+
 
 
 <div class="k-default-codeblock">
@@ -690,9 +692,9 @@ Epoch 10/50
 
 ```
 </div>
-    
+
 ![png](/img/examples/vision/patch_convnet/patch_conv_net_23_5.png)
-    
+
 
 
 <div class="k-default-codeblock">
@@ -711,9 +713,9 @@ Epoch 15/50
 
 ```
 </div>
-    
+
 ![png](/img/examples/vision/patch_convnet/patch_conv_net_23_7.png)
-    
+
 
 
 <div class="k-default-codeblock">
@@ -732,9 +734,9 @@ Epoch 20/50
 
 ```
 </div>
-    
+
 ![png](/img/examples/vision/patch_convnet/patch_conv_net_23_9.png)
-    
+
 
 
 <div class="k-default-codeblock">
@@ -753,9 +755,9 @@ Epoch 25/50
 
 ```
 </div>
-    
+
 ![png](/img/examples/vision/patch_convnet/patch_conv_net_23_11.png)
-    
+
 
 
 <div class="k-default-codeblock">
@@ -774,9 +776,9 @@ Epoch 30/50
 
 ```
 </div>
-    
+
 ![png](/img/examples/vision/patch_convnet/patch_conv_net_23_13.png)
-    
+
 
 
 <div class="k-default-codeblock">
@@ -795,9 +797,9 @@ Epoch 35/50
 
 ```
 </div>
-    
+
 ![png](/img/examples/vision/patch_convnet/patch_conv_net_23_15.png)
-    
+
 
 
 <div class="k-default-codeblock">
@@ -816,9 +818,9 @@ Epoch 40/50
 
 ```
 </div>
-    
+
 ![png](/img/examples/vision/patch_convnet/patch_conv_net_23_17.png)
-    
+
 
 
 <div class="k-default-codeblock">
@@ -837,9 +839,9 @@ Epoch 45/50
 
 ```
 </div>
-    
+
 ![png](/img/examples/vision/patch_convnet/patch_conv_net_23_19.png)
-    
+
 
 
 <div class="k-default-codeblock">
@@ -858,9 +860,9 @@ Epoch 50/50
 
 ```
 </div>
-    
+
 ![png](/img/examples/vision/patch_convnet/patch_conv_net_23_21.png)
-    
+
 
 
 <div class="k-default-codeblock">
@@ -926,9 +928,9 @@ plot_attention(image)
 ```
 
 
-    
-![png](/img/examples/vision/patch_convnet/patch_convnet_25_1.png)
-    
+
+![png](/img/examples/vision/patch_convnet/patch_conv_net_25_1.png)
+
 
 
 ---
