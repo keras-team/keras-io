@@ -52,8 +52,10 @@ import numpy as np
 import tensorflow as tf
 from tensorflow import keras
 import matplotlib.pyplot as plt
-import tensorflow_addons as tfa
-from tensorflow.keras import layers
+import keras
+from keras import layers
+from keras import ops
+from tensorflow import data as tf_data
 
 # Set seed for reproducibiltiy
 SEED = 42
@@ -66,7 +68,7 @@ keras.utils.set_random_seed(SEED)
 # DATA
 BATCH_SIZE = 128
 BUFFER_SIZE = BATCH_SIZE * 2
-AUTO = tf.data.AUTOTUNE
+AUTO = tf_data.AUTOTUNE
 INPUT_SHAPE = (32, 32, 3)
 NUM_CLASSES = 10  # for CIFAR 10
 
@@ -98,13 +100,13 @@ print(f"Training samples: {len(x_train)}")
 print(f"Validation samples: {len(x_val)}")
 print(f"Testing samples: {len(x_test)}")
 
-train_ds = tf.data.Dataset.from_tensor_slices((x_train, y_train))
+train_ds = tf_data.Dataset.from_tensor_slices((x_train, y_train))
 train_ds = train_ds.shuffle(BUFFER_SIZE).batch(BATCH_SIZE).prefetch(AUTO)
 
-val_ds = tf.data.Dataset.from_tensor_slices((x_val, y_val))
+val_ds = tf_data.Dataset.from_tensor_slices((x_val, y_val))
 val_ds = val_ds.batch(BATCH_SIZE).prefetch(AUTO)
 
-test_ds = tf.data.Dataset.from_tensor_slices((x_test, y_test))
+test_ds = tf_data.Dataset.from_tensor_slices((x_test, y_test))
 test_ds = test_ds.batch(BATCH_SIZE).prefetch(AUTO)
 
 """
@@ -157,7 +159,7 @@ def build_convolutional_stem(dimensions):
     config = {
         "kernel_size": (3, 3),
         "strides": (2, 2),
-        "activation": tf.nn.gelu,
+        "activation": ops.gelu,
         "padding": "same",
     }
 
@@ -259,7 +261,7 @@ class Trunk(layers.Layer):
     def build(self, input_shape):
         config = {
             "filters": self.dimensions,
-            "activation": tf.nn.gelu,
+            "activation": ops.gelu,
             "padding": "same",
         }
 
@@ -315,7 +317,7 @@ class AttentionPooling(layers.Layer):
         super().__init__(**kwargs)
         self.dimensions = dimensions
         self.num_classes = num_classes
-        self.cls = tf.Variable(tf.zeros((1, 1, dimensions)))
+        self.cls = keras.Variable(ops.zeros((1, 1, dimensions)))
 
     def get_config(self):
         config = super().get_config()
@@ -339,20 +341,20 @@ class AttentionPooling(layers.Layer):
         self.layer_norm3 = layers.LayerNormalization(epsilon=1e-6)
         self.mlp = keras.Sequential(
             [
-                layers.Dense(units=self.dimensions, activation=tf.nn.gelu),
+                layers.Dense(units=self.dimensions, activation=ops.gelu),
                 layers.Dropout(0.2),
-                layers.Dense(units=self.dimensions, activation=tf.nn.gelu),
+                layers.Dense(units=self.dimensions, activation=ops.gelu),
             ]
         )
         self.dense = layers.Dense(units=self.num_classes)
         self.flatten = layers.Flatten()
 
     def call(self, x):
-        batch_size = tf.shape(x)[0]
+        batch_size = ops.shape(x)[0]
         # Expand the class token batch number of times.
-        class_token = tf.repeat(self.cls, repeats=batch_size, axis=0)
+        class_token = ops.repeat(self.cls, repeats=batch_size, axis=0)
         # Concat the input with the trainable class token.
-        x = tf.concat([class_token, x], axis=1)
+        x = ops.concatenate([class_token, x], axis=1)
         # Apply attention to x.
         x = self.layer_norm1(x)
         x, viz_weights = self.attention(
@@ -365,7 +367,7 @@ class AttentionPooling(layers.Layer):
         class_token = class_token + self.mlp(class_token)
         # Build the logits
         logits = self.dense(class_token)
-        return logits, tf.squeeze(viz_weights)[..., 1:]
+        return logits, ops.squeeze(viz_weights)[..., 1:]
 
 
 """
@@ -493,11 +495,11 @@ class TrainMonitor(keras.callbacks.Callback):
             # Pass through the attention pooling block.
             _, test_viz_weights = self.model.attention_pooling(test_x)
             # Reshape the vizualization weights
-            num_patches = tf.shape(test_viz_weights)[-1]
+            num_patches = ops.shape(test_viz_weights)[-1]
             height = width = int(math.sqrt(num_patches))
             test_viz_weights = layers.Reshape((height, width))(test_viz_weights)
             # Take a random image and its attention weights.
-            index = np.random.randint(low=0, high=tf.shape(test_augmented_images)[0])
+            index = np.random.randint(low=0, high=ops.shape(test_augmented_images)[0])
             selected_image = test_augmented_images[index]
             selected_weight = test_viz_weights[index]
             # Plot the images and the overlayed attention map.
@@ -530,14 +532,14 @@ class WarmUpCosine(keras.optimizers.schedules.LearningRateSchedule):
         self.total_steps = total_steps
         self.warmup_learning_rate = warmup_learning_rate
         self.warmup_steps = warmup_steps
-        self.pi = tf.constant(np.pi)
+        self.pi = np.pi
 
     def __call__(self, step):
         if self.total_steps < self.warmup_steps:
             raise ValueError("Total_steps must be larger or equal to warmup_steps.")
-        cos_annealed_lr = tf.cos(
+        cos_annealed_lr = ops.cos(
             self.pi
-            * (tf.cast(step, tf.float32) - self.warmup_steps)
+            * (ops.cast(step, "float32") - self.warmup_steps)
             / float(self.total_steps - self.warmup_steps)
         )
         learning_rate = 0.5 * self.learning_rate_base * (1 + cos_annealed_lr)
@@ -550,12 +552,14 @@ class WarmUpCosine(keras.optimizers.schedules.LearningRateSchedule):
             slope = (
                 self.learning_rate_base - self.warmup_learning_rate
             ) / self.warmup_steps
-            warmup_rate = slope * tf.cast(step, tf.float32) + self.warmup_learning_rate
-            learning_rate = tf.where(
+            warmup_rate = slope * ops.cast(step, "float32") + self.warmup_learning_rate
+            learning_rate = ops.where(
                 step < self.warmup_steps, warmup_rate, learning_rate
             )
-        return tf.where(
-            step > self.total_steps, 0.0, learning_rate, name="learning_rate"
+        return ops.where(
+            step > self.total_steps,
+            0.0,
+            learning_rate,
         )
 
 
@@ -592,7 +596,9 @@ patch_conv_net = PatchConvNet(
 # Assemble the callbacks.
 train_callbacks = [TrainMonitor(epoch_interval=5)]
 # Get the optimizer.
-optimizer = tfa.optimizers.AdamW(learning_rate=scheduled_lrs, weight_decay=WEIGHT_DECAY)
+optimizer = keras.optimizers.AdamW(
+    learning_rate=scheduled_lrs, weight_decay=WEIGHT_DECAY
+)
 # Compile and pretrain the model.
 patch_conv_net.compile(
     optimizer=optimizer,
@@ -629,8 +635,8 @@ def plot_attention(image):
         image: A numpy image of arbitrary size.
     """
     # Resize the image to a (32, 32) dim.
-    image = tf.image.resize(image, (32, 32))
-    image = image[tf.newaxis, ...]
+    image = ops.image.resize(image, (32, 32))
+    image = image[np.newaxis, ...]
     test_augmented_images = patch_conv_net.preprocessing_model(image)
     # Pass through the stem.
     test_x = patch_conv_net.stem(test_augmented_images)
@@ -638,9 +644,9 @@ def plot_attention(image):
     test_x = patch_conv_net.trunk(test_x)
     # Pass through the attention pooling block.
     _, test_viz_weights = patch_conv_net.attention_pooling(test_x)
-    test_viz_weights = test_viz_weights[tf.newaxis, ...]
+    test_viz_weights = test_viz_weights[np.newaxis, ...]
     # Reshape the vizualization weights.
-    num_patches = tf.shape(test_viz_weights)[-1]
+    num_patches = ops.shape(test_viz_weights)[-1]
     height = width = int(math.sqrt(num_patches))
     test_viz_weights = layers.Reshape((height, width))(test_viz_weights)
     selected_image = test_augmented_images[0]
@@ -661,8 +667,8 @@ def plot_attention(image):
 
 url = "http://farm9.staticflickr.com/8017/7140384795_385b1f48df_z.jpg"
 image_name = keras.utils.get_file(fname="image.jpg", origin=url)
-image = tf.io.read_file(image_name)
-image = tf.io.decode_image(image)
+image = keras.utils.load_img(image_name)
+image = keras.utils.img_to_array(image)
 plot_attention(image)
 
 """
@@ -680,6 +686,4 @@ accuracy.
 
 I would like to thank [JarvisLabs.ai](https://jarvislabs.ai/) for
 providing GPU credits for this project.
-
-You can try the model on [Hugging Face Spaces](https://huggingface.co/spaces/keras-io/patch-conv-net).
 """
