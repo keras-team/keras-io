@@ -126,6 +126,7 @@ EXAMPLES_MASTER = {
                     "path": "deeplabv3_plus",
                     "title": "Multiclass semantic segmentation using DeepLabV3+",
                     "subcategory": "Image segmentation",
+                    "keras_3": True,
                 },
                 {
                     "path": "basnet_segmentation",
@@ -366,6 +367,12 @@ EXAMPLES_MASTER = {
                 {
                     "path": "cait",
                     "title": "Class Attention Image Transformers with LayerScale",
+                    "subcategory": "Performance recipes",
+                    "keras_3": True,
+                },
+                {
+                    "path": "patch_convnet",
+                    "title": "Augmenting convnets with aggregated attention",
                     "subcategory": "Performance recipes",
                     "keras_3": True,
                 },
