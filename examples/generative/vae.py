@@ -17,7 +17,8 @@ os.environ["KERAS_BACKEND"] = "tensorflow"  # @param ["tensorflow", "torch"]
 
 import numpy as np
 import keras
-from keras import layers, ops
+from keras import layers
+from keras import ops
 
 """
 ## Create a sampling layer
@@ -89,60 +90,26 @@ class VAE(keras.Model):
             self.kl_loss_tracker,
         ]
 
-    def _tf_train_step(self, data):
-        import tensorflow as tf
-
-        with tf.GradientTape() as tape:
-            z_mean, z_log_var, z = self.encoder(data)
-            reconstruction = self.decoder(z)
-            reconstruction_loss = ops.mean(
-                ops.sum(
-                    keras.losses.binary_crossentropy(data, reconstruction),
-                    axis=(1, 2),
-                )
-            )
-            kl_loss = -0.5 * (1 + z_log_var - ops.square(z_mean) - ops.exp(z_log_var))
-            kl_loss = ops.mean(ops.sum(kl_loss, axis=1))
-            total_loss = reconstruction_loss + kl_loss
-        grads = tape.gradient(total_loss, self.trainable_weights)
-        self.optimizer.apply_gradients(zip(grads, self.trainable_weights))
-        return total_loss, reconstruction_loss, kl_loss
-
-    def _torch_train_step(self, data):
-        import torch
-
-        self.zero_grad()
-        z_mean, z_log_var, z = self.encoder(data)
-        reconstruction = self.decoder(z)
+    def compute_loss(self, x, y, y_pred, sample_weight=None):
+        reconstruction, z_mean, z_log_var, z = y_pred
         reconstruction_loss = ops.mean(
             ops.sum(
-                keras.losses.binary_crossentropy(data, reconstruction),
+                keras.losses.binary_crossentropy(x, reconstruction),
                 axis=(1, 2),
             )
         )
         kl_loss = -0.5 * (1 + z_log_var - ops.square(z_mean) - ops.exp(z_log_var))
         kl_loss = ops.mean(ops.sum(kl_loss, axis=1))
         total_loss = reconstruction_loss + kl_loss
-        total_loss.backward()
-        trainable_weights = [v for v in self.trainable_weights]
-        gradients = [v.value.grad for v in trainable_weights]
-        with torch.no_grad():
-            self.optimizer.apply(gradients, trainable_weights)
-        return total_loss, reconstruction_loss, kl_loss
-
-    def train_step(self, data):
-        if keras.backend.backend() == "tensorflow":
-            total_loss, reconstruction_loss, kl_loss = self._tf_train_step(data)
-        elif keras.backend.backend() == "torch":
-            total_loss, reconstruction_loss, kl_loss = self._torch_train_step(data)
         self.total_loss_tracker.update_state(total_loss)
         self.reconstruction_loss_tracker.update_state(reconstruction_loss)
         self.kl_loss_tracker.update_state(kl_loss)
-        return {
-            "loss": self.total_loss_tracker.result(),
-            "reconstruction_loss": self.reconstruction_loss_tracker.result(),
-            "kl_loss": self.kl_loss_tracker.result(),
-        }
+        return total_loss
+
+    def call(self, inputs):
+        z_mean, z_log_var, z = self.encoder(inputs)
+        reconstruction = self.decoder(z)
+        return reconstruction, z_mean, z_log_var, z
 
 
 """
