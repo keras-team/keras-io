@@ -823,55 +823,55 @@ plt.show()
 <div class="k-default-codeblock">
 ```
 Epoch 1/25
- 250/250 ━━━━━━━━━━━━━━━━━━━━ 89s 90ms/step - accuracy: 0.5872 - loss: 1.4368 - val_accuracy: 0.5146 - val_loss: 25012.6270
+250/250 [==============================] - 115s 359ms/step - loss: 1.1765 - accuracy: 0.6424 - val_loss: 2.3559 - val_accuracy: 0.5960
 Epoch 2/25
- 250/250 ━━━━━━━━━━━━━━━━━━━━ 18s 72ms/step - accuracy: 0.6607 - loss: 1.1006 - val_accuracy: 0.5959 - val_loss: 935.8270
+250/250 [==============================] - 92s 366ms/step - loss: 0.9413 - accuracy: 0.6998 - val_loss: 1.7349 - val_accuracy: 0.5593
 Epoch 3/25
- 250/250 ━━━━━━━━━━━━━━━━━━━━ 18s 72ms/step - accuracy: 0.6713 - loss: 1.0537 - val_accuracy: 0.4431 - val_loss: 5.9314
+250/250 [==============================] - 93s 371ms/step - loss: 0.8415 - accuracy: 0.7310 - val_loss: 1.3097 - val_accuracy: 0.6281
 Epoch 4/25
- 250/250 ━━━━━━━━━━━━━━━━━━━━ 18s 71ms/step - accuracy: 0.6970 - loss: 0.9693 - val_accuracy: 0.6611 - val_loss: 1.2598
+250/250 [==============================] - 93s 372ms/step - loss: 0.7640 - accuracy: 0.7552 - val_loss: 1.0175 - val_accuracy: 0.6885
 Epoch 5/25
- 250/250 ━━━━━━━━━━━━━━━━━━━━ 18s 71ms/step - accuracy: 0.7165 - loss: 0.9037 - val_accuracy: 0.6041 - val_loss: 1.3692
+250/250 [==============================] - 93s 372ms/step - loss: 0.7139 - accuracy: 0.7706 - val_loss: 1.2226 - val_accuracy: 0.6107
 Epoch 6/25
- 250/250 ━━━━━━━━━━━━━━━━━━━━ 18s 72ms/step - accuracy: 0.7293 - loss: 0.8612 - val_accuracy: 0.6718 - val_loss: 1.0125
+250/250 [==============================] - 93s 373ms/step - loss: 0.6647 - accuracy: 0.7867 - val_loss: 0.8583 - val_accuracy: 0.7178
 Epoch 7/25
- 250/250 ━━━━━━━━━━━━━━━━━━━━ 18s 71ms/step - accuracy: 0.7422 - loss: 0.8207 - val_accuracy: 0.1095 - val_loss: 15888.4795
+250/250 [==============================] - 94s 375ms/step - loss: 0.5986 - accuracy: 0.8080 - val_loss: 0.9724 - val_accuracy: 0.7135
 Epoch 8/25
- 250/250 ━━━━━━━━━━━━━━━━━━━━ 18s 71ms/step - accuracy: 0.7163 - loss: 0.9071 - val_accuracy: 0.6336 - val_loss: 1.1677
+250/250 [==============================] - 93s 372ms/step - loss: 0.5599 - accuracy: 0.8212 - val_loss: 0.9722 - val_accuracy: 0.7064
 Epoch 9/25
- 250/250 ━━━━━━━━━━━━━━━━━━━━ 18s 71ms/step - accuracy: 0.7452 - loss: 0.8054 - val_accuracy: 0.4326 - val_loss: 1.9414
+250/250 [==============================] - 93s 372ms/step - loss: 0.5161 - accuracy: 0.8364 - val_loss: 0.9023 - val_accuracy: 0.7471
 Epoch 10/25
- 250/250 ━━━━━━━━━━━━━━━━━━━━ 18s 71ms/step - accuracy: 0.7239 - loss: 0.8829 - val_accuracy: 0.5505 - val_loss: 2.0953
+250/250 [==============================] - 93s 373ms/step - loss: 0.4719 - accuracy: 0.8515 - val_loss: 0.8803 - val_accuracy: 0.7540
 Epoch 11/25
- 250/250 ━━━━━━━━━━━━━━━━━━━━ 18s 71ms/step - accuracy: 0.7049 - loss: 0.9413 - val_accuracy: 0.6559 - val_loss: 1.1037
+250/250 [==============================] - 93s 372ms/step - loss: 0.4337 - accuracy: 0.8636 - val_loss: 0.9682 - val_accuracy: 0.7377
 Epoch 12/25
- 250/250 ━━━━━━━━━━━━━━━━━━━━ 18s 71ms/step - accuracy: 0.7442 - loss: 0.8106 - val_accuracy: 0.6978 - val_loss: 0.9768
+250/250 [==============================] - 93s 373ms/step - loss: 0.4079 - accuracy: 0.8718 - val_loss: 0.9586 - val_accuracy: 0.7551
 Epoch 13/25
- 250/250 ━━━━━━━━━━━━━━━━━━━━ 18s 71ms/step - accuracy: 0.7643 - loss: 0.7458 - val_accuracy: 0.6363 - val_loss: 1.1337
+250/250 [==============================] - 93s 373ms/step - loss: 0.3694 - accuracy: 0.8856 - val_loss: 0.9676 - val_accuracy: 0.7606
 Epoch 14/25
- 250/250 ━━━━━━━━━━━━━━━━━━━━ 18s 71ms/step - accuracy: 0.7702 - loss: 0.7268 - val_accuracy: 0.5960 - val_loss: 719.3384
+250/250 [==============================] - 93s 373ms/step - loss: 0.3493 - accuracy: 0.8913 - val_loss: 0.8375 - val_accuracy: 0.7706
 Epoch 15/25
- 250/250 ━━━━━━━━━━━━━━━━━━━━ 18s 71ms/step - accuracy: 0.6652 - loss: 1.0875 - val_accuracy: 0.5826 - val_loss: 14.4363
+250/250 [==============================] - 93s 373ms/step - loss: 0.3217 - accuracy: 0.9008 - val_loss: 0.9956 - val_accuracy: 0.7469
 Epoch 16/25
- 250/250 ━━━━━━━━━━━━━━━━━━━━ 18s 71ms/step - accuracy: 0.6999 - loss: 0.9540 - val_accuracy: 0.4971 - val_loss: 3.1220
+250/250 [==============================] - 93s 372ms/step - loss: 0.3018 - accuracy: 0.9075 - val_loss: 0.9614 - val_accuracy: 0.7474
 Epoch 17/25
- 250/250 ━━━━━━━━━━━━━━━━━━━━ 18s 71ms/step - accuracy: 0.7272 - loss: 0.8654 - val_accuracy: 0.5095 - val_loss: 4.9449
+250/250 [==============================] - 93s 372ms/step - loss: 0.2870 - accuracy: 0.9122 - val_loss: 0.9652 - val_accuracy: 0.7626
 Epoch 18/25
- 250/250 ━━━━━━━━━━━━━━━━━━━━ 18s 71ms/step - accuracy: 0.7410 - loss: 0.8200 - val_accuracy: 0.6976 - val_loss: 0.9777
+250/250 [==============================] - 93s 373ms/step - loss: 0.2685 - accuracy: 0.9182 - val_loss: 0.8913 - val_accuracy: 0.7824
 Epoch 19/25
- 250/250 ━━━━━━━━━━━━━━━━━━━━ 18s 71ms/step - accuracy: 0.7623 - loss: 0.7529 - val_accuracy: 0.2299 - val_loss: 45.1476
+250/250 [==============================] - 93s 373ms/step - loss: 0.2574 - accuracy: 0.9216 - val_loss: 1.0205 - val_accuracy: 0.7417
 Epoch 20/25
- 250/250 ━━━━━━━━━━━━━━━━━━━━ 18s 71ms/step - accuracy: 0.7574 - loss: 0.7647 - val_accuracy: 0.0116 - val_loss: 5.0363
+250/250 [==============================] - 93s 372ms/step - loss: 0.2619 - accuracy: 0.9199 - val_loss: 0.9237 - val_accuracy: 0.7788
 Epoch 21/25
- 250/250 ━━━━━━━━━━━━━━━━━━━━ 18s 71ms/step - accuracy: 0.7537 - loss: 0.7782 - val_accuracy: 0.5814 - val_loss: 1.2912
+250/250 [==============================] - 93s 372ms/step - loss: 0.2372 - accuracy: 0.9280 - val_loss: 0.9076 - val_accuracy: 0.7796
 Epoch 22/25
- 250/250 ━━━━━━━━━━━━━━━━━━━━ 18s 71ms/step - accuracy: 0.7664 - loss: 0.7357 - val_accuracy: 0.3763 - val_loss: 1.7886
+250/250 [==============================] - 93s 372ms/step - loss: 0.2175 - accuracy: 0.9344 - val_loss: 0.9797 - val_accuracy: 0.7742
 Epoch 23/25
- 250/250 ━━━━━━━━━━━━━━━━━━━━ 18s 71ms/step - accuracy: 0.7332 - loss: 0.8406 - val_accuracy: 0.3551 - val_loss: 11.2559
+250/250 [==============================] - 93s 372ms/step - loss: 0.2084 - accuracy: 0.9370 - val_loss: 0.9981 - val_accuracy: 0.7870
 Epoch 24/25
- 250/250 ━━━━━━━━━━━━━━━━━━━━ 18s 72ms/step - accuracy: 0.6643 - loss: 1.0869 - val_accuracy: 0.5804 - val_loss: 1.8700
+250/250 [==============================] - 93s 373ms/step - loss: 0.2077 - accuracy: 0.9370 - val_loss: 1.0494 - val_accuracy: 0.7767
 Epoch 25/25
- 250/250 ━━━━━━━━━━━━━━━━━━━━ 18s 72ms/step - accuracy: 0.6302 - loss: 1.1875 - val_accuracy: 0.6420 - val_loss: 1.1440
+250/250 [==============================] - 93s 372ms/step - loss: 0.2059 - accuracy: 0.9377 - val_loss: 0.9640 - val_accuracy: 0.7651
 
 ```
 </div>
@@ -1036,7 +1036,7 @@ plot_predictions(val_images[:4], colormap, model=model)
 ```
 </div>
     
-![png](/img/examples/vision/deeplabv3_plus/deeplabv3_plus_18_1.png)
+![png](/img/examples/vision/deeplabv3_plus/deeplabv3_plus_18_0.png)
     
 
 
@@ -1047,28 +1047,28 @@ plot_predictions(val_images[:4], colormap, model=model)
 ```
 </div>
     
+![png](/img/examples/vision/deeplabv3_plus/deeplabv3_plus_18_1.png)
+    
+
+
+<div class="k-default-codeblock">
+```
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 25ms/step
+
+```
+</div>
+    
+![png](/img/examples/vision/deeplabv3_plus/deeplabv3_plus_18_2.png)
+    
+
+
+<div class="k-default-codeblock">
+```
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 25ms/step
+
+```
+</div>
+    
 ![png](/img/examples/vision/deeplabv3_plus/deeplabv3_plus_18_3.png)
-    
-
-
-<div class="k-default-codeblock">
-```
- 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 25ms/step
-
-```
-</div>
-    
-![png](/img/examples/vision/deeplabv3_plus/deeplabv3_plus_18_5.png)
-    
-
-
-<div class="k-default-codeblock">
-```
- 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 25ms/step
-
-```
-</div>
-    
-![png](/img/examples/vision/deeplabv3_plus/deeplabv3_plus_18_7.png)
     
 
