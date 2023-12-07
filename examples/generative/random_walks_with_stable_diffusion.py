@@ -236,25 +236,26 @@ for batch in range(batches):
     )
 
 
-def plot_grid(
-    images,
-    path,
-    grid_size,
-    scale=2,
-):
-    fig = plt.figure(figsize=(grid_size * scale, grid_size * scale))
+def plot_grid(images, path, grid_size, scale=2):
+    fig, axs = plt.subplots(
+        grid_size, grid_size, figsize=(grid_size * scale, grid_size * scale)
+    )
     fig.tight_layout()
     plt.subplots_adjust(wspace=0, hspace=0)
-    plt.margins(x=0, y=0)
     plt.axis("off")
+    for ax in axs.flat:
+        ax.axis("off")
+
     images = images.astype(int)
-    for row in range(grid_size):
-        for col in range(grid_size):
-            index = row * grid_size + col
-            plt.subplot(grid_size, grid_size, index + 1)
-            plt.imshow(images[index].astype("uint8"))
-            plt.axis("off")
-            plt.margins(x=0, y=0)
+    for i in range(min(grid_size * grid_size, len(images))):
+        ax = axs.flat[i]
+        ax.imshow(images[i].astype("uint8"))
+        ax.axis("off")
+
+    for i in range(len(images), grid_size * grid_size):
+        axs.flat[i].axis("off")
+        axs.flat[i].remove()
+
     plt.savefig(
         fname=path,
         pad_inches=0,
