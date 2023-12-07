@@ -276,7 +276,7 @@ def get_sequence_model():
 
 # Utility for running experiments.
 def run_experiment():
-    filepath = "/tmp/video_classifier"
+    filepath = "/tmp/video_classifier/ckpt.weights.h5"
     checkpoint = keras.callbacks.ModelCheckpoint(
         filepath, save_weights_only=True, save_best_only=True, verbose=1
     )
