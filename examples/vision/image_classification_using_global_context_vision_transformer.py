@@ -585,7 +585,12 @@ class WindowAttention(layers.Layer):
             ],
         )
         relative_position_bias = ops.transpose(relative_position_bias, axes=[2, 0, 1])
-        attn = attn + relative_position_bias[None,]
+        attn = (
+            attn
+            + relative_position_bias[
+                None,
+            ]
+        )
         attn = self.softmax(attn)
         attn = self.attn_drop(attn)
 
@@ -1063,7 +1068,9 @@ model.summary((224, 224, 3))
 img = keras.applications.imagenet_utils.preprocess_input(
     chelsea(), mode="torch"
 )  # Chelsea the cat
-img = ops.image.resize(img, (224, 224))[None,]  # resize & create batch
+img = ops.image.resize(img, (224, 224))[
+    None,
+]  # resize & create batch
 pred = model(img)
 pred_dec = keras.applications.imagenet_utils.decode_predictions(pred)[0]
 
