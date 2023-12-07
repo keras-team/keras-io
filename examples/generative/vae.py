@@ -13,7 +13,7 @@ Accelerator: GPU
 
 import os
 
-os.environ["KERAS_BACKEND"] = "tensorflow"  # @param ["tensorflow", "torch"]
+os.environ["KERAS_BACKEND"] = "tensorflow"  # @param ["tensorflow", "torch", "jax"]
 
 import numpy as np
 import keras
