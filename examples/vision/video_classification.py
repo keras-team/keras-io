@@ -2,7 +2,7 @@
 Title: Video Classification with a CNN-RNN Architecture
 Author: [Sayak Paul](https://twitter.com/RisingSayak)
 Date created: 2021/05/28
-Last modified: 2023/08/28
+Last modified: 2023/12/07
 Description: Training a video classifier with transfer learning and a recurrent model on the UCF101 dataset.
 Accelerator: GPU
 """
