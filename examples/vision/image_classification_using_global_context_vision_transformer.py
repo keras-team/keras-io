@@ -4,6 +4,7 @@ Author: Md Awsafur Rahman
 Date created: 2023/10/30
 Last modified: 2023/10/30
 Description: Implementation and fine-tuning of Global Context Vision Transformer for image classification.
+Accelerator: GPU
 """
 """
 # Setup
@@ -326,8 +327,8 @@ class PatchEmbed(layers.Layer):
 As we can see from above cell, in the `level` we have first used `to_q_global/Global
 Token Gen./FeatureExtraction`. Let's try to understand how it works,
 
-* This module is series of `FeatureExtract` module, according to paper we need to 
-repeat this module `K` times, where `K = log2(H/h)`, `H = feature_map_height`, 
+* This module is series of `FeatureExtract` module, according to paper we need to
+repeat this module `K` times, where `K = log2(H/h)`, `H = feature_map_height`,
 `W = feature_map_width`.
 * `FeatureExtraction:` This layer is very similar to `ReduceSize` module except it uses
 **MaxPooling** module to reduce the dimension, it doesn't increse feature dimension
@@ -337,7 +338,7 @@ repeat this module `K` times, where `K = log2(H/h)`, `H = feature_map_height`,
 * One important point to notice from the figure is that, **global tokens** is shared
 across the whole image which means we use only **one global window** for **all local
 tokens** in a image. This makes the computation very efficient.
-* For input feature map with shape `(B, H, W, C)`, we'll get output shape `(B, h, w, C)`. 
+* For input feature map with shape `(B, H, W, C)`, we'll get output shape `(B, h, w, C)`.
 If we copy these global tokens for total `M` local windows in an image where,
 `M = (H x W)/(h x w) = num_window`, then output shape: `(B * M, h, w, C)`."
 
@@ -585,12 +586,7 @@ class WindowAttention(layers.Layer):
             ],
         )
         relative_position_bias = ops.transpose(relative_position_bias, axes=[2, 0, 1])
-        attn = (
-            attn
-            + relative_position_bias[
-                None,
-            ]
-        )
+        attn = attn + relative_position_bias[None,]
         attn = self.softmax(attn)
         attn = self.attn_drop(attn)
 
@@ -625,7 +621,7 @@ width=400>
 ### Window
 In the `block` module, we have created **windows** before and after applying attention.
 Let's try to understand how we're creating windows,
-* Following module converts feature maps `(B, H, W, C)` to stacked windows 
+* Following module converts feature maps `(B, H, W, C)` to stacked windows
 `(B x H/h x W/w, h, w, C)` → `(num_windows_batch, window_size, window_size, channel)`
 * This module uses `reshape` & `transpose` to create these windows out of image instead
 of iterating over them.
@@ -841,7 +837,7 @@ class Level(layers.Layer):
         mlp_ratio=4.0,
         qkv_bias=True,
         qk_scale=None,
-        drop=0.0,
+        dropout=0.0,
         attention_dropout=0.0,
         path_drop=0.0,
         layer_scale=None,
@@ -856,7 +852,7 @@ class Level(layers.Layer):
         self.mlp_ratio = mlp_ratio
         self.qkv_bias = qkv_bias
         self.qk_scale = qk_scale
-        self.drop = drop
+        self.dropout = dropout
         self.attention_dropout = attention_dropout
         self.path_drop = path_drop
         self.layer_scale = layer_scale
@@ -875,7 +871,7 @@ class Level(layers.Layer):
                 mlp_ratio=self.mlp_ratio,
                 qkv_bias=self.qkv_bias,
                 qk_scale=self.qk_scale,
-                drop=self.drop,
+                dropout=self.dropout,
                 attention_dropout=self.attention_dropout,
                 path_drop=path_drop[i],
                 layer_scale=self.layer_scale,
@@ -914,11 +910,11 @@ where,
     1. Global token is generated
     1. Both local & global attention is applied
     1. Finally downsample is applied.
-4. So, output after `n` number of **levels**, shape: `(batch, width/window_size x 2^{n-1}, 
+4. So, output after `n` number of **levels**, shape: `(batch, width/window_size x 2^{n-1},
 width/window_size x 2^{n-1}, embed_dim x 2^{n-1})`. In the last layer,
 paper doesn't use **downsample** and increase **channels**.
 5. Output of above layer is normalized using `LayerNormalization` module.
-6. In the head, 2D features are converted to 1D features with `Pooling` module. Output 
+6. In the head, 2D features are converted to 1D features with `Pooling` module. Output
 shape after this module is `(batch, embed_dim x 2^{n-1})`
 7. Finally, pooled features are sent to `Dense/Linear` module for classification.
 
@@ -995,7 +991,7 @@ class GCViT(keras.Model):
                 mlp_ratio=mlp_ratio,
                 qkv_bias=qkv_bias,
                 qk_scale=qk_scale,
-                drop=drop_rate,
+                dropout=drop_rate,
                 attention_dropout=attention_dropout,
                 path_drop=path_drop,
                 layer_scale=layer_scale,
@@ -1068,9 +1064,7 @@ model.summary((224, 224, 3))
 img = keras.applications.imagenet_utils.preprocess_input(
     chelsea(), mode="torch"
 )  # Chelsea the cat
-img = ops.image.resize(img, (224, 224))[
-    None,
-]  # resize & create batch
+img = ops.image.resize(img, (224, 224))[None,]  # resize & create batch
 pred = model(img)
 pred_dec = keras.applications.imagenet_utils.decode_predictions(pred)[0]
 
