@@ -82,7 +82,7 @@ class KerasIO:
 
         self.make_examples_master()
         self.nav = self.make_nav_index()
-        self.docstring_printer = docstrings.TFKerasDocumentationGenerator(PROJECT_URL)
+        self.docstring_printer = docstrings.KerasDocumentationGenerator(PROJECT_URL)
 
     def make_examples_master(self):
         for entry in self.master["children"]:
