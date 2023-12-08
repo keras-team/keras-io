@@ -21,7 +21,7 @@ in computer vision, natural language processing, and generative AI.
 You can install Keras from PyPI via:
 
 ```
-pip install keras
+pip install --upgrade keras
 ```
 
 You can check your local Keras version number via:
@@ -47,8 +47,8 @@ The cause is that `tensorflow==2.15` will overwrite your Keras installation with
 KerasCV and KerasNLP can be installed via pip:
 
 ```
-pip install keras-cv
-pip install keras-nlp
+pip install --upgrade keras-cv
+pip install --upgrade keras-nlp
 ```
 
 Critically, **you should reinstall Keras 3 after installing KerasNLP**.
@@ -73,7 +73,7 @@ As an example, here is how to create a JAX GPU environment with [Conda](https://
 conda create -y -n keras-jax python=3.10
 conda activate keras-jax
 pip install -r requirements-jax-cuda.txt
-pip install keras
+pip install --upgrade keras
 ```
 
 Note that it may not always be possible to use the GPU with multiple backends in the same environment due to conflicting

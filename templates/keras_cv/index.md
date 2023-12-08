@@ -51,7 +51,7 @@ Keras 2, and will no longer be necessary after TensorFlow 2.16.
 
 ```
 pip install --upgrade keras-cv tensorflow
-pip install keras>=3
+pip install --upgrade keras
 ```
 
 To install the latest changes nightly for KerasCV and Keras, you can use our

@@ -68,7 +68,7 @@ Keras 2, and will no longer be necessary after TensorFlow 2.16.
 
 ```
 pip install --upgrade keras-nlp
-pip install --upgrade keras>=3
+pip install --upgrade keras
 ```
 
 To install the latest nightly changes for both KerasNLP and Keras, you can use
