@@ -5,7 +5,7 @@ help you go from raw data on disk to a `tf.data.Dataset` object that can be
 used to efficiently train a model.
 
 These loading utilites can be combined with
-[preprocessing layers](https://keras.io/guides/preprocessing_layers/) to
+[preprocessing layers](https://keras.io/api/layers/preprocessing_layers/) to
 futher transform your input dataset before training.
 
 Here's a quick example: let's say you have 10 folders, each containing
