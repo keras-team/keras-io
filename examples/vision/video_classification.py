@@ -49,8 +49,6 @@ tar xf ucf101_top5.tar.gz
 """
 import os
 
-os.environ["KERAS_BACKEND"] = "tensorflow"
-
 import keras
 from imutils import paths
 
@@ -186,7 +184,7 @@ def prepare_all_videos(df, root_dir):
     num_samples = len(df)
     video_paths = df["video_name"].values.tolist()
     labels = df["tag"].values
-    labels = label_processor(labels[..., None]).numpy()
+    labels = keras.ops.convert_to_numpy(label_processor(labels[..., None]))
 
     # `frame_masks` and `frame_features` are what we will feed to our sequence model.
     # `frame_masks` will contain a bunch of booleans denoting if a timestep is
