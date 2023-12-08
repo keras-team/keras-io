@@ -2,7 +2,7 @@
 Title: Handwriting recognition
 Authors: [A_K_Nain](https://twitter.com/A_K_Nain), [Sayak Paul](https://twitter.com/RisingSayak)
 Date created: 2021/08/16
-Last modified: 2023/07/06
+Last modified: 2023/12/08
 Description: Training a handwriting recognition model with variable-length sequences.
 Accelerator: GPU
 """
@@ -44,13 +44,17 @@ head -20 data/words.txt
 ## Imports
 """
 
-from tensorflow.keras.layers import StringLookup
-from tensorflow import keras
+import os
+
+os.environ["KERAS_BACKEND"] = "tensorflow"
+
+import keras
+from keras import layers
 
 import matplotlib.pyplot as plt
 import tensorflow as tf
 import numpy as np
-import os
+
 
 np.random.seed(42)
 tf.random.set_seed(42)
@@ -185,10 +189,10 @@ layer for this purpose.
 AUTOTUNE = tf.data.AUTOTUNE
 
 # Mapping characters to integers.
-char_to_num = StringLookup(vocabulary=list(characters), mask_token=None)
+char_to_num = layers.StringLookup(vocabulary=list(characters), mask_token=None)
 
 # Mapping integers back to original characters.
-num_to_char = StringLookup(
+num_to_char = layers.StringLookup(
     vocabulary=char_to_num.get_vocabulary(), mask_token=None, invert=True
 )
 
@@ -364,10 +368,10 @@ class CTCLayer(keras.layers.Layer):
 def build_model():
     # Inputs to the model
     input_img = keras.Input(shape=(image_width, image_height, 1), name="image")
-    labels = keras.layers.Input(name="label", shape=(None,))
+    labels = layers.Input(name="label", shape=(None,))
 
     # First conv block.
-    x = keras.layers.Conv2D(
+    x = layers.Conv2D(
         32,
         (3, 3),
         activation="relu",
@@ -375,10 +379,10 @@ def build_model():
         padding="same",
         name="Conv1",
     )(input_img)
-    x = keras.layers.MaxPooling2D((2, 2), name="pool1")(x)
+    x = layers.MaxPooling2D((2, 2), name="pool1")(x)
 
     # Second conv block.
-    x = keras.layers.Conv2D(
+    x = layers.Conv2D(
         64,
         (3, 3),
         activation="relu",
@@ -386,28 +390,28 @@ def build_model():
         padding="same",
         name="Conv2",
     )(x)
-    x = keras.layers.MaxPooling2D((2, 2), name="pool2")(x)
+    x = layers.MaxPooling2D((2, 2), name="pool2")(x)
 
     # We have used two max pool with pool size and strides 2.
     # Hence, downsampled feature maps are 4x smaller. The number of
     # filters in the last layer is 64. Reshape accordingly before
     # passing the output to the RNN part of the model.
     new_shape = ((image_width // 4), (image_height // 4) * 64)
-    x = keras.layers.Reshape(target_shape=new_shape, name="reshape")(x)
-    x = keras.layers.Dense(64, activation="relu", name="dense1")(x)
-    x = keras.layers.Dropout(0.2)(x)
+    x = layers.Reshape(target_shape=new_shape, name="reshape")(x)
+    x = layers.Dense(64, activation="relu", name="dense1")(x)
+    x = layers.Dropout(0.2)(x)
 
     # RNNs.
-    x = keras.layers.Bidirectional(
-        keras.layers.LSTM(128, return_sequences=True, dropout=0.25)
+    x = layers.Bidirectional(
+        layers.LSTM(128, return_sequences=True, dropout=0.25)
     )(x)
-    x = keras.layers.Bidirectional(
-        keras.layers.LSTM(64, return_sequences=True, dropout=0.25)
+    x = layers.Bidirectional(
+        layers.LSTM(64, return_sequences=True, dropout=0.25)
     )(x)
 
     # +2 is to account for the two special tokens introduced by the CTC loss.
     # The recommendation comes here: https://git.io/J0eXP.
-    x = keras.layers.Dense(
+    x = layers.Dense(
         len(char_to_num.get_vocabulary()) + 2, activation="softmax", name="dense2"
     )(x)
 
