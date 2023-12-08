@@ -316,6 +316,7 @@ EXAMPLES_MASTER = {
                     "path": "video_classification",
                     "title": "Video Classification with a CNN-RNN Architecture",
                     "subcategory": "Video",
+                    "keras_3": True,
                 },
                 {
                     "path": "conv_lstm",
