@@ -657,6 +657,7 @@ EXAMPLES_MASTER = {
                     "title": "A walk through latent space with Stable Diffusion",
                     "subcategory": "Image generation",
                     "highlight": True,
+                    "keras_3": True,
                 },
                 {
                     "path": "dreambooth",
