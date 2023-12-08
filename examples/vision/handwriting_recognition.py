@@ -55,7 +55,6 @@ import matplotlib.pyplot as plt
 import tensorflow as tf
 import numpy as np
 
-
 np.random.seed(42)
 keras.utils.set_random_seed(42)
 
