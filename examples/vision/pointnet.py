@@ -31,12 +31,13 @@ import os
 import glob
 import trimesh
 import numpy as np
-import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras import layers
+from tensorflow import data as tf_data
+from keras import ops
+import keras
+from keras import layers
 from matplotlib import pyplot as plt
 
-tf.random.set_seed(1234)
+keras.random.SeedGenerator(seed=42)
 
 """
 ## Load dataset
@@ -45,7 +46,7 @@ We use the ModelNet10 model dataset, the smaller 10 class version of the ModelNe
 dataset. First download the data:
 """
 
-DATA_DIR = tf.keras.utils.get_file(
+DATA_DIR = keras.utils.get_file(
     "modelnet.zip",
     "http://3dvision.princeton.edu/projects/2014/3DShapeNets/ModelNet10.zip",
     extract=True,
@@ -137,14 +138,14 @@ augmentation function to jitter and shuffle the train dataset.
 
 def augment(points, label):
     # jitter points
-    points += tf.random.uniform(points.shape, -0.005, 0.005, dtype=tf.float64)
+    points += keras.random.uniform(points.shape, -0.005, 0.005, dtype="float64")
     # shuffle points
-    points = tf.random.shuffle(points)
+    points = keras.random.shuffle(points)
     return points, label
 
 
-train_dataset = tf.data.Dataset.from_tensor_slices((train_points, train_labels))
-test_dataset = tf.data.Dataset.from_tensor_slices((test_points, test_labels))
+train_dataset = tf_data.Dataset.from_tensor_slices((train_points, train_labels))
+test_dataset = tf_data.Dataset.from_tensor_slices((test_points, test_labels))
 
 train_dataset = train_dataset.shuffle(len(train_points)).map(augment).batch(BATCH_SIZE)
 test_dataset = test_dataset.shuffle(len(test_points)).batch(BATCH_SIZE)
@@ -183,13 +184,13 @@ class OrthogonalRegularizer(keras.regularizers.Regularizer):
     def __init__(self, num_features, l2reg=0.001):
         self.num_features = num_features
         self.l2reg = l2reg
-        self.eye = tf.eye(num_features)
+        self.eye = ops.eye(num_features)
 
     def __call__(self, x):
-        x = tf.reshape(x, (-1, self.num_features, self.num_features))
-        xxt = tf.tensordot(x, x, axes=(2, 2))
-        xxt = tf.reshape(xxt, (-1, self.num_features, self.num_features))
-        return tf.reduce_sum(self.l2reg * tf.square(xxt - self.eye))
+        x = ops.reshape(x, (-1, self.num_features, self.num_features))
+        xxt = ops.tensordot(x, x, axes=(2, 2))
+        xxt = ops.reshape(xxt, (-1, self.num_features, self.num_features))
+        return ops.sum(self.l2reg * ops.square(xxt - self.eye))
 
 
 """
@@ -275,7 +276,7 @@ labels = labels[:8, ...]
 
 # run test data through model
 preds = model.predict(points)
-preds = tf.math.argmax(preds, -1)
+preds = ops.argmax(preds, -1)
 
 points = points.numpy()
 
