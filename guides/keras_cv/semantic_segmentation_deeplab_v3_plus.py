@@ -239,16 +239,23 @@ model = keras_cv.models.DeepLabV3Plus.from_preset(
 The model.compile() function sets up the training process for the model. It defines the
 - optimization algorithm - Stochastic Gradient Descent (SGD)
 - the loss function - categorical cross-entropy
-- the evaluation metrics - categorical accuracy
+- the evaluation metrics - Mean IoU and categorical accuracy
 
 Semantic segmentation evaluation metrics:
+
+Mean Intersection over Union (MeanIoU):
+MeanIoU measures how well a semantic segmentation model accurately identifies
+and delineates different objects or regions in an image. It calculates the
+overlap between predicted and actual object boundaries, providing a score
+between 0 and 1, where 1 represents a perfect match.
 
 Categorical Accuracy:
 Categorical Accuracy measures the proportion of correctly classified pixels in
 an image. It gives a simple percentage indicating how accurately the model
 predicts the categories of pixels in the entire image.
 
-In essence, Categorical Accuracy gives a broad overview of overall
+In essence, MeanIoU emphasizes the accuracy of identifying specific object
+boundaries, while Categorical Accuracy gives a broad overview of overall
 pixel-level correctness.
 """
 
@@ -258,6 +265,9 @@ model.compile(
     ),
     loss=keras.losses.CategoricalCrossentropy(from_logits=False),
     metrics=[
+        keras.metrics.MeanIoU(
+            num_classes=NUM_CLASSES, sparse_y_true=False, sparse_y_pred=False
+        ),
         keras.metrics.CategoricalAccuracy(),
     ],
 )

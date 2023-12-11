@@ -90,13 +90,6 @@ model = keras_cv.models.DeepLabV3Plus.from_preset(
 )
 ```
 
-<div class="k-default-codeblock">
-```
-Downloading data from https://storage.googleapis.com/keras-cv/models/deeplab_v3_plus/voc/deeplabv3plus_resenet50_pascal_voc.weights.h5
- 313992688/313992688 ━━━━━━━━━━━━━━━━━━━━ 3s 0us/step
-
-```
-</div>
 Let us visualize the results of this pretrained model
 
 
@@ -120,15 +113,9 @@ keras_cv.visualization.plot_segmentation_mask_gallery(
 )
 ```
 
-<div class="k-default-codeblock">
-```
-Downloading data from https://i.imgur.com/gCNcJJI.jpg
- 1215963/1215963 ━━━━━━━━━━━━━━━━━━━━ 0s 0us/step
 
-```
-</div>
     
-![png](/img/guides/semantic_segmentation_deeplab_v3_plus/semantic_segmentation_deeplab_v3_plus_9_1.png)
+![png](/img/guides/semantic_segmentation_deeplab_v3_plus/semantic_segmentation_deeplab_v3_plus_9_0.png)
     
 
 
@@ -151,13 +138,6 @@ train_ds = load_voc(split="sbd_train")
 eval_ds = load_voc(split="sbd_eval")
 ```
 
-<div class="k-default-codeblock">
-```
-Downloading data from https://www.eecs.berkeley.edu/Research/Projects/CS/vision/grouping/semantic_contours/benchmark.tgz
- 1419539633/1419539633 ━━━━━━━━━━━━━━━━━━━━ 20s 0us/step
-
-```
-</div>
 ---
 ## Preprocess the data
 
@@ -299,16 +279,23 @@ Downloading data from https://storage.googleapis.com/keras-cv/models/resnet50v2/
 The model.compile() function sets up the training process for the model. It defines the
 - optimization algorithm - Stochastic Gradient Descent (SGD)
 - the loss function - categorical cross-entropy
-- the evaluation metrics - categorical accuracy
+- the evaluation metrics - Mean IoU and categorical accuracy
 
 Semantic segmentation evaluation metrics:
+
+Mean Intersection over Union (MeanIoU):
+MeanIoU measures how well a semantic segmentation model accurately identifies
+and delineates different objects or regions in an image. It calculates the
+overlap between predicted and actual object boundaries, providing a score
+between 0 and 1, where 1 represents a perfect match.
 
 Categorical Accuracy:
 Categorical Accuracy measures the proportion of correctly classified pixels in
 an image. It gives a simple percentage indicating how accurately the model
 predicts the categories of pixels in the entire image.
 
-In essence, Categorical Accuracy gives a broad overview of overall
+In essence, MeanIoU emphasizes the accuracy of identifying specific object
+boundaries, while Categorical Accuracy gives a broad overview of overall
 pixel-level correctness.
 
 
@@ -319,6 +306,9 @@ model.compile(
     ),
     loss=keras.losses.CategoricalCrossentropy(from_logits=False),
     metrics=[
+        keras.metrics.MeanIoU(
+            num_classes=NUM_CLASSES, sparse_y_true=False, sparse_y_pred=False
+        ),
         keras.metrics.CategoricalAccuracy(),
     ],
 )
@@ -404,9 +394,14 @@ model.fit(train_ds, validation_data=eval_ds, epochs=EPOCHS)
 
 <div class="k-default-codeblock">
 ```
- 2124/2124 ━━━━━━━━━━━━━━━━━━━━ 414s 171ms/step - categorical_accuracy: 0.7081 - loss: 1.1970 - val_categorical_accuracy: 0.7725 - val_loss: 0.8474
+   2124/Unknown  735s 319ms/step - categorical_accuracy: 0.7026 - loss: 1.2143 - mean_io_u: 0.0706
 
-<keras.src.callbacks.history.History at 0x7f6a9d17c220>
+/usr/lib/python3.10/contextlib.py:153: UserWarning: Your input ran out of data; interrupting training. Make sure that your dataset or generator can generate at least `steps_per_epoch * epochs` batches. You may need to use the `.repeat()` function when building your dataset.
+  self.gen.throw(typ, value, traceback)
+
+ 2124/2124 ━━━━━━━━━━━━━━━━━━━━ 813s 356ms/step - categorical_accuracy: 0.7026 - loss: 1.2143 - mean_io_u: 0.0706 - val_categorical_accuracy: 0.7768 - val_loss: 0.8223 - val_mean_io_u: 0.1593
+
+<keras.src.callbacks.history.History at 0x7f261a534640>
 
 ```
 </div>
