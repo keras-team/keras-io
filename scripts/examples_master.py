@@ -234,6 +234,7 @@ EXAMPLES_MASTER = {
                     "path": "mixup",
                     "title": "MixUp augmentation for image classification",
                     "subcategory": "Data augmentation",
+                    "keras_3": True,
                 },
                 {
                     "path": "randaugment",
