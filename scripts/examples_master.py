@@ -179,6 +179,7 @@ EXAMPLES_MASTER = {
                     "path": "pointnet",
                     "title": "Point cloud classification",
                     "subcategory": "3D",
+                    "keras_3": True,
                 },
                 # OCR
                 {
@@ -417,6 +418,7 @@ EXAMPLES_MASTER = {
                     "path": "text_classification_with_switch_transformer",
                     "title": "Text classification with Switch Transformer",
                     "subcategory": "Text classification",
+                    "keras_3": True,
                 },
                 {
                     "path": "tweet-classification-using-tfdf",
