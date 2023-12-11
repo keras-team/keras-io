@@ -46,8 +46,8 @@ To run this tutorial, you will need to install the following packages:
 """
 
 """shell
-!pip install -q keras-core
-!pip install -q git+https://github.com/keras-team/keras-cv.git
+pip install -q --upgrade keras-cv
+pip install -q --upgrade keras # Upgrade to Keras 3.
 """
 
 """
@@ -55,11 +55,12 @@ After installing `keras-core` and `keras-cv`, set the backend for `keras-core`.
 This guide can be run with any backend (Tensorflow, JAX, PyTorch).
 
 ```
-%env KERAS_BACKEND=tensorflow
+import os
+
+os.environ["KERAS_BACKEND"] = "jax"
 ```
 """
 
-%env KERAS_BACKEND=tensorflow
 import keras
 from keras import ops
 
@@ -140,10 +141,11 @@ batch of images and segmentation masks as input and displays them in a grid.
 
 def preprocess_tfds_inputs(inputs):
     def unpackage_tfds_inputs(tfds_inputs):
-      return {
-          "images": tfds_inputs["image"],
-          "segmentation_masks": tfds_inputs["class_segmentation"],
-      }
+        return {
+            "images": tfds_inputs["image"],
+            "segmentation_masks": tfds_inputs["class_segmentation"],
+        }
+
     outputs = inputs.map(unpackage_tfds_inputs)
     outputs = outputs.map(keras_cv.layers.Resizing(height=512, width=512))
     outputs = outputs.batch(4, drop_remainder=True)
@@ -280,8 +282,10 @@ which is used during training and evaluation of the DeepLabv3+ model.
 
 
 def dict_to_tuple(x):
-    return x["images"], ops.one_hot(
-        ops.cast(ops.squeeze(x["segmentation_masks"], axis=-1), "int32"), 21
+    import tensorflow as tf
+
+    return x["images"], tf.one_hot(
+        tf.cast(tf.squeeze(x["segmentation_masks"], axis=-1), "int32"), 21
     )
 
 
@@ -301,6 +305,8 @@ test_ds = load_voc(split="sbd_eval")
 test_ds = preprocess_tfds_inputs(test_ds)
 
 images, masks = next(iter(train_ds.take(1)))
+images = ops.convert_to_tensor(images)
+masks = ops.convert_to_tensor(masks)
 preds = ops.expand_dims(ops.argmax(model(images), axis=-1), axis=-1)
 masks = ops.expand_dims(ops.argmax(masks, axis=-1), axis=-1)
 
