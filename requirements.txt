@@ -12,8 +12,7 @@ pycocotools
 pydot
 tensorflow
 tensorflow_datasets
-keras-tuner==1.4.5
-keras-cv==0.7.1
+keras-tuner==1.4.6
+keras-cv==0.7.2
 tf_keras==2.15.0
-keras-nlp==0.6.3
-keras==3.0.1
+keras-nlp==0.6.4
