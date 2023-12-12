@@ -218,7 +218,8 @@ def prepare_all_videos(df, root_dir):
             length = min(MAX_SEQ_LENGTH, video_length)
             for j in range(length):
                 temp_frame_features[i, j, :] = feature_extractor.predict(
-                    batch[None, j, :], verbose=0,
+                    batch[None, j, :],
+                    verbose=0,
                 )
             temp_frame_mask[i, :length] = 1  # 1 = not masked, 0 = masked
 

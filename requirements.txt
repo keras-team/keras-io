@@ -10,7 +10,7 @@ pandas
 jupyter
 pycocotools
 pydot
-tensorflow==2.15.0
+tensorflow
 tensorflow_datasets
 keras-tuner==1.4.5
 keras-cv==0.7.1
