@@ -9,7 +9,7 @@ Accelerator: GPU
 """
 ## Introduction
 
-Keras 3 is a deep learning framework
+Keras 3 is a deep learning framework that
 works with TensorFlow, JAX, and PyTorch interchangeably.
 This notebook will walk you through key Keras 3 workflows.
 
