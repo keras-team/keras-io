@@ -248,7 +248,6 @@ class ShiftedPatchTokenization(layers.Layer):
         return (tokens, patches)
 
 
-
 """
 ### Visualize the patches
 """
