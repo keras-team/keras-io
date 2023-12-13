@@ -43,11 +43,6 @@ clarity in more complex models.
 The backend must be selected before keras 3 is first imported.
 """
 
-import os
-
-# backend selection in Keras 3. Supported values are jax, torch and tensorflow
-os.environ["KERAS_BACKEND"] = "tensorflow"
-
 import keras
 
 print("Keras version", keras.version())
