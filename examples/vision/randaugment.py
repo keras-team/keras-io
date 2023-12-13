@@ -1,8 +1,8 @@
 """
 Title: RandAugment for Image Classification for Improved Robustness
-Author: [Sayak Paul](https://twitter.com/RisingSayak)
+Authors: [Sayak Paul](https://twitter.com/RisingSayak)[Sachin Prasad](https://github.com/sachinprasadhs)
 Date created: 2021/03/13
-Last modified: 2021/03/17
+Last modified: 2023/12/12
 Description: RandAugment for training an image classification model with improved robustness.
 Accelerator: GPU
 """
@@ -15,12 +15,6 @@ It is composed of strong augmentation transforms like color jitters, Gaussian bl
 saturations, etc. along with more traditional augmentation transforms such as
 random crops.
 
-RandAugment has two parameters:
-
-* `n` that denotes the number of randomly selected augmentation transforms to apply
-sequentially
-* `m` strength of all the augmentation transforms
-
 These parameters are tuned for a given dataset and a network architecture. The authors of
 RandAugment also provide pseudocode of RandAugment in the original paper (Figure 2).
 
@@ -30,29 +24,29 @@ Recently, it has been a key component of works like
 It has been also central to the
 success of [EfficientNets](https://arxiv.org/abs/1905.11946).
 
-This example requires TensorFlow 2.4 or higher, as well as
-[`imgaug`](https://imgaug.readthedocs.io/),
-which can be installed using the following command:
 
 ```python
-pip install imgaug
+pip install keras-cv
 ```
 """
 
 """
 ## Imports & setup
 """
+import os
+
+os.environ["KERAS_BACKEND"] = "tensorflow"
+import keras
+import keras_cv
+from keras import ops
+from keras import layers
 import tensorflow as tf
 import numpy as np
 import matplotlib.pyplot as plt
-from tensorflow.keras import layers
 import tensorflow_datasets as tfds
-from imgaug import augmenters as iaa
-import imgaug as ia
 
 tfds.disable_progress_bar()
-tf.random.set_seed(42)
-ia.seed(42)
+keras.utils.set_random_seed(42)
 
 """
 ## Load the CIFAR10 dataset
@@ -61,7 +55,7 @@ For this example, we will be using the
 [CIFAR10 dataset](https://www.cs.toronto.edu/~kriz/cifar.html).
 """
 
-(x_train, y_train), (x_test, y_test) = tf.keras.datasets.cifar10.load_data()
+(x_train, y_train), (x_test, y_test) = keras.datasets.cifar10.load_data()
 print(f"Total training examples: {len(x_train)}")
 print(f"Total test examples: {len(x_test)}")
 
@@ -81,32 +75,13 @@ Now, we will initialize a `RandAugment` object from the `imgaug.augmenters` modu
 the parameters suggested by the RandAugment authors.
 """
 
-rand_aug = iaa.RandAugment(n=3, m=7)
-
-
-def augment(images):
-    # Input to `augment()` is a TensorFlow tensor which
-    # is not supported by `imgaug`. This is why we first
-    # convert it to its `numpy` variant.
-    images = tf.cast(images, tf.uint8)
-    return rand_aug(images=images.numpy())
+rand_augment = keras_cv.layers.RandAugment(
+    value_range=(0, 255), augmentations_per_image=3, magnitude=0.8
+)
 
 
 """
 ## Create TensorFlow `Dataset` objects
-
-Because `RandAugment` can only process NumPy arrays, it
-cannot be applied directly as part of the `Dataset` object (which expects TensorFlow
-tensors). To make `RandAugment` part of the dataset, we need to wrap it in a
-[`tf.py_function`](https://www.tensorflow.org/api_docs/python/tf/py_function).
-
-A `tf.py_function` is a TensorFlow operation (which, like any other TensorFlow operation,
-takes TF tensors as arguments and returns TensorFlow tensors) that is capable of running
-arbitrary Python code. Naturally, this Python code can only be executed on CPU (whereas
-the rest of the TensorFlow graph can be accelerated on GPU), which in some  cases can
-cause significant slowdowns -- however, in this case, the `Dataset` pipeline will run
-asynchronously together with the model, and doing preprocessing on CPU will remain
-performant.
 """
 
 train_ds_rand = (
@@ -118,7 +93,7 @@ train_ds_rand = (
         num_parallel_calls=AUTO,
     )
     .map(
-        lambda x, y: (tf.py_function(augment, [x], [tf.float32])[0], y),
+        lambda x, y: (rand_augment(tf.cast(x, tf.uint8)), y),
         num_parallel_calls=AUTO,
     )
     .prefetch(AUTO)
@@ -135,23 +110,11 @@ test_ds = (
 )
 
 """
-**Note about using `tf.py_function`**:
-
-* As our `augment()` function is not a native TensorFlow operation chances are likely
-that it can turn into an expensive operation. This is why it is much better to apply it
-_after_ batching our dataset.
-* `tf.py_function` is [not compatible](https://github.com/tensorflow/tensorflow/issues/38762)
-with TPUs. So, if you have distributed TensorFlow training pipelines that use TPUs
-you cannot use `tf.py_function`. In that case, consider switching to a multi-GPU environment,
-or rewriting the contents of the function in pure TensorFlow.
-"""
-
-"""
 For comparison purposes, let's also define a simple augmentation pipeline consisting of
 random flips, random rotations, and random zoomings.
 """
 
-simple_aug = tf.keras.Sequential(
+simple_aug = keras.Sequential(
     [
         layers.Resizing(IMAGE_SIZE, IMAGE_SIZE),
         layers.RandomFlip("horizontal"),
@@ -208,13 +171,13 @@ deployment purposes.
 
 
 def get_training_model():
-    resnet50_v2 = tf.keras.applications.ResNet50V2(
+    resnet50_v2 = keras.applications.ResNet50V2(
         weights=None,
         include_top=True,
         input_shape=(IMAGE_SIZE, IMAGE_SIZE, 3),
         classes=10,
     )
-    model = tf.keras.Sequential(
+    model = keras.Sequential(
         [
             layers.Input((IMAGE_SIZE, IMAGE_SIZE, 3)),
             layers.Rescaling(scale=1.0 / 127.5, offset=-1),
@@ -250,14 +213,14 @@ network.
 """
 
 initial_model = get_training_model()
-initial_model.save_weights("initial_weights.h5")
+initial_model.save_weights("initial.weights.h5")
 
 """
 ## Train model with RandAugment
 """
 
 rand_aug_model = get_training_model()
-rand_aug_model.load_weights("initial_weights.h5")
+rand_aug_model.load_weights("initial.weights.h5")
 rand_aug_model.compile(
     loss="sparse_categorical_crossentropy", optimizer="adam", metrics=["accuracy"]
 )
@@ -270,7 +233,7 @@ print("Test accuracy: {:.2f}%".format(test_acc * 100))
 """
 
 simple_aug_model = get_training_model()
-simple_aug_model.load_weights("initial_weights.h5")
+simple_aug_model.load_weights("initial.weights.h5")
 simple_aug_model.compile(
     loss="sparse_categorical_crossentropy", optimizer="adam", metrics=["accuracy"]
 )
@@ -310,8 +273,7 @@ print(
 For the purpose of this example, we trained the models for only a single epoch. On the
 CIFAR-10-C dataset, the model with RandAugment can perform better with a higher accuracy
 (for example, 76.64% in one experiment) compared with the model trained with `simple_aug`
-(e.g., 64.80%). RandAugment can also help stabilize the training. You can explore this
-[notebook](https://nbviewer.jupyter.org/github/sayakpaul/Keras-Examples-RandAugment/blob/main/RandAugment.ipynb) to check some of the results.
+(e.g., 64.80%). RandAugment can also help stabilize the training.
 
 In the notebook, you may notice that, at the expense of increased training time with RandAugment,
 we are able to carve out far better performance on the CIFAR-10-C dataset. You can
