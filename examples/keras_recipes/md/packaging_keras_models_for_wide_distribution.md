@@ -44,9 +44,9 @@ The backend must be selected before keras 3 is first imported.
 
 
 ```python
-# backend selection in Keras 3. Supported values are jax, torch and tensorflow
 import os
 
+# backend selection in Keras 3. Supported values are jax, torch and tensorflow
 os.environ["KERAS_BACKEND"] = "tensorflow"
 
 import keras
@@ -101,28 +101,20 @@ EPOCHS = 5
 # Functional Subclassing Model
 
 The model is wrapped in a class so that end users can instantiate it normally by calling
-the constructor `MnistModel()` rather than calling a factory function. The factory
-function `make_functional_model()` exists
-but users don't need to care about it. It is called in the constructor.
+the constructor `MnistModel()` rather than calling a factory function.
 
 
 ```python
 
 class MnistModel(keras.Model):
     def __init__(self, **kwargs):
-        inputs, outputs = self.make_functional_model()
-        # A Keras Functional model is created by calling keras.Model(inputs, outputs)
-        super().__init__(inputs=inputs, outputs=outputs, **kwargs)
-
-    @staticmethod
-    def make_functional_model():
-        # Keras Functional model. This could have used Sequential as well,
-        # Sequential is just syntactic sugar for simple functional models.
+        # Keras Functional model definition. This could have used Sequential as
+        # well. Sequential is just syntactic sugar for simple functional models.
 
         # 1-channel monochrome input
-        input = keras.layers.Input(shape=(None, None, 1), dtype="int8")
+        inputs = keras.layers.Input(shape=(None, None, 1), dtype="uint8")
         # pixel format conversion from uint8 to float32
-        y = keras.layers.Rescaling(1 / 255.0)(input)
+        y = keras.layers.Rescaling(1 / 255.0)(inputs)
 
         # 3 convolutional layers
         y = keras.layers.Conv2D(
@@ -139,10 +131,12 @@ class MnistModel(keras.Model):
         y = keras.layers.GlobalAveragePooling2D()(y)
         y = keras.layers.Dense(48, activation="relu")(y)
         y = keras.layers.Dropout(0.4)(y)
-        output = keras.layers.Dense(
+        outputs = keras.layers.Dense(
             10, activation="softmax", name="classification_head"  # 10 classes
         )(y)
-        return input, output
+
+        # A Keras Functional model is created by calling keras.Model(inputs, outputs)
+        super().__init__(inputs=inputs, outputs=outputs, **kwargs)
 
 ```
 
@@ -169,15 +163,15 @@ history = model.fit(
 <div class="k-default-codeblock">
 ```
 Epoch 1/5
- 234/234 ━━━━━━━━━━━━━━━━━━━━ 8s 27ms/step - loss: 2.1268 - sparse_categorical_accuracy: 0.1960 - val_loss: 1.2316 - val_sparse_categorical_accuracy: 0.6353
+ 234/234 ━━━━━━━━━━━━━━━━━━━━ 10s 35ms/step - loss: 1.8045 - sparse_categorical_accuracy: 0.3418 - val_loss: 0.4754 - val_sparse_categorical_accuracy: 0.8627
 Epoch 2/5
- 234/234 ━━━━━━━━━━━━━━━━━━━━ 6s 25ms/step - loss: 1.2627 - sparse_categorical_accuracy: 0.5526 - val_loss: 0.7594 - val_sparse_categorical_accuracy: 0.7746
+ 234/234 ━━━━━━━━━━━━━━━━━━━━ 7s 31ms/step - loss: 0.6120 - sparse_categorical_accuracy: 0.8104 - val_loss: 0.2469 - val_sparse_categorical_accuracy: 0.9282
 Epoch 3/5
- 234/234 ━━━━━━━━━━━━━━━━━━━━ 6s 25ms/step - loss: 0.9504 - sparse_categorical_accuracy: 0.6759 - val_loss: 0.6268 - val_sparse_categorical_accuracy: 0.8054
+ 234/234 ━━━━━━━━━━━━━━━━━━━━ 8s 34ms/step - loss: 0.4136 - sparse_categorical_accuracy: 0.8773 - val_loss: 0.1832 - val_sparse_categorical_accuracy: 0.9464
 Epoch 4/5
- 234/234 ━━━━━━━━━━━━━━━━━━━━ 6s 25ms/step - loss: 0.8255 - sparse_categorical_accuracy: 0.7250 - val_loss: 0.5817 - val_sparse_categorical_accuracy: 0.8162
+ 234/234 ━━━━━━━━━━━━━━━━━━━━ 8s 35ms/step - loss: 0.3264 - sparse_categorical_accuracy: 0.9047 - val_loss: 0.1828 - val_sparse_categorical_accuracy: 0.9471
 Epoch 5/5
- 234/234 ━━━━━━━━━━━━━━━━━━━━ 6s 26ms/step - loss: 0.7410 - sparse_categorical_accuracy: 0.7568 - val_loss: 0.4887 - val_sparse_categorical_accuracy: 0.8454
+ 234/234 ━━━━━━━━━━━━━━━━━━━━ 8s 32ms/step - loss: 0.2889 - sparse_categorical_accuracy: 0.9161 - val_loss: 0.1399 - val_sparse_categorical_accuracy: 0.9581
 
 ```
 </div>
@@ -410,15 +404,15 @@ history = binary_model.fit(
 <div class="k-default-codeblock">
 ```
 Epoch 1/5
- 234/234 ━━━━━━━━━━━━━━━━━━━━ 7s 27ms/step - binary_accuracy: 0.8860 - loss: 0.3981 - val_binary_accuracy: 0.9020 - val_loss: 0.2744
+ 234/234 ━━━━━━━━━━━━━━━━━━━━ 9s 34ms/step - binary_accuracy: 0.8906 - loss: 0.3504 - val_binary_accuracy: 0.9424 - val_loss: 0.1687
 Epoch 2/5
- 234/234 ━━━━━━━━━━━━━━━━━━━━ 6s 25ms/step - binary_accuracy: 0.9002 - loss: 0.2745 - val_binary_accuracy: 0.9019 - val_loss: 0.2087
+ 234/234 ━━━━━━━━━━━━━━━━━━━━ 8s 32ms/step - binary_accuracy: 0.9507 - loss: 0.1407 - val_binary_accuracy: 0.9817 - val_loss: 0.0603
 Epoch 3/5
- 234/234 ━━━━━━━━━━━━━━━━━━━━ 6s 25ms/step - binary_accuracy: 0.9144 - loss: 0.2078 - val_binary_accuracy: 0.9293 - val_loss: 0.2038
+ 234/234 ━━━━━━━━━━━━━━━━━━━━ 8s 34ms/step - binary_accuracy: 0.9816 - loss: 0.0601 - val_binary_accuracy: 0.9930 - val_loss: 0.0270
 Epoch 4/5
- 234/234 ━━━━━━━━━━━━━━━━━━━━ 6s 25ms/step - binary_accuracy: 0.9337 - loss: 0.1881 - val_binary_accuracy: 0.9433 - val_loss: 0.1656
+ 234/234 ━━━━━━━━━━━━━━━━━━━━ 8s 33ms/step - binary_accuracy: 0.9920 - loss: 0.0283 - val_binary_accuracy: 0.9934 - val_loss: 0.0199
 Epoch 5/5
- 234/234 ━━━━━━━━━━━━━━━━━━━━ 6s 26ms/step - binary_accuracy: 0.9495 - loss: 0.1524 - val_binary_accuracy: 0.9608 - val_loss: 0.1142
+ 234/234 ━━━━━━━━━━━━━━━━━━━━ 7s 31ms/step - binary_accuracy: 0.9934 - loss: 0.0221 - val_binary_accuracy: 0.9951 - val_loss: 0.0142
 
 ```
 </div>
@@ -432,25 +426,19 @@ improve readability and usability. This is straightforward to do with a function
 
 class MnistDictModel(keras.Model):
     def __init__(self, **kwargs):
-        inputs, outputs = self.make_functional_model()
-        # A Keras Functional model is created by calling keras.Model(inputs, outputs)
-        super().__init__(inputs=inputs, outputs=outputs, **kwargs)
-
-    @staticmethod
-    def make_functional_model():
         #
         # The input is a dictionary
         #
-        input = {
+        inputs = {
             "image": keras.layers.Input(
                 shape=(None, None, 1),  # 1-channel monochrome
-                dtype="int8",
+                dtype="uint8",
                 name="image",
             )
         }
 
         # pixel format conversion from uint8 to float32
-        y = keras.layers.Rescaling(1 / 255.0)(input["image"])
+        y = keras.layers.Rescaling(1 / 255.0)(inputs["image"])
 
         # 3 conv layers
         y = keras.layers.Conv2D(
@@ -467,11 +455,12 @@ class MnistDictModel(keras.Model):
         y = keras.layers.GlobalAveragePooling2D()(y)
         y = keras.layers.Dense(48, activation="relu")(y)
         y = keras.layers.Dropout(0.4)(y)
-        output = keras.layers.Dense(
+        outputs = keras.layers.Dense(
             10, activation="softmax", name="classification_head"  # 10 classes
         )(y)
 
-        return input, output
+        # A Keras Functional model is created by calling keras.Model(inputs, outputs)
+        super().__init__(inputs=inputs, outputs=outputs, **kwargs)
 
 ```
 
@@ -502,15 +491,15 @@ history = model.fit(
 <div class="k-default-codeblock">
 ```
 Epoch 1/5
- 234/234 ━━━━━━━━━━━━━━━━━━━━ 7s 27ms/step - loss: 2.1208 - sparse_categorical_accuracy: 0.2111 - val_loss: 1.3459 - val_sparse_categorical_accuracy: 0.5110
+ 234/234 ━━━━━━━━━━━━━━━━━━━━ 8s 32ms/step - loss: 1.8456 - sparse_categorical_accuracy: 0.3172 - val_loss: 0.3935 - val_sparse_categorical_accuracy: 0.9028
 Epoch 2/5
- 234/234 ━━━━━━━━━━━━━━━━━━━━ 6s 25ms/step - loss: 1.3405 - sparse_categorical_accuracy: 0.5147 - val_loss: 0.8680 - val_sparse_categorical_accuracy: 0.7303
+ 234/234 ━━━━━━━━━━━━━━━━━━━━ 7s 30ms/step - loss: 0.5859 - sparse_categorical_accuracy: 0.8186 - val_loss: 0.2375 - val_sparse_categorical_accuracy: 0.9345
 Epoch 3/5
- 234/234 ━━━━━━━━━━━━━━━━━━━━ 6s 25ms/step - loss: 1.0184 - sparse_categorical_accuracy: 0.6462 - val_loss: 0.6867 - val_sparse_categorical_accuracy: 0.7928
+ 234/234 ━━━━━━━━━━━━━━━━━━━━ 7s 30ms/step - loss: 0.4071 - sparse_categorical_accuracy: 0.8769 - val_loss: 0.1724 - val_sparse_categorical_accuracy: 0.9497
 Epoch 4/5
- 234/234 ━━━━━━━━━━━━━━━━━━━━ 6s 25ms/step - loss: 0.8784 - sparse_categorical_accuracy: 0.7036 - val_loss: 0.6201 - val_sparse_categorical_accuracy: 0.8091
+ 234/234 ━━━━━━━━━━━━━━━━━━━━ 7s 30ms/step - loss: 0.3294 - sparse_categorical_accuracy: 0.9027 - val_loss: 0.1460 - val_sparse_categorical_accuracy: 0.9566
 Epoch 5/5
- 234/234 ━━━━━━━━━━━━━━━━━━━━ 6s 25ms/step - loss: 0.8009 - sparse_categorical_accuracy: 0.7342 - val_loss: 0.5659 - val_sparse_categorical_accuracy: 0.8110
+ 234/234 ━━━━━━━━━━━━━━━━━━━━ 7s 31ms/step - loss: 0.2807 - sparse_categorical_accuracy: 0.9162 - val_loss: 0.1195 - val_sparse_categorical_accuracy: 0.9613
 
 ```
 </div>

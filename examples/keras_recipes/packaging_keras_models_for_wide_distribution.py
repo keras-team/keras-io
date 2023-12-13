@@ -6,6 +6,7 @@ Last modified: 2023-12-13
 Description: When sharing your deep learning models, package them using the Functional Subclassing pattern.
 Accelerator: GPU
 """
+
 """
 #Introduction
 
@@ -42,9 +43,9 @@ clarity in more complex models.
 The backend must be selected before keras 3 is first imported.
 """
 
-# backend selection in Keras 3. Supported values are jax, torch and tensorflow
 import os
 
+# backend selection in Keras 3. Supported values are jax, torch and tensorflow
 os.environ["KERAS_BACKEND"] = "tensorflow"
 
 import keras
@@ -91,27 +92,19 @@ EPOCHS = 5
 # Functional Subclassing Model
 
 The model is wrapped in a class so that end users can instantiate it normally by calling
-the constructor `MnistModel()` rather than calling a factory function. The factory
-function `make_functional_model()` exists
-but users don't need to care about it. It is called in the constructor.
+the constructor `MnistModel()` rather than calling a factory function.
 """
 
 
 class MnistModel(keras.Model):
     def __init__(self, **kwargs):
-        inputs, outputs = self.make_functional_model()
-        # A Keras Functional model is created by calling keras.Model(inputs, outputs)
-        super().__init__(inputs=inputs, outputs=outputs, **kwargs)
-
-    @staticmethod
-    def make_functional_model():
-        # Keras Functional model. This could have used Sequential as well,
-        # Sequential is just syntactic sugar for simple functional models.
+        # Keras Functional model definition. This could have used Sequential as
+        # well. Sequential is just syntactic sugar for simple functional models.
 
         # 1-channel monochrome input
-        input = keras.layers.Input(shape=(None, None, 1), dtype="int8")
+        inputs = keras.layers.Input(shape=(None, None, 1), dtype="uint8")
         # pixel format conversion from uint8 to float32
-        y = keras.layers.Rescaling(1 / 255.0)(input)
+        y = keras.layers.Rescaling(1 / 255.0)(inputs)
 
         # 3 convolutional layers
         y = keras.layers.Conv2D(
@@ -128,10 +121,12 @@ class MnistModel(keras.Model):
         y = keras.layers.GlobalAveragePooling2D()(y)
         y = keras.layers.Dense(48, activation="relu")(y)
         y = keras.layers.Dropout(0.4)(y)
-        output = keras.layers.Dense(
+        outputs = keras.layers.Dense(
             10, activation="softmax", name="classification_head"  # 10 classes
         )(y)
-        return input, output
+
+        # A Keras Functional model is created by calling keras.Model(inputs, outputs)
+        super().__init__(inputs=inputs, outputs=outputs, **kwargs)
 
 
 """
@@ -264,25 +259,19 @@ improve readability and usability. This is straightforward to do with a function
 
 class MnistDictModel(keras.Model):
     def __init__(self, **kwargs):
-        inputs, outputs = self.make_functional_model()
-        # A Keras Functional model is created by calling keras.Model(inputs, outputs)
-        super().__init__(inputs=inputs, outputs=outputs, **kwargs)
-
-    @staticmethod
-    def make_functional_model():
         #
         # The input is a dictionary
         #
-        input = {
+        inputs = {
             "image": keras.layers.Input(
                 shape=(None, None, 1),  # 1-channel monochrome
-                dtype="int8",
+                dtype="uint8",
                 name="image",
             )
         }
 
         # pixel format conversion from uint8 to float32
-        y = keras.layers.Rescaling(1 / 255.0)(input["image"])
+        y = keras.layers.Rescaling(1 / 255.0)(inputs["image"])
 
         # 3 conv layers
         y = keras.layers.Conv2D(
@@ -299,11 +288,12 @@ class MnistDictModel(keras.Model):
         y = keras.layers.GlobalAveragePooling2D()(y)
         y = keras.layers.Dense(48, activation="relu")(y)
         y = keras.layers.Dropout(0.4)(y)
-        output = keras.layers.Dense(
+        outputs = keras.layers.Dense(
             10, activation="softmax", name="classification_head"  # 10 classes
         )(y)
 
-        return input, output
+        # A Keras Functional model is created by calling keras.Model(inputs, outputs)
+        super().__init__(inputs=inputs, outputs=outputs, **kwargs)
 
 
 """
