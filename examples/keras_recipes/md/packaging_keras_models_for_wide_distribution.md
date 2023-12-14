@@ -3,14 +3,14 @@
 **Author:** Martin Görner<br>
 **Date created:** 2023-12-13<br>
 **Last modified:** 2023-12-13<br>
-**Description:** When sharing your deep learning models, package them using the Functional Subclassing pattern.
+**Description:** When sharing your deep learning models, package them using the Functional sSubclassing pattern.
 
 
 <img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/keras_recipes/ipynb/packaging_keras_models_for_wide_distribution.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/keras_recipes/packaging_keras_models_for_wide_distribution.py)
 
 
 
-#Introduction
+##Introduction
 
 Keras is the ideal framework for sharing your cutting-edge deep learning models, in a
 library of pre-trained (or not) models. Millions of ML engineers are fluent in the
@@ -38,13 +38,12 @@ models](#unconstrained-inputs) for the widest range of supported inputs, for exa
 images of various sizes, and [using dictionary inputs](#model-with-dictionary-inputs) for
 clarity in more complex models.
 
-# Initialization
-
-The backend must be selected before keras 3 is first imported.
+##Setup
 
 
 ```python
 import keras
+import tensorflow as tf  # only for tf.data
 
 print("Keras version", keras.version())
 print("Keras is running on", keras.config.backend())
@@ -57,14 +56,13 @@ Keras is running on tensorflow
 
 ```
 </div>
-# Dataset
+---
+## Dataset
 
 Let's load an MNIST dataset so that we have something to train with.
 
 
 ```python
-import tensorflow as tf  # only for tf.data
-
 # tf.data is a great API for putting together a data stream.
 # It works wether you use the TensorFlow, PyTorch or Jax backend,
 # as long as you use it in the data stream only and not inside of a model.
@@ -93,7 +91,8 @@ STEPS_PER_EPOCH = len(train_labels) // BATCH_SIZE
 EPOCHS = 5
 ```
 
-# Functional Subclassing Model
+---
+## Functional Subclassing Model
 
 The model is wrapped in a class so that end users can instantiate it normally by calling
 the constructor `MnistModel()` rather than calling a factory function.
@@ -158,19 +157,20 @@ history = model.fit(
 <div class="k-default-codeblock">
 ```
 Epoch 1/5
- 234/234 ━━━━━━━━━━━━━━━━━━━━ 9s 33ms/step - loss: 1.8522 - sparse_categorical_accuracy: 0.3283 - val_loss: 0.5395 - val_sparse_categorical_accuracy: 0.8729
+ 234/234 ━━━━━━━━━━━━━━━━━━━━ 10s 35ms/step - loss: 1.8018 - sparse_categorical_accuracy: 0.3499 - val_loss: 0.3810 - val_sparse_categorical_accuracy: 0.9016
 Epoch 2/5
- 234/234 ━━━━━━━━━━━━━━━━━━━━ 8s 32ms/step - loss: 0.6604 - sparse_categorical_accuracy: 0.7975 - val_loss: 0.2808 - val_sparse_categorical_accuracy: 0.9157
+ 234/234 ━━━━━━━━━━━━━━━━━━━━ 7s 31ms/step - loss: 0.5717 - sparse_categorical_accuracy: 0.8261 - val_loss: 0.3042 - val_sparse_categorical_accuracy: 0.9059
 Epoch 3/5
- 234/234 ━━━━━━━━━━━━━━━━━━━━ 7s 31ms/step - loss: 0.4202 - sparse_categorical_accuracy: 0.8757 - val_loss: 0.2111 - val_sparse_categorical_accuracy: 0.9426
+ 234/234 ━━━━━━━━━━━━━━━━━━━━ 8s 33ms/step - loss: 0.4153 - sparse_categorical_accuracy: 0.8776 - val_loss: 0.2004 - val_sparse_categorical_accuracy: 0.9382
 Epoch 4/5
- 234/234 ━━━━━━━━━━━━━━━━━━━━ 7s 31ms/step - loss: 0.3536 - sparse_categorical_accuracy: 0.8935 - val_loss: 0.1891 - val_sparse_categorical_accuracy: 0.9426
+ 234/234 ━━━━━━━━━━━━━━━━━━━━ 7s 31ms/step - loss: 0.3365 - sparse_categorical_accuracy: 0.9015 - val_loss: 0.1894 - val_sparse_categorical_accuracy: 0.9422
 Epoch 5/5
- 234/234 ━━━━━━━━━━━━━━━━━━━━ 7s 31ms/step - loss: 0.3096 - sparse_categorical_accuracy: 0.9100 - val_loss: 0.1763 - val_sparse_categorical_accuracy: 0.9441
+ 234/234 ━━━━━━━━━━━━━━━━━━━━ 7s 30ms/step - loss: 0.3074 - sparse_categorical_accuracy: 0.9087 - val_loss: 0.1948 - val_sparse_categorical_accuracy: 0.9398
 
 ```
 </div>
-# Unconstrained inputs
+---
+## Unconstrained inputs
 
 Notice, in the model definition above, that the input is specified with undefined
 dimensions: `Input(shape=(None, None, 1)`
@@ -187,7 +187,8 @@ parameters:<br/> `model = MnistModel()`
 sizes, you will have to ask your users to specify the size in the constructor:<br/>
 `model = ModelXYZ(input_size=...)`
 
-# Model introspection
+---
+## Model introspection
 
 Keras maintains a programmatically accessible graph of layers for every model. It can be
 used for introspection and is accessed through the `model.layers` or `layer.layers`
@@ -286,7 +287,8 @@ classification_head
 
 ```
 </div>
-# Model surgery
+---
+## Model surgery
 
 End users might want to instantiate the model from your library but modify it before use.
 Functional models have a programmatically accessible graph of layers. Edits are possible
@@ -399,19 +401,20 @@ history = binary_model.fit(
 <div class="k-default-codeblock">
 ```
 Epoch 1/5
- 234/234 ━━━━━━━━━━━━━━━━━━━━ 9s 33ms/step - binary_accuracy: 0.8802 - loss: 0.3647 - val_binary_accuracy: 0.9248 - val_loss: 0.1865
+ 234/234 ━━━━━━━━━━━━━━━━━━━━ 9s 34ms/step - binary_accuracy: 0.9020 - loss: 0.3422 - val_binary_accuracy: 0.9585 - val_loss: 0.1060
 Epoch 2/5
- 234/234 ━━━━━━━━━━━━━━━━━━━━ 7s 31ms/step - binary_accuracy: 0.9400 - loss: 0.1639 - val_binary_accuracy: 0.9799 - val_loss: 0.0700
+ 234/234 ━━━━━━━━━━━━━━━━━━━━ 8s 32ms/step - binary_accuracy: 0.9637 - loss: 0.1012 - val_binary_accuracy: 0.9804 - val_loss: 0.0546
 Epoch 3/5
- 234/234 ━━━━━━━━━━━━━━━━━━━━ 7s 30ms/step - binary_accuracy: 0.9786 - loss: 0.0726 - val_binary_accuracy: 0.9896 - val_loss: 0.0353
+ 234/234 ━━━━━━━━━━━━━━━━━━━━ 8s 33ms/step - binary_accuracy: 0.9820 - loss: 0.0569 - val_binary_accuracy: 0.9861 - val_loss: 0.0416
 Epoch 4/5
- 234/234 ━━━━━━━━━━━━━━━━━━━━ 7s 32ms/step - binary_accuracy: 0.9889 - loss: 0.0371 - val_binary_accuracy: 0.9932 - val_loss: 0.0213
+ 234/234 ━━━━━━━━━━━━━━━━━━━━ 8s 32ms/step - binary_accuracy: 0.9898 - loss: 0.0347 - val_binary_accuracy: 0.9920 - val_loss: 0.0235
 Epoch 5/5
- 234/234 ━━━━━━━━━━━━━━━━━━━━ 7s 31ms/step - binary_accuracy: 0.9933 - loss: 0.0233 - val_binary_accuracy: 0.9956 - val_loss: 0.0138
+ 234/234 ━━━━━━━━━━━━━━━━━━━━ 8s 33ms/step - binary_accuracy: 0.9937 - loss: 0.0209 - val_binary_accuracy: 0.9949 - val_loss: 0.0158
 
 ```
 </div>
-# Model with dictionary inputs
+---
+## Model with dictionary inputs
 
 In more complex models, with multiple inputs, structuring the inputs as a dictionary can
 improve readability and usability. This is straightforward to do with a functional model:
@@ -486,15 +489,15 @@ history = model.fit(
 <div class="k-default-codeblock">
 ```
 Epoch 1/5
- 234/234 ━━━━━━━━━━━━━━━━━━━━ 8s 32ms/step - loss: 1.7936 - sparse_categorical_accuracy: 0.3563 - val_loss: 0.4938 - val_sparse_categorical_accuracy: 0.8678
+ 234/234 ━━━━━━━━━━━━━━━━━━━━ 9s 33ms/step - loss: 1.8601 - sparse_categorical_accuracy: 0.3185 - val_loss: 0.5399 - val_sparse_categorical_accuracy: 0.8645
 Epoch 2/5
- 234/234 ━━━━━━━━━━━━━━━━━━━━ 7s 31ms/step - loss: 0.6087 - sparse_categorical_accuracy: 0.8138 - val_loss: 0.2745 - val_sparse_categorical_accuracy: 0.9208
+ 234/234 ━━━━━━━━━━━━━━━━━━━━ 8s 32ms/step - loss: 0.7109 - sparse_categorical_accuracy: 0.7697 - val_loss: 0.2883 - val_sparse_categorical_accuracy: 0.9158
 Epoch 3/5
- 234/234 ━━━━━━━━━━━━━━━━━━━━ 7s 30ms/step - loss: 0.4167 - sparse_categorical_accuracy: 0.8787 - val_loss: 0.1908 - val_sparse_categorical_accuracy: 0.9460
+ 234/234 ━━━━━━━━━━━━━━━━━━━━ 8s 32ms/step - loss: 0.5062 - sparse_categorical_accuracy: 0.8438 - val_loss: 0.2445 - val_sparse_categorical_accuracy: 0.9282
 Epoch 4/5
- 234/234 ━━━━━━━━━━━━━━━━━━━━ 7s 30ms/step - loss: 0.3254 - sparse_categorical_accuracy: 0.9064 - val_loss: 0.1659 - val_sparse_categorical_accuracy: 0.9480
+ 234/234 ━━━━━━━━━━━━━━━━━━━━ 7s 32ms/step - loss: 0.4119 - sparse_categorical_accuracy: 0.8752 - val_loss: 0.2056 - val_sparse_categorical_accuracy: 0.9384
 Epoch 5/5
- 234/234 ━━━━━━━━━━━━━━━━━━━━ 7s 30ms/step - loss: 0.2793 - sparse_categorical_accuracy: 0.9213 - val_loss: 0.1502 - val_sparse_categorical_accuracy: 0.9559
+ 234/234 ━━━━━━━━━━━━━━━━━━━━ 8s 33ms/step - loss: 0.3583 - sparse_categorical_accuracy: 0.8946 - val_loss: 0.1619 - val_sparse_categorical_accuracy: 0.9497
 
 ```
 </div>

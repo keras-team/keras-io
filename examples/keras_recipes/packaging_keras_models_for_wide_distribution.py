@@ -3,12 +3,12 @@ Title: Packaging Keras models for wide distribution using Functional Subclassing
 Author: Martin Görner
 Date created: 2023-12-13
 Last modified: 2023-12-13
-Description: When sharing your deep learning models, package them using the Functional Subclassing pattern.
+Description: When sharing your deep learning models, package them using the Functional sSubclassing pattern.
 Accelerator: GPU
 """
 
 """
-#Introduction
+##Introduction
 
 Keras is the ideal framework for sharing your cutting-edge deep learning models, in a
 library of pre-trained (or not) models. Millions of ML engineers are fluent in the
@@ -38,23 +38,20 @@ clarity in more complex models.
 """
 
 """
-# Initialization
-
-The backend must be selected before keras 3 is first imported.
+##Setup
 """
 
 import keras
+import tensorflow as tf  # only for tf.data
 
 print("Keras version", keras.version())
 print("Keras is running on", keras.config.backend())
 
 """
-# Dataset
+## Dataset
 
 Let's load an MNIST dataset so that we have something to train with.
 """
-
-import tensorflow as tf  # only for tf.data
 
 # tf.data is a great API for putting together a data stream.
 # It works wether you use the TensorFlow, PyTorch or Jax backend,
@@ -84,7 +81,7 @@ STEPS_PER_EPOCH = len(train_labels) // BATCH_SIZE
 EPOCHS = 5
 
 """
-# Functional Subclassing Model
+## Functional Subclassing Model
 
 The model is wrapped in a class so that end users can instantiate it normally by calling
 the constructor `MnistModel()` rather than calling a factory function.
@@ -144,7 +141,7 @@ history = model.fit(
 )
 
 """
-# Unconstrained inputs
+## Unconstrained inputs
 
 Notice, in the model definition above, that the input is specified with undefined
 dimensions: `Input(shape=(None, None, 1)`
@@ -163,7 +160,7 @@ sizes, you will have to ask your users to specify the size in the constructor:<b
 """
 
 """
-# Model introspection
+## Model introspection
 
 Keras maintains a programmatically accessible graph of layers for every model. It can be
 used for introspection and is accessed through the `model.layers` or `layer.layers`
@@ -189,7 +186,7 @@ print("\nWalking model layers:\n")
 walk_layers(model)
 
 """
-# Model surgery
+## Model surgery
 
 End users might want to instantiate the model from your library but modify it before use.
 Functional models have a programmatically accessible graph of layers. Edits are possible
@@ -245,7 +242,7 @@ history = binary_model.fit(
 )
 
 """
-# Model with dictionary inputs
+## Model with dictionary inputs
 
 In more complex models, with multiple inputs, structuring the inputs as a dictionary can
 improve readability and usability. This is straightforward to do with a functional model:
