@@ -232,8 +232,8 @@ class ShiftedPatchTokenization(layers.Layer):
         patches = ops.image.extract_patches(
             images,
             (self.patch_size, self.patch_size),
-            strides = (self.patch_size, self.patch_size),
-            dilation_rate=(1,1),
+            strides=(self.patch_size, self.patch_size),
+            dilation_rate=(1, 1),
             padding="VALID",
         )
         flat_patches = self.flatten_patches(patches)
@@ -255,8 +255,8 @@ class ShiftedPatchTokenization(layers.Layer):
 # and resize the image
 image = x_train[np.random.choice(range(x_train.shape[0]))]
 resized_image = ops.image.resize(
-    ops.convert_to_tensor([image],dtype="float32"),
-    size=(IMAGE_SIZE, IMAGE_SIZE)
+    ops.convert_to_tensor([image], dtype="float32"),
+    size=(IMAGE_SIZE, IMAGE_SIZE),
 )
 
 # Vanilla patch maker: This takes an image and divides into
