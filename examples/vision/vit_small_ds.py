@@ -39,13 +39,9 @@ example is inspired from
 """
 ## Setup
 """
-import os
-
-os.environ["KERAS_BACKEND"] = "tensorflow"
 
 import math
 import numpy as np
-import tensorflow as tf
 import keras
 import matplotlib.pyplot as plt
 from keras import layers
@@ -54,11 +50,6 @@ from keras import ops
 # Setting seed for reproducibiltiy
 SEED = 42
 keras.utils.set_random_seed(SEED)
-
-# TF imports required for this tutorial
-from tensorflow import image as tf_image
-from tensorflow import range as tf_range
-from tensorflow import constant as tf_constant
 
 
 """
@@ -199,13 +190,15 @@ class ShiftedPatchTokenization(layers.Layer):
             shift_width = self.half_patch
 
         # Crop the shifted images and pad them
-        crop = tf_image.crop_to_bounding_box(
-            images,
-            offset_height=crop_height,
-            offset_width=crop_width,
-            target_height=self.image_size - self.half_patch,
-            target_width=self.image_size - self.half_patch,
-        )
+        target_height = self.image_size - self.half_patch
+        target_width = self.image_size - self.half_patch
+        crop = images[
+            :,
+            crop_height : crop_height + target_height,
+            crop_width : crop_width + target_width,
+            :,
+        ]
+
         shift_pad = ops.image.pad_images(
             crop,
             top_padding=shift_height,
@@ -311,7 +304,7 @@ class PatchEncoder(layers.Layer):
         self.position_embedding = layers.Embedding(
             input_dim=num_patches, output_dim=projection_dim
         )
-        self.positions = tf_range(start=0, limit=self.num_patches, delta=1)
+        self.positions = ops.arange(start=0, stop=self.num_patches, step=1)
 
     def call(self, encoded_patches):
         encoded_positions = self.position_embedding(self.positions)
@@ -460,7 +453,7 @@ class WarmUpCosine(keras.optimizers.schedules.LearningRateSchedule):
         self.total_steps = total_steps
         self.warmup_learning_rate = warmup_learning_rate
         self.warmup_steps = warmup_steps
-        self.pi = tf_constant(np.pi)
+        self.pi = ops.array(np.pi)
 
     def __call__(self, step):
         if self.total_steps < self.warmup_steps:
