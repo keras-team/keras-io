@@ -1,14 +1,13 @@
 """
 Title: Packaging Keras models for wide distribution using Functional Subclassing
 Author: Martin Görner
-Date created: 2023-12-13
-Last modified: 2023-12-13
-Description: When sharing your deep learning models, package them using the Functional sSubclassing pattern.
+Date created: 2023-12-15
+Last modified: 2023-12-15
+Description: When sharing your deep learning models, package them using the Functional Subclassing pattern.
 Accelerator: GPU
 """
-
 """
-##Introduction
+## Introduction
 
 Keras is the ideal framework for sharing your cutting-edge deep learning models, in a
 library of pre-trained (or not) models. Millions of ML engineers are fluent in the
@@ -38,7 +37,7 @@ clarity in more complex models.
 """
 
 """
-##Setup
+## Setup
 """
 
 import keras
