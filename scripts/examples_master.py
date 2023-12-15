@@ -240,6 +240,7 @@ EXAMPLES_MASTER = {
                     "path": "randaugment",
                     "title": "RandAugment for Image Classification for Improved Robustness",
                     "subcategory": "Data augmentation",
+                    "keras_3": True,
                 },
                 # Image & Text
                 {
