@@ -34,7 +34,6 @@ This example implements the ideas of the paper. A large part of this
 example is inspired from
 [Image classification with Vision Transformer](https://keras.io/examples/vision/image_classification_with_vision_transformer/).
 
-_Note_: This example requires TensorFlow 2.6 or higher
 
 """
 """
@@ -207,10 +206,10 @@ class ShiftedPatchTokenization(layers.Layer):
             target_height=self.image_size - self.half_patch,
             target_width=self.image_size - self.half_patch,
         )
-        shift_pad = tf_image.pad_to_bounding_box(
+        shift_pad = ops.image.pad_images(
             crop,
-            offset_height=shift_height,
-            offset_width=shift_width,
+            top_padding=shift_height,
+            left_padding=shift_width,
             target_height=self.image_size,
             target_width=self.image_size,
         )
@@ -230,11 +229,11 @@ class ShiftedPatchTokenization(layers.Layer):
                 axis=-1,
             )
         # Patchify the images and flatten it
-        patches = tf_image.extract_patches(
-            images=images,
-            sizes=[1, self.patch_size, self.patch_size, 1],
-            strides=[1, self.patch_size, self.patch_size, 1],
-            rates=[1, 1, 1, 1],
+        patches = ops.image.extract_patches(
+            images,
+            (self.patch_size, self.patch_size),
+            strides = (self.patch_size, self.patch_size),
+            dilation_rate=(1,1),
             padding="VALID",
         )
         flat_patches = self.flatten_patches(patches)
@@ -255,8 +254,9 @@ class ShiftedPatchTokenization(layers.Layer):
 # Get a random image from the training dataset
 # and resize the image
 image = x_train[np.random.choice(range(x_train.shape[0]))]
-resized_image = tf_image.resize(
-    ops.convert_to_tensor([image]), size=(IMAGE_SIZE, IMAGE_SIZE)
+resized_image = ops.image.resize(
+    ops.convert_to_tensor([image],dtype="float32"),
+    size=(IMAGE_SIZE, IMAGE_SIZE)
 )
 
 # Vanilla patch maker: This takes an image and divides into
