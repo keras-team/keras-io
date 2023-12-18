@@ -2,7 +2,7 @@
 
 **Author:** [Sayak Paul](https://twitter.com/RisingSayak)<br>
 **Date created:** 2021/04/30<br>
-**Last modified:** 2021/05/13<br>
+**Last modified:** 2023/12/18<br>
 **Description:** How to optimally learn representations of images for a given resolution.
 
 
@@ -13,8 +13,8 @@
 It is a common belief that if we constrain vision models to perceive things as humans do,
 their performance can be improved. For example, in [this work](https://arxiv.org/abs/1811.12231),
 Geirhos et al. showed that the vision models pre-trained on the ImageNet-1k dataset are
-biased toward texture whereas human beings mostly use the shape descriptor to develop a
-common perception. But does this belief always apply especially when it comes to improving
+biased towards texture, whereas human beings mostly use the shape descriptor to develop a
+common perception. But does this belief always apply, especially when it comes to improving
 the performance of vision models?
 
 It turns out it may not always be the case. When training vision models, it is common to
@@ -36,15 +36,17 @@ resizing module as proposed in the paper and demonstrate that on the
 [Cats and Dogs dataset](https://www.microsoft.com/en-us/download/details.aspx?id=54765)
 using the [DenseNet-121](https://arxiv.org/abs/1608.06993) architecture.
 
-This example requires TensorFlow 2.4 or higher.
-
 ---
 ## Setup
 
 
 ```python
-from tensorflow.keras import layers
-from tensorflow import keras
+import os
+
+os.environ["KERAS_BACKEND"] = "tensorflow"
+import keras
+from keras import ops
+from keras import layers
 import tensorflow as tf
 
 import tensorflow_datasets as tfds
@@ -94,8 +96,8 @@ train_ds, validation_ds = tfds.load(
 
 
 def preprocess_dataset(image, label):
-    image = tf.image.resize(image, (INP_SIZE[0], INP_SIZE[1]))
-    label = tf.one_hot(label, depth=2)
+    image = ops.image.resize(image, (INP_SIZE[0], INP_SIZE[1]))
+    label = ops.one_hot(label, num_classes=2)
     return (image, label)
 
 
@@ -112,16 +114,6 @@ validation_ds = (
 )
 ```
 
-<div class="k-default-codeblock">
-```
-[1mDownloading and preparing dataset 786.68 MiB (download: 786.68 MiB, generated: Unknown size, total: 786.68 MiB) to /home/jupyter/tensorflow_datasets/cats_vs_dogs/4.0.0...[0m
-
-WARNING:absl:1738 images were corrupted and were skipped
-
-[1mDataset cats_vs_dogs downloaded and prepared to /home/jupyter/tensorflow_datasets/cats_vs_dogs/4.0.0. Subsequent calls will reuse this data.[0m
-
-```
-</div>
 ---
 ## Define the learnable resizer utilities
 
@@ -147,15 +139,14 @@ def res_block(x):
     x = conv_block(x, 16, 3, 1, activation=None)
     return layers.Add()([inputs, x])
 
+    # Note: user can change num_res_blocks to >1 also if needed
 
-#Note: user can change num_res_blocks to >1 also if needed
+
 def get_learnable_resizer(filters=16, num_res_blocks=1, interpolation=INTERPOLATION):
     inputs = layers.Input(shape=[None, None, 3])
 
     # First, perform naive resizing.
-    naive_resize = layers.Resizing(
-        *TARGET_SIZE, interpolation=interpolation
-    )(inputs)
+    naive_resize = layers.Resizing(*TARGET_SIZE, interpolation=interpolation)(inputs)
 
     # First convolution block without batch normalization.
     x = layers.Conv2D(filters=filters, kernel_size=7, strides=1, padding="same")(inputs)
@@ -167,9 +158,7 @@ def get_learnable_resizer(filters=16, num_res_blocks=1, interpolation=INTERPOLAT
     x = layers.BatchNormalization()(x)
 
     # Intermediate resizing as a bottleneck.
-    bottleneck = layers.Resizing(
-        *TARGET_SIZE, interpolation=interpolation
-    )(x)
+    bottleneck = layers.Resizing(*TARGET_SIZE, interpolation=interpolation)(x)
 
     # Residual passes.
     # First res_block will get bottleneck output as input
@@ -191,7 +180,7 @@ def get_learnable_resizer(filters=16, num_res_blocks=1, interpolation=INTERPOLAT
     x = layers.Conv2D(filters=3, kernel_size=7, strides=1, padding="same")(x)
     final_resize = layers.Add()([naive_resize, x])
 
-    return tf.keras.Model(inputs, final_resize, name="learnable_resizer")
+    return keras.Model(inputs, final_resize, name="learnable_resizer")
 
 
 learnable_resizer = get_learnable_resizer()
@@ -226,6 +215,7 @@ for i, image in enumerate(sample_images[:6]):
 
 <div class="k-default-codeblock">
 ```
+Corrupt JPEG data: 65 extraneous bytes before marker 0xd9
 WARNING:matplotlib.image:Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers).
 WARNING:matplotlib.image:Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers).
 WARNING:matplotlib.image:Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers).
@@ -247,7 +237,7 @@ WARNING:matplotlib.image:Clipping input data to the valid range for imshow with 
 ```python
 
 def get_model():
-    backbone = tf.keras.applications.DenseNet121(
+    backbone = keras.applications.DenseNet121(
         weights=None,
         include_top=True,
         classes=2,
@@ -260,7 +250,7 @@ def get_model():
     x = learnable_resizer(x)
     outputs = backbone(x)
 
-    return tf.keras.Model(inputs, outputs)
+    return keras.Model(inputs, outputs)
 
 ```
 
@@ -284,17 +274,26 @@ model.fit(train_ds, validation_data=validation_ds, epochs=EPOCHS)
 <div class="k-default-codeblock">
 ```
 Epoch 1/5
-146/146 [==============================] - 49s 247ms/step - loss: 0.6956 - accuracy: 0.5697 - val_loss: 0.6958 - val_accuracy: 0.5103
-Epoch 2/5
-146/146 [==============================] - 33s 216ms/step - loss: 0.6685 - accuracy: 0.6117 - val_loss: 0.6955 - val_accuracy: 0.5387
-Epoch 3/5
-146/146 [==============================] - 33s 216ms/step - loss: 0.6542 - accuracy: 0.6190 - val_loss: 0.7410 - val_accuracy: 0.5684
-Epoch 4/5
-146/146 [==============================] - 33s 216ms/step - loss: 0.6357 - accuracy: 0.6576 - val_loss: 0.9322 - val_accuracy: 0.5314
-Epoch 5/5
-146/146 [==============================] - 33s 215ms/step - loss: 0.6224 - accuracy: 0.6745 - val_loss: 0.6526 - val_accuracy: 0.6672
 
-<tensorflow.python.keras.callbacks.History at 0x7f4433a79a50>
+ 146/146 ━━━━━━━━━━━━━━━━━━━━ 1790s 12s/step - accuracy: 0.5783 - loss: 0.6877 - val_accuracy: 0.4953 - val_loss: 0.7173
+ 
+Epoch 2/5
+
+ 146/146 ━━━━━━━━━━━━━━━━━━━━ 1738s 12s/step - accuracy: 0.6516 - loss: 0.6436 - val_accuracy: 0.6148 - val_loss: 0.6605
+ 
+Epoch 3/5
+
+ 146/146 ━━━━━━━━━━━━━━━━━━━━ 1730s 12s/step - accuracy: 0.6881 - loss: 0.6185 - val_accuracy: 0.5529 - val_loss: 0.8655
+ 
+Epoch 4/5
+
+ 146/146 ━━━━━━━━━━━━━━━━━━━━ 1725s 12s/step - accuracy: 0.6985 - loss: 0.5980 - val_accuracy: 0.6862 - val_loss: 0.6070
+ 
+Epoch 5/5
+
+ 146/146 ━━━━━━━━━━━━━━━━━━━━ 1722s 12s/step - accuracy: 0.7499 - loss: 0.5595 - val_accuracy: 0.6737 - val_loss: 0.6321
+
+<keras.src.callbacks.history.History at 0x7f126c5440a0>
 
 ```
 </div>
@@ -369,7 +368,7 @@ Now, the authors argue that using the second option is better because it helps t
 learn how to adjust the representations better with respect to the given resolution.
 Since the results purely are empirical, a few more experiments such as analyzing the
 cross-channel interaction would have been even better. It is worth noting that elements
-like [Squeeze and Excitation (SE) blocks](https://arxiv.org/abs/1709.01507), [Global Context (GC) blocks](https://arxiv.org/pdf/1904.11492) also add a few
+like [Squeeze and Excitation (SE) blocks](https://arxiv.org/abs/1709.01507), [Global Context (GC) blocks](https://arxiv.org/abs/1904.11492) also add a few
 parameters to an existing network but they are known to help a network process
 information in systematic ways to improve the overall performance.
 
@@ -385,5 +384,5 @@ discard the texture information.
 important for tasks like object detection and segmentation.
 
 * There is another closely related topic on ***adaptive image resizing*** that attempts
-to resize images/feature maps adaptively during training. [EfficientV2](https://arxiv.org/pdf/2104.00298)
+to resize images/feature maps adaptively during training. [EfficientV2](https://arxiv.org/abs/2104.00298)
 uses this idea.
