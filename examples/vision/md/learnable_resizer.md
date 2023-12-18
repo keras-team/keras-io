@@ -275,107 +275,21 @@ model.fit(train_ds, validation_data=validation_ds, epochs=EPOCHS)
 ```
 Epoch 1/5
 
-Corrupt JPEG data: 65 extraneous bytes before marker 0xd9
-
-  32/146 ━━━━[37m━━━━━━━━━━━━━━━━  22:13 12s/step - accuracy: 0.5584 - loss: 0.7012
-
-Corrupt JPEG data: 239 extraneous bytes before marker 0xd9
-
-  38/146 ━━━━━[37m━━━━━━━━━━━━━━━  20:59 12s/step - accuracy: 0.5596 - loss: 0.7005
-
-Corrupt JPEG data: 1153 extraneous bytes before marker 0xd9
-
-  40/146 ━━━━━[37m━━━━━━━━━━━━━━━  20:35 12s/step - accuracy: 0.5597 - loss: 0.7004
-
-Corrupt JPEG data: 228 extraneous bytes before marker 0xd9
-
- 146/146 ━━━━━━━━━━━━━━━━━━━━ 0s 12s/step - accuracy: 0.5782 - loss: 0.6878 
-
-Corrupt JPEG data: 2226 extraneous bytes before marker 0xd9
-
  146/146 ━━━━━━━━━━━━━━━━━━━━ 1790s 12s/step - accuracy: 0.5783 - loss: 0.6877 - val_accuracy: 0.4953 - val_loss: 0.7173
+ 
 Epoch 2/5
 
-Corrupt JPEG data: 65 extraneous bytes before marker 0xd9
-
-  32/146 ━━━━[37m━━━━━━━━━━━━━━━━  21:53 12s/step - accuracy: 0.6563 - loss: 0.6414
-
-Corrupt JPEG data: 239 extraneous bytes before marker 0xd9
-
-  38/146 ━━━━━[37m━━━━━━━━━━━━━━━  20:42 12s/step - accuracy: 0.6549 - loss: 0.6423
-
-Corrupt JPEG data: 1153 extraneous bytes before marker 0xd9
-
-  40/146 ━━━━━[37m━━━━━━━━━━━━━━━  20:19 12s/step - accuracy: 0.6547 - loss: 0.6425
-
-Corrupt JPEG data: 228 extraneous bytes before marker 0xd9
-
- 146/146 ━━━━━━━━━━━━━━━━━━━━ 0s 11s/step - accuracy: 0.6516 - loss: 0.6436 
-
-Corrupt JPEG data: 2226 extraneous bytes before marker 0xd9
-
  146/146 ━━━━━━━━━━━━━━━━━━━━ 1738s 12s/step - accuracy: 0.6516 - loss: 0.6436 - val_accuracy: 0.6148 - val_loss: 0.6605
+ 
 Epoch 3/5
 
-Corrupt JPEG data: 65 extraneous bytes before marker 0xd9
-
-  32/146 ━━━━[37m━━━━━━━━━━━━━━━━  21:42 11s/step - accuracy: 0.6909 - loss: 0.6229
-
-Corrupt JPEG data: 239 extraneous bytes before marker 0xd9
-
-  38/146 ━━━━━[37m━━━━━━━━━━━━━━━  20:34 11s/step - accuracy: 0.6890 - loss: 0.6236
-
-Corrupt JPEG data: 1153 extraneous bytes before marker 0xd9
-
-  40/146 ━━━━━[37m━━━━━━━━━━━━━━━  20:11 11s/step - accuracy: 0.6884 - loss: 0.6237
-
-Corrupt JPEG data: 228 extraneous bytes before marker 0xd9
-
- 146/146 ━━━━━━━━━━━━━━━━━━━━ 0s 11s/step - accuracy: 0.6881 - loss: 0.6186 
-
-Corrupt JPEG data: 2226 extraneous bytes before marker 0xd9
-
  146/146 ━━━━━━━━━━━━━━━━━━━━ 1730s 12s/step - accuracy: 0.6881 - loss: 0.6185 - val_accuracy: 0.5529 - val_loss: 0.8655
+ 
 Epoch 4/5
 
-Corrupt JPEG data: 65 extraneous bytes before marker 0xd9
-
-  32/146 ━━━━[37m━━━━━━━━━━━━━━━━  21:33 11s/step - accuracy: 0.6768 - loss: 0.6073
-
-Corrupt JPEG data: 239 extraneous bytes before marker 0xd9
-
-  38/146 ━━━━━[37m━━━━━━━━━━━━━━━  20:25 11s/step - accuracy: 0.6816 - loss: 0.6050
-
-Corrupt JPEG data: 1153 extraneous bytes before marker 0xd9
-
-  40/146 ━━━━━[37m━━━━━━━━━━━━━━━  20:02 11s/step - accuracy: 0.6829 - loss: 0.6043
-
-Corrupt JPEG data: 228 extraneous bytes before marker 0xd9
-
- 146/146 ━━━━━━━━━━━━━━━━━━━━ 0s 11s/step - accuracy: 0.6985 - loss: 0.5981 
-
-Corrupt JPEG data: 2226 extraneous bytes before marker 0xd9
-
  146/146 ━━━━━━━━━━━━━━━━━━━━ 1725s 12s/step - accuracy: 0.6985 - loss: 0.5980 - val_accuracy: 0.6862 - val_loss: 0.6070
+ 
 Epoch 5/5
-
-Corrupt JPEG data: 65 extraneous bytes before marker 0xd9
-
-  32/146 ━━━━[37m━━━━━━━━━━━━━━━━  21:19 11s/step - accuracy: 0.7508 - loss: 0.5558
-
-Corrupt JPEG data: 239 extraneous bytes before marker 0xd9
-
-  38/146 ━━━━━[37m━━━━━━━━━━━━━━━  20:11 11s/step - accuracy: 0.7504 - loss: 0.5566
-
-Corrupt JPEG data: 1153 extraneous bytes before marker 0xd9
-
-  40/146 ━━━━━[37m━━━━━━━━━━━━━━━  19:49 11s/step - accuracy: 0.7503 - loss: 0.5568
-
-Corrupt JPEG data: 228 extraneous bytes before marker 0xd9
-
- 146/146 ━━━━━━━━━━━━━━━━━━━━ 0s 11s/step - accuracy: 0.7500 - loss: 0.5595 
-
-Corrupt JPEG data: 2226 extraneous bytes before marker 0xd9
 
  146/146 ━━━━━━━━━━━━━━━━━━━━ 1722s 12s/step - accuracy: 0.7499 - loss: 0.5595 - val_accuracy: 0.6737 - val_loss: 0.6321
 
