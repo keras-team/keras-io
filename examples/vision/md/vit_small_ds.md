@@ -2,8 +2,8 @@
 
 **Author:** [Aritra Roy Gosthipaty](https://twitter.com/ariG23498)<br>
 **Date created:** 2022/01/07<br>
-**Last modified:** 2022/01/10<br>
-**Description:** Training a ViT from scratch on smaller datasets with shifted patch tokenization and locality self-attention.
+**Last modified:** 2023/12/13<br>
+**Description:** Training a ViT on smaller datasets with shifted patch tokenization and locality self-attention.
 
 
 <img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/vision/ipynb/vit_small_ds.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/vision/vit_small_ds.py)
@@ -38,13 +38,6 @@ This example implements the ideas of the paper. A large part of this
 example is inspired from
 [Image classification with Vision Transformer](https://keras.io/examples/vision/image_classification_with_vision_transformer/).
 
-_Note_: This example requires TensorFlow 2.6 or higher, as well as
-[TensorFlow Addons](https://www.tensorflow.org/addons), which can be
-installed using the following command:
-
-```python
-pip install -qq -U tensorflow-addons
-```
 
 ---
 ## Setup
@@ -53,17 +46,16 @@ pip install -qq -U tensorflow-addons
 ```python
 import math
 import numpy as np
-import tensorflow as tf
-from tensorflow import keras
-import tensorflow_addons as tfa
+import keras
 import matplotlib.pyplot as plt
-from tensorflow.keras import layers
+from keras import layers
+from keras import ops
 
 # Setting seed for reproducibiltiy
 SEED = 42
 keras.utils.set_random_seed(SEED)
-```
 
+```
 
 ---
 ## Prepare the data
@@ -81,9 +73,6 @@ print(f"x_test shape: {x_test.shape} - y_test shape: {y_test.shape}")
 
 <div class="k-default-codeblock">
 ```
-Downloading data from https://www.cs.toronto.edu/~kriz/cifar-100-python.tar.gz
-169009152/169001437 [==============================] - 16s 0us/step
-169017344/169001437 [==============================] - 16s 0us/step
 x_train shape: (50000, 32, 32, 3) - y_train shape: (50000, 1)
 x_test shape: (10000, 32, 32, 3) - y_test shape: (10000, 1)
 
@@ -155,7 +144,6 @@ data_augmentation = keras.Sequential(
 data_augmentation.layers[0].adapt(x_train)
 ```
 
-
 ---
 ## Implement Shifted Patch Tokenization
 
@@ -221,17 +209,19 @@ class ShiftedPatchTokenization(layers.Layer):
             shift_width = self.half_patch
 
         # Crop the shifted images and pad them
-        crop = tf.image.crop_to_bounding_box(
-            images,
-            offset_height=crop_height,
-            offset_width=crop_width,
-            target_height=self.image_size - self.half_patch,
-            target_width=self.image_size - self.half_patch,
-        )
-        shift_pad = tf.image.pad_to_bounding_box(
+        target_height = self.image_size - self.half_patch
+        target_width = self.image_size - self.half_patch
+        crop = images[
+            :,
+            crop_height : crop_height + target_height,
+            crop_width : crop_width + target_width,
+            :,
+        ]
+
+        shift_pad = ops.image.pad_images(
             crop,
-            offset_height=shift_height,
-            offset_width=shift_width,
+            top_padding=shift_height,
+            left_padding=shift_width,
             target_height=self.image_size,
             target_width=self.image_size,
         )
@@ -240,7 +230,7 @@ class ShiftedPatchTokenization(layers.Layer):
     def call(self, images):
         if not self.vanilla:
             # Concat the shifted images with the original image
-            images = tf.concat(
+            images = ops.concatenate(
                 [
                     images,
                     self.crop_shift_pad(images, mode="left-up"),
@@ -251,11 +241,11 @@ class ShiftedPatchTokenization(layers.Layer):
                 axis=-1,
             )
         # Patchify the images and flatten it
-        patches = tf.image.extract_patches(
-            images=images,
-            sizes=[1, self.patch_size, self.patch_size, 1],
-            strides=[1, self.patch_size, self.patch_size, 1],
-            rates=[1, 1, 1, 1],
+        patches = ops.image.extract_patches(
+            images,
+            (self.patch_size, self.patch_size),
+            strides=(self.patch_size, self.patch_size),
+            dilation_rate=(1, 1),
             padding="VALID",
         )
         flat_patches = self.flatten_patches(patches)
@@ -277,8 +267,9 @@ class ShiftedPatchTokenization(layers.Layer):
 # Get a random image from the training dataset
 # and resize the image
 image = x_train[np.random.choice(range(x_train.shape[0]))]
-resized_image = tf.image.resize(
-    tf.convert_to_tensor([image]), size=(IMAGE_SIZE, IMAGE_SIZE)
+resized_image = ops.image.resize(
+    ops.convert_to_tensor([image], dtype="float32"),
+    size=(IMAGE_SIZE, IMAGE_SIZE),
 )
 
 # Vanilla patch maker: This takes an image and divides into
@@ -292,7 +283,7 @@ for row in range(n):
     for col in range(n):
         plt.subplot(n, n, count)
         count = count + 1
-        image = tf.reshape(patch[row][col], (PATCH_SIZE, PATCH_SIZE, 3))
+        image = ops.reshape(patch[row][col], (PATCH_SIZE, PATCH_SIZE, 3))
         plt.imshow(image)
         plt.axis("off")
 plt.show()
@@ -311,7 +302,7 @@ for index, name in enumerate(shifted_images):
         for col in range(n):
             plt.subplot(n, n, count)
             count = count + 1
-            image = tf.reshape(patch[row][col], (PATCH_SIZE, PATCH_SIZE, 5 * 3))
+            image = ops.reshape(patch[row][col], (PATCH_SIZE, PATCH_SIZE, 5 * 3))
             plt.imshow(image[..., 3 * index : 3 * index + 3])
             plt.axis("off")
     plt.show()
@@ -319,7 +310,8 @@ for index, name in enumerate(shifted_images):
 
 <div class="k-default-codeblock">
 ```
-2022-01-12 04:50:54.960908: I tensorflow/stream_executor/cuda/cuda_blas.cc:1774] TensorFloat-32 will be used for the matrix multiplication. This will only be logged once.
+/home/suryanarayanay/miniconda3/envs/tf2.13/lib/python3.11/site-packages/keras/src/layers/layer.py:357: UserWarning: `build()` was called on layer 'shifted_patch_tokenization', however the layer does not have a `build()` method implemented and it looks like it has unbuilt state. This will cause the layer to be marked as built, despite not being actually built, which may cause failures down the line. Make sure to implement a proper `build()` method.
+  warnings.warn(
 
 ```
 </div>
@@ -401,7 +393,7 @@ class PatchEncoder(layers.Layer):
         self.position_embedding = layers.Embedding(
             input_dim=num_patches, output_dim=projection_dim
         )
-        self.positions = tf.range(start=0, limit=self.num_patches, delta=1)
+        self.positions = ops.arange(start=0, stop=self.num_patches, step=1)
 
     def call(self, encoded_patches):
         encoded_positions = self.position_embedding(self.positions)
@@ -450,21 +442,21 @@ at a later stage.
 
 ```python
 
-class MultiHeadAttentionLSA(tf.keras.layers.MultiHeadAttention):
+class MultiHeadAttentionLSA(keras.layers.MultiHeadAttention):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         # The trainable temperature term. The initial value is
         # the square root of the key dimension.
-        self.tau = tf.Variable(math.sqrt(float(self._key_dim)), trainable=True)
+        self.tau = keras.Variable(math.sqrt(float(self._key_dim)), trainable=True)
 
     def _compute_attention(self, query, key, value, attention_mask=None, training=None):
-        query = tf.multiply(query, 1.0 / self.tau)
-        attention_scores = tf.einsum(self._dot_product_equation, key, query)
+        query = ops.multiply(query, 1.0 / self.tau)
+        attention_scores = ops.einsum(self._dot_product_equation, key, query)
         attention_scores = self._masked_softmax(attention_scores, attention_mask)
         attention_scores_dropout = self._dropout_layer(
             attention_scores, training=training
         )
-        attention_output = tf.einsum(
+        attention_output = ops.einsum(
             self._combine_equation, attention_scores_dropout, value
         )
         return attention_output, attention_scores
@@ -479,14 +471,14 @@ class MultiHeadAttentionLSA(tf.keras.layers.MultiHeadAttention):
 
 def mlp(x, hidden_units, dropout_rate):
     for units in hidden_units:
-        x = layers.Dense(units, activation=tf.nn.gelu)(x)
+        x = layers.Dense(units, activation=keras.activations.gelu)(x)
         x = layers.Dropout(dropout_rate)(x)
     return x
 
 
 # Build the diagonal attention mask
-diag_attn_mask = 1 - tf.eye(NUM_PATCHES)
-diag_attn_mask = tf.cast([diag_attn_mask], dtype=tf.int8)
+diag_attn_mask = 1 - ops.eye(NUM_PATCHES)
+diag_attn_mask = ops.cast([diag_attn_mask], dtype="int8")
 ```
 
 ---
@@ -545,6 +537,7 @@ def create_vit_classifier(vanilla=False):
 
 
 ```python
+
 # Some code is taken from:
 # https://www.kaggle.com/ashusma/training-rfcx-tensorflow-tpu-effnet-b2.
 class WarmUpCosine(keras.optimizers.schedules.LearningRateSchedule):
@@ -557,15 +550,15 @@ class WarmUpCosine(keras.optimizers.schedules.LearningRateSchedule):
         self.total_steps = total_steps
         self.warmup_learning_rate = warmup_learning_rate
         self.warmup_steps = warmup_steps
-        self.pi = tf.constant(np.pi)
+        self.pi = ops.array(np.pi)
 
     def __call__(self, step):
         if self.total_steps < self.warmup_steps:
             raise ValueError("Total_steps must be larger or equal to warmup_steps.")
 
-        cos_annealed_lr = tf.cos(
+        cos_annealed_lr = ops.cos(
             self.pi
-            * (tf.cast(step, tf.float32) - self.warmup_steps)
+            * (ops.cast(step, "float32") - self.warmup_steps)
             / float(self.total_steps - self.warmup_steps)
         )
         learning_rate = 0.5 * self.learning_rate_base * (1 + cos_annealed_lr)
@@ -579,11 +572,11 @@ class WarmUpCosine(keras.optimizers.schedules.LearningRateSchedule):
             slope = (
                 self.learning_rate_base - self.warmup_learning_rate
             ) / self.warmup_steps
-            warmup_rate = slope * tf.cast(step, tf.float32) + self.warmup_learning_rate
-            learning_rate = tf.where(
+            warmup_rate = slope * ops.cast(step, "float32") + self.warmup_learning_rate
+            learning_rate = ops.where(
                 step < self.warmup_steps, warmup_rate, learning_rate
             )
-        return tf.where(
+        return ops.where(
             step > self.total_steps, 0.0, learning_rate, name="learning_rate"
         )
 
@@ -599,7 +592,7 @@ def run_experiment(model):
         warmup_steps=warmup_steps,
     )
 
-    optimizer = tfa.optimizers.AdamW(
+    optimizer = keras.optimizers.AdamW(
         learning_rate=LEARNING_RATE, weight_decay=WEIGHT_DECAY
     )
 
@@ -638,212 +631,215 @@ history = run_experiment(vit_sl)
 
 <div class="k-default-codeblock">
 ```
+/home/suryanarayanay/miniconda3/envs/tf2.13/lib/python3.11/site-packages/keras/src/layers/layer.py:357: UserWarning: `build()` was called on layer 'shifted_patch_tokenization_2', however the layer does not have a `build()` method implemented and it looks like it has unbuilt state. This will cause the layer to be marked as built, despite not being actually built, which may cause failures down the line. Make sure to implement a proper `build()` method.
+  warnings.warn(
+
 Epoch 1/50
-176/176 [==============================] - 22s 83ms/step - loss: 4.4912 - accuracy: 0.0427 - top-5-accuracy: 0.1549 - val_loss: 3.9409 - val_accuracy: 0.1030 - val_top-5-accuracy: 0.3036
+ 176/176 ━━━━━━━━━━━━━━━━━━━━ 106s 388ms/step - accuracy: 0.0144 - loss: 4.9827 - top-5-accuracy: 0.0674 - val_accuracy: 0.0338 - val_loss: 4.2915 - val_top-5-accuracy: 0.1594
 Epoch 2/50
-176/176 [==============================] - 14s 77ms/step - loss: 3.9749 - accuracy: 0.0897 - top-5-accuracy: 0.2802 - val_loss: 3.5721 - val_accuracy: 0.1550 - val_top-5-accuracy: 0.4058
+ 176/176 ━━━━━━━━━━━━━━━━━━━━ 66s 376ms/step - accuracy: 0.0326 - loss: 4.3661 - top-5-accuracy: 0.1383 - val_accuracy: 0.0614 - val_loss: 4.0716 - val_top-5-accuracy: 0.2298
 Epoch 3/50
-176/176 [==============================] - 14s 77ms/step - loss: 3.7129 - accuracy: 0.1282 - top-5-accuracy: 0.3601 - val_loss: 3.3235 - val_accuracy: 0.2022 - val_top-5-accuracy: 0.4788
+ 176/176 ━━━━━━━━━━━━━━━━━━━━ 67s 378ms/step - accuracy: 0.0500 - loss: 4.1864 - top-5-accuracy: 0.1946 - val_accuracy: 0.0848 - val_loss: 3.9701 - val_top-5-accuracy: 0.2820
 Epoch 4/50
-176/176 [==============================] - 14s 77ms/step - loss: 3.5518 - accuracy: 0.1544 - top-5-accuracy: 0.4078 - val_loss: 3.2432 - val_accuracy: 0.2132 - val_top-5-accuracy: 0.5056
+ 176/176 ━━━━━━━━━━━━━━━━━━━━ 82s 378ms/step - accuracy: 0.0587 - loss: 4.1070 - top-5-accuracy: 0.2219 - val_accuracy: 0.0812 - val_loss: 3.9043 - val_top-5-accuracy: 0.2830
 Epoch 5/50
-176/176 [==============================] - 14s 77ms/step - loss: 3.4098 - accuracy: 0.1828 - top-5-accuracy: 0.4471 - val_loss: 3.0910 - val_accuracy: 0.2462 - val_top-5-accuracy: 0.5376
+ 176/176 ━━━━━━━━━━━━━━━━━━━━ 82s 378ms/step - accuracy: 0.0647 - loss: 4.0492 - top-5-accuracy: 0.2386 - val_accuracy: 0.0980 - val_loss: 3.8119 - val_top-5-accuracy: 0.3244
 Epoch 6/50
-176/176 [==============================] - 14s 77ms/step - loss: 3.2835 - accuracy: 0.2037 - top-5-accuracy: 0.4838 - val_loss: 2.9803 - val_accuracy: 0.2704 - val_top-5-accuracy: 0.5606
+ 176/176 ━━━━━━━━━━━━━━━━━━━━ 82s 378ms/step - accuracy: 0.0743 - loss: 3.9836 - top-5-accuracy: 0.2607 - val_accuracy: 0.1042 - val_loss: 3.7930 - val_top-5-accuracy: 0.3304
 Epoch 7/50
-176/176 [==============================] - 14s 77ms/step - loss: 3.1756 - accuracy: 0.2205 - top-5-accuracy: 0.5113 - val_loss: 2.8608 - val_accuracy: 0.2802 - val_top-5-accuracy: 0.5908
+ 176/176 ━━━━━━━━━━━━━━━━━━━━ 66s 376ms/step - accuracy: 0.0754 - loss: 3.9804 - top-5-accuracy: 0.2626 - val_accuracy: 0.1006 - val_loss: 3.7506 - val_top-5-accuracy: 0.3306
 Epoch 8/50
-176/176 [==============================] - 14s 77ms/step - loss: 3.0585 - accuracy: 0.2439 - top-5-accuracy: 0.5432 - val_loss: 2.8055 - val_accuracy: 0.2960 - val_top-5-accuracy: 0.6144
+ 176/176 ━━━━━━━━━━━━━━━━━━━━ 82s 378ms/step - accuracy: 0.0794 - loss: 3.9464 - top-5-accuracy: 0.2760 - val_accuracy: 0.1064 - val_loss: 3.7564 - val_top-5-accuracy: 0.3406
 Epoch 9/50
-176/176 [==============================] - 14s 77ms/step - loss: 2.9457 - accuracy: 0.2654 - top-5-accuracy: 0.5697 - val_loss: 2.7034 - val_accuracy: 0.3210 - val_top-5-accuracy: 0.6242
+ 176/176 ━━━━━━━━━━━━━━━━━━━━ 67s 380ms/step - accuracy: 0.0820 - loss: 3.9316 - top-5-accuracy: 0.2788 - val_accuracy: 0.1070 - val_loss: 3.7597 - val_top-5-accuracy: 0.3274
 Epoch 10/50
-176/176 [==============================] - 14s 77ms/step - loss: 2.8458 - accuracy: 0.2863 - top-5-accuracy: 0.5918 - val_loss: 2.5899 - val_accuracy: 0.3416 - val_top-5-accuracy: 0.6500
+ 176/176 ━━━━━━━━━━━━━━━━━━━━ 82s 378ms/step - accuracy: 0.0800 - loss: 3.9258 - top-5-accuracy: 0.2854 - val_accuracy: 0.1064 - val_loss: 3.7534 - val_top-5-accuracy: 0.3376
 Epoch 11/50
-176/176 [==============================] - 14s 77ms/step - loss: 2.7530 - accuracy: 0.3052 - top-5-accuracy: 0.6191 - val_loss: 2.5275 - val_accuracy: 0.3526 - val_top-5-accuracy: 0.6660
+ 176/176 ━━━━━━━━━━━━━━━━━━━━ 67s 378ms/step - accuracy: 0.0868 - loss: 3.9147 - top-5-accuracy: 0.2892 - val_accuracy: 0.1188 - val_loss: 3.7024 - val_top-5-accuracy: 0.3508
 Epoch 12/50
-176/176 [==============================] - 14s 77ms/step - loss: 2.6561 - accuracy: 0.3250 - top-5-accuracy: 0.6355 - val_loss: 2.5111 - val_accuracy: 0.3544 - val_top-5-accuracy: 0.6554
+ 176/176 ━━━━━━━━━━━━━━━━━━━━ 82s 380ms/step - accuracy: 0.0931 - loss: 3.8687 - top-5-accuracy: 0.3009 - val_accuracy: 0.1214 - val_loss: 3.6852 - val_top-5-accuracy: 0.3588
 Epoch 13/50
-176/176 [==============================] - 14s 77ms/step - loss: 2.5833 - accuracy: 0.3398 - top-5-accuracy: 0.6538 - val_loss: 2.3931 - val_accuracy: 0.3792 - val_top-5-accuracy: 0.6888
+ 176/176 ━━━━━━━━━━━━━━━━━━━━ 82s 378ms/step - accuracy: 0.0930 - loss: 3.8857 - top-5-accuracy: 0.2979 - val_accuracy: 0.1140 - val_loss: 3.7435 - val_top-5-accuracy: 0.3450
 Epoch 14/50
-176/176 [==============================] - 14s 77ms/step - loss: 2.4988 - accuracy: 0.3594 - top-5-accuracy: 0.6724 - val_loss: 2.3695 - val_accuracy: 0.3868 - val_top-5-accuracy: 0.6958
+ 176/176 ━━━━━━━━━━━━━━━━━━━━ 82s 377ms/step - accuracy: 0.0964 - loss: 3.8475 - top-5-accuracy: 0.3063 - val_accuracy: 0.1186 - val_loss: 3.7180 - val_top-5-accuracy: 0.3508
 Epoch 15/50
-176/176 [==============================] - 14s 77ms/step - loss: 2.4342 - accuracy: 0.3706 - top-5-accuracy: 0.6877 - val_loss: 2.3076 - val_accuracy: 0.4072 - val_top-5-accuracy: 0.7074
+ 176/176 ━━━━━━━━━━━━━━━━━━━━ 66s 376ms/step - accuracy: 0.0883 - loss: 3.9195 - top-5-accuracy: 0.2851 - val_accuracy: 0.1166 - val_loss: 3.7621 - val_top-5-accuracy: 0.3386
 Epoch 16/50
-176/176 [==============================] - 14s 77ms/step - loss: 2.3654 - accuracy: 0.3841 - top-5-accuracy: 0.7024 - val_loss: 2.2346 - val_accuracy: 0.4202 - val_top-5-accuracy: 0.7174
+ 176/176 ━━━━━━━━━━━━━━━━━━━━ 82s 378ms/step - accuracy: 0.0951 - loss: 3.8740 - top-5-accuracy: 0.3024 - val_accuracy: 0.1190 - val_loss: 3.7663 - val_top-5-accuracy: 0.3442
 Epoch 17/50
-176/176 [==============================] - 14s 77ms/step - loss: 2.3062 - accuracy: 0.3967 - top-5-accuracy: 0.7130 - val_loss: 2.2277 - val_accuracy: 0.4206 - val_top-5-accuracy: 0.7190
+ 176/176 ━━━━━━━━━━━━━━━━━━━━ 82s 378ms/step - accuracy: 0.0950 - loss: 3.8552 - top-5-accuracy: 0.3057 - val_accuracy: 0.1300 - val_loss: 3.6928 - val_top-5-accuracy: 0.3622
 Epoch 18/50
-176/176 [==============================] - 14s 77ms/step - loss: 2.2415 - accuracy: 0.4100 - top-5-accuracy: 0.7271 - val_loss: 2.1605 - val_accuracy: 0.4398 - val_top-5-accuracy: 0.7366
+ 176/176 ━━━━━━━━━━━━━━━━━━━━ 82s 379ms/step - accuracy: 0.0998 - loss: 3.8125 - top-5-accuracy: 0.3239 - val_accuracy: 0.1242 - val_loss: 3.7050 - val_top-5-accuracy: 0.3554
 Epoch 19/50
-176/176 [==============================] - 14s 77ms/step - loss: 2.1802 - accuracy: 0.4240 - top-5-accuracy: 0.7386 - val_loss: 2.1533 - val_accuracy: 0.4428 - val_top-5-accuracy: 0.7382
+ 176/176 ━━━━━━━━━━━━━━━━━━━━ 82s 377ms/step - accuracy: 0.1051 - loss: 3.7838 - top-5-accuracy: 0.3307 - val_accuracy: 0.1308 - val_loss: 3.6886 - val_top-5-accuracy: 0.3698
 Epoch 20/50
-176/176 [==============================] - 14s 77ms/step - loss: 2.1264 - accuracy: 0.4357 - top-5-accuracy: 0.7486 - val_loss: 2.1395 - val_accuracy: 0.4428 - val_top-5-accuracy: 0.7404
+ 176/176 ━━━━━━━━━━━━━━━━━━━━ 82s 377ms/step - accuracy: 0.1096 - loss: 3.7654 - top-5-accuracy: 0.3396 - val_accuracy: 0.1318 - val_loss: 3.6502 - val_top-5-accuracy: 0.3734
 Epoch 21/50
-176/176 [==============================] - 14s 77ms/step - loss: 2.0856 - accuracy: 0.4442 - top-5-accuracy: 0.7564 - val_loss: 2.1025 - val_accuracy: 0.4512 - val_top-5-accuracy: 0.7448
+ 176/176 ━━━━━━━━━━━━━━━━━━━━ 82s 379ms/step - accuracy: 0.1125 - loss: 3.7372 - top-5-accuracy: 0.3426 - val_accuracy: 0.1346 - val_loss: 3.6462 - val_top-5-accuracy: 0.3764
 Epoch 22/50
-176/176 [==============================] - 14s 77ms/step - loss: 2.0320 - accuracy: 0.4566 - top-5-accuracy: 0.7668 - val_loss: 2.0677 - val_accuracy: 0.4600 - val_top-5-accuracy: 0.7534
+ 176/176 ━━━━━━━━━━━━━━━━━━━━ 82s 378ms/step - accuracy: 0.1106 - loss: 3.7680 - top-5-accuracy: 0.3365 - val_accuracy: 0.1244 - val_loss: 3.7112 - val_top-5-accuracy: 0.3582
 Epoch 23/50
-176/176 [==============================] - 14s 77ms/step - loss: 1.9903 - accuracy: 0.4666 - top-5-accuracy: 0.7761 - val_loss: 2.0273 - val_accuracy: 0.4650 - val_top-5-accuracy: 0.7610
+ 176/176 ━━━━━━━━━━━━━━━━━━━━ 66s 376ms/step - accuracy: 0.1136 - loss: 3.7426 - top-5-accuracy: 0.3430 - val_accuracy: 0.1346 - val_loss: 3.6812 - val_top-5-accuracy: 0.3612
 Epoch 24/50
-176/176 [==============================] - 14s 77ms/step - loss: 1.9398 - accuracy: 0.4772 - top-5-accuracy: 0.7877 - val_loss: 2.0253 - val_accuracy: 0.4694 - val_top-5-accuracy: 0.7636
+ 176/176 ━━━━━━━━━━━━━━━━━━━━ 83s 379ms/step - accuracy: 0.1198 - loss: 3.7006 - top-5-accuracy: 0.3575 - val_accuracy: 0.1420 - val_loss: 3.6321 - val_top-5-accuracy: 0.3814
 Epoch 25/50
-176/176 [==============================] - 14s 78ms/step - loss: 1.9027 - accuracy: 0.4865 - top-5-accuracy: 0.7933 - val_loss: 2.0584 - val_accuracy: 0.4606 - val_top-5-accuracy: 0.7520
+ 176/176 ━━━━━━━━━━━━━━━━━━━━ 66s 376ms/step - accuracy: 0.1233 - loss: 3.7036 - top-5-accuracy: 0.3598 - val_accuracy: 0.1248 - val_loss: 3.7282 - val_top-5-accuracy: 0.3560
 Epoch 26/50
-176/176 [==============================] - 14s 77ms/step - loss: 1.8529 - accuracy: 0.4964 - top-5-accuracy: 0.8010 - val_loss: 2.0128 - val_accuracy: 0.4752 - val_top-5-accuracy: 0.7654
+ 176/176 ━━━━━━━━━━━━━━━━━━━━ 66s 376ms/step - accuracy: 0.1218 - loss: 3.6886 - top-5-accuracy: 0.3597 - val_accuracy: 0.1236 - val_loss: 3.7601 - val_top-5-accuracy: 0.3498
 Epoch 27/50
-176/176 [==============================] - 14s 77ms/step - loss: 1.8161 - accuracy: 0.5047 - top-5-accuracy: 0.8111 - val_loss: 1.9630 - val_accuracy: 0.4898 - val_top-5-accuracy: 0.7746
+ 176/176 ━━━━━━━━━━━━━━━━━━━━ 83s 379ms/step - accuracy: 0.1176 - loss: 3.7587 - top-5-accuracy: 0.3406 - val_accuracy: 0.1270 - val_loss: 3.7429 - val_top-5-accuracy: 0.3476
 Epoch 28/50
-176/176 [==============================] - 13s 77ms/step - loss: 1.7792 - accuracy: 0.5136 - top-5-accuracy: 0.8140 - val_loss: 1.9931 - val_accuracy: 0.4780 - val_top-5-accuracy: 0.7640
+ 176/176 ━━━━━━━━━━━━━━━━━━━━ 82s 379ms/step - accuracy: 0.1229 - loss: 3.6951 - top-5-accuracy: 0.3578 - val_accuracy: 0.1454 - val_loss: 3.6243 - val_top-5-accuracy: 0.3808
 Epoch 29/50
-176/176 [==============================] - 14s 77ms/step - loss: 1.7268 - accuracy: 0.5211 - top-5-accuracy: 0.8250 - val_loss: 1.9748 - val_accuracy: 0.4854 - val_top-5-accuracy: 0.7708
+ 176/176 ━━━━━━━━━━━━━━━━━━━━ 66s 376ms/step - accuracy: 0.1254 - loss: 3.6891 - top-5-accuracy: 0.3589 - val_accuracy: 0.1362 - val_loss: 3.6371 - val_top-5-accuracy: 0.3726
 Epoch 30/50
-176/176 [==============================] - 14s 77ms/step - loss: 1.7115 - accuracy: 0.5298 - top-5-accuracy: 0.8265 - val_loss: 1.9669 - val_accuracy: 0.4884 - val_top-5-accuracy: 0.7796
+ 176/176 ━━━━━━━━━━━━━━━━━━━━ 82s 377ms/step - accuracy: 0.1356 - loss: 3.6347 - top-5-accuracy: 0.3753 - val_accuracy: 0.1086 - val_loss: 3.7619 - val_top-5-accuracy: 0.3336
 Epoch 31/50
-176/176 [==============================] - 14s 77ms/step - loss: 1.6795 - accuracy: 0.5361 - top-5-accuracy: 0.8329 - val_loss: 1.9428 - val_accuracy: 0.4972 - val_top-5-accuracy: 0.7852
+ 176/176 ━━━━━━━━━━━━━━━━━━━━ 66s 376ms/step - accuracy: 0.1361 - loss: 3.6206 - top-5-accuracy: 0.3844 - val_accuracy: 0.1192 - val_loss: 3.7217 - val_top-5-accuracy: 0.3460
 Epoch 32/50
-176/176 [==============================] - 14s 77ms/step - loss: 1.6411 - accuracy: 0.5448 - top-5-accuracy: 0.8412 - val_loss: 1.9318 - val_accuracy: 0.4952 - val_top-5-accuracy: 0.7864
+ 176/176 ━━━━━━━━━━━━━━━━━━━━ 66s 376ms/step - accuracy: 0.1429 - loss: 3.6092 - top-5-accuracy: 0.3874 - val_accuracy: 0.1120 - val_loss: 3.8008 - val_top-5-accuracy: 0.3224
 Epoch 33/50
-176/176 [==============================] - 14s 77ms/step - loss: 1.6015 - accuracy: 0.5547 - top-5-accuracy: 0.8466 - val_loss: 1.9233 - val_accuracy: 0.4996 - val_top-5-accuracy: 0.7882
+ 176/176 ━━━━━━━━━━━━━━━━━━━━ 83s 380ms/step - accuracy: 0.1452 - loss: 3.5909 - top-5-accuracy: 0.3944 - val_accuracy: 0.0920 - val_loss: 3.9773 - val_top-5-accuracy: 0.2808
 Epoch 34/50
-176/176 [==============================] - 14s 77ms/step - loss: 1.5651 - accuracy: 0.5655 - top-5-accuracy: 0.8525 - val_loss: 1.9285 - val_accuracy: 0.5082 - val_top-5-accuracy: 0.7888
+ 176/176 ━━━━━━━━━━━━━━━━━━━━ 82s 379ms/step - accuracy: 0.1106 - loss: 3.8286 - top-5-accuracy: 0.3258 - val_accuracy: 0.1310 - val_loss: 3.6728 - val_top-5-accuracy: 0.3628
 Epoch 35/50
-176/176 [==============================] - 14s 77ms/step - loss: 1.5437 - accuracy: 0.5672 - top-5-accuracy: 0.8570 - val_loss: 1.9268 - val_accuracy: 0.5028 - val_top-5-accuracy: 0.7842
+ 176/176 ━━━━━━━━━━━━━━━━━━━━ 82s 379ms/step - accuracy: 0.1313 - loss: 3.6763 - top-5-accuracy: 0.3657 - val_accuracy: 0.1074 - val_loss: 3.8060 - val_top-5-accuracy: 0.3170
 Epoch 36/50
-176/176 [==============================] - 14s 77ms/step - loss: 1.5103 - accuracy: 0.5748 - top-5-accuracy: 0.8620 - val_loss: 1.9262 - val_accuracy: 0.5014 - val_top-5-accuracy: 0.7890
+ 176/176 ━━━━━━━━━━━━━━━━━━━━ 82s 377ms/step - accuracy: 0.1383 - loss: 3.6165 - top-5-accuracy: 0.3860 - val_accuracy: 0.1322 - val_loss: 3.6553 - val_top-5-accuracy: 0.3624
 Epoch 37/50
-176/176 [==============================] - 14s 77ms/step - loss: 1.4784 - accuracy: 0.5822 - top-5-accuracy: 0.8690 - val_loss: 1.8698 - val_accuracy: 0.5130 - val_top-5-accuracy: 0.7948
+ 176/176 ━━━━━━━━━━━━━━━━━━━━ 82s 377ms/step - accuracy: 0.1469 - loss: 3.5917 - top-5-accuracy: 0.3905 - val_accuracy: 0.1242 - val_loss: 3.7094 - val_top-5-accuracy: 0.3452
 Epoch 38/50
-176/176 [==============================] - 14s 77ms/step - loss: 1.4449 - accuracy: 0.5922 - top-5-accuracy: 0.8728 - val_loss: 1.8734 - val_accuracy: 0.5136 - val_top-5-accuracy: 0.7980
+ 176/176 ━━━━━━━━━━━━━━━━━━━━ 82s 377ms/step - accuracy: 0.1513 - loss: 3.5550 - top-5-accuracy: 0.3996 - val_accuracy: 0.1136 - val_loss: 3.8052 - val_top-5-accuracy: 0.3224
 Epoch 39/50
-176/176 [==============================] - 14s 77ms/step - loss: 1.4312 - accuracy: 0.5928 - top-5-accuracy: 0.8755 - val_loss: 1.8736 - val_accuracy: 0.5150 - val_top-5-accuracy: 0.7956
+ 176/176 ━━━━━━━━━━━━━━━━━━━━ 82s 377ms/step - accuracy: 0.1578 - loss: 3.5185 - top-5-accuracy: 0.4110 - val_accuracy: 0.1138 - val_loss: 3.8225 - val_top-5-accuracy: 0.3140
 Epoch 40/50
-176/176 [==============================] - 14s 77ms/step - loss: 1.3996 - accuracy: 0.5999 - top-5-accuracy: 0.8808 - val_loss: 1.8718 - val_accuracy: 0.5178 - val_top-5-accuracy: 0.7970
+ 176/176 ━━━━━━━━━━━━━━━━━━━━ 82s 377ms/step - accuracy: 0.1643 - loss: 3.4857 - top-5-accuracy: 0.4196 - val_accuracy: 0.1168 - val_loss: 3.7585 - val_top-5-accuracy: 0.3348
 Epoch 41/50
-176/176 [==============================] - 14s 77ms/step - loss: 1.3859 - accuracy: 0.6075 - top-5-accuracy: 0.8817 - val_loss: 1.9097 - val_accuracy: 0.5084 - val_top-5-accuracy: 0.7884
+ 176/176 ━━━━━━━━━━━━━━━━━━━━ 82s 379ms/step - accuracy: 0.1665 - loss: 3.4651 - top-5-accuracy: 0.4277 - val_accuracy: 0.1114 - val_loss: 3.8782 - val_top-5-accuracy: 0.2956
 Epoch 42/50
-176/176 [==============================] - 14s 77ms/step - loss: 1.3586 - accuracy: 0.6119 - top-5-accuracy: 0.8860 - val_loss: 1.8620 - val_accuracy: 0.5148 - val_top-5-accuracy: 0.8010
+ 176/176 ━━━━━━━━━━━━━━━━━━━━ 82s 379ms/step - accuracy: 0.1717 - loss: 3.4370 - top-5-accuracy: 0.4325 - val_accuracy: 0.1220 - val_loss: 3.8067 - val_top-5-accuracy: 0.3182
 Epoch 43/50
-176/176 [==============================] - 14s 77ms/step - loss: 1.3384 - accuracy: 0.6154 - top-5-accuracy: 0.8911 - val_loss: 1.8509 - val_accuracy: 0.5202 - val_top-5-accuracy: 0.8014
+ 176/176 ━━━━━━━━━━━━━━━━━━━━ 82s 377ms/step - accuracy: 0.1779 - loss: 3.3973 - top-5-accuracy: 0.4457 - val_accuracy: 0.1068 - val_loss: 3.8727 - val_top-5-accuracy: 0.2994
 Epoch 44/50
-176/176 [==============================] - 14s 78ms/step - loss: 1.3090 - accuracy: 0.6236 - top-5-accuracy: 0.8954 - val_loss: 1.8607 - val_accuracy: 0.5242 - val_top-5-accuracy: 0.8020
+ 176/176 ━━━━━━━━━━━━━━━━━━━━ 82s 377ms/step - accuracy: 0.1812 - loss: 3.4076 - top-5-accuracy: 0.4446 - val_accuracy: 0.1290 - val_loss: 3.7340 - val_top-5-accuracy: 0.3370
 Epoch 45/50
-176/176 [==============================] - 14s 78ms/step - loss: 1.2873 - accuracy: 0.6292 - top-5-accuracy: 0.8964 - val_loss: 1.8729 - val_accuracy: 0.5208 - val_top-5-accuracy: 0.8056
+ 176/176 ━━━━━━━━━━━━━━━━━━━━ 82s 377ms/step - accuracy: 0.1812 - loss: 3.3673 - top-5-accuracy: 0.4529 - val_accuracy: 0.1134 - val_loss: 3.8447 - val_top-5-accuracy: 0.3062
 Epoch 46/50
-176/176 [==============================] - 14s 77ms/step - loss: 1.2658 - accuracy: 0.6367 - top-5-accuracy: 0.9007 - val_loss: 1.8573 - val_accuracy: 0.5278 - val_top-5-accuracy: 0.8066
+ 176/176 ━━━━━━━━━━━━━━━━━━━━ 82s 377ms/step - accuracy: 0.1845 - loss: 3.3541 - top-5-accuracy: 0.4552 - val_accuracy: 0.0976 - val_loss: 3.9903 - val_top-5-accuracy: 0.2778
 Epoch 47/50
-176/176 [==============================] - 14s 77ms/step - loss: 1.2628 - accuracy: 0.6346 - top-5-accuracy: 0.9023 - val_loss: 1.8240 - val_accuracy: 0.5292 - val_top-5-accuracy: 0.8112
+ 176/176 ━━━━━━━━━━━━━━━━━━━━ 66s 375ms/step - accuracy: 0.1906 - loss: 3.3411 - top-5-accuracy: 0.4612 - val_accuracy: 0.1046 - val_loss: 3.9565 - val_top-5-accuracy: 0.2806
 Epoch 48/50
-176/176 [==============================] - 14s 78ms/step - loss: 1.2396 - accuracy: 0.6431 - top-5-accuracy: 0.9057 - val_loss: 1.8342 - val_accuracy: 0.5362 - val_top-5-accuracy: 0.8096
+ 176/176 ━━━━━━━━━━━━━━━━━━━━ 66s 376ms/step - accuracy: 0.1958 - loss: 3.3100 - top-5-accuracy: 0.4696 - val_accuracy: 0.0894 - val_loss: 4.1331 - val_top-5-accuracy: 0.2536
 Epoch 49/50
-176/176 [==============================] - 14s 77ms/step - loss: 1.2163 - accuracy: 0.6464 - top-5-accuracy: 0.9081 - val_loss: 1.8836 - val_accuracy: 0.5246 - val_top-5-accuracy: 0.8044
+ 176/176 ━━━━━━━━━━━━━━━━━━━━ 82s 377ms/step - accuracy: 0.1936 - loss: 3.3293 - top-5-accuracy: 0.4643 - val_accuracy: 0.1178 - val_loss: 3.8180 - val_top-5-accuracy: 0.3152
 Epoch 50/50
-176/176 [==============================] - 14s 77ms/step - loss: 1.1919 - accuracy: 0.6541 - top-5-accuracy: 0.9122 - val_loss: 1.8513 - val_accuracy: 0.5336 - val_top-5-accuracy: 0.8048
-40/40 [==============================] - 1s 26ms/step - loss: 1.8172 - accuracy: 0.5310 - top-5-accuracy: 0.8053
-Test accuracy: 53.1%
-Test top 5 accuracy: 80.53%
+ 176/176 ━━━━━━━━━━━━━━━━━━━━ 82s 377ms/step - accuracy: 0.1941 - loss: 3.3206 - top-5-accuracy: 0.4695 - val_accuracy: 0.1104 - val_loss: 3.9149 - val_top-5-accuracy: 0.3000
+ 40/40 ━━━━━━━━━━━━━━━━━━━━ 5s 114ms/step - accuracy: 0.1098 - loss: 3.9105 - top-5-accuracy: 0.2918
+Test accuracy: 11.01%
+Test top 5 accuracy: 29.66%
 Epoch 1/50
-176/176 [==============================] - 23s 90ms/step - loss: 4.4889 - accuracy: 0.0450 - top-5-accuracy: 0.1559 - val_loss: 3.9364 - val_accuracy: 0.1128 - val_top-5-accuracy: 0.3184
+ 176/176 ━━━━━━━━━━━━━━━━━━━━ 114s 435ms/step - accuracy: 0.0130 - loss: 4.9957 - top-5-accuracy: 0.0603 - val_accuracy: 0.0184 - val_loss: 4.4445 - val_top-5-accuracy: 0.1068
 Epoch 2/50
-176/176 [==============================] - 15s 85ms/step - loss: 3.9806 - accuracy: 0.0924 - top-5-accuracy: 0.2798 - val_loss: 3.6392 - val_accuracy: 0.1576 - val_top-5-accuracy: 0.4034
+ 176/176 ━━━━━━━━━━━━━━━━━━━━ 76s 431ms/step - accuracy: 0.0187 - loss: 4.4785 - top-5-accuracy: 0.0923 - val_accuracy: 0.0328 - val_loss: 4.3426 - val_top-5-accuracy: 0.1186
 Epoch 3/50
-176/176 [==============================] - 15s 84ms/step - loss: 3.7713 - accuracy: 0.1253 - top-5-accuracy: 0.3448 - val_loss: 3.3892 - val_accuracy: 0.1918 - val_top-5-accuracy: 0.4622
+ 176/176 ━━━━━━━━━━━━━━━━━━━━ 76s 430ms/step - accuracy: 0.0258 - loss: 4.3935 - top-5-accuracy: 0.1156 - val_accuracy: 0.0314 - val_loss: 4.2596 - val_top-5-accuracy: 0.1456
 Epoch 4/50
-176/176 [==============================] - 15s 85ms/step - loss: 3.6297 - accuracy: 0.1460 - top-5-accuracy: 0.3859 - val_loss: 3.2856 - val_accuracy: 0.2194 - val_top-5-accuracy: 0.4970
+ 176/176 ━━━━━━━━━━━━━━━━━━━━ 83s 435ms/step - accuracy: 0.0317 - loss: 4.3342 - top-5-accuracy: 0.1326 - val_accuracy: 0.0534 - val_loss: 4.1678 - val_top-5-accuracy: 0.1914
 Epoch 5/50
-176/176 [==============================] - 15s 85ms/step - loss: 3.4955 - accuracy: 0.1706 - top-5-accuracy: 0.4239 - val_loss: 3.1359 - val_accuracy: 0.2412 - val_top-5-accuracy: 0.5308
+ 176/176 ━━━━━━━━━━━━━━━━━━━━ 76s 431ms/step - accuracy: 0.0354 - loss: 4.2960 - top-5-accuracy: 0.1521 - val_accuracy: 0.0418 - val_loss: 4.2036 - val_top-5-accuracy: 0.1768
 Epoch 6/50
-176/176 [==============================] - 15s 85ms/step - loss: 3.3781 - accuracy: 0.1908 - top-5-accuracy: 0.4565 - val_loss: 3.0535 - val_accuracy: 0.2620 - val_top-5-accuracy: 0.5652
+ 176/176 ━━━━━━━━━━━━━━━━━━━━ 73s 417ms/step - accuracy: 0.0397 - loss: 4.2619 - top-5-accuracy: 0.1604 - val_accuracy: 0.0490 - val_loss: 4.1102 - val_top-5-accuracy: 0.2018
 Epoch 7/50
-176/176 [==============================] - 15s 85ms/step - loss: 3.2540 - accuracy: 0.2123 - top-5-accuracy: 0.4895 - val_loss: 2.9165 - val_accuracy: 0.2782 - val_top-5-accuracy: 0.5800
+ 176/176 ━━━━━━━━━━━━━━━━━━━━ 82s 417ms/step - accuracy: 0.0402 - loss: 4.2454 - top-5-accuracy: 0.1649 - val_accuracy: 0.0534 - val_loss: 4.0830 - val_top-5-accuracy: 0.2138
 Epoch 8/50
-176/176 [==============================] - 15s 85ms/step - loss: 3.1442 - accuracy: 0.2318 - top-5-accuracy: 0.5197 - val_loss: 2.8592 - val_accuracy: 0.2984 - val_top-5-accuracy: 0.6090
+ 176/176 ━━━━━━━━━━━━━━━━━━━━ 84s 431ms/step - accuracy: 0.0410 - loss: 4.2215 - top-5-accuracy: 0.1703 - val_accuracy: 0.0608 - val_loss: 4.0638 - val_top-5-accuracy: 0.2174
 Epoch 9/50
-176/176 [==============================] - 15s 85ms/step - loss: 3.0348 - accuracy: 0.2504 - top-5-accuracy: 0.5440 - val_loss: 2.7378 - val_accuracy: 0.3146 - val_top-5-accuracy: 0.6294
+ 176/176 ━━━━━━━━━━━━━━━━━━━━ 76s 430ms/step - accuracy: 0.0423 - loss: 4.2098 - top-5-accuracy: 0.1746 - val_accuracy: 0.0626 - val_loss: 4.0521 - val_top-5-accuracy: 0.2340
 Epoch 10/50
-176/176 [==============================] - 15s 84ms/step - loss: 2.9311 - accuracy: 0.2681 - top-5-accuracy: 0.5704 - val_loss: 2.6274 - val_accuracy: 0.3362 - val_top-5-accuracy: 0.6446
+ 176/176 ━━━━━━━━━━━━━━━━━━━━ 80s 418ms/step - accuracy: 0.0440 - loss: 4.2040 - top-5-accuracy: 0.1776 - val_accuracy: 0.0614 - val_loss: 4.0863 - val_top-5-accuracy: 0.2312
 Epoch 11/50
-176/176 [==============================] - 15s 85ms/step - loss: 2.8214 - accuracy: 0.2925 - top-5-accuracy: 0.5986 - val_loss: 2.5557 - val_accuracy: 0.3458 - val_top-5-accuracy: 0.6616
+ 176/176 ━━━━━━━━━━━━━━━━━━━━ 73s 417ms/step - accuracy: 0.0419 - loss: 4.2204 - top-5-accuracy: 0.1747 - val_accuracy: 0.0596 - val_loss: 4.1508 - val_top-5-accuracy: 0.2196
 Epoch 12/50
-176/176 [==============================] - 15s 85ms/step - loss: 2.7244 - accuracy: 0.3100 - top-5-accuracy: 0.6168 - val_loss: 2.4763 - val_accuracy: 0.3564 - val_top-5-accuracy: 0.6804
+ 176/176 ━━━━━━━━━━━━━━━━━━━━ 82s 418ms/step - accuracy: 0.0449 - loss: 4.2479 - top-5-accuracy: 0.1725 - val_accuracy: 0.0698 - val_loss: 4.1028 - val_top-5-accuracy: 0.2356
 Epoch 13/50
-176/176 [==============================] - 15s 85ms/step - loss: 2.6476 - accuracy: 0.3255 - top-5-accuracy: 0.6358 - val_loss: 2.3946 - val_accuracy: 0.3678 - val_top-5-accuracy: 0.6940
+ 176/176 ━━━━━━━━━━━━━━━━━━━━ 84s 431ms/step - accuracy: 0.0472 - loss: 4.2098 - top-5-accuracy: 0.1841 - val_accuracy: 0.0722 - val_loss: 4.0688 - val_top-5-accuracy: 0.2454
 Epoch 14/50
-176/176 [==============================] - 15s 85ms/step - loss: 2.5518 - accuracy: 0.3436 - top-5-accuracy: 0.6584 - val_loss: 2.3362 - val_accuracy: 0.3856 - val_top-5-accuracy: 0.7038
+ 176/176 ━━━━━━━━━━━━━━━━━━━━ 82s 431ms/step - accuracy: 0.0518 - loss: 4.1769 - top-5-accuracy: 0.2000 - val_accuracy: 0.0722 - val_loss: 4.0601 - val_top-5-accuracy: 0.2466
 Epoch 15/50
-176/176 [==============================] - 15s 85ms/step - loss: 2.4620 - accuracy: 0.3632 - top-5-accuracy: 0.6776 - val_loss: 2.2690 - val_accuracy: 0.4006 - val_top-5-accuracy: 0.7222
+ 176/176 ━━━━━━━━━━━━━━━━━━━━ 82s 431ms/step - accuracy: 0.0563 - loss: 4.1603 - top-5-accuracy: 0.1986 - val_accuracy: 0.0718 - val_loss: 4.0230 - val_top-5-accuracy: 0.2534
 Epoch 16/50
-176/176 [==============================] - 15s 85ms/step - loss: 2.4010 - accuracy: 0.3749 - top-5-accuracy: 0.6908 - val_loss: 2.1937 - val_accuracy: 0.4216 - val_top-5-accuracy: 0.7338
+ 176/176 ━━━━━━━━━━━━━━━━━━━━ 79s 418ms/step - accuracy: 0.0548 - loss: 4.1367 - top-5-accuracy: 0.2080 - val_accuracy: 0.0810 - val_loss: 4.0148 - val_top-5-accuracy: 0.2582
 Epoch 17/50
-176/176 [==============================] - 15s 85ms/step - loss: 2.3330 - accuracy: 0.3911 - top-5-accuracy: 0.7041 - val_loss: 2.1519 - val_accuracy: 0.4286 - val_top-5-accuracy: 0.7370
+ 176/176 ━━━━━━━━━━━━━━━━━━━━ 73s 417ms/step - accuracy: 0.0577 - loss: 4.1224 - top-5-accuracy: 0.2128 - val_accuracy: 0.0748 - val_loss: 4.0177 - val_top-5-accuracy: 0.2576
 Epoch 18/50
-176/176 [==============================] - 15s 85ms/step - loss: 2.2600 - accuracy: 0.4069 - top-5-accuracy: 0.7171 - val_loss: 2.1212 - val_accuracy: 0.4356 - val_top-5-accuracy: 0.7460
+ 176/176 ━━━━━━━━━━━━━━━━━━━━ 84s 431ms/step - accuracy: 0.0602 - loss: 4.0958 - top-5-accuracy: 0.2233 - val_accuracy: 0.0700 - val_loss: 4.0434 - val_top-5-accuracy: 0.2538
 Epoch 19/50
-176/176 [==============================] - 15s 85ms/step - loss: 2.1967 - accuracy: 0.4169 - top-5-accuracy: 0.7320 - val_loss: 2.0748 - val_accuracy: 0.4470 - val_top-5-accuracy: 0.7580
+ 176/176 ━━━━━━━━━━━━━━━━━━━━ 76s 430ms/step - accuracy: 0.0613 - loss: 4.1042 - top-5-accuracy: 0.2232 - val_accuracy: 0.0748 - val_loss: 4.0170 - val_top-5-accuracy: 0.2634
 Epoch 20/50
-176/176 [==============================] - 15s 85ms/step - loss: 2.1397 - accuracy: 0.4302 - top-5-accuracy: 0.7450 - val_loss: 2.1152 - val_accuracy: 0.4362 - val_top-5-accuracy: 0.7416
+ 176/176 ━━━━━━━━━━━━━━━━━━━━ 82s 431ms/step - accuracy: 0.0597 - loss: 4.1195 - top-5-accuracy: 0.2211 - val_accuracy: 0.0896 - val_loss: 3.9539 - val_top-5-accuracy: 0.2854
 Epoch 21/50
-176/176 [==============================] - 15s 85ms/step - loss: 2.0929 - accuracy: 0.4396 - top-5-accuracy: 0.7524 - val_loss: 2.0044 - val_accuracy: 0.4652 - val_top-5-accuracy: 0.7680
+ 176/176 ━━━━━━━━━━━━━━━━━━━━ 76s 430ms/step - accuracy: 0.0649 - loss: 4.0599 - top-5-accuracy: 0.2390 - val_accuracy: 0.0802 - val_loss: 4.0006 - val_top-5-accuracy: 0.2712
 Epoch 22/50
-176/176 [==============================] - 15s 85ms/step - loss: 2.0423 - accuracy: 0.4521 - top-5-accuracy: 0.7639 - val_loss: 2.0628 - val_accuracy: 0.4488 - val_top-5-accuracy: 0.7544
+ 176/176 ━━━━━━━━━━━━━━━━━━━━ 80s 417ms/step - accuracy: 0.0680 - loss: 4.0650 - top-5-accuracy: 0.2385 - val_accuracy: 0.0916 - val_loss: 3.9500 - val_top-5-accuracy: 0.2790
 Epoch 23/50
-176/176 [==============================] - 15s 85ms/step - loss: 1.9771 - accuracy: 0.4661 - top-5-accuracy: 0.7750 - val_loss: 1.9380 - val_accuracy: 0.4740 - val_top-5-accuracy: 0.7836
+ 176/176 ━━━━━━━━━━━━━━━━━━━━ 82s 417ms/step - accuracy: 0.0667 - loss: 4.0852 - top-5-accuracy: 0.2381 - val_accuracy: 0.0932 - val_loss: 3.9277 - val_top-5-accuracy: 0.2872
 Epoch 24/50
-176/176 [==============================] - 15s 84ms/step - loss: 1.9323 - accuracy: 0.4752 - top-5-accuracy: 0.7848 - val_loss: 1.9461 - val_accuracy: 0.4732 - val_top-5-accuracy: 0.7768
+ 176/176 ━━━━━━━━━━━━━━━━━━━━ 82s 418ms/step - accuracy: 0.0731 - loss: 4.0355 - top-5-accuracy: 0.2484 - val_accuracy: 0.0922 - val_loss: 3.9267 - val_top-5-accuracy: 0.2922
 Epoch 25/50
-176/176 [==============================] - 15s 85ms/step - loss: 1.8913 - accuracy: 0.4844 - top-5-accuracy: 0.7914 - val_loss: 1.9230 - val_accuracy: 0.4768 - val_top-5-accuracy: 0.7886
+ 176/176 ━━━━━━━━━━━━━━━━━━━━ 84s 431ms/step - accuracy: 0.0748 - loss: 4.0059 - top-5-accuracy: 0.2635 - val_accuracy: 0.0942 - val_loss: 3.9181 - val_top-5-accuracy: 0.2854
 Epoch 26/50
-176/176 [==============================] - 15s 84ms/step - loss: 1.8520 - accuracy: 0.4950 - top-5-accuracy: 0.7999 - val_loss: 1.9159 - val_accuracy: 0.4808 - val_top-5-accuracy: 0.7900
+ 176/176 ━━━━━━━━━━━━━━━━━━━━ 82s 431ms/step - accuracy: 0.0796 - loss: 3.9839 - top-5-accuracy: 0.2660 - val_accuracy: 0.1054 - val_loss: 3.8624 - val_top-5-accuracy: 0.3120
 Epoch 27/50
-176/176 [==============================] - 15s 85ms/step - loss: 1.8175 - accuracy: 0.5046 - top-5-accuracy: 0.8076 - val_loss: 1.8977 - val_accuracy: 0.4896 - val_top-5-accuracy: 0.7876
+ 176/176 ━━━━━━━━━━━━━━━━━━━━ 76s 430ms/step - accuracy: 0.0852 - loss: 3.9548 - top-5-accuracy: 0.2778 - val_accuracy: 0.1012 - val_loss: 3.8862 - val_top-5-accuracy: 0.3122
 Epoch 28/50
-176/176 [==============================] - 15s 85ms/step - loss: 1.7692 - accuracy: 0.5133 - top-5-accuracy: 0.8146 - val_loss: 1.8632 - val_accuracy: 0.4940 - val_top-5-accuracy: 0.7920
+ 176/176 ━━━━━━━━━━━━━━━━━━━━ 80s 417ms/step - accuracy: 0.0910 - loss: 3.9288 - top-5-accuracy: 0.2873 - val_accuracy: 0.1094 - val_loss: 3.8378 - val_top-5-accuracy: 0.3192
 Epoch 29/50
-176/176 [==============================] - 15s 85ms/step - loss: 1.7375 - accuracy: 0.5193 - top-5-accuracy: 0.8206 - val_loss: 1.8686 - val_accuracy: 0.4926 - val_top-5-accuracy: 0.7952
+ 176/176 ━━━━━━━━━━━━━━━━━━━━ 73s 417ms/step - accuracy: 0.0931 - loss: 3.9275 - top-5-accuracy: 0.2917 - val_accuracy: 0.0830 - val_loss: 4.0437 - val_top-5-accuracy: 0.2622
 Epoch 30/50
-176/176 [==============================] - 15s 85ms/step - loss: 1.6952 - accuracy: 0.5308 - top-5-accuracy: 0.8280 - val_loss: 1.8265 - val_accuracy: 0.5024 - val_top-5-accuracy: 0.7996
+ 176/176 ━━━━━━━━━━━━━━━━━━━━ 76s 430ms/step - accuracy: 0.0659 - loss: 4.1312 - top-5-accuracy: 0.2252 - val_accuracy: 0.0730 - val_loss: 4.0968 - val_top-5-accuracy: 0.2366
 Epoch 31/50
-176/176 [==============================] - 15s 85ms/step - loss: 1.6631 - accuracy: 0.5379 - top-5-accuracy: 0.8348 - val_loss: 1.8665 - val_accuracy: 0.4942 - val_top-5-accuracy: 0.7854
+ 176/176 ━━━━━━━━━━━━━━━━━━━━ 76s 430ms/step - accuracy: 0.0641 - loss: 4.1432 - top-5-accuracy: 0.2210 - val_accuracy: 0.0956 - val_loss: 3.9468 - val_top-5-accuracy: 0.2882
 Epoch 32/50
-176/176 [==============================] - 15s 85ms/step - loss: 1.6329 - accuracy: 0.5466 - top-5-accuracy: 0.8401 - val_loss: 1.8364 - val_accuracy: 0.5090 - val_top-5-accuracy: 0.7996
+ 176/176 ━━━━━━━━━━━━━━━━━━━━ 80s 417ms/step - accuracy: 0.0809 - loss: 4.0316 - top-5-accuracy: 0.2580 - val_accuracy: 0.1012 - val_loss: 3.9199 - val_top-5-accuracy: 0.2926
 Epoch 33/50
-176/176 [==============================] - 15s 85ms/step - loss: 1.5960 - accuracy: 0.5537 - top-5-accuracy: 0.8465 - val_loss: 1.8171 - val_accuracy: 0.5136 - val_top-5-accuracy: 0.8034
+ 176/176 ━━━━━━━━━━━━━━━━━━━━ 73s 417ms/step - accuracy: 0.0836 - loss: 3.9901 - top-5-accuracy: 0.2690 - val_accuracy: 0.0088 - val_loss: 4.6065 - val_top-5-accuracy: 0.0606
 Epoch 34/50
-176/176 [==============================] - 15s 85ms/step - loss: 1.5815 - accuracy: 0.5578 - top-5-accuracy: 0.8476 - val_loss: 1.8020 - val_accuracy: 0.5128 - val_top-5-accuracy: 0.8042
+ 176/176 ━━━━━━━━━━━━━━━━━━━━ 82s 417ms/step - accuracy: 0.0130 - loss: 4.5710 - top-5-accuracy: 0.0715 - val_accuracy: 0.0234 - val_loss: 4.4221 - val_top-5-accuracy: 0.1234
 Epoch 35/50
-176/176 [==============================] - 15s 85ms/step - loss: 1.5432 - accuracy: 0.5667 - top-5-accuracy: 0.8566 - val_loss: 1.8173 - val_accuracy: 0.5142 - val_top-5-accuracy: 0.8080
+ 176/176 ━━━━━━━━━━━━━━━━━━━━ 73s 416ms/step - accuracy: 0.0275 - loss: 4.4182 - top-5-accuracy: 0.1194 - val_accuracy: 0.0438 - val_loss: 4.3006 - val_top-5-accuracy: 0.1820
 Epoch 36/50
-176/176 [==============================] - 15s 85ms/step - loss: 1.5110 - accuracy: 0.5768 - top-5-accuracy: 0.8594 - val_loss: 1.8168 - val_accuracy: 0.5124 - val_top-5-accuracy: 0.8066
+ 176/176 ━━━━━━━━━━━━━━━━━━━━ 82s 417ms/step - accuracy: 0.0349 - loss: 4.3419 - top-5-accuracy: 0.1467 - val_accuracy: 0.0482 - val_loss: 4.2545 - val_top-5-accuracy: 0.1948
 Epoch 37/50
-176/176 [==============================] - 15s 85ms/step - loss: 1.4890 - accuracy: 0.5816 - top-5-accuracy: 0.8641 - val_loss: 1.7861 - val_accuracy: 0.5274 - val_top-5-accuracy: 0.8120
+ 176/176 ━━━━━━━━━━━━━━━━━━━━ 82s 417ms/step - accuracy: 0.0412 - loss: 4.3049 - top-5-accuracy: 0.1622 - val_accuracy: 0.0572 - val_loss: 4.2424 - val_top-5-accuracy: 0.2096
 Epoch 38/50
-176/176 [==============================] - 15s 85ms/step - loss: 1.4672 - accuracy: 0.5849 - top-5-accuracy: 0.8660 - val_loss: 1.7695 - val_accuracy: 0.5222 - val_top-5-accuracy: 0.8106
+ 176/176 ━━━━━━━━━━━━━━━━━━━━ 82s 417ms/step - accuracy: 0.0456 - loss: 4.2676 - top-5-accuracy: 0.1777 - val_accuracy: 0.0604 - val_loss: 4.2151 - val_top-5-accuracy: 0.2160
 Epoch 39/50
-176/176 [==============================] - 15s 85ms/step - loss: 1.4323 - accuracy: 0.5939 - top-5-accuracy: 0.8721 - val_loss: 1.7653 - val_accuracy: 0.5250 - val_top-5-accuracy: 0.8164
+ 176/176 ━━━━━━━━━━━━━━━━━━━━ 73s 416ms/step - accuracy: 0.0529 - loss: 4.2212 - top-5-accuracy: 0.1956 - val_accuracy: 0.0638 - val_loss: 4.2102 - val_top-5-accuracy: 0.2164
 Epoch 40/50
-176/176 [==============================] - 15s 85ms/step - loss: 1.4192 - accuracy: 0.5975 - top-5-accuracy: 0.8754 - val_loss: 1.7727 - val_accuracy: 0.5298 - val_top-5-accuracy: 0.8154
+ 176/176 ━━━━━━━━━━━━━━━━━━━━ 73s 416ms/step - accuracy: 0.0553 - loss: 4.2052 - top-5-accuracy: 0.2000 - val_accuracy: 0.0580 - val_loss: 4.2483 - val_top-5-accuracy: 0.1942
 Epoch 41/50
-176/176 [==============================] - 15s 85ms/step - loss: 1.3897 - accuracy: 0.6055 - top-5-accuracy: 0.8805 - val_loss: 1.7535 - val_accuracy: 0.5328 - val_top-5-accuracy: 0.8122
+ 176/176 ━━━━━━━━━━━━━━━━━━━━ 73s 416ms/step - accuracy: 0.0593 - loss: 4.1926 - top-5-accuracy: 0.2096 - val_accuracy: 0.0576 - val_loss: 4.2302 - val_top-5-accuracy: 0.2036
 Epoch 42/50
-176/176 [==============================] - 15s 85ms/step - loss: 1.3702 - accuracy: 0.6087 - top-5-accuracy: 0.8828 - val_loss: 1.7746 - val_accuracy: 0.5316 - val_top-5-accuracy: 0.8116
+ 176/176 ━━━━━━━━━━━━━━━━━━━━ 84s 430ms/step - accuracy: 0.0607 - loss: 4.1615 - top-5-accuracy: 0.2178 - val_accuracy: 0.0642 - val_loss: 4.2020 - val_top-5-accuracy: 0.2104
 Epoch 43/50
-176/176 [==============================] - 15s 85ms/step - loss: 1.3338 - accuracy: 0.6185 - top-5-accuracy: 0.8894 - val_loss: 1.7606 - val_accuracy: 0.5342 - val_top-5-accuracy: 0.8176
+ 176/176 ━━━━━━━━━━━━━━━━━━━━ 82s 430ms/step - accuracy: 0.0618 - loss: 4.1686 - top-5-accuracy: 0.2174 - val_accuracy: 0.0520 - val_loss: 4.2642 - val_top-5-accuracy: 0.1868
 Epoch 44/50
-176/176 [==============================] - 15s 85ms/step - loss: 1.3171 - accuracy: 0.6200 - top-5-accuracy: 0.8920 - val_loss: 1.7490 - val_accuracy: 0.5364 - val_top-5-accuracy: 0.8164
+ 176/176 ━━━━━━━━━━━━━━━━━━━━ 76s 429ms/step - accuracy: 0.0656 - loss: 4.1444 - top-5-accuracy: 0.2268 - val_accuracy: 0.0690 - val_loss: 4.1636 - val_top-5-accuracy: 0.2188
 Epoch 45/50
-176/176 [==============================] - 15s 85ms/step - loss: 1.3056 - accuracy: 0.6276 - top-5-accuracy: 0.8932 - val_loss: 1.7535 - val_accuracy: 0.5388 - val_top-5-accuracy: 0.8156
+ 176/176 ━━━━━━━━━━━━━━━━━━━━ 73s 417ms/step - accuracy: 0.0692 - loss: 4.1015 - top-5-accuracy: 0.2354 - val_accuracy: 0.0450 - val_loss: 4.2696 - val_top-5-accuracy: 0.1740
 Epoch 46/50
-176/176 [==============================] - 15s 85ms/step - loss: 1.2876 - accuracy: 0.6289 - top-5-accuracy: 0.8952 - val_loss: 1.7546 - val_accuracy: 0.5320 - val_top-5-accuracy: 0.8154
+ 176/176 ━━━━━━━━━━━━━━━━━━━━ 84s 432ms/step - accuracy: 0.0688 - loss: 4.1271 - top-5-accuracy: 0.2321 - val_accuracy: 0.0526 - val_loss: 4.2354 - val_top-5-accuracy: 0.1932
 Epoch 47/50
-176/176 [==============================] - 15s 85ms/step - loss: 1.2764 - accuracy: 0.6350 - top-5-accuracy: 0.8970 - val_loss: 1.7177 - val_accuracy: 0.5382 - val_top-5-accuracy: 0.8200
+ 176/176 ━━━━━━━━━━━━━━━━━━━━ 80s 418ms/step - accuracy: 0.0743 - loss: 4.0733 - top-5-accuracy: 0.2484 - val_accuracy: 0.0560 - val_loss: 4.2570 - val_top-5-accuracy: 0.1894
 Epoch 48/50
-176/176 [==============================] - 15s 85ms/step - loss: 1.2543 - accuracy: 0.6407 - top-5-accuracy: 0.9001 - val_loss: 1.7330 - val_accuracy: 0.5438 - val_top-5-accuracy: 0.8198
+ 176/176 ━━━━━━━━━━━━━━━━━━━━ 76s 431ms/step - accuracy: 0.0773 - loss: 4.0570 - top-5-accuracy: 0.2498 - val_accuracy: 0.0544 - val_loss: 4.2575 - val_top-5-accuracy: 0.1946
 Epoch 49/50
-176/176 [==============================] - 15s 84ms/step - loss: 1.2191 - accuracy: 0.6470 - top-5-accuracy: 0.9042 - val_loss: 1.7316 - val_accuracy: 0.5436 - val_top-5-accuracy: 0.8196
+ 176/176 ━━━━━━━━━━━━━━━━━━━━ 82s 433ms/step - accuracy: 0.0826 - loss: 4.0352 - top-5-accuracy: 0.2621 - val_accuracy: 0.0466 - val_loss: 4.3723 - val_top-5-accuracy: 0.1560
 Epoch 50/50
-176/176 [==============================] - 15s 85ms/step - loss: 1.2186 - accuracy: 0.6457 - top-5-accuracy: 0.9066 - val_loss: 1.7201 - val_accuracy: 0.5486 - val_top-5-accuracy: 0.8218
-40/40 [==============================] - 1s 30ms/step - loss: 1.6760 - accuracy: 0.5611 - top-5-accuracy: 0.8227
-Test accuracy: 56.11%
-Test top 5 accuracy: 82.27%
+ 176/176 ━━━━━━━━━━━━━━━━━━━━ 77s 434ms/step - accuracy: 0.0888 - loss: 4.0068 - top-5-accuracy: 0.2730 - val_accuracy: 0.0548 - val_loss: 4.3327 - val_top-5-accuracy: 0.1874
+ 40/40 ━━━━━━━━━━━━━━━━━━━━ 6s 144ms/step - accuracy: 0.0539 - loss: 4.3341 - top-5-accuracy: 0.1849
+Test accuracy: 5.8%
+Test top 5 accuracy: 18.77%
 
 ```
 </div>
@@ -860,4 +856,5 @@ supplementary of the paper.
 I would like to thank [Jarvislabs.ai](https://jarvislabs.ai/) for
 generously helping with GPU credits.
 
-You can use the trained model hosted on [Hugging Face Hub](https://huggingface.co/keras-io/vit_small_ds_v2) and try the demo on [Hugging Face Spaces](https://huggingface.co/spaces/keras-io/vit-small-ds).
+You can use the trained model hosted on [Hugging Face Hub](https://huggingface.co/keras-io/vit_small_ds_v2)
+and try the demo on [Hugging Face Spaces](https://huggingface.co/spaces/keras-io/vit-small-ds).
