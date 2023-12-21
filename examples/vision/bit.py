@@ -2,9 +2,10 @@
 Title: Image Classification using BigTransfer (BiT)
 Author: [Sayan Nath](https://twitter.com/sayannath2350)
 Date created: 2021/09/24
-Last modified: 2021/09/24
+Last modified: 2023/12/22
 Description: BigTransfer (BiT) State-of-the-art transfer learning for image classification.
 Accelerator: GPU
+Converted to Keras 3 by: [Sitam Meur](https://github.com/sitamgithub-MSIT)
 """
 
 """
@@ -39,12 +40,14 @@ the curve below is a ResNet-50 pre-trained on ImageNet (ILSVRC-2012).
 ## Setup
 """
 
+import os
+os.environ["KERAS_BACKEND"] = "tensorflow"
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
+import keras
 import tensorflow as tf
-from tensorflow import keras
 import tensorflow_hub as hub
 import tensorflow_datasets as tfds
 
@@ -53,7 +56,7 @@ tfds.disable_progress_bar()
 SEEDS = 42
 
 np.random.seed(SEEDS)
-tf.random.set_seed(SEEDS)
+seed_generator = keras.random.SeedGenerator(1337)
 
 """
 ## Gather Flower Dataset
@@ -176,7 +179,7 @@ for n in range(25):
 """
 
 bit_model_url = "https://tfhub.dev/google/bit/m-r50x1/1"
-bit_module = hub.KerasLayer(bit_model_url)
+bit_module = hub.load(bit_model_url)
 
 """
 ## Create BigTransfer (BiT) model
