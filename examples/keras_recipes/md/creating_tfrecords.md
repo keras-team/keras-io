@@ -2,7 +2,7 @@
 
 **Author:** [Dimitre Oliveira](https://www.linkedin.com/in/dimitre-oliveira-7a1a0113a/)<br>
 **Date created:** 2021/02/27<br>
-**Last modified:** 2021/02/27<br>
+**Last modified:** 2023/12/20<br>
 **Description:** Converting data to the TFRecord format.
 
 
@@ -46,6 +46,9 @@ numeric) into TFRecord.
 
 ```python
 import os
+
+os.environ["KERAS_BACKEND"] = "tensorflow"
+import keras
 import json
 import pprint
 import tensorflow as tf
@@ -90,14 +93,17 @@ annotations_url = (
 
 # Download image files
 if not os.path.exists(images_dir):
-    image_zip = tf.keras.utils.get_file(
-        "images.zip", cache_dir=os.path.abspath("."), origin=images_url, extract=True,
+    image_zip = keras.utils.get_file(
+        "images.zip",
+        cache_dir=os.path.abspath("."),
+        origin=images_url,
+        extract=True,
     )
     os.remove(image_zip)
 
 # Download caption annotation files
 if not os.path.exists(annotations_dir):
-    annotation_zip = tf.keras.utils.get_file(
+    annotation_zip = keras.utils.get_file(
         "captions.zip",
         cache_dir=os.path.abspath("."),
         origin=annotations_url,
@@ -116,9 +122,11 @@ print(f"Number of images: {len(annotations)}")
 <div class="k-default-codeblock">
 ```
 Downloading data from http://images.cocodataset.org/zips/val2017.zip
-815587328/815585330 [==============================] - 990s 1us/step
+ 815585330/815585330 ━━━━━━━━━━━━━━━━━━━━ 79s 0us/step
 Downloading data from http://images.cocodataset.org/annotations/annotations_trainval2017.zip
-172441600/252907541 [===================>..........] - ETA: 1:35
+ 252907541/252907541 ━━━━━━━━━━━━━━━━━━━━ 5s 0us/step
+The COCO dataset has been downloaded and extracted successfully.
+Number of images: 36781
 
 ```
 </div>
@@ -282,7 +290,9 @@ Image shape: (640, 529, 3)
 
 ```
 </div>
+    
 ![png](/img/examples/keras_recipes/creating_tfrecords/creating_tfrecords_14_1.png)
+    
 
 
 ---
@@ -298,7 +308,7 @@ use only a few of them, in this case, we are going to use only `image` and `cate
 ```python
 
 def prepare_sample(features):
-    image = tf.image.resize(features["image"], size=(224, 224))
+    image = keras.ops.image.resize(features["image"], size=(224, 224))
     return image, features["category_id"]
 
 
@@ -320,16 +330,16 @@ epochs = 1
 steps_per_epoch = 50
 AUTOTUNE = tf.data.AUTOTUNE
 
-input_tensor = tf.keras.layers.Input(shape=(224, 224, 3), name="image")
-model = tf.keras.applications.EfficientNetB0(
+input_tensor = keras.layers.Input(shape=(224, 224, 3), name="image")
+model = keras.applications.EfficientNetB0(
     input_tensor=input_tensor, weights=None, classes=91
 )
 
 
 model.compile(
-    optimizer=tf.keras.optimizers.Adam(),
-    loss=tf.keras.losses.SparseCategoricalCrossentropy(),
-    metrics=[tf.keras.metrics.SparseCategoricalAccuracy()],
+    optimizer=keras.optimizers.Adam(),
+    loss=keras.losses.SparseCategoricalCrossentropy(),
+    metrics=[keras.metrics.SparseCategoricalAccuracy()],
 )
 
 
@@ -343,9 +353,9 @@ model.fit(
 
 <div class="k-default-codeblock">
 ```
-50/50 [==============================] - 258s 5s/step - loss: 3.9857 - sparse_categorical_accuracy: 0.2375
+ 50/50 ━━━━━━━━━━━━━━━━━━━━ 146s 2s/step - loss: 3.9206 - sparse_categorical_accuracy: 0.1690
 
-<tensorflow.python.keras.callbacks.History at 0x7f6ca4160d90>
+<keras.src.callbacks.history.History at 0x7f70684c27a0>
 
 ```
 </div>
