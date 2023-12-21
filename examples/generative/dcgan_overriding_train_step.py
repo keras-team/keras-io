@@ -2,7 +2,7 @@
 Title: DCGAN to generate face images
 Author: [fchollet](https://twitter.com/fchollet)
 Date created: 2019/04/29
-Last modified: 2021/01/01
+Last modified: 2023/12/21
 Description: A simple DCGAN trained using `fit()` by overriding `train_step` on CelebA images.
 Accelerator: GPU
 """
@@ -10,9 +10,11 @@ Accelerator: GPU
 ## Setup
 """
 
+import keras
 import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras import layers
+
+from keras import layers
+from keras import ops
 import matplotlib.pyplot as plt
 import os
 import gdown
@@ -64,11 +66,11 @@ discriminator = keras.Sequential(
     [
         keras.Input(shape=(64, 64, 3)),
         layers.Conv2D(64, kernel_size=4, strides=2, padding="same"),
-        layers.LeakyReLU(alpha=0.2),
+        layers.LeakyReLU(negative_slope=0.2),
         layers.Conv2D(128, kernel_size=4, strides=2, padding="same"),
-        layers.LeakyReLU(alpha=0.2),
+        layers.LeakyReLU(negative_slope=0.2),
         layers.Conv2D(128, kernel_size=4, strides=2, padding="same"),
-        layers.LeakyReLU(alpha=0.2),
+        layers.LeakyReLU(negative_slope=0.2),
         layers.Flatten(),
         layers.Dropout(0.2),
         layers.Dense(1, activation="sigmoid"),
@@ -91,11 +93,11 @@ generator = keras.Sequential(
         layers.Dense(8 * 8 * 128),
         layers.Reshape((8, 8, 128)),
         layers.Conv2DTranspose(128, kernel_size=4, strides=2, padding="same"),
-        layers.LeakyReLU(alpha=0.2),
+        layers.LeakyReLU(negative_slope=0.2),
         layers.Conv2DTranspose(256, kernel_size=4, strides=2, padding="same"),
-        layers.LeakyReLU(alpha=0.2),
+        layers.LeakyReLU(negative_slope=0.2),
         layers.Conv2DTranspose(512, kernel_size=4, strides=2, padding="same"),
-        layers.LeakyReLU(alpha=0.2),
+        layers.LeakyReLU(negative_slope=0.2),
         layers.Conv2D(3, kernel_size=5, padding="same", activation="sigmoid"),
     ],
     name="generator",
@@ -105,6 +107,7 @@ generator.summary()
 """
 ## Override `train_step`
 """
+
 
 
 class GAN(keras.Model):
@@ -128,18 +131,18 @@ class GAN(keras.Model):
 
     def train_step(self, real_images):
         # Sample random points in the latent space
-        batch_size = tf.shape(real_images)[0]
-        random_latent_vectors = tf.random.normal(shape=(batch_size, self.latent_dim))
+        batch_size = ops.shape(real_images)[0]
+        random_latent_vectors = keras.random.normal(shape=(batch_size, self.latent_dim))
 
         # Decode them to fake images
         generated_images = self.generator(random_latent_vectors)
 
         # Combine them with real images
-        combined_images = tf.concat([generated_images, real_images], axis=0)
+        combined_images = ops.concatenate([generated_images, real_images], axis=0)
 
         # Assemble labels discriminating real from fake images
-        labels = tf.concat(
-            [tf.ones((batch_size, 1)), tf.zeros((batch_size, 1))], axis=0
+        labels = ops.concatenate(
+            [ops.ones((batch_size, 1)), ops.zeros((batch_size, 1))], axis=0
         )
         # Add random noise to the labels - important trick!
         labels += 0.05 * tf.random.uniform(tf.shape(labels))
@@ -154,10 +157,10 @@ class GAN(keras.Model):
         )
 
         # Sample random points in the latent space
-        random_latent_vectors = tf.random.normal(shape=(batch_size, self.latent_dim))
+        random_latent_vectors = keras.random.normal(shape=(batch_size, self.latent_dim))
 
         # Assemble labels that say "all real images"
-        misleading_labels = tf.zeros((batch_size, 1))
+        misleading_labels = ops.zeros((batch_size, 1))
 
         # Train the generator (note that we should *not* update the weights
         # of the discriminator)!
@@ -176,6 +179,7 @@ class GAN(keras.Model):
         }
 
 
+
 """
 ## Create a callback that periodically saves generated images
 """
@@ -187,7 +191,7 @@ class GANMonitor(keras.callbacks.Callback):
         self.latent_dim = latent_dim
 
     def on_epoch_end(self, epoch, logs=None):
-        random_latent_vectors = tf.random.normal(shape=(self.num_img, self.latent_dim))
+        random_latent_vectors = keras.random.normal(shape=(self.num_img, self.latent_dim))
         generated_images = self.model.generator(random_latent_vectors)
         generated_images *= 255
         generated_images.numpy()
