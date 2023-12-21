@@ -2,7 +2,7 @@
 Title: Image Segmentation using Composable Fully-Convolutional Networks
 Author: [Suvaditya Mukherjee](https://twitter.com/halcyonrayes)
 Date created: 2023/06/16
-Last modified: 2023/06/16
+Last modified: 2023/12/21
 Description: Using the Fully-Convolutional Network for Image Segmentation.
 Accelerator: GPU
 """
@@ -48,14 +48,17 @@ or a [PyImageSearch Blog on Semantic Segmentation](https://pyimagesearch.com/201
 ## Setup Imports
 """
 
+import os
+os.environ["KERAS_BACKEND"] = "tensorflow"
+import keras
+from keras import ops
 import tensorflow as tf
-from tensorflow import keras
 import matplotlib.pyplot as plt
 import tensorflow_datasets as tfds
 import numpy as np
 
 keras.utils.set_random_seed(27)
-tf.random.set_seed(27)
+seed_generator = keras.random.SeedGenerator(1337)
 
 AUTOTUNE = tf.data.AUTOTUNE
 
@@ -147,10 +150,10 @@ which makes the image and mask size same.
 # for Matplotlib visualization.
 
 images, masks = next(iter(test_ds))
-random_idx = tf.random.uniform([], minval=0, maxval=BATCH_SIZE, dtype=tf.int32)
+random_idx = keras.random.uniform([], minval=0, maxval=BATCH_SIZE, seed=seed_generator)
 
-test_image = images[random_idx].numpy().astype("float")
-test_mask = masks[random_idx].numpy().astype("float")
+test_image = images[int(random_idx)].numpy().astype("float")
+test_mask = masks[int(random_idx)].numpy().astype("float")
 
 # Overlay segmentation mask on top of image.
 fig, ax = plt.subplots(nrows=1, ncols=2, figsize=(10, 5))
@@ -259,7 +262,7 @@ for filter_idx in range(len(units)):
         activation="relu",
         padding="same",
         use_bias=False,
-        kernel_initializer=tf.constant_initializer(1.0),
+        kernel_initializer=keras.initializers.Constant(1.0),
     )
     dense_convs.append(dense_conv)
     dropout_layer = keras.layers.Dropout(0.5)
@@ -556,13 +559,13 @@ Note: For better results, the model must be trained for a higher number of epoch
 """
 
 images, masks = next(iter(test_ds))
-random_idx = tf.random.uniform([], minval=0, maxval=BATCH_SIZE, dtype=tf.int32)
+random_idx = keras.random.uniform([], minval=0, maxval=BATCH_SIZE,seed=seed_generator)
 
 # Get random test image and mask
-test_image = images[random_idx].numpy().astype("float")
-test_mask = masks[random_idx].numpy().astype("float")
+test_image = images[int(random_idx)].numpy().astype("float")
+test_mask = masks[int(random_idx)].numpy().astype("float")
 
-pred_image = tf.expand_dims(test_image, axis=0)
+pred_image = ops.expand_dims(test_image, axis=0)
 pred_image = keras.applications.vgg19.preprocess_input(pred_image)
 
 # Perform inference on FCN-32S
