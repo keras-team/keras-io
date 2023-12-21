@@ -109,7 +109,6 @@ generator.summary()
 """
 
 
-
 class GAN(keras.Model):
     def __init__(self, discriminator, generator, latent_dim):
         super().__init__()
@@ -179,7 +178,6 @@ class GAN(keras.Model):
         }
 
 
-
 """
 ## Create a callback that periodically saves generated images
 """
@@ -191,7 +189,9 @@ class GANMonitor(keras.callbacks.Callback):
         self.latent_dim = latent_dim
 
     def on_epoch_end(self, epoch, logs=None):
-        random_latent_vectors = keras.random.normal(shape=(self.num_img, self.latent_dim))
+        random_latent_vectors = keras.random.normal(
+            shape=(self.num_img, self.latent_dim)
+        )
         generated_images = self.model.generator(random_latent_vectors)
         generated_images *= 255
         generated_images.numpy()
