@@ -1,11 +1,12 @@
 """
 Title: Packaging Keras models for wide distribution using Functional Subclassing
 Author: Martin Görner
-Date created: 2023-12-15
-Last modified: 2023-12-15
+Date created: 2023-12-13
+Last modified: 2023-12-13
 Description: When sharing your deep learning models, package them using the Functional Subclassing pattern.
 Accelerator: GPU
 """
+
 """
 ## Introduction
 
@@ -58,7 +59,7 @@ Let's load an MNIST dataset so that we have something to train with.
 
 BATCH_SIZE = 256
 
-(x_train, train_labels), (x_test, test_labels) = tf.keras.datasets.mnist.load_data()
+(x_train, train_labels), (x_test, test_labels) = keras.datasets.mnist.load_data()
 
 train_data = tf.data.Dataset.from_tensor_slices((x_train, train_labels))
 train_data = train_data.map(
