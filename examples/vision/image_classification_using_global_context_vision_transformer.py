@@ -6,13 +6,14 @@ Last modified: 2023/10/30
 Description: Implementation and fine-tuning of Global Context Vision Transformer for image classification.
 Accelerator: GPU
 """
+
 """
 # Setup
 """
 
 """shell
-pip install --upgrade keras
-pip install --upgrade keras_cv
+!pip install --upgrade keras_cv tensorflow
+!pip install --upgrade keras
 """
 
 import keras
@@ -88,7 +89,8 @@ For this network, it creates **patches/tokens** and converts them into **embeddi
 2. `Level:` It is the repetitive building block that extracts features using different
 blocks.
 3. `Global Token Gen./FeatureExtraction:` It generates **global tokens/patches** with
-**Depthwise-CNN**, **SqueezeAndExcitation (Squeeze-Excitation)**, **CNN** and **MaxPooling**. So basically
+**Depthwise-CNN**, **SqueezeAndExcitation (Squeeze-Excitation)**, **CNN** and
+**MaxPooling**. So basically
 it's a Feature Extractor.
 4. `Block:` It is the repetitive module that applies attention to the features and
 projects them to a certain dimension.
@@ -112,14 +114,16 @@ I've annotated the architecture figure to make it easier to digest,
 > **Note:** This blocks are used to build other modules throughout the paper. Most of the
 blocks are either borrowed from other work or modified version old work.
 
-1. `SqueezeAndExcitation`: **Squeeze-Excitation (SE)** aka **Bottleneck** module acts sd kind of **channel
+1. `SqueezeAndExcitation`: **Squeeze-Excitation (SE)** aka **Bottleneck** module acts sd
+kind of **channel
 attention**. It consits of **AvgPooling**, **Dense/FullyConnected (FC)/Linear** ,
 **GELU** and **Sigmoid** module.
 <img src="https://raw.githubusercontent.com/awsaf49/gcvit-tf/main/image/se_annot.png"
 width=400>
 
 2. `Fused-MBConv:` This is similar to the one used in **EfficientNetV2**. It uses
-**Depthwise-Conv**, **GELU**, **SqueezeAndExcitation**, **Conv**, to extract feature with a resiudal
+**Depthwise-Conv**, **GELU**, **SqueezeAndExcitation**, **Conv**, to extract feature with
+a resiudal
 connection. Note that, no new module is declared for this one, we simply applied
 corresponding modules directly.
 <img src="https://raw.githubusercontent.com/awsaf49/gcvit-tf/main/image/fmb_annot.png"
@@ -455,14 +459,14 @@ image-tokens with window-tokens even after image-tokens have larger dimensions t
 window-tokens? (from above figure image-tokens have shape `(1, 8, 8, 3)` and
 window-tokens have shape `(1, 4, 4, 3)`). Yes, you are right we can't directly compare
 them hence we resize image-tokens to fit window-tokens with `Global Token
-Gen./FeatureExtraction` **CNN** module. The following table should give you a clear comparison,
+Gen./FeatureExtraction` **CNN** module. The following table should give you a clear
+comparison,
 
 | Model            | Query Tokens    | Key-Value Tokens  | Attention Type            | Attention Coverage |
 |------------------|-----------------|-------------------|---------------------------|--------------------|
 | ViT              | image           | image             | self-attention            | global             |
 | SwinTransformer  | window          | window            | self-attention            | local              |
 | **GCViT**        | **resized-image** | **window**     | **image-window attention** | **global**        |
-
 
 """
 
@@ -700,12 +704,14 @@ class Block(layers.Layer):
                 name="gamma1",
                 shape=[C],
                 initializer=keras.initializers.Constant(self.layer_scale),
+                trainable=True,
                 dtype=self.dtype,
             )
             self.gamma2 = self.add_weight(
                 name="gamma2",
                 shape=[C],
                 initializer=keras.initializers.Constant(self.layer_scale),
+                trainable=True,
                 dtype=self.dtype,
             )
         else:
@@ -795,7 +801,8 @@ class Block(layers.Layer):
 
 In the model, the second module that we have used is `level`. Let's try to understand
 this module. As we can see from the `call` method,
-1. First it creates **global_token** with a series of `FeatureExtraction` modules. As we'll see
+1. First it creates **global_token** with a series of `FeatureExtraction` modules. As
+we'll see
 later that `FeatureExtraction` is nothing but a simple **CNN** based module.
 2. Then it uses series of`Block` modules to apply **local or global window attention**
 depending on depth level.
@@ -1017,7 +1024,9 @@ class GCViT(keras.Model):
         return x
 
     def build_graph(self, input_shape=(224, 224, 3)):
-        """ref: https://www.kaggle.com/code/ipythonx/tf-hybrid-efficientnet-swin-transformer-gradcam"""
+        """
+        ref: https://www.kaggle.com/code/ipythonx/tf-hybrid-efficientnet-swin-transformer-gradcam
+        """
         x = keras.Input(shape=input_shape)
         return keras.Model(inputs=[x], outputs=self.call(x), name=self.name)
 
@@ -1043,7 +1052,9 @@ config = {
     "mlp_ratio": 3.0,
     "path_drop": 0.2,
 }
-ckpt_link = "https://github.com/awsaf49/gcvit-tf/releases/download/v1.1.5/gcvitxxtiny.weights.h5"
+ckpt_link = (
+    "https://github.com/awsaf49/gcvit-tf/releases/download/v1.1.6/gcvitxxtiny.keras"
+)
 
 # Build Model
 model = GCViT(**config)
@@ -1112,7 +1123,6 @@ AUTO = tf.data.AUTOTUNE
 
 """
 ## Data Loader
-
 """
 
 
@@ -1134,7 +1144,6 @@ def make_dataset(dataset: tf.data.Dataset, train: bool, image_size: int = IMAGE_
 
 """
 ### Flower Dataset
-
 """
 
 train_dataset, val_dataset = tfds.load(
@@ -1166,7 +1175,6 @@ model.compile(
 
 """
 ### Training
-
 """
 
 history = model.fit(
