@@ -12,8 +12,8 @@ Accelerator: GPU
 """
 
 """shell
-!pip install --upgrade keras_cv tensorflow
-!pip install --upgrade keras
+pip install --upgrade keras_cv tensorflow
+pip install --upgrade keras
 """
 
 import keras
