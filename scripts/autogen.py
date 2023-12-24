@@ -44,10 +44,10 @@ EXAMPLES_GH_LOCATION = Path("keras-team") / "keras-io" / "blob" / "master" / "ex
 GUIDES_GH_LOCATION = Path("keras-team") / "keras-io" / "blob" / "master" / "guides"
 KERAS_TEAM_GH = "https://github.com/keras-team"
 PROJECT_URL = {
-    "keras": f"{KERAS_TEAM_GH}/keras/tree/v3.0.0/",
-    "keras_tuner": f"{KERAS_TEAM_GH}/keras-tuner/tree/v1.4.5/",
-    "keras_cv": f"{KERAS_TEAM_GH}/keras-cv/tree/v0.7.1/",
-    "keras_nlp": f"{KERAS_TEAM_GH}/keras-nlp/tree/v0.6.3/",
+    "keras": f"{KERAS_TEAM_GH}/keras/tree/v3.0.1/",
+    "keras_tuner": f"{KERAS_TEAM_GH}/keras-tuner/tree/v1.4.6/",
+    "keras_cv": f"{KERAS_TEAM_GH}/keras-cv/tree/v0.7.2/",
+    "keras_nlp": f"{KERAS_TEAM_GH}/keras-nlp/tree/v0.6.4/",
     "tf_keras": f"{KERAS_TEAM_GH}/tf-keras/tree/v2.15.0/",
 }
 USE_MULTIPROCESSING = False
@@ -82,7 +82,7 @@ class KerasIO:
 
         self.make_examples_master()
         self.nav = self.make_nav_index()
-        self.docstring_printer = docstrings.TFKerasDocumentationGenerator(PROJECT_URL)
+        self.docstring_printer = docstrings.KerasDocumentationGenerator(PROJECT_URL)
 
     def make_examples_master(self):
         for entry in self.master["children"]:
@@ -558,7 +558,7 @@ class KerasIO:
         location_history = []
         for i in range(len(path_stack)):
             stripped_path_stack = [s.strip("/") for s in path_stack[: i + 1]]
-            url = self.url + "/".join(stripped_path_stack)
+            url = self.url + "/".join(stripped_path_stack) + "/"
             location_history.append(
                 {
                     "url": url,
@@ -571,7 +571,9 @@ class KerasIO:
                 "outline": autogen_utils.make_outline(template)
                 if entry.get("outline", True)
                 else [],
-                "location": "/" + "/".join([s.replace("/", "") for s in path_stack]),
+                "location": "/"
+                + "/".join([s.replace("/", "") for s in path_stack])
+                + "/",
                 "url": parent_url,
                 "title": entry["title"],
             }
@@ -691,6 +693,7 @@ class KerasIO:
             location_history=metadata["location_history"],
             outline=metadata["outline"],
             local_nav=local_nav,
+            relative_url=relative_url,
         )
 
         # Save per-category landing pages
@@ -723,6 +726,7 @@ class KerasIO:
                 location_history=metadata["location_history"],
                 outline=metadata["outline"],
                 local_nav=local_nav,
+                relative_url=relative_url,
             )
 
     def render_md_sources_to_html(self):
@@ -863,6 +867,8 @@ class KerasIO:
             target_path = full_target_dir / "index.html"
             relative_url = (str(full_target_dir) + "/").replace(self.site_dir, "/")
             relative_url = relative_url.replace("//", "/")
+            if not relative_url.endswith("/"):
+                relative_url += "/"
 
         md_file = open(src_dir / fname, encoding="utf-8")
         md_content = md_file.read()
@@ -928,6 +934,7 @@ class KerasIO:
             metadata["location_history"],
             metadata["outline"],
             local_nav,
+            relative_url,
         )
         return relative_url
 
@@ -939,6 +946,7 @@ class KerasIO:
         location_history,
         outline,
         local_nav,
+        relative_url,
     ):
         base_template = jinja2.Template(open(Path(self.theme_dir) / "base.html").read())
         docs_template = jinja2.Template(open(Path(self.theme_dir) / "docs.html").read())
@@ -957,6 +965,7 @@ class KerasIO:
                 "nav": local_nav,
                 "base_url": self.url,
                 "main": html_docs,
+                "relative_url": relative_url,
             }
         )
         html_page = html_page.replace("../guides/img/", "/img/guides/")

@@ -97,15 +97,15 @@ GUIDES_MASTER = {
         },
         {
             "path": "custom_train_step_in_jax",
-            "title": "Customizing what happens in `fit()` with JAX",
+            "title": "Customizing `fit()` with JAX",
         },
         {
             "path": "custom_train_step_in_tensorflow",
-            "title": "Customizing what happens in `fit()` with TensorFlow",
+            "title": "Customizing `fit()` with TensorFlow",
         },
         {
             "path": "custom_train_step_in_torch",
-            "title": "Customizing what happens in `fit()` with PyTorch",
+            "title": "Customizing `fit()` with PyTorch",
         },
         {
             "path": "writing_a_custom_training_loop_in_jax",

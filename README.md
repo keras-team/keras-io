@@ -6,6 +6,8 @@ This repository hosts the code used to generate the [keras.io](https://keras.io)
 
 ```
 pip install -r requirements.txt
+# Update Keras version to 3
+pip install keras==3.0.2
 cd scripts
 python autogen.py make
 python autogen.py serve

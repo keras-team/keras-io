@@ -10,7 +10,7 @@ import itertools
 import render_tags
 
 
-class TFKerasDocumentationGenerator:
+class KerasDocumentationGenerator:
     def __init__(self, project_url=None):
         self.project_url = project_url
 
@@ -313,6 +313,7 @@ def get_google_style_sections(docstring):
     google_style_sections, docstring = get_google_style_sections_without_code(docstring)
     docstring = reinject_strings(docstring, code_blocks)
     for section_token, section in google_style_sections.items():
+        section = reinject_strings(section, code_blocks)
         google_style_sections[section_token] = reinject_strings(section, code_blocks)
     return google_style_sections, docstring
 
@@ -339,6 +340,8 @@ def to_markdown(google_style_section: str) -> str:
 def format_as_markdown_list(section_body):
     section_body = re.sub(r"\n([^ ].*?):", r"\n- __\1__:", section_body)
     section_body = re.sub(r"^([^ ].*?):", r"- __\1__:", section_body)
+    # Switch to 2-space indent so we can render nested lists.
+    section_body = section_body.replace("\n    ", "\n  ")
     return section_body
 
 

@@ -2,7 +2,7 @@
 Title: Video Classification with a CNN-RNN Architecture
 Author: [Sayak Paul](https://twitter.com/RisingSayak)
 Date created: 2021/05/28
-Last modified: 2023/08/28
+Last modified: 2023/12/08
 Description: Training a video classifier with transfer learning and a recurrent model on the UCF101 dataset.
 Accelerator: GPU
 """
@@ -47,18 +47,17 @@ tar xf ucf101_top5.tar.gz
 """
 ## Setup
 """
+import os
 
-from tensorflow_docs.vis import embed
-from tensorflow import keras
+import keras
 from imutils import paths
 
 import matplotlib.pyplot as plt
-import tensorflow as tf
 import pandas as pd
 import numpy as np
 import imageio
 import cv2
-import os
+from IPython.display import Image
 
 """
 ## Define hyperparameters
@@ -185,7 +184,7 @@ def prepare_all_videos(df, root_dir):
     num_samples = len(df)
     video_paths = df["video_name"].values.tolist()
     labels = df["tag"].values
-    labels = label_processor(labels[..., None]).numpy()
+    labels = keras.ops.convert_to_numpy(label_processor(labels[..., None]))
 
     # `frame_masks` and `frame_features` are what we will feed to our sequence model.
     # `frame_masks` will contain a bunch of booleans denoting if a timestep is
@@ -219,7 +218,8 @@ def prepare_all_videos(df, root_dir):
             length = min(MAX_SEQ_LENGTH, video_length)
             for j in range(length):
                 temp_frame_features[i, j, :] = feature_extractor.predict(
-                    batch[None, j, :]
+                    batch[None, j, :],
+                    verbose=0,
                 )
             temp_frame_mask[i, :length] = 1  # 1 = not masked, 0 = masked
 
@@ -275,7 +275,7 @@ def get_sequence_model():
 
 # Utility for running experiments.
 def run_experiment():
-    filepath = "/tmp/video_classifier"
+    filepath = "/tmp/video_classifier/ckpt.weights.h5"
     checkpoint = keras.callbacks.ModelCheckpoint(
         filepath, save_weights_only=True, save_best_only=True, verbose=1
     )
@@ -349,7 +349,7 @@ def sequence_prediction(path):
 def to_gif(images):
     converted_images = images.astype(np.uint8)
     imageio.mimsave("animation.gif", converted_images, duration=100)
-    return embed.embed_file("animation.gif")
+    return Image("animation.gif")
 
 
 test_video = np.random.choice(test_df["video_name"].values.tolist())
@@ -364,7 +364,7 @@ to_gif(test_frames[:MAX_SEQ_LENGTH])
 from video frames. You could also fine-tune the pre-trained network to notice how that
 affects the end results.
 * For speed-accuracy trade-offs, you can try out other models present inside
-`tf.keras.applications`.
+`keras.applications`.
 * Try different combinations of `MAX_SEQ_LENGTH` to observe how that affects the
 performance.
 * Train on a higher number of classes and see if you are able to get good performance.

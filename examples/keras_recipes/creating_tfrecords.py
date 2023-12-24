@@ -2,7 +2,7 @@
 Title: Creating TFRecords
 Author: [Dimitre Oliveira](https://www.linkedin.com/in/dimitre-oliveira-7a1a0113a/)
 Date created: 2021/02/27
-Last modified: 2021/02/27
+Last modified: 2023/12/20
 Description: Converting data to the TFRecord format.
 Accelerator: GPU
 """
@@ -41,6 +41,9 @@ numeric) into TFRecord.
 """
 
 import os
+
+os.environ["KERAS_BACKEND"] = "tensorflow"
+import keras
 import json
 import pprint
 import tensorflow as tf
@@ -83,7 +86,7 @@ annotations_url = (
 
 # Download image files
 if not os.path.exists(images_dir):
-    image_zip = tf.keras.utils.get_file(
+    image_zip = keras.utils.get_file(
         "images.zip",
         cache_dir=os.path.abspath("."),
         origin=images_url,
@@ -93,7 +96,7 @@ if not os.path.exists(images_dir):
 
 # Download caption annotation files
 if not os.path.exists(annotations_dir):
-    annotation_zip = tf.keras.utils.get_file(
+    annotation_zip = keras.utils.get_file(
         "captions.zip",
         cache_dir=os.path.abspath("."),
         origin=annotations_url,
@@ -243,7 +246,7 @@ use only a few of them, in this case, we are going to use only `image` and `cate
 
 
 def prepare_sample(features):
-    image = tf.image.resize(features["image"], size=(224, 224))
+    image = keras.ops.image.resize(features["image"], size=(224, 224))
     return image, features["category_id"]
 
 
@@ -265,16 +268,16 @@ epochs = 1
 steps_per_epoch = 50
 AUTOTUNE = tf.data.AUTOTUNE
 
-input_tensor = tf.keras.layers.Input(shape=(224, 224, 3), name="image")
-model = tf.keras.applications.EfficientNetB0(
+input_tensor = keras.layers.Input(shape=(224, 224, 3), name="image")
+model = keras.applications.EfficientNetB0(
     input_tensor=input_tensor, weights=None, classes=91
 )
 
 
 model.compile(
-    optimizer=tf.keras.optimizers.Adam(),
-    loss=tf.keras.losses.SparseCategoricalCrossentropy(),
-    metrics=[tf.keras.metrics.SparseCategoricalAccuracy()],
+    optimizer=keras.optimizers.Adam(),
+    loss=keras.losses.SparseCategoricalCrossentropy(),
+    metrics=[keras.metrics.SparseCategoricalAccuracy()],
 )
 
 

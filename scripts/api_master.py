@@ -772,7 +772,7 @@ API_MASTER = {
                             "generate": ["keras.layers.TorchModuleWrapper"],
                         },
                     ],
-                }
+                },
             ],
         },
         {

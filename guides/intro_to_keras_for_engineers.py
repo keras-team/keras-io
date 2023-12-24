@@ -356,7 +356,7 @@ the power and usability of `fit()`? It's easy to customize
 
 - [Customizing what happens in `fit()` with TensorFlow](http://keras.io/guides/custom_train_step_in_tensorflow/)
 - [Customizing what happens in `fit()` with JAX](http://keras.io/guides/custom_train_step_in_jax/)
-- [Customizing what happens in `fit()` with PyTorch](http://keras.io/guides/custom_train_step_in_pytorch/)
+- [Customizing what happens in `fit()` with PyTorch](http://keras.io/guides/custom_train_step_in_torch/)
 
 ## How to write custom training loops
 
@@ -367,8 +367,8 @@ the power and usability of `fit()`? It's easy to customize
 ## How to distribute training
 
 - [Guide to distributed training with TensorFlow](http://keras.io/guides/distributed_training_with_tensorflow/)
-- [JAX distributed training example](https://github.com/keras-team/keras/blob/main/examples/demo_jax_distributed.py)
-- [PyTorch distributed training example](https://github.com/keras-team/keras/blob/main/examples/demo_torch_multi_gpu.py)
+- [JAX distributed training example](https://github.com/keras-team/keras/blob/master/examples/demo_jax_distributed.py)
+- [PyTorch distributed training example](https://github.com/keras-team/keras/blob/master/examples/demo_torch_multi_gpu.py)
 
 Enjoy the library! 🚀
 """

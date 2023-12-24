@@ -10,10 +10,9 @@ pandas
 jupyter
 pycocotools
 pydot
-tensorflow~=2.15.0
+tensorflow
 tensorflow_datasets
-keras-core==0.1.7
-keras-tuner==1.4.5
-keras-cv==0.7.1
+keras-tuner==1.4.6
+keras-cv==0.7.2
 tf_keras==2.15.0
-keras-nlp==0.6.3
+keras-nlp==0.6.4
