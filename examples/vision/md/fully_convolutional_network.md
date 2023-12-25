@@ -2,7 +2,7 @@
 
 **Author:** [Suvaditya Mukherjee](https://twitter.com/halcyonrayes)<br>
 **Date created:** 2023/06/16<br>
-**Last modified:** 2023/10/21<br>
+**Last modified:** 2023/12/25<br>
 **Description:** Using the Fully-Convolutional Network for Image Segmentation.
 
 
@@ -58,9 +58,6 @@ import tensorflow as tf
 import matplotlib.pyplot as plt
 import tensorflow_datasets as tfds
 import numpy as np
-
-keras.utils.set_random_seed(27)
-seed_generator = keras.random.SeedGenerator(1337)
 
 AUTOTUNE = tf.data.AUTOTUNE
 ```
@@ -168,7 +165,7 @@ which makes the image and mask size same.
 # for Matplotlib visualization.
 
 images, masks = next(iter(test_ds))
-random_idx = keras.random.uniform([], minval=0, maxval=BATCH_SIZE, seed=seed_generator)
+random_idx = keras.random.uniform([], minval=0, maxval=BATCH_SIZE, seed=10)
 
 test_image = images[int(random_idx)].numpy().astype("float")
 test_mask = masks[int(random_idx)].numpy().astype("float")
@@ -975,7 +972,7 @@ Note: For better results, the model must be trained for a higher number of epoch
 
 ```python
 images, masks = next(iter(test_ds))
-random_idx = keras.random.uniform([], minval=0, maxval=BATCH_SIZE,seed=seed_generator)
+random_idx = keras.random.uniform([], minval=0, maxval=BATCH_SIZE,seed=10)
 
 # Get random test image and mask
 test_image = images[int(random_idx)].numpy().astype("float")
