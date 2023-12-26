@@ -2,7 +2,7 @@
 
 **Author:** [Sayak Paul](https://twitter.com/RisingSayak)<br>
 **Date created:** 2021/03/19<br>
-**Last modified:** 2021/03/20<br>
+**Last modified:** 2023/12/26<br>
 **Description:** Implementation of a self-supervised learning method for computer vision.
 
 
@@ -44,16 +44,18 @@ fully-connected network having an
 4. We then train our encoder to maximize the cosine similarity between the two different
 versions of our dataset.
 
-This example requires TensorFlow 2.4 or higher.
+This example requires TensorFlow 2.15 or higher.
 
 ---
 ## Setup
 
 
 ```python
-from tensorflow.keras import layers
-from tensorflow.keras import regularizers
-import tensorflow as tf
+import os
+os.environ["KERAS_BACKEND"] = "tensorflow"
+import keras
+import keras_cv
+from keras import ops
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -80,7 +82,7 @@ WEIGHT_DECAY = 0.0005
 
 
 ```python
-(x_train, y_train), (x_test, y_test) = tf.keras.datasets.cifar10.load_data()
+(x_train, y_train), (x_test, y_test) = keras.datasets.cifar10.load_data()
 print(f"Total training examples: {len(x_train)}")
 print(f"Total test examples: {len(x_test)}")
 ```
@@ -106,36 +108,42 @@ etc.) include these in their training pipelines.
 
 ```python
 
+strength=[0.4, 0.4, 0.4, 0.1]
+
+random_flip = layers.RandomFlip(mode="horizontal_and_vertical")
+random_crop = layers.RandomCrop(CROP_TO, CROP_TO)
+random_brightness=layers.RandomBrightness(0.8 * strength[0])
+random_contrast=layers.RandomContrast((1 - 0.8 * strength[1],1 + 0.8 * strength[1]))
+random_saturation=keras_cv.layers.RandomSaturation((0.5 - 0.8 * strength[2], 0.5 + 0.8 * strength[2]))
+random_hue=keras_cv.layers.RandomHue(0.2 * strength[3],[0,255])
+grayscale=keras_cv.layers.Grayscale()
+
 def flip_random_crop(image):
     # With random crops we also apply horizontal flipping.
-    image = tf.image.random_flip_left_right(image)
-    image = tf.image.random_crop(image, (CROP_TO, CROP_TO, 3))
+    image = random_flip(image)
+    image = random_crop(image)
     return image
 
 
-def color_jitter(x, strength=[0.4, 0.4, 0.4, 0.1]):
-    x = tf.image.random_brightness(x, max_delta=0.8 * strength[0])
-    x = tf.image.random_contrast(
-        x, lower=1 - 0.8 * strength[1], upper=1 + 0.8 * strength[1]
-    )
-    x = tf.image.random_saturation(
-        x, lower=1 - 0.8 * strength[2], upper=1 + 0.8 * strength[2]
-    )
-    x = tf.image.random_hue(x, max_delta=0.2 * strength[3])
+def color_jitter(x, strength=[0.4, 0.4, 0.3, 0.1]):
+    x = random_brightness(x)
+    x = random_contrast(x)
+    x = random_saturation(x)
+    x = random_hue(x)
     # Affine transformations can disturb the natural range of
     # RGB images, hence this is needed.
-    x = tf.clip_by_value(x, 0, 255)
+    x = ops.clip(x, 0, 255)
     return x
 
 
 def color_drop(x):
-    x = tf.image.rgb_to_grayscale(x)
-    x = tf.tile(x, [1, 1, 3])
+    x = grayscale(x)
+    x = ops.tile(x, [1, 1, 3])
     return x
 
 
 def random_apply(func, x, p):
-    if tf.random.uniform([], minval=0, maxval=1) < p:
+    if keras.random.uniform([], minval=0, maxval=1,seed=152) < p:
         return func(x)
     else:
         return x
@@ -263,11 +271,11 @@ def get_encoder():
         PROJECT_DIM, use_bias=False, kernel_regularizer=regularizers.l2(WEIGHT_DECAY)
     )(x)
     outputs = layers.BatchNormalization()(x)
-    return tf.keras.Model(inputs, outputs, name="encoder")
+    return keras.Model(inputs, outputs, name="encoder")
 
 
 def get_predictor():
-    model = tf.keras.Sequential(
+    model = keras.Sequential(
         [
             # Note the AutoEncoder-like structure.
             layers.Input((PROJECT_DIM,)),
@@ -302,27 +310,27 @@ def compute_loss(p, z):
     # The authors of SimSiam emphasize the impact of
     # the `stop_gradient` operator in the paper as it
     # has an important role in the overall optimization.
-    z = tf.stop_gradient(z)
-    p = tf.math.l2_normalize(p, axis=1)
-    z = tf.math.l2_normalize(z, axis=1)
+    z = ops.stop_gradient(z)
+    p = keras.utils.normalize(p, axis=1,order=2)
+    z = keras.utils.normalize(z, axis=1,order=2)
     # Negative cosine similarity (minimizing this is
     # equivalent to maximizing the similarity).
-    return -tf.reduce_mean(tf.reduce_sum((p * z), axis=1))
+    return -ops.mean(ops.sum((p * z), axis=1))
 
 ```
 
 We then define our training loop by overriding the `train_step()` function of the
-`tf.keras.Model` class.
+`keras.Model` class.
 
 
 ```python
 
-class SimSiam(tf.keras.Model):
+class SimSiam(keras.Model):
     def __init__(self, encoder, predictor):
         super().__init__()
         self.encoder = encoder
         self.predictor = predictor
-        self.loss_tracker = tf.keras.metrics.Mean(name="loss")
+        self.loss_tracker = keras.metrics.Mean(name="loss")
 
     @property
     def metrics(self):
@@ -365,18 +373,18 @@ this should at least be 100 epochs.
 # Create a cosine decay learning scheduler.
 num_training_samples = len(x_train)
 steps = EPOCHS * (num_training_samples // BATCH_SIZE)
-lr_decayed_fn = tf.keras.optimizers.schedules.CosineDecay(
+lr_decayed_fn = keras.optimizers.schedules.CosineDecay(
     initial_learning_rate=0.03, decay_steps=steps
 )
 
 # Create an early stopping callback.
-early_stopping = tf.keras.callbacks.EarlyStopping(
+early_stopping = keras.callbacks.EarlyStopping(
     monitor="loss", patience=5, restore_best_weights=True
 )
 
 # Compile model and start training.
 simsiam = SimSiam(get_encoder(), get_predictor())
-simsiam.compile(optimizer=tf.keras.optimizers.SGD(lr_decayed_fn, momentum=0.6))
+simsiam.compile(optimizer=keras.optimizers.SGD(lr_decayed_fn, momentum=0.6))
 history = simsiam.fit(ssl_ds, epochs=EPOCHS, callbacks=[early_stopping])
 
 # Visualize the training progress of the model.
@@ -446,7 +454,7 @@ train_ds = (
 test_ds = test_ds.batch(BATCH_SIZE).prefetch(AUTO)
 
 # Extract the backbone ResNet20.
-backbone = tf.keras.Model(
+backbone = keras.Model(
     simsiam.encoder.input, simsiam.encoder.get_layer("backbone_pool").output
 )
 
@@ -455,13 +463,13 @@ backbone.trainable = False
 inputs = layers.Input((CROP_TO, CROP_TO, 3))
 x = backbone(inputs, training=False)
 outputs = layers.Dense(10, activation="softmax")(x)
-linear_model = tf.keras.Model(inputs, outputs, name="linear_model")
+linear_model = keras.Model(inputs, outputs, name="linear_model")
 
 # Compile model and start training.
 linear_model.compile(
     loss="sparse_categorical_crossentropy",
     metrics=["accuracy"],
-    optimizer=tf.keras.optimizers.SGD(lr_decayed_fn, momentum=0.9),
+    optimizer=keras.optimizers.SGD(lr_decayed_fn, momentum=0.9),
 )
 history = linear_model.fit(
     train_ds, validation_data=test_ds, epochs=EPOCHS, callbacks=[early_stopping]
