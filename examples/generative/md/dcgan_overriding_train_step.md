@@ -24,6 +24,8 @@ import matplotlib.pyplot as plt
 import os
 import gdown
 from zipfile import ZipFile
+
+seed_generator = keras.random.SeedGenerator(42)
 ```
 
 ---
@@ -261,7 +263,9 @@ class GAN(keras.Model):
     def train_step(self, real_images):
         # Sample random points in the latent space
         batch_size = ops.shape(real_images)[0]
-        random_latent_vectors = keras.random.normal(shape=(batch_size, self.latent_dim))
+        random_latent_vectors = keras.random.normal(
+            shape=(batch_size, self.latent_dim), seed=seed_generator
+        )
 
         # Decode them to fake images
         generated_images = self.generator(random_latent_vectors)
@@ -286,7 +290,9 @@ class GAN(keras.Model):
         )
 
         # Sample random points in the latent space
-        random_latent_vectors = keras.random.normal(shape=(batch_size, self.latent_dim))
+        random_latent_vectors = keras.random.normal(
+            shape=(batch_size, self.latent_dim), seed=seed_generator
+        )
 
         # Assemble labels that say "all real images"
         misleading_labels = ops.zeros((batch_size, 1))
@@ -322,7 +328,7 @@ class GANMonitor(keras.callbacks.Callback):
 
     def on_epoch_end(self, epoch, logs=None):
         random_latent_vectors = keras.random.normal(
-            shape=(self.num_img, self.latent_dim)
+            shape=(self.num_img, self.latent_dim), seed=seed_generator
         )
         generated_images = self.model.generator(random_latent_vectors)
         generated_images *= 255
@@ -354,14 +360,14 @@ gan.fit(
 
 <div class="k-default-codeblock">
 ```
-    2/6332 [37m━━━━━━━━━━━━━━━━━━━━  9:37 91ms/step - d_loss: 0.6853 - g_loss: 0.7761   
+    2/6332 [37m━━━━━━━━━━━━━━━━━━━━  10:07 96ms/step - d_loss: 0.6940 - g_loss: 0.7699  
 
 WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
-I0000 00:00:1703188912.818851    3649 device_compiler.h:186] Compiled cluster using XLA!  This line is logged at most once for the lifetime of the process.
+I0000 00:00:1703715357.169335    1399 device_compiler.h:186] Compiled cluster using XLA!  This line is logged at most once for the lifetime of the process.
 
- 6332/6332 ━━━━━━━━━━━━━━━━━━━━ 558s 84ms/step - d_loss: 0.5599 - g_loss: 1.4323
+ 6332/6332 ━━━━━━━━━━━━━━━━━━━━ 562s 85ms/step - d_loss: 0.6062 - g_loss: 1.2240
 
-<keras.src.callbacks.history.History at 0x7f957375caf0>
+<keras.src.callbacks.history.History at 0x7fc3784ed8a0>
 
 ```
 </div>

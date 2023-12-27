@@ -134,8 +134,7 @@ class GAN(keras.Model):
         # Sample random points in the latent space
         batch_size = ops.shape(real_images)[0]
         random_latent_vectors = keras.random.normal(
-            shape=(batch_size, self.latent_dim),
-            seed=seed_generator
+            shape=(batch_size, self.latent_dim), seed=seed_generator
         )
 
         # Decode them to fake images
@@ -162,8 +161,7 @@ class GAN(keras.Model):
 
         # Sample random points in the latent space
         random_latent_vectors = keras.random.normal(
-            shape=(batch_size, self.latent_dim),
-            seed=seed_generator
+            shape=(batch_size, self.latent_dim), seed=seed_generator
         )
 
         # Assemble labels that say "all real images"
@@ -198,8 +196,7 @@ class GANMonitor(keras.callbacks.Callback):
 
     def on_epoch_end(self, epoch, logs=None):
         random_latent_vectors = keras.random.normal(
-            shape=(self.num_img, self.latent_dim),
-            seed=seed_generator
+            shape=(self.num_img, self.latent_dim), seed=seed_generator
         )
         generated_images = self.model.generator(random_latent_vectors)
         generated_images *= 255
