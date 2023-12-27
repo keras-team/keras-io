@@ -262,7 +262,7 @@ outputs = model.predict(
 
 <div class="k-default-codeblock">
 ```
- 1/1 ━━━━━━━━━━━━━━━━━━━━ 38s 38s/step
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 41s 41s/step
 
 ```
 </div>
@@ -485,10 +485,10 @@ filepath = keras.utils.get_file(
     origin="https://storage.googleapis.com/keras-cv/test-images/mountain-dog.jpeg"
 )
 image = np.array(keras.utils.load_img(filepath))
-image = inference_resizing(image)
+image = ops.convert_to_numpy(inference_resizing(image))
 
 plt.figure(figsize=(10, 10))
-plt.imshow(ops.convert_to_numpy(image) / 255.0)
+plt.imshow(image / 255.0)
 plt.axis("on")
 plt.show()
 ```
@@ -514,7 +514,7 @@ segment whatever you want using text from your image!
 
 ```python
 # Let's predict the bounding box for the harness of the dog
-boxes = grounding_dino.predict_with_caption(np.array(image, dtype=np.uint8), "harness")
+boxes = grounding_dino.predict_with_caption(image.astype(np.uint8), "harness")
 boxes = np.array(boxes[0].xyxy)
 
 outputs = model.predict(
@@ -548,7 +548,7 @@ Let's visualize the results.
 
 ```python
 plt.figure(figsize=(10, 10))
-plt.imshow(ops.convert_to_numpy(image) / 255.0)
+plt.imshow(image / 255.0)
 
 for mask in outputs["masks"]:
     mask = inference_resizing(mask[0][..., None], pad=False)[..., 0]
@@ -611,8 +611,8 @@ print(f"Time taken with float16 dtype: {min(time_taken) / 3:.10f}s")
 
 <div class="k-default-codeblock">
 ```
-Time taken with float32 dtype: 0.5332747653s
-Time taken with float16 dtype: 0.1609014777s
+Time taken with float32 dtype: 0.5337588177s
+Time taken with float16 dtype: 0.1591560393s
 
 ```
 </div>
