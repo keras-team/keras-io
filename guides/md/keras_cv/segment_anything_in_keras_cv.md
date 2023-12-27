@@ -262,7 +262,7 @@ outputs = model.predict(
 
 <div class="k-default-codeblock">
 ```
- 1/1 ━━━━━━━━━━━━━━━━━━━━ 41s 41s/step
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 39s 39s/step
 
 ```
 </div>
@@ -307,35 +307,23 @@ Let's also visualize the other masks the model has predicted.
 
 
 ```python
+fig, ax = plt.subplots(1, 3, figsize=(20, 60))
 masks, scores = outputs["masks"][0][1:], outputs["iou_pred"][0][1:]
 for i, (mask, score) in enumerate(zip(masks, scores)):
     mask = inference_resizing(mask[..., None], pad=False)[..., 0]
     mask, score = map(ops.convert_to_numpy, (mask, score))
     mask = 1 * (mask > 0.0)
-    plt.figure(figsize=(10, 10))
-    plt.imshow(ops.convert_to_numpy(image) / 255.0)
-    show_mask(mask, plt.gca())
-    show_points(input_point, input_label, plt.gca())
-    plt.title(f"Mask {i+1}, Score: {score:.3f}", fontsize=18)
-    plt.axis("off")
-    plt.show()
+    ax[i].imshow(ops.convert_to_numpy(image) / 255.0)
+    show_mask(mask, ax[i])
+    show_points(input_point, input_label, ax[i])
+    ax[i].set_title(f"Mask {i+1}, Score: {score:.3f}", fontsize=12)
+    ax[i].axis("off")
+plt.show()
 ```
 
 
     
 ![png](/img/guides/segment_anything_in_keras_cv/segment_anything_in_keras_cv_20_0.png)
-    
-
-
-
-    
-![png](/img/guides/segment_anything_in_keras_cv/segment_anything_in_keras_cv_20_1.png)
-    
-
-
-
-    
-![png](/img/guides/segment_anything_in_keras_cv/segment_anything_in_keras_cv_20_2.png)
     
 
 
@@ -611,8 +599,8 @@ print(f"Time taken with float16 dtype: {min(time_taken) / 3:.10f}s")
 
 <div class="k-default-codeblock">
 ```
-Time taken with float32 dtype: 0.5337588177s
-Time taken with float16 dtype: 0.1591560393s
+Time taken with float32 dtype: 0.5343484557s
+Time taken with float16 dtype: 0.1595368500s
 
 ```
 </div>
