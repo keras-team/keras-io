@@ -1,8 +1,8 @@
 # Packaging Keras models for wide distribution using Functional Subclassing
 
 **Author:** Martin Görner<br>
-**Date created:** 2023-12-15<br>
-**Last modified:** 2023-12-15<br>
+**Date created:** 2023-12-13<br>
+**Last modified:** 2023-12-13<br>
 **Description:** When sharing your deep learning models, package them using the Functional Subclassing pattern.
 
 
@@ -71,7 +71,7 @@ Let's load an MNIST dataset so that we have something to train with.
 
 BATCH_SIZE = 256
 
-(x_train, train_labels), (x_test, test_labels) = tf.keras.datasets.mnist.load_data()
+(x_train, train_labels), (x_test, test_labels) = keras.datasets.mnist.load_data()
 
 train_data = tf.data.Dataset.from_tensor_slices((x_train, train_labels))
 train_data = train_data.map(
@@ -159,15 +159,15 @@ history = model.fit(
 <div class="k-default-codeblock">
 ```
 Epoch 1/5
- 234/234 ━━━━━━━━━━━━━━━━━━━━ 13s 33ms/step - loss: 1.8610 - sparse_categorical_accuracy: 0.3137 - val_loss: 0.4941 - val_sparse_categorical_accuracy: 0.8740
+ 234/234 ━━━━━━━━━━━━━━━━━━━━ 9s 33ms/step - loss: 1.8916 - sparse_categorical_accuracy: 0.2933 - val_loss: 0.4278 - val_sparse_categorical_accuracy: 0.8864
 Epoch 2/5
- 234/234 ━━━━━━━━━━━━━━━━━━━━ 7s 30ms/step - loss: 0.6131 - sparse_categorical_accuracy: 0.8099 - val_loss: 0.2655 - val_sparse_categorical_accuracy: 0.9275
+ 234/234 ━━━━━━━━━━━━━━━━━━━━ 7s 31ms/step - loss: 0.5723 - sparse_categorical_accuracy: 0.8201 - val_loss: 0.2703 - val_sparse_categorical_accuracy: 0.9248
 Epoch 3/5
- 234/234 ━━━━━━━━━━━━━━━━━━━━ 7s 30ms/step - loss: 0.4191 - sparse_categorical_accuracy: 0.8742 - val_loss: 0.1845 - val_sparse_categorical_accuracy: 0.9469
+ 234/234 ━━━━━━━━━━━━━━━━━━━━ 7s 31ms/step - loss: 0.4063 - sparse_categorical_accuracy: 0.8772 - val_loss: 0.2010 - val_sparse_categorical_accuracy: 0.9400
 Epoch 4/5
- 234/234 ━━━━━━━━━━━━━━━━━━━━ 7s 30ms/step - loss: 0.3495 - sparse_categorical_accuracy: 0.8963 - val_loss: 0.1649 - val_sparse_categorical_accuracy: 0.9506
+ 234/234 ━━━━━━━━━━━━━━━━━━━━ 7s 31ms/step - loss: 0.3391 - sparse_categorical_accuracy: 0.8996 - val_loss: 0.1869 - val_sparse_categorical_accuracy: 0.9427
 Epoch 5/5
- 234/234 ━━━━━━━━━━━━━━━━━━━━ 7s 30ms/step - loss: 0.2920 - sparse_categorical_accuracy: 0.9153 - val_loss: 0.1388 - val_sparse_categorical_accuracy: 0.9574
+ 234/234 ━━━━━━━━━━━━━━━━━━━━ 7s 31ms/step - loss: 0.2989 - sparse_categorical_accuracy: 0.9120 - val_loss: 0.1513 - val_sparse_categorical_accuracy: 0.9557
 
 ```
 </div>
@@ -403,15 +403,15 @@ history = binary_model.fit(
 <div class="k-default-codeblock">
 ```
 Epoch 1/5
- 234/234 ━━━━━━━━━━━━━━━━━━━━ 10s 33ms/step - binary_accuracy: 0.8867 - loss: 0.3635 - val_binary_accuracy: 0.9406 - val_loss: 0.1637
+ 234/234 ━━━━━━━━━━━━━━━━━━━━ 9s 33ms/step - binary_accuracy: 0.8926 - loss: 0.3635 - val_binary_accuracy: 0.9235 - val_loss: 0.1777
 Epoch 2/5
- 234/234 ━━━━━━━━━━━━━━━━━━━━ 7s 30ms/step - binary_accuracy: 0.9486 - loss: 0.1423 - val_binary_accuracy: 0.9755 - val_loss: 0.0722
+ 234/234 ━━━━━━━━━━━━━━━━━━━━ 7s 31ms/step - binary_accuracy: 0.9411 - loss: 0.1620 - val_binary_accuracy: 0.9766 - val_loss: 0.0748
 Epoch 3/5
- 234/234 ━━━━━━━━━━━━━━━━━━━━ 8s 33ms/step - binary_accuracy: 0.9827 - loss: 0.0591 - val_binary_accuracy: 0.9914 - val_loss: 0.0285
+ 234/234 ━━━━━━━━━━━━━━━━━━━━ 7s 31ms/step - binary_accuracy: 0.9751 - loss: 0.0794 - val_binary_accuracy: 0.9884 - val_loss: 0.0414
 Epoch 4/5
- 234/234 ━━━━━━━━━━━━━━━━━━━━ 7s 30ms/step - binary_accuracy: 0.9914 - loss: 0.0316 - val_binary_accuracy: 0.9930 - val_loss: 0.0191
+ 234/234 ━━━━━━━━━━━━━━━━━━━━ 7s 31ms/step - binary_accuracy: 0.9848 - loss: 0.0480 - val_binary_accuracy: 0.9915 - val_loss: 0.0292
 Epoch 5/5
- 234/234 ━━━━━━━━━━━━━━━━━━━━ 7s 31ms/step - binary_accuracy: 0.9933 - loss: 0.0217 - val_binary_accuracy: 0.9920 - val_loss: 0.0254
+ 234/234 ━━━━━━━━━━━━━━━━━━━━ 7s 31ms/step - binary_accuracy: 0.9910 - loss: 0.0326 - val_binary_accuracy: 0.9917 - val_loss: 0.0286
 
 ```
 </div>
@@ -491,15 +491,15 @@ history = model.fit(
 <div class="k-default-codeblock">
 ```
 Epoch 1/5
- 234/234 ━━━━━━━━━━━━━━━━━━━━ 8s 32ms/step - loss: 1.8581 - sparse_categorical_accuracy: 0.3203 - val_loss: 0.4766 - val_sparse_categorical_accuracy: 0.8696
+ 234/234 ━━━━━━━━━━━━━━━━━━━━ 9s 34ms/step - loss: 1.8702 - sparse_categorical_accuracy: 0.3175 - val_loss: 0.4505 - val_sparse_categorical_accuracy: 0.8779
 Epoch 2/5
- 234/234 ━━━━━━━━━━━━━━━━━━━━ 7s 31ms/step - loss: 0.6215 - sparse_categorical_accuracy: 0.8060 - val_loss: 0.3247 - val_sparse_categorical_accuracy: 0.9083
+ 234/234 ━━━━━━━━━━━━━━━━━━━━ 8s 32ms/step - loss: 0.5991 - sparse_categorical_accuracy: 0.8131 - val_loss: 0.2582 - val_sparse_categorical_accuracy: 0.9245
 Epoch 3/5
- 234/234 ━━━━━━━━━━━━━━━━━━━━ 7s 29ms/step - loss: 0.4389 - sparse_categorical_accuracy: 0.8645 - val_loss: 0.2091 - val_sparse_categorical_accuracy: 0.9332
+ 234/234 ━━━━━━━━━━━━━━━━━━━━ 7s 32ms/step - loss: 0.3916 - sparse_categorical_accuracy: 0.8846 - val_loss: 0.1938 - val_sparse_categorical_accuracy: 0.9422
 Epoch 4/5
- 234/234 ━━━━━━━━━━━━━━━━━━━━ 7s 30ms/step - loss: 0.3543 - sparse_categorical_accuracy: 0.8956 - val_loss: 0.1722 - val_sparse_categorical_accuracy: 0.9488
+ 234/234 ━━━━━━━━━━━━━━━━━━━━ 8s 33ms/step - loss: 0.3109 - sparse_categorical_accuracy: 0.9089 - val_loss: 0.1450 - val_sparse_categorical_accuracy: 0.9566
 Epoch 5/5
- 234/234 ━━━━━━━━━━━━━━━━━━━━ 7s 30ms/step - loss: 0.3210 - sparse_categorical_accuracy: 0.9073 - val_loss: 0.1598 - val_sparse_categorical_accuracy: 0.9522
+ 234/234 ━━━━━━━━━━━━━━━━━━━━ 8s 32ms/step - loss: 0.2775 - sparse_categorical_accuracy: 0.9197 - val_loss: 0.1316 - val_sparse_categorical_accuracy: 0.9608
 
 ```
 </div>
