@@ -20,6 +20,8 @@ import os
 import gdown
 from zipfile import ZipFile
 
+seed_generator = keras.random.SeedGenerator(42)
+
 """
 ## Prepare CelebA data
 
@@ -131,7 +133,10 @@ class GAN(keras.Model):
     def train_step(self, real_images):
         # Sample random points in the latent space
         batch_size = ops.shape(real_images)[0]
-        random_latent_vectors = keras.random.normal(shape=(batch_size, self.latent_dim))
+        random_latent_vectors = keras.random.normal(
+            shape=(batch_size, self.latent_dim),
+            seed=seed_generator
+        )
 
         # Decode them to fake images
         generated_images = self.generator(random_latent_vectors)
@@ -156,7 +161,10 @@ class GAN(keras.Model):
         )
 
         # Sample random points in the latent space
-        random_latent_vectors = keras.random.normal(shape=(batch_size, self.latent_dim))
+        random_latent_vectors = keras.random.normal(
+            shape=(batch_size, self.latent_dim),
+            seed=seed_generator
+        )
 
         # Assemble labels that say "all real images"
         misleading_labels = ops.zeros((batch_size, 1))
@@ -190,7 +198,8 @@ class GANMonitor(keras.callbacks.Callback):
 
     def on_epoch_end(self, epoch, logs=None):
         random_latent_vectors = keras.random.normal(
-            shape=(self.num_img, self.latent_dim)
+            shape=(self.num_img, self.latent_dim),
+            seed=seed_generator
         )
         generated_images = self.model.generator(random_latent_vectors)
         generated_images *= 255
