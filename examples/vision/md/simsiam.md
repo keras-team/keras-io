@@ -2,7 +2,7 @@
 
 **Author:** [Sayak Paul](https://twitter.com/RisingSayak)<br>
 **Date created:** 2021/03/19<br>
-**Last modified:** 2023/12/26<br>
+**Last modified:** 2023/12/29<br>
 **Description:** Implementation of a self-supervised learning method for computer vision.
 
 
@@ -43,8 +43,6 @@ fully-connected network having an
 [AutoEncoder](https://en.wikipedia.org/wiki/Autoencoder) like structure.
 4. We then train our encoder to maximize the cosine similarity between the two different
 versions of our dataset.
-
-This example requires TensorFlow 2.15 or higher.
 
 ---
 ## Setup
@@ -108,15 +106,17 @@ etc.) include these in their training pipelines.
 
 ```python
 
-strength=[0.4, 0.4, 0.4, 0.1]
+strength = [0.4, 0.4, 0.4, 0.1]
 
 random_flip = layers.RandomFlip(mode="horizontal_and_vertical")
 random_crop = layers.RandomCrop(CROP_TO, CROP_TO)
-random_brightness=layers.RandomBrightness(0.8 * strength[0])
-random_contrast=layers.RandomContrast((1 - 0.8 * strength[1],1 + 0.8 * strength[1]))
-random_saturation=keras_cv.layers.RandomSaturation((0.5 - 0.8 * strength[2], 0.5 + 0.8 * strength[2]))
-random_hue=keras_cv.layers.RandomHue(0.2 * strength[3],[0,255])
-grayscale=keras_cv.layers.Grayscale()
+random_brightness = layers.RandomBrightness(0.8 * strength[0])
+random_contrast = layers.RandomContrast((1 - 0.8 * strength[1], 1 + 0.8 * strength[1]))
+random_saturation = keras_cv.layers.RandomSaturation(
+    (0.5 - 0.8 * strength[2], 0.5 + 0.8 * strength[2])
+)
+random_hue = keras_cv.layers.RandomHue(0.2 * strength[3], [0,255])
+grayscale = keras_cv.layers.Grayscale()
 
 def flip_random_crop(image):
     # With random crops we also apply horizontal flipping.
@@ -143,7 +143,7 @@ def color_drop(x):
 
 
 def random_apply(func, x, p):
-    if keras.random.uniform([], minval=0, maxval=1,seed=152) < p:
+    if keras.random.uniform([], minval=0, maxval=1) < p:
         return func(x)
     else:
         return x
@@ -311,8 +311,8 @@ def compute_loss(p, z):
     # the `stop_gradient` operator in the paper as it
     # has an important role in the overall optimization.
     z = ops.stop_gradient(z)
-    p = keras.utils.normalize(p, axis=1,order=2)
-    z = keras.utils.normalize(z, axis=1,order=2)
+    p = keras.utils.normalize(p, axis=1, order=2)
+    z = keras.utils.normalize(z, axis=1, order=2)
     # Negative cosine similarity (minimizing this is
     # equivalent to maximizing the similarity).
     return -ops.mean(ops.sum((p * z), axis=1))
