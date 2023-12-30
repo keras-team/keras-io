@@ -31,7 +31,7 @@ We fine-tune a BERT model to perform this task as follows:
 
 **References:**
 
-- [BERT](https://arxiv.org/pdf/1810.04805.pdf)
+- [BERT](https://arxiv.org/abs/1810.04805)
 - [SQuAD](https://arxiv.org/abs/1606.05250)
 """
 """
