@@ -36,11 +36,10 @@ This example requires Keras 3.0 or higher.
 """
 
 import os
-import tensorflow as tf
 import keras
-from keras import layers, activations
+from keras import layers, activations, ops
 
-os.environ["KERAS_BACKEND"] = "tensorflow"
+os.environ["KERAS_BACKEND"] = "jax"
 
 """
 ## Prepare the data
@@ -136,16 +135,16 @@ class Patches(layers.Layer):
         self.patch_size = patch_size
 
     def call(self, images):
-        batch_size = tf.shape(images)[0]
-        patches = tf.image.extract_patches(
-            images=images,
-            sizes=[1, self.patch_size, self.patch_size, 1],
-            strides=[1, self.patch_size, self.patch_size, 1],
-            rates=[1, 1, 1, 1],
-            padding="VALID",
+        batch_size = ops.shape(images)[0]
+        patches = ops.image.extract_patches(
+            image=images,
+            size=(self.patch_size, self.patch_size),
+            strides=(self.patch_size, self.patch_size),
+            dilation_rate=1,
+            padding="valid",
         )
         patch_dims = patches.shape[-1]
-        patches = tf.reshape(patches, [batch_size, -1, patch_dims])
+        patches = ops.reshape(patches, [batch_size, -1, patch_dims])
         return patches
 
 
@@ -170,7 +169,7 @@ class PatchEncoder(layers.Layer):
         )
 
     def call(self, patches):
-        positions = tf.range(start=0, limit=self.num_patches, delta=1)
+        positions = ops.arange(start=0, stop=self.num_patches, step=1)
         encoded = self.projection(patches) + self.position_embedding(positions)
         return encoded
 
@@ -369,7 +368,7 @@ class Perceiver(keras.Model):
         encoded_patches = self.patch_encoder(patches)
         # Prepare cross-attention inputs.
         cross_attention_inputs = {
-            "latent_array": tf.expand_dims(self.latent_array, 0),
+            "latent_array": ops.expand_dims(self.latent_array, 0),
             "data_array": encoded_patches,
         }
         # Apply the cross-attention and the Transformer modules iteratively.
