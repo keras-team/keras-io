@@ -2,7 +2,7 @@
 Title: Image classification with Perceiver
 Author: [Khalid Salama](https://www.linkedin.com/in/khalid-salama-24403144/)
 Date created: 2021/04/30
-Last modified: 2021/01/30
+Last modified: 2023/12/30
 Description: Implementing the Perceiver model for image classification.
 Accelerator: GPU
 """
@@ -28,24 +28,19 @@ and performs two operations iteratively:
 1. Cross-attention Transformer between the latent array and the data array - The complexity of this operation is `O(M.N)`.
 2. Self-attention Transformer on the latent array -  The complexity of this operation is `O(N^2)`.
 
-This example requires TensorFlow 2.4 or higher, as well as
-[TensorFlow Addons](https://www.tensorflow.org/addons/overview),
-which can be installed using the following command:
-
-```python
-pip install -U tensorflow-addons
-```
+This example requires Keras 3.0 or higher.
 """
 
 """
 ## Setup
 """
 
-import numpy as np
+import os
 import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras import layers
-import tensorflow_addons as tfa
+import keras
+from keras import layers, activations
+
+os.environ["KERAS_BACKEND"] = "tensorflow"
 
 """
 ## Prepare the data
@@ -121,7 +116,7 @@ data_augmentation.layers[0].adapt(x_train)
 def create_ffn(hidden_units, dropout_rate):
     ffn_layers = []
     for units in hidden_units[:-1]:
-        ffn_layers.append(layers.Dense(units, activation=tf.nn.gelu))
+        ffn_layers.append(layers.Dense(units, activation=activations.gelu))
 
     ffn_layers.append(layers.Dense(units=hidden_units[-1]))
     ffn_layers.append(layers.Dropout(dropout_rate))
@@ -399,11 +394,8 @@ class Perceiver(keras.Model):
 
 
 def run_experiment(model):
-    # Create LAMB optimizer with weight decay.
-    optimizer = tfa.optimizers.LAMB(
-        learning_rate=learning_rate,
-        weight_decay_rate=weight_decay,
-    )
+    # Create ADAM instead of LAMB optimizer with weight decay. (LAMB isn't supported yet)
+    optimizer = keras.optimizers.Adam(learning_rate=learning_rate)
 
     # Compile the model.
     model.compile(
@@ -421,7 +413,7 @@ def run_experiment(model):
     )
 
     # Create an early stopping callback.
-    early_stopping = tf.keras.callbacks.EarlyStopping(
+    early_stopping = keras.callbacks.EarlyStopping(
         monitor="val_loss", patience=15, restore_best_weights=True
     )
 
