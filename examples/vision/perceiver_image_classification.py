@@ -35,11 +35,8 @@ This example requires Keras 3.0 or higher.
 ## Setup
 """
 
-import os
 import keras
 from keras import layers, activations, ops
-
-os.environ["KERAS_BACKEND"] = "jax"
 
 """
 ## Prepare the data
