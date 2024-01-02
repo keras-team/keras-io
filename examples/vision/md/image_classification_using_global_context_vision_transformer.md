@@ -56,6 +56,7 @@ tokens in a gigantic architecture similar to encoder of the original Transformer
 * Despite the historic dominance of **Convolutional Neural Network (CNN)** in computer
 vision, **ViT-based** models have shown **SOTA or competitive performance** in various
 computer vision tasks.
+
 <img src="https://raw.githubusercontent.com/awsaf49/gcvit-tf/main/image/vit_gif.gif"
 width=600>
 
