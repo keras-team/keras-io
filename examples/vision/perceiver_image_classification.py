@@ -57,7 +57,7 @@ print(f"x_test shape: {x_test.shape} - y_test shape: {y_test.shape}")
 learning_rate = 0.001
 weight_decay = 0.0001
 batch_size = 64
-num_epochs = 50
+num_epochs = 2
 dropout_rate = 0.2
 image_size = 64  # We'll resize input images to this size.
 patch_size = 2  # Size of the patches to be extract from the input images.
@@ -197,9 +197,11 @@ def create_cross_attention_module(
 ):
     inputs = {
         # Recieve the latent array as an input of shape [1, latent_dim, projection_dim].
-        "latent_array": layers.Input(shape=(latent_dim, projection_dim)),
+        "latent_array": layers.Input(
+            shape=(latent_dim, projection_dim), name="latent_array"
+        ),
         # Recieve the data_array (encoded image) as an input of shape [batch_size, data_dim, projection_dim].
-        "data_array": layers.Input(shape=(data_dim, projection_dim)),
+        "data_array": layers.Input(shape=(data_dim, projection_dim), name="data_array"),
     }
 
     # Apply layer norm to the inputs
