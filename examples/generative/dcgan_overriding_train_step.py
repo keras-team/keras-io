@@ -194,7 +194,6 @@ class GANMonitor(keras.callbacks.Callback):
         self.num_img = num_img
         self.latent_dim = latent_dim
         self.seed_generator = keras.random.SeedGenerator(42)
-        
 
     def on_epoch_end(self, epoch, logs=None):
         random_latent_vectors = keras.random.normal(

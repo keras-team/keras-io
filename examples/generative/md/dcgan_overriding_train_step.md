@@ -25,7 +25,6 @@ import os
 import gdown
 from zipfile import ZipFile
 
-seed_generator = keras.random.SeedGenerator(42)
 ```
 
 ---
@@ -247,6 +246,7 @@ class GAN(keras.Model):
         self.discriminator = discriminator
         self.generator = generator
         self.latent_dim = latent_dim
+        self.seed_generator = keras.random.SeedGenerator(1337)
 
     def compile(self, d_optimizer, g_optimizer, loss_fn):
         super().compile()
@@ -264,7 +264,7 @@ class GAN(keras.Model):
         # Sample random points in the latent space
         batch_size = ops.shape(real_images)[0]
         random_latent_vectors = keras.random.normal(
-            shape=(batch_size, self.latent_dim), seed=seed_generator
+            shape=(batch_size, self.latent_dim), seed=self.seed_generator
         )
 
         # Decode them to fake images
@@ -291,7 +291,7 @@ class GAN(keras.Model):
 
         # Sample random points in the latent space
         random_latent_vectors = keras.random.normal(
-            shape=(batch_size, self.latent_dim), seed=seed_generator
+            shape=(batch_size, self.latent_dim), seed=self.seed_generator
         )
 
         # Assemble labels that say "all real images"
@@ -325,10 +325,11 @@ class GANMonitor(keras.callbacks.Callback):
     def __init__(self, num_img=3, latent_dim=128):
         self.num_img = num_img
         self.latent_dim = latent_dim
+        self.seed_generator = keras.random.SeedGenerator(42)
 
     def on_epoch_end(self, epoch, logs=None):
         random_latent_vectors = keras.random.normal(
-            shape=(self.num_img, self.latent_dim), seed=seed_generator
+            shape=(self.num_img, self.latent_dim), seed=self.seed_generator
         )
         generated_images = self.model.generator(random_latent_vectors)
         generated_images *= 255
@@ -360,14 +361,14 @@ gan.fit(
 
 <div class="k-default-codeblock">
 ```
-    2/6332 [37m━━━━━━━━━━━━━━━━━━━━  10:07 96ms/step - d_loss: 0.6940 - g_loss: 0.7699  
+    2/6332 [37m━━━━━━━━━━━━━━━━━━━━  9:54 94ms/step - d_loss: 0.6792 - g_loss: 0.7880   
 
 WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
-I0000 00:00:1703715357.169335    1399 device_compiler.h:186] Compiled cluster using XLA!  This line is logged at most once for the lifetime of the process.
+I0000 00:00:1704214667.959762    1319 device_compiler.h:186] Compiled cluster using XLA!  This line is logged at most once for the lifetime of the process.
 
- 6332/6332 ━━━━━━━━━━━━━━━━━━━━ 562s 85ms/step - d_loss: 0.6062 - g_loss: 1.2240
+ 6332/6332 ━━━━━━━━━━━━━━━━━━━━ 557s 84ms/step - d_loss: 0.5616 - g_loss: 1.4099
 
-<keras.src.callbacks.history.History at 0x7fc3784ed8a0>
+<keras.src.callbacks.history.History at 0x7f251d32bc40>
 
 ```
 </div>
