@@ -143,7 +143,7 @@ random_crop = keras.layers.RandomCrop(CROP_TO, CROP_TO)
 
 def preprocess_train(image, label):
     image = random_flip(image)
-    image = keras.ops.image.resize(image, (RESIZE_TO, RESIZE_TO))
+    image = ops.image.resize(image, (RESIZE_TO, RESIZE_TO))
     image = random_crop(image)
     image = image / 255.0
     return (image, label)
