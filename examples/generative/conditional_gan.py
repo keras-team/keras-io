@@ -189,8 +189,8 @@ class ConditionalGAN(keras.Model):
         # This is for the generator.
         batch_size = ops.shape(real_images)[0]
         random_latent_vectors = keras.random.normal(
-            shape=(batch_size, self.latent_dim),
-            seed=self.seed_generator)
+            shape=(batch_size, self.latent_dim), seed=self.seed_generator
+        )
         random_vector_labels = ops.concatenate(
             [random_latent_vectors, one_hot_labels], axis=1
         )
@@ -200,7 +200,9 @@ class ConditionalGAN(keras.Model):
 
         # Combine them with real images. Note that we are concatenating the labels
         # with these images here.
-        fake_image_and_labels = ops.concatenate([generated_images, image_one_hot_labels], -1)
+        fake_image_and_labels = ops.concatenate(
+            [generated_images, image_one_hot_labels], -1
+        )
         real_image_and_labels = ops.concatenate([real_images, image_one_hot_labels], -1)
         combined_images = ops.concatenate(
             [fake_image_and_labels, real_image_and_labels], axis=0
@@ -222,8 +224,7 @@ class ConditionalGAN(keras.Model):
 
         # Sample random points in the latent space.
         random_latent_vectors = keras.random.normal(
-            shape=(batch_size, self.latent_dim),
-            seed=self.seed_generator
+            shape=(batch_size, self.latent_dim), seed=self.seed_generator
         )
         random_vector_labels = ops.concatenate(
             [random_latent_vectors, one_hot_labels], axis=1
@@ -236,7 +237,9 @@ class ConditionalGAN(keras.Model):
         # of the discriminator)!
         with tf.GradientTape() as tape:
             fake_images = self.generator(random_vector_labels)
-            fake_image_and_labels = ops.concatenate([fake_images, image_one_hot_labels], -1)
+            fake_image_and_labels = ops.concatenate(
+                [fake_images, image_one_hot_labels], -1
+            )
             predictions = self.discriminator(fake_image_and_labels)
             g_loss = self.loss_fn(misleading_labels, predictions)
         grads = tape.gradient(g_loss, self.generator.trainable_weights)
