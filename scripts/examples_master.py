@@ -86,6 +86,7 @@ EXAMPLES_MASTER = {
                     "path": "perceiver_image_classification",
                     "title": "Image classification with Perceiver",
                     "subcategory": "Image classification",
+                    "keras_3": True,
                 },
                 {
                     "path": "reptile",
@@ -114,6 +115,12 @@ EXAMPLES_MASTER = {
                     "title": "A Vision Transformer without Attention",
                     "subcategory": "Image classification",
                 },
+                {
+                    "path": "image_classification_using_global_context_vision_transformer",
+                    "title": "Image Classification using Global Context Vision Transformer",
+                    "subcategory": "Image classification",
+                    "keras_3": True,
+                },
                 # Image segmentation
                 {
                     "path": "oxford_pets_image_segmentation",
@@ -132,6 +139,12 @@ EXAMPLES_MASTER = {
                     "path": "basnet_segmentation",
                     "title": "Highly accurate boundaries segmentation using BASNet",
                     "subcategory": "Image segmentation",
+                },
+                {
+                    "path": "fully_convolutional_network",
+                    "title": "Image Segmentation using Composable Fully-Convolutional Networks",
+                    "subcategory": "Image segmentation",
+                    "keras_3": True,
                 },
                 # Object Detection
                 {
@@ -377,6 +390,12 @@ EXAMPLES_MASTER = {
                 {
                     "path": "patch_convnet",
                     "title": "Augmenting convnets with aggregated attention",
+                    "subcategory": "Performance recipes",
+                    "keras_3": True,
+                },
+                {
+                    "path": "learnable_resizer",
+                    "title": "Learning to Resize",
                     "subcategory": "Performance recipes",
                     "keras_3": True,
                 },
@@ -891,6 +910,12 @@ EXAMPLES_MASTER = {
                 {
                     "path": "memory_efficient_embeddings",
                     "title": "Memory-efficient embeddings for recommendation systems",
+                    "subcategory": "ML best practices",
+                    "keras_3": True,
+                },
+                {
+                    "path": "creating_tfrecords",
+                    "title": "Creating TFRecords",
                     "subcategory": "ML best practices",
                     "keras_3": True,
                 },

@@ -2,7 +2,7 @@
 
 **Author:** [Khalid Salama](https://www.linkedin.com/in/khalid-salama-24403144/)<br>
 **Date created:** 2021/04/30<br>
-**Last modified:** 2021/01/30<br>
+**Last modified:** 2023/12/30<br>
 **Description:** Implementing the Perceiver model for image classification.
 
 
@@ -31,24 +31,15 @@ and performs two operations iteratively:
 1. Cross-attention Transformer between the latent array and the data array - The complexity of this operation is `O(M.N)`.
 2. Self-attention Transformer on the latent array -  The complexity of this operation is `O(N^2)`.
 
-This example requires TensorFlow 2.4 or higher, as well as
-[TensorFlow Addons](https://www.tensorflow.org/addons/overview),
-which can be installed using the following command:
-
-```python
-pip install -U tensorflow-addons
-```
+This example requires Keras 3.0 or higher.
 
 ---
 ## Setup
 
 
 ```python
-import numpy as np
-import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras import layers
-import tensorflow_addons as tfa
+import keras
+from keras import layers, activations, ops
 ```
 
 ---
@@ -80,7 +71,7 @@ x_test shape: (10000, 32, 32, 3) - y_test shape: (10000, 1)
 learning_rate = 0.001
 weight_decay = 0.0001
 batch_size = 64
-num_epochs = 50
+num_epochs = 2  # You should actually use 50 epochs!
 dropout_rate = 0.2
 image_size = 64  # We'll resize input images to this size.
 patch_size = 2  # Size of the patches to be extract from the input images.
@@ -131,9 +122,7 @@ data_augmentation = keras.Sequential(
         layers.Normalization(),
         layers.Resizing(image_size, image_size),
         layers.RandomFlip("horizontal"),
-        layers.RandomZoom(
-            height_factor=0.2, width_factor=0.2
-        ),
+        layers.RandomZoom(height_factor=0.2, width_factor=0.2),
     ],
     name="data_augmentation",
 )
@@ -150,7 +139,7 @@ data_augmentation.layers[0].adapt(x_train)
 def create_ffn(hidden_units, dropout_rate):
     ffn_layers = []
     for units in hidden_units[:-1]:
-        ffn_layers.append(layers.Dense(units, activation=tf.nn.gelu))
+        ffn_layers.append(layers.Dense(units, activation=activations.gelu))
 
     ffn_layers.append(layers.Dense(units=hidden_units[-1]))
     ffn_layers.append(layers.Dropout(dropout_rate))
@@ -172,16 +161,16 @@ class Patches(layers.Layer):
         self.patch_size = patch_size
 
     def call(self, images):
-        batch_size = tf.shape(images)[0]
-        patches = tf.image.extract_patches(
-            images=images,
-            sizes=[1, self.patch_size, self.patch_size, 1],
-            strides=[1, self.patch_size, self.patch_size, 1],
-            rates=[1, 1, 1, 1],
-            padding="VALID",
+        batch_size = ops.shape(images)[0]
+        patches = ops.image.extract_patches(
+            image=images,
+            size=(self.patch_size, self.patch_size),
+            strides=(self.patch_size, self.patch_size),
+            dilation_rate=1,
+            padding="valid",
         )
         patch_dims = patches.shape[-1]
-        patches = tf.reshape(patches, [batch_size, -1, patch_dims])
+        patches = ops.reshape(patches, [batch_size, -1, patch_dims])
         return patches
 
 ```
@@ -208,7 +197,7 @@ class PatchEncoder(layers.Layer):
         )
 
     def call(self, patches):
-        positions = tf.range(start=0, limit=self.num_patches, delta=1)
+        positions = ops.arange(start=0, stop=self.num_patches, step=1)
         encoded = self.projection(patches) + self.position_embedding(positions)
         return encoded
 
@@ -237,12 +226,13 @@ where the `data_dim` is set to the `num_patches`.
 def create_cross_attention_module(
     latent_dim, data_dim, projection_dim, ffn_units, dropout_rate
 ):
-
     inputs = {
         # Recieve the latent array as an input of shape [1, latent_dim, projection_dim].
-        "latent_array": layers.Input(shape=(latent_dim, projection_dim)),
+        "latent_array": layers.Input(
+            shape=(latent_dim, projection_dim), name="latent_array"
+        ),
         # Recieve the data_array (encoded image) as an input of shape [batch_size, data_dim, projection_dim].
-        "data_array": layers.Input(shape=(data_dim, projection_dim)),
+        "data_array": layers.Input(shape=(data_dim, projection_dim), name="data_array"),
     }
 
     # Apply layer norm to the inputs
@@ -294,7 +284,6 @@ def create_transformer_module(
     ffn_units,
     dropout_rate,
 ):
-
     # input_shape: [1, latent_dim, projection_dim]
     inputs = layers.Input(shape=(latent_dim, projection_dim))
 
@@ -367,10 +356,7 @@ class Perceiver(keras.Model):
             trainable=True,
         )
 
-        # Create patching module.
-        self.patcher = Patches(self.patch_size)
-
-        # Create patch encoder.
+        # Create patching module.war
         self.patch_encoder = PatchEncoder(self.data_dim, self.projection_dim)
 
         # Create cross-attenion module.
@@ -411,7 +397,7 @@ class Perceiver(keras.Model):
         encoded_patches = self.patch_encoder(patches)
         # Prepare cross-attention inputs.
         cross_attention_inputs = {
-            "latent_array": tf.expand_dims(self.latent_array, 0),
+            "latent_array": ops.expand_dims(self.latent_array, 0),
             "data_array": encoded_patches,
         }
         # Apply the cross-attention and the Transformer modules iteratively.
@@ -438,11 +424,8 @@ class Perceiver(keras.Model):
 ```python
 
 def run_experiment(model):
-
-    # Create LAMB optimizer with weight decay.
-    optimizer = tfa.optimizers.LAMB(
-        learning_rate=learning_rate, weight_decay_rate=weight_decay,
-    )
+    # Create ADAM instead of LAMB optimizer with weight decay. (LAMB isn't supported yet)
+    optimizer = keras.optimizers.Adam(learning_rate=learning_rate)
 
     # Compile the model.
     model.compile(
@@ -460,7 +443,7 @@ def run_experiment(model):
     )
 
     # Create an early stopping callback.
-    early_stopping = tf.keras.callbacks.EarlyStopping(
+    early_stopping = keras.callbacks.EarlyStopping(
         monitor="val_loss", patience=15, restore_best_weights=True
     )
 
@@ -505,105 +488,13 @@ perceiver_classifier = Perceiver(
 history = run_experiment(perceiver_classifier)
 ```
 
-<div class="k-default-codeblock">
 ```
-Epoch 1/100
-704/704 [==============================] - 305s 405ms/step - loss: 4.4550 - acc: 0.0389 - top5-acc: 0.1407 - val_loss: 4.0544 - val_acc: 0.0802 - val_top5-acc: 0.2516
-Epoch 2/100
-704/704 [==============================] - 284s 403ms/step - loss: 4.0639 - acc: 0.0889 - top5-acc: 0.2576 - val_loss: 3.7379 - val_acc: 0.1272 - val_top5-acc: 0.3556
-Epoch 3/100
-704/704 [==============================] - 283s 402ms/step - loss: 3.8400 - acc: 0.1226 - top5-acc: 0.3326 - val_loss: 3.4527 - val_acc: 0.1750 - val_top5-acc: 0.4350
-Epoch 4/100
-704/704 [==============================] - 283s 402ms/step - loss: 3.5917 - acc: 0.1657 - top5-acc: 0.4063 - val_loss: 3.2160 - val_acc: 0.2176 - val_top5-acc: 0.5048
-Epoch 5/100
-704/704 [==============================] - 283s 403ms/step - loss: 3.3820 - acc: 0.2082 - top5-acc: 0.4638 - val_loss: 2.9947 - val_acc: 0.2584 - val_top5-acc: 0.5732
-Epoch 6/100
-704/704 [==============================] - 284s 403ms/step - loss: 3.2487 - acc: 0.2338 - top5-acc: 0.4991 - val_loss: 2.9179 - val_acc: 0.2770 - val_top5-acc: 0.5744
-Epoch 7/100
-704/704 [==============================] - 283s 402ms/step - loss: 3.1228 - acc: 0.2605 - top5-acc: 0.5295 - val_loss: 2.7958 - val_acc: 0.2994 - val_top5-acc: 0.6100
-Epoch 8/100
-704/704 [==============================] - 283s 402ms/step - loss: 2.9989 - acc: 0.2862 - top5-acc: 0.5588 - val_loss: 2.7117 - val_acc: 0.3208 - val_top5-acc: 0.6340
-Epoch 9/100
-704/704 [==============================] - 283s 402ms/step - loss: 2.9294 - acc: 0.3018 - top5-acc: 0.5763 - val_loss: 2.5933 - val_acc: 0.3390 - val_top5-acc: 0.6636
-Epoch 10/100
-704/704 [==============================] - 283s 402ms/step - loss: 2.8687 - acc: 0.3139 - top5-acc: 0.5934 - val_loss: 2.5030 - val_acc: 0.3614 - val_top5-acc: 0.6764
-Epoch 11/100
-704/704 [==============================] - 283s 402ms/step - loss: 2.7771 - acc: 0.3341 - top5-acc: 0.6098 - val_loss: 2.4657 - val_acc: 0.3704 - val_top5-acc: 0.6928
-Epoch 12/100
-704/704 [==============================] - 283s 402ms/step - loss: 2.7306 - acc: 0.3436 - top5-acc: 0.6229 - val_loss: 2.4441 - val_acc: 0.3738 - val_top5-acc: 0.6878
-Epoch 13/100
-704/704 [==============================] - 283s 402ms/step - loss: 2.6863 - acc: 0.3546 - top5-acc: 0.6346 - val_loss: 2.3508 - val_acc: 0.3892 - val_top5-acc: 0.7050
-Epoch 14/100
-704/704 [==============================] - 283s 402ms/step - loss: 2.6107 - acc: 0.3708 - top5-acc: 0.6537 - val_loss: 2.3219 - val_acc: 0.3996 - val_top5-acc: 0.7108
-Epoch 15/100
-704/704 [==============================] - 283s 402ms/step - loss: 2.5559 - acc: 0.3836 - top5-acc: 0.6664 - val_loss: 2.2748 - val_acc: 0.4140 - val_top5-acc: 0.7242
-Epoch 16/100
-704/704 [==============================] - 283s 402ms/step - loss: 2.5016 - acc: 0.3942 - top5-acc: 0.6761 - val_loss: 2.2364 - val_acc: 0.4238 - val_top5-acc: 0.7264
-Epoch 17/100
-704/704 [==============================] - 283s 402ms/step - loss: 2.4554 - acc: 0.4056 - top5-acc: 0.6897 - val_loss: 2.1684 - val_acc: 0.4418 - val_top5-acc: 0.7452
-Epoch 18/100
-704/704 [==============================] - 283s 402ms/step - loss: 2.3926 - acc: 0.4209 - top5-acc: 0.7024 - val_loss: 2.1614 - val_acc: 0.4372 - val_top5-acc: 0.7428
-Epoch 19/100
-704/704 [==============================] - 283s 402ms/step - loss: 2.3617 - acc: 0.4264 - top5-acc: 0.7119 - val_loss: 2.1595 - val_acc: 0.4382 - val_top5-acc: 0.7408
-Epoch 20/100
-704/704 [==============================] - 283s 402ms/step - loss: 2.3355 - acc: 0.4324 - top5-acc: 0.7133 - val_loss: 2.1187 - val_acc: 0.4462 - val_top5-acc: 0.7490
-Epoch 21/100
-704/704 [==============================] - 283s 402ms/step - loss: 2.2571 - acc: 0.4512 - top5-acc: 0.7299 - val_loss: 2.1095 - val_acc: 0.4424 - val_top5-acc: 0.7534
-Epoch 22/100
-704/704 [==============================] - 283s 402ms/step - loss: 2.2374 - acc: 0.4559 - top5-acc: 0.7357 - val_loss: 2.0997 - val_acc: 0.4398 - val_top5-acc: 0.7554
-Epoch 23/100
-704/704 [==============================] - 283s 402ms/step - loss: 2.2108 - acc: 0.4628 - top5-acc: 0.7452 - val_loss: 2.0662 - val_acc: 0.4574 - val_top5-acc: 0.7598
-Epoch 24/100
-704/704 [==============================] - 283s 402ms/step - loss: 2.1628 - acc: 0.4728 - top5-acc: 0.7555 - val_loss: 2.0564 - val_acc: 0.4564 - val_top5-acc: 0.7584
-Epoch 25/100
-704/704 [==============================] - 283s 402ms/step - loss: 2.1169 - acc: 0.4834 - top5-acc: 0.7616 - val_loss: 2.0793 - val_acc: 0.4600 - val_top5-acc: 0.7538
-Epoch 26/100
-704/704 [==============================] - 283s 402ms/step - loss: 2.0938 - acc: 0.4867 - top5-acc: 0.7743 - val_loss: 2.0835 - val_acc: 0.4566 - val_top5-acc: 0.7506
-Epoch 27/100
-704/704 [==============================] - 283s 402ms/step - loss: 2.0479 - acc: 0.4993 - top5-acc: 0.7816 - val_loss: 2.0790 - val_acc: 0.4610 - val_top5-acc: 0.7556
-Epoch 28/100
-704/704 [==============================] - 283s 402ms/step - loss: 1.8480 - acc: 0.5493 - top5-acc: 0.8159 - val_loss: 1.8846 - val_acc: 0.5046 - val_top5-acc: 0.7890
-Epoch 29/100
-704/704 [==============================] - 283s 402ms/step - loss: 1.7532 - acc: 0.5731 - top5-acc: 0.8362 - val_loss: 1.8844 - val_acc: 0.5106 - val_top5-acc: 0.7976
-Epoch 30/100
-704/704 [==============================] - 283s 402ms/step - loss: 1.7113 - acc: 0.5827 - top5-acc: 0.8434 - val_loss: 1.8792 - val_acc: 0.5096 - val_top5-acc: 0.7928
-Epoch 31/100
-704/704 [==============================] - 283s 403ms/step - loss: 1.6831 - acc: 0.5891 - top5-acc: 0.8511 - val_loss: 1.8938 - val_acc: 0.5044 - val_top5-acc: 0.7914
-Epoch 32/100
-704/704 [==============================] - 284s 403ms/step - loss: 1.6480 - acc: 0.5977 - top5-acc: 0.8562 - val_loss: 1.9055 - val_acc: 0.5034 - val_top5-acc: 0.7922
-Epoch 33/100
-704/704 [==============================] - 284s 403ms/step - loss: 1.6320 - acc: 0.6015 - top5-acc: 0.8627 - val_loss: 1.9064 - val_acc: 0.5056 - val_top5-acc: 0.7896
-Epoch 34/100
-704/704 [==============================] - 283s 403ms/step - loss: 1.5821 - acc: 0.6145 - top5-acc: 0.8673 - val_loss: 1.8912 - val_acc: 0.5138 - val_top5-acc: 0.7936
-Epoch 35/100
-704/704 [==============================] - 283s 403ms/step - loss: 1.5791 - acc: 0.6163 - top5-acc: 0.8719 - val_loss: 1.8963 - val_acc: 0.5090 - val_top5-acc: 0.7982
-Epoch 36/100
-704/704 [==============================] - 283s 402ms/step - loss: 1.5680 - acc: 0.6178 - top5-acc: 0.8741 - val_loss: 1.8998 - val_acc: 0.5142 - val_top5-acc: 0.7936
-Epoch 37/100
-704/704 [==============================] - 284s 403ms/step - loss: 1.5506 - acc: 0.6218 - top5-acc: 0.8743 - val_loss: 1.8941 - val_acc: 0.5142 - val_top5-acc: 0.7952
-Epoch 38/100
-704/704 [==============================] - 283s 402ms/step - loss: 1.5611 - acc: 0.6216 - top5-acc: 0.8722 - val_loss: 1.8946 - val_acc: 0.5183 - val_top5-acc: 0.7956
-Epoch 39/100
-704/704 [==============================] - 284s 403ms/step - loss: 1.5541 - acc: 0.6215 - top5-acc: 0.8764 - val_loss: 1.8923 - val_acc: 0.5180 - val_top5-acc: 0.7962
-Epoch 40/100
-704/704 [==============================] - 283s 403ms/step - loss: 1.5505 - acc: 0.6228 - top5-acc: 0.8773 - val_loss: 1.8934 - val_acc: 0.5232 - val_top5-acc: 0.7962
-Epoch 41/100
-704/704 [==============================] - 283s 402ms/step - loss: 1.5604 - acc: 0.6224 - top5-acc: 0.8747 - val_loss: 1.8938 - val_acc: 0.5230 - val_top5-acc: 0.7958
-Epoch 42/100
-704/704 [==============================] - 283s 402ms/step - loss: 1.5545 - acc: 0.6194 - top5-acc: 0.8784 - val_loss: 1.8938 - val_acc: 0.5240 - val_top5-acc: 0.7966
-Epoch 43/100
-704/704 [==============================] - 283s 402ms/step - loss: 1.5630 - acc: 0.6210 - top5-acc: 0.8758 - val_loss: 1.8939 - val_acc: 0.5240 - val_top5-acc: 0.7958
-Epoch 44/100
-704/704 [==============================] - 283s 402ms/step - loss: 1.5569 - acc: 0.6198 - top5-acc: 0.8756 - val_loss: 1.8938 - val_acc: 0.5240 - val_top5-acc: 0.7060
-Epoch 45/100
-704/704 [==============================] - 283s 402ms/step - loss: 1.5569 - acc: 0.6197 - top5-acc: 0.8770 - val_loss: 1.8940 - val_acc: 0.5140 - val_top5-acc: 0.7962
-313/313 [==============================] - 22s 69ms/step - loss: 1.8630 - acc: 0.5264 - top5-acc: 0.8087
-Test accuracy: 52.64%
-Test top 5 accuracy: 80.87%
+Test accuracy: 0.91%
+Test top 5 accuracy: 5.2%
 
 ```
-</div>
-After 45 epochs, the Perceiver model achieves around 53% accuracy and 81% top-5 accuracy on the test data.
+
+After 40 epochs, the Perceiver model achieves around 53% accuracy and 81% top-5 accuracy on the test data.
 
 As mentioned in the ablations of the [Perceiver](https://arxiv.org/abs/2103.03206) paper,
 you can obtain better results by increasing the latent array size,
