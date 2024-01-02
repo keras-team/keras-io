@@ -16,9 +16,9 @@ image. It has been trained on a
 [dataset](https://segment-anything.com/dataset/index.html) of 11 million images and 1.1
 billion masks, and has strong zero-shot performance on a variety of segmentation tasks.
 
-In this guide, we will show how to use KerasCV's implementation of the [Segment Anything
-Model](https://github.com/facebookresearch/segment-anything) and show how powerful
-TensorFlow's and JAX's performance boost is.
+In this guide, we will show how to use KerasCV's implementation of the
+[Segment Anything Model](https://github.com/facebookresearch/segment-anything)
+and show how powerful TensorFlow's and JAX's performance boost is.
 
 First, let's get all our dependencies and images for our demo.
 """
@@ -355,8 +355,9 @@ rim of the tyre.
 Finally, let's see how text prompts can be used along with KerasCV's
 `SegmentAnythingModel`.
 
-For this demo, we will use the [offical grounding dino
-model](https://github.com/IDEA-Research/GroundingDINO). Grounding DINO is a model that
+For this demo, we will use the
+[offical grounding dino model](https://github.com/IDEA-Research/GroundingDINO).
+Grounding DINO is a model that
 takes as input a `(image, text)` pair and generates a bounding box around the object in
 the `image` described by the `text`. You can refer to the
 [paper](https://arxiv.org/abs/2303.05499) for more details on the implementation of the
@@ -374,7 +375,7 @@ Then, we can install the pretrained model's weights and config:
 
 """shell
 wget -q https://github.com/IDEA-Research/GroundingDINO/releases/download/v0.1.0-alpha/groundingdino_swint_ogc.pth
-wget -q https://raw.githubusercontent.com/IDEA-Research/GroundingDINO/main/groundingdino/config/GroundingDINO_SwinT_OGC.py
+wget -q https://raw.githubusercontent.com/IDEA-Research/GroundingDINO/v0.1.0-alpha2/groundingdino/config/GroundingDINO_SwinT_OGC.py
 """
 
 from groundingdino.util.inference import Model as GroundingDINO
@@ -495,6 +496,6 @@ in JAX and TensorFlow, the model runs several times faster than the original
 implementation. Moreover, using Keras's mixed precision support helps optimize memory use
 and computation time with just one line of code!
 
-For more advanced uses, check out the [Automatic Mask Generator
-demo](https://github.com/tirthasheshpatel/segment_anything_keras/blob/main/Segment_Anything_Automatic_Mask_Generator_Demo.ipynb).
+For more advanced uses, check out the
+[Automatic Mask Generator demo](https://github.com/tirthasheshpatel/segment_anything_keras/blob/main/Segment_Anything_Automatic_Mask_Generator_Demo.ipynb).
 """
