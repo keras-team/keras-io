@@ -71,7 +71,7 @@ x_test shape: (10000, 32, 32, 3) - y_test shape: (10000, 1)
 learning_rate = 0.001
 weight_decay = 0.0001
 batch_size = 64
-num_epochs = 2
+num_epochs = 2 # It is recommended to run 50 epochs to observe improvements in accuracy
 dropout_rate = 0.2
 image_size = 64  # We'll resize input images to this size.
 patch_size = 2  # Size of the patches to be extract from the input images.
@@ -356,10 +356,7 @@ class Perceiver(keras.Model):
             trainable=True,
         )
 
-        # Create patching module.
-        self.patcher = Patches(self.patch_size)
-
-        # Create patch encoder.
+        # Create patching module.war
         self.patch_encoder = PatchEncoder(self.data_dim, self.projection_dim)
 
         # Create cross-attenion module.
