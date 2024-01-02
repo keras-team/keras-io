@@ -2,7 +2,7 @@
 Title: Image Classification using BigTransfer (BiT)
 Author: [Sayan Nath](https://twitter.com/sayannath2350)
 Date created: 2021/09/24
-Last modified: 2023/12/22
+Last modified: 2024/01/03
 Description: BigTransfer (BiT) State-of-the-art transfer learning for image classification.
 Accelerator: GPU
 Converted to Keras 3 by: [Sitam Meur](https://github.com/sitamgithub-MSIT)
@@ -47,6 +47,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 import keras
+from keras import ops
 import tensorflow as tf
 import tensorflow_hub as hub
 import tensorflow_datasets as tfds
@@ -55,8 +56,7 @@ tfds.disable_progress_bar()
 
 SEEDS = 42
 
-np.random.seed(SEEDS)
-seed_generator = keras.random.SeedGenerator(1337)
+keras.utils.set_random_seed(SEEDS)
 
 """
 ## Gather Flower Dataset
@@ -117,19 +117,20 @@ Implementation in [Keras Coding Examples](https://keras.io/examples/vision/mixup
 
 SCHEDULE_LENGTH = SCHEDULE_LENGTH * 512 / BATCH_SIZE
 
+random_flip = keras.layers.RandomFlip("horizontal")
+random_crop = keras.layers.RandomCrop(CROP_TO, CROP_TO)
 
-@tf.function
 def preprocess_train(image, label):
-    image = tf.image.random_flip_left_right(image)
-    image = tf.image.resize(image, (RESIZE_TO, RESIZE_TO))
-    image = tf.image.random_crop(image, (CROP_TO, CROP_TO, 3))
+    image = random_flip(image)
+    image = ops.image.resize(image, (RESIZE_TO, RESIZE_TO))
+    image = random_crop(image)
     image = image / 255.0
     return (image, label)
 
 
-@tf.function
 def preprocess_test(image, label):
-    image = tf.image.resize(image, (RESIZE_TO, RESIZE_TO))
+    image = ops.image.resize(image, (RESIZE_TO, RESIZE_TO))
+    image = ops.cast(image, dtype="float32")
     image = image / 255.0
     return (image, label)
 
