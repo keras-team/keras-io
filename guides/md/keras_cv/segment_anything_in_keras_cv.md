@@ -359,7 +359,7 @@ plt.show()
 
 <div class="k-default-codeblock">
 ```
- 1/1 ━━━━━━━━━━━━━━━━━━━━ 14s 14s/step
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 13s 13s/step
 
 ```
 </div>
@@ -406,7 +406,7 @@ plt.show()
 
 <div class="k-default-codeblock">
 ```
- 1/1 ━━━━━━━━━━━━━━━━━━━━ 17s 17s/step
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 16s 16s/step
 
 ```
 </div>
@@ -425,7 +425,7 @@ Finally, let's see how text prompts can be used along with KerasCV's
 `SegmentAnythingModel`.
 
 For this demo, we will use the
-[offical grounding dino model](https://github.com/IDEA-Research/GroundingDINO).
+[offical Grounding DINO model](https://github.com/IDEA-Research/GroundingDINO).
 Grounding DINO is a model that
 takes as input a `(image, text)` pair and generates a bounding box around the object in
 the `image` described by the `text`. You can refer to the
@@ -524,7 +524,7 @@ outputs = model.predict(
 /home/tirthp/oss/virtualenvs/keras-io-dev/lib/python3.10/site-packages/torch/utils/checkpoint.py:61: UserWarning: None of the inputs have requires_grad=True. Gradients will be None
   warnings.warn(
 
- 1/1 ━━━━━━━━━━━━━━━━━━━━ 15s 15s/step
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 13s 13s/step
 
 ```
 </div>
@@ -600,8 +600,8 @@ print(f"Time taken with float16 dtype: {min(time_taken) / 3:.10f}s")
 
 <div class="k-default-codeblock">
 ```
-Time taken with float32 dtype: 0.5225358707s
-Time taken with float16 dtype: 0.1623664857s
+Time taken with float32 dtype: 0.5304666963s
+Time taken with float16 dtype: 0.1586400040s
 
 ```
 </div>

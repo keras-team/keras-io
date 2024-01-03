@@ -356,7 +356,7 @@ Finally, let's see how text prompts can be used along with KerasCV's
 `SegmentAnythingModel`.
 
 For this demo, we will use the
-[offical grounding dino model](https://github.com/IDEA-Research/GroundingDINO).
+[offical Grounding DINO model](https://github.com/IDEA-Research/GroundingDINO).
 Grounding DINO is a model that
 takes as input a `(image, text)` pair and generates a bounding box around the object in
 the `image` described by the `text`. You can refer to the
