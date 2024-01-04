@@ -713,6 +713,7 @@ EXAMPLES_MASTER = {
                     "path": "dcgan_overriding_train_step",
                     "title": "GAN overriding Model.train_step",
                     "subcategory": "Image generation",
+                    "keras_3": True,
                 },
                 {
                     "path": "wgan_gp",
@@ -724,6 +725,7 @@ EXAMPLES_MASTER = {
                     "path": "conditional_gan",
                     "title": "Conditional GAN",
                     "subcategory": "Image generation",
+                    "keras_3": True,
                 },
                 {
                     "path": "cyclegan",
