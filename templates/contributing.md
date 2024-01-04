@@ -12,7 +12,7 @@ Your code doesn't work, and you have determined that the issue lies with Keras? 
 
 1. Your bug may already be fixed. Make sure to update to the current Keras nightly release (`pip install keras-nightly --upgrade`) and test whether your bug is still occurring.
 
-2. Search for similar issues among the [keras-team/keras Github issues](https://github.com/keras-team/keras/issues). Make sure to delete `is:open` on the issue search to find solved tickets as well. It's possible somebody has encountered this bug already. Also remember to check out Keras [FAQ](http://keras.io/getting-started/faq/). Still having a problem? Open an issue on the Keras Github to let us know.
+2. Search for similar issues among the [keras-team/keras Github issues](https://github.com/keras-team/keras/issues). Make sure to delete `is:open` on the issue search to find solved tickets as well. It's possible somebody has encountered this bug already. Also remember to check out Keras [FAQ](http://keras.io/getting_started/faq/). Still having a problem? Open an issue on the Keras Github to let us know.
 
 3. Make sure you provide us with useful information about your configuration: What backend are you using? Are you running on GPU?
 
