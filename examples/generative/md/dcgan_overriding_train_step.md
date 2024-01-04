@@ -2,7 +2,7 @@
 
 **Author:** [fchollet](https://twitter.com/fchollet)<br>
 **Date created:** 2019/04/29<br>
-**Last modified:** 2021/01/01<br>
+**Last modified:** 2023/12/21<br>
 **Description:** A simple DCGAN trained using `fit()` by overriding `train_step` on CelebA images.
 
 
@@ -15,13 +15,16 @@
 
 
 ```python
+import keras
 import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras import layers
+
+from keras import layers
+from keras import ops
 import matplotlib.pyplot as plt
 import os
 import gdown
 from zipfile import ZipFile
+
 ```
 
 ---
@@ -54,7 +57,7 @@ dataset = dataset.map(lambda x: x / 255.0)
 
 <div class="k-default-codeblock">
 ```
-Found 202599 files belonging to 1 classes.
+Found 202599 files.
 
 ```
 </div>
@@ -71,7 +74,9 @@ for x in dataset:
 ```
 
 
+    
 ![png](/img/examples/generative/dcgan_overriding_train_step/dcgan_overriding_train_step_8_0.png)
+    
 
 
 ---
@@ -85,11 +90,11 @@ discriminator = keras.Sequential(
     [
         keras.Input(shape=(64, 64, 3)),
         layers.Conv2D(64, kernel_size=4, strides=2, padding="same"),
-        layers.LeakyReLU(alpha=0.2),
+        layers.LeakyReLU(negative_slope=0.2),
         layers.Conv2D(128, kernel_size=4, strides=2, padding="same"),
-        layers.LeakyReLU(alpha=0.2),
+        layers.LeakyReLU(negative_slope=0.2),
         layers.Conv2D(128, kernel_size=4, strides=2, padding="same"),
-        layers.LeakyReLU(alpha=0.2),
+        layers.LeakyReLU(negative_slope=0.2),
         layers.Flatten(),
         layers.Dropout(0.2),
         layers.Dense(1, activation="sigmoid"),
@@ -99,37 +104,56 @@ discriminator = keras.Sequential(
 discriminator.summary()
 ```
 
-<div class="k-default-codeblock">
-```
-Model: "discriminator"
-_________________________________________________________________
-Layer (type)                 Output Shape              Param #   
-=================================================================
-conv2d (Conv2D)              (None, 32, 32, 64)        3136      
-_________________________________________________________________
-leaky_re_lu (LeakyReLU)      (None, 32, 32, 64)        0         
-_________________________________________________________________
-conv2d_1 (Conv2D)            (None, 16, 16, 128)       131200    
-_________________________________________________________________
-leaky_re_lu_1 (LeakyReLU)    (None, 16, 16, 128)       0         
-_________________________________________________________________
-conv2d_2 (Conv2D)            (None, 8, 8, 128)         262272    
-_________________________________________________________________
-leaky_re_lu_2 (LeakyReLU)    (None, 8, 8, 128)         0         
-_________________________________________________________________
-flatten (Flatten)            (None, 8192)              0         
-_________________________________________________________________
-dropout (Dropout)            (None, 8192)              0         
-_________________________________________________________________
-dense (Dense)                (None, 1)                 8193      
-=================================================================
-Total params: 404,801
-Trainable params: 404,801
-Non-trainable params: 0
-_________________________________________________________________
 
-```
-</div>
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold">Model: "discriminator"</span>
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━┓
+┃<span style="font-weight: bold"> Layer (type)                    </span>┃<span style="font-weight: bold"> Output Shape              </span>┃<span style="font-weight: bold">    Param # </span>┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━┩
+│ conv2d (<span style="color: #0087ff; text-decoration-color: #0087ff">Conv2D</span>)                 │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">32</span>, <span style="color: #00af00; text-decoration-color: #00af00">32</span>, <span style="color: #00af00; text-decoration-color: #00af00">64</span>)        │      <span style="color: #00af00; text-decoration-color: #00af00">3,136</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ leaky_re_lu (<span style="color: #0087ff; text-decoration-color: #0087ff">LeakyReLU</span>)         │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">32</span>, <span style="color: #00af00; text-decoration-color: #00af00">32</span>, <span style="color: #00af00; text-decoration-color: #00af00">64</span>)        │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ conv2d_1 (<span style="color: #0087ff; text-decoration-color: #0087ff">Conv2D</span>)               │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">16</span>, <span style="color: #00af00; text-decoration-color: #00af00">16</span>, <span style="color: #00af00; text-decoration-color: #00af00">128</span>)       │    <span style="color: #00af00; text-decoration-color: #00af00">131,200</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ leaky_re_lu_1 (<span style="color: #0087ff; text-decoration-color: #0087ff">LeakyReLU</span>)       │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">16</span>, <span style="color: #00af00; text-decoration-color: #00af00">16</span>, <span style="color: #00af00; text-decoration-color: #00af00">128</span>)       │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ conv2d_2 (<span style="color: #0087ff; text-decoration-color: #0087ff">Conv2D</span>)               │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">8</span>, <span style="color: #00af00; text-decoration-color: #00af00">8</span>, <span style="color: #00af00; text-decoration-color: #00af00">128</span>)         │    <span style="color: #00af00; text-decoration-color: #00af00">262,272</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ leaky_re_lu_2 (<span style="color: #0087ff; text-decoration-color: #0087ff">LeakyReLU</span>)       │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">8</span>, <span style="color: #00af00; text-decoration-color: #00af00">8</span>, <span style="color: #00af00; text-decoration-color: #00af00">128</span>)         │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ flatten (<span style="color: #0087ff; text-decoration-color: #0087ff">Flatten</span>)               │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">8192</span>)              │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ dropout (<span style="color: #0087ff; text-decoration-color: #0087ff">Dropout</span>)               │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">8192</span>)              │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ dense (<span style="color: #0087ff; text-decoration-color: #0087ff">Dense</span>)                   │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>)                 │      <span style="color: #00af00; text-decoration-color: #00af00">8,193</span> │
+└─────────────────────────────────┴───────────────────────────┴────────────┘
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Total params: </span><span style="color: #00af00; text-decoration-color: #00af00">404,801</span> (1.54 MB)
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Trainable params: </span><span style="color: #00af00; text-decoration-color: #00af00">404,801</span> (1.54 MB)
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Non-trainable params: </span><span style="color: #00af00; text-decoration-color: #00af00">0</span> (0.00 B)
+</pre>
+
+
+
 ---
 ## Create the generator
 
@@ -145,11 +169,11 @@ generator = keras.Sequential(
         layers.Dense(8 * 8 * 128),
         layers.Reshape((8, 8, 128)),
         layers.Conv2DTranspose(128, kernel_size=4, strides=2, padding="same"),
-        layers.LeakyReLU(alpha=0.2),
+        layers.LeakyReLU(negative_slope=0.2),
         layers.Conv2DTranspose(256, kernel_size=4, strides=2, padding="same"),
-        layers.LeakyReLU(alpha=0.2),
+        layers.LeakyReLU(negative_slope=0.2),
         layers.Conv2DTranspose(512, kernel_size=4, strides=2, padding="same"),
-        layers.LeakyReLU(alpha=0.2),
+        layers.LeakyReLU(negative_slope=0.2),
         layers.Conv2D(3, kernel_size=5, padding="same", activation="sigmoid"),
     ],
     name="generator",
@@ -157,37 +181,59 @@ generator = keras.Sequential(
 generator.summary()
 ```
 
-<div class="k-default-codeblock">
-```
-Model: "generator"
-_________________________________________________________________
-Layer (type)                 Output Shape              Param #   
-=================================================================
-dense_1 (Dense)              (None, 8192)              1056768   
-_________________________________________________________________
-reshape (Reshape)            (None, 8, 8, 128)         0         
-_________________________________________________________________
-conv2d_transpose (Conv2DTran (None, 16, 16, 128)       262272    
-_________________________________________________________________
-leaky_re_lu_3 (LeakyReLU)    (None, 16, 16, 128)       0         
-_________________________________________________________________
-conv2d_transpose_1 (Conv2DTr (None, 32, 32, 256)       524544    
-_________________________________________________________________
-leaky_re_lu_4 (LeakyReLU)    (None, 32, 32, 256)       0         
-_________________________________________________________________
-conv2d_transpose_2 (Conv2DTr (None, 64, 64, 512)       2097664   
-_________________________________________________________________
-leaky_re_lu_5 (LeakyReLU)    (None, 64, 64, 512)       0         
-_________________________________________________________________
-conv2d_3 (Conv2D)            (None, 64, 64, 3)         38403     
-=================================================================
-Total params: 3,979,651
-Trainable params: 3,979,651
-Non-trainable params: 0
-_________________________________________________________________
 
-```
-</div>
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold">Model: "generator"</span>
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━┓
+┃<span style="font-weight: bold"> Layer (type)                    </span>┃<span style="font-weight: bold"> Output Shape              </span>┃<span style="font-weight: bold">    Param # </span>┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━┩
+│ dense_1 (<span style="color: #0087ff; text-decoration-color: #0087ff">Dense</span>)                 │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">8192</span>)              │  <span style="color: #00af00; text-decoration-color: #00af00">1,056,768</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ reshape (<span style="color: #0087ff; text-decoration-color: #0087ff">Reshape</span>)               │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">8</span>, <span style="color: #00af00; text-decoration-color: #00af00">8</span>, <span style="color: #00af00; text-decoration-color: #00af00">128</span>)         │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ conv2d_transpose                │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">16</span>, <span style="color: #00af00; text-decoration-color: #00af00">16</span>, <span style="color: #00af00; text-decoration-color: #00af00">128</span>)       │    <span style="color: #00af00; text-decoration-color: #00af00">262,272</span> │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Conv2DTranspose</span>)               │                           │            │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ leaky_re_lu_3 (<span style="color: #0087ff; text-decoration-color: #0087ff">LeakyReLU</span>)       │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">16</span>, <span style="color: #00af00; text-decoration-color: #00af00">16</span>, <span style="color: #00af00; text-decoration-color: #00af00">128</span>)       │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ conv2d_transpose_1              │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">32</span>, <span style="color: #00af00; text-decoration-color: #00af00">32</span>, <span style="color: #00af00; text-decoration-color: #00af00">256</span>)       │    <span style="color: #00af00; text-decoration-color: #00af00">524,544</span> │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Conv2DTranspose</span>)               │                           │            │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ leaky_re_lu_4 (<span style="color: #0087ff; text-decoration-color: #0087ff">LeakyReLU</span>)       │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">32</span>, <span style="color: #00af00; text-decoration-color: #00af00">32</span>, <span style="color: #00af00; text-decoration-color: #00af00">256</span>)       │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ conv2d_transpose_2              │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">64</span>, <span style="color: #00af00; text-decoration-color: #00af00">64</span>, <span style="color: #00af00; text-decoration-color: #00af00">512</span>)       │  <span style="color: #00af00; text-decoration-color: #00af00">2,097,664</span> │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Conv2DTranspose</span>)               │                           │            │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ leaky_re_lu_5 (<span style="color: #0087ff; text-decoration-color: #0087ff">LeakyReLU</span>)       │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">64</span>, <span style="color: #00af00; text-decoration-color: #00af00">64</span>, <span style="color: #00af00; text-decoration-color: #00af00">512</span>)       │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ conv2d_3 (<span style="color: #0087ff; text-decoration-color: #0087ff">Conv2D</span>)               │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">64</span>, <span style="color: #00af00; text-decoration-color: #00af00">64</span>, <span style="color: #00af00; text-decoration-color: #00af00">3</span>)         │     <span style="color: #00af00; text-decoration-color: #00af00">38,403</span> │
+└─────────────────────────────────┴───────────────────────────┴────────────┘
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Total params: </span><span style="color: #00af00; text-decoration-color: #00af00">3,979,651</span> (15.18 MB)
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Trainable params: </span><span style="color: #00af00; text-decoration-color: #00af00">3,979,651</span> (15.18 MB)
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Non-trainable params: </span><span style="color: #00af00; text-decoration-color: #00af00">0</span> (0.00 B)
+</pre>
+
+
+
 ---
 ## Override `train_step`
 
@@ -200,6 +246,7 @@ class GAN(keras.Model):
         self.discriminator = discriminator
         self.generator = generator
         self.latent_dim = latent_dim
+        self.seed_generator = keras.random.SeedGenerator(1337)
 
     def compile(self, d_optimizer, g_optimizer, loss_fn):
         super().compile()
@@ -215,18 +262,20 @@ class GAN(keras.Model):
 
     def train_step(self, real_images):
         # Sample random points in the latent space
-        batch_size = tf.shape(real_images)[0]
-        random_latent_vectors = tf.random.normal(shape=(batch_size, self.latent_dim))
+        batch_size = ops.shape(real_images)[0]
+        random_latent_vectors = keras.random.normal(
+            shape=(batch_size, self.latent_dim), seed=self.seed_generator
+        )
 
         # Decode them to fake images
         generated_images = self.generator(random_latent_vectors)
 
         # Combine them with real images
-        combined_images = tf.concat([generated_images, real_images], axis=0)
+        combined_images = ops.concatenate([generated_images, real_images], axis=0)
 
         # Assemble labels discriminating real from fake images
-        labels = tf.concat(
-            [tf.ones((batch_size, 1)), tf.zeros((batch_size, 1))], axis=0
+        labels = ops.concatenate(
+            [ops.ones((batch_size, 1)), ops.zeros((batch_size, 1))], axis=0
         )
         # Add random noise to the labels - important trick!
         labels += 0.05 * tf.random.uniform(tf.shape(labels))
@@ -241,10 +290,12 @@ class GAN(keras.Model):
         )
 
         # Sample random points in the latent space
-        random_latent_vectors = tf.random.normal(shape=(batch_size, self.latent_dim))
+        random_latent_vectors = keras.random.normal(
+            shape=(batch_size, self.latent_dim), seed=self.seed_generator
+        )
 
         # Assemble labels that say "all real images"
-        misleading_labels = tf.zeros((batch_size, 1))
+        misleading_labels = ops.zeros((batch_size, 1))
 
         # Train the generator (note that we should *not* update the weights
         # of the discriminator)!
@@ -274,9 +325,12 @@ class GANMonitor(keras.callbacks.Callback):
     def __init__(self, num_img=3, latent_dim=128):
         self.num_img = num_img
         self.latent_dim = latent_dim
+        self.seed_generator = keras.random.SeedGenerator(42)
 
     def on_epoch_end(self, epoch, logs=None):
-        random_latent_vectors = tf.random.normal(shape=(self.num_img, self.latent_dim))
+        random_latent_vectors = keras.random.normal(
+            shape=(self.num_img, self.latent_dim), seed=self.seed_generator
+        )
         generated_images = self.model.generator(random_latent_vectors)
         generated_images *= 255
         generated_images.numpy()
@@ -307,9 +361,14 @@ gan.fit(
 
 <div class="k-default-codeblock">
 ```
-6332/6332 [==============================] - 605s 96ms/step - d_loss: 0.6113 - g_loss: 1.1976
+    2/6332 [37m━━━━━━━━━━━━━━━━━━━━  9:54 94ms/step - d_loss: 0.6792 - g_loss: 0.7880   
 
-<tensorflow.python.keras.callbacks.History at 0x7f4eb5d055d0>
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1704214667.959762    1319 device_compiler.h:186] Compiled cluster using XLA!  This line is logged at most once for the lifetime of the process.
+
+ 6332/6332 ━━━━━━━━━━━━━━━━━━━━ 557s 84ms/step - d_loss: 0.5616 - g_loss: 1.4099
+
+<keras.src.callbacks.history.History at 0x7f251d32bc40>
 
 ```
 </div>
