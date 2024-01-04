@@ -27,6 +27,10 @@ CV_GUIDES_MASTER = {
             "path": "semantic_segmentation_deeplab_v3_plus",
             "title": "Semantic Segmentation with KerasCV",
         },
+        {
+            "path": "segment_anything_in_keras_cv",
+            "title": "Segment Anything in KerasCV",
+        }
     ],
 }
 
