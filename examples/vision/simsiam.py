@@ -47,6 +47,7 @@ versions of our dataset.
 ## Setup
 """
 import os
+
 os.environ["KERAS_BACKEND"] = "tensorflow"
 import keras
 import keras_cv
@@ -104,6 +105,7 @@ random_saturation = keras_cv.layers.RandomSaturation(
 )
 random_hue = keras_cv.layers.RandomHue(0.2 * strength[3], [0, 255])
 grayscale = keras_cv.layers.Grayscale()
+
 
 def flip_random_crop(image):
     # With random crops we also apply horizontal flipping.
