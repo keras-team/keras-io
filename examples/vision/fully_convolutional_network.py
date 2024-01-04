@@ -49,6 +49,7 @@ or a [PyImageSearch Blog on Semantic Segmentation](https://pyimagesearch.com/201
 """
 
 import os
+
 os.environ["KERAS_BACKEND"] = "tensorflow"
 import keras
 from keras import ops
@@ -556,7 +557,7 @@ Note: For better results, the model must be trained for a higher number of epoch
 """
 
 images, masks = next(iter(test_ds))
-random_idx = keras.random.uniform([], minval=0, maxval=BATCH_SIZE,seed=10)
+random_idx = keras.random.uniform([], minval=0, maxval=BATCH_SIZE, seed=10)
 
 # Get random test image and mask
 test_image = images[int(random_idx)].numpy().astype("float")
