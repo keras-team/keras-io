@@ -924,9 +924,6 @@ class KerasIO:
         ]
         title = md_content[2 : md_content.find("\n")]
 
-        # Replace -- with —
-        html_content = html_content.replace("--", "—")
-
         self.render_single_docs_page_from_html(
             target_path,
             title,
