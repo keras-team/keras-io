@@ -2,7 +2,7 @@
 
 **Author:** [Soumik Rakshit](http://github.com/soumik12345)<br>
 **Date created:** 2021/08/31<br>
-**Last modified:** 2023/07/19<br>
+**Last modified:** 2024/01/05<br>
 **Description:** Implement DeepLabV3+ architecture for Multi-class Semantic Segmentation.
 
 
@@ -158,7 +158,6 @@ def convolution_block(
     num_filters=256,
     kernel_size=3,
     dilation_rate=1,
-    padding="same",
     use_bias=False,
 ):
     x = layers.Conv2D(

@@ -2,7 +2,7 @@
 Title: Multiclass semantic segmentation using DeepLabV3+
 Author: [Soumik Rakshit](http://github.com/soumik12345)
 Date created: 2021/08/31
-Last modified: 2023/07/19
+Last modified: 2024/01/05
 Description: Implement DeepLabV3+ architecture for Multi-class Semantic Segmentation.
 Accelerator: GPU
 Converted to Keras 3: [Muhammad Anas Raza](https://anasrz.com)
@@ -134,7 +134,6 @@ def convolution_block(
     num_filters=256,
     kernel_size=3,
     dilation_rate=1,
-    padding="same",
     use_bias=False,
 ):
     x = layers.Conv2D(
