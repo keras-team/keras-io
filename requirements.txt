@@ -1,4 +1,4 @@
-black~=23.10.0
+black~=23.21.1
 pygments>=2.7.4
 markdown>=3.3
 matplotlib
@@ -13,6 +13,6 @@ pydot
 tensorflow
 tensorflow_datasets
 keras-tuner==1.4.6
-keras-cv==0.7.2
+keras-cv==0.8.0
 tf_keras==2.15.0
-keras-nlp==0.6.4
+keras-nlp==0.7.0
