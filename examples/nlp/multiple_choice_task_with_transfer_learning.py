@@ -2,7 +2,7 @@
 Title: MultipleChoice Task with Transfer Learning
 Author: Md Awsafur Rahman
 Date created: 2023/09/14
-Last modified: 2023/09/14
+Last modified: 2024/01/06
 Description: Use pre-trained nlp models for multiplechoice task.
 Accelerator: GPU
 """
@@ -21,11 +21,12 @@ unlike question answering. We will use SWAG dataset to demonstrate this example.
 """
 
 """shell
+pip install -q keras-nlp --upgrade
 """
 
-import keras_nlp
 import keras
-import tensorflow as tf  # For tf.data only.
+import keras_nlp
+import tensorflow as tf
 
 import numpy as np
 import pandas as pd
@@ -542,9 +543,9 @@ for i in range(0, 50, 10):
     question = row.startphrase
     pred_answer = f"ending{pred_answers[i]}"
     true_answer = f"ending{true_answers[i]}"
-    print(f"❓ Sentence {i+1}:\n{question}\n")
-    print(f"✅ True Ending: {true_answer}\n   >> {row[true_answer]}\n")
-    print(f"🤖 Predicted Ending: {pred_answer}\n   >> {row[pred_answer]}\n")
+    print(f"❓  Sentence {i+1}:\n{question}\n")
+    print(f"✅  True Ending: {true_answer}\n   >> {row[true_answer]}\n")
+    print(f"🤖  Predicted Ending: {pred_answer}\n   >> {row[pred_answer]}\n")
     print("-" * 90, "\n")
 
 """
