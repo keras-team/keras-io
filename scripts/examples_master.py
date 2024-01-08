@@ -355,6 +355,7 @@ EXAMPLES_MASTER = {
                     "path": "bit",
                     "title": "Image Classification using BigTransfer (BiT)",
                     "subcategory": "Image classification",
+                    "keras_3": True,
                 },
                 # Performance recipes
                 {

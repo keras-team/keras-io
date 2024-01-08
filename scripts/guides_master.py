@@ -30,7 +30,7 @@ CV_GUIDES_MASTER = {
         {
             "path": "segment_anything_in_keras_cv",
             "title": "Segment Anything in KerasCV",
-        }
+        },
     ],
 }
 
