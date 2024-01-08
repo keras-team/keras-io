@@ -1,0 +1,31 @@
+name: Upload to S3
+
+on: [push]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.12
+      - name: pip cache
+          uses: actions/cache@v3
+          with:
+            path: ${{ steps.pip-cache.outputs.dir }}
+            key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+        - name: Install dependencies
+          run: |
+            pip install -r requirements.txt --progress-bar off --upgrade
+        - name: Build website
+          run: |
+            python scripts/autogen.py make
+        - name: Upload files
+          env: 
+            AWS_S3_ACCESS_KEY: ${{ secrets.AWS_S3_ACCESS_KEY }}
+            AWS_S3_SECRET_KEY: ${{ secrets.AWS_S3_SECRET_KEY }}
+          run: |
+            python scripts/upload.py
