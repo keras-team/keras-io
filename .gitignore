@@ -1,7 +1,6 @@
 tmp/*
 sources/*
 site/*
-scripts/upload.py
 *.pyc
 *.swp
 templates/examples/generative/*
