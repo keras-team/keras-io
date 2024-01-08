@@ -8,10 +8,7 @@ mdx_truly_sane_lists
 PyYAML
 pandas
 jupyter
-pycocotools
 pydot
-tensorflow
-tensorflow_datasets
 keras-tuner==1.4.6
 keras-cv==0.8.0
 tf_keras==2.15.0
