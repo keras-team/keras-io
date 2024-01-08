@@ -1118,16 +1118,17 @@ def get_working_dir(arg):
 
 
 if __name__ == "__main__":
+    root = Path(__file__).parent.parent.resolve()
     keras_io = KerasIO(
         master=MASTER,
         url=os.path.sep,
-        templates_dir=os.path.join("..", "templates"),
-        md_sources_dir=os.path.join("..", "sources"),
-        site_dir=os.path.join("..", "site"),
-        theme_dir=os.path.join("..", "theme"),
-        guides_dir=os.path.join("..", "guides"),
-        examples_dir=os.path.join("..", "examples"),
-        redirects_dir=os.path.join("..", "redirects"),
+        templates_dir=os.path.join(root, "templates"),
+        md_sources_dir=os.path.join(root, "sources"),
+        site_dir=os.path.join(root, "site"),
+        theme_dir=os.path.join(root, "theme"),
+        guides_dir=os.path.join(root, "guides"),
+        examples_dir=os.path.join(root, "examples"),
+        redirects_dir=os.path.join(root, "redirects"),
         refresh_guides=False,
         refresh_examples=False,
     )
@@ -1138,10 +1139,9 @@ if __name__ == "__main__":
         "serve",
         "add_example",
         "add_guide",
-        "generate_tf_guides",
     }:
         raise ValueError(
-            "Must specify command `make`, `serve`, `add_example`, `add_guide` or `generate_tf_guides`."
+            "Must specify command `make`, `serve`, `add_example`, or `add_guide`."
         )
     if cmd in {"add_example", "add_guide"}:
         if not len(sys.argv) in (3, 4):
@@ -1165,5 +1165,3 @@ if __name__ == "__main__":
             sys.argv[2],
             working_dir=get_working_dir(sys.argv[3]) if len(sys.argv) == 4 else None,
         )
-    elif cmd == "generate_tf_guides":
-        generate_tf_guides.generate_tf_guides()
