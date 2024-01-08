@@ -6,11 +6,9 @@ jobs:
   build:
     strategy:
       fail-fast: false
-      matrix:
-        python-version: [3.9]
+      python-version: 3.10
     runs-on: ubuntu-latest
     env:
-      PYTHON: ${{ matrix.python-version }}
       AWS_S3_ACCESS_KEY: ${{ secrets.AWS_S3_ACCESS_KEY }}
       AWS_S3_SECRET_KEY: ${{ secrets.AWS_S3_SECRET_KEY }}
     steps:
