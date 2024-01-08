@@ -6,7 +6,6 @@ jobs:
   build:
     strategy:
       fail-fast: false
-      python-version: 3.10
     runs-on: ubuntu-latest
     env:
       AWS_S3_ACCESS_KEY: ${{ secrets.AWS_S3_ACCESS_KEY }}
@@ -16,7 +15,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: 3.10
       - name: Get pip cache dir
         id: pip-cache
         run: |
