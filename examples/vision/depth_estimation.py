@@ -360,8 +360,8 @@ class DepthEstimationModel(keras.Model):
         # Edges
         dy_true, dx_true = tf_image.image_gradients(target)
         dy_pred, dx_pred = tf_image.image_gradients(pred)
-        weights_x = ops.cast(ops.exp(ops.mean(ops.abs(dx_true))), "float32")
-        weights_y = ops.cast(ops.exp(ops.mean(ops.abs(dy_true))), "float32")
+        weights_x = ops.exp(ops.mean(ops.abs(dx_true)))
+        weights_y = ops.exp(ops.mean(ops.abs(dy_true)))
 
         # Depth smoothness
         smoothness_x = dx_pred * weights_x
