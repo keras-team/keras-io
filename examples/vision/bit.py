@@ -41,6 +41,7 @@ the curve below is a ResNet-50 pre-trained on ImageNet (ILSVRC-2012).
 """
 
 import os
+
 os.environ["KERAS_BACKEND"] = "tensorflow"
 import numpy as np
 import pandas as pd
@@ -119,6 +120,7 @@ SCHEDULE_LENGTH = SCHEDULE_LENGTH * 512 / BATCH_SIZE
 
 random_flip = keras.layers.RandomFlip("horizontal")
 random_crop = keras.layers.RandomCrop(CROP_TO, CROP_TO)
+
 
 def preprocess_train(image, label):
     image = random_flip(image)
