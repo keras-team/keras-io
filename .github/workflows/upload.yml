@@ -1,6 +1,8 @@
 name: Upload to S3
 
-on: [push]
+on:
+  push:
+    branches: [master]
 
 jobs:
   build:

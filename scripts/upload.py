@@ -39,7 +39,7 @@ def cleanup(site_directory, redirect_directory):
 
 
 def upload_dir(directory, include_img=True):
-    print("Uploading...")
+    print(f"Uploading files from '{directory}'...")
     all_targets = []
     for dp, dn, fn in os.walk(directory):
         if fn:
@@ -58,7 +58,7 @@ def upload_dir(directory, include_img=True):
 
 
 def upload_redirects(directory):
-    print("Uploading...")
+    print("Uploading redirects...")
     for dp, dn, fn in os.walk(directory):
         if fn:
             for f in fn:
