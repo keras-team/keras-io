@@ -7,7 +7,7 @@ and some state, held in TensorFlow variables (the layer's *weights*).
 A Layer instance is callable, much like a function:
 
 ```python
-from tensorflow.keras import layers
+from keras import layers
 
 layer = layers.Dense(32, activation='relu')
 inputs = tf.random.uniform(shape=(10, 20))

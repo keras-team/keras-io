@@ -5,8 +5,8 @@
 An optimizer is one of the two arguments required for compiling a Keras model:
 
 ```python
-from tensorflow import keras
-from tensorflow.keras import layers
+import keras
+from keras import layers
 
 model = keras.Sequential()
 model.add(layers.Dense(64, kernel_initializer='uniform', input_shape=(10,)))
@@ -23,39 +23,6 @@ or you can pass it by its string identifier. In the latter case, the default par
 # pass optimizer by name: default parameters will be used
 model.compile(loss='categorical_crossentropy', optimizer='adam')
 ```
-
----
-
-## Usage in a custom training loop
-
-When writing a custom training loop, you would retrieve
-gradients via a [`tf.GradientTape`](https://www.tensorflow.org/api_docs/python/tf/GradientTape) instance,
-then call `optimizer.apply_gradients()` to update your weights:
-
-
-```python
-# Instantiate an optimizer.
-optimizer = tf.keras.optimizers.Adam()
-
-# Iterate over the batches of a dataset.
-for x, y in dataset:
-    # Open a GradientTape.
-    with tf.GradientTape() as tape:
-        # Forward pass.
-        logits = model(x)
-        # Loss value for this batch.
-        loss_value = loss_fn(y, logits)
-
-    # Get gradients of loss wrt the weights.
-    gradients = tape.gradient(loss_value, model.trainable_weights)
-
-    # Update the weights of the model.
-    optimizer.apply_gradients(zip(gradients, model.trainable_weights))
-```
-
-Note that when you use `apply_gradients`, the optimizer does not
-apply gradient clipping to the gradients: if you want gradient clipping,
-you would have to do it by hand before calling the method.
 
 
 ---

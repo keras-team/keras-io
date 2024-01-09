@@ -24,8 +24,8 @@ and they perform reduction by default when used in a standalone way (see details
 A loss function is one of the two arguments required for compiling a Keras model:
 
 ```python
-from tensorflow import keras
-from tensorflow.keras import layers
+import keras
+from keras import layers
 
 model = keras.Sequential()
 model.add(layers.Dense(64, kernel_initializer='uniform', input_shape=(10,)))
@@ -74,7 +74,7 @@ A loss is a callable with arguments `loss_fn(y_true, y_pred, sample_weight=None)
 By default, loss functions return one scalar loss value per input sample, e.g.
 
 ```
->>> tf.keras.losses.mean_squared_error(tf.ones((2, 2,)), tf.zeros((2, 2)))
+>>> keras.losses.mean_squared_error(tf.ones((2, 2,)), tf.zeros((2, 2)))
 <tf.Tensor: shape=(2,), dtype=float32, numpy=array([1., 1.], dtype=float32)>
 ```
 
@@ -88,32 +88,32 @@ which defaults to `"sum_over_batch_size"` (i.e. average). Allowable values are
 - "none" means the loss instance will return the full array of per-sample losses.
 
 ```
->>> loss_fn = tf.keras.losses.MeanSquaredError(reduction='sum_over_batch_size')
+>>> loss_fn = keras.losses.MeanSquaredError(reduction='sum_over_batch_size')
 >>> loss_fn(tf.ones((2, 2,)), tf.zeros((2, 2)))
 <tf.Tensor: shape=(), dtype=float32, numpy=1.0>
 ```
 ```
->>> loss_fn = tf.keras.losses.MeanSquaredError(reduction='sum')
+>>> loss_fn = keras.losses.MeanSquaredError(reduction='sum')
 >>> loss_fn(tf.ones((2, 2,)), tf.zeros((2, 2)))
 <tf.Tensor: shape=(), dtype=float32, numpy=2.0>
 ```
 ```
->>> loss_fn = tf.keras.losses.MeanSquaredError(reduction='none')
+>>> loss_fn = keras.losses.MeanSquaredError(reduction='none')
 >>> loss_fn(tf.ones((2, 2,)), tf.zeros((2, 2)))
 <tf.Tensor: shape=(2,), dtype=float32, numpy=array([1., 1.], dtype=float32)>
 ```
 
-Note that this is an important difference between loss functions like `tf.keras.losses.mean_squared_error`
-and default loss class instances like `tf.keras.losses.MeanSquaredError`: the function version
+Note that this is an important difference between loss functions like `keras.losses.mean_squared_error`
+and default loss class instances like `keras.losses.MeanSquaredError`: the function version
 does not perform reduction, but by default the class instance does.
 
 ```
->>> loss_fn = tf.keras.losses.mean_squared_error
+>>> loss_fn = keras.losses.mean_squared_error
 >>> loss_fn(tf.ones((2, 2,)), tf.zeros((2, 2)))
 <tf.Tensor: shape=(2,), dtype=float32, numpy=array([1., 1.], dtype=float32)>
 ```
 ```
->>> loss_fn = tf.keras.losses.MeanSquaredError()
+>>> loss_fn = keras.losses.MeanSquaredError()
 >>> loss_fn(tf.ones((2, 2,)), tf.zeros((2, 2)))
 <tf.Tensor: shape=(), dtype=float32, numpy=1.0>
 ```
@@ -123,8 +123,8 @@ When using `fit()`, this difference is irrelevant since reduction is handled by 
 Here's how you would use a loss class instance as part of a simple training loop:
 
 ```python
-loss_fn = tf.keras.losses.CategoricalCrossentropy(from_logits=True)
-optimizer = tf.keras.optimizers.Adam()
+loss_fn = keras.losses.CategoricalCrossentropy(from_logits=True)
+optimizer = keras.optimizers.Adam()
 
 # Iterate over the batches of a dataset.
 for x, y in dataset:
@@ -172,34 +172,32 @@ to keep track of such loss terms.
 Here's an example of a layer that adds a sparsity regularization loss based on the L2 norm of the inputs:
 
 ```python
-from tensorflow.keras.layers import Layer
-
-class MyActivityRegularizer(Layer):
+class MyActivityRegularizer(keras.layers.Layer):
   """Layer that creates an activity sparsity regularization loss."""
-  
-  def __init__(self, rate=1e-2):
-    super().__init__()
-    self.rate = rate
-  
-  def call(self, inputs):
-    # We use `add_loss` to create a regularization loss
-    # that depends on the inputs.
-    self.add_loss(self.rate * tf.reduce_sum(tf.square(inputs)))
-    return inputs
+
+    def __init__(self, rate=1e-2):
+        super().__init__()
+        self.rate = rate
+
+    def call(self, inputs):
+        # We use `add_loss` to create a regularization loss
+        # that depends on the inputs.
+        self.add_loss(self.rate * keras.ops.sum(keras.ops.square(inputs)))
+        return inputs
 ```
 
 Loss values added via `add_loss` can be retrieved in the `.losses` list property of any `Layer` or `Model`
 (they are recursively retrieved from every underlying layer):
 
 ```python
-from tensorflow.keras import layers
+from keras import layers
 
-class SparseMLP(Layer):
+class SparseMLP(layers.Layer):
   """Stack of Linear layers with a sparsity regularization loss."""
 
   def __init__(self, output_dim):
       super().__init__()
-      self.dense_1 = layers.Dense(32, activation=tf.nn.relu)
+      self.dense_1 = layers.Dense(32, activation=keras.ops.relu)
       self.regularization = MyActivityRegularizer(1e-2)
       self.dense_2 = layers.Dense(output_dim)
 
@@ -210,7 +208,7 @@ class SparseMLP(Layer):
     
 
 mlp = SparseMLP(1)
-y = mlp(tf.ones((10, 10)))
+y = mlp(keras.ops.ones((10, 10)))
 
 print(mlp.losses)  # List containing one float32 scalar
 ```
@@ -222,9 +220,9 @@ You would typically use these losses by summing them before computing your gradi
 ```python
 # Losses correspond to the *last* forward pass.
 mlp = SparseMLP(1)
-mlp(tf.ones((10, 10)))
+mlp(keras.ops.ones((10, 10)))
 assert len(mlp.losses) == 1
-mlp(tf.ones((10, 10)))
+mlp(keras.ops.ones((10, 10)))
 assert len(mlp.losses) == 1  # No accumulation.
 ```
 
@@ -234,8 +232,8 @@ When writing a custom training loop, you should retrieve these terms
 by hand from `model.losses`, like this:
 
 ```python
-loss_fn = tf.keras.losses.CategoricalCrossentropy(from_logits=True)
-optimizer = tf.keras.optimizers.Adam()
+loss_fn = keras.losses.CategoricalCrossentropy(from_logits=True)
+optimizer = keras.optimizers.Adam()
 
 # Iterate over the batches of a dataset.
 for x, y in dataset:

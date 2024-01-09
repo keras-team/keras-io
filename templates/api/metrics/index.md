@@ -70,7 +70,7 @@ Unlike losses, metrics are stateful. You update their state using the `update_st
 and you query the scalar metric result using the `result()` method:
 
 ```python
-m = tf.keras.metrics.AUC()
+m = keras.metrics.AUC()
 m.update_state([0, 1, 1, 1], [0, 1, 0, 0])
 print('Intermediate result:', float(m.result()))
 
@@ -83,9 +83,9 @@ The internal state can be cleared via `metric.reset_states()`.
 Here's how you would use a metric as part of a simple custom training loop:
 
 ```python
-accuracy = tf.keras.metrics.CategoricalAccuracy()
-loss_fn = tf.keras.losses.CategoricalCrossentropy(from_logits=True)
-optimizer = tf.keras.optimizers.Adam()
+accuracy = keras.metrics.CategoricalAccuracy()
+loss_fn = keras.losses.CategoricalCrossentropy(from_logits=True)
+optimizer = keras.optimizers.Adam()
 
 # Iterate over the batches of a dataset.
 for step, (x, y) in enumerate(dataset):
@@ -121,9 +121,11 @@ Note that sample weighting is automatically supported for any such metric.
 Here's a simple example:
 
 ```python
+from keras import ops
+
 def my_metric_fn(y_true, y_pred):
-    squared_difference = tf.square(y_true - y_pred)
-    return tf.reduce_mean(squared_difference, axis=-1)  # Note the `axis=-1`
+    squared_difference = ops.square(y_true - y_pred)
+    return ops.mean(squared_difference, axis=-1)  # Note the `axis=-1`
 
 model.compile(optimizer='adam', loss='mean_squared_error', metrics=[my_metric_fn])
 ```
@@ -155,22 +157,22 @@ which can maintain a state across batches. It's easy:
 Here's a simple example computing binary true positives:
 
 ```python
-class BinaryTruePositives(tf.keras.metrics.Metric):
+class BinaryTruePositives(keras.metrics.Metric):
 
   def __init__(self, name='binary_true_positives', **kwargs):
     super().__init__(name=name, **kwargs)
     self.true_positives = self.add_weight(name='tp', initializer='zeros')
 
   def update_state(self, y_true, y_pred, sample_weight=None):
-    y_true = tf.cast(y_true, tf.bool)
-    y_pred = tf.cast(y_pred, tf.bool)
+    y_true = ops.cast(y_true, "bool")
+    y_pred = ops.cast(y_pred, "bool")
 
-    values = tf.logical_and(tf.equal(y_true, True), tf.equal(y_pred, True))
-    values = tf.cast(values, self.dtype)
+    values = ops.logical_and(ops.equal(y_true, True), ops.equal(y_pred, True))
+    values = ops.cast(values, self.dtype)
     if sample_weight is not None:
-      sample_weight = tf.cast(sample_weight, self.dtype)
-      values = tf.multiply(values, sample_weight)
-    self.true_positives.assign_add(tf.reduce_sum(values))
+      sample_weight = ops.cast(sample_weight, self.dtype)
+      values = values * sample_weight
+    self.true_positives.assign_add(ops.sum(values))
 
   def result(self):
     return self.true_positives

@@ -1,6 +1,6 @@
 # Data loading
 
-Keras data loading utilities, located in `tf.keras.utils`,
+Keras data loading utilities, located in `keras.utils`,
 help you go from raw data on disk to a `tf.data.Dataset` object that can be
 used to efficiently train a model.
 
@@ -31,7 +31,7 @@ same way.
 You could simply do:
 
 ```python
-from tensorflow import keras
+import keras
 
 train_ds = keras.utils.image_dataset_from_directory(
     directory='training_data/',

@@ -21,13 +21,13 @@ while training as well as when using 32-bit precision.
 
 ## Using mixed precision training in Keras
 
-The precision policy used by Keras layers or models is controled by a `tf.keras.mixed_precision.Policy` instance.
-Each layer has its own `Policy`. You can either set it on an individual layer via the `dtype` argument
+The precision policy used by Keras layers or models is controled by a `keras.mixed_precision.DTypePolicy` instance.
+Each layer has its own `DTypePolicy`. You can either set it on an individual layer via the `dtype` argument
 (e.g. `MyLayer(..., dtype="mixed_float16")`), or you can set a global value to be used by all layers by
-default, via the utility `tf.keras.mixed_precision.set_global_policy`.
+default, via the utility `keras.mixed_precision.set_global_policy`.
 
-Typically, to start using mixed precision on GPU, you would simply call `tf.keras.mixed_precision.set_global_policy("mixed_float16")`
-at the start of your program. On TPU, you would call `tf.keras.mixed_precision.set_global_policy("mixed_bfloat16")`.
+Typically, to start using mixed precision on GPU, you would simply call `keras.mixed_precision.set_global_policy("mixed_float16")`
+at the start of your program. On TPU, you would call `keras.mixed_precision.set_global_policy("mixed_bfloat16")`.
 
 
 ## API documentation

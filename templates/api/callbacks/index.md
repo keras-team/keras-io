@@ -19,9 +19,9 @@ You can pass a list of callbacks (as the keyword argument `callbacks`) to the `.
 
 ```python
 my_callbacks = [
-    tf.keras.callbacks.EarlyStopping(patience=2),
-    tf.keras.callbacks.ModelCheckpoint(filepath='model.{epoch:02d}-{val_loss:.2f}.h5'),
-    tf.keras.callbacks.TensorBoard(log_dir='./logs'),
+    keras.callbacks.EarlyStopping(patience=2),
+    keras.callbacks.ModelCheckpoint(filepath='model.{epoch:02d}-{val_loss:.2f}.h5'),
+    keras.callbacks.TensorBoard(log_dir='./logs'),
 ]
 model.fit(dataset, epochs=10, callbacks=my_callbacks)
 ```
