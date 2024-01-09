@@ -56,6 +56,7 @@ def upload_dir(directory, include_img=True):
                 if not include_img and "/img/" in fpath:
                     continue
                 key_name = fpath[len(directory) :]
+                key_name = key_name.removeprefix("/")
                 print("> " + fpath)
                 print(">>>>>> " + key_name)
                 all_targets.append((BUCKET, fpath, key_name))
