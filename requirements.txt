@@ -9,6 +9,7 @@ PyYAML
 pandas
 jupyter
 pydot
+boto3
 tensorflow
 keras-tuner==1.4.6
 keras-cv==0.8.0
