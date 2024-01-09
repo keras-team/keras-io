@@ -2,7 +2,7 @@
 
 ## Usage of constraints
 
-Classes from the `tf.keras.constraints` module allow setting constraints (eg. non-negativity)
+Classes from the `keras.constraints` module allow setting constraints (eg. non-negativity)
 on model parameters during training. They are per-variable projection functions
 applied to the target variable after each gradient update (when using `fit()`).
 
@@ -15,7 +15,7 @@ These layers expose two keyword arguments:
 
 
 ```python
-from tensorflow.keras.constraints import max_norm
+from keras.constraints import max_norm
 model.add(Dense(64, kernel_constraint=max_norm(2.)))
 ```
 
@@ -31,21 +31,21 @@ model.add(Dense(64, kernel_constraint=max_norm(2.)))
 
 A weight constraint can be any callable that takes a tensor
 and returns a tensor with the same shape and dtype. You would typically
-implement your constraints as subclasses of `tf.keras.constraints.Constraint`.
+implement your constraints as subclasses of `keras.constraints.Constraint`.
 
 Here's a simple example: a constraint that forces weight tensors
 to be centered around a specific value on average.
 
 
 ```python
-class CenterAround(tf.keras.constraints.Constraint):
+class CenterAround(keras.constraints.Constraint):
   """Constrains weight tensors to be centered around `ref_value`."""
 
   def __init__(self, ref_value):
     self.ref_value = ref_value
 
   def __call__(self, w):
-    mean = tf.reduce_mean(w)
+    mean = keras.ops.mean(w)
     return w - mean + self.ref_value
 
   def get_config(self):

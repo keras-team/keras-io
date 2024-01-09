@@ -7,7 +7,7 @@ Weights are downloaded automatically when instantiating a model. They are stored
 
 Upon instantiation, the models will be built according to the image data format set in your Keras configuration file at `~/.keras/keras.json`.
 For instance, if you have set `image_data_format=channels_last`,
-then any model loaded from this repository will get built according to the TensorFlow data format convention, "Height-Width-Depth".
+then any model loaded from this repository will get built according to the data format convention "Height-Width-Depth".
 
 
 ## Available models
@@ -73,16 +73,16 @@ Depth counts the number of layers with parameters.
 ### Classify ImageNet classes with ResNet50
 
 ```python
-from tensorflow.keras.applications.resnet50 import ResNet50
-from tensorflow.keras.preprocessing import image
-from tensorflow.keras.applications.resnet50 import preprocess_input, decode_predictions
+import keras
+from keras.applications.resnet50 import ResNet50
+from keras.applications.resnet50 import preprocess_input, decode_predictions
 import numpy as np
 
 model = ResNet50(weights='imagenet')
 
 img_path = 'elephant.jpg'
-img = image.load_img(img_path, target_size=(224, 224))
-x = image.img_to_array(img)
+img = keras.utils.load_img(img_path, target_size=(224, 224))
+x = keras.utils.img_to_array(img)
 x = np.expand_dims(x, axis=0)
 x = preprocess_input(x)
 
@@ -96,16 +96,16 @@ print('Predicted:', decode_predictions(preds, top=3)[0])
 ### Extract features with VGG16
 
 ```python
-from tensorflow.keras.applications.vgg16 import VGG16
-from tensorflow.keras.preprocessing import image
-from tensorflow.keras.applications.vgg16 import preprocess_input
+import keras
+from keras.applications.vgg16 import VGG16
+from keras.applications.vgg16 import preprocess_input
 import numpy as np
 
 model = VGG16(weights='imagenet', include_top=False)
 
 img_path = 'elephant.jpg'
-img = image.load_img(img_path, target_size=(224, 224))
-x = image.img_to_array(img)
+img = keras.utils.load_img(img_path, target_size=(224, 224))
+x = keras.utils.img_to_array(img)
 x = np.expand_dims(x, axis=0)
 x = preprocess_input(x)
 
@@ -115,18 +115,17 @@ features = model.predict(x)
 ### Extract features from an arbitrary intermediate layer with VGG19
 
 ```python
-from tensorflow.keras.applications.vgg19 import VGG19
-from tensorflow.keras.preprocessing import image
-from tensorflow.keras.applications.vgg19 import preprocess_input
-from tensorflow.keras.models import Model
+from keras.applications.vgg19 import VGG19
+from keras.applications.vgg19 import preprocess_input
+from keras.models import Model
 import numpy as np
 
 base_model = VGG19(weights='imagenet')
 model = Model(inputs=base_model.input, outputs=base_model.get_layer('block4_pool').output)
 
 img_path = 'elephant.jpg'
-img = image.load_img(img_path, target_size=(224, 224))
-x = image.img_to_array(img)
+img = keras.utils.load_img(img_path, target_size=(224, 224))
+x = keras.utils.img_to_array(img)
 x = np.expand_dims(x, axis=0)
 x = preprocess_input(x)
 
@@ -136,10 +135,9 @@ block4_pool_features = model.predict(x)
 ### Fine-tune InceptionV3 on a new set of classes
 
 ```python
-from tensorflow.keras.applications.inception_v3 import InceptionV3
-from tensorflow.keras.preprocessing import image
-from tensorflow.keras.models import Model
-from tensorflow.keras.layers import Dense, GlobalAveragePooling2D
+from keras.applications.inception_v3 import InceptionV3
+from keras.models import Model
+from keras.layers import Dense, GlobalAveragePooling2D
 
 # create the base pre-trained model
 base_model = InceptionV3(weights='imagenet', include_top=False)
@@ -184,7 +182,7 @@ for layer in model.layers[249:]:
 
 # we need to recompile the model for these modifications to take effect
 # we use SGD with a low learning rate
-from tensorflow.keras.optimizers import SGD
+from keras.optimizers import SGD
 model.compile(optimizer=SGD(lr=0.0001, momentum=0.9), loss='categorical_crossentropy')
 
 # we train our model again (this time fine-tuning the top 2 inception blocks
@@ -196,8 +194,8 @@ model.fit(...)
 ### Build InceptionV3 over a custom input tensor
 
 ```python
-from tensorflow.keras.applications.inception_v3 import InceptionV3
-from tensorflow.keras.layers import Input
+from keras.applications.inception_v3 import InceptionV3
+from keras.layers import Input
 
 # this could also be the output a different Keras model or layer
 input_tensor = Input(shape=(224, 224, 3))
