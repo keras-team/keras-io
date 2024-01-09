@@ -110,7 +110,7 @@ resize it.
 """
 
 
-class DataGenerator(keras.utils.Sequence):
+class DataGenerator(keras.utils.PyDataset):
     def __init__(self, data, batch_size=6, dim=(768, 1024), n_channels=3, shuffle=True):
         """
         Initialization
@@ -393,29 +393,12 @@ class DepthEstimationModel(keras.Model):
     def metrics(self):
         return [self.loss_metric]
 
-    def train_step(self, batch_data):
-        input, target = batch_data
-        with tf.GradientTape() as tape:
-            pred = self(input, training=True)
-            loss = self.calculate_loss(target, pred)
-
-        gradients = tape.gradient(loss, self.trainable_variables)
-        self.optimizer.apply_gradients(zip(gradients, self.trainable_variables))
+    def compute_loss(
+        self, x=None, y=None, y_pred=None, sample_weight=None, allow_empty=False
+    ):
+        loss = self.calculate_loss(y, y_pred)
         self.loss_metric.update_state(loss)
-        return {
-            "loss": self.loss_metric.result(),
-        }
-
-    def test_step(self, batch_data):
-        input, target = batch_data
-
-        pred = self(input, training=False)
-        loss = self.calculate_loss(target, pred)
-
-        self.loss_metric.update_state(loss)
-        return {
-            "loss": self.loss_metric.result(),
-        }
+        return loss
 
     def call(self, x):
         c1, p1 = self.downscale_blocks[0](x)
