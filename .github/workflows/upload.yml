@@ -29,6 +29,7 @@ jobs:
       - name: Install dependencies
         run: |
           pip install -r requirements.txt --progress-bar off --upgrade
+          pip install keras --upgrade
       - name: Build website
         run: |
           python scripts/autogen.py make
