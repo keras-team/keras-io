@@ -731,11 +731,6 @@ inference_resizing = keras_cv.layers.Resizing(
 )
 eval_ds = eval_ds.map(inference_resizing, num_parallel_calls=tf.data.AUTOTUNE)
 
-inference_resizing = keras_cv.layers.Resizing(
-    IMAGE_SIZE[0], IMAGE_SIZE[1], crop_to_aspect_ratio=True
-)
-eval_ds = eval_ds.map(inference_resizing, num_parallel_calls=tf.data.AUTOTUNE)
-
 image_batch = next(iter(eval_ds.take(1)))["images"]
 keras_cv.visualization.plot_image_gallery(
     image_batch,
