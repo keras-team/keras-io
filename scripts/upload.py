@@ -38,7 +38,11 @@ def upload_file(bucket, fpath, key_name, redirect=None):
 
 
 def load_hash_cache():
-    s3.download_file(BUCKET, HASH_CACHE, HASH_CACHE)
+    try:
+        s3.download_file(BUCKET, HASH_CACHE, HASH_CACHE)
+    except:
+        print(f"[ERROR] Could not dowload hash cache {HASH_CACHE}")
+        return {}
     with open(HASH_CACHE) as f:
         contents = f.read()
         return json.loads(contents)
