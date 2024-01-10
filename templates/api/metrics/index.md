@@ -182,8 +182,8 @@ class BinaryTruePositives(keras.metrics.Metric):
 
 m = BinaryTruePositives()
 m.update_state([0, 1, 1, 1], [0, 1, 0, 0])
-print('Intermediate result:', float(m.result()))
+print(f'Intermediate result: {m.result().numpy()}')
 
 m.update_state([1, 1, 1, 1], [0, 1, 1, 0])
-print('Final result:', float(m.result()))
+print(f'Intermediate result: {m.result().numpy()}')
 ```

@@ -34,15 +34,17 @@ You can access a layer's regularization penalties by calling `layer.losses`
 after calling the layer on inputs:
 
 ```python
+from keras import ops
+
 layer = layers.Dense(units=5,
                      kernel_initializer='ones',
                      kernel_regularizer=regularizers.L1(0.01),
                      activity_regularizer=regularizers.L2(0.01))
-tensor = keras.ops.ones(shape=(5, 5)) * 2.0
+tensor = ops.ones(shape=(5, 5)) * 2.0
 out = layer(tensor)
 # The kernel regularization term is 0.25
 # The activity regularization term (after dividing by the batch size) is 5
-print(keras.ops.sum(layer.losses))  # 5.25 (= 5 + 0.25)
+print(ops.sum(layer.losses))  # 5.25 (= 5 + 0.25)
 ```
 
 
@@ -62,7 +64,7 @@ A weight regularizer can be any callable that takes as input a weight tensor
 
 ```python
 def my_regularizer(x):
-    return 1e-3 * keras.ops.sum(keras.ops.square(x))
+    return 1e-3 * ops.sum(ops.square(x))
 ```
 
 
@@ -83,7 +85,7 @@ class MyRegularizer(regularizers.Regularizer):
         self.strength = strength
 
     def __call__(self, x):
-        return self.strength * keras.ops.sum(keras.ops.square(x))
+        return self.strength * ops.sum(ops.square(x))
 ```
 
 Optionally, you can also implement the method `get_config` and the class
@@ -98,7 +100,7 @@ class MyRegularizer(regularizers.Regularizer):
         self.strength = strength
 
     def __call__(self, x):
-        return self.strength * keras.ops.sum(keras.ops.square(x))
+        return self.strength * ops.sum(ops.square(x))
 
     def get_config(self):
         return {'strength': self.strength}
