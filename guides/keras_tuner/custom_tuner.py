@@ -39,7 +39,7 @@ validation. Here, we just use some random data for demonstration purposes.
 
 import keras_tuner
 import tensorflow as tf
-from tensorflow import keras
+import keras
 import numpy as np
 
 

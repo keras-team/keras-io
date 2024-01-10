@@ -37,8 +37,8 @@ The first step is to download and format the data.
 
 import numpy as np
 import keras_tuner
-from tensorflow import keras
-from tensorflow.keras import layers
+import keras
+from keras import layers
 
 (x_train, y_train), (x_test, y_test) = keras.datasets.mnist.load_data()
 # Normalize the pixel values to the range of [0, 1].
