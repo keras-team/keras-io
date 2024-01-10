@@ -149,9 +149,11 @@ Note that sample weighting is automatically supported for any such loss.
 Here's a simple example:
 
 ```python
+from keras import ops
+
 def my_loss_fn(y_true, y_pred):
-    squared_difference = tf.square(y_true - y_pred)
-    return tf.reduce_mean(squared_difference, axis=-1)  # Note the `axis=-1`
+    squared_difference = ops.square(y_true - y_pred)
+    return ops.mean(squared_difference, axis=-1)  # Note the `axis=-1`
 
 model.compile(optimizer='adam', loss=my_loss_fn)
 ```
@@ -172,6 +174,8 @@ to keep track of such loss terms.
 Here's an example of a layer that adds a sparsity regularization loss based on the L2 norm of the inputs:
 
 ```python
+from keras import ops
+
 class MyActivityRegularizer(keras.layers.Layer):
   """Layer that creates an activity sparsity regularization loss."""
 
@@ -182,7 +186,7 @@ class MyActivityRegularizer(keras.layers.Layer):
     def call(self, inputs):
         # We use `add_loss` to create a regularization loss
         # that depends on the inputs.
-        self.add_loss(self.rate * keras.ops.sum(keras.ops.square(inputs)))
+        self.add_loss(self.rate * ops.sum(ops.square(inputs)))
         return inputs
 ```
 
@@ -191,13 +195,14 @@ Loss values added via `add_loss` can be retrieved in the `.losses` list property
 
 ```python
 from keras import layers
+from keras import ops
 
 class SparseMLP(layers.Layer):
   """Stack of Linear layers with a sparsity regularization loss."""
 
   def __init__(self, output_dim):
       super().__init__()
-      self.dense_1 = layers.Dense(32, activation=keras.ops.relu)
+      self.dense_1 = layers.Dense(32, activation=ops.relu)
       self.regularization = MyActivityRegularizer(1e-2)
       self.dense_2 = layers.Dense(output_dim)
 
@@ -208,7 +213,7 @@ class SparseMLP(layers.Layer):
     
 
 mlp = SparseMLP(1)
-y = mlp(keras.ops.ones((10, 10)))
+y = mlp(ops.ones((10, 10)))
 
 print(mlp.losses)  # List containing one float32 scalar
 ```
@@ -220,9 +225,9 @@ You would typically use these losses by summing them before computing your gradi
 ```python
 # Losses correspond to the *last* forward pass.
 mlp = SparseMLP(1)
-mlp(keras.ops.ones((10, 10)))
+mlp(ops.ones((10, 10)))
 assert len(mlp.losses) == 1
-mlp(keras.ops.ones((10, 10)))
+mlp(ops.ones((10, 10)))
 assert len(mlp.losses) == 1  # No accumulation.
 ```
 
