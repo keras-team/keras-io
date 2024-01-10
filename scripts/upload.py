@@ -88,8 +88,7 @@ def upload_dir(directory, include_img=True, hash_cache=None):
                     continue
                 key_name = fpath[len(directory) :]
                 key_name = key_name.removeprefix("/")
-                print("> " + fpath)
-                print(">>>>>> " + key_name)
+                print(f"...{key_name}")
                 all_targets.append((BUCKET, fpath, key_name))
 
     if hash_cache is not None:
