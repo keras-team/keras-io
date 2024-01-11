@@ -76,24 +76,50 @@ for training our GauGAN model. Let's first download it.
 
 
 ```python
-!!wget https://drive.google.com/uc?id=1q4FEjQg1YSb4mPx2VdxL7LXKYu3voTMj -O facades_data.zip
-!!unzip -q facades_data.zip
+!wget https://drive.google.com/uc?id=1q4FEjQg1YSb4mPx2VdxL7LXKYu3voTMj -O facades_data.zip
+!unzip -q facades_data.zip
 ```
-
-
-
 
 <div class="k-default-codeblock">
 ```
-[]
-
+--2024-01-11 22:46:32--  https://drive.google.com/uc?id=1q4FEjQg1YSb4mPx2VdxL7LXKYu3voTMj
+Resolving drive.google.com (drive.google.com)... 64.233.181.138, 64.233.181.102, 64.233.181.100, ...
+Connecting to drive.google.com (drive.google.com)|64.233.181.138|:443... connected.
+HTTP request sent, awaiting response... 303 See Other
+Location: https://drive.usercontent.google.com/download?id=1q4FEjQg1YSb4mPx2VdxL7LXKYu3voTMj [following]
+--2024-01-11 22:46:32--  https://drive.usercontent.google.com/download?id=1q4FEjQg1YSb4mPx2VdxL7LXKYu3voTMj
+Resolving drive.usercontent.google.com (drive.usercontent.google.com)... 108.177.112.132, 2607:f8b0:4001:c12::84
+Connecting to drive.usercontent.google.com (drive.usercontent.google.com)|108.177.112.132|:443... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: 26036052 (25M) [application/octet-stream]
+Saving to: ‘facades_data.zip’
 ```
 </div>
+    
+<div class="k-default-codeblock">
+```
+facades_data.zip    100%[===================>]  24.83M  94.3MB/s    in 0.3s    
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+2024-01-11 22:46:42 (94.3 MB/s) - ‘facades_data.zip’ saved [26036052/26036052]
+```
+</div>
+    
+
+
 ---
 ## Imports
 
 
 ```python
+import os
+
+os.environ["KERAS_BACKEND"] = "tensorflow"
+
+
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -247,12 +273,6 @@ One-hot encoded label map shape: (4, 256, 256, 12).
 
     
 ![png](/img/examples/generative/gaugan/gaugan_11_3.png)
-    
-
-
-
-    
-![png](/img/examples/generative/gaugan/gaugan_11_4.png)
     
 
 
@@ -860,12 +880,12 @@ Epoch 1/15
 /home/sineeli/anaconda3/envs/kerasv3/lib/python3.10/site-packages/keras/src/optimizers/base_optimizer.py:472: UserWarning: Gradients do not exist for variables ['kernel', 'kernel', 'gamma', 'beta', 'kernel', 'gamma', 'beta', 'kernel', 'gamma', 'beta', 'kernel', 'gamma', 'beta', 'kernel', 'bias', 'kernel', 'bias'] when minimizing the loss. If using `model.compile()`, did you forget to provide a `loss` argument?
   warnings.warn(
 WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
-I0000 00:00:1704931438.883262    3166 device_compiler.h:186] Compiled cluster using XLA!  This line is logged at most once for the lifetime of the process.
-W0000 00:00:1704931438.928328    3166 graph_launch.cc:671] Fallback to op-by-op mode because memset node breaks graph update
+I0000 00:00:1705013303.976306   30381 device_compiler.h:186] Compiled cluster using XLA!  This line is logged at most once for the lifetime of the process.
+W0000 00:00:1705013304.021899   30381 graph_launch.cc:671] Fallback to op-by-op mode because memset node breaks graph update
 
- 75/75 ━━━━━━━━━━━━━━━━━━━━ 0s 175ms/step - disc_loss: 1.3088 - feat_loss: 7.8474 - gen_loss: 114.0020 - kl_loss: 87.9822 - vgg_loss: 18.1334
+ 75/75 ━━━━━━━━━━━━━━━━━━━━ 0s 176ms/step - disc_loss: 1.3079 - feat_loss: 11.2902 - gen_loss: 113.0583 - kl_loss: 83.1424 - vgg_loss: 18.4966
 
-W0000 00:00:1704931461.360352    3164 graph_launch.cc:671] Fallback to op-by-op mode because memset node breaks graph update
+W0000 00:00:1705013326.657730   30384 graph_launch.cc:671] Fallback to op-by-op mode because memset node breaks graph update
 
  1/1 ━━━━━━━━━━━━━━━━━━━━ 3s 3s/step
 
@@ -896,17 +916,17 @@ W0000 00:00:1704931461.360352    3164 graph_launch.cc:671] Fallback to op-by-op 
 
 <div class="k-default-codeblock">
 ```
- 75/75 ━━━━━━━━━━━━━━━━━━━━ 113s 429ms/step - disc_loss: 1.3065 - feat_loss: 7.8452 - gen_loss: 113.9953 - kl_loss: 87.9862 - vgg_loss: 18.1246 - val_disc_loss: 1.1139 - val_feat_loss: 8.1333 - val_gen_loss: 112.6849 - val_kl_loss: 87.1736 - val_vgg_loss: 17.2939
+ 75/75 ━━━━━━━━━━━━━━━━━━━━ 114s 426ms/step - disc_loss: 1.3051 - feat_loss: 11.2902 - gen_loss: 113.0590 - kl_loss: 83.1493 - vgg_loss: 18.4890 - val_disc_loss: 1.0374 - val_feat_loss: 9.2344 - val_gen_loss: 110.1001 - val_kl_loss: 83.8935 - val_vgg_loss: 16.6412
 Epoch 2/15
- 75/75 ━━━━━━━━━━━━━━━━━━━━ 14s 192ms/step - disc_loss: 0.9905 - feat_loss: 8.2777 - gen_loss: 112.9607 - kl_loss: 87.4652 - vgg_loss: 17.1153 - val_disc_loss: 0.9998 - val_feat_loss: 2.6571 - val_gen_loss: 109.1785 - val_kl_loss: 86.9621 - val_vgg_loss: 19.6633
+ 75/75 ━━━━━━━━━━━━━━━━━━━━ 14s 193ms/step - disc_loss: 0.8257 - feat_loss: 12.6603 - gen_loss: 115.9798 - kl_loss: 84.4545 - vgg_loss: 18.2973 - val_disc_loss: 0.9296 - val_feat_loss: 10.4162 - val_gen_loss: 110.6182 - val_kl_loss: 83.4473 - val_vgg_loss: 16.5499
 Epoch 3/15
- 75/75 ━━━━━━━━━━━━━━━━━━━━ 14s 192ms/step - disc_loss: 0.9925 - feat_loss: 3.9836 - gen_loss: 110.9926 - kl_loss: 87.7377 - vgg_loss: 19.2879 - val_disc_loss: 1.0904 - val_feat_loss: 1.4258 - val_gen_loss: 106.5909 - val_kl_loss: 87.7226 - val_vgg_loss: 17.1114
+ 75/75 ━━━━━━━━━━━━━━━━━━━━ 15s 194ms/step - disc_loss: 0.9126 - feat_loss: 10.4992 - gen_loss: 111.6962 - kl_loss: 83.8692 - vgg_loss: 17.0433 - val_disc_loss: 0.8875 - val_feat_loss: 9.9899 - val_gen_loss: 111.4879 - val_kl_loss: 84.6905 - val_vgg_loss: 16.4510
 Epoch 4/15
- 75/75 ━━━━━━━━━━━━━━━━━━━━ 14s 192ms/step - disc_loss: 1.0036 - feat_loss: 1.8540 - gen_loss: 106.2400 - kl_loss: 87.7651 - vgg_loss: 16.5193 - val_disc_loss: 1.1302 - val_feat_loss: 2.1545 - val_gen_loss: 107.5857 - val_kl_loss: 88.1624 - val_vgg_loss: 16.7384
+ 75/75 ━━━━━━━━━━━━━━━━━━━━ 15s 194ms/step - disc_loss: 0.8975 - feat_loss: 9.9081 - gen_loss: 111.2489 - kl_loss: 84.3098 - vgg_loss: 16.7369 - val_disc_loss: 0.9266 - val_feat_loss: 8.8318 - val_gen_loss: 107.9712 - val_kl_loss: 82.1354 - val_vgg_loss: 16.2676
 Epoch 5/15
- 75/75 ━━━━━━━━━━━━━━━━━━━━ 14s 192ms/step - disc_loss: 1.0510 - feat_loss: 2.2650 - gen_loss: 106.2309 - kl_loss: 87.6485 - vgg_loss: 16.2240 - val_disc_loss: 0.9224 - val_feat_loss: 2.7848 - val_gen_loss: 107.4519 - val_kl_loss: 87.7816 - val_vgg_loss: 16.6732
+ 75/75 ━━━━━━━━━━━━━━━━━━━━ 15s 194ms/step - disc_loss: 0.9378 - feat_loss: 9.1914 - gen_loss: 110.5359 - kl_loss: 84.7988 - vgg_loss: 16.3160 - val_disc_loss: 1.0073 - val_feat_loss: 8.9351 - val_gen_loss: 109.2667 - val_kl_loss: 84.4920 - val_vgg_loss: 16.3844
 Epoch 6/15
- 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 33ms/step
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 35ms/step
 
 ```
 </div>
@@ -935,20 +955,86 @@ Epoch 6/15
 
 <div class="k-default-codeblock">
 ```
- 75/75 ━━━━━━━━━━━━━━━━━━━━ 19s 257ms/step - disc_loss: 0.9765 - feat_loss: 2.6338 - gen_loss: 106.8292 - kl_loss: 87.9422 - vgg_loss: 16.1358 - val_disc_loss: 0.9084 - val_feat_loss: 3.4654 - val_gen_loss: 109.1946 - val_kl_loss: 89.1764 - val_vgg_loss: 16.4939
+ 75/75 ━━━━━━━━━━━━━━━━━━━━ 19s 258ms/step - disc_loss: 0.8982 - feat_loss: 9.2486 - gen_loss: 109.9399 - kl_loss: 83.8095 - vgg_loss: 16.5587 - val_disc_loss: 0.8061 - val_feat_loss: 8.5935 - val_gen_loss: 109.5937 - val_kl_loss: 84.5844 - val_vgg_loss: 15.8794
 Epoch 7/15
- 75/75 ━━━━━━━━━━━━━━━━━━━━ 14s 193ms/step - disc_loss: 0.9695 - feat_loss: 2.9791 - gen_loss: 106.6965 - kl_loss: 87.6516 - vgg_loss: 15.9400 - val_disc_loss: 0.8938 - val_feat_loss: 3.3881 - val_gen_loss: 107.7295 - val_kl_loss: 87.7579 - val_vgg_loss: 16.4218
+ 75/75 ━━━━━━━━━━━━━━━━━━━━ 15s 194ms/step - disc_loss: 0.9048 - feat_loss: 9.1064 - gen_loss: 109.3803 - kl_loss: 83.8245 - vgg_loss: 16.0975 - val_disc_loss: 1.0096 - val_feat_loss: 7.6335 - val_gen_loss: 108.2900 - val_kl_loss: 84.8679 - val_vgg_loss: 15.9580
 Epoch 8/15
- 75/75 ━━━━━━━━━━━━━━━━━━━━ 14s 192ms/step - disc_loss: 0.9663 - feat_loss: 2.9945 - gen_loss: 107.0034 - kl_loss: 87.7469 - vgg_loss: 16.1191 - val_disc_loss: 0.8590 - val_feat_loss: 3.5634 - val_gen_loss: 108.6608 - val_kl_loss: 88.4126 - val_vgg_loss: 16.4720
+ 75/75 ━━━━━━━━━━━━━━━━━━━━ 15s 193ms/step - disc_loss: 0.9075 - feat_loss: 8.0537 - gen_loss: 108.1771 - kl_loss: 83.6673 - vgg_loss: 16.1545 - val_disc_loss: 1.0090 - val_feat_loss: 8.7077 - val_gen_loss: 109.2079 - val_kl_loss: 84.5022 - val_vgg_loss: 16.3814
 Epoch 9/15
- 75/75 ━━━━━━━━━━━━━━━━━━━━ 14s 192ms/step - disc_loss: 0.9527 - feat_loss: 3.0602 - gen_loss: 107.0537 - kl_loss: 87.9148 - vgg_loss: 15.9367 - val_disc_loss: 0.9155 - val_feat_loss: 4.5307 - val_gen_loss: 108.2882 - val_kl_loss: 87.5102 - val_vgg_loss: 16.3752
+ 75/75 ━━━━━━━━━━━━━━━━━━━━ 15s 194ms/step - disc_loss: 0.9053 - feat_loss: 7.7949 - gen_loss: 107.9268 - kl_loss: 83.6504 - vgg_loss: 16.1193 - val_disc_loss: 1.0663 - val_feat_loss: 8.2042 - val_gen_loss: 108.4819 - val_kl_loss: 84.5961 - val_vgg_loss: 16.0834
 Epoch 10/15
- 75/75 ━━━━━━━━━━━━━━━━━━━━ 14s 193ms/step - disc_loss: 0.9360 - feat_loss: 3.8135 - gen_loss: 107.4504 - kl_loss: 87.4767 - vgg_loss: 15.9964 - val_disc_loss: 0.9192 - val_feat_loss: 3.7713 - val_gen_loss: 107.8610 - val_kl_loss: 87.5078 - val_vgg_loss: 16.4318
+ 75/75 ━━━━━━━━━━━━━━━━━━━━ 15s 194ms/step - disc_loss: 0.8905 - feat_loss: 7.7652 - gen_loss: 108.3079 - kl_loss: 83.8574 - vgg_loss: 16.2992 - val_disc_loss: 0.8362 - val_feat_loss: 7.7127 - val_gen_loss: 108.9906 - val_kl_loss: 84.4822 - val_vgg_loss: 16.0521
 Epoch 11/15
- 56/75 ━━━━━━━━━━━━━━[37m━━━━━━  3s 176ms/step - disc_loss: 0.9340 - feat_loss: 3.5289 - gen_loss: 107.9632 - kl_loss: 88.3703 - vgg_loss: 15.8786
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 30ms/step
 
 ```
 </div>
+    
+![png](/img/examples/generative/gaugan/gaugan_31_15.png)
+    
+
+
+
+    
+![png](/img/examples/generative/gaugan/gaugan_31_16.png)
+    
+
+
+
+    
+![png](/img/examples/generative/gaugan/gaugan_31_17.png)
+    
+
+
+
+    
+![png](/img/examples/generative/gaugan/gaugan_31_18.png)
+    
+
+
+<div class="k-default-codeblock">
+```
+ 75/75 ━━━━━━━━━━━━━━━━━━━━ 20s 263ms/step - disc_loss: 0.9047 - feat_loss: 7.5019 - gen_loss: 107.6317 - kl_loss: 83.6812 - vgg_loss: 16.1292 - val_disc_loss: 0.8788 - val_feat_loss: 7.7651 - val_gen_loss: 109.1731 - val_kl_loss: 84.3094 - val_vgg_loss: 16.0356
+Epoch 12/15
+ 75/75 ━━━━━━━━━━━━━━━━━━━━ 15s 194ms/step - disc_loss: 0.8899 - feat_loss: 7.5799 - gen_loss: 108.2313 - kl_loss: 84.4031 - vgg_loss: 15.9665 - val_disc_loss: 0.8358 - val_feat_loss: 7.5676 - val_gen_loss: 109.5789 - val_kl_loss: 85.7282 - val_vgg_loss: 16.0442
+Epoch 13/15
+ 75/75 ━━━━━━━━━━━━━━━━━━━━ 15s 194ms/step - disc_loss: 0.8542 - feat_loss: 7.3362 - gen_loss: 107.4649 - kl_loss: 83.6942 - vgg_loss: 16.0675 - val_disc_loss: 1.0853 - val_feat_loss: 7.9020 - val_gen_loss: 106.9958 - val_kl_loss: 84.2610 - val_vgg_loss: 15.8510
+Epoch 14/15
+ 75/75 ━━━━━━━━━━━━━━━━━━━━ 15s 194ms/step - disc_loss: 0.8631 - feat_loss: 7.6403 - gen_loss: 108.6401 - kl_loss: 84.5304 - vgg_loss: 16.0426 - val_disc_loss: 0.9516 - val_feat_loss: 8.8795 - val_gen_loss: 108.5215 - val_kl_loss: 83.1849 - val_vgg_loss: 16.3289
+Epoch 15/15
+ 75/75 ━━━━━━━━━━━━━━━━━━━━ 15s 194ms/step - disc_loss: 0.8939 - feat_loss: 7.5489 - gen_loss: 108.8330 - kl_loss: 85.0358 - vgg_loss: 15.9147 - val_disc_loss: 0.9616 - val_feat_loss: 8.0080 - val_gen_loss: 108.1650 - val_kl_loss: 84.7754 - val_vgg_loss: 15.9561
+
+```
+</div>
+    
+![png](/img/examples/generative/gaugan/gaugan_31_20.png)
+    
+
+
+
+    
+![png](/img/examples/generative/gaugan/gaugan_31_21.png)
+    
+
+
+
+    
+![png](/img/examples/generative/gaugan/gaugan_31_22.png)
+    
+
+
+
+    
+![png](/img/examples/generative/gaugan/gaugan_31_23.png)
+    
+
+
+
+    
+![png](/img/examples/generative/gaugan/gaugan_31_24.png)
+    
+
+
 ---
 ## Inference
 
@@ -985,7 +1071,7 @@ for _ in range(5):
 
 <div class="k-default-codeblock">
 ```
- 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 33ms/step
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 29ms/step
 
 ```
 </div>
@@ -996,12 +1082,23 @@ for _ in range(5):
 
 <div class="k-default-codeblock">
 ```
- 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 33ms/step
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 25ms/step
 
 ```
 </div>
     
 ![png](/img/examples/generative/gaugan/gaugan_33_3.png)
+    
+
+
+<div class="k-default-codeblock">
+```
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 25ms/step
+
+```
+</div>
+    
+![png](/img/examples/generative/gaugan/gaugan_33_5.png)
     
 
 

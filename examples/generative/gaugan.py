@@ -69,13 +69,17 @@ for training our GauGAN model. Let's first download it.
 """
 
 """shell
-!wget https://drive.google.com/uc?id=1q4FEjQg1YSb4mPx2VdxL7LXKYu3voTMj -O facades_data.zip
-!unzip -q facades_data.zip
+wget https://drive.google.com/uc?id=1q4FEjQg1YSb4mPx2VdxL7LXKYu3voTMj -O facades_data.zip
+unzip -q facades_data.zip
 """
 
 """
 ## Imports
 """
+import os
+
+os.environ["KERAS_BACKEND"] = "tensorflow"
+
 
 import numpy as np
 import matplotlib.pyplot as plt
