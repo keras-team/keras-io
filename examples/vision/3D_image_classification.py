@@ -29,10 +29,10 @@ equivalent: it takes as input a 3D volume or a sequence of 2D frames (e.g. slice
 import os
 import zipfile
 import numpy as np
-import tensorflow as tf
+import tensorflow as tf  # for data preprocessing
 
-from tensorflow import keras
-from tensorflow.keras import layers
+import keras
+from keras import layers
 
 """
 ## Downloading the MosMedData: Chest CT Scans with COVID-19 Related Findings
@@ -379,7 +379,7 @@ model.compile(
 
 # Define callbacks.
 checkpoint_cb = keras.callbacks.ModelCheckpoint(
-    "3d_image_classification.h5", save_best_only=True
+    "3d_image_classification.keras", save_best_only=True
 )
 early_stopping_cb = keras.callbacks.EarlyStopping(monitor="val_acc", patience=15)
 
@@ -426,7 +426,7 @@ for i, metric in enumerate(["acc", "loss"]):
 """
 
 # Load best weights.
-model.load_weights("3d_image_classification.h5")
+model.load_weights("3d_image_classification.keras")
 prediction = model.predict(np.expand_dims(x_val[0], axis=0))[0]
 scores = [1 - prediction[0], prediction[0]]
 
