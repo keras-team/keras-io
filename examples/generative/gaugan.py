@@ -69,7 +69,7 @@ for training our GauGAN model. Let's first download it.
 """
 
 """shell
-!gdown https://drive.google.com/uc?id=1q4FEjQg1YSb4mPx2VdxL7LXKYu3voTMj
+!wget https://drive.google.com/uc?id=1q4FEjQg1YSb4mPx2VdxL7LXKYu3voTMj -O facades_data.zip
 !unzip -q facades_data.zip
 """
 
@@ -117,7 +117,10 @@ AUTOTUNE = tf.data.AUTOTUNE
 
 def load(image_files, batch_size, is_train=True):
     def _random_crop(
-        segmentation_map, image, labels, crop_size=(IMG_HEIGHT, IMG_WIDTH),
+        segmentation_map,
+        image,
+        labels,
+        crop_size=(IMG_HEIGHT, IMG_WIDTH),
     ):
         crop_size = tf.convert_to_tensor(crop_size)
         image_shape = tf.shape(image)[:2]
@@ -150,7 +153,6 @@ def load(image_files, batch_size, is_train=True):
         labels.set_shape((None, None, NUM_CLASSES))
         return segmentation_maps, real_images, labels
 
-
     segmentation_map_files = [
         image_file.replace("images", "segmentation_map").replace("jpg", "png")
         for image_file in image_files
@@ -169,7 +171,6 @@ def load(image_files, batch_size, is_train=True):
     dataset = dataset.map(_one_hot, num_parallel_calls=AUTOTUNE)
     dataset = dataset.batch(batch_size, drop_remainder=True)
     return dataset
-
 
 
 train_dataset = load(train_files, batch_size=BATCH_SIZE, is_train=True)
@@ -231,7 +232,6 @@ SPADE is better suited for semantic image synthesis.
 """
 
 
-
 class SPADE(layers.Layer):
     def __init__(self, filters, epsilon=1e-5, **kwargs):
         super().__init__(**kwargs)
@@ -244,10 +244,7 @@ class SPADE(layers.Layer):
         self.resize_shape = input_shape[1:3]
 
     def call(self, input_tensor, raw_mask):
-        mask = ops.image.resize(
-            raw_mask,
-            self.resize_shape,
-            interpolation="nearest")
+        mask = ops.image.resize(raw_mask, self.resize_shape, interpolation="nearest")
         x = self.conv(mask)
         gamma = self.conv_gamma(x)
         beta = self.conv_beta(x)
@@ -282,8 +279,9 @@ class ResBlock(layers.Layer):
         x = self.spade_2(x, mask)
         x = self.conv_2(keras.activations.leaky_relu(x, 0.2))
         skip = (
-            self.conv_3(keras.activations.leaky_relu(
-                self.spade_3(input_tensor, mask), 0.2))
+            self.conv_3(
+                keras.activations.leaky_relu(self.spade_3(input_tensor, mask), 0.2)
+            )
             if self.learned_skip
             else input_tensor
         )
@@ -304,16 +302,16 @@ class GaussianSampler(layers.Layer):
             shape=(self.batch_size, self.latent_dim),
             mean=0.0,
             stddev=1.0,
-            seed=self.seed_generator
+            seed=self.seed_generator,
         )
         samples = means + ops.exp(0.5 * variance) * epsilon
         return samples
 
 
-
 """
 Next, we implement the downsampling block for the encoder.
 """
+
 
 def downsample(
     channels,
@@ -343,7 +341,6 @@ def downsample(
     return block
 
 
-
 """
 The GauGAN encoder consists of a few downsampling blocks. It outputs the mean and
 variance of a distribution.
@@ -364,7 +361,6 @@ def build_encoder(image_shape, encoder_downsample_factor=64, latent_dim=256):
     mean = layers.Dense(latent_dim, name="mean")(x)
     variance = layers.Dense(latent_dim, name="variance")(x)
     return keras.Model(input_image, [mean, variance], name="encoder")
-
 
 
 """
@@ -522,7 +518,7 @@ class GanMonitor(keras.callbacks.Callback):
             shape=(self.model.batch_size, self.model.latent_dim),
             mean=0.0,
             stddev=2.0,
-            seed=self.seed_generator
+            seed=self.seed_generator,
         )
         return self.model.predict([latent_vector, self.val_images[2]])
 
@@ -617,8 +613,7 @@ class GauGAN(keras.Model):
         combined_outputs = discriminator_output + [generated_image]
         patch_size = discriminator_output[-1].shape[1]
         combined_model = keras.Model(
-            [latent_input, mask_input, image_input],
-            combined_outputs
+            [latent_input, mask_input, image_input], combined_outputs
         )
         return patch_size, combined_model
 
