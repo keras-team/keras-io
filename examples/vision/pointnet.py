@@ -2,7 +2,7 @@
 Title: Point cloud classification with PointNet
 Author: [David Griffiths](https://dgriffiths3.github.io)
 Date created: 2020/05/25
-Last modified: 2020/05/26
+Last modified: 2024/01/09
 Description: Implementation of PointNet for ModelNet10 classification.
 Accelerator: GPU
 """
@@ -37,7 +37,7 @@ import keras
 from keras import layers
 from matplotlib import pyplot as plt
 
-keras.random.SeedGenerator(seed=42)
+keras.utils.set_random_seed(seed=42)
 
 """
 ## Load dataset
@@ -144,11 +144,16 @@ def augment(points, label):
     return points, label
 
 
-train_dataset = tf_data.Dataset.from_tensor_slices((train_points, train_labels))
+train_size = 0.8
+dataset = tf_data.Dataset.from_tensor_slices((train_points, train_labels))
 test_dataset = tf_data.Dataset.from_tensor_slices((test_points, test_labels))
+train_dataset_size = int(len(dataset) * train_size)
 
-train_dataset = train_dataset.shuffle(len(train_points)).map(augment).batch(BATCH_SIZE)
+dataset = dataset.shuffle(len(train_points)).map(augment)
 test_dataset = test_dataset.shuffle(len(test_points)).batch(BATCH_SIZE)
+
+train_dataset = dataset.take(train_dataset_size).batch(BATCH_SIZE)
+validation_dataset = dataset.skip(train_dataset_size).batch(BATCH_SIZE)
 
 """
 ### Build a model
@@ -260,7 +265,7 @@ model.compile(
     metrics=["sparse_categorical_accuracy"],
 )
 
-model.fit(train_dataset, epochs=20, validation_data=test_dataset)
+model.fit(train_dataset, epochs=20, validation_data=validation_dataset)
 
 """
 ## Visualize predictions

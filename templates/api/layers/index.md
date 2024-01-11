@@ -7,10 +7,11 @@ and some state, held in TensorFlow variables (the layer's *weights*).
 A Layer instance is callable, much like a function:
 
 ```python
+import keras
 from keras import layers
 
 layer = layers.Dense(32, activation='relu')
-inputs = tf.random.uniform(shape=(10, 20))
+inputs = keras.random.uniform(shape=(10, 20))
 outputs = layer(inputs)
 ```
 
@@ -19,8 +20,8 @@ during training, and stored in `layer.weights`:
 
 ```python
 >>> layer.weights
-[<tf.Variable 'dense/kernel:0' shape=(20, 32) dtype=float32>,
- <tf.Variable 'dense/bias:0' shape=(32,) dtype=float32>]
+[<KerasVariable shape=(20, 32), dtype=float32, path=dense/kernel>,
+ <KerasVariable shape=(32,), dtype=float32, path=dense/bias>]
 ```
 
 ---
