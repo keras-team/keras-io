@@ -2,9 +2,10 @@
 Title: 3D image classification from CT scans
 Author: [Hasib Zunair](https://twitter.com/hasibzunair)
 Date created: 2020/09/23
-Last modified: 2020/09/23
+Last modified: 2024/01/11
 Description: Train a 3D convolutional neural network to predict presence of pneumonia.
 Accelerator: GPU
+Converted to Keras 3 by: [Sitam Meur](https://github.com/sitamgithub-MSIT)
 """
 """
 ## Introduction
@@ -27,12 +28,14 @@ equivalent: it takes as input a 3D volume or a sequence of 2D frames (e.g. slice
 """
 
 import os
+os.environ["KERAS_BACKEND"] = "tensorflow"
 import zipfile
 import numpy as np
-import tensorflow as tf
+import keras
+from keras import ops
+from keras import layers
 
-from tensorflow import keras
-from tensorflow.keras import layers
+import tensorflow as tf
 
 """
 ## Downloading the MosMedData: Chest CT Scans with COVID-19 Related Findings
@@ -210,37 +213,28 @@ import random
 
 from scipy import ndimage
 
+random_rotation = layers.RandomRotation(factor=(-0.06, 0.06))
 
-@tf.function
+
 def rotate(volume):
     """Rotate the volume by a few degrees"""
-
-    def scipy_rotate(volume):
-        # define some rotation angles
-        angles = [-20, -10, -5, 5, 10, 20]
-        # pick angles at random
-        angle = random.choice(angles)
-        # rotate volume
-        volume = ndimage.rotate(volume, angle, reshape=False)
-        volume[volume < 0] = 0
-        volume[volume > 1] = 1
-        return volume
-
-    augmented_volume = tf.numpy_function(scipy_rotate, [volume], tf.float32)
-    return augmented_volume
+    # rotate volume
+    volume = random_rotation(volume)
+    volume = ops.clip(volume, 0, 1)
+    return volume
 
 
 def train_preprocessing(volume, label):
     """Process training data by rotating and adding a channel."""
     # Rotate volume
     volume = rotate(volume)
-    volume = tf.expand_dims(volume, axis=3)
+    volume = ops.expand_dims(volume, axis=3)
     return volume, label
 
 
 def validation_preprocessing(volume, label):
     """Process validation data by only adding a channel."""
-    volume = tf.expand_dims(volume, axis=3)
+    volume = ops.expand_dims(volume, axis=3)
     return volume, label
 
 
@@ -379,7 +373,7 @@ model.compile(
 
 # Define callbacks.
 checkpoint_cb = keras.callbacks.ModelCheckpoint(
-    "3d_image_classification.h5", save_best_only=True
+    "3d_image_classification.keras", save_best_only=True
 )
 early_stopping_cb = keras.callbacks.EarlyStopping(monitor="val_acc", patience=15)
 
@@ -426,7 +420,7 @@ for i, metric in enumerate(["acc", "loss"]):
 """
 
 # Load best weights.
-model.load_weights("3d_image_classification.h5")
+model.load_weights("3d_image_classification.keras")
 prediction = model.predict(np.expand_dims(x_val[0], axis=0))[0]
 scores = [1 - prediction[0], prediction[0]]
 
