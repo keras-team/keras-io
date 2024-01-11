@@ -72,39 +72,61 @@ from the Deep Learning with Python book by François Chollet.
 
 We will be using the
 [Facades dataset](https://cmp.felk.cvut.cz/~tylecr1/facade/)
-for training our GauGAN model. Let's first download it. We also install
-TensorFlow Addons.
+for training our GauGAN model. Let's first download it.
 
 
 ```python
-!gdown https://drive.google.com/uc?id=1q4FEjQg1YSb4mPx2VdxL7LXKYu3voTMj
+!wget https://drive.google.com/uc?id=1q4FEjQg1YSb4mPx2VdxL7LXKYu3voTMj -O facades_data.zip
 !unzip -q facades_data.zip
-!pip install -qqq tensorflow_addons
 ```
 
 <div class="k-default-codeblock">
 ```
-Downloading...
-From: https://drive.google.com/uc?id=1q4FEjQg1YSb4mPx2VdxL7LXKYu3voTMj
-To: /content/keras-io/scripts/tmp_6251400/facades_data.zip
-100% 26.0M/26.0M [00:00<00:00, 69.1MB/s]
-[K     |████████████████████████████████| 1.1 MB 5.0 MB/s 
-[?25h
-
+--2024-01-11 22:46:32--  https://drive.google.com/uc?id=1q4FEjQg1YSb4mPx2VdxL7LXKYu3voTMj
+Resolving drive.google.com (drive.google.com)... 64.233.181.138, 64.233.181.102, 64.233.181.100, ...
+Connecting to drive.google.com (drive.google.com)|64.233.181.138|:443... connected.
+HTTP request sent, awaiting response... 303 See Other
+Location: https://drive.usercontent.google.com/download?id=1q4FEjQg1YSb4mPx2VdxL7LXKYu3voTMj [following]
+--2024-01-11 22:46:32--  https://drive.usercontent.google.com/download?id=1q4FEjQg1YSb4mPx2VdxL7LXKYu3voTMj
+Resolving drive.usercontent.google.com (drive.usercontent.google.com)... 108.177.112.132, 2607:f8b0:4001:c12::84
+Connecting to drive.usercontent.google.com (drive.usercontent.google.com)|108.177.112.132|:443... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: 26036052 (25M) [application/octet-stream]
+Saving to: ‘facades_data.zip’
 ```
 </div>
+    
+<div class="k-default-codeblock">
+```
+facades_data.zip    100%[===================>]  24.83M  94.3MB/s    in 0.3s    
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+2024-01-11 22:46:42 (94.3 MB/s) - ‘facades_data.zip’ saved [26036052/26036052]
+```
+</div>
+    
+
+
 ---
 ## Imports
 
 
 ```python
+import os
+
+os.environ["KERAS_BACKEND"] = "tensorflow"
+
+
 import numpy as np
 import matplotlib.pyplot as plt
 
 import tensorflow as tf
-import tensorflow_addons as tfa
-from tensorflow import keras
-from tensorflow.keras import layers
+import keras
+from keras import ops
+from keras import layers
 
 from glob import glob
 ```
@@ -150,7 +172,10 @@ AUTOTUNE = tf.data.AUTOTUNE
 
 def load(image_files, batch_size, is_train=True):
     def _random_crop(
-        segmentation_map, image, labels, crop_size=(IMG_HEIGHT, IMG_WIDTH),
+        segmentation_map,
+        image,
+        labels,
+        crop_size=(IMG_HEIGHT, IMG_WIDTH),
     ):
         crop_size = tf.convert_to_tensor(crop_size)
         image_shape = tf.shape(image)[:2]
@@ -178,6 +203,11 @@ def load(image_files, batch_size, is_train=True):
         segmentation_map = tf.cast(segmentation_map, tf.float32) / 127.5 - 1
         return segmentation_map, image, labels
 
+    def _one_hot(segmentation_maps, real_images, labels):
+        labels = tf.one_hot(labels, NUM_CLASSES)
+        labels.set_shape((None, None, NUM_CLASSES))
+        return segmentation_maps, real_images, labels
+
     segmentation_map_files = [
         image_file.replace("images", "segmentation_map").replace("jpg", "png")
         for image_file in image_files
@@ -193,10 +223,9 @@ def load(image_files, batch_size, is_train=True):
     dataset = dataset.shuffle(batch_size * 10) if is_train else dataset
     dataset = dataset.map(_load_data_tf, num_parallel_calls=AUTOTUNE)
     dataset = dataset.map(_random_crop, num_parallel_calls=AUTOTUNE)
-    dataset = dataset.map(
-        lambda x, y, z: (x, y, tf.one_hot(z, NUM_CLASSES)), num_parallel_calls=AUTOTUNE
-    )
-    return dataset.batch(batch_size, drop_remainder=True)
+    dataset = dataset.map(_one_hot, num_parallel_calls=AUTOTUNE)
+    dataset = dataset.batch(batch_size, drop_remainder=True)
+    return dataset
 
 
 train_dataset = load(train_files, batch_size=BATCH_SIZE, is_train=True)
@@ -230,19 +259,21 @@ One-hot encoded label map shape: (4, 256, 256, 12).
 
 ```
 </div>
+    
 ![png](/img/examples/generative/gaugan/gaugan_11_1.png)
+    
 
 
 
+    
 ![png](/img/examples/generative/gaugan/gaugan_11_2.png)
+    
 
 
 
+    
 ![png](/img/examples/generative/gaugan/gaugan_11_3.png)
-
-
-
-![png](/img/examples/generative/gaugan/gaugan_11_4.png)
+    
 
 
 Note that in the rest of this example, we use a couple of figures from the
@@ -292,12 +323,12 @@ class SPADE(layers.Layer):
         self.resize_shape = input_shape[1:3]
 
     def call(self, input_tensor, raw_mask):
-        mask = tf.image.resize(raw_mask, self.resize_shape, method="nearest")
+        mask = ops.image.resize(raw_mask, self.resize_shape, interpolation="nearest")
         x = self.conv(mask)
         gamma = self.conv_gamma(x)
         beta = self.conv_beta(x)
-        mean, var = tf.nn.moments(input_tensor, axes=(0, 1, 2), keepdims=True)
-        std = tf.sqrt(var + self.epsilon)
+        mean, var = ops.moments(input_tensor, axes=(0, 1, 2), keepdims=True)
+        std = ops.sqrt(var + self.epsilon)
         normalized = (input_tensor - mean) / std
         output = gamma * normalized + beta
         return output
@@ -323,11 +354,13 @@ class ResBlock(layers.Layer):
 
     def call(self, input_tensor, mask):
         x = self.spade_1(input_tensor, mask)
-        x = self.conv_1(tf.nn.leaky_relu(x, 0.2))
+        x = self.conv_1(keras.activations.leaky_relu(x, 0.2))
         x = self.spade_2(x, mask)
-        x = self.conv_2(tf.nn.leaky_relu(x, 0.2))
+        x = self.conv_2(keras.activations.leaky_relu(x, 0.2))
         skip = (
-            self.conv_3(tf.nn.leaky_relu(self.spade_3(input_tensor, mask), 0.2))
+            self.conv_3(
+                keras.activations.leaky_relu(self.spade_3(input_tensor, mask), 0.2)
+            )
             if self.learned_skip
             else input_tensor
         )
@@ -340,13 +373,17 @@ class GaussianSampler(layers.Layer):
         super().__init__(**kwargs)
         self.batch_size = batch_size
         self.latent_dim = latent_dim
+        self.seed_generator = keras.random.SeedGenerator(1337)
 
     def call(self, inputs):
         means, variance = inputs
-        epsilon = tf.random.normal(
-            shape=(self.batch_size, self.latent_dim), mean=0.0, stddev=1.0
+        epsilon = keras.random.normal(
+            shape=(self.batch_size, self.latent_dim),
+            mean=0.0,
+            stddev=1.0,
+            seed=self.seed_generator,
         )
-        samples = means + tf.exp(0.5 * variance) * epsilon
+        samples = means + ops.exp(0.5 * variance) * epsilon
         return samples
 
 ```
@@ -376,7 +413,7 @@ def downsample(
         )
     )
     if apply_norm:
-        block.add(tfa.layers.InstanceNormalization())
+        block.add(layers.GroupNormalization(groups=-1))
     if apply_activation:
         block.add(layers.LeakyReLU(0.2))
     if apply_dropout:
@@ -424,7 +461,7 @@ natural path to multi-modal synthesis.
 ```python
 
 def build_generator(mask_shape, latent_dim=256):
-    latent = keras.Input(shape=(latent_dim))
+    latent = keras.Input(shape=(latent_dim,))
     mask = keras.Input(shape=mask_shape)
     x = layers.Dense(16384)(latent)
     x = layers.Reshape((4, 4, 1024))(x)
@@ -440,8 +477,8 @@ def build_generator(mask_shape, latent_dim=256):
     x = layers.UpSampling2D((2, 2))(x)
     x = ResBlock(filters=128)(x, mask)
     x = layers.UpSampling2D((2, 2))(x)
-    x = tf.nn.leaky_relu(x, 0.2)
-    output_image = tf.nn.tanh(layers.Conv2D(3, 4, padding="same")(x))
+    x = keras.activations.leaky_relu(x, 0.2)
+    output_image = keras.activations.tanh(layers.Conv2D(3, 4, padding="same")(x))
     return keras.Model([latent, mask], output_image, name="generator")
 
 ```
@@ -492,11 +529,11 @@ images to have perceptual quality.
 ```python
 
 def generator_loss(y):
-    return -tf.reduce_mean(y)
+    return -ops.mean(y)
 
 
 def kl_divergence_loss(mean, variance):
-    return -0.5 * tf.reduce_sum(1 + variance - tf.square(mean) - tf.exp(variance))
+    return -0.5 * ops.sum(1 + variance - ops.square(mean) - ops.exp(variance))
 
 
 class FeatureMatchingLoss(keras.losses.Loss):
@@ -544,8 +581,7 @@ class DiscriminatorLoss(keras.losses.Loss):
         self.hinge_loss = keras.losses.Hinge()
 
     def call(self, y, is_real):
-        label = 1.0 if is_real else -1.0
-        return self.hinge_loss(label, y)
+        return self.hinge_loss(is_real, y)
 
 ```
 <div class="k-default-codeblock">
@@ -567,10 +603,14 @@ class GanMonitor(keras.callbacks.Callback):
         self.val_images = next(iter(val_dataset))
         self.n_samples = n_samples
         self.epoch_interval = epoch_interval
+        self.seed_generator = keras.random.SeedGenerator(42)
 
     def infer(self):
-        latent_vector = tf.random.normal(
-            shape=(self.model.batch_size, self.model.latent_dim), mean=0.0, stddev=2.0
+        latent_vector = keras.random.normal(
+            shape=(self.model.batch_size, self.model.latent_dim),
+            mean=0.0,
+            stddev=2.0,
+            seed=self.seed_generator,
         )
         return self.model.predict([latent_vector, self.val_images[2]])
 
@@ -634,11 +674,11 @@ class GauGAN(keras.Model):
         self.sampler = GaussianSampler(batch_size, latent_dim)
         self.patch_size, self.combined_model = self.build_combined_generator()
 
-        self.disc_loss_tracker = tf.keras.metrics.Mean(name="disc_loss")
-        self.gen_loss_tracker = tf.keras.metrics.Mean(name="gen_loss")
-        self.feat_loss_tracker = tf.keras.metrics.Mean(name="feat_loss")
-        self.vgg_loss_tracker = tf.keras.metrics.Mean(name="vgg_loss")
-        self.kl_loss_tracker = tf.keras.metrics.Mean(name="kl_loss")
+        self.disc_loss_tracker = keras.metrics.Mean(name="disc_loss")
+        self.gen_loss_tracker = keras.metrics.Mean(name="gen_loss")
+        self.feat_loss_tracker = keras.metrics.Mean(name="feat_loss")
+        self.vgg_loss_tracker = keras.metrics.Mean(name="vgg_loss")
+        self.kl_loss_tracker = keras.metrics.Mean(name="kl_loss")
 
     @property
     def metrics(self):
@@ -661,13 +701,13 @@ class GauGAN(keras.Model):
         self.discriminator.trainable = False
         mask_input = keras.Input(shape=self.mask_shape, name="mask")
         image_input = keras.Input(shape=self.image_shape, name="image")
-        latent_input = keras.Input(shape=(self.latent_dim), name="latent")
+        latent_input = keras.Input(shape=(self.latent_dim,), name="latent")
         generated_image = self.generator([latent_input, mask_input])
         discriminator_output = self.discriminator([image_input, generated_image])
+        combined_outputs = discriminator_output + [generated_image]
         patch_size = discriminator_output[-1].shape[1]
         combined_model = keras.Model(
-            [latent_input, mask_input, image_input],
-            [discriminator_output, generated_image],
+            [latent_input, mask_input, image_input], combined_outputs
         )
         return patch_size, combined_model
 
@@ -688,8 +728,8 @@ class GauGAN(keras.Model):
         with tf.GradientTape() as gradient_tape:
             pred_fake = self.discriminator([segmentation_map, fake_images])[-1]
             pred_real = self.discriminator([segmentation_map, real_image])[-1]
-            loss_fake = self.discriminator_loss(pred_fake, False)
-            loss_real = self.discriminator_loss(pred_real, True)
+            loss_fake = self.discriminator_loss(pred_fake, -1.0)
+            loss_real = self.discriminator_loss(pred_real, 1.0)
             total_loss = 0.5 * (loss_fake + loss_real)
 
         self.discriminator.trainable = True
@@ -709,9 +749,10 @@ class GauGAN(keras.Model):
         self.discriminator.trainable = False
         with tf.GradientTape() as tape:
             real_d_output = self.discriminator([segmentation_map, image])
-            fake_d_output, fake_image = self.combined_model(
+            combined_outputs = self.combined_model(
                 [latent_vector, labels, segmentation_map]
             )
+            fake_d_output, fake_image = combined_outputs[:-1], combined_outputs[-1]
             pred = fake_d_output[-1]
 
             # Compute generator losses.
@@ -767,13 +808,14 @@ class GauGAN(keras.Model):
         # Calculate the losses.
         pred_fake = self.discriminator([segmentation_map, fake_images])[-1]
         pred_real = self.discriminator([segmentation_map, image])[-1]
-        loss_fake = self.discriminator_loss(pred_fake, False)
-        loss_real = self.discriminator_loss(pred_real, True)
+        loss_fake = self.discriminator_loss(pred_fake, -1.0)
+        loss_real = self.discriminator_loss(pred_real, 1.0)
         total_discriminator_loss = 0.5 * (loss_fake + loss_real)
         real_d_output = self.discriminator([segmentation_map, image])
-        fake_d_output, fake_image = self.combined_model(
+        combined_outputs = self.combined_model(
             [latent_vector, labels, segmentation_map]
         )
+        fake_d_output, fake_image = combined_outputs[:-1], combined_outputs[-1]
         pred = fake_d_output[-1]
         g_loss = generator_loss(pred)
         kl_loss = self.kl_divergence_loss_coeff * kl_divergence_loss(mean, variance)
@@ -833,124 +875,164 @@ plot_history("kl_loss")
 
 <div class="k-default-codeblock">
 ```
-Downloading data from https://storage.googleapis.com/tensorflow/keras-applications/vgg19/vgg19_weights_tf_dim_ordering_tf_kernels_notop.h5
-80142336/80134624 [==============================] - 0s 0us/step
-80150528/80134624 [==============================] - 0s 0us/step
 Epoch 1/15
-WARNING:tensorflow:Gradients do not exist for variables ['conv2d_6/kernel:0', 'conv2d_7/kernel:0', 'instance_normalization_3/gamma:0', 'instance_normalization_3/beta:0', 'conv2d_8/kernel:0', 'instance_normalization_4/gamma:0', 'instance_normalization_4/beta:0', 'conv2d_9/kernel:0', 'instance_normalization_5/gamma:0', 'instance_normalization_5/beta:0', 'conv2d_10/kernel:0', 'instance_normalization_6/gamma:0', 'instance_normalization_6/beta:0', 'mean/kernel:0', 'mean/bias:0', 'variance/kernel:0', 'variance/bias:0'] when minimizing the loss. If you're using `model.compile()`, did you forget to provide a `loss`argument?
-WARNING:tensorflow:Gradients do not exist for variables ['conv2d_6/kernel:0', 'conv2d_7/kernel:0', 'instance_normalization_3/gamma:0', 'instance_normalization_3/beta:0', 'conv2d_8/kernel:0', 'instance_normalization_4/gamma:0', 'instance_normalization_4/beta:0', 'conv2d_9/kernel:0', 'instance_normalization_5/gamma:0', 'instance_normalization_5/beta:0', 'conv2d_10/kernel:0', 'instance_normalization_6/gamma:0', 'instance_normalization_6/beta:0', 'mean/kernel:0', 'mean/bias:0', 'variance/kernel:0', 'variance/bias:0'] when minimizing the loss. If you're using `model.compile()`, did you forget to provide a `loss`argument?
-75/75 [==============================] - ETA: 0s - disc_loss: 1.1523 - gen_loss: 116.4506 - feat_loss: 9.3978 - vgg_loss: 17.5297 - kl_loss: 89.3524
+
+/home/sineeli/anaconda3/envs/kerasv3/lib/python3.10/site-packages/keras/src/optimizers/base_optimizer.py:472: UserWarning: Gradients do not exist for variables ['kernel', 'kernel', 'gamma', 'beta', 'kernel', 'gamma', 'beta', 'kernel', 'gamma', 'beta', 'kernel', 'gamma', 'beta', 'kernel', 'bias', 'kernel', 'bias'] when minimizing the loss. If using `model.compile()`, did you forget to provide a `loss` argument?
+  warnings.warn(
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1705013303.976306   30381 device_compiler.h:186] Compiled cluster using XLA!  This line is logged at most once for the lifetime of the process.
+W0000 00:00:1705013304.021899   30381 graph_launch.cc:671] Fallback to op-by-op mode because memset node breaks graph update
+
+ 75/75 ━━━━━━━━━━━━━━━━━━━━ 0s 176ms/step - disc_loss: 1.3079 - feat_loss: 11.2902 - gen_loss: 113.0583 - kl_loss: 83.1424 - vgg_loss: 18.4966
+
+W0000 00:00:1705013326.657730   30384 graph_launch.cc:671] Fallback to op-by-op mode because memset node breaks graph update
+
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 3s 3s/step
 
 ```
 </div>
-![png](/img/examples/generative/gaugan/gaugan_31_1.png)
+    
+![png](/img/examples/generative/gaugan/gaugan_31_5.png)
+    
 
 
 
-![png](/img/examples/generative/gaugan/gaugan_31_2.png)
-
-
-
-![png](/img/examples/generative/gaugan/gaugan_31_3.png)
-
-
-
-![png](/img/examples/generative/gaugan/gaugan_31_4.png)
-
-
-<div class="k-default-codeblock">
-```
-75/75 [==============================] - 108s 1s/step - disc_loss: 1.1523 - gen_loss: 116.4506 - feat_loss: 9.3978 - vgg_loss: 17.5297 - kl_loss: 89.3524 - val_disc_loss: 0.9178 - val_gen_loss: 116.5032 - val_feat_loss: 10.7875 - val_vgg_loss: 17.3193 - val_kl_loss: 88.4352
-Epoch 2/15
-75/75 [==============================] - 77s 1s/step - disc_loss: 0.9191 - gen_loss: 118.7338 - feat_loss: 11.0603 - vgg_loss: 16.6664 - kl_loss: 90.6103 - val_disc_loss: 0.6385 - val_gen_loss: 119.3599 - val_feat_loss: 11.3670 - val_vgg_loss: 17.1393 - val_kl_loss: 90.0082
-Epoch 3/15
-75/75 [==============================] - 80s 1s/step - disc_loss: 0.7655 - gen_loss: 117.5064 - feat_loss: 11.5845 - vgg_loss: 16.4784 - kl_loss: 88.7713 - val_disc_loss: 0.4862 - val_gen_loss: 119.3581 - val_feat_loss: 12.1496 - val_vgg_loss: 16.9515 - val_kl_loss: 89.8430
-Epoch 4/15
-75/75 [==============================] - 80s 1s/step - disc_loss: 0.6624 - gen_loss: 118.3517 - feat_loss: 11.3209 - vgg_loss: 16.3818 - kl_loss: 89.8082 - val_disc_loss: 0.5079 - val_gen_loss: 120.7913 - val_feat_loss: 11.5181 - val_vgg_loss: 17.0514 - val_kl_loss: 91.6182
-Epoch 5/15
-75/75 [==============================] - 80s 1s/step - disc_loss: 0.6675 - gen_loss: 117.6569 - feat_loss: 11.1012 - vgg_loss: 16.3577 - kl_loss: 89.3192 - val_disc_loss: 0.8371 - val_gen_loss: 117.0856 - val_feat_loss: 11.8800 - val_vgg_loss: 16.9238 - val_kl_loss: 88.9101
-Epoch 6/15
-75/75 [==============================] - ETA: 0s - disc_loss: 0.6380 - gen_loss: 118.0546 - feat_loss: 10.9940 - vgg_loss: 16.3220 - kl_loss: 89.8497
-
-```
-</div>
+    
 ![png](/img/examples/generative/gaugan/gaugan_31_6.png)
+    
 
 
 
+    
 ![png](/img/examples/generative/gaugan/gaugan_31_7.png)
+    
 
 
 
+    
 ![png](/img/examples/generative/gaugan/gaugan_31_8.png)
-
-
-
-![png](/img/examples/generative/gaugan/gaugan_31_9.png)
+    
 
 
 <div class="k-default-codeblock">
 ```
-75/75 [==============================] - 84s 1s/step - disc_loss: 0.6380 - gen_loss: 118.0546 - feat_loss: 10.9940 - vgg_loss: 16.3220 - kl_loss: 89.8497 - val_disc_loss: 0.5685 - val_gen_loss: 117.1406 - val_feat_loss: 10.9653 - val_vgg_loss: 16.9390 - val_kl_loss: 89.1890
-Epoch 7/15
-75/75 [==============================] - 81s 1s/step - disc_loss: 0.6146 - gen_loss: 117.7761 - feat_loss: 10.7700 - vgg_loss: 16.2307 - kl_loss: 89.8057 - val_disc_loss: 0.5274 - val_gen_loss: 119.1055 - val_feat_loss: 10.7547 - val_vgg_loss: 16.8180 - val_kl_loss: 90.3080
-Epoch 8/15
-75/75 [==============================] - 80s 1s/step - disc_loss: 0.6255 - gen_loss: 117.6616 - feat_loss: 10.7103 - vgg_loss: 16.2302 - kl_loss: 89.7942 - val_disc_loss: 0.5411 - val_gen_loss: 116.6601 - val_feat_loss: 11.2193 - val_vgg_loss: 17.0372 - val_kl_loss: 88.2279
-Epoch 9/15
-75/75 [==============================] - 80s 1s/step - disc_loss: 0.6166 - gen_loss: 117.8108 - feat_loss: 10.6085 - vgg_loss: 16.2162 - kl_loss: 89.9843 - val_disc_loss: 0.4528 - val_gen_loss: 117.9378 - val_feat_loss: 10.7798 - val_vgg_loss: 16.7823 - val_kl_loss: 89.9090
-Epoch 10/15
-75/75 [==============================] - 81s 1s/step - disc_loss: 0.5717 - gen_loss: 117.3905 - feat_loss: 10.6555 - vgg_loss: 16.0916 - kl_loss: 89.6282 - val_disc_loss: 0.5962 - val_gen_loss: 115.7530 - val_feat_loss: 10.7713 - val_vgg_loss: 16.7657 - val_kl_loss: 88.1683
-Epoch 11/15
-75/75 [==============================] - ETA: 0s - disc_loss: 0.5847 - gen_loss: 117.7846 - feat_loss: 10.8056 - vgg_loss: 16.0719 - kl_loss: 89.9362
+ 75/75 ━━━━━━━━━━━━━━━━━━━━ 114s 426ms/step - disc_loss: 1.3051 - feat_loss: 11.2902 - gen_loss: 113.0590 - kl_loss: 83.1493 - vgg_loss: 18.4890 - val_disc_loss: 1.0374 - val_feat_loss: 9.2344 - val_gen_loss: 110.1001 - val_kl_loss: 83.8935 - val_vgg_loss: 16.6412
+Epoch 2/15
+ 75/75 ━━━━━━━━━━━━━━━━━━━━ 14s 193ms/step - disc_loss: 0.8257 - feat_loss: 12.6603 - gen_loss: 115.9798 - kl_loss: 84.4545 - vgg_loss: 18.2973 - val_disc_loss: 0.9296 - val_feat_loss: 10.4162 - val_gen_loss: 110.6182 - val_kl_loss: 83.4473 - val_vgg_loss: 16.5499
+Epoch 3/15
+ 75/75 ━━━━━━━━━━━━━━━━━━━━ 15s 194ms/step - disc_loss: 0.9126 - feat_loss: 10.4992 - gen_loss: 111.6962 - kl_loss: 83.8692 - vgg_loss: 17.0433 - val_disc_loss: 0.8875 - val_feat_loss: 9.9899 - val_gen_loss: 111.4879 - val_kl_loss: 84.6905 - val_vgg_loss: 16.4510
+Epoch 4/15
+ 75/75 ━━━━━━━━━━━━━━━━━━━━ 15s 194ms/step - disc_loss: 0.8975 - feat_loss: 9.9081 - gen_loss: 111.2489 - kl_loss: 84.3098 - vgg_loss: 16.7369 - val_disc_loss: 0.9266 - val_feat_loss: 8.8318 - val_gen_loss: 107.9712 - val_kl_loss: 82.1354 - val_vgg_loss: 16.2676
+Epoch 5/15
+ 75/75 ━━━━━━━━━━━━━━━━━━━━ 15s 194ms/step - disc_loss: 0.9378 - feat_loss: 9.1914 - gen_loss: 110.5359 - kl_loss: 84.7988 - vgg_loss: 16.3160 - val_disc_loss: 1.0073 - val_feat_loss: 8.9351 - val_gen_loss: 109.2667 - val_kl_loss: 84.4920 - val_vgg_loss: 16.3844
+Epoch 6/15
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 35ms/step
 
 ```
 </div>
+    
+![png](/img/examples/generative/gaugan/gaugan_31_10.png)
+    
+
+
+
+    
 ![png](/img/examples/generative/gaugan/gaugan_31_11.png)
+    
 
 
 
+    
 ![png](/img/examples/generative/gaugan/gaugan_31_12.png)
+    
 
 
 
+    
 ![png](/img/examples/generative/gaugan/gaugan_31_13.png)
-
-
-
-![png](/img/examples/generative/gaugan/gaugan_31_14.png)
+    
 
 
 <div class="k-default-codeblock">
 ```
-75/75 [==============================] - 85s 1s/step - disc_loss: 0.5847 - gen_loss: 117.7846 - feat_loss: 10.8056 - vgg_loss: 16.0719 - kl_loss: 89.9362 - val_disc_loss: 0.4893 - val_gen_loss: 118.1462 - val_feat_loss: 11.4571 - val_vgg_loss: 16.7712 - val_kl_loss: 89.5385
-Epoch 12/15
-75/75 [==============================] - 80s 1s/step - disc_loss: 0.5382 - gen_loss: 117.5233 - feat_loss: 10.6898 - vgg_loss: 16.0712 - kl_loss: 89.7246 - val_disc_loss: 1.1371 - val_gen_loss: 115.7767 - val_feat_loss: 11.3614 - val_vgg_loss: 16.8377 - val_kl_loss: 88.8200
-Epoch 13/15
-75/75 [==============================] - 80s 1s/step - disc_loss: 0.5503 - gen_loss: 117.2452 - feat_loss: 10.6088 - vgg_loss: 16.0694 - kl_loss: 89.4459 - val_disc_loss: 0.5598 - val_gen_loss: 117.8204 - val_feat_loss: 10.1941 - val_vgg_loss: 16.8888 - val_kl_loss: 88.7975
-Epoch 14/15
-75/75 [==============================] - 79s 1s/step - disc_loss: 0.5454 - gen_loss: 117.2473 - feat_loss: 10.5061 - vgg_loss: 16.0546 - kl_loss: 89.5726 - val_disc_loss: 0.5854 - val_gen_loss: 118.8546 - val_feat_loss: 10.1710 - val_vgg_loss: 16.7827 - val_kl_loss: 90.1311
-Epoch 15/15
-75/75 [==============================] - 81s 1s/step - disc_loss: 0.5522 - gen_loss: 117.1168 - feat_loss: 10.3688 - vgg_loss: 15.9824 - kl_loss: 89.6849 - val_disc_loss: 0.6948 - val_gen_loss: 119.7691 - val_feat_loss: 9.7619 - val_vgg_loss: 16.7731 - val_kl_loss: 91.1593
+ 75/75 ━━━━━━━━━━━━━━━━━━━━ 19s 258ms/step - disc_loss: 0.8982 - feat_loss: 9.2486 - gen_loss: 109.9399 - kl_loss: 83.8095 - vgg_loss: 16.5587 - val_disc_loss: 0.8061 - val_feat_loss: 8.5935 - val_gen_loss: 109.5937 - val_kl_loss: 84.5844 - val_vgg_loss: 15.8794
+Epoch 7/15
+ 75/75 ━━━━━━━━━━━━━━━━━━━━ 15s 194ms/step - disc_loss: 0.9048 - feat_loss: 9.1064 - gen_loss: 109.3803 - kl_loss: 83.8245 - vgg_loss: 16.0975 - val_disc_loss: 1.0096 - val_feat_loss: 7.6335 - val_gen_loss: 108.2900 - val_kl_loss: 84.8679 - val_vgg_loss: 15.9580
+Epoch 8/15
+ 75/75 ━━━━━━━━━━━━━━━━━━━━ 15s 193ms/step - disc_loss: 0.9075 - feat_loss: 8.0537 - gen_loss: 108.1771 - kl_loss: 83.6673 - vgg_loss: 16.1545 - val_disc_loss: 1.0090 - val_feat_loss: 8.7077 - val_gen_loss: 109.2079 - val_kl_loss: 84.5022 - val_vgg_loss: 16.3814
+Epoch 9/15
+ 75/75 ━━━━━━━━━━━━━━━━━━━━ 15s 194ms/step - disc_loss: 0.9053 - feat_loss: 7.7949 - gen_loss: 107.9268 - kl_loss: 83.6504 - vgg_loss: 16.1193 - val_disc_loss: 1.0663 - val_feat_loss: 8.2042 - val_gen_loss: 108.4819 - val_kl_loss: 84.5961 - val_vgg_loss: 16.0834
+Epoch 10/15
+ 75/75 ━━━━━━━━━━━━━━━━━━━━ 15s 194ms/step - disc_loss: 0.8905 - feat_loss: 7.7652 - gen_loss: 108.3079 - kl_loss: 83.8574 - vgg_loss: 16.2992 - val_disc_loss: 0.8362 - val_feat_loss: 7.7127 - val_gen_loss: 108.9906 - val_kl_loss: 84.4822 - val_vgg_loss: 16.0521
+Epoch 11/15
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 30ms/step
 
 ```
 </div>
+    
+![png](/img/examples/generative/gaugan/gaugan_31_15.png)
+    
+
+
+
+    
 ![png](/img/examples/generative/gaugan/gaugan_31_16.png)
+    
 
 
 
+    
 ![png](/img/examples/generative/gaugan/gaugan_31_17.png)
+    
 
 
 
+    
 ![png](/img/examples/generative/gaugan/gaugan_31_18.png)
+    
 
 
+<div class="k-default-codeblock">
+```
+ 75/75 ━━━━━━━━━━━━━━━━━━━━ 20s 263ms/step - disc_loss: 0.9047 - feat_loss: 7.5019 - gen_loss: 107.6317 - kl_loss: 83.6812 - vgg_loss: 16.1292 - val_disc_loss: 0.8788 - val_feat_loss: 7.7651 - val_gen_loss: 109.1731 - val_kl_loss: 84.3094 - val_vgg_loss: 16.0356
+Epoch 12/15
+ 75/75 ━━━━━━━━━━━━━━━━━━━━ 15s 194ms/step - disc_loss: 0.8899 - feat_loss: 7.5799 - gen_loss: 108.2313 - kl_loss: 84.4031 - vgg_loss: 15.9665 - val_disc_loss: 0.8358 - val_feat_loss: 7.5676 - val_gen_loss: 109.5789 - val_kl_loss: 85.7282 - val_vgg_loss: 16.0442
+Epoch 13/15
+ 75/75 ━━━━━━━━━━━━━━━━━━━━ 15s 194ms/step - disc_loss: 0.8542 - feat_loss: 7.3362 - gen_loss: 107.4649 - kl_loss: 83.6942 - vgg_loss: 16.0675 - val_disc_loss: 1.0853 - val_feat_loss: 7.9020 - val_gen_loss: 106.9958 - val_kl_loss: 84.2610 - val_vgg_loss: 15.8510
+Epoch 14/15
+ 75/75 ━━━━━━━━━━━━━━━━━━━━ 15s 194ms/step - disc_loss: 0.8631 - feat_loss: 7.6403 - gen_loss: 108.6401 - kl_loss: 84.5304 - vgg_loss: 16.0426 - val_disc_loss: 0.9516 - val_feat_loss: 8.8795 - val_gen_loss: 108.5215 - val_kl_loss: 83.1849 - val_vgg_loss: 16.3289
+Epoch 15/15
+ 75/75 ━━━━━━━━━━━━━━━━━━━━ 15s 194ms/step - disc_loss: 0.8939 - feat_loss: 7.5489 - gen_loss: 108.8330 - kl_loss: 85.0358 - vgg_loss: 15.9147 - val_disc_loss: 0.9616 - val_feat_loss: 8.0080 - val_gen_loss: 108.1650 - val_kl_loss: 84.7754 - val_vgg_loss: 15.9561
 
-![png](/img/examples/generative/gaugan/gaugan_31_19.png)
-
-
-
+```
+</div>
+    
 ![png](/img/examples/generative/gaugan/gaugan_31_20.png)
+    
+
+
+
+    
+![png](/img/examples/generative/gaugan/gaugan_31_21.png)
+    
+
+
+
+    
+![png](/img/examples/generative/gaugan/gaugan_31_22.png)
+    
+
+
+
+    
+![png](/img/examples/generative/gaugan/gaugan_31_23.png)
+    
+
+
+
+    
+![png](/img/examples/generative/gaugan/gaugan_31_24.png)
+    
 
 
 ---
@@ -963,7 +1045,7 @@ val_iterator = iter(val_dataset)
 for _ in range(5):
     val_images = next(val_iterator)
     # Sample latent from a normal distribution.
-    latent_vector = tf.random.normal(
+    latent_vector = keras.random.normal(
         shape=(gaugan.batch_size, gaugan.latent_dim), mean=0.0, stddev=2.0
     )
     # Generate fake images.
@@ -987,24 +1069,37 @@ for _ in range(5):
     plt.show()
 ```
 
+<div class="k-default-codeblock">
+```
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 29ms/step
 
-![png](/img/examples/generative/gaugan/gaugan_33_0.png)
-
-
-
+```
+</div>
+    
 ![png](/img/examples/generative/gaugan/gaugan_33_1.png)
+    
 
 
+<div class="k-default-codeblock">
+```
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 25ms/step
 
-![png](/img/examples/generative/gaugan/gaugan_33_2.png)
-
-
-
+```
+</div>
+    
 ![png](/img/examples/generative/gaugan/gaugan_33_3.png)
+    
 
 
+<div class="k-default-codeblock">
+```
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 25ms/step
 
-![png](/img/examples/generative/gaugan/gaugan_33_4.png)
+```
+</div>
+    
+![png](/img/examples/generative/gaugan/gaugan_33_5.png)
+    
 
 
 ---
