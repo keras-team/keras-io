@@ -36,10 +36,10 @@ import os
 os.environ["KERAS_BACKEND"] = "tensorflow"
 import zipfile
 import numpy as np
+
 import keras
 from keras import ops
 from keras import layers
-
 import tensorflow as tf
 ```
 

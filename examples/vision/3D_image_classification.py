@@ -28,13 +28,14 @@ equivalent: it takes as input a 3D volume or a sequence of 2D frames (e.g. slice
 """
 
 import os
+
 os.environ["KERAS_BACKEND"] = "tensorflow"
 import zipfile
 import numpy as np
+
 import keras
 from keras import ops
 from keras import layers
-
 import tensorflow as tf
 
 """
