@@ -38,6 +38,8 @@ to be centered around a specific value on average.
 
 
 ```python
+from keras import ops
+
 class CenterAround(keras.constraints.Constraint):
   """Constrains weight tensors to be centered around `ref_value`."""
 
@@ -45,7 +47,7 @@ class CenterAround(keras.constraints.Constraint):
     self.ref_value = ref_value
 
   def __call__(self, w):
-    mean = keras.ops.mean(w)
+    mean = ops.mean(w)
     return w - mean + self.ref_value
 
   def get_config(self):
