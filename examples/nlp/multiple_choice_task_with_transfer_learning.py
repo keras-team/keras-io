@@ -2,7 +2,7 @@
 Title: MultipleChoice Task with Transfer Learning
 Author: Md Awsafur Rahman
 Date created: 2023/09/14
-Last modified: 2024/01/06
+Last modified: 2024/01/10
 Description: Use pre-trained nlp models for multiplechoice task.
 Accelerator: GPU
 """
@@ -20,9 +20,6 @@ unlike question answering. We will use SWAG dataset to demonstrate this example.
 ## Setup
 """
 
-"""shell
-pip install -q keras-nlp --upgrade
-"""
 
 import keras
 import keras_nlp
