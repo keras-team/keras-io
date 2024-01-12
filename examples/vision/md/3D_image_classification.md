@@ -208,19 +208,19 @@ Lastly, split the dataset into train and validation subsets.
 ```python
 # Read and process the scans.
 # Each scan is resized across height, width, and depth and rescaled.
-abnormal_scans = np.array([process_scan(path) for path in abnormal_scan_paths])
-normal_scans = np.array([process_scan(path) for path in normal_scan_paths])
+abnormal_scans = ops.array([process_scan(path) for path in abnormal_scan_paths])
+normal_scans = ops.array([process_scan(path) for path in normal_scan_paths])
 
 # For the CT scans having presence of viral pneumonia
 # assign 1, for the normal ones assign 0.
-abnormal_labels = np.array([1 for _ in range(len(abnormal_scans))])
-normal_labels = np.array([0 for _ in range(len(normal_scans))])
+abnormal_labels = ops.array([1 for _ in range(len(abnormal_scans))])
+normal_labels = ops.array([0 for _ in range(len(normal_scans))])
 
 # Split data in the ratio 70-30 for training and validation.
-x_train = np.concatenate((abnormal_scans[:70], normal_scans[:70]), axis=0)
-y_train = np.concatenate((abnormal_labels[:70], normal_labels[:70]), axis=0)
-x_val = np.concatenate((abnormal_scans[70:], normal_scans[70:]), axis=0)
-y_val = np.concatenate((abnormal_labels[70:], normal_labels[70:]), axis=0)
+x_train = ops.concatenate((abnormal_scans[:70], normal_scans[:70]), axis=0)
+y_train = ops.concatenate((abnormal_labels[:70], normal_labels[:70]), axis=0)
+x_val = ops.concatenate((abnormal_scans[70:], normal_scans[70:]), axis=0)
+y_val = ops.concatenate((abnormal_labels[70:], normal_labels[70:]), axis=0)
 print(
     "Number of samples in train and validation are %d and %d."
     % (x_train.shape[0], x_val.shape[0])
@@ -310,10 +310,10 @@ import matplotlib.pyplot as plt
 
 data = train_dataset.take(1)
 images, labels = list(data)[0]
-images = images.numpy()
+images = ops.convert_to_numpy(images)
 image = images[0]
 print("Dimension of the CT scan is:", image.shape)
-plt.imshow(np.squeeze(image[:, :, 30]), cmap="gray")
+plt.imshow(ops.squeeze(image[:, :, 30]), cmap="gray")
 
 ```
 
@@ -335,9 +335,9 @@ Since a CT scan has many slices, let's visualize a montage of the slices.
 
 def plot_slices(num_rows, num_columns, width, height, data):
     """Plot a montage of 20 CT slices"""
-    data = np.rot90(np.array(data))
-    data = np.transpose(data)
-    data = np.reshape(data, (num_rows, num_columns, width, height))
+    data = ndimage.rotate(ops.array(data), 90, reshape=False)
+    data = ops.transpose(data)
+    data = ops.reshape(data, (num_rows, num_columns, width, height))
     rows_data, columns_data = data.shape[0], data.shape[1]
     heights = [slc[0].shape[0] for slc in data]
     widths = [slc.shape[1] for slc in data[0]]
@@ -601,7 +601,7 @@ for i, metric in enumerate(["acc", "loss"]):
 ```python
 # Load best weights.
 model.load_weights("3d_image_classification.keras")
-prediction = model.predict(np.expand_dims(x_val[0], axis=0))[0]
+prediction = model.predict(ops.expand_dims(x_val[0], axis=0))[0]
 scores = [1 - prediction[0], prediction[0]]
 
 class_names = ["normal", "abnormal"]
