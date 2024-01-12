@@ -146,7 +146,7 @@ class MyHyperModel(keras_tuner.HyperModel):
 
         # Assign the model to the callbacks.
         for callback in callbacks:
-            callback.model = model
+            callback.set_model(model)
 
         # Record the best validation loss value
         best_epoch_loss = float("inf")
@@ -168,7 +168,7 @@ class MyHyperModel(keras_tuner.HyperModel):
             for callback in callbacks:
                 # The "my_metric" is the objective passed to the tuner.
                 callback.on_epoch_end(epoch, logs={"my_metric": epoch_loss})
-            epoch_loss_metric.reset_states()
+            epoch_loss_metric.reset_state()
 
             print(f"Epoch loss: {epoch_loss}")
             best_epoch_loss = min(best_epoch_loss, epoch_loss)
