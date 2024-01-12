@@ -130,8 +130,11 @@ BOUNDING_BOX_FORMATS = {
     "generate": [
         "keras_cv.bounding_box.CENTER_XYWH",
         "keras_cv.bounding_box.XYWH",
+        "keras_cv.bounding_box.REL_XYWH",
         "keras_cv.bounding_box.XYXY",
         "keras_cv.bounding_box.REL_XYXY",
+        "keras_cv.bounding_box.YXYX",
+        "keras_cv.bounding_box.REL_YXYX",
     ],
 }
 
