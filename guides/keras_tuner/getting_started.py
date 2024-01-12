@@ -284,9 +284,6 @@ its best performing epoch evaluated on the `validation_data`.
 # Get the top 2 models.
 models = tuner.get_best_models(num_models=2)
 best_model = models[0]
-# Build the model.
-# Needed for `Sequential` without specified `input_shape`.
-best_model.build(input_shape=(None, 28, 28))
 best_model.summary()
 
 """
@@ -888,8 +885,4 @@ tuner = keras_tuner.RandomSearch(
     overwrite=True,
     directory="my_dir",
     project_name="built_in_hypermodel",
-)
-
-tuner.search(
-    x_train[:100], y_train[:100], epochs=1, validation_data=(x_val[:100], y_val[:100])
 )
