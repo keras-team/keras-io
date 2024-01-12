@@ -37,8 +37,8 @@ In the following model-building function, we specified the default value for
 the `units` hyperparameter as 64.
 """
 
-from tensorflow import keras
-from tensorflow.keras import layers
+import keras
+from keras import layers
 import keras_tuner
 import numpy as np
 

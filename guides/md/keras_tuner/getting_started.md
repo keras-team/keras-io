@@ -41,8 +41,8 @@ step for walking through the interval is 32.
 
 
 ```python
-from tensorflow import keras
-from tensorflow.keras import layers
+import keras
+from keras import layers
 
 
 def build_model(hp):
@@ -57,19 +57,14 @@ def build_model(hp):
     )
     model.add(layers.Dense(10, activation="softmax"))
     model.compile(
-        optimizer="adam", loss="categorical_crossentropy", metrics=["accuracy"],
+        optimizer="adam",
+        loss="categorical_crossentropy",
+        metrics=["accuracy"],
     )
     return model
 
 ```
 
-<div class="k-default-codeblock">
-```
-2022-04-28 03:54:31.185833: W tensorflow/stream_executor/platform/default/dso_loader.cc:64] Could not load dynamic library 'libcudart.so.11.0'; dlerror: libcudart.so.11.0: cannot open shared object file: No such file or directory
-2022-04-28 03:54:31.185890: I tensorflow/stream_executor/cuda/cudart_stub.cc:29] Ignore above cudart dlerror if you do not have a GPU set up on your machine.
-
-```
-</div>
 You can quickly test if the model builds successfully.
 
 
@@ -79,15 +74,12 @@ import keras_tuner
 build_model(keras_tuner.HyperParameters())
 ```
 
+
+
+
 <div class="k-default-codeblock">
 ```
-2022-04-28 03:54:33.745939: W tensorflow/stream_executor/platform/default/dso_loader.cc:64] Could not load dynamic library 'libcuda.so.1'; dlerror: libcuda.so.1: cannot open shared object file: No such file or directory
-2022-04-28 03:54:33.746027: W tensorflow/stream_executor/cuda/cuda_driver.cc:269] failed call to cuInit: UNKNOWN ERROR (303)
-2022-04-28 03:54:33.746059: I tensorflow/stream_executor/cuda/cuda_diagnostics.cc:156] kernel driver does not appear to be running on this host (haifengj.c.googlers.com): /proc/driver/nvidia/version does not exist
-2022-04-28 03:54:33.746443: I tensorflow/core/platform/cpu_feature_guard.cc:151] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  AVX2 FMA
-To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
-
-<keras.engine.sequential.Sequential at 0x7fa888064c40>
+<Sequential name=sequential, built=False>
 
 ```
 </div>
@@ -133,7 +125,7 @@ build_model(keras_tuner.HyperParameters())
 
 <div class="k-default-codeblock">
 ```
-<keras.engine.sequential.Sequential at 0x7fa8082f1160>
+<Sequential name=sequential_1, built=False>
 
 ```
 </div>
@@ -195,7 +187,7 @@ build_model(keras_tuner.HyperParameters())
 
 <div class="k-default-codeblock">
 ```
-<keras.engine.sequential.Sequential at 0x7fa8083044f0>
+<Sequential name=sequential_2, built=False>
 
 ```
 </div>
@@ -247,7 +239,7 @@ build_model(keras_tuner.HyperParameters())
 
 <div class="k-default-codeblock">
 ```
-<keras.engine.sequential.Sequential at 0x7fa888109ee0>
+<Sequential name=sequential_3, built=False>
 
 ```
 </div>
@@ -303,9 +295,9 @@ tuner.search_space_summary()
 Search space summary
 Default search space size: 5
 num_layers (Int)
-{'default': None, 'conditions': [], 'min_value': 1, 'max_value': 3, 'step': 1, 'sampling': None}
+{'default': None, 'conditions': [], 'min_value': 1, 'max_value': 3, 'step': 1, 'sampling': 'linear'}
 units_0 (Int)
-{'default': None, 'conditions': [], 'min_value': 32, 'max_value': 512, 'step': 32, 'sampling': None}
+{'default': None, 'conditions': [], 'min_value': 32, 'max_value': 512, 'step': 32, 'sampling': 'linear'}
 activation (Choice)
 {'default': 'relu', 'conditions': [], 'values': ['relu', 'tanh'], 'ordered': False}
 dropout (Boolean)
@@ -319,7 +311,7 @@ Before starting the search, let's prepare the MNIST dataset.
 
 
 ```python
-from tensorflow import keras
+import keras
 import numpy as np
 
 (x, y), (x_test, y_test) = keras.datasets.mnist.load_data()
@@ -350,16 +342,15 @@ tuner.search(x_train, y_train, epochs=2, validation_data=(x_val, y_val))
 
 <div class="k-default-codeblock">
 ```
-Trial 3 Complete [00h 00m 39s]
-val_accuracy: 0.9630500078201294
+Trial 3 Complete [00h 00m 19s]
+val_accuracy: 0.9665500223636627
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-Best val_accuracy So Far: 0.9736500084400177
-Total elapsed time: 00h 01m 51s
-INFO:tensorflow:Oracle triggered exit
+Best val_accuracy So Far: 0.9665500223636627
+Total elapsed time: 00h 00m 40s
 
 ```
 </div>
@@ -379,36 +370,61 @@ its best performing epoch evaluated on the `validation_data`.
 # Get the top 2 models.
 models = tuner.get_best_models(num_models=2)
 best_model = models[0]
-# Build the model.
-# Needed for `Sequential` without specified `input_shape`.
-best_model.build(input_shape=(None, 28, 28))
 best_model.summary()
 ```
 
 <div class="k-default-codeblock">
 ```
-Model: "sequential"
-_________________________________________________________________
- Layer (type)                Output Shape              Param #   
-=================================================================
- flatten (Flatten)           (None, 784)               0         
-                                                                 
- dense (Dense)               (None, 224)               175840    
-                                                                 
- dense_1 (Dense)             (None, 416)               93600     
-                                                                 
- dropout (Dropout)           (None, 416)               0         
-                                                                 
- dense_2 (Dense)             (None, 10)                4170      
-                                                                 
-=================================================================
-Total params: 273,610
-Trainable params: 273,610
-Non-trainable params: 0
-_________________________________________________________________
+/usr/local/python/3.10.13/lib/python3.10/site-packages/keras/src/saving/saving_lib.py:388: UserWarning: Skipping variable loading for optimizer 'adam', because it has 2 variables whereas the saved optimizer has 18 variables. 
+  trackable.load_own_variables(weights_store.get(inner_path))
+/usr/local/python/3.10.13/lib/python3.10/site-packages/keras/src/saving/saving_lib.py:388: UserWarning: Skipping variable loading for optimizer 'adam', because it has 2 variables whereas the saved optimizer has 10 variables. 
+  trackable.load_own_variables(weights_store.get(inner_path))
 
 ```
 </div>
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold">Model: "sequential"</span>
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━┓
+┃<span style="font-weight: bold"> Layer (type)                    </span>┃<span style="font-weight: bold"> Output Shape              </span>┃<span style="font-weight: bold">    Param # </span>┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━┩
+│ flatten (<span style="color: #0087ff; text-decoration-color: #0087ff">Flatten</span>)               │ (<span style="color: #00af00; text-decoration-color: #00af00">32</span>, <span style="color: #00af00; text-decoration-color: #00af00">784</span>)                 │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ dense (<span style="color: #0087ff; text-decoration-color: #0087ff">Dense</span>)                   │ (<span style="color: #00af00; text-decoration-color: #00af00">32</span>, <span style="color: #00af00; text-decoration-color: #00af00">416</span>)                 │    <span style="color: #00af00; text-decoration-color: #00af00">326,560</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ dense_1 (<span style="color: #0087ff; text-decoration-color: #0087ff">Dense</span>)                 │ (<span style="color: #00af00; text-decoration-color: #00af00">32</span>, <span style="color: #00af00; text-decoration-color: #00af00">512</span>)                 │    <span style="color: #00af00; text-decoration-color: #00af00">213,504</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ dense_2 (<span style="color: #0087ff; text-decoration-color: #0087ff">Dense</span>)                 │ (<span style="color: #00af00; text-decoration-color: #00af00">32</span>, <span style="color: #00af00; text-decoration-color: #00af00">32</span>)                  │     <span style="color: #00af00; text-decoration-color: #00af00">16,416</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ dropout (<span style="color: #0087ff; text-decoration-color: #0087ff">Dropout</span>)               │ (<span style="color: #00af00; text-decoration-color: #00af00">32</span>, <span style="color: #00af00; text-decoration-color: #00af00">32</span>)                  │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │
+├─────────────────────────────────┼───────────────────────────┼────────────┤
+│ dense_3 (<span style="color: #0087ff; text-decoration-color: #0087ff">Dense</span>)                 │ (<span style="color: #00af00; text-decoration-color: #00af00">32</span>, <span style="color: #00af00; text-decoration-color: #00af00">10</span>)                  │        <span style="color: #00af00; text-decoration-color: #00af00">330</span> │
+└─────────────────────────────────┴───────────────────────────┴────────────┘
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Total params: </span><span style="color: #00af00; text-decoration-color: #00af00">556,810</span> (2.12 MB)
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Trainable params: </span><span style="color: #00af00; text-decoration-color: #00af00">556,810</span> (2.12 MB)
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Non-trainable params: </span><span style="color: #00af00; text-decoration-color: #00af00">0</span> (0.00 B)
+</pre>
+
+
+
 You can also print a summary of the search results.
 
 
@@ -421,34 +437,49 @@ tuner.results_summary()
 Results summary
 Results in my_dir/helloworld
 Showing 10 best trials
-<keras_tuner.engine.objective.Objective object at 0x7fa888109fa0>
-Trial summary
+Objective(name="val_accuracy", direction="max")
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+Trial 2 summary
 Hyperparameters:
-num_layers: 2
-units_0: 224
+num_layers: 3
+units_0: 416
 activation: relu
 dropout: True
-lr: 0.0009550630393190334
-units_1: 416
-Score: 0.9736500084400177
-Trial summary
+lr: 0.0001324166048504802
+units_1: 512
+units_2: 32
+Score: 0.9665500223636627
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+Trial 0 summary
 Hyperparameters:
 num_layers: 1
-units_0: 480
-activation: relu
-dropout: True
-lr: 0.00749002644603394
-units_1: 320
-Score: 0.9630500078201294
-Trial summary
+units_0: 128
+activation: tanh
+dropout: False
+lr: 0.001425162921397599
+Score: 0.9623999893665314
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+Trial 1 summary
 Hyperparameters:
 num_layers: 2
-units_0: 480
+units_0: 512
 activation: tanh
 dropout: True
-lr: 0.00022149269189931809
+lr: 0.0010584293918512798
 units_1: 32
-Score: 0.9437499940395355
+Score: 0.9606499969959259
 
 ```
 </div>
@@ -476,11 +507,394 @@ y_all = np.concatenate((y_train, y_val))
 model.fit(x=x_all, y=y_all, epochs=1)
 ```
 
+    
+    1/1875 [37m━━━━━━━━━━━━━━━━━━━━  17:57 575ms/step - accuracy: 0.1250 - loss: 2.3113
+
 <div class="k-default-codeblock">
 ```
-1875/1875 [==============================] - 8s 4ms/step - loss: 0.2121 - accuracy: 0.9368
+
+```
+</div>
+   29/1875 [37m━━━━━━━━━━━━━━━━━━━━  3s 2ms/step - accuracy: 0.1753 - loss: 2.2296     
 
-<keras.callbacks.History at 0x7fa7e8a689a0>
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+   63/1875 [37m━━━━━━━━━━━━━━━━━━━━  3s 2ms/step - accuracy: 0.2626 - loss: 2.1206
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+   96/1875 ━[37m━━━━━━━━━━━━━━━━━━━  2s 2ms/step - accuracy: 0.3252 - loss: 2.0103
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+  130/1875 ━[37m━━━━━━━━━━━━━━━━━━━  2s 2ms/step - accuracy: 0.3745 - loss: 1.9041
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+  164/1875 ━[37m━━━━━━━━━━━━━━━━━━━  2s 2ms/step - accuracy: 0.4139 - loss: 1.8094
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+  199/1875 ━━[37m━━━━━━━━━━━━━━━━━━  2s 2ms/step - accuracy: 0.4470 - loss: 1.7246
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+  235/1875 ━━[37m━━━━━━━━━━━━━━━━━━  2s 2ms/step - accuracy: 0.4752 - loss: 1.6493
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+  270/1875 ━━[37m━━━━━━━━━━━━━━━━━━  2s 2ms/step - accuracy: 0.4982 - loss: 1.5857
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+  305/1875 ━━━[37m━━━━━━━━━━━━━━━━━  2s 2ms/step - accuracy: 0.5182 - loss: 1.5293
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+  339/1875 ━━━[37m━━━━━━━━━━━━━━━━━  2s 2ms/step - accuracy: 0.5354 - loss: 1.4800
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+  374/1875 ━━━[37m━━━━━━━━━━━━━━━━━  2s 1ms/step - accuracy: 0.5513 - loss: 1.4340
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+  409/1875 ━━━━[37m━━━━━━━━━━━━━━━━  2s 1ms/step - accuracy: 0.5656 - loss: 1.3924
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+  444/1875 ━━━━[37m━━━━━━━━━━━━━━━━  2s 1ms/step - accuracy: 0.5785 - loss: 1.3545
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+  478/1875 ━━━━━[37m━━━━━━━━━━━━━━━  2s 1ms/step - accuracy: 0.5899 - loss: 1.3208
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+  513/1875 ━━━━━[37m━━━━━━━━━━━━━━━  2s 1ms/step - accuracy: 0.6006 - loss: 1.2887
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+  548/1875 ━━━━━[37m━━━━━━━━━━━━━━━  1s 1ms/step - accuracy: 0.6104 - loss: 1.2592
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+  583/1875 ━━━━━━[37m━━━━━━━━━━━━━━  1s 1ms/step - accuracy: 0.6195 - loss: 1.2318
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+  618/1875 ━━━━━━[37m━━━━━━━━━━━━━━  1s 1ms/step - accuracy: 0.6279 - loss: 1.2063
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+  653/1875 ━━━━━━[37m━━━━━━━━━━━━━━  1s 1ms/step - accuracy: 0.6358 - loss: 1.1823
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+  688/1875 ━━━━━━━[37m━━━━━━━━━━━━━  1s 1ms/step - accuracy: 0.6431 - loss: 1.1598
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+  723/1875 ━━━━━━━[37m━━━━━━━━━━━━━  1s 1ms/step - accuracy: 0.6500 - loss: 1.1387
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+  758/1875 ━━━━━━━━[37m━━━━━━━━━━━━  1s 1ms/step - accuracy: 0.6564 - loss: 1.1189
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+  793/1875 ━━━━━━━━[37m━━━━━━━━━━━━  1s 1ms/step - accuracy: 0.6625 - loss: 1.1002
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+  828/1875 ━━━━━━━━[37m━━━━━━━━━━━━  1s 1ms/step - accuracy: 0.6682 - loss: 1.0826
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+  863/1875 ━━━━━━━━━[37m━━━━━━━━━━━  1s 1ms/step - accuracy: 0.6736 - loss: 1.0658
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+  899/1875 ━━━━━━━━━[37m━━━━━━━━━━━  1s 1ms/step - accuracy: 0.6788 - loss: 1.0495
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+  935/1875 ━━━━━━━━━[37m━━━━━━━━━━━  1s 1ms/step - accuracy: 0.6838 - loss: 1.0339
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+  970/1875 ━━━━━━━━━━[37m━━━━━━━━━━  1s 1ms/step - accuracy: 0.6885 - loss: 1.0195
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+ 1005/1875 ━━━━━━━━━━[37m━━━━━━━━━━  1s 1ms/step - accuracy: 0.6929 - loss: 1.0058
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+ 1041/1875 ━━━━━━━━━━━[37m━━━━━━━━━  1s 1ms/step - accuracy: 0.6972 - loss: 0.9923
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+ 1076/1875 ━━━━━━━━━━━[37m━━━━━━━━━  1s 1ms/step - accuracy: 0.7012 - loss: 0.9798
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+ 1111/1875 ━━━━━━━━━━━[37m━━━━━━━━━  1s 1ms/step - accuracy: 0.7051 - loss: 0.9677
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+ 1146/1875 ━━━━━━━━━━━━[37m━━━━━━━━  1s 1ms/step - accuracy: 0.7088 - loss: 0.9561
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+ 1182/1875 ━━━━━━━━━━━━[37m━━━━━━━━  1s 1ms/step - accuracy: 0.7124 - loss: 0.9446
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+ 1218/1875 ━━━━━━━━━━━━[37m━━━━━━━━  0s 1ms/step - accuracy: 0.7159 - loss: 0.9336
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+ 1254/1875 ━━━━━━━━━━━━━[37m━━━━━━━  0s 1ms/step - accuracy: 0.7193 - loss: 0.9230
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+ 1289/1875 ━━━━━━━━━━━━━[37m━━━━━━━  0s 1ms/step - accuracy: 0.7225 - loss: 0.9131
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+ 1324/1875 ━━━━━━━━━━━━━━[37m━━━━━━  0s 1ms/step - accuracy: 0.7255 - loss: 0.9035
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+ 1359/1875 ━━━━━━━━━━━━━━[37m━━━━━━  0s 1ms/step - accuracy: 0.7284 - loss: 0.8943
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+ 1394/1875 ━━━━━━━━━━━━━━[37m━━━━━━  0s 1ms/step - accuracy: 0.7313 - loss: 0.8853
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+ 1429/1875 ━━━━━━━━━━━━━━━[37m━━━━━  0s 1ms/step - accuracy: 0.7341 - loss: 0.8767
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+ 1465/1875 ━━━━━━━━━━━━━━━[37m━━━━━  0s 1ms/step - accuracy: 0.7368 - loss: 0.8680
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+ 1500/1875 ━━━━━━━━━━━━━━━━[37m━━━━  0s 1ms/step - accuracy: 0.7394 - loss: 0.8599
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+ 1535/1875 ━━━━━━━━━━━━━━━━[37m━━━━  0s 1ms/step - accuracy: 0.7419 - loss: 0.8520
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+ 1570/1875 ━━━━━━━━━━━━━━━━[37m━━━━  0s 1ms/step - accuracy: 0.7443 - loss: 0.8444
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+ 1605/1875 ━━━━━━━━━━━━━━━━━[37m━━━  0s 1ms/step - accuracy: 0.7467 - loss: 0.8370
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+ 1639/1875 ━━━━━━━━━━━━━━━━━[37m━━━  0s 1ms/step - accuracy: 0.7489 - loss: 0.8299
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+ 1674/1875 ━━━━━━━━━━━━━━━━━[37m━━━  0s 1ms/step - accuracy: 0.7511 - loss: 0.8229
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+ 1707/1875 ━━━━━━━━━━━━━━━━━━[37m━━  0s 1ms/step - accuracy: 0.7532 - loss: 0.8164
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+ 1741/1875 ━━━━━━━━━━━━━━━━━━[37m━━  0s 1ms/step - accuracy: 0.7552 - loss: 0.8099
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+ 1774/1875 ━━━━━━━━━━━━━━━━━━[37m━━  0s 1ms/step - accuracy: 0.7572 - loss: 0.8038
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+ 1809/1875 ━━━━━━━━━━━━━━━━━━━[37m━  0s 1ms/step - accuracy: 0.7592 - loss: 0.7975
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+ 1843/1875 ━━━━━━━━━━━━━━━━━━━[37m━  0s 1ms/step - accuracy: 0.7611 - loss: 0.7915
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+ 1875/1875 ━━━━━━━━━━━━━━━━━━━━ 3s 1ms/step - accuracy: 0.7629 - loss: 0.7858
+
+
+
+
+
+<div class="k-default-codeblock">
+```
+<keras.src.callbacks.history.History at 0x7f31883d9e10>
 
 ```
 </div>
@@ -523,7 +937,9 @@ class MyHyperModel(keras_tuner.HyperModel):
         )
         model.add(layers.Dense(10, activation="softmax"))
         model.compile(
-            optimizer="adam", loss="categorical_crossentropy", metrics=["accuracy"],
+            optimizer="adam",
+            loss="categorical_crossentropy",
+            metrics=["accuracy"],
         )
         return model
 
@@ -547,11 +963,30 @@ model = hypermodel.build(hp)
 hypermodel.fit(hp, model, np.random.rand(100, 28, 28), np.random.rand(100, 10))
 ```
 
+    
+ 1/4 ━━━━━[37m━━━━━━━━━━━━━━━  0s 279ms/step - accuracy: 0.0000e+00 - loss: 12.2230
+
 <div class="k-default-codeblock">
 ```
-4/4 [==============================] - 0s 3ms/step - loss: 12.1061 - accuracy: 0.1500
+
+```
+</div>
+ 4/4 ━━━━━━━━━━━━━━━━━━━━ 0s 108ms/step - accuracy: 0.0679 - loss: 11.9568    
 
-<keras.callbacks.History at 0x7fa7e8a8e490>
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+ 4/4 ━━━━━━━━━━━━━━━━━━━━ 1s 109ms/step - accuracy: 0.0763 - loss: 11.8941
+
+
+
+
+
+<div class="k-default-codeblock">
+```
+<keras.src.callbacks.history.History at 0x7f318865c100>
 
 ```
 </div>
@@ -579,7 +1014,9 @@ class MyHyperModel(keras_tuner.HyperModel):
         )
         model.add(layers.Dense(10, activation="softmax"))
         model.compile(
-            optimizer="adam", loss="categorical_crossentropy", metrics=["accuracy"],
+            optimizer="adam",
+            loss="categorical_crossentropy",
+            metrics=["accuracy"],
         )
         return model
 
@@ -601,11 +1038,30 @@ model = hypermodel.build(hp)
 hypermodel.fit(hp, model, np.random.rand(100, 28, 28), np.random.rand(100, 10))
 ```
 
+    
+ 1/4 ━━━━━[37m━━━━━━━━━━━━━━━  0s 276ms/step - accuracy: 0.1250 - loss: 12.0090
+
 <div class="k-default-codeblock">
 ```
-4/4 [==============================] - 0s 4ms/step - loss: 12.5366 - accuracy: 0.1200
+
+```
+</div>
+ 4/4 ━━━━━━━━━━━━━━━━━━━━ 0s 94ms/step - accuracy: 0.0994 - loss: 12.1242 
 
-<keras.callbacks.History at 0x7fa7e8a82d90>
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+ 4/4 ━━━━━━━━━━━━━━━━━━━━ 1s 95ms/step - accuracy: 0.0955 - loss: 12.1594
+
+
+
+
+
+<div class="k-default-codeblock">
+```
+<keras.src.callbacks.history.History at 0x7f31ba836200>
 
 ```
 </div>
@@ -629,7 +1085,9 @@ class MyHyperModel(keras_tuner.HyperModel):
         outputs = layers.Dense(10, activation="softmax")(outputs)
         model = keras.Model(inputs, outputs)
         model.compile(
-            optimizer="adam", loss="categorical_crossentropy", metrics=["accuracy"],
+            optimizer="adam",
+            loss="categorical_crossentropy",
+            metrics=["accuracy"],
         )
         return model
 
@@ -666,16 +1124,15 @@ tuner.search(x_train, y_train, epochs=2, validation_data=(x_val, y_val))
 
 <div class="k-default-codeblock">
 ```
-Trial 3 Complete [00h 00m 09s]
-val_accuracy: 0.5476999878883362
+Trial 3 Complete [00h 00m 04s]
+val_accuracy: 0.9567000269889832
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-Best val_accuracy So Far: 0.9699000120162964
-Total elapsed time: 00h 00m 29s
-INFO:tensorflow:Oracle triggered exit
+Best val_accuracy So Far: 0.9685999751091003
+Total elapsed time: 00h 00m 13s
 
 ```
 </div>
@@ -691,11 +1148,233 @@ model = hypermodel.build(best_hp)
 hypermodel.fit(best_hp, model, x_all, y_all, epochs=1)
 ```
 
+    
+    1/1875 [37m━━━━━━━━━━━━━━━━━━━━  9:00 289ms/step - accuracy: 0.0000e+00 - loss: 2.4352
+
 <div class="k-default-codeblock">
 ```
-1875/1875 [==============================] - 6s 3ms/step - loss: 0.2493 - accuracy: 0.9274
+
+```
+</div>
+   52/1875 [37m━━━━━━━━━━━━━━━━━━━━  1s 996us/step - accuracy: 0.6035 - loss: 1.3521      
 
-<keras.callbacks.History at 0x7fa7e8894df0>
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+  110/1875 ━[37m━━━━━━━━━━━━━━━━━━━  1s 925us/step - accuracy: 0.7037 - loss: 1.0231
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+  171/1875 ━[37m━━━━━━━━━━━━━━━━━━━  1s 890us/step - accuracy: 0.7522 - loss: 0.8572
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+  231/1875 ━━[37m━━━━━━━━━━━━━━━━━━  1s 877us/step - accuracy: 0.7804 - loss: 0.7590
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+  291/1875 ━━━[37m━━━━━━━━━━━━━━━━━  1s 870us/step - accuracy: 0.7993 - loss: 0.6932
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+  350/1875 ━━━[37m━━━━━━━━━━━━━━━━━  1s 867us/step - accuracy: 0.8127 - loss: 0.6467
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+  413/1875 ━━━━[37m━━━━━━━━━━━━━━━━  1s 856us/step - accuracy: 0.8238 - loss: 0.6079
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+  476/1875 ━━━━━[37m━━━━━━━━━━━━━━━  1s 848us/step - accuracy: 0.8326 - loss: 0.5774
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+  535/1875 ━━━━━[37m━━━━━━━━━━━━━━━  1s 849us/step - accuracy: 0.8394 - loss: 0.5536
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+  600/1875 ━━━━━━[37m━━━━━━━━━━━━━━  1s 841us/step - accuracy: 0.8458 - loss: 0.5309
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+  661/1875 ━━━━━━━[37m━━━━━━━━━━━━━  1s 840us/step - accuracy: 0.8511 - loss: 0.5123
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+  723/1875 ━━━━━━━[37m━━━━━━━━━━━━━  0s 837us/step - accuracy: 0.8559 - loss: 0.4955
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+  783/1875 ━━━━━━━━[37m━━━━━━━━━━━━  0s 838us/step - accuracy: 0.8600 - loss: 0.4811
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+  847/1875 ━━━━━━━━━[37m━━━━━━━━━━━  0s 834us/step - accuracy: 0.8640 - loss: 0.4671
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+  912/1875 ━━━━━━━━━[37m━━━━━━━━━━━  0s 830us/step - accuracy: 0.8677 - loss: 0.4544
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+  976/1875 ━━━━━━━━━━[37m━━━━━━━━━━  0s 827us/step - accuracy: 0.8709 - loss: 0.4429
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+ 1040/1875 ━━━━━━━━━━━[37m━━━━━━━━━  0s 825us/step - accuracy: 0.8738 - loss: 0.4325
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+ 1104/1875 ━━━━━━━━━━━[37m━━━━━━━━━  0s 822us/step - accuracy: 0.8766 - loss: 0.4229
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+ 1168/1875 ━━━━━━━━━━━━[37m━━━━━━━━  0s 821us/step - accuracy: 0.8791 - loss: 0.4140
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+ 1233/1875 ━━━━━━━━━━━━━[37m━━━━━━━  0s 818us/step - accuracy: 0.8815 - loss: 0.4056
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+ 1296/1875 ━━━━━━━━━━━━━[37m━━━━━━━  0s 817us/step - accuracy: 0.8837 - loss: 0.3980
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+ 1361/1875 ━━━━━━━━━━━━━━[37m━━━━━━  0s 815us/step - accuracy: 0.8858 - loss: 0.3907
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+ 1424/1875 ━━━━━━━━━━━━━━━[37m━━━━━  0s 814us/step - accuracy: 0.8877 - loss: 0.3840
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+ 1488/1875 ━━━━━━━━━━━━━━━[37m━━━━━  0s 813us/step - accuracy: 0.8895 - loss: 0.3776
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+ 1550/1875 ━━━━━━━━━━━━━━━━[37m━━━━  0s 813us/step - accuracy: 0.8912 - loss: 0.3718
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+ 1613/1875 ━━━━━━━━━━━━━━━━━[37m━━━  0s 813us/step - accuracy: 0.8928 - loss: 0.3662
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+ 1678/1875 ━━━━━━━━━━━━━━━━━[37m━━━  0s 811us/step - accuracy: 0.8944 - loss: 0.3607
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+ 1744/1875 ━━━━━━━━━━━━━━━━━━[37m━━  0s 809us/step - accuracy: 0.8959 - loss: 0.3555
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+ 1810/1875 ━━━━━━━━━━━━━━━━━━━[37m━  0s 808us/step - accuracy: 0.8973 - loss: 0.3504
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+ 1874/1875 ━━━━━━━━━━━━━━━━━━━[37m━  0s 807us/step - accuracy: 0.8987 - loss: 0.3457
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+ 1875/1875 ━━━━━━━━━━━━━━━━━━━━ 2s 808us/step - accuracy: 0.8987 - loss: 0.3456
+
+
+
+
+
+<div class="k-default-codeblock">
+```
+<keras.src.callbacks.history.History at 0x7f31884b3070>
 
 ```
 </div>
@@ -776,32 +1455,46 @@ tuner.results_summary()
 
 <div class="k-default-codeblock">
 ```
-Trial 3 Complete [00h 00m 00s]
-val_mean_absolute_error: 0.4645603597164154
+Trial 3 Complete [00h 00m 01s]
+val_mean_absolute_error: 0.39589792490005493
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-Best val_mean_absolute_error So Far: 0.3443751931190491
-Total elapsed time: 00h 00m 02s
-INFO:tensorflow:Oracle triggered exit
+Best val_mean_absolute_error So Far: 0.34321871399879456
+Total elapsed time: 00h 00m 03s
 Results summary
 Results in my_dir/built_in_metrics
 Showing 10 best trials
-<keras_tuner.engine.objective.Objective object at 0x7fa7e87a8e80>
-Trial summary
+Objective(name="val_mean_absolute_error", direction="min")
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+Trial 1 summary
 Hyperparameters:
-units: 64
-Score: 0.3443751931190491
-Trial summary
+units: 32
+Score: 0.34321871399879456
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+Trial 2 summary
 Hyperparameters:
 units: 128
-Score: 0.4645603597164154
-Trial summary
+Score: 0.39589792490005493
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+Trial 0 summary
 Hyperparameters:
 units: 96
-Score: 0.6250903606414795
+Score: 0.5005304217338562
 
 ```
 </div>
@@ -824,7 +1517,7 @@ tutorial](https://keras.io/guides/customizing_what_happens_in_fit/#going-lowerle
 
 
 ```python
-import tensorflow as tf
+from keras import ops
 
 
 class CustomMetric(keras.metrics.Metric):
@@ -832,20 +1525,20 @@ class CustomMetric(keras.metrics.Metric):
         # Specify the name of the metric as "custom_metric".
         super().__init__(name="custom_metric", **kwargs)
         self.sum = self.add_weight(name="sum", initializer="zeros")
-        self.count = self.add_weight(name="count", dtype=tf.int32, initializer="zeros")
+        self.count = self.add_weight(name="count", dtype="int32", initializer="zeros")
 
     def update_state(self, y_true, y_pred, sample_weight=None):
-        values = tf.math.squared_difference(y_pred, y_true)
-        count = tf.shape(y_true)[0]
+        values = ops.square(y_true - y_pred)
+        count = ops.shape(y_true)[0]
         if sample_weight is not None:
-            sample_weight = tf.cast(sample_weight, self.dtype)
+            sample_weight = ops.cast(sample_weight, self.dtype)
             values *= sample_weight
             count *= sample_weight
-        self.sum.assign_add(tf.reduce_sum(values))
+        self.sum.assign_add(ops.sum(values))
         self.count.assign_add(count)
 
     def result(self):
-        return self.sum / tf.cast(self.count, tf.float32)
+        return self.sum / ops.cast(self.count, "float32")
 
     def reset_states(self):
         self.sum.assign(0)
@@ -895,32 +1588,46 @@ tuner.results_summary()
 
 <div class="k-default-codeblock">
 ```
-Trial 3 Complete [00h 00m 00s]
-val_custom_metric: 0.3950428366661072
+Trial 3 Complete [00h 00m 01s]
+val_custom_metric: 0.2830956280231476
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-Best val_custom_metric So Far: 0.28074973821640015
+Best val_custom_metric So Far: 0.2529197633266449
 Total elapsed time: 00h 00m 02s
-INFO:tensorflow:Oracle triggered exit
 Results summary
 Results in my_dir/custom_metrics
 Showing 10 best trials
-<keras_tuner.engine.objective.Objective object at 0x7fa7e8a6c4c0>
-Trial summary
+Objective(name="val_custom_metric", direction="min")
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+Trial 0 summary
 Hyperparameters:
-units: 96
-Score: 0.28074973821640015
-Trial summary
+units: 32
+Score: 0.2529197633266449
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+Trial 2 summary
 Hyperparameters:
 units: 128
-Score: 0.3950428366661072
-Trial summary
+Score: 0.2830956280231476
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+Trial 1 summary
 Hyperparameters:
-units: 64
-Score: 0.407703161239624
+units: 96
+Score: 0.4656866192817688
 
 ```
 </div>
@@ -944,7 +1651,8 @@ class HyperRegressor(keras_tuner.HyperModel):
             ]
         )
         model.compile(
-            optimizer="adam", loss="mean_squared_error",
+            optimizer="adam",
+            loss="mean_squared_error",
         )
         return model
 
@@ -976,28 +1684,46 @@ tuner.results_summary()
 
 <div class="k-default-codeblock">
 ```
-Trial 2 Complete [00h 00m 00s]
-default_objective: 0.5315216306064647
+Trial 3 Complete [00h 00m 01s]
+default_objective: 0.6571611521766413
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-Best default_objective So Far: 0.5315216306064647
-Total elapsed time: 00h 00m 01s
-INFO:tensorflow:Oracle triggered exit
+Best default_objective So Far: 0.40719249752993525
+Total elapsed time: 00h 00m 02s
 Results summary
 Results in my_dir/custom_eval
 Showing 10 best trials
-<keras_tuner.engine.objective.DefaultObjective object at 0x7fa7e8a8e610>
-Trial summary
+Objective(name="default_objective", direction="min")
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+Trial 1 summary
+Hyperparameters:
+units: 128
+Score: 0.40719249752993525
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+Trial 0 summary
 Hyperparameters:
 units: 96
-Score: 0.5315216306064647
-Trial summary
+Score: 0.4992297225533352
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+Trial 2 summary
 Hyperparameters:
-units: 64
-Score: 0.6146181396007905
+units: 32
+Score: 0.6571611521766413
 
 ```
 </div>
@@ -1019,7 +1745,8 @@ class HyperRegressor(keras_tuner.HyperModel):
             ]
         )
         model.compile(
-            optimizer="adam", loss="mean_squared_error",
+            optimizer="adam",
+            loss="mean_squared_error",
         )
         return model
 
@@ -1055,32 +1782,46 @@ tuner.results_summary()
 
 <div class="k-default-codeblock">
 ```
-Trial 3 Complete [00h 00m 00s]
-metric_a: -0.5002187378206384
+Trial 3 Complete [00h 00m 01s]
+metric_a: -0.39470441501524833
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-Best metric_a So Far: -0.4161598418534809
+Best metric_a So Far: -0.3836997988261662
 Total elapsed time: 00h 00m 02s
-INFO:tensorflow:Oracle triggered exit
 Results summary
 Results in my_dir/custom_eval_dict
 Showing 10 best trials
-<keras_tuner.engine.objective.Objective object at 0x7fa808051670>
-Trial summary
+Objective(name="metric_a", direction="max")
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+Trial 1 summary
 Hyperparameters:
 units: 64
-Score: -0.4161598418534809
-Trial summary
-Hyperparameters:
-units: 96
-Score: -0.5002187378206384
-Trial summary
+Score: -0.3836997988261662
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+Trial 2 summary
 Hyperparameters:
 units: 32
-Score: -0.5328526873574686
+Score: -0.39470441501524833
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+Trial 0 summary
+Hyperparameters:
+units: 96
+Score: -0.46081380465766364
 
 ```
 </div>
@@ -1129,16 +1870,15 @@ print(tuner.get_best_hyperparameters()[0].get("x"))
 <div class="k-default-codeblock">
 ```
 Trial 20 Complete [00h 00m 00s]
-default_objective: 1.241846646968536
+default_objective: 1.6547719581194267
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-Best default_objective So Far: 1.0000468934095137
+Best default_objective So Far: 1.0013236767905302
 Total elapsed time: 00h 00m 00s
-INFO:tensorflow:Oracle triggered exit
-0.006847876277630949
+0.03638236922645777
 
 ```
 </div>
@@ -1163,10 +1903,14 @@ import os
 def keras_code(units, optimizer, saving_path):
     # Build model
     model = keras.Sequential(
-        [layers.Dense(units=units, activation="relu"), layers.Dense(units=1),]
+        [
+            layers.Dense(units=units, activation="relu"),
+            layers.Dense(units=1),
+        ]
     )
     model.compile(
-        optimizer=optimizer, loss="mean_squared_error",
+        optimizer=optimizer,
+        loss="mean_squared_error",
     )
 
     # Prepare data
@@ -1194,35 +1938,71 @@ class MyTuner(keras_tuner.RandomSearch):
         return keras_code(
             units=hp.Int("units", 32, 128, 32),
             optimizer=hp.Choice("optimizer", ["adam", "adadelta"]),
-            saving_path=os.path.join("/tmp", trial.trial_id),
+            saving_path=os.path.join("/tmp", f"{trial.trial_id}.keras"),
         )
 
 
 tuner = MyTuner(
-    max_trials=3, overwrite=True, directory="my_dir", project_name="keep_code_separate",
+    max_trials=3,
+    overwrite=True,
+    directory="my_dir",
+    project_name="keep_code_separate",
 )
 tuner.search()
 # Retraining the model
 best_hp = tuner.get_best_hyperparameters()[0]
-keras_code(**best_hp.values, saving_path="/tmp/best_model")
+keras_code(**best_hp.values, saving_path="/tmp/best_model.keras")
 ```
 
 <div class="k-default-codeblock">
 ```
 Trial 3 Complete [00h 00m 00s]
-default_objective: 0.4348094390943946
+default_objective: 0.18014027375230962
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-Best default_objective So Far: 0.23868455769793312
+Best default_objective So Far: 0.18014027375230962
 Total elapsed time: 00h 00m 03s
-INFO:tensorflow:Oracle triggered exit
-4/4 [==============================] - 0s 3ms/step - loss: 0.1520
-INFO:tensorflow:Assets written to: /tmp/best_model/assets
 
-0.2114115606885921
+```
+</div>
+    
+ 1/4 ━━━━━[37m━━━━━━━━━━━━━━━  0s 172ms/step - loss: 0.5030
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+ 4/4 ━━━━━━━━━━━━━━━━━━━━ 0s 60ms/step - loss: 0.5288 
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+ 4/4 ━━━━━━━━━━━━━━━━━━━━ 0s 61ms/step - loss: 0.5367
+
+
+    
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 27ms/step
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 28ms/step
+
+
+
+
+
+<div class="k-default-codeblock">
+```
+0.5918120126201316
 
 ```
 </div>
@@ -1248,24 +2028,4 @@ tuner = keras_tuner.RandomSearch(
     directory="my_dir",
     project_name="built_in_hypermodel",
 )
-
-tuner.search(
-    x_train[:100], y_train[:100], epochs=1, validation_data=(x_val[:100], y_val[:100])
-)
 ```
-
-<div class="k-default-codeblock">
-```
-Trial 2 Complete [00h 01m 34s]
-val_accuracy: 0.10000000149011612
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-Best val_accuracy So Far: 0.10999999940395355
-Total elapsed time: 00h 02m 35s
-INFO:tensorflow:Oracle triggered exit
-
-```
-</div>

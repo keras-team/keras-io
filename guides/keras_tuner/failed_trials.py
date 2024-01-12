@@ -30,8 +30,8 @@ including:
 pip install keras-tuner -q
 """
 
-from tensorflow import keras
-from tensorflow.keras import layers
+import keras
+from keras import layers
 import keras_tuner
 import numpy as np
 

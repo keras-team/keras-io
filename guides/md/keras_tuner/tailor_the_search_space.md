@@ -42,8 +42,8 @@ the `units` hyperparameter as 64.
 
 
 ```python
-from tensorflow import keras
-from tensorflow.keras import layers
+import keras
+from keras import layers
 import keras_tuner
 import numpy as np
 
@@ -120,15 +120,14 @@ tuner.search(x_train, y_train, epochs=1, validation_data=(x_val, y_val))
 <div class="k-default-codeblock">
 ```
 Trial 3 Complete [00h 00m 01s]
-val_accuracy: 0.05000000074505806
+val_accuracy: 0.20000000298023224
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-Best val_accuracy So Far: 0.15000000596046448
-Total elapsed time: 00h 00m 05s
-INFO:tensorflow:Oracle triggered exit
+Best val_accuracy So Far: 0.25
+Total elapsed time: 00h 00m 03s
 
 ```
 </div>
@@ -182,7 +181,7 @@ tuner.search(x_train, y_train, epochs=1, validation_data=(x_val, y_val))
 <div class="k-default-codeblock">
 ```
 Trial 3 Complete [00h 00m 01s]
-val_accuracy: 0.10000000149011612
+val_accuracy: 0.15000000596046448
 ```
 </div>
     
@@ -190,7 +189,6 @@ val_accuracy: 0.10000000149011612
 ```
 Best val_accuracy So Far: 0.15000000596046448
 Total elapsed time: 00h 00m 03s
-INFO:tensorflow:Oracle triggered exit
 
 ```
 </div>
@@ -244,15 +242,14 @@ tuner.search(x_train, y_train, epochs=1, validation_data=(x_val, y_val))
 <div class="k-default-codeblock">
 ```
 Trial 3 Complete [00h 00m 01s]
-val_loss: 18.5389404296875
+val_loss: 29.39796257019043
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-Best val_loss So Far: 18.5389404296875
-Total elapsed time: 00h 00m 03s
-INFO:tensorflow:Oracle triggered exit
+Best val_loss So Far: 29.39630699157715
+Total elapsed time: 00h 00m 04s
 
 ```
 </div>
@@ -265,19 +262,8 @@ tuner.get_best_models()[0].loss
 
 <div class="k-default-codeblock">
 ```
-WARNING:tensorflow:Detecting that an object or model or tf.train.Checkpoint is being deleted with unrestored values. See the following logs for the specific values in question. To silence these warnings, use `status.expect_partial()`. See https://www.tensorflow.org/api_docs/python/tf/train/Checkpoint#restorefor details about the status object returned by the restore function.
-WARNING:tensorflow:Value in checkpoint could not be found in the restored object: (root).layer_with_weights-0.kernel
-WARNING:tensorflow:Value in checkpoint could not be found in the restored object: (root).layer_with_weights-0.bias
-WARNING:tensorflow:Value in checkpoint could not be found in the restored object: (root).layer_with_weights-1.kernel
-WARNING:tensorflow:Value in checkpoint could not be found in the restored object: (root).layer_with_weights-1.bias
-WARNING:tensorflow:Value in checkpoint could not be found in the restored object: (root).optimizer._variables.1
-WARNING:tensorflow:Value in checkpoint could not be found in the restored object: (root).optimizer._variables.2
-WARNING:tensorflow:Value in checkpoint could not be found in the restored object: (root).optimizer._variables.3
-WARNING:tensorflow:Value in checkpoint could not be found in the restored object: (root).optimizer._variables.4
-WARNING:tensorflow:Value in checkpoint could not be found in the restored object: (root).optimizer._variables.5
-WARNING:tensorflow:Value in checkpoint could not be found in the restored object: (root).optimizer._variables.6
-WARNING:tensorflow:Value in checkpoint could not be found in the restored object: (root).optimizer._variables.7
-WARNING:tensorflow:Value in checkpoint could not be found in the restored object: (root).optimizer._variables.8
+/usr/local/python/3.10.13/lib/python3.10/site-packages/keras/src/saving/saving_lib.py:388: UserWarning: Skipping variable loading for optimizer 'adam', because it has 2 variables whereas the saved optimizer has 10 variables. 
+  trackable.load_own_variables(weights_store.get(inner_path))
 
 'mse'
 
@@ -329,16 +315,15 @@ tuner.search_space_summary()
 
 <div class="k-default-codeblock">
 ```
-Trial 3 Complete [00h 00m 09s]
-val_accuracy: 0.05000000074505806
+Trial 3 Complete [00h 00m 19s]
+val_accuracy: 0.15000000596046448
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-Best val_accuracy So Far: 0.05000000074505806
-Total elapsed time: 00h 00m 27s
-INFO:tensorflow:Oracle triggered exit
+Best val_accuracy So Far: 0.20000000298023224
+Total elapsed time: 00h 00m 58s
 Search space summary
 Default search space size: 1
 learning_rate (Choice)
