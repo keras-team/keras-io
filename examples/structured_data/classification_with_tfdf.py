@@ -68,7 +68,7 @@ and 34 categorical features.
 First we load the data from the UCI Machine Learning Repository into a Pandas DataFrame.
 """
 
-BASE_PATH = "https://archive.ics.uci.edu/ml/machine-learning-databases/census-income-mld/census-income"
+BASE_PATH = "https://kdd.ics.uci.edu/databases/census-income/census-income"
 CSV_HEADER = [
     l.decode("utf-8").split(":")[0].replace(" ", "_")
     for l in urllib.request.urlopen(f"{BASE_PATH}.names")
