@@ -2,7 +2,7 @@
 Title: Video Vision Transformer
 Author: [Aritra Roy Gosthipaty](https://twitter.com/ariG23498), [Ayush Thakur](https://twitter.com/ayushthakur0) (equal contribution)
 Date created: 2022/01/12
-Last modified:  2024/01/11
+Last modified:  2024/01/13
 Description: A Transformer-based architecture for video classification.
 Accelerator: GPU
 """
@@ -48,7 +48,6 @@ import imageio
 import medmnist
 import ipywidgets
 import numpy as np
-os.environ["KERAS_BACKEND"] = "tensorflow"
 
 import keras
 import tensorflow as tf
@@ -144,7 +143,9 @@ def preprocess(frames, label):
     """Preprocess the frames tensors and parse the labels."""
     # Preprocess images
     frames = ops.cast(frames, "float32")
-    frames = ops.expand_dims(frames, axis=-1) # The new axis is to help for further processing with Conv3D layers
+    frames = ops.expand_dims(
+        frames, axis=-1
+    )  # The new axis is to help for further processing with Conv3D layers
     # Parse label
     label = ops.cast(label, "float32")
     return frames, label
