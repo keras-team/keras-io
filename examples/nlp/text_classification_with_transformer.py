@@ -10,9 +10,9 @@ Accelerator: GPU
 ## Setup
 """
 
-import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras import layers
+import keras
+from keras import ops
+from keras import layers
 
 
 """
@@ -35,12 +35,12 @@ class TransformerBlock(layers.Layer):
         self.dropout1 = layers.Dropout(rate)
         self.dropout2 = layers.Dropout(rate)
 
-    def call(self, inputs, training):
+    def call(self, inputs):
         attn_output = self.att(inputs, inputs)
-        attn_output = self.dropout1(attn_output, training=training)
+        attn_output = self.dropout1(attn_output)
         out1 = self.layernorm1(inputs + attn_output)
         ffn_output = self.ffn(out1)
-        ffn_output = self.dropout2(ffn_output, training=training)
+        ffn_output = self.dropout2(ffn_output)
         return self.layernorm2(out1 + ffn_output)
 
 
@@ -58,8 +58,8 @@ class TokenAndPositionEmbedding(layers.Layer):
         self.pos_emb = layers.Embedding(input_dim=maxlen, output_dim=embed_dim)
 
     def call(self, x):
-        maxlen = tf.shape(x)[-1]
-        positions = tf.range(start=0, limit=maxlen, delta=1)
+        maxlen = ops.shape(x)[-1]
+        positions = ops.arange(start=0, stop=maxlen, step=1)
         positions = self.pos_emb(positions)
         x = self.token_emb(x)
         return x + positions
