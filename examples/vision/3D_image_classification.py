@@ -374,6 +374,7 @@ model.compile(
     loss="binary_crossentropy",
     optimizer=keras.optimizers.Adam(learning_rate=lr_schedule),
     metrics=["acc"],
+    run_eagerly=True,
 )
 
 # Define callbacks.
