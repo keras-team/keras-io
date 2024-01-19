@@ -72,6 +72,10 @@ KT_GUIDES_MASTER = {
             "title": "Visualize the hyperparameter tuning process",
         },
         {
+            "path": "failed_trials",
+            "title": "Handling failed trials in KerasTuner",
+        },
+        {
             "path": "tailor_the_search_space",
             "title": "Tailor the search space",
         },

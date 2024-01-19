@@ -34,8 +34,8 @@ including:
 
 
 ```python
-from tensorflow import keras
-from tensorflow.keras import layers
+import keras
+from keras import layers
 import keras_tuner
 import numpy as np
 ```
@@ -131,51 +131,164 @@ Trial 12 Complete [00h 00m 00s]
     
 <div class="k-default-codeblock">
 ```
-Best val_loss So Far: 0.11403200030326843
-Total elapsed time: 00h 00m 14s
-INFO:tensorflow:Oracle triggered exit
+Best val_loss So Far: 0.12375041842460632
+Total elapsed time: 00h 00m 08s
 Results summary
 Results in ./untitled_project
 Showing 10 best trials
-<keras_tuner.engine.objective.Objective object at 0x7ff05a5c7280>
-Trial summary
+Objective(name="val_loss", direction="min")
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+Trial 0003 summary
 Hyperparameters:
 units_1: 20
-units_2: 30
-Score: 0.11403200030326843
-Trial summary
+units_2: 10
+Score: 0.12375041842460632
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+Trial 0001 summary
 Hyperparameters:
-units_1: 20
+units_1: 10
 units_2: 20
-Score: 0.12364783138036728
-Trial summary
+Score: 0.12741881608963013
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+Trial 0002 summary
 Hyperparameters:
 units_1: 10
 units_2: 30
-Score: 0.1268368661403656
-Trial summary
+Score: 0.13982832431793213
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+Trial 0000 summary
 Hyperparameters:
 units_1: 10
-units_2: 20
-Score: 0.15601204335689545
-Trial summary
+units_2: 10
+Score: 0.1433391124010086
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+Trial 0005 summary
+Hyperparameters:
+units_1: 20
+units_2: 30
+Score: 0.14747518301010132
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+Trial 0006 summary
 Hyperparameters:
 units_1: 30
 units_2: 10
-Score: 0.16938944160938263
-Trial summary
-Hyperparameters:
-units_1: 20
-units_2: 10
-Score: 0.20609712600708008
-Trial summary
-Hyperparameters:
-units_1: 10
-units_2: 10
-Score: 0.36607497930526733
-
+Score: 0.15092280507087708
 ```
 </div>
+    
+<div class="k-default-codeblock">
+```
+Trial 0004 summary
+Hyperparameters:
+units_1: 20
+units_2: 20
+Score: 0.21962997317314148
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+Trial 0007 summary
+Hyperparameters:
+units_1: 30
+units_2: 20
+Traceback (most recent call last):
+  File "/home/codespace/.local/lib/python3.10/site-packages/keras_tuner/src/engine/base_tuner.py", line 273, in _try_run_and_update_trial
+    self._run_and_update_trial(trial, *fit_args, **fit_kwargs)
+  File "/home/codespace/.local/lib/python3.10/site-packages/keras_tuner/src/engine/base_tuner.py", line 238, in _run_and_update_trial
+    results = self.run_trial(trial, *fit_args, **fit_kwargs)
+  File "/home/codespace/.local/lib/python3.10/site-packages/keras_tuner/src/engine/tuner.py", line 314, in run_trial
+    obj_value = self._build_and_fit_model(trial, *args, **copied_kwargs)
+  File "/home/codespace/.local/lib/python3.10/site-packages/keras_tuner/src/engine/tuner.py", line 232, in _build_and_fit_model
+    model = self._try_build(hp)
+  File "/home/codespace/.local/lib/python3.10/site-packages/keras_tuner/src/engine/tuner.py", line 164, in _try_build
+    model = self._build_hypermodel(hp)
+  File "/home/codespace/.local/lib/python3.10/site-packages/keras_tuner/src/engine/tuner.py", line 155, in _build_hypermodel
+    model = self.hypermodel.build(hp)
+  File "/tmp/ipykernel_21713/966577796.py", line 19, in build_model
+    raise ValueError(f"Model too large! It contains {num_params} params.")
+ValueError: Model too large! It contains 1271 params.
+```
+</div>
+    
+    
+<div class="k-default-codeblock">
+```
+Trial 0008 summary
+Hyperparameters:
+units_1: 30
+units_2: 30
+Traceback (most recent call last):
+  File "/home/codespace/.local/lib/python3.10/site-packages/keras_tuner/src/engine/base_tuner.py", line 273, in _try_run_and_update_trial
+    self._run_and_update_trial(trial, *fit_args, **fit_kwargs)
+  File "/home/codespace/.local/lib/python3.10/site-packages/keras_tuner/src/engine/base_tuner.py", line 238, in _run_and_update_trial
+    results = self.run_trial(trial, *fit_args, **fit_kwargs)
+  File "/home/codespace/.local/lib/python3.10/site-packages/keras_tuner/src/engine/tuner.py", line 314, in run_trial
+    obj_value = self._build_and_fit_model(trial, *args, **copied_kwargs)
+  File "/home/codespace/.local/lib/python3.10/site-packages/keras_tuner/src/engine/tuner.py", line 232, in _build_and_fit_model
+    model = self._try_build(hp)
+  File "/home/codespace/.local/lib/python3.10/site-packages/keras_tuner/src/engine/tuner.py", line 164, in _try_build
+    model = self._build_hypermodel(hp)
+  File "/home/codespace/.local/lib/python3.10/site-packages/keras_tuner/src/engine/tuner.py", line 155, in _build_hypermodel
+    model = self.hypermodel.build(hp)
+  File "/tmp/ipykernel_21713/966577796.py", line 19, in build_model
+    raise ValueError(f"Model too large! It contains {num_params} params.")
+ValueError: Model too large! It contains 1591 params.
+```
+</div>
+    
+    
+<div class="k-default-codeblock">
+```
+Trial 0009 summary
+Hyperparameters:
+units_1: 40
+units_2: 10
+Traceback (most recent call last):
+  File "/home/codespace/.local/lib/python3.10/site-packages/keras_tuner/src/engine/base_tuner.py", line 273, in _try_run_and_update_trial
+    self._run_and_update_trial(trial, *fit_args, **fit_kwargs)
+  File "/home/codespace/.local/lib/python3.10/site-packages/keras_tuner/src/engine/base_tuner.py", line 238, in _run_and_update_trial
+    results = self.run_trial(trial, *fit_args, **fit_kwargs)
+  File "/home/codespace/.local/lib/python3.10/site-packages/keras_tuner/src/engine/tuner.py", line 314, in run_trial
+    obj_value = self._build_and_fit_model(trial, *args, **copied_kwargs)
+  File "/home/codespace/.local/lib/python3.10/site-packages/keras_tuner/src/engine/tuner.py", line 232, in _build_and_fit_model
+    model = self._try_build(hp)
+  File "/home/codespace/.local/lib/python3.10/site-packages/keras_tuner/src/engine/tuner.py", line 164, in _try_build
+    model = self._build_hypermodel(hp)
+  File "/home/codespace/.local/lib/python3.10/site-packages/keras_tuner/src/engine/tuner.py", line 155, in _build_hypermodel
+    model = self.hypermodel.build(hp)
+  File "/tmp/ipykernel_21713/966577796.py", line 19, in build_model
+    raise ValueError(f"Model too large! It contains {num_params} params.")
+ValueError: Model too large! It contains 1261 params.
+```
+</div>
+    
+
+
 ---
 ## Mark a trial as failed
 
@@ -249,51 +362,164 @@ Trial 12 Complete [00h 00m 00s]
     
 <div class="k-default-codeblock">
 ```
-Best val_loss So Far: 0.09288986027240753
-Total elapsed time: 00h 00m 11s
-INFO:tensorflow:Oracle triggered exit
+Best val_loss So Far: 0.08265472948551178
+Total elapsed time: 00h 00m 05s
 Results summary
 Results in ./untitled_project
 Showing 10 best trials
-<keras_tuner.engine.objective.Objective object at 0x7ff0583327a0>
-Trial summary
+Objective(name="val_loss", direction="min")
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+Trial 0002 summary
 Hyperparameters:
 units_1: 10
 units_2: 30
-Score: 0.09288986027240753
-Trial summary
+Score: 0.08265472948551178
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+Trial 0005 summary
 Hyperparameters:
 units_1: 20
 units_2: 30
-Score: 0.10828635841608047
-Trial summary
-Hyperparameters:
-units_1: 20
-units_2: 10
-Score: 0.11322537064552307
-Trial summary
-Hyperparameters:
-units_1: 20
-units_2: 20
-Score: 0.12243752181529999
-Trial summary
-Hyperparameters:
-units_1: 10
-units_2: 10
-Score: 0.129277765750885
-Trial summary
+Score: 0.11731438338756561
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+Trial 0006 summary
 Hyperparameters:
 units_1: 30
 units_2: 10
-Score: 0.16572774946689606
-Trial summary
+Score: 0.13600358366966248
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+Trial 0004 summary
+Hyperparameters:
+units_1: 20
+units_2: 20
+Score: 0.1465979516506195
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+Trial 0000 summary
+Hyperparameters:
+units_1: 10
+units_2: 10
+Score: 0.15967626869678497
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+Trial 0001 summary
 Hyperparameters:
 units_1: 10
 units_2: 20
-Score: 0.2288801372051239
-
+Score: 0.1646396517753601
 ```
 </div>
+    
+<div class="k-default-codeblock">
+```
+Trial 0003 summary
+Hyperparameters:
+units_1: 20
+units_2: 10
+Score: 0.1696309596300125
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+Trial 0007 summary
+Hyperparameters:
+units_1: 30
+units_2: 20
+Traceback (most recent call last):
+  File "/home/codespace/.local/lib/python3.10/site-packages/keras_tuner/src/engine/base_tuner.py", line 273, in _try_run_and_update_trial
+    self._run_and_update_trial(trial, *fit_args, **fit_kwargs)
+  File "/home/codespace/.local/lib/python3.10/site-packages/keras_tuner/src/engine/base_tuner.py", line 238, in _run_and_update_trial
+    results = self.run_trial(trial, *fit_args, **fit_kwargs)
+  File "/home/codespace/.local/lib/python3.10/site-packages/keras_tuner/src/engine/tuner.py", line 314, in run_trial
+    obj_value = self._build_and_fit_model(trial, *args, **copied_kwargs)
+  File "/home/codespace/.local/lib/python3.10/site-packages/keras_tuner/src/engine/tuner.py", line 232, in _build_and_fit_model
+    model = self._try_build(hp)
+  File "/home/codespace/.local/lib/python3.10/site-packages/keras_tuner/src/engine/tuner.py", line 164, in _try_build
+    model = self._build_hypermodel(hp)
+  File "/home/codespace/.local/lib/python3.10/site-packages/keras_tuner/src/engine/tuner.py", line 155, in _build_hypermodel
+    model = self.hypermodel.build(hp)
+  File "/tmp/ipykernel_21713/2463037569.py", line 20, in build_model
+    raise keras_tuner.errors.FailedTrialError(
+keras_tuner.src.errors.FailedTrialError: Model too large! It contains 1271 params.
+```
+</div>
+    
+    
+<div class="k-default-codeblock">
+```
+Trial 0008 summary
+Hyperparameters:
+units_1: 30
+units_2: 30
+Traceback (most recent call last):
+  File "/home/codespace/.local/lib/python3.10/site-packages/keras_tuner/src/engine/base_tuner.py", line 273, in _try_run_and_update_trial
+    self._run_and_update_trial(trial, *fit_args, **fit_kwargs)
+  File "/home/codespace/.local/lib/python3.10/site-packages/keras_tuner/src/engine/base_tuner.py", line 238, in _run_and_update_trial
+    results = self.run_trial(trial, *fit_args, **fit_kwargs)
+  File "/home/codespace/.local/lib/python3.10/site-packages/keras_tuner/src/engine/tuner.py", line 314, in run_trial
+    obj_value = self._build_and_fit_model(trial, *args, **copied_kwargs)
+  File "/home/codespace/.local/lib/python3.10/site-packages/keras_tuner/src/engine/tuner.py", line 232, in _build_and_fit_model
+    model = self._try_build(hp)
+  File "/home/codespace/.local/lib/python3.10/site-packages/keras_tuner/src/engine/tuner.py", line 164, in _try_build
+    model = self._build_hypermodel(hp)
+  File "/home/codespace/.local/lib/python3.10/site-packages/keras_tuner/src/engine/tuner.py", line 155, in _build_hypermodel
+    model = self.hypermodel.build(hp)
+  File "/tmp/ipykernel_21713/2463037569.py", line 20, in build_model
+    raise keras_tuner.errors.FailedTrialError(
+keras_tuner.src.errors.FailedTrialError: Model too large! It contains 1591 params.
+```
+</div>
+    
+    
+<div class="k-default-codeblock">
+```
+Trial 0009 summary
+Hyperparameters:
+units_1: 40
+units_2: 10
+Traceback (most recent call last):
+  File "/home/codespace/.local/lib/python3.10/site-packages/keras_tuner/src/engine/base_tuner.py", line 273, in _try_run_and_update_trial
+    self._run_and_update_trial(trial, *fit_args, **fit_kwargs)
+  File "/home/codespace/.local/lib/python3.10/site-packages/keras_tuner/src/engine/base_tuner.py", line 238, in _run_and_update_trial
+    results = self.run_trial(trial, *fit_args, **fit_kwargs)
+  File "/home/codespace/.local/lib/python3.10/site-packages/keras_tuner/src/engine/tuner.py", line 314, in run_trial
+    obj_value = self._build_and_fit_model(trial, *args, **copied_kwargs)
+  File "/home/codespace/.local/lib/python3.10/site-packages/keras_tuner/src/engine/tuner.py", line 232, in _build_and_fit_model
+    model = self._try_build(hp)
+  File "/home/codespace/.local/lib/python3.10/site-packages/keras_tuner/src/engine/tuner.py", line 164, in _try_build
+    model = self._build_hypermodel(hp)
+  File "/home/codespace/.local/lib/python3.10/site-packages/keras_tuner/src/engine/tuner.py", line 155, in _build_hypermodel
+    model = self.hypermodel.build(hp)
+  File "/tmp/ipykernel_21713/2463037569.py", line 20, in build_model
+    raise keras_tuner.errors.FailedTrialError(
+keras_tuner.src.errors.FailedTrialError: Model too large! It contains 1261 params.
+```
+</div>
+    
+
+
 ---
 ## Terminate the search programmatically
 
@@ -358,15 +584,15 @@ except keras_tuner.errors.FatalError:
 
 <div class="k-default-codeblock">
 ```
-Trial 7 Complete [00h 00m 02s]
-val_loss: 0.09336935728788376
+Trial 7 Complete [00h 00m 01s]
+val_loss: 0.14219732582569122
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-Best val_loss So Far: 0.09336935728788376
-Total elapsed time: 00h 00m 10s
+Best val_loss So Far: 0.09755773097276688
+Total elapsed time: 00h 00m 04s
 ```
 </div>
     
@@ -379,8 +605,8 @@ Search: Running Trial #8
 <div class="k-default-codeblock">
 ```
 Value             |Best Value So Far |Hyperparameter
-30                |30                |units_1
-20                |10                |units_2
+30                |10                |units_1
+20                |20                |units_2
 ```
 </div>
     

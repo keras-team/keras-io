@@ -36,8 +36,8 @@ whose range is from 32 to 512 inclusive. When sampling from it, the minimum
 step for walking through the interval is 32.
 """
 
-from tensorflow import keras
-from tensorflow.keras import layers
+import keras
+from keras import layers
 
 
 def build_model(hp):
@@ -241,7 +241,7 @@ tuner.search_space_summary()
 Before starting the search, let's prepare the MNIST dataset.
 """
 
-from tensorflow import keras
+import keras
 import numpy as np
 
 (x, y), (x_test, y_test) = keras.datasets.mnist.load_data()
@@ -284,9 +284,6 @@ its best performing epoch evaluated on the `validation_data`.
 # Get the top 2 models.
 models = tuner.get_best_models(num_models=2)
 best_model = models[0]
-# Build the model.
-# Needed for `Sequential` without specified `input_shape`.
-best_model.build(input_shape=(None, 28, 28))
 best_model.summary()
 
 """
@@ -587,7 +584,7 @@ tutorial](https://keras.io/guides/customizing_what_happens_in_fit/#going-lowerle
 
 """
 
-import tensorflow as tf
+from keras import ops
 
 
 class CustomMetric(keras.metrics.Metric):
@@ -595,20 +592,20 @@ class CustomMetric(keras.metrics.Metric):
         # Specify the name of the metric as "custom_metric".
         super().__init__(name="custom_metric", **kwargs)
         self.sum = self.add_weight(name="sum", initializer="zeros")
-        self.count = self.add_weight(name="count", dtype=tf.int32, initializer="zeros")
+        self.count = self.add_weight(name="count", dtype="int32", initializer="zeros")
 
     def update_state(self, y_true, y_pred, sample_weight=None):
-        values = tf.math.squared_difference(y_pred, y_true)
-        count = tf.shape(y_true)[0]
+        values = ops.square(y_true - y_pred)
+        count = ops.shape(y_true)[0]
         if sample_weight is not None:
-            sample_weight = tf.cast(sample_weight, self.dtype)
+            sample_weight = ops.cast(sample_weight, self.dtype)
             values *= sample_weight
             count *= sample_weight
-        self.sum.assign_add(tf.reduce_sum(values))
+        self.sum.assign_add(ops.sum(values))
         self.count.assign_add(count)
 
     def result(self):
-        return self.sum / tf.cast(self.count, tf.float32)
+        return self.sum / ops.cast(self.count, "float32")
 
     def reset_states(self):
         self.sum.assign(0)
@@ -888,8 +885,4 @@ tuner = keras_tuner.RandomSearch(
     overwrite=True,
     directory="my_dir",
     project_name="built_in_hypermodel",
-)
-
-tuner.search(
-    x_train[:100], y_train[:100], epochs=1, validation_data=(x_val[:100], y_val[:100])
 )
