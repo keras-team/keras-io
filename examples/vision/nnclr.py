@@ -2,7 +2,7 @@
 Title: Self-supervised contrastive learning with NNCLR
 Author: [Rishit Dagli](https://twitter.com/rishit_dagli)
 Date created: 2021/09/13
-Last modified: 2024/01/14
+Last modified: 2024/01/19
 Description: Implementation of NNCLR, a self-supervised learning method for computer vision.
 Accelerator: GPU
 """
@@ -74,6 +74,7 @@ import matplotlib.pyplot as plt
 import tensorflow as tf
 import tensorflow_datasets as tfds
 import keras
+import keras_cv
 from keras import ops
 from keras import layers
 
@@ -170,78 +171,6 @@ Since NNCLR is less dependent on complex augmentations, we will only use random
 crops and random brightness for augmenting the input images.
 """
 
-"""
-### Random Resized Crops
-"""
-
-
-class RandomResizedCrop(layers.Layer):
-    def __init__(self, scale, ratio):
-        super().__init__()
-        self.scale = scale
-        self.log_ratio = (ops.log(ratio[0]), ops.log(ratio[1]))
-
-    def call(self, images):
-        batch_size = ops.shape(images)[0]
-        height = ops.shape(images)[1]
-        width = ops.shape(images)[2]
-
-        random_scales = keras.random.uniform(
-            (batch_size,), self.scale[0], self.scale[1]
-        )
-        random_ratios = ops.exp(
-            keras.random.uniform((batch_size,), self.log_ratio[0], self.log_ratio[1])
-        )
-
-        new_heights = ops.clip(ops.sqrt(random_scales / random_ratios), 0, 1)
-        new_widths = ops.clip(ops.sqrt(random_scales * random_ratios), 0, 1)
-        height_offsets = keras.random.uniform((batch_size,), 0, 1 - new_heights)
-        width_offsets = keras.random.uniform((batch_size,), 0, 1 - new_widths)
-
-        bounding_boxes = ops.stack(
-            [
-                height_offsets,
-                width_offsets,
-                height_offsets + new_heights,
-                width_offsets + new_widths,
-            ],
-            axis=1,
-        )
-        images = tf.image.crop_and_resize(
-            images, bounding_boxes, ops.arange(batch_size), (height, width)
-        )
-        return images
-
-
-"""
-### Random Brightness
-"""
-
-
-class RandomBrightness(layers.Layer):
-    def __init__(self, brightness):
-        super().__init__()
-        self.brightness = brightness
-
-    def blend(self, images_1, images_2, ratios):
-        return ops.clip(ratios * images_1 + (1.0 - ratios) * images_2, 0, 1)
-
-    def random_brightness(self, images):
-        # random interpolation/extrapolation between the image and darkness
-        return self.blend(
-            images,
-            0,
-            keras.random.uniform(
-                (ops.shape(images)[0], 1, 1, 1),
-                1 - self.brightness,
-                1 + self.brightness,
-            ),
-        )
-
-    def call(self, images):
-        images = self.random_brightness(images)
-        return images
-
 
 """
 ### Prepare augmentation module
@@ -254,8 +183,12 @@ def augmenter(brightness, name, scale):
             layers.Input(shape=input_shape),
             layers.Rescaling(1 / 255),
             layers.RandomFlip("horizontal"),
-            RandomResizedCrop(scale=scale, ratio=(3 / 4, 4 / 3)),
-            RandomBrightness(brightness=brightness),
+            keras_cv.layers.RandomCropAndResize(
+                target_size=(input_shape[0], input_shape[1]),
+                crop_area_factor=scale,
+                aspect_ratio_factor=(3 / 4, 4 / 3),
+            ),
+            keras_cv.layers.RandomBrightness(factor=brightness, value_range=(0.0, 1.0)),
         ],
         name=name,
     )
@@ -558,7 +491,7 @@ finetuning_model.compile(
     optimizer=keras.optimizers.Adam(),
     loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
     metrics=[keras.metrics.SparseCategoricalAccuracy(name="acc")],
-    jit_compile=False
+    jit_compile=False,
 )
 
 finetuning_history = finetuning_model.fit(
