@@ -2,7 +2,7 @@
 Title: Self-supervised contrastive learning with NNCLR
 Author: [Rishit Dagli](https://twitter.com/rishit_dagli)
 Date created: 2021/09/13
-Last modified: 2024/01/19
+Last modified: 2024/01/21
 Description: Implementation of NNCLR, a self-supervised learning method for computer vision.
 Accelerator: GPU
 """
@@ -73,6 +73,9 @@ pip install tensorflow-datasets
 import matplotlib.pyplot as plt
 import tensorflow as tf
 import tensorflow_datasets as tfds
+import os
+
+os.environ["KERAS_BACKEND"] = "tensorflow"
 import keras
 import keras_cv
 from keras import ops
