@@ -2,7 +2,7 @@
 Title: 3D image classification from CT scans
 Author: [Hasib Zunair](https://twitter.com/hasibzunair)
 Date created: 2020/09/23
-Last modified: 2020/09/23
+Last modified: 2024/01/11
 Description: Train a 3D convolutional neural network to predict presence of pneumonia.
 Accelerator: GPU
 """
@@ -17,9 +17,9 @@ equivalent: it takes as input a 3D volume or a sequence of 2D frames (e.g. slice
 
 ## References
 
-- [A survey on Deep Learning Advances on Different 3D DataRepresentations](https://arxiv.org/pdf/1808.01462.pdf)
+- [A survey on Deep Learning Advances on Different 3D DataRepresentations](https://arxiv.org/abs/1808.01462)
 - [VoxNet: A 3D Convolutional Neural Network for Real-Time Object Recognition](https://www.ri.cmu.edu/pub_files/2015/9/voxnet_maturana_scherer_iros15.pdf)
-- [FusionNet: 3D Object Classification Using MultipleData Representations](http://3ddl.cs.princeton.edu/2016/papers/Hegde_Zadeh.pdf)
+- [FusionNet: 3D Object Classification Using MultipleData Representations](https://arxiv.org/abs/1607.05695)
 - [Uniformizing Techniques to Process CT scans with 3D CNNs for Tuberculosis Prediction](https://arxiv.org/abs/2007.13224)
 """
 """
@@ -29,10 +29,10 @@ equivalent: it takes as input a 3D volume or a sequence of 2D frames (e.g. slice
 import os
 import zipfile
 import numpy as np
-import tensorflow as tf
+import tensorflow as tf  # for data preprocessing
 
-from tensorflow import keras
-from tensorflow.keras import layers
+import keras
+from keras import layers
 
 """
 ## Downloading the MosMedData: Chest CT Scans with COVID-19 Related Findings
@@ -211,7 +211,6 @@ import random
 from scipy import ndimage
 
 
-@tf.function
 def rotate(volume):
     """Rotate the volume by a few degrees"""
 
@@ -375,11 +374,12 @@ model.compile(
     loss="binary_crossentropy",
     optimizer=keras.optimizers.Adam(learning_rate=lr_schedule),
     metrics=["acc"],
+    run_eagerly=True,
 )
 
 # Define callbacks.
 checkpoint_cb = keras.callbacks.ModelCheckpoint(
-    "3d_image_classification.h5", save_best_only=True
+    "3d_image_classification.keras", save_best_only=True
 )
 early_stopping_cb = keras.callbacks.EarlyStopping(monitor="val_acc", patience=15)
 
@@ -426,7 +426,7 @@ for i, metric in enumerate(["acc", "loss"]):
 """
 
 # Load best weights.
-model.load_weights("3d_image_classification.h5")
+model.load_weights("3d_image_classification.keras")
 prediction = model.predict(np.expand_dims(x_val[0], axis=0))[0]
 scores = [1 - prediction[0], prediction[0]]
 
