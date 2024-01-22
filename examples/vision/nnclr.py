@@ -2,7 +2,7 @@
 Title: Self-supervised contrastive learning with NNCLR
 Author: [Rishit Dagli](https://twitter.com/rishit_dagli)
 Date created: 2021/09/13
-Last modified: 2024/01/21
+Last modified: 2024/01/22
 Description: Implementation of NNCLR, a self-supervised learning method for computer vision.
 Accelerator: GPU
 """
@@ -110,8 +110,8 @@ classification_augmenter = {
 }
 input_shape = (96, 96, 3)
 width = 128
-num_epochs = 25
-steps_per_epoch = 200
+num_epochs = 5  # Use 25 for better results
+steps_per_epoch = 50  # Use 200 for better results
 
 """
 ## Load the Dataset
@@ -277,7 +277,9 @@ class NNCLR(keras.Model):
         self.probe_optimizer = probe_optimizer
 
     def nearest_neighbour(self, projections):
-        support_similarities = ops.matmul(projections, ops.tranpose(self.feature_queue))
+        support_similarities = ops.matmul(
+            projections, ops.transpose(self.feature_queue)
+        )
         nn_projections = ops.take(
             self.feature_queue, ops.argmax(support_similarities, axis=1), axis=0
         )
@@ -286,7 +288,7 @@ class NNCLR(keras.Model):
     def update_contrastive_accuracy(self, features_1, features_2):
         features_1 = keras.utils.normalize(features_1, axis=1, order=2)
         features_2 = keras.utils.normalize(features_2, axis=1, order=2)
-        similarities = ops.matmul(features_1, ops.tranpose(features_2))
+        similarities = ops.matmul(features_1, ops.transpose(features_2))
         batch_size = ops.shape(features_1)[0]
         contrastive_labels = ops.arange(batch_size)
         self.contrastive_accuracy.update_state(
@@ -304,7 +306,7 @@ class NNCLR(keras.Model):
 
         batch_size = ops.shape(features_1)[0]
         cross_correlation = (
-            ops.matmul(ops.tranpose(features_1), features_2) / batch_size
+            ops.matmul(ops.transpose(features_1), features_2) / batch_size
         )
 
         feature_dim = ops.shape(features_1)[1]
@@ -328,20 +330,20 @@ class NNCLR(keras.Model):
         )
         similarities_1_2_2 = (
             ops.matmul(
-                projections_2, ops.tranpose(self.nearest_neighbour(projections_1))
+                projections_2, ops.transpose(self.nearest_neighbour(projections_1))
             )
             / self.temperature
         )
 
         similarities_2_1_1 = (  #
             ops.matmul(
-                self.nearest_neighbour(projections_2), ops.tranpose(projections_1)
+                self.nearest_neighbour(projections_2), ops.transpose(projections_1)
             )
             / self.temperature
         )
         similarities_2_1_2 = (
             ops.matmul(
-                projections_1, ops.tranpose(self.nearest_neighbour(projections_2))
+                projections_1, ops.transpose(self.nearest_neighbour(projections_2))
             )
             / self.temperature
         )
