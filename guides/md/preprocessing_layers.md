@@ -736,11 +736,3 @@ Instead, pre-compute your vocabulary in advance
 (you could use Apache Beam or TF Transform for this)
 and store it in a file. Then load the vocabulary into the layer at construction
 time by passing the file path as the `vocabulary` argument.
-
-
-### Using lookup layers on a TPU pod or with `ParameterServerStrategy`.
-
-There is an outstanding issue that causes performance to degrade when using
-a `TextVectorization`, `StringLookup`, or `IntegerLookup` layer while
-training on a TPU pod or on multiple machines via `ParameterServerStrategy`.
-This is slated to be fixed in TensorFlow 2.7.
