@@ -2,7 +2,7 @@
 Title: Self-supervised contrastive learning with NNCLR
 Author: [Rishit Dagli](https://twitter.com/rishit_dagli)
 Date created: 2021/09/13
-Last modified: 2021/09/13
+Last modified: 2024/01/21
 Description: Implementation of NNCLR, a self-supervised learning method for computer vision.
 Accelerator: GPU
 """
@@ -58,7 +58,7 @@ the positive pairs using nearest-neighbours. A support set is used as memory dur
 training, similar to a queue (i.e. first-in-first-out) as in
 [MoCo](https://arxiv.org/abs/1911.05722).
 
-This example requires TensorFlow 2.6 or higher, as well as `tensorflow_datasets`, which can
+This example requires `tensorflow_datasets`, which can
 be installed with this command:
 """
 
@@ -73,8 +73,13 @@ pip install tensorflow-datasets
 import matplotlib.pyplot as plt
 import tensorflow as tf
 import tensorflow_datasets as tfds
-from tensorflow import keras
-from tensorflow.keras import layers
+import os
+
+os.environ["KERAS_BACKEND"] = "tensorflow"
+import keras
+import keras_cv
+from keras import ops
+from keras import layers
 
 """
 ## Hyperparameters
@@ -169,74 +174,6 @@ Since NNCLR is less dependent on complex augmentations, we will only use random
 crops and random brightness for augmenting the input images.
 """
 
-"""
-### Random Resized Crops
-"""
-
-
-class RandomResizedCrop(layers.Layer):
-    def __init__(self, scale, ratio):
-        super().__init__()
-        self.scale = scale
-        self.log_ratio = (tf.math.log(ratio[0]), tf.math.log(ratio[1]))
-
-    def call(self, images):
-        batch_size = tf.shape(images)[0]
-        height = tf.shape(images)[1]
-        width = tf.shape(images)[2]
-
-        random_scales = tf.random.uniform((batch_size,), self.scale[0], self.scale[1])
-        random_ratios = tf.exp(
-            tf.random.uniform((batch_size,), self.log_ratio[0], self.log_ratio[1])
-        )
-
-        new_heights = tf.clip_by_value(tf.sqrt(random_scales / random_ratios), 0, 1)
-        new_widths = tf.clip_by_value(tf.sqrt(random_scales * random_ratios), 0, 1)
-        height_offsets = tf.random.uniform((batch_size,), 0, 1 - new_heights)
-        width_offsets = tf.random.uniform((batch_size,), 0, 1 - new_widths)
-
-        bounding_boxes = tf.stack(
-            [
-                height_offsets,
-                width_offsets,
-                height_offsets + new_heights,
-                width_offsets + new_widths,
-            ],
-            axis=1,
-        )
-        images = tf.image.crop_and_resize(
-            images, bounding_boxes, tf.range(batch_size), (height, width)
-        )
-        return images
-
-
-"""
-### Random Brightness
-"""
-
-
-class RandomBrightness(layers.Layer):
-    def __init__(self, brightness):
-        super().__init__()
-        self.brightness = brightness
-
-    def blend(self, images_1, images_2, ratios):
-        return tf.clip_by_value(ratios * images_1 + (1.0 - ratios) * images_2, 0, 1)
-
-    def random_brightness(self, images):
-        # random interpolation/extrapolation between the image and darkness
-        return self.blend(
-            images,
-            0,
-            tf.random.uniform(
-                (tf.shape(images)[0], 1, 1, 1), 1 - self.brightness, 1 + self.brightness
-            ),
-        )
-
-    def call(self, images):
-        images = self.random_brightness(images)
-        return images
-
 
 """
 ### Prepare augmentation module
@@ -249,8 +186,12 @@ def augmenter(brightness, name, scale):
             layers.Input(shape=input_shape),
             layers.Rescaling(1 / 255),
             layers.RandomFlip("horizontal"),
-            RandomResizedCrop(scale=scale, ratio=(3 / 4, 4 / 3)),
-            RandomBrightness(brightness=brightness),
+            keras_cv.layers.RandomCropAndResize(
+                target_size=(input_shape[0], input_shape[1]),
+                crop_area_factor=scale,
+                aspect_ratio_factor=(3 / 4, 4 / 3),
+            ),
+            keras_cv.layers.RandomBrightness(factor=brightness, value_range=(0.0, 1.0)),
         ],
         name=name,
     )
@@ -321,9 +262,11 @@ class NNCLR(keras.Model):
         self.temperature = temperature
 
         feature_dimensions = self.encoder.output_shape[1]
-        self.feature_queue = tf.Variable(
-            tf.math.l2_normalize(
-                tf.random.normal(shape=(queue_size, feature_dimensions)), axis=1
+        self.feature_queue = keras.Variable(
+            keras.utils.normalize(
+                keras.random.normal(shape=(queue_size, feature_dimensions)),
+                axis=1,
+                order=2,
             ),
             trainable=False,
         )
@@ -334,80 +277,79 @@ class NNCLR(keras.Model):
         self.probe_optimizer = probe_optimizer
 
     def nearest_neighbour(self, projections):
-        support_similarities = tf.matmul(
-            projections, self.feature_queue, transpose_b=True
+        support_similarities = ops.matmul(projections, ops.tranpose(self.feature_queue))
+        nn_projections = ops.take(
+            self.feature_queue, ops.argmax(support_similarities, axis=1), axis=0
         )
-        nn_projections = tf.gather(
-            self.feature_queue, tf.argmax(support_similarities, axis=1), axis=0
-        )
-        return projections + tf.stop_gradient(nn_projections - projections)
+        return projections + ops.stop_gradient(nn_projections - projections)
 
     def update_contrastive_accuracy(self, features_1, features_2):
-        features_1 = tf.math.l2_normalize(features_1, axis=1)
-        features_2 = tf.math.l2_normalize(features_2, axis=1)
-        similarities = tf.matmul(features_1, features_2, transpose_b=True)
-
-        batch_size = tf.shape(features_1)[0]
-        contrastive_labels = tf.range(batch_size)
+        features_1 = keras.utils.normalize(features_1, axis=1, order=2)
+        features_2 = keras.utils.normalize(features_2, axis=1, order=2)
+        similarities = ops.matmul(features_1, ops.tranpose(features_2))
+        batch_size = ops.shape(features_1)[0]
+        contrastive_labels = ops.arange(batch_size)
         self.contrastive_accuracy.update_state(
-            tf.concat([contrastive_labels, contrastive_labels], axis=0),
-            tf.concat([similarities, tf.transpose(similarities)], axis=0),
+            ops.concatenate([contrastive_labels, contrastive_labels], axis=0),
+            ops.concatenate([similarities, ops.transpose(similarities)], axis=0),
         )
 
     def update_correlation_accuracy(self, features_1, features_2):
-        features_1 = (
-            features_1 - tf.reduce_mean(features_1, axis=0)
-        ) / tf.math.reduce_std(features_1, axis=0)
-        features_2 = (
-            features_2 - tf.reduce_mean(features_2, axis=0)
-        ) / tf.math.reduce_std(features_2, axis=0)
-
-        batch_size = tf.shape(features_1, out_type=tf.float32)[0]
-        cross_correlation = (
-            tf.matmul(features_1, features_2, transpose_a=True) / batch_size
+        features_1 = (features_1 - ops.mean(features_1, axis=0)) / ops.std(
+            features_1, axis=0
+        )
+        features_2 = (features_2 - ops.mean(features_2, axis=0)) / ops.std(
+            features_2, axis=0
         )
 
-        feature_dim = tf.shape(features_1)[1]
-        correlation_labels = tf.range(feature_dim)
+        batch_size = ops.shape(features_1)[0]
+        cross_correlation = (
+            ops.matmul(ops.tranpose(features_1), features_2) / batch_size
+        )
+
+        feature_dim = ops.shape(features_1)[1]
+        correlation_labels = ops.arange(feature_dim)
         self.correlation_accuracy.update_state(
-            tf.concat([correlation_labels, correlation_labels], axis=0),
-            tf.concat([cross_correlation, tf.transpose(cross_correlation)], axis=0),
+            ops.concatenate([correlation_labels, correlation_labels], axis=0),
+            ops.concatenate(
+                [cross_correlation, ops.transpose(cross_correlation)], axis=0
+            ),
         )
 
     def contrastive_loss(self, projections_1, projections_2):
-        projections_1 = tf.math.l2_normalize(projections_1, axis=1)
-        projections_2 = tf.math.l2_normalize(projections_2, axis=1)
+        projections_1 = keras.utils.normalize(projections_1, axis=1, order=2)
+        projections_2 = keras.utils.normalize(projections_2, axis=1, order=2)
 
         similarities_1_2_1 = (
-            tf.matmul(
-                self.nearest_neighbour(projections_1), projections_2, transpose_b=True
+            ops.matmul(
+                self.nearest_neighbour(projections_1), ops.transpose(projections_2)
             )
             / self.temperature
         )
         similarities_1_2_2 = (
-            tf.matmul(
-                projections_2, self.nearest_neighbour(projections_1), transpose_b=True
+            ops.matmul(
+                projections_2, ops.tranpose(self.nearest_neighbour(projections_1))
             )
             / self.temperature
         )
 
-        similarities_2_1_1 = (
-            tf.matmul(
-                self.nearest_neighbour(projections_2), projections_1, transpose_b=True
+        similarities_2_1_1 = (  #
+            ops.matmul(
+                self.nearest_neighbour(projections_2), ops.tranpose(projections_1)
             )
             / self.temperature
         )
         similarities_2_1_2 = (
-            tf.matmul(
-                projections_1, self.nearest_neighbour(projections_2), transpose_b=True
+            ops.matmul(
+                projections_1, ops.tranpose(self.nearest_neighbour(projections_2))
             )
             / self.temperature
         )
 
-        batch_size = tf.shape(projections_1)[0]
-        contrastive_labels = tf.range(batch_size)
+        batch_size = ops.shape(projections_1)[0]
+        contrastive_labels = ops.arange(batch_size)
         loss = keras.losses.sparse_categorical_crossentropy(
-            tf.concat(
+            ops.concatenate(
                 [
                     contrastive_labels,
                     contrastive_labels,
@@ -416,7 +358,7 @@ class NNCLR(keras.Model):
                 ],
                 axis=0,
             ),
-            tf.concat(
+            ops.concatenate(
                 [
                     similarities_1_2_1,
                     similarities_1_2_2,
@@ -429,13 +371,13 @@ class NNCLR(keras.Model):
         )
 
         self.feature_queue.assign(
-            tf.concat([projections_1, self.feature_queue[:-batch_size]], axis=0)
+            ops.concatenate([projections_1, self.feature_queue[:-batch_size]], axis=0)
         )
         return loss
 
     def train_step(self, data):
         (unlabeled_images, _), (labeled_images, labels) = data
-        images = tf.concat((unlabeled_images, labeled_images), axis=0)
+        images = ops.concatenate((unlabeled_images, labeled_images), axis=0)
         augmented_images_1 = self.contrastive_augmenter(images)
         augmented_images_2 = self.contrastive_augmenter(images)
 
@@ -521,6 +463,7 @@ model = NNCLR(temperature=temperature, queue_size=queue_size)
 model.compile(
     contrastive_optimizer=keras.optimizers.Adam(),
     probe_optimizer=keras.optimizers.Adam(),
+    jit_compile=False,
 )
 pretrain_history = model.fit(
     train_dataset, epochs=num_epochs, validation_data=test_dataset
@@ -551,6 +494,7 @@ finetuning_model.compile(
     optimizer=keras.optimizers.Adam(),
     loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
     metrics=[keras.metrics.SparseCategoricalAccuracy(name="acc")],
+    jit_compile=False,
 )
 
 finetuning_history = finetuning_model.fit(
