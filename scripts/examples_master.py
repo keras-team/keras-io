@@ -356,6 +356,7 @@ EXAMPLES_MASTER = {
                     "path": "vivit",
                     "title": "Video Vision Transformer",
                     "subcategory": "Video",
+                    "keras_3": True,
                 },
                 {
                     "path": "bit",
