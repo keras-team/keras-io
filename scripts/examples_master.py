@@ -327,6 +327,12 @@ EXAMPLES_MASTER = {
                     "title": "Metric learning for image similarity search using TensorFlow Similarity",
                     "subcategory": "Image similarity search",
                 },
+                {
+                    "path": "nnclr",
+                    "title": "Self-supervised contrastive learning with NNCLR",
+                    "subcategory": "Image similarity search",
+                    "keras_3": True,
+                },
                 # Video
                 {
                     "path": "video_classification",
