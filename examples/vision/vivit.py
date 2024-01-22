@@ -2,7 +2,7 @@
 Title: Video Vision Transformer
 Author: [Aritra Roy Gosthipaty](https://twitter.com/ariG23498), [Ayush Thakur](https://twitter.com/ayushthakur0) (equal contribution)
 Date created: 2022/01/12
-Last modified:  2024/01/13
+Last modified:  2024/01/15
 Description: A Transformer-based architecture for video classification.
 Accelerator: GPU
 """
@@ -30,8 +30,8 @@ and a number of Transformer variants to model video clips. We implement
 the embedding scheme and one of the variants of the Transformer
 architecture, for simplicity.
 
-This example requires the `medmnist`
-package, which can be installed by running the code cell below.
+This example requires  `medmnist` package, which can be installed
+by running the code cell below.
 """
 
 """shell
@@ -48,11 +48,9 @@ import imageio
 import medmnist
 import ipywidgets
 import numpy as np
-
+import tensorflow as tf  # for data preprocessing only
 import keras
-import tensorflow as tf
-from keras import layers
-from keras import ops
+from keras import layers, ops
 
 # Setting seed for reproducibility
 SEED = 42
@@ -139,15 +137,17 @@ prepared_dataset = download_and_prepare_dataset(info)
 """
 
 
-def preprocess(frames, label):
+def preprocess(frames: tf.Tensor, label: tf.Tensor):
     """Preprocess the frames tensors and parse the labels."""
     # Preprocess images
-    frames = ops.cast(frames, "float32")
-    frames = ops.expand_dims(
-        frames, axis=-1
-    )  # The new axis is to help for further processing with Conv3D layers
+    frames = tf.image.convert_image_dtype(
+        frames[
+            ..., tf.newaxis
+        ],  # The new axis is to help for further processing with Conv3D layers
+        tf.float32,
+    )
     # Parse label
-    label = ops.cast(label, "float32")
+    label = tf.cast(label, tf.float32)
     return frames, label
 
 
@@ -234,7 +234,7 @@ class PositionalEncoder(layers.Layer):
         self.position_embedding = layers.Embedding(
             input_dim=num_tokens, output_dim=self.embed_dim
         )
-        self.positions = ops.arange(start=0, stop=num_tokens, step=1)
+        self.positions = ops.arange(0, num_tokens, 1)
 
     def call(self, encoded_tokens):
         # Encode the positions and add it to the encoded tokens
@@ -294,8 +294,8 @@ def create_vivit_classifier(
         x3 = layers.LayerNormalization(epsilon=1e-6)(x2)
         x3 = keras.Sequential(
             [
-                layers.Dense(units=embed_dim * 4, activation="gelu"),
-                layers.Dense(units=embed_dim, activation="gelu"),
+                layers.Dense(units=embed_dim * 4, activation=ops.gelu),
+                layers.Dense(units=embed_dim, activation=ops.gelu),
             ]
         )(x3)
 
@@ -366,9 +366,9 @@ videos = []
 
 for i, (testsample, label) in enumerate(zip(testsamples, labels)):
     # Generate gif
-    testsample = ops.reshape(testsample, (-1, 28, 28))
+    testsample = np.reshape(testsample.numpy(), (-1, 28, 28))
     with io.BytesIO() as gif:
-        imageio.mimsave(gif, (testsample.numpy() * 255).astype("uint8"), "GIF", fps=5)
+        imageio.mimsave(gif, (testsample * 255).astype("uint8"), "GIF", fps=5)
         videos.append(gif.getvalue())
 
     # Get model prediction
