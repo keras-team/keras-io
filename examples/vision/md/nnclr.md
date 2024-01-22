@@ -2,7 +2,7 @@
 
 **Author:** [Rishit Dagli](https://twitter.com/rishit_dagli)<br>
 **Date created:** 2021/09/13<br>
-**Last modified:** 2024/01/21<br>
+**Last modified:** 2021/09/13<br>
 **Description:** Implementation of NNCLR, a self-supervised learning method for computer vision.
 
 
@@ -113,13 +113,8 @@ Consider using the `--user` option or check the permissions.
 import matplotlib.pyplot as plt
 import tensorflow as tf
 import tensorflow_datasets as tfds
-import os
-
-os.environ["KERAS_BACKEND"] = "tensorflow"
-import keras
-import keras_cv
-from keras import ops
-from keras import layers
+from tensorflow import keras
+from tensorflow.keras import layers
 ```
 
 ---
@@ -215,14 +210,18 @@ Generating splits...:   0%|          | 0/3 [00:00<?, ? splits/s]
 
 Generating train examples...:   0%|          | 0/5000 [00:00<?, ? examples/s]
 
-2024-01-21 17:09:18.680092: I external/local_tsl/tsl/cuda/cudart_stub.cc:31] Could not find cuda drivers on your machine, GPU will not be used.
-2024-01-21 17:09:19.511196: E external/local_xla/xla/stream_executor/cuda/cuda_dnn.cc:9261] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered
-2024-01-21 17:09:19.511485: E external/local_xla/xla/stream_executor/cuda/cuda_fft.cc:607] Unable to register cuFFT factory: Attempting to register factory for plugin cuFFT when one has already been registered
-2024-01-21 17:09:19.648782: E external/local_xla/xla/stream_executor/cuda/cuda_blas.cc:1515] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
-2024-01-21 17:09:19.862449: I external/local_tsl/tsl/cuda/cudart_stub.cc:31] Could not find cuda drivers on your machine, GPU will not be used.
-2024-01-21 17:09:19.864743: I tensorflow/core/platform/cpu_feature_guard.cc:182] This TensorFlow binary is optimized to use available CPU instructions in performance-critical operations.
-To enable the following instructions: AVX2 FMA, in other operations, rebuild TensorFlow with the appropriate compiler flags.
-2024-01-21 17:09:29.922392: W tensorflow/compiler/tf2tensorrt/utils/py_utils.cc:38] TF-TRT Warning: Could not find TensorRT
+2021-09-18 06:28:15.807796: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:937] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
+2021-09-18 06:28:15.924117: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:937] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
+2021-09-18 06:28:15.924804: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:937] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
+2021-09-18 06:28:15.927672: I tensorflow/core/platform/cpu_feature_guard.cc:142] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  AVX2 FMA
+To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
+2021-09-18 06:28:15.928626: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:937] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
+2021-09-18 06:28:15.929321: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:937] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
+2021-09-18 06:28:15.930011: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:937] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
+2021-09-18 06:28:17.910528: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:937] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
+2021-09-18 06:28:17.911198: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:937] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
+2021-09-18 06:28:17.911790: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:937] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
+2021-09-18 06:28:17.912414: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1510] Created device /job:localhost/replica:0/task:0/device:GPU:0 with 14684 MB memory:  -> device: 0, name: Tesla V100-SXM2-16GB, pci bus id: 0000:00:04.0, compute capability: 7.0
 
 Shuffling stl10-train.tfrecord...:   0%|          | 0/5000 [00:00<?, ? examples/s]
 
@@ -255,7 +254,76 @@ augmentation pipelines are:
 Since NNCLR is less dependent on complex augmentations, we will only use random
 crops and random brightness for augmenting the input images.
 
+### Random Resized Crops
 
+
+```python
+
+class RandomResizedCrop(layers.Layer):
+    def __init__(self, scale, ratio):
+        super().__init__()
+        self.scale = scale
+        self.log_ratio = (tf.math.log(ratio[0]), tf.math.log(ratio[1]))
+
+    def call(self, images):
+        batch_size = tf.shape(images)[0]
+        height = tf.shape(images)[1]
+        width = tf.shape(images)[2]
+
+        random_scales = tf.random.uniform((batch_size,), self.scale[0], self.scale[1])
+        random_ratios = tf.exp(
+            tf.random.uniform((batch_size,), self.log_ratio[0], self.log_ratio[1])
+        )
+
+        new_heights = tf.clip_by_value(tf.sqrt(random_scales / random_ratios), 0, 1)
+        new_widths = tf.clip_by_value(tf.sqrt(random_scales * random_ratios), 0, 1)
+        height_offsets = tf.random.uniform((batch_size,), 0, 1 - new_heights)
+        width_offsets = tf.random.uniform((batch_size,), 0, 1 - new_widths)
+
+        bounding_boxes = tf.stack(
+            [
+                height_offsets,
+                width_offsets,
+                height_offsets + new_heights,
+                width_offsets + new_widths,
+            ],
+            axis=1,
+        )
+        images = tf.image.crop_and_resize(
+            images, bounding_boxes, tf.range(batch_size), (height, width)
+        )
+        return images
+
+```
+
+### Random Brightness
+
+
+```python
+
+class RandomBrightness(layers.Layer):
+    def __init__(self, brightness):
+        super().__init__()
+        self.brightness = brightness
+
+    def blend(self, images_1, images_2, ratios):
+        return tf.clip_by_value(ratios * images_1 + (1.0 - ratios) * images_2, 0, 1)
+
+    def random_brightness(self, images):
+        # random interpolation/extrapolation between the image and darkness
+        return self.blend(
+            images,
+            0,
+            tf.random.uniform(
+                (tf.shape(images)[0], 1, 1, 1), 1 - self.brightness, 1 + self.brightness
+            ),
+        )
+
+    def call(self, images):
+        images = self.random_brightness(images)
+        return images
+
+```
 
 ### Prepare augmentation module
 
@@ -268,12 +336,8 @@ def augmenter(brightness, name, scale):
             layers.Input(shape=input_shape),
             layers.Rescaling(1 / 255),
             layers.RandomFlip("horizontal"),
-            keras_cv.layers.RandomCropAndResize(
-                target_size=(input_shape[0], input_shape[1]),
-                crop_area_factor=scale,
-                aspect_ratio_factor=(3 / 4, 4 / 3),
-            ),
-            keras_cv.layers.RandomBrightness(factor=brightness, value_range=(0.0, 1.0)),
+            RandomResizedCrop(scale=scale, ratio=(3 / 4, 4 / 3)),
+            RandomBrightness(brightness=brightness),
         ],
         name=name,
     )
@@ -345,11 +409,9 @@ class NNCLR(keras.Model):
         self.temperature = temperature
 
         feature_dimensions = self.encoder.output_shape[1]
-        self.feature_queue = keras.Variable(
-            keras.utils.normalize(
-                keras.random.normal(shape=(queue_size, feature_dimensions)),
-                axis=1,
-                order=2,
+        self.feature_queue = tf.Variable(
+            tf.math.l2_normalize(
+                tf.random.normal(shape=(queue_size, feature_dimensions)), axis=1
             ),
             trainable=False,
         )
@@ -360,79 +422,80 @@ class NNCLR(keras.Model):
         self.probe_optimizer = probe_optimizer
 
     def nearest_neighbour(self, projections):
-        support_similarities = ops.matmul(projections, ops.tranpose(self.feature_queue))
-        nn_projections = ops.take(
-            self.feature_queue, ops.argmax(support_similarities, axis=1), axis=0
+        support_similarities = tf.matmul(
+            projections, self.feature_queue, transpose_b=True
         )
-        return projections + ops.stop_gradient(nn_projections - projections)
+        nn_projections = tf.gather(
+            self.feature_queue, tf.argmax(support_similarities, axis=1), axis=0
+        )
+        return projections + tf.stop_gradient(nn_projections - projections)
 
     def update_contrastive_accuracy(self, features_1, features_2):
-        features_1 = keras.utils.normalize(features_1, axis=1, order=2)
-        features_2 = keras.utils.normalize(features_2, axis=1, order=2)
-        similarities = ops.matmul(features_1, ops.tranpose(features_2))
-        batch_size = ops.shape(features_1)[0]
-        contrastive_labels = ops.arange(batch_size)
+        features_1 = tf.math.l2_normalize(features_1, axis=1)
+        features_2 = tf.math.l2_normalize(features_2, axis=1)
+        similarities = tf.matmul(features_1, features_2, transpose_b=True)
+
+        batch_size = tf.shape(features_1)[0]
+        contrastive_labels = tf.range(batch_size)
         self.contrastive_accuracy.update_state(
-            ops.concatenate([contrastive_labels, contrastive_labels], axis=0),
-            ops.concatenate([similarities, ops.transpose(similarities)], axis=0),
+            tf.concat([contrastive_labels, contrastive_labels], axis=0),
+            tf.concat([similarities, tf.transpose(similarities)], axis=0),
         )
 
     def update_correlation_accuracy(self, features_1, features_2):
-        features_1 = (features_1 - ops.mean(features_1, axis=0)) / ops.std(
-            features_1, axis=0
-        )
-        features_2 = (features_2 - ops.mean(features_2, axis=0)) / ops.std(
-            features_2, axis=0
-        )
+        features_1 = (
+            features_1 - tf.reduce_mean(features_1, axis=0)
+        ) / tf.math.reduce_std(features_1, axis=0)
+        features_2 = (
+            features_2 - tf.reduce_mean(features_2, axis=0)
+        ) / tf.math.reduce_std(features_2, axis=0)
 
-        batch_size = ops.shape(features_1)[0]
+        batch_size = tf.shape(features_1, out_type=tf.float32)[0]
         cross_correlation = (
-            ops.matmul(ops.tranpose(features_1), features_2) / batch_size
+            tf.matmul(features_1, features_2, transpose_a=True) / batch_size
         )
 
-        feature_dim = ops.shape(features_1)[1]
-        correlation_labels = ops.arange(feature_dim)
+        feature_dim = tf.shape(features_1)[1]
+        correlation_labels = tf.range(feature_dim)
         self.correlation_accuracy.update_state(
-            ops.concatenate([correlation_labels, correlation_labels], axis=0),
-            ops.concatenate(
-                [cross_correlation, ops.transpose(cross_correlation)], axis=0
-            ),
+            tf.concat([correlation_labels, correlation_labels], axis=0),
+            tf.concat([cross_correlation, tf.transpose(cross_correlation)], axis=0),
         )
 
     def contrastive_loss(self, projections_1, projections_2):
-        projections_1 = keras.utils.normalize(projections_1, axis=1, order=2)
-        projections_2 = keras.utils.normalize(projections_2, axis=1, order=2)
+        projections_1 = tf.math.l2_normalize(projections_1, axis=1)
+        projections_2 = tf.math.l2_normalize(projections_2, axis=1)
 
         similarities_1_2_1 = (
-            ops.matmul(
-                self.nearest_neighbour(projections_1), ops.transpose(projections_2)
+            tf.matmul(
+                self.nearest_neighbour(projections_1), projections_2, transpose_b=True
             )
             / self.temperature
         )
         similarities_1_2_2 = (
-             ops.matmul(
-                projections_2, ops.tranpose(self.nearest_neighbour(projections_1))
+            tf.matmul(
+                projections_2, self.nearest_neighbour(projections_1), transpose_b=True
             )
             / self.temperature
         )
 
         similarities_2_1_1 = (
-            ops.matmul(
-                self.nearest_neighbour(projections_2), ops.tranpose(projections_1)
+            tf.matmul(
+                self.nearest_neighbour(projections_2), projections_1, transpose_b=True
             )
             / self.temperature
         )
         similarities_2_1_2 = (
-            ops.matmul(
-                projections_1, ops.tranpose(self.nearest_neighbour(projections_2))
+            tf.matmul(
+                projections_1, self.nearest_neighbour(projections_2), transpose_b=True
             )
             / self.temperature
         )
 
-        batch_size = ops.shape(projections_1)[0]
-        contrastive_labels = ops.arange(batch_size)
+        batch_size = tf.shape(projections_1)[0]
+        contrastive_labels = tf.range(batch_size)
         loss = keras.losses.sparse_categorical_crossentropy(
-            ops.concatenate(
+            tf.concat(
                 [
                     contrastive_labels,
                     contrastive_labels,
@@ -441,7 +504,7 @@ class NNCLR(keras.Model):
                 ],
                 axis=0,
             ),
-            ops.concatenate(
+            tf.concat(
                 [
                     similarities_1_2_1,
                     similarities_1_2_2,
@@ -454,13 +517,13 @@ class NNCLR(keras.Model):
         )
 
         self.feature_queue.assign(
-            ops.concatenate([projections_1, self.feature_queue[:-batch_size]], axis=0)
+            tf.concat([projections_1, self.feature_queue[:-batch_size]], axis=0)
         )
         return loss
 
     def train_step(self, data):
         (unlabeled_images, _), (labeled_images, labels) = data
-        images = ops.concatenate((unlabeled_images, labeled_images), axis=0)
+        images = tf.concat((unlabeled_images, labeled_images), axis=0)
         augmented_images_1 = self.contrastive_augmenter(images)
         augmented_images_2 = self.contrastive_augmenter(images)
 
@@ -548,7 +611,6 @@ model = NNCLR(temperature=temperature, queue_size=queue_size)
 model.compile(
     contrastive_optimizer=keras.optimizers.Adam(),
     probe_optimizer=keras.optimizers.Adam(),
-    jit_compile=False,
 )
 pretrain_history = model.fit(
     train_dataset, epochs=num_epochs, validation_data=test_dataset
@@ -558,60 +620,59 @@ pretrain_history = model.fit(
 <div class="k-default-codeblock">
 ```
 Epoch 1/25
-WARNING:tensorflow:Using a while_loop for converting RngReadAndSkip cause there is no registered converter for this op.
-WARNING:tensorflow:Using a while_loop for converting Bitcast cause there is no registered converter for this op.
-WARNING:tensorflow:Using a while_loop for converting Bitcast cause there is no registered converter for this op.
-WARNING:tensorflow:Using a while_loop for converting StatelessRandomUniformV2 cause there is no registered converter for this op.
-200/200 [==============================] - 46s 125ms/step - c_loss: 3.2847 - c_acc: 0.4083 - r_acc: 0.4421 - p_loss: 2.2195 - p_acc: 0.1298 - val_p_loss: 2.1121 - val_p_acc: 0.2483
-Epoch 2/25
-200/200 [==============================] - 44s 123ms/step - c_loss: 3.0548 - c_acc: 0.4996 - r_acc: 0.4427 - p_loss: 2.0976 - p_acc: 0.1604 - val_p_loss: 1.9856 - val_p_acc: 0.2827
-Epoch 3/25
-200/200 [==============================] - 43s 121ms/step - c_loss: 2.8195 - c_acc: 0.5898 - r_acc: 0.4433 - p_loss: 1.9762 - p_acc: 0.1910 - val_p_loss: 1.8799 - val_p_acc: 0.3255
-Epoch 4/25
-200/200 [==============================] - 42s 119ms/step - c_loss: 2.5867 - c_acc: 0.6812 - r_acc: 0.4439 - p_loss: 1.8550 - p_acc: 0.2216 - val_p_loss: 1.7805 - val_p_acc: 0.3410
-Epoch 5/25
-200/200 [==============================] - 41s 117ms/step - c_loss: 2.3545 - c_acc: 0.7726 - r_acc: 0.4445 - p_loss: 1.7338 - p_acc: 0.2522 - val_p_loss: 1.7508 - val_p_acc: 0.3562
-Epoch 6/25
-200/200 [==============================] - 40s 115ms/step - c_loss: 2.1242 - c_acc: 0.8630 - r_acc: 0.4451 - p_loss: 1.6126 - p_acc: 0.2828 - val_p_loss: 1.6986 - val_p_acc: 0.3657
-Epoch 7/25
-200/200 [==============================] - 39s 113ms/step - c_loss: 1.8918 - c_acc: 0.9532 - r_acc: 0.4457 - p_loss: 1.4914 - p_acc: 0.3134 - val_p_loss: 1.6755 - val_p_acc: 0.3807
-Epoch 8/25
-200/200 [==============================] - 38s 111ms/step - c_loss: 1.6595 - c_acc: 0.9899 - r_acc: 0.4463 - p_loss: 1.3702 - p_acc: 0.3440 - val_p_loss: 1.6962 - val_p_acc: 0.3771
-Epoch 9/25
-200/200 [==============================] - 37s 109ms/step - c_loss: 1.4272 - c_acc: 0.9955 - r_acc: 0.4469 - p_loss: 1.2490 - p_acc: 0.3746 - val_p_loss: 1.6273 - val_p_acc: 0.3846
-Epoch 10/25
-200/200 [==============================] - 36s 107ms/step - c_loss: 1.1949 - c_acc: 0.9999 - r_acc: 0.4475 - p_loss: 1.1268 - p_acc: 0.4052 - val_p_loss: 1.5887 - val_p_acc: 0.3911
-Epoch 11/25
-200/200 [==============================] - 35s 105ms/step - c_loss: 0.9627 - c_acc: 0.9999 - r_acc: 0.4481 - p_loss: 1.0046 - p_acc: 0.4358 - val_p_loss: 1.5561 - val_p_acc: 0.3902
-Epoch 12/25
-200/200 [==============================] - 34s 103ms/step - c_loss: 0.7304 - c_acc: 0.9999 - r_acc: 0.4487 - p_loss: 0.8824 - p_acc: 0.4664 - val_p_loss: 1.6117 - val_p_acc: 0.4062
-Epoch 13/25
-200/200 [==============================] - 33s 101ms/step - c_loss: 0.4981 - c_acc: 0.9999 - r_acc: 0.4493 - p_loss: 0.7602 - p_acc: 0.4970 - val_p_loss: 1.5959 - val_p_acc: 0.3965
-Epoch 14/25
-200/200 [==============================] - 32s 99ms/step - c_loss: 0.2658 - c_acc: 0.9999 - r_acc: 0.4499 - p_loss: 0.6380 - p_acc: 0.5276 - val_p_loss: 1.5237 - val_p_acc: 0.3971
-Epoch 15/25
-200/200 [==============================] - 31s 97ms/step - c_loss: 0.0335 - c_acc: 0.9999 - r_acc: 0.4505 - p_loss: 0.5158 - p_acc: 0.5582 - val_p_loss: 1.5431 - val_p_acc: 0.4121
-Epoch 16/25
-200/200 [==============================] - 30s 95ms/step - c_loss: 0.1910 - c_acc: 0.9999 - r_acc: 0.4511 - p_loss: 0.3936 - p_acc: 0.5888 - val_p_loss: 1.5567 - val_p_acc: 0.4108
-Epoch 17/25
-200/200 [==============================] - 29s 93ms/step - c_loss: 0.3484 - c_acc: 0.9999 - r_acc: 0.4517 - p_loss: 0.2714 - p_acc: 0.6194 - val_p_loss: 1.6413 - val_p_acc: 0.4040
-Epoch 18/25
-200/200 [==============================] - 28s 91ms/step - c_loss: 0.5058 - c_acc: 0.9999 - r_acc: 0.4523 - p_loss: 0.1492 - p_acc: 0.6500 - val_p_loss: 1.5944 - val_p_acc: 0.4164
-Epoch 19/25
-200/200 [==============================] - 27s 89ms/step - c_loss: 0.6633 - c_acc: 0.9999 - r_acc: 0.4529 - p_loss: 0.0270 - p_acc: 0.6806 - val_p_loss: 1.5617 - val_p_acc: 0.4136
-Epoch 20/25
-200/200 [==============================] - 26s 87ms/step - c_loss: 0.8207 - c_acc: 0.9999 - r_acc: 0.4535 - p_loss: 0.2086 - p_acc: 0.7112 - val_p_loss: 1.5843 - val_p_acc: 0.4052
-Epoch 21/25
-200/200 [==============================] - 25s 85ms/step - c_loss: 0.9781 - c_acc: 0.9999 - r_acc: 0.4541 - p_loss: 0.3902 - p_acc: 0.7418 - val_p_loss: 1.5242 - val_p_acc: 0.4151
-Epoch 22/25
-200/200 [==============================] - 24s 83ms/step - c_loss: 1.1355 - c_acc: 0.9920 - r_acc: 0.4547 - p_loss: 0.5718 - p_acc: 0.7724 - val_p_loss: 1.6004 - val_p_acc: 0.4182
-Epoch 23/25
-200/200 [==============================] - 23s 81ms/step - c_loss: 1.2929 - c_acc: 0.9841 - r_acc: 0.4553 - p_loss: 0.7534 - p_acc: 0.8030 - val_p_loss: 1.6552 - val_p_acc: 0.4057
-Epoch 24/25
-200/200 [==============================] - 28s 126ms/step - c_loss: 1.3291 - c_acc: 0.9260 - r_acc: 0.4599 - p_loss: 1.5494 - p_acc: 0.4518 - val_p_loss: 1.5957 - val_p_acc: 0.4169
-Epoch 25/25
-200/200 [==============================] - 27s 123ms/step - c_loss: 1.2963 - c_acc: 0.9281 - r_acc: 0.4613 - p_loss: 1.5282 - p_acc: 0.4517 - val_p_loss: 1.6376 - val_p_acc: 0.4181
 
+2021-09-18 06:33:53.688856: I tensorflow/compiler/mlir/mlir_graph_optimization_pass.cc:185] None of the MLIR Optimization Passes are enabled (registered 2)
+2021-09-18 06:34:01.908683: I tensorflow/stream_executor/cuda/cuda_dnn.cc:369] Loaded cuDNN version 8005
+
+200/200 [==============================] - 46s 125ms/step - c_loss: 3.2890 - c_acc: 0.4006 - r_acc: 0.4409 - p_loss: 2.2239 - p_acc: 0.1201 - val_p_loss: 2.1178 - val_p_acc: 0.2426
+Epoch 2/25
+200/200 [==============================] - 27s 124ms/step - c_loss: 2.1876 - c_acc: 0.6887 - r_acc: 0.4467 - p_loss: 2.0128 - p_acc: 0.2492 - val_p_loss: 1.9811 - val_p_acc: 0.2966
+Epoch 3/25
+200/200 [==============================] - 27s 124ms/step - c_loss: 1.9057 - c_acc: 0.7590 - r_acc: 0.4452 - p_loss: 1.9197 - p_acc: 0.2945 - val_p_loss: 1.8854 - val_p_acc: 0.3194
+Epoch 4/25
+200/200 [==============================] - 27s 123ms/step - c_loss: 1.7300 - c_acc: 0.8085 - r_acc: 0.4469 - p_loss: 1.8433 - p_acc: 0.3213 - val_p_loss: 1.7860 - val_p_acc: 0.3347
+Epoch 5/25
+200/200 [==============================] - 26s 121ms/step - c_loss: 1.6209 - c_acc: 0.8359 - r_acc: 0.4469 - p_loss: 1.7898 - p_acc: 0.3388 - val_p_loss: 1.7563 - val_p_acc: 0.3499
+Epoch 6/25
+200/200 [==============================] - 26s 122ms/step - c_loss: 1.5700 - c_acc: 0.8521 - r_acc: 0.4458 - p_loss: 1.7577 - p_acc: 0.3573 - val_p_loss: 1.7041 - val_p_acc: 0.3596
+Epoch 7/25
+200/200 [==============================] - 27s 124ms/step - c_loss: 1.5209 - c_acc: 0.8662 - r_acc: 0.4476 - p_loss: 1.7131 - p_acc: 0.3763 - val_p_loss: 1.6810 - val_p_acc: 0.3746
+Epoch 8/25
+200/200 [==============================] - 26s 122ms/step - c_loss: 1.4823 - c_acc: 0.8751 - r_acc: 0.4454 - p_loss: 1.6869 - p_acc: 0.3775 - val_p_loss: 1.7017 - val_p_acc: 0.3710
+Epoch 9/25
+200/200 [==============================] - 27s 124ms/step - c_loss: 1.4497 - c_acc: 0.8845 - r_acc: 0.4453 - p_loss: 1.6572 - p_acc: 0.3748 - val_p_loss: 1.6328 - val_p_acc: 0.3785
+Epoch 10/25
+200/200 [==============================] - 26s 122ms/step - c_loss: 1.4338 - c_acc: 0.8903 - r_acc: 0.4455 - p_loss: 1.6426 - p_acc: 0.3898 - val_p_loss: 1.5942 - val_p_acc: 0.3850
+Epoch 11/25
+200/200 [==============================] - 26s 122ms/step - c_loss: 1.4239 - c_acc: 0.8967 - r_acc: 0.4457 - p_loss: 1.6179 - p_acc: 0.3865 - val_p_loss: 1.5616 - val_p_acc: 0.3841
+Epoch 12/25
+200/200 [==============================] - 27s 124ms/step - c_loss: 1.3998 - c_acc: 0.9000 - r_acc: 0.4474 - p_loss: 1.5955 - p_acc: 0.4014 - val_p_loss: 1.6176 - val_p_acc: 0.4001
+Epoch 13/25
+200/200 [==============================] - 26s 123ms/step - c_loss: 1.3943 - c_acc: 0.9052 - r_acc: 0.4467 - p_loss: 1.5810 - p_acc: 0.4076 - val_p_loss: 1.6018 - val_p_acc: 0.3904
+Epoch 14/25
+200/200 [==============================] - 26s 122ms/step - c_loss: 1.3778 - c_acc: 0.9084 - r_acc: 0.4506 - p_loss: 1.5622 - p_acc: 0.4237 - val_p_loss: 1.5296 - val_p_acc: 0.3910
+Epoch 15/25
+200/200 [==============================] - 27s 124ms/step - c_loss: 1.3654 - c_acc: 0.9094 - r_acc: 0.4499 - p_loss: 1.5616 - p_acc: 0.4218 - val_p_loss: 1.5490 - val_p_acc: 0.4060
+Epoch 16/25
+200/200 [==============================] - 27s 124ms/step - c_loss: 1.3615 - c_acc: 0.9127 - r_acc: 0.4500 - p_loss: 1.5478 - p_acc: 0.4083 - val_p_loss: 1.5626 - val_p_acc: 0.4047
+Epoch 17/25
+200/200 [==============================] - 27s 123ms/step - c_loss: 1.3519 - c_acc: 0.9153 - r_acc: 0.4503 - p_loss: 1.5442 - p_acc: 0.4276 - val_p_loss: 1.6472 - val_p_acc: 0.3979
+Epoch 18/25
+200/200 [==============================] - 27s 123ms/step - c_loss: 1.3518 - c_acc: 0.9163 - r_acc: 0.4523 - p_loss: 1.5314 - p_acc: 0.4202 - val_p_loss: 1.6003 - val_p_acc: 0.4103
+Epoch 19/25
+200/200 [==============================] - 27s 123ms/step - c_loss: 1.3362 - c_acc: 0.9199 - r_acc: 0.4518 - p_loss: 1.5273 - p_acc: 0.4245 - val_p_loss: 1.5676 - val_p_acc: 0.4075
+Epoch 20/25
+200/200 [==============================] - 27s 124ms/step - c_loss: 1.3266 - c_acc: 0.9205 - r_acc: 0.4536 - p_loss: 1.5180 - p_acc: 0.4340 - val_p_loss: 1.5902 - val_p_acc: 0.3995
+Epoch 21/25
+200/200 [==============================] - 27s 124ms/step - c_loss: 1.3315 - c_acc: 0.9211 - r_acc: 0.4567 - p_loss: 1.5148 - p_acc: 0.4359 - val_p_loss: 1.5301 - val_p_acc: 0.4092
+Epoch 22/25
+200/200 [==============================] - 27s 123ms/step - c_loss: 1.3216 - c_acc: 0.9207 - r_acc: 0.4579 - p_loss: 1.5201 - p_acc: 0.4270 - val_p_loss: 1.6063 - val_p_acc: 0.4123
+Epoch 23/25
+200/200 [==============================] - 26s 123ms/step - c_loss: 1.3207 - c_acc: 0.9229 - r_acc: 0.4578 - p_loss: 1.5120 - p_acc: 0.4308 - val_p_loss: 1.6611 - val_p_acc: 0.4157
+Epoch 24/25
+200/200 [==============================] - 27s 125ms/step - c_loss: 1.3081 - c_acc: 0.9243 - r_acc: 0.4586 - p_loss: 1.5267 - p_acc: 0.4325 - val_p_loss: 1.6015 - val_p_acc: 0.4111
+Epoch 25/25
+200/200 [==============================] - 27s 123ms/step - c_loss: 1.2987 - c_acc: 0.9282 - r_acc: 0.4599 - p_loss: 1.5115 - p_acc: 0.4404 - val_p_loss: 1.6434 - val_p_acc: 0.4123
 
 ```
 </div>
@@ -641,7 +702,6 @@ finetuning_model.compile(
     optimizer=keras.optimizers.Adam(),
     loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
     metrics=[keras.metrics.SparseCategoricalAccuracy(name="acc")],
-    jit_compile=False,
 )
 
 finetuning_history = finetuning_model.fit(
@@ -652,60 +712,55 @@ finetuning_history = finetuning_model.fit(
 <div class="k-default-codeblock">
 ```
 Epoch 1/25
-WARNING:tensorflow:Using a while_loop for converting RngReadAndSkip cause there is no registered converter for this op.
-WARNING:tensorflow:Using a while_loop for converting Bitcast cause there is no registered converter for this op.
-WARNING:tensorflow:Using a while_loop for converting Bitcast cause there is no registered converter for this op.
-WARNING:tensorflow:Using a while_loop for converting StatelessRandomUniformV2 cause there is no registered converter for this op.
-200/200 [==============================] - 4s 15ms/step - loss: 1.9034 - acc: 0.2819 - val_loss: 1.6183 - val_acc: 0.3754
+200/200 [==============================] - 4s 14ms/step - loss: 1.9094 - acc: 0.2770 - val_loss: 1.6228 - val_acc: 0.3735
 Epoch 2/25
-200/200 [==============================] - 4s 14ms/step - loss: 1.5453 - acc: 0.4297 - val_loss: 1.4769 - val_acc: 0.4318
+200/200 [==============================] - 4s 13ms/step - loss: 1.5537 - acc: 0.4138 - val_loss: 1.4663 - val_acc: 0.4455
 Epoch 3/25
-200/200 [==============================] - 4s 14ms/step - loss: 1.4322 - acc: 0.4716 - val_loss: 1.3994 - val_acc: 0.4659
+200/200 [==============================] - 4s 13ms/step - loss: 1.4502 - acc: 0.4590 - val_loss: 1.4110 - val_acc: 0.4683
 Epoch 4/25
-200/200 [==============================] - 4s 14ms/step - loss: 1.3691 - acc: 0.5042 - val_loss: 1.3348 - val_acc: 0.4997
+200/200 [==============================] - 4s 13ms/step - loss: 1.3705 - acc: 0.4968 - val_loss: 1.3402 - val_acc: 0.4979
 Epoch 5/25
-200/200 [==============================] - 4s 14ms/step - loss: 1.2919 - acc: 0.5341 - val_loss: 1.2853 - val_acc: 0.5273
+200/200 [==============================] - 4s 13ms/step - loss: 1.2894 - acc: 0.5238 - val_loss: 1.2905 - val_acc: 0.5319
 Epoch 6/25
-200/200 [==============================] - 4s 14ms/step - loss: 1.2223 - acc: 0.5593 - val_loss: 1.2662 - val_acc: 0.5229
+200/200 [==============================] - 4s 13ms/step - loss: 1.2331 - acc: 0.5508 - val_loss: 1.2726 - val_acc: 0.5285
 Epoch 7/25
-200/200 [==============================] - 4s 14ms/step - loss: 1.1417 - acc: 0.5874 - val_loss: 1.2084 - val_acc: 0.5523
+200/200 [==============================] - 4s 13ms/step - loss: 1.1543 - acc: 0.5728 - val_loss: 1.2200 - val_acc: 0.5585
 Epoch 8/25
-200/200 [==============================] - 4s 15ms/step - loss: 1.0787 - acc: 0.6171 - val_loss: 1.3145 - val_acc: 0.5076
+200/200 [==============================] - 4s 14ms/step - loss: 1.0924 - acc: 0.6034 - val_loss: 1.3213 - val_acc: 0.5213
 Epoch 9/25
-200/200 [==============================] - 4s 14ms/step - loss: 1.0522 - acc: 0.6368 - val_loss: 1.2697 - val_acc: 0.5321
+200/200 [==============================] - 4s 13ms/step - loss: 1.0575 - acc: 0.6136 - val_loss: 1.2674 - val_acc: 0.5474
 Epoch 10/25
-200/200 [==============================] - 4s 14ms/step - loss: 1.0153 - acc: 0.6453 - val_loss: 1.2203 - val_acc: 0.5476
+200/200 [==============================] - 4s 13ms/step - loss: 1.0196 - acc: 0.6336 - val_loss: 1.2162 - val_acc: 0.5621
 Epoch 11/25
-200/200 [==============================] - 4s 16ms/step - loss: 0.9795 - acc: 0.6517 - val_loss: 1.2022 - val_acc: 0.5598
+200/200 [==============================] - 4s 15ms/step - loss: 0.9818 - acc: 0.6322 - val_loss: 1.2032 - val_acc: 0.5746
 Epoch 12/25
-200/200 [==============================] - 4s 15ms/step - loss: 0.9476 - acc: 0.6714 - val_loss: 1.1947 - val_acc: 0.5562
+200/200 [==============================] - 4s 14ms/step - loss: 0.9608 - acc: 0.6510 - val_loss: 1.2000 - val_acc: 0.5695
 Epoch 13/25
-200/200 [==============================] - 4s 14ms/step - loss: 0.9245 - acc: 0.6872 - val_loss: 1.1284 - val_acc: 0.5758
+200/200 [==============================] - 4s 13ms/step - loss: 0.9295 - acc: 0.6598 - val_loss: 1.1348 - val_acc: 0.5890
 Epoch 14/25
-200/200 [==============================] - 4s 15ms/step - loss: 0.9011 - acc: 0.7038 - val_loss: 1.1058 - val_acc: 0.5954
+200/200 [==============================] - 4s 14ms/step - loss: 0.9131 - acc: 0.6804 - val_loss: 1.1133 - val_acc: 0.6089
 Epoch 15/25
-200/200 [==============================] - 5s 15ms/step - loss: 0.8339 - acc: 0.7183 - val_loss: 1.1106 - val_acc: 0.5978
+200/200 [==============================] - 4s 14ms/step - loss: 0.8418 - acc: 0.6982 - val_loss: 1.1153 - val_acc: 0.6051
 Epoch 16/25
-200/200 [==============================] - 4s 15ms/step - loss: 0.8117 - acc: 0.7258 - val_loss: 1.1688 - val_acc: 0.5936
+200/200 [==============================] - 4s 14ms/step - loss: 0.8300 - acc: 0.6998 - val_loss: 1.1734 - val_acc: 0.6026
 Epoch 17/25
-200/200 [==============================] - 4s 15ms/step - loss: 0.7943 - acc: 0.7347 - val_loss: 1.1343 - val_acc: 0.6109
+200/200 [==============================] - 4s 14ms/step - loss: 0.8190 - acc: 0.7016 - val_loss: 1.1410 - val_acc: 0.6225
 Epoch 18/25
-200/200 [==============================] - 4s 14ms/step - loss: 0.7754 - acc: 0.7444 - val_loss: 1.2063 - val_acc: 0.5844
+200/200 [==============================] - 4s 13ms/step - loss: 0.7935 - acc: 0.7176 - val_loss: 1.2120 - val_acc: 0.5961
 Epoch 19/25
-200/200 [==============================] - 4s 14ms/step - loss: 0.7337 - acc: 0.7567 - val_loss: 1.1897 - val_acc: 0.5945
+200/200 [==============================] - 4s 13ms/step - loss: 0.7528 - acc: 0.7306 - val_loss: 1.1974 - val_acc: 0.6037
 Epoch 20/25
-200/200 [==============================] - 5s 15ms/step - loss: 0.7527 - acc: 0.7509 - val_loss: 1.1084 - val_acc: 0.6112
+200/200 [==============================] - 4s 14ms/step - loss: 0.7735 - acc: 0.7274 - val_loss: 1.1211 - val_acc: 0.6245
 Epoch 21/25
-200/200 [==============================] - 4s 15ms/step - loss: 0.7135 - acc: 0.7627 - val_loss: 1.2842 - val_acc: 0.5679
+200/200 [==============================] - 4s 14ms/step - loss: 0.7384 - acc: 0.7400 - val_loss: 1.2980 - val_acc: 0.5853
 Epoch 22/25
-200/200 [==============================] - 4s 15ms/step - loss: 0.7008 - acc: 0.7711 - val_loss: 1.1004 - val_acc: 0.6074
+200/200 [==============================] - 4s 13ms/step - loss: 0.7198 - acc: 0.7438 - val_loss: 1.1106 - val_acc: 0.6205
 Epoch 23/25
-200/200 [==============================] - 4s 14ms/step - loss: 0.6844 - acc: 0.7786 - val_loss: 1.1809 - val_acc: 0.6077
+200/200 [==============================] - 4s 13ms/step - loss: 0.6972 - acc: 0.7532 - val_loss: 1.1848 - val_acc: 0.6208
 Epoch 24/25
-200/200 [==============================] - 4s 14ms/step - loss: 0.6931 - acc: 0.7652 - val_loss: 1.1696 - val_acc: 0.6023
+200/200 [==============================] - 4s 14ms/step - loss: 0.7054 - acc: 0.7418 - val_loss: 1.1773 - val_acc: 0.6143
 Epoch 25/25
-200/200 [==============================] - 4s 14ms/step - loss: 0.6533 - acc: 0.7873 - val_loss: 1.1889 - val_acc: 0.5969
-
+200/200 [==============================] - 4s 13ms/step - loss: 0.6698 - acc: 0.7614 - val_loss: 1.2016 - val_acc: 0.6033
 
 ```
 </div>
