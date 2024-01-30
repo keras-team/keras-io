@@ -102,7 +102,9 @@ def random_rotate(lowres_img, highres_img):
     """Rotates Images by 90 degrees."""
 
     # Outputs random values from uniform distribution in between 0 to 4
-    rn = ops.cast(keras.random.uniform(shape=(), maxval=4, dtype="float32"), dtype="int32")
+    rn = ops.cast(
+        keras.random.uniform(shape=(), maxval=4, dtype="float32"), dtype="int32"
+    )
     # Here rn signifies number of times the image(s) are rotated by 90 degrees
     return tf.image.rot90(lowres_img, rn), tf.image.rot90(highres_img, rn)
 
@@ -116,12 +118,18 @@ def random_crop(lowres_img, highres_img, hr_crop_size=96, scale=4):
     lowres_crop_size = hr_crop_size // scale  # 96//4=24
     lowres_img_shape = ops.shape(lowres_img)[:2]  # (height,width)
 
-    lowres_width = ops.cast(keras.random.uniform(
-        shape=(), maxval=lowres_img_shape[1] - lowres_crop_size + 1, dtype="float32"
-    ), dtype="int32")
-    lowres_height = ops.cast(keras.random.uniform(
-        shape=(), maxval=lowres_img_shape[0] - lowres_crop_size + 1, dtype="float32"
-    ), dtype="int32")
+    lowres_width = ops.cast(
+        keras.random.uniform(
+            shape=(), maxval=lowres_img_shape[1] - lowres_crop_size + 1, dtype="float32"
+        ),
+        dtype="int32",
+    )
+    lowres_height = ops.cast(
+        keras.random.uniform(
+            shape=(), maxval=lowres_img_shape[0] - lowres_crop_size + 1, dtype="float32"
+        ),
+        dtype="int32",
+    )
 
     highres_width = lowres_width * scale
     highres_height = lowres_height * scale
@@ -273,8 +281,8 @@ class UpsamplingLayer(layers.Layer):
     def __init__(self, factor=2, **kwargs):
         super(UpsamplingLayer, self).__init__(**kwargs)
         self.factor = factor
-        self.conv1 = layers.Conv2D(64 * (factor ** 2), 3, padding="same")
-        self.conv2 = layers.Conv2D(64 * (factor ** 2), 3, padding="same")
+        self.conv1 = layers.Conv2D(64 * (factor**2), 3, padding="same")
+        self.conv2 = layers.Conv2D(64 * (factor**2), 3, padding="same")
 
     def call(self, inputs):
         x = self.conv1(inputs)
