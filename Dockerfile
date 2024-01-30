@@ -2,7 +2,7 @@ FROM python:3.9
 
 COPY requirements.txt ./
 RUN pip install -r requirements.txt
-RUN pip install keras==3.0.2
+RUN pip install keras==3.0.4
 
 COPY ./ ./
 WORKDIR scripts
