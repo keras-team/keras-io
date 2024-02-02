@@ -33,7 +33,7 @@ Payment fraud detection is critical for banks, businesses, and consumers. In Eur
 
 Fraudulent transactions often cannot be detected by looking at transactions in isolation. Instead, fraudulent transactions are detected by looking at patterns across multiple transactions from the same user, to the same merchant, or with other types of relationships. To express these relationships in a way that is understandable by a machine learning model, and to augment features with feature engineering. We use the [Temporian](https://temporian.readthedocs.io/en/latest) preprocessing library.
 
-The processed dataset is a tabular dataset, and we use a Feedforward neural network to learn the patterns of fraud and make predictions.
+We pre-process an event-set dataset into a tabular dataset and use a feed-forward neural network to learn the patterns of fraud and make predictions
 
 ## Loading the dataset
 
@@ -56,7 +56,7 @@ if not os.path.exists(cache_path):
         if counter % (num_files // 10) == 0:
             print(f"[{100 * (counter+1) // num_files}%]", end="", flush=True)
         print(".", end="", flush=True)
-        url = f"https://github.com/Fraud-Detection-Handbook/simulated-data-raw/raw/main/data/{start_date}.pkl"
+        url = f"https://github.com/Fraud-Detection-Handbook/simulated-data-raw/raw/6e67dbd0a3bfe0d7ec33abc4bce5f37cd4ff0d6a/data/{start_date}.pkl"
         dataframes.append(pd.read_pickle(url))
         start_date += datetime.timedelta(days=1)
         counter += 1
@@ -115,7 +115,7 @@ Note the few fraudulent transactions for this client.
 
 ## Preparing the training data
 
-Fraudulent transactions in isslation cannot be detected. Instead, we need to connect related transactions. For each transaction, we compute the sum and count of transactions for the same terminal  in the last `n` days. Because we don't know what is the right value for `n`, we use multiple values for `n` and compute a set of features for each of them.
+Fraudulent transactions in isolation cannot be detected. Instead, we need to connect related transactions. For each transaction, we compute the sum and count of transactions for the same terminal in the last `n` days. Because we don't know the correct value for `n`, we use multiple values for `n` and compute a set of features for each of them.
 """
 
 # Group the transactions per terminal
@@ -205,7 +205,7 @@ print("The model input features:")
 input_feature_names
 
 """
-For neural networks to work correctly, numerical input must be normalized. A common approach is to apply z-normalization, which involves subtracting the mean and dividing by the standard deviation estimated the training data to each value. In forecasting, such z-normalization is not recommended as it would lead to future leakage. Specifically, to classify a transaction at time t, we cannot rely on data after time t since, at serving time when making a prediction at time t, no subsequent data is available yet. In short, at time t, we are limited to using data that precedes or is concurrent with time t.
+For neural networks to work correctly, numerical input must be normalized. A common approach is to apply z-normalization, which involves subtracting the mean and dividing by the standard deviation estimated from the training data to each value. In forecasting, such z-normalization is not recommended as it would lead to future leakage. Specifically, to classify a transaction at time t, we cannot rely on data after time t since, at serving time when making a prediction at time t, no subsequent data is available yet. In short, at time t, we are limited to using data that precedes or is concurrent with time t.
 
 The solution is therefore to apply z-normalization **over time**, which means that we normalize each transaction using the mean and standard deviation computed from the past data **for that transaction**.
 
@@ -228,11 +228,11 @@ normalized_features = normalized_features.rename(values.schema.feature_names())
 print(normalized_features)
 
 """
-One issue is that the first transactions will be normalized using poor estimates of the mean and standard deviation since there are only a few transactions before them. So, we will remove the first week of data from the training dataset.
+The first transactions will be normalized using poor estimates of the mean and standard deviation since there are only a few transactions before them. To mitigate this issue, we remove the first week of data from the training dataset.
 
 Notice that the first values contain NaN. In Temporian, NaN represents missing values, and all operators handle them accordingly. For instance, when calculating a moving average, NaN values are not included in the calculation and do not generate a NaN result.
 
-However, neural networks are not good at handling NaN natively. So, we replace them with zeros.
+However, neural networks cannot natively handle NaN values. So, we replace them with zeros.
 """
 
 normalized_features = normalized_features.fillna(0.0)
@@ -424,7 +424,7 @@ Here are some ideas:
 
 - Train the model on the entire dataset instead of a single month of data.
 - Train the model for more epochs and use early stopping to ensure that the model is fully trained without overfitting.
-- Make the feedforward network more powerful by increasing the number of layers while ensuring that the model is regularized.
+- Make the feed-forward network more powerful by increasing the number of layers while ensuring that the model is regularized.
 - Compute additional preprocessing features. For example, in addition to aggregating transactions by terminal, aggregate transactions by client.
 - Use the Keras Tuner to perform hyperparameter tuning on the model. Note that the parameters of the preprocessing (e.g., the number of days of aggregations) are also hyperparameters that can be tuned.
 """
