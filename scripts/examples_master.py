@@ -756,6 +756,7 @@ EXAMPLES_MASTER = {
                     "path": "gaugan",
                     "title": "GauGAN for conditional image generation",
                     "subcategory": "Image generation",
+                    "keras_3": True,
                 },
                 {
                     "path": "pixelcnn",
