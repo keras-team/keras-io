@@ -169,6 +169,7 @@ EXAMPLES_MASTER = {
                     "path": "3D_image_classification",
                     "title": "3D image classification from CT scans",
                     "subcategory": "3D",
+                    "keras_3": True,
                 },
                 {
                     "path": "depth_estimation",
