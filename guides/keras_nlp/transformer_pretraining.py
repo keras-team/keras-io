@@ -434,7 +434,7 @@ inputs = keras.Input(shape=(SEQ_LENGTH,), dtype=tf.int32)
 
 # Encode and pool the tokens.
 encoded_tokens = encoder_model(inputs)
-pooled_tokens = keras.layers.GlobalAveragePooling1D()(encoded_tokens[0])
+pooled_tokens = keras.layers.GlobalAveragePooling1D()(encoded_tokens)
 
 # Predict an output label.
 outputs = keras.layers.Dense(1, activation="sigmoid")(pooled_tokens)
