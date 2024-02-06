@@ -81,14 +81,7 @@ Downloading data from https://github.com/hasibzunair/3D-image-classification-tut
 
 ```
 </div>
-    
-          0/1065471431 [37m━━━━━━━━━━━━━━━━━━━━  0s 0s/step
 
-<div class="k-default-codeblock">
-```
-
-```
-</div>
  1045162547/1045162547 ━━━━━━━━━━━━━━━━━━━━ 4s 0us/step
 
 
