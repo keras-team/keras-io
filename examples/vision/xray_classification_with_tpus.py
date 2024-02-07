@@ -99,7 +99,10 @@ def get_label(file_path):
     # convert the path to a list of path components
     parts = tf.strings.split(file_path, "/")
     # The second to last is the class-directory
-    return parts[-2] == "PNEUMONIA"
+    if parts[-2] == "PNEUMONIA":
+        return 1
+    else:
+        return 0
 
 
 def decode_img(img):
@@ -223,9 +226,8 @@ The architecture for this CNN has been inspired by this
 [article](https://towardsdatascience.com/deep-learning-for-detecting-pneumonia-from-x-ray-images-fc9a3d9fdba8).
 """
 
-from tensorflow import keras
-from tensorflow.keras import layers
-
+import keras
+from keras import layers
 
 def conv_block(filters, inputs):
     x = layers.SeparableConv2D(filters, 3, activation="relu", padding="same")(inputs)
@@ -322,9 +324,9 @@ the training process when the model starts becoming stagnant, or even worse, whe
 model starts overfitting.
 """
 
-checkpoint_cb = tf.keras.callbacks.ModelCheckpoint("xray_model.h5", save_best_only=True)
+checkpoint_cb = keras.callbacks.ModelCheckpoint("xray_model.h5", save_best_only=True)
 
-early_stopping_cb = tf.keras.callbacks.EarlyStopping(
+early_stopping_cb = keras.callbacks.EarlyStopping(
     patience=10, restore_best_weights=True
 )
 
@@ -335,7 +337,7 @@ implement the exponential learning rate scheduling method below.
 """
 
 initial_learning_rate = 0.015
-lr_schedule = tf.keras.optimizers.schedules.ExponentialDecay(
+lr_schedule = keras.optimizers.schedules.ExponentialDecay(
     initial_learning_rate, decay_steps=100000, decay_rate=0.96, staircase=True
 )
 
@@ -364,12 +366,12 @@ with strategy.scope():
     model = build_model()
 
     METRICS = [
-        tf.keras.metrics.BinaryAccuracy(),
-        tf.keras.metrics.Precision(name="precision"),
-        tf.keras.metrics.Recall(name="recall"),
+        keras.metrics.BinaryAccuracy(),
+        keras.metrics.Precision(name="precision"),
+        keras.metrics.Recall(name="recall"),
     ]
     model.compile(
-        optimizer=tf.keras.optimizers.Adam(learning_rate=lr_schedule),
+        optimizer=keras.optimizers.Adam(learning_rate=lr_schedule),
         loss="binary_crossentropy",
         metrics=METRICS,
     )
@@ -426,7 +428,7 @@ for image, label in test_ds.take(1):
     plt.imshow(image[0] / 255.0)
     plt.title(CLASS_NAMES[label[0].numpy()])
 
-prediction = model.predict(test_ds.take(1))[0]
+prediction = model.predict(test_ds.take(1))
 scores = [1 - prediction, prediction]
 
 for score, name in zip(scores, CLASS_NAMES):
