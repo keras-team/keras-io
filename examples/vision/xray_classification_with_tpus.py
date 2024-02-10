@@ -324,7 +324,7 @@ the training process when the model starts becoming stagnant, or even worse, whe
 model starts overfitting.
 """
 
-checkpoint_cb = keras.callbacks.ModelCheckpoint("xray_model.h5", save_best_only=True)
+checkpoint_cb = keras.callbacks.ModelCheckpoint("xray_model.keras", save_best_only=True)
 
 early_stopping_cb = keras.callbacks.EarlyStopping(
     patience=10, restore_best_weights=True
@@ -428,7 +428,7 @@ for image, label in test_ds.take(1):
     plt.imshow(image[0] / 255.0)
     plt.title(CLASS_NAMES[label[0].numpy()])
 
-prediction = model.predict(test_ds.take(1))
+prediction = model.predict(test_ds.take(1))[0]
 scores = [1 - prediction, prediction]
 
 for score, name in zip(scores, CLASS_NAMES):
