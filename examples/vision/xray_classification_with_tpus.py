@@ -226,6 +226,9 @@ The architecture for this CNN has been inspired by this
 [article](https://towardsdatascience.com/deep-learning-for-detecting-pneumonia-from-x-ray-images-fc9a3d9fdba8).
 """
 
+import os
+os.environ["KERAS_BACKEND"] = "tensorflow"
+
 import keras
 from keras import layers
 
