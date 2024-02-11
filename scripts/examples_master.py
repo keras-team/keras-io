@@ -52,6 +52,7 @@ EXAMPLES_MASTER = {
                     "path": "mobilevit",
                     "title": "A mobile-friendly Transformer-based model for image classification",
                     "subcategory": "Image classification",
+                    "keras_3": True,
                 },
                 {
                     "path": "xray_classification_with_tpus",
