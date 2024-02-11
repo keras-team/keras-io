@@ -564,9 +564,7 @@ class WindowAttention(layers.Layer):
             q_global = ops.repeat(
                 q_global, repeats=B_ // B, axis=0
             )  # num_windows = B_//B => q_global same for all windows in a img
-            q = ops.reshape(
-                q_global, new_shape=[B_, N, self.num_heads, C // self.num_heads]
-            )
+            q = ops.reshape(q_global, [B_, N, self.num_heads, C // self.num_heads])
             q = ops.transpose(q, axes=[0, 2, 1, 3])
         else:
             q, k, v = ops.split(qkv, indices_or_sections=3, axis=0)
@@ -579,11 +577,11 @@ class WindowAttention(layers.Layer):
         attn = q @ ops.transpose(k, axes=[0, 1, 3, 2])
         relative_position_bias = ops.take(
             self.relative_position_bias_table,
-            ops.reshape(self.get_relative_position_index(), new_shape=[-1]),
+            ops.reshape(self.get_relative_position_index(), [-1]),
         )
         relative_position_bias = ops.reshape(
             relative_position_bias,
-            new_shape=[
+            [
                 self.window_size[0] * self.window_size[1],
                 self.window_size[0] * self.window_size[1],
                 -1,
@@ -595,7 +593,7 @@ class WindowAttention(layers.Layer):
         attn = self.attn_drop(attn)
 
         x = ops.transpose((attn @ v), axes=[0, 2, 1, 3])
-        x = ops.reshape(x, new_shape=[B_, N, C])
+        x = ops.reshape(x, [B_, N, C])
         x = self.proj_drop(self.proj(x))
         return x
 
@@ -730,7 +728,7 @@ class Block(layers.Layer):
         # create windows and concat them in batch axis
         x = self.window_partition(x, self.window_size)  # (B_, win_h, win_w, C)
         # flatten patch
-        x = ops.reshape(x, new_shape=[-1, self.window_size * self.window_size, C])
+        x = ops.reshape(x, [-1, self.window_size * self.window_size, C])
         # attention
         if self.global_query:
             x = self.attn([x, q_global])
@@ -754,7 +752,7 @@ class Block(layers.Layer):
         B, H, W, C = ops.shape(x)
         x = ops.reshape(
             x,
-            new_shape=[
+            [
                 -1,
                 H // window_size,
                 window_size,
@@ -764,7 +762,7 @@ class Block(layers.Layer):
             ],
         )
         x = ops.transpose(x, axes=[0, 1, 3, 2, 4, 5])
-        windows = ops.reshape(x, new_shape=[-1, window_size, window_size, C])
+        windows = ops.reshape(x, [-1, window_size, window_size, C])
         return windows
 
     def window_reverse(self, windows, window_size, H, W, C):
@@ -780,7 +778,7 @@ class Block(layers.Layer):
         """
         x = ops.reshape(
             windows,
-            new_shape=[
+            [
                 -1,
                 H // window_size,
                 W // window_size,
@@ -790,7 +788,7 @@ class Block(layers.Layer):
             ],
         )
         x = ops.transpose(x, axes=[0, 1, 3, 2, 4, 5])
-        x = ops.reshape(x, new_shape=[-1, H, W, C])
+        x = ops.reshape(x, [-1, H, W, C])
         return x
 
 

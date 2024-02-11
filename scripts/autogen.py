@@ -44,9 +44,9 @@ EXAMPLES_GH_LOCATION = Path("keras-team") / "keras-io" / "blob" / "master" / "ex
 GUIDES_GH_LOCATION = Path("keras-team") / "keras-io" / "blob" / "master" / "guides"
 KERAS_TEAM_GH = "https://github.com/keras-team"
 PROJECT_URL = {
-    "keras": f"{KERAS_TEAM_GH}/keras/tree/v3.0.2/",
+    "keras": f"{KERAS_TEAM_GH}/keras/tree/v3.0.4/",
     "keras_tuner": f"{KERAS_TEAM_GH}/keras-tuner/tree/v1.4.6/",
-    "keras_cv": f"{KERAS_TEAM_GH}/keras-cv/tree/v0.8.0/",
+    "keras_cv": f"{KERAS_TEAM_GH}/keras-cv/tree/v0.8.1/",
     "keras_nlp": f"{KERAS_TEAM_GH}/keras-nlp/tree/v0.7.0/",
     "tf_keras": f"{KERAS_TEAM_GH}/tf-keras/tree/v2.15.0/",
 }
