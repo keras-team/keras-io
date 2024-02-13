@@ -176,9 +176,9 @@ following:
 
 - Cropping: forces the model to encode different parts of the same image
 similarly, we implement it with the
-[RandomTranslation](https://keras.io/api/layers/preprocessing_layers/image_preprocessing/random_translation/)
+[RandomTranslation](https://keras.io/api/layers/preprocessing_layers/image_augmentation/random_translation/)
 and
-[RandomZoom](https://keras.io/api/layers/preprocessing_layers/image_preprocessing/random_zoom/)
+[RandomZoom](https://keras.io/api/layers/preprocessing_layers/image_augmentation/random_zoom/)
 layers
 - Color jitter: prevents a trivial color histogram-based solution to the task by
 distorting color histograms. A principled way to implement that is by affine

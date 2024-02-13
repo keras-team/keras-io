@@ -49,41 +49,13 @@ KerasCV and KerasNLP can be installed via pip:
 ```
 pip install --upgrade keras-cv
 pip install --upgrade keras-nlp
+pip install --upgrade keras
 ```
 
 Critically, **you should reinstall Keras 3 after installing KerasNLP**.
 This is a temporary step while TensorFlow is pinned to Keras 2, and will no longer be necessary after TensorFlow 2.16.
 The cause is that `keras-nlp` depends on `tensorflow-text`, which will install `tensorflow==2.15`, which will
 overwrite your Keras installation with `keras==2.15`.
-
-
-### GPU dependencies
-
-To make sure you're able to run Keras on GPU, use the following backend-specific requirements files:
-
-- [requirements-jax-cuda.txt](https://github.com/keras-team/keras/blob/master/requirements-jax-cuda.txt)
-- [requirements-tensorflow-cuda.txt](https://github.com/keras-team/keras/blob/master/requirements-tensorflow-cuda.txt)
-- [requirements-torch-cuda.txt](https://github.com/keras-team/keras/blob/master/requirements-torch-cuda.txt)
-
-These install all CUDA-enabled dependencies via pip. They expect a NVIDIA driver to be preinstalled.
-We recommend a clean python environment for each backend to avoid CUDA version mismatches.
-As an example, here is how to create a JAX GPU environment with [Conda](https://docs.conda.io/en/latest/):
-
-```
-conda create -y -n keras-jax python=3.10
-conda activate keras-jax
-pip install -r requirements-jax-cuda.txt
-pip install --upgrade keras
-```
-
-Note that it may not always be possible to use the GPU with multiple backends in the same environment due to conflicting
-dependency requirements between backends.
-The above requirements files only enable GPU usage for one target backends while keeping the other two backends CPU-only.
-We recommend using [Conda](https://docs.conda.io/en/latest/) to maintain three separate environments `keras-jax`, `keras-tensorflow`, `keras-torch`.
-
-If you want to attempt to create a "universal environment" where any backend can use the GPU, we recommend following
-[the dependency versions used by Colab](https://colab.sandbox.google.com/drive/13cpd3wCwEHpsmypY9o6XB6rXgBm5oSxu)
-(which seeks to solve this exact problem).
 
 ---
 
@@ -107,6 +79,44 @@ import keras
 
 **Note:** The backend must be configured before importing Keras, and the backend cannot be changed after the package has been imported.
 
+
+### GPU dependencies
+
+#### Colab or Kaggle
+If you are running on Colab or Kaggle, the GPU should already be configured, with the correct CUDA version. 
+Installing a newer version of CUDA on Colab or Kaggle is typically not possible. Even though pip installers exist,
+they rely on a pre-installed NVIDIA driver and there is no way to update the driver on Colab or Kaggle.
+
+#### Universal GPU environment
+
+If you want to attempt to create a "universal environment" where any backend can use the GPU, we recommend following
+[the dependency versions used by Colab](https://colab.sandbox.google.com/drive/13cpd3wCwEHpsmypY9o6XB6rXgBm5oSxu)
+(which seeks to solve this exact problem). You can install the CUDA driver [from here](https://developer.nvidia.com/cuda-downloads),
+then pip install backends by following their respective CUDA installation instructions:
+[Installing JAX](https://jax.readthedocs.io/en/latest/installation.html),
+[Installing TensorFlow](https://www.tensorflow.org/install),
+[Installing PyTorch](https://pytorch.org/get-started/locally/)
+
+#### Most stable GPU environment
+
+This setup is recommended  if you are a Keras contributor and are running Keras tests. It installs all backends but only
+gives GPU access to one backend at a time, avoiding potentially conflicting dependency requirements between backends.
+You can use the following backend-specific requirements files:
+
+- [requirements-jax-cuda.txt](https://github.com/keras-team/keras/blob/master/requirements-jax-cuda.txt)
+- [requirements-tensorflow-cuda.txt](https://github.com/keras-team/keras/blob/master/requirements-tensorflow-cuda.txt)
+- [requirements-torch-cuda.txt](https://github.com/keras-team/keras/blob/master/requirements-torch-cuda.txt)
+
+These install all CUDA-enabled dependencies via pip. They expect a NVIDIA driver to be preinstalled.
+We recommend a clean python environment for each backend to avoid CUDA version mismatches.
+As an example, here is how to create a JAX GPU environment with [Conda](https://docs.conda.io/en/latest/):
+
+```
+conda create -y -n keras-jax python=3.10
+conda activate keras-jax
+pip install -r requirements-jax-cuda.txt
+pip install --upgrade keras
+```
 ---
 
 ## TensorFlow + Keras 2 backwards compatibility
