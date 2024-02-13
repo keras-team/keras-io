@@ -8,7 +8,7 @@ Accelerator: GPU
 """
 
 """
-This notebook depends on Keras Core, Temporian, and a few other libraries. You can install them as follow:
+This notebook depends on Keras 3, Temporian, and a few other libraries. You can install them as follow:
 
 ```shell
 pip install temporian keras pandas tf-nightly scikit-learn -U
