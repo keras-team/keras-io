@@ -31,9 +31,9 @@ from sklearn.metrics import RocCurveDisplay
 
 Payment fraud detection is critical for banks, businesses, and consumers. In Europe alone, fraudulent transactions were estimated at [€1.89 billion in 2019](https://www.ecb.europa.eu/pub/pdf/cardfraud/ecb.cardfraudreport202110~cac4c418e8.en.pdf). Worldwide, approximately [3.6%](https://www.cybersource.com/content/dam/documents/campaign/fraud-report/global-fraud-report-2022.pdf) of commerce revenue is lost to fraud. In this notebook, we train and evaluate a model to detect fraudulent transactions using the synthetic dataset attached to the book [Reproducible Machine Learning for Credit Card Fraud Detection](https://fraud-detection-handbook.github.io/fraud-detection-handbook/Foreword.html) by Le Borgne et al.
 
-Fraudulent transactions often cannot be detected by looking at transactions in isolation. Instead, fraudulent transactions are detected by looking at patterns across multiple transactions from the same user, to the same merchant, or with other types of relationships. To express these relationships in a way that is understandable by a machine learning model, and to augment features with feature engineering. We use the [Temporian](https://temporian.readthedocs.io/en/latest) preprocessing library.
+Fraudulent transactions often cannot be detected by looking at transactions in isolation. Instead, fraudulent transactions are detected by looking at patterns across multiple transactions from the same user, to the same merchant, or with other types of relationships. To express these relationships in a way that is understandable by a machine learning model, and to augment features with feature engineering, we We use the [Temporian](https://temporian.readthedocs.io/en/latest) preprocessing library.
 
-We pre-process an event-set dataset into a tabular dataset and use a feed-forward neural network to learn the patterns of fraud and make predictions
+We preprocess a transaction dataset into a tabular dataset and use a feed-forward neural network to learn the patterns of fraud and make predictions.
 
 ## Loading the dataset
 
@@ -95,20 +95,20 @@ fraudulent_rate = transactions_dataframe["TX_FRAUD"].mean()
 print("Rate of fraudulent transactions:", fraudulent_rate)
 
 """
-The [pandas dataframe](https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html) is converted into a [Temporian event-set](https://temporian.readthedocs.io/en/latest/reference/temporian/EventSet/), which is better suited for the data exploration and feature preprocessing of the next steps.
+The [pandas dataframe](https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html) is converted into a [Temporian EventSet](https://temporian.readthedocs.io/en/latest/reference/temporian/EventSet/), which is better suited for the data exploration and feature preprocessing of the next steps.
 """
 
-transactions_eventset = tp.from_pandas(
+transactions_evset = tp.from_pandas(
     transactions_dataframe, timestamps="TX_DATETIME"
 )
 
-transactions_eventset
+transactions_evset
 
 """
 It is possible to plot the entire dataset, but the resulting plot will be difficult to read. Instead, we can group the transactions per client.
 """
 
-transactions_eventset.add_index("CUSTOMER_ID").plot(indexes="3774")
+transactions_evset.add_index("CUSTOMER_ID").plot(indexes="3774")
 
 """
 Note the few fraudulent transactions for this client.
@@ -119,7 +119,7 @@ Fraudulent transactions in isolation cannot be detected. Instead, we need to con
 """
 
 # Group the transactions per terminal
-transactions_per_terminal = transactions_eventset.add_index("TERMINAL_ID")
+transactions_per_terminal = transactions_evset.add_index("TERMINAL_ID")
 
 # Moving statistics per terminal
 tmp_features = []
@@ -201,17 +201,17 @@ input_feature_names = [
     k for k in all_data.schema.feature_names() if k.islower()
 ]
 
-print("The model input features:")
+print("The model's input features:")
 input_feature_names
 
 """
-For neural networks to work correctly, numerical input must be normalized. A common approach is to apply z-normalization, which involves subtracting the mean and dividing by the standard deviation estimated from the training data to each value. In forecasting, such z-normalization is not recommended as it would lead to future leakage. Specifically, to classify a transaction at time t, we cannot rely on data after time t since, at serving time when making a prediction at time t, no subsequent data is available yet. In short, at time t, we are limited to using data that precedes or is concurrent with time t.
+For neural networks to work correctly, numerical inputs must be normalized. A common approach is to apply z-normalization, which involves subtracting the mean and dividing by the standard deviation estimated from the training data to each value. In forecasting, such z-normalization is not recommended as it would lead to future leakage. Specifically, to classify a transaction at time t, we cannot rely on data after time t since, at serving time when making a prediction at time t, no subsequent data is available yet. In short, at time t, we are limited to using data that precedes or is concurrent with time t.
 
 The solution is therefore to apply z-normalization **over time**, which means that we normalize each transaction using the mean and standard deviation computed from the past data **for that transaction**.
 
-Future leakage is pernicious. Luckily, Temporian is here to help: The only operator that can cause future leakage is `tp.leak`. If you are not using `tp.leak`, your preprocessing is **guaranteed** not to contain future leakage.
+Future leakage is pernicious. Luckily, Temporian is here to help: the only operator that can cause future leakage is `EventSet.leak()`. If you are not using `EventSet.leak()`, your preprocessing is **guaranteed** not to create future leakage.
 
-**Note:** For advanced pipelines, you can also check programatically that a feature does not depends on a `tp.leak` results.
+**Note:** For advanced pipelines, you can also check programatically that a feature does not depends on an `EventSet.leak()` operation.
 """
 
 # Cast all values (e.g. ints) to floats.
@@ -287,34 +287,34 @@ tp.plot(
 We filter the input features and label in each fold.
 """
 
-train_ds_eventset = normalized_all_data.filter(is_train)
-valid_ds_eventset = normalized_all_data.filter(is_valid)
-test_ds_eventset = normalized_all_data.filter(is_test)
+train_ds_evset = normalized_all_data.filter(is_train)
+valid_ds_evset = normalized_all_data.filter(is_valid)
+test_ds_evset = normalized_all_data.filter(is_test)
 
-print(f"Training examples: {train_ds_eventset.num_events()}")
-print(f"Validation examples: {valid_ds_eventset.num_events()}")
-print(f"Testing examples: {test_ds_eventset.num_events()}")
+print(f"Training examples: {train_ds_evset.num_events()}")
+print(f"Validation examples: {valid_ds_evset.num_events()}")
+print(f"Testing examples: {test_ds_evset.num_events()}")
 
 """
 It is important to split the dataset **after** the features have been computed because some of the features for the training dataset are computed from transactions during the training window.
 
 ## Create TensorFlow datasets
 
-We convert the datasets from event-sets to TensorFlow Datasets as Keras consumes them natively.
+We convert the datasets from EventSets to TensorFlow Datasets as Keras consumes them natively.
 """
 
-non_batched_train_ds = tp.to_tensorflow_dataset(train_ds_eventset)
-non_batched_valid_ds = tp.to_tensorflow_dataset(valid_ds_eventset)
-non_batched_test_ds = tp.to_tensorflow_dataset(test_ds_eventset)
+non_batched_train_ds = tp.to_tensorflow_dataset(train_ds_evset)
+non_batched_valid_ds = tp.to_tensorflow_dataset(valid_ds_evset)
+non_batched_test_ds = tp.to_tensorflow_dataset(test_ds_evset)
 
 """
-The following processing steps are applied using TensorFlow dataset:
+The following processing steps are applied using TensorFlow datasets:
 
 1. The features and labels are separated using `extract_features_and_label` in the format that Keras expects.
 1. The dataset is batched, which means that the examples are grouped into mini-batches.
 1. The training examples are shuffled to improve the quality of mini-batch training.
 
-As we noted before, the dataset is unbalanced in the direction of legitimate transactions. While we want to evaluate our model on this original distribution, neural networks often train poorly on strongly unbalanced datasets. Therefore, we resample the training dataset to a ratio of 80% legitimate / 20% fraudulent using `rejection_resample`.
+As we noted before, the dataset is imbalanced in the direction of legitimate transactions. While we want to evaluate our model on this original distribution, neural networks often train poorly on strongly imbalanced datasets. Therefore, we resample the training dataset to a ratio of 80% legitimate / 20% fraudulent using `rejection_resample`.
 """
 
 
@@ -356,7 +356,7 @@ test_ds = (
 )
 
 """
-We print the first four examples of the training dataset. There is a simple way to identify some of the errors that could have been made above.
+We print the first four examples of the training dataset. This is a simple way to identify some of the errors that could have been made above.
 """
 
 for features, labels in train_ds.take(1):
@@ -390,7 +390,8 @@ model.compile(
 model.fit(train_ds, validation_data=valid_ds)
 
 """
-We evaluate the model on the test dataset."""
+We evaluate the model on the test dataset.
+"""
 
 model.evaluate(test_ds)
 
@@ -412,7 +413,8 @@ Extract the labels from the test set:
 labels = np.concatenate([label for _, label in test_ds])
 
 """
-Finaly, we plot the ROC curve."""
+Finaly, we plot the ROC curve.
+"""
 
 _ = RocCurveDisplay.from_predictions(labels, predictions)
 
