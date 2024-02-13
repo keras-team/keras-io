@@ -57,6 +57,7 @@ EXAMPLES_MASTER = {
                     "path": "xray_classification_with_tpus",
                     "title": "Pneumonia Classification on TPU",
                     "subcategory": "Image classification",
+                    "keras_3": True,
                 },
                 {
                     "path": "cct",
@@ -443,6 +444,7 @@ EXAMPLES_MASTER = {
                     "path": "text_classification_with_transformer",
                     "title": "Text classification with Transformer",
                     "subcategory": "Text classification",
+                    "keras_3": True,
                 },
                 {
                     "path": "text_classification_with_switch_transformer",
@@ -516,6 +518,7 @@ EXAMPLES_MASTER = {
                     "path": "addition_rnn",
                     "title": "Sequence to sequence learning for performing number addition",
                     "subcategory": "Sequence-to-sequence",
+                    "keras_3": True,
                 },
                 # Text similarity search
                 {
