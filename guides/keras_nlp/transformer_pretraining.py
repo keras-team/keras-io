@@ -306,7 +306,7 @@ bag-of-words model we used as a baseline, this model will embed each token accou
 the context in which it appeared.
 """
 
-inputs = keras.Input(shape=(SEQ_LENGTH,), dtype=tf.int32)
+inputs = keras.Input(shape=(SEQ_LENGTH,), dtype="int32")
 
 # Embed our tokens with a positional embedding.
 embedding_layer = keras_nlp.layers.TokenAndPositionEmbedding(
@@ -430,7 +430,7 @@ the encoded tokens together, and use a single dense layer to make a prediction.
 encoder_model = keras.models.load_model("encoder_model.keras", compile=False)
 
 # Take as input the tokenized input.
-inputs = keras.Input(shape=(SEQ_LENGTH,), dtype=tf.int32)
+inputs = keras.Input(shape=(SEQ_LENGTH,), dtype="int32")
 
 # Encode and pool the tokens.
 encoded_tokens = encoder_model(inputs)
