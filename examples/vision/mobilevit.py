@@ -37,7 +37,7 @@ os.environ["KERAS_BACKEND"] = "tensorflow"
 
 import keras
 from keras import layers
-from keras.src.applications import imagenet_utils
+from keras import backend
 
 import tensorflow_datasets as tfds
 
@@ -75,6 +75,23 @@ def conv_block(x, filters=16, kernel_size=3, strides=2):
     )
     return conv_layer(x)
 
+# Reference: https://github.com/keras-team/keras/blob/e3858739d178fe16a0c77ce7fab88b0be6dbbdc7/keras/applications/imagenet_utils.py#L413C17-L435
+
+def correct_pad(inputs, kernel_size):
+    img_dim = 2 if backend.image_data_format() == "channels_first" else 1
+    input_size = inputs.shape[img_dim : (img_dim + 2)]
+    if isinstance(kernel_size, int):
+        kernel_size = (kernel_size, kernel_size)
+    if input_size[0] is None:
+        adjust = (1, 1)
+    else:
+        adjust = (1 - input_size[0] % 2, 1 - input_size[1] % 2)
+    correct = (kernel_size[0] // 2, kernel_size[1] // 2)
+    return (
+        (correct[0] - adjust[0], correct[0]),
+        (correct[1] - adjust[1], correct[1]),
+    )
+
 
 # Reference: https://git.io/JKgtC
 
@@ -85,7 +102,7 @@ def inverted_residual_block(x, expanded_channels, output_channels, strides=1):
     m = keras.activations.swish(m)
 
     if strides == 2:
-        m = layers.ZeroPadding2D(padding=imagenet_utils.correct_pad(m, 3))(m)
+        m = layers.ZeroPadding2D(padding=correct_pad(m, 3))(m)
     m = layers.DepthwiseConv2D(
         3, strides=strides, padding="same" if strides == 1 else "valid", use_bias=False
     )(m)
