@@ -351,9 +351,9 @@ intensive, so even this relatively small Transformer will take some time.
 
 # Create the pretraining model by attaching a masked language model head.
 inputs = {
-    "token_ids": keras.Input(shape=(SEQ_LENGTH,), dtype=tf.int32, name="token_ids"),
+    "token_ids": keras.Input(shape=(SEQ_LENGTH,), dtype="int32", name="token_ids"),
     "mask_positions": keras.Input(
-        shape=(PREDICTIONS_PER_SEQ,), dtype=tf.int32, name="mask_positions"
+        shape=(PREDICTIONS_PER_SEQ,), dtype="int32", name="mask_positions"
     ),
 }
 
