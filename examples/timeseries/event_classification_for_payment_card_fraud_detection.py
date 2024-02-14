@@ -207,7 +207,7 @@ feature_set_2 = tp.glue(*tmp_features)
 """
 Transaction date and time can be correlated with fraud. While each transaction
 has a timestamp, a machine learning model might struggle to consume them
-directly. Instead, we extract various informative calendar features from the 
+directly. Instead, we extract various informative calendar features from the
 timestamps, such as hour, day of the week (e.g., Monday, Tuesday), and day of
 the month (1-31).
 """
