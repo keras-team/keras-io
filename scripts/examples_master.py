@@ -305,6 +305,7 @@ EXAMPLES_MASTER = {
                     "path": "semantic_image_clustering",
                     "title": "Semantic Image Clustering",
                     "subcategory": "Image similarity search",
+                    "keras_3": True,
                 },
                 {
                     "path": "siamese_contrastive",

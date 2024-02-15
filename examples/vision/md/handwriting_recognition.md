@@ -234,7 +234,7 @@ test_labels_cleaned = clean_labels(test_labels)
 ### Building the character vocabulary
 
 Keras provides different preprocessing layers to deal with different modalities of data.
-[This guide](https://keras.io/guides/preprocessing_layers/) provides a comprehensive introduction.
+[This guide](https://keras.io/api/layers/preprocessing_layers/) provides a comprehensive introduction.
 Our example involves preprocessing labels at the character
 level. This means that if there are two labels, e.g. "cat" and "dog", then our character
 vocabulary should be {a, c, d, g, o, t} (without any special tokens). We use the
