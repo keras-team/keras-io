@@ -242,7 +242,7 @@ def create_ffn(hidden_units, dropout_rate, name=None):
 ### Prepare the data for the baseline model
 """
 
-feature_names = set(papers.columns) - {"paper_id", "subject"}
+feature_names = list(set(papers.columns) - {"paper_id", "subject"})
 num_features = len(feature_names)
 num_classes = len(class_idx)
 
