@@ -6,6 +6,7 @@ Last modified: 2024/02/11
 Description: MobileViT for image classification with combined benefits of convolutions and Transformers.
 Accelerator: GPU
 """
+
 """
 ## Introduction
 
@@ -71,11 +72,17 @@ presented in the figure below (taken from the
 
 def conv_block(x, filters=16, kernel_size=3, strides=2):
     conv_layer = layers.Conv2D(
-        filters, kernel_size, strides=strides, activation=keras.activations.swish, padding="same"
+        filters,
+        kernel_size,
+        strides=strides,
+        activation=keras.activations.swish,
+        padding="same",
     )
     return conv_layer(x)
 
+
 # Reference: https://github.com/keras-team/keras/blob/e3858739d178fe16a0c77ce7fab88b0be6dbbdc7/keras/applications/imagenet_utils.py#L413C17-L435
+
 
 def correct_pad(inputs, kernel_size):
     img_dim = 2 if backend.image_data_format() == "channels_first" else 1
@@ -342,7 +349,7 @@ def run_experiment(epochs=epochs):
     mobilevit_xxs = create_mobilevit(num_classes=num_classes)
     mobilevit_xxs.compile(optimizer=optimizer, loss=loss_fn, metrics=["accuracy"])
 
-    # When using `save_weights_only=True` in `ModelCheckpoint`, the filepath provided must end in `.weights.h5`
+    # When using `save_weights_only=True` in `ModelCheckpoint`, the filepath provided must end in `.weights.h5`
     checkpoint_filepath = "/tmp/checkpoint.weights.h5"
     checkpoint_callback = keras.callbacks.ModelCheckpoint(
         checkpoint_filepath,

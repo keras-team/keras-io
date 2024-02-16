@@ -2,7 +2,7 @@
 
 **Author:** [Sayak Paul](https://twitter.com/RisingSayak)<br>
 **Date created:** 2021/10/20<br>
-**Last modified:** 2021/10/20<br>
+**Last modified:** 2024/02/11<br>
 **Description:** MobileViT for image classification with combined benefits of convolutions and Transformers.
 
 
@@ -34,17 +34,16 @@ Note: This example should be run with Tensorflow 2.13 and higher.
 
 
 ```python
+import os
 import tensorflow as tf
 
-from keras.src.applications import imagenet_utils
-# For versions <TF2.13 change the above import to:
-# from keras.applications import imagenet_utils
+os.environ["KERAS_BACKEND"] = "tensorflow"
 
-from tensorflow.keras import layers
-from tensorflow import keras
+import keras
+from keras import layers
+from keras import backend
 
 import tensorflow_datasets as tfds
-import tensorflow_addons as tfa
 
 tfds.disable_progress_bar()
 ```
@@ -80,9 +79,32 @@ presented in the figure below (taken from the
 
 def conv_block(x, filters=16, kernel_size=3, strides=2):
     conv_layer = layers.Conv2D(
-        filters, kernel_size, strides=strides, activation=tf.nn.swish, padding="same"
+        filters,
+        kernel_size,
+        strides=strides,
+        activation=keras.activations.swish,
+        padding="same",
     )
     return conv_layer(x)
+
+
+# Reference: https://github.com/keras-team/keras/blob/e3858739d178fe16a0c77ce7fab88b0be6dbbdc7/keras/applications/imagenet_utils.py#L413C17-L435
+
+
+def correct_pad(inputs, kernel_size):
+    img_dim = 2 if backend.image_data_format() == "channels_first" else 1
+    input_size = inputs.shape[img_dim : (img_dim + 2)]
+    if isinstance(kernel_size, int):
+        kernel_size = (kernel_size, kernel_size)
+    if input_size[0] is None:
+        adjust = (1, 1)
+    else:
+        adjust = (1 - input_size[0] % 2, 1 - input_size[1] % 2)
+    correct = (kernel_size[0] // 2, kernel_size[1] // 2)
+    return (
+        (correct[0] - adjust[0], correct[0]),
+        (correct[1] - adjust[1], correct[1]),
+    )
 
 
 # Reference: https://git.io/JKgtC
@@ -91,20 +113,20 @@ def conv_block(x, filters=16, kernel_size=3, strides=2):
 def inverted_residual_block(x, expanded_channels, output_channels, strides=1):
     m = layers.Conv2D(expanded_channels, 1, padding="same", use_bias=False)(x)
     m = layers.BatchNormalization()(m)
-    m = tf.nn.swish(m)
+    m = keras.activations.swish(m)
 
     if strides == 2:
-        m = layers.ZeroPadding2D(padding=imagenet_utils.correct_pad(m, 3))(m)
+        m = layers.ZeroPadding2D(padding=correct_pad(m, 3))(m)
     m = layers.DepthwiseConv2D(
         3, strides=strides, padding="same" if strides == 1 else "valid", use_bias=False
     )(m)
     m = layers.BatchNormalization()(m)
-    m = tf.nn.swish(m)
+    m = keras.activations.swish(m)
 
     m = layers.Conv2D(output_channels, 1, padding="same", use_bias=False)(m)
     m = layers.BatchNormalization()(m)
 
-    if tf.math.equal(x.shape[-1], output_channels) and strides == 1:
+    if keras.ops.equal(x.shape[-1], output_channels) and strides == 1:
         return layers.Add()([m, x])
     return m
 
@@ -115,7 +137,7 @@ def inverted_residual_block(x, expanded_channels, output_channels, strides=1):
 
 def mlp(x, hidden_units, dropout_rate):
     for units in hidden_units:
-        x = layers.Dense(units, activation=tf.nn.swish)(x)
+        x = layers.Dense(units, activation=keras.activations.swish)(x)
         x = layers.Dropout(dropout_rate)(x)
     return x
 
@@ -133,7 +155,11 @@ def transformer_block(x, transformer_layers, projection_dim, num_heads=2):
         # Layer normalization 2.
         x3 = layers.LayerNormalization(epsilon=1e-6)(x2)
         # MLP.
-        x3 = mlp(x3, hidden_units=[x.shape[-1] * 2, x.shape[-1]], dropout_rate=0.1,)
+        x3 = mlp(
+            x3,
+            hidden_units=[x.shape[-1] * 2, x.shape[-1]],
+            dropout_rate=0.1,
+        )
         # Skip connection 2.
         x = layers.Add()([x3, x2])
 
@@ -640,8 +666,6 @@ Trainable params: 1,305,077
 Non-trainable params: 2,544
 __________________________________________________________________________________________________
 
-```
-</div>
 ---
 ## Dataset preparation
 
@@ -728,7 +752,8 @@ def run_experiment(epochs=epochs):
     mobilevit_xxs = create_mobilevit(num_classes=num_classes)
     mobilevit_xxs.compile(optimizer=optimizer, loss=loss_fn, metrics=["accuracy"])
 
-    checkpoint_filepath = "/tmp/checkpoint"
+    # When using `save_weights_only=True` in `ModelCheckpoint`, the filepath provided must end in `.weights.h5`
+    checkpoint_filepath = "/tmp/checkpoint.weights.h5"
     checkpoint_callback = keras.callbacks.ModelCheckpoint(
         checkpoint_filepath,
         monitor="val_accuracy",
@@ -828,7 +853,7 @@ and can be converted with the following code:
 
 ```python
 # Serialize the model as a SavedModel.
-mobilevit_xxs.save("mobilevit_xxs")
+tf.saved_model.save(mobilevit_xxs, "mobilevit_xxs")
 
 # Convert to TFLite. This form of quantization is called
 # post-training dynamic-range quantization in TFLite.
@@ -845,4 +870,6 @@ open("mobilevit_xxs.tflite", "wb").write(tflite_model)
 To learn more about different quantization recipes available in TFLite and running
 inference with TFLite models, check out
 [this official resource](https://www.tensorflow.org/lite/performance/post_training_quantization).
-You can use the trained model hosted on [Hugging Face Hub](https://huggingface.co/keras-io/mobile-vit-xxs) and try the demo on [Hugging Face Spaces](https://huggingface.co/spaces/keras-io/Flowers-Classification-MobileViT).
+
+You can use the trained model hosted on [Hugging Face Hub](https://huggingface.co/keras-io/mobile-vit-xxs)
+and try the demo on [Hugging Face Spaces](https://huggingface.co/spaces/keras-io/Flowers-Classification-MobileViT).
