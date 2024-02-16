@@ -108,6 +108,7 @@ EXAMPLES_MASTER = {
                     "path": "vit_small_ds",
                     "title": "Train a Vision Transformer on small datasets",
                     "subcategory": "Image classification",
+                    "keras_3": True,
                 },
                 {
                     "path": "shiftvit",
