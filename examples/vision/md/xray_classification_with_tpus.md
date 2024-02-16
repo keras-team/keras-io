@@ -2,7 +2,7 @@
 
 **Author:** Amy MiHyun Jang<br>
 **Date created:** 2020/07/28<br>
-**Last modified:** 2020/08/24<br>
+**Last modified:** 2024/02/12<br>
 **Description:** Medical image classification on TPU.
 
 
@@ -201,7 +201,10 @@ def get_label(file_path):
     # convert the path to a list of path components
     parts = tf.strings.split(file_path, "/")
     # The second to last is the class-directory
-    return parts[-2] == "PNEUMONIA"
+    if parts[-2] == "PNEUMONIA":
+        return 1
+    else:
+        return 0
 
 
 def decode_img(img):
@@ -346,9 +349,11 @@ The architecture for this CNN has been inspired by this
 
 
 ```python
-from tensorflow import keras
-from tensorflow.keras import layers
+import os 
+os.environ['KERAS_BACKEND'] = 'tensorflow'
 
+import keras
+from keras import layers
 
 def conv_block(filters, inputs):
     x = layers.SeparableConv2D(filters, 3, activation="relu", padding="same")(inputs)
@@ -454,9 +459,9 @@ model starts overfitting.
 
 
 ```python
-checkpoint_cb = tf.keras.callbacks.ModelCheckpoint("xray_model.h5", save_best_only=True)
+checkpoint_cb = keras.callbacks.ModelCheckpoint("xray_model.keras", save_best_only=True)
 
-early_stopping_cb = tf.keras.callbacks.EarlyStopping(
+early_stopping_cb = keras.callbacks.EarlyStopping(
     patience=10, restore_best_weights=True
 )
 ```
@@ -468,7 +473,7 @@ implement the exponential learning rate scheduling method below.
 
 ```python
 initial_learning_rate = 0.015
-lr_schedule = tf.keras.optimizers.schedules.ExponentialDecay(
+lr_schedule = keras.optimizers.schedules.ExponentialDecay(
     initial_learning_rate, decay_steps=100000, decay_rate=0.96, staircase=True
 )
 ```
@@ -498,12 +503,12 @@ with strategy.scope():
     model = build_model()
 
     METRICS = [
-        tf.keras.metrics.BinaryAccuracy(),
-        tf.keras.metrics.Precision(name="precision"),
-        tf.keras.metrics.Recall(name="recall"),
+        keras.metrics.BinaryAccuracy(),
+        keras.metrics.Precision(name="precision"),
+        keras.metrics.Recall(name="recall"),
     ]
     model.compile(
-        optimizer=tf.keras.optimizers.Adam(learning_rate=lr_schedule),
+        optimizer=keras.optimizers.Adam(learning_rate=lr_schedule),
         loss="binary_crossentropy",
         metrics=METRICS,
     )

@@ -48,3 +48,9 @@ jobs:
           close-issue-message: >
             This issue was closed because it has been inactive for more than 1 year.
           repo-token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/checkout@v3
+      - uses: actions/github-script@v6
+        with:
+          script: |
+            const script = require('./\.github/workflows/scripts/stale_csat.js')
+            script({github, context})

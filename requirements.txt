@@ -12,6 +12,6 @@ pydot
 boto3
 tensorflow
 keras-tuner==1.4.6
-keras-cv==0.8.1
+keras-cv==0.8.2
 tf_keras==2.15.0
 keras-nlp==0.7.0

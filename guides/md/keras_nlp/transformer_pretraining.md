@@ -469,9 +469,9 @@ intensive, so even this relatively small Transformer will take some time.
 ```python
 # Create the pretraining model by attaching a masked language model head.
 inputs = {
-    "token_ids": keras.Input(shape=(SEQ_LENGTH,), dtype=tf.int32, name="token_ids"),
+    "token_ids": keras.Input(shape=(SEQ_LENGTH,), dtype="int32", name="token_ids"),
     "mask_positions": keras.Input(
-        shape=(PREDICTIONS_PER_SEQ,), dtype=tf.int32, name="mask_positions"
+        shape=(PREDICTIONS_PER_SEQ,), dtype="int32", name="mask_positions"
     ),
 }
 
@@ -585,7 +585,7 @@ the encoded tokens together, and use a single dense layer to make a prediction.
 encoder_model = keras.models.load_model("encoder_model.keras", compile=False)
 
 # Take as input the tokenized input.
-inputs = keras.Input(shape=(SEQ_LENGTH,), dtype=tf.int32)
+inputs = keras.Input(shape=(SEQ_LENGTH,), dtype="int32")
 
 # Encode and pool the tokens.
 encoded_tokens = encoder_model(inputs)
