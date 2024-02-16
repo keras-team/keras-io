@@ -16,7 +16,7 @@ jobs:
     - name: Ensure files are formatted with black
       run: |
         pip install --upgrade pip
-        pip install black~=23.3.0
+        pip install black --upgrade
         black --check --diff ./examples
   docker-image:
     runs-on: ubuntu-latest
