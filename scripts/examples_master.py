@@ -99,6 +99,7 @@ EXAMPLES_MASTER = {
                     "path": "semisupervised_simclr",
                     "title": "Semi-supervised image classification using contrastive pretraining with SimCLR",
                     "subcategory": "Image classification",
+                    "keras_3": True,
                 },
                 {
                     "path": "swin_transformers",
