@@ -415,15 +415,8 @@ class GraphConvLayer(layers.Layer):
         self.normalize = normalize
 
         self.ffn_prepare = create_ffn(hidden_units, dropout_rate)
-        if self.combination_type == "gated":
-            self.update_fn = layers.GRU(
-                units=hidden_units,
-                activation="tanh",
-                recurrent_activation="sigmoid",
-                dropout=dropout_rate,
-                return_state=True,
-                recurrent_dropout=dropout_rate,
-            )
+        if self.combination_type == "gru":
+            self.update_fn = create_gru(hidden_units, dropout_rate)
         else:
             self.update_fn = create_ffn(hidden_units, dropout_rate)
 
@@ -524,6 +517,22 @@ of the Keras model object, rather than input data for training or prediction.
 The model will accept a **batch** of `node_indices`, which are used to lookup the
 node features and neighbours from the `graph_info`.
 """
+
+def create_gru(hidden_units, dropout_rate):
+  inputs = keras.layers.Input(shape=(2, hidden_units[0]))
+  x = inputs
+  gru_layers = []
+  for i, units in enumerate(hidden_units):
+    x = layers.GRU(
+        units=units,
+        activation="tanh",
+        recurrent_activation="sigmoid",
+        return_sequences=True,
+        dropout=dropout_rate,
+        return_state=False,
+        recurrent_dropout=dropout_rate,
+    )(x)
+  return keras.Model(inputs=inputs, outputs=x)
 
 
 class GNNNodeClassifier(tf.keras.Model):
