@@ -396,19 +396,20 @@ Two other key techniques that are not covered are [Graph Attention Networks](htt
 and [Message Passing Neural Networks](https://arxiv.org/abs/1704.01212).
 """
 
+
 def create_gru(hidden_units, dropout_rate):
     inputs = keras.layers.Input(shape=(2, hidden_units[0]))
     x = inputs
     for units in hidden_units:
-      x = layers.GRU(
-          units=units,
-          activation="tanh",
-          recurrent_activation="sigmoid",
-          return_sequences=True,
-          dropout=dropout_rate,
-          return_state=False,
-          recurrent_dropout=dropout_rate,
-      )(x)
+        x = layers.GRU(
+            units=units,
+            activation="tanh",
+            recurrent_activation="sigmoid",
+            return_sequences=True,
+            dropout=dropout_rate,
+            return_state=False,
+            recurrent_dropout=dropout_rate,
+        )(x)
     return keras.Model(inputs=inputs, outputs=x)
 
 
