@@ -533,6 +533,7 @@ The model will accept a **batch** of `node_indices`, which are used to lookup th
 node features and neighbours from the `graph_info`.
 """
 
+
 class GNNNodeClassifier(tf.keras.Model):
     def __init__(
         self,
