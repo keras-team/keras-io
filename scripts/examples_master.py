@@ -654,6 +654,12 @@ EXAMPLES_MASTER = {
                     "subcategory": "Timeseries classification",
                     "keras_3": True,
                 },
+                {
+                    "path": "event_classification_for_payment_card_fraud_detection",
+                    "title": "Event classification for payment card fraud detection",
+                    "subcategory": "Timeseries classification",
+                    "keras_3": True,
+                },
                 # Anomaly detection
                 {
                     "path": "timeseries_anomaly_detection",
@@ -671,12 +677,6 @@ EXAMPLES_MASTER = {
                 {
                     "path": "timeseries_weather_forecasting",
                     "title": "Timeseries forecasting for weather prediction",
-                    "subcategory": "Timeseries forecasting",
-                    "keras_3": True,
-                },
-                {
-                    "path": "event_classification_for_payment_card_fraud_detection",
-                    "title": "Event classification for payment card fraud detection",
                     "subcategory": "Timeseries forecasting",
                     "keras_3": True,
                 },
