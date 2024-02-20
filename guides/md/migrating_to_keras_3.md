@@ -60,7 +60,7 @@ to `from keras import xyz` (e.g. `from keras import layers`)
 3. Replace `tf.keras.*` to `keras.*`
 
 Next, start running your tests. Most of the time, your code will execute on Keras 3 just fine.
-All issues you might encouter are detailed below, with their fixes.
+All issues you might encounter are detailed below, with their fixes.
 
 ### `jit_compile` is set to `True` by default on GPU.
 

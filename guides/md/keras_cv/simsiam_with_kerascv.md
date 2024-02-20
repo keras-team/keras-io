@@ -131,11 +131,11 @@ train_ds = train_ds.shuffle(buffer_size=8 * BATCH_SIZE, reshuffle_each_iteration
 [1mDataset stl10 downloaded and prepared to ~/tensorflow_datasets/stl10/1.0.0. Subsequent calls will reuse this data.[0m
 WARNING:tensorflow:From /home/lukewood/.local/lib/python3.7/site-packages/tensorflow/python/autograph/pyct/static_analysis/liveness.py:83: Analyzer.lamba_check (from tensorflow.python.autograph.pyct.static_analysis.liveness) is deprecated and will be removed after 2023-09-23.
 Instructions for updating:
-Lambda fuctions will be no more assumed to be used in the statement where they are used, or at least in the same block. https://github.com/tensorflow/tensorflow/issues/56089
+Lambda functions will be no more assumed to be used in the statement where they are used, or at least in the same block. https://github.com/tensorflow/tensorflow/issues/56089
 
 WARNING:tensorflow:From /home/lukewood/.local/lib/python3.7/site-packages/tensorflow/python/autograph/pyct/static_analysis/liveness.py:83: Analyzer.lamba_check (from tensorflow.python.autograph.pyct.static_analysis.liveness) is deprecated and will be removed after 2023-09-23.
 Instructions for updating:
-Lambda fuctions will be no more assumed to be used in the statement where they are used, or at least in the same block. https://github.com/tensorflow/tensorflow/issues/56089
+Lambda functions will be no more assumed to be used in the statement where they are used, or at least in the same block. https://github.com/tensorflow/tensorflow/issues/56089
 
 ```
 </div>
@@ -166,7 +166,7 @@ these datasets:
 
 
 ```python
-# Compute the indicies for query, index, val, and train splits
+# Compute the indices for query, index, val, and train splits
 query_idxs, index_idxs, val_idxs, train_idxs = [], [], [], []
 for cid in range(ds_info.features["label"].num_classes):
     idxs = tf.random.shuffle(tf.where(y_raw_train == cid))

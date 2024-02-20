@@ -2611,7 +2611,7 @@ init();</script></body>
 
 
 To convert a mesh file to a point cloud we first need to sample points on the mesh
-surface. `.sample()` performs a unifrom random sampling. Here we sample at 2048 locations
+surface. `.sample()` performs a uniform random sampling. Here we sample at 2048 locations
 and visualize in `matplotlib`.
 
 
@@ -2741,7 +2741,7 @@ validation_dataset = dataset.skip(train_dataset_size).batch(BATCH_SIZE)
 
 ### Build a model
 
-Each convolution and fully-connected layer (with exception for end layers) consits of
+Each convolution and fully-connected layer (with exception for end layers) consists of
 Convolution / Dense -> Batch Normalization -> ReLU Activation.
 
 
@@ -2790,7 +2790,7 @@ class OrthogonalRegularizer(keras.regularizers.Regularizer):
 ```python
 
 def tnet(inputs, num_features):
-    # Initalise bias as the indentity matrix
+    # Initialise bias as the identity matrix
     bias = keras.initializers.Constant(np.eye(num_features).flatten())
     reg = OrthogonalRegularizer(num_features)
 
