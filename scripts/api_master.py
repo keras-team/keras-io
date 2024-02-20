@@ -160,7 +160,7 @@ API_MASTER = {
                         "keras.initializers.VarianceScaling",
                         "keras.initializers.LecunNormal",
                         "keras.initializers.LecunUniform",
-                        "keras.initializers.IdentityInitializer"
+                        "keras.initializers.IdentityInitializer",
                     ],
                 },
                 {
@@ -838,7 +838,6 @@ API_MASTER = {
                             "generate": ["keras.layers.TFSMLayer"],
                         },
                     ],
-                    
                 },
             ],
         },
@@ -908,9 +907,9 @@ API_MASTER = {
                     "generate": ["keras.callbacks.ProgbarLogger"],
                 },
                 {
-                    "path":"swap_ema_weights", 
+                    "path": "swap_ema_weights",
                     "title": "SwapEMAWeights",
-                    "generate": ["keras.callbacks.SwapEMAWeights"]
+                    "generate": ["keras.callbacks.SwapEMAWeights"],
                 },
             ],
         },
@@ -1250,7 +1249,9 @@ API_MASTER = {
                         {
                             "path": "learning_rate_schedule",
                             "title": "LearningRateSchedule",
-                            "generate": ["keras.optimizers.schedules.LearningRateSchedule'"],
+                            "generate": [
+                                "keras.optimizers.schedules.LearningRateSchedule'"
+                            ],
                         },
                         {
                             "path": "exponential_decay",
@@ -1362,7 +1363,6 @@ API_MASTER = {
                     "path": "segmentation_metrics",
                     "title": "Image segmentation metrics",
                     "generate": [
-
                         "keras.metrics.IoU",
                         "keras.metrics.BinaryIoU",
                         "keras.metrics.OneHotIoU",
