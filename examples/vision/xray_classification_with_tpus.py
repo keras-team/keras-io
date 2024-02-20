@@ -6,6 +6,7 @@ Last modified: 2020/08/24
 Description: Medical image classification on TPU.
 Accelerator: TPU
 """
+
 """
 ## Introduction + Set-up
 
@@ -227,10 +228,12 @@ The architecture for this CNN has been inspired by this
 """
 
 import os
+
 os.environ["KERAS_BACKEND"] = "tensorflow"
 
 import keras
 from keras import layers
+
 
 def conv_block(filters, inputs):
     x = layers.SeparableConv2D(filters, 3, activation="relu", padding="same")(inputs)
