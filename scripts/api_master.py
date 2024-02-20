@@ -197,8 +197,8 @@ API_MASTER = {
                         },
                         {
                             "path": "input_spec",
-                            "title": "Input spec",
-                            "generate": ["keras.layers.InputSpec"],
+                            "title": "InputSpec object",
+                            "generate": ["keras.InputSpec"],
                         },
                         {
                             "path": "dense",
@@ -1380,11 +1380,11 @@ API_MASTER = {
                     ],
                 },
                 {
-                    "path": "metric_wrapper",
-                    "title": "Metric wrappers and generic metrics",
+                    "path": "metrics_wrappers",
+                    "title": "Metric wrappers and reduction metrics",
                     "generate": [
-                        "keras.metrics.Mean",
                         "keras.metrics.MeanMetricWrapper",
+                        "keras.metrics.Mean",
                         "keras.metrics.Sum",
                     ],
                 },
@@ -1762,10 +1762,9 @@ API_MASTER = {
                     "generate": [
                         "keras.utils.get_source_inputs",
                         "keras.utils.is_keras_tensor",
-                        "keras.backend.standardize_dtype",
-                        "keras.backend.is_float_dtype",
-                        "keras.backend.is_int_dtype",
-                        "keras.backend.result_type",
+                        # "keras.backend.standardize_dtype",  # TODO: enable later
+                        # "keras.backend.is_float_dtype",
+                        # "keras.backend.is_int_dtype",
                     ],
                 },
                 {
@@ -1780,7 +1779,6 @@ API_MASTER = {
                         "keras.utils.PyDataset",
                         "keras.utils.to_categorical",
                         "keras.utils.normalize",
-                        "keras.backend.get_uid",
                     ],
                 },
                 {
