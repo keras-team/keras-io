@@ -7,6 +7,7 @@ Description: An all-convolutional network applied to patches of images.
 Accelerator: GPU
 Converted to Keras 3 by: [Md Awsafur Rahman](https://awsaf49.github.io)
 """
+
 """
 ## Introduction
 

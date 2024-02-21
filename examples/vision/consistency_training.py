@@ -6,6 +6,7 @@ Last modified: 2021/04/19
 Description: Training with consistency regularization for robustness against data distribution shifts.
 Accelerator: GPU
 """
+
 """
 Deep learning models excel in many image recognition tasks when the data is independent
 and identically distributed (i.i.d.). However, they can suffer from performance

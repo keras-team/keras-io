@@ -6,6 +6,7 @@ Last modified: 2023/08/14
 Description: Adaptively generating a smaller number of tokens for Vision Transformers.
 Accelerator: GPU
 """
+
 """
 ## Introduction
 

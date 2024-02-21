@@ -6,6 +6,7 @@ Last modified: 2022/11/21
 Description: Implementing an image transformer equipped with Class Attention and LayerScale.
 Accelerator: None
 """
+
 """
 
 ## Introduction

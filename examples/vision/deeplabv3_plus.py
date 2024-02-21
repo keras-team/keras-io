@@ -7,6 +7,7 @@ Description: Implement DeepLabV3+ architecture for Multi-class Semantic Segmenta
 Accelerator: GPU
 Converted to Keras 3: [Muhammad Anas Raza](https://anasrz.com)
 """
+
 """
 ## Introduction
 

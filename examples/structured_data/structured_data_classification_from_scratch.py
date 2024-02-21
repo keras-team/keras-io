@@ -6,6 +6,7 @@ Last modified: 2020/06/09
 Description: Binary classification of structured data including numerical and categorical features.
 Accelerator: GPU
 """
+
 """
 ## Introduction
 

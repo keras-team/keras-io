@@ -6,6 +6,7 @@ Last modified: 2023/03/12
 Description: Image Classification with Temporal Latent Bottleneck Networks.
 Accelerator: GPU
 """
+
 """
 ## Introduction
 

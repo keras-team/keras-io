@@ -6,6 +6,7 @@ Last modified: 2021/10/05
 Description: FNet transformer for text generation in Keras.
 Accelerator: GPU
 """
+
 """
 ## Introduction
 

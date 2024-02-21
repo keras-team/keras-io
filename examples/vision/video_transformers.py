@@ -7,6 +7,7 @@ Description: Training a video classifier with hybrid transformers.
 Accelerator: GPU
 Converted to Keras 3 by: [Soumik Rakshit](http://github.com/soumik12345)
 """
+
 """
 This example is a follow-up to the
 [Video Classification with a CNN-RNN Architecture](https://keras.io/examples/vision/video_classification/)

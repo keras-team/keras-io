@@ -7,6 +7,7 @@ Description: Classify speakers using Fast Fourier Transform (FFT) and a 1D Convn
 Accelerator: GPU
 Converted to Keras 3 by: [Fadi Badine](https://twitter.com/fadibadine)
 """
+
 """
 ## Introduction
 

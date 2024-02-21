@@ -6,6 +6,7 @@ Last modified: 2020/09/18
 Description: Implement a Masked Language Model (MLM) with BERT and fine-tune it on the IMDB Reviews dataset.
 Accelerator: GPU
 """
+
 """
 ## Introduction
 
@@ -196,9 +197,9 @@ def get_masked_input_and_labels(encoded_texts):
     # Set input to [MASK] which is the last token for the 90% of tokens
     # This means leaving 10% unchanged
     inp_mask_2mask = inp_mask & (np.random.rand(*encoded_texts.shape) < 0.90)
-    encoded_texts_masked[
-        inp_mask_2mask
-    ] = mask_token_id  # mask token is the last in the dict
+    encoded_texts_masked[inp_mask_2mask] = (
+        mask_token_id  # mask token is the last in the dict
+    )
 
     # Set 10% to a random token
     inp_mask_2random = inp_mask_2mask & (np.random.rand(*encoded_texts.shape) < 1 / 9)
@@ -293,9 +294,11 @@ def bert_module(query, key, value, i):
 def get_pos_encoding_matrix(max_len, d_emb):
     pos_enc = np.array(
         [
-            [pos / np.power(10000, 2 * (j // 2) / d_emb) for j in range(d_emb)]
-            if pos != 0
-            else np.zeros(d_emb)
+            (
+                [pos / np.power(10000, 2 * (j // 2) / d_emb) for j in range(d_emb)]
+                if pos != 0
+                else np.zeros(d_emb)
+            )
             for pos in range(max_len)
         ]
     )

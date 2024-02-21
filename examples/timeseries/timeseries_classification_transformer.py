@@ -7,7 +7,6 @@ Description: This notebook demonstrates how to do timeseries classification usin
 Accelerator: GPU
 """
 
-
 """
 ## Introduction
 

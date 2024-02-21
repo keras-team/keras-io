@@ -6,6 +6,7 @@ Last modified: 2023/11/10
 Description: Training a timeseries classifier from scratch on the FordA dataset from the UCR/UEA archive.
 Accelerator: GPU
 """
+
 """
 ## Introduction
 

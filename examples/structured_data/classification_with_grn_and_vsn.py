@@ -194,9 +194,12 @@ FEATURE_NAMES = NUMERIC_FEATURE_NAMES + list(
 )
 # Feature default values.
 COLUMN_DEFAULTS = [
-    [0.0]
-    if feature_name in NUMERIC_FEATURE_NAMES + [TARGET_FEATURE_NAME, WEIGHT_COLUMN_NAME]
-    else ["NA"]
+    (
+        [0.0]
+        if feature_name
+        in NUMERIC_FEATURE_NAMES + [TARGET_FEATURE_NAME, WEIGHT_COLUMN_NAME]
+        else ["NA"]
+    )
     for feature_name in CSV_HEADER
 ]
 

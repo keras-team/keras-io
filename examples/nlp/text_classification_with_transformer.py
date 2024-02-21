@@ -7,6 +7,7 @@ Description: Implement a Transformer block as a Keras layer and use it for text 
 Accelerator: GPU
 Converted to Keras 3 by: [Sitam Meur](https://github.com/sitamgithub-MSIT)
 """
+
 """
 ## Setup
 """

@@ -6,6 +6,7 @@ Last modified: 2023/11/13
 Description: Minimal implementation of volumetric rendering as shown in NeRF.
 Accelerator: GPU
 """
+
 """
 ## Introduction
 

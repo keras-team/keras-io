@@ -6,6 +6,7 @@ Last modified: 2020/04/20
 Description: Image segmentation model trained from scratch on the Oxford Pets dataset.
 Accelerator: GPU
 """
+
 """
 ## Download the data
 """

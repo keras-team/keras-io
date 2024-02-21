@@ -6,6 +6,7 @@ Last modified: 2022/06/27
 Description: Training a VQ-VAE for image reconstruction and codebook sampling for generation.
 Accelerator: GPU
 """
+
 """
 In this example, we develop a Vector Quantized Variational Autoencoder (VQ-VAE).
 VQ-VAE was proposed in

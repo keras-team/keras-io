@@ -6,6 +6,7 @@ Last modified: 2024/01/02
 Description: Training a GAN conditioned on class labels to generate handwritten digits.
 Accelerator: GPU
 """
+
 """
 Generative Adversarial Networks (GANs) let us generate novel image data, video data,
 or audio data from a random input. Typically, the random input is sampled
