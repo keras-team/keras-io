@@ -1175,7 +1175,7 @@ API_MASTER = {
             "title": "Optimizers",
             "toc": True,
             "generate": [
-                "keras.optimizers.Optimizer"
+                "keras.optimizers.Optimizer",
                 "keras.optimizers.Optimizer.apply_gradients",
                 "keras.optimizers.Optimizer.variables",
             ],
@@ -1250,7 +1250,7 @@ API_MASTER = {
                             "path": "learning_rate_schedule",
                             "title": "LearningRateSchedule",
                             "generate": [
-                                "keras.optimizers.schedules.LearningRateSchedule'"
+                                "keras.optimizers.schedules.LearningRateSchedule"
                             ],
                         },
                         {
@@ -1461,7 +1461,7 @@ API_MASTER = {
                         "keras.utils.load_img",
                         "keras.utils.img_to_array",
                         "keras.utils.save_img",
-                        "keras.utils.array_to_image",
+                        "keras.utils.array_to_img",
                     ],
                 },
                 {
