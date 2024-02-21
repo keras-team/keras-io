@@ -52,6 +52,7 @@ EXAMPLES_MASTER = {
                     "path": "mobilevit",
                     "title": "A mobile-friendly Transformer-based model for image classification",
                     "subcategory": "Image classification",
+                    "keras_3": True,
                 },
                 {
                     "path": "xray_classification_with_tpus",
@@ -99,6 +100,7 @@ EXAMPLES_MASTER = {
                     "path": "semisupervised_simclr",
                     "title": "Semi-supervised image classification using contrastive pretraining with SimCLR",
                     "subcategory": "Image classification",
+                    "keras_3": True,
                 },
                 {
                     "path": "swin_transformers",
@@ -651,6 +653,12 @@ EXAMPLES_MASTER = {
                 {
                     "path": "eeg_signal_classification",
                     "title": "Electroencephalogram Signal Classification for action identification",
+                    "subcategory": "Timeseries classification",
+                    "keras_3": True,
+                },
+                {
+                    "path": "event_classification_for_payment_card_fraud_detection",
+                    "title": "Event classification for payment card fraud detection",
                     "subcategory": "Timeseries classification",
                     "keras_3": True,
                 },

@@ -242,7 +242,7 @@ def create_ffn(hidden_units, dropout_rate, name=None):
 ### Prepare the data for the baseline model
 """
 
-feature_names = set(papers.columns) - {"paper_id", "subject"}
+feature_names = list(set(papers.columns) - {"paper_id", "subject"})
 num_features = len(feature_names)
 num_classes = len(class_idx)
 
@@ -397,6 +397,22 @@ and [Message Passing Neural Networks](https://arxiv.org/abs/1704.01212).
 """
 
 
+def create_gru(hidden_units, dropout_rate):
+    inputs = keras.layers.Input(shape=(2, hidden_units[0]))
+    x = inputs
+    for units in hidden_units:
+        x = layers.GRU(
+            units=units,
+            activation="tanh",
+            recurrent_activation="sigmoid",
+            return_sequences=True,
+            dropout=dropout_rate,
+            return_state=False,
+            recurrent_dropout=dropout_rate,
+        )(x)
+    return keras.Model(inputs=inputs, outputs=x)
+
+
 class GraphConvLayer(layers.Layer):
     def __init__(
         self,
@@ -415,15 +431,8 @@ class GraphConvLayer(layers.Layer):
         self.normalize = normalize
 
         self.ffn_prepare = create_ffn(hidden_units, dropout_rate)
-        if self.combination_type == "gated":
-            self.update_fn = layers.GRU(
-                units=hidden_units,
-                activation="tanh",
-                recurrent_activation="sigmoid",
-                dropout=dropout_rate,
-                return_state=True,
-                recurrent_dropout=dropout_rate,
-            )
+        if self.combination_type == "gru":
+            self.update_fn = create_gru(hidden_units, dropout_rate)
         else:
             self.update_fn = create_ffn(hidden_units, dropout_rate)
 
