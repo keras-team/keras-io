@@ -6,6 +6,7 @@ Last modified: 2023/07/10
 Description: Use EfficientNet with weights pre-trained on imagenet for Stanford Dogs classification.
 Accelerator: GPU
 """
+
 """
 
 ## Introduction: what is EfficientNet

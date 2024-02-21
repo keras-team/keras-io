@@ -6,6 +6,7 @@ Last modified: 2020/10/24
 Description: Implementation of a PointNet-based model for segmenting point clouds.
 Accelerator: GPU
 """
+
 """
 ## Introduction
 

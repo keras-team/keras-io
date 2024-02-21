@@ -6,6 +6,7 @@ Last modified: 2023/12/21
 Description: A simple DCGAN trained using `fit()` by overriding `train_step` on CelebA images.
 Accelerator: GPU
 """
+
 """
 ## Setup
 """

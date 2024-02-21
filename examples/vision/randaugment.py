@@ -6,6 +6,7 @@ Last modified: 2023/12/12
 Description: RandAugment for training an image classification model with improved robustness.
 Accelerator: GPU
 """
+
 """
 Data augmentation is a very useful technique that can help to improve the translational
 invariance of convolutional neural networks (CNN). RandAugment is a stochastic data

@@ -6,6 +6,7 @@ Last modified: 2022/01/03
 Description: Implementing a GauGAN for conditional image generation.
 Accelerator: GPU
 """
+
 """
 ## Introduction
 

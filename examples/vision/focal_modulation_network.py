@@ -6,6 +6,7 @@ Last modified: 2023/02/15
 Description: Image classification with Focal Modulation Networks.
 Accelerator: GPU
 """
+
 """
 ## Introduction
 
@@ -786,9 +787,9 @@ class FocalModulationNetwork(keras.Model):
         for i_layer in range(self.num_layers):
             layer = BasicLayer(
                 dim=embed_dim[i_layer],
-                out_dim=embed_dim[i_layer + 1]
-                if (i_layer < self.num_layers - 1)
-                else None,
+                out_dim=(
+                    embed_dim[i_layer + 1] if (i_layer < self.num_layers - 1) else None
+                ),
                 input_resolution=(
                     patches_resolution[0] // (2**i_layer),
                     patches_resolution[1] // (2**i_layer),

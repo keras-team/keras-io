@@ -6,6 +6,7 @@ Last modified: 12/20/21
 Description: A keras implementation of Barlow Twins (constrastive SSL with redundancy reduction).
 Accelerator: GPU
 """
+
 """
 ## Introduction
 """

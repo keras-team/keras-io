@@ -6,6 +6,7 @@ Last modified:  2024/01/15
 Description: A Transformer-based architecture for video classification.
 Accelerator: GPU
 """
+
 """
 ## Introduction
 

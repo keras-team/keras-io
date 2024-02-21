@@ -6,6 +6,7 @@ Last modified: 2023/12/08
 Description: Training a video classifier with transfer learning and a recurrent model on the UCF101 dataset.
 Accelerator: GPU
 """
+
 """
 This example demonstrates video classification, an important use-case with
 applications in recommendations, security, and so on.

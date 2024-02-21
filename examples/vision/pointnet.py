@@ -6,6 +6,7 @@ Last modified: 2024/01/09
 Description: Implementation of PointNet for ModelNet10 classification.
 Accelerator: GPU
 """
+
 """
 # Point cloud classification
 """

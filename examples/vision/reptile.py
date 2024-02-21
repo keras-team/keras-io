@@ -117,15 +117,15 @@ class Dataset:
                     self.data[label_subset[class_idx]], k=shots + 1
                 )
                 test_images[class_idx] = images_to_split[-1]
-                temp_images[
-                    class_idx * shots : (class_idx + 1) * shots
-                ] = images_to_split[:-1]
+                temp_images[class_idx * shots : (class_idx + 1) * shots] = (
+                    images_to_split[:-1]
+                )
             else:
                 # For each index in the randomly selected label_subset, sample the
                 # necessary number of images.
-                temp_images[
-                    class_idx * shots : (class_idx + 1) * shots
-                ] = random.choices(self.data[label_subset[class_idx]], k=shots)
+                temp_images[class_idx * shots : (class_idx + 1) * shots] = (
+                    random.choices(self.data[label_subset[class_idx]], k=shots)
+                )
 
         dataset = tf.data.Dataset.from_tensor_slices(
             (temp_images.astype(np.float32), temp_labels.astype(np.int32))

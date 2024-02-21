@@ -6,6 +6,7 @@ Last modified: 2020/08/29
 Description: Natural Language Inference by fine-tuning BERT model on SNLI Corpus.
 Accelerator: GPU
 """
+
 """
 ## Introduction
 

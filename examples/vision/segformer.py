@@ -6,6 +6,7 @@ Last modified: 2023/01/29
 Description: Fine-tuning a SegFormer model variant for semantic segmentation.
 Accelerator: GPU
 """
+
 """
 ## Introduction
 

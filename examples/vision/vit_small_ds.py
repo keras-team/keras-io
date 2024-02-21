@@ -6,6 +6,7 @@ Last modified: 2022/01/10
 Description: Training a ViT from scratch on smaller datasets with shifted patch tokenization and locality self-attention.
 Accelerator: GPU
 """
+
 """
 ## Introduction
 
