@@ -657,7 +657,7 @@ own metrics in a few lines of code.
 To use a metric in a custom training loop, you would:
 
 - Instantiate the metric object, e.g. `metric = keras.metrics.AUC()`
-- Call its `metric.udpate_state(targets, predictions)` method for each batch of data
+- Call its `metric.update_state(targets, predictions)` method for each batch of data
 - Query its result via `metric.result()`
 - Reset the metric's state at the end of an epoch or at the start of an evaluation via
 `metric.reset_state()`

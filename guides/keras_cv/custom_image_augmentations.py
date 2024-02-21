@@ -81,7 +81,7 @@ def parse_factor(param, min_value=0.0, max_value=1.0, seed=None):
 ## BaseImageAugmentationLayer Introduction
 
 Image augmentation should operate on a sample-wise basis; not batch-wise.
-This is a common mistake many machine learning practicioners make when implementing
+This is a common mistake many machine learning practitioners make when implementing
 custom techniques.
 `BaseImageAugmentation` offers a set of clean abstractions to make implementing image
 augmentation techniques on a sample wise basis much easier.
@@ -217,7 +217,7 @@ As you can see, the augmentations now are drawn from a normal distributions.
 There are various types of `FactorSamplers` including `UniformFactorSampler`,
 `NormalFactorSampler`, and `ConstantFactorSampler`.  You can also implement you own.
 
-## Overridding `get_random_transformation()`
+## Overriding `get_random_transformation()`
 
 Now, suppose that your layer impacts the prediction targets: whether they are bounding
 boxes, classification labels, or regression targets.
@@ -225,7 +225,7 @@ Your layer will need to have information about what augmentations are taken on t
 when augmenting the label.
 Luckily, `BaseImageAugmentationLayer` was designed with this in mind.
 
-To handle this issue, `BaseImageAugmentationLayer` has an overrideable
+To handle this issue, `BaseImageAugmentationLayer` has an overridable
 `get_random_transformation()` method alongside with `augment_label()`,
 `augment_target()` and `augment_bounding_boxes()`.
 `augment_segmentation_map()` and others will be added in the future.
