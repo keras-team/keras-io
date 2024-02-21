@@ -479,7 +479,7 @@ provided (as NumPy arrays).
 
 Examples:
 
-***Transfering weights from one layer to another, in memory***
+***Transferring weights from one layer to another, in memory***
 
 
 ```python
@@ -497,7 +497,7 @@ layer_2 = create_layer()
 layer_2.set_weights(layer_1.get_weights())
 ```
 
-***Transfering weights from one model to another model with a compatible architecture, in memory***
+***Transferring weights from one model to another model with a compatible architecture, in memory***
 
 
 ```python
