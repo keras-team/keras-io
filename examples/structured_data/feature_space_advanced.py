@@ -15,7 +15,7 @@ This example is an extension of the
 code example, and here we will extend it to cover more complex use
 cases of the [`keras.utils.FeatureSpace`](https://keras.io/api/utils/feature_space/)
 preprocessing utility, like feature hashing, feature crosses, handling missing values and
-integrating [Keras preprocessing layers](https://keras.io/guides/preprocessing_layers/)
+integrating [Keras preprocessing layers](https://keras.io/api/layers/preprocessing_layers/)
 with FeatureSpace.
 
 The general task still is structured data classification (also known as tabular data
