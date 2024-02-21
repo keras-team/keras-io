@@ -129,7 +129,7 @@ evaluate the quality of the produced latent embedding.  The following code assem
 these datasets:
 """
 
-# Compute the indicies for query, index, val, and train splits
+# Compute the indices for query, index, val, and train splits
 query_idxs, index_idxs, val_idxs, train_idxs = [], [], [], []
 for cid in range(ds_info.features["label"].num_classes):
     idxs = tf.random.shuffle(tf.where(y_raw_train == cid))

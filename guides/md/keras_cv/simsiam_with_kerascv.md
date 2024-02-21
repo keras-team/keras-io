@@ -424,7 +424,7 @@ def get_projector(input_dim, dim, activation="relu", num_layers: int = 3):
         name=f"batch_normalization_ouput",
     )(x)
     # Metric Logging layer. Monitors the std of the layer activations.
-    # Degnerate solutions colapse to 0 while valid solutions will move
+    # Degenerate solutions colapse to 0 while valid solutions will move
     # towards something like 0.0220. The actual number will depend on the layer size.
     o = tfsim.layers.ActivationStdLoggingLayer(name="proj_std")(x)
     projector = tf.keras.Model(inputs, o, name="projector")
@@ -496,7 +496,7 @@ def get_predictor(input_dim, hidden_dim=512, activation="relu"):
         name="predictor_output",
     )(x)
     # Metric Logging layer. Monitors the std of the layer activations.
-    # Degnerate solutions colapse to 0 while valid solutions will move
+    # Degenerate solutions colapse to 0 while valid solutions will move
     # towards something like 0.0220. The actual number will depend on the layer size.
     o = tfsim.layers.ActivationStdLoggingLayer(name="pred_std")(x)
     predictor = tf.keras.Model(inputs, o, name="predictor")
@@ -591,7 +591,7 @@ As we are only concerned with the matches below the distance threshold, the
 accuracy simplifies to TP/(TP+FP) and is equivalent to the precision with
 respect to the unfiltered queries. However, we also want to consider the
 query coverage at the distance threshold, i.e., the percentage of queries
-that retrun a match, computed as (TP+FP)/(TP+FP+TN+FN). Therefore, we can
+that return a match, computed as (TP+FP)/(TP+FP+TN+FN). Therefore, we can
 take $ precision \times query_coverage $ to produce a measure that capture
 the precision scaled by the query coverage. This simplifies down to the
 binary accuracy presented here, giving TP/(TP+FP+TN+FN).

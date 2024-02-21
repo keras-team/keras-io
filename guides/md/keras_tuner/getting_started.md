@@ -1504,7 +1504,7 @@ You may implement your own metric and use it as the hyperparameter search
 objective. Here, we use mean squared error (MSE) as an example. First, we
 implement the MSE metric by subclassing `keras.metrics.Metric`. Remember to
 give a name to your metric using the `name` argument of `super().__init__()`,
-which will be used later. Note: MSE is actully a build-in metric, which can be
+which will be used later. Note: MSE is actually a build-in metric, which can be
 imported with `keras.metrics.MeanSquaredError`. This is just an example to show
 how to use a custom metric as the hyperparameter search objective.
 
