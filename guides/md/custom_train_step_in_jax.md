@@ -128,6 +128,7 @@ class CustomModel(keras.Model):
 
         # Update metrics.
         new_metrics_vars = []
+        logs = {}
         for metric in self.metrics:
             this_metric_vars = metrics_variables[
                 len(new_metrics_vars) : len(new_metrics_vars) + len(metric.variables)
@@ -138,7 +139,7 @@ class CustomModel(keras.Model):
                 this_metric_vars = metric.stateless_update_state(
                     this_metric_vars, y, y_pred
                 )
-            logs = metric.stateless_result(this_metric_vars)
+            logs[metric.name] = metric.stateless_result(this_metric_vars)
             new_metrics_vars += this_metric_vars
 
         # Return metric logs and updated state variables.
@@ -172,13 +173,13 @@ model.fit(x, y, epochs=3)
 <div class="k-default-codeblock">
 ```
 Epoch 1/3
- 32/32 ━━━━━━━━━━━━━━━━━━━━ 0s 3ms/step - mae: 0.8205 - loss: 0.7613
+ 32/32 ━━━━━━━━━━━━━━━━━━━━ 0s 3ms/step - mae: 1.0022 - loss: 1.2464
 Epoch 2/3
- 32/32 ━━━━━━━━━━━━━━━━━━━━ 0s 119us/step - mae: 0.5123 - loss: 0.3576
+ 32/32 ━━━━━━━━━━━━━━━━━━━━ 0s 198us/step - mae: 0.5811 - loss: 0.4912
 Epoch 3/3
- 32/32 ━━━━━━━━━━━━━━━━━━━━ 0s 101us/step - mae: 0.4244 - loss: 0.2784
+ 32/32 ━━━━━━━━━━━━━━━━━━━━ 0s 231us/step - mae: 0.4386 - loss: 0.2905
 
-<keras.src.callbacks.history.History at 0x14a8e41f0>
+<keras.src.callbacks.history.History at 0x14da599c0>
 
 ```
 </div>
@@ -300,17 +301,17 @@ model.fit(x, y, epochs=5)
 <div class="k-default-codeblock">
 ```
 Epoch 1/5
- 32/32 ━━━━━━━━━━━━━━━━━━━━ 0s 2ms/step - loss: 0.2970 - mae: 0.4350
+ 32/32 ━━━━━━━━━━━━━━━━━━━━ 0s 2ms/step - loss: 0.6085 - mae: 0.6580
 Epoch 2/5
- 32/32 ━━━━━━━━━━━━━━━━━━━━ 0s 102us/step - loss: 0.2574 - mae: 0.3989
+ 32/32 ━━━━━━━━━━━━━━━━━━━━ 0s 215us/step - loss: 0.2630 - mae: 0.4141
 Epoch 3/5
- 32/32 ━━━━━━━━━━━━━━━━━━━━ 0s 96us/step - loss: 0.2366 - mae: 0.3871 
+ 32/32 ━━━━━━━━━━━━━━━━━━━━ 0s 202us/step - loss: 0.2271 - mae: 0.3835
 Epoch 4/5
- 32/32 ━━━━━━━━━━━━━━━━━━━━ 0s 91us/step - loss: 0.2171 - mae: 0.3647 
+ 32/32 ━━━━━━━━━━━━━━━━━━━━ 0s 192us/step - loss: 0.2093 - mae: 0.3714
 Epoch 5/5
- 32/32 ━━━━━━━━━━━━━━━━━━━━ 0s 91us/step - loss: 0.2122 - mae: 0.3634 
+ 32/32 ━━━━━━━━━━━━━━━━━━━━ 0s 194us/step - loss: 0.2188 - mae: 0.3818
 
-<keras.src.callbacks.history.History at 0x14c8e5de0>
+<keras.src.callbacks.history.History at 0x14de01420>
 
 ```
 </div>
@@ -381,9 +382,9 @@ model.evaluate(x, y)
 
 <div class="k-default-codeblock">
 ```
- 32/32 ━━━━━━━━━━━━━━━━━━━━ 0s 777us/step - mae: 0.6349 - loss: 0.5714
+ 32/32 ━━━━━━━━━━━━━━━━━━━━ 0s 973us/step - mae: 0.7887 - loss: 0.8385
 
-[0.5714115500450134, 0.6256848573684692]
+[0.8385222554206848, 0.7956181168556213]
 
 ```
 </div>
