@@ -123,6 +123,7 @@ class CustomModel(keras.Model):
 
         # Update metrics.
         new_metrics_vars = []
+        logs = {}
         for metric in self.metrics:
             this_metric_vars = metrics_variables[
                 len(new_metrics_vars) : len(new_metrics_vars) + len(metric.variables)
@@ -133,7 +134,7 @@ class CustomModel(keras.Model):
                 this_metric_vars = metric.stateless_update_state(
                     this_metric_vars, y, y_pred
                 )
-            logs = metric.stateless_result(this_metric_vars)
+            logs[metric.name] = metric.stateless_result(this_metric_vars)
             new_metrics_vars += this_metric_vars
 
         # Return metric logs and updated state variables.
