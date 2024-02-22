@@ -65,7 +65,6 @@ MODELS_MASTER = {
                 },
             ],
         },
-
         {
             "path": "bart/",
             "title": "Bart",
@@ -307,7 +306,6 @@ MODELS_MASTER = {
                 },
             ],
         },
-
         {
             "path": "gemma/",
             "title": "Gemma",

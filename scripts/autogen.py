@@ -568,9 +568,11 @@ class KerasIO:
         metadata = json.dumps(
             {
                 "location_history": location_history[:-1],
-                "outline": autogen_utils.make_outline(template)
-                if entry.get("outline", True)
-                else [],
+                "outline": (
+                    autogen_utils.make_outline(template)
+                    if entry.get("outline", True)
+                    else []
+                ),
                 "location": "/"
                 + "/".join([s.replace("/", "") for s in path_stack])
                 + "/",
@@ -1132,7 +1134,11 @@ if __name__ == "__main__":
         refresh_guides=False,
         refresh_examples=False,
     )
-
+    error_msg = (
+        "Must specify command " "`make`, `serve`, `add_example`, or `add_guide`."
+    )
+    if len(sys.argv) < 2:
+        raise ValueError(error_msg)
     cmd = sys.argv[1]
     if cmd not in {
         "make",
@@ -1140,9 +1146,7 @@ if __name__ == "__main__":
         "add_example",
         "add_guide",
     }:
-        raise ValueError(
-            "Must specify command `make`, `serve`, `add_example`, or `add_guide`."
-        )
+        raise ValueError(error_msg)
     if cmd in {"add_example", "add_guide"}:
         if not len(sys.argv) in (3, 4):
             raise ValueError(
