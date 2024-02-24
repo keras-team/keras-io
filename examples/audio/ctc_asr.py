@@ -245,82 +245,6 @@ plt.show()
 """
 ## Model
 
-We first define the CTC Loss function.
-"""
-
-
-# Reference: https://github.com/keras-team/keras/blob/ec67b760ba25e1ccc392d288f7d8c6e9e153eea2/keras/legacy/backend.py#L674-L711
-def ctc_label_dense_to_sparse(labels, label_lengths):
-    label_shape = tf.shape(labels)
-    num_batches_tns = tf.stack([label_shape[0]])
-    max_num_labels_tns = tf.stack([label_shape[1]])
-
-    def range_less_than(old_input, current_input):
-        return tf.expand_dims(tf.range(tf.shape(old_input)[1]), 0) < tf.fill(
-            max_num_labels_tns, current_input
-        )
-
-    init = tf.cast(tf.fill([1, label_shape[1]], 0), tf.bool)
-    dense_mask = tf.compat.v1.scan(
-        range_less_than, label_lengths, initializer=init, parallel_iterations=1
-    )
-    dense_mask = dense_mask[:, 0, :]
-
-    label_array = tf.reshape(
-        tf.tile(tf.range(0, label_shape[1]), num_batches_tns), label_shape
-    )
-    label_ind = tf.compat.v1.boolean_mask(label_array, dense_mask)
-
-    batch_array = tf.transpose(
-        tf.reshape(
-            tf.tile(tf.range(0, label_shape[0]), max_num_labels_tns),
-            tf.reverse(label_shape, [0]),
-        )
-    )
-    batch_ind = tf.compat.v1.boolean_mask(batch_array, dense_mask)
-    indices = tf.transpose(
-        tf.reshape(tf.concat([batch_ind, label_ind], axis=0), [2, -1])
-    )
-
-    vals_sparse = tf.compat.v1.gather_nd(labels, indices)
-
-    return tf.SparseTensor(
-        tf.cast(indices, tf.int64), vals_sparse, tf.cast(label_shape, tf.int64)
-    )
-
-
-# Reference: https://github.com/keras-team/keras/blob/ec67b760ba25e1ccc392d288f7d8c6e9e153eea2/keras/legacy/backend.py#L653-L670
-
-
-def ctc_batch_cost(y_true, y_pred, input_length, label_length):
-    label_length = tf.cast(tf.squeeze(label_length, axis=-1), tf.int32)
-    input_length = tf.cast(tf.squeeze(input_length, axis=-1), tf.int32)
-    sparse_labels = tf.cast(ctc_label_dense_to_sparse(y_true, label_length), tf.int32)
-
-    y_pred = tf.math.log(tf.transpose(y_pred, perm=[1, 0, 2]) + keras.backend.epsilon())
-
-    return tf.expand_dims(
-        tf.compat.v1.nn.ctc_loss(
-            inputs=y_pred, labels=sparse_labels, sequence_length=input_length
-        ),
-        1,
-    )
-
-
-def CTCLoss(y_true, y_pred):
-    # Compute the training-time loss value
-    batch_len = keras.ops.cast(keras.ops.shape(y_true)[0], dtype="int64")
-    input_length = keras.ops.cast(keras.ops.shape(y_pred)[1], dtype="int64")
-    label_length = keras.ops.cast(keras.ops.shape(y_true)[1], dtype="int64")
-
-    input_length = input_length * keras.ops.ones(shape=(batch_len, 1), dtype="int64")
-    label_length = label_length * keras.ops.ones(shape=(batch_len, 1), dtype="int64")
-
-    loss = ctc_batch_cost(y_true, y_pred, input_length, label_length)
-    return loss
-
-
-"""
 We now define our model. We will define a model similar to
 [DeepSpeech2](https://nvidia.github.io/OpenSeq2Seq/html/speech-recognition/deepspeech2.html).
 """
@@ -383,7 +307,7 @@ def build_model(input_dim, output_dim, rnn_layers=5, rnn_units=128):
     # Optimizer
     opt = keras.optimizers.Adam(learning_rate=1e-4)
     # Compile the model and return
-    model.compile(optimizer=opt, loss=CTCLoss)
+    model.compile(optimizer=opt, loss=keras.losses.ctc)
     return model
 
 
