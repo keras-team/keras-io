@@ -307,7 +307,7 @@ def build_model(input_dim, output_dim, rnn_layers=5, rnn_units=128):
     # Optimizer
     opt = keras.optimizers.Adam(learning_rate=1e-4)
     # Compile the model and return
-    model.compile(optimizer=opt, loss=keras.losses.ctc)
+    model.compile(optimizer=opt, loss=keras.losses.CTC())
     return model
 
 
