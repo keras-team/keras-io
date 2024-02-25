@@ -1,5 +1,6 @@
 """Lightweight fork of Keras-Autodocs.
 """
+
 import warnings
 import black
 import re

@@ -134,6 +134,7 @@ API_MASTER = {
                         "keras.activations.leaky_relu",
                         "keras.activations.relu6",
                         "keras.activations.silu",
+                        "keras.activations.hard_silu",
                         "keras.activations.gelu",
                         "keras.activations.hard_sigmoid",
                         "keras.activations.linear",
@@ -157,12 +158,16 @@ API_MASTER = {
                         "keras.initializers.Orthogonal",
                         "keras.initializers.Constant",
                         "keras.initializers.VarianceScaling",
+                        "keras.initializers.LecunNormal",
+                        "keras.initializers.LecunUniform",
+                        "keras.initializers.IdentityInitializer",
                     ],
                 },
                 {
                     "path": "regularizers",
                     "title": "Layer weight regularizers",
                     "generate": [
+                        "keras.regularizers.Regularizer",
                         "keras.regularizers.L1",
                         "keras.regularizers.L2",
                         "keras.regularizers.L1L2",
@@ -173,6 +178,7 @@ API_MASTER = {
                     "path": "constraints",
                     "title": "Layer weight constraints",
                     "generate": [
+                        "keras.constraints.Constraint",
                         "keras.constraints.MaxNorm",
                         "keras.constraints.MinMaxNorm",
                         "keras.constraints.NonNeg",
@@ -190,9 +196,19 @@ API_MASTER = {
                             "generate": ["keras.Input"],
                         },
                         {
+                            "path": "input_spec",
+                            "title": "InputSpec object",
+                            "generate": ["keras.InputSpec"],
+                        },
+                        {
                             "path": "dense",
                             "title": "Dense layer",
                             "generate": ["keras.layers.Dense"],
+                        },
+                        {
+                            "path": "einsum_dense",
+                            "title": "EinsumDense layer",
+                            "generate": ["keras.layers.EinsumDense"],
                         },
                         {
                             "path": "activation",
@@ -213,6 +229,11 @@ API_MASTER = {
                             "path": "lambda",
                             "title": "Lambda layer",
                             "generate": ["keras.layers.Lambda"],
+                        },
+                        {
+                            "path": "identity",
+                            "title": "Identity layer",
+                            "generate": ["keras.layers.Identity"],
                         },
                     ],
                 },
@@ -245,6 +266,11 @@ API_MASTER = {
                             "path": "separable_convolution2d",
                             "title": "SeparableConv2D layer",
                             "generate": ["keras.layers.SeparableConv2D"],
+                        },
+                        {
+                            "path": "depthwise_convolution1d",
+                            "title": "DepthwiseConv1D layer",
+                            "generate": ["keras.layers.DepthwiseConv1D"],
                         },
                         {
                             "path": "depthwise_convolution2d",
@@ -346,9 +372,19 @@ API_MASTER = {
                             "generate": ["keras.layers.LSTM"],
                         },
                         {
+                            "path": "lstm_cell",
+                            "title": "LSTM cell layer",
+                            "generate": ["keras.layers.LSTMCell"],
+                        },
+                        {
                             "path": "gru",
                             "title": "GRU layer",
                             "generate": ["keras.layers.GRU"],
+                        },
+                        {
+                            "path": "gru_cell",
+                            "title": "GRU Cell layer",
+                            "generate": ["keras.layers.GRUCell"],
                         },
                         {
                             "path": "simple_rnn",
@@ -385,6 +421,16 @@ API_MASTER = {
                             "title": "Base RNN layer",
                             "generate": ["keras.layers.RNN"],
                         },
+                        {
+                            "path": "simple_rnn_cell",
+                            "title": "Simple RNN cell layer",
+                            "generate": ["keras.layers.SimpleRNNCell"],
+                        },
+                        {
+                            "path": "stacked_rnn_cell",
+                            "title": "Stacked RNN cell layer",
+                            "generate": ["keras.layers.StackedRNNCells"],
+                        },
                     ],
                 },
                 {
@@ -413,6 +459,11 @@ API_MASTER = {
                                     "path": "normalization",
                                     "title": "Normalization layer",
                                     "generate": ["keras.layers.Normalization"],
+                                },
+                                {
+                                    "path": "spectral_normalization",
+                                    "title": "Spectral Normalization layer",
+                                    "generate": ["keras.layers.SpectralNormalization"],
                                 },
                                 {
                                     "path": "discretization",
@@ -577,6 +628,11 @@ API_MASTER = {
                             "generate": ["keras.layers.GaussianDropout"],
                         },
                         {
+                            "path": "alpha_dropout",
+                            "title": "AlphaDropout layer",
+                            "generate": ["keras.layers.AlphaDropout"],
+                        },
+                        {
                             "path": "gaussian_noise",
                             "title": "GaussianNoise layer",
                             "generate": ["keras.layers.GaussianNoise"],
@@ -593,6 +649,11 @@ API_MASTER = {
                     "title": "Attention layers",
                     "toc": True,
                     "children": [
+                        {
+                            "path": "group_query_attention",
+                            "title": "GroupQueryAttention",
+                            "generate": ["keras.layers.GroupQueryAttention"],
+                        },
                         {
                             "path": "multi_head_attention",
                             "title": "MultiHeadAttention layer",
@@ -771,6 +832,11 @@ API_MASTER = {
                             "title": "TorchModuleWrapper layer",
                             "generate": ["keras.layers.TorchModuleWrapper"],
                         },
+                        {
+                            "path": "tfsm_layer",
+                            "title": "Tensorflow SavedModel layer",
+                            "generate": ["keras.layers.TFSMLayer"],
+                        },
                     ],
                 },
             ],
@@ -840,6 +906,11 @@ API_MASTER = {
                     "title": "ProgbarLogger",
                     "generate": ["keras.callbacks.ProgbarLogger"],
                 },
+                {
+                    "path": "swap_ema_weights",
+                    "title": "SwapEMAWeights",
+                    "generate": ["keras.callbacks.SwapEMAWeights"],
+                },
             ],
         },
         {
@@ -890,6 +961,7 @@ API_MASTER = {
                         "keras.ops.diff",
                         "keras.ops.digitize",
                         "keras.ops.divide",
+                        "keras.ops.divide_no_nan",
                         "keras.ops.dot",
                         "keras.ops.einsum",
                         "keras.ops.empty",
@@ -941,6 +1013,7 @@ API_MASTER = {
                         "keras.ops.ndim",
                         "keras.ops.negative",
                         "keras.ops.nonzero",
+                        "keras.ops.norm",
                         "keras.ops.not_equal",
                         "keras.ops.ones",
                         "keras.ops.ones_like",
@@ -1017,11 +1090,29 @@ API_MASTER = {
                         "keras.ops.separable_conv",
                         "keras.ops.sigmoid",
                         "keras.ops.silu",
+                        "keras.ops.hard_silu",
                         "keras.ops.softmax",
                         "keras.ops.softplus",
                         "keras.ops.softsign",
                         "keras.ops.sparse_categorical_crossentropy",
                         "keras.ops.swish",
+                        "keras.ops.hard_swish",
+                    ],
+                },
+                {
+                    "path": "linalg/",
+                    "title": "Linear algebra ops",
+                    "generate": [
+                        "keras.ops.cholesky",
+                        "keras.ops.det",
+                        "keras.ops.eig",
+                        "keras.ops.inv",
+                        "keras.ops.lu_factor",
+                        "keras.ops.norm",
+                        "keras.ops.qr",
+                        "keras.ops.solve",
+                        "keras.ops.solve_triangular",
+                        "keras.ops.svd",
                     ],
                 },
                 {
@@ -1033,12 +1124,12 @@ API_MASTER = {
                         "keras.ops.convert_to_numpy",
                         "keras.ops.convert_to_tensor",
                         "keras.ops.erf",
+                        "keras.ops.erfinv",
                         "keras.ops.extract_sequences",
                         "keras.ops.fori_loop",
                         "keras.ops.in_top_k",
                         "keras.ops.is_tensor",
                         "keras.ops.logsumexp",
-                        "keras.ops.qr",
                         "keras.ops.rsqrt",
                         "keras.ops.scatter",
                         "keras.ops.scatter_update",
@@ -1047,7 +1138,6 @@ API_MASTER = {
                         "keras.ops.shape",
                         "keras.ops.slice",
                         "keras.ops.slice_update",
-                        "keras.ops.solve",
                         "keras.ops.stop_gradient",
                         "keras.ops.top_k",
                         "keras.ops.unstack",
@@ -1085,6 +1175,7 @@ API_MASTER = {
             "title": "Optimizers",
             "toc": True,
             "generate": [
+                "keras.optimizers.Optimizer",
                 "keras.optimizers.Optimizer.apply_gradients",
                 "keras.optimizers.Optimizer.variables",
             ],
@@ -1140,11 +1231,28 @@ API_MASTER = {
                     "generate": ["keras.optimizers.Ftrl"],
                 },
                 {
+                    "path": "lion",
+                    "title": "Lion",
+                    "generate": ["keras.optimizers.Lion"],
+                },
+                {
+                    "path": "loss_scale_optimizer",
+                    "title": "Loss Scale Optimizer",
+                    "generate": ["keras.optimizers.LossScaleOptimizer"],
+                },
+                {
                     "path": "learning_rate_schedules/",
                     "title": "Learning rate schedules API",
                     "toc": True,
                     "skip_from_toc": True,
                     "children": [
+                        {
+                            "path": "learning_rate_schedule",
+                            "title": "LearningRateSchedule",
+                            "generate": [
+                                "keras.optimizers.schedules.LearningRateSchedule"
+                            ],
+                        },
                         {
                             "path": "exponential_decay",
                             "title": "ExponentialDecay",
@@ -1189,6 +1297,13 @@ API_MASTER = {
             "toc": True,
             "children": [
                 {
+                    "path": "base_metric",
+                    "title": "Base Metric class",
+                    "generate": [
+                        "keras.metrics.Metric",
+                    ],
+                },
+                {
                     "path": "accuracy_metrics",
                     "title": "Accuracy metrics",
                     "generate": [
@@ -1222,6 +1337,7 @@ API_MASTER = {
                         "keras.metrics.MeanSquaredLogarithmicError",
                         "keras.metrics.CosineSimilarity",
                         "keras.metrics.LogCoshError",
+                        "keras.metrics.R2Score",
                     ],
                 },
                 {
@@ -1236,14 +1352,23 @@ API_MASTER = {
                         "keras.metrics.FalsePositives",
                         "keras.metrics.FalseNegatives",
                         "keras.metrics.PrecisionAtRecall",
+                        "keras.metrics.RecallAtPrecision",
                         "keras.metrics.SensitivityAtSpecificity",
                         "keras.metrics.SpecificityAtSensitivity",
+                        "keras.metrics.F1Score",
+                        "keras.metrics.FBetaScore",
                     ],
                 },
                 {
                     "path": "segmentation_metrics",
                     "title": "Image segmentation metrics",
-                    "generate": ["keras.metrics.MeanIoU"],
+                    "generate": [
+                        "keras.metrics.IoU",
+                        "keras.metrics.BinaryIoU",
+                        "keras.metrics.OneHotIoU",
+                        "keras.metrics.OneHotMeanIoU",
+                        "keras.metrics.MeanIoU",
+                    ],
                 },
                 {
                     "path": "hinge_metrics",
@@ -1252,6 +1377,15 @@ API_MASTER = {
                         "keras.metrics.Hinge",
                         "keras.metrics.SquaredHinge",
                         "keras.metrics.CategoricalHinge",
+                    ],
+                },
+                {
+                    "path": "metrics_wrappers",
+                    "title": "Metric wrappers and reduction metrics",
+                    "generate": [
+                        "keras.metrics.MeanMetricWrapper",
+                        "keras.metrics.Mean",
+                        "keras.metrics.Sum",
                     ],
                 },
             ],
@@ -1266,7 +1400,9 @@ API_MASTER = {
                     "title": "Probabilistic losses",
                     "generate": [
                         "keras.losses.BinaryCrossentropy",
+                        "keras.losses.BinaryFocalCrossentropy",
                         "keras.losses.CategoricalCrossentropy",
+                        "keras.losses.CategoricalFocalCrossentropy",
                         "keras.losses.SparseCategoricalCrossentropy",
                         "keras.losses.Poisson",
                         "keras.losses.binary_crossentropy",
@@ -1275,6 +1411,7 @@ API_MASTER = {
                         "keras.losses.poisson",
                         "keras.losses.KLDivergence",
                         "keras.losses.kl_divergence",
+                        "keras.losses.CTC",
                     ],
                 },
                 {
@@ -1324,6 +1461,7 @@ API_MASTER = {
                         "keras.utils.load_img",
                         "keras.utils.img_to_array",
                         "keras.utils.save_img",
+                        "keras.utils.array_to_img",
                     ],
                 },
                 {
@@ -1619,11 +1757,23 @@ API_MASTER = {
                     ],
                 },
                 {
+                    "path": "tensor_utils",
+                    "title": "Tensor utilities",
+                    "generate": [
+                        "keras.utils.get_source_inputs",
+                        "keras.utils.is_keras_tensor",
+                        # "keras.backend.standardize_dtype",  # TODO: enable later
+                        # "keras.backend.is_float_dtype",
+                        # "keras.backend.is_int_dtype",
+                    ],
+                },
+                {
                     "path": "python_utils",
                     "title": "Python & NumPy utilities",
                     "generate": [
                         "keras.utils.set_random_seed",
                         "keras.utils.split_dataset",
+                        "keras.utils.pack_x_y_sample_weight",
                         "keras.utils.get_file",
                         "keras.utils.Progbar",
                         "keras.utils.PyDataset",
@@ -1635,13 +1785,22 @@ API_MASTER = {
                     "path": "config_utils",
                     "title": "Keras configuration utilities",
                     "generate": [
+                        "keras.version",
                         "keras.utils.clear_session",
+                        "keras.config.enable_traceback_filtering",
+                        "keras.config.disable_traceback_filtering",
+                        "keras.config.is_traceback_filtering_enabled",
+                        "keras.config.enable_interactive_logging",
+                        "keras.config.disable_interactive_logging",
+                        "keras.config.is_interactive_logging_enabled",
+                        "keras.config.enable_unsafe_deserialization",
                         "keras.config.floatx",
                         "keras.config.set_floatx",
                         "keras.config.image_data_format",
                         "keras.config.set_image_data_format",
                         "keras.config.epsilon",
                         "keras.config.set_epsilon",
+                        "keras.config.backend",
                     ],
                 },
             ],

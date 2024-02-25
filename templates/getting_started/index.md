@@ -136,7 +136,7 @@ To use it, you can install it via `pip install tf_keras` then import it via `imp
 Should you want `tf.keras` to stay on Keras 2 after upgrading to TensorFlow 2.16+, you can configure your TensorFlow installation
 so that `tf.keras` points to `tf_keras`. To achieve this:
 
-1. Make sure to install `tf_keras`. Note that TensorFlow does not install by default.
+1. Make sure to install `tf_keras`. Note that TensorFlow does not install it by default.
 2. Export the environment variable `TF_USE_LEGACY_KERAS=1`.
 
 There are several ways to export the environment variable:

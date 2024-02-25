@@ -22,6 +22,7 @@ but an equivalent request to storage.googleapis.com/www.example.com does not.
 
 After upload, you may need to invalidate the CDN cache.
 """
+
 import os
 import pathlib
 

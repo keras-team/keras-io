@@ -6,6 +6,7 @@ Last modified: 2021/07/01
 Description: Implementation of StyleGAN for image generation.
 Accelerator: GPU
 """
+
 """
 ## Introduction
 

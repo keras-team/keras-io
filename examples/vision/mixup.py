@@ -6,6 +6,7 @@ Last modified: 2023/07/24
 Description: Data augmentation using the mixup technique for image classification.
 Accelerator: GPU
 """
+
 """
 ## Introduction
 """

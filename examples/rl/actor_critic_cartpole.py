@@ -2,10 +2,12 @@
 Title: Actor Critic Method
 Author: [Apoorv Nandan](https://twitter.com/NandanApoorv)
 Date created: 2020/05/13
-Last modified: 2020/05/13
+Last modified: 2024/02/22
 Description: Implement Actor Critic Method in CartPole environment.
 Accelerator: NONE
+Converted to Keras 3 by: [Sitam Meur](https://github.com/sitamgithub-MSIT)
 """
+
 """
 ## Introduction
 
@@ -39,11 +41,15 @@ remains upright. The agent, therefore, must learn to keep the pole from falling 
 ## Setup
 """
 
+import os
+
+os.environ["KERAS_BACKEND"] = "tensorflow"
 import gym
 import numpy as np
+import keras
+from keras import ops
+from keras import layers
 import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras import layers
 
 # Configuration parameters for the whole setup
 seed = 42
@@ -97,8 +103,8 @@ while True:  # Run until solved
             # env.render(); Adding this line would show the attempts
             # of the agent in a pop up window.
 
-            state = tf.convert_to_tensor(state)
-            state = tf.expand_dims(state, 0)
+            state = ops.convert_to_tensor(state)
+            state = ops.expand_dims(state, 0)
 
             # Predict action probabilities and estimated future rewards
             # from environment state
@@ -107,7 +113,7 @@ while True:  # Run until solved
 
             # Sample action from action probability distribution
             action = np.random.choice(num_actions, p=np.squeeze(action_probs))
-            action_probs_history.append(tf.math.log(action_probs[0, action]))
+            action_probs_history.append(ops.log(action_probs[0, action]))
 
             # Apply the sampled action in our environment
             state, reward, done, _ = env.step(action)
@@ -151,7 +157,7 @@ while True:  # Run until solved
             # The critic must be updated so that it predicts a better estimate of
             # the future rewards.
             critic_losses.append(
-                huber_loss(tf.expand_dims(value, 0), tf.expand_dims(ret, 0))
+                huber_loss(ops.expand_dims(value, 0), ops.expand_dims(ret, 0))
             )
 
         # Backpropagation

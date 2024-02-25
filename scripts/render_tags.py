@@ -10,6 +10,7 @@ metadata dictionary as follows:
     'path': Relative path of the model on keras.io,
 }
 """
+
 import inspect
 
 try:

@@ -6,6 +6,7 @@ Last modified: 2021/11/25
 Description: MIL approach to classify bags of instances and get their individual instance score.
 Accelerator: GPU
 """
+
 """
 ## Introduction
 

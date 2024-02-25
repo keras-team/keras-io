@@ -6,6 +6,7 @@ Last modified: 2022/09/26
 Description: Guide on how to share a custom training step across multiple Keras models.
 Accelerator: GPU
 """
+
 """
 ## Introduction
 

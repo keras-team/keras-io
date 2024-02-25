@@ -6,6 +6,7 @@ Last modified: 2023/07/06
 Description: Training a handwriting recognition model with variable-length sequences.
 Accelerator: GPU
 """
+
 """
 ## Introduction
 

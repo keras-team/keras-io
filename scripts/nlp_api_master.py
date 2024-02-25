@@ -66,6 +66,61 @@ MODELS_MASTER = {
             ],
         },
         {
+            "path": "bart/",
+            "title": "Bart",
+            "toc": True,
+            "children": [
+                {
+                    "path": "bart_tokenizer",
+                    "title": "BertTokenizer",
+                    "generate": [
+                        "keras_nlp.models.BertTokenizer",
+                        "keras_nlp.models.BertTokenizer.from_preset",
+                    ],
+                },
+                {
+                    "path": "bart_preprocessor",
+                    "title": "BertPreprocessor layer",
+                    "generate": [
+                        "keras_nlp.models.BertPreprocessor",
+                        "keras_nlp.models.BertPreprocessor.from_preset",
+                        "keras_nlp.models.BertPreprocessor.tokenizer",
+                    ],
+                },
+                {
+                    "path": "bart_backbone",
+                    "title": "BertBackbone model",
+                    "generate": [
+                        "keras_nlp.models.BertBackbone",
+                        "keras_nlp.models.BertBackbone.from_preset",
+                        "keras_nlp.models.BertBackbone.token_embedding",
+                    ],
+                },
+                {
+                    "path": "bart_seq_2_seq_lm",
+                    "title": "BartSeq2SeqLM model",
+                    "generate": [
+                        "keras_nlp.models.BartSeq2SeqLM",
+                        "keras_nlp.models.BartSeq2SeqLM.from_preset",
+                        "keras_nlp.models.BartSeq2SeqLM.generate",
+                        "keras_nlp.models.BartSeq2SeqLM.backbone",
+                        "keras_nlp.models.BartSeq2SeqLM.preprocessor",
+                    ],
+                },
+                {
+                    "path": "bart_seq_2_seq_lm_preprocessor",
+                    "title": "BartSeq2SeqLMPreprocessor layer",
+                    "generate": [
+                        "keras_nlp.models.BartSeq2SeqLMPreprocessor",
+                        "keras_nlp.models.BartSeq2SeqLMPreprocessor.from_preset",
+                        "keras_nlp.models.BartSeq2SeqLMPreprocessor.generate_preprocess",
+                        "keras_nlp.models.BartSeq2SeqLMPreprocessor.generate_postprocess",
+                        "keras_nlp.models.BartSeq2SeqLMPreprocessor.tokenizer",
+                    ],
+                },
+            ],
+        },
+        {
             "path": "bert/",
             "title": "Bert",
             "toc": True,
@@ -252,6 +307,62 @@ MODELS_MASTER = {
             ],
         },
         {
+            "path": "gemma/",
+            "title": "Gemma",
+            "toc": True,
+            "children": [
+                {
+                    "path": "gemma_tokenizer",
+                    "title": "GemmaTokenizer",
+                    "generate": [
+                        "keras_nlp.models.GemmaTokenizer",
+                        "keras_nlp.models.GemmaTokenizer.from_preset",
+                    ],
+                },
+                {
+                    "path": "gemma_preprocessor",
+                    "title": "GemmaPreprocessor layer",
+                    "generate": [
+                        "keras_nlp.models.GemmaPreprocessor",
+                        "keras_nlp.models.GemmaPreprocessor.from_preset",
+                        "keras_nlp.models.GemmaPreprocessor.tokenizer",
+                    ],
+                },
+                {
+                    "path": "gemma_backbone",
+                    "title": "GemmaBackbone model",
+                    "generate": [
+                        "keras_nlp.models.GemmaBackbone",
+                        "keras_nlp.models.GemmaBackbone.from_preset",
+                        "keras_nlp.models.GemmaBackbone.token_embedding",
+                        "keras_nlp.models.GemmaBackbone.enable_lora",
+                        "keras_nlp.models.GemmaBackbone.get_layout_map",
+                    ],
+                },
+                {
+                    "path": "gemma_causal_lm",
+                    "title": "GemmaCausalLM model",
+                    "generate": [
+                        "keras_nlp.models.GemmaCausalLM",
+                        "keras_nlp.models.GemmaCausalLM.from_preset",
+                        "keras_nlp.models.GemmaCausalLM.generate",
+                        "keras_nlp.models.GemmaCausalLM.backbone",
+                        "keras_nlp.models.GemmaCausalLM.preprocessor",
+                        "keras_nlp.models.GemmaCausalLM.score",
+                    ],
+                },
+                {
+                    "path": "gemma_causal_lm_preprocessor",
+                    "title": "GemmaCausalLMPreprocessor layer",
+                    "generate": [
+                        "keras_nlp.models.GemmaCausalLMPreprocessor",
+                        "keras_nlp.models.GemmaCausalLMPreprocessor.from_preset",
+                        "keras_nlp.models.GemmaCausalLMPreprocessor.tokenizer",
+                    ],
+                },
+            ],
+        },
+        {
             "path": "gpt2/",
             "title": "GPT2",
             "toc": True,
@@ -364,6 +475,60 @@ MODELS_MASTER = {
                         "keras_nlp.models.FNetMaskedLMPreprocessor",
                         "keras_nlp.models.FNetMaskedLMPreprocessor.from_preset",
                         "keras_nlp.models.FNetMaskedLMPreprocessor.tokenizer",
+                    ],
+                },
+            ],
+        },
+        {
+            "path": "mistral/",
+            "title": "Mistral",
+            "toc": True,
+            "children": [
+                {
+                    "path": "mistral_tokenizer",
+                    "title": "MistralTokenizer",
+                    "generate": [
+                        "keras_nlp.models.MistralTokenizer",
+                        "keras_nlp.models.MistralTokenizer.from_preset",
+                    ],
+                },
+                {
+                    "path": "mistral_preprocessor",
+                    "title": "MistralPreprocessor layer",
+                    "generate": [
+                        "keras_nlp.models.MistralPreprocessor",
+                        "keras_nlp.models.MistralPreprocessor.from_preset",
+                        "keras_nlp.models.MistralPreprocessor.tokenizer",
+                    ],
+                },
+                {
+                    "path": "mistral_backbone",
+                    "title": "MistralBackbone model",
+                    "generate": [
+                        "keras_nlp.models.MistralBackbone",
+                        "keras_nlp.models.MistralBackbone.from_preset",
+                        "keras_nlp.models.MistralBackbone.token_embedding",
+                        "keras_nlp.models.MistralBackbone.enable_lora",
+                    ],
+                },
+                {
+                    "path": "mistral_causal_lm",
+                    "title": "MistralCausalLM model",
+                    "generate": [
+                        "keras_nlp.models.MistralCausalLM",
+                        "keras_nlp.models.MistralCausalLM.from_preset",
+                        "keras_nlp.models.MistralCausalLM.generate",
+                        "keras_nlp.models.MistralCausalLM.backbone",
+                        "keras_nlp.models.MistralCausalLM.preprocessor",
+                    ],
+                },
+                {
+                    "path": "mistral_causal_lm_preprocessor",
+                    "title": "MistralCausalLMPreprocessor layer",
+                    "generate": [
+                        "keras_nlp.models.MistralCausalLMPreprocessor",
+                        "keras_nlp.models.MistralCausalLMPreprocessor.from_preset",
+                        "keras_nlp.models.MistralCausalLMPreprocessor.tokenizer",
                     ],
                 },
             ],
@@ -773,6 +938,11 @@ MODELING_LAYERS_MASTER = {
             "path": "token_and_position_embedding",
             "title": "TokenAndPositionEmbedding layer",
             "generate": ["keras_nlp.layers.TokenAndPositionEmbedding"],
+        },
+        {
+            "path": "alibi_bias",
+            "title": "AlibiBias layer",
+            "generate": ["keras_nlp.layers.AlibiBias"],
         },
         {
             "path": "masked_lm_head",

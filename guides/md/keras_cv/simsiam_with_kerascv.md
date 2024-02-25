@@ -131,11 +131,11 @@ train_ds = train_ds.shuffle(buffer_size=8 * BATCH_SIZE, reshuffle_each_iteration
 [1mDataset stl10 downloaded and prepared to ~/tensorflow_datasets/stl10/1.0.0. Subsequent calls will reuse this data.[0m
 WARNING:tensorflow:From /home/lukewood/.local/lib/python3.7/site-packages/tensorflow/python/autograph/pyct/static_analysis/liveness.py:83: Analyzer.lamba_check (from tensorflow.python.autograph.pyct.static_analysis.liveness) is deprecated and will be removed after 2023-09-23.
 Instructions for updating:
-Lambda fuctions will be no more assumed to be used in the statement where they are used, or at least in the same block. https://github.com/tensorflow/tensorflow/issues/56089
+Lambda functions will be no more assumed to be used in the statement where they are used, or at least in the same block. https://github.com/tensorflow/tensorflow/issues/56089
 
 WARNING:tensorflow:From /home/lukewood/.local/lib/python3.7/site-packages/tensorflow/python/autograph/pyct/static_analysis/liveness.py:83: Analyzer.lamba_check (from tensorflow.python.autograph.pyct.static_analysis.liveness) is deprecated and will be removed after 2023-09-23.
 Instructions for updating:
-Lambda fuctions will be no more assumed to be used in the statement where they are used, or at least in the same block. https://github.com/tensorflow/tensorflow/issues/56089
+Lambda functions will be no more assumed to be used in the statement where they are used, or at least in the same block. https://github.com/tensorflow/tensorflow/issues/56089
 
 ```
 </div>
@@ -166,7 +166,7 @@ these datasets:
 
 
 ```python
-# Compute the indicies for query, index, val, and train splits
+# Compute the indices for query, index, val, and train splits
 query_idxs, index_idxs, val_idxs, train_idxs = [], [], [], []
 for cid in range(ds_info.features["label"].num_classes):
     idxs = tf.random.shuffle(tf.where(y_raw_train == cid))
@@ -424,7 +424,7 @@ def get_projector(input_dim, dim, activation="relu", num_layers: int = 3):
         name=f"batch_normalization_ouput",
     )(x)
     # Metric Logging layer. Monitors the std of the layer activations.
-    # Degnerate solutions colapse to 0 while valid solutions will move
+    # Degenerate solutions colapse to 0 while valid solutions will move
     # towards something like 0.0220. The actual number will depend on the layer size.
     o = tfsim.layers.ActivationStdLoggingLayer(name="proj_std")(x)
     projector = tf.keras.Model(inputs, o, name="projector")
@@ -496,7 +496,7 @@ def get_predictor(input_dim, hidden_dim=512, activation="relu"):
         name="predictor_output",
     )(x)
     # Metric Logging layer. Monitors the std of the layer activations.
-    # Degnerate solutions colapse to 0 while valid solutions will move
+    # Degenerate solutions colapse to 0 while valid solutions will move
     # towards something like 0.0220. The actual number will depend on the layer size.
     o = tfsim.layers.ActivationStdLoggingLayer(name="pred_std")(x)
     predictor = tf.keras.Model(inputs, o, name="predictor")
@@ -591,7 +591,7 @@ As we are only concerned with the matches below the distance threshold, the
 accuracy simplifies to TP/(TP+FP) and is equivalent to the precision with
 respect to the unfiltered queries. However, we also want to consider the
 query coverage at the distance threshold, i.e., the percentage of queries
-that retrun a match, computed as (TP+FP)/(TP+FP+TN+FN). Therefore, we can
+that return a match, computed as (TP+FP)/(TP+FP+TN+FN). Therefore, we can
 take $ precision \times query_coverage $ to produce a measure that capture
 the precision scaled by the query coverage. This simplifies down to the
 binary accuracy presented here, giving TP/(TP+FP+TN+FN).

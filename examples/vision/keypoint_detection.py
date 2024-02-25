@@ -6,6 +6,7 @@ Last modified: 2023/07/19
 Description: Training a keypoint detector with data augmentation and transfer learning.
 Accelerator: GPU
 """
+
 """
 Keypoint detection consists of locating key object parts. For example, the key parts
 of our faces include nose tips, eyebrows, eye corners, and so on. These parts help to

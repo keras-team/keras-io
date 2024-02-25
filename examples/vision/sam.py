@@ -6,6 +6,7 @@ Last modified: 2023/07/11
 Description: Fine-tuning Segment Anything Model using Keras and 🤗 Transformers.
 Accelerator: GPU
 """
+
 """
 ## Introduction
 

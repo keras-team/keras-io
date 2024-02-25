@@ -200,7 +200,7 @@ model = load_model('my_model.keras')
 If you need to save the **weights of a model**, you can do so in HDF5 with the code below, using the file extension `.weights.h5`:
 
 ```python
-model.save_weights('my_model.weights.5')
+model.save_weights('my_model.weights.h5')
 ```
 
 Assuming you have code for instantiating your model, you can then load the weights you saved into a model with the *same* architecture:

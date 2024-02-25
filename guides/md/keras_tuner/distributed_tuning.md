@@ -91,7 +91,7 @@ is not supported, but support for this is on the roadmap.
 
 ### Example code
 
-When the enviroment variables described above are set, the example below will
+When the environment variables described above are set, the example below will
 run distributed tuning and use data parallelism within each trial via
 `tf.distribute`. The example loads MNIST from `tensorflow_datasets` and uses
 [Hyperband](https://arxiv.org/abs/1603.06560) for the hyperparameter

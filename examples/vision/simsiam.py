@@ -6,6 +6,7 @@ Last modified: 2023/12/29
 Description: Implementation of a self-supervised learning method for computer vision.
 Accelerator: GPU
 """
+
 """
 Self-supervised learning (SSL) is an interesting branch of study in the field of
 representation learning. SSL systems try to formulate a supervised signal from a corpus

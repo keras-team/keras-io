@@ -82,7 +82,7 @@ mesh = keras.distribution.DeviceMesh(
 
 # A 2D layout, which describes how a tensor is distributed across the
 # mesh. The layout can be visualized as a 2D grid with "model" as rows and
-# "data" as columns, and it is a [4, 2] grid when it mapped to the physcial
+# "data" as columns, and it is a [4, 2] grid when it mapped to the physical
 # devices on the mesh.
 layout_2d = keras.distribution.TensorLayout(axes=("model", "data"), device_mesh=mesh)
 

@@ -6,6 +6,7 @@ Last modified: 2021/03/07
 Description: How to obtain a class activation heatmap for an image classification model.
 Accelerator: GPU
 """
+
 """
 Adapted from Deep Learning with Python (2017).
 
