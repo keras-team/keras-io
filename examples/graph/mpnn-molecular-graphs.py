@@ -497,7 +497,7 @@ class MessagePassing(layers.Layer):
 ### Readout
 
 When the message passing procedure ends, the k-step-aggregated node states are to be partitioned
-into subgraphs (correspoding to each molecule in the batch) and subsequently
+into subgraphs (corresponding to each molecule in the batch) and subsequently
 reduced to graph-level embeddings. In the
 [original paper](https://arxiv.org/abs/1704.01212), a
 [set-to-set layer](https://arxiv.org/abs/1511.06391) was used for this purpose.
@@ -662,7 +662,7 @@ MolsToGridImage(molecules, molsPerRow=4, legends=legends)
 """
 ## Conclusions
 
-In this tutorial, we demonstarted a message passing neural network (MPNN) to
+In this tutorial, we demonstrated a message passing neural network (MPNN) to
 predict blood-brain barrier permeability (BBBP) for a number of different molecules. We
 first had to construct graphs from SMILES, then build a Keras model that could
 operate on these graphs, and finally train the model to make the predictions.

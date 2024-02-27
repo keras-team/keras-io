@@ -375,14 +375,14 @@ Network layer based on the true values and our expected outputs:
 
 def get_mixture_loss_func(output_dim, num_mixes):
     def mdn_loss_func(y_true, y_pred):
-        # Reshape inputs in case this is used in a TimeDistribued layer
+        # Reshape inputs in case this is used in a TimeDistributed layer
         y_pred = tf.reshape(
             y_pred,
             [-1, (2 * num_mixes * output_dim) + num_mixes],
             name="reshape_ypreds",
         )
         y_true = tf.reshape(y_true, [-1, output_dim], name="reshape_ytrue")
-        # Split the inputs into paramaters
+        # Split the inputs into parameters
         out_mu, out_sigma, out_pi = tf.split(
             y_pred,
             num_or_size_splits=[
