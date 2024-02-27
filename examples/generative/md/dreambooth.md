@@ -731,7 +731,7 @@ plot_images(images_dreamboothed, prompt)
 ![png](/img/examples/generative/dreambooth/dreambooth_44_1.png)
 
 
-Feel free to experiment with different prompts (don't forget to add the unique identifer
+Feel free to experiment with different prompts (don't forget to add the unique identifier
 and the class label!) to see how the results change. We welcome you to check out our
 codebase and more experimental results
 [here](https://github.com/sayakpaul/dreambooth-keras#results). You can also read

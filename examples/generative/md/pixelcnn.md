@@ -20,7 +20,7 @@ from an input vector where the probability distribution of prior elements dictat
 probability distribution of later elements. In the following example, images are generated
 in this fashion, pixel-by-pixel, via a masked convolution kernel that only looks at data
 from previously generated pixels (origin at the top left) to generate later pixels.
-During inference, the output of the network is used as a probability ditribution
+During inference, the output of the network is used as a probability distribution
 from which new pixel values are sampled to generate a new image
 (here, with MNIST, the pixels values are either black or white).
 
