@@ -11,7 +11,7 @@ Accelerator: GPU
 ## Introduction
 
 [Graph neural networks](https://en.wikipedia.org/wiki/Graph_neural_network)
-is the prefered neural network architecture for processing data structured as
+is the preferred neural network architecture for processing data structured as
 graphs (for example, social networks or molecule structures), yielding
 better results than fully-connected networks or convolutional networks.
 
@@ -131,7 +131,7 @@ outputs \[updated\] node states. The node states are, for each target node, neig
 aggregated information of *N*-hops (where *N* is decided by the number of layers of the
 GAT). Importantly, in contrast to the
 [graph convolutional network](https://arxiv.org/abs/1609.02907) (GCN)
-the GAT makes use of attention machanisms
+the GAT makes use of attention mechanisms
 to aggregate information from neighboring nodes (or *source nodes*). In other words, instead of simply
 averaging/summing node states from source nodes (*source papers*) to the target node (*target papers*),
 GAT first applies normalized attention scores to each source node state and then sums.

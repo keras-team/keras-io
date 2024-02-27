@@ -67,7 +67,7 @@ tfds.disable_progress_bar()
 ```
 
 ---
-## Hyperparameters and contants
+## Hyperparameters and constants
 
 
 ```python

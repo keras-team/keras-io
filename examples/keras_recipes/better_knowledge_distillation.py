@@ -58,7 +58,7 @@ import tensorflow_datasets as tfds
 tfds.disable_progress_bar()
 
 """
-## Hyperparameters and contants
+## Hyperparameters and constants
 """
 
 AUTO = tf.data.AUTOTUNE  # Used to dynamically adjust parallelism.
