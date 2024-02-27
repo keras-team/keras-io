@@ -147,7 +147,7 @@ imagenet_labels_url = (
     "https://storage.googleapis.com/download.tensorflow.org/data/ImageNetLabels.txt"
 )
 response = requests.get(imagenet_labels_url)
-# Skiping backgroung class
+# Skipping background class
 labels = [x for x in response.text.split("\n") if x != ""][1:]
 # Convert the labels to the TensorFlow data format
 tf_labels = tf.constant(labels, dtype=tf.string)

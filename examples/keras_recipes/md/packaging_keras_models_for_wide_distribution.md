@@ -66,7 +66,7 @@ Let's load an MNIST dataset so that we have something to train with.
 
 ```python
 # tf.data is a great API for putting together a data stream.
-# It works wether you use the TensorFlow, PyTorch or Jax backend,
+# It works whether you use the TensorFlow, PyTorch or Jax backend,
 # as long as you use it in the data stream only and not inside of a model.
 
 BATCH_SIZE = 256

@@ -325,7 +325,7 @@ negative training examples. Each example includes the following features:
 
 1. `target`: A movie in a walk sequence.
 2. `context`: Another movie in a walk sequence.
-3. `weight`: How many times these two movies occured in walk sequences.
+3. `weight`: How many times these two movies occurred  in walk sequences.
 4. `label`: The label is 1 if these two movies are samples from the walk sequences,
 otherwise (i.e., if randomly sampled) the label is 0.
 """
@@ -342,7 +342,7 @@ def generate_examples(sequences, window_size, num_negative_samples, vocabulary_s
         sequences,
         position=0,
         leave=True,
-        desc=f"Generating postive and negative examples",
+        desc=f"Generating positive  and negative examples",
     ):
         # Generate positive and negative skip-gram pairs for a sequence (walk).
         pairs, labels = keras.preprocessing.sequence.skipgrams(

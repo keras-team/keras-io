@@ -414,7 +414,7 @@ y_test = test_data["subject"]
 
 ### Implement a baseline classifier
 
-We add five FFN blocks with skip connections, so that we generate a baseline model with
+We add five FFN blocks with skip connections, so that we generatee a baseline model with
 roughly the same number of parameters as the GNN models to be built later.
 
 
@@ -1052,7 +1052,7 @@ as follows:
 1. Apply preprocessing using FFN to the node features to generate initial node representations.
 2. Apply one or more graph convolutional layer, with skip connections,  to the node representation
 to produce node embeddings.
-3. Apply post-processing using FFN to the node embeddings to generat the final node embeddings.
+3. Apply post-processing using FFN to the node embeddings to generate the final node embeddings.
 4. Feed the node embeddings in a Softmax layer to predict the node class.
 
 Each graph convolutional layer added captures information from a further level of neighbours.
