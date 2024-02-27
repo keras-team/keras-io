@@ -583,7 +583,7 @@ _________________________________________________________________
 ---
 ## Class weights calculation
 
-Since the dataset is quite unbalanced, we wil use `class_weight` argument during training.
+Since the dataset is quite unbalanced, we will use `class_weight` argument during training.
 
 Getting the class weights is a little tricky because even though we know the number of
 audio files for each class, it does not represent the number of samples for that class

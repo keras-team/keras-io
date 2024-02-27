@@ -498,7 +498,7 @@ penalty is further guided by the model's property (QED) prediction.
 A gradient penalty is an alternative soft constraint on the
 1-Lipschitz continuity as an improvement upon the gradient clipping scheme from the
 original neural network
-("1-Lipschitz continuity" means that the norm of the gradient is at most 1 at evey single
+("1-Lipschitz continuity" means that the norm of the gradient is at most 1 at every single
 point of the function).
 It adds a regularization term to the loss function.
 
