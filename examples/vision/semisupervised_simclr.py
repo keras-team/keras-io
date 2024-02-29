@@ -214,7 +214,7 @@ class RandomColorAffine(layers.Layer):
             )
 
             color_transforms = (
-                tf.eye(3, batch_shape=[batch_size, 1]) * brightness_scales
+                ops.tile(ops.expand_dims(ops.eye(3), axis=0), (batch_size, 1, 1, 1)) * brightness_scales
                 + jitter_matrices
             )
             images = ops.clip(ops.matmul(images, color_transforms), 0, 1)
@@ -417,10 +417,10 @@ class ContrastiveModel(keras.Model):
         # NT-Xent loss (normalized temperature-scaled cross entropy)
 
         # Cosine similarity: the dot product of the l2-normalized feature vectors
-        projections_1 = keras.utils.normalize(projections_1, axis=1, order=2)
-        projections_2 = keras.utils.normalize(projections_2, axis=1, order=2)
+        projections_1 = ops.normalize(projections_1, axis=1)
+        projections_2 = ops.normalize(projections_2, axis=1)
         similarities = (
-            tf.matmul(projections_1, projections_2, transpose_b=True) / self.temperature
+            ops.matmul(projections_1, ops.transpose(projections_2)) / self.temperature
         )
 
         # The similarity between the representations of two augmented views of the
