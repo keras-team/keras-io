@@ -214,7 +214,8 @@ class RandomColorAffine(layers.Layer):
             )
 
             color_transforms = (
-                ops.tile(ops.expand_dims(ops.eye(3), axis=0), (batch_size, 1, 1, 1)) * brightness_scales
+                ops.tile(ops.expand_dims(ops.eye(3), axis=0), (batch_size, 1, 1, 1))
+                * brightness_scales
                 + jitter_matrices
             )
             images = ops.clip(ops.matmul(images, color_transforms), 0, 1)
