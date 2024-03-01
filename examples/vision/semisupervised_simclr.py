@@ -190,6 +190,7 @@ class RandomColorAffine(layers.Layer):
     def __init__(self, brightness=0, jitter=0, **kwargs):
         super().__init__(**kwargs)
 
+        self.seed_generator = keras.random.SeedGenerator(1337)
         self.brightness = brightness
         self.jitter = jitter
 
@@ -207,10 +208,14 @@ class RandomColorAffine(layers.Layer):
                 (batch_size, 1, 1, 1),
                 minval=-self.brightness,
                 maxval=self.brightness,
+                seed=self.seed_generator,
             )
             # Different for all colors
             jitter_matrices = keras.random.uniform(
-                (batch_size, 1, 3, 3), minval=-self.jitter, maxval=self.jitter
+                (batch_size, 1, 3, 3),
+                minval=-self.jitter,
+                maxval=self.jitter,
+                seed=self.seed_generator,
             )
 
             color_transforms = (
