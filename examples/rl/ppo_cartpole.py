@@ -2,7 +2,7 @@
 Title: Proximal Policy Optimization
 Author: [Ilias Chrysovergis](https://twitter.com/iliachry)
 Date created: 2021/06/24
-Last modified: 2021/06/24
+Last modified: 2024/03/09
 Description: Implementation of a Proximal Policy Optimization agent for the CartPole-v0 environment.
 Accelerator: NONE
 """
@@ -10,9 +10,9 @@ Accelerator: NONE
 """
 ## Introduction
 
-This code example solves the CartPole-v0 environment using a Proximal Policy Optimization (PPO) agent.
+This code example solves the CartPole-v1 environment using a Proximal Policy Optimization (PPO) agent.
 
-### CartPole-v0
+### CartPole-v1
 
 A pole is attached by an un-actuated joint to a cart, which moves along a frictionless track.
 The system is controlled by applying a force of +1 or -1 to the cart.
@@ -21,7 +21,7 @@ A reward of +1 is provided for every timestep that the pole remains upright.
 The episode ends when the pole is more than 15 degrees from vertical, or the cart moves more than 2.4 units from the center.
 After 200 steps the episode ends. Thus, the highest return we can get is equal to 200.
 
-[CartPole-v0](https://gym.openai.com/envs/CartPole-v0/)
+[CartPole-v1](https://gym.openai.com/envs/CartPole-v1/)
 
 ### Proximal Policy Optimization
 
@@ -56,13 +56,17 @@ For this example the following libraries are used:
 3. `gym` for getting everything we need about the environment
 4. `scipy.signal` for calculating the discounted cumulative sums of vectors
 """
+import os
+
+os.environ["KERAS_BACKEND"] = "tensorflow"
+
+import keras
+from keras import layers
+
 import numpy as np
 import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras import layers
 import gym
 import scipy.signal
-import time
 
 """
 ## Functions and class
@@ -133,7 +137,7 @@ class Buffer:
         )
 
 
-def mlp(x, sizes, activation=tf.tanh, output_activation=None):
+def mlp(x, sizes, activation=keras.activations.tanh, output_activation=None):
     # Build a feedforward neural network
     for size in sizes[:-1]:
         x = layers.Dense(units=size, activation=activation)(x)
@@ -142,18 +146,23 @@ def mlp(x, sizes, activation=tf.tanh, output_activation=None):
 
 def logprobabilities(logits, a):
     # Compute the log-probabilities of taking actions a by using the logits (i.e. the output of the actor)
-    logprobabilities_all = tf.nn.log_softmax(logits)
-    logprobability = tf.reduce_sum(
-        tf.one_hot(a, num_actions) * logprobabilities_all, axis=1
+    logprobabilities_all = keras.ops.log_softmax(logits)
+    logprobability = keras.ops.sum(
+        keras.ops.one_hot(a, num_actions) * logprobabilities_all, axis=1
     )
     return logprobability
+
+
+seed_generator = keras.random.SeedGenerator(1337)
 
 
 # Sample action from actor
 @tf.function
 def sample_action(observation):
     logits = actor(observation)
-    action = tf.squeeze(tf.random.categorical(logits, 1), axis=1)
+    action = keras.ops.squeeze(
+        keras.random.categorical(logits, 1, seed=seed_generator), axis=1
+    )
     return logits, action
 
 
@@ -163,27 +172,27 @@ def train_policy(
     observation_buffer, action_buffer, logprobability_buffer, advantage_buffer
 ):
     with tf.GradientTape() as tape:  # Record operations for automatic differentiation.
-        ratio = tf.exp(
+        ratio = keras.ops.exp(
             logprobabilities(actor(observation_buffer), action_buffer)
             - logprobability_buffer
         )
-        min_advantage = tf.where(
+        min_advantage = keras.ops.where(
             advantage_buffer > 0,
             (1 + clip_ratio) * advantage_buffer,
             (1 - clip_ratio) * advantage_buffer,
         )
 
-        policy_loss = -tf.reduce_mean(
-            tf.minimum(ratio * advantage_buffer, min_advantage)
+        policy_loss = -keras.ops.mean(
+            keras.ops.minimum(ratio * advantage_buffer, min_advantage)
         )
     policy_grads = tape.gradient(policy_loss, actor.trainable_variables)
     policy_optimizer.apply_gradients(zip(policy_grads, actor.trainable_variables))
 
-    kl = tf.reduce_mean(
+    kl = keras.ops.mean(
         logprobability_buffer
         - logprobabilities(actor(observation_buffer), action_buffer)
     )
-    kl = tf.reduce_sum(kl)
+    kl = keras.ops.sum(kl)
     return kl
 
 
@@ -191,7 +200,7 @@ def train_policy(
 @tf.function
 def train_value_function(observation_buffer, return_buffer):
     with tf.GradientTape() as tape:  # Record operations for automatic differentiation.
-        value_loss = tf.reduce_mean((return_buffer - critic(observation_buffer)) ** 2)
+        value_loss = keras.ops.mean((return_buffer - critic(observation_buffer)) ** 2)
     value_grads = tape.gradient(value_loss, critic.trainable_variables)
     value_optimizer.apply_gradients(zip(value_grads, critic.trainable_variables))
 
@@ -222,7 +231,7 @@ render = False
 
 # Initialize the environment and get the dimensionality of the
 # observation space and the number of possible actions
-env = gym.make("CartPole-v0")
+env = gym.make("CartPole-v1")
 observation_dimensions = env.observation_space.shape[0]
 num_actions = env.action_space.n
 
@@ -230,12 +239,10 @@ num_actions = env.action_space.n
 buffer = Buffer(observation_dimensions, steps_per_epoch)
 
 # Initialize the actor and the critic as keras models
-observation_input = keras.Input(shape=(observation_dimensions,), dtype=tf.float32)
-logits = mlp(observation_input, list(hidden_sizes) + [num_actions], tf.tanh, None)
+observation_input = keras.Input(shape=(observation_dimensions,), dtype="float32")
+logits = mlp(observation_input, list(hidden_sizes) + [num_actions])
 actor = keras.Model(inputs=observation_input, outputs=logits)
-value = tf.squeeze(
-    mlp(observation_input, list(hidden_sizes) + [1], tf.tanh, None), axis=1
-)
+value = keras.ops.squeeze(mlp(observation_input, list(hidden_sizes) + [1]), axis=1)
 critic = keras.Model(inputs=observation_input, outputs=value)
 
 # Initialize the policy and the value function optimizers
