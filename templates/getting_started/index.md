@@ -160,7 +160,7 @@ These lines would need to be before any `import tensorflow` statement.
 
 The following Keras + JAX versions are compatible with each other:
 
-- `jax==0.4.20` & `keras==3.0.0`
+- `jax==0.4.20` & `keras~=3.0.0`
 
 ### TensorFlow compatibility
 
@@ -168,17 +168,17 @@ The following Keras + TensorFlow versions are compatible with each other:
 
 To use Keras 2:
 
-- `tensorflow==2.13.0` & `keras==2.13.0`
-- `tensorflow==2.14.0` & `keras==2.14.0`
-- `tensorflow==2.15.0` & `keras==2.15.0`
+- `tensorflow~=2.13.0` & `keras~=2.13.0`
+- `tensorflow~=2.14.0` & `keras~=2.14.0`
+- `tensorflow~=2.15.0` & `keras~=2.15.0`
 
 To use Keras 3:
 
-- `tensorflow==2.15.0` & `keras==3.0.0`
-- `tensorflow==2.16.0` & `keras==3.0.0`
+- `tensorflow~=2.15.0` & `keras~=3.0.0`
+- `tensorflow~=2.16.1` & `keras~=3.0.0`
 
 ### PyTorch compatibility
 
 The following Keras + PyTorch versions are compatible with each other:
 
-- `torch==2.1.0` & `keras==3.0.0`
+- `torch~=2.1.0` & `keras~=3.0.0`
