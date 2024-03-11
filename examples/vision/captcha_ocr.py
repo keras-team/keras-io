@@ -187,7 +187,9 @@ plt.show()
 def ctc_batch_cost(y_true, y_pred, input_length, label_length):
     label_length = ops.cast(ops.squeeze(label_length, axis=-1), dtype="int32")
     input_length = ops.cast(ops.squeeze(input_length, axis=-1), dtype="int32")
-    sparse_labels = ops.cast(ctc_label_dense_to_sparse(y_true, label_length), dtype="int32")
+    sparse_labels = ops.cast(
+        ctc_label_dense_to_sparse(y_true, label_length), dtype="int32"
+    )
 
     y_pred = ops.log(ops.transpose(y_pred, axes=[1, 0, 2]) + keras.backend.epsilon())
 
@@ -234,7 +236,9 @@ def ctc_label_dense_to_sparse(labels, label_lengths):
     vals_sparse = tf.compat.v1.gather_nd(labels, indices)
 
     return tf.SparseTensor(
-        ops.cast(indices, dtype="int64"), vals_sparse, ops.cast(label_shape, dtype="int64")
+        ops.cast(indices, dtype="int64"),
+        vals_sparse,
+        ops.cast(label_shape, dtype="int64"),
     )
 
 
@@ -246,9 +250,9 @@ class CTCLayer(layers.Layer):
     def call(self, y_true, y_pred):
         # Compute the training-time loss value and add it
         # to the layer using `self.add_loss()`.
-        batch_len = ops.cast(tf.shape(y_true)[0], dtype="int64")
-        input_length = ops.cast(tf.shape(y_pred)[1], dtype="int64")
-        label_length = ops.cast(tf.shape(y_true)[1], dtype="int64")
+        batch_len = ops.cast(ops.shape(y_true)[0], dtype="int64")
+        input_length = ops.cast(ops.shape(y_pred)[1], dtype="int64")
+        label_length = ops.cast(ops.shape(y_true)[1], dtype="int64")
 
         input_length = input_length * ops.ones(shape=(batch_len, 1), dtype="int64")
         label_length = label_length * ops.ones(shape=(batch_len, 1), dtype="int64")
