@@ -2,9 +2,9 @@
 Title: Proximal Policy Optimization
 Author: [Ilias Chrysovergis](https://twitter.com/iliachry)
 Date created: 2021/06/24
-Last modified: 2024/03/09
-Description: Implementation of a Proximal Policy Optimization agent for the CartPole-v0 environment.
-Accelerator: NONE
+Last modified: 2024/03/12
+Description: Implementation of a Proximal Policy Optimization agent for the CartPole-v1 environment.
+Accelerator: None
 """
 
 """
@@ -21,7 +21,7 @@ A reward of +1 is provided for every timestep that the pole remains upright.
 The episode ends when the pole is more than 15 degrees from vertical, or the cart moves more than 2.4 units from the center.
 After 200 steps the episode ends. Thus, the highest return we can get is equal to 200.
 
-[CartPole-v1](https://gym.openai.com/envs/CartPole-v1/)
+[CartPole-v1](https://gymnasium.farama.org/environments/classic_control/cart_pole/)
 
 ### Proximal Policy Optimization
 
@@ -35,7 +35,7 @@ This procedure is applied for many epochs until the environment is solved.
 
 ![Algorithm](https://i.imgur.com/rd5tda1.png)
 
-- [PPO Original Paper](https://arxiv.org/pdf/1707.06347.pdf)
+- [Proximal Policy Optimization Algorithms](https://arxiv.org/abs/1707.06347)
 - [OpenAI Spinning Up docs - PPO](https://spinningup.openai.com/en/latest/algorithms/ppo.html)
 
 ### Note
@@ -53,7 +53,7 @@ For this example the following libraries are used:
 
 1. `numpy` for n-dimensional arrays
 2. `tensorflow` and `keras` for building the deep RL PPO agent
-3. `gym` for getting everything we need about the environment
+3. `gymnasium` for getting everything we need about the environment
 4. `scipy.signal` for calculating the discounted cumulative sums of vectors
 """
 import os
@@ -65,7 +65,7 @@ from keras import layers
 
 import numpy as np
 import tensorflow as tf
-import gym
+import gymnasium as gym
 import scipy.signal
 
 """
@@ -250,7 +250,8 @@ policy_optimizer = keras.optimizers.Adam(learning_rate=policy_learning_rate)
 value_optimizer = keras.optimizers.Adam(learning_rate=value_function_learning_rate)
 
 # Initialize the observation, episode return and episode length
-observation, episode_return, episode_length = env.reset(), 0, 0
+observation, _ = env.reset()
+episode_return, episode_length = 0, 0
 
 """
 ## Train
@@ -270,7 +271,7 @@ for epoch in range(epochs):
         # Get the logits, action, and take one step in the environment
         observation = observation.reshape(1, -1)
         logits, action = sample_action(observation)
-        observation_new, reward, done, _ = env.step(action[0].numpy())
+        observation_new, reward, done, _, _ = env.step(action[0].numpy())
         episode_return += reward
         episode_length += 1
 
@@ -292,7 +293,8 @@ for epoch in range(epochs):
             sum_return += episode_return
             sum_length += episode_length
             num_episodes += 1
-            observation, episode_return, episode_length = env.reset(), 0, 0
+            observation, _ = env.reset()
+            episode_return, episode_length = 0, 0
 
     # Get values from the buffer
     (
