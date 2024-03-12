@@ -20,6 +20,10 @@ MASTER = {
                     "title": "Introduction to Keras for engineers",
                 },
                 {
+                    "path": "benchmark",
+                    "title": "Keras 3 benchmark",
+                },
+                {
                     "path": "ecosystem",
                     "title": "The Keras ecosystem",
                 },
