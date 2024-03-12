@@ -2,9 +2,10 @@
 Title: OCR model for reading Captchas
 Author: [A_K_Nain](https://twitter.com/A_K_Nain)
 Date created: 2020/06/14
-Last modified: 2020/06/26
+Last modified: 2024/03/13
 Description: How to implement an OCR model using CNNs, RNNs and CTC loss.
 Accelerator: GPU
+Converted to Keras 3 by: [Sitam Meur](https://github.com/sitamgithub-MSIT)
 """
 
 """
