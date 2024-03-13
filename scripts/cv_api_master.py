@@ -257,6 +257,49 @@ LAYERS_MASTER = {
 #     ],
 # }
 
+LOSSES_MASTER = {
+    "path": "losses/",
+    "title": "Losses",
+    "toc": True,
+    "children": [
+        {
+            "path": "binary_focal_crossentropy",
+            "title": "Binary Penalty Reduced Focal CrossEntropy",
+            "generate": ["keras_cv.losses.BinaryPenaltyReducedFocalCrossEntropy"],
+        },
+        {
+            "path": "ciou_loss",
+            "title": "CIoU Loss",
+            "generate": ["keras_cv.losses.CIoULoss"],
+        },
+        {
+            "path": "focal_loss",
+            "title": "Focal Loss",
+            "generate": ["keras_cv.losses.FocalLoss"],
+        },
+        {
+            "path": "giou_loss",
+            "title": "GIoU Loss",
+            "generate": ["keras_cv.losses.GIoULoss"],
+        },
+        {
+            "path": "iou_loss",
+            "title": "IoU Loss",
+            "generate": ["keras_cv.losses.IoULoss"],
+        },
+        {
+            "path": "simclr_loss",
+            "title": "SimCLR Loss",
+            "generate": ["keras_cv.losses.SimCLRLoss"],
+        },
+        {
+            "path": "smoothl1_loss",
+            "title": "SmoothL1Loss Loss",
+            "generate": ["keras_cv.losses.SmoothL1Loss"],
+        },
+    ],
+}
+
 
 BACKBONES_MASTER = {
     "path": "backbones/",
@@ -388,5 +431,5 @@ CV_API_MASTER = {
     "path": "keras_cv/",
     "title": "KerasCV",
     "toc": True,
-    "children": [LAYERS_MASTER, MODELS_MASTER, BOUNDING_BOX_MASTER],
+    "children": [LAYERS_MASTER, MODELS_MASTER, BOUNDING_BOX_MASTER, LOSSES_MASTER],
 }
