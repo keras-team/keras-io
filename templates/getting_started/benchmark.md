@@ -1,9 +1,10 @@
 # Keras 3 benchmarks
+
 We benchmark the three backends of Keras 3
 ([TensorFlow](https://tensorflow.org/),
 [JAX](https://jax.readthedocs.io/en/latest/), [PyTorch](https://pytorch.org/))
-against native PyTorch implementations ([HuggingFace](https://huggingface.co/)
-and [Meta Research](https://github.com/facebookresearch/)) and against Keras 2
+alongside native PyTorch implementations ([HuggingFace](https://huggingface.co/)
+and [Meta Research](https://github.com/facebookresearch/)) and alongside Keras 2
 with TensorFlow. Find code and setup details for reproducing our results
 [here](https://github.com/haifeng-jin/keras-benchmarks).
 
@@ -95,7 +96,7 @@ addressed soon._
 
 ### Key Finding 1: There is no "best" backend
 
-Each of Keras 3's three backends offers unique strengths. Crucially, from a
+Each of the three backends of Keras offers unique strengths. Crucially, from a
 performance standpoint, there's no single backend that consistently outpaces the
 others. The fastest backend often depends on your specific model architecture.
 
@@ -172,7 +173,7 @@ Keras 3 models deliver excellent out-of-the-box performance without requiring
 complex, low-level optimizations.
 
 
-## Reference
+## References
 
 <sup>1</sup> Kirillov, Alexander, et al. "Segment anything." ICCV (2023).
 
