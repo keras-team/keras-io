@@ -6,7 +6,7 @@ We benchmark the three backends of Keras 3
 alongside native PyTorch implementations ([HuggingFace](https://huggingface.co/)
 and [Meta Research](https://github.com/facebookresearch/)) and alongside Keras 2
 with TensorFlow. Find code and setup details for reproducing our results
-[here](https://github.com/haifeng-jin/keras-benchmarks).
+[here](https://github.com/haifeng-jin/keras-benchmarks/tree/v0.0.1).
 
 ## Models
 
