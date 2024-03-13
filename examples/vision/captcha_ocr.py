@@ -27,7 +27,6 @@ import os
 
 os.environ["KERAS_BACKEND"] = "tensorflow"
 
-import os
 import numpy as np
 import matplotlib.pyplot as plt
 
