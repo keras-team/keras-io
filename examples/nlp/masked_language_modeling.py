@@ -295,9 +295,7 @@ def bert_module(query, key, value, i):
     return sequence_output
 
 
-loss_fn = keras.losses.SparseCategoricalCrossentropy(
-    reduction=None
-)
+loss_fn = keras.losses.SparseCategoricalCrossentropy(reduction=None)
 loss_tracker = keras.metrics.Mean(name="loss")
 
 
@@ -343,7 +341,7 @@ def create_masked_language_bert_model():
         config.VOCAB_SIZE, config.EMBED_DIM, name="word_embedding"
     )(inputs)
     position_embeddings = keras_nlp.layers.PositionEmbedding(
-      sequence_length=config.MAX_LEN
+        sequence_length=config.MAX_LEN
     )(word_embeddings)
     embeddings = word_embeddings + position_embeddings
 
