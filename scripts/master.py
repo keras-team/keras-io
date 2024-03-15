@@ -28,6 +28,10 @@ MASTER = {
                     "title": "The Keras ecosystem",
                 },
                 {
+                    "path": "tensorflow_keras_versions",
+                    "title": "TensorFlow Keras compatibility",
+                },
+                {
                     "path": "faq",
                     "title": "Frequently Asked Questions",
                     "outline": False,
