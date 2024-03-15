@@ -34,9 +34,10 @@ PyTorch backend.
 
 We employed synthetic data for all benchmarks. We used `bfloat16` precision for
 all LLM training and inferencing, and LoRA<sup>6</sup> for all LLM training
-(fine-tuning). Additionally, we applied `torch.compile()` to compatible native
-PyTorch implementations (with the exception of Gemma training and Mistral
-training due to incompatibility).
+(fine-tuning). Based on the recommendations of the PyTorch team, we used
+`torch.compile(model, mode="reduce-overhead")` to compatible native PyTorch
+implementations (with the exception of Gemma training and Mistral training due
+to incompatibility).
 
 To measure out-of-the-box performance, we use high-level APIs (e.g. `Trainer()`
 from HuggingFace, plain PyTorch training loops and Keras `model.fit()`) with as
