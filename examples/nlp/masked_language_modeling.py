@@ -2,9 +2,10 @@
 Title: End-to-end Masked Language Modeling with BERT
 Author: [Ankur Singh](https://twitter.com/ankur310794)
 Date created: 2020/09/18
-Last modified: 2020/09/18
+Last modified: 2024/03/15
 Description: Implement a Masked Language Model (MLM) with BERT and fine-tune it on the IMDB Reviews dataset.
 Accelerator: GPU
+Converted to Keras 3 by: [Sitam Meur](https://github.com/sitamgithub-MSIT)
 """
 
 """
@@ -43,10 +44,14 @@ Note: This example should be run with `tf-nightly`.
 Install `tf-nightly` via `pip install tf-nightly`.
 """
 
+import os
+
+os.environ["KERAS_BACKEND"] = "tensorflow"
+import keras_nlp
+import keras
 import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras import layers
-from tensorflow.keras.layers import TextVectorization
+from keras import layers
+from keras.layers import TextVectorization
 from dataclasses import dataclass
 import pandas as pd
 import numpy as np
@@ -264,13 +269,13 @@ def bert_module(query, key, value, i):
     attention_output = layers.MultiHeadAttention(
         num_heads=config.NUM_HEAD,
         key_dim=config.EMBED_DIM // config.NUM_HEAD,
-        name="encoder_{}/multiheadattention".format(i),
+        name="encoder_{}_multiheadattention".format(i),
     )(query, key, value)
-    attention_output = layers.Dropout(0.1, name="encoder_{}/att_dropout".format(i))(
+    attention_output = layers.Dropout(0.1, name="encoder_{}_att_dropout".format(i))(
         attention_output
     )
     attention_output = layers.LayerNormalization(
-        epsilon=1e-6, name="encoder_{}/att_layernormalization".format(i)
+        epsilon=1e-6, name="encoder_{}_att_layernormalization".format(i)
     )(query + attention_output)
 
     # Feed-forward layer
@@ -279,41 +284,23 @@ def bert_module(query, key, value, i):
             layers.Dense(config.FF_DIM, activation="relu"),
             layers.Dense(config.EMBED_DIM),
         ],
-        name="encoder_{}/ffn".format(i),
+        name="encoder_{}_ffn".format(i),
     )
     ffn_output = ffn(attention_output)
-    ffn_output = layers.Dropout(0.1, name="encoder_{}/ffn_dropout".format(i))(
+    ffn_output = layers.Dropout(0.1, name="encoder_{}_ffn_dropout".format(i))(
         ffn_output
     )
     sequence_output = layers.LayerNormalization(
-        epsilon=1e-6, name="encoder_{}/ffn_layernormalization".format(i)
+        epsilon=1e-6, name="encoder_{}_ffn_layernormalization".format(i)
     )(attention_output + ffn_output)
     return sequence_output
 
 
-def get_pos_encoding_matrix(max_len, d_emb):
-    pos_enc = np.array(
-        [
-            (
-                [pos / np.power(10000, 2 * (j // 2) / d_emb) for j in range(d_emb)]
-                if pos != 0
-                else np.zeros(d_emb)
-            )
-            for pos in range(max_len)
-        ]
-    )
-    pos_enc[1:, 0::2] = np.sin(pos_enc[1:, 0::2])  # dim 2i
-    pos_enc[1:, 1::2] = np.cos(pos_enc[1:, 1::2])  # dim 2i+1
-    return pos_enc
+loss_fn = keras.losses.SparseCategoricalCrossentropy(reduction=None)
+loss_tracker = keras.metrics.Mean(name="loss")
 
 
-loss_fn = keras.losses.SparseCategoricalCrossentropy(
-    reduction=tf.keras.losses.Reduction.NONE
-)
-loss_tracker = tf.keras.metrics.Mean(name="loss")
-
-
-class MaskedLanguageModel(tf.keras.Model):
+class MaskedLanguageModel(keras.Model):
     def train_step(self, inputs):
         if len(inputs) == 3:
             features, labels, sample_weight = inputs
@@ -349,17 +336,14 @@ class MaskedLanguageModel(tf.keras.Model):
 
 
 def create_masked_language_bert_model():
-    inputs = layers.Input((config.MAX_LEN,), dtype=tf.int64)
+    inputs = layers.Input((config.MAX_LEN,), dtype="int64")
 
     word_embeddings = layers.Embedding(
         config.VOCAB_SIZE, config.EMBED_DIM, name="word_embedding"
     )(inputs)
-    position_embeddings = layers.Embedding(
-        input_dim=config.MAX_LEN,
-        output_dim=config.EMBED_DIM,
-        weights=[get_pos_encoding_matrix(config.MAX_LEN, config.EMBED_DIM)],
-        name="position_embedding",
-    )(tf.range(start=0, limit=config.MAX_LEN, delta=1))
+    position_embeddings = keras_nlp.layers.PositionEmbedding(
+        sequence_length=config.MAX_LEN
+    )(word_embeddings)
     embeddings = word_embeddings + position_embeddings
 
     encoder_output = embeddings
@@ -426,7 +410,7 @@ bert_masked_model.summary()
 """
 
 bert_masked_model.fit(mlm_ds, epochs=5, callbacks=[generator_callback])
-bert_masked_model.save("bert_mlm_imdb.h5")
+bert_masked_model.save("bert_mlm_imdb.keras")
 
 """
 ## Fine-tune a sentiment classification model
@@ -439,10 +423,10 @@ pretrained BERT features.
 
 # Load pretrained bert model
 mlm_model = keras.models.load_model(
-    "bert_mlm_imdb.h5", custom_objects={"MaskedLanguageModel": MaskedLanguageModel}
+    "bert_mlm_imdb.keras", custom_objects={"MaskedLanguageModel": MaskedLanguageModel}
 )
-pretrained_bert_model = tf.keras.Model(
-    mlm_model.input, mlm_model.get_layer("encoder_0/ffn_layernormalization").output
+pretrained_bert_model = keras.Model(
+    mlm_model.input, mlm_model.get_layer("encoder_0_ffn_layernormalization").output
 )
 
 # Freeze it
@@ -450,7 +434,7 @@ pretrained_bert_model.trainable = False
 
 
 def create_classifier_bert_model():
-    inputs = layers.Input((config.MAX_LEN,), dtype=tf.int64)
+    inputs = layers.Input((config.MAX_LEN,), dtype="int64")
     sequence_output = pretrained_bert_model(inputs)
     pooled_output = layers.GlobalMaxPooling1D()(sequence_output)
     hidden_layer = layers.Dense(64, activation="relu")(pooled_output)
