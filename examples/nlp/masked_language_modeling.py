@@ -2,9 +2,10 @@
 Title: End-to-end Masked Language Modeling with BERT
 Author: [Ankur Singh](https://twitter.com/ankur310794)
 Date created: 2020/09/18
-Last modified: 2020/09/18
+Last modified: 2024/03/15
 Description: Implement a Masked Language Model (MLM) with BERT and fine-tune it on the IMDB Reviews dataset.
 Accelerator: GPU
+Converted to Keras 3 by: [Sitam Meur](https://github.com/sitamgithub-MSIT)
 """
 
 """
