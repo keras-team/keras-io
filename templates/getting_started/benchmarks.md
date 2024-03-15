@@ -6,7 +6,7 @@ We benchmark the three backends of Keras 3
 alongside native PyTorch implementations ([HuggingFace](https://huggingface.co/)
 and [Meta Research](https://github.com/facebookresearch/)) and alongside Keras 2
 with TensorFlow. Find code and setup details for reproducing our results
-[here](https://github.com/haifeng-jin/keras-benchmarks/tree/v0.0.1).
+[here](https://github.com/haifeng-jin/keras-benchmarks/tree/v0.0.2).
 
 ## Models
 
@@ -75,18 +75,18 @@ better.
 
 | | Batch<br>size | Native<br>PyTorch | Keras 2<br>(TensorFlow) | Keras 3<br>(TensorFlow) | Keras 3<br>(JAX) | Keras 3<br>(PyTorch) | Keras 3<br>(best) |
 |:---:|---:|---:|---:|---:|---:|---:|---:|
-| **SegmentAnything<br>(fit)** | 1 | 1,306.85 | 386.93 | **355.25** | 361.69 | 1,388.87 | **355.25** |
-| **SegmentAnything<br>(predict)** | 7 | 2,733.90 | 3,187.09 | 762.67 | **660.16** | 2,973.64 | **660.16** |
-| **Stable Diffusion<br>(fit)** | 8 | 481.22 | 1,023.21 | 392.24 | **391.21** | 823.44 | **391.21** |
-| **Stable Diffusion<br>(predict)** | 13 | 775.36 | 649.71 | **616.04** | 627.27 | 1,337.17 | **616.04** |
-| **BERT<br>(fit)** | 54 | 1,137.57 | 841.84 | **404.17** | 414.26 | 1,320.41 | **404.17** |
-| **BERT<br>(predict)** | 531 | 3,837.65 | 965.21 | 962.11 | **865.29** | 3,869.72 | **865.29** |
+| **SegmentAnything<br>(fit)** | 1 | 1,310.97 | 386.93 | **355.25** | 361.69 | 1,388.87 | **355.25** |
+| **SegmentAnything<br>(predict)** | 7 | 2,733.65 | 3,187.09 | 762.67 | **660.16** | 2,973.64 | **660.16** |
+| **Stable Diffusion<br>(fit)** | 8 | 484.56 | 1,023.21 | 392.24 | **391.21** | 823.44 | **391.21** |
+| **Stable Diffusion<br>(predict)** | 13 | 759.05 | 649.71 | **616.04** | 627.27 | 1,337.17 | **616.04** |
+| **BERT<br>(fit)** | 32 | 214.73 | 486.00 | **214.49** | 222.37 | 808.68 | **214.49** |
+| **BERT<br>(predict)** | 256 | 739.46 | 470.12 | 466.01 | **418.72** | 1,865.98 | **865.29** |
 | **Gemma<br>(fit)** | 8 | 253.95 | NA | **232.52** | 273.67 | 525.15 | **232.52** |
-| **Gemma<br>(generate)** | 32 | 2,717.04 | NA | 1,134.91 | **1,128.21** | 7,952.67<sup>*</sup> | **1,128.21** |
-| **Gemma<br>(generate)** | 1 | 1,632.66 | NA | 758.57 | **703.46** | 7,649.40<sup>*</sup> | **703.46** |
+| **Gemma<br>(generate)** | 32 | 2,735.18 | NA | 1,134.91 | **1,128.21** | 7,952.67<sup>*</sup> | **1,128.21** |
+| **Gemma<br>(generate)** | 1 | 1,618.85 | NA | 758.57 | **703.46** | 7,649.40<sup>*</sup> | **703.46** |
 | **Mistral<br>(fit)** | 8 | 217.56 | NA | **185.92** | 213.22 | 452.12 | **185.92** |
-| **Mistral<br>(generate)** | 32 | 1,594.65 | NA | 966.06 | **957.25** | 10,932.59<sup>*</sup> | **957.25** |
-| **Mistral<br>(generate)** | 1 | 1,532.63 | NA | 743.28 | **679.30** | 11,054.67<sup>*</sup> | **679.30** |
+| **Mistral<br>(generate)** | 32 | 1,633.50 | NA | 966.06 | **957.25** | 10,932.59<sup>*</sup> | **957.25** |
+| **Mistral<br>(generate)** | 1 | 1,554.79 | NA | 743.28 | **679.30** | 11,054.67<sup>*</sup> | **679.30** |
 
 \* _LLM inference with the PyTorch backend is abnormally slow at this time
 because KerasNLP uses static sequence padding, unlike HuggingFace. This will be
@@ -112,13 +112,13 @@ the throughput (steps/ms) increase of Keras 3 over native PyTorch from Table 2.
 A 100% increase indicates Keras 3 is twice as fast, while 0% means both
 frameworks perform equally.
 
-![Figure 1](https://i.imgur.com/3s3RZOx.png)
+![Figure 1](https://i.imgur.com/tFeLTbz.png)
 
 **Figure 1**: Keras 3 speedup over PyTorch measured in throughput (steps/ms)
 
 Keras 3 with the best-performing backend outperformed the reference native
 PyTorch implementations for all the models. Notably, 5 out of 10 tasks
-demonstrated speedups exceeding 100%, with a maximum speedup of 340%.
+demonstrated speedups exceeding 50%, with a maximum speedup of 340%.
 
 ### Key Finding 3: Keras 3 delivers best-in-class "out-of-the-box" performance
 
@@ -149,7 +149,7 @@ We also calculated the throughput (steps/ms) increase of Keras 3 (using its
 best-performing backend) over Keras 2 with TensorFlow from Table 1. Results are
 shown in the following figure.
 
-![Figrue 2](https://i.imgur.com/BUjRUK1.png)
+![Figrue 2](https://i.imgur.com/lBAPgsY.png)
 
 **Figure 2**: Keras 3 speedup over Keras 2 measured in throughput (steps/ms)
 
