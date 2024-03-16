@@ -13,7 +13,7 @@ In these cases, use the following guidelines to stay on Keras 2 (via [tf-keras](
 
 ## Using TensorFlow with Keras 3
 
-To use TensorFlow, JAX or PyTorch with Keras 3, checkout the getting started page in [keras.io](keras.io).  Starting with TensorFlow 2.16, Keras 3 is available directly via `import keras `(recommended) or as `from tensorflow import keras`. By default, Keras 3 uses the TensorFlow backend. Users can set the environment variable `KERAS_BACKEND` to `jax` or `torch` or `tensorflow` before importing Keras to use a specific backend.
+To use TensorFlow, JAX or PyTorch with Keras 3, checkout the getting started page in [keras.io](keras.io). Starting with TensorFlow 2.16, Keras 3 is available directly via `import keras `(recommended) or as `from tensorflow import keras`. By default, Keras 3 uses the TensorFlow backend. Users can set the environment variable `KERAS_BACKEND` to `jax` or `torch` or `tensorflow` before importing Keras to use a specific backend.
 
 
 ## Using TensorFlow with Keras 2
@@ -29,9 +29,9 @@ from tensorflow import keras  # That's Keras 2.14
 
 ### TensorFlow==2.15
 
-Continue to access `keras` via `tf.keras`. No change to existing codebase and usages are required when Keras version is also 2.15 (default with TensorFlow 2.15). But if the user has upgraded to Keras 3, follow steps outlined for TensorFlow>=2.16.  
+Continue to access `keras` via `tf.keras`. No change to existing codebase and usages are required when Keras version is also 2.15 (default with TensorFlow 2.15). But if the user has upgraded to Keras 3, follow steps outlined for TensorFlow>=2.16.
 
-TensorFlow 2.15 introduced an environment variable [TF_USE_LEGACY_KERAS](https://github.com/tensorflow/tensorflow/blob/r2.15/tensorflow/python/util/lazy_loader.py#L96) which when set to "1" or "true" or "True", redirects usagges of `tf.keras` to `tf_keras==2.15` and not `keras==2.15`. This would have no effect if the user uses `tf.keras`, but would matter if the user uses `import keras` directly.  In other words, `from tensorflow import keras`, will either use `keras 2.15` or `tf_keras 2.15` depending on whether env. variable `TF_USE_LEGACY_KERAS` is set. 
+TensorFlow 2.15 introduced an environment variable [TF_USE_LEGACY_KERAS](https://github.com/tensorflow/tensorflow/blob/r2.15/tensorflow/python/util/lazy_loader.py#L96) which when set to "1" or "true" or "True", redirects usagges of `tf.keras` to `tf_keras==2.15` and not `keras==2.15`. This would have no effect if the user uses `tf.keras`, but would matter if the user uses `import keras` directly. In other words, `from tensorflow import keras`, will either use `keras 2.15` or `tf_keras 2.15` depending on whether env. variable `TF_USE_LEGACY_KERAS` is set. 
 
 
 #### Using TensorFlow 2.15 with Keras 2.15 (Default)
@@ -64,7 +64,7 @@ It's recommended that users use `tf.keras` or `from tensorflow import keras` whe
 
 ### TensorFlow>=2.16
 
-With TensorFlow 2.16+, `tf.keras` usage defaults to Keras 3. Also, `import keras` will import Keras 3. To continue to use Keras 2, users of the package will need to set the environment variable in their codebases `TF_USE_LEGACY_KERAS` to “1 or True or true”,  Setting this environment variable will switch usage of `tf.keras` to `tf_keras`.  Library authors who want to keep working with Keras 2 shouldn't rely on this environment variable being set in users environment and would need to update their codebases by changing usages of `tf.keras` to `tf_keras` for public API and use `tf_keras.src` when referring to private source files. 
+With TensorFlow 2.16+, `tf.keras` usage defaults to Keras 3. Also, `import keras` will import Keras 3. To continue to use Keras 2, users of the package will need to set the environment variable in their codebases `TF_USE_LEGACY_KERAS` to "1 or True or true". Setting this environment variable will switch usage of `tf.keras` to `tf_keras`. Library authors who want to keep working with Keras 2 shouldn't rely on this environment variable being set in users environment and would need to update their codebases by changing usages of `tf.keras` to `tf_keras` for public API and use `tf_keras.src` when referring to private source files. 
 
 #### Using TensorFlow 2.16 with Keras 3 (Default)
 ```python
