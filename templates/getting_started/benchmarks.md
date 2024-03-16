@@ -6,7 +6,7 @@ We benchmark the three backends of Keras 3
 alongside native PyTorch implementations ([HuggingFace](https://huggingface.co/)
 and [Meta Research](https://github.com/facebookresearch/)) and alongside Keras 2
 with TensorFlow. Find code and setup details for reproducing our results
-[here](https://github.com/haifeng-jin/keras-benchmarks/tree/v0.0.2).
+[here](https://github.com/haifeng-jin/keras-benchmarks/tree/v0.0.3).
 
 ## Models
 
@@ -76,9 +76,9 @@ better.
 
 | | Batch<br>size | Native<br>PyTorch | Keras 2<br>(TensorFlow) | Keras 3<br>(TensorFlow) | Keras 3<br>(JAX) | Keras 3<br>(PyTorch) | Keras 3<br>(best) |
 |:---:|---:|---:|---:|---:|---:|---:|---:|
-| **SegmentAnything<br>(fit)** | 1 | 1,310.97 | 386.93 | **355.25** | 361.69 | 1,388.87 | **355.25** |
-| **SegmentAnything<br>(predict)** | 7 | 2,733.65 | 3,187.09 | 762.67 | **660.16** | 2,973.64 | **660.16** |
-| **Stable Diffusion<br>(fit)** | 8 | 484.56 | 1,023.21 | 392.24 | **391.21** | 823.44 | **391.21** |
+| **SegmentAnything<br>(fit)** | 1 | 1,233.25 | 386.93 | **355.25** | 361.69 | 1,388.87 | **355.25** |
+| **SegmentAnything<br>(predict)** | 4 | 1,476.87 | 1,859.27 | 438.50 | **376.34** | 1,720.96 | **376.34** |
+| **Stable Diffusion<br>(fit)** | 8 | 396.64 | 1,023.21 | 392.24 | **391.21** | 823.44 | **391.21** |
 | **Stable Diffusion<br>(predict)** | 13 | 759.05 | 649.71 | **616.04** | 627.27 | 1,337.17 | **616.04** |
 | **BERT<br>(fit)** | 32 | 214.73 | 486.00 | **214.49** | 222.37 | 808.68 | **214.49** |
 | **BERT<br>(predict)** | 256 | 739.46 | 470.12 | 466.01 | **418.72** | 1,865.98 | **865.29** |
@@ -113,13 +113,13 @@ the throughput (steps/ms) increase of Keras 3 over native PyTorch from Table 2.
 A 100% increase indicates Keras 3 is twice as fast, while 0% means both
 frameworks perform equally.
 
-![Figure 1](https://i.imgur.com/tFeLTbz.png)
+![Figure 1](https://i.imgur.com/03owEcn.png)
 
 **Figure 1**: Keras 3 speedup over PyTorch measured in throughput (steps/ms)
 
 Keras 3 with the best-performing backend outperformed the reference native
 PyTorch implementations for all the models. Notably, 5 out of 10 tasks
-demonstrated speedups exceeding 50%, with a maximum speedup of 340%.
+demonstrated speedups exceeding 50%, with a maximum speedup of 290%.
 
 ### Key Finding 3: Keras 3 delivers best-in-class "out-of-the-box" performance
 
@@ -150,7 +150,7 @@ We also calculated the throughput (steps/ms) increase of Keras 3 (using its
 best-performing backend) over Keras 2 with TensorFlow from Table 1. Results are
 shown in the following figure.
 
-![Figrue 2](https://i.imgur.com/lBAPgsY.png)
+![Figrue 2](https://i.imgur.com/jPncf0F.png)
 
 **Figure 2**: Keras 3 speedup over Keras 2 measured in throughput (steps/ms)
 
