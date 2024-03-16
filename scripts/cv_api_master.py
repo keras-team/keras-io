@@ -331,7 +331,7 @@ BACKBONES_MASTER = {
             ],
         },
         {
-            "path": "efficientnetv1",
+            "path": "efficientnet_v1",
             "title": "EfficientNetV1 models",
             "generate": [
                 "keras_cv.models.EfficientNetV1Backbone",
@@ -347,7 +347,7 @@ BACKBONES_MASTER = {
             ],
         },
         {
-            "path": "efficientnetv2",
+            "path": "efficientnet_v2",
             "title": "EfficientNetV2 models",
             "generate": [
                 "keras_cv.models.EfficientNetV2Backbone",
@@ -389,17 +389,7 @@ BACKBONES_MASTER = {
             ],
         },
         {
-            "path": "mobilenetv3",
-            "title": "MobileNetV3 backbones",
-            "generate": [
-                "keras_cv.models.MobileNetV3Backbone",
-                "keras_cv.models.MobileNetV3Backbone.from_preset",
-                "keras_cv.models.MobileNetV3SmallBackbone",
-                "keras_cv.models.MobileNetV3LargeBackbone",
-            ],
-        },
-        {
-            "path": "mobilenetv3",
+            "path": "mobilenet_v3",
             "title": "MobileNetV3 backbones",
             "generate": [
                 "keras_cv.models.MobileNetV3Backbone",
@@ -478,7 +468,7 @@ TASKS_MASKTER = {
             ],
         },
         {
-            "path": "deeplabv3_segmentation",
+            "path": "deeplab_v3_segmentation",
             "title": "DeepLabV3Plus Segmentation",
             "generate": [
                 "keras_cv.models.DeepLabV3Plus",
