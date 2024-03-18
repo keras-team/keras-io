@@ -27,6 +27,8 @@ class KerasDocumentationGenerator:
         docstring = docstring.replace("Returns:", "# Returns")
         docstring = docstring.replace("Example:", "# Example\n")
         docstring = docstring.replace("Examples:", "# Examples\n")
+        docstring = docstring.replace("Usage:", "# Usage\n")
+        docstring = docstring.replace("Sample usage:", "# Sample usage\n")
 
         docstring = re.sub(r"\nReference:\n\s*", "\n**Reference**\n\n", docstring)
         docstring = re.sub(r"\nReferences:\n\s*", "\n**References**\n\n", docstring)
