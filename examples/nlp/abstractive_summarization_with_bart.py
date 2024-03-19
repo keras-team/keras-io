@@ -42,8 +42,8 @@ pip install git+https://github.com/keras-team/keras-nlp.git py7zr -q
 """
 
 """
-This examples uses [Keras Core](https://keras.io/keras_core/) to work in any of
-`"tensorflow"`, `"jax"` or `"torch"`. Support for Keras Core is baked into
+This examples uses [Keras 3](https://keras.io/keras_3/) to work in any of
+`"tensorflow"`, `"jax"` or `"torch"`. Support for Keras 3 is baked into
 KerasNLP, simply change the `"KERAS_BACKEND"` environment variable to select
 the backend of your choice. We select the JAX backend below.
 """
@@ -60,10 +60,9 @@ import py7zr
 import time
 
 import keras_nlp
+import keras
 import tensorflow as tf
 import tensorflow_datasets as tfds
-
-import keras_core as keras
 
 """
 Let's also define our hyperparameters.
