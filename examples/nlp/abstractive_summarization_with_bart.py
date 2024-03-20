@@ -2,9 +2,10 @@
 Title: Abstractive Text Summarization with BART
 Author: [Abheesht Sharma](https://github.com/abheesht17/)
 Date created: 2023/07/08
-Last modified: 2023/07/08
+Last modified: 2024/03/20
 Description: Use KerasNLP to fine-tune BART on the abstractive summarization task.
 Accelerator: GPU
+Converted to Keras 3 by: [Sitam Meur](https://github.com/sitamgithub-MSIT)
 """
 
 """
