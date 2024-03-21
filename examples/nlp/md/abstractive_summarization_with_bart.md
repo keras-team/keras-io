@@ -2,7 +2,7 @@
 
 **Author:** [Abheesht Sharma](https://github.com/abheesht17/)<br>
 **Date created:** 2023/07/08<br>
-**Last modified:** 2023/07/08<br>
+**Last modified:** 2024/03/20<br>
 **Description:** Use KerasNLP to fine-tune BART on the abstractive summarization task.
 
 
@@ -59,8 +59,8 @@ couple of utility libraries.
 
 ```
 </div>
-This examples uses [Keras Core](https://keras.io/keras_core/) to work in any of
-`"tensorflow"`, `"jax"` or `"torch"`. Support for Keras Core is baked into
+This examples uses [Keras 3](https://keras.io/keras_3) to work in any of
+`"tensorflow"`, `"jax"` or `"torch"`. Support for Keras 3 is baked into
 KerasNLP, simply change the `"KERAS_BACKEND"` environment variable to select
 the backend of your choice. We select the JAX backend below.
 
@@ -79,10 +79,9 @@ import py7zr
 import time
 
 import keras_nlp
+import keras
 import tensorflow as tf
 import tensorflow_datasets as tfds
-
-import keras_core as keras
 ```
 
 <div class="k-default-codeblock">
