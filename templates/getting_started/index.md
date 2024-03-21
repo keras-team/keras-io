@@ -37,10 +37,8 @@ To use Keras 3, you will also need to install a backend framework -- either JAX,
 - [Installing TensorFlow](https://www.tensorflow.org/install)
 - [Installing PyTorch](https://pytorch.org/get-started/locally/)
 
-If you install TensorFlow, critically, **you should reinstall Keras 3 afterwards**.
-This is a temporary step while TensorFlow is pinned to Keras 2, and will no longer be necessary after TensorFlow 2.16.
-The cause is that `tensorflow==2.15` will overwrite your Keras installation with `keras==2.15`.
-
+If you install TensorFlow 2.15, you should reinstall Keras 3 afterwards. The cause is that `tensorflow==2.15` will overwrite your Keras installation with `keras==2.15`.
+This step is not necessary for TensorFlow versions 2.16 onwards as starting in TensorFlow 2.16, it will install Keras 3 by default.
 
 ### Installing KerasCV and KerasNLP
 
@@ -51,11 +49,6 @@ pip install --upgrade keras-cv
 pip install --upgrade keras-nlp
 pip install --upgrade keras
 ```
-
-Critically, **you should reinstall Keras 3 after installing KerasNLP**.
-This is a temporary step while TensorFlow is pinned to Keras 2, and will no longer be necessary after TensorFlow 2.16.
-The cause is that `keras-nlp` depends on `tensorflow-text`, which will install `tensorflow==2.15`, which will
-overwrite your Keras installation with `keras==2.15`.
 
 ---
 
@@ -160,7 +153,7 @@ These lines would need to be before any `import tensorflow` statement.
 
 The following Keras + JAX versions are compatible with each other:
 
-- `jax==0.4.20` & `keras~=3.0.0`
+- `jax==0.4.20` & `keras~=3.0`
 
 ### TensorFlow compatibility
 
@@ -174,11 +167,10 @@ To use Keras 2:
 
 To use Keras 3:
 
-- `tensorflow~=2.15.0` & `keras~=3.0.0`
-- `tensorflow~=2.16.1` & `keras~=3.0.0`
+- `tensorflow~=2.16.1` & `keras~=3.0`
 
 ### PyTorch compatibility
 
 The following Keras + PyTorch versions are compatible with each other:
 
-- `torch~=2.1.0` & `keras~=3.0.0`
+- `torch~=2.1.0` & `keras~=3.0`
