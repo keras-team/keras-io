@@ -168,12 +168,10 @@ Finally, the following feature are continuous numerical features:
 For each of these features, we will use a `Normalization()` layer to make sure the mean
 of each feature is 0 and its standard deviation is 1.
 
-Below, we define 3 utility functions to do the operations:
+Below, we define 2 utility functions to do the operations:
 
 - `encode_numerical_feature` to apply featurewise normalization to numerical features.
-- `encode_string_categorical_feature` to first turn string inputs into integer indices,
-then one-hot encode these integer indices.
-- `encode_integer_categorical_feature` to one-hot encode integer categorical features.
+- `encode_categorical_feature` to one-hot encode string or integer categorical features.
 """
 
 
