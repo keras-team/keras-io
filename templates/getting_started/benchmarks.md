@@ -6,7 +6,7 @@ We benchmark the three backends of Keras 3
 alongside native PyTorch implementations ([HuggingFace](https://huggingface.co/)
 and [Meta Research](https://github.com/facebookresearch/)) and alongside Keras 2
 with TensorFlow. Find code and setup details for reproducing our results
-[here](https://github.com/haifeng-jin/keras-benchmarks/tree/v0.0.3).
+[here](https://github.com/haifeng-jin/keras-benchmarks/tree/v0.0.4).
 
 ## Models
 
@@ -36,8 +36,7 @@ We employed synthetic data for all benchmarks. We used `bfloat16` precision for
 all LLM training and inferencing, and LoRA<sup>6</sup> for all LLM training
 (fine-tuning). Based on the recommendations of the PyTorch team, we used
 `torch.compile(model, mode="reduce-overhead")` with native PyTorch
-implementations (with the exception of Gemma training and Mistral training due
-to incompatibility).
+implementations to compile the models.
 
 To measure out-of-the-box performance, we use high-level APIs (e.g. `Trainer()`
 from HuggingFace, plain PyTorch training loops and Keras `model.fit()`) with as
@@ -74,20 +73,20 @@ requested by the users.
 **Table 2**: Benchmarking results. The speed is measured in ms/step. Lower is
 better.
 
-| | Batch<br>size | Native<br>PyTorch | Keras 2<br>(TensorFlow) | Keras 3<br>(TensorFlow) | Keras 3<br>(JAX) | Keras 3<br>(PyTorch) | Keras 3<br>(best) |
-|:---:|---:|---:|---:|---:|---:|---:|---:|
-| **SegmentAnything<br>(fit)** | 1 | 1,233.25 | 386.93 | **355.25** | 361.69 | 1,388.87 | **355.25** |
-| **SegmentAnything<br>(predict)** | 4 | 1,476.87 | 1,859.27 | 438.50 | **376.34** | 1,720.96 | **376.34** |
-| **Stable Diffusion<br>(fit)** | 8 | 396.64 | 1,023.21 | 392.24 | **391.21** | 823.44 | **391.21** |
-| **Stable Diffusion<br>(predict)** | 13 | 759.05 | 649.71 | **616.04** | 627.27 | 1,337.17 | **616.04** |
-| **BERT<br>(fit)** | 32 | 214.73 | 486.00 | **214.49** | 222.37 | 808.68 | **214.49** |
-| **BERT<br>(predict)** | 256 | 739.46 | 470.12 | 466.01 | **418.72** | 1,865.98 | **865.29** |
-| **Gemma<br>(fit)** | 8 | 253.95 | NA | **232.52** | 273.67 | 525.15 | **232.52** |
-| **Gemma<br>(generate)** | 32 | 2,735.18 | NA | 1,134.91 | **1,128.21** | 7,952.67<sup>*</sup> | **1,128.21** |
-| **Gemma<br>(generate)** | 1 | 1,618.85 | NA | 758.57 | **703.46** | 7,649.40<sup>*</sup> | **703.46** |
-| **Mistral<br>(fit)** | 8 | 217.56 | NA | **185.92** | 213.22 | 452.12 | **185.92** |
-| **Mistral<br>(generate)** | 32 | 1,633.50 | NA | 966.06 | **957.25** | 10,932.59<sup>*</sup> | **957.25** |
-| **Mistral<br>(generate)** | 1 | 1,554.79 | NA | 743.28 | **679.30** | 11,054.67<sup>*</sup> | **679.30** |
+| | Batch<br>size | Native<br>PyTorch<br>(eager) | Native<br>PyTorch<br>(compiled) | Keras 2<br>(TensorFlow) | Keras 3<br>(TensorFlow) | Keras 3<br>(JAX) | Keras 3<br>(PyTorch)<br>(eager) | Keras 3<br>(best) |
+|:---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| **SegmentAnything<br>(fit)** | 1 | 1,305.52 | 1,233.25 | 386.93 | **355.25** | 361.69 | 1,388.87 | **355.25** |
+| **SegmentAnything<br>(predict)** | 4 | 1,573.48 | 1,476.87 | 1,859.27 | 438.50 | **376.34** | 1,720.96 | **376.34** |
+| **Stable Diffusion<br>(fit)** | 8 | 481.48 | 396.64 | 1,023.21 | 392.24 | **391.21** | 823.44 | **391.21** |
+| **Stable Diffusion<br>(predict)** | 13 | 783.43 | 759.05 | 649.71 | **616.04** | 627.27 | 1,337.17 | **616.04** |
+| **BERT<br>(fit)** | 32 | 693.37 | 214.73 | 486.00 | **214.49** | 222.37 | 808.68 | **214.49** |
+| **BERT<br>(predict)** | 256 | 1849.80 | 739.46 | 470.12 | 466.01 | **418.72** | 1,865.98 | **418.72** |
+| **Gemma<br>(fit)** | 8 | 253.95 | 1,036.83 | NA | **232.52** | 273.67 | 525.15 | **232.52** |
+| **Gemma<br>(generate)** | 32 | 2,759.18 | 2,735.18 | NA | 1,134.91 | **1,128.21** | 7,952.67<sup>*</sup> | **1,128.21** |
+| **Gemma<br>(generate)** | 1 | 1,721.03 | 1,618.85 | NA | 758.57 | **703.46** | 7,649.40<sup>*</sup> | **703.46** |
+| **Mistral<br>(fit)** | 8 | 217.56 | 1,225.66 | NA | **185.92** | 213.22 | 452.12 | **185.92** |
+| **Mistral<br>(generate)** | 32 | 1,618.43 | 1,633.50 | NA | 966.06 | **957.25** | 10,932.59<sup>*</sup> | **957.25** |
+| **Mistral<br>(generate)** | 1 | 1610.84 | 1,554.79 | NA | 743.28 | **679.30** | 11,054.67<sup>*</sup> | **679.30** |
 
 \* _LLM inference with the PyTorch backend is abnormally slow at this time
 because KerasNLP uses static sequence padding, unlike HuggingFace. This will be
