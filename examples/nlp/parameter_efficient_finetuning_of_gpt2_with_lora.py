@@ -587,7 +587,7 @@ for layer_idx in range(lora_model.backbone.num_layers):
     B_weights = value_lora_layer.B.kernel  # (1, 12, 64) (b, c, d)
     increment_weights = tf.einsum("ab,bcd->acd", A_weights, B_weights) * (ALPHA / RANK)
     value_lora_layer.original_layer.kernel.assign_add(increment_weights)
-    
+
     # Put back in place the original layers with updated weights
     self_attention_layer._query_dense = query_lora_layer.original_layer
     self_attention_layer._value_dense = value_lora_layer.original_layer
