@@ -6,7 +6,7 @@ We benchmark the three backends of Keras 3
 alongside native PyTorch implementations ([HuggingFace](https://huggingface.co/)
 and [Meta Research](https://github.com/facebookresearch/)) and alongside Keras 2
 with TensorFlow. Find code and setup details for reproducing our results
-[here](https://github.com/haifeng-jin/keras-benchmarks/tree/v0.0.4).
+[here](https://github.com/haifeng-jin/keras-benchmarks/tree/v0.0.5).
 
 ## Models
 
@@ -20,6 +20,12 @@ selections.
 |:---:|:---:|:---:|
 | CV | SegmentAnything<sup>1</sup> | StableDiffusion<sup>2</sup> |
 | NLP | BERT<sup>3</sup> | Gemma<sup>4</sup>, Mistral<sup>5</sup> |
+
+We are not measuring the best possible performance of the frameworks, but the
+most common user workflows. With this goal in mind, we choose the following
+model implementations. They are subject to further optimization in their
+performance, but they should represent the common cases of how the users are
+using these models.
 
 We leveraged pre-existing implementations from KerasCV and KerasNLP for the
 Keras versions of the models. For native PyTorch, we opted for the most popular
@@ -75,18 +81,18 @@ better.
 
 | | Batch<br>size | Native<br>PyTorch<br>(eager) | Native<br>PyTorch<br>(compiled) | Keras 2<br>(TensorFlow) | Keras 3<br>(TensorFlow) | Keras 3<br>(JAX) | Keras 3<br>(PyTorch)<br>(eager) | Keras 3<br>(best) |
 |:---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| **SegmentAnything<br>(fit)** | 1 | 1,305.52 | 1,233.25 | 386.93 | **355.25** | 361.69 | 1,388.87 | **355.25** |
-| **SegmentAnything<br>(predict)** | 4 | 1,573.48 | 1,476.87 | 1,859.27 | 438.50 | **376.34** | 1,720.96 | **376.34** |
-| **Stable Diffusion<br>(fit)** | 8 | 481.48 | 396.64 | 1,023.21 | 392.24 | **391.21** | 823.44 | **391.21** |
-| **Stable Diffusion<br>(predict)** | 13 | 783.43 | 759.05 | 649.71 | **616.04** | 627.27 | 1,337.17 | **616.04** |
-| **BERT<br>(fit)** | 32 | 693.37 | 214.73 | 486.00 | **214.49** | 222.37 | 808.68 | **214.49** |
-| **BERT<br>(predict)** | 256 | 1849.80 | 739.46 | 470.12 | 466.01 | **418.72** | 1,865.98 | **418.72** |
-| **Gemma<br>(fit)** | 8 | 253.95 | 1,036.83 | NA | **232.52** | 273.67 | 525.15 | **232.52** |
-| **Gemma<br>(generate)** | 32 | 2,759.18 | 2,735.18 | NA | 1,134.91 | **1,128.21** | 7,952.67<sup>*</sup> | **1,128.21** |
-| **Gemma<br>(generate)** | 1 | 1,721.03 | 1,618.85 | NA | 758.57 | **703.46** | 7,649.40<sup>*</sup> | **703.46** |
-| **Mistral<br>(fit)** | 8 | 217.56 | 1,225.66 | NA | **185.92** | 213.22 | 452.12 | **185.92** |
-| **Mistral<br>(generate)** | 32 | 1,618.43 | 1,633.50 | NA | 966.06 | **957.25** | 10,932.59<sup>*</sup> | **957.25** |
-| **Mistral<br>(generate)** | 1 | 1610.84 | 1,554.79 | NA | 743.28 | **679.30** | 11,054.67<sup>*</sup> | **679.30** |
+| **SegmentAnything<br>(fit)** | 1 | 1,305.52 | 1,222.85 | 386.93 | **355.25** | 361.69 | 1,388.87 | **355.25** |
+| **SegmentAnything<br>(predict)** | 4 | 1,573.48 | 1,463.85 | 1,859.27 | 438.50 | **376.34** | 1,720.96 | **376.34** |
+| **Stable Diffusion<br>(fit)** | 8 | 481.48 | **385.58** | 1,023.21 | 392.24 | 391.21 | 823.44 | 391.21 |
+| **Stable Diffusion<br>(predict)** | 13 | 783.43 | 770.05 | 649.71 | **616.04** | 627.27 | 1,337.17 | **616.04** |
+| **BERT<br>(fit)** | 32 | 693.37 | **202.43** | 486.00 | 214.49 | 222.37 | 808.68 | 214.49 |
+| **BERT<br>(predict)** | 256 | 1849.80 | 733.16 | 470.12 | 466.01 | **418.72** | 1,865.98 | **418.72** |
+| **Gemma<br>(fit)** | 8 | 253.95 | **211.73** | NA | 232.52 | 273.67 | 525.15 | 232.52 |
+| **Gemma<br>(generate)** | 32 | 2,745.18 | 2,735.18 | NA | 1,134.91 | **1,128.21** | 7,952.67<sup>*</sup> | **1,128.21** |
+| **Gemma<br>(generate)** | 1 | 1,721.03 | 1,669.01 | NA | 758.57 | **703.46** | 7,649.40<sup>*</sup> | **703.46** |
+| **Mistral<br>(fit)** | 8 | 217.56 | **176.04** | NA | 185.92 | 213.22 | 452.12 | 185.92 |
+| **Mistral<br>(generate)** | 32 | 1,618.43 | 1,640.41 | NA | 966.06 | **957.25** | 10,932.59<sup>*</sup> | **957.25** |
+| **Mistral<br>(generate)** | 1 | 1610.84 | 1,577.84 | NA | 743.28 | **679.30** | 11,054.67<sup>*</sup> | **679.30** |
 
 \* _LLM inference with the PyTorch backend is abnormally slow at this time
 because KerasNLP uses static sequence padding, unlike HuggingFace. This will be
@@ -104,7 +110,7 @@ This underscores the value of framework optionality when chasing optimal
 performance. Keras 3 empowers you to seamlessly switch backends, ensuring you
 find the ideal match for your model.
 
-### Key Finding 2: Keras 3 is consistently faster than the reference PyTorch implementations 
+### Key Finding 2: Keras 3 delivers best-in-class "out-of-the-box" performance
 
 The following figure compares the best-performing Keras 3 backend for each model
 with the corresponding reference native PyTorch implementation. We calculated
@@ -112,15 +118,14 @@ the throughput (steps/ms) increase of Keras 3 over native PyTorch from Table 2.
 A 100% increase indicates Keras 3 is twice as fast, while 0% means both
 frameworks perform equally.
 
-![Figure 1](https://i.imgur.com/03owEcn.png)
+![Figure 1](https://i.imgur.com/vO7pxPf.png)
 
 **Figure 1**: Keras 3 speedup over PyTorch measured in throughput (steps/ms)
 
-Keras 3 with the best-performing backend outperformed the reference native
-PyTorch implementations for all the models. Notably, 5 out of 10 tasks
-demonstrated speedups exceeding 50%, with a maximum speedup of 290%.
-
-### Key Finding 3: Keras 3 delivers best-in-class "out-of-the-box" performance
+Keras 3 with the best-performing backend is slightly (1-9%) slower than the
+referenced PyTorch implementation for the 4 out of the 10 tasks and faster for
+the rest. Notably, for 5 out of 10 tasks, Keras demonstrated speedups exceeding
+50%, with a maximum speedup of 290%.
 
 All Keras model implementations benchmarked here are plain implementations
 without any custom performance optimizations: they represent "out-of-the-box
@@ -143,7 +148,7 @@ performance gap compared to Keras is wider than most other models.
 The takeaway here is that Keras offers exceptional out-of-the-box performance.
 You don't have to know all the tricks to make your model run faster.
 
-### Key Finding 4: Keras 3 is faster than Keras 2
+### Key Finding 3: Keras 3 is faster than Keras 2
 
 We also calculated the throughput (steps/ms) increase of Keras 3 (using its
 best-performing backend) over Keras 2 with TensorFlow from Table 1. Results are
@@ -168,9 +173,9 @@ XLA compilation in certain use cases.
 
 Framework performance depends heavily on the specific model. Keras 3 empowers
 you to select the fastest framework for your task – an option almost always to
-outperform both Keras 2 and reference PyTorch implementations. Importantly,
-Keras 3 models deliver excellent out-of-the-box performance without requiring
-complex, low-level optimizations.
+be equally good or outperform both Keras 2 and reference PyTorch
+implementations. Importantly, Keras 3 models deliver excellent out-of-the-box
+performance without requiring complex, low-level optimizations.
 
 
 ## References
