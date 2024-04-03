@@ -21,11 +21,11 @@ selections.
 | CV | SegmentAnything<sup>1</sup> | StableDiffusion<sup>2</sup> |
 | NLP | BERT<sup>3</sup> | Gemma<sup>4</sup>, Mistral<sup>5</sup> |
 
-We are not measuring the best possible performance of the frameworks, but the
-most common user workflows. With this goal in mind, we choose the following
-model implementations. They are subject to further optimization in their
-performance, but they should represent the common cases of how the users are
-using these models.
+We are not measuring the best possible performance achievable by each framework,
+but the out-of-the-box performance of common user workflows.
+With this goal in mind, we choose the following
+model implementations. They may be subject to further optimization,
+but they should represent the most common way developers are using these models today.
 
 We leveraged pre-existing implementations from KerasCV and KerasNLP for the
 Keras versions of the models. For native PyTorch, we opted for the most popular
