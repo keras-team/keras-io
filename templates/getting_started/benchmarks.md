@@ -38,18 +38,6 @@ options online:
 We'll refer to this group as "Native PyTorch" in contrast to Keras 3 with
 PyTorch backend.
 
-We employed synthetic data for all benchmarks. We used `bfloat16` precision for
-all LLM training and inferencing, and LoRA<sup>6</sup> for all LLM training
-(fine-tuning). Based on the recommendations of the PyTorch team, we used
-`torch.compile(model, mode="reduce-overhead")` with native PyTorch
-implementations to compile the models.
-
-To measure out-of-the-box performance, we use high-level APIs (e.g. `Trainer()`
-from HuggingFace, plain PyTorch training loops and Keras `model.fit()`) with as
-little configuration as possible. Note that this is quite different from
-measuring an optimized implementation for a particular hardware/framework/model
-combination.
-
 ## Hardware
 
 All benchmarks are done with a single NVIDIA A100 GPU with 40GB of GPU memory on
@@ -73,8 +61,19 @@ its Python overhead.
 For large language models (Gemma and Mistral), we also used the same batch size
 since they are the same model type with similar number of parameters (7B). We
 also benchmarked text generation with batch size equal to 1 since it is widely
-requested by the users. 
+requested by the users. We used `bfloat16` precision for their training and
+inferencing, and LoRA<sup>6</sup> for their training (fine-tuning).
 
+To measure out-of-the-box performance, we try to use all default settings.
+For example, use high-level APIs (e.g. `Trainer()` from HuggingFace, plain
+PyTorch training loops and Keras `model.fit()`) with as little configuration as
+possible. As a reference, we also included the compiled results for native
+PyTorch in addition to the default settings (eager mode).
+
+Note that this is quite different from measuring an optimized implementation for
+a particular hardware/framework/model combination. Please refer to
+[MLPerf](https://mlcommons.org/benchmarks/) for the best optimized results for
+different frameworks.
 
 **Table 2**: Benchmarking results. The speed is measured in ms/step. Lower is
 better.
@@ -110,22 +109,43 @@ This underscores the value of framework optionality when chasing optimal
 performance. Keras 3 empowers you to seamlessly switch backends, ensuring you
 find the ideal match for your model.
 
-### Key Finding 2: Keras 3 delivers best-in-class "out-of-the-box" performance
+### Key Finding 2: Keras 3 is faster than the reference PyTorch implementations
 
-The following figure compares the best-performing Keras 3 backend for each model
-with the corresponding reference native PyTorch implementation. We calculated
-the throughput (steps/ms) increase of Keras 3 over native PyTorch from Table 2.
-A 100% increase indicates Keras 3 is twice as fast, while 0% means both
-frameworks perform equally.
+Figure 1 compares the best-performing Keras 3 backend for each model
+with the corresponding reference native PyTorch implementation in all default
+settings to simulate common developer workflows. We calculated the throughput
+(steps/ms) increase of Keras 3 over native PyTorch from Table 2. A 100% increase
+indicates Keras 3 is twice as fast, while 0% means both frameworks perform
+equally. Note that the native PyTorch results are in eager mode.
 
-![Figure 1](https://i.imgur.com/vO7pxPf.png)
+![Figure 1](https://i.imgur.com/S3SLYaN.png)
 
-**Figure 1**: Keras 3 speedup over PyTorch measured in throughput (steps/ms)
+**Figure 1**: Keras 3 speedup over PyTorch (default settings) measured in throughput (steps/ms)
 
-Keras 3 with the best-performing backend is slightly (1-9%) slower than the
-referenced PyTorch implementation for the 4 out of the 10 tasks and faster for
-the rest. Notably, for 5 out of 10 tasks, Keras demonstrated speedups exceeding
-50%, with a maximum speedup of 290%.
+Keras 3 with the best-performing backend outperformed the reference native
+PyTorch implementations for all the models. Notably, 5 out of 10 tasks
+demonstrated speedups exceeding 100%, with a maximum speedup of 340%.
+
+If you are more experienced with `torch.compile()`, you can refer to Figure 2.
+We did a similar comparison with `torch.compile()` enabled for the native
+PyTorch implementations.
+
+To enable `torch.compile()`, we refactored the training or inferencing process
+into a single compiled function, or passed certain arguments to the `Trainer`
+class. Based on the recommendations of the PyTorch team, we used
+`torch.compile(model, mode="reduce-overhead")`. You are welcome to tweak our
+code to explore more optimization techniques.
+
+![Figure 2](https://i.imgur.com/VBNsQA9.png)
+
+**Figure 2**: Keras 3 speedup over PyTorch (compiled) measured in throughput (steps/ms)
+
+In Figure 2, Keras 3 with the best-performing backend is slightly (1-9%) slower
+than the referenced PyTorch implementation for the 4 out of the 10 tasks and
+faster for the rest, but still, for 5 out of 10 tasks, Keras demonstrated
+speedups exceeding 50%, with a maximum speedup of 290%.
+
+### Key Finding 3: Keras 3 delivers best-in-class "out-of-the-box" performance
 
 All Keras model implementations benchmarked here are plain implementations
 without any custom performance optimizations: they represent "out-of-the-box
@@ -148,7 +168,7 @@ performance gap compared to Keras is wider than most other models.
 The takeaway here is that Keras offers exceptional out-of-the-box performance.
 You don't have to know all the tricks to make your model run faster.
 
-### Key Finding 3: Keras 3 is faster than Keras 2
+### Key Finding 4: Keras 3 is faster than Keras 2
 
 We also calculated the throughput (steps/ms) increase of Keras 3 (using its
 best-performing backend) over Keras 2 with TensorFlow from Table 1. Results are
@@ -173,9 +193,9 @@ XLA compilation in certain use cases.
 
 Framework performance depends heavily on the specific model. Keras 3 empowers
 you to select the fastest framework for your task – an option almost always to
-be equally good or outperform both Keras 2 and reference PyTorch
-implementations. Importantly, Keras 3 models deliver excellent out-of-the-box
-performance without requiring complex, low-level optimizations.
+outperform both Keras 2 and reference PyTorch implementations. Importantly,
+Keras 3 models deliver excellent out-of-the-box performance without requiring
+complex, low-level optimizations.
 
 
 ## References
