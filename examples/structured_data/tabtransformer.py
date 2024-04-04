@@ -276,7 +276,7 @@ def create_model_inputs():
             )
         else:
             inputs[feature_name] = layers.Input(
-                name=feature_name, shape=(), dtype="float32"
+                name=feature_name, shape=(), dtype="int32"
             )
     return inputs
 
@@ -328,7 +328,7 @@ def encode_inputs(inputs, embedding_dims):
 def create_mlp(hidden_units, dropout_rate, activation, normalization_layer, name=None):
     mlp_layers = []
     for units in hidden_units:
-        mlp_layers.append(normalization_layer()),
+        mlp_layers.append(normalization_layer())
         mlp_layers.append(layers.Dense(units, activation=activation))
         mlp_layers.append(layers.Dropout(dropout_rate))
 
