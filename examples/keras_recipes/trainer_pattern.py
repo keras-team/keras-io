@@ -17,7 +17,7 @@ beyond plain supervised learning.
 
 The Trainer pattern can also easily be adapted to more complex models with larger
 custom training steps, such as
-[this end-to-end GAN model](https://keras.io/guides/customizing_what_happens_in_fit/#wrapping-up-an-endtoend-gan-example),
+[this end-to-end GAN model](https://keras.io/guides/custom_train_step_in_tensorflow/#wrapping-up-an-endtoend-gan-example),
 by putting the custom training step in the Trainer class definition.
 """
 
