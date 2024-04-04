@@ -1,7 +1,7 @@
 """
 Title: Named Entity Recognition using Transformers
 Author: [Varun Singh](https://www.linkedin.com/in/varunsingh2/)
-Date created: Jun 23, 2021
+Date created: 2021/06/23
 Last modified: 2024/04/05
 Description: NER using the Transformers and data from CoNLL 2003 shared task.
 Accelerator: GPU
