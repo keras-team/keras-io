@@ -49,7 +49,7 @@ class TransformerBlock(layers.Layer):
 """
 ## Implement embedding layer
 
-Two seperate embedding layers, one for tokens, one for token index (positions).
+Two separate embedding layers, one for tokens, one for token index (positions).
 """
 
 

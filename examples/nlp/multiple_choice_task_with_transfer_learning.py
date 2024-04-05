@@ -259,7 +259,7 @@ def build_dataset(
 
 
 """
-Now let's create train and valid dataloader using above funciton.
+Now let's create train and valid dataloader using above function.
 """
 
 # Build train dataloader
@@ -465,7 +465,7 @@ def build_model():
         num_classes=1,  # one output per one option, for five options total 5 outputs
     )
     logits = []
-    # Loop through each option (Q+A), (Q+B) etc and compute associted logits
+    # Loop through each option (Q+A), (Q+B) etc and compute associated logits
     for option_idx in range(4):
         option = {
             k: SelectOption(option_idx, name=f"{k}_{option_idx}")(v)

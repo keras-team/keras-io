@@ -46,7 +46,7 @@ import matplotlib.pyplot as plt
 """
 ## Get the data
 
-The Dataset is avalaible on [Kaggle](https://www.kaggle.com/c/nlp-getting-started)
+The Dataset is available on [Kaggle](https://www.kaggle.com/c/nlp-getting-started)
 
 Dataset description:
 

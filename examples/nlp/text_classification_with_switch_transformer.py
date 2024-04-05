@@ -67,7 +67,7 @@ print(f"Number of tokens per batch: {num_tokens_per_batch}")
 """
 ## Implement token & position embedding layer
 
-It consists of two seperate embedding layers, one for tokens, one for token index (positions).
+It consists of two separate embedding layers, one for tokens, one for token index (positions).
 """
 
 

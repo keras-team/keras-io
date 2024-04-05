@@ -415,7 +415,7 @@ def train_active_learning_models(
         # Generating labels from the output probabilities
         rounded = tf.where(tf.greater(predictions, 0.5), 1, 0)
 
-        # Evaluating the number of zeros and ones incorrrectly classified
+        # Evaluating the number of zeros and ones incorrectly classified
         _, _, false_negatives, false_positives = model.evaluate(test_dataset, verbose=0)
 
         print("-" * 100)
@@ -510,7 +510,7 @@ data, saving resources.
 The following are some noteworthy observations from this example:
 
 1. We only require 30,000 samples to reach the same (if not better) scores as the model
-trained on the full datatset. This means that in a real life setting, we save the effort
+trained on the full dataset. This means that in a real life setting, we save the effort
 required for annotating 10,000 images!
 2. The number of false negatives and false positives are well balanced at the end of the
 training as compared to the skewed ratio obtained from the full training. This makes the
