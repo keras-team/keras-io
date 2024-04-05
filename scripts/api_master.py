@@ -78,7 +78,12 @@ API_MASTER = {
                             "path": "export",
                             "title": "Model export for inference",
                             "generate": [
+                                "keras.Model.export",
                                 "keras.export.ExportArchive",
+                                "keras.export.ExportArchive.add_endpoint",
+                                "keras.export.ExportArchive.add_variable_collection",
+                                "keras.export.ExportArchive.track",
+                                "keras.export.ExportArchive.write_out",
                             ],
                         },
                         {
