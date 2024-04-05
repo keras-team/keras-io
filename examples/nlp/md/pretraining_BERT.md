@@ -233,7 +233,7 @@ tokenizer = AutoTokenizer.from_pretrained(MODEL_CHECKPOINT)
 
 <div class="k-default-codeblock">
 ```
-The cache for model files in Transformers v4.22.0 has been udpated. Migrating your old cache. This is a one-time only operation. You can interrupt this and resume the migration later on by calling `transformers.utils.move_cache()`.
+The cache for model files in Transformers v4.22.0 has been updated. Migrating your old cache. This is a one-time only operation. You can interrupt this and resume the migration later on by calling `transformers.utils.move_cache()`.
 
 Moving 52 files to the new cache system
 
@@ -484,7 +484,7 @@ Next we define our training set with which we train our model. Again, 🤗 Datas
 provides us with the `to_tf_dataset` method which will help us integrate our dataset with
 the `collator` defined above. The method expects certain parameters:
 
-- **columns**: the columns which will serve as our independant variables
+- **columns**: the columns which will serve as our independent variables
 - **label_cols**: the columns which will serve as our labels or dependant variables
 - **batch_size**: our batch size for training
 - **shuffle**: whether we want to shuffle our training dataset
