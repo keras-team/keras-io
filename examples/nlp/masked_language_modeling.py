@@ -150,7 +150,7 @@ def get_vectorize_layer(texts, vocab_size, max_seq, special_tokens=["[MASK]"]):
     Args:
       texts (list): List of string i.e input texts
       vocab_size (int): vocab size
-      max_seq (int): Maximum sequence lenght.
+      max_seq (int): Maximum sequence length.
       special_tokens (list, optional): List of special tokens. Defaults to ['[MASK]'].
 
     Returns:

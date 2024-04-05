@@ -61,7 +61,7 @@ import keras_nlp
 Before we start any training, let's configure our single GPU to show up as two logical
 devices.
 
-When you are training with two or more phsyical GPUs, this is totally uncessary. This
+When you are training with two or more physical GPUs, this is totally uncessary. This
 is just a trick to show real distributed training on the default colab GPU runtime,
 which has only one GPU available.
 
