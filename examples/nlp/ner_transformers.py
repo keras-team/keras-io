@@ -1,10 +1,11 @@
 """
 Title: Named Entity Recognition using Transformers
 Author: [Varun Singh](https://www.linkedin.com/in/varunsingh2/)
-Date created: Jun 23, 2021
-Last modified: Jun 24, 2021
+Date created: 2021/06/23
+Last modified: 2024/04/05
 Description: NER using the Transformers and data from CoNLL 2003 shared task.
 Accelerator: GPU
+Converted to Keras 3 by: [Sitam Meur](https://github.com/sitamgithub-MSIT)
 """
 
 """
@@ -37,8 +38,8 @@ import os
 
 os.environ["KERAS_BACKEND"] = "tensorflow"
 
-import os
 import keras
+from keras import ops
 import numpy as np
 import tensorflow as tf
 from keras import layers
@@ -94,8 +95,8 @@ class TokenAndPositionEmbedding(layers.Layer):
         self.pos_emb = keras.layers.Embedding(input_dim=maxlen, output_dim=embed_dim)
 
     def call(self, inputs):
-        maxlen = tf.shape(inputs)[-1]
-        positions = tf.range(start=0, limit=maxlen, delta=1)
+        maxlen = ops.shape(inputs)[-1]
+        positions = ops.arange(start=0, stop=maxlen, step=1)
         position_embeddings = self.pos_emb(positions)
         token_embeddings = self.token_emb(inputs)
         return token_embeddings + position_embeddings
@@ -270,9 +271,9 @@ class CustomNonPaddingTokenLoss(keras.losses.Loss):
             from_logits=False, reduction=None
         )
         loss = loss_fn(y_true, y_pred)
-        mask = tf.cast((y_true > 0), dtype=tf.float32)
+        mask = ops.cast((y_true > 0), dtype="float32")
         loss = loss * mask
-        return tf.reduce_sum(loss) / tf.reduce_sum(mask)
+        return ops.sum(loss) / ops.sum(mask)
 
 
 loss = CustomNonPaddingTokenLoss()
@@ -281,6 +282,7 @@ loss = CustomNonPaddingTokenLoss()
 ## Compile and fit the model
 """
 
+tf.config.run_functions_eagerly(True)
 ner_model.compile(optimizer="adam", loss=loss)
 ner_model.fit(train_dataset, epochs=10)
 
@@ -294,7 +296,7 @@ def tokenize_and_convert_to_ids(text):
 sample_input = tokenize_and_convert_to_ids(
     "eu rejects german call to boycott british lamb"
 )
-sample_input = tf.reshape(sample_input, shape=[1, -1])
+sample_input = ops.reshape(sample_input, shape=[1, -1])
 print(sample_input)
 
 output = ner_model.predict(sample_input)
@@ -317,10 +319,10 @@ def calculate_metrics(dataset):
 
     for x, y in dataset:
         output = ner_model.predict(x, verbose=0)
-        predictions = np.argmax(output, axis=-1)
-        predictions = np.reshape(predictions, [-1])
+        predictions = ops.argmax(output, axis=-1)
+        predictions = ops.reshape(predictions, [-1])
 
-        true_tag_ids = np.reshape(y, [-1])
+        true_tag_ids = ops.reshape(y, [-1])
 
         mask = (true_tag_ids > 0) & (predictions > 0)
         true_tag_ids = true_tag_ids[mask]
