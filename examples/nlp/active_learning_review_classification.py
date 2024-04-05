@@ -2,7 +2,7 @@
 Title: Review Classification using Active Learning
 Author: [Darshan Deshpande](https://twitter.com/getdarshan)
 Date created: 2021/10/29
-Last modified: 2021/10/29
+Last modified: 2024/02/29
 Description: Demonstrating the advantages of active learning through review classification.
 Accelerator: GPU
 """
@@ -51,10 +51,11 @@ Selects data points closest to the decision boundary
 ## Importing required libraries
 """
 
+import keras
+from keras import layers
+
 import tensorflow_datasets as tfds
 import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras import layers
 import matplotlib.pyplot as plt
 import re
 import string
@@ -96,18 +97,18 @@ x_negatives, y_negatives = reviews[labels == 0], labels[labels == 0]
 
 # Creating training, validation and testing splits
 x_val, y_val = (
-    tf.concat((x_positives[:val_split], x_negatives[:val_split]), 0),
-    tf.concat((y_positives[:val_split], y_negatives[:val_split]), 0),
+    keras.ops.concatenate((x_positives[:val_split], x_negatives[:val_split]), 0),
+    keras.ops.concatenate((y_positives[:val_split], y_negatives[:val_split]), 0),
 )
 x_test, y_test = (
-    tf.concat(
+    keras.ops.concatenate(
         (
             x_positives[val_split : val_split + test_split],
             x_negatives[val_split : val_split + test_split],
         ),
         0,
     ),
-    tf.concat(
+    keras.ops.concatenate(
         (
             y_positives[val_split : val_split + test_split],
             y_negatives[val_split : val_split + test_split],
@@ -116,14 +117,14 @@ x_test, y_test = (
     ),
 )
 x_train, y_train = (
-    tf.concat(
+    keras.ops.concatenate(
         (
             x_positives[val_split + test_split : val_split + test_split + train_split],
             x_negatives[val_split + test_split : val_split + test_split + train_split],
         ),
         0,
     ),
-    tf.concat(
+    keras.ops.concatenate(
         (
             y_positives[val_split + test_split : val_split + test_split + train_split],
             y_negatives[val_split + test_split : val_split + test_split + train_split],
@@ -281,7 +282,8 @@ def train_full_model(full_train_dataset, val_dataset, test_dataset):
         ],
     )
 
-    # We will save the best model at every epoch and load the best one for evaluation on the test set
+    # We will save the weights of the best model at every epoch and load the best ones for evaluation on the test set
+    checkpoint_file = "FullModelCheckpoint.weights.h5"
     history = model.fit(
         full_train_dataset.batch(256),
         epochs=20,
@@ -289,7 +291,10 @@ def train_full_model(full_train_dataset, val_dataset, test_dataset):
         callbacks=[
             keras.callbacks.EarlyStopping(patience=4, verbose=1),
             keras.callbacks.ModelCheckpoint(
-                "FullModelCheckpoint.h5", verbose=1, save_best_only=True
+                checkpoint_file,
+                verbose=1,
+                save_best_only=True,
+                save_weights_only=True,
             ),
         ],
     )
@@ -302,8 +307,8 @@ def train_full_model(full_train_dataset, val_dataset, test_dataset):
         history.history["val_binary_accuracy"],
     )
 
-    # Loading the best checkpoint
-    model = keras.models.load_model("FullModelCheckpoint.h5")
+    # Loading the weights of the best checkpoint
+    model.load_weights(checkpoint_file)
 
     print("-" * 100)
     print(
@@ -387,9 +392,10 @@ def train_active_learning_models(
     )
 
     # Defining checkpoints.
-    # The checkpoint callback is reused throughout the training since it only saves the best overall model.
+    # The checkpoint callback is reused throughout the training since it only saves the weights of the best overall model.
+    checkpoint_file = "AL_Model.weights.h5"
     checkpoint = keras.callbacks.ModelCheckpoint(
-        "AL_Model.h5", save_best_only=True, verbose=1
+        checkpoint_file, save_best_only=True, save_weights_only=True, verbose=1
     )
     # Here, patience is set to 4. This can be set higher if desired.
     early_stopping = keras.callbacks.EarlyStopping(patience=4, verbose=1)
@@ -408,12 +414,9 @@ def train_active_learning_models(
         losses, val_losses, accuracies, val_accuracies, history
     )
 
-    for iteration in range(num_iterations):
+    for _ in range(num_iterations):
         # Getting predictions from previously trained model
         predictions = model.predict(test_dataset)
-
-        # Generating labels from the output probabilities
-        rounded = tf.where(tf.greater(predictions, 0.5), 1, 0)
 
         # Evaluating the number of zeros and ones incorrrectly classified
         _, _, false_negatives, false_positives = model.evaluate(test_dataset, verbose=0)
@@ -481,8 +484,8 @@ def train_active_learning_models(
             losses, val_losses, accuracies, val_accuracies, history
         )
 
-        # Loading the best model from this training loop
-        model = keras.models.load_model("AL_Model.h5")
+        # Loading the weights of the best model from this training loop
+        model.load_weights(checkpoint_file)
 
     # Plotting the overall history and evaluating the final model
     plot_history(losses, val_losses, accuracies, val_accuracies)

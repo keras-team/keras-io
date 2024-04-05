@@ -431,6 +431,7 @@ EXAMPLES_MASTER = {
                     "path": "active_learning_review_classification",
                     "title": "Review Classification using Active Learning",
                     "subcategory": "Text classification",
+                    "keras_3": True,
                 },
                 {
                     "path": "fnet_classification_with_keras_nlp",
