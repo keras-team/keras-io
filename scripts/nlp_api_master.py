@@ -283,7 +283,7 @@ MODELS_MASTER = {
         },
         {
             "path": "bloom/",
-            "title": "Mistral",
+            "title": "Bloom",
             "toc": True,
             "children": [
                 {
