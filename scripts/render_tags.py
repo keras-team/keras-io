@@ -54,6 +54,21 @@ def format_path(metadata):
         return "Unknown"
 
 
+def is_base_class(symbol):
+    import keras_nlp
+
+    return symbol in (
+        keras_nlp.models.Backbone,
+        keras_nlp.models.Tokenizer,
+        keras_nlp.models.Preprocessor,
+        keras_nlp.models.Task,
+        keras_nlp.models.Classifier,
+        keras_nlp.models.CausalLM,
+        keras_nlp.models.MaskedLM,
+        keras_nlp.models.Seq2SeqLM,
+    )
+
+
 def render_backbone_table(symbols):
     """Renders the markdown table for backbone presets as a string."""
 
@@ -64,7 +79,7 @@ def render_backbone_table(symbols):
     added_presets = set()
     # Bakcbone presets
     for name, symbol in symbols:
-        if "Backbone" not in name:
+        if is_base_class(symbol) or "Backbone" not in name:
             continue
         presets = symbol.presets
         # Only keep the ones with pretrained weights for KerasCV Backbones.
@@ -101,7 +116,8 @@ def render_classifier_table(symbols):
         if "Classifier" not in name:
             continue
         for preset in symbol.presets:
-            if preset not in symbol.backbone_cls.presets:
+            backbone_cls = symbol.backbone_cls
+            if backbone_cls is not None and preset not in backbone_cls.presets:
                 metadata = symbol.presets[preset]["metadata"]
                 table += (
                     f"{preset} | "
@@ -145,7 +161,7 @@ def render_task_table(symbols):
 
 def render_table(symbol):
     table = TABLE_HEADER_PER_MODEL
-    if len(symbol.presets) == 0:
+    if is_base_class(symbol) or len(symbol.presets) == 0:
         return None
     for preset in symbol.presets:
         # Do not print all backbone presets for a task
