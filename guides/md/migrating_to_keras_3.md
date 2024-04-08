@@ -38,7 +38,7 @@ and click "Restart runtime" in Colab, and your code will run on the JAX or PyTor
 !pip install -q keras-nightly
 ```
 
-
+    
 ```python
 import os
 
@@ -48,7 +48,13 @@ import keras
 import tensorflow as tf
 import numpy as np
 ```
+<div class="k-default-codeblock">
+```
+ [[34;49mnotice[1;39;49m][39;49m A new release of pip is available: [31;49m23.3.1[39;49m -> [32;49m24.0
+ [[34;49mnotice[1;39;49m][39;49m To update, run: [32;49mpip install --upgrade pip
 
+```
+</div>
 ---
 ## Going from Keras 2 to Keras 3 with the TensorFlow backend
 
@@ -124,7 +130,7 @@ subclass_model.predict(x_train)
 
 <div class="k-default-codeblock">
 ```
- 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 45ms/step
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 51ms/step
 
 array([[1., 2., 3.],
        [4., 5., 6.]], dtype=float32)
@@ -141,7 +147,7 @@ The error message you could encounter would be as follows:
 >>> model.save("mymodel")
 ValueError: Invalid filepath extension for saving. Please add either a `.keras` extension
 for the native Keras format (recommended) or a `.h5` extension. Use
-`tf.saved_model.save()` if you want to export a SavedModel for use with
+`model.export(filepath)` if you want to export a SavedModel for use with
 TFLite/TFServing/etc. Received: filepath=saved_model.
 ```
 
@@ -154,13 +160,13 @@ sequential_model = keras.Sequential([
 sequential_model.save("saved_model")
 ```
 
-**How to fix it:** use `tf.saved_model.save` instead of `model.save`
+**How to fix it:** use `model.export(filepath)` instead of `model.save(filepath)`
 
 
 ```python
 sequential_model = keras.Sequential([keras.layers.Dense(2)])
 sequential_model(np.random.rand(3, 5))
-tf.saved_model.save(sequential_model, "saved_model")
+sequential_model.export("saved_model")
 ```
 
 <div class="k-default-codeblock">
@@ -168,6 +174,20 @@ tf.saved_model.save(sequential_model, "saved_model")
 INFO:tensorflow:Assets written to: saved_model/assets
 
 INFO:tensorflow:Assets written to: saved_model/assets
+
+Saved artifact at 'saved_model'. The following endpoints are available:
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+* Endpoint 'serve'
+  args_0 (POSITIONAL_ONLY): TensorSpec(shape=(3, 5), dtype=tf.float32, name='keras_tensor')
+Output Type:
+  TensorSpec(shape=(3, 2), dtype=tf.float32, name=None)
+Captures:
+  14428321600: TensorSpec(shape=(), dtype=tf.resource, name=None)
+  14439128528: TensorSpec(shape=(), dtype=tf.resource, name=None)
 
 ```
 </div>
@@ -320,11 +340,11 @@ model.predict(data)
 
 <div class="k-default-codeblock">
 ```
- 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 41ms/step
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 43ms/step
 
-array([[0.69081205, 1.0757748 , 0.06216738],
-       [0.86100876, 0.92610997, 1.7946503 ],
-       [1.0368572 , 1.0535108 , 1.1335285 ]], dtype=float32)
+array([[0.59727275, 1.9986179 , 1.5514829 ],
+       [0.56239295, 1.6529864 , 0.33085832],
+       [0.67086476, 1.5208522 , 1.99276   ]], dtype=float32)
 
 ```
 </div>
@@ -422,9 +442,9 @@ multi_output_model.evaluate(x_test, y_test)
 
 <div class="k-default-codeblock">
 ```
- 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 111ms/step - loss: 3.7628 - output_1_categorical_crossentropy: 3.7628
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 112ms/step - loss: 4.0217 - output_1_categorical_crossentropy: 4.0217
 
-[3.762784481048584, 3.762784481048584]
+[4.021683692932129, 4.021683692932129]
 
 ```
 </div>
@@ -506,7 +526,7 @@ for layer in model.layers:
 
 <div class="k-default-codeblock">
 ```
- 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 30ms/step
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 33ms/step
 [<KerasVariable shape=(3, 3), dtype=float32, path=sequential_2/my_custom_layer_1/variable>, <KerasVariable shape=(3,), dtype=float32, path=sequential_2/my_custom_layer_1/variable_1>]
 
 ```

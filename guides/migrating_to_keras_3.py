@@ -131,7 +131,7 @@ The error message you could encounter would be as follows:
 >>> model.save("mymodel")
 ValueError: Invalid filepath extension for saving. Please add either a `.keras` extension
 for the native Keras format (recommended) or a `.h5` extension. Use
-`tf.saved_model.save()` if you want to export a SavedModel for use with
+`model.export(filepath)` if you want to export a SavedModel for use with
 TFLite/TFServing/etc. Received: filepath=saved_model.
 ```
 
@@ -146,12 +146,12 @@ sequential_model.save("saved_model")
 """
 
 """
-**How to fix it:** use `tf.saved_model.save` instead of `model.save`
+**How to fix it:** use `model.export(filepath)` instead of `model.save(filepath)`
 """
 
 sequential_model = keras.Sequential([keras.layers.Dense(2)])
 sequential_model(np.random.rand(3, 5))
-tf.saved_model.save(sequential_model, "saved_model")
+sequential_model.export("saved_model")
 
 """
 ### Loading a TF SavedModel
