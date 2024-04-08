@@ -569,13 +569,6 @@ REGULARIZATION_MASTER = {
     ],
 }
 
-LAYERS_MASTER = {
-    "path": "layers/",
-    "title": "Layers",
-    "toc": True,
-    "children": [AUGMENTATION_MASTER, PREPROCESSING_MASTER, REGULARIZATION_MASTER, DECODING_MASTER],
-}
-
 #
 # METRICS_MASTER = {
 #     "path": "metrics/",
