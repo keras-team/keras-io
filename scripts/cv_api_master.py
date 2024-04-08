@@ -1,127 +1,470 @@
-AUGMENTATION_MASTER = {
-    "path": "augmentation/",
-    "title": "Augmentation layers",
-    "toc": True,
-    "children": [
-        {
-            "path": "auto_contrast",
-            "title": "AutoContrast layer",
-            "generate": ["keras_cv.layers.AutoContrast"],
-        },
-        {
-            "path": "aug_mix",
-            "title": "AugMix layer",
-            "generate": ["keras_cv.layers.AugMix"],
-        },
-        {
-            "path": "channel_shuffle",
-            "title": "ChannelShuffle layer",
-            "generate": ["keras_cv.layers.ChannelShuffle"],
-        },
-        {
-            "path": "cut_mix",
-            "title": "CutMix layer",
-            "generate": ["keras_cv.layers.CutMix"],
-        },
-        {
-            "path": "fourier_mix",
-            "title": "FourierMix layer",
-            "generate": ["keras_cv.layers.FourierMix"],
-        },
-        {
-            "path": "grid_mask",
-            "title": "GridMask layer",
-            "generate": ["keras_cv.layers.GridMask"],
-        },
-        {
-            "path": "jittered_resize",
-            "title": "JitteredResize layer",
-            "generate": ["keras_cv.layers.JitteredResize"],
-        },
-        {
-            "path": "mix_up",
-            "title": "MixUp layer",
-            "generate": ["keras_cv.layers.MixUp"],
-        },
-        {
-            "path": "rand_augment",
-            "title": "RandAugment layer",
-            "generate": ["keras_cv.layers.RandAugment"],
-        },
-        {
-            "path": "random_augmentation_pipeline",
-            "title": "RandomAugmentationPipeline layer",
-            "generate": ["keras_cv.layers.RandomAugmentationPipeline"],
-        },
-        {
-            "path": "random_channel_shift",
-            "title": "RandomChannelShift layer",
-            "generate": ["keras_cv.layers.RandomChannelShift"],
-        },
-        {
-            "path": "random_color_degeneration",
-            "title": "RandomColorDegeneration layer",
-            "generate": ["keras_cv.layers.RandomColorDegeneration"],
-        },
-        {
-            "path": "random_cutout",
-            "title": "RandomCutout layer",
-            "generate": ["keras_cv.layers.RandomCutout"],
-        },
-        {
-            "path": "random_hue",
-            "title": "RandomHue layer",
-            "generate": ["keras_cv.layers.RandomHue"],
-        },
-        {
-            "path": "random_saturation",
-            "title": "RandomSaturation layer",
-            "generate": ["keras_cv.layers.RandomSaturation"],
-        },
-        {
-            "path": "random_sharpness",
-            "title": "RandomSharpness layer",
-            "generate": ["keras_cv.layers.RandomSharpness"],
-        },
-        {
-            "path": "random_shear",
-            "title": "RandomShear layer",
-            "generate": ["keras_cv.layers.RandomShear"],
-        },
-        {
-            "path": "solarization",
-            "title": "Solarization layer",
-            "generate": ["keras_cv.layers.Solarization"],
-        },
-    ],
-}
 
-PREPROCESSING_MASTER = {
-    "path": "preprocessing/",
-    "title": "Preprocessing layers",
+LAYERS_MASTER = {
+    "path": "layers/",
+    "title": "Layers",
     "toc": True,
     "children": [
         {
-            "path": "resizing",
-            "title": "Resizing layer",
-            "generate": ["keras_cv.layers.Resizing"],
+            "path": "attention/",
+            "title": "Attention layers",
+            "toc": True,
+            "children": [
+                {
+                    "path": "segformer_multihead_attention",
+                    "title": "SegFormer MultiHead Attention layer",
+                    "generate": [
+                        "keras_cv.layers.SegFormerMultiheadAttention"
+                    ]
+                },
+            ]
         },
         {
-            "path": "grayscale",
-            "title": "Grayscale layer",
-            "generate": ["keras_cv.layers.Grayscale"],
+            "path": "augmentation/",
+            "title": "Augmentation layers",
+            "toc": True,
+            "children": [
+                {
+                    "path": "augmenter",
+                    "title": "Augmenter layer",
+                    "generate": ["keras_cv.layers.Augmenter"],
+                },
+                {
+                    "path": "auto_contrast",
+                    "title": "AutoContrast layer",
+                    "generate": ["keras_cv.layers.AutoContrast"],
+                },
+                {
+                    "path": "aug_mix",
+                    "title": "AugMix layer",
+                    "generate": ["keras_cv.layers.AugMix"],
+                },
+                {
+                    "path": "channel_shuffle",
+                    "title": "ChannelShuffle layer",
+                    "generate": ["keras_cv.layers.ChannelShuffle"],
+                },
+                {
+                    "path": "cut_mix",
+                    "title": "CutMix layer",
+                    "generate": ["keras_cv.layers.CutMix"],
+                },
+                {
+                    "path": "fourier_mix",
+                    "title": "FourierMix layer",
+                    "generate": ["keras_cv.layers.FourierMix"],
+                },
+                {
+                    "path": "grid_mask",
+                    "title": "GridMask layer",
+                    "generate": ["keras_cv.layers.GridMask"],
+                },
+                {
+                    "path": "jittered_resize",
+                    "title": "JitteredResize layer",
+                    "generate": ["keras_cv.layers.JitteredResize"],
+                },
+                {
+                    "path": "mix_up",
+                    "title": "MixUp layer",
+                    "generate": ["keras_cv.layers.MixUp"],
+                },
+                {
+                    "path": "mosaic",
+                    "title": "Mosaic layer",
+                    "generate": ["keras_cv.layers.Mosaic"],
+                },
+                {
+                    "path": "random_apply",
+                    "title": "Random apply layer",
+                    "generate": ["keras_cv.layers.RandomApply"],
+                },
+                {
+                    "path": "random_aspect_ratio",
+                    "title": "Random aspect ratio layer",
+                    "generate": ["keras_cv.layers.RandomAspectRatio"],
+                },
+                {
+                    "path": "rand_augment",
+                    "title": "RandAugment layer",
+                    "generate": ["keras_cv.layers.RandAugment"],
+                },
+                {
+                    "path": "random_augmentation_pipeline",
+                    "title": "RandomAugmentationPipeline layer",
+                    "generate": ["keras_cv.layers.RandomAugmentationPipeline"],
+                },
+                {
+                    "path": "random_brightness",
+                    "title": "Random Brightness layer",
+                    "generate": ["keras_cv.layers.RandomBrightness"],
+                },
+                {
+                    "path": "random_channel_shift",
+                    "title": "RandomChannelShift layer",
+                    "generate": ["keras_cv.layers.RandomChannelShift"],
+                },
+                {
+                    "path": "random_choice",
+                    "title": "Random Choice layer",
+                    "generate": ["keras_cv.layers.RandomChoice"],
+                },
+                {
+                    "path": "random_color_degeneration",
+                    "title": "RandomColorDegeneration layer",
+                    "generate": ["keras_cv.layers.RandomColorDegeneration"],
+                },
+                {
+                    "path": "random_color_jitter",
+                    "title": "Random Color Jitter layer",
+                    "generate": ["keras_cv.layers.RandomColorJitter"],
+                },
+                {
+                    "path": "random_contrast",
+                    "title": "Random Contrast layer",
+                    "generate": ["keras_cv.layers.RandomContrast"],
+                },
+                {
+                    "path": "random_crop",
+                    "title": "Random Crop layer",
+                    "generate": ["keras_cv.layers.RandomCrop"],
+                },
+                {
+                    "path": "random_crop_and_resize",
+                    "title": "Random Crop and Resize layer",
+                    "generate": ["keras_cv.layers.RandomCropAndResize"],
+                },
+                {
+                    "path": "random_cutout",
+                    "title": "RandomCutout layer",
+                    "generate": ["keras_cv.layers.RandomCutout"],
+                },
+                {
+                    "path": "random_flip",
+                    "title": "Random Flip layer",
+                    "generate": ["keras_cv.layers.RandomFlip"],
+                },
+                {
+                    "path": "random_guassian_blur",
+                    "title": "Random Gaussian Blur layer",
+                    "generate": ["keras_cv.layers.RandomGaussianBlur"],
+                },
+                {
+                    "path": "random_hue",
+                    "title": "RandomHue layer",
+                    "generate": ["keras_cv.layers.RandomHue"],
+                },
+                {
+                    "path": "random_jpeg_quality",
+                    "title": "Random Jpeg Quality layer",
+                    "generate": ["keras_cv.layers.RandomJpegQuality"],
+                },
+                {
+                    "path": "random_rotation",
+                    "title": "Random Rotation layer",
+                    "generate": ["keras_cv.layers.RandomRotation"],
+                },
+                {
+                    "path": "random_saturation",
+                    "title": "RandomSaturation layer",
+                    "generate": ["keras_cv.layers.RandomSaturation"],
+                },
+                {
+                    "path": "random_sharpness",
+                    "title": "RandomSharpness layer",
+                    "generate": ["keras_cv.layers.RandomSharpness"],
+                },
+                {
+                    "path": "random_shear",
+                    "title": "RandomShear layer",
+                    "generate": ["keras_cv.layers.RandomShear"],
+                },
+                {
+                    "path": "random_translation",
+                    "title": "Random Translation layer",
+                    "generate": ["keras_cv.layers.RandomTranslation"],
+                },
+                {
+                    "path": "random_zoom",
+                    "title": "Random Zoom layer",
+                    "generate": ["keras_cv.layers.RandomZoom"],
+                },
+                {
+                    "path": "repeated_augmentation",
+                    "title": "Repeated Augmentation layer",
+                    "generate": ["keras_cv.layers.RepeatedAugmentation"],
+                },
+                {
+                    "path": "solarization",
+                    "title": "Solarization layer",
+                    "generate": ["keras_cv.layers.Solarization"],
+                },
+                {
+                    "path": "vectorized_image_augmentation",
+                    "title": "Vectorized BaseImage Augmentation layer",
+                    "generate": ["keras_cv.layers.VectorizedBaseImageAugmentationLayer"],
+                },
+            ],
         },
         {
-            "path": "equalization",
-            "title": "Equalization layer",
-            "generate": ["keras_cv.layers.Equalization"],
+            "path": "convolution/",
+            "title": "Convolution layers",
+            "toc": True,
+            "children": [
+                {
+                    "path": "fusedmb",
+                    "title": "FusedMBConv block layer",
+                    "generate": [
+                        "keras_cv.layers.FusedMBConvBlock"
+                    ]
+                },
+                {
+                    "path": "mb_conv",
+                    "title": "MBConv block layer",
+                    "generate": [
+                        "keras_cv.layers.MBConvBlock"
+                    ]
+                },
+            ]
         },
         {
-            "path": "posterization",
-            "title": "Posterization layer",
-            "generate": ["keras_cv.layers.Posterization"],
+            "path": "decoder/",
+            "title": "Decoder Layers",
+            "toc": True,
+            "children": [
+                {
+                    "path": "feature_pyramid",
+                    "title": "Feature Pyramid layer",
+                    "generate": ["keras_cv.layers.FeaturePyramid"]
+                },
+                {
+                    "path": "spatial_pyramid_pooling",
+                    "title": "Spatial Pyramid Pooling layer",
+                    "generate": ["keras_cv.layers.SpatialPyramidPooling"]
+                },
+            ]
         },
-    ],
+        {
+            "path": "embedding/",
+            "title": "Embedding layers",
+            "toc": True,
+            "children": [
+                {
+                    "path": "relative_positional_embedding",
+                    "title": "Add Relative Positional Embedding layer",
+                    "generate": [
+                        "keras_cv.layers.AddRelativePositionalEmbedding"
+                    ]
+                },
+                {
+                    "path": "multihead_relative_pe",
+                    "title": "Mlti-Head Relative Positional Embedding layer",
+                    "generate": [
+                        "keras_cv.layers.MultiHeadAttentionWithRelativePE"
+                    ]
+                },
+                {
+                    "path": "overlapping_patching",
+                    "title": "Overlapping Patching and Embedding layer",
+                    "generate": [
+                        "keras_cv.layers.OverlappingPatchingAndEmbedding"
+                    ]
+                },
+                {
+                    "path": "patching_embedding",
+                    "title": "Patching and Embedding layer",
+                    "generate": [
+                        "keras_cv.layers.PatchingAndEmbedding"
+                    ]
+                },
+                {
+                    "path": "vitdet_patching",
+                    "title": "ViT Det Patching and Embedding layer",
+                    "generate": [
+                        "keras_cv.layers.ViTDetPatchingAndEmbedding"
+                    ]
+                },
+                # {
+                #     "path": "window_partitioning",
+                #     "title": "Window Partitioning layer",
+                #     "generate": [
+                #         "keras_cv.layers.WindowPartitioning"
+                #     ]
+                # },
+            ]
+        },
+        {
+            "path": "encoder/",
+            "title": "Encoder layers",
+            "toc": True,
+            "children": [
+                {
+                    "path": "hierarchical_transformer_encoder",
+                    "title": "Hierarchical Transformer Encoder layer",
+                    "generate": [
+                        "keras_cv.layers.HierarchicalTransformerEncoder"
+                    ]
+                },
+                {
+                    "path": "transformer_encoder",
+                    "title": "Transformer Encoder layer",
+                    "generate": [
+                        "keras_cv.layers.TransformerEncoder"
+                    ]
+                },
+                {
+                    "path": "window_transformer_encoder",
+                    "title": "Window Transformer Encoder layer",
+                    "generate": [
+                        "keras_cv.layers.WindowedTransformerEncoder"
+                    ]
+                },
+            ]
+        },
+        {
+            "path": "preprocessing/",
+            "title": "Preprocessing layers",
+            "toc": True,
+            "children": [
+                {
+                    "path": "equalization",
+                    "title": "Equalization layer",
+                    "generate": ["keras_cv.layers.Equalization"],
+                },
+                {
+                    "path": "grayscale",
+                    "title": "Grayscale layer",
+                    "generate": ["keras_cv.layers.Grayscale"],
+                },
+                {
+                    "path": "posterization",
+                    "title": "Posterization layer",
+                    "generate": ["keras_cv.layers.Posterization"],
+                },
+                {
+                    "path": "rescaling",
+                    "title": "Rescaling layer",
+                    "generate": ["keras_cv.layers.Rescaling"],
+                },
+                {
+                    "path": "resizing",
+                    "title": "Resizing layer",
+                    "generate": ["keras_cv.layers.Resizing"],
+                },
+            ],
+        },
+        {
+            "path": "object_detection/",
+            "title": "Object Detection layers",
+            "toc": True,
+            "children": [
+                {
+                    "path": "anchor_generator",
+                    "title": "Anchor Generator",
+                    "generate": [
+                        "keras_cv.layers.AnchorGenerator"
+                    ]
+                },
+                {
+                    "path": "box_matcher",
+                    "title": "Box Matcher",
+                    "generate": [
+                        "keras_cv.layers.BoxMatcher"
+                    ]
+                },
+                {
+                    "path": "multiclass_nonmax_suppression",
+                    "title": "Multi-Class Non-Max Suppression",
+                    "generate": [
+                        "keras_cv.layers.MultiClassNonMaxSuppression"
+                    ]
+                }, 
+                {
+                    "path": "nonmax_suppression",
+                    "title": "Non-Max Suppression",
+                    "generate": [
+                        "keras_cv.layers.NonMaxSuppression"
+                    ]
+                },
+                {
+                    "path": "roi_generator",
+                    "title": "Region of interests (ROI) Generator",
+                    "generate": [
+                        "keras_cv.layers.ROIGenerator"
+                    ]
+                },
+                {
+                    "path": "roi_pool",
+                    "title": "Region of interests (ROI) Pooler",
+                    "generate": [
+                        "keras_cv.layers.ROIPooler"
+                    ]
+                },        
+            ]
+        },
+        {
+            "path": "object_detection_3d/",
+            "title": "Object Detection 3D layers",
+            "toc": True,
+            "children": [
+                {
+                    "path": "centernet_label_encoder",
+                    "title": "CenterNet Label Encoder",
+                    "generate": [
+                        "keras_cv.layers.CenterNetLabelEncoder",
+                    ],
+                },
+                {
+                    "path": "dynamic_voxelization",
+                    "title": "Dynamic Voxelization layer",
+                    "generate": [
+                        "keras_cv.layers.DynamicVoxelization",
+                    ],
+                },
+                {
+                    "path": "heatmap_decoder",
+                    "title": "Heatmap Decoder",
+                    "generate": [
+                        "keras_cv.layers.HeatmapDecoder",
+                    ],
+                },
+            ]
+        },
+        {
+            "path": "regularization/",
+            "title": "Regularization layers",
+            "toc": True,
+            "children": [
+                {
+                    "path": "dropblock2d",
+                    "title": "DropBlock2D layer",
+                    "generate": [
+                        "keras_cv.layers.DropBlock2D",
+                    ],
+                },
+                {
+                    "path": "drop_path",
+                    "title": "DropPath layer",
+                    "generate": [
+                        "keras_cv.layers.DropPath",
+                    ],
+                },
+                {
+                    "path": "squeeze_and_excite_2d",
+                    "title": "SqueezeAndExcite2D layer",
+                    "generate": [
+                        "keras_cv.layers.SqueezeAndExcite2D",
+                    ],
+                },
+                {
+                    "path": "stochastic_depth",
+                    "title": "StochasticDepth layer",
+                    "generate": [
+                        "keras_cv.layers.StochasticDepth",
+                    ],
+                },
+            ],
+        },
+    ]
 }
 
 BOUNDING_BOX_FORMATS = {
@@ -230,7 +573,7 @@ LAYERS_MASTER = {
     "path": "layers/",
     "title": "Layers",
     "toc": True,
-    "children": [AUGMENTATION_MASTER, PREPROCESSING_MASTER, REGULARIZATION_MASTER],
+    "children": [AUGMENTATION_MASTER, PREPROCESSING_MASTER, REGULARIZATION_MASTER, DECODING_MASTER],
 }
 
 #
