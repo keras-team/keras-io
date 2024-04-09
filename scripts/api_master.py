@@ -842,6 +842,16 @@ API_MASTER = {
                             "title": "Tensorflow SavedModel layer",
                             "generate": ["keras.layers.TFSMLayer"],
                         },
+                        {
+                            "path": "jax_layer",
+                            "title": "JaxLayer",
+                            "generate": ["keras.layers.JaxLayer"],
+                        },
+                        {
+                            "path": "flax_layer",
+                            "title": "FlaxLayer",
+                            "generate": ["keras.layers.FlaxLayer"],
+                        },
                     ],
                 },
             ],
