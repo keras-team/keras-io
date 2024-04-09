@@ -206,27 +206,6 @@ LAYERS_MASTER = {
             ],
         },
         {
-            "path": "convolution/",
-            "title": "Convolution layers",
-            "toc": True,
-            "children": [
-                {
-                    "path": "fusedmb",
-                    "title": "FusedMBConv block layer",
-                    "generate": [
-                        "keras_cv.layers.FusedMBConvBlock"
-                    ]
-                },
-                {
-                    "path": "mb_conv",
-                    "title": "MBConv block layer",
-                    "generate": [
-                        "keras_cv.layers.MBConvBlock"
-                    ]
-                },
-            ]
-        },
-        {
             "path": "decoder/",
             "title": "Decoder Layers",
             "toc": True,
@@ -249,28 +228,28 @@ LAYERS_MASTER = {
             "toc": True,
             "children": [
                 {
-                    "path": "relative_positional_embedding",
+                    "path": "add_relative_positional_embedding",
                     "title": "Add Relative Positional Embedding layer",
                     "generate": [
                         "keras_cv.layers.AddRelativePositionalEmbedding"
                     ]
                 },
                 {
-                    "path": "multihead_relative_pe",
+                    "path": "multi_head_attention_with_relative_pe",
                     "title": "Mlti-Head Relative Positional Embedding layer",
                     "generate": [
                         "keras_cv.layers.MultiHeadAttentionWithRelativePE"
                     ]
                 },
                 {
-                    "path": "overlapping_patching",
+                    "path": "overlapping_patching_and_embedding",
                     "title": "Overlapping Patching and Embedding layer",
                     "generate": [
                         "keras_cv.layers.OverlappingPatchingAndEmbedding"
                     ]
                 },
                 {
-                    "path": "patching_embedding",
+                    "path": "patching_and_embedding",
                     "title": "Patching and Embedding layer",
                     "generate": [
                         "keras_cv.layers.PatchingAndEmbedding"
@@ -283,39 +262,67 @@ LAYERS_MASTER = {
                         "keras_cv.layers.ViTDetPatchingAndEmbedding"
                     ]
                 },
-                # {
-                #     "path": "window_partitioning",
-                #     "title": "Window Partitioning layer",
-                #     "generate": [
-                #         "keras_cv.layers.WindowPartitioning"
-                #     ]
-                # },
+                {
+                    "path": "window_partitioning",
+                    "title": "Window Partitioning layer",
+                    "generate": [
+                        "keras_cv.layers.WindowPartitioning"
+                    ]
+                },
             ]
         },
         {
-            "path": "encoder/",
-            "title": "Encoder layers",
+            "path": "modelling/",
+            "title": "Modelling layers",
             "toc": True,
             "children": [
                 {
-                    "path": "hierarchical_transformer_encoder",
-                    "title": "Hierarchical Transformer Encoder layer",
-                    "generate": [
-                        "keras_cv.layers.HierarchicalTransformerEncoder"
+                    "path": "encoder/",
+                    "title": "Encoder layers",
+                    "toc": True,
+                    "children": [
+                        {
+                            "path": "hierarchical_transformer_encoder",
+                            "title": "Hierarchical Transformer Encoder layer",
+                            "generate": [
+                                "keras_cv.layers.HierarchicalTransformerEncoder"
+                            ]
+                        },
+                        {
+                            "path": "transformer_encoder",
+                            "title": "Transformer Encoder layer",
+                            "generate": [
+                                "keras_cv.layers.TransformerEncoder"
+                            ]
+                        },
+                        {
+                            "path": "window_transformer_encoder",
+                            "title": "Window Transformer Encoder layer",
+                            "generate": [
+                                "keras_cv.layers.WindowedTransformerEncoder"
+                            ]
+                        },
                     ]
                 },
                 {
-                    "path": "transformer_encoder",
-                    "title": "Transformer Encoder layer",
-                    "generate": [
-                        "keras_cv.layers.TransformerEncoder"
-                    ]
-                },
-                {
-                    "path": "window_transformer_encoder",
-                    "title": "Window Transformer Encoder layer",
-                    "generate": [
-                        "keras_cv.layers.WindowedTransformerEncoder"
+                    "path": "convolution/",
+                    "title": "Convolution layers",
+                    "toc": True,
+                    "children": [
+                        {
+                            "path": "fusedmb_conv_block",
+                            "title": "FusedMBConv block layer",
+                            "generate": [
+                                "keras_cv.layers.FusedMBConvBlock"
+                            ]
+                        },
+                        {
+                            "path": "mb_conv_block",
+                            "title": "MBConv block layer",
+                            "generate": [
+                                "keras_cv.layers.MBConvBlock"
+                            ]
+                        },
                     ]
                 },
             ]
@@ -403,7 +410,7 @@ LAYERS_MASTER = {
         },
         {
             "path": "object_detection_3d/",
-            "title": "Object Detection 3D layers",
+            "title": "3D Object Detection layers",
             "toc": True,
             "children": [
                 {
