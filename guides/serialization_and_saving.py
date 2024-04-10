@@ -129,7 +129,7 @@ Like this:
 class CustomLayer(keras.layers.Layer):
     def __init__(self, sublayer, **kwargs):
         super().__init__(**kwargs)
-        self.sublayer = layer
+        self.sublayer = sublayer
 
     def call(self, x):
         return self.sublayer(x)
