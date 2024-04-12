@@ -26,32 +26,28 @@ operation with a shifting operation.
 
 In this example, we minimally implement the paper with close alignement to the author's
 [official implementation](https://github.com/microsoft/SPACH/blob/main/models/shiftvit.py).
-
-This example requires TensorFlow 2.9 or higher, as well as TensorFlow Addons, which can
-be installed using the following command:
-"""
-"""shell
-pip install -qq -U tensorflow-addons
 """
 
 """
 ## Setup and imports
 """
 
+import os
+
+os.environ["KERAS_BACKEND"] = "tensorflow"  # @param ["tensorflow", "jax", "torch"]
+
 import numpy as np
 import matplotlib.pyplot as plt
 
 import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras import layers
-import tensorflow_addons as tfa
+import keras
+from keras import layers
 
 import pathlib
 import glob
 
 # Setting seed for reproducibiltiy
-SEED = 42
-keras.utils.set_random_seed(SEED)
+keras.utils.set_random_seed(42)
 
 """
 ## Hyperparameters
@@ -242,7 +238,7 @@ class MLP(layers.Layer):
             [
                 layers.Dense(
                     units=initial_filters,
-                    activation=tf.nn.gelu,
+                    activation=keras.activations.gelu,
                 ),
                 layers.Dropout(rate=self.mlp_dropout_rate),
                 layers.Dense(units=input_channels),
@@ -280,9 +276,9 @@ class DropPath(layers.Layer):
     def call(self, x, training=False):
         if training:
             keep_prob = 1 - self.drop_path_prob
-            shape = (tf.shape(x)[0],) + (1,) * (len(tf.shape(x)) - 1)
-            random_tensor = keep_prob + tf.random.uniform(shape, 0, 1)
-            random_tensor = tf.floor(random_tensor)
+            shape = (keras.ops.shape(x)[0],) + (1,) * (len(keras.ops.shape(x)) - 1)
+            random_tensor = keep_prob + keras.random.uniform(shape)
+            random_tensor = keras.ops.floor(random_tensor)
             return (x / keep_prob) * random_tensor
         return x
 
@@ -403,10 +399,10 @@ class ShiftViTBlock(layers.Layer):
             target_height=self.H - target_height,
             target_width=self.W - target_width,
         )
-        shift_pad = tf.image.pad_to_bounding_box(
+        shift_pad = keras.ops.image.pad_images(
             crop,
-            offset_height=offset_height,
-            offset_width=offset_width,
+            top_padding=offset_height,
+            left_padding=offset_width,
             target_height=self.H,
             target_width=self.W,
         )
@@ -414,7 +410,7 @@ class ShiftViTBlock(layers.Layer):
 
     def call(self, x, training=False):
         # Split the feature maps
-        x_splits = tf.split(x, num_or_size_splits=self.C // self.num_div, axis=-1)
+        x_splits = keras.ops.split(x, indices_or_sections=self.C // self.num_div, axis=-1)
 
         # Shift the feature maps
         x_splits[0] = self.get_shift_pad(x_splits[0], mode="left")
@@ -423,7 +419,7 @@ class ShiftViTBlock(layers.Layer):
         x_splits[3] = self.get_shift_pad(x_splits[3], mode="down")
 
         # Concatenate the shifted and unshifted feature maps
-        x = tf.concat(x_splits, axis=-1)
+        x = keras.ops.concatenate(x_splits, axis=-1)
 
         # Add the residual connection
         shortcut = x
@@ -534,7 +530,7 @@ class StackedShiftBlocks(layers.Layer):
         # Reference: https://keras.io/examples/vision/cct/#the-final-cct-model
         dpr = [
             x
-            for x in np.linspace(
+            for x in keras.ops.linspace(
                 start=0, stop=self.stochastic_depth_rate, num=self.num_shift_blocks
             )
         ]
@@ -673,7 +669,7 @@ class ShiftViTModel(keras.Model):
         # Augment the images
         augmented_images = self.data_augmentation(images, training=training)
 
-        # Create patches and project the pathces.
+        # Create patches and project the patches.
         projected_patches = self.patch_projection(augmented_images)
 
         # Pass through the stages
@@ -690,6 +686,14 @@ class ShiftViTModel(keras.Model):
         return total_loss, labels, logits
 
     def train_step(self, inputs):
+        if keras.backend.backend() == "jax":
+            return self._jax_train_step(self, inputs)
+        elif keras.backend.backend() == "tensorflow":
+            return self._tensorflow_train_step(self, inputs)
+        elif keras.backend.backend() == "torch":
+            return self._torch_train_step(self, inputs)
+
+    def _tensorflow_train_step(self, inputs):
         with tf.GradientTape() as tape:
             total_loss, labels, logits = self._calculate_loss(
                 data=inputs, training=True
@@ -713,14 +717,28 @@ class ShiftViTModel(keras.Model):
         self.optimizer.apply_gradients(trainable_variable_list)
 
         # Update the metrics
-        self.compiled_metrics.update_state(labels, logits)
+        for metric in self.metrics:
+            metric.update_state(labels, logits)
+
         return {m.name: m.result() for m in self.metrics}
+
+    # TODO: add JAX implementation.
+    def _jax_train_step(self, inputs):
+        print("JAX training step is not implemented yet.")
+        pass
+
+    # TODO: add PyTorch implementation.
+    def _torch_train_step(self, inputs):
+        print("PyTorch training step is not implemented yet.")
+        pass
 
     def test_step(self, data):
         _, labels, logits = self._calculate_loss(data=data, training=False)
 
         # Update the metrics
-        self.compiled_metrics.update_state(labels, logits)
+        for metric in self.metrics:
+            metric.update_state(labels, logits)
+
         return {m.name: m.result() for m in self.metrics}
 
     def call(self, images):
@@ -779,7 +797,6 @@ class WarmUpCosine(keras.optimizers.schedules.LearningRateSchedule):
         self.lr_max = lr_max
         self.warmup_steps = warmup_steps
         self.total_steps = total_steps
-        self.pi = tf.constant(np.pi)
 
     def __call__(self, step):
         # Check whether the total number of steps is larger than the warmup
@@ -793,10 +810,10 @@ class WarmUpCosine(keras.optimizers.schedules.LearningRateSchedule):
         # `cos_annealed_lr` is a graph that increases to 1 from the initial
         # step to the warmup step. After that this graph decays to -1 at the
         # final step mark.
-        cos_annealed_lr = tf.cos(
-            self.pi
-            * (tf.cast(step, tf.float32) - self.warmup_steps)
-            / tf.cast(self.total_steps - self.warmup_steps, tf.float32)
+        cos_annealed_lr = keras.ops.cos(
+            np.pi
+            * (keras.ops.cast(step, dtype="float32") - self.warmup_steps)
+            / keras.ops.cast(self.total_steps - self.warmup_steps, dtype="float32")
         )
 
         # Shift the mean of the `cos_annealed_lr` graph to 1. Now the grpah goes
@@ -821,19 +838,19 @@ class WarmUpCosine(keras.optimizers.schedules.LearningRateSchedule):
 
             # With the formula for a straight line (y = mx+c) build the warmup
             # schedule
-            warmup_rate = slope * tf.cast(step, tf.float32) + self.lr_start
+            warmup_rate = slope * keras.ops.cast(step, dtype="float32") + self.lr_start
 
             # When the current step is lesser that warmup steps, get the line
             # graph. When the current step is greater than the warmup steps, get
             # the scaled cos graph.
-            learning_rate = tf.where(
+            learning_rate = keras.ops.where(
                 step < self.warmup_steps, warmup_rate, learning_rate
             )
 
         # When the current step is more that the total steps, return 0 else return
         # the calculated graph.
-        return tf.where(
-            step > self.total_steps, 0.0, learning_rate, name="learning_rate"
+        return keras.ops.where(
+            step > self.total_steps, 0.0, learning_rate
         )
 
     def get_config(self):
@@ -871,7 +888,7 @@ scheduled_lrs = WarmUpCosine(
 )
 
 # Get the optimizer.
-optimizer = tfa.optimizers.AdamW(
+optimizer = keras.optimizers.AdamW(
     learning_rate=scheduled_lrs, weight_decay=config.weight_decay
 )
 
@@ -934,9 +951,9 @@ unzip -q inference_set.zip
 """
 # Custom objects are not included when the model is saved.
 # At loading time, these objects need to be passed for reconstruction of the model
-saved_model = tf.keras.models.load_model(
+saved_model = keras.models.load_model(
     "ShiftViT",
-    custom_objects={"WarmUpCosine": WarmUpCosine, "AdamW": tfa.optimizers.AdamW},
+    custom_objects={"WarmUpCosine": WarmUpCosine, "AdamW": keras.optimizers.AdamW},
 )
 
 """
@@ -953,8 +970,9 @@ def process_image(img_path):
 
     # resize image to match input size accepted by model
     # use `method` as `nearest` to preserve dtype of input passed to `resize()`
-    img = tf.image.resize(
-        img, [config.input_shape[0], config.input_shape[1]], method="nearest"
+    img = keras.ops.image.resize(
+        img, size=[config.input_shape[0], config.input_shape[1]],
+        interpolation="nearest"
     )
     return img
 
@@ -962,8 +980,12 @@ def process_image(img_path):
 def create_tf_dataset(image_dir):
     data_dir = pathlib.Path(image_dir)
 
-    # create tf.data dataset using directory of images
-    predict_ds = tf.data.Dataset.list_files(str(data_dir / "*.jpg"), shuffle=False)
+    # create tf.data.Dataset using directory of images
+    predict_ds = keras.utils.image_dataset_from_directory(
+        directory=str(data_dir / "*.jpg"),
+        shuffle=False,
+        verbose=False
+    )
 
     # use map to convert string paths to uint8 image tensors
     # setting `num_parallel_calls' helps in processing multiple images parallely
@@ -979,21 +1001,21 @@ def predict(predict_ds):
     logits = saved_model.predict(predict_ds)
 
     # normalize predictions by calling softmax()
-    probabilities = tf.nn.softmax(logits)
+    probabilities = keras.ops.softmax(logits)
     return probabilities
 
 
 def get_predicted_class(probabilities):
-    pred_label = np.argmax(probabilities)
+    pred_label = keras.ops.argmax(probabilities)
     predicted_class = config.label_map[pred_label]
     return predicted_class
 
 
 def get_confidence_scores(probabilities):
     # get the indices of the probability scores sorted in descending order
-    labels = np.argsort(probabilities)[::-1]
+    labels = keras.ops.argsort(probabilities)[::-1]
     confidences = {
-        config.label_map[label]: np.round((probabilities[label]) * 100, 2)
+        config.label_map[label]: keras.ops.round((probabilities[label]) * 100, 2)
         for label in labels
     }
     return confidences
