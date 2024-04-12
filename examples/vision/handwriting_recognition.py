@@ -45,16 +45,22 @@ head -20 data/words.txt
 ## Imports
 """
 
-from tensorflow.keras.layers import StringLookup
-from tensorflow import keras
+import os
+
+os.environ["KERAS_BACKEND"] = "torch"  # @param ["tensorflow", "jax", "torch"]
+
+from keras.layers import StringLookup
+from keras_nlp.metrics import EditDistance
+import keras
 
 import matplotlib.pyplot as plt
 import tensorflow as tf
 import numpy as np
-import os
 
 np.random.seed(42)
-tf.random.set_seed(42)
+keras.random.SeedGenerator(42)
+
+k_nlp_edit_distance = EditDistance(normalize=False)
 
 """
 ## Dataset splitting
@@ -210,11 +216,11 @@ the following criteria are met:
 
 def distortion_free_resize(image, img_size):
     w, h = img_size
-    image = tf.image.resize(image, size=(h, w), preserve_aspect_ratio=True)
+    image = keras.ops.image.resize(image, size=(h, w))
 
-    # Check tha amount of padding needed to be done.
-    pad_height = h - tf.shape(image)[0]
-    pad_width = w - tf.shape(image)[1]
+    # Check the amount of padding needed to be done.
+    pad_height = h - keras.ops.shape(image)[0]
+    pad_width = w - keras.ops.shape(image)[1]
 
     # Only necessary if you want to do same amount of padding on both sides.
     if pad_height % 2 != 0:
@@ -231,17 +237,16 @@ def distortion_free_resize(image, img_size):
     else:
         pad_width_left = pad_width_right = pad_width // 2
 
-    image = tf.pad(
+    image = keras.ops.image.pad_images(
         image,
-        paddings=[
-            [pad_height_top, pad_height_bottom],
-            [pad_width_left, pad_width_right],
-            [0, 0],
-        ],
+        top_padding=pad_height_top,
+        bottom_padding=pad_height_bottom,
+        right_padding=pad_width_right,
+        left_padding=pad_width_left
     )
 
-    image = tf.transpose(image, perm=[1, 0, 2])
-    image = tf.image.flip_left_right(image)
+    image = keras.ops.transpose(image, axes=[1, 0, 2])
+    image = keras.ops.flip(image, axis=1)
     return image
 
 
@@ -267,15 +272,18 @@ def preprocess_image(image_path, img_size=(image_width, image_height)):
     image = tf.io.read_file(image_path)
     image = tf.image.decode_png(image, 1)
     image = distortion_free_resize(image, img_size)
-    image = tf.cast(image, tf.float32) / 255.0
+    image = keras.ops.cast(image, dtype="float32") / 255.0
     return image
 
 
 def vectorize_label(label):
     label = char_to_num(tf.strings.unicode_split(label, input_encoding="UTF-8"))
-    length = tf.shape(label)[0]
+    length = keras.ops.shape(label)[0]
     pad_amount = max_len - length
-    label = tf.pad(label, paddings=[[0, pad_amount]], constant_values=padding_token)
+    label = keras.ops.pad(
+        label, pad_width=[[0, pad_amount]],
+        mode="constant", constant_values=padding_token
+    )
     return label
 
 
@@ -295,7 +303,6 @@ def prepare_dataset(image_paths, labels):
 """
 ## Prepare `tf.data.Dataset` objects
 """
-
 train_ds = prepare_dataset(train_img_paths, train_labels_cleaned)
 validation_ds = prepare_dataset(validation_img_paths, validation_labels_cleaned)
 test_ds = prepare_dataset(test_img_paths, test_labels_cleaned)
@@ -311,14 +318,16 @@ for data in train_ds.take(1):
 
     for i in range(16):
         img = images[i]
-        img = tf.image.flip_left_right(img)
-        img = tf.transpose(img, perm=[1, 0, 2])
+        img = keras.ops.flip(img, axis=1)
+        img = keras.ops.transpose(img, axes=[1, 0, 2])
         img = (img * 255.0).numpy().clip(0, 255).astype(np.uint8)
         img = img[:, :, 0]
 
         # Gather indices where label!= padding_token.
         label = labels[i]
-        indices = tf.gather(label, tf.where(tf.math.not_equal(label, padding_token)))
+        indices = keras.ops.take(
+            label, keras.ops.where(keras.ops.not_equal(label, padding_token))
+        )
         # Convert to string.
         label = tf.strings.reduce_join(num_to_char(indices))
         label = label.numpy().decode("utf-8")
@@ -346,16 +355,10 @@ CTC loss, refer to [this post](https://distill.pub/2017/ctc/).
 class CTCLayer(keras.layers.Layer):
     def __init__(self, name=None):
         super().__init__(name=name)
-        self.loss_fn = keras.backend.ctc_batch_cost
+        self.loss_fn = keras.losses.ctc
 
     def call(self, y_true, y_pred):
-        batch_len = tf.cast(tf.shape(y_true)[0], dtype="int64")
-        input_length = tf.cast(tf.shape(y_pred)[1], dtype="int64")
-        label_length = tf.cast(tf.shape(y_true)[1], dtype="int64")
-
-        input_length = input_length * tf.ones(shape=(batch_len, 1), dtype="int64")
-        label_length = label_length * tf.ones(shape=(batch_len, 1), dtype="int64")
-        loss = self.loss_fn(y_true, y_pred, input_length, label_length)
+        loss = self.loss_fn(y_true, y_pred)
         self.add_loss(loss)
 
         # At test time, just return the computed predictions.
@@ -421,6 +424,7 @@ def build_model():
     )
     # Optimizer.
     opt = keras.optimizers.Adam()
+
     # Compile the model and return.
     model.compile(optimizer=opt)
     return model
@@ -455,22 +459,23 @@ Now, we create a callback to monitor the edit distances.
 
 def calculate_edit_distance(labels, predictions):
     # Get a single batch and convert its labels to sparse tensors.
-    saprse_labels = tf.cast(tf.sparse.from_dense(labels), dtype=tf.int64)
+    sparse_labels = keras.ops.cast(
+        tf.sparse.from_dense(labels), dtype="int64"
+    )
 
     # Make predictions and convert them to sparse tensors.
     input_len = np.ones(predictions.shape[0]) * predictions.shape[1]
     predictions_decoded = keras.backend.ctc_decode(
         predictions, input_length=input_len, greedy=True
     )[0][0][:, :max_len]
-    sparse_predictions = tf.cast(
-        tf.sparse.from_dense(predictions_decoded), dtype=tf.int64
+    sparse_predictions = keras.ops.cast(
+        tf.sparse.from_dense(predictions_decoded), dtype="int64"
     )
 
     # Compute individual edit distances and average them out.
-    edit_distances = tf.edit_distance(
-        sparse_predictions, saprse_labels, normalize=False
-    )
-    return tf.reduce_mean(edit_distances)
+    edit_distances = k_nlp_edit_distance(sparse_predictions, sparse_labels)
+
+    return keras.ops.mean(edit_distances)
 
 
 class EditDistanceCallback(keras.callbacks.Callback):
@@ -529,7 +534,7 @@ def decode_batch_predictions(pred):
     # Iterate over the results and get back the text.
     output_text = []
     for res in results:
-        res = tf.gather(res, tf.where(tf.math.not_equal(res, -1)))
+        res = keras.ops.take(res, keras.ops.where(keras.ops.not_equal(res, -1)))
         res = tf.strings.reduce_join(num_to_char(res)).numpy().decode("utf-8")
         output_text.append(res)
     return output_text
@@ -545,8 +550,8 @@ for batch in test_ds.take(1):
 
     for i in range(16):
         img = batch_images[i]
-        img = tf.image.flip_left_right(img)
-        img = tf.transpose(img, perm=[1, 0, 2])
+        img = keras.ops.flip(img, axis=1)
+        img = keras.ops.transpose(img, axes=[1, 0, 2])
         img = (img * 255.0).numpy().clip(0, 255).astype(np.uint8)
         img = img[:, :, 0]
 
