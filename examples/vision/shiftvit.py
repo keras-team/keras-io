@@ -34,14 +34,25 @@ In this example, we minimally implement the paper with close alignement to the a
 
 import os
 
-os.environ["KERAS_BACKEND"] = "tensorflow"  # @param ["tensorflow", "jax", "torch"]
+# @param ["tensorflow", "jax", "torch"]
+if os.environ.get('KERAS_BACKEND') is None:
+    os.environ["KERAS_BACKEND"] = "tensorflow"
+
+if os.environ.get('KERAS_BACKEND') == "torch":
+    import torch
+elif os.environ.get('KERAS_BACKEND') == "jax":
+    import jax
+
+# Always import tensorflow because of tf.io, tf.image, and tf.data.Dataset
+# dependencies even when using other backends.
+import tensorflow as tf
 
 import numpy as np
 import matplotlib.pyplot as plt
 
-import tensorflow as tf
 import keras
 from keras import layers
+from keras import ops
 
 import pathlib
 import glob
@@ -276,9 +287,9 @@ class DropPath(layers.Layer):
     def call(self, x, training=False):
         if training:
             keep_prob = 1 - self.drop_path_prob
-            shape = (keras.ops.shape(x)[0],) + (1,) * (len(keras.ops.shape(x)) - 1)
+            shape = (ops.shape(x)[0],) + (1,) * (len(ops.shape(x)) - 1)
             random_tensor = keep_prob + keras.random.uniform(shape)
-            random_tensor = keras.ops.floor(random_tensor)
+            random_tensor = ops.floor(random_tensor)
             return (x / keep_prob) * random_tensor
         return x
 
@@ -399,7 +410,7 @@ class ShiftViTBlock(layers.Layer):
             target_height=self.H - target_height,
             target_width=self.W - target_width,
         )
-        shift_pad = keras.ops.image.pad_images(
+        shift_pad = ops.image.pad_images(
             crop,
             top_padding=offset_height,
             left_padding=offset_width,
@@ -410,7 +421,7 @@ class ShiftViTBlock(layers.Layer):
 
     def call(self, x, training=False):
         # Split the feature maps
-        x_splits = keras.ops.split(x, indices_or_sections=self.C // self.num_div, axis=-1)
+        x_splits = ops.split(x, indices_or_sections=self.C // self.num_div, axis=-1)
 
         # Shift the feature maps
         x_splits[0] = self.get_shift_pad(x_splits[0], mode="left")
@@ -419,7 +430,7 @@ class ShiftViTBlock(layers.Layer):
         x_splits[3] = self.get_shift_pad(x_splits[3], mode="down")
 
         # Concatenate the shifted and unshifted feature maps
-        x = keras.ops.concatenate(x_splits, axis=-1)
+        x = ops.concatenate(x_splits, axis=-1)
 
         # Add the residual connection
         shortcut = x
@@ -530,7 +541,7 @@ class StackedShiftBlocks(layers.Layer):
         # Reference: https://keras.io/examples/vision/cct/#the-final-cct-model
         dpr = [
             x
-            for x in keras.ops.linspace(
+            for x in ops.linspace(
                 start=0, stop=self.stochastic_depth_rate, num=self.num_shift_blocks
             )
         ]
@@ -687,11 +698,15 @@ class ShiftViTModel(keras.Model):
 
     def train_step(self, inputs):
         if keras.backend.backend() == "jax":
-            return self._jax_train_step(self, inputs)
+            return self._jax_train_step(inputs)
         elif keras.backend.backend() == "tensorflow":
-            return self._tensorflow_train_step(self, inputs)
+            return self._tensorflow_train_step(inputs)
         elif keras.backend.backend() == "torch":
-            return self._torch_train_step(self, inputs)
+            return self._torch_train_step(inputs)
+        else:
+            raise NotImplementedError(
+                f"The training forward pass is not implemented for {keras.backend.backend()}."
+            )
 
     def _tensorflow_train_step(self, inputs):
         with tf.GradientTape() as tape:
@@ -810,10 +825,10 @@ class WarmUpCosine(keras.optimizers.schedules.LearningRateSchedule):
         # `cos_annealed_lr` is a graph that increases to 1 from the initial
         # step to the warmup step. After that this graph decays to -1 at the
         # final step mark.
-        cos_annealed_lr = keras.ops.cos(
+        cos_annealed_lr = ops.cos(
             np.pi
-            * (keras.ops.cast(step, dtype="float32") - self.warmup_steps)
-            / keras.ops.cast(self.total_steps - self.warmup_steps, dtype="float32")
+            * (ops.cast(step, dtype="float32") - self.warmup_steps)
+            / ops.cast(self.total_steps - self.warmup_steps, dtype="float32")
         )
 
         # Shift the mean of the `cos_annealed_lr` graph to 1. Now the grpah goes
@@ -838,18 +853,18 @@ class WarmUpCosine(keras.optimizers.schedules.LearningRateSchedule):
 
             # With the formula for a straight line (y = mx+c) build the warmup
             # schedule
-            warmup_rate = slope * keras.ops.cast(step, dtype="float32") + self.lr_start
+            warmup_rate = slope * ops.cast(step, dtype="float32") + self.lr_start
 
             # When the current step is lesser that warmup steps, get the line
             # graph. When the current step is greater than the warmup steps, get
             # the scaled cos graph.
-            learning_rate = keras.ops.where(
+            learning_rate = ops.where(
                 step < self.warmup_steps, warmup_rate, learning_rate
             )
 
         # When the current step is more that the total steps, return 0 else return
         # the calculated graph.
-        return keras.ops.where(
+        return ops.where(
             step > self.total_steps, 0.0, learning_rate
         )
 
@@ -970,7 +985,7 @@ def process_image(img_path):
 
     # resize image to match input size accepted by model
     # use `method` as `nearest` to preserve dtype of input passed to `resize()`
-    img = keras.ops.image.resize(
+    img = ops.image.resize(
         img, size=[config.input_shape[0], config.input_shape[1]],
         interpolation="nearest"
     )
@@ -1001,21 +1016,21 @@ def predict(predict_ds):
     logits = saved_model.predict(predict_ds)
 
     # normalize predictions by calling softmax()
-    probabilities = keras.ops.softmax(logits)
+    probabilities = ops.softmax(logits)
     return probabilities
 
 
 def get_predicted_class(probabilities):
-    pred_label = keras.ops.argmax(probabilities)
+    pred_label = ops.argmax(probabilities)
     predicted_class = config.label_map[pred_label]
     return predicted_class
 
 
 def get_confidence_scores(probabilities):
     # get the indices of the probability scores sorted in descending order
-    labels = keras.ops.argsort(probabilities)[::-1]
+    labels = ops.argsort(probabilities)[::-1]
     confidences = {
-        config.label_map[label]: keras.ops.round((probabilities[label]) * 100, 2)
+        config.label_map[label]: ops.round((probabilities[label]) * 100, 2)
         for label in labels
     }
     return confidences
