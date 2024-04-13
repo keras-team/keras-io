@@ -2,7 +2,7 @@
 Title: Handwriting recognition
 Authors: [A_K_Nain](https://twitter.com/A_K_Nain), [Sayak Paul](https://twitter.com/RisingSayak)
 Date created: 2021/08/16
-Last modified: 2023/07/06
+Last modified: 2024/04/12
 Description: Training a handwriting recognition model with variable-length sequences.
 Accelerator: GPU
 """
@@ -17,6 +17,8 @@ which has variable length ground-truth targets. Each sample in the dataset is an
 handwritten text, and its corresponding target is the string present in the image.
 The IAM Dataset is widely used across many OCR benchmarks, so we hope this example can serve as a
 good starting point for building OCR systems.
+
+Note: This example is currently only compatible with TensorFlow.
 """
 
 """
@@ -347,23 +349,12 @@ been padded accordingly.
 """
 ## Model
 
-Our model will use the CTC loss as an endpoint layer. For a detailed understanding of the
-CTC loss, refer to [this post](https://distill.pub/2017/ctc/).
+Our model will use the CTC loss. For a detailed understanding of the CTC loss,
+refer to [this post](https://distill.pub/2017/ctc/).
 """
 
-class CTCLayer(layers.Layer):
-    def __init__(self, name=None):
-        super().__init__(name=name)
-        self.loss_fn = keras.losses.ctc
 
-    def call(self, y_true, y_pred):
-        loss = self.loss_fn(y_true, y_pred)
-        self.add_loss(loss)
-
-        # At test time, just return the computed predictions.
-        return y_pred
-
-# Ported from Keras 2 backend.
+# Ported from keras 2 backend (with keras 3 ops updates).
 def ctc_decode(y_pred, input_length, greedy=True, beam_width=100, top_paths=1):
     input_shape = tf.shape(y_pred)
     num_samples, num_steps = input_shape[0], input_shape[1]
@@ -433,22 +424,20 @@ def build_model():
 
     # +2 is to account for the two special tokens introduced by the CTC loss.
     # The recommendation comes here: https://git.io/J0eXP.
-    x = layers.Dense(
-        len(char_to_num.get_vocabulary()) + 2, activation="softmax", name="dense2"
+    output = layers.Dense(
+        len(char_to_num.get_vocabulary()) + 2, activation="softmax", name="softmax"
     )(x)
-
-    # Add CTC layer for calculating CTC loss at each step.
-    output = CTCLayer(name="ctc_loss")(labels, x)
 
     # Define the model.
     model = keras.models.Model(
         inputs=[input_img, labels], outputs=output, name="handwriting_recognizer"
     )
-    # Optimizer.
-    opt = keras.optimizers.Adam()
 
     # Compile the model and return.
-    model.compile(optimizer=opt)
+    model.compile(
+        optimizer=keras.optimizers.Adam(),
+        loss=keras.losses.CTC())
+
     return model
 
 
@@ -488,8 +477,7 @@ def calculate_edit_distance(labels, predictions):
     # Make predictions and convert them to sparse tensors.
     input_len = ops.ones(predictions.shape[0]) * predictions.shape[1]
     predictions_decoded = ctc_decode(
-        predictions, input_length=input_len, greedy=True
-    )[0][0][:, :max_len]
+        predictions, input_length=input_len, greedy=True)[0][0][:, :max_len]
     sparse_predictions = ops.cast(
         tf.sparse.from_dense(predictions_decoded), dtype="int64"
     )
