@@ -29,8 +29,7 @@ Note: This example is currently only compatible with TensorFlow.
 wget -q https://github.com/sayakpaul/Handwriting-Recognizer-in-Keras/releases/download/v1.0.0/IAM_Words.zip
 unzip -qq IAM_Words.zip
 
-mkdir data
-mkdir data/words
+mkdir -p data/words
 tar -xf IAM_Words/words.tgz -C data/words
 mv IAM_Words/words.txt data
 """
@@ -354,6 +353,8 @@ refer to [this post](https://distill.pub/2017/ctc/).
 """
 
 
+# TODO: Remove and use native keras op after
+# https://github.com/keras-team/keras/pull/19366 is merged.
 # Ported from keras 2 backend (with keras 3 ops updates).
 def ctc_decode(y_pred, input_length, greedy=True, beam_width=100, top_paths=1):
     input_shape = tf.shape(y_pred)
@@ -516,7 +517,7 @@ epochs = 10  # To get good results this should be at least 50.
 
 model = build_model()
 prediction_model = keras.models.Model(
-    model.get_layer(name="image").input, model.get_layer(name="dense2").output
+    model.get_layer(name="image").input, model.get_layer(name="softmax").output
 )
 edit_distance_callback = EditDistanceCallback(prediction_model)
 
