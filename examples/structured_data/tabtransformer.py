@@ -566,5 +566,4 @@ For a scenario where there are a few labeled examples and a large number of unla
 examples, a pre-training procedure can be employed to train the Transformer layers using unlabeled data.
 This is followed by fine-tuning of the pre-trained Transformer layers along with
 the top MLP layer using the labeled data.
-
 """
