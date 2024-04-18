@@ -34,8 +34,8 @@ In this example, we minimally implement the paper with close alignement to the a
 
 import os
 
-# @param ["tensorflow", "jax", "torch"]
 if os.environ.get('KERAS_BACKEND') is None:
+    # @param ["tensorflow", "jax", "torch"]
     os.environ["KERAS_BACKEND"] = "tensorflow"
 
 if os.environ.get('KERAS_BACKEND') == "torch":
@@ -54,8 +54,7 @@ import keras
 from keras import layers
 from keras import ops
 
-import pathlib
-import glob
+from pathlib import Path
 
 # Setting seed for reproducibiltiy
 keras.utils.set_random_seed(42)
@@ -674,7 +673,44 @@ class ShiftViTModel(keras.Model):
         )
         return config
 
-    def _calculate_loss(self, data, training=False):
+    def train_step(self, inputs):
+        if keras.backend.backend() == "jax":
+            return self._jax_train_step(inputs)
+        elif keras.backend.backend() == "tensorflow":
+            return self._tensorflow_train_step(inputs)
+        elif keras.backend.backend() == "torch":
+            return self._torch_train_step(inputs)
+        else:
+            raise NotImplementedError(
+                f"The train/fit step is not implemented for {keras.backend.backend()}."
+            )
+
+    def test_step(self, data):
+        if keras.backend.backend() == "jax":
+            return self._jax_test_step(data)
+        elif keras.backend.backend() == "tensorflow":
+            return self._tensorflow_test_step(data)
+        elif keras.backend.backend() == "torch":
+            return self._torch_test_step(data)
+        else:
+            raise NotImplementedError(
+                f"The test/evaluate step is not implemented for {keras.backend.backend()}."
+            )
+
+    def call(self, images):
+        augmented_images = self.data_augmentation(images)
+        x = self.patch_projection(augmented_images)
+        for stage in self.stages:
+            x = stage(x, training=False)
+        x = self.global_avg_pool(x)
+        logits = self.classifier(x)
+        return logits
+
+    ################################
+    # TensorFlow specific methods.
+    ################################
+
+    def _calculate_loss_tf(self, data, training=False):
         (images, labels) = data
 
         # Augment the images
@@ -693,20 +729,8 @@ class ShiftViTModel(keras.Model):
         logits = self.classifier(x)
 
         # Calculate the loss and return it.
-        total_loss = self.compiled_loss(labels, logits)
+        total_loss = self.compute_loss(y=labels, y_pred=logits)
         return total_loss, labels, logits
-
-    def train_step(self, inputs):
-        if keras.backend.backend() == "jax":
-            return self._jax_train_step(inputs)
-        elif keras.backend.backend() == "tensorflow":
-            return self._tensorflow_train_step(inputs)
-        elif keras.backend.backend() == "torch":
-            return self._torch_train_step(inputs)
-        else:
-            raise NotImplementedError(
-                f"The training forward pass is not implemented for {keras.backend.backend()}."
-            )
 
     def _tensorflow_train_step(self, inputs):
         with tf.GradientTape() as tape:
@@ -737,33 +761,104 @@ class ShiftViTModel(keras.Model):
 
         return {m.name: m.result() for m in self.metrics}
 
-    # TODO: add JAX implementation.
-    def _jax_train_step(self, inputs):
-        print("JAX training step is not implemented yet.")
-        pass
+    def _test_step_tf(self, data):
+        _, labels, logits = self._calculate_loss_tf(data=data, training=False)
 
-    # TODO: add PyTorch implementation.
-    def _torch_train_step(self, inputs):
-        print("PyTorch training step is not implemented yet.")
-        pass
-
-    def test_step(self, data):
-        _, labels, logits = self._calculate_loss(data=data, training=False)
-
-        # Update the metrics
         for metric in self.metrics:
             metric.update_state(labels, logits)
 
         return {m.name: m.result() for m in self.metrics}
 
-    def call(self, images):
-        augmented_images = self.data_augmentation(images)
-        x = self.patch_projection(augmented_images)
+    #############################
+    # PyTorch specific methods.
+    #############################
+
+    def _torch_calculate_loss(self, data, training=False):
+        (images, labels) = data
+
+        # Augment the images
+        augmented_images = self.data_augmentation(images, training=training)
+
+        # Create patches and project the patches.
+        projected_patches = self.patch_projection(augmented_images)
+
+        # Pass through the stages
+        x = projected_patches
         for stage in self.stages:
-            x = stage(x, training=False)
+            x = stage(x, training=training)
+
+        # Get the logits.
         x = self.global_avg_pool(x)
         logits = self.classifier(x)
-        return logits
+
+        # Calculate the loss and return it.
+        total_loss = self.compute_loss(y=labels, y_pred=logits)
+        return total_loss, labels, logits
+
+    def _torch_train_step(self, inputs):
+        with tf.GradientTape() as tape:
+            total_loss, labels, logits = self._calculate_loss(
+                data=inputs, training=True
+            )
+
+        # Apply gradients.
+        train_vars = [
+            self.data_augmentation.trainable_variables,
+            self.patch_projection.trainable_variables,
+            self.global_avg_pool.trainable_variables,
+            self.classifier.trainable_variables,
+        ]
+        train_vars = train_vars + [stage.trainable_variables for stage in self.stages]
+
+        # Optimize the gradients.
+        with torch.no_grad():
+            self.optimizer.apply(gradients, train_vars)
+
+        grads = tape.gradient(total_loss, train_vars)
+        trainable_variable_list = []
+        for grad, var in zip(grads, train_vars):
+            for g, v in zip(grad, var):
+                trainable_variable_list.append((g, v))
+        self.optimizer.apply_gradients(trainable_variable_list)
+
+        # Update the metrics
+        for metric in self.metrics:
+            if metric.name == "loss":
+                metric.update_state(loss)
+            else:
+                metric.update_state(y_true=labels, y_pred=logits)
+
+        return {m.name: m.result() for m in self.metrics}
+
+
+    def _test_step_torch(self, data):
+        loss, labels, logits = _torch_calculate_loss(data, False)
+
+        # Update metrics
+        for metric in self.metrics:
+            if metric.name == "loss":
+                metric.update_state(loss)
+            else:
+                metric.update_state(y_true=labels, y_pred=logits)
+
+        return {m.name: m.result() for m in self.metrics}
+
+    #########################
+    # JAX specific methods.
+    #########################
+
+    def _jax_calculate_loss(self, data, training=False):
+        pass
+
+    def _jax_train_step(self, inputs):
+        print("JAX train step is not implemented yet.")
+        pass
+
+    def _jax_test_step(self, data):
+        print("JAX test step is not implemented yet.")
+        pass
+
+
 
 
 """
@@ -993,7 +1088,7 @@ def process_image(img_path):
 
 
 def create_tf_dataset(image_dir):
-    data_dir = pathlib.Path(image_dir)
+    data_dir = Path(image_dir)
 
     # create tf.data.Dataset using directory of images
     predict_ds = keras.utils.image_dataset_from_directory(
