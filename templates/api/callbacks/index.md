@@ -13,6 +13,12 @@ You can use callbacks to:
 
 ---
 
+## Available callbacks
+
+{{toc}}
+
+---
+
 ## Usage of callbacks via the built-in `fit()` loop
 
 You can pass a list of callbacks (as the keyword argument `callbacks`) to the `.fit()` method of a model:
@@ -37,8 +43,3 @@ Learn more about creating new callbacks in the guide
 [Writing your own Callbacks](/guides/writing_your_own_callbacks), and refer to
 the documentation for [the base `Callback` class](base_callback).
 
----
-
-## Available callbacks
-
-{{toc}}
