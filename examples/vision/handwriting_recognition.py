@@ -381,7 +381,7 @@ def ctc_decode(y_pred, input_length, greedy=True, beam_width=100, top_paths=1):
 
 def build_model():
     # Inputs to the model
-    input_img = keras.Input(shape=(image_width, image_height, 1), name="image")
+    input_img = layers.Input(shape=(image_width, image_height, 1), name="image")
     labels = layers.Input(name="label", shape=(None,))
 
     # First conv block.
@@ -430,7 +430,7 @@ def build_model():
     )(x)
 
     # Define the model.
-    model = keras.models.Model(
+    model = keras.Model(
         inputs=[input_img, labels], outputs=output, name="handwriting_recognizer"
     )
 
@@ -515,15 +515,11 @@ Now we are ready to kick off model training.
 
 epochs = 10  # To get good results this should be at least 50.
 
-model = build_model()
-prediction_model = keras.models.Model(
-    model.get_layer(name="image").input, model.get_layer(name="softmax").output
-)
-edit_distance_callback = EditDistanceCallback(prediction_model)
+edit_distance_callback = EditDistanceCallback(model)
 
 # Train the model.
 history = model.fit(
-    train_ds,
+    x=train_ds,
     validation_data=validation_ds,
     epochs=epochs,
     callbacks=[edit_distance_callback],
