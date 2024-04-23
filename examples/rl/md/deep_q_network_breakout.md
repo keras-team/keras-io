@@ -66,7 +66,7 @@ from gymnasium.wrappers import AtariPreprocessing, FrameStack
 import numpy as np
 import tensorflow as tf
 
-# Configuration paramaters for the whole setup
+# Configuration parameters for the whole setup
 seed = 42
 gamma = 0.99  # Discount factor for past rewards
 epsilon = 1.0  # Epsilon greedy parameter
