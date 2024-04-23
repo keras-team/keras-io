@@ -1,5 +1,11 @@
 # Optimizers
 
+## Available optimizers
+
+{{toc}}
+
+---
+
 ## Usage with `compile()` & `fit()`
 
 An optimizer is one of the two arguments required for compiling a Keras model:
@@ -41,13 +47,6 @@ optimizer = keras.optimizers.SGD(learning_rate=lr_schedule)
 ```
 
 Check out [the learning rate schedule API documentation](/api/optimizers/learning_rate_schedules) for a list of available schedules.
-
-
----
-
-## Available optimizers
-
-{{toc}}
 
 ---
 
