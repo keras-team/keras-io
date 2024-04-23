@@ -352,33 +352,6 @@ Our model will use the CTC loss. For a detailed understanding of the CTC loss,
 refer to [this post](https://distill.pub/2017/ctc/).
 """
 
-
-# TODO: Remove and use native keras op after
-# https://github.com/keras-team/keras/pull/19366 is merged.
-# Ported from keras 2 backend (with keras 3 ops updates).
-def ctc_decode(y_pred, input_length, greedy=True, beam_width=100, top_paths=1):
-    input_shape = tf.shape(y_pred)
-    num_samples, num_steps = input_shape[0], input_shape[1]
-    y_pred = ops.log(ops.transpose(y_pred, axes=[1, 0, 2]) + ops.epsilon())
-    input_length = ops.cast(input_length, dtype="int32")
-
-    if greedy:
-        (decoded, log_prob) = tf.nn.ctc_greedy_decoder(
-            inputs=y_pred, sequence_length=input_length
-        )
-    else:
-        (decoded, log_prob) = tf.compat.v1.nn.ctc_beam_search_decoder(
-            inputs=y_pred,
-            sequence_length=input_length,
-            beam_width=beam_width,
-            top_paths=top_paths,
-        )
-    decoded_dense = []
-    for st in decoded:
-        st = tf.SparseTensor(st.indices, st.values, (num_samples, num_steps))
-        decoded_dense.append(tf.sparse.to_dense(sp_input=st, default_value=-1))
-    return (decoded_dense, log_prob)
-
 def build_model():
     # Inputs to the model
     input_img = layers.Input(shape=(image_width, image_height, 1), name="image")
@@ -477,7 +450,7 @@ def calculate_edit_distance(labels, predictions):
 
     # Make predictions and convert them to sparse tensors.
     input_len = ops.ones(predictions.shape[0]) * predictions.shape[1]
-    predictions_decoded = ctc_decode(
+    predictions_decoded = ops.nn.ctc_decode(
         predictions, input_length=input_len, greedy=True)[0][0][:, :max_len]
     sparse_predictions = ops.cast(
         tf.sparse.from_dense(predictions_decoded), dtype="int64"
@@ -535,7 +508,7 @@ history = model.fit(
 def decode_batch_predictions(pred):
     input_len = ops.ones(pred.shape[0]) * pred.shape[1]
     # Use greedy search. For complex tasks, you can use beam search.
-    results = ctc_decode(pred, input_length=input_len, greedy=True)[0][0][:, :max_len]
+    results = ops.nn.ctc_decode(pred, input_length=input_len, greedy=True)[0][0][:, :max_len]
     # Iterate over the results and get back the text.
     output_text = []
     for res in results:
