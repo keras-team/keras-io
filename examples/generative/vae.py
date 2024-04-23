@@ -2,7 +2,7 @@
 Title: Variational AutoEncoder
 Author: [fchollet](https://twitter.com/fchollet)
 Date created: 2020/05/03
-Last modified: 2023/11/22
+Last modified: 2024/04/24
 Description: Convolutional Variational AutoEncoder (VAE) trained on MNIST digits.
 Accelerator: GPU
 """
