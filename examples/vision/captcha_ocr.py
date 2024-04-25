@@ -377,7 +377,7 @@ def decode_batch_predictions(pred):
     dense_results = dense_results[:, :max_length]
     # Iterate over the results and get back the text
     output_text = []
-    for res in results:
+    for res in dense_results:
         res = tf.strings.reduce_join(num_to_char(res)).numpy().decode("utf-8")
         output_text.append(res)
     return output_text
