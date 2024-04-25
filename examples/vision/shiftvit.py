@@ -278,7 +278,7 @@ than on individual nodes present inside a layer.
 class DropPath(layers.Layer):
     """Drop Path also known as the Stochastic Depth layer.
 
-    Refernece:
+    Reference:
         - https://keras.io/examples/vision/cct/#stochastic-depth-for-regularization
         - github.com:rwightman/pytorch-image-models
     """
@@ -642,10 +642,10 @@ class ShiftViTModel(keras.Model):
         **kwargs,
     ):
         super().__init__(**kwargs)
-        self.data_augmentation = data_augmentation
-        self.patch_projection = patch_projection
-        self.classifier = classifier
-        self.global_avg_pool = global_avg_pool
+        self.data_augmentation=data_augmentation
+        self.patch_projection=patch_projection
+        self.classifier=classifier
+        self.global_avg_pool=global_avg_pool
         self.projected_dim=projected_dim,
         self.patch_size=patch_size,
         self.num_shift_blocks_per_stages=num_shift_blocks_per_stages,
@@ -683,6 +683,7 @@ class ShiftViTModel(keras.Model):
             {
                 "data_augmentation": self.data_augmentation,
                 "patch_projection": self.patch_projection,
+                "stages": self.stages,
                 "global_avg_pool": self.global_avg_pool,
                 "classifier": self.classifier,
                 "projected_dim": self.projected_dim,
@@ -694,7 +695,6 @@ class ShiftViTModel(keras.Model):
                 "num_div": self.num_div,
                 "shift_pixel": self.shift_pixel,
                 "mlp_expand_ratio": self.mlp_expand_ratio,
-                "stages": self.stages,
             }
         )
         return config
@@ -708,20 +708,16 @@ class ShiftViTModel(keras.Model):
             return self._torch_train_step(inputs)
         else:
             raise NotImplementedError(
-                f"The train/fit step is not implemented for {keras.backend.backend()}."
+                f"The train/fit step is not implemented for '{keras.backend.backend()}' backend."
             )
 
     def test_step(self, data):
-        if keras.backend.backend() == "jax":
-            return self._jax_test_step(data)
-        elif keras.backend.backend() == "tensorflow":
-            return self._tensorflow_test_step(data)
-        elif keras.backend.backend() == "torch":
-            return self._torch_test_step(data)
-        else:
-            raise NotImplementedError(
-                f"The test/evaluate step is not implemented for {keras.backend.backend()}."
-            )
+        _, labels, logits = self._calculate_loss(data)
+
+        # Update metrics
+        for metric in self.metrics:
+            metric.update_state(labels, logits)
+        return {m.name: m.result() for m in self.metrics}
 
     def call(self, images):
         augmented_images = self.data_augmentation(images)
@@ -732,15 +728,11 @@ class ShiftViTModel(keras.Model):
         logits = self.classifier(x)
         return logits
 
-    ################################
-    # TensorFlow specific methods.
-    ################################
-
-    def _tensorflow_calculate_loss(self, data, training=False):
+    def _calculate_loss(self, data, training=False):
         (images, labels) = data
 
         # Augment the images
-        augmented_images = self.data_augmentation(images, training=training)
+        augmented_images = self.data_augmentation(images)
 
         # Create patches and project the patches.
         projected_patches = self.patch_projection(augmented_images)
@@ -760,7 +752,7 @@ class ShiftViTModel(keras.Model):
 
     def _tensorflow_train_step(self, inputs):
         with tf.GradientTape() as tape:
-            total_loss, labels, logits = self._tensorflow_calculate_loss(
+            total_loss, labels, logits = self._calculate_loss(
                 data=inputs, training=True
             )
 
@@ -787,58 +779,16 @@ class ShiftViTModel(keras.Model):
 
         return {m.name: m.result() for m in self.metrics}
 
-    def _tensorflow_test_step(self, data):
-        _, labels, logits = self._tensorflow_calculate_loss(data=data, training=False)
-
-        for metric in self.metrics:
-            metric.update_state(labels, logits)
-
-        return {m.name: m.result() for m in self.metrics}
-
-    #############################
-    # PyTorch specific methods.
-    #############################
-
-    def _torch_calculate_loss(self, data, training=False):
-        pass
-
     def _torch_train_step(self, inputs):
         print("PyTorch train step is not implemented yet.")
         pass
 
-
-    def _torch_test_step(self, data):
-        loss, labels, logits = self._torch_calculate_loss(data, False)
-
-        # Update metrics
-        for metric in self.metrics:
-            if metric.name == "loss":
-                metric.update_state(loss)
-            else:
-                metric.update_state(y_true=labels, y_pred=logits)
-
-        return {m.name: m.result() for m in self.metrics}
-
-    #########################
-    # JAX specific methods.
-    #########################
-
-    def _jax_calculate_loss(self, data, training=False):
-        pass
-
     def _jax_train_step(self, inputs):
-        print("JAX train step is not implemented yet.")
-        pass
-
-    def _jax_test_step(self, data):
-        loss, labels, logits = self._torch_calculate_loss(data, False)
+        total_loss, labels, logits = self._jax_calculate_loss(data=inputs, training=True)
 
         # Update metrics
         for metric in self.metrics:
-            if metric.name == "loss":
-                metric.update_state(loss)
-            else:
-                metric.update_state(y_true=labels, y_pred=logits)
+            metric.update_state(y_true=labels, y_pred=logits)
 
         return {m.name: m.result() for m in self.metrics}
 
@@ -872,6 +822,7 @@ cosine decay.
 
 # Some code is taken from:
 # https://www.kaggle.com/ashusma/training-rfcx-tensorflow-tpu-effnet-b2.
+#
 # The original implementation has been adapted to use Keras 3 ops.
 class WarmUpCosine(keras.optimizers.schedules.LearningRateSchedule):
     """A LearningRateSchedule that uses a warmup cosine decay schedule."""
@@ -1021,7 +972,8 @@ print(f"Top 5 test accuracy: {acc_top5*100:0.2f}%")
 
 Since we created the model by Subclassing, we can't save the model in HDF5 format.
 
-It can be saved in native Keras format only. In general, this is the recommended format for saving models in Keras 3.
+It can be saved in native Keras format only. In general, this is the recommended
+format for saving models in Keras 3.
 """
 model.save("ShiftViT.keras")
 
@@ -1095,16 +1047,17 @@ def predict(predict_ds):
 
 
 def get_predicted_class(probabilities):
-    pred_label = ops.argmax(probabilities)
+    pred_label = ops.argmax(probabilities).numpy()
     predicted_class = config.label_map[pred_label]
     return predicted_class
 
 
 def get_confidence_scores(probabilities):
     # get the indices of the probability scores sorted in descending order
-    labels = ops.argsort(probabilities)[::-1]
+    labels = ops.convert_to_numpy(ops.argsort(probabilities)[::-1])
     confidences = {
-        config.label_map[label]: ops.round((probabilities[label]) * 100, 2)
+        config.label_map[label]: ops.convert_to_numpy(
+            ops.round((probabilities[label]) * 100, 2)).item(0)
         for label in labels
     }
     return confidences
