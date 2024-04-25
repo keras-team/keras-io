@@ -627,6 +627,15 @@ class ShiftViTModel(keras.Model):
         epsilon,
         mlp_dropout_rate,
         stochastic_depth_rate,
+        classifier=layers.Dense(config.num_classes),
+        global_avg_pool=layers.GlobalAveragePooling2D(),
+        patch_projection=layers.Conv2D(
+            filters=config.projected_dim,
+            kernel_size=config.patch_size,
+            strides=config.patch_size,
+            padding="same",
+        ),
+        stages=list(),
         num_div=12,
         shift_pixel=1,
         mlp_expand_ratio=2,
@@ -634,19 +643,17 @@ class ShiftViTModel(keras.Model):
     ):
         super().__init__(**kwargs)
         self.data_augmentation = data_augmentation
-        self.patch_projection = layers.Conv2D(
-            filters=projected_dim,
-            kernel_size=patch_size,
-            strides=patch_size,
-            padding="same",
-        )
+        self.patch_projection = patch_projection
+        self.classifier = classifier
+        self.global_avg_pool = global_avg_pool
         self.projected_dim=projected_dim,
         self.patch_size=patch_size,
         self.num_shift_blocks_per_stages=num_shift_blocks_per_stages,
         self.epsilon=epsilon,
         self.mlp_dropout_rate=mlp_dropout_rate,
         self.stochastic_depth_rate=stochastic_depth_rate,
-        self.stages = list()
+        self.stages=stages
+
         for index, num_shift_blocks in enumerate(num_shift_blocks_per_stages):
             if index == len(num_shift_blocks_per_stages) - 1:
                 # This is the last stage, do not use the patch merge here.
@@ -666,9 +673,6 @@ class ShiftViTModel(keras.Model):
                     mlp_expand_ratio=mlp_expand_ratio,
                 )
             )
-        self.global_avg_pool = layers.GlobalAveragePooling2D()
-
-        self.classifier = layers.Dense(config.num_classes)
 
     def get_config(self):
         config = super().get_config()
@@ -1064,11 +1068,7 @@ def create_tf_dataset(image_dir):
     data_dir = Path(image_dir)
 
     # create tf.data.Dataset using directory of images
-    predict_ds = keras.utils.image_dataset_from_directory(
-        directory=str(data_dir / "*.jpg"),
-        shuffle=False,
-        verbose=False
-    )
+    predict_ds = tf.data.Dataset.list_files(str(data_dir / "*.jpg"), shuffle=False)
 
     # use map to convert string paths to uint8 image tensors
     # setting `num_parallel_calls' helps in processing multiple images parallely
