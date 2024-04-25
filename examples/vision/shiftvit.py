@@ -652,6 +652,9 @@ class ShiftViTModel(keras.Model):
         self.epsilon=epsilon,
         self.mlp_dropout_rate=mlp_dropout_rate,
         self.stochastic_depth_rate=stochastic_depth_rate,
+        self.num_div=num_div,
+        self.shift_pixel=shift_pixel,
+        self.mlp_expand_ratio=mlp_expand_ratio,
         self.stages=stages
 
         for index, num_shift_blocks in enumerate(num_shift_blocks_per_stages):
@@ -680,7 +683,6 @@ class ShiftViTModel(keras.Model):
             {
                 "data_augmentation": self.data_augmentation,
                 "patch_projection": self.patch_projection,
-                "stages": self.stages,
                 "global_avg_pool": self.global_avg_pool,
                 "classifier": self.classifier,
                 "projected_dim": self.projected_dim,
@@ -689,6 +691,10 @@ class ShiftViTModel(keras.Model):
                 "epsilon": self.epsilon,
                 "mlp_dropout_rate": self.mlp_dropout_rate,
                 "stochastic_depth_rate": self.stochastic_depth_rate,
+                "num_div": self.num_div,
+                "shift_pixel": self.shift_pixel,
+                "mlp_expand_ratio": self.mlp_expand_ratio,
+                "stages": self.stages,
             }
         )
         return config
