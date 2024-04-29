@@ -148,7 +148,7 @@ while True:  # Run until solved
         for log_prob, value, ret in history:
             # At this point in history, the critic estimated that we would get a
             # total reward = `value` in the future. We took an action with log probability
-            # of `log_prob` and ended up recieving a total reward = `ret`.
+            # of `log_prob` and ended up receiving a total reward = `ret`.
             # The actor must be updated so that it predicts an action that leads to
             # high rewards (compared to critic's estimate) with high probability.
             diff = ret - value
