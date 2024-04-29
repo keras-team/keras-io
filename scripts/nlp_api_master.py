@@ -24,6 +24,7 @@ BASE_CLASSES = {
                 "keras_nlp.models.CausalLM.from_preset",
                 "keras_nlp.models.CausalLM.compile",
                 "keras_nlp.models.CausalLM.generate",
+                "keras_nlp.models.CausalLM.save_to_preset",
                 "keras_nlp.models.CausalLM.preprocessor",
                 "keras_nlp.models.CausalLM.backbone",
             ],
@@ -36,6 +37,7 @@ BASE_CLASSES = {
                 "keras_nlp.models.Seq2SeqLM.from_preset",
                 "keras_nlp.models.Seq2SeqLM.compile",
                 "keras_nlp.models.Seq2SeqLM.generate",
+                "keras_nlp.models.Seq2SeqLM.save_to_preset",
                 "keras_nlp.models.Seq2SeqLM.preprocessor",
                 "keras_nlp.models.Seq2SeqLM.backbone",
             ],
@@ -47,6 +49,7 @@ BASE_CLASSES = {
                 "keras_nlp.models.Classifier",
                 "keras_nlp.models.Classifier.from_preset",
                 "keras_nlp.models.Classifier.compile",
+                "keras_nlp.models.Classifier.save_to_preset",
                 "keras_nlp.models.Classifier.preprocessor",
                 "keras_nlp.models.Classifier.backbone",
             ],
@@ -58,6 +61,7 @@ BASE_CLASSES = {
                 "keras_nlp.models.MaskedLM",
                 "keras_nlp.models.MaskedLM.from_preset",
                 "keras_nlp.models.MaskedLM.compile",
+                "keras_nlp.models.MaskedLM.save_to_preset",
                 "keras_nlp.models.MaskedLM.preprocessor",
                 "keras_nlp.models.MaskedLM.backbone",
             ],
@@ -68,6 +72,7 @@ BASE_CLASSES = {
             "generate": [
                 "keras_nlp.models.Task",
                 "keras_nlp.models.Task.from_preset",
+                "keras_nlp.models.Task.save_to_preset",
                 "keras_nlp.models.Task.preprocessor",
                 "keras_nlp.models.Task.backbone",
             ],
@@ -78,6 +83,7 @@ BASE_CLASSES = {
             "generate": [
                 "keras_nlp.models.Preprocessor",
                 "keras_nlp.models.Preprocessor.from_preset",
+                "keras_nlp.models.Preprocessor.save_to_preset",
                 "keras_nlp.models.Preprocessor.tokenizer",
             ],
         },
@@ -87,6 +93,7 @@ BASE_CLASSES = {
             "generate": [
                 "keras_nlp.models.Tokenizer",
                 "keras_nlp.models.Tokenizer.from_preset",
+                "keras_nlp.models.Tokenizer.save_to_preset",
             ],
         },
         {
