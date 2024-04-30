@@ -36,6 +36,29 @@ os.environ["KERAS_BACKEND"] = "jax"
 
 import keras_nlp
 
+
+"""
+# Data
+
+We can use the IMDB reviews dataset for this guide. Let's load the dataset from `tensorflow_dataset`.
+"""
+
+import tensorflow_datasets as tfds
+
+imdb_train, imdb_test = tfds.load(
+    "imdb_reviews",
+    split=["train", "test"],
+    as_supervised=True,
+    batch_size=16,
+)
+
+"""
+We only use a small subset of the training samples to make the guide run faster.
+However, if you need a higher quality model, consider using a larger number of training samples.
+"""
+
+imdb_train = imdb_train.take(100)
+
 """
 # Task Upload
 
@@ -56,14 +79,16 @@ causal_lm = keras_nlp.models.CausalLM.from_preset("gpt2_base_en")
 
 """
 ## Fine-tune Model
+
 After loading the model, you can call `.fit()` on the model to fine-tune it.
+Here, we fine-tune the model on the IMDB reviews which makes the model movie domain-specific.
 """
 
-# A toy dataset.
-data = ["The quick brown fox jumped.", "I forgot my homework."]
+# Drop labels and keep the review text only for the Causal LM.
+imdb_train_reviews = imdb_train.map(lambda x, y: x)
 
-# Fine-tune the `causal_lm` model.
-causal_lm.fit(data, batch_size=2)
+# Fine-tune the Causal LM.
+causal_lm.fit(imdb_train_reviews)
 
 """
 ## Save the Model Locally
@@ -182,17 +207,13 @@ To upload the fine-tuned model, first, the model is saved to a local directory u
 API and then it can be uploaded via `keras_nlp.upload_preset`.
 """
 
-# A toy dataset.
-data = ["The quick brown fox jumped.", "I forgot my homework."]
-labels = [0, 2]
-
 # Load the base model.
 classifier = keras_nlp.models.Classifier.from_preset(
-    "bert_tiny_en_uncased", num_classes=4
+    "bert_tiny_en_uncased", num_classes=2
 )
 
 # Fine-tune the classifier.
-classifier.fit(x=data, y=labels, batch_size=2)
+classifier.fit(imdb_train)
 
 # Save the model to a local preset directory.
 preset_dir = "./finetuned_bert"
@@ -215,17 +236,3 @@ keras_nlp.upload_preset(f"hf://{hf_username}/finetuned_bert", preset_dir)
 classifier = keras_nlp.models.Classifier.from_preset(
     f"hf://{hf_username}/finetuned_bert"
 )
-
-"""
-# Base Upload
-
-If you have fine-tuned a base class that is not related to any specific task or if you need
-more flexibility and want to upload the base model only, we recommend saving `Backbone` and
-`Tokenizer` into a preset directory and uploading the custom direcotry.
-
-```python
-backbone.save_to_preset(preset_dir)
-tokenizer.save_to_preset(preset_dir)
-keras_nlp.upload_preset(uri, preset_dir)
-```
-"""
