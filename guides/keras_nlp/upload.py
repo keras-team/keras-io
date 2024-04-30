@@ -81,6 +81,21 @@ Let's see what are the files what are the saved files.
 os.listdir(preset_dir)
 
 """
+### Load a Locally Saved Model
+
+A model that is saved to a local preset, can be loaded using `from_preset`.
+"""
+
+causal_lm = keras_nlp.models.CausalLM.from_preset(preset_dir)
+
+"""
+You can also load the `Backbone` and `Tokenizer` objects from this preset directory.
+"""
+
+backbone = keras_nlp.models.Backbone(preset_dir)
+tokenizer = keras_nlp.models.Tokenizer(preset_dir)
+
+"""
 ## Upload the Model to a Model Hub
 
 When the model is saved to a local directory `preset_dir`, this directory can be seamlessly
@@ -110,7 +125,7 @@ if "KAGGLE_USERNAME" not in os.environ or "KAGGLE_KEY" not in os.environ:
 Run this command to upload the model that is save in `preset_dir` to Kaggle Models:
 """
 
-kaggle_username = "" # TODO: assing username.
+kaggle_username = ""  # TODO: assing username.
 kaggle_uri = f"kaggle://{kaggle_username}/gpt2/keras/finetuned_gpt2"
 keras_nlp.upload_preset(kaggle_uri, preset_dir)
 
@@ -139,6 +154,21 @@ Run this command to upload the model that is save in `preset_dir` to Hugging Fac
 hf_username = huggingface_hub.whoami()
 hf_uri = f"hf://{hf_username}/finetuned_gpt2"
 keras_nlp.upload_preset(hf_uri, preset_dir)
+
+
+"""
+## Load a User Uploaded Model
+
+A user uploaded model can be loaded using `from_preset`.
+"""
+
+# Load a user uploaded CausalLM from Kaggle Models.
+causal_lm = keras_nlp.models.CausalLM.from_preset(
+    f"kaggle://{kaggle_username}/gpt2/keras/finetuned_gpt2"
+)
+
+# Load a user uploaded CausalLM from Hugging Face Hub.
+causal_lm = keras_nlp.models.CausalLM.from_preset(f"hf://{hf_username}/finetuned_gpt2")
 
 """
 # Classifier Upload
@@ -173,8 +203,18 @@ keras_nlp.upload_preset(
     f"kaggle://{kaggle_username}/bert/keras/finetuned_bert", preset_dir
 )
 
+# Load a user uploaded Classifier from Kaggle Models.
+classifier = keras_nlp.models.Classifier.from_preset(
+    f"kaggle://{kaggle_username}/bert/keras/finetuned_bert"
+)
+
 # Upload to Hugging Face.
 keras_nlp.upload_preset(f"hf://{hf_username}/finetuned_bert", preset_dir)
+
+# Load a user uploaded Classifier from Hugging Face Hub.
+classifier = keras_nlp.models.Classifier.from_preset(
+    f"hf://{hf_username}/finetuned_bert"
+)
 
 """
 # Base Upload
