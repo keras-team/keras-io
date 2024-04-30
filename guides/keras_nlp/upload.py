@@ -1,9 +1,9 @@
 """
-Title: Model Upload
-Author: [Samaneh Saadat](https://github.com/SamanehSaadat)
-Date created: 2024/04/22
-Last modified: 2024/04/22
-Description: An introduction on how to upload a fine-tuned model to model hubs.
+Title: Uploading Models with KerasNLP
+Author: [Samaneh Saadat](https://github.com/SamanehSaadat/), [Matthew Watson](https://github.com/mattdangerw/)
+Date created: 2024/04/29
+Last modified: 2024/04/29
+Description: An introduction on how to upload a fine-tuned KerasNLP model to model hubs.
 Accelerator: GPU
 """
 
@@ -28,7 +28,6 @@ Let's start by installing and importing all the libraries we need. We use KerasN
 
 """shell
 pip install -q --upgrade keras-nlp
-pip install -q --upgrade keras  # Upgrade to Keras 3.
 """
 
 import os
@@ -41,7 +40,7 @@ import keras
 """
 # Task Upload
 
-A KerasNLP `Task`, wraps a `keras_nlp.models.Backbone` and a `keras_nlp.models.Preprocessor` to create
+A KerasNLP `keras_nlp.models.Task`, wraps a `keras_nlp.models.Backbone` and a `keras_nlp.models.Preprocessor` to create
 a model that can be directly used for training, fine-tuning, and prediction for a given text problem.
 In this section, we explain how to create a `Task`, fine-tune and upload it to a model hub.
 """
@@ -77,6 +76,12 @@ preset_dir = "./finetuned_gpt2"
 causal_lm.save_to_preset(preset_dir)
 
 """
+Let's see what are the files what are the saved files.
+"""
+
+os.listdir(preset_dir)
+
+"""
 ## Upload the Model to a Model Hub
 
 When the model is saved to a local directory `preset_dir`, this directory can be seamlessly
@@ -90,8 +95,8 @@ uploaded to a model hub such as Kaggle or Hugging Face programmatically.
 To upload a model to Kaggle Hub, first, we need to authenticate with Kaggle.
 This can by one of the followings:
 1. Set environment variables `KAGGLE_USERNAME` and `KAGGLE_KEY`.
-2. Provide a local `~/.kaggle/kaggle.json`
-3. Call `kagglehub.login()`
+2. Provide a local `~/.kaggle/kaggle.json`.
+3. Call `kagglehub.login()`.
 
 Let's make sure we are logged in before coninuing.
 """
@@ -132,12 +137,13 @@ if "HF_USERNAME" not in os.environ or "HF_TOKEN" not in os.environ:
 Run this command to upload the model that is save in `preset_dir` to Hugging Face Hub:
 """
 
-hf_username = os.getenv("HF_USERNAME")
+hf_username = huggingface_hub.whoami()
 hf_uri = f"hf://{hf_username}/finetuned_gpt2"
 keras_nlp.upload_preset(hf_uri, preset_dir)
 
 """
 # Classifier Upload
+
 Uploading a classifier model is similar to Causal LM upload. You can follow
 [this guide](https://keras.io/guides/keras_nlp/getting_started/#fine-tuning-a-pretrained-bert-backbone)
 to fine-tune a classfier.
