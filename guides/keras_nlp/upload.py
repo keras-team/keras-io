@@ -17,7 +17,7 @@ making your contributions an integral part of the machine learning landscape.
 This can also streamline the integration of your model into real-world applications.
 
 This guide walks you through how to upload your fine-tuned models to popular model hubs such as
-[Kaggle Hub](https://www.kaggle.com/models) and [Hugging Face Hub](https://huggingface.co/models).
+[Kaggle Models](https://www.kaggle.com/models) and [Hugging Face Hub](https://huggingface.co/models).
 """
 
 """
@@ -87,11 +87,11 @@ When the model is saved to a local directory `preset_dir`, this directory can be
 uploaded to a model hub such as Kaggle or Hugging Face programmatically.
 """
 """
-### Upload to Kaggle Hub
+### Upload to Kaggle Models
 """
 
 """
-To upload a model to Kaggle Hub, first, we need to authenticate with Kaggle.
+To upload a model to Kaggle Models, first, we need to authenticate with Kaggle.
 This can by one of the followings:
 1. Set environment variables `KAGGLE_USERNAME` and `KAGGLE_KEY`.
 2. Provide a local `~/.kaggle/kaggle.json`.
@@ -107,10 +107,10 @@ if "KAGGLE_USERNAME" not in os.environ or "KAGGLE_KEY" not in os.environ:
 
 
 """
-Run this command to upload the model that is save in `preset_dir` to Kaggle Hub:
+Run this command to upload the model that is save in `preset_dir` to Kaggle Models:
 """
 
-kaggle_username = os.getenv("KAGGLE_USERNAME")
+kaggle_username = "" # TODO: assing username.
 kaggle_uri = f"kaggle://{kaggle_username}/gpt2/keras/finetuned_gpt2"
 keras_nlp.upload_preset(kaggle_uri, preset_dir)
 
