@@ -35,7 +35,6 @@ import os
 os.environ["KERAS_BACKEND"] = "jax"
 
 import keras_nlp
-import keras
 
 """
 # Task Upload
@@ -151,12 +150,31 @@ to fine-tune a classfier.
 
 To upload the fine-tuned model, first, the model is saved to a local directory using `save_to_preset`
 API and then it can be uploaded via `keras_nlp.upload_preset`.
-
-```python
-classifier.save_to_preset(preset_dir)
-keras_nlp.upload_preset(uri, preset_dir)
-```
 """
+
+# A toy dataset.
+data = ["The quick brown fox jumped.", "I forgot my homework."]
+labels = [0, 2]
+
+# Load the base model.
+classifier = keras_nlp.models.Classifier.from_preset(
+    "bert_tiny_en_uncased", num_classes=4
+)
+
+# Fine-tune the classifier.
+classifier.fit(x=data, y=labels, batch_size=2)
+
+# Save the model to a local preset directory.
+preset_dir = "./finetuned_bert"
+classifier.save_to_preset(preset_dir)
+
+# Upload to Kaggle Models.
+keras_nlp.upload_preset(
+    f"kaggle://{kaggle_username}/bert/keras/finetuned_bert", preset_dir
+)
+
+# Upload to Hugging Face.
+keras_nlp.upload_preset(f"hf://{hf_username}/finetuned_bert", preset_dir)
 
 """
 # Base Upload
