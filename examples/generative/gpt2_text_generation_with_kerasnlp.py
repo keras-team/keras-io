@@ -1,8 +1,8 @@
 """
 Title: GPT2 Text Generation with KerasNLP
 Author: Chen Qian
-Date created: 04/17/2023
-Last modified: 04/17/2023
+Date created: 2023/04/17
+Last modified: 2024/04/12
 Description: Use KerasNLP GPT2 model and `samplers` to do text generation.
 Accelerator: GPU
 """
@@ -27,8 +27,8 @@ GPT-2 model. Running this tutorial on CPU runtime will take hours.
 """
 ## Install KerasNLP, Choose Backend and Import Dependencies
 
-This examples uses [Keras Core](https://keras.io/keras_core/) to work in any of
-`"tensorflow"`, `"jax"` or `"torch"`. Support for Keras Core is baked into
+This examples uses [Keras 3](https://keras.io/keras_3/) to work in any of
+`"tensorflow"`, `"jax"` or `"torch"`. Support for Keras 3 is baked into
 KerasNLP, simply change the `"KERAS_BACKEND"` environment variable to select
 the backend of your choice. We select the JAX backend below.
 """

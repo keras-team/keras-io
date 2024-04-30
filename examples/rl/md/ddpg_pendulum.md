@@ -14,7 +14,7 @@
 ## Introduction
 
 **Deep Deterministic Policy Gradient (DDPG)** is a model-free off-policy algorithm for
-learning continous actions.
+learning continuous actions.
 
 It combines ideas from DPG (Deterministic Policy Gradient) and DQN (Deep Q-Network).
 It uses Experience Replay and slow-learning target networks from DQN, and it is based on
@@ -185,7 +185,7 @@ class Buffer:
         self.reward_buffer = np.zeros((self.buffer_capacity, 1))
         self.next_state_buffer = np.zeros((self.buffer_capacity, num_states))
 
-    # Takes (s,a,r,s') obervation tuple as input
+    # Takes (s,a,r,s') observation tuple as input
     def record(self, obs_tuple):
         # Set index to zero if buffer_capacity is exceeded,
         # replacing old records
@@ -304,7 +304,7 @@ def get_critic():
     action_input = layers.Input(shape=(num_actions,))
     action_out = layers.Dense(32, activation="relu")(action_input)
 
-    # Both are passed through seperate layer before concatenating
+    # Both are passed through separate layer before concatenating
     concat = layers.Concatenate()([state_out, action_out])
 
     out = layers.Dense(256, activation="relu")(concat)
@@ -393,7 +393,7 @@ for ep in range(total_episodes):
         )
 
         action = policy(tf_prev_state, ou_noise)
-        # Recieve state and reward from environment.
+        # Receive state and reward from environment.
         state, reward, done, truncated, _ = env.step(action)
 
         buffer.record((prev_state, action, reward, state))
