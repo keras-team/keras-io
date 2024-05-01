@@ -2,7 +2,7 @@
 Title: A Vision Transformer without Attention
 Author: [Aritra Roy Gosthipaty](https://twitter.com/ariG23498), [Ritwik Raha](https://twitter.com/ritwik_raha), [Shivalika Singh](https://www.linkedin.com/in/shivalika-singh/)
 Date created: 2022/02/24
-Last modified: 2022/10/15
+Last modified: 2024/04/01
 Description: A minimal implementation of ShiftViT.
 Accelerator: GPU
 """
@@ -54,9 +54,9 @@ except ImportError:
 import numpy as np
 import matplotlib.pyplot as plt
 
+import keras
 from keras import layers
 from keras import ops
-import keras
 
 from pathlib import Path
 
@@ -756,7 +756,7 @@ class ShiftViTModel(keras.Model):
                 data=inputs, training=True
             )
 
-        # Apply gradients.
+        # Apply the gradients.
         train_vars = [
             self.data_augmentation.trainable_variables,
             self.patch_projection.trainable_variables,
@@ -773,15 +773,47 @@ class ShiftViTModel(keras.Model):
                 trainable_variable_list.append((g, v))
         self.optimizer.apply_gradients(trainable_variable_list)
 
-        # Update the metrics
+        # Update the metrics.
         for metric in self.metrics:
             metric.update_state(labels, logits)
 
         return {m.name: m.result() for m in self.metrics}
 
     def _torch_train_step(self, inputs):
-        print("PyTorch train step is not implemented yet.")
-        pass
+        # Clear the leftover gradients.
+        self.zero_grad()
+
+        # Run forward pass and compute loss.
+        total_loss, labels, logits = self._calculate_loss(
+            data=inputs, training=True
+        )
+
+        # Apply the gradients.
+        total_loss.backward()
+
+        train_vars = [
+            self.data_augmentation.trainable_variables,
+            self.patch_projection.trainable_variables,
+            self.global_avg_pool.trainable_variables,
+            self.classifier.trainable_variables,
+        ]
+        train_vars = train_vars + [stage.trainable_variables for stage in self.stages]
+
+        gradients = [v.value.grad for v in train_vars]
+
+        # Optimize the gradients.
+        trainable_variable_list = []
+        for grad, var in zip(gradients, train_vars):
+            for g, v in zip(grad, var):
+                trainable_variable_list.append((g, v))
+        with torch.no_grad():
+            self.optimizer.apply_gradients(trainable_variable_list)
+
+        # Update the metrics.
+        for metric in self.metrics:
+            metric.update_state(y_true=labels, y_pred=logits)
+
+        return {m.name: m.result() for m in self.metrics}
 
     def _jax_train_step(self, inputs):
         total_loss, labels, logits = self._jax_calculate_loss(data=inputs, training=True)
