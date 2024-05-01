@@ -2,7 +2,7 @@
 Title: English-to-Spanish translation with KerasNLP
 Author: [Abheesht Sharma](https://github.com/abheesht17/)
 Date created: 2022/05/26
-Last modified: 2022/12/21
+Last modified: 2024/04/30
 Description: Use KerasNLP to train a sequence-to-sequence Transformer model on the machine translation task.
 Accelerator: GPU
 """
@@ -420,7 +420,9 @@ def decode_sequences(input_sentences):
     encoder_input_tokens = ops.convert_to_tensor(eng_tokenizer(input_sentences))
     if len(encoder_input_tokens[0]) < MAX_SEQUENCE_LENGTH:
         pads = ops.full((1, MAX_SEQUENCE_LENGTH - len(encoder_input_tokens[0])), 0)
-        encoder_input_tokens = ops.concatenate([encoder_input_tokens, pads], 1)
+        encoder_input_tokens = ops.concatenate(
+            [encoder_input_tokens.to_tensor(), pads], 1
+        )
 
     # Define a function that outputs the next token's probability given the
     # input sequence.
@@ -439,7 +441,7 @@ def decode_sequences(input_sentences):
     generated_tokens = keras_nlp.samplers.GreedySampler()(
         next,
         prompt,
-        end_token_id=spa_tokenizer.token_to_id("[END]"),
+        stop_token_ids=[spa_tokenizer.token_to_id("[END]")],
         index=1,  # Start sampling after start token.
     )
     generated_sentences = spa_tokenizer.detokenize(generated_tokens)
