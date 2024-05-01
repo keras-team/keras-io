@@ -2,7 +2,7 @@
 
 **Author:** [Abheesht Sharma](https://github.com/abheesht17/)<br>
 **Date created:** 2022/05/26<br>
-**Last modified:** 2022/12/21<br>
+**Last modified:** 2024/04/30<br>
 **Description:** Use KerasNLP to train a sequence-to-sequence Transformer model on the machine translation task.
 
 
@@ -51,9 +51,6 @@ Before we start implementing the pipeline, let's import all the libraries we nee
 !pip install -q --upgrade keras  # Upgrade to Keras 3.
 ```
 
-
-
-
 ```python
 import keras_nlp
 import pathlib
@@ -69,8 +66,9 @@ from tensorflow_text.tools.wordpiece_vocab import (
 ```
 <div class="k-default-codeblock">
 ```
-['\x1b[33mWARNING: There was an error checking the latest version of pip.\x1b[0m\x1b[33m',
- '\x1b[0m']
+[31mERROR: pip's dependency resolver does not currently take into account all the packages that are installed. This behaviour is the source of the following dependency conflicts.
+tensorflow 2.15.1 requires keras<2.16,>=2.15.0, but you have keras 3.3.3 which is incompatible.[31m
+
 
 ```
 </div>
@@ -105,6 +103,13 @@ text_file = keras.utils.get_file(
 text_file = pathlib.Path(text_file).parent / "spa-eng" / "spa.txt"
 ```
 
+<div class="k-default-codeblock">
+```
+Downloading data from http://storage.googleapis.com/download.tensorflow.org/data/spa-eng.zip
+ 2638744/2638744 ━━━━━━━━━━━━━━━━━━━━ 0s 0us/step
+
+```
+</div>
 ---
 ## Parsing the data
 
@@ -134,11 +139,11 @@ for _ in range(5):
 
 <div class="k-default-codeblock">
 ```
-('will the coffee stain ruin the carpet?', '¿la mancha de café va a arruinar la alfombra?')
-('is it only about money?', '¿sólo se trata de dinero?')
-('most students come to school on foot.', 'la mayoría de los estudiantes vienen a la escuela de a pie.')
-("tom doesn't want to make mary angry.", 'tom no quiere hacer enojar a mary.')
-('i can fly.', 'puedo volar.')
+('tom heard that mary had bought a new computer.', 'tom oyó que mary se había comprado un computador nuevo.')
+('will you stay at home?', '¿te vas a quedar en casa?')
+('where is this train going?', '¿adónde va este tren?')
+('tom panicked.', 'tom entró en pánico.')
+("we'll help you rescue tom.", 'te ayudaremos a rescatar a tom.')
 
 ```
 </div>
@@ -231,8 +236,8 @@ print("Spanish Tokens: ", spa_vocab[100:110])
 
 <div class="k-default-codeblock">
 ```
-English Tokens:  ['at', 'know', 'him', 'there', 'they', 'go', 'her', 'has', 'will', 're']
-Spanish Tokens:  ['qué', 'le', 'ella', 'para', 'te', 'mary', 'las', 'más', 'al', 'yo']
+English Tokens:  ['at', 'know', 'him', 'there', 'go', 'they', 'her', 'has', 'time', 'will']
+Spanish Tokens:  ['le', 'para', 'te', 'mary', 'las', 'más', 'al', 'yo', 'tu', 'estoy']
 
 ```
 </div>
@@ -278,21 +283,17 @@ print(
 
 <div class="k-default-codeblock">
 ```
-English sentence:  tom thinks mary should apologize to john for not doing what she said she'd do.
-Tokens:  tf.Tensor(
-[  69  640   86  151 1274   67  309   82   97  288   85   84  181   84
-    8   29   77   11], shape=(18,), dtype=int32)
-Recovered text after detokenizing:  tf.Tensor(b"tom thinks mary should apologize to john for not doing what she said she ' d do .", shape=(), dtype=string)
+English sentence:  i am leaving the books here.
+Tokens:  tf.Tensor([ 35 163 931  66 356 119  12], shape=(7,), dtype=int32)
+Recovered text after detokenizing:  tf.Tensor(b'i am leaving the books here .', shape=(), dtype=string)
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-Spanish sentence:  tom piensa que mary debería pedirle perdón a john por no hacer lo que había dicho que haría.
-Tokens:  tf.Tensor(
-[  82  704   80  105  262 1666 1894   29  314   91   81  125   92   80
-  179  464   80  915   14], shape=(19,), dtype=int32)
-Recovered text after detokenizing:  tf.Tensor(b'tom piensa que mary deber\xc3\xada pedirle perd\xc3\xb3n a john por no hacer lo que hab\xc3\xada dicho que har\xc3\xada .', shape=(), dtype=string)
+Spanish sentence:  dejo los libros aquí.
+Tokens:  tf.Tensor([2962   93  350  122   14], shape=(5,), dtype=int32)
+Recovered text after detokenizing:  tf.Tensor(b'dejo los libros aqu\xc3\xad .', shape=(), dtype=string)
 
 ```
 </div>
@@ -492,24 +493,24 @@ transformer.fit(train_ds, epochs=EPOCHS, validation_data=val_ds)
 
 
 
-<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">┏━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━┓
-┃<span style="font-weight: bold"> Layer (type)        </span>┃<span style="font-weight: bold"> Output Shape      </span>┃<span style="font-weight: bold"> Param # </span>┃<span style="font-weight: bold"> Connected to         </span>┃
-┡━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━┩
-│ encoder_inputs      │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>)      │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ -                    │
-│ (<span style="color: #0087ff; text-decoration-color: #0087ff">InputLayer</span>)        │                   │         │                      │
-├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
-│ token_and_position… │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">256</span>) │ <span style="color: #00af00; text-decoration-color: #00af00">3,850,…</span> │ encoder_inputs[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>] │
-│ (<span style="color: #0087ff; text-decoration-color: #0087ff">TokenAndPositionE…</span> │                   │         │                      │
-├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
-│ decoder_inputs      │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>)      │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ -                    │
-│ (<span style="color: #0087ff; text-decoration-color: #0087ff">InputLayer</span>)        │                   │         │                      │
-├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
-│ transformer_encoder │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">256</span>) │ <span style="color: #00af00; text-decoration-color: #00af00">1,315,…</span> │ token_and_position_… │
-│ (<span style="color: #0087ff; text-decoration-color: #0087ff">TransformerEncode…</span> │                   │         │                      │
-├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
-│ functional_3        │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>,      │ <span style="color: #00af00; text-decoration-color: #00af00">9,283,…</span> │ decoder_inputs[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>… │
-│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Functional</span>)        │ <span style="color: #00af00; text-decoration-color: #00af00">15000</span>)            │         │ transformer_encoder… │
-└─────────────────────┴───────────────────┴─────────┴──────────────────────┘
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">┏━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━┓
+┃<span style="font-weight: bold"> Layer (type)        </span>┃<span style="font-weight: bold"> Output Shape      </span>┃<span style="font-weight: bold">    Param # </span>┃<span style="font-weight: bold"> Connected to      </span>┃
+┡━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━┩
+│ encoder_inputs      │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>)      │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ -                 │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">InputLayer</span>)        │                   │            │                   │
+├─────────────────────┼───────────────────┼────────────┼───────────────────┤
+│ token_and_position… │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">256</span>) │  <span style="color: #00af00; text-decoration-color: #00af00">3,850,240</span> │ encoder_inputs[<span style="color: #00af00; text-decoration-color: #00af00">0</span>… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">TokenAndPositionE…</span> │                   │            │                   │
+├─────────────────────┼───────────────────┼────────────┼───────────────────┤
+│ decoder_inputs      │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>)      │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ -                 │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">InputLayer</span>)        │                   │            │                   │
+├─────────────────────┼───────────────────┼────────────┼───────────────────┤
+│ transformer_encoder │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">256</span>) │  <span style="color: #00af00; text-decoration-color: #00af00">1,315,072</span> │ token_and_positi… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">TransformerEncode…</span> │                   │            │                   │
+├─────────────────────┼───────────────────┼────────────┼───────────────────┤
+│ functional_3        │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>,      │  <span style="color: #00af00; text-decoration-color: #00af00">9,283,992</span> │ decoder_inputs[<span style="color: #00af00; text-decoration-color: #00af00">0</span>… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Functional</span>)        │ <span style="color: #00af00; text-decoration-color: #00af00">15000</span>)            │            │ transformer_enco… │
+└─────────────────────┴───────────────────┴────────────┴───────────────────┘
 </pre>
 
 
@@ -534,9 +535,9 @@ transformer.fit(train_ds, epochs=EPOCHS, validation_data=val_ds)
 
 <div class="k-default-codeblock">
 ```
- 1302/1302 ━━━━━━━━━━━━━━━━━━━━ 22s 15ms/step - accuracy: 0.8164 - loss: 1.4953 - val_accuracy: 0.8683 - val_loss: 0.7952
+ 1302/1302 ━━━━━━━━━━━━━━━━━━━━ 1701s 1s/step - accuracy: 0.8168 - loss: 1.4819 - val_accuracy: 0.8650 - val_loss: 0.8129
 
-<keras.src.callbacks.history.History at 0x7f6563fd2140>
+<keras.src.callbacks.history.History at 0x7efdd7ee6a50>
 
 ```
 </div>
@@ -563,7 +564,9 @@ def decode_sequences(input_sentences):
     encoder_input_tokens = ops.convert_to_tensor(eng_tokenizer(input_sentences))
     if len(encoder_input_tokens[0]) < MAX_SEQUENCE_LENGTH:
         pads = ops.full((1, MAX_SEQUENCE_LENGTH - len(encoder_input_tokens[0])), 0)
-        encoder_input_tokens = ops.concatenate([encoder_input_tokens, pads], 1)
+        encoder_input_tokens = ops.concatenate(
+            [encoder_input_tokens.to_tensor(), pads], 1
+        )
 
     # Define a function that outputs the next token's probability given the
     # input sequence.
@@ -582,7 +585,7 @@ def decode_sequences(input_sentences):
     generated_tokens = keras_nlp.samplers.GreedySampler()(
         next,
         prompt,
-        end_token_id=spa_tokenizer.token_to_id("[END]"),
+        stop_token_ids=[spa_tokenizer.token_to_id("[END]")],
         index=1,  # Start sampling after start token.
     )
     generated_sentences = spa_tokenizer.detokenize(generated_tokens)
@@ -608,17 +611,20 @@ for i in range(2):
 
 <div class="k-default-codeblock">
 ```
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1714519073.816969   34774 device_compiler.h:186] Compiled cluster using XLA!  This line is logged at most once for the lifetime of the process.
+
 ** Example 0 **
-he is always complaining.
-él siempre está en la escuela .
+i got the ticket free of charge.
+me pregunto la comprome .
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
 ** Example 1 **
-i think you're all wrong.
-creo que te representan todos los días .
+i think maybe that's all you have to do.
+creo que tom le dije que hacer eso .
 ```
 </div>
     
@@ -663,8 +669,8 @@ print("ROUGE-2 Score: ", rouge_2.result())
 
 <div class="k-default-codeblock">
 ```
-ROUGE-1 Score:  {'precision': Array(0.33075738, dtype=float32), 'recall': Array(0.33867723, dtype=float32), 'f1_score': Array(0.3302676, dtype=float32)}
-ROUGE-2 Score:  {'precision': Array(0.13534392, dtype=float32), 'recall': Array(0.13344036, dtype=float32), 'f1_score': Array(0.13272808, dtype=float32)}
+ROUGE-1 Score:  {'precision': <tf.Tensor: shape=(), dtype=float32, numpy=0.30989552>, 'recall': <tf.Tensor: shape=(), dtype=float32, numpy=0.37136248>, 'f1_score': <tf.Tensor: shape=(), dtype=float32, numpy=0.33032653>}
+ROUGE-2 Score:  {'precision': <tf.Tensor: shape=(), dtype=float32, numpy=0.08999339>, 'recall': <tf.Tensor: shape=(), dtype=float32, numpy=0.09524643>, 'f1_score': <tf.Tensor: shape=(), dtype=float32, numpy=0.08855649>}
 
 ```
 </div>
