@@ -194,14 +194,20 @@ keras_nlp.upload_preset(hf_uri, preset_dir)
 ## Load a User Uploaded Model
 
 After verifying that the model is uploaded to Kaggle, we can load the model by calling `from_preset`.
-"""
 
+```python
 causal_lm = keras_nlp.models.CausalLM.from_preset(
     f"kaggle://{kaggle_username}/gpt2/keras/gpt2_imdb"
 )
+```
 
-# Load a user uploaded CausalLM from Hugging Face.
+We can also load the model uploaded to Hugging Face by calling `from_preset`.
+
+```python
 causal_lm = keras_nlp.models.CausalLM.from_preset(f"hf://{hf_username}/gpt2_imdb")
+```
+"""
+
 
 """
 # Classifier Upload
@@ -228,13 +234,12 @@ keras_nlp.upload_preset(
     f"kaggle://{kaggle_username}/bert/keras/bert_tiny_imdb", preset_dir
 )
 
-# Upload to Hugging Face.
-keras_nlp.upload_preset(f"hf://{hf_username}/bert_tiny_imdb", preset_dir)
-
 """
 After verifying that the model is uploaded to Kaggle, we can load the model by calling `from_preset`.
-"""
 
+```python
 classifier = keras_nlp.models.Classifier.from_preset(
     f"kaggle://{kaggle_username}/bert/keras/bert_tiny_imdb"
 )
+```
+"""
