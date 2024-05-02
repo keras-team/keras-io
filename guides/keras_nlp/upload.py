@@ -229,7 +229,7 @@ keras_nlp.upload_preset(
 )
 
 # Upload to Hugging Face.
-keras_nlp.upload_preset(f"hf://{hf_username}/gpt2_imdb", preset_dir)
+keras_nlp.upload_preset(f"hf://{hf_username}/bert_tiny_imdb", preset_dir)
 
 """
 After verifying that the model is uploaded to Kaggle, we can load the model by calling `from_preset`.
