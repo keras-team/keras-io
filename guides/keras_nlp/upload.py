@@ -11,7 +11,7 @@ Accelerator: GPU
 # Introduction
 
 Fine-tuning a machine learning model can yield impressive results for specific tasks.
-Uploading your fine-tuned model to a model hub allow you to share it with the broader community.
+Uploading your fine-tuned model to a model hub allows you to share it with the broader community.
 By sharing your models, you'll enhance accessibility for other researchers and developers,
 making your contributions an integral part of the machine learning landscape.
 This can also streamline the integration of your model into real-world applications.
@@ -100,7 +100,7 @@ preset_dir = "./gpt2_imdb"
 causal_lm.save_to_preset(preset_dir)
 
 """
-Let's see what are the files what are the saved files.
+Let's see the saved files.
 """
 
 os.listdir(preset_dir)
@@ -108,7 +108,7 @@ os.listdir(preset_dir)
 """
 ### Load a Locally Saved Model
 
-A model that is saved to a local preset, can be loaded using `from_preset`.
+A model that is saved to a local preset can be loaded using `from_preset`.
 What you save in, is what you get back out.
 """
 
@@ -126,7 +126,7 @@ tokenizer = keras_nlp.models.Tokenizer.from_preset(preset_dir)
 ## Upload the Model to a Model Hub
 
 After saving a preset to a directory, this directory can be uploaded to a model hub such as Kaggle or Hugging Face directly from the KerasNLP library.
-To upload the model to Kaggle, the URI should start with `kaggle://` and to upload to Hugging Face, it should start with `hf://`.
+To upload the model to Kaggle, the URI must start with `kaggle://` and to upload to Hugging Face, it should start with `hf://`.
 """
 """
 ### Upload to Kaggle
@@ -134,12 +134,12 @@ To upload the model to Kaggle, the URI should start with `kaggle://` and to uplo
 
 """
 To upload a model to Kaggle, first, we need to authenticate with Kaggle.
-This can by one of the followings:
+This can in one of the following ways:
 1. Set environment variables `KAGGLE_USERNAME` and `KAGGLE_KEY`.
 2. Provide a local `~/.kaggle/kaggle.json`.
 3. Call `kagglehub.login()`.
 
-Let's make sure we are logged in before coninuing.
+Let's make sure we are logged in before continuing.
 """
 
 import kagglehub
@@ -165,7 +165,7 @@ keras_nlp.upload_preset(kaggle_uri, preset_dir)
 
 """
 To upload a model to Hugging Face, first, we need to authenticate with Hugging Face.
-This can by one of the followings:
+This can in one of the following ways:
 1. Set environment variables `HF_USERNAME` and `HF_TOKEN`.
 2. Call `huggingface_hub.notebook_login()`.
 
