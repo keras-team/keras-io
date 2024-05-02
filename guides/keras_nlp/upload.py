@@ -27,8 +27,7 @@ Let's start by installing and importing all the libraries we need. We use KerasN
 """
 
 """shell
-pip install -q --upgrade keras-nlp
-pip install -q --upgrade huggingface-hub
+pip install -q --upgrade keras-nlp huggingface-hub
 """
 
 import os
@@ -116,12 +115,12 @@ What you save in, is what you get back out.
 causal_lm = keras_nlp.models.CausalLM.from_preset(preset_dir)
 
 """
-You can also load the `Backbone` and `Tokenizer` objects from this preset directory.
+You can also load the `keras_nlp.models.Backbone` and `keras_nlp.models.Tokenizer` objects from this preset directory.
 Note that these objects are equivalent to `causal_lm.backbone` and `causal_lm.preprocessor.tokenizer` above.
 """
 
-backbone = keras_nlp.models.Backbone(preset_dir)
-tokenizer = keras_nlp.models.Tokenizer(preset_dir)
+backbone = keras_nlp.models.Backbone.from_preset(preset_dir)
+tokenizer = keras_nlp.models.Tokenizer.from_preset(preset_dir)
 
 """
 ## Upload the Model to a Model Hub
@@ -152,12 +151,11 @@ if "KAGGLE_USERNAME" not in os.environ or "KAGGLE_KEY" not in os.environ:
 """
 
 To upload a model we can use `keras_nlp.upload_preset(uri, preset_dir)` API where `uri` has the format of
-`kaggle://<KAGGLE_USERNAME>/<MODEL>/<FRAMEWORK>/<VARIATION>` for uploading to Kaggle and `preset_dir` is the directory that the model is saved in.
+`kaggle://<KAGGLE_USERNAME>/<MODEL>/Keras/<VARIATION>` for uploading to Kaggle and `preset_dir` is the directory that the model is saved in.
 
 Running the following uploads the model that is saved in `preset_dir` to Kaggle:
 """
-
-kaggle_username = ""  # TODO: Assign username.
+kaggle_username = os.getenv("KAGGLE_USERNAME")  # TODO: Assign username.
 kaggle_uri = f"kaggle://{kaggle_username}/gpt2/keras/gpt2_imdb"
 keras_nlp.upload_preset(kaggle_uri, preset_dir)
 
@@ -187,7 +185,7 @@ if "HF_USERNAME" not in os.environ or "HF_TOKEN" not in os.environ:
 Running the following uploads the model that is saved in `preset_dir` to Hugging Face:
 """
 
-hf_username = huggingface_hub.whoami()
+hf_username = huggingface_hub.whoami()["name"]
 hf_uri = f"hf://{hf_username}/gpt2_imdb"
 keras_nlp.upload_preset(hf_uri, preset_dir)
 
@@ -208,7 +206,7 @@ causal_lm = keras_nlp.models.CausalLM.from_preset(f"hf://{hf_username}/gpt2_imdb
 """
 # Classifier Upload
 
-Uploading a classifier model is similar to Causal LM upload. 
+Uploading a classifier model is similar to Causal LM upload.
 To upload the fine-tuned model, first, the model should be saved to a local directory using `save_to_preset`
 API and then it can be uploaded via `keras_nlp.upload_preset`.
 """
@@ -229,6 +227,9 @@ classifier.save_to_preset(preset_dir)
 keras_nlp.upload_preset(
     f"kaggle://{kaggle_username}/bert/keras/bert_tiny_imdb", preset_dir
 )
+
+# Upload to Hugging Face.
+keras_nlp.upload_preset(f"hf://{hf_username}/gpt2_imdb", preset_dir)
 
 """
 After verifying that the model is uploaded to Kaggle, we can load the model by calling `from_preset`.
