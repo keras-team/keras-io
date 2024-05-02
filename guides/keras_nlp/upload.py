@@ -49,7 +49,7 @@ imdb_train, imdb_test = tfds.load(
     "imdb_reviews",
     split=["train", "test"],
     as_supervised=True,
-    batch_size=16,
+    batch_size=4,
 )
 
 """
