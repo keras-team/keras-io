@@ -155,7 +155,7 @@ To upload a model we can use `keras_nlp.upload_preset(uri, preset_dir)` API wher
 
 Running the following uploads the model that is saved in `preset_dir` to Kaggle:
 """
-kaggle_username = os.getenv("KAGGLE_USERNAME")  # TODO: Assign username.
+kaggle_username = kagglehub.whoami()['username']
 kaggle_uri = f"kaggle://{kaggle_username}/gpt2/keras/gpt2_imdb"
 keras_nlp.upload_preset(kaggle_uri, preset_dir)
 
