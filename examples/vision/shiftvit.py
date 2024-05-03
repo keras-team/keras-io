@@ -43,7 +43,7 @@ if os.environ.get('KERAS_BACKEND') == "torch":
 elif os.environ.get('KERAS_BACKEND') == "jax":
     import jax
 
-# Always import tensorflow because of tf.io, tf.image, and tf.data.Dataset
+# Always import tensorflow because of tf.io, and tf.data.Dataset
 # dependencies even when using other backends.
 try:
     import tensorflow as tf
@@ -406,10 +406,10 @@ class ShiftViTBlock(layers.Layer):
             offset_width = 0
             target_height = self.shift_pixel
             target_width = 0
-        crop = tf.image.crop_to_bounding_box(
+        crop = ops.image.crop_images(
             x,
-            offset_height=offset_height,
-            offset_width=offset_width,
+            top_cropping=offset_height,
+            left_cropping=offset_width,
             target_height=self.H - target_height,
             target_width=self.W - target_width,
         )
