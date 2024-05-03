@@ -27,7 +27,7 @@ Let's start by installing and importing all the libraries we need. We use KerasN
 """
 
 """shell
-pip install -q --upgrade keras-nlp huggingface-hub
+pip install -q --upgrade keras-nlp huggingface-hub kagglehub
 """
 
 import os
