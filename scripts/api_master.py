@@ -1165,6 +1165,7 @@ API_MASTER = {
                     "title": "Image ops",
                     "generate": [
                         "keras.ops.image.affine_transform",
+                        "keras.ops.image.crop_images",
                         "keras.ops.image.extract_patches",
                         "keras.ops.image.map_coordinates",
                         "keras.ops.image.pad_images",
