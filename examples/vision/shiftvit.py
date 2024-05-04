@@ -2,7 +2,7 @@
 Title: A Vision Transformer without Attention
 Author: [Aritra Roy Gosthipaty](https://twitter.com/ariG23498), [Ritwik Raha](https://twitter.com/ritwik_raha), [Shivalika Singh](https://www.linkedin.com/in/shivalika-singh/)
 Date created: 2022/02/24
-Last modified: 2024/04/01
+Last modified: 2024/05/03
 Description: A minimal implementation of ShiftViT.
 Accelerator: GPU
 """
@@ -35,15 +35,13 @@ In this example, we minimally implement the paper with close alignement to the a
 import os
 
 if os.environ.get('KERAS_BACKEND') is None:
-    # @param ["tensorflow", "jax", "torch"]
+    # @param ["tensorflow", "torch"]
     os.environ["KERAS_BACKEND"] = "tensorflow"
 
 if os.environ.get('KERAS_BACKEND') == "torch":
     import torch
-elif os.environ.get('KERAS_BACKEND') == "jax":
-    import jax
 
-# Always import tensorflow because of tf.io, and tf.data.Dataset
+# Always import tensorflow because of tf.io and tf.data.Dataset
 # dependencies even when using other backends.
 try:
     import tensorflow as tf
@@ -60,8 +58,9 @@ from keras import ops
 
 from pathlib import Path
 
-# Setting seed for reproducibiltiy
-keras.utils.set_random_seed(42)
+# Setting seed for reproducibility.
+SEED=42
+keras.utils.set_random_seed(SEED)
 
 """
 ## Hyperparameters
@@ -700,9 +699,7 @@ class ShiftViTModel(keras.Model):
         return config
 
     def train_step(self, inputs):
-        if keras.backend.backend() == "jax":
-            return self._jax_train_step(inputs)
-        elif keras.backend.backend() == "tensorflow":
+        if keras.backend.backend() == "tensorflow":
             return self._tensorflow_train_step(inputs)
         elif keras.backend.backend() == "torch":
             return self._torch_train_step(inputs)
@@ -811,16 +808,7 @@ class ShiftViTModel(keras.Model):
 
         # Update the metrics.
         for metric in self.metrics:
-            metric.update_state(y_true=labels, y_pred=logits)
-
-        return {m.name: m.result() for m in self.metrics}
-
-    def _jax_train_step(self, inputs):
-        total_loss, labels, logits = self._jax_calculate_loss(data=inputs, training=True)
-
-        # Update metrics
-        for metric in self.metrics:
-            metric.update_state(y_true=labels, y_pred=logits)
+            metric.update_state(labels, logits)
 
         return {m.name: m.result() for m in self.metrics}
 
