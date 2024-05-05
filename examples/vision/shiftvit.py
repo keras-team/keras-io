@@ -38,16 +38,8 @@ if os.environ.get('KERAS_BACKEND') is None:
     # @param ["tensorflow", "torch"]
     os.environ["KERAS_BACKEND"] = "tensorflow"
 
-if os.environ.get('KERAS_BACKEND') == "torch":
-    import torch
-
-# Always import tensorflow because of tf.io and tf.data.Dataset
-# dependencies even when using other backends.
-try:
-    import tensorflow as tf
-except ImportError:
-    print("TensorFlow is not installed but is required even when choosing other Keras backends for this example.")
-    exit(1)
+# Import tensorflow because of tf.io and tf.data.Dataset dependencies.
+import tensorflow as tf
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -698,24 +690,6 @@ class ShiftViTModel(keras.Model):
         )
         return config
 
-    def train_step(self, inputs):
-        if keras.backend.backend() == "tensorflow":
-            return self._tensorflow_train_step(inputs)
-        elif keras.backend.backend() == "torch":
-            return self._torch_train_step(inputs)
-        else:
-            raise NotImplementedError(
-                f"The train/fit step is not implemented for '{keras.backend.backend()}' backend."
-            )
-
-    def test_step(self, data):
-        _, labels, logits = self._calculate_loss(data)
-
-        # Update metrics
-        for metric in self.metrics:
-            metric.update_state(labels, logits)
-        return {m.name: m.result() for m in self.metrics}
-
     def call(self, images):
         augmented_images = self.data_augmentation(images)
         x = self.patch_projection(augmented_images)
@@ -724,93 +698,6 @@ class ShiftViTModel(keras.Model):
         x = self.global_avg_pool(x)
         logits = self.classifier(x)
         return logits
-
-    def _calculate_loss(self, data, training=False):
-        (images, labels) = data
-
-        # Augment the images
-        augmented_images = self.data_augmentation(images)
-
-        # Create patches and project the patches.
-        projected_patches = self.patch_projection(augmented_images)
-
-        # Pass through the stages
-        x = projected_patches
-        for stage in self.stages:
-            x = stage(x, training=training)
-
-        # Get the logits.
-        x = self.global_avg_pool(x)
-        logits = self.classifier(x)
-
-        # Calculate the loss and return it.
-        total_loss = self.compute_loss(y=labels, y_pred=logits)
-        return total_loss, labels, logits
-
-    def _tensorflow_train_step(self, inputs):
-        with tf.GradientTape() as tape:
-            total_loss, labels, logits = self._calculate_loss(
-                data=inputs, training=True
-            )
-
-        # Apply the gradients.
-        train_vars = [
-            self.data_augmentation.trainable_variables,
-            self.patch_projection.trainable_variables,
-            self.global_avg_pool.trainable_variables,
-            self.classifier.trainable_variables,
-        ]
-        train_vars = train_vars + [stage.trainable_variables for stage in self.stages]
-
-        # Optimize the gradients.
-        grads = tape.gradient(total_loss, train_vars)
-        trainable_variable_list = []
-        for grad, var in zip(grads, train_vars):
-            for g, v in zip(grad, var):
-                trainable_variable_list.append((g, v))
-        self.optimizer.apply_gradients(trainable_variable_list)
-
-        # Update the metrics.
-        for metric in self.metrics:
-            metric.update_state(labels, logits)
-
-        return {m.name: m.result() for m in self.metrics}
-
-    def _torch_train_step(self, inputs):
-        # Clear the leftover gradients.
-        self.zero_grad()
-
-        # Run forward pass and compute loss.
-        total_loss, labels, logits = self._calculate_loss(
-            data=inputs, training=True
-        )
-
-        # Apply the gradients.
-        total_loss.backward()
-
-        train_vars = [
-            self.data_augmentation.trainable_variables,
-            self.patch_projection.trainable_variables,
-            self.global_avg_pool.trainable_variables,
-            self.classifier.trainable_variables,
-        ]
-        train_vars = train_vars + [stage.trainable_variables for stage in self.stages]
-
-        gradients = [v.value.grad for v in train_vars]
-
-        # Optimize the gradients.
-        trainable_variable_list = []
-        for grad, var in zip(gradients, train_vars):
-            for g, v in zip(grad, var):
-                trainable_variable_list.append((g, v))
-        with torch.no_grad():
-            self.optimizer.apply_gradients(trainable_variable_list)
-
-        # Update the metrics.
-        for metric in self.metrics:
-            metric.update_state(labels, logits)
-
-        return {m.name: m.result() for m in self.metrics}
 
 
 """
