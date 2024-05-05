@@ -1,11 +1,15 @@
 """
-Title: End-to-end Masked Language Modeling with BERT
-Author: [Ankur Singh](https://twitter.com/ankur310794)
-Date created: 2020/09/18
-Last modified: 2024/03/15
-Description: Implement a Masked Language Model (MLM) with BERT and fine-tune it on the IMDB Reviews dataset.
-Accelerator: GPU
-Converted to Keras 3 by: [Sitam Meur](https://github.com/sitamgithub-MSIT)
+# End-to-end Masked Language Modeling with BERT
+
+**Author:** [Ankur Singh](https://twitter.com/ankur310794)<br>
+**Date created:** 2020/09/18<br>
+**Last modified:** 2024/05/05<br>
+**Description:** Implement a Masked Language Model (MLM) with BERT and fine-tune it on
+the IMDB Reviews dataset.<br>
+**Accelerator:** GPU
+**Converted to Keras 3 by:** [Sitam Meur](https://github.com/sitamgithub-MSIT)<br>
+**Converted to Keras 3 Backend-Agnostic by:** [Mrutyunjay
+Biswal](https://twitter.com/LearnStochastic)<br>
 """
 
 """
@@ -32,35 +36,43 @@ This example teaches you how to build a BERT model from scratch,
 train it with the masked language modeling task,
 and then fine-tune this model on a sentiment classification task.
 
-We will use the Keras `TextVectorization` and `MultiHeadAttention` layers
+We will use the Keras `TextVectorization` and `MultiHeadAttention` layers, and
+`PositionEmbedding` from `keras-nlp`
 to create a BERT Transformer-Encoder network architecture.
 
-Note: This example should be run with `tf-nightly`.
+Note: This is backend-agnostic, i.e. update the keras backend to "tensorflow", "torch",
+or "jax" as shown in the code, and it should work with no other code change.
 """
 
 """
 ## Setup
-
-Install `tf-nightly` via `pip install tf-nightly`.
 """
+
+# install keras 3.x and keras-nlp
+# !pip install --upgrade keras keras-nlp
 
 import os
 
+# set backend ["tensorflow", "jax", "torch"]
 os.environ["KERAS_BACKEND"] = "tensorflow"
-import keras_nlp
-import keras
-import tensorflow as tf
-from keras import layers
-from keras.layers import TextVectorization
-from dataclasses import dataclass
-import pandas as pd
-import numpy as np
-import glob
+
 import re
+import glob
+import numpy as np
+import pandas as pd
+from pathlib import Path
 from pprint import pprint
+from dataclasses import dataclass
+
+import keras
+from keras import ops
+from keras import layers
+
+import keras_nlp
+import tensorflow as tf
 
 """
-## Set-up Configuration
+## Configuration
 """
 
 
@@ -74,19 +86,43 @@ class Config:
     NUM_HEAD = 8  # used in bert model
     FF_DIM = 128  # used in bert model
     NUM_LAYERS = 1
+    NUM_EPOCHS = 1
+    STEPS_PER_EPOCH = 2
 
 
 config = Config()
 
 """
-## Load the data
-
-We will first download the IMDB data and load into a Pandas dataframe.
+## Download the Data: IMDB Movie Review Sentiment Classification
+Download the IMDB data and load into a Pandas DataFrame.
 """
 
-"""shell
-curl -O https://ai.stanford.edu/~amaas/data/sentiment/aclImdb_v1.tar.gz
-tar -xf aclImdb_v1.tar.gz
+fpath = keras.utils.get_file(
+    origin="https://ai.stanford.edu/~amaas/data/sentiment/aclImdb_v1.tar.gz"
+)
+dirpath = Path(fpath).parent.absolute()
+_ = os.system(f"tar -xf {fpath} -C {dirpath}")
+
+"""
+The `aclImdb` folder contains a `train` and `test` subfolder:
+"""
+
+_ = os.system(f"ls {dirpath}/aclImdb")
+_ = os.system(f"ls {dirpath}/aclImdb/train")
+_ = os.system(f"ls {dirpath}/aclImdb/test")
+
+"""
+We are only interested in the `pos` and `neg` subfolders, so let's delete the rest:
+"""
+
+_ = os.system(f"rm -r {dirpath}/aclImdb/train/unsup")
+_ = os.system(f"rm -r {dirpath}/aclImdb/train/*.feat")
+_ = os.system(f"rm -r {dirpath}/aclImdb/train/*.txt")
+_ = os.system(f"rm -r {dirpath}/aclImdb/test/*.feat")
+_ = os.system(f"rm -r {dirpath}/aclImdb/test/*.txt")
+
+"""
+Let's read the dataset from the text files to a DataFrame.
 """
 
 
@@ -100,9 +136,10 @@ def get_text_list_from_files(files):
 
 
 def get_data_from_text_files(folder_name):
-    pos_files = glob.glob("aclImdb/" + folder_name + "/pos/*.txt")
+
+    pos_files = glob.glob(f"{dirpath}/aclImdb/" + folder_name + "/pos/*.txt")
     pos_texts = get_text_list_from_files(pos_files)
-    neg_files = glob.glob("aclImdb/" + folder_name + "/neg/*.txt")
+    neg_files = glob.glob(f"{dirpath}/aclImdb/" + folder_name + "/neg/*.txt")
     neg_texts = get_text_list_from_files(neg_files)
     df = pd.DataFrame(
         {
@@ -117,7 +154,8 @@ def get_data_from_text_files(folder_name):
 train_df = get_data_from_text_files("train")
 test_df = get_data_from_text_files("test")
 
-all_data = train_df.append(test_df)
+all_data = pd.concat([train_df, test_df], axis=0).reset_index(drop=True)
+assert len(all_data) != 0, f"{all_data} is empty"
 
 """
 ## Dataset preparation
@@ -125,7 +163,8 @@ all_data = train_df.append(test_df)
 We will use the `TextVectorization` layer to vectorize the text into integer token ids.
 It transforms a batch of strings into either
 a sequence of token indices (one sample = 1D array of integer token indices, in order)
-or a dense representation (one sample = 1D array of float values encoding an unordered set of tokens).
+or a dense representation (one sample = 1D array of float values encoding an unordered
+set of tokens).
 
 Below, we define 3 preprocessing functions.
 
@@ -156,7 +195,7 @@ def get_vectorize_layer(texts, vocab_size, max_seq, special_tokens=["[MASK]"]):
     Returns:
         layers.Layer: Return TextVectorization Keras Layer
     """
-    vectorize_layer = TextVectorization(
+    vectorize_layer = layers.TextVectorization(
         max_tokens=vocab_size,
         output_mode="int",
         standardize=custom_standardization,
@@ -179,14 +218,15 @@ vectorize_layer = get_vectorize_layer(
 )
 
 # Get mask token id for masked language model
-mask_token_id = vectorize_layer(["[mask]"]).numpy()[0][0]
+mask_token_id = vectorize_layer(["[mask]"])[0][0]
 
 
 def encode(texts):
     encoded_texts = vectorize_layer(texts)
-    return encoded_texts.numpy()
+    return ops.convert_to_numpy(encoded_texts)
 
 
+# todo: make this backend agnostic
 def get_masked_input_and_labels(encoded_texts):
     # 15% BERT masking
     inp_mask = np.random.rand(*encoded_texts.shape) < 0.15
@@ -213,7 +253,7 @@ def get_masked_input_and_labels(encoded_texts):
     )
 
     # Prepare sample_weights to pass to .fit() method
-    sample_weights = np.ones(labels.shape)
+    sample_weights = np.ones(labels.shape, dtype="float32")
     sample_weights[labels == -1] = 0
 
     # y_labels would be same as encoded_texts i.e input tokens
@@ -264,18 +304,18 @@ and it will predict the correct ids for the masked input tokens.
 """
 
 
-def bert_module(query, key, value, i):
+def bert_module(query, key, value, layer_num):
     # Multi headed self-attention
     attention_output = layers.MultiHeadAttention(
         num_heads=config.NUM_HEAD,
         key_dim=config.EMBED_DIM // config.NUM_HEAD,
-        name="encoder_{}_multiheadattention".format(i),
+        name=f"encoder_{layer_num}_multiheadattention",
     )(query, key, value)
-    attention_output = layers.Dropout(0.1, name="encoder_{}_att_dropout".format(i))(
+    attention_output = layers.Dropout(0.1, name=f"encoder_{layer_num}_att_dropout")(
         attention_output
     )
     attention_output = layers.LayerNormalization(
-        epsilon=1e-6, name="encoder_{}_att_layernormalization".format(i)
+        epsilon=1e-6, name=f"encoder_{layer_num}_att_layernormalization"
     )(query + attention_output)
 
     # Feed-forward layer
@@ -284,14 +324,14 @@ def bert_module(query, key, value, i):
             layers.Dense(config.FF_DIM, activation="relu"),
             layers.Dense(config.EMBED_DIM),
         ],
-        name="encoder_{}_ffn".format(i),
+        name=f"encoder_{layer_num}_ffn",
     )
     ffn_output = ffn(attention_output)
-    ffn_output = layers.Dropout(0.1, name="encoder_{}_ffn_dropout".format(i))(
+    ffn_output = layers.Dropout(0.1, name=f"encoder_{layer_num}_ffn_dropout")(
         ffn_output
     )
     sequence_output = layers.LayerNormalization(
-        epsilon=1e-6, name="encoder_{}_ffn_layernormalization".format(i)
+        epsilon=1e-6, name=f"encoder_{layer_num}_ffn_layernormalization"
     )(attention_output + ffn_output)
     return sequence_output
 
@@ -336,29 +376,40 @@ class MaskedLanguageModel(keras.Model):
 
 
 def create_masked_language_bert_model():
-    inputs = layers.Input((config.MAX_LEN,), dtype="int64")
+    inputs = layers.Input((config.MAX_LEN,), dtype="int32")
 
     word_embeddings = layers.Embedding(
         config.VOCAB_SIZE, config.EMBED_DIM, name="word_embedding"
     )(inputs)
+
     position_embeddings = keras_nlp.layers.PositionEmbedding(
         sequence_length=config.MAX_LEN
     )(word_embeddings)
+
     embeddings = word_embeddings + position_embeddings
 
     encoder_output = embeddings
-    for i in range(config.NUM_LAYERS):
-        encoder_output = bert_module(encoder_output, encoder_output, encoder_output, i)
+    for layer in range(config.NUM_LAYERS):
+        encoder_output = bert_module(
+            encoder_output, encoder_output, encoder_output, layer
+        )
 
     mlm_output = layers.Dense(config.VOCAB_SIZE, name="mlm_cls", activation="softmax")(
         encoder_output
     )
-    mlm_model = MaskedLanguageModel(inputs, mlm_output, name="masked_bert_model")
+    mlm_model = keras.Model(inputs, mlm_output, name="masked_bert_model")
 
     optimizer = keras.optimizers.Adam(learning_rate=config.LR)
-    mlm_model.compile(optimizer=optimizer)
+    mlm_model.compile(optimizer=optimizer, loss=loss_fn)
     return mlm_model
 
+
+bert_masked_model = create_masked_language_bert_model()
+bert_masked_model.summary()
+
+"""
+## Define a Callback to Generate Masked Token
+"""
 
 id2token = dict(enumerate(vectorize_layer.get_vocabulary()))
 token2id = {y: x for x, y in id2token.items()}
@@ -366,7 +417,7 @@ token2id = {y: x for x, y in id2token.items()}
 
 class MaskedTextGenerator(keras.callbacks.Callback):
     def __init__(self, sample_tokens, top_k=5):
-        self.sample_tokens = sample_tokens
+        self.sample_tokens = ops.convert_to_numpy(sample_tokens)
         self.k = top_k
 
     def decode(self, tokens):
@@ -378,20 +429,20 @@ class MaskedTextGenerator(keras.callbacks.Callback):
     def on_epoch_end(self, epoch, logs=None):
         prediction = self.model.predict(self.sample_tokens)
 
-        masked_index = np.where(self.sample_tokens == mask_token_id)
-        masked_index = masked_index[1]
+        masked_index = ops.where(self.sample_tokens == mask_token_id)
+        masked_index = ops.convert_to_numpy(masked_index[1])[0]
         mask_prediction = prediction[0][masked_index]
 
-        top_indices = mask_prediction[0].argsort()[-self.k :][::-1]
-        values = mask_prediction[0][top_indices]
+        top_indices = mask_prediction.argsort()[-self.k :][::-1]
+        values = mask_prediction[top_indices]
 
         for i in range(len(top_indices)):
             p = top_indices[i]
             v = values[i]
-            tokens = np.copy(sample_tokens[0])
-            tokens[masked_index[0]] = p
+            tokens = np.copy(self.sample_tokens[0])
+            tokens[masked_index] = p
             result = {
-                "input_text": self.decode(sample_tokens[0].numpy()),
+                "input_text": self.decode(self.sample_tokens[0]),
                 "prediction": self.decode(tokens),
                 "probability": v,
                 "predicted mask token": self.convert_ids_to_tokens(p),
@@ -400,25 +451,28 @@ class MaskedTextGenerator(keras.callbacks.Callback):
 
 
 sample_tokens = vectorize_layer(["I have watched this [mask] and it was awesome"])
-generator_callback = MaskedTextGenerator(sample_tokens.numpy())
-
-bert_masked_model = create_masked_language_bert_model()
-bert_masked_model.summary()
+generator_callback = MaskedTextGenerator(sample_tokens)
 
 """
 ## Train and Save
 """
 
-bert_masked_model.fit(mlm_ds, epochs=5, callbacks=[generator_callback])
+bert_masked_model.fit(
+    mlm_ds,
+    epochs=config.NUM_EPOCHS,
+    steps_per_epoch=config.STEPS_PER_EPOCH,
+    callbacks=[generator_callback],
+)
 bert_masked_model.save("bert_mlm_imdb.keras")
 
 """
 ## Fine-tune a sentiment classification model
 
-We will fine-tune our self-supervised model on a downstream task of sentiment classification.
-To do this, let's create a classifier by adding a pooling layer and a `Dense` layer on top of the
+We will fine-tune our self-supervised model on a downstream task of sentiment
+classification.
+To do this, let's create a classifier by adding a pooling layer and a `Dense` layer on
+top of the
 pretrained BERT features.
-
 """
 
 # Load pretrained bert model
@@ -465,7 +519,7 @@ classifer_model.compile(
 )
 classifer_model.fit(
     train_classifier_ds,
-    epochs=5,
+    epochs=config.NUM_EPOCHS,
     validation_data=test_classifier_ds,
 )
 
@@ -481,7 +535,7 @@ as input.
 
 
 def get_end_to_end(model):
-    inputs_string = keras.Input(shape=(1,), dtype="string")
+    inputs_string = layers.Input(shape=(1,), dtype="string")
     indices = vectorize_layer(inputs_string)
     outputs = model(indices)
     end_to_end_model = keras.Model(inputs_string, outputs, name="end_to_end_model")
