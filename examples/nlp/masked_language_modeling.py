@@ -218,7 +218,7 @@ vectorize_layer = get_vectorize_layer(
 )
 
 # Get mask token id for masked language model
-mask_token_id = vectorize_layer(["[mask]"])[0][0]
+mask_token_id = ops.convert_to_numpy(vectorize_layer(["[mask]"])[0][0])
 
 
 def encode(texts):
