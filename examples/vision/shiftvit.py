@@ -34,7 +34,7 @@ In this example, we minimally implement the paper with close alignement to the a
 
 import os
 
-if os.environ.get('KERAS_BACKEND') is None:
+if os.environ.get("KERAS_BACKEND") is None:
     # @param ["tensorflow", "torch"]
     os.environ["KERAS_BACKEND"] = "tensorflow"
 
@@ -51,8 +51,7 @@ from keras import ops
 from pathlib import Path
 
 # Setting seed for reproducibility.
-SEED=42
-keras.utils.set_random_seed(SEED)
+keras.utils.set_random_seed(seed=42)
 
 """
 ## Hyperparameters
@@ -588,6 +587,7 @@ class StackedShiftBlocks(layers.Layer):
 Build the ShiftViT custom model.
 """
 
+
 @keras.saving.register_keras_serializable()
 class ShiftViTModel(keras.Model):
     """The ShiftViT Model.
@@ -633,20 +633,20 @@ class ShiftViTModel(keras.Model):
         **kwargs,
     ):
         super().__init__(**kwargs)
-        self.data_augmentation=data_augmentation
-        self.patch_projection=patch_projection
-        self.classifier=classifier
-        self.global_avg_pool=global_avg_pool
-        self.projected_dim=projected_dim,
-        self.patch_size=patch_size,
-        self.num_shift_blocks_per_stages=num_shift_blocks_per_stages,
-        self.epsilon=epsilon,
-        self.mlp_dropout_rate=mlp_dropout_rate,
-        self.stochastic_depth_rate=stochastic_depth_rate,
-        self.num_div=num_div,
-        self.shift_pixel=shift_pixel,
-        self.mlp_expand_ratio=mlp_expand_ratio,
-        self.stages=stages
+        self.data_augmentation = data_augmentation
+        self.patch_projection = patch_projection
+        self.classifier = classifier
+        self.global_avg_pool = global_avg_pool
+        self.projected_dim = (projected_dim,)
+        self.patch_size = (patch_size,)
+        self.num_shift_blocks_per_stages = (num_shift_blocks_per_stages,)
+        self.epsilon = (epsilon,)
+        self.mlp_dropout_rate = (mlp_dropout_rate,)
+        self.stochastic_depth_rate = (stochastic_depth_rate,)
+        self.num_div = (num_div,)
+        self.shift_pixel = (shift_pixel,)
+        self.mlp_expand_ratio = (mlp_expand_ratio,)
+        self.stages = stages
 
         for index, num_shift_blocks in enumerate(num_shift_blocks_per_stages):
             if index == len(num_shift_blocks_per_stages) - 1:
@@ -800,9 +800,7 @@ class WarmUpCosine(keras.optimizers.schedules.LearningRateSchedule):
 
         # When the current step is more that the total steps, return 0 else return
         # the calculated graph.
-        return ops.where(
-            step > self.total_steps, 0.0, learning_rate
-        )
+        return ops.where(step > self.total_steps, 0.0, learning_rate)
 
     def get_config(self):
         config = {
@@ -923,8 +921,9 @@ def process_image(img_path):
     # resize image to match input size accepted by model
     # use `method` as `nearest` to preserve dtype of input passed to `resize()`
     img = ops.image.resize(
-        img, size=[config.input_shape[0], config.input_shape[1]],
-        interpolation="nearest"
+        img,
+        size=[config.input_shape[0], config.input_shape[1]],
+        interpolation="nearest",
     )
     return img
 
@@ -964,7 +963,8 @@ def get_confidence_scores(probabilities):
     labels = ops.convert_to_numpy(ops.argsort(probabilities)[::-1])
     confidences = {
         config.label_map[label]: ops.convert_to_numpy(
-            ops.round((probabilities[label]) * 100, 2)).item(0)
+            ops.round((probabilities[label]) * 100, 2)
+        ).item(0)
         for label in labels
     }
     return confidences
