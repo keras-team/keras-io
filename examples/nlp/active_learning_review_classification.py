@@ -5,6 +5,7 @@ Date created: 2021/10/29
 Last modified: 2024/05/08
 Description: Demonstrating the advantages of active learning through review classification.
 Accelerator: GPU
+Converted to Keras 3 by: [Sachin Prasad](https://github.com/sachinprasadhs)
 """
 
 """
@@ -53,7 +54,7 @@ Selects data points closest to the decision boundary
 
 import os
 
-os.environ["KERAS_BACKEND"] = "tensorflow"
+os.environ["KERAS_BACKEND"] = "tensorflow"  # @param ["tensorflow", "jax", "torch"]
 import keras
 from keras import ops
 from keras import layers
@@ -100,18 +101,18 @@ x_negatives, y_negatives = reviews[labels == 0], labels[labels == 0]
 
 # Creating training, validation and testing splits
 x_val, y_val = (
-    ops.concatenate((x_positives[:val_split], x_negatives[:val_split]), 0),
-    ops.concatenate((y_positives[:val_split], y_negatives[:val_split]), 0),
+    tf.concat((x_positives[:val_split], x_negatives[:val_split]), 0),
+    tf.concat((y_positives[:val_split], y_negatives[:val_split]), 0),
 )
 x_test, y_test = (
-    ops.concatenate(
+    tf.concat(
         (
             x_positives[val_split : val_split + test_split],
             x_negatives[val_split : val_split + test_split],
         ),
         0,
     ),
-    ops.concatenate(
+    tf.concat(
         (
             y_positives[val_split : val_split + test_split],
             y_negatives[val_split : val_split + test_split],
@@ -120,14 +121,14 @@ x_test, y_test = (
     ),
 )
 x_train, y_train = (
-    ops.concatenate(
+    tf.concat(
         (
             x_positives[val_split + test_split : val_split + test_split + train_split],
             x_negatives[val_split + test_split : val_split + test_split + train_split],
         ),
         0,
     ),
-    ops.concatenate(
+    tf.concat(
         (
             y_positives[val_split + test_split : val_split + test_split + train_split],
             y_negatives[val_split + test_split : val_split + test_split + train_split],
@@ -173,16 +174,8 @@ faster, we use the `map()` function with its parallelization functionality.
 """
 
 
-def custom_standardization(input_data):
-    lowercase = tf.strings.lower(input_data)
-    stripped_html = tf.strings.regex_replace(lowercase, "<br />", " ")
-    return tf.strings.regex_replace(
-        stripped_html, f"[{re.escape(string.punctuation)}]", ""
-    )
-
-
 vectorizer = layers.TextVectorization(
-    3000, standardize=custom_standardization, output_sequence_length=150
+    3000, standardize="lower_and_strip_punctuation", output_sequence_length=150
 )
 # Adapting the dataset
 vectorizer.adapt(
