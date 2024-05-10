@@ -27,9 +27,11 @@ weights require more precision. In the backward pass, however, E5M2 is utilized
 because gradients are less susceptible to the loss of precision but require
 higher dynamic range.
 
-It is worth noting that FP8 inference deployment is greatly simplified compared
-to INT8, which requires post-training quantization (PTQ) calibration and even
-quantization-aware training (QAT) in order to maintain model accuracy.
+It is worth noting that FP8 inference deployment is greatly simplified, as
+inference and training use the same datatype. This is in contrast to INT8
+inference with networks trained in 32- or 16-bit floating point, which require
+post-training quantization (PTQ) calibration and even quantization-aware
+training (QAT) in order to maintain model accuracy.
 
 In this example, we will build a simple Transformer model and train it with
 both FP16 and FP8 precision. You will observe that the accuracy doesn't decrease
