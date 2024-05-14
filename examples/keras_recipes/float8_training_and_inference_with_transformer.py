@@ -1,8 +1,8 @@
 """
 Title: Float8 training and inference with a simple Transformer model
 Author: [Hongyu Chiu](https://github.com/james77777778)
-Date created: 2024/05/09
-Last modified: 2024/05/09
+Date created: 2024/05/14
+Last modified: 2024/05/14
 Description: Train a simple Transformer model with the float8 quantization.
 Accelerator: GPU
 """
@@ -46,6 +46,8 @@ performance improvement.
 
 We will use KerasNLP library to simplify the model implementation. Additionally,
 use mixed precision training to reduce the training time.
+
+Note: The dependency on TensorFlow is only required for data processing.
 """
 
 """shell
@@ -56,91 +58,221 @@ pip install -q --upgrade keras  # Upgrade to Keras 3.
 import os
 
 os.environ["KERAS_BACKEND"] = "jax"
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 
 import re
 
 import keras
 import keras_nlp
+import tensorflow as tf
 
 keras.config.set_dtype_policy("mixed_bfloat16")
 
 """
+Define some hyperparameters.
+"""
+
+EPOCHS = 3
+BATCH_SIZE = 32
+VOCABULARY_SIZE = 20000
+MAX_SEQUENCE_LENGTH = 200
+MODEL_KWARGS = dict(
+    vocabulary_size=VOCABULARY_SIZE,
+    max_sequence_length=MAX_SEQUENCE_LENGTH,
+    hidden_dim=32,  # Hidden size for each token
+    num_heads=2,  # Number of attention heads
+    intermediate_dim=32,  # Intermediate size in feedforward network
+    dropout=0.1,  # Dropout rate
+)
+
+"""
 ## Dataset
 
-Let's load the IMDB dataset from `keras.datasets`. This dataset consists of
-25,000 movie reviews labeled by sentiment (positive/negative). To simplify the
-task, we only consider the top 20k words and the first 200 words of each review.
+First, let's download the IMDB dataset and extract it.
 """
 
-vocabulary_size = 20000
-max_sequence_length = 200
-index_from = 3
-(x_train, y_train), (x_val, y_val) = keras.datasets.imdb.load_data(
-    num_words=vocabulary_size, start_char=1, oov_char=2, index_from=3
+"""shell
+mkdir -p datasets
+wget http://ai.stanford.edu/~amaas/data/sentiment/aclImdb_v1.tar.gz -O datasets/aclImdb_v1.tar.gz
+mkdir -p datasets/aclImdb
+tar -xzf datasets/aclImdb_v1.tar.gz -C datasets
+rm -rf datasets/aclImdb/train/unsup
+"""
+
+"""
+We'll use the `keras.utils.text_dataset_from_directory` utility to generate our
+labelled `tf.data.Dataset` dataset from text files.
+"""
+
+train_ds = keras.utils.text_dataset_from_directory(
+    "datasets/aclImdb/train",
+    batch_size=BATCH_SIZE,
+    validation_split=0.2,
+    subset="training",
+    seed=42,
 )
-print(f"Number of training sequences: {len(x_train)}")
-print(f"Number of validation sequences: {len(x_val)}")
-x_train = keras.utils.pad_sequences(x_train, maxlen=max_sequence_length)
-x_val = keras.utils.pad_sequences(x_val, maxlen=max_sequence_length)
+val_ds = keras.utils.text_dataset_from_directory(
+    "datasets/aclImdb/train",
+    batch_size=BATCH_SIZE,
+    validation_split=0.2,
+    subset="validation",
+    seed=42,
+)
+test_ds = keras.utils.text_dataset_from_directory(
+    "datasets/aclImdb/test", batch_size=BATCH_SIZE
+)
 
 """
-To better understand the dataset, we can print one encoded data, its decoded
-sequence, and the label in the training data.
+We will now convert the text to lowercase.
 """
 
-word_index = keras.datasets.imdb.get_word_index()
-inverted_word_index = dict((i + index_from, word) for (word, i) in word_index.items())
-inverted_word_index[1] = "[START]"
-inverted_word_index[2] = "[OOV]"
+train_ds = train_ds.map(lambda x, y: (tf.strings.lower(x), y))
+val_ds = val_ds.map(lambda x, y: (tf.strings.lower(x), y))
+test_ds = test_ds.map(lambda x, y: (tf.strings.lower(x), y))
 
-decoded_sequence = " ".join(inverted_word_index[i] for i in x_train[0])
-print(f"Encoded training data:\n{x_train[0]}")
-print(f"Decoded training data:\n{decoded_sequence}")
-print(f"Labeld sentiment (0: negative, 1: positive):\n{y_train[0]}")
+"""
+Let's print a few samples.
+"""
+
+for text_batch, label_batch in train_ds.take(1):
+    for i in range(3):
+        print(f"Text: {text_batch.numpy()[i]}")
+        print(f"Label: {label_batch.numpy()[i]}")
+
+"""
+### Tokenizing the data
+
+We'll be using the `keras_nlp.tokenizers.WordPieceTokenizer` layer to tokenize
+the text. `keras_nlp.tokenizers.WordPieceTokenizer` takes a WordPiece vocabulary
+and has functions for tokenizing the text, and detokenizing sequences of tokens.
+
+Before we define the tokenizer, we first need to train it on the dataset
+we have. The WordPiece tokenization algorithm is a subword tokenization
+algorithm; training it on a corpus gives us a vocabulary of subwords. A subword
+tokenizer is a compromise between word tokenizers (word tokenizers need very
+large vocabularies for good coverage of input words), and character tokenizers
+(characters don't really encode meaning like words do). Luckily, KerasNLP
+makes it very simple to train WordPiece on a corpus with the
+`keras_nlp.tokenizers.compute_word_piece_vocabulary` utility.
+"""
+
+
+def train_word_piece(ds, vocab_size, reserved_tokens):
+    word_piece_ds = ds.unbatch().map(lambda x, y: x)
+    vocab = keras_nlp.tokenizers.compute_word_piece_vocabulary(
+        word_piece_ds.batch(1000).prefetch(2),
+        vocabulary_size=vocab_size,
+        reserved_tokens=reserved_tokens,
+    )
+    return vocab
+
+
+"""
+Every vocabulary has a few special, reserved tokens. We have two such tokens:
+
+- `"[PAD]"` - Padding token. Padding tokens are appended to the input sequence
+length when the input sequence length is shorter than the maximum sequence
+length.
+- `"[UNK]"` - Unknown token.
+"""
+
+reserved_tokens = ["[PAD]", "[UNK]"]
+train_sentences = [element[0] for element in train_ds]
+vocab = train_word_piece(train_ds, VOCABULARY_SIZE, reserved_tokens)
+
+"""
+Let's see some tokens!
+"""
+
+print("Tokens: ", vocab[100:110])
+
+"""
+Now, let's define the tokenizer. We will configure the tokenizer with the
+the vocabularies trained above. We will define a maximum sequence length so that
+all sequences are padded to the same length, if the length of the sequence is
+less than the specified sequence length. Otherwise, the sequence is truncated.
+"""
+
+tokenizer = keras_nlp.tokenizers.WordPieceTokenizer(
+    vocabulary=vocab,
+    lowercase=False,
+    sequence_length=MAX_SEQUENCE_LENGTH,
+)
+
+"""
+Let's try and tokenize a sample from our dataset! To verify whether the text has
+been tokenized correctly, we can also detokenize the list of tokens back to the
+original text.
+"""
+
+input_sentence_ex = train_ds.take(1).get_single_element()[0][0]
+input_tokens_ex = tokenizer(input_sentence_ex)
+
+print("Sentence: ", input_sentence_ex)
+print("Tokens: ", input_tokens_ex)
+print("Recovered text after detokenizing: ", tokenizer.detokenize(input_tokens_ex))
+
+"""
+## Formatting the dataset
+
+Next, we'll format our datasets in the form that will be fed to the models. We
+need to tokenize the text.
+"""
+
+
+def format_dataset(sentence, label):
+    sentence = tokenizer(sentence)
+    return ({"input_ids": sentence}, label)
+
+
+def make_dataset(dataset):
+    dataset = dataset.map(format_dataset, num_parallel_calls=tf.data.AUTOTUNE)
+    return dataset.shuffle(512).prefetch(tf.data.AUTOTUNE).cache()
+
+
+train_ds = make_dataset(train_ds)
+val_ds = make_dataset(val_ds)
+test_ds = make_dataset(test_ds)
+
 
 """
 ## Model
 
-Let's build a simple Transformer model. `TransformerBlock` outputs one vector
+Let's build a simple Transformer model. `TransformerDecoder` outputs one vector
 for each time step of our input sequence. Here, we take the mean across all time
 steps and use a feedforward network on top of it to classify text.
 """
 
 
-class TransformerBlock(keras.layers.Layer):
-    def __init__(self, hidden_dim, intermediate_dim, num_heads, dropout=0.1, **kwargs):
-        super().__init__(**kwargs)
-        self.self_attention = keras.layers.MultiHeadAttention(
-            num_heads=num_heads, key_dim=intermediate_dim, dropout=dropout
+class TransformerDecoder(keras_nlp.layers.TransformerDecoder):
+    def call(
+        self,
+        decoder_sequence,
+        encoder_sequence=None,
+        decoder_padding_mask=None,
+        decoder_attention_mask=None,
+        encoder_padding_mask=None,
+        encoder_attention_mask=None,
+        self_attention_cache=None,
+        self_attention_cache_update_index=None,
+        cross_attention_cache=None,
+        cross_attention_cache_update_index=None,
+        use_causal_mask=True,
+        training=None,
+    ):
+        return super().call(
+            decoder_sequence,
+            encoder_sequence,
+            decoder_padding_mask,
+            decoder_attention_mask,
+            encoder_padding_mask,
+            encoder_attention_mask,
+            self_attention_cache,
+            self_attention_cache_update_index,
+            cross_attention_cache,
+            cross_attention_cache_update_index,
+            use_causal_mask,
         )
-        self.self_attention_norm = keras.layers.LayerNormalization(epsilon=1e-5)
-        self.self_attention_dropout = keras.layers.Dropout(dropout)
-
-        self.feedforward_intermediate = keras.layers.Dense(
-            intermediate_dim, activation="relu"
-        )
-        self.feedforward_output = keras.layers.Dense(hidden_dim)
-        self.feedforward_norm = keras.layers.LayerNormalization(epsilon=1e-5)
-        self.feedforward_dropout = keras.layers.Dropout(dropout)
-
-    def call(self, inputs, training=None):
-        x = inputs
-
-        # Self attention block.
-        residual = x
-        x = self.self_attention(inputs, inputs, training=training)
-        x = self.self_attention_dropout(x, training=training)
-        x = x + residual
-        x = self.self_attention_norm(x)
-
-        # Feedforward block.
-        residual = x
-        x = self.feedforward_intermediate(x)
-        x = self.feedforward_output(x)
-        x = self.feedforward_dropout(x, training=training)
-        x = x + residual
-        x = self.feedforward_norm(x)
-        return x
 
 
 def build_model(
@@ -151,15 +283,14 @@ def build_model(
     intermediate_dim=32,
     dropout=0.1,
 ):
-    token_id_input = keras.layers.Input(shape=(None,), dtype="int32")
+    token_id_input = keras.layers.Input(shape=(None,), dtype="int32", name="input_ids")
     x = keras_nlp.layers.TokenAndPositionEmbedding(
         vocabulary_size=vocabulary_size,
         sequence_length=max_sequence_length,
         embedding_dim=hidden_dim,
     )(token_id_input)
     x = keras.layers.Dropout(rate=dropout)(x)
-    x = TransformerBlock(
-        hidden_dim=hidden_dim,
+    x = TransformerDecoder(
         intermediate_dim=intermediate_dim,
         num_heads=num_heads,
         dropout=dropout,
@@ -168,18 +299,9 @@ def build_model(
     x = keras.layers.Dropout(dropout)(x)
     x = keras.layers.Dense(intermediate_dim, activation="relu")(x)
     x = keras.layers.Dropout(dropout)(x)
-    outputs = keras.layers.Dense(2, activation="softmax")(x)
+    outputs = keras.layers.Dense(1, activation="sigmoid")(x)
     return keras.Model(inputs=token_id_input, outputs=outputs)
 
-
-model_kwargs = dict(
-    vocabulary_size=vocabulary_size,
-    max_sequence_length=max_sequence_length,
-    hidden_dim=32,  # Hidden size for each token
-    num_heads=2,  # Number of attention heads
-    intermediate_dim=32,  # Intermediate size in feedforward network
-    dropout=0.1,  # Dropout rate
-)
 
 """
 ## Training and evaluating our model
@@ -189,22 +311,23 @@ First, we train and evaluate the model with mixed precision
 training/inference.
 """
 
-model = build_model(**model_kwargs)
+model = build_model(**MODEL_KWARGS)
+model.summary()
 model.compile(
     optimizer="adam",
-    loss="sparse_categorical_crossentropy",
+    loss="binary_crossentropy",
     metrics=["accuracy"],
 )
-history = model.fit(x_train, y_train, epochs=2, validation_data=(x_val, y_val))
-result = model.evaluate(x_val, y_val)
-print(f"Validation accuracy (float32): {result[1]:.2%}")
+history = model.fit(train_ds, epochs=EPOCHS, validation_data=val_ds)
+result = model.evaluate(test_ds)
+print(f"Accuracy (float32): {result[1]:.2%}")
 
 """
 We can enable FP8 training/inference with a one-line API:
 `model.quantize("float8")`.
 """
 
-model = build_model(**model_kwargs)
+model = build_model(**MODEL_KWARGS)
 model.quantize("float8")
 
 """
@@ -239,12 +362,12 @@ change after fitting.
 
 model.compile(
     optimizer="adam",
-    loss="sparse_categorical_crossentropy",
+    loss="binary_crossentropy",
     metrics=["accuracy"],
 )
-history = model.fit(x_train, y_train, epochs=2, validation_data=(x_val, y_val))
-result = model.evaluate(x_val, y_val)
-print(f"Validation accuracy (float8): {result[1]:.2%}")
+history = model.fit(train_ds, epochs=EPOCHS, validation_data=val_ds)
+result = model.evaluate(test_ds)
+print(f"Accuracy (float32): {result[1]:.2%}")
 
 for v in model.trainable_variables:
     if re.findall(pattern, v.path):
