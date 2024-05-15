@@ -2,13 +2,13 @@
 
 **Author:** [Darshan Deshpande](https://twitter.com/getdarshan)<br>
 **Date created:** 2021/10/29<br>
-**Last modified:** 2021/10/29<br>
+**Last modified:** 2024/05/08<br>
+**Description:** Demonstrating the advantages of active learning through review classification.
 
 
 <img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/nlp/ipynb/active_learning_review_classification.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/nlp/active_learning_review_classification.py)
 
 
-**Description:** Demonstrating the advantages of active learning through review classification.
 
 ---
 ## Introduction
@@ -54,10 +54,14 @@ Selects data points closest to the decision boundary
 
 
 ```python
+import os
+
+os.environ["KERAS_BACKEND"] = "tensorflow"  # @param ["tensorflow", "jax", "torch"]
+import keras
+from keras import ops
+from keras import layers
 import tensorflow_datasets as tfds
 import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras import layers
 import matplotlib.pyplot as plt
 import re
 import string
@@ -192,16 +196,8 @@ faster, we use the `map()` function with its parallelization functionality.
 
 ```python
 
-def custom_standardization(input_data):
-    lowercase = tf.strings.lower(input_data)
-    stripped_html = tf.strings.regex_replace(lowercase, "<br />", " ")
-    return tf.strings.regex_replace(
-        stripped_html, f"[{re.escape(string.punctuation)}]", ""
-    )
-
-
 vectorizer = layers.TextVectorization(
-    3000, standardize=custom_standardization, output_sequence_length=150
+    3000, standardize="lower_and_strip_punctuation", output_sequence_length=150
 )
 # Adapting the dataset
 vectorizer.adapt(
@@ -233,6 +229,7 @@ test_dataset = test_dataset.batch(256).map(
 
 
 ```python
+
 # Helper function for merging new history objects with older ones
 def append_history(losses, val_losses, accuracy, val_accuracy, history):
     losses = losses + history.history["loss"]
@@ -317,7 +314,7 @@ def train_full_model(full_train_dataset, val_dataset, test_dataset):
         callbacks=[
             keras.callbacks.EarlyStopping(patience=4, verbose=1),
             keras.callbacks.ModelCheckpoint(
-                "FullModelCheckpoint.h5", verbose=1, save_best_only=True
+                "FullModelCheckpoint.keras", verbose=1, save_best_only=True
             ),
         ],
     )
@@ -331,7 +328,7 @@ def train_full_model(full_train_dataset, val_dataset, test_dataset):
     )
 
     # Loading the best checkpoint
-    model = keras.models.load_model("FullModelCheckpoint.h5")
+    model = keras.models.load_model("FullModelCheckpoint.keras")
 
     print("-" * 100)
     print(
@@ -354,90 +351,291 @@ full_train_dataset = (
 full_dataset_model = train_full_model(full_train_dataset, val_dataset, test_dataset)
 ```
 
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold">Model: "sequential"</span>
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━┓
+┃<span style="font-weight: bold"> Layer (type)                    </span>┃<span style="font-weight: bold"> Output Shape           </span>┃<span style="font-weight: bold">       Param # </span>┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━┩
+│ embedding (<span style="color: #0087ff; text-decoration-color: #0087ff">Embedding</span>)           │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">150</span>, <span style="color: #00af00; text-decoration-color: #00af00">128</span>)       │       <span style="color: #00af00; text-decoration-color: #00af00">384,000</span> │
+├─────────────────────────────────┼────────────────────────┼───────────────┤
+│ bidirectional (<span style="color: #0087ff; text-decoration-color: #0087ff">Bidirectional</span>)   │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">150</span>, <span style="color: #00af00; text-decoration-color: #00af00">64</span>)        │        <span style="color: #00af00; text-decoration-color: #00af00">41,216</span> │
+├─────────────────────────────────┼────────────────────────┼───────────────┤
+│ global_max_pooling1d            │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">64</span>)             │             <span style="color: #00af00; text-decoration-color: #00af00">0</span> │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">GlobalMaxPooling1D</span>)            │                        │               │
+├─────────────────────────────────┼────────────────────────┼───────────────┤
+│ dense (<span style="color: #0087ff; text-decoration-color: #0087ff">Dense</span>)                   │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">20</span>)             │         <span style="color: #00af00; text-decoration-color: #00af00">1,300</span> │
+├─────────────────────────────────┼────────────────────────┼───────────────┤
+│ dropout (<span style="color: #0087ff; text-decoration-color: #0087ff">Dropout</span>)               │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">20</span>)             │             <span style="color: #00af00; text-decoration-color: #00af00">0</span> │
+├─────────────────────────────────┼────────────────────────┼───────────────┤
+│ dense_1 (<span style="color: #0087ff; text-decoration-color: #0087ff">Dense</span>)                 │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>)              │            <span style="color: #00af00; text-decoration-color: #00af00">21</span> │
+└─────────────────────────────────┴────────────────────────┴───────────────┘
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Total params: </span><span style="color: #00af00; text-decoration-color: #00af00">426,537</span> (1.63 MB)
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Trainable params: </span><span style="color: #00af00; text-decoration-color: #00af00">426,537</span> (1.63 MB)
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Non-trainable params: </span><span style="color: #00af00; text-decoration-color: #00af00">0</span> (0.00 B)
+</pre>
+
+
+
 <div class="k-default-codeblock">
 ```
-Model: "sequential"
-_________________________________________________________________
- Layer (type)                Output Shape              Param #   
-=================================================================
- embedding (Embedding)       (None, 150, 128)          384000    
-                                                                 
- bidirectional (Bidirectiona  (None, 150, 64)          41216     
- l)                                                              
-                                                                 
- global_max_pooling1d (Globa  (None, 64)               0         
- lMaxPooling1D)                                                  
-                                                                 
- dense (Dense)               (None, 20)                1300      
-                                                                 
- dropout (Dropout)           (None, 20)                0         
-                                                                 
- dense_1 (Dense)             (None, 1)                 21        
-                                                                 
-=================================================================
-Total params: 426,537
-Trainable params: 426,537
-Non-trainable params: 0
-_________________________________________________________________
 Epoch 1/20
-156/157 [============================>.] - ETA: 0s - loss: 0.5150 - binary_accuracy: 0.7615 - false_negatives: 3314.0000 - false_positives: 6210.0000
-Epoch 00001: val_loss improved from inf to 0.47791, saving model to FullModelCheckpoint.h5
-157/157 [==============================] - 25s 103ms/step - loss: 0.5148 - binary_accuracy: 0.7617 - false_negatives: 3316.0000 - false_positives: 6217.0000 - val_loss: 0.4779 - val_binary_accuracy: 0.7858 - val_false_negatives: 970.0000 - val_false_positives: 101.0000
-Epoch 2/20
-156/157 [============================>.] - ETA: 0s - loss: 0.3659 - binary_accuracy: 0.8500 - false_negatives: 2833.0000 - false_positives: 3158.0000
-Epoch 00002: val_loss improved from 0.47791 to 0.35345, saving model to FullModelCheckpoint.h5
-157/157 [==============================] - 9s 59ms/step - loss: 0.3656 - binary_accuracy: 0.8501 - false_negatives: 2836.0000 - false_positives: 3159.0000 - val_loss: 0.3535 - val_binary_accuracy: 0.8502 - val_false_negatives: 363.0000 - val_false_positives: 386.0000
-Epoch 3/20
-156/157 [============================>.] - ETA: 0s - loss: 0.3319 - binary_accuracy: 0.8653 - false_negatives: 2507.0000 - false_positives: 2873.0000
-Epoch 00003: val_loss improved from 0.35345 to 0.33150, saving model to FullModelCheckpoint.h5
-157/157 [==============================] - 9s 55ms/step - loss: 0.3319 - binary_accuracy: 0.8652 - false_negatives: 2512.0000 - false_positives: 2878.0000 - val_loss: 0.3315 - val_binary_accuracy: 0.8576 - val_false_negatives: 423.0000 - val_false_positives: 289.0000
-Epoch 4/20
-156/157 [============================>.] - ETA: 0s - loss: 0.3130 - binary_accuracy: 0.8764 - false_negatives: 2398.0000 - false_positives: 2538.0000
-Epoch 00004: val_loss did not improve from 0.33150
-157/157 [==============================] - 9s 55ms/step - loss: 0.3129 - binary_accuracy: 0.8763 - false_negatives: 2404.0000 - false_positives: 2542.0000 - val_loss: 0.3328 - val_binary_accuracy: 0.8586 - val_false_negatives: 263.0000 - val_false_positives: 444.0000
-Epoch 5/20
-156/157 [============================>.] - ETA: 0s - loss: 0.2918 - binary_accuracy: 0.8867 - false_negatives: 2141.0000 - false_positives: 2385.0000
-Epoch 00005: val_loss did not improve from 0.33150
-157/157 [==============================] - 9s 55ms/step - loss: 0.2917 - binary_accuracy: 0.8867 - false_negatives: 2143.0000 - false_positives: 2388.0000 - val_loss: 0.3762 - val_binary_accuracy: 0.8468 - val_false_negatives: 476.0000 - val_false_positives: 290.0000
-Epoch 6/20
-156/157 [============================>.] - ETA: 0s - loss: 0.2819 - binary_accuracy: 0.8901 - false_negatives: 2112.0000 - false_positives: 2277.0000
-Epoch 00006: val_loss did not improve from 0.33150
-157/157 [==============================] - 9s 55ms/step - loss: 0.2819 - binary_accuracy: 0.8902 - false_negatives: 2112.0000 - false_positives: 2282.0000 - val_loss: 0.4018 - val_binary_accuracy: 0.8312 - val_false_negatives: 694.0000 - val_false_positives: 150.0000
-Epoch 7/20
-156/157 [============================>.] - ETA: 0s - loss: 0.2650 - binary_accuracy: 0.8992 - false_negatives: 1902.0000 - false_positives: 2122.0000
-Epoch 00007: val_loss improved from 0.33150 to 0.32843, saving model to FullModelCheckpoint.h5
-157/157 [==============================] - 9s 55ms/step - loss: 0.2649 - binary_accuracy: 0.8992 - false_negatives: 1908.0000 - false_positives: 2123.0000 - val_loss: 0.3284 - val_binary_accuracy: 0.8578 - val_false_negatives: 274.0000 - val_false_positives: 437.0000
-Epoch 8/20
-157/157 [==============================] - ETA: 0s - loss: 0.2508 - binary_accuracy: 0.9051 - false_negatives: 1821.0000 - false_positives: 1974.0000
-Epoch 00008: val_loss did not improve from 0.32843
-157/157 [==============================] - 9s 55ms/step - loss: 0.2508 - binary_accuracy: 0.9051 - false_negatives: 1821.0000 - false_positives: 1974.0000 - val_loss: 0.4806 - val_binary_accuracy: 0.8194 - val_false_negatives: 788.0000 - val_false_positives: 115.0000
-Epoch 9/20
-156/157 [============================>.] - ETA: 0s - loss: 0.2377 - binary_accuracy: 0.9112 - false_negatives: 1771.0000 - false_positives: 1775.0000
-Epoch 00009: val_loss did not improve from 0.32843
-157/157 [==============================] - 9s 54ms/step - loss: 0.2378 - binary_accuracy: 0.9112 - false_negatives: 1775.0000 - false_positives: 1777.0000 - val_loss: 0.3378 - val_binary_accuracy: 0.8562 - val_false_negatives: 335.0000 - val_false_positives: 384.0000
-Epoch 10/20
-156/157 [============================>.] - ETA: 0s - loss: 0.2209 - binary_accuracy: 0.9195 - false_negatives: 1591.0000 - false_positives: 1623.0000
-Epoch 00010: val_loss did not improve from 0.32843
-157/157 [==============================] - 9s 55ms/step - loss: 0.2211 - binary_accuracy: 0.9195 - false_negatives: 1594.0000 - false_positives: 1627.0000 - val_loss: 0.3475 - val_binary_accuracy: 0.8556 - val_false_negatives: 425.0000 - val_false_positives: 297.0000
-Epoch 11/20
-156/157 [============================>.] - ETA: 0s - loss: 0.2060 - binary_accuracy: 0.9251 - false_negatives: 1512.0000 - false_positives: 1479.0000
-Epoch 00011: val_loss did not improve from 0.32843
-157/157 [==============================] - 9s 55ms/step - loss: 0.2061 - binary_accuracy: 0.9251 - false_negatives: 1517.0000 - false_positives: 1479.0000 - val_loss: 0.3823 - val_binary_accuracy: 0.8522 - val_false_negatives: 276.0000 - val_false_positives: 463.0000
-Epoch 00011: early stopping
 
 ```
 </div>
-![png](/img/examples/nlp/active_learning_review_classification/active_learning_review_classification_15_1.png)
+
+ 156/157 ━━━━━━━━━━━━━━━━━━━[37m━  0s 73ms/step - binary_accuracy: 0.6412 - false_negatives: 2084.3333 - false_positives: 5252.1924 - loss: 0.6507
+
+    
+<div class="k-default-codeblock">
+```
+Epoch 1: val_loss improved from inf to 0.57198, saving model to FullModelCheckpoint.keras
+
+
+```
+</div>
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 15s 79ms/step - binary_accuracy: 0.6411 - false_negatives: 2135.1772 - false_positives: 5292.4053 - loss: 0.6506 - val_binary_accuracy: 0.7356 - val_false_negatives: 898.0000 - val_false_positives: 424.0000 - val_loss: 0.5720
+
+
+<div class="k-default-codeblock">
+```
+Epoch 2/20
+
+```
+</div>
+ 156/157 ━━━━━━━━━━━━━━━━━━━[37m━  0s 72ms/step - binary_accuracy: 0.7448 - false_negatives: 1756.2756 - false_positives: 3249.1411 - loss: 0.5416
+
+    
+<div class="k-default-codeblock">
+```
+Epoch 2: val_loss improved from 0.57198 to 0.41756, saving model to FullModelCheckpoint.keras
+
+
+```
+</div>
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 12s 76ms/step - binary_accuracy: 0.7450 - false_negatives: 1783.8925 - false_positives: 3279.8101 - loss: 0.5412 - val_binary_accuracy: 0.8156 - val_false_negatives: 531.0000 - val_false_positives: 391.0000 - val_loss: 0.4176
+
+
+<div class="k-default-codeblock">
+```
+Epoch 3/20
+
+```
+</div>
+
+ 156/157 ━━━━━━━━━━━━━━━━━━━[37m━  0s 72ms/step - binary_accuracy: 0.8162 - false_negatives: 1539.7693 - false_positives: 2197.1475 - loss: 0.4254
+
+    
+<div class="k-default-codeblock">
+```
+Epoch 3: val_loss improved from 0.41756 to 0.38233, saving model to FullModelCheckpoint.keras
+
+
+```
+</div>
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 12s 76ms/step - binary_accuracy: 0.8161 - false_negatives: 1562.6962 - false_positives: 2221.5886 - loss: 0.4254 - val_binary_accuracy: 0.8340 - val_false_negatives: 496.0000 - val_false_positives: 334.0000 - val_loss: 0.3823
+
+
+<div class="k-default-codeblock">
+```
+Epoch 4/20
+
+```
+</div>
+ 156/157 ━━━━━━━━━━━━━━━━━━━[37m━  0s 72ms/step - binary_accuracy: 0.8413 - false_negatives: 1400.6538 - false_positives: 1818.7372 - loss: 0.3837
+
+    
+<div class="k-default-codeblock">
+```
+Epoch 4: val_loss improved from 0.38233 to 0.36235, saving model to FullModelCheckpoint.keras
+
+
+```
+</div>
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 12s 76ms/step - binary_accuracy: 0.8412 - false_negatives: 1421.5063 - false_positives: 1839.3102 - loss: 0.3838 - val_binary_accuracy: 0.8396 - val_false_negatives: 548.0000 - val_false_positives: 254.0000 - val_loss: 0.3623
+
+
+<div class="k-default-codeblock">
+```
+Epoch 5/20
+
+```
+</div>
+
+ 156/157 ━━━━━━━━━━━━━━━━━━━[37m━  0s 72ms/step - binary_accuracy: 0.8611 - false_negatives: 1264.5256 - false_positives: 1573.5962 - loss: 0.3468
+
+    
+<div class="k-default-codeblock">
+```
+Epoch 5: val_loss did not improve from 0.36235
+
+
+```
+</div>
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 12s 75ms/step - binary_accuracy: 0.8611 - false_negatives: 1283.0632 - false_positives: 1592.3228 - loss: 0.3468 - val_binary_accuracy: 0.8222 - val_false_negatives: 734.0000 - val_false_positives: 155.0000 - val_loss: 0.4081
+
+
+<div class="k-default-codeblock">
+```
+Epoch 6/20
+
+```
+</div>
+
+ 156/157 ━━━━━━━━━━━━━━━━━━━[37m━  0s 72ms/step - binary_accuracy: 0.8706 - false_negatives: 1186.9166 - false_positives: 1427.9487 - loss: 0.3301
+
+    
+<div class="k-default-codeblock">
+```
+Epoch 6: val_loss improved from 0.36235 to 0.35041, saving model to FullModelCheckpoint.keras
+
+
+```
+</div>
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 12s 76ms/step - binary_accuracy: 0.8705 - false_negatives: 1204.8038 - false_positives: 1444.9368 - loss: 0.3302 - val_binary_accuracy: 0.8412 - val_false_negatives: 569.0000 - val_false_positives: 225.0000 - val_loss: 0.3504
+
+
+<div class="k-default-codeblock">
+```
+Epoch 7/20
+
+```
+</div>
+
+ 156/157 ━━━━━━━━━━━━━━━━━━━[37m━  0s 72ms/step - binary_accuracy: 0.8768 - false_negatives: 1162.4423 - false_positives: 1342.4807 - loss: 0.3084
+
+    
+<div class="k-default-codeblock">
+```
+Epoch 7: val_loss improved from 0.35041 to 0.32680, saving model to FullModelCheckpoint.keras
+
+
+```
+</div>
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 12s 76ms/step - binary_accuracy: 0.8768 - false_negatives: 1179.5253 - false_positives: 1358.4114 - loss: 0.3085 - val_binary_accuracy: 0.8590 - val_false_negatives: 364.0000 - val_false_positives: 341.0000 - val_loss: 0.3268
+
+
+<div class="k-default-codeblock">
+```
+Epoch 8/20
+
+```
+</div>
+
+ 156/157 ━━━━━━━━━━━━━━━━━━━[37m━  0s 73ms/step - binary_accuracy: 0.8865 - false_negatives: 1079.3206 - false_positives: 1250.2693 - loss: 0.2924
+
+    
+<div class="k-default-codeblock">
+```
+Epoch 8: val_loss did not improve from 0.32680
+
+
+```
+</div>
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 12s 76ms/step - binary_accuracy: 0.8864 - false_negatives: 1094.9873 - false_positives: 1265.0632 - loss: 0.2926 - val_binary_accuracy: 0.8460 - val_false_negatives: 548.0000 - val_false_positives: 222.0000 - val_loss: 0.3432
+
+
+<div class="k-default-codeblock">
+```
+Epoch 9/20
+
+```
+</div>
+
+ 156/157 ━━━━━━━━━━━━━━━━━━━[37m━  0s 73ms/step - binary_accuracy: 0.8912 - false_negatives: 1019.1987 - false_positives: 1189.4551 - loss: 0.2807
+
+    
+<div class="k-default-codeblock">
+```
+Epoch 9: val_loss did not improve from 0.32680
+
+
+```
+</div>
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 12s 77ms/step - binary_accuracy: 0.8912 - false_negatives: 1033.9684 - false_positives: 1203.5632 - loss: 0.2808 - val_binary_accuracy: 0.8588 - val_false_negatives: 330.0000 - val_false_positives: 376.0000 - val_loss: 0.3302
+
+
+<div class="k-default-codeblock">
+```
+Epoch 10/20
+
+```
+</div>
+
+ 156/157 ━━━━━━━━━━━━━━━━━━━[37m━  0s 72ms/step - binary_accuracy: 0.8997 - false_negatives: 968.6346 - false_positives: 1109.9103 - loss: 0.2669
+
+    
+<div class="k-default-codeblock">
+```
+Epoch 10: val_loss did not improve from 0.32680
+
+
+```
+</div>
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 12s 76ms/step - binary_accuracy: 0.8996 - false_negatives: 983.1202 - false_positives: 1123.3418 - loss: 0.2671 - val_binary_accuracy: 0.8558 - val_false_negatives: 445.0000 - val_false_positives: 276.0000 - val_loss: 0.3413
+
+
+<div class="k-default-codeblock">
+```
+Epoch 11/20
+
+```
+</div>
+
+ 156/157 ━━━━━━━━━━━━━━━━━━━[37m━  0s 72ms/step - binary_accuracy: 0.9055 - false_negatives: 937.0320 - false_positives: 1000.8589 - loss: 0.2520
+
+    
+<div class="k-default-codeblock">
+```
+Epoch 11: val_loss did not improve from 0.32680
+
+
+```
+</div>
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 12s 76ms/step - binary_accuracy: 0.9055 - false_negatives: 950.3608 - false_positives: 1013.6456 - loss: 0.2521 - val_binary_accuracy: 0.8602 - val_false_negatives: 402.0000 - val_false_positives: 297.0000 - val_loss: 0.3281
+
+
+<div class="k-default-codeblock">
+```
+Epoch 11: early stopping
+
+```
+</div>
+    
+![png](/img/examples/nlp/active_learning_review_classification/active_learning_review_classification_15_1755.png)
+    
 
 
 
-![png](/img/examples/nlp/active_learning_review_classification/active_learning_review_classification_15_2.png)
+    
+![png](/img/examples/nlp/active_learning_review_classification/active_learning_review_classification_15_1756.png)
+    
 
 
 <div class="k-default-codeblock">
 ```
 ----------------------------------------------------------------------------------------------------
-Test set evaluation:  {'loss': 0.34183189272880554, 'binary_accuracy': 0.8579999804496765, 'false_negatives': 295.0, 'false_positives': 415.0}
+
+Test set evaluation:  {'binary_accuracy': 0.8507999777793884, 'false_negatives': 397.0, 'false_positives': 349.0, 'loss': 0.3372706174850464}
 ----------------------------------------------------------------------------------------------------
 
 ```
@@ -508,7 +706,7 @@ def train_active_learning_models(
     # Defining checkpoints.
     # The checkpoint callback is reused throughout the training since it only saves the best overall model.
     checkpoint = keras.callbacks.ModelCheckpoint(
-        "AL_Model.h5", save_best_only=True, verbose=1
+        "AL_Model.keras", save_best_only=True, verbose=1
     )
     # Here, patience is set to 4. This can be set higher if desired.
     early_stopping = keras.callbacks.EarlyStopping(patience=4, verbose=1)
@@ -532,9 +730,9 @@ def train_active_learning_models(
         predictions = model.predict(test_dataset)
 
         # Generating labels from the output probabilities
-        rounded = tf.where(tf.greater(predictions, 0.5), 1, 0)
+        rounded = ops.where(ops.greater(predictions, 0.5), 1, 0)
 
-        # Evaluating the number of zeros and ones incorrectly classified
+        # Evaluating the number of zeros and ones incorrrectly classified
         _, _, false_negatives, false_positives = model.evaluate(test_dataset, verbose=0)
 
         print("-" * 100)
@@ -601,7 +799,7 @@ def train_active_learning_models(
         )
 
         # Loading the best model from this training loop
-        model = keras.models.load_model("AL_Model.h5")
+        model = keras.models.load_model("AL_Model.keras")
 
     # Plotting the overall history and evaluating the final model
     plot_history(losses, val_losses, accuracies, val_accuracies)
@@ -620,177 +818,779 @@ active_learning_model = train_active_learning_models(
 )
 ```
 
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold">Model: "sequential_1"</span>
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━┓
+┃<span style="font-weight: bold"> Layer (type)                    </span>┃<span style="font-weight: bold"> Output Shape           </span>┃<span style="font-weight: bold">       Param # </span>┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━┩
+│ embedding_1 (<span style="color: #0087ff; text-decoration-color: #0087ff">Embedding</span>)         │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">150</span>, <span style="color: #00af00; text-decoration-color: #00af00">128</span>)       │       <span style="color: #00af00; text-decoration-color: #00af00">384,000</span> │
+├─────────────────────────────────┼────────────────────────┼───────────────┤
+│ bidirectional_1 (<span style="color: #0087ff; text-decoration-color: #0087ff">Bidirectional</span>) │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">150</span>, <span style="color: #00af00; text-decoration-color: #00af00">64</span>)        │        <span style="color: #00af00; text-decoration-color: #00af00">41,216</span> │
+├─────────────────────────────────┼────────────────────────┼───────────────┤
+│ global_max_pooling1d_1          │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">64</span>)             │             <span style="color: #00af00; text-decoration-color: #00af00">0</span> │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">GlobalMaxPooling1D</span>)            │                        │               │
+├─────────────────────────────────┼────────────────────────┼───────────────┤
+│ dense_2 (<span style="color: #0087ff; text-decoration-color: #0087ff">Dense</span>)                 │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">20</span>)             │         <span style="color: #00af00; text-decoration-color: #00af00">1,300</span> │
+├─────────────────────────────────┼────────────────────────┼───────────────┤
+│ dropout_1 (<span style="color: #0087ff; text-decoration-color: #0087ff">Dropout</span>)             │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">20</span>)             │             <span style="color: #00af00; text-decoration-color: #00af00">0</span> │
+├─────────────────────────────────┼────────────────────────┼───────────────┤
+│ dense_3 (<span style="color: #0087ff; text-decoration-color: #0087ff">Dense</span>)                 │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>)              │            <span style="color: #00af00; text-decoration-color: #00af00">21</span> │
+└─────────────────────────────────┴────────────────────────┴───────────────┘
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Total params: </span><span style="color: #00af00; text-decoration-color: #00af00">426,537</span> (1.63 MB)
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Trainable params: </span><span style="color: #00af00; text-decoration-color: #00af00">426,537</span> (1.63 MB)
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Non-trainable params: </span><span style="color: #00af00; text-decoration-color: #00af00">0</span> (0.00 B)
+</pre>
+
+
+
 <div class="k-default-codeblock">
 ```
-Model: "sequential_1"
-_________________________________________________________________
- Layer (type)                Output Shape              Param #   
-=================================================================
- embedding_1 (Embedding)     (None, 150, 128)          384000    
-                                                                 
- bidirectional_1 (Bidirectio  (None, 150, 64)          41216     
- nal)                                                            
-                                                                 
- global_max_pooling1d_1 (Glo  (None, 64)               0         
- balMaxPooling1D)                                                
-                                                                 
- dense_2 (Dense)             (None, 20)                1300      
-                                                                 
- dropout_1 (Dropout)         (None, 20)                0         
-                                                                 
- dense_3 (Dense)             (None, 1)                 21        
-                                                                 
-=================================================================
-Total params: 426,537
-Trainable params: 426,537
-Non-trainable params: 0
-_________________________________________________________________
 Starting to train with 15000 samples
 Epoch 1/20
-59/59 [==============================] - ETA: 0s - loss: 0.6235 - binary_accuracy: 0.6679 - false_negatives_1: 3111.0000 - false_positives_1: 1870.0000
-Epoch 00001: val_loss improved from inf to 0.43017, saving model to AL_Model.h5
-59/59 [==============================] - 13s 87ms/step - loss: 0.6235 - binary_accuracy: 0.6679 - false_negatives_1: 3111.0000 - false_positives_1: 1870.0000 - val_loss: 0.4302 - val_binary_accuracy: 0.8286 - val_false_negatives_1: 513.0000 - val_false_positives_1: 344.0000
-Epoch 2/20
-58/59 [============================>.] - ETA: 0s - loss: 0.4381 - binary_accuracy: 0.8232 - false_negatives_1: 1412.0000 - false_positives_1: 1213.0000
-Epoch 00002: val_loss improved from 0.43017 to 0.40090, saving model to AL_Model.h5
-59/59 [==============================] - 4s 64ms/step - loss: 0.4373 - binary_accuracy: 0.8235 - false_negatives_1: 1423.0000 - false_positives_1: 1225.0000 - val_loss: 0.4009 - val_binary_accuracy: 0.8248 - val_false_negatives_1: 674.0000 - val_false_positives_1: 202.0000
-Epoch 3/20
-58/59 [============================>.] - ETA: 0s - loss: 0.3810 - binary_accuracy: 0.8544 - false_negatives_1: 1115.0000 - false_positives_1: 1047.0000
-Epoch 00003: val_loss improved from 0.40090 to 0.36085, saving model to AL_Model.h5
-59/59 [==============================] - 4s 61ms/step - loss: 0.3805 - binary_accuracy: 0.8545 - false_negatives_1: 1123.0000 - false_positives_1: 1060.0000 - val_loss: 0.3608 - val_binary_accuracy: 0.8408 - val_false_negatives_1: 231.0000 - val_false_positives_1: 565.0000
-Epoch 4/20
-58/59 [============================>.] - ETA: 0s - loss: 0.3436 - binary_accuracy: 0.8647 - false_negatives_1: 995.0000 - false_positives_1: 1014.0000
-Epoch 00004: val_loss improved from 0.36085 to 0.35469, saving model to AL_Model.h5
-59/59 [==============================] - 4s 61ms/step - loss: 0.3428 - binary_accuracy: 0.8654 - false_negatives_1: 999.0000 - false_positives_1: 1020.0000 - val_loss: 0.3547 - val_binary_accuracy: 0.8452 - val_false_negatives_1: 266.0000 - val_false_positives_1: 508.0000
-Epoch 5/20
-58/59 [============================>.] - ETA: 0s - loss: 0.3166 - binary_accuracy: 0.8834 - false_negatives_1: 835.0000 - false_positives_1: 897.0000
-Epoch 00005: val_loss did not improve from 0.35469
-59/59 [==============================] - 4s 60ms/step - loss: 0.3163 - binary_accuracy: 0.8835 - false_negatives_1: 839.0000 - false_positives_1: 908.0000 - val_loss: 0.3554 - val_binary_accuracy: 0.8508 - val_false_negatives_1: 382.0000 - val_false_positives_1: 364.0000
-Epoch 6/20
-58/59 [============================>.] - ETA: 0s - loss: 0.2935 - binary_accuracy: 0.8944 - false_negatives_1: 757.0000 - false_positives_1: 811.0000
-Epoch 00006: val_loss did not improve from 0.35469
-59/59 [==============================] - 4s 60ms/step - loss: 0.2938 - binary_accuracy: 0.8945 - false_negatives_1: 765.0000 - false_positives_1: 818.0000 - val_loss: 0.3718 - val_binary_accuracy: 0.8458 - val_false_negatives_1: 345.0000 - val_false_positives_1: 426.0000
-Epoch 7/20
-58/59 [============================>.] - ETA: 0s - loss: 0.2794 - binary_accuracy: 0.9003 - false_negatives_1: 732.0000 - false_positives_1: 748.0000
-Epoch 00007: val_loss did not improve from 0.35469
-59/59 [==============================] - 3s 59ms/step - loss: 0.2797 - binary_accuracy: 0.9001 - false_negatives_1: 749.0000 - false_positives_1: 749.0000 - val_loss: 0.3825 - val_binary_accuracy: 0.8406 - val_false_negatives_1: 228.0000 - val_false_positives_1: 569.0000
-Epoch 8/20
-58/59 [============================>.] - ETA: 0s - loss: 0.2526 - binary_accuracy: 0.9147 - false_negatives_1: 620.0000 - false_positives_1: 647.0000
-Epoch 00008: val_loss did not improve from 0.35469
-59/59 [==============================] - 4s 60ms/step - loss: 0.2561 - binary_accuracy: 0.9134 - false_negatives_1: 620.0000 - false_positives_1: 679.0000 - val_loss: 0.4109 - val_binary_accuracy: 0.8258 - val_false_negatives_1: 622.0000 - val_false_positives_1: 249.0000
-Epoch 00008: early stopping
-----------------------------------------------------------------------------------------------------
-Number of zeros incorrectly classified: 665.0, Number of ones incorrectly classified: 234.0
-Sample ratio for positives: 0.26028921023359286, Sample ratio for negatives:0.7397107897664071
-Starting training with 19999 samples
-----------------------------------------------------------------------------------------------------
-Epoch 1/20
-78/79 [============================>.] - ETA: 0s - loss: 0.2955 - binary_accuracy: 0.8902 - false_negatives_2: 1091.0000 - false_positives_2: 1101.0000
-Epoch 00001: val_loss did not improve from 0.35469
-79/79 [==============================] - 15s 83ms/step - loss: 0.2956 - binary_accuracy: 0.8901 - false_negatives_2: 1095.0000 - false_positives_2: 1102.0000 - val_loss: 0.4136 - val_binary_accuracy: 0.8238 - val_false_negatives_2: 156.0000 - val_false_positives_2: 725.0000
-Epoch 2/20
-78/79 [============================>.] - ETA: 0s - loss: 0.2657 - binary_accuracy: 0.9047 - false_negatives_2: 953.0000 - false_positives_2: 949.0000
-Epoch 00002: val_loss did not improve from 0.35469
-79/79 [==============================] - 5s 61ms/step - loss: 0.2659 - binary_accuracy: 0.9047 - false_negatives_2: 954.0000 - false_positives_2: 951.0000 - val_loss: 0.4079 - val_binary_accuracy: 0.8386 - val_false_negatives_2: 510.0000 - val_false_positives_2: 297.0000
-Epoch 3/20
-78/79 [============================>.] - ETA: 0s - loss: 0.2475 - binary_accuracy: 0.9126 - false_negatives_2: 892.0000 - false_positives_2: 854.0000
-Epoch 00003: val_loss did not improve from 0.35469
-79/79 [==============================] - 5s 58ms/step - loss: 0.2474 - binary_accuracy: 0.9126 - false_negatives_2: 893.0000 - false_positives_2: 855.0000 - val_loss: 0.4207 - val_binary_accuracy: 0.8364 - val_false_negatives_2: 228.0000 - val_false_positives_2: 590.0000
-Epoch 4/20
-78/79 [============================>.] - ETA: 0s - loss: 0.2319 - binary_accuracy: 0.9193 - false_negatives_2: 805.0000 - false_positives_2: 807.0000
-Epoch 00004: val_loss did not improve from 0.35469
-79/79 [==============================] - 5s 57ms/step - loss: 0.2319 - binary_accuracy: 0.9192 - false_negatives_2: 807.0000 - false_positives_2: 808.0000 - val_loss: 0.4080 - val_binary_accuracy: 0.8310 - val_false_negatives_2: 264.0000 - val_false_positives_2: 581.0000
-Epoch 5/20
-78/79 [============================>.] - ETA: 0s - loss: 0.2133 - binary_accuracy: 0.9260 - false_negatives_2: 728.0000 - false_positives_2: 750.0000
-Epoch 00005: val_loss did not improve from 0.35469
-79/79 [==============================] - 5s 57ms/step - loss: 0.2133 - binary_accuracy: 0.9259 - false_negatives_2: 729.0000 - false_positives_2: 752.0000 - val_loss: 0.4054 - val_binary_accuracy: 0.8394 - val_false_negatives_2: 371.0000 - val_false_positives_2: 432.0000
-Epoch 6/20
-78/79 [============================>.] - ETA: 0s - loss: 0.1982 - binary_accuracy: 0.9361 - false_negatives_2: 639.0000 - false_positives_2: 636.0000
-Epoch 00006: val_loss did not improve from 0.35469
-79/79 [==============================] - 5s 57ms/step - loss: 0.1980 - binary_accuracy: 0.9362 - false_negatives_2: 639.0000 - false_positives_2: 636.0000 - val_loss: 0.5185 - val_binary_accuracy: 0.8284 - val_false_negatives_2: 590.0000 - val_false_positives_2: 268.0000
-Epoch 7/20
-78/79 [============================>.] - ETA: 0s - loss: 0.1887 - binary_accuracy: 0.9409 - false_negatives_2: 606.0000 - false_positives_2: 575.0000
-Epoch 00007: val_loss did not improve from 0.35469
-79/79 [==============================] - 5s 57ms/step - loss: 0.1886 - binary_accuracy: 0.9408 - false_negatives_2: 606.0000 - false_positives_2: 577.0000 - val_loss: 0.6881 - val_binary_accuracy: 0.7886 - val_false_negatives_2: 893.0000 - val_false_positives_2: 164.0000
-Epoch 8/20
-78/79 [============================>.] - ETA: 0s - loss: 0.1778 - binary_accuracy: 0.9443 - false_negatives_2: 575.0000 - false_positives_2: 538.0000
-Epoch 00008: val_loss did not improve from 0.35469
-79/79 [==============================] - 5s 57ms/step - loss: 0.1776 - binary_accuracy: 0.9443 - false_negatives_2: 575.0000 - false_positives_2: 538.0000 - val_loss: 0.5921 - val_binary_accuracy: 0.8244 - val_false_negatives_2: 634.0000 - val_false_positives_2: 244.0000
-Epoch 9/20
-78/79 [============================>.] - ETA: 0s - loss: 0.1598 - binary_accuracy: 0.9505 - false_negatives_2: 507.0000 - false_positives_2: 481.0000
-Epoch 00009: val_loss did not improve from 0.35469
-79/79 [==============================] - 5s 57ms/step - loss: 0.1597 - binary_accuracy: 0.9506 - false_negatives_2: 507.0000 - false_positives_2: 481.0000 - val_loss: 0.5393 - val_binary_accuracy: 0.8214 - val_false_negatives_2: 542.0000 - val_false_positives_2: 351.0000
-Epoch 00009: early stopping
-----------------------------------------------------------------------------------------------------
-Number of zeros incorrectly classified: 270.0, Number of ones incorrectly classified: 498.0
-Sample ratio for positives: 0.6484375, Sample ratio for negatives:0.3515625
-Starting training with 24998 samples
-----------------------------------------------------------------------------------------------------
-Epoch 1/20
-97/98 [============================>.] - ETA: 0s - loss: 0.3554 - binary_accuracy: 0.8609 - false_negatives_3: 1714.0000 - false_positives_3: 1739.0000
-Epoch 00001: val_loss improved from 0.35469 to 0.34182, saving model to AL_Model.h5
-98/98 [==============================] - 17s 82ms/step - loss: 0.3548 - binary_accuracy: 0.8613 - false_negatives_3: 1720.0000 - false_positives_3: 1748.0000 - val_loss: 0.3418 - val_binary_accuracy: 0.8528 - val_false_negatives_3: 369.0000 - val_false_positives_3: 367.0000
-Epoch 2/20
-97/98 [============================>.] - ETA: 0s - loss: 0.3176 - binary_accuracy: 0.8785 - false_negatives_3: 1473.0000 - false_positives_3: 1544.0000
-Epoch 00002: val_loss did not improve from 0.34182
-98/98 [==============================] - 6s 56ms/step - loss: 0.3179 - binary_accuracy: 0.8784 - false_negatives_3: 1479.0000 - false_positives_3: 1560.0000 - val_loss: 0.4785 - val_binary_accuracy: 0.8102 - val_false_negatives_3: 793.0000 - val_false_positives_3: 156.0000
-Epoch 3/20
-97/98 [============================>.] - ETA: 0s - loss: 0.2986 - binary_accuracy: 0.8893 - false_negatives_3: 1353.0000 - false_positives_3: 1396.0000
-Epoch 00003: val_loss did not improve from 0.34182
-98/98 [==============================] - 5s 56ms/step - loss: 0.2985 - binary_accuracy: 0.8893 - false_negatives_3: 1366.0000 - false_positives_3: 1402.0000 - val_loss: 0.3473 - val_binary_accuracy: 0.8542 - val_false_negatives_3: 340.0000 - val_false_positives_3: 389.0000
-Epoch 4/20
-97/98 [============================>.] - ETA: 0s - loss: 0.2822 - binary_accuracy: 0.8970 - false_negatives_3: 1253.0000 - false_positives_3: 1305.0000
-Epoch 00004: val_loss did not improve from 0.34182
-98/98 [==============================] - 6s 56ms/step - loss: 0.2820 - binary_accuracy: 0.8971 - false_negatives_3: 1257.0000 - false_positives_3: 1316.0000 - val_loss: 0.3849 - val_binary_accuracy: 0.8386 - val_false_negatives_3: 537.0000 - val_false_positives_3: 270.0000
-Epoch 5/20
-97/98 [============================>.] - ETA: 0s - loss: 0.2666 - binary_accuracy: 0.9047 - false_negatives_3: 1130.0000 - false_positives_3: 1237.0000
-Epoch 00005: val_loss did not improve from 0.34182
-98/98 [==============================] - 6s 56ms/step - loss: 0.2666 - binary_accuracy: 0.9048 - false_negatives_3: 1142.0000 - false_positives_3: 1238.0000 - val_loss: 0.3731 - val_binary_accuracy: 0.8444 - val_false_negatives_3: 251.0000 - val_false_positives_3: 527.0000
-Epoch 00005: early stopping
-----------------------------------------------------------------------------------------------------
-Number of zeros incorrectly classified: 392.0, Number of ones incorrectly classified: 356.0
-Sample ratio for positives: 0.47593582887700536, Sample ratio for negatives:0.5240641711229946
-Starting training with 29997 samples
-----------------------------------------------------------------------------------------------------
-Epoch 1/20
-117/118 [============================>.] - ETA: 0s - loss: 0.3345 - binary_accuracy: 0.8720 - false_negatives_4: 1835.0000 - false_positives_4: 1998.0000
-Epoch 00001: val_loss did not improve from 0.34182
-118/118 [==============================] - 20s 96ms/step - loss: 0.3343 - binary_accuracy: 0.8722 - false_negatives_4: 1835.0000 - false_positives_4: 1999.0000 - val_loss: 0.3478 - val_binary_accuracy: 0.8488 - val_false_negatives_4: 250.0000 - val_false_positives_4: 506.0000
-Epoch 2/20
-117/118 [============================>.] - ETA: 0s - loss: 0.3061 - binary_accuracy: 0.8842 - false_negatives_4: 1667.0000 - false_positives_4: 1801.0000
-Epoch 00002: val_loss improved from 0.34182 to 0.33779, saving model to AL_Model.h5
-118/118 [==============================] - 7s 56ms/step - loss: 0.3059 - binary_accuracy: 0.8843 - false_negatives_4: 1670.0000 - false_positives_4: 1802.0000 - val_loss: 0.3378 - val_binary_accuracy: 0.8534 - val_false_negatives_4: 335.0000 - val_false_positives_4: 398.0000
-Epoch 3/20
-117/118 [============================>.] - ETA: 0s - loss: 0.2923 - binary_accuracy: 0.8921 - false_negatives_4: 1626.0000 - false_positives_4: 1607.0000
-Epoch 00003: val_loss did not improve from 0.33779
-118/118 [==============================] - 7s 56ms/step - loss: 0.2923 - binary_accuracy: 0.8921 - false_negatives_4: 1626.0000 - false_positives_4: 1611.0000 - val_loss: 0.3413 - val_binary_accuracy: 0.8486 - val_false_negatives_4: 269.0000 - val_false_positives_4: 488.0000
-Epoch 4/20
-117/118 [============================>.] - ETA: 0s - loss: 0.2746 - binary_accuracy: 0.8997 - false_negatives_4: 1459.0000 - false_positives_4: 1546.0000
-Epoch 00004: val_loss did not improve from 0.33779
-118/118 [==============================] - 7s 55ms/step - loss: 0.2746 - binary_accuracy: 0.8996 - false_negatives_4: 1465.0000 - false_positives_4: 1546.0000 - val_loss: 0.3810 - val_binary_accuracy: 0.8326 - val_false_negatives_4: 169.0000 - val_false_positives_4: 668.0000
-Epoch 5/20
-117/118 [============================>.] - ETA: 0s - loss: 0.2598 - binary_accuracy: 0.9066 - false_negatives_4: 1336.0000 - false_positives_4: 1462.0000
-Epoch 00005: val_loss did not improve from 0.33779
-118/118 [==============================] - 7s 56ms/step - loss: 0.2597 - binary_accuracy: 0.9066 - false_negatives_4: 1337.0000 - false_positives_4: 1465.0000 - val_loss: 0.4038 - val_binary_accuracy: 0.8332 - val_false_negatives_4: 643.0000 - val_false_positives_4: 191.0000
-Epoch 6/20
-117/118 [============================>.] - ETA: 0s - loss: 0.2461 - binary_accuracy: 0.9132 - false_negatives_4: 1263.0000 - false_positives_4: 1337.0000
-Epoch 00006: val_loss did not improve from 0.33779
-118/118 [==============================] - 7s 55ms/step - loss: 0.2462 - binary_accuracy: 0.9132 - false_negatives_4: 1263.0000 - false_positives_4: 1341.0000 - val_loss: 0.3546 - val_binary_accuracy: 0.8500 - val_false_negatives_4: 359.0000 - val_false_positives_4: 391.0000
-Epoch 00006: early stopping
 
 ```
 </div>
-![png](/img/examples/nlp/active_learning_review_classification/active_learning_review_classification_17_1.png)
+
+ 59/59 ━━━━━━━━━━━━━━━━━━━━ 0s 72ms/step - binary_accuracy: 0.5197 - false_negatives_1: 1686.7457 - false_positives_1: 1938.3051 - loss: 0.6918
+
+    
+<div class="k-default-codeblock">
+```
+Epoch 1: val_loss improved from inf to 0.67428, saving model to AL_Model.keras
+
+
+```
+</div>
+ 59/59 ━━━━━━━━━━━━━━━━━━━━ 8s 89ms/step - binary_accuracy: 0.5202 - false_negatives_1: 1716.9833 - false_positives_1: 1961.4667 - loss: 0.6917 - val_binary_accuracy: 0.6464 - val_false_negatives_1: 279.0000 - val_false_positives_1: 1489.0000 - val_loss: 0.6743
 
 
+<div class="k-default-codeblock">
+```
+Epoch 2/20
 
-![png](/img/examples/nlp/active_learning_review_classification/active_learning_review_classification_17_2.png)
+```
+</div>
+
+ 59/59 ━━━━━━━━━━━━━━━━━━━━ 0s 72ms/step - binary_accuracy: 0.6505 - false_negatives_1: 1216.0170 - false_positives_1: 1434.2373 - loss: 0.6561
+
+    
+<div class="k-default-codeblock">
+```
+Epoch 2: val_loss improved from 0.67428 to 0.59133, saving model to AL_Model.keras
+
+
+```
+</div>
+ 59/59 ━━━━━━━━━━━━━━━━━━━━ 5s 83ms/step - binary_accuracy: 0.6507 - false_negatives_1: 1234.9833 - false_positives_1: 1455.7667 - loss: 0.6558 - val_binary_accuracy: 0.7032 - val_false_negatives_1: 235.0000 - val_false_positives_1: 1249.0000 - val_loss: 0.5913
+
+
+<div class="k-default-codeblock">
+```
+Epoch 3/20
+
+```
+</div>
+
+ 59/59 ━━━━━━━━━━━━━━━━━━━━ 0s 72ms/step - binary_accuracy: 0.7103 - false_negatives_1: 939.5255 - false_positives_1: 1235.8983 - loss: 0.5829
+
+    
+<div class="k-default-codeblock">
+```
+Epoch 3: val_loss improved from 0.59133 to 0.51602, saving model to AL_Model.keras
+
+
+```
+</div>
+ 59/59 ━━━━━━━━━━━━━━━━━━━━ 5s 83ms/step - binary_accuracy: 0.7106 - false_negatives_1: 953.0500 - false_positives_1: 1255.3167 - loss: 0.5827 - val_binary_accuracy: 0.7686 - val_false_negatives_1: 812.0000 - val_false_positives_1: 345.0000 - val_loss: 0.5160
+
+
+<div class="k-default-codeblock">
+```
+Epoch 4/20
+
+```
+</div>
+
+ 59/59 ━━━━━━━━━━━━━━━━━━━━ 0s 72ms/step - binary_accuracy: 0.7545 - false_negatives_1: 787.4237 - false_positives_1: 1070.0339 - loss: 0.5214
+
+    
+<div class="k-default-codeblock">
+```
+Epoch 4: val_loss improved from 0.51602 to 0.43948, saving model to AL_Model.keras
+
+
+```
+</div>
+ 59/59 ━━━━━━━━━━━━━━━━━━━━ 5s 83ms/step - binary_accuracy: 0.7547 - false_negatives_1: 799.2667 - false_positives_1: 1085.8833 - loss: 0.5212 - val_binary_accuracy: 0.8028 - val_false_negatives_1: 342.0000 - val_false_positives_1: 644.0000 - val_loss: 0.4395
+
+
+<div class="k-default-codeblock">
+```
+Epoch 5/20
+
+```
+</div>
+
+ 59/59 ━━━━━━━━━━━━━━━━━━━━ 0s 72ms/step - binary_accuracy: 0.7919 - false_negatives_1: 676.7458 - false_positives_1: 907.4915 - loss: 0.4657
+
+    
+<div class="k-default-codeblock">
+```
+Epoch 5: val_loss improved from 0.43948 to 0.41679, saving model to AL_Model.keras
+
+
+```
+</div>
+ 59/59 ━━━━━━━━━━━━━━━━━━━━ 5s 83ms/step - binary_accuracy: 0.7920 - false_negatives_1: 687.3834 - false_positives_1: 921.1667 - loss: 0.4655 - val_binary_accuracy: 0.8158 - val_false_negatives_1: 598.0000 - val_false_positives_1: 323.0000 - val_loss: 0.4168
+
+
+<div class="k-default-codeblock">
+```
+Epoch 6/20
+
+```
+</div>
+
+ 59/59 ━━━━━━━━━━━━━━━━━━━━ 0s 72ms/step - binary_accuracy: 0.7994 - false_negatives_1: 661.3560 - false_positives_1: 828.0847 - loss: 0.4498
+
+    
+<div class="k-default-codeblock">
+```
+Epoch 6: val_loss improved from 0.41679 to 0.39680, saving model to AL_Model.keras
+
+
+```
+</div>
+ 59/59 ━━━━━━━━━━━━━━━━━━━━ 5s 83ms/step - binary_accuracy: 0.7997 - false_negatives_1: 671.3666 - false_positives_1: 840.2500 - loss: 0.4495 - val_binary_accuracy: 0.8260 - val_false_negatives_1: 382.0000 - val_false_positives_1: 488.0000 - val_loss: 0.3968
+
+
+<div class="k-default-codeblock">
+```
+Epoch 7/20
+
+```
+</div>
+
+ 59/59 ━━━━━━━━━━━━━━━━━━━━ 0s 72ms/step - binary_accuracy: 0.8311 - false_negatives_1: 589.1187 - false_positives_1: 707.0170 - loss: 0.4017
+
+    
+<div class="k-default-codeblock">
+```
+Epoch 7: val_loss did not improve from 0.39680
+
+
+```
+</div>
+ 59/59 ━━━━━━━━━━━━━━━━━━━━ 5s 83ms/step - binary_accuracy: 0.8312 - false_negatives_1: 598.3500 - false_positives_1: 717.8167 - loss: 0.4016 - val_binary_accuracy: 0.7706 - val_false_negatives_1: 1004.0000 - val_false_positives_1: 143.0000 - val_loss: 0.4884
+
+
+<div class="k-default-codeblock">
+```
+Epoch 8/20
+
+```
+</div>
+
+ 59/59 ━━━━━━━━━━━━━━━━━━━━ 0s 72ms/step - binary_accuracy: 0.8365 - false_negatives_1: 566.7288 - false_positives_1: 649.9322 - loss: 0.3896
+
+    
+<div class="k-default-codeblock">
+```
+Epoch 8: val_loss did not improve from 0.39680
+
+
+```
+</div>
+ 59/59 ━━━━━━━━━━━━━━━━━━━━ 5s 83ms/step - binary_accuracy: 0.8366 - false_negatives_1: 575.2833 - false_positives_1: 660.2167 - loss: 0.3895 - val_binary_accuracy: 0.8216 - val_false_negatives_1: 623.0000 - val_false_positives_1: 269.0000 - val_loss: 0.4043
+
+
+<div class="k-default-codeblock">
+```
+Epoch 9/20
+
+```
+</div>
+
+ 59/59 ━━━━━━━━━━━━━━━━━━━━ 0s 72ms/step - binary_accuracy: 0.8531 - false_negatives_1: 519.0170 - false_positives_1: 591.6440 - loss: 0.3631
+
+    
+<div class="k-default-codeblock">
+```
+Epoch 9: val_loss improved from 0.39680 to 0.37727, saving model to AL_Model.keras
+
+
+```
+</div>
+ 59/59 ━━━━━━━━━━━━━━━━━━━━ 5s 83ms/step - binary_accuracy: 0.8531 - false_negatives_1: 527.2667 - false_positives_1: 601.2500 - loss: 0.3631 - val_binary_accuracy: 0.8348 - val_false_negatives_1: 296.0000 - val_false_positives_1: 530.0000 - val_loss: 0.3773
+
+
+<div class="k-default-codeblock">
+```
+Epoch 10/20
+
+```
+</div>
+
+ 59/59 ━━━━━━━━━━━━━━━━━━━━ 0s 72ms/step - binary_accuracy: 0.8686 - false_negatives_1: 475.7966 - false_positives_1: 569.0508 - loss: 0.3387
+
+    
+<div class="k-default-codeblock">
+```
+Epoch 10: val_loss improved from 0.37727 to 0.37354, saving model to AL_Model.keras
+
+
+```
+</div>
+ 59/59 ━━━━━━━━━━━━━━━━━━━━ 5s 83ms/step - binary_accuracy: 0.8685 - false_negatives_1: 483.5000 - false_positives_1: 577.9667 - loss: 0.3387 - val_binary_accuracy: 0.8400 - val_false_negatives_1: 327.0000 - val_false_positives_1: 473.0000 - val_loss: 0.3735
+
+
+<div class="k-default-codeblock">
+```
+Epoch 11/20
+
+```
+</div>
+
+ 59/59 ━━━━━━━━━━━━━━━━━━━━ 0s 72ms/step - binary_accuracy: 0.8716 - false_negatives_1: 452.1356 - false_positives_1: 522.1187 - loss: 0.3303
+
+    
+<div class="k-default-codeblock">
+```
+Epoch 11: val_loss improved from 0.37354 to 0.37074, saving model to AL_Model.keras
+
+
+```
+</div>
+ 59/59 ━━━━━━━━━━━━━━━━━━━━ 5s 83ms/step - binary_accuracy: 0.8716 - false_negatives_1: 459.3833 - false_positives_1: 530.6667 - loss: 0.3303 - val_binary_accuracy: 0.8390 - val_false_negatives_1: 362.0000 - val_false_positives_1: 443.0000 - val_loss: 0.3707
+
+
+<div class="k-default-codeblock">
+```
+Epoch 12/20
+
+```
+</div>
+
+ 59/59 ━━━━━━━━━━━━━━━━━━━━ 0s 72ms/step - binary_accuracy: 0.8833 - false_negatives_1: 433.0678 - false_positives_1: 481.1864 - loss: 0.3065
+
+    
+<div class="k-default-codeblock">
+```
+Epoch 12: val_loss did not improve from 0.37074
+
+
+```
+</div>
+ 59/59 ━━━━━━━━━━━━━━━━━━━━ 5s 83ms/step - binary_accuracy: 0.8833 - false_negatives_1: 439.8333 - false_positives_1: 488.9667 - loss: 0.3066 - val_binary_accuracy: 0.8236 - val_false_negatives_1: 208.0000 - val_false_positives_1: 674.0000 - val_loss: 0.4046
+
+
+<div class="k-default-codeblock">
+```
+Epoch 13/20
+
+```
+</div>
+
+ 59/59 ━━━━━━━━━━━━━━━━━━━━ 0s 72ms/step - binary_accuracy: 0.8876 - false_negatives_1: 384.8305 - false_positives_1: 476.5254 - loss: 0.2978
+
+    
+<div class="k-default-codeblock">
+```
+Epoch 13: val_loss did not improve from 0.37074
+
+
+```
+</div>
+ 59/59 ━━━━━━━━━━━━━━━━━━━━ 5s 82ms/step - binary_accuracy: 0.8876 - false_negatives_1: 391.2667 - false_positives_1: 484.2500 - loss: 0.2978 - val_binary_accuracy: 0.8380 - val_false_negatives_1: 364.0000 - val_false_positives_1: 446.0000 - val_loss: 0.3783
+
+
+<div class="k-default-codeblock">
+```
+Epoch 14/20
+
+```
+</div>
+
+ 59/59 ━━━━━━━━━━━━━━━━━━━━ 0s 72ms/step - binary_accuracy: 0.8976 - false_negatives_1: 378.0169 - false_positives_1: 433.9831 - loss: 0.2754
+
+    
+<div class="k-default-codeblock">
+```
+Epoch 14: val_loss did not improve from 0.37074
+
+
+```
+</div>
+ 59/59 ━━━━━━━━━━━━━━━━━━━━ 5s 83ms/step - binary_accuracy: 0.8975 - false_negatives_1: 384.2333 - false_positives_1: 441.3833 - loss: 0.2757 - val_binary_accuracy: 0.8310 - val_false_negatives_1: 525.0000 - val_false_positives_1: 320.0000 - val_loss: 0.3957
+
+
+<div class="k-default-codeblock">
+```
+Epoch 15/20
+
+```
+</div>
+
+ 59/59 ━━━━━━━━━━━━━━━━━━━━ 0s 72ms/step - binary_accuracy: 0.9013 - false_negatives_1: 354.9322 - false_positives_1: 403.1695 - loss: 0.2709
+
+    
+<div class="k-default-codeblock">
+```
+Epoch 15: val_loss did not improve from 0.37074
+
+
+```
+</div>
+ 59/59 ━━━━━━━━━━━━━━━━━━━━ 5s 83ms/step - binary_accuracy: 0.9013 - false_negatives_1: 360.4000 - false_positives_1: 409.5833 - loss: 0.2709 - val_binary_accuracy: 0.8298 - val_false_negatives_1: 302.0000 - val_false_positives_1: 549.0000 - val_loss: 0.4015
+
+
+<div class="k-default-codeblock">
+```
+Epoch 15: early stopping
+
+```
+</div>
+
+ 20/20 ━━━━━━━━━━━━━━━━━━━━ 1s 39ms/step
 
 
 <div class="k-default-codeblock">
 ```
 ----------------------------------------------------------------------------------------------------
-Test set evaluation:  {'loss': 0.34248775243759155, 'binary_accuracy': 0.854200005531311, 'false_negatives_4': 348.0, 'false_positives_4': 381.0}
+Number of zeros incorrectly classified: 290.0, Number of ones incorrectly classified: 538.0
+Sample ratio for positives: 0.6497584541062802, Sample ratio for negatives:0.3502415458937198
+Starting training with 19999 samples
+----------------------------------------------------------------------------------------------------
+Epoch 1/20
+
+```
+</div>
+
+ 78/79 ━━━━━━━━━━━━━━━━━━━[37m━  0s 72ms/step - binary_accuracy: 0.8735 - false_negatives_2: 547.2436 - false_positives_2: 650.2436 - loss: 0.3527
+
+    
+<div class="k-default-codeblock">
+```
+Epoch 1: val_loss did not improve from 0.37074
+
+
+```
+</div>
+ 79/79 ━━━━━━━━━━━━━━━━━━━━ 9s 84ms/step - binary_accuracy: 0.8738 - false_negatives_2: 559.2125 - false_positives_2: 665.3375 - loss: 0.3518 - val_binary_accuracy: 0.7932 - val_false_negatives_2: 119.0000 - val_false_positives_2: 915.0000 - val_loss: 0.4949
+
+
+<div class="k-default-codeblock">
+```
+Epoch 2/20
+
+```
+</div>
+
+ 78/79 ━━━━━━━━━━━━━━━━━━━[37m━  0s 72ms/step - binary_accuracy: 0.8961 - false_negatives_2: 470.2436 - false_positives_2: 576.1539 - loss: 0.2824
+
+    
+<div class="k-default-codeblock">
+```
+Epoch 2: val_loss did not improve from 0.37074
+
+
+```
+</div>
+ 79/79 ━━━━━━━━━━━━━━━━━━━━ 6s 80ms/step - binary_accuracy: 0.8962 - false_negatives_2: 481.4125 - false_positives_2: 589.6750 - loss: 0.2823 - val_binary_accuracy: 0.8014 - val_false_negatives_2: 809.0000 - val_false_positives_2: 184.0000 - val_loss: 0.4580
+
+
+<div class="k-default-codeblock">
+```
+Epoch 3/20
+
+```
+</div>
+
+ 78/79 ━━━━━━━━━━━━━━━━━━━[37m━  0s 72ms/step - binary_accuracy: 0.9059 - false_negatives_2: 442.2051 - false_positives_2: 500.5385 - loss: 0.2628
+
+    
+<div class="k-default-codeblock">
+```
+Epoch 3: val_loss did not improve from 0.37074
+
+
+```
+</div>
+ 79/79 ━━━━━━━━━━━━━━━━━━━━ 6s 80ms/step - binary_accuracy: 0.9059 - false_negatives_2: 452.6750 - false_positives_2: 513.5250 - loss: 0.2629 - val_binary_accuracy: 0.8294 - val_false_negatives_2: 302.0000 - val_false_positives_2: 551.0000 - val_loss: 0.3868
+
+
+<div class="k-default-codeblock">
+```
+Epoch 4/20
+
+```
+</div>
+
+ 78/79 ━━━━━━━━━━━━━━━━━━━[37m━  0s 72ms/step - binary_accuracy: 0.9188 - false_negatives_2: 394.5513 - false_positives_2: 462.4359 - loss: 0.2391
+
+    
+<div class="k-default-codeblock">
+```
+Epoch 4: val_loss did not improve from 0.37074
+
+
+```
+</div>
+ 79/79 ━━━━━━━━━━━━━━━━━━━━ 6s 80ms/step - binary_accuracy: 0.9187 - false_negatives_2: 405.0625 - false_positives_2: 474.1250 - loss: 0.2393 - val_binary_accuracy: 0.8268 - val_false_negatives_2: 225.0000 - val_false_positives_2: 641.0000 - val_loss: 0.4197
+
+
+<div class="k-default-codeblock">
+```
+Epoch 5/20
+
+```
+</div>
+
+ 78/79 ━━━━━━━━━━━━━━━━━━━[37m━  0s 72ms/step - binary_accuracy: 0.9255 - false_negatives_2: 349.8718 - false_positives_2: 413.0898 - loss: 0.2270
+
+    
+<div class="k-default-codeblock">
+```
+Epoch 5: val_loss did not improve from 0.37074
+
+
+```
+</div>
+ 79/79 ━━━━━━━━━━━━━━━━━━━━ 6s 79ms/step - binary_accuracy: 0.9254 - false_negatives_2: 358.6500 - false_positives_2: 423.5625 - loss: 0.2270 - val_binary_accuracy: 0.8228 - val_false_negatives_2: 611.0000 - val_false_positives_2: 275.0000 - val_loss: 0.4233
+
+
+<div class="k-default-codeblock">
+```
+Epoch 6/20
+
+```
+</div>
+
+ 78/79 ━━━━━━━━━━━━━━━━━━━[37m━  0s 73ms/step - binary_accuracy: 0.9265 - false_negatives_2: 349.8590 - false_positives_2: 389.9359 - loss: 0.2147
+
+    
+<div class="k-default-codeblock">
+```
+Epoch 6: val_loss did not improve from 0.37074
+
+
+```
+</div>
+ 79/79 ━━━━━━━━━━━━━━━━━━━━ 6s 80ms/step - binary_accuracy: 0.9265 - false_negatives_2: 358.8375 - false_positives_2: 399.9875 - loss: 0.2148 - val_binary_accuracy: 0.8272 - val_false_negatives_2: 581.0000 - val_false_positives_2: 283.0000 - val_loss: 0.4415
+
+
+<div class="k-default-codeblock">
+```
+Epoch 7/20
+
+```
+</div>
+
+ 78/79 ━━━━━━━━━━━━━━━━━━━[37m━  0s 72ms/step - binary_accuracy: 0.9409 - false_negatives_2: 286.7820 - false_positives_2: 322.7949 - loss: 0.1877
+
+    
+<div class="k-default-codeblock">
+```
+Epoch 7: val_loss did not improve from 0.37074
+
+
+```
+</div>
+ 79/79 ━━━━━━━━━━━━━━━━━━━━ 6s 79ms/step - binary_accuracy: 0.9408 - false_negatives_2: 294.4375 - false_positives_2: 331.4000 - loss: 0.1880 - val_binary_accuracy: 0.8266 - val_false_negatives_2: 528.0000 - val_false_positives_2: 339.0000 - val_loss: 0.4419
+
+
+<div class="k-default-codeblock">
+```
+Epoch 7: early stopping
+
+```
+</div>
+
+ 20/20 ━━━━━━━━━━━━━━━━━━━━ 1s 39ms/step
+
+
+<div class="k-default-codeblock">
+```
+----------------------------------------------------------------------------------------------------
+Number of zeros incorrectly classified: 376.0, Number of ones incorrectly classified: 442.0
+Sample ratio for positives: 0.5403422982885085, Sample ratio for negatives:0.45965770171149145
+Starting training with 24998 samples
+----------------------------------------------------------------------------------------------------
+Epoch 1/20
+
+```
+</div>
+
+ 98/98 ━━━━━━━━━━━━━━━━━━━━ 0s 73ms/step - binary_accuracy: 0.8509 - false_negatives_3: 809.9184 - false_positives_3: 1018.9286 - loss: 0.3732
+
+    
+<div class="k-default-codeblock">
+```
+Epoch 1: val_loss improved from 0.37074 to 0.36196, saving model to AL_Model.keras
+
+
+```
+</div>
+ 98/98 ━━━━━━━━━━━━━━━━━━━━ 11s 83ms/step - binary_accuracy: 0.8509 - false_negatives_3: 817.5757 - false_positives_3: 1028.7980 - loss: 0.3731 - val_binary_accuracy: 0.8424 - val_false_negatives_3: 368.0000 - val_false_positives_3: 420.0000 - val_loss: 0.3620
+
+
+<div class="k-default-codeblock">
+```
+Epoch 2/20
+
+```
+</div>
+
+ 98/98 ━━━━━━━━━━━━━━━━━━━━ 0s 72ms/step - binary_accuracy: 0.8744 - false_negatives_3: 734.7449 - false_positives_3: 884.7755 - loss: 0.3185
+
+    
+<div class="k-default-codeblock">
+```
+Epoch 2: val_loss did not improve from 0.36196
+
+
+```
+</div>
+ 98/98 ━━━━━━━━━━━━━━━━━━━━ 8s 79ms/step - binary_accuracy: 0.8744 - false_negatives_3: 741.9697 - false_positives_3: 893.7172 - loss: 0.3186 - val_binary_accuracy: 0.8316 - val_false_negatives_3: 202.0000 - val_false_positives_3: 640.0000 - val_loss: 0.3792
+
+
+<div class="k-default-codeblock">
+```
+Epoch 3/20
+
+```
+</div>
+
+ 98/98 ━━━━━━━━━━━━━━━━━━━━ 0s 72ms/step - binary_accuracy: 0.8830 - false_negatives_3: 684.1326 - false_positives_3: 807.8878 - loss: 0.3090
+
+    
+<div class="k-default-codeblock">
+```
+Epoch 3: val_loss did not improve from 0.36196
+
+
+```
+</div>
+ 98/98 ━━━━━━━━━━━━━━━━━━━━ 8s 79ms/step - binary_accuracy: 0.8830 - false_negatives_3: 691.0707 - false_positives_3: 816.2222 - loss: 0.3090 - val_binary_accuracy: 0.8118 - val_false_negatives_3: 738.0000 - val_false_positives_3: 203.0000 - val_loss: 0.4112
+
+
+<div class="k-default-codeblock">
+```
+Epoch 4/20
+
+```
+</div>
+
+ 98/98 ━━━━━━━━━━━━━━━━━━━━ 0s 72ms/step - binary_accuracy: 0.8892 - false_negatives_3: 651.9898 - false_positives_3: 776.4388 - loss: 0.2928
+
+    
+<div class="k-default-codeblock">
+```
+Epoch 4: val_loss did not improve from 0.36196
+
+
+```
+</div>
+ 98/98 ━━━━━━━━━━━━━━━━━━━━ 8s 79ms/step - binary_accuracy: 0.8892 - false_negatives_3: 658.4041 - false_positives_3: 784.3839 - loss: 0.2928 - val_binary_accuracy: 0.8344 - val_false_negatives_3: 557.0000 - val_false_positives_3: 271.0000 - val_loss: 0.3734
+
+
+<div class="k-default-codeblock">
+```
+Epoch 5/20
+
+```
+</div>
+
+ 98/98 ━━━━━━━━━━━━━━━━━━━━ 0s 72ms/step - binary_accuracy: 0.8975 - false_negatives_3: 612.0714 - false_positives_3: 688.9184 - loss: 0.2806
+
+    
+<div class="k-default-codeblock">
+```
+Epoch 5: val_loss did not improve from 0.36196
+
+
+```
+</div>
+ 98/98 ━━━━━━━━━━━━━━━━━━━━ 8s 79ms/step - binary_accuracy: 0.8974 - false_negatives_3: 618.4343 - false_positives_3: 696.1313 - loss: 0.2807 - val_binary_accuracy: 0.8456 - val_false_negatives_3: 446.0000 - val_false_positives_3: 326.0000 - val_loss: 0.3658
+
+
+<div class="k-default-codeblock">
+```
+Epoch 5: early stopping
+
+```
+</div>
+
+ 20/20 ━━━━━━━━━━━━━━━━━━━━ 1s 40ms/step
+
+
+<div class="k-default-codeblock">
+```
+----------------------------------------------------------------------------------------------------
+Number of zeros incorrectly classified: 407.0, Number of ones incorrectly classified: 410.0
+Sample ratio for positives: 0.5018359853121175, Sample ratio for negatives:0.4981640146878825
+Starting training with 29997 samples
+----------------------------------------------------------------------------------------------------
+Epoch 1/20
+
+```
+</div>
+
+ 117/118 ━━━━━━━━━━━━━━━━━━━[37m━  0s 76ms/step - binary_accuracy: 0.8621 - false_negatives_4: 916.2393 - false_positives_4: 1130.9744 - loss: 0.3527
+
+    
+<div class="k-default-codeblock">
+```
+Epoch 1: val_loss did not improve from 0.36196
+
+
+```
+</div>
+ 118/118 ━━━━━━━━━━━━━━━━━━━━ 13s 85ms/step - binary_accuracy: 0.8621 - false_negatives_4: 931.0924 - false_positives_4: 1149.7479 - loss: 0.3525 - val_binary_accuracy: 0.8266 - val_false_negatives_4: 627.0000 - val_false_positives_4: 240.0000 - val_loss: 0.3802
+
+
+<div class="k-default-codeblock">
+```
+Epoch 2/20
+
+```
+</div>
+
+ 117/118 ━━━━━━━━━━━━━━━━━━━[37m━  0s 76ms/step - binary_accuracy: 0.8761 - false_negatives_4: 876.4872 - false_positives_4: 1005.5726 - loss: 0.3195
+
+    
+<div class="k-default-codeblock">
+```
+Epoch 2: val_loss improved from 0.36196 to 0.35707, saving model to AL_Model.keras
+
+
+```
+</div>
+ 118/118 ━━━━━━━━━━━━━━━━━━━━ 10s 82ms/step - binary_accuracy: 0.8760 - false_negatives_4: 891.0504 - false_positives_4: 1022.9412 - loss: 0.3196 - val_binary_accuracy: 0.8404 - val_false_negatives_4: 479.0000 - val_false_positives_4: 319.0000 - val_loss: 0.3571
+
+
+<div class="k-default-codeblock">
+```
+Epoch 3/20
+
+```
+</div>
+
+ 117/118 ━━━━━━━━━━━━━━━━━━━[37m━  0s 74ms/step - binary_accuracy: 0.8874 - false_negatives_4: 801.1710 - false_positives_4: 941.4786 - loss: 0.2965
+
+    
+<div class="k-default-codeblock">
+```
+Epoch 3: val_loss did not improve from 0.35707
+
+
+```
+</div>
+ 118/118 ━━━━━━━━━━━━━━━━━━━━ 9s 79ms/step - binary_accuracy: 0.8873 - false_negatives_4: 814.8319 - false_positives_4: 957.8571 - loss: 0.2966 - val_binary_accuracy: 0.8226 - val_false_negatives_4: 677.0000 - val_false_positives_4: 210.0000 - val_loss: 0.3948
+
+
+<div class="k-default-codeblock">
+```
+Epoch 4/20
+
+```
+</div>
+
+ 117/118 ━━━━━━━━━━━━━━━━━━━[37m━  0s 76ms/step - binary_accuracy: 0.8977 - false_negatives_4: 740.5385 - false_positives_4: 837.1710 - loss: 0.2768
+
+    
+<div class="k-default-codeblock">
+```
+Epoch 4: val_loss did not improve from 0.35707
+
+
+```
+</div>
+ 118/118 ━━━━━━━━━━━━━━━━━━━━ 10s 81ms/step - binary_accuracy: 0.8976 - false_negatives_4: 753.5378 - false_positives_4: 852.2437 - loss: 0.2770 - val_binary_accuracy: 0.8406 - val_false_negatives_4: 530.0000 - val_false_positives_4: 267.0000 - val_loss: 0.3630
+
+
+<div class="k-default-codeblock">
+```
+Epoch 5/20
+
+```
+</div>
+
+ 117/118 ━━━━━━━━━━━━━━━━━━━[37m━  0s 76ms/step - binary_accuracy: 0.9020 - false_negatives_4: 722.5214 - false_positives_4: 808.2308 - loss: 0.2674
+
+    
+<div class="k-default-codeblock">
+```
+Epoch 5: val_loss did not improve from 0.35707
+
+
+```
+</div>
+ 118/118 ━━━━━━━━━━━━━━━━━━━━ 10s 82ms/step - binary_accuracy: 0.9019 - false_negatives_4: 734.8655 - false_positives_4: 822.4117 - loss: 0.2676 - val_binary_accuracy: 0.8330 - val_false_negatives_4: 592.0000 - val_false_positives_4: 243.0000 - val_loss: 0.3805
+
+
+<div class="k-default-codeblock">
+```
+Epoch 6/20
+
+```
+</div>
+
+ 117/118 ━━━━━━━━━━━━━━━━━━━[37m━  0s 76ms/step - binary_accuracy: 0.9059 - false_negatives_4: 682.1453 - false_positives_4: 737.0513 - loss: 0.2525
+
+    
+<div class="k-default-codeblock">
+```
+Epoch 6: val_loss did not improve from 0.35707
+
+
+```
+</div>
+ 118/118 ━━━━━━━━━━━━━━━━━━━━ 10s 82ms/step - binary_accuracy: 0.9059 - false_negatives_4: 693.6387 - false_positives_4: 749.9412 - loss: 0.2526 - val_binary_accuracy: 0.8454 - val_false_negatives_4: 391.0000 - val_false_positives_4: 382.0000 - val_loss: 0.3620
+
+
+<div class="k-default-codeblock">
+```
+Epoch 6: early stopping
+
+```
+</div>
+    
+![png](/img/examples/nlp/active_learning_review_classification/active_learning_review_classification_17_2767.png)
+    
+
+
+
+    
+![png](/img/examples/nlp/active_learning_review_classification/active_learning_review_classification_17_2768.png)
+    
+
+
+<div class="k-default-codeblock">
+```
+----------------------------------------------------------------------------------------------------
+
+Test set evaluation:  {'binary_accuracy': 0.8424000144004822, 'false_negatives_4': 491.0, 'false_positives_4': 297.0, 'loss': 0.3661557137966156}
 ----------------------------------------------------------------------------------------------------
 
 ```
