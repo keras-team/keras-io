@@ -51,7 +51,7 @@ Note: The dependency on TensorFlow is only required for data processing.
 """
 
 """shell
-pip install -q --upgrade keras-nlp
+pip install -q --upgrade git+https://github.com/keras-team/keras-nlp.git  # Get the latest version of KerasNLP
 pip install -q --upgrade keras  # Upgrade to Keras 3.
 """
 
@@ -238,41 +238,13 @@ test_ds = make_dataset(test_ds)
 """
 ## Model
 
-Let's build a simple Transformer model. `TransformerDecoder` outputs one vector
-for each time step of our input sequence. Here, we take the mean across all time
-steps and use a feedforward network on top of it to classify text.
+Let's build a simple Transformer model. We will use `TokenAndPositionEmbedding`
+and `TransformerDecoder` from KerasNLP library. `TokenAndPositionEmbedding`
+represents words and their order in a sentence, while `TransformerDecoder`
+outputs one vector for each time step of our input sequence. Here, we take the
+mean across all time steps and use a feedforward network on top of it to
+classify text.
 """
-
-
-class TransformerDecoder(keras_nlp.layers.TransformerDecoder):
-    def call(
-        self,
-        decoder_sequence,
-        encoder_sequence=None,
-        decoder_padding_mask=None,
-        decoder_attention_mask=None,
-        encoder_padding_mask=None,
-        encoder_attention_mask=None,
-        self_attention_cache=None,
-        self_attention_cache_update_index=None,
-        cross_attention_cache=None,
-        cross_attention_cache_update_index=None,
-        use_causal_mask=True,
-        training=None,
-    ):
-        return super().call(
-            decoder_sequence,
-            encoder_sequence,
-            decoder_padding_mask,
-            decoder_attention_mask,
-            encoder_padding_mask,
-            encoder_attention_mask,
-            self_attention_cache,
-            self_attention_cache_update_index,
-            cross_attention_cache,
-            cross_attention_cache_update_index,
-            use_causal_mask,
-        )
 
 
 def build_model(
@@ -290,7 +262,7 @@ def build_model(
         embedding_dim=hidden_dim,
     )(token_id_input)
     x = keras.layers.Dropout(rate=dropout)(x)
-    x = TransformerDecoder(
+    x = keras_nlp.layers.TransformerDecoder(
         intermediate_dim=intermediate_dim,
         num_heads=num_heads,
         dropout=dropout,
