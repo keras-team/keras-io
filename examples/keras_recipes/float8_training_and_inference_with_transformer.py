@@ -93,7 +93,7 @@ First, let's download the IMDB dataset and extract it.
 
 """shell
 mkdir -p datasets
-wget http://ai.stanford.edu/~amaas/data/sentiment/aclImdb_v1.tar.gz -O datasets/aclImdb_v1.tar.gz
+wget http://ai.stanford.edu/~amaas/data/sentiment/aclImdb_v1.tar.gz -q -O datasets/aclImdb_v1.tar.gz
 mkdir -p datasets/aclImdb
 tar -xzf datasets/aclImdb_v1.tar.gz -C datasets
 rm -rf datasets/aclImdb/train/unsup
