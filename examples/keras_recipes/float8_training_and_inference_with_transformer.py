@@ -292,7 +292,7 @@ model.compile(
 )
 history = model.fit(train_ds, epochs=EPOCHS, validation_data=val_ds)
 result = model.evaluate(test_ds)
-print(f"Accuracy (float32): {result[1]:.2%}")
+print(f"Accuracy (mixed_bfloat16): {result[1]:.2%}")
 
 """
 We can enable FP8 training/inference with a one-line API:
@@ -339,7 +339,7 @@ model.compile(
 )
 history = model.fit(train_ds, epochs=EPOCHS, validation_data=val_ds)
 result = model.evaluate(test_ds)
-print(f"Accuracy (float32): {result[1]:.2%}")
+print(f"Accuracy (float8): {result[1]:.2%}")
 
 for v in model.trainable_variables:
     if re.findall(pattern, v.path):
