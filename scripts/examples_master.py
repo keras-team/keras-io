@@ -902,6 +902,12 @@ EXAMPLES_MASTER = {
             "toc": True,
             "children": [
                 {
+                    "path": "float8_training_and_inference_with_transformer",
+                    "title": "Float8 training and inference with a simple Transformer model",
+                    "subcategory": "Keras usage tips",
+                    "keras_3": True,
+                },
+                {
                     "path": "tf_serving",
                     "title": "Serving TensorFlow models with TFServing",
                     "subcategory": "Serving",
