@@ -31,6 +31,7 @@ to start learning our API. We welcome
 ## Guides
 
 * [Getting Started with KerasNLP](/guides/keras_nlp/getting_started/)
+* [Uploading Models with KerasNLP](/guides/keras_nlp/upload/)
 * [Pretraining a Transformer from scratch](/guides/keras_nlp/transformer_pretraining/)
 
 ## Examples
