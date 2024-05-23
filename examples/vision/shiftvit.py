@@ -35,10 +35,10 @@ In this example, we minimally implement the paper with close alignement to the a
 import os
 
 if os.environ.get("KERAS_BACKEND") is None:
-    # @param ["tensorflow", "torch"]
+    # @param ["tensorflow", "torch", "jax"]
     os.environ["KERAS_BACKEND"] = "tensorflow"
 
-# Import tensorflow because of tf.io and tf.data.Dataset dependencies.
+# Import tensorflow because of tf.data.Dataset dependencies.
 import tensorflow as tf
 
 import numpy as np
@@ -534,7 +534,7 @@ class StackedShiftBlocks(layers.Layer):
         # Reference: https://keras.io/examples/vision/cct/#the-final-cct-model
         dpr = [
             x
-            for x in ops.linspace(
+            for x in np.linspace(
                 start=0, stop=self.stochastic_depth_rate, num=self.num_shift_blocks
             )
         ]
@@ -588,7 +588,7 @@ Build the ShiftViT custom model.
 """
 
 
-@keras.saving.register_keras_serializable()
+@keras.saving.register_keras_serializable(package="my_shiftvit_package", name="shiftvitmodel")
 class ShiftViTModel(keras.Model):
     """The ShiftViT Model.
 
@@ -911,32 +911,14 @@ saved_model = keras.saving.load_model(
 """
 
 
-def process_image(img_path):
-    # read image file from string path
-    img = tf.io.read_file(img_path)
-
-    # decode jpeg to uint8 tensor
-    img = tf.io.decode_jpeg(img, channels=3)
-
-    # resize image to match input size accepted by model
-    # use `method` as `nearest` to preserve dtype of input passed to `resize()`
-    img = ops.image.resize(
-        img,
-        size=[config.input_shape[0], config.input_shape[1]],
-        interpolation="nearest",
-    )
-    return img
-
-
 def create_tf_dataset(image_dir):
-    data_dir = Path(image_dir)
-
-    # create tf.data.Dataset using directory of images
-    predict_ds = tf.data.Dataset.list_files(str(data_dir / "*.jpg"), shuffle=False)
-
-    # use map to convert string paths to uint8 image tensors
-    # setting `num_parallel_calls' helps in processing multiple images parallely
-    predict_ds = predict_ds.map(process_image, num_parallel_calls=AUTO)
+    predict_ds = keras.utils.image_dataset_from_directory(
+        directory=Path(image_dir),
+        image_size=(config.input_shape[0], config.input_shape[1]),
+        labels=None,
+        interpolation="nearest",
+        batch_size=config.tf_ds_batch_size,
+    )
 
     # create a Prefetch Dataset for better latency & throughput
     predict_ds = predict_ds.batch(config.tf_ds_batch_size).prefetch(AUTO)
