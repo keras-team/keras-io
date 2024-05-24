@@ -20,11 +20,10 @@ floating point with nearly no degradation in accuracy.
 
 In detail, there are two distinct types of FP8: E4M3 and E5M2, useful in
 different parts of training.
-- E4M3: It consists of 1 sign bit, 4 exponent bits and 3 bits of mantissa. It
-    can store values up to +/-448 and nan.
-- E5M2: It consists of 1 sign bit, 5 exponent bits and 2 bits of mantissa. It
-    can store values up to +/-57344, +/-inf and nan. The tradeoff of the
-    increased dynamic range is lower precision of the stored values.
+
+- E4M3: It consists of 1 sign bit, 4 exponent bits and 3 bits of mantissa. It can store values up to +/-448 and nan.
+- E5M2: It consists of 1 sign bit, 5 exponent bits and 2 bits of mantissa. It can store values up to +/-57344, +/-inf and nan. The tradeoff of theincreased dynamic range is lower precision of the stored values.
+
 Typically, E4M3 is best used during the forward pass because activations and
 weights require more precision. In the backward pass, however, E5M2 is utilized
 because gradients are less susceptible to the loss of precision but require
@@ -53,7 +52,7 @@ Note: The dependency on TensorFlow is only required for data processing.
 
 
 ```python
-!pip install -q --upgrade git+https://github.com/keras-team/keras-nlp.git  # Get the latest version of KerasNLP
+!pip install -q --upgrade keras-nlp
 !pip install -q --upgrade keras  # Upgrade to Keras 3.
 ```
 
