@@ -556,6 +556,61 @@ MODELS_MASTER = {
             ],
         },
         {
+            "path": "falcon/",
+            "title": "Falcon",
+            "toc": True,
+            "children": [
+                {
+                    "path": "falcon_tokenizer",
+                    "title": "FalconTokenizer",
+                    "generate": [
+                        "keras_nlp.models.FalconTokenizer",
+                        "keras_nlp.models.FalconTokenizer.from_preset",
+                    ],
+                },
+                {
+                    "path": "falcon_preprocessor",
+                    "title": "FalconPreprocessor layer",
+                    "generate": [
+                        "keras_nlp.models.FalconPreprocessor",
+                        "keras_nlp.models.FalconPreprocessor.from_preset",
+                        "keras_nlp.models.FalconPreprocessor.tokenizer",
+                    ],
+                },
+                {
+                    "path": "falcon_backbone",
+                    "title": "FalconBackbone model",
+                    "generate": [
+                        "keras_nlp.models.FalconBackbone",
+                        "keras_nlp.models.FalconBackbone.from_preset",
+                        "keras_nlp.models.FalconBackbone.token_embedding",
+                    ],
+                },
+                {
+                    "path": "falcon_causal_lm",
+                    "title": "FalconCausalLM model",
+                    "generate": [
+                        "keras_nlp.models.FalconCausalLM",
+                        "keras_nlp.models.FalconCausalLM.from_preset",
+                        "keras_nlp.models.FalconCausalLM.generate",
+                        "keras_nlp.models.FalconCausalLM.backbone",
+                        "keras_nlp.models.FalconCausalLM.preprocessor",
+                    ],
+                },
+                {
+                    "path": "falcon_causal_lm_preprocessor",
+                    "title": "FalconCausalLMPreprocessor layer",
+                    "generate": [
+                        "keras_nlp.models.FalconCausalLMPreprocessor",
+                        "keras_nlp.models.FalconCausalLMPreprocessor.from_preset",
+                        "keras_nlp.models.FalconCausalLMPreprocessor.generate_preprocess",
+                        "keras_nlp.models.FalconCausalLMPreprocessor.generate_postprocess",
+                        "keras_nlp.models.FalconCausalLMPreprocessor.tokenizer",
+                    ],
+                },
+            ],
+        },
+        {
             "path": "f_net/",
             "title": "FNet",
             "toc": True,
