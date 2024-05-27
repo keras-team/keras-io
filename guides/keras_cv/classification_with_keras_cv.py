@@ -89,7 +89,7 @@ classifier = keras_cv.models.ImageClassifier.from_preset(
 You may notice a small deviation from the old `keras.applications` API; where
 you would construct the class with `EfficientNetV2B0(weights="imagenet")`.
 While the old API was great for classification, it did not scale effectively to
-other use cases that required complex architectures, like object deteciton and
+other use cases that required complex architectures, like object detection and
 semantic segmentation.
 
 Now that our classifier is built, let's apply it to this cute cat picture!
