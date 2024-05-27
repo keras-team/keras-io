@@ -286,7 +286,7 @@ keras_cv.visualization.plot_image_gallery(
 
 ## Data Augmentation
 
-In our previous finetuning exmaple, we performed a static resizing operation and
+In our previous finetuning example, we performed a static resizing operation and
 did not utilize any image augmentation.
 This is because a single pass over the training set was sufficient to achieve
 decent results.
