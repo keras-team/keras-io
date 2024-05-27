@@ -141,7 +141,7 @@ Ideally, we'd have a classifier that only performs computation to determine if
 an image is a cat or a dog, and has all of its resources dedicated to this task.
 This can be solved by fine tuning our own classifier.
 
-# Fine tuning a pretrained classifier
+## Fine tuning a pretrained classifier
 
 ![](https://storage.googleapis.com/keras-nlp/getting_started_guide/prof_keras_intermediate.png)
 
@@ -231,7 +231,7 @@ Awesome - looks like the model correctly classified the image.
 """
 
 """
-# Train a Classifier from Scratch
+## Train a Classifier from Scratch
 
 ![](https://storage.googleapis.com/keras-nlp/getting_started_guide/prof_keras_advanced.png)
 
@@ -284,7 +284,7 @@ keras_cv.visualization.plot_image_gallery(
 )
 """
 
-## Data Augmentation
+### Data Augmentation
 
 In our previous finetuning example, we performed a static resizing operation and
 did not utilize any image augmentation.
@@ -550,7 +550,7 @@ Data augmentation is by far the hardest piece of training a modern
 classifier.
 Congratulations on making it this far!
 
-## Optimizer Tuning
+### Optimizer Tuning
 
 To achieve optimal performance, we need to use a learning rate schedule instead
 of a single learning rate. While we won't go into detail on the Cosine decay
