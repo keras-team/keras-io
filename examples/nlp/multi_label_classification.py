@@ -30,16 +30,6 @@ Additionally, you can also find the dataset on
 ## Imports
 """
 
-from tensorflow.keras import layers
-from tensorflow import keras
-import tensorflow as tf
-
-from sklearn.model_selection import train_test_split
-from ast import literal_eval
-
-import matplotlib.pyplot as plt
-import pandas as pd
-import numpy as np
 
 """
 ## Perform exploratory data analysis
@@ -48,6 +38,14 @@ In this section, we first load the dataset into a `pandas` dataframe and then pe
 some basic exploratory data analysis (EDA).
 """
 
+from tensorflow.keras import layers
+from tensorflow import keras
+import tensorflow as tf
+from sklearn.model_selection import train_test_split
+from ast import literal_eval
+import matplotlib.pyplot as plt
+import pandas as pd
+import numpy as np
 arxiv_data = pd.read_csv(
     "https://github.com/soumik12345/multi-label-text-classification/releases/download/v0.2/arxiv_data.csv"
 )
@@ -152,7 +150,7 @@ vocab = lookup.get_vocabulary()
 
 def invert_multi_hot(encoded_labels):
     """Reverse a single multi-hot encoded label to a tuple of vocab terms."""
-    hot_indices = np.argwhere(encoded_labels == 1.0)[..., 0]
+    hot_indices = np.nonzero(encoded_labels)[1]
     return np.take(vocab, hot_indices)
 
 
@@ -404,7 +402,8 @@ for i, text in enumerate(text_batch[:5]):
             reverse=True,
         )
     ][:3]
-    print(f"Predicted Label(s): ({', '.join([label for label in top_3_labels])})")
+    print(
+        f"Predicted Label(s): ({', '.join([label for label in top_3_labels])})")
     print(" ")
 
 """
