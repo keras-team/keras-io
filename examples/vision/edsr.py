@@ -88,12 +88,12 @@ def flip_left_right(lowres_img, highres_img):
     rn = keras.random.uniform(shape=(), maxval=1)
     # If rn is less than 0.5 it returns original lowres_img and highres_img
     # If rn is greater than 0.5 it returns flipped image
-    return tf.cond(
+    return ops.cond(
         rn < 0.5,
         lambda: (lowres_img, highres_img),
         lambda: (
-            tf.image.flip_left_right(lowres_img),
-            tf.image.flip_left_right(highres_img),
+            ops.flip(lowres_img),
+            ops.flip(highres_img),
         ),
     )
 
@@ -253,7 +253,7 @@ class EDSRModel(keras.Model):
         return {m.name: m.result() for m in self.metrics}
 
     def predict_step(self, x):
-        # Adding dummy dimension using tf.expand_dims and converting to float32 using tf.cast
+        # Adding dummy dimension using ops.expand_dims and converting to float32 using ops.cast
         x = ops.cast(ops.expand_dims(x, axis=0), dtype="float32")
         # Passing low resolution image to model
         super_resolution_img = self(x, training=False)
