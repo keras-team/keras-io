@@ -576,6 +576,13 @@ EXAMPLES_MASTER = {
                     "keras_3": True,
                 },
                 {
+                    "path": "feature_space_advanced",
+                    "title": "FeatureSpace advanced use cases",
+                    "subcategory": "Structured data classification",
+                    "highlight": True,
+                    "keras_3": True,
+                },
+                {
                     "path": "imbalanced_classification",
                     "title": "Imbalanced classification: credit card fraud detection",
                     "subcategory": "Structured data classification",
