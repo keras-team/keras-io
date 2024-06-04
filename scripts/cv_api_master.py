@@ -158,21 +158,21 @@ BOUNDING_BOX_UTILS = {
             "title": "Clip bounding boxes to be within the bounds of provided images",
             "generate": ["keras_cv.bounding_box.clip_to_image"],
         },
-        # {
-        #     "path": "to_dense",
-        #     "title": "Convert a bounding box dictionary to -1 padded Dense tensors",
-        #     "generate": ["keras_cv.bounding_box.to_dense"],
-        # },
-        # {
-        #     "path": "to_ragged",
-        #     "title": "Convert a bounding box dictionary batched Ragged tensors",
-        #     "generate": ["keras_cv.bounding_box.to_ragged"],
-        # },
-        # {
-        #     "path": "validate_format",
-        #     "title": "Ensure that your bounding boxes comply with the bounding box spec",
-        #     "generate": ["keras_cv.bounding_box.validate_format"],
-        # },
+        {
+            "path": "to_dense",
+            "title": "Convert a bounding box dictionary to -1 padded Dense tensors",
+            "generate": ["keras_cv.bounding_box.to_dense"],
+        },
+        {
+            "path": "to_ragged",
+            "title": "Convert a bounding box dictionary batched Ragged tensors",
+            "generate": ["keras_cv.bounding_box.to_ragged"],
+        },
+        {
+            "path": "validate_format",
+            "title": "Ensure that your bounding boxes comply with the bounding box spec",
+            "generate": ["keras_cv.bounding_box.validate_format"],
+        },
     ],
 }
 
@@ -233,29 +233,28 @@ LAYERS_MASTER = {
     "children": [AUGMENTATION_MASTER, PREPROCESSING_MASTER, REGULARIZATION_MASTER],
 }
 
-#
-# METRICS_MASTER = {
-#     "path": "metrics/",
-#     "title": "Metrics",
-#     "toc": True,
-#     "children": [
-#         # Temporarily remove COCO metrics
-#         # {
-#         #     "path": "coco_mean_average_precision",
-#         #     "title": "COCOMeanAveragePrecision metric",
-#         #     "generate": [
-#         #         "keras_cv.metrics.COCOMeanAveragePrecision",
-#         #     ],
-#         # },
-#         # {
-#         #     "path": "coco_recall",
-#         #     "title": "COCORecall metric",
-#         #     "generate": [
-#         #         "keras_cv.metrics.COCORecall",
-#         #     ],
-#         # },
-#     ],
-# }
+
+METRICS_MASTER = {
+    "path": "metrics/",
+    "title": "Metrics",
+    "toc": True,
+    "children": [
+        {
+            "path": "coco_mean_average_precision",
+            "title": "COCOMeanAveragePrecision metric",
+            "generate": [
+                "keras_cv.metrics.COCOMeanAveragePrecision",
+            ],
+        },
+        {
+            "path": "coco_recall",
+            "title": "COCORecall metric",
+            "generate": [
+                "keras_cv.metrics.COCORecall",
+            ],
+        },
+    ],
+}
 
 LOSSES_MASTER = {
     "path": "losses/",
@@ -312,11 +311,11 @@ BACKBONES_MASTER = {
             "generate": [
                 "keras_cv.models.CSPDarkNetBackbone",
                 "keras_cv.models.CSPDarkNetBackbone.from_preset",
-                # "keras_cv.models.CSPDarkNetTinyBackbone",
-                # "keras_cv.models.CSPDarkNetSBackbone",
-                # "keras_cv.models.CSPDarkNetMBackbone",
-                # "keras_cv.models.CSPDarkNetLBackbone",
-                # "keras_cv.models.CSPDarkNetXLBackbone",
+                "keras_cv.models.CSPDarkNetTinyBackbone",
+                "keras_cv.models.CSPDarkNetSBackbone",
+                "keras_cv.models.CSPDarkNetMBackbone",
+                "keras_cv.models.CSPDarkNetLBackbone",
+                "keras_cv.models.CSPDarkNetXLBackbone",
             ],
         },
         {
@@ -330,22 +329,22 @@ BACKBONES_MASTER = {
                 "keras_cv.models.DenseNet201Backbone",
             ],
         },
-        # {
-        #     "path": "efficientnet_v1",
-        #     "title": "EfficientNetV1 models",
-        #     "generate": [
-        #         "keras_cv.models.EfficientNetV1Backbone",
-        #         "keras_cv.models.EfficientNetV1Backbone.from_preset",
-        #         "keras_cv.models.EfficientNetV1B0Backbone",
-        #         "keras_cv.models.EfficientNetV1B1Backbone",
-        #         "keras_cv.models.EfficientNetV1B2Backbone",
-        #         "keras_cv.models.EfficientNetV1B3Backbone",
-        #         "keras_cv.models.EfficientNetV1B4Backbone",
-        #         "keras_cv.models.EfficientNetV1B5Backbone",
-        #         "keras_cv.models.EfficientNetV1B6Backbone",
-        #         "keras_cv.models.EfficientNetV1B7Backbone",
-        #     ],
-        # },
+        {
+            "path": "efficientnet_v1",
+            "title": "EfficientNetV1 models",
+            "generate": [
+                "keras_cv.models.EfficientNetV1Backbone",
+                "keras_cv.models.EfficientNetV1Backbone.from_preset",
+                "keras_cv.models.EfficientNetV1B0Backbone",
+                "keras_cv.models.EfficientNetV1B1Backbone",
+                "keras_cv.models.EfficientNetV1B2Backbone",
+                "keras_cv.models.EfficientNetV1B3Backbone",
+                "keras_cv.models.EfficientNetV1B4Backbone",
+                "keras_cv.models.EfficientNetV1B5Backbone",
+                "keras_cv.models.EfficientNetV1B6Backbone",
+                "keras_cv.models.EfficientNetV1B7Backbone",
+            ],
+        },
         {
             "path": "efficientnet_v2",
             "title": "EfficientNetV2 models",
@@ -361,33 +360,33 @@ BACKBONES_MASTER = {
                 "keras_cv.models.EfficientNetV2LBackbone",
             ],
         },
-        # {
-        #     "path": "efficientnet_lite",
-        #     "title": "EfficientNet Lite backbones",
-        #     "generate": [
-        #         "keras_cv.models.EfficientNetLiteBackbone",
-        #         "keras_cv.models.EfficientNetLiteBackbone.from_preset",
-        #         "keras_cv.models.EfficientNetLiteB0Backbone",
-        #         "keras_cv.models.EfficientNetLiteB1Backbone",
-        #         "keras_cv.models.EfficientNetLiteB2Backbone",
-        #         "keras_cv.models.EfficientNetLiteB3Backbone",
-        #         "keras_cv.models.EfficientNetLiteB4Backbone",
-        #     ],
-        # },
-        # {
-        #     "path": "mix_transformer",
-        #     "title": "MixTransformer backbones",
-        #     "generate": [
-        #         "keras_cv.models.MiTBackbone",
-        #         "keras_cv.models.MiTBackbone.from_preset",
-        #         "keras_cv.models.MiTB0Backbone",
-        #         "keras_cv.models.MiTB1Backbone",
-        #         "keras_cv.models.MiTB2Backbone",
-        #         "keras_cv.models.MiTB3Backbone",
-        #         "keras_cv.models.MiTB4Backbone",
-        #         "keras_cv.models.MiTB5Backbone",
-        #     ],
-        # },
+        {
+            "path": "efficientnet_lite",
+            "title": "EfficientNet Lite backbones",
+            "generate": [
+                "keras_cv.models.EfficientNetLiteBackbone",
+                "keras_cv.models.EfficientNetLiteBackbone.from_preset",
+                "keras_cv.models.EfficientNetLiteB0Backbone",
+                "keras_cv.models.EfficientNetLiteB1Backbone",
+                "keras_cv.models.EfficientNetLiteB2Backbone",
+                "keras_cv.models.EfficientNetLiteB3Backbone",
+                "keras_cv.models.EfficientNetLiteB4Backbone",
+            ],
+        },
+        {
+            "path": "mix_transformer",
+            "title": "MixTransformer backbones",
+            "generate": [
+                "keras_cv.models.MiTBackbone",
+                "keras_cv.models.MiTBackbone.from_preset",
+                "keras_cv.models.MiTB0Backbone",
+                "keras_cv.models.MiTB1Backbone",
+                "keras_cv.models.MiTB2Backbone",
+                "keras_cv.models.MiTB3Backbone",
+                "keras_cv.models.MiTB4Backbone",
+                "keras_cv.models.MiTB5Backbone",
+            ],
+        },
         {
             "path": "mobilenet_v3",
             "title": "MobileNetV3 backbones",
@@ -424,25 +423,25 @@ BACKBONES_MASTER = {
                 "keras_cv.models.ResNet152V2Backbone",
             ],
         },
-        # {
-        #     "path": "vgg16",
-        #     "title": "VGG16 backbones",
-        #     "generate": [
-        #         "keras_cv.models.VGG16Backbone",
-        #         "keras_cv.models.VGG16Backbone.from_preset",
-        #     ],
-        # },
-        # {
-        #     "path": "vitdet",
-        #     "title": "ViTDet backbones",
-        #     "generate": [
-        #         "keras_cv.models.ViTDetBackbone",
-        #         "keras_cv.models.ViTDetBackbone.from_preset",
-        #         "keras_cv.models.ViTDetBBackbone",
-        #         "keras_cv.models.ViTDetLBackbone",
-        #         "keras_cv.models.ViTDetHBackbone",
-        #     ],
-        # },
+        {
+            "path": "vgg16",
+            "title": "VGG16 backbones",
+            "generate": [
+                "keras_cv.models.VGG16Backbone",
+                "keras_cv.models.VGG16Backbone.from_preset",
+            ],
+        },
+        {
+            "path": "vitdet",
+            "title": "ViTDet backbones",
+            "generate": [
+                "keras_cv.models.ViTDetBackbone",
+                "keras_cv.models.ViTDetBackbone.from_preset",
+                "keras_cv.models.ViTDetBBackbone",
+                "keras_cv.models.ViTDetLBackbone",
+                "keras_cv.models.ViTDetHBackbone",
+            ],
+        },
         {
             "path": "yolo_v8",
             "title": "YOLOV8 backbones",
@@ -481,12 +480,12 @@ TASKS_MASKTER = {
             "generate": [
                 "keras_cv.models.SegFormer",
                 "keras_cv.models.SegFormer.from_preset",
-        #         "keras_cv.models.SegFormerB0",
-        #         "keras_cv.models.SegFormerB1",
-        #         "keras_cv.models.SegFormerB2",
-        #         "keras_cv.models.SegFormerB3",
-        #         "keras_cv.models.SegFormerB4",
-        #         "keras_cv.models.SegFormerB5",
+                "keras_cv.models.SegFormerB0",
+                "keras_cv.models.SegFormerB1",
+                "keras_cv.models.SegFormerB2",
+                "keras_cv.models.SegFormerB3",
+                "keras_cv.models.SegFormerB4",
+                "keras_cv.models.SegFormerB5",
             ],
         },
         {
@@ -503,22 +502,22 @@ TASKS_MASKTER = {
                 "keras_cv.layers.RandomFrequencyPositionalEmbeddings",
             ],
         },
-        # {
-        #     "path": "feature_extractor",
-        #     "title": "CLIP Feature extractor",
-        #     "generate": [
-        #         "keras_cv.models.CLIP",
-        #         "keras_cv.models.CLIP.from_preset",
-        #         "keras_cv.models.feature_extractor.CLIPAttention",
-        #         "keras_cv.models.feature_extractor.CLIPEncoder",
-        #         "keras_cv.models.feature_extractor.CLIPImageEncoder",
-        #         "keras_cv.models.feature_extractor.CLIPPatchingAndEmbedding",
-        #         "keras_cv.models.feature_extractor.CLIPProcessor",
-        #         "keras_cv.models.feature_extractor.CLIPTextEncoder",
-        #         "keras_cv.models.feature_extractor.QuickGELU",
-        #         "keras_cv.models.feature_extractor.ResidualAttention",
-        #     ],
-        # },
+        {
+            "path": "feature_extractor",
+            "title": "CLIP Feature extractor",
+            "generate": [
+                "keras_cv.models.CLIP",
+                "keras_cv.models.CLIP.from_preset",
+                "keras_cv.models.feature_extractor.CLIPAttention",
+                "keras_cv.models.feature_extractor.CLIPEncoder",
+                "keras_cv.models.feature_extractor.CLIPImageEncoder",
+                # "keras_cv.models.feature_extractor.CLIPPatchingAndEmbedding",
+                "keras_cv.models.feature_extractor.CLIPProcessor",
+                "keras_cv.models.feature_extractor.CLIPTextEncoder",
+                "keras_cv.models.feature_extractor.QuickGELU",
+                "keras_cv.models.feature_extractor.ResidualAttention",
+            ],
+        },
         {
             "path": "image_classifier",
             "title": "The ImageClassifier model",
