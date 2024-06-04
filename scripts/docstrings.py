@@ -147,7 +147,7 @@ def make_source_link(cls, project_url):
     line = inspect.getsourcelines(cls)[-1]
     return (
         f'<span style="float:right;">'
-        f"[[source]]({project_url}/{path}.py#L{line})"
+        f"[[source]]({project_url}{path}.py#L{line})"
         f"</span>"
     )
 
