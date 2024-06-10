@@ -1540,7 +1540,7 @@ class CustomMetric(keras.metrics.Metric):
     def result(self):
         return self.sum / ops.cast(self.count, "float32")
 
-    def reset_states(self):
+    def reset_state(self):
         self.sum.assign(0)
         self.count.assign(0)
 
