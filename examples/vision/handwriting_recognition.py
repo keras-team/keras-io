@@ -50,7 +50,6 @@ import os
 
 os.environ["KERAS_BACKEND"] = "tensorflow"
 
-from keras.layers import StringLookup
 from keras import layers
 from keras import ops
 from keras_nlp.metrics import EditDistance
@@ -194,10 +193,10 @@ layer for this purpose.
 AUTOTUNE = tf.data.AUTOTUNE
 
 # Mapping characters to integers.
-char_to_num = StringLookup(vocabulary=list(characters), mask_token=None)
+char_to_num = keras.layers.StringLookup(vocabulary=list(characters), mask_token=None)
 
 # Mapping integers back to original characters.
-num_to_char = StringLookup(
+num_to_char = keras.layers.StringLookup(
     vocabulary=char_to_num.get_vocabulary(), mask_token=None, invert=True
 )
 
@@ -354,8 +353,8 @@ refer to [this post](https://distill.pub/2017/ctc/).
 
 def build_model():
     # Inputs to the model
-    input_img = layers.Input(shape=(image_width, image_height, 1), name="image")
-    labels = layers.Input(name="label", shape=(None,))
+    input_img = keras.Input(shape=(image_width, image_height, 1), name="image")
+    labels = keras.Input(name="label", shape=(None,))
 
     # First conv block.
     x = layers.Conv2D(
@@ -410,7 +409,8 @@ def build_model():
     # Compile the model and return.
     model.compile(
         optimizer=keras.optimizers.Adam(),
-        loss=keras.losses.CTC())
+        loss=keras.losses.CTC()
+    )
 
     return model
 
@@ -467,7 +467,7 @@ class EditDistanceCallback(keras.callbacks.Callback):
         super().__init__()
         self.prediction_model = pred_model
 
-    def on_epoch_end(self, epoch, logs=None):
+    def on_epoch_end(self, epoch):
         edit_distances = []
 
         for i in range(len(validation_images)):
@@ -523,7 +523,7 @@ for batch in test_ds.take(1):
     batch_images = batch["image"]
     _, ax = plt.subplots(4, 4, figsize=(15, 8))
 
-    preds = prediction_model.predict(batch_images)
+    preds = model.predict(batch_images)
     pred_texts = decode_batch_predictions(preds)
 
     for i in range(16):
