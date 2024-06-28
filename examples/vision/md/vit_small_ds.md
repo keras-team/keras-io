@@ -3,7 +3,7 @@
 **Author:** [Aritra Roy Gosthipaty](https://twitter.com/ariG23498)<br>
 **Date created:** 2022/01/07<br>
 **Last modified:** 2022/01/10<br>
-**Description:** Training a ViT from scratch on smaller datasets with shifted patch tokenization and locality self-attention.
+**Description:** Training a ViT on smaller datasets with shifted patch tokenization and locality self-attention.
 
 
 <img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/vision/ipynb/vit_small_ds.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/vision/vit_small_ds.py)
@@ -38,32 +38,26 @@ This example implements the ideas of the paper. A large part of this
 example is inspired from
 [Image classification with Vision Transformer](https://keras.io/examples/vision/image_classification_with_vision_transformer/).
 
-_Note_: This example requires TensorFlow 2.6 or higher, as well as
-[TensorFlow Addons](https://www.tensorflow.org/addons), which can be
-installed using the following command:
-
-```python
-pip install -qq -U tensorflow-addons
-```
-
 ---
 ## Setup
 
 
 ```python
+import os
+
+os.environ["KERAS_BACKEND"] = "tensorflow"
+
 import math
 import numpy as np
 import tensorflow as tf
-from tensorflow import keras
-import tensorflow_addons as tfa
+import keras
 import matplotlib.pyplot as plt
-from tensorflow.keras import layers
+from keras import layers
 
 # Setting seed for reproducibiltiy
 SEED = 42
 keras.utils.set_random_seed(SEED)
 ```
-
 
 ---
 ## Prepare the data
@@ -154,7 +148,6 @@ data_augmentation = keras.Sequential(
 # Compute the mean and the variance of the training data for normalization.
 data_augmentation.layers[0].adapt(x_train)
 ```
-
 
 ---
 ## Implement Shifted Patch Tokenization
@@ -450,7 +443,7 @@ at a later stage.
 
 ```python
 
-class MultiHeadAttentionLSA(tf.keras.layers.MultiHeadAttention):
+class MultiHeadAttentionLSA(keras.layers.MultiHeadAttention):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         # The trainable temperature term. The initial value is
@@ -545,6 +538,7 @@ def create_vit_classifier(vanilla=False):
 
 
 ```python
+
 # Some code is taken from:
 # https://www.kaggle.com/ashusma/training-rfcx-tensorflow-tpu-effnet-b2.
 class WarmUpCosine(keras.optimizers.schedules.LearningRateSchedule):
@@ -599,7 +593,7 @@ def run_experiment(model):
         warmup_steps=warmup_steps,
     )
 
-    optimizer = tfa.optimizers.AdamW(
+    optimizer = keras.optimizers.AdamW(
         learning_rate=LEARNING_RATE, weight_decay=WEIGHT_DECAY
     )
 
@@ -859,5 +853,3 @@ supplementary of the paper.
 
 I would like to thank [Jarvislabs.ai](https://jarvislabs.ai/) for
 generously helping with GPU credits.
-
-You can use the trained model hosted on [Hugging Face Hub](https://huggingface.co/keras-io/vit_small_ds_v2) and try the demo on [Hugging Face Spaces](https://huggingface.co/spaces/keras-io/vit-small-ds).
