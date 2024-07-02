@@ -153,7 +153,7 @@ def compute_loss_and_updates(trainable_variables, non_trainable_variables, x, y)
 ```
 
 Once you have such a function, you can get the gradient function by
-specifying `hax_aux` in `value_and_grad`: it tells JAX that the loss
+specifying `has_aux` in `value_and_grad`: it tells JAX that the loss
 computation function returns more outputs than just the loss. Note that the loss
 should always be the first output.
 
