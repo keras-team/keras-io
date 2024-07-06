@@ -6,6 +6,7 @@ Last modified: 2023/07/10
 Description: First contact with Keras 3.
 Accelerator: GPU
 """
+
 """
 ## Introduction
 

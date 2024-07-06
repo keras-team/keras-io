@@ -6,6 +6,7 @@ Last modified: 2020/04/29
 Description: Guide to multi-GPU & distributed training for Keras models.
 Accelerator: GPU
 """
+
 """
 ## Introduction
 

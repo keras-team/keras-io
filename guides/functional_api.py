@@ -6,6 +6,7 @@ Last modified: 2023/06/25
 Description: Complete guide to the functional API.
 Accelerator: GPU
 """
+
 """
 ## Setup
 """
@@ -402,7 +403,7 @@ Train the model by passing lists of NumPy arrays of inputs and targets:
 """
 
 # Dummy input data
-title_data = np.random.randint(num_words, size=(1280, 10))
+title_data = np.random.randint(num_words, size=(1280, 12))
 body_data = np.random.randint(num_words, size=(1280, 100))
 tags_data = np.random.randint(2, size=(1280, num_tags)).astype("float32")
 
