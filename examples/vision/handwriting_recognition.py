@@ -243,7 +243,7 @@ def distortion_free_resize(image, img_size):
         top_padding=pad_height_top,
         bottom_padding=pad_height_bottom,
         right_padding=pad_width_right,
-        left_padding=pad_width_left
+        left_padding=pad_width_left,
     )
 
     image = ops.transpose(image, axes=[1, 0, 2])
@@ -282,8 +282,10 @@ def vectorize_label(label):
     length = ops.shape(label)[0]
     pad_amount = max_len - length
     label = ops.pad(
-        label, pad_width=[[0, pad_amount]],
-        mode="constant", constant_values=padding_token
+        label,
+        pad_width=[[0, pad_amount]],
+        mode="constant",
+        constant_values=padding_token,
     )
     return label
 
@@ -326,9 +328,7 @@ for data in train_ds.take(1):
 
         # Gather indices where label!= padding_token.
         label = labels[i]
-        indices = ops.take(
-            label, ops.where(ops.not_equal(label, padding_token))
-        )
+        indices = ops.take(label, ops.where(ops.not_equal(label, padding_token)))
         # Convert to string.
         label = tf.strings.reduce_join(num_to_char(indices)).numpy().decode("utf-8")
 
@@ -350,6 +350,7 @@ been padded accordingly.
 Our model will use the CTC loss. For a detailed understanding of the CTC loss,
 refer to [this post](https://distill.pub/2017/ctc/).
 """
+
 
 def build_model():
     # Inputs to the model
@@ -388,12 +389,8 @@ def build_model():
     x = layers.Dropout(0.2)(x)
 
     # RNNs.
-    x = layers.Bidirectional(
-        layers.LSTM(128, return_sequences=True, dropout=0.25)
-    )(x)
-    x = layers.Bidirectional(
-        layers.LSTM(64, return_sequences=True, dropout=0.25)
-    )(x)
+    x = layers.Bidirectional(layers.LSTM(128, return_sequences=True, dropout=0.25))(x)
+    x = layers.Bidirectional(layers.LSTM(64, return_sequences=True, dropout=0.25))(x)
 
     # +2 is to account for the two special tokens introduced by the CTC loss.
     # The recommendation comes here: https://git.io/J0eXP.
@@ -407,10 +404,7 @@ def build_model():
     )
 
     # Compile the model and return.
-    model.compile(
-        optimizer=keras.optimizers.Adam(),
-        loss=keras.losses.CTC()
-    )
+    model.compile(optimizer=keras.optimizers.Adam(), loss=keras.losses.CTC())
 
     return model
 
@@ -444,14 +438,13 @@ Now, we create a callback to monitor the edit distances.
 
 def calculate_edit_distance(labels, predictions):
     # Get a single batch and convert its labels to sparse tensors.
-    sparse_labels = ops.cast(
-        tf.sparse.from_dense(labels), dtype="int64"
-    )
+    sparse_labels = ops.cast(tf.sparse.from_dense(labels), dtype="int64")
 
     # Make predictions and convert them to sparse tensors.
     input_len = ops.ones(predictions.shape[0]) * predictions.shape[1]
     predictions_decoded = ops.nn.ctc_decode(
-        predictions, input_length=input_len, greedy=True)[0][0][:, :max_len]
+        predictions, input_length=input_len, greedy=True
+    )[0][0][:, :max_len]
     sparse_predictions = ops.cast(
         tf.sparse.from_dense(predictions_decoded), dtype="int64"
     )
@@ -508,7 +501,9 @@ history = model.fit(
 def decode_batch_predictions(pred):
     input_len = ops.ones(pred.shape[0]) * pred.shape[1]
     # Use greedy search. For complex tasks, you can use beam search.
-    results = ops.nn.ctc_decode(pred, input_length=input_len, greedy=True)[0][0][:, :max_len]
+    results = ops.nn.ctc_decode(pred, input_length=input_len, greedy=True)[0][0][
+        :, :max_len
+    ]
     # Iterate over the results and get back the text.
     output_text = []
     for res in results:
