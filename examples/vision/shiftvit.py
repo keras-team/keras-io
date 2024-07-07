@@ -588,7 +588,9 @@ Build the ShiftViT custom model.
 """
 
 
-@keras.saving.register_keras_serializable(package="my_shiftvit_package", name="shiftvitmodel")
+@keras.saving.register_keras_serializable(
+    package="my_shiftvit_package", name="shiftvitmodel"
+)
 class ShiftViTModel(keras.Model):
     """The ShiftViT Model.
 
