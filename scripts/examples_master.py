@@ -576,6 +576,13 @@ EXAMPLES_MASTER = {
                     "keras_3": True,
                 },
                 {
+                    "path": "feature_space_advanced",
+                    "title": "FeatureSpace advanced use cases",
+                    "subcategory": "Structured data classification",
+                    "highlight": True,
+                    "keras_3": True,
+                },
+                {
                     "path": "imbalanced_classification",
                     "title": "Imbalanced classification: credit card fraud detection",
                     "subcategory": "Structured data classification",
@@ -901,6 +908,12 @@ EXAMPLES_MASTER = {
             "title": "Quick Keras Recipes",
             "toc": True,
             "children": [
+                {
+                    "path": "float8_training_and_inference_with_transformer",
+                    "title": "Float8 training and inference with a simple Transformer model",
+                    "subcategory": "Keras usage tips",
+                    "keras_3": True,
+                },
                 {
                     "path": "tf_serving",
                     "title": "Serving TensorFlow models with TFServing",

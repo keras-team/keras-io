@@ -18,7 +18,7 @@ This example is an extension of the
 code example, and here we will extend it to cover more complex use
 cases of the [`keras.utils.FeatureSpace`](https://keras.io/api/utils/feature_space/)
 preprocessing utility, like feature hashing, feature crosses, handling missing values and
-integrating [Keras preprocessing layers](https://keras.io/guides/preprocessing_layers/)
+integrating [Keras preprocessing layers](https://keras.io/api/layers/preprocessing_layers/)
 with FeatureSpace.
 
 The general task still is structured data classification (also known as tabular data
@@ -71,11 +71,16 @@ is to have a realistic predictive model. For this reason we will drop it.
 
 
 ```python
+import os
+
+os.environ["KERAS_BACKEND"] = "tensorflow"
+
+import keras
+from keras.utils import FeatureSpace
 import pandas as pd
 import tensorflow as tf
 from pathlib import Path
 from zipfile import ZipFile
-from tensorflow.keras.utils import FeatureSpace
 ```
 
 ---
@@ -86,7 +91,7 @@ Let's download the data and load it into a Pandas dataframe:
 
 ```python
 data_url = "https://archive.ics.uci.edu/static/public/222/bank+marketing.zip"
-data_zipped_path = tf.keras.utils.get_file("bank_marketing.zip", data_url, extract=True)
+data_zipped_path = keras.utils.get_file("bank_marketing.zip", data_url, extract=True)
 keras_datasets_path = Path(data_zipped_path).parents[0]
 with ZipFile(f"{keras_datasets_path}/bank-additional.zip", "r") as zip:
     # Extract files
@@ -97,13 +102,6 @@ dataframe = pd.read_csv(
 )
 ```
 
-<div class="k-default-codeblock">
-```
-Downloading data from https://archive.ics.uci.edu/static/public/222/bank+marketing.zip
-   8192/Unknown - 0s 0us/step
-
-```
-</div>
 We will create a new feature `previously_contacted` to be able to demonstrate some useful
 preprocessing techniques, this feature is based on `pdays`. According to the dataset
 information if `pdays = 999` it means that the client was not previously contacted, so
@@ -125,187 +123,60 @@ target label), here's a preview of a few samples:
 
 ```python
 print(f"Dataframe shape: {dataframe.shape}")
-display(dataframe.head())
+print(dataframe.head())
 ```
 
 <div class="k-default-codeblock">
 ```
 Dataframe shape: (4119, 21)
-
+   age          job  marital          education default  housing     loan  \
+0   30  blue-collar  married           basic.9y      no      yes       no   
+1   39     services   single        high.school      no       no       no   
+2   25     services  married        high.school      no      yes       no   
+3   38     services  married           basic.9y      no  unknown  unknown   
+4   47       admin.  married  university.degree      no      yes       no   
 ```
 </div>
-<div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
+    
 <div class="k-default-codeblock">
 ```
-.dataframe tbody tr th {
-    vertical-align: top;
-}
-
-.dataframe thead th {
-    text-align: right;
-}
+     contact month day_of_week  ...  pdays  previous     poutcome  \
+0   cellular   may         fri  ...    999         0  nonexistent   
+1  telephone   may         fri  ...    999         0  nonexistent   
+2  telephone   jun         wed  ...    999         0  nonexistent   
+3  telephone   jun         fri  ...    999         0  nonexistent   
+4   cellular   nov         mon  ...    999         0  nonexistent   
 ```
 </div>
-</style>
-<table border="1" class="dataframe">
-  <thead>
-    <tr style="text-align: right;">
-      <th></th>
-      <th>age</th>
-      <th>job</th>
-      <th>marital</th>
-      <th>education</th>
-      <th>default</th>
-      <th>housing</th>
-      <th>loan</th>
-      <th>contact</th>
-      <th>month</th>
-      <th>day_of_week</th>
-      <th>...</th>
-      <th>pdays</th>
-      <th>previous</th>
-      <th>poutcome</th>
-      <th>emp.var.rate</th>
-      <th>cons.price.idx</th>
-      <th>cons.conf.idx</th>
-      <th>euribor3m</th>
-      <th>nr.employed</th>
-      <th>y</th>
-      <th>previously_contacted</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>30</td>
-      <td>blue-collar</td>
-      <td>married</td>
-      <td>basic.9y</td>
-      <td>no</td>
-      <td>yes</td>
-      <td>no</td>
-      <td>cellular</td>
-      <td>may</td>
-      <td>fri</td>
-      <td>...</td>
-      <td>999</td>
-      <td>0</td>
-      <td>nonexistent</td>
-      <td>-1.8</td>
-      <td>92.893</td>
-      <td>-46.2</td>
-      <td>1.313</td>
-      <td>5099.1</td>
-      <td>no</td>
-      <td>0</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>39</td>
-      <td>services</td>
-      <td>single</td>
-      <td>high.school</td>
-      <td>no</td>
-      <td>no</td>
-      <td>no</td>
-      <td>telephone</td>
-      <td>may</td>
-      <td>fri</td>
-      <td>...</td>
-      <td>999</td>
-      <td>0</td>
-      <td>nonexistent</td>
-      <td>1.1</td>
-      <td>93.994</td>
-      <td>-36.4</td>
-      <td>4.855</td>
-      <td>5191.0</td>
-      <td>no</td>
-      <td>0</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>25</td>
-      <td>services</td>
-      <td>married</td>
-      <td>high.school</td>
-      <td>no</td>
-      <td>yes</td>
-      <td>no</td>
-      <td>telephone</td>
-      <td>jun</td>
-      <td>wed</td>
-      <td>...</td>
-      <td>999</td>
-      <td>0</td>
-      <td>nonexistent</td>
-      <td>1.4</td>
-      <td>94.465</td>
-      <td>-41.8</td>
-      <td>4.962</td>
-      <td>5228.1</td>
-      <td>no</td>
-      <td>0</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>38</td>
-      <td>services</td>
-      <td>married</td>
-      <td>basic.9y</td>
-      <td>no</td>
-      <td>unknown</td>
-      <td>unknown</td>
-      <td>telephone</td>
-      <td>jun</td>
-      <td>fri</td>
-      <td>...</td>
-      <td>999</td>
-      <td>0</td>
-      <td>nonexistent</td>
-      <td>1.4</td>
-      <td>94.465</td>
-      <td>-41.8</td>
-      <td>4.959</td>
-      <td>5228.1</td>
-      <td>no</td>
-      <td>0</td>
-    </tr>
-    <tr>
-      <th>4</th>
-      <td>47</td>
-      <td>admin.</td>
-      <td>married</td>
-      <td>university.degree</td>
-      <td>no</td>
-      <td>yes</td>
-      <td>no</td>
-      <td>cellular</td>
-      <td>nov</td>
-      <td>mon</td>
-      <td>...</td>
-      <td>999</td>
-      <td>0</td>
-      <td>nonexistent</td>
-      <td>-0.1</td>
-      <td>93.200</td>
-      <td>-42.0</td>
-      <td>4.191</td>
-      <td>5195.8</td>
-      <td>no</td>
-      <td>0</td>
-    </tr>
-  </tbody>
-</table>
-<p>5 rows × 21 columns</p>
+    
+<div class="k-default-codeblock">
+```
+  emp.var.rate  cons.price.idx  cons.conf.idx  euribor3m  nr.employed   y  \
+0         -1.8          92.893          -46.2      1.313       5099.1  no   
+1          1.1          93.994          -36.4      4.855       5191.0  no   
+2          1.4          94.465          -41.8      4.962       5228.1  no   
+3          1.4          94.465          -41.8      4.959       5228.1  no   
+4         -0.1          93.200          -42.0      4.191       5195.8  no   
+```
 </div>
+    
+<div class="k-default-codeblock">
+```
+  previously_contacted  
+0                    0  
+1                    0  
+2                    0  
+3                    0  
+4                    0  
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+[5 rows x 21 columns]
 
-
+```
+</div>
 The column, "y", indicates whether the client has subscribed a term deposit or not.
 
 ---
@@ -342,7 +213,7 @@ respectively.
 
 
 ```python
-label_lookup = tf.keras.layers.StringLookup(
+label_lookup = keras.layers.StringLookup(
     # the order here is important since the first index will be encoded as 0
     vocabulary=["no", "yes"],
     num_oov_indices=0,
@@ -367,13 +238,6 @@ train_ds = dataframe_to_dataset(train_dataframe)
 valid_ds = dataframe_to_dataset(valid_dataframe)
 ```
 
-<div class="k-default-codeblock">
-```
-/Users/dimitreoliveira/Desktop/keras-io/.venvs/dev/lib/python3.11/site-packages/numpy/core/numeric.py:2463: FutureWarning: elementwise comparison failed; returning scalar instead, but in the future will perform elementwise comparison
-  return bool(asarray(a1 == a2).all())
-
-```
-</div>
 Each `Dataset` yields a tuple `(input, target)` where `input` is a dictionary of features
 and `target` is the value `0` or `1`:
 
@@ -386,7 +250,7 @@ for x, y in dataframe_to_dataset(train_dataframe).take(1):
 
 <div class="k-default-codeblock">
 ```
-Input: {'age': <tf.Tensor: shape=(), dtype=int64, numpy=57>, 'job': <tf.Tensor: shape=(), dtype=string, numpy=b'housemaid'>, 'marital': <tf.Tensor: shape=(), dtype=string, numpy=b'married'>, 'education': <tf.Tensor: shape=(), dtype=string, numpy=b'basic.4y'>, 'default': <tf.Tensor: shape=(), dtype=string, numpy=b'no'>, 'housing': <tf.Tensor: shape=(), dtype=string, numpy=b'yes'>, 'loan': <tf.Tensor: shape=(), dtype=string, numpy=b'no'>, 'contact': <tf.Tensor: shape=(), dtype=string, numpy=b'telephone'>, 'month': <tf.Tensor: shape=(), dtype=string, numpy=b'jul'>, 'day_of_week': <tf.Tensor: shape=(), dtype=string, numpy=b'thu'>, 'campaign': <tf.Tensor: shape=(), dtype=int64, numpy=3>, 'pdays': <tf.Tensor: shape=(), dtype=int64, numpy=999>, 'previous': <tf.Tensor: shape=(), dtype=int64, numpy=0>, 'poutcome': <tf.Tensor: shape=(), dtype=string, numpy=b'nonexistent'>, 'emp.var.rate': <tf.Tensor: shape=(), dtype=float64, numpy=1.4>, 'cons.price.idx': <tf.Tensor: shape=(), dtype=float64, numpy=93.918>, 'cons.conf.idx': <tf.Tensor: shape=(), dtype=float64, numpy=-42.7>, 'euribor3m': <tf.Tensor: shape=(), dtype=float64, numpy=4.966>, 'nr.employed': <tf.Tensor: shape=(), dtype=float64, numpy=5228.1>, 'previously_contacted': <tf.Tensor: shape=(), dtype=int64, numpy=0>}
+Input: {'age': <tf.Tensor: shape=(), dtype=int64, numpy=33>, 'job': <tf.Tensor: shape=(), dtype=string, numpy=b'technician'>, 'marital': <tf.Tensor: shape=(), dtype=string, numpy=b'married'>, 'education': <tf.Tensor: shape=(), dtype=string, numpy=b'university.degree'>, 'default': <tf.Tensor: shape=(), dtype=string, numpy=b'unknown'>, 'housing': <tf.Tensor: shape=(), dtype=string, numpy=b'yes'>, 'loan': <tf.Tensor: shape=(), dtype=string, numpy=b'no'>, 'contact': <tf.Tensor: shape=(), dtype=string, numpy=b'cellular'>, 'month': <tf.Tensor: shape=(), dtype=string, numpy=b'aug'>, 'day_of_week': <tf.Tensor: shape=(), dtype=string, numpy=b'tue'>, 'campaign': <tf.Tensor: shape=(), dtype=int64, numpy=1>, 'pdays': <tf.Tensor: shape=(), dtype=int64, numpy=999>, 'previous': <tf.Tensor: shape=(), dtype=int64, numpy=0>, 'poutcome': <tf.Tensor: shape=(), dtype=string, numpy=b'nonexistent'>, 'emp.var.rate': <tf.Tensor: shape=(), dtype=float64, numpy=1.4>, 'cons.price.idx': <tf.Tensor: shape=(), dtype=float64, numpy=93.444>, 'cons.conf.idx': <tf.Tensor: shape=(), dtype=float64, numpy=-36.1>, 'euribor3m': <tf.Tensor: shape=(), dtype=float64, numpy=4.963>, 'nr.employed': <tf.Tensor: shape=(), dtype=float64, numpy=5228.1>, 'previously_contacted': <tf.Tensor: shape=(), dtype=int64, numpy=0>}
 Target: 0
 
 ```
@@ -468,8 +332,8 @@ example_feature_space(train_ds_with_no_labels, feature_space, ["education"])
 
 <div class="k-default-codeblock">
 ```
-Input: [{'education': b'high.school'}]
-Preprocessed output: [{'education': array([1., 0., 0.], dtype=float32)}]
+Input: [{'education': b'basic.9y'}]
+Preprocessed output: [{'education': array([0., 1., 0.], dtype=float32)}]
 
 ```
 </div>
@@ -490,7 +354,7 @@ example_feature_space(train_ds_with_no_labels, feature_space, ["age"])
 
 <div class="k-default-codeblock">
 ```
-Input: [{'age': 36}]
+Input: [{'age': 40}]
 Preprocessed output: [{'age': array([0., 1., 0.], dtype=float32)}]
 
 ```
@@ -604,8 +468,8 @@ example_feature_space(train_ds_with_no_labels, feature_space, ["age", "job"])
 
 <div class="k-default-codeblock">
 ```
-Input: [{'age': 43}, {'job': b'management'}]
-Preprocessed output: [{'age': array([1., 0., 0., 0., 0., 0.], dtype=float32)}, {'job': array([0., 0., 0., 0., 1., 0., 0., 0., 0., 0., 0., 0.], dtype=float32)}, {'age_X_job': array([0., 0., 0., 0., 0., 0., 1., 0.], dtype=float32)}]
+Input: [{'age': 28}, {'job': b'blue-collar'}]
+Preprocessed output: [{'age': array([0., 0., 1., 0., 0., 0.], dtype=float32)}, {'job': array([0., 1., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.], dtype=float32)}, {'age_X_job': array([0., 0., 0., 0., 1., 0., 0., 0.], dtype=float32)}]
 
 ```
 </div>
@@ -619,14 +483,14 @@ can use sophisticated data transformations provided by the framework, you can ev
 your own custom Keras preprocessing layers and use it in the same way.
 
 Here we are going to use the
-[`tf.keras.layers.TextVectorization`](https://keras.io/api/layers/preprocessing_layers/text/text_vectorization/#textvectorization-class)
+[`keras.layers.TextVectorization`](https://keras.io/api/layers/preprocessing_layers/text/text_vectorization/#textvectorization-class)
 preprocessing layer to create a TF-IDF
 feature from our data. Note that this feature is not a really good use case for TF-IDF,
 this is just for demonstration purposes.
 
 
 ```python
-custom_layer = tf.keras.layers.TextVectorization(output_mode="tf_idf")
+custom_layer = keras.layers.TextVectorization(output_mode="tf_idf")
 
 feature_space = FeatureSpace(
     features={
@@ -641,8 +505,8 @@ example_feature_space(train_ds_with_no_labels, feature_space, ["education"])
 
 <div class="k-default-codeblock">
 ```
-Input: [{'education': b'high.school'}]
-Preprocessed output: [{'education': array([0.       , 0.       , 1.6840783, 0.       , 0.       , 0.       ,
+Input: [{'education': b'university.degree'}]
+Preprocessed output: [{'education': array([0.       , 1.4574516, 0.       , 0.       , 0.       , 0.       ,
        0.       , 0.       , 0.       ], dtype=float32)}]
 
 ```
@@ -692,9 +556,7 @@ feature_space = FeatureSpace(
     # Specify feature cross with a custom crossing dim.
     crosses=[
         FeatureSpace.cross(feature_names=("age", "job"), crossing_dim=8),
-        FeatureSpace.cross(
-            feature_names=("default", "housing", "loan"), crossing_dim=6
-        ),
+        FeatureSpace.cross(feature_names=("housing", "loan"), crossing_dim=6),
         FeatureSpace.cross(
             feature_names=("poutcome", "previously_contacted"), crossing_dim=2
         ),
@@ -745,19 +607,19 @@ for x, _ in train_ds.take(1):
 ```
 preprocessed_x shape: (32, 77)
 preprocessed_x sample: 
-[ 0.          0.          1.          0.         -0.58789116 -0.47766402
-  0.59354883  1.          0.          1.          0.          0.
-  0.          0.          1.          0.          0.          0.
-  0.          0.          1.          0.          0.          0.
-  0.          0.8486566   0.77920455  1.          0.          0.
-  0.          1.          0.          0.          1.          0.
-  1.          0.          0.          0.          0.          1.
+[ 0.          1.          0.          0.         -0.19560693  0.95908785
+ -0.22542837  1.          0.          0.          1.          0.
+  0.          0.          1.          0.          0.          1.
   0.          0.          0.          0.          0.          0.
-  0.          0.          0.84002995  0.          0.          1.
-  0.          1.          0.          0.         -0.35691866  1.
-  0.          0.          0.          0.          0.          1.
-  0.          0.          0.          0.          1.          0.
-  0.          0.          0.          1.          0.        ]
+  0.          0.8486567   0.781508    1.          0.          0.
+  0.          0.          1.          1.          0.          0.
+  0.          1.          0.          0.          0.          0.
+  1.          0.          0.          0.          0.          0.
+  0.          0.          0.8400493   0.          0.          1.
+  0.          1.          0.          0.         -0.35691845  1.
+  0.          0.          0.          0.          0.          0.
+  1.          0.          0.          0.          0.          0.
+  0.          1.          0.          1.          0.        ]
 
 ```
 </div>
@@ -813,7 +675,7 @@ print(encoded_features)
 
 <div class="k-default-codeblock">
 ```
-KerasTensor(type_spec=TensorSpec(shape=(None, 77), dtype=tf.float32, name=None), name='concatenate/concat:0', description="created by layer 'concatenate'")
+<KerasTensor shape=(None, 77), dtype=float32, sparse=False, name=keras_tensor_56>
 
 ```
 </div>
@@ -822,11 +684,11 @@ attention to the architecture.
 
 
 ```python
-x = tf.keras.layers.Dense(64, activation="relu")(encoded_features)
-x = tf.keras.layers.Dropout(0.5)(x)
-output = tf.keras.layers.Dense(1, activation="sigmoid")(x)
+x = keras.layers.Dense(64, activation="relu")(encoded_features)
+x = keras.layers.Dropout(0.5)(x)
+output = keras.layers.Dense(1, activation="sigmoid")(x)
 
-model = tf.keras.Model(inputs=encoded_features, outputs=output)
+model = keras.Model(inputs=encoded_features, outputs=output)
 model.compile(optimizer="adam", loss="binary_crossentropy", metrics=["accuracy"])
 ```
 
@@ -846,47 +708,47 @@ model.fit(
 <div class="k-default-codeblock">
 ```
 Epoch 1/20
-103/103 - 2s - loss: 0.3399 - accuracy: 0.8777 - val_loss: 0.2653 - val_accuracy: 0.9114 - 2s/epoch - 23ms/step
+103/103 - 1s - 6ms/step - accuracy: 0.8844 - loss: 0.3453 - val_accuracy: 0.9114 - val_loss: 0.2612
 Epoch 2/20
-103/103 - 1s - loss: 0.3077 - accuracy: 0.8953 - val_loss: 0.2650 - val_accuracy: 0.9114 - 848ms/epoch - 8ms/step
+103/103 - 0s - 2ms/step - accuracy: 0.8974 - loss: 0.3010 - val_accuracy: 0.9078 - val_loss: 0.2641
 Epoch 3/20
-103/103 - 1s - loss: 0.3001 - accuracy: 0.8956 - val_loss: 0.2638 - val_accuracy: 0.9114 - 852ms/epoch - 8ms/step
+103/103 - 0s - 2ms/step - accuracy: 0.9005 - loss: 0.2863 - val_accuracy: 0.9066 - val_loss: 0.2630
 Epoch 4/20
-103/103 - 1s - loss: 0.2942 - accuracy: 0.8950 - val_loss: 0.2679 - val_accuracy: 0.9029 - 842ms/epoch - 8ms/step
+103/103 - 0s - 2ms/step - accuracy: 0.9002 - loss: 0.2925 - val_accuracy: 0.9053 - val_loss: 0.2653
 Epoch 5/20
-103/103 - 1s - loss: 0.2897 - accuracy: 0.8995 - val_loss: 0.2649 - val_accuracy: 0.9078 - 845ms/epoch - 8ms/step
+103/103 - 0s - 2ms/step - accuracy: 0.8995 - loss: 0.2893 - val_accuracy: 0.9078 - val_loss: 0.2624
 Epoch 6/20
-103/103 - 1s - loss: 0.2893 - accuracy: 0.8992 - val_loss: 0.2648 - val_accuracy: 0.9078 - 844ms/epoch - 8ms/step
+103/103 - 0s - 2ms/step - accuracy: 0.9002 - loss: 0.2866 - val_accuracy: 0.9078 - val_loss: 0.2628
 Epoch 7/20
-103/103 - 1s - loss: 0.2869 - accuracy: 0.8980 - val_loss: 0.2649 - val_accuracy: 0.9090 - 836ms/epoch - 8ms/step
+103/103 - 0s - 2ms/step - accuracy: 0.9026 - loss: 0.2868 - val_accuracy: 0.9090 - val_loss: 0.2621
 Epoch 8/20
-103/103 - 1s - loss: 0.2892 - accuracy: 0.8953 - val_loss: 0.2647 - val_accuracy: 0.9066 - 832ms/epoch - 8ms/step
+103/103 - 0s - 2ms/step - accuracy: 0.9023 - loss: 0.2802 - val_accuracy: 0.9078 - val_loss: 0.2623
 Epoch 9/20
-103/103 - 1s - loss: 0.2856 - accuracy: 0.9011 - val_loss: 0.2641 - val_accuracy: 0.9102 - 831ms/epoch - 8ms/step
+103/103 - 0s - 2ms/step - accuracy: 0.9047 - loss: 0.2743 - val_accuracy: 0.9078 - val_loss: 0.2628
 Epoch 10/20
-103/103 - 1s - loss: 0.2810 - accuracy: 0.8998 - val_loss: 0.2647 - val_accuracy: 0.9090 - 840ms/epoch - 8ms/step
+103/103 - 0s - 2ms/step - accuracy: 0.9062 - loss: 0.2761 - val_accuracy: 0.9090 - val_loss: 0.2650
 Epoch 11/20
-103/103 - 1s - loss: 0.2841 - accuracy: 0.8980 - val_loss: 0.2659 - val_accuracy: 0.9041 - 830ms/epoch - 8ms/step
+103/103 - 0s - 2ms/step - accuracy: 0.9050 - loss: 0.2729 - val_accuracy: 0.9090 - val_loss: 0.2668
 Epoch 12/20
-103/103 - 1s - loss: 0.2828 - accuracy: 0.8983 - val_loss: 0.2652 - val_accuracy: 0.9053 - 833ms/epoch - 8ms/step
+103/103 - 0s - 2ms/step - accuracy: 0.9029 - loss: 0.2699 - val_accuracy: 0.9078 - val_loss: 0.2670
 Epoch 13/20
-103/103 - 1s - loss: 0.2815 - accuracy: 0.9023 - val_loss: 0.2639 - val_accuracy: 0.9126 - 834ms/epoch - 8ms/step
+103/103 - 0s - 2ms/step - accuracy: 0.9056 - loss: 0.2671 - val_accuracy: 0.9078 - val_loss: 0.2641
 Epoch 14/20
-103/103 - 1s - loss: 0.2830 - accuracy: 0.8953 - val_loss: 0.2659 - val_accuracy: 0.9053 - 835ms/epoch - 8ms/step
+103/103 - 0s - 2ms/step - accuracy: 0.9032 - loss: 0.2750 - val_accuracy: 0.9078 - val_loss: 0.2643
 Epoch 15/20
-103/103 - 1s - loss: 0.2848 - accuracy: 0.8977 - val_loss: 0.2637 - val_accuracy: 0.9090 - 831ms/epoch - 8ms/step
+103/103 - 0s - 2ms/step - accuracy: 0.9083 - loss: 0.2650 - val_accuracy: 0.9102 - val_loss: 0.2658
 Epoch 16/20
-103/103 - 1s - loss: 0.2764 - accuracy: 0.8986 - val_loss: 0.2653 - val_accuracy: 0.9053 - 829ms/epoch - 8ms/step
+103/103 - 0s - 2ms/step - accuracy: 0.9102 - loss: 0.2593 - val_accuracy: 0.9102 - val_loss: 0.2639
 Epoch 17/20
-103/103 - 1s - loss: 0.2813 - accuracy: 0.8995 - val_loss: 0.2635 - val_accuracy: 0.9078 - 826ms/epoch - 8ms/step
+103/103 - 0s - 2ms/step - accuracy: 0.9074 - loss: 0.2719 - val_accuracy: 0.9102 - val_loss: 0.2655
 Epoch 18/20
-103/103 - 1s - loss: 0.2790 - accuracy: 0.9023 - val_loss: 0.2677 - val_accuracy: 0.9017 - 831ms/epoch - 8ms/step
+103/103 - 0s - 2ms/step - accuracy: 0.9059 - loss: 0.2655 - val_accuracy: 0.9102 - val_loss: 0.2670
 Epoch 19/20
-103/103 - 1s - loss: 0.2820 - accuracy: 0.8968 - val_loss: 0.2644 - val_accuracy: 0.9066 - 835ms/epoch - 8ms/step
+103/103 - 0s - 2ms/step - accuracy: 0.9099 - loss: 0.2650 - val_accuracy: 0.9102 - val_loss: 0.2646
 Epoch 20/20
-103/103 - 1s - loss: 0.2812 - accuracy: 0.9002 - val_loss: 0.2661 - val_accuracy: 0.9029 - 898ms/epoch - 9ms/step
+103/103 - 0s - 2ms/step - accuracy: 0.9068 - loss: 0.2624 - val_accuracy: 0.9078 - val_loss: 0.2661
 
-<keras.callbacks.History at 0x2d2ff5090>
+<keras.src.callbacks.history.History at 0x31eac7eb0>
 
 ```
 </div>
@@ -904,16 +766,9 @@ different device or environment.
 
 
 ```python
-loaded_feature_space = tf.keras.models.load_model("myfeaturespace.keras")
+loaded_feature_space = keras.saving.load_model("myfeaturespace.keras")
 ```
 
-<div class="k-default-codeblock">
-```
-/Users/dimitreoliveira/Desktop/keras-io/.venvs/dev/lib/python3.11/site-packages/numpy/core/numeric.py:2463: FutureWarning: elementwise comparison failed; returning scalar instead, but in the future will perform elementwise comparison
-  return bool(asarray(a1 == a2).all())
-
-```
-</div>
 ### Building the inference end-to-end model
 
 To build the inference model we need both the feature input map and the preprocessing
@@ -928,7 +783,7 @@ print(encoded_features)
 print(dict_inputs)
 
 outputs = model(encoded_features)
-inference_model = tf.keras.Model(inputs=dict_inputs, outputs=outputs)
+inference_model = keras.Model(inputs=dict_inputs, outputs=outputs)
 
 sample = {
     "age": 30,
@@ -953,7 +808,9 @@ sample = {
     "previously_contacted": 0,
 }
 
-input_dict = {name: tf.convert_to_tensor([value]) for name, value in sample.items()}
+input_dict = {
+    name: keras.ops.convert_to_tensor([value]) for name, value in sample.items()
+}
 predictions = inference_model.predict(input_dict)
 
 print(
@@ -964,10 +821,10 @@ print(
 
 <div class="k-default-codeblock">
 ```
-KerasTensor(type_spec=TensorSpec(shape=(None, 77), dtype=tf.float32, name=None), name='concatenate_1/concat:0', description="created by layer 'concatenate_1'")
-{'previously_contacted': <KerasTensor: shape=(None, 1) dtype=int64 (created by layer 'previously_contacted')>, 'marital': <KerasTensor: shape=(None, 1) dtype=string (created by layer 'marital')>, 'education': <KerasTensor: shape=(None, 1) dtype=string (created by layer 'education')>, 'default': <KerasTensor: shape=(None, 1) dtype=string (created by layer 'default')>, 'housing': <KerasTensor: shape=(None, 1) dtype=string (created by layer 'housing')>, 'loan': <KerasTensor: shape=(None, 1) dtype=string (created by layer 'loan')>, 'contact': <KerasTensor: shape=(None, 1) dtype=string (created by layer 'contact')>, 'month': <KerasTensor: shape=(None, 1) dtype=string (created by layer 'month')>, 'day_of_week': <KerasTensor: shape=(None, 1) dtype=string (created by layer 'day_of_week')>, 'poutcome': <KerasTensor: shape=(None, 1) dtype=string (created by layer 'poutcome')>, 'job': <KerasTensor: shape=(None, 1) dtype=string (created by layer 'job')>, 'pdays': <KerasTensor: shape=(None, 1) dtype=int64 (created by layer 'pdays')>, 'age': <KerasTensor: shape=(None, 1) dtype=float32 (created by layer 'age')>, 'campaign': <KerasTensor: shape=(None, 1) dtype=float32 (created by layer 'campaign')>, 'previous': <KerasTensor: shape=(None, 1) dtype=float32 (created by layer 'previous')>, 'emp.var.rate': <KerasTensor: shape=(None, 1) dtype=float32 (created by layer 'emp.var.rate')>, 'cons.price.idx': <KerasTensor: shape=(None, 1) dtype=float32 (created by layer 'cons.price.idx')>, 'cons.conf.idx': <KerasTensor: shape=(None, 1) dtype=float32 (created by layer 'cons.conf.idx')>, 'euribor3m': <KerasTensor: shape=(None, 1) dtype=float32 (created by layer 'euribor3m')>, 'nr.employed': <KerasTensor: shape=(None, 1) dtype=float32 (created by layer 'nr.employed')>}
-1/1 [==============================] - 1s 568ms/step
-This particular client has a 8.59% probability of subscribing a term deposit, as evaluated by our model.
+<KerasTensor shape=(None, 77), dtype=float32, sparse=False, name=keras_tensor_99>
+{'previously_contacted': <KerasTensor shape=(None, 1), dtype=int32, sparse=None, name=previously_contacted>, 'marital': <KerasTensor shape=(None, 1), dtype=string, sparse=None, name=marital>, 'education': <KerasTensor shape=(None, 1), dtype=string, sparse=None, name=education>, 'default': <KerasTensor shape=(None, 1), dtype=string, sparse=None, name=default>, 'housing': <KerasTensor shape=(None, 1), dtype=string, sparse=None, name=housing>, 'loan': <KerasTensor shape=(None, 1), dtype=string, sparse=None, name=loan>, 'contact': <KerasTensor shape=(None, 1), dtype=string, sparse=None, name=contact>, 'month': <KerasTensor shape=(None, 1), dtype=string, sparse=None, name=month>, 'day_of_week': <KerasTensor shape=(None, 1), dtype=string, sparse=None, name=day_of_week>, 'poutcome': <KerasTensor shape=(None, 1), dtype=string, sparse=None, name=poutcome>, 'job': <KerasTensor shape=(None, 1), dtype=string, sparse=None, name=job>, 'pdays': <KerasTensor shape=(None, 1), dtype=int32, sparse=None, name=pdays>, 'age': <KerasTensor shape=(None, 1), dtype=float32, sparse=None, name=age>, 'campaign': <KerasTensor shape=(None, 1), dtype=float32, sparse=None, name=campaign>, 'previous': <KerasTensor shape=(None, 1), dtype=float32, sparse=None, name=previous>, 'emp.var.rate': <KerasTensor shape=(None, 1), dtype=float32, sparse=None, name=emp.var.rate>, 'cons.price.idx': <KerasTensor shape=(None, 1), dtype=float32, sparse=None, name=cons.price.idx>, 'cons.conf.idx': <KerasTensor shape=(None, 1), dtype=float32, sparse=None, name=cons.conf.idx>, 'euribor3m': <KerasTensor shape=(None, 1), dtype=float32, sparse=None, name=euribor3m>, 'nr.employed': <KerasTensor shape=(None, 1), dtype=float32, sparse=None, name=nr.employed>}
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 126ms/step
+This particular client has a 9.60% probability of subscribing a term deposit, as evaluated by our model.
 
 ```
 </div>

@@ -687,7 +687,7 @@ Let's answer with an extract from
 def predict(x):
     y_batches = []
     for x_batch in get_batches(x):
-        y_batch = model(x).numpy()
+        y_batch = model(x_batch).numpy()
         y_batches.append(y_batch)
     return np.concatenate(y_batches)
 ```

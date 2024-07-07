@@ -96,7 +96,7 @@ classifier = keras_cv.models.ImageClassifier.from_preset(
 You may notice a small deviation from the old `keras.applications` API; where
 you would construct the class with `EfficientNetV2B0(weights="imagenet")`.
 While the old API was great for classification, it did not scale effectively to
-other use cases that required complex architectures, like object deteciton and
+other use cases that required complex architectures, like object detection and
 semantic segmentation.
 
 Now that our classifier is built, let's apply it to this cute cat picture!
@@ -183,7 +183,7 @@ Ideally, we'd have a classifier that only performs computation to determine if
 an image is a cat or a dog, and has all of its resources dedicated to this task.
 This can be solved by fine tuning our own classifier.
 
-# Fine tuning a pretrained classifier
+## Fine tuning a pretrained classifier
 
 ![](https://storage.googleapis.com/keras-nlp/getting_started_guide/prof_keras_intermediate.png)
 
@@ -361,7 +361,7 @@ Top class is: cat
 </div>
 Awesome - looks like the model correctly classified the image.
 
-# Train a Classifier from Scratch
+## Train a Classifier from Scratch
 
 ![](https://storage.googleapis.com/keras-nlp/getting_started_guide/prof_keras_advanced.png)
 
@@ -431,9 +431,9 @@ keras_cv.visualization.plot_image_gallery(
 
 
 ---
-## Data Augmentation
+### Data Augmentation
 
-In our previous finetuning exmaple, we performed a static resizing operation and
+In our previous finetuning example, we performed a static resizing operation and
 did not utilize any image augmentation.
 This is because a single pass over the training set was sufficient to achieve
 decent results.
@@ -766,7 +766,7 @@ classifier.
 Congratulations on making it this far!
 
 ---
-## Optimizer Tuning
+### Optimizer Tuning
 
 To achieve optimal performance, we need to use a learning rate schedule instead
 of a single learning rate. While we won't go into detail on the Cosine decay
