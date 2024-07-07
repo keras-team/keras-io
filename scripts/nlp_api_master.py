@@ -24,6 +24,7 @@ BASE_CLASSES = {
                 "keras_nlp.models.CausalLM.from_preset",
                 "keras_nlp.models.CausalLM.compile",
                 "keras_nlp.models.CausalLM.generate",
+                "keras_nlp.models.CausalLM.save_to_preset",
                 "keras_nlp.models.CausalLM.preprocessor",
                 "keras_nlp.models.CausalLM.backbone",
             ],
@@ -36,6 +37,7 @@ BASE_CLASSES = {
                 "keras_nlp.models.Seq2SeqLM.from_preset",
                 "keras_nlp.models.Seq2SeqLM.compile",
                 "keras_nlp.models.Seq2SeqLM.generate",
+                "keras_nlp.models.Seq2SeqLM.save_to_preset",
                 "keras_nlp.models.Seq2SeqLM.preprocessor",
                 "keras_nlp.models.Seq2SeqLM.backbone",
             ],
@@ -47,6 +49,7 @@ BASE_CLASSES = {
                 "keras_nlp.models.Classifier",
                 "keras_nlp.models.Classifier.from_preset",
                 "keras_nlp.models.Classifier.compile",
+                "keras_nlp.models.Classifier.save_to_preset",
                 "keras_nlp.models.Classifier.preprocessor",
                 "keras_nlp.models.Classifier.backbone",
             ],
@@ -58,6 +61,7 @@ BASE_CLASSES = {
                 "keras_nlp.models.MaskedLM",
                 "keras_nlp.models.MaskedLM.from_preset",
                 "keras_nlp.models.MaskedLM.compile",
+                "keras_nlp.models.MaskedLM.save_to_preset",
                 "keras_nlp.models.MaskedLM.preprocessor",
                 "keras_nlp.models.MaskedLM.backbone",
             ],
@@ -68,6 +72,7 @@ BASE_CLASSES = {
             "generate": [
                 "keras_nlp.models.Task",
                 "keras_nlp.models.Task.from_preset",
+                "keras_nlp.models.Task.save_to_preset",
                 "keras_nlp.models.Task.preprocessor",
                 "keras_nlp.models.Task.backbone",
             ],
@@ -78,6 +83,7 @@ BASE_CLASSES = {
             "generate": [
                 "keras_nlp.models.Preprocessor",
                 "keras_nlp.models.Preprocessor.from_preset",
+                "keras_nlp.models.Preprocessor.save_to_preset",
                 "keras_nlp.models.Preprocessor.tokenizer",
             ],
         },
@@ -87,6 +93,7 @@ BASE_CLASSES = {
             "generate": [
                 "keras_nlp.models.Tokenizer",
                 "keras_nlp.models.Tokenizer.from_preset",
+                "keras_nlp.models.Tokenizer.save_to_preset",
             ],
         },
         {
@@ -549,6 +556,61 @@ MODELS_MASTER = {
             ],
         },
         {
+            "path": "falcon/",
+            "title": "Falcon",
+            "toc": True,
+            "children": [
+                {
+                    "path": "falcon_tokenizer",
+                    "title": "FalconTokenizer",
+                    "generate": [
+                        "keras_nlp.models.FalconTokenizer",
+                        "keras_nlp.models.FalconTokenizer.from_preset",
+                    ],
+                },
+                {
+                    "path": "falcon_preprocessor",
+                    "title": "FalconPreprocessor layer",
+                    "generate": [
+                        "keras_nlp.models.FalconPreprocessor",
+                        "keras_nlp.models.FalconPreprocessor.from_preset",
+                        "keras_nlp.models.FalconPreprocessor.tokenizer",
+                    ],
+                },
+                {
+                    "path": "falcon_backbone",
+                    "title": "FalconBackbone model",
+                    "generate": [
+                        "keras_nlp.models.FalconBackbone",
+                        "keras_nlp.models.FalconBackbone.from_preset",
+                        "keras_nlp.models.FalconBackbone.token_embedding",
+                    ],
+                },
+                {
+                    "path": "falcon_causal_lm",
+                    "title": "FalconCausalLM model",
+                    "generate": [
+                        "keras_nlp.models.FalconCausalLM",
+                        "keras_nlp.models.FalconCausalLM.from_preset",
+                        "keras_nlp.models.FalconCausalLM.generate",
+                        "keras_nlp.models.FalconCausalLM.backbone",
+                        "keras_nlp.models.FalconCausalLM.preprocessor",
+                    ],
+                },
+                {
+                    "path": "falcon_causal_lm_preprocessor",
+                    "title": "FalconCausalLMPreprocessor layer",
+                    "generate": [
+                        "keras_nlp.models.FalconCausalLMPreprocessor",
+                        "keras_nlp.models.FalconCausalLMPreprocessor.from_preset",
+                        "keras_nlp.models.FalconCausalLMPreprocessor.generate_preprocess",
+                        "keras_nlp.models.FalconCausalLMPreprocessor.generate_postprocess",
+                        "keras_nlp.models.FalconCausalLMPreprocessor.tokenizer",
+                    ],
+                },
+            ],
+        },
+        {
             "path": "f_net/",
             "title": "FNet",
             "toc": True,
@@ -720,6 +782,60 @@ MODELS_MASTER = {
             ],
         },
         {
+            "path": "llama3/",
+            "title": "Llama3",
+            "toc": True,
+            "children": [
+                {
+                    "path": "llama3_tokenizer",
+                    "title": "Llama3Tokenizer",
+                    "generate": [
+                        "keras_nlp.models.Llama3Tokenizer",
+                        "keras_nlp.models.Llama3Tokenizer.from_preset",
+                    ],
+                },
+                {
+                    "path": "llama3_preprocessor",
+                    "title": "Llama3Preprocessor layer",
+                    "generate": [
+                        "keras_nlp.models.Llama3Preprocessor",
+                        "keras_nlp.models.Llama3Preprocessor.from_preset",
+                        "keras_nlp.models.Llama3Preprocessor.tokenizer",
+                    ],
+                },
+                {
+                    "path": "llama3_backbone",
+                    "title": "Llama3Backbone model",
+                    "generate": [
+                        "keras_nlp.models.Llama3Backbone",
+                        "keras_nlp.models.Llama3Backbone.from_preset",
+                        "keras_nlp.models.Llama3Backbone.token_embedding",
+                        "keras_nlp.models.Llama3Backbone.enable_lora",
+                    ],
+                },
+                {
+                    "path": "llama3_causal_lm",
+                    "title": "Llama3CausalLM model",
+                    "generate": [
+                        "keras_nlp.models.Llama3CausalLM",
+                        "keras_nlp.models.Llama3CausalLM.from_preset",
+                        "keras_nlp.models.Llama3CausalLM.generate",
+                        "keras_nlp.models.Llama3CausalLM.backbone",
+                        "keras_nlp.models.Llama3CausalLM.preprocessor",
+                    ],
+                },
+                {
+                    "path": "llama3_causal_lm_preprocessor",
+                    "title": "Llama3CausalLMPreprocessor layer",
+                    "generate": [
+                        "keras_nlp.models.Llama3CausalLMPreprocessor",
+                        "keras_nlp.models.Llama3CausalLMPreprocessor.from_preset",
+                        "keras_nlp.models.Llama3CausalLMPreprocessor.tokenizer",
+                    ],
+                },
+            ],
+        },
+        {
             "path": "mistral/",
             "title": "Mistral",
             "toc": True,
@@ -822,6 +938,103 @@ MODELS_MASTER = {
                         "keras_nlp.models.OPTCausalLMPreprocessor",
                         "keras_nlp.models.OPTCausalLMPreprocessor.from_preset",
                         "keras_nlp.models.OPTCausalLMPreprocessor.tokenizer",
+                    ],
+                },
+            ],
+        },
+        {
+            "path": "pali_gemma/",
+            "title": "PaliGemma",
+            "toc": True,
+            "children": [
+                {
+                    "path": "pali_gemma_tokenizer",
+                    "title": "PaliGemmaTokenizer",
+                    "generate": [
+                        "keras_nlp.models.PaliGemmaTokenizer",
+                        "keras_nlp.models.PaliGemmaTokenizer.from_preset",
+                    ],
+                },
+                {
+                    "path": "pali_gemma_backbone",
+                    "title": "PaliGemmaBackbone model",
+                    "generate": [
+                        "keras_nlp.models.PaliGemmaBackbone",
+                        "keras_nlp.models.PaliGemmaBackbone.from_preset",
+                        "keras_nlp.models.PaliGemmaBackbone.token_embedding",
+                    ],
+                },
+                {
+                    "path": "pali_gemma_causal_lm",
+                    "title": "PaliGemmaCausalLM model",
+                    "generate": [
+                        "keras_nlp.models.PaliGemmaCausalLM",
+                        "keras_nlp.models.PaliGemmaCausalLM.from_preset",
+                        "keras_nlp.models.PaliGemmaCausalLM.generate",
+                        "keras_nlp.models.PaliGemmaCausalLM.backbone",
+                        "keras_nlp.models.PaliGemmaCausalLM.preprocessor",
+                    ],
+                },
+                {
+                    "path": "pali_gemma_causal_lm_preprocessor",
+                    "title": "PaliGemmaCausalLMPreprocessor layer",
+                    "generate": [
+                        "keras_nlp.models.PaliGemmaCausalLMPreprocessor",
+                        "keras_nlp.models.PaliGemmaCausalLMPreprocessor.from_preset",
+                        "keras_nlp.models.PaliGemmaCausalLMPreprocessor.tokenizer",
+                    ],
+                },
+            ],
+        },
+        {
+            "path": "phi3/",
+            "title": "Phi3",
+            "toc": True,
+            "children": [
+                {
+                    "path": "phi3_tokenizer",
+                    "title": "Phi3Tokenizer",
+                    "generate": [
+                        "keras_nlp.models.Phi3Tokenizer",
+                        "keras_nlp.models.Phi3Tokenizer.from_preset",
+                    ],
+                },
+                {
+                    "path": "phi3_preprocessor",
+                    "title": "Phi3Preprocessor layer",
+                    "generate": [
+                        "keras_nlp.models.Phi3Preprocessor",
+                        "keras_nlp.models.Phi3Preprocessor.from_preset",
+                        "keras_nlp.models.Phi3Preprocessor.tokenizer",
+                    ],
+                },
+                {
+                    "path": "phi3_backbone",
+                    "title": "Phi3Backbone model",
+                    "generate": [
+                        "keras_nlp.models.Phi3Backbone",
+                        "keras_nlp.models.Phi3Backbone.from_preset",
+                        "keras_nlp.models.Phi3Backbone.token_embedding",
+                    ],
+                },
+                {
+                    "path": "phi3_causal_lm",
+                    "title": "Phi3CausalLM model",
+                    "generate": [
+                        "keras_nlp.models.Phi3CausalLM",
+                        "keras_nlp.models.Phi3CausalLM.from_preset",
+                        "keras_nlp.models.Phi3CausalLM.generate",
+                        "keras_nlp.models.Phi3CausalLM.backbone",
+                        "keras_nlp.models.Phi3CausalLM.preprocessor",
+                    ],
+                },
+                {
+                    "path": "phi3_causal_lm_preprocessor",
+                    "title": "Phi3CausalLMPreprocessor layer",
+                    "generate": [
+                        "keras_nlp.models.Phi3CausalLMPreprocessor",
+                        "keras_nlp.models.Phi3CausalLMPreprocessor.from_preset",
+                        "keras_nlp.models.Phi3CausalLMPreprocessor.tokenizer",
                     ],
                 },
             ],

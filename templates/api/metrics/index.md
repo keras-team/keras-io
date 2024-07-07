@@ -177,7 +177,7 @@ class BinaryTruePositives(keras.metrics.Metric):
   def result(self):
     return self.true_positives
 
-  def reset_states(self):
+  def reset_state(self):
     self.true_positives.assign(0)
 
 m = BinaryTruePositives()

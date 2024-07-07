@@ -47,6 +47,10 @@ NLP_GUIDES_MASTER = {
             "path": "transformer_pretraining",
             "title": "Pretraining a Transformer from scratch with KerasNLP",
         },
+        {
+            "path": "upload",
+            "title": "Uploading Models with KerasNLP",
+        },
     ],
 }
 

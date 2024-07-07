@@ -33,7 +33,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from pathlib import Path
-from collections import Counter
 
 import tensorflow as tf
 import keras
@@ -133,7 +132,7 @@ def split_data(images, labels, train_size=0.9, shuffle=True):
     # 2. Make an indices array and shuffle it, if required
     indices = ops.arange(size)
     if shuffle:
-        keras.random.shuffle(indices)
+        indices = keras.random.shuffle(indices)
     # 3. Get the size of training samples
     train_samples = int(size * train_size)
     # 4. Split data into training and validation sets

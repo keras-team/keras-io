@@ -71,11 +71,16 @@ is to have a realistic predictive model. For this reason we will drop it.
 ## Setup
 """
 
+import os
+
+os.environ["KERAS_BACKEND"] = "tensorflow"
+
+import keras
+from keras.utils import FeatureSpace
 import pandas as pd
 import tensorflow as tf
 from pathlib import Path
 from zipfile import ZipFile
-from tensorflow.keras.utils import FeatureSpace
 
 """
 ## Load the data
@@ -84,7 +89,7 @@ Let's download the data and load it into a Pandas dataframe:
 """
 
 data_url = "https://archive.ics.uci.edu/static/public/222/bank+marketing.zip"
-data_zipped_path = tf.keras.utils.get_file("bank_marketing.zip", data_url, extract=True)
+data_zipped_path = keras.utils.get_file("bank_marketing.zip", data_url, extract=True)
 keras_datasets_path = Path(data_zipped_path).parents[0]
 with ZipFile(f"{keras_datasets_path}/bank-additional.zip", "r") as zip:
     # Extract files
@@ -114,7 +119,7 @@ target label), here's a preview of a few samples:
 """
 
 print(f"Dataframe shape: {dataframe.shape}")
-display(dataframe.head())
+print(dataframe.head())
 
 """
 The column, "y", indicates whether the client has subscribed a term deposit or not.
@@ -145,7 +150,7 @@ an integer to be able to train our model with it. To achieve this we will create
 respectively.
 """
 
-label_lookup = tf.keras.layers.StringLookup(
+label_lookup = keras.layers.StringLookup(
     # the order here is important since the first index will be encoded as 0
     vocabulary=["no", "yes"],
     num_oov_indices=0,
@@ -363,13 +368,13 @@ can use sophisticated data transformations provided by the framework, you can ev
 your own custom Keras preprocessing layers and use it in the same way.
 
 Here we are going to use the
-[`tf.keras.layers.TextVectorization`](https://keras.io/api/layers/preprocessing_layers/text/text_vectorization/#textvectorization-class)
+[`keras.layers.TextVectorization`](https://keras.io/api/layers/preprocessing_layers/text/text_vectorization/#textvectorization-class)
 preprocessing layer to create a TF-IDF
 feature from our data. Note that this feature is not a really good use case for TF-IDF,
 this is just for demonstration purposes.
 """
 
-custom_layer = tf.keras.layers.TextVectorization(output_mode="tf_idf")
+custom_layer = keras.layers.TextVectorization(output_mode="tf_idf")
 
 feature_space = FeatureSpace(
     features={
@@ -426,9 +431,7 @@ feature_space = FeatureSpace(
     # Specify feature cross with a custom crossing dim.
     crosses=[
         FeatureSpace.cross(feature_names=("age", "job"), crossing_dim=8),
-        FeatureSpace.cross(
-            feature_names=("default", "housing", "loan"), crossing_dim=6
-        ),
+        FeatureSpace.cross(feature_names=("housing", "loan"), crossing_dim=6),
         FeatureSpace.cross(
             feature_names=("poutcome", "previously_contacted"), crossing_dim=2
         ),
@@ -520,11 +523,11 @@ This model is quite trivial only for demonstration purposes so don't pay too muc
 attention to the architecture.
 """
 
-x = tf.keras.layers.Dense(64, activation="relu")(encoded_features)
-x = tf.keras.layers.Dropout(0.5)(x)
-output = tf.keras.layers.Dense(1, activation="sigmoid")(x)
+x = keras.layers.Dense(64, activation="relu")(encoded_features)
+x = keras.layers.Dropout(0.5)(x)
+output = keras.layers.Dense(1, activation="sigmoid")(x)
 
-model = tf.keras.Model(inputs=encoded_features, outputs=output)
+model = keras.Model(inputs=encoded_features, outputs=output)
 model.compile(optimizer="adam", loss="binary_crossentropy", metrics=["accuracy"])
 
 """
@@ -553,7 +556,7 @@ handy if you train a model but want to do inference at different time, possibly 
 different device or environment.
 """
 
-loaded_feature_space = tf.keras.models.load_model("myfeaturespace.keras")
+loaded_feature_space = keras.saving.load_model("myfeaturespace.keras")
 
 """
 ### Building the inference end-to-end model
@@ -569,7 +572,7 @@ print(encoded_features)
 print(dict_inputs)
 
 outputs = model(encoded_features)
-inference_model = tf.keras.Model(inputs=dict_inputs, outputs=outputs)
+inference_model = keras.Model(inputs=dict_inputs, outputs=outputs)
 
 sample = {
     "age": 30,
@@ -594,7 +597,9 @@ sample = {
     "previously_contacted": 0,
 }
 
-input_dict = {name: tf.convert_to_tensor([value]) for name, value in sample.items()}
+input_dict = {
+    name: keras.ops.convert_to_tensor([value]) for name, value in sample.items()
+}
 predictions = inference_model.predict(input_dict)
 
 print(
