@@ -778,8 +778,8 @@ The model has two parts:
 class ResNet34:
     """Resnet34 class.
 
-            Responsible for the Resnet 34 architecture.
-        Modified from
+    Responsible for the Resnet 34 architecture.
+    Modified from
     https://www.analyticsvidhya.com/blog/2021/08/how-to-code-your-resnet-from-scratch-in-tensorflow/#h2_2.
             View their website for more information.
     """
