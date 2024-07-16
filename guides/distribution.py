@@ -194,7 +194,7 @@ layout_map["d1/bias"] = ("model",)
 layout_map["d2/output"] = ("data", None)
 
 model_parallel = keras.distribution.ModelParallel(
-    mesh_2d, layout_map, batch_dim_name="data"
+    layout_map, batch_dim_name="data"
 )
 
 keras.distribution.set_distribution(model_parallel)
