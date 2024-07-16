@@ -26,7 +26,7 @@ Suppose we had an image of a cat and a dog. The embeddings should
 primarily store information from the images that differentiate the cat from its canine
 counterpart. For example, it could keep the shape of the ears of both images, or maybe
 the tail length, and so on. When used in a downstream task,
-like a classification model, these embeddings(which have the curated measurements
+like a classification model, these embeddings (which have the curated measurements
 mentioned above) should assist the model.
 
 However, instead of this occurring, these approaches would produce embeddings that did
@@ -72,8 +72,7 @@ training loop, and visualization code ourselves.
 
 [Barlow Twins Paper](https://arxiv.org/abs/2103.03230)
 
-[Barlow Twins Example(Some of the architecture code is copied from
-it)](https://keras.io/examples/vision/barlow_twins/)
+[Barlow Twins Example](https://keras.io/examples/vision/barlow_twins/)
 
 [Tensorflow Similarity](https://github.com/tensorflow/similarity)
 """

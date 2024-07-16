@@ -603,15 +603,15 @@ representation neurons are correlated with values that are not on the diagonal.
 
 After this the two parts are summed together.
 
-We will be using the [BarlowLoss](https://github.com/tensorflow/similarity/blob/master/tensorflow_similarity/lo
-sses/barlow.py)
+We will be using the 
+[BarlowLoss](https://github.com/tensorflow/similarity/blob/master/tensorflow_similarity/losses/barlow.py)
 module from Tensorflow Similarity
 
 A from-scratch implementation is also included below.
 """
 
 """
-### From-Scratch implementation(for understanding purposes)
+### From-Scratch implementation (for understanding purposes)
 """
 
 
@@ -780,9 +780,6 @@ class ResNet34:
 
             Responsible for the Resnet 34 architecture.
         Modified from
-    https://www.analyticsvidhya.com/blog/2021/08/how-to-code-your-resnet-from-scratch-in-tensorflow/#h2_2.
-    https://www.analyticsvidhya.com/blog/2021/08/how-to-code-your-resnet-from-scratch-in-tensorflow/#h2_2.
-    https://www.analyticsvidhya.com/blog/2021/08/how-to-code-your-resnet-from-scratch-in-tensorflow/#h2_2.
     https://www.analyticsvidhya.com/blog/2021/08/how-to-code-your-resnet-from-scratch-in-tensorflow/#h2_2.
             View their website for more information.
     """
