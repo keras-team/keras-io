@@ -2,7 +2,7 @@
 Title: Barlow Twins for Contrastive SSL
 Author: [Abhiraam Eranti](https://github.com/dewball345)
 Date created: 11/4/21
-Last modified: 12/20/21
+Last modified: 7/16/24
 Description: A keras implementation of Barlow Twins (constrastive SSL with redundancy reduction).
 Accelerator: GPU
 """
