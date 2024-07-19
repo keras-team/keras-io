@@ -56,10 +56,12 @@ pip install -q git+https://github.com/keras-team/keras-nlp.git
 pip install -q --upgrade keras
 """
 
+import gc
 import os
 
-os.environ["KERAS_BACKEND"] = "tensorflow"
-os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
+os.environ["KERAS_BACKEND"] = "jax"
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"  # Suppress verbose logging from TF
+
 # os.environ["KAGGLE_USERNAME"] = "..."
 # os.environ["KAGGLE_KEY"] = "..."
 
@@ -265,6 +267,15 @@ template = (
 prompt = template.format(inputs="Bonjour, je m'appelle Morgane.")
 outputs = gemma_lm.generate(prompt, max_length=256)
 print("Translation:\n", outputs.replace(prompt, ""))
+
+"""
+Release memory.
+"""
+
+del preprocessor
+del gemma_lm
+del optimizer
+gc.collect()
 
 """
 ## QLoRA Fine-tuning
