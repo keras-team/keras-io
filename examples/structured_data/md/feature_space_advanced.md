@@ -478,7 +478,7 @@ Preprocessed output: [{'age': array([0., 0., 1., 0., 0., 0.], dtype=float32)}, {
 To be a really flexible and extensible feature we cannot only rely on those pre-defined
 transformation, we must be able to re-use other transformations from the Keras/TensorFlow
 ecosystem and customize our own, this is why `FeatureSpace` is also designed to work with
-[Keras preprocessing layers](https://keras.io/guides/preprocessing_layers/), this way we
+[Keras preprocessing layers](https://keras.io/api/layers/preprocessing_layers/), this way we
 can use sophisticated data transformations provided by the framework, you can even create
 your own custom Keras preprocessing layers and use it in the same way.
 

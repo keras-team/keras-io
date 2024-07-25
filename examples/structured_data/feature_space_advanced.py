@@ -363,7 +363,7 @@ example_feature_space(train_ds_with_no_labels, feature_space, ["age", "job"])
 To be a really flexible and extensible feature we cannot only rely on those pre-defined
 transformation, we must be able to re-use other transformations from the Keras/TensorFlow
 ecosystem and customize our own, this is why `FeatureSpace` is also designed to work with
-[Keras preprocessing layers](https://keras.io/guides/preprocessing_layers/), this way we
+[Keras preprocessing layers](https://keras.io/api/layers/preprocessing_layers/), this way we
 can use sophisticated data transformations provided by the framework, you can even create
 your own custom Keras preprocessing layers and use it in the same way.
 
