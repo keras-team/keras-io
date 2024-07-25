@@ -19,7 +19,7 @@ hyperparameters in each trial for the user to monitor the progress. However,
 reading the logs is not intuitive enough to sense the influences of
 hyperparameters have on the results, Therefore, we provide a method to
 visualize the hyperparameter values and the corresponding evaluation results
-with interactive figures using TensorBaord.
+with interactive figures using TensorBoard.
 
 [TensorBoard](https://www.tensorflow.org/tensorboard) is a useful tool for
 visualizing the machine learning experiments.  It can monitor the losses and
