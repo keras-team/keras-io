@@ -2,7 +2,7 @@
 Title: Customizing what happens in `fit()` with PyTorch
 Author: [fchollet](https://twitter.com/fchollet)
 Date created: 2023/06/27
-Last modified: 2023/06/27
+Last modified: 2024/08/01
 Description: Overriding the training step of the Model class with PyTorch.
 Accelerator: GPU
 """
@@ -397,7 +397,7 @@ class GAN(keras.Model):
 
     def train_step(self, real_images):
         device = "cuda" if torch.cuda.is_available() else "cpu"
-        if isinstance(real_images, tuple):
+        if isinstance(real_images, tuple) or isinstance(real_images, list):
             real_images = real_images[0]
         # Sample random points in the latent space
         batch_size = real_images.shape[0]
