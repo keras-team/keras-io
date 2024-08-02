@@ -821,7 +821,7 @@ Where `inputs` is a tensor or a nested structure of tensors (e.g. a list of tens
 and where `**kwargs` are non-tensor arguments (non-inputs).
 - `call(self, inputs, training=None, **kwargs)` --
 Where `training` is a boolean indicating whether the layer should behave
-in training mode and inference mode.
+in training mode or inference mode.
 - `call(self, inputs, mask=None, **kwargs)` --
 Where `mask` is a boolean mask tensor (useful for RNNs, for instance).
 - `call(self, inputs, training=None, mask=None, **kwargs)` --
