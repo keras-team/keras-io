@@ -15,3 +15,7 @@ templates/guides/**/*.md
 templates/keras-tuner/getting_started.md
 datasets/*
 .vscode/*
+**/*.zip
+**/*.tgz
+**/*.tar.gz
+**/data/*
