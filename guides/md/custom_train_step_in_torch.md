@@ -2,7 +2,7 @@
 
 **Author:** [fchollet](https://twitter.com/fchollet)<br>
 **Date created:** 2023/06/27<br>
-**Last modified:** 2023/06/27<br>
+**Last modified:** 2024/08/01<br>
 **Description:** Overriding the training step of the Model class with PyTorch.
 
 
@@ -142,14 +142,14 @@ model.fit(x, y, epochs=3)
 
 <div class="k-default-codeblock">
 ```
-Epoch 1/3
- 32/32 ━━━━━━━━━━━━━━━━━━━━ 0s 551us/step - mae: 0.6533 - loss: 0.6036
+Epoch 1/3    
+ 32/32 ━━━━━━━━━━━━━━━━━━━━ 0s 2ms/step - mae: 0.3410 - loss: 0.1772
 Epoch 2/3
- 32/32 ━━━━━━━━━━━━━━━━━━━━ 0s 522us/step - mae: 0.4013 - loss: 0.2522
+ 32/32 ━━━━━━━━━━━━━━━━━━━━ 0s 2ms/step - mae: 0.3336 - loss: 0.1695
 Epoch 3/3
- 32/32 ━━━━━━━━━━━━━━━━━━━━ 0s 516us/step - mae: 0.3813 - loss: 0.2256
+ 32/32 ━━━━━━━━━━━━━━━━━━━━ 0s 3ms/step - mae: 0.3170 - loss: 0.1511
 
-<keras.src.callbacks.history.History at 0x299b7baf0>
+<keras.src.callbacks.history.History at 0x7f48a3255710>
 
 ```
 </div>
@@ -238,17 +238,17 @@ model.fit(x, y, epochs=5)
 <div class="k-default-codeblock">
 ```
 Epoch 1/5
- 32/32 ━━━━━━━━━━━━━━━━━━━━ 0s 461us/step - loss: 0.2470 - mae: 0.3953
+ 32/32 ━━━━━━━━━━━━━━━━━━━━ 0s 2ms/step - loss: 0.6173 - mae: 0.6607
 Epoch 2/5
- 32/32 ━━━━━━━━━━━━━━━━━━━━ 0s 456us/step - loss: 0.2386 - mae: 0.3910
+ 32/32 ━━━━━━━━━━━━━━━━━━━━ 0s 2ms/step - loss: 0.2340 - mae: 0.3883
 Epoch 3/5
- 32/32 ━━━━━━━━━━━━━━━━━━━━ 0s 456us/step - loss: 0.2359 - mae: 0.3901
+ 32/32 ━━━━━━━━━━━━━━━━━━━━ 0s 2ms/step - loss: 0.1922 - mae: 0.3517
 Epoch 4/5
- 32/32 ━━━━━━━━━━━━━━━━━━━━ 0s 480us/step - loss: 0.2013 - mae: 0.3572
+ 32/32 ━━━━━━━━━━━━━━━━━━━━ 0s 2ms/step - loss: 0.1802 - mae: 0.3411
 Epoch 5/5
- 32/32 ━━━━━━━━━━━━━━━━━━━━ 0s 463us/step - loss: 0.1903 - mae: 0.3480
+ 32/32 ━━━━━━━━━━━━━━━━━━━━ 0s 3ms/step - loss: 0.1862 - mae: 0.3505
 
-<keras.src.callbacks.history.History at 0x299c5eec0>
+<keras.src.callbacks.history.History at 0x7f48975ccbd0>
 
 ```
 </div>
@@ -328,13 +328,13 @@ model.fit(x, y, sample_weight=sw, epochs=3)
 <div class="k-default-codeblock">
 ```
 Epoch 1/3
- 32/32 ━━━━━━━━━━━━━━━━━━━━ 0s 499us/step - mae: 1.4332 - loss: 1.0769
+ 32/32 ━━━━━━━━━━━━━━━━━━━━ 0s 2ms/step - mae: 0.3216 - loss: 0.0827
 Epoch 2/3
- 32/32 ━━━━━━━━━━━━━━━━━━━━ 0s 520us/step - mae: 0.9250 - loss: 0.5614
+ 32/32 ━━━━━━━━━━━━━━━━━━━━ 0s 2ms/step - mae: 0.3156 - loss: 0.0803
 Epoch 3/3
- 32/32 ━━━━━━━━━━━━━━━━━━━━ 0s 502us/step - mae: 0.6069 - loss: 0.2653
+ 32/32 ━━━━━━━━━━━━━━━━━━━━ 0s 2ms/step - mae: 0.3085 - loss: 0.0760
 
-<keras.src.callbacks.history.History at 0x299c82bf0>
+<keras.src.callbacks.history.History at 0x7f48975d7bd0>
 
 ```
 </div>
@@ -378,11 +378,23 @@ y = np.random.random((1000, 1))
 model.evaluate(x, y)
 ```
 
+    
+  1/32 [37m━━━━━━━━━━━━━━━━━━━━  0s 2ms/step - mae: 0.8706 - loss: 0.9344
+
 <div class="k-default-codeblock">
 ```
- 32/32 ━━━━━━━━━━━━━━━━━━━━ 0s 325us/step - mae: 0.4427 - loss: 0.2993
+
+```
+</div>
+ 32/32 ━━━━━━━━━━━━━━━━━━━━ 0s 1ms/step - mae: 0.8959 - loss: 0.9952
 
-[0.2726495862007141, 0.42286917567253113]
+
+
+
+
+<div class="k-default-codeblock">
+```
+[1.0077838897705078, 0.8984771370887756]
 
 ```
 </div>
@@ -463,7 +475,7 @@ class GAN(keras.Model):
 
     def train_step(self, real_images):
         device = "cuda" if torch.cuda.is_available() else "cpu"
-        if isinstance(real_images, tuple):
+        if isinstance(real_images, tuple) or isinstance(real_images, list):
             real_images = real_images[0]
         # Sample random points in the latent space
         batch_size = real_images.shape[0]
@@ -556,9 +568,8 @@ gan.fit(dataloader, epochs=1)
 
 <div class="k-default-codeblock">
 ```
- 1094/1094 ━━━━━━━━━━━━━━━━━━━━ 1582s 1s/step - d_loss: 0.3581 - g_loss: 2.0571
-
-<keras.src.callbacks.history.History at 0x299ce1840>
+ 1094/1094 ━━━━━━━━━━━━━━━━━━━━ 394s 360ms/step - d_loss: 0.2436 - g_loss: 4.7259
+<keras.src.callbacks.history.History at 0x7f489760a490>
 
 ```
 </div>
