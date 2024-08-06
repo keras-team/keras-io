@@ -1,8 +1,8 @@
 """
 Title: Parameter-efficient fine-tuning of Gemma with LoRA and QLoRA
 Authors: [Hongyu Chiu](https://github.com/james77777778), [Abheesht Sharma](https://github.com/abheesht17/), [Matthew Watson](https://github.com/mattdangerw/)
-Date created: 2024/07/12
-Last modified: 2024/07/12
+Date created: 2024/08/06
+Last modified: 2024/08/06
 Description: Use KerasNLP to fine-tune a Gemma LLM with LoRA and QLoRA.
 Accelerator: GPU
 """
@@ -52,8 +52,8 @@ configured to access the Gemma model.
 """
 
 """shell
-pip install -q git+https://github.com/keras-team/keras-nlp.git
-pip install -q --upgrade keras
+# We might need the latest code from Keras and KerasNLP
+pip install -q git+https://github.com/keras-team/keras.git git+https://github.com/keras-team/keras-nlp.git
 """
 
 import gc
@@ -302,30 +302,6 @@ Steps 2 and 3 are achieved with one-line APIs:
 
 - `quantize("int8")`
 - `enable_lora(...)`
-
-It's possible that the memory doesn't release when using `quantize("int8")`,
-leading to an OOM error. To address this, you can first save the quantized
-model, restart the process to release the memory, and then load the quantized
-model from a new process.
-
-```python
-# Save the quantized model
-preprocessor = keras_nlp.models.GemmaCausalLMPreprocessor.from_preset(
-    "gemma_1.1_instruct_2b_en", sequence_length=256
-)
-gemma_lm = keras_nlp.models.GemmaCausalLM.from_preset(
-    "gemma_1.1_instruct_2b_en", preprocessor=preprocessor
-)
-gemma_lm.quantize("int8")
-gemma_lm.save("model.keras")
-
-# Restart the process
-...
-
-# Load the quantized model
-gemma_lm = keras.saving.load_model("model.keras")
-...
-```
 """
 
 preprocessor = keras_nlp.models.GemmaCausalLMPreprocessor.from_preset(
