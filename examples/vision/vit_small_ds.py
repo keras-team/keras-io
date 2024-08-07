@@ -35,13 +35,7 @@ This example implements the ideas of the paper. A large part of this
 example is inspired from
 [Image classification with Vision Transformer](https://keras.io/examples/vision/image_classification_with_vision_transformer/).
 
-_Note_: This example requires TensorFlow 2.6 or higher, as well as
-[TensorFlow Addons](https://www.tensorflow.org/addons), which can be
-installed using the following command:
-
-```python
-pip install -qq -U tensorflow-addons
-```
+_Note_: This example requires TensorFlow 2.6 or higher.
 """
 """
 ## Setup
@@ -49,11 +43,12 @@ pip install -qq -U tensorflow-addons
 
 import math
 import numpy as np
+import keras
 import tensorflow as tf
-from tensorflow import keras
-import tensorflow_addons as tfa
 import matplotlib.pyplot as plt
-from tensorflow.keras import layers
+
+from keras import layers
+from keras import optimizers
 
 # Setting seed for reproducibiltiy
 SEED = 42
@@ -499,9 +494,7 @@ def run_experiment(model):
         warmup_steps=warmup_steps,
     )
 
-    optimizer = tfa.optimizers.AdamW(
-        learning_rate=LEARNING_RATE, weight_decay=WEIGHT_DECAY
-    )
+    optimizer = optimizers.AdamW(learning_rate=LEARNING_RATE, weight_decay=WEIGHT_DECAY)
 
     model.compile(
         optimizer=optimizer,
