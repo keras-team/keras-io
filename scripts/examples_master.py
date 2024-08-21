@@ -909,6 +909,12 @@ EXAMPLES_MASTER = {
             "toc": True,
             "children": [
                 {
+                    "path": "parameter_efficient_finetuning_of_gemma_with_lora_and_qlora",
+                    "title": "Parameter-efficient fine-tuning of Gemma with LoRA and QLoRA",
+                    "subcategory": "Keras usage tips",
+                    "keras_3": True,
+                },
+                {
                     "path": "float8_training_and_inference_with_transformer",
                     "title": "Float8 training and inference with a simple Transformer model",
                     "subcategory": "Keras usage tips",
