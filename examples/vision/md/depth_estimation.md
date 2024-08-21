@@ -27,6 +27,9 @@ and simple loss functions.
 
 ```python
 import os
+
+os.environ["KERAS_BACKEND"] = "tensorflow"
+
 import sys
 
 import tensorflow as tf
@@ -71,15 +74,7 @@ Downloading data from http://diode-dataset.s3.amazonaws.com/val.tar.gz
 
 ```
 </div>
-    
-          0/2774625282 [37m━━━━━━━━━━━━━━━━━━━━  0s 0s/step
-
-<div class="k-default-codeblock">
-```
-
-```
-</div>
- 2774625282/2774625282 ━━━━━━━━━━━━━━━━━━━━ 296s 0us/step
+ 2774625282/2774625282 ━━━━━━━━━━━━━━━━━━━━ 205s 0us/step
 
 
 ---
@@ -115,7 +110,7 @@ df = df.sample(frac=1, random_state=42)
 ```python
 HEIGHT = 256
 WIDTH = 256
-LR = 0.0002
+LR = 0.00001
 EPOCHS = 30
 BATCH_SIZE = 32
 ```
@@ -133,8 +128,9 @@ resize it.
 
 ```python
 
-class DataGenerator(keras.utils.Sequence):
+class DataGenerator(keras.utils.PyDataset):
     def __init__(self, data, batch_size=6, dim=(768, 1024), n_channels=3, shuffle=True):
+        super().__init__()
         """
         Initialization
         """
@@ -376,6 +372,32 @@ Out of the three loss functions, SSIM contributes the most to improving model pe
 
 ```python
 
+def image_gradients(image):
+    if len(ops.shape(image)) != 4:
+        raise ValueError(
+            "image_gradients expects a 4D tensor "
+            "[batch_size, h, w, d], not {}.".format(ops.shape(image))
+        )
+
+    image_shape = ops.shape(image)
+    batch_size, height, width, depth = ops.unstack(image_shape)
+
+    dy = image[:, 1:, :, :] - image[:, :-1, :, :]
+    dx = image[:, :, 1:, :] - image[:, :, :-1, :]
+
+    # Return tensors with same size as original image by concatenating
+    # zeros. Place the gradient [I(x+1,y) - I(x,y)] on the base pixel (x, y).
+    shape = ops.stack([batch_size, 1, width, depth])
+    dy = ops.concatenate([dy, ops.zeros(shape, dtype=image.dtype)], axis=1)
+    dy = ops.reshape(dy, image_shape)
+
+    shape = ops.stack([batch_size, height, 1, depth])
+    dx = ops.concatenate([dx, ops.zeros(shape, dtype=image.dtype)], axis=2)
+    dx = ops.reshape(dx, image_shape)
+
+    return dy, dx
+
+
 class DepthEstimationModel(keras.Model):
     def __init__(self):
         super().__init__()
@@ -401,8 +423,8 @@ class DepthEstimationModel(keras.Model):
 
     def calculate_loss(self, target, pred):
         # Edges
-        dy_true, dx_true = tf.image.image_gradients(target)
-        dy_pred, dx_pred = tf.image.image_gradients(pred)
+        dy_true, dx_true = image_gradients(target)
+        dy_pred, dx_pred = image_gradients(pred)
         weights_x = ops.cast(ops.exp(ops.mean(ops.abs(dx_true))), "float32")
         weights_y = ops.cast(ops.exp(ops.mean(ops.abs(dy_true))), "float32")
 
@@ -482,9 +504,9 @@ class DepthEstimationModel(keras.Model):
 
 
 ```python
-optimizer = keras.optimizers.Adam(
+optimizer = keras.optimizers.SGD(
     learning_rate=LR,
-    amsgrad=False,
+    nesterov=False,
 )
 model = DepthEstimationModel()
 # Compile the model
@@ -503,27 +525,20 @@ model.fit(
 )
 ```
 
-<div class="k-default-codeblock">
 ```
 Epoch 1/30
-
-/usr/local/google/home/chunduriv/projects/Keras-IO/env/lib/python3.11/site-packages/keras/src/trainers/data_adapters/py_dataset_adapter.py:122: UserWarning: Your `PyDataset` class should call `super().__init__(**kwargs)` in its constructor. `**kwargs` can include `workers`, `use_multiprocessing`, `max_queue_size`. Do not pass these arguments to `fit()`, as they will be ignored.
-  self._warn_if_super_not_called()
-    
- 1/9 ━━[37m━━━━━━━━━━━━━━━━━━  4:12 32s/step - loss: 0.7700
-
+ 9/9 ━━━━━━━━━━━━━━━━━━━━ 64s 5s/step - loss: 0.7656 - val_loss: 0.7738
+Epoch 10/30
+ 9/9 ━━━━━━━━━━━━━━━━━━━━ 7s 602ms/step - loss: 0.7005 - val_loss: 0.6696
+Epoch 20/30
+ 9/9 ━━━━━━━━━━━━━━━━━━━━ 7s 632ms/step - loss: 0.5827 - val_loss: 0.5821
 Epoch 30/30
- 9/9 ━━━━━━━━━━━━━━━━━━━━ 7s 593ms/step - loss: 0.2198 - val_loss: 0.1221
+ 9/9 ━━━━━━━━━━━━━━━━━━━━ 7s 593ms/step - loss: 0.6218 - val_loss: 0.5132
 ```
-</div>
-
-
-
-
 
 <div class="k-default-codeblock">
 ```
-<keras.src.callbacks.history.History at 0x7f27785a1590>
+<keras.src.callbacks.history.History at 0x7f5a2886d210>
 
 ```
 </div>
@@ -556,25 +571,25 @@ visualize_depth_map(test_loader, test=True, model=model)
 ```
 
     
- 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 841ms/step
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 781ms/step
 
 <div class="k-default-codeblock">
 ```
 
 ```
 </div>
- 1/1 ━━━━━━━━━━━━━━━━━━━━ 1s 841ms/step
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 1s 782ms/step
 
 
     
- 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 164ms/step
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 171ms/step
 
 <div class="k-default-codeblock">
 ```
 
 ```
 </div>
- 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 165ms/step
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 172ms/step
 
 
 

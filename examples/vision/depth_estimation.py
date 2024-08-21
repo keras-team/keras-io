@@ -25,6 +25,9 @@ and simple loss functions.
 """
 
 import os
+
+os.environ["KERAS_BACKEND"] = "tensorflow"
+
 import sys
 
 import tensorflow as tf
@@ -90,7 +93,7 @@ df = df.sample(frac=1, random_state=42)
 
 HEIGHT = 256
 WIDTH = 256
-LR = 0.0002
+LR = 0.00001
 EPOCHS = 30
 BATCH_SIZE = 32
 
@@ -106,8 +109,9 @@ resize it.
 """
 
 
-class DataGenerator(keras.utils.Sequence):
+class DataGenerator(keras.utils.PyDataset):
     def __init__(self, data, batch_size=6, dim=(768, 1024), n_channels=3, shuffle=True):
+        super().__init__()
         """
         Initialization
         """
@@ -329,6 +333,32 @@ Out of the three loss functions, SSIM contributes the most to improving model pe
 """
 
 
+def image_gradients(image):
+    if len(ops.shape(image)) != 4:
+        raise ValueError(
+            "image_gradients expects a 4D tensor "
+            "[batch_size, h, w, d], not {}.".format(ops.shape(image))
+        )
+
+    image_shape = ops.shape(image)
+    batch_size, height, width, depth = ops.unstack(image_shape)
+
+    dy = image[:, 1:, :, :] - image[:, :-1, :, :]
+    dx = image[:, :, 1:, :] - image[:, :, :-1, :]
+
+    # Return tensors with same size as original image by concatenating
+    # zeros. Place the gradient [I(x+1,y) - I(x,y)] on the base pixel (x, y).
+    shape = ops.stack([batch_size, 1, width, depth])
+    dy = ops.concatenate([dy, ops.zeros(shape, dtype=image.dtype)], axis=1)
+    dy = ops.reshape(dy, image_shape)
+
+    shape = ops.stack([batch_size, height, 1, depth])
+    dx = ops.concatenate([dx, ops.zeros(shape, dtype=image.dtype)], axis=2)
+    dx = ops.reshape(dx, image_shape)
+
+    return dy, dx
+
+
 class DepthEstimationModel(keras.Model):
     def __init__(self):
         super().__init__()
@@ -354,8 +384,8 @@ class DepthEstimationModel(keras.Model):
 
     def calculate_loss(self, target, pred):
         # Edges
-        dy_true, dx_true = tf.image.image_gradients(target)
-        dy_pred, dx_pred = tf.image.image_gradients(pred)
+        dy_true, dx_true = image_gradients(target)
+        dy_pred, dx_pred = image_gradients(pred)
         weights_x = ops.cast(ops.exp(ops.mean(ops.abs(dx_true))), "float32")
         weights_y = ops.cast(ops.exp(ops.mean(ops.abs(dy_true))), "float32")
 
@@ -433,9 +463,9 @@ class DepthEstimationModel(keras.Model):
 ## Model training
 """
 
-optimizer = keras.optimizers.Adam(
+optimizer = keras.optimizers.SGD(
     learning_rate=LR,
-    amsgrad=False,
+    nesterov=False,
 )
 model = DepthEstimationModel()
 # Compile the model
