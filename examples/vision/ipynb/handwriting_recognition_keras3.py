@@ -33,7 +33,7 @@ good starting point for building OCR systems.
 # !tar -xf IAM_Words/words.tgz -C data/words
 # !mv IAM_Words/words.txt data
 
-"""Preview how the dataset is organized. Lines prepended by "#" are just metadata information."""
+##Preview how the dataset is organized. Lines prepended by "#" are just metadata information."""
 
 # !head -20 data/words.txt
 
