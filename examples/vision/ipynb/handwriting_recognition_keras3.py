@@ -24,8 +24,7 @@ The IAM Dataset is widely used across many OCR benchmarks, so we hope this examp
 good starting point for building OCR systems.
 
 ## Data collection
-"""
-
+""
 # !wget -q https://github.com/sayakpaul/Handwriting-Recognizer-in-Keras/releases/download/v1.0.0/IAM_Words.zip
 # !unzip -qq IAM_Words.zip
 # !
