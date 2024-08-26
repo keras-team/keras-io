@@ -652,7 +652,7 @@ The trained model gives us an evaluation accuracy of ~99%.
 ## Inference
 
 An important feature of the
-[preprocessing layers provided by Keras](https://keras.io/guides/preprocessing_layers/)
+[preprocessing layers provided by Keras](https://keras.io/api/layers/preprocessing_layers/)
 is that they can be included inside a `tf.keras.Model`. We will export an inference model
 by including the `text_vectorization` layer on top of `shallow_mlp_model`. This will
 allow our inference model to directly operate on raw strings.
