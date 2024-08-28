@@ -372,8 +372,7 @@ class CTCLayer(keras.layers.Layer):
         super().__init__(name=name)
         self.loss_fn = (
             tf.keras.backend.ctc_batch_cost
-)  # change to tf.keras.backend.ctc_batch_cost because keras.backend.ctc_batch_cost not
-in keras 3
+        )  # change to tf.keras.backend.ctc_batch_cost because keras.backend.ctc_batch_cost notin keras 3
         # keras.backend.ctc_batch_cost is depricated on keras repo.
 
     def call(self, y_true, y_pred):
