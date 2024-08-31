@@ -35,13 +35,7 @@ This example implements the ideas of the paper. A large part of this
 example is inspired from
 [Image classification with Vision Transformer](https://keras.io/examples/vision/image_classification_with_vision_transformer/).
 
-_Note_: This example requires TensorFlow 2.6 or higher, as well as
-[TensorFlow Addons](https://www.tensorflow.org/addons), which can be
-installed using the following command:
-
-```python
-pip install -qq -U tensorflow-addons
-```
+_Note_: This example requires TensorFlow 3 or higher
 """
 """
 ## Setup
