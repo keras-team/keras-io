@@ -50,10 +50,9 @@ pip install -qq -U tensorflow-addons
 import math
 import numpy as np
 import tensorflow as tf
-from tensorflow import keras
-import tensorflow_addons as tfa
+import keras
 import matplotlib.pyplot as plt
-from tensorflow.keras import layers
+from keras import layers
 
 # Setting seed for reproducibiltiy
 SEED = 42
@@ -355,7 +354,7 @@ at a later stage.
 """
 
 
-class MultiHeadAttentionLSA(tf.keras.layers.MultiHeadAttention):
+class MultiHeadAttentionLSA(keras.layers.MultiHeadAttention):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         # The trainable temperature term. The initial value is
@@ -499,7 +498,7 @@ def run_experiment(model):
         warmup_steps=warmup_steps,
     )
 
-    optimizer = tfa.optimizers.AdamW(
+    optimizer = keras.optimizers.AdamW(
         learning_rate=LEARNING_RATE, weight_decay=WEIGHT_DECAY
     )
 
