@@ -1,19 +1,10 @@
 """
-Title: FILLME
-Author: FILLME
-Date created: FILLME
-Last modified: FILLME
-Description: FILLME
-"""
-
-"""
-# Handwriting recognition
-
-**Authors:** [A_K_Nain](https://twitter.com/A_K_Nain), [Sayak
-Paul](https://twitter.com/RisingSayak)<br>
-**Date created:** 2021/08/16<br>
-**Last modified:** 2023/07/06<br>
-**Description:** Training a handwriting recognition model with variable-length sequences.
+Title: Handwriting recognition
+Authors: [A_K_Nain](https://twitter.com/A_K_Nain), [Sayak Paul](https://twitter.com/RisingSayak)
+Date created: 2021/08/16
+Last modified: 2024/09/01
+Description: Training a handwriting recognition model with variable-length sequences.
+Accelerator: GPU
 """
 
 """
@@ -22,11 +13,9 @@ Paul](https://twitter.com/RisingSayak)<br>
 This example shows how the [Captcha OCR](https://keras.io/examples/vision/captcha_ocr/)
 example can be extended to the
 [IAM Dataset](https://fki.tic.heia-fr.ch/databases/iam-handwriting-database),
-which has variable length ground-truth targets. Each sample in the dataset is an image of
-some
+which has variable length ground-truth targets. Each sample in the dataset is an image of some
 handwritten text, and its corresponding target is the string present in the image.
-The IAM Dataset is widely used across many OCR benchmarks, so we hope this example can
-serve as a
+The IAM Dataset is widely used across many OCR benchmarks, so we hope this example can serve as a
 good starting point for building OCR systems.
 """
 
@@ -35,45 +24,34 @@ good starting point for building OCR systems.
 """
 
 """shell
-!wget -q
-https://github.com/sayakpaul/Handwriting-Recognizer-in-Keras/releases/download/v1.0.0/IAM_Words.zip
-https://github.com/sayakpaul/Handwriting-Recognizer-in-Keras/releases/download/v1.0.0/IAM_Words.zip
-!unzip -qq IAM_Words.zip
-!
-!mkdir data
-!mkdir data/words
-!tar -xf IAM_Words/words.tgz -C data/words
-!mv IAM_Words/words.txt data
+wget -q https://github.com/sayakpaul/Handwriting-Recognizer-in-Keras/releases/download/v1.0.0/IAM_Words.zip
+unzip -qq IAM_Words.zip
+
+mkdir data
+mkdir data/words
+tar -xf IAM_Words/words.tgz -C data/words
+mv IAM_Words/words.txt data
 """
 
 """
-Preview how the dataset is organized. Lines prepended by "#" are just metadata
-information.
+Preview how the dataset is organized. Lines prepended by "#" are just metadata information.
 """
 
 """shell
-!head -20 data/words.txt
+head -20 data/words.txt
 """
 
 """
 ## Imports
 """
 
-"""shell
-!pip install --upgrade keras
-"""
-
 import keras
-
-print(keras.__version__)
-
-import os
-
-os.environ["KERAS_BACKEND"] = "tensorflow"
-
+from keras.layers import StringLookup
+from keras import ops
 import matplotlib.pyplot as plt
 import tensorflow as tf
 import numpy as np
+import os
 
 np.random.seed(42)
 keras.utils.set_random_seed(42)
@@ -196,12 +174,10 @@ test_labels_cleaned = clean_labels(test_labels)
 ### Building the character vocabulary
 
 Keras provides different preprocessing layers to deal with different modalities of data.
-[This guide](https://keras.io/api/layers/preprocessing_layers/) provides a comprehensive
-introduction.
+[This guide](https://keras.io/api/layers/preprocessing_layers/) provides a comprehensive introduction.
 Our example involves preprocessing labels at the character
 level. This means that if there are two labels, e.g. "cat" and "dog", then our character
 vocabulary should be {a, c, d, g, o, t} (without any special tokens). We use the
-[`StringLookup`](https://keras.io/api/layers/preprocessing_layers/categorical/string_lookup/)
 [`StringLookup`](https://keras.io/api/layers/preprocessing_layers/categorical/string_lookup/)
 layer for this purpose.
 """
@@ -210,10 +186,10 @@ layer for this purpose.
 AUTOTUNE = tf.data.AUTOTUNE
 
 # Mapping characters to integers.
-char_to_num = keras.layers.StringLookup(vocabulary=list(characters), mask_token=None)
+char_to_num = StringLookup(vocabulary=list(characters), mask_token=None)
 
 # Mapping integers back to original characters.
-num_to_char = keras.layers.StringLookup(
+num_to_char = StringLookup(
     vocabulary=char_to_num.get_vocabulary(), mask_token=None, invert=True
 )
 
@@ -237,8 +213,8 @@ def distortion_free_resize(image, img_size):
     image = tf.image.resize(image, size=(h, w), preserve_aspect_ratio=True)
 
     # Check tha amount of padding needed to be done.
-    pad_height = h - keras.ops.shape(image)[0]
-    pad_width = w - keras.ops.shape(image)[1]
+    pad_height = h - ops.shape(image)[0]
+    pad_width = w - ops.shape(image)[1]
 
     # Only necessary if you want to do same amount of padding on both sides.
     if pad_height % 2 != 0:
@@ -264,7 +240,7 @@ def distortion_free_resize(image, img_size):
         ],
     )
 
-    image = keras.ops.transpose(image, (1, 0, 2))
+    image = ops.transpose(image, (1, 0, 2))
     image = tf.image.flip_left_right(image)
     return image
 
@@ -291,13 +267,13 @@ def preprocess_image(image_path, img_size=(image_width, image_height)):
     image = tf.io.read_file(image_path)
     image = tf.image.decode_png(image, 1)
     image = distortion_free_resize(image, img_size)
-    image = keras.ops.cast(image, tf.float32) / 255.0
+    image = ops.cast(image, tf.float32) / 255.0
     return image
 
 
 def vectorize_label(label):
     label = char_to_num(tf.strings.unicode_split(label, input_encoding="UTF-8"))
-    length = keras.ops.shape(label)[0]
+    length = ops.shape(label)[0]
     pad_amount = max_len - length
     label = tf.pad(label, paddings=[[0, pad_amount]], constant_values=padding_token)
     return label
@@ -336,7 +312,7 @@ for data in train_ds.take(1):
     for i in range(16):
         img = images[i]
         img = tf.image.flip_left_right(img)
-        img = keras.ops.transpose(img, (1, 0, 2))
+        img = ops.transpose(img, (1, 0, 2))
         img = (img * 255.0).numpy().clip(0, 255).astype(np.uint8)
         img = img[:, :, 0]
 
@@ -370,18 +346,15 @@ CTC loss, refer to [this post](https://distill.pub/2017/ctc/).
 class CTCLayer(keras.layers.Layer):
     def __init__(self, name=None):
         super().__init__(name=name)
-        self.loss_fn = (
-            tf.keras.backend.ctc_batch_cost
-        )  # change to tf.keras.backend.ctc_batch_cost because keras.backend.ctc_batch_cost notin keras 3
-        # keras.backend.ctc_batch_cost is depricated on keras repo.
+        self.loss_fn = tf.keras.backend.ctc_batch_cost
 
     def call(self, y_true, y_pred):
-        batch_len = keras.ops.cast(tf.shape(y_true)[0], dtype="int64")
-        input_length = keras.ops.cast(tf.shape(y_pred)[1], dtype="int64")
-        label_length = keras.ops.cast(tf.shape(y_true)[1], dtype="int64")
+        batch_len = ops.cast(ops.shape(y_true)[0], dtype="int64")
+        input_length = ops.cast(ops.shape(y_pred)[1], dtype="int64")
+        label_length = ops.cast(ops.shape(y_true)[1], dtype="int64")
 
-        input_length = input_length * tf.ones(shape=(batch_len, 1), dtype="int64")
-        label_length = label_length * tf.ones(shape=(batch_len, 1), dtype="int64")
+        input_length = input_length * ops.ones(shape=(batch_len, 1), dtype="int64")
+        label_length = label_length * ops.ones(shape=(batch_len, 1), dtype="int64")
         loss = self.loss_fn(y_true, y_pred, input_length, label_length)
         self.add_loss(loss)
 
@@ -449,7 +422,7 @@ def build_model():
     # Optimizer.
     opt = keras.optimizers.Adam()
     # Compile the model and return.
-    model.compile(optimizer=opt, jit_compile=False)
+    model.compile(optimizer=opt)
     return model
 
 
@@ -468,7 +441,6 @@ implement it and use it as a callback to monitor our model.
 """
 We first segregate the validation images and their labels for convenience.
 """
-
 validation_images = []
 validation_labels = []
 
@@ -483,14 +455,14 @@ Now, we create a callback to monitor the edit distances.
 
 def calculate_edit_distance(labels, predictions):
     # Get a single batch and convert its labels to sparse tensors.
-    saprse_labels = keras.ops.cast(tf.sparse.from_dense(labels), dtype=tf.int64)
+    saprse_labels = ops.cast(tf.sparse.from_dense(labels), dtype=tf.int64)
 
     # Make predictions and convert them to sparse tensors.
     input_len = np.ones(predictions.shape[0]) * predictions.shape[1]
     predictions_decoded = keras.ops.nn.ctc_decode(
         predictions, sequence_lengths=input_len
     )[0][0][:, :max_len]
-    sparse_predictions = keras.ops.cast(
+    sparse_predictions = ops.cast(
         tf.sparse.from_dense(predictions_decoded), dtype=tf.int64
     )
 
@@ -579,7 +551,7 @@ for batch in test_ds.take(1):
     for i in range(16):
         img = batch_images[i]
         img = tf.image.flip_left_right(img)
-        img = keras.ops.transpose(img, (1, 0, 2))
+        img = ops.transpose(img, (1, 0, 2))
         img = (img * 255.0).numpy().clip(0, 255).astype(np.uint8)
         img = img[:, :, 0]
 
@@ -599,9 +571,7 @@ To get better results the model should be trained for at least 50 epochs.
 
 * The `prediction_model` is fully compatible with TensorFlow Lite. If you are interested,
 you can use it inside a mobile application. You may find
-[this
-notebook](https://github.com/tulasiram58827/ocr_tflite/blob/main/colabs/captcha_ocr_tflite.ipynb)
-notebook](https://github.com/tulasiram58827/ocr_tflite/blob/main/colabs/captcha_ocr_tflite.ipynb)
+[this notebook](https://github.com/tulasiram58827/ocr_tflite/blob/main/colabs/captcha_ocr_tflite.ipynb)
 to be useful in this regard.
 * Not all the training examples are perfectly aligned as observed in this example. This
 can hurt model performance for complex sequences. To this end, we can leverage
