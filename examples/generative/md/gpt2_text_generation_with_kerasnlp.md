@@ -1,16 +1,16 @@
-# GPT2 Text Generation with KerasNLP
+# GPT2 Text Generation with KerasHub
 
 **Author:** Chen Qian<br>
 **Date created:** 2023/04/17<br>
 **Last modified:** 2024/04/12<br>
-**Description:** Use KerasNLP GPT2 model and `samplers` to do text generation.
+**Description:** Use KerasHub GPT2 model and `samplers` to do text generation.
 
 
 <img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/generative/ipynb/gpt2_text_generation_with_kerasnlp.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/generative/gpt2_text_generation_with_kerasnlp.py)
 
 
 
-In this tutorial, you will learn to use [KerasNLP](https://keras.io/keras_nlp/) to load a
+In this tutorial, you will learn to use [KerasHub](https://keras.io/keras_hub/) to load a
 pre-trained Large Language Model (LLM) - [GPT-2 model](https://openai.com/research/better-language-models)
 (originally invented by OpenAI), finetune it to a specific text style, and
 generate text based on users' input (also known as prompt). You will also learn
@@ -25,16 +25,16 @@ Change runtime type** and choose the GPU Hardware Accelerator runtime
 GPT-2 model. Running this tutorial on CPU runtime will take hours.
 
 ---
-## Install KerasNLP, Choose Backend and Import Dependencies
+## Install KerasHub, Choose Backend and Import Dependencies
 
 This examples uses [Keras 3](https://keras.io/keras_3/) to work in any of
 `"tensorflow"`, `"jax"` or `"torch"`. Support for Keras 3 is baked into
-KerasNLP, simply change the `"KERAS_BACKEND"` environment variable to select
+KerasHub, simply change the `"KERAS_BACKEND"` environment variable to select
 the backend of your choice. We select the JAX backend below.
 
 
 ```python
-!pip install git+https://github.com/keras-team/keras-nlp.git -q
+!pip install git+https://github.com/keras-team/keras-hub.git -q
 ```
 
 ```python
@@ -42,7 +42,7 @@ import os
 
 os.environ["KERAS_BACKEND"] = "jax"  # or "tensorflow" or "torch"
 
-import keras_nlp
+import keras_hub
 import keras
 import tensorflow as tf
 import time
@@ -75,22 +75,22 @@ pedagogical discussion on language models, you can refer to the
 [Stanford CS324 LLM class](https://stanford-cs324.github.io/winter2022/lectures/introduction/).
 
 ---
-## Introduction to KerasNLP
+## Introduction to KerasHub
 
 Large Language Models are complex to build and expensive to train from scratch.
-Luckily there are pretrained LLMs available for use right away. [KerasNLP](https://keras.io/keras_nlp/)
+Luckily there are pretrained LLMs available for use right away. [KerasHub](https://keras.io/keras_hub/)
 provides a large number of pre-trained checkpoints that allow you to experiment
 with SOTA models without needing to train them yourself.
 
-KerasNLP is a natural language processing library that supports users through
-their entire development cycle. KerasNLP offers both pretrained models and
+KerasHub is a natural language processing library that supports users through
+their entire development cycle. KerasHub offers both pretrained models and
 modularized building blocks, so developers could easily reuse pretrained models
 or stack their own LLM.
 
-In a nutshell, for generative LLM, KerasNLP offers:
+In a nutshell, for generative LLM, KerasHub offers:
 
 - Pretrained models with `generate()` method, e.g.,
-    `keras_nlp.models.GPT2CausalLM` and `keras_nlp.models.OPTCausalLM`.
+    `keras_hub.models.GPT2CausalLM` and `keras_hub.models.OPTCausalLM`.
 - Sampler class that implements generation algorithms such as Top-K, Beam and
     contrastive search. These samplers can be used to generate text with
     custom models.
@@ -98,10 +98,10 @@ In a nutshell, for generative LLM, KerasNLP offers:
 ---
 ## Load a pre-trained GPT-2 model and generate some text
 
-KerasNLP provides a number of pre-trained models, such as [Google
+KerasHub provides a number of pre-trained models, such as [Google
 Bert](https://ai.googleblog.com/2018/11/open-sourcing-bert-state-of-art-pre.html)
 and [GPT-2](https://openai.com/research/better-language-models). You can see
-the list of models available in the [KerasNLP repository](https://github.com/keras-team/keras-nlp/tree/master/keras_nlp/models).
+the list of models available in the [KerasHub repository](https://github.com/keras-team/keras-hub/tree/master/keras_hub/models).
 
 It's very easy to load the GPT-2 model as you can see below:
 
@@ -109,11 +109,11 @@ It's very easy to load the GPT-2 model as you can see below:
 ```python
 # To speed up training and generation, we use preprocessor of length 128
 # instead of full length 1024.
-preprocessor = keras_nlp.models.GPT2CausalLMPreprocessor.from_preset(
+preprocessor = keras_hub.models.GPT2CausalLMPreprocessor.from_preset(
     "gpt2_base_en",
     sequence_length=128,
 )
-gpt2_lm = keras_nlp.models.GPT2CausalLM.from_preset(
+gpt2_lm = keras_hub.models.GPT2CausalLM.from_preset(
     "gpt2_base_en", preprocessor=preprocessor
 )
 ```
@@ -258,34 +258,34 @@ The quality of the generated text looks OK, but we can improve it via
 fine-tuning.
 
 ---
-## More on the GPT-2 model from KerasNLP
+## More on the GPT-2 model from KerasHub
 
 Next up, we will actually fine-tune the model to update its parameters, but
 before we do, let's take a look at the full set of tools we have to for working
 with for GPT2.
 
 The code of GPT2 can be found
-[here](https://github.com/keras-team/keras-nlp/blob/master/keras_nlp/models/gpt2/).
+[here](https://github.com/keras-team/keras-hub/blob/master/keras_hub/models/gpt2/).
 Conceptually the `GPT2CausalLM` can be hierarchically broken down into several
-modules in KerasNLP, all of which have a *from_preset()* function that loads a
+modules in KerasHub, all of which have a *from_preset()* function that loads a
 pretrained model:
 
-- `keras_nlp.models.GPT2Tokenizer`: The tokenizer used by GPT2 model, which is a
+- `keras_hub.models.GPT2Tokenizer`: The tokenizer used by GPT2 model, which is a
     [byte-pair encoder](https://huggingface.co/course/chapter6/5?fw=pt).
-- `keras_nlp.models.GPT2CausalLMPreprocessor`: the preprocessor used by GPT2
+- `keras_hub.models.GPT2CausalLMPreprocessor`: the preprocessor used by GPT2
     causal LM training. It does the tokenization along with other preprocessing
     works such as creating the label and appending the end token.
-- `keras_nlp.models.GPT2Backbone`: the GPT2 model, which is a stack of
-    `keras_nlp.layers.TransformerDecoder`. This is usually just referred as
+- `keras_hub.models.GPT2Backbone`: the GPT2 model, which is a stack of
+    `keras_hub.layers.TransformerDecoder`. This is usually just referred as
     `GPT2`.
-- `keras_nlp.models.GPT2CausalLM`: wraps `GPT2Backbone`, it multiplies the
+- `keras_hub.models.GPT2CausalLM`: wraps `GPT2Backbone`, it multiplies the
     output of `GPT2Backbone` by embedding matrix to generate logits over
     vocab tokens.
 
 ---
 ## Finetune on Reddit dataset
 
-Now you have the knowledge of the GPT-2 model from KerasNLP, you can take one
+Now you have the knowledge of the GPT-2 model from KerasHub, you can take one
 step further to finetune the model so that it generates text in a specific
 style, short or long, strict or casual. In this tutorial, we will use reddit
 dataset for example.
@@ -333,7 +333,7 @@ train_ds = (
 
 Now you can finetune the model using the familiar *fit()* function. Note that
 `preprocessor` will be automatically called inside `fit` method since
-`GPT2CausalLM` is a `keras_nlp.models.Task` instance.
+`GPT2CausalLM` is a `keras_hub.models.Task` instance.
 
 This step takes quite a bit of GPU memory and a long time if we were to train
 it all the way to a fully trained state. Here we just use part of the dataset
@@ -415,7 +415,7 @@ TOTAL TIME ELAPSED: 21.13s
 ---
 ## Into the Sampling Method
 
-In KerasNLP, we offer a few sampling methods, e.g., contrastive search,
+In KerasHub, we offer a few sampling methods, e.g., contrastive search,
 Top-K and beam sampling. By default, our `GPT2CausalLM` uses Top-k search, but
 you can choose your own sampling method.
 
@@ -424,7 +424,7 @@ sampler:
 
 - Use a string identifier, such as "greedy", you are using the default
 configuration via this way.
-- Pass a `keras_nlp.samplers.Sampler` instance, you can use custom configuration
+- Pass a `keras_hub.samplers.Sampler` instance, you can use custom configuration
 via this way.
 
 
@@ -436,7 +436,7 @@ print("\nGPT-2 output:")
 print(output)
 
 # Use a `Sampler` instance. `GreedySampler` tends to repeat itself,
-greedy_sampler = keras_nlp.samplers.GreedySampler()
+greedy_sampler = keras_hub.samplers.GreedySampler()
 gpt2_lm.compile(sampler=greedy_sampler)
 
 output = gpt2_lm.generate("I like basketball", max_length=200)
@@ -531,8 +531,8 @@ so i was playing with my brother, and he was playing with his brother
 
 ```
 </div>
-For more details on KerasNLP `Sampler` class, you can check the code
-[here](https://github.com/keras-team/keras-nlp/tree/master/keras_nlp/samplers).
+For more details on KerasHub `Sampler` class, you can check the code
+[here](https://github.com/keras-team/keras-hub/tree/master/keras_hub/samplers).
 
 ---
 ## Finetune on Chinese Poem Dataset

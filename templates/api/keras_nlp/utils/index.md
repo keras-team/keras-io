@@ -1,6 +1,6 @@
-# KerasNLP Utils
+# KerasHub Utils
 
-Standalone utilitiy methods for KerasNLP, including functions for generating
+Standalone utilitiy methods for KerasHub, including functions for generating
 sequences of text with a model.
 
 {{toc}}

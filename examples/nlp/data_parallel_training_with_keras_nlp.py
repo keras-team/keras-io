@@ -1,9 +1,9 @@
 """
-Title: Data Parallel Training with KerasNLP and tf.distribute
+Title: Data Parallel Training with KerasHub and tf.distribute
 Author: Anshuman Mishra
 Date created: 2023/07/07
 Last modified: 2023/07/07
-Description: Data Parallel training with KerasNLP and tf.distribute.
+Description: Data Parallel training with KerasHub and tf.distribute.
 Accelerator: GPU
 """
 
@@ -12,10 +12,10 @@ Accelerator: GPU
 
 Distributed training is a technique used to train deep learning models on multiple devices
 or machines simultaneously. It helps to reduce training time and allows for training larger
-models with more data. KerasNLP is a library that provides tools and utilities for natural
+models with more data. KerasHub is a library that provides tools and utilities for natural
 language processing tasks, including distributed training.
 
-In this tutorial, we will use KerasNLP to train a BERT-based masked language model (MLM)
+In this tutorial, we will use KerasHub to train a BERT-based masked language model (MLM)
 on the wikitext-2 dataset (a 2 million word dataset of wikipedia articles). The MLM task
 involves predicting the masked words in a sentence, which helps the model learn contextual
 representations of words.
@@ -37,7 +37,7 @@ training high-resolution text summarization models on billion word datasets on 2
 """
 
 """shell
-pip install -q --upgrade keras-nlp
+pip install -q --upgrade keras-hub
 pip install -q --upgrade keras  # Upgrade to Keras 3.
 """
 
@@ -51,7 +51,7 @@ os.environ["KERAS_BACKEND"] = "tensorflow"
 
 import tensorflow as tf
 import keras
-import keras_nlp
+import keras_hub
 
 """
 Before we start any training, let's configure our single GPU to show up as two logical
@@ -197,7 +197,7 @@ the `strategy.scope()`:
 with strategy.scope():
     # Everything that creates variables should be under the strategy scope.
     # In general this is only model construction & `compile()`.
-    model_dist = keras_nlp.models.BertMaskedLM.from_preset("bert_tiny_en_uncased")
+    model_dist = keras_hub.models.BertMaskedLM.from_preset("bert_tiny_en_uncased")
 
     # This line just sets pooled_dense layer as non-trainiable, we do this to avoid
     # warnings of this layer being unused

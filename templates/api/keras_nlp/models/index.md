@@ -1,6 +1,6 @@
-# KerasNLP Models
+# KerasHub Models
 
-KerasNLP contains end-to-end implementations of popular model architectures.
+KerasHub contains end-to-end implementations of popular model architectures.
 These models can be created in two ways:
 
 - Through the `from_preset()` constructor, which instantiates an object with
@@ -9,7 +9,7 @@ These models can be created in two ways:
 
 Below, we list all presets available in the library. For more detailed usage,
 browse the docstring for a particular class. For an in depth introduction
-to our API, see the [getting started guide](/guides/keras_nlp/getting_started/).
+to our API, see the [getting started guide](/guides/keras_hub/getting_started/).
 
 ## Presets
 
@@ -18,10 +18,10 @@ model. Any task, preprocessor, backbone or tokenizer `from_preset()` can be used
 to create a model from the saved preset.
 
 ```python
-backbone = keras_nlp.models.Backbone.from_preset("bert_base_en")
-tokenizer = keras_nlp.models.Tokenizer.from_preset("bert_base_en")
-classifier = keras_nlp.models.TextClassifier.from_preset("bert_base_en", num_classes=2)
-preprocessor = keras_nlp.models.TextClassifierPreprocessor.from_preset("bert_base_en")
+backbone = keras_hub.models.Backbone.from_preset("bert_base_en")
+tokenizer = keras_hub.models.Tokenizer.from_preset("bert_base_en")
+classifier = keras_hub.models.TextClassifier.from_preset("bert_base_en", num_classes=2)
+preprocessor = keras_hub.models.TextClassifierPreprocessor.from_preset("bert_base_en")
 ```
 
 {{backbone_presets_table}}

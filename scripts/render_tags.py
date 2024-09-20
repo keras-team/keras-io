@@ -1,4 +1,4 @@
-"""Custom rendering code for the /api/{keras_nlp|keras_cv}/models page.
+"""Custom rendering code for the /api/{keras_hub|keras_cv}/models page.
 
 The model metadata is pulled from the library, each preset has a
 metadata dictionary as follows:
@@ -55,17 +55,17 @@ def format_path(metadata):
 
 
 def is_base_class(symbol):
-    import keras_nlp
+    import keras_hub
 
     return symbol in (
-        keras_nlp.models.Backbone,
-        keras_nlp.models.Tokenizer,
-        keras_nlp.models.Preprocessor,
-        keras_nlp.models.Task,
-        keras_nlp.models.Classifier,
-        keras_nlp.models.CausalLM,
-        keras_nlp.models.MaskedLM,
-        keras_nlp.models.Seq2SeqLM,
+        keras_hub.models.Backbone,
+        keras_hub.models.Tokenizer,
+        keras_hub.models.Preprocessor,
+        keras_hub.models.Task,
+        keras_hub.models.Classifier,
+        keras_hub.models.CausalLM,
+        keras_hub.models.MaskedLM,
+        keras_hub.models.Seq2SeqLM,
     )
 
 
@@ -182,7 +182,7 @@ def render_table(symbol):
 
 
 def render_tags(template, lib):
-    """Replaces all custom KerasNLP/KerasCV tags with rendered content."""
+    """Replaces all custom KerasHub/KerasCV tags with rendered content."""
     symbols = lib.models.__dict__.items()
     if "{{backbone_presets_table}}" in template:
         template = template.replace(

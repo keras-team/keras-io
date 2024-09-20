@@ -39,16 +39,12 @@ MASTER = {
         KERAS2_API_MASTER,
         EXAMPLES_MASTER,
         {
+            "path": "keras_hub/",
+            "title": "KerasHub: Pretrained Models",
+        },
+        {
             "path": "keras_tuner/",
             "title": "KerasTuner: Hyperparameter Tuning",
-        },
-        {
-            "path": "keras_cv/",
-            "title": "KerasCV: Computer Vision Workflows",
-        },
-        {
-            "path": "keras_nlp/",
-            "title": "KerasNLP: Natural Language Workflows",
         },
     ],
 }

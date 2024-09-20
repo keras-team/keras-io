@@ -1,16 +1,16 @@
-# Pretraining a Transformer from scratch with KerasNLP
+# Pretraining a Transformer from scratch with KerasHub
 
 **Author:** [Matthew Watson](https://github.com/mattdangerw/)<br>
 **Date created:** 2022/04/18<br>
 **Last modified:** 2023/07/15<br>
-**Description:** Use KerasNLP to train a Transformer model from scratch.
+**Description:** Use KerasHub to train a Transformer model from scratch.
 
 
-<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/guides/ipynb/keras_nlp/transformer_pretraining.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/guides/keras_nlp/transformer_pretraining.py)
+<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/guides/ipynb/keras_hub/transformer_pretraining.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/guides/keras_hub/transformer_pretraining.py)
 
 
 
-KerasNLP aims to make it easy to build state-of-the-art text processing models. In this
+KerasHub aims to make it easy to build state-of-the-art text processing models. In this
 guide, we will show how library components simplify pretraining and fine-tuning a
 Transformer model from scratch.
 
@@ -29,7 +29,7 @@ fast train step below, but feel free to mix it up.
 
 
 ```python
-!pip install -q --upgrade keras-nlp
+!pip install -q --upgrade keras-hub
 !pip install -q --upgrade keras  # Upgrade to Keras 3.
 ```
 
@@ -39,7 +39,7 @@ import os
 os.environ["KERAS_BACKEND"] = "jax"  # or "tensorflow" or "torch"
 
 
-import keras_nlp
+import keras_hub
 import tensorflow as tf
 import keras
 ```
@@ -78,7 +78,7 @@ sst_dir = os.path.expanduser("~/.keras/datasets/SST-2/")
 
 # Download vocabulary data.
 vocab_file = keras.utils.get_file(
-    origin="https://storage.googleapis.com/tensorflow/keras-nlp/examples/bert/bert_vocab_uncased.txt",
+    origin="https://storage.googleapis.com/tensorflow/keras-hub/examples/bert/bert_vocab_uncased.txt",
 )
 ```
 
@@ -157,7 +157,7 @@ positive sentiment, and a label of 0 negative sentiment.
 ### Establish a baseline
 
 As a first step, we will establish a baseline of good performance. We don't actually need
-KerasNLP for this, we can just use core Keras layers.
+KerasHub for this, we can just use core Keras layers.
 
 We will train a simple bag-of-words model, where we learn a positive or negative weight
 for each word in our vocabulary. A sample's score is simply the sum of the weights of all
@@ -215,7 +215,7 @@ sequence. We would quickly start to overfit and memorize our training set, witho
 increase in our ability to generalize to unseen examples.
 
 Enter **pretraining**, which will allow us to learn on a larger corpus, and transfer our
-knowledge to the `SST-2` task. And enter **KerasNLP**, which will allow us to pretrain a
+knowledge to the `SST-2` task. And enter **KerasHub**, which will allow us to pretrain a
 particularly powerful model, the Transformer, with ease.
 
 ---
@@ -240,16 +240,16 @@ Our text preprocessing for the MaskedLM task will occur in two stages.
 1. Tokenize input text into integer sequences of token ids.
 2. Mask certain positions in our input to predict on.
 
-To tokenize, we can use a `keras_nlp.tokenizers.Tokenizer` -- the KerasNLP building block
+To tokenize, we can use a `keras_hub.tokenizers.Tokenizer` -- the KerasHub building block
 for transforming text into sequences of integer token ids.
 
-In particular, we will use `keras_nlp.tokenizers.WordPieceTokenizer` which does
+In particular, we will use `keras_hub.tokenizers.WordPieceTokenizer` which does
 *sub-word* tokenization. Sub-word tokenization is popular when training models on large
 text corpora. Essentially, it allows our model to learn from uncommon words, while not
 requiring a massive vocabulary of every word in our training set.
 
 The second thing we need to do is mask our input for the MaskedLM task. To do this, we can use
-`keras_nlp.layers.MaskedLMMaskGenerator`, which will randomly select a set of tokens in each
+`keras_hub.layers.MaskedLMMaskGenerator`, which will randomly select a set of tokens in each
 input and mask them out.
 
 The tokenizer and the masking layer can both be used inside a call to
@@ -263,7 +263,7 @@ new set of labels to train on.
 ```python
 # Setting sequence_length will trim or pad the token outputs to shape
 # (batch_size, SEQ_LENGTH).
-tokenizer = keras_nlp.tokenizers.WordPieceTokenizer(
+tokenizer = keras_hub.tokenizers.WordPieceTokenizer(
     vocabulary=vocab_file,
     sequence_length=SEQ_LENGTH,
     lowercase=True,
@@ -271,7 +271,7 @@ tokenizer = keras_nlp.tokenizers.WordPieceTokenizer(
 )
 # Setting mask_selection_length will trim or pad the mask outputs to shape
 # (batch_size, PREDICTIONS_PER_SEQ).
-masker = keras_nlp.layers.MaskedLMMaskGenerator(
+masker = keras_hub.layers.MaskedLMMaskGenerator(
     vocabulary_size=tokenizer.vocabulary_size(),
     mask_selection_rate=MASK_RATE,
     mask_selection_length=PREDICTIONS_PER_SEQ,
@@ -356,13 +356,13 @@ zero weight.
 
 ### Create the Transformer encoder
 
-KerasNLP provides all the building blocks to quickly build a Transformer encoder.
+KerasHub provides all the building blocks to quickly build a Transformer encoder.
 
-We use `keras_nlp.layers.TokenAndPositionEmbedding` to first embed our input token ids.
+We use `keras_hub.layers.TokenAndPositionEmbedding` to first embed our input token ids.
 This layer simultaneously learns two embeddings -- one for words in a sentence and another
 for integer positions in a sentence. The output embedding is simply the sum of the two.
 
-Then we can add a series of `keras_nlp.layers.TransformerEncoder` layers. These are the
+Then we can add a series of `keras_hub.layers.TransformerEncoder` layers. These are the
 bread and butter of the Transformer model, using an attention mechanism to attend to
 different parts of the input sentence, followed by a multi-layer perceptron block.
 
@@ -375,7 +375,7 @@ the context in which it appeared.
 inputs = keras.Input(shape=(SEQ_LENGTH,), dtype="int32")
 
 # Embed our tokens with a positional embedding.
-embedding_layer = keras_nlp.layers.TokenAndPositionEmbedding(
+embedding_layer = keras_hub.layers.TokenAndPositionEmbedding(
     vocabulary_size=tokenizer.vocabulary_size(),
     sequence_length=SEQ_LENGTH,
     embedding_dim=MODEL_DIM,
@@ -388,7 +388,7 @@ outputs = keras.layers.Dropout(rate=DROPOUT)(outputs)
 
 # Add a number of encoder blocks
 for i in range(NUM_LAYERS):
-    outputs = keras_nlp.layers.TransformerEncoder(
+    outputs = keras_hub.layers.TransformerEncoder(
         intermediate_dim=INTERMEDIATE_DIM,
         num_heads=NUM_HEADS,
         dropout=DROPOUT,
@@ -455,7 +455,7 @@ encoder_model.summary()
 You can think of the `encoder_model` as it's own modular unit, it is the piece of our
 model that we are really interested in for our downstream task. However we still need to
 set up the encoder to train on the MaskedLM task; to do that we attach a
-`keras_nlp.layers.MaskedLMHead`.
+`keras_hub.layers.MaskedLMHead`.
 
 This layer will take as one input the token encodings, and as another the positions we
 masked out in the original input. It will gather the token encodings we masked, and
@@ -481,7 +481,7 @@ encoded_tokens = encoder_model(inputs["token_ids"])
 # Predict an output word for each masked input token.
 # We use the input token embedding to project from our encoded vectors to
 # vocabulary logits, which has been shown to improve training efficiency.
-outputs = keras_nlp.layers.MaskedLMHead(
+outputs = keras_hub.layers.MaskedLMHead(
     token_embedding=embedding_layer.token_embedding,
     activation="softmax",
 )(encoded_tokens, mask_positions=inputs["mask_positions"])
@@ -629,7 +629,7 @@ performance was still steadily increasing. Our model is still significantly unde
 Training for more epochs, training a large Transformer, and training on more unlabeled
 text would all continue to boost performance significantly.
 
-One of the key goals of KerasNLP is to provide a modular approach to NLP model building.
-We have shown one approach to building a Transformer here, but KerasNLP supports an ever
+One of the key goals of KerasHub is to provide a modular approach to NLP model building.
+We have shown one approach to building a Transformer here, but KerasHub supports an ever
 growing array of components for preprocessing text and building models. We hope it makes
 it easier to experiment on solutions to your natural language problems.

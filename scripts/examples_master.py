@@ -433,7 +433,7 @@ EXAMPLES_MASTER = {
                     "subcategory": "Text classification",
                 },
                 {
-                    "path": "fnet_classification_with_keras_nlp",
+                    "path": "fnet_classification_with_keras_hub",
                     "title": "Text Classification using FNet",
                     "subcategory": "Text classification",
                     "keras_3": True,
@@ -473,15 +473,15 @@ EXAMPLES_MASTER = {
                     "keras_3": True,
                 },
                 {
-                    "path": "data_parallel_training_with_keras_nlp",
-                    "title": "Data Parallel Training with KerasNLP and tf.distribute",
+                    "path": "data_parallel_training_with_keras_hub",
+                    "title": "Data Parallel Training with KerasHub and tf.distribute",
                     "subcategory": "Text classification",
                     "keras_3": True,
                 },
                 # Machine translation
                 {
-                    "path": "neural_machine_translation_with_keras_nlp",
-                    "title": "English-to-Spanish translation with KerasNLP",
+                    "path": "neural_machine_translation_with_keras_hub",
+                    "title": "English-to-Spanish translation with KerasHub",
                     "subcategory": "Machine translation",
                     "keras_3": True,
                 },
@@ -525,8 +525,8 @@ EXAMPLES_MASTER = {
                 },
                 # Text similarity search
                 {
-                    "path": "semantic_similarity_with_keras_nlp",
-                    "title": "Semantic Similarity with KerasNLP",
+                    "path": "semantic_similarity_with_keras_hub",
+                    "title": "Semantic Similarity with KerasHub",
                     "subcategory": "Text similarity search",
                     "keras_3": True,
                 },
@@ -808,14 +808,14 @@ EXAMPLES_MASTER = {
                 # Text generation
                 {
                     "path": "gpt2_text_generation_with_kerasnlp",
-                    "title": "GPT2 Text Generation with KerasNLP",
+                    "title": "GPT2 Text Generation with KerasHub",
                     "subcategory": "Text generation",
                     "highlight": True,
                     "keras_3": True,
                 },
                 {
                     "path": "text_generation_gpt",
-                    "title": "GPT text generation from scratch with KerasNLP",
+                    "title": "GPT text generation from scratch with KerasHub",
                     "subcategory": "Text generation",
                     "keras_3": True,
                 },

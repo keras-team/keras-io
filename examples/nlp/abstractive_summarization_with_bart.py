@@ -3,7 +3,7 @@ Title: Abstractive Text Summarization with BART
 Author: [Abheesht Sharma](https://github.com/abheesht17/)
 Date created: 2023/07/08
 Last modified: 2024/03/20
-Description: Use KerasNLP to fine-tune BART on the abstractive summarization task.
+Description: Use KerasHub to fine-tune BART on the abstractive summarization task.
 Accelerator: GPU
 Converted to Keras 3 by: [Sitam Meur](https://github.com/sitamgithub-MSIT)
 """
@@ -26,7 +26,7 @@ include token masking, token deletion, sentence permutation (shuffle sentences
 and train BART to fix the order), etc.
 
 In this example, we will demonstrate how to fine-tune BART on the abstractive
-summarization task (on conversations!) using KerasNLP, and generate summaries
+summarization task (on conversations!) using KerasHub, and generate summaries
 using the fine-tuned model.
 """
 
@@ -34,18 +34,18 @@ using the fine-tuned model.
 ## Setup
 
 Before we start implementing the pipeline, let's install and import all the
-libraries we need. We'll be using the KerasNLP library. We will also need a
+libraries we need. We'll be using the KerasHub library. We will also need a
 couple of utility libraries.
 """
 
 """shell
-pip install git+https://github.com/keras-team/keras-nlp.git py7zr -q
+pip install git+https://github.com/keras-team/keras-hub.git py7zr -q
 """
 
 """
 This examples uses [Keras 3](https://keras.io/keras_3/) to work in any of
 `"tensorflow"`, `"jax"` or `"torch"`. Support for Keras 3 is baked into
-KerasNLP, simply change the `"KERAS_BACKEND"` environment variable to select
+KerasHub, simply change the `"KERAS_BACKEND"` environment variable to select
 the backend of your choice. We select the JAX backend below.
 """
 
@@ -60,7 +60,7 @@ Import all necessary libraries.
 import py7zr
 import time
 
-import keras_nlp
+import keras_hub
 import keras
 import tensorflow as tf
 import tensorflow_datasets as tfds
@@ -109,7 +109,7 @@ We'll now batch the dataset and retain only a subset of the dataset for the
 purpose of this example. The dialogue is fed to the encoder, and the
 corresponding summary serves as input to the decoder. We will, therefore, change
 the format of the dataset to a dictionary having two keys: `"encoder_text"` and
-`"decoder_text"`.This is how `keras_nlp.models.BartSeq2SeqLMPreprocessor`
+`"decoder_text"`.This is how `keras_hub.models.BartSeq2SeqLMPreprocessor`
 expects the input format to be.
 """
 
@@ -139,12 +139,12 @@ position to the right. This is done because at every timestep, the model is
 trained to predict the next token.
 """
 
-preprocessor = keras_nlp.models.BartSeq2SeqLMPreprocessor.from_preset(
+preprocessor = keras_hub.models.BartSeq2SeqLMPreprocessor.from_preset(
     "bart_base_en",
     encoder_sequence_length=MAX_ENCODER_SEQUENCE_LENGTH,
     decoder_sequence_length=MAX_DECODER_SEQUENCE_LENGTH,
 )
-bart_lm = keras_nlp.models.BartSeq2SeqLM.from_preset(
+bart_lm = keras_hub.models.BartSeq2SeqLM.from_preset(
     "bart_base_en", preprocessor=preprocessor
 )
 
@@ -188,7 +188,7 @@ generating summaries! Let's pick the first 100 samples from the validation set
 and generate summaries for them. We will use the default decoding strategy, i.e.,
 greedy search.
 
-Generation in KerasNLP is highly optimized. It is backed by the power of XLA.
+Generation in KerasHub is highly optimized. It is backed by the power of XLA.
 Secondly, key/value tensors in the self-attention layer and cross-attention layer
 in the decoder are cached to avoid recomputation at every timestep.
 """
