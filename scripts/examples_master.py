@@ -807,7 +807,7 @@ EXAMPLES_MASTER = {
                 },
                 # Text generation
                 {
-                    "path": "gpt2_text_generation_with_kerasnlp",
+                    "path": "gpt2_text_generation_with_keras_hub",
                     "title": "GPT2 Text Generation with KerasHub",
                     "subcategory": "Text generation",
                     "highlight": True,

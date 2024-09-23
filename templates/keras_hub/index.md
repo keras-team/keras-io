@@ -126,7 +126,7 @@ If KerasHub helps your research, we appreciate your citations.
 Here is the BibTeX entry:
 
 ```bibtex
-@misc{kerasnlp2022,
+@misc{kerashub2022,
   title={KerasHub},
   author={Watson, Matthew, and Qian, Chen, and Bischof, Jonathan and Chollet, 
   Fran\c{c}ois and others},
