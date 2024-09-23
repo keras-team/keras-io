@@ -47,7 +47,7 @@ PROJECT_URL = {
     "keras": f"{KERAS_TEAM_GH}/keras/tree/v3.5.0/",
     "keras_tuner": f"{KERAS_TEAM_GH}/keras-tuner/tree/v1.4.7/",
     "keras_cv": f"{KERAS_TEAM_GH}/keras-cv/tree/v0.9.0/",
-    "keras_hub": f"{KERAS_TEAM_GH}/keras-hub/tree/v0.16.0.dev20240917221418/",
+    "keras_hub": f"{KERAS_TEAM_GH}/keras-hub/tree/v0.16.1.dev202409220340/",
     "tf_keras": f"{KERAS_TEAM_GH}/tf-keras/tree/v2.17.0/",
 }
 USE_MULTIPROCESSING = False
@@ -541,8 +541,6 @@ class KerasIO:
             template = template.replace("{{toc}}", toc)
         if "keras_hub/" in path_stack and "models/" in path_stack:
             template = render_tags.render_tags(template, keras_hub)
-        if "keras_cv/" in path_stack and "models/" in path_stack:
-            template = render_tags.render_tags(template, keras_cv)
         source_path = Path(self.md_sources_dir) / Path(*path_stack)
         if path.endswith("/"):
             md_source_path = source_path / "index.md"

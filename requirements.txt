@@ -12,6 +12,5 @@ pydot
 boto3
 tensorflow
 keras-tuner
-keras-cv
 tf_keras
-keras-hub
+keras-hub-nightly  # TODO: update to keras-hub.

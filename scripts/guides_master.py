@@ -34,7 +34,7 @@ CV_GUIDES_MASTER = {
     ],
 }
 
-NLP_GUIDES_MASTER = {
+HUB_GUIDES_MASTER = {
     "path": "keras_hub/",
     "title": "KerasHub",
     "toc": True,
@@ -201,6 +201,6 @@ GUIDES_MASTER = {
         # },
         KT_GUIDES_MASTER,
         CV_GUIDES_MASTER,
-        NLP_GUIDES_MASTER,
+        HUB_GUIDES_MASTER,
     ],
 }

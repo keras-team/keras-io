@@ -972,6 +972,49 @@ MODELS_MASTER = {
             ],
         },
         {
+            "path": "resnet/",
+            "title": "ResNet",
+            "toc": True,
+            "children": [
+                {
+                    "path": "resnet_image_converter",
+                    "title": "ResNetImageConverter",
+                    "generate": [
+                        "keras_hub.layers.ResNetImageConverter",
+                        "keras_hub.layers.ResNetImageConverter.from_preset",
+                    ],
+                },
+                {
+                    "path": "resnet_backbone",
+                    "title": "ResNetBackbone model",
+                    "generate": [
+                        "keras_hub.models.ResNetBackbone",
+                        "keras_hub.models.ResNetBackbone.from_preset",
+                        "keras_hub.models.ResNetBackbone.token_embedding",
+                    ],
+                },
+                {
+                    "path": "resnet_image_classifier",
+                    "title": "ResNetImageClassifier model",
+                    "generate": [
+                        "keras_hub.models.ResNetImageClassifier",
+                        "keras_hub.models.ResNetImageClassifier.from_preset",
+                        "keras_hub.models.ResNetImageClassifier.backbone",
+                        "keras_hub.models.ResNetImageClassifier.preprocessor",
+                    ],
+                },
+                {
+                    "path": "resnet_image_classifier_preprocessor",
+                    "title": "ResNetImageClassifierPreprocessor layer",
+                    "generate": [
+                        "keras_hub.models.ResNetImageClassifierPreprocessor",
+                        "keras_hub.models.ResNetImageClassifierPreprocessor.from_preset",
+                        "keras_hub.models.ResNetImageClassifierPreprocessor.tokenizer",
+                    ],
+                },
+            ],
+        },
+        {
             "path": "roberta/",
             "title": "Roberta",
             "toc": True,
@@ -1242,6 +1285,21 @@ PREPROCESSING_LAYERS_MASTER = {
     "toc": True,
     "children": [
         {
+            "path": "audio_converter",
+            "title": "AudioConverter layer",
+            "generate": ["keras_hub.layers.AudioConverter"],
+        },
+        {
+            "path": "image_converter",
+            "title": "ImageConverter layer",
+            "generate": ["keras_hub.layers.ImageConverter"],
+        },
+        {
+            "path": "resizing_image_converter",
+            "title": "ResizingImageConverter layer",
+            "generate": ["keras_hub.layers.ResizingImageConverter"],
+        },
+        {
             "path": "start_end_packer",
             "title": "StartEndPacker layer",
             "generate": ["keras_hub.layers.StartEndPacker"],
@@ -1352,7 +1410,7 @@ METRICS_MASTER = {
     ],
 }
 
-NLP_API_MASTER = {
+HUB_API_MASTER = {
     "path": "keras_hub/",
     "title": "KerasHub",
     "toc": True,
