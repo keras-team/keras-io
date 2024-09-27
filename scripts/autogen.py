@@ -539,6 +539,8 @@ class KerasIO:
                     "missing {{toc}} tag." % (template_path,)
                 )
             template = template.replace("{{toc}}", toc)
+        if "keras_cv/" in path_stack and "models/" in path_stack:
+            template = render_tags.render_tags(template, keras_cv)
         if "keras_hub/" in path_stack and "models/" in path_stack:
             template = render_tags.render_tags(template, keras_hub)
         source_path = Path(self.md_sources_dir) / Path(*path_stack)
