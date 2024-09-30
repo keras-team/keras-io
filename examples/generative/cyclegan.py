@@ -618,7 +618,7 @@ model_checkpoint_callback = keras.callbacks.ModelCheckpoint(
 # 7 minutes on a single P100 backed machine.
 cycle_gan_model.fit(
     tf.data.Dataset.zip((train_horses, train_zebras)),
-    epochs=1,
+    epochs=90,
     callbacks=[plotter, model_checkpoint_callback],
 )
 
