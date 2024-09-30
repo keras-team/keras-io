@@ -39,6 +39,11 @@ except Exception as e:
     print(f"Could not import Keras CV. Exception: {e}")
     keras_cv = None
 
+try:
+    import keras_nlp
+except Exception as e:
+    print(f"Could not import Keras NLP. Exception: {e}")
+    keras_nlp = None
 
 EXAMPLES_GH_LOCATION = Path("keras-team") / "keras-io" / "blob" / "master" / "examples"
 GUIDES_GH_LOCATION = Path("keras-team") / "keras-io" / "blob" / "master" / "guides"
@@ -47,6 +52,7 @@ PROJECT_URL = {
     "keras": f"{KERAS_TEAM_GH}/keras/tree/v3.5.0/",
     "keras_tuner": f"{KERAS_TEAM_GH}/keras-tuner/tree/v1.4.7/",
     "keras_cv": f"{KERAS_TEAM_GH}/keras-cv/tree/v0.9.0/",
+    "keras_nlp": f"{KERAS_TEAM_GH}/keras-nlp/tree/v0.15.1/",
     "keras_hub": f"{KERAS_TEAM_GH}/keras-hub/tree/v0.16.1.dev202409260340/",
     "tf_keras": f"{KERAS_TEAM_GH}/tf-keras/tree/v2.17.0/",
 }
@@ -539,6 +545,8 @@ class KerasIO:
                     "missing {{toc}} tag." % (template_path,)
                 )
             template = template.replace("{{toc}}", toc)
+        if "keras_nlp/" in path_stack and "models/" in path_stack:
+            template = render_tags.render_tags(template, keras_nlp)
         if "keras_cv/" in path_stack and "models/" in path_stack:
             template = render_tags.render_tags(template, keras_cv)
         if "keras_hub/" in path_stack and "models/" in path_stack:

@@ -34,6 +34,26 @@ CV_GUIDES_MASTER = {
     ],
 }
 
+NLP_GUIDES_MASTER = {
+    "path": "keras_nlp/",
+    "title": "KerasNLP",
+    "toc": True,
+    "children": [
+        {
+            "path": "getting_started",
+            "title": "Getting Started with KerasNLP",
+        },
+        {
+            "path": "transformer_pretraining",
+            "title": "Pretraining a Transformer from scratch with KerasNLP",
+        },
+        {
+            "path": "upload",
+            "title": "Uploading Models with KerasNLP",
+        },
+    ],
+}
+
 HUB_GUIDES_MASTER = {
     "path": "keras_hub/",
     "title": "KerasHub",
@@ -201,6 +221,7 @@ GUIDES_MASTER = {
         # },
         KT_GUIDES_MASTER,
         CV_GUIDES_MASTER,
+        NLP_GUIDES_MASTER,
         HUB_GUIDES_MASTER,
     ],
 }
