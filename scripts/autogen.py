@@ -30,7 +30,7 @@ import render_tags
 try:
     import keras_hub
 except Exception as e:
-    print(f"Could not import Keras NLP. Exception: {e}")
+    print(f"Could not import KerasHub. Exception: {e}")
     keras_hub = None
 
 try:
