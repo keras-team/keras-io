@@ -2,7 +2,7 @@
 Title: CycleGAN
 Author: [A_K_Nain](https://twitter.com/A_K_Nain)
 Date created: 2020/08/12
-Last modified: 2020/08/12
+Last modified: 2024/09/30
 Description: Implementation of CycleGAN.
 Accelerator: GPU
 """
