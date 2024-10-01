@@ -46,14 +46,14 @@ performance improvement.
 """
 ## Setup
 
-We will use KerasNLP library to simplify the model implementation. Additionally,
+We will use KerasHub library to simplify the model implementation. Additionally,
 use mixed precision training to reduce the training time.
 
 Note: The dependency on TensorFlow is only required for data processing.
 """
 
 """shell
-pip install -q --upgrade keras-nlp
+pip install -q --upgrade keras-hub
 pip install -q --upgrade keras  # Upgrade to Keras 3.
 """
 
@@ -65,7 +65,7 @@ os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 import re
 
 import keras
-import keras_nlp
+import keras_hub
 import tensorflow as tf
 
 keras.config.set_dtype_policy("mixed_bfloat16")
@@ -144,8 +144,8 @@ for text_batch, label_batch in train_ds.take(1):
 """
 ### Tokenizing the data
 
-We'll be using the `keras_nlp.tokenizers.WordPieceTokenizer` layer to tokenize
-the text. `keras_nlp.tokenizers.WordPieceTokenizer` takes a WordPiece vocabulary
+We'll be using the `keras_hub.tokenizers.WordPieceTokenizer` layer to tokenize
+the text. `keras_hub.tokenizers.WordPieceTokenizer` takes a WordPiece vocabulary
 and has functions for tokenizing the text, and detokenizing sequences of tokens.
 
 Before we define the tokenizer, we first need to train it on the dataset
@@ -153,15 +153,15 @@ we have. The WordPiece tokenization algorithm is a subword tokenization
 algorithm; training it on a corpus gives us a vocabulary of subwords. A subword
 tokenizer is a compromise between word tokenizers (word tokenizers need very
 large vocabularies for good coverage of input words), and character tokenizers
-(characters don't really encode meaning like words do). Luckily, KerasNLP
+(characters don't really encode meaning like words do). Luckily, KerasHub
 makes it very simple to train WordPiece on a corpus with the
-`keras_nlp.tokenizers.compute_word_piece_vocabulary` utility.
+`keras_hub.tokenizers.compute_word_piece_vocabulary` utility.
 """
 
 
 def train_word_piece(ds, vocab_size, reserved_tokens):
     word_piece_ds = ds.unbatch().map(lambda x, y: x)
-    vocab = keras_nlp.tokenizers.compute_word_piece_vocabulary(
+    vocab = keras_hub.tokenizers.compute_word_piece_vocabulary(
         word_piece_ds.batch(1000).prefetch(2),
         vocabulary_size=vocab_size,
         reserved_tokens=reserved_tokens,
@@ -195,7 +195,7 @@ all sequences are padded to the same length, if the length of the sequence is
 less than the specified sequence length. Otherwise, the sequence is truncated.
 """
 
-tokenizer = keras_nlp.tokenizers.WordPieceTokenizer(
+tokenizer = keras_hub.tokenizers.WordPieceTokenizer(
     vocabulary=vocab,
     lowercase=False,
     sequence_length=MAX_SEQUENCE_LENGTH,
@@ -241,7 +241,7 @@ test_ds = make_dataset(test_ds)
 ## Model
 
 Let's build a simple Transformer model. We will use `TokenAndPositionEmbedding`
-and `TransformerDecoder` from KerasNLP library. `TokenAndPositionEmbedding`
+and `TransformerDecoder` from KerasHub library. `TokenAndPositionEmbedding`
 represents words and their order in a sentence, while `TransformerDecoder`
 outputs one vector for each time step of our input sequence. Here, we take the
 mean across all time steps and use a feedforward network on top of it to
@@ -258,13 +258,13 @@ def build_model(
     dropout=0.1,
 ):
     token_id_input = keras.layers.Input(shape=(None,), dtype="int32", name="input_ids")
-    x = keras_nlp.layers.TokenAndPositionEmbedding(
+    x = keras_hub.layers.TokenAndPositionEmbedding(
         vocabulary_size=vocabulary_size,
         sequence_length=max_sequence_length,
         embedding_dim=hidden_dim,
     )(token_id_input)
     x = keras.layers.Dropout(rate=dropout)(x)
-    x = keras_nlp.layers.TransformerDecoder(
+    x = keras_hub.layers.TransformerDecoder(
         intermediate_dim=intermediate_dim,
         num_heads=num_heads,
         dropout=dropout,

@@ -1,42 +1,42 @@
-# English-to-Spanish translation with KerasNLP
+# English-to-Spanish translation with KerasHub
 
 **Author:** [Abheesht Sharma](https://github.com/abheesht17/)<br>
 **Date created:** 2022/05/26<br>
 **Last modified:** 2024/04/30<br>
-**Description:** Use KerasNLP to train a sequence-to-sequence Transformer model on the machine translation task.
+**Description:** Use KerasHub to train a sequence-to-sequence Transformer model on the machine translation task.
 
 
-<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/nlp/ipynb/neural_machine_translation_with_keras_nlp.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/nlp/neural_machine_translation_with_keras_nlp.py)
+<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/nlp/ipynb/neural_machine_translation_with_keras_hub.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/nlp/neural_machine_translation_with_keras_hub.py)
 
 
 
 ---
 ## Introduction
 
-KerasNLP provides building blocks for NLP (model layers, tokenizers, metrics, etc.) and
+KerasHub provides building blocks for NLP (model layers, tokenizers, metrics, etc.) and
 makes it convenient to construct NLP pipelines.
 
-In this example, we'll use KerasNLP layers to build an encoder-decoder Transformer
+In this example, we'll use KerasHub layers to build an encoder-decoder Transformer
 model, and train it on the English-to-Spanish machine translation task.
 
 This example is based on the
 [English-to-Spanish NMT
 example](https://keras.io/examples/nlp/neural_machine_translation_with_transformer/)
 by [fchollet](https://twitter.com/fchollet). The original example is more low-level
-and implements layers from scratch, whereas this example uses KerasNLP to show
+and implements layers from scratch, whereas this example uses KerasHub to show
 some more advanced approaches, such as subword tokenization and using metrics
 to compute the quality of generated translations.
 
 You'll learn how to:
 
-- Tokenize text using `keras_nlp.tokenizers.WordPieceTokenizer`.
-- Implement a sequence-to-sequence Transformer model using KerasNLP's
-`keras_nlp.layers.TransformerEncoder`, `keras_nlp.layers.TransformerDecoder` and
-`keras_nlp.layers.TokenAndPositionEmbedding` layers, and train it.
-- Use `keras_nlp.samplers` to generate translations of unseen input sentences
+- Tokenize text using `keras_hub.tokenizers.WordPieceTokenizer`.
+- Implement a sequence-to-sequence Transformer model using KerasHub's
+`keras_hub.layers.TransformerEncoder`, `keras_hub.layers.TransformerDecoder` and
+`keras_hub.layers.TokenAndPositionEmbedding` layers, and train it.
+- Use `keras_hub.samplers` to generate translations of unseen input sentences
  using the top-p decoding strategy!
 
-Don't worry if you aren't familiar with KerasNLP. This tutorial will start with
+Don't worry if you aren't familiar with KerasHub. This tutorial will start with
 the basics. Let's dive right in!
 
 ---
@@ -47,12 +47,12 @@ Before we start implementing the pipeline, let's import all the libraries we nee
 
 ```python
 !pip install -q --upgrade rouge-score
-!pip install -q --upgrade keras-nlp
+!pip install -q --upgrade keras-hub
 !pip install -q --upgrade keras  # Upgrade to Keras 3.
 ```
 
 ```python
-import keras_nlp
+import keras_hub
 import pathlib
 import random
 
@@ -180,8 +180,8 @@ print(f"{len(test_pairs)} test pairs")
 
 We'll define two tokenizers - one for the source language (English), and the other
 for the target language (Spanish). We'll be using
-`keras_nlp.tokenizers.WordPieceTokenizer` to tokenize the text.
-`keras_nlp.tokenizers.WordPieceTokenizer` takes a WordPiece vocabulary
+`keras_hub.tokenizers.WordPieceTokenizer` to tokenize the text.
+`keras_hub.tokenizers.WordPieceTokenizer` takes a WordPiece vocabulary
 and has functions for tokenizing the text, and detokenizing sequences of tokens.
 
 Before we define the two tokenizers, we first need to train them on the dataset
@@ -189,16 +189,16 @@ we have. The WordPiece tokenization algorithm is a subword tokenization algorith
 training it on a corpus gives us a vocabulary of subwords. A subword tokenizer
 is a compromise between word tokenizers (word tokenizers need very large
 vocabularies for good coverage of input words), and character tokenizers
-(characters don't really encode meaning like words do). Luckily, KerasNLP
+(characters don't really encode meaning like words do). Luckily, KerasHub
 makes it very simple to train WordPiece on a corpus with the
-`keras_nlp.tokenizers.compute_word_piece_vocabulary` utility.
+`keras_hub.tokenizers.compute_word_piece_vocabulary` utility.
 
 
 ```python
 
 def train_word_piece(text_samples, vocab_size, reserved_tokens):
     word_piece_ds = tf_data.Dataset.from_tensor_slices(text_samples)
-    vocab = keras_nlp.tokenizers.compute_word_piece_vocabulary(
+    vocab = keras_hub.tokenizers.compute_word_piece_vocabulary(
         word_piece_ds.batch(1000).prefetch(2),
         vocabulary_size=vocab_size,
         reserved_tokens=reserved_tokens,
@@ -246,10 +246,10 @@ the vocabularies trained above.
 
 
 ```python
-eng_tokenizer = keras_nlp.tokenizers.WordPieceTokenizer(
+eng_tokenizer = keras_hub.tokenizers.WordPieceTokenizer(
     vocabulary=eng_vocab, lowercase=False
 )
-spa_tokenizer = keras_nlp.tokenizers.WordPieceTokenizer(
+spa_tokenizer = keras_hub.tokenizers.WordPieceTokenizer(
     vocabulary=spa_vocab, lowercase=False
 )
 ```
@@ -317,7 +317,7 @@ it provides the next words in the target sentence -- what the model will try to 
 
 We will add special tokens, `"[START]"` and `"[END]"`, to the input Spanish
 sentence after tokenizing the text. We will also pad the input to a fixed length.
-This can be easily done using `keras_nlp.layers.StartEndPacker`.
+This can be easily done using `keras_hub.layers.StartEndPacker`.
 
 
 ```python
@@ -329,14 +329,14 @@ def preprocess_batch(eng, spa):
     spa = spa_tokenizer(spa)
 
     # Pad `eng` to `MAX_SEQUENCE_LENGTH`.
-    eng_start_end_packer = keras_nlp.layers.StartEndPacker(
+    eng_start_end_packer = keras_hub.layers.StartEndPacker(
         sequence_length=MAX_SEQUENCE_LENGTH,
         pad_value=eng_tokenizer.token_to_id("[PAD]"),
     )
     eng = eng_start_end_packer(eng)
 
     # Add special tokens (`"[START]"` and `"[END]"`) to `spa` and pad it as well.
-    spa_start_end_packer = keras_nlp.layers.StartEndPacker(
+    spa_start_end_packer = keras_hub.layers.StartEndPacker(
         sequence_length=MAX_SEQUENCE_LENGTH + 1,
         start_value=spa_tokenizer.token_to_id("[START]"),
         end_value=spa_tokenizer.token_to_id("[END]"),
@@ -394,27 +394,27 @@ Now, let's move on to the exciting part - defining our model!
 We first need an embedding layer, i.e., a vector for every token in our input sequence.
 This embedding layer can be initialised randomly. We also need a positional
 embedding layer which encodes the word order in the sequence. The convention is
-to add these two embeddings. KerasNLP has a `keras_nlp.layers.TokenAndPositionEmbedding `
+to add these two embeddings. KerasHub has a `keras_hub.layers.TokenAndPositionEmbedding `
 layer which does all of the above steps for us.
 
-Our sequence-to-sequence Transformer consists of a `keras_nlp.layers.TransformerEncoder`
-layer and a `keras_nlp.layers.TransformerDecoder` layer chained together.
+Our sequence-to-sequence Transformer consists of a `keras_hub.layers.TransformerEncoder`
+layer and a `keras_hub.layers.TransformerDecoder` layer chained together.
 
-The source sequence will be passed to `keras_nlp.layers.TransformerEncoder`, which
+The source sequence will be passed to `keras_hub.layers.TransformerEncoder`, which
 will produce a new representation of it. This new representation will then be passed
-to the `keras_nlp.layers.TransformerDecoder`, together with the target sequence
-so far (target words 0 to N). The `keras_nlp.layers.TransformerDecoder` will
+to the `keras_hub.layers.TransformerDecoder`, together with the target sequence
+so far (target words 0 to N). The `keras_hub.layers.TransformerDecoder` will
 then seek to predict the next words in the target sequence (N+1 and beyond).
 
 A key detail that makes this possible is causal masking.
-The `keras_nlp.layers.TransformerDecoder` sees the entire sequence at once, and
+The `keras_hub.layers.TransformerDecoder` sees the entire sequence at once, and
 thus we must make sure that it only uses information from target tokens 0 to N
 when predicting token N+1 (otherwise, it could use information from the future,
 which would result in a model that cannot be used at inference time). Causal masking
-is enabled by default in `keras_nlp.layers.TransformerDecoder`.
+is enabled by default in `keras_hub.layers.TransformerDecoder`.
 
 We also need to mask the padding tokens (`"[PAD]"`). For this, we can set the
-`mask_zero` argument of the `keras_nlp.layers.TokenAndPositionEmbedding` layer
+`mask_zero` argument of the `keras_hub.layers.TokenAndPositionEmbedding` layer
 to True. This will then be propagated to all subsequent layers.
 
 
@@ -422,13 +422,13 @@ to True. This will then be propagated to all subsequent layers.
 # Encoder
 encoder_inputs = keras.Input(shape=(None,), name="encoder_inputs")
 
-x = keras_nlp.layers.TokenAndPositionEmbedding(
+x = keras_hub.layers.TokenAndPositionEmbedding(
     vocabulary_size=ENG_VOCAB_SIZE,
     sequence_length=MAX_SEQUENCE_LENGTH,
     embedding_dim=EMBED_DIM,
 )(encoder_inputs)
 
-encoder_outputs = keras_nlp.layers.TransformerEncoder(
+encoder_outputs = keras_hub.layers.TransformerEncoder(
     intermediate_dim=INTERMEDIATE_DIM, num_heads=NUM_HEADS
 )(inputs=x)
 encoder = keras.Model(encoder_inputs, encoder_outputs)
@@ -438,13 +438,13 @@ encoder = keras.Model(encoder_inputs, encoder_outputs)
 decoder_inputs = keras.Input(shape=(None,), name="decoder_inputs")
 encoded_seq_inputs = keras.Input(shape=(None, EMBED_DIM), name="decoder_state_inputs")
 
-x = keras_nlp.layers.TokenAndPositionEmbedding(
+x = keras_hub.layers.TokenAndPositionEmbedding(
     vocabulary_size=SPA_VOCAB_SIZE,
     sequence_length=MAX_SEQUENCE_LENGTH,
     embedding_dim=EMBED_DIM,
 )(decoder_inputs)
 
-x = keras_nlp.layers.TransformerDecoder(
+x = keras_hub.layers.TransformerDecoder(
     intermediate_dim=INTERMEDIATE_DIM, num_heads=NUM_HEADS
 )(decoder_sequence=x, encoder_sequence=encoded_seq_inputs)
 x = keras.layers.Dropout(0.5)(x)
@@ -550,8 +550,8 @@ as well as the target token `"[START]"`. The model outputs probabilities of the
 next token. We then we repeatedly generated the next token conditioned on the
 tokens generated so far, until we hit the token `"[END]"`.
 
-For decoding, we will use the `keras_nlp.samplers` module from
-KerasNLP. Greedy Decoding is a text decoding method which outputs the most
+For decoding, we will use the `keras_hub.samplers` module from
+KerasHub. Greedy Decoding is a text decoding method which outputs the most
 likely next token at each time step, i.e., the token with the highest probability.
 
 
@@ -582,7 +582,7 @@ def decode_sequences(input_sentences):
     pad = ops.full((batch_size, length - 1), spa_tokenizer.token_to_id("[PAD]"))
     prompt = ops.concatenate((start, pad), axis=-1)
 
-    generated_tokens = keras_nlp.samplers.GreedySampler()(
+    generated_tokens = keras_hub.samplers.GreedySampler()(
         next,
         prompt,
         stop_token_ids=[spa_tokenizer.token_to_id("[END]")],
@@ -644,8 +644,8 @@ expensive process).
 
 
 ```python
-rouge_1 = keras_nlp.metrics.RougeN(order=1)
-rouge_2 = keras_nlp.metrics.RougeN(order=2)
+rouge_1 = keras_hub.metrics.RougeN(order=1)
+rouge_2 = keras_hub.metrics.RougeN(order=2)
 
 for test_pair in test_pairs[:30]:
     input_sentence = test_pair[0]

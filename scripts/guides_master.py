@@ -54,6 +54,26 @@ NLP_GUIDES_MASTER = {
     ],
 }
 
+HUB_GUIDES_MASTER = {
+    "path": "keras_hub/",
+    "title": "KerasHub",
+    "toc": True,
+    "children": [
+        {
+            "path": "getting_started",
+            "title": "Getting Started with KerasHub",
+        },
+        {
+            "path": "transformer_pretraining",
+            "title": "Pretraining a Transformer from scratch with KerasHub",
+        },
+        {
+            "path": "upload",
+            "title": "Uploading Models with KerasHub",
+        },
+    ],
+}
+
 KT_GUIDES_MASTER = {
     "path": "keras_tuner/",
     "title": "Hyperparameter Tuning",
@@ -202,5 +222,6 @@ GUIDES_MASTER = {
         KT_GUIDES_MASTER,
         CV_GUIDES_MASTER,
         NLP_GUIDES_MASTER,
+        HUB_GUIDES_MASTER,
     ],
 }

@@ -42,7 +42,7 @@ task using Hugging Face Transformers on the `XSum` dataset loaded from Hugging F
 
 ```python
 !pip install transformers==4.20.0
-!pip install keras_nlp==0.3.0
+!pip install keras_hub==0.3.0
 !pip install datasets
 !pip install huggingface-hub
 !pip install nltk
@@ -333,9 +333,9 @@ calculate the `ROUGE` score between the groud-truth and predictions.
 
 
 ```python
-import keras_nlp
+import keras_hub
 
-rouge_l = keras_nlp.metrics.RougeL()
+rouge_l = keras_hub.metrics.RougeL()
 
 
 def metric_fn(eval_predictions):

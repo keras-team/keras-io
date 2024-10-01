@@ -748,7 +748,7 @@ intermediate_output = intermediate_layer_model(data)
 ### How can I use pre-trained models in Keras?
 
 You could leverage the [models available in `keras.applications`](/api/applications/),
-or the models available in [KerasCV](/keras_cv/) and [KerasNLP](/keras_nlp/).
+or the models available in [KerasCV](/keras_cv/) and [KerasHub](/keras_hub/).
 
 
 ---

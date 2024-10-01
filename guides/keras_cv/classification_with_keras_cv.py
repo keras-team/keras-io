@@ -29,7 +29,7 @@ TensorFlow or PyTorch backends with zero changes, simply update the
 We use Professor Keras, the official Keras mascot, as a
 visual reference for the complexity of the material:
 
-![](https://storage.googleapis.com/keras-nlp/getting_started_guide/prof_keras_evolution.png)
+![](https://storage.googleapis.com/keras-hub/getting_started_guide/prof_keras_evolution.png)
 """
 
 """shell
@@ -62,7 +62,7 @@ import tensorflow_datasets as tfds
 """
 ## Inference with a pretrained classifier
 
-![](https://storage.googleapis.com/keras-nlp/getting_started_guide/prof_keras_beginner.png)
+![](https://storage.googleapis.com/keras-hub/getting_started_guide/prof_keras_beginner.png)
 
 Let's get started with the simplest KerasCV API: a pretrained classifier.
 In this example, we will construct a classifier that was
@@ -143,7 +143,7 @@ This can be solved by fine tuning our own classifier.
 
 ## Fine tuning a pretrained classifier
 
-![](https://storage.googleapis.com/keras-nlp/getting_started_guide/prof_keras_intermediate.png)
+![](https://storage.googleapis.com/keras-hub/getting_started_guide/prof_keras_intermediate.png)
 
 When labeled images specific to our task are available, fine-tuning a custom
 classifier can improve performance.
@@ -233,7 +233,7 @@ Awesome - looks like the model correctly classified the image.
 """
 ## Train a Classifier from Scratch
 
-![](https://storage.googleapis.com/keras-nlp/getting_started_guide/prof_keras_advanced.png)
+![](https://storage.googleapis.com/keras-hub/getting_started_guide/prof_keras_advanced.png)
 
 Now that we've gotten our hands dirty with classification, let's take on one
 last task: training a classification model from scratch!

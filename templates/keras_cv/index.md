@@ -3,20 +3,20 @@
 <a class="github-button" href="https://github.com/keras-team/keras-cv" data-size="large" data-show-count="true" aria-label="Star keras-team/keras-cv on GitHub">Star</a>
 
 KerasCV is a library of modular computer vision components that work natively
-with TensorFlow, JAX, or PyTorch. Built on Keras 3, these models, layers, 
-metrics, callbacks, etc., can be trained and serialized in any framework and 
+with TensorFlow, JAX, or PyTorch. Built on Keras 3, these models, layers,
+metrics, callbacks, etc., can be trained and serialized in any framework and
 re-used in another without costly migrations.
 
-KerasCV can be understood as a horizontal extension of the Keras API: the 
-components are new first-party Keras objects that are too specialized to be 
-added to core Keras. They receive the same level of polish and backwards 
-compatibility guarantees as the core Keras API, and they are maintained by the 
+KerasCV can be understood as a horizontal extension of the Keras API: the
+components are new first-party Keras objects that are too specialized to be
+added to core Keras. They receive the same level of polish and backwards
+compatibility guarantees as the core Keras API, and they are maintained by the
 Keras team.
 
-Our APIs assist in common computer vision tasks such as data augmentation, 
+Our APIs assist in common computer vision tasks such as data augmentation,
 classification, object detection, segmentation, image generation, and more.
-Applied computer vision engineers can leverage KerasCV to quickly assemble 
-production-grade, state-of-the-art training and inference pipelines for all of 
+Applied computer vision engineers can leverage KerasCV to quickly assemble
+production-grade, state-of-the-art training and inference pipelines for all of
 these common tasks.
 
 

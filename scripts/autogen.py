@@ -28,10 +28,10 @@ import generate_tf_guides
 import render_tags
 
 try:
-    import keras_nlp
+    import keras_hub
 except Exception as e:
-    print(f"Could not import Keras NLP. Exception: {e}")
-    keras_nlp = None
+    print(f"Could not import KerasHub. Exception: {e}")
+    keras_hub = None
 
 try:
     import keras_cv
@@ -39,6 +39,11 @@ except Exception as e:
     print(f"Could not import Keras CV. Exception: {e}")
     keras_cv = None
 
+try:
+    import keras_nlp
+except Exception as e:
+    print(f"Could not import Keras NLP. Exception: {e}")
+    keras_nlp = None
 
 EXAMPLES_GH_LOCATION = Path("keras-team") / "keras-io" / "blob" / "master" / "examples"
 GUIDES_GH_LOCATION = Path("keras-team") / "keras-io" / "blob" / "master" / "guides"
@@ -48,6 +53,7 @@ PROJECT_URL = {
     "keras_tuner": f"{KERAS_TEAM_GH}/keras-tuner/tree/v1.4.7/",
     "keras_cv": f"{KERAS_TEAM_GH}/keras-cv/tree/v0.9.0/",
     "keras_nlp": f"{KERAS_TEAM_GH}/keras-nlp/tree/v0.15.1/",
+    "keras_hub": f"{KERAS_TEAM_GH}/keras-hub/tree/v0.16.1.dev202409290341/",
     "tf_keras": f"{KERAS_TEAM_GH}/tf-keras/tree/v2.17.0/",
 }
 USE_MULTIPROCESSING = False
@@ -543,6 +549,8 @@ class KerasIO:
             template = render_tags.render_tags(template, keras_nlp)
         if "keras_cv/" in path_stack and "models/" in path_stack:
             template = render_tags.render_tags(template, keras_cv)
+        if "keras_hub/" in path_stack and "models/" in path_stack:
+            template = render_tags.render_tags(template, keras_hub)
         source_path = Path(self.md_sources_dir) / Path(*path_stack)
         if path.endswith("/"):
             md_source_path = source_path / "index.md"
