@@ -38,6 +38,7 @@ unzip -q DUTS-TE.zip
 """
 
 import os
+
 os.environ["KERAS_BACKEND"] = "tensorflow"
 import numpy as np
 from glob import glob
@@ -72,12 +73,22 @@ def load_paths(path, split_ratio):
     len_ = int(len(images) * split_ratio)
     return (images[:len_], masks[:len_]), (images[len_:], masks[len_:])
 
+
 class Dataset(keras.utils.PyDataset):
-    def __init__(self, image_paths, mask_paths, img_size, out_classes, batch, shuffle=True, **kwargs):
+    def __init__(
+        self,
+        image_paths,
+        mask_paths,
+        img_size,
+        out_classes,
+        batch,
+        shuffle=True,
+        **kwargs,
+    ):
         if shuffle:
             perm = np.random.permutation(len(image_paths))
-            image_paths = [ image_paths[i] for i in perm ]
-            mask_paths = [ mask_paths[i] for i in perm ]
+            image_paths = [image_paths[i] for i in perm]
+            mask_paths = [mask_paths[i] for i in perm]
         self.image_paths = image_paths
         self.mask_paths = mask_paths
         self.img_size = img_size
@@ -89,9 +100,11 @@ class Dataset(keras.utils.PyDataset):
         return len(self.image_paths) // self.batch_size
 
     def __getitem__(self, idx):
-        batch_x, batch_y = [],[]
-        for i in range(idx*self.batch_size, (idx+1)*self.batch_size):
-            x,y = self.preprocess(self.image_paths[i], self.mask_paths[i], self.img_size, self.out_classes)
+        batch_x, batch_y = [], []
+        for i in range(idx * self.batch_size, (idx + 1) * self.batch_size):
+            x, y = self.preprocess(
+                self.image_paths[i], self.mask_paths[i], self.img_size, self.out_classes
+            )
             batch_x.append(x)
             batch_y.append(y)
         batch_x = np.stack(batch_x, axis=0)
@@ -135,7 +148,7 @@ def display(display_list):
     plt.show()
 
 
-for (image, mask),_ in zip(val_dataset, range(1)):
+for (image, mask), _ in zip(val_dataset, range(1)):
     display([image[0], mask[0]])
 
 """
@@ -387,9 +400,7 @@ class BasnetLoss(keras.losses.Loss):
         intersection = ops.sum(ops.abs(y_true * y_pred), axis=[1, 2, 3])
         union = ops.sum(y_true, [1, 2, 3]) + ops.sum(y_pred, [1, 2, 3])
         union = union - intersection
-        return ops.mean(
-            (intersection + self.smooth) / (union + self.smooth), axis=0
-        )
+        return ops.mean((intersection + self.smooth) / (union + self.smooth), axis=0)
 
     def call(self, y_true, y_pred):
         cross_entropy_loss = self.cross_entropy_loss(y_true, y_pred)
@@ -455,6 +466,6 @@ basnet_model.load_weights("./basnet_weights.h5")
 ### Make Predictions
 """
 
-for (image, mask),_ in zip(val_dataset,range(1)):
+for (image, mask), _ in zip(val_dataset, range(1)):
     pred_mask = basnet_model.predict(image)
     display([image[0], mask[0], normalize_output(pred_mask[0][0])])
