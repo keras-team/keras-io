@@ -1190,7 +1190,7 @@ API_MASTER = {
                         "keras.ops.inv",
                         "keras.ops.logdet",
                         "keras.ops.lstsq",
-                        "keras.ops.lu_factor",                        
+                        "keras.ops.lu_factor",
                         "keras.ops.norm",
                         "keras.ops.qr",
                         "keras.ops.solve",
@@ -1493,6 +1493,9 @@ API_MASTER = {
             "path": "losses/",
             "title": "Losses",
             "toc": True,
+            "generate": [
+                "keras.losses.Loss",
+            ],
             "children": [
                 {
                     "path": "probabilistic_losses",
@@ -1526,6 +1529,7 @@ API_MASTER = {
                         "keras.losses.Huber",
                         "keras.losses.LogCosh",
                         "keras.losses.Tversky",
+                        "keras.losses.Dice",
                         "keras.losses.mean_squared_error",
                         "keras.losses.mean_absolute_error",
                         "keras.losses.mean_absolute_percentage_error",
@@ -1534,6 +1538,7 @@ API_MASTER = {
                         "keras.losses.huber",
                         "keras.losses.log_cosh",
                         "keras.losses.tversky",
+                        "keras.losses.dice",
                     ],
                 },
                 {
