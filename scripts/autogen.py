@@ -53,7 +53,7 @@ PROJECT_URL = {
     "keras_tuner": f"{KERAS_TEAM_GH}/keras-tuner/tree/v1.4.7/",
     "keras_cv": f"{KERAS_TEAM_GH}/keras-cv/tree/v0.9.0/",
     "keras_nlp": f"{KERAS_TEAM_GH}/keras-nlp/tree/v0.15.1/",
-    "keras_hub": f"{KERAS_TEAM_GH}/keras-hub/tree/v0.16.1.dev202409290341/",
+    "keras_hub": f"{KERAS_TEAM_GH}/keras-hub/tree/v0.16.1.dev202410020340/",
     "tf_keras": f"{KERAS_TEAM_GH}/tf-keras/tree/v2.17.0/",
 }
 USE_MULTIPROCESSING = False
