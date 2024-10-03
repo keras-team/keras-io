@@ -7,6 +7,7 @@ import re
 import inspect
 import importlib
 import itertools
+import copy
 
 import render_tags
 
@@ -134,7 +135,9 @@ def make_source_link(cls, project_url):
     project_url = project_url[base_module]
     assert project_url.endswith("/"), f"{base_module} not found"
     project_url_version = project_url.split("/")[-2].removeprefix("v")
-    module_version = importlib.import_module(base_module).__version__
+    module_version = copy.copy(importlib.import_module(base_module).__version__)
+    if ".dev" in module_version:
+        module_version = project_url_version[:module_version.find(".dev")]
     if module_version != project_url_version:
         raise RuntimeError(
             f"For project {base_module}, URL {project_url} "
