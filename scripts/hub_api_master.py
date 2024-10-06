@@ -1295,11 +1295,6 @@ PREPROCESSING_LAYERS_MASTER = {
             "generate": ["keras_hub.layers.ImageConverter"],
         },
         {
-            "path": "resizing_image_converter",
-            "title": "ResizingImageConverter layer",
-            "generate": ["keras_hub.layers.ResizingImageConverter"],
-        },
-        {
             "path": "start_end_packer",
             "title": "StartEndPacker layer",
             "generate": ["keras_hub.layers.StartEndPacker"],
