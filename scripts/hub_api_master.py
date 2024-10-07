@@ -980,8 +980,8 @@ MODELS_MASTER = {
                     "path": "densenet_image_converter",
                     "title": "DenseNetImageConverter",
                     "generate": [
-                        "keras_hub.layers.DensNetImageConverter",
-                        "keras_hub.layers.DensNetImageConverter.from_preset",
+                        "keras_hub.layers.DenseNetImageConverter",
+                        "keras_hub.layers.DenseNetImageConverter.from_preset",
                     ],
                 },
                 {
