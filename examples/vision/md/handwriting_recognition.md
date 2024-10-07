@@ -2,13 +2,13 @@
 
 **Authors:** [A_K_Nain](https://twitter.com/A_K_Nain), [Sayak Paul](https://twitter.com/RisingSayak)<br>
 **Date created:** 2021/08/16<br>
-**Last modified:** 2023/07/06<br>
+**Last modified:** 2024/09/01<br>
+**Description:** Training a handwriting recognition model with variable-length sequences.
 
 
 <img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/vision/ipynb/handwriting_recognition.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/vision/handwriting_recognition.py)
 
 
-**Description:** Training a handwriting recognition model with variable-length sequences.
 
 ---
 ## Introduction
@@ -72,16 +72,16 @@ a01-000u-00-01 ok 154 507 766 213 48 NN MOVE
 
 
 ```python
-from tensorflow.keras.layers import StringLookup
-from tensorflow import keras
-
+import keras
+from keras.layers import StringLookup
+from keras import ops
 import matplotlib.pyplot as plt
 import tensorflow as tf
 import numpy as np
 import os
 
 np.random.seed(42)
-tf.random.set_seed(42)
+keras.utils.set_random_seed(42)
 ```
 
 ---
@@ -146,7 +146,7 @@ base_image_path = os.path.join(base_path, "words")
 def get_image_paths_and_labels(samples):
     paths = []
     corrected_samples = []
-    for (i, file_line) in enumerate(samples):
+    for i, file_line in enumerate(samples):
         line_split = file_line.strip()
         line_split = line_split.split(" ")
 
@@ -275,8 +275,8 @@ def distortion_free_resize(image, img_size):
     image = tf.image.resize(image, size=(h, w), preserve_aspect_ratio=True)
 
     # Check tha amount of padding needed to be done.
-    pad_height = h - tf.shape(image)[0]
-    pad_width = w - tf.shape(image)[1]
+    pad_height = h - ops.shape(image)[0]
+    pad_width = w - ops.shape(image)[1]
 
     # Only necessary if you want to do same amount of padding on both sides.
     if pad_height % 2 != 0:
@@ -302,7 +302,7 @@ def distortion_free_resize(image, img_size):
         ],
     )
 
-    image = tf.transpose(image, perm=[1, 0, 2])
+    image = ops.transpose(image, (1, 0, 2))
     image = tf.image.flip_left_right(image)
     return image
 
@@ -328,13 +328,13 @@ def preprocess_image(image_path, img_size=(image_width, image_height)):
     image = tf.io.read_file(image_path)
     image = tf.image.decode_png(image, 1)
     image = distortion_free_resize(image, img_size)
-    image = tf.cast(image, tf.float32) / 255.0
+    image = ops.cast(image, tf.float32) / 255.0
     return image
 
 
 def vectorize_label(label):
     label = char_to_num(tf.strings.unicode_split(label, input_encoding="UTF-8"))
-    length = tf.shape(label)[0]
+    length = ops.shape(label)[0]
     pad_amount = max_len - length
     label = tf.pad(label, paddings=[[0, pad_amount]], constant_values=padding_token)
     return label
@@ -377,7 +377,7 @@ for data in train_ds.take(1):
     for i in range(16):
         img = images[i]
         img = tf.image.flip_left_right(img)
-        img = tf.transpose(img, perm=[1, 0, 2])
+        img = ops.transpose(img, (1, 0, 2))
         img = (img * 255.0).numpy().clip(0, 255).astype(np.uint8)
         img = img[:, :, 0]
 
@@ -397,7 +397,9 @@ plt.show()
 ```
 
 
+    
 ![png](/img/examples/vision/handwriting_recognition/handwriting_recognition_28_0.png)
+    
 
 
 You will notice that the content of original image is kept as faithful as possible and has
@@ -415,15 +417,15 @@ CTC loss, refer to [this post](https://distill.pub/2017/ctc/).
 class CTCLayer(keras.layers.Layer):
     def __init__(self, name=None):
         super().__init__(name=name)
-        self.loss_fn = keras.backend.ctc_batch_cost
+        self.loss_fn = tf.keras.backend.ctc_batch_cost
 
     def call(self, y_true, y_pred):
-        batch_len = tf.cast(tf.shape(y_true)[0], dtype="int64")
-        input_length = tf.cast(tf.shape(y_pred)[1], dtype="int64")
-        label_length = tf.cast(tf.shape(y_true)[1], dtype="int64")
+        batch_len = ops.cast(ops.shape(y_true)[0], dtype="int64")
+        input_length = ops.cast(ops.shape(y_pred)[1], dtype="int64")
+        label_length = ops.cast(ops.shape(y_true)[1], dtype="int64")
 
-        input_length = input_length * tf.ones(shape=(batch_len, 1), dtype="int64")
-        label_length = label_length * tf.ones(shape=(batch_len, 1), dtype="int64")
+        input_length = input_length * ops.ones(shape=(batch_len, 1), dtype="int64")
+        label_length = label_length * ops.ones(shape=(batch_len, 1), dtype="int64")
         loss = self.loss_fn(y_true, y_pred, input_length, label_length)
         self.add_loss(loss)
 
@@ -500,46 +502,72 @@ model = build_model()
 model.summary()
 ```
 
-<div class="k-default-codeblock">
-```
-Model: "handwriting_recognizer"
-__________________________________________________________________________________________________
-Layer (type)                    Output Shape         Param #     Connected to                     
-==================================================================================================
-image (InputLayer)              [(None, 128, 32, 1)] 0                                            
-__________________________________________________________________________________________________
-Conv1 (Conv2D)                  (None, 128, 32, 32)  320         image[0][0]                      
-__________________________________________________________________________________________________
-pool1 (MaxPooling2D)            (None, 64, 16, 32)   0           Conv1[0][0]                      
-__________________________________________________________________________________________________
-Conv2 (Conv2D)                  (None, 64, 16, 64)   18496       pool1[0][0]                      
-__________________________________________________________________________________________________
-pool2 (MaxPooling2D)            (None, 32, 8, 64)    0           Conv2[0][0]                      
-__________________________________________________________________________________________________
-reshape (Reshape)               (None, 32, 512)      0           pool2[0][0]                      
-__________________________________________________________________________________________________
-dense1 (Dense)                  (None, 32, 64)       32832       reshape[0][0]                    
-__________________________________________________________________________________________________
-dropout (Dropout)               (None, 32, 64)       0           dense1[0][0]                     
-__________________________________________________________________________________________________
-bidirectional (Bidirectional)   (None, 32, 256)      197632      dropout[0][0]                    
-__________________________________________________________________________________________________
-bidirectional_1 (Bidirectional) (None, 32, 128)      164352      bidirectional[0][0]              
-__________________________________________________________________________________________________
-label (InputLayer)              [(None, None)]       0                                            
-__________________________________________________________________________________________________
-dense2 (Dense)                  (None, 32, 81)       10449       bidirectional_1[0][0]            
-__________________________________________________________________________________________________
-ctc_loss (CTCLayer)             (None, 32, 81)       0           label[0][0]                      
-                                                                 dense2[0][0]                     
-==================================================================================================
-Total params: 424,081
-Trainable params: 424,081
-Non-trainable params: 0
-__________________________________________________________________________________________________
 
-```
-</div>
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold">Model: "handwriting_recognizer"</span>
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">┏━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━┓
+┃<span style="font-weight: bold"> Layer (type)        </span>┃<span style="font-weight: bold"> Output Shape      </span>┃<span style="font-weight: bold">    Param # </span>┃<span style="font-weight: bold"> Connected to      </span>┃
+┡━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━┩
+│ image (<span style="color: #0087ff; text-decoration-color: #0087ff">InputLayer</span>)  │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">128</span>, <span style="color: #00af00; text-decoration-color: #00af00">32</span>,   │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ -                 │
+│                     │ <span style="color: #00af00; text-decoration-color: #00af00">1</span>)                │            │                   │
+├─────────────────────┼───────────────────┼────────────┼───────────────────┤
+│ Conv1 (<span style="color: #0087ff; text-decoration-color: #0087ff">Conv2D</span>)      │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">128</span>, <span style="color: #00af00; text-decoration-color: #00af00">32</span>,   │        <span style="color: #00af00; text-decoration-color: #00af00">320</span> │ image[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>]       │
+│                     │ <span style="color: #00af00; text-decoration-color: #00af00">32</span>)               │            │                   │
+├─────────────────────┼───────────────────┼────────────┼───────────────────┤
+│ pool1               │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">64</span>, <span style="color: #00af00; text-decoration-color: #00af00">16</span>,    │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ Conv1[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>]       │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">MaxPooling2D</span>)      │ <span style="color: #00af00; text-decoration-color: #00af00">32</span>)               │            │                   │
+├─────────────────────┼───────────────────┼────────────┼───────────────────┤
+│ Conv2 (<span style="color: #0087ff; text-decoration-color: #0087ff">Conv2D</span>)      │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">64</span>, <span style="color: #00af00; text-decoration-color: #00af00">16</span>,    │     <span style="color: #00af00; text-decoration-color: #00af00">18,496</span> │ pool1[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>]       │
+│                     │ <span style="color: #00af00; text-decoration-color: #00af00">64</span>)               │            │                   │
+├─────────────────────┼───────────────────┼────────────┼───────────────────┤
+│ pool2               │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">32</span>, <span style="color: #00af00; text-decoration-color: #00af00">8</span>, <span style="color: #00af00; text-decoration-color: #00af00">64</span>) │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ Conv2[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>]       │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">MaxPooling2D</span>)      │                   │            │                   │
+├─────────────────────┼───────────────────┼────────────┼───────────────────┤
+│ reshape (<span style="color: #0087ff; text-decoration-color: #0087ff">Reshape</span>)   │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">32</span>, <span style="color: #00af00; text-decoration-color: #00af00">512</span>)   │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ pool2[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>]       │
+├─────────────────────┼───────────────────┼────────────┼───────────────────┤
+│ dense1 (<span style="color: #0087ff; text-decoration-color: #0087ff">Dense</span>)      │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">32</span>, <span style="color: #00af00; text-decoration-color: #00af00">64</span>)    │     <span style="color: #00af00; text-decoration-color: #00af00">32,832</span> │ reshape[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>]     │
+├─────────────────────┼───────────────────┼────────────┼───────────────────┤
+│ dropout (<span style="color: #0087ff; text-decoration-color: #0087ff">Dropout</span>)   │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">32</span>, <span style="color: #00af00; text-decoration-color: #00af00">64</span>)    │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ dense1[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>]      │
+├─────────────────────┼───────────────────┼────────────┼───────────────────┤
+│ bidirectional       │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">32</span>, <span style="color: #00af00; text-decoration-color: #00af00">256</span>)   │    <span style="color: #00af00; text-decoration-color: #00af00">197,632</span> │ dropout[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>]     │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Bidirectional</span>)     │                   │            │                   │
+├─────────────────────┼───────────────────┼────────────┼───────────────────┤
+│ bidirectional_1     │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">32</span>, <span style="color: #00af00; text-decoration-color: #00af00">128</span>)   │    <span style="color: #00af00; text-decoration-color: #00af00">164,352</span> │ bidirectional[<span style="color: #00af00; text-decoration-color: #00af00">0</span>]… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Bidirectional</span>)     │                   │            │                   │
+├─────────────────────┼───────────────────┼────────────┼───────────────────┤
+│ label (<span style="color: #0087ff; text-decoration-color: #0087ff">InputLayer</span>)  │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>)      │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ -                 │
+├─────────────────────┼───────────────────┼────────────┼───────────────────┤
+│ dense2 (<span style="color: #0087ff; text-decoration-color: #0087ff">Dense</span>)      │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">32</span>, <span style="color: #00af00; text-decoration-color: #00af00">81</span>)    │     <span style="color: #00af00; text-decoration-color: #00af00">10,449</span> │ bidirectional_1[<span style="color: #00af00; text-decoration-color: #00af00">…</span> │
+├─────────────────────┼───────────────────┼────────────┼───────────────────┤
+│ ctc_loss (<span style="color: #0087ff; text-decoration-color: #0087ff">CTCLayer</span>) │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">32</span>, <span style="color: #00af00; text-decoration-color: #00af00">81</span>)    │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ label[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>],      │
+│                     │                   │            │ dense2[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>]      │
+└─────────────────────┴───────────────────┴────────────┴───────────────────┘
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Total params: </span><span style="color: #00af00; text-decoration-color: #00af00">424,081</span> (1.62 MB)
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Trainable params: </span><span style="color: #00af00; text-decoration-color: #00af00">424,081</span> (1.62 MB)
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Non-trainable params: </span><span style="color: #00af00; text-decoration-color: #00af00">0</span> (0.00 B)
+</pre>
+
+
+
 ---
 ## Evaluation metric
 
@@ -566,14 +594,14 @@ Now, we create a callback to monitor the edit distances.
 
 def calculate_edit_distance(labels, predictions):
     # Get a single batch and convert its labels to sparse tensors.
-    saprse_labels = tf.cast(tf.sparse.from_dense(labels), dtype=tf.int64)
+    saprse_labels = ops.cast(tf.sparse.from_dense(labels), dtype=tf.int64)
 
     # Make predictions and convert them to sparse tensors.
     input_len = np.ones(predictions.shape[0]) * predictions.shape[1]
-    predictions_decoded = keras.backend.ctc_decode(
-        predictions, input_length=input_len, greedy=True
+    predictions_decoded = keras.ops.nn.ctc_decode(
+        predictions, sequence_lengths=input_len
     )[0][0][:, :max_len]
-    sparse_predictions = tf.cast(
+    sparse_predictions = ops.cast(
         tf.sparse.from_dense(predictions_decoded), dtype=tf.int64
     )
 
@@ -614,7 +642,7 @@ epochs = 10  # To get good results this should be at least 50.
 
 model = build_model()
 prediction_model = keras.models.Model(
-    model.get_layer(name="image").input, model.get_layer(name="dense2").output
+    model.get_layer(name="image").output, model.get_layer(name="dense2").output
 )
 edit_distance_callback = EditDistanceCallback(prediction_model)
 
@@ -631,38 +659,36 @@ history = model.fit(
 <div class="k-default-codeblock">
 ```
 Epoch 1/10
-1357/1357 [==============================] - 89s 51ms/step - loss: 13.6670 - val_loss: 11.8041
-Mean edit distance for epoch 1: 20.5117
-Epoch 2/10
-1357/1357 [==============================] - 48s 36ms/step - loss: 10.6864 - val_loss: 9.6994
-Mean edit distance for epoch 2: 20.1167
-Epoch 3/10
-1357/1357 [==============================] - 48s 35ms/step - loss: 9.0437 - val_loss: 8.0355
-Mean edit distance for epoch 3: 19.7270
-Epoch 4/10
-1357/1357 [==============================] - 48s 35ms/step - loss: 7.6098 - val_loss: 6.4239
-Mean edit distance for epoch 4: 19.1106
-Epoch 5/10
-1357/1357 [==============================] - 48s 35ms/step - loss: 6.3194 - val_loss: 4.9814
-Mean edit distance for epoch 5: 18.4894
-Epoch 6/10
-1357/1357 [==============================] - 48s 35ms/step - loss: 5.3417 - val_loss: 4.1307
-Mean edit distance for epoch 6: 18.1909
-Epoch 7/10
-1357/1357 [==============================] - 48s 35ms/step - loss: 4.6396 - val_loss: 3.7706
-Mean edit distance for epoch 7: 18.1224
-Epoch 8/10
-1357/1357 [==============================] - 48s 35ms/step - loss: 4.1926 - val_loss: 3.3682
-Mean edit distance for epoch 8: 17.9387
-Epoch 9/10
-1357/1357 [==============================] - 48s 36ms/step - loss: 3.8532 - val_loss: 3.1829
-Mean edit distance for epoch 9: 17.9074
-Epoch 10/10
-1357/1357 [==============================] - 49s 36ms/step - loss: 3.5769 - val_loss: 2.9221
-Mean edit distance for epoch 10: 17.7960
+  1357/1357 ━━━━━━━━━━━━━━━━━━━━ 216s 157ms/step - loss: 1068.7206 - val_loss: 762.4462
 
-```
+Epoch 2/10
+  1357/1357 ━━━━━━━━━━━━━━━━━━━━ 215s 158ms/step - loss: 735.8929 - val_loss: 627.9722
+
+Epoch 3/10
+  1357/1357 ━━━━━━━━━━━━━━━━━━━━ 211s 155ms/step - loss: 624.9929 - val_loss: 540.8905
+
+Epoch 4/10
+  1357/1357 ━━━━━━━━━━━━━━━━━━━━ 208s 153ms/step - loss: 544.2097 - val_loss: 446.0919
+
+Epoch 5/10
+  1357/1357 ━━━━━━━━━━━━━━━━━━━━ 213s 157ms/step - loss: 459.0329 - val_loss: 347.1689
+
+Epoch 6/10
+  1357/1357 ━━━━━━━━━━━━━━━━━━━━ 210s 155ms/step - loss: 378.6367 - val_loss: 287.1726
+
+Epoch 7/10
+  1357/1357 ━━━━━━━━━━━━━━━━━━━━ 211s 155ms/step - loss: 325.4126 - val_loss: 250.3677
+
+Epoch 8/10
+  1357/1357 ━━━━━━━━━━━━━━━━━━━━ 209s 154ms/step - loss: 289.2796 - val_loss: 224.4595
+
+Epoch 9/10
+  1357/1357 ━━━━━━━━━━━━━━━━━━━━ 209s 154ms/step - loss: 264.0461 - val_loss: 205.5910
+
+Epoch 10/10
+  1357/1357 ━━━━━━━━━━━━━━━━━━━━ 208s 153ms/step - loss: 245.5216 - val_loss: 195.7952
 </div>
+
 ---
 ## Inference
 
@@ -673,14 +699,19 @@ Mean edit distance for epoch 10: 17.7960
 def decode_batch_predictions(pred):
     input_len = np.ones(pred.shape[0]) * pred.shape[1]
     # Use greedy search. For complex tasks, you can use beam search.
-    results = keras.backend.ctc_decode(pred, input_length=input_len, greedy=True)[0][0][
+    results = keras.ops.nn.ctc_decode(pred, sequence_lengths=input_len)[0][0][
         :, :max_len
     ]
     # Iterate over the results and get back the text.
     output_text = []
     for res in results:
         res = tf.gather(res, tf.where(tf.math.not_equal(res, -1)))
-        res = tf.strings.reduce_join(num_to_char(res)).numpy().decode("utf-8")
+        res = (
+            tf.strings.reduce_join(num_to_char(res))
+            .numpy()
+            .decode("utf-8")
+            .replace("[UNK]", "")
+        )
         output_text.append(res)
     return output_text
 
@@ -696,7 +727,7 @@ for batch in test_ds.take(1):
     for i in range(16):
         img = batch_images[i]
         img = tf.image.flip_left_right(img)
-        img = tf.transpose(img, perm=[1, 0, 2])
+        img = ops.transpose(img, (1, 0, 2))
         img = (img * 255.0).numpy().clip(0, 255).astype(np.uint8)
         img = img[:, :, 0]
 
@@ -708,8 +739,21 @@ for batch in test_ds.take(1):
 plt.show()
 ```
 
+    
+ 1/2 ━━━━━━━━━━[37m━━━━━━━━━━  0s 34ms/step
 
-![png](/img/examples/vision/handwriting_recognition/handwriting_recognition_40_0.png)
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+ 2/2 ━━━━━━━━━━━━━━━━━━━━ 0s 27ms/step
+
+
+
+    
+![png](/img/examples/vision/handwriting_recognition/handwriting_recognition_40_2.png)
+    
 
 
 To get better results the model should be trained for at least 50 epochs.
