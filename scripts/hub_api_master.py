@@ -1119,7 +1119,7 @@ MODELS_MASTER = {
             "toc": True,
             "children": [
                 {
-                    "path": "deeplav_v3_image_converter",
+                    "path": "deeplab_v3_image_converter",
                     "title": "DeepLabV3ImageConverter",
                     "generate": [
                         "keras_hub.layers.DeepLabV3ImageConverter",
