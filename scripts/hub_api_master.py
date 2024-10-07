@@ -1059,14 +1059,14 @@ MODELS_MASTER = {
                     "path": "sam_prompt_encoder",
                     "title": "SAMPromptEncoder layer",
                     "generate": [
-                        "keras_hub.models.SAMPromptEncoder",
+                        "keras_hub.layers.SAMPromptEncoder",
                     ],
                 },
                 {
                     "path": "sam_mask_decoder",
                     "title": "SAMMaskDecoder layer",
                     "generate": [
-                        "keras_hub.models.SAMMaskDecoder",
+                        "keras_hub.layers.SAMMaskDecoder",
                     ],
                 },
             ],
