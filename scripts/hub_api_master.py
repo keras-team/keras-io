@@ -1109,8 +1109,8 @@ MODELS_MASTER = {
                     "generate": [
                         "keras_hub.models.StableDiffusion3TextToImagePreprocessor",
                         "keras_hub.models.StableDiffusion3TextToImagePreprocessor.from_preset",
-                        "keras_hub.models.StableDiffusion3TextToImagePreprocessorc.clip_l_preprocessor",
-                        "keras_hub.models.StableDiffusion3TextToImagePreprocessorc.clip_g_preprocessor",
+                        "keras_hub.models.StableDiffusion3TextToImagePreprocessor.clip_l_preprocessor",
+                        "keras_hub.models.StableDiffusion3TextToImagePreprocessor.clip_g_preprocessor",
                     ],
                 },
             ],
