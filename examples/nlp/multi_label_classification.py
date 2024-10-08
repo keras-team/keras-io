@@ -30,8 +30,9 @@ Additionally, you can also find the dataset on
 ## Imports
 """
 
-from tensorflow.keras import layers
-from tensorflow import keras
+import keras
+from keras import layers
+
 import tensorflow as tf
 
 from sklearn.model_selection import train_test_split
@@ -145,7 +146,7 @@ layer.
 """
 
 terms = tf.ragged.constant(train_df["terms"].values)
-lookup = tf.keras.layers.StringLookup(output_mode="multi_hot")
+lookup = layers.StringLookup(output_mode="multi_hot")
 lookup.adapt(terms)
 vocab = lookup.get_vocabulary()
 
