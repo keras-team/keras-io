@@ -151,7 +151,7 @@ plot_image_gallery(image, num_cols=1, figsize=(3, 3))
 
 
     
-![png](/home/admin/keras-io/guides/img/classification_with_keras_hub/classification_with_keras_hub_9_0.png)
+![png](../../img/classification_with_keras_hub/classification_with_keras_hub_9_0.png)
     
 
 
@@ -267,7 +267,7 @@ plot_image_gallery(images)
 
 
     
-![png](/home/admin/keras-io/guides/img/classification_with_keras_hub/classification_with_keras_hub_15_0.png)
+![png](../../img/classification_with_keras_hub/classification_with_keras_hub_15_0.png)
     
 
 
@@ -5512,7 +5512,7 @@ plot_image_gallery(
 
 
     
-![png](/home/admin/keras-io/guides/img/classification_with_keras_hub/classification_with_keras_hub_26_0.png)
+![png](../../img/classification_with_keras_hub/classification_with_keras_hub_26_0.png)
     
 
 
@@ -5561,7 +5561,7 @@ plot_image_gallery(image_batch)
 
 
     
-![png](/home/admin/keras-io/guides/img/classification_with_keras_hub/classification_with_keras_hub_28_0.png)
+![png](../../img/classification_with_keras_hub/classification_with_keras_hub_28_0.png)
     
 
 
@@ -5590,7 +5590,7 @@ plot_image_gallery(
 
 
     
-![png](/home/admin/keras-io/guides/img/classification_with_keras_hub/classification_with_keras_hub_30_0.png)
+![png](../../img/classification_with_keras_hub/classification_with_keras_hub_30_0.png)
     
 
 
@@ -5615,13 +5615,13 @@ plot_image_gallery(image_batch)
 
 
     
-![png](/home/admin/keras-io/guides/img/classification_with_keras_hub/classification_with_keras_hub_32_0.png)
+![png](../../img/classification_with_keras_hub/classification_with_keras_hub_32_0.png)
     
 
 
 
     
-![png](/home/admin/keras-io/guides/img/classification_with_keras_hub/classification_with_keras_hub_32_1.png)
+![png](../../img/classification_with_keras_hub/classification_with_keras_hub_32_1.png)
     
 
 
@@ -5650,7 +5650,7 @@ plot_image_gallery(
 
 
     
-![png](/home/admin/keras-io/guides/img/classification_with_keras_hub/classification_with_keras_hub_34_0.png)
+![png](../../img/classification_with_keras_hub/classification_with_keras_hub_34_0.png)
     
 
 
@@ -5679,7 +5679,7 @@ plot_image_gallery(
 
 
     
-![png](/home/admin/keras-io/guides/img/classification_with_keras_hub/classification_with_keras_hub_36_0.png)
+![png](../../img/classification_with_keras_hub/classification_with_keras_hub_36_0.png)
     
 
 
