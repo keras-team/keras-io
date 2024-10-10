@@ -52,6 +52,7 @@ from keras import ops
 from keras import optimizers
 from keras.optimizers import schedules
 from keras import metrics
+from keras.applications.imagenet_utils import decode_predictions
 import keras_hub
 
 # Import tensorflow for `tf.data` and its preprocessing functions
@@ -79,8 +80,8 @@ classification pipeline.
 This architecture manages to achieve high accuracy, while using a
 compact parameter count.
 If a ResNet is not powerful enough for the task you are hoping to
-solve, be sure to check out [KerasHub's other available
-Backbones](https://github.com/keras-team/keras-hub/tree/master/keras_hub/src/models)!
+solve, be sure to check out
+[KerasHub's other available Backbones](https://github.com/keras-team/keras-hub/tree/master/keras_hub/src/models)!
 """
 
 classifier = keras_hub.models.ImageClassifier.from_preset("resnet_v2_50_imagenet")
@@ -96,16 +97,16 @@ We first create a utility function for plotting images throughout this tutorial:
 """
 
 
-def plot_image_gallery(images, titles=None, n_cols=3, figsize=(6, 12)):
-    n_images = len(images)
+def plot_image_gallery(images, titles=None, num_cols=3, figsize=(6, 12)):
+    num_images = len(images)
     images = np.asarray(images) / 255.0
     images = np.minimum(np.maximum(images, 0.0), 1.0)
-    n_rows = (n_images + n_cols - 1) // n_cols
-    fig, axes = plt.subplots(n_rows, n_cols, figsize=figsize, squeeze=False)
+    num_rows = (num_images + num_cols - 1) // num_cols
+    fig, axes = plt.subplots(num_rows, num_cols, figsize=figsize, squeeze=False)
     axes = axes.flatten()  # Flatten in case the axes is a 2D array
 
     for i, ax in enumerate(axes):
-        if i < n_images:
+        if i < num_images:
             # Plot the image
             ax.imshow(images[i])
             ax.axis("off")  # Remove axis
@@ -127,42 +128,22 @@ filepath = keras.utils.get_file(
     origin="https://upload.wikimedia.org/wikipedia/commons/thumb/4/49/5hR96puA_VA.jpg/1024px-5hR96puA_VA.jpg"
 )
 image = keras.utils.load_img(filepath)
-image = np.array(image)
-plot_image_gallery(np.array([image]), n_cols=1, figsize=(3, 3))
+image = np.array([image])
+plot_image_gallery(image, num_cols=1, figsize=(3, 3))
 
 """
 Next, let's get some predictions from our classifier:
 """
 
-predictions = classifier.predict(np.expand_dims(image, axis=0))
+predictions = classifier.predict(image)
 
 """
 Predictions come in the form of softmax-ed category rankings.
-We can find the index of the top classes using a simple argsort function:
+We can use Keras' `imagenet_utils.decode_predictions` function to map
+them to class names:
 """
 
-top_classes = predictions[0].argsort(axis=-1)
-
-
-"""
-In order to decode the class mappings, we can construct a mapping from
-category indices to ImageNet class names.
-For convenience, I've stored the ImageNet class mapping in a GitHub gist.
-Let's download and load it now.
-"""
-
-classes = keras.utils.get_file(
-    origin="https://gist.githubusercontent.com/LukeWood/62eebcd5c5c4a4d0e0b7845780f76d55/raw/fde63e5e4c09e2fa0a3436680f436bdcb8325aac/ImagenetClassnames.json"
-)
-with open(classes, "rb") as f:
-    classes = json.load(f)
-
-"""
-Now we can simply look up the class names via index:
-"""
-
-top_two = [classes[str(i)] for i in top_classes[-2:]]
-print("Top two classes are:", top_two)
+print(f"Top two classes are:\n{decode_predictions(predictions, top=2)}")
 
 """
 Great!  Both of these appear to be correct!
@@ -254,7 +235,7 @@ model.fit(train_dataset)
 Let's look at how our model performs after the fine tuning:
 """
 
-predictions = model.predict(np.expand_dims(image, axis=0))
+predictions = model.predict(image)
 
 classes = {0: "cat", 1: "dog"}
 print("Top class is:", classes[predictions[0].argmax()])
@@ -469,8 +450,8 @@ Congratulations on making it this far!
 
 To achieve optimal performance, we need to use a learning rate schedule instead
 of a single learning rate. While we won't go into detail on the Cosine decay
-with warmup schedule used here, [you can read more about it
-here](https://scorrea92.medium.com/cosine-learning-rate-decay-e8b50aa455b).
+with warmup schedule used here,
+[you can read more about it here](https://scorrea92.medium.com/cosine-learning-rate-decay-e8b50aa455b).
 """
 
 
