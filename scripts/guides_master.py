@@ -71,6 +71,10 @@ HUB_GUIDES_MASTER = {
             "path": "upload",
             "title": "Uploading Models with KerasHub",
         },
+        {
+            "path": "segment_anything_in_keras_hub",
+            "title": "Segment Anything in KerasHub",
+        },
     ],
 }
 
