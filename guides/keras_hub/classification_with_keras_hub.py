@@ -14,7 +14,7 @@ While classification is a relatively straightforward computer vision task,
 modern approaches still are built of several complex components.
 Luckily, Keras provides APIs to construct commonly used components.
 
-This guide demonstrates Keras' modular approach to solving image
+This guide demonstrates KerasHub's modular approach to solving image
 classification problems at three levels of complexity:
 
 - Inference with a pretrained classifier
