@@ -75,6 +75,10 @@ HUB_GUIDES_MASTER = {
             "path": "segment_anything_in_keras_hub",
             "title": "Segment Anything in KerasHub",
         },
+        {
+            "path": "stable_diffusion_3_in_keras_hub",
+            "title": "Stable Diffusion 3 in KerasHub",
+        },
     ],
 }
 
