@@ -37,6 +37,7 @@ import time
 
 import keras
 import keras_hub
+import matplotlib.pyplot as plt
 import numpy as np
 from PIL import Image
 
@@ -91,7 +92,8 @@ prompt = "Astronaut in a jungle, cold color palette, muted colors, detailed, 8k"
 # after that.
 generated_image = text_to_image.generate(prompt)
 generated_image = Image.fromarray(generated_image)
-generated_image.show()
+plt.axis("off")
+plt.imshow(generated_image)
 
 """
 Pretty impressive! But how does this work?
@@ -178,7 +180,8 @@ def concate_images(images):
 
 generated_images = text_to_image.generate([prompt] * 3)
 generated_image = concate_images(generated_images)
-generated_image.show()
+plt.axis("off")
+plt.imshow(generated_image)
 
 """
 `num_steps` controls the number of denoising steps. More denoising steps
@@ -194,7 +197,8 @@ for n in num_steps:
     print(f"Cost time (`num_steps={n}`): {time.time() - st:.2f}s")
 
 generated_image = concate_images(generated_images)
-generated_image.show()
+plt.axis("off")
+plt.imshow(generated_image)
 
 """
 We can use `"negative_prompts"` to guide the model away from generating specific
@@ -208,7 +212,8 @@ unconditioned prompt with the default value of `""`.
 inputs = {"prompts": [prompt] * 3, "negative_prompts": ["Green color"] * 3}
 generated_images = text_to_image.generate(inputs)
 generated_image = concate_images(generated_images)
-generated_image.show()
+plt.axis("off")
+plt.imshow(generated_image)
 
 """
 `guidance_scale` affects how much the `"prompts"` influences image generation.
@@ -224,7 +229,8 @@ generated_images = [
     text_to_image.generate(prompt, guidance_scale=10.5),
 ]
 generated_image = concate_images(generated_images)
-generated_image.show()
+plt.axis("off")
+plt.imshow(generated_image)
 
 """
 Note that `negative_prompts` and `guidance_scale` are related. The formula in
@@ -270,7 +276,8 @@ prompt += "adorable, Pixar, Disney, 8k"
 generated_image = image_to_image.generate({"images": image_array, "prompts": prompt})
 
 display_image = concate_images([np.array(image), generated_image])
-display_image.show()
+plt.axis("off")
+plt.imshow(display_image)
 
 """
 ## Inpaint task
@@ -314,7 +321,8 @@ generated_image = inpaint.generate(
 display_image = concate_images(
     [np.array(image), np.array(mask.convert("RGB")), generated_image]
 )
-display_image.show()
+plt.axis("off")
+plt.imshow(display_image)
 
 """
 ## Conclusion

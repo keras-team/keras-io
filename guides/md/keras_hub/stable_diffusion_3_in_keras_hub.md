@@ -44,6 +44,7 @@ import time
 
 import keras
 import keras_hub
+import matplotlib.pyplot as plt
 import numpy as np
 from PIL import Image
 ```
@@ -97,6 +98,21 @@ preprocessor = keras_hub.models.StableDiffusion3TextToImagePreprocessor.from_pre
 text_to_image = keras_hub.models.StableDiffusion3TextToImage(backbone, preprocessor)
 ```
 
+<div class="k-default-codeblock">
+```
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1728640803.384696 2470467 cuda_executor.cc:1015] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero. See more at https://github.com/torvalds/linux/blob/v6.0/Documentation/ABI/testing/sysfs-bus-pci#L344-L355
+I0000 00:00:1728640803.411675 2470467 cuda_executor.cc:1015] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero. See more at https://github.com/torvalds/linux/blob/v6.0/Documentation/ABI/testing/sysfs-bus-pci#L344-L355
+I0000 00:00:1728640803.411850 2470467 cuda_executor.cc:1015] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero. See more at https://github.com/torvalds/linux/blob/v6.0/Documentation/ABI/testing/sysfs-bus-pci#L344-L355
+I0000 00:00:1728640803.413060 2470467 cuda_executor.cc:1015] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero. See more at https://github.com/torvalds/linux/blob/v6.0/Documentation/ABI/testing/sysfs-bus-pci#L344-L355
+I0000 00:00:1728640803.413176 2470467 cuda_executor.cc:1015] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero. See more at https://github.com/torvalds/linux/blob/v6.0/Documentation/ABI/testing/sysfs-bus-pci#L344-L355
+I0000 00:00:1728640803.413271 2470467 cuda_executor.cc:1015] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero. See more at https://github.com/torvalds/linux/blob/v6.0/Documentation/ABI/testing/sysfs-bus-pci#L344-L355
+I0000 00:00:1728640803.416756 2470467 cuda_executor.cc:1015] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero. See more at https://github.com/torvalds/linux/blob/v6.0/Documentation/ABI/testing/sysfs-bus-pci#L344-L355
+I0000 00:00:1728640803.416863 2470467 cuda_executor.cc:1015] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero. See more at https://github.com/torvalds/linux/blob/v6.0/Documentation/ABI/testing/sysfs-bus-pci#L344-L355
+I0000 00:00:1728640803.416971 2470467 cuda_executor.cc:1015] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero. See more at https://github.com/torvalds/linux/blob/v6.0/Documentation/ABI/testing/sysfs-bus-pci#L344-L355
+
+```
+</div>
 Next, we give it a prompt:
 
 
@@ -108,10 +124,23 @@ prompt = "Astronaut in a jungle, cold color palette, muted colors, detailed, 8k"
 # after that.
 generated_image = text_to_image.generate(prompt)
 generated_image = Image.fromarray(generated_image)
-generated_image.show()
+plt.axis("off")
+plt.imshow(generated_image)
 ```
 
-![png](/img/guides/stable_diffusion_3_in_keras_hub/stable_diffusion_3_in_keras_hub_0_1.png)
+
+
+
+<div class="k-default-codeblock">
+```
+<matplotlib.image.AxesImage at 0x71c6d418ce50>
+
+```
+</div>
+    
+![png](/home/hongyu/workspace/keras-io/guides/img/stable_diffusion_3_in_keras_hub/stable_diffusion_3_in_keras_hub_7_1.png)
+    
+
 
 Pretty impressive! But how does this work?
 
@@ -196,10 +225,21 @@ def concate_images(images):
 
 generated_images = text_to_image.generate([prompt] * 3)
 generated_image = concate_images(generated_images)
-generated_image.show()
+plt.axis("off")
+plt.imshow(generated_image)
 ```
 
-![png](/img/guides/stable_diffusion_3_in_keras_hub/stable_diffusion_3_in_keras_hub_1_1.png)
+
+
+
+<div class="k-default-codeblock">
+```
+<matplotlib.image.AxesImage at 0x71c6c819f850>
+
+```
+</div>
+    
+![png](/home/hongyu/workspace/keras-io/guides/img/stable_diffusion_3_in_keras_hub/stable_diffusion_3_in_keras_hub_10_1.png)
     
 
 
@@ -217,12 +257,9 @@ for n in num_steps:
     print(f"Cost time (`num_steps={n}`): {time.time() - st:.2f}s")
 
 generated_image = concate_images(generated_images)
-generated_image.show()
+plt.axis("off")
+plt.imshow(generated_image)
 ```
-
-![png](/img/guides/stable_diffusion_3_in_keras_hub/stable_diffusion_3_in_keras_hub_2_1.png)
-    
-
 
 <div class="k-default-codeblock">
 ```
@@ -232,8 +269,15 @@ Cost time (`num_steps=28`): 3.43s
 
 Cost time (`num_steps=50`): 5.99s
 
+<matplotlib.image.AxesImage at 0x71c6e027c490>
+
 ```
 </div>
+    
+![png](/home/hongyu/workspace/keras-io/guides/img/stable_diffusion_3_in_keras_hub/stable_diffusion_3_in_keras_hub_12_4.png)
+    
+
+
 We can use `"negative_prompts"` to guide the model away from generating specific
 styles and elements. The input format becomes a dict with the keys `"prompts"`
 and `"negative_prompts"`.
@@ -246,10 +290,21 @@ unconditioned prompt with the default value of `""`.
 inputs = {"prompts": [prompt] * 3, "negative_prompts": ["Green color"] * 3}
 generated_images = text_to_image.generate(inputs)
 generated_image = concate_images(generated_images)
-generated_image.show()
+plt.axis("off")
+plt.imshow(generated_image)
 ```
 
-![png](/img/guides/stable_diffusion_3_in_keras_hub/stable_diffusion_3_in_keras_hub_3_1.png)
+
+
+
+<div class="k-default-codeblock">
+```
+<matplotlib.image.AxesImage at 0x71c6c85f1d50>
+
+```
+</div>
+    
+![png](/home/hongyu/workspace/keras-io/guides/img/stable_diffusion_3_in_keras_hub/stable_diffusion_3_in_keras_hub_14_1.png)
     
 
 
@@ -267,10 +322,21 @@ generated_images = [
     text_to_image.generate(prompt, guidance_scale=10.5),
 ]
 generated_image = concate_images(generated_images)
-generated_image.show()
+plt.axis("off")
+plt.imshow(generated_image)
 ```
 
-![png](/img/guides/stable_diffusion_3_in_keras_hub/stable_diffusion_3_in_keras_hub_4_1.png)
+
+
+
+<div class="k-default-codeblock">
+```
+<matplotlib.image.AxesImage at 0x71c6bc045d10>
+
+```
+</div>
+    
+![png](/home/hongyu/workspace/keras-io/guides/img/stable_diffusion_3_in_keras_hub/stable_diffusion_3_in_keras_hub_16_1.png)
     
 
 
@@ -317,10 +383,21 @@ prompt += "adorable, Pixar, Disney, 8k"
 generated_image = image_to_image.generate({"images": image_array, "prompts": prompt})
 
 display_image = concate_images([np.array(image), generated_image])
-display_image.show()
+plt.axis("off")
+plt.imshow(display_image)
 ```
 
-![png](/img/guides/stable_diffusion_3_in_keras_hub/stable_diffusion_3_in_keras_hub_5_1.png)
+
+
+
+<div class="k-default-codeblock">
+```
+<matplotlib.image.AxesImage at 0x71c6bff7f110>
+
+```
+</div>
+    
+![png](/home/hongyu/workspace/keras-io/guides/img/stable_diffusion_3_in_keras_hub/stable_diffusion_3_in_keras_hub_19_1.png)
     
 
 
@@ -367,10 +444,21 @@ generated_image = inpaint.generate(
 display_image = concate_images(
     [np.array(image), np.array(mask.convert("RGB")), generated_image]
 )
-display_image.show()
+plt.axis("off")
+plt.imshow(display_image)
 ```
 
-![png](/img/guides/stable_diffusion_3_in_keras_hub/stable_diffusion_3_in_keras_hub_6_1.png)
+
+
+
+<div class="k-default-codeblock">
+```
+<matplotlib.image.AxesImage at 0x71c6ca3a76d0>
+
+```
+</div>
+    
+![png](/home/hongyu/workspace/keras-io/guides/img/stable_diffusion_3_in_keras_hub/stable_diffusion_3_in_keras_hub_21_1.png)
     
 
 
