@@ -1,9 +1,9 @@
 """
 Title: Semantic Segmentation with KerasHub
-Author: [Sachin Prasad](https://github.com/sachinprasad)<br>
-Date created: 2024/10/11<br>
-Last modified: 2024/10/11<br>
-Description: Train and use DeepLabv3 and DeepLabv3+ segmentation model with KerasHub.
+Author: [Sachin Prasad](https://github.com/sachinprasad)
+Date created: 2024/10/11
+Last modified: 2024/10/11
+Description: DeepLabV3 training and inference with KerasHub
 Accelerator: GPU
 """
 
@@ -12,26 +12,25 @@ Accelerator: GPU
 
 ## Background
 Semantic segmentation is a type of computer vision task that involves assigning a
-class label such as person, bike, or background to each individual pixel of an
-image, effectively dividing the image into regions that correspond to different
-fobject classes or categories.
+class label such as "person", "bike", or "background" to each individual pixel
+of an image, effectively dividing the image into regions that correspond to
+different object classes or categories.
 
 ![](https://miro.medium.com/v2/resize:fit:4800/format:webp/1*z6ch-2BliDGLIHpOPFY_Sw.png)
 
 
 
-KerasHub offers the DeepLabv3, DeepLabv3+, SegFormer etc models for semantic
+KerasHub offers the DeepLabv3, DeepLabv3+, SegFormer, etc., models for semantic
 segmentation.
 
-This guide demonstrates how to finetune and use DeepLabv3+ model which is
-devoloped by Google for image semantic segmentaion with KerasHub. Its
-architecture that combines atrous convolutions, contextual information
-aggregation, and powerful backbones to achieve accurate and detailed semantic
-segmentation. 
+This guide demonstrates how to fine-tune and use the DeepLabv3+ model, developed
+by Google for image semantic segmentation with KerasHub. Its architecture
+combines Atrous convolutions, contextual information aggregation, and powerful
+backbones to achieve accurate and detailed semantic segmentation.
 
-DeepLabv3+, extends DeepLabv3 by adding a simple yet effective decoder module to
-refine the segmentation results especially along object boundaries both these
-models have achienved state-of-the-art results on a variety of image segmentation
+DeepLabv3+ extends DeepLabv3 by adding a simple yet effective decoder module to
+refine the segmentation results, especially along object boundaries. Both models
+have achieved state-of-the-art results on a variety of image segmentation
 benchmarks.
 
 ### References
@@ -84,7 +83,7 @@ The highest level API in the KerasHub semantic segmentation API is the
 `keras_hub.models` API. This API includes fully pretrained semantic segmentation
 models, such as `keras_hub.models.DeepLabV3ImageSegmenter`.
 
-Let's get started by constructing a DeepLabv3 pretrained on the pascalvoc
+Let's get started by constructing a DeepLabv3 pretrained on the Pascal VOC
 dataset.
 Also, define the preprocessing function for the model to preprocess images and
 labels.
@@ -154,7 +153,6 @@ import logging
 import multiprocessing
 import os.path
 import random
-import tarfile
 import xml
 
 import tensorflow_datasets as tfds
@@ -221,11 +219,11 @@ VOC_PNG_COLOR_VALUE = [
     [128, 192, 0],
     [0, 64, 128],
 ]
-# Will be populated by _maybe_populate_voc_color_mapping() below.
+# Will be populated by maybe_populate_voc_color_mapping() below.
 VOC_PNG_COLOR_MAPPING = None
 
 
-def _maybe_populate_voc_color_mapping():
+def maybe_populate_voc_color_mapping():
     # Lazy creation of VOC_PNG_COLOR_MAPPING, which could take 64M memory.
     global VOC_PNG_COLOR_MAPPING
     if VOC_PNG_COLOR_MAPPING is None:
@@ -240,52 +238,14 @@ def _maybe_populate_voc_color_mapping():
     return VOC_PNG_COLOR_MAPPING
 
 
-def _download_data_file(
-    data_url, extracted_dir, local_dir_path=None, override_extract=False
-):
-    """Fetch the original VOC or Semantic Boundaries Dataset from remote URL.
-
-    Args:
-        data_url: string, the URL for the data to be downloaded, should be in a
-            zipped tar package.
-        local_dir_path: string, the local directory path to save the data.
-    Returns:
-        the path to the folder of extracted data.
-    """
-    if not local_dir_path:
-        # download to ~/.keras/datasets/fname
-        cache_dir = os.path.join(os.path.expanduser("~"), ".keras/datasets")
-        fname = os.path.join(os.path.basename(data_url))
-    else:
-        # Make sure the directory exists
-        if not os.path.exists(local_dir_path):
-            os.makedirs(local_dir_path, exist_ok=True)
-        # download to local_dir_path/fname
-        fname = os.path.join(os.path.basename(data_url))
-        cache_dir = local_dir_path
-    data_directory = os.path.join(os.path.dirname(fname), extracted_dir)
-    if not override_extract and os.path.exists(data_directory):
-        logging.info("data directory %s already exist", data_directory)
-        return data_directory
-    data_file_path = keras.utils.get_file(
-        fname=fname, origin=data_url, cache_dir=cache_dir
-    )
-    # Extra the data into the same directory as the tar file.
-    data_directory = os.path.dirname(data_file_path)
-    logging.info("Extract data into %s", data_directory)
-    with tarfile.open(data_file_path) as f:
-        f.extractall(data_directory)
-    return os.path.join(data_directory, extracted_dir)
-
-
-def _parse_annotation_data(annotation_file_path):
+def parse_annotation_data(annotation_file_path):
     """Parse the annotation XML file for the image.
 
     The annotation contains the metadata, as well as the object bounding box
     information.
 
     """
-    with tf.io.gfile.GFile(annotation_file_path, "r") as f:
+    with open(annotation_file_path, "r") as f:
         root = xml.etree.ElementTree.parse(f).getroot()
 
         size = root.find("size")
@@ -318,15 +278,13 @@ def _parse_annotation_data(annotation_file_path):
         return {"width": width, "height": height, "objects": objects}
 
 
-def _get_image_ids(data_dir, split):
+def get_image_ids(data_dir, split):
     data_file_mapping = {
         "train": "train.txt",
         "eval": "val.txt",
         "trainval": "trainval.txt",
-        # TODO(tanzhenyu): add diff dataset
-        # "diff": "diff.txt",
     }
-    with tf.io.gfile.GFile(
+    with open(
         os.path.join(data_dir, "ImageSets", "Segmentation", data_file_mapping[split]),
         "r",
     ) as f:
@@ -335,9 +293,9 @@ def _get_image_ids(data_dir, split):
         return image_ids
 
 
-def _get_sbd_image_ids(data_dir, split):
+def get_sbd_image_ids(data_dir, split):
     data_file_mapping = {"sbd_train": "train.txt", "sbd_eval": "val.txt"}
-    with tf.io.gfile.GFile(
+    with open(
         os.path.join(data_dir, data_file_mapping[split]),
         "r",
     ) as f:
@@ -346,7 +304,7 @@ def _get_sbd_image_ids(data_dir, split):
         return image_ids
 
 
-def _parse_single_image(image_file_path):
+def parse_single_image(image_file_path):
     data_dir, image_file_name = os.path.split(image_file_path)
     data_dir = os.path.normpath(os.path.join(data_dir, os.path.pardir))
     image_id, _ = os.path.splitext(image_file_name)
@@ -357,7 +315,7 @@ def _parse_single_image(image_file_path):
         data_dir, "SegmentationObject", image_id + ".png"
     )
     annotation_file_path = os.path.join(data_dir, "Annotations", image_id + ".xml")
-    image_annotations = _parse_annotation_data(annotation_file_path)
+    image_annotations = parse_annotation_data(annotation_file_path)
 
     result = {
         "image/filename": image_id + ".jpg",
@@ -372,7 +330,7 @@ def _parse_single_image(image_file_path):
     return result
 
 
-def _parse_single_sbd_image(image_file_path):
+def parse_single_sbd_image(image_file_path):
     data_dir, image_file_name = os.path.split(image_file_path)
     data_dir = os.path.normpath(os.path.join(data_dir, os.path.pardir))
     image_id, _ = os.path.splitext(image_file_name)
@@ -387,14 +345,14 @@ def _parse_single_sbd_image(image_file_path):
     return result
 
 
-def _build_metadata(data_dir, image_ids):
+def build_metadata(data_dir, image_ids):
     # Parallel process all the images.
     image_file_paths = [
         os.path.join(data_dir, "JPEGImages", i + ".jpg") for i in image_ids
     ]
     pool_size = 10 if len(image_ids) > 10 else len(image_ids)
     with multiprocessing.Pool(pool_size) as p:
-        metadata = p.map(_parse_single_image, image_file_paths)
+        metadata = p.map(parse_single_image, image_file_paths)
 
     # Transpose the metadata which convert from list of dict to dict of list.
     keys = [
@@ -421,12 +379,12 @@ def _build_metadata(data_dir, image_ids):
     return result
 
 
-def _build_sbd_metadata(data_dir, image_ids):
+def build_sbd_metadata(data_dir, image_ids):
     # Parallel process all the images.
     image_file_paths = [os.path.join(data_dir, "img", i + ".jpg") for i in image_ids]
     pool_size = 10 if len(image_ids) > 10 else len(image_ids)
     with multiprocessing.Pool(pool_size) as p:
-        metadata = p.map(_parse_single_sbd_image, image_file_paths)
+        metadata = p.map(parse_single_sbd_image, image_file_paths)
 
     keys = [
         "image/filename",
@@ -441,8 +399,7 @@ def _build_sbd_metadata(data_dir, image_ids):
     return result
 
 
-@tf.function(jit_compile=True)
-def _decode_png_mask(mask):
+def decode_png_mask(mask):
     """Decode the raw PNG image and convert it to 2D tensor with probably
     class."""
     # Cast the mask to int32 since the original uint8 will overflow when
@@ -454,7 +411,7 @@ def _decode_png_mask(mask):
     return mask
 
 
-def _load_images(example):
+def load_images(example):
     image_file_path = example.pop("image/file_path")
     segmentation_class_file_path = example.pop("segmentation/class/file_path")
     segmentation_object_file_path = example.pop("segmentation/object/file_path")
@@ -463,11 +420,11 @@ def _load_images(example):
 
     segmentation_class_mask = tf.io.read_file(segmentation_class_file_path)
     segmentation_class_mask = tf.image.decode_png(segmentation_class_mask)
-    segmentation_class_mask = _decode_png_mask(segmentation_class_mask)
+    segmentation_class_mask = decode_png_mask(segmentation_class_mask)
 
     segmentation_object_mask = tf.io.read_file(segmentation_object_file_path)
     segmentation_object_mask = tf.image.decode_png(segmentation_object_mask)
-    segmentation_object_mask = _decode_png_mask(segmentation_object_mask)
+    segmentation_object_mask = decode_png_mask(segmentation_object_mask)
 
     example.update(
         {
@@ -479,7 +436,7 @@ def _load_images(example):
     return example
 
 
-def _load_sbd_images(image_file_path, seg_cls_file_path, seg_obj_file_path):
+def load_sbd_images(image_file_path, seg_cls_file_path, seg_obj_file_path):
     image = tf.io.read_file(image_file_path)
     image = tf.image.decode_jpeg(image)
 
@@ -500,7 +457,7 @@ def _load_sbd_images(image_file_path, seg_cls_file_path, seg_obj_file_path):
     }
 
 
-def _build_dataset_from_metadata(metadata):
+def build_dataset_from_metadata(metadata):
     # The objects need some manual conversion to ragged tensor.
     metadata["labels"] = tf.ragged.constant(metadata["labels"])
     metadata["objects/label"] = tf.ragged.constant(metadata["objects/label"])
@@ -516,11 +473,11 @@ def _build_dataset_from_metadata(metadata):
     )
 
     dataset = tf.data.Dataset.from_tensor_slices(metadata)
-    dataset = dataset.map(_load_images, num_parallel_calls=tf.data.AUTOTUNE)
+    dataset = dataset.map(load_images, num_parallel_calls=tf.data.AUTOTUNE)
     return dataset
 
 
-def _build_sbd_dataset_from_metadata(metadata):
+def build_sbd_dataset_from_metadata(metadata):
     img_filepath = metadata["image/file_path"]
     cls_filepath = metadata["segmentation/class/file_path"]
     obj_filepath = metadata["segmentation/object/file_path"]
@@ -531,7 +488,7 @@ def _build_sbd_dataset_from_metadata(metadata):
         random.shuffle(c)
         for fp in c:
             img_fp, cls_fp, obj_fp = fp
-            yield _load_sbd_images(img_fp, cls_fp, obj_fp)
+            yield load_sbd_images(img_fp, cls_fp, obj_fp)
 
     dataset = tf.data.Dataset.from_generator(
         md_gen,
@@ -592,45 +549,59 @@ def load(
         data_dir = os.path.expanduser(data_dir)
 
     if "sbd" in split:
-        return _load_sbd(split, data_dir)
+        return load_sbd(split, data_dir)
     else:
-        return _load_voc(split, data_dir)
+        return load_voc(split, data_dir)
 
 
-def _load_voc(
+def load_voc(
     split="train",
     data_dir=None,
 ):
     extracted_dir = os.path.join("VOCdevkit", "VOC2012")
-    data_dir = _download_data_file(
-        VOC_URL, extracted_dir=extracted_dir, local_dir_path=data_dir
+    get_data = keras.utils.get_file(
+        fname=os.path.basename(VOC_URL),
+        origin=VOC_URL,
+        cache_dir=data_dir,
+        extract=True,
     )
-    image_ids = _get_image_ids(data_dir, split)
+    data_dir = os.path.join(os.path.dirname(get_data), extracted_dir)
+    image_ids = get_image_ids(data_dir, split)
     # len(metadata) = #samples, metadata[i] is a dict.
-    metadata = _build_metadata(data_dir, image_ids)
-    _maybe_populate_voc_color_mapping()
-    dataset = _build_dataset_from_metadata(metadata)
+    metadata = build_metadata(data_dir, image_ids)
+    maybe_populate_voc_color_mapping()
+    dataset = build_dataset_from_metadata(metadata)
 
     return dataset
 
 
-def _load_sbd(
+def load_sbd(
     split="sbd_train",
     data_dir=None,
 ):
     extracted_dir = os.path.join("benchmark_RELEASE", "dataset")
-    data_dir = _download_data_file(
-        SBD_URL, extracted_dir=extracted_dir, local_dir_path=data_dir
+    get_data = keras.utils.get_file(
+        fname=os.path.basename(SBD_URL),
+        origin=SBD_URL,
+        cache_dir=data_dir,
+        extract=True,
     )
-    image_ids = _get_sbd_image_ids(data_dir, split)
+    data_dir = os.path.join(os.path.dirname(get_data), extracted_dir)
+    image_ids = get_sbd_image_ids(data_dir, split)
     # len(metadata) = #samples, metadata[i] is a dict.
-    metadata = _build_sbd_metadata(data_dir, image_ids)
-    dataset = _build_sbd_dataset_from_metadata(metadata)
+    metadata = build_sbd_metadata(data_dir, image_ids)
+
+    dataset = build_sbd_dataset_from_metadata(metadata)
     return dataset
 
 
 """
-Load the dataset for training and evaluation.
+## Load the dataset
+
+For training and evaluation, let's use "sbd_train" and "sbd_eval." You can also
+choose any of these datasets for the `load` function: 'train', 'eval', 'trainval',
+'sbd_train', or 'sbd_eval'. 'sbd_train' represents the training dataset for the
+SBD dataset, while 'train' represents the training dataset for the VOC2012 dataset.
 """
 train_ds = load(split="sbd_train")
 eval_ds = load(split="sbd_eval")
@@ -638,10 +609,10 @@ eval_ds = load(split="sbd_eval")
 """
 ## Preprocess the data
 
-The `preprocess_inputs` utility function preprocesses the inputs to a dictionary
-of `images` and `segmentation_masks`. The images and segmentation masks are
-resized to 512x512. The resulting dataset is then batched into groups of 4 image
-and segmentation mask pairs.
+The preprocess_inputs utility function preprocesses inputs, converting them into
+a dictionary containing images and segmentation_masks. Both images and
+segmentation masks are resized to 512x512. The resulting dataset is then batched
+into groups of four image and segmentation mask pairs.
 """
 
 
