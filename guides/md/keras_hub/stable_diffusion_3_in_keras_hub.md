@@ -52,16 +52,16 @@ from PIL import Image
 ```
 <div class="k-default-codeblock">
 ```
-['--2024-10-13 12:07:02--  https://i.imgur.com/n3Prpj6.png',
- 'Resolving i.imgur.com (i.imgur.com)... 146.75.92.193',
- 'Connecting to i.imgur.com (i.imgur.com)|146.75.92.193|:443... connected.',
+['--2024-10-13 12:12:53--  https://i.imgur.com/n3Prpj6.png',
+ 'Resolving i.imgur.com (i.imgur.com)... 146.75.40.193',
+ 'Connecting to i.imgur.com (i.imgur.com)|146.75.40.193|:443... connected.',
  'HTTP request sent, awaiting response... 200 OK',
  'Length: 20520 (20K) [image/png]',
  'Saving to: ‘mountain_dog_mask.png’',
  '',
- '     0K .......... ..........                                 100%  674K=0.03s',
+ '     0K .......... ..........                                 100%  809K=0.02s',
  '',
- '2024-10-13 12:07:03 (674 KB/s) - ‘mountain_dog_mask.png’ saved [20520/20520]',
+ '2024-10-13 12:12:54 (809 KB/s) - ‘mountain_dog_mask.png’ saved [20520/20520]',
  '']
 
 ```
@@ -112,15 +112,15 @@ text_to_image = keras_hub.models.StableDiffusion3TextToImage(backbone, preproces
 <div class="k-default-codeblock">
 ```
 WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
-I0000 00:00:1728792433.895623 2856807 cuda_executor.cc:1015] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero. See more at https://github.com/torvalds/linux/blob/v6.0/Documentation/ABI/testing/sysfs-bus-pci#L344-L355
-I0000 00:00:1728792433.923072 2856807 cuda_executor.cc:1015] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero. See more at https://github.com/torvalds/linux/blob/v6.0/Documentation/ABI/testing/sysfs-bus-pci#L344-L355
-I0000 00:00:1728792433.923246 2856807 cuda_executor.cc:1015] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero. See more at https://github.com/torvalds/linux/blob/v6.0/Documentation/ABI/testing/sysfs-bus-pci#L344-L355
-I0000 00:00:1728792433.924461 2856807 cuda_executor.cc:1015] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero. See more at https://github.com/torvalds/linux/blob/v6.0/Documentation/ABI/testing/sysfs-bus-pci#L344-L355
-I0000 00:00:1728792433.924601 2856807 cuda_executor.cc:1015] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero. See more at https://github.com/torvalds/linux/blob/v6.0/Documentation/ABI/testing/sysfs-bus-pci#L344-L355
-I0000 00:00:1728792433.924719 2856807 cuda_executor.cc:1015] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero. See more at https://github.com/torvalds/linux/blob/v6.0/Documentation/ABI/testing/sysfs-bus-pci#L344-L355
-I0000 00:00:1728792433.929072 2856807 cuda_executor.cc:1015] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero. See more at https://github.com/torvalds/linux/blob/v6.0/Documentation/ABI/testing/sysfs-bus-pci#L344-L355
-I0000 00:00:1728792433.929212 2856807 cuda_executor.cc:1015] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero. See more at https://github.com/torvalds/linux/blob/v6.0/Documentation/ABI/testing/sysfs-bus-pci#L344-L355
-I0000 00:00:1728792433.929323 2856807 cuda_executor.cc:1015] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero. See more at https://github.com/torvalds/linux/blob/v6.0/Documentation/ABI/testing/sysfs-bus-pci#L344-L355
+I0000 00:00:1728792784.677737 2860129 cuda_executor.cc:1015] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero. See more at https://github.com/torvalds/linux/blob/v6.0/Documentation/ABI/testing/sysfs-bus-pci#L344-L355
+I0000 00:00:1728792784.705050 2860129 cuda_executor.cc:1015] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero. See more at https://github.com/torvalds/linux/blob/v6.0/Documentation/ABI/testing/sysfs-bus-pci#L344-L355
+I0000 00:00:1728792784.705218 2860129 cuda_executor.cc:1015] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero. See more at https://github.com/torvalds/linux/blob/v6.0/Documentation/ABI/testing/sysfs-bus-pci#L344-L355
+I0000 00:00:1728792784.706507 2860129 cuda_executor.cc:1015] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero. See more at https://github.com/torvalds/linux/blob/v6.0/Documentation/ABI/testing/sysfs-bus-pci#L344-L355
+I0000 00:00:1728792784.706629 2860129 cuda_executor.cc:1015] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero. See more at https://github.com/torvalds/linux/blob/v6.0/Documentation/ABI/testing/sysfs-bus-pci#L344-L355
+I0000 00:00:1728792784.706725 2860129 cuda_executor.cc:1015] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero. See more at https://github.com/torvalds/linux/blob/v6.0/Documentation/ABI/testing/sysfs-bus-pci#L344-L355
+I0000 00:00:1728792784.710223 2860129 cuda_executor.cc:1015] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero. See more at https://github.com/torvalds/linux/blob/v6.0/Documentation/ABI/testing/sysfs-bus-pci#L344-L355
+I0000 00:00:1728792784.710329 2860129 cuda_executor.cc:1015] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero. See more at https://github.com/torvalds/linux/blob/v6.0/Documentation/ABI/testing/sysfs-bus-pci#L344-L355
+I0000 00:00:1728792784.710429 2860129 cuda_executor.cc:1015] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero. See more at https://github.com/torvalds/linux/blob/v6.0/Documentation/ABI/testing/sysfs-bus-pci#L344-L355
 
 ```
 </div>
@@ -146,7 +146,7 @@ plt.imshow(generated_image)
 
 <div class="k-default-codeblock">
 ```
-<matplotlib.image.AxesImage at 0x7eb544db8910>
+<matplotlib.image.AxesImage at 0x7833e75c1d90>
 
 ```
 </div>
@@ -288,7 +288,7 @@ Cost time (`num_steps=10`): 1.35s
 
 Cost time (`num_steps=28`): 3.45s
 
-Cost time (`num_steps=50`): 6.02s
+Cost time (`num_steps=50`): 6.03s
 
 ```
 </div>
