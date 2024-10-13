@@ -3,7 +3,7 @@ Title: Stable Diffusion 3 in KerasHub!
 Author: [Hongyu Chiu](https://github.com/james77777778), [fchollet](https://twitter.com/fchollet), [lukewood](https://twitter.com/luke_wood_ml), [divamgupta](https://github.com/divamgupta)
 Date created: 2024/10/09
 Last modified: 2024/10/09
-Description: Generate new images using KerasHub's Stable Diffusion 3 model.
+Description: Image generation using KerasHub's Stable Diffusion 3 model.
 Accelerator: GPU
 """
 
@@ -21,12 +21,14 @@ In this guide, we will explore KerasHub's implementation of the
 [Stable Diffusion 3 Medium](https://huggingface.co/stabilityai/stable-diffusion-3-medium)
 including text-to-image, image-to-image and inpaint tasks.
 
-To get started, let's install a few dependencies and sort out some imports:
+To get started, let's install a few dependencies and get images for our demo:
 """
 
 """shell
 !pip install -Uq keras
 !pip install -Uq git+https://github.com/keras-team/keras-hub.git
+!wget --user-agent="User-Agent: Mozilla/5.0" -O mountain_dog.png https://i.imgur.com/3AHYG9Z.png
+!wget --user-agent="User-Agent: Mozilla/5.0" -O mountain_dog_mask.png https://i.imgur.com/n3Prpj6.png
 """
 
 import os
@@ -70,7 +72,8 @@ float16.
 
 It is also worth noting that the preset "stable_diffusion_3_medium" excludes the
 T5XXL text encoder, as it requires significantly more GPU memory. The performace
-degradation is negligible in most cases.
+degradation is negligible in most cases. The weights, including T5XXL, will be
+available on KerasHub soon.
 """
 
 backbone = keras_hub.models.StableDiffusion3Backbone.from_preset(
@@ -88,8 +91,10 @@ Next, we give it a prompt:
 prompt = "Astronaut in a jungle, cold color palette, muted colors, detailed, 8k"
 
 # When using JAX or TensorFlow backends, you might experience a significant
-# compilation time during the first `generate()` call. It will be much faster
-# after that.
+# compilation time during the first `generate()` call. The subsequent
+# `generate()` call speedup highlights the power of JIT compilation and caching
+# in frameworks like JAX and TensorFlow, making them well-suited for
+# high-performance deep learning tasks like image generation.
 generated_image = text_to_image.generate(prompt)
 generated_image = Image.fromarray(generated_image)
 plt.axis("off")
@@ -161,32 +166,50 @@ _"It's not complicated, it's just a lot of it!"_
 ## Text-to-image task
 
 Now we know the basis of the Stable Diffusion 3 and the text-to-image task.
-Let's explore it more by KerasHub APIs.
+Let's explore further using KerasHub APIs.
 
-To enable batch processing, we can feed a list of prompts into the model:
+To use KerasHub's APIs for efficient batch processing, we can provide the model
+with a list of prompts:
 """
 
 
-def concate_images(images):
-    if isinstance(images, list):
-        concated_images = np.concatenate(list(images), axis=1)
-        return Image.fromarray(concated_images)
-    elif len(images.shape) < 4:
-        return Image.fromarray(images)
-    else:
-        concated_images = np.concatenate(list(images), axis=1)
-        return Image.fromarray(concated_images)
+def display_generated_images(images):
+    """Helper function to display the images from the inputs.
+
+    This function accepts the following input formats:
+    - 3D numpy array.
+    - 4D numpy array: concatenated horizontally.
+    - List of 3D numpy arrays: concatenated horizontally.
+    """
+    display_image = None
+    if isinstance(images, np.ndarray):
+        if images.ndim == 3:
+            display_image = Image.fromarray(images)
+        elif images.ndim == 4:
+            concated_images = np.concatenate(list(images), axis=1)
+            display_image = Image.fromarray(concated_images)
+    elif isinstance(images, list):
+        concated_images = np.concatenate(images, axis=1)
+        display_image = Image.fromarray(concated_images)
+
+    if display_image is None:
+        raise ValueError("Unsupported input format.")
+
+    plt.figure(figsize=(10, 10))
+    plt.axis("off")
+    plt.imshow(display_image)
+    plt.show()
+    plt.close()
 
 
 generated_images = text_to_image.generate([prompt] * 3)
-generated_image = concate_images(generated_images)
-plt.axis("off")
-plt.imshow(generated_image)
+display_generated_images(generated_images)
 
 """
-`num_steps` controls the number of denoising steps. More denoising steps
-typically produce higher quality images, but it'll take longer to generate. In
-Stable Diffusion 3, it defaults to `28`.
+The `num_steps` parameter controls the number of denoising steps used during
+image generation. Increasing the number of steps typically leads to higher
+quality images at the expense of increased generation time. In
+Stable Diffusion 3, this parameter defaults to `28`.
 """
 
 num_steps = [10, 28, 50]
@@ -196,9 +219,7 @@ for n in num_steps:
     generated_images.append(text_to_image.generate(prompt, num_steps=n))
     print(f"Cost time (`num_steps={n}`): {time.time() - st:.2f}s")
 
-generated_image = concate_images(generated_images)
-plt.axis("off")
-plt.imshow(generated_image)
+display_generated_images(generated_images)
 
 """
 We can use `"negative_prompts"` to guide the model away from generating specific
@@ -209,11 +230,13 @@ If `"negative_prompts"` is not provided, it will be interpreted as an
 unconditioned prompt with the default value of `""`.
 """
 
-inputs = {"prompts": [prompt] * 3, "negative_prompts": ["Green color"] * 3}
-generated_images = text_to_image.generate(inputs)
-generated_image = concate_images(generated_images)
-plt.axis("off")
-plt.imshow(generated_image)
+generated_images = text_to_image.generate(
+    {
+        "prompts": [prompt] * 3,
+        "negative_prompts": ["Green color"] * 3,
+    }
+)
+display_generated_images(generated_images)
 
 """
 `guidance_scale` affects how much the `"prompts"` influences image generation.
@@ -228,9 +251,7 @@ generated_images = [
     text_to_image.generate(prompt, guidance_scale=7.0),
     text_to_image.generate(prompt, guidance_scale=10.5),
 ]
-generated_image = concate_images(generated_images)
-plt.axis("off")
-plt.imshow(generated_image)
+display_generated_images(generated_images)
 
 """
 Note that `negative_prompts` and `guidance_scale` are related. The formula in
@@ -241,13 +262,13 @@ the implementation can be represented as follows:
 """
 ## Image-to-image task
 
-It is possible to use a referece image as the starting point for the diffusion
-process. This requires an additional module in the pipeline -- the encoder of
-the VAE model.
+A reference image can be used as a starting point for the diffusion process.
+This requires an additional module in the pipeline: the encoder from the VAE
+model.
 
 The reference image is encoded by the VAE encoder into the latent space, where
-noise is then added. The subsequent steps follow the same procedure as the
-text-to-image task.
+noise is then added. The subsequent denoising steps follow the same procedure as
+the text-to-image task.
 
 The input format becomes a dict with the keys `"images"`, `"prompts"` and
 optionally `"negative_prompts"`.
@@ -255,74 +276,83 @@ optionally `"negative_prompts"`.
 
 image_to_image = keras_hub.models.StableDiffusion3ImageToImage(backbone, preprocessor)
 
-image = keras.utils.get_file(
-    "cat.png",
-    origin="https://huggingface.co/datasets/huggingface/documentation-images/resolve/main/diffusers/cat.png",
-)
-image = Image.open(image).convert("RGB")
+image = Image.open("mountain_dog.png").convert("RGB")
+image = image.resize((512, 512))
 width, height = image.size
 
-# Crop the image to fit the height and width of the backbone.
-image = image.crop(
-    (width // 2 - 256, height // 2 - 256, width // 2 + 256, height // 2 + 256)
-)
-
 # Note that the values of the image must be in the range of [-1.0, 1.0].
-image_array = np.array(image).astype("float32")
-image_array = image_array / 127.5 - 1.0
-prompt = "cat wizard, gandalf, lord of the rings, detailed, fantasy, cute, "
+rescale = keras.layers.Rescaling(scale=1 / 127.5, offset=-1.0)
+image_array = rescale(np.array(image))
+
+prompt = "dog wizard, gandalf, lord of the rings, detailed, fantasy, cute, "
 prompt += "adorable, Pixar, Disney, 8k"
 
-generated_image = image_to_image.generate({"images": image_array, "prompts": prompt})
+generated_image = image_to_image.generate(
+    {
+        "images": image_array,
+        "prompts": prompt,
+    }
+)
+display_generated_images(
+    [
+        np.array(image),
+        generated_image,
+    ]
+)
 
-display_image = concate_images([np.array(image), generated_image])
-plt.axis("off")
-plt.imshow(display_image)
+"""
+As you can see, a new image is generated based on the reference image and the
+prompt.
+"""
 
 """
 ## Inpaint task
 
-To extent the image-to-image task, we can also control the generated area using
-a mask. This process is called inpainting, where specific areas of an image are
-replaced or edited.
+Building upon the image-to-image task, we can also control the generated area
+using a mask. This process is called inpainting, where specific areas of an
+image are replaced or edited.
 
 Inpainting relies on a mask to determine which regions of the image to modify.
 The areas to inpaint are represented by white pixels (`True`), while the areas
 to preserve are represented by black pixels (`False`).
 
-The input format becomes a dict with the keys `"images"`, `"masks"`, `"prompts"`
-and optionally `"negative_prompts"`.
+For inpainting, the input is a dict with the keys `"images"`, `"masks"`,
+`"prompts"` and optionally `"negative_prompts"`.
 """
 
 inpaint = keras_hub.models.StableDiffusion3Inpaint(backbone, preprocessor)
 
-image = keras.utils.get_file(
-    "inpaint.png",
-    origin="https://huggingface.co/datasets/huggingface/documentation-images/resolve/main/diffusers/inpaint.png",
-)
-image = Image.open(image).convert("RGB")
-image_array = np.array(image).astype("float32")
-image_array = image_array / 127.5 - 1.0
-mask = keras.utils.get_file(
-    "inpaint_mask.png",
-    origin="https://huggingface.co/datasets/huggingface/documentation-images/resolve/main/diffusers/inpaint_mask.png",
-)
-mask = Image.open(mask).convert("L")
+image = Image.open("mountain_dog.png").convert("RGB")
+image = image.resize((512, 512))
+image_array = rescale(np.array(image))
 
 # Note that the mask values are of boolean dtype.
+mask = Image.open("mountain_dog_mask.png").convert("L")
+mask = mask.resize((512, 512))
 mask_array = np.array(mask).astype("bool")
-prompt = "concept art digital painting of an elven castle, "
-prompt += "inspired by lord of the rings, highly detailed, 8k"
+
+prompt = "a black cat with glowing eyes, cute, adorable, disney, pixar, highly "
+prompt += "detailed, 8k"
 
 generated_image = inpaint.generate(
-    {"images": image_array, "masks": mask_array, "prompts": prompt}
+    {
+        "images": image_array,
+        "masks": mask_array,
+        "prompts": prompt,
+    }
+)
+display_generated_images(
+    [
+        np.array(image),
+        np.array(mask.convert("RGB")),
+        generated_image,
+    ]
 )
 
-display_image = concate_images(
-    [np.array(image), np.array(mask.convert("RGB")), generated_image]
-)
-plt.axis("off")
-plt.imshow(display_image)
+"""
+Fantastic! The dog is replaced by a cute black cat, but unlike image-to-image,
+the background is preserved.
+"""
 
 """
 ## Conclusion
