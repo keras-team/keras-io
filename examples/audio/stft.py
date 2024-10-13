@@ -34,19 +34,18 @@ We will:
 
 import os
 
-os.environ["KERAS_BACKEND"] = "tensorflow"
+os.environ["KERAS_BACKEND"] = "jax"
 
 import keras
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import scipy.io.wavfile
-import tensorflow as tf
 from keras import layers
 from scipy.signal import resample
 
 np.random.seed(41)
-tf.random.set_seed(41)
+keras.utils.set_random_seed(41)
 
 """
 ### Define some variables
@@ -114,7 +113,7 @@ def plot_single_spectrogram(sample_wav_data):
         frame_step=SAMPLE_RATE * 5 // 1000,
         fft_length=1024,
         trainable=False,
-    )(sample_wav_data[None, ...]).numpy()[0]
+    )(sample_wav_data[None, ...])[0, ...]
 
     # Plot the spectrogram
     plt.imshow(spectrogram.T, origin="lower")
@@ -147,7 +146,7 @@ def plot_multi_bandwidth_spectrogram(sample_wav_data):
                 fft_length=1024,
                 padding="same",
                 expand_dims=True,
-            )(sample_wav_data[None, ...]).numpy()[0, ...]
+            )(sample_wav_data[None, ...])[0, ...]
             for x in [5, 10, 20]
         ],
         axis=-1,
@@ -190,20 +189,23 @@ plot_multi_bandwidth_spectrogram(sample_wav_data)
 """
 
 
-def read_dataset(df, folds, batch_size, shuffle=True):
+def read_dataset(df, folds):
     msk = df["fold"].isin(folds)
     filenames = df["filename"][msk]
     targets = df["target"][msk].values
     waves = np.array(
         [read_wav_file(fil) for fil in filenames], dtype=np.float32
     )
-    ds = tf.data.Dataset.from_tensor_slices((waves, targets))
-    if shuffle:
-        ds = ds.shuffle(1024, seed=41)
-    ds = ds.batch(batch_size, drop_remainder=False)
-    ds = ds.prefetch(tf.data.AUTOTUNE)
-    return ds
+    return waves, targets
 
+
+"""
+### Create the datasets
+"""
+
+train_x, train_y = read_dataset(pd_data, [1, 2, 3])
+valid_x, valid_y = read_dataset(pd_data, [4])
+test_x, test_y = read_dataset(pd_data, [5])
 
 """
 ## Training the Models
@@ -262,19 +264,14 @@ model1d.compile(
 model1d.summary()
 
 """
-Create the datasets.
-"""
-
-train_ds = read_dataset(pd_data, [1, 2, 3], BATCH_SIZE)
-valid_ds = read_dataset(pd_data, [4], BATCH_SIZE)
-
-"""
 Train the model and restore the best weights.
 """
 
 history_model1d = model1d.fit(
-    train_ds,
-    validation_data=valid_ds,
+    train_x,
+    train_y,
+    batch_size=BATCH_SIZE,
+    validation_data=(valid_x, valid_y),
     epochs=EPOCHS,
     callbacks=[
         keras.callbacks.EarlyStopping(
@@ -299,29 +296,20 @@ input = layers.Input((None, 1))
 spectrograms = [
     layers.STFTSpectrogram(
         mode="log",
-        frame_length=SAMPLE_RATE * x // 1000,
+        frame_length=SAMPLE_RATE * frame_size // 1000,
         frame_step=SAMPLE_RATE * 15 // 1000,
         fft_length=2048,
         padding="same",
         expand_dims=True,
         # trainable=True,  # trainable by default
     )(input)
-    for x in [30, 40, 50]
+    for frame_size in [30, 40, 50]  # frame size in milliseconds
 ]
 
 multi_spectrograms = layers.Concatenate(axis=-1)(spectrograms)
 
-img_model_weights_no_top = keras.applications.MobileNet(
-    weights="imagenet"
-).get_weights()[:-2]
-
-img_model = keras.applications.MobileNet(
-    weights=None,
-    include_top=False,
-    pooling="max",
-)
+img_model = keras.applications.MobileNet(include_top=False, pooling="max")
 output = img_model(multi_spectrograms)
-img_model.set_weights(img_model_weights_no_top)
 
 output = layers.Dropout(0.5)(output)
 output = layers.Dense(256, activation="relu")(output)
@@ -337,19 +325,14 @@ model2d.compile(
 model2d.summary()
 
 """
-Create the datasets.
-"""
-
-train_ds = read_dataset(pd_data, [1, 2, 3], BATCH_SIZE)
-valid_ds = read_dataset(pd_data, [4], BATCH_SIZE)
-
-"""
 Train the model and restore the best weights.
 """
 
 history_model2d = model2d.fit(
-    train_ds,
-    validation_data=valid_ds,
+    train_x,
+    train_y,
+    batch_size=BATCH_SIZE,
+    validation_data=(valid_x, valid_y),
     epochs=EPOCHS,
     callbacks=[
         keras.callbacks.EarlyStopping(
@@ -422,12 +405,10 @@ plt.show()
 Running the models on the test set.
 """
 
-test_ds = read_dataset(pd_data, [5], BATCH_SIZE, False)
-
-_, test_acc = model1d.evaluate(test_ds)
+_, test_acc = model1d.evaluate(test_x, test_y)
 print(
     f"1D model wit non-trainable STFT -> Test Accuracy: {test_acc * 100:.2f}%"
 )
 
-_, test_acc = model2d.evaluate(test_ds)
+_, test_acc = model2d.evaluate(test_x, test_y)
 print(f"2D model with trainable STFT -> Test Accuracy: {test_acc * 100:.2f}%")
