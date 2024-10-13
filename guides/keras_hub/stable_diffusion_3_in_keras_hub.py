@@ -76,6 +76,36 @@ degradation is negligible in most cases. The weights, including T5XXL, will be
 available on KerasHub soon.
 """
 
+
+def display_generated_images(images):
+    """Helper function to display the images from the inputs.
+
+    This function accepts the following input formats:
+    - 3D numpy array.
+    - 4D numpy array: concatenated horizontally.
+    - List of 3D numpy arrays: concatenated horizontally.
+    """
+    display_image = None
+    if isinstance(images, np.ndarray):
+        if images.ndim == 3:
+            display_image = Image.fromarray(images)
+        elif images.ndim == 4:
+            concated_images = np.concatenate(list(images), axis=1)
+            display_image = Image.fromarray(concated_images)
+    elif isinstance(images, list):
+        concated_images = np.concatenate(images, axis=1)
+        display_image = Image.fromarray(concated_images)
+
+    if display_image is None:
+        raise ValueError("Unsupported input format.")
+
+    plt.figure(figsize=(10, 10))
+    plt.axis("off")
+    plt.imshow(display_image)
+    plt.show()
+    plt.close()
+
+
 backbone = keras_hub.models.StableDiffusion3Backbone.from_preset(
     "stable_diffusion_3_medium", height=512, width=512, dtype="float16"
 )
@@ -96,9 +126,8 @@ prompt = "Astronaut in a jungle, cold color palette, muted colors, detailed, 8k"
 # in frameworks like JAX and TensorFlow, making them well-suited for
 # high-performance deep learning tasks like image generation.
 generated_image = text_to_image.generate(prompt)
-generated_image = Image.fromarray(generated_image)
-plt.axis("off")
-plt.imshow(generated_image)
+display_generated_images(generated_image)
+
 
 """
 Pretty impressive! But how does this work?
@@ -171,35 +200,6 @@ Let's explore further using KerasHub APIs.
 To use KerasHub's APIs for efficient batch processing, we can provide the model
 with a list of prompts:
 """
-
-
-def display_generated_images(images):
-    """Helper function to display the images from the inputs.
-
-    This function accepts the following input formats:
-    - 3D numpy array.
-    - 4D numpy array: concatenated horizontally.
-    - List of 3D numpy arrays: concatenated horizontally.
-    """
-    display_image = None
-    if isinstance(images, np.ndarray):
-        if images.ndim == 3:
-            display_image = Image.fromarray(images)
-        elif images.ndim == 4:
-            concated_images = np.concatenate(list(images), axis=1)
-            display_image = Image.fromarray(concated_images)
-    elif isinstance(images, list):
-        concated_images = np.concatenate(images, axis=1)
-        display_image = Image.fromarray(concated_images)
-
-    if display_image is None:
-        raise ValueError("Unsupported input format.")
-
-    plt.figure(figsize=(10, 10))
-    plt.axis("off")
-    plt.imshow(display_image)
-    plt.show()
-    plt.close()
 
 
 generated_images = text_to_image.generate([prompt] * 3)
@@ -306,6 +306,44 @@ prompt.
 """
 
 """
+The `strength` parameter plays a key role in determining how closely the
+generated image resembles the reference image. The value ranges from
+`[0.0, 1.0]` and defaults to `0.8` in Stable Diffusion 3.
+
+A higher `strength` value gives the model more “creativity” to generate an image
+that is different from the reference image. At a value of `1.0`, the reference
+image is completely ignored, making the task purely text-to-image.
+
+A lower `strength` value means the generated image is more similar to the
+reference image.
+"""
+
+generated_images = [
+    image_to_image.generate(
+        {
+            "images": image_array,
+            "prompts": prompt,
+        },
+        strength=0.7,
+    ),
+    image_to_image.generate(
+        {
+            "images": image_array,
+            "prompts": prompt,
+        },
+        strength=0.8,
+    ),
+    image_to_image.generate(
+        {
+            "images": image_array,
+            "prompts": prompt,
+        },
+        strength=0.9,
+    ),
+]
+display_generated_images(generated_images)
+
+"""
 ## Inpaint task
 
 Building upon the image-to-image task, we can also control the generated area
@@ -352,6 +390,9 @@ display_generated_images(
 """
 Fantastic! The dog is replaced by a cute black cat, but unlike image-to-image,
 the background is preserved.
+
+Note that inpainting task also includes `strength` parameter to control the
+image generation, with the default value of `0.6` in Stable Diffusion 3.
 """
 
 """

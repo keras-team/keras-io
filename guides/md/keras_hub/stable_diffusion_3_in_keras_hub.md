@@ -52,16 +52,16 @@ from PIL import Image
 ```
 <div class="k-default-codeblock">
 ```
-['--2024-10-13 12:12:53--  https://i.imgur.com/n3Prpj6.png',
- 'Resolving i.imgur.com (i.imgur.com)... 146.75.40.193',
- 'Connecting to i.imgur.com (i.imgur.com)|146.75.40.193|:443... connected.',
+['--2024-10-13 15:04:25--  https://i.imgur.com/n3Prpj6.png',
+ 'Resolving i.imgur.com (i.imgur.com)... 151.101.196.193',
+ 'Connecting to i.imgur.com (i.imgur.com)|151.101.196.193|:443... connected.',
  'HTTP request sent, awaiting response... 200 OK',
  'Length: 20520 (20K) [image/png]',
  'Saving to: ‘mountain_dog_mask.png’',
  '',
- '     0K .......... ..........                                 100%  809K=0.02s',
+ '     0K .......... ..........                                 100%  676K=0.03s',
  '',
- '2024-10-13 12:12:54 (809 KB/s) - ‘mountain_dog_mask.png’ saved [20520/20520]',
+ '2024-10-13 15:04:26 (676 KB/s) - ‘mountain_dog_mask.png’ saved [20520/20520]',
  '']
 
 ```
@@ -100,6 +100,36 @@ available on KerasHub soon.
 
 
 ```python
+
+def display_generated_images(images):
+    """Helper function to display the images from the inputs.
+
+    This function accepts the following input formats:
+    - 3D numpy array.
+    - 4D numpy array: concatenated horizontally.
+    - List of 3D numpy arrays: concatenated horizontally.
+    """
+    display_image = None
+    if isinstance(images, np.ndarray):
+        if images.ndim == 3:
+            display_image = Image.fromarray(images)
+        elif images.ndim == 4:
+            concated_images = np.concatenate(list(images), axis=1)
+            display_image = Image.fromarray(concated_images)
+    elif isinstance(images, list):
+        concated_images = np.concatenate(images, axis=1)
+        display_image = Image.fromarray(concated_images)
+
+    if display_image is None:
+        raise ValueError("Unsupported input format.")
+
+    plt.figure(figsize=(10, 10))
+    plt.axis("off")
+    plt.imshow(display_image)
+    plt.show()
+    plt.close()
+
+
 backbone = keras_hub.models.StableDiffusion3Backbone.from_preset(
     "stable_diffusion_3_medium", height=512, width=512, dtype="float16"
 )
@@ -112,15 +142,15 @@ text_to_image = keras_hub.models.StableDiffusion3TextToImage(backbone, preproces
 <div class="k-default-codeblock">
 ```
 WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
-I0000 00:00:1728792784.677737 2860129 cuda_executor.cc:1015] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero. See more at https://github.com/torvalds/linux/blob/v6.0/Documentation/ABI/testing/sysfs-bus-pci#L344-L355
-I0000 00:00:1728792784.705050 2860129 cuda_executor.cc:1015] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero. See more at https://github.com/torvalds/linux/blob/v6.0/Documentation/ABI/testing/sysfs-bus-pci#L344-L355
-I0000 00:00:1728792784.705218 2860129 cuda_executor.cc:1015] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero. See more at https://github.com/torvalds/linux/blob/v6.0/Documentation/ABI/testing/sysfs-bus-pci#L344-L355
-I0000 00:00:1728792784.706507 2860129 cuda_executor.cc:1015] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero. See more at https://github.com/torvalds/linux/blob/v6.0/Documentation/ABI/testing/sysfs-bus-pci#L344-L355
-I0000 00:00:1728792784.706629 2860129 cuda_executor.cc:1015] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero. See more at https://github.com/torvalds/linux/blob/v6.0/Documentation/ABI/testing/sysfs-bus-pci#L344-L355
-I0000 00:00:1728792784.706725 2860129 cuda_executor.cc:1015] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero. See more at https://github.com/torvalds/linux/blob/v6.0/Documentation/ABI/testing/sysfs-bus-pci#L344-L355
-I0000 00:00:1728792784.710223 2860129 cuda_executor.cc:1015] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero. See more at https://github.com/torvalds/linux/blob/v6.0/Documentation/ABI/testing/sysfs-bus-pci#L344-L355
-I0000 00:00:1728792784.710329 2860129 cuda_executor.cc:1015] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero. See more at https://github.com/torvalds/linux/blob/v6.0/Documentation/ABI/testing/sysfs-bus-pci#L344-L355
-I0000 00:00:1728792784.710429 2860129 cuda_executor.cc:1015] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero. See more at https://github.com/torvalds/linux/blob/v6.0/Documentation/ABI/testing/sysfs-bus-pci#L344-L355
+I0000 00:00:1728803077.293173 2901459 cuda_executor.cc:1015] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero. See more at https://github.com/torvalds/linux/blob/v6.0/Documentation/ABI/testing/sysfs-bus-pci#L344-L355
+I0000 00:00:1728803077.320598 2901459 cuda_executor.cc:1015] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero. See more at https://github.com/torvalds/linux/blob/v6.0/Documentation/ABI/testing/sysfs-bus-pci#L344-L355
+I0000 00:00:1728803077.320755 2901459 cuda_executor.cc:1015] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero. See more at https://github.com/torvalds/linux/blob/v6.0/Documentation/ABI/testing/sysfs-bus-pci#L344-L355
+I0000 00:00:1728803077.322098 2901459 cuda_executor.cc:1015] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero. See more at https://github.com/torvalds/linux/blob/v6.0/Documentation/ABI/testing/sysfs-bus-pci#L344-L355
+I0000 00:00:1728803077.322213 2901459 cuda_executor.cc:1015] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero. See more at https://github.com/torvalds/linux/blob/v6.0/Documentation/ABI/testing/sysfs-bus-pci#L344-L355
+I0000 00:00:1728803077.322309 2901459 cuda_executor.cc:1015] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero. See more at https://github.com/torvalds/linux/blob/v6.0/Documentation/ABI/testing/sysfs-bus-pci#L344-L355
+I0000 00:00:1728803077.325873 2901459 cuda_executor.cc:1015] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero. See more at https://github.com/torvalds/linux/blob/v6.0/Documentation/ABI/testing/sysfs-bus-pci#L344-L355
+I0000 00:00:1728803077.325981 2901459 cuda_executor.cc:1015] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero. See more at https://github.com/torvalds/linux/blob/v6.0/Documentation/ABI/testing/sysfs-bus-pci#L344-L355
+I0000 00:00:1728803077.326081 2901459 cuda_executor.cc:1015] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero. See more at https://github.com/torvalds/linux/blob/v6.0/Documentation/ABI/testing/sysfs-bus-pci#L344-L355
 
 ```
 </div>
@@ -136,22 +166,13 @@ prompt = "Astronaut in a jungle, cold color palette, muted colors, detailed, 8k"
 # in frameworks like JAX and TensorFlow, making them well-suited for
 # high-performance deep learning tasks like image generation.
 generated_image = text_to_image.generate(prompt)
-generated_image = Image.fromarray(generated_image)
-plt.axis("off")
-plt.imshow(generated_image)
-```
-
-
-
-
-<div class="k-default-codeblock">
-```
-<matplotlib.image.AxesImage at 0x7833e75c1d90>
+display_generated_images(generated_image)
 
 ```
-</div>
+
+
     
-![png](/home/hongyu/workspace/keras-io/guides/img/stable_diffusion_3_in_keras_hub/stable_diffusion_3_in_keras_hub_7_1.png)
+![png](/home/hongyu/workspace/keras-io/guides/img/stable_diffusion_3_in_keras_hub/stable_diffusion_3_in_keras_hub_7_0.png)
     
 
 
@@ -226,35 +247,6 @@ with a list of prompts:
 
 ```python
 
-def display_generated_images(images):
-    """Helper function to display the images from the inputs.
-
-    This function accepts the following input formats:
-    - 3D numpy array.
-    - 4D numpy array: concatenated horizontally.
-    - List of 3D numpy arrays: concatenated horizontally.
-    """
-    display_image = None
-    if isinstance(images, np.ndarray):
-        if images.ndim == 3:
-            display_image = Image.fromarray(images)
-        elif images.ndim == 4:
-            concated_images = np.concatenate(list(images), axis=1)
-            display_image = Image.fromarray(concated_images)
-    elif isinstance(images, list):
-        concated_images = np.concatenate(images, axis=1)
-        display_image = Image.fromarray(concated_images)
-
-    if display_image is None:
-        raise ValueError("Unsupported input format.")
-
-    plt.figure(figsize=(10, 10))
-    plt.axis("off")
-    plt.imshow(display_image)
-    plt.show()
-    plt.close()
-
-
 generated_images = text_to_image.generate([prompt] * 3)
 display_generated_images(generated_images)
 ```
@@ -286,9 +278,9 @@ display_generated_images(generated_images)
 ```
 Cost time (`num_steps=10`): 1.35s
 
-Cost time (`num_steps=28`): 3.45s
+Cost time (`num_steps=28`): 3.44s
 
-Cost time (`num_steps=50`): 6.03s
+Cost time (`num_steps=50`): 6.18s
 
 ```
 </div>
@@ -399,6 +391,51 @@ display_generated_images(
 As you can see, a new image is generated based on the reference image and the
 prompt.
 
+The `strength` parameter plays a key role in determining how closely the
+generated image resembles the reference image. The value ranges from
+`[0.0, 1.0]` and defaults to `0.8` in Stable Diffusion 3.
+
+A higher `strength` value gives the model more “creativity” to generate an image
+that is different from the reference image. At a value of `1.0`, the reference
+image is completely ignored, making the task purely text-to-image.
+
+A lower `strength` value means the generated image is more similar to the
+reference image.
+
+
+```python
+generated_images = [
+    image_to_image.generate(
+        {
+            "images": image_array,
+            "prompts": prompt,
+        },
+        strength=0.7,
+    ),
+    image_to_image.generate(
+        {
+            "images": image_array,
+            "prompts": prompt,
+        },
+        strength=0.8,
+    ),
+    image_to_image.generate(
+        {
+            "images": image_array,
+            "prompts": prompt,
+        },
+        strength=0.9,
+    ),
+]
+display_generated_images(generated_images)
+```
+
+
+    
+![png](/home/hongyu/workspace/keras-io/guides/img/stable_diffusion_3_in_keras_hub/stable_diffusion_3_in_keras_hub_22_0.png)
+    
+
+
 ---
 ## Inpaint task
 
@@ -447,12 +484,15 @@ display_generated_images(
 
 
     
-![png](/home/hongyu/workspace/keras-io/guides/img/stable_diffusion_3_in_keras_hub/stable_diffusion_3_in_keras_hub_22_0.png)
+![png](/home/hongyu/workspace/keras-io/guides/img/stable_diffusion_3_in_keras_hub/stable_diffusion_3_in_keras_hub_24_0.png)
     
 
 
 Fantastic! The dog is replaced by a cute black cat, but unlike image-to-image,
 the background is preserved.
+
+Note that inpainting task also includes `strength` parameter to control the
+image generation, with the default value of `0.6` in Stable Diffusion 3.
 
 ---
 ## Conclusion
