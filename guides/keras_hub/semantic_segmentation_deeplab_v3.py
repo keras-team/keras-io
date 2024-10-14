@@ -1,6 +1,6 @@
 """
 Title: Semantic Segmentation with KerasHub
-Author: [Sachin Prasad](https://github.com/sachinprasad)
+Authors: [Sachin Prasad](https://github.com/sachinprasadhs), [Divyashree Sreepathihalli](https://github.com/divyashreepathihalli), [Ian Stenbit](https://github.com/ianstenbit)
 Date created: 2024/10/11
 Last modified: 2024/10/11
 Description: DeepLabV3 training and inference with KerasHub
@@ -224,7 +224,7 @@ VOC_PNG_COLOR_MAPPING = None
 
 
 def maybe_populate_voc_color_mapping():
-    # Lazy creation of VOC_PNG_COLOR_MAPPING, which could take 64M memory.
+    """Lazy creation of VOC_PNG_COLOR_MAPPING, which could take 64M memory."""
     global VOC_PNG_COLOR_MAPPING
     if VOC_PNG_COLOR_MAPPING is None:
         VOC_PNG_COLOR_MAPPING = [0] * (256**3)
@@ -279,6 +279,7 @@ def parse_annotation_data(annotation_file_path):
 
 
 def get_image_ids(data_dir, split):
+    """To get image ids from the "train", "eval" or "trainval" files of VOC data."""
     data_file_mapping = {
         "train": "train.txt",
         "eval": "val.txt",
@@ -294,6 +295,7 @@ def get_image_ids(data_dir, split):
 
 
 def get_sbd_image_ids(data_dir, split):
+    """To get image ids from the "sbd_train", "sbd_eval" from files of SBD data."""
     data_file_mapping = {"sbd_train": "train.txt", "sbd_eval": "val.txt"}
     with open(
         os.path.join(data_dir, data_file_mapping[split]),
@@ -305,6 +307,7 @@ def get_sbd_image_ids(data_dir, split):
 
 
 def parse_single_image(image_file_path):
+    """Creates metadata of VOC images and path."""
     data_dir, image_file_name = os.path.split(image_file_path)
     data_dir = os.path.normpath(os.path.join(data_dir, os.path.pardir))
     image_id, _ = os.path.splitext(image_file_name)
@@ -331,6 +334,7 @@ def parse_single_image(image_file_path):
 
 
 def parse_single_sbd_image(image_file_path):
+    """Creates metadata of SBD images and path."""
     data_dir, image_file_name = os.path.split(image_file_path)
     data_dir = os.path.normpath(os.path.join(data_dir, os.path.pardir))
     image_id, _ = os.path.splitext(image_file_name)
@@ -346,6 +350,7 @@ def parse_single_sbd_image(image_file_path):
 
 
 def build_metadata(data_dir, image_ids):
+    """Transpose the metadata which convert from list of dict to dict of list."""
     # Parallel process all the images.
     image_file_paths = [
         os.path.join(data_dir, "JPEGImages", i + ".jpg") for i in image_ids
@@ -354,7 +359,6 @@ def build_metadata(data_dir, image_ids):
     with multiprocessing.Pool(pool_size) as p:
         metadata = p.map(parse_single_image, image_file_paths)
 
-    # Transpose the metadata which convert from list of dict to dict of list.
     keys = [
         "image/filename",
         "image/file_path",
@@ -380,6 +384,7 @@ def build_metadata(data_dir, image_ids):
 
 
 def build_sbd_metadata(data_dir, image_ids):
+    """Transpose the metadata which convert from list of dict to dict of list."""
     # Parallel process all the images.
     image_file_paths = [os.path.join(data_dir, "img", i + ".jpg") for i in image_ids]
     pool_size = 10 if len(image_ids) > 10 else len(image_ids)
@@ -412,6 +417,7 @@ def decode_png_mask(mask):
 
 
 def load_images(example):
+    """Loads VOC images for segmentation task from the provided paths"""
     image_file_path = example.pop("image/file_path")
     segmentation_class_file_path = example.pop("segmentation/class/file_path")
     segmentation_object_file_path = example.pop("segmentation/object/file_path")
@@ -437,6 +443,7 @@ def load_images(example):
 
 
 def load_sbd_images(image_file_path, seg_cls_file_path, seg_obj_file_path):
+    """Loads SBD images for segmentation task from the provided paths"""
     image = tf.io.read_file(image_file_path)
     image = tf.image.decode_jpeg(image)
 
@@ -458,6 +465,7 @@ def load_sbd_images(image_file_path, seg_cls_file_path, seg_obj_file_path):
 
 
 def build_dataset_from_metadata(metadata):
+    """Builds TensorFlow dataset from the image metadata of VOC dataset."""
     # The objects need some manual conversion to ragged tensor.
     metadata["labels"] = tf.ragged.constant(metadata["labels"])
     metadata["objects/label"] = tf.ragged.constant(metadata["objects/label"])
@@ -478,6 +486,7 @@ def build_dataset_from_metadata(metadata):
 
 
 def build_sbd_dataset_from_metadata(metadata):
+    """Builds TensorFlow dataset from the image metadata of SBD dataset."""
     img_filepath = metadata["image/file_path"]
     cls_filepath = metadata["segmentation/class/file_path"]
     obj_filepath = metadata["segmentation/object/file_path"]
@@ -523,7 +532,7 @@ def load(
     as well as 255 which is the boundary mask.
 
     Args:
-        split: string, can be 'train', 'eval', 'trainval", 'sbd_train', or
+        split: string, can be 'train', 'eval', 'trainval', 'sbd_train', or
             'sbd_eval'. 'sbd_train' represents the training dataset for SBD
             dataset, while 'train' represents the training dataset for VOC2012
             dataset. Defaults to `sbd_train`.
@@ -558,6 +567,10 @@ def load_voc(
     split="train",
     data_dir=None,
 ):
+    """This function will download VOC data from a URL. If the data is already
+    present in the cache directory, it will load the data from that directory
+    instead.
+    """
     extracted_dir = os.path.join("VOCdevkit", "VOC2012")
     get_data = keras.utils.get_file(
         fname=os.path.basename(VOC_URL),
@@ -579,6 +592,10 @@ def load_sbd(
     split="sbd_train",
     data_dir=None,
 ):
+    """This function will download SBD data from a URL. If the data is already
+    present in the cache directory, it will load the data from that directory
+    instead.
+    """
     extracted_dir = os.path.join("benchmark_RELEASE", "dataset")
     get_data = keras.utils.get_file(
         fname=os.path.basename(SBD_URL),
@@ -634,9 +651,8 @@ batch = train_ds.take(1).get_single_element()
 
 """
 A batch of this preprocessed input training data can be visualized using the
-`plot_images_masks` function. This function takes a
-batch of images and segmentation masks and prediction masks as input and
-displays them in a grid.
+`plot_images_masks` function. This function takes a batch of images and
+segmentation masks and prediction masks as input and displays them in a grid.
 """
 
 
