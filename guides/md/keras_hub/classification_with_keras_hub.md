@@ -5766,7 +5766,6 @@ class WarmUpCosineDecay(schedules.LearningRateSchedule):
             target_lr=self.target_lr,
             hold=self.hold,
         )
-
         return ops.where(step > self.total_steps, 0.0, lr)
 
 ```
