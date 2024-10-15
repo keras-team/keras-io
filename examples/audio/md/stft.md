@@ -52,7 +52,6 @@ import scipy.io.wavfile
 from keras import layers
 from scipy.signal import resample
 
-np.random.seed(41)
 keras.utils.set_random_seed(41)
 ```
 

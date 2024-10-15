@@ -44,7 +44,6 @@ import scipy.io.wavfile
 from keras import layers
 from scipy.signal import resample
 
-np.random.seed(41)
 keras.utils.set_random_seed(41)
 
 """
@@ -193,9 +192,7 @@ def read_dataset(df, folds):
     msk = df["fold"].isin(folds)
     filenames = df["filename"][msk]
     targets = df["target"][msk].values
-    waves = np.array(
-        [read_wav_file(fil) for fil in filenames], dtype=np.float32
-    )
+    waves = np.array([read_wav_file(fil) for fil in filenames], dtype=np.float32)
     return waves, targets
 
 
@@ -406,9 +403,7 @@ Running the models on the test set.
 """
 
 _, test_acc = model1d.evaluate(test_x, test_y)
-print(
-    f"1D model wit non-trainable STFT -> Test Accuracy: {test_acc * 100:.2f}%"
-)
+print(f"1D model wit non-trainable STFT -> Test Accuracy: {test_acc * 100:.2f}%")
 
 _, test_acc = model2d.evaluate(test_x, test_y)
 print(f"2D model with trainable STFT -> Test Accuracy: {test_acc * 100:.2f}%")
