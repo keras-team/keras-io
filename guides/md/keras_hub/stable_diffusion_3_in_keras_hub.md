@@ -28,10 +28,10 @@ To get started, let's install a few dependencies and get images for our demo:
 
 
 ```python
-!!pip install -Uq keras
-!!pip install -Uq git+https://github.com/keras-team/keras-hub.git
-!!wget --user-agent="User-Agent: Mozilla/5.0" -O mountain_dog.png https://i.imgur.com/3AHYG9Z.png
-!!wget --user-agent="User-Agent: Mozilla/5.0" -O mountain_dog_mask.png https://i.imgur.com/n3Prpj6.png
+!pip install -Uq keras
+!pip install -Uq git+https://github.com/keras-team/keras-hub.git
+!wget --user-agent="User-Agent: Mozilla/5.0" -O mountain_dog.png https://i.imgur.com/3AHYG9Z.png
+!wget --user-agent="User-Agent: Mozilla/5.0" -O mountain_dog_mask.png https://i.imgur.com/n3Prpj6.png
 ```
 
 
@@ -50,22 +50,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from PIL import Image
 ```
-<div class="k-default-codeblock">
-```
-['--2024-10-13 15:04:25--  https://i.imgur.com/n3Prpj6.png',
- 'Resolving i.imgur.com (i.imgur.com)... 151.101.196.193',
- 'Connecting to i.imgur.com (i.imgur.com)|151.101.196.193|:443... connected.',
- 'HTTP request sent, awaiting response... 200 OK',
- 'Length: 20520 (20K) [image/png]',
- 'Saving to: ‘mountain_dog_mask.png’',
- '',
- '     0K .......... ..........                                 100%  676K=0.03s',
- '',
- '2024-10-13 15:04:26 (676 KB/s) - ‘mountain_dog_mask.png’ saved [20520/20520]',
- '']
 
-```
-</div>
 ---
 ## Introduction
 
@@ -139,21 +124,7 @@ preprocessor = keras_hub.models.StableDiffusion3TextToImagePreprocessor.from_pre
 text_to_image = keras_hub.models.StableDiffusion3TextToImage(backbone, preprocessor)
 ```
 
-<div class="k-default-codeblock">
-```
-WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
-I0000 00:00:1728803077.293173 2901459 cuda_executor.cc:1015] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero. See more at https://github.com/torvalds/linux/blob/v6.0/Documentation/ABI/testing/sysfs-bus-pci#L344-L355
-I0000 00:00:1728803077.320598 2901459 cuda_executor.cc:1015] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero. See more at https://github.com/torvalds/linux/blob/v6.0/Documentation/ABI/testing/sysfs-bus-pci#L344-L355
-I0000 00:00:1728803077.320755 2901459 cuda_executor.cc:1015] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero. See more at https://github.com/torvalds/linux/blob/v6.0/Documentation/ABI/testing/sysfs-bus-pci#L344-L355
-I0000 00:00:1728803077.322098 2901459 cuda_executor.cc:1015] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero. See more at https://github.com/torvalds/linux/blob/v6.0/Documentation/ABI/testing/sysfs-bus-pci#L344-L355
-I0000 00:00:1728803077.322213 2901459 cuda_executor.cc:1015] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero. See more at https://github.com/torvalds/linux/blob/v6.0/Documentation/ABI/testing/sysfs-bus-pci#L344-L355
-I0000 00:00:1728803077.322309 2901459 cuda_executor.cc:1015] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero. See more at https://github.com/torvalds/linux/blob/v6.0/Documentation/ABI/testing/sysfs-bus-pci#L344-L355
-I0000 00:00:1728803077.325873 2901459 cuda_executor.cc:1015] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero. See more at https://github.com/torvalds/linux/blob/v6.0/Documentation/ABI/testing/sysfs-bus-pci#L344-L355
-I0000 00:00:1728803077.325981 2901459 cuda_executor.cc:1015] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero. See more at https://github.com/torvalds/linux/blob/v6.0/Documentation/ABI/testing/sysfs-bus-pci#L344-L355
-I0000 00:00:1728803077.326081 2901459 cuda_executor.cc:1015] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero. See more at https://github.com/torvalds/linux/blob/v6.0/Documentation/ABI/testing/sysfs-bus-pci#L344-L355
 
-```
-</div>
 Next, we give it a prompt:
 
 
@@ -172,7 +143,7 @@ display_generated_images(generated_image)
 
 
     
-![png](/home/hongyu/workspace/keras-io/guides/img/stable_diffusion_3_in_keras_hub/stable_diffusion_3_in_keras_hub_7_0.png)
+![png](/img/guides/stable_diffusion_3_in_keras_hub/stable_diffusion_3_in_keras_hub_7_0.png)
     
 
 
@@ -253,7 +224,7 @@ display_generated_images(generated_images)
 
 
     
-![png](/home/hongyu/workspace/keras-io/guides/img/stable_diffusion_3_in_keras_hub/stable_diffusion_3_in_keras_hub_10_0.png)
+![png](/img/guides/stable_diffusion_3_in_keras_hub/stable_diffusion_3_in_keras_hub_10_0.png)
     
 
 
@@ -285,7 +256,7 @@ Cost time (`num_steps=50`): 6.18s
 ```
 </div>
     
-![png](/home/hongyu/workspace/keras-io/guides/img/stable_diffusion_3_in_keras_hub/stable_diffusion_3_in_keras_hub_12_3.png)
+![png](/img/guides/stable_diffusion_3_in_keras_hub/stable_diffusion_3_in_keras_hub_12_3.png)
     
 
 
@@ -309,7 +280,7 @@ display_generated_images(generated_images)
 
 
     
-![png](/home/hongyu/workspace/keras-io/guides/img/stable_diffusion_3_in_keras_hub/stable_diffusion_3_in_keras_hub_14_0.png)
+![png](/img/guides/stable_diffusion_3_in_keras_hub/stable_diffusion_3_in_keras_hub_14_0.png)
     
 
 
@@ -331,7 +302,7 @@ display_generated_images(generated_images)
 
 
     
-![png](/home/hongyu/workspace/keras-io/guides/img/stable_diffusion_3_in_keras_hub/stable_diffusion_3_in_keras_hub_16_0.png)
+![png](/img/guides/stable_diffusion_3_in_keras_hub/stable_diffusion_3_in_keras_hub_16_0.png)
     
 
 
@@ -384,7 +355,7 @@ display_generated_images(
 
 
     
-![png](/home/hongyu/workspace/keras-io/guides/img/stable_diffusion_3_in_keras_hub/stable_diffusion_3_in_keras_hub_19_0.png)
+![png](/img/guides/stable_diffusion_3_in_keras_hub/stable_diffusion_3_in_keras_hub_19_0.png)
     
 
 
@@ -432,7 +403,7 @@ display_generated_images(generated_images)
 
 
     
-![png](/home/hongyu/workspace/keras-io/guides/img/stable_diffusion_3_in_keras_hub/stable_diffusion_3_in_keras_hub_22_0.png)
+![png](/img/guides/stable_diffusion_3_in_keras_hub/stable_diffusion_3_in_keras_hub_22_0.png)
     
 
 
@@ -484,7 +455,7 @@ display_generated_images(
 
 
     
-![png](/home/hongyu/workspace/keras-io/guides/img/stable_diffusion_3_in_keras_hub/stable_diffusion_3_in_keras_hub_24_0.png)
+![png](/img/guides/stable_diffusion_3_in_keras_hub/stable_diffusion_3_in_keras_hub_24_0.png)
     
 
 
