@@ -1,8 +1,8 @@
 # Getting Started with KerasHub
 
-**Author:** [Jonathan Bischof](https://github.com/jbischof)<br>
+**Author:** [Matthew Watson](https://github.com/mattdangerw/), [Jonathan Bischof](https://github.com/jbischof)<br>
 **Date created:** 2022/12/15<br>
-**Last modified:** 2023/07/01<br>
+**Last modified:** 2024/10/17<br>
 **Description:** An introduction to the KerasHub API.
 
 
@@ -10,803 +10,509 @@
 
 
 
+**KerasHub** is a pretrained modeling library that aims to be simple, flexible, and fast.
+The library provides [Keras 3](https://keras.io/keras_3/) implementations of popular
+model architectures, paired with a collection of pretrained checkpoints available on
+[Kaggle](https://www.kaggle.com/organizations/keras/models). Models can be used for both
+training and inference on any of the TensorFlow, Jax, and Torch backends.
+
+KerasHub is an extension of the core Keras API; KerasHub components are provided as
+`keras.Layer`s and `keras.Model`s. If you are familiar with Keras, congratulations! You
+already understand most of KerasHub.
+
+This guide is meant to be an accessible introduction to the entire library. We will start
+by using high-level APIs to classify images and generate text, then progressively show
+deeper customization of models and training. Throughout the guide, we use Professor Keras,
+the official Keras mascot, as a visual reference for the complexity of the material:
+
+![](https://storage.googleapis.com/keras-nlp/getting_started_guide/prof_keras_evolution.png)
+
+As always, we'll keep our Keras guides focused on real-world code examples. You can play
+with the code here at any time by clicking the Colab link at the top of the guide.
+
 ---
-## Introduction
+## Installation and Setup
 
-KerasHub is a natural language processing library that supports users through
-their entire development cycle. Our workflows are built from modular components
-that have state-of-the-art preset weights and architectures when used
-out-of-the-box and are easily customizable when more control is needed.
-
-This library is an extension of the core Keras API; all high-level modules are
-[`Layers`](/api/layers/) or [`Models`](/api/models/). If you are familiar with Keras,
-congratulations! You already understand most of KerasHub.
-
-KerasHub uses Keras 3 to work with any of TensorFlow, Pytorch and Jax. In the
-guide below, we will use the `jax` backend for training our models, and
-[tf.data](https://www.tensorflow.org/guide/data) for efficiently running our
-input preprocessing. But feel free to mix things up! This guide runs in
-TensorFlow or PyTorch backends with zero changes, simply update the
-`KERAS_BACKEND` below.
-
-This guide demonstrates our modular approach using a sentiment analysis example at six
-levels of complexity:
-
-* Inference with a pretrained classifier
-* Fine tuning a pretrained backbone
-* Fine tuning with user-controlled preprocessing
-* Fine tuning a custom model
-* Pretraining a backbone model
-* Build and train your own transformer from scratch
-
-Throughout our guide, we use Professor Keras, the official Keras mascot, as a visual
-reference for the complexity of the material:
-
-<img src="https://storage.googleapis.com/keras-hub/getting_started_guide/prof_keras_evolution.png" alt="drawing" height="250"/>
+To begin, let's install keras-hub. The library is available on PyPI, so we can simply
+install it with pip.
 
 
 ```python
-!pip install -q --upgrade keras-hub
-!pip install -q --upgrade keras  # Upgrade to Keras 3.
+!pip install --upgrade --quiet keras-hub-nightly keras-nightly
 ```
+
+Keras 3 was built to work on top of TensorFlow, Jax, and Torch backends. You should
+specify the backend first thing when writing Keras code, before any library imports. We
+will use the Jax backend for this guide, but you can use `torch` or `tensorflow` without
+changing a single line in the rest of this guide. That's the power of Keras 3!
+
+We will also set `XLA_PYTHON_CLIENT_MEM_FRACTION`, which frees up the whole GPU for
+Jax to use from the start.
+
 
 ```python
 import os
 
 os.environ["KERAS_BACKEND"] = "jax"  # or "tensorflow" or "torch"
-
-import keras_hub
-import keras
-
-# Use mixed precision to speed up all training in this guide.
-keras.mixed_precision.set_global_policy("mixed_float16")
-```
-<div class="k-default-codeblock">
+os.environ["XLA_PYTHON_CLIENT_MEM_FRACTION"] = "1.0"
 ```
 
+Lastly, we need to do some extra setup to access the models used in this guide. Many
+popular open LLMs, such as Gemma from Google and Llama from Meta, require accepting
+a community license before accessing the model weights. We will be using Gemma in this
+guide, so we can follow the following steps:
 
-```
-</div>
+1. Go to the [Gemma 2](https://www.kaggle.com/models/keras/gemma2) model page, and accept
+   the license at the banner at the top.
+2. Generate an Kaggle API key by going to [Kaggle settings](https://www.kaggle.com/settings)
+   and clicking "Create New Token" button under the "API" section.
+3. Inside your colab notebook, click on the key icon on the left hand toolbar. Add two
+   secrets: `KAGGLE_USERNAME` with your username, and `KAGGLE_KEY` with the API key you just
+   created. Make these secrets visible to the notebook you are running.
+
 ---
-## API quickstart
+## API Quickstart
 
-Our highest level API is `keras_hub.models`. These symbols cover the complete user
-journey of converting strings to tokens, tokens to dense features, and dense features to
-task-specific output. For each `XX` architecture (e.g., `Bert`), we offer the following
-modules:
+Before we begin, let's take a look at the key classes we will use in the KerasHub library.
 
-* **Tokenizer**: `keras_hub.models.XXTokenizer`
+* **Task**: e.g., `keras_hub.models.CausalLM`, `keras_hub.models.ImageClassifier`, and
+`keras_hub.models.TextClassifier`.
+  * **What it does**: A task maps from raw image, audio, and text inputs to model
+    predictions.
+  * **Why it's important**: A task is the highest-level entry point to the KerasHub API. It
+    encapsulates both preprocessing and modeling into a single, easy-to-use class. Tasks can
+    be used both for fine-tuning and inference.
+  * **Has a**: `backbone` and `preprocessor`.
+  * **Inherits from**: `keras.Model`.
+* **Backbone**: `keras_hub.models.Backbone`.
+  * **What it does**: Maps preprocessed tensor inputs to the latent space of the model.
+  * **Why it's important**: The backbone encapsulates the architecture and parameters of a
+    pretrained models in a way that is unspecialized to any particular task. A backbone can
+    be combined with arbitrary preprocessing and "head" layers mapping dense features to
+    predictions to accomplish any ML task.
+  * **Inherits from**: `keras.Model`.
+* **Preprocessor**: e.g.,`keras_hub.models.CausalLMPreprocessor`,
+  `keras_hub.models.ImageClassifierPreprocessor`, and
+  `keras_hub.models.TextClassifierPreprocessor`.
+  * **What it does**: A preprocessor maps from raw image, audio and text inputs to
+    preprocessed tensor inputs.
+  * **Why it's important**: A preprocessing layer encapsulates all tasks specific
+    preprocessing, e.g. image resizing and text tokenization, in a way that can be used
+    standalone to precompute preprocessed inputs. Note that if you are using a high-level
+    task class, this preprocessing is already baked in by default.
+  * **Has a**: `tokenizer`, `audio_converter`, and/or `image_converter`.
+  * **Inherits from**: `keras.layers.Layer`.
+* **Tokenizer**: `keras_hub.tokenizers.Tokenizer`.
   * **What it does**: Converts strings to sequences of token ids.
-  * **Why it's important**: The raw bytes of a string are too high dimensional to be useful
-    features so we first map them to a small number of tokens, for example `"The quick brown
-    fox"` to `["the", "qu", "##ick", "br", "##own", "fox"]`.
+  * **Why it's important**: The raw bytes of a string are an inefficient representation of
+    text input, so we first map string inputs to integer token ids. This class encapsulated
+    the mapping of strings to ints and the reverse (via the `detokenize()` method).
   * **Inherits from**: `keras.layers.Layer`.
-* **Preprocessor**: `keras_hub.models.XXPreprocessor`
-  * **What it does**: Converts strings to a dictionary of preprocessed tensors consumed by
-    the backbone, starting with tokenization.
-  * **Why it's important**: Each model uses special tokens and extra tensors to understand
-    the input such as delimiting input segments and identifying padding tokens. Padding each
-    sequence to the same length improves computational efficiency.
-  * **Has a**: `XXTokenizer`.
+* **ImageConverter**: `keras_hub.layers.ImageConverter`.
+  * **What it does**: Resizes and rescales image input.
+  * **Why it's important**: Image models often need to normalize image  inputs to a specific
+    range, or resizing inputs to a specific size. This class encapsulates the image-specific
+    preprocessing.
   * **Inherits from**: `keras.layers.Layer`.
-* **Backbone**: `keras_hub.models.XXBackbone`
-  * **What it does**: Converts preprocessed tensors to dense features. *Does not handle
-    strings; call the preprocessor first.*
-  * **Why it's important**: The backbone distills the input tokens into dense features that
-    can be used in downstream tasks. It is generally pretrained on a language modeling task
-    using massive amounts of unlabeled data. Transferring this information to a new task is a
-    major breakthrough in modern NLP.
-  * **Inherits from**: `keras.Model`.
-* **Task**: e.g., `keras_hub.models.XXClassifier`
-  * **What it does**: Converts strings to task-specific output (e.g., classification
-    probabilities).
-  * **Why it's important**: Task models combine string preprocessing and the backbone model
-    with task-specific `Layers` to solve a problem such as sentence classification, token
-    classification, or text generation. The additional `Layers` must be fine-tuned on labeled
-    data.
-  * **Has a**: `XXBackbone` and `XXPreprocessor`.
-  * **Inherits from**: `keras.Model`.
+* **AudioConveter**: `keras_hub.layers.AudioConveter`.
+  * **What it does**: Converts raw audio to model ready input.
+  * **Why it's important**: Audio models often need to preprocess raw audio input before
+    passing it to a model, e.g. by computing a spectrogram of the audio signal. This class
+    encapsulates the image specific preprocessing in an easy to use layer.
+  * **Inherits from**: `keras.layers.Layer`.
 
-Here is the modular hierarchy for `BertClassifier` (all relationships are compositional):
+All of the classes listed here have a `from_preset()` constructor, which will instantiate
+the component with weights and state for the given pre-trained model identifier. E.g.
+`keras_hub.tokenizers.Tokenizer.from_preset("gemma2_2b_en")` will create a layer that
+tokenizes text using a Gemma2 tokenizer vocabulary.
 
-<img src="https://storage.googleapis.com/keras-hub/getting_started_guide/class_diagram.png" alt="drawing" height="300"/>
+The figure below shows how all these core classes interact. Arrow indicate composition
+not inheritance (e.g., a task *has a* backbone).
 
-All modules can be used independently and have a `from_preset()` method in addition to
-the standard constructor that instantiates the class with **preset** architecture and
-weights (see examples below).
+![png](/img/guides/getting_started/class-diagram.png)
 
 ---
-## Data
+## Classify an image
 
-We will use a running example of sentiment analysis of IMDB movie reviews. In this task,
-we use the text to predict whether the review was positive (`label = 1`) or negative
-(`label = 0`).
+![](https://storage.googleapis.com/keras-nlp/getting_started_guide/prof_keras_beginner.png)
 
-We load the data using `keras.utils.text_dataset_from_directory`, which utilizes the
-powerful `tf.data.Dataset` format for examples.
+Enough setup! Let's have some fun with pre-trained models. Let's load a test image of a
+California Quail and classify it.
 
 
 ```python
-!curl -O https://ai.stanford.edu/~amaas/data/sentiment/aclImdb_v1.tar.gz
-!tar -xf aclImdb_v1.tar.gz
-!# Remove unsupervised examples
-!rm -r aclImdb/train/unsup
+import keras
+import numpy as np
+import matplotlib.pyplot as plt
+
+image_url = "https://upload.wikimedia.org/wikipedia/commons/a/aa/California_quail.jpg"
+image_path = keras.utils.get_file(origin=image_url)
+image = keras.utils.load_img(image_path)
+plt.imshow(image)
 ```
+    
+![png](/img/guides/getting_started/getting_started_11_1.png)
+    
+
+
+We can use a ResNet vision model trained on the ImageNet-1k database. This model will
+give each input sample and output label from `[0, 1000)`, where each label corresponds to
+some real word entity, like a "milk can" or a "porcupine." The dataset actually has a
+specific label for quail, at index 85. Let's download the model and predict a label.
+
 
 ```python
-BATCH_SIZE = 16
-imdb_train = keras.utils.text_dataset_from_directory(
-    "aclImdb/train",
-    batch_size=BATCH_SIZE,
+import keras_hub
+
+image_classifier = keras_hub.models.ImageClassifier.from_preset(
+    "resnet_50_imagenet",
+    activation="softmax",
 )
-imdb_test = keras.utils.text_dataset_from_directory(
-    "aclImdb/test",
-    batch_size=BATCH_SIZE,
-)
-
-# Inspect first review
-# Format is (review text tensor, label tensor)
-print(imdb_train.unbatch().take(1).get_single_element())
-
-```
-<div class="k-default-codeblock">
-```
-  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
-                                 Dload  Upload   Total   Spent    Left  Speed
-100 80.2M  100 80.2M    0     0  88.0M      0 --:--:-- --:--:-- --:--:-- 87.9M
-
-Found 25000 files belonging to 2 classes.
-Found 25000 files belonging to 2 classes.
-(<tf.Tensor: shape=(), dtype=string, numpy=b'This is a very, very early Bugs Bunny cartoon. As a result, the character is still in a transition period--he is not drawn as elongated as he later was and his voice isn\'t quite right. In addition, the chemistry between Elmer and Bugs is a little unusual. Elmer is some poor sap who buys Bugs from a pet shop--there is no gun or desire on his part to blast the bunny to smithereens! However, despite this, this is still a very enjoyable film. The early Bugs was definitely more sassy and cruel than his later incarnations. In later films, he messed with Elmer, Yosimite Sam and others because they started it--they messed with the rabbit. But, in this film, he is much more like Daffy Duck of the late 30s and early 40s--a jerk who just loves irritating others!! A true "anarchist" instead of the hero of the later cartoons. While this isn\'t among the best Bug Bunny cartoons, it sure is fun to watch and it\'s interesting to see just how much he\'s changed over the years.'>, <tf.Tensor: shape=(), dtype=int32, numpy=1>)
-
-```
-</div>
----
-## Inference with a pretrained classifier
-
-<img src="https://storage.googleapis.com/keras-hub/getting_started_guide/prof_keras_beginner.png" alt="drawing" height="250"/>
-
-The highest level module in KerasHub is a **task**. A **task** is a `keras.Model`
-consisting of a (generally pretrained) **backbone** model and task-specific layers.
-Here's an example using `keras_hub.models.BertClassifier`.
-
-**Note**: Outputs are the logits per class (e.g., `[0, 0]` is 50% chance of positive). The output is
-[negative, positive] for binary classification.
-
-
-```python
-classifier = keras_hub.models.BertClassifier.from_preset("bert_tiny_en_uncased_sst2")
-# Note: batched inputs expected so must wrap string in iterable
-classifier.predict(["I love modular workflows in keras-hub!"])
+batch = np.array([image])
+image_classifier.preprocessor.image_size = (224, 224)
+preds = image_classifier.predict(batch)
+preds.shape
 ```
 
 <div class="k-default-codeblock">
 ```
- 1/1 ━━━━━━━━━━━━━━━━━━━━ 1s 689ms/step
-
-array([[-1.539,  1.543]], dtype=float16)
-
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 2s 2s/step
+(1, 1000)
 ```
 </div>
-All **tasks** have a `from_preset` method that constructs a `keras.Model` instance with
-preset preprocessing, architecture and weights. This means that we can pass raw strings
-in any format accepted by a `keras.Model` and get output specific to our task.
-
-This particular **preset** is a `"bert_tiny_uncased_en"` **backbone** fine-tuned on
-`sst2`, another movie review sentiment analysis (this time from Rotten Tomatoes). We use
-the `tiny` architecture for demo purposes, but larger models are recommended for SoTA
-performance. For all the task-specific presets available for `BertClassifier`, see
-our keras.io [models page](https://keras.io/api/keras_hub/models/).
-
-Let's evaluate our classifier on the IMDB dataset. You will note we don't need to
-call `keras.Model.compile` here. All **task** models like `BertClassifier` ship with
-compilation defaults, meaning we can just call `keras.Model.evaluate` directly. You
-can always call compile as normal to override these defaults (e.g. to add new metrics).
-
-The output below is [loss, accuracy],
+These ImageNet labels aren't a particularly "human readable," so we can use a built-in
+utility function to decode the predictions to a set of class names.
 
 
 ```python
-classifier.evaluate(imdb_test)
+keras_hub.utils.decode_imagenet_predictions(preds)
+```
+
+
+
+
+<div class="k-default-codeblock">
+```
+[[('quail', 0.9996534585952759),
+  ('prairie_chicken', 8.45497488626279e-05),
+  ('partridge', 1.4000976079842076e-05),
+  ('black_grouse', 7.407367775158491e-06),
+  ('bullet_train', 7.323932550207246e-06)]]
+
+```
+</div>
+Looking good! The model weights successfully downloaded, and we predicted the
+correct classification label for our quail image with near certainty.
+
+This was our first example of the high-level **task** API mentioned in the API quickstart
+above. An `keras_hub.models.ImageClassifier` is a task for classifying images, and can be
+used with a number of different model architectures (ResNet, VGG, MobileNet, etc). You
+can view the full list of models shipped directly by the Keras team on
+[Kaggle](https://www.kaggle.com/organizations/keras/models).
+
+A task is just a subclass of `keras.Model` — you can use `fit()`, `compile()`, and
+`save()` on our `classifier` object same as any other model. But tasks come with a few
+extras provided by the KerasHub library. The first and most important is `from_preset()`,
+a special constructor you will see on many classes in KerasHub.
+
+A **preset** is a directory of model state. It defines both the architecture we should
+load and the pretrained weights that go with it. `from_preset()` allows us to load
+**preset** directories from a number of different locations:
+
+- A local directory.
+- The Kaggle Model hub.
+- The HuggingFace model hub.
+
+You can take a look at the `keras_hub.models.ImageClassifier.from_preset` docs to better
+understand all the options when constructing a Keras model from a preset.
+
+All tasks use two main sub-objects. A `keras_hub.models.Backbone` and a
+`keras_hub.layers.Preprocessor`. You might be familiar already with the term **backbone**
+from computer vision, where it is often used to describe a feature extractor network that
+maps images to a latent space. A KerasHub backbone is this concept generalized, we use it
+to refer to any pretrained model without a task-specific head. That is, a KerasHub
+backbone maps raw images, audio and text (or a combination of these inputs) to a
+pretrained model's latent space. We can then map this latent space to any number of task
+specific outputs, depending on what we are trying to do with the model.
+
+A **preprocessor** is just a Keras layer that does all the preprocessing for a specific
+task. In our case, preprocessing with will resize our input image and rescale it to the
+range `[0, 1]` using some ImageNet specific mean and variance data. Let's call our
+task's preprocessor and backbone in succession to see what happens to our input shape.
+
+
+```python
+print("Raw input shape:", batch.shape)
+resized_batch = image_classifier.preprocessor(batch)
+print("Preprocessed input shape:", resized_batch.shape)
+hidden_states = image_classifier.backbone(resized_batch)
+print("Latent space shape:", hidden_states.shape)
 ```
 
 <div class="k-default-codeblock">
 ```
- 1563/1563 ━━━━━━━━━━━━━━━━━━━━ 4s 2ms/step - loss: 0.4610 - sparse_categorical_accuracy: 0.7882
+Raw input shape: (1, 557, 707, 3)
 
-[0.4630218744277954, 0.783519983291626]
+Preprocessed input shape: (1, 224, 224, 3)
 
-```
-</div>
-Our result is 78% accuracy without training anything. Not bad!
-
----
-## Fine tuning a pretrained BERT backbone
-
-<img src="https://storage.googleapis.com/keras-hub/getting_started_guide/prof_keras_intermediate.png" alt="drawing" height="250"/>
-
-When labeled text specific to our task is available, fine-tuning a custom classifier can
-improve performance. If we want to predict IMDB review sentiment, using IMDB data should
-perform better than Rotten Tomatoes data! And for many tasks, no relevant pretrained model
-will be available (e.g., categorizing customer reviews).
-
-The workflow for fine-tuning is almost identical to above, except that we request a
-**preset** for the **backbone**-only model rather than the entire classifier. When passed
-a **backbone** **preset**, a **task** `Model` will randomly initialize all task-specific
-layers in preparation for training. For all the **backbone** presets available for
-`BertClassifier`, see our keras.io [models page](https://keras.io/api/keras_hub/models/).
-
-To train your classifier, use `keras.Model.fit` as with any other
-`keras.Model`. As with our inference example, we can rely on the compilation
-defaults for the **task** and skip `keras.Model.compile`. As preprocessing is
-included, we again pass the raw data.
-
-
-```python
-classifier = keras_hub.models.BertClassifier.from_preset(
-    "bert_tiny_en_uncased",
-    num_classes=2,
-)
-classifier.fit(
-    imdb_train,
-    validation_data=imdb_test,
-    epochs=1,
-)
-```
-
-<div class="k-default-codeblock">
-```
- 1563/1563 ━━━━━━━━━━━━━━━━━━━━ 16s 9ms/step - loss: 0.5202 - sparse_categorical_accuracy: 0.7281 - val_loss: 0.3254 - val_sparse_categorical_accuracy: 0.8621
-
-<keras.src.callbacks.history.History at 0x7f281ffc9f90>
+Latent space shape: (1, 7, 7, 2048)
 
 ```
 </div>
-Here we see a significant lift in validation accuracy (0.78 -> 0.87) with a single epoch of
-training even though the IMDB dataset is much smaller than `sst2`.
+Our raw image is rescaled to `(224, 224)` during preprocessing and finally
+downscaled to a `(7, 7)` image of 2048 feature vectors — the latent space of the
+ResNet model. Note that ResNet can actually handle images of arbitrary sizes,
+though performance will eventually fall off if your image is very different
+sized than the pretrained data. If you'd like to disable the resizing in the
+preprocessing layer, you can run `image_classifier.preprocessor.image_size = None`.
 
----
-## Fine tuning with user-controlled preprocessing
-<img src="https://storage.googleapis.com/keras-hub/getting_started_guide/prof_keras_advanced.png" alt="drawing" height="250"/>
-
-For some advanced training scenarios, users might prefer direct control over
-preprocessing. For large datasets, examples can be preprocessed in advance and saved to
-disk or preprocessed by a separate worker pool using `tf.data.experimental.service`. In
-other cases, custom preprocessing is needed to handle the inputs.
-
-Pass `preprocessor=None` to the constructor of a **task** `Model` to skip automatic
-preprocessing or pass a custom `BertPreprocessor` instead.
-
-### Separate preprocessing from the same preset
-
-Each model architecture has a parallel **preprocessor** `Layer` with its own
-`from_preset` constructor. Using the same **preset** for this `Layer` will return the
-matching **preprocessor** as the **task**.
-
-In this workflow we train the model over three epochs using `tf.data.Dataset.cache()`,
-which computes the preprocessing once and caches the result before fitting begins.
-
-**Note:** we can use `tf.data` for preprocessing while running on the
-Jax or PyTorch backend. The input dataset will automatically be converted to
-backend native tensor types during fit. In fact, given the efficiency of `tf.data`
-for running preprocessing, this is good practice on all backends.
+If you are ever wondering the exact structure of the task you loaded, you can
+use `model.summary()` same as any Keras model. The model summary for tasks will
+included extra information on model preprocessing.
 
 
 ```python
-import tensorflow as tf
-
-preprocessor = keras_hub.models.BertPreprocessor.from_preset(
-    "bert_tiny_en_uncased",
-    sequence_length=512,
-)
-
-# Apply the preprocessor to every sample of train and test data using `map()`.
-# `tf.data.AUTOTUNE` and `prefetch()` are options to tune performance, see
-# https://www.tensorflow.org/guide/data_performance for details.
-
-# Note: only call `cache()` if you training data fits in CPU memory!
-imdb_train_cached = (
-    imdb_train.map(preprocessor, tf.data.AUTOTUNE).cache().prefetch(tf.data.AUTOTUNE)
-)
-imdb_test_cached = (
-    imdb_test.map(preprocessor, tf.data.AUTOTUNE).cache().prefetch(tf.data.AUTOTUNE)
-)
-
-classifier = keras_hub.models.BertClassifier.from_preset(
-    "bert_tiny_en_uncased", preprocessor=None, num_classes=2
-)
-classifier.fit(
-    imdb_train_cached,
-    validation_data=imdb_test_cached,
-    epochs=3,
-)
-```
-
-<div class="k-default-codeblock">
-```
-Epoch 1/3
- 1563/1563 ━━━━━━━━━━━━━━━━━━━━ 15s 8ms/step - loss: 0.5194 - sparse_categorical_accuracy: 0.7272 - val_loss: 0.3032 - val_sparse_categorical_accuracy: 0.8728
-Epoch 2/3
- 1563/1563 ━━━━━━━━━━━━━━━━━━━━ 10s 7ms/step - loss: 0.2871 - sparse_categorical_accuracy: 0.8805 - val_loss: 0.2809 - val_sparse_categorical_accuracy: 0.8818
-Epoch 3/3
- 1563/1563 ━━━━━━━━━━━━━━━━━━━━ 10s 7ms/step - loss: 0.2134 - sparse_categorical_accuracy: 0.9178 - val_loss: 0.3043 - val_sparse_categorical_accuracy: 0.8790
-
-<keras.src.callbacks.history.History at 0x7f281ffc87f0>
-
-```
-</div>
-After three epochs, our validation accuracy has only increased to 0.88. This is both a
-function of the small size of our dataset and our model. To exceed 90% accuracy, try
-larger **presets** such as  `"bert_base_en_uncased"`. For all the **backbone** presets
-available for `BertClassifier`, see our keras.io [models page](https://keras.io/api/keras_hub/models/).
-
-### Custom preprocessing
-
-In cases where custom preprocessing is required, we offer direct access to the
-`Tokenizer` class that maps raw strings to tokens. It also has a `from_preset()`
-constructor to get the vocabulary matching pretraining.
-
-**Note:** `BertTokenizer` does not pad sequences by default, so the output is
-ragged (each sequence has varying length). The `MultiSegmentPacker` below
-handles padding these ragged sequences to dense tensor types (e.g. `tf.Tensor`
-or `torch.Tensor`).
-
-
-```python
-tokenizer = keras_hub.models.BertTokenizer.from_preset("bert_tiny_en_uncased")
-tokenizer(["I love modular workflows!", "Libraries over frameworks!"])
-
-# Write your own packer or use one of our `Layers`
-packer = keras_hub.layers.MultiSegmentPacker(
-    start_value=tokenizer.cls_token_id,
-    end_value=tokenizer.sep_token_id,
-    # Note: This cannot be longer than the preset's `sequence_length`, and there
-    # is no check for a custom preprocessor!
-    sequence_length=64,
-)
-
-
-# This function that takes a text sample `x` and its
-# corresponding label `y` as input and converts the
-# text into a format suitable for input into a BERT model.
-def preprocessor(x, y):
-    token_ids, segment_ids = packer(tokenizer(x))
-    x = {
-        "token_ids": token_ids,
-        "segment_ids": segment_ids,
-        "padding_mask": token_ids != 0,
-    }
-    return x, y
-
-
-imdb_train_preprocessed = imdb_train.map(preprocessor, tf.data.AUTOTUNE).prefetch(
-    tf.data.AUTOTUNE
-)
-imdb_test_preprocessed = imdb_test.map(preprocessor, tf.data.AUTOTUNE).prefetch(
-    tf.data.AUTOTUNE
-)
-
-# Preprocessed example
-print(imdb_train_preprocessed.unbatch().take(1).get_single_element())
-```
-
-<div class="k-default-codeblock">
-```
-({'token_ids': <tf.Tensor: shape=(64,), dtype=int32, numpy=
-array([  101,  2023,  2003,  2941,  2028,  1997,  2026,  5440,  3152,
-        1010,  1045,  2052, 16755,  2008,  3071, 12197,  2009,  1012,
-        2045,  2003,  2070,  2307,  3772,  1999,  2009,  1998,  2009,
-        3065,  2008,  2025,  2035,  1000,  2204,  1000,  3152,  2024,
-        2137,  1012,  1012,  1012,  1012,   102,     0,     0,     0,
-           0,     0,     0,     0,     0,     0,     0,     0,     0,
-           0,     0,     0,     0,     0,     0,     0,     0,     0,
-           0], dtype=int32)>, 'segment_ids': <tf.Tensor: shape=(64,), dtype=int32, numpy=
-array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-      dtype=int32)>, 'padding_mask': <tf.Tensor: shape=(64,), dtype=bool, numpy=
-array([ True,  True,  True,  True,  True,  True,  True,  True,  True,
-        True,  True,  True,  True,  True,  True,  True,  True,  True,
-        True,  True,  True,  True,  True,  True,  True,  True,  True,
-        True,  True,  True,  True,  True,  True,  True,  True,  True,
-        True,  True,  True,  True,  True,  True, False, False, False,
-       False, False, False, False, False, False, False, False, False,
-       False, False, False, False, False, False, False, False, False,
-       False])>}, <tf.Tensor: shape=(), dtype=int32, numpy=1>)
-
-```
-</div>
----
-## Fine tuning with a custom model
-<img src="https://storage.googleapis.com/keras-hub/getting_started_guide/prof_keras_advanced.png" alt="drawing" height="250"/>
-
-For more advanced applications, an appropriate **task** `Model` may not be available. In
-this case, we provide direct access to the **backbone** `Model`, which has its own
-`from_preset` constructor and can be composed with custom `Layer`s. Detailed examples can
-be found at our [transfer learning guide](https://keras.io/guides/transfer_learning/).
-
-A **backbone** `Model` does not include automatic preprocessing but can be paired with a
-matching **preprocessor** using the same **preset** as shown in the previous workflow.
-
-In this workflow, we experiment with freezing our backbone model and adding two trainable
-transformer layers to adapt to the new input.
-
-**Note**: We can ignore the warning about gradients for the `pooled_dense` layer because
-we are using BERT's sequence output.
-
-
-```python
-preprocessor = keras_hub.models.BertPreprocessor.from_preset("bert_tiny_en_uncased")
-backbone = keras_hub.models.BertBackbone.from_preset("bert_tiny_en_uncased")
-
-imdb_train_preprocessed = (
-    imdb_train.map(preprocessor, tf.data.AUTOTUNE).cache().prefetch(tf.data.AUTOTUNE)
-)
-imdb_test_preprocessed = (
-    imdb_test.map(preprocessor, tf.data.AUTOTUNE).cache().prefetch(tf.data.AUTOTUNE)
-)
-
-backbone.trainable = False
-inputs = backbone.input
-sequence = backbone(inputs)["sequence_output"]
-for _ in range(2):
-    sequence = keras_hub.layers.TransformerEncoder(
-        num_heads=2,
-        intermediate_dim=512,
-        dropout=0.1,
-    )(sequence)
-# Use [CLS] token output to classify
-outputs = keras.layers.Dense(2)(sequence[:, backbone.cls_token_index, :])
-
-model = keras.Model(inputs, outputs)
-model.compile(
-    loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
-    optimizer=keras.optimizers.AdamW(5e-5),
-    metrics=[keras.metrics.SparseCategoricalAccuracy()],
-    jit_compile=True,
-)
-model.summary()
-model.fit(
-    imdb_train_preprocessed,
-    validation_data=imdb_test_preprocessed,
-    epochs=3,
-)
+image_classifier.summary()
 ```
 
 
-<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold">Model: "functional_1"</span>
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold">Preprocessor: "res_net_image_classifier_preprocessor"</span>
 </pre>
 
 
 
 
-<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">┏━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━┓
-┃<span style="font-weight: bold"> Layer (type)        </span>┃<span style="font-weight: bold"> Output Shape      </span>┃<span style="font-weight: bold"> Param # </span>┃<span style="font-weight: bold"> Connected to         </span>┃
-┡━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━┩
-│ padding_mask        │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>)      │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ -                    │
-│ (<span style="color: #0087ff; text-decoration-color: #0087ff">InputLayer</span>)        │                   │         │                      │
-├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
-│ segment_ids         │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>)      │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ -                    │
-│ (<span style="color: #0087ff; text-decoration-color: #0087ff">InputLayer</span>)        │                   │         │                      │
-├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
-│ token_ids           │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>)      │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ -                    │
-│ (<span style="color: #0087ff; text-decoration-color: #0087ff">InputLayer</span>)        │                   │         │                      │
-├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
-│ bert_backbone_3     │ [(<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">128</span>),     │ <span style="color: #00af00; text-decoration-color: #00af00">4,385,…</span> │ padding_mask[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>],  │
-│ (<span style="color: #0087ff; text-decoration-color: #0087ff">BertBackbone</span>)      │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>,      │         │ segment_ids[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>],   │
-│                     │ <span style="color: #00af00; text-decoration-color: #00af00">128</span>)]             │         │ token_ids[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>]      │
-├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
-│ transformer_encoder │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">128</span>) │ <span style="color: #00af00; text-decoration-color: #00af00">198,272</span> │ bert_backbone_3[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">…</span> │
-│ (<span style="color: #0087ff; text-decoration-color: #0087ff">TransformerEncode…</span> │                   │         │                      │
-├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
-│ transformer_encode… │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">128</span>) │ <span style="color: #00af00; text-decoration-color: #00af00">198,272</span> │ transformer_encoder… │
-│ (<span style="color: #0087ff; text-decoration-color: #0087ff">TransformerEncode…</span> │                   │         │                      │
-├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
-│ get_item_4          │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">128</span>)       │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ transformer_encoder… │
-│ (<span style="color: #0087ff; text-decoration-color: #0087ff">GetItem</span>)           │                   │         │                      │
-├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
-│ dense (<span style="color: #0087ff; text-decoration-color: #0087ff">Dense</span>)       │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">2</span>)         │     <span style="color: #00af00; text-decoration-color: #00af00">258</span> │ get_item_4[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>]     │
-└─────────────────────┴───────────────────┴─────────┴──────────────────────┘
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃<span style="font-weight: bold"> Layer (type)                                 </span>┃<span style="font-weight: bold">                        Config </span>┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│ res_net_image_converter                      │        Image size: (<span style="color: #00af00; text-decoration-color: #00af00">224</span>, <span style="color: #00af00; text-decoration-color: #00af00">224</span>) │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">ResNetImageConverter</span>)                       │                               │
+└──────────────────────────────────────────────┴───────────────────────────────┘
 </pre>
 
 
 
 
-<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Total params: </span><span style="color: #00af00; text-decoration-color: #00af00">4,782,722</span> (18.24 MB)
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold">Model: "res_net_image_classifier"</span>
 </pre>
 
 
 
 
-<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Trainable params: </span><span style="color: #00af00; text-decoration-color: #00af00">396,802</span> (1.51 MB)
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━┓
+┃<span style="font-weight: bold"> Layer (type)                      </span>┃<span style="font-weight: bold"> Output Shape             </span>┃<span style="font-weight: bold">       Param # </span>┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━┩
+│ input_layer (<span style="color: #0087ff; text-decoration-color: #0087ff">InputLayer</span>)          │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">3</span>)    │             <span style="color: #00af00; text-decoration-color: #00af00">0</span> │
+├───────────────────────────────────┼──────────────────────────┼───────────────┤
+│ res_net_backbone (<span style="color: #0087ff; text-decoration-color: #0087ff">ResNetBackbone</span>) │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">2048</span>) │    <span style="color: #00af00; text-decoration-color: #00af00">23,561,152</span> │
+├───────────────────────────────────┼──────────────────────────┼───────────────┤
+│ pooler (<span style="color: #0087ff; text-decoration-color: #0087ff">GlobalAveragePooling2D</span>)   │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">2048</span>)             │             <span style="color: #00af00; text-decoration-color: #00af00">0</span> │
+├───────────────────────────────────┼──────────────────────────┼───────────────┤
+│ output_dropout (<span style="color: #0087ff; text-decoration-color: #0087ff">Dropout</span>)          │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">2048</span>)             │             <span style="color: #00af00; text-decoration-color: #00af00">0</span> │
+├───────────────────────────────────┼──────────────────────────┼───────────────┤
+│ predictions (<span style="color: #0087ff; text-decoration-color: #0087ff">Dense</span>)               │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">1000</span>)             │     <span style="color: #00af00; text-decoration-color: #00af00">2,049,000</span> │
+└───────────────────────────────────┴──────────────────────────┴───────────────┘
 </pre>
 
 
 
 
-<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Non-trainable params: </span><span style="color: #00af00; text-decoration-color: #00af00">4,385,920</span> (16.73 MB)
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Total params: </span><span style="color: #00af00; text-decoration-color: #00af00">25,610,152</span> (97.69 MB)
 </pre>
 
 
 
-<div class="k-default-codeblock">
-```
-Epoch 1/3
- 1563/1563 ━━━━━━━━━━━━━━━━━━━━ 17s 10ms/step - loss: 0.6208 - sparse_categorical_accuracy: 0.6612 - val_loss: 0.6119 - val_sparse_categorical_accuracy: 0.6758
-Epoch 2/3
- 1563/1563 ━━━━━━━━━━━━━━━━━━━━ 12s 8ms/step - loss: 0.5324 - sparse_categorical_accuracy: 0.7347 - val_loss: 0.5484 - val_sparse_categorical_accuracy: 0.7320
-Epoch 3/3
- 1563/1563 ━━━━━━━━━━━━━━━━━━━━ 12s 8ms/step - loss: 0.4735 - sparse_categorical_accuracy: 0.7723 - val_loss: 0.4874 - val_sparse_categorical_accuracy: 0.7742
 
-<keras.src.callbacks.history.History at 0x7f2790170220>
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Trainable params: </span><span style="color: #00af00; text-decoration-color: #00af00">25,557,032</span> (97.49 MB)
+</pre>
 
-```
-</div>
-This model achieves reasonable accuracy despite having only 10% of the trainable parameters
-of our `BertClassifier` model. Each training step takes about 1/3 of the time---even
-accounting for cached preprocessing.
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Non-trainable params: </span><span style="color: #00af00; text-decoration-color: #00af00">53,120</span> (207.50 KB)
+</pre>
+
+
 
 ---
-## Pretraining a backbone model
-<img src="https://storage.googleapis.com/keras-hub/getting_started_guide/prof_keras_expert.png" alt="drawing" height="250"/>
+## Generate text with an LLM
 
-Do you have access to large unlabeled datasets in your domain? Are they around the
-same size as used to train popular backbones such as BERT, RoBERTa, or GPT2 (XX+ GiB)? If
-so, you might benefit from domain-specific pretraining of your own backbone models.
+![](https://storage.googleapis.com/keras-nlp/getting_started_guide/prof_keras_intermediate.png)
 
-NLP models are generally pretrained on a language modeling task, predicting masked words
-given the visible words in an input sentence. For example, given the input
-`"The fox [MASK] over the [MASK] dog"`, the model might be asked to predict `["jumped", "lazy"]`.
-The lower layers of this model are then packaged as a **backbone** to be combined with
-layers relating to a new task.
+Next up, let's try working with and generating text. The task we can use when generating
+text is `keras_hub.models.CausalLM` (where LM is short for **L**anguage **M**odel). Let's
+download the 2 billion parameter Gemma 2 model and try it out.
 
-The KerasHub library offers SoTA **backbones** and **tokenizers** to be trained from
-scratch without presets.
-
-In this workflow, we pretrain a BERT **backbone** using our IMDB review text. We skip the
-"next sentence prediction" (NSP) loss because it adds significant complexity to the data
-processing and was dropped by later models like RoBERTa. See our e2e
-[Transformer pretraining](https://keras.io/guides/keras_hub/transformer_pretraining/#pretraining)
-for step-by-step details on how to replicate the original paper.
-
-### Preprocessing
+Since this is about 100x larger model than the ResNet model we just downloaded, we need to be
+a little more careful about our GPU memory usage. We can use a half-precision type to
+load each parameter of our ~2.5 billion as a two-byte float instead of four. To do this
+we can pass `dtype` to the `from_preset()` constructor. `from_preset()` will forward any
+kwargs to the main constructor for the class, so you can pass kwargs that work on all
+Keras layers like `dtype`, `trainable`, and `name`.
 
 
 ```python
-# All BERT `en` models have the same vocabulary, so reuse preprocessor from
-# "bert_tiny_en_uncased"
-preprocessor = keras_hub.models.BertPreprocessor.from_preset(
-    "bert_tiny_en_uncased",
-    sequence_length=256,
+causal_lm = keras_hub.models.CausalLM.from_preset(
+    "gemma2_instruct_2b_en",
+    dtype="bfloat16",
 )
-packer = preprocessor.packer
-tokenizer = preprocessor.tokenizer
+```
 
-# keras.Layer to replace some input tokens with the "[MASK]" token
-masker = keras_hub.layers.MaskedLMMaskGenerator(
-    vocabulary_size=tokenizer.vocabulary_size(),
-    mask_selection_rate=0.25,
-    mask_selection_length=64,
-    mask_token_id=tokenizer.token_to_id("[MASK]"),
-    unselectable_token_ids=[
-        tokenizer.token_to_id(x) for x in ["[CLS]", "[PAD]", "[SEP]"]
-    ],
-)
+The model we just loaded was an instruction-tuned version of Gemma, which means the model
+was further fine-tuned for chat. We can take advantage of these capabilities as long as
+we stick to the particular template for text used when training the model. These special
+tokens vary per model and can be hard to track, the [Kaggle model
+page](https://www.kaggle.com/models/keras/gemma2/) will contain details such as this.
+
+`CausalLM` come with an extra function called `generate()` which can be used generate
+predict tokens in a loop and decode them as a string.
 
 
-def preprocess(inputs, label):
-    inputs = preprocessor(inputs)
-    masked_inputs = masker(inputs["token_ids"])
-    # Split the masking layer outputs into a (features, labels, and weights)
-    # tuple that we can use with keras.Model.fit().
-    features = {
-        "token_ids": masked_inputs["token_ids"],
-        "segment_ids": inputs["segment_ids"],
-        "padding_mask": inputs["padding_mask"],
-        "mask_positions": masked_inputs["mask_positions"],
-    }
-    labels = masked_inputs["mask_ids"]
-    weights = masked_inputs["mask_weights"]
-    return features, labels, weights
+```python
+template = "<start_of_turn>user\n{question}<end_of_turn>\n<start_of_turn>model"
 
-
-pretrain_ds = imdb_train.map(preprocess, num_parallel_calls=tf.data.AUTOTUNE).prefetch(
-    tf.data.AUTOTUNE
-)
-pretrain_val_ds = imdb_test.map(
-    preprocess, num_parallel_calls=tf.data.AUTOTUNE
-).prefetch(tf.data.AUTOTUNE)
-
-# Tokens with ID 103 are "masked"
-print(pretrain_ds.unbatch().take(1).get_single_element())
+question = """Write a python program to generate the first 1000 prime numbers.
+Just show the actual code."""
+print(causal_lm.generate(template.format(question=question), max_length=512))
 ```
 
 <div class="k-default-codeblock">
 ```
-({'token_ids': <tf.Tensor: shape=(256,), dtype=int32, numpy=
-array([  101,   103,  2332,   103,  1006,   103,   103,  2332,  2370,
-        1007,   103,  2029,   103,  2402,  2155,  1010, 24159,  2000,
-        3541,  7081,  1010,  2424,  2041,  2055,  1996,  9004,  4528,
-         103,   103,  2037,  2188,   103,  1996,  2269,  1006,  8512,
-        3054,   103,  4246,  1007,  2059,  4858,  1555,  2055,  1996,
-       23025, 22911,  8940,  2598,  3458,  1996, 25483,  4528,  2008,
-        2038,   103,  1997, 15218,  1011,   103,  1997,   103,  2505,
-        3950,  2045,  3310,  2067,  2025,  3243,  2157,  1012,   103,
-        7987,  1013,  1028,   103,  7987,  1013,  1028,  2917,   103,
-        1000,  5469,  1000,   103,   103,  2041, 22902,  1010, 23979,
-        1010,  1998,  1999, 23606,   103,  1998,  4247,  2008,  2126,
-        2005,  1037,  2096,  1010,  2007,  1996,   103,  5409,   103,
-        2108,  3054,  3211,  4246,  1005,  1055, 22692,  2836,  1012,
-        2009,   103,  1037,  2210,  2488,   103,   103,  2203,  1010,
-        2007,   103,   103,  9599,  1012,   103,  2391,  1997,  2755,
-        1010,  1996,  2878,  3185,  2003,  2428,   103,  1010,   103,
-         103,   103,  1045,  2064,  1005,  1056,  3294, 19776,  2009,
-        1011,  2012,  2560,  2009,  2038,  2242,  2000,   103,  2009,
-       13432,  1012, 11519,  4637,  4616,  2011,  5965,  1043, 11761,
-         103,   103,  2004,   103,  7968,  3243,  4793, 11429,  1010,
-        1998,  8226,  2665, 18331,  1010,  1219,  1996,  4487, 22747,
-        8004, 12165,  4382,  5125,   103,  3597,   103,  2024,  2025,
-        2438,  2000,   103,  2417, 21564,  2143,   103,   103,  7987,
-        1013,  1028,  1026,   103,  1013,  1028,  2332,  2038,   103,
-        5156, 12081,  2004,  1996,   103,  1012,  1026, 14216,   103,
-         103,  1026,  7987,  1013,  1028,   184,  2011,  1037,  8297,
-        2036,   103,  2011,  2984,   103,  1006,  2003,  2009,  2151,
-        4687,  2008,  2016,  1005,  1055,  2018,  2053,  7731,   103,
-         103,  2144,  1029,   102], dtype=int32)>, 'segment_ids': <tf.Tensor: shape=(256,), dtype=int32, numpy=
-array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], dtype=int32)>, 'padding_mask': <tf.Tensor: shape=(256,), dtype=bool, numpy=
-array([ True,  True,  True,  True,  True,  True,  True,  True,  True,
-        True,  True,  True,  True,  True,  True,  True,  True,  True,
-        True,  True,  True,  True,  True,  True,  True,  True,  True,
-        True,  True,  True,  True,  True,  True,  True,  True,  True,
-        True,  True,  True,  True,  True,  True,  True,  True,  True,
-        True,  True,  True,  True,  True,  True,  True,  True,  True,
-        True,  True,  True,  True,  True,  True,  True,  True,  True,
-        True,  True,  True,  True,  True,  True,  True,  True,  True,
-        True,  True,  True,  True,  True,  True,  True,  True,  True,
-        True,  True,  True,  True,  True,  True,  True,  True,  True,
-        True,  True,  True,  True,  True,  True,  True,  True,  True,
-        True,  True,  True,  True,  True,  True,  True,  True,  True,
-        True,  True,  True,  True,  True,  True,  True,  True,  True,
-        True,  True,  True,  True,  True,  True,  True,  True,  True,
-        True,  True,  True,  True,  True,  True,  True,  True,  True,
-        True,  True,  True,  True,  True,  True,  True,  True,  True,
-        True,  True,  True,  True,  True,  True,  True,  True,  True,
-        True,  True,  True,  True,  True,  True,  True,  True,  True,
-        True,  True,  True,  True,  True,  True,  True,  True,  True,
-        True,  True,  True,  True,  True,  True,  True,  True,  True,
-        True,  True,  True,  True,  True,  True,  True,  True,  True,
-        True,  True,  True,  True,  True,  True,  True,  True,  True,
-        True,  True,  True,  True,  True,  True,  True,  True,  True,
-        True,  True,  True,  True,  True,  True,  True,  True,  True,
-        True,  True,  True,  True,  True,  True,  True,  True,  True,
-        True,  True,  True,  True,  True,  True,  True,  True,  True,
-        True,  True,  True,  True,  True,  True,  True,  True,  True,
-        True,  True,  True,  True,  True,  True,  True,  True,  True,
-        True,  True,  True,  True])>, 'mask_positions': <tf.Tensor: shape=(64,), dtype=int64, numpy=
-array([  1,   3,   5,   6,  10,  12,  13,  27,  28,  31,  37,  42,  51,
-        55,  59,  61,  65,  71,  75,  80,  83,  84,  85,  94, 105, 107,
-       108, 118, 122, 123, 127, 128, 131, 141, 143, 144, 145, 149, 160,
-       167, 170, 171, 172, 174, 176, 185, 193, 195, 200, 204, 205, 208,
-       210, 215, 220, 223, 224, 225, 230, 231, 235, 238, 251, 252])>}, <tf.Tensor: shape=(64,), dtype=int32, numpy=
-array([ 4459,  6789, 22892,  2011,  1999,  1037,  2402,  2485,  2000,
-        1012,  3211,  2041,  9004,  4204,  2069,  2607,  3310,  1026,
-        1026,  2779,  1000,  3861,  4627,  1010,  7619,  5783,  2108,
-        4152,  2646,  1996, 15958, 14888,  1999, 14888,  2029,  2003,
-        2339,  1056,  2191,  2011, 11761,  2638,  1010,  1996,  2214,
-        2004, 14674,  2860,  2428,  1012,  1026,  1028,  7987,  2010,
-        2704,  7987,  1013,  1028,  2628,  2011,  2856, 12838,  2143,
-        2147], dtype=int32)>, <tf.Tensor: shape=(64,), dtype=float16, numpy=
-array([1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1.,
-       1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1.,
-       1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1.,
-       1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1.], dtype=float16)>)
+<start_of_turn>user
+Write a python program to generate the first 1000 prime numbers.
+Just show the actual code.<end_of_turn>
+<start_of_turn>model
+def is_prime(n):
+  if n <= 1:
+    return False
+  for i in range(2, int(n**0.5) + 1):
+    if n % i == 0:
+      return False
+  return True
+
+count = 0
+number = 2
+primes = []
+while count < 1000:
+  if is_prime(number):
+    primes.append(number)
+    count += 1
+  number += 1
+print(primes)
+<end_of_turn>
 
 ```
 </div>
-### Pretraining model
+Note that on the Jax and TensorFlow backends, this `generate()` function is compiled, so
+the second time you call for the same `max_length`, it will actually be much faster.
+KerasHub will use Jax an TensorFlow to compute an optimized version of the generation
+computational graph that can be reused.
 
 
 ```python
-# BERT backbone
-backbone = keras_hub.models.BertBackbone(
-    vocabulary_size=tokenizer.vocabulary_size(),
-    num_layers=2,
-    num_heads=2,
-    hidden_dim=128,
-    intermediate_dim=512,
-)
+question = "Share a very simple brownie recipe."
+print(causal_lm.generate(template.format(question=question), max_length=512))
+```
 
-# Language modeling head
-mlm_head = keras_hub.layers.MaskedLMHead(
-    token_embedding=backbone.token_embedding,
-)
+<div class="k-default-codeblock">
+```
+<start_of_turn>user
+Share a very simple brownie recipe.<end_of_turn>
+<start_of_turn>model
 
-inputs = {
-    "token_ids": keras.Input(shape=(None,), dtype=tf.int32, name="token_ids"),
-    "segment_ids": keras.Input(shape=(None,), dtype=tf.int32, name="segment_ids"),
-    "padding_mask": keras.Input(shape=(None,), dtype=tf.int32, name="padding_mask"),
-    "mask_positions": keras.Input(shape=(None,), dtype=tf.int32, name="mask_positions"),
-}
+---
+## Super Simple Brownies
 
-# Encoded token sequence
-sequence = backbone(inputs)["sequence_output"]
+**Ingredients:**
 
-# Predict an output word for each masked input token.
-# We use the input token embedding to project from our encoded vectors to
-# vocabulary logits, which has been shown to improve training efficiency.
-outputs = mlm_head(sequence, mask_positions=inputs["mask_positions"])
+* 1 cup (2 sticks) unsalted butter, melted
+* 2 cups granulated sugar
+* 4 large eggs
+* 1 teaspoon vanilla extract
+* 1 cup all-purpose flour
+* 1/2 cup unsweetened cocoa powder
+* 1/4 teaspoon salt
 
-# Define and compile our pretraining model.
-pretraining_model = keras.Model(inputs, outputs)
-pretraining_model.summary()
-pretraining_model.compile(
-    loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
-    optimizer=keras.optimizers.AdamW(learning_rate=5e-4),
-    weighted_metrics=[keras.metrics.SparseCategoricalAccuracy()],
-    jit_compile=True,
-)
+**Instructions:**
 
-# Pretrain on IMDB dataset
-pretraining_model.fit(
-    pretrain_ds,
-    validation_data=pretrain_val_ds,
-    epochs=3,  # Increase to 6 for higher accuracy
-)
+1. Preheat oven to 350°F (175°C). Grease and flour a 9x13 inch baking pan.
+2. In a large bowl, whisk together the melted butter and sugar until smooth.
+3. Beat in the eggs one at a time, then stir in the vanilla extract.
+4. In a separate bowl, whisk together the flour, cocoa powder, and salt.
+5. Gradually add the dry ingredients to the wet ingredients, mixing until just combined. Do not overmix.
+6. Pour the batter into the prepared pan and spread evenly.
+7. Bake for 25-30 minutes, or until a toothpick inserted into the center comes out with a few moist crumbs attached.
+8. Let cool completely before cutting and serving.
+
+**Tips:**
+
+* For extra fudgy brownies, underbake them slightly.
+* Add chocolate chips, nuts, or other mix-ins to the batter for a personalized touch.
+* Serve with a scoop of ice cream or whipped cream for a decadent treat.
+
+Enjoy! 
+<end_of_turn>
+
+```
+</div>
+As with our image classifier, we can use model summary to see the details of our task
+setup, including preprocessing.
+
+
+```python
+causal_lm.summary()
 ```
 
 
-<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold">Model: "functional_3"</span>
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold">Preprocessor: "gemma_causal_lm_preprocessor"</span>
 </pre>
 
 
 
 
-<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">┏━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━┓
-┃<span style="font-weight: bold"> Layer (type)        </span>┃<span style="font-weight: bold"> Output Shape      </span>┃<span style="font-weight: bold"> Param # </span>┃<span style="font-weight: bold"> Connected to         </span>┃
-┡━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━┩
-│ mask_positions      │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>)      │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ -                    │
-│ (<span style="color: #0087ff; text-decoration-color: #0087ff">InputLayer</span>)        │                   │         │                      │
-├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
-│ padding_mask        │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>)      │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ -                    │
-│ (<span style="color: #0087ff; text-decoration-color: #0087ff">InputLayer</span>)        │                   │         │                      │
-├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
-│ segment_ids         │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>)      │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ -                    │
-│ (<span style="color: #0087ff; text-decoration-color: #0087ff">InputLayer</span>)        │                   │         │                      │
-├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
-│ token_ids           │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>)      │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ -                    │
-│ (<span style="color: #0087ff; text-decoration-color: #0087ff">InputLayer</span>)        │                   │         │                      │
-├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
-│ bert_backbone_4     │ [(<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">128</span>),     │ <span style="color: #00af00; text-decoration-color: #00af00">4,385,…</span> │ mask_positions[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>… │
-│ (<span style="color: #0087ff; text-decoration-color: #0087ff">BertBackbone</span>)      │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>,      │         │ padding_mask[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>],  │
-│                     │ <span style="color: #00af00; text-decoration-color: #00af00">128</span>)]             │         │ segment_ids[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>],   │
-│                     │                   │         │ token_ids[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>]      │
-├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
-│ masked_lm_head      │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>,      │ <span style="color: #00af00; text-decoration-color: #00af00">3,954,…</span> │ bert_backbone_4[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">…</span> │
-│ (<span style="color: #0087ff; text-decoration-color: #0087ff">MaskedLMHead</span>)      │ <span style="color: #00af00; text-decoration-color: #00af00">30522</span>)            │         │ mask_positions[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>] │
-└─────────────────────┴───────────────────┴─────────┴──────────────────────┘
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃<span style="font-weight: bold"> Layer (type)                                 </span>┃<span style="font-weight: bold">                        Config </span>┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│ gemma_tokenizer (<span style="color: #0087ff; text-decoration-color: #0087ff">GemmaTokenizer</span>)             │           Vocab size: <span style="color: #00af00; text-decoration-color: #00af00">256,000</span> │
+└──────────────────────────────────────────────┴───────────────────────────────┘
 </pre>
 
 
 
 
-<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Total params: </span><span style="color: #00af00; text-decoration-color: #00af00">4,433,210</span> (16.91 MB)
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold">Model: "gemma_causal_lm"</span>
 </pre>
 
 
 
 
-<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Trainable params: </span><span style="color: #00af00; text-decoration-color: #00af00">4,433,210</span> (16.91 MB)
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">┏━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━┓
+┃<span style="font-weight: bold"> Layer (type)          </span>┃<span style="font-weight: bold"> Output Shape      </span>┃<span style="font-weight: bold">     Param # </span>┃<span style="font-weight: bold"> Connected to       </span>┃
+┡━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━┩
+│ padding_mask          │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>)      │           <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ -                  │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">InputLayer</span>)          │                   │             │                    │
+├───────────────────────┼───────────────────┼─────────────┼────────────────────┤
+│ token_ids             │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>)      │           <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ -                  │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">InputLayer</span>)          │                   │             │                    │
+├───────────────────────┼───────────────────┼─────────────┼────────────────────┤
+│ gemma_backbone        │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>,      │ <span style="color: #00af00; text-decoration-color: #00af00">2,614,341,…</span> │ padding_mask[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">GemmaBackbone</span>)       │ <span style="color: #00af00; text-decoration-color: #00af00">2304</span>)             │             │ token_ids[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>]    │
+├───────────────────────┼───────────────────┼─────────────┼────────────────────┤
+│ token_embedding       │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>,      │ <span style="color: #00af00; text-decoration-color: #00af00">589,824,000</span> │ gemma_backbone[<span style="color: #00af00; text-decoration-color: #00af00">0</span>]… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">ReversibleEmbedding</span>) │ <span style="color: #00af00; text-decoration-color: #00af00">256000</span>)           │             │                    │
+└───────────────────────┴───────────────────┴─────────────┴────────────────────┘
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Total params: </span><span style="color: #00af00; text-decoration-color: #00af00">2,614,341,888</span> (4.87 GB)
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Trainable params: </span><span style="color: #00af00; text-decoration-color: #00af00">2,614,341,888</span> (4.87 GB)
 </pre>
 
 
@@ -817,209 +523,625 @@ pretraining_model.fit(
 
 
 
-<div class="k-default-codeblock">
-```
-Epoch 1/3
- 1563/1563 ━━━━━━━━━━━━━━━━━━━━ 22s 12ms/step - loss: 5.7032 - sparse_categorical_accuracy: 0.0566 - val_loss: 5.0685 - val_sparse_categorical_accuracy: 0.1044
-Epoch 2/3
- 1563/1563 ━━━━━━━━━━━━━━━━━━━━ 13s 8ms/step - loss: 5.0701 - sparse_categorical_accuracy: 0.1096 - val_loss: 4.9363 - val_sparse_categorical_accuracy: 0.1239
-Epoch 3/3
- 1563/1563 ━━━━━━━━━━━━━━━━━━━━ 13s 8ms/step - loss: 4.9607 - sparse_categorical_accuracy: 0.1240 - val_loss: 4.7913 - val_sparse_categorical_accuracy: 0.1417
-
-<keras.src.callbacks.history.History at 0x7f2738299330>
-
-```
-</div>
-After pretraining save your `backbone` submodel to use in a new task!
-
----
-## Build and train your own transformer from scratch
-<img src="https://storage.googleapis.com/keras-hub/getting_started_guide/prof_keras_expert.png" alt="drawing" height="250"/>
-
-Want to implement a novel transformer architecture? The KerasHub library offers all the
-low-level modules used to build SoTA architectures in our `models` API. This includes the
-`keras_hub.tokenizers` API which allows you to train your own subword tokenizer using
-`WordPieceTokenizer`, `BytePairTokenizer`, or `SentencePieceTokenizer`.
-
-In this workflow, we train a custom tokenizer on the IMDB data and design a backbone with
-custom transformer architecture. For simplicity, we then train directly on the
-classification task. Interested in more details? We wrote an entire guide to pretraining
-and finetuning a custom transformer on
-[keras.io](https://keras.io/guides/keras_hub/transformer_pretraining/),
-
-### Train custom vocabulary from IMDB data
+Our text preprocessing includes a tokenizer, which is how all KerasHub models handle
+input text. Let's try using it directly to get a better sense of how it works. All
+tokenizers include `tokenize()` and `detokenize()` methods, to map strings to integer
+sequences and integer sequences to strings. Directly calling the layer with
+`tokenizer(inputs)` is equivalent to calling `tokenizer.tokenize(inputs)`.
 
 
 ```python
-vocab = keras_hub.tokenizers.compute_word_piece_vocabulary(
-    imdb_train.map(lambda x, y: x),
-    vocabulary_size=20_000,
-    lowercase=True,
-    strip_accents=True,
-    reserved_tokens=["[PAD]", "[START]", "[END]", "[MASK]", "[UNK]"],
+tokenizer = causal_lm.preprocessor.tokenizer
+tokens_ids = tokenizer.tokenize("The quick brown fox jumps over the lazy dog.")
+print(tokens_ids)
+string = tokenizer.detokenize(tokens_ids)
+print(string)
+```
+
+<div class="k-default-codeblock">
+```
+[   651   4320   8426  25341  36271   1163    573  27894   5929 235265]
+The quick brown fox jumps over the lazy dog.
+
+```
+</div>
+The `generate()` function for `CausalLM` models involved a sampling step. The Gemma model
+will be called once for each token we want to generate, and return a probability
+distribution over all tokens. This distribution is then sampled to choose the next token
+in the sequence.
+
+For Gemma models, we default to greedy sampling, meaning we simply pick the most likely
+output from the model at each step. But we can actually control this process with an
+extra `sampler` argument to the standard `compile` function on all Keras models. Let's
+try it out.
+
+
+```python
+causal_lm.compile(
+    sampler=keras_hub.samplers.TopKSampler(k=10, temperature=2.0),
 )
-tokenizer = keras_hub.tokenizers.WordPieceTokenizer(
-    vocabulary=vocab,
-    lowercase=True,
-    strip_accents=True,
-    oov_token="[UNK]",
+
+question = "Share a very simple brownie recipe."
+print(causal_lm.generate(template.format(question=question), max_length=512))
+```
+
+<div class="k-default-codeblock">
+```
+<start_of_turn>user
+Share a very simple brownie recipe.<end_of_turn>
+<start_of_turn>model  ##  Ultimate Simple Brownies
+
+This recipe requires NO oven or special equipment! Just microwave, mixing, and a few moments!
+
+**Yields:** 6 large brownies
+**Prep time:** 7 minutes 
+**Cook time:** 6-9 minutes, depending on your microwave
+
+**What you need:**
+* 3 ounces (about 2-3 tablespoons) chocolate chips 
+* 1/4 cup butter 
+* 1 large egg 
+* 1/2 cup granulated sugar 
+* 9 tablespoons all-purpose flour
+
+**Optional Add-Ins (for extra fun):**
+* 1/2 teaspoon vanilla
+* 1/4 cup chopped walnuts or pecans
+
+**Instructions:**  
+
+1. Place all microwave-safe mixing bowl ingredients:
+    - Chocolate Chips 🍫
+    - Butter  🧈
+    - Flour  🗲
+    - Egg (beaten!)
+    (You can add the optional add-INS like chopped nuts/extra vanilla, now is the good place to!)
+
+
+ 2. Put all that in your microwave (microwave-safe dish or a heat-safe mug is fine!) 
+
+3. **Cook on:** Medium-high, stirring halfway.
+    * Time depends on your microwave, so keep checking, but aim for 6-9 minutes (if no stirring at least 8 mins). You want a thick, almost chewy-texture.
+  
+
+
+ **To serve:** Cut up your brownies immediately and savor this classic treat. You'd also need a tall glass of cold milk or coffee (or both, if you've really enjoyed it).  
+
+ Let me know if you want to experiment with a different chocolate or add-ins to make it even sweeter. Enjoy! 😉 
+ 
+<end_of_turn>
+
+```
+</div>
+Here we used a Top-K sampler, meaning we will randomly sample the partial distribution formed
+by looking at just the top 10 predicted tokens at each time step. We also pass a `temperature` of 2,
+which flattens our predicted distribution before we sample.
+
+The net effect is that we will explore our model's distribution much more broadly each
+time we generate output. Generation will now be a random process, each time we re-run
+generate we will get a different result. We can note that the results feel "looser" than
+greedy search — more minor mistakes, a less consistent one, and the dubious recommendation to
+microwave brownies.
+
+You can look at all the samplers Keras supports at [keras_hub.samplers](https://keras.io/api/keras_hub/samplers/).
+
+Let's free up the memory from our large Gemma model before we jump to the next section.
+
+
+```python
+del causal_lm
+```
+
+---
+## Fine-tune and publish an image classifier
+
+![](https://storage.googleapis.com/keras-nlp/getting_started_guide/prof_keras_advanced.png)
+
+Now that we've tried running inference for both images and text, let's try running
+training. We will take our ResNet image classifier from earlier and fine-tune it on
+simple cats vs dogs dataset. We can start by downloading and extracting the data.
+
+
+```python
+import pathlib
+
+extract_dir = keras.utils.get_file(
+    "cats_vs_dogs",
+    "https://download.microsoft.com/download/3/E/1/3E1C3F21-ECDB-4869-8368-6DEBA77B919F/kagglecatsanddogs_5340.zip",
+    extract=True,
+)
+data_dir = pathlib.Path(extract_dir) / "PetImages"
+```
+
+When working with lots of real-world image data, corrupted images are a common occurrence.
+Let's filter out badly-encoded images that do not feature the string "JFIF" in their
+header.
+
+
+```python
+num_skipped = 0
+
+for path in data_dir.rglob("*.jpg"):
+    with open(path, "rb") as file:
+        is_jfif = b"JFIF" in file.peek(10)
+    if not is_jfif:
+        num_skipped += 1
+        os.remove(path)
+
+print(f"Deleted {num_skipped} images.")
+```
+
+<div class="k-default-codeblock">
+```
+Deleted 1590 images.
+
+```
+</div>
+We can load the dataset with `keras.utils.image_dataset_from_directory`. One important
+thing to note here is that the `train_ds` and `val_ds` will both be returned as
+`tf.data.Dataset` objects, including on the `torch` and `jax` backends.
+
+KerasHub will use [tf.data](https://www.tensorflow.org/guide/data) as the default API for
+running multi-threaded preprocessing on the CPU. `tf.data` is a powerful API for training
+input pipelines that can scale up to complex, multi-host training jobs easily. Using it
+does not restrict your choice of backend, a `tf.data.Dataset` can be as an iterator of
+regular numpy data and passed to `fit()` on any Keras backend.
+
+
+```python
+train_ds, val_ds = keras.utils.image_dataset_from_directory(
+    data_dir,
+    validation_split=0.2,
+    subset="both",
+    seed=1337,
+    image_size=(256, 256),
+    batch_size=32,
 )
 ```
 
-### Preprocess data with a custom tokenizer
+<div class="k-default-codeblock">
+```
+Found 23410 files belonging to 2 classes.
+
+Using 18728 files for training.
+
+Using 4682 files for validation.
+
+```
+</div>
+At its simplest, training our classifier could consist of simply calling `fit()` on our
+model with our dataset. But to make this example a little more interesting, let's show
+how to customize preprocessing within a task.
+
+In the first example, we saw how, by default, the preprocessing for our ResNet model resized
+and rescaled our input. This preprocessing can be customized when we create our model. We
+can use Keras' image preprocessing layers to create a `keras.layers.Pipeline` that will
+rescale, randomly flip, and randomly rotate our input images. These random image
+augmentations will allow our smaller dataset to function as a larger, more varied one.
+Let's try it out.
+
+
+```python
+preprocessor = keras.layers.Pipeline(
+    [
+        keras.layers.Rescaling(1.0 / 255),
+        keras.layers.RandomFlip("horizontal"),
+        keras.layers.RandomRotation(0.2),
+    ]
+)
+```
+
+Now that we have created a new layer for preprocessing, we can simply pass it to the
+`ImageClassifier` during the `from_preset()` constructor. We can also pass
+`num_classes=2` to match our two labels for "cat" and "dog." When `num_classes` is
+specified like this, our head weights for the model will be randomly initialized
+instead of containing the weights for our 1000 class image classification.
+
+
+```python
+image_classifier = keras_hub.models.ImageClassifier.from_preset(
+    "resnet_50_imagenet",
+    activation="softmax",
+    num_classes=2,
+    preprocessor=preprocessor,
+)
+```
+
+Note that if you want to preprocess your input data outside of Keras, you can simply
+pass `preprocessor=None` to the task `from_preset()` call. In this case, KerasHub will
+apply no preprocessing at all, and you are free to preprocess your data with any library
+or workflow before passing your data to `fit()`.
+
+Next, we can compile our model for fine-tuning. A KerasHub task is just a regular
+`keras.Model` with some extra functionality, so we can `compile()` as normal for a
+classification task.
+
+
+```python
+image_classifier.compile(
+    optimizer=keras.optimizers.Adam(1e-4),
+    loss="sparse_categorical_crossentropy",
+    metrics=["accuracy"],
+)
+```
+
+With that, we can simply run `fit()`. The image classifier will automatically apply our
+preprocessing to each batch when training the model.
+
+
+```python
+image_classifier.fit(
+    train_ds,
+    validation_data=val_ds,
+    epochs=3,
+)
+```
+
+<div class="k-default-codeblock">
+```
+Epoch 1/3
+ 586/586 ━━━━━━━━━━━━━━━━━━━━ 0s 122ms/step - accuracy: 0.8869 - loss: 0.2921
+Epoch 2/3
+ 586/586 ━━━━━━━━━━━━━━━━━━━━ 65s 105ms/step - accuracy: 0.9858 - loss: 0.0393 - val_accuracy: 0.9912 - val_loss: 0.0234
+Epoch 3/3
+ 586/586 ━━━━━━━━━━━━━━━━━━━━ 57s 96ms/step - accuracy: 0.9897 - loss: 0.0289 - val_accuracy: 0.9930 - val_loss: 0.0206
+
+<keras.src.callbacks.history.History at 0x787e77fb2550>
+```
+</div>
+After three epochs of data, we achieve 99% accuracy on our cats vs dogs
+validation dataset. This is unsurprising, given that the ImageNet pretrained weights we began
+with could already classify some breeds of cats and dogs individually.
+
+Now that we have a fine-tuned model let's try saving it. You can create a new saved preset with a
+fine-tuned model for any task simply by running `task.save_to_preset()`.
+
+
+```python
+image_classifier.save_to_preset("cats_vs_dogs")
+```
+
+One of the most powerful features of KerasHub is the ability upload models to Kaggle or
+Huggingface models hub and share them with others. `keras_hub.upload_preset` allows you
+to upload a saved preset.
+
+In this case, we will upload to Kaggle. We have already authenticated with Kaggle to,
+download the Gemma model earlier. Running the following cell well upload a new model
+to Kaggle.
+
+
+```python
+from google.colab import userdata
+
+username = userdata.get("KAGGLE_USERNAME")
+keras_hub.upload_preset(
+    f"kaggle://{username}/resnet/keras/cats_vs_dogs",
+    "cats_vs_dogs",
+)
+```
+
+<div class="k-default-codeblock">
+```
+Uploading Model https://www.kaggle.com/models/matthewdwatson/resnet/keras/cats_vs_dogs ...
+Upload successful: cats_vs_dogs/task.json (5KB)
+Upload successful: cats_vs_dogs/task.weights.h5 (270MB)
+Upload successful: cats_vs_dogs/metadata.json (157B)
+Upload successful: cats_vs_dogs/model.weights.h5 (90MB)
+Upload successful: cats_vs_dogs/config.json (841B)
+Upload successful: cats_vs_dogs/preprocessor.json (3KB)
+
+Your model instance version has been created.
+Files are being processed...
+See at: https://www.kaggle.com/models/matthewdwatson/resnet/keras/cats_vs_dogs
+
+```
+</div>
+Let's take a look at a test image from our dataset.
+
+
+```python
+image = keras.utils.load_img(data_dir / "Cat" / "6779.jpg")
+plt.imshow(image)
+```
+
+![png](/img/guides/getting_started/getting_started_55_1.png)
+    
+
+
+If we wait for a few minutes for our model upload to finish processing on the Kaggle
+side, we can go ahead and download the model we just created and use it to classify this
+test image.
+
+
+```python
+image_classifier = keras_hub.models.ImageClassifier.from_preset(
+    f"kaggle://{username}/resnet/keras/cats_vs_dogs",
+)
+print(image_classifier.predict(np.array([image])))
+```
+
+<div class="k-default-codeblock">
+```
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 2s 2s/step
+
+[[9.999286e-01 7.135461e-05]]
+
+```
+</div>
+Congratulations on uploading your first model with KerasHub! If you want to share your
+work with others, you can go to the model link printed out when we uploaded the model, and
+turn the model public in settings.
+
+Let's delete this model to free up memory before we move on to our final example for this
+guide.
+
+
+```python
+del image_classifier
+```
+
+---
+## Building a custom text classifier
+
+![](https://storage.googleapis.com/keras-nlp/getting_started_guide/prof_keras_expert.png)
+
+As a final example for this getting started guide, let's take a look at how we can build
+custom models from lower-level Keras and KerasHub components. We will build a text
+classifier to classify movie reviews in the IMDb dataset as either positive or negative.
+
+Let's download the dataset.
+
+
+```python
+extract_dir = keras.utils.get_file(
+    "imdb_reviews",
+    origin="https://ai.stanford.edu/~amaas/data/sentiment/aclImdb_v1.tar.gz",
+    extract=True,
+)
+data_dir = pathlib.Path(extract_dir) / "aclImdb"
+```
+
+The IMDb dataset contrains a large amount of unlabeled movie reviews. We don't need those
+here, we can simply delete them.
+
+
+```python
+import shutil
+
+shutil.rmtree(data_dir / "train" / "unsup")
+```
+
+Next up, we can load our data with `keras.utils.text_dataset_from_directory`. As with our
+image dataset creation above, the returned datasets will be `tf.data.Dataset` objects.
+
+
+```python
+raw_train_ds = keras.utils.text_dataset_from_directory(
+    data_dir / "train",
+    batch_size=2,
+)
+raw_val_ds = keras.utils.text_dataset_from_directory(
+    data_dir / "test",
+    batch_size=2,
+)
+```
+
+<div class="k-default-codeblock">
+```
+Found 25000 files belonging to 2 classes.
+
+Found 25000 files belonging to 2 classes.
+
+```
+</div>
+KerasHub is designed to be a layered API. At the top-most level, tasks aim to make it
+easy to quickly tackle a problem. We could keep using the task API here, and create a
+`keras_hub.models.TextClassifer` for a text classification model like BERT, and fine-tune
+it in 10 or so lines of code.
+
+Instead, to make our final example a little more interesting, let's show how we can use
+lower-level API components to do something that isn't directly baked in to the library.
+We will take the Gemma 2 model we used earlier, which is usually used for generating text,
+and modify it to output classification predictions.
+
+A common approach for classifying with a generative model would keep using it in a generative
+context, by prompting it with the review and a question (`"Is this review positive or negative?"`).
+But making an actual classifier is more useful if you want an actual probability score associated
+with your labels.
+
+Instead of loading the Gemma 2 model through the `CausalLM` task, we can load two
+lower-level components: a **backbone** and a **tokenizer**. Much like the task classes we have
+used so far, `keras_hub.models.Backbone` and `keras_hub.tokenizers.Tokenizer` both have a
+`from_preset()` constructor for loading pretrained models. If you are running this code,
+you will note you don't have to wait for a download as we use the model a second time,
+the weights files are cached locally the first time we use the model.
+
+
+```python
+tokenizer = keras_hub.tokenizers.Tokenizer.from_preset(
+    "gemma2_instruct_2b_en",
+)
+backbone = keras_hub.models.Backbone.from_preset(
+    "gemma2_instruct_2b_en",
+)
+```
+
+We saw what the tokenizer does in the second example of this guide. We can use it to map
+from string inputs to token ids in a way that matches the pretrained weights of the Gemma
+model.
+
+The backbone will map from a sequence of token ids to a sequence of embedded tokens in
+the latent space of the model. We can use this rich representation to build a classifier.
+
+Let's start by defining a custom preprocessing routine. `keras_hub.layers` contains a
+collection of modeling and preprocessing layers, included some layers for token
+preprocessing. We can use `keras_hub.layers.StartEndPacker`, which will append a special
+start token to the beginning of each review, a special end token to the end, and finally
+truncate or pad each review to a fixed length.
+
+If we combine this with our `tokenizer`, we can build a preprocessing function that will
+output batches of token ids with shape `(batch_size, sequence_length)`. We should also
+output a padding mask that marks which tokens are padding tokens, so we can later exclude
+these positions from our Transformer's attention computation. Most Transformer backbones
+in KerasNLP take in a `"padding_mask"` input.
 
 
 ```python
 packer = keras_hub.layers.StartEndPacker(
-    start_value=tokenizer.token_to_id("[START]"),
-    end_value=tokenizer.token_to_id("[END]"),
-    pad_value=tokenizer.token_to_id("[PAD]"),
-    sequence_length=512,
+    start_value=tokenizer.start_token_id,
+    end_value=tokenizer.end_token_id,
+    pad_value=tokenizer.pad_token_id,
+    sequence_length=None,
 )
 
 
-def preprocess(x, y):
-    token_ids = packer(tokenizer(x))
-    return token_ids, y
-
-
-imdb_preproc_train_ds = imdb_train.map(
-    preprocess, num_parallel_calls=tf.data.AUTOTUNE
-).prefetch(tf.data.AUTOTUNE)
-imdb_preproc_val_ds = imdb_test.map(
-    preprocess, num_parallel_calls=tf.data.AUTOTUNE
-).prefetch(tf.data.AUTOTUNE)
-
-print(imdb_preproc_train_ds.unbatch().take(1).get_single_element())
-```
-
-<div class="k-default-codeblock">
-```
-(<tf.Tensor: shape=(512,), dtype=int32, numpy=
-array([    1,   102,    11,    61,    43,   771,    16,   340,   916,
-        1259,   155,    16,   135,   207,    18,   501, 10568,   344,
-          16,    51,   206,   612,   211,   232,    43,  1094,    17,
-         215,   155,   103,   238,   202,    18,   111,    16,    51,
-         143,  1583,   131,   100,    18,    32,   101,    19,    34,
-          32,   101,    19,    34,   102,    11,    61,    43,   155,
-         105,  5337,    99,   120,     6,  1289,     6,   129,    96,
-         526,    18,   111,    16,   193,    51,   197,   102,    16,
-          51,   252,    11,    62,   167,   104,   642,    98,     6,
-        8572,     6,   154,    51,   153,  1464,   119,  3005,   990,
-        2393,    18,   102,    11,    61,   233,   404,   103,   104,
-         110,    18,    18,    18,   233,  1259,    18,    18,    18,
-         154,    51,   659, 16273,   867,   192,  1632,   133,   990,
-        2393,    18,    32,   101,    19,    34,    32,   101,    19,
-          34,    96,   110,  2886,   761,   114,  4905,   293, 12337,
-          97,  2375,    18,   113,   143,   158,   179,   104,  4905,
-         610,    16, 12585,    97,   516,   725,    18,   113,   323,
-          96,   651,   146,   104,   207, 17649,    16,    96,   176,
-       16022,   136,    16,  1414,   136,    18,   113,   323,    96,
-        2184,    18,    97,   150,   651,    51,   242,   104,   100,
-       11722,    18,   113,   151,   543,   102,   171,   115,  1081,
-         103,    96,   222,    18,    18,    18,    18,   102,   659,
-        1081,    18,    18,    18,   102,    11,    61,   115,   299,
-          18,   113,   323,    96,  1579,    98,   203,  4438,  2033,
-         103,    96,   222,    18,    18,    18,    32,   101,    19,
-          34,    32,   101,    19,    34,   111,    16,    51,   455,
-         174,    99,   859,    43,  1687,  3330,    99,   104,  1021,
-          18,    18,    18,    51,   181,    11,    62,   214,   138,
-          96,   155,   100,   115,   916,    14,  1286,    14,    99,
-         296,    96,   642,   105,   224,  4598,   117,  1289,   156,
-         103,   904,    16,   111,   115,   103,  1628,    18,   113,
-         181,    11,    62,   119,    96,  1054,   155,    16,   111,
-         156, 14665,    18,   146,   110,   139,   742,    16,    96,
-        4905,   293, 12337,    97,  7042,  1104,   106,   557,   103,
-         366,    18,   128,    16,   150,  2446,   135,    96,   960,
-          98,    96,  4905,    18,   113,   323,   156,    43,  1174,
-         293,   188,    18,    18,    18,    43,   639,   293,    96,
-         455,   108,   207,    97,  1893,    99,  1081,   104,  4905,
-          18,    51,   194,   104,   440,    98, 12337,    99,  7042,
-        1104,   654,   122,    30,     6,    51,   276,    99,   663,
-          18,    18,    18,    97,   138,   113,   207,   163,    16,
-         113,   171,   172,   107,    51,  1027,   113,     6,    18,
-          32,   101,    19,    34,    32,   101,    19,    34,   104,
-         110,   171,   333, 10311,   141,  1311,   135,   140,   100,
-         207,    97,   140,   100,    99,   120,  1632,    18,    18,
-          18,    97,   210,    11,    61,    96,  6236,   293,   188,
-          18,    51,   181,    11,    62,   214,   138,    96,   421,
-          98,   104,   110,   100,     6,   207, 14129,   122,    18,
-          18,    18,   151,  1128,    97,  1632,  1675,     6,   133,
-           6,   207,   100,   404,    18,    18,    18,   150,   646,
-         179,   133,   210,     6,    18,   111,   103,   152,   744,
-          16,   104,   110,   100,   557,    43,  1120,   108,    96,
-         701,   382,   105,   102,   260,   113,   194,    18,    18,
-          18,     2,     0,     0,     0,     0,     0,     0,     0,
-           0,     0,     0,     0,     0,     0,     0,     0,     0,
-           0,     0,     0,     0,     0,     0,     0,     0,     0,
-           0,     0,     0,     0,     0,     0,     0,     0],
-      dtype=int32)>, <tf.Tensor: shape=(), dtype=int32, numpy=1>)
+def preprocess(x, y=None, sequence_length=256):
+    x = tokenizer(x)
+    x = packer(x, sequence_length=sequence_length)
+    x = {
+        "token_ids": x,
+        "padding_mask": x != tokenizer.pad_token_id,
+    }
+    return keras.utils.pack_x_y_sample_weight(x, y)
 
 ```
-</div>
-### Design a tiny transformer
+
+With our preprocessing defined, we can simply use `tf.data.Dataset.map` to apply our
+preprocessing to our input data.
 
 
 ```python
-token_id_input = keras.Input(
-    shape=(None,),
-    dtype="int32",
-    name="token_ids",
-)
-outputs = keras_hub.layers.TokenAndPositionEmbedding(
-    vocabulary_size=len(vocab),
-    sequence_length=packer.sequence_length,
-    embedding_dim=64,
-)(token_id_input)
-outputs = keras_hub.layers.TransformerEncoder(
-    num_heads=2,
-    intermediate_dim=128,
-    dropout=0.1,
-)(outputs)
-# Use "[START]" token to classify
-outputs = keras.layers.Dense(2)(outputs[:, 0, :])
-model = keras.Model(
-    inputs=token_id_input,
-    outputs=outputs,
-)
-
-model.summary()
+train_ds = raw_train_ds.map(preprocess, num_parallel_calls=16)
+val_ds = raw_val_ds.map(preprocess, num_parallel_calls=16)
+next(iter(train_ds))
 ```
 
 
-<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold">Model: "functional_5"</span>
+
+
+<div class="k-default-codeblock">
+```
+({'token_ids': <tf.Tensor: shape=(2, 256), dtype=int32, numpy=
+  array([[     2,  94300,   1185,    ...      0]],
+        dtype=int32)>,
+  'padding_mask': <tf.Tensor: shape=(2, 256), dtype=bool, numpy=
+  array([[ True,  True,  True,  ...    False]])>},
+ <tf.Tensor: shape=(2,), dtype=int32, numpy=array([1, 0], dtype=int32)>)
+
+```
+</div>
+Running fine-tuning on a 2.5 billion parameter model is quite expensive compared to the
+image classifier we trained earlier, for the simple reason that this model is 100x the
+size of ResNet! To speed things up a bit, let's reduce the size of our training data to a
+tenth of the original size. Of course, this is leaving some performance on the table
+compared to full training, but it will keep things running quickly for our guide.
+
+
+```python
+train_ds = train_ds.take(1000)
+val_ds = val_ds.take(1000)
+```
+
+Next, we need to attach a classification head to our backbone model. In general, text
+transformer backbones will output a tensor with shape
+`(batch_size, sequence_length, hidden_dim)`. The main thing we will need to
+classify with this input is to pool on the sequence dimension so we have a single
+feature vector per input example.
+
+Since the Gemma model is a generative model, information only passed from left to right
+in the sequence. The only token representation that can "see" the entire movie review
+input is the final token in each review. We can write a simple pooling layer to do this —
+we will simply grab the last non-padding position of each input sequence. There's no special
+process to writing a layer like this, we can use Keras and `keras.ops` normally.
+
+
+```python
+from keras import ops
+
+
+class LastTokenPooler(keras.layers.Layer):
+    def call(self, inputs, padding_mask):
+        end_positions = ops.sum(padding_mask, axis=1, keepdims=True) - 1
+        end_positions = ops.cast(end_positions, "int")[:, :, None]
+        outputs = ops.take_along_axis(inputs, end_positions, axis=1)
+        return ops.squeeze(outputs, axis=1)
+
+```
+
+With this pooling layer, we are ready to write our Gemma classifier. All task and backbone
+models in KerasHub are [functional](https://keras.io/guides/functional_api/) models, so
+we can easily manipulate the model structure. We will call our backbone on our inputs, add
+our new pooling layer, and finally add a small feedforward network with a `"relu"` activation
+in the middle. Let's try it out.
+
+
+```python
+inputs = backbone.input
+x = backbone(inputs)
+x = LastTokenPooler(
+    name="pooler",
+)(x, inputs["padding_mask"])
+x = keras.layers.Dense(
+    2048,
+    activation="relu",
+    name="pooled_dense",
+)(x)
+x = keras.layers.Dropout(
+    0.1,
+    name="output_dropout",
+)(x)
+outputs = keras.layers.Dense(
+    2,
+    activation="softmax",
+    name="output_dense",
+)(x)
+text_classifier = keras.Model(inputs, outputs)
+text_classifier.summary()
+```
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold">Model: "functional"</span>
 </pre>
 
 
 
 
-<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━┓
-┃<span style="font-weight: bold"> Layer (type)                    </span>┃<span style="font-weight: bold"> Output Shape              </span>┃<span style="font-weight: bold">    Param # </span>┃
-┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━┩
-│ token_ids (<span style="color: #0087ff; text-decoration-color: #0087ff">InputLayer</span>)          │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>)              │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │
-├─────────────────────────────────┼───────────────────────────┼────────────┤
-│ token_and_position_embedding    │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">64</span>)          │  <span style="color: #00af00; text-decoration-color: #00af00">1,259,648</span> │
-│ (<span style="color: #0087ff; text-decoration-color: #0087ff">TokenAndPositionEmbedding</span>)     │                           │            │
-├─────────────────────────────────┼───────────────────────────┼────────────┤
-│ transformer_encoder_2           │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">64</span>)          │     <span style="color: #00af00; text-decoration-color: #00af00">33,472</span> │
-│ (<span style="color: #0087ff; text-decoration-color: #0087ff">TransformerEncoder</span>)            │                           │            │
-├─────────────────────────────────┼───────────────────────────┼────────────┤
-│ get_item_6 (<span style="color: #0087ff; text-decoration-color: #0087ff">GetItem</span>)            │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">64</span>)                │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │
-├─────────────────────────────────┼───────────────────────────┼────────────┤
-│ dense_1 (<span style="color: #0087ff; text-decoration-color: #0087ff">Dense</span>)                 │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">2</span>)                 │        <span style="color: #00af00; text-decoration-color: #00af00">130</span> │
-└─────────────────────────────────┴───────────────────────────┴────────────┘
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">┏━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━┓
+┃<span style="font-weight: bold"> Layer (type)        </span>┃<span style="font-weight: bold"> Output Shape      </span>┃<span style="font-weight: bold">    Param # </span>┃<span style="font-weight: bold"> Connected to      </span>┃
+┡━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━┩
+│ padding_mask        │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>)      │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ -                 │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">InputLayer</span>)        │                   │            │                   │
+├─────────────────────┼───────────────────┼────────────┼───────────────────┤
+│ token_ids           │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>)      │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ -                 │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">InputLayer</span>)        │                   │            │                   │
+├─────────────────────┼───────────────────┼────────────┼───────────────────┤
+│ gemma_backbone      │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>,      │ <span style="color: #00af00; text-decoration-color: #00af00">2,614,341…</span> │ padding_mask[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">…</span> │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">GemmaBackbone</span>)     │ <span style="color: #00af00; text-decoration-color: #00af00">2304</span>)             │            │ token_ids[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>]   │
+├─────────────────────┼───────────────────┼────────────┼───────────────────┤
+│ pooler              │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">2304</span>)      │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ gemma_backbone[<span style="color: #00af00; text-decoration-color: #00af00">0</span>… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">LastTokenPooler</span>)   │                   │            │ padding_mask[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">…</span> │
+├─────────────────────┼───────────────────┼────────────┼───────────────────┤
+│ pooled_dense        │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">2048</span>)      │  <span style="color: #00af00; text-decoration-color: #00af00">4,720,640</span> │ pooler[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>]      │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Dense</span>)             │                   │            │                   │
+├─────────────────────┼───────────────────┼────────────┼───────────────────┤
+│ output_dropout      │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">2048</span>)      │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ pooled_dense[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">…</span> │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Dropout</span>)           │                   │            │                   │
+├─────────────────────┼───────────────────┼────────────┼───────────────────┤
+│ output_dense        │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">2</span>)         │      <span style="color: #00af00; text-decoration-color: #00af00">4,098</span> │ output_dropout[<span style="color: #00af00; text-decoration-color: #00af00">0</span>… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Dense</span>)             │                   │            │                   │
+└─────────────────────┴───────────────────┴────────────┴───────────────────┘
 </pre>
 
 
 
 
-<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Total params: </span><span style="color: #00af00; text-decoration-color: #00af00">1,293,250</span> (4.93 MB)
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Total params: </span><span style="color: #00af00; text-decoration-color: #00af00">2,619,066,626</span> (9.76 GB)
 </pre>
 
 
 
 
-<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Trainable params: </span><span style="color: #00af00; text-decoration-color: #00af00">1,293,250</span> (4.93 MB)
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Trainable params: </span><span style="color: #00af00; text-decoration-color: #00af00">2,619,066,626</span> (9.76 GB)
 </pre>
 
 
@@ -1030,36 +1152,129 @@ model.summary()
 
 
 
-### Train the transformer directly on the classification objective
+Before we train, there is one last trick we should employ to make this code run on free
+tier colab GPUs. We can see from our model summary our model takes up almost 10 gigabytes
+of space. An optimizer will need to make multiple copies of each parameter during
+training, taking the total space of our model during training close to 30 or 40
+gigabytes.
+
+This would OOM many GPUs. A useful trick we can employ is to enable LoRA on our
+backbone. LoRA is an approach which freezes the entire model, and only trains a low-parameter
+decomposition of large weight matrices. You can read more about LoRA in this [Keras
+example](https://keras.io/examples/nlp/parameter_efficient_finetuning_of_gpt2_with_lora/).
+Let's try enabling it and re-printing our summary.
 
 
 ```python
-model.compile(
-    loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
-    optimizer=keras.optimizers.AdamW(5e-5),
-    metrics=[keras.metrics.SparseCategoricalAccuracy()],
-    jit_compile=True,
+backbone.enable_lora(4)
+text_classifier.summary()
+```
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold">Model: "functional"</span>
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">┏━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━┓
+┃<span style="font-weight: bold"> Layer (type)        </span>┃<span style="font-weight: bold"> Output Shape      </span>┃<span style="font-weight: bold">    Param # </span>┃<span style="font-weight: bold"> Connected to      </span>┃
+┡━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━┩
+│ padding_mask        │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>)      │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ -                 │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">InputLayer</span>)        │                   │            │                   │
+├─────────────────────┼───────────────────┼────────────┼───────────────────┤
+│ token_ids           │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>)      │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ -                 │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">InputLayer</span>)        │                   │            │                   │
+├─────────────────────┼───────────────────┼────────────┼───────────────────┤
+│ gemma_backbone      │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>,      │ <span style="color: #00af00; text-decoration-color: #00af00">2,617,270…</span> │ padding_mask[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">…</span> │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">GemmaBackbone</span>)     │ <span style="color: #00af00; text-decoration-color: #00af00">2304</span>)             │            │ token_ids[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>]   │
+├─────────────────────┼───────────────────┼────────────┼───────────────────┤
+│ pooler              │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">2304</span>)      │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ gemma_backbone[<span style="color: #00af00; text-decoration-color: #00af00">0</span>… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">LastTokenPooler</span>)   │                   │            │ padding_mask[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">…</span> │
+├─────────────────────┼───────────────────┼────────────┼───────────────────┤
+│ pooled_dense        │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">2048</span>)      │  <span style="color: #00af00; text-decoration-color: #00af00">4,720,640</span> │ pooler[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>]      │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Dense</span>)             │                   │            │                   │
+├─────────────────────┼───────────────────┼────────────┼───────────────────┤
+│ output_dropout      │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">2048</span>)      │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ pooled_dense[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">…</span> │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Dropout</span>)           │                   │            │                   │
+├─────────────────────┼───────────────────┼────────────┼───────────────────┤
+│ output_dense        │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">2</span>)         │      <span style="color: #00af00; text-decoration-color: #00af00">4,098</span> │ output_dropout[<span style="color: #00af00; text-decoration-color: #00af00">0</span>… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Dense</span>)             │                   │            │                   │
+└─────────────────────┴───────────────────┴────────────┴───────────────────┘
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Total params: </span><span style="color: #00af00; text-decoration-color: #00af00">2,621,995,266</span> (9.77 GB)
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Trainable params: </span><span style="color: #00af00; text-decoration-color: #00af00">7,653,378</span> (29.20 MB)
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Non-trainable params: </span><span style="color: #00af00; text-decoration-color: #00af00">2,614,341,888</span> (9.74 GB)
+</pre>
+
+
+
+After enabling LoRA, our model goes from 10GB of traininable parameters to just 20MB.
+That means the space used by optimizer variables will no longer be a concern.
+
+With all that set up, we can compile and train our model as normal.
+
+
+```python
+text_classifier.compile(
+    optimizer=keras.optimizers.Adam(5e-5),
+    loss="sparse_categorical_crossentropy",
+    metrics=["accuracy"],
 )
-model.fit(
-    imdb_preproc_train_ds,
-    validation_data=imdb_preproc_val_ds,
-    epochs=3,
+text_classifier.fit(
+    train_ds,
+    validation_data=val_ds,
 )
 ```
 
 <div class="k-default-codeblock">
 ```
-Epoch 1/3
- 1563/1563 ━━━━━━━━━━━━━━━━━━━━ 8s 4ms/step - loss: 0.7790 - sparse_categorical_accuracy: 0.5367 - val_loss: 0.4420 - val_sparse_categorical_accuracy: 0.8120
-Epoch 2/3
- 1563/1563 ━━━━━━━━━━━━━━━━━━━━ 5s 3ms/step - loss: 0.3654 - sparse_categorical_accuracy: 0.8443 - val_loss: 0.3046 - val_sparse_categorical_accuracy: 0.8752
-Epoch 3/3
- 1563/1563 ━━━━━━━━━━━━━━━━━━━━ 5s 3ms/step - loss: 0.2471 - sparse_categorical_accuracy: 0.9019 - val_loss: 0.3060 - val_sparse_categorical_accuracy: 0.8748
+ 1000/1000 ━━━━━━━━━━━━━━━━━━━━ 295s 285ms/step - accuracy: 0.7733 - loss: 0.6511 - val_accuracy: 0.9370 - val_loss: 0.2814
 
-<keras.src.callbacks.history.History at 0x7f26d032a4d0>
-
+<keras.src.callbacks.history.History at 0x787e103ae010>
 ```
 </div>
-Excitingly, our custom classifier is similar to the performance of fine-tuning
-`"bert_tiny_en_uncased"`! To see the advantages of pretraining and exceed 90% accuracy we
-would need to use larger **presets** such as `"bert_base_en_uncased"`.
+We are able to achieve over ~93% accuracy on the movie review sentiment
+classification problem. This is not bad, given that we only used a 10th of our
+original dataset to train.
+
+Taken together, the `backbone` and `tokenizer` we created in this example
+allowed us access the full power of pretrained Gemma checkpoints, without
+restricting what we could do with them. This is a central aim of the KerasHub
+API. Simple workflows should be easy, and as you go deeper, you gain access to a
+deeply customizable set of building blocks.
+
+---
+## Going further
+
+This is just scratching the surface of what you can do with the KerasHub.
+
+This guide shows a few of the high-level tasks that we ship with the KerasHub library,
+but there are many tasks we did not cover here. Try [generating images with Stable
+Diffusion](https://keras.io/guides/keras_hub/stable_diffusion_3_in_keras_hub/), for
+example.
+
+The most significant advantage of KerasHub is it gives you the flexibility to combine pre-trained
+building blocks with the full power of Keras 3. You can train large LLMs on TPUs with model
+parallelism with the [keras.distribution](https://keras.io/guides/distribution/) API. You can
+quantize models with Keras' [quatize
+method](https://keras.io/examples/keras_recipes/float8_training_and_inference_with_transfo
+rmer/). You can write custom training loops and even mix in direct Jax, Torch, or
+Tensorflow calls.
+
+See [keras.io/keras_hub](https://keras.io/keras_hub/) for a full list of guides and
+examples to continue digging into the library.
