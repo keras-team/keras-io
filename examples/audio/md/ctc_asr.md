@@ -57,11 +57,16 @@ pip install jiwer
 
 
 ```python
+import os
+
+os.environ["KERAS_BACKEND"] = "tensorflow"
+
+import keras
+from keras import layers
+
+import tensorflow as tf
 import pandas as pd
 import numpy as np
-import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras import layers
 import matplotlib.pyplot as plt
 from IPython import display
 from jiwer import wer
@@ -183,9 +188,9 @@ We first prepare the vocabulary to be used.
 # The set of characters accepted in the transcription.
 characters = [x for x in "abcdefghijklmnopqrstuvwxyz'?! "]
 # Mapping characters to integers
-char_to_num = keras.layers.StringLookup(vocabulary=characters, oov_token="")
+char_to_num = layers.StringLookup(vocabulary=characters, oov_token="")
 # Mapping integers back to original characters
-num_to_char = keras.layers.StringLookup(
+num_to_char = layers.StringLookup(
     vocabulary=char_to_num.get_vocabulary(), oov_token="", invert=True
 )
 
@@ -223,9 +228,9 @@ def encode_single_sample(wav_file, label):
     file = tf.io.read_file(wavs_path + wav_file + ".wav")
     # 2. Decode the wav file
     audio, _ = tf.audio.decode_wav(file)
-    audio = tf.squeeze(audio, axis=-1)
+    audio = keras.ops.squeeze(audio, axis=-1)
     # 3. Change type to float
-    audio = tf.cast(audio, tf.float32)
+    audio = keras.ops.cast(audio, tf.float32)
     # 4. Get the spectrogram
     spectrogram = tf.signal.stft(
         audio, frame_length=frame_length, frame_step=frame_step, fft_length=fft_length
@@ -234,8 +239,8 @@ def encode_single_sample(wav_file, label):
     spectrogram = tf.abs(spectrogram)
     spectrogram = tf.math.pow(spectrogram, 0.5)
     # 6. normalisation
-    means = tf.math.reduce_mean(spectrogram, 1, keepdims=True)
-    stddevs = tf.math.reduce_std(spectrogram, 1, keepdims=True)
+    means = keras.ops.mean(spectrogram, 1, keepdims=True)
+    stddevs = keras.ops.std(spectrogram, 1, keepdims=True)
     spectrogram = (spectrogram - means) / (stddevs + 1e-10)
     ###########################################
     ##  Process the label
@@ -332,25 +337,6 @@ plt.show()
 ---
 ## Model
 
-We first define the CTC Loss function.
-
-
-```python
-
-def CTCLoss(y_true, y_pred):
-    # Compute the training-time loss value
-    batch_len = tf.cast(tf.shape(y_true)[0], dtype="int64")
-    input_length = tf.cast(tf.shape(y_pred)[1], dtype="int64")
-    label_length = tf.cast(tf.shape(y_true)[1], dtype="int64")
-
-    input_length = input_length * tf.ones(shape=(batch_len, 1), dtype="int64")
-    label_length = label_length * tf.ones(shape=(batch_len, 1), dtype="int64")
-
-    loss = keras.backend.ctc_batch_cost(y_true, y_pred, input_length, label_length)
-    return loss
-
-```
-
 We now define our model. We will define a model similar to
 [DeepSpeech2](https://nvidia.github.io/OpenSeq2Seq/html/speech-recognition/deepspeech2.html).
 
@@ -414,7 +400,7 @@ def build_model(input_dim, output_dim, rnn_layers=5, rnn_units=128):
     # Optimizer
     opt = keras.optimizers.Adam(learning_rate=1e-4)
     # Compile the model and return
-    model.compile(optimizer=opt, loss=CTCLoss)
+    model.compile(optimizer=opt, loss=keras.losses.CTC())
     return model
 
 
@@ -490,11 +476,38 @@ ________________________________________________________________________________
 
 
 ```python
+# Reference: https://github.com/keras-team/keras/blob/ec67b760ba25e1ccc392d288f7d8c6e9e153eea2/keras/legacy/backend.py#L715-L739
+
+
+def ctc_decode(y_pred, input_length, greedy=True, beam_width=100, top_paths=1):
+    input_shape = tf.shape(y_pred)
+    num_samples, num_steps = input_shape[0], input_shape[1]
+    y_pred = tf.math.log(tf.transpose(y_pred, perm=[1, 0, 2]) + keras.backend.epsilon())
+    input_length = tf.cast(input_length, tf.int32)
+
+    if greedy:
+        (decoded, log_prob) = tf.nn.ctc_greedy_decoder(
+            inputs=y_pred, sequence_length=input_length
+        )
+    else:
+        (decoded, log_prob) = tf.compat.v1.nn.ctc_beam_search_decoder(
+            inputs=y_pred,
+            sequence_length=input_length,
+            beam_width=beam_width,
+            top_paths=top_paths,
+        )
+    decoded_dense = []
+    for st in decoded:
+        st = tf.SparseTensor(st.indices, st.values, (num_samples, num_steps))
+        decoded_dense.append(tf.sparse.to_dense(sp_input=st, default_value=-1))
+    return (decoded_dense, log_prob)
+
+
 # A utility function to decode the output of the network
 def decode_batch_predictions(pred):
     input_len = np.ones(pred.shape[0]) * pred.shape[1]
     # Use greedy search. For complex tasks, you can use beam search
-    results = keras.backend.ctc_decode(pred, input_length=input_len, greedy=True)[0][0]
+    results = ctc_decode(pred, input_length=input_len, greedy=True)[0][0]
     # Iterate over the results and get back the text
     output_text = []
     for result in results:
