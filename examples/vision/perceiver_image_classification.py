@@ -134,7 +134,7 @@ class Patches(layers.Layer):
     def call(self, images):
         batch_size = ops.shape(images)[0]
         patches = ops.image.extract_patches(
-            image=images,
+            images=images,
             size=(self.patch_size, self.patch_size),
             strides=(self.patch_size, self.patch_size),
             dilation_rate=1,
