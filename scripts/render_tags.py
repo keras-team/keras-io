@@ -1,4 +1,4 @@
-"""Custom rendering code for the /api/{keras_nlp|keras_cv}/models page.
+"""Custom rendering code for the /api/{keras_hub|keras_cv}/models page.
 
 The model metadata is pulled from the library, each preset has a
 metadata dictionary as follows:
@@ -55,17 +55,17 @@ def format_path(metadata):
 
 
 def is_base_class(symbol):
-    import keras_nlp
+    import keras_hub
 
     return symbol in (
-        keras_nlp.models.Backbone,
-        keras_nlp.models.Tokenizer,
-        keras_nlp.models.Preprocessor,
-        keras_nlp.models.Task,
-        keras_nlp.models.Classifier,
-        keras_nlp.models.CausalLM,
-        keras_nlp.models.MaskedLM,
-        keras_nlp.models.Seq2SeqLM,
+        keras_hub.models.Backbone,
+        keras_hub.models.Tokenizer,
+        keras_hub.models.Preprocessor,
+        keras_hub.models.Task,
+        keras_hub.models.Classifier,
+        keras_hub.models.CausalLM,
+        keras_hub.models.MaskedLM,
+        keras_hub.models.Seq2SeqLM,
     )
 
 
@@ -83,17 +83,12 @@ def render_backbone_table(symbols):
             continue
         presets = symbol.presets
         # Only keep the ones with pretrained weights for KerasCV Backbones.
-        if issubclass(symbol, keras_cv.models.Backbone):
-            presets = symbol.presets_with_weights
         for preset in presets:
             if preset in added_presets:
                 continue
             else:
                 added_presets.add(preset)
             metadata = presets[preset]["metadata"]
-            # KerasCV backbones docs' URL has a "backbones/" path.
-            if issubclass(symbol, keras_cv.models.Backbone) and "path" in metadata:
-                metadata["path"] = "backbones/" + metadata["path"]
             table += (
                 f"{preset} | "
                 f"{format_path(metadata)} | "
@@ -103,59 +98,6 @@ def render_backbone_table(symbols):
             if "model_card" in metadata:
                 table += f" [Model Card]({metadata['model_card']})"
             table += "\n"
-    return table
-
-
-def render_classifier_table(symbols):
-    """Renders the markdown table for classifier presets as a string."""
-
-    table = TABLE_HEADER
-
-    # Classifier presets
-    for name, symbol in symbols:
-        if "Classifier" not in name:
-            continue
-        for preset in symbol.presets:
-            backbone_cls = symbol.backbone_cls
-            if backbone_cls is not None and preset not in backbone_cls.presets:
-                metadata = symbol.presets[preset]["metadata"]
-                table += (
-                    f"{preset} | "
-                    f"{format_path(metadata)} | "
-                    f"{format_param_count(metadata)} | "
-                    f"{metadata['description']} \n"
-                )
-    return table
-
-
-def render_task_table(symbols):
-    """Renders the markdown table for Task presets as a string."""
-    table = TABLE_HEADER
-
-    for name, symbol in symbols:
-        if not inspect.isclass(symbol):
-            continue
-        if not issubclass(symbol, keras_cv.models.Task):
-            continue
-        for preset in symbol.presets:
-            # Do not print all backbone presets for a task
-            if (
-                preset
-                in keras_cv.src.models.backbones.backbone_presets.backbone_presets
-            ):
-                continue
-            if preset not in symbol.presets_with_weights:
-                continue
-            # Only render the ones with pretrained_weights for KerasCV.
-            metadata = symbol.presets_with_weights[preset]["metadata"]
-            # KerasCV tasks docs' URL has a "tasks/" path.
-            metadata["path"] = "tasks/" + metadata["path"]
-            table += (
-                f"{preset} | "
-                f"{format_path(metadata)} | "
-                f"{format_param_count(metadata)} | "
-                f"{metadata['description']} \n"
-            )
     return table
 
 
@@ -182,18 +124,10 @@ def render_table(symbol):
 
 
 def render_tags(template, lib):
-    """Replaces all custom KerasNLP/KerasCV tags with rendered content."""
+    """Replaces all custom KerasHub/KerasCV tags with rendered content."""
     symbols = lib.models.__dict__.items()
     if "{{backbone_presets_table}}" in template:
         template = template.replace(
             "{{backbone_presets_table}}", render_backbone_table(symbols)
-        )
-    if "{{classifier_presets_table}}" in template:
-        template = template.replace(
-            "{{classifier_presets_table}}", render_classifier_table(symbols)
-        )
-    if "{{task_presets_table}}" in template:
-        template = template.replace(
-            "{{task_presets_table}}", render_task_table(symbols)
         )
     return template

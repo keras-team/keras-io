@@ -2,13 +2,13 @@
 
 **Author:** [Victor Basu](https://www.linkedin.com/in/victor-basu-520958147)<br>
 **Date created:** 2021/08/30<br>
-**Last modified:** 2021/08/30<br>
+**Last modified:** 2024/08/13<br>
+**Description:** Implement a depth estimation model with a convnet.
 
 
 <img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/vision/ipynb/depth_estimation.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/vision/depth_estimation.py)
 
 
-**Description:** Implement a depth estimation model with a convnet.
 
 ---
 ## Introduction
@@ -27,17 +27,21 @@ and simple loss functions.
 
 ```python
 import os
+
+os.environ["KERAS_BACKEND"] = "tensorflow"
+
 import sys
 
 import tensorflow as tf
-from tensorflow.keras import layers
-
+import keras
+from keras import layers
+from keras import ops
 import pandas as pd
 import numpy as np
 import cv2
 import matplotlib.pyplot as plt
 
-tf.random.set_seed(123)
+keras.utils.set_random_seed(123)
 ```
 
 ---
@@ -56,7 +60,7 @@ and **[KITTI](http://www.cvlibs.net/datasets/kitti/)**.
 ```python
 annotation_folder = "/dataset/"
 if not os.path.exists(os.path.abspath(".") + annotation_folder):
-    annotation_zip = tf.keras.utils.get_file(
+    annotation_zip = keras.utils.get_file(
         "val.tar.gz",
         cache_subdir=os.path.abspath("."),
         origin="http://diode-dataset.s3.amazonaws.com/val.tar.gz",
@@ -67,11 +71,12 @@ if not os.path.exists(os.path.abspath(".") + annotation_folder):
 <div class="k-default-codeblock">
 ```
 Downloading data from http://diode-dataset.s3.amazonaws.com/val.tar.gz
-2774630400/2774625282 [==============================] - 90s 0us/step
-2774638592/2774625282 [==============================] - 90s 0us/step
 
 ```
 </div>
+ 2774625282/2774625282 ━━━━━━━━━━━━━━━━━━━━ 205s 0us/step
+
+
 ---
 ##  Preparing the dataset
 
@@ -105,7 +110,7 @@ df = df.sample(frac=1, random_state=42)
 ```python
 HEIGHT = 256
 WIDTH = 256
-LR = 0.0002
+LR = 0.00001
 EPOCHS = 30
 BATCH_SIZE = 32
 ```
@@ -123,8 +128,9 @@ resize it.
 
 ```python
 
-class DataGenerator(tf.keras.utils.Sequence):
+class DataGenerator(keras.utils.PyDataset):
     def __init__(self, data, batch_size=6, dim=(768, 1024), n_channels=3, shuffle=True):
+        super().__init__()
         """
         Initialization
         """
@@ -153,7 +159,6 @@ class DataGenerator(tf.keras.utils.Sequence):
         return x, y
 
     def on_epoch_end(self):
-
         """
         Updates indexes after each epoch
         """
@@ -188,7 +193,6 @@ class DataGenerator(tf.keras.utils.Sequence):
         return image_, depth_map
 
     def data_generation(self, batch):
-
         x = np.empty((self.batch_size, *self.dim, self.n_channels))
         y = np.empty((self.batch_size, *self.dim, 1))
 
@@ -198,7 +202,7 @@ class DataGenerator(tf.keras.utils.Sequence):
                 self.data["depth"][batch_id],
                 self.data["mask"][batch_id],
             )
-
+        x, y = x.astype("float32"), y.astype("float32")
         return x, y
 
 ```
@@ -236,7 +240,9 @@ visualize_depth_map(visualize_samples)
 ```
 
 
+    
 ![png](/img/examples/vision/depth_estimation/depth_estimation_13_0.png)
+    
 
 
 ---
@@ -264,7 +270,9 @@ for x in range(0, img_vis.shape[0], STEP):
 ```
 
 
+    
 ![png](/img/examples/vision/depth_estimation/depth_estimation_15_0.png)
+    
 
 
 ---
@@ -283,10 +291,10 @@ class DownscaleBlock(layers.Layer):
         super().__init__(**kwargs)
         self.convA = layers.Conv2D(filters, kernel_size, strides, padding)
         self.convB = layers.Conv2D(filters, kernel_size, strides, padding)
-        self.reluA = layers.LeakyReLU(alpha=0.2)
-        self.reluB = layers.LeakyReLU(alpha=0.2)
-        self.bn2a = tf.keras.layers.BatchNormalization()
-        self.bn2b = tf.keras.layers.BatchNormalization()
+        self.reluA = layers.LeakyReLU(negative_slope=0.2)
+        self.reluB = layers.LeakyReLU(negative_slope=0.2)
+        self.bn2a = layers.BatchNormalization()
+        self.bn2b = layers.BatchNormalization()
 
         self.pool = layers.MaxPool2D((2, 2), (2, 2))
 
@@ -312,10 +320,10 @@ class UpscaleBlock(layers.Layer):
         self.us = layers.UpSampling2D((2, 2))
         self.convA = layers.Conv2D(filters, kernel_size, strides, padding)
         self.convB = layers.Conv2D(filters, kernel_size, strides, padding)
-        self.reluA = layers.LeakyReLU(alpha=0.2)
-        self.reluB = layers.LeakyReLU(alpha=0.2)
-        self.bn2a = tf.keras.layers.BatchNormalization()
-        self.bn2b = tf.keras.layers.BatchNormalization()
+        self.reluA = layers.LeakyReLU(negative_slope=0.2)
+        self.reluB = layers.LeakyReLU(negative_slope=0.2)
+        self.bn2a = layers.BatchNormalization()
+        self.bn2b = layers.BatchNormalization()
         self.conc = layers.Concatenate()
 
     def call(self, x, skip):
@@ -339,8 +347,8 @@ class BottleNeckBlock(layers.Layer):
         super().__init__(**kwargs)
         self.convA = layers.Conv2D(filters, kernel_size, strides, padding)
         self.convB = layers.Conv2D(filters, kernel_size, strides, padding)
-        self.reluA = layers.LeakyReLU(alpha=0.2)
-        self.reluB = layers.LeakyReLU(alpha=0.2)
+        self.reluA = layers.LeakyReLU(negative_slope=0.2)
+        self.reluB = layers.LeakyReLU(negative_slope=0.2)
 
     def call(self, x):
         x = self.convA(x)
@@ -364,13 +372,39 @@ Out of the three loss functions, SSIM contributes the most to improving model pe
 
 ```python
 
-class DepthEstimationModel(tf.keras.Model):
+def image_gradients(image):
+    if len(ops.shape(image)) != 4:
+        raise ValueError(
+            "image_gradients expects a 4D tensor "
+            "[batch_size, h, w, d], not {}.".format(ops.shape(image))
+        )
+
+    image_shape = ops.shape(image)
+    batch_size, height, width, depth = ops.unstack(image_shape)
+
+    dy = image[:, 1:, :, :] - image[:, :-1, :, :]
+    dx = image[:, :, 1:, :] - image[:, :, :-1, :]
+
+    # Return tensors with same size as original image by concatenating
+    # zeros. Place the gradient [I(x+1,y) - I(x,y)] on the base pixel (x, y).
+    shape = ops.stack([batch_size, 1, width, depth])
+    dy = ops.concatenate([dy, ops.zeros(shape, dtype=image.dtype)], axis=1)
+    dy = ops.reshape(dy, image_shape)
+
+    shape = ops.stack([batch_size, height, 1, depth])
+    dx = ops.concatenate([dx, ops.zeros(shape, dtype=image.dtype)], axis=2)
+    dx = ops.reshape(dx, image_shape)
+
+    return dy, dx
+
+
+class DepthEstimationModel(keras.Model):
     def __init__(self):
         super().__init__()
         self.ssim_loss_weight = 0.85
         self.l1_loss_weight = 0.1
         self.edge_loss_weight = 0.9
-        self.loss_metric = tf.keras.metrics.Mean(name="loss")
+        self.loss_metric = keras.metrics.Mean(name="loss")
         f = [16, 32, 64, 128, 256]
         self.downscale_blocks = [
             DownscaleBlock(f[0]),
@@ -389,28 +423,28 @@ class DepthEstimationModel(tf.keras.Model):
 
     def calculate_loss(self, target, pred):
         # Edges
-        dy_true, dx_true = tf.image.image_gradients(target)
-        dy_pred, dx_pred = tf.image.image_gradients(pred)
-        weights_x = tf.exp(tf.reduce_mean(tf.abs(dx_true)))
-        weights_y = tf.exp(tf.reduce_mean(tf.abs(dy_true)))
+        dy_true, dx_true = image_gradients(target)
+        dy_pred, dx_pred = image_gradients(pred)
+        weights_x = ops.cast(ops.exp(ops.mean(ops.abs(dx_true))), "float32")
+        weights_y = ops.cast(ops.exp(ops.mean(ops.abs(dy_true))), "float32")
 
         # Depth smoothness
         smoothness_x = dx_pred * weights_x
         smoothness_y = dy_pred * weights_y
 
-        depth_smoothness_loss = tf.reduce_mean(abs(smoothness_x)) + tf.reduce_mean(
+        depth_smoothness_loss = ops.mean(abs(smoothness_x)) + ops.mean(
             abs(smoothness_y)
         )
 
         # Structural similarity (SSIM) index
-        ssim_loss = tf.reduce_mean(
+        ssim_loss = ops.mean(
             1
             - tf.image.ssim(
-                target, pred, max_val=WIDTH, filter_size=7, k1=0.01 ** 2, k2=0.03 ** 2
+                target, pred, max_val=WIDTH, filter_size=7, k1=0.01**2, k2=0.03**2
             )
         )
         # Point-wise depth
-        l1_loss = tf.reduce_mean(tf.abs(target - pred))
+        l1_loss = ops.mean(ops.abs(target - pred))
 
         loss = (
             (self.ssim_loss_weight * ssim_loss)
@@ -470,9 +504,9 @@ class DepthEstimationModel(tf.keras.Model):
 
 
 ```python
-optimizer = tf.keras.optimizers.Adam(
+optimizer = keras.optimizers.SGD(
     learning_rate=LR,
-    amsgrad=False,
+    nesterov=False,
 )
 model = DepthEstimationModel()
 # Compile the model
@@ -491,70 +525,20 @@ model.fit(
 )
 ```
 
-<div class="k-default-codeblock">
 ```
 Epoch 1/30
-9/9 [==============================] - 18s 1s/step - loss: 1.1543 - val_loss: 1.4281
-Epoch 2/30
-9/9 [==============================] - 3s 390ms/step - loss: 0.8727 - val_loss: 1.0686
-Epoch 3/30
-9/9 [==============================] - 4s 428ms/step - loss: 0.6659 - val_loss: 0.7884
-Epoch 4/30
-9/9 [==============================] - 3s 334ms/step - loss: 0.6462 - val_loss: 0.6198
-Epoch 5/30
-9/9 [==============================] - 3s 355ms/step - loss: 0.5689 - val_loss: 0.6207
-Epoch 6/30
-9/9 [==============================] - 3s 361ms/step - loss: 0.5067 - val_loss: 0.4876
-Epoch 7/30
-9/9 [==============================] - 3s 357ms/step - loss: 0.4680 - val_loss: 0.4698
-Epoch 8/30
-9/9 [==============================] - 3s 325ms/step - loss: 0.4622 - val_loss: 0.7249
-Epoch 9/30
-9/9 [==============================] - 3s 393ms/step - loss: 0.4215 - val_loss: 0.3826
+ 9/9 ━━━━━━━━━━━━━━━━━━━━ 64s 5s/step - loss: 0.7656 - val_loss: 0.7738
 Epoch 10/30
-9/9 [==============================] - 3s 337ms/step - loss: 0.3788 - val_loss: 0.3289
-Epoch 11/30
-9/9 [==============================] - 3s 345ms/step - loss: 0.3347 - val_loss: 0.3032
-Epoch 12/30
-9/9 [==============================] - 3s 327ms/step - loss: 0.3488 - val_loss: 0.2631
-Epoch 13/30
-9/9 [==============================] - 3s 326ms/step - loss: 0.3315 - val_loss: 0.2383
-Epoch 14/30
-9/9 [==============================] - 3s 331ms/step - loss: 0.3349 - val_loss: 0.2379
-Epoch 15/30
-9/9 [==============================] - 3s 333ms/step - loss: 0.3394 - val_loss: 0.2151
-Epoch 16/30
-9/9 [==============================] - 3s 337ms/step - loss: 0.3073 - val_loss: 0.2243
-Epoch 17/30
-9/9 [==============================] - 3s 355ms/step - loss: 0.3951 - val_loss: 0.2627
-Epoch 18/30
-9/9 [==============================] - 3s 335ms/step - loss: 0.3657 - val_loss: 0.2175
-Epoch 19/30
-9/9 [==============================] - 3s 321ms/step - loss: 0.3404 - val_loss: 0.2073
+ 9/9 ━━━━━━━━━━━━━━━━━━━━ 7s 602ms/step - loss: 0.7005 - val_loss: 0.6696
 Epoch 20/30
-9/9 [==============================] - 3s 320ms/step - loss: 0.3549 - val_loss: 0.1972
-Epoch 21/30
-9/9 [==============================] - 3s 317ms/step - loss: 0.2802 - val_loss: 0.1936
-Epoch 22/30
-9/9 [==============================] - 3s 316ms/step - loss: 0.2632 - val_loss: 0.1893
-Epoch 23/30
-9/9 [==============================] - 3s 318ms/step - loss: 0.2862 - val_loss: 0.1807
-Epoch 24/30
-9/9 [==============================] - 3s 328ms/step - loss: 0.3083 - val_loss: 0.1923
-Epoch 25/30
-9/9 [==============================] - 3s 312ms/step - loss: 0.3666 - val_loss: 0.1795
-Epoch 26/30
-9/9 [==============================] - 3s 316ms/step - loss: 0.2928 - val_loss: 0.1753
-Epoch 27/30
-9/9 [==============================] - 3s 325ms/step - loss: 0.2945 - val_loss: 0.1790
-Epoch 28/30
-9/9 [==============================] - 3s 325ms/step - loss: 0.2642 - val_loss: 0.1775
-Epoch 29/30
-9/9 [==============================] - 3s 333ms/step - loss: 0.2546 - val_loss: 0.1810
+ 9/9 ━━━━━━━━━━━━━━━━━━━━ 7s 632ms/step - loss: 0.5827 - val_loss: 0.5821
 Epoch 30/30
-9/9 [==============================] - 3s 315ms/step - loss: 0.2650 - val_loss: 0.1795
+ 9/9 ━━━━━━━━━━━━━━━━━━━━ 7s 593ms/step - loss: 0.6218 - val_loss: 0.5132
+```
 
-<keras.callbacks.History at 0x7f5151799fd0>
+<div class="k-default-codeblock">
+```
+<keras.src.callbacks.history.History at 0x7f5a2886d210>
 
 ```
 </div>
@@ -586,12 +570,38 @@ test_loader = next(
 visualize_depth_map(test_loader, test=True, model=model)
 ```
 
+    
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 781ms/step
 
-![png](/img/examples/vision/depth_estimation/depth_estimation_23_0.png)
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 1s 782ms/step
+
+
+    
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 171ms/step
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 172ms/step
 
 
 
-![png](/img/examples/vision/depth_estimation/depth_estimation_23_1.png)
+    
+![png](/img/examples/vision/depth_estimation/depth_estimation_23_4.png)
+    
+
+
+
+    
+![png](/img/examples/vision/depth_estimation/depth_estimation_23_5.png)
+    
 
 
 ---
@@ -606,10 +616,11 @@ Tuning the loss functions may yield significant improvement.
 ## References
 
 The following papers go deeper into possible approaches for depth estimation.
-1. [Depth Prediction Without the Sensors: Leveraging Structure for Unsupervised Learning from Monocular Videos](https://arxiv.org/pdf/1811.06152v1.pdf)
+1. [Depth Prediction Without the Sensors: Leveraging Structure for Unsupervised Learning from Monocular Videos](https://arxiv.org/abs/1811.06152v1)
 2. [Digging Into Self-Supervised Monocular Depth Estimation](https://openaccess.thecvf.com/content_ICCV_2019/papers/Godard_Digging_Into_Self-Supervised_Monocular_Depth_Estimation_ICCV_2019_paper.pdf)
-3. [Deeper Depth Prediction with Fully Convolutional Residual Networks](https://arxiv.org/pdf/1606.00373v2.pdf)
+3. [Deeper Depth Prediction with Fully Convolutional Residual Networks](https://arxiv.org/abs/1606.00373v2)
 
 You can also find helpful implementations in the papers with code depth estimation task.
 
-You can use the trained model hosted on [Hugging Face Hub](https://huggingface.co/spaces/keras-io/Monocular-Depth-Estimation) and try the demo on [Hugging Face Spaces](https://huggingface.co/keras-io/monocular-depth-estimation).
+You can use the trained model hosted on [Hugging Face Hub](https://huggingface.co/spaces/keras-io/Monocular-Depth-Estimation)
+and try the demo on [Hugging Face Spaces](https://huggingface.co/keras-io/monocular-depth-estimation).

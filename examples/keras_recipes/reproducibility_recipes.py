@@ -151,8 +151,13 @@ def train_model(train_data: tf.data.Dataset, test_data: tf.data.Dataset) -> dict
     )
 
     model.compile(
-        optimizer="adam", loss="sparse_categorical_crossentropy", metrics=["accuracy"]
+        optimizer="adam",
+        loss="sparse_categorical_crossentropy",
+        metrics=["accuracy"],
+        jit_compile=False,
     )
+    # jit_compile's default value is "auto" which will cause some problems in some
+    # ops, therefore it's set to False.
 
     # model.fit has a `shuffle` parameter which has a default value of `True`.
     # If you are using array-like objects, this will shuffle the data before

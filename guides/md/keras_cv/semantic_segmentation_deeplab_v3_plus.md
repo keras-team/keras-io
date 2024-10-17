@@ -10,7 +10,7 @@
 
 
 
-![](https://storage.googleapis.com/keras-nlp/getting_started_guide/prof_keras_intermediate.png)
+![](https://storage.googleapis.com/keras-hub/getting_started_guide/prof_keras_intermediate.png)
 
 ---
 ## Background

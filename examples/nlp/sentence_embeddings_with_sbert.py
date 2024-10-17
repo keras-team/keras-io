@@ -3,7 +3,7 @@ Title: Sentence embeddings using Siamese RoBERTa-networks
 Author: [Mohammed Abu El-Nasr](https://github.com/abuelnasr0)
 Date created: 2023/07/14
 Last modified: 2023/07/14
-Description: Fine-tune a RoBERTa model to generate sentence embeddings using KerasNLP.
+Description: Fine-tune a RoBERTa model to generate sentence embeddings using KerasHub.
 Accelerator: GPU
 """
 
@@ -44,7 +44,7 @@ This method of fine-tuning was introduced in
 """
 ## Setup
 
-Let's install and import the libraries we need. We'll be using the KerasNLP library in
+Let's install and import the libraries we need. We'll be using the KerasHub library in
 this example.
 
 We will also enable [mixed precision](https://www.tensorflow.org/guide/mixed_precision)
@@ -52,7 +52,7 @@ training. This will help us reduce the training time.
 """
 
 """shell
-pip install -q --upgrade keras-nlp
+pip install -q --upgrade keras-hub
 pip install -q --upgrade keras  # Upgrade to Keras 3.
 """
 
@@ -61,7 +61,7 @@ import os
 os.environ["KERAS_BACKEND"] = "tensorflow"
 
 import keras
-import keras_nlp
+import keras_hub
 import tensorflow as tf
 import tensorflow_datasets as tfds
 import sklearn.cluster as cluster
@@ -171,8 +171,8 @@ layer to exclude padded tokens from being averaged.
 - A normalization layer to normalize the embeddings as we are using the cosine similarity.
 """
 
-preprocessor = keras_nlp.models.RobertaPreprocessor.from_preset("roberta_base_en")
-backbone = keras_nlp.models.RobertaBackbone.from_preset("roberta_base_en")
+preprocessor = keras_hub.models.RobertaPreprocessor.from_preset("roberta_base_en")
+backbone = keras_hub.models.RobertaBackbone.from_preset("roberta_base_en")
 inputs = keras.Input(shape=(1,), dtype="string", name="sentence")
 x = preprocessor(inputs)
 h = backbone(x)
@@ -347,8 +347,8 @@ sentence.
 - A mean pooling layer to produce the embeddings.
 """
 
-preprocessor = keras_nlp.models.RobertaPreprocessor.from_preset("roberta_base_en")
-backbone = keras_nlp.models.RobertaBackbone.from_preset("roberta_base_en")
+preprocessor = keras_hub.models.RobertaPreprocessor.from_preset("roberta_base_en")
+backbone = keras_hub.models.RobertaBackbone.from_preset("roberta_base_en")
 input = keras.Input(shape=(1,), dtype="string", name="sentence")
 
 x = preprocessor(input)

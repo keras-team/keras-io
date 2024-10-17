@@ -17,56 +17,6 @@ BASE_CLASSES = {
             ],
         },
         {
-            "path": "causal_lm",
-            "title": "CausalLM",
-            "generate": [
-                "keras_nlp.models.CausalLM",
-                "keras_nlp.models.CausalLM.from_preset",
-                "keras_nlp.models.CausalLM.compile",
-                "keras_nlp.models.CausalLM.generate",
-                "keras_nlp.models.CausalLM.save_to_preset",
-                "keras_nlp.models.CausalLM.preprocessor",
-                "keras_nlp.models.CausalLM.backbone",
-            ],
-        },
-        {
-            "path": "seq_2_seq_lm",
-            "title": "Seq2SeqLM",
-            "generate": [
-                "keras_nlp.models.Seq2SeqLM",
-                "keras_nlp.models.Seq2SeqLM.from_preset",
-                "keras_nlp.models.Seq2SeqLM.compile",
-                "keras_nlp.models.Seq2SeqLM.generate",
-                "keras_nlp.models.Seq2SeqLM.save_to_preset",
-                "keras_nlp.models.Seq2SeqLM.preprocessor",
-                "keras_nlp.models.Seq2SeqLM.backbone",
-            ],
-        },
-        {
-            "path": "classifier",
-            "title": "Classifier",
-            "generate": [
-                "keras_nlp.models.Classifier",
-                "keras_nlp.models.Classifier.from_preset",
-                "keras_nlp.models.Classifier.compile",
-                "keras_nlp.models.Classifier.save_to_preset",
-                "keras_nlp.models.Classifier.preprocessor",
-                "keras_nlp.models.Classifier.backbone",
-            ],
-        },
-        {
-            "path": "masked_lm",
-            "title": "MaskedLM",
-            "generate": [
-                "keras_nlp.models.MaskedLM",
-                "keras_nlp.models.MaskedLM.from_preset",
-                "keras_nlp.models.MaskedLM.compile",
-                "keras_nlp.models.MaskedLM.save_to_preset",
-                "keras_nlp.models.MaskedLM.preprocessor",
-                "keras_nlp.models.MaskedLM.backbone",
-            ],
-        },
-        {
             "path": "task",
             "title": "Task",
             "generate": [
@@ -88,12 +38,93 @@ BASE_CLASSES = {
             ],
         },
         {
-            "path": "tokenizer",
-            "title": "Tokenizer",
+            "path": "causal_lm",
+            "title": "CausalLM",
             "generate": [
-                "keras_nlp.models.Tokenizer",
-                "keras_nlp.models.Tokenizer.from_preset",
-                "keras_nlp.models.Tokenizer.save_to_preset",
+                "keras_nlp.models.CausalLM",
+                "keras_nlp.models.CausalLM.from_preset",
+                "keras_nlp.models.CausalLM.compile",
+                "keras_nlp.models.CausalLM.generate",
+                "keras_nlp.models.CausalLM.save_to_preset",
+                "keras_nlp.models.CausalLM.preprocessor",
+                "keras_nlp.models.CausalLM.backbone",
+            ],
+        },
+        {
+            "path": "causal_lm_preprocessor",
+            "title": "CausalLMPreprocessor",
+            "generate": [
+                "keras_nlp.models.CausalLMPreprocessor",
+                "keras_nlp.models.CausalLMPreprocessor.from_preset",
+                "keras_nlp.models.CausalLMPreprocessor.save_to_preset",
+                "keras_nlp.models.CausalLMPreprocessor.tokenizer",
+            ],
+        },
+        {
+            "path": "seq_2_seq_lm",
+            "title": "Seq2SeqLM",
+            "generate": [
+                "keras_nlp.models.Seq2SeqLM",
+                "keras_nlp.models.Seq2SeqLM.from_preset",
+                "keras_nlp.models.Seq2SeqLM.compile",
+                "keras_nlp.models.Seq2SeqLM.generate",
+                "keras_nlp.models.Seq2SeqLM.save_to_preset",
+                "keras_nlp.models.Seq2SeqLM.preprocessor",
+                "keras_nlp.models.Seq2SeqLM.backbone",
+            ],
+        },
+        {
+            "path": "seq_2_seq_lm_preprocessor",
+            "title": "Seq2SeqLMPreprocessor",
+            "generate": [
+                "keras_nlp.models.Seq2SeqLMPreprocessor",
+                "keras_nlp.models.Seq2SeqLMPreprocessor.from_preset",
+                "keras_nlp.models.Seq2SeqLMPreprocessor.save_to_preset",
+                "keras_nlp.models.Seq2SeqLMPreprocessor.tokenizer",
+            ],
+        },
+        {
+            "path": "text_classifier",
+            "title": "TextClassifier",
+            "generate": [
+                "keras_nlp.models.TextClassifier",
+                "keras_nlp.models.TextClassifier.from_preset",
+                "keras_nlp.models.TextClassifier.compile",
+                "keras_nlp.models.TextClassifier.save_to_preset",
+                "keras_nlp.models.TextClassifier.preprocessor",
+                "keras_nlp.models.TextClassifier.backbone",
+            ],
+        },
+        {
+            "path": "text_classifier_preprocessor",
+            "title": "TextClassifierPreprocessor",
+            "generate": [
+                "keras_nlp.models.TextClassifierPreprocessor",
+                "keras_nlp.models.TextClassifierPreprocessor.from_preset",
+                "keras_nlp.models.TextClassifierPreprocessor.save_to_preset",
+                "keras_nlp.models.TextClassifierPreprocessor.tokenizer",
+            ],
+        },
+        {
+            "path": "masked_lm",
+            "title": "MaskedLM",
+            "generate": [
+                "keras_nlp.models.MaskedLM",
+                "keras_nlp.models.MaskedLM.from_preset",
+                "keras_nlp.models.MaskedLM.compile",
+                "keras_nlp.models.MaskedLM.save_to_preset",
+                "keras_nlp.models.MaskedLM.preprocessor",
+                "keras_nlp.models.MaskedLM.backbone",
+            ],
+        },
+        {
+            "path": "masked_lm_preprocessor",
+            "title": "MaskedLMPreprocessor",
+            "generate": [
+                "keras_nlp.models.MaskedLMPreprocessor",
+                "keras_nlp.models.MaskedLMPreprocessor.from_preset",
+                "keras_nlp.models.MaskedLMPreprocessor.save_to_preset",
+                "keras_nlp.models.MaskedLMPreprocessor.tokenizer",
             ],
         },
         {
@@ -118,17 +149,8 @@ MODELS_MASTER = {
                     "path": "albert_tokenizer",
                     "title": "AlbertTokenizer",
                     "generate": [
-                        "keras_nlp.models.AlbertTokenizer",
-                        "keras_nlp.models.AlbertTokenizer.from_preset",
-                    ],
-                },
-                {
-                    "path": "albert_preprocessor",
-                    "title": "AlbertPreprocessor layer",
-                    "generate": [
-                        "keras_nlp.models.AlbertPreprocessor",
-                        "keras_nlp.models.AlbertPreprocessor.from_preset",
-                        "keras_nlp.models.AlbertPreprocessor.tokenizer",
+                        "keras_nlp.tokenizers.AlbertTokenizer",
+                        "keras_nlp.tokenizers.AlbertTokenizer.from_preset",
                     ],
                 },
                 {
@@ -141,13 +163,22 @@ MODELS_MASTER = {
                     ],
                 },
                 {
-                    "path": "albert_classifier",
-                    "title": "AlbertClassifier model",
+                    "path": "albert_text_classifier",
+                    "title": "AlbertTextClassifier model",
                     "generate": [
-                        "keras_nlp.models.AlbertClassifier",
-                        "keras_nlp.models.AlbertClassifier.from_preset",
-                        "keras_nlp.models.AlbertClassifier.backbone",
-                        "keras_nlp.models.AlbertClassifier.preprocessor",
+                        "keras_nlp.models.AlbertTextClassifier",
+                        "keras_nlp.models.AlbertTextClassifier.from_preset",
+                        "keras_nlp.models.AlbertTextClassifier.backbone",
+                        "keras_nlp.models.AlbertTextClassifier.preprocessor",
+                    ],
+                },
+                {
+                    "path": "albert_text_classifier_preprocessor",
+                    "title": "AlbertTextClassifierPreprocessor layer",
+                    "generate": [
+                        "keras_nlp.models.AlbertTextClassifierPreprocessor",
+                        "keras_nlp.models.AlbertTextClassifierPreprocessor.from_preset",
+                        "keras_nlp.models.AlbertTextClassifierPreprocessor.tokenizer",
                     ],
                 },
                 {
@@ -180,17 +211,8 @@ MODELS_MASTER = {
                     "path": "bart_tokenizer",
                     "title": "BertTokenizer",
                     "generate": [
-                        "keras_nlp.models.BertTokenizer",
-                        "keras_nlp.models.BertTokenizer.from_preset",
-                    ],
-                },
-                {
-                    "path": "bart_preprocessor",
-                    "title": "BertPreprocessor layer",
-                    "generate": [
-                        "keras_nlp.models.BertPreprocessor",
-                        "keras_nlp.models.BertPreprocessor.from_preset",
-                        "keras_nlp.models.BertPreprocessor.tokenizer",
+                        "keras_nlp.tokenizers.BertTokenizer",
+                        "keras_nlp.tokenizers.BertTokenizer.from_preset",
                     ],
                 },
                 {
@@ -235,17 +257,8 @@ MODELS_MASTER = {
                     "path": "bert_tokenizer",
                     "title": "BertTokenizer",
                     "generate": [
-                        "keras_nlp.models.BertTokenizer",
-                        "keras_nlp.models.BertTokenizer.from_preset",
-                    ],
-                },
-                {
-                    "path": "bert_preprocessor",
-                    "title": "BertPreprocessor layer",
-                    "generate": [
-                        "keras_nlp.models.BertPreprocessor",
-                        "keras_nlp.models.BertPreprocessor.from_preset",
-                        "keras_nlp.models.BertPreprocessor.tokenizer",
+                        "keras_nlp.tokenizers.BertTokenizer",
+                        "keras_nlp.tokenizers.BertTokenizer.from_preset",
                     ],
                 },
                 {
@@ -258,13 +271,22 @@ MODELS_MASTER = {
                     ],
                 },
                 {
-                    "path": "bert_classifier",
-                    "title": "BertClassifier model",
+                    "path": "bert_text_classifier",
+                    "title": "BertTextClassifier model",
                     "generate": [
-                        "keras_nlp.models.BertClassifier",
-                        "keras_nlp.models.BertClassifier.from_preset",
-                        "keras_nlp.models.BertClassifier.backbone",
-                        "keras_nlp.models.BertClassifier.preprocessor",
+                        "keras_nlp.models.BertTextClassifier",
+                        "keras_nlp.models.BertTextClassifier.from_preset",
+                        "keras_nlp.models.BertTextClassifier.backbone",
+                        "keras_nlp.models.BertTextClassifier.preprocessor",
+                    ],
+                },
+                {
+                    "path": "bert_text_classifier_preprocessor",
+                    "title": "BertTextClassifierPreprocessor layer",
+                    "generate": [
+                        "keras_nlp.models.BertTextClassifierPreprocessor",
+                        "keras_nlp.models.BertTextClassifierPreprocessor.from_preset",
+                        "keras_nlp.models.BertTextClassifierPreprocessor.tokenizer",
                     ],
                 },
                 {
@@ -297,17 +319,8 @@ MODELS_MASTER = {
                     "path": "bloom_tokenizer",
                     "title": "BloomTokenizer",
                     "generate": [
-                        "keras_nlp.models.BloomTokenizer",
-                        "keras_nlp.models.BloomTokenizer.from_preset",
-                    ],
-                },
-                {
-                    "path": "bloom_preprocessor",
-                    "title": "BloomPreprocessor layer",
-                    "generate": [
-                        "keras_nlp.models.BloomPreprocessor",
-                        "keras_nlp.models.BloomPreprocessor.from_preset",
-                        "keras_nlp.models.BloomPreprocessor.tokenizer",
+                        "keras_nlp.tokenizers.BloomTokenizer",
+                        "keras_nlp.tokenizers.BloomTokenizer.from_preset",
                     ],
                 },
                 {
@@ -351,17 +364,8 @@ MODELS_MASTER = {
                     "path": "deberta_v3_tokenizer",
                     "title": "DebertaV3Tokenizer",
                     "generate": [
-                        "keras_nlp.models.DebertaV3Tokenizer",
-                        "keras_nlp.models.DebertaV3Tokenizer.from_preset",
-                    ],
-                },
-                {
-                    "path": "deberta_v3_preprocessor",
-                    "title": "DebertaV3Preprocessor layer",
-                    "generate": [
-                        "keras_nlp.models.DebertaV3Preprocessor",
-                        "keras_nlp.models.DebertaV3Preprocessor.from_preset",
-                        "keras_nlp.models.DebertaV3Preprocessor.tokenizer",
+                        "keras_nlp.tokenizers.DebertaV3Tokenizer",
+                        "keras_nlp.tokenizers.DebertaV3Tokenizer.from_preset",
                     ],
                 },
                 {
@@ -374,13 +378,22 @@ MODELS_MASTER = {
                     ],
                 },
                 {
-                    "path": "deberta_v3_classifier",
-                    "title": "DebertaV3Classifier model",
+                    "path": "deberta_v3_text_classifier",
+                    "title": "DebertaV3TextClassifier model",
                     "generate": [
-                        "keras_nlp.models.DebertaV3Classifier",
-                        "keras_nlp.models.DebertaV3Classifier.from_preset",
-                        "keras_nlp.models.DebertaV3Classifier.backbone",
-                        "keras_nlp.models.DebertaV3Classifier.preprocessor",
+                        "keras_nlp.models.DebertaV3TextClassifier",
+                        "keras_nlp.models.DebertaV3TextClassifier.from_preset",
+                        "keras_nlp.models.DebertaV3TextClassifier.backbone",
+                        "keras_nlp.models.DebertaV3TextClassifier.preprocessor",
+                    ],
+                },
+                {
+                    "path": "deberta_v3_text_classifier_preprocessor",
+                    "title": "DebertaV3TextClassifierPreprocessor layer",
+                    "generate": [
+                        "keras_nlp.models.DebertaV3TextClassifierPreprocessor",
+                        "keras_nlp.models.DebertaV3TextClassifierPreprocessor.from_preset",
+                        "keras_nlp.models.DebertaV3TextClassifierPreprocessor.tokenizer",
                     ],
                 },
                 {
@@ -413,17 +426,8 @@ MODELS_MASTER = {
                     "path": "distil_bert_tokenizer",
                     "title": "DistilBertTokenizer",
                     "generate": [
-                        "keras_nlp.models.DistilBertTokenizer",
-                        "keras_nlp.models.DistilBertTokenizer.from_preset",
-                    ],
-                },
-                {
-                    "path": "distil_bert_preprocessor",
-                    "title": "DistilBertPreprocessor layer",
-                    "generate": [
-                        "keras_nlp.models.DistilBertPreprocessor",
-                        "keras_nlp.models.DistilBertPreprocessor.from_preset",
-                        "keras_nlp.models.DistilBertPreprocessor.tokenizer",
+                        "keras_nlp.tokenizers.DistilBertTokenizer",
+                        "keras_nlp.tokenizers.DistilBertTokenizer.from_preset",
                     ],
                 },
                 {
@@ -436,13 +440,22 @@ MODELS_MASTER = {
                     ],
                 },
                 {
-                    "path": "distil_bert_classifier",
-                    "title": "DistilBertClassifier model",
+                    "path": "distil_bert_text_classifier",
+                    "title": "DistilBertTextClassifier model",
                     "generate": [
-                        "keras_nlp.models.DistilBertClassifier",
-                        "keras_nlp.models.DistilBertClassifier.from_preset",
-                        "keras_nlp.models.DistilBertClassifier.backbone",
-                        "keras_nlp.models.DistilBertClassifier.preprocessor",
+                        "keras_nlp.models.DistilBertTextClassifier",
+                        "keras_nlp.models.DistilBertTextClassifier.from_preset",
+                        "keras_nlp.models.DistilBertTextClassifier.backbone",
+                        "keras_nlp.models.DistilBertTextClassifier.preprocessor",
+                    ],
+                },
+                {
+                    "path": "distil_bert_text_classifier_preprocessor",
+                    "title": "DistilBertTextClassifierPreprocessor layer",
+                    "generate": [
+                        "keras_nlp.models.DistilBertTextClassifierPreprocessor",
+                        "keras_nlp.models.DistilBertTextClassifierPreprocessor.from_preset",
+                        "keras_nlp.models.DistilBertTextClassifierPreprocessor.tokenizer",
                     ],
                 },
                 {
@@ -475,17 +488,8 @@ MODELS_MASTER = {
                     "path": "gemma_tokenizer",
                     "title": "GemmaTokenizer",
                     "generate": [
-                        "keras_nlp.models.GemmaTokenizer",
-                        "keras_nlp.models.GemmaTokenizer.from_preset",
-                    ],
-                },
-                {
-                    "path": "gemma_preprocessor",
-                    "title": "GemmaPreprocessor layer",
-                    "generate": [
-                        "keras_nlp.models.GemmaPreprocessor",
-                        "keras_nlp.models.GemmaPreprocessor.from_preset",
-                        "keras_nlp.models.GemmaPreprocessor.tokenizer",
+                        "keras_nlp.tokenizers.GemmaTokenizer",
+                        "keras_nlp.tokenizers.GemmaTokenizer.from_preset",
                     ],
                 },
                 {
@@ -531,17 +535,8 @@ MODELS_MASTER = {
                     "path": "electra_tokenizer",
                     "title": "ElectraTokenizer",
                     "generate": [
-                        "keras_nlp.models.ElectraTokenizer",
-                        "keras_nlp.models.ElectraTokenizer.from_preset",
-                    ],
-                },
-                {
-                    "path": "electra_preprocessor",
-                    "title": "ElectraPreprocessor layer",
-                    "generate": [
-                        "keras_nlp.models.ElectraPreprocessor",
-                        "keras_nlp.models.ElectraPreprocessor.from_preset",
-                        "keras_nlp.models.ElectraPreprocessor.tokenizer",
+                        "keras_nlp.tokenizers.ElectraTokenizer",
+                        "keras_nlp.tokenizers.ElectraTokenizer.from_preset",
                     ],
                 },
                 {
@@ -564,17 +559,8 @@ MODELS_MASTER = {
                     "path": "falcon_tokenizer",
                     "title": "FalconTokenizer",
                     "generate": [
-                        "keras_nlp.models.FalconTokenizer",
-                        "keras_nlp.models.FalconTokenizer.from_preset",
-                    ],
-                },
-                {
-                    "path": "falcon_preprocessor",
-                    "title": "FalconPreprocessor layer",
-                    "generate": [
-                        "keras_nlp.models.FalconPreprocessor",
-                        "keras_nlp.models.FalconPreprocessor.from_preset",
-                        "keras_nlp.models.FalconPreprocessor.tokenizer",
+                        "keras_nlp.tokenizers.FalconTokenizer",
+                        "keras_nlp.tokenizers.FalconTokenizer.from_preset",
                     ],
                 },
                 {
@@ -619,21 +605,12 @@ MODELS_MASTER = {
                     "path": "f_net_tokenizer",
                     "title": "FNetTokenizer",
                     "generate": [
-                        "keras_nlp.models.FNetTokenizer",
-                        "keras_nlp.models.FNetTokenizer.from_preset",
+                        "keras_nlp.tokenizers.FNetTokenizer",
+                        "keras_nlp.tokenizers.FNetTokenizer.from_preset",
                     ],
                 },
                 {
-                    "path": "f_net_preprocessor",
-                    "title": "FNetPreprocessor layer",
-                    "generate": [
-                        "keras_nlp.models.FNetPreprocessor",
-                        "keras_nlp.models.FNetPreprocessor.from_preset",
-                        "keras_nlp.models.FNetPreprocessor.tokenizer",
-                    ],
-                },
-                {
-                    "path": "f_net3_backbone",
+                    "path": "f_net_backbone",
                     "title": "FNetBackbone model",
                     "generate": [
                         "keras_nlp.models.FNetBackbone",
@@ -642,13 +619,22 @@ MODELS_MASTER = {
                     ],
                 },
                 {
-                    "path": "f_net_classifier",
-                    "title": "FNetClassifier model",
+                    "path": "f_net_text_classifier",
+                    "title": "FNetTextClassifier model",
                     "generate": [
-                        "keras_nlp.models.FNetClassifier",
-                        "keras_nlp.models.FNetClassifier.from_preset",
-                        "keras_nlp.models.FNetClassifier.backbone",
-                        "keras_nlp.models.FNetClassifier.preprocessor",
+                        "keras_nlp.models.FNetTextClassifier",
+                        "keras_nlp.models.FNetTextClassifier.from_preset",
+                        "keras_nlp.models.FNetTextClassifier.backbone",
+                        "keras_nlp.models.FNetTextClassifier.preprocessor",
+                    ],
+                },
+                {
+                    "path": "f_net_text_classifier_preprocessor",
+                    "title": "FNetTextClassifierPreprocessor layer",
+                    "generate": [
+                        "keras_nlp.models.FNetTextClassifierPreprocessor",
+                        "keras_nlp.models.FNetTextClassifierPreprocessor.from_preset",
+                        "keras_nlp.models.FNetTextClassifierPreprocessor.tokenizer",
                     ],
                 },
                 {
@@ -681,17 +667,8 @@ MODELS_MASTER = {
                     "path": "gpt2_tokenizer",
                     "title": "GPT2Tokenizer",
                     "generate": [
-                        "keras_nlp.models.GPT2Tokenizer",
-                        "keras_nlp.models.GPT2Tokenizer.from_preset",
-                    ],
-                },
-                {
-                    "path": "gpt2_preprocessor",
-                    "title": "GPT2Preprocessor layer",
-                    "generate": [
-                        "keras_nlp.models.GPT2Preprocessor",
-                        "keras_nlp.models.GPT2Preprocessor.from_preset",
-                        "keras_nlp.models.GPT2Preprocessor.tokenizer",
+                        "keras_nlp.tokenizers.GPT2Tokenizer",
+                        "keras_nlp.tokenizers.GPT2Tokenizer.from_preset",
                     ],
                 },
                 {
@@ -736,17 +713,8 @@ MODELS_MASTER = {
                     "path": "llama_tokenizer",
                     "title": "LlamaTokenizer",
                     "generate": [
-                        "keras_nlp.models.LlamaTokenizer",
-                        "keras_nlp.models.LlamaTokenizer.from_preset",
-                    ],
-                },
-                {
-                    "path": "llama_preprocessor",
-                    "title": "LlamaPreprocessor layer",
-                    "generate": [
-                        "keras_nlp.models.LlamaPreprocessor",
-                        "keras_nlp.models.LlamaPreprocessor.from_preset",
-                        "keras_nlp.models.LlamaPreprocessor.tokenizer",
+                        "keras_nlp.tokenizers.LlamaTokenizer",
+                        "keras_nlp.tokenizers.LlamaTokenizer.from_preset",
                     ],
                 },
                 {
@@ -790,17 +758,8 @@ MODELS_MASTER = {
                     "path": "llama3_tokenizer",
                     "title": "Llama3Tokenizer",
                     "generate": [
-                        "keras_nlp.models.Llama3Tokenizer",
-                        "keras_nlp.models.Llama3Tokenizer.from_preset",
-                    ],
-                },
-                {
-                    "path": "llama3_preprocessor",
-                    "title": "Llama3Preprocessor layer",
-                    "generate": [
-                        "keras_nlp.models.Llama3Preprocessor",
-                        "keras_nlp.models.Llama3Preprocessor.from_preset",
-                        "keras_nlp.models.Llama3Preprocessor.tokenizer",
+                        "keras_nlp.tokenizers.Llama3Tokenizer",
+                        "keras_nlp.tokenizers.Llama3Tokenizer.from_preset",
                     ],
                 },
                 {
@@ -844,17 +803,8 @@ MODELS_MASTER = {
                     "path": "mistral_tokenizer",
                     "title": "MistralTokenizer",
                     "generate": [
-                        "keras_nlp.models.MistralTokenizer",
-                        "keras_nlp.models.MistralTokenizer.from_preset",
-                    ],
-                },
-                {
-                    "path": "mistral_preprocessor",
-                    "title": "MistralPreprocessor layer",
-                    "generate": [
-                        "keras_nlp.models.MistralPreprocessor",
-                        "keras_nlp.models.MistralPreprocessor.from_preset",
-                        "keras_nlp.models.MistralPreprocessor.tokenizer",
+                        "keras_nlp.tokenizers.MistralTokenizer",
+                        "keras_nlp.tokenizers.MistralTokenizer.from_preset",
                     ],
                 },
                 {
@@ -898,17 +848,8 @@ MODELS_MASTER = {
                     "path": "opt_tokenizer",
                     "title": "OPTTokenizer",
                     "generate": [
-                        "keras_nlp.models.OPTTokenizer",
-                        "keras_nlp.models.OPTTokenizer.from_preset",
-                    ],
-                },
-                {
-                    "path": "opt_preprocessor",
-                    "title": "OPTPreprocessor layer",
-                    "generate": [
-                        "keras_nlp.models.OPTPreprocessor",
-                        "keras_nlp.models.OPTPreprocessor.from_preset",
-                        "keras_nlp.models.OPTPreprocessor.tokenizer",
+                        "keras_nlp.tokenizers.OPTTokenizer",
+                        "keras_nlp.tokenizers.OPTTokenizer.from_preset",
                     ],
                 },
                 {
@@ -951,8 +892,8 @@ MODELS_MASTER = {
                     "path": "pali_gemma_tokenizer",
                     "title": "PaliGemmaTokenizer",
                     "generate": [
-                        "keras_nlp.models.PaliGemmaTokenizer",
-                        "keras_nlp.models.PaliGemmaTokenizer.from_preset",
+                        "keras_nlp.tokenizers.PaliGemmaTokenizer",
+                        "keras_nlp.tokenizers.PaliGemmaTokenizer.from_preset",
                     ],
                 },
                 {
@@ -995,17 +936,8 @@ MODELS_MASTER = {
                     "path": "phi3_tokenizer",
                     "title": "Phi3Tokenizer",
                     "generate": [
-                        "keras_nlp.models.Phi3Tokenizer",
-                        "keras_nlp.models.Phi3Tokenizer.from_preset",
-                    ],
-                },
-                {
-                    "path": "phi3_preprocessor",
-                    "title": "Phi3Preprocessor layer",
-                    "generate": [
-                        "keras_nlp.models.Phi3Preprocessor",
-                        "keras_nlp.models.Phi3Preprocessor.from_preset",
-                        "keras_nlp.models.Phi3Preprocessor.tokenizer",
+                        "keras_nlp.tokenizers.Phi3Tokenizer",
+                        "keras_nlp.tokenizers.Phi3Tokenizer.from_preset",
                     ],
                 },
                 {
@@ -1048,17 +980,8 @@ MODELS_MASTER = {
                     "path": "roberta_tokenizer",
                     "title": "RobertaTokenizer",
                     "generate": [
-                        "keras_nlp.models.RobertaTokenizer",
-                        "keras_nlp.models.RobertaTokenizer.from_preset",
-                    ],
-                },
-                {
-                    "path": "roberta_preprocessor",
-                    "title": "RobertaPreprocessor layer",
-                    "generate": [
-                        "keras_nlp.models.RobertaPreprocessor",
-                        "keras_nlp.models.RobertaPreprocessor.from_preset",
-                        "keras_nlp.models.RobertaPreprocessor.tokenizer",
+                        "keras_nlp.tokenizers.RobertaTokenizer",
+                        "keras_nlp.tokenizers.RobertaTokenizer.from_preset",
                     ],
                 },
                 {
@@ -1071,13 +994,22 @@ MODELS_MASTER = {
                     ],
                 },
                 {
-                    "path": "roberta_classifier",
-                    "title": "RobertaClassifier model",
+                    "path": "roberta_text_classifier",
+                    "title": "RobertaTextClassifier model",
                     "generate": [
-                        "keras_nlp.models.RobertaClassifier",
-                        "keras_nlp.models.RobertaClassifier.from_preset",
-                        "keras_nlp.models.RobertaClassifier.backbone",
-                        "keras_nlp.models.RobertaClassifier.preprocessor",
+                        "keras_nlp.models.RobertaTextClassifier",
+                        "keras_nlp.models.RobertaTextClassifier.from_preset",
+                        "keras_nlp.models.RobertaTextClassifier.backbone",
+                        "keras_nlp.models.RobertaTextClassifier.preprocessor",
+                    ],
+                },
+                {
+                    "path": "roberta_text_classifier_preprocessor",
+                    "title": "RobertaTextClassifierPreprocessor layer",
+                    "generate": [
+                        "keras_nlp.models.RobertaTextClassifierPreprocessor",
+                        "keras_nlp.models.RobertaTextClassifierPreprocessor.from_preset",
+                        "keras_nlp.models.RobertaTextClassifierPreprocessor.tokenizer",
                     ],
                 },
                 {
@@ -1110,17 +1042,8 @@ MODELS_MASTER = {
                     "path": "xlm_roberta_tokenizer",
                     "title": "XLMRobertaTokenizer",
                     "generate": [
-                        "keras_nlp.models.XLMRobertaTokenizer",
-                        "keras_nlp.models.XLMRobertaTokenizer.from_preset",
-                    ],
-                },
-                {
-                    "path": "xlm_roberta_preprocessor",
-                    "title": "XLMRobertaPreprocessor layer",
-                    "generate": [
-                        "keras_nlp.models.XLMRobertaPreprocessor",
-                        "keras_nlp.models.XLMRobertaPreprocessor.from_preset",
-                        "keras_nlp.models.XLMRobertaPreprocessor.tokenizer",
+                        "keras_nlp.tokenizers.XLMRobertaTokenizer",
+                        "keras_nlp.tokenizers.XLMRobertaTokenizer.from_preset",
                     ],
                 },
                 {
@@ -1133,13 +1056,22 @@ MODELS_MASTER = {
                     ],
                 },
                 {
-                    "path": "xlm_roberta_classifier",
-                    "title": "XLMRobertaClassifier model",
+                    "path": "xlm_roberta_text_classifier",
+                    "title": "XLMRobertaTextClassifier model",
                     "generate": [
-                        "keras_nlp.models.XLMRobertaClassifier",
-                        "keras_nlp.models.XLMRobertaClassifier.from_preset",
-                        "keras_nlp.models.XLMRobertaClassifier.backbone",
-                        "keras_nlp.models.XLMRobertaClassifier.preprocessor",
+                        "keras_nlp.models.XLMRobertaTextClassifier",
+                        "keras_nlp.models.XLMRobertaTextClassifier.from_preset",
+                        "keras_nlp.models.XLMRobertaTextClassifier.backbone",
+                        "keras_nlp.models.XLMRobertaTextClassifier.preprocessor",
+                    ],
+                },
+                {
+                    "path": "xlm_roberta_text_classifier_preprocessor",
+                    "title": "XLMRobertaTextClassifierPreprocessor layer",
+                    "generate": [
+                        "keras_nlp.models.XLMRobertaTextClassifierPreprocessor",
+                        "keras_nlp.models.XLMRobertaTextClassifierPreprocessor.from_preset",
+                        "keras_nlp.models.XLMRobertaTextClassifierPreprocessor.tokenizer",
                     ],
                 },
                 {
@@ -1217,6 +1149,15 @@ TOKENIZERS_MASTER = {
     "title": "Tokenizers",
     "toc": True,
     "children": [
+        {
+            "path": "tokenizer",
+            "title": "Tokenizer",
+            "generate": [
+                "keras_nlp.tokenizers.Tokenizer",
+                "keras_nlp.tokenizers.Tokenizer.from_preset",
+                "keras_nlp.tokenizers.Tokenizer.save_to_preset",
+            ],
+        },
         {
             "path": "word_piece_tokenizer",
             "title": "WordPieceTokenizer",
@@ -1407,26 +1348,6 @@ METRICS_MASTER = {
             "path": "perplexity",
             "title": "Perplexity metric",
             "generate": ["keras_nlp.metrics.Perplexity"],
-        },
-        {
-            "path": "rouge_l",
-            "title": "RougeL metric",
-            "generate": ["keras_nlp.metrics.RougeL"],
-        },
-        {
-            "path": "rouge_n",
-            "title": "RougeN metric",
-            "generate": ["keras_nlp.metrics.RougeN"],
-        },
-        {
-            "path": "bleu",
-            "title": "Bleu metric",
-            "generate": ["keras_nlp.metrics.Bleu"],
-        },
-        {
-            "path": "edit_distance",
-            "title": "EditDistance metric",
-            "generate": ["keras_nlp.metrics.EditDistance"],
         },
     ],
 }
