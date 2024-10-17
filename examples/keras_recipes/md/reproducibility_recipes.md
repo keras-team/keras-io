@@ -87,8 +87,8 @@ for initializer in initializers_list:
 <div class="k-default-codeblock">
 ```
 Running <class 'keras.src.initializers.random_initializers.RandomNormal'>
-	Iteration --> 0 // Result --> 0.05609520897269249
-	Iteration --> 1 // Result --> 0.05609520897269249
+	Iteration --> 0 // Result --> 0.000790853810030967
+	Iteration --> 1 // Result --> 0.000790853810030967
 ```
 </div>
     
@@ -96,8 +96,8 @@ Running <class 'keras.src.initializers.random_initializers.RandomNormal'>
 <div class="k-default-codeblock">
 ```
 Running <class 'keras.src.initializers.random_initializers.RandomUniform'>
-	Iteration --> 0 // Result --> 0.03690483793616295
-	Iteration --> 1 // Result --> 0.03690483793616295
+	Iteration --> 0 // Result --> -0.02175668440759182
+	Iteration --> 1 // Result --> -0.02175668440759182
 ```
 </div>
     
@@ -105,8 +105,8 @@ Running <class 'keras.src.initializers.random_initializers.RandomUniform'>
 <div class="k-default-codeblock">
 ```
 Running <class 'keras.src.initializers.random_initializers.TruncatedNormal'>
-	Iteration --> 0 // Result --> 0.05230803042650223
-	Iteration --> 1 // Result --> 0.05230803042650223
+	Iteration --> 0 // Result --> 0.000790853810030967
+	Iteration --> 1 // Result --> 0.000790853810030967
 ```
 </div>
     
@@ -114,8 +114,8 @@ Running <class 'keras.src.initializers.random_initializers.TruncatedNormal'>
 <div class="k-default-codeblock">
 ```
 Running <class 'keras.src.initializers.random_initializers.VarianceScaling'>
-	Iteration --> 0 // Result --> 1.1893247365951538
-	Iteration --> 1 // Result --> 1.1893247365951538
+	Iteration --> 0 // Result --> 0.017981600016355515
+	Iteration --> 1 // Result --> 0.017981600016355515
 ```
 </div>
     
@@ -123,8 +123,8 @@ Running <class 'keras.src.initializers.random_initializers.VarianceScaling'>
 <div class="k-default-codeblock">
 ```
 Running <class 'keras.src.initializers.random_initializers.GlorotNormal'>
-	Iteration --> 0 // Result --> 1.1893247365951538
-	Iteration --> 1 // Result --> 1.1893247365951538
+	Iteration --> 0 // Result --> 0.017981600016355515
+	Iteration --> 1 // Result --> 0.017981600016355515
 ```
 </div>
     
@@ -132,8 +132,8 @@ Running <class 'keras.src.initializers.random_initializers.GlorotNormal'>
 <div class="k-default-codeblock">
 ```
 Running <class 'keras.src.initializers.random_initializers.GlorotUniform'>
-	Iteration --> 0 // Result --> 1.2784210443496704
-	Iteration --> 1 // Result --> 1.2784210443496704
+	Iteration --> 0 // Result --> -0.7536736726760864
+	Iteration --> 1 // Result --> -0.7536736726760864
 ```
 </div>
     
@@ -141,8 +141,8 @@ Running <class 'keras.src.initializers.random_initializers.GlorotUniform'>
 <div class="k-default-codeblock">
 ```
 Running <class 'keras.src.initializers.random_initializers.HeNormal'>
-	Iteration --> 0 // Result --> 1.6819592714309692
-	Iteration --> 1 // Result --> 1.6819592714309692
+	Iteration --> 0 // Result --> 0.025429822504520416
+	Iteration --> 1 // Result --> 0.025429822504520416
 ```
 </div>
     
@@ -150,8 +150,8 @@ Running <class 'keras.src.initializers.random_initializers.HeNormal'>
 <div class="k-default-codeblock">
 ```
 Running <class 'keras.src.initializers.random_initializers.HeUniform'>
-	Iteration --> 0 // Result --> 1.8079603910446167
-	Iteration --> 1 // Result --> 1.8079603910446167
+	Iteration --> 0 // Result --> -1.065855622291565
+	Iteration --> 1 // Result --> -1.065855622291565
 ```
 </div>
     
@@ -159,8 +159,8 @@ Running <class 'keras.src.initializers.random_initializers.HeUniform'>
 <div class="k-default-codeblock">
 ```
 Running <class 'keras.src.initializers.random_initializers.LecunNormal'>
-	Iteration --> 0 // Result --> 1.1893247365951538
-	Iteration --> 1 // Result --> 1.1893247365951538
+	Iteration --> 0 // Result --> 0.017981600016355515
+	Iteration --> 1 // Result --> 0.017981600016355515
 ```
 </div>
     
@@ -168,8 +168,8 @@ Running <class 'keras.src.initializers.random_initializers.LecunNormal'>
 <div class="k-default-codeblock">
 ```
 Running <class 'keras.src.initializers.random_initializers.LecunUniform'>
-	Iteration --> 0 // Result --> 1.2784210443496704
-	Iteration --> 1 // Result --> 1.2784210443496704
+	Iteration --> 0 // Result --> -0.7536736726760864
+	Iteration --> 1 // Result --> -0.7536736726760864
 ```
 </div>
     
@@ -273,8 +273,13 @@ def train_model(train_data: tf.data.Dataset, test_data: tf.data.Dataset) -> dict
     )
 
     model.compile(
-        optimizer="adam", loss="sparse_categorical_crossentropy", metrics=["accuracy"]
+        optimizer="adam",
+        loss="sparse_categorical_crossentropy",
+        metrics=["accuracy"],
+        jit_compile=False,
     )
+    # jit_compile's default value is "auto" which will cause some problems in some
+    # ops, therefore it's set to False.
 
     # model.fit has a `shuffle` parameter which has a default value of `True`.
     # If you are using array-like objects, this will shuffle the data before
@@ -298,6 +303,13 @@ train_ds = tf.data.Dataset.from_tensor_slices((train_images, train_labels))
 test_ds = tf.data.Dataset.from_tensor_slices((test_images, test_labels))
 ```
 
+<div class="k-default-codeblock">
+```
+Downloading data from https://storage.googleapis.com/tensorflow/tf-keras-datasets/mnist.npz
+ 11490434/11490434 ━━━━━━━━━━━━━━━━━━━━ 0s 0us/step
+
+```
+</div>
 Remember we called `tf.config.experimental.enable_op_determinism()` at the
 beginning of the function. This makes the `tf.data` operations deterministic.
 However, making `tf.data` operations deterministic comes with a performance
@@ -375,11 +387,11 @@ history = train_model(train_data, test_data)
 <div class="k-default-codeblock">
 ```
 Epoch 1/2
- 938/938 ━━━━━━━━━━━━━━━━━━━━ 26s 27ms/step - accuracy: 0.5418 - loss: 1.2867 - val_accuracy: 0.9291 - val_loss: 0.2303
+ 938/938 ━━━━━━━━━━━━━━━━━━━━ 73s 73ms/step - accuracy: 0.5726 - loss: 1.2175 - val_accuracy: 0.9401 - val_loss: 0.1924
 Epoch 2/2
- 938/938 ━━━━━━━━━━━━━━━━━━━━ 25s 26ms/step - accuracy: 0.9075 - loss: 0.2983 - val_accuracy: 0.9583 - val_loss: 0.1343
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 1s 4ms/step - accuracy: 0.9512 - loss: 0.1559
-Model accuracy on test data: 95.83%
+ 938/938 ━━━━━━━━━━━━━━━━━━━━ 89s 81ms/step - accuracy: 0.9105 - loss: 0.2885 - val_accuracy: 0.9630 - val_loss: 0.1131
+ 157/157 ━━━━━━━━━━━━━━━━━━━━ 3s 17ms/step - accuracy: 0.9553 - loss: 0.1353
+Model accuracy on test data: 96.30%
 
 ```
 </div>
