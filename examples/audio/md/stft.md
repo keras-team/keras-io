@@ -605,7 +605,7 @@ plt.show()
 
 
     
-![png](https://github.com/mostafa-mahmoud/keras-io/blob/master/examples/audio/img/stft/raw_audio.png)
+![png](https://github.com/keras-team/keras-io/blob/master/examples/audio/img/stft/raw_audio.png)
     
 
 
@@ -618,7 +618,7 @@ plot_single_spectrogram(sample_wav_data)
 
 
     
-![png](https://github.com/mostafa-mahmoud/keras-io/blob/master/examples/audio/img/stft/spectrogram.png)
+![png](https://github.com/keras-team/keras-io/blob/master/examples/audio/img/stft/spectrogram.png)
     
 
 
@@ -631,7 +631,7 @@ plot_multi_bandwidth_spectrogram(sample_wav_data)
 
 
     
-![png](https://github.com/mostafa-mahmoud/keras-io/blob/master/examples/audio/img/stft/multiband_spectrogram.png)
+![png](https://github.com/keras-team/keras-io/blob/master/examples/audio/img/stft/multiband_spectrogram.png)
     
 
 
@@ -643,9 +643,7 @@ def read_dataset(df, folds):
     msk = df["fold"].isin(folds)
     filenames = df["filename"][msk]
     targets = df["target"][msk].values
-    waves = np.array(
-        [read_wav_file(fil) for fil in filenames], dtype=np.float32
-    )
+    waves = np.array([read_wav_file(fil) for fil in filenames], dtype=np.float32)
     return waves, targets
 ```
 
@@ -1790,7 +1788,7 @@ plt.show()
 
 
     
-![png](https://github.com/mostafa-mahmoud/keras-io/blob/master/examples/audio/img/stft/training.png)
+![png](https://github.com/keras-team/keras-io/blob/master/examples/audio/img/stft/training.png)
     
 
 
@@ -1802,9 +1800,7 @@ Running the models on the test set.
 
 ```python
 _, test_acc = model1d.evaluate(test_x, test_y)
-print(
-    f"1D model wit non-trainable STFT -> Test Accuracy: {test_acc * 100:.2f}%"
-)
+print(f"1D model wit non-trainable STFT -> Test Accuracy: {test_acc * 100:.2f}%")
 ```
 
     [1m3/3[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m3s[0m 307ms/step - accuracy: 0.8148 - loss: 0.6244
