@@ -49,7 +49,7 @@ Install `tf-nightly` via `pip install tf-nightly`.
 import os
 
 os.environ["KERAS_BACKEND"] = "tensorflow"
-import keras_nlp
+import keras_hub
 import keras
 import tensorflow as tf
 from keras import layers
@@ -359,7 +359,7 @@ def create_masked_language_bert_model():
     word_embeddings = layers.Embedding(
         config.VOCAB_SIZE, config.EMBED_DIM, name="word_embedding"
     )(inputs)
-    position_embeddings = keras_nlp.layers.PositionEmbedding(
+    position_embeddings = keras_hub.layers.PositionEmbedding(
         sequence_length=config.MAX_LEN
     )(word_embeddings)
     embeddings = word_embeddings + position_embeddings

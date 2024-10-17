@@ -85,12 +85,9 @@ import os
 
 SAM has the following components:
 
-|
-![](https://imgur.com/oLfdwuB)
+| ![](https://imgur.com/oLfdwuB.png) |
 |:--:|
-| Image taken from the official
-[SAM blog post](https://ai.facebook.com/blog/segment-anything-foundation-model-image-segmentation/) |
-|
+| Image taken from the official [SAM blog post](https://ai.facebook.com/blog/segment-anything-foundation-model-image-segmentation/) |
 
 The image encoder is responsible for computing image embeddings. When interacting with
 SAM, we compute the image embedding one time (as the image encoder is heavy) and then
@@ -345,9 +342,7 @@ And there we go!
 As can be noticed, all the masks are _valid_ masks for the point prompt we provided.
 
 SAM is flexible enough to support different visual prompts and we encourage you to check
-out [this
-notebook](https://github.com/huggingface/notebooks/blob/main/examples/segment_anything.ipy
-nb) to know more about them!
+out [this notebook](https://github.com/huggingface/notebooks/blob/main/examples/segment_anything.ipynb) to know more about them!
 
 ---
 ## Fine-tuning
@@ -559,7 +554,7 @@ ground_truth_mask (2, 256, 256) <dtype: 'int32'> True
 ### Training
 
 We will now write DICE loss. This implementation is based on
-[MONAI DICE loss](https://docs.monai.io/en/stable/_modules/monai/losses/dice.html#DiceLoss).
+[MONAI DICE loss](https://docs.monai.io/en/stable/losses.html#diceloss).
 
 
 ```python

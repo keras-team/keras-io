@@ -1,16 +1,16 @@
 """
-Title: GPT text generation from scratch with KerasNLP
+Title: GPT text generation from scratch with KerasHub
 Author: [Jesse Chan](https://github.com/jessechancy)
 Date created: 2022/07/25
 Last modified: 2022/07/25
-Description: Using KerasNLP to train a mini-GPT model for text generation.
+Description: Using KerasHub to train a mini-GPT model for text generation.
 Accelerator: GPU
 """
 
 """
 ## Introduction
 
-In this example, we will use KerasNLP to build a scaled down Generative
+In this example, we will use KerasHub to build a scaled down Generative
 Pre-Trained (GPT) model. GPT is a Transformer-based model that allows you to generate
 sophisticated text from a prompt.
 
@@ -21,15 +21,15 @@ model with few parameters.
 
 This example combines concepts from
 [Text generation with a miniature GPT](https://keras.io/examples/generative/text_generation_with_miniature_gpt/)
-with KerasNLP abstractions. We will demonstrate how KerasNLP tokenization, layers and
+with KerasHub abstractions. We will demonstrate how KerasHub tokenization, layers and
 metrics simplify the training
-process, and then show how to generate output text using the KerasNLP sampling utilities.
+process, and then show how to generate output text using the KerasHub sampling utilities.
 
 Note: If you are running this example on a Colab,
 make sure to enable GPU runtime for faster training.
 
-This example requires KerasNLP. You can install it via the following command:
-`pip install keras-nlp`
+This example requires KerasHub. You can install it via the following command:
+`pip install keras-hub`
 """
 
 """
@@ -37,12 +37,12 @@ This example requires KerasNLP. You can install it via the following command:
 """
 
 """shell
-pip install -q --upgrade keras-nlp
+pip install -q --upgrade keras-hub
 pip install -q --upgrade keras  # Upgrade to Keras 3.
 """
 
 import os
-import keras_nlp
+import keras_hub
 import keras
 
 import tensorflow.data as tf_data
@@ -119,7 +119,7 @@ representing the beginning of each line of training data.
 """
 
 # Train tokenizer vocabulary
-vocab = keras_nlp.tokenizers.compute_word_piece_vocabulary(
+vocab = keras_hub.tokenizers.compute_word_piece_vocabulary(
     raw_train_ds,
     vocabulary_size=VOCAB_SIZE,
     lowercase=True,
@@ -130,12 +130,12 @@ vocab = keras_nlp.tokenizers.compute_word_piece_vocabulary(
 ## Load tokenizer
 
 We use the vocabulary data to initialize
-`keras_nlp.tokenizers.WordPieceTokenizer`. WordPieceTokenizer is an efficient
+`keras_hub.tokenizers.WordPieceTokenizer`. WordPieceTokenizer is an efficient
 implementation of the WordPiece algorithm used by BERT and other models. It will strip,
 lower-case and do other irreversible preprocessing operations.
 """
 
-tokenizer = keras_nlp.tokenizers.WordPieceTokenizer(
+tokenizer = keras_hub.tokenizers.WordPieceTokenizer(
     vocabulary=vocab,
     sequence_length=SEQ_LEN,
     lowercase=True,
@@ -148,7 +148,7 @@ We preprocess the dataset by tokenizing and splitting it into `features` and `la
 """
 
 # packer adds a start token
-start_packer = keras_nlp.layers.StartEndPacker(
+start_packer = keras_hub.layers.StartEndPacker(
     sequence_length=SEQ_LEN,
     start_value=tokenizer.token_to_id("[BOS]"),
 )
@@ -174,16 +174,16 @@ val_ds = raw_val_ds.map(preprocess, num_parallel_calls=tf_data.AUTOTUNE).prefetc
 
 We create our scaled down GPT model with the following layers:
 
-- One `keras_nlp.layers.TokenAndPositionEmbedding` layer, which combines the embedding
+- One `keras_hub.layers.TokenAndPositionEmbedding` layer, which combines the embedding
 for the token and its position.
-- Multiple `keras_nlp.layers.TransformerDecoder` layers, with the default causal masking.
+- Multiple `keras_hub.layers.TransformerDecoder` layers, with the default causal masking.
 The layer has no cross-attention when run with decoder sequence only.
 - One final dense linear layer
 """
 
 inputs = keras.layers.Input(shape=(None,), dtype="int32")
 # Embedding.
-embedding_layer = keras_nlp.layers.TokenAndPositionEmbedding(
+embedding_layer = keras_hub.layers.TokenAndPositionEmbedding(
     vocabulary_size=VOCAB_SIZE,
     sequence_length=SEQ_LEN,
     embedding_dim=EMBED_DIM,
@@ -192,7 +192,7 @@ embedding_layer = keras_nlp.layers.TokenAndPositionEmbedding(
 x = embedding_layer(inputs)
 # Transformer decoders.
 for _ in range(NUM_LAYERS):
-    decoder_layer = keras_nlp.layers.TransformerDecoder(
+    decoder_layer = keras_hub.layers.TransformerDecoder(
         num_heads=NUM_HEADS,
         intermediate_dim=FEED_FORWARD_DIM,
     )
@@ -201,7 +201,7 @@ for _ in range(NUM_LAYERS):
 outputs = keras.layers.Dense(VOCAB_SIZE)(x)
 model = keras.Model(inputs=inputs, outputs=outputs)
 loss_fn = keras.losses.SparseCategoricalCrossentropy(from_logits=True)
-perplexity = keras_nlp.metrics.Perplexity(from_logits=True, mask_token_id=0)
+perplexity = keras_hub.metrics.Perplexity(from_logits=True, mask_token_id=0)
 model.compile(optimizer="adam", loss=loss_fn, metrics=[perplexity])
 
 """
@@ -238,7 +238,7 @@ prompt_tokens = start_packer(tokenizer([""]))
 prompt_tokens
 
 """
-We will use the `keras_nlp.samplers` module for inference, which requires a
+We will use the `keras_hub.samplers` module for inference, which requires a
 callback function wrapping the model we just trained. This wrapper calls
 the model and returns the logit predictions for the current token we are
 generating.
@@ -247,7 +247,7 @@ Note: There are two pieces of more advanced functionality available when
 defining your callback. The first is the ability to take in a `cache` of states
 computed in previous generation steps, which can be used to speed up generation.
 The second is the ability to output the final dense "hidden state" of each
-generated token. This is used by `keras_nlp.samplers.ContrastiveSampler`, which
+generated token. This is used by `keras_hub.samplers.ContrastiveSampler`, which
 avoids repetition by penalizing repeated hidden states. Both are optional, and
 we will ignore them for now.
 """
@@ -272,7 +272,7 @@ We greedily pick the most probable token at each timestep. In other words, we ge
 argmax of the model output.
 """
 
-sampler = keras_nlp.samplers.GreedySampler()
+sampler = keras_hub.samplers.GreedySampler()
 output_tokens = sampler(
     next=next,
     prompt=prompt_tokens,
@@ -298,7 +298,7 @@ greedy search since it has to compute and store multiple potential sequences.
 **Note:** beam search with `num_beams=1` is identical to greedy search.
 """
 
-sampler = keras_nlp.samplers.BeamSampler(num_beams=10)
+sampler = keras_hub.samplers.BeamSampler(num_beams=10)
 output_tokens = sampler(
     next=next,
     prompt=prompt_tokens,
@@ -319,7 +319,7 @@ Random search is our first probabilistic method. At each time step, it samples t
 token using the softmax probabilities provided by the model.
 """
 
-sampler = keras_nlp.samplers.RandomSampler()
+sampler = keras_hub.samplers.RandomSampler()
 output_tokens = sampler(
     next=next,
     prompt=prompt_tokens,
@@ -344,7 +344,7 @@ we won't be sampling from low probability tokens, and hence we would have less
 nonsensical words!
 """
 
-sampler = keras_nlp.samplers.TopKSampler(k=10)
+sampler = keras_hub.samplers.TopKSampler(k=10)
 output_tokens = sampler(
     next=next,
     prompt=prompt_tokens,
@@ -370,7 +370,7 @@ top 2 tokens to sample from. If instead the 90% is distributed over 10 tokens, i
 similarly filter out the top 10 tokens to sample from.
 """
 
-sampler = keras_nlp.samplers.TopPSampler(p=0.5)
+sampler = keras_hub.samplers.TopPSampler(p=0.5)
 output_tokens = sampler(
     next=next,
     prompt=prompt_tokens,
@@ -391,7 +391,7 @@ class TopKTextGenerator(keras.callbacks.Callback):
     """A callback to generate text from a trained model using top-k."""
 
     def __init__(self, k):
-        self.sampler = keras_nlp.samplers.TopKSampler(k)
+        self.sampler = keras_hub.samplers.TopKSampler(k)
 
     def on_epoch_end(self, epoch, logs=None):
         output_tokens = self.sampler(
@@ -410,7 +410,7 @@ model.fit(train_ds.take(1), verbose=2, epochs=2, callbacks=[text_generation_call
 """
 ## Conclusion
 
-To recap, in this example, we use KerasNLP layers to train a sub-word vocabulary,
+To recap, in this example, we use KerasHub layers to train a sub-word vocabulary,
 tokenize training data, create a miniature GPT model, and perform inference with the
 text generation library.
 

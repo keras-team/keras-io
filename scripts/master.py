@@ -43,6 +43,10 @@ MASTER = {
             "title": "KerasTuner: Hyperparameter Tuning",
         },
         {
+            "path": "keras_hub/",
+            "title": "KerasHub: Pretrained Models",
+        },
+        {
             "path": "keras_cv/",
             "title": "KerasCV: Computer Vision Workflows",
         },
