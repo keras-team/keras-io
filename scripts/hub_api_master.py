@@ -61,6 +61,56 @@ BASE_CLASSES = {
             ],
         },
         {
+            "path": "image_classifier",
+            "title": "ImageClassifier",
+            "generate": [
+                "keras_hub.models.ImageClassifier",
+                "keras_hub.models.ImageClassifier.from_preset",
+                "keras_hub.models.ImageClassifier.compile",
+                "keras_hub.models.ImageClassifier.save_to_preset",
+                "keras_hub.models.ImageClassifier.preprocessor",
+                "keras_hub.models.ImageClassifier.backbone",
+            ],
+        },
+        {
+            "path": "image_to_image",
+            "title": "ImageToImage",
+            "generate": [
+                "keras_hub.models.ImageToImage",
+                "keras_hub.models.ImageToImage.from_preset",
+                "keras_hub.models.ImageToImage.compile",
+                "keras_hub.models.ImageToImage.save_to_preset",
+                "keras_hub.models.ImageToImage.preprocessor",
+                "keras_hub.models.ImageToImage.backbone",
+                "keras_hub.models.ImageToImage.generate",
+            ],
+        },
+        {
+            "path": "image_segmenter",
+            "title": "ImageSegmenter",
+            "generate": [
+                "keras_hub.models.ImageSegmenter",
+                "keras_hub.models.ImageSegmenter.from_preset",
+                "keras_hub.models.ImageSegmenter.compile",
+                "keras_hub.models.ImageSegmenter.save_to_preset",
+                "keras_hub.models.ImageSegmenter.preprocessor",
+                "keras_hub.models.ImageSegmenter.backbone",
+            ],
+        },
+        {
+            "path": "inpaint",
+            "title": "Inpaint",
+            "generate": [
+                "keras_hub.models.Inpaint",
+                "keras_hub.models.Inpaint.from_preset",
+                "keras_hub.models.Inpaint.compile",
+                "keras_hub.models.Inpaint.save_to_preset",
+                "keras_hub.models.Inpaint.preprocessor",
+                "keras_hub.models.Inpaint.backbone",
+                "keras_hub.models.Inpaint.generate",
+            ],
+        },
+        {
             "path": "seq_2_seq_lm",
             "title": "Seq2SeqLM",
             "generate": [
@@ -103,6 +153,19 @@ BASE_CLASSES = {
                 "keras_hub.models.TextClassifierPreprocessor.from_preset",
                 "keras_hub.models.TextClassifierPreprocessor.save_to_preset",
                 "keras_hub.models.TextClassifierPreprocessor.tokenizer",
+            ],
+        },
+        {
+            "path": "text_to_image",
+            "title": "TextToImage",
+            "generate": [
+                "keras_hub.models.TextToImage",
+                "keras_hub.models.TextToImage.from_preset",
+                "keras_hub.models.TextToImage.compile",
+                "keras_hub.models.TextToImage.save_to_preset",
+                "keras_hub.models.TextToImage.preprocessor",
+                "keras_hub.models.TextToImage.backbone",
+                "keras_hub.models.TextToImage.generate",
             ],
         },
         {
