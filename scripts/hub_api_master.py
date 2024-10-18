@@ -17,27 +17,6 @@ BASE_CLASSES = {
             ],
         },
         {
-            "path": "task",
-            "title": "Task",
-            "generate": [
-                "keras_hub.models.Task",
-                "keras_hub.models.Task.from_preset",
-                "keras_hub.models.Task.save_to_preset",
-                "keras_hub.models.Task.preprocessor",
-                "keras_hub.models.Task.backbone",
-            ],
-        },
-        {
-            "path": "preprocessor",
-            "title": "Preprocessor",
-            "generate": [
-                "keras_hub.models.Preprocessor",
-                "keras_hub.models.Preprocessor.from_preset",
-                "keras_hub.models.Preprocessor.save_to_preset",
-                "keras_hub.models.Preprocessor.tokenizer",
-            ],
-        },
-        {
             "path": "causal_lm",
             "title": "CausalLM",
             "generate": [
@@ -70,6 +49,15 @@ BASE_CLASSES = {
                 "keras_hub.models.ImageClassifier.save_to_preset",
                 "keras_hub.models.ImageClassifier.preprocessor",
                 "keras_hub.models.ImageClassifier.backbone",
+            ],
+        },
+       {
+            "path": "image_classifier_preprocessor",
+            "title": "ImageClassifierPreprocessor",
+            "generate": [
+                "keras_hub.models.ImageClassifierPreprocessor",
+                "keras_hub.models.ImageClassifierPreprocessor.from_preset",
+                "keras_hub.models.ImageClassifier.save_to_preset",
             ],
         },
         {
@@ -110,6 +98,38 @@ BASE_CLASSES = {
                 "keras_hub.models.Inpaint.generate",
             ],
         },
+                {
+            "path": "masked_lm",
+            "title": "MaskedLM",
+            "generate": [
+                "keras_hub.models.MaskedLM",
+                "keras_hub.models.MaskedLM.from_preset",
+                "keras_hub.models.MaskedLM.compile",
+                "keras_hub.models.MaskedLM.save_to_preset",
+                "keras_hub.models.MaskedLM.preprocessor",
+                "keras_hub.models.MaskedLM.backbone",
+            ],
+        },
+        {
+            "path": "masked_lm_preprocessor",
+            "title": "MaskedLMPreprocessor",
+            "generate": [
+                "keras_hub.models.MaskedLMPreprocessor",
+                "keras_hub.models.MaskedLMPreprocessor.from_preset",
+                "keras_hub.models.MaskedLMPreprocessor.save_to_preset",
+                "keras_hub.models.MaskedLMPreprocessor.tokenizer",
+            ],
+        },
+        {
+            "path": "preprocessor",
+            "title": "Preprocessor",
+            "generate": [
+                "keras_hub.models.Preprocessor",
+                "keras_hub.models.Preprocessor.from_preset",
+                "keras_hub.models.Preprocessor.save_to_preset",
+                "keras_hub.models.Preprocessor.tokenizer",
+            ],
+        },
         {
             "path": "seq_2_seq_lm",
             "title": "Seq2SeqLM",
@@ -131,6 +151,17 @@ BASE_CLASSES = {
                 "keras_hub.models.Seq2SeqLMPreprocessor.from_preset",
                 "keras_hub.models.Seq2SeqLMPreprocessor.save_to_preset",
                 "keras_hub.models.Seq2SeqLMPreprocessor.tokenizer",
+            ],
+        },
+        {
+            "path": "task",
+            "title": "Task",
+            "generate": [
+                "keras_hub.models.Task",
+                "keras_hub.models.Task.from_preset",
+                "keras_hub.models.Task.save_to_preset",
+                "keras_hub.models.Task.preprocessor",
+                "keras_hub.models.Task.backbone",
             ],
         },
         {
@@ -166,28 +197,6 @@ BASE_CLASSES = {
                 "keras_hub.models.TextToImage.preprocessor",
                 "keras_hub.models.TextToImage.backbone",
                 "keras_hub.models.TextToImage.generate",
-            ],
-        },
-        {
-            "path": "masked_lm",
-            "title": "MaskedLM",
-            "generate": [
-                "keras_hub.models.MaskedLM",
-                "keras_hub.models.MaskedLM.from_preset",
-                "keras_hub.models.MaskedLM.compile",
-                "keras_hub.models.MaskedLM.save_to_preset",
-                "keras_hub.models.MaskedLM.preprocessor",
-                "keras_hub.models.MaskedLM.backbone",
-            ],
-        },
-        {
-            "path": "masked_lm_preprocessor",
-            "title": "MaskedLMPreprocessor",
-            "generate": [
-                "keras_hub.models.MaskedLMPreprocessor",
-                "keras_hub.models.MaskedLMPreprocessor.from_preset",
-                "keras_hub.models.MaskedLMPreprocessor.save_to_preset",
-                "keras_hub.models.MaskedLMPreprocessor.tokenizer",
             ],
         },
         {
