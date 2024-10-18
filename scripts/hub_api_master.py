@@ -972,7 +972,7 @@ MODELS_MASTER = {
             ],
         },
         {
-            "path": "densnet/",
+            "path": "densenet/",
             "title": "DenseNet",
             "toc": True,
             "children": [
@@ -990,7 +990,6 @@ MODELS_MASTER = {
                     "generate": [
                         "keras_hub.models.DenseNetBackbone",
                         "keras_hub.models.DenseNetBackbone.from_preset",
-                        "keras_hub.models.DenseNetBackbone.token_embedding",
                     ],
                 },
                 {
@@ -1033,7 +1032,6 @@ MODELS_MASTER = {
                     "generate": [
                         "keras_hub.models.SAMBackbone",
                         "keras_hub.models.SAMBackbone.from_preset",
-                        "keras_hub.models.SAMBackbone.token_embedding",
                     ],
                 },
                 {
@@ -1132,7 +1130,6 @@ MODELS_MASTER = {
                     "generate": [
                         "keras_hub.models.DeepLabV3Backbone",
                         "keras_hub.models.DeepLabV3Backbone.from_preset",
-                        "keras_hub.models.DeepLabV3Backbone.token_embedding",
                     ],
                 },
                 {
@@ -1157,6 +1154,29 @@ MODELS_MASTER = {
             ],
         },
         {
+            "path": "mit/",
+            "title": "MixTransformer",
+            "toc": True,
+            "children": [
+                {
+                    "path": "mix_transformer_image_converter",
+                    "title": "MixTransformer ImageConverter",
+                    "generate": [
+                        "keras_hub.layers.MiTImageConverter",
+                        "keras_hub.layers.MiTImageConverter.from_preset",
+                    ],
+                },
+                {
+                    "path": "mix_transformer_backbone",
+                    "title": "MixTransformer model",
+                    "generate": [
+                        "keras_hub.models.MiTBackbone",
+                        "keras_hub.models.MiTBackbone.from_preset",
+                    ],
+                },
+            ],
+        },
+        {
             "path": "resnet/",
             "title": "ResNet",
             "toc": True,
@@ -1175,7 +1195,6 @@ MODELS_MASTER = {
                     "generate": [
                         "keras_hub.models.ResNetBackbone",
                         "keras_hub.models.ResNetBackbone.from_preset",
-                        "keras_hub.models.ResNetBackbone.token_embedding",
                     ],
                 },
                 {
