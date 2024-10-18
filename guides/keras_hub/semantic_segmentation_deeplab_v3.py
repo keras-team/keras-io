@@ -145,7 +145,7 @@ and split them into train dataset `train_ds` and `eval_ds`.
 
 # @title helper functions
 import logging
-import multiprocess as multiprocessing
+import multiprocessing
 from builtins import open
 import os.path
 import random
@@ -592,14 +592,13 @@ def load_sbd(
     instead.
     """
     extracted_dir = os.path.join("benchmark_RELEASE", "dataset")
-    # get_data = keras.utils.get_file(
-    #     fname=os.path.basename(SBD_URL),
-    #     origin=SBD_URL,
-    #     cache_dir=data_dir,
-    #     extract=True,
-    # )
-    # data_dir = os.path.join(os.path.dirname(get_data), extracted_dir)
-    data_dir = os.path.join("/home/sachinprasad/projects/", extracted_dir)
+    get_data = keras.utils.get_file(
+        fname=os.path.basename(SBD_URL),
+        origin=SBD_URL,
+        cache_dir=data_dir,
+        extract=True,
+    )
+    data_dir = os.path.join(os.path.dirname(get_data), extracted_dir)
     image_ids = get_sbd_image_ids(data_dir, split)
     # len(metadata) = #samples, metadata[i] is a dict.
     metadata = build_sbd_metadata(data_dir, image_ids)
