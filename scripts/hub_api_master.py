@@ -17,27 +17,6 @@ BASE_CLASSES = {
             ],
         },
         {
-            "path": "task",
-            "title": "Task",
-            "generate": [
-                "keras_hub.models.Task",
-                "keras_hub.models.Task.from_preset",
-                "keras_hub.models.Task.save_to_preset",
-                "keras_hub.models.Task.preprocessor",
-                "keras_hub.models.Task.backbone",
-            ],
-        },
-        {
-            "path": "preprocessor",
-            "title": "Preprocessor",
-            "generate": [
-                "keras_hub.models.Preprocessor",
-                "keras_hub.models.Preprocessor.from_preset",
-                "keras_hub.models.Preprocessor.save_to_preset",
-                "keras_hub.models.Preprocessor.tokenizer",
-            ],
-        },
-        {
             "path": "causal_lm",
             "title": "CausalLM",
             "generate": [
@@ -58,6 +37,97 @@ BASE_CLASSES = {
                 "keras_hub.models.CausalLMPreprocessor.from_preset",
                 "keras_hub.models.CausalLMPreprocessor.save_to_preset",
                 "keras_hub.models.CausalLMPreprocessor.tokenizer",
+            ],
+        },
+        {
+            "path": "image_classifier",
+            "title": "ImageClassifier",
+            "generate": [
+                "keras_hub.models.ImageClassifier",
+                "keras_hub.models.ImageClassifier.from_preset",
+                "keras_hub.models.ImageClassifier.compile",
+                "keras_hub.models.ImageClassifier.save_to_preset",
+                "keras_hub.models.ImageClassifier.preprocessor",
+                "keras_hub.models.ImageClassifier.backbone",
+            ],
+        },
+       {
+            "path": "image_classifier_preprocessor",
+            "title": "ImageClassifierPreprocessor",
+            "generate": [
+                "keras_hub.models.ImageClassifierPreprocessor",
+                "keras_hub.models.ImageClassifierPreprocessor.from_preset",
+                "keras_hub.models.ImageClassifier.save_to_preset",
+            ],
+        },
+        {
+            "path": "image_to_image",
+            "title": "ImageToImage",
+            "generate": [
+                "keras_hub.models.ImageToImage",
+                "keras_hub.models.ImageToImage.from_preset",
+                "keras_hub.models.ImageToImage.compile",
+                "keras_hub.models.ImageToImage.save_to_preset",
+                "keras_hub.models.ImageToImage.preprocessor",
+                "keras_hub.models.ImageToImage.backbone",
+                "keras_hub.models.ImageToImage.generate",
+            ],
+        },
+        {
+            "path": "image_segmenter",
+            "title": "ImageSegmenter",
+            "generate": [
+                "keras_hub.models.ImageSegmenter",
+                "keras_hub.models.ImageSegmenter.from_preset",
+                "keras_hub.models.ImageSegmenter.compile",
+                "keras_hub.models.ImageSegmenter.save_to_preset",
+                "keras_hub.models.ImageSegmenter.preprocessor",
+                "keras_hub.models.ImageSegmenter.backbone",
+            ],
+        },
+        {
+            "path": "inpaint",
+            "title": "Inpaint",
+            "generate": [
+                "keras_hub.models.Inpaint",
+                "keras_hub.models.Inpaint.from_preset",
+                "keras_hub.models.Inpaint.compile",
+                "keras_hub.models.Inpaint.save_to_preset",
+                "keras_hub.models.Inpaint.preprocessor",
+                "keras_hub.models.Inpaint.backbone",
+                "keras_hub.models.Inpaint.generate",
+            ],
+        },
+                {
+            "path": "masked_lm",
+            "title": "MaskedLM",
+            "generate": [
+                "keras_hub.models.MaskedLM",
+                "keras_hub.models.MaskedLM.from_preset",
+                "keras_hub.models.MaskedLM.compile",
+                "keras_hub.models.MaskedLM.save_to_preset",
+                "keras_hub.models.MaskedLM.preprocessor",
+                "keras_hub.models.MaskedLM.backbone",
+            ],
+        },
+        {
+            "path": "masked_lm_preprocessor",
+            "title": "MaskedLMPreprocessor",
+            "generate": [
+                "keras_hub.models.MaskedLMPreprocessor",
+                "keras_hub.models.MaskedLMPreprocessor.from_preset",
+                "keras_hub.models.MaskedLMPreprocessor.save_to_preset",
+                "keras_hub.models.MaskedLMPreprocessor.tokenizer",
+            ],
+        },
+        {
+            "path": "preprocessor",
+            "title": "Preprocessor",
+            "generate": [
+                "keras_hub.models.Preprocessor",
+                "keras_hub.models.Preprocessor.from_preset",
+                "keras_hub.models.Preprocessor.save_to_preset",
+                "keras_hub.models.Preprocessor.tokenizer",
             ],
         },
         {
@@ -84,6 +154,17 @@ BASE_CLASSES = {
             ],
         },
         {
+            "path": "task",
+            "title": "Task",
+            "generate": [
+                "keras_hub.models.Task",
+                "keras_hub.models.Task.from_preset",
+                "keras_hub.models.Task.save_to_preset",
+                "keras_hub.models.Task.preprocessor",
+                "keras_hub.models.Task.backbone",
+            ],
+        },
+        {
             "path": "text_classifier",
             "title": "TextClassifier",
             "generate": [
@@ -106,25 +187,16 @@ BASE_CLASSES = {
             ],
         },
         {
-            "path": "masked_lm",
-            "title": "MaskedLM",
+            "path": "text_to_image",
+            "title": "TextToImage",
             "generate": [
-                "keras_hub.models.MaskedLM",
-                "keras_hub.models.MaskedLM.from_preset",
-                "keras_hub.models.MaskedLM.compile",
-                "keras_hub.models.MaskedLM.save_to_preset",
-                "keras_hub.models.MaskedLM.preprocessor",
-                "keras_hub.models.MaskedLM.backbone",
-            ],
-        },
-        {
-            "path": "masked_lm_preprocessor",
-            "title": "MaskedLMPreprocessor",
-            "generate": [
-                "keras_hub.models.MaskedLMPreprocessor",
-                "keras_hub.models.MaskedLMPreprocessor.from_preset",
-                "keras_hub.models.MaskedLMPreprocessor.save_to_preset",
-                "keras_hub.models.MaskedLMPreprocessor.tokenizer",
+                "keras_hub.models.TextToImage",
+                "keras_hub.models.TextToImage.from_preset",
+                "keras_hub.models.TextToImage.compile",
+                "keras_hub.models.TextToImage.save_to_preset",
+                "keras_hub.models.TextToImage.preprocessor",
+                "keras_hub.models.TextToImage.backbone",
+                "keras_hub.models.TextToImage.generate",
             ],
         },
         {
@@ -418,6 +490,90 @@ MODELS_MASTER = {
             ],
         },
         {
+            "path": "deeplab_v3/",
+            "title": "DeepLabV3 and DeepLabV3Plus",
+            "toc": True,
+            "children": [
+                {
+                    "path": "deeplab_v3_image_converter",
+                    "title": "DeepLabV3ImageConverter",
+                    "generate": [
+                        "keras_hub.layers.DeepLabV3ImageConverter",
+                        "keras_hub.layers.DeepLabV3ImageConverter.from_preset",
+                    ],
+                },
+                {
+                    "path": "deeplab_v3_backbone",
+                    "title": "DeepLabV3Backbone model",
+                    "generate": [
+                        "keras_hub.models.DeepLabV3Backbone",
+                        "keras_hub.models.DeepLabV3Backbone.from_preset",
+                    ],
+                },
+                {
+                    "path": "deeplab_v3_image_segmenter",
+                    "title": "DeepLabV3ImageSegmenter model",
+                    "generate": [
+                        "keras_hub.models.DeepLabV3ImageSegmenter",
+                        "keras_hub.models.DeepLabV3ImageSegmenter.from_preset",
+                        "keras_hub.models.DeepLabV3ImageSegmenter.backbone",
+                        "keras_hub.models.DeepLabV3ImageSegmenter.preprocessor",
+                    ],
+                },
+                {
+                    "path": "deeplab_v3_image_segmenter_preprocessor",
+                    "title": "DeepLabV3ImageSegmenterPreprocessor layer",
+                    "generate": [
+                        "keras_hub.models.DeepLabV3ImageSegmenterPreprocessor",
+                        "keras_hub.models.DeepLabV3ImageSegmenterPreprocessor.from_preset",
+                        "keras_hub.models.DeepLabV3ImageSegmenterPreprocessor.image_converter",
+                    ],
+                },
+            ],
+        },
+        {
+            "path": "densenet/",
+            "title": "DenseNet",
+            "toc": True,
+            "children": [
+                {
+                    "path": "densenet_image_converter",
+                    "title": "DenseNetImageConverter",
+                    "generate": [
+                        "keras_hub.layers.DenseNetImageConverter",
+                        "keras_hub.layers.DenseNetImageConverter.from_preset",
+                    ],
+                },
+                {
+                    "path": "densenet_backbone",
+                    "title": "DensNetBackbone model",
+                    "generate": [
+                        "keras_hub.models.DenseNetBackbone",
+                        "keras_hub.models.DenseNetBackbone.from_preset",
+                    ],
+                },
+                {
+                    "path": "densenet_image_classifier",
+                    "title": "DenseNetImageClassifier model",
+                    "generate": [
+                        "keras_hub.models.DenseNetImageClassifier",
+                        "keras_hub.models.DenseNetImageClassifier.from_preset",
+                        "keras_hub.models.DenseNetImageClassifier.backbone",
+                        "keras_hub.models.DenseNetImageClassifier.preprocessor",
+                    ],
+                },
+                {
+                    "path": "densenet_image_classifier_preprocessor",
+                    "title": "DenseNetImageClassifierPreprocessor layer",
+                    "generate": [
+                        "keras_hub.models.DenseNetImageClassifierPreprocessor",
+                        "keras_hub.models.DenseNetImageClassifierPreprocessor.from_preset",
+                        "keras_hub.models.DenseNetImageClassifierPreprocessor.image_converter",
+                    ],
+                },
+            ],
+        },
+        {
             "path": "distil_bert/",
             "title": "DistilBert",
             "toc": True,
@@ -475,53 +631,6 @@ MODELS_MASTER = {
                         "keras_hub.models.DistilBertMaskedLMPreprocessor",
                         "keras_hub.models.DistilBertMaskedLMPreprocessor.from_preset",
                         "keras_hub.models.DistilBertMaskedLMPreprocessor.tokenizer",
-                    ],
-                },
-            ],
-        },
-        {
-            "path": "gemma/",
-            "title": "Gemma",
-            "toc": True,
-            "children": [
-                {
-                    "path": "gemma_tokenizer",
-                    "title": "GemmaTokenizer",
-                    "generate": [
-                        "keras_hub.tokenizers.GemmaTokenizer",
-                        "keras_hub.tokenizers.GemmaTokenizer.from_preset",
-                    ],
-                },
-                {
-                    "path": "gemma_backbone",
-                    "title": "GemmaBackbone model",
-                    "generate": [
-                        "keras_hub.models.GemmaBackbone",
-                        "keras_hub.models.GemmaBackbone.from_preset",
-                        "keras_hub.models.GemmaBackbone.token_embedding",
-                        "keras_hub.models.GemmaBackbone.enable_lora",
-                        "keras_hub.models.GemmaBackbone.get_layout_map",
-                    ],
-                },
-                {
-                    "path": "gemma_causal_lm",
-                    "title": "GemmaCausalLM model",
-                    "generate": [
-                        "keras_hub.models.GemmaCausalLM",
-                        "keras_hub.models.GemmaCausalLM.from_preset",
-                        "keras_hub.models.GemmaCausalLM.generate",
-                        "keras_hub.models.GemmaCausalLM.backbone",
-                        "keras_hub.models.GemmaCausalLM.preprocessor",
-                        "keras_hub.models.GemmaCausalLM.score",
-                    ],
-                },
-                {
-                    "path": "gemma_causal_lm_preprocessor",
-                    "title": "GemmaCausalLMPreprocessor layer",
-                    "generate": [
-                        "keras_hub.models.GemmaCausalLMPreprocessor",
-                        "keras_hub.models.GemmaCausalLMPreprocessor.from_preset",
-                        "keras_hub.models.GemmaCausalLMPreprocessor.tokenizer",
                     ],
                 },
             ],
@@ -654,6 +763,53 @@ MODELS_MASTER = {
                         "keras_hub.models.FNetMaskedLMPreprocessor",
                         "keras_hub.models.FNetMaskedLMPreprocessor.from_preset",
                         "keras_hub.models.FNetMaskedLMPreprocessor.tokenizer",
+                    ],
+                },
+            ],
+        },
+        {
+            "path": "gemma/",
+            "title": "Gemma",
+            "toc": True,
+            "children": [
+                {
+                    "path": "gemma_tokenizer",
+                    "title": "GemmaTokenizer",
+                    "generate": [
+                        "keras_hub.tokenizers.GemmaTokenizer",
+                        "keras_hub.tokenizers.GemmaTokenizer.from_preset",
+                    ],
+                },
+                {
+                    "path": "gemma_backbone",
+                    "title": "GemmaBackbone model",
+                    "generate": [
+                        "keras_hub.models.GemmaBackbone",
+                        "keras_hub.models.GemmaBackbone.from_preset",
+                        "keras_hub.models.GemmaBackbone.token_embedding",
+                        "keras_hub.models.GemmaBackbone.enable_lora",
+                        "keras_hub.models.GemmaBackbone.get_layout_map",
+                    ],
+                },
+                {
+                    "path": "gemma_causal_lm",
+                    "title": "GemmaCausalLM model",
+                    "generate": [
+                        "keras_hub.models.GemmaCausalLM",
+                        "keras_hub.models.GemmaCausalLM.from_preset",
+                        "keras_hub.models.GemmaCausalLM.generate",
+                        "keras_hub.models.GemmaCausalLM.backbone",
+                        "keras_hub.models.GemmaCausalLM.preprocessor",
+                        "keras_hub.models.GemmaCausalLM.score",
+                    ],
+                },
+                {
+                    "path": "gemma_causal_lm_preprocessor",
+                    "title": "GemmaCausalLMPreprocessor layer",
+                    "generate": [
+                        "keras_hub.models.GemmaCausalLMPreprocessor",
+                        "keras_hub.models.GemmaCausalLMPreprocessor.from_preset",
+                        "keras_hub.models.GemmaCausalLMPreprocessor.tokenizer",
                     ],
                 },
             ],
@@ -838,6 +994,48 @@ MODELS_MASTER = {
                     ],
                 },
             ],
+        },        
+        {
+            "path": "mit/",
+            "title": "MiT",
+            "toc": True,
+            "children": [
+                {
+                    "path": "mit_image_converter",
+                    "title": "MiTImageConverter",
+                    "generate": [
+                        "keras_hub.layers.MiTImageConverter",
+                        "keras_hub.layers.MiTImageConverter.from_preset",
+                    ],
+                },
+                {
+                    "path": "mit_backbone",
+                    "title": "MiTBackbone model",
+                    "generate": [
+                        "keras_hub.models.MiTBackbone",
+                        "keras_hub.models.MiTBackbone.from_preset",
+                    ],
+                },
+                {
+                    "path": "mit_image_classifier",
+                    "title": "MiTImageClassifier model",
+                    "generate": [
+                        "keras_hub.models.MiTImageClassifier",
+                        "keras_hub.models.MiTImageClassifier.from_preset",
+                        "keras_hub.models.MiTImageClassifier.backbone",
+                        "keras_hub.models.MiTImageClassifier.preprocessor",
+                    ],
+                },
+                {
+                    "path": "mit_image_classifier_preprocessor",
+                    "title": "MiTImageClassifierPreprocessor layer",
+                    "generate": [
+                        "keras_hub.models.MiTImageClassifierPreprocessor",
+                        "keras_hub.models.MiTImageClassifierPreprocessor.from_preset",
+                        "keras_hub.models.MiTImageClassifierPreprocessor.image_converter",
+                    ],
+                },
+            ],
         },
         {
             "path": "opt/",
@@ -972,191 +1170,6 @@ MODELS_MASTER = {
             ],
         },
         {
-            "path": "densnet/",
-            "title": "DenseNet",
-            "toc": True,
-            "children": [
-                {
-                    "path": "densenet_image_converter",
-                    "title": "DenseNetImageConverter",
-                    "generate": [
-                        "keras_hub.layers.DenseNetImageConverter",
-                        "keras_hub.layers.DenseNetImageConverter.from_preset",
-                    ],
-                },
-                {
-                    "path": "densenet_backbone",
-                    "title": "DensNetBackbone model",
-                    "generate": [
-                        "keras_hub.models.DenseNetBackbone",
-                        "keras_hub.models.DenseNetBackbone.from_preset",
-                        "keras_hub.models.DenseNetBackbone.token_embedding",
-                    ],
-                },
-                {
-                    "path": "densenet_image_classifier",
-                    "title": "DenseNetImageClassifier model",
-                    "generate": [
-                        "keras_hub.models.DenseNetImageClassifier",
-                        "keras_hub.models.DenseNetImageClassifier.from_preset",
-                        "keras_hub.models.DenseNetImageClassifier.backbone",
-                        "keras_hub.models.DenseNetImageClassifier.preprocessor",
-                    ],
-                },
-                {
-                    "path": "densenet_image_classifier_preprocessor",
-                    "title": "DenseNetImageClassifierPreprocessor layer",
-                    "generate": [
-                        "keras_hub.models.DenseNetImageClassifierPreprocessor",
-                        "keras_hub.models.DenseNetImageClassifierPreprocessor.from_preset",
-                        "keras_hub.models.DenseNetImageClassifierPreprocessor.image_converter",
-                    ],
-                },
-            ],
-        },
-        {
-            "path": "sam/",
-            "title": "Segment Anything Model",
-            "toc": True,
-            "children": [
-                {
-                    "path": "sam_image_converter",
-                    "title": "SAMImageConverter",
-                    "generate": [
-                        "keras_hub.layers.SAMImageConverter",
-                        "keras_hub.layers.SAMImageConverter.from_preset",
-                    ],
-                },
-                {
-                    "path": "sam_backbone",
-                    "title": "SAMBackbone model",
-                    "generate": [
-                        "keras_hub.models.SAMBackbone",
-                        "keras_hub.models.SAMBackbone.from_preset",
-                        "keras_hub.models.SAMBackbone.token_embedding",
-                    ],
-                },
-                {
-                    "path": "sam_image_segmenter",
-                    "title": "SAMImageSegmenter model",
-                    "generate": [
-                        "keras_hub.models.SAMImageSegmenter",
-                        "keras_hub.models.SAMImageSegmenter.from_preset",
-                        "keras_hub.models.SAMImageSegmenter.backbone",
-                        "keras_hub.models.SAMImageSegmenter.preprocessor",
-                    ],
-                },
-                {
-                    "path": "sam_image_segmenter_preprocessor",
-                    "title": "SAMImageSegmenterPreprocessor layer",
-                    "generate": [
-                        "keras_hub.models.SAMImageSegmenterPreprocessor",
-                        "keras_hub.models.SAMImageSegmenterPreprocessor.from_preset",
-                        "keras_hub.models.SAMImageSegmenterPreprocessor.image_converter",
-                    ],
-                },
-                {
-                    "path": "sam_prompt_encoder",
-                    "title": "SAMPromptEncoder layer",
-                    "generate": [
-                        "keras_hub.layers.SAMPromptEncoder",
-                    ],
-                },
-                {
-                    "path": "sam_mask_decoder",
-                    "title": "SAMMaskDecoder layer",
-                    "generate": [
-                        "keras_hub.layers.SAMMaskDecoder",
-                    ],
-                },
-            ],
-        },
-        {
-            "path": "stable_diffusion_3/",
-            "title": "Stable Diffusion 3",
-            "toc": True,
-            "children": [
-                {
-                    "path": "sam_image_converter",
-                    "title": "SAMImageConverter",
-                    "generate": [
-                        "keras_hub.layers.SAMImageConverter",
-                        "keras_hub.layers.SAMImageConverter.from_preset",
-                    ],
-                },
-                {
-                    "path": "stable_diffusion_3_backbone",
-                    "title": "StableDiffusion3Backbone model",
-                    "generate": [
-                        "keras_hub.models.StableDiffusion3Backbone",
-                        "keras_hub.models.StableDiffusion3Backbone.from_preset",
-                        "keras_hub.models.StableDiffusion3Backbone.token_embedding",
-                    ],
-                },
-                {
-                    "path": "stable_diffusion_3_text_to_image",
-                    "title": "StableDiffusion3TextToImage model",
-                    "generate": [
-                        "keras_hub.models.StableDiffusion3TextToImage",
-                        "keras_hub.models.StableDiffusion3TextToImage.from_preset",
-                        "keras_hub.models.StableDiffusion3TextToImage.backbone",
-                        "keras_hub.models.StableDiffusion3TextToImage.preprocessor",
-                    ],
-                },
-                {
-                    "path": "stable_diffusion_3_text_to_image_preprocessor",
-                    "title": "StableDiffusion3TextToImagePreprocessor layer",
-                    "generate": [
-                        "keras_hub.models.StableDiffusion3TextToImagePreprocessor",
-                        "keras_hub.models.StableDiffusion3TextToImagePreprocessor.from_preset",
-                    ],
-                },
-            ],
-        },
-        {
-            "path": "deeplab_v3/",
-            "title": "DeepLabV3 and DeepLabV3Plus",
-            "toc": True,
-            "children": [
-                {
-                    "path": "deeplab_v3_image_converter",
-                    "title": "DeepLabV3ImageConverter",
-                    "generate": [
-                        "keras_hub.layers.DeepLabV3ImageConverter",
-                        "keras_hub.layers.DeepLabV3ImageConverter.from_preset",
-                    ],
-                },
-                {
-                    "path": "deeplab_v3_backbone",
-                    "title": "DeepLabV3Backbone model",
-                    "generate": [
-                        "keras_hub.models.DeepLabV3Backbone",
-                        "keras_hub.models.DeepLabV3Backbone.from_preset",
-                        "keras_hub.models.DeepLabV3Backbone.token_embedding",
-                    ],
-                },
-                {
-                    "path": "deeplab_v3_image_segmenter",
-                    "title": "DeepLabV3ImageSegmenter model",
-                    "generate": [
-                        "keras_hub.models.DeepLabV3ImageSegmenter",
-                        "keras_hub.models.DeepLabV3ImageSegmenter.from_preset",
-                        "keras_hub.models.DeepLabV3ImageSegmenter.backbone",
-                        "keras_hub.models.DeepLabV3ImageSegmenter.preprocessor",
-                    ],
-                },
-                {
-                    "path": "deeplab_v3_image_segmenter_preprocessor",
-                    "title": "DeepLabV3ImageSegmenterPreprocessor layer",
-                    "generate": [
-                        "keras_hub.models.DeepLabV3ImageSegmenterPreprocessor",
-                        "keras_hub.models.DeepLabV3ImageSegmenterPreprocessor.from_preset",
-                        "keras_hub.models.DeepLabV3ImageSegmenterPreprocessor.image_converter",
-                    ],
-                },
-            ],
-        },
-        {
             "path": "resnet/",
             "title": "ResNet",
             "toc": True,
@@ -1175,7 +1188,6 @@ MODELS_MASTER = {
                     "generate": [
                         "keras_hub.models.ResNetBackbone",
                         "keras_hub.models.ResNetBackbone.from_preset",
-                        "keras_hub.models.ResNetBackbone.token_embedding",
                     ],
                 },
                 {
@@ -1257,6 +1269,183 @@ MODELS_MASTER = {
                         "keras_hub.models.RobertaMaskedLMPreprocessor",
                         "keras_hub.models.RobertaMaskedLMPreprocessor.from_preset",
                         "keras_hub.models.RobertaMaskedLMPreprocessor.tokenizer",
+                    ],
+                },
+            ],
+        },
+        {
+            "path": "sam/",
+            "title": "Segment Anything Model",
+            "toc": True,
+            "children": [
+                {
+                    "path": "sam_image_converter",
+                    "title": "SAMImageConverter",
+                    "generate": [
+                        "keras_hub.layers.SAMImageConverter",
+                        "keras_hub.layers.SAMImageConverter.from_preset",
+                    ],
+                },
+                {
+                    "path": "sam_backbone",
+                    "title": "SAMBackbone model",
+                    "generate": [
+                        "keras_hub.models.SAMBackbone",
+                        "keras_hub.models.SAMBackbone.from_preset",
+                    ],
+                },
+                {
+                    "path": "sam_image_segmenter",
+                    "title": "SAMImageSegmenter model",
+                    "generate": [
+                        "keras_hub.models.SAMImageSegmenter",
+                        "keras_hub.models.SAMImageSegmenter.from_preset",
+                        "keras_hub.models.SAMImageSegmenter.backbone",
+                        "keras_hub.models.SAMImageSegmenter.preprocessor",
+                    ],
+                },
+                {
+                    "path": "sam_image_segmenter_preprocessor",
+                    "title": "SAMImageSegmenterPreprocessor layer",
+                    "generate": [
+                        "keras_hub.models.SAMImageSegmenterPreprocessor",
+                        "keras_hub.models.SAMImageSegmenterPreprocessor.from_preset",
+                        "keras_hub.models.SAMImageSegmenterPreprocessor.image_converter",
+                    ],
+                },
+                {
+                    "path": "sam_prompt_encoder",
+                    "title": "SAMPromptEncoder layer",
+                    "generate": [
+                        "keras_hub.layers.SAMPromptEncoder",
+                    ],
+                },
+                {
+                    "path": "sam_mask_decoder",
+                    "title": "SAMMaskDecoder layer",
+                    "generate": [
+                        "keras_hub.layers.SAMMaskDecoder",
+                    ],
+                },
+            ],
+        },
+        {
+            "path": "stable_diffusion_3/",
+            "title": "Stable Diffusion 3",
+            "toc": True,
+            "children": [
+                {
+                    "path": "sam_image_converter",
+                    "title": "SAMImageConverter",
+                    "generate": [
+                        "keras_hub.layers.SAMImageConverter",
+                        "keras_hub.layers.SAMImageConverter.from_preset",
+                    ],
+                },
+                {
+                    "path": "stable_diffusion_3_backbone",
+                    "title": "StableDiffusion3Backbone model",
+                    "generate": [
+                        "keras_hub.models.StableDiffusion3Backbone",
+                        "keras_hub.models.StableDiffusion3Backbone.from_preset",
+                    ],
+                },
+                {
+                    "path": "stable_diffusion_3_text_to_image",
+                    "title": "StableDiffusion3TextToImage model",
+                    "generate": [
+                        "keras_hub.models.StableDiffusion3TextToImage",
+                        "keras_hub.models.StableDiffusion3TextToImage.from_preset",
+                        "keras_hub.models.StableDiffusion3TextToImage.backbone",
+                        "keras_hub.models.StableDiffusion3TextToImage.generate",
+                        "keras_hub.models.StableDiffusion3TextToImage.preprocessor",
+                    ],
+                },                
+                {
+                    "path": "stable_diffusion_3_text_to_image_preprocessor",
+                    "title": "StableDiffusion3TextToImagePreprocessor layer",
+                    "generate": [
+                        "keras_hub.models.StableDiffusion3TextToImagePreprocessor",
+                        "keras_hub.models.StableDiffusion3TextToImagePreprocessor.from_preset",
+                    ],
+                },
+                {
+                    "path": "stable_diffusion_3_image_to_image",
+                    "title": "StableDiffusion3ImageToImage model",
+                    "generate": [
+                        "keras_hub.models.StableDiffusion3ImageToImage",
+                        "keras_hub.models.StableDiffusion3ImageToImage.from_preset",
+                        "keras_hub.models.StableDiffusion3ImageToImage.backbone",
+                        "keras_hub.models.StableDiffusion3ImageToImage.generate",
+                        "keras_hub.models.StableDiffusion3ImageToImage.preprocessor",
+                    ],
+                },
+                {
+                    "path": "stable_diffusion_3_inpaint",
+                    "title": "StableDiffusion3Inpaint model",
+                    "generate": [
+                        "keras_hub.models.StableDiffusion3Inpaint",
+                        "keras_hub.models.StableDiffusion3Inpaint.from_preset",
+                        "keras_hub.models.StableDiffusion3Inpaint.backbone",
+                        "keras_hub.models.StableDiffusion3Inpaint.generate",
+                        "keras_hub.models.StableDiffusion3Inpaint.preprocessor",
+                    ],
+                },
+            ],
+        },        
+        {
+            "path": "vgg/",
+            "title": "VGG",
+            "toc": True,
+            "children": [
+                {
+                    "path": "vgg_image_converter",
+                    "title": "VGGImageConverter",
+                    "generate": [
+                        "keras_hub.layers.VGGImageConverter",
+                        "keras_hub.layers.VGGImageConverter.from_preset",
+                    ],
+                },
+                {
+                    "path": "vgg_backbone",
+                    "title": "VGGBackbone model",
+                    "generate": [
+                        "keras_hub.models.VGGBackbone",
+                        "keras_hub.models.VGGBackbone.from_preset",
+                    ],
+                },
+                {
+                    "path": "vgg_image_classifier",
+                    "title": "VGGImageClassifier model",
+                    "generate": [
+                        "keras_hub.models.VGGImageClassifier",
+                        "keras_hub.models.VGGImageClassifier.from_preset",
+                        "keras_hub.models.VGGImageClassifier.backbone",
+                        "keras_hub.models.VGGImageClassifier.preprocessor",
+                    ],
+                },
+                {
+                    "path": "vgg_image_classifier_preprocessor",
+                    "title": "VGGImageClassifierPreprocessor layer",
+                    "generate": [
+                        "keras_hub.models.VGGImageClassifierPreprocessor",
+                        "keras_hub.models.VGGImageClassifierPreprocessor.from_preset",
+                        "keras_hub.models.VGGImageClassifierPreprocessor.image_converter",
+                    ],
+                },
+            ],
+        },
+        {
+            "path": "vit_det/",
+            "title": "ViTDet",
+            "toc": True,
+            "children": [
+                {
+                    "path": "ViTDetBackbone",
+                    "title": "VitDet model",
+                    "generate": [
+                        "keras_hub.models.ViTDetBackbone",
+                        "keras_hub.models.ViTDetBackbone.from_preset",
                     ],
                 },
             ],

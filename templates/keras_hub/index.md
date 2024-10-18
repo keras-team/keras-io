@@ -26,9 +26,10 @@ to start learning our API. We welcome
 * [List of available pretrained models](/api/keras_hub/models/)
 
 ## Guides
-
 * [Getting Started with KerasHub](/guides/keras_hub/getting_started/)
-* [Uploading Models with KerasHub](/guides/keras_hub/upload/)
+* [Classification with KerasHub](/guides/keras_hub/classification_with_keras_hub/)
+* [Segment Anything in KerasHub](/guides/keras_hub/segment_anything_in_keras_hub/)
+* [Stable Diffusion 3 in KerasHub](/guides/keras_hub/stable_diffusion_3_in_keras_hub/)
 
 ---
 ## Installation
@@ -86,7 +87,7 @@ print(keras_hub.utils.decode_imagenet_predictions(preds))
 
 # Load a BERT model.
 classifier = keras_hub.models.BertClassifier.from_preset(
-    "bert_base_en_uncased", 
+    "bert_base_en_uncased",
     activation="softmax",
     num_classes=2,
 )
@@ -126,11 +127,13 @@ If KerasHub helps your research, we appreciate your citations.
 Here is the BibTeX entry:
 
 ```bibtex
-@misc{kerashub2022,
+@misc{kerashub2024,
   title={KerasHub},
-  author={Watson, Matthew, and Qian, Chen, and Bischof, Jonathan and Chollet, 
-  Fran\c{c}ois and others},
-  year={2022},
+  author={Watson, Matthew, and  Chollet, Fran\c{c}ois and Sreepathihalli,
+  Divyashree, and Saadat, Samaneh and Sampath, Ramesh, and Rasskin, Gabriel and
+  and Zhu, Scott and Singh, Varun and Wood, Luke and Tan, Zhenyu and Stenbit,
+  Ian and Qian, Chen, and Bischof, Jonathan and others},
+  year={2024},
   howpublished={\url{https://github.com/keras-team/keras-hub}},
 }
 ```
