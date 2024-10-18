@@ -26,6 +26,7 @@ to start learning our API. We welcome
 * [List of available pretrained models](/api/keras_hub/models/)
 
 ## Guides
+* [Getting Started with KerasHub](/guides/keras_hub/getting_started/)
 * [Classification with KerasHub](/guides/keras_hub/classification_with_keras_hub/)
 * [Segment Anything in KerasHub](/guides/keras_hub/segment_anything_in_keras_hub/)
 * [Stable Diffusion 3 in KerasHub](/guides/keras_hub/stable_diffusion_3_in_keras_hub/)
