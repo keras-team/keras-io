@@ -922,6 +922,48 @@ MODELS_MASTER = {
                     ],
                 },
             ],
+        },        
+        {
+            "path": "mit/",
+            "title": "MiT",
+            "toc": True,
+            "children": [
+                {
+                    "path": "mit_image_converter",
+                    "title": "MiTImageConverter",
+                    "generate": [
+                        "keras_hub.layers.MiTImageConverter",
+                        "keras_hub.layers.MiTImageConverter.from_preset",
+                    ],
+                },
+                {
+                    "path": "mit_backbone",
+                    "title": "MiTBackbone model",
+                    "generate": [
+                        "keras_hub.models.MiTBackbone",
+                        "keras_hub.models.MiTBackbone.from_preset",
+                    ],
+                },
+                {
+                    "path": "mit_image_classifier",
+                    "title": "MiTImageClassifier model",
+                    "generate": [
+                        "keras_hub.models.MiTImageClassifier",
+                        "keras_hub.models.MiTImageClassifier.from_preset",
+                        "keras_hub.models.MiTImageClassifier.backbone",
+                        "keras_hub.models.MiTImageClassifier.preprocessor",
+                    ],
+                },
+                {
+                    "path": "mit_image_classifier_preprocessor",
+                    "title": "MiTImageClassifierPreprocessor layer",
+                    "generate": [
+                        "keras_hub.models.MiTImageClassifierPreprocessor",
+                        "keras_hub.models.MiTImageClassifierPreprocessor.from_preset",
+                        "keras_hub.models.MiTImageClassifierPreprocessor.image_converter",
+                    ],
+                },
+            ],
         },
         {
             "path": "opt/",
