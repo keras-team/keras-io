@@ -436,7 +436,6 @@ MODELS_MASTER = {
                     "generate": [
                         "keras_hub.models.DeepLabV3Backbone",
                         "keras_hub.models.DeepLabV3Backbone.from_preset",
-                        "keras_hub.models.DeepLabV3Backbone.token_embedding",
                     ],
                 },
                 {
@@ -479,7 +478,6 @@ MODELS_MASTER = {
                     "generate": [
                         "keras_hub.models.DenseNetBackbone",
                         "keras_hub.models.DenseNetBackbone.from_preset",
-                        "keras_hub.models.DenseNetBackbone.token_embedding",
                     ],
                 },
                 {
@@ -1076,7 +1074,6 @@ MODELS_MASTER = {
                     "generate": [
                         "keras_hub.models.ResNetBackbone",
                         "keras_hub.models.ResNetBackbone.from_preset",
-                        "keras_hub.models.ResNetBackbone.token_embedding",
                     ],
                 },
                 {
@@ -1181,7 +1178,6 @@ MODELS_MASTER = {
                     "generate": [
                         "keras_hub.models.SAMBackbone",
                         "keras_hub.models.SAMBackbone.from_preset",
-                        "keras_hub.models.SAMBackbone.token_embedding",
                     ],
                 },
                 {
@@ -1238,7 +1234,6 @@ MODELS_MASTER = {
                     "generate": [
                         "keras_hub.models.StableDiffusion3Backbone",
                         "keras_hub.models.StableDiffusion3Backbone.from_preset",
-                        "keras_hub.models.StableDiffusion3Backbone.token_embedding",
                     ],
                 },
                 {
@@ -1257,6 +1252,21 @@ MODELS_MASTER = {
                     "generate": [
                         "keras_hub.models.StableDiffusion3TextToImagePreprocessor",
                         "keras_hub.models.StableDiffusion3TextToImagePreprocessor.from_preset",
+                    ],
+                },
+            ],
+        },
+        {
+            "path": "vit_det/",
+            "title": "ViTDet",
+            "toc": True,
+            "children": [
+                {
+                    "path": "ViTDetBackbone",
+                    "title": "VitDet model",
+                    "generate": [
+                        "keras_hub.models.ViTDetBackbone",
+                        "keras_hub.models.ViTDetBackbone.from_preset",
                     ],
                 },
             ],
