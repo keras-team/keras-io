@@ -1297,6 +1297,48 @@ MODELS_MASTER = {
                     ],
                 },
             ],
+        },        
+        {
+            "path": "vgg/",
+            "title": "VGG",
+            "toc": True,
+            "children": [
+                {
+                    "path": "vgg_image_converter",
+                    "title": "VGGImageConverter",
+                    "generate": [
+                        "keras_hub.layers.VGGImageConverter",
+                        "keras_hub.layers.VGGImageConverter.from_preset",
+                    ],
+                },
+                {
+                    "path": "vgg_backbone",
+                    "title": "VGGBackbone model",
+                    "generate": [
+                        "keras_hub.models.VGGBackbone",
+                        "keras_hub.models.VGGBackbone.from_preset",
+                    ],
+                },
+                {
+                    "path": "vgg_image_classifier",
+                    "title": "VGGImageClassifier model",
+                    "generate": [
+                        "keras_hub.models.VGGImageClassifier",
+                        "keras_hub.models.VGGImageClassifier.from_preset",
+                        "keras_hub.models.VGGImageClassifier.backbone",
+                        "keras_hub.models.VGGImageClassifier.preprocessor",
+                    ],
+                },
+                {
+                    "path": "vgg_image_classifier_preprocessor",
+                    "title": "VGGImageClassifierPreprocessor layer",
+                    "generate": [
+                        "keras_hub.models.VGGImageClassifierPreprocessor",
+                        "keras_hub.models.VGGImageClassifierPreprocessor.from_preset",
+                        "keras_hub.models.VGGImageClassifierPreprocessor.image_converter",
+                    ],
+                },
+            ],
         },
         {
             "path": "vit_det/",
