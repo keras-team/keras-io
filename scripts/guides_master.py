@@ -79,6 +79,10 @@ HUB_GUIDES_MASTER = {
             "path": "stable_diffusion_3_in_keras_hub",
             "title": "Stable Diffusion 3 in KerasHub",
         },
+        {
+            "path": "classification_with_keras_hub",
+            "title": "Classification with KerasHub",
+        },
     ],
 }
 
