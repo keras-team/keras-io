@@ -532,7 +532,7 @@ MODELS_MASTER = {
             ],
         },
         {
-            "path": "densnet/",
+            "path": "densenet/",
             "title": "DenseNet",
             "toc": True,
             "children": [
