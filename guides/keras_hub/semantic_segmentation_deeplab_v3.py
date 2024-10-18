@@ -3,7 +3,7 @@ Title: Semantic Segmentation with KerasHub
 Authors: [Sachin Prasad](https://github.com/sachinprasadhs), [Divyashree Sreepathihalli](https://github.com/divyashreepathihalli), [Ian Stenbit](https://github.com/ianstenbit)
 Date created: 2024/10/11
 Last modified: 2024/10/11
-Description: DeepLabV3 training and inference with KerasHub
+Description: DeepLabV3 training and inference with KerasHub.
 Accelerator: GPU
 """
 
@@ -34,10 +34,8 @@ have achieved state-of-the-art results on a variety of image segmentation
 benchmarks.
 
 ### References
-[Encoder-Decoder with Atrous Separable Convolution for Semantic Image
-Segmentation](https://arxiv.org/abs/1802.02611)<br>
-[Rethinking Atrous Convolution for Semantic Image
-Segmentation](https://arxiv.org/abs/1706.05587)
+[Encoder-Decoder with Atrous Separable Convolution for Semantic Image Segmentation](https://arxiv.org/abs/1802.02611)
+[Rethinking Atrous Convolution for Semantic Image Segmentation](https://arxiv.org/abs/1706.05587)
 """
 
 """
@@ -59,11 +57,6 @@ pip install -q --upgrade keras
 """
 After installing `keras` and `keras-hub`, set the backend for `keras`.
 This guide can be run with any backend (Tensorflow, JAX, PyTorch).
-
-```
-import os
-os.environ["KERAS_BACKEND"] = "jax"
-```
 """
 
 import os
@@ -92,7 +85,7 @@ task weights with all the classes, 21 classes in this case.
 """
 
 model = keras_hub.models.DeepLabV3ImageSegmenter.from_preset(
-    "deeplabv3_plus_resnet50_pascalvoc"
+    "deeplab_v3_plus_resnet50_pascalvoc"
 )
 
 image_converter = keras_hub.layers.DeepLabV3ImageConverter(
@@ -104,7 +97,9 @@ preprocessor = keras_hub.models.DeepLabV3ImageSegmenterPreprocessor(image_conver
 """
 Let us visualize the results of this pretrained model
 """
-filepath = keras.utils.get_file(origin="https://i.imgur.com/gCNcJJI.jpg")
+filepath = keras.utils.get_file(
+    origin="https://storage.googleapis.com/keras-cv/pictures/dog.jpeg"
+)
 image = keras.utils.load_img(filepath)
 image = keras.utils.img_to_array(image)
 
@@ -150,7 +145,8 @@ and split them into train dataset `train_ds` and `eval_ds`.
 
 # @title helper functions
 import logging
-import multiprocessing
+import multiprocess as multiprocessing
+from builtins import open
 import os.path
 import random
 import xml
@@ -160,7 +156,6 @@ import tensorflow_datasets as tfds
 VOC_URL = "https://host.robots.ox.ac.uk/pascal/VOC/voc2012/VOCtrainval_11-May-2012.tar"
 
 SBD_URL = "https://www2.eecs.berkeley.edu/Research/Projects/CS/vision/grouping/semantic_contours/benchmark.tgz"
-
 
 # Note that this list doesn't contain the background class. In the
 # classification use case, the label is 0 based (aeroplane -> 0), whereas in
@@ -597,13 +592,14 @@ def load_sbd(
     instead.
     """
     extracted_dir = os.path.join("benchmark_RELEASE", "dataset")
-    get_data = keras.utils.get_file(
-        fname=os.path.basename(SBD_URL),
-        origin=SBD_URL,
-        cache_dir=data_dir,
-        extract=True,
-    )
-    data_dir = os.path.join(os.path.dirname(get_data), extracted_dir)
+    # get_data = keras.utils.get_file(
+    #     fname=os.path.basename(SBD_URL),
+    #     origin=SBD_URL,
+    #     cache_dir=data_dir,
+    #     extract=True,
+    # )
+    # data_dir = os.path.join(os.path.dirname(get_data), extracted_dir)
+    data_dir = os.path.join("/home/sachinprasad/projects/", extracted_dir)
     image_ids = get_sbd_image_ids(data_dir, split)
     # len(metadata) = #samples, metadata[i] is a dict.
     metadata = build_sbd_metadata(data_dir, image_ids)
@@ -620,8 +616,8 @@ choose any of these datasets for the `load` function: 'train', 'eval', 'trainval
 'sbd_train', or 'sbd_eval'. 'sbd_train' represents the training dataset for the
 SBD dataset, while 'train' represents the training dataset for the VOC2012 dataset.
 """
-train_ds = load(split="sbd_train")
-eval_ds = load(split="sbd_eval")
+train_ds = load(split="sbd_train", data_dir="segmentation")
+eval_ds = load(split="sbd_eval", data_dir="segmentation")
 
 """
 ## Preprocess the data
@@ -697,7 +693,7 @@ eval_ds = preprocess_inputs(eval_ds)
 Keras provides a variety of image augmentation options. In this example, we will
 use the `RandomFlip` augmentation to augment the training dataset. The
 `RandomFlip` augmentation randomly flips the images in the training dataset
-horizontally or vertically. This can help to improve the model's robustness to 
+horizontally or vertically. This can help to improve the model's robustness to
 changes in the orientation of the objects in the images.
 """
 
