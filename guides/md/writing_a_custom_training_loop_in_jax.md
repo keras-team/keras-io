@@ -184,7 +184,7 @@ variables.
 
 def compute_loss_and_updates(trainable_variables, non_trainable_variables, x, y):
     y_pred, non_trainable_variables = model.stateless_call(
-        trainable_variables, non_trainable_variables, x
+        trainable_variables, non_trainable_variables, x, training=True
     )
     loss = loss_fn(y, y_pred)
     return loss, non_trainable_variables
@@ -225,7 +225,7 @@ def train_step(state, data):
         trainable_variables, non_trainable_variables, x, y
     )
     trainable_variables, optimizer_variables = optimizer.stateless_apply(
-        grads, trainable_variables, optimizer_variables
+        optimizer_variables, grads, trainable_variables
     )
     # Return updated state
     return loss, (
@@ -305,37 +305,37 @@ for step, data in enumerate(train_dataset):
 
 <div class="k-default-codeblock">
 ```
-Training loss (for 1 batch) at step 0: 156.4785
+Training loss (for 1 batch) at step 0: 96.2726
 Seen so far: 32 samples
-Training loss (for 1 batch) at step 100: 2.5526
+Training loss (for 1 batch) at step 100: 2.0853
 Seen so far: 3232 samples
-Training loss (for 1 batch) at step 200: 1.8922
+Training loss (for 1 batch) at step 200: 0.6535
 Seen so far: 6432 samples
-Training loss (for 1 batch) at step 300: 1.2381
+Training loss (for 1 batch) at step 300: 1.2679
 Seen so far: 9632 samples
-Training loss (for 1 batch) at step 400: 0.4812
+Training loss (for 1 batch) at step 400: 0.7563
 Seen so far: 12832 samples
-Training loss (for 1 batch) at step 500: 2.3339
+Training loss (for 1 batch) at step 500: 0.7154
 Seen so far: 16032 samples
-Training loss (for 1 batch) at step 600: 0.5615
+Training loss (for 1 batch) at step 600: 1.0267
 Seen so far: 19232 samples
-Training loss (for 1 batch) at step 700: 0.6471
+Training loss (for 1 batch) at step 700: 0.6860
 Seen so far: 22432 samples
-Training loss (for 1 batch) at step 800: 1.6272
+Training loss (for 1 batch) at step 800: 0.7306
 Seen so far: 25632 samples
-Training loss (for 1 batch) at step 900: 0.9416
+Training loss (for 1 batch) at step 900: 0.4571
 Seen so far: 28832 samples
-Training loss (for 1 batch) at step 1000: 0.8152
+Training loss (for 1 batch) at step 1000: 0.6023
 Seen so far: 32032 samples
-Training loss (for 1 batch) at step 1100: 0.8838
+Training loss (for 1 batch) at step 1100: 0.9140
 Seen so far: 35232 samples
-Training loss (for 1 batch) at step 1200: 0.1278
+Training loss (for 1 batch) at step 1200: 0.4224
 Seen so far: 38432 samples
-Training loss (for 1 batch) at step 1300: 1.9234
+Training loss (for 1 batch) at step 1300: 0.6696
 Seen so far: 41632 samples
-Training loss (for 1 batch) at step 1400: 0.3413
+Training loss (for 1 batch) at step 1400: 0.1399
 Seen so far: 44832 samples
-Training loss (for 1 batch) at step 1500: 0.2429
+Training loss (for 1 batch) at step 1500: 0.5761
 Seen so far: 48032 samples
 
 ```
@@ -514,65 +514,65 @@ for step, data in enumerate(val_dataset):
 
 <div class="k-default-codeblock">
 ```
-Training loss (for 1 batch) at step 0: 96.4990
-Training accuracy: 0.0625
+Training loss (for 1 batch) at step 0: 70.8851
+Training accuracy: 0.09375
 Seen so far: 32 samples
-Training loss (for 1 batch) at step 100: 2.0447
-Training accuracy: 0.6064356565475464
+Training loss (for 1 batch) at step 100: 2.1930
+Training accuracy: 0.6596534848213196
 Seen so far: 3232 samples
-Training loss (for 1 batch) at step 200: 2.0184
-Training accuracy: 0.6934079527854919
+Training loss (for 1 batch) at step 200: 3.0249
+Training accuracy: 0.7352300882339478
 Seen so far: 6432 samples
-Training loss (for 1 batch) at step 300: 1.9111
-Training accuracy: 0.7303779125213623
+Training loss (for 1 batch) at step 300: 0.6004
+Training accuracy: 0.7588247656822205
 Seen so far: 9632 samples
-Training loss (for 1 batch) at step 400: 1.8042
-Training accuracy: 0.7555330395698547
+Training loss (for 1 batch) at step 400: 1.4633
+Training accuracy: 0.7736907601356506
 Seen so far: 12832 samples
-Training loss (for 1 batch) at step 500: 1.2200
-Training accuracy: 0.7659056782722473
+Training loss (for 1 batch) at step 500: 1.3367
+Training accuracy: 0.7826846241950989
 Seen so far: 16032 samples
-Training loss (for 1 batch) at step 600: 1.3437
-Training accuracy: 0.7793781161308289
+Training loss (for 1 batch) at step 600: 0.8767
+Training accuracy: 0.7930532693862915
 Seen so far: 19232 samples
-Training loss (for 1 batch) at step 700: 1.2409
-Training accuracy: 0.789318859577179
+Training loss (for 1 batch) at step 700: 0.3479
+Training accuracy: 0.8004636168479919
 Seen so far: 22432 samples
-Training loss (for 1 batch) at step 800: 1.6530
-Training accuracy: 0.7977527976036072
+Training loss (for 1 batch) at step 800: 0.3608
+Training accuracy: 0.8066869378089905
 Seen so far: 25632 samples
-Training loss (for 1 batch) at step 900: 0.4173
-Training accuracy: 0.8060488104820251
+Training loss (for 1 batch) at step 900: 0.7582
+Training accuracy: 0.8117369413375854
 Seen so far: 28832 samples
-Training loss (for 1 batch) at step 1000: 0.5543
-Training accuracy: 0.8100025057792664
+Training loss (for 1 batch) at step 1000: 1.3135
+Training accuracy: 0.8142170310020447
 Seen so far: 32032 samples
-Training loss (for 1 batch) at step 1100: 1.2699
-Training accuracy: 0.8160762786865234
+Training loss (for 1 batch) at step 1100: 1.0202
+Training accuracy: 0.8186308145523071
 Seen so far: 35232 samples
-Training loss (for 1 batch) at step 1200: 1.2621
-Training accuracy: 0.8213468194007874
+Training loss (for 1 batch) at step 1200: 0.6766
+Training accuracy: 0.822023332118988
 Seen so far: 38432 samples
-Training loss (for 1 batch) at step 1300: 0.8028
-Training accuracy: 0.8257350325584412
+Training loss (for 1 batch) at step 1300: 0.7606
+Training accuracy: 0.8257110118865967
 Seen so far: 41632 samples
-Training loss (for 1 batch) at step 1400: 1.0701
-Training accuracy: 0.8298090696334839
+Training loss (for 1 batch) at step 1400: 0.7657
+Training accuracy: 0.8290283679962158
 Seen so far: 44832 samples
-Training loss (for 1 batch) at step 1500: 0.3910
-Training accuracy: 0.8336525559425354
+Training loss (for 1 batch) at step 1500: 0.6563
+Training accuracy: 0.831653892993927
 Seen so far: 48032 samples
-Validation loss (for 1 batch) at step 0: 0.2482
-Validation accuracy: 0.835365355014801
+Validation loss (for 1 batch) at step 0: 0.1622
+Validation accuracy: 0.8329269289970398
 Seen so far: 32 samples
-Validation loss (for 1 batch) at step 100: 1.1641
-Validation accuracy: 0.8388938903808594
+Validation loss (for 1 batch) at step 100: 0.7455
+Validation accuracy: 0.8338780999183655
 Seen so far: 3232 samples
-Validation loss (for 1 batch) at step 200: 0.1201
-Validation accuracy: 0.8428196907043457
+Validation loss (for 1 batch) at step 200: 0.2738
+Validation accuracy: 0.836174488067627
 Seen so far: 6432 samples
-Validation loss (for 1 batch) at step 300: 0.0755
-Validation accuracy: 0.8471122980117798
+Validation loss (for 1 batch) at step 300: 0.1255
+Validation accuracy: 0.8390461206436157
 Seen so far: 9632 samples
 
 ```
