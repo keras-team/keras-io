@@ -240,7 +240,7 @@ plt.show()
 
 
     
-![png](/content/keras-io/guides/img/segment_anything_in_keras_hub/segment_anything_in_keras_hub_11_0.png)
+![png](/img/guides/segment_anything_in_keras_hub/segment_anything_in_keras_hub_11_0.png)
     
 
 
@@ -262,7 +262,7 @@ plt.show()
 
 
     
-![png](/content/keras-io/guides/img/segment_anything_in_keras_hub/segment_anything_in_keras_hub_13_0.png)
+![png](/img/guides/segment_anything_in_keras_hub/segment_anything_in_keras_hub_13_0.png)
     
 
 
@@ -326,7 +326,7 @@ plt.show()
 
 
     
-![png](/content/keras-io/guides/img/segment_anything_in_keras_hub/segment_anything_in_keras_hub_17_0.png)
+![png](/img/guides/segment_anything_in_keras_hub/segment_anything_in_keras_hub_17_0.png)
     
 
 
@@ -354,7 +354,7 @@ plt.show()
 
 
     
-![png](/content/keras-io/guides/img/segment_anything_in_keras_hub/segment_anything_in_keras_hub_20_0.png)
+![png](/img/guides/segment_anything_in_keras_hub/segment_anything_in_keras_hub_20_0.png)
     
 
 
@@ -395,7 +395,7 @@ plt.show()
 ```
 </div>
     
-![png](/content/keras-io/guides/img/segment_anything_in_keras_hub/segment_anything_in_keras_hub_23_1.png)
+![png](/img/guides/segment_anything_in_keras_hub/segment_anything_in_keras_hub_23_1.png)
     
 
 
@@ -442,7 +442,7 @@ plt.show()
 ```
 </div>
     
-![png](/content/keras-io/guides/img/segment_anything_in_keras_hub/segment_anything_in_keras_hub_25_1.png)
+![png](/img/guides/segment_anything_in_keras_hub/segment_anything_in_keras_hub_25_1.png)
     
 
 
@@ -625,7 +625,7 @@ WARNING:matplotlib.image:Clipping input data to the valid range for imshow with 
 ```
 </div>
     
-![png](/content/keras-io/guides/img/segment_anything_in_keras_hub/segment_anything_in_keras_hub_31_2.png)
+![png](/img/guides/segment_anything_in_keras_hub/segment_anything_in_keras_hub_31_2.png)
     
 
 
@@ -690,7 +690,7 @@ WARNING:matplotlib.image:Clipping input data to the valid range for imshow with 
 ```
 </div>
     
-![png](/content/keras-io/guides/img/segment_anything_in_keras_hub/segment_anything_in_keras_hub_35_1.png)
+![png](/img/guides/segment_anything_in_keras_hub/segment_anything_in_keras_hub_35_1.png)
     
 
 
