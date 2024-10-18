@@ -27,8 +27,8 @@ To get started, let's install a few dependencies and get images for our demo:
 """shell
 !pip install -Uq keras
 !pip install -Uq git+https://github.com/keras-team/keras-hub.git
-!wget --user-agent="User-Agent: Mozilla/5.0" -O mountain_dog.png https://i.imgur.com/3AHYG9Z.png
-!wget --user-agent="User-Agent: Mozilla/5.0" -O mountain_dog_mask.png https://i.imgur.com/n3Prpj6.png
+!wget -O mountain_dog.png https://raw.githubusercontent.com/keras-team/keras-io/master/guides/img/stable_diffusion_3_in_keras_hub/mountain_dog.png
+!wget -O mountain_dog_mask.png https://raw.githubusercontent.com/keras-team/keras-io/master/guides/img/stable_diffusion_3_in_keras_hub/mountain_dog_mask.png
 """
 
 import os
