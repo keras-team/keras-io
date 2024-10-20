@@ -177,7 +177,7 @@ variables.
 
 def compute_loss_and_updates(trainable_variables, non_trainable_variables, x, y):
     y_pred, non_trainable_variables = model.stateless_call(
-        trainable_variables, non_trainable_variables, x
+        trainable_variables, non_trainable_variables, x, training=True
     )
     loss = loss_fn(y, y_pred)
     return loss, non_trainable_variables

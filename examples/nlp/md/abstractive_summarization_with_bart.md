@@ -3,7 +3,7 @@
 **Author:** [Abheesht Sharma](https://github.com/abheesht17/)<br>
 **Date created:** 2023/07/08<br>
 **Last modified:** 2024/03/20<br>
-**Description:** Use KerasNLP to fine-tune BART on the abstractive summarization task.
+**Description:** Use KerasHub to fine-tune BART on the abstractive summarization task.
 
 
 <img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/nlp/ipynb/abstractive_summarization_with_bart.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/nlp/abstractive_summarization_with_bart.py)
@@ -28,19 +28,19 @@ include token masking, token deletion, sentence permutation (shuffle sentences
 and train BART to fix the order), etc.
 
 In this example, we will demonstrate how to fine-tune BART on the abstractive
-summarization task (on conversations!) using KerasNLP, and generate summaries
+summarization task (on conversations!) using KerasHub, and generate summaries
 using the fine-tuned model.
 
 ---
 ## Setup
 
 Before we start implementing the pipeline, let's install and import all the
-libraries we need. We'll be using the KerasNLP library. We will also need a
+libraries we need. We'll be using the KerasHub library. We will also need a
 couple of utility libraries.
 
 
 ```python
-!pip install git+https://github.com/keras-team/keras-nlp.git py7zr -q
+!pip install git+https://github.com/keras-team/keras-hub.git py7zr -q
 ```
 
 <div class="k-default-codeblock">
@@ -55,13 +55,13 @@ couple of utility libraries.
 [2K     [90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 49.8/49.8 kB [31m5.8 MB/s eta [36m0:00:00
 [2K     [90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2.7/2.7 MB [31m61.4 MB/s eta [36m0:00:00
 [2K     [90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 93.1/93.1 kB [31m10.1 MB/s eta [36m0:00:00
-[?25h  Building wheel for keras-nlp (pyproject.toml) ... [?25l[?25hdone
+[?25h  Building wheel for keras-hub (pyproject.toml) ... [?25l[?25hdone
 
 ```
 </div>
 This examples uses [Keras 3](https://keras.io/keras_3) to work in any of
 `"tensorflow"`, `"jax"` or `"torch"`. Support for Keras 3 is baked into
-KerasNLP, simply change the `"KERAS_BACKEND"` environment variable to select
+KerasHub, simply change the `"KERAS_BACKEND"` environment variable to select
 the backend of your choice. We select the JAX backend below.
 
 
@@ -78,7 +78,7 @@ Import all necessary libraries.
 import py7zr
 import time
 
-import keras_nlp
+import keras_hub
 import keras
 import tensorflow as tf
 import tensorflow_datasets as tfds
@@ -169,7 +169,7 @@ We'll now batch the dataset and retain only a subset of the dataset for the
 purpose of this example. The dialogue is fed to the encoder, and the
 corresponding summary serves as input to the decoder. We will, therefore, change
 the format of the dataset to a dictionary having two keys: `"encoder_text"` and
-`"decoder_text"`.This is how `keras_nlp.models.BartSeq2SeqLMPreprocessor`
+`"decoder_text"`.This is how `keras_hub.models.BartSeq2SeqLMPreprocessor`
 expects the input format to be.
 
 
@@ -202,12 +202,12 @@ trained to predict the next token.
 
 
 ```python
-preprocessor = keras_nlp.models.BartSeq2SeqLMPreprocessor.from_preset(
+preprocessor = keras_hub.models.BartSeq2SeqLMPreprocessor.from_preset(
     "bart_base_en",
     encoder_sequence_length=MAX_ENCODER_SEQUENCE_LENGTH,
     decoder_sequence_length=MAX_DECODER_SEQUENCE_LENGTH,
 )
-bart_lm = keras_nlp.models.BartSeq2SeqLM.from_preset(
+bart_lm = keras_hub.models.BartSeq2SeqLM.from_preset(
     "bart_base_en", preprocessor=preprocessor
 )
 
@@ -216,11 +216,11 @@ bart_lm.summary()
 
 <div class="k-default-codeblock">
 ```
-Downloading data from https://storage.googleapis.com/keras-nlp/models/bart_base_en/v1/vocab.json
+Downloading data from https://storage.googleapis.com/keras-hub/models/bart_base_en/v1/vocab.json
  898823/898823 ━━━━━━━━━━━━━━━━━━━━ 1s 1us/step
-Downloading data from https://storage.googleapis.com/keras-nlp/models/bart_base_en/v1/merges.txt
+Downloading data from https://storage.googleapis.com/keras-hub/models/bart_base_en/v1/merges.txt
  456318/456318 ━━━━━━━━━━━━━━━━━━━━ 1s 1us/step
-Downloading data from https://storage.googleapis.com/keras-nlp/models/bart_base_en/v1/model.h5
+Downloading data from https://storage.googleapis.com/keras-hub/models/bart_base_en/v1/model.h5
  557969120/557969120 ━━━━━━━━━━━━━━━━━━━━ 29s 0us/step
 
 ```
@@ -340,7 +340,7 @@ generating summaries! Let's pick the first 100 samples from the validation set
 and generate summaries for them. We will use the default decoding strategy, i.e.,
 greedy search.
 
-Generation in KerasNLP is highly optimized. It is backed by the power of XLA.
+Generation in KerasHub is highly optimized. It is backed by the power of XLA.
 Secondly, key/value tensors in the self-attention layer and cross-attention layer
 in the decoder are cached to avoid recomputation at every timestep.
 

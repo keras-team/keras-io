@@ -3,7 +3,7 @@
 **Authors:** [Hongyu Chiu](https://github.com/james77777778), [Abheesht Sharma](https://github.com/abheesht17/), [Matthew Watson](https://github.com/mattdangerw/)<br>
 **Date created:** 2024/08/06<br>
 **Last modified:** 2024/08/06<br>
-**Description:** Use KerasNLP to fine-tune a Gemma LLM with LoRA and QLoRA.
+**Description:** Use KerasHub to fine-tune a Gemma LLM with LoRA and QLoRA.
 
 
 <img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/keras_recipes/ipynb/parameter_efficient_finetuning_of_gemma_with_lora_and_qlora.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/keras_recipes/parameter_efficient_finetuning_of_gemma_with_lora_and_qlora.py)
@@ -33,8 +33,8 @@ Furthermore,
 extends LoRA to enhance efficiency through quantization techniques without
 performance degradation.
 
-In this example, we will fine-tune KerasNLP's
-[Gemma model](https://keras.io/api/keras_nlp/models/gemma/) on the next token
+In this example, we will fine-tune KerasHub's
+[Gemma model](https://keras.io/api/keras_hub/models/gemma/) on the next token
 prediction task using LoRA and QLoRA.
 
 Note that this example runs on all backends supported by Keras. TensorFlow is
@@ -44,7 +44,7 @@ only used for data preprocessing.
 ## Setup
 
 Before we start implementing the pipeline, let's install and import all the
-libraries we need. We'll be using the KerasNLP library.
+libraries we need. We'll be using the KerasHub library.
 
 Secondly, let's set the precision to bfloat16. This will help us reduce the
 memory usage and training time.
@@ -54,8 +54,8 @@ configured to access the Gemma model.
 
 
 ```python
-# We might need the latest code from Keras and KerasNLP
-!pip install -q git+https://github.com/keras-team/keras.git git+https://github.com/keras-team/keras-nlp.git
+# We might need the latest code from Keras and KerasHub
+!pip install -q git+https://github.com/keras-team/keras.git git+https://github.com/keras-team/keras-hub.git
 ```
 
     
@@ -70,7 +70,7 @@ os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"  # Suppress verbose logging from TF
 # os.environ["KAGGLE_KEY"] = "..."
 
 import keras
-import keras_nlp
+import keras_hub
 import tensorflow as tf
 import tensorflow_datasets as tfds
 
@@ -206,7 +206,7 @@ train_ds = train_ds.batch(1).take(100)
 ---
 ## Model
 
-KerasNLP provides implementations of many popular model architectures.
+KerasHub provides implementations of many popular model architectures.
 In this example, we will use `GemmaCausalLM`, an end-to-end Gemma model for
 causal language modeling. A causal language model predicts the next token based
 on previous tokens.
@@ -215,10 +215,10 @@ Note that `sequence_length` is set to `256` to speed up the fitting.
 
 
 ```python
-preprocessor = keras_nlp.models.GemmaCausalLMPreprocessor.from_preset(
+preprocessor = keras_hub.models.GemmaCausalLMPreprocessor.from_preset(
     "gemma_1.1_instruct_2b_en", sequence_length=256
 )
-gemma_lm = keras_nlp.models.GemmaCausalLM.from_preset(
+gemma_lm = keras_hub.models.GemmaCausalLM.from_preset(
     "gemma_1.1_instruct_2b_en", preprocessor=preprocessor
 )
 gemma_lm.summary()
@@ -344,7 +344,7 @@ savings happen.
 - Faster training; and
 - No additional inference latency.
 
-When using KerasNLP, we can enable LoRA with an one-line API:
+When using KerasHub, we can enable LoRA with an one-line API:
 `enable_lora(rank=4)`
 
 From `gemma_lm.summary()`, we can see enabling LoRA reduces the number of
@@ -481,7 +481,7 @@ original. The differences are:
 - No double quantization.
 - No Paged optimizer.
 
-To enable QLoRA in KerasNLP, follow these steps:
+To enable QLoRA in KerasHub, follow these steps:
 
 1. Instantiate the model.
 2. Quantize the weights using dynamic int8 quantization.
@@ -494,10 +494,10 @@ Steps 2 and 3 are achieved with one-line APIs:
 
 
 ```python
-preprocessor = keras_nlp.models.GemmaCausalLMPreprocessor.from_preset(
+preprocessor = keras_hub.models.GemmaCausalLMPreprocessor.from_preset(
     "gemma_1.1_instruct_2b_en", sequence_length=256
 )
-gemma_lm = keras_nlp.models.GemmaCausalLM.from_preset(
+gemma_lm = keras_hub.models.GemmaCausalLM.from_preset(
     "gemma_1.1_instruct_2b_en", preprocessor=preprocessor
 )
 gemma_lm.quantize("int8")

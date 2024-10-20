@@ -11,7 +11,8 @@ jupyter
 pydot
 boto3
 tensorflow
-keras-tuner
 keras-cv
-tf_keras
 keras-nlp
+keras-tuner
+tf_keras
+keras-hub-nightly  # TODO: update to keras-hub.

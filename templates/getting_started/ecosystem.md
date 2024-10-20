@@ -13,11 +13,11 @@ KerasTuner is an easy-to-use, scalable hyperparameter optimization framework tha
 
 ---
 
-## KerasNLP
+## KerasHub
 
-[KerasNLP Documentation](/keras_nlp/) - [KerasNLP GitHub repository](https://github.com/keras-team/keras-nlp)
+[KerasHub Documentation](/keras_hub/) - [KerasHub GitHub repository](https://github.com/keras-team/keras-hub)
 
-KerasNLP is a natural language processing library that supports users through
+KerasHub is a natural language processing library that supports users through
 their entire development cycle. Our workflows are built from modular components 
 that have state-of-the-art preset weights and architectures when used 
 out-of-the-box and are easily customizable when more control is needed.
