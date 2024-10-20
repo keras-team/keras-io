@@ -60,16 +60,8 @@ HUB_GUIDES_MASTER = {
     "toc": True,
     "children": [
         {
-            "path": "getting_started",
-            "title": "Getting Started with KerasHub",
-        },
-        {
-            "path": "transformer_pretraining",
-            "title": "Pretraining a Transformer from scratch with KerasHub",
-        },
-        {
-            "path": "upload",
-            "title": "Uploading Models with KerasHub",
+            "path": "classification_with_keras_hub",
+            "title": "Classification with KerasHub",
         },
         {
             "path": "segment_anything_in_keras_hub",
