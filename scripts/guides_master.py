@@ -60,6 +60,22 @@ HUB_GUIDES_MASTER = {
     "toc": True,
     "children": [
         {
+            "path": "getting_started",
+            "title": "Getting Started with KerasHub",
+        },
+        {
+            "path": "Semantic Segmentation with KerasHub",
+            "title": "semantic_segmentation_deeplab_v3",
+        },
+        {
+            "path": "trasnformer_pretraining",
+            "title": "Pretraining a Transformer from scratch with KerasHub",
+        },
+        {
+            "path": "upload",
+            "title": "Uploading Models with KerasHub",
+        },
+        {
             "path": "classification_with_keras_hub",
             "title": "Classification with KerasHub",
         },
