@@ -51,7 +51,7 @@ BASE_CLASSES = {
                 "keras_hub.models.ImageClassifier.backbone",
             ],
         },
-       {
+        {
             "path": "image_classifier_preprocessor",
             "title": "ImageClassifierPreprocessor",
             "generate": [
@@ -98,7 +98,7 @@ BASE_CLASSES = {
                 "keras_hub.models.Inpaint.generate",
             ],
         },
-                {
+        {
             "path": "masked_lm",
             "title": "MaskedLM",
             "generate": [
@@ -994,7 +994,7 @@ MODELS_MASTER = {
                     ],
                 },
             ],
-        },        
+        },
         {
             "path": "mit/",
             "title": "MiT",
@@ -1360,7 +1360,7 @@ MODELS_MASTER = {
                         "keras_hub.models.StableDiffusion3TextToImage.generate",
                         "keras_hub.models.StableDiffusion3TextToImage.preprocessor",
                     ],
-                },                
+                },
                 {
                     "path": "stable_diffusion_3_text_to_image_preprocessor",
                     "title": "StableDiffusion3TextToImagePreprocessor layer",
@@ -1392,7 +1392,7 @@ MODELS_MASTER = {
                     ],
                 },
             ],
-        },        
+        },
         {
             "path": "vgg/",
             "title": "VGG",

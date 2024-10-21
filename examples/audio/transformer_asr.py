@@ -289,7 +289,7 @@ Note: This requires ~3.6 GB of disk space and
 takes ~5 minutes for the extraction of files.
 """
 
-pattern_wav_name = re.compile(r'([^/\\\.]+)')
+pattern_wav_name = re.compile(r"([^/\\\.]+)")
 
 keras.utils.get_file(
     os.path.join(os.getcwd(), "data.tar.gz"),
