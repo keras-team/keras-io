@@ -5,6 +5,7 @@ Date created: 2022/01/07
 Last modified: 2022/01/10
 Description: Training a ViT from scratch on smaller datasets with shifted patch tokenization and locality self-attention.
 Accelerator: GPU
+Keras 3 Conversion initiated by: [Pavan Kumar Singh](https://github.com/pksX01)
 """
 
 """
@@ -34,26 +35,20 @@ The main ideas are:
 This example implements the ideas of the paper. A large part of this
 example is inspired from
 [Image classification with Vision Transformer](https://keras.io/examples/vision/image_classification_with_vision_transformer/).
-
-_Note_: This example requires TensorFlow 2.6 or higher, as well as
-[TensorFlow Addons](https://www.tensorflow.org/addons), which can be
-installed using the following command:
-
-```python
-pip install -qq -U tensorflow-addons
-```
 """
 """
 ## Setup
 """
 
+import os
+os.environ["KERAS_BACKEND"] = "tensorflow"
+
 import math
 import numpy as np
 import tensorflow as tf
-from tensorflow import keras
-import tensorflow_addons as tfa
+import keras
 import matplotlib.pyplot as plt
-from tensorflow.keras import layers
+from keras import layers
 
 # Setting seed for reproducibiltiy
 SEED = 42
@@ -355,7 +350,7 @@ at a later stage.
 """
 
 
-class MultiHeadAttentionLSA(tf.keras.layers.MultiHeadAttention):
+class MultiHeadAttentionLSA(keras.layers.MultiHeadAttention):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         # The trainable temperature term. The initial value is
@@ -499,7 +494,7 @@ def run_experiment(model):
         warmup_steps=warmup_steps,
     )
 
-    optimizer = tfa.optimizers.AdamW(
+    optimizer = keras.optimizers.AdamW(
         learning_rate=LEARNING_RATE, weight_decay=WEIGHT_DECAY
     )
 
@@ -548,7 +543,4 @@ supplementary of the paper.
 
 I would like to thank [Jarvislabs.ai](https://jarvislabs.ai/) for
 generously helping with GPU credits.
-
-You can use the trained model hosted on [Hugging Face Hub](https://huggingface.co/keras-io/vit_small_ds_v2)
-and try the demo on [Hugging Face Spaces](https://huggingface.co/spaces/keras-io/vit-small-ds).
 """
