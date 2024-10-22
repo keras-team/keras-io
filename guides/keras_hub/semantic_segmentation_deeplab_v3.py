@@ -2,7 +2,7 @@
 Title: Semantic Segmentation with KerasHub
 Authors: [Sachin Prasad](https://github.com/sachinprasadhs), [Divyashree Sreepathihalli](https://github.com/divyashreepathihalli), [Ian Stenbit](https://github.com/ianstenbit)
 Date created: 2024/10/11
-Last modified: 2024/10/11
+Last modified: 2024/10/22
 Description: DeepLabV3 training and inference with KerasHub.
 Accelerator: GPU
 """
@@ -98,7 +98,7 @@ preprocessor = keras_hub.models.DeepLabV3ImageSegmenterPreprocessor(image_conver
 Let us visualize the results of this pretrained model
 """
 filepath = keras.utils.get_file(
-    origin="https://storage.googleapis.com/keras-cv/pictures/dog.jpeg"
+    origin="https://storage.googleapis.com/keras-cv/models/paligemma/cow_beach_1.png"
 )
 image = keras.utils.load_img(filepath)
 image = keras.utils.img_to_array(image)
@@ -119,7 +119,7 @@ def plot_segmentation(original_image, predicted_mask):
     plt.axis("off")
 
     plt.subplot(1, 2, 2)
-    plt.imshow(predicted_mask, cmap="gray")
+    plt.imshow(predicted_mask)
     plt.axis("off")
 
     plt.tight_layout()
@@ -139,7 +139,7 @@ metric evaluation, and inference!
 ## Download the data
 
 We download Pascal VOC 2012 dataset with additional annotations provided here
-[Semantic contours from inverse detectors](https://www.eecs.berkeley.edu/Research/Projects/CS/vision/grouping/semantic_contours/benchmark.tgz)
+[Semantic contours from inverse detectors](https://ieeexplore.ieee.org/document/6126343)
 and split them into train dataset `train_ds` and `eval_ds`.
 """
 
@@ -592,13 +592,14 @@ def load_sbd(
     instead.
     """
     extracted_dir = os.path.join("benchmark_RELEASE", "dataset")
-    get_data = keras.utils.get_file(
-        fname=os.path.basename(SBD_URL),
-        origin=SBD_URL,
-        cache_dir=data_dir,
-        extract=True,
-    )
-    data_dir = os.path.join(os.path.dirname(get_data), extracted_dir)
+    # get_data = keras.utils.get_file(
+    #     fname=os.path.basename(SBD_URL),
+    #     origin=SBD_URL,
+    #     cache_dir=data_dir,
+    #     extract=True,
+    # )
+    # data_dir = os.path.join(os.path.dirname(get_data), extracted_dir)
+    data_dir = os.path.join("/home/sachinprasad/projects/", extracted_dir)
     image_ids = get_sbd_image_ids(data_dir, split)
     # len(metadata) = #samples, metadata[i] is a dict.
     metadata = build_sbd_metadata(data_dir, image_ids)
@@ -668,12 +669,12 @@ def plot_images_masks(images, masks, pred_masks=None):
         plt.axis("off")
 
         plt.subplot(rows, num_images, num_images + i + 1)
-        plt.imshow(masks[i], cmap="gray")
+        plt.imshow(masks[i])
         plt.axis("off")
 
         if pred_masks is not None:
             plt.subplot(rows, num_images, i + 1 + 2 * num_images)
-            plt.imshow(pred_masks[i, ..., 0], cmap="gray")
+            plt.imshow(pred_masks[i, ..., 0])
             plt.axis("off")
 
     plt.show()
