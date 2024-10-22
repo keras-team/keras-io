@@ -64,11 +64,11 @@ HUB_GUIDES_MASTER = {
             "title": "Getting Started with KerasHub",
         },
         {
-            "path": "Semantic Segmentation with KerasHub",
-            "title": "semantic_segmentation_deeplab_v3",
+            "path": "semantic_segmentation_deeplab_v3",
+            "title": "Semantic Segmentation with KerasHub",
         },
         {
-            "path": "trasnformer_pretraining",
+            "path": "transformer_pretraining",
             "title": "Pretraining a Transformer from scratch with KerasHub",
         },
         {
