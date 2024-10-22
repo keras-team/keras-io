@@ -101,25 +101,22 @@ filepath = keras.utils.get_file(
     origin="https://storage.googleapis.com/keras-cv/models/paligemma/cow_beach_1.png"
 )
 image = keras.utils.load_img(filepath)
-image = keras.utils.img_to_array(image)
+image = np.array(image)
 
 image = preprocessor(image)
 image = keras.ops.expand_dims(image, axis=0)
-preds = ops.expand_dims(ops.argmax(model(image), axis=-1), axis=-1)
+preds = ops.expand_dims(ops.argmax(model.predict(image), axis=-1), axis=-1)
 
 
 def plot_segmentation(original_image, predicted_mask):
-    original_image = np.squeeze(original_image, axis=0)
-    original_image = np.clip(original_image / 255.0, 0, 1)
-    predicted_mask = np.squeeze(predicted_mask, axis=0)
     plt.figure(figsize=(5, 5))
 
     plt.subplot(1, 2, 1)
-    plt.imshow(original_image)
+    plt.imshow(original_image[0] / 255)
     plt.axis("off")
 
     plt.subplot(1, 2, 2)
-    plt.imshow(predicted_mask)
+    plt.imshow(predicted_mask[0])
     plt.axis("off")
 
     plt.tight_layout()
@@ -653,19 +650,13 @@ segmentation masks and prediction masks as input and displays them in a grid.
 
 
 def plot_images_masks(images, masks, pred_masks=None):
-    images = (images - np.min(images)) / (np.max(images) - np.min(images))
-    masks = (masks - np.min(masks)) / (np.max(masks) - np.min(masks))
-    if pred_masks is not None:
-        pred_masks = (pred_masks - pred_masks.min()) / (
-            pred_masks.max() - pred_masks.min()
-        )
     num_images = len(images)
     plt.figure(figsize=(8, 4))
     rows = 3 if pred_masks is not None else 2
 
     for i in range(num_images):
         plt.subplot(rows, num_images, i + 1)
-        plt.imshow(images[i])
+        plt.imshow(images[i] / 255)
         plt.axis("off")
 
         plt.subplot(rows, num_images, num_images + i + 1)
@@ -674,7 +665,7 @@ def plot_images_masks(images, masks, pred_masks=None):
 
         if pred_masks is not None:
             plt.subplot(rows, num_images, i + 1 + 2 * num_images)
-            plt.imshow(pred_masks[i, ..., 0])
+            plt.imshow(pred_masks[i])
             plt.axis("off")
 
     plt.show()
@@ -840,7 +831,7 @@ test_ds = preprocess_inputs(test_ds)
 images, masks = next(iter(train_ds.take(1)))
 images = ops.convert_to_tensor(images)
 masks = ops.convert_to_tensor(masks)
-preds = ops.expand_dims(ops.argmax(model(images), axis=-1), axis=-1)
+preds = ops.expand_dims(ops.argmax(model.predict(images), axis=-1), axis=-1)
 masks = ops.expand_dims(ops.argmax(masks, axis=-1), axis=-1)
 
 plot_images_masks(images, masks, preds)
