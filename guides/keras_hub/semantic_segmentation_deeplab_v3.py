@@ -112,7 +112,7 @@ def plot_segmentation(original_image, predicted_mask):
     plt.figure(figsize=(5, 5))
 
     plt.subplot(1, 2, 1)
-    plt.imshow(original_image[0]/255)
+    plt.imshow(original_image[0] / 255)
     plt.axis("off")
 
     plt.subplot(1, 2, 2)
@@ -656,7 +656,7 @@ def plot_images_masks(images, masks, pred_masks=None):
 
     for i in range(num_images):
         plt.subplot(rows, num_images, i + 1)
-        plt.imshow(images[i]/255)
+        plt.imshow(images[i] / 255)
         plt.axis("off")
 
         plt.subplot(rows, num_images, num_images + i + 1)
@@ -664,11 +664,12 @@ def plot_images_masks(images, masks, pred_masks=None):
         plt.axis("off")
 
         if pred_masks is not None:
-          plt.subplot(rows, num_images, i + 1 + 2*num_images)
-          plt.imshow(pred_masks[i])
-          plt.axis("off")
+            plt.subplot(rows, num_images, i + 1 + 2 * num_images)
+            plt.imshow(pred_masks[i])
+            plt.axis("off")
 
     plt.show()
+
 
 plot_images_masks(batch["images"], batch["segmentation_masks"])
 
