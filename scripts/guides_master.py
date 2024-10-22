@@ -64,7 +64,11 @@ HUB_GUIDES_MASTER = {
             "title": "Getting Started with KerasHub",
         },
         {
-            "path": "transformer_pretraining",
+            "path": "semantic_segmentation_deeplab_v3",
+            "title": "Semantic Segmentation with KerasHub",
+        },
+        {
+            "path": "trasnformer_pretraining",
             "title": "Pretraining a Transformer from scratch with KerasHub",
         },
         {
@@ -72,8 +76,16 @@ HUB_GUIDES_MASTER = {
             "title": "Uploading Models with KerasHub",
         },
         {
+            "path": "classification_with_keras_hub",
+            "title": "Classification with KerasHub",
+        },
+        {
             "path": "segment_anything_in_keras_hub",
             "title": "Segment Anything in KerasHub",
+        },
+        {
+            "path": "stable_diffusion_3_in_keras_hub",
+            "title": "Stable Diffusion 3 in KerasHub",
         },
     ],
 }
