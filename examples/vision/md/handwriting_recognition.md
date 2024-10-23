@@ -740,18 +740,6 @@ plt.show()
 ```
 
     
- 1/2 ━━━━━━━━━━[37m━━━━━━━━━━  0s 34ms/step
-
-<div class="k-default-codeblock">
-```
-
-```
-</div>
- 2/2 ━━━━━━━━━━━━━━━━━━━━ 0s 27ms/step
-
-
-
-    
 ![png](/img/examples/vision/handwriting_recognition/handwriting_recognition_40_2.png)
     
 
