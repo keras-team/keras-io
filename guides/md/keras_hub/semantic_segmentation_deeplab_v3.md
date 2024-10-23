@@ -2,7 +2,7 @@
 
 **Authors:** [Sachin Prasad](https://github.com/sachinprasadhs), [Divyashree Sreepathihalli](https://github.com/divyashreepathihalli), [Ian Stenbit](https://github.com/ianstenbit)<br>
 **Date created:** 2024/10/11<br>
-**Last modified:** 2024/10/11<br>
+**Last modified:** 2024/10/22<br>
 **Description:** DeepLabV3 training and inference with KerasHub.
 
 
@@ -99,33 +99,31 @@ image_converter = keras_hub.layers.DeepLabV3ImageConverter(
 preprocessor = keras_hub.models.DeepLabV3ImageSegmenterPreprocessor(image_converter)
 ```
 
+
 Let us visualize the results of this pretrained model
 
 
 ```python
 filepath = keras.utils.get_file(
-    origin="https://storage.googleapis.com/keras-cv/pictures/dog.jpeg"
+    origin="https://storage.googleapis.com/keras-cv/models/paligemma/cow_beach_1.png"
 )
 image = keras.utils.load_img(filepath)
-image = keras.utils.img_to_array(image)
+image = np.array(image)
 
 image = preprocessor(image)
 image = keras.ops.expand_dims(image, axis=0)
-preds = ops.expand_dims(ops.argmax(model(image), axis=-1), axis=-1)
+preds = ops.expand_dims(ops.argmax(model.predict(image), axis=-1), axis=-1)
 
 
 def plot_segmentation(original_image, predicted_mask):
-    original_image = np.squeeze(original_image, axis=0)
-    original_image = np.clip(original_image / 255.0, 0, 1)
-    predicted_mask = np.squeeze(predicted_mask, axis=0)
     plt.figure(figsize=(5, 5))
 
     plt.subplot(1, 2, 1)
-    plt.imshow(original_image)
+    plt.imshow(original_image[0] / 255)
     plt.axis("off")
 
     plt.subplot(1, 2, 2)
-    plt.imshow(predicted_mask, cmap="gray")
+    plt.imshow(predicted_mask[0])
     plt.axis("off")
 
     plt.tight_layout()
@@ -136,7 +134,19 @@ plot_segmentation(image, preds)
 ```
 
     
-![png](/guides/img/semantic_segmentation_deeplab_v3/semantic_segmentation_deeplab_v3_9_1.png)
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 5s/step
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 5s 5s/step
+
+
+
+    
+![png](/img/guides/semantic_segmentation_deeplab_v3/semantic_segmentation_deeplab_v3_9_3.png)
     
 
 
@@ -150,7 +160,7 @@ metric evaluation, and inference!
 ## Download the data
 
 We download Pascal VOC 2012 dataset with additional annotations provided here
-[Semantic contours from inverse detectors](https://www.eecs.berkeley.edu/Research/Projects/CS/vision/grouping/semantic_contours/benchmark.tgz)
+[Semantic contours from inverse detectors](https://ieeexplore.ieee.org/document/6126343)
 and split them into train dataset `train_ds` and `eval_ds`.
 
 
@@ -670,28 +680,22 @@ segmentation masks and prediction masks as input and displays them in a grid.
 ```python
 
 def plot_images_masks(images, masks, pred_masks=None):
-    images = (images - np.min(images)) / (np.max(images) - np.min(images))
-    masks = (masks - np.min(masks)) / (np.max(masks) - np.min(masks))
-    if pred_masks is not None:
-        pred_masks = (pred_masks - pred_masks.min()) / (
-            pred_masks.max() - pred_masks.min()
-        )
     num_images = len(images)
     plt.figure(figsize=(8, 4))
     rows = 3 if pred_masks is not None else 2
 
     for i in range(num_images):
         plt.subplot(rows, num_images, i + 1)
-        plt.imshow(images[i])
+        plt.imshow(images[i] / 255)
         plt.axis("off")
 
         plt.subplot(rows, num_images, num_images + i + 1)
-        plt.imshow(masks[i], cmap="gray")
+        plt.imshow(masks[i])
         plt.axis("off")
 
         if pred_masks is not None:
             plt.subplot(rows, num_images, i + 1 + 2 * num_images)
-            plt.imshow(pred_masks[i, ..., 0], cmap="gray")
+            plt.imshow(pred_masks[i])
             plt.axis("off")
 
     plt.show()
@@ -702,7 +706,7 @@ plot_images_masks(batch["images"], batch["segmentation_masks"])
 
 
     
-![png](/guides/img/semantic_segmentation_deeplab_v3/semantic_segmentation_deeplab_v3_18_0.png)
+![png](/img/guides/semantic_segmentation_deeplab_v3/semantic_segmentation_deeplab_v3_18_0.png)
     
 
 
@@ -732,7 +736,7 @@ plot_images_masks(batch["images"], batch["segmentation_masks"])
 
 
     
-![png](/guides/img/semantic_segmentation_deeplab_v3/semantic_segmentation_deeplab_v3_22_0.png)
+![png](/img/guides/semantic_segmentation_deeplab_v3/semantic_segmentation_deeplab_v3_22_0.png)
     
 
 
@@ -753,7 +757,7 @@ dataset cardinality is important for learning rate decay because it determines
 how many steps the model will train for. The initial learning rate is
 proportional to 0.007 and the decay steps are 2124. This means that the learning
 rate will start at `INITIAL_LR` and then decrease to zero over 2124 steps.
-![png](/guides/img/semantic_segmentation_deeplab_v3_plus/learning_rate_schedule.png)
+![png](/img/guides/semantic_segmentation_deeplab_v3/learning_rate_schedule.png)
 
 
 ```python
@@ -922,10 +926,12 @@ model.fit(train_ds, validation_data=eval_ds, epochs=EPOCHS)
     
 <div class="k-default-codeblock">
 ```
-  1/Unknown  40s 40s/step - categorical_accuracy: 0.0494 - loss: 3.4081 - mean_io_u: 0.0112
+  1/Unknown  40s 40s/step - categorical_accuracy: 0.1191 - loss: 3.0568 - mean_io_u: 0.0118
+
+
 ```
 </div>
- 2124/2124 ━━━━━━━━━━━━━━━━━━━━ 279s 113ms/step - categorical_accuracy: 0.7188 - loss: 1.1003 - mean_io_u: 0.0934 - val_categorical_accuracy: 0.8222 - val_loss: 0.5761 - val_mean_io_u: 0.3481
+ 2124/2124 ━━━━━━━━━━━━━━━━━━━━ 281s 114ms/step - categorical_accuracy: 0.7286 - loss: 1.0707 - mean_io_u: 0.0926 - val_categorical_accuracy: 0.8199 - val_loss: 0.5900 - val_mean_io_u: 0.3265
 
 
 
@@ -933,7 +939,7 @@ model.fit(train_ds, validation_data=eval_ds, epochs=EPOCHS)
 
 <div class="k-default-codeblock">
 ```
-<keras.src.callbacks.history.History at 0x7f6868c16490>
+<keras.src.callbacks.history.History at 0x7fd7a897f8d0>
 
 ```
 </div>
@@ -953,13 +959,26 @@ test_ds = preprocess_inputs(test_ds)
 images, masks = next(iter(train_ds.take(1)))
 images = ops.convert_to_tensor(images)
 masks = ops.convert_to_tensor(masks)
-preds = ops.expand_dims(ops.argmax(model(images), axis=-1), axis=-1)
+preds = ops.expand_dims(ops.argmax(model.predict(images), axis=-1), axis=-1)
 masks = ops.expand_dims(ops.argmax(masks, axis=-1), axis=-1)
 
 plot_images_masks(images, masks, preds)
 ```
+
     
-![png](/guides/img/semantic_segmentation_deeplab_v3/semantic_segmentation_deeplab_v3_32_2.png)
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 3s/step
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 3s 3s/step
+
+
+
+    
+![png](/img/guides/semantic_segmentation_deeplab_v3/semantic_segmentation_deeplab_v3_32_2.png)
     
 
 
