@@ -210,6 +210,7 @@ EXAMPLES_MASTER = {
                     "path": "handwriting_recognition",
                     "title": "Handwriting recognition",
                     "subcategory": "OCR",
+                    "keras_3": True,
                 },
                 # Image enhancement
                 {
@@ -234,6 +235,7 @@ EXAMPLES_MASTER = {
                     "path": "edsr",
                     "title": "Enhanced Deep Residual Networks for single-image super-resolution",
                     "subcategory": "Image enhancement",
+                    "keras_3": True,
                 },
                 {
                     "path": "zero_dce",
