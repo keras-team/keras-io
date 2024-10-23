@@ -178,6 +178,7 @@ EXAMPLES_MASTER = {
                     "path": "depth_estimation",
                     "title": "Monocular depth estimation",
                     "subcategory": "3D",
+                    "keras_3": True,
                 },
                 {
                     "path": "nerf",
@@ -431,6 +432,7 @@ EXAMPLES_MASTER = {
                     "path": "active_learning_review_classification",
                     "title": "Review Classification using Active Learning",
                     "subcategory": "Text classification",
+                    "keras_3": True,
                 },
                 {
                     "path": "fnet_classification_with_keras_hub",
@@ -547,6 +549,13 @@ EXAMPLES_MASTER = {
                     "path": "masked_language_modeling",
                     "title": "End-to-end Masked Language Modeling with BERT",
                     "subcategory": "Language modeling",
+                    "keras_3": True,
+                },
+                {
+                    "path": "abstractive_summarization_with_bart",
+                    "title": "Abstractive Text Summarization with BART",
+                    "subcategory": "Language modeling",
+                    "keras_3": True,
                 },
                 {
                     "path": "pretraining_BERT",
