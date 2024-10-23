@@ -32,14 +32,13 @@ relatively large salient object segmentation dataset. which contain diversified 
 structures common to real-world images in both foreground and background.
 """
 
-"""shell
-wget http://saliencydetection.net/duts/download/DUTS-TE.zip
-unzip -q DUTS-TE.zip
-"""
-
 import os
 
+# Because of the use of tf.image.ssim in the loss,
+# this example requires TensorFlow. The rest of the code
+# is backend-agnostic.
 os.environ["KERAS_BACKEND"] = "tensorflow"
+
 import numpy as np
 from glob import glob
 import matplotlib.pyplot as plt
@@ -49,6 +48,8 @@ import tensorflow as tf
 import keras
 from keras import layers, ops
 
+keras.config.disable_traceback_filtering()
+
 """
 ## Define Hyperparameters
 """
@@ -57,14 +58,19 @@ IMAGE_SIZE = 288
 BATCH_SIZE = 4
 OUT_CLASSES = 1
 TRAIN_SPLIT_RATIO = 0.90
-DATA_DIR = "./DUTS-TE/"
 
 """
-## Create `PyDataset`s 
+## Create `PyDataset`s
 
 We will use `load_paths()` to load and split 140 paths into train and validation set, and
 convert paths into `PyDataset` object.
 """
+
+data_dir = keras.utils.get_file(
+    origin="http://saliencydetection.net/duts/download/DUTS-TE.zip",
+    extract=True,
+)
+data_dir = os.path.join(data_dir, "DUTS-TE")
 
 
 def load_paths(path, split_ratio):
@@ -103,7 +109,9 @@ class Dataset(keras.utils.PyDataset):
         batch_x, batch_y = [], []
         for i in range(idx * self.batch_size, (idx + 1) * self.batch_size):
             x, y = self.preprocess(
-                self.image_paths[i], self.mask_paths[i], self.img_size, self.out_classes
+                self.image_paths[i],
+                self.mask_paths[i],
+                self.img_size,
             )
             batch_x.append(x)
             batch_y.append(y)
@@ -117,13 +125,13 @@ class Dataset(keras.utils.PyDataset):
         x = (x / 255.0).astype(np.float32)
         return x
 
-    def preprocess(self, x_batch, y_batch, img_size, out_classes):
+    def preprocess(self, x_batch, y_batch, img_size):
         images = self.read_image(x_batch, (img_size, img_size), mode="rgb")  # image
         masks = self.read_image(y_batch, (img_size, img_size), mode="grayscale")  # mask
         return images, masks
 
 
-train_paths, val_paths = load_paths(DATA_DIR, TRAIN_SPLIT_RATIO)
+train_paths, val_paths = load_paths(data_dir, TRAIN_SPLIT_RATIO)
 
 train_dataset = Dataset(
     train_paths[0], train_paths[1], IMAGE_SIZE, OUT_CLASSES, BATCH_SIZE, shuffle=True
@@ -148,8 +156,9 @@ def display(display_list):
     plt.show()
 
 
-for (image, mask), _ in zip(val_dataset, range(1)):
+for image, mask in val_dataset:
     display([image[0], mask[0]])
+    break
 
 """
 ## Analyze Mask
@@ -343,7 +352,7 @@ def basnet_rrm(base_model, out_classes):
     # ------------- refined = coarse + residual
     x = layers.Add()([x_input, x])  # Add prediction + refinement output
 
-    return keras.models.Model(inputs=[base_model.input], outputs=[x])
+    return keras.models.Model(inputs=base_model.input[0], outputs=x)
 
 
 """
@@ -351,44 +360,29 @@ def basnet_rrm(base_model, out_classes):
 """
 
 
-def basnet(input_shape, out_classes):
-    """BASNet, it's a combination of two modules
-    Prediction Module and Residual Refinement Module(RRM)."""
+class BASNet(keras.Model):
+    def __init__(self, input_shape, out_classes):
+        """BASNet, it's a combination of two modules
+        Prediction Module and Residual Refinement Module(RRM)."""
 
-    # Prediction model.
-    predict_model = basnet_predict(input_shape, out_classes)
-    # Refinement model.
-    refine_model = basnet_rrm(predict_model, out_classes)
+        # Prediction model.
+        predict_model = basnet_predict(input_shape, out_classes)
+        # Refinement model.
+        refine_model = basnet_rrm(predict_model, out_classes)
 
-    output = refine_model.outputs  # Combine outputs.
-    output.extend(predict_model.output)
+        output = refine_model.outputs  # Combine outputs.
+        output.extend(predict_model.output)
 
-    output = [layers.Activation("sigmoid")(_) for _ in output]  # Activations.
+        # Activations.
+        output = [layers.Activation("sigmoid")(x) for x in output]
+        super().__init__(inputs=predict_model.input[0], outputs=output)
 
-    return keras.models.Model(inputs=[predict_model.input], outputs=output)
-
-
-"""
-## Hybrid Loss
-
-Another important feature of BASNet is its hybrid loss function, which is a combination of
-binary cross entropy, structural similarity and intersection-over-union losses, which guide
-the network to learn three-level (i.e., pixel, patch and map level) hierarchy representations.
-"""
-
-
-class BasnetLoss(keras.losses.Loss):
-    """BASNet hybrid loss."""
-
-    def __init__(self, **kwargs):
-        super().__init__(name="basnet_loss", **kwargs)
         self.smooth = 1.0e-9
-
         # Binary Cross Entropy loss.
         self.cross_entropy_loss = keras.losses.BinaryCrossentropy()
         # Structural Similarity Index value.
         self.ssim_value = tf.image.ssim
-        #  Jaccard / IoU loss.
+        # Jaccard / IoU loss.
         self.iou_value = self.calculate_iou
 
     def calculate_iou(
@@ -402,20 +396,32 @@ class BasnetLoss(keras.losses.Loss):
         union = union - intersection
         return ops.mean((intersection + self.smooth) / (union + self.smooth), axis=0)
 
-    def call(self, y_true, y_pred):
-        cross_entropy_loss = self.cross_entropy_loss(y_true, y_pred)
+    def compute_loss(self, x, y_true, y_pred, sample_weight=None, training=False):
+        total = 0.0
+        for y_pred_i in y_pred:  # y_pred = refine_model.outputs + predict_model.output
+            cross_entropy_loss = self.cross_entropy_loss(y_true, y_pred_i)
 
-        ssim_value = self.ssim_value(y_true, y_pred, max_val=1)
-        ssim_loss = ops.mean(1 - ssim_value + self.smooth, axis=0)
+            ssim_value = self.ssim_value(y_true, y_pred, max_val=1)
+            ssim_loss = ops.mean(1 - ssim_value + self.smooth, axis=0)
 
-        iou_value = self.iou_value(y_true, y_pred)
-        iou_loss = 1 - iou_value
+            iou_value = self.iou_value(y_true, y_pred)
+            iou_loss = 1 - iou_value
 
-        # Add all three losses.
-        return cross_entropy_loss + ssim_loss + iou_loss
+            # Add all three losses.
+            total += cross_entropy_loss + ssim_loss + iou_loss
+        return total
 
 
-basnet_model = basnet(
+"""
+## Hybrid Loss
+
+Another important feature of BASNet is its hybrid loss function, which is a combination of
+binary cross entropy, structural similarity and intersection-over-union losses, which guide
+the network to learn three-level (i.e., pixel, patch and map level) hierarchy representations.
+"""
+
+
+basnet_model = BASNet(
     input_shape=[IMAGE_SIZE, IMAGE_SIZE, 3], out_classes=OUT_CLASSES
 )  # Create model.
 basnet_model.summary()  # Show model summary.
@@ -423,7 +429,6 @@ basnet_model.summary()  # Show model summary.
 optimizer = keras.optimizers.Adam(learning_rate=1e-4, epsilon=1e-8)
 # Compile model.
 basnet_model.compile(
-    loss=BasnetLoss(),
     optimizer=optimizer,
     metrics=[keras.metrics.MeanAbsoluteError(name="mae") for _ in basnet_model.outputs],
 )
