@@ -1501,7 +1501,7 @@ MODELS_MASTER = {
                     "title": "WhisperAudioConverter",
                     "generate": [
                         "keras_hub.layers.WhisperAudioConverter",
-                        "keras_hub.models.WhisperAudioConverter.from_preset",
+                        "keras_hub.layers.WhisperAudioConverter.from_preset",
                     ],
                 },
                 {
