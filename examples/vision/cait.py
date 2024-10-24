@@ -790,7 +790,7 @@ as well as
 ## Load a pretrained model
 """
 
-model_gcs_path = "gs://tfhub-modules/sayakpaul/cait_xxs24_224/1/uncompressed"
+model_gcs_path = "gs://kaggle-tfhub-models-uncompressed/tfhub-modules/sayakpaul/cait_xxs24_224/1/uncompressed"
 pretrained_model = keras.Sequential(
     [keras.layers.TFSMLayer(model_gcs_path, call_endpoint="serving_default")]
 )
