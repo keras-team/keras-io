@@ -1394,6 +1394,39 @@ MODELS_MASTER = {
             ],
         },
         {
+            "path": "t5/",
+            "title": "T5",
+            "toc": True,
+            "children": [
+                {
+                    "path": "t5_tokenizer",
+                    "title": "T5Tokenizer",
+                    "generate": [
+                        "keras_hub.tokenizers.T5Tokenizer",
+                        "keras_hub.tokenizers.T5Tokenizer.from_preset",
+                    ],
+                },
+                {
+                    "path": "t5_backbone",
+                    "title": "T5Backbone model",
+                    "generate": [
+                        "keras_hub.models.T5Backbone",
+                        "keras_hub.models.T5Backbone.from_preset",
+                        "keras_hub.models.T5Backbone.token_embedding",
+                    ],
+                },
+                {
+                    "path": "t5_preprocessor",
+                    "title": "T5Preprocessor layer",
+                    "generate": [
+                        "keras_hub.models.T5Preprocessor",
+                        "keras_hub.models.T5Preprocessor.from_preset",
+                        "keras_hub.models.T5Preprocessor.tokenizer",
+                    ],
+                },
+            ],
+        },
+        {
             "path": "vgg/",
             "title": "VGG",
             "toc": True,
@@ -1446,6 +1479,37 @@ MODELS_MASTER = {
                     "generate": [
                         "keras_hub.models.ViTDetBackbone",
                         "keras_hub.models.ViTDetBackbone.from_preset",
+                    ],
+                },
+            ],
+        },
+        {
+            "path": "whisper/",
+            "title": "Whisper",
+            "toc": True,
+            "children": [
+                {
+                    "path": "whisper_tokenizer",
+                    "title": "WhisperTokenizer",
+                    "generate": [
+                        "keras_hub.tokenizers.WhisperTokenizer",
+                        "keras_hub.tokenizers.WhisperTokenizer.from_preset",
+                    ],
+                },
+                {
+                    "path": "whisper_audio_converter",
+                    "title": "WhisperAudioConverter",
+                    "generate": [
+                        "keras_hub.layers.WhisperAudioConverter",
+                        "keras_hub.layers.WhisperAudioConverter.from_preset",
+                    ],
+                },
+                {
+                    "path": "whisper_backbone",
+                    "title": "WhisperBackbone model",
+                    "generate": [
+                        "keras_hub.models.WhisperBackbone",
+                        "keras_hub.models.WhisperBackbone.from_preset",
                     ],
                 },
             ],
