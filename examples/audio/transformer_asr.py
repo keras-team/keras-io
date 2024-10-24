@@ -315,7 +315,7 @@ def get_data(wavs, id_to_text, maxlen=50):
     """returns mapping of audio paths and transcription texts"""
     data = []
     for w in wavs:
-        id = pattern_wav_name.split(test)[-4]
+        id = pattern_wav_name.split(w)[-4]
         if len(id_to_text[id]) < maxlen:
             data.append({"audio": w, "text": id_to_text[id]})
     return data
