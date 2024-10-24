@@ -35,13 +35,7 @@ This example implements the ideas of the paper. A large part of this
 example is inspired from
 [Image classification with Vision Transformer](https://keras.io/examples/vision/image_classification_with_vision_transformer/).
 
-_Note_: This example requires TensorFlow 2.6 or higher, as well as
-[TensorFlow Addons](https://www.tensorflow.org/addons), which can be
-installed using the following command:
-
-```python
-pip install -qq -U tensorflow-addons
-```
+_Note_: This example requires TensorFlow 3 or higher
 """
 """
 ## Setup
@@ -50,10 +44,9 @@ pip install -qq -U tensorflow-addons
 import math
 import numpy as np
 import tensorflow as tf
-from tensorflow import keras
-import tensorflow_addons as tfa
+import keras
 import matplotlib.pyplot as plt
-from tensorflow.keras import layers
+from keras import layers
 
 # Setting seed for reproducibiltiy
 SEED = 42
@@ -355,7 +348,7 @@ at a later stage.
 """
 
 
-class MultiHeadAttentionLSA(tf.keras.layers.MultiHeadAttention):
+class MultiHeadAttentionLSA(keras.layers.MultiHeadAttention):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         # The trainable temperature term. The initial value is
@@ -499,7 +492,7 @@ def run_experiment(model):
         warmup_steps=warmup_steps,
     )
 
-    optimizer = tfa.optimizers.AdamW(
+    optimizer = keras.optimizers.AdamW(
         learning_rate=LEARNING_RATE, weight_decay=WEIGHT_DECAY
     )
 
