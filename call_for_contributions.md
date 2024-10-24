@@ -21,7 +21,7 @@ mixing numerical, categorical, and text features, doing feature engineering with
 
 ## Text-to-image
 
-A text-to-image diffusion model in the style of Imagen, using a frozen BERT encoder from KerasNLP
+A text-to-image diffusion model in the style of Imagen, using a frozen BERT encoder from KerasHub
 and a multi-stage diffusion model.
 
 

@@ -96,7 +96,7 @@ Let's do this!
 ---
 ## Perform detections with a pretrained model
 
-![](https://storage.googleapis.com/keras-nlp/getting_started_guide/prof_keras_beginner.png)
+![](https://storage.googleapis.com/keras-hub/getting_started_guide/prof_keras_beginner.png)
 
 The highest level API in the KerasCV Object Detection API is the `keras_cv.models` API.
 This API includes fully pretrained object detection models, such as
@@ -416,7 +416,7 @@ That looks a lot better!
 ---
 ## Train a custom object detection model
 
-![](https://storage.googleapis.com/keras-nlp/getting_started_guide/prof_keras_advanced.png)
+![](https://storage.googleapis.com/keras-hub/getting_started_guide/prof_keras_advanced.png)
 
 Whether you're an object detection amateur or a well seasoned veteran, assembling
 an object detection pipeline from scratch is a massive undertaking.

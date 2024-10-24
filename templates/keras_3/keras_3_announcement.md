@@ -171,7 +171,7 @@ you can start using today with Keras 3.
 All 40 Keras Applications models (the `keras.applications` namespace)
 are available in all backends.
 The vast array of pretrained models in [KerasCV](https://keras.io/api/keras_cv/)
-and [KerasNLP](https://keras.io/api/keras_nlp/) also work with all backends. This includes:
+and [KerasHub](https://keras.io/api/keras_hub/) also work with all backends. This includes:
 
 - BERT
 - OPT

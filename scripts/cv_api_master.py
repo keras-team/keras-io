@@ -532,7 +532,7 @@ TASKS_MASKTER = {
             "generate": [
                 "keras_cv.models.RetinaNet",
                 "keras_cv.models.RetinaNet.from_preset",
-                "keras_cv.models.retinanet.PredictionHead"
+                "keras_cv.models.retinanet.PredictionHead",
             ],
         },
         {

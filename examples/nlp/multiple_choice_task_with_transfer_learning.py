@@ -23,7 +23,7 @@ unlike question answering. We will use SWAG dataset to demonstrate this example.
 """shell
 """
 
-import keras_nlp
+import keras_hub
 import keras
 import tensorflow as tf  # For tf.data only.
 
@@ -143,12 +143,12 @@ Making all sequences the same length through padding boosts computational effici
 making subsequent steps smoother.
 
 Explore the following pages to access the available preprocessing and tokenizer layers in
-**KerasNLP**:
-- [Preprocessing](https://keras.io/api/keras_nlp/preprocessing_layers/)
-- [Tokenizers](https://keras.io/api/keras_nlp/tokenizers/)
+**KerasHub**:
+- [Preprocessing](https://keras.io/api/keras_hub/preprocessing_layers/)
+- [Tokenizers](https://keras.io/api/keras_hub/tokenizers/)
 """
 
-preprocessor = keras_nlp.models.DebertaV3Preprocessor.from_preset(
+preprocessor = keras_hub.models.DebertaV3Preprocessor.from_preset(
     preset=CFG.preset,  # Name of the model
     sequence_length=CFG.sequence_length,  # Max sequence length, will be padded if shorter
 )
@@ -378,15 +378,15 @@ callbacks = get_callbacks()
 
 ### Pre-trained Models
 
-The `KerasNLP` library provides comprehensive, ready-to-use implementations of popular
+The `KerasHub` library provides comprehensive, ready-to-use implementations of popular
 NLP model architectures. It features a variety of pre-trained models including `Bert`,
 `Roberta`, `DebertaV3`, and more. In this notebook, we'll showcase the usage of
-`DistillBert`. However, feel free to explore all available models in the [KerasNLP
-documentation](https://keras.io/api/keras_nlp/models/). Also for a deeper understanding
-of `KerasNLP`, refer to the informative [getting started
-guide](https://keras.io/guides/keras_nlp/getting_started/).
+`DistillBert`. However, feel free to explore all available models in the [KerasHub
+documentation](https://keras.io/api/keras_hub/models/). Also for a deeper understanding
+of `KerasHub`, refer to the informative [getting started
+guide](https://keras.io/guides/keras_hub/getting_started/).
 
-Our approach involves using `keras_nlp.models.XXClassifier` to process each question and
+Our approach involves using `keras_hub.models.XXClassifier` to process each question and
 option pari (e.g. (Q+A), (Q+B), etc.), generating logits. These logits are then combined
 and passed through a softmax function to produce the final output.
 """
@@ -459,7 +459,7 @@ def build_model():
         ),
     }
     # Create a DebertaV3Classifier model
-    classifier = keras_nlp.models.DebertaV3Classifier.from_preset(
+    classifier = keras_hub.models.DebertaV3Classifier.from_preset(
         CFG.preset,
         preprocessor=None,
         num_classes=1,  # one output per one option, for five options total 5 outputs
@@ -551,7 +551,7 @@ for i in range(0, 50, 10):
 ## Reference
 * [Multiple Choice with
 HF](https://twitter.com/johnowhitaker/status/1689790373454041089?s=20)
-* [Keras NLP](https://keras.io/api/keras_nlp/)
+* [Keras NLP](https://keras.io/api/keras_hub/)
 * [BirdCLEF23: Pretraining is All you Need
 [Train]](https://www.kaggle.com/code/awsaf49/birdclef23-pretraining-is-all-you-need-train)
 [Train]](https://www.kaggle.com/code/awsaf49/birdclef23-pretraining-is-all-you-need-train)

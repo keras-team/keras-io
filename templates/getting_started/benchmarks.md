@@ -21,7 +21,7 @@ selections.
 
 We are not measuring the best possible performance achievable by each framework,
 but the out-of-the-box performance of common user workflows. With this goal in
-mind, we leveraged pre-existing implementations from KerasCV and KerasNLP for
+mind, we leveraged pre-existing implementations from KerasCV and KerasHub for
 the Keras versions of the models.
 
 ## Hardware
@@ -77,7 +77,7 @@ better.
 | **Mistral<br>(generate)** | 1 | NA | 743.28 | **679.30** | 11,054.67<sup>*</sup> | **679.30** |
 
 \* _LLM inference with the PyTorch backend is abnormally slow at this time
-because KerasNLP uses static sequence padding, unlike HuggingFace. This will be
+because KerasHub uses static sequence padding, unlike HuggingFace. This will be
 addressed soon._
 
 ## Discussion

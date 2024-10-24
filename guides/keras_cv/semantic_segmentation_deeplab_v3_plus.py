@@ -8,7 +8,7 @@ Accelerator: GPU
 """
 
 """
-![](https://storage.googleapis.com/keras-nlp/getting_started_guide/prof_keras_intermediate.png)
+![](https://storage.googleapis.com/keras-hub/getting_started_guide/prof_keras_intermediate.png)
 
 ## Background
 Semantic segmentation is a type of computer vision task that involves assigning a
