@@ -770,6 +770,7 @@ EXAMPLES_MASTER = {
                     "path": "cyclegan",
                     "title": "CycleGAN",
                     "subcategory": "Image generation",
+                    "keras_3": True,
                 },
                 {
                     "path": "gan_ada",
