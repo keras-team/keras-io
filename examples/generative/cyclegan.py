@@ -17,7 +17,7 @@ aligned image pairs. However, obtaining paired examples isn't always feasible.
 CycleGAN tries to learn this mapping without requiring paired input-output images,
 using cycle-consistent adversarial networks.
 
-- [Paper](https://arxiv.org/pdf/1703.10593.pdf)
+- [Paper](https://arxiv.org/abs/1703.10593)
 - [Original implementation](https://github.com/junyanz/pytorch-CycleGAN-and-pix2pix)
 """
 
@@ -31,7 +31,6 @@ import matplotlib.pyplot as plt
 import tensorflow as tf
 import keras
 from keras import layers, ops
-#import tensorflow_addons as tfa
 import tensorflow_datasets as tfds
 
 tfds.disable_progress_bar()
@@ -191,7 +190,9 @@ def residual_block(
         padding=padding,
         use_bias=use_bias,
     )(x)
-    x = keras.layers.GroupNormalization(groups=1, gamma_initializer=gamma_initializer)(x)
+    x = keras.layers.GroupNormalization(groups=1, gamma_initializer=gamma_initializer)(
+        x
+    )
     x = activation(x)
 
     x = ReflectionPadding2D()(x)
@@ -203,7 +204,9 @@ def residual_block(
         padding=padding,
         use_bias=use_bias,
     )(x)
-    x = keras.layers.GroupNormalization(groups=1, gamma_initializer=gamma_initializer)(x)
+    x = keras.layers.GroupNormalization(groups=1, gamma_initializer=gamma_initializer)(
+        x
+    )
     x = layers.add([input_tensor, x])
     return x
 
@@ -227,7 +230,9 @@ def downsample(
         padding=padding,
         use_bias=use_bias,
     )(x)
-    x = keras.layers.GroupNormalization(groups=1, gamma_initializer=gamma_initializer)(x)
+    x = keras.layers.GroupNormalization(groups=1, gamma_initializer=gamma_initializer)(
+        x
+    )
     if activation:
         x = activation(x)
     return x
@@ -252,7 +257,9 @@ def upsample(
         kernel_initializer=kernel_initializer,
         use_bias=use_bias,
     )(x)
-    x = keras.layers.GroupNormalization(groups=1, gamma_initializer=gamma_initializer)(x)
+    x = keras.layers.GroupNormalization(groups=1, gamma_initializer=gamma_initializer)(
+        x
+    )
     if activation:
         x = activation(x)
     return x
@@ -299,7 +306,9 @@ def get_resnet_generator(
     x = layers.Conv2D(filters, (7, 7), kernel_initializer=kernel_init, use_bias=False)(
         x
     )
-    x = keras.layers.GroupNormalization(groups=1, gamma_initializer=gamma_initializer)(x)
+    x = keras.layers.GroupNormalization(groups=1, gamma_initializer=gamma_initializer)(
+        x
+    )
     x = layers.Activation("relu")(x)
 
     # Downsampling
