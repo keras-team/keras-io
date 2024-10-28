@@ -31,7 +31,7 @@ to start learning our API. We welcome
 * [Segment Anything in KerasHub](/guides/keras_hub/segment_anything_in_keras_hub/)
 * [Semantic Segmentation with KerasHub](/guides/keras_hub/semantic_segmentation_deeplab_v3/)
 * [Stable Diffusion 3 in KerasHub](/guides/keras_hub/stable_diffusion_3_in_keras_hub/)
-* [Pretraining a Transformer from scratch with KerasHub](/guides/keras_hub/transformer_pretrainingb/)
+* [Pretraining a Transformer from scratch with KerasHub](/guides/keras_hub/transformer_pretraining/)
 * [Uploading Models with KerasHub](/guides/keras_hub/upload/)
 
 ---
