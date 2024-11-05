@@ -838,7 +838,7 @@ class WarmUpCosineDecay(schedules.LearningRateSchedule):
 
 ![WarmUpCosineDecay schedule](https://i.imgur.com/YCr5pII.png)
 
-The schedule looks a as we expect.
+The schedule looks as we expect.
 
 Next let's construct this optimizer:
 
