@@ -38,7 +38,7 @@ and click "Restart runtime" in Colab, and your code will run on the JAX or PyTor
 !pip install -q keras-nightly
 ```
 
-    
+
 ```python
 import os
 
@@ -178,7 +178,7 @@ INFO:tensorflow:Assets written to: saved_model/assets
 Saved artifact at 'saved_model'. The following endpoints are available:
 ```
 </div>
-    
+
 <div class="k-default-codeblock">
 ```
 * Endpoint 'serve'
@@ -815,6 +815,8 @@ are usually named the same in both frameworks (e.g. `reshape`, `matmul`, `cast`,
 | `tf.tensor_scatter_nd_update`                      | `keras.ops.slice_update`                                          |
 | `tf.signal.fft2d`                                  | `keras.ops.fft2`                                                  |
 | `tf.signal.inverse_stft`                           | `keras.ops.istft`                                                 |
+| `tf.image.crop_to_bounding_box`                    | `keras.ops.image.crop_images`                                     |
+| `tf.image.pad_to_bounding_box`                     | `keras.ops.image.pad_images`                                      |
 
 ### Custom `train_step()` methods
 
