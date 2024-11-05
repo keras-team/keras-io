@@ -43,9 +43,6 @@ The following example explores how we can make use of the new Temporal Latent Bo
 mechanism to perform image classification on the CIFAR-10 dataset. We implement this
 model by making a custom `RNNCell` implementation in order to make a **performant** and
 **vectorized** design.
-
-_Note_: This example makes use of `TensorFlow 2.12.0`, which must be installed into our
-system
 """
 
 """
@@ -186,7 +183,7 @@ def test_map_fn(image, label):
 ## Load dataset into `PyDataset` object
 
 - We take the `np.ndarray` instance of the datasets and wrap a class around it,
-wrapping a a `keras.utils.PyDataset` and apply augmentations with keras
+wrapping a `keras.utils.PyDataset` and apply augmentations with keras
 preprocessing layers.
 """
 
@@ -216,8 +213,8 @@ class Dataset(keras.utils.PyDataset):
                 x, y = self.preprocess_fn(x, y)
             batch_x.append(x)
             batch_y.append(y)
-        batch_x = np.stack(batch_x, axis=0)
-        batch_y = np.stack(batch_y, axis=0)
+        batch_x = ops.stack(batch_x, axis=0)
+        batch_y = ops.stack(batch_y, axis=0)
         return batch_x, batch_y
 
 
@@ -271,8 +268,7 @@ A PyTorch-style pseudocode is also proposed by the authors as shown in **Algorit
 
 This custom `keras.layers.Layer` is useful for generating patches from the image and
 transform them into a higher-dimensional embedding space using `keras.layers.Embedding`.
-The patching operation is done using a `keras.layers.Conv2D` instance instead of a
-traditional `tf.image.extract_patches` to allow for vectorization.
+The patching operation is done using a `keras.layers.Conv2D` instance.
 
 Once the patching of images is complete, we reshape the image patches in order to get a
 flattened representation where the number of dimensions is the embedding dimension. At
@@ -692,10 +688,10 @@ class TemporalLatentBottleneckModel(keras.Model):
         custom_cell (`keras.layers.Layer`): Custom Recurrent Cell.
     """
 
-    def __init__(self, patch_layer, custom_cell, **kwargs):
+    def __init__(self, patch_layer, custom_cell, unroll_loops=False, **kwargs):
         super().__init__(**kwargs)
         self.patch_layer = patch_layer
-        self.rnn = layers.RNN(custom_cell, name="rnn")
+        self.rnn = layers.RNN(custom_cell, unroll=unroll_loops, name="rnn")
         self.gap = layers.GlobalAveragePooling1D(name="gap")
         self.head = layers.Dense(10, activation="softmax", dtype="float32", name="head")
 
@@ -814,17 +810,27 @@ def score_to_viz(chunk_score):
 # Get a batch of images and labels from the testing dataset
 images, labels = next(iter(test_ds))
 
+# Create a new model instance that is executed eagerly to allow saving
+# attention scores. This also requires unrolling loops
+eager_model = TemporalLatentBottleneckModel(
+    patch_layer=patch_layer, custom_cell=custom_rnn_cell, unroll_loops=True
+)
+eager_model.compile(run_eagerly=True, jit_compile=False)
+model.save("weights.keras")
+eager_model.load_weights("weights.keras")
+
 # Set the get_attn_scores flag to True
-model.rnn.cell.get_attention_scores = True
+eager_model.rnn.cell.get_attention_scores = True
 
 # Run the model with the testing images and grab the
 # attention scores.
-outputs = model(images)
-list_chunk_scores = model.rnn.cell.attention_scores
+outputs = eager_model(images)
+list_chunk_scores = eager_model.rnn.cell.attention_scores
 
 # Process the attention scores in order to visualize them
-list_chunk_viz = [score_to_viz(x) for x in list_chunk_scores]
-chunk_viz = ops.concatenate(list_chunk_viz[1:], axis=-1)
+num_chunks = (config["image_size"] // config["patch_size"]) ** 2 // config["chunk_size"]
+list_chunk_viz = [score_to_viz(x) for x in list_chunk_scores[-num_chunks:]]
+chunk_viz = ops.concatenate(list_chunk_viz, axis=-1)
 chunk_viz = ops.reshape(
     chunk_viz,
     (
@@ -846,6 +852,12 @@ Run the following code snippet to get different images and their attention maps.
 index = random.randint(0, config["batch_size"])
 orig_image = images[index]
 overlay_image = upsampled_heat_map[index, ..., 0]
+
+if keras.backend.backend() == "torch":
+    # when using the torch backend, we are required to ensure that the
+    # image is copied from the GPU
+    orig_image = orig_image.cpu().detach().numpy()
+    overlay_image = overlay_image.cpu().detach().numpy()
 
 # Plot the visualization
 fig, ax = plt.subplots(nrows=1, ncols=2, figsize=(10, 5))
