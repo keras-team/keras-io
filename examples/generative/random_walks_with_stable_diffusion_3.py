@@ -15,7 +15,7 @@ low-dimensional vector space where each point maps to an image. Going from such
 a point on the manifold back to a displayable image is called "decoding" -- in
 the Stable Diffusion model, this is handled by the "decoder" model.
 
-![Stable Diffusion 3 Medium Architecture](https://huggingface.co/stabilityai/stable-diffusion-3-medium/resolve/main/mmdit.png)
+![Stable Diffusion 3 Medium Architecture](/img/examples/generative/random_walks_with_stable_diffusion_3/mmdit.png)
 
 This latent manifold of images is continuous and interpolative, meaning that:
 
@@ -229,10 +229,10 @@ animate rotations smoothly and can also be applied to interpolate between
 high-dimensional data points, such as latent vectors used in generative models.
 
 The source is from Andrej Karpathy's gist:
-https://gist.github.com/karpathy/00103b0037c5aaea32fe1da1af553355.
+[https://gist.github.com/karpathy/00103b0037c5aaea32fe1da1af553355](https://gist.github.com/karpathy/00103b0037c5aaea32fe1da1af553355).
 
 A more detailed explanation of this method can be found at:
-https://en.wikipedia.org/wiki/Slerp.
+[https://en.wikipedia.org/wiki/Slerp](https://en.wikipedia.org/wiki/Slerp).
 """
 
 
