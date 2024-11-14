@@ -50,8 +50,6 @@ model by making a custom `RNNCell` implementation in order to make a **performan
 """
 import os
 
-os.environ["KERAS_BACKEND"] = "tensorflow"
-
 import keras
 from keras import layers, ops, mixed_precision
 from keras.optimizers import AdamW
