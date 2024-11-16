@@ -318,7 +318,7 @@ class FFNetwork(keras.Model):
     def predict(self, data):
         x = data
         preds = list()
-        preds = ops.vectorized_map(fn=self.predict_one_sample, elems=x)
+        preds = ops.vectorized_map(self.predict_one_sample, x)
         return np.asarray(preds, dtype=int)
 
     # This custom `train_step` function overrides the internal `train_step`
@@ -347,10 +347,10 @@ class FFNetwork(keras.Model):
         # Flatten op
         x = ops.reshape(x, [-1, ops.shape(x)[1] * ops.shape(x)[2]])
 
-        x_pos, y = ops.vectorized_map(fn=self.overlay_y_on_x, elems=(x, y))
+        x_pos, y = ops.vectorized_map(self.overlay_y_on_x, (x, y))
 
         random_y = tf.random.shuffle(y)
-        x_neg, y = tf.map_fn(fn=self.overlay_y_on_x, elems=(x, random_y))
+        x_neg, y = tf.map_fn(self.overlay_y_on_x, (x, random_y))
 
         h_pos, h_neg = x_pos, x_neg
 
