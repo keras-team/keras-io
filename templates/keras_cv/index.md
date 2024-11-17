@@ -25,8 +25,8 @@ these common tasks.
 ## Quick Links
 - [List of available models and presets](https://keras.io/api/keras_cv/models/)
 - [Developer Guides](https://keras.io/guides/keras_cv/)
-- [Contributing Guide](https://github.com/keras-team/keras-cv/blob/master/.github/CONTRIBUTING.md)
-- [API Design Guidelines](https://github.com/keras-team/keras-cv/blob/master/.github/API_DESIGN.md)
+- [Contributing Guide](https://github.com/keras-team/keras-cv/blob/master/CONTRIBUTING.md)
+- [API Design Guidelines](https://github.com/keras-team/keras-cv/blob/master/API_DESIGN.md)
 
 ## Installation
 
@@ -138,7 +138,7 @@ KerasCV provides access to pre-trained models via the `keras_cv.models` API.
 These pre-trained models are provided on an "as is" basis, without warranties or
 conditions of any kind. The following underlying models are provided by third
 parties, and are subject to separate licenses: StableDiffusion, Vision
-Transfomer
+Transformer
 
 ## Citing KerasCV
 
