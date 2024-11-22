@@ -414,7 +414,9 @@ decoder = keras.Model([decoder_inputs, encoded_seq_inputs], decoder_outputs)
 
 decoder_outputs = decoder([decoder_inputs, encoder_outputs])
 transformer = keras.Model(
-    [encoder_inputs, decoder_inputs], decoder_outputs, name="transformer"
+    {"encoder_inputs": encoder_inputs, "decoder_inputs": decoder_inputs},
+    decoder_outputs,
+    name="transformer",
 )
 
 """
@@ -454,7 +456,12 @@ def decode_sequence(input_sentence):
     decoded_sentence = "[start]"
     for i in range(max_decoded_sentence_length):
         tokenized_target_sentence = spa_vectorization([decoded_sentence])[:, :-1]
-        predictions = transformer([tokenized_input_sentence, tokenized_target_sentence])
+        predictions = transformer(
+            {
+                "encoder_inputs": tokenized_input_sentence,
+                "decoder_inputs": tokenized_target_sentence,
+            }
+        )
 
         # ops.argmax(predictions[0, i, :]) is not a concrete value for jax here
         sampled_token_index = ops.convert_to_numpy(
