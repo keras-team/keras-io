@@ -9,8 +9,8 @@ pretrained checkpoints available on [Kaggle Models](https://kaggle.com/models/).
 Models can be use for both training and inference, on any of the TensorFlow,
 Jax, and Torch backends.
 
-KerasHub is an extension of the core Keras API; KerasHub components are provide
-as [`Layers`](/api/layers/) and [`Models`](/api/models/). If you are familiar
+KerasHub is an extension of the core Keras API; KerasHub components are provided
+as `keras.layers.Layer` and `keras.Model` implementations. If you are familiar
 with Keras, congratulations! You already understand most of KerasHub.
 
 See our [Getting Started guide](/guides/keras_hub/getting_started)
@@ -20,19 +20,12 @@ to start learning our API. We welcome
 ---
 ## Quick links
 
-* [KerasHub API reference](/api/keras_hub/)
+* [Getting started with KerasHub](/keras_hub/getting_started/)
+* [Guides](/keras_hub/guides)
+* [API reference](/keras_hub/api/)
 * [KerasHub on GitHub](https://github.com/keras-team/keras-hub)
 * [KerasHub models on Kaggle](https://www.kaggle.com/organizations/keras/models)
-* [List of available pretrained models](/api/keras_hub/models/)
-
-## Guides
-* [Getting Started with KerasHub](/guides/keras_hub/getting_started/)
-* [Classification with KerasHub](/guides/keras_hub/classification_with_keras_hub/)
-* [Segment Anything in KerasHub](/guides/keras_hub/segment_anything_in_keras_hub/)
-* [Semantic Segmentation with KerasHub](/guides/keras_hub/semantic_segmentation_deeplab_v3/)
-* [Stable Diffusion 3 in KerasHub](/guides/keras_hub/stable_diffusion_3_in_keras_hub/)
-* [Pretraining a Transformer from scratch with KerasHub](/guides/keras_hub/transformer_pretraining/)
-* [Uploading Models with KerasHub](/guides/keras_hub/upload/)
+* [Pretrained model list](/keras_hub/presets/)
 
 ---
 ## Installation
@@ -52,9 +45,8 @@ pip install --upgrade keras-hub-nightly
 
 Note that currently, installing KerasHub will always pull in TensorFlow for use
 of the `tf.data` API for preprocessing. Even when pre-processing with `tf.data`,
-training can still happen on any backend.
-
-Read [Getting started with Keras](https://keras.io/getting_started/) for more
+training can still happen on any backend. Read
+[Getting started with Keras](https://keras.io/getting_started/) for more
 information on installing Keras 3 and compatibility with different frameworks.
 
 **Note:** We recommend using KerasHub with TensorFlow 2.16 or later, as TF 2.16
@@ -118,12 +110,14 @@ provide backwards compatibility guarantees both for code and saved models built
 with our components. While we continue with pre-release `0.y.z` development, we
 may break compatibility at any time and APIs should not be consider stable.
 
+---
 ## Disclaimer
 
 KerasHub provides access to pre-trained models via the `keras_hub.models` API.
 These pre-trained models are provided on an "as is" basis, without warranties
 or conditions of any kind.
 
+---
 ## Citing KerasHub
 
 If KerasHub helps your research, we appreciate your citations.
