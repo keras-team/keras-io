@@ -1,6 +1,8 @@
 from guides_master import GUIDES_MASTER
 from examples_master import EXAMPLES_MASTER
 from api_master import API_MASTER
+from tuner_master import TUNER_MASTER
+from hub_master import HUB_MASTER
 from keras2_api_master import KERAS2_API_MASTER
 
 MASTER = {
@@ -35,24 +37,10 @@ MASTER = {
             ],
         },
         GUIDES_MASTER,
+        EXAMPLES_MASTER,
         API_MASTER,
         KERAS2_API_MASTER,
-        EXAMPLES_MASTER,
-        {
-            "path": "keras_tuner/",
-            "title": "KerasTuner: Hyperparameter Tuning",
-        },
-        {
-            "path": "keras_hub/",
-            "title": "KerasHub: Pretrained Models",
-        },
-        {
-            "path": "keras_cv/",
-            "title": "KerasCV: Computer Vision Workflows",
-        },
-        {
-            "path": "keras_nlp/",
-            "title": "KerasNLP: Natural Language Workflows",
-        },
+        TUNER_MASTER,
+        HUB_MASTER,
     ],
 }

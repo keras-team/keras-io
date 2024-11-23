@@ -1,6 +1,6 @@
 BASE_CLASSES = {
     "path": "base_classes/",
-    "title": "Models API",
+    "title": "Model Base Classes",
     "toc": True,
     "children": [
         {
@@ -1844,8 +1844,8 @@ METRICS_MASTER = {
 }
 
 HUB_API_MASTER = {
-    "path": "keras_hub/",
-    "title": "KerasHub",
+    "path": "api/",
+    "title": "API documentation",
     "toc": True,
     "children": [
         MODELS_MASTER,
@@ -1855,5 +1855,54 @@ HUB_API_MASTER = {
         MODELING_LAYERS_MASTER,
         SAMPLERS_MASTER,
         METRICS_MASTER,
+    ],
+}
+
+HUB_GUIDES_MASTER = {
+    "path": "guides/",
+    "title": "Guides",
+    "toc": True,
+    "children": [
+        {
+            "path": "semantic_segmentation_deeplab_v3",
+            "title": "Semantic Segmentation with KerasHub",
+        },
+        {
+            "path": "transformer_pretraining",
+            "title": "Pretraining a Transformer from scratch with KerasHub",
+        },
+        {
+            "path": "upload",
+            "title": "Uploading Models with KerasHub",
+        },
+        {
+            "path": "classification_with_keras_hub",
+            "title": "Classification with KerasHub",
+        },
+        {
+            "path": "segment_anything_in_keras_hub",
+            "title": "Segment Anything in KerasHub",
+        },
+        {
+            "path": "stable_diffusion_3_in_keras_hub",
+            "title": "Stable Diffusion 3 in KerasHub",
+        },
+    ],
+}
+
+HUB_MASTER = {
+    "path": "keras_hub/",
+    "title": "KerasHub: Pretrained Models",
+    "children": [
+        {
+            "path": "getting_started",
+            "title": "Getting started",
+        },
+        HUB_GUIDES_MASTER,
+        HUB_API_MASTER,
+        {
+            "path": "presets/",
+            "title": "Presets",
+       },
     ],
 }

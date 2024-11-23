@@ -9,7 +9,7 @@ import importlib
 import itertools
 import copy
 
-import render_tags
+import render_presets
 
 
 class KerasDocumentationGenerator:
@@ -97,7 +97,7 @@ class KerasDocumentationGenerator:
             subblocks.append(docstring)
         # Render preset table for KerasCV and KerasHub
         if element.endswith("from_preset"):
-            table = render_tags.render_table(import_object(element.rsplit(".", 1)[0]))
+            table = render_presets.render_table(import_object(element.rsplit(".", 1)[0]))
             if table is not None:
                 subblocks.append(table)
         return "\n\n".join(subblocks) + "\n\n----\n\n"

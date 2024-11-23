@@ -1,4 +1,4 @@
-"""Custom rendering code for the /api/{keras_hub|keras_cv}/models page.
+"""Custom rendering code for keras_hub presets.
 
 The model metadata is pulled from the library, each preset has a
 metadata dictionary as follows:
@@ -11,23 +11,21 @@ metadata dictionary as follows:
 }
 """
 
-import inspect
-
 try:
-    import keras_cv
+    import keras_hub
 except Exception as e:
-    print(f"Could not import Keras CV. Exception: {e}")
-    keras_cv = None
+    print(f"Could not import KerasHub. Exception: {e}")
+    keras_hub = None
 
 
 TABLE_HEADER = (
-    "Preset name | Model | Parameters | Description\n"
-    "------------|-------|------------|------------\n"
+    "Preset | Model API | Parameters | Description\n"
+    "-------|-----------|------------|------------\n"
 )
 
 TABLE_HEADER_PER_MODEL = (
-    "Preset name | Parameters | Description\n"
-    "------------|------------|------------\n"
+    "Preset | Parameters | Description\n"
+    "-------|------------|------------\n"
 )
 
 
@@ -55,21 +53,15 @@ def format_path(metadata):
 
 
 def is_base_class(symbol):
-    import keras_hub
-
     return symbol in (
         keras_hub.models.Backbone,
         keras_hub.models.Tokenizer,
         keras_hub.models.Preprocessor,
         keras_hub.models.Task,
-        keras_hub.models.Classifier,
-        keras_hub.models.CausalLM,
-        keras_hub.models.MaskedLM,
-        keras_hub.models.Seq2SeqLM,
     )
 
 
-def render_backbone_table(symbols):
+def render_all_presets(symbols):
     """Renders the markdown table for backbone presets as a string."""
 
     table = TABLE_HEADER
@@ -89,31 +81,26 @@ def render_backbone_table(symbols):
             else:
                 added_presets.add(preset)
             metadata = presets[preset]["metadata"]
+            url = presets[preset]["kaggle_handle"]
+            url = url.replace("kaggle://", "https://www.kaggle.com/models/")
             table += (
-                f"{preset} | "
+                f"[{preset}]({url}) | "
                 f"{format_path(metadata)} | "
                 f"{format_param_count(metadata)} | "
                 f"{metadata['description']}"
             )
-            if "model_card" in metadata:
-                table += f" [Model Card]({metadata['model_card']})"
             table += "\n"
     return table
 
 
 def render_table(symbol):
+    if keras_hub is None:
+        return ""
+
     table = TABLE_HEADER_PER_MODEL
     if is_base_class(symbol) or len(symbol.presets) == 0:
         return None
     for preset in symbol.presets:
-        # Do not print all backbone presets for a task
-        if (
-            issubclass(symbol, keras_cv.models.Task)
-            and preset
-            in keras_cv.src.models.backbones.backbone_presets.backbone_presets
-        ):
-            continue
-
         metadata = symbol.presets[preset]["metadata"]
         table += (
             f"{preset} | "
@@ -123,11 +110,14 @@ def render_table(symbol):
     return table
 
 
-def render_tags(template, lib):
-    """Replaces all custom KerasHub/KerasCV tags with rendered content."""
-    symbols = lib.models.__dict__.items()
-    if "{{backbone_presets_table}}" in template:
+def render_tags(template):
+    """Replaces all custom KerasHub tags with rendered content."""
+    if keras_hub is None:
+        return template
+
+    symbols = keras_hub.models.__dict__.items()
+    if "{{presets_table}}" in template:
         template = template.replace(
-            "{{backbone_presets_table}}", render_backbone_table(symbols)
+            "{{presets_table}}", render_all_presets(symbols)
         )
     return template

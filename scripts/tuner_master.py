@@ -171,9 +171,9 @@ TUNER_MASTER = {
     ],
 }
 
-KT_API_MASTER = {
-    "path": "keras_tuner/",
-    "title": "KerasTuner",
+TUNER_API_MASTER = {
+    "path": "api/",
+    "title": "API documentation",
     "toc": True,
     "children": [
         {
@@ -204,5 +204,48 @@ KT_API_MASTER = {
                 "keras_tuner.errors.FatalRuntimeError",
             ],
         },
+    ],
+}
+
+
+TUNER_GUIDES_MASTER = {
+    "path": "guides/",
+    "title": "Guides",
+    "toc": True,
+    "children": [
+        {
+            "path": "distributed_tuning",
+            "title": "Distributed hyperparameter tuning with KerasTuner",
+        },
+        {
+            "path": "custom_tuner",
+            "title": "Tune hyperparameters in your custom training loop",
+        },
+        {
+            "path": "visualize_tuning",
+            "title": "Visualize the hyperparameter tuning process",
+        },
+        {
+            "path": "failed_trials",
+            "title": "Handling failed trials in KerasTuner",
+        },
+        {
+            "path": "tailor_the_search_space",
+            "title": "Tailor the search space",
+        },
+    ],
+}
+
+
+TUNER_MASTER = {
+    "path": "keras_tuner/",
+    "title": "KerasTuner: Hyperparam Tuning",
+    "children": [
+        {
+            "path": "getting_started",
+            "title": "Getting started",
+        },
+        TUNER_GUIDES_MASTER,
+        TUNER_API_MASTER,
     ],
 }
