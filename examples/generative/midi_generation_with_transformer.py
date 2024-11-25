@@ -621,21 +621,15 @@ class MusicTransformerDecoder(keras.Model):
         return fc
 
     # --- Sequence generation methods
-
-    def _top_k_sample(self, decode_array, length, k=5):
+    def _top_k_sample(self, inputs, length, k=5):
         """Top-k sampling for sequence generation.
 
         Samples from the top `k` tokens in the output distribution.
         """
-        print(f"Top-k sampling (k={k}) for sequence generation started")
-        num_generations = min(
-            length, self.max_sequence_length - decode_array.shape[1]
-        )
-        progbar = utils.Progbar(num_generations, unit_name="token")
 
-        for _ in range(num_generations):
-            # Get the output distribution for the current sequence
-            distribution = ops.stop_gradient(self.call(decode_array))[0, -1]
+        # Generate a new token using output distribution at given index
+        def generate_token(inputs, end_idx):
+            distribution = ops.stop_gradient(self.call(inputs)[0, end_idx])
 
             # Select the top-k tokens and their probabilities
             top_k_distribution, top_k_indices = ops.top_k(distribution, k=k)
@@ -644,23 +638,38 @@ class MusicTransformerDecoder(keras.Model):
             new_token_idx = keras.random.categorical(
                 top_k_distribution[None, :], 1
             )
-            new_token = ops.take(top_k_indices, new_token_idx[0])[None, :]
+            return ops.take(top_k_indices, new_token_idx[0])
 
-            # Append the new token to the sequence
-            decode_array = ops.concatenate([decode_array, new_token], axis=-1)
+        # Compute the number of tokens to add
+        added_tokens = min(length, self.max_sequence_length - inputs.shape[1])
+        progbar = utils.Progbar(added_tokens, unit_name="token")
+
+        # Pad the input sequence that will be filled with generated tokens
+        outputs = ops.pad(
+            inputs,
+            ((0, 0), (0, added_tokens)),
+            # Padding tokens do not affect other tokens
+            constant_values=CONFIG.token_pad,
+        )
+
+        # Generate tokens using top-k sampling
+        print(f"Top-k sampling (k={k}) for sequence generation started")
+        last_token_idx = inputs.shape[1] - 1
+        for _ in range(added_tokens):
+            token = generate_token(outputs, end_idx=last_token_idx)
+            last_token_idx += 1
+            outputs = ops.scatter_update(outputs, ((0, last_token_idx),), token)
             progbar.add(1)
 
-        return decode_array[0]
+        return outputs[0]
 
     def generate(
         self, inputs: list, length=CONFIG.max_sequence_length, top_k=5
     ):
-        decode_array = ops.convert_to_tensor([inputs])
+        inputs = ops.convert_to_tensor([inputs])
 
         # Generate sequence using top-k sampling
-        return ops.convert_to_numpy(
-            self._top_k_sample(decode_array, length, k=top_k)
-        )
+        return ops.convert_to_numpy(self._top_k_sample(inputs, length, k=top_k))
 
     # --- Serialization methods
 
@@ -772,7 +781,7 @@ if os.path.exists(CONFIG.model_checkpoint):
 else:
     model = MusicTransformerDecoder()
     # Train the model
-    train_model(model, train_dataset, val_dataset, epochs=20)
+    train_model(model, train_dataset, val_dataset, epochs=1)
 
 
 """
