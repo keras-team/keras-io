@@ -41,10 +41,6 @@ _Note_: This example requires TensorFlow 2.6 or higher.
 """
 ## Setup
 """
-import os
-
-os.environ["KERAS_BACKEND"] = "tensorflow"
-
 import math
 import numpy as np
 import keras
@@ -195,17 +191,17 @@ class ShiftedPatchTokenization(layers.Layer):
             shift_width = self.half_patch
 
         # Crop the shifted images and pad them
-        crop = tf.image.crop_to_bounding_box(
+        crop = ops.image.crop_images(
             images,
-            offset_height=crop_height,
-            offset_width=crop_width,
+            top_cropping=crop_height,
+            left_cropping=crop_width,
             target_height=self.image_size - self.half_patch,
             target_width=self.image_size - self.half_patch,
         )
-        shift_pad = tf.image.pad_to_bounding_box(
+        shift_pad = ops.image.pad_images(
             crop,
-            offset_height=shift_height,
-            offset_width=shift_width,
+            top_padding=shift_height,
+            left_padding=shift_width,
             target_height=self.image_size,
             target_width=self.image_size,
         )
@@ -225,11 +221,11 @@ class ShiftedPatchTokenization(layers.Layer):
                 axis=-1,
             )
         # Patchify the images and flatten it
-        patches = tf.image.extract_patches(
+        patches = ops.image.extract_patches(
             images=images,
-            sizes=[1, self.patch_size, self.patch_size, 1],
+            size=(self.patch_size, self.patch_size),
             strides=[1, self.patch_size, self.patch_size, 1],
-            rates=[1, 1, 1, 1],
+            dilation_rate=1,
             padding="VALID",
         )
         flat_patches = self.flatten_patches(patches)
@@ -359,7 +355,7 @@ class MultiHeadAttentionLSA(layers.MultiHeadAttention):
         super().__init__(**kwargs)
         # The trainable temperature term. The initial value is
         # the square root of the key dimension.
-        self.tau = tf.Variable(math.sqrt(float(self._key_dim)), trainable=True)
+        self.tau = keras.Variable(math.sqrt(float(self._key_dim)), trainable=True)
 
     def _compute_attention(self, query, key, value, attention_mask=None, training=None):
         query = ops.multiply(query, 1.0 / self.tau)
@@ -456,7 +452,7 @@ class WarmUpCosine(keras.optimizers.schedules.LearningRateSchedule):
         self.total_steps = total_steps
         self.warmup_learning_rate = warmup_learning_rate
         self.warmup_steps = warmup_steps
-        self.pi = tf.constant(np.pi)
+        self.pi = ops.array(np.pi)
 
     def __call__(self, step):
         if self.total_steps < self.warmup_steps:
