@@ -302,10 +302,7 @@ class PositionalEmbedding(layers.Layer):
         return embedded_tokens + embedded_positions
 
     def compute_mask(self, inputs, mask=None):
-        if mask is None:
-            return None
-        else:
-            return ops.not_equal(inputs, 0)
+        return ops.not_equal(inputs, 0)
 
     def get_config(self):
         config = super().get_config()
