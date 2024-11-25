@@ -102,8 +102,10 @@ def render_table(symbol):
         return None
     for preset in symbol.presets:
         metadata = symbol.presets[preset]["metadata"]
+        url = symbol.presets[preset]["kaggle_handle"]
+        url = url.replace("kaggle://", "https://www.kaggle.com/models/")
         table += (
-            f"{preset} | "
+            f"[{preset}]({url}) | "
             f"{format_param_count(metadata)} | "
             f"{metadata['description']} \n"
         )

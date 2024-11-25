@@ -210,7 +210,7 @@ TUNER_API_MASTER = {
 
 TUNER_GUIDES_MASTER = {
     "path": "guides/",
-    "title": "Guides",
+    "title": "Developer guides",
     "toc": True,
     "children": [
         {

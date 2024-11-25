@@ -1,15 +1,13 @@
-# KerasHub Models
+# KerasHub Model Architectures
 
-KerasHub contains end-to-end implementations of popular model architectures.
-These models can be created in two ways:
+The following is a  list of model architectures supported by KerasHub. These
+models can be created in two ways:
 
 - Through the `from_preset()` constructor, which instantiates an object with
-  a pre-trained configurations, vocabularies, and (optionally) weights.
+  a pre-trained configurations, vocabularies, and weights.
 - Through custom configuration controlled by the user.
 
-For the full list of available presets shipped directly by the Keras team, see
-the [Presets page](/keras_hub/presets/)
-
-## API Documentation
+For the full list of available pretrained model presets shipped directly by the
+Keras team, see the [Pretrained Models](/keras_hub/presets/) page.
 
 {{toc}}

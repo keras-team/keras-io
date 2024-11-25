@@ -1,6 +1,6 @@
 BASE_CLASSES = {
     "path": "base_classes/",
-    "title": "Model Base Classes",
+    "title": "Modeling API",
     "toc": True,
     "children": [
         {
@@ -209,7 +209,7 @@ BASE_CLASSES = {
 
 MODELS_MASTER = {
     "path": "models/",
-    "title": "Pretrained Models",
+    "title": "Model Architectures",
     "toc": True,
     "children": [
         {
@@ -491,7 +491,7 @@ MODELS_MASTER = {
         },
         {
             "path": "deeplab_v3/",
-            "title": "DeepLabV3 and DeepLabV3Plus",
+            "title": "DeepLabV3",
             "toc": True,
             "children": [
                 {
@@ -1725,12 +1725,18 @@ PREPROCESSING_LAYERS_MASTER = {
         {
             "path": "audio_converter",
             "title": "AudioConverter layer",
-            "generate": ["keras_hub.layers.AudioConverter"],
+            "generate": [
+                "keras_hub.layers.AudioConverter",
+                "keras_hub.layers.AudioConverter.from_preset",
+            ],
         },
         {
             "path": "image_converter",
             "title": "ImageConverter layer",
-            "generate": ["keras_hub.layers.ImageConverter"],
+            "generate": [
+                "keras_hub.layers.ImageConverter",
+                "keras_hub.layers.ImageConverter.from_preset",
+            ],
         },
         {
             "path": "start_end_packer",
@@ -1848,8 +1854,8 @@ HUB_API_MASTER = {
     "title": "API documentation",
     "toc": True,
     "children": [
-        MODELS_MASTER,
         BASE_CLASSES,
+        MODELS_MASTER,
         TOKENIZERS_MASTER,
         PREPROCESSING_LAYERS_MASTER,
         MODELING_LAYERS_MASTER,
@@ -1860,32 +1866,32 @@ HUB_API_MASTER = {
 
 HUB_GUIDES_MASTER = {
     "path": "guides/",
-    "title": "Guides",
+    "title": "Developer guides",
     "toc": True,
     "children": [
         {
-            "path": "semantic_segmentation_deeplab_v3",
-            "title": "Semantic Segmentation with KerasHub",
-        },
-        {
-            "path": "transformer_pretraining",
-            "title": "Pretraining a Transformer from scratch with KerasHub",
-        },
-        {
             "path": "upload",
-            "title": "Uploading Models with KerasHub",
-        },
-        {
-            "path": "classification_with_keras_hub",
-            "title": "Classification with KerasHub",
-        },
-        {
-            "path": "segment_anything_in_keras_hub",
-            "title": "Segment Anything in KerasHub",
+            "title": "Uploading Models",
         },
         {
             "path": "stable_diffusion_3_in_keras_hub",
-            "title": "Stable Diffusion 3 in KerasHub",
+            "title": "Stable Diffusion 3",
+        },
+        {
+            "path": "segment_anything_in_keras_hub",
+            "title": "Segment Anything",
+        },
+        {
+            "path": "classification_with_keras_hub",
+            "title": "Image Classification",
+        },
+        {
+            "path": "semantic_segmentation_deeplab_v3",
+            "title": "Semantic Segmentation",
+        },
+        {
+            "path": "transformer_pretraining",
+            "title": "Pretraining a Transformer from scratch",
         },
     ],
 }
@@ -1902,7 +1908,7 @@ HUB_MASTER = {
         HUB_API_MASTER,
         {
             "path": "presets/",
-            "title": "Presets",
+            "title": "Pretrained models list",
        },
     ],
 }
