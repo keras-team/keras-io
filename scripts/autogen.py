@@ -594,7 +594,7 @@ class KerasIO:
             for entry in children:
                 self.make_md_source_for_entry(entry, path_stack[:], title_stack[:])
 
-    def make_map_of_symbol_names_to_api_urls(self):
+    def make_symbol_to_link_map(self):
         def recursive_make_map(entry, current_url):
             current_url /= entry["path"]
             entry_map = {}
@@ -616,9 +616,12 @@ class KerasIO:
                     entry_map.update(recursive_make_map(child, current_url))
             return entry_map
 
-        self._map_of_symbol_names_to_api_urls = recursive_make_map(
-            self.master, Path("")
-        )
+        urls = recursive_make_map(self.master, Path(""))
+        self._symbol_to_link_map = {}
+        for key, value in urls.items():
+            symbol = f"`{key}`"
+            link = f"[{symbol}]({value})"
+            self._symbol_to_link_map[symbol] = link
 
     def generate_examples_landing_page(self):
         """Create the html file /examples/index.html.
@@ -740,7 +743,7 @@ class KerasIO:
             )
 
     def render_md_sources_to_html(self):
-        self.make_map_of_symbol_names_to_api_urls()
+        self.make_symbol_to_link_map()
         print("Rendering md sources to HTML")
         base_template = jinja2.Template(open(Path(self.theme_dir) / "base.html").read())
         docs_template = jinja2.Template(open(Path(self.theme_dir) / "docs.html").read())
@@ -886,12 +889,8 @@ class KerasIO:
         md_content = replace_links(md_content)
 
         # Convert Keras symbols to links to the Keras docs
-        for symbol, symbol_url in self._map_of_symbol_names_to_api_urls.items():
-            md_content = re.sub(
-                r"`((tf\.|)" + symbol + ")`",
-                r"[`\1`](" + symbol_url + ")",
-                md_content,
-            )
+        for symbol, link in self._symbol_to_link_map.items():
+            md_content = md_content.replace(symbol, link)
 
         # Convert TF symbols to links to tensorflow.org
         tmp_content = copy.copy(md_content)
