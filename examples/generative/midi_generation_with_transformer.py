@@ -2,7 +2,7 @@
 Title: Music Generation with Transformer Models
 Author: [Joaquin Jimenez](https://github.com/johacks/)
 Date created: 2024/11/22
-Last modified: 2024/11/22
+Last modified: 2024/11/26
 Description: Use a Transformer model to train on MIDI data and generate music sequences.
 Accelerator: GPU
 """
@@ -29,10 +29,14 @@ Before we start, let's import and install all the libraries we need.
 
 """shell
 pip install midi_neural_processor
+pip install keras_hub
+pip install "keras>=3.6.0"  # Allows use of keras.utils.Config.
 """
 
 """
-(Optional) To hear the audio, install the following additional dependencies:
+### Optional dependencies
+
+To hear the audio, install the following additional dependencies:
 """
 
 """shell
@@ -48,7 +52,7 @@ import keras
 import midi_neural_processor.processor as midi_tokenizer
 import numpy as np
 from keras import callbacks, layers, ops, optimizers, utils
-from keras_hub.api import layers as hub_layers
+from keras_hub import layers as hub_layers
 
 """
 ## Configuration
@@ -63,7 +67,6 @@ EVENT_DIMENSIONS = (
 )  # Compute max token number not reserved for special tokens
 CONFIG = utils.Config(
     max_sequence_length=2048,
-    learning_rate=0.001,
     embedding_dim=256,
     num_transformer_blocks=6,
     batch_size=6,
@@ -142,13 +145,14 @@ val_paths = [paths[i] for i in indices[:split]]
 
 We use the pretty_midi library and fluidsynth to convert MIDI files into waveform audio.
 This allows us to listen to the data samples before and after processing.
+
+The following dependencies are required to play the audio:
+- fluidsynth: `sudo apt install -y fluidsynth`
+- pyfluidsynth, scipy: `pip install pyfluidsynth scipy`
 """
 
 
 def visualize_midi(midi_path, sampling_rate=16000, seconds=15, out_dir=None):
-    # Requires:
-    # sudo apt install -y fluidsynth
-    # pip install pyfluidsynth scipy
     import pretty_midi
     from scipy.io.wavfile import write as write_wav
 
@@ -313,7 +317,7 @@ allows the model to learn relative positional information between tokens.
 class RelativeGlobalAttention(layers.Layer):
     """
     From Music Transformer (Huang et al., 2018)
-    [paper link](https://arxiv.org/pdf/1809.04281.pdf)
+    https://arxiv.org/pdf/1809.04281.pdf
     """
 
     def __init__(self, num_heads, embedding_dim, max_sequence_length, **kwargs):
@@ -409,9 +413,9 @@ class RelativeGlobalAttention(layers.Layer):
         """
         Apply masking to relative positional scores to ignore future positions.
         """
-        mask = ops.tri(scores.shape[-2], scores.shape[-1], dtype="float32")[
-            :, ::-1
-        ]
+        mask = ops.flip(
+            ops.tri(scores.shape[-2], scores.shape[-1], dtype="float32"), axis=1
+        )
         return mask * scores
 
     def _skew_attention_scores(self, scores):
@@ -781,7 +785,7 @@ if os.path.exists(CONFIG.model_checkpoint):
 else:
     model = MusicTransformerDecoder()
     # Train the model
-    train_model(model, train_dataset, val_dataset, epochs=1)
+    train_model(model, train_dataset, val_dataset, epochs=20)
 
 
 """
