@@ -339,10 +339,12 @@ class TransformerDecoder(layers.Layer):
         self.layernorm_3 = layers.LayerNormalization()
         self.supports_masking = True
 
-    def call(self, inputs, encoder_outputs, mask=None):
+    def call(self, inputs, mask=None):
+        inputs, encoder_outputs = inputs
         causal_mask = self.get_causal_attention_mask(inputs)
         if mask is not None:
-            padding_mask = ops.cast(mask[:, None, :], dtype="int32")
+            inputs_mask = mask[0]
+            padding_mask = ops.cast(inputs_mask[:, None, :], dtype="int32")
             padding_mask = ops.minimum(padding_mask, causal_mask)
         else:
             padding_mask = None
@@ -404,12 +406,11 @@ encoder = keras.Model(encoder_inputs, encoder_outputs)
 decoder_inputs = keras.Input(shape=(None,), dtype="int64", name="decoder_inputs")
 encoded_seq_inputs = keras.Input(shape=(None, embed_dim), name="decoder_state_inputs")
 x = PositionalEmbedding(sequence_length, vocab_size, embed_dim)(decoder_inputs)
-x = TransformerDecoder(embed_dim, latent_dim, num_heads)(x, encoded_seq_inputs)
+x = TransformerDecoder(embed_dim, latent_dim, num_heads)([x, encoder_outputs])
 x = layers.Dropout(0.5)(x)
 decoder_outputs = layers.Dense(vocab_size, activation="softmax")(x)
 decoder = keras.Model([decoder_inputs, encoded_seq_inputs], decoder_outputs)
 
-decoder_outputs = decoder([decoder_inputs, encoder_outputs])
 transformer = keras.Model(
     {"encoder_inputs": encoder_inputs, "decoder_inputs": decoder_inputs},
     decoder_outputs,
