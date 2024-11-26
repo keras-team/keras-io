@@ -342,15 +342,18 @@ class TransformerDecoder(layers.Layer):
     def call(self, inputs, mask=None):
         inputs, encoder_outputs = inputs
         causal_mask = self.get_causal_attention_mask(inputs)
-        if mask is not None:
-            inputs_mask = mask[0]
-            padding_mask = ops.cast(inputs_mask[:, None, :], dtype="int32")
-            padding_mask = ops.minimum(padding_mask, causal_mask)
+
+        if mask is None:
+            inputs_padding_mask, encoder_outputs_padding_mask = None, None
         else:
-            padding_mask = None
+            inputs_padding_mask, encoder_outputs_padding_mask = mask
 
         attention_output_1 = self.attention_1(
-            query=inputs, value=inputs, key=inputs, attention_mask=causal_mask
+            query=inputs,
+            value=inputs,
+            key=inputs,
+            attention_mask=causal_mask,
+            query_mask=inputs_padding_mask,
         )
         out_1 = self.layernorm_1(inputs + attention_output_1)
 
@@ -358,7 +361,8 @@ class TransformerDecoder(layers.Layer):
             query=out_1,
             value=encoder_outputs,
             key=encoder_outputs,
-            attention_mask=padding_mask,
+            query_mask=inputs_padding_mask,
+            key_mask=encoder_outputs_padding_mask,
         )
         out_2 = self.layernorm_2(out_1 + attention_output_2)
 
@@ -431,7 +435,9 @@ epochs = 1  # This should be at least 30 for convergence
 
 transformer.summary()
 transformer.compile(
-    "rmsprop", loss="sparse_categorical_crossentropy", metrics=["accuracy"]
+    "rmsprop",
+    loss=keras.losses.SparseCategoricalCrossentropy(ignore_class=0),
+    metrics=["accuracy"],
 )
 transformer.fit(train_ds, epochs=epochs, validation_data=val_ds)
 
