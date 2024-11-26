@@ -1,5 +1,5 @@
 """
-Title: Classification with KerasHub
+Title: Image Classification with KerasHub
 Author: [Gowtham Paimagam](https://github.com/gowthamkpr), [lukewood](https://lukewood.xyz)
 Date created: 09/24/2024
 Last modified: 10/04/2024
@@ -41,7 +41,6 @@ import os
 
 os.environ["KERAS_BACKEND"] = "jax"  # @param ["tensorflow", "jax", "torch"]
 
-import json
 import math
 import numpy as np
 import matplotlib.pyplot as plt
