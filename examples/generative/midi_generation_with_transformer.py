@@ -660,7 +660,9 @@ class MusicTransformerDecoder(keras.Model):
         print(f"Top-k sampling (k={k}) for sequence generation started")
         last_token_idx = inputs.shape[1] - 1
         for _ in range(added_tokens):
-            token = generate_token(outputs, end_idx=last_token_idx)
+            token = ops.cast(
+                generate_token(outputs, end_idx=last_token_idx), outputs.dtype
+            )
             last_token_idx += 1
             outputs = ops.scatter_update(outputs, ((0, last_token_idx),), token)
             progbar.add(1)
@@ -722,9 +724,11 @@ class CustomSchedule(optimizers.schedules.LearningRateSchedule):
         super(CustomSchedule, self).__init__()
 
         self.embedding_dim = embedding_dim
-        self._embedding_dim = ops.cast(self.embedding_dim, "float32")
-
         self.warmup_steps = warmup_steps
+
+        self._embedding_dim = ops.cast(self.embedding_dim, "float32")
+        # Numerical stability adjustment on torch, which is less precise
+        self._lr_adjust = 0.1 if keras.backend.backend() == "torch" else 1.0
 
     def get_config(self):
         return {
@@ -736,8 +740,10 @@ class CustomSchedule(optimizers.schedules.LearningRateSchedule):
         step_reciprocal_root = ops.rsqrt(ops.cast(step, "float32"))
         warmup_adjustment = step * (self.warmup_steps**-1.5)
 
-        return ops.rsqrt(self._embedding_dim) * ops.minimum(
-            step_reciprocal_root, warmup_adjustment
+        return (
+            ops.rsqrt(self._embedding_dim)
+            * ops.minimum(step_reciprocal_root, warmup_adjustment)
+            * self._lr_adjust
         )
 
 
