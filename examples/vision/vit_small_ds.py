@@ -2,9 +2,10 @@
 Title: Train a Vision Transformer on small datasets
 Author: [Aritra Roy Gosthipaty](https://twitter.com/ariG23498)
 Date created: 2022/01/07
-Last modified: 2022/01/10
+Last modified: 2024/11/27
 Description: Training a ViT from scratch on smaller datasets with shifted patch tokenization and locality self-attention.
 Accelerator: GPU
+Converted to Keras 3 by: [Sitam Meur](https://github.com/sitamgithub-MSIT)
 """
 
 """
