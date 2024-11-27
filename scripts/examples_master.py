@@ -112,6 +112,7 @@ EXAMPLES_MASTER = {
                     "path": "vit_small_ds",
                     "title": "Train a Vision Transformer on small datasets",
                     "subcategory": "Image classification",
+                    "keras_3": True,
                 },
                 {
                     "path": "shiftvit",
@@ -121,6 +122,12 @@ EXAMPLES_MASTER = {
                 {
                     "path": "image_classification_using_global_context_vision_transformer",
                     "title": "Image Classification using Global Context Vision Transformer",
+                    "subcategory": "Image classification",
+                    "keras_3": True,
+                },
+                {
+                    "path": "temporal_latent_bottleneck",
+                    "title": "When Recurrence meets Transformers",
                     "subcategory": "Image classification",
                     "keras_3": True,
                 },
@@ -847,6 +854,13 @@ EXAMPLES_MASTER = {
                     "path": "text_generation_fnet",
                     "title": "Text Generation using FNet",
                     "subcategory": "Text generation",
+                },
+                # Audio / midi generation
+                {
+                    "path": "midi_generation_with_transformer",
+                    "title": "Music Generation with Transformer Models",
+                    "subcategory": "Audio generation",
+                    "keras_3": True,
                 },
                 # Graph generation
                 {
