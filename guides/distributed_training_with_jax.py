@@ -175,7 +175,7 @@ optimizer.build(model.trainable_variables)
 # Keras provides a pure functional forward pass: model.stateless_call
 def compute_loss(trainable_variables, non_trainable_variables, x, y):
     y_pred, updated_non_trainable_variables = model.stateless_call(
-        trainable_variables, non_trainable_variables, x
+        trainable_variables, non_trainable_variables, x, training=True
     )
     loss_value = loss(y, y_pred)
     return loss_value, updated_non_trainable_variables

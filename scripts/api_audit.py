@@ -91,4 +91,4 @@ def list_all_keras_ops():
 
 
 if __name__ == "__main__":
-    list_all_keras_ops()
+    audit_api_docs()

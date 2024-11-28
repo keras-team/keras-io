@@ -9,7 +9,7 @@ import importlib
 import itertools
 import copy
 
-import render_tags
+import render_presets
 
 
 class KerasDocumentationGenerator:
@@ -97,7 +97,7 @@ class KerasDocumentationGenerator:
             subblocks.append(docstring)
         # Render preset table for KerasCV and KerasHub
         if element.endswith("from_preset"):
-            table = render_tags.render_table(import_object(element.rsplit(".", 1)[0]))
+            table = render_presets.render_table(import_object(element.rsplit(".", 1)[0]))
             if table is not None:
                 subblocks.append(table)
         return "\n\n".join(subblocks) + "\n\n----\n\n"
@@ -137,7 +137,7 @@ def make_source_link(cls, project_url):
     project_url_version = project_url.split("/")[-2].removeprefix("v")
     module_version = copy.copy(importlib.import_module(base_module).__version__)
     if ".dev" in module_version:
-        module_version = project_url_version[:module_version.find(".dev")]
+        module_version = project_url_version[: module_version.find(".dev")]
     if module_version != project_url_version:
         raise RuntimeError(
             f"For project {base_module}, URL {project_url} "

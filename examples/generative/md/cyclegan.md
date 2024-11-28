@@ -2,7 +2,7 @@
 
 **Author:** [A_K_Nain](https://twitter.com/A_K_Nain)<br>
 **Date created:** 2020/08/12<br>
-**Last modified:** 2020/08/12<br>
+**Last modified:** 2024/09/30<br>
 **Description:** Implementation of CycleGAN.
 
 
@@ -20,7 +20,7 @@ aligned image pairs. However, obtaining paired examples isn't always feasible.
 CycleGAN tries to learn this mapping without requiring paired input-output images,
 using cycle-consistent adversarial networks.
 
-- [Paper](https://arxiv.org/pdf/1703.10593.pdf)
+- [Paper](https://arxiv.org/abs/1703.10593)
 - [Original implementation](https://github.com/junyanz/pytorch-CycleGAN-and-pix2pix)
 
 ---
@@ -28,19 +28,18 @@ using cycle-consistent adversarial networks.
 
 
 ```python
+import os
 import numpy as np
 import matplotlib.pyplot as plt
-
 import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras import layers
-
-import tensorflow_addons as tfa
+import keras
+from keras import layers, ops
 import tensorflow_datasets as tfds
 
 tfds.disable_progress_bar()
 autotune = tf.data.AUTOTUNE
 
+os.environ["KERAS_BACKEND"] = "tensorflow"
 ```
 
 ---
@@ -53,7 +52,7 @@ dataset.
 
 ```python
 # Load the horse-zebra dataset using tensorflow-datasets.
-dataset, _ = tfds.load("cycle_gan/horse2zebra", with_info=True, as_supervised=True)
+dataset, _ = tfds.load(name="cycle_gan/horse2zebra", with_info=True, as_supervised=True)
 train_horses, train_zebras = dataset["trainA"], dataset["trainB"]
 test_horses, test_zebras = dataset["testA"], dataset["testB"]
 
@@ -71,7 +70,7 @@ batch_size = 1
 
 
 def normalize_img(img):
-    img = tf.cast(img, dtype=tf.float32)
+    img = ops.cast(img, dtype=tf.float32)
     # Map values in the range [-1, 1]
     return (img / 127.5) - 1.0
 
@@ -80,7 +79,7 @@ def preprocess_train_image(img, label):
     # Random flip
     img = tf.image.random_flip_left_right(img)
     # Resize to the original size first
-    img = tf.image.resize(img, [*orig_img_size])
+    img = ops.image.resize(img, [*orig_img_size])
     # Random crop to 256X256
     img = tf.image.random_crop(img, size=[*input_img_size])
     # Normalize the pixel values in the range [-1, 1]
@@ -90,7 +89,7 @@ def preprocess_train_image(img, label):
 
 def preprocess_test_image(img, label):
     # Only resizing and normalization for the test images.
-    img = tf.image.resize(img, [input_img_size[0], input_img_size[1]])
+    img = ops.image.resize(img, [input_img_size[0], input_img_size[1]])
     img = normalize_img(img)
     return img
 
@@ -149,7 +148,9 @@ plt.show()
 ```
 
 
+    
 ![png](/img/examples/generative/cyclegan/cyclegan_9_0.png)
+    
 
 
 ---
@@ -181,7 +182,7 @@ class ReflectionPadding2D(layers.Layer):
             [padding_width, padding_width],
             [0, 0],
         ]
-        return tf.pad(input_tensor, padding_tensor, mode="REFLECT")
+        return ops.pad(input_tensor, padding_tensor, mode="REFLECT")
 
 
 def residual_block(
@@ -206,7 +207,9 @@ def residual_block(
         padding=padding,
         use_bias=use_bias,
     )(x)
-    x = tfa.layers.InstanceNormalization(gamma_initializer=gamma_initializer)(x)
+    x = keras.layers.GroupNormalization(groups=1, gamma_initializer=gamma_initializer)(
+        x
+    )
     x = activation(x)
 
     x = ReflectionPadding2D()(x)
@@ -218,7 +221,9 @@ def residual_block(
         padding=padding,
         use_bias=use_bias,
     )(x)
-    x = tfa.layers.InstanceNormalization(gamma_initializer=gamma_initializer)(x)
+    x = keras.layers.GroupNormalization(groups=1, gamma_initializer=gamma_initializer)(
+        x
+    )
     x = layers.add([input_tensor, x])
     return x
 
@@ -242,7 +247,9 @@ def downsample(
         padding=padding,
         use_bias=use_bias,
     )(x)
-    x = tfa.layers.InstanceNormalization(gamma_initializer=gamma_initializer)(x)
+    x = keras.layers.GroupNormalization(groups=1, gamma_initializer=gamma_initializer)(
+        x
+    )
     if activation:
         x = activation(x)
     return x
@@ -267,7 +274,9 @@ def upsample(
         kernel_initializer=kernel_initializer,
         use_bias=use_bias,
     )(x)
-    x = tfa.layers.InstanceNormalization(gamma_initializer=gamma_initializer)(x)
+    x = keras.layers.GroupNormalization(groups=1, gamma_initializer=gamma_initializer)(
+        x
+    )
     if activation:
         x = activation(x)
     return x
@@ -316,7 +325,9 @@ def get_resnet_generator(
     x = layers.Conv2D(filters, (7, 7), kernel_initializer=kernel_init, use_bias=False)(
         x
     )
-    x = tfa.layers.InstanceNormalization(gamma_initializer=gamma_initializer)(x)
+    x = keras.layers.GroupNormalization(groups=1, gamma_initializer=gamma_initializer)(
+        x
+    )
     x = layers.Activation("relu")(x)
 
     # Downsampling
@@ -429,6 +440,14 @@ class CycleGan(keras.Model):
         self.disc_Y = discriminator_Y
         self.lambda_cycle = lambda_cycle
         self.lambda_identity = lambda_identity
+
+    def call(self, inputs):
+        return (
+            self.disc_X(inputs),
+            self.disc_Y(inputs),
+            self.gen_G(inputs),
+            self.gen_F(inputs),
+        )
 
     def compile(
         self,
@@ -596,15 +615,17 @@ class GANMonitor(keras.callbacks.Callback):
 adv_loss_fn = keras.losses.MeanSquaredError()
 
 # Define the loss function for the generators
+
+
 def generator_loss_fn(fake):
-    fake_loss = adv_loss_fn(tf.ones_like(fake), fake)
+    fake_loss = adv_loss_fn(ops.ones_like(fake), fake)
     return fake_loss
 
 
 # Define the loss function for the discriminators
 def discriminator_loss_fn(real, fake):
-    real_loss = adv_loss_fn(tf.ones_like(real), real)
-    fake_loss = adv_loss_fn(tf.zeros_like(fake), fake)
+    real_loss = adv_loss_fn(ops.ones_like(real), real)
+    fake_loss = adv_loss_fn(ops.zeros_like(fake), fake)
     return (real_loss + fake_loss) * 0.5
 
 
@@ -615,16 +636,16 @@ cycle_gan_model = CycleGan(
 
 # Compile the model
 cycle_gan_model.compile(
-    gen_G_optimizer=keras.optimizers.legacy.Adam(learning_rate=2e-4, beta_1=0.5),
-    gen_F_optimizer=keras.optimizers.legacy.Adam(learning_rate=2e-4, beta_1=0.5),
-    disc_X_optimizer=keras.optimizers.legacy.Adam(learning_rate=2e-4, beta_1=0.5),
-    disc_Y_optimizer=keras.optimizers.legacy.Adam(learning_rate=2e-4, beta_1=0.5),
+    gen_G_optimizer=keras.optimizers.Adam(learning_rate=2e-4, beta_1=0.5),
+    gen_F_optimizer=keras.optimizers.Adam(learning_rate=2e-4, beta_1=0.5),
+    disc_X_optimizer=keras.optimizers.Adam(learning_rate=2e-4, beta_1=0.5),
+    disc_Y_optimizer=keras.optimizers.Adam(learning_rate=2e-4, beta_1=0.5),
     gen_loss_fn=generator_loss_fn,
     disc_loss_fn=discriminator_loss_fn,
 )
 # Callbacks
 plotter = GANMonitor()
-checkpoint_filepath = "./model_checkpoints/cyclegan_checkpoints.{epoch:03d}"
+checkpoint_filepath = "./model_checkpoints/cyclegan_checkpoints.weights.h5"
 model_checkpoint_callback = keras.callbacks.ModelCheckpoint(
     filepath=checkpoint_filepath, save_weights_only=True
 )
@@ -633,49 +654,21 @@ model_checkpoint_callback = keras.callbacks.ModelCheckpoint(
 # 7 minutes on a single P100 backed machine.
 cycle_gan_model.fit(
     tf.data.Dataset.zip((train_horses, train_zebras)),
-    epochs=1,
+    epochs=90,
     callbacks=[plotter, model_checkpoint_callback],
 )
 ```
 
-<div class="k-default-codeblock">
-```
-1067/1067 [==============================] - ETA: 0s - G_loss: 4.4794 - F_loss: 4.1048 - D_X_loss: 0.1584 - D_Y_loss: 0.1233
-
-```
-</div>
-![png](/img/examples/generative/cyclegan/cyclegan_21_1.png)
-
-
-<div class="k-default-codeblock">
-```
-1067/1067 [==============================] - 390s 366ms/step - G_loss: 4.4783 - F_loss: 4.1035 - D_X_loss: 0.1584 - D_Y_loss: 0.1232
-
-<tensorflow.python.keras.callbacks.History at 0x7f4184326e90>
-
-```
-</div>
 Test the performance of the model.
 
-You can use the trained model hosted on [Hugging Face Hub](https://huggingface.co/keras-io/CycleGAN) and try the demo on [Hugging Face Spaces](https://huggingface.co/spaces/keras-io/CycleGAN).
-```python
-
-# This model was trained for 90 epochs. We will be loading those weights
-# here. Once the weights are loaded, we will take a few samples from the test
-# data and check the model's performance.
-```
-
 
 ```python
-!curl -LO https://github.com/AakashKumarNain/CycleGAN_TF2/releases/download/v1.0/saved_checkpoints.zip
-!unzip -qq saved_checkpoints.zip
-```
 
-```python
+# Once the weights are loaded, we will take a few samples from the test data and check the model's performance.
+
 
 # Load the checkpoints
-weight_file = "./saved_checkpoints/cyclegan_checkpoints.090"
-cycle_gan_model.load_weights(weight_file).expect_partial()
+cycle_gan_model.load_weights(checkpoint_filepath)
 print("Weights loaded successfully")
 
 _, ax = plt.subplots(4, 2, figsize=(10, 15))
@@ -697,15 +690,14 @@ for i, img in enumerate(test_horses.take(4)):
 plt.tight_layout()
 plt.show()
 ```
+
 <div class="k-default-codeblock">
 ```
-  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
-                                 Dload  Upload   Total   Spent    Left  Speed
-100   634  100   634    0     0   2874      0 --:--:-- --:--:-- --:--:--  2881
-100  273M  100  273M    0     0  1736k      0  0:02:41  0:02:41 --:--:-- 2049k
-
 Weights loaded successfully
 
 ```
 </div>
-![png](/img/examples/generative/cyclegan/cyclegan_25_1.png)
+    
+![png](/img/examples/generative/cyclegan/cyclegan_23_1.png)
+    
+

@@ -1,118 +1,38 @@
-CV_GUIDES_MASTER = {
-    "path": "keras_cv/",
-    "title": "KerasCV",
-    "toc": True,
-    "children": [
-        {
-            "path": "object_detection_keras_cv",
-            "title": "Use KerasCV to assemble object detection pipelines",
-        },
-        {
-            "path": "classification_with_keras_cv",
-            "title": "Use KerasCV to train powerful image classifiers.",
-        },
-        {
-            "path": "cut_mix_mix_up_and_rand_augment",
-            "title": "CutMix, MixUp, and RandAugment image augmentation with KerasCV",
-        },
-        {
-            "path": "generate_images_with_stable_diffusion",
-            "title": "High-performance image generation using Stable Diffusion in KerasCV",
-        },
-        {
-            "path": "custom_image_augmentations",
-            "title": "Custom Image Augmentations with BaseImageAugmentationLayer",
-        },
-        {
-            "path": "semantic_segmentation_deeplab_v3_plus",
-            "title": "Semantic Segmentation with KerasCV",
-        },
-        {
-            "path": "segment_anything_in_keras_cv",
-            "title": "Segment Anything in KerasCV",
-        },
-    ],
-}
-
-NLP_GUIDES_MASTER = {
-    "path": "keras_nlp/",
-    "title": "KerasNLP",
-    "toc": True,
-    "children": [
-        {
-            "path": "getting_started",
-            "title": "Getting Started with KerasNLP",
-        },
-        {
-            "path": "transformer_pretraining",
-            "title": "Pretraining a Transformer from scratch with KerasNLP",
-        },
-        {
-            "path": "upload",
-            "title": "Uploading Models with KerasNLP",
-        },
-    ],
-}
-
-HUB_GUIDES_MASTER = {
-    "path": "keras_hub/",
-    "title": "KerasHub",
-    "toc": True,
-    "children": [
-        {
-            "path": "getting_started",
-            "title": "Getting Started with KerasHub",
-        },
-        {
-            "path": "transformer_pretraining",
-            "title": "Pretraining a Transformer from scratch with KerasHub",
-        },
-        {
-            "path": "upload",
-            "title": "Uploading Models with KerasHub",
-        },
-        {
-            "path": "segment_anything_in_keras_hub",
-            "title": "Segment Anything in KerasHub",
-        },
-        {
-            "path": "stable_diffusion_3_in_keras_hub",
-            "title": "Stable Diffusion 3 in KerasHub",
-        },
-    ],
-}
-
-KT_GUIDES_MASTER = {
-    "path": "keras_tuner/",
-    "title": "Hyperparameter Tuning",
-    "toc": True,
-    "children": [
-        {
-            "path": "getting_started",
-            "title": "Getting started with KerasTuner",
-        },
-        {
-            "path": "distributed_tuning",
-            "title": "Distributed hyperparameter tuning with KerasTuner",
-        },
-        {
-            "path": "custom_tuner",
-            "title": "Tune hyperparameters in your custom training loop",
-        },
-        {
-            "path": "visualize_tuning",
-            "title": "Visualize the hyperparameter tuning process",
-        },
-        {
-            "path": "failed_trials",
-            "title": "Handling failed trials in KerasTuner",
-        },
-        {
-            "path": "tailor_the_search_space",
-            "title": "Tailor the search space",
-        },
-    ],
-}
+# CV_GUIDES_MASTER = {
+#     "path": "keras_cv/",
+#     "title": "KerasCV",
+#     "toc": True,
+#     "children": [
+#         {
+#             "path": "object_detection_keras_cv",
+#             "title": "Use KerasCV to assemble object detection pipelines",
+#         },
+#         {
+#             "path": "classification_with_keras_cv",
+#             "title": "Use KerasCV to train powerful image classifiers.",
+#         },
+#         {
+#             "path": "cut_mix_mix_up_and_rand_augment",
+#             "title": "CutMix, MixUp, and RandAugment image augmentation with KerasCV",
+#         },
+#         {
+#             "path": "generate_images_with_stable_diffusion",
+#             "title": "High-performance image generation using Stable Diffusion in KerasCV",
+#         },
+#         {
+#             "path": "custom_image_augmentations",
+#             "title": "Custom Image Augmentations with BaseImageAugmentationLayer",
+#         },
+#         {
+#             "path": "semantic_segmentation_deeplab_v3_plus",
+#             "title": "Semantic Segmentation with KerasCV",
+#         },
+#         {
+#             "path": "segment_anything_in_keras_cv",
+#             "title": "Segment Anything in KerasCV",
+#         },
+#     ],
+# }
 
 GUIDES_MASTER = {
     "path": "guides/",
@@ -227,9 +147,6 @@ GUIDES_MASTER = {
         #     'path': 'mixed_precision',
         #     'title': 'Mixed precision training',
         # },
-        KT_GUIDES_MASTER,
-        CV_GUIDES_MASTER,
-        NLP_GUIDES_MASTER,
-        HUB_GUIDES_MASTER,
+        # CV_GUIDES_MASTER,
     ],
 }

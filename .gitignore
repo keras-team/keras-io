@@ -11,8 +11,9 @@ templates/examples/rl/*
 templates/examples/keras_recipes/*
 templates/examples/timeseries/*
 templates/examples/graph/*
-templates/guides/**/*.md
-templates/keras-tuner/getting_started.md
+templates/**/guides/**/*.md
+templates/keras_hub/getting_started.md
+templates/keras_tuner/getting_started.md
 datasets/*
 .vscode/*
 **/*.zip

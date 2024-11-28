@@ -35,6 +35,7 @@ as proposed in the paper, "Attention is All You Need".
 
 ```python
 
+import re
 import os
 
 os.environ["KERAS_BACKEND"] = "tensorflow"
@@ -43,6 +44,8 @@ from glob import glob
 import tensorflow as tf
 import keras
 from keras import layers
+
+pattern_wav_name = re.compile(r'([^/\\\.]+)')
 
 ```
 
@@ -327,7 +330,7 @@ def get_data(wavs, id_to_text, maxlen=50):
     """returns mapping of audio paths and transcription texts"""
     data = []
     for w in wavs:
-        id = w.split("/")[-1].split(".")[0]
+        id = pattern_wav_name.split(w)[-4]
         if len(id_to_text[id]) < maxlen:
             data.append({"audio": w, "text": id_to_text[id]})
     return data

@@ -112,6 +112,7 @@ EXAMPLES_MASTER = {
                     "path": "vit_small_ds",
                     "title": "Train a Vision Transformer on small datasets",
                     "subcategory": "Image classification",
+                    "keras_3": True,
                 },
                 {
                     "path": "shiftvit",
@@ -121,6 +122,12 @@ EXAMPLES_MASTER = {
                 {
                     "path": "image_classification_using_global_context_vision_transformer",
                     "title": "Image Classification using Global Context Vision Transformer",
+                    "subcategory": "Image classification",
+                    "keras_3": True,
+                },
+                {
+                    "path": "temporal_latent_bottleneck",
+                    "title": "When Recurrence meets Transformers",
                     "subcategory": "Image classification",
                     "keras_3": True,
                 },
@@ -178,6 +185,7 @@ EXAMPLES_MASTER = {
                     "path": "depth_estimation",
                     "title": "Monocular depth estimation",
                     "subcategory": "3D",
+                    "keras_3": True,
                 },
                 {
                     "path": "nerf",
@@ -209,6 +217,7 @@ EXAMPLES_MASTER = {
                     "path": "handwriting_recognition",
                     "title": "Handwriting recognition",
                     "subcategory": "OCR",
+                    "keras_3": True,
                 },
                 # Image enhancement
                 {
@@ -233,6 +242,7 @@ EXAMPLES_MASTER = {
                     "path": "edsr",
                     "title": "Enhanced Deep Residual Networks for single-image super-resolution",
                     "subcategory": "Image enhancement",
+                    "keras_3": True,
                 },
                 {
                     "path": "zero_dce",
@@ -431,6 +441,7 @@ EXAMPLES_MASTER = {
                     "path": "active_learning_review_classification",
                     "title": "Review Classification using Active Learning",
                     "subcategory": "Text classification",
+                    "keras_3": True,
                 },
                 {
                     "path": "fnet_classification_with_keras_hub",
@@ -547,6 +558,13 @@ EXAMPLES_MASTER = {
                     "path": "masked_language_modeling",
                     "title": "End-to-end Masked Language Modeling with BERT",
                     "subcategory": "Language modeling",
+                    "keras_3": True,
+                },
+                {
+                    "path": "abstractive_summarization_with_bart",
+                    "title": "Abstractive Text Summarization with BART",
+                    "subcategory": "Language modeling",
+                    "keras_3": True,
                 },
                 {
                     "path": "pretraining_BERT",
@@ -759,6 +777,7 @@ EXAMPLES_MASTER = {
                     "path": "cyclegan",
                     "title": "CycleGAN",
                     "subcategory": "Image generation",
+                    "keras_3": True,
                 },
                 {
                     "path": "gan_ada",
@@ -835,6 +854,13 @@ EXAMPLES_MASTER = {
                     "path": "text_generation_fnet",
                     "title": "Text Generation using FNet",
                     "subcategory": "Text generation",
+                },
+                # Audio / midi generation
+                {
+                    "path": "midi_generation_with_transformer",
+                    "title": "Music Generation with Transformer Models",
+                    "subcategory": "Audio generation",
+                    "keras_3": True,
                 },
                 # Graph generation
                 {

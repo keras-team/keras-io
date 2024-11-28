@@ -1,4 +1,4 @@
-# Segment Anything in KerasHub!
+# Segment Anything in KerasHub
 
 **Author:** Tirth Patel, Ian Stenbit, Divyashree Sreepathihalli<br><br>
 **Date created:** 2024/10/1<br><br>
@@ -37,14 +37,7 @@ First, let's get all our dependencies and images for our demo.
 ```python
 !!wget -q https://raw.githubusercontent.com/facebookresearch/segment-anything/main/notebooks/images/truck.jpg
 ```
-<div class="k-default-codeblock">
-```
-[]
 
-[]
-
-```
-</div>
 ---
 ## Choose your backend
 
@@ -158,26 +151,6 @@ masks).
 model = keras_hub.models.SAMImageSegmenter.from_preset("sam_huge_sa1b")
 ```
 
-<div class="k-default-codeblock">
-```
-Downloading from https://www.kaggle.com/api/v1/models/kerashub/sam/keras/sam_huge_sa1b/2/download/config.json...
-
-100%|████████████████████████████████████████████████████| 3.06k/3.06k [00:00<00:00, 6.08MB/s]
-
-Downloading from https://www.kaggle.com/api/v1/models/kerashub/sam/keras/sam_huge_sa1b/2/download/task.json...
-
-100%|████████████████████████████████████████████████████| 5.76k/5.76k [00:00<00:00, 11.0MB/s]
-
-Downloading from https://www.kaggle.com/api/v1/models/kerashub/sam/keras/sam_huge_sa1b/2/download/task.weights.h5...
-
-100%|████████████████████████████████████████████████████| 2.39G/2.39G [00:26<00:00, 95.7MB/s]
-
-Downloading from https://www.kaggle.com/api/v1/models/kerashub/sam/keras/sam_huge_sa1b/2/download/model.weights.h5...
-
-100%|████████████████████████████████████████████████████| 2.39G/2.39G [00:32<00:00, 79.7MB/s]
-
-```
-</div>
 ---
 ## Understanding Prompts
 
@@ -289,14 +262,6 @@ outputs = model.predict(
 )
 ```
 
-<div class="k-default-codeblock">
-```
-Could not load symbol cuFuncGetName. Error: /usr/lib64-nvidia/libcuda.so.1: undefined symbol: cuFuncGetName
-
- 1/1 ━━━━━━━━━━━━━━━━━━━━ 24s 24s/step
-
-```
-</div>
 `SegmentAnythingModel.predict` returns two outputs. First are logits (segmentation masks)
 of shape `(1, 4, 256, 256)` and the other are the IoU confidence scores (of shape `(1,
 4)`) for each mask predicted. The pretrained SAM model predicts four masks: the first is
@@ -388,12 +353,6 @@ plt.axis("off")
 plt.show()
 ```
 
-<div class="k-default-codeblock">
-```
- 1/1 ━━━━━━━━━━━━━━━━━━━━ 10s 10s/step
-
-```
-</div>
     
 ![png](/img/guides/segment_anything_in_keras_hub/segment_anything_in_keras_hub_23_1.png)
     
@@ -435,12 +394,6 @@ plt.axis("off")
 plt.show()
 ```
 
-<div class="k-default-codeblock">
-```
- 1/1 ━━━━━━━━━━━━━━━━━━━━ 14s 14s/step
-
-```
-</div>
     
 ![png](/img/guides/segment_anything_in_keras_hub/segment_anything_in_keras_hub_25_1.png)
     
@@ -477,13 +430,11 @@ Then, we can install the pretrained model's weights and config:
 !!pip install -U git+https://github.com/IDEA-Research/GroundingDINO.git
 ```
 
-
-
-
 ```python
 !!wget -q https://github.com/IDEA-Research/GroundingDINO/releases/download/v0.1.0-alpha/groundingdino_swint_ogc.pth
 !!wget -q https://raw.githubusercontent.com/IDEA-Research/GroundingDINO/v0.1.0-alpha2/groundingdino/config/GroundingDINO_SwinT_OGC.py
 ```
+
 ```python
 from groundingdino.util.inference import Model as GroundingDINO
 
@@ -492,113 +443,7 @@ WEIGHTS_PATH = "groundingdino_swint_ogc.pth"
 
 grounding_dino = GroundingDINO(CONFIG_PATH, WEIGHTS_PATH)
 ```
-<div class="k-default-codeblock">
-```
-['Collecting git+https://github.com/IDEA-Research/GroundingDINO.git',
- '  Cloning https://github.com/IDEA-Research/GroundingDINO.git to /tmp/pip-req-build-m_hhz04_',
- '  Running command git clone --filter=blob:none --quiet https://github.com/IDEA-Research/GroundingDINO.git /tmp/pip-req-build-m_hhz04_',
- '  Resolved https://github.com/IDEA-Research/GroundingDINO.git to commit 856dde20aee659246248e20734ef9ba5214f5e44',
- '  Preparing metadata (setup.py) ... \x1b[?25l\x1b[?25hdone',
- 'Requirement already satisfied: torch in /usr/local/lib/python3.10/dist-packages (from groundingdino==0.1.0) (2.4.1+cu121)',
- 'Requirement already satisfied: torchvision in /usr/local/lib/python3.10/dist-packages (from groundingdino==0.1.0) (0.19.1+cu121)',
- 'Requirement already satisfied: transformers in /usr/local/lib/python3.10/dist-packages (from groundingdino==0.1.0) (4.44.2)',
- 'Collecting addict (from groundingdino==0.1.0)',
- '  Downloading addict-2.4.0-py3-none-any.whl.metadata (1.0 kB)',
- 'Collecting yapf (from groundingdino==0.1.0)',
- '  Downloading yapf-0.40.2-py3-none-any.whl.metadata (45 kB)',
- '\x1b[?25l     \x1b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\x1b[0m \x1b[32m0.0/45.4 kB\x1b[0m \x1b[31m?\x1b[0m eta \x1b[36m-:--:--\x1b[0m',
- '\x1b[2K     \x1b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\x1b[0m \x1b[32m45.4/45.4 kB\x1b[0m \x1b[31m1.8 MB/s\x1b[0m eta \x1b[36m0:00:00\x1b[0m',
- '\x1b[?25hCollecting timm (from groundingdino==0.1.0)',
- '  Downloading timm-1.0.9-py3-none-any.whl.metadata (42 kB)',
- '\x1b[?25l     \x1b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\x1b[0m \x1b[32m0.0/42.4 kB\x1b[0m \x1b[31m?\x1b[0m eta \x1b[36m-:--:--\x1b[0m',
- '\x1b[2K     \x1b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\x1b[0m \x1b[32m42.4/42.4 kB\x1b[0m \x1b[31m1.8 MB/s\x1b[0m eta \x1b[36m0:00:00\x1b[0m',
- '\x1b[?25hRequirement already satisfied: numpy in /usr/local/lib/python3.10/dist-packages (from groundingdino==0.1.0) (1.26.4)',
- 'Requirement already satisfied: opencv-python in /usr/local/lib/python3.10/dist-packages (from groundingdino==0.1.0) (4.10.0.84)',
- 'Collecting supervision>=0.22.0 (from groundingdino==0.1.0)',
- '  Downloading supervision-0.23.0-py3-none-any.whl.metadata (14 kB)',
- 'Requirement already satisfied: pycocotools in /usr/local/lib/python3.10/dist-packages (from groundingdino==0.1.0) (2.0.8)',
- 'Requirement already satisfied: defusedxml<0.8.0,>=0.7.1 in /usr/local/lib/python3.10/dist-packages (from supervision>=0.22.0->groundingdino==0.1.0) (0.7.1)',
- 'Requirement already satisfied: matplotlib>=3.6.0 in /usr/local/lib/python3.10/dist-packages (from supervision>=0.22.0->groundingdino==0.1.0) (3.7.1)',
- 'Requirement already satisfied: opencv-python-headless>=4.5.5.64 in /usr/local/lib/python3.10/dist-packages (from supervision>=0.22.0->groundingdino==0.1.0) (4.10.0.84)',
- 'Requirement already satisfied: pillow>=9.4 in /usr/local/lib/python3.10/dist-packages (from supervision>=0.22.0->groundingdino==0.1.0) (10.4.0)',
- 'Requirement already satisfied: pyyaml>=5.3 in /usr/local/lib/python3.10/dist-packages (from supervision>=0.22.0->groundingdino==0.1.0) (6.0.2)',
- 'Requirement already satisfied: scipy<2.0.0,>=1.10.0 in /usr/local/lib/python3.10/dist-packages (from supervision>=0.22.0->groundingdino==0.1.0) (1.13.1)',
- 'Requirement already satisfied: huggingface_hub in /usr/local/lib/python3.10/dist-packages (from timm->groundingdino==0.1.0) (0.24.7)',
- 'Requirement already satisfied: safetensors in /usr/local/lib/python3.10/dist-packages (from timm->groundingdino==0.1.0) (0.4.5)',
- 'Requirement already satisfied: filelock in /usr/local/lib/python3.10/dist-packages (from torch->groundingdino==0.1.0) (3.16.1)',
- 'Requirement already satisfied: typing-extensions>=4.8.0 in /usr/local/lib/python3.10/dist-packages (from torch->groundingdino==0.1.0) (4.12.2)',
- 'Requirement already satisfied: sympy in /usr/local/lib/python3.10/dist-packages (from torch->groundingdino==0.1.0) (1.13.3)',
- 'Requirement already satisfied: networkx in /usr/local/lib/python3.10/dist-packages (from torch->groundingdino==0.1.0) (3.3)',
- 'Requirement already satisfied: jinja2 in /usr/local/lib/python3.10/dist-packages (from torch->groundingdino==0.1.0) (3.1.4)',
- 'Requirement already satisfied: fsspec in /usr/local/lib/python3.10/dist-packages (from torch->groundingdino==0.1.0) (2024.6.1)',
- 'Requirement already satisfied: packaging>=20.0 in /usr/local/lib/python3.10/dist-packages (from transformers->groundingdino==0.1.0) (24.1)',
- 'Requirement already satisfied: regex!=2019.12.17 in /usr/local/lib/python3.10/dist-packages (from transformers->groundingdino==0.1.0) (2024.9.11)',
- 'Requirement already satisfied: requests in /usr/local/lib/python3.10/dist-packages (from transformers->groundingdino==0.1.0) (2.32.3)',
- 'Requirement already satisfied: tokenizers<0.20,>=0.19 in /usr/local/lib/python3.10/dist-packages (from transformers->groundingdino==0.1.0) (0.19.1)',
- 'Requirement already satisfied: tqdm>=4.27 in /usr/local/lib/python3.10/dist-packages (from transformers->groundingdino==0.1.0) (4.66.5)',
- 'Requirement already satisfied: importlib-metadata>=6.6.0 in /usr/local/lib/python3.10/dist-packages (from yapf->groundingdino==0.1.0) (8.4.0)',
- 'Requirement already satisfied: platformdirs>=3.5.1 in /usr/local/lib/python3.10/dist-packages (from yapf->groundingdino==0.1.0) (4.3.6)',
- 'Requirement already satisfied: tomli>=2.0.1 in /usr/local/lib/python3.10/dist-packages (from yapf->groundingdino==0.1.0) (2.0.1)',
- 'Requirement already satisfied: zipp>=0.5 in /usr/local/lib/python3.10/dist-packages (from importlib-metadata>=6.6.0->yapf->groundingdino==0.1.0) (3.20.2)',
- 'Requirement already satisfied: contourpy>=1.0.1 in /usr/local/lib/python3.10/dist-packages (from matplotlib>=3.6.0->supervision>=0.22.0->groundingdino==0.1.0) (1.3.0)',
- 'Requirement already satisfied: cycler>=0.10 in /usr/local/lib/python3.10/dist-packages (from matplotlib>=3.6.0->supervision>=0.22.0->groundingdino==0.1.0) (0.12.1)',
- 'Requirement already satisfied: fonttools>=4.22.0 in /usr/local/lib/python3.10/dist-packages (from matplotlib>=3.6.0->supervision>=0.22.0->groundingdino==0.1.0) (4.54.1)',
- 'Requirement already satisfied: kiwisolver>=1.0.1 in /usr/local/lib/python3.10/dist-packages (from matplotlib>=3.6.0->supervision>=0.22.0->groundingdino==0.1.0) (1.4.7)',
- 'Requirement already satisfied: pyparsing>=2.3.1 in /usr/local/lib/python3.10/dist-packages (from matplotlib>=3.6.0->supervision>=0.22.0->groundingdino==0.1.0) (3.1.4)',
- 'Requirement already satisfied: python-dateutil>=2.7 in /usr/local/lib/python3.10/dist-packages (from matplotlib>=3.6.0->supervision>=0.22.0->groundingdino==0.1.0) (2.8.2)',
- 'Requirement already satisfied: MarkupSafe>=2.0 in /usr/local/lib/python3.10/dist-packages (from jinja2->torch->groundingdino==0.1.0) (2.1.5)',
- 'Requirement already satisfied: charset-normalizer<4,>=2 in /usr/local/lib/python3.10/dist-packages (from requests->transformers->groundingdino==0.1.0) (3.3.2)',
- 'Requirement already satisfied: idna<4,>=2.5 in /usr/local/lib/python3.10/dist-packages (from requests->transformers->groundingdino==0.1.0) (3.10)',
- 'Requirement already satisfied: urllib3<3,>=1.21.1 in /usr/local/lib/python3.10/dist-packages (from requests->transformers->groundingdino==0.1.0) (2.2.3)',
- 'Requirement already satisfied: certifi>=2017.4.17 in /usr/local/lib/python3.10/dist-packages (from requests->transformers->groundingdino==0.1.0) (2024.8.30)',
- 'Requirement already satisfied: mpmath<1.4,>=1.1.0 in /usr/local/lib/python3.10/dist-packages (from sympy->torch->groundingdino==0.1.0) (1.3.0)',
- 'Requirement already satisfied: six>=1.5 in /usr/local/lib/python3.10/dist-packages (from python-dateutil>=2.7->matplotlib>=3.6.0->supervision>=0.22.0->groundingdino==0.1.0) (1.16.0)',
- 'Downloading supervision-0.23.0-py3-none-any.whl (151 kB)',
- '\x1b[?25l   \x1b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\x1b[0m \x1b[32m0.0/151.5 kB\x1b[0m \x1b[31m?\x1b[0m eta \x1b[36m-:--:--\x1b[0m',
- '\x1b[2K   \x1b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\x1b[0m \x1b[32m151.5/151.5 kB\x1b[0m \x1b[31m6.0 MB/s\x1b[0m eta \x1b[36m0:00:00\x1b[0m',
- '\x1b[?25hDownloading addict-2.4.0-py3-none-any.whl (3.8 kB)',
- 'Downloading timm-1.0.9-py3-none-any.whl (2.3 MB)',
- '\x1b[?25l   \x1b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\x1b[0m \x1b[32m0.0/2.3 MB\x1b[0m \x1b[31m?\x1b[0m eta \x1b[36m-:--:--\x1b[0m',
- '\x1b[2K   \x1b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\x1b[0m\x1b[90m╺\x1b[0m\x1b[90m━━━━━━━\x1b[0m \x1b[32m1.9/2.3 MB\x1b[0m \x1b[31m55.9 MB/s\x1b[0m eta \x1b[36m0:00:01\x1b[0m',
- '\x1b[2K   \x1b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\x1b[0m \x1b[32m2.3/2.3 MB\x1b[0m \x1b[31m42.4 MB/s\x1b[0m eta \x1b[36m0:00:00\x1b[0m',
- '\x1b[?25hDownloading yapf-0.40.2-py3-none-any.whl (254 kB)',
- '\x1b[?25l   \x1b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\x1b[0m \x1b[32m0.0/254.7 kB\x1b[0m \x1b[31m?\x1b[0m eta \x1b[36m-:--:--\x1b[0m',
- '\x1b[2K   \x1b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\x1b[0m \x1b[32m254.7/254.7 kB\x1b[0m \x1b[31m18.3 MB/s\x1b[0m eta \x1b[36m0:00:00\x1b[0m',
- '\x1b[?25hBuilding wheels for collected packages: groundingdino',
- '  Building wheel for groundingdino (setup.py) ... \x1b[?25l\x1b[?25hdone',
- '  Created wheel for groundingdino: filename=groundingdino-0.1.0-cp310-cp310-linux_x86_64.whl size=3038498 sha256=1e7306dfa5ebd4bebb340bfe814e13026800708bbc0223d37ae8963e90145fb2',
- '  Stored in directory: /tmp/pip-ephem-wheel-cache-multbs74/wheels/6b/06/d7/b57f601a4df56af41d262a5b1b496359b13c323bf5ef0434b2',
- 'Successfully built groundingdino',
- 'Installing collected packages: addict, yapf, supervision, timm, groundingdino',
- 'Successfully installed addict-2.4.0 groundingdino-0.1.0 supervision-0.23.0 timm-1.0.9 yapf-0.40.2']
 
-[]
-
-UserWarning: torch.meshgrid: in an upcoming release, it will be required to pass the indexing argument. (Triggered internally at ../aten/src/ATen/native/TensorShape.cpp:3609.)
-
-final text_encoder_type: bert-base-uncased
-
-UserWarning: 
-Error while fetching `HF_TOKEN` secret value from your vault: 'Requesting secret HF_TOKEN timed out. Secrets can only be fetched when running from the Colab UI.'.
-You are not authenticated with the Hugging Face Hub in this notebook.
-If the error persists, please let us know by opening an issue on GitHub (https://github.com/huggingface/huggingface_hub/issues/new).
-
-tokenizer_config.json:   0%|          | 0.00/48.0 [00:00<?, ?B/s]
-
-config.json:   0%|          | 0.00/570 [00:00<?, ?B/s]
-
-vocab.txt:   0%|          | 0.00/232k [00:00<?, ?B/s]
-
-tokenizer.json:   0%|          | 0.00/466k [00:00<?, ?B/s]
-
-FutureWarning: `clean_up_tokenization_spaces` was not set. It will be set to `True` by default. This behavior will be depracted in transformers v4.45, and will be then set to `False` by default. For more details check this issue: https://github.com/huggingface/transformers/issues/31884
-
-model.safetensors:   0%|          | 0.00/440M [00:00<?, ?B/s]
-
-FutureWarning: You are using `torch.load` with `weights_only=False` (the current default value), which uses the default pickle module implicitly. It is possible to construct malicious pickle data which will execute arbitrary code during unpickling (See https://github.com/pytorch/pytorch/blob/main/SECURITY.md#untrusted-models for more details). In a future release, the default value for `weights_only` will be flipped to `True`. This limits the functions that could be executed during unpickling. Arbitrary objects will no longer be allowed to be loaded via this mode unless they are explicitly allowlisted by the user via `torch.serialization.add_safe_globals`. We recommend you start setting `weights_only=True` for any use case where you don't have full control of the loaded file. Please open an issue on GitHub for any issues related to this experimental feature.
-
-```
-</div>
 Let's load an image of a dog for this part!
 
 
@@ -615,15 +460,6 @@ plt.axis("on")
 plt.show()
 ```
 
-<div class="k-default-codeblock">
-```
-Downloading data from https://storage.googleapis.com/keras-cv/test-images/mountain-dog.jpeg
- 1236492/1236492 ━━━━━━━━━━━━━━━━━━━━ 0s 0us/step
-
-WARNING:matplotlib.image:Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers).
-
-```
-</div>
     
 ![png](/img/guides/segment_anything_in_keras_hub/segment_anything_in_keras_hub_31_2.png)
     
@@ -651,17 +487,6 @@ outputs = model.predict(
 )
 ```
 
-<div class="k-default-codeblock">
-```
-FutureWarning: The `device` argument is deprecated and will be removed in v5 of Transformers.
-UserWarning: torch.utils.checkpoint: the use_reentrant parameter should be passed explicitly. In version 2.4 we will raise an exception if use_reentrant is not passed. use_reentrant=False is recommended, but if you need to preserve the current default behavior, you can pass use_reentrant=True. Refer to docs for more details on the differences between the two variants.
-UserWarning: None of the inputs have requires_grad=True. Gradients will be None
-FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
-
- 1/1 ━━━━━━━━━━━━━━━━━━━━ 10s 10s/step
-
-```
-</div>
 And that's it! We got a segmentation mask for our text prompt using the combination of
 Gounding DINO + SAM! This is a very powerful technique to combine different models to
 expand the applications!
@@ -683,12 +508,6 @@ plt.axis("off")
 plt.show()
 ```
 
-<div class="k-default-codeblock">
-```
-WARNING:matplotlib.image:Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers).
-
-```
-</div>
     
 ![png](/img/guides/segment_anything_in_keras_hub/segment_anything_in_keras_hub_35_1.png)
     
@@ -732,17 +551,6 @@ time_taken = timeit.repeat(
 print(f"Time taken with float16 dtype: {min(time_taken) / 3:.10f}s")
 ```
 
-<div class="k-default-codeblock">
-```
-Time taken with float32 dtype: 0.2298811787s
-
-UserWarning: Skipping variable loading for optimizer 'loss_scale_optimizer', because it has 4 variables whereas the saved optimizer has 2 variables. 
-UserWarning: Skipping variable loading for optimizer 'adam', because it has 2 variables whereas the saved optimizer has 0 variables. 
-
-Time taken with float16 dtype: 0.2068303013s
-
-```
-</div>
 Here's a comparison of KerasHub's implementation with the original PyTorch
 implementation!
 

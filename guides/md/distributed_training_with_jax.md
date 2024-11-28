@@ -180,7 +180,7 @@ optimizer.build(model.trainable_variables)
 # Keras provides a pure functional forward pass: model.stateless_call
 def compute_loss(trainable_variables, non_trainable_variables, x, y):
     y_pred, updated_non_trainable_variables = model.stateless_call(
-        trainable_variables, non_trainable_variables, x
+        trainable_variables, non_trainable_variables, x, training=True
     )
     loss_value = loss(y, y_pred)
     return loss_value, updated_non_trainable_variables
@@ -292,8 +292,8 @@ Data sharding
 
 <div class="k-default-codeblock">
 ```
-Epoch 0 loss: 0.43531758
-Epoch 1 loss: 0.5194763
+Epoch 0 loss: 0.28599858
+Epoch 1 loss: 0.23666474
 
 ```
 </div>

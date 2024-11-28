@@ -2,7 +2,7 @@
 
 **Author:** [Hongyu Chiu](https://github.com/james77777778), [fchollet](https://twitter.com/fchollet), [lukewood](https://twitter.com/luke_wood_ml), [divamgupta](https://github.com/divamgupta)<br>
 **Date created:** 2024/10/09<br>
-**Last modified:** 2024/10/09<br>
+**Last modified:** 2024/10/24<br>
 **Description:** Image generation using KerasHub's Stable Diffusion 3 model.
 
 
@@ -30,8 +30,8 @@ To get started, let's install a few dependencies and get images for our demo:
 ```python
 !pip install -Uq keras
 !pip install -Uq git+https://github.com/keras-team/keras-hub.git
-!wget --user-agent="User-Agent: Mozilla/5.0" -O mountain_dog.png https://i.imgur.com/3AHYG9Z.png
-!wget --user-agent="User-Agent: Mozilla/5.0" -O mountain_dog_mask.png https://i.imgur.com/n3Prpj6.png
+!wget -O mountain_dog.png https://raw.githubusercontent.com/keras-team/keras-io/master/guides/img/stable_diffusion_3_in_keras_hub/mountain_dog.png
+!wget -O mountain_dog_mask.png https://raw.githubusercontent.com/keras-team/keras-io/master/guides/img/stable_diffusion_3_in_keras_hub/mountain_dog_mask.png
 ```
 
 
@@ -71,7 +71,7 @@ text_to_image = keras_hub.models.StableDiffusion3TextToImage.from_preset(
 That will automatically load and configure trained `backbone` and `preprocessor`
 for you.
 
-Note that in this guide, we'll use `height=512` and `width=512` for faster
+Note that in this guide, we'll use `image_shape=(512, 512, 3)` for faster
 image generation. For higher-quality output, it's recommended to use the default
 size of `1024`. Since the entire backbone has about 3 billion parameters, which
 can be challenging to fit into a consumer-level GPU, we set `dtype="float16"` to
@@ -116,7 +116,7 @@ def display_generated_images(images):
 
 
 backbone = keras_hub.models.StableDiffusion3Backbone.from_preset(
-    "stable_diffusion_3_medium", height=512, width=512, dtype="float16"
+    "stable_diffusion_3_medium", image_shape=(512, 512, 3), dtype="float16"
 )
 preprocessor = keras_hub.models.StableDiffusion3TextToImagePreprocessor.from_preset(
     "stable_diffusion_3_medium"

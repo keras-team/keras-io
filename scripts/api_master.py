@@ -1,8 +1,3 @@
-from kt_api_master import KT_API_MASTER
-from cv_api_master import CV_API_MASTER
-from hub_api_master import HUB_API_MASTER
-from nlp_api_master import NLP_API_MASTER
-
 API_MASTER = {
     "path": "api/",
     "title": "Keras 3 API documentation",
@@ -614,6 +609,11 @@ API_MASTER = {
                                     "title": "MelSpectrogram layer",
                                     "generate": ["keras.layers.MelSpectrogram"],
                                 },
+                                # {
+                                #     "path": "stft_spectrogram",
+                                #     "title": "STFTSpectrogram layer",
+                                #     "generate": ["keras.layers.STFTSpectrogram"],
+                                # },
                             ],
                         },
                     ],
@@ -1925,9 +1925,5 @@ API_MASTER = {
                 },
             ],
         },
-        KT_API_MASTER,
-        CV_API_MASTER,
-        NLP_API_MASTER,
-        HUB_API_MASTER,
     ],
 }
