@@ -1,0 +1,575 @@
+"""
+Title: Deep Learning for Customer Lifetime Value
+Author: [Praveen Hosdrug](https://www.linkedin.com/in/praveenhosdrug/)
+Date created: 2024/11/23
+Last modified: 2024/11/27
+Description: Predicting Customer Lifetime Value.
+Accelerator: None
+"""
+
+"""
+## Introduction
+Traditional approaches often treat each customer's purchase history as an isolated
+timeseries, much like how basic forecasting models handle independent sequences. However,
+customer behavior exists within a complex network of interactions, influenced by various
+factors such as seasonal patterns, demographic similarities, and purchase dependencies -
+similar to how we observe interconnected patterns in financial and human activity data.
+"""
+
+"""
+For the purpose of the tutorial; we will be using the UK Retail
+[Dataset](https://archive.ics.uci.edu/dataset/352/online+retail).
+You can install it via the following command: `pip install ucimlrepo
+
+This example requires access to the transformer encoder layer in keras_hub package. You
+can install it via the following command `pip install keras_hub
+
+"""
+
+"""
+##Setting up Libraries for the Deep Learning Project
+"""
+%pip install ucimlrepo
+
+%pip install keras_hub
+
+# Set Keras backend
+import os
+
+os.environ["KERAS_BACKEND"] = "tensorflow"
+
+# Core data processing and numerical libraries
+import numpy as np
+import pandas as pd
+from typing import Dict
+import tensorflow as tf
+
+
+# For reproducibility across modelling
+def set_seeds(seed=42):
+    np.random.seed(seed)
+    tf.random.set_seed(seed)
+
+
+# Visualization
+import matplotlib.pyplot as plt
+
+# Keras imports
+from keras import layers
+from keras import Model
+from keras.layers import (
+    Input,
+    Dense,
+    LSTM,
+    GlobalAveragePooling1D,
+    Embedding,
+    Flatten,
+    RepeatVector,
+    Concatenate,
+    StringLookup,
+)
+from keras_hub.layers import TransformerEncoder
+
+from keras import regularizers
+
+# UK Retail Dataset
+from ucimlrepo import fetch_ucirepo
+
+"""
+## Preprocessing the UK Retail dataset
+"""
+
+
+def prepare_time_series_data(data):
+    """
+    Minimal preprocessing for deep learning time series models.
+    Deep learning models can handle complex patterns
+    and non-linearities in the data without explicit complex feature engineering.
+    """
+    processed_data = data.copy()
+
+    # Essential datetime handling for temporal ordering
+    processed_data["InvoiceDate"] = pd.to_datetime(processed_data["InvoiceDate"])
+
+    # Basic business constraints and calculations
+    processed_data = processed_data[processed_data["UnitPrice"] > 0]
+    processed_data["Amount"] = processed_data["UnitPrice"] * processed_data["Quantity"]
+    processed_data["CustomerID"] = processed_data["CustomerID"].fillna(99999.0)
+
+    # Handle outliers in Amount using statistical thresholds
+    Q1 = processed_data["Amount"].quantile(0.25)
+    Q3 = processed_data["Amount"].quantile(0.75)
+
+    # Define bounds - using 1.5 IQR rule
+    lower_bound = Q1 - 1.5 * (Q3 - Q1)
+    upper_bound = Q3 + 1.5 * (Q3 - Q1)
+
+    # Filter outliers
+    processed_data = processed_data[
+        (processed_data["Amount"] >= lower_bound)
+        & (processed_data["Amount"] <= upper_bound)
+    ]
+
+    return processed_data
+
+
+# Load Data
+
+online_retail = fetch_ucirepo(id=352)
+raw_data = online_retail.data.features
+transformed_data = prepare_time_series_data(raw_data)
+
+"""
+##Chunking Data into 4 month input and output sequences for multistep forecasting for
+each Customer
+
+"""
+
+
+def prepare_data_for_modeling(
+    df: pd.DataFrame,
+    input_sequence_length: int = 6,
+    output_sequence_length: int = 6,
+) -> Dict:
+    """
+    Transform retail data into sequence-to-sequence format with separate
+    temporal and trend components.
+    """
+    df = df.copy()
+
+    # Daily aggregation
+    daily_purchases = (
+        df.groupby(["CustomerID", pd.Grouper(key="InvoiceDate", freq="D")])
+        .agg({"Amount": "sum", "Quantity": "sum", "Country": "first"})
+        .reset_index()
+    )
+
+    daily_purchases["frequency"] = np.where(daily_purchases["Amount"] > 0, 1, 0)
+
+    # Monthly resampling
+    monthly_purchases = (
+        daily_purchases.set_index("InvoiceDate")
+        .groupby("CustomerID")
+        .resample("M")
+        .agg(
+            {"Amount": "sum", "Quantity": "sum", "frequency": "sum", "Country": "first"}
+        )
+        .reset_index()
+    )
+
+    # Add cyclical temporal features
+    def prepare_temporal_features(input_window: pd.DataFrame) -> np.ndarray:
+
+        month = input_window["InvoiceDate"].dt.month
+        month_sin = np.sin(2 * np.pi * month / 12)
+        month_cos = np.cos(2 * np.pi * month / 12)
+        is_quarter_start = (month % 3 == 1).astype(int)
+
+        temporal_features = np.column_stack(
+            [
+                month,
+                input_window["InvoiceDate"].dt.year,
+                month_sin,
+                month_cos,
+                is_quarter_start,
+            ]
+        )
+        return temporal_features
+
+    # Prepare trend features with lagged values
+    def prepare_trend_features(input_window: pd.DataFrame, lag: int = 3) -> np.ndarray:
+
+        lagged_data = pd.DataFrame()
+        for i in range(1, lag + 1):
+            lagged_data[f"Amount_lag_{i}"] = input_window["Amount"].shift(i)
+            lagged_data[f"Quantity_lag_{i}"] = input_window["Quantity"].shift(i)
+            lagged_data[f"frequency_lag_{i}"] = input_window["frequency"].shift(i)
+
+        lagged_data = lagged_data.fillna(0)
+
+        trend_features = np.column_stack(
+            [
+                input_window["Amount"].values,
+                input_window["Quantity"].values,
+                input_window["frequency"].values,
+                lagged_data.values,
+            ]
+        )
+        return trend_features
+
+    sequence_containers = {
+        "temporal_sequences": [],
+        "trend_sequences": [],
+        "static_features": [],
+        "output_sequences": [],
+        "customer_ids": [],
+    }
+
+    # Process sequences for each customer
+    for customer_id, customer_data in monthly_purchases.groupby("CustomerID"):
+        customer_data = customer_data.sort_values("InvoiceDate")
+        sequence_ranges = (
+            len(customer_data) - input_sequence_length - output_sequence_length + 1
+        )
+
+        country = customer_data["Country"].iloc[0]
+
+        for i in range(sequence_ranges):
+            input_window = customer_data.iloc[i : i + input_sequence_length]
+            output_window = customer_data.iloc[
+                i
+                + input_sequence_length : i
+                + input_sequence_length
+                + output_sequence_length
+            ]
+
+            if (
+                len(input_window) == input_sequence_length
+                and len(output_window) == output_sequence_length
+            ):
+                temporal_features = prepare_temporal_features(input_window)
+                trend_features = prepare_trend_features(input_window)
+
+                sequence_containers["temporal_sequences"].append(temporal_features)
+                sequence_containers["trend_sequences"].append(trend_features)
+                sequence_containers["static_features"].append(country)
+                sequence_containers["output_sequences"].append(
+                    output_window["Amount"].values
+                )
+                sequence_containers["customer_ids"].append(customer_id)
+
+    return {
+        "temporal_sequences": (
+            np.array(sequence_containers["temporal_sequences"], dtype=np.float32)
+        ),
+        "trend_sequences": (
+            np.array(sequence_containers["trend_sequences"], dtype=np.float32)
+        ),
+        "static_features": np.array(sequence_containers["static_features"]),
+        "output_sequences": (
+            np.array(sequence_containers["output_sequences"], dtype=np.float32)
+        ),
+        "customer_ids": np.array(sequence_containers["customer_ids"]),
+    }
+
+
+# Transform data with input and output sequences into a Output dictionary
+output = prepare_data_for_modeling(
+    df=transformed_data, input_sequence_length=6, output_sequence_length=6
+)
+
+"""
+# Scaling and Splitting
+"""
+
+
+def robust_scale(data):
+    """
+    Min-Max scaling function since standard deviation is high.
+    """
+    data = np.array(data)
+    data_min = np.min(data)
+    data_max = np.max(data)
+    scaled = (data - data_min) / (data_max - data_min)
+    return scaled
+
+
+def create_temporal_splits_with_scaling(
+    prepared_data: Dict[str, np.ndarray],
+    test_ratio: float = 0.2,
+    val_ratio: float = 0.2,
+):
+    total_sequences = len(prepared_data["trend_sequences"])
+    # Calculate split points
+    test_size = int(total_sequences * test_ratio)
+    val_size = int(total_sequences * val_ratio)
+    train_size = total_sequences - (test_size + val_size)
+
+    # Scale trend sequences
+    trend_shape = prepared_data["trend_sequences"].shape
+    scaled_trends = np.zeros_like(prepared_data["trend_sequences"])
+
+    # Scale each feature independently
+    for i in range(trend_shape[-1]):
+        scaled_trends[..., i] = robust_scale(prepared_data["trend_sequences"][..., i])
+    # Scale output sequences
+    scaled_outputs = robust_scale(prepared_data["output_sequences"])
+
+    # Create splits
+    train_data = {
+        "trend_sequences": scaled_trends[:train_size],
+        "temporal_sequences": prepared_data["temporal_sequences"][:train_size],
+        "static_features": prepared_data["static_features"][:train_size],
+        "output_sequences": scaled_outputs[:train_size],
+    }
+
+    val_data = {
+        "trend_sequences": scaled_trends[train_size : train_size + val_size],
+        "temporal_sequences": prepared_data["temporal_sequences"][
+            train_size : train_size + val_size
+        ],
+        "static_features": prepared_data["static_features"][
+            train_size : train_size + val_size
+        ],
+        "output_sequences": scaled_outputs[train_size : train_size + val_size],
+    }
+
+    test_data = {
+        "trend_sequences": scaled_trends[train_size + val_size :],
+        "temporal_sequences": prepared_data["temporal_sequences"][
+            train_size + val_size :
+        ],
+        "static_features": prepared_data["static_features"][train_size + val_size :],
+        "output_sequences": scaled_outputs[train_size + val_size :],
+    }
+
+    return train_data, val_data, test_data
+
+
+# Usage
+train_data, val_data, test_data = create_temporal_splits_with_scaling(output)
+
+"""
+# Evaluation
+"""
+
+
+def calculate_metrics(y_true, y_pred):
+    """
+    Calculates RMSE, MAE, R², and sMAPE
+    """
+    # Convert inputs to float32
+    y_true = tf.cast(y_true, tf.float32)
+    y_pred = tf.cast(y_pred, tf.float32)
+
+    # RMSE
+    rmse = np.sqrt(np.mean(np.square(y_true - y_pred)))
+
+    # R² (coefficient of determination)
+    ss_res = np.sum(np.square(y_true - y_pred))
+    ss_tot = np.sum(np.square(y_true - np.mean(y_true)))
+    r2 = 1 - (ss_res / ss_tot)
+
+    return {"mae": np.mean(np.abs(y_true - y_pred)), "rmse": rmse, "r2": r2}
+
+
+def plot_lorenz_analysis(y_true, y_pred):
+    """
+    Plots Lorenz curves to show distribution of high and low value users
+    """
+    # Convert to numpy arrays and flatten
+    y_true = np.array(y_true).flatten()
+    y_pred = np.array(y_pred).flatten()
+
+    # Sort values in descending order (for high-value users analysis)
+    true_sorted = np.sort(-y_true)
+    pred_sorted = np.sort(-y_pred)
+
+    # Calculate cumulative sums
+    true_cumsum = np.cumsum(true_sorted)
+    pred_cumsum = np.cumsum(pred_sorted)
+
+    # Normalize to percentages
+    true_cumsum_pct = true_cumsum / true_cumsum[-1]
+    pred_cumsum_pct = pred_cumsum / pred_cumsum[-1]
+
+    # Generate percentiles for x-axis
+    percentiles = np.linspace(0, 1, len(y_true))
+
+    # Calculate Mutual Gini (area between curves)
+    mutual_gini = np.abs(
+        np.trapz(true_cumsum_pct, percentiles) - np.trapz(pred_cumsum_pct, percentiles)
+    )
+
+    # Create plot
+    plt.figure(figsize=(10, 6))
+    plt.plot(percentiles, true_cumsum_pct, "g-", label="True Values")
+    plt.plot(percentiles, pred_cumsum_pct, "r-", label="Predicted Values")
+    plt.plot([0, 1], [0, 1], "k--", label="Perfect Equality")
+    plt.xlabel("Cumulative % of Users (Descending Order)")
+    plt.ylabel("Cumulative % of LTV")
+    plt.title("Lorenz Curves: True vs Predicted Values")
+    plt.legend()
+    plt.grid(True)
+
+    print(f"\nMutual Gini: {mutual_gini:.4f} (lower is better)")
+    plt.show()
+
+    return mutual_gini
+
+
+"""
+# Hybrid Transformer / LSTM model architecture
+
+The hybrid nature of this model is particularly significant because it combines RNN's
+ability to handle sequential data with Transformer's attention mechanisms for capturing
+global patterns across countries and seasonality.
+"""
+
+
+def build_hybrid_model(
+    input_sequence_length: int,
+    output_sequence_length: int,
+    num_countries: int,
+    d_model: int = 8,
+    num_heads: int = 4,
+):
+
+    set_seeds(seed=42)
+
+    # Inputs
+    temporal_inputs = Input(shape=(input_sequence_length, 5), name="temporal_inputs")
+    trend_inputs = Input(shape=(input_sequence_length, 12), name="trend_inputs")
+    country_inputs = Input(shape=(num_countries,), dtype="int32", name="country_inputs")
+
+    # Process country features
+    country_embedding = Embedding(
+        input_dim=num_countries,
+        output_dim=d_model,
+        mask_zero=False,
+        name="country_embedding",
+    )(
+        country_inputs
+    )  # Output shape: (batch_size, 1, d_model)
+
+    # Flatten the embedding output
+    country_embedding = Flatten(name="flatten_country_embedding")(country_embedding)
+
+    # Repeat the country embedding across timesteps
+    country_embedding_repeated = RepeatVector(
+        input_sequence_length, name="repeat_country_embedding"
+    )(country_embedding)
+
+    # Projection of temporal inputs to match Transformer dimensions
+    temporal_projection = Dense(d_model, activation="tanh", name="temporal_projection")(
+        temporal_inputs
+    )
+
+    # Combine all features
+    combined_features = Concatenate()([temporal_projection, country_embedding_repeated])
+
+    transformer_output = combined_features
+    for _ in range(3):
+        transformer_output = TransformerEncoder(
+            intermediate_dim=16, num_heads=num_heads
+        )(transformer_output)
+
+    lstm_output = LSTM(units=64, name="lstm_trend")(trend_inputs)
+
+    transformer_flattened = GlobalAveragePooling1D(name="flatten_transformer")(
+        transformer_output
+    )
+    transformer_flattened = Dense(1, activation="sigmoid")(transformer_flattened)
+    # Concatenate flattened Transformer output with LSTM output
+    merged_features = Concatenate(name="concatenate_transformer_lstm")(
+        [transformer_flattened, lstm_output]
+    )
+    # Repeat the merged features to match the output sequence length
+    decoder_initial = RepeatVector(
+        output_sequence_length, name="repeat_merged_features"
+    )(merged_features)
+
+    decoder_lstm = LSTM(
+        units=64,
+        return_sequences=True,
+        recurrent_regularizer=regularizers.L1L2(l1=1e-5, l2=1e-4),
+    )(decoder_initial)
+
+    # Output Dense layer
+    output = Dense(units=1, activation="linear", name="output_dense")(decoder_lstm)
+
+    model = Model(
+        inputs=[temporal_inputs, trend_inputs, country_inputs], outputs=output
+    )
+
+    model.compile(
+        optimizer=tf.keras.optimizers.Adam(learning_rate=0.001),
+        loss="mse",
+        metrics=["mse"],
+    )
+
+    return model
+
+
+# Create the hybrid model
+model = build_hybrid_model(
+    input_sequence_length=6,
+    output_sequence_length=6,
+    num_countries=len(np.unique(train_data["static_features"])) + 1,
+    d_model=8,
+    num_heads=4,
+)
+
+# Configure StringLookup
+label_encoder = StringLookup(output_mode="one_hot", num_oov_indices=1)
+
+# Adapt and encode
+label_encoder.adapt(train_data["static_features"])
+
+train_static_encoded = label_encoder(train_data["static_features"])
+val_static_encoded = label_encoder(val_data["static_features"])
+test_static_encoded = label_encoder(test_data["static_features"])
+
+# Convert sequences with proper type casting
+X_train_seq = np.asarray(train_data["trend_sequences"]).astype(np.float32)
+X_val_seq = np.asarray(val_data["trend_sequences"]).astype(np.float32)
+X_train_temporal = np.asarray(train_data["temporal_sequences"]).astype(np.float32)
+X_val_temporal = np.asarray(val_data["temporal_sequences"]).astype(np.float32)
+
+# Define callbacks with proper monitoring strategy
+callbacks = [
+    keras.callbacks.EarlyStopping(
+        monitor="val_loss",
+        patience=10,
+        restore_best_weights=True,  # Important for best model preservation
+        mode="min",
+    ),
+    keras.callbacks.ReduceLROnPlateau(
+        monitor="val_loss", factor=0.2, patience=5, min_lr=1e-6, mode="min", verbose=1
+    ),
+]
+
+train_outputs = train_data["output_sequences"].astype(np.float32)
+val_outputs = val_data["output_sequences"].astype(np.float32)
+test_output = test_data["output_sequences"].astype(np.float32)
+# Training setup
+
+history = model.fit(
+    [X_train_temporal, X_train_seq, train_static_encoded],
+    train_outputs,
+    validation_data=(
+        [X_val_temporal, X_val_seq, val_static_encoded],
+        val_data["output_sequences"].astype(np.float32),
+    ),
+    epochs=20,
+    batch_size=32,
+    callbacks=[
+        tf.keras.callbacks.EarlyStopping(
+            monitor="val_loss", patience=10, restore_best_weights=True
+        )
+    ],
+)
+
+# Make predictions
+predictions = model.predict(
+    [
+        test_data["temporal_sequences"].astype(np.float32),
+        test_data["trend_sequences"].astype(np.float32),
+        test_static_encoded,
+    ]
+)
+
+# Calculate the predictions
+predictions = tf.squeeze(predictions)
+
+# Calculate basic metrics
+hybrid_metrics = calculate_metrics(test_data["output_sequences"], predictions)
+
+# Plot Lorenz curves and get Mutual Gini
+hybrid_mutual_gini = plot_lorenz_analysis(test_data["output_sequences"], predictions)
+
+"""
+Conclusion: While LSTMs provide a solid baseline for capturing sequential patterns, the
+hybrid approach's additional attention mechanisms allow it to adaptively focus on the
+relevant temporal/seasonal features for prediction.
+"""
