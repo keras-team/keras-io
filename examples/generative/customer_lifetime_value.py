@@ -55,7 +55,6 @@ def set_seeds(seed=42):
 import matplotlib.pyplot as plt
 
 # Keras imports
-from keras import layers
 from keras import Model
 from keras.layers import (
     Input,
