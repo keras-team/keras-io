@@ -1,4 +1,4 @@
-# Classification with KerasHub
+# Image Classification with KerasHub
 
 **Author:** [Gowtham Paimagam](https://github.com/gowthamkpr), [lukewood](https://lukewood.xyz)<br>
 **Date created:** 09/24/2024<br>

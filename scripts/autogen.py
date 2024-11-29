@@ -25,36 +25,17 @@ from master import MASTER
 from examples_master import EXAMPLES_MASTER
 import tutobooks
 import generate_tf_guides
-import render_tags
+import render_presets
 
-try:
-    import keras_hub
-except Exception as e:
-    print(f"Could not import KerasHub. Exception: {e}")
-    keras_hub = None
-
-try:
-    import keras_cv
-except Exception as e:
-    print(f"Could not import Keras CV. Exception: {e}")
-    keras_cv = None
-
-try:
-    import keras_nlp
-except Exception as e:
-    print(f"Could not import Keras NLP. Exception: {e}")
-    keras_nlp = None
 
 EXAMPLES_GH_LOCATION = Path("keras-team") / "keras-io" / "blob" / "master" / "examples"
 GUIDES_GH_LOCATION = Path("keras-team") / "keras-io" / "blob" / "master" / "guides"
 KERAS_TEAM_GH = "https://github.com/keras-team"
 PROJECT_URL = {
-    "keras": f"{KERAS_TEAM_GH}/keras/tree/v3.6.0/",
+    "keras": f"{KERAS_TEAM_GH}/keras/tree/v3.7.0/",
     "keras_tuner": f"{KERAS_TEAM_GH}/keras-tuner/tree/v1.4.7/",
-    "keras_cv": f"{KERAS_TEAM_GH}/keras-cv/tree/v0.9.0/",
-    "keras_nlp": f"{KERAS_TEAM_GH}/keras-nlp/tree/v0.15.1/",
     "keras_hub": f"{KERAS_TEAM_GH}/keras-hub/tree/v0.17.0/",
-    "tf_keras": f"{KERAS_TEAM_GH}/tf-keras/tree/v2.17.0/",
+    "tf_keras": f"{KERAS_TEAM_GH}/tf-keras/tree/v2.18.0/",
 }
 USE_MULTIPROCESSING = False
 
@@ -371,19 +352,41 @@ class KerasIO:
             Path(self.templates_dir) / "guides",
             ext=".md",
         )
-        # Special cases
+        # Special cases.
+        # - Copy the Keras intro guide to /getting_started/.
+        # - Copy the KerasHub guides to /keras_hub/.
+        # - Copy the KerasTuner guides to /keras_tuner/.
+        templates_path = Path(self.templates_dir)
         shutil.copyfile(
-            Path(self.templates_dir) / "guides" / "intro_to_keras_for_engineers.md",
-            Path(self.templates_dir)
+            templates_path / "guides" / "intro_to_keras_for_engineers.md",
+            templates_path
             / "getting_started"
             / "intro_to_keras_for_engineers.md",
+        )
+        shutil.copyfile(
+            templates_path / "guides" / "keras_hub" / "getting_started.md",
+            templates_path / "keras_hub" / "getting_started.md",
+        )
+        shutil.copyfile(
+            templates_path / "guides" / "keras_tuner" / "getting_started.md",
+            templates_path / "keras_tuner" / "getting_started.md",
+        )
+        shutil.copytree(
+            templates_path / "guides" / "keras_hub",
+            templates_path / "keras_hub" / "guides",
+            dirs_exist_ok=True,
+        )
+        shutil.copytree(
+            templates_path / "guides" / "keras_tuner",
+            templates_path / "keras_tuner" / "guides",
+            dirs_exist_ok=True,
         )
 
         # Examples
         for dir_name in os.listdir(Path(self.examples_dir)):
             dir_path = Path(self.examples_dir) / dir_name  # e.g. examples/nlp
             if os.path.isdir(dir_path):
-                dst_dir = Path(self.templates_dir) / "examples" / dir_name
+                dst_dir = templates_path / "examples" / dir_name
                 if os.path.exists(dst_dir):
                     shutil.rmtree(dst_dir)
                 os.makedirs(dst_dir)
@@ -400,9 +403,9 @@ class KerasIO:
                 else:
                     version = 2
                 example_name_to_version[example_name] = version
-        for section_name in os.listdir(Path(self.templates_dir) / "examples"):
+        for section_name in os.listdir(templates_path / "examples"):
             # e.g. templates/examples/nlp
-            dir_path = Path(self.templates_dir) / "examples" / section_name
+            dir_path = templates_path / "examples" / section_name
             if not os.path.isdir(dir_path):
                 continue
             for example_fname in os.listdir(dir_path):
@@ -545,12 +548,8 @@ class KerasIO:
                     "missing {{toc}} tag." % (template_path,)
                 )
             template = template.replace("{{toc}}", toc)
-        if "keras_nlp/" in path_stack and "models/" in path_stack:
-            template = render_tags.render_tags(template, keras_nlp)
-        if "keras_cv/" in path_stack and "models/" in path_stack:
-            template = render_tags.render_tags(template, keras_cv)
-        if "keras_hub/" in path_stack and "models/" in path_stack:
-            template = render_tags.render_tags(template, keras_hub)
+        if "keras_hub/" in path_stack:
+            template = render_presets.render_tags(template)
         source_path = Path(self.md_sources_dir) / Path(*path_stack)
         if path.endswith("/"):
             md_source_path = source_path / "index.md"
@@ -594,7 +593,7 @@ class KerasIO:
             for entry in children:
                 self.make_md_source_for_entry(entry, path_stack[:], title_stack[:])
 
-    def make_map_of_symbol_names_to_api_urls(self):
+    def make_symbol_to_link_map(self):
         def recursive_make_map(entry, current_url):
             current_url /= entry["path"]
             entry_map = {}
@@ -616,9 +615,12 @@ class KerasIO:
                     entry_map.update(recursive_make_map(child, current_url))
             return entry_map
 
-        self._map_of_symbol_names_to_api_urls = recursive_make_map(
-            self.master, Path("")
-        )
+        urls = recursive_make_map(self.master, Path(""))
+        self._symbol_to_link_map = {}
+        for key, value in urls.items():
+            symbol = f"`{key}`"
+            link = f"[{symbol}]({value})"
+            self._symbol_to_link_map[symbol] = link
 
     def generate_examples_landing_page(self):
         """Create the html file /examples/index.html.
@@ -740,7 +742,7 @@ class KerasIO:
             )
 
     def render_md_sources_to_html(self):
-        self.make_map_of_symbol_names_to_api_urls()
+        self.make_symbol_to_link_map()
         print("Rendering md sources to HTML")
         base_template = jinja2.Template(open(Path(self.theme_dir) / "base.html").read())
         docs_template = jinja2.Template(open(Path(self.theme_dir) / "docs.html").read())
@@ -886,12 +888,8 @@ class KerasIO:
         md_content = replace_links(md_content)
 
         # Convert Keras symbols to links to the Keras docs
-        for symbol, symbol_url in self._map_of_symbol_names_to_api_urls.items():
-            md_content = re.sub(
-                r"`((tf\.|)" + symbol + ")`",
-                r"[`\1`](" + symbol_url + ")",
-                md_content,
-            )
+        for symbol, link in self._symbol_to_link_map.items():
+            md_content = md_content.replace(symbol, link)
 
         # Convert TF symbols to links to tensorflow.org
         tmp_content = copy.copy(md_content)
@@ -1033,6 +1031,8 @@ def copy_inner_contents(src, dst, ext=".md"):
         if fname.endswith(ext):
             shutil.copyfile(fpath, fdst)
         if os.path.isdir(fpath):
+            if not os.path.exists(fdst):
+                os.mkdir(fdst)
             copy_inner_contents(fpath, fdst, ext)
 
 

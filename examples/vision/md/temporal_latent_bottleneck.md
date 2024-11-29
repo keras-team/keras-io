@@ -2,7 +2,7 @@
 
 **Author:** [Aritra Roy Gosthipaty](https://twitter.com/ariG23498), [Suvaditya Mukherjee](https://twitter.com/halcyonrayes)<br>
 **Date created:** 2023/03/12<br>
-**Last modified:** 2023/03/12<br>
+**Last modified:** 2024/11/12<br>
 **Description:** Image Classification with Temporal Latent Bottleneck Networks.
 
 
@@ -47,29 +47,23 @@ mechanism to perform image classification on the CIFAR-10 dataset. We implement 
 model by making a custom `RNNCell` implementation in order to make a **performant** and
 **vectorized** design.
 
-_Note_: This example makes use of `TensorFlow 2.12.0`, which must be installed into our
-system
-
 ---
 ## Setup imports
 
 
 ```python
-import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras import layers
-from tensorflow.keras import mixed_precision
-from tensorflow.keras.optimizers import AdamW
+import os
 
+import keras
+from keras import layers, ops, mixed_precision
+from keras.optimizers import AdamW
+import numpy as np
 import random
 from matplotlib import pyplot as plt
 
 # Set seed for reproducibility.
 keras.utils.set_random_seed(42)
-
-AUTO = tf.data.AUTOTUNE
 ```
-
 ---
 ## Setting required configuration
 
@@ -112,13 +106,6 @@ if config["mixed_precision"]:
     mixed_precision.set_global_policy(policy)
 ```
 
-<div class="k-default-codeblock">
-```
-INFO:tensorflow:Mixed precision compatibility check (mixed_float16): OK
-Your GPU will likely run quickly with dtype policy mixed_float16 as it has compute capability of at least 7.0. Your GPU: NVIDIA A100-PCIE-40GB, compute capability 8.0
-
-```
-</div>
 ---
 ## Loading the CIFAR-10 dataset
 
@@ -200,43 +187,52 @@ def test_map_fn(image, label):
 
 ```
 
----
-## Load dataset into `tf.data.Dataset` object
 
-- We take the `np.ndarray` instance of the datasets and move them into a
-`tf.data.Dataset` instance
-- Apply augmentations using
-[`.map()`](https://www.tensorflow.org/api_docs/python/tf/data/Dataset#map)
-- Shuffle the dataset using
-[`.shuffle()`](https://www.tensorflow.org/api_docs/python/tf/data/Dataset#shuffle)
-- Batch the dataset using
-[`.batch()`](https://www.tensorflow.org/api_docs/python/tf/data/Dataset#batch)
-- Enable pre-fetching of batches using
-[`.prefetch()`](https://www.tensorflow.org/api_docs/python/tf/data/Dataset#prefetch)
+---
+## Load dataset into `PyDataset` object
+
+- We take the `np.ndarray` instance of the datasets and wrap a class around it,
+wrapping a `keras.utils.PyDataset` and apply augmentations with keras
+preprocessing layers.
 
 
 ```python
-train_ds = tf.data.Dataset.from_tensor_slices((x_train, y_train))
-train_ds = (
-    train_ds.map(train_map_fn, num_parallel_calls=AUTO)
-    .shuffle(config["buffer_size"])
-    .batch(config["batch_size"], num_parallel_calls=AUTO)
-    .prefetch(AUTO)
-)
 
-val_ds = tf.data.Dataset.from_tensor_slices((x_val, y_val))
-val_ds = (
-    val_ds.map(test_map_fn, num_parallel_calls=AUTO)
-    .batch(config["batch_size"], num_parallel_calls=AUTO)
-    .prefetch(AUTO)
-)
+class Dataset(keras.utils.PyDataset):
+    def __init__(
+        self, x_data, y_data, batch_size, preprocess_fn=None, shuffle=False, **kwargs
+    ):
+        if shuffle:
+            perm = np.random.permutation(len(x_data))
+            x_data = x_data[perm]
+            y_data = y_data[perm]
+        self.x_data = x_data
+        self.y_data = y_data
+        self.preprocess_fn = preprocess_fn
+        self.batch_size = batch_size
+        super().__init__(*kwargs)
 
-test_ds = tf.data.Dataset.from_tensor_slices((x_test, y_test))
-test_ds = (
-    test_ds.map(test_map_fn, num_parallel_calls=AUTO)
-    .batch(config["batch_size"], num_parallel_calls=AUTO)
-    .prefetch(AUTO)
+    def __len__(self):
+        return len(self.x_data) // self.batch_size
+
+    def __getitem__(self, idx):
+        batch_x, batch_y = [], []
+        for i in range(idx * self.batch_size, (idx + 1) * self.batch_size):
+            x, y = self.x_data[i], self.y_data[i]
+            if self.preprocess_fn:
+                x, y = self.preprocess_fn(x, y)
+            batch_x.append(x)
+            batch_y.append(y)
+        batch_x = ops.stack(batch_x, axis=0)
+        batch_y = ops.stack(batch_y, axis=0)
+        return batch_x, batch_y
+
+
+train_ds = Dataset(
+    x_train, y_train, config["batch_size"], preprocess_fn=train_map_fn, shuffle=True
 )
+val_ds = Dataset(x_val, y_val, config["batch_size"], preprocess_fn=test_map_fn)
+test_ds = Dataset(x_test, y_test, config["batch_size"], preprocess_fn=test_map_fn)
 ```
 
 ---
@@ -280,8 +276,7 @@ A PyTorch-style pseudocode is also proposed by the authors as shown in **Algorit
 
 This custom `keras.layers.Layer` is useful for generating patches from the image and
 transform them into a higher-dimensional embedding space using `keras.layers.Embedding`.
-The patching operation is done using a `keras.layers.Conv2D` instance instead of a
-traditional `tf.image.extract_patches` to allow for vectorization.
+The patching operation is done using a `keras.layers.Conv2D` instance.
 
 Once the patching of images is complete, we reshape the image patches in order to get a
 flattened representation where the number of dimensions is the embedding dimension. At
@@ -327,7 +322,7 @@ class PatchEmbedding(layers.Layer):
         self.num_patches = patch_resolution[0] * patch_resolution[1]
 
         # Define the positions of the patches.
-        self.positions = tf.range(start=0, limit=self.num_patches, delta=1)
+        self.positions = ops.arange(start=0, stop=self.num_patches, step=1)
 
         # Create the layers.
         self.projection = layers.Conv2D(
@@ -393,7 +388,7 @@ class FeedForwardNetwork(layers.Layer):
         # Create the layers.
         self.ffn = keras.Sequential(
             [
-                layers.Dense(units=4 * dims, activation=tf.nn.gelu),
+                layers.Dense(units=4 * dims, activation="gelu"),
                 layers.Dense(units=dims),
                 layers.Dropout(rate=dropout),
             ],
@@ -504,7 +499,13 @@ class AttentionWithFFN(layers.Layer):
     ):
         super().__init__(**kwargs)
         # Create the layers.
-        self.attention = BaseAttention(
+        self.fast_stream_attention = BaseAttention(
+            num_heads=num_heads,
+            key_dim=key_dim,
+            dropout=attn_dropout,
+            name="base_attn",
+        )
+        self.slow_stream_attention = BaseAttention(
             num_heads=num_heads,
             key_dim=key_dim,
             dropout=attn_dropout,
@@ -518,12 +519,25 @@ class AttentionWithFFN(layers.Layer):
 
         self.attention_scores = None
 
-    def call(self, query, key, value):
+    def build(self, input_shape):
+        self.built = True
+
+    def call(self, query, key, value, stream="fast"):
         # Apply the attention module.
-        x = self.attention(query, key, value)
+        attention_layer = {
+            "fast": self.fast_stream_attention,
+            "slow": self.slow_stream_attention,
+        }[stream]
+        if len(query.shape) == 2:
+            query = ops.expand_dims(query, -1)
+        if len(key.shape) == 2:
+            key = ops.expand_dims(key, -1)
+        if len(value.shape) == 2:
+            value = ops.expand_dims(value, -1)
+        x = attention_layer(query, key, value)
 
         # Save the attention scores for later visualization.
-        self.attention_scores = self.attention.attention_scores
+        self.attention_scores = attention_layer.attention_scores
 
         # Apply the FFN.
         x = self.ffn(x)
@@ -598,10 +612,9 @@ class CustomRecurrentCell(layers.Layer):
         self.key_dim = key_dim
         self.attn_dropout = attn_dropout
 
-        # Create the state_size and output_size. This is important for
+        # Create state_size. This is important for
         # custom recurrence logic.
-        self.state_size = tf.TensorShape([chunk_size, ffn_dims])
-        self.output_size = tf.TensorShape([chunk_size, ffn_dims])
+        self.state_size = chunk_size * ffn_dims
 
         self.get_attention_scores = False
         self.attention_scores = []
@@ -642,18 +655,23 @@ class CustomRecurrentCell(layers.Layer):
             name=f"tlb_cross_attn_ffn",
         )
 
+    def build(self, input_shape):
+        self.built = True
+
     def call(self, inputs, states):
         # inputs => (batch, chunk_size, dims)
         # states => [(batch, chunk_size, units)]
-        slow_stream = states[0]
+        slow_stream = ops.reshape(states[0], (-1, self.chunk_size, self.ffn_dims))
         fast_stream = inputs
 
         for layer_idx, layer in enumerate(self.perceptual_module):
-            fast_stream = layer(query=fast_stream, key=fast_stream, value=fast_stream)
+            fast_stream = layer(
+                query=fast_stream, key=fast_stream, value=fast_stream, stream="fast"
+            )
 
             if layer_idx % self.r == 0:
                 fast_stream = layer(
-                    query=fast_stream, key=slow_stream, value=slow_stream
+                    query=fast_stream, key=slow_stream, value=slow_stream, stream="slow"
                 )
 
         slow_stream = self.tlb_module(
@@ -664,7 +682,9 @@ class CustomRecurrentCell(layers.Layer):
         if self.get_attention_scores:
             self.attention_scores.append(self.tlb_module.attention_scores)
 
-        return fast_stream, [slow_stream]
+        return fast_stream, [
+            ops.reshape(slow_stream, (-1, self.chunk_size * self.ffn_dims))
+        ]
 
 ```
 
@@ -682,10 +702,10 @@ class TemporalLatentBottleneckModel(keras.Model):
         custom_cell (`keras.layers.Layer`): Custom Recurrent Cell.
     """
 
-    def __init__(self, patch_layer, custom_cell, **kwargs):
+    def __init__(self, patch_layer, custom_cell, unroll_loops=False, **kwargs):
         super().__init__(**kwargs)
         self.patch_layer = patch_layer
-        self.rnn = layers.RNN(custom_cell, name="rnn")
+        self.rnn = layers.RNN(custom_cell, unroll=unroll_loops, name="rnn")
         self.gap = layers.GlobalAveragePooling1D(name="gap")
         self.head = layers.Dense(10, activation="softmax", dtype="float32", name="head")
 
@@ -770,68 +790,94 @@ history = model.fit(
 <div class="k-default-codeblock">
 ```
 Epoch 1/30
-20/20 [==============================] - 104s 3s/step - loss: 2.6284 - accuracy: 0.1010 - val_loss: 2.2835 - val_accuracy: 0.1251
-Epoch 2/30
-20/20 [==============================] - 35s 2s/step - loss: 2.2797 - accuracy: 0.1542 - val_loss: 2.1721 - val_accuracy: 0.1846
-Epoch 3/30
-20/20 [==============================] - 34s 2s/step - loss: 2.1989 - accuracy: 0.1883 - val_loss: 2.1288 - val_accuracy: 0.2241
-Epoch 4/30
-20/20 [==============================] - 34s 2s/step - loss: 2.1267 - accuracy: 0.2192 - val_loss: 2.0919 - val_accuracy: 0.2477
-Epoch 5/30
-20/20 [==============================] - 33s 2s/step - loss: 2.0653 - accuracy: 0.2393 - val_loss: 2.0134 - val_accuracy: 0.2671
-Epoch 6/30
-20/20 [==============================] - 34s 2s/step - loss: 2.0327 - accuracy: 0.2524 - val_loss: 2.0258 - val_accuracy: 0.2665
-Epoch 7/30
-20/20 [==============================] - 34s 2s/step - loss: 2.0047 - accuracy: 0.2598 - val_loss: 1.9871 - val_accuracy: 0.2831
-Epoch 8/30
-20/20 [==============================] - 34s 2s/step - loss: 1.9765 - accuracy: 0.2781 - val_loss: 1.9550 - val_accuracy: 0.2968
-Epoch 9/30
-20/20 [==============================] - 34s 2s/step - loss: 1.9432 - accuracy: 0.2883 - val_loss: 1.9559 - val_accuracy: 0.2969
-Epoch 10/30
-20/20 [==============================] - 33s 2s/step - loss: 1.9062 - accuracy: 0.3020 - val_loss: 1.8967 - val_accuracy: 0.3200
-Epoch 11/30
-20/20 [==============================] - 33s 2s/step - loss: 1.8741 - accuracy: 0.3158 - val_loss: 1.8648 - val_accuracy: 0.3330
-Epoch 12/30
-20/20 [==============================] - 33s 2s/step - loss: 1.8336 - accuracy: 0.3282 - val_loss: 1.7863 - val_accuracy: 0.3464
-Epoch 13/30
-20/20 [==============================] - 33s 2s/step - loss: 1.7931 - accuracy: 0.3434 - val_loss: 1.7364 - val_accuracy: 0.3669
-Epoch 14/30
-20/20 [==============================] - 34s 2s/step - loss: 1.7491 - accuracy: 0.3558 - val_loss: 1.7104 - val_accuracy: 0.3710
-Epoch 15/30
-20/20 [==============================] - 34s 2s/step - loss: 1.7182 - accuracy: 0.3686 - val_loss: 1.6883 - val_accuracy: 0.3866
-Epoch 16/30
-20/20 [==============================] - 33s 2s/step - loss: 1.6819 - accuracy: 0.3790 - val_loss: 1.6493 - val_accuracy: 0.3933
-Epoch 17/30
-20/20 [==============================] - 33s 2s/step - loss: 1.6594 - accuracy: 0.3873 - val_loss: 1.6021 - val_accuracy: 0.4161
-Epoch 18/30
-20/20 [==============================] - 33s 2s/step - loss: 1.6279 - accuracy: 0.3946 - val_loss: 1.5949 - val_accuracy: 0.4170
-Epoch 19/30
-20/20 [==============================] - 34s 2s/step - loss: 1.6127 - accuracy: 0.4015 - val_loss: 1.5672 - val_accuracy: 0.4239
-Epoch 20/30
-20/20 [==============================] - 33s 2s/step - loss: 1.5995 - accuracy: 0.4079 - val_loss: 1.5795 - val_accuracy: 0.4223
-Epoch 21/30
-20/20 [==============================] - 34s 2s/step - loss: 1.5809 - accuracy: 0.4167 - val_loss: 1.5294 - val_accuracy: 0.4390
-Epoch 22/30
-20/20 [==============================] - 34s 2s/step - loss: 1.5572 - accuracy: 0.4254 - val_loss: 1.5192 - val_accuracy: 0.4455
-Epoch 23/30
-20/20 [==============================] - 33s 2s/step - loss: 1.5468 - accuracy: 0.4291 - val_loss: 1.5243 - val_accuracy: 0.4424
-Epoch 24/30
-20/20 [==============================] - 34s 2s/step - loss: 1.5347 - accuracy: 0.4335 - val_loss: 1.4920 - val_accuracy: 0.4532
-Epoch 25/30
-20/20 [==============================] - 33s 2s/step - loss: 1.5245 - accuracy: 0.4387 - val_loss: 1.4805 - val_accuracy: 0.4584
-Epoch 26/30
-20/20 [==============================] - 33s 2s/step - loss: 1.5057 - accuracy: 0.4469 - val_loss: 1.4754 - val_accuracy: 0.4592
-Epoch 27/30
-20/20 [==============================] - 34s 2s/step - loss: 1.5013 - accuracy: 0.4457 - val_loss: 1.4688 - val_accuracy: 0.4619
-Epoch 28/30
-20/20 [==============================] - 33s 2s/step - loss: 1.4852 - accuracy: 0.4548 - val_loss: 1.4543 - val_accuracy: 0.4704
-Epoch 29/30
-20/20 [==============================] - 34s 2s/step - loss: 1.4728 - accuracy: 0.4570 - val_loss: 1.4437 - val_accuracy: 0.4751
-Epoch 30/30
-20/20 [==============================] - 34s 2s/step - loss: 1.4652 - accuracy: 0.4606 - val_loss: 1.4546 - val_accuracy: 0.4726
+19/19 ━━━━━━━━━━━━━━━━━━━━ 1270s 62s/step - accuracy: 0.1166 - loss: 3.1132 - val_accuracy: 0.1486 - val_loss: 2.2887
 
-```
-</div>
+Epoch 2/30
+19/19 ━━━━━━━━━━━━━━━━━━━━ 1152s 60s/step - accuracy: 0.1798 - loss: 2.2290 - val_accuracy: 0.2249 - val_loss: 2.1083
+
+Epoch 3/30
+19/19 ━━━━━━━━━━━━━━━━━━━━ 1150s 60s/step - accuracy: 0.2371 - loss: 2.0661 - val_accuracy: 0.2610 - val_loss: 2.0294
+
+Epoch 4/30
+19/19 ━━━━━━━━━━━━━━━━━━━━ 1150s 60s/step - accuracy: 0.2631 - loss: 1.9997 - val_accuracy: 0.2765 - val_loss: 2.0008
+
+Epoch 5/30
+19/19 ━━━━━━━━━━━━━━━━━━━━ 1151s 60s/step - accuracy: 0.2869 - loss: 1.9634 - val_accuracy: 0.2985 - val_loss: 1.9578
+
+Epoch 6/30
+19/19 ━━━━━━━━━━━━━━━━━━━━ 1151s 60s/step - accuracy: 0.3048 - loss: 1.9314 - val_accuracy: 0.3055 - val_loss: 1.9324
+
+Epoch 7/30
+ 19/19 ━━━━━━━━━━━━━━━━━━━━ 1152s 60s/step - accuracy: 0.3136 - loss: 1.8977 - val_accuracy: 0.3209 - val_loss: 1.9050
+
+Epoch 8/30
+19/19 ━━━━━━━━━━━━━━━━━━━━ 1151s 60s/step - accuracy: 0.3238 - loss: 1.8717 - val_accuracy: 0.3231 - val_loss: 1.8874
+
+Epoch 9/30
+19/19 ━━━━━━━━━━━━━━━━━━━━ 1152s 60s/step - accuracy: 0.3414 - loss: 1.8453 - val_accuracy: 0.3445 - val_loss: 1.8334
+
+Epoch 10/30
+19/19 ━━━━━━━━━━━━━━━━━━━━ 1152s 60s/step - accuracy: 0.3469 - loss: 1.8119 - val_accuracy: 0.3591 - val_loss: 1.8019
+
+Epoch 11/30
+19/19 ━━━━━━━━━━━━━━━━━━━━ 1151s 60s/step - accuracy: 0.3648 - loss: 1.7712 - val_accuracy: 0.3793 - val_loss: 1.7513
+
+Epoch 12/30
+19/19 ━━━━━━━━━━━━━━━━━━━━ 1146s 60s/step - accuracy: 0.3730 - loss: 1.7332 - val_accuracy: 0.3667 - val_loss: 1.7464
+
+Epoch 13/30
+19/19 ━━━━━━━━━━━━━━━━━━━━ 1148s 60s/step - accuracy: 0.3918 - loss: 1.6986 - val_accuracy: 0.3995 - val_loss: 1.6843
+
+Epoch 14/30
+19/19 ━━━━━━━━━━━━━━━━━━━━ 1147s 60s/step - accuracy: 0.3975 - loss: 1.6679 - val_accuracy: 0.4026 - val_loss: 1.6602
+
+Epoch 15/30
+19/19 ━━━━━━━━━━━━━━━━━━━━ 1146s 60s/step - accuracy: 0.4078 - loss: 1.6400 - val_accuracy: 0.3990 - val_loss: 1.6536
+
+Epoch 16/30
+19/19 ━━━━━━━━━━━━━━━━━━━━ 1146s 60s/step - accuracy: 0.4135 - loss: 1.6224 - val_accuracy: 0.4216 - val_loss: 1.6144
+
+Epoch 17/30
+19/19 ━━━━━━━━━━━━━━━━━━━━ 1147s 60s/step - accuracy: 0.4254 - loss: 1.5884 - val_accuracy: 0.4281 - val_loss: 1.5788
+
+Epoch 18/30
+19/19 ━━━━━━━━━━━━━━━━━━━━ 1146s 60s/step - accuracy: 0.4383 - loss: 1.5614 - val_accuracy: 0.4294 - val_loss: 1.5731
+
+Epoch 19/30
+19/19 ━━━━━━━━━━━━━━━━━━━━ 1146s 60s/step - accuracy: 0.4419 - loss: 1.5440 - val_accuracy: 0.4338 - val_loss: 1.5633
+
+Epoch 20/30
+19/19 ━━━━━━━━━━━━━━━━━━━━ 1146s 60s/step - accuracy: 0.4439 - loss: 1.5268 - val_accuracy: 0.4430 - val_loss: 1.5211
+
+Epoch 21/30
+19/19 ━━━━━━━━━━━━━━━━━━━━ 1147s 60s/step - accuracy: 0.4509 - loss: 1.5108 - val_accuracy: 0.4504 - val_loss: 1.5054
+
+Epoch 22/30
+19/19 ━━━━━━━━━━━━━━━━━━━━ 1146s 60s/step - accuracy: 0.4629 - loss: 1.4828 - val_accuracy: 0.4563 - val_loss: 1.4974
+
+Epoch 23/30
+19/19 ━━━━━━━━━━━━━━━━━━━━ 1145s 60s/step - accuracy: 0.4660 - loss: 1.4682 - val_accuracy: 0.4647 - val_loss: 1.4794
+
+Epoch 24/30
+19/19 ━━━━━━━━━━━━━━━━━━━━ 1146s 60s/step - accuracy: 0.4680 - loss: 1.4524 - val_accuracy: 0.4640 - val_loss: 1.4681
+
+Epoch 25/30
+19/19 ━━━━━━━━━━━━━━━━━━━━ 1145s 60s/step - accuracy: 0.4786 - loss: 1.4297 - val_accuracy: 0.4663 - val_loss: 1.4496
+
+Epoch 26/30
+19/19 ━━━━━━━━━━━━━━━━━━━━ 1146s 60s/step - accuracy: 0.4889 - loss: 1.4149 - val_accuracy: 0.4769 - val_loss: 1.4350
+
+Epoch 27/30
+19/19 ━━━━━━━━━━━━━━━━━━━━ 1146s 60s/step - accuracy: 0.4925 - loss: 1.4009 - val_accuracy: 0.4808 - val_loss: 1.4317
+
+Epoch 28/30
+19/19 ━━━━━━━━━━━━━━━━━━━━ 1145s 60s/step - accuracy: 0.4907 - loss: 1.3994 - val_accuracy: 0.4810 - val_loss: 1.4307
+
+Epoch 29/30
+19/19 ━━━━━━━━━━━━━━━━━━━━ 1146s 60s/step - accuracy: 0.5000 - loss: 1.3832 - val_accuracy: 0.4844 - val_loss: 1.3996
+
+Epoch 30/30
+19/19 ━━━━━━━━━━━━━━━━━━━━ 1146s 60s/step - accuracy: 0.5076 - loss: 1.3592 - val_accuracy: 0.4890 - val_loss: 1.3961
 ---
 ## Visualize training metrics
 
@@ -882,27 +928,37 @@ these values.
 
 def score_to_viz(chunk_score):
     # get the most attended token
-    chunk_viz = tf.math.reduce_max(chunk_score, axis=-2)
+    chunk_viz = ops.max(chunk_score, axis=-2)
     # get the mean across heads
-    chunk_viz = tf.math.reduce_mean(chunk_viz, axis=1)
+    chunk_viz = ops.mean(chunk_viz, axis=1)
     return chunk_viz
 
 
 # Get a batch of images and labels from the testing dataset
 images, labels = next(iter(test_ds))
 
+# Create a new model instance that is executed eagerly to allow saving
+# attention scores. This also requires unrolling loops
+eager_model = TemporalLatentBottleneckModel(
+    patch_layer=patch_layer, custom_cell=custom_rnn_cell, unroll_loops=True
+)
+eager_model.compile(run_eagerly=True, jit_compile=False)
+model.save("weights.keras")
+eager_model.load_weights("weights.keras")
+
 # Set the get_attn_scores flag to True
-model.rnn.cell.get_attention_scores = True
+eager_model.rnn.cell.get_attention_scores = True
 
 # Run the model with the testing images and grab the
 # attention scores.
-outputs = model(images)
-list_chunk_scores = model.rnn.cell.attention_scores
+outputs = eager_model(images)
+list_chunk_scores = eager_model.rnn.cell.attention_scores
 
 # Process the attention scores in order to visualize them
-list_chunk_viz = [score_to_viz(x) for x in list_chunk_scores]
-chunk_viz = tf.concat(list_chunk_viz[1:], axis=-1)
-chunk_viz = tf.reshape(
+num_chunks = (config["image_size"] // config["patch_size"]) ** 2 // config["chunk_size"]
+list_chunk_viz = [score_to_viz(x) for x in list_chunk_scores[-num_chunks:]]
+chunk_viz = ops.concatenate(list_chunk_viz, axis=-1)
+chunk_viz = ops.reshape(
     chunk_viz,
     (
         config["batch_size"],
@@ -924,6 +980,12 @@ Run the following code snippet to get different images and their attention maps.
 index = random.randint(0, config["batch_size"])
 orig_image = images[index]
 overlay_image = upsampled_heat_map[index, ..., 0]
+
+if keras.backend.backend() == "torch":
+    # when using the torch backend, we are required to ensure that the
+    # image is copied from the GPU
+    orig_image = orig_image.cpu().detach().numpy()
+    overlay_image = overlay_image.cpu().detach().numpy()
 
 # Plot the visualization
 fig, ax = plt.subplots(nrows=1, ncols=2, figsize=(10, 5))

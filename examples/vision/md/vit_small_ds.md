@@ -2,7 +2,7 @@
 
 **Author:** [Aritra Roy Gosthipaty](https://twitter.com/ariG23498)<br>
 **Date created:** 2022/01/07<br>
-**Last modified:** 2022/01/10<br>
+**Last modified:** 2024/11/27<br>
 **Description:** Training a ViT from scratch on smaller datasets with shifted patch tokenization and locality self-attention.
 
 
@@ -38,13 +38,7 @@ This example implements the ideas of the paper. A large part of this
 example is inspired from
 [Image classification with Vision Transformer](https://keras.io/examples/vision/image_classification_with_vision_transformer/).
 
-_Note_: This example requires TensorFlow 2.6 or higher, as well as
-[TensorFlow Addons](https://www.tensorflow.org/addons), which can be
-installed using the following command:
-
-```python
-pip install -qq -U tensorflow-addons
-```
+_Note_: This example requires TensorFlow 2.6 or higher.
 
 ---
 ## Setup
@@ -53,11 +47,11 @@ pip install -qq -U tensorflow-addons
 ```python
 import math
 import numpy as np
+import keras
+from keras import ops
+from keras import layers
 import tensorflow as tf
-from tensorflow import keras
-import tensorflow_addons as tfa
 import matplotlib.pyplot as plt
-from tensorflow.keras import layers
 
 # Setting seed for reproducibiltiy
 SEED = 42
@@ -221,17 +215,17 @@ class ShiftedPatchTokenization(layers.Layer):
             shift_width = self.half_patch
 
         # Crop the shifted images and pad them
-        crop = tf.image.crop_to_bounding_box(
+        crop = ops.image.crop_images(
             images,
-            offset_height=crop_height,
-            offset_width=crop_width,
+            top_cropping=crop_height,
+            left_cropping=crop_width,
             target_height=self.image_size - self.half_patch,
             target_width=self.image_size - self.half_patch,
         )
-        shift_pad = tf.image.pad_to_bounding_box(
+        shift_pad = ops.image.pad_images(
             crop,
-            offset_height=shift_height,
-            offset_width=shift_width,
+            top_padding=shift_height,
+            left_padding=shift_width,
             target_height=self.image_size,
             target_width=self.image_size,
         )
@@ -240,7 +234,7 @@ class ShiftedPatchTokenization(layers.Layer):
     def call(self, images):
         if not self.vanilla:
             # Concat the shifted images with the original image
-            images = tf.concat(
+            images = ops.concatenate(
                 [
                     images,
                     self.crop_shift_pad(images, mode="left-up"),
@@ -251,11 +245,11 @@ class ShiftedPatchTokenization(layers.Layer):
                 axis=-1,
             )
         # Patchify the images and flatten it
-        patches = tf.image.extract_patches(
+        patches = ops.image.extract_patches(
             images=images,
-            sizes=[1, self.patch_size, self.patch_size, 1],
+            size=(self.patch_size, self.patch_size),
             strides=[1, self.patch_size, self.patch_size, 1],
-            rates=[1, 1, 1, 1],
+            dilation_rate=1,
             padding="VALID",
         )
         flat_patches = self.flatten_patches(patches)
@@ -277,8 +271,9 @@ class ShiftedPatchTokenization(layers.Layer):
 # Get a random image from the training dataset
 # and resize the image
 image = x_train[np.random.choice(range(x_train.shape[0]))]
-resized_image = tf.image.resize(
-    tf.convert_to_tensor([image]), size=(IMAGE_SIZE, IMAGE_SIZE)
+resized_image = ops.cast(
+    ops.image.resize(ops.convert_to_tensor([image]), size=(IMAGE_SIZE, IMAGE_SIZE)),
+    dtype="float32",
 )
 
 # Vanilla patch maker: This takes an image and divides into
@@ -292,7 +287,7 @@ for row in range(n):
     for col in range(n):
         plt.subplot(n, n, count)
         count = count + 1
-        image = tf.reshape(patch[row][col], (PATCH_SIZE, PATCH_SIZE, 3))
+        image = ops.reshape(patch[row][col], (PATCH_SIZE, PATCH_SIZE, 3))
         plt.imshow(image)
         plt.axis("off")
 plt.show()
@@ -311,7 +306,7 @@ for index, name in enumerate(shifted_images):
         for col in range(n):
             plt.subplot(n, n, count)
             count = count + 1
-            image = tf.reshape(patch[row][col], (PATCH_SIZE, PATCH_SIZE, 5 * 3))
+            image = ops.reshape(patch[row][col], (PATCH_SIZE, PATCH_SIZE, 5 * 3))
             plt.imshow(image[..., 3 * index : 3 * index + 3])
             plt.axis("off")
     plt.show()
@@ -401,7 +396,7 @@ class PatchEncoder(layers.Layer):
         self.position_embedding = layers.Embedding(
             input_dim=num_patches, output_dim=projection_dim
         )
-        self.positions = tf.range(start=0, limit=self.num_patches, delta=1)
+        self.positions = ops.arange(start=0, stop=self.num_patches, step=1)
 
     def call(self, encoded_patches):
         encoded_positions = self.position_embedding(self.positions)
@@ -450,21 +445,21 @@ at a later stage.
 
 ```python
 
-class MultiHeadAttentionLSA(tf.keras.layers.MultiHeadAttention):
+class MultiHeadAttentionLSA(layers.MultiHeadAttention):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         # The trainable temperature term. The initial value is
         # the square root of the key dimension.
-        self.tau = tf.Variable(math.sqrt(float(self._key_dim)), trainable=True)
+        self.tau = keras.Variable(math.sqrt(float(self._key_dim)), trainable=True)
 
     def _compute_attention(self, query, key, value, attention_mask=None, training=None):
-        query = tf.multiply(query, 1.0 / self.tau)
-        attention_scores = tf.einsum(self._dot_product_equation, key, query)
+        query = ops.multiply(query, 1.0 / self.tau)
+        attention_scores = ops.einsum(self._dot_product_equation, key, query)
         attention_scores = self._masked_softmax(attention_scores, attention_mask)
         attention_scores_dropout = self._dropout_layer(
             attention_scores, training=training
         )
-        attention_output = tf.einsum(
+        attention_output = ops.einsum(
             self._combine_equation, attention_scores_dropout, value
         )
         return attention_output, attention_scores
@@ -479,14 +474,14 @@ class MultiHeadAttentionLSA(tf.keras.layers.MultiHeadAttention):
 
 def mlp(x, hidden_units, dropout_rate):
     for units in hidden_units:
-        x = layers.Dense(units, activation=tf.nn.gelu)(x)
+        x = layers.Dense(units, activation="gelu")(x)
         x = layers.Dropout(dropout_rate)(x)
     return x
 
 
 # Build the diagonal attention mask
-diag_attn_mask = 1 - tf.eye(NUM_PATCHES)
-diag_attn_mask = tf.cast([diag_attn_mask], dtype=tf.int8)
+diag_attn_mask = 1 - ops.eye(NUM_PATCHES)
+diag_attn_mask = ops.cast([diag_attn_mask], dtype="int8")
 ```
 
 ---
@@ -557,15 +552,15 @@ class WarmUpCosine(keras.optimizers.schedules.LearningRateSchedule):
         self.total_steps = total_steps
         self.warmup_learning_rate = warmup_learning_rate
         self.warmup_steps = warmup_steps
-        self.pi = tf.constant(np.pi)
+        self.pi = ops.array(np.pi)
 
     def __call__(self, step):
         if self.total_steps < self.warmup_steps:
             raise ValueError("Total_steps must be larger or equal to warmup_steps.")
 
-        cos_annealed_lr = tf.cos(
+        cos_annealed_lr = ops.cos(
             self.pi
-            * (tf.cast(step, tf.float32) - self.warmup_steps)
+            * (ops.cast(step, dtype="float32") - self.warmup_steps)
             / float(self.total_steps - self.warmup_steps)
         )
         learning_rate = 0.5 * self.learning_rate_base * (1 + cos_annealed_lr)
@@ -579,11 +574,13 @@ class WarmUpCosine(keras.optimizers.schedules.LearningRateSchedule):
             slope = (
                 self.learning_rate_base - self.warmup_learning_rate
             ) / self.warmup_steps
-            warmup_rate = slope * tf.cast(step, tf.float32) + self.warmup_learning_rate
-            learning_rate = tf.where(
+            warmup_rate = (
+                slope * ops.cast(step, dtype="float32") + self.warmup_learning_rate
+            )
+            learning_rate = ops.where(
                 step < self.warmup_steps, warmup_rate, learning_rate
             )
-        return tf.where(
+        return ops.where(
             step > self.total_steps, 0.0, learning_rate, name="learning_rate"
         )
 
@@ -599,7 +596,7 @@ def run_experiment(model):
         warmup_steps=warmup_steps,
     )
 
-    optimizer = tfa.optimizers.AdamW(
+    optimizer = keras.optimizers.AdamW(
         learning_rate=LEARNING_RATE, weight_decay=WEIGHT_DECAY
     )
 

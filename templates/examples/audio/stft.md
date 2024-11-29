@@ -6,7 +6,7 @@
 **Description:** Introducing the `STFTSpectrogram` layer to extract spectrograms for audio classification.
 
 
-<div class='example_version_banner keras_3'>ⓘ This example uses Keras 3</div>
+<div class='example_version_banner keras_2'>ⓘ This example uses Keras 2</div>
 <img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/audio/ipynb/stft.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/audio/stft.py)
 
 
@@ -1816,6 +1816,7 @@ print(f"2D model with trainable STFT -> Test Accuracy: {test_acc * 100:.2f}%")
 
     [1m3/3[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m17s[0m 546ms/step - accuracy: 0.9195 - loss: 0.5271
     2D model with trainable STFT -> Test Accuracy: 92.50%
+
 
 
 

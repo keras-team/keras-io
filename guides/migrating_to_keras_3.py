@@ -715,8 +715,8 @@ are usually named the same in both frameworks (e.g. `reshape`, `matmul`, `cast`,
 | `tf.tensor_scatter_nd_update`                      | `keras.ops.slice_update`                                          |
 | `tf.signal.fft2d`                                  | `keras.ops.fft2`                                                  |
 | `tf.signal.inverse_stft`                           | `keras.ops.istft`                                                 |
-| 'tf.image.crop_to_bounding_box'                    | `keras.ops.image.crop_images`                                     |
-| 'tf.image.pad_to_bounding_box'                     | `keras.ops.image.pad_images`                                      |
+| `tf.image.crop_to_bounding_box`                    | `keras.ops.image.crop_images`                                     |
+| `tf.image.pad_to_bounding_box`                     | `keras.ops.image.pad_images`                                      |
 
 """
 
