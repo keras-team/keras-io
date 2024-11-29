@@ -535,7 +535,7 @@ history = model.fit(
     epochs=20,
     batch_size=32,
     callbacks=[
-        tf.keras.callbacks.EarlyStopping(
+        keras.callbacks.EarlyStopping(
             monitor="val_loss", patience=10, restore_best_weights=True
         )
     ],
