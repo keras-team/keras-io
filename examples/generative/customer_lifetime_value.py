@@ -534,6 +534,7 @@ train_outputs = train_data["output_sequences"].astype(np.float32)
 val_outputs = val_data["output_sequences"].astype(np.float32)
 test_output = test_data["output_sequences"].astype(np.float32)
 # Training setup
+keras.utils.set_random_seed(seed=42)
 
 history = model.fit(
     [x_train_temporal, x_train_seq, train_static_encoded],
