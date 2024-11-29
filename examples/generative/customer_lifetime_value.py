@@ -17,45 +17,35 @@ similar to how we observe interconnected patterns in financial and human activit
 """
 
 """
-For the purpose of the tutorial; we will be using the UK Retail
-[Dataset](https://archive.ics.uci.edu/dataset/352/online+retail).
-You can install it via the following command: `pip install ucimlrepo
-
-This example requires access to the transformer encoder layer in keras_hub package. You
-can install it via the following command `pip install keras_hub
-
+## Setting up Libraries for the Deep Learning Project
 """
+# Shell Block
 
-"""
-##Setting up Libraries for the Deep Learning Project
-"""
-%pip install ucimlrepo
-
-%pip install keras_hub
-
-# Set Keras backend
-import os
-
-os.environ["KERAS_BACKEND"] = "tensorflow"
+%%bash
+# For the purpose of the tutorial; we will be using the UK Retail
+# [Dataset](https://archive.ics.uci.edu/dataset/352/online+retail) through uciml.
+pip install ucimlrepo
+# This example requires access to the transformer encoder layer in keras_hub package.
+pip install keras_hub
 
 # Core data processing and numerical libraries
+import keras
 import numpy as np
 import pandas as pd
 from typing import Dict
 import tensorflow as tf
 
-
 # For reproducibility across modelling
 def set_seeds(seed=42):
-    np.random.seed(seed)
-    tf.random.set_seed(seed)
-
+    keras.utils.set_random_seed(seed)
 
 # Visualization
 import matplotlib.pyplot as plt
 
 # Keras imports
+from keras import layers
 from keras import Model
+from keras import ops
 from keras.layers import (
     Input,
     Dense,
@@ -73,6 +63,10 @@ from keras import regularizers
 
 # UK Retail Dataset
 from ucimlrepo import fetch_ucirepo
+
+# For reproducibility across modelling
+def set_seeds(seed=42):
+    keras.utils.set_random_seed
 
 """
 ## Preprocessing the UK Retail dataset
@@ -96,12 +90,12 @@ def prepare_time_series_data(data):
     processed_data["CustomerID"] = processed_data["CustomerID"].fillna(99999.0)
 
     # Handle outliers in Amount using statistical thresholds
-    Q1 = processed_data["Amount"].quantile(0.25)
-    Q3 = processed_data["Amount"].quantile(0.75)
+    q1 = processed_data["Amount"].quantile(0.25)
+    q3 = processed_data["Amount"].quantile(0.75)
 
     # Define bounds - using 1.5 IQR rule
-    lower_bound = Q1 - 1.5 * (Q3 - Q1)
-    upper_bound = Q3 + 1.5 * (Q3 - Q1)
+    lower_bound = q1 - 1.5 * (q3 - q1)
+    upper_bound = q3 + 1.5 * (q3 - q1)
 
     # Filter outliers
     processed_data = processed_data[
@@ -118,12 +112,11 @@ online_retail = fetch_ucirepo(id=352)
 raw_data = online_retail.data.features
 transformed_data = prepare_time_series_data(raw_data)
 
-"""
-##Chunking Data into 4 month input and output sequences for multistep forecasting for
-each Customer
 
 """
+## Chunking Data into 6 month input and output sequences for multistep forecasting 
 
+"""
 
 def prepare_data_for_modeling(
     df: pd.DataFrame,
@@ -329,7 +322,7 @@ def create_temporal_splits_with_scaling(
 train_data, val_data, test_data = create_temporal_splits_with_scaling(output)
 
 """
-# Evaluation
+## Evaluation
 """
 
 
@@ -338,8 +331,8 @@ def calculate_metrics(y_true, y_pred):
     Calculates RMSE, MAE, R², and sMAPE
     """
     # Convert inputs to float32
-    y_true = tf.cast(y_true, tf.float32)
-    y_pred = tf.cast(y_pred, tf.float32)
+    y_true = ops.cast(y_true, tf.float32)
+    y_pred = ops.cast(y_pred, tf.float32)
 
     # RMSE
     rmse = np.sqrt(np.mean(np.square(y_true - y_pred)))
@@ -398,13 +391,12 @@ def plot_lorenz_analysis(y_true, y_pred):
 
 
 """
-# Hybrid Transformer / LSTM model architecture
+## Hybrid Transformer / LSTM model architecture
 
 The hybrid nature of this model is particularly significant because it combines RNN's
 ability to handle sequential data with Transformer's attention mechanisms for capturing
 global patterns across countries and seasonality.
 """
-
 
 def build_hybrid_model(
     input_sequence_length: int,
@@ -482,7 +474,7 @@ def build_hybrid_model(
     )
 
     model.compile(
-        optimizer=tf.keras.optimizers.Adam(learning_rate=0.001),
+        optimizer=keras.optimizers.Adam(learning_rate=0.001),
         loss="mse",
         metrics=["mse"],
     )
@@ -510,10 +502,10 @@ val_static_encoded = label_encoder(val_data["static_features"])
 test_static_encoded = label_encoder(test_data["static_features"])
 
 # Convert sequences with proper type casting
-X_train_seq = np.asarray(train_data["trend_sequences"]).astype(np.float32)
-X_val_seq = np.asarray(val_data["trend_sequences"]).astype(np.float32)
-X_train_temporal = np.asarray(train_data["temporal_sequences"]).astype(np.float32)
-X_val_temporal = np.asarray(val_data["temporal_sequences"]).astype(np.float32)
+x_train_seq = np.asarray(train_data["trend_sequences"]).astype(np.float32)
+x_val_seq = np.asarray(val_data["trend_sequences"]).astype(np.float32)
+x_train_temporal = np.asarray(train_data["temporal_sequences"]).astype(np.float32)
+x_val_temporal = np.asarray(val_data["temporal_sequences"]).astype(np.float32)
 
 # Define callbacks with proper monitoring strategy
 callbacks = [
@@ -534,10 +526,10 @@ test_output = test_data["output_sequences"].astype(np.float32)
 # Training setup
 
 history = model.fit(
-    [X_train_temporal, X_train_seq, train_static_encoded],
+    [x_train_temporal, x_train_seq, train_static_encoded],
     train_outputs,
     validation_data=(
-        [X_val_temporal, X_val_seq, val_static_encoded],
+        [x_val_temporal, x_val_seq, val_static_encoded],
         val_data["output_sequences"].astype(np.float32),
     ),
     epochs=20,
@@ -559,7 +551,7 @@ predictions = model.predict(
 )
 
 # Calculate the predictions
-predictions = tf.squeeze(predictions)
+predictions = np.squeeze(predictions)
 
 # Calculate basic metrics
 hybrid_metrics = calculate_metrics(test_data["output_sequences"], predictions)
@@ -568,7 +560,7 @@ hybrid_metrics = calculate_metrics(test_data["output_sequences"], predictions)
 hybrid_mutual_gini = plot_lorenz_analysis(test_data["output_sequences"], predictions)
 
 """
-Conclusion: While LSTMs provide a solid baseline for capturing sequential patterns, the
+## Conclusion: While LSTMs provide a solid baseline for capturing sequential patterns, the
 hybrid approach's additional attention mechanisms allow it to adaptively focus on the
 relevant temporal/seasonal features for prediction.
 """
