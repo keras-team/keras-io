@@ -554,23 +554,7 @@ transformer.fit(train_ds, epochs=epochs, validation_data=val_ds)
 
 <div class="k-default-codeblock">
 ```
-/root/keras-io/venv/lib/python3.10/site-packages/keras/src/layers/layer.py:932: UserWarning: Layer 'query' (of type EinsumDense) was passed an input with a mask attached to it. However, this layer does not support masking and will therefore destroy the mask information. Downstream layers will not see the mask.
-  warnings.warn(
-/root/keras-io/venv/lib/python3.10/site-packages/keras/src/layers/layer.py:932: UserWarning: Layer 'key' (of type EinsumDense) was passed an input with a mask attached to it. However, this layer does not support masking and will therefore destroy the mask information. Downstream layers will not see the mask.
-  warnings.warn(
-/root/keras-io/venv/lib/python3.10/site-packages/keras/src/layers/layer.py:932: UserWarning: Layer 'value' (of type EinsumDense) was passed an input with a mask attached to it. However, this layer does not support masking and will therefore destroy the mask information. Downstream layers will not see the mask.
-  warnings.warn(
-
-WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
-```
-</div>
-
-    1302/1302 ━━━━━━━━━━━━━━━━━━━━ 57s 30ms/step - accuracy: 0.1042 - loss: 5.0703 - val_accuracy: 0.1926 - val_loss: 2.9115
-
-<div class="k-default-codeblock">
-```
 <keras.src.callbacks.history.History at 0x7ffae0753a60>
-
 ```
 </div>
 ---
