@@ -19,14 +19,30 @@ similar to how we observe interconnected patterns in financial and human activit
 """
 ## Setting up Libraries for the Deep Learning Project
 """
-# Shell Block
+import subprocess
 
-%%bash
-# For the purpose of the tutorial; we will be using the UK Retail
-# [Dataset](https://archive.ics.uci.edu/dataset/352/online+retail) through uciml.
-pip install ucimlrepo
-# This example requires access to the transformer encoder layer in keras_hub package.
-pip install keras_hub
+
+def install_packages(packages):
+    """
+    Install a list of packages using pip.
+
+    Args:
+        packages (list): A list of package names to install.
+    """
+    for package in packages:
+        subprocess.run(["pip", "install", package], check=True)
+
+
+"""
+List of packages to install
+uciml -> For the purpose of the tutorial; we will be using the UK Retail
+[Dataset](https://archive.ics.uci.edu/dataset/352/online+retail) 
+keras_hub -> Access to the transformer encoder layer
+"""
+packages_to_install = ["ucimlrepo", "keras_hub"]
+
+# Install the packages
+install_packages(packages_to_install)
 
 # Core data processing and numerical libraries
 import keras
@@ -35,9 +51,11 @@ import pandas as pd
 from typing import Dict
 import tensorflow as tf
 
+
 # For reproducibility across modelling
 def set_seeds(seed=42):
     keras.utils.set_random_seed(seed)
+
 
 # Visualization
 import matplotlib.pyplot as plt
@@ -64,9 +82,11 @@ from keras import regularizers
 # UK Retail Dataset
 from ucimlrepo import fetch_ucirepo
 
+
 # For reproducibility across modelling
 def set_seeds(seed=42):
     keras.utils.set_random_seed
+
 
 """
 ## Preprocessing the UK Retail dataset
@@ -117,6 +137,7 @@ transformed_data = prepare_time_series_data(raw_data)
 ## Chunking Data into 6 month input and output sequences for multistep forecasting 
 
 """
+
 
 def prepare_data_for_modeling(
     df: pd.DataFrame,
@@ -397,6 +418,7 @@ The hybrid nature of this model is particularly significant because it combines 
 ability to handle sequential data with Transformer's attention mechanisms for capturing
 global patterns across countries and seasonality.
 """
+
 
 def build_hybrid_model(
     input_sequence_length: int,
