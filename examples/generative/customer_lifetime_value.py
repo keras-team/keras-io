@@ -34,11 +34,13 @@ def install_packages(packages):
 
 
 """
-List of packages to install
-uciml -> For the purpose of the tutorial; we will be using the UK Retail
-[Dataset](https://archive.ics.uci.edu/dataset/352/online+retail) 
-keras_hub -> Access to the transformer encoder layer
+## List of Packages to Install
+
+1. uciml: For the purpose of the tutorial; we will be using 
+          the UK Retail [Dataset](https://archive.ics.uci.edu/dataset/352/online+retail).
+2. keras_hub: Access to the transformer encoder layer.
 """
+
 packages_to_install = ["ucimlrepo", "keras_hub"]
 
 # Install the packages
@@ -51,12 +53,6 @@ import pandas as pd
 from typing import Dict
 import tensorflow as tf
 
-
-# For reproducibility across modelling
-def set_seeds(seed=42):
-    keras.utils.set_random_seed(seed)
-
-
 # Visualization
 import matplotlib.pyplot as plt
 
@@ -64,29 +60,11 @@ import matplotlib.pyplot as plt
 from keras import layers
 from keras import Model
 from keras import ops
-from keras.layers import (
-    Input,
-    Dense,
-    LSTM,
-    GlobalAveragePooling1D,
-    Embedding,
-    Flatten,
-    RepeatVector,
-    Concatenate,
-    StringLookup,
-)
 from keras_hub.layers import TransformerEncoder
-
 from keras import regularizers
 
 # UK Retail Dataset
 from ucimlrepo import fetch_ucirepo
-
-
-# For reproducibility across modelling
-def set_seeds(seed=42):
-    keras.utils.set_random_seed
-
 
 """
 ## Preprocessing the UK Retail dataset
@@ -351,9 +329,9 @@ def calculate_metrics(y_true, y_pred):
     """
     Calculates RMSE, MAE, R², and sMAPE
     """
-    # Convert inputs to float32
-    y_true = ops.cast(y_true, tf.float32)
-    y_pred = ops.cast(y_pred, tf.float32)
+    # Convert inputs to "float32"
+    y_true = ops.cast(y_true, dtype="float32")
+    y_pred = ops.cast(y_pred, dtype="float32")
 
     # RMSE
     rmse = np.sqrt(np.mean(np.square(y_true - y_pred)))
@@ -428,15 +406,19 @@ def build_hybrid_model(
     num_heads: int = 4,
 ):
 
-    set_seeds(seed=42)
+    keras.utils.set_random_seed(seed=42)
 
     # Inputs
-    temporal_inputs = Input(shape=(input_sequence_length, 5), name="temporal_inputs")
-    trend_inputs = Input(shape=(input_sequence_length, 12), name="trend_inputs")
-    country_inputs = Input(shape=(num_countries,), dtype="int32", name="country_inputs")
+    temporal_inputs = layers.Input(
+        shape=(input_sequence_length, 5), name="temporal_inputs"
+    )
+    trend_inputs = layers.Input(shape=(input_sequence_length, 12), name="trend_inputs")
+    country_inputs = layers.Input(
+        shape=(num_countries,), dtype="int32", name="country_inputs"
+    )
 
     # Process country features
-    country_embedding = Embedding(
+    country_embedding = layers.Embedding(
         input_dim=num_countries,
         output_dim=d_model,
         mask_zero=False,
@@ -446,20 +428,24 @@ def build_hybrid_model(
     )  # Output shape: (batch_size, 1, d_model)
 
     # Flatten the embedding output
-    country_embedding = Flatten(name="flatten_country_embedding")(country_embedding)
+    country_embedding = layers.Flatten(name="flatten_country_embedding")(
+        country_embedding
+    )
 
     # Repeat the country embedding across timesteps
-    country_embedding_repeated = RepeatVector(
+    country_embedding_repeated = layers.RepeatVector(
         input_sequence_length, name="repeat_country_embedding"
     )(country_embedding)
 
     # Projection of temporal inputs to match Transformer dimensions
-    temporal_projection = Dense(d_model, activation="tanh", name="temporal_projection")(
-        temporal_inputs
-    )
+    temporal_projection = layers.Dense(
+        d_model, activation="tanh", name="temporal_projection"
+    )(temporal_inputs)
 
     # Combine all features
-    combined_features = Concatenate()([temporal_projection, country_embedding_repeated])
+    combined_features = layers.Concatenate()(
+        [temporal_projection, country_embedding_repeated]
+    )
 
     transformer_output = combined_features
     for _ in range(3):
@@ -467,29 +453,31 @@ def build_hybrid_model(
             intermediate_dim=16, num_heads=num_heads
         )(transformer_output)
 
-    lstm_output = LSTM(units=64, name="lstm_trend")(trend_inputs)
+    lstm_output = layers.LSTM(units=64, name="lstm_trend")(trend_inputs)
 
-    transformer_flattened = GlobalAveragePooling1D(name="flatten_transformer")(
+    transformer_flattened = layers.GlobalAveragePooling1D(name="flatten_transformer")(
         transformer_output
     )
-    transformer_flattened = Dense(1, activation="sigmoid")(transformer_flattened)
+    transformer_flattened = layers.Dense(1, activation="sigmoid")(transformer_flattened)
     # Concatenate flattened Transformer output with LSTM output
-    merged_features = Concatenate(name="concatenate_transformer_lstm")(
+    merged_features = layers.Concatenate(name="concatenate_transformer_lstm")(
         [transformer_flattened, lstm_output]
     )
     # Repeat the merged features to match the output sequence length
-    decoder_initial = RepeatVector(
+    decoder_initial = layers.RepeatVector(
         output_sequence_length, name="repeat_merged_features"
     )(merged_features)
 
-    decoder_lstm = LSTM(
+    decoder_lstm = layers.LSTM(
         units=64,
         return_sequences=True,
         recurrent_regularizer=regularizers.L1L2(l1=1e-5, l2=1e-4),
     )(decoder_initial)
 
     # Output Dense layer
-    output = Dense(units=1, activation="linear", name="output_dense")(decoder_lstm)
+    output = layers.Dense(units=1, activation="linear", name="output_dense")(
+        decoder_lstm
+    )
 
     model = Model(
         inputs=[temporal_inputs, trend_inputs, country_inputs], outputs=output
@@ -514,7 +502,7 @@ model = build_hybrid_model(
 )
 
 # Configure StringLookup
-label_encoder = StringLookup(output_mode="one_hot", num_oov_indices=1)
+label_encoder = layers.StringLookup(output_mode="one_hot", num_oov_indices=1)
 
 # Adapt and encode
 label_encoder.adapt(train_data["static_features"])
@@ -557,7 +545,7 @@ history = model.fit(
     epochs=20,
     batch_size=32,
     callbacks=[
-        keras.callbacks.EarlyStopping(
+        tf.keras.callbacks.EarlyStopping(
             monitor="val_loss", patience=10, restore_best_weights=True
         )
     ],
