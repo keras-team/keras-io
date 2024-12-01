@@ -47,11 +47,14 @@ packages_to_install = ["ucimlrepo", "keras_hub"]
 install_packages(packages_to_install)
 
 # Core data processing and numerical libraries
+import os
+
+os.environ["KERAS_BACKEND"] = "jax"
 import keras
 import numpy as np
 import pandas as pd
 from typing import Dict
-import tensorflow as tf
+
 
 # Visualization
 import matplotlib.pyplot as plt
@@ -546,7 +549,7 @@ history = model.fit(
     epochs=20,
     batch_size=32,
     callbacks=[
-        tf.keras.callbacks.EarlyStopping(
+        keras.callbacks.EarlyStopping(
             monitor="val_loss", patience=10, restore_best_weights=True
         )
     ],
