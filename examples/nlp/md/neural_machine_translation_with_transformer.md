@@ -2,7 +2,7 @@
 
 **Author:** [fchollet](https://twitter.com/fchollet)<br>
 **Date created:** 2021/05/26<br>
-**Last modified:** 2023/02/25<br>
+**Last modified:** 2024/11/18<br>
 **Description:** Implementing a sequence-to-sequence Transformer and training it on a machine translation task.
 
 
@@ -109,11 +109,11 @@ for _ in range(5):
 
 <div class="k-default-codeblock">
 ```
-("On Saturday nights, it's difficult to find parking around here.", '[start] Los sábados por la noche es difícil encontrar aparcamiento por aquí. [end]')
-('I was the worst student in the class.', '[start] Fui el peor estudiante en la clase. [end]')
-('There is nothing to do today.', '[start] No hay nada que hacer hoy. [end]')
-('The twins do resemble each other.', '[start] Los gemelos se parecen mutuamente. [end]')
-('They found Tom in the crowd.', '[start] Encontraron a Tom entre la multitud. [end]')
+('The trouble is that we have nowhere to stay tonight.', '[start] El problema es que no tenemos donde quedarnos esta noche. [end]')
+("I want to help you, but I can't.", '[start] Quiero ayudarte, pero no puedo. [end]')
+('I can help.', '[start] Yo puedo ayudar. [end]')
+('Tom fed his dog table scraps.', '[start] Tom alimentó a su perro con sobras de la mesa. [end]')
+('Tom never eats junk food.', '[start] Tom nunca come comida chatarra. [end]')
 
 ```
 </div>
@@ -346,10 +346,7 @@ class PositionalEmbedding(layers.Layer):
         return embedded_tokens + embedded_positions
 
     def compute_mask(self, inputs, mask=None):
-        if mask is None:
-            return None
-        else:
-            return ops.not_equal(inputs, 0)
+        return ops.not_equal(inputs, 0)
 
     def get_config(self):
         config = super().get_config()
@@ -386,16 +383,21 @@ class TransformerDecoder(layers.Layer):
         self.layernorm_3 = layers.LayerNormalization()
         self.supports_masking = True
 
-    def call(self, inputs, encoder_outputs, mask=None):
+    def call(self, inputs, mask=None):
+        inputs, encoder_outputs = inputs
         causal_mask = self.get_causal_attention_mask(inputs)
-        if mask is not None:
-            padding_mask = ops.cast(mask[:, None, :], dtype="int32")
-            padding_mask = ops.minimum(padding_mask, causal_mask)
+
+        if mask is None:
+            inputs_padding_mask, encoder_outputs_padding_mask = None, None
         else:
-            padding_mask = None
+            inputs_padding_mask, encoder_outputs_padding_mask = mask
 
         attention_output_1 = self.attention_1(
-            query=inputs, value=inputs, key=inputs, attention_mask=causal_mask
+            query=inputs,
+            value=inputs,
+            key=inputs,
+            attention_mask=causal_mask,
+            query_mask=inputs_padding_mask,
         )
         out_1 = self.layernorm_1(inputs + attention_output_1)
 
@@ -403,7 +405,8 @@ class TransformerDecoder(layers.Layer):
             query=out_1,
             value=encoder_outputs,
             key=encoder_outputs,
-            attention_mask=padding_mask,
+            query_mask=inputs_padding_mask,
+            key_mask=encoder_outputs_padding_mask,
         )
         out_2 = self.layernorm_2(out_1 + attention_output_2)
 
@@ -452,14 +455,15 @@ encoder = keras.Model(encoder_inputs, encoder_outputs)
 decoder_inputs = keras.Input(shape=(None,), dtype="int64", name="decoder_inputs")
 encoded_seq_inputs = keras.Input(shape=(None, embed_dim), name="decoder_state_inputs")
 x = PositionalEmbedding(sequence_length, vocab_size, embed_dim)(decoder_inputs)
-x = TransformerDecoder(embed_dim, latent_dim, num_heads)(x, encoded_seq_inputs)
+x = TransformerDecoder(embed_dim, latent_dim, num_heads)([x, encoder_outputs])
 x = layers.Dropout(0.5)(x)
 decoder_outputs = layers.Dense(vocab_size, activation="softmax")(x)
 decoder = keras.Model([decoder_inputs, encoded_seq_inputs], decoder_outputs)
 
-decoder_outputs = decoder([decoder_inputs, encoder_outputs])
 transformer = keras.Model(
-    [encoder_inputs, decoder_inputs], decoder_outputs, name="transformer"
+    {"encoder_inputs": encoder_inputs, "decoder_inputs": decoder_inputs},
+    decoder_outputs,
+    name="transformer",
 )
 ```
 
@@ -478,7 +482,9 @@ epochs = 1  # This should be at least 30 for convergence
 
 transformer.summary()
 transformer.compile(
-    "rmsprop", loss="sparse_categorical_crossentropy", metrics=["accuracy"]
+    "rmsprop",
+    loss=keras.losses.SparseCategoricalCrossentropy(ignore_class=0),
+    metrics=["accuracy"],
 )
 transformer.fit(train_ds, epochs=epochs, validation_data=val_ds)
 ```
@@ -490,24 +496,40 @@ transformer.fit(train_ds, epochs=epochs, validation_data=val_ds)
 
 
 
-<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">┏━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━┓
-┃<span style="font-weight: bold"> Layer (type)        </span>┃<span style="font-weight: bold"> Output Shape      </span>┃<span style="font-weight: bold"> Param # </span>┃<span style="font-weight: bold"> Connected to         </span>┃
-┡━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━┩
-│ encoder_inputs      │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>)      │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ -                    │
-│ (<span style="color: #0087ff; text-decoration-color: #0087ff">InputLayer</span>)        │                   │         │                      │
-├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
-│ positional_embeddi… │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">256</span>) │ <span style="color: #00af00; text-decoration-color: #00af00">3,845,…</span> │ encoder_inputs[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>] │
-│ (<span style="color: #0087ff; text-decoration-color: #0087ff">PositionalEmbeddi…</span> │                   │         │                      │
-├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
-│ decoder_inputs      │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>)      │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ -                    │
-│ (<span style="color: #0087ff; text-decoration-color: #0087ff">InputLayer</span>)        │                   │         │                      │
-├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
-│ transformer_encoder │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">256</span>) │ <span style="color: #00af00; text-decoration-color: #00af00">3,155,…</span> │ positional_embeddin… │
-│ (<span style="color: #0087ff; text-decoration-color: #0087ff">TransformerEncode…</span> │                   │         │                      │
-├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
-│ functional_5        │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>,      │ <span style="color: #00af00; text-decoration-color: #00af00">12,959…</span> │ decoder_inputs[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>… │
-│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Functional</span>)        │ <span style="color: #00af00; text-decoration-color: #00af00">15000</span>)            │         │ transformer_encoder… │
-└─────────────────────┴───────────────────┴─────────┴──────────────────────┘
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">┏━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━┓
+┃<span style="font-weight: bold"> Layer (type)        </span>┃<span style="font-weight: bold"> Output Shape      </span>┃<span style="font-weight: bold">    Param # </span>┃<span style="font-weight: bold"> Connected to      </span>┃
+┡━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━┩
+│ encoder_inputs      │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>)      │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ -                 │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">InputLayer</span>)        │                   │            │                   │
+├─────────────────────┼───────────────────┼────────────┼───────────────────┤
+│ decoder_inputs      │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>)      │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ -                 │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">InputLayer</span>)        │                   │            │                   │
+├─────────────────────┼───────────────────┼────────────┼───────────────────┤
+│ positional_embeddi… │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">256</span>) │  <span style="color: #00af00; text-decoration-color: #00af00">3,845,120</span> │ encoder_inputs[<span style="color: #00af00; text-decoration-color: #00af00">0</span>… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">PositionalEmbeddi…</span> │                   │            │                   │
+├─────────────────────┼───────────────────┼────────────┼───────────────────┤
+│ not_equal           │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>)      │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ encoder_inputs[<span style="color: #00af00; text-decoration-color: #00af00">0</span>… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">NotEqual</span>)          │                   │            │                   │
+├─────────────────────┼───────────────────┼────────────┼───────────────────┤
+│ positional_embeddi… │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">256</span>) │  <span style="color: #00af00; text-decoration-color: #00af00">3,845,120</span> │ decoder_inputs[<span style="color: #00af00; text-decoration-color: #00af00">0</span>… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">PositionalEmbeddi…</span> │                   │            │                   │
+├─────────────────────┼───────────────────┼────────────┼───────────────────┤
+│ transformer_encoder │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">256</span>) │  <span style="color: #00af00; text-decoration-color: #00af00">3,155,456</span> │ positional_embed… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">TransformerEncode…</span> │                   │            │ not_equal[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>]   │
+├─────────────────────┼───────────────────┼────────────┼───────────────────┤
+│ not_equal_1         │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>)      │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ decoder_inputs[<span style="color: #00af00; text-decoration-color: #00af00">0</span>… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">NotEqual</span>)          │                   │            │                   │
+├─────────────────────┼───────────────────┼────────────┼───────────────────┤
+│ transformer_decoder │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">256</span>) │  <span style="color: #00af00; text-decoration-color: #00af00">5,259,520</span> │ positional_embed… │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">TransformerDecode…</span> │                   │            │ transformer_enco… │
+│                     │                   │            │ not_equal_1[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>… │
+│                     │                   │            │ not_equal[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>]   │
+├─────────────────────┼───────────────────┼────────────┼───────────────────┤
+│ dropout_3 (<span style="color: #0087ff; text-decoration-color: #0087ff">Dropout</span>) │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">256</span>) │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ transformer_deco… │
+├─────────────────────┼───────────────────┼────────────┼───────────────────┤
+│ dense_4 (<span style="color: #0087ff; text-decoration-color: #0087ff">Dense</span>)     │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>,      │  <span style="color: #00af00; text-decoration-color: #00af00">3,855,000</span> │ dropout_3[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>]   │
+│                     │ <span style="color: #00af00; text-decoration-color: #00af00">15000</span>)            │            │                   │
+└─────────────────────┴───────────────────┴────────────┴───────────────────┘
 </pre>
 
 
@@ -532,15 +554,7 @@ transformer.fit(train_ds, epochs=epochs, validation_data=val_ds)
 
 <div class="k-default-codeblock">
 ```
-    5/1302 [37m━━━━━━━━━━━━━━━━━━━━  42s 33ms/step - accuracy: 0.3558 - loss: 8.3596
-
-WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
-I0000 00:00:1699484373.932513   76082 device_compiler.h:187] Compiled cluster using XLA!  This line is logged at most once for the lifetime of the process.
-
- 1302/1302 ━━━━━━━━━━━━━━━━━━━━ 64s 39ms/step - accuracy: 0.7073 - loss: 2.2372 - val_accuracy: 0.7329 - val_loss: 1.6477
-
-<keras.src.callbacks.history.History at 0x7ff611f21540>
-
+<keras.src.callbacks.history.History at 0x7ffae0753a60>
 ```
 </div>
 ---
@@ -563,7 +577,12 @@ def decode_sequence(input_sentence):
     decoded_sentence = "[start]"
     for i in range(max_decoded_sentence_length):
         tokenized_target_sentence = spa_vectorization([decoded_sentence])[:, :-1]
-        predictions = transformer([tokenized_input_sentence, tokenized_target_sentence])
+        predictions = transformer(
+            {
+                "encoder_inputs": tokenized_input_sentence,
+                "decoder_inputs": tokenized_target_sentence,
+            }
+        )
 
         # ops.argmax(predictions[0, i, :]) is not a concrete value for jax here
         sampled_token_index = ops.convert_to_numpy(
