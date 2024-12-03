@@ -81,7 +81,8 @@ import numpy as np
 
 import tensorflow as tf
 import keras
-from keras import layers, ops
+from keras import layers
+from keras import ops
 
 import matplotlib.pyplot as plt
 from rdkit import Chem, RDLogger
@@ -380,7 +381,7 @@ def get_decoder(dense_units, dropout_rate, latent_dim, adjacency_shape, feature_
 class Sampling(layers.Layer):
     def __init__(self, seed=None, **kwargs):
         super().__init__(**kwargs)
-        self.seed_generator = seed or keras.random.SeedGenerator()
+        self.seed_generator = keras.random.SeedGenerator(seed)
 
     def call(self, inputs):
         z_mean, z_log_var = inputs
@@ -423,7 +424,8 @@ class MoleculeGenerator(keras.Model):
         self.decoder = decoder
         self.property_prediction_layer = layers.Dense(1)
         self.max_len = max_len
-        self.seed_generator = seed or keras.random.SeedGenerator()
+        self.seed_generator = keras.random.SeedGenerator(seed)
+        self.sampling_layer = Sampling(seed=seed)
 
         self.train_total_loss_tracker = keras.metrics.Mean(name="train_total_loss")
         self.val_total_loss_tracker = keras.metrics.Mean(name="val_total_loss")
@@ -532,7 +534,7 @@ class MoleculeGenerator(keras.Model):
 
     def call(self, inputs):
         z_mean, log_var = self.encoder(inputs)
-        z = Sampling(seed=self.seed_generator)([z_mean, log_var])
+        z = self.sampling_layer([z_mean, log_var])
 
         gen_adjacency, gen_features = self.decoder(z)
 
