@@ -2,7 +2,7 @@
 Title: Drug Molecule Generation with VAE
 Author: [Victor Basu](https://www.linkedin.com/in/victor-basu-520958147)
 Date created: 2022/03/10
-Last modified: 2024/11/26
+Last modified: 2024/12/05
 Description: Implementing a Convolutional Variational AutoEncoder (VAE) for Drug Discovery.
 Accelerator: GPU
 """
