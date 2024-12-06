@@ -118,6 +118,7 @@ EXAMPLES_MASTER = {
                     "path": "shiftvit",
                     "title": "A Vision Transformer without Attention",
                     "subcategory": "Image classification",
+                    "keras_3": True,
                 },
                 {
                     "path": "image_classification_using_global_context_vision_transformer",
