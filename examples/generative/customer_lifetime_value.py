@@ -3,17 +3,19 @@ Title: Deep Learning for Customer Lifetime Value
 Author: [Praveen Hosdrug](https://www.linkedin.com/in/praveenhosdrug/)
 Date created: 2024/11/23
 Last modified: 2024/11/27
-Description: Predicting Customer Lifetime Value.
+Description: A hybrid deep learning architecture for predicting customer purchase patterns and lifetime value.
 Accelerator: None
 """
 
 """
 ## Introduction
-Traditional approaches often treat each customer's purchase history as an isolated
-timeseries, much like how basic forecasting models handle independent sequences. However,
-customer behavior exists within a complex network of interactions, influenced by various
-factors such as seasonal patterns, demographic similarities, and purchase dependencies -
-similar to how we observe interconnected patterns in financial and human activity data.
+
+A hybrid deep learning architecture combining Transformer encoders and LSTM networks
+for predicting customer purchase patterns and lifetime value using transaction history.
+While many existing review articles focus on classic parametric models and traditional machine learning algorithms
+,this implementation leverages recent advancements in Transformer-based models for time series prediction.
+The approach handles multi-granularity prediction across different temporal scales.
+
 """
 
 """
@@ -36,8 +38,8 @@ def install_packages(packages):
 """
 ## List of Packages to Install
 
-1. uciml: For the purpose of the tutorial; we will be using 
-          the UK Retail [Dataset](https://archive.ics.uci.edu/dataset/352/online+retail).
+1. uciml: For the purpose of the tutorial; we will be using
+          the UK Retail [Dataset](https://archive.ics.uci.edu/dataset/352/online+retail)
 2. keras_hub: Access to the transformer encoder layer.
 """
 
@@ -76,9 +78,12 @@ from ucimlrepo import fetch_ucirepo
 
 def prepare_time_series_data(data):
     """
-    Minimal preprocessing for deep learning time series models.
-    Deep learning models can handle complex patterns
-    and non-linearities in the data without explicit complex feature engineering.
+    Preprocess retail transaction data for deep learning.
+
+    Args:
+        data: Raw transaction data containing InvoiceDate, UnitPrice, etc.
+    Returns:
+        Processed DataFrame with calculated features
     """
     processed_data = data.copy()
 
@@ -112,12 +117,6 @@ def prepare_time_series_data(data):
 online_retail = fetch_ucirepo(id=352)
 raw_data = online_retail.data.features
 transformed_data = prepare_time_series_data(raw_data)
-
-
-"""
-## Chunking Data into 6 month input and output sequences for multistep forecasting 
-
-"""
 
 
 def prepare_data_for_modeling(
@@ -196,7 +195,6 @@ def prepare_data_for_modeling(
         "trend_sequences": [],
         "static_features": [],
         "output_sequences": [],
-        "customer_ids": [],
     }
 
     # Process sequences for each customer
@@ -230,7 +228,6 @@ def prepare_data_for_modeling(
                 sequence_containers["output_sequences"].append(
                     output_window["Amount"].values
                 )
-                sequence_containers["customer_ids"].append(customer_id)
 
     return {
         "temporal_sequences": (
@@ -243,7 +240,6 @@ def prepare_data_for_modeling(
         "output_sequences": (
             np.array(sequence_containers["output_sequences"], dtype=np.float32)
         ),
-        "customer_ids": np.array(sequence_containers["customer_ids"]),
     }
 
 
@@ -253,7 +249,7 @@ output = prepare_data_for_modeling(
 )
 
 """
-# Scaling and Splitting
+## Scaling and Splitting
 """
 
 
@@ -330,7 +326,7 @@ train_data, val_data, test_data = create_temporal_splits_with_scaling(output)
 
 def calculate_metrics(y_true, y_pred):
     """
-    Calculates RMSE, MAE, R², and sMAPE
+    Calculates RMSE, MAE and R²
     """
     # Convert inputs to "float32"
     y_true = ops.cast(y_true, dtype="float32")
@@ -379,13 +375,11 @@ def plot_lorenz_analysis(y_true, y_pred):
     plt.figure(figsize=(10, 6))
     plt.plot(percentiles, true_cumsum_pct, "g-", label="True Values")
     plt.plot(percentiles, pred_cumsum_pct, "r-", label="Predicted Values")
-    plt.plot([0, 1], [0, 1], "k--", label="Perfect Equality")
     plt.xlabel("Cumulative % of Users (Descending Order)")
     plt.ylabel("Cumulative % of LTV")
     plt.title("Lorenz Curves: True vs Predicted Values")
     plt.legend()
     plt.grid(True)
-
     print(f"\nMutual Gini: {mutual_gini:.4f} (lower is better)")
     plt.show()
 
@@ -519,23 +513,9 @@ x_train_seq = np.asarray(train_data["trend_sequences"]).astype(np.float32)
 x_val_seq = np.asarray(val_data["trend_sequences"]).astype(np.float32)
 x_train_temporal = np.asarray(train_data["temporal_sequences"]).astype(np.float32)
 x_val_temporal = np.asarray(val_data["temporal_sequences"]).astype(np.float32)
-
-# Define callbacks with proper monitoring strategy
-callbacks = [
-    keras.callbacks.EarlyStopping(
-        monitor="val_loss",
-        patience=10,
-        restore_best_weights=True,  # Important for best model preservation
-        mode="min",
-    ),
-    keras.callbacks.ReduceLROnPlateau(
-        monitor="val_loss", factor=0.2, patience=5, min_lr=1e-6, mode="min", verbose=1
-    ),
-]
-
-train_outputs = train_data["output_sequences"].astype(np.float32)
-val_outputs = val_data["output_sequences"].astype(np.float32)
-test_output = test_data["output_sequences"].astype(np.float32)
+train_outputs = np.asarray(train_data["output_sequences"]).astype(np.float32)
+val_outputs = np.asarray(val_data["output_sequences"]).astype(np.float32)
+test_output = np.asarray(test_data["output_sequences"]).astype(np.float32)
 # Training setup
 keras.utils.set_random_seed(seed=42)
 
@@ -547,12 +527,7 @@ history = model.fit(
         val_data["output_sequences"].astype(np.float32),
     ),
     epochs=20,
-    batch_size=32,
-    callbacks=[
-        keras.callbacks.EarlyStopping(
-            monitor="val_loss", patience=10, restore_best_weights=True
-        )
-    ],
+    batch_size=30,
 )
 
 # Make predictions
@@ -574,7 +549,13 @@ hybrid_metrics = calculate_metrics(test_data["output_sequences"], predictions)
 hybrid_mutual_gini = plot_lorenz_analysis(test_data["output_sequences"], predictions)
 
 """
-## Conclusion: While LSTMs provide a solid baseline for capturing sequential patterns, the
-hybrid approach's additional attention mechanisms allow it to adaptively focus on the
-relevant temporal/seasonal features for prediction.
+## Conclusion
+
+While LSTMs excel at sequence to sequence learning as demonstrated through the work of Sutskever, I., Vinyals,
+O., & Le, Q. V. (2014) Sequence to sequence learning with neural networks.
+The hybrid approach here enhances this foundation. The addition of attention mechanisms allows the model to adaptively
+focus on relevant temporal/geographical patterns while maintaining the LSTM's inherent strengths in sequence learning.
+This combination has proven especially effective for handling both periodic patterns and special events in time
+series forecasting from Zhou, H., Zhang, S., Peng, J., Zhang, S., Li, J., Xiong, H., & Zhang, W. (2021).
+Informer: Beyond Efficient Transformer for Long Sequence Time-Series Forecasting.
 """
