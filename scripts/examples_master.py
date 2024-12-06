@@ -868,6 +868,7 @@ EXAMPLES_MASTER = {
                     "path": "molecule_generation",
                     "title": "Drug Molecule Generation with VAE",
                     "subcategory": "Graph generation",
+                    "keras_3": True,
                 },
                 {
                     "path": "wgan-graphs",
