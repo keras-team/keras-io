@@ -2,9 +2,10 @@
 Title: A Vision Transformer without Attention
 Author: [Aritra Roy Gosthipaty](https://twitter.com/ariG23498), [Ritwik Raha](https://twitter.com/ritwik_raha), [Shivalika Singh](https://www.linkedin.com/in/shivalika-singh/)
 Date created: 2022/02/24
-Last modified: 2022/10/15
+Last modified: 2024/12/06
 Description: A minimal implementation of ShiftViT.
 Accelerator: GPU
+Converted to Keras 3 by: [Sitam Meur](https://github.com/sitamgithub-MSIT)
 """
 
 """
