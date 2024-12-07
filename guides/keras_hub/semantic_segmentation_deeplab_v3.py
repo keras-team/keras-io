@@ -827,7 +827,7 @@ better accuracy and result train with more number of epochs.
 test_ds = load(split="sbd_eval")
 test_ds = preprocess_inputs(test_ds)
 
-images, masks = next(iter(train_ds.take(1)))
+images, masks = next(iter(test_ds.take(1)))
 images = ops.convert_to_tensor(images)
 masks = ops.convert_to_tensor(masks)
 preds = ops.expand_dims(ops.argmax(model.predict(images), axis=-1), axis=-1)
