@@ -621,6 +621,12 @@ EXAMPLES_MASTER = {
                     "keras_3": True,
                 },
                 {
+                    "path": "customer_lifetime_value",
+                    "title": "Deep Learning for Customer Lifetime Value",
+                    "subcategory": "Structured data regression",
+                    "keras_3": True,
+                },
+                {
                     "path": "classification_with_grn_and_vsn",
                     "title": "Classification with Gated Residual and Variable Selection Networks",
                     "subcategory": "Structured data classification",
