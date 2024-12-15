@@ -45,6 +45,7 @@ Import and install all the required dependencies.
 """shell
 pip install -qq audiomentations soundfile ffmpeg-binaries
 pip install -qq "keras==3.7.0"
+sudo -n apt-get install -y graphviz >/dev/null 2>&1  # Required for plotting the model
 """
 
 import glob
@@ -64,7 +65,7 @@ import keras
 import numpy as np
 import soundfile as sf
 from IPython import display
-from keras import callbacks, layers, ops, optimizers, saving, utils
+from keras import callbacks, layers, ops, saving
 from matplotlib import pyplot as plt
 
 """
@@ -93,14 +94,16 @@ BATCH_SIZE = 3
 ACCUMULATION_STEPS = 2
 EFFECTIVE_BATCH_SIZE = BATCH_SIZE * (ACCUMULATION_STEPS or 1)
 
-MODEL_PATH = path.expanduser(f"~/.keras/tmp/model_{keras.backend.backend()}.keras")
-CSV_LOG_PATH = path.expanduser(f"~/.keras/tmp/training_{keras.backend.backend()}.csv")
+# Paths
+TMP_DIR = path.expanduser("~/.keras/tmp")
 DATASET_DIR = path.expanduser("~/.keras/datasets")
+MODEL_PATH = path.join(TMP_DIR, f"model_{keras.backend.backend()}.keras")
+CSV_LOG_PATH = path.join(TMP_DIR, f"training_{keras.backend.backend()}.csv")
 os.makedirs(DATASET_DIR, exist_ok=True)
-os.makedirs(path.dirname(MODEL_PATH), exist_ok=True)
+os.makedirs(TMP_DIR, exist_ok=True)
 
 # Set random seed for reproducibility
-utils.set_random_seed(21)
+keras.utils.set_random_seed(21)
 
 """
 ## MUSDB18 Dataset
@@ -134,7 +137,7 @@ def download_musdb18(out_dir=None):
         return out_dir
 
     # Download and extract the dataset
-    download_dir = utils.get_file(
+    download_dir = keras.utils.get_file(
         fname="musdb18",
         origin="https://zenodo.org/records/1117372/files/musdb18.zip",
         extract=True,
@@ -185,7 +188,7 @@ through randomization and augmentation.
 """
 
 
-class Dataset(utils.PyDataset):
+class Dataset(keras.utils.PyDataset):
     def __init__(
         self,
         songs,
@@ -373,19 +376,22 @@ def inverse_stft(inputs, fft_size=STFT_N_FFT, sequence_stride=STFT_HOP_LENGTH):
 """
 ### Model Architecture
 
-The model uses TFC_TDF blocks that combine time-frequency convolutions (TFC)
-and time-distributed fully connected (TDF) layers.
+The model uses a custom encoder-decoder architecture with Time-Frequency Convolution
+(TFC) and Time-Distributed Fully Connected (TDF) blocks. They are grouped into a
+`TimeFrequencyTransformBlock`, i.e. "TFC_TDF" in the original paper by Choi et al.
 
-We define the TDF and TFC layers, and then build an encoder-decoder network with
-multiple scales. Each scale performs downscaling/upscaling and uses TFC_TDF blocks.
+We then define an encoder-decoder network with multiple scales. Each encoder scale
+applies TFC_TDF blocks followed by downsampling, while decoder scales apply TFC_TDF
+blocks over the concatenation of upsampled features and associated encoder outputs.
 """
 
 
 @saving.register_keras_serializable()
-class TDF(layers.Layer):
-    """Time-Distributed Fully Connected layer:
+class TimeDistributedDenseBlock(layers.Layer):
+    """Time-Distributed Fully Connected layer block.
 
-    Applies frequency-wise dense transformations across time frames.
+    Applies frequency-wise dense transformations across time frames with instance
+    normalization and GELU activation.
     """
 
     def __init__(self, bottleneck_factor, fft_dim, **kwargs):
@@ -412,10 +418,11 @@ class TDF(layers.Layer):
 
 
 @saving.register_keras_serializable()
-class TFC(layers.Layer):
-    """Time-Frequency Convolutional layer:
+class TimeFrequencyConvolution(layers.Layer):
+    """Time-Frequency Convolutional layer.
 
-    Applies a 2D convolution over time-frequency representations.
+    Applies a 2D convolution over time-frequency representations and applies instance
+    normalization and GELU activation.
     """
 
     def __init__(self, channels, **kwargs):
@@ -430,38 +437,82 @@ class TFC(layers.Layer):
         return self.conv(ops.gelu(self.group_norm(x)))
 
 
-def tfc_tdf(inputs, channels, length, fft_dim, bottleneck_factor):
-    """A TFC_TDF block sequence.
+@saving.register_keras_serializable()
+class TimeFrequencyTransformBlock(layers.Layer):
+    """Implements TFC_TDF block for encoder-decoder architecture.
 
-    Repeatedly apply TFC and TDF layers and form residual connections.
+    Repeatedly apply Time-Frequency Convolution and Time-Distributed Dense blocks as
+    many times as specified by the `length` parameter.
     """
-    in_channels = ops.shape(inputs)[-1]
-    x = inputs
-    for _ in range(length):
-        # First TFC layer
-        tfc_1 = TFC(in_channels)(x)
-        # TDF layer
-        tdf = TDF(bottleneck_factor, fft_dim)(x)
-        # Second TFC layer with residual
-        tfc_2 = TFC(channels)(tfc_1 + tdf)
-        x = tfc_2 + layers.Conv2D(channels, 1, 1, use_bias=False)(x)
-        in_channels = channels
-    return x
+
+    def __init__(
+        self, channels, length, fft_dim, bottleneck_factor, in_channels=None, **kwargs
+    ):
+        super().__init__(**kwargs)
+        self.channels = channels
+        self.length = length
+        self.fft_dim = fft_dim
+        self.bottleneck_factor = bottleneck_factor
+        self.in_channels = in_channels or channels
+
+    def build(self, *_):
+        self.blocks = []
+        in_channels = self.in_channels
+        for _ in range(self.length):
+            block = (
+                TimeFrequencyConvolution(in_channels),
+                TimeDistributedDenseBlock(self.bottleneck_factor, self.fft_dim),
+                TimeFrequencyConvolution(self.channels),
+                # Residual connection to the input
+                layers.Conv2D(self.channels, 1, 1, use_bias=False),
+            )
+            self.blocks.append(block)
+            in_channels = self.channels
+
+    def call(self, inputs):
+        x = inputs
+        for (
+            time_freq_conv_1,
+            time_distributed_dense,
+            time_freq_conv_2,
+            residual,
+        ) in self.blocks:
+            # Apply first time-frequency convolution
+            tfc_1 = time_freq_conv_1(x)
+            # Apply time-distributed dense layer
+            tdf = time_distributed_dense(x)
+            # Apply final time-frequency convolution with residual connection
+            x = time_freq_conv_2(tfc_1 + tdf) + residual(x)
+        return x
 
 
-def downscale(inputs, out_channels, scale):
+@saving.register_keras_serializable()
+class Downscale(layers.Layer):
     """Downscale time-frequency dimensions using a convolution."""
-    x = layers.Conv2D(out_channels, scale, scale, use_bias=False)(inputs)
-    return layers.GroupNormalization(groups=-1)(ops.gelu(x))
+
+    conv_cls = layers.Conv2D
+
+    def __init__(self, channels, scale, **kwargs):
+        super().__init__(**kwargs)
+        self.channels = channels
+        self.scale = scale
+
+    def build(self, *_):
+        self.conv = self.conv_cls(self.channels, self.scale, self.scale, use_bias=False)
+        self.norm = layers.GroupNormalization(groups=-1)
+
+    def call(self, inputs):
+        return self.norm(ops.gelu(self.conv(inputs)))
 
 
-def upscale(inputs, out_channels, scale):
+@saving.register_keras_serializable()
+class Upscale(Downscale):
     """Upscale time-frequency dimensions using a transposed convolution."""
-    x = layers.Conv2DTranspose(out_channels, scale, scale, use_bias=False)(inputs)
-    return layers.GroupNormalization(groups=-1)(ops.gelu(x))
+
+    conv_cls = layers.Conv2DTranspose
 
 
-def tfc_tdf_net(
+def build_model(
     inputs,
     n_instruments=N_INSTRUMENTS,
     n_subbands=N_SUBBANDS,
@@ -469,7 +520,7 @@ def tfc_tdf_net(
     fft_dim=(STFT_N_FFT // 2) // N_SUBBANDS,
     n_scales=4,
     scale=(2, 2),
-    block_length=2,
+    block_size=2,
     growth=128,
     bottleneck_factor=2,
     **kwargs,
@@ -486,19 +537,23 @@ def tfc_tdf_net(
     # Encoder path
     encoder_outs = []
     for _ in range(n_scales):
-        x = tfc_tdf(x, channels, block_length, fft_dim, bottleneck_factor)
+        x = TimeFrequencyTransformBlock(
+            channels, block_size, fft_dim, bottleneck_factor
+        )(x)
         encoder_outs.append(x)
         fft_dim, channels = fft_dim // scale[0], channels + growth
-        x = downscale(x, channels, scale)
+        x = Downscale(channels, scale)(x)
 
     # Bottleneck
-    x = tfc_tdf(x, channels, block_length, fft_dim, bottleneck_factor)
+    x = TimeFrequencyTransformBlock(channels, block_size, fft_dim, bottleneck_factor)(x)
 
     # Decoder path
     for _ in range(n_scales):
         fft_dim, channels = fft_dim * scale[0], channels - growth
-        x = ops.concatenate([upscale(x, channels, scale), encoder_outs.pop()], axis=-1)
-        x = tfc_tdf(x, channels, block_length, fft_dim, bottleneck_factor)
+        x = ops.concatenate([Upscale(channels, scale)(x), encoder_outs.pop()], axis=-1)
+        x = TimeFrequencyTransformBlock(
+            channels, block_size, fft_dim, bottleneck_factor, in_channels=x.shape[-1]
+        )(x)
 
     # Residual connection and final convolutions
     x = ops.concatenate([mix, x * first_conv_out], axis=-1)
@@ -564,12 +619,15 @@ def spectral_loss(y_true, y_pred):
 if path.exists(MODEL_PATH):
     model = saving.load_model(MODEL_PATH)
 else:
-    model = tfc_tdf_net(keras.Input(sample_batch_x.shape[1:]), name="tfc_tdf_net")
+    model = build_model(keras.Input(sample_batch_x.shape[1:]), name="tfc_tdf_net")
 
+# Display the model architecture
 model.summary()
+img = keras.utils.plot_model(model, path.join(TMP_DIR, "model.png"), show_shapes=True)
+display.Image(img)
 
 # Compile the model
-optimizer = optimizers.Adam(5e-05, gradient_accumulation_steps=ACCUMULATION_STEPS)
+optimizer = keras.optimizers.Adam(5e-05, gradient_accumulation_steps=ACCUMULATION_STEPS)
 model.compile(optimizer=optimizer, loss=spectral_loss, metrics=[sdr])
 
 # Define callbacks
@@ -600,7 +658,7 @@ visualize_audio_np(ops.convert_to_numpy(y_pred[0, 0]), name="vocals_pred")
 ## Conclusion
 
 We built and trained a vocal track separation model using an encoder-decoder
-architecture and TFC_TDF blocks, applied to the MUSDB18 dataset. We demonstrated
+architecture with custom blocks applied to the MUSDB18 dataset. We demonstrated
 STFT-based preprocessing, data augmentation, and a source separation metric (SDR).
 
 **Next steps:**
