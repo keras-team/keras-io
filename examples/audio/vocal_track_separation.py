@@ -354,18 +354,19 @@ def stft(inputs, fft_size=STFT_N_FFT, sequence_stride=STFT_HOP_LENGTH):
     real_x, imag_x = ops.stft(inputs, fft_size, sequence_stride, fft_size)
     real_x, imag_x = ops.expand_dims(real_x, -1), ops.expand_dims(imag_x, -1)
     x = ops.concatenate((real_x, imag_x), axis=-1)
-    return ops.split(x, [x.shape[2] - 1], axis=2)[
-        0
-    ]  # Drop last freq sample for convenience
+
+    # Drop last freq sample for convenience
+    return ops.split(x, [x.shape[2] - 1], axis=2)[0]
 
 
 def inverse_stft(inputs, fft_size=STFT_N_FFT, sequence_stride=STFT_HOP_LENGTH):
     """Compute the inverse STFT for the given STFT input."""
-    # Pad back if using torch backend
+    x = inputs
+
+    # Pad back dropped freq sample if using torch backend
     if keras.backend.backend() == "torch":
-        x = ops.pad(inputs, ((0, 0), (0, 0), (0, 1), (0, 0)))
-    else:
-        x = inputs
+        x = ops.pad(x, ((0, 0), (0, 0), (0, 1), (0, 0)))
+
     real_x, imag_x = ops.split(x, 2, axis=-1)
     real_x = ops.squeeze(real_x, axis=-1)
     imag_x = ops.squeeze(imag_x, axis=-1)
@@ -457,32 +458,29 @@ class TimeFrequencyTransformBlock(layers.Layer):
 
     def build(self, *_):
         self.blocks = []
-        in_channels = self.in_channels
-        for _ in range(self.length):
-            block = (
-                TimeFrequencyConvolution(in_channels),
-                TimeDistributedDenseBlock(self.bottleneck_factor, self.fft_dim),
-                TimeFrequencyConvolution(self.channels),
-                # Residual connection to the input
-                layers.Conv2D(self.channels, 1, 1, use_bias=False),
+        # Add blocks in a flat list to avoid nested structures
+        for i in range(self.length):
+            in_channels = self.channels if i > 0 else self.in_channels
+            self.blocks.append(TimeFrequencyConvolution(in_channels))
+            self.blocks.append(
+                TimeDistributedDenseBlock(self.bottleneck_factor, self.fft_dim)
             )
-            self.blocks.append(block)
-            in_channels = self.channels
+            self.blocks.append(TimeFrequencyConvolution(self.channels))
+            # Residual connection
+            self.blocks.append(layers.Conv2D(self.channels, 1, 1, use_bias=False))
 
     def call(self, inputs):
         x = inputs
-        for (
-            time_freq_conv_1,
-            time_distributed_dense,
-            time_freq_conv_2,
-            residual,
-        ) in self.blocks:
-            # Apply first time-frequency convolution
-            tfc_1 = time_freq_conv_1(x)
-            # Apply time-distributed dense layer
-            tdf = time_distributed_dense(x)
-            # Apply final time-frequency convolution with residual connection
-            x = time_freq_conv_2(tfc_1 + tdf) + residual(x)
+        # Each block consists of 4 layers:
+        # 1. Time-Frequency Convolution
+        # 2. Time-Distributed Dense
+        # 3. Time-Frequency Convolution
+        # 4. Residual connection
+        for i in range(0, len(self.blocks), 4):
+            tfc_1 = self.blocks[i](x)
+            tdf = self.blocks[i + 1](x)
+            tfc_2 = self.blocks[i + 2](tfc_1 + tdf)
+            x = tfc_2 + self.blocks[i + 3](x)  # Residual connection
         return x
 
 
@@ -613,6 +611,8 @@ def spectral_loss(y_true, y_pred):
 
 """
 ## Training
+
+### Visualize Model Architecture
 """
 
 # Load or create the model
@@ -624,7 +624,11 @@ else:
 # Display the model architecture
 model.summary()
 img = keras.utils.plot_model(model, path.join(TMP_DIR, "model.png"), show_shapes=True)
-display.Image(img)
+display.display(img)
+
+"""
+### Compile and Train the Model
+"""
 
 # Compile the model
 optimizer = keras.optimizers.Adam(5e-05, gradient_accumulation_steps=ACCUMULATION_STEPS)
