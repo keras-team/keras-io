@@ -2,7 +2,7 @@
 Title: Drug Molecule Generation with VAE
 Author: [Victor Basu](https://www.linkedin.com/in/victor-basu-520958147)
 Date created: 2022/03/10
-Last modified: 2024/12/05
+Last modified: 2024/12/17
 Description: Implementing a Convolutional Variational AutoEncoder (VAE) for Drug Discovery.
 Accelerator: GPU
 """
@@ -385,8 +385,7 @@ class Sampling(layers.Layer):
 
     def call(self, inputs):
         z_mean, z_log_var = inputs
-        batch = ops.shape(z_log_var)[0]
-        dim = ops.shape(z_log_var)[1]
+        batch, dim = ops.shape(z_log_var)
         epsilon = keras.random.normal(shape=(batch, dim), seed=self.seed_generator)
         return z_mean + ops.exp(0.5 * z_log_var) * epsilon
 

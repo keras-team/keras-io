@@ -2,7 +2,7 @@
 
 **Author:** [Victor Basu](https://www.linkedin.com/in/victor-basu-520958147)<br>
 **Date created:** 2022/03/10<br>
-**Last modified:** 2024/12/05<br>
+**Last modified:** 2024/12/17<br>
 **Description:** Implementing a Convolutional Variational AutoEncoder (VAE) for Drug Discovery.
 
 
@@ -116,13 +116,8 @@ df["smiles"] = df["smiles"].apply(lambda s: s.replace("\n", ""))
 df.head()
 ```
 
-<div class="k-default-codeblock">
-```
-Downloading data from https://raw.githubusercontent.com/aspuru-guzik-group/chemical_vae/master/models/zinc_properties/250k_rndm_zinc_drugs_clean_3.csv
-22606589/22606589 ━━━━━━━━━━━━━━━━━━━━ 1s 0us/step
 
-```
-</div>
+
 
 <div>
 <style scoped>
@@ -291,6 +286,7 @@ def graph_to_molecule(graph):
         return None
 
     return molecule
+
 ```
 
 ---
@@ -474,8 +470,7 @@ class Sampling(layers.Layer):
 
     def call(self, inputs):
         z_mean, z_log_var = inputs
-        batch = ops.shape(z_log_var)[0]
-        dim = ops.shape(z_log_var)[1]
+        batch, dim = ops.shape(z_log_var)
         epsilon = keras.random.normal(shape=(batch, dim), seed=self.seed_generator)
         return z_mean + ops.exp(0.5 * z_log_var) * epsilon
 
@@ -667,37 +662,34 @@ history = model.fit([adjacency_tensor, feature_tensor, qed_tensor], epochs=EPOCH
 <div class="k-default-codeblock">
 ```
 Epoch 1/10
- 250/250 ━━━━━━━━━━━━━━━━━━━━ 114s 436ms/step - loss: 2798.4812
+ 250/250 ━━━━━━━━━━━━━━━━━━━━ 125s 481ms/step - loss: 2841.6440
 
-Epoch 2/10
- 250/250 ━━━━━━━━━━━━━━━━━━━━ 104s 414ms/step - loss: 225.8434
+ Epoch 2/10
+  250/250 ━━━━━━━━━━━━━━━━━━━━ 113s 451ms/step - loss: 197.5607
 
 Epoch 3/10
- 250/250 ━━━━━━━━━━━━━━━━━━━━ 101s 403ms/step - loss: 321.1549
+ 250/250 ━━━━━━━━━━━━━━━━━━━━ 115s 460ms/step - loss: 220.5820
 
 Epoch 4/10
- 250/250 ━━━━━━━━━━━━━━━━━━━━ 101s 405ms/step - loss: 255.8026
+ 250/250 ━━━━━━━━━━━━━━━━━━━━ 109s 434ms/step - loss: 394.0200
 
 Epoch 5/10
- 250/250 ━━━━━━━━━━━━━━━━━━━━ 107s 428ms/step - loss: 223.7877
+ 250/250 ━━━━━━━━━━━━━━━━━━━━ 109s 436ms/step - loss: 388.5954
 
 Epoch 6/10
- 250/250 ━━━━━━━━━━━━━━━━━━━━ 117s 466ms/step - loss: 237.3931
+ 250/250 ━━━━━━━━━━━━━━━━━━━━ 108s 431ms/step - loss: 323.4093
 
 Epoch 7/10
- 250/250 ━━━━━━━━━━━━━━━━━━━━ 109s 436ms/step - loss: 403.0982
-
+ 250/250 ━━━━━━━━━━━━━━━━━━━━ 108s 432ms/step - loss: 278.2234
 Epoch 8/10
- 250/250 ━━━━━━━━━━━━━━━━━━━━ 126s 504ms/step - loss: 264.9526
+ 250/250 ━━━━━━━━━━━━━━━━━━━━ 110s 439ms/step - loss: 393.4183
+
 
 Epoch 9/10
- 250/250 ━━━━━━━━━━━━━━━━━━━━ 104s 418ms/step - loss: 315.0625
+ 250/250 ━━━━━━━━━━━━━━━━━━━━ 114s 456ms/step - loss: 523.3671
 
 Epoch 10/10
- 250/250 ━━━━━━━━━━━━━━━━━━━━ 102s 409ms/step - loss: 204.2523
- 
-```
-</div>
+ 250/250 ━━━━━━━━━━━━━━━━━━━━ 111s 445ms/step - loss: 223.5443
 
 
 ---
@@ -715,9 +707,8 @@ MolsToGridImage(
     [m for m in molecules if m is not None][:1000], molsPerRow=5, subImgSize=(260, 160)
 )
 ```
-
     
-![png](/img/examples/generative/molecule_generation/molecule_generation_21_16.png)
+![png](/img/examples/generative/molecule_generation/molecule_generation_21_18.png)
     
 
 
@@ -740,8 +731,10 @@ def plot_latent(vae, data, labels):
 
 plot_latent(model, [adjacency_tensor[:8000], feature_tensor[:8000]], qed_tensor[:8000])
 ```
+
+
     
-![png](/img/examples/generative/molecule_generation/molecule_generation_23_41.png)
+![png](/img/examples/generative/molecule_generation/molecule_generation_23_39.png)
     
 
 
