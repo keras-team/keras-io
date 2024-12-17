@@ -888,6 +888,12 @@ EXAMPLES_MASTER = {
             "toc": True,
             "children": [
                 {
+                    "path": "vocal_track_separation",
+                    "title": "Vocal Track Separation with Encoder-Decoder Architecture",
+                    "subcategory": "Vocal track separation",
+                    "keras_3": True,
+                },
+                {
                     "path": "transformer_asr",
                     "title": "Automatic Speech Recognition with Transformer",
                     "subcategory": "Speech recognition",
