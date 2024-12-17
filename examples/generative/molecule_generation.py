@@ -2,7 +2,7 @@
 Title: Drug Molecule Generation with VAE
 Author: [Victor Basu](https://www.linkedin.com/in/victor-basu-520958147)
 Date created: 2022/03/10
-Last modified: 2022/03/24
+Last modified: 2024/12/17
 Description: Implementing a Convolutional Variational AutoEncoder (VAE) for Drug Discovery.
 Accelerator: GPU
 """
@@ -70,14 +70,19 @@ a molecule object, which can then be used to compute a great number of molecular
 pip -q install rdkit-pypi==2021.9.4
 """
 
+import os
+
+os.environ["KERAS_BACKEND"] = "tensorflow"
+
 import ast
 
 import pandas as pd
 import numpy as np
 
 import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras import layers
+import keras
+from keras import layers
+from keras import ops
 
 import matplotlib.pyplot as plt
 from rdkit import Chem, RDLogger
@@ -98,11 +103,11 @@ accessibility score) and **QED** (Qualitative Estimate of Drug-likeness).
 """
 
 csv_path = keras.utils.get_file(
-    "/content/250k_rndm_zinc_drugs_clean_3.csv",
+    "250k_rndm_zinc_drugs_clean_3.csv",
     "https://raw.githubusercontent.com/aspuru-guzik-group/chemical_vae/master/models/zinc_properties/250k_rndm_zinc_drugs_clean_3.csv",
 )
 
-df = pd.read_csv("/content/250k_rndm_zinc_drugs_clean_3.csv")
+df = pd.read_csv(csv_path)
 df["smiles"] = df["smiles"].apply(lambda s: s.replace("\n", ""))
 df.head()
 
@@ -256,7 +261,7 @@ class RelationalGraphConvLayer(keras.layers.Layer):
             regularizer=self.kernel_regularizer,
             trainable=True,
             name="W",
-            dtype=tf.float32,
+            dtype="float32",
         )
 
         if self.use_bias:
@@ -266,7 +271,7 @@ class RelationalGraphConvLayer(keras.layers.Layer):
                 regularizer=self.bias_regularizer,
                 trainable=True,
                 name="b",
-                dtype=tf.float32,
+                dtype="float32",
             )
 
         self.built = True
@@ -274,13 +279,13 @@ class RelationalGraphConvLayer(keras.layers.Layer):
     def call(self, inputs, training=False):
         adjacency, features = inputs
         # Aggregate information from neighbors
-        x = tf.matmul(adjacency, features[:, None, :, :])
+        x = ops.matmul(adjacency, features[:, None])
         # Apply linear transformation
-        x = tf.matmul(x, self.kernel)
+        x = ops.matmul(x, self.kernel)
         if self.use_bias:
             x += self.bias
         # Reduce bond types dim
-        x_reduced = tf.reduce_sum(x, axis=1)
+        x_reduced = ops.sum(x, axis=1)
         # Apply non-linear transformation
         return self.activation(x_reduced)
 
@@ -316,8 +321,8 @@ the graph adjacency matrix and feature matrix of the corresponding molecules.
 def get_encoder(
     gconv_units, latent_dim, adjacency_shape, feature_shape, dense_units, dropout_rate
 ):
-    adjacency = keras.layers.Input(shape=adjacency_shape)
-    features = keras.layers.Input(shape=feature_shape)
+    adjacency = layers.Input(shape=adjacency_shape)
+    features = layers.Input(shape=feature_shape)
 
     # Propagate through one or more graph convolutional layers
     features_transformed = features
@@ -326,7 +331,7 @@ def get_encoder(
             [adjacency, features_transformed]
         )
     # Reduce 2-D representation of molecule to 1-D
-    x = keras.layers.GlobalAveragePooling1D()(features_transformed)
+    x = layers.GlobalAveragePooling1D()(features_transformed)
 
     # Propagate through one or more densely connected layers
     for units in dense_units:
@@ -346,20 +351,20 @@ def get_decoder(dense_units, dropout_rate, latent_dim, adjacency_shape, feature_
 
     x = latent_inputs
     for units in dense_units:
-        x = keras.layers.Dense(units, activation="tanh")(x)
-        x = keras.layers.Dropout(dropout_rate)(x)
+        x = layers.Dense(units, activation="tanh")(x)
+        x = layers.Dropout(dropout_rate)(x)
 
     # Map outputs of previous layer (x) to [continuous] adjacency tensors (x_adjacency)
-    x_adjacency = keras.layers.Dense(tf.math.reduce_prod(adjacency_shape))(x)
-    x_adjacency = keras.layers.Reshape(adjacency_shape)(x_adjacency)
+    x_adjacency = layers.Dense(np.prod(adjacency_shape))(x)
+    x_adjacency = layers.Reshape(adjacency_shape)(x_adjacency)
     # Symmetrify tensors in the last two dimensions
-    x_adjacency = (x_adjacency + tf.transpose(x_adjacency, (0, 1, 3, 2))) / 2
-    x_adjacency = keras.layers.Softmax(axis=1)(x_adjacency)
+    x_adjacency = (x_adjacency + ops.transpose(x_adjacency, (0, 1, 3, 2))) / 2
+    x_adjacency = layers.Softmax(axis=1)(x_adjacency)
 
     # Map outputs of previous layer (x) to [continuous] feature tensors (x_features)
-    x_features = keras.layers.Dense(tf.math.reduce_prod(feature_shape))(x)
-    x_features = keras.layers.Reshape(feature_shape)(x_features)
-    x_features = keras.layers.Softmax(axis=2)(x_features)
+    x_features = layers.Dense(np.prod(feature_shape))(x)
+    x_features = layers.Reshape(feature_shape)(x_features)
+    x_features = layers.Softmax(axis=2)(x_features)
 
     decoder = keras.Model(
         latent_inputs, outputs=[x_adjacency, x_features], name="decoder"
@@ -374,12 +379,15 @@ def get_decoder(dense_units, dropout_rate, latent_dim, adjacency_shape, feature_
 
 
 class Sampling(layers.Layer):
+    def __init__(self, seed=None, **kwargs):
+        super().__init__(**kwargs)
+        self.seed_generator = keras.random.SeedGenerator(seed)
+
     def call(self, inputs):
         z_mean, z_log_var = inputs
-        batch = tf.shape(z_log_var)[0]
-        dim = tf.shape(z_log_var)[1]
-        epsilon = tf.keras.backend.random_normal(shape=(batch, dim))
-        return z_mean + tf.exp(0.5 * z_log_var) * epsilon
+        batch, dim = ops.shape(z_log_var)
+        epsilon = keras.random.normal(shape=(batch, dim), seed=self.seed_generator)
+        return z_mean + ops.exp(0.5 * z_log_var) * epsilon
 
 
 """
@@ -409,12 +417,14 @@ It adds a regularization term to the loss function.
 
 
 class MoleculeGenerator(keras.Model):
-    def __init__(self, encoder, decoder, max_len, **kwargs):
+    def __init__(self, encoder, decoder, max_len, seed=None, **kwargs):
         super().__init__(**kwargs)
         self.encoder = encoder
         self.decoder = decoder
         self.property_prediction_layer = layers.Dense(1)
         self.max_len = max_len
+        self.seed_generator = keras.random.SeedGenerator(seed)
+        self.sampling_layer = Sampling(seed=seed)
 
         self.train_total_loss_tracker = keras.metrics.Mean(name="train_total_loss")
         self.val_total_loss_tracker = keras.metrics.Mean(name="val_total_loss")
@@ -422,7 +432,7 @@ class MoleculeGenerator(keras.Model):
     def train_step(self, data):
         adjacency_tensor, feature_tensor, qed_tensor = data[0]
         graph_real = [adjacency_tensor, feature_tensor]
-        self.batch_size = tf.shape(qed_tensor)[0]
+        self.batch_size = ops.shape(qed_tensor)[0]
         with tf.GradientTape() as tape:
             z_mean, z_log_var, qed_pred, gen_adjacency, gen_features = self(
                 graph_real, training=True
@@ -444,25 +454,27 @@ class MoleculeGenerator(keras.Model):
         adjacency_real, features_real = graph_real
         adjacency_gen, features_gen = graph_generated
 
-        adjacency_loss = tf.reduce_mean(
-            tf.reduce_sum(
-                keras.losses.categorical_crossentropy(adjacency_real, adjacency_gen),
+        adjacency_loss = ops.mean(
+            ops.sum(
+                keras.losses.categorical_crossentropy(
+                    adjacency_real, adjacency_gen, axis=1
+                ),
                 axis=(1, 2),
             )
         )
-        features_loss = tf.reduce_mean(
-            tf.reduce_sum(
+        features_loss = ops.mean(
+            ops.sum(
                 keras.losses.categorical_crossentropy(features_real, features_gen),
                 axis=(1),
             )
         )
-        kl_loss = -0.5 * tf.reduce_sum(
-            1 + z_log_var - tf.square(z_mean) - tf.exp(z_log_var), 1
+        kl_loss = -0.5 * ops.sum(
+            1 + z_log_var - z_mean**2 - ops.minimum(ops.exp(z_log_var), 1e6), 1
         )
-        kl_loss = tf.reduce_mean(kl_loss)
+        kl_loss = ops.mean(kl_loss)
 
-        property_loss = tf.reduce_mean(
-            keras.losses.binary_crossentropy(qed_true, qed_pred)
+        property_loss = ops.mean(
+            keras.losses.binary_crossentropy(qed_true, ops.squeeze(qed_pred, axis=1))
         )
 
         graph_loss = self._gradient_penalty(graph_real, graph_generated)
@@ -475,11 +487,13 @@ class MoleculeGenerator(keras.Model):
         adjacency_generated, features_generated = graph_generated
 
         # Generate interpolated graphs (adjacency_interp and features_interp)
-        alpha = tf.random.uniform([self.batch_size])
-        alpha = tf.reshape(alpha, (self.batch_size, 1, 1, 1))
-        adjacency_interp = (adjacency_real * alpha) + (1 - alpha) * adjacency_generated
-        alpha = tf.reshape(alpha, (self.batch_size, 1, 1))
-        features_interp = (features_real * alpha) + (1 - alpha) * features_generated
+        alpha = keras.random.uniform(shape=(self.batch_size,), seed=self.seed_generator)
+        alpha = ops.reshape(alpha, (self.batch_size, 1, 1, 1))
+        adjacency_interp = (adjacency_real * alpha) + (
+            1.0 - alpha
+        ) * adjacency_generated
+        alpha = ops.reshape(alpha, (self.batch_size, 1, 1))
+        features_interp = (features_real * alpha) + (1.0 - alpha) * features_generated
 
         # Compute the logits of interpolated graphs
         with tf.GradientTape() as tape:
@@ -492,24 +506,26 @@ class MoleculeGenerator(keras.Model):
         # Compute the gradients with respect to the interpolated graphs
         grads = tape.gradient(logits, [adjacency_interp, features_interp])
         # Compute the gradient penalty
-        grads_adjacency_penalty = (1 - tf.norm(grads[0], axis=1)) ** 2
-        grads_features_penalty = (1 - tf.norm(grads[1], axis=2)) ** 2
-        return tf.reduce_mean(
-            tf.reduce_mean(grads_adjacency_penalty, axis=(-2, -1))
-            + tf.reduce_mean(grads_features_penalty, axis=(-1))
+        grads_adjacency_penalty = (1 - ops.norm(grads[0], axis=1)) ** 2
+        grads_features_penalty = (1 - ops.norm(grads[1], axis=2)) ** 2
+        return ops.mean(
+            ops.mean(grads_adjacency_penalty, axis=(-2, -1))
+            + ops.mean(grads_features_penalty, axis=(-1))
         )
 
     def inference(self, batch_size):
-        z = tf.random.normal((batch_size, LATENT_DIM))
+        z = keras.random.normal(
+            shape=(batch_size, LATENT_DIM), seed=self.seed_generator
+        )
         reconstruction_adjacency, reconstruction_features = model.decoder.predict(z)
         # obtain one-hot encoded adjacency tensor
-        adjacency = tf.argmax(reconstruction_adjacency, axis=1)
-        adjacency = tf.one_hot(adjacency, depth=BOND_DIM, axis=1)
+        adjacency = ops.argmax(reconstruction_adjacency, axis=1)
+        adjacency = ops.one_hot(adjacency, num_classes=BOND_DIM, axis=1)
         # Remove potential self-loops from adjacency
-        adjacency = tf.linalg.set_diag(adjacency, tf.zeros(tf.shape(adjacency)[:-1]))
+        adjacency = adjacency * (1.0 - ops.eye(NUM_ATOMS, dtype="float32")[None, None])
         # obtain one-hot encoded feature tensor
-        features = tf.argmax(reconstruction_features, axis=2)
-        features = tf.one_hot(features, depth=ATOM_DIM, axis=2)
+        features = ops.argmax(reconstruction_features, axis=2)
+        features = ops.one_hot(features, num_classes=ATOM_DIM, axis=2)
         return [
             graph_to_molecule([adjacency[i].numpy(), features[i].numpy()])
             for i in range(batch_size)
@@ -517,7 +533,7 @@ class MoleculeGenerator(keras.Model):
 
     def call(self, inputs):
         z_mean, log_var = self.encoder(inputs)
-        z = Sampling()([z_mean, log_var])
+        z = self.sampling_layer([z_mean, log_var])
 
         gen_adjacency, gen_features = self.decoder(z)
 
@@ -530,7 +546,7 @@ class MoleculeGenerator(keras.Model):
 ## Train the model
 """
 
-vae_optimizer = tf.keras.optimizers.Adam(learning_rate=VAE_LR)
+vae_optimizer = keras.optimizers.Adam(learning_rate=VAE_LR)
 
 encoder = get_encoder(
     gconv_units=[9],
