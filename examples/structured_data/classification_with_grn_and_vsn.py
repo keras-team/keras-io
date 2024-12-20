@@ -46,6 +46,8 @@ and 34 categorical features.
 """
 
 import os
+import subprocess
+import tarfile
 
 # Only the TensorFlow backend supports string inputs.
 os.environ["KERAS_BACKEND"] = "tensorflow"
@@ -108,13 +110,30 @@ CSV_HEADER = [
     "income_level",
 ]
 
-data_url = "https://archive.ics.uci.edu/static/public/20/census+income.zip"
+data_url = "https://archive.ics.uci.edu/static/public/117/census+income+kdd.zip"
 keras.utils.get_file(origin=data_url, extract=True)
+
+
+"""
+determine the downloaded .tar.gz file path and
+extract the files from the downloaded .tar.gz file
+"""
+
+extracted_path = os.path.join(
+    os.path.expanduser("~"), ".keras", "datasets", "census+income+kdd.zip"
+)
+for root, dirs, files in os.walk(extracted_path):
+    for file in files:
+        if file.endswith('.tar.gz'):
+            tar_gz_path = os.path.join(root, file)
+            with tarfile.open(tar_gz_path, 'r:gz') as tar:
+                tar.extractall(path=root)
+
 train_data_path = os.path.join(
-    os.path.expanduser("~"), ".keras", "datasets", "adult.data"
+    os.path.expanduser("~"), ".keras", "datasets", "census+income+kdd.zip", "census-income.data"
 )
 test_data_path = os.path.join(
-    os.path.expanduser("~"), ".keras", "datasets", "adult.test"
+    os.path.expanduser("~"), ".keras", "datasets", "census+income+kdd.zip", "census-income.test"
 )
 
 data = pd.read_csv(train_data_path, header=None, names=CSV_HEADER)
@@ -122,7 +141,6 @@ test_data = pd.read_csv(test_data_path, header=None, names=CSV_HEADER)
 
 print(f"Data shape: {data.shape}")
 print(f"Test data shape: {test_data.shape}")
-
 
 """
 We convert the target column from string to integer.
@@ -156,6 +174,16 @@ test_data_file = "test_data.csv"
 train_data.to_csv(train_data_file, index=False, header=False)
 valid_data.to_csv(valid_data_file, index=False, header=False)
 test_data.to_csv(test_data_file, index=False, header=False)
+
+
+"""
+clean the directory except the .tar.gz file and
+remove empty directories
+"""
+
+subprocess.run(f'find {extracted_path} -type f ! -name "*.tar.gz" -exec rm -f {{}} +', shell=True, check=True)
+subprocess.run(f'find {extracted_path} -type d -empty -exec rmdir {{}} +', shell=True, check=True)
+
 
 """
 ## Define dataset metadata
@@ -436,6 +464,7 @@ train_dataset = get_dataset_from_csv(
     train_data_file, shuffle=True, batch_size=batch_size
 )
 valid_dataset = get_dataset_from_csv(valid_data_file, batch_size=batch_size)
+
 model.fit(
     train_dataset,
     epochs=num_epochs,
