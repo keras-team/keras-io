@@ -110,6 +110,24 @@ CSV_HEADER = [
     "income_level",
 ]
 
+"""
+Arranged CSV_HEADER to match the FEATURES_NAME metadata described below
+"""
+
+CSV_HEADER_FEATURE = ['age', 'wage_per_hour', 'capital_gains', 'capital_losses',
+'dividends_from_stocks', 'num_persons_worked_for_employer',
+'weeks_worked_in_year', 'instance_weight', 'class_of_worker',
+'detailed_industry_recode', 'detailed_occupation_recode', 'education',
+'enroll_in_edu_inst_last_wk', 'marital_stat', 'major_industry_code', 'major_occupation_code',
+'race', 'hispanic_origin', 'sex', 'member_of_a_labor_union', 'reason_for_unemployment',
+'full_or_part_time_employment_stat', 'tax_filer_stat', 'region_of_previous_residence',
+'state_of_previous_residence', 'detailed_household_and_family_stat', 'detailed_household_summary_in_household',
+'migration_code-change_in_msa', 'migration_code-change_in_reg', 'migration_code-move_within_reg',
+'live_in_this_house_1_year_ago', 'migration_prev_res_in_sunbelt', 'family_members_under_18',
+'country_of_birth_father', 'country_of_birth_mother', 'country_of_birth_self', 'citizenship',
+'own_business_or_self_employed', 'fill_inc_questionnaire_for_veterans_admin', 'veterans_benefits',
+'year', 'income_level']
+
 data_url = "https://archive.ics.uci.edu/static/public/117/census+income+kdd.zip"
 keras.utils.get_file(origin=data_url, extract=True)
 
@@ -137,6 +155,8 @@ test_data_path = os.path.join(
 )
 
 data = pd.read_csv(train_data_path, header=None, names=CSV_HEADER)
+# Rearrange the dataframe columns to match FEATURES_NAMES metadata described below
+data = data[CSV_HEADER_FEATURE]
 test_data = pd.read_csv(test_data_path, header=None, names=CSV_HEADER)
 
 print(f"Data shape: {data.shape}")
@@ -212,7 +232,7 @@ NUMERIC_FEATURE_NAMES = [
 # sure that they are treated as strings.
 CATEGORICAL_FEATURES_WITH_VOCABULARY = {
     feature_name: sorted([str(value) for value in list(data[feature_name].unique())])
-    for feature_name in CSV_HEADER
+    for feature_name in CSV_HEADER_FEATURE
     if feature_name
     not in list(NUMERIC_FEATURE_NAMES + [WEIGHT_COLUMN_NAME, TARGET_FEATURE_NAME])
 }
@@ -228,7 +248,7 @@ COLUMN_DEFAULTS = [
         in NUMERIC_FEATURE_NAMES + [TARGET_FEATURE_NAME, WEIGHT_COLUMN_NAME]
         else ["NA"]
     )
-    for feature_name in CSV_HEADER
+    for feature_name in CSV_HEADER_FEATURE
 ]
 
 """
@@ -247,14 +267,14 @@ def process(features, target):
             features[feature_name] = keras.ops.cast(features[feature_name], "string")
     # Get the instance weight.
     weight = features.pop(WEIGHT_COLUMN_NAME)
-    return features, target, weight
+    return dict(features), target, weight
 
 
 def get_dataset_from_csv(csv_file_path, shuffle=False, batch_size=128):
     dataset = tf.data.experimental.make_csv_dataset(
         csv_file_path,
         batch_size=batch_size,
-        column_names=CSV_HEADER,
+        column_names=CSV_HEADER_FEATURE,
         column_defaults=COLUMN_DEFAULTS,
         label_name=TARGET_FEATURE_NAME,
         num_epochs=1,
@@ -268,7 +288,6 @@ def get_dataset_from_csv(csv_file_path, shuffle=False, batch_size=128):
 """
 ## Create model inputs
 """
-
 
 def create_model_inputs():
     inputs = {}
