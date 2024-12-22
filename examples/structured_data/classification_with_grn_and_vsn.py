@@ -46,6 +46,8 @@ and 34 categorical features.
 """
 
 import os
+import subprocess
+import tarfile
 
 # Only the TensorFlow backend supports string inputs.
 os.environ["KERAS_BACKEND"] = "tensorflow"
@@ -108,13 +110,29 @@ CSV_HEADER = [
     "income_level",
 ]
 
-data_url = "https://archive.ics.uci.edu/static/public/20/census+income.zip"
+data_url = "https://archive.ics.uci.edu/static/public/117/census+income+kdd.zip"
 keras.utils.get_file(origin=data_url, extract=True)
+
+"""
+determine the downloaded .tar.gz file path and
+extract the files from the downloaded .tar.gz file
+"""
+
+extracted_path = os.path.join(
+    os.path.expanduser("~"), ".keras", "datasets", "census+income+kdd.zip"
+)
+for root, dirs, files in os.walk(extracted_path):
+    for file in files:
+        if file.endswith('.tar.gz'):
+            tar_gz_path = os.path.join(root, file)
+            with tarfile.open(tar_gz_path, 'r:gz') as tar:
+                tar.extractall(path=root)
+
 train_data_path = os.path.join(
-    os.path.expanduser("~"), ".keras", "datasets", "adult.data"
+    os.path.expanduser("~"), ".keras", "datasets", "census+income+kdd.zip", "census-income.data"
 )
 test_data_path = os.path.join(
-    os.path.expanduser("~"), ".keras", "datasets", "adult.test"
+    os.path.expanduser("~"), ".keras", "datasets", "census+income+kdd.zip", "census-income.test"
 )
 
 data = pd.read_csv(train_data_path, header=None, names=CSV_HEADER)
@@ -156,6 +174,15 @@ test_data_file = "test_data.csv"
 train_data.to_csv(train_data_file, index=False, header=False)
 valid_data.to_csv(valid_data_file, index=False, header=False)
 test_data.to_csv(test_data_file, index=False, header=False)
+
+
+"""
+clean the directory for the downloaded files except the .tar.gz file and
+also remove the empty directories
+"""
+
+subprocess.run(f'find {extracted_path} -type f ! -name "*.tar.gz" -exec rm -f {{}} +', shell=True, check=True)
+subprocess.run(f'find {extracted_path} -type d -empty -exec rmdir {{}} +', shell=True, check=True)
 
 """
 ## Define dataset metadata
@@ -219,10 +246,10 @@ def process(features, target):
             features[feature_name] = keras.ops.cast(features[feature_name], "string")
     # Get the instance weight.
     weight = features.pop(WEIGHT_COLUMN_NAME)
-    return features, target, weight
+    return dict(features), target, weight
 
 
-def get_dataset_from_csv(csv_file_path, shuffle=False, batch_size=128):
+def get_dataset_from_csv(csv_file_path, batch_size, shuffle=False):
     dataset = tf.data.experimental.make_csv_dataset(
         csv_file_path,
         batch_size=batch_size,
@@ -277,7 +304,7 @@ def encode_inputs(inputs, encoding_size):
             # Since we are not using a mask token nor expecting any out of vocabulary
             # (oov) token, we set mask_token to None and  num_oov_indices to 0.
             index = layers.StringLookup(
-                vocabulary=vocabulary, mask_token=None, num_oov_indices=0
+                vocabulary=vocabulary, mask_token=None, num_oov_indices=1
             )
             # Convert the string input values into integer indices.
             value_index = index(inputs[feature_name])
@@ -311,6 +338,10 @@ class GatedLinearUnit(layers.Layer):
 
     def call(self, inputs):
         return self.linear(inputs) * self.sigmoid(inputs)
+    
+    # to remove the build warnings
+    def build(self):
+        self.built=True
 
 
 """
@@ -346,6 +377,10 @@ class GatedResidualNetwork(layers.Layer):
         x = inputs + self.gated_linear_unit(x)
         x = self.layer_norm(x)
         return x
+
+    # to remove the build warnings
+    def build(self):
+        self.build=True
 
 
 """
@@ -387,6 +422,10 @@ class VariableSelection(layers.Layer):
 
         outputs = keras.ops.squeeze(tf.matmul(v, x, transpose_a=True), axis=1)
         return outputs
+
+    # to remove the build warnings
+    def build(self):
+        self.built=True
 
 
 """
@@ -433,7 +472,7 @@ early_stopping = keras.callbacks.EarlyStopping(
 
 print("Start training the model...")
 train_dataset = get_dataset_from_csv(
-    train_data_file, shuffle=True, batch_size=batch_size
+    train_data_file, batch_size=batch_size, shuffle=True,
 )
 valid_dataset = get_dataset_from_csv(valid_data_file, batch_size=batch_size)
 model.fit(
