@@ -182,6 +182,9 @@ and labels into a[`tf.data.Dataset`](https://www.tensorflow.org/guide/datasets)
 for training or evaluation.
 """
 
+# To convert the datasets elements to from OrderedDict to Dictionary
+def process(features, target):
+    return dict(features), target
 
 def get_dataset_from_csv(csv_file_path, batch_size, shuffle=False):
     dataset = tf_data.experimental.make_csv_dataset(
@@ -193,7 +196,7 @@ def get_dataset_from_csv(csv_file_path, batch_size, shuffle=False):
         num_epochs=1,
         header=True,
         shuffle=shuffle,
-    )
+    ).map(process)
     return dataset.cache()
 
 
