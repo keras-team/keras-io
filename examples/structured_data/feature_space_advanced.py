@@ -90,7 +90,7 @@ Let's download the data and load it into a Pandas dataframe:
 
 data_url = "https://archive.ics.uci.edu/static/public/222/bank+marketing.zip"
 data_zipped_path = keras.utils.get_file("bank_marketing.zip", data_url, extract=True)
-keras_datasets_path = Path(data_zipped_path).parents[0]
+keras_datasets_path = Path(data_zipped_path)
 with ZipFile(f"{keras_datasets_path}/bank-additional.zip", "r") as zip:
     # Extract files
     zip.extractall(path=keras_datasets_path)
