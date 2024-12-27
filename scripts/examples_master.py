@@ -730,8 +730,8 @@ EXAMPLES_MASTER = {
                     "keras_3": True,
                 },
                 {
-                    "path": "random_walks_with_stable_diffusion",
-                    "title": "A walk through latent space with Stable Diffusion",
+                    "path": "random_walks_with_stable_diffusion_3",
+                    "title": "A walk through latent space with Stable Diffusion 3",
                     "subcategory": "Image generation",
                     "highlight": True,
                     "keras_3": True,
@@ -818,6 +818,12 @@ EXAMPLES_MASTER = {
                     "path": "vq_vae",
                     "title": "Vector-Quantized Variational Autoencoders",
                     "subcategory": "Image generation",
+                },
+                {
+                    "path": "random_walks_with_stable_diffusion",
+                    "title": "A walk through latent space with Stable Diffusion",
+                    "subcategory": "Image generation",
+                    "keras_3": True,
                 },
                 # Style transfer
                 {
