@@ -55,8 +55,7 @@ import os
 
 import tensorflow as tf
 import keras
-from keras_hub.src.models.bert.bert_backbone import BertBackbone
-from keras_hub.src.models.bert.bert_text_classifier_preprocessor import BertTextClassifierPreprocessor
+import keras_hub
 
 """
 ## Define a label map
@@ -214,9 +213,9 @@ the original BERT model.
 text preprocessing using KerasHub
 """
 
-text_preprocessor = BertTextClassifierPreprocessor.from_preset(
-        "bert_base_en_uncased"
-    )
+text_preprocessor = keras_hub.src.models.bert.bert_text_classifier_preprocessor.BertTextClassifierPreprocessor.from_preset(
+    "bert_base_en_uncased"
+)
 
 """
 ### Run the preprocessor on a sample input
@@ -294,11 +293,11 @@ def preprocess_text_and_image(sample):
     image_2 = preprocess_image(sample["image_2_path"])
     text = preprocess_text(sample["text_1"], sample["text_2"])
     return {
-           'image_1': image_1,
-           'image_2': image_2,
-           'padding_mask': text['padding_mask'],
-           'segment_ids': text['segment_ids'],
-           'token_ids': text['token_ids'],
+        "image_1": image_1,
+        "image_2": image_2,
+        "padding_mask": text["padding_mask"],
+        "segment_ids": text["segment_ids"],
+        "token_ids": text["token_ids"],
     }
 
 
@@ -419,7 +418,9 @@ def create_text_encoder(
     num_projection_layers, projection_dims, dropout_rate, trainable=False
 ):
     # Load the pre-trained BERT BackBone using KerasHub.
-    bert = BertBackbone.from_preset('bert_base_en_uncased', num_classes=3)
+    bert = keras_hub.src.models.bert.bert_backbone.BertBackbone.from_preset(
+        "bert_base_en_uncased", num_classes=3
+    )
 
     # Set the trainability of the base encoder.
     bert.trainable = trainable
