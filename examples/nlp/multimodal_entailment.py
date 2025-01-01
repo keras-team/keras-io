@@ -54,9 +54,9 @@ import numpy as np
 import os
 
 import tensorflow as tf
-import tensorflow_hub as hub
-import tensorflow_text as text
-from tensorflow import keras
+import keras
+from keras_hub.src.models.bert.bert_backbone import BertBackbone
+from keras_hub.src.models.bert.bert_text_classifier_preprocessor import BertTextClassifierPreprocessor
 
 """
 ## Define a label map
@@ -199,72 +199,24 @@ print(f"Total test examples: {len(test_df)}")
 """
 ## Data input pipeline
 
-TensorFlow Hub provides
-[variety of BERT family of models](https://www.tensorflow.org/text/tutorials/bert_glue#loading_models_from_tensorflow_hub).
+Keras Hub provides
+[variety of BERT family of models](https://keras.io/keras_hub/presets/).
 Each of those models comes with a
 corresponding preprocessing layer. You can learn more about these models and their
 preprocessing layers from
-[this resource](https://www.tensorflow.org/text/tutorials/bert_glue#loading_models_from_tensorflow_hub).
+[this resource](https://www.kaggle.com/models/keras/bert/keras/bert_base_en_uncased/2).
 
-To keep the runtime of this example relatively short, we will use a smaller variant of
+To keep the runtime of this example relatively short, we will use a base_unacased variant of
 the original BERT model.
 """
 
-# Define TF Hub paths to the BERT encoder and its preprocessor
-bert_model_path = (
-    "https://tfhub.dev/tensorflow/small_bert/bert_en_uncased_L-2_H-256_A-4/1"
-)
-bert_preprocess_path = "https://tfhub.dev/tensorflow/bert_en_uncased_preprocess/3"
-
 """
-Our text preprocessing code mostly comes from
-[this tutorial](https://www.tensorflow.org/text/tutorials/bert_glue).
-You are highly encouraged to check out the tutorial to learn more about the input
-preprocessing.
+text preprocessing using KerasHub
 """
 
-
-def make_bert_preprocessing_model(sentence_features, seq_length=128):
-    """Returns Model mapping string features to BERT inputs.
-
-    Args:
-      sentence_features: A list with the names of string-valued features.
-      seq_length: An integer that defines the sequence length of BERT inputs.
-
-    Returns:
-      A Keras Model that can be called on a list or dict of string Tensors
-      (with the order or names, resp., given by sentence_features) and
-      returns a dict of tensors for input to BERT.
-    """
-
-    input_segments = [
-        tf.keras.layers.Input(shape=(), dtype=tf.string, name=ft)
-        for ft in sentence_features
-    ]
-
-    # Tokenize the text to word pieces.
-    bert_preprocess = hub.load(bert_preprocess_path)
-    tokenizer = hub.KerasLayer(bert_preprocess.tokenize, name="tokenizer")
-    segments = [tokenizer(s) for s in input_segments]
-
-    # Optional: Trim segments in a smart way to fit seq_length.
-    # Simple cases (like this example) can skip this step and let
-    # the next step apply a default truncation to approximately equal lengths.
-    truncated_segments = segments
-
-    # Pack inputs. The details (start/end token ids, dict of output tensors)
-    # are model-dependent, so this gets loaded from the SavedModel.
-    packer = hub.KerasLayer(
-        bert_preprocess.bert_pack_inputs,
-        arguments=dict(seq_length=seq_length),
-        name="packer",
+text_preprocessor = BertTextClassifierPreprocessor.from_preset(
+        "bert_base_en_uncased"
     )
-    model_inputs = packer(truncated_segments)
-    return keras.Model(input_segments, model_inputs)
-
-
-bert_preprocess_model = make_bert_preprocessing_model(["text_1", "text_2"])
-keras.utils.plot_model(bert_preprocess_model, show_shapes=True, show_dtype=True)
 
 """
 ### Run the preprocessor on a sample input
@@ -276,16 +228,16 @@ sample_text_1, sample_text_2 = row["text_1"], row["text_2"]
 print(f"Text 1: {sample_text_1}")
 print(f"Text 2: {sample_text_2}")
 
-test_text = [np.array([sample_text_1]), np.array([sample_text_2])]
-text_preprocessed = bert_preprocess_model(test_text)
+test_text = [sample_text_1, sample_text_2]
+text_preprocessed = text_preprocessor(test_text)
 
 print("Keys           : ", list(text_preprocessed.keys()))
-print("Shape Word Ids : ", text_preprocessed["input_word_ids"].shape)
-print("Word Ids       : ", text_preprocessed["input_word_ids"][0, :16])
-print("Shape Mask     : ", text_preprocessed["input_mask"].shape)
-print("Input Mask     : ", text_preprocessed["input_mask"][0, :16])
-print("Shape Type Ids : ", text_preprocessed["input_type_ids"].shape)
-print("Type Ids       : ", text_preprocessed["input_type_ids"][0, :16])
+print("Shape Token Ids : ", text_preprocessed["token_ids"].shape)
+print("Token Ids       : ", text_preprocessed["token_ids"][0, :16])
+print(" Shape Padding Mask     : ", text_preprocessed["padding_mask"].shape)
+print("Padding Mask     : ", text_preprocessed["padding_mask"][0, :16])
+print("Shape Segment Ids : ", text_preprocessed["segment_ids"].shape)
+print("Segment Ids       : ", text_preprocessed["segment_ids"][0, :16])
 
 
 """
@@ -314,7 +266,7 @@ def dataframe_to_dataset(dataframe):
 """
 
 resize = (128, 128)
-bert_input_features = ["input_word_ids", "input_type_ids", "input_mask"]
+bert_input_features = ["padding_mask", "segment_ids", "token_ids"]
 
 
 def preprocess_image(image_path):
@@ -332,7 +284,7 @@ def preprocess_image(image_path):
 def preprocess_text(text_1, text_2):
     text_1 = tf.convert_to_tensor([text_1])
     text_2 = tf.convert_to_tensor([text_2])
-    output = bert_preprocess_model([text_1, text_2])
+    output = text_preprocessor((text_1, text_2))
     output = {feature: tf.squeeze(output[feature]) for feature in bert_input_features}
     return output
 
@@ -341,7 +293,13 @@ def preprocess_text_and_image(sample):
     image_1 = preprocess_image(sample["image_1_path"])
     image_2 = preprocess_image(sample["image_2_path"])
     text = preprocess_text(sample["text_1"], sample["text_2"])
-    return {"image_1": image_1, "image_2": image_2, "text": text}
+    return {
+           'image_1': image_1,
+           'image_2': image_2,
+           'padding_mask': text['padding_mask'],
+           'segment_ids': text['segment_ids'],
+           'token_ids': text['token_ids'],
+    }
 
 
 """
@@ -406,7 +364,7 @@ def project_embeddings(
 ):
     projected_embeddings = keras.layers.Dense(units=projection_dims)(embeddings)
     for _ in range(num_projection_layers):
-        x = tf.nn.gelu(projected_embeddings)
+        x = keras.ops.nn.gelu(projected_embeddings)
         x = keras.layers.Dense(projection_dims)(x)
         x = keras.layers.Dropout(dropout_rate)(x)
         x = keras.layers.Add()([projected_embeddings, x])
@@ -460,18 +418,16 @@ Text encoder utilities
 def create_text_encoder(
     num_projection_layers, projection_dims, dropout_rate, trainable=False
 ):
-    # Load the pre-trained BERT model to be used as the base encoder.
-    bert = hub.KerasLayer(
-        bert_model_path,
-        name="bert",
-    )
+    # Load the pre-trained BERT BackBone using KerasHub.
+    bert = BertBackbone.from_preset('bert_base_en_uncased', num_classes=3)
+
     # Set the trainability of the base encoder.
     bert.trainable = trainable
 
     # Receive the text as inputs.
-    bert_input_features = ["input_type_ids", "input_mask", "input_word_ids"]
+    bert_input_features = ["padding_mask", "segment_ids", "token_ids"]
     inputs = {
-        feature: keras.Input(shape=(128,), dtype=tf.int32, name=feature)
+        feature: keras.Input(shape=(512,), dtype=tf.int32, name=feature)
         for feature in bert_input_features
     }
 
@@ -503,12 +459,12 @@ def create_multimodal_model(
     image_2 = keras.Input(shape=(128, 128, 3), name="image_2")
 
     # Receive the text as inputs.
-    bert_input_features = ["input_type_ids", "input_mask", "input_word_ids"]
+    bert_input_features = ["padding_mask", "segment_ids", "token_ids"]
     text_inputs = {
-        feature: keras.Input(shape=(128,), dtype=tf.int32, name=feature)
+        feature: keras.Input(shape=(512,), dtype=tf.int32, name=feature)
         for feature in bert_input_features
     }
-
+    text_inputs = list(text_inputs.values())
     # Create the encoders.
     vision_encoder = create_vision_encoder(
         num_projection_layers, projection_dims, dropout_rate, vision_trainable
@@ -524,7 +480,7 @@ def create_multimodal_model(
     # Concatenate the projections and pass through the classification layer.
     concatenated = keras.layers.Concatenate()([vision_projections, text_projections])
     outputs = keras.layers.Dense(3, activation="softmax")(concatenated)
-    return keras.Model([image_1, image_2, text_inputs], outputs)
+    return keras.Model([image_1, image_2, *text_inputs], outputs)
 
 
 multimodal_model = create_multimodal_model()
@@ -542,7 +498,7 @@ observe how the final performance is affected.
 """
 
 multimodal_model.compile(
-    optimizer="adam", loss="sparse_categorical_crossentropy", metrics="accuracy"
+    optimizer="adam", loss="sparse_categorical_crossentropy", metrics=["accuracy"]
 )
 
 history = multimodal_model.fit(train_ds, validation_data=validation_ds, epochs=10)
