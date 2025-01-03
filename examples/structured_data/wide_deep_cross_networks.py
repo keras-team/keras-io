@@ -2,7 +2,7 @@
 Title: Structured data learning with Wide, Deep, and Cross networks
 Author: [Khalid Salama](https://www.linkedin.com/in/khalid-salama-24403144/)
 Date created: 2020/12/31
-Last modified: 2021/05/05
+Last modified: 2025/01/03
 Description: Using Wide & Deep and Deep & Cross networks for structured data classification.
 Accelerator: GPU
 """
@@ -182,9 +182,11 @@ and labels into a[`tf.data.Dataset`](https://www.tensorflow.org/guide/datasets)
 for training or evaluation.
 """
 
+
 # To convert the datasets elements to from OrderedDict to Dictionary
 def process(features, target):
     return dict(features), target
+
 
 def get_dataset_from_csv(csv_file_path, batch_size, shuffle=False):
     dataset = tf_data.experimental.make_csv_dataset(
@@ -208,7 +210,7 @@ evaluation experiment given a model.
 learning_rate = 0.001
 dropout_rate = 0.1
 batch_size = 265
-num_epochs = 50
+num_epochs = 1
 
 hidden_units = [32, 32]
 
