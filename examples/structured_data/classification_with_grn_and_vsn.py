@@ -2,7 +2,7 @@
 Title: Classification with Gated Residual and Variable Selection Networks
 Author: [Khalid Salama](https://www.linkedin.com/in/khalid-salama-24403144/)
 Date created: 2021/02/10
-Last modified: 2021/02/10
+Last modified: 2025/01/03
 Description: Using Gated Residual and Variable Selection Networks for income level prediction.
 Accelerator: GPU
 """
@@ -123,16 +123,24 @@ extracted_path = os.path.join(
 )
 for root, dirs, files in os.walk(extracted_path):
     for file in files:
-        if file.endswith('.tar.gz'):
+        if file.endswith(".tar.gz"):
             tar_gz_path = os.path.join(root, file)
-            with tarfile.open(tar_gz_path, 'r:gz') as tar:
+            with tarfile.open(tar_gz_path, "r:gz") as tar:
                 tar.extractall(path=root)
 
 train_data_path = os.path.join(
-    os.path.expanduser("~"), ".keras", "datasets", "census+income+kdd.zip", "census-income.data"
+    os.path.expanduser("~"),
+    ".keras",
+    "datasets",
+    "census+income+kdd.zip",
+    "census-income.data",
 )
 test_data_path = os.path.join(
-    os.path.expanduser("~"), ".keras", "datasets", "census+income+kdd.zip", "census-income.test"
+    os.path.expanduser("~"),
+    ".keras",
+    "datasets",
+    "census+income+kdd.zip",
+    "census-income.test",
 )
 
 data = pd.read_csv(train_data_path, header=None, names=CSV_HEADER)
@@ -181,8 +189,14 @@ clean the directory for the downloaded files except the .tar.gz file and
 also remove the empty directories
 """
 
-subprocess.run(f'find {extracted_path} -type f ! -name "*.tar.gz" -exec rm -f {{}} +', shell=True, check=True)
-subprocess.run(f'find {extracted_path} -type d -empty -exec rmdir {{}} +', shell=True, check=True)
+subprocess.run(
+    f'find {extracted_path} -type f ! -name "*.tar.gz" -exec rm -f {{}} +',
+    shell=True,
+    check=True,
+)
+subprocess.run(
+    f"find {extracted_path} -type d -empty -exec rmdir {{}} +", shell=True, check=True
+)
 
 """
 ## Define dataset metadata
@@ -338,10 +352,10 @@ class GatedLinearUnit(layers.Layer):
 
     def call(self, inputs):
         return self.linear(inputs) * self.sigmoid(inputs)
-    
+
     # to remove the build warnings
     def build(self):
-        self.built=True
+        self.built = True
 
 
 """
@@ -380,7 +394,7 @@ class GatedResidualNetwork(layers.Layer):
 
     # to remove the build warnings
     def build(self):
-        self.build=True
+        self.build = True
 
 
 """
@@ -425,7 +439,7 @@ class VariableSelection(layers.Layer):
 
     # to remove the build warnings
     def build(self):
-        self.built=True
+        self.built = True
 
 
 """
@@ -454,7 +468,7 @@ def create_model(encoding_size):
 learning_rate = 0.001
 dropout_rate = 0.15
 batch_size = 265
-num_epochs = 20
+num_epochs = 1
 encoding_size = 16
 
 model = create_model(encoding_size)
@@ -472,7 +486,9 @@ early_stopping = keras.callbacks.EarlyStopping(
 
 print("Start training the model...")
 train_dataset = get_dataset_from_csv(
-    train_data_file, batch_size=batch_size, shuffle=True,
+    train_data_file,
+    batch_size=batch_size,
+    shuffle=True,
 )
 valid_dataset = get_dataset_from_csv(valid_data_file, batch_size=batch_size)
 model.fit(
