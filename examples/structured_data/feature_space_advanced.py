@@ -2,7 +2,7 @@
 Title: FeatureSpace advanced use cases
 Author: [Dimitre Oliveira](https://www.linkedin.com/in/dimitre-oliveira-7a1a0113a/)
 Date created: 2023/07/01
-Last modified: 2023/07/01
+Last modified: 2025/01/03
 Description: How to use FeatureSpace for advanced preprocessing use cases.
 Accelerator: None
 """
@@ -538,7 +538,7 @@ of the tf.data pipeline, not as part of the model.
 """
 
 model.fit(
-    preprocessed_train_ds, validation_data=preprocessed_valid_ds, epochs=20, verbose=2
+    preprocessed_train_ds, validation_data=preprocessed_valid_ds, epochs=10, verbose=2
 )
 
 """
