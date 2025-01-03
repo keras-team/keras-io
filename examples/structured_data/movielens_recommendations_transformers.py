@@ -2,7 +2,7 @@
 Title: A Transformer-based recommendation system
 Author: [Khalid Salama](https://www.linkedin.com/in/khalid-salama-24403144/)
 Date created: 2020/12/30
-Last modified: 2020/12/30
+Last modified: 2025/01/03
 Description: Rating rate prediction using the Behavior Sequence Transformer (BST) model on the Movielens.
 Accelerator: GPU
 """
@@ -536,7 +536,7 @@ model.compile(
 train_dataset = get_dataset_from_csv("train_data.csv", batch_size=265, shuffle=True)
 
 # Fit the model with the training data.
-model.fit(train_dataset, epochs=5)
+model.fit(train_dataset, epochs=2)
 
 # Read the test data.
 test_dataset = get_dataset_from_csv("test_data.csv", batch_size=265)
