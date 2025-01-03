@@ -2,9 +2,10 @@
 Title: Multimodal entailment
 Author: [Sayak Paul](https://twitter.com/RisingSayak)
 Date created: 2021/08/08
-Last modified: 2021/08/15
+Last modified: 2025/01/03
 Description: Training a multimodal model for predicting entailment.
 Accelerator: GPU
+Converted to Keras 3 by: [Humbulani Ndou](https://github.com/Humbulani1234)
 """
 
 """
@@ -50,7 +51,7 @@ pip install -q tensorflow_text
 from sklearn.model_selection import train_test_split
 import matplotlib.pyplot as plt
 import pandas as pd
-import numpy as np
+import random
 import os
 
 import tensorflow as tf
@@ -162,10 +163,10 @@ def visualize(idx):
     print(f"Label: {label}")
 
 
-random_idx = np.random.choice(len(df))
+random_idx = random.choice(range(len(df)))
 visualize(random_idx)
 
-random_idx = np.random.choice(len(df))
+random_idx = random.choice(range(len(df)))
 visualize(random_idx)
 
 """
@@ -213,15 +214,16 @@ the original BERT model.
 text preprocessing using KerasHub
 """
 
-text_preprocessor = keras_hub.src.models.bert.bert_text_classifier_preprocessor.BertTextClassifierPreprocessor.from_preset(
-    "bert_base_en_uncased"
+text_preprocessor = keras_hub.models.BertTextClassifierPreprocessor.from_preset(
+    "bert_base_en_uncased",
+    sequence_length=128,
 )
 
 """
 ### Run the preprocessor on a sample input
 """
 
-idx = np.random.choice(len(train_df))
+idx = random.choice(range(len(train_df)))
 row = train_df.iloc[idx]
 sample_text_1, sample_text_2 = row["text_1"], row["text_2"]
 print(f"Text 1: {sample_text_1}")
@@ -276,15 +278,18 @@ def preprocess_image(image_path):
         image = tf.image.decode_jpeg(image, 3)
     else:
         image = tf.image.decode_png(image, 3)
-    image = tf.image.resize(image, resize)
+    image = keras.ops.image.resize(image, resize)
     return image
 
 
 def preprocess_text(text_1, text_2):
-    text_1 = tf.convert_to_tensor([text_1])
-    text_2 = tf.convert_to_tensor([text_2])
+    text_1 = keras.ops.convert_to_tensor([text_1])
+    text_2 = keras.ops.convert_to_tensor([text_2])
     output = text_preprocessor((text_1, text_2))
-    output = {feature: tf.squeeze(output[feature]) for feature in bert_input_features}
+    output = {
+        feature: keras.ops.reshape(output[feature], [-1])
+        for feature in bert_input_features
+    }
     return output
 
 
@@ -418,7 +423,7 @@ def create_text_encoder(
     num_projection_layers, projection_dims, dropout_rate, trainable=False
 ):
     # Load the pre-trained BERT BackBone using KerasHub.
-    bert = keras_hub.src.models.bert.bert_backbone.BertBackbone.from_preset(
+    bert = keras_hub.models.BertBackbone.from_preset(
         "bert_base_en_uncased", num_classes=3
     )
 
@@ -428,7 +433,7 @@ def create_text_encoder(
     # Receive the text as inputs.
     bert_input_features = ["padding_mask", "segment_ids", "token_ids"]
     inputs = {
-        feature: keras.Input(shape=(512,), dtype=tf.int32, name=feature)
+        feature: keras.Input(shape=(128,), dtype=tf.int32, name=feature)
         for feature in bert_input_features
     }
 
@@ -462,7 +467,7 @@ def create_multimodal_model(
     # Receive the text as inputs.
     bert_input_features = ["padding_mask", "segment_ids", "token_ids"]
     text_inputs = {
-        feature: keras.Input(shape=(512,), dtype=tf.int32, name=feature)
+        feature: keras.Input(shape=(128,), dtype=tf.int32, name=feature)
         for feature in bert_input_features
     }
     text_inputs = list(text_inputs.values())
@@ -502,7 +507,7 @@ multimodal_model.compile(
     optimizer="adam", loss="sparse_categorical_crossentropy", metrics=["accuracy"]
 )
 
-history = multimodal_model.fit(train_ds, validation_data=validation_ds, epochs=10)
+history = multimodal_model.fit(train_ds, validation_data=validation_ds, epochs=1)
 
 """
 ## Evaluate the model

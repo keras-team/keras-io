@@ -2,7 +2,7 @@
 
 **Author:** [Sayak Paul](https://twitter.com/RisingSayak)<br>
 **Date created:** 2021/08/08<br>
-**Last modified:** 2021/08/15<br>
+**Last modified:** 2025/01/03<br>
 **Description:** Training a multimodal model for predicting entailment.
 
 
@@ -46,6 +46,14 @@ using the following command:
 !pip install -q tensorflow_text
 ```
 
+    
+<div class="k-default-codeblock">
+```
+ [[34;49mnotice[1;39;49m][39;49m A new release of pip is available: [31;49m24.0[39;49m -> [32;49m24.3.1
+ [[34;49mnotice[1;39;49m][39;49m To update, run: [32;49mpip install --upgrade pip
+
+```
+</div>
 ---
 ## Imports
 
@@ -54,15 +62,22 @@ using the following command:
 from sklearn.model_selection import train_test_split
 import matplotlib.pyplot as plt
 import pandas as pd
-import numpy as np
+import random
 import os
 
 import tensorflow as tf
-import tensorflow_hub as hub
-import tensorflow_text as text
-from tensorflow import keras
+import keras
+import keras_hub
 ```
 
+<div class="k-default-codeblock">
+```
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+E0000 00:00:1735907683.393230   12828 cuda_dnn.cc:8310] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered
+E0000 00:00:1735907683.399130   12828 cuda_blas.cc:1418] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
+
+```
+</div>
 ---
 ## Define a label map
 
@@ -107,7 +122,7 @@ df.sample(10)
 
 
 
-<div style="overflow-x: scroll; width: 100%;">
+<div>
 <style scoped>
     .dataframe tbody tr th:only-of-type {
         vertical-align: middle;
@@ -140,104 +155,104 @@ df.sample(10)
   </thead>
   <tbody>
     <tr>
-      <th>291</th>
-      <td>1330800194863190016</td>
-      <td>#KLM1167 (B738): #AMS (Amsterdam) to #HEL (Van...</td>
-      <td>http://pbs.twimg.com/media/EnfzuZAW4AE236p.png</td>
-      <td>1378695438480588802</td>
-      <td>#CKK205 (B77L): #PVG (Shanghai) to #AMS (Amste...</td>
-      <td>http://pbs.twimg.com/media/EyIcMexXEAE6gia.png</td>
-      <td>NoEntailment</td>
-    </tr>
-    <tr>
-      <th>37</th>
-      <td>1366581728312057856</td>
-      <td>Friends, interested all go to have a look!\n@j...</td>
-      <td>http://pbs.twimg.com/media/EvcS1v4UcAEEXPO.jpg</td>
-      <td>1373810535066570759</td>
-      <td>Friends, interested all go to have a look!\n@f...</td>
-      <td>http://pbs.twimg.com/media/ExDBZqwVIAQ4LWk.jpg</td>
+      <th>22</th>
+      <td>1372954867178729473</td>
+      <td>JK reports152 new positive cases, 125118 recov...</td>
+      <td>http://pbs.twimg.com/media/Ew23LJ6U8AA1Een.jpg</td>
+      <td>1376577693056069634</td>
+      <td>JK reports 235 new positive cases, 126129 reco...</td>
+      <td>http://pbs.twimg.com/media/ExqWHX2UUAUVIqD.jpg</td>
       <td>Contradictory</td>
     </tr>
     <tr>
-      <th>315</th>
-      <td>1352551603258052608</td>
-      <td>#WINk Drops I have earned today🚀\n\nToday:1/22...</td>
-      <td>http://pbs.twimg.com/media/EsTdcLLVcAIiFKT.jpg</td>
-      <td>1354636016234098688</td>
-      <td>#WINk Drops I have earned today☀\n\nToday:1/28...</td>
-      <td>http://pbs.twimg.com/media/EsyhK-qU0AgfMAH.jpg</td>
+      <th>104</th>
+      <td>1341296172032548864</td>
+      <td>US president donald trump issues executive ord...</td>
+      <td>http://pbs.twimg.com/media/Ep09wrSXEAArQdp.jpg</td>
+      <td>1365036686628048897</td>
+      <td>president joe biden revokes trump's executive ...</td>
+      <td>http://pbs.twimg.com/media/EvGVofdXMAAkK80.jpg</td>
+      <td>Implies</td>
+    </tr>
+    <tr>
+      <th>92</th>
+      <td>1357584913449558016</td>
+      <td>3 Day Temperature Forecast for Glasgow from 20...</td>
+      <td>http://pbs.twimg.com/media/EtccSKvXAAICUee.png</td>
+      <td>1358309729735499777</td>
+      <td>3 Day Temperature Forecast for Glasgow from 20...</td>
+      <td>http://pbs.twimg.com/media/EtmvgBLXEAELqon.png</td>
+      <td>Contradictory</td>
+    </tr>
+    <tr>
+      <th>670</th>
+      <td>1356330489527853056</td>
+      <td>#SPX500 SSI is at -1.76\n\nRisk Warning: Losse...</td>
+      <td>http://pbs.twimg.com/media/EtKnZJoXUAARsQw.png</td>
+      <td>1377161273830305800</td>
+      <td>#USOil SSI is at -1.25\n\nRisk Warning: Losses...</td>
+      <td>http://pbs.twimg.com/media/Exyo4X4VcAgVjQa.png</td>
       <td>NoEntailment</td>
     </tr>
     <tr>
-      <th>761</th>
-      <td>1379795999493853189</td>
-      <td>#buythedip Ready to FLY even HIGHER  #pennysto...</td>
-      <td>http://pbs.twimg.com/media/EyYFJCzWgAMfTrT.jpg</td>
-      <td>1380190250144792576</td>
-      <td>#buythedip Ready to FLY even HIGHER  #pennysto...</td>
-      <td>http://pbs.twimg.com/media/Eydrt0ZXAAMmbfv.jpg</td>
+      <th>1083</th>
+      <td>1359121217173610504</td>
+      <td>"ನಂದಾದೀಪ"\nLiving up to the legacy .\n\nWatch ...</td>
+      <td>http://pbs.twimg.com/media/EtyRixhU0Ac7VD4.jpg</td>
+      <td>1361662126675292160</td>
+      <td>Sons of villains..\nStar directors..\nBrothers...</td>
+      <td>http://pbs.twimg.com/media/EuWYfMaUYAk2ii0.jpg</td>
       <td>NoEntailment</td>
     </tr>
     <tr>
-      <th>146</th>
-      <td>1340185132293099523</td>
-      <td>I know sometimes I am weird to you.\n\nBecause...</td>
-      <td>http://pbs.twimg.com/media/EplLRriWwAAJ2AE.jpg</td>
-      <td>1359755419883814913</td>
-      <td>I put my sword down and get on my knees to swe...</td>
-      <td>http://pbs.twimg.com/media/Et7SWWeWYAICK-c.jpg</td>
+      <th>135</th>
+      <td>1344231606035345408</td>
+      <td>Becoming breezy mid-morning with winds out of ...</td>
+      <td>http://pbs.twimg.com/media/EqergoGXMAMOC-m.jpg</td>
+      <td>1370009652516241416</td>
+      <td>Today will make 3 in a row 70° or higher and w...</td>
+      <td>http://pbs.twimg.com/media/EwNAgsjWEAIbA3k.jpg</td>
       <td>NoEntailment</td>
     </tr>
     <tr>
-      <th>1351</th>
-      <td>1381256604926967813</td>
-      <td>Finally completed the skin rendering. Will sta...</td>
-      <td>http://pbs.twimg.com/media/Eys1j7NVIAgF-YF.jpg</td>
-      <td>1381630932092784641</td>
-      <td>Hair rendering. Will finish the hair by tomorr...</td>
-      <td>http://pbs.twimg.com/media/EyyKAoaUUAElm-e.jpg</td>
+      <th>1007</th>
+      <td>1378336964731146247</td>
+      <td>$HOT has bounced off the first support line. L...</td>
+      <td>http://pbs.twimg.com/media/EyDVXuiWgAAyiV9.png</td>
+      <td>1378695758455656452</td>
+      <td>$HOT has just broken through resistance. 👀\n#H...</td>
+      <td>http://pbs.twimg.com/media/EyIcXmSW8AIYr8c.png</td>
       <td>NoEntailment</td>
     </tr>
     <tr>
-      <th>368</th>
-      <td>1371883298805403649</td>
-      <td>📉 $LINK Number of Receiving Addresses (7d MA) ...</td>
-      <td>http://pbs.twimg.com/media/EwnoltOWEAAS4mG.jpg</td>
-      <td>1373216720974979072</td>
-      <td>📉 $LINK Number of Receiving Addresses (7d MA) ...</td>
-      <td>http://pbs.twimg.com/media/Ew6lVGYXEAE6Ugi.jpg</td>
+      <th>543</th>
+      <td>1335155454985400320</td>
+      <td>[NOMINATION WEEK DEADLINE COUNTDOWN, D-3]\n\nD...</td>
+      <td>http://pbs.twimg.com/media/EodszoQUUAI42yW.jpg</td>
+      <td>1335879723801407488</td>
+      <td>[NOMINATION WEEK DEADLINE COUNTDOWN, D-1] \nDe...</td>
+      <td>http://pbs.twimg.com/media/Eon-YvCVQAc4LHS.jpg</td>
       <td>NoEntailment</td>
     </tr>
     <tr>
-      <th>1112</th>
-      <td>1377679115159887873</td>
-      <td>April is National Distracted Driving Awareness...</td>
-      <td>http://pbs.twimg.com/media/Ex5_u7UVIAARjQ2.jpg</td>
-      <td>1379075258448281608</td>
-      <td>April is Distracted Driving Awareness Month.  ...</td>
-      <td>http://pbs.twimg.com/media/EyN1YjpWUAMc5ak.jpg</td>
-      <td>NoEntailment</td>
+      <th>39</th>
+      <td>1358551424334893056</td>
+      <td>Sun protection recommended from 8:20 am to 4:3...</td>
+      <td>http://pbs.twimg.com/media/EtqLMAiVgAAF0Tw.png</td>
+      <td>1363987146743238658</td>
+      <td>Sun protection recommended from 8:30 am to 4:2...</td>
+      <td>http://pbs.twimg.com/media/Eu3bENsUcAAVtML.png</td>
+      <td>Contradictory</td>
     </tr>
     <tr>
-      <th>264</th>
-      <td>1330727515741167619</td>
-      <td>♥️Verse Of The Day♥️\n.\n#VerseOfTheDay #Quran...</td>
-      <td>http://pbs.twimg.com/media/EnexnydXIAYuI11.jpg</td>
-      <td>1332623263495819264</td>
-      <td>♥️Verse Of The Day♥️\n.\n#VerseOfTheDay #Quran...</td>
-      <td>http://pbs.twimg.com/media/En5ty1VXUAATALP.jpg</td>
-      <td>NoEntailment</td>
-    </tr>
-    <tr>
-      <th>865</th>
-      <td>1377784616275296261</td>
-      <td>No white picket fence can keep us in. #TBT 200...</td>
-      <td>http://pbs.twimg.com/media/Ex7fzouWQAITAq8.jpg</td>
-      <td>1380175915804672012</td>
-      <td>Sometimes you just need to change your altitud...</td>
-      <td>http://pbs.twimg.com/media/EydernQXIAk2g5v.jpg</td>
-      <td>NoEntailment</td>
+      <th>1310</th>
+      <td>1378514622542540800</td>
+      <td>Friends, interested all go to have a look!\n@F...</td>
+      <td>http://pbs.twimg.com/media/EyF3vjiXIAE1MH2.jpg</td>
+      <td>1380603591589724168</td>
+      <td>Friends! Anyone interested? Go and have a look...</td>
+      <td>http://pbs.twimg.com/media/EyjjpodUYAIanwc.jpg</td>
+      <td>Contradictory</td>
     </tr>
   </tbody>
 </table>
@@ -317,10 +332,10 @@ def visualize(idx):
     print(f"Label: {label}")
 
 
-random_idx = np.random.choice(len(df))
+random_idx = random.choice(range(len(df)))
 visualize(random_idx)
 
-random_idx = np.random.choice(len(df))
+random_idx = random.choice(range(len(df)))
 visualize(random_idx)
 ```
 
@@ -332,11 +347,11 @@ visualize(random_idx)
 
 <div class="k-default-codeblock">
 ```
-Text one: Friends, interested all go to have a look!
-@ThePartyGoddess @OurLadyAngels @BJsWholesale @Richard_Jeni @FashionLavidaG @RapaRooski @DMVTHING @DeMarcoReports @LobidaFo @DeMarcoMorgan https://t.co/cStULl7y7G
-Text two: Friends, interested all go to have a look!
-@smittyses @CYosabel @crum_7 @CrumDarrell @ElymalikU @jenloarn @SoCodiePrevost @roblowry82 @Crummy_14 @CSchmelzenbach https://t.co/IZphLTNzgl
-Label: Contradictory
+Text one: Learn to play Piano this lockdown
+#music #musiclessons #lockdown #lockdownlearning #lockdown2021 #onlinelearning #onlinelessons #musiconline #keeplearning #motivation #pianolessons #learnpiano #piano https://t.co/PMuMBWFlzn
+Text two: Learn to play Piano this lockdown
+#music #musiclessons #lockdown #lockdownlearning #lockdown2021 #onlinelearning #onlinelessons #musiconline #keeplearning #motivation #pianolessons #learnpiano #piano https://t.co/9tfaWn8Uzc
+Label: Implies
 
 ```
 </div>
@@ -347,46 +362,8 @@ Label: Contradictory
 
 <div class="k-default-codeblock">
 ```
-Text one: 👟 KICK OFF @ MARDEN SPORTS COMPLEX
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-We're underway in the Round 6 opener!
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-📺: @Foxtel, @kayosports
-📱: My Football Live app https://t.co/wHSpvQaoGC
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-#WLeague #ADLvMVC #AUFC #MVFC https://t.co/3Smp8KXm8W
-Text two: 👟 KICK OFF @ MARSDEN SPORTS COMPLEX
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-We're underway in sunny Adelaide!
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-📺: @Foxtel, @kayosports
-📱: My Football Live app https://t.co/wHSpvQaoGC
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-#ADLvCBR #WLeague #AUFC #UnitedAlways https://t.co/fG1PyLQXM4
+Text one: The delicious new Shake Me! Vegan Peanut Butter* is now available for pre-order. The world’s est Complete Meal Replacement. https://t.co/TsgFDgIRP2 #vegan #kosher #globalhealth #penutbutter #plantbasednutrition https://t.co/yG3pOj0CI0
+Text two: The delicious new Shake Me! Vegan Peanut Butter is now available! https://t.co/TsgFDgrgXu #nutrition #vegan #kosher #globalhealth #penutbutter #vivri https://t.co/T9cRZZJMXy
 Label: NoEntailment
 
 ```
@@ -408,10 +385,11 @@ df["label"].value_counts()
 
 <div class="k-default-codeblock">
 ```
+label
 NoEntailment     1182
 Implies           109
 Contradictory     109
-Name: label, dtype: int64
+Name: count, dtype: int64
 
 ```
 </div>
@@ -444,122 +422,85 @@ Total test examples: 140
 ---
 ## Data input pipeline
 
-TensorFlow Hub provides
-[variety of BERT family of models](https://www.tensorflow.org/text/tutorials/bert_glue#loading_models_from_tensorflow_hub).
+Keras Hub provides
+[variety of BERT family of models](https://keras.io/keras_hub/presets/).
 Each of those models comes with a
 corresponding preprocessing layer. You can learn more about these models and their
 preprocessing layers from
-[this resource](https://www.tensorflow.org/text/tutorials/bert_glue#loading_models_from_tensorflow_hub).
+[this resource](https://www.kaggle.com/models/keras/bert/keras/bert_base_en_uncased/2).
 
-To keep the runtime of this example relatively short, we will use a smaller variant of
+To keep the runtime of this example relatively short, we will use a base_unacased variant of
 the original BERT model.
 
+text preprocessing using KerasHub
+
 
 ```python
-# Define TF Hub paths to the BERT encoder and its preprocessor
-bert_model_path = (
-    "https://tfhub.dev/tensorflow/small_bert/bert_en_uncased_L-2_H-256_A-4/1"
+text_preprocessor = keras_hub.models.BertTextClassifierPreprocessor.from_preset(
+    "bert_base_en_uncased",
+    sequence_length=128,
 )
-bert_preprocess_path = "https://tfhub.dev/tensorflow/bert_en_uncased_preprocess/3"
 ```
 
-Our text preprocessing code mostly comes from
-[this tutorial](https://www.tensorflow.org/text/tutorials/bert_glue).
-You are highly encouraged to check out the tutorial to learn more about the input
-preprocessing.
-
-
-```python
-
-def make_bert_preprocessing_model(sentence_features, seq_length=128):
-    """Returns Model mapping string features to BERT inputs.
-
-  Args:
-    sentence_features: A list with the names of string-valued features.
-    seq_length: An integer that defines the sequence length of BERT inputs.
-
-  Returns:
-    A Keras Model that can be called on a list or dict of string Tensors
-    (with the order or names, resp., given by sentence_features) and
-    returns a dict of tensors for input to BERT.
-  """
-
-    input_segments = [
-        tf.keras.layers.Input(shape=(), dtype=tf.string, name=ft)
-        for ft in sentence_features
-    ]
-
-    # Tokenize the text to word pieces.
-    bert_preprocess = hub.load(bert_preprocess_path)
-    tokenizer = hub.KerasLayer(bert_preprocess.tokenize, name="tokenizer")
-    segments = [tokenizer(s) for s in input_segments]
-
-    # Optional: Trim segments in a smart way to fit seq_length.
-    # Simple cases (like this example) can skip this step and let
-    # the next step apply a default truncation to approximately equal lengths.
-    truncated_segments = segments
-
-    # Pack inputs. The details (start/end token ids, dict of output tensors)
-    # are model-dependent, so this gets loaded from the SavedModel.
-    packer = hub.KerasLayer(
-        bert_preprocess.bert_pack_inputs,
-        arguments=dict(seq_length=seq_length),
-        name="packer",
-    )
-    model_inputs = packer(truncated_segments)
-    return keras.Model(input_segments, model_inputs)
-
-
-bert_preprocess_model = make_bert_preprocessing_model(["text_1", "text_2"])
-keras.utils.plot_model(bert_preprocess_model, show_shapes=True, show_dtype=True)
+<div class="k-default-codeblock">
 ```
+W0000 00:00:1735907697.293486   12828 gpu_device.cc:2344] Cannot dlopen some GPU libraries. Please make sure the missing libraries mentioned above are installed properly if you would like to use GPU. Follow the guide at https://www.tensorflow.org/install/gpu for how to download and setup the required libraries for your platform.
+Skipping registering GPU devices...
 
-
-
-
-    
-![png](/img/examples/nlp/multimodal_entailment/multimodal_entailment_22_0.png)
-    
-
-
-
+```
+</div>
 ### Run the preprocessor on a sample input
 
 
 ```python
-idx = np.random.choice(len(train_df))
+idx = random.choice(range(len(train_df)))
 row = train_df.iloc[idx]
 sample_text_1, sample_text_2 = row["text_1"], row["text_2"]
 print(f"Text 1: {sample_text_1}")
 print(f"Text 2: {sample_text_2}")
 
-test_text = [np.array([sample_text_1]), np.array([sample_text_2])]
-text_preprocessed = bert_preprocess_model(test_text)
+test_text = [sample_text_1, sample_text_2]
+text_preprocessed = text_preprocessor(test_text)
 
 print("Keys           : ", list(text_preprocessed.keys()))
-print("Shape Word Ids : ", text_preprocessed["input_word_ids"].shape)
-print("Word Ids       : ", text_preprocessed["input_word_ids"][0, :16])
-print("Shape Mask     : ", text_preprocessed["input_mask"].shape)
-print("Input Mask     : ", text_preprocessed["input_mask"][0, :16])
-print("Shape Type Ids : ", text_preprocessed["input_type_ids"].shape)
-print("Type Ids       : ", text_preprocessed["input_type_ids"][0, :16])
+print("Shape Token Ids : ", text_preprocessed["token_ids"].shape)
+print("Token Ids       : ", text_preprocessed["token_ids"][0, :16])
+print(" Shape Padding Mask     : ", text_preprocessed["padding_mask"].shape)
+print("Padding Mask     : ", text_preprocessed["padding_mask"][0, :16])
+print("Shape Segment Ids : ", text_preprocessed["segment_ids"].shape)
+print("Segment Ids       : ", text_preprocessed["segment_ids"][0, :16])
 
 ```
 
 <div class="k-default-codeblock">
 ```
-Text 1: Renewables met 97% of Scotland's electricity demand in 2020!!!!
-https://t.co/wi5c9UFAUF https://t.co/arcuBgh0BP
-Text 2: Renewables met 97% of Scotland's electricity demand in 2020 https://t.co/SrhyqPnIkU https://t.co/LORgvTM7Sn
-Keys           :  ['input_mask', 'input_word_ids', 'input_type_ids']
-Shape Word Ids :  (1, 128)
-Word Ids       :  tf.Tensor(
-[  101 13918  2015  2777  5989  1003  1997  3885  1005  1055  6451  5157
-  1999 12609   999   999], shape=(16,), dtype=int32)
-Shape Mask     :  (1, 128)
-Input Mask     :  tf.Tensor([1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1], shape=(16,), dtype=int32)
-Shape Type Ids :  (1, 128)
-Type Ids       :  tf.Tensor([0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0], shape=(16,), dtype=int32)
+Text 1: Sign up for one of our 5 or 6 day courses, like #FOR500, #FOR572 or #FOR585, and choose from an iPad mini, a Galaxy Tab S5e, or take $300 off.
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+https://t.co/knpN3xIwoI
+Note: Valid in US only https://t.co/5kIt74v5FB
+Text 2: Hurry - offer ends tomorrow! Sign up for one of our 5 or 6 day courses, like #FOR500, #FOR572 or #FOR585, and choose from an iPad mini, a Galaxy Tab S5e, or take $300 off.
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+https://t.co/knpN3xIwoI
+Note: Valid in US only https://t.co/9IyveqSd68
+Keys           :  ['token_ids', 'padding_mask', 'segment_ids']
+Shape Token Ids :  (2, 128)
+Token Ids       :  tf.Tensor(
+[ 101 3696 2039 2005 2028 1997 2256 1019 2030 1020 2154 5352 1010 2066
+ 1001 2005], shape=(16,), dtype=int32)
+ Shape Padding Mask     :  (2, 128)
+Padding Mask     :  tf.Tensor(
+[ True  True  True  True  True  True  True  True  True  True  True  True
+  True  True  True  True], shape=(16,), dtype=bool)
+Shape Segment Ids :  (2, 128)
+Segment Ids       :  tf.Tensor([0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0], shape=(16,), dtype=int32)
 
 ```
 </div>
@@ -590,7 +531,7 @@ def dataframe_to_dataset(dataframe):
 
 ```python
 resize = (128, 128)
-bert_input_features = ["input_word_ids", "input_type_ids", "input_mask"]
+bert_input_features = ["padding_mask", "segment_ids", "token_ids"]
 
 
 def preprocess_image(image_path):
@@ -601,15 +542,18 @@ def preprocess_image(image_path):
         image = tf.image.decode_jpeg(image, 3)
     else:
         image = tf.image.decode_png(image, 3)
-    image = tf.image.resize(image, resize)
+    image = keras.ops.image.resize(image, resize)
     return image
 
 
 def preprocess_text(text_1, text_2):
-    text_1 = tf.convert_to_tensor([text_1])
-    text_2 = tf.convert_to_tensor([text_2])
-    output = bert_preprocess_model([text_1, text_2])
-    output = {feature: tf.squeeze(output[feature]) for feature in bert_input_features}
+    text_1 = keras.ops.convert_to_tensor([text_1])
+    text_2 = keras.ops.convert_to_tensor([text_2])
+    output = text_preprocessor((text_1, text_2))
+    output = {
+        feature: keras.ops.reshape(output[feature], [-1])
+        for feature in bert_input_features
+    }
     return output
 
 
@@ -617,7 +561,13 @@ def preprocess_text_and_image(sample):
     image_1 = preprocess_image(sample["image_1_path"])
     image_2 = preprocess_image(sample["image_2_path"])
     text = preprocess_text(sample["text_1"], sample["text_2"])
-    return {"image_1": image_1, "image_2": image_2, "text": text}
+    return {
+        "image_1": image_1,
+        "image_2": image_2,
+        "padding_mask": text["padding_mask"],
+        "segment_ids": text["segment_ids"],
+        "token_ids": text["token_ids"],
+    }
 
 ```
 
@@ -683,7 +633,7 @@ def project_embeddings(
 ):
     projected_embeddings = keras.layers.Dense(units=projection_dims)(embeddings)
     for _ in range(num_projection_layers):
-        x = tf.nn.gelu(projected_embeddings)
+        x = keras.ops.nn.gelu(projected_embeddings)
         x = keras.layers.Dense(projection_dims)(x)
         x = keras.layers.Dropout(dropout_rate)(x)
         x = keras.layers.Add()([projected_embeddings, x])
@@ -739,13 +689,16 @@ Text encoder utilities
 def create_text_encoder(
     num_projection_layers, projection_dims, dropout_rate, trainable=False
 ):
-    # Load the pre-trained BERT model to be used as the base encoder.
-    bert = hub.KerasLayer(bert_model_path, name="bert",)
+    # Load the pre-trained BERT BackBone using KerasHub.
+    bert = keras_hub.models.BertBackbone.from_preset(
+        "bert_base_en_uncased", num_classes=3
+    )
+
     # Set the trainability of the base encoder.
     bert.trainable = trainable
 
     # Receive the text as inputs.
-    bert_input_features = ["input_type_ids", "input_mask", "input_word_ids"]
+    bert_input_features = ["padding_mask", "segment_ids", "token_ids"]
     inputs = {
         feature: keras.Input(shape=(128,), dtype=tf.int32, name=feature)
         for feature in bert_input_features
@@ -780,12 +733,12 @@ def create_multimodal_model(
     image_2 = keras.Input(shape=(128, 128, 3), name="image_2")
 
     # Receive the text as inputs.
-    bert_input_features = ["input_type_ids", "input_mask", "input_word_ids"]
+    bert_input_features = ["padding_mask", "segment_ids", "token_ids"]
     text_inputs = {
         feature: keras.Input(shape=(128,), dtype=tf.int32, name=feature)
         for feature in bert_input_features
     }
-
+    text_inputs = list(text_inputs.values())
     # Create the encoders.
     vision_encoder = create_vision_encoder(
         num_projection_layers, projection_dims, dropout_rate, vision_trainable
@@ -801,7 +754,7 @@ def create_multimodal_model(
     # Concatenate the projections and pass through the classification layer.
     concatenated = keras.layers.Concatenate()([vision_projections, text_projections])
     outputs = keras.layers.Dense(3, activation="softmax")(concatenated)
-    return keras.Model([image_1, image_2, text_inputs], outputs)
+    return keras.Model([image_1, image_2, *text_inputs], outputs)
 
 
 multimodal_model = create_multimodal_model()
@@ -812,7 +765,7 @@ keras.utils.plot_model(multimodal_model, show_shapes=True)
 
 
     
-![png](/img/examples/nlp/multimodal_entailment/multimodal_entailment_39_0.png)
+![png](/img/examples/nlp/multimodal_entailment/multimodal_entailment_38_0.png)
     
 
 
@@ -828,37 +781,291 @@ observe how the final performance is affected.
 
 ```python
 multimodal_model.compile(
-    optimizer="adam", loss="sparse_categorical_crossentropy", metrics="accuracy"
+    optimizer="adam", loss="sparse_categorical_crossentropy", metrics=["accuracy"]
 )
 
-history = multimodal_model.fit(train_ds, validation_data=validation_ds, epochs=10)
+history = multimodal_model.fit(train_ds, validation_data=validation_ds, epochs=1)
 ```
 
 <div class="k-default-codeblock">
 ```
-Epoch 1/10
-38/38 [==============================] - 49s 789ms/step - loss: 1.0014 - accuracy: 0.8229 - val_loss: 0.5514 - val_accuracy: 0.8571
-Epoch 2/10
-38/38 [==============================] - 3s 90ms/step - loss: 0.4019 - accuracy: 0.8814 - val_loss: 0.5866 - val_accuracy: 0.8571
-Epoch 3/10
-38/38 [==============================] - 3s 90ms/step - loss: 0.3557 - accuracy: 0.8897 - val_loss: 0.5929 - val_accuracy: 0.8571
-Epoch 4/10
-38/38 [==============================] - 3s 91ms/step - loss: 0.2877 - accuracy: 0.9006 - val_loss: 0.6272 - val_accuracy: 0.8571
-Epoch 5/10
-38/38 [==============================] - 3s 91ms/step - loss: 0.1796 - accuracy: 0.9398 - val_loss: 0.8545 - val_accuracy: 0.8254
-Epoch 6/10
-38/38 [==============================] - 3s 91ms/step - loss: 0.1292 - accuracy: 0.9566 - val_loss: 1.2276 - val_accuracy: 0.8413
-Epoch 7/10
-38/38 [==============================] - 3s 91ms/step - loss: 0.1015 - accuracy: 0.9666 - val_loss: 1.2914 - val_accuracy: 0.7778
-Epoch 8/10
-38/38 [==============================] - 3s 92ms/step - loss: 0.1253 - accuracy: 0.9524 - val_loss: 1.1944 - val_accuracy: 0.8413
-Epoch 9/10
-38/38 [==============================] - 3s 92ms/step - loss: 0.3064 - accuracy: 0.9131 - val_loss: 1.2162 - val_accuracy: 0.8095
-Epoch 10/10
-38/38 [==============================] - 3s 92ms/step - loss: 0.2212 - accuracy: 0.9248 - val_loss: 1.1080 - val_accuracy: 0.8413
+/home/humbulani/jax/env/lib/python3.11/site-packages/keras/src/models/functional.py:238: UserWarning: The structure of `inputs` doesn't match the expected structure.
+Expected: {'padding_mask': 'padding_mask', 'segment_ids': 'segment_ids', 'token_ids': 'token_ids'}
+Received: inputs=['Tensor(shape=(None, None))', 'Tensor(shape=(None, None))', 'Tensor(shape=(None, None))']
+  warnings.warn(msg)
 
 ```
 </div>
+    
+  1/38 [37m━━━━━━━━━━━━━━━━━━━━  42:56 70s/step - accuracy: 0.2500 - loss: 1.6472
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+  2/38 ━[37m━━━━━━━━━━━━━━━━━━━  13:24 22s/step - accuracy: 0.3906 - loss: 2.0702
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+  3/38 ━[37m━━━━━━━━━━━━━━━━━━━  13:20 23s/step - accuracy: 0.4757 - loss: 2.2410
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+  4/38 ━━[37m━━━━━━━━━━━━━━━━━━  12:59 23s/step - accuracy: 0.5326 - loss: 2.2835
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+  5/38 ━━[37m━━━━━━━━━━━━━━━━━━  12:27 23s/step - accuracy: 0.5710 - loss: 2.2807
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+  6/38 ━━━[37m━━━━━━━━━━━━━━━━━  12:06 23s/step - accuracy: 0.6017 - loss: 2.2483
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+  7/38 ━━━[37m━━━━━━━━━━━━━━━━━  11:42 23s/step - accuracy: 0.6216 - loss: 2.2529
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+  8/38 ━━━━[37m━━━━━━━━━━━━━━━━  11:16 23s/step - accuracy: 0.6313 - loss: 2.2501
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+  9/38 ━━━━[37m━━━━━━━━━━━━━━━━  10:53 23s/step - accuracy: 0.6407 - loss: 2.2301
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+ 10/38 ━━━━━[37m━━━━━━━━━━━━━━━  10:31 23s/step - accuracy: 0.6491 - loss: 2.2041
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+ 11/38 ━━━━━[37m━━━━━━━━━━━━━━━  10:08 23s/step - accuracy: 0.6572 - loss: 2.1754
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+ 12/38 ━━━━━━[37m━━━━━━━━━━━━━━  9:46 23s/step - accuracy: 0.6650 - loss: 2.1464 
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+ 13/38 ━━━━━━[37m━━━━━━━━━━━━━━  9:23 23s/step - accuracy: 0.6724 - loss: 2.1149
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+ 14/38 ━━━━━━━[37m━━━━━━━━━━━━━  8:59 22s/step - accuracy: 0.6791 - loss: 2.0861
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+ 15/38 ━━━━━━━[37m━━━━━━━━━━━━━  8:37 23s/step - accuracy: 0.6853 - loss: 2.0569
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+ 16/38 ━━━━━━━━[37m━━━━━━━━━━━━  8:14 22s/step - accuracy: 0.6910 - loss: 2.0276
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+ 17/38 ━━━━━━━━[37m━━━━━━━━━━━━  7:52 23s/step - accuracy: 0.6966 - loss: 1.9968
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+ 18/38 ━━━━━━━━━[37m━━━━━━━━━━━  7:29 22s/step - accuracy: 0.7019 - loss: 1.9657
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+ 19/38 ━━━━━━━━━━[37m━━━━━━━━━━  7:08 23s/step - accuracy: 0.7068 - loss: 1.9354
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+ 20/38 ━━━━━━━━━━[37m━━━━━━━━━━  6:45 23s/step - accuracy: 0.7113 - loss: 1.9068
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+ 21/38 ━━━━━━━━━━━[37m━━━━━━━━━  6:22 23s/step - accuracy: 0.7149 - loss: 1.8800
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+ 22/38 ━━━━━━━━━━━[37m━━━━━━━━━  6:00 23s/step - accuracy: 0.7182 - loss: 1.8538
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+ 23/38 ━━━━━━━━━━━━[37m━━━━━━━━  5:37 22s/step - accuracy: 0.7213 - loss: 1.8284
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+ 24/38 ━━━━━━━━━━━━[37m━━━━━━━━  5:14 22s/step - accuracy: 0.7239 - loss: 1.8047
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+ 25/38 ━━━━━━━━━━━━━[37m━━━━━━━  4:52 22s/step - accuracy: 0.7266 - loss: 1.7814
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+ 26/38 ━━━━━━━━━━━━━[37m━━━━━━━  4:29 22s/step - accuracy: 0.7292 - loss: 1.7587
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+ 27/38 ━━━━━━━━━━━━━━[37m━━━━━━  4:07 22s/step - accuracy: 0.7318 - loss: 1.7363
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+ 28/38 ━━━━━━━━━━━━━━[37m━━━━━━  3:45 23s/step - accuracy: 0.7343 - loss: 1.7149
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+ 29/38 ━━━━━━━━━━━━━━━[37m━━━━━  3:22 23s/step - accuracy: 0.7367 - loss: 1.6941
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+ 30/38 ━━━━━━━━━━━━━━━[37m━━━━━  3:00 23s/step - accuracy: 0.7391 - loss: 1.6741
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+ 31/38 ━━━━━━━━━━━━━━━━[37m━━━━  2:37 23s/step - accuracy: 0.7413 - loss: 1.6548
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+ 32/38 ━━━━━━━━━━━━━━━━[37m━━━━  2:15 23s/step - accuracy: 0.7434 - loss: 1.6366
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+ 33/38 ━━━━━━━━━━━━━━━━━[37m━━━  1:52 23s/step - accuracy: 0.7454 - loss: 1.6191
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+ 34/38 ━━━━━━━━━━━━━━━━━[37m━━━  1:29 22s/step - accuracy: 0.7474 - loss: 1.6019
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+ 35/38 ━━━━━━━━━━━━━━━━━━[37m━━  1:07 23s/step - accuracy: 0.7495 - loss: 1.5849
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+ 36/38 ━━━━━━━━━━━━━━━━━━[37m━━  44s 22s/step - accuracy: 0.7514 - loss: 1.5685 
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+ 37/38 ━━━━━━━━━━━━━━━━━━━[37m━  22s 22s/step - accuracy: 0.7532 - loss: 1.5531
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+ 38/38 ━━━━━━━━━━━━━━━━━━━━ 0s 22s/step - accuracy: 0.7550 - loss: 1.5384 
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+ 38/38 ━━━━━━━━━━━━━━━━━━━━ 943s 24s/step - accuracy: 0.7566 - loss: 1.5244 - val_accuracy: 0.8413 - val_loss: 0.6571
+
+
 ---
 ## Evaluate the model
 
@@ -868,10 +1075,48 @@ _, acc = multimodal_model.evaluate(test_ds)
 print(f"Accuracy on the test set: {round(acc * 100, 2)}%.")
 ```
 
+    
+ 1/5 ━━━━[37m━━━━━━━━━━━━━━━━  1:28 22s/step - accuracy: 0.8438 - loss: 0.5892
+
 <div class="k-default-codeblock">
 ```
-5/5 [==============================] - 6s 1s/step - loss: 0.8390 - accuracy: 0.8429
-Accuracy on the test set: 84.29%.
+
+```
+</div>
+ 2/5 ━━━━━━━━[37m━━━━━━━━━━━━  1:05 22s/step - accuracy: 0.8672 - loss: 0.4839
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+ 3/5 ━━━━━━━━━━━━[37m━━━━━━━━  43s 22s/step - accuracy: 0.8767 - loss: 0.4635 
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+ 4/5 ━━━━━━━━━━━━━━━━[37m━━━━  21s 22s/step - accuracy: 0.8802 - loss: 0.4634
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+ 5/5 ━━━━━━━━━━━━━━━━━━━━ 0s 18s/step - accuracy: 0.8799 - loss: 0.4729 
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+ 5/5 ━━━━━━━━━━━━━━━━━━━━ 94s 18s/step - accuracy: 0.8797 - loss: 0.4792
+
+
+<div class="k-default-codeblock">
+```
+Accuracy on the test set: 87.86%.
 
 ```
 </div>
@@ -964,4 +1209,5 @@ from the
 [Recognizing Multimodal Entailment](https://multimodal-entailment.github.io/)
 tutorial provides a comprehensive overview.
 
-You can use the trained model hosted on [Hugging Face Hub](https://huggingface.co/keras-io/multimodal-entailment) and try the demo on [Hugging Face Spaces](https://huggingface.co/spaces/keras-io/multimodal_entailment)
+You can use the trained model hosted on [Hugging Face Hub](https://huggingface.co/keras-io/multimodal-entailment)
+and try the demo on [Hugging Face Spaces](https://huggingface.co/spaces/keras-io/multimodal_entailment)
