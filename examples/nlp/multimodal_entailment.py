@@ -5,7 +5,7 @@ Date created: 2021/08/08
 Last modified: 2025/01/03
 Description: Training a multimodal model for predicting entailment.
 Accelerator: GPU
-Converted to Keras 3 by: [Humbulani Ndou](https://github.com/Humbulani1234)
+Converted to Keras 3 and made backend-agnostic by: [Humbulani Ndou](https://github.com/Humbulani1234)
 """
 
 """
@@ -51,12 +51,19 @@ pip install -q tensorflow_text
 from sklearn.model_selection import train_test_split
 import matplotlib.pyplot as plt
 import pandas as pd
+import numpy as np
 import random
+import math
+from skimage.io import imread
+from skimage.transform import resize
+from PIL import Image
 import os
 
-import tensorflow as tf
+os.environ["KERAS_BACKEND"] = "jax"  # or tensorflow, or torch
+
 import keras
 import keras_hub
+from keras.utils import PyDataset
 
 """
 ## Define a label map
@@ -90,7 +97,9 @@ image_base_path = keras.utils.get_file(
 
 df = pd.read_csv(
     "https://github.com/sayakpaul/Multimodal-Entailment-Baseline/raw/main/csvs/tweets.csv"
-)
+).iloc[
+    0:1000
+]  # Resources conservation since these are examples and not SOTA
 df.sample(10)
 
 """
@@ -255,10 +264,11 @@ models.
 
 def dataframe_to_dataset(dataframe):
     columns = ["image_1_path", "image_2_path", "text_1", "text_2", "label_idx"]
-    dataframe = dataframe[columns].copy()
-    labels = dataframe.pop("label_idx")
-    ds = tf.data.Dataset.from_tensor_slices((dict(dataframe), labels))
-    ds = ds.shuffle(buffer_size=len(dataframe))
+    ds = UnifiedPyDataset(
+        dataframe,
+        batch_size=32,
+        workers=4,
+    )
     return ds
 
 
@@ -266,26 +276,11 @@ def dataframe_to_dataset(dataframe):
 ### Preprocessing utilities
 """
 
-resize = (128, 128)
 bert_input_features = ["padding_mask", "segment_ids", "token_ids"]
 
 
-def preprocess_image(image_path):
-    extension = tf.strings.split(image_path)[-1]
-
-    image = tf.io.read_file(image_path)
-    if extension == b"jpg":
-        image = tf.image.decode_jpeg(image, 3)
-    else:
-        image = tf.image.decode_png(image, 3)
-    image = keras.ops.image.resize(image, resize)
-    return image
-
-
 def preprocess_text(text_1, text_2):
-    text_1 = keras.ops.convert_to_tensor([text_1])
-    text_2 = keras.ops.convert_to_tensor([text_2])
-    output = text_preprocessor((text_1, text_2))
+    output = text_preprocessor([text_1, text_2])
     output = {
         feature: keras.ops.reshape(output[feature], [-1])
         for feature in bert_input_features
@@ -293,40 +288,158 @@ def preprocess_text(text_1, text_2):
     return output
 
 
-def preprocess_text_and_image(sample):
-    image_1 = preprocess_image(sample["image_1_path"])
-    image_2 = preprocess_image(sample["image_2_path"])
-    text = preprocess_text(sample["text_1"], sample["text_2"])
-    return {
-        "image_1": image_1,
-        "image_2": image_2,
-        "padding_mask": text["padding_mask"],
-        "segment_ids": text["segment_ids"],
-        "token_ids": text["token_ids"],
-    }
+"""
+### Create the final datasets, method adapted from PyDataset doc string.
+"""
+
+
+class UnifiedPyDataset(PyDataset):
+    """A Keras-compatible dataset that processes a DataFrame for TensorFlow, JAX, and PyTorch."""
+
+    def __init__(
+        self,
+        df,
+        batch_size=32,
+        workers=4,
+        use_multiprocessing=False,
+        max_queue_size=10,
+        **kwargs,
+    ):
+        """
+        Args:
+            df: pandas DataFrame with data
+            batch_size: Batch size for dataset
+            workers: Number of workers to use for parallel loading (Keras)
+            use_multiprocessing: Whether to use multiprocessing
+            max_queue_size: Maximum size of the data queue for parallel loading
+        """
+        super().__init__(**kwargs)
+        self.dataframe = df
+        columns = ["image_1_path", "image_2_path", "text_1", "text_2"]
+
+        # image files
+        self.image_x_1 = self.dataframe["image_1_path"]
+        self.image_x_2 = self.dataframe["image_1_path"]
+        self.image_y = self.dataframe["label_idx"]
+
+        # text files
+        self.text_x_1 = self.dataframe["text_1"]
+        self.text_x_2 = self.dataframe["text_2"]
+        self.text_y = self.dataframe["label_idx"]
+
+        # general
+        self.batch_size = batch_size
+        self.workers = workers
+        self.use_multiprocessing = use_multiprocessing
+        self.max_queue_size = max_queue_size
+
+    def __getitem__(self, index):
+        """
+        Fetches a batch of data from the dataset at the given index.
+        """
+
+        # Return x, y for batch idx.
+        low = index * self.batch_size
+        # Cap upper bound at array length; the last batch may be smaller
+        # if the total number of items is not a multiple of batch size.
+
+        high_image_1 = min(low + self.batch_size, len(self.image_x_1))
+        high_image_2 = min(low + self.batch_size, len(self.image_x_2))
+
+        high_text_1 = min(low + self.batch_size, len(self.text_x_1))
+        high_text_2 = min(low + self.batch_size, len(self.text_x_1))
+
+        # images files
+        batch_image_x_1 = self.image_x_1[low:high_image_1]
+        batch_image_y_1 = self.image_y[low:high_image_1]
+
+        batch_image_x_2 = self.image_x_2[low:high_image_2]
+        batch_image_y_2 = self.image_y[low:high_image_2]
+
+        # text files
+        batch_text_x_1 = self.text_x_1[low:high_text_1]
+        batch_text_y_1 = self.text_y[low:high_text_1]
+
+        batch_text_x_2 = self.text_x_2[low:high_text_2]
+        batch_text_y_2 = self.text_y[low:high_text_2]
+
+        # image number 1 inputs
+        image_1 = [
+            resize(imread(file_name), (128, 128)) for file_name in batch_image_x_1
+        ]
+        image_1 = [
+            (  # exeperienced some shapes which were different from others.
+                np.array(Image.fromarray((img.astype(np.uint8))).convert("RGB"))
+                if img.shape[2] == 4
+                else img
+            )
+            for img in image_1
+        ]
+        image_1 = np.array(image_1)
+
+        # Both text inputs to the model, return a dict for inputs to BertBackbone
+        text = {
+            key: np.array(
+                [
+                    d[key]
+                    for d in [
+                        preprocess_text(file_path1, file_path2)
+                        for file_path1, file_path2 in zip(
+                            batch_text_x_1, batch_text_x_2
+                        )
+                    ]
+                ]
+            )
+            for key in ["padding_mask", "token_ids", "segment_ids"]
+        }
+
+        # Image number 2 model inputs
+        image_2 = [
+            resize(imread(file_name), (128, 128)) for file_name in batch_image_x_2
+        ]
+        image_2 = [
+            (  # exeperienced some shapes which were different from others
+                np.array(Image.fromarray((img.astype(np.uint8))).convert("RGB"))
+                if img.shape[2] == 4
+                else img
+            )
+            for img in image_2
+        ]
+        # Stack the list comprehension to an nd.array
+        image_2 = np.array(image_2)
+
+        return (
+            {
+                "image_1": image_1,
+                "image_2": image_2,
+                "padding_mask": text["padding_mask"],
+                "segment_ids": text["segment_ids"],
+                "token_ids": text["token_ids"],
+            },
+            # Target lables
+            np.array(batch_image_y_1),
+        )
+
+    def __len__(self):
+        """
+        Returns the number of batches in the dataset.
+        """
+        return math.ceil(len(self.dataframe) / self.batch_size)
 
 
 """
-### Create the final datasets
+Create train, validation and test datasets
 """
 
-batch_size = 32
-auto = tf.data.AUTOTUNE
 
-
-def prepare_dataset(dataframe, training=True):
+def prepare_dataset(dataframe):
     ds = dataframe_to_dataset(dataframe)
-    if training:
-        ds = ds.shuffle(len(train_df))
-    ds = ds.map(lambda x, y: (preprocess_text_and_image(x), y)).cache()
-    ds = ds.batch(batch_size).prefetch(auto)
     return ds
 
 
 train_ds = prepare_dataset(train_df)
-validation_ds = prepare_dataset(val_df, False)
-test_ds = prepare_dataset(test_df, False)
-
+validation_ds = prepare_dataset(val_df)
+test_ds = prepare_dataset(test_df)
 
 """
 ## Model building utilities
@@ -433,7 +546,7 @@ def create_text_encoder(
     # Receive the text as inputs.
     bert_input_features = ["padding_mask", "segment_ids", "token_ids"]
     inputs = {
-        feature: keras.Input(shape=(128,), dtype=tf.int32, name=feature)
+        feature: keras.Input(shape=(256,), dtype="int32", name=feature)
         for feature in bert_input_features
     }
 
@@ -467,7 +580,7 @@ def create_multimodal_model(
     # Receive the text as inputs.
     bert_input_features = ["padding_mask", "segment_ids", "token_ids"]
     text_inputs = {
-        feature: keras.Input(shape=(128,), dtype=tf.int32, name=feature)
+        feature: keras.Input(shape=(256,), dtype="int32", name=feature)
         for feature in bert_input_features
     }
     text_inputs = list(text_inputs.values())

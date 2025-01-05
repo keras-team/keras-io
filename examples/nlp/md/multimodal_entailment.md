@@ -62,22 +62,21 @@ using the following command:
 from sklearn.model_selection import train_test_split
 import matplotlib.pyplot as plt
 import pandas as pd
+import numpy as np
 import random
+import math
+from skimage.io import imread
+from skimage.transform import resize
+from PIL import Image
 import os
 
-import tensorflow as tf
+os.environ["KERAS_BACKEND"] = "jax"  # or tensorflow, or torch
+
 import keras
 import keras_hub
+from keras.utils import PyDataset
 ```
 
-<div class="k-default-codeblock">
-```
-WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
-E0000 00:00:1735907683.393230   12828 cuda_dnn.cc:8310] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered
-E0000 00:00:1735907683.399130   12828 cuda_blas.cc:1418] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
-
-```
-</div>
 ---
 ## Define a label map
 
@@ -115,7 +114,9 @@ image_base_path = keras.utils.get_file(
 ```python
 df = pd.read_csv(
     "https://github.com/sayakpaul/Multimodal-Entailment-Baseline/raw/main/csvs/tweets.csv"
-)
+).iloc[
+    0:1000
+]  # Resources conservation since these are examples and not SOTA
 df.sample(10)
 ```
 
@@ -155,103 +156,103 @@ df.sample(10)
   </thead>
   <tbody>
     <tr>
-      <th>22</th>
-      <td>1372954867178729473</td>
-      <td>JK reports152 new positive cases, 125118 recov...</td>
-      <td>http://pbs.twimg.com/media/Ew23LJ6U8AA1Een.jpg</td>
-      <td>1376577693056069634</td>
-      <td>JK reports 235 new positive cases, 126129 reco...</td>
-      <td>http://pbs.twimg.com/media/ExqWHX2UUAUVIqD.jpg</td>
-      <td>Contradictory</td>
+      <th>815</th>
+      <td>1370730009921343490</td>
+      <td>Sticky bombs are a threat as they have magnets...</td>
+      <td>http://pbs.twimg.com/media/EwXOFrgVIAEkfjR.jpg</td>
+      <td>1370731764906295307</td>
+      <td>Sticky bombs are a threat as they have magnets...</td>
+      <td>http://pbs.twimg.com/media/EwXRK_3XEAA6Q6F.jpg</td>
+      <td>NoEntailment</td>
     </tr>
     <tr>
-      <th>104</th>
-      <td>1341296172032548864</td>
-      <td>US president donald trump issues executive ord...</td>
-      <td>http://pbs.twimg.com/media/Ep09wrSXEAArQdp.jpg</td>
-      <td>1365036686628048897</td>
-      <td>president joe biden revokes trump's executive ...</td>
-      <td>http://pbs.twimg.com/media/EvGVofdXMAAkK80.jpg</td>
+      <th>615</th>
+      <td>1364119737446395905</td>
+      <td>Daily Horoscope for #Cancer 2.23.21 ♊️❤️✨ #Hor...</td>
+      <td>http://pbs.twimg.com/media/Eu5Te44VgAIo1jZ.jpg</td>
+      <td>1365218087906078720</td>
+      <td>Daily Horoscope for #Cancer 2.26.21 ♊️❤️✨ #Hor...</td>
+      <td>http://pbs.twimg.com/media/EvI6nW4WQAA4_E_.jpg</td>
+      <td>NoEntailment</td>
+    </tr>
+    <tr>
+      <th>624</th>
+      <td>1335542260923068417</td>
+      <td>The Reindeer Run is back and this year's run i...</td>
+      <td>http://pbs.twimg.com/media/Eoi99DyXEAE0AFV.jpg</td>
+      <td>1335872932267122689</td>
+      <td>Get your red nose and antlers on for the 2020 ...</td>
+      <td>http://pbs.twimg.com/media/Eon5Wk7XUAE-CxN.jpg</td>
+      <td>NoEntailment</td>
+    </tr>
+    <tr>
+      <th>970</th>
+      <td>1345058844439949312</td>
+      <td>Participants needed for online survey!\n\nTopi...</td>
+      <td>http://pbs.twimg.com/media/Eqqb4_MXcAA-Pvu.jpg</td>
+      <td>1361211461792632835</td>
+      <td>Participants needed for top-ranked study on Su...</td>
+      <td>http://pbs.twimg.com/media/EuPz0GwXMAMDklt.jpg</td>
+      <td>NoEntailment</td>
+    </tr>
+    <tr>
+      <th>456</th>
+      <td>1379831489043521545</td>
+      <td>comission for @NanoBiteTSF \nenjoyed bros and ...</td>
+      <td>http://pbs.twimg.com/media/EyVf0_VXMAMtRaL.jpg</td>
+      <td>1380660763749142531</td>
+      <td>another comission for @NanoBiteTSF \nhope you ...</td>
+      <td>http://pbs.twimg.com/media/EykW0iXXAAA2SBC.jpg</td>
+      <td>NoEntailment</td>
+    </tr>
+    <tr>
+      <th>917</th>
+      <td>1336180735191891968</td>
+      <td>(2/10)\n(Seoul Jung-gu) Market cluster -&amp;gt;\n...</td>
+      <td>http://pbs.twimg.com/media/EosRFpGVQAIeuYG.jpg</td>
+      <td>1356113330536996866</td>
+      <td>(3/11)\n(Seoul Dongdaemun-gu) Goshitel cluster...</td>
+      <td>http://pbs.twimg.com/media/EtHhj7QVcAAibvF.jpg</td>
+      <td>NoEntailment</td>
+    </tr>
+    <tr>
+      <th>276</th>
+      <td>1339270210029834241</td>
+      <td>Today the message of freedom goes to Kisoro, R...</td>
+      <td>http://pbs.twimg.com/media/EpVK3pfXcAAZ5Du.jpg</td>
+      <td>1340881971132698625</td>
+      <td>Today the message of freedom is going to the p...</td>
+      <td>http://pbs.twimg.com/media/EpvDorkXYAEyz4g.jpg</td>
       <td>Implies</td>
     </tr>
     <tr>
-      <th>92</th>
-      <td>1357584913449558016</td>
-      <td>3 Day Temperature Forecast for Glasgow from 20...</td>
-      <td>http://pbs.twimg.com/media/EtccSKvXAAICUee.png</td>
-      <td>1358309729735499777</td>
-      <td>3 Day Temperature Forecast for Glasgow from 20...</td>
-      <td>http://pbs.twimg.com/media/EtmvgBLXEAELqon.png</td>
-      <td>Contradictory</td>
+      <th>35</th>
+      <td>1360186999836200961</td>
+      <td>Bitcoin in Argentina - Google Trends https://t...</td>
+      <td>http://pbs.twimg.com/media/EuBa3UxXYAMb99_.jpg</td>
+      <td>1382778703055228929</td>
+      <td>Argentina wants #Bitcoin https://t.co/9lNxJdxX...</td>
+      <td>http://pbs.twimg.com/media/EzCbUFNXMAABwPD.jpg</td>
+      <td>Implies</td>
     </tr>
     <tr>
-      <th>670</th>
-      <td>1356330489527853056</td>
-      <td>#SPX500 SSI is at -1.76\n\nRisk Warning: Losse...</td>
-      <td>http://pbs.twimg.com/media/EtKnZJoXUAARsQw.png</td>
-      <td>1377161273830305800</td>
-      <td>#USOil SSI is at -1.25\n\nRisk Warning: Losses...</td>
-      <td>http://pbs.twimg.com/media/Exyo4X4VcAgVjQa.png</td>
+      <th>762</th>
+      <td>1370824756400959491</td>
+      <td>$HSBA.L: The long term trend is positive and t...</td>
+      <td>http://pbs.twimg.com/media/EwYl2hPWYAE2niq.png</td>
+      <td>1374347458126475269</td>
+      <td>Although the technical rating is only medium, ...</td>
+      <td>http://pbs.twimg.com/media/ExKpuwrWgAAktg4.png</td>
       <td>NoEntailment</td>
     </tr>
     <tr>
-      <th>1083</th>
-      <td>1359121217173610504</td>
-      <td>"ನಂದಾದೀಪ"\nLiving up to the legacy .\n\nWatch ...</td>
-      <td>http://pbs.twimg.com/media/EtyRixhU0Ac7VD4.jpg</td>
-      <td>1361662126675292160</td>
-      <td>Sons of villains..\nStar directors..\nBrothers...</td>
-      <td>http://pbs.twimg.com/media/EuWYfMaUYAk2ii0.jpg</td>
-      <td>NoEntailment</td>
-    </tr>
-    <tr>
-      <th>135</th>
-      <td>1344231606035345408</td>
-      <td>Becoming breezy mid-morning with winds out of ...</td>
-      <td>http://pbs.twimg.com/media/EqergoGXMAMOC-m.jpg</td>
-      <td>1370009652516241416</td>
-      <td>Today will make 3 in a row 70° or higher and w...</td>
-      <td>http://pbs.twimg.com/media/EwNAgsjWEAIbA3k.jpg</td>
-      <td>NoEntailment</td>
-    </tr>
-    <tr>
-      <th>1007</th>
-      <td>1378336964731146247</td>
-      <td>$HOT has bounced off the first support line. L...</td>
-      <td>http://pbs.twimg.com/media/EyDVXuiWgAAyiV9.png</td>
-      <td>1378695758455656452</td>
-      <td>$HOT has just broken through resistance. 👀\n#H...</td>
-      <td>http://pbs.twimg.com/media/EyIcXmSW8AIYr8c.png</td>
-      <td>NoEntailment</td>
-    </tr>
-    <tr>
-      <th>543</th>
-      <td>1335155454985400320</td>
-      <td>[NOMINATION WEEK DEADLINE COUNTDOWN, D-3]\n\nD...</td>
-      <td>http://pbs.twimg.com/media/EodszoQUUAI42yW.jpg</td>
-      <td>1335879723801407488</td>
-      <td>[NOMINATION WEEK DEADLINE COUNTDOWN, D-1] \nDe...</td>
-      <td>http://pbs.twimg.com/media/Eon-YvCVQAc4LHS.jpg</td>
-      <td>NoEntailment</td>
-    </tr>
-    <tr>
-      <th>39</th>
-      <td>1358551424334893056</td>
-      <td>Sun protection recommended from 8:20 am to 4:3...</td>
-      <td>http://pbs.twimg.com/media/EtqLMAiVgAAF0Tw.png</td>
-      <td>1363987146743238658</td>
-      <td>Sun protection recommended from 8:30 am to 4:2...</td>
-      <td>http://pbs.twimg.com/media/Eu3bENsUcAAVtML.png</td>
-      <td>Contradictory</td>
-    </tr>
-    <tr>
-      <th>1310</th>
-      <td>1378514622542540800</td>
-      <td>Friends, interested all go to have a look!\n@F...</td>
-      <td>http://pbs.twimg.com/media/EyF3vjiXIAE1MH2.jpg</td>
-      <td>1380603591589724168</td>
-      <td>Friends! Anyone interested? Go and have a look...</td>
-      <td>http://pbs.twimg.com/media/EyjjpodUYAIanwc.jpg</td>
+      <th>130</th>
+      <td>1373789433607172097</td>
+      <td>I've just watched episode S01 | E05 of Ted Las...</td>
+      <td>http://pbs.twimg.com/media/ExCuNbDXAAQaPiL.jpg</td>
+      <td>1374913509662806016</td>
+      <td>I've just watched episode S01 | E06 of Ted Las...</td>
+      <td>http://pbs.twimg.com/media/ExSsjRQWgAUVRPz.jpg</td>
       <td>Contradictory</td>
     </tr>
   </tbody>
@@ -347,11 +348,21 @@ visualize(random_idx)
 
 <div class="k-default-codeblock">
 ```
-Text one: Learn to play Piano this lockdown
-#music #musiclessons #lockdown #lockdownlearning #lockdown2021 #onlinelearning #onlinelessons #musiconline #keeplearning #motivation #pianolessons #learnpiano #piano https://t.co/PMuMBWFlzn
-Text two: Learn to play Piano this lockdown
-#music #musiclessons #lockdown #lockdownlearning #lockdown2021 #onlinelearning #onlinelessons #musiconline #keeplearning #motivation #pianolessons #learnpiano #piano https://t.co/9tfaWn8Uzc
-Label: Implies
+Text one: World #water day reminds that we should follow the #guidelines to save water for us. This Day is an #opportunity to learn more about water related issues, be #inspired to tell others and take action to make a difference. Just remember, every #drop counts.
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+#WorldWaterDay2021 https://t.co/bQ9Hp53qUj
+Text two: Water is an extremely precious resource without which life would be impossible. We need to ensure that water is used judiciously, this #WorldWaterDay, let us pledge to reduce water wastage and conserve it.
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+#WorldWaterDay2021 https://t.co/0KWnd8Kn8r
+Label: NoEntailment
 
 ```
 </div>
@@ -362,8 +373,56 @@ Label: Implies
 
 <div class="k-default-codeblock">
 ```
-Text one: The delicious new Shake Me! Vegan Peanut Butter* is now available for pre-order. The world’s est Complete Meal Replacement. https://t.co/TsgFDgIRP2 #vegan #kosher #globalhealth #penutbutter #plantbasednutrition https://t.co/yG3pOj0CI0
-Text two: The delicious new Shake Me! Vegan Peanut Butter is now available! https://t.co/TsgFDgrgXu #nutrition #vegan #kosher #globalhealth #penutbutter #vivri https://t.co/T9cRZZJMXy
+Text one: 🎧 𝗘𝗣𝗜𝗦𝗢𝗗𝗘 𝟯𝟬: 𝗗𝗬𝗟𝗔𝗡 𝗙𝗜𝗧𝗭𝗦𝗜𝗠𝗢𝗡𝗦
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+Dylan Fitzsimons is a young passionate greyhound supporter. 
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+He and @Drakesport enjoy a great chat about everything greyhounds!
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+Listen: https://t.co/B2XgMp0yaO
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+#GoGreyhoundRacing #ThisRunsDeep #TalkingDogs https://t.co/crBiSqHUvp
+Text two: 🎧 𝗘𝗣𝗜𝗦𝗢𝗗𝗘 𝟯𝟳: 𝗣𝗜𝗢 𝗕𝗔𝗥𝗥𝗬 🎧
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+Well known within greyhound circles, Pio Barry shares some wonderful greyhound racing stories with @Drakesport in this podcast episode.
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+A great chat. 
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+Listen: https://t.co/mJTVlPHzp0
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+#TalkingDogs #GoGreyhoundRacing #ThisRunsDeep https://t.co/QbxtCpLcGm
 Label: NoEntailment
 
 ```
@@ -386,9 +445,9 @@ df["label"].value_counts()
 <div class="k-default-codeblock">
 ```
 label
-NoEntailment     1182
-Implies           109
-Contradictory     109
+NoEntailment     819
+Contradictory     92
+Implies           89
 Name: count, dtype: int64
 
 ```
@@ -413,9 +472,9 @@ print(f"Total test examples: {len(test_df)}")
 
 <div class="k-default-codeblock">
 ```
-Total training examples: 1197
-Total validation examples: 63
-Total test examples: 140
+Total training examples: 855
+Total validation examples: 45
+Total test examples: 100
 
 ```
 </div>
@@ -442,13 +501,6 @@ text_preprocessor = keras_hub.models.BertTextClassifierPreprocessor.from_preset(
 )
 ```
 
-<div class="k-default-codeblock">
-```
-W0000 00:00:1735907697.293486   12828 gpu_device.cc:2344] Cannot dlopen some GPU libraries. Please make sure the missing libraries mentioned above are installed properly if you would like to use GPU. Follow the guide at https://www.tensorflow.org/install/gpu for how to download and setup the required libraries for your platform.
-Skipping registering GPU devices...
-
-```
-</div>
 ### Run the preprocessor on a sample input
 
 
@@ -474,33 +526,19 @@ print("Segment Ids       : ", text_preprocessed["segment_ids"][0, :16])
 
 <div class="k-default-codeblock">
 ```
-Text 1: Sign up for one of our 5 or 6 day courses, like #FOR500, #FOR572 or #FOR585, and choose from an iPad mini, a Galaxy Tab S5e, or take $300 off.
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-https://t.co/knpN3xIwoI
-Note: Valid in US only https://t.co/5kIt74v5FB
-Text 2: Hurry - offer ends tomorrow! Sign up for one of our 5 or 6 day courses, like #FOR500, #FOR572 or #FOR585, and choose from an iPad mini, a Galaxy Tab S5e, or take $300 off.
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-https://t.co/knpN3xIwoI
-Note: Valid in US only https://t.co/9IyveqSd68
+An NVIDIA GPU may be present on this machine, but a CUDA-enabled jaxlib is not installed. Falling back to cpu.
+
+Text 1: The RPF Lohardaga and Hatia Post of Ranchi Division have recovered  02 bags on 20.02.2021 at Station platform and in T/No.08310 Spl. respectively and  handed over to their actual owner correctly. @RPF_INDIA https://t.co/bdEBl2egIc
+Text 2: The RPF Lohardaga and Hatia Post of Ranchi Division have recovered  02 bags on 20.02.2021 at Station platform and in T/No.08310 (JAT-SBP) Spl. respectively and  handed over to their actual owner correctly. @RPF_INDIA https://t.co/Q5l2AtA4uq
 Keys           :  ['token_ids', 'padding_mask', 'segment_ids']
 Shape Token Ids :  (2, 128)
-Token Ids       :  tf.Tensor(
-[ 101 3696 2039 2005 2028 1997 2256 1019 2030 1020 2154 5352 1010 2066
- 1001 2005], shape=(16,), dtype=int32)
+Token Ids       :  [  101  1996  1054 14376  8840 11783 16098  1998  6045  2401  2695  1997
+  8086  2072  2407  2031]
  Shape Padding Mask     :  (2, 128)
-Padding Mask     :  tf.Tensor(
-[ True  True  True  True  True  True  True  True  True  True  True  True
-  True  True  True  True], shape=(16,), dtype=bool)
+Padding Mask     :  [ True  True  True  True  True  True  True  True  True  True  True  True
+  True  True  True  True]
 Shape Segment Ids :  (2, 128)
-Segment Ids       :  tf.Tensor([0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0], shape=(16,), dtype=int32)
+Segment Ids       :  [0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0]
 
 ```
 </div>
@@ -518,10 +556,11 @@ models.
 
 def dataframe_to_dataset(dataframe):
     columns = ["image_1_path", "image_2_path", "text_1", "text_2", "label_idx"]
-    dataframe = dataframe[columns].copy()
-    labels = dataframe.pop("label_idx")
-    ds = tf.data.Dataset.from_tensor_slices((dict(dataframe), labels))
-    ds = ds.shuffle(buffer_size=len(dataframe))
+    ds = UnifiedPyDataset(
+        dataframe,
+        batch_size=32,
+        workers=4,
+    )
     return ds
 
 ```
@@ -530,68 +569,172 @@ def dataframe_to_dataset(dataframe):
 
 
 ```python
-resize = (128, 128)
 bert_input_features = ["padding_mask", "segment_ids", "token_ids"]
 
 
-def preprocess_image(image_path):
-    extension = tf.strings.split(image_path)[-1]
-
-    image = tf.io.read_file(image_path)
-    if extension == b"jpg":
-        image = tf.image.decode_jpeg(image, 3)
-    else:
-        image = tf.image.decode_png(image, 3)
-    image = keras.ops.image.resize(image, resize)
-    return image
-
-
 def preprocess_text(text_1, text_2):
-    text_1 = keras.ops.convert_to_tensor([text_1])
-    text_2 = keras.ops.convert_to_tensor([text_2])
-    output = text_preprocessor((text_1, text_2))
+    output = text_preprocessor([text_1, text_2])
     output = {
         feature: keras.ops.reshape(output[feature], [-1])
         for feature in bert_input_features
     }
     return output
 
-
-def preprocess_text_and_image(sample):
-    image_1 = preprocess_image(sample["image_1_path"])
-    image_2 = preprocess_image(sample["image_2_path"])
-    text = preprocess_text(sample["text_1"], sample["text_2"])
-    return {
-        "image_1": image_1,
-        "image_2": image_2,
-        "padding_mask": text["padding_mask"],
-        "segment_ids": text["segment_ids"],
-        "token_ids": text["token_ids"],
-    }
-
 ```
 
-### Create the final datasets
+### Create the final datasets, method adapted from PyDataset doc string.
 
 
 ```python
-batch_size = 32
-auto = tf.data.AUTOTUNE
+
+class UnifiedPyDataset(PyDataset):
+    """A Keras-compatible dataset that processes a DataFrame for TensorFlow, JAX, and PyTorch."""
+
+    def __init__(
+        self,
+        df,
+        batch_size=32,
+        workers=4,
+        use_multiprocessing=False,
+        max_queue_size=10,
+        **kwargs,
+    ):
+        """
+        Args:
+            df: pandas DataFrame with data
+            batch_size: Batch size for dataset
+            workers: Number of workers to use for parallel loading (Keras)
+            use_multiprocessing: Whether to use multiprocessing
+            max_queue_size: Maximum size of the data queue for parallel loading
+        """
+        super().__init__(**kwargs)
+        self.dataframe = df
+        columns = ["image_1_path", "image_2_path", "text_1", "text_2"]
+
+        # image files
+        self.image_x_1 = self.dataframe["image_1_path"]
+        self.image_x_2 = self.dataframe["image_1_path"]
+        self.image_y = self.dataframe["label_idx"]
+
+        # text files
+        self.text_x_1 = self.dataframe["text_1"]
+        self.text_x_2 = self.dataframe["text_2"]
+        self.text_y = self.dataframe["label_idx"]
+
+        # general
+        self.batch_size = batch_size
+        self.workers = workers
+        self.use_multiprocessing = use_multiprocessing
+        self.max_queue_size = max_queue_size
+
+    def __getitem__(self, index):
+        """
+        Fetches a batch of data from the dataset at the given index.
+        """
+
+        # Return x, y for batch idx.
+        low = index * self.batch_size
+        # Cap upper bound at array length; the last batch may be smaller
+        # if the total number of items is not a multiple of batch size.
+
+        high_image_1 = min(low + self.batch_size, len(self.image_x_1))
+        high_image_2 = min(low + self.batch_size, len(self.image_x_2))
+
+        high_text_1 = min(low + self.batch_size, len(self.text_x_1))
+        high_text_2 = min(low + self.batch_size, len(self.text_x_1))
+
+        # images files
+        batch_image_x_1 = self.image_x_1[low:high_image_1]
+        batch_image_y_1 = self.image_y[low:high_image_1]
+
+        batch_image_x_2 = self.image_x_2[low:high_image_2]
+        batch_image_y_2 = self.image_y[low:high_image_2]
+
+        # text files
+        batch_text_x_1 = self.text_x_1[low:high_text_1]
+        batch_text_y_1 = self.text_y[low:high_text_1]
+
+        batch_text_x_2 = self.text_x_2[low:high_text_2]
+        batch_text_y_2 = self.text_y[low:high_text_2]
+
+        # image number 1 inputs
+        image_1 = [
+            resize(imread(file_name), (128, 128)) for file_name in batch_image_x_1
+        ]
+        image_1 = [
+            (  # exeperienced some shapes which were different from others.
+                np.array(Image.fromarray((img.astype(np.uint8))).convert("RGB"))
+                if img.shape[2] == 4
+                else img
+            )
+            for img in image_1
+        ]
+        image_1 = np.array(image_1)
+
+        # Both text inputs to the model, return a dict for inputs to BertBackbone
+        text = {
+            key: np.array(
+                [
+                    d[key]
+                    for d in [
+                        preprocess_text(file_path1, file_path2)
+                        for file_path1, file_path2 in zip(
+                            batch_text_x_1, batch_text_x_2
+                        )
+                    ]
+                ]
+            )
+            for key in ["padding_mask", "token_ids", "segment_ids"]
+        }
+
+        # Image number 2 model inputs
+        image_2 = [
+            resize(imread(file_name), (128, 128)) for file_name in batch_image_x_2
+        ]
+        image_2 = [
+            (  # exeperienced some shapes which were different from others
+                np.array(Image.fromarray((img.astype(np.uint8))).convert("RGB"))
+                if img.shape[2] == 4
+                else img
+            )
+            for img in image_2
+        ]
+        # Stack the list comprehension to an nd.array
+        image_2 = np.array(image_2)
+
+        return (
+            {
+                "image_1": image_1,
+                "image_2": image_2,
+                "padding_mask": text["padding_mask"],
+                "segment_ids": text["segment_ids"],
+                "token_ids": text["token_ids"],
+            },
+            # Target lables
+            np.array(batch_image_y_1),
+        )
+
+    def __len__(self):
+        """
+        Returns the number of batches in the dataset.
+        """
+        return math.ceil(len(self.dataframe) / self.batch_size)
+
+```
+
+Create train, validation and test datasets
 
 
-def prepare_dataset(dataframe, training=True):
+```python
+
+def prepare_dataset(dataframe):
     ds = dataframe_to_dataset(dataframe)
-    if training:
-        ds = ds.shuffle(len(train_df))
-    ds = ds.map(lambda x, y: (preprocess_text_and_image(x), y)).cache()
-    ds = ds.batch(batch_size).prefetch(auto)
     return ds
 
 
 train_ds = prepare_dataset(train_df)
-validation_ds = prepare_dataset(val_df, False)
-test_ds = prepare_dataset(test_df, False)
-
+validation_ds = prepare_dataset(val_df)
+test_ds = prepare_dataset(test_df)
 ```
 
 ---
@@ -700,7 +843,7 @@ def create_text_encoder(
     # Receive the text as inputs.
     bert_input_features = ["padding_mask", "segment_ids", "token_ids"]
     inputs = {
-        feature: keras.Input(shape=(128,), dtype=tf.int32, name=feature)
+        feature: keras.Input(shape=(256,), dtype="int32", name=feature)
         for feature in bert_input_features
     }
 
@@ -735,7 +878,7 @@ def create_multimodal_model(
     # Receive the text as inputs.
     bert_input_features = ["padding_mask", "segment_ids", "token_ids"]
     text_inputs = {
-        feature: keras.Input(shape=(128,), dtype=tf.int32, name=feature)
+        feature: keras.Input(shape=(256,), dtype="int32", name=feature)
         for feature in bert_input_features
     }
     text_inputs = list(text_inputs.values())
@@ -765,7 +908,7 @@ keras.utils.plot_model(multimodal_model, show_shapes=True)
 
 
     
-![png](/img/examples/nlp/multimodal_entailment/multimodal_entailment_38_0.png)
+![png](/img/examples/nlp/multimodal_entailment/multimodal_entailment_40_0.png)
     
 
 
@@ -789,281 +932,335 @@ history = multimodal_model.fit(train_ds, validation_data=validation_ds, epochs=1
 
 <div class="k-default-codeblock">
 ```
-/home/humbulani/jax/env/lib/python3.11/site-packages/keras/src/models/functional.py:238: UserWarning: The structure of `inputs` doesn't match the expected structure.
+/home/humbulani/tensorflow-env/env/lib/python3.11/site-packages/keras/src/models/functional.py:248: UserWarning: The structure of `inputs` doesn't match the expected structure.
 Expected: {'padding_mask': 'padding_mask', 'segment_ids': 'segment_ids', 'token_ids': 'token_ids'}
-Received: inputs=['Tensor(shape=(None, None))', 'Tensor(shape=(None, None))', 'Tensor(shape=(None, None))']
+Received: inputs=['Tensor(shape=(32, 256))', 'Tensor(shape=(32, 256))', 'Tensor(shape=(32, 256))']
+  warnings.warn(msg)
+
+/home/humbulani/tensorflow-env/env/lib/python3.11/site-packages/keras/src/models/functional.py:248: UserWarning: The structure of `inputs` doesn't match the expected structure.
+Expected: {'padding_mask': 'padding_mask', 'segment_ids': 'segment_ids', 'token_ids': 'token_ids'}
+Received: inputs=['Tensor(shape=(32, 256))', 'Tensor(shape=(32, 256))', 'Tensor(shape=(32, 256))']
   warnings.warn(msg)
 
 ```
 </div>
     
-  1/38 [37m━━━━━━━━━━━━━━━━━━━━  42:56 70s/step - accuracy: 0.2500 - loss: 1.6472
+  1/27 [37m━━━━━━━━━━━━━━━━━━━━  45:45 106s/step - accuracy: 0.0625 - loss: 1.6335
+
+<div class="k-default-codeblock">
+```
+/home/humbulani/tensorflow-env/env/lib/python3.11/site-packages/keras/src/models/functional.py:248: UserWarning: The structure of `inputs` doesn't match the expected structure.
+Expected: {'padding_mask': 'padding_mask', 'segment_ids': 'segment_ids', 'token_ids': 'token_ids'}
+Received: inputs=['Tensor(shape=(32, 256))', 'Tensor(shape=(32, 256))', 'Tensor(shape=(32, 256))']
+  warnings.warn(msg)
+
+
+```
+</div>
+  2/27 ━[37m━━━━━━━━━━━━━━━━━━━  42:14 101s/step - accuracy: 0.2422 - loss: 1.9508
+
+<div class="k-default-codeblock">
+```
+/home/humbulani/tensorflow-env/env/lib/python3.11/site-packages/keras/src/models/functional.py:248: UserWarning: The structure of `inputs` doesn't match the expected structure.
+Expected: {'padding_mask': 'padding_mask', 'segment_ids': 'segment_ids', 'token_ids': 'token_ids'}
+Received: inputs=['Tensor(shape=(32, 256))', 'Tensor(shape=(32, 256))', 'Tensor(shape=(32, 256))']
+  warnings.warn(msg)
+
+
+```
+</div>
+  3/27 ━━[37m━━━━━━━━━━━━━━━━━━  38:49 97s/step - accuracy: 0.3524 - loss: 2.0126 
+
+<div class="k-default-codeblock">
+```
+/home/humbulani/tensorflow-env/env/lib/python3.11/site-packages/keras/src/models/functional.py:248: UserWarning: The structure of `inputs` doesn't match the expected structure.
+Expected: {'padding_mask': 'padding_mask', 'segment_ids': 'segment_ids', 'token_ids': 'token_ids'}
+Received: inputs=['Tensor(shape=(32, 256))', 'Tensor(shape=(32, 256))', 'Tensor(shape=(32, 256))']
+  warnings.warn(msg)
+
+
+```
+</div>
+  4/27 ━━[37m━━━━━━━━━━━━━━━━━━  37:09 97s/step - accuracy: 0.4284 - loss: 1.9870
+
+<div class="k-default-codeblock">
+```
+/home/humbulani/tensorflow-env/env/lib/python3.11/site-packages/keras/src/models/functional.py:248: UserWarning: The structure of `inputs` doesn't match the expected structure.
+Expected: {'padding_mask': 'padding_mask', 'segment_ids': 'segment_ids', 'token_ids': 'token_ids'}
+Received: inputs=['Tensor(shape=(32, 256))', 'Tensor(shape=(32, 256))', 'Tensor(shape=(32, 256))']
+  warnings.warn(msg)
+
+
+```
+</div>
+  5/27 ━━━[37m━━━━━━━━━━━━━━━━━  35:08 96s/step - accuracy: 0.4815 - loss: 1.9855
+
+<div class="k-default-codeblock">
+```
+/home/humbulani/tensorflow-env/env/lib/python3.11/site-packages/keras/src/models/functional.py:248: UserWarning: The structure of `inputs` doesn't match the expected structure.
+Expected: {'padding_mask': 'padding_mask', 'segment_ids': 'segment_ids', 'token_ids': 'token_ids'}
+Received: inputs=['Tensor(shape=(32, 256))', 'Tensor(shape=(32, 256))', 'Tensor(shape=(32, 256))']
+  warnings.warn(msg)
+
+
+```
+</div>
+  6/27 ━━━━[37m━━━━━━━━━━━━━━━━  31:56 91s/step - accuracy: 0.5210 - loss: 1.9939
 
 <div class="k-default-codeblock">
 ```
 
 ```
 </div>
-  2/38 ━[37m━━━━━━━━━━━━━━━━━━━  13:24 22s/step - accuracy: 0.3906 - loss: 2.0702
+  7/27 ━━━━━[37m━━━━━━━━━━━━━━━  29:30 89s/step - accuracy: 0.5512 - loss: 1.9980
 
 <div class="k-default-codeblock">
 ```
 
 ```
 </div>
-  3/38 ━[37m━━━━━━━━━━━━━━━━━━━  13:20 23s/step - accuracy: 0.4757 - loss: 2.2410
+  8/27 ━━━━━[37m━━━━━━━━━━━━━━━  27:12 86s/step - accuracy: 0.5750 - loss: 2.0061
 
 <div class="k-default-codeblock">
 ```
 
 ```
 </div>
-  4/38 ━━[37m━━━━━━━━━━━━━━━━━━  12:59 23s/step - accuracy: 0.5326 - loss: 2.2835
+  9/27 ━━━━━━[37m━━━━━━━━━━━━━━  25:15 84s/step - accuracy: 0.5956 - loss: 1.9959
 
 <div class="k-default-codeblock">
 ```
 
 ```
 </div>
-  5/38 ━━[37m━━━━━━━━━━━━━━━━━━  12:27 23s/step - accuracy: 0.5710 - loss: 2.2807
+ 10/27 ━━━━━━━[37m━━━━━━━━━━━━━  23:33 83s/step - accuracy: 0.6120 - loss: 1.9738
 
 <div class="k-default-codeblock">
 ```
+/home/humbulani/tensorflow-env/env/lib/python3.11/site-packages/keras/src/models/functional.py:248: UserWarning: The structure of `inputs` doesn't match the expected structure.
+Expected: {'padding_mask': 'padding_mask', 'segment_ids': 'segment_ids', 'token_ids': 'token_ids'}
+Received: inputs=['Tensor(shape=(32, 256))', 'Tensor(shape=(32, 256))', 'Tensor(shape=(32, 256))']
+  warnings.warn(msg)
+
 
 ```
 </div>
-  6/38 ━━━[37m━━━━━━━━━━━━━━━━━  12:06 23s/step - accuracy: 0.6017 - loss: 2.2483
+ 11/27 ━━━━━━━━[37m━━━━━━━━━━━━  22:09 83s/step - accuracy: 0.6251 - loss: 1.9579
 
 <div class="k-default-codeblock">
 ```
+/home/humbulani/tensorflow-env/env/lib/python3.11/site-packages/keras/src/models/functional.py:248: UserWarning: The structure of `inputs` doesn't match the expected structure.
+Expected: {'padding_mask': 'padding_mask', 'segment_ids': 'segment_ids', 'token_ids': 'token_ids'}
+Received: inputs=['Tensor(shape=(32, 256))', 'Tensor(shape=(32, 256))', 'Tensor(shape=(32, 256))']
+  warnings.warn(msg)
+
 
 ```
 </div>
-  7/38 ━━━[37m━━━━━━━━━━━━━━━━━  11:42 23s/step - accuracy: 0.6216 - loss: 2.2529
+ 12/27 ━━━━━━━━[37m━━━━━━━━━━━━  20:59 84s/step - accuracy: 0.6357 - loss: 1.9524
 
 <div class="k-default-codeblock">
 ```
+/home/humbulani/tensorflow-env/env/lib/python3.11/site-packages/keras/src/models/functional.py:248: UserWarning: The structure of `inputs` doesn't match the expected structure.
+Expected: {'padding_mask': 'padding_mask', 'segment_ids': 'segment_ids', 'token_ids': 'token_ids'}
+Received: inputs=['Tensor(shape=(32, 256))', 'Tensor(shape=(32, 256))', 'Tensor(shape=(32, 256))']
+  warnings.warn(msg)
+
 
 ```
 </div>
-  8/38 ━━━━[37m━━━━━━━━━━━━━━━━  11:16 23s/step - accuracy: 0.6313 - loss: 2.2501
+ 13/27 ━━━━━━━━━[37m━━━━━━━━━━━  19:44 85s/step - accuracy: 0.6454 - loss: 1.9439
 
 <div class="k-default-codeblock">
 ```
+/home/humbulani/tensorflow-env/env/lib/python3.11/site-packages/keras/src/models/functional.py:248: UserWarning: The structure of `inputs` doesn't match the expected structure.
+Expected: {'padding_mask': 'padding_mask', 'segment_ids': 'segment_ids', 'token_ids': 'token_ids'}
+Received: inputs=['Tensor(shape=(32, 256))', 'Tensor(shape=(32, 256))', 'Tensor(shape=(32, 256))']
+  warnings.warn(msg)
+
 
 ```
 </div>
-  9/38 ━━━━[37m━━━━━━━━━━━━━━━━  10:53 23s/step - accuracy: 0.6407 - loss: 2.2301
+ 14/27 ━━━━━━━━━━[37m━━━━━━━━━━  18:22 85s/step - accuracy: 0.6540 - loss: 1.9346
 
 <div class="k-default-codeblock">
 ```
+/home/humbulani/tensorflow-env/env/lib/python3.11/site-packages/keras/src/models/functional.py:248: UserWarning: The structure of `inputs` doesn't match the expected structure.
+Expected: {'padding_mask': 'padding_mask', 'segment_ids': 'segment_ids', 'token_ids': 'token_ids'}
+Received: inputs=['Tensor(shape=(23, 256))', 'Tensor(shape=(23, 256))', 'Tensor(shape=(23, 256))']
+  warnings.warn(msg)
+
 
 ```
 </div>
- 10/38 ━━━━━[37m━━━━━━━━━━━━━━━  10:31 23s/step - accuracy: 0.6491 - loss: 2.2041
+ 15/27 ━━━━━━━━━━━[37m━━━━━━━━━  16:52 84s/step - accuracy: 0.6621 - loss: 1.9213
 
 <div class="k-default-codeblock">
 ```
+/home/humbulani/tensorflow-env/env/lib/python3.11/site-packages/keras/src/models/functional.py:248: UserWarning: The structure of `inputs` doesn't match the expected structure.
+Expected: {'padding_mask': 'padding_mask', 'segment_ids': 'segment_ids', 'token_ids': 'token_ids'}
+Received: inputs=['Tensor(shape=(32, 256))', 'Tensor(shape=(32, 256))', 'Tensor(shape=(32, 256))']
+  warnings.warn(msg)
+
 
 ```
 </div>
- 11/38 ━━━━━[37m━━━━━━━━━━━━━━━  10:08 23s/step - accuracy: 0.6572 - loss: 2.1754
+ 16/27 ━━━━━━━━━━━[37m━━━━━━━━━  15:29 85s/step - accuracy: 0.6693 - loss: 1.9101
 
 <div class="k-default-codeblock">
 ```
+/home/humbulani/tensorflow-env/env/lib/python3.11/site-packages/keras/src/models/functional.py:248: UserWarning: The structure of `inputs` doesn't match the expected structure.
+Expected: {'padding_mask': 'padding_mask', 'segment_ids': 'segment_ids', 'token_ids': 'token_ids'}
+Received: inputs=['Tensor(shape=(32, 256))', 'Tensor(shape=(32, 256))', 'Tensor(shape=(32, 256))']
+  warnings.warn(msg)
+
 
 ```
 </div>
- 12/38 ━━━━━━[37m━━━━━━━━━━━━━━  9:46 23s/step - accuracy: 0.6650 - loss: 2.1464 
+ 17/27 ━━━━━━━━━━━━[37m━━━━━━━━  14:08 85s/step - accuracy: 0.6758 - loss: 1.9021
 
 <div class="k-default-codeblock">
 ```
+/home/humbulani/tensorflow-env/env/lib/python3.11/site-packages/keras/src/models/functional.py:248: UserWarning: The structure of `inputs` doesn't match the expected structure.
+Expected: {'padding_mask': 'padding_mask', 'segment_ids': 'segment_ids', 'token_ids': 'token_ids'}
+Received: inputs=['Tensor(shape=(32, 256))', 'Tensor(shape=(32, 256))', 'Tensor(shape=(32, 256))']
+  warnings.warn(msg)
+
+
+```
+</div>
+ 18/27 ━━━━━━━━━━━━━[37m━━━━━━━  12:45 85s/step - accuracy: 0.6819 - loss: 1.8916
+
+<div class="k-default-codeblock">
+```
+/home/humbulani/tensorflow-env/env/lib/python3.11/site-packages/keras/src/models/functional.py:248: UserWarning: The structure of `inputs` doesn't match the expected structure.
+Expected: {'padding_mask': 'padding_mask', 'segment_ids': 'segment_ids', 'token_ids': 'token_ids'}
+Received: inputs=['Tensor(shape=(32, 256))', 'Tensor(shape=(32, 256))', 'Tensor(shape=(32, 256))']
+  warnings.warn(msg)
+
+
+```
+</div>
+ 19/27 ━━━━━━━━━━━━━━[37m━━━━━━  11:24 86s/step - accuracy: 0.6874 - loss: 1.8851
+
+<div class="k-default-codeblock">
+```
+/home/humbulani/tensorflow-env/env/lib/python3.11/site-packages/keras/src/models/functional.py:248: UserWarning: The structure of `inputs` doesn't match the expected structure.
+Expected: {'padding_mask': 'padding_mask', 'segment_ids': 'segment_ids', 'token_ids': 'token_ids'}
+Received: inputs=['Tensor(shape=(32, 256))', 'Tensor(shape=(32, 256))', 'Tensor(shape=(32, 256))']
+  warnings.warn(msg)
+
+
+```
+</div>
+ 20/27 ━━━━━━━━━━━━━━[37m━━━━━━  10:00 86s/step - accuracy: 0.6925 - loss: 1.8791
+
+<div class="k-default-codeblock">
+```
+/home/humbulani/tensorflow-env/env/lib/python3.11/site-packages/keras/src/models/functional.py:248: UserWarning: The structure of `inputs` doesn't match the expected structure.
+Expected: {'padding_mask': 'padding_mask', 'segment_ids': 'segment_ids', 'token_ids': 'token_ids'}
+Received: inputs=['Tensor(shape=(32, 256))', 'Tensor(shape=(32, 256))', 'Tensor(shape=(32, 256))']
+  warnings.warn(msg)
+
+
+```
+</div>
+ 21/27 ━━━━━━━━━━━━━━━[37m━━━━━  8:36 86s/step - accuracy: 0.6976 - loss: 1.8699 
+
+<div class="k-default-codeblock">
+```
+/home/humbulani/tensorflow-env/env/lib/python3.11/site-packages/keras/src/models/functional.py:248: UserWarning: The structure of `inputs` doesn't match the expected structure.
+Expected: {'padding_mask': 'padding_mask', 'segment_ids': 'segment_ids', 'token_ids': 'token_ids'}
+Received: inputs=['Tensor(shape=(32, 256))', 'Tensor(shape=(32, 256))', 'Tensor(shape=(32, 256))']
+  warnings.warn(msg)
+
 
 ```
 </div>
- 13/38 ━━━━━━[37m━━━━━━━━━━━━━━  9:23 23s/step - accuracy: 0.6724 - loss: 2.1149
+ 22/27 ━━━━━━━━━━━━━━━━[37m━━━━  7:11 86s/step - accuracy: 0.7020 - loss: 1.8623
 
 <div class="k-default-codeblock">
 ```
+/home/humbulani/tensorflow-env/env/lib/python3.11/site-packages/keras/src/models/functional.py:248: UserWarning: The structure of `inputs` doesn't match the expected structure.
+Expected: {'padding_mask': 'padding_mask', 'segment_ids': 'segment_ids', 'token_ids': 'token_ids'}
+Received: inputs=['Tensor(shape=(32, 256))', 'Tensor(shape=(32, 256))', 'Tensor(shape=(32, 256))']
+  warnings.warn(msg)
+
 
 ```
 </div>
- 14/38 ━━━━━━━[37m━━━━━━━━━━━━━  8:59 22s/step - accuracy: 0.6791 - loss: 2.0861
+ 23/27 ━━━━━━━━━━━━━━━━━[37m━━━  5:46 87s/step - accuracy: 0.7061 - loss: 1.8573
 
 <div class="k-default-codeblock">
 ```
+/home/humbulani/tensorflow-env/env/lib/python3.11/site-packages/keras/src/models/functional.py:248: UserWarning: The structure of `inputs` doesn't match the expected structure.
+Expected: {'padding_mask': 'padding_mask', 'segment_ids': 'segment_ids', 'token_ids': 'token_ids'}
+Received: inputs=['Tensor(shape=(32, 256))', 'Tensor(shape=(32, 256))', 'Tensor(shape=(32, 256))']
+  warnings.warn(msg)
+
 
 ```
 </div>
- 15/38 ━━━━━━━[37m━━━━━━━━━━━━━  8:37 23s/step - accuracy: 0.6853 - loss: 2.0569
+ 24/27 ━━━━━━━━━━━━━━━━━[37m━━━  4:20 87s/step - accuracy: 0.7100 - loss: 1.8534
 
 <div class="k-default-codeblock">
 ```
+/home/humbulani/tensorflow-env/env/lib/python3.11/site-packages/keras/src/models/functional.py:248: UserWarning: The structure of `inputs` doesn't match the expected structure.
+Expected: {'padding_mask': 'padding_mask', 'segment_ids': 'segment_ids', 'token_ids': 'token_ids'}
+Received: inputs=['Tensor(shape=(32, 256))', 'Tensor(shape=(32, 256))', 'Tensor(shape=(32, 256))']
+  warnings.warn(msg)
+
 
 ```
 </div>
- 16/38 ━━━━━━━━[37m━━━━━━━━━━━━  8:14 22s/step - accuracy: 0.6910 - loss: 2.0276
+ 25/27 ━━━━━━━━━━━━━━━━━━[37m━━  2:54 87s/step - accuracy: 0.7136 - loss: 1.8494
 
 <div class="k-default-codeblock">
 ```
+/home/humbulani/tensorflow-env/env/lib/python3.11/site-packages/keras/src/models/functional.py:248: UserWarning: The structure of `inputs` doesn't match the expected structure.
+Expected: {'padding_mask': 'padding_mask', 'segment_ids': 'segment_ids', 'token_ids': 'token_ids'}
+Received: inputs=['Tensor(shape=(32, 256))', 'Tensor(shape=(32, 256))', 'Tensor(shape=(32, 256))']
+  warnings.warn(msg)
+
 
 ```
 </div>
- 17/38 ━━━━━━━━[37m━━━━━━━━━━━━  7:52 23s/step - accuracy: 0.6966 - loss: 1.9968
+ 26/27 ━━━━━━━━━━━━━━━━━━━[37m━  1:27 87s/step - accuracy: 0.7170 - loss: 1.8449
 
 <div class="k-default-codeblock">
 ```
+/home/humbulani/tensorflow-env/env/lib/python3.11/site-packages/keras/src/models/functional.py:248: UserWarning: The structure of `inputs` doesn't match the expected structure.
+Expected: {'padding_mask': 'padding_mask', 'segment_ids': 'segment_ids', 'token_ids': 'token_ids'}
+Received: inputs=['Tensor(shape=(32, 256))', 'Tensor(shape=(32, 256))', 'Tensor(shape=(32, 256))']
+  warnings.warn(msg)
+
 
 ```
 </div>
- 18/38 ━━━━━━━━━[37m━━━━━━━━━━━  7:29 22s/step - accuracy: 0.7019 - loss: 1.9657
+ 27/27 ━━━━━━━━━━━━━━━━━━━━ 0s 88s/step - accuracy: 0.7201 - loss: 1.8414  
 
 <div class="k-default-codeblock">
 ```
-
-```
-</div>
- 19/38 ━━━━━━━━━━[37m━━━━━━━━━━  7:08 23s/step - accuracy: 0.7068 - loss: 1.9354
+/home/humbulani/tensorflow-env/env/lib/python3.11/site-packages/PIL/Image.py:1054: UserWarning: Palette images with Transparency expressed in bytes should be converted to RGBA images
+  warnings.warn(
 
-<div class="k-default-codeblock">
-```
-
-```
-</div>
- 20/38 ━━━━━━━━━━[37m━━━━━━━━━━  6:45 23s/step - accuracy: 0.7113 - loss: 1.9068
+/home/humbulani/tensorflow-env/env/lib/python3.11/site-packages/PIL/Image.py:1054: UserWarning: Palette images with Transparency expressed in bytes should be converted to RGBA images
+  warnings.warn(
 
-<div class="k-default-codeblock">
-```
-
-```
-</div>
- 21/38 ━━━━━━━━━━━[37m━━━━━━━━━  6:22 23s/step - accuracy: 0.7149 - loss: 1.8800
+/home/humbulani/tensorflow-env/env/lib/python3.11/site-packages/keras/src/models/functional.py:248: UserWarning: The structure of `inputs` doesn't match the expected structure.
+Expected: {'padding_mask': 'padding_mask', 'segment_ids': 'segment_ids', 'token_ids': 'token_ids'}
+Received: inputs=['Tensor(shape=(32, 256))', 'Tensor(shape=(32, 256))', 'Tensor(shape=(32, 256))']
+  warnings.warn(msg)
 
-<div class="k-default-codeblock">
-```
-
-```
-</div>
- 22/38 ━━━━━━━━━━━[37m━━━━━━━━━  6:00 23s/step - accuracy: 0.7182 - loss: 1.8538
+/home/humbulani/tensorflow-env/env/lib/python3.11/site-packages/keras/src/models/functional.py:248: UserWarning: The structure of `inputs` doesn't match the expected structure.
+Expected: {'padding_mask': 'padding_mask', 'segment_ids': 'segment_ids', 'token_ids': 'token_ids'}
+Received: inputs=['Tensor(shape=(13, 256))', 'Tensor(shape=(13, 256))', 'Tensor(shape=(13, 256))']
+  warnings.warn(msg)
 
-<div class="k-default-codeblock">
-```
-
-```
-</div>
- 23/38 ━━━━━━━━━━━━[37m━━━━━━━━  5:37 22s/step - accuracy: 0.7213 - loss: 1.8284
-
-<div class="k-default-codeblock">
-```
-
-```
-</div>
- 24/38 ━━━━━━━━━━━━[37m━━━━━━━━  5:14 22s/step - accuracy: 0.7239 - loss: 1.8047
-
-<div class="k-default-codeblock">
-```
-
-```
-</div>
- 25/38 ━━━━━━━━━━━━━[37m━━━━━━━  4:52 22s/step - accuracy: 0.7266 - loss: 1.7814
-
-<div class="k-default-codeblock">
-```
-
-```
-</div>
- 26/38 ━━━━━━━━━━━━━[37m━━━━━━━  4:29 22s/step - accuracy: 0.7292 - loss: 1.7587
-
-<div class="k-default-codeblock">
-```
-
-```
-</div>
- 27/38 ━━━━━━━━━━━━━━[37m━━━━━━  4:07 22s/step - accuracy: 0.7318 - loss: 1.7363
-
-<div class="k-default-codeblock">
-```
-
-```
-</div>
- 28/38 ━━━━━━━━━━━━━━[37m━━━━━━  3:45 23s/step - accuracy: 0.7343 - loss: 1.7149
-
-<div class="k-default-codeblock">
-```
-
-```
-</div>
- 29/38 ━━━━━━━━━━━━━━━[37m━━━━━  3:22 23s/step - accuracy: 0.7367 - loss: 1.6941
-
-<div class="k-default-codeblock">
-```
-
-```
-</div>
- 30/38 ━━━━━━━━━━━━━━━[37m━━━━━  3:00 23s/step - accuracy: 0.7391 - loss: 1.6741
-
-<div class="k-default-codeblock">
-```
-
-```
-</div>
- 31/38 ━━━━━━━━━━━━━━━━[37m━━━━  2:37 23s/step - accuracy: 0.7413 - loss: 1.6548
-
-<div class="k-default-codeblock">
-```
-
-```
-</div>
- 32/38 ━━━━━━━━━━━━━━━━[37m━━━━  2:15 23s/step - accuracy: 0.7434 - loss: 1.6366
-
-<div class="k-default-codeblock">
-```
-
-```
-</div>
- 33/38 ━━━━━━━━━━━━━━━━━[37m━━━  1:52 23s/step - accuracy: 0.7454 - loss: 1.6191
-
-<div class="k-default-codeblock">
-```
-
-```
-</div>
- 34/38 ━━━━━━━━━━━━━━━━━[37m━━━  1:29 22s/step - accuracy: 0.7474 - loss: 1.6019
-
-<div class="k-default-codeblock">
-```
-
-```
-</div>
- 35/38 ━━━━━━━━━━━━━━━━━━[37m━━  1:07 23s/step - accuracy: 0.7495 - loss: 1.5849
-
-<div class="k-default-codeblock">
-```
-
-```
-</div>
- 36/38 ━━━━━━━━━━━━━━━━━━[37m━━  44s 22s/step - accuracy: 0.7514 - loss: 1.5685 
-
-<div class="k-default-codeblock">
-```
-
-```
-</div>
- 37/38 ━━━━━━━━━━━━━━━━━━━[37m━  22s 22s/step - accuracy: 0.7532 - loss: 1.5531
-
-<div class="k-default-codeblock">
-```
-
-```
-</div>
- 38/38 ━━━━━━━━━━━━━━━━━━━━ 0s 22s/step - accuracy: 0.7550 - loss: 1.5384 
-
-<div class="k-default-codeblock">
-```
 
 ```
 </div>
- 38/38 ━━━━━━━━━━━━━━━━━━━━ 943s 24s/step - accuracy: 0.7566 - loss: 1.5244 - val_accuracy: 0.8413 - val_loss: 0.6571
+ 27/27 ━━━━━━━━━━━━━━━━━━━━ 2508s 92s/step - accuracy: 0.7231 - loss: 1.8382 - val_accuracy: 0.8222 - val_loss: 1.7304
 
 
 ---
@@ -1075,48 +1272,61 @@ _, acc = multimodal_model.evaluate(test_ds)
 print(f"Accuracy on the test set: {round(acc * 100, 2)}%.")
 ```
 
+<div class="k-default-codeblock">
+```
+/home/humbulani/tensorflow-env/env/lib/python3.11/site-packages/PIL/Image.py:1054: UserWarning: Palette images with Transparency expressed in bytes should be converted to RGBA images
+  warnings.warn(
+
+/home/humbulani/tensorflow-env/env/lib/python3.11/site-packages/PIL/Image.py:1054: UserWarning: Palette images with Transparency expressed in bytes should be converted to RGBA images
+  warnings.warn(
+
+/home/humbulani/tensorflow-env/env/lib/python3.11/site-packages/keras/src/models/functional.py:248: UserWarning: The structure of `inputs` doesn't match the expected structure.
+Expected: {'padding_mask': 'padding_mask', 'segment_ids': 'segment_ids', 'token_ids': 'token_ids'}
+Received: inputs=['Tensor(shape=(32, 256))', 'Tensor(shape=(32, 256))', 'Tensor(shape=(32, 256))']
+  warnings.warn(msg)
+
+```
+</div>
     
- 1/5 ━━━━[37m━━━━━━━━━━━━━━━━  1:28 22s/step - accuracy: 0.8438 - loss: 0.5892
+ 1/4 ━━━━━[37m━━━━━━━━━━━━━━━  5:32 111s/step - accuracy: 0.7812 - loss: 1.9384
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+ 2/4 ━━━━━━━━━━[37m━━━━━━━━━━  2:10 65s/step - accuracy: 0.7969 - loss: 1.8931 
 
 <div class="k-default-codeblock">
 ```
 
 ```
 </div>
- 2/5 ━━━━━━━━[37m━━━━━━━━━━━━  1:05 22s/step - accuracy: 0.8672 - loss: 0.4839
+ 3/4 ━━━━━━━━━━━━━━━[37m━━━━━  1:05 65s/step - accuracy: 0.8056 - loss: 1.8200
 
 <div class="k-default-codeblock">
 ```
+/home/humbulani/tensorflow-env/env/lib/python3.11/site-packages/keras/src/models/functional.py:248: UserWarning: The structure of `inputs` doesn't match the expected structure.
+Expected: {'padding_mask': 'padding_mask', 'segment_ids': 'segment_ids', 'token_ids': 'token_ids'}
+Received: inputs=['Tensor(shape=(4, 256))', 'Tensor(shape=(4, 256))', 'Tensor(shape=(4, 256))']
+  warnings.warn(msg)
+
 
 ```
 </div>
- 3/5 ━━━━━━━━━━━━[37m━━━━━━━━  43s 22s/step - accuracy: 0.8767 - loss: 0.4635 
-
-<div class="k-default-codeblock">
-```
-
-```
-</div>
- 4/5 ━━━━━━━━━━━━━━━━[37m━━━━  21s 22s/step - accuracy: 0.8802 - loss: 0.4634
-
-<div class="k-default-codeblock">
-```
-
-```
-</div>
- 5/5 ━━━━━━━━━━━━━━━━━━━━ 0s 18s/step - accuracy: 0.8799 - loss: 0.4729 
+ 4/4 ━━━━━━━━━━━━━━━━━━━━ 0s 49s/step - accuracy: 0.8092 - loss: 1.8075  
 
 <div class="k-default-codeblock">
 ```
 
 ```
 </div>
- 5/5 ━━━━━━━━━━━━━━━━━━━━ 94s 18s/step - accuracy: 0.8797 - loss: 0.4792
+ 4/4 ━━━━━━━━━━━━━━━━━━━━ 256s 49s/step - accuracy: 0.8113 - loss: 1.8000
 
 
 <div class="k-default-codeblock">
 ```
-Accuracy on the test set: 87.86%.
+Accuracy on the test set: 82.0%.
 
 ```
 </div>
