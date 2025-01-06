@@ -2,9 +2,10 @@
 Title: Text Classification using FNet
 Author: [Abheesht Sharma](https://github.com/abheesht17/)
 Date created: 2022/06/01
-Last modified: 2022/12/21
+Last modified: 2025/01/06
 Description: Text Classification on the IMDb Dataset using `keras_hub.layers.FNetEncoder` layer.
 Accelerator: GPU
+Made Backend agnostic by: [Humbulani Ndou](https://github.com/Humbulani1234)
 """
 
 """
@@ -55,10 +56,17 @@ pip install -q --upgrade keras-hub
 pip install -q --upgrade keras  # Upgrade to Keras 3.
 """
 
+import os
+from sklearn.model_selection import train_test_split
+import pandas as pd
+import numpy as np
+import random
+import math
+
+os.environ["KERAS_BACKEND"] = "torch"  # or jax, or tensorflow
+
 import keras_hub
 import keras
-import tensorflow as tf
-import os
 
 keras.utils.set_random_seed(42)
 
@@ -66,7 +74,7 @@ keras.utils.set_random_seed(42)
 Let's also define our hyperparameters.
 """
 BATCH_SIZE = 64
-EPOCHS = 3
+EPOCHS = 1  # maybe adjusted as desired
 MAX_SEQUENCE_LENGTH = 512
 VOCAB_SIZE = 15000
 
@@ -105,41 +113,62 @@ rm -rf aclImdb/train/unsup
 """
 
 """
-We'll use the `keras.utils.text_dataset_from_directory` utility to generate
-our labelled `tf.data.Dataset` dataset from text files.
+We'll use Pandas to avoid dependency on `keras.utils.text_dataset_from_directory`
+since it is merely a wrapper that returns `tf.data.Dataset` and we wish to make
+this script backend-agnostic
 """
 
-train_ds = keras.utils.text_dataset_from_directory(
-    "aclImdb/train",
-    batch_size=BATCH_SIZE,
-    validation_split=0.2,
-    subset="training",
-    seed=42,
-)
-val_ds = keras.utils.text_dataset_from_directory(
-    "aclImdb/train",
-    batch_size=BATCH_SIZE,
-    validation_split=0.2,
-    subset="validation",
-    seed=42,
-)
-test_ds = keras.utils.text_dataset_from_directory("aclImdb/test", batch_size=BATCH_SIZE)
 
-"""
-We will now convert the text to lowercase.
-"""
-train_ds = train_ds.map(lambda x, y: (tf.strings.lower(x), y))
-val_ds = val_ds.map(lambda x, y: (tf.strings.lower(x), y))
-test_ds = test_ds.map(lambda x, y: (tf.strings.lower(x), y))
+# Function to read files and label them
+def load_data_from_directory(directory, label):
+    data = []
+    for filename in os.listdir(directory):
+        if filename.endswith(".txt"):
+            file_path = os.path.join(directory, filename)
+            with open(file_path, "r", encoding="utf-8") as file:
+                text = file.read().strip()
+                data.append((text, label))
+    return data
+
+
+# Function to create Pandas dataframes
+def create_df(directory_pos, directory_neg):
+
+    # Load data from both directories
+    pos_data = load_data_from_directory(directory_pos, label=1)
+    neg_data = load_data_from_directory(directory_neg, label=0)
+
+    # Combine data from both pos and neg
+    all_data = pos_data + neg_data
+
+    # Shuffle the data randomly
+    random.shuffle(all_data)
+
+    # Create a pandas DataFrame
+    df = pd.DataFrame(all_data, columns=["text", "label"])
+    return df
+
+
+# Create the train and test dataframes, iloc maybe adjusted to a desired size
+train_df = create_df("./aclImdb/train/pos", "./aclImdb/train/neg").iloc[0:5000]
+test_df = create_df("./aclImdb/test/pos", "./aclImdb/test/neg").iloc[0:2500]
+
+# Train and Validation splits, 5% for validation
+train_df, val_df = train_test_split(
+    train_df, test_size=0.05, stratify=train_df["label"].values, random_state=42
+)
+
+# Data statistics
+print(f"Total training examples: {len(train_df)}")
+print(f"Total validation examples: {len(val_df)}")
+print(f"Total test examples: {len(test_df)}")
 
 """
 Let's print a few samples.
 """
-for text_batch, label_batch in train_ds.take(1):
-    for i in range(3):
-        print(text_batch.numpy()[i])
-        print(label_batch.numpy()[i])
 
+for i in range(3):
+    print(f"text: {train_df['text'][i]}, label: {train_df['label'][i]}")
 
 """
 ### Tokenizing the data
@@ -160,17 +189,6 @@ makes it very simple to train WordPiece on a corpus with the
 Note: The official implementation of FNet uses the SentencePiece Tokenizer.
 """
 
-
-def train_word_piece(ds, vocab_size, reserved_tokens):
-    word_piece_ds = ds.unbatch().map(lambda x, y: x)
-    vocab = keras_hub.tokenizers.compute_word_piece_vocabulary(
-        word_piece_ds.batch(1000).prefetch(2),
-        vocabulary_size=vocab_size,
-        reserved_tokens=reserved_tokens,
-    )
-    return vocab
-
-
 """
 Every vocabulary has a few special, reserved tokens. We have two such tokens:
 
@@ -178,9 +196,21 @@ Every vocabulary has a few special, reserved tokens. We have two such tokens:
 when the input sequence length is shorter than the maximum sequence length.
 - `"[UNK]"` - Unknown token.
 """
+
 reserved_tokens = ["[PAD]", "[UNK]"]
-train_sentences = [element[0] for element in train_ds]
-vocab = train_word_piece(train_ds, VOCAB_SIZE, reserved_tokens)
+train_sentences = [element[0] for element in train_df]
+
+vocab = keras_hub.tokenizers.compute_word_piece_vocabulary(
+    data=[
+        "./aclImdb/train/pos/" + f
+        for f in os.listdir("./aclImdb/train/pos")
+        if os.path.isfile(os.path.join("./aclImdb/train/pos", f))
+    ],  # list of files in the specified directory used to create the vocab
+    vocabulary_size=VOCAB_SIZE,
+    reserved_tokens=reserved_tokens,
+    lowercase=True,
+)
+
 
 """
 Let's see some tokens!
@@ -193,18 +223,21 @@ the vocabularies trained above. We will define a maximum sequence length so that
 all sequences are padded to the same length, if the length of the sequence is
 less than the specified sequence length. Otherwise, the sequence is truncated.
 """
+
 tokenizer = keras_hub.tokenizers.WordPieceTokenizer(
     vocabulary=vocab,
     lowercase=False,
     sequence_length=MAX_SEQUENCE_LENGTH,
 )
 
+
 """
 Let's try and tokenize a sample from our dataset! To verify whether the text has
 been tokenized correctly, we can also detokenize the list of tokens back to the
 original text.
 """
-input_sentence_ex = train_ds.take(1).get_single_element()[0][0]
+
+input_sentence_ex = train_df["text"][0]
 input_tokens_ex = tokenizer(input_sentence_ex)
 
 print("Sentence: ", input_sentence_ex)
@@ -213,26 +246,92 @@ print("Recovered text after detokenizing: ", tokenizer.detokenize(input_tokens_e
 
 
 """
-## Formatting the dataset
-
-Next, we'll format our datasets in the form that will be fed to the models. We
-need to tokenize the text.
+Create the final datasets, method adapted from `PyDataset` doc string
 """
 
 
-def format_dataset(sentence, label):
-    sentence = tokenizer(sentence)
-    return ({"input_ids": sentence}, label)
+class UnifiedPyDataset(keras.utils.PyDataset):
+    """A Keras-compatible dataset that processes a DataFrame for TensorFlow, JAX, and PyTorch."""
+
+    def __init__(
+        self,
+        df,
+        batch_size=BATCH_SIZE,
+        workers=4,
+        use_multiprocessing=True,
+        max_queue_size=10,
+        **kwargs,
+    ):
+        """
+        Args:
+            df: pandas DataFrame with data
+            batch_size: Batch size for dataset
+            workers: Number of workers to use for parallel loading (Keras)
+            use_multiprocessing: Whether to use multiprocessing
+            max_queue_size: Maximum size of the data queue for parallel loading
+        """
+        super().__init__(**kwargs)
+        self.dataframe = df
+        columns = ["text", "label"]
+
+        # text files
+        self.text_x = self.dataframe["text"]
+        self.text_y = self.dataframe["label"]
+
+        # general
+        self.batch_size = batch_size
+        self.workers = workers
+        self.use_multiprocessing = use_multiprocessing
+        self.max_queue_size = max_queue_size
+
+    def __getitem__(self, index):
+        """
+        Fetches a batch of data from the dataset at the given index.
+
+        Args:
+            index: position of the batch in the dataset
+        """
+
+        # Return x, y for batch idx.
+        low = index * self.batch_size
+        # Cap upper bound at array length; the last batch may be smaller
+        # if the total number of items is not a multiple of batch size.
+
+        high_text = min(low + self.batch_size, len(self.text_x))
+
+        # text files batches
+        batch_text_x = self.text_x[low:high_text]
+        batch_text_y = self.text_y[low:high_text]
+
+        # Tokenize the data in dataframe and stack them into an nd.array of axis_0=batch
+        text = np.array([[tokenizer(text) for text in batch_text_x]])
+        return (
+            {
+                "input_ids": keras.ops.squeeze(text),
+            },
+            # Target lables
+            np.array(batch_text_y),
+        )
+
+    def __len__(self):
+        """
+        Returns the number of batches in the dataset.
+        """
+        return math.ceil(len(self.dataframe) / self.batch_size)
 
 
-def make_dataset(dataset):
-    dataset = dataset.map(format_dataset, num_parallel_calls=tf.data.AUTOTUNE)
-    return dataset.shuffle(512).prefetch(16).cache()
+def prepare_dataset(dataframe, training=True):
+    ds = UnifiedPyDataset(
+        dataframe,
+        batch_size=32,
+        workers=4,
+    )
+    return ds
 
 
-train_ds = make_dataset(train_ds)
-val_ds = make_dataset(val_ds)
-test_ds = make_dataset(test_ds)
+train_ds = prepare_dataset(train_df)
+val_ds = prepare_dataset(val_df)
+test_ds = prepare_dataset(test_df)
 
 """
 ## Building the model
