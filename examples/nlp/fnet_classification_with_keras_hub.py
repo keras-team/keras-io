@@ -133,17 +133,13 @@ def load_data_from_directory(directory, label):
 
 # Function to create Pandas dataframes
 def create_df(directory_pos, directory_neg):
-
     # Load data from both directories
     pos_data = load_data_from_directory(directory_pos, label=1)
     neg_data = load_data_from_directory(directory_neg, label=0)
-
     # Combine data from both pos and neg
     all_data = pos_data + neg_data
-
     # Shuffle the data randomly
     random.shuffle(all_data)
-
     # Create a pandas DataFrame
     df = pd.DataFrame(all_data, columns=["text", "label"])
     return df
@@ -226,7 +222,7 @@ less than the specified sequence length. Otherwise, the sequence is truncated.
 
 tokenizer = keras_hub.tokenizers.WordPieceTokenizer(
     vocabulary=vocab,
-    lowercase=False,
+    lowercase=True,
     sequence_length=MAX_SEQUENCE_LENGTH,
 )
 
@@ -296,13 +292,10 @@ class UnifiedPyDataset(keras.utils.PyDataset):
         low = index * self.batch_size
         # Cap upper bound at array length; the last batch may be smaller
         # if the total number of items is not a multiple of batch size.
-
         high_text = min(low + self.batch_size, len(self.text_x))
-
         # text files batches
         batch_text_x = self.text_x[low:high_text]
         batch_text_y = self.text_y[low:high_text]
-
         # Tokenize the data in dataframe and stack them into an nd.array of axis_0=batch
         text = np.array([[tokenizer(text) for text in batch_text_x]])
         return (
