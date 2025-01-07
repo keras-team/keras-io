@@ -316,17 +316,14 @@ class UnifiedPyDataset(PyDataset):
         super().__init__(**kwargs)
         self.dataframe = df
         columns = ["image_1_path", "image_2_path", "text_1", "text_2"]
-
         # image files
         self.image_x_1 = self.dataframe["image_1_path"]
         self.image_x_2 = self.dataframe["image_1_path"]
         self.image_y = self.dataframe["label_idx"]
-
         # text files
         self.text_x_1 = self.dataframe["text_1"]
         self.text_x_2 = self.dataframe["text_2"]
         self.text_y = self.dataframe["label_idx"]
-
         # general
         self.batch_size = batch_size
         self.workers = workers
@@ -342,27 +339,22 @@ class UnifiedPyDataset(PyDataset):
         low = index * self.batch_size
         # Cap upper bound at array length; the last batch may be smaller
         # if the total number of items is not a multiple of batch size.
-
+        # image files
         high_image_1 = min(low + self.batch_size, len(self.image_x_1))
         high_image_2 = min(low + self.batch_size, len(self.image_x_2))
-
+        # text
         high_text_1 = min(low + self.batch_size, len(self.text_x_1))
         high_text_2 = min(low + self.batch_size, len(self.text_x_1))
-
         # images files
         batch_image_x_1 = self.image_x_1[low:high_image_1]
         batch_image_y_1 = self.image_y[low:high_image_1]
-
         batch_image_x_2 = self.image_x_2[low:high_image_2]
         batch_image_y_2 = self.image_y[low:high_image_2]
-
         # text files
         batch_text_x_1 = self.text_x_1[low:high_text_1]
         batch_text_y_1 = self.text_y[low:high_text_1]
-
         batch_text_x_2 = self.text_x_2[low:high_text_2]
         batch_text_y_2 = self.text_y[low:high_text_2]
-
         # image number 1 inputs
         image_1 = [
             resize(imread(file_name), (128, 128)) for file_name in batch_image_x_1
@@ -376,7 +368,6 @@ class UnifiedPyDataset(PyDataset):
             for img in image_1
         ]
         image_1 = np.array(image_1)
-
         # Both text inputs to the model, return a dict for inputs to BertBackbone
         text = {
             key: np.array(
@@ -392,7 +383,6 @@ class UnifiedPyDataset(PyDataset):
             )
             for key in ["padding_mask", "token_ids", "segment_ids"]
         }
-
         # Image number 2 model inputs
         image_2 = [
             resize(imread(file_name), (128, 128)) for file_name in batch_image_x_2
@@ -407,7 +397,6 @@ class UnifiedPyDataset(PyDataset):
         ]
         # Stack the list comprehension to an nd.array
         image_2 = np.array(image_2)
-
         return (
             {
                 "image_1": image_1,
