@@ -451,7 +451,7 @@ class VariableSelection(layers.Layer):
         # the equivalent keras operation that is backend-agnostic. In the following case there,s
         # a keras.ops.matmul but it was returning errors. I could have used the tensorflow matmul
         # for all backends, but due to jax jit tracing it results in an error.
-        def matmul_dependent_on_backend(thsi, v):
+        def matmul_dependent_on_backend(tensor_1, tensor_2):
             """
             Function for executing matmul for each backend.
             """
@@ -459,12 +459,12 @@ class VariableSelection(layers.Layer):
             if keras.backend.backend() == "jax":
                 import jax.numpy as jnp
 
-                result = jnp.sum(thsi * v, axis=1)
+                result = jnp.sum(tensor_1 * tensor_2, axis=1)
             elif keras.backend.backend() == "torch":
-                result = torch.sum(thsi * v, dim=1)
+                result = torch.sum(tensor_1 * tensor_2, dim=1)
             # tensorflow backend
             elif keras.backend.backend() == "tensorflow":
-                result = keras.ops.squeeze(tf.matmul(thsi, v, transpose_a=True), axis=1)
+                result = keras.ops.squeeze(tf.matmul(tensor_1, tensor_2, transpose_a=True), axis=1)
             # unsupported backend exception
             else:
                 raise ValueError(
