@@ -399,6 +399,21 @@ class VariableSelection(layers.Layer):
     def __init__(self, num_features, units, dropout_rate):
         super().__init__()
         self.units = units
+        # Create an embedding layers with the specified dimensions
+        self.embeddings = dict()
+        for input_ in CATEGORICAL_FEATURES_WITH_VOCABULARY:
+            vocabulary = CATEGORICAL_FEATURES_WITH_VOCABULARY[input_]
+            embedding_encoder = layers.Embedding(
+                input_dim=len(vocabulary), output_dim=self.units, name=input_
+            )
+            self.embeddings[input_] = embedding_encoder
+
+        # Projection layers for numeric features
+        self.proj_layer = dict()
+        for input_ in NUMERIC_FEATURE_NAMES:
+            proj_layer = layers.Dense(units=self.units)
+            self.proj_layer[input_] = proj_layer
+
         self.grns = list()
         # Create a GRN for each feature independently
         for idx in range(num_features):
@@ -412,21 +427,16 @@ class VariableSelection(layers.Layer):
         concat_inputs = []
         for input_ in inputs:
             if input_ in CATEGORICAL_FEATURES_WITH_VOCABULARY:
-                vocabulary = CATEGORICAL_FEATURES_WITH_VOCABULARY[input_]
-                # Create an embedding layer with the specified dimensions
-                embedding_encoder = layers.Embedding(
-                    input_dim=len(vocabulary), output_dim=self.units
-                )
-                max_index = len(vocabulary) - 1  # Clamp the indices
+                max_index = self.embeddings[input_].input_dim - 1  # Clamp the indices
                 # torch had some index errors during embedding hence the clip function
-                embedded_feature = embedding_encoder(
+                embedded_feature = self.embeddings[input_](
                     keras.ops.clip(inputs[input_], 0, max_index)
                 )
                 concat_inputs.append(embedded_feature)
             else:
                 # Project the numeric feature to encoding_size using linear transformation.
                 proj_feature = keras.ops.expand_dims(inputs[input_], -1)
-                proj_feature = layers.Dense(units=self.units)(proj_feature)
+                proj_feature = self.proj_layer[input_](proj_feature)
                 concat_inputs.append(proj_feature)
 
         v = layers.concatenate(concat_inputs)
@@ -438,11 +448,10 @@ class VariableSelection(layers.Layer):
         x = keras.ops.stack(x, axis=1)
 
         # The reason for each individual backend calculation is that I couldn't find
-        # the equivalent keras operation that is backend-agnostic. In the following case there's
+        # the equivalent keras operation that is backend-agnostic. In the following case there,s
         # a keras.ops.matmul but it was returning errors. I could have used the tensorflow matmul
         # for all backends, but due to jax jit tracing it results in an error.
-
-        def matmul_dependent_on_backend(tensor_1, tensor_2):
+        def matmul_dependent_on_backend(thsi, v):
             """
             Function for executing matmul for each backend.
             """
@@ -450,18 +459,12 @@ class VariableSelection(layers.Layer):
             if keras.backend.backend() == "jax":
                 import jax.numpy as jnp
 
-                result = jnp.sum(tensor_1 * tensor_2, axis=1)
+                result = jnp.sum(thsi * v, axis=1)
             elif keras.backend.backend() == "torch":
-                import torch
-
-                result = torch.sum(tensor_1 * tensor_2, dim=1)
+                result = torch.sum(thsi * v, dim=1)
             # tensorflow backend
             elif keras.backend.backend() == "tensorflow":
-                import tensorflow as tf
-
-                result = keras.ops.squeeze(
-                    tf.matmul(tensor_1, tensor_2, transpose_a=True), axis=1
-                )
+                result = keras.ops.squeeze(tf.matmul(thsi, v, transpose_a=True), axis=1)
             # unsupported backend exception
             else:
                 raise ValueError(
@@ -477,20 +480,22 @@ class VariableSelection(layers.Layer):
 
             result_jax = matmul_dependent_on_backend(v, x)
             return result_jax
-
         # torch backend
         if keras.backend.backend() == "torch":
             import torch
 
             result_torch = matmul_dependent_on_backend(v, x)
             return result_torch
-
         # tensorflow backend
         if keras.backend.backend() == "tensorflow":
             import tensorflow as tf
 
             result_tf = keras.ops.squeeze(tf.matmul(v, x, transpose_a=True), axis=1)
             return result_tf
+
+    # to remove the build warnings
+    def build(self):
+        self.built = True
 
 
 """
