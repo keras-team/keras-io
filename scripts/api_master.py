@@ -1866,7 +1866,7 @@ API_MASTER = {
         },
         {
             "path": "utils/",
-            "title": "Utilities and Wrappers",
+            "title": "Utilities",
             "toc": True,
             "children": [
                 {
@@ -1918,7 +1918,7 @@ API_MASTER = {
                 },
                 {
                     "path": "sklearn_wrappers",
-                    "title": "scikit-learn wrappers",
+                    "title": "Scikit-Learn API wrappers",
                     "generate": [
                         "keras.wrappers.SKLearnClassifier",
                         "keras.wrappers.SKLearnRegressor",
