@@ -2,7 +2,7 @@
 
 **Author:** [Dimitre Oliveira](https://www.linkedin.com/in/dimitre-oliveira-7a1a0113a/)<br>
 **Date created:** 2023/07/01<br>
-**Last modified:** 2023/07/01<br>
+**Last modified:** 2025/01/03<br>
 **Description:** How to use FeatureSpace for advanced preprocessing use cases.
 
 
@@ -92,7 +92,7 @@ Let's download the data and load it into a Pandas dataframe:
 ```python
 data_url = "https://archive.ics.uci.edu/static/public/222/bank+marketing.zip"
 data_zipped_path = keras.utils.get_file("bank_marketing.zip", data_url, extract=True)
-keras_datasets_path = Path(data_zipped_path).parents[0]
+keras_datasets_path = Path(data_zipped_path)
 with ZipFile(f"{keras_datasets_path}/bank-additional.zip", "r") as zip:
     # Extract files
     zip.extractall(path=keras_datasets_path)
@@ -250,7 +250,7 @@ for x, y in dataframe_to_dataset(train_dataframe).take(1):
 
 <div class="k-default-codeblock">
 ```
-Input: {'age': <tf.Tensor: shape=(), dtype=int64, numpy=33>, 'job': <tf.Tensor: shape=(), dtype=string, numpy=b'technician'>, 'marital': <tf.Tensor: shape=(), dtype=string, numpy=b'married'>, 'education': <tf.Tensor: shape=(), dtype=string, numpy=b'university.degree'>, 'default': <tf.Tensor: shape=(), dtype=string, numpy=b'unknown'>, 'housing': <tf.Tensor: shape=(), dtype=string, numpy=b'yes'>, 'loan': <tf.Tensor: shape=(), dtype=string, numpy=b'no'>, 'contact': <tf.Tensor: shape=(), dtype=string, numpy=b'cellular'>, 'month': <tf.Tensor: shape=(), dtype=string, numpy=b'aug'>, 'day_of_week': <tf.Tensor: shape=(), dtype=string, numpy=b'tue'>, 'campaign': <tf.Tensor: shape=(), dtype=int64, numpy=1>, 'pdays': <tf.Tensor: shape=(), dtype=int64, numpy=999>, 'previous': <tf.Tensor: shape=(), dtype=int64, numpy=0>, 'poutcome': <tf.Tensor: shape=(), dtype=string, numpy=b'nonexistent'>, 'emp.var.rate': <tf.Tensor: shape=(), dtype=float64, numpy=1.4>, 'cons.price.idx': <tf.Tensor: shape=(), dtype=float64, numpy=93.444>, 'cons.conf.idx': <tf.Tensor: shape=(), dtype=float64, numpy=-36.1>, 'euribor3m': <tf.Tensor: shape=(), dtype=float64, numpy=4.963>, 'nr.employed': <tf.Tensor: shape=(), dtype=float64, numpy=5228.1>, 'previously_contacted': <tf.Tensor: shape=(), dtype=int64, numpy=0>}
+Input: {'age': <tf.Tensor: shape=(), dtype=int64, numpy=56>, 'job': <tf.Tensor: shape=(), dtype=string, numpy=b'admin.'>, 'marital': <tf.Tensor: shape=(), dtype=string, numpy=b'married'>, 'education': <tf.Tensor: shape=(), dtype=string, numpy=b'university.degree'>, 'default': <tf.Tensor: shape=(), dtype=string, numpy=b'no'>, 'housing': <tf.Tensor: shape=(), dtype=string, numpy=b'yes'>, 'loan': <tf.Tensor: shape=(), dtype=string, numpy=b'no'>, 'contact': <tf.Tensor: shape=(), dtype=string, numpy=b'cellular'>, 'month': <tf.Tensor: shape=(), dtype=string, numpy=b'jul'>, 'day_of_week': <tf.Tensor: shape=(), dtype=string, numpy=b'fri'>, 'campaign': <tf.Tensor: shape=(), dtype=int64, numpy=5>, 'pdays': <tf.Tensor: shape=(), dtype=int64, numpy=999>, 'previous': <tf.Tensor: shape=(), dtype=int64, numpy=0>, 'poutcome': <tf.Tensor: shape=(), dtype=string, numpy=b'nonexistent'>, 'emp.var.rate': <tf.Tensor: shape=(), dtype=float64, numpy=1.4>, 'cons.price.idx': <tf.Tensor: shape=(), dtype=float64, numpy=93.918>, 'cons.conf.idx': <tf.Tensor: shape=(), dtype=float64, numpy=-42.7>, 'euribor3m': <tf.Tensor: shape=(), dtype=float64, numpy=4.957>, 'nr.employed': <tf.Tensor: shape=(), dtype=float64, numpy=5228.1>, 'previously_contacted': <tf.Tensor: shape=(), dtype=int64, numpy=0>}
 Target: 0
 
 ```
@@ -332,8 +332,8 @@ example_feature_space(train_ds_with_no_labels, feature_space, ["education"])
 
 <div class="k-default-codeblock">
 ```
-Input: [{'education': b'basic.9y'}]
-Preprocessed output: [{'education': array([0., 1., 0.], dtype=float32)}]
+Input: [{'education': b'university.degree'}]
+Preprocessed output: [{'education': array([0., 0., 1.], dtype=float32)}]
 
 ```
 </div>
@@ -354,8 +354,8 @@ example_feature_space(train_ds_with_no_labels, feature_space, ["age"])
 
 <div class="k-default-codeblock">
 ```
-Input: [{'age': 40}]
-Preprocessed output: [{'age': array([0., 1., 0.], dtype=float32)}]
+Input: [{'age': 56}]
+Preprocessed output: [{'age': array([0., 0., 1.], dtype=float32)}]
 
 ```
 </div>
@@ -385,8 +385,8 @@ example_feature_space(train_ds_with_no_labels, feature_space, ["default"])
 
 <div class="k-default-codeblock">
 ```
-Input: [{'default': b'unknown'}]
-Preprocessed output: [{'default': array([0., 0., 1., 0.], dtype=float32)}]
+Input: [{'default': b'no'}]
+Preprocessed output: [{'default': array([0., 1., 0., 0.], dtype=float32)}]
 
 ```
 </div>
@@ -468,8 +468,8 @@ example_feature_space(train_ds_with_no_labels, feature_space, ["age", "job"])
 
 <div class="k-default-codeblock">
 ```
-Input: [{'age': 28}, {'job': b'blue-collar'}]
-Preprocessed output: [{'age': array([0., 0., 1., 0., 0., 0.], dtype=float32)}, {'job': array([0., 1., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.], dtype=float32)}, {'age_X_job': array([0., 0., 0., 0., 1., 0., 0., 0.], dtype=float32)}]
+Input: [{'age': 33}, {'job': b'admin.'}]
+Preprocessed output: [{'age': array([0., 0., 1., 0., 0., 0.], dtype=float32)}, {'job': array([1., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.], dtype=float32)}, {'age_X_job': array([0., 1., 0., 0., 0., 0., 0., 0.], dtype=float32)}]
 
 ```
 </div>
@@ -505,8 +505,8 @@ example_feature_space(train_ds_with_no_labels, feature_space, ["education"])
 
 <div class="k-default-codeblock">
 ```
-Input: [{'education': b'university.degree'}]
-Preprocessed output: [{'education': array([0.       , 1.4574516, 0.       , 0.       , 0.       , 0.       ,
+Input: [{'education': b'high.school'}]
+Preprocessed output: [{'education': array([0.       , 0.       , 1.6840783, 0.       , 0.       , 0.       ,
        0.       , 0.       , 0.       ], dtype=float32)}]
 
 ```
@@ -607,19 +607,19 @@ for x, _ in train_ds.take(1):
 ```
 preprocessed_x shape: (32, 77)
 preprocessed_x sample: 
-[ 0.          1.          0.          0.         -0.19560693  0.95908785
- -0.22542837  1.          0.          0.          1.          0.
-  0.          0.          1.          0.          0.          1.
+[ 0.          0.          1.          0.         -0.19560708  0.8937782
+  0.7249699   0.          1.          0.          0.          0.
+  1.          0.          0.          1.          0.          0.
+  0.          0.          0.          1.          0.          0.
+  0.          0.6566938   0.71815234  0.          0.          1.
+  0.          1.          0.          0.          0.          1.
+  1.          0.          0.          0.          1.          0.
   0.          0.          0.          0.          0.          0.
-  0.          0.8486567   0.781508    1.          0.          0.
-  0.          0.          1.          1.          0.          0.
-  0.          1.          0.          0.          0.          0.
-  1.          0.          0.          0.          0.          0.
-  0.          0.          0.8400493   0.          0.          1.
-  0.          1.          0.          0.         -0.35691845  1.
+  0.          0.          0.33757654  0.          0.          1.
+  0.          1.          0.          0.         -0.35691857  1.
+  0.          0.          0.          0.          0.          1.
   0.          0.          0.          0.          0.          0.
-  1.          0.          0.          0.          0.          0.
-  0.          1.          0.          1.          0.        ]
+  1.          0.          0.          1.          0.        ]
 
 ```
 </div>
@@ -701,54 +701,53 @@ of the tf.data pipeline, not as part of the model.
 
 ```python
 model.fit(
-    preprocessed_train_ds, validation_data=preprocessed_valid_ds, epochs=20, verbose=2
+    preprocessed_train_ds, validation_data=preprocessed_valid_ds, epochs=10, verbose=2
 )
 ```
 
 <div class="k-default-codeblock">
 ```
-Epoch 1/20
-103/103 - 1s - 6ms/step - accuracy: 0.8844 - loss: 0.3453 - val_accuracy: 0.9114 - val_loss: 0.2612
-Epoch 2/20
-103/103 - 0s - 2ms/step - accuracy: 0.8974 - loss: 0.3010 - val_accuracy: 0.9078 - val_loss: 0.2641
-Epoch 3/20
-103/103 - 0s - 2ms/step - accuracy: 0.9005 - loss: 0.2863 - val_accuracy: 0.9066 - val_loss: 0.2630
-Epoch 4/20
-103/103 - 0s - 2ms/step - accuracy: 0.9002 - loss: 0.2925 - val_accuracy: 0.9053 - val_loss: 0.2653
-Epoch 5/20
-103/103 - 0s - 2ms/step - accuracy: 0.8995 - loss: 0.2893 - val_accuracy: 0.9078 - val_loss: 0.2624
-Epoch 6/20
-103/103 - 0s - 2ms/step - accuracy: 0.9002 - loss: 0.2866 - val_accuracy: 0.9078 - val_loss: 0.2628
-Epoch 7/20
-103/103 - 0s - 2ms/step - accuracy: 0.9026 - loss: 0.2868 - val_accuracy: 0.9090 - val_loss: 0.2621
-Epoch 8/20
-103/103 - 0s - 2ms/step - accuracy: 0.9023 - loss: 0.2802 - val_accuracy: 0.9078 - val_loss: 0.2623
-Epoch 9/20
-103/103 - 0s - 2ms/step - accuracy: 0.9047 - loss: 0.2743 - val_accuracy: 0.9078 - val_loss: 0.2628
-Epoch 10/20
-103/103 - 0s - 2ms/step - accuracy: 0.9062 - loss: 0.2761 - val_accuracy: 0.9090 - val_loss: 0.2650
-Epoch 11/20
-103/103 - 0s - 2ms/step - accuracy: 0.9050 - loss: 0.2729 - val_accuracy: 0.9090 - val_loss: 0.2668
-Epoch 12/20
-103/103 - 0s - 2ms/step - accuracy: 0.9029 - loss: 0.2699 - val_accuracy: 0.9078 - val_loss: 0.2670
-Epoch 13/20
-103/103 - 0s - 2ms/step - accuracy: 0.9056 - loss: 0.2671 - val_accuracy: 0.9078 - val_loss: 0.2641
-Epoch 14/20
-103/103 - 0s - 2ms/step - accuracy: 0.9032 - loss: 0.2750 - val_accuracy: 0.9078 - val_loss: 0.2643
-Epoch 15/20
-103/103 - 0s - 2ms/step - accuracy: 0.9083 - loss: 0.2650 - val_accuracy: 0.9102 - val_loss: 0.2658
-Epoch 16/20
-103/103 - 0s - 2ms/step - accuracy: 0.9102 - loss: 0.2593 - val_accuracy: 0.9102 - val_loss: 0.2639
-Epoch 17/20
-103/103 - 0s - 2ms/step - accuracy: 0.9074 - loss: 0.2719 - val_accuracy: 0.9102 - val_loss: 0.2655
-Epoch 18/20
-103/103 - 0s - 2ms/step - accuracy: 0.9059 - loss: 0.2655 - val_accuracy: 0.9102 - val_loss: 0.2670
-Epoch 19/20
-103/103 - 0s - 2ms/step - accuracy: 0.9099 - loss: 0.2650 - val_accuracy: 0.9102 - val_loss: 0.2646
-Epoch 20/20
-103/103 - 0s - 2ms/step - accuracy: 0.9068 - loss: 0.2624 - val_accuracy: 0.9078 - val_loss: 0.2661
+Epoch 1/10
 
-<keras.src.callbacks.history.History at 0x31eac7eb0>
+103/103 - 15s - 149ms/step - accuracy: 0.8753 - loss: 0.3639 - val_accuracy: 0.9102 - val_loss: 0.2747
+
+Epoch 2/10
+
+103/103 - 12s - 121ms/step - accuracy: 0.8965 - loss: 0.3058 - val_accuracy: 0.9078 - val_loss: 0.2716
+
+Epoch 3/10
+
+103/103 - 12s - 121ms/step - accuracy: 0.8947 - loss: 0.2972 - val_accuracy: 0.9053 - val_loss: 0.2712
+
+Epoch 4/10
+
+103/103 - 12s - 116ms/step - accuracy: 0.9002 - loss: 0.2877 - val_accuracy: 0.9102 - val_loss: 0.2677
+
+Epoch 5/10
+
+103/103 - 13s - 124ms/step - accuracy: 0.8974 - loss: 0.2815 - val_accuracy: 0.9041 - val_loss: 0.2688
+
+Epoch 6/10
+
+103/103 - 13s - 129ms/step - accuracy: 0.8986 - loss: 0.2917 - val_accuracy: 0.9066 - val_loss: 0.2658
+
+Epoch 7/10
+
+103/103 - 12s - 120ms/step - accuracy: 0.9029 - loss: 0.2779 - val_accuracy: 0.9053 - val_loss: 0.2670
+
+Epoch 8/10
+
+103/103 - 13s - 124ms/step - accuracy: 0.9011 - loss: 0.2809 - val_accuracy: 0.9090 - val_loss: 0.2660
+
+Epoch 9/10
+
+103/103 - 13s - 121ms/step - accuracy: 0.9008 - loss: 0.2748 - val_accuracy: 0.9041 - val_loss: 0.2689
+
+Epoch 10/10
+
+103/103 - 13s - 123ms/step - accuracy: 0.9038 - loss: 0.2768 - val_accuracy: 0.9053 - val_loss: 0.2674
+
+<keras.src.callbacks.history.History at 0x723b293058d0>
 
 ```
 </div>
@@ -822,9 +821,29 @@ print(
 <div class="k-default-codeblock">
 ```
 <KerasTensor shape=(None, 77), dtype=float32, sparse=False, name=keras_tensor_99>
-{'previously_contacted': <KerasTensor shape=(None, 1), dtype=int32, sparse=None, name=previously_contacted>, 'marital': <KerasTensor shape=(None, 1), dtype=string, sparse=None, name=marital>, 'education': <KerasTensor shape=(None, 1), dtype=string, sparse=None, name=education>, 'default': <KerasTensor shape=(None, 1), dtype=string, sparse=None, name=default>, 'housing': <KerasTensor shape=(None, 1), dtype=string, sparse=None, name=housing>, 'loan': <KerasTensor shape=(None, 1), dtype=string, sparse=None, name=loan>, 'contact': <KerasTensor shape=(None, 1), dtype=string, sparse=None, name=contact>, 'month': <KerasTensor shape=(None, 1), dtype=string, sparse=None, name=month>, 'day_of_week': <KerasTensor shape=(None, 1), dtype=string, sparse=None, name=day_of_week>, 'poutcome': <KerasTensor shape=(None, 1), dtype=string, sparse=None, name=poutcome>, 'job': <KerasTensor shape=(None, 1), dtype=string, sparse=None, name=job>, 'pdays': <KerasTensor shape=(None, 1), dtype=int32, sparse=None, name=pdays>, 'age': <KerasTensor shape=(None, 1), dtype=float32, sparse=None, name=age>, 'campaign': <KerasTensor shape=(None, 1), dtype=float32, sparse=None, name=campaign>, 'previous': <KerasTensor shape=(None, 1), dtype=float32, sparse=None, name=previous>, 'emp.var.rate': <KerasTensor shape=(None, 1), dtype=float32, sparse=None, name=emp.var.rate>, 'cons.price.idx': <KerasTensor shape=(None, 1), dtype=float32, sparse=None, name=cons.price.idx>, 'cons.conf.idx': <KerasTensor shape=(None, 1), dtype=float32, sparse=None, name=cons.conf.idx>, 'euribor3m': <KerasTensor shape=(None, 1), dtype=float32, sparse=None, name=euribor3m>, 'nr.employed': <KerasTensor shape=(None, 1), dtype=float32, sparse=None, name=nr.employed>}
- 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 126ms/step
-This particular client has a 9.60% probability of subscribing a term deposit, as evaluated by our model.
+{'previously_contacted': <KerasTensor shape=(None, 1), dtype=int32, sparse=False, name=previously_contacted>, 'marital': <KerasTensor shape=(None, 1), dtype=string, sparse=False, name=marital>, 'education': <KerasTensor shape=(None, 1), dtype=string, sparse=False, name=education>, 'default': <KerasTensor shape=(None, 1), dtype=string, sparse=False, name=default>, 'housing': <KerasTensor shape=(None, 1), dtype=string, sparse=False, name=housing>, 'loan': <KerasTensor shape=(None, 1), dtype=string, sparse=False, name=loan>, 'contact': <KerasTensor shape=(None, 1), dtype=string, sparse=False, name=contact>, 'month': <KerasTensor shape=(None, 1), dtype=string, sparse=False, name=month>, 'day_of_week': <KerasTensor shape=(None, 1), dtype=string, sparse=False, name=day_of_week>, 'poutcome': <KerasTensor shape=(None, 1), dtype=string, sparse=False, name=poutcome>, 'job': <KerasTensor shape=(None, 1), dtype=string, sparse=False, name=job>, 'pdays': <KerasTensor shape=(None, 1), dtype=int32, sparse=False, name=pdays>, 'age': <KerasTensor shape=(None, 1), dtype=float32, sparse=False, name=age>, 'campaign': <KerasTensor shape=(None, 1), dtype=float32, sparse=False, name=campaign>, 'previous': <KerasTensor shape=(None, 1), dtype=float32, sparse=False, name=previous>, 'emp.var.rate': <KerasTensor shape=(None, 1), dtype=float32, sparse=False, name=emp.var.rate>, 'cons.price.idx': <KerasTensor shape=(None, 1), dtype=float32, sparse=False, name=cons.price.idx>, 'cons.conf.idx': <KerasTensor shape=(None, 1), dtype=float32, sparse=False, name=cons.conf.idx>, 'euribor3m': <KerasTensor shape=(None, 1), dtype=float32, sparse=False, name=euribor3m>, 'nr.employed': <KerasTensor shape=(None, 1), dtype=float32, sparse=False, name=nr.employed>}
+
+/home/humbulani/tensorflow-env/env/lib/python3.11/site-packages/keras/src/models/functional.py:248: UserWarning: The structure of `inputs` doesn't match the expected structure.
+Expected: {'age': 'age', 'campaign': 'campaign', 'cons.conf.idx': 'cons.conf.idx', 'cons.price.idx': 'cons.price.idx', 'contact': 'contact', 'day_of_week': 'day_of_week', 'default': 'default', 'education': 'education', 'emp.var.rate': 'emp.var.rate', 'euribor3m': 'euribor3m', 'housing': 'housing', 'job': 'job', 'loan': 'loan', 'marital': 'marital', 'month': 'month', 'nr.employed': 'nr.employed', 'pdays': 'pdays', 'poutcome': 'poutcome', 'previous': 'previous', 'previously_contacted': 'previously_contacted'}
+Received: inputs={'age': 'Tensor(shape=(1,))', 'job': 'Tensor(shape=(1,))', 'marital': 'Tensor(shape=(1,))', 'education': 'Tensor(shape=(1,))', 'default': 'Tensor(shape=(1,))', 'housing': 'Tensor(shape=(1,))', 'loan': 'Tensor(shape=(1,))', 'contact': 'Tensor(shape=(1,))', 'month': 'Tensor(shape=(1,))', 'day_of_week': 'Tensor(shape=(1,))', 'campaign': 'Tensor(shape=(1,))', 'pdays': 'Tensor(shape=(1,))', 'previous': 'Tensor(shape=(1,))', 'poutcome': 'Tensor(shape=(1,))', 'emp.var.rate': 'Tensor(shape=(1,))', 'cons.price.idx': 'Tensor(shape=(1,))', 'cons.conf.idx': 'Tensor(shape=(1,))', 'euribor3m': 'Tensor(shape=(1,))', 'nr.employed': 'Tensor(shape=(1,))', 'previously_contacted': 'Tensor(shape=(1,))'}
+  warnings.warn(msg)
+
+```
+</div>
+    
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 1s/step
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 2s 2s/step
+
+
+<div class="k-default-codeblock">
+```
+This particular client has a 10.85% probability of subscribing a term deposit, as evaluated by our model.
 
 ```
 </div>
