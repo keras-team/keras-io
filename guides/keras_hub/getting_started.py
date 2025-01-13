@@ -272,8 +272,8 @@ we stick to the particular template for text used when training the model. These
 tokens vary per model and can be hard to track, the [Kaggle model
 page](https://www.kaggle.com/models/keras/gemma2/) will contain details such as this.
 
-`CausalLM` come with an extra function called `generate()` which can be used generate
-predict tokens in a loop and decode them as a string.
+`CausalLM` comes with an extra function called `generate()` which can be used generate
+predicted tokens in a loop and decode them as a string.
 """
 
 template = "<start_of_turn>user\n{question}<end_of_turn>\n<start_of_turn>model"
@@ -285,7 +285,7 @@ print(causal_lm.generate(template.format(question=question), max_length=512))
 """
 Note that on the Jax and TensorFlow backends, this `generate()` function is compiled, so
 the second time you call for the same `max_length`, it will actually be much faster.
-KerasHub will use Jax an TensorFlow to compute an optimized version of the generation
+KerasHub will use Jax and TensorFlow to compute an optimized version of the generation
 computational graph that can be reused.
 """
 
