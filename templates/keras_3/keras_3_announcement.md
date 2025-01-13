@@ -1,8 +1,8 @@
 After five months of extensive public beta testing,
 we're excited to announce the official release of Keras 3.0.
 Keras 3 is a full rewrite of Keras that enables you to
-run your Keras workflows on top of either JAX, TensorFlow, or PyTorch, and that
-unlocks brand new large-scale model training and deployment capabilities.
+run your Keras workflows on top of either JAX, TensorFlow, PyTorch, or OpenVINO (for inference-only),
+and that unlocks brand new large-scale model training and deployment capabilities.
 You can pick the framework that suits you best,
 and switch from one to another based on your current goals.
 You can also use Keras as a low-level cross-framework language
@@ -254,6 +254,32 @@ outputs, updated_non_trainable_variables = layer.stateless_call(
 
 You never have to implement these methods yourself — they're automatically available
 as long as you've implemented the stateful version (e.g. `call()` or `update_state()`).
+
+---
+
+## Run inference with the OpenVINO backend.
+
+Starting with release 3.8, Keras introduces the OpenVINO backend that is an inference-only backend,
+meaning it is designed only for running model predictions using `predict()` method.
+This backend enables to leverage OpenVINO performance optimizations directly
+within the Keras workflow, enabling faster inference on OpenVINO supported hardware.
+
+To switch to the OpenVINO backend, set the KERAS_BACKEND environment variable
+to `"openvino"` or specify the backend in the local configuration file at `~/.keras/keras.json`.
+Here is an example of how to infer a model (trained with PyTorch, JAX, or TensorFlow backends),
+using the OpenVINO backend:
+
+```python
+import os
+os.environ["KERAS_BACKEND"] = "openvino"
+import keras
+
+loaded_model = keras.saving.load_model(...)
+predictions = loaded_model.predict(...)
+```
+
+Note that the OpenVINO backend may currently lack support for some operations.
+This will be addressed in upcoming Keras releases as operation coverage is being expanded.
 
 ---
 
