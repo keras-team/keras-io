@@ -183,20 +183,6 @@ valid_data.to_csv(valid_data_file, index=False, header=False)
 test_data.to_csv(test_data_file, index=False, header=False)
 
 """
-Clean the directory for the downloaded files except the .tar.gz file and
-also remove the empty directories
-"""
-
-subprocess.run(
-    f'find {extracted_path} -type f ! -name "*.tar.gz" -exec rm -f {{}} +',
-    shell=True,
-    check=True,
-)
-subprocess.run(
-    f"find {extracted_path} -type d -empty -exec rmdir {{}} +", shell=True, check=True
-)
-
-"""
 ## Define dataset metadata
 
 Here, we define the metadata of the dataset that will be useful for reading and
@@ -337,6 +323,10 @@ class GatedLinearUnit(layers.Layer):
     def call(self, inputs):
         return self.linear(inputs) * self.sigmoid(inputs)
 
+    # Remove build warnings
+    def build(self):
+        self.built = True
+
 
 """
 ## Implement the Gated Residual Network
@@ -371,6 +361,10 @@ class GatedResidualNetwork(layers.Layer):
         x = inputs + self.gated_linear_unit(x)
         x = self.layer_norm(x)
         return x
+
+    # Remove build warnings
+    def build(self):
+        self.built = True
 
 
 """
@@ -446,52 +440,9 @@ class VariableSelection(layers.Layer):
         for idx, input in enumerate(concat_inputs):
             x.append(self.grns[idx](input))
         x = keras.ops.stack(x, axis=1)
-
-        # The reason for each individual backend calculation is that I couldn't find
-        # the equivalent keras operation that is backend-agnostic. In the following case there,s
-        # a keras.ops.matmul but it was returning errors. I could have used the tensorflow matmul
-        # for all backends, but due to jax jit tracing it results in an error.
-        def matmul_dependent_on_backend(tensor_1, tensor_2):
-            """
-            Function for executing matmul for each backend.
-            """
-            # jax backend
-            if keras.backend.backend() == "jax":
-                import jax.numpy as jnp
-
-                result = jnp.sum(tensor_1 * tensor_2, axis=1)
-            elif keras.backend.backend() == "torch":
-                result = torch.sum(tensor_1 * tensor_2, dim=1)
-            # tensorflow backend
-            elif keras.backend.backend() == "tensorflow":
-                result = keras.ops.squeeze(tf.matmul(tensor_1, tensor_2, transpose_a=True), axis=1)
-            # unsupported backend exception
-            else:
-                raise ValueError(
-                    "Unsupported backend: {}".format(keras.backend.backend())
-                )
-            return result
-
-        # jax backend
-        if keras.backend.backend() == "jax":
-            # This repetative imports are intentional to force the idea of backend
-            # separation
-            import jax.numpy as jnp
-
-            result_jax = matmul_dependent_on_backend(v, x)
-            return result_jax
-        # torch backend
-        if keras.backend.backend() == "torch":
-            import torch
-
-            result_torch = matmul_dependent_on_backend(v, x)
-            return result_torch
-        # tensorflow backend
-        if keras.backend.backend() == "tensorflow":
-            import tensorflow as tf
-
-            result_tf = keras.ops.squeeze(tf.matmul(v, x, transpose_a=True), axis=1)
-            return result_tf
+        return keras.ops.squeeze(
+            keras.ops.matmul(keras.ops.transpose(v, axes=[0, 2, 1]), x), axis=1
+        )
 
     # to remove the build warnings
     def build(self):
@@ -520,7 +471,7 @@ def create_model(encoding_size):
 learning_rate = 0.001
 dropout_rate = 0.15
 batch_size = 265
-num_epochs = 1  # maybe adjusted to a desired value
+num_epochs = 1  # may be adjusted to a desired value
 encoding_size = 16
 
 model = create_model(encoding_size)

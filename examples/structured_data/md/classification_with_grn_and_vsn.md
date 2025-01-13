@@ -206,30 +206,6 @@ valid_data.to_csv(valid_data_file, index=False, header=False)
 test_data.to_csv(test_data_file, index=False, header=False)
 ```
 
-Clean the directory for the downloaded files except the .tar.gz file and
-also remove the empty directories
-
-
-```python
-subprocess.run(
-    f'find {extracted_path} -type f ! -name "*.tar.gz" -exec rm -f {{}} +',
-    shell=True,
-    check=True,
-)
-subprocess.run(
-    f"find {extracted_path} -type d -empty -exec rmdir {{}} +", shell=True, check=True
-)
-```
-
-
-
-
-<div class="k-default-codeblock">
-```
-CompletedProcess(args='find /home/humbulani/.keras/datasets/census+income+kdd.zip -type d -empty -exec rmdir {} +', returncode=0)
-
-```
-</div>
 ---
 ## Define dataset metadata
 
@@ -378,6 +354,10 @@ class GatedLinearUnit(layers.Layer):
     def call(self, inputs):
         return self.linear(inputs) * self.sigmoid(inputs)
 
+    # Remove build warnings
+    def build(self):
+        self.built = True
+
 ```
 
 ---
@@ -414,6 +394,10 @@ class GatedResidualNetwork(layers.Layer):
         x = inputs + self.gated_linear_unit(x)
         x = self.layer_norm(x)
         return x
+
+    # Remove build warnings
+    def build(self):
+        self.built = True
 
 ```
 
@@ -490,52 +474,9 @@ class VariableSelection(layers.Layer):
         for idx, input in enumerate(concat_inputs):
             x.append(self.grns[idx](input))
         x = keras.ops.stack(x, axis=1)
-
-        # The reason for each individual backend calculation is that I couldn't find
-        # the equivalent keras operation that is backend-agnostic. In the following case there,s
-        # a keras.ops.matmul but it was returning errors. I could have used the tensorflow matmul
-        # for all backends, but due to jax jit tracing it results in an error.
-        def matmul_dependent_on_backend(thsi, v):
-            """
-            Function for executing matmul for each backend.
-            """
-            # jax backend
-            if keras.backend.backend() == "jax":
-                import jax.numpy as jnp
-
-                result = jnp.sum(thsi * v, axis=1)
-            elif keras.backend.backend() == "torch":
-                result = torch.sum(thsi * v, dim=1)
-            # tensorflow backend
-            elif keras.backend.backend() == "tensorflow":
-                result = keras.ops.squeeze(tf.matmul(thsi, v, transpose_a=True), axis=1)
-            # unsupported backend exception
-            else:
-                raise ValueError(
-                    "Unsupported backend: {}".format(keras.backend.backend())
-                )
-            return result
-
-        # jax backend
-        if keras.backend.backend() == "jax":
-            # This repetative imports are intentional to force the idea of backend
-            # separation
-            import jax.numpy as jnp
-
-            result_jax = matmul_dependent_on_backend(v, x)
-            return result_jax
-        # torch backend
-        if keras.backend.backend() == "torch":
-            import torch
-
-            result_torch = matmul_dependent_on_backend(v, x)
-            return result_torch
-        # tensorflow backend
-        if keras.backend.backend() == "tensorflow":
-            import tensorflow as tf
-
-            result_tf = keras.ops.squeeze(tf.matmul(v, x, transpose_a=True), axis=1)
-            return result_tf
+        return keras.ops.squeeze(
+            keras.ops.matmul(keras.ops.transpose(v, axes=[0, 2, 1]), x), axis=1
+        )
 
     # to remove the build warnings
     def build(self):
@@ -568,7 +509,7 @@ def create_model(encoding_size):
 learning_rate = 0.001
 dropout_rate = 0.15
 batch_size = 265
-num_epochs = 1  # maybe adjusted to a desired value
+num_epochs = 1  # may be adjusted to a desired value
 encoding_size = 16
 
 model = create_model(encoding_size)
@@ -579,94 +520,6 @@ model.compile(
 )
 ```
 
-<div class="k-default-codeblock">
-```
-/home/humbulani/tensorflow-env/env/lib/python3.11/site-packages/keras/src/layers/layer.py:391: UserWarning: `build()` was called on layer 'gated_residual_network', however the layer does not have a `build()` method implemented and it looks like it has unbuilt state. This will cause the layer to be marked as built, despite not being actually built, which may cause failures down the line. Make sure to implement a proper `build()` method.
-  warnings.warn(
-/home/humbulani/tensorflow-env/env/lib/python3.11/site-packages/keras/src/layers/layer.py:391: UserWarning: `build()` was called on layer 'gated_residual_network_1', however the layer does not have a `build()` method implemented and it looks like it has unbuilt state. This will cause the layer to be marked as built, despite not being actually built, which may cause failures down the line. Make sure to implement a proper `build()` method.
-  warnings.warn(
-/home/humbulani/tensorflow-env/env/lib/python3.11/site-packages/keras/src/layers/layer.py:391: UserWarning: `build()` was called on layer 'gated_residual_network_2', however the layer does not have a `build()` method implemented and it looks like it has unbuilt state. This will cause the layer to be marked as built, despite not being actually built, which may cause failures down the line. Make sure to implement a proper `build()` method.
-  warnings.warn(
-/home/humbulani/tensorflow-env/env/lib/python3.11/site-packages/keras/src/layers/layer.py:391: UserWarning: `build()` was called on layer 'gated_residual_network_3', however the layer does not have a `build()` method implemented and it looks like it has unbuilt state. This will cause the layer to be marked as built, despite not being actually built, which may cause failures down the line. Make sure to implement a proper `build()` method.
-  warnings.warn(
-/home/humbulani/tensorflow-env/env/lib/python3.11/site-packages/keras/src/layers/layer.py:391: UserWarning: `build()` was called on layer 'gated_residual_network_4', however the layer does not have a `build()` method implemented and it looks like it has unbuilt state. This will cause the layer to be marked as built, despite not being actually built, which may cause failures down the line. Make sure to implement a proper `build()` method.
-  warnings.warn(
-/home/humbulani/tensorflow-env/env/lib/python3.11/site-packages/keras/src/layers/layer.py:391: UserWarning: `build()` was called on layer 'gated_residual_network_5', however the layer does not have a `build()` method implemented and it looks like it has unbuilt state. This will cause the layer to be marked as built, despite not being actually built, which may cause failures down the line. Make sure to implement a proper `build()` method.
-  warnings.warn(
-/home/humbulani/tensorflow-env/env/lib/python3.11/site-packages/keras/src/layers/layer.py:391: UserWarning: `build()` was called on layer 'gated_residual_network_6', however the layer does not have a `build()` method implemented and it looks like it has unbuilt state. This will cause the layer to be marked as built, despite not being actually built, which may cause failures down the line. Make sure to implement a proper `build()` method.
-  warnings.warn(
-/home/humbulani/tensorflow-env/env/lib/python3.11/site-packages/keras/src/layers/layer.py:391: UserWarning: `build()` was called on layer 'gated_residual_network_7', however the layer does not have a `build()` method implemented and it looks like it has unbuilt state. This will cause the layer to be marked as built, despite not being actually built, which may cause failures down the line. Make sure to implement a proper `build()` method.
-  warnings.warn(
-/home/humbulani/tensorflow-env/env/lib/python3.11/site-packages/keras/src/layers/layer.py:391: UserWarning: `build()` was called on layer 'gated_residual_network_8', however the layer does not have a `build()` method implemented and it looks like it has unbuilt state. This will cause the layer to be marked as built, despite not being actually built, which may cause failures down the line. Make sure to implement a proper `build()` method.
-  warnings.warn(
-/home/humbulani/tensorflow-env/env/lib/python3.11/site-packages/keras/src/layers/layer.py:391: UserWarning: `build()` was called on layer 'gated_residual_network_9', however the layer does not have a `build()` method implemented and it looks like it has unbuilt state. This will cause the layer to be marked as built, despite not being actually built, which may cause failures down the line. Make sure to implement a proper `build()` method.
-  warnings.warn(
-/home/humbulani/tensorflow-env/env/lib/python3.11/site-packages/keras/src/layers/layer.py:391: UserWarning: `build()` was called on layer 'gated_residual_network_10', however the layer does not have a `build()` method implemented and it looks like it has unbuilt state. This will cause the layer to be marked as built, despite not being actually built, which may cause failures down the line. Make sure to implement a proper `build()` method.
-  warnings.warn(
-
-/home/humbulani/tensorflow-env/env/lib/python3.11/site-packages/keras/src/layers/layer.py:391: UserWarning: `build()` was called on layer 'gated_residual_network_11', however the layer does not have a `build()` method implemented and it looks like it has unbuilt state. This will cause the layer to be marked as built, despite not being actually built, which may cause failures down the line. Make sure to implement a proper `build()` method.
-  warnings.warn(
-/home/humbulani/tensorflow-env/env/lib/python3.11/site-packages/keras/src/layers/layer.py:391: UserWarning: `build()` was called on layer 'gated_residual_network_12', however the layer does not have a `build()` method implemented and it looks like it has unbuilt state. This will cause the layer to be marked as built, despite not being actually built, which may cause failures down the line. Make sure to implement a proper `build()` method.
-  warnings.warn(
-/home/humbulani/tensorflow-env/env/lib/python3.11/site-packages/keras/src/layers/layer.py:391: UserWarning: `build()` was called on layer 'gated_residual_network_13', however the layer does not have a `build()` method implemented and it looks like it has unbuilt state. This will cause the layer to be marked as built, despite not being actually built, which may cause failures down the line. Make sure to implement a proper `build()` method.
-  warnings.warn(
-/home/humbulani/tensorflow-env/env/lib/python3.11/site-packages/keras/src/layers/layer.py:391: UserWarning: `build()` was called on layer 'gated_residual_network_14', however the layer does not have a `build()` method implemented and it looks like it has unbuilt state. This will cause the layer to be marked as built, despite not being actually built, which may cause failures down the line. Make sure to implement a proper `build()` method.
-  warnings.warn(
-/home/humbulani/tensorflow-env/env/lib/python3.11/site-packages/keras/src/layers/layer.py:391: UserWarning: `build()` was called on layer 'gated_residual_network_15', however the layer does not have a `build()` method implemented and it looks like it has unbuilt state. This will cause the layer to be marked as built, despite not being actually built, which may cause failures down the line. Make sure to implement a proper `build()` method.
-  warnings.warn(
-/home/humbulani/tensorflow-env/env/lib/python3.11/site-packages/keras/src/layers/layer.py:391: UserWarning: `build()` was called on layer 'gated_residual_network_16', however the layer does not have a `build()` method implemented and it looks like it has unbuilt state. This will cause the layer to be marked as built, despite not being actually built, which may cause failures down the line. Make sure to implement a proper `build()` method.
-  warnings.warn(
-/home/humbulani/tensorflow-env/env/lib/python3.11/site-packages/keras/src/layers/layer.py:391: UserWarning: `build()` was called on layer 'gated_residual_network_17', however the layer does not have a `build()` method implemented and it looks like it has unbuilt state. This will cause the layer to be marked as built, despite not being actually built, which may cause failures down the line. Make sure to implement a proper `build()` method.
-  warnings.warn(
-/home/humbulani/tensorflow-env/env/lib/python3.11/site-packages/keras/src/layers/layer.py:391: UserWarning: `build()` was called on layer 'gated_residual_network_18', however the layer does not have a `build()` method implemented and it looks like it has unbuilt state. This will cause the layer to be marked as built, despite not being actually built, which may cause failures down the line. Make sure to implement a proper `build()` method.
-  warnings.warn(
-/home/humbulani/tensorflow-env/env/lib/python3.11/site-packages/keras/src/layers/layer.py:391: UserWarning: `build()` was called on layer 'gated_residual_network_19', however the layer does not have a `build()` method implemented and it looks like it has unbuilt state. This will cause the layer to be marked as built, despite not being actually built, which may cause failures down the line. Make sure to implement a proper `build()` method.
-  warnings.warn(
-/home/humbulani/tensorflow-env/env/lib/python3.11/site-packages/keras/src/layers/layer.py:391: UserWarning: `build()` was called on layer 'gated_residual_network_20', however the layer does not have a `build()` method implemented and it looks like it has unbuilt state. This will cause the layer to be marked as built, despite not being actually built, which may cause failures down the line. Make sure to implement a proper `build()` method.
-  warnings.warn(
-
-/home/humbulani/tensorflow-env/env/lib/python3.11/site-packages/keras/src/layers/layer.py:391: UserWarning: `build()` was called on layer 'gated_residual_network_21', however the layer does not have a `build()` method implemented and it looks like it has unbuilt state. This will cause the layer to be marked as built, despite not being actually built, which may cause failures down the line. Make sure to implement a proper `build()` method.
-  warnings.warn(
-/home/humbulani/tensorflow-env/env/lib/python3.11/site-packages/keras/src/layers/layer.py:391: UserWarning: `build()` was called on layer 'gated_residual_network_22', however the layer does not have a `build()` method implemented and it looks like it has unbuilt state. This will cause the layer to be marked as built, despite not being actually built, which may cause failures down the line. Make sure to implement a proper `build()` method.
-  warnings.warn(
-/home/humbulani/tensorflow-env/env/lib/python3.11/site-packages/keras/src/layers/layer.py:391: UserWarning: `build()` was called on layer 'gated_residual_network_23', however the layer does not have a `build()` method implemented and it looks like it has unbuilt state. This will cause the layer to be marked as built, despite not being actually built, which may cause failures down the line. Make sure to implement a proper `build()` method.
-  warnings.warn(
-/home/humbulani/tensorflow-env/env/lib/python3.11/site-packages/keras/src/layers/layer.py:391: UserWarning: `build()` was called on layer 'gated_residual_network_24', however the layer does not have a `build()` method implemented and it looks like it has unbuilt state. This will cause the layer to be marked as built, despite not being actually built, which may cause failures down the line. Make sure to implement a proper `build()` method.
-  warnings.warn(
-/home/humbulani/tensorflow-env/env/lib/python3.11/site-packages/keras/src/layers/layer.py:391: UserWarning: `build()` was called on layer 'gated_residual_network_25', however the layer does not have a `build()` method implemented and it looks like it has unbuilt state. This will cause the layer to be marked as built, despite not being actually built, which may cause failures down the line. Make sure to implement a proper `build()` method.
-  warnings.warn(
-/home/humbulani/tensorflow-env/env/lib/python3.11/site-packages/keras/src/layers/layer.py:391: UserWarning: `build()` was called on layer 'gated_residual_network_26', however the layer does not have a `build()` method implemented and it looks like it has unbuilt state. This will cause the layer to be marked as built, despite not being actually built, which may cause failures down the line. Make sure to implement a proper `build()` method.
-  warnings.warn(
-/home/humbulani/tensorflow-env/env/lib/python3.11/site-packages/keras/src/layers/layer.py:391: UserWarning: `build()` was called on layer 'gated_residual_network_27', however the layer does not have a `build()` method implemented and it looks like it has unbuilt state. This will cause the layer to be marked as built, despite not being actually built, which may cause failures down the line. Make sure to implement a proper `build()` method.
-  warnings.warn(
-/home/humbulani/tensorflow-env/env/lib/python3.11/site-packages/keras/src/layers/layer.py:391: UserWarning: `build()` was called on layer 'gated_residual_network_28', however the layer does not have a `build()` method implemented and it looks like it has unbuilt state. This will cause the layer to be marked as built, despite not being actually built, which may cause failures down the line. Make sure to implement a proper `build()` method.
-  warnings.warn(
-/home/humbulani/tensorflow-env/env/lib/python3.11/site-packages/keras/src/layers/layer.py:391: UserWarning: `build()` was called on layer 'gated_residual_network_29', however the layer does not have a `build()` method implemented and it looks like it has unbuilt state. This will cause the layer to be marked as built, despite not being actually built, which may cause failures down the line. Make sure to implement a proper `build()` method.
-  warnings.warn(
-/home/humbulani/tensorflow-env/env/lib/python3.11/site-packages/keras/src/layers/layer.py:391: UserWarning: `build()` was called on layer 'gated_residual_network_30', however the layer does not have a `build()` method implemented and it looks like it has unbuilt state. This will cause the layer to be marked as built, despite not being actually built, which may cause failures down the line. Make sure to implement a proper `build()` method.
-  warnings.warn(
-/home/humbulani/tensorflow-env/env/lib/python3.11/site-packages/keras/src/layers/layer.py:391: UserWarning: `build()` was called on layer 'gated_residual_network_31', however the layer does not have a `build()` method implemented and it looks like it has unbuilt state. This will cause the layer to be marked as built, despite not being actually built, which may cause failures down the line. Make sure to implement a proper `build()` method.
-  warnings.warn(
-
-/home/humbulani/tensorflow-env/env/lib/python3.11/site-packages/keras/src/layers/layer.py:391: UserWarning: `build()` was called on layer 'gated_residual_network_32', however the layer does not have a `build()` method implemented and it looks like it has unbuilt state. This will cause the layer to be marked as built, despite not being actually built, which may cause failures down the line. Make sure to implement a proper `build()` method.
-  warnings.warn(
-/home/humbulani/tensorflow-env/env/lib/python3.11/site-packages/keras/src/layers/layer.py:391: UserWarning: `build()` was called on layer 'gated_residual_network_33', however the layer does not have a `build()` method implemented and it looks like it has unbuilt state. This will cause the layer to be marked as built, despite not being actually built, which may cause failures down the line. Make sure to implement a proper `build()` method.
-  warnings.warn(
-/home/humbulani/tensorflow-env/env/lib/python3.11/site-packages/keras/src/layers/layer.py:391: UserWarning: `build()` was called on layer 'gated_residual_network_34', however the layer does not have a `build()` method implemented and it looks like it has unbuilt state. This will cause the layer to be marked as built, despite not being actually built, which may cause failures down the line. Make sure to implement a proper `build()` method.
-  warnings.warn(
-/home/humbulani/tensorflow-env/env/lib/python3.11/site-packages/keras/src/layers/layer.py:391: UserWarning: `build()` was called on layer 'gated_residual_network_35', however the layer does not have a `build()` method implemented and it looks like it has unbuilt state. This will cause the layer to be marked as built, despite not being actually built, which may cause failures down the line. Make sure to implement a proper `build()` method.
-  warnings.warn(
-/home/humbulani/tensorflow-env/env/lib/python3.11/site-packages/keras/src/layers/layer.py:391: UserWarning: `build()` was called on layer 'gated_residual_network_36', however the layer does not have a `build()` method implemented and it looks like it has unbuilt state. This will cause the layer to be marked as built, despite not being actually built, which may cause failures down the line. Make sure to implement a proper `build()` method.
-  warnings.warn(
-/home/humbulani/tensorflow-env/env/lib/python3.11/site-packages/keras/src/layers/layer.py:391: UserWarning: `build()` was called on layer 'gated_residual_network_37', however the layer does not have a `build()` method implemented and it looks like it has unbuilt state. This will cause the layer to be marked as built, despite not being actually built, which may cause failures down the line. Make sure to implement a proper `build()` method.
-  warnings.warn(
-/home/humbulani/tensorflow-env/env/lib/python3.11/site-packages/keras/src/layers/layer.py:391: UserWarning: `build()` was called on layer 'gated_residual_network_38', however the layer does not have a `build()` method implemented and it looks like it has unbuilt state. This will cause the layer to be marked as built, despite not being actually built, which may cause failures down the line. Make sure to implement a proper `build()` method.
-  warnings.warn(
-/home/humbulani/tensorflow-env/env/lib/python3.11/site-packages/keras/src/layers/layer.py:391: UserWarning: `build()` was called on layer 'gated_residual_network_39', however the layer does not have a `build()` method implemented and it looks like it has unbuilt state. This will cause the layer to be marked as built, despite not being actually built, which may cause failures down the line. Make sure to implement a proper `build()` method.
-  warnings.warn(
-
-```
-</div>
 Let's visualize our connectivity graph:
 
 
@@ -708,1924 +561,1921 @@ Start training the model...
     
 <div class="k-default-codeblock">
 ```
-  1/Unknown  1s 740ms/step - accuracy: 0.2491 - loss: 1302.2852
+  1/Unknown  1s 698ms/step - accuracy: 0.4717 - loss: 1212.3043
 
 
-  2/Unknown  1s 193ms/step - accuracy: 0.4104 - loss: 1243.1028
+  2/Unknown  1s 200ms/step - accuracy: 0.5745 - loss: 1141.6052
 
 
-  3/Unknown  1s 207ms/step - accuracy: 0.5046 - loss: 1190.0552
+  3/Unknown  1s 195ms/step - accuracy: 0.6388 - loss: 1084.4358
 
 
-  4/Unknown  1s 211ms/step - accuracy: 0.5667 - loss: 1140.0157
+  4/Unknown  1s 199ms/step - accuracy: 0.6822 - loss: 1031.0354
 
 
-  5/Unknown  2s 211ms/step - accuracy: 0.6118 - loss: 1094.2517
-
-
-  6/Unknown  2s 215ms/step - accuracy: 0.6458 - loss: 1052.5693
-
-
-  7/Unknown  2s 216ms/step - accuracy: 0.6727 - loss: 1015.1872
-
-
-  8/Unknown  2s 215ms/step - accuracy: 0.6942 - loss: 982.8596 
+  5/Unknown  2s 201ms/step - accuracy: 0.7131 - loss: 986.4984 
 
 
-  9/Unknown  2s 215ms/step - accuracy: 0.7121 - loss: 953.8212
+  6/Unknown  2s 197ms/step - accuracy: 0.7363 - loss: 947.2644
 
 
- 10/Unknown  3s 214ms/step - accuracy: 0.7272 - loss: 927.4525
+  7/Unknown  2s 190ms/step - accuracy: 0.7546 - loss: 912.4213
 
 
- 11/Unknown  3s 214ms/step - accuracy: 0.7400 - loss: 904.0518
+  8/Unknown  2s 188ms/step - accuracy: 0.7698 - loss: 881.4526
 
 
- 12/Unknown  3s 215ms/step - accuracy: 0.7512 - loss: 882.7589
+  9/Unknown  2s 186ms/step - accuracy: 0.7824 - loss: 853.8523
 
 
- 13/Unknown  3s 219ms/step - accuracy: 0.7611 - loss: 862.8194
+ 10/Unknown  2s 184ms/step - accuracy: 0.7932 - loss: 829.0496
 
 
- 14/Unknown  4s 219ms/step - accuracy: 0.7700 - loss: 844.1758
+ 11/Unknown  3s 183ms/step - accuracy: 0.8022 - loss: 807.4752
 
 
- 15/Unknown  4s 222ms/step - accuracy: 0.7780 - loss: 826.9224
+ 12/Unknown  3s 184ms/step - accuracy: 0.8100 - loss: 788.1222
 
 
- 16/Unknown  4s 224ms/step - accuracy: 0.7851 - loss: 810.8615
+ 13/Unknown  3s 187ms/step - accuracy: 0.8170 - loss: 770.3723
 
 
- 17/Unknown  4s 224ms/step - accuracy: 0.7916 - loss: 795.8868
+ 14/Unknown  3s 187ms/step - accuracy: 0.8233 - loss: 753.6734
 
 
- 18/Unknown  5s 223ms/step - accuracy: 0.7975 - loss: 782.1332
+ 15/Unknown  3s 186ms/step - accuracy: 0.8289 - loss: 737.9523
 
 
- 19/Unknown  5s 225ms/step - accuracy: 0.8029 - loss: 769.1092
+ 16/Unknown  3s 186ms/step - accuracy: 0.8342 - loss: 723.0760
 
 
- 20/Unknown  5s 226ms/step - accuracy: 0.8079 - loss: 756.8516
+ 17/Unknown  4s 186ms/step - accuracy: 0.8389 - loss: 709.2202
 
 
- 21/Unknown  5s 225ms/step - accuracy: 0.8125 - loss: 745.5027
+ 18/Unknown  4s 202ms/step - accuracy: 0.8432 - loss: 696.8585
 
 
- 22/Unknown  5s 223ms/step - accuracy: 0.8168 - loss: 734.6467
+ 19/Unknown  4s 200ms/step - accuracy: 0.8470 - loss: 685.7762
 
 
- 23/Unknown  6s 222ms/step - accuracy: 0.8207 - loss: 724.4232
+ 20/Unknown  4s 198ms/step - accuracy: 0.8505 - loss: 675.3044
 
 
- 24/Unknown  6s 222ms/step - accuracy: 0.8245 - loss: 714.9254
+ 21/Unknown  5s 197ms/step - accuracy: 0.8537 - loss: 665.8409
 
 
- 25/Unknown  6s 221ms/step - accuracy: 0.8279 - loss: 706.1494
+ 22/Unknown  5s 196ms/step - accuracy: 0.8566 - loss: 657.3629
 
 
- 26/Unknown  6s 220ms/step - accuracy: 0.8311 - loss: 697.8618
+ 23/Unknown  5s 195ms/step - accuracy: 0.8593 - loss: 649.5444
 
 
- 27/Unknown  6s 219ms/step - accuracy: 0.8341 - loss: 690.1976
+ 24/Unknown  5s 195ms/step - accuracy: 0.8618 - loss: 642.1780
 
 
- 28/Unknown  7s 218ms/step - accuracy: 0.8369 - loss: 682.8348
+ 25/Unknown  5s 194ms/step - accuracy: 0.8641 - loss: 635.1900
 
 
- 29/Unknown  7s 218ms/step - accuracy: 0.8395 - loss: 675.9014
+ 26/Unknown  6s 195ms/step - accuracy: 0.8662 - loss: 628.5919
 
 
- 30/Unknown  7s 220ms/step - accuracy: 0.8420 - loss: 669.2024
+ 27/Unknown  6s 195ms/step - accuracy: 0.8683 - loss: 622.2363
 
 
- 31/Unknown  7s 219ms/step - accuracy: 0.8444 - loss: 662.8259
+ 28/Unknown  6s 195ms/step - accuracy: 0.8702 - loss: 616.1565
 
 
- 32/Unknown  8s 219ms/step - accuracy: 0.8467 - loss: 656.7582
+ 29/Unknown  6s 194ms/step - accuracy: 0.8720 - loss: 610.3881
 
 
- 33/Unknown  8s 219ms/step - accuracy: 0.8488 - loss: 650.9562
+ 30/Unknown  6s 194ms/step - accuracy: 0.8737 - loss: 604.7990
 
 
- 34/Unknown  8s 218ms/step - accuracy: 0.8508 - loss: 645.4325
+ 31/Unknown  6s 193ms/step - accuracy: 0.8753 - loss: 599.5613
 
 
- 35/Unknown  8s 218ms/step - accuracy: 0.8527 - loss: 640.0767
+ 32/Unknown  7s 194ms/step - accuracy: 0.8769 - loss: 594.4847
 
 
- 36/Unknown  8s 218ms/step - accuracy: 0.8546 - loss: 634.9040
+ 33/Unknown  7s 194ms/step - accuracy: 0.8783 - loss: 589.5745
 
 
- 37/Unknown  9s 217ms/step - accuracy: 0.8563 - loss: 629.9690
+ 34/Unknown  7s 194ms/step - accuracy: 0.8797 - loss: 584.9431
 
 
- 38/Unknown  9s 216ms/step - accuracy: 0.8580 - loss: 625.1686
+ 35/Unknown  7s 194ms/step - accuracy: 0.8810 - loss: 580.5197
 
 
- 39/Unknown  9s 215ms/step - accuracy: 0.8596 - loss: 620.4742
+ 36/Unknown  7s 193ms/step - accuracy: 0.8822 - loss: 576.2609
 
 
- 40/Unknown  9s 215ms/step - accuracy: 0.8611 - loss: 616.0271
+ 37/Unknown  8s 193ms/step - accuracy: 0.8834 - loss: 572.0708
 
 
- 41/Unknown  9s 215ms/step - accuracy: 0.8625 - loss: 611.7262
+ 38/Unknown  8s 194ms/step - accuracy: 0.8845 - loss: 567.9126
 
 
- 42/Unknown  10s 215ms/step - accuracy: 0.8639 - loss: 607.5671
+ 39/Unknown  8s 194ms/step - accuracy: 0.8856 - loss: 563.8269
 
-
- 43/Unknown  10s 214ms/step - accuracy: 0.8653 - loss: 603.5233
+
+ 40/Unknown  8s 194ms/step - accuracy: 0.8867 - loss: 559.9911
 
-
- 44/Unknown  10s 214ms/step - accuracy: 0.8666 - loss: 599.6008
+
+ 41/Unknown  8s 194ms/step - accuracy: 0.8877 - loss: 556.2637
 
-
- 45/Unknown  10s 214ms/step - accuracy: 0.8679 - loss: 595.7900
+
+ 42/Unknown  9s 193ms/step - accuracy: 0.8886 - loss: 552.6080
 
-
- 46/Unknown  10s 213ms/step - accuracy: 0.8691 - loss: 592.0447
+
+ 43/Unknown  9s 193ms/step - accuracy: 0.8896 - loss: 549.0726
 
-
- 47/Unknown  11s 214ms/step - accuracy: 0.8702 - loss: 588.3965
+
+ 44/Unknown  9s 193ms/step - accuracy: 0.8905 - loss: 545.6210
 
-
- 48/Unknown  11s 214ms/step - accuracy: 0.8713 - loss: 584.8365
+
+ 45/Unknown  9s 193ms/step - accuracy: 0.8913 - loss: 542.2662
+
+
+ 46/Unknown  9s 193ms/step - accuracy: 0.8921 - loss: 539.0649
 
+
+ 47/Unknown  10s 193ms/step - accuracy: 0.8929 - loss: 535.9783
+
 
- 49/Unknown  11s 214ms/step - accuracy: 0.8724 - loss: 581.3633
+ 48/Unknown  10s 193ms/step - accuracy: 0.8936 - loss: 532.9994
 
 
- 50/Unknown  11s 215ms/step - accuracy: 0.8735 - loss: 577.9586
+ 49/Unknown  10s 193ms/step - accuracy: 0.8944 - loss: 530.0856
 
 
- 51/Unknown  11s 215ms/step - accuracy: 0.8745 - loss: 574.6376
+ 50/Unknown  10s 193ms/step - accuracy: 0.8951 - loss: 527.2556
 
 
- 52/Unknown  12s 215ms/step - accuracy: 0.8755 - loss: 571.4106
+ 51/Unknown  10s 194ms/step - accuracy: 0.8957 - loss: 524.4853
 
 
- 53/Unknown  12s 215ms/step - accuracy: 0.8764 - loss: 568.2571
+ 52/Unknown  11s 194ms/step - accuracy: 0.8964 - loss: 521.8221
 
 
- 54/Unknown  12s 215ms/step - accuracy: 0.8773 - loss: 565.1942
+ 53/Unknown  11s 194ms/step - accuracy: 0.8970 - loss: 519.2384
 
 
- 55/Unknown  12s 215ms/step - accuracy: 0.8782 - loss: 562.1995
+ 54/Unknown  11s 194ms/step - accuracy: 0.8976 - loss: 516.6887
 
 
- 56/Unknown  13s 215ms/step - accuracy: 0.8791 - loss: 559.2789
+ 55/Unknown  11s 195ms/step - accuracy: 0.8982 - loss: 514.2283
 
 
- 57/Unknown  13s 215ms/step - accuracy: 0.8799 - loss: 556.4360
+ 56/Unknown  11s 195ms/step - accuracy: 0.8987 - loss: 511.8073
 
 
- 58/Unknown  13s 215ms/step - accuracy: 0.8807 - loss: 553.6384
+ 57/Unknown  12s 195ms/step - accuracy: 0.8993 - loss: 509.4113
 
 
- 59/Unknown  13s 215ms/step - accuracy: 0.8815 - loss: 550.8985
+ 58/Unknown  12s 194ms/step - accuracy: 0.8998 - loss: 507.0705
 
 
- 60/Unknown  13s 215ms/step - accuracy: 0.8823 - loss: 548.2059
+ 59/Unknown  12s 194ms/step - accuracy: 0.9004 - loss: 504.7713
 
 
- 61/Unknown  14s 219ms/step - accuracy: 0.8830 - loss: 545.5831
+ 60/Unknown  12s 194ms/step - accuracy: 0.9009 - loss: 502.5121
 
 
- 62/Unknown  14s 218ms/step - accuracy: 0.8838 - loss: 543.0310
+ 61/Unknown  12s 195ms/step - accuracy: 0.9014 - loss: 500.2973
 
 
- 63/Unknown  14s 218ms/step - accuracy: 0.8845 - loss: 540.5276
+ 62/Unknown  13s 195ms/step - accuracy: 0.9019 - loss: 498.1272
 
 
- 64/Unknown  14s 217ms/step - accuracy: 0.8852 - loss: 538.0663
+ 63/Unknown  13s 196ms/step - accuracy: 0.9023 - loss: 496.0018
 
 
- 65/Unknown  15s 217ms/step - accuracy: 0.8858 - loss: 535.6724
+ 64/Unknown  13s 196ms/step - accuracy: 0.9028 - loss: 493.9293
 
 
- 66/Unknown  15s 216ms/step - accuracy: 0.8865 - loss: 533.3412
+ 65/Unknown  13s 197ms/step - accuracy: 0.9032 - loss: 491.9118
 
 
- 67/Unknown  15s 216ms/step - accuracy: 0.8871 - loss: 531.0530
+ 66/Unknown  14s 197ms/step - accuracy: 0.9037 - loss: 489.9484
 
 
- 68/Unknown  15s 215ms/step - accuracy: 0.8877 - loss: 528.8370
+ 67/Unknown  14s 197ms/step - accuracy: 0.9041 - loss: 488.0164
 
 
- 69/Unknown  15s 215ms/step - accuracy: 0.8883 - loss: 526.6666
+ 68/Unknown  14s 197ms/step - accuracy: 0.9045 - loss: 486.1193
 
 
- 70/Unknown  16s 215ms/step - accuracy: 0.8889 - loss: 524.5291
+ 69/Unknown  14s 197ms/step - accuracy: 0.9049 - loss: 484.2630
 
 
- 71/Unknown  16s 215ms/step - accuracy: 0.8894 - loss: 522.4325
+ 70/Unknown  14s 197ms/step - accuracy: 0.9053 - loss: 482.4265
 
 
- 72/Unknown  16s 214ms/step - accuracy: 0.8900 - loss: 520.3626
+ 71/Unknown  14s 197ms/step - accuracy: 0.9057 - loss: 480.6362
 
 
- 73/Unknown  16s 214ms/step - accuracy: 0.8905 - loss: 518.3271
+ 72/Unknown  15s 197ms/step - accuracy: 0.9061 - loss: 478.8780
 
 
- 74/Unknown  16s 214ms/step - accuracy: 0.8910 - loss: 516.3285
+ 73/Unknown  15s 197ms/step - accuracy: 0.9064 - loss: 477.1625
 
 
- 75/Unknown  17s 214ms/step - accuracy: 0.8915 - loss: 514.3654
+ 74/Unknown  15s 197ms/step - accuracy: 0.9068 - loss: 475.4860
 
 
- 76/Unknown  17s 213ms/step - accuracy: 0.8920 - loss: 512.4387
+ 75/Unknown  15s 198ms/step - accuracy: 0.9071 - loss: 473.8222
 
 
- 77/Unknown  17s 213ms/step - accuracy: 0.8925 - loss: 510.5423
+ 76/Unknown  15s 197ms/step - accuracy: 0.9075 - loss: 472.2155
 
 
- 78/Unknown  17s 213ms/step - accuracy: 0.8930 - loss: 508.6753
+ 77/Unknown  16s 197ms/step - accuracy: 0.9078 - loss: 470.6271
 
 
- 79/Unknown  17s 213ms/step - accuracy: 0.8935 - loss: 506.8432
+ 78/Unknown  16s 196ms/step - accuracy: 0.9081 - loss: 469.0505
 
 
- 80/Unknown  18s 213ms/step - accuracy: 0.8939 - loss: 505.0417
+ 79/Unknown  16s 196ms/step - accuracy: 0.9084 - loss: 467.4939
 
 
- 81/Unknown  18s 212ms/step - accuracy: 0.8944 - loss: 503.2594
+ 80/Unknown  16s 196ms/step - accuracy: 0.9087 - loss: 465.9711
 
 
- 82/Unknown  18s 212ms/step - accuracy: 0.8948 - loss: 501.5193
+ 81/Unknown  16s 196ms/step - accuracy: 0.9090 - loss: 464.4900
 
 
- 83/Unknown  18s 212ms/step - accuracy: 0.8953 - loss: 499.8059
+ 82/Unknown  17s 196ms/step - accuracy: 0.9093 - loss: 463.0288
 
 
- 84/Unknown  18s 212ms/step - accuracy: 0.8957 - loss: 498.1246
+ 83/Unknown  17s 196ms/step - accuracy: 0.9096 - loss: 461.5836
 
 
- 85/Unknown  19s 212ms/step - accuracy: 0.8961 - loss: 496.4738
+ 84/Unknown  17s 196ms/step - accuracy: 0.9099 - loss: 460.1690
 
 
- 86/Unknown  19s 213ms/step - accuracy: 0.8965 - loss: 494.8399
+ 85/Unknown  17s 196ms/step - accuracy: 0.9101 - loss: 458.7745
 
 
- 87/Unknown  19s 213ms/step - accuracy: 0.8969 - loss: 493.2329
+ 86/Unknown  17s 196ms/step - accuracy: 0.9104 - loss: 457.3958
 
 
- 88/Unknown  19s 213ms/step - accuracy: 0.8973 - loss: 491.6490
+ 87/Unknown  18s 196ms/step - accuracy: 0.9107 - loss: 456.0403
 
 
- 89/Unknown  19s 213ms/step - accuracy: 0.8977 - loss: 490.0891
+ 88/Unknown  18s 196ms/step - accuracy: 0.9109 - loss: 454.6969
 
 
- 90/Unknown  20s 213ms/step - accuracy: 0.8981 - loss: 488.5493
+ 89/Unknown  18s 195ms/step - accuracy: 0.9112 - loss: 453.3802
 
 
- 91/Unknown  20s 213ms/step - accuracy: 0.8985 - loss: 487.0343
+ 90/Unknown  18s 195ms/step - accuracy: 0.9115 - loss: 452.0960
 
 
- 92/Unknown  20s 213ms/step - accuracy: 0.8988 - loss: 485.5350
+ 91/Unknown  18s 195ms/step - accuracy: 0.9117 - loss: 450.8279
 
 
- 93/Unknown  20s 213ms/step - accuracy: 0.8992 - loss: 484.0580
+ 92/Unknown  18s 195ms/step - accuracy: 0.9119 - loss: 449.5715
 
 
- 94/Unknown  21s 213ms/step - accuracy: 0.8996 - loss: 482.6119
+ 93/Unknown  19s 195ms/step - accuracy: 0.9122 - loss: 448.3546
 
 
- 95/Unknown  21s 213ms/step - accuracy: 0.8999 - loss: 481.1904
+ 94/Unknown  19s 195ms/step - accuracy: 0.9124 - loss: 447.1467
 
 
- 96/Unknown  21s 213ms/step - accuracy: 0.9002 - loss: 479.7946
+ 95/Unknown  19s 195ms/step - accuracy: 0.9126 - loss: 445.9574
 
 
- 97/Unknown  21s 214ms/step - accuracy: 0.9006 - loss: 478.4108
+ 96/Unknown  19s 195ms/step - accuracy: 0.9129 - loss: 444.7892
 
 
- 98/Unknown  21s 214ms/step - accuracy: 0.9009 - loss: 477.0426
+ 97/Unknown  19s 195ms/step - accuracy: 0.9131 - loss: 443.6310
 
 
- 99/Unknown  22s 214ms/step - accuracy: 0.9012 - loss: 475.6963
+ 98/Unknown  20s 195ms/step - accuracy: 0.9133 - loss: 442.5005
 
 
-100/Unknown  22s 214ms/step - accuracy: 0.9016 - loss: 474.3627
+ 99/Unknown  20s 195ms/step - accuracy: 0.9135 - loss: 441.3832
 
 
-101/Unknown  22s 214ms/step - accuracy: 0.9019 - loss: 473.0454
+100/Unknown  20s 195ms/step - accuracy: 0.9137 - loss: 440.2770
 
 
-102/Unknown  22s 214ms/step - accuracy: 0.9022 - loss: 471.7478
+101/Unknown  20s 194ms/step - accuracy: 0.9139 - loss: 439.1806
 
 
-103/Unknown  22s 213ms/step - accuracy: 0.9025 - loss: 470.4634
+102/Unknown  20s 194ms/step - accuracy: 0.9141 - loss: 438.0936
 
 
-104/Unknown  23s 213ms/step - accuracy: 0.9028 - loss: 469.2029
+103/Unknown  21s 194ms/step - accuracy: 0.9144 - loss: 437.0181
 
 
-105/Unknown  23s 213ms/step - accuracy: 0.9031 - loss: 467.9564
+104/Unknown  21s 195ms/step - accuracy: 0.9146 - loss: 435.9646
 
 
-106/Unknown  23s 213ms/step - accuracy: 0.9034 - loss: 466.7221
+105/Unknown  21s 195ms/step - accuracy: 0.9148 - loss: 434.9277
 
 
-107/Unknown  23s 213ms/step - accuracy: 0.9037 - loss: 465.5094
+106/Unknown  21s 195ms/step - accuracy: 0.9150 - loss: 433.8949
 
 
-108/Unknown  24s 213ms/step - accuracy: 0.9040 - loss: 464.3122
+107/Unknown  21s 195ms/step - accuracy: 0.9151 - loss: 432.8877
 
 
-109/Unknown  24s 213ms/step - accuracy: 0.9042 - loss: 463.1289
+108/Unknown  22s 195ms/step - accuracy: 0.9153 - loss: 431.8965
 
 
-110/Unknown  24s 213ms/step - accuracy: 0.9045 - loss: 461.9557
+109/Unknown  22s 195ms/step - accuracy: 0.9155 - loss: 430.9133
 
 
-111/Unknown  24s 213ms/step - accuracy: 0.9048 - loss: 460.7968
+110/Unknown  22s 196ms/step - accuracy: 0.9157 - loss: 429.9397
 
 
-112/Unknown  24s 213ms/step - accuracy: 0.9050 - loss: 459.6553
+111/Unknown  22s 196ms/step - accuracy: 0.9159 - loss: 428.9818
 
 
-113/Unknown  25s 213ms/step - accuracy: 0.9053 - loss: 458.5283
+112/Unknown  22s 196ms/step - accuracy: 0.9161 - loss: 428.0353
 
 
-114/Unknown  25s 213ms/step - accuracy: 0.9056 - loss: 457.4111
+113/Unknown  23s 197ms/step - accuracy: 0.9162 - loss: 427.0999
 
 
-115/Unknown  25s 213ms/step - accuracy: 0.9058 - loss: 456.3075
+114/Unknown  23s 197ms/step - accuracy: 0.9164 - loss: 426.1697
 
 
-116/Unknown  25s 213ms/step - accuracy: 0.9061 - loss: 455.2115
+115/Unknown  23s 197ms/step - accuracy: 0.9166 - loss: 425.2458
 
 
-117/Unknown  25s 213ms/step - accuracy: 0.9063 - loss: 454.1252
+116/Unknown  23s 197ms/step - accuracy: 0.9168 - loss: 424.3345
 
 
-118/Unknown  26s 213ms/step - accuracy: 0.9066 - loss: 453.0476
+117/Unknown  24s 197ms/step - accuracy: 0.9169 - loss: 423.4386
 
 
-119/Unknown  26s 213ms/step - accuracy: 0.9068 - loss: 451.9829
+118/Unknown  24s 197ms/step - accuracy: 0.9171 - loss: 422.5567
 
 
-120/Unknown  26s 213ms/step - accuracy: 0.9070 - loss: 450.9324
+119/Unknown  24s 197ms/step - accuracy: 0.9173 - loss: 421.6823
 
 
-121/Unknown  26s 213ms/step - accuracy: 0.9073 - loss: 449.8954
+120/Unknown  24s 197ms/step - accuracy: 0.9174 - loss: 420.8182
 
 
-122/Unknown  27s 214ms/step - accuracy: 0.9075 - loss: 448.8740
+121/Unknown  24s 197ms/step - accuracy: 0.9176 - loss: 419.9664
 
 
-123/Unknown  27s 214ms/step - accuracy: 0.9077 - loss: 447.8640
+122/Unknown  25s 197ms/step - accuracy: 0.9177 - loss: 419.1238
 
 
-124/Unknown  27s 214ms/step - accuracy: 0.9080 - loss: 446.8658
+123/Unknown  25s 197ms/step - accuracy: 0.9179 - loss: 418.2940
 
 
-125/Unknown  27s 215ms/step - accuracy: 0.9082 - loss: 445.8753
+124/Unknown  25s 197ms/step - accuracy: 0.9181 - loss: 417.4785
 
 
-126/Unknown  28s 215ms/step - accuracy: 0.9084 - loss: 444.8939
+125/Unknown  25s 197ms/step - accuracy: 0.9182 - loss: 416.6722
 
 
-127/Unknown  28s 215ms/step - accuracy: 0.9086 - loss: 443.9199
+126/Unknown  25s 197ms/step - accuracy: 0.9183 - loss: 415.8714
 
 
-128/Unknown  28s 216ms/step - accuracy: 0.9089 - loss: 442.9591
+127/Unknown  26s 197ms/step - accuracy: 0.9185 - loss: 415.0771
 
 
-129/Unknown  28s 217ms/step - accuracy: 0.9091 - loss: 442.0043
+128/Unknown  26s 197ms/step - accuracy: 0.9186 - loss: 414.2919
 
 
-130/Unknown  29s 217ms/step - accuracy: 0.9093 - loss: 441.0609
+129/Unknown  26s 197ms/step - accuracy: 0.9188 - loss: 413.5163
 
 
-131/Unknown  29s 217ms/step - accuracy: 0.9095 - loss: 440.1299
+130/Unknown  26s 197ms/step - accuracy: 0.9189 - loss: 412.7452
 
 
-132/Unknown  29s 217ms/step - accuracy: 0.9097 - loss: 439.2089
+131/Unknown  26s 198ms/step - accuracy: 0.9191 - loss: 411.9837
 
 
-133/Unknown  29s 217ms/step - accuracy: 0.9099 - loss: 438.2959
+132/Unknown  27s 197ms/step - accuracy: 0.9192 - loss: 411.2362
 
 
-134/Unknown  30s 217ms/step - accuracy: 0.9101 - loss: 437.3937
+133/Unknown  27s 198ms/step - accuracy: 0.9193 - loss: 410.4987
 
 
-135/Unknown  30s 217ms/step - accuracy: 0.9103 - loss: 436.5073
+134/Unknown  27s 198ms/step - accuracy: 0.9195 - loss: 409.7713
 
 
-136/Unknown  30s 218ms/step - accuracy: 0.9105 - loss: 435.6308
+135/Unknown  27s 198ms/step - accuracy: 0.9196 - loss: 409.0497
 
 
-137/Unknown  30s 218ms/step - accuracy: 0.9107 - loss: 434.7618
+136/Unknown  27s 198ms/step - accuracy: 0.9197 - loss: 408.3427
 
 
-138/Unknown  31s 218ms/step - accuracy: 0.9109 - loss: 433.9018
+137/Unknown  28s 198ms/step - accuracy: 0.9199 - loss: 407.6457
 
 
-139/Unknown  31s 219ms/step - accuracy: 0.9111 - loss: 433.0544
+138/Unknown  28s 198ms/step - accuracy: 0.9200 - loss: 406.9554
 
 
-140/Unknown  31s 219ms/step - accuracy: 0.9112 - loss: 432.2228
+139/Unknown  28s 198ms/step - accuracy: 0.9201 - loss: 406.2739
 
 
-141/Unknown  31s 219ms/step - accuracy: 0.9114 - loss: 431.3983
+140/Unknown  28s 198ms/step - accuracy: 0.9202 - loss: 405.6025
 
 
-142/Unknown  32s 219ms/step - accuracy: 0.9116 - loss: 430.5809
+141/Unknown  28s 198ms/step - accuracy: 0.9204 - loss: 404.9378
 
 
-143/Unknown  32s 219ms/step - accuracy: 0.9118 - loss: 429.7700
+142/Unknown  29s 198ms/step - accuracy: 0.9205 - loss: 404.2800
 
 
-144/Unknown  32s 219ms/step - accuracy: 0.9120 - loss: 428.9709
+143/Unknown  29s 198ms/step - accuracy: 0.9206 - loss: 403.6313
 
 
-145/Unknown  32s 219ms/step - accuracy: 0.9121 - loss: 428.1824
+144/Unknown  29s 198ms/step - accuracy: 0.9207 - loss: 402.9886
 
 
-146/Unknown  33s 219ms/step - accuracy: 0.9123 - loss: 427.4028
+145/Unknown  29s 198ms/step - accuracy: 0.9208 - loss: 402.3509
 
 
-147/Unknown  33s 219ms/step - accuracy: 0.9125 - loss: 426.6298
+146/Unknown  29s 198ms/step - accuracy: 0.9209 - loss: 401.7167
 
 
-148/Unknown  33s 219ms/step - accuracy: 0.9126 - loss: 425.8698
+147/Unknown  30s 199ms/step - accuracy: 0.9211 - loss: 401.0935
 
 
-149/Unknown  33s 219ms/step - accuracy: 0.9128 - loss: 425.1159
+148/Unknown  30s 199ms/step - accuracy: 0.9212 - loss: 400.4745
 
 
-150/Unknown  33s 219ms/step - accuracy: 0.9130 - loss: 424.3755
+149/Unknown  30s 200ms/step - accuracy: 0.9213 - loss: 399.8633
 
 
-151/Unknown  34s 219ms/step - accuracy: 0.9131 - loss: 423.6459
+150/Unknown  30s 200ms/step - accuracy: 0.9214 - loss: 399.2570
 
 
-152/Unknown  34s 219ms/step - accuracy: 0.9133 - loss: 422.9241
+151/Unknown  31s 200ms/step - accuracy: 0.9215 - loss: 398.6591
 
 
-153/Unknown  34s 219ms/step - accuracy: 0.9134 - loss: 422.2071
+152/Unknown  31s 200ms/step - accuracy: 0.9216 - loss: 398.0708
 
 
-154/Unknown  34s 220ms/step - accuracy: 0.9136 - loss: 421.4937
+153/Unknown  31s 201ms/step - accuracy: 0.9217 - loss: 397.4871
 
 
-155/Unknown  35s 220ms/step - accuracy: 0.9138 - loss: 420.7878
+154/Unknown  31s 201ms/step - accuracy: 0.9218 - loss: 396.9082
 
 
-156/Unknown  35s 220ms/step - accuracy: 0.9139 - loss: 420.0875
+155/Unknown  32s 201ms/step - accuracy: 0.9219 - loss: 396.3336
 
 
-157/Unknown  35s 220ms/step - accuracy: 0.9141 - loss: 419.3929
+156/Unknown  32s 201ms/step - accuracy: 0.9220 - loss: 395.7641
 
 
-158/Unknown  35s 220ms/step - accuracy: 0.9142 - loss: 418.7023
+157/Unknown  32s 202ms/step - accuracy: 0.9222 - loss: 395.1993
 
 
-159/Unknown  35s 220ms/step - accuracy: 0.9143 - loss: 418.0189
+158/Unknown  32s 202ms/step - accuracy: 0.9223 - loss: 394.6414
 
 
-160/Unknown  36s 220ms/step - accuracy: 0.9145 - loss: 417.3419
+159/Unknown  33s 202ms/step - accuracy: 0.9224 - loss: 394.0871
 
 
-161/Unknown  36s 220ms/step - accuracy: 0.9146 - loss: 416.6698
+160/Unknown  33s 202ms/step - accuracy: 0.9225 - loss: 393.5349
 
 
-162/Unknown  36s 220ms/step - accuracy: 0.9148 - loss: 416.0050
+161/Unknown  33s 202ms/step - accuracy: 0.9226 - loss: 392.9877
 
 
-163/Unknown  36s 220ms/step - accuracy: 0.9149 - loss: 415.3468
+162/Unknown  33s 202ms/step - accuracy: 0.9227 - loss: 392.4430
 
 
-164/Unknown  37s 220ms/step - accuracy: 0.9151 - loss: 414.6968
+163/Unknown  33s 202ms/step - accuracy: 0.9228 - loss: 391.9062
 
 
-165/Unknown  37s 220ms/step - accuracy: 0.9152 - loss: 414.0533
+164/Unknown  34s 202ms/step - accuracy: 0.9229 - loss: 391.3741
 
 
-166/Unknown  37s 220ms/step - accuracy: 0.9153 - loss: 413.4176
+165/Unknown  34s 202ms/step - accuracy: 0.9230 - loss: 390.8450
 
 
-167/Unknown  37s 220ms/step - accuracy: 0.9155 - loss: 412.7845
+166/Unknown  34s 202ms/step - accuracy: 0.9231 - loss: 390.3184
 
 
-168/Unknown  37s 220ms/step - accuracy: 0.9156 - loss: 412.1593
+167/Unknown  34s 202ms/step - accuracy: 0.9232 - loss: 389.7947
 
 
-169/Unknown  38s 220ms/step - accuracy: 0.9157 - loss: 411.5370
+168/Unknown  34s 202ms/step - accuracy: 0.9233 - loss: 389.2769
 
 
-170/Unknown  38s 220ms/step - accuracy: 0.9159 - loss: 410.9182
+169/Unknown  35s 201ms/step - accuracy: 0.9234 - loss: 388.7642
 
 
-171/Unknown  38s 220ms/step - accuracy: 0.9160 - loss: 410.3065
+170/Unknown  35s 201ms/step - accuracy: 0.9234 - loss: 388.2601
 
 
-172/Unknown  38s 221ms/step - accuracy: 0.9161 - loss: 409.7014
+171/Unknown  35s 202ms/step - accuracy: 0.9235 - loss: 387.7563
 
 
-173/Unknown  39s 221ms/step - accuracy: 0.9163 - loss: 409.1011
+172/Unknown  35s 202ms/step - accuracy: 0.9236 - loss: 387.2565
 
 
-174/Unknown  39s 221ms/step - accuracy: 0.9164 - loss: 408.5077
+173/Unknown  35s 202ms/step - accuracy: 0.9237 - loss: 386.7589
 
 
-175/Unknown  39s 222ms/step - accuracy: 0.9165 - loss: 407.9176
+174/Unknown  36s 202ms/step - accuracy: 0.9238 - loss: 386.2676
 
 
-176/Unknown  40s 222ms/step - accuracy: 0.9166 - loss: 407.3345
+175/Unknown  36s 202ms/step - accuracy: 0.9239 - loss: 385.7783
 
 
-177/Unknown  40s 222ms/step - accuracy: 0.9168 - loss: 406.7563
+176/Unknown  36s 202ms/step - accuracy: 0.9240 - loss: 385.2943
 
 
-178/Unknown  40s 222ms/step - accuracy: 0.9169 - loss: 406.1828
+177/Unknown  36s 202ms/step - accuracy: 0.9241 - loss: 384.8183
 
 
-179/Unknown  40s 222ms/step - accuracy: 0.9170 - loss: 405.6138
+178/Unknown  36s 202ms/step - accuracy: 0.9242 - loss: 384.3459
 
 
-180/Unknown  40s 222ms/step - accuracy: 0.9171 - loss: 405.0493
+179/Unknown  37s 202ms/step - accuracy: 0.9243 - loss: 383.8763
 
 
-181/Unknown  41s 222ms/step - accuracy: 0.9172 - loss: 404.4879
+180/Unknown  37s 202ms/step - accuracy: 0.9243 - loss: 383.4090
 
 
-182/Unknown  41s 222ms/step - accuracy: 0.9173 - loss: 403.9296
+181/Unknown  37s 202ms/step - accuracy: 0.9244 - loss: 382.9447
 
 
-183/Unknown  41s 222ms/step - accuracy: 0.9175 - loss: 403.3773
+182/Unknown  37s 202ms/step - accuracy: 0.9245 - loss: 382.4837
 
 
-184/Unknown  41s 222ms/step - accuracy: 0.9176 - loss: 402.8297
+183/Unknown  37s 202ms/step - accuracy: 0.9246 - loss: 382.0276
 
 
-185/Unknown  42s 222ms/step - accuracy: 0.9177 - loss: 402.2837
+184/Unknown  38s 202ms/step - accuracy: 0.9247 - loss: 381.5741
 
 
-186/Unknown  42s 223ms/step - accuracy: 0.9178 - loss: 401.7392
+185/Unknown  38s 202ms/step - accuracy: 0.9248 - loss: 381.1227
 
 
-187/Unknown  42s 223ms/step - accuracy: 0.9179 - loss: 401.1979
+186/Unknown  38s 203ms/step - accuracy: 0.9248 - loss: 380.6739
 
 
-188/Unknown  42s 223ms/step - accuracy: 0.9180 - loss: 400.6618
+187/Unknown  38s 203ms/step - accuracy: 0.9249 - loss: 380.2263
 
 
-189/Unknown  43s 223ms/step - accuracy: 0.9181 - loss: 400.1364
+188/Unknown  39s 203ms/step - accuracy: 0.9250 - loss: 379.7803
 
 
-190/Unknown  43s 223ms/step - accuracy: 0.9182 - loss: 399.6142
+189/Unknown  39s 203ms/step - accuracy: 0.9251 - loss: 379.3362
 
 
-191/Unknown  43s 223ms/step - accuracy: 0.9184 - loss: 399.0972
+190/Unknown  39s 203ms/step - accuracy: 0.9252 - loss: 378.8958
 
 
-192/Unknown  43s 224ms/step - accuracy: 0.9185 - loss: 398.5863
+191/Unknown  39s 203ms/step - accuracy: 0.9252 - loss: 378.4580
 
 
-193/Unknown  44s 224ms/step - accuracy: 0.9186 - loss: 398.0764
+192/Unknown  40s 203ms/step - accuracy: 0.9253 - loss: 378.0284
 
 
-194/Unknown  44s 224ms/step - accuracy: 0.9187 - loss: 397.5734
+193/Unknown  40s 203ms/step - accuracy: 0.9254 - loss: 377.6024
 
 
-195/Unknown  44s 224ms/step - accuracy: 0.9188 - loss: 397.0740
+194/Unknown  40s 203ms/step - accuracy: 0.9255 - loss: 377.1786
 
 
-196/Unknown  44s 224ms/step - accuracy: 0.9189 - loss: 396.5792
+195/Unknown  40s 203ms/step - accuracy: 0.9256 - loss: 376.7578
 
 
-197/Unknown  45s 224ms/step - accuracy: 0.9190 - loss: 396.0892
+196/Unknown  40s 203ms/step - accuracy: 0.9256 - loss: 376.3396
 
 
-198/Unknown  45s 225ms/step - accuracy: 0.9191 - loss: 395.6027
+197/Unknown  41s 203ms/step - accuracy: 0.9257 - loss: 375.9260
 
 
-199/Unknown  45s 225ms/step - accuracy: 0.9192 - loss: 395.1190
+198/Unknown  41s 203ms/step - accuracy: 0.9258 - loss: 375.5150
 
 
-200/Unknown  46s 225ms/step - accuracy: 0.9193 - loss: 394.6403
+199/Unknown  41s 203ms/step - accuracy: 0.9259 - loss: 375.1063
 
 
-201/Unknown  46s 225ms/step - accuracy: 0.9194 - loss: 394.1669
+200/Unknown  41s 203ms/step - accuracy: 0.9259 - loss: 374.6986
 
 
-202/Unknown  46s 225ms/step - accuracy: 0.9195 - loss: 393.6972
+201/Unknown  41s 203ms/step - accuracy: 0.9260 - loss: 374.2932
 
 
-203/Unknown  46s 225ms/step - accuracy: 0.9195 - loss: 393.2319
+202/Unknown  42s 203ms/step - accuracy: 0.9261 - loss: 373.8907
 
 
-204/Unknown  46s 225ms/step - accuracy: 0.9196 - loss: 392.7684
+203/Unknown  42s 203ms/step - accuracy: 0.9262 - loss: 373.4908
 
 
-205/Unknown  47s 225ms/step - accuracy: 0.9197 - loss: 392.3078
+204/Unknown  42s 203ms/step - accuracy: 0.9262 - loss: 373.0950
 
 
-206/Unknown  47s 226ms/step - accuracy: 0.9198 - loss: 391.8511
+205/Unknown  42s 203ms/step - accuracy: 0.9263 - loss: 372.7011
 
 
-207/Unknown  47s 226ms/step - accuracy: 0.9199 - loss: 391.3967
+206/Unknown  42s 203ms/step - accuracy: 0.9264 - loss: 372.3101
 
 
-208/Unknown  48s 226ms/step - accuracy: 0.9200 - loss: 390.9444
+207/Unknown  43s 203ms/step - accuracy: 0.9264 - loss: 371.9205
 
 
-209/Unknown  48s 226ms/step - accuracy: 0.9201 - loss: 390.4966
+208/Unknown  43s 203ms/step - accuracy: 0.9265 - loss: 371.5334
 
 
-210/Unknown  48s 227ms/step - accuracy: 0.9202 - loss: 390.0508
+209/Unknown  43s 203ms/step - accuracy: 0.9266 - loss: 371.1480
 
 
-211/Unknown  48s 227ms/step - accuracy: 0.9203 - loss: 389.6074
+210/Unknown  43s 203ms/step - accuracy: 0.9266 - loss: 370.7651
 
 
-212/Unknown  49s 228ms/step - accuracy: 0.9204 - loss: 389.1664
+211/Unknown  43s 203ms/step - accuracy: 0.9267 - loss: 370.3852
 
 
-213/Unknown  49s 228ms/step - accuracy: 0.9205 - loss: 388.7271
+212/Unknown  44s 203ms/step - accuracy: 0.9268 - loss: 370.0093
 
 
-214/Unknown  49s 229ms/step - accuracy: 0.9205 - loss: 388.2910
+213/Unknown  44s 203ms/step - accuracy: 0.9268 - loss: 369.6351
 
 
-215/Unknown  50s 229ms/step - accuracy: 0.9206 - loss: 387.8583
+214/Unknown  44s 204ms/step - accuracy: 0.9269 - loss: 369.2646
 
 
-216/Unknown  50s 229ms/step - accuracy: 0.9207 - loss: 387.4301
+215/Unknown  44s 204ms/step - accuracy: 0.9270 - loss: 368.8969
 
 
-217/Unknown  50s 229ms/step - accuracy: 0.9208 - loss: 387.0048
+216/Unknown  45s 204ms/step - accuracy: 0.9270 - loss: 368.5307
 
 
-218/Unknown  50s 229ms/step - accuracy: 0.9209 - loss: 386.5822
+217/Unknown  45s 204ms/step - accuracy: 0.9271 - loss: 368.1656
 
 
-219/Unknown  51s 229ms/step - accuracy: 0.9210 - loss: 386.1640
+218/Unknown  45s 204ms/step - accuracy: 0.9272 - loss: 367.8022
 
 
-220/Unknown  51s 229ms/step - accuracy: 0.9211 - loss: 385.7477
+219/Unknown  45s 204ms/step - accuracy: 0.9272 - loss: 367.4400
 
 
-221/Unknown  51s 230ms/step - accuracy: 0.9211 - loss: 385.3330
+220/Unknown  45s 204ms/step - accuracy: 0.9273 - loss: 367.0780
 
 
-222/Unknown  51s 230ms/step - accuracy: 0.9212 - loss: 384.9213
+221/Unknown  46s 204ms/step - accuracy: 0.9274 - loss: 366.7194
 
 
-223/Unknown  52s 229ms/step - accuracy: 0.9213 - loss: 384.5125
+222/Unknown  46s 204ms/step - accuracy: 0.9274 - loss: 366.3614
 
 
-224/Unknown  52s 230ms/step - accuracy: 0.9214 - loss: 384.1057
+223/Unknown  46s 204ms/step - accuracy: 0.9275 - loss: 366.0057
 
 
-225/Unknown  52s 229ms/step - accuracy: 0.9215 - loss: 383.7001
+224/Unknown  46s 205ms/step - accuracy: 0.9275 - loss: 365.6517
 
 
-226/Unknown  52s 229ms/step - accuracy: 0.9215 - loss: 383.2977
+225/Unknown  47s 205ms/step - accuracy: 0.9276 - loss: 365.2998
 
 
-227/Unknown  53s 229ms/step - accuracy: 0.9216 - loss: 382.8967
+226/Unknown  47s 205ms/step - accuracy: 0.9277 - loss: 364.9511
 
 
-228/Unknown  53s 229ms/step - accuracy: 0.9217 - loss: 382.4982
+227/Unknown  47s 205ms/step - accuracy: 0.9277 - loss: 364.6082
 
 
-229/Unknown  53s 229ms/step - accuracy: 0.9218 - loss: 382.1027
+228/Unknown  47s 205ms/step - accuracy: 0.9278 - loss: 364.2671
 
 
-230/Unknown  53s 230ms/step - accuracy: 0.9219 - loss: 381.7113
+229/Unknown  47s 205ms/step - accuracy: 0.9278 - loss: 363.9267
 
 
-231/Unknown  54s 230ms/step - accuracy: 0.9219 - loss: 381.3225
+230/Unknown  48s 205ms/step - accuracy: 0.9279 - loss: 363.5866
 
 
-232/Unknown  54s 230ms/step - accuracy: 0.9220 - loss: 380.9357
+231/Unknown  48s 205ms/step - accuracy: 0.9280 - loss: 363.2502
 
 
-233/Unknown  54s 230ms/step - accuracy: 0.9221 - loss: 380.5510
+232/Unknown  48s 205ms/step - accuracy: 0.9280 - loss: 362.9175
 
 
-234/Unknown  54s 230ms/step - accuracy: 0.9222 - loss: 380.1692
+233/Unknown  48s 205ms/step - accuracy: 0.9281 - loss: 362.5866
 
 
-235/Unknown  55s 230ms/step - accuracy: 0.9222 - loss: 379.7904
+234/Unknown  49s 205ms/step - accuracy: 0.9281 - loss: 362.2563
 
 
-236/Unknown  55s 230ms/step - accuracy: 0.9223 - loss: 379.4137
+235/Unknown  49s 205ms/step - accuracy: 0.9282 - loss: 361.9282
 
 
-237/Unknown  55s 230ms/step - accuracy: 0.9224 - loss: 379.0397
+236/Unknown  49s 206ms/step - accuracy: 0.9283 - loss: 361.6011
 
 
-238/Unknown  55s 230ms/step - accuracy: 0.9225 - loss: 378.6663
+237/Unknown  49s 206ms/step - accuracy: 0.9283 - loss: 361.2760
 
 
-239/Unknown  55s 230ms/step - accuracy: 0.9225 - loss: 378.2958
+238/Unknown  50s 207ms/step - accuracy: 0.9284 - loss: 360.9536
 
 
-240/Unknown  56s 230ms/step - accuracy: 0.9226 - loss: 377.9276
+239/Unknown  50s 207ms/step - accuracy: 0.9284 - loss: 360.6325
 
 
-241/Unknown  56s 230ms/step - accuracy: 0.9227 - loss: 377.5616
+240/Unknown  50s 207ms/step - accuracy: 0.9285 - loss: 360.3125
 
 
-242/Unknown  56s 231ms/step - accuracy: 0.9228 - loss: 377.1977
+241/Unknown  51s 208ms/step - accuracy: 0.9285 - loss: 359.9926
 
 
-243/Unknown  57s 231ms/step - accuracy: 0.9228 - loss: 376.8351
+242/Unknown  51s 208ms/step - accuracy: 0.9286 - loss: 359.6747
 
 
-244/Unknown  57s 231ms/step - accuracy: 0.9229 - loss: 376.4753
+243/Unknown  51s 208ms/step - accuracy: 0.9287 - loss: 359.3593
 
 
-245/Unknown  57s 231ms/step - accuracy: 0.9230 - loss: 376.1172
+244/Unknown  51s 209ms/step - accuracy: 0.9287 - loss: 359.0458
 
 
-246/Unknown  57s 231ms/step - accuracy: 0.9231 - loss: 375.7617
+245/Unknown  52s 209ms/step - accuracy: 0.9288 - loss: 358.7349
 
 
-247/Unknown  58s 231ms/step - accuracy: 0.9231 - loss: 375.4093
+246/Unknown  52s 209ms/step - accuracy: 0.9288 - loss: 358.4268
 
 
-248/Unknown  58s 231ms/step - accuracy: 0.9232 - loss: 375.0621
+247/Unknown  52s 209ms/step - accuracy: 0.9289 - loss: 358.1215
 
 
-249/Unknown  58s 231ms/step - accuracy: 0.9233 - loss: 374.7164
+248/Unknown  52s 209ms/step - accuracy: 0.9289 - loss: 357.8191
 
 
-250/Unknown  58s 231ms/step - accuracy: 0.9233 - loss: 374.3738
+249/Unknown  53s 209ms/step - accuracy: 0.9290 - loss: 357.5194
 
 
-251/Unknown  58s 231ms/step - accuracy: 0.9234 - loss: 374.0346
+250/Unknown  53s 209ms/step - accuracy: 0.9290 - loss: 357.2212
 
 
-252/Unknown  59s 231ms/step - accuracy: 0.9235 - loss: 373.6974
+251/Unknown  53s 209ms/step - accuracy: 0.9291 - loss: 356.9238
 
 
-253/Unknown  59s 231ms/step - accuracy: 0.9235 - loss: 373.3607
+252/Unknown  53s 209ms/step - accuracy: 0.9291 - loss: 356.6286
 
 
-254/Unknown  59s 231ms/step - accuracy: 0.9236 - loss: 373.0276
+253/Unknown  53s 209ms/step - accuracy: 0.9292 - loss: 356.3355
 
 
-255/Unknown  60s 231ms/step - accuracy: 0.9237 - loss: 372.6956
+254/Unknown  54s 210ms/step - accuracy: 0.9292 - loss: 356.0449
 
 
-256/Unknown  60s 232ms/step - accuracy: 0.9237 - loss: 372.3641
+255/Unknown  54s 210ms/step - accuracy: 0.9293 - loss: 355.7557
 
 
-257/Unknown  60s 232ms/step - accuracy: 0.9238 - loss: 372.0338
+256/Unknown  54s 210ms/step - accuracy: 0.9293 - loss: 355.4673
 
 
-258/Unknown  60s 232ms/step - accuracy: 0.9239 - loss: 371.7052
+257/Unknown  54s 210ms/step - accuracy: 0.9294 - loss: 355.1799
 
 
-259/Unknown  61s 232ms/step - accuracy: 0.9239 - loss: 371.3809
+258/Unknown  55s 210ms/step - accuracy: 0.9294 - loss: 354.8956
 
 
-260/Unknown  61s 232ms/step - accuracy: 0.9240 - loss: 371.0571
+259/Unknown  55s 210ms/step - accuracy: 0.9295 - loss: 354.6136
 
 
-261/Unknown  61s 232ms/step - accuracy: 0.9241 - loss: 370.7343
+260/Unknown  55s 210ms/step - accuracy: 0.9295 - loss: 354.3326
 
 
-262/Unknown  61s 232ms/step - accuracy: 0.9241 - loss: 370.4119
+261/Unknown  55s 210ms/step - accuracy: 0.9296 - loss: 354.0539
 
 
-263/Unknown  62s 232ms/step - accuracy: 0.9242 - loss: 370.0924
+262/Unknown  56s 210ms/step - accuracy: 0.9296 - loss: 353.7773
 
 
-264/Unknown  62s 233ms/step - accuracy: 0.9243 - loss: 369.7755
+263/Unknown  56s 210ms/step - accuracy: 0.9297 - loss: 353.5032
 
 
-265/Unknown  62s 233ms/step - accuracy: 0.9243 - loss: 369.4610
+264/Unknown  56s 211ms/step - accuracy: 0.9297 - loss: 353.2297
 
 
-266/Unknown  62s 233ms/step - accuracy: 0.9244 - loss: 369.1483
+265/Unknown  56s 211ms/step - accuracy: 0.9298 - loss: 352.9581
 
 
-267/Unknown  63s 233ms/step - accuracy: 0.9244 - loss: 368.8368
+266/Unknown  57s 211ms/step - accuracy: 0.9298 - loss: 352.6891
 
 
-268/Unknown  63s 233ms/step - accuracy: 0.9245 - loss: 368.5270
+267/Unknown  57s 211ms/step - accuracy: 0.9299 - loss: 352.4228
 
 
-269/Unknown  63s 233ms/step - accuracy: 0.9246 - loss: 368.2200
+268/Unknown  57s 211ms/step - accuracy: 0.9299 - loss: 352.1577
 
 
-270/Unknown  64s 233ms/step - accuracy: 0.9246 - loss: 367.9145
+269/Unknown  57s 212ms/step - accuracy: 0.9300 - loss: 351.8944
 
 
-271/Unknown  64s 233ms/step - accuracy: 0.9247 - loss: 367.6098
+270/Unknown  58s 212ms/step - accuracy: 0.9300 - loss: 351.6331
 
 
-272/Unknown  64s 233ms/step - accuracy: 0.9247 - loss: 367.3058
+271/Unknown  58s 212ms/step - accuracy: 0.9300 - loss: 351.3750
 
 
-273/Unknown  64s 233ms/step - accuracy: 0.9248 - loss: 367.0038
+272/Unknown  58s 212ms/step - accuracy: 0.9301 - loss: 351.1187
 
 
-274/Unknown  64s 233ms/step - accuracy: 0.9249 - loss: 366.7027
+273/Unknown  59s 213ms/step - accuracy: 0.9301 - loss: 350.8644
 
 
-275/Unknown  65s 233ms/step - accuracy: 0.9249 - loss: 366.4044
+274/Unknown  59s 213ms/step - accuracy: 0.9302 - loss: 350.6121
 
 
-276/Unknown  65s 233ms/step - accuracy: 0.9250 - loss: 366.1067
+275/Unknown  59s 213ms/step - accuracy: 0.9302 - loss: 350.3619
 
 
-277/Unknown  65s 233ms/step - accuracy: 0.9250 - loss: 365.8106
+276/Unknown  59s 213ms/step - accuracy: 0.9303 - loss: 350.1118
 
 
-278/Unknown  65s 233ms/step - accuracy: 0.9251 - loss: 365.5167
+277/Unknown  60s 213ms/step - accuracy: 0.9303 - loss: 349.8630
 
 
-279/Unknown  66s 233ms/step - accuracy: 0.9252 - loss: 365.2255
+278/Unknown  60s 213ms/step - accuracy: 0.9303 - loss: 349.6153
 
 
-280/Unknown  66s 233ms/step - accuracy: 0.9252 - loss: 364.9359
+279/Unknown  60s 213ms/step - accuracy: 0.9304 - loss: 349.3688
 
 
-281/Unknown  66s 233ms/step - accuracy: 0.9253 - loss: 364.6480
+280/Unknown  60s 213ms/step - accuracy: 0.9304 - loss: 349.1229
 
 
-282/Unknown  66s 233ms/step - accuracy: 0.9253 - loss: 364.3615
+281/Unknown  60s 213ms/step - accuracy: 0.9305 - loss: 348.8784
 
 
-283/Unknown  67s 234ms/step - accuracy: 0.9254 - loss: 364.0771
+282/Unknown  61s 213ms/step - accuracy: 0.9305 - loss: 348.6351
 
 
-284/Unknown  67s 234ms/step - accuracy: 0.9254 - loss: 363.7952
+283/Unknown  61s 213ms/step - accuracy: 0.9306 - loss: 348.3920
 
 
-285/Unknown  67s 234ms/step - accuracy: 0.9255 - loss: 363.5163
+284/Unknown  61s 213ms/step - accuracy: 0.9306 - loss: 348.1502
 
 
-286/Unknown  67s 234ms/step - accuracy: 0.9255 - loss: 363.2393
+285/Unknown  61s 214ms/step - accuracy: 0.9306 - loss: 347.9100
 
 
-287/Unknown  68s 234ms/step - accuracy: 0.9256 - loss: 362.9632
+286/Unknown  62s 214ms/step - accuracy: 0.9307 - loss: 347.6703
 
 
-288/Unknown  68s 234ms/step - accuracy: 0.9257 - loss: 362.6883
+287/Unknown  62s 214ms/step - accuracy: 0.9307 - loss: 347.4321
 
 
-289/Unknown  68s 234ms/step - accuracy: 0.9257 - loss: 362.4147
+288/Unknown  62s 214ms/step - accuracy: 0.9308 - loss: 347.1949
 
 
-290/Unknown  68s 234ms/step - accuracy: 0.9258 - loss: 362.1423
+289/Unknown  62s 214ms/step - accuracy: 0.9308 - loss: 346.9582
 
 
-291/Unknown  69s 234ms/step - accuracy: 0.9258 - loss: 361.8702
+290/Unknown  63s 214ms/step - accuracy: 0.9308 - loss: 346.7231
 
 
-292/Unknown  69s 234ms/step - accuracy: 0.9259 - loss: 361.5998
+291/Unknown  63s 214ms/step - accuracy: 0.9309 - loss: 346.4895
 
 
-293/Unknown  69s 234ms/step - accuracy: 0.9259 - loss: 361.3298
+292/Unknown  63s 214ms/step - accuracy: 0.9309 - loss: 346.2580
 
 
-294/Unknown  69s 234ms/step - accuracy: 0.9260 - loss: 361.0607
+293/Unknown  63s 214ms/step - accuracy: 0.9310 - loss: 346.0265
 
 
-295/Unknown  70s 234ms/step - accuracy: 0.9260 - loss: 360.7924
+294/Unknown  63s 214ms/step - accuracy: 0.9310 - loss: 345.7953
 
 
-296/Unknown  70s 234ms/step - accuracy: 0.9261 - loss: 360.5264
+295/Unknown  64s 214ms/step - accuracy: 0.9310 - loss: 345.5652
 
 
-297/Unknown  70s 234ms/step - accuracy: 0.9261 - loss: 360.2625
+296/Unknown  64s 214ms/step - accuracy: 0.9311 - loss: 345.3354
 
 
-298/Unknown  70s 234ms/step - accuracy: 0.9262 - loss: 359.9996
+297/Unknown  64s 214ms/step - accuracy: 0.9311 - loss: 345.1051
 
 
-299/Unknown  70s 234ms/step - accuracy: 0.9262 - loss: 359.7378
+298/Unknown  64s 214ms/step - accuracy: 0.9312 - loss: 344.8757
 
 
-300/Unknown  71s 234ms/step - accuracy: 0.9263 - loss: 359.4759
+299/Unknown  65s 214ms/step - accuracy: 0.9312 - loss: 344.6488
 
 
-301/Unknown  71s 234ms/step - accuracy: 0.9263 - loss: 359.2154
+300/Unknown  65s 215ms/step - accuracy: 0.9312 - loss: 344.4228
 
 
-302/Unknown  71s 234ms/step - accuracy: 0.9264 - loss: 358.9561
+301/Unknown  65s 215ms/step - accuracy: 0.9313 - loss: 344.1973
 
 
-303/Unknown  71s 234ms/step - accuracy: 0.9264 - loss: 358.6978
+302/Unknown  65s 215ms/step - accuracy: 0.9313 - loss: 343.9730
 
 
-304/Unknown  72s 234ms/step - accuracy: 0.9265 - loss: 358.4405
+303/Unknown  66s 215ms/step - accuracy: 0.9314 - loss: 343.7490
 
 
-305/Unknown  72s 234ms/step - accuracy: 0.9265 - loss: 358.1843
+304/Unknown  66s 215ms/step - accuracy: 0.9314 - loss: 343.5257
 
 
-306/Unknown  72s 234ms/step - accuracy: 0.9266 - loss: 357.9290
+305/Unknown  66s 215ms/step - accuracy: 0.9314 - loss: 343.3047
 
 
-307/Unknown  72s 234ms/step - accuracy: 0.9266 - loss: 357.6744
+306/Unknown  66s 215ms/step - accuracy: 0.9315 - loss: 343.0848
 
 
-308/Unknown  73s 234ms/step - accuracy: 0.9267 - loss: 357.4214
+307/Unknown  66s 215ms/step - accuracy: 0.9315 - loss: 342.8660
 
 
-309/Unknown  73s 234ms/step - accuracy: 0.9267 - loss: 357.1702
+308/Unknown  67s 215ms/step - accuracy: 0.9315 - loss: 342.6490
 
 
-310/Unknown  73s 234ms/step - accuracy: 0.9268 - loss: 356.9197
+309/Unknown  67s 215ms/step - accuracy: 0.9316 - loss: 342.4344
 
 
-311/Unknown  73s 234ms/step - accuracy: 0.9268 - loss: 356.6696
+310/Unknown  67s 215ms/step - accuracy: 0.9316 - loss: 342.2202
 
 
-312/Unknown  74s 234ms/step - accuracy: 0.9269 - loss: 356.4204
+311/Unknown  67s 215ms/step - accuracy: 0.9316 - loss: 342.0071
 
 
-313/Unknown  74s 234ms/step - accuracy: 0.9269 - loss: 356.1724
+312/Unknown  67s 215ms/step - accuracy: 0.9317 - loss: 341.7946
 
 
-314/Unknown  74s 234ms/step - accuracy: 0.9270 - loss: 355.9252
+313/Unknown  68s 215ms/step - accuracy: 0.9317 - loss: 341.5840
 
 
-315/Unknown  74s 234ms/step - accuracy: 0.9270 - loss: 355.6787
+314/Unknown  68s 215ms/step - accuracy: 0.9318 - loss: 341.3745
 
 
-316/Unknown  75s 234ms/step - accuracy: 0.9271 - loss: 355.4333
+315/Unknown  68s 215ms/step - accuracy: 0.9318 - loss: 341.1663
 
 
-317/Unknown  75s 235ms/step - accuracy: 0.9271 - loss: 355.1894
+316/Unknown  68s 215ms/step - accuracy: 0.9318 - loss: 340.9592
 
 
-318/Unknown  75s 235ms/step - accuracy: 0.9272 - loss: 354.9465
+317/Unknown  69s 215ms/step - accuracy: 0.9319 - loss: 340.7528
 
 
-319/Unknown  75s 235ms/step - accuracy: 0.9272 - loss: 354.7051
+318/Unknown  69s 215ms/step - accuracy: 0.9319 - loss: 340.5479
 
 
-320/Unknown  76s 235ms/step - accuracy: 0.9273 - loss: 354.4644
+319/Unknown  69s 215ms/step - accuracy: 0.9319 - loss: 340.3434
 
 
-321/Unknown  76s 235ms/step - accuracy: 0.9273 - loss: 354.2247
+320/Unknown  69s 215ms/step - accuracy: 0.9320 - loss: 340.1393
 
 
-322/Unknown  76s 235ms/step - accuracy: 0.9274 - loss: 353.9866
+321/Unknown  69s 215ms/step - accuracy: 0.9320 - loss: 339.9351
 
 
-323/Unknown  76s 235ms/step - accuracy: 0.9274 - loss: 353.7493
+322/Unknown  70s 215ms/step - accuracy: 0.9320 - loss: 339.7322
 
 
-324/Unknown  77s 235ms/step - accuracy: 0.9275 - loss: 353.5126
+323/Unknown  70s 214ms/step - accuracy: 0.9321 - loss: 339.5305
 
 
-325/Unknown  77s 235ms/step - accuracy: 0.9275 - loss: 353.2766
+324/Unknown  70s 214ms/step - accuracy: 0.9321 - loss: 339.3291
 
 
-326/Unknown  77s 235ms/step - accuracy: 0.9276 - loss: 353.0421
+325/Unknown  70s 214ms/step - accuracy: 0.9321 - loss: 339.1288
 
 
-327/Unknown  77s 235ms/step - accuracy: 0.9276 - loss: 352.8081
+326/Unknown  70s 214ms/step - accuracy: 0.9322 - loss: 338.9296
 
 
-328/Unknown  78s 235ms/step - accuracy: 0.9276 - loss: 352.5762
+327/Unknown  71s 214ms/step - accuracy: 0.9322 - loss: 338.7308
 
 
-329/Unknown  78s 235ms/step - accuracy: 0.9277 - loss: 352.3457
+328/Unknown  71s 214ms/step - accuracy: 0.9322 - loss: 338.5333
 
 
-330/Unknown  78s 235ms/step - accuracy: 0.9277 - loss: 352.1166
+329/Unknown  71s 214ms/step - accuracy: 0.9323 - loss: 338.3367
 
 
-331/Unknown  78s 235ms/step - accuracy: 0.9278 - loss: 351.8886
+330/Unknown  71s 214ms/step - accuracy: 0.9323 - loss: 338.1408
 
 
-332/Unknown  79s 235ms/step - accuracy: 0.9278 - loss: 351.6612
+331/Unknown  71s 214ms/step - accuracy: 0.9323 - loss: 337.9453
 
 
-333/Unknown  79s 235ms/step - accuracy: 0.9279 - loss: 351.4354
+332/Unknown  71s 214ms/step - accuracy: 0.9324 - loss: 337.7515
 
 
-334/Unknown  79s 235ms/step - accuracy: 0.9279 - loss: 351.2099
+333/Unknown  72s 214ms/step - accuracy: 0.9324 - loss: 337.5584
 
 
-335/Unknown  79s 235ms/step - accuracy: 0.9280 - loss: 350.9852
+334/Unknown  72s 214ms/step - accuracy: 0.9324 - loss: 337.3662
 
 
-336/Unknown  80s 235ms/step - accuracy: 0.9280 - loss: 350.7610
+335/Unknown  72s 214ms/step - accuracy: 0.9325 - loss: 337.1747
 
 
-337/Unknown  80s 235ms/step - accuracy: 0.9280 - loss: 350.5387
+336/Unknown  72s 214ms/step - accuracy: 0.9325 - loss: 336.9847
 
 
-338/Unknown  80s 235ms/step - accuracy: 0.9281 - loss: 350.3170
+337/Unknown  72s 214ms/step - accuracy: 0.9325 - loss: 336.7955
 
 
-339/Unknown  80s 235ms/step - accuracy: 0.9281 - loss: 350.0962
+338/Unknown  73s 214ms/step - accuracy: 0.9326 - loss: 336.6066
 
 
-340/Unknown  81s 236ms/step - accuracy: 0.9282 - loss: 349.8758
+339/Unknown  73s 214ms/step - accuracy: 0.9326 - loss: 336.4176
 
 
-341/Unknown  81s 236ms/step - accuracy: 0.9282 - loss: 349.6569
+340/Unknown  73s 214ms/step - accuracy: 0.9326 - loss: 336.2293
 
 
-342/Unknown  81s 236ms/step - accuracy: 0.9283 - loss: 349.4397
+341/Unknown  73s 214ms/step - accuracy: 0.9327 - loss: 336.0417
 
 
-343/Unknown  81s 236ms/step - accuracy: 0.9283 - loss: 349.2237
+342/Unknown  74s 214ms/step - accuracy: 0.9327 - loss: 335.8549
 
 
-344/Unknown  82s 236ms/step - accuracy: 0.9283 - loss: 349.0085
+343/Unknown  74s 213ms/step - accuracy: 0.9327 - loss: 335.6696
 
 
-345/Unknown  82s 236ms/step - accuracy: 0.9284 - loss: 348.7947
+344/Unknown  74s 213ms/step - accuracy: 0.9328 - loss: 335.4847
 
 
-346/Unknown  82s 236ms/step - accuracy: 0.9284 - loss: 348.5816
+345/Unknown  74s 213ms/step - accuracy: 0.9328 - loss: 335.3005
 
 
-347/Unknown  82s 236ms/step - accuracy: 0.9285 - loss: 348.3696
+346/Unknown  74s 214ms/step - accuracy: 0.9328 - loss: 335.1162
 
 
-348/Unknown  83s 236ms/step - accuracy: 0.9285 - loss: 348.1585
+347/Unknown  75s 214ms/step - accuracy: 0.9328 - loss: 334.9317
 
 
-349/Unknown  83s 236ms/step - accuracy: 0.9285 - loss: 347.9480
+348/Unknown  75s 214ms/step - accuracy: 0.9329 - loss: 334.7472
 
 
-350/Unknown  83s 236ms/step - accuracy: 0.9286 - loss: 347.7393
+349/Unknown  75s 214ms/step - accuracy: 0.9329 - loss: 334.5628
 
 
-351/Unknown  83s 236ms/step - accuracy: 0.9286 - loss: 347.5312
+350/Unknown  75s 214ms/step - accuracy: 0.9329 - loss: 334.3791
 
 
-352/Unknown  84s 236ms/step - accuracy: 0.9287 - loss: 347.3236
+351/Unknown  75s 214ms/step - accuracy: 0.9330 - loss: 334.1966
 
 
-353/Unknown  84s 237ms/step - accuracy: 0.9287 - loss: 347.1163
+352/Unknown  76s 214ms/step - accuracy: 0.9330 - loss: 334.0144
 
 
-354/Unknown  84s 237ms/step - accuracy: 0.9287 - loss: 346.9100
+353/Unknown  76s 214ms/step - accuracy: 0.9330 - loss: 333.8329
 
 
-355/Unknown  85s 237ms/step - accuracy: 0.9288 - loss: 346.7040
+354/Unknown  76s 214ms/step - accuracy: 0.9331 - loss: 333.6525
 
 
-356/Unknown  85s 237ms/step - accuracy: 0.9288 - loss: 346.5000
+355/Unknown  76s 214ms/step - accuracy: 0.9331 - loss: 333.4737
 
 
-357/Unknown  85s 237ms/step - accuracy: 0.9289 - loss: 346.2967
+356/Unknown  77s 214ms/step - accuracy: 0.9331 - loss: 333.2956
 
 
-358/Unknown  85s 236ms/step - accuracy: 0.9289 - loss: 346.0948
+357/Unknown  77s 214ms/step - accuracy: 0.9332 - loss: 333.1186
 
 
-359/Unknown  85s 236ms/step - accuracy: 0.9289 - loss: 345.8932
+358/Unknown  77s 214ms/step - accuracy: 0.9332 - loss: 332.9418
 
 
-360/Unknown  86s 236ms/step - accuracy: 0.9290 - loss: 345.6926
+359/Unknown  77s 214ms/step - accuracy: 0.9332 - loss: 332.7658
 
 
-361/Unknown  86s 236ms/step - accuracy: 0.9290 - loss: 345.4924
+360/Unknown  77s 214ms/step - accuracy: 0.9332 - loss: 332.5904
 
 
-362/Unknown  86s 236ms/step - accuracy: 0.9291 - loss: 345.2931
+361/Unknown  78s 214ms/step - accuracy: 0.9333 - loss: 332.4163
 
 
-363/Unknown  86s 236ms/step - accuracy: 0.9291 - loss: 345.0950
+362/Unknown  78s 214ms/step - accuracy: 0.9333 - loss: 332.2424
 
 
-364/Unknown  87s 236ms/step - accuracy: 0.9291 - loss: 344.8981
+363/Unknown  78s 214ms/step - accuracy: 0.9333 - loss: 332.0692
 
 
-365/Unknown  87s 236ms/step - accuracy: 0.9292 - loss: 344.7014
+364/Unknown  78s 214ms/step - accuracy: 0.9334 - loss: 331.8963
 
 
-366/Unknown  87s 236ms/step - accuracy: 0.9292 - loss: 344.5053
+365/Unknown  79s 214ms/step - accuracy: 0.9334 - loss: 331.7242
 
 
-367/Unknown  87s 237ms/step - accuracy: 0.9292 - loss: 344.3105
+366/Unknown  79s 214ms/step - accuracy: 0.9334 - loss: 331.5526
 
 
-368/Unknown  88s 237ms/step - accuracy: 0.9293 - loss: 344.1166
+367/Unknown  79s 214ms/step - accuracy: 0.9334 - loss: 331.3815
 
 
-369/Unknown  88s 237ms/step - accuracy: 0.9293 - loss: 343.9235
+368/Unknown  79s 214ms/step - accuracy: 0.9335 - loss: 331.2112
 
 
-370/Unknown  88s 237ms/step - accuracy: 0.9294 - loss: 343.7310
+369/Unknown  79s 214ms/step - accuracy: 0.9335 - loss: 331.0415
 
 
-371/Unknown  88s 237ms/step - accuracy: 0.9294 - loss: 343.5392
+370/Unknown  80s 214ms/step - accuracy: 0.9335 - loss: 330.8718
 
 
-372/Unknown  89s 237ms/step - accuracy: 0.9294 - loss: 343.3481
+371/Unknown  80s 214ms/step - accuracy: 0.9336 - loss: 330.7039
 
 
-373/Unknown  89s 237ms/step - accuracy: 0.9295 - loss: 343.1579
+372/Unknown  80s 214ms/step - accuracy: 0.9336 - loss: 330.5366
 
 
-374/Unknown  89s 237ms/step - accuracy: 0.9295 - loss: 342.9688
+373/Unknown  80s 214ms/step - accuracy: 0.9336 - loss: 330.3701
 
 
-375/Unknown  89s 237ms/step - accuracy: 0.9295 - loss: 342.7797
+374/Unknown  81s 214ms/step - accuracy: 0.9336 - loss: 330.2039
 
 
-376/Unknown  89s 237ms/step - accuracy: 0.9296 - loss: 342.5912
+375/Unknown  81s 214ms/step - accuracy: 0.9337 - loss: 330.0381
 
 
-377/Unknown  90s 237ms/step - accuracy: 0.9296 - loss: 342.4032
+376/Unknown  81s 214ms/step - accuracy: 0.9337 - loss: 329.8729
 
 
-378/Unknown  90s 237ms/step - accuracy: 0.9297 - loss: 342.2162
+377/Unknown  81s 214ms/step - accuracy: 0.9337 - loss: 329.7084
 
 
-379/Unknown  90s 237ms/step - accuracy: 0.9297 - loss: 342.0300
+378/Unknown  81s 214ms/step - accuracy: 0.9338 - loss: 329.5450
 
 
-380/Unknown  91s 237ms/step - accuracy: 0.9297 - loss: 341.8448
+379/Unknown  82s 214ms/step - accuracy: 0.9338 - loss: 329.3824
 
 
-381/Unknown  91s 237ms/step - accuracy: 0.9298 - loss: 341.6605
+380/Unknown  82s 214ms/step - accuracy: 0.9338 - loss: 329.2206
 
 
-382/Unknown  91s 237ms/step - accuracy: 0.9298 - loss: 341.4775
+381/Unknown  82s 214ms/step - accuracy: 0.9338 - loss: 329.0592
 
 
-383/Unknown  91s 237ms/step - accuracy: 0.9298 - loss: 341.2947
+382/Unknown  82s 214ms/step - accuracy: 0.9339 - loss: 328.8988
 
 
-384/Unknown  92s 237ms/step - accuracy: 0.9299 - loss: 341.1129
+383/Unknown  83s 214ms/step - accuracy: 0.9339 - loss: 328.7392
 
 
-385/Unknown  92s 237ms/step - accuracy: 0.9299 - loss: 340.9320
+384/Unknown  83s 214ms/step - accuracy: 0.9339 - loss: 328.5800
 
 
-386/Unknown  92s 237ms/step - accuracy: 0.9299 - loss: 340.7514
+385/Unknown  83s 214ms/step - accuracy: 0.9339 - loss: 328.4217
 
 
-387/Unknown  92s 237ms/step - accuracy: 0.9300 - loss: 340.5714
+386/Unknown  83s 214ms/step - accuracy: 0.9340 - loss: 328.2640
 
 
-388/Unknown  93s 238ms/step - accuracy: 0.9300 - loss: 340.3924
+387/Unknown  84s 215ms/step - accuracy: 0.9340 - loss: 328.1079
 
 
-389/Unknown  93s 238ms/step - accuracy: 0.9300 - loss: 340.2137
+388/Unknown  84s 215ms/step - accuracy: 0.9340 - loss: 327.9520
 
 
-390/Unknown  93s 237ms/step - accuracy: 0.9301 - loss: 340.0357
+389/Unknown  84s 215ms/step - accuracy: 0.9340 - loss: 327.7965
 
 
-391/Unknown  93s 237ms/step - accuracy: 0.9301 - loss: 339.8592
+390/Unknown  84s 215ms/step - accuracy: 0.9341 - loss: 327.6415
 
 
-392/Unknown  94s 237ms/step - accuracy: 0.9301 - loss: 339.6831
+391/Unknown  84s 215ms/step - accuracy: 0.9341 - loss: 327.4871
 
 
-393/Unknown  94s 237ms/step - accuracy: 0.9302 - loss: 339.5081
+392/Unknown  85s 215ms/step - accuracy: 0.9341 - loss: 327.3329
 
 
-394/Unknown  94s 237ms/step - accuracy: 0.9302 - loss: 339.3347
+393/Unknown  85s 215ms/step - accuracy: 0.9341 - loss: 327.1793
 
 
-395/Unknown  94s 237ms/step - accuracy: 0.9302 - loss: 339.1619
+394/Unknown  85s 215ms/step - accuracy: 0.9342 - loss: 327.0259
 
 
-396/Unknown  94s 237ms/step - accuracy: 0.9303 - loss: 338.9900
+395/Unknown  85s 215ms/step - accuracy: 0.9342 - loss: 326.8732
 
 
-397/Unknown  95s 237ms/step - accuracy: 0.9303 - loss: 338.8185
+396/Unknown  86s 215ms/step - accuracy: 0.9342 - loss: 326.7209
 
 
-398/Unknown  95s 237ms/step - accuracy: 0.9303 - loss: 338.6484
+397/Unknown  86s 215ms/step - accuracy: 0.9342 - loss: 326.5693
 
 
-399/Unknown  95s 237ms/step - accuracy: 0.9304 - loss: 338.4797
+398/Unknown  86s 215ms/step - accuracy: 0.9343 - loss: 326.4187
 
 
-400/Unknown  95s 237ms/step - accuracy: 0.9304 - loss: 338.3118
+399/Unknown  86s 215ms/step - accuracy: 0.9343 - loss: 326.2686
 
 
-401/Unknown  96s 237ms/step - accuracy: 0.9304 - loss: 338.1445
+400/Unknown  87s 216ms/step - accuracy: 0.9343 - loss: 326.1197
 
 
-402/Unknown  96s 238ms/step - accuracy: 0.9305 - loss: 337.9777
+401/Unknown  87s 216ms/step - accuracy: 0.9343 - loss: 325.9718
 
 
-403/Unknown  96s 238ms/step - accuracy: 0.9305 - loss: 337.8118
+402/Unknown  87s 216ms/step - accuracy: 0.9344 - loss: 325.8240
 
 
-404/Unknown  96s 238ms/step - accuracy: 0.9305 - loss: 337.6463
+403/Unknown  88s 216ms/step - accuracy: 0.9344 - loss: 325.6769
 
 
-405/Unknown  97s 238ms/step - accuracy: 0.9306 - loss: 337.4813
+404/Unknown  88s 216ms/step - accuracy: 0.9344 - loss: 325.5306
 
 
-406/Unknown  97s 238ms/step - accuracy: 0.9306 - loss: 337.3167
+405/Unknown  88s 216ms/step - accuracy: 0.9344 - loss: 325.3849
 
 
-407/Unknown  97s 238ms/step - accuracy: 0.9306 - loss: 337.1526
+406/Unknown  88s 216ms/step - accuracy: 0.9345 - loss: 325.2393
 
 
-408/Unknown  98s 238ms/step - accuracy: 0.9307 - loss: 336.9886
+407/Unknown  88s 216ms/step - accuracy: 0.9345 - loss: 325.0950
 
 
-409/Unknown  98s 238ms/step - accuracy: 0.9307 - loss: 336.8252
+408/Unknown  89s 216ms/step - accuracy: 0.9345 - loss: 324.9518
 
 
-410/Unknown  98s 238ms/step - accuracy: 0.9307 - loss: 336.6620
+409/Unknown  89s 216ms/step - accuracy: 0.9345 - loss: 324.8096
 
 
-411/Unknown  98s 238ms/step - accuracy: 0.9308 - loss: 336.4990
+410/Unknown  89s 216ms/step - accuracy: 0.9346 - loss: 324.6682
 
 
-412/Unknown  99s 238ms/step - accuracy: 0.9308 - loss: 336.3363
+411/Unknown  89s 216ms/step - accuracy: 0.9346 - loss: 324.5275
 
 
-413/Unknown  99s 238ms/step - accuracy: 0.9308 - loss: 336.1741
+412/Unknown  90s 216ms/step - accuracy: 0.9346 - loss: 324.3878
 
 
-414/Unknown  99s 238ms/step - accuracy: 0.9309 - loss: 336.0125
+413/Unknown  90s 216ms/step - accuracy: 0.9346 - loss: 324.2490
 
 
-415/Unknown  99s 238ms/step - accuracy: 0.9309 - loss: 335.8519
+414/Unknown  90s 216ms/step - accuracy: 0.9347 - loss: 324.1107
 
 
-416/Unknown  100s 238ms/step - accuracy: 0.9309 - loss: 335.6918
+415/Unknown  90s 216ms/step - accuracy: 0.9347 - loss: 323.9733
 
-
-417/Unknown  100s 238ms/step - accuracy: 0.9309 - loss: 335.5317
+
+416/Unknown  90s 216ms/step - accuracy: 0.9347 - loss: 323.8363
 
-
-418/Unknown  100s 238ms/step - accuracy: 0.9310 - loss: 335.3719
+
+417/Unknown  91s 216ms/step - accuracy: 0.9347 - loss: 323.7005
 
-
-419/Unknown  100s 238ms/step - accuracy: 0.9310 - loss: 335.2126
+
+418/Unknown  91s 216ms/step - accuracy: 0.9347 - loss: 323.5650
 
-
-420/Unknown  101s 238ms/step - accuracy: 0.9310 - loss: 335.0541
+
+419/Unknown  91s 216ms/step - accuracy: 0.9348 - loss: 323.4300
 
-
-421/Unknown  101s 238ms/step - accuracy: 0.9311 - loss: 334.8961
+
+420/Unknown  91s 216ms/step - accuracy: 0.9348 - loss: 323.2954
 
-
-422/Unknown  101s 238ms/step - accuracy: 0.9311 - loss: 334.7386
+
+421/Unknown  92s 216ms/step - accuracy: 0.9348 - loss: 323.1616
 
-
-423/Unknown  101s 238ms/step - accuracy: 0.9311 - loss: 334.5819
+
+422/Unknown  92s 216ms/step - accuracy: 0.9348 - loss: 323.0279
 
-
-424/Unknown  101s 238ms/step - accuracy: 0.9312 - loss: 334.4256
+
+423/Unknown  92s 216ms/step - accuracy: 0.9349 - loss: 322.8943
 
-
-425/Unknown  102s 238ms/step - accuracy: 0.9312 - loss: 334.2702
+
+424/Unknown  92s 217ms/step - accuracy: 0.9349 - loss: 322.7610
 
-
-426/Unknown  102s 238ms/step - accuracy: 0.9312 - loss: 334.1153
+
+425/Unknown  93s 217ms/step - accuracy: 0.9349 - loss: 322.6279
 
-
-427/Unknown  102s 238ms/step - accuracy: 0.9312 - loss: 333.9609
+
+426/Unknown  93s 217ms/step - accuracy: 0.9349 - loss: 322.4956
 
-
-428/Unknown  102s 238ms/step - accuracy: 0.9313 - loss: 333.8071
+
+427/Unknown  93s 217ms/step - accuracy: 0.9349 - loss: 322.3640
 
-
-429/Unknown  103s 238ms/step - accuracy: 0.9313 - loss: 333.6533
+
+428/Unknown  93s 217ms/step - accuracy: 0.9350 - loss: 322.2333
 
-
-430/Unknown  103s 238ms/step - accuracy: 0.9313 - loss: 333.5001
+
+429/Unknown  93s 217ms/step - accuracy: 0.9350 - loss: 322.1030
 
-
-431/Unknown  103s 238ms/step - accuracy: 0.9314 - loss: 333.3471
+
+430/Unknown  94s 217ms/step - accuracy: 0.9350 - loss: 321.9735
 
-
-432/Unknown  103s 238ms/step - accuracy: 0.9314 - loss: 333.1947
+
+431/Unknown  94s 217ms/step - accuracy: 0.9350 - loss: 321.8445
 
-
-433/Unknown  104s 238ms/step - accuracy: 0.9314 - loss: 333.0432
+
+432/Unknown  94s 217ms/step - accuracy: 0.9350 - loss: 321.7156
 
-
-434/Unknown  104s 238ms/step - accuracy: 0.9315 - loss: 332.8920
+
+433/Unknown  95s 217ms/step - accuracy: 0.9351 - loss: 321.5872
 
-
-435/Unknown  104s 238ms/step - accuracy: 0.9315 - loss: 332.7414
+
+434/Unknown  95s 217ms/step - accuracy: 0.9351 - loss: 321.4588
 
-
-436/Unknown  104s 238ms/step - accuracy: 0.9315 - loss: 332.5910
+
+435/Unknown  95s 217ms/step - accuracy: 0.9351 - loss: 321.3307
 
-
-437/Unknown  105s 239ms/step - accuracy: 0.9315 - loss: 332.4410
+
+436/Unknown  95s 217ms/step - accuracy: 0.9351 - loss: 321.2033
 
-
-438/Unknown  105s 239ms/step - accuracy: 0.9316 - loss: 332.2921
+
+437/Unknown  95s 217ms/step - accuracy: 0.9352 - loss: 321.0760
 
-
-439/Unknown  105s 239ms/step - accuracy: 0.9316 - loss: 332.1440
+
+438/Unknown  96s 217ms/step - accuracy: 0.9352 - loss: 320.9493
 
-
-440/Unknown  106s 239ms/step - accuracy: 0.9316 - loss: 331.9966
+
+439/Unknown  96s 217ms/step - accuracy: 0.9352 - loss: 320.8226
 
-
-441/Unknown  106s 239ms/step - accuracy: 0.9317 - loss: 331.8502
+
+440/Unknown  96s 217ms/step - accuracy: 0.9352 - loss: 320.6959
 
-
-442/Unknown  106s 239ms/step - accuracy: 0.9317 - loss: 331.7041
+
+441/Unknown  96s 217ms/step - accuracy: 0.9352 - loss: 320.5698
 
-
-443/Unknown  106s 239ms/step - accuracy: 0.9317 - loss: 331.5587
+
+442/Unknown  97s 218ms/step - accuracy: 0.9353 - loss: 320.4443
 
-
-444/Unknown  107s 239ms/step - accuracy: 0.9317 - loss: 331.4137
+
+443/Unknown  97s 218ms/step - accuracy: 0.9353 - loss: 320.3189
 
-
-445/Unknown  107s 239ms/step - accuracy: 0.9318 - loss: 331.2690
+
+444/Unknown  97s 218ms/step - accuracy: 0.9353 - loss: 320.1938
 
-
-446/Unknown  107s 239ms/step - accuracy: 0.9318 - loss: 331.1252
+
+445/Unknown  97s 218ms/step - accuracy: 0.9353 - loss: 320.0695
 
-
-447/Unknown  107s 239ms/step - accuracy: 0.9318 - loss: 330.9824
+
+446/Unknown  98s 218ms/step - accuracy: 0.9353 - loss: 319.9457
 
-
-448/Unknown  108s 239ms/step - accuracy: 0.9318 - loss: 330.8399
+
+447/Unknown  98s 218ms/step - accuracy: 0.9354 - loss: 319.8219
 
-
-449/Unknown  108s 239ms/step - accuracy: 0.9319 - loss: 330.6978
+
+448/Unknown  98s 218ms/step - accuracy: 0.9354 - loss: 319.6988
 
-
-450/Unknown  108s 239ms/step - accuracy: 0.9319 - loss: 330.5566
+
+449/Unknown  98s 218ms/step - accuracy: 0.9354 - loss: 319.5759
 
-
-451/Unknown  108s 239ms/step - accuracy: 0.9319 - loss: 330.4161
+
+450/Unknown  99s 218ms/step - accuracy: 0.9354 - loss: 319.4533
 
-
-452/Unknown  109s 240ms/step - accuracy: 0.9320 - loss: 330.2763
+
+451/Unknown  99s 218ms/step - accuracy: 0.9354 - loss: 319.3317
 
-
-453/Unknown  109s 240ms/step - accuracy: 0.9320 - loss: 330.1370
+
+452/Unknown  99s 218ms/step - accuracy: 0.9355 - loss: 319.2104
 
-
-454/Unknown  109s 240ms/step - accuracy: 0.9320 - loss: 329.9986
+
+453/Unknown  99s 218ms/step - accuracy: 0.9355 - loss: 319.0900
 
-
-455/Unknown  110s 240ms/step - accuracy: 0.9320 - loss: 329.8606
+
+454/Unknown  100s 218ms/step - accuracy: 0.9355 - loss: 318.9702
 
 
-456/Unknown  110s 240ms/step - accuracy: 0.9321 - loss: 329.7228
+455/Unknown  100s 218ms/step - accuracy: 0.9355 - loss: 318.8509
 
 
-457/Unknown  110s 240ms/step - accuracy: 0.9321 - loss: 329.5859
+456/Unknown  100s 218ms/step - accuracy: 0.9355 - loss: 318.7319
 
 
-458/Unknown  110s 240ms/step - accuracy: 0.9321 - loss: 329.4496
+457/Unknown  100s 218ms/step - accuracy: 0.9356 - loss: 318.6129
 
 
-459/Unknown  110s 240ms/step - accuracy: 0.9321 - loss: 329.3138
+458/Unknown  101s 219ms/step - accuracy: 0.9356 - loss: 318.4945
 
 
-460/Unknown  111s 240ms/step - accuracy: 0.9322 - loss: 329.1786
+459/Unknown  101s 219ms/step - accuracy: 0.9356 - loss: 318.3764
 
 
-461/Unknown  111s 240ms/step - accuracy: 0.9322 - loss: 329.0436
+460/Unknown  101s 219ms/step - accuracy: 0.9356 - loss: 318.2592
 
 
-462/Unknown  111s 240ms/step - accuracy: 0.9322 - loss: 328.9090
+461/Unknown  101s 219ms/step - accuracy: 0.9356 - loss: 318.1426
 
 
-463/Unknown  112s 240ms/step - accuracy: 0.9322 - loss: 328.7749
+462/Unknown  102s 219ms/step - accuracy: 0.9356 - loss: 318.0262
 
 
-464/Unknown  112s 240ms/step - accuracy: 0.9323 - loss: 328.6411
+463/Unknown  102s 219ms/step - accuracy: 0.9357 - loss: 317.9101
 
 
-465/Unknown  112s 240ms/step - accuracy: 0.9323 - loss: 328.5077
+464/Unknown  102s 219ms/step - accuracy: 0.9357 - loss: 317.7942
 
 
-466/Unknown  112s 240ms/step - accuracy: 0.9323 - loss: 328.3747
+465/Unknown  102s 219ms/step - accuracy: 0.9357 - loss: 317.6788
 
 
-467/Unknown  113s 240ms/step - accuracy: 0.9323 - loss: 328.2422
+466/Unknown  102s 219ms/step - accuracy: 0.9357 - loss: 317.5635
 
 
-468/Unknown  113s 240ms/step - accuracy: 0.9324 - loss: 328.1100
+467/Unknown  103s 219ms/step - accuracy: 0.9357 - loss: 317.4484
 
 
-469/Unknown  113s 240ms/step - accuracy: 0.9324 - loss: 327.9782
+468/Unknown  103s 219ms/step - accuracy: 0.9358 - loss: 317.3335
 
 
-470/Unknown  113s 240ms/step - accuracy: 0.9324 - loss: 327.8466
+469/Unknown  103s 219ms/step - accuracy: 0.9358 - loss: 317.2188
 
 
-471/Unknown  114s 240ms/step - accuracy: 0.9324 - loss: 327.7153
+470/Unknown  103s 219ms/step - accuracy: 0.9358 - loss: 317.1040
 
 
-472/Unknown  114s 240ms/step - accuracy: 0.9325 - loss: 327.5845
+471/Unknown  104s 219ms/step - accuracy: 0.9358 - loss: 316.9898
 
 
-473/Unknown  114s 240ms/step - accuracy: 0.9325 - loss: 327.4537
+472/Unknown  104s 219ms/step - accuracy: 0.9358 - loss: 316.8763
 
 
-474/Unknown  114s 240ms/step - accuracy: 0.9325 - loss: 327.3231
+473/Unknown  104s 219ms/step - accuracy: 0.9359 - loss: 316.7631
 
 
-475/Unknown  115s 240ms/step - accuracy: 0.9325 - loss: 327.1929
+474/Unknown  104s 219ms/step - accuracy: 0.9359 - loss: 316.6501
 
 
-476/Unknown  115s 240ms/step - accuracy: 0.9326 - loss: 327.0634
+475/Unknown  105s 219ms/step - accuracy: 0.9359 - loss: 316.5378
 
 
-477/Unknown  115s 240ms/step - accuracy: 0.9326 - loss: 326.9344
+476/Unknown  105s 219ms/step - accuracy: 0.9359 - loss: 316.4257
 
 
-478/Unknown  115s 240ms/step - accuracy: 0.9326 - loss: 326.8064
+477/Unknown  105s 220ms/step - accuracy: 0.9359 - loss: 316.3138
 
 
-479/Unknown  116s 240ms/step - accuracy: 0.9326 - loss: 326.6785
+478/Unknown  105s 220ms/step - accuracy: 0.9359 - loss: 316.2022
 
 
-480/Unknown  116s 240ms/step - accuracy: 0.9327 - loss: 326.5513
+479/Unknown  106s 220ms/step - accuracy: 0.9360 - loss: 316.0910
 
 
-481/Unknown  116s 240ms/step - accuracy: 0.9327 - loss: 326.4247
+480/Unknown  106s 220ms/step - accuracy: 0.9360 - loss: 315.9806
 
 
-482/Unknown  116s 240ms/step - accuracy: 0.9327 - loss: 326.2985
+481/Unknown  106s 220ms/step - accuracy: 0.9360 - loss: 315.8706
 
 
-483/Unknown  117s 241ms/step - accuracy: 0.9327 - loss: 326.1726
+482/Unknown  106s 220ms/step - accuracy: 0.9360 - loss: 315.7607
 
 
-484/Unknown  117s 241ms/step - accuracy: 0.9328 - loss: 326.0472
+483/Unknown  107s 220ms/step - accuracy: 0.9360 - loss: 315.6510
 
 
-485/Unknown  117s 241ms/step - accuracy: 0.9328 - loss: 325.9221
+484/Unknown  107s 220ms/step - accuracy: 0.9361 - loss: 315.5415
 
 
-486/Unknown  117s 241ms/step - accuracy: 0.9328 - loss: 325.7975
+485/Unknown  107s 220ms/step - accuracy: 0.9361 - loss: 315.4324
 
 
-487/Unknown  118s 241ms/step - accuracy: 0.9328 - loss: 325.6735
+486/Unknown  107s 220ms/step - accuracy: 0.9361 - loss: 315.3241
 
 
-488/Unknown  118s 241ms/step - accuracy: 0.9329 - loss: 325.5500
+487/Unknown  108s 220ms/step - accuracy: 0.9361 - loss: 315.2159
 
 
-489/Unknown  118s 241ms/step - accuracy: 0.9329 - loss: 325.4270
+488/Unknown  108s 220ms/step - accuracy: 0.9361 - loss: 315.1081
 
 
-490/Unknown  119s 241ms/step - accuracy: 0.9329 - loss: 325.3045
+489/Unknown  108s 220ms/step - accuracy: 0.9361 - loss: 315.0006
 
 
-491/Unknown  119s 241ms/step - accuracy: 0.9329 - loss: 325.1823
+490/Unknown  108s 220ms/step - accuracy: 0.9362 - loss: 314.8934
 
 
-492/Unknown  119s 241ms/step - accuracy: 0.9330 - loss: 325.0604
+491/Unknown  109s 220ms/step - accuracy: 0.9362 - loss: 314.7863
 
 
-493/Unknown  119s 241ms/step - accuracy: 0.9330 - loss: 324.9387
+492/Unknown  109s 220ms/step - accuracy: 0.9362 - loss: 314.6796
 
 
-494/Unknown  119s 241ms/step - accuracy: 0.9330 - loss: 324.8173
+493/Unknown  109s 220ms/step - accuracy: 0.9362 - loss: 314.5731
 
 
-495/Unknown  120s 241ms/step - accuracy: 0.9330 - loss: 324.6962
+494/Unknown  109s 220ms/step - accuracy: 0.9362 - loss: 314.4671
 
 
-496/Unknown  120s 241ms/step - accuracy: 0.9330 - loss: 324.5757
+495/Unknown  109s 220ms/step - accuracy: 0.9363 - loss: 314.3610
 
 
-497/Unknown  120s 241ms/step - accuracy: 0.9331 - loss: 324.4557
+496/Unknown  110s 220ms/step - accuracy: 0.9363 - loss: 314.2551
 
 
-498/Unknown  121s 241ms/step - accuracy: 0.9331 - loss: 324.3361
+497/Unknown  110s 220ms/step - accuracy: 0.9363 - loss: 314.1498
 
 
-499/Unknown  121s 241ms/step - accuracy: 0.9331 - loss: 324.2168
+498/Unknown  110s 220ms/step - accuracy: 0.9363 - loss: 314.0451
 
 
-500/Unknown  121s 241ms/step - accuracy: 0.9331 - loss: 324.0978
+499/Unknown  110s 220ms/step - accuracy: 0.9363 - loss: 313.9405
 
 
-501/Unknown  121s 241ms/step - accuracy: 0.9332 - loss: 323.9789
+500/Unknown  111s 220ms/step - accuracy: 0.9363 - loss: 313.8364
 
 
-502/Unknown  122s 241ms/step - accuracy: 0.9332 - loss: 323.8604
+501/Unknown  111s 220ms/step - accuracy: 0.9364 - loss: 313.7324
 
 
-503/Unknown  122s 241ms/step - accuracy: 0.9332 - loss: 323.7420
+502/Unknown  111s 220ms/step - accuracy: 0.9364 - loss: 313.6290
 
 
-504/Unknown  122s 241ms/step - accuracy: 0.9332 - loss: 323.6241
+503/Unknown  111s 220ms/step - accuracy: 0.9364 - loss: 313.5266
 
 
-505/Unknown  122s 241ms/step - accuracy: 0.9333 - loss: 323.5069
+504/Unknown  111s 220ms/step - accuracy: 0.9364 - loss: 313.4240
 
 
-506/Unknown  122s 241ms/step - accuracy: 0.9333 - loss: 323.3900
+505/Unknown  112s 220ms/step - accuracy: 0.9364 - loss: 313.3215
 
 
-507/Unknown  123s 241ms/step - accuracy: 0.9333 - loss: 323.2732
+506/Unknown  112s 220ms/step - accuracy: 0.9364 - loss: 313.2194
 
 
-508/Unknown  123s 241ms/step - accuracy: 0.9333 - loss: 323.1570
+507/Unknown  112s 220ms/step - accuracy: 0.9365 - loss: 313.1174
 
 
-509/Unknown  123s 241ms/step - accuracy: 0.9333 - loss: 323.0411
+508/Unknown  112s 220ms/step - accuracy: 0.9365 - loss: 313.0163
 
 
-510/Unknown  124s 241ms/step - accuracy: 0.9334 - loss: 322.9258
+509/Unknown  113s 220ms/step - accuracy: 0.9365 - loss: 312.9149
 
 
-511/Unknown  124s 241ms/step - accuracy: 0.9334 - loss: 322.8106
+510/Unknown  113s 220ms/step - accuracy: 0.9365 - loss: 312.8137
 
 
-512/Unknown  124s 241ms/step - accuracy: 0.9334 - loss: 322.6954
+511/Unknown  113s 220ms/step - accuracy: 0.9365 - loss: 312.7127
 
 
-513/Unknown  124s 241ms/step - accuracy: 0.9334 - loss: 322.5804
+512/Unknown  113s 220ms/step - accuracy: 0.9365 - loss: 312.6117
 
 
-514/Unknown  125s 241ms/step - accuracy: 0.9334 - loss: 322.4655
+513/Unknown  113s 220ms/step - accuracy: 0.9366 - loss: 312.5108
 
 
-515/Unknown  125s 241ms/step - accuracy: 0.9335 - loss: 322.3508
+514/Unknown  114s 220ms/step - accuracy: 0.9366 - loss: 312.4105
 
 
-516/Unknown  125s 242ms/step - accuracy: 0.9335 - loss: 322.2363
+515/Unknown  114s 220ms/step - accuracy: 0.9366 - loss: 312.3107
 
 
-517/Unknown  125s 242ms/step - accuracy: 0.9335 - loss: 322.1223
+516/Unknown  114s 221ms/step - accuracy: 0.9366 - loss: 312.2112
 
 
-518/Unknown  126s 242ms/step - accuracy: 0.9335 - loss: 322.0087
+517/Unknown  115s 221ms/step - accuracy: 0.9366 - loss: 312.1120
 
 
-519/Unknown  126s 242ms/step - accuracy: 0.9336 - loss: 321.8951
+518/Unknown  115s 221ms/step - accuracy: 0.9366 - loss: 312.0136
 
 
-520/Unknown  126s 242ms/step - accuracy: 0.9336 - loss: 321.7819
+519/Unknown  115s 221ms/step - accuracy: 0.9367 - loss: 311.9154
 
 
-521/Unknown  126s 242ms/step - accuracy: 0.9336 - loss: 321.6687
+520/Unknown  115s 221ms/step - accuracy: 0.9367 - loss: 311.8175
 
 
-522/Unknown  127s 242ms/step - accuracy: 0.9336 - loss: 321.5559
+521/Unknown  116s 221ms/step - accuracy: 0.9367 - loss: 311.7198
 
 
-523/Unknown  127s 242ms/step - accuracy: 0.9336 - loss: 321.4433
+522/Unknown  116s 221ms/step - accuracy: 0.9367 - loss: 311.6223
 
 
-524/Unknown  127s 242ms/step - accuracy: 0.9337 - loss: 321.3311
+523/Unknown  116s 221ms/step - accuracy: 0.9367 - loss: 311.5254
 
 
-525/Unknown  127s 241ms/step - accuracy: 0.9337 - loss: 321.2190
+524/Unknown  116s 221ms/step - accuracy: 0.9367 - loss: 311.4289
 
 
-526/Unknown  128s 241ms/step - accuracy: 0.9337 - loss: 321.1076
+525/Unknown  117s 221ms/step - accuracy: 0.9368 - loss: 311.3327
 
 
-527/Unknown  128s 241ms/step - accuracy: 0.9337 - loss: 320.9963
+526/Unknown  117s 221ms/step - accuracy: 0.9368 - loss: 311.2370
 
 
-528/Unknown  128s 241ms/step - accuracy: 0.9337 - loss: 320.8853
+527/Unknown  117s 221ms/step - accuracy: 0.9368 - loss: 311.1415
 
 
-529/Unknown  128s 241ms/step - accuracy: 0.9338 - loss: 320.7745
+528/Unknown  117s 221ms/step - accuracy: 0.9368 - loss: 311.0460
 
 
-530/Unknown  128s 241ms/step - accuracy: 0.9338 - loss: 320.6637
+529/Unknown  118s 221ms/step - accuracy: 0.9368 - loss: 310.9506
 
 
-531/Unknown  129s 241ms/step - accuracy: 0.9338 - loss: 320.5531
+530/Unknown  118s 221ms/step - accuracy: 0.9368 - loss: 310.8556
 
 
-532/Unknown  129s 241ms/step - accuracy: 0.9338 - loss: 320.4430
+531/Unknown  118s 221ms/step - accuracy: 0.9368 - loss: 310.7611
 
 
-533/Unknown  129s 241ms/step - accuracy: 0.9339 - loss: 320.3329
+532/Unknown  118s 221ms/step - accuracy: 0.9369 - loss: 310.6666
 
 
-534/Unknown  129s 241ms/step - accuracy: 0.9339 - loss: 320.2232
+533/Unknown  119s 222ms/step - accuracy: 0.9369 - loss: 310.5723
 
 
-535/Unknown  130s 241ms/step - accuracy: 0.9339 - loss: 320.1136
+534/Unknown  119s 222ms/step - accuracy: 0.9369 - loss: 310.4783
 
 
-536/Unknown  130s 241ms/step - accuracy: 0.9339 - loss: 320.0045
+535/Unknown  119s 222ms/step - accuracy: 0.9369 - loss: 310.3845
 
 
-537/Unknown  130s 241ms/step - accuracy: 0.9339 - loss: 319.8954
+536/Unknown  119s 222ms/step - accuracy: 0.9369 - loss: 310.2907
 
 
-538/Unknown  130s 242ms/step - accuracy: 0.9340 - loss: 319.7864
+537/Unknown  119s 222ms/step - accuracy: 0.9369 - loss: 310.1972
 
 
-539/Unknown  131s 242ms/step - accuracy: 0.9340 - loss: 319.6782
+538/Unknown  120s 222ms/step - accuracy: 0.9370 - loss: 310.1041
 
 
-540/Unknown  131s 242ms/step - accuracy: 0.9340 - loss: 319.5701
+539/Unknown  120s 222ms/step - accuracy: 0.9370 - loss: 310.0114
 
 
-541/Unknown  131s 242ms/step - accuracy: 0.9340 - loss: 319.4627
+540/Unknown  120s 222ms/step - accuracy: 0.9370 - loss: 309.9187
 
 
-542/Unknown  132s 242ms/step - accuracy: 0.9340 - loss: 319.3557
+541/Unknown  120s 222ms/step - accuracy: 0.9370 - loss: 309.8263
 
 
-543/Unknown  132s 242ms/step - accuracy: 0.9341 - loss: 319.2490
+542/Unknown  121s 221ms/step - accuracy: 0.9370 - loss: 309.7338
 
 
-544/Unknown  132s 242ms/step - accuracy: 0.9341 - loss: 319.1425
+543/Unknown  121s 221ms/step - accuracy: 0.9370 - loss: 309.6414
 
 
-545/Unknown  132s 242ms/step - accuracy: 0.9341 - loss: 319.0364
+544/Unknown  121s 222ms/step - accuracy: 0.9370 - loss: 309.5492
 
 
-546/Unknown  133s 242ms/step - accuracy: 0.9341 - loss: 318.9309
+545/Unknown  121s 222ms/step - accuracy: 0.9371 - loss: 309.4574
 
 
-547/Unknown  133s 242ms/step - accuracy: 0.9341 - loss: 318.8256
+546/Unknown  121s 222ms/step - accuracy: 0.9371 - loss: 309.3658
 
 
-548/Unknown  133s 242ms/step - accuracy: 0.9342 - loss: 318.7207
+547/Unknown  122s 222ms/step - accuracy: 0.9371 - loss: 309.2743
 
 
-549/Unknown  133s 242ms/step - accuracy: 0.9342 - loss: 318.6164
+548/Unknown  122s 222ms/step - accuracy: 0.9371 - loss: 309.1831
 
 
-550/Unknown  134s 242ms/step - accuracy: 0.9342 - loss: 318.5123
+549/Unknown  122s 222ms/step - accuracy: 0.9371 - loss: 309.0924
 
 
-551/Unknown  134s 242ms/step - accuracy: 0.9342 - loss: 318.4086
+550/Unknown  122s 222ms/step - accuracy: 0.9371 - loss: 309.0020
 
 
-552/Unknown  134s 242ms/step - accuracy: 0.9342 - loss: 318.3053
+551/Unknown  123s 222ms/step - accuracy: 0.9371 - loss: 308.9121
 
 
-553/Unknown  134s 242ms/step - accuracy: 0.9343 - loss: 318.2019
+552/Unknown  123s 222ms/step - accuracy: 0.9372 - loss: 308.8221
 
 
-554/Unknown  135s 242ms/step - accuracy: 0.9343 - loss: 318.0987
+553/Unknown  123s 222ms/step - accuracy: 0.9372 - loss: 308.7321
 
 
-555/Unknown  135s 242ms/step - accuracy: 0.9343 - loss: 317.9957
+554/Unknown  123s 222ms/step - accuracy: 0.9372 - loss: 308.6426
 
 
-556/Unknown  135s 242ms/step - accuracy: 0.9343 - loss: 317.8931
+555/Unknown  124s 222ms/step - accuracy: 0.9372 - loss: 308.5534
 
 
-557/Unknown  136s 242ms/step - accuracy: 0.9343 - loss: 317.7906
+556/Unknown  124s 222ms/step - accuracy: 0.9372 - loss: 308.4645
 
 
-558/Unknown  136s 242ms/step - accuracy: 0.9344 - loss: 317.6887
+557/Unknown  124s 222ms/step - accuracy: 0.9372 - loss: 308.3757
 
 
-559/Unknown  136s 242ms/step - accuracy: 0.9344 - loss: 317.5871
+558/Unknown  124s 222ms/step - accuracy: 0.9372 - loss: 308.2873
 
 
-560/Unknown  136s 242ms/step - accuracy: 0.9344 - loss: 317.4857
+559/Unknown  125s 222ms/step - accuracy: 0.9373 - loss: 308.1992
 
 
-561/Unknown  137s 242ms/step - accuracy: 0.9344 - loss: 317.3849
+560/Unknown  125s 222ms/step - accuracy: 0.9373 - loss: 308.1115
 
 
-562/Unknown  137s 243ms/step - accuracy: 0.9344 - loss: 317.2843
+561/Unknown  125s 222ms/step - accuracy: 0.9373 - loss: 308.0239
 
 
-563/Unknown  137s 243ms/step - accuracy: 0.9344 - loss: 317.1841
+562/Unknown  125s 222ms/step - accuracy: 0.9373 - loss: 307.9366
 
 
-564/Unknown  137s 243ms/step - accuracy: 0.9345 - loss: 317.0841
+563/Unknown  126s 222ms/step - accuracy: 0.9373 - loss: 307.8493
 
 
-565/Unknown  138s 243ms/step - accuracy: 0.9345 - loss: 316.9843
+564/Unknown  126s 222ms/step - accuracy: 0.9373 - loss: 307.7624
 
 
-566/Unknown  138s 243ms/step - accuracy: 0.9345 - loss: 316.8847
+565/Unknown  126s 222ms/step - accuracy: 0.9373 - loss: 307.6758
 
 
-567/Unknown  138s 243ms/step - accuracy: 0.9345 - loss: 316.7856
+566/Unknown  126s 222ms/step - accuracy: 0.9374 - loss: 307.5896
 
 
-568/Unknown  138s 243ms/step - accuracy: 0.9345 - loss: 316.6870
+567/Unknown  126s 222ms/step - accuracy: 0.9374 - loss: 307.5038
 
 
-569/Unknown  139s 243ms/step - accuracy: 0.9346 - loss: 316.5887
+568/Unknown  127s 222ms/step - accuracy: 0.9374 - loss: 307.4184
 
 
-570/Unknown  139s 243ms/step - accuracy: 0.9346 - loss: 316.4907
+569/Unknown  127s 222ms/step - accuracy: 0.9374 - loss: 307.3336
 
 
-571/Unknown  139s 243ms/step - accuracy: 0.9346 - loss: 316.3928
+570/Unknown  127s 222ms/step - accuracy: 0.9374 - loss: 307.2491
 
 
-572/Unknown  139s 243ms/step - accuracy: 0.9346 - loss: 316.2950
+571/Unknown  127s 222ms/step - accuracy: 0.9374 - loss: 307.1649
 
 
-573/Unknown  140s 243ms/step - accuracy: 0.9346 - loss: 316.1977
+572/Unknown  128s 222ms/step - accuracy: 0.9374 - loss: 307.0807
 
 
-574/Unknown  140s 243ms/step - accuracy: 0.9347 - loss: 316.1008
+573/Unknown  128s 222ms/step - accuracy: 0.9375 - loss: 306.9967
 
 
-575/Unknown  140s 243ms/step - accuracy: 0.9347 - loss: 316.0045
+574/Unknown  128s 223ms/step - accuracy: 0.9375 - loss: 306.9132
 
 
-576/Unknown  140s 243ms/step - accuracy: 0.9347 - loss: 315.9082
+575/Unknown  129s 223ms/step - accuracy: 0.9375 - loss: 306.8299
 
 
-577/Unknown  141s 243ms/step - accuracy: 0.9347 - loss: 315.8120
+576/Unknown  129s 223ms/step - accuracy: 0.9375 - loss: 306.7468
 
 
-578/Unknown  141s 243ms/step - accuracy: 0.9347 - loss: 315.7160
+577/Unknown  129s 223ms/step - accuracy: 0.9375 - loss: 306.6639
 
 
-579/Unknown  141s 243ms/step - accuracy: 0.9347 - loss: 315.6203
+578/Unknown  129s 223ms/step - accuracy: 0.9375 - loss: 306.5809
 
 
-580/Unknown  142s 243ms/step - accuracy: 0.9348 - loss: 315.5247
+579/Unknown  130s 223ms/step - accuracy: 0.9375 - loss: 306.4984
 
 
-581/Unknown  142s 243ms/step - accuracy: 0.9348 - loss: 315.4293
+580/Unknown  130s 223ms/step - accuracy: 0.9376 - loss: 306.4160
 
 
-582/Unknown  142s 243ms/step - accuracy: 0.9348 - loss: 315.3342
+581/Unknown  130s 223ms/step - accuracy: 0.9376 - loss: 306.3336
 
 
-583/Unknown  142s 243ms/step - accuracy: 0.9348 - loss: 315.2393
+582/Unknown  130s 223ms/step - accuracy: 0.9376 - loss: 306.2515
 
 
-584/Unknown  143s 243ms/step - accuracy: 0.9348 - loss: 315.1447
+583/Unknown  131s 223ms/step - accuracy: 0.9376 - loss: 306.1693
 
 
-585/Unknown  143s 243ms/step - accuracy: 0.9348 - loss: 315.0504
+584/Unknown  131s 223ms/step - accuracy: 0.9376 - loss: 306.0871
 
 
-586/Unknown  143s 243ms/step - accuracy: 0.9349 - loss: 314.9563
+585/Unknown  131s 223ms/step - accuracy: 0.9376 - loss: 306.0051
 
 
-587/Unknown  143s 243ms/step - accuracy: 0.9349 - loss: 314.8626
+586/Unknown  131s 223ms/step - accuracy: 0.9376 - loss: 305.9232
 
 
-588/Unknown  144s 243ms/step - accuracy: 0.9349 - loss: 314.7693
+587/Unknown  132s 223ms/step - accuracy: 0.9376 - loss: 305.8415
 
 
-589/Unknown  144s 243ms/step - accuracy: 0.9349 - loss: 314.6760
+588/Unknown  132s 223ms/step - accuracy: 0.9377 - loss: 305.7600
 
 
-590/Unknown  144s 243ms/step - accuracy: 0.9349 - loss: 314.5832
+589/Unknown  132s 223ms/step - accuracy: 0.9377 - loss: 305.6787
 
 
-591/Unknown  144s 243ms/step - accuracy: 0.9349 - loss: 314.4905
+590/Unknown  132s 223ms/step - accuracy: 0.9377 - loss: 305.5978
 
 
-592/Unknown  145s 244ms/step - accuracy: 0.9350 - loss: 314.3980
+591/Unknown  133s 223ms/step - accuracy: 0.9377 - loss: 305.5169
 
 
-593/Unknown  145s 244ms/step - accuracy: 0.9350 - loss: 314.3056
+592/Unknown  133s 223ms/step - accuracy: 0.9377 - loss: 305.4363
 
 
-594/Unknown  145s 244ms/step - accuracy: 0.9350 - loss: 314.2133
+593/Unknown  133s 223ms/step - accuracy: 0.9377 - loss: 305.3560
 
 
-595/Unknown  145s 244ms/step - accuracy: 0.9350 - loss: 314.1214
+594/Unknown  133s 223ms/step - accuracy: 0.9377 - loss: 305.2758
 
 
-596/Unknown  146s 244ms/step - accuracy: 0.9350 - loss: 314.0297
+595/Unknown  133s 223ms/step - accuracy: 0.9378 - loss: 305.1960
 
 
-597/Unknown  146s 244ms/step - accuracy: 0.9351 - loss: 313.9380
+596/Unknown  134s 223ms/step - accuracy: 0.9378 - loss: 305.1167
 
 
-598/Unknown  146s 244ms/step - accuracy: 0.9351 - loss: 313.8465
+597/Unknown  134s 223ms/step - accuracy: 0.9378 - loss: 305.0374
 
 
-599/Unknown  147s 244ms/step - accuracy: 0.9351 - loss: 313.7552
+598/Unknown  134s 223ms/step - accuracy: 0.9378 - loss: 304.9583
 
 
-600/Unknown  147s 244ms/step - accuracy: 0.9351 - loss: 313.6645
+599/Unknown  134s 223ms/step - accuracy: 0.9378 - loss: 304.8791
 
 
-601/Unknown  147s 244ms/step - accuracy: 0.9351 - loss: 313.5738
+600/Unknown  134s 223ms/step - accuracy: 0.9378 - loss: 304.8002
 
 
-602/Unknown  147s 244ms/step - accuracy: 0.9351 - loss: 313.4837
+601/Unknown  135s 223ms/step - accuracy: 0.9378 - loss: 304.7217
 
 
-603/Unknown  148s 244ms/step - accuracy: 0.9352 - loss: 313.3939
+602/Unknown  135s 223ms/step - accuracy: 0.9378 - loss: 304.6434
 
 
-604/Unknown  148s 244ms/step - accuracy: 0.9352 - loss: 313.3044
+603/Unknown  135s 223ms/step - accuracy: 0.9379 - loss: 304.5656
 
 
-605/Unknown  148s 244ms/step - accuracy: 0.9352 - loss: 313.2152
+604/Unknown  135s 223ms/step - accuracy: 0.9379 - loss: 304.4879
 
 
-606/Unknown  148s 244ms/step - accuracy: 0.9352 - loss: 313.1262
+605/Unknown  136s 223ms/step - accuracy: 0.9379 - loss: 304.4105
 
 
-607/Unknown  149s 244ms/step - accuracy: 0.9352 - loss: 313.0374
+606/Unknown  136s 223ms/step - accuracy: 0.9379 - loss: 304.3331
 
 
-608/Unknown  149s 244ms/step - accuracy: 0.9352 - loss: 312.9488
+607/Unknown  136s 223ms/step - accuracy: 0.9379 - loss: 304.2561
 
 
-609/Unknown  149s 244ms/step - accuracy: 0.9352 - loss: 312.8601
+608/Unknown  136s 223ms/step - accuracy: 0.9379 - loss: 304.1792
 
 
-610/Unknown  149s 244ms/step - accuracy: 0.9353 - loss: 312.7717
+609/Unknown  137s 223ms/step - accuracy: 0.9379 - loss: 304.1025
 
 
-611/Unknown  150s 244ms/step - accuracy: 0.9353 - loss: 312.6833
+610/Unknown  137s 223ms/step - accuracy: 0.9379 - loss: 304.0259
 
 
-612/Unknown  150s 244ms/step - accuracy: 0.9353 - loss: 312.5952
+611/Unknown  137s 223ms/step - accuracy: 0.9380 - loss: 303.9494
 
 
-613/Unknown  150s 244ms/step - accuracy: 0.9353 - loss: 312.5075
+612/Unknown  137s 223ms/step - accuracy: 0.9380 - loss: 303.8730
 
 
-614/Unknown  150s 244ms/step - accuracy: 0.9353 - loss: 312.4199
+613/Unknown  137s 223ms/step - accuracy: 0.9380 - loss: 303.7966
 
 
-615/Unknown  151s 244ms/step - accuracy: 0.9353 - loss: 312.3324
+614/Unknown  138s 223ms/step - accuracy: 0.9380 - loss: 303.7203
 
 
-616/Unknown  151s 244ms/step - accuracy: 0.9354 - loss: 312.2452
+615/Unknown  138s 223ms/step - accuracy: 0.9380 - loss: 303.6440
 
 
-617/Unknown  151s 245ms/step - accuracy: 0.9354 - loss: 312.1583
+616/Unknown  138s 223ms/step - accuracy: 0.9380 - loss: 303.5678
 
 
-618/Unknown  152s 245ms/step - accuracy: 0.9354 - loss: 312.0714
+617/Unknown  138s 224ms/step - accuracy: 0.9380 - loss: 303.4917
 
 
-619/Unknown  152s 245ms/step - accuracy: 0.9354 - loss: 311.9846
+618/Unknown  139s 224ms/step - accuracy: 0.9380 - loss: 303.4161
 
 
-620/Unknown  152s 245ms/step - accuracy: 0.9354 - loss: 311.8981
+619/Unknown  139s 224ms/step - accuracy: 0.9380 - loss: 303.3405
 
 
-621/Unknown  152s 245ms/step - accuracy: 0.9354 - loss: 311.8117
+620/Unknown  139s 224ms/step - accuracy: 0.9381 - loss: 303.2652
 
 
-622/Unknown  153s 245ms/step - accuracy: 0.9355 - loss: 311.7256
+621/Unknown  140s 224ms/step - accuracy: 0.9381 - loss: 303.1904
 
 
-623/Unknown  153s 245ms/step - accuracy: 0.9355 - loss: 311.6397
+622/Unknown  140s 224ms/step - accuracy: 0.9381 - loss: 303.1159
 
 
-624/Unknown  153s 245ms/step - accuracy: 0.9355 - loss: 311.5540
+623/Unknown  140s 224ms/step - accuracy: 0.9381 - loss: 303.0418
 
 
-625/Unknown  153s 245ms/step - accuracy: 0.9355 - loss: 311.4685
+624/Unknown  140s 224ms/step - accuracy: 0.9381 - loss: 302.9678
 
 
-626/Unknown  154s 245ms/step - accuracy: 0.9355 - loss: 311.3833
+625/Unknown  141s 224ms/step - accuracy: 0.9381 - loss: 302.8940
 
 
-627/Unknown  154s 245ms/step - accuracy: 0.9355 - loss: 311.2987
+626/Unknown  141s 224ms/step - accuracy: 0.9381 - loss: 302.8201
 
 
-628/Unknown  154s 244ms/step - accuracy: 0.9356 - loss: 311.2146
+627/Unknown  141s 224ms/step - accuracy: 0.9381 - loss: 302.7465
 
 
-629/Unknown  154s 244ms/step - accuracy: 0.9356 - loss: 311.1306
+628/Unknown  141s 224ms/step - accuracy: 0.9382 - loss: 302.6730
 
 
-630/Unknown  155s 244ms/step - accuracy: 0.9356 - loss: 311.0466
+629/Unknown  141s 224ms/step - accuracy: 0.9382 - loss: 302.5998
 
 
-631/Unknown  155s 244ms/step - accuracy: 0.9356 - loss: 310.9627
+630/Unknown  142s 224ms/step - accuracy: 0.9382 - loss: 302.5268
 
 
-632/Unknown  155s 244ms/step - accuracy: 0.9356 - loss: 310.8792
+631/Unknown  142s 224ms/step - accuracy: 0.9382 - loss: 302.4539
 
 
-633/Unknown  155s 244ms/step - accuracy: 0.9356 - loss: 310.7963
+632/Unknown  142s 224ms/step - accuracy: 0.9382 - loss: 302.3810
 
 
-634/Unknown  155s 244ms/step - accuracy: 0.9356 - loss: 310.7135
+633/Unknown  142s 224ms/step - accuracy: 0.9382 - loss: 302.3086
 
 
-635/Unknown  156s 244ms/step - accuracy: 0.9357 - loss: 310.6309
+634/Unknown  143s 224ms/step - accuracy: 0.9382 - loss: 302.2364
 
 
-636/Unknown  156s 244ms/step - accuracy: 0.9357 - loss: 310.5486
+635/Unknown  143s 224ms/step - accuracy: 0.9382 - loss: 302.1645
 
 
-637/Unknown  156s 244ms/step - accuracy: 0.9357 - loss: 310.4668
+636/Unknown  143s 224ms/step - accuracy: 0.9383 - loss: 302.0930
 
 
-638/Unknown  157s 245ms/step - accuracy: 0.9357 - loss: 310.3852
+637/Unknown  143s 224ms/step - accuracy: 0.9383 - loss: 302.0216
 
 
-639/Unknown  157s 245ms/step - accuracy: 0.9357 - loss: 310.3038
+638/Unknown  144s 224ms/step - accuracy: 0.9383 - loss: 301.9502
 
 
-640/Unknown  157s 245ms/step - accuracy: 0.9357 - loss: 310.2225
+639/Unknown  144s 224ms/step - accuracy: 0.9383 - loss: 301.8791
 
 /home/humbulani/tensorflow-env/env/lib/python3.11/site-packages/keras/src/trainers/epoch_iterator.py:151: UserWarning: Your input ran out of data; interrupting training. Make sure that your dataset or generator can generate at least `steps_per_epoch * epochs` batches. You may need to use the `.repeat()` function when building your dataset.
   self._interrupted_warning()
@@ -2633,7 +2483,7 @@ Start training the model...
 
 ```
 </div>
- 640/640 ━━━━━━━━━━━━━━━━━━━━ 174s 271ms/step - accuracy: 0.9358 - loss: 310.1415 - val_accuracy: 0.9498 - val_loss: 227.1810
+ 639/639 ━━━━━━━━━━━━━━━━━━━━ 160s 249ms/step - accuracy: 0.9383 - loss: 301.8082 - val_accuracy: 0.9485 - val_loss: 235.7996
 
 
 <div class="k-default-codeblock">
@@ -2646,1145 +2496,1145 @@ Evaluating model performance...
     
 <div class="k-default-codeblock">
 ```
-  1/Unknown  0s 341ms/step - accuracy: 0.9509 - loss: 162.4458
+  1/Unknown  0s 331ms/step - accuracy: 0.9623 - loss: 160.6135
 
 
-  2/Unknown  0s 144ms/step - accuracy: 0.9443 - loss: 181.0830
+  2/Unknown  0s 119ms/step - accuracy: 0.9557 - loss: 181.4366
 
 
-  3/Unknown  1s 142ms/step - accuracy: 0.9419 - loss: 196.8291
+  3/Unknown  1s 131ms/step - accuracy: 0.9524 - loss: 198.4659
 
 
-  4/Unknown  1s 146ms/step - accuracy: 0.9404 - loss: 206.0489
+  4/Unknown  1s 129ms/step - accuracy: 0.9502 - loss: 209.3009
 
 
-  5/Unknown  1s 142ms/step - accuracy: 0.9407 - loss: 211.7518
+  5/Unknown  1s 133ms/step - accuracy: 0.9499 - loss: 215.6982
 
 
-  6/Unknown  1s 145ms/step - accuracy: 0.9415 - loss: 215.5974
+  6/Unknown  1s 131ms/step - accuracy: 0.9499 - loss: 219.7466
 
 
-  7/Unknown  1s 146ms/step - accuracy: 0.9426 - loss: 216.1428
+  7/Unknown  1s 132ms/step - accuracy: 0.9502 - loss: 220.2296
 
 
-  8/Unknown  1s 145ms/step - accuracy: 0.9435 - loss: 215.5485
+  8/Unknown  1s 132ms/step - accuracy: 0.9504 - loss: 219.6000
 
 
-  9/Unknown  2s 145ms/step - accuracy: 0.9441 - loss: 214.7674
+  9/Unknown  1s 133ms/step - accuracy: 0.9506 - loss: 218.5403
 
 
- 10/Unknown  2s 144ms/step - accuracy: 0.9446 - loss: 213.8222
+ 10/Unknown  2s 133ms/step - accuracy: 0.9507 - loss: 217.4007
 
 
- 11/Unknown  2s 144ms/step - accuracy: 0.9452 - loss: 213.1922
+ 11/Unknown  2s 134ms/step - accuracy: 0.9507 - loss: 216.4865
 
 
- 12/Unknown  2s 144ms/step - accuracy: 0.9455 - loss: 212.5974
+ 12/Unknown  2s 133ms/step - accuracy: 0.9504 - loss: 215.7090
 
 
- 13/Unknown  2s 144ms/step - accuracy: 0.9457 - loss: 212.4554
+ 13/Unknown  2s 135ms/step - accuracy: 0.9502 - loss: 215.4628
 
 
- 14/Unknown  2s 144ms/step - accuracy: 0.9459 - loss: 212.1609
+ 14/Unknown  2s 135ms/step - accuracy: 0.9500 - loss: 215.0735
 
 
- 15/Unknown  2s 145ms/step - accuracy: 0.9461 - loss: 212.0100
+ 15/Unknown  2s 134ms/step - accuracy: 0.9499 - loss: 214.8078
 
 
- 16/Unknown  3s 145ms/step - accuracy: 0.9464 - loss: 211.6899
+ 16/Unknown  2s 134ms/step - accuracy: 0.9500 - loss: 214.3558
 
 
- 17/Unknown  3s 145ms/step - accuracy: 0.9466 - loss: 211.4328
+ 17/Unknown  2s 134ms/step - accuracy: 0.9500 - loss: 213.9521
 
 
- 18/Unknown  3s 145ms/step - accuracy: 0.9468 - loss: 211.5108
+ 18/Unknown  3s 135ms/step - accuracy: 0.9501 - loss: 213.9012
 
 
- 19/Unknown  3s 144ms/step - accuracy: 0.9469 - loss: 211.7577
+ 19/Unknown  3s 134ms/step - accuracy: 0.9501 - loss: 214.0063
 
 
- 20/Unknown  3s 144ms/step - accuracy: 0.9470 - loss: 212.0558
+ 20/Unknown  3s 135ms/step - accuracy: 0.9501 - loss: 214.2168
 
 
- 21/Unknown  3s 144ms/step - accuracy: 0.9470 - loss: 212.4518
+ 21/Unknown  3s 134ms/step - accuracy: 0.9500 - loss: 214.5657
 
 
- 22/Unknown  3s 144ms/step - accuracy: 0.9471 - loss: 212.7789
+ 22/Unknown  3s 135ms/step - accuracy: 0.9500 - loss: 214.8618
 
 
- 23/Unknown  4s 144ms/step - accuracy: 0.9471 - loss: 213.0560
+ 23/Unknown  3s 134ms/step - accuracy: 0.9500 - loss: 215.1154
 
 
- 24/Unknown  4s 144ms/step - accuracy: 0.9471 - loss: 213.2825
+ 24/Unknown  3s 135ms/step - accuracy: 0.9499 - loss: 215.2906
 
 
- 25/Unknown  4s 144ms/step - accuracy: 0.9471 - loss: 213.6518
+ 25/Unknown  4s 134ms/step - accuracy: 0.9499 - loss: 215.6145
 
 
- 26/Unknown  4s 144ms/step - accuracy: 0.9471 - loss: 213.9233
+ 26/Unknown  4s 135ms/step - accuracy: 0.9499 - loss: 215.8544
 
 
- 27/Unknown  4s 144ms/step - accuracy: 0.9472 - loss: 214.1503
+ 27/Unknown  4s 135ms/step - accuracy: 0.9498 - loss: 216.0591
 
 
- 28/Unknown  4s 144ms/step - accuracy: 0.9472 - loss: 214.3847
+ 28/Unknown  4s 135ms/step - accuracy: 0.9499 - loss: 216.2666
 
 
- 29/Unknown  4s 144ms/step - accuracy: 0.9473 - loss: 214.5778
+ 29/Unknown  4s 135ms/step - accuracy: 0.9499 - loss: 216.4423
 
 
- 30/Unknown  5s 144ms/step - accuracy: 0.9473 - loss: 214.7275
+ 30/Unknown  4s 135ms/step - accuracy: 0.9499 - loss: 216.5613
 
 
- 31/Unknown  5s 145ms/step - accuracy: 0.9473 - loss: 214.8989
+ 31/Unknown  4s 135ms/step - accuracy: 0.9498 - loss: 216.7220
 
 
- 32/Unknown  5s 146ms/step - accuracy: 0.9474 - loss: 215.0651
+ 32/Unknown  5s 135ms/step - accuracy: 0.9498 - loss: 216.8842
 
 
- 33/Unknown  5s 147ms/step - accuracy: 0.9474 - loss: 215.3561
+ 33/Unknown  5s 135ms/step - accuracy: 0.9498 - loss: 217.1658
 
 
- 34/Unknown  5s 148ms/step - accuracy: 0.9474 - loss: 215.6748
+ 34/Unknown  5s 135ms/step - accuracy: 0.9497 - loss: 217.4608
 
 
- 35/Unknown  5s 149ms/step - accuracy: 0.9473 - loss: 215.9542
+ 35/Unknown  5s 135ms/step - accuracy: 0.9496 - loss: 217.7231
 
 
- 36/Unknown  6s 149ms/step - accuracy: 0.9473 - loss: 216.1981
+ 36/Unknown  5s 134ms/step - accuracy: 0.9496 - loss: 217.9504
 
 
- 37/Unknown  6s 149ms/step - accuracy: 0.9473 - loss: 216.4192
+ 37/Unknown  5s 135ms/step - accuracy: 0.9496 - loss: 218.1658
 
 
- 38/Unknown  6s 149ms/step - accuracy: 0.9473 - loss: 216.6240
+ 38/Unknown  5s 134ms/step - accuracy: 0.9495 - loss: 218.3597
 
 
- 39/Unknown  6s 150ms/step - accuracy: 0.9473 - loss: 216.7979
+ 39/Unknown  5s 134ms/step - accuracy: 0.9495 - loss: 218.5269
 
 
- 40/Unknown  6s 150ms/step - accuracy: 0.9474 - loss: 216.9769
+ 40/Unknown  6s 135ms/step - accuracy: 0.9495 - loss: 218.7106
 
 
- 41/Unknown  6s 150ms/step - accuracy: 0.9474 - loss: 217.1346
+ 41/Unknown  6s 135ms/step - accuracy: 0.9494 - loss: 218.8721
 
 
- 42/Unknown  7s 150ms/step - accuracy: 0.9474 - loss: 217.2511
+ 42/Unknown  6s 136ms/step - accuracy: 0.9494 - loss: 218.9924
 
 
- 43/Unknown  7s 150ms/step - accuracy: 0.9474 - loss: 217.4261
+ 43/Unknown  6s 136ms/step - accuracy: 0.9494 - loss: 219.1745
 
 
- 44/Unknown  7s 150ms/step - accuracy: 0.9474 - loss: 217.5872
+ 44/Unknown  6s 137ms/step - accuracy: 0.9494 - loss: 219.3449
 
 
- 45/Unknown  7s 150ms/step - accuracy: 0.9474 - loss: 217.7351
+ 45/Unknown  6s 138ms/step - accuracy: 0.9493 - loss: 219.4943
 
 
- 46/Unknown  7s 150ms/step - accuracy: 0.9474 - loss: 217.8584
+ 46/Unknown  7s 137ms/step - accuracy: 0.9493 - loss: 219.6201
 
 
- 47/Unknown  7s 150ms/step - accuracy: 0.9474 - loss: 217.9560
+ 47/Unknown  7s 138ms/step - accuracy: 0.9493 - loss: 219.7240
 
 
- 48/Unknown  7s 149ms/step - accuracy: 0.9475 - loss: 218.0626
+ 48/Unknown  7s 138ms/step - accuracy: 0.9493 - loss: 219.8335
 
 
- 49/Unknown  7s 149ms/step - accuracy: 0.9475 - loss: 218.1622
+ 49/Unknown  7s 138ms/step - accuracy: 0.9493 - loss: 219.9367
 
 
- 50/Unknown  8s 148ms/step - accuracy: 0.9475 - loss: 218.3029
+ 50/Unknown  7s 138ms/step - accuracy: 0.9493 - loss: 220.0834
 
 
- 51/Unknown  8s 148ms/step - accuracy: 0.9475 - loss: 218.4238
+ 51/Unknown  7s 138ms/step - accuracy: 0.9492 - loss: 220.2067
 
 
- 52/Unknown  8s 148ms/step - accuracy: 0.9475 - loss: 218.5109
+ 52/Unknown  7s 139ms/step - accuracy: 0.9492 - loss: 220.2963
 
 
- 53/Unknown  8s 147ms/step - accuracy: 0.9476 - loss: 218.5741
+ 53/Unknown  8s 138ms/step - accuracy: 0.9492 - loss: 220.3649
 
 
- 54/Unknown  8s 147ms/step - accuracy: 0.9476 - loss: 218.6540
+ 54/Unknown  8s 138ms/step - accuracy: 0.9492 - loss: 220.4462
 
 
- 55/Unknown  8s 147ms/step - accuracy: 0.9476 - loss: 218.7485
+ 55/Unknown  8s 138ms/step - accuracy: 0.9492 - loss: 220.5459
 
 
- 56/Unknown  8s 146ms/step - accuracy: 0.9476 - loss: 218.8147
+ 56/Unknown  8s 138ms/step - accuracy: 0.9492 - loss: 220.6197
 
 
- 57/Unknown  9s 146ms/step - accuracy: 0.9477 - loss: 218.8586
+ 57/Unknown  8s 138ms/step - accuracy: 0.9491 - loss: 220.6727
 
 
- 58/Unknown  9s 146ms/step - accuracy: 0.9477 - loss: 218.9425
+ 58/Unknown  8s 138ms/step - accuracy: 0.9491 - loss: 220.7652
 
 
- 59/Unknown  9s 146ms/step - accuracy: 0.9477 - loss: 219.0194
+ 59/Unknown  8s 138ms/step - accuracy: 0.9491 - loss: 220.8513
 
 
- 60/Unknown  9s 146ms/step - accuracy: 0.9477 - loss: 219.0956
+ 60/Unknown  8s 138ms/step - accuracy: 0.9491 - loss: 220.9392
 
 
- 61/Unknown  9s 146ms/step - accuracy: 0.9477 - loss: 219.1801
+ 61/Unknown  9s 138ms/step - accuracy: 0.9491 - loss: 221.0330
 
 
- 62/Unknown  9s 146ms/step - accuracy: 0.9478 - loss: 219.2492
+ 62/Unknown  9s 137ms/step - accuracy: 0.9491 - loss: 221.1127
 
 
- 63/Unknown  9s 146ms/step - accuracy: 0.9478 - loss: 219.3433
+ 63/Unknown  9s 137ms/step - accuracy: 0.9491 - loss: 221.2177
 
 
- 64/Unknown  10s 146ms/step - accuracy: 0.9478 - loss: 219.4519
+ 64/Unknown  9s 137ms/step - accuracy: 0.9490 - loss: 221.3382
 
-
- 65/Unknown  10s 146ms/step - accuracy: 0.9478 - loss: 219.5580
+
+ 65/Unknown  9s 137ms/step - accuracy: 0.9490 - loss: 221.4572
 
-
- 66/Unknown  10s 146ms/step - accuracy: 0.9478 - loss: 219.6452
+
+ 66/Unknown  9s 137ms/step - accuracy: 0.9490 - loss: 221.5552
 
-
- 67/Unknown  10s 145ms/step - accuracy: 0.9478 - loss: 219.7370
+
+ 67/Unknown  9s 137ms/step - accuracy: 0.9490 - loss: 221.6626
 
-
- 68/Unknown  10s 145ms/step - accuracy: 0.9478 - loss: 219.8202
+
+ 68/Unknown  9s 136ms/step - accuracy: 0.9490 - loss: 221.7653
 
-
- 69/Unknown  10s 145ms/step - accuracy: 0.9478 - loss: 219.9068
+
+ 69/Unknown  10s 136ms/step - accuracy: 0.9490 - loss: 221.8680
 
 
- 70/Unknown  10s 145ms/step - accuracy: 0.9479 - loss: 219.9808
+ 70/Unknown  10s 136ms/step - accuracy: 0.9490 - loss: 221.9582
 
 
- 71/Unknown  11s 145ms/step - accuracy: 0.9479 - loss: 220.0469
+ 71/Unknown  10s 136ms/step - accuracy: 0.9489 - loss: 222.0398
 
 
- 72/Unknown  11s 145ms/step - accuracy: 0.9479 - loss: 220.1314
+ 72/Unknown  10s 136ms/step - accuracy: 0.9489 - loss: 222.1409
 
 
- 73/Unknown  11s 145ms/step - accuracy: 0.9479 - loss: 220.2233
+ 73/Unknown  10s 136ms/step - accuracy: 0.9489 - loss: 222.2496
 
 
- 74/Unknown  11s 145ms/step - accuracy: 0.9479 - loss: 220.3074
+ 74/Unknown  10s 136ms/step - accuracy: 0.9489 - loss: 222.3526
 
 
- 75/Unknown  11s 145ms/step - accuracy: 0.9479 - loss: 220.3792
+ 75/Unknown  10s 136ms/step - accuracy: 0.9489 - loss: 222.4433
 
 
- 76/Unknown  11s 145ms/step - accuracy: 0.9479 - loss: 220.4452
+ 76/Unknown  11s 136ms/step - accuracy: 0.9489 - loss: 222.5272
 
 
- 77/Unknown  11s 145ms/step - accuracy: 0.9480 - loss: 220.5054
+ 77/Unknown  11s 136ms/step - accuracy: 0.9489 - loss: 222.6031
 
 
- 78/Unknown  12s 145ms/step - accuracy: 0.9480 - loss: 220.5729
+ 78/Unknown  11s 136ms/step - accuracy: 0.9488 - loss: 222.6857
 
 
- 79/Unknown  12s 145ms/step - accuracy: 0.9480 - loss: 220.6319
+ 79/Unknown  11s 136ms/step - accuracy: 0.9488 - loss: 222.7623
 
 
- 80/Unknown  12s 146ms/step - accuracy: 0.9480 - loss: 220.6857
+ 80/Unknown  11s 136ms/step - accuracy: 0.9488 - loss: 222.8322
 
 
- 81/Unknown  12s 146ms/step - accuracy: 0.9480 - loss: 220.7341
+ 81/Unknown  11s 136ms/step - accuracy: 0.9488 - loss: 222.8963
 
 
- 82/Unknown  12s 147ms/step - accuracy: 0.9480 - loss: 220.7907
+ 82/Unknown  11s 136ms/step - accuracy: 0.9488 - loss: 222.9694
 
 
- 83/Unknown  12s 147ms/step - accuracy: 0.9480 - loss: 220.8492
+ 83/Unknown  11s 136ms/step - accuracy: 0.9488 - loss: 223.0455
 
 
- 84/Unknown  13s 147ms/step - accuracy: 0.9480 - loss: 220.9068
+ 84/Unknown  12s 136ms/step - accuracy: 0.9488 - loss: 223.1209
 
 
- 85/Unknown  13s 147ms/step - accuracy: 0.9480 - loss: 220.9686
+ 85/Unknown  12s 136ms/step - accuracy: 0.9488 - loss: 223.1990
 
 
- 86/Unknown  13s 147ms/step - accuracy: 0.9480 - loss: 221.0368
+ 86/Unknown  12s 136ms/step - accuracy: 0.9488 - loss: 223.2825
 
 
- 87/Unknown  13s 147ms/step - accuracy: 0.9480 - loss: 221.1018
+ 87/Unknown  12s 136ms/step - accuracy: 0.9487 - loss: 223.3633
 
 
- 88/Unknown  13s 147ms/step - accuracy: 0.9480 - loss: 221.1624
+ 88/Unknown  12s 136ms/step - accuracy: 0.9487 - loss: 223.4366
 
 
- 89/Unknown  13s 148ms/step - accuracy: 0.9480 - loss: 221.2261
+ 89/Unknown  12s 136ms/step - accuracy: 0.9487 - loss: 223.5151
 
 
- 90/Unknown  13s 148ms/step - accuracy: 0.9481 - loss: 221.2927
+ 90/Unknown  12s 136ms/step - accuracy: 0.9487 - loss: 223.5958
 
 
- 91/Unknown  14s 148ms/step - accuracy: 0.9481 - loss: 221.3554
+ 91/Unknown  13s 136ms/step - accuracy: 0.9487 - loss: 223.6727
 
 
- 92/Unknown  14s 148ms/step - accuracy: 0.9481 - loss: 221.4201
+ 92/Unknown  13s 137ms/step - accuracy: 0.9487 - loss: 223.7505
 
 
- 93/Unknown  14s 148ms/step - accuracy: 0.9481 - loss: 221.4830
+ 93/Unknown  13s 137ms/step - accuracy: 0.9487 - loss: 223.8250
 
 
- 94/Unknown  14s 148ms/step - accuracy: 0.9481 - loss: 221.5580
+ 94/Unknown  13s 137ms/step - accuracy: 0.9486 - loss: 223.9114
 
 
- 95/Unknown  14s 148ms/step - accuracy: 0.9481 - loss: 221.6310
+ 95/Unknown  13s 137ms/step - accuracy: 0.9486 - loss: 223.9948
 
 
- 96/Unknown  14s 148ms/step - accuracy: 0.9481 - loss: 221.7074
+ 96/Unknown  13s 138ms/step - accuracy: 0.9486 - loss: 224.0807
 
 
- 97/Unknown  15s 147ms/step - accuracy: 0.9481 - loss: 221.7751
+ 97/Unknown  14s 138ms/step - accuracy: 0.9486 - loss: 224.1586
 
 
- 98/Unknown  15s 147ms/step - accuracy: 0.9481 - loss: 221.8373
+ 98/Unknown  14s 138ms/step - accuracy: 0.9486 - loss: 224.2289
 
 
- 99/Unknown  15s 148ms/step - accuracy: 0.9481 - loss: 221.9001
+ 99/Unknown  14s 138ms/step - accuracy: 0.9486 - loss: 224.2979
 
 
-100/Unknown  15s 148ms/step - accuracy: 0.9481 - loss: 221.9738
+100/Unknown  14s 138ms/step - accuracy: 0.9486 - loss: 224.3739
 
 
-101/Unknown  15s 148ms/step - accuracy: 0.9481 - loss: 222.0465
+101/Unknown  14s 138ms/step - accuracy: 0.9485 - loss: 224.4488
 
 
-102/Unknown  15s 148ms/step - accuracy: 0.9480 - loss: 222.1164
+102/Unknown  14s 138ms/step - accuracy: 0.9485 - loss: 224.5210
 
 
-103/Unknown  15s 148ms/step - accuracy: 0.9480 - loss: 222.1863
+103/Unknown  14s 139ms/step - accuracy: 0.9485 - loss: 224.5936
 
 
-104/Unknown  16s 148ms/step - accuracy: 0.9480 - loss: 222.2534
+104/Unknown  15s 139ms/step - accuracy: 0.9485 - loss: 224.6630
 
 
-105/Unknown  16s 148ms/step - accuracy: 0.9480 - loss: 222.3202
+105/Unknown  15s 139ms/step - accuracy: 0.9485 - loss: 224.7316
 
 
-106/Unknown  16s 148ms/step - accuracy: 0.9480 - loss: 222.3874
+106/Unknown  15s 139ms/step - accuracy: 0.9485 - loss: 224.8002
 
 
-107/Unknown  16s 148ms/step - accuracy: 0.9480 - loss: 222.4603
+107/Unknown  15s 139ms/step - accuracy: 0.9485 - loss: 224.8736
 
 
-108/Unknown  16s 148ms/step - accuracy: 0.9480 - loss: 222.5335
+108/Unknown  15s 139ms/step - accuracy: 0.9484 - loss: 224.9466
 
 
-109/Unknown  16s 148ms/step - accuracy: 0.9480 - loss: 222.6129
+109/Unknown  15s 138ms/step - accuracy: 0.9484 - loss: 225.0268
 
 
-110/Unknown  17s 149ms/step - accuracy: 0.9480 - loss: 222.6919
+110/Unknown  15s 138ms/step - accuracy: 0.9484 - loss: 225.1065
 
 
-111/Unknown  17s 148ms/step - accuracy: 0.9480 - loss: 222.7742
+111/Unknown  16s 138ms/step - accuracy: 0.9484 - loss: 225.1895
 
 
-112/Unknown  17s 148ms/step - accuracy: 0.9480 - loss: 222.8567
+112/Unknown  16s 139ms/step - accuracy: 0.9484 - loss: 225.2730
 
 
-113/Unknown  17s 149ms/step - accuracy: 0.9480 - loss: 222.9396
+113/Unknown  16s 139ms/step - accuracy: 0.9484 - loss: 225.3562
 
 
-114/Unknown  17s 148ms/step - accuracy: 0.9480 - loss: 223.0149
+114/Unknown  16s 139ms/step - accuracy: 0.9484 - loss: 225.4317
 
 
-115/Unknown  17s 148ms/step - accuracy: 0.9480 - loss: 223.0847
+115/Unknown  16s 139ms/step - accuracy: 0.9484 - loss: 225.5018
 
 
-116/Unknown  17s 148ms/step - accuracy: 0.9480 - loss: 223.1570
+116/Unknown  16s 139ms/step - accuracy: 0.9483 - loss: 225.5749
 
 
-117/Unknown  18s 148ms/step - accuracy: 0.9480 - loss: 223.2323
+117/Unknown  16s 139ms/step - accuracy: 0.9483 - loss: 225.6508
 
 
-118/Unknown  18s 148ms/step - accuracy: 0.9480 - loss: 223.3047
+118/Unknown  17s 139ms/step - accuracy: 0.9483 - loss: 225.7233
 
 
-119/Unknown  18s 148ms/step - accuracy: 0.9480 - loss: 223.3757
+119/Unknown  17s 139ms/step - accuracy: 0.9483 - loss: 225.7933
 
 
-120/Unknown  18s 148ms/step - accuracy: 0.9480 - loss: 223.4460
+120/Unknown  17s 139ms/step - accuracy: 0.9483 - loss: 225.8627
 
 
-121/Unknown  18s 148ms/step - accuracy: 0.9480 - loss: 223.5164
+121/Unknown  17s 139ms/step - accuracy: 0.9483 - loss: 225.9334
 
 
-122/Unknown  18s 147ms/step - accuracy: 0.9480 - loss: 223.5857
+122/Unknown  17s 139ms/step - accuracy: 0.9483 - loss: 226.0017
 
 
-123/Unknown  18s 147ms/step - accuracy: 0.9480 - loss: 223.6464
+123/Unknown  17s 139ms/step - accuracy: 0.9483 - loss: 226.0612
 
 
-124/Unknown  18s 147ms/step - accuracy: 0.9480 - loss: 223.7074
+124/Unknown  17s 139ms/step - accuracy: 0.9483 - loss: 226.1206
 
 
-125/Unknown  19s 147ms/step - accuracy: 0.9480 - loss: 223.7708
+125/Unknown  18s 139ms/step - accuracy: 0.9482 - loss: 226.1817
 
 
-126/Unknown  19s 147ms/step - accuracy: 0.9480 - loss: 223.8305
+126/Unknown  18s 139ms/step - accuracy: 0.9482 - loss: 226.2397
 
 
-127/Unknown  19s 147ms/step - accuracy: 0.9480 - loss: 223.8893
+127/Unknown  18s 139ms/step - accuracy: 0.9482 - loss: 226.2974
 
 
-128/Unknown  19s 147ms/step - accuracy: 0.9480 - loss: 223.9453
+128/Unknown  18s 139ms/step - accuracy: 0.9482 - loss: 226.3512
 
 
-129/Unknown  19s 147ms/step - accuracy: 0.9480 - loss: 223.9971
+129/Unknown  18s 139ms/step - accuracy: 0.9482 - loss: 226.4005
 
 
-130/Unknown  19s 147ms/step - accuracy: 0.9480 - loss: 224.0474
+130/Unknown  18s 139ms/step - accuracy: 0.9482 - loss: 226.4489
 
 
-131/Unknown  19s 147ms/step - accuracy: 0.9480 - loss: 224.0945
+131/Unknown  18s 139ms/step - accuracy: 0.9482 - loss: 226.4945
 
 
-132/Unknown  20s 147ms/step - accuracy: 0.9480 - loss: 224.1432
+132/Unknown  19s 139ms/step - accuracy: 0.9482 - loss: 226.5418
 
 
-133/Unknown  20s 147ms/step - accuracy: 0.9480 - loss: 224.1884
+133/Unknown  19s 139ms/step - accuracy: 0.9482 - loss: 226.5853
 
 
-134/Unknown  20s 147ms/step - accuracy: 0.9480 - loss: 224.2346
+134/Unknown  19s 140ms/step - accuracy: 0.9482 - loss: 226.6308
 
 
-135/Unknown  20s 147ms/step - accuracy: 0.9480 - loss: 224.2775
+135/Unknown  19s 140ms/step - accuracy: 0.9482 - loss: 226.6727
 
 
-136/Unknown  20s 147ms/step - accuracy: 0.9480 - loss: 224.3277
+136/Unknown  19s 140ms/step - accuracy: 0.9482 - loss: 226.7198
 
 
-137/Unknown  20s 147ms/step - accuracy: 0.9480 - loss: 224.3793
+137/Unknown  19s 140ms/step - accuracy: 0.9482 - loss: 226.7688
 
 
-138/Unknown  20s 147ms/step - accuracy: 0.9480 - loss: 224.4278
+138/Unknown  19s 140ms/step - accuracy: 0.9482 - loss: 226.8152
 
 
-139/Unknown  21s 147ms/step - accuracy: 0.9481 - loss: 224.4756
+139/Unknown  20s 140ms/step - accuracy: 0.9482 - loss: 226.8609
 
 
-140/Unknown  21s 147ms/step - accuracy: 0.9481 - loss: 224.5227
+140/Unknown  20s 140ms/step - accuracy: 0.9482 - loss: 226.9056
 
 
-141/Unknown  21s 147ms/step - accuracy: 0.9481 - loss: 224.5697
+141/Unknown  20s 140ms/step - accuracy: 0.9481 - loss: 226.9498
 
 
-142/Unknown  21s 147ms/step - accuracy: 0.9481 - loss: 224.6159
+142/Unknown  20s 140ms/step - accuracy: 0.9481 - loss: 226.9936
 
 
-143/Unknown  21s 147ms/step - accuracy: 0.9481 - loss: 224.6616
+143/Unknown  20s 140ms/step - accuracy: 0.9481 - loss: 227.0366
 
 
-144/Unknown  21s 146ms/step - accuracy: 0.9481 - loss: 224.7067
+144/Unknown  20s 139ms/step - accuracy: 0.9481 - loss: 227.0785
 
 
-145/Unknown  21s 146ms/step - accuracy: 0.9481 - loss: 224.7498
+145/Unknown  20s 139ms/step - accuracy: 0.9481 - loss: 227.1189
 
 
-146/Unknown  22s 146ms/step - accuracy: 0.9481 - loss: 224.7929
+146/Unknown  21s 139ms/step - accuracy: 0.9481 - loss: 227.1589
 
 
-147/Unknown  22s 146ms/step - accuracy: 0.9481 - loss: 224.8350
+147/Unknown  21s 139ms/step - accuracy: 0.9481 - loss: 227.1976
 
 
-148/Unknown  22s 147ms/step - accuracy: 0.9481 - loss: 224.8750
+148/Unknown  21s 140ms/step - accuracy: 0.9481 - loss: 227.2341
 
 
-149/Unknown  22s 147ms/step - accuracy: 0.9481 - loss: 224.9186
+149/Unknown  21s 140ms/step - accuracy: 0.9481 - loss: 227.2737
 
 
-150/Unknown  22s 147ms/step - accuracy: 0.9481 - loss: 224.9600
+150/Unknown  21s 140ms/step - accuracy: 0.9481 - loss: 227.3114
 
 
-151/Unknown  22s 147ms/step - accuracy: 0.9481 - loss: 225.0039
+151/Unknown  21s 140ms/step - accuracy: 0.9481 - loss: 227.3518
 
 
-152/Unknown  23s 147ms/step - accuracy: 0.9481 - loss: 225.0496
+152/Unknown  21s 140ms/step - accuracy: 0.9481 - loss: 227.3940
 
 
-153/Unknown  23s 147ms/step - accuracy: 0.9481 - loss: 225.0955
+153/Unknown  22s 140ms/step - accuracy: 0.9481 - loss: 227.4359
 
 
-154/Unknown  23s 148ms/step - accuracy: 0.9481 - loss: 225.1402
+154/Unknown  22s 140ms/step - accuracy: 0.9481 - loss: 227.4770
 
 
-155/Unknown  23s 148ms/step - accuracy: 0.9481 - loss: 225.1870
+155/Unknown  22s 140ms/step - accuracy: 0.9481 - loss: 227.5203
 
 
-156/Unknown  23s 148ms/step - accuracy: 0.9481 - loss: 225.2341
+156/Unknown  22s 140ms/step - accuracy: 0.9481 - loss: 227.5634
 
 
-157/Unknown  23s 148ms/step - accuracy: 0.9481 - loss: 225.2801
+157/Unknown  22s 140ms/step - accuracy: 0.9481 - loss: 227.6052
 
 
-158/Unknown  24s 148ms/step - accuracy: 0.9481 - loss: 225.3243
+158/Unknown  22s 140ms/step - accuracy: 0.9481 - loss: 227.6457
 
 
-159/Unknown  24s 148ms/step - accuracy: 0.9481 - loss: 225.3679
+159/Unknown  22s 140ms/step - accuracy: 0.9481 - loss: 227.6858
 
 
-160/Unknown  24s 148ms/step - accuracy: 0.9481 - loss: 225.4094
+160/Unknown  23s 140ms/step - accuracy: 0.9481 - loss: 227.7236
 
 
-161/Unknown  24s 148ms/step - accuracy: 0.9481 - loss: 225.4495
+161/Unknown  23s 140ms/step - accuracy: 0.9481 - loss: 227.7598
 
 
-162/Unknown  24s 148ms/step - accuracy: 0.9481 - loss: 225.4878
+162/Unknown  23s 140ms/step - accuracy: 0.9481 - loss: 227.7944
 
 
-163/Unknown  24s 148ms/step - accuracy: 0.9481 - loss: 225.5246
+163/Unknown  23s 140ms/step - accuracy: 0.9481 - loss: 227.8277
 
 
-164/Unknown  25s 148ms/step - accuracy: 0.9481 - loss: 225.5602
+164/Unknown  23s 140ms/step - accuracy: 0.9481 - loss: 227.8596
 
 
-165/Unknown  25s 149ms/step - accuracy: 0.9481 - loss: 225.5937
+165/Unknown  23s 140ms/step - accuracy: 0.9480 - loss: 227.8896
 
 
-166/Unknown  25s 149ms/step - accuracy: 0.9481 - loss: 225.6266
+166/Unknown  23s 140ms/step - accuracy: 0.9480 - loss: 227.9187
 
 
-167/Unknown  25s 149ms/step - accuracy: 0.9481 - loss: 225.6585
+167/Unknown  24s 140ms/step - accuracy: 0.9480 - loss: 227.9463
 
 
-168/Unknown  25s 148ms/step - accuracy: 0.9481 - loss: 225.6897
+168/Unknown  24s 140ms/step - accuracy: 0.9480 - loss: 227.9726
 
 
-169/Unknown  25s 148ms/step - accuracy: 0.9481 - loss: 225.7194
+169/Unknown  24s 140ms/step - accuracy: 0.9480 - loss: 227.9972
 
 
-170/Unknown  25s 148ms/step - accuracy: 0.9481 - loss: 225.7488
+170/Unknown  24s 140ms/step - accuracy: 0.9480 - loss: 228.0219
 
 
-171/Unknown  26s 148ms/step - accuracy: 0.9481 - loss: 225.7782
+171/Unknown  24s 140ms/step - accuracy: 0.9480 - loss: 228.0469
 
 
-172/Unknown  26s 148ms/step - accuracy: 0.9481 - loss: 225.8078
+172/Unknown  24s 140ms/step - accuracy: 0.9480 - loss: 228.0727
 
 
-173/Unknown  26s 148ms/step - accuracy: 0.9481 - loss: 225.8382
+173/Unknown  24s 140ms/step - accuracy: 0.9480 - loss: 228.0992
 
 
-174/Unknown  26s 148ms/step - accuracy: 0.9481 - loss: 225.8664
+174/Unknown  25s 140ms/step - accuracy: 0.9480 - loss: 228.1232
 
 
-175/Unknown  26s 148ms/step - accuracy: 0.9481 - loss: 225.8942
+175/Unknown  25s 140ms/step - accuracy: 0.9480 - loss: 228.1466
 
 
-176/Unknown  26s 148ms/step - accuracy: 0.9481 - loss: 225.9219
+176/Unknown  25s 140ms/step - accuracy: 0.9480 - loss: 228.1700
 
 
-177/Unknown  26s 148ms/step - accuracy: 0.9481 - loss: 225.9492
+177/Unknown  25s 140ms/step - accuracy: 0.9480 - loss: 228.1928
 
 
-178/Unknown  26s 148ms/step - accuracy: 0.9481 - loss: 225.9751
+178/Unknown  25s 140ms/step - accuracy: 0.9480 - loss: 228.2146
 
 
-179/Unknown  27s 148ms/step - accuracy: 0.9482 - loss: 225.9979
+179/Unknown  25s 140ms/step - accuracy: 0.9480 - loss: 228.2334
 
 
-180/Unknown  27s 148ms/step - accuracy: 0.9482 - loss: 226.0186
+180/Unknown  25s 140ms/step - accuracy: 0.9480 - loss: 228.2502
 
 
-181/Unknown  27s 147ms/step - accuracy: 0.9482 - loss: 226.0383
+181/Unknown  26s 140ms/step - accuracy: 0.9480 - loss: 228.2660
 
 
-182/Unknown  27s 147ms/step - accuracy: 0.9482 - loss: 226.0596
+182/Unknown  26s 140ms/step - accuracy: 0.9480 - loss: 228.2829
 
 
-183/Unknown  27s 147ms/step - accuracy: 0.9482 - loss: 226.0812
+183/Unknown  26s 140ms/step - accuracy: 0.9480 - loss: 228.3001
 
 
-184/Unknown  27s 147ms/step - accuracy: 0.9482 - loss: 226.1047
+184/Unknown  26s 140ms/step - accuracy: 0.9480 - loss: 228.3197
 
 
-185/Unknown  27s 147ms/step - accuracy: 0.9482 - loss: 226.1278
+185/Unknown  26s 140ms/step - accuracy: 0.9480 - loss: 228.3382
 
 
-186/Unknown  28s 147ms/step - accuracy: 0.9482 - loss: 226.1494
+186/Unknown  26s 140ms/step - accuracy: 0.9480 - loss: 228.3550
 
 
-187/Unknown  28s 147ms/step - accuracy: 0.9482 - loss: 226.1703
+187/Unknown  26s 140ms/step - accuracy: 0.9480 - loss: 228.3710
 
 
-188/Unknown  28s 147ms/step - accuracy: 0.9482 - loss: 226.1906
+188/Unknown  26s 140ms/step - accuracy: 0.9480 - loss: 228.3866
 
 
-189/Unknown  28s 147ms/step - accuracy: 0.9482 - loss: 226.2107
+189/Unknown  27s 140ms/step - accuracy: 0.9480 - loss: 228.4023
 
 
-190/Unknown  28s 147ms/step - accuracy: 0.9482 - loss: 226.2321
+190/Unknown  27s 140ms/step - accuracy: 0.9480 - loss: 228.4187
 
 
-191/Unknown  28s 147ms/step - accuracy: 0.9482 - loss: 226.2524
+191/Unknown  27s 140ms/step - accuracy: 0.9480 - loss: 228.4339
 
 
-192/Unknown  28s 147ms/step - accuracy: 0.9482 - loss: 226.2710
+192/Unknown  27s 139ms/step - accuracy: 0.9480 - loss: 228.4476
 
 
-193/Unknown  29s 147ms/step - accuracy: 0.9482 - loss: 226.2888
+193/Unknown  27s 139ms/step - accuracy: 0.9480 - loss: 228.4600
 
 
-194/Unknown  29s 147ms/step - accuracy: 0.9482 - loss: 226.3056
+194/Unknown  27s 139ms/step - accuracy: 0.9480 - loss: 228.4714
 
 
-195/Unknown  29s 147ms/step - accuracy: 0.9482 - loss: 226.3227
+195/Unknown  27s 139ms/step - accuracy: 0.9480 - loss: 228.4833
 
 
-196/Unknown  29s 147ms/step - accuracy: 0.9482 - loss: 226.3410
+196/Unknown  27s 139ms/step - accuracy: 0.9480 - loss: 228.4972
 
 
-197/Unknown  29s 147ms/step - accuracy: 0.9482 - loss: 226.3565
+197/Unknown  28s 139ms/step - accuracy: 0.9480 - loss: 228.5084
 
 
-198/Unknown  29s 147ms/step - accuracy: 0.9482 - loss: 226.3754
+198/Unknown  28s 139ms/step - accuracy: 0.9480 - loss: 228.5233
 
 
-199/Unknown  29s 147ms/step - accuracy: 0.9482 - loss: 226.3936
+199/Unknown  28s 139ms/step - accuracy: 0.9480 - loss: 228.5378
 
 
-200/Unknown  30s 147ms/step - accuracy: 0.9482 - loss: 226.4121
+200/Unknown  28s 139ms/step - accuracy: 0.9480 - loss: 228.5527
 
 
-201/Unknown  30s 147ms/step - accuracy: 0.9482 - loss: 226.4291
+201/Unknown  28s 139ms/step - accuracy: 0.9480 - loss: 228.5660
 
 
-202/Unknown  30s 147ms/step - accuracy: 0.9483 - loss: 226.4454
+202/Unknown  28s 139ms/step - accuracy: 0.9480 - loss: 228.5789
 
 
-203/Unknown  30s 147ms/step - accuracy: 0.9483 - loss: 226.4612
+203/Unknown  28s 139ms/step - accuracy: 0.9480 - loss: 228.5915
 
 
-204/Unknown  30s 147ms/step - accuracy: 0.9483 - loss: 226.4754
+204/Unknown  29s 139ms/step - accuracy: 0.9480 - loss: 228.6026
 
 
-205/Unknown  30s 147ms/step - accuracy: 0.9483 - loss: 226.4914
+205/Unknown  29s 139ms/step - accuracy: 0.9480 - loss: 228.6157
 
 
-206/Unknown  31s 148ms/step - accuracy: 0.9483 - loss: 226.5079
+206/Unknown  29s 139ms/step - accuracy: 0.9480 - loss: 228.6292
 
 
-207/Unknown  31s 148ms/step - accuracy: 0.9483 - loss: 226.5235
+207/Unknown  29s 139ms/step - accuracy: 0.9481 - loss: 228.6418
 
 
-208/Unknown  31s 148ms/step - accuracy: 0.9483 - loss: 226.5387
+208/Unknown  29s 139ms/step - accuracy: 0.9481 - loss: 228.6543
 
 
-209/Unknown  31s 148ms/step - accuracy: 0.9483 - loss: 226.5556
+209/Unknown  29s 139ms/step - accuracy: 0.9481 - loss: 228.6688
 
 
-210/Unknown  31s 148ms/step - accuracy: 0.9483 - loss: 226.5714
+210/Unknown  29s 139ms/step - accuracy: 0.9481 - loss: 228.6819
 
 
-211/Unknown  31s 148ms/step - accuracy: 0.9483 - loss: 226.5859
+211/Unknown  29s 139ms/step - accuracy: 0.9481 - loss: 228.6941
 
 
-212/Unknown  32s 148ms/step - accuracy: 0.9483 - loss: 226.5997
+212/Unknown  30s 139ms/step - accuracy: 0.9481 - loss: 228.7058
 
 
-213/Unknown  32s 148ms/step - accuracy: 0.9483 - loss: 226.6133
+213/Unknown  30s 139ms/step - accuracy: 0.9481 - loss: 228.7174
 
 
-214/Unknown  32s 148ms/step - accuracy: 0.9483 - loss: 226.6275
+214/Unknown  30s 139ms/step - accuracy: 0.9481 - loss: 228.7294
 
 
-215/Unknown  32s 148ms/step - accuracy: 0.9483 - loss: 226.6414
+215/Unknown  30s 139ms/step - accuracy: 0.9481 - loss: 228.7410
 
 
-216/Unknown  32s 148ms/step - accuracy: 0.9483 - loss: 226.6565
+216/Unknown  30s 139ms/step - accuracy: 0.9481 - loss: 228.7537
 
 
-217/Unknown  32s 148ms/step - accuracy: 0.9483 - loss: 226.6711
+217/Unknown  30s 139ms/step - accuracy: 0.9481 - loss: 228.7657
 
 
-218/Unknown  32s 148ms/step - accuracy: 0.9483 - loss: 226.6844
+218/Unknown  30s 139ms/step - accuracy: 0.9481 - loss: 228.7765
 
 
-219/Unknown  33s 148ms/step - accuracy: 0.9483 - loss: 226.6964
+219/Unknown  31s 139ms/step - accuracy: 0.9481 - loss: 228.7861
 
 
-220/Unknown  33s 148ms/step - accuracy: 0.9483 - loss: 226.7072
+220/Unknown  31s 139ms/step - accuracy: 0.9481 - loss: 228.7945
 
 
-221/Unknown  33s 148ms/step - accuracy: 0.9483 - loss: 226.7171
+221/Unknown  31s 139ms/step - accuracy: 0.9481 - loss: 228.8020
 
 
-222/Unknown  33s 148ms/step - accuracy: 0.9483 - loss: 226.7257
+222/Unknown  31s 139ms/step - accuracy: 0.9481 - loss: 228.8082
 
 
-223/Unknown  33s 148ms/step - accuracy: 0.9484 - loss: 226.7337
+223/Unknown  31s 139ms/step - accuracy: 0.9481 - loss: 228.8140
 
 
-224/Unknown  33s 148ms/step - accuracy: 0.9484 - loss: 226.7415
+224/Unknown  31s 138ms/step - accuracy: 0.9481 - loss: 228.8199
 
 
-225/Unknown  33s 148ms/step - accuracy: 0.9484 - loss: 226.7505
+225/Unknown  31s 138ms/step - accuracy: 0.9481 - loss: 228.8271
 
 
-226/Unknown  34s 148ms/step - accuracy: 0.9484 - loss: 226.7594
+226/Unknown  31s 138ms/step - accuracy: 0.9481 - loss: 228.8340
 
 
-227/Unknown  34s 148ms/step - accuracy: 0.9484 - loss: 226.7673
+227/Unknown  32s 138ms/step - accuracy: 0.9481 - loss: 228.8403
 
 
-228/Unknown  34s 148ms/step - accuracy: 0.9484 - loss: 226.7739
+228/Unknown  32s 138ms/step - accuracy: 0.9481 - loss: 228.8456
 
 
-229/Unknown  34s 148ms/step - accuracy: 0.9484 - loss: 226.7809
+229/Unknown  32s 138ms/step - accuracy: 0.9481 - loss: 228.8512
 
 
-230/Unknown  34s 148ms/step - accuracy: 0.9484 - loss: 226.7871
+230/Unknown  32s 138ms/step - accuracy: 0.9481 - loss: 228.8562
 
 
-231/Unknown  34s 148ms/step - accuracy: 0.9484 - loss: 226.7928
+231/Unknown  32s 138ms/step - accuracy: 0.9481 - loss: 228.8611
 
 
-232/Unknown  35s 148ms/step - accuracy: 0.9484 - loss: 226.7966
+232/Unknown  32s 138ms/step - accuracy: 0.9481 - loss: 228.8642
 
 
-233/Unknown  35s 148ms/step - accuracy: 0.9484 - loss: 226.8005
+233/Unknown  32s 138ms/step - accuracy: 0.9481 - loss: 228.8672
 
 
-234/Unknown  35s 148ms/step - accuracy: 0.9484 - loss: 226.8036
+234/Unknown  33s 138ms/step - accuracy: 0.9481 - loss: 228.8694
 
 
-235/Unknown  35s 148ms/step - accuracy: 0.9484 - loss: 226.8075
+235/Unknown  33s 138ms/step - accuracy: 0.9481 - loss: 228.8721
 
 
-236/Unknown  35s 148ms/step - accuracy: 0.9484 - loss: 226.8128
+236/Unknown  33s 138ms/step - accuracy: 0.9481 - loss: 228.8762
 
 
-237/Unknown  35s 148ms/step - accuracy: 0.9484 - loss: 226.8175
+237/Unknown  33s 138ms/step - accuracy: 0.9481 - loss: 228.8797
 
 
-238/Unknown  36s 148ms/step - accuracy: 0.9484 - loss: 226.8228
+238/Unknown  33s 138ms/step - accuracy: 0.9481 - loss: 228.8838
 
 
-239/Unknown  36s 148ms/step - accuracy: 0.9484 - loss: 226.8287
+239/Unknown  33s 138ms/step - accuracy: 0.9481 - loss: 228.8885
 
 
-240/Unknown  36s 148ms/step - accuracy: 0.9485 - loss: 226.8334
+240/Unknown  33s 138ms/step - accuracy: 0.9481 - loss: 228.8919
 
 
-241/Unknown  36s 148ms/step - accuracy: 0.9485 - loss: 226.8374
+241/Unknown  33s 138ms/step - accuracy: 0.9481 - loss: 228.8947
 
 
-242/Unknown  36s 148ms/step - accuracy: 0.9485 - loss: 226.8412
+242/Unknown  34s 138ms/step - accuracy: 0.9481 - loss: 228.8974
 
 
-243/Unknown  36s 148ms/step - accuracy: 0.9485 - loss: 226.8454
+243/Unknown  34s 138ms/step - accuracy: 0.9481 - loss: 228.9001
 
 
-244/Unknown  36s 148ms/step - accuracy: 0.9485 - loss: 226.8489
+244/Unknown  34s 138ms/step - accuracy: 0.9481 - loss: 228.9023
 
 
-245/Unknown  37s 148ms/step - accuracy: 0.9485 - loss: 226.8528
+245/Unknown  34s 138ms/step - accuracy: 0.9481 - loss: 228.9047
 
 
-246/Unknown  37s 148ms/step - accuracy: 0.9485 - loss: 226.8559
+246/Unknown  34s 138ms/step - accuracy: 0.9481 - loss: 228.9063
 
 
-247/Unknown  37s 148ms/step - accuracy: 0.9485 - loss: 226.8593
+247/Unknown  34s 139ms/step - accuracy: 0.9481 - loss: 228.9082
 
 
-248/Unknown  37s 148ms/step - accuracy: 0.9485 - loss: 226.8624
+248/Unknown  35s 139ms/step - accuracy: 0.9481 - loss: 228.9095
 
 
-249/Unknown  37s 148ms/step - accuracy: 0.9485 - loss: 226.8650
+249/Unknown  35s 139ms/step - accuracy: 0.9482 - loss: 228.9103
 
 
-250/Unknown  37s 148ms/step - accuracy: 0.9485 - loss: 226.8684
+250/Unknown  35s 139ms/step - accuracy: 0.9482 - loss: 228.9118
 
 
-251/Unknown  37s 148ms/step - accuracy: 0.9485 - loss: 226.8727
+251/Unknown  35s 139ms/step - accuracy: 0.9482 - loss: 228.9147
 
 
-252/Unknown  38s 148ms/step - accuracy: 0.9485 - loss: 226.8768
+252/Unknown  35s 139ms/step - accuracy: 0.9482 - loss: 228.9173
 
 
-253/Unknown  38s 149ms/step - accuracy: 0.9485 - loss: 226.8811
+253/Unknown  35s 139ms/step - accuracy: 0.9482 - loss: 228.9200
 
 
-254/Unknown  38s 149ms/step - accuracy: 0.9485 - loss: 226.8850
+254/Unknown  36s 139ms/step - accuracy: 0.9482 - loss: 228.9222
 
 
-255/Unknown  38s 149ms/step - accuracy: 0.9485 - loss: 226.8888
+255/Unknown  36s 139ms/step - accuracy: 0.9482 - loss: 228.9243
 
 
-256/Unknown  38s 149ms/step - accuracy: 0.9485 - loss: 226.8931
+256/Unknown  36s 139ms/step - accuracy: 0.9482 - loss: 228.9268
 
 
-257/Unknown  38s 149ms/step - accuracy: 0.9485 - loss: 226.8969
+257/Unknown  36s 139ms/step - accuracy: 0.9482 - loss: 228.9288
 
 
-258/Unknown  39s 149ms/step - accuracy: 0.9485 - loss: 226.9015
+258/Unknown  36s 140ms/step - accuracy: 0.9482 - loss: 228.9315
 
 
-259/Unknown  39s 149ms/step - accuracy: 0.9485 - loss: 226.9061
+259/Unknown  36s 140ms/step - accuracy: 0.9482 - loss: 228.9344
 
 
-260/Unknown  39s 149ms/step - accuracy: 0.9485 - loss: 226.9099
+260/Unknown  36s 140ms/step - accuracy: 0.9482 - loss: 228.9363
 
 
-261/Unknown  39s 149ms/step - accuracy: 0.9485 - loss: 226.9135
+261/Unknown  37s 140ms/step - accuracy: 0.9482 - loss: 228.9379
 
 
-262/Unknown  39s 149ms/step - accuracy: 0.9486 - loss: 226.9156
+262/Unknown  37s 140ms/step - accuracy: 0.9482 - loss: 228.9381
 
 
-263/Unknown  39s 149ms/step - accuracy: 0.9486 - loss: 226.9174
+263/Unknown  37s 140ms/step - accuracy: 0.9482 - loss: 228.9378
 
 
-264/Unknown  39s 149ms/step - accuracy: 0.9486 - loss: 226.9189
+264/Unknown  37s 140ms/step - accuracy: 0.9482 - loss: 228.9372
 
 
-265/Unknown  40s 149ms/step - accuracy: 0.9486 - loss: 226.9205
+265/Unknown  37s 140ms/step - accuracy: 0.9482 - loss: 228.9366
 
 
-266/Unknown  40s 149ms/step - accuracy: 0.9486 - loss: 226.9237
+266/Unknown  37s 140ms/step - accuracy: 0.9482 - loss: 228.9373
 
 
-267/Unknown  40s 149ms/step - accuracy: 0.9486 - loss: 226.9278
+267/Unknown  37s 140ms/step - accuracy: 0.9482 - loss: 228.9385
 
 
-268/Unknown  40s 149ms/step - accuracy: 0.9486 - loss: 226.9312
+268/Unknown  38s 140ms/step - accuracy: 0.9482 - loss: 228.9391
 
 
-269/Unknown  40s 149ms/step - accuracy: 0.9486 - loss: 226.9352
+269/Unknown  38s 140ms/step - accuracy: 0.9482 - loss: 228.9401
 
 
-270/Unknown  40s 149ms/step - accuracy: 0.9486 - loss: 226.9391
+270/Unknown  38s 140ms/step - accuracy: 0.9482 - loss: 228.9409
 
 
-271/Unknown  41s 149ms/step - accuracy: 0.9486 - loss: 226.9431
+271/Unknown  38s 139ms/step - accuracy: 0.9482 - loss: 228.9415
 
 
-272/Unknown  41s 149ms/step - accuracy: 0.9486 - loss: 226.9461
+272/Unknown  38s 139ms/step - accuracy: 0.9482 - loss: 228.9413
 
 
-273/Unknown  41s 149ms/step - accuracy: 0.9486 - loss: 226.9491
+273/Unknown  38s 139ms/step - accuracy: 0.9482 - loss: 228.9413
 
 
-274/Unknown  41s 149ms/step - accuracy: 0.9486 - loss: 226.9513
+274/Unknown  38s 139ms/step - accuracy: 0.9482 - loss: 228.9406
 
 
-275/Unknown  41s 149ms/step - accuracy: 0.9486 - loss: 226.9532
+275/Unknown  38s 139ms/step - accuracy: 0.9482 - loss: 228.9396
 
 
-276/Unknown  41s 150ms/step - accuracy: 0.9486 - loss: 226.9559
+276/Unknown  39s 139ms/step - accuracy: 0.9482 - loss: 228.9395
 
 
-277/Unknown  42s 150ms/step - accuracy: 0.9486 - loss: 226.9587
+277/Unknown  39s 139ms/step - accuracy: 0.9482 - loss: 228.9393
 
 
-278/Unknown  42s 150ms/step - accuracy: 0.9486 - loss: 226.9614
+278/Unknown  39s 139ms/step - accuracy: 0.9482 - loss: 228.9390
 
 
-279/Unknown  42s 150ms/step - accuracy: 0.9486 - loss: 226.9636
+279/Unknown  39s 139ms/step - accuracy: 0.9482 - loss: 228.9383
 
 
-280/Unknown  42s 150ms/step - accuracy: 0.9486 - loss: 226.9648
+280/Unknown  39s 139ms/step - accuracy: 0.9483 - loss: 228.9368
 
 
-281/Unknown  42s 150ms/step - accuracy: 0.9486 - loss: 226.9664
+281/Unknown  39s 139ms/step - accuracy: 0.9483 - loss: 228.9358
 
 
-282/Unknown  43s 150ms/step - accuracy: 0.9487 - loss: 226.9669
+282/Unknown  39s 139ms/step - accuracy: 0.9483 - loss: 228.9339
 
 
-283/Unknown  43s 150ms/step - accuracy: 0.9487 - loss: 226.9666
+283/Unknown  40s 139ms/step - accuracy: 0.9483 - loss: 228.9312
 
 
-284/Unknown  43s 150ms/step - accuracy: 0.9487 - loss: 226.9671
+284/Unknown  40s 139ms/step - accuracy: 0.9483 - loss: 228.9295
 
 
-285/Unknown  43s 151ms/step - accuracy: 0.9487 - loss: 226.9668
+285/Unknown  40s 139ms/step - accuracy: 0.9483 - loss: 228.9271
 
 
-286/Unknown  43s 151ms/step - accuracy: 0.9487 - loss: 226.9667
+286/Unknown  40s 139ms/step - accuracy: 0.9483 - loss: 228.9249
 
 
-287/Unknown  43s 150ms/step - accuracy: 0.9487 - loss: 226.9665
+287/Unknown  40s 139ms/step - accuracy: 0.9483 - loss: 228.9228
 
 
-288/Unknown  44s 151ms/step - accuracy: 0.9487 - loss: 226.9657
+288/Unknown  40s 139ms/step - accuracy: 0.9483 - loss: 228.9200
 
 
-289/Unknown  44s 151ms/step - accuracy: 0.9487 - loss: 226.9642
+289/Unknown  40s 139ms/step - accuracy: 0.9483 - loss: 228.9166
 
 
-290/Unknown  44s 151ms/step - accuracy: 0.9487 - loss: 226.9632
+290/Unknown  40s 139ms/step - accuracy: 0.9483 - loss: 228.9136
 
 
-291/Unknown  44s 151ms/step - accuracy: 0.9487 - loss: 226.9620
+291/Unknown  41s 139ms/step - accuracy: 0.9483 - loss: 228.9105
 
 
-292/Unknown  44s 151ms/step - accuracy: 0.9487 - loss: 226.9610
+292/Unknown  41s 139ms/step - accuracy: 0.9483 - loss: 228.9076
 
 
-293/Unknown  44s 151ms/step - accuracy: 0.9487 - loss: 226.9598
+293/Unknown  41s 139ms/step - accuracy: 0.9483 - loss: 228.9045
 
 
-294/Unknown  44s 151ms/step - accuracy: 0.9487 - loss: 226.9589
+294/Unknown  41s 139ms/step - accuracy: 0.9483 - loss: 228.9017
 
 
-295/Unknown  45s 150ms/step - accuracy: 0.9487 - loss: 226.9574
+295/Unknown  41s 139ms/step - accuracy: 0.9483 - loss: 228.8983
 
 
-296/Unknown  45s 150ms/step - accuracy: 0.9487 - loss: 226.9580
+296/Unknown  41s 139ms/step - accuracy: 0.9483 - loss: 228.8967
 
 
-297/Unknown  45s 150ms/step - accuracy: 0.9487 - loss: 226.9589
+297/Unknown  41s 139ms/step - accuracy: 0.9483 - loss: 228.8956
 
 
-298/Unknown  45s 150ms/step - accuracy: 0.9487 - loss: 226.9600
+298/Unknown  42s 139ms/step - accuracy: 0.9483 - loss: 228.8946
 
 
-299/Unknown  45s 150ms/step - accuracy: 0.9487 - loss: 226.9605
+299/Unknown  42s 139ms/step - accuracy: 0.9483 - loss: 228.8931
 
 
-300/Unknown  45s 150ms/step - accuracy: 0.9487 - loss: 226.9607
+300/Unknown  42s 139ms/step - accuracy: 0.9483 - loss: 228.8911
 
 
-301/Unknown  45s 150ms/step - accuracy: 0.9488 - loss: 226.9622
+301/Unknown  42s 139ms/step - accuracy: 0.9483 - loss: 228.8904
 
 
-302/Unknown  46s 150ms/step - accuracy: 0.9488 - loss: 226.9636
+302/Unknown  42s 139ms/step - accuracy: 0.9483 - loss: 228.8897
 
 
-303/Unknown  46s 150ms/step - accuracy: 0.9488 - loss: 226.9660
+303/Unknown  42s 139ms/step - accuracy: 0.9483 - loss: 228.8902
 
 
-304/Unknown  46s 150ms/step - accuracy: 0.9488 - loss: 226.9686
+304/Unknown  42s 139ms/step - accuracy: 0.9484 - loss: 228.8911
 
 
-305/Unknown  46s 150ms/step - accuracy: 0.9488 - loss: 226.9712
+305/Unknown  43s 139ms/step - accuracy: 0.9484 - loss: 228.8920
 
 
-306/Unknown  46s 150ms/step - accuracy: 0.9488 - loss: 226.9734
+306/Unknown  43s 139ms/step - accuracy: 0.9484 - loss: 228.8923
 
 
-307/Unknown  46s 150ms/step - accuracy: 0.9488 - loss: 226.9763
+307/Unknown  43s 139ms/step - accuracy: 0.9484 - loss: 228.8938
 
 
-308/Unknown  46s 150ms/step - accuracy: 0.9488 - loss: 226.9788
+308/Unknown  43s 139ms/step - accuracy: 0.9484 - loss: 228.8946
 
 
-309/Unknown  46s 150ms/step - accuracy: 0.9488 - loss: 226.9816
+309/Unknown  43s 139ms/step - accuracy: 0.9484 - loss: 228.8958
 
 
-310/Unknown  47s 150ms/step - accuracy: 0.9488 - loss: 226.9850
+310/Unknown  43s 139ms/step - accuracy: 0.9484 - loss: 228.8979
 
 
-311/Unknown  47s 150ms/step - accuracy: 0.9488 - loss: 226.9886
+311/Unknown  44s 139ms/step - accuracy: 0.9484 - loss: 228.9006
 
 
-312/Unknown  47s 150ms/step - accuracy: 0.9488 - loss: 226.9916
+312/Unknown  44s 139ms/step - accuracy: 0.9484 - loss: 228.9027
 
 
-313/Unknown  47s 150ms/step - accuracy: 0.9488 - loss: 226.9948
+313/Unknown  44s 139ms/step - accuracy: 0.9484 - loss: 228.9051
 
 
-314/Unknown  47s 150ms/step - accuracy: 0.9488 - loss: 226.9977
+314/Unknown  44s 139ms/step - accuracy: 0.9484 - loss: 228.9074
 
 
-315/Unknown  47s 150ms/step - accuracy: 0.9488 - loss: 227.0007
+315/Unknown  44s 140ms/step - accuracy: 0.9484 - loss: 228.9098
 
 
-316/Unknown  47s 150ms/step - accuracy: 0.9488 - loss: 227.0032
+316/Unknown  44s 140ms/step - accuracy: 0.9484 - loss: 228.9117
 
 
-317/Unknown  48s 150ms/step - accuracy: 0.9488 - loss: 227.0062
+317/Unknown  44s 140ms/step - accuracy: 0.9484 - loss: 228.9142
 
 
-318/Unknown  48s 150ms/step - accuracy: 0.9488 - loss: 227.0096
+318/Unknown  45s 140ms/step - accuracy: 0.9484 - loss: 228.9171
 
 
-319/Unknown  48s 150ms/step - accuracy: 0.9488 - loss: 227.0135
+319/Unknown  45s 140ms/step - accuracy: 0.9484 - loss: 228.9203
 
 
-320/Unknown  48s 150ms/step - accuracy: 0.9488 - loss: 227.0171
+320/Unknown  45s 140ms/step - accuracy: 0.9484 - loss: 228.9232
 
 
-321/Unknown  48s 150ms/step - accuracy: 0.9488 - loss: 227.0207
+321/Unknown  45s 140ms/step - accuracy: 0.9484 - loss: 228.9262
 
 
-322/Unknown  48s 150ms/step - accuracy: 0.9488 - loss: 227.0244
+322/Unknown  45s 140ms/step - accuracy: 0.9484 - loss: 228.9293
 
 
-323/Unknown  48s 150ms/step - accuracy: 0.9488 - loss: 227.0280
+323/Unknown  45s 140ms/step - accuracy: 0.9484 - loss: 228.9324
 
 
-324/Unknown  49s 149ms/step - accuracy: 0.9488 - loss: 227.0314
+324/Unknown  46s 140ms/step - accuracy: 0.9484 - loss: 228.9353
 
 
-325/Unknown  49s 149ms/step - accuracy: 0.9489 - loss: 227.0350
+325/Unknown  46s 140ms/step - accuracy: 0.9484 - loss: 228.9387
 
 
-326/Unknown  49s 149ms/step - accuracy: 0.9489 - loss: 227.0395
+326/Unknown  46s 140ms/step - accuracy: 0.9484 - loss: 228.9429
 
 
-327/Unknown  49s 149ms/step - accuracy: 0.9489 - loss: 227.0438
+327/Unknown  46s 140ms/step - accuracy: 0.9484 - loss: 228.9469
 
 
-328/Unknown  49s 149ms/step - accuracy: 0.9489 - loss: 227.0479
+328/Unknown  46s 140ms/step - accuracy: 0.9484 - loss: 228.9508
 
 
-329/Unknown  49s 149ms/step - accuracy: 0.9489 - loss: 227.0516
+329/Unknown  46s 140ms/step - accuracy: 0.9484 - loss: 228.9543
 
 
-330/Unknown  50s 150ms/step - accuracy: 0.9489 - loss: 227.0557
+330/Unknown  46s 140ms/step - accuracy: 0.9484 - loss: 228.9582
 
 
-331/Unknown  50s 150ms/step - accuracy: 0.9489 - loss: 227.0595
+331/Unknown  46s 140ms/step - accuracy: 0.9484 - loss: 228.9617
 
 
-332/Unknown  50s 150ms/step - accuracy: 0.9489 - loss: 227.0644
+332/Unknown  47s 140ms/step - accuracy: 0.9484 - loss: 228.9662
 
 
-333/Unknown  50s 150ms/step - accuracy: 0.9489 - loss: 227.0693
+333/Unknown  47s 140ms/step - accuracy: 0.9484 - loss: 228.9707
 
 
-334/Unknown  50s 150ms/step - accuracy: 0.9489 - loss: 227.0736
+334/Unknown  47s 140ms/step - accuracy: 0.9484 - loss: 228.9747
 
 
-335/Unknown  50s 150ms/step - accuracy: 0.9489 - loss: 227.0776
+335/Unknown  47s 140ms/step - accuracy: 0.9484 - loss: 228.9783
 
 
-336/Unknown  51s 150ms/step - accuracy: 0.9489 - loss: 227.0809
+336/Unknown  47s 140ms/step - accuracy: 0.9485 - loss: 228.9814
 
 
-337/Unknown  51s 150ms/step - accuracy: 0.9489 - loss: 227.0846
+337/Unknown  47s 140ms/step - accuracy: 0.9485 - loss: 228.9847
 
 
-338/Unknown  51s 150ms/step - accuracy: 0.9489 - loss: 227.0884
+338/Unknown  47s 140ms/step - accuracy: 0.9485 - loss: 228.9882
 
 
-339/Unknown  51s 150ms/step - accuracy: 0.9489 - loss: 227.0918
+339/Unknown  47s 140ms/step - accuracy: 0.9485 - loss: 228.9913
 
 
-340/Unknown  51s 150ms/step - accuracy: 0.9489 - loss: 227.0958
+340/Unknown  48s 139ms/step - accuracy: 0.9485 - loss: 228.9950
 
 
-341/Unknown  51s 150ms/step - accuracy: 0.9489 - loss: 227.1006
+341/Unknown  48s 139ms/step - accuracy: 0.9485 - loss: 228.9996
 
 
-342/Unknown  52s 150ms/step - accuracy: 0.9489 - loss: 227.1051
+342/Unknown  48s 139ms/step - accuracy: 0.9485 - loss: 229.0038
 
 
-343/Unknown  52s 150ms/step - accuracy: 0.9489 - loss: 227.1095
+343/Unknown  48s 139ms/step - accuracy: 0.9485 - loss: 229.0080
 
 
-344/Unknown  52s 150ms/step - accuracy: 0.9489 - loss: 227.1141
+344/Unknown  48s 139ms/step - accuracy: 0.9485 - loss: 229.0122
 
 
-345/Unknown  52s 150ms/step - accuracy: 0.9489 - loss: 227.1185
+345/Unknown  48s 139ms/step - accuracy: 0.9485 - loss: 229.0163
 
 
-346/Unknown  52s 150ms/step - accuracy: 0.9489 - loss: 227.1235
+346/Unknown  48s 139ms/step - accuracy: 0.9485 - loss: 229.0210
 
 
-347/Unknown  52s 150ms/step - accuracy: 0.9489 - loss: 227.1284
+347/Unknown  49s 139ms/step - accuracy: 0.9485 - loss: 229.0256
 
 
-348/Unknown  52s 150ms/step - accuracy: 0.9489 - loss: 227.1345
+348/Unknown  49s 139ms/step - accuracy: 0.9485 - loss: 229.0313
 
 
-349/Unknown  53s 150ms/step - accuracy: 0.9489 - loss: 227.1408
+349/Unknown  49s 139ms/step - accuracy: 0.9485 - loss: 229.0372
 
 
-350/Unknown  53s 150ms/step - accuracy: 0.9489 - loss: 227.1469
+350/Unknown  49s 139ms/step - accuracy: 0.9485 - loss: 229.0429
 
 
-351/Unknown  53s 150ms/step - accuracy: 0.9489 - loss: 227.1535
+351/Unknown  49s 139ms/step - accuracy: 0.9485 - loss: 229.0492
 
 
-352/Unknown  53s 150ms/step - accuracy: 0.9490 - loss: 227.1598
+352/Unknown  49s 139ms/step - accuracy: 0.9485 - loss: 229.0551
 
 
-353/Unknown  53s 150ms/step - accuracy: 0.9490 - loss: 227.1664
+353/Unknown  49s 139ms/step - accuracy: 0.9485 - loss: 229.0615
 
 
-354/Unknown  53s 150ms/step - accuracy: 0.9490 - loss: 227.1744
+354/Unknown  49s 139ms/step - accuracy: 0.9485 - loss: 229.0690
 
 
-355/Unknown  53s 150ms/step - accuracy: 0.9490 - loss: 227.1824
+355/Unknown  50s 139ms/step - accuracy: 0.9485 - loss: 229.0767
 
 
-356/Unknown  54s 150ms/step - accuracy: 0.9490 - loss: 227.1902
+356/Unknown  50s 139ms/step - accuracy: 0.9485 - loss: 229.0841
 
 
-357/Unknown  54s 150ms/step - accuracy: 0.9490 - loss: 227.1976
+357/Unknown  50s 139ms/step - accuracy: 0.9485 - loss: 229.0911
 
 
-358/Unknown  54s 150ms/step - accuracy: 0.9490 - loss: 227.2054
+358/Unknown  50s 139ms/step - accuracy: 0.9485 - loss: 229.0985
 
 
-359/Unknown  54s 150ms/step - accuracy: 0.9490 - loss: 227.2136
+359/Unknown  50s 139ms/step - accuracy: 0.9485 - loss: 229.1061
 
 
-360/Unknown  54s 150ms/step - accuracy: 0.9490 - loss: 227.2215
+360/Unknown  50s 139ms/step - accuracy: 0.9485 - loss: 229.1136
 
 
-361/Unknown  54s 150ms/step - accuracy: 0.9490 - loss: 227.2299
+361/Unknown  50s 139ms/step - accuracy: 0.9485 - loss: 229.1216
 
 
-362/Unknown  54s 150ms/step - accuracy: 0.9490 - loss: 227.2383
+362/Unknown  51s 139ms/step - accuracy: 0.9485 - loss: 229.1297
 
 
-363/Unknown  54s 150ms/step - accuracy: 0.9490 - loss: 227.2464
+363/Unknown  51s 139ms/step - accuracy: 0.9485 - loss: 229.1375
 
 
-364/Unknown  55s 150ms/step - accuracy: 0.9490 - loss: 227.2545
+364/Unknown  51s 139ms/step - accuracy: 0.9485 - loss: 229.1453
 
 
-365/Unknown  55s 150ms/step - accuracy: 0.9490 - loss: 227.2623
+365/Unknown  51s 139ms/step - accuracy: 0.9485 - loss: 229.1526
 
 
-366/Unknown  55s 150ms/step - accuracy: 0.9490 - loss: 227.2691
+366/Unknown  51s 139ms/step - accuracy: 0.9485 - loss: 229.1591
 
 
-367/Unknown  55s 150ms/step - accuracy: 0.9490 - loss: 227.2757
+367/Unknown  51s 139ms/step - accuracy: 0.9485 - loss: 229.1653
 
 
-368/Unknown  55s 149ms/step - accuracy: 0.9490 - loss: 227.2823
+368/Unknown  51s 139ms/step - accuracy: 0.9485 - loss: 229.1717
 
 
-369/Unknown  55s 149ms/step - accuracy: 0.9490 - loss: 227.2889
+369/Unknown  52s 139ms/step - accuracy: 0.9485 - loss: 229.1778
 
 
-370/Unknown  55s 149ms/step - accuracy: 0.9490 - loss: 227.2951
+370/Unknown  52s 139ms/step - accuracy: 0.9485 - loss: 229.1837
 
 
-371/Unknown  56s 149ms/step - accuracy: 0.9490 - loss: 227.3009
+371/Unknown  52s 139ms/step - accuracy: 0.9485 - loss: 229.1893
 
 
-372/Unknown  56s 149ms/step - accuracy: 0.9490 - loss: 227.3066
+372/Unknown  52s 139ms/step - accuracy: 0.9485 - loss: 229.1947
 
 
-373/Unknown  56s 149ms/step - accuracy: 0.9490 - loss: 227.3122
+373/Unknown  52s 139ms/step - accuracy: 0.9485 - loss: 229.1999
 
 
-374/Unknown  56s 149ms/step - accuracy: 0.9490 - loss: 227.3181
+374/Unknown  52s 139ms/step - accuracy: 0.9485 - loss: 229.2054
 
 
-375/Unknown  56s 149ms/step - accuracy: 0.9490 - loss: 227.3240
+375/Unknown  52s 139ms/step - accuracy: 0.9485 - loss: 229.2110
 
 
-376/Unknown  56s 149ms/step - accuracy: 0.9490 - loss: 227.3297
+376/Unknown  53s 139ms/step - accuracy: 0.9486 - loss: 229.2163
 
 
-377/Unknown  56s 149ms/step - accuracy: 0.9490 - loss: 227.3355
+377/Unknown  53s 139ms/step - accuracy: 0.9486 - loss: 229.2217
 
 
 ```
 </div>
- 377/377 ━━━━━━━━━━━━━━━━━━━━ 56s 149ms/step - accuracy: 0.9490 - loss: 227.3412
+ 377/377 ━━━━━━━━━━━━━━━━━━━━ 53s 139ms/step - accuracy: 0.9486 - loss: 229.2270
 
 
 <div class="k-default-codeblock">
 ```
-Test accuracy: 95.0%
+Test accuracy: 94.94%
 
 ```
 </div>
