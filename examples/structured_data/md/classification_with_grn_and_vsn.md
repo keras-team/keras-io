@@ -509,7 +509,7 @@ def create_model(encoding_size):
 learning_rate = 0.001
 dropout_rate = 0.15
 batch_size = 265
-num_epochs = 1  # may be adjusted to a desired value
+num_epochs = 20  # may be adjusted to a desired value
 encoding_size = 16
 
 model = create_model(encoding_size)
