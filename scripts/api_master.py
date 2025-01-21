@@ -564,44 +564,94 @@ API_MASTER = {
                             "toc": True,
                             "children": [
                                 {
-                                    "path": "random_crop",
-                                    "title": "RandomCrop layer",
-                                    "generate": ["keras.layers.RandomCrop"],
+                                    "path": "equalization",
+                                    "title": "Equalization layer",
+                                    "generate": ["keras.layers.Equalization"]
                                 },
                                 {
-                                    "path": "random_flip",
-                                    "title": "RandomFlip layer",
-                                    "generate": ["keras.layers.RandomFlip"],
+                                    "path": "mix_up",
+                                    "title": "MixUp layer",
+                                    "generate": ["keras.layers.MixUp"]
                                 },
                                 {
-                                    "path": "random_translation",
-                                    "title": "RandomTranslation layer",
-                                    "generate": ["keras.layers.RandomTranslation"],
-                                },
-                                {
-                                    "path": "random_rotation",
-                                    "title": "RandomRotation layer",
-                                    "generate": ["keras.layers.RandomRotation"],
-                                },
-                                {
-                                    "path": "random_zoom",
-                                    "title": "RandomZoom layer",
-                                    "generate": ["keras.layers.RandomZoom"],
-                                },
-                                {
-                                    "path": "random_contrast",
-                                    "title": "RandomContrast layer",
-                                    "generate": ["keras.layers.RandomContrast"],
+                                    "path": "rand_augment",
+                                    "title": "RandAugment layer",
+                                    "generate": ["keras.layers.RandAugment"]
                                 },
                                 {
                                     "path": "random_brightness",
                                     "title": "RandomBrightness layer",
-                                    "generate": ["keras.layers.RandomBrightness"],
+                                    "generate": ["keras.layers.RandomBrightness"]
+                                },
+                                {
+                                    "path": "random_color_degeneration",
+                                    "title": "RandomColorDegeneration layer",
+                                    "generate": ["keras.layers.RandomColorDegeneration"]
+                                },
+                                {
+                                    "path": "random_color_jitter",
+                                    "title": "RandomColorJitter layer",
+                                    "generate": ["keras.layers.RandomColorJitter"]
+                                },
+                                {
+                                    "path": "random_contrast",
+                                    "title": "RandomContrast layer",
+                                    "generate": ["keras.layers.RandomContrast"]
+                                },
+                                {
+                                    "path": "random_crop",
+                                    "title": "RandomCrop layer",
+                                    "generate": ["keras.layers.RandomCrop"]
+                                },
+                                {
+                                    "path": "random_flip",
+                                    "title": "RandomFlip layer",
+                                    "generate": ["keras.layers.RandomFlip"]
+                                },
+                                {
+                                    "path": "random_grayscale",
+                                    "title": "RandomGrayscale layer",
+                                    "generate": ["keras.layers.RandomGrayscale"]
+                                },
+                                {
+                                    "path": "random_hue",
+                                    "title": "RandomHue layer",
+                                    "generate": ["keras.layers.RandomHue"]
+                                },
+                                {
+                                    "path": "random_rotation",
+                                    "title": "RandomRotation layer",
+                                    "generate": ["keras.layers.RandomRotation"]
+                                },
+                                {
+                                    "path": "random_saturation",
+                                    "title": "RandomSaturation layer",
+                                    "generate": ["keras.layers.RandomSaturation"]
+                                },
+                                {
+                                    "path": "random_sharpness",
+                                    "title": "RandomSharpness layer",
+                                    "generate": ["keras.layers.RandomSharpness"]
+                                },
+                                {
+                                    "path": "random_shear",
+                                    "title": "RandomShear layer",
+                                    "generate": ["keras.layers.RandomShear"]
+                                },
+                                {
+                                    "path": "random_translation",
+                                    "title": "RandomTranslation layer",
+                                    "generate": ["keras.layers.RandomTranslation"]
+                                },
+                                {
+                                    "path": "random_zoom",
+                                    "title": "RandomZoom layer",
+                                    "generate": ["keras.layers.RandomZoom"]
                                 },
                                 {
                                     "path": "solarization",
                                     "title": "Solarization layer",
-                                    "generate": ["keras.layers.Solarization"],
+                                    "generate": ["keras.layers.Solarization"]
                                 },
                                 {
                                     "path": "pipeline",
