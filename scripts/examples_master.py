@@ -630,6 +630,7 @@ EXAMPLES_MASTER = {
                     "path": "classification_with_grn_and_vsn",
                     "title": "Classification with Gated Residual and Variable Selection Networks",
                     "subcategory": "Structured data classification",
+                    "keras_3": True,
                 },
                 {
                     "path": "classification_with_tfdf",
