@@ -5,6 +5,7 @@ Date created: 2020/06/09
 Last modified: 2020/06/09
 Description: Binary classification of structured data including numerical and categorical features.
 Accelerator: GPU
+Made backend-agnostic by: [Humbulani Ndou](https://github.com/Humbulani1234)
 """
 
 """
@@ -52,8 +53,7 @@ Target | Diagnosis of heart disease (1 = true; 0 = false) | Target
 
 import os
 
-# TensorFlow is the only backend that supports string inputs.
-os.environ["KERAS_BACKEND"] = "jax" # or torch, or tensorflow
+os.environ["KERAS_BACKEND"] = "torch"  # or torch, or tensorflow
 
 import pandas as pd
 import keras
@@ -197,7 +197,7 @@ import tensorflow as tf
 
 # We process our datasets elements here (categorical) and convert them to indices to avoid this step
 # during model training since only tensorflow support strings.
-def process(features, target):
+def encode_categorical(features, target):
     for feature_name in features:
         if feature_name in CATEGORICAL_FEATURES_WITH_VOCABULARY:
             lookup_class = (
@@ -247,7 +247,9 @@ Let's generate `tf.data.Dataset` objects for each dataframe:
 def dataframe_to_dataset(dataframe):
     dataframe = dataframe.copy()
     labels = dataframe.pop("target")
-    ds = tf.data.Dataset.from_tensor_slices((dict(dataframe), labels)).map(process)
+    ds = tf.data.Dataset.from_tensor_slices((dict(dataframe), labels)).map(
+        encode_categorical
+    )
     ds = ds.shuffle(buffer_size=len(dataframe))
     return ds
 
@@ -324,7 +326,7 @@ class Classifier(keras.layers.Layer):
         return output
 
     # Surpress build warnings
-    def build(self):
+    def build(self, input_shape):
         self.built = True
 
 
@@ -420,7 +422,7 @@ print(
 
 - The orignal model (the one that runs only on tensorflow) converges quickly to around 80% and remains
 there for extended periods and at times hits 85%
-- The updated model (the backe-anostic) model may fluctuate between 78% and 83% and at times hitting 86% 
+- The updated model (the backed-agnostic) model may fluctuate between 78% and 83% and at times hitting 86%
 validation accuracy and converges around 80% also.
 
 """
