@@ -29,7 +29,7 @@ same parameters and settings as the original paper in all processing operations 
 preprocessing to training.
 
 
-The tutorial begins with a quick BCI and dataset descprition then, we go through the
+The tutorial begins with a quick BCI and dataset description then, we go through the
 technicalities following these sections:
 - Setup, and imports.
 - Dataset download and extraction.
@@ -65,7 +65,7 @@ are less reliable.
 
 This tutorials uses the 12 commands (class) public SSVEP dataset [2] with the following
 interface emulating a phone dialing numbers.
-![Imgur](https://imgur.com/qQu5bdQ.jpg)
+![dataset](/img/eeg_bci_ssvepformer/eeg_ssvepformer_dataset1_interface.jpg)
 
 The dataset was recorded with 10 participants, each faced the above 12 SSVEP stimuli (A).
 The stimulation frequencies ranged from 9.25Hz to 14.75 Hz with 0.5Hz step, and phases
@@ -240,7 +240,7 @@ time = np.linspace(0.0, samples / fs, samples) * 1000
 ## EEG in time
 
 Raw EEG vs Filtered EEG
-the same 1-second recording for subject s1 at Oz (central electrode in the visual cortex,
+The same 1-second recording for subject s1 at Oz (central electrode in the visual cortex,
 back of the head) is illustrated. left is the raw EEG as recorded and in the right is
 the filtered EEG on the [8, 64] Hz frequency band. we see less noise and
 normalized amplitude values in a natural EEG range.
@@ -259,14 +259,12 @@ ax1.plot(time, X_raw[:, elec, 0, 0], "r-")
 ax1.set_xlabel(x_label)
 ax1.set_ylabel(y_label)
 ax1.set_title("Raw EEG : 1 second at Oz ")
-# ax1.legend()
 
 # Plot data on the second subplot
 ax2.plot(time, X[0, :, elec, 0], "b-")
 ax2.set_xlabel(x_label)
 ax2.set_ylabel(y_label)
 ax2.set_title("Filtered EEG between 8-64 Hz: 1 second at Oz")
-# ax2.legend()
 
 # Adjust spacing between subplots
 plt.tight_layout()
@@ -284,7 +282,7 @@ frequency). we see clear peaks showing the high responses from that subject whic
 that this subject is a good candidate for SSVEP BCI control. In many cases the peaks
 are weak or absent, meaning that subject do not achieve the task correctly.
 
-![eeg_frequency](https://i.imgur.com/IlGEwfn.png)
+![eeg_frequency](/img/eeg_bci_ssvepformer/eeg_ssvepformer_frequencypowers.png)
 """
 
 
@@ -298,7 +296,7 @@ the concatenation of frequency and phase information in a fixed frequency band. 
 the model in an end-to-end format, we implement the complex spectrum transformation as
 non-trainable layer.
 
-![model](https://imgur.com/r7ZUpQJ.jpg)
+![model](/img/eeg_bci_ssvepformer/eeg_ssvepformer_model.jpg)
 The SSVEPFormer unlike the Transformer architecture does not contain positional encoding/embedding
 layers which replaced a channel combination block that has a layer of Conv1D layer of 1
 kernel size with double input channels (double the count of electrodes) number of filters,
@@ -522,6 +520,7 @@ def evaluate_subject(
     y_train,
     x_val,
     y_val,
+    input_shape,
     fs=256,
     resolution=0.25,
     band=[8, 64],
@@ -598,7 +597,7 @@ for subject in range(10):
     x_val, y_val = concatenate_subjects(X, Y, test_index)
 
     # train and evaluate a fold and compute the time it takes
-    acc = evaluate_subject(x_train, y_train, x_val, y_val)
+    acc = evaluate_subject(x_train, y_train, x_val, y_val, input_shape)
 
     accs[subject] = acc
 
@@ -623,13 +622,13 @@ and PyTorch) on the three GPUs available with Colab Free/Pro/Pro+: T4, L4, A100.
 """
 ## Training Time
 
-![training_time](https://imgur.com/YJlmuoc.png)
+![training_time](/img/eeg_bci_ssvepformer/eeg_ssvepformer_keras_training_time.png)
 """
 
 """
 # Inference Time
 
-![inference_time](https://imgur.com/CRuLku5.png)
+![inference_time](/img/eeg_bci_ssvepformer/eeg_ssvepformer_keras_inference_time.png)
 """
 
 """
