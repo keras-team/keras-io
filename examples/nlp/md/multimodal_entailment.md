@@ -2,7 +2,7 @@
 
 **Author:** [Sayak Paul](https://twitter.com/RisingSayak)<br>
 **Date created:** 2021/08/08<br>
-**Last modified:** 2021/08/15<br>
+**Last modified:** 2025/01/03<br>
 **Description:** Training a multimodal model for predicting entailment.
 
 
@@ -46,6 +46,14 @@ using the following command:
 !pip install -q tensorflow_text
 ```
 
+    
+<div class="k-default-codeblock">
+```
+ [[34;49mnotice[1;39;49m][39;49m A new release of pip is available: [31;49m24.0[39;49m -> [32;49m24.3.1
+ [[34;49mnotice[1;39;49m][39;49m To update, run: [32;49mpip install --upgrade pip
+
+```
+</div>
 ---
 ## Imports
 
@@ -55,12 +63,18 @@ from sklearn.model_selection import train_test_split
 import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
+import random
+import math
+from skimage.io import imread
+from skimage.transform import resize
+from PIL import Image
 import os
 
-import tensorflow as tf
-import tensorflow_hub as hub
-import tensorflow_text as text
-from tensorflow import keras
+os.environ["KERAS_BACKEND"] = "jax"  # or tensorflow, or torch
+
+import keras
+import keras_hub
+from keras.utils import PyDataset
 ```
 
 ---
@@ -100,14 +114,16 @@ image_base_path = keras.utils.get_file(
 ```python
 df = pd.read_csv(
     "https://github.com/sayakpaul/Multimodal-Entailment-Baseline/raw/main/csvs/tweets.csv"
-)
+).iloc[
+    0:1000
+]  # Resources conservation since these are examples and not SOTA
 df.sample(10)
 ```
 
 
 
 
-<div style="overflow-x: scroll; width: 100%;">
+<div>
 <style scoped>
     .dataframe tbody tr th:only-of-type {
         vertical-align: middle;
@@ -140,104 +156,104 @@ df.sample(10)
   </thead>
   <tbody>
     <tr>
-      <th>291</th>
-      <td>1330800194863190016</td>
-      <td>#KLM1167 (B738): #AMS (Amsterdam) to #HEL (Van...</td>
-      <td>http://pbs.twimg.com/media/EnfzuZAW4AE236p.png</td>
-      <td>1378695438480588802</td>
-      <td>#CKK205 (B77L): #PVG (Shanghai) to #AMS (Amste...</td>
-      <td>http://pbs.twimg.com/media/EyIcMexXEAE6gia.png</td>
+      <th>815</th>
+      <td>1370730009921343490</td>
+      <td>Sticky bombs are a threat as they have magnets...</td>
+      <td>http://pbs.twimg.com/media/EwXOFrgVIAEkfjR.jpg</td>
+      <td>1370731764906295307</td>
+      <td>Sticky bombs are a threat as they have magnets...</td>
+      <td>http://pbs.twimg.com/media/EwXRK_3XEAA6Q6F.jpg</td>
       <td>NoEntailment</td>
     </tr>
     <tr>
-      <th>37</th>
-      <td>1366581728312057856</td>
-      <td>Friends, interested all go to have a look!\n@j...</td>
-      <td>http://pbs.twimg.com/media/EvcS1v4UcAEEXPO.jpg</td>
-      <td>1373810535066570759</td>
-      <td>Friends, interested all go to have a look!\n@f...</td>
-      <td>http://pbs.twimg.com/media/ExDBZqwVIAQ4LWk.jpg</td>
+      <th>615</th>
+      <td>1364119737446395905</td>
+      <td>Daily Horoscope for #Cancer 2.23.21 ♊️❤️✨ #Hor...</td>
+      <td>http://pbs.twimg.com/media/Eu5Te44VgAIo1jZ.jpg</td>
+      <td>1365218087906078720</td>
+      <td>Daily Horoscope for #Cancer 2.26.21 ♊️❤️✨ #Hor...</td>
+      <td>http://pbs.twimg.com/media/EvI6nW4WQAA4_E_.jpg</td>
+      <td>NoEntailment</td>
+    </tr>
+    <tr>
+      <th>624</th>
+      <td>1335542260923068417</td>
+      <td>The Reindeer Run is back and this year's run i...</td>
+      <td>http://pbs.twimg.com/media/Eoi99DyXEAE0AFV.jpg</td>
+      <td>1335872932267122689</td>
+      <td>Get your red nose and antlers on for the 2020 ...</td>
+      <td>http://pbs.twimg.com/media/Eon5Wk7XUAE-CxN.jpg</td>
+      <td>NoEntailment</td>
+    </tr>
+    <tr>
+      <th>970</th>
+      <td>1345058844439949312</td>
+      <td>Participants needed for online survey!\n\nTopi...</td>
+      <td>http://pbs.twimg.com/media/Eqqb4_MXcAA-Pvu.jpg</td>
+      <td>1361211461792632835</td>
+      <td>Participants needed for top-ranked study on Su...</td>
+      <td>http://pbs.twimg.com/media/EuPz0GwXMAMDklt.jpg</td>
+      <td>NoEntailment</td>
+    </tr>
+    <tr>
+      <th>456</th>
+      <td>1379831489043521545</td>
+      <td>comission for @NanoBiteTSF \nenjoyed bros and ...</td>
+      <td>http://pbs.twimg.com/media/EyVf0_VXMAMtRaL.jpg</td>
+      <td>1380660763749142531</td>
+      <td>another comission for @NanoBiteTSF \nhope you ...</td>
+      <td>http://pbs.twimg.com/media/EykW0iXXAAA2SBC.jpg</td>
+      <td>NoEntailment</td>
+    </tr>
+    <tr>
+      <th>917</th>
+      <td>1336180735191891968</td>
+      <td>(2/10)\n(Seoul Jung-gu) Market cluster -&amp;gt;\n...</td>
+      <td>http://pbs.twimg.com/media/EosRFpGVQAIeuYG.jpg</td>
+      <td>1356113330536996866</td>
+      <td>(3/11)\n(Seoul Dongdaemun-gu) Goshitel cluster...</td>
+      <td>http://pbs.twimg.com/media/EtHhj7QVcAAibvF.jpg</td>
+      <td>NoEntailment</td>
+    </tr>
+    <tr>
+      <th>276</th>
+      <td>1339270210029834241</td>
+      <td>Today the message of freedom goes to Kisoro, R...</td>
+      <td>http://pbs.twimg.com/media/EpVK3pfXcAAZ5Du.jpg</td>
+      <td>1340881971132698625</td>
+      <td>Today the message of freedom is going to the p...</td>
+      <td>http://pbs.twimg.com/media/EpvDorkXYAEyz4g.jpg</td>
+      <td>Implies</td>
+    </tr>
+    <tr>
+      <th>35</th>
+      <td>1360186999836200961</td>
+      <td>Bitcoin in Argentina - Google Trends https://t...</td>
+      <td>http://pbs.twimg.com/media/EuBa3UxXYAMb99_.jpg</td>
+      <td>1382778703055228929</td>
+      <td>Argentina wants #Bitcoin https://t.co/9lNxJdxX...</td>
+      <td>http://pbs.twimg.com/media/EzCbUFNXMAABwPD.jpg</td>
+      <td>Implies</td>
+    </tr>
+    <tr>
+      <th>762</th>
+      <td>1370824756400959491</td>
+      <td>$HSBA.L: The long term trend is positive and t...</td>
+      <td>http://pbs.twimg.com/media/EwYl2hPWYAE2niq.png</td>
+      <td>1374347458126475269</td>
+      <td>Although the technical rating is only medium, ...</td>
+      <td>http://pbs.twimg.com/media/ExKpuwrWgAAktg4.png</td>
+      <td>NoEntailment</td>
+    </tr>
+    <tr>
+      <th>130</th>
+      <td>1373789433607172097</td>
+      <td>I've just watched episode S01 | E05 of Ted Las...</td>
+      <td>http://pbs.twimg.com/media/ExCuNbDXAAQaPiL.jpg</td>
+      <td>1374913509662806016</td>
+      <td>I've just watched episode S01 | E06 of Ted Las...</td>
+      <td>http://pbs.twimg.com/media/ExSsjRQWgAUVRPz.jpg</td>
       <td>Contradictory</td>
-    </tr>
-    <tr>
-      <th>315</th>
-      <td>1352551603258052608</td>
-      <td>#WINk Drops I have earned today🚀\n\nToday:1/22...</td>
-      <td>http://pbs.twimg.com/media/EsTdcLLVcAIiFKT.jpg</td>
-      <td>1354636016234098688</td>
-      <td>#WINk Drops I have earned today☀\n\nToday:1/28...</td>
-      <td>http://pbs.twimg.com/media/EsyhK-qU0AgfMAH.jpg</td>
-      <td>NoEntailment</td>
-    </tr>
-    <tr>
-      <th>761</th>
-      <td>1379795999493853189</td>
-      <td>#buythedip Ready to FLY even HIGHER  #pennysto...</td>
-      <td>http://pbs.twimg.com/media/EyYFJCzWgAMfTrT.jpg</td>
-      <td>1380190250144792576</td>
-      <td>#buythedip Ready to FLY even HIGHER  #pennysto...</td>
-      <td>http://pbs.twimg.com/media/Eydrt0ZXAAMmbfv.jpg</td>
-      <td>NoEntailment</td>
-    </tr>
-    <tr>
-      <th>146</th>
-      <td>1340185132293099523</td>
-      <td>I know sometimes I am weird to you.\n\nBecause...</td>
-      <td>http://pbs.twimg.com/media/EplLRriWwAAJ2AE.jpg</td>
-      <td>1359755419883814913</td>
-      <td>I put my sword down and get on my knees to swe...</td>
-      <td>http://pbs.twimg.com/media/Et7SWWeWYAICK-c.jpg</td>
-      <td>NoEntailment</td>
-    </tr>
-    <tr>
-      <th>1351</th>
-      <td>1381256604926967813</td>
-      <td>Finally completed the skin rendering. Will sta...</td>
-      <td>http://pbs.twimg.com/media/Eys1j7NVIAgF-YF.jpg</td>
-      <td>1381630932092784641</td>
-      <td>Hair rendering. Will finish the hair by tomorr...</td>
-      <td>http://pbs.twimg.com/media/EyyKAoaUUAElm-e.jpg</td>
-      <td>NoEntailment</td>
-    </tr>
-    <tr>
-      <th>368</th>
-      <td>1371883298805403649</td>
-      <td>📉 $LINK Number of Receiving Addresses (7d MA) ...</td>
-      <td>http://pbs.twimg.com/media/EwnoltOWEAAS4mG.jpg</td>
-      <td>1373216720974979072</td>
-      <td>📉 $LINK Number of Receiving Addresses (7d MA) ...</td>
-      <td>http://pbs.twimg.com/media/Ew6lVGYXEAE6Ugi.jpg</td>
-      <td>NoEntailment</td>
-    </tr>
-    <tr>
-      <th>1112</th>
-      <td>1377679115159887873</td>
-      <td>April is National Distracted Driving Awareness...</td>
-      <td>http://pbs.twimg.com/media/Ex5_u7UVIAARjQ2.jpg</td>
-      <td>1379075258448281608</td>
-      <td>April is Distracted Driving Awareness Month.  ...</td>
-      <td>http://pbs.twimg.com/media/EyN1YjpWUAMc5ak.jpg</td>
-      <td>NoEntailment</td>
-    </tr>
-    <tr>
-      <th>264</th>
-      <td>1330727515741167619</td>
-      <td>♥️Verse Of The Day♥️\n.\n#VerseOfTheDay #Quran...</td>
-      <td>http://pbs.twimg.com/media/EnexnydXIAYuI11.jpg</td>
-      <td>1332623263495819264</td>
-      <td>♥️Verse Of The Day♥️\n.\n#VerseOfTheDay #Quran...</td>
-      <td>http://pbs.twimg.com/media/En5ty1VXUAATALP.jpg</td>
-      <td>NoEntailment</td>
-    </tr>
-    <tr>
-      <th>865</th>
-      <td>1377784616275296261</td>
-      <td>No white picket fence can keep us in. #TBT 200...</td>
-      <td>http://pbs.twimg.com/media/Ex7fzouWQAITAq8.jpg</td>
-      <td>1380175915804672012</td>
-      <td>Sometimes you just need to change your altitud...</td>
-      <td>http://pbs.twimg.com/media/EydernQXIAk2g5v.jpg</td>
-      <td>NoEntailment</td>
     </tr>
   </tbody>
 </table>
@@ -317,10 +333,10 @@ def visualize(idx):
     print(f"Label: {label}")
 
 
-random_idx = np.random.choice(len(df))
+random_idx = random.choice(range(len(df)))
 visualize(random_idx)
 
-random_idx = np.random.choice(len(df))
+random_idx = random.choice(range(len(df)))
 visualize(random_idx)
 ```
 
@@ -332,11 +348,21 @@ visualize(random_idx)
 
 <div class="k-default-codeblock">
 ```
-Text one: Friends, interested all go to have a look!
-@ThePartyGoddess @OurLadyAngels @BJsWholesale @Richard_Jeni @FashionLavidaG @RapaRooski @DMVTHING @DeMarcoReports @LobidaFo @DeMarcoMorgan https://t.co/cStULl7y7G
-Text two: Friends, interested all go to have a look!
-@smittyses @CYosabel @crum_7 @CrumDarrell @ElymalikU @jenloarn @SoCodiePrevost @roblowry82 @Crummy_14 @CSchmelzenbach https://t.co/IZphLTNzgl
-Label: Contradictory
+Text one: World #water day reminds that we should follow the #guidelines to save water for us. This Day is an #opportunity to learn more about water related issues, be #inspired to tell others and take action to make a difference. Just remember, every #drop counts.
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+#WorldWaterDay2021 https://t.co/bQ9Hp53qUj
+Text two: Water is an extremely precious resource without which life would be impossible. We need to ensure that water is used judiciously, this #WorldWaterDay, let us pledge to reduce water wastage and conserve it.
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+#WorldWaterDay2021 https://t.co/0KWnd8Kn8r
+Label: NoEntailment
 
 ```
 </div>
@@ -347,46 +373,56 @@ Label: Contradictory
 
 <div class="k-default-codeblock">
 ```
-Text one: 👟 KICK OFF @ MARDEN SPORTS COMPLEX
+Text one: 🎧 𝗘𝗣𝗜𝗦𝗢𝗗𝗘 𝟯𝟬: 𝗗𝗬𝗟𝗔𝗡 𝗙𝗜𝗧𝗭𝗦𝗜𝗠𝗢𝗡𝗦
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-We're underway in the Round 6 opener!
+Dylan Fitzsimons is a young passionate greyhound supporter. 
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-📺: @Foxtel, @kayosports
-📱: My Football Live app https://t.co/wHSpvQaoGC
+He and @Drakesport enjoy a great chat about everything greyhounds!
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-#WLeague #ADLvMVC #AUFC #MVFC https://t.co/3Smp8KXm8W
-Text two: 👟 KICK OFF @ MARSDEN SPORTS COMPLEX
+Listen: https://t.co/B2XgMp0yaO
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-We're underway in sunny Adelaide!
+#GoGreyhoundRacing #ThisRunsDeep #TalkingDogs https://t.co/crBiSqHUvp
+Text two: 🎧 𝗘𝗣𝗜𝗦𝗢𝗗𝗘 𝟯𝟳: 𝗣𝗜𝗢 𝗕𝗔𝗥𝗥𝗬 🎧
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-📺: @Foxtel, @kayosports
-📱: My Football Live app https://t.co/wHSpvQaoGC
+Well known within greyhound circles, Pio Barry shares some wonderful greyhound racing stories with @Drakesport in this podcast episode.
 ```
 </div>
     
 <div class="k-default-codeblock">
 ```
-#ADLvCBR #WLeague #AUFC #UnitedAlways https://t.co/fG1PyLQXM4
+A great chat. 
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+Listen: https://t.co/mJTVlPHzp0
+```
+</div>
+    
+<div class="k-default-codeblock">
+```
+#TalkingDogs #GoGreyhoundRacing #ThisRunsDeep https://t.co/QbxtCpLcGm
 Label: NoEntailment
 
 ```
@@ -408,10 +444,11 @@ df["label"].value_counts()
 
 <div class="k-default-codeblock">
 ```
-NoEntailment     1182
-Implies           109
-Contradictory     109
-Name: label, dtype: int64
+label
+NoEntailment     819
+Contradictory     92
+Implies           89
+Name: count, dtype: int64
 
 ```
 </div>
@@ -435,131 +472,73 @@ print(f"Total test examples: {len(test_df)}")
 
 <div class="k-default-codeblock">
 ```
-Total training examples: 1197
-Total validation examples: 63
-Total test examples: 140
+Total training examples: 855
+Total validation examples: 45
+Total test examples: 100
 
 ```
 </div>
 ---
 ## Data input pipeline
 
-TensorFlow Hub provides
-[variety of BERT family of models](https://www.tensorflow.org/text/tutorials/bert_glue#loading_models_from_tensorflow_hub).
+Keras Hub provides
+[variety of BERT family of models](https://keras.io/keras_hub/presets/).
 Each of those models comes with a
 corresponding preprocessing layer. You can learn more about these models and their
 preprocessing layers from
-[this resource](https://www.tensorflow.org/text/tutorials/bert_glue#loading_models_from_tensorflow_hub).
+[this resource](https://www.kaggle.com/models/keras/bert/keras/bert_base_en_uncased/2).
 
-To keep the runtime of this example relatively short, we will use a smaller variant of
+To keep the runtime of this example relatively short, we will use a base_unacased variant of
 the original BERT model.
 
+text preprocessing using KerasHub
+
 
 ```python
-# Define TF Hub paths to the BERT encoder and its preprocessor
-bert_model_path = (
-    "https://tfhub.dev/tensorflow/small_bert/bert_en_uncased_L-2_H-256_A-4/1"
+text_preprocessor = keras_hub.models.BertTextClassifierPreprocessor.from_preset(
+    "bert_base_en_uncased",
+    sequence_length=128,
 )
-bert_preprocess_path = "https://tfhub.dev/tensorflow/bert_en_uncased_preprocess/3"
 ```
-
-Our text preprocessing code mostly comes from
-[this tutorial](https://www.tensorflow.org/text/tutorials/bert_glue).
-You are highly encouraged to check out the tutorial to learn more about the input
-preprocessing.
-
-
-```python
-
-def make_bert_preprocessing_model(sentence_features, seq_length=128):
-    """Returns Model mapping string features to BERT inputs.
-
-  Args:
-    sentence_features: A list with the names of string-valued features.
-    seq_length: An integer that defines the sequence length of BERT inputs.
-
-  Returns:
-    A Keras Model that can be called on a list or dict of string Tensors
-    (with the order or names, resp., given by sentence_features) and
-    returns a dict of tensors for input to BERT.
-  """
-
-    input_segments = [
-        tf.keras.layers.Input(shape=(), dtype=tf.string, name=ft)
-        for ft in sentence_features
-    ]
-
-    # Tokenize the text to word pieces.
-    bert_preprocess = hub.load(bert_preprocess_path)
-    tokenizer = hub.KerasLayer(bert_preprocess.tokenize, name="tokenizer")
-    segments = [tokenizer(s) for s in input_segments]
-
-    # Optional: Trim segments in a smart way to fit seq_length.
-    # Simple cases (like this example) can skip this step and let
-    # the next step apply a default truncation to approximately equal lengths.
-    truncated_segments = segments
-
-    # Pack inputs. The details (start/end token ids, dict of output tensors)
-    # are model-dependent, so this gets loaded from the SavedModel.
-    packer = hub.KerasLayer(
-        bert_preprocess.bert_pack_inputs,
-        arguments=dict(seq_length=seq_length),
-        name="packer",
-    )
-    model_inputs = packer(truncated_segments)
-    return keras.Model(input_segments, model_inputs)
-
-
-bert_preprocess_model = make_bert_preprocessing_model(["text_1", "text_2"])
-keras.utils.plot_model(bert_preprocess_model, show_shapes=True, show_dtype=True)
-```
-
-
-
-
-    
-![png](/img/examples/nlp/multimodal_entailment/multimodal_entailment_22_0.png)
-    
-
-
 
 ### Run the preprocessor on a sample input
 
 
 ```python
-idx = np.random.choice(len(train_df))
+idx = random.choice(range(len(train_df)))
 row = train_df.iloc[idx]
 sample_text_1, sample_text_2 = row["text_1"], row["text_2"]
 print(f"Text 1: {sample_text_1}")
 print(f"Text 2: {sample_text_2}")
 
-test_text = [np.array([sample_text_1]), np.array([sample_text_2])]
-text_preprocessed = bert_preprocess_model(test_text)
+test_text = [sample_text_1, sample_text_2]
+text_preprocessed = text_preprocessor(test_text)
 
 print("Keys           : ", list(text_preprocessed.keys()))
-print("Shape Word Ids : ", text_preprocessed["input_word_ids"].shape)
-print("Word Ids       : ", text_preprocessed["input_word_ids"][0, :16])
-print("Shape Mask     : ", text_preprocessed["input_mask"].shape)
-print("Input Mask     : ", text_preprocessed["input_mask"][0, :16])
-print("Shape Type Ids : ", text_preprocessed["input_type_ids"].shape)
-print("Type Ids       : ", text_preprocessed["input_type_ids"][0, :16])
+print("Shape Token Ids : ", text_preprocessed["token_ids"].shape)
+print("Token Ids       : ", text_preprocessed["token_ids"][0, :16])
+print(" Shape Padding Mask     : ", text_preprocessed["padding_mask"].shape)
+print("Padding Mask     : ", text_preprocessed["padding_mask"][0, :16])
+print("Shape Segment Ids : ", text_preprocessed["segment_ids"].shape)
+print("Segment Ids       : ", text_preprocessed["segment_ids"][0, :16])
 
 ```
 
 <div class="k-default-codeblock">
 ```
-Text 1: Renewables met 97% of Scotland's electricity demand in 2020!!!!
-https://t.co/wi5c9UFAUF https://t.co/arcuBgh0BP
-Text 2: Renewables met 97% of Scotland's electricity demand in 2020 https://t.co/SrhyqPnIkU https://t.co/LORgvTM7Sn
-Keys           :  ['input_mask', 'input_word_ids', 'input_type_ids']
-Shape Word Ids :  (1, 128)
-Word Ids       :  tf.Tensor(
-[  101 13918  2015  2777  5989  1003  1997  3885  1005  1055  6451  5157
-  1999 12609   999   999], shape=(16,), dtype=int32)
-Shape Mask     :  (1, 128)
-Input Mask     :  tf.Tensor([1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1], shape=(16,), dtype=int32)
-Shape Type Ids :  (1, 128)
-Type Ids       :  tf.Tensor([0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0], shape=(16,), dtype=int32)
+An NVIDIA GPU may be present on this machine, but a CUDA-enabled jaxlib is not installed. Falling back to cpu.
+
+Text 1: The RPF Lohardaga and Hatia Post of Ranchi Division have recovered  02 bags on 20.02.2021 at Station platform and in T/No.08310 Spl. respectively and  handed over to their actual owner correctly. @RPF_INDIA https://t.co/bdEBl2egIc
+Text 2: The RPF Lohardaga and Hatia Post of Ranchi Division have recovered  02 bags on 20.02.2021 at Station platform and in T/No.08310 (JAT-SBP) Spl. respectively and  handed over to their actual owner correctly. @RPF_INDIA https://t.co/Q5l2AtA4uq
+Keys           :  ['token_ids', 'padding_mask', 'segment_ids']
+Shape Token Ids :  (2, 128)
+Token Ids       :  [  101  1996  1054 14376  8840 11783 16098  1998  6045  2401  2695  1997
+  8086  2072  2407  2031]
+ Shape Padding Mask     :  (2, 128)
+Padding Mask     :  [ True  True  True  True  True  True  True  True  True  True  True  True
+  True  True  True  True]
+Shape Segment Ids :  (2, 128)
+Segment Ids       :  [0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0]
 
 ```
 </div>
@@ -577,10 +556,11 @@ models.
 
 def dataframe_to_dataset(dataframe):
     columns = ["image_1_path", "image_2_path", "text_1", "text_2", "label_idx"]
-    dataframe = dataframe[columns].copy()
-    labels = dataframe.pop("label_idx")
-    ds = tf.data.Dataset.from_tensor_slices((dict(dataframe), labels))
-    ds = ds.shuffle(buffer_size=len(dataframe))
+    ds = UnifiedPyDataset(
+        dataframe,
+        batch_size=32,
+        workers=4,
+    )
     return ds
 
 ```
@@ -589,59 +569,172 @@ def dataframe_to_dataset(dataframe):
 
 
 ```python
-resize = (128, 128)
-bert_input_features = ["input_word_ids", "input_type_ids", "input_mask"]
-
-
-def preprocess_image(image_path):
-    extension = tf.strings.split(image_path)[-1]
-
-    image = tf.io.read_file(image_path)
-    if extension == b"jpg":
-        image = tf.image.decode_jpeg(image, 3)
-    else:
-        image = tf.image.decode_png(image, 3)
-    image = tf.image.resize(image, resize)
-    return image
+bert_input_features = ["padding_mask", "segment_ids", "token_ids"]
 
 
 def preprocess_text(text_1, text_2):
-    text_1 = tf.convert_to_tensor([text_1])
-    text_2 = tf.convert_to_tensor([text_2])
-    output = bert_preprocess_model([text_1, text_2])
-    output = {feature: tf.squeeze(output[feature]) for feature in bert_input_features}
+    output = text_preprocessor([text_1, text_2])
+    output = {
+        feature: keras.ops.reshape(output[feature], [-1])
+        for feature in bert_input_features
+    }
     return output
-
-
-def preprocess_text_and_image(sample):
-    image_1 = preprocess_image(sample["image_1_path"])
-    image_2 = preprocess_image(sample["image_2_path"])
-    text = preprocess_text(sample["text_1"], sample["text_2"])
-    return {"image_1": image_1, "image_2": image_2, "text": text}
 
 ```
 
-### Create the final datasets
+### Create the final datasets, method adapted from PyDataset doc string.
 
 
 ```python
-batch_size = 32
-auto = tf.data.AUTOTUNE
+
+class UnifiedPyDataset(PyDataset):
+    """A Keras-compatible dataset that processes a DataFrame for TensorFlow, JAX, and PyTorch."""
+
+    def __init__(
+        self,
+        df,
+        batch_size=32,
+        workers=4,
+        use_multiprocessing=False,
+        max_queue_size=10,
+        **kwargs,
+    ):
+        """
+        Args:
+            df: pandas DataFrame with data
+            batch_size: Batch size for dataset
+            workers: Number of workers to use for parallel loading (Keras)
+            use_multiprocessing: Whether to use multiprocessing
+            max_queue_size: Maximum size of the data queue for parallel loading
+        """
+        super().__init__(**kwargs)
+        self.dataframe = df
+        columns = ["image_1_path", "image_2_path", "text_1", "text_2"]
+
+        # image files
+        self.image_x_1 = self.dataframe["image_1_path"]
+        self.image_x_2 = self.dataframe["image_1_path"]
+        self.image_y = self.dataframe["label_idx"]
+
+        # text files
+        self.text_x_1 = self.dataframe["text_1"]
+        self.text_x_2 = self.dataframe["text_2"]
+        self.text_y = self.dataframe["label_idx"]
+
+        # general
+        self.batch_size = batch_size
+        self.workers = workers
+        self.use_multiprocessing = use_multiprocessing
+        self.max_queue_size = max_queue_size
+
+    def __getitem__(self, index):
+        """
+        Fetches a batch of data from the dataset at the given index.
+        """
+
+        # Return x, y for batch idx.
+        low = index * self.batch_size
+        # Cap upper bound at array length; the last batch may be smaller
+        # if the total number of items is not a multiple of batch size.
+
+        high_image_1 = min(low + self.batch_size, len(self.image_x_1))
+        high_image_2 = min(low + self.batch_size, len(self.image_x_2))
+
+        high_text_1 = min(low + self.batch_size, len(self.text_x_1))
+        high_text_2 = min(low + self.batch_size, len(self.text_x_1))
+
+        # images files
+        batch_image_x_1 = self.image_x_1[low:high_image_1]
+        batch_image_y_1 = self.image_y[low:high_image_1]
+
+        batch_image_x_2 = self.image_x_2[low:high_image_2]
+        batch_image_y_2 = self.image_y[low:high_image_2]
+
+        # text files
+        batch_text_x_1 = self.text_x_1[low:high_text_1]
+        batch_text_y_1 = self.text_y[low:high_text_1]
+
+        batch_text_x_2 = self.text_x_2[low:high_text_2]
+        batch_text_y_2 = self.text_y[low:high_text_2]
+
+        # image number 1 inputs
+        image_1 = [
+            resize(imread(file_name), (128, 128)) for file_name in batch_image_x_1
+        ]
+        image_1 = [
+            (  # exeperienced some shapes which were different from others.
+                np.array(Image.fromarray((img.astype(np.uint8))).convert("RGB"))
+                if img.shape[2] == 4
+                else img
+            )
+            for img in image_1
+        ]
+        image_1 = np.array(image_1)
+
+        # Both text inputs to the model, return a dict for inputs to BertBackbone
+        text = {
+            key: np.array(
+                [
+                    d[key]
+                    for d in [
+                        preprocess_text(file_path1, file_path2)
+                        for file_path1, file_path2 in zip(
+                            batch_text_x_1, batch_text_x_2
+                        )
+                    ]
+                ]
+            )
+            for key in ["padding_mask", "token_ids", "segment_ids"]
+        }
+
+        # Image number 2 model inputs
+        image_2 = [
+            resize(imread(file_name), (128, 128)) for file_name in batch_image_x_2
+        ]
+        image_2 = [
+            (  # exeperienced some shapes which were different from others
+                np.array(Image.fromarray((img.astype(np.uint8))).convert("RGB"))
+                if img.shape[2] == 4
+                else img
+            )
+            for img in image_2
+        ]
+        # Stack the list comprehension to an nd.array
+        image_2 = np.array(image_2)
+
+        return (
+            {
+                "image_1": image_1,
+                "image_2": image_2,
+                "padding_mask": text["padding_mask"],
+                "segment_ids": text["segment_ids"],
+                "token_ids": text["token_ids"],
+            },
+            # Target lables
+            np.array(batch_image_y_1),
+        )
+
+    def __len__(self):
+        """
+        Returns the number of batches in the dataset.
+        """
+        return math.ceil(len(self.dataframe) / self.batch_size)
+
+```
+
+Create train, validation and test datasets
 
 
-def prepare_dataset(dataframe, training=True):
+```python
+
+def prepare_dataset(dataframe):
     ds = dataframe_to_dataset(dataframe)
-    if training:
-        ds = ds.shuffle(len(train_df))
-    ds = ds.map(lambda x, y: (preprocess_text_and_image(x), y)).cache()
-    ds = ds.batch(batch_size).prefetch(auto)
     return ds
 
 
 train_ds = prepare_dataset(train_df)
-validation_ds = prepare_dataset(val_df, False)
-test_ds = prepare_dataset(test_df, False)
-
+validation_ds = prepare_dataset(val_df)
+test_ds = prepare_dataset(test_df)
 ```
 
 ---
@@ -683,7 +776,7 @@ def project_embeddings(
 ):
     projected_embeddings = keras.layers.Dense(units=projection_dims)(embeddings)
     for _ in range(num_projection_layers):
-        x = tf.nn.gelu(projected_embeddings)
+        x = keras.ops.nn.gelu(projected_embeddings)
         x = keras.layers.Dense(projection_dims)(x)
         x = keras.layers.Dropout(dropout_rate)(x)
         x = keras.layers.Add()([projected_embeddings, x])
@@ -739,15 +832,18 @@ Text encoder utilities
 def create_text_encoder(
     num_projection_layers, projection_dims, dropout_rate, trainable=False
 ):
-    # Load the pre-trained BERT model to be used as the base encoder.
-    bert = hub.KerasLayer(bert_model_path, name="bert",)
+    # Load the pre-trained BERT BackBone using KerasHub.
+    bert = keras_hub.models.BertBackbone.from_preset(
+        "bert_base_en_uncased", num_classes=3
+    )
+
     # Set the trainability of the base encoder.
     bert.trainable = trainable
 
     # Receive the text as inputs.
-    bert_input_features = ["input_type_ids", "input_mask", "input_word_ids"]
+    bert_input_features = ["padding_mask", "segment_ids", "token_ids"]
     inputs = {
-        feature: keras.Input(shape=(128,), dtype=tf.int32, name=feature)
+        feature: keras.Input(shape=(256,), dtype="int32", name=feature)
         for feature in bert_input_features
     }
 
@@ -780,12 +876,12 @@ def create_multimodal_model(
     image_2 = keras.Input(shape=(128, 128, 3), name="image_2")
 
     # Receive the text as inputs.
-    bert_input_features = ["input_type_ids", "input_mask", "input_word_ids"]
+    bert_input_features = ["padding_mask", "segment_ids", "token_ids"]
     text_inputs = {
-        feature: keras.Input(shape=(128,), dtype=tf.int32, name=feature)
+        feature: keras.Input(shape=(256,), dtype="int32", name=feature)
         for feature in bert_input_features
     }
-
+    text_inputs = list(text_inputs.values())
     # Create the encoders.
     vision_encoder = create_vision_encoder(
         num_projection_layers, projection_dims, dropout_rate, vision_trainable
@@ -801,7 +897,7 @@ def create_multimodal_model(
     # Concatenate the projections and pass through the classification layer.
     concatenated = keras.layers.Concatenate()([vision_projections, text_projections])
     outputs = keras.layers.Dense(3, activation="softmax")(concatenated)
-    return keras.Model([image_1, image_2, text_inputs], outputs)
+    return keras.Model([image_1, image_2, *text_inputs], outputs)
 
 
 multimodal_model = create_multimodal_model()
@@ -812,7 +908,7 @@ keras.utils.plot_model(multimodal_model, show_shapes=True)
 
 
     
-![png](/img/examples/nlp/multimodal_entailment/multimodal_entailment_39_0.png)
+![png](/img/examples/nlp/multimodal_entailment/multimodal_entailment_40_0.png)
     
 
 
@@ -828,37 +924,345 @@ observe how the final performance is affected.
 
 ```python
 multimodal_model.compile(
-    optimizer="adam", loss="sparse_categorical_crossentropy", metrics="accuracy"
+    optimizer="adam", loss="sparse_categorical_crossentropy", metrics=["accuracy"]
 )
 
-history = multimodal_model.fit(train_ds, validation_data=validation_ds, epochs=10)
+history = multimodal_model.fit(train_ds, validation_data=validation_ds, epochs=1)
 ```
 
 <div class="k-default-codeblock">
 ```
-Epoch 1/10
-38/38 [==============================] - 49s 789ms/step - loss: 1.0014 - accuracy: 0.8229 - val_loss: 0.5514 - val_accuracy: 0.8571
-Epoch 2/10
-38/38 [==============================] - 3s 90ms/step - loss: 0.4019 - accuracy: 0.8814 - val_loss: 0.5866 - val_accuracy: 0.8571
-Epoch 3/10
-38/38 [==============================] - 3s 90ms/step - loss: 0.3557 - accuracy: 0.8897 - val_loss: 0.5929 - val_accuracy: 0.8571
-Epoch 4/10
-38/38 [==============================] - 3s 91ms/step - loss: 0.2877 - accuracy: 0.9006 - val_loss: 0.6272 - val_accuracy: 0.8571
-Epoch 5/10
-38/38 [==============================] - 3s 91ms/step - loss: 0.1796 - accuracy: 0.9398 - val_loss: 0.8545 - val_accuracy: 0.8254
-Epoch 6/10
-38/38 [==============================] - 3s 91ms/step - loss: 0.1292 - accuracy: 0.9566 - val_loss: 1.2276 - val_accuracy: 0.8413
-Epoch 7/10
-38/38 [==============================] - 3s 91ms/step - loss: 0.1015 - accuracy: 0.9666 - val_loss: 1.2914 - val_accuracy: 0.7778
-Epoch 8/10
-38/38 [==============================] - 3s 92ms/step - loss: 0.1253 - accuracy: 0.9524 - val_loss: 1.1944 - val_accuracy: 0.8413
-Epoch 9/10
-38/38 [==============================] - 3s 92ms/step - loss: 0.3064 - accuracy: 0.9131 - val_loss: 1.2162 - val_accuracy: 0.8095
-Epoch 10/10
-38/38 [==============================] - 3s 92ms/step - loss: 0.2212 - accuracy: 0.9248 - val_loss: 1.1080 - val_accuracy: 0.8413
+/home/humbulani/tensorflow-env/env/lib/python3.11/site-packages/keras/src/models/functional.py:248: UserWarning: The structure of `inputs` doesn't match the expected structure.
+Expected: {'padding_mask': 'padding_mask', 'segment_ids': 'segment_ids', 'token_ids': 'token_ids'}
+Received: inputs=['Tensor(shape=(32, 256))', 'Tensor(shape=(32, 256))', 'Tensor(shape=(32, 256))']
+  warnings.warn(msg)
+
+/home/humbulani/tensorflow-env/env/lib/python3.11/site-packages/keras/src/models/functional.py:248: UserWarning: The structure of `inputs` doesn't match the expected structure.
+Expected: {'padding_mask': 'padding_mask', 'segment_ids': 'segment_ids', 'token_ids': 'token_ids'}
+Received: inputs=['Tensor(shape=(32, 256))', 'Tensor(shape=(32, 256))', 'Tensor(shape=(32, 256))']
+  warnings.warn(msg)
 
 ```
 </div>
+    
+  1/27 [37m━━━━━━━━━━━━━━━━━━━━  45:45 106s/step - accuracy: 0.0625 - loss: 1.6335
+
+<div class="k-default-codeblock">
+```
+/home/humbulani/tensorflow-env/env/lib/python3.11/site-packages/keras/src/models/functional.py:248: UserWarning: The structure of `inputs` doesn't match the expected structure.
+Expected: {'padding_mask': 'padding_mask', 'segment_ids': 'segment_ids', 'token_ids': 'token_ids'}
+Received: inputs=['Tensor(shape=(32, 256))', 'Tensor(shape=(32, 256))', 'Tensor(shape=(32, 256))']
+  warnings.warn(msg)
+
+
+```
+</div>
+  2/27 ━[37m━━━━━━━━━━━━━━━━━━━  42:14 101s/step - accuracy: 0.2422 - loss: 1.9508
+
+<div class="k-default-codeblock">
+```
+/home/humbulani/tensorflow-env/env/lib/python3.11/site-packages/keras/src/models/functional.py:248: UserWarning: The structure of `inputs` doesn't match the expected structure.
+Expected: {'padding_mask': 'padding_mask', 'segment_ids': 'segment_ids', 'token_ids': 'token_ids'}
+Received: inputs=['Tensor(shape=(32, 256))', 'Tensor(shape=(32, 256))', 'Tensor(shape=(32, 256))']
+  warnings.warn(msg)
+
+
+```
+</div>
+  3/27 ━━[37m━━━━━━━━━━━━━━━━━━  38:49 97s/step - accuracy: 0.3524 - loss: 2.0126 
+
+<div class="k-default-codeblock">
+```
+/home/humbulani/tensorflow-env/env/lib/python3.11/site-packages/keras/src/models/functional.py:248: UserWarning: The structure of `inputs` doesn't match the expected structure.
+Expected: {'padding_mask': 'padding_mask', 'segment_ids': 'segment_ids', 'token_ids': 'token_ids'}
+Received: inputs=['Tensor(shape=(32, 256))', 'Tensor(shape=(32, 256))', 'Tensor(shape=(32, 256))']
+  warnings.warn(msg)
+
+
+```
+</div>
+  4/27 ━━[37m━━━━━━━━━━━━━━━━━━  37:09 97s/step - accuracy: 0.4284 - loss: 1.9870
+
+<div class="k-default-codeblock">
+```
+/home/humbulani/tensorflow-env/env/lib/python3.11/site-packages/keras/src/models/functional.py:248: UserWarning: The structure of `inputs` doesn't match the expected structure.
+Expected: {'padding_mask': 'padding_mask', 'segment_ids': 'segment_ids', 'token_ids': 'token_ids'}
+Received: inputs=['Tensor(shape=(32, 256))', 'Tensor(shape=(32, 256))', 'Tensor(shape=(32, 256))']
+  warnings.warn(msg)
+
+
+```
+</div>
+  5/27 ━━━[37m━━━━━━━━━━━━━━━━━  35:08 96s/step - accuracy: 0.4815 - loss: 1.9855
+
+<div class="k-default-codeblock">
+```
+/home/humbulani/tensorflow-env/env/lib/python3.11/site-packages/keras/src/models/functional.py:248: UserWarning: The structure of `inputs` doesn't match the expected structure.
+Expected: {'padding_mask': 'padding_mask', 'segment_ids': 'segment_ids', 'token_ids': 'token_ids'}
+Received: inputs=['Tensor(shape=(32, 256))', 'Tensor(shape=(32, 256))', 'Tensor(shape=(32, 256))']
+  warnings.warn(msg)
+
+
+```
+</div>
+  6/27 ━━━━[37m━━━━━━━━━━━━━━━━  31:56 91s/step - accuracy: 0.5210 - loss: 1.9939
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+  7/27 ━━━━━[37m━━━━━━━━━━━━━━━  29:30 89s/step - accuracy: 0.5512 - loss: 1.9980
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+  8/27 ━━━━━[37m━━━━━━━━━━━━━━━  27:12 86s/step - accuracy: 0.5750 - loss: 2.0061
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+  9/27 ━━━━━━[37m━━━━━━━━━━━━━━  25:15 84s/step - accuracy: 0.5956 - loss: 1.9959
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+ 10/27 ━━━━━━━[37m━━━━━━━━━━━━━  23:33 83s/step - accuracy: 0.6120 - loss: 1.9738
+
+<div class="k-default-codeblock">
+```
+/home/humbulani/tensorflow-env/env/lib/python3.11/site-packages/keras/src/models/functional.py:248: UserWarning: The structure of `inputs` doesn't match the expected structure.
+Expected: {'padding_mask': 'padding_mask', 'segment_ids': 'segment_ids', 'token_ids': 'token_ids'}
+Received: inputs=['Tensor(shape=(32, 256))', 'Tensor(shape=(32, 256))', 'Tensor(shape=(32, 256))']
+  warnings.warn(msg)
+
+
+```
+</div>
+ 11/27 ━━━━━━━━[37m━━━━━━━━━━━━  22:09 83s/step - accuracy: 0.6251 - loss: 1.9579
+
+<div class="k-default-codeblock">
+```
+/home/humbulani/tensorflow-env/env/lib/python3.11/site-packages/keras/src/models/functional.py:248: UserWarning: The structure of `inputs` doesn't match the expected structure.
+Expected: {'padding_mask': 'padding_mask', 'segment_ids': 'segment_ids', 'token_ids': 'token_ids'}
+Received: inputs=['Tensor(shape=(32, 256))', 'Tensor(shape=(32, 256))', 'Tensor(shape=(32, 256))']
+  warnings.warn(msg)
+
+
+```
+</div>
+ 12/27 ━━━━━━━━[37m━━━━━━━━━━━━  20:59 84s/step - accuracy: 0.6357 - loss: 1.9524
+
+<div class="k-default-codeblock">
+```
+/home/humbulani/tensorflow-env/env/lib/python3.11/site-packages/keras/src/models/functional.py:248: UserWarning: The structure of `inputs` doesn't match the expected structure.
+Expected: {'padding_mask': 'padding_mask', 'segment_ids': 'segment_ids', 'token_ids': 'token_ids'}
+Received: inputs=['Tensor(shape=(32, 256))', 'Tensor(shape=(32, 256))', 'Tensor(shape=(32, 256))']
+  warnings.warn(msg)
+
+
+```
+</div>
+ 13/27 ━━━━━━━━━[37m━━━━━━━━━━━  19:44 85s/step - accuracy: 0.6454 - loss: 1.9439
+
+<div class="k-default-codeblock">
+```
+/home/humbulani/tensorflow-env/env/lib/python3.11/site-packages/keras/src/models/functional.py:248: UserWarning: The structure of `inputs` doesn't match the expected structure.
+Expected: {'padding_mask': 'padding_mask', 'segment_ids': 'segment_ids', 'token_ids': 'token_ids'}
+Received: inputs=['Tensor(shape=(32, 256))', 'Tensor(shape=(32, 256))', 'Tensor(shape=(32, 256))']
+  warnings.warn(msg)
+
+
+```
+</div>
+ 14/27 ━━━━━━━━━━[37m━━━━━━━━━━  18:22 85s/step - accuracy: 0.6540 - loss: 1.9346
+
+<div class="k-default-codeblock">
+```
+/home/humbulani/tensorflow-env/env/lib/python3.11/site-packages/keras/src/models/functional.py:248: UserWarning: The structure of `inputs` doesn't match the expected structure.
+Expected: {'padding_mask': 'padding_mask', 'segment_ids': 'segment_ids', 'token_ids': 'token_ids'}
+Received: inputs=['Tensor(shape=(23, 256))', 'Tensor(shape=(23, 256))', 'Tensor(shape=(23, 256))']
+  warnings.warn(msg)
+
+
+```
+</div>
+ 15/27 ━━━━━━━━━━━[37m━━━━━━━━━  16:52 84s/step - accuracy: 0.6621 - loss: 1.9213
+
+<div class="k-default-codeblock">
+```
+/home/humbulani/tensorflow-env/env/lib/python3.11/site-packages/keras/src/models/functional.py:248: UserWarning: The structure of `inputs` doesn't match the expected structure.
+Expected: {'padding_mask': 'padding_mask', 'segment_ids': 'segment_ids', 'token_ids': 'token_ids'}
+Received: inputs=['Tensor(shape=(32, 256))', 'Tensor(shape=(32, 256))', 'Tensor(shape=(32, 256))']
+  warnings.warn(msg)
+
+
+```
+</div>
+ 16/27 ━━━━━━━━━━━[37m━━━━━━━━━  15:29 85s/step - accuracy: 0.6693 - loss: 1.9101
+
+<div class="k-default-codeblock">
+```
+/home/humbulani/tensorflow-env/env/lib/python3.11/site-packages/keras/src/models/functional.py:248: UserWarning: The structure of `inputs` doesn't match the expected structure.
+Expected: {'padding_mask': 'padding_mask', 'segment_ids': 'segment_ids', 'token_ids': 'token_ids'}
+Received: inputs=['Tensor(shape=(32, 256))', 'Tensor(shape=(32, 256))', 'Tensor(shape=(32, 256))']
+  warnings.warn(msg)
+
+
+```
+</div>
+ 17/27 ━━━━━━━━━━━━[37m━━━━━━━━  14:08 85s/step - accuracy: 0.6758 - loss: 1.9021
+
+<div class="k-default-codeblock">
+```
+/home/humbulani/tensorflow-env/env/lib/python3.11/site-packages/keras/src/models/functional.py:248: UserWarning: The structure of `inputs` doesn't match the expected structure.
+Expected: {'padding_mask': 'padding_mask', 'segment_ids': 'segment_ids', 'token_ids': 'token_ids'}
+Received: inputs=['Tensor(shape=(32, 256))', 'Tensor(shape=(32, 256))', 'Tensor(shape=(32, 256))']
+  warnings.warn(msg)
+
+
+```
+</div>
+ 18/27 ━━━━━━━━━━━━━[37m━━━━━━━  12:45 85s/step - accuracy: 0.6819 - loss: 1.8916
+
+<div class="k-default-codeblock">
+```
+/home/humbulani/tensorflow-env/env/lib/python3.11/site-packages/keras/src/models/functional.py:248: UserWarning: The structure of `inputs` doesn't match the expected structure.
+Expected: {'padding_mask': 'padding_mask', 'segment_ids': 'segment_ids', 'token_ids': 'token_ids'}
+Received: inputs=['Tensor(shape=(32, 256))', 'Tensor(shape=(32, 256))', 'Tensor(shape=(32, 256))']
+  warnings.warn(msg)
+
+
+```
+</div>
+ 19/27 ━━━━━━━━━━━━━━[37m━━━━━━  11:24 86s/step - accuracy: 0.6874 - loss: 1.8851
+
+<div class="k-default-codeblock">
+```
+/home/humbulani/tensorflow-env/env/lib/python3.11/site-packages/keras/src/models/functional.py:248: UserWarning: The structure of `inputs` doesn't match the expected structure.
+Expected: {'padding_mask': 'padding_mask', 'segment_ids': 'segment_ids', 'token_ids': 'token_ids'}
+Received: inputs=['Tensor(shape=(32, 256))', 'Tensor(shape=(32, 256))', 'Tensor(shape=(32, 256))']
+  warnings.warn(msg)
+
+
+```
+</div>
+ 20/27 ━━━━━━━━━━━━━━[37m━━━━━━  10:00 86s/step - accuracy: 0.6925 - loss: 1.8791
+
+<div class="k-default-codeblock">
+```
+/home/humbulani/tensorflow-env/env/lib/python3.11/site-packages/keras/src/models/functional.py:248: UserWarning: The structure of `inputs` doesn't match the expected structure.
+Expected: {'padding_mask': 'padding_mask', 'segment_ids': 'segment_ids', 'token_ids': 'token_ids'}
+Received: inputs=['Tensor(shape=(32, 256))', 'Tensor(shape=(32, 256))', 'Tensor(shape=(32, 256))']
+  warnings.warn(msg)
+
+
+```
+</div>
+ 21/27 ━━━━━━━━━━━━━━━[37m━━━━━  8:36 86s/step - accuracy: 0.6976 - loss: 1.8699 
+
+<div class="k-default-codeblock">
+```
+/home/humbulani/tensorflow-env/env/lib/python3.11/site-packages/keras/src/models/functional.py:248: UserWarning: The structure of `inputs` doesn't match the expected structure.
+Expected: {'padding_mask': 'padding_mask', 'segment_ids': 'segment_ids', 'token_ids': 'token_ids'}
+Received: inputs=['Tensor(shape=(32, 256))', 'Tensor(shape=(32, 256))', 'Tensor(shape=(32, 256))']
+  warnings.warn(msg)
+
+
+```
+</div>
+ 22/27 ━━━━━━━━━━━━━━━━[37m━━━━  7:11 86s/step - accuracy: 0.7020 - loss: 1.8623
+
+<div class="k-default-codeblock">
+```
+/home/humbulani/tensorflow-env/env/lib/python3.11/site-packages/keras/src/models/functional.py:248: UserWarning: The structure of `inputs` doesn't match the expected structure.
+Expected: {'padding_mask': 'padding_mask', 'segment_ids': 'segment_ids', 'token_ids': 'token_ids'}
+Received: inputs=['Tensor(shape=(32, 256))', 'Tensor(shape=(32, 256))', 'Tensor(shape=(32, 256))']
+  warnings.warn(msg)
+
+
+```
+</div>
+ 23/27 ━━━━━━━━━━━━━━━━━[37m━━━  5:46 87s/step - accuracy: 0.7061 - loss: 1.8573
+
+<div class="k-default-codeblock">
+```
+/home/humbulani/tensorflow-env/env/lib/python3.11/site-packages/keras/src/models/functional.py:248: UserWarning: The structure of `inputs` doesn't match the expected structure.
+Expected: {'padding_mask': 'padding_mask', 'segment_ids': 'segment_ids', 'token_ids': 'token_ids'}
+Received: inputs=['Tensor(shape=(32, 256))', 'Tensor(shape=(32, 256))', 'Tensor(shape=(32, 256))']
+  warnings.warn(msg)
+
+
+```
+</div>
+ 24/27 ━━━━━━━━━━━━━━━━━[37m━━━  4:20 87s/step - accuracy: 0.7100 - loss: 1.8534
+
+<div class="k-default-codeblock">
+```
+/home/humbulani/tensorflow-env/env/lib/python3.11/site-packages/keras/src/models/functional.py:248: UserWarning: The structure of `inputs` doesn't match the expected structure.
+Expected: {'padding_mask': 'padding_mask', 'segment_ids': 'segment_ids', 'token_ids': 'token_ids'}
+Received: inputs=['Tensor(shape=(32, 256))', 'Tensor(shape=(32, 256))', 'Tensor(shape=(32, 256))']
+  warnings.warn(msg)
+
+
+```
+</div>
+ 25/27 ━━━━━━━━━━━━━━━━━━[37m━━  2:54 87s/step - accuracy: 0.7136 - loss: 1.8494
+
+<div class="k-default-codeblock">
+```
+/home/humbulani/tensorflow-env/env/lib/python3.11/site-packages/keras/src/models/functional.py:248: UserWarning: The structure of `inputs` doesn't match the expected structure.
+Expected: {'padding_mask': 'padding_mask', 'segment_ids': 'segment_ids', 'token_ids': 'token_ids'}
+Received: inputs=['Tensor(shape=(32, 256))', 'Tensor(shape=(32, 256))', 'Tensor(shape=(32, 256))']
+  warnings.warn(msg)
+
+
+```
+</div>
+ 26/27 ━━━━━━━━━━━━━━━━━━━[37m━  1:27 87s/step - accuracy: 0.7170 - loss: 1.8449
+
+<div class="k-default-codeblock">
+```
+/home/humbulani/tensorflow-env/env/lib/python3.11/site-packages/keras/src/models/functional.py:248: UserWarning: The structure of `inputs` doesn't match the expected structure.
+Expected: {'padding_mask': 'padding_mask', 'segment_ids': 'segment_ids', 'token_ids': 'token_ids'}
+Received: inputs=['Tensor(shape=(32, 256))', 'Tensor(shape=(32, 256))', 'Tensor(shape=(32, 256))']
+  warnings.warn(msg)
+
+
+```
+</div>
+ 27/27 ━━━━━━━━━━━━━━━━━━━━ 0s 88s/step - accuracy: 0.7201 - loss: 1.8414  
+
+<div class="k-default-codeblock">
+```
+/home/humbulani/tensorflow-env/env/lib/python3.11/site-packages/PIL/Image.py:1054: UserWarning: Palette images with Transparency expressed in bytes should be converted to RGBA images
+  warnings.warn(
+
+/home/humbulani/tensorflow-env/env/lib/python3.11/site-packages/PIL/Image.py:1054: UserWarning: Palette images with Transparency expressed in bytes should be converted to RGBA images
+  warnings.warn(
+
+/home/humbulani/tensorflow-env/env/lib/python3.11/site-packages/keras/src/models/functional.py:248: UserWarning: The structure of `inputs` doesn't match the expected structure.
+Expected: {'padding_mask': 'padding_mask', 'segment_ids': 'segment_ids', 'token_ids': 'token_ids'}
+Received: inputs=['Tensor(shape=(32, 256))', 'Tensor(shape=(32, 256))', 'Tensor(shape=(32, 256))']
+  warnings.warn(msg)
+
+/home/humbulani/tensorflow-env/env/lib/python3.11/site-packages/keras/src/models/functional.py:248: UserWarning: The structure of `inputs` doesn't match the expected structure.
+Expected: {'padding_mask': 'padding_mask', 'segment_ids': 'segment_ids', 'token_ids': 'token_ids'}
+Received: inputs=['Tensor(shape=(13, 256))', 'Tensor(shape=(13, 256))', 'Tensor(shape=(13, 256))']
+  warnings.warn(msg)
+
+
+```
+</div>
+ 27/27 ━━━━━━━━━━━━━━━━━━━━ 2508s 92s/step - accuracy: 0.7231 - loss: 1.8382 - val_accuracy: 0.8222 - val_loss: 1.7304
+
+
 ---
 ## Evaluate the model
 
@@ -870,8 +1274,59 @@ print(f"Accuracy on the test set: {round(acc * 100, 2)}%.")
 
 <div class="k-default-codeblock">
 ```
-5/5 [==============================] - 6s 1s/step - loss: 0.8390 - accuracy: 0.8429
-Accuracy on the test set: 84.29%.
+/home/humbulani/tensorflow-env/env/lib/python3.11/site-packages/PIL/Image.py:1054: UserWarning: Palette images with Transparency expressed in bytes should be converted to RGBA images
+  warnings.warn(
+
+/home/humbulani/tensorflow-env/env/lib/python3.11/site-packages/PIL/Image.py:1054: UserWarning: Palette images with Transparency expressed in bytes should be converted to RGBA images
+  warnings.warn(
+
+/home/humbulani/tensorflow-env/env/lib/python3.11/site-packages/keras/src/models/functional.py:248: UserWarning: The structure of `inputs` doesn't match the expected structure.
+Expected: {'padding_mask': 'padding_mask', 'segment_ids': 'segment_ids', 'token_ids': 'token_ids'}
+Received: inputs=['Tensor(shape=(32, 256))', 'Tensor(shape=(32, 256))', 'Tensor(shape=(32, 256))']
+  warnings.warn(msg)
+
+```
+</div>
+    
+ 1/4 ━━━━━[37m━━━━━━━━━━━━━━━  5:32 111s/step - accuracy: 0.7812 - loss: 1.9384
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+ 2/4 ━━━━━━━━━━[37m━━━━━━━━━━  2:10 65s/step - accuracy: 0.7969 - loss: 1.8931 
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+ 3/4 ━━━━━━━━━━━━━━━[37m━━━━━  1:05 65s/step - accuracy: 0.8056 - loss: 1.8200
+
+<div class="k-default-codeblock">
+```
+/home/humbulani/tensorflow-env/env/lib/python3.11/site-packages/keras/src/models/functional.py:248: UserWarning: The structure of `inputs` doesn't match the expected structure.
+Expected: {'padding_mask': 'padding_mask', 'segment_ids': 'segment_ids', 'token_ids': 'token_ids'}
+Received: inputs=['Tensor(shape=(4, 256))', 'Tensor(shape=(4, 256))', 'Tensor(shape=(4, 256))']
+  warnings.warn(msg)
+
+
+```
+</div>
+ 4/4 ━━━━━━━━━━━━━━━━━━━━ 0s 49s/step - accuracy: 0.8092 - loss: 1.8075  
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+ 4/4 ━━━━━━━━━━━━━━━━━━━━ 256s 49s/step - accuracy: 0.8113 - loss: 1.8000
+
+
+<div class="k-default-codeblock">
+```
+Accuracy on the test set: 82.0%.
 
 ```
 </div>
@@ -964,4 +1419,5 @@ from the
 [Recognizing Multimodal Entailment](https://multimodal-entailment.github.io/)
 tutorial provides a comprehensive overview.
 
-You can use the trained model hosted on [Hugging Face Hub](https://huggingface.co/keras-io/multimodal-entailment) and try the demo on [Hugging Face Spaces](https://huggingface.co/spaces/keras-io/multimodal_entailment)
+You can use the trained model hosted on [Hugging Face Hub](https://huggingface.co/keras-io/multimodal-entailment)
+and try the demo on [Hugging Face Spaces](https://huggingface.co/spaces/keras-io/multimodal_entailment)

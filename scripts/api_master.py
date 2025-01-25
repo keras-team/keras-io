@@ -138,32 +138,35 @@ API_MASTER = {
                     "path": "activations",
                     "title": "Layer activations",
                     "generate": [
-                        "keras.activations.relu",
-                        "keras.activations.sigmoid",
-                        "keras.activations.softmax",
-                        "keras.activations.softplus",
-                        "keras.activations.softsign",
-                        "keras.activations.tanh",
-                        "keras.activations.selu",
+                        "keras.activations.celu",
                         "keras.activations.elu",
                         "keras.activations.exponential",
-                        "keras.activations.leaky_relu",
-                        "keras.activations.relu6",
-                        "keras.activations.silu",
-                        "keras.activations.hard_silu",
                         "keras.activations.gelu",
-                        "keras.activations.hard_sigmoid",
-                        "keras.activations.linear",
-                        "keras.activations.mish",
-                        "keras.activations.log_softmax",
-                        "keras.activations.celu",
-                        "keras.activations.squareplus",
-                        "keras.activations.soft_shrink",
                         "keras.activations.glu",
-                        "keras.activations.tanh_shrink",
-                        "keras.activations.hard_tanh",
                         "keras.activations.hard_shrink",
+                        "keras.activations.hard_sigmoid",
+                        "keras.activations.hard_silu",
+                        "keras.activations.hard_tanh",
+                        "keras.activations.leaky_relu",
+                        "keras.activations.linear",
                         "keras.activations.log_sigmoid",
+                        "keras.activations.log_softmax",
+                        "keras.activations.mish",
+                        "keras.activations.relu",
+                        "keras.activations.relu6",
+                        "keras.activations.selu",
+                        "keras.activations.sigmoid",
+                        "keras.activations.silu",
+                        "keras.activations.softmax",
+                        "keras.activations.soft_shrink",
+                        "keras.activations.softplus",
+                        "keras.activations.softsign",
+                        "keras.activations.sparse_plus",
+                        "keras.activations.sparsemax",
+                        "keras.activations.squareplus",
+                        "keras.activations.tanh",
+                        "keras.activations.tanh_shrink",
+                        "keras.activations.threshold",
                     ],
                 },
                 {
@@ -561,44 +564,94 @@ API_MASTER = {
                             "toc": True,
                             "children": [
                                 {
-                                    "path": "random_crop",
-                                    "title": "RandomCrop layer",
-                                    "generate": ["keras.layers.RandomCrop"],
+                                    "path": "equalization",
+                                    "title": "Equalization layer",
+                                    "generate": ["keras.layers.Equalization"]
                                 },
                                 {
-                                    "path": "random_flip",
-                                    "title": "RandomFlip layer",
-                                    "generate": ["keras.layers.RandomFlip"],
+                                    "path": "mix_up",
+                                    "title": "MixUp layer",
+                                    "generate": ["keras.layers.MixUp"]
                                 },
                                 {
-                                    "path": "random_translation",
-                                    "title": "RandomTranslation layer",
-                                    "generate": ["keras.layers.RandomTranslation"],
-                                },
-                                {
-                                    "path": "random_rotation",
-                                    "title": "RandomRotation layer",
-                                    "generate": ["keras.layers.RandomRotation"],
-                                },
-                                {
-                                    "path": "random_zoom",
-                                    "title": "RandomZoom layer",
-                                    "generate": ["keras.layers.RandomZoom"],
-                                },
-                                {
-                                    "path": "random_contrast",
-                                    "title": "RandomContrast layer",
-                                    "generate": ["keras.layers.RandomContrast"],
+                                    "path": "rand_augment",
+                                    "title": "RandAugment layer",
+                                    "generate": ["keras.layers.RandAugment"]
                                 },
                                 {
                                     "path": "random_brightness",
                                     "title": "RandomBrightness layer",
-                                    "generate": ["keras.layers.RandomBrightness"],
+                                    "generate": ["keras.layers.RandomBrightness"]
+                                },
+                                {
+                                    "path": "random_color_degeneration",
+                                    "title": "RandomColorDegeneration layer",
+                                    "generate": ["keras.layers.RandomColorDegeneration"]
+                                },
+                                {
+                                    "path": "random_color_jitter",
+                                    "title": "RandomColorJitter layer",
+                                    "generate": ["keras.layers.RandomColorJitter"]
+                                },
+                                {
+                                    "path": "random_contrast",
+                                    "title": "RandomContrast layer",
+                                    "generate": ["keras.layers.RandomContrast"]
+                                },
+                                {
+                                    "path": "random_crop",
+                                    "title": "RandomCrop layer",
+                                    "generate": ["keras.layers.RandomCrop"]
+                                },
+                                {
+                                    "path": "random_flip",
+                                    "title": "RandomFlip layer",
+                                    "generate": ["keras.layers.RandomFlip"]
+                                },
+                                {
+                                    "path": "random_grayscale",
+                                    "title": "RandomGrayscale layer",
+                                    "generate": ["keras.layers.RandomGrayscale"]
+                                },
+                                {
+                                    "path": "random_hue",
+                                    "title": "RandomHue layer",
+                                    "generate": ["keras.layers.RandomHue"]
+                                },
+                                {
+                                    "path": "random_rotation",
+                                    "title": "RandomRotation layer",
+                                    "generate": ["keras.layers.RandomRotation"]
+                                },
+                                {
+                                    "path": "random_saturation",
+                                    "title": "RandomSaturation layer",
+                                    "generate": ["keras.layers.RandomSaturation"]
+                                },
+                                {
+                                    "path": "random_sharpness",
+                                    "title": "RandomSharpness layer",
+                                    "generate": ["keras.layers.RandomSharpness"]
+                                },
+                                {
+                                    "path": "random_shear",
+                                    "title": "RandomShear layer",
+                                    "generate": ["keras.layers.RandomShear"]
+                                },
+                                {
+                                    "path": "random_translation",
+                                    "title": "RandomTranslation layer",
+                                    "generate": ["keras.layers.RandomTranslation"]
+                                },
+                                {
+                                    "path": "random_zoom",
+                                    "title": "RandomZoom layer",
+                                    "generate": ["keras.layers.RandomZoom"]
                                 },
                                 {
                                     "path": "solarization",
                                     "title": "Solarization layer",
-                                    "generate": ["keras.layers.Solarization"],
+                                    "generate": ["keras.layers.Solarization"]
                                 },
                                 {
                                     "path": "pipeline",
@@ -1186,8 +1239,11 @@ API_MASTER = {
                         "keras.ops.swish",
                         "keras.ops.hard_swish",
                         "keras.ops.celu",
+                        "keras.ops.sparsemax",
                         "keras.ops.squareplus",
+                        "keras.ops.sparse_plus",
                         "keras.ops.soft_shrink",
+                        "keras.ops.threshold",
                         "keras.ops.glu",
                         "keras.ops.tanh_shrink",
                         "keras.ops.hard_tanh",
@@ -1914,6 +1970,15 @@ API_MASTER = {
                         "keras.utils.PyDataset",
                         "keras.utils.to_categorical",
                         "keras.utils.normalize",
+                    ],
+                },
+                {
+                    "path": "sklearn_wrappers",
+                    "title": "Scikit-Learn API wrappers",
+                    "generate": [
+                        "keras.wrappers.SKLearnClassifier",
+                        "keras.wrappers.SKLearnRegressor",
+                        "keras.wrappers.SKLearnTransformer",
                     ],
                 },
                 {

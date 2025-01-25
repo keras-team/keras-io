@@ -5,6 +5,7 @@ Date created: 2020/06/09
 Last modified: 2020/06/09
 Description: Binary classification of structured data including numerical and categorical features.
 Accelerator: GPU
+Made backend-agnostic by: [Humbulani Ndou](https://github.com/Humbulani1234)
 """
 
 """
@@ -52,10 +53,8 @@ Target | Diagnosis of heart disease (1 = true; 0 = false) | Target
 
 import os
 
-# TensorFlow is the only backend that supports string inputs.
-os.environ["KERAS_BACKEND"] = "tensorflow"
+os.environ["KERAS_BACKEND"] = "torch"  # or torch, or tensorflow
 
-import tensorflow as tf
 import pandas as pd
 import keras
 from keras import layers
@@ -97,37 +96,55 @@ print(
     f"and {len(val_dataframe)} for validation"
 )
 
-"""
-Let's generate `tf.data.Dataset` objects for each dataframe:
-"""
-
-
-def dataframe_to_dataset(dataframe):
-    dataframe = dataframe.copy()
-    labels = dataframe.pop("target")
-    ds = tf.data.Dataset.from_tensor_slices((dict(dataframe), labels))
-    ds = ds.shuffle(buffer_size=len(dataframe))
-    return ds
-
-
-train_ds = dataframe_to_dataset(train_dataframe)
-val_ds = dataframe_to_dataset(val_dataframe)
 
 """
-Each `Dataset` yields a tuple `(input, target)` where `input` is a dictionary of features
-and `target` is the value `0` or `1`:
+## Define dataset metadata
+
+Here, we define the metadata of the dataset that will be useful for reading and
+parsing the data into input features, and encoding the input features with respect
+to their types.
 """
 
-for x, y in train_ds.take(1):
-    print("Input:", x)
-    print("Target:", y)
+COLUMN_NAMES = [
+    "age",
+    "sex",
+    "cp",
+    "trestbps",
+    "chol",
+    "fbs",
+    "restecg",
+    "thalach",
+    "exang",
+    "oldpeak",
+    "slope",
+    "ca",
+    "thal",
+    "target",
+]
+# Target feature name.
+TARGET_FEATURE_NAME = "target"
+# Numeric feature names.
+NUMERIC_FEATURE_NAMES = ["age", "trestbps", "thalach", "oldpeak", "slope", "chol"]
+# Categorical features and their vocabulary lists.
+# Note that we add 'v=' as a prefix to all categorical feature values to make
+# sure that they are treated as strings.
 
-"""
-Let's batch the datasets:
-"""
+CATEGORICAL_FEATURES_WITH_VOCABULARY = {
+    feature_name: sorted(
+        [
+            # Integer categorcal must be int and string must be str
+            value if dataframe[feature_name].dtype == "int64" else str(value)
+            for value in list(dataframe[feature_name].unique())
+        ]
+    )
+    for feature_name in COLUMN_NAMES
+    if feature_name not in list(NUMERIC_FEATURE_NAMES + [TARGET_FEATURE_NAME])
+}
+# All features names.
+FEATURE_NAMES = NUMERIC_FEATURE_NAMES + list(
+    CATEGORICAL_FEATURES_WITH_VOCABULARY.keys()
+)
 
-train_ds = train_ds.batch(32)
-val_ds = val_ds.batch(32)
 
 """
 ## Feature preprocessing with Keras layers
@@ -171,41 +188,90 @@ of each feature is 0 and its standard deviation is 1.
 Below, we define 2 utility functions to do the operations:
 
 - `encode_numerical_feature` to apply featurewise normalization to numerical features.
-- `encode_categorical_feature` to one-hot encode string or integer categorical features.
+- `process` to one-hot encode string or integer categorical features.
 """
+
+# Tensorflow required for tf.data.Dataset
+import tensorflow as tf
+
+
+# We process our datasets elements here (categorical) and convert them to indices to avoid this step
+# during model training since only tensorflow support strings.
+def encode_categorical(features, target):
+    for feature_name in features:
+        if feature_name in CATEGORICAL_FEATURES_WITH_VOCABULARY:
+            lookup_class = (
+                layers.StringLookup
+                if features[feature_name].dtype == "string"
+                else layers.IntegerLookup
+            )
+            vocabulary = CATEGORICAL_FEATURES_WITH_VOCABULARY[feature_name]
+            # Create a lookup to convert a string values to an integer indices.
+            # Since we are not using a mask token nor expecting any out of vocabulary
+            # (oov) token, we set mask_token to None and  num_oov_indices to 0.
+            index = lookup_class(
+                vocabulary=vocabulary,
+                mask_token=None,
+                num_oov_indices=0,
+                output_mode="binary",
+            )
+            # Convert the string input values into integer indices.
+            value_index = index(features[feature_name])
+            features[feature_name] = value_index
+
+        else:
+            pass
+
+    # Change features from OrderedDict to Dict to match Inputs as they are Dict.
+    return dict(features), target
 
 
 def encode_numerical_feature(feature, name, dataset):
     # Create a Normalization layer for our feature
     normalizer = layers.Normalization()
-
     # Prepare a Dataset that only yields our feature
     feature_ds = dataset.map(lambda x, y: x[name])
     feature_ds = feature_ds.map(lambda x: tf.expand_dims(x, -1))
-
     # Learn the statistics of the data
     normalizer.adapt(feature_ds)
-
     # Normalize the input feature
     encoded_feature = normalizer(feature)
     return encoded_feature
 
 
-def encode_categorical_feature(feature, name, dataset, is_string):
-    lookup_class = layers.StringLookup if is_string else layers.IntegerLookup
-    # Create a lookup layer which will turn strings into integer indices
-    lookup = lookup_class(output_mode="binary")
+"""
+Let's generate `tf.data.Dataset` objects for each dataframe:
+"""
 
-    # Prepare a Dataset that only yields our feature
-    feature_ds = dataset.map(lambda x, y: x[name])
-    feature_ds = feature_ds.map(lambda x: tf.expand_dims(x, -1))
 
-    # Learn the set of possible string values and assign them a fixed integer index
-    lookup.adapt(feature_ds)
+def dataframe_to_dataset(dataframe):
+    dataframe = dataframe.copy()
+    labels = dataframe.pop("target")
+    ds = tf.data.Dataset.from_tensor_slices((dict(dataframe), labels)).map(
+        encode_categorical
+    )
+    ds = ds.shuffle(buffer_size=len(dataframe))
+    return ds
 
-    # Turn the string input into integer indices
-    encoded_feature = lookup(feature)
-    return encoded_feature
+
+train_ds = dataframe_to_dataset(train_dataframe)
+val_ds = dataframe_to_dataset(val_dataframe)
+
+"""
+Each `Dataset` yields a tuple `(input, target)` where `input` is a dictionary of features
+and `target` is the value `0` or `1`:
+"""
+
+for x, y in train_ds.take(1):
+    print("Input:", x)
+    print("Target:", y)
+
+"""
+Let's batch the datasets:
+"""
+
+train_ds = train_ds.batch(32)
+val_ds = val_ds.batch(32)
 
 
 """
@@ -214,81 +280,65 @@ def encode_categorical_feature(feature, name, dataset, is_string):
 With this done, we can create our end-to-end model:
 """
 
-# Categorical features encoded as integers
-sex = keras.Input(shape=(1,), name="sex", dtype="int64")
-cp = keras.Input(shape=(1,), name="cp", dtype="int64")
-fbs = keras.Input(shape=(1,), name="fbs", dtype="int64")
-restecg = keras.Input(shape=(1,), name="restecg", dtype="int64")
-exang = keras.Input(shape=(1,), name="exang", dtype="int64")
-ca = keras.Input(shape=(1,), name="ca", dtype="int64")
 
-# Categorical feature encoded as string
-thal = keras.Input(shape=(1,), name="thal", dtype="string")
+# Categorical features have different shapes after the encoding, dependent on the
+# vocabulary or unique values of each feature. We create them accordinly to match the
+# input data elements generated by tf.data.Dataset after pre-processing them
+def create_model_inputs():
+    inputs = {}
 
-# Numerical features
-age = keras.Input(shape=(1,), name="age")
-trestbps = keras.Input(shape=(1,), name="trestbps")
-chol = keras.Input(shape=(1,), name="chol")
-thalach = keras.Input(shape=(1,), name="thalach")
-oldpeak = keras.Input(shape=(1,), name="oldpeak")
-slope = keras.Input(shape=(1,), name="slope")
+    # This a helper function for creating categorical features
+    def create_input_helper(feature_name):
+        num_categories = len(CATEGORICAL_FEATURES_WITH_VOCABULARY[feature_name])
+        inputs[feature_name] = layers.Input(
+            name=feature_name, shape=(num_categories,), dtype="int64"
+        )
+        return inputs
 
-all_inputs = [
-    sex,
-    cp,
-    fbs,
-    restecg,
-    exang,
-    ca,
-    thal,
-    age,
-    trestbps,
-    chol,
-    thalach,
-    oldpeak,
-    slope,
-]
+    for feature_name in FEATURE_NAMES:
+        if feature_name in CATEGORICAL_FEATURES_WITH_VOCABULARY:
+            # Categorical features
+            create_input_helper(feature_name)
+        else:
+            # Make them float32, they are Real numbers
+            feature_input = layers.Input(name=feature_name, shape=(1,), dtype="float32")
+            # Process the Inputs here
+            inputs[feature_name] = encode_numerical_feature(
+                feature_input, feature_name, train_ds
+            )
+    return inputs
 
-# Integer categorical features
-sex_encoded = encode_categorical_feature(sex, "sex", train_ds, False)
-cp_encoded = encode_categorical_feature(cp, "cp", train_ds, False)
-fbs_encoded = encode_categorical_feature(fbs, "fbs", train_ds, False)
-restecg_encoded = encode_categorical_feature(restecg, "restecg", train_ds, False)
-exang_encoded = encode_categorical_feature(exang, "exang", train_ds, False)
-ca_encoded = encode_categorical_feature(ca, "ca", train_ds, False)
 
-# String categorical features
-thal_encoded = encode_categorical_feature(thal, "thal", train_ds, True)
+# This Layer defines the logic of the Model to perform the classification
+class Classifier(keras.layers.Layer):
 
-# Numerical features
-age_encoded = encode_numerical_feature(age, "age", train_ds)
-trestbps_encoded = encode_numerical_feature(trestbps, "trestbps", train_ds)
-chol_encoded = encode_numerical_feature(chol, "chol", train_ds)
-thalach_encoded = encode_numerical_feature(thalach, "thalach", train_ds)
-oldpeak_encoded = encode_numerical_feature(oldpeak, "oldpeak", train_ds)
-slope_encoded = encode_numerical_feature(slope, "slope", train_ds)
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.dense_1 = layers.Dense(32, activation="relu")
+        self.dropout = layers.Dropout(0.5)
+        self.dense_2 = layers.Dense(1, activation="sigmoid")
 
-all_features = layers.concatenate(
-    [
-        sex_encoded,
-        cp_encoded,
-        fbs_encoded,
-        restecg_encoded,
-        exang_encoded,
-        slope_encoded,
-        ca_encoded,
-        thal_encoded,
-        age_encoded,
-        trestbps_encoded,
-        chol_encoded,
-        thalach_encoded,
-        oldpeak_encoded,
-    ]
-)
-x = layers.Dense(32, activation="relu")(all_features)
-x = layers.Dropout(0.5)(x)
-output = layers.Dense(1, activation="sigmoid")(x)
-model = keras.Model(all_inputs, output)
+    def call(self, inputs):
+        all_features = layers.concatenate(list(inputs.values()))
+        x = self.dense_1(all_features)
+        x = self.dropout(x)
+        output = self.dense_2(x)
+        return output
+
+    # Surpress build warnings
+    def build(self, input_shape):
+        self.built = True
+
+
+# Create the Classifier model
+def create_model():
+    all_inputs = create_model_inputs()
+    output = Classifier()(all_inputs)
+    model = keras.Model(all_inputs, output)
+    return model
+
+
+model = create_model()
 model.compile("adam", "binary_crossentropy", metrics=["accuracy"])
 
 """
@@ -303,6 +353,7 @@ keras.utils.plot_model(model, show_shapes=True, rankdir="LR")
 """
 
 model.fit(train_ds, epochs=50, validation_data=val_ds)
+
 
 """
 We quickly get to 80% validation accuracy.
@@ -335,6 +386,28 @@ sample = {
     "thal": "fixed",
 }
 
+
+# Given the category (in the sample above - key) and the category value (in the sample above - value),
+# we return its one-hot encoding
+def get_cat_encoding(cat, cat_value):
+    # Create a list of zeros with the same length as categories
+    encoding = [0] * len(cat)
+    # Find the index of category_value in categories and set the corresponding position to 1
+    if cat_value in cat:
+        encoding[cat.index(cat_value)] = 1
+    return encoding
+
+
+for name, value in sample.items():
+    if name in CATEGORICAL_FEATURES_WITH_VOCABULARY:
+        sample.update(
+            {
+                name: get_cat_encoding(
+                    CATEGORICAL_FEATURES_WITH_VOCABULARY[name], sample[name]
+                )
+            }
+        )
+# Convert inputs to tensors
 input_dict = {name: tf.convert_to_tensor([value]) for name, value in sample.items()}
 predictions = model.predict(input_dict)
 
@@ -343,3 +416,13 @@ print(
     "percent probability of having a heart disease, "
     "as evaluated by our model."
 )
+
+"""
+## Conclusions
+
+- The orignal model (the one that runs only on tensorflow) converges quickly to around 80% and remains
+there for extended periods and at times hits 85%
+- The updated model (the backed-agnostic) model may fluctuate between 78% and 83% and at times hitting 86%
+validation accuracy and converges around 80% also.
+
+"""

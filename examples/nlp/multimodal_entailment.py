@@ -2,9 +2,10 @@
 Title: Multimodal entailment
 Author: [Sayak Paul](https://twitter.com/RisingSayak)
 Date created: 2021/08/08
-Last modified: 2021/08/15
+Last modified: 2025/01/03
 Description: Training a multimodal model for predicting entailment.
 Accelerator: GPU
+Converted to Keras 3 and made backend-agnostic by: [Humbulani Ndou](https://github.com/Humbulani1234)
 """
 
 """
@@ -51,12 +52,18 @@ from sklearn.model_selection import train_test_split
 import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
+import random
+import math
+from skimage.io import imread
+from skimage.transform import resize
+from PIL import Image
 import os
 
-import tensorflow as tf
-import tensorflow_hub as hub
-import tensorflow_text as text
-from tensorflow import keras
+os.environ["KERAS_BACKEND"] = "jax"  # or tensorflow, or torch
+
+import keras
+import keras_hub
+from keras.utils import PyDataset
 
 """
 ## Define a label map
@@ -90,7 +97,9 @@ image_base_path = keras.utils.get_file(
 
 df = pd.read_csv(
     "https://github.com/sayakpaul/Multimodal-Entailment-Baseline/raw/main/csvs/tweets.csv"
-)
+).iloc[
+    0:1000
+]  # Resources conservation since these are examples and not SOTA
 df.sample(10)
 
 """
@@ -163,10 +172,10 @@ def visualize(idx):
     print(f"Label: {label}")
 
 
-random_idx = np.random.choice(len(df))
+random_idx = random.choice(range(len(df)))
 visualize(random_idx)
 
-random_idx = np.random.choice(len(df))
+random_idx = random.choice(range(len(df)))
 visualize(random_idx)
 
 """
@@ -199,93 +208,46 @@ print(f"Total test examples: {len(test_df)}")
 """
 ## Data input pipeline
 
-TensorFlow Hub provides
-[variety of BERT family of models](https://www.tensorflow.org/text/tutorials/bert_glue#loading_models_from_tensorflow_hub).
+Keras Hub provides
+[variety of BERT family of models](https://keras.io/keras_hub/presets/).
 Each of those models comes with a
 corresponding preprocessing layer. You can learn more about these models and their
 preprocessing layers from
-[this resource](https://www.tensorflow.org/text/tutorials/bert_glue#loading_models_from_tensorflow_hub).
+[this resource](https://www.kaggle.com/models/keras/bert/keras/bert_base_en_uncased/2).
 
-To keep the runtime of this example relatively short, we will use a smaller variant of
+To keep the runtime of this example relatively short, we will use a base_unacased variant of
 the original BERT model.
 """
 
-# Define TF Hub paths to the BERT encoder and its preprocessor
-bert_model_path = (
-    "https://tfhub.dev/tensorflow/small_bert/bert_en_uncased_L-2_H-256_A-4/1"
+"""
+text preprocessing using KerasHub
+"""
+
+text_preprocessor = keras_hub.models.BertTextClassifierPreprocessor.from_preset(
+    "bert_base_en_uncased",
+    sequence_length=128,
 )
-bert_preprocess_path = "https://tfhub.dev/tensorflow/bert_en_uncased_preprocess/3"
-
-"""
-Our text preprocessing code mostly comes from
-[this tutorial](https://www.tensorflow.org/text/tutorials/bert_glue).
-You are highly encouraged to check out the tutorial to learn more about the input
-preprocessing.
-"""
-
-
-def make_bert_preprocessing_model(sentence_features, seq_length=128):
-    """Returns Model mapping string features to BERT inputs.
-
-    Args:
-      sentence_features: A list with the names of string-valued features.
-      seq_length: An integer that defines the sequence length of BERT inputs.
-
-    Returns:
-      A Keras Model that can be called on a list or dict of string Tensors
-      (with the order or names, resp., given by sentence_features) and
-      returns a dict of tensors for input to BERT.
-    """
-
-    input_segments = [
-        tf.keras.layers.Input(shape=(), dtype=tf.string, name=ft)
-        for ft in sentence_features
-    ]
-
-    # Tokenize the text to word pieces.
-    bert_preprocess = hub.load(bert_preprocess_path)
-    tokenizer = hub.KerasLayer(bert_preprocess.tokenize, name="tokenizer")
-    segments = [tokenizer(s) for s in input_segments]
-
-    # Optional: Trim segments in a smart way to fit seq_length.
-    # Simple cases (like this example) can skip this step and let
-    # the next step apply a default truncation to approximately equal lengths.
-    truncated_segments = segments
-
-    # Pack inputs. The details (start/end token ids, dict of output tensors)
-    # are model-dependent, so this gets loaded from the SavedModel.
-    packer = hub.KerasLayer(
-        bert_preprocess.bert_pack_inputs,
-        arguments=dict(seq_length=seq_length),
-        name="packer",
-    )
-    model_inputs = packer(truncated_segments)
-    return keras.Model(input_segments, model_inputs)
-
-
-bert_preprocess_model = make_bert_preprocessing_model(["text_1", "text_2"])
-keras.utils.plot_model(bert_preprocess_model, show_shapes=True, show_dtype=True)
 
 """
 ### Run the preprocessor on a sample input
 """
 
-idx = np.random.choice(len(train_df))
+idx = random.choice(range(len(train_df)))
 row = train_df.iloc[idx]
 sample_text_1, sample_text_2 = row["text_1"], row["text_2"]
 print(f"Text 1: {sample_text_1}")
 print(f"Text 2: {sample_text_2}")
 
-test_text = [np.array([sample_text_1]), np.array([sample_text_2])]
-text_preprocessed = bert_preprocess_model(test_text)
+test_text = [sample_text_1, sample_text_2]
+text_preprocessed = text_preprocessor(test_text)
 
 print("Keys           : ", list(text_preprocessed.keys()))
-print("Shape Word Ids : ", text_preprocessed["input_word_ids"].shape)
-print("Word Ids       : ", text_preprocessed["input_word_ids"][0, :16])
-print("Shape Mask     : ", text_preprocessed["input_mask"].shape)
-print("Input Mask     : ", text_preprocessed["input_mask"][0, :16])
-print("Shape Type Ids : ", text_preprocessed["input_type_ids"].shape)
-print("Type Ids       : ", text_preprocessed["input_type_ids"][0, :16])
+print("Shape Token Ids : ", text_preprocessed["token_ids"].shape)
+print("Token Ids       : ", text_preprocessed["token_ids"][0, :16])
+print(" Shape Padding Mask     : ", text_preprocessed["padding_mask"].shape)
+print("Padding Mask     : ", text_preprocessed["padding_mask"][0, :16])
+print("Shape Segment Ids : ", text_preprocessed["segment_ids"].shape)
+print("Segment Ids       : ", text_preprocessed["segment_ids"][0, :16])
 
 
 """
@@ -302,10 +264,11 @@ models.
 
 def dataframe_to_dataset(dataframe):
     columns = ["image_1_path", "image_2_path", "text_1", "text_2", "label_idx"]
-    dataframe = dataframe[columns].copy()
-    labels = dataframe.pop("label_idx")
-    ds = tf.data.Dataset.from_tensor_slices((dict(dataframe), labels))
-    ds = ds.shuffle(buffer_size=len(dataframe))
+    ds = UnifiedPyDataset(
+        dataframe,
+        batch_size=32,
+        workers=4,
+    )
     return ds
 
 
@@ -313,58 +276,159 @@ def dataframe_to_dataset(dataframe):
 ### Preprocessing utilities
 """
 
-resize = (128, 128)
-bert_input_features = ["input_word_ids", "input_type_ids", "input_mask"]
-
-
-def preprocess_image(image_path):
-    extension = tf.strings.split(image_path)[-1]
-
-    image = tf.io.read_file(image_path)
-    if extension == b"jpg":
-        image = tf.image.decode_jpeg(image, 3)
-    else:
-        image = tf.image.decode_png(image, 3)
-    image = tf.image.resize(image, resize)
-    return image
+bert_input_features = ["padding_mask", "segment_ids", "token_ids"]
 
 
 def preprocess_text(text_1, text_2):
-    text_1 = tf.convert_to_tensor([text_1])
-    text_2 = tf.convert_to_tensor([text_2])
-    output = bert_preprocess_model([text_1, text_2])
-    output = {feature: tf.squeeze(output[feature]) for feature in bert_input_features}
+    output = text_preprocessor([text_1, text_2])
+    output = {
+        feature: keras.ops.reshape(output[feature], [-1])
+        for feature in bert_input_features
+    }
     return output
 
 
-def preprocess_text_and_image(sample):
-    image_1 = preprocess_image(sample["image_1_path"])
-    image_2 = preprocess_image(sample["image_2_path"])
-    text = preprocess_text(sample["text_1"], sample["text_2"])
-    return {"image_1": image_1, "image_2": image_2, "text": text}
+"""
+### Create the final datasets, method adapted from PyDataset doc string.
+"""
+
+
+class UnifiedPyDataset(PyDataset):
+    """A Keras-compatible dataset that processes a DataFrame for TensorFlow, JAX, and PyTorch."""
+
+    def __init__(
+        self,
+        df,
+        batch_size=32,
+        workers=4,
+        use_multiprocessing=False,
+        max_queue_size=10,
+        **kwargs,
+    ):
+        """
+        Args:
+            df: pandas DataFrame with data
+            batch_size: Batch size for dataset
+            workers: Number of workers to use for parallel loading (Keras)
+            use_multiprocessing: Whether to use multiprocessing
+            max_queue_size: Maximum size of the data queue for parallel loading
+        """
+        super().__init__(**kwargs)
+        self.dataframe = df
+        columns = ["image_1_path", "image_2_path", "text_1", "text_2"]
+        # image files
+        self.image_x_1 = self.dataframe["image_1_path"]
+        self.image_x_2 = self.dataframe["image_1_path"]
+        self.image_y = self.dataframe["label_idx"]
+        # text files
+        self.text_x_1 = self.dataframe["text_1"]
+        self.text_x_2 = self.dataframe["text_2"]
+        self.text_y = self.dataframe["label_idx"]
+        # general
+        self.batch_size = batch_size
+        self.workers = workers
+        self.use_multiprocessing = use_multiprocessing
+        self.max_queue_size = max_queue_size
+
+    def __getitem__(self, index):
+        """
+        Fetches a batch of data from the dataset at the given index.
+        """
+
+        # Return x, y for batch idx.
+        low = index * self.batch_size
+        # Cap upper bound at array length; the last batch may be smaller
+        # if the total number of items is not a multiple of batch size.
+        # image files
+        high_image_1 = min(low + self.batch_size, len(self.image_x_1))
+        high_image_2 = min(low + self.batch_size, len(self.image_x_2))
+        # text
+        high_text_1 = min(low + self.batch_size, len(self.text_x_1))
+        high_text_2 = min(low + self.batch_size, len(self.text_x_1))
+        # images files
+        batch_image_x_1 = self.image_x_1[low:high_image_1]
+        batch_image_y_1 = self.image_y[low:high_image_1]
+        batch_image_x_2 = self.image_x_2[low:high_image_2]
+        batch_image_y_2 = self.image_y[low:high_image_2]
+        # text files
+        batch_text_x_1 = self.text_x_1[low:high_text_1]
+        batch_text_y_1 = self.text_y[low:high_text_1]
+        batch_text_x_2 = self.text_x_2[low:high_text_2]
+        batch_text_y_2 = self.text_y[low:high_text_2]
+        # image number 1 inputs
+        image_1 = [
+            resize(imread(file_name), (128, 128)) for file_name in batch_image_x_1
+        ]
+        image_1 = [
+            (  # exeperienced some shapes which were different from others.
+                np.array(Image.fromarray((img.astype(np.uint8))).convert("RGB"))
+                if img.shape[2] == 4
+                else img
+            )
+            for img in image_1
+        ]
+        image_1 = np.array(image_1)
+        # Both text inputs to the model, return a dict for inputs to BertBackbone
+        text = {
+            key: np.array(
+                [
+                    d[key]
+                    for d in [
+                        preprocess_text(file_path1, file_path2)
+                        for file_path1, file_path2 in zip(
+                            batch_text_x_1, batch_text_x_2
+                        )
+                    ]
+                ]
+            )
+            for key in ["padding_mask", "token_ids", "segment_ids"]
+        }
+        # Image number 2 model inputs
+        image_2 = [
+            resize(imread(file_name), (128, 128)) for file_name in batch_image_x_2
+        ]
+        image_2 = [
+            (  # exeperienced some shapes which were different from others
+                np.array(Image.fromarray((img.astype(np.uint8))).convert("RGB"))
+                if img.shape[2] == 4
+                else img
+            )
+            for img in image_2
+        ]
+        # Stack the list comprehension to an nd.array
+        image_2 = np.array(image_2)
+        return (
+            {
+                "image_1": image_1,
+                "image_2": image_2,
+                "padding_mask": text["padding_mask"],
+                "segment_ids": text["segment_ids"],
+                "token_ids": text["token_ids"],
+            },
+            # Target lables
+            np.array(batch_image_y_1),
+        )
+
+    def __len__(self):
+        """
+        Returns the number of batches in the dataset.
+        """
+        return math.ceil(len(self.dataframe) / self.batch_size)
 
 
 """
-### Create the final datasets
+Create train, validation and test datasets
 """
 
-batch_size = 32
-auto = tf.data.AUTOTUNE
 
-
-def prepare_dataset(dataframe, training=True):
+def prepare_dataset(dataframe):
     ds = dataframe_to_dataset(dataframe)
-    if training:
-        ds = ds.shuffle(len(train_df))
-    ds = ds.map(lambda x, y: (preprocess_text_and_image(x), y)).cache()
-    ds = ds.batch(batch_size).prefetch(auto)
     return ds
 
 
 train_ds = prepare_dataset(train_df)
-validation_ds = prepare_dataset(val_df, False)
-test_ds = prepare_dataset(test_df, False)
-
+validation_ds = prepare_dataset(val_df)
+test_ds = prepare_dataset(test_df)
 
 """
 ## Model building utilities
@@ -406,7 +470,7 @@ def project_embeddings(
 ):
     projected_embeddings = keras.layers.Dense(units=projection_dims)(embeddings)
     for _ in range(num_projection_layers):
-        x = tf.nn.gelu(projected_embeddings)
+        x = keras.ops.nn.gelu(projected_embeddings)
         x = keras.layers.Dense(projection_dims)(x)
         x = keras.layers.Dropout(dropout_rate)(x)
         x = keras.layers.Add()([projected_embeddings, x])
@@ -460,18 +524,18 @@ Text encoder utilities
 def create_text_encoder(
     num_projection_layers, projection_dims, dropout_rate, trainable=False
 ):
-    # Load the pre-trained BERT model to be used as the base encoder.
-    bert = hub.KerasLayer(
-        bert_model_path,
-        name="bert",
+    # Load the pre-trained BERT BackBone using KerasHub.
+    bert = keras_hub.models.BertBackbone.from_preset(
+        "bert_base_en_uncased", num_classes=3
     )
+
     # Set the trainability of the base encoder.
     bert.trainable = trainable
 
     # Receive the text as inputs.
-    bert_input_features = ["input_type_ids", "input_mask", "input_word_ids"]
+    bert_input_features = ["padding_mask", "segment_ids", "token_ids"]
     inputs = {
-        feature: keras.Input(shape=(128,), dtype=tf.int32, name=feature)
+        feature: keras.Input(shape=(256,), dtype="int32", name=feature)
         for feature in bert_input_features
     }
 
@@ -503,12 +567,12 @@ def create_multimodal_model(
     image_2 = keras.Input(shape=(128, 128, 3), name="image_2")
 
     # Receive the text as inputs.
-    bert_input_features = ["input_type_ids", "input_mask", "input_word_ids"]
+    bert_input_features = ["padding_mask", "segment_ids", "token_ids"]
     text_inputs = {
-        feature: keras.Input(shape=(128,), dtype=tf.int32, name=feature)
+        feature: keras.Input(shape=(256,), dtype="int32", name=feature)
         for feature in bert_input_features
     }
-
+    text_inputs = list(text_inputs.values())
     # Create the encoders.
     vision_encoder = create_vision_encoder(
         num_projection_layers, projection_dims, dropout_rate, vision_trainable
@@ -524,7 +588,7 @@ def create_multimodal_model(
     # Concatenate the projections and pass through the classification layer.
     concatenated = keras.layers.Concatenate()([vision_projections, text_projections])
     outputs = keras.layers.Dense(3, activation="softmax")(concatenated)
-    return keras.Model([image_1, image_2, text_inputs], outputs)
+    return keras.Model([image_1, image_2, *text_inputs], outputs)
 
 
 multimodal_model = create_multimodal_model()
@@ -542,10 +606,10 @@ observe how the final performance is affected.
 """
 
 multimodal_model.compile(
-    optimizer="adam", loss="sparse_categorical_crossentropy", metrics="accuracy"
+    optimizer="adam", loss="sparse_categorical_crossentropy", metrics=["accuracy"]
 )
 
-history = multimodal_model.fit(train_ds, validation_data=validation_ds, epochs=10)
+history = multimodal_model.fit(train_ds, validation_data=validation_ds, epochs=1)
 
 """
 ## Evaluate the model

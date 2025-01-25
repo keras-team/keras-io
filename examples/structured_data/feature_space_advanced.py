@@ -2,7 +2,7 @@
 Title: FeatureSpace advanced use cases
 Author: [Dimitre Oliveira](https://www.linkedin.com/in/dimitre-oliveira-7a1a0113a/)
 Date created: 2023/07/01
-Last modified: 2023/07/01
+Last modified: 2025/01/03
 Description: How to use FeatureSpace for advanced preprocessing use cases.
 Accelerator: None
 """
@@ -90,7 +90,7 @@ Let's download the data and load it into a Pandas dataframe:
 
 data_url = "https://archive.ics.uci.edu/static/public/222/bank+marketing.zip"
 data_zipped_path = keras.utils.get_file("bank_marketing.zip", data_url, extract=True)
-keras_datasets_path = Path(data_zipped_path).parents[0]
+keras_datasets_path = Path(data_zipped_path)
 with ZipFile(f"{keras_datasets_path}/bank-additional.zip", "r") as zip:
     # Extract files
     zip.extractall(path=keras_datasets_path)
@@ -538,7 +538,7 @@ of the tf.data pipeline, not as part of the model.
 """
 
 model.fit(
-    preprocessed_train_ds, validation_data=preprocessed_valid_ds, epochs=20, verbose=2
+    preprocessed_train_ds, validation_data=preprocessed_valid_ds, epochs=10, verbose=2
 )
 
 """

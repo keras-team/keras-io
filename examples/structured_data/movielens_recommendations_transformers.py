@@ -2,7 +2,7 @@
 Title: A Transformer-based recommendation system
 Author: [Khalid Salama](https://www.linkedin.com/in/khalid-salama-24403144/)
 Date created: 2020/12/30
-Last modified: 2020/12/30
+Last modified: 2025/01/03
 Description: Rating rate prediction using the Behavior Sequence Transformer (BST) model on the Movielens.
 Accelerator: GPU
 """
@@ -259,7 +259,7 @@ MOVIE_FEATURES = ["genres"]
 """
 
 
-def get_dataset_from_csv(csv_file_path, shuffle=False, batch_size=128):
+def get_dataset_from_csv(csv_file_path, batch_size, shuffle=True):
     def process(features):
         movie_ids_string = features["sequence_movie_ids"]
         sequence_movie_ids = tf.strings.split(movie_ids_string, ",").to_tensor()
@@ -277,7 +277,7 @@ def get_dataset_from_csv(csv_file_path, shuffle=False, batch_size=128):
         target = sequence_ratings[:, -1]
         features["sequence_ratings"] = sequence_ratings[:, :-1]
 
-        return features, target
+        return dict(features), target
 
     dataset = tf.data.experimental.make_csv_dataset(
         csv_file_path,
@@ -533,10 +533,10 @@ model.compile(
 )
 
 # Read the training data.
-train_dataset = get_dataset_from_csv("train_data.csv", shuffle=True, batch_size=265)
+train_dataset = get_dataset_from_csv("train_data.csv", batch_size=265, shuffle=True)
 
 # Fit the model with the training data.
-model.fit(train_dataset, epochs=5)
+model.fit(train_dataset, epochs=2)
 
 # Read the test data.
 test_dataset = get_dataset_from_csv("test_data.csv", batch_size=265)
