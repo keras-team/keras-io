@@ -203,7 +203,7 @@ using the source sentence and the target words 0 to N.
 As such, the training dataset will yield a tuple `(inputs, targets)`, where:
 
 - `inputs` is a dictionary with the keys `encoder_inputs` and `decoder_inputs`.
-`encoder_inputs` is the vectorized source sentence and `encoder_inputs` is the target sentence "so far",
+`encoder_inputs` is the vectorized source sentence and `decoder_inputs` is the target sentence "so far",
 that is to say, the words 0 to N used to predict word N+1 (and beyond) in the target sentence.
 - `target` is the target sentence offset by one step:
 it provides the next words in the target sentence -- what the model will try to predict.
