@@ -313,7 +313,7 @@ def get_dataset_from_csv(csv_file_path, batch_size, shuffle=True):
                 # Convert the string input values into integer indices.
                 value_index = index_lookup(features[feature_name])
                 features[feature_name] = value_index
-            if feature_name in CATEGORICAL_FEATURES_WITH_VOCABULARY:
+            else:
                 # movie_id is not part of the features, hence not processed. It was mainly required
                 # for its vocabulary above.
                 if feature_name == "movie_id":
@@ -345,7 +345,6 @@ def get_dataset_from_csv(csv_file_path, batch_size, shuffle=True):
         field_delim="|",
         shuffle=shuffle,
     ).map(process)
-
     return dataset
 
 
@@ -449,7 +448,7 @@ class Embeddings(layers.Layer):
 
         encoded_sequence_movies = embedding_helper("sequence_movie_ids")
         # Create positional embedding.
-        positions = tf.range(start=0, limit=sequence_length - 1, delta=1)
+        positions = keras.ops.arange(start=0, stop=sequence_length - 1, step=1)
         encoded_positions = self.position_embedding_encoder(positions)
         # Retrieve sequence ratings to incorporate them into the encoding of the movie.
         sequence_ratings = inputs["sequence_ratings"]
@@ -502,7 +501,7 @@ def create_model_inputs():
             name="target_movie_id", shape=(1,), dtype="int64"
         ),
         "sequence_ratings": keras.Input(
-            name="sequence_ratings", shape=(sequence_length - 1,), dtype=tf.float32
+            name="sequence_ratings", shape=(sequence_length - 1,), dtype="float32"
         ),
         "sex": keras.Input(name="sex", shape=(1,), dtype="int64"),
         "age_group": keras.Input(name="age_group", shape=(1,), dtype="int64"),
