@@ -259,7 +259,7 @@ MOVIE_FEATURES = ["genres"]
 """
 ## Encode input features
 
-The `encode_input_features` method works as follows:
+The encoding works as follows:
 
 1. Each categorical user feature is encoded using `layers.Embedding`, with embedding
 dimension equals to the square root of the vocabulary size of the feature.
@@ -313,8 +313,6 @@ def get_dataset_from_csv(csv_file_path, batch_size, shuffle=True):
                 # Convert the string input values into integer indices.
                 value_index = index_lookup(features[feature_name])
                 features[feature_name] = value_index
-                # This return statement is for target_movie_id feature
-                return features[feature_name]
             if feature_name in CATEGORICAL_FEATURES_WITH_VOCABULARY:
                 # movie_id is not part of the features, hence not processed. It was mainly required
                 # for its vocabulary above.
@@ -333,10 +331,10 @@ def get_dataset_from_csv(csv_file_path, batch_size, shuffle=True):
         for feature_name in CATEGORICAL_FEATURES_WITH_VOCABULARY:
             encoding_helper(feature_name)
         # Encoding target_movie_id and returning it as the target variable
-        encoded_target_movie = encoding_helper("target_movie_id")
+        encoding_helper("target_movie_id")
         # Encoding sequence movie_ids.
         encoding_helper("sequence_movie_ids")
-        return dict(features), encoded_target_movie
+        return dict(features), target
 
     dataset = tf.data.experimental.make_csv_dataset(
         csv_file_path,
@@ -370,7 +368,6 @@ class Embeddings(layers.Layer):
         self.include_movie_features = include_movie_features
         # Movie genres embeddings
         genre_vectors = movies[genres].to_numpy()
-        # movie_vocabulary = CATEGORICAL_FEATURES_WITH_VOCABULARY["movie_id"]
         movie_embedding_dims = int(
             math.sqrt(len(CATEGORICAL_FEATURES_WITH_VOCABULARY["movie_id"]))
         )
@@ -579,6 +576,7 @@ model.compile(
 )
 
 # Read the training data.
+
 train_dataset = get_dataset_from_csv("train_data.csv", batch_size=265, shuffle=True)
 
 # Fit the model with the training data.
@@ -592,8 +590,7 @@ _, rmse = model.evaluate(test_dataset, verbose=0)
 print(f"Test MAE: {round(rmse, 3)}")
 
 """
-You should achieve a Mean Absolute Error (MAE) at or around 0.7 on the test data, and
-with the Jax backend it can hit 0.592.
+You should achieve a Mean Absolute Error (MAE) at or around 0.7 on the test data.
 """
 
 """
