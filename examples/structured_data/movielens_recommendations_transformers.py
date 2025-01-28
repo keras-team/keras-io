@@ -412,9 +412,13 @@ class Embeddings(layers.Layer):
                 vocabulary = CATEGORICAL_FEATURES_WITH_VOCABULARY["movie_id"]
                 embed_create(input, vocabulary)
             if input in CATEGORICAL_FEATURES_WITH_VOCABULARY:
-                # This includes user_id
-                vocabulary = CATEGORICAL_FEATURES_WITH_VOCABULARY[input]
-                embed_create(input, vocabulary)
+                # movie_id is only used to determine vocabulary size
+                if input == "movie_id":
+                    pass
+                else:
+                    # This includes user_id
+                    vocabulary = CATEGORICAL_FEATURES_WITH_VOCABULARY[input]
+                    embed_create(input, vocabulary)
 
         # Dictionary of embeddings for features/inputs to the model
         self.embeddings = dict()
@@ -440,12 +444,12 @@ class Embeddings(layers.Layer):
         for input in inputs:
             if (input in CATEGORICAL_FEATURES_WITH_VOCABULARY):
                 if input == "user_id":
-                    if include_user_id:
+                    if self.include_user_id:
                         embedded_user_id = embedding_helper(input)
                         encoded_other_features.append(embedded_user_id)
 
                 if input in USER_FEATURES:
-                    if include_user_features:
+                    if self.include_user_features:
                         embedded_user_feature = embedding_helper(input)
                         encoded_other_features.append(embedded_user_feature)
 
@@ -473,13 +477,13 @@ class Embeddings(layers.Layer):
                     feature = keras.ops.expand_dims(feature, 1)
                     encoded_transformer_features.append(feature)
 
-            if include_movie_features and input == "sequence_movie_ids":
+            if self.include_movie_features and input == "sequence_movie_ids":
                 encoded_sequence_movies = embedding_helper(input)
                 concat = layers.concatenate([self.movie_genres_vector(inputs[input]), encoded_sequence_movies])
                 encoded_sequence_movies = self.encoded_sequence_movies(concat)
                 movie_sequence_helper(encoded_sequence_movies)
 
-            if ((not include_movie_features) and input == "sequence_movie_ids"):
+            if ((not self.include_movie_features) and input == "sequence_movie_ids"):
                 encoded_sequence_movies = embedding_helper("sequence_movie_ids")
                 movie_sequence_helper(encoded_sequence_movies)
 
@@ -563,7 +567,7 @@ def create_model():
     transformer_features = layers.LayerNormalization()(transformer_features)
     features = layers.Flatten()(transformer_features)
 
-    # Included the other features.
+    # Included the other_features.
     # Test for an empty returned tensor
     if other_features.shape[0] != 0:
         features = layers.concatenate(
