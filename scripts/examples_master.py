@@ -150,6 +150,7 @@ EXAMPLES_MASTER = {
                     "path": "basnet_segmentation",
                     "title": "Highly accurate boundaries segmentation using BASNet",
                     "subcategory": "Image segmentation",
+                    "keras_3": True,
                 },
                 {
                     "path": "fully_convolutional_network",
