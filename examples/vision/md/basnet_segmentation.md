@@ -1141,16 +1141,6 @@ Python(47905) MallocStackLogging: can't turn off malloc stack logging because it
 ```
 </div>
 
-<div class="k-default-codeblock">
-```
-
-  100%| 436M /436M [00:22<00:00, 19.6MB/s]
-
-```
-</div>
-
-
-
 ### Make Predictions
 
 
