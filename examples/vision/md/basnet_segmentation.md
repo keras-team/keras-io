@@ -1140,8 +1140,8 @@ Python(47905) MallocStackLogging: can't turn off malloc stack logging because it
 
 ```
 </div>
-    
-  100%|                                                                                                                      | 436M /436M [00:22<00:00, 19.6MB/s]
+
+  100%| 436M /436M [00:22<00:00, 19.6MB/s]
 
 
 ### Make Predictions
