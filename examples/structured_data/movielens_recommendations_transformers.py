@@ -62,7 +62,7 @@ from urllib.request import urlretrieve
 import keras
 import numpy as np
 import pandas as pd
-from keras import layers
+from keras import layers, ops
 from keras.layers import StringLookup
 
 """
@@ -214,7 +214,6 @@ ratings_data_transformed.movie_ids = ratings_data_transformed.movie_ids.apply(
 ratings_data_transformed.ratings = ratings_data_transformed.ratings.apply(
     lambda x: ",".join([str(v) for v in x])
 )
-# ratings_data_transformed['movie_id'] = movies["movie_id"].apply(lambda x: f"movie_{x}")
 
 del ratings_data_transformed["zip_code"]
 
@@ -396,99 +395,107 @@ class Embeddings(layers.Layer):
         # position and ratings embeddings layer
         self.encoded_sequence_movies_with_position_and_rating = layers.Multiply()
 
-        # Define a helper function to create an embedding layer for a feature.
-        def embedding_helper(input):
-
-            # A function to group the common logic of creating embeddings
-            def embed_create(input, vocabulary):
-                embedding_dims = int(math.sqrt(len(vocabulary)))
-                embedding_encoder = layers.Embedding(
-                    input_dim=len(vocabulary), output_dim=embedding_dims, name=input
-                )
-                self.embeddings[input] = embedding_encoder
-
-            if input == "target_movie_id" or input == "sequence_movie_ids":
-                # movie_id as the vocabulary for target_move_id and sequence_movie_ids
-                vocabulary = CATEGORICAL_FEATURES_WITH_VOCABULARY["movie_id"]
-                embed_create(input, vocabulary)
-            if input in CATEGORICAL_FEATURES_WITH_VOCABULARY:
-                # movie_id is only used to determine vocabulary size
-                if input == "movie_id":
-                    pass
-                else:
-                    # This includes user_id
-                    vocabulary = CATEGORICAL_FEATURES_WITH_VOCABULARY[input]
-                    embed_create(input, vocabulary)
-
         # Dictionary of embeddings for features/inputs to the model
         self.embeddings = dict()
         for input in self.inputs:
-            embedding_helper(input)
+            self.embedding_helper(input)
+
+    # Define a helper function to create an embedding layer for a feature.
+    def embedding_helper(self, input):
+
+        # A function to group the common logic of creating embeddings
+        def embed_create(input, vocabulary):
+            embedding_dims = int(math.sqrt(len(vocabulary)))
+            embedding_encoder = layers.Embedding(
+                input_dim=len(vocabulary), output_dim=embedding_dims, name=input
+            )
+            self.embeddings[input] = embedding_encoder
+
+        if input == "target_movie_id" or input == "sequence_movie_ids":
+            # movie_id as the vocabulary for target_move_id and sequence_movie_ids
+            vocabulary = CATEGORICAL_FEATURES_WITH_VOCABULARY["movie_id"]
+            embed_create(input, vocabulary)
+        if input in CATEGORICAL_FEATURES_WITH_VOCABULARY:
+            # movie_id is only used to determine vocabulary size
+            if input == "movie_id":
+                pass
+            else:
+                # This includes user_id
+                vocabulary = CATEGORICAL_FEATURES_WITH_VOCABULARY[input]
+                embed_create(input, vocabulary)
+
+    # This function merely groups similar logic for include_movie_features=True,
+    # or given as include_movie_features=False
+    def movie_sequence_helper(
+        self, inputs, encoded_sequence_movies, encoded_transformer_features
+    ):
+        # Create positional embedding.
+        positions = ops.arange(start=0, stop=sequence_length - 1, step=1)
+        encoded_positions = self.position_embedding_encoder(positions)
+        # Retrieve sequence ratings to incorporate them into the encoding of the movie.
+        sequence_ratings = inputs["sequence_ratings"]
+        sequence_ratings = ops.expand_dims(sequence_ratings, -1)
+        # Add the positional encoding to the movie encodings and multiply them by rating.
+        encoded_sequence_movies_with_position_and_rating = (
+            self.encoded_sequence_movies_with_position_and_rating(
+                [
+                    (encoded_sequence_movies + encoded_positions),
+                    sequence_ratings,
+                ]
+            )
+        )
+        # Construct the transformer inputs.
+        for i in range(sequence_length - 1):
+            feature = encoded_sequence_movies_with_position_and_rating[:, i, ...]
+            feature = ops.expand_dims(feature, 1)
+            encoded_transformer_features.append(feature)
+
+    # Helper function to create embeddings
+    def create_embedding(self, inputs, input):
+        max_index = self.embeddings[input].input_dim - 1  # Clamp the indices
+        # torch had some index errors during embedding hence the clip function
+        encoded_feature = self.embeddings[input](ops.clip(inputs[input], 0, max_index))
+        return encoded_feature
 
     def call(self, inputs):
 
         # Returned concatenated list of features
         encoded_transformer_features = []
         encoded_other_features = []
-
-        # Helper function to create embeddings
-        def embedding_helper(input):
-            max_index = self.embeddings[input].input_dim - 1  # Clamp the indices
-            # torch had some index errors during embedding hence the clip function
-            encoded_feature = self.embeddings[input](
-                keras.ops.clip(inputs[input], 0, max_index)
-            )
-            return encoded_feature
-
         ## Encode user features
         for input in inputs:
-            if (input in CATEGORICAL_FEATURES_WITH_VOCABULARY):
+            if input in CATEGORICAL_FEATURES_WITH_VOCABULARY:
                 if input == "user_id":
                     if self.include_user_id:
-                        embedded_user_id = embedding_helper(input)
+                        embedded_user_id = self.create_embedding(inputs, input)
                         encoded_other_features.append(embedded_user_id)
                         continue
 
                 if input in USER_FEATURES:
                     if self.include_user_features:
-                        embedded_user_feature = embedding_helper(input)
+                        embedded_user_feature = self.create_embedding(inputs, input)
                         encoded_other_features.append(embedded_user_feature)
                         continue
 
-            # This function merely groups similar logic for include_movie_features=True,
-            # or given as include_movie_features=False
-            def movie_sequence_helper(encoded_sequence_movies):
-                # Create positional embedding.
-                positions = keras.ops.arange(start=0, stop=sequence_length - 1, step=1)
-                encoded_positions = self.position_embedding_encoder(positions)
-                # Retrieve sequence ratings to incorporate them into the encoding of the movie.
-                sequence_ratings = inputs["sequence_ratings"]
-                sequence_ratings = keras.ops.expand_dims(sequence_ratings, -1)
-                # Add the positional encoding to the movie encodings and multiply them by rating.
-                encoded_sequence_movies_with_position_and_rating = (
-                    self.encoded_sequence_movies_with_position_and_rating(
-                        [
-                            (encoded_sequence_movies + encoded_positions),
-                            sequence_ratings,
-                        ]
-                    )
-                )
-                # Construct the transformer inputs.
-                for i in range(sequence_length - 1):
-                    feature = encoded_sequence_movies_with_position_and_rating[:, i, ...]
-                    feature = keras.ops.expand_dims(feature, 1)
-                    encoded_transformer_features.append(feature)
-
             if self.include_movie_features and input == "sequence_movie_ids":
-                encoded_sequence_movies = embedding_helper(input)
-                concat = layers.concatenate([self.movie_genres_vector(inputs[input]), encoded_sequence_movies])
+                encoded_sequence_movies = self.create_embedding(inputs, input)
+                concat = layers.concatenate(
+                    [
+                        self.movie_genres_vector(inputs[input]),
+                        encoded_sequence_movies,
+                    ]
+                )
                 encoded_sequence_movies = self.encoded_sequence_movies(concat)
-                movie_sequence_helper(encoded_sequence_movies)
+                self.movie_sequence_helper(
+                    inputs, encoded_sequence_movies, encoded_transformer_features
+                )
                 continue
 
-            if ((not self.include_movie_features) and input == "sequence_movie_ids"):
-                encoded_sequence_movies = embedding_helper("sequence_movie_ids")
-                movie_sequence_helper(encoded_sequence_movies)
+            if (not self.include_movie_features) and input == "sequence_movie_ids":
+                encoded_sequence_movies = self.create_embedding(inputs, input)
+                self.movie_sequence_helper(
+                    inputs, encoded_sequence_movies, encoded_transformer_features
+                )
 
         # Create a single embedding vector for the user features
         if len(encoded_other_features) > 1:
@@ -496,9 +503,10 @@ class Embeddings(layers.Layer):
         elif len(encoded_other_features) == 1:
             encoded_other_features = encoded_other_features[0]
         else:
-            encoded_other_features = keras.ops.zeros((0,))
+            # An empty tensor required for keras symbolic model build
+            encoded_other_features = ops.zeros((0,))
         # The target_movie_id embedding and appending to transformer features
-        encoded_target_movie = embedding_helper("target_movie_id")
+        encoded_target_movie = self.create_embedding(inputs, "target_movie_id")
         encoded_transformer_features.append(encoded_target_movie)
         # Concatenation of transformer features
         encoded_transformer_features = layers.concatenate(
