@@ -170,7 +170,7 @@ We will now
 subclass the `RMSProp` optimizer class modifying the
 `keras.optimizers.Optimizer.get_gradients()` method where we now implement Gradient
 Centralization. On a high level the idea is that let us say we obtain our gradients
-through back propogation for a Dense or Convolution layer we then compute the mean of the
+through back propagation for a Dense or Convolution layer we then compute the mean of the
 column vectors of the weight matrix, and then remove the mean from each column vector.
 
 The experiments in [this paper](https://arxiv.org/abs/2004.01461) on various
