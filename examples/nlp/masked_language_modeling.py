@@ -46,12 +46,14 @@ Install `tf-nightly` via `pip install tf-nightly`.
 
 import os
 
-os.environ["KERAS_BACKEND"] = "jax"
-import keras_hub
-import keras
+os.environ["KERAS_BACKEND"] = "torch"  # or jax, or tensorflow
 
+import keras_hub
+
+import keras
 from keras import layers
 from keras.layers import TextVectorization
+
 from dataclasses import dataclass
 import pandas as pd
 import numpy as np
@@ -137,6 +139,7 @@ It masks 15% of all input tokens in each sequence at random.
 
 # For data pre-processing and tf.data.Dataset
 import tensorflow as tf
+
 
 def custom_standardization(input_data):
     lowercase = tf.strings.lower(input_data)
@@ -240,7 +243,7 @@ test_classifier_ds = tf.data.Dataset.from_tensor_slices((x_test, y_test)).batch(
     config.BATCH_SIZE
 )
 
-# Build dataset for end to end model input (will be used at the end)
+# Dataset for end to end model input (will be used at the end)
 test_raw_classifier_ds = test_df
 
 # Prepare data for masked language model
@@ -327,9 +330,11 @@ class MaskedLanguageModel(keras.Model):
             training=training,
         )
         loss = loss_fn(labels, y_pred, sample_weight=sample_weight)
+        # We decided to use sum since our reduction=None in the loss_fn
         summed_loss = loss.sum()
         return summed_loss, (y_pred, non_trainable_variables, loss)
 
+    # Jax training loop
     def _jax_train_step(self, state, inputs):
 
         import jax
@@ -363,7 +368,7 @@ class MaskedLanguageModel(keras.Model):
         ) = self.optimizer.stateless_apply(
             optimizer_variables, grads, trainable_variables
         )
-        # Compute our own metrics
+        # Compute our own metrics, loss_tracker object was returning errors with JAX.
         new_metrics_vars = []
         logs = {}
         for metric in self.metrics:
@@ -387,10 +392,10 @@ class MaskedLanguageModel(keras.Model):
             optimizer_variables,
             new_metrics_vars,
         )
-        # Return a dict mapping metric names to current value, and
-        # state for model saving
+        # Return a dict mapping metric names to current value, and state
         return {"loss": logs["loss"]}, state
 
+    # Tensorflow training step
     def _tensorflow_train_step(self, inputs):
 
         if len(inputs) == 3:
@@ -411,9 +416,8 @@ class MaskedLanguageModel(keras.Model):
         # Return a dict mapping metric names to current value
         return {"loss": loss_tracker.result()}
 
+    # Torch training step
     def _torch_train_step(self, inputs):
-
-        import torch
 
         if len(inputs) == 3:
             features, labels, sample_weight = inputs
@@ -424,8 +428,8 @@ class MaskedLanguageModel(keras.Model):
         # Compute loss
         predictions = self(features, training=True)
         loss = loss_fn(labels, predictions, sample_weight=sample_weight)
-        # Call torch.Tensor.backward() on the loss to compute gradients
-        # for the weights.
+        # Compute gradients for the weights, and # We decided to use sum since our
+        # reduction=None in the loss_fn
         loss.sum().backward()
         trainable_weights = [v for v in self.trainable_weights]
         gradients = [v.value.grad for v in trainable_weights]
@@ -445,7 +449,6 @@ class MaskedLanguageModel(keras.Model):
         # If you don't implement this property, you have to call
         # `reset_states()` yourself at the time of your choosing.
         return [loss_tracker]
-
 
 
 def create_masked_language_bert_model():
@@ -522,8 +525,8 @@ bert_masked_model.summary()
 ## Train and Save
 """
 
-# bert_masked_model.fit(mlm_ds, epochs=1, callbacks=[generator_callback])
-# bert_masked_model.save("bert_mlm_imdb.keras")
+bert_masked_model.fit(mlm_ds, epochs=1, callbacks=[generator_callback])
+bert_masked_model.save("bert_mlm_imdb.keras")
 
 """
 ## Fine-tune a sentiment classification model
@@ -588,24 +591,25 @@ classifer_model.fit(
 When you want to deploy a model, it's best if it already includes its preprocessing
 pipeline, so that you don't have to reimplement the preprocessing logic in your
 production environment. Let's create an end-to-end model that incorporates
-the `TextVectorization` layer, and let's evaluate. Our model will accept raw strings
-as input.
+the `TextVectorization` layer inside evalaute method, and let's evaluate. 
+We will pass raw strings as input.
 """
 
+
 # We create a custom Model to override the evaluate method so
-# that if first pre-process text data
+# that it first pre-process text data
 class ModelEndtoEnd(keras.Model):
 
     def evaluate(self, inputs):
         features = encode(inputs.review.values)
         labels = inputs.sentiment.values
         test_classifier_ds = (
-        tf.data.Dataset.from_tensor_slices((features, labels))
-        .shuffle(1000)
-        .batch(config.BATCH_SIZE)
+            tf.data.Dataset.from_tensor_slices((features, labels))
+            .shuffle(1000)
+            .batch(config.BATCH_SIZE)
         )
         return super().evaluate(test_classifier_ds)
-        
+
     # Build the model
     def build(self, input_shape):
         self.built = True
@@ -623,4 +627,5 @@ def get_end_to_end(model):
 
 
 end_to_end_classification_model = get_end_to_end(classifer_model)
+# Pass raw text dataframe to the model
 end_to_end_classification_model.evaluate(test_raw_classifier_ds)
