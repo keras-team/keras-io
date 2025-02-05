@@ -281,19 +281,19 @@ MODELS_MASTER = {
             "children": [
                 {
                     "path": "bart_tokenizer",
-                    "title": "BertTokenizer",
+                    "title": "BartTokenizer",
                     "generate": [
-                        "keras_hub.tokenizers.BertTokenizer",
-                        "keras_hub.tokenizers.BertTokenizer.from_preset",
+                        "keras_hub.tokenizers.BartTokenizer",
+                        "keras_hub.tokenizers.BartTokenizer.from_preset",
                     ],
                 },
                 {
                     "path": "bart_backbone",
-                    "title": "BertBackbone model",
+                    "title": "BartBackbone model",
                     "generate": [
-                        "keras_hub.models.BertBackbone",
-                        "keras_hub.models.BertBackbone.from_preset",
-                        "keras_hub.models.BertBackbone.token_embedding",
+                        "keras_hub.models.BartBackbone",
+                        "keras_hub.models.BartBackbone.from_preset",
+                        "keras_hub.models.BartBackbone.token_embedding",
                     ],
                 },
                 {
