@@ -2,9 +2,10 @@
 Title: Large-scale multi-label text classification
 Author: [Sayak Paul](https://twitter.com/RisingSayak), [Soumik Rakshit](https://github.com/soumik12345)
 Date created: 2020/09/25
-Last modified: 2020/12/23
+Last modified: 2025/06/02
 Description: Implementing a large-scale multi-label text classification model.
 Accelerator: GPU
+Made backend-agnostic by: [Humbulani Ndou](https://github.com/Humbulani1234)
 """
 
 """
@@ -30,13 +31,16 @@ Additionally, you can also find the dataset on
 ## Imports
 """
 
-from tensorflow.keras import layers
-from tensorflow import keras
-import tensorflow as tf
+import os
+
+os.environ["KERAS_BACKEND"] = "jax"  # or tensorflow, or torch
+
+import keras
+from keras import layers, ops
 
 from sklearn.model_selection import train_test_split
-from ast import literal_eval
 
+from ast import literal_eval
 import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
@@ -50,7 +54,7 @@ some basic exploratory data analysis (EDA).
 
 arxiv_data = pd.read_csv(
     "https://github.com/soumik12345/multi-label-text-classification/releases/download/v0.2/arxiv_data.csv"
-)
+).iloc[0:2000]
 arxiv_data.head()
 
 """
@@ -144,8 +148,11 @@ Now we preprocess our labels using the
 layer.
 """
 
+# For RaggedTensor
+import tensorflow as tf
+
 terms = tf.ragged.constant(train_df["terms"].values)
-lookup = tf.keras.layers.StringLookup(output_mode="multi_hot")
+lookup = layers.StringLookup(output_mode="multi_hot")
 lookup.adapt(terms)
 vocab = lookup.get_vocabulary()
 
@@ -326,7 +333,7 @@ There are also other suitable metrics for multi-label classification, like
 [Hamming loss](https://www.tensorflow.org/addons/api_docs/python/tfa/metrics/HammingLoss).
 """
 
-epochs = 20
+epochs = 1
 
 shallow_mlp_model = make_model()
 shallow_mlp_model.compile(
@@ -382,13 +389,33 @@ surfacing bottlenecks for the hardware accelerators. This also allows for
 asynchronous data processing.
 """
 
-# Create a model for inference.
-model_for_inference = keras.Sequential([text_vectorizer, shallow_mlp_model])
 
-# Create a small dataset just for demoing inference.
-inference_dataset = make_dataset(test_df.sample(100), is_train=False)
+# We create a custom Model to override the predict method so
+# that it first vectorizes text data
+class ModelEndtoEnd(keras.Model):
+
+    def predict(self, inputs):
+        indices = text_vectorizer(inputs)
+        return super().predict(indices)
+
+
+def get_inference_model(model):
+    inputs = shallow_mlp_model.inputs
+    outputs = shallow_mlp_model.outputs
+    end_to_end_model = ModelEndtoEnd(inputs, outputs, name="end_to_end_model")
+    end_to_end_model.compile(
+        optimizer="adam", loss="binary_crossentropy", metrics=["accuracy"]
+    )
+    return end_to_end_model
+
+
+model_for_inference = get_inference_model(shallow_mlp_model)
+
+# Create a small dataset just for demonstrating inference.
+inference_dataset = make_dataset(test_df.sample(2), is_train=False)
 text_batch, label_batch = next(iter(inference_dataset))
 predicted_probabilities = model_for_inference.predict(text_batch)
+
 
 # Perform inference.
 for i, text in enumerate(text_batch[:5]):
