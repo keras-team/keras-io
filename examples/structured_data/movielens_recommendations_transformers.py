@@ -4,8 +4,8 @@ Author: [Khalid Salama](https://www.linkedin.com/in/khalid-salama-24403144/)
 Date created: 2020/12/30
 Last modified: 2025/01/27
 Description: Rating rate prediction using the Behavior Sequence Transformer (BST) model on the Movielens.
-Made backend-agnostic by: [Humbulani Ndou](https://github.com/Humbulani1234)
 Accelerator: GPU
+Made backend-agnostic by: [Humbulani Ndou](https://github.com/Humbulani1234)
 """
 
 """
@@ -58,10 +58,10 @@ os.environ["KERAS_BACKEND"] = "jax"  # or torch, or tensorflow
 import math
 from zipfile import ZipFile
 from urllib.request import urlretrieve
-
-import keras
 import numpy as np
 import pandas as pd
+
+import keras
 from keras import layers, ops
 from keras.layers import StringLookup
 
@@ -315,7 +315,6 @@ def get_dataset_from_csv(csv_file_path, batch_size, shuffle=True):
                 # Convert the string input values into integer indices.
                 value_index = index_lookup(features[feature_name])
                 features[feature_name] = value_index
-
             else:
                 # movie_id is not part of the features, hence not processed. It was mainly required
                 # for its vocabulary above.
@@ -348,7 +347,6 @@ def get_dataset_from_csv(csv_file_path, batch_size, shuffle=True):
         field_delim="|",
         shuffle=shuffle,
     ).map(process)
-
     return dataset
 
 
@@ -524,6 +522,7 @@ def create_model():
         features = layers.concatenate(
             [features, layers.Reshape([other_features.shape[-1]])(other_features)]
         )
+
     # Fully-connected layers.
     for num_units in hidden_units:
         features = layers.Dense(num_units)(features)
@@ -532,7 +531,6 @@ def create_model():
         features = layers.Dropout(dropout_rate)(features)
     outputs = layers.Dense(units=1)(features)
     model = keras.Model(inputs=inputs, outputs=outputs)
-
     return model
 
 
