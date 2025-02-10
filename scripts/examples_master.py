@@ -791,6 +791,7 @@ EXAMPLES_MASTER = {
                     "path": "gan_ada",
                     "title": "Data-efficient GANs with Adaptive Discriminator Augmentation",
                     "subcategory": "Image generation",
+                    "keras_3": True,
                 },
                 {
                     "path": "deep_dream",
