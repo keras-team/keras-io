@@ -72,7 +72,7 @@ sst_dir = os.path.expanduser("~/.keras/datasets/SST-2/")
 
 # Download vocabulary data.
 vocab_file = keras.utils.get_file(
-    origin="https://storage.googleapis.com/tensorflow/keras-hub/examples/bert/bert_vocab_uncased.txt",
+    origin="https://storage.googleapis.com/tensorflow/keras-nlp/examples/bert/bert_vocab_uncased.txt",
 )
 
 """
