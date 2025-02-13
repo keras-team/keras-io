@@ -2,9 +2,10 @@
 Title: A Transformer-based recommendation system
 Author: [Khalid Salama](https://www.linkedin.com/in/khalid-salama-24403144/)
 Date created: 2020/12/30
-Last modified: 2025/01/03
+Last modified: 2025/01/27
 Description: Rating rate prediction using the Behavior Sequence Transformer (BST) model on the Movielens.
 Accelerator: GPU
+Made backend-agnostic by: [Humbulani Ndou](https://github.com/Humbulani1234)
 """
 
 """
@@ -52,17 +53,16 @@ as expected by the BST model.
 
 import os
 
-os.environ["KERAS_BACKEND"] = "tensorflow"
+os.environ["KERAS_BACKEND"] = "jax"  # or torch, or tensorflow
 
 import math
 from zipfile import ZipFile
 from urllib.request import urlretrieve
-
-import keras
 import numpy as np
 import pandas as pd
-import tensorflow as tf
-from keras import layers
+
+import keras
+from keras import layers, ops
 from keras.layers import StringLookup
 
 """
@@ -254,71 +254,11 @@ USER_FEATURES = ["sex", "age_group", "occupation"]
 
 MOVIE_FEATURES = ["genres"]
 
-"""
-## Create `tf.data.Dataset` for training and evaluation
-"""
-
-
-def get_dataset_from_csv(csv_file_path, batch_size, shuffle=True):
-    def process(features):
-        movie_ids_string = features["sequence_movie_ids"]
-        sequence_movie_ids = tf.strings.split(movie_ids_string, ",").to_tensor()
-
-        # The last movie id in the sequence is the target movie.
-        features["target_movie_id"] = sequence_movie_ids[:, -1]
-        features["sequence_movie_ids"] = sequence_movie_ids[:, :-1]
-
-        ratings_string = features["sequence_ratings"]
-        sequence_ratings = tf.strings.to_number(
-            tf.strings.split(ratings_string, ","), tf.dtypes.float32
-        ).to_tensor()
-
-        # The last rating in the sequence is the target for the model to predict.
-        target = sequence_ratings[:, -1]
-        features["sequence_ratings"] = sequence_ratings[:, :-1]
-
-        return dict(features), target
-
-    dataset = tf.data.experimental.make_csv_dataset(
-        csv_file_path,
-        batch_size=batch_size,
-        column_names=CSV_HEADER,
-        num_epochs=1,
-        header=False,
-        field_delim="|",
-        shuffle=shuffle,
-    ).map(process)
-
-    return dataset
-
-
-"""
-## Create model inputs
-"""
-
-
-def create_model_inputs():
-    return {
-        "user_id": keras.Input(name="user_id", shape=(1,), dtype="string"),
-        "sequence_movie_ids": keras.Input(
-            name="sequence_movie_ids", shape=(sequence_length - 1,), dtype="string"
-        ),
-        "target_movie_id": keras.Input(
-            name="target_movie_id", shape=(1,), dtype="string"
-        ),
-        "sequence_ratings": keras.Input(
-            name="sequence_ratings", shape=(sequence_length - 1,), dtype=tf.float32
-        ),
-        "sex": keras.Input(name="sex", shape=(1,), dtype="string"),
-        "age_group": keras.Input(name="age_group", shape=(1,), dtype="string"),
-        "occupation": keras.Input(name="occupation", shape=(1,), dtype="string"),
-    }
-
 
 """
 ## Encode input features
 
-The `encode_input_features` method works as follows:
+The `encode_input_features` function works as follows:
 
 1. Each categorical user feature is encoded using `layers.Embedding`, with embedding
 dimension equals to the square root of the vocabulary size of the feature.
@@ -342,12 +282,79 @@ by the attention layer for the transformer architecture.
 `encoded_other_features`.
 """
 
+# Required for tf.data.Dataset
+import tensorflow as tf
+
+
+def get_dataset_from_csv(csv_file_path, batch_size, shuffle=True):
+
+    def process(features):
+        movie_ids_string = features["sequence_movie_ids"]
+        sequence_movie_ids = tf.strings.split(movie_ids_string, ",").to_tensor()
+        # The last movie id in the sequence is the target movie.
+        features["target_movie_id"] = sequence_movie_ids[:, -1]
+        features["sequence_movie_ids"] = sequence_movie_ids[:, :-1]
+        # Sequence ratings
+        ratings_string = features["sequence_ratings"]
+        sequence_ratings = tf.strings.to_number(
+            tf.strings.split(ratings_string, ","), tf.dtypes.float32
+        ).to_tensor()
+        # The last rating in the sequence is the target for the model to predict.
+        target = sequence_ratings[:, -1]
+        features["sequence_ratings"] = sequence_ratings[:, :-1]
+
+        def encoding_helper(feature_name):
+
+            # This are target_movie_id and sequence_movie_ids and they have the same
+            # vocabulary as movie_id.
+            if feature_name not in CATEGORICAL_FEATURES_WITH_VOCABULARY:
+                vocabulary = CATEGORICAL_FEATURES_WITH_VOCABULARY["movie_id"]
+                index_lookup = StringLookup(
+                    vocabulary=vocabulary, mask_token=None, num_oov_indices=0
+                )
+                # Convert the string input values into integer indices.
+                value_index = index_lookup(features[feature_name])
+                features[feature_name] = value_index
+            else:
+                # movie_id is not part of the features, hence not processed. It was mainly required
+                # for its vocabulary above.
+                if feature_name == "movie_id":
+                    pass
+                else:
+                    vocabulary = CATEGORICAL_FEATURES_WITH_VOCABULARY[feature_name]
+                    index_lookup = StringLookup(
+                        vocabulary=vocabulary, mask_token=None, num_oov_indices=0
+                    )
+                    # Convert the string input values into integer indices.
+                    value_index = index_lookup(features[feature_name])
+                    features[feature_name] = value_index
+
+        # Encode the user features
+        for feature_name in CATEGORICAL_FEATURES_WITH_VOCABULARY:
+            encoding_helper(feature_name)
+        # Encoding target_movie_id and returning it as the target variable
+        encoding_helper("target_movie_id")
+        # Encoding sequence movie_ids.
+        encoding_helper("sequence_movie_ids")
+        return dict(features), target
+
+    dataset = tf.data.experimental.make_csv_dataset(
+        csv_file_path,
+        batch_size=batch_size,
+        column_names=CSV_HEADER,
+        num_epochs=1,
+        header=False,
+        field_delim="|",
+        shuffle=shuffle,
+    ).map(process)
+    return dataset
+
 
 def encode_input_features(
     inputs,
-    include_user_id=True,
-    include_user_features=True,
-    include_movie_features=True,
+    include_user_id,
+    include_user_features,
+    include_movie_features,
 ):
     encoded_transformer_features = []
     encoded_other_features = []
@@ -360,11 +367,7 @@ def encode_input_features(
 
     ## Encode user features
     for feature_name in other_feature_names:
-        # Convert the string input values into integer indices.
         vocabulary = CATEGORICAL_FEATURES_WITH_VOCABULARY[feature_name]
-        idx = StringLookup(vocabulary=vocabulary, mask_token=None, num_oov_indices=0)(
-            inputs[feature_name]
-        )
         # Compute embedding dimensions
         embedding_dims = int(math.sqrt(len(vocabulary)))
         # Create an embedding layer with the specified dimensions.
@@ -374,7 +377,7 @@ def encode_input_features(
             name=f"{feature_name}_embedding",
         )
         # Convert the index values to embedding representations.
-        encoded_other_features.append(embedding_encoder(idx))
+        encoded_other_features.append(embedding_encoder(inputs[feature_name]))
 
     ## Create a single embedding vector for the user features
     if len(encoded_other_features) > 1:
@@ -387,13 +390,6 @@ def encode_input_features(
     ## Create a movie embedding encoder
     movie_vocabulary = CATEGORICAL_FEATURES_WITH_VOCABULARY["movie_id"]
     movie_embedding_dims = int(math.sqrt(len(movie_vocabulary)))
-    # Create a lookup to convert string values to integer indices.
-    movie_index_lookup = StringLookup(
-        vocabulary=movie_vocabulary,
-        mask_token=None,
-        num_oov_indices=0,
-        name="movie_index_lookup",
-    )
     # Create an embedding layer with the specified dimensions.
     movie_embedding_encoder = layers.Embedding(
         input_dim=len(movie_vocabulary),
@@ -419,11 +415,10 @@ def encode_input_features(
     ## Define a function to encode a given movie id.
     def encode_movie(movie_id):
         # Convert the string input values into integer indices.
-        movie_idx = movie_index_lookup(movie_id)
-        movie_embedding = movie_embedding_encoder(movie_idx)
+        movie_embedding = movie_embedding_encoder(movie_id)
         encoded_movie = movie_embedding
         if include_movie_features:
-            movie_genres_vector = movie_genres_lookup(movie_idx)
+            movie_genres_vector = movie_genres_lookup(movie_id)
             encoded_movie = movie_embedding_processor(
                 layers.concatenate([movie_embedding, movie_genres_vector])
             )
@@ -442,11 +437,11 @@ def encode_input_features(
         output_dim=movie_embedding_dims,
         name="position_embedding",
     )
-    positions = tf.range(start=0, limit=sequence_length - 1, delta=1)
+    positions = ops.arange(start=0, stop=sequence_length - 1, step=1)
     encodded_positions = position_embedding_encoder(positions)
     # Retrieve sequence ratings to incorporate them into the encoding of the movie.
     sequence_ratings = inputs["sequence_ratings"]
-    sequence_ratings = keras.ops.expand_dims(sequence_ratings, -1)
+    sequence_ratings = ops.expand_dims(sequence_ratings, -1)
     # Add the positional encoding to the movie encodings and multiply them by rating.
     encoded_sequence_movies_with_poistion_and_rating = layers.Multiply()(
         [(encoded_sequence_movies + encodded_positions), sequence_ratings]
@@ -455,15 +450,36 @@ def encode_input_features(
     # Construct the transformer inputs.
     for i in range(sequence_length - 1):
         feature = encoded_sequence_movies_with_poistion_and_rating[:, i, ...]
-        feature = keras.ops.expand_dims(feature, 1)
+        feature = ops.expand_dims(feature, 1)
         encoded_transformer_features.append(feature)
     encoded_transformer_features.append(encoded_target_movie)
-
     encoded_transformer_features = layers.concatenate(
         encoded_transformer_features, axis=1
     )
-
     return encoded_transformer_features, encoded_other_features
+
+
+"""
+## Create model inputs
+"""
+
+
+def create_model_inputs():
+    return {
+        "user_id": keras.Input(name="user_id", shape=(1,), dtype="int32"),
+        "sequence_movie_ids": keras.Input(
+            name="sequence_movie_ids", shape=(sequence_length - 1,), dtype="int32"
+        ),
+        "target_movie_id": keras.Input(
+            name="target_movie_id", shape=(1,), dtype="int32"
+        ),
+        "sequence_ratings": keras.Input(
+            name="sequence_ratings", shape=(sequence_length - 1,), dtype="float32"
+        ),
+        "sex": keras.Input(name="sex", shape=(1,), dtype="int32"),
+        "age_group": keras.Input(name="age_group", shape=(1,), dtype="int32"),
+        "occupation": keras.Input(name="occupation", shape=(1,), dtype="int32"),
+    }
 
 
 """
@@ -480,11 +496,11 @@ num_heads = 3
 
 
 def create_model():
+
     inputs = create_model_inputs()
     transformer_features, other_features = encode_input_features(
         inputs, include_user_id, include_user_features, include_movie_features
     )
-
     # Create a multi-headed attention layer.
     attention_output = layers.MultiHeadAttention(
         num_heads=num_heads, key_dim=transformer_features.shape[2], dropout=dropout_rate
@@ -501,7 +517,7 @@ def create_model():
     transformer_features = layers.LayerNormalization()(transformer_features)
     features = layers.Flatten()(transformer_features)
 
-    # Included the other features.
+    # Included the other_features.
     if other_features is not None:
         features = layers.concatenate(
             [features, layers.Reshape([other_features.shape[-1]])(other_features)]
@@ -513,7 +529,6 @@ def create_model():
         features = layers.BatchNormalization()(features)
         features = layers.LeakyReLU()(features)
         features = layers.Dropout(dropout_rate)(features)
-
     outputs = layers.Dense(units=1)(features)
     model = keras.Model(inputs=inputs, outputs=outputs)
     return model
@@ -533,6 +548,7 @@ model.compile(
 )
 
 # Read the training data.
+
 train_dataset = get_dataset_from_csv("train_data.csv", batch_size=265, shuffle=True)
 
 # Fit the model with the training data.
