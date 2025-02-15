@@ -36,7 +36,8 @@ remains upright. The agent, therefore, must learn to keep the pole from falling 
 
 ### References
 
-- [CartPole](http://www.derongliu.org/adp/adp-cdrom/Barto1983.pdf)
+- [Environment documentation](https://www.gymlibrary.dev/environments/classic_control/cart_pole/)
+- [CartPole paper](http://www.derongliu.org/adp/adp-cdrom/Barto1983.pdf)
 - [Actor Critic Method](https://hal.inria.fr/hal-00840470/document)
 
 
@@ -60,6 +61,7 @@ seed = 42
 gamma = 0.99  # Discount factor for past rewards
 max_steps_per_episode = 10000
 env = gym.make("CartPole-v0")  # Create the environment
+# Adding `render_mode='human'` will show the attempts of the agent
 env.seed(seed)
 eps = np.finfo(np.float32).eps.item()  # Smallest number such that 1.0 + eps != 1.0
 
@@ -108,12 +110,10 @@ running_reward = 0
 episode_count = 0
 
 while True:  # Run until solved
-    state = env.reset()
+    state = env.reset()[0]
     episode_reward = 0
     with tf.GradientTape() as tape:
         for timestep in range(1, max_steps_per_episode):
-            # env.render(); Adding this line would show the attempts
-            # of the agent in a pop up window.
 
             state = ops.convert_to_tensor(state)
             state = ops.expand_dims(state, 0)
@@ -128,7 +128,7 @@ while True:  # Run until solved
             action_probs_history.append(ops.log(action_probs[0, action]))
 
             # Apply the sampled action in our environment
-            state, reward, done, _ = env.step(action)
+            state, reward, done, _, _ = env.step(action)
             rewards_history.append(reward)
             episode_reward += reward
 
