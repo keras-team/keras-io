@@ -27,30 +27,29 @@ given `x`.  We'll use a class of neural networks called
 "Mixture Density Networks".
 
 I'm going to use the new
-[multibackend Keras Core project](https://github.com/keras-team/keras-core) to
+[multibackend Keras V3](https://github.com/keras-team/keras) to
 build my Mixture Density networks.
 Great job to the Keras team on the project - it's awesome to be able to swap
 frameworks in one line of code.
 
-Some bad news: I use TensorFlow probability in this guide... so it doesn't
-actually work with other backends.
+Some bad news: I use TensorFlow probability in this guide... so it
+actually works only with TensorFlow and JAX backends.
 
 Anyways, let's start by installing dependencies and sorting out imports:
 """
 """shell
-pip install -q --upgrade tensorflow-probability keras-core
+pip install -q --upgrade jax tensorflow-probability[jax] keras
 """
+
+import os
+
+os.environ["KERAS_BACKEND"] = "jax"
 
 import numpy as np
 import matplotlib.pyplot as plt
-import math
-import random
-from keras_core import callbacks
-import keras_core
-import tensorflow as tf
-from keras_core import layers
-from keras_core import optimizers
-from tensorflow_probability import distributions as tfd
+import keras
+from keras import callbacks, layers, ops
+from tensorflow_probability.substrates.jax import distributions as tfd
 
 """
 Next, lets generate a noisy spiral that we're going to attempt to approximate.
@@ -99,7 +98,7 @@ We can quickly show this with a simple linear model:
 
 N_HIDDEN = 128
 
-model = keras_core.Sequential(
+model = keras.Sequential(
     [
         layers.Dense(N_HIDDEN, activation="relu"),
         layers.Dense(N_HIDDEN, activation="relu"),
@@ -179,7 +178,7 @@ Network loss evaluation.
 
 
 def elu_plus_one_plus_epsilon(x):
-    return keras_core.activations.elu(x) + 1 + keras_core.backend.epsilon()
+    return keras.activations.elu(x) + 1 + keras.backend.epsilon()
 
 
 """
@@ -238,7 +237,7 @@ Lets construct an Mixture Density Network using our new layer:
 OUTPUT_DIMS = 1
 N_MIXES = 20
 
-mdn_network = keras_core.Sequential(
+mdn_network = keras.Sequential(
     [
         layers.Dense(N_HIDDEN, activation="relu"),
         layers.Dense(N_HIDDEN, activation="relu"),
@@ -255,36 +254,22 @@ Network layer based on the true values and our expected outputs:
 def get_mixture_loss_func(output_dim, num_mixes):
     def mdn_loss_func(y_true, y_pred):
         # Reshape inputs in case this is used in a TimeDistributed layer
-        y_pred = tf.reshape(
-            y_pred,
-            [-1, (2 * num_mixes * output_dim) + num_mixes],
-            name="reshape_ypreds",
-        )
-        y_true = tf.reshape(y_true, [-1, output_dim], name="reshape_ytrue")
+        y_pred = ops.reshape(y_pred, [-1, (2 * num_mixes * output_dim) + num_mixes])
+        y_true = ops.reshape(y_true, [-1, output_dim])
         # Split the inputs into parameters
-        out_mu, out_sigma, out_pi = tf.split(
-            y_pred,
-            num_or_size_splits=[
-                num_mixes * output_dim,
-                num_mixes * output_dim,
-                num_mixes,
-            ],
-            axis=-1,
-            name="mdn_coef_split",
-        )
+        out_mu, out_sigma, out_pi = ops.split(y_pred, 3, axis=-1)
         # Construct the mixture models
         cat = tfd.Categorical(logits=out_pi)
-        component_splits = [output_dim] * num_mixes
-        mus = tf.split(out_mu, num_or_size_splits=component_splits, axis=1)
-        sigs = tf.split(out_sigma, num_or_size_splits=component_splits, axis=1)
+        mus = ops.split(out_mu, num_mixes, axis=1)
+        sigs = ops.split(out_sigma, num_mixes, axis=1)
         coll = [
             tfd.MultivariateNormalDiag(loc=loc, scale_diag=scale)
             for loc, scale in zip(mus, sigs)
         ]
         mixture = tfd.Mixture(cat=cat, components=coll)
         loss = mixture.log_prob(y_true)
-        loss = tf.negative(loss)
-        loss = tf.reduce_mean(loss)
+        loss = ops.negative(loss)
+        loss = ops.mean(loss)
         return loss
 
     return mdn_loss_func
@@ -349,7 +334,7 @@ def sample_from_categorical(dist):
         accumulate += dist[i]
         if accumulate >= r:
             return i
-    tf.logging.info("Error sampling categorical model.")
+    print("Error sampling categorical model.")
     return -1
 
 
