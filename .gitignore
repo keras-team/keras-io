@@ -16,3 +16,5 @@ templates/keras_hub/getting_started.md
 templates/keras_tuner/getting_started.md
 datasets/*
 .vscode/*
+node_modules/*
+bundle/*
