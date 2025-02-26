@@ -1,0 +1,23 @@
+:root {
+  --white:#FFFFFF;
+  --grey: #E7E7E7;
+  --grey-blue: #425066;
+
+  /* Light Colors*/
+  --light-grey: #F3F3F3;
+
+  /* Dark Colors */
+  --dark-grey: #3F3F3F;
+  --dark-red: #AB0000;
+
+  /* Border Colors */
+  --border-grey: #DCDCDC;
+  --border-red: #A80000;
+
+  /* Shadow Colors */
+  --shadow-grey: #9C9C9C;
+
+  /* Text Colors */
+  --text-black: #292321;
+  --text-red: #D00101;
+}

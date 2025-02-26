@@ -1,0 +1,38 @@
+i {
+  display: block;
+}
+
+.icon--search {
+  background-image: url("../icons/search.webp");
+  background-size: cover;
+  height: 12px;
+  width: 12px;
+}
+
+.icon__search--mobile {
+  background-image: url("../icons/search.webp");
+  background-size: cover;
+  height: 28px;
+  width: 28px;
+}
+
+.icon--copy {
+  background-image: url("../icons/copy.webp");
+  background-size: cover;
+  height: 18px;
+  width: 18px;
+}
+
+.icon--menu {
+  background-image: url("../icons/menu.webp");
+  background-size: cover;
+  height: 18px;
+  width: 27px;
+}
+
+.icon--colab {
+  background-image: url("../icons/colab.webp");
+  background-size: cover;
+  height: 20px;
+  width: 20px;
+}

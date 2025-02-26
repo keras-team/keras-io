@@ -7,6 +7,22 @@ const CopyWebpackPlugin = require("copy-webpack-plugin");
 
 const isProduction = process.env.NODE_ENV === "production";
 
+const pages = ["landing", "base", "docs", "examples", "keras_3", "search"];
+
+const htmlPlugins = pages.map((page) => {
+  return new HtmlWebpackPlugin({
+    template: `./theme/${page}.html`,
+    filename: `${page}.html`,
+    inject: "body",
+    minify: isProduction
+      ? { 
+          removeComments: true,
+          collapseWhitespace: true,
+        }
+      : false,
+  });
+});
+
 module.exports = {
   mode: isProduction ? "production" : "development",
   devtool: isProduction ? false : "inline-source-map",
@@ -15,6 +31,11 @@ module.exports = {
     path: path.join(__dirname, "bundle"),
     filename: "js/[name].[contenthash].min.js",
     clean: true,
+  },
+  resolve: {
+    alias: {
+      '@images': path.resolve(__dirname, 'bundle/images/'),
+    },
   },
   module: {
     rules: [
@@ -65,17 +86,7 @@ module.exports = {
     new MiniCssExtractPlugin({
       filename: "css/[name].[contenthash].min.css",
     }),
-    new HtmlWebpackPlugin({
-      template: "./theme/landing.html",
-      filename: "landing.html",
-      inject: "body",
-      minify: isProduction
-        ? {
-            removeComments: true,
-            collapseWhitespace: true,
-          }
-        : false,
-    }),
+    ...htmlPlugins,
     new CopyWebpackPlugin({
       patterns: [
         {

@@ -1,11 +1,18 @@
-FROM python:3.9
+FROM node:23.8-bullseye AS node-builder
+
+COPY ./ ./
+RUN npm install && npm run webpack:prod
+
+FROM python:3.9 AS final
 
 COPY requirements.txt ./
-RUN pip install -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 RUN pip install keras --upgrade
 
 COPY ./ ./
-WORKDIR scripts
+COPY --from=node-builder /bundle ./bundle
+
+WORKDIR /scripts
 RUN python autogen.py make
 
 CMD ["python", "-u", "autogen.py", "serve"]

@@ -776,9 +776,11 @@ class KerasIO:
                     print("...Rendering", fname)
                     self.render_single_file(src_location, fname, self.nav)
 
-        # Images & css
+        # Images & css & js
         shutil.copytree(Path(self.theme_dir) / "css", Path(self.site_dir) / "css")
-        shutil.copytree(Path(self.theme_dir) / "img", Path(self.site_dir) / "img")
+        shutil.copytree(Path(self.theme_dir) / "images", Path(self.site_dir) / "images")
+        shutil.copytree(Path(self.theme_dir) / "icons", Path(self.site_dir) / "icons")
+        shutil.copytree(Path(self.theme_dir) / "js", Path(self.site_dir) / "js")
 
         # Landing page
         landing_template = jinja2.Template(
@@ -834,7 +836,7 @@ class KerasIO:
 
         # Favicon
         shutil.copyfile(
-            Path(self.theme_dir) / "favicon.ico",
+            Path(self.theme_dir) / "images/favicon.ico",
             Path(self.site_dir) / "favicon.ico",
         )
 
@@ -1135,7 +1137,7 @@ if __name__ == "__main__":
         templates_dir=os.path.join(root, "templates"),
         md_sources_dir=os.path.join(root, "sources"),
         site_dir=os.path.join(root, "site"),
-        theme_dir=os.path.join(root, "theme"),
+        theme_dir=os.path.join(root, "bundle"),
         guides_dir=os.path.join(root, "guides"),
         examples_dir=os.path.join(root, "examples"),
         redirects_dir=os.path.join(root, "redirects"),

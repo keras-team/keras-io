@@ -1,259 +1,584 @@
 <!DOCTYPE html>
 <html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, shrink-to-fit=no"
+    />
+    <meta name="description" content="Keras documentation" />
+    <meta name="author" content="Keras Team" />
 
-<head>
+    <title>Keras: Deep Learning for humans</title>
+    <link rel="icon" type="image/webp" href="images/k-keras-social.webp" />
 
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-  <meta name="description" content="Keras documentation">
-  <meta name="author" content="Keras Team">
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 
-  <title>Keras: Deep Learning for humans</title>
+    <!-- Fonts -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400&display=swap"
+      rel="stylesheet"
+    />
 
-  <!-- Bootstrap core CSS -->
-  <link href="css/bootstrap.min.css" rel="stylesheet">
+    <!-- Prism CSS import -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css"
+    />
 
-  <!-- Custom fonts for this template -->
-  <link href="https://fonts.googleapis.com/css?family=Open+Sans:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <!-- GLIDE CSS import -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/Glide.js/3.6.0/css/glide.core.min.css"
+    />
 
-  <!-- Custom styles for this template -->
-  <link href="css/landing.css" rel="stylesheet">
+    <!-- Google Tag Manager -->
+    <script>
+      (function (w, d, s, l, i) {
+        w[l] = w[l] || [];
+        w[l].push({
+          "gtm.start": new Date().getTime(),
+          event: "gtm.js",
+        });
+        var f = d.getElementsByTagName(s)[0],
+          j = d.createElement(s),
+          dl = l != "dataLayer" ? "&l=" + l : "";
+        j.async = true;
+        j.src = "https://www.googletagmanager.com/gtm.js?id=" + i + dl;
+        f.parentNode.insertBefore(j, f);
+      })(window, document, "script", "dataLayer", "GTM-5DNGF4N");
+    </script>
+    <script>
+      (function (i, s, o, g, r, a, m) {
+        i["GoogleAnalyticsObject"] = r;
+        (i[r] =
+          i[r] ||
+          function () {
+            (i[r].q = i[r].q || []).push(arguments);
+          }),
+          (i[r].l = 1 * new Date());
+        (a = s.createElement(o)), (m = s.getElementsByTagName(o)[0]);
+        a.async = 1;
+        a.src = g;
+        m.parentNode.insertBefore(a, m);
+      })(
+        window,
+        document,
+        "script",
+        "https://www.google-analytics.com/analytics.js",
+        "ga"
+      );
+      ga("create", "UA-175165319-128", "auto");
+      ga("send", "pageview");
+    </script>
+    <!-- End Google Tag Manager -->
+  </head>
 
-  <!-- Google Tag Manager -->
-  <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-  new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-  j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-  'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-  })(window,document,'script','dataLayer','GTM-5DNGF4N');
-  </script>
-  <script>
-  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
-  ga('create', 'UA-175165319-128', 'auto');
-  ga('send', 'pageview');
-  </script>
-  <!-- End Google Tag Manager -->
+  <body>
+    <!-- Google Tag Manager (noscript) -->
+    <noscript
+      ><iframe
+        src="https://www.googletagmanager.com/ns.html?id=GTM-5DNGF4N"
+        height="0"
+        width="0"
+        style="display: none; visibility: hidden"
+      ></iframe
+    ></noscript>
+    <!-- End Google Tag Manager (noscript) -->
 
-</head>
+    <nav class="nav__container">
+      <button class="nav__menu--button"><i class="icon--menu"></i></button>
+      <a href="{{base_url}}">
+        <img class="nav__logo" />
+      </a>
+      <button class="nav__search--mobile">
+        <i class="icon__search--mobile"></i>
+      </button>
 
-<body>
-  <!-- Google Tag Manager (noscript) -->
-  <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-5DNGF4N"
-  height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
-  <!-- End Google Tag Manager (noscript) -->
+      <div class="nav__menu">
+        <ul class="nav__item--container">
+          <li class="nav__item">
+            <a class="nav__link">GET STARTED</a>
+          </li>
+          <li class="nav__item">
+            <a class="nav__link" href="{{base_url}}about/">ABOUT</a>
+          </li>
+          <li class="nav__item">
+            <a class="nav__link" href="{{base_url}}guides/">GUIDES</a>
+          </li>
+          <li class="nav__item">
+            <a class="nav__link" href="{{base_url}}api/">API DOCS</a>
+          </li>
+          <li class="nav__item">
+            <a class="nav__link" href="{{base_url}}examples/">EXAMPLES</a>
+          </li>
+          <li class="nav__item"><a class="nav__link">KERASHUB</a></li>
+        </ul>
 
-  <!-- Masthead -->
-  <header class="masthead smooth-white-bg text-center">
-    
-    <div class="container">
-        <img src='img/logo.png' class='logo' />
-      <div class="row">
-        <div class="col-xl-8 mx-auto">
-          <h1 class="mb-5">Simple. Flexible. Powerful.</h1>
-        
-            <div class="row mx-auto">            
-              <div class="col-md px-1">
-                <a href='{{base_url}}getting_started/' class="btn btn-block btn-lg btn-primary">Get started</a>
-              </div>
-              <div class="col-md px-1">
-                <a href='{{base_url}}api/' class="btn btn-block btn-lg btn-secondary">API docs</a>
-              </div>
-              <div class="col-md px-1">
-                <a href='{{base_url}}guides/' class="btn btn-block btn-lg btn-secondary">Guides</a>
-              </div>
-              <div class="col-md px-1">
-                <a href='{{base_url}}examples/' class="btn btn-block btn-lg btn-secondary">Examples</a>
+        <form class="nav__search">
+          <input
+            class="nav__search--input"
+            type="search"
+            placeholder="SEARCH"
+            aria-label="Search"
+          />
+          <button class="nav__search--button" type="submit">
+            <i class="icon--search"></i>
+          </button>
+        </form>
+      </div>
+    </nav>
+
+    <div class="page__container">
+      <div class="hero">
+        <div class="hero__content--wrapper">
+          <div class="hero__content">
+            <a class="button__round">KERAS 3.0 RELEASED</a>
+
+            <h1 class="hero__title text--white">A superpower for developers</h1>
+
+            <p class="hero__description text--white">
+              Keras is a deep learning API designed for human beings, not
+              machines. Keras focuses on debugging speed, code elegance &
+              conciseness, maintainability, and deployability. When you choose
+              Keras, your codebase is smaller, more readable, easier to iterate
+              on.
+            </p>
+
+            <div class="hero__buttons">
+              <a class="button__square button__square--white">API DOCS</a>
+              <a class="button__square button__square--white">GUIDES</a>
+              <a class="button__square button__square--white">EXAMPLES</a>
+            </div>
+          </div>
+        </div>
+        <img class="hero__image" src="images/k-graphic.webp" />
+      </div>
+
+      <div class="stack--container">
+        <div class="explore stacked__item">
+          <div class="explore__column">
+            <div class="code__container">
+              <button class="code__copy--button">
+                <i class="icon--copy"></i>
+              </button>
+              <pre>
+                <code class="language-python">
+  inputs = keras.Input(shape=(32, 32, 3))
+  x = layers.Conv2D(32, 3, activation="relu")(inputs)
+  x = layers.Conv2D(64, 3, activation="relu")(x)
+  block_1_output = layers.MaxPooling2D(3)(x)
+  
+  x = layers.Conv2D(64, 3, activation="relu")(block_1_output)
+  x = layers.Conv2D(64, 3, activation="relu")(x)
+  block_2_output = layers.add([x, block_1_output])
+  
+  x = layers.Conv2D(64, 3, activation="relu")(block_2_output)
+  x = layers.GlobalAveragePooling2D()(x)
+  x = layers.Dense(256, activation="relu")(x)
+  x = layers.Dropout(0.5)(x)
+  outputs = layers.Dense(10)(x)
+  
+  model = keras.Model(inputs, outputs, name="mini_resnet")
+  keras.utils.plot_model(model, "mini_resnet.png")
+  model.fit(dataset, epochs=10)
+                </code>
+              </pre>
+              <div class="code__container--quickstart">
+                <a class="button__square--colab"
+                  >Run quickstart <i class="icon--colab"></i
+                ></a>
               </div>
             </div>
-        </div>
-      </div>
-    
-  </header>
 
-
-  <div class="masthead text-center smooth-black-bg" style="padding: 1em;">
-    <div class="row">
-      <div class="col-xl-8 mx-auto" id="announcement-box">
-        Keras is now available for<br>
-        JAX, TensorFlow, PyTorch, and OpenVINO!<br>
-        <a href="/keras_3/" id="announcement-link">Read the Keras 3.0 release announcement</a>
-      </div>
-    </div>
-  </div>
+            <div class="code__container">
+              <button class="code__copy--button">
+                <i class="icon--copy"></i>
+              </button>
+              <pre>
+                <code class="language-python">
+  causal_lm = keras_hub.models.CausalLM.from_preset(
+    "gemma2_instruct_2b_en",
+    dtype="float16",
+  )
+  prompt = """&lt;start_of_turn&gt;user
+  Write python code to print the first 100 primes.
+  &lt;end_of_turn&gt;
+  &lt;start_of_turn&gt;model
+  """
+  text_output = causal_lm.generate(prompt, max_length=512)
   
+  text_to_image = keras_hub.models.TextToImage.from_preset(
+      "stable_diffusion_3_medium",
+      dtype="float16",
+  )
+  prompt = "Astronaut in a jungle, detailed"
+  image_output = text_to_image.generate(prompt)
+                </code>
+              </pre>
+              <div class="code__container--quickstart">
+                <a class="button__square--colab"
+                  >Run quickstart <i class="icon--colab"></i
+                ></a>
+              </div>
+            </div>
+          </div>
 
-  <!-- Testimonials -->
-  <section class="testimonials text-center smooth-white-bg">
-    <div class="container">
-      <div class="row">
-        <div class="col-lg-4">
-          <div class="testimonial-item mx-auto mb-5">
-            <p class="font-weight-light mb-0 quote-content">
-            "Keras is one of the key building blocks in YouTube Discovery's new modeling infrastructure. It brings a clear, consistent API and a common way of expressing modeling ideas to 8 teams across the major surfaces of YouTube recommendations."
+          <div class="explore__content">
+            <div class="explore__image--container">
+              <img src="images/jax-logo.webp" />
+              <img src="images/tensor-flow-logo.webp" />
+              <img src="images/pytorch-logo.webp" />
+              <img src="images/openvino-logo.webp" />
+              <img src="images/numpy-logo.webp" />
+            </div>
+            <h2 class="text--red">
+              Welcome to multi-framework machine learning
+            </h2>
+            <p class="explore__description">
+              With its multi-backend approach, Keras gives you the freedom to
+              work with JAX, TensorFlow, and PyTorch. Build models that can move
+              seamlessly across these frameworks and leverage the strengths of
+              each ecosystem.
             </p>
-            <h5><span class="quote-name">Maciej Kula</span><br><span class="quote-title">Staff Software Engineer - Google</span></h5>
-
+            <a
+              class="button__square button__square--white button__square--shadow"
+            >
+              GET STARTED
+            </a>
           </div>
         </div>
 
+        <div class="guide stacked__item">
+          <div class="guide__header">
+            <h2 class="guide__title text--red">Developer Guides</h2>
+            <a
+              class="guide__button button__square button__square--transparent text--red"
+              >VIEW ALL
+            </a>
+          </div>
 
-        <div class="col-lg-4">
-          <div class="testimonial-item mx-auto mb-5">
-            <p class="font-weight-light mb-0 quote-content">
-            "Keras has tremendously simplified the development workflow of Waymo's ML practitioners, with the benefits of a significantly simplified API, standardized interface and behaviors, easily shareable model building components, and highly improved debuggability."
-            </p>
-            <h5><span class="quote-name">Yiming Chen</span><br><span class="quote-title">Senior Software Engineer - Waymo</span></h5>
+          <div class="guide__code--container">
+            <div class="guide__wrapper">
+              <div class="code__container guide__code">
+                <button class="code__copy--button">
+                  <i class="icon--copy"></i>
+                </button>
+                <pre>
+                <code class="language-python">
+  import numpy as np
+  import keras
+  from keras import layers
+  from keras import ops
+  
+  inputs = keras.Input(shape=(784,))
+                </code>
+              </pre>
+              </div>
+
+              <div class="guide__content">
+                <h3>The foundation: AKA The Functional API</h3>
+                <p>
+                  Lorem ipsum dolor sit amet, consectetur adipiscing elit. Etiam
+                  eu turpis molestie, dictum est a, mattis tellus.
+                </p>
+
+                <a
+                  class="guide__content--button button__square button__square--red"
+                >
+                  VIEW GUIDE
+                </a>
+              </div>
+            </div>
+
+            <div class="guide__wrapper">
+              <div class="code__container guide__code">
+                <button class="code__copy--button">
+                  <i class="icon--copy"></i>
+                </button>
+                <pre>
+                <code class="language-python">
+  import numpy as np
+  import keras
+  from keras import layers
+  from keras import ops
+  
+  inputs = keras.Input(shape=(784,))
+                </code>
+              </pre>
+              </div>
+
+              <div class="guide__content">
+                <h3>Training & evaluation with the built-in methods</h3>
+                <p>
+                  Lorem ipsum dolor sit amet, consectetur adipiscing elit. Etiam
+                  eu turpis molestie, dictum est a, mattis tellus.
+                </p>
+
+                <a
+                  class="guide__content--button button__square button__square--red"
+                >
+                  VIEW GUIDE
+                </a>
+              </div>
+            </div>
+
+            <div class="guide__wrapper">
+              <div class="code__container guide__code">
+                <button class="code__copy--button">
+                  <i class="icon--copy"></i>
+                </button>
+                <pre>
+                  <code class="language-python">
+    import numpy as np
+    import keras
+    from keras import layers
+    from keras import ops
+  
+    inputs = keras.Input(shape=(784,))
+                  </code>
+                </pre>
+              </div>
+
+              <div class="guide__content">
+                <h3>Making new layers and models via subclassing</h3>
+                <p>
+                  Lorem ipsum dolor sit amet, consectetur adipiscing elit. Etiam
+                  eu turpis molestie, dictum est a, mattis tellus.
+                </p>
+
+                <a
+                  class="guide__content--button button__square button__square--red"
+                >
+                  VIEW GUIDE
+                </a>
+              </div>
+            </div>
           </div>
         </div>
-
-        <div class="col-lg-4">
-          <div class="testimonial-item mx-auto mb-5">
-            <p class="font-weight-light mb-0 quote-content">
-            "The best thing you can say about any software library is that the abstractions it chooses feel completely natural, such that there is zero friction between thinking about what you want to do and thinking about how you want to code it. That's exactly what you get with Keras."
-            </p>
-            <h5><span class="quote-name">Matthew Carrigan</span><br><span class="quote-title">Machine Learning Engineer - Hugging Face</span></h5>
-          </div>
-        </div>
-        
       </div>
 
-      <div class="row">
-        <div class="col-lg-4">
-          <div class="testimonial-item mx-auto mb-5">
-            <p class="font-weight-light mb-0 quote-content">
-            "Keras allows us to prototype, research and deploy deep learning models in an intuitive and streamlined manner. The functional API makes code comprehensible and stylistic, allowing for effective knowledge transfer between scientists on my team."
-            </p>
-            <h5><span class="quote-name">Aiden Arnold, PhD</span><br><span class="quote-title">Lead Data Scientist - Rune Labs</span></h5>
-          </div>
+      <div class="models">
+        <div class="models__content--container">
+          <h2 class="models__title text--white">Models</h2>
+
+          <p class="models__description">
+            Keras has a wealth of guides and examples, for people just getting
+            started to researchers in the field. Build a tiny regression model
+            on a CPU or fine-tune a foundation model across a fleet or GPUs or
+            TPUs.
+          </p>
         </div>
-        <div class="col-lg-4">
-          <div class="testimonial-item mx-auto mb-5">
-            <p class="font-weight-light mb-0 quote-content">
-            "Keras has something for every user: easy customisability for the academic; out-of-the-box, performant models and pipelines for use by the industry, and readable, modular code for the student. Keras has made it very simple to quickly iterate over experiments without worrying about low-level details."
-            </p>
-            <h5><span class="quote-name">Abheesht Sharma</span><br><span class="quote-title">Research Scientist - Amazon</span></h5>
-          </div>
+
+        <div class="models__button--contanier">
+          <a class="models__card">
+            <div class="models__card--contanier">
+              <h4 class="models__card--title">GEMMA</h4>
+              <p class="models__card--description">
+                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Etiam
+                eu turpis molestie, dictum est a, mattis tellus.
+              </p>
+            </div>
+          </a>
+
+          <a class="models__card">
+            <div class="models__card--contanier">
+              <h4 class="models__card--title">LLAMA</h4>
+              <p class="models__card--description">
+                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Etiam
+                eu turpis molestie, dictum est a, mattis tellus.
+              </p>
+            </div>
+          </a>
+
+          <a class="models__card">
+            <div class="models__card--contanier">
+              <h4 class="models__card--title">STABLE DIFFUSION</h4>
+              <p class="models__card--description">
+                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Etiam
+                eu turpis molestie, dictum est a, mattis tellus.
+              </p>
+            </div>
+          </a>
+
+          <a class="models__card">
+            <div class="models__card--contanier">
+              <h4 class="models__card--title">MISTRAL</h4>
+              <p class="models__card--description">
+                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Etiam
+                eu turpis molestie, dictum est a, mattis tellus.
+              </p>
+            </div>
+          </a>
+
+          <a class="button__square button__square--transparent text--white">
+            SEE ALL
+          </a>
         </div>
-        <div class="col-lg-4">
-          <div class="testimonial-item mx-auto mb-5">
-            <p class="font-weight-light mb-0 quote-content">
-            "Keras is the perfect abstraction layer to build and operationalize Deep Learning models. I've been using it since 2018 to develop and deploy models for some of the largest companies in the world [...] a combination of Keras, TensorFlow, and TFX has no rival."
-            </p>
-            <h5><span class="quote-name">Santiago L. Valdarrama</span><br><span class="quote-title">Machine Learning Consultant</span></h5>
+      </div>
+
+      <div class="guide__example">
+        <div class="guide__header">
+          <h2 class="guide__title text--red">Code examples</h2>
+          <a
+            class="guide__button button__square button__square--transparent text--red"
+            >VIEW ALL
+          </a>
+        </div>
+
+        <div class="guide__code--container">
+          <div class="guide__wrapper">
+            <img class="code__container guide__code" src="images/eye.webp" />
+
+            <div class="guide__content">
+              <h3>Generative Deep Learning</h3>
+              <p>
+                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Etiam
+                eu turpis molestie, dictum est a, mattis tellus.
+              </p>
+
+              <a
+                class="guide__content--button button__square button__square--red"
+              >
+                SEE EXAMPLE
+              </a>
+            </div>
+          </div>
+
+          <div class="guide__wrapper">
+            <img class="code__container guide__code" src="images/text.webp" />
+
+            <div class="guide__content">
+              <h3>Natural Language Processing</h3>
+              <p>
+                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Etiam
+                eu turpis molestie, dictum est a, mattis tellus.
+              </p>
+
+              <a
+                class="guide__content--button button__square button__square--red"
+              >
+                SEE EXAMPLE
+              </a>
+            </div>
+          </div>
+
+          <div class="guide__wrapper">
+            <img class="code__container guide__code" src="images/flower.webp" />
+
+            <div class="guide__content">
+              <h3>Computer Vision</h3>
+              <p>
+                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Etiam
+                eu turpis molestie, dictum est a, mattis tellus.
+              </p>
+
+              <a
+                class="guide__content--button button__square button__square--red"
+              >
+                SEE EXAMPLE
+              </a>
+            </div>
           </div>
         </div>
       </div>
 
-      <div class="row">
-        <div class="col-lg-4">
-          <div class="testimonial-item mx-auto mb-5">
-            <p class="font-weight-light mb-0 quote-content">
-            "What I personally like the most about Keras (aside from its intuitive APIs), is the ease of transitioning from research to production. I can train a Keras model, convert it to TF Lite and deploy it to mobile & edge devices."
-            </p>
-            <h5><span class="quote-name">Margaret Maynard-Reid</span><br><span class="quote-title">Machine Learning Engineer</span></h5>
+      <div class="research">
+        <div class="research__content--contanier">
+          <h2 class="text--red">Trusted for research and production</h2>
+          <p class="research__description">
+            Keras is used by CERN, NASA, NIH, and many more scientific
+            organizations around the world (and yes, Keras is used at the Large
+            Hadron Collider). Keras is used by Waymo to power self-driving
+            vehicles. Keras partners with Kaggle and HuggingFace to meet ML
+            developers in the tools they use daily.
+          </p>
+        </div>
+        <div class="glide">
+          <div data-glide-el="track" class="glide__track">
+            <ul class="glide__slides">
+              <li class="glide__slide">
+                <img class="research__image" src="images/youtube-logo.webp" />
+              </li>
+              <li class="glide__slide">
+                <img class="research__image" src="images/google-logo.webp" />
+              </li>
+              <li class="glide__slide">
+                <img class="research__image" src="images/waymo-logo.webp" />
+              </li>
+              <li class="glide__slide">
+                <img class="research__image" src="images/amazon-logo.webp" />
+              </li>
+              <li class="glide__slide">
+                <img class="research__image" src="images/spotify-logo.webp" />
+              </li>
+              <li class="glide__slide">
+                <img class="research__image" src="images/uber-logo.webp" />
+              </li>
+              <li class="glide__slide">
+                <img class="research__image" src="images/netflix-logo.webp" />
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
 
+      <div class="contacts">
+        <div class="contacts__contanier">
+          <h2 class="contacts__title text--white">Stay in touch</h2>
+
+          <p class="contacts__description">
+            Sign up to our mailing list for regular updates and discussions
+            about the Keras ecosystem.
+          </p>
+
+          <div class="contacts__button-contanier">
+            <a class="button__square button__square--white">
+              JOIN GOOGLE GROUP
+            </a>
+            <a class="button__square button__square--white">
+              JOIN COMMUNITY MEETING
+            </a>
+            <a class="button__square button__square--white">DISCORD</a>
+            <a class="button__square button__square--white">TWITTER</a>
           </div>
         </div>
 
-        <div class="col-lg-4">
-          <div class="testimonial-item mx-auto mb-5">
-            <p class="font-weight-light mb-0 quote-content">
-            "Keras is that sweet spot where you get flexibility for research and consistency for deployment. Keras is to Deep Learning what Ubuntu is to Operating Systems."
-            </p>
-            <h5><span class="quote-name">Aakash Nain</span><br><span class="quote-title">Research Engineer</span></h5>
-          </div>
-        </div>
+        <div class="contacts__border"></div>
 
-        <div class="col-lg-4">
-          <div class="testimonial-item mx-auto mb-5">
-            <p class="font-weight-light mb-0 quote-content">
-            "Keras's user-friendly design means it's easy to learn and easy to use [...] it allows for the rapid prototyping and deployment of models across a variety of platforms." 
-            </p>
-            <h5><span class="quote-name">Gareth Collins</span><br><span class="quote-title">Machine Learning Engineer</span></h5>
+        <div class="contacts__contanier">
+          <h2 class="contacts__title text--white">Contributions welcome!</h2>
+
+          <p class="contacts__description">
+            We welcome your code, ideas, and feedback as we continue to grow.
+            Visit our roadmap, contribution guide or GitHub for more
+            information.
+          </p>
+
+          <div class="contacts__button-contanier">
+            <a class="button__square button__square--white"> VIEW ROADMAP </a>
+            <a class="button__square button__square--white">
+              CONTRIBUTION GUIDE
+            </a>
+            <a class="button__square button__square--white"> GITHUB </a>
           </div>
         </div>
       </div>
     </div>
-  </section>
 
-  <!-- Image Showcases -->
-  <section class="showcase">
-    <div class="container-fluid p-0">
+    <footer>
+      <a>Terms</a>
+      <div>|</div>
+      <a>Privacy</a>
+    </footer>
 
-      <div class="row no-gutters bottom-border smooth-black-bg">
-        <div class="col-lg-6 order-lg-2 text-white showcase-img" style="background-image: url('img/showcase-superpower.png');"></div>
-        <div class="col-lg-6 order-lg-1 my-auto showcase-text">
-          <h2>A superpower for developers.</h2>
-          <p class="lead mb-0">
-            The purpose of Keras is to give an <b>unfair advantage</b> to any developer looking to ship Machine Learning-powered apps.
-
-            Keras focuses on debugging speed, code elegance & conciseness, maintainability, and deployability.
-
-            When you choose Keras, your codebase is smaller, more readable, easier to iterate on. Your models run faster
-            thanks to XLA compilation with JAX and TensorFlow, and are easier to deploy across every surface (server, mobile, browser, embedded) thanks to
-            the serving components from the TensorFlow and PyTorch ecosystems, such as TF Serving, TorchServe, TF Lite, TF.js, and more.
-          </p>
-        </div>
-      </div>
-
-      <div class="row no-gutters bottom-border smooth-white-bg">
-        <div class="col-lg-6 text-white showcase-img" style="background-image: url('img/showcase-api-2.png');"></div>
-        <div class="col-lg-6 my-auto showcase-text">
-          <h2>Deep learning for humans.</h2>
-          <p class="lead mb-0">
-            Keras is an API designed for human beings, not machines.
-            Keras follows best practices for <b>reducing cognitive load</b>: it offers consistent & simple APIs,
-            it minimizes the number of user actions required for common use cases,
-            and it provides clear & actionable error messages.
-            Keras also gives the highest priority to crafting great documentation and developer guides.
-          </p>
-        </div>
-      </div>
-
-      <div class="row no-gutters bottom-border smooth-black-bg">
-        <div class="col-lg-6 order-lg-2 text-white showcase-img" style="background-image: url('img/framework-optionality.png');"></div>
-        <div class="col-lg-6 order-lg-1 my-auto showcase-text">
-          <h2>Unlock framework optionality.</h2>
-          <p class="lead mb-0">
-            Keras works with JAX, TensorFlow, and PyTorch. It enables you to create models that can move across framework
-            boundaries and that can benefit from the ecosystem of all three of these frameworks.
-          </p>
-        </div>
-      </div>
-
-      <div class="row no-gutters bottom-border smooth-white-bg">
-        <div class="col-lg-6 text-white showcase-img" style="background-image: url('img/showcase-tpu.jpg');"></div>
-        <div class="col-lg-6 my-auto showcase-text">
-          <h2>Exascale machine learning.</h2>
-          <p class="lead mb-0">
-            Keras is an industry-strength framework
-            that can scale to large clusters of GPUs or an entire <a href='https://cloud.google.com/tpu'>TPU pod</a>.
-            It's not only possible; it's easy.
-          </p>
-        </div>
-      </div>
-
-      <div class="row no-gutters bottom-border smooth-black-bg">
-        <div class="col-lg-6 order-lg-2 text-white showcase-img" style="background-image: url('img/showcase-lhc.jpg');"></div>
-        <div class="col-lg-6 order-lg-1 my-auto showcase-text">
-          <h2>State-of-the-art research.</h2>
-          <p class="lead mb-0">
-            Keras is used by CERN, NASA, NIH, and many more scientific organizations around the world
-            (and yes, Keras is used at the LHC).
-            Keras has the low-level flexibility to implement arbitrary research ideas while
-            offering optional high-level convenience features to speed up experimentation cycles.
-          </p>
-        </div>
-      </div>
-      
-    </div>
-  </section>
-
-
-</body>
-<footer>
-  <a href="https://policies.google.com/terms">Terms</a> | <a href="https://policies.google.com/privacy">Privacy</a>
-</footer>
+    <!-- Prism Script -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+  </body>
 </html>
