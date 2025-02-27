@@ -2,11 +2,11 @@
 
 **Author:** [Sayak Paul](https://twitter.com/RisingSayak), [Soumik Rakshit](https://github.com/soumik12345)<br>
 **Date created:** 2020/09/25<br>
-**Last modified:** 2020/12/23<br>
+**Last modified:** 2025/02/27<br>
 **Description:** Implementing a large-scale multi-label text classification model.
 
 
-<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team\keras-io\blob\master\examples\nlp/ipynb/multi_label_classification.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team\keras-io\blob\master\examples\nlp/multi_label_classification.py)
+<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/nlp/ipynb/multi_label_classification.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/nlp/multi_label_classification.py)
 
 
 
@@ -33,13 +33,16 @@ Additionally, you can also find the dataset on
 
 
 ```python
-from tensorflow.keras import layers
-from tensorflow import keras
-import tensorflow as tf
+import os
+
+os.environ["KERAS_BACKEND"] = "jax"  # or tensorflow, or torch
+
+import keras
+from keras import layers, ops
 
 from sklearn.model_selection import train_test_split
-from ast import literal_eval
 
+from ast import literal_eval
 import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
@@ -137,11 +140,10 @@ print(f"There are {len(arxiv_data)} rows in the dataset.")
 
 <div class="k-default-codeblock">
 ```
-There are 51774 rows in the dataset.
+There are 2000 rows in the dataset.
+
 ```
 </div>
-    
-
 Real-world data is noisy. One of the most commonly observed source of noise is data
 duplication. Here we notice that our initial dataset has got about 13k duplicate entries.
 
@@ -153,11 +155,10 @@ print(f"There are {total_duplicate_titles} duplicate titles.")
 
 <div class="k-default-codeblock">
 ```
-There are 12802 duplicate titles.
+There are 9 duplicate titles.
+
 ```
 </div>
-    
-
 Before proceeding further, we drop these entries.
 
 
@@ -174,13 +175,12 @@ print(arxiv_data["terms"].nunique())
 
 <div class="k-default-codeblock">
 ```
-There are 38972 rows in the deduplicated dataset.
-2321
-3157
+There are 1991 rows in the deduplicated dataset.
+208
+275
+
 ```
 </div>
-    
-
 As observed above, out of 3,157 unique combinations of `terms`, 2,321 entries have the
 lowest occurrence. To prepare our train, validation, and test sets with
 [stratification](https://en.wikipedia.org/wiki/Stratified_sampling), we need to drop
@@ -198,7 +198,7 @@ arxiv_data_filtered.shape
 
 <div class="k-default-codeblock">
 ```
-(36651, 3)
+(1783, 3)
 
 ```
 </div>
@@ -262,13 +262,12 @@ print(f"Number of rows in test set: {len(test_df)}")
 
 <div class="k-default-codeblock">
 ```
-Number of rows in training set: 32985
-Number of rows in validation set: 1833
-Number of rows in test set: 1833
+Number of rows in training set: 1604
+Number of rows in validation set: 90
+Number of rows in test set: 89
+
 ```
 </div>
-    
-
 ---
 ## Multi-label binarization
 
@@ -278,8 +277,11 @@ layer.
 
 
 ```python
+# For RaggedTensor
+import tensorflow as tf
+
 terms = tf.ragged.constant(train_df["terms"].values)
-lookup = tf.keras.layers.StringLookup(output_mode="multi_hot")
+lookup = layers.StringLookup(output_mode="multi_hot")
 lookup.adapt(terms)
 vocab = lookup.get_vocabulary()
 
@@ -303,11 +305,10 @@ Vocabulary:
     
 <div class="k-default-codeblock">
 ```
-['[UNK]', 'cs.CV', 'cs.LG', 'stat.ML', 'cs.AI', 'eess.IV', 'cs.RO', 'cs.CL', 'cs.NE', 'cs.CR', 'math.OC', 'eess.SP', 'cs.GR', 'cs.SI', 'cs.MM', 'cs.SY', 'cs.IR', 'cs.MA', 'eess.SY', 'cs.HC', 'math.IT', 'cs.IT', 'cs.DC', 'cs.CY', 'stat.AP', 'stat.TH', 'math.ST', 'stat.ME', 'eess.AS', 'cs.SD', 'q-bio.QM', 'q-bio.NC', 'cs.DS', 'cs.GT', 'cs.CG', 'cs.SE', 'cs.NI', 'I.2.6', 'stat.CO', 'math.NA', 'cs.NA', 'physics.chem-ph', 'cs.DB', 'q-bio.BM', 'cs.PL', 'cs.LO', 'cond-mat.dis-nn', '68T45', 'math.PR', 'physics.comp-ph', 'I.2.10', 'cs.CE', 'cs.AR', 'q-fin.ST', 'cond-mat.stat-mech', '68T05', 'quant-ph', 'math.DS', 'physics.data-an', 'cs.CC', 'I.4.6', 'physics.soc-ph', 'physics.ao-ph', 'cs.DM', 'econ.EM', 'q-bio.GN', 'physics.med-ph', 'astro-ph.IM', 'I.4.8', 'math.AT', 'cs.PF', 'cs.FL', 'I.4', 'q-fin.TR', 'I.5.4', 'I.2', '68U10', 'hep-ex', 'cond-mat.mtrl-sci', '68T10', 'physics.optics', 'physics.geo-ph', 'physics.flu-dyn', 'math.CO', 'math.AP', 'I.4; I.5', 'I.4.9', 'I.2.6; I.2.8', '68T01', '65D19', 'q-fin.CP', 'nlin.CD', 'cs.MS', 'I.2.6; I.5.1', 'I.2.10; I.4; I.5', 'I.2.0; I.2.6', '68T07', 'q-fin.GN', 'cs.SC', 'cs.ET', 'K.3.2', 'I.2.8', '68U01', '68T30', 'q-fin.EC', 'q-bio.MN', 'econ.GN', 'I.4.9; I.5.4', 'I.4.5', 'I.2; I.5', 'I.2; I.4; I.5', 'I.2.6; I.2.7', 'I.2.10; I.4.8', '68T99', '68Q32', '68', '62H30', 'q-fin.RM', 'q-fin.PM', 'q-bio.TO', 'q-bio.OT', 'physics.bio-ph', 'nlin.AO', 'math.LO', 'math.FA', 'hep-ph', 'cond-mat.soft', 'I.4.6; I.4.8', 'I.4.4', 'I.4.3', 'I.4.0', 'I.2; J.2', 'I.2; I.2.6; I.2.7', 'I.2.7', 'I.2.6; I.5.4', 'I.2.6; I.2.9', 'I.2.6; I.2.7; H.3.1; H.3.3', 'I.2.6; I.2.10', 'I.2.6, I.5.4', 'I.2.1; J.3', 'I.2.10; I.5.1; I.4.8', 'I.2.10; I.4.8; I.5.4', 'I.2.10; I.2.6', 'I.2.1', 'H.3.1; I.2.6; I.2.7', 'H.3.1; H.3.3; I.2.6; I.2.7', 'G.3', 'F.2.2; I.2.7', 'E.5; E.4; E.2; H.1.1; F.1.1; F.1.3', '68Txx', '62H99', '62H35', '14J60 (Primary) 14F05, 14J26 (Secondary)']
+['[UNK]', 'cs.CV', 'cs.LG', 'cs.AI', 'stat.ML', 'eess.IV', 'cs.NE', 'cs.RO', 'cs.CL', 'cs.SI', 'cs.MM', 'math.NA', 'cs.CG', 'cs.CR', 'I.4.6', 'math.OC', 'cs.GR', 'cs.NA', 'cs.HC', 'cs.DS', '68U10', 'stat.ME', 'q-bio.NC', 'math.AP', 'eess.SP', 'cs.DM', '62H30']
+
 ```
 </div>
-    
-
 Here we are separating the individual unique classes available from the label
 pool and then using this information to represent a given label set with 0's and 1's.
 Below is an example.
@@ -323,18 +324,14 @@ print(f"Label-binarized representation: {label_binarized}")
 
 <div class="k-default-codeblock">
 ```
-Original label: ['cs.LG', 'cs.CV', 'eess.IV']
-Label-binarized representation: [[0. 1. 1. 0. 0. 1. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.
-  0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.
-  0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.
-  0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.
-  0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.
-  0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0. 0.
-  0. 0. 0. 0. 0. 0. 0. 0. 0.]]
+Original label: ['cs.CV']
+
+An NVIDIA GPU may be present on this machine, but a CUDA-enabled jaxlib is not installed. Falling back to cpu.
+
+Label-binarized representation: [[0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0]]
+
 ```
 </div>
-    
-
 ---
 ## Data preprocessing and `tf.data.Dataset` objects
 
@@ -351,14 +348,14 @@ train_df["summaries"].apply(lambda x: len(x.split(" "))).describe()
 
 <div class="k-default-codeblock">
 ```
-count    32985.000000
-mean       156.497105
-std         41.528225
-min          5.000000
-25%        128.000000
-50%        154.000000
-75%        183.000000
-max        462.000000
+count    1604.000000
+mean      158.151496
+std        41.543130
+min        25.000000
+25%       130.000000
+50%       156.000000
+75%       184.250000
+max       283.000000
 Name: summaries, dtype: float64
 
 ```
@@ -413,25 +410,24 @@ for i, text in enumerate(text_batch[:5]):
 
 <div class="k-default-codeblock">
 ```
-Abstract: b"In this paper we show how using satellite images can improve the accuracy of\nhousing price estimation models. Using Los Angeles County's property assessment\ndataset, by transferring learning from an Inception-v3 model pretrained on\nImageNet, we could achieve an improvement of ~10% in R-squared score compared\nto two baseline models that only use non-image features of the house."
+Abstract: b"For the Domain Generalization (DG) problem where the hypotheses are composed\nof a common representation function followed by a labeling function, we point\nout a shortcoming in existing approaches that fail to explicitly optimize for a\nterm, appearing in a well-known and widely adopted upper bound to the risk on\nthe unseen domain, that is dependent on the representation to be learned. To\nthis end, we first derive a novel upper bound to the prediction risk. We show\nthat imposing a mild assumption on the representation to be learned, namely\nmanifold restricted invertibility, is sufficient to deal with this issue.\nFurther, unlike existing approaches, our novel upper bound doesn't require the\nassumption of Lipschitzness of the loss function. In addition, the\ndistributional discrepancy in the representation space is handled via the\nWasserstein-2 barycenter cost. In this context, we creatively leverage old and\nrecent transport inequalities, which link various optimal transport metrics, in\nparticular the $L^1$ distance (also known as the total variation distance) and\nthe Wasserstein-2 distances, with the Kullback-Liebler divergence. These\nanalyses and insights motivate a new representation learning cost for DG that\nadditively balances three competing objectives: 1) minimizing classification\nerror across seen domains via cross-entropy, 2) enforcing domain-invariance in\nthe representation space via the Wasserstein-2 barycenter cost, and 3)\npromoting non-degenerate, nearly-invertible representation via one of two\nmechanisms, viz., an autoencoder-based reconstruction loss or a mutual\ninformation loss. It is to be noted that the proposed algorithms completely\nbypass the use of any adversarial training mechanism that is typical of many\ncurrent domain generalization approaches. Simulation results on several\nstandard datasets demonstrate superior performance compared to several\nwell-known DG algorithms."
 Label(s): ['cs.LG' 'stat.ML']
  
-Abstract: b'Learning from data streams is an increasingly important topic in data mining,\nmachine learning, and artificial intelligence in general. A major focus in the\ndata stream literature is on designing methods that can deal with concept\ndrift, a challenge where the generating distribution changes over time. A\ngeneral assumption in most of this literature is that instances are\nindependently distributed in the stream. In this work we show that, in the\ncontext of concept drift, this assumption is contradictory, and that the\npresence of concept drift necessarily implies temporal dependence; and thus\nsome form of time series. This has important implications on model design and\ndeployment. We explore and highlight the these implications, and show that\nHoeffding-tree based ensembles, which are very popular for learning in streams,\nare not naturally suited to learning \\emph{within} drift; and can perform in\nthis scenario only at significant computational cost of destructive adaptation.\nOn the other hand, we develop and parameterize gradient-descent methods and\ndemonstrate how they can perform \\emph{continuous} adaptation with no explicit\ndrift-detection mechanism, offering major advantages in terms of accuracy and\nefficiency. As a consequence of our theoretical discussion and empirical\nobservations, we outline a number of recommendations for deploying methods in\nconcept-drifting streams.'
-Label(s): ['cs.LG' 'stat.ML']
- 
-Abstract: b"As reinforcement learning (RL) achieves more success in solving complex\ntasks, more care is needed to ensure that RL research is reproducible and that\nalgorithms herein can be compared easily and fairly with minimal bias. RL\nresults are, however, notoriously hard to reproduce due to the algorithms'\nintrinsic variance, the environments' stochasticity, and numerous (potentially\nunreported) hyper-parameters. In this work we investigate the many issues\nleading to irreproducible research and how to manage those. We further show how\nto utilise a rigorous and standardised evaluation approach for easing the\nprocess of documentation, evaluation and fair comparison of different\nalgorithms, where we emphasise the importance of choosing the right measurement\nmetrics and conducting proper statistics on the results, for unbiased reporting\nof the results."
-Label(s): ['cs.LG' 'stat.ML' 'cs.AI' 'cs.RO']
- 
-Abstract: b'Estimating dense correspondences between images is a long-standing image\nunder-standing task. Recent works introduce convolutional neural networks\n(CNNs) to extract high-level feature maps and find correspondences through\nfeature matching. However,high-level feature maps are in low spatial resolution\nand therefore insufficient to provide accurate and fine-grained features to\ndistinguish intra-class variations for correspondence matching. To address this\nproblem, we generate robust features by dynamically selecting features at\ndifferent scales. To resolve two critical issues in feature selection,i.e.,how\nmany and which scales of features to be selected, we frame the feature\nselection process as a sequential Markov decision-making process (MDP) and\nintroduce an optimal selection strategy using reinforcement learning (RL). We\ndefine an RL environment for image matching in which each individual action\neither requires new features or terminates the selection episode by referring a\nmatching score. Deep neural networks are incorporated into our method and\ntrained for decision making. Experimental results show that our method achieves\ncomparable/superior performance with state-of-the-art methods on three\nbenchmarks, demonstrating the effectiveness of our feature selection strategy.'
+Abstract: b'Image segmentation of touching objects plays a key role in providing accurate\nclassification for computer vision technologies. A new line profile based\nimaging segmentation algorithm has been developed to provide a robust and\naccurate segmentation of a group of touching corns. The performance of the line\nprofile based algorithm has been compared to a watershed based imaging\nsegmentation algorithm. Both algorithms are tested on three different patterns\nof images, which are isolated corns, single-lines, and random distributed\nformations. The experimental results show that the algorithm can segment a\nlarge number of touching corn kernels efficiently and accurately.'
 Label(s): ['cs.CV']
  
-Abstract: b'Dense reconstructions often contain errors that prior work has so far\nminimised using high quality sensors and regularising the output. Nevertheless,\nerrors still persist. This paper proposes a machine learning technique to\nidentify errors in three dimensional (3D) meshes. Beyond simply identifying\nerrors, our method quantifies both the magnitude and the direction of depth\nestimate errors when viewing the scene. This enables us to improve the\nreconstruction accuracy.\n  We train a suitably deep network architecture with two 3D meshes: a\nhigh-quality laser reconstruction, and a lower quality stereo image\nreconstruction. The network predicts the amount of error in the lower quality\nreconstruction with respect to the high-quality one, having only view the\nformer through its input. We evaluate our approach by correcting\ntwo-dimensional (2D) inverse-depth images extracted from the 3D model, and show\nthat our method improves the quality of these depth reconstructions by up to a\nrelative 10% RMSE.'
-Label(s): ['cs.CV' 'cs.RO']
+Abstract: b'Semantic image segmentation is a principal problem in computer vision, where\nthe aim is to correctly classify each individual pixel of an image into a\nsemantic label. Its widespread use in many areas, including medical imaging and\nautonomous driving, has fostered extensive research in recent years. Empirical\nimprovements in tackling this task have primarily been motivated by successful\nexploitation of Convolutional Neural Networks (CNNs) pre-trained for image\nclassification and object recognition. However, the pixel-wise labelling with\nCNNs has its own unique challenges: (1) an accurate deconvolution, or\nupsampling, of low-resolution output into a higher-resolution segmentation mask\nand (2) an inclusion of global information, or context, within locally\nextracted features. To address these issues, we propose a novel architecture to\nconduct the equivalent of the deconvolution operation globally and acquire\ndense predictions. We demonstrate that it leads to improved performance of\nstate-of-the-art semantic segmentation models on the PASCAL VOC 2012 benchmark,\nreaching 74.0% mean IU accuracy on the test set.'
+Label(s): ['cs.CV']
  
+Abstract: b'Modern deep learning models have revolutionized the field of computer vision.\nBut, a significant drawback of most of these models is that they require a\nlarge number of labelled examples to generalize properly. Recent developments\nin few-shot learning aim to alleviate this requirement. In this paper, we\npropose a novel lightweight CNN architecture for 1-shot image segmentation. The\nproposed model is created by taking inspiration from well-performing\narchitectures for semantic segmentation and adapting it to the 1-shot domain.\nWe train our model using 4 meta-learning algorithms that have worked well for\nimage classification and compare the results. For the chosen dataset, our\nproposed model has a 70% lower parameter count than the benchmark, while having\nbetter or comparable mean IoU scores using all 4 of the meta-learning\nalgorithms.'
+Label(s): ['cs.CV' 'cs.LG' 'eess.IV']
+ 
+Abstract: b'In this work, we propose CARLS, a novel framework for augmenting the capacity\nof existing deep learning frameworks by enabling multiple components -- model\ntrainers, knowledge makers and knowledge banks -- to concertedly work together\nin an asynchronous fashion across hardware platforms. The proposed CARLS is\nparticularly suitable for learning paradigms where model training benefits from\nadditional knowledge inferred or discovered during training, such as node\nembeddings for graph neural networks or reliable pseudo labels from model\npredictions. We also describe three learning paradigms -- semi-supervised\nlearning, curriculum learning and multimodal learning -- as examples that can\nbe scaled up efficiently by CARLS. One version of CARLS has been open-sourced\nand available for download at:\nhttps://github.com/tensorflow/neural-structured-learning/tree/master/research/carls'
+Label(s): ['cs.LG']
+ 
+
 ```
 </div>
-    
-
 ---
 ## Vectorization
 
@@ -455,11 +451,10 @@ print(vocabulary_size)
 
 <div class="k-default-codeblock">
 ```
-153338
+20498
+
 ```
 </div>
-    
-
 We now create our vectorization layer and `map()` to the `tf.data.Dataset`s created
 earlier.
 
@@ -570,61 +565,110 @@ plot_result("loss")
 plot_result("binary_accuracy")
 ```
 
+    
+  1/13 ━[37m━━━━━━━━━━━━━━━━━━━  26s 2s/step - binary_accuracy: 0.4491 - loss: 1.4007
+
 <div class="k-default-codeblock">
 ```
-Epoch 1/20
-258/258 [==============================] - 87s 332ms/step - loss: 0.0326 - binary_accuracy: 0.9893 - val_loss: 0.0189 - val_binary_accuracy: 0.9943
-Epoch 2/20
-258/258 [==============================] - 100s 387ms/step - loss: 0.0033 - binary_accuracy: 0.9990 - val_loss: 0.0271 - val_binary_accuracy: 0.9940
-Epoch 3/20
-258/258 [==============================] - 99s 384ms/step - loss: 7.8393e-04 - binary_accuracy: 0.9999 - val_loss: 0.0328 - val_binary_accuracy: 0.9939
-Epoch 4/20
-258/258 [==============================] - 109s 421ms/step - loss: 3.0132e-04 - binary_accuracy: 1.0000 - val_loss: 0.0366 - val_binary_accuracy: 0.9939
-Epoch 5/20
-258/258 [==============================] - 105s 405ms/step - loss: 1.6006e-04 - binary_accuracy: 1.0000 - val_loss: 0.0399 - val_binary_accuracy: 0.9939
-Epoch 6/20
-258/258 [==============================] - 107s 414ms/step - loss: 1.2400e-04 - binary_accuracy: 1.0000 - val_loss: 0.0412 - val_binary_accuracy: 0.9939
-Epoch 7/20
-258/258 [==============================] - 110s 425ms/step - loss: 7.7131e-05 - binary_accuracy: 1.0000 - val_loss: 0.0439 - val_binary_accuracy: 0.9940
-Epoch 8/20
-258/258 [==============================] - 105s 405ms/step - loss: 5.5611e-05 - binary_accuracy: 1.0000 - val_loss: 0.0446 - val_binary_accuracy: 0.9940
-Epoch 9/20
-258/258 [==============================] - 103s 397ms/step - loss: 4.5994e-05 - binary_accuracy: 1.0000 - val_loss: 0.0454 - val_binary_accuracy: 0.9940
-Epoch 10/20
-258/258 [==============================] - 105s 405ms/step - loss: 3.5126e-05 - binary_accuracy: 1.0000 - val_loss: 0.0472 - val_binary_accuracy: 0.9939
-Epoch 11/20
-258/258 [==============================] - 109s 422ms/step - loss: 2.9927e-05 - binary_accuracy: 1.0000 - val_loss: 0.0466 - val_binary_accuracy: 0.9940
-Epoch 12/20
-258/258 [==============================] - 133s 516ms/step - loss: 2.5748e-05 - binary_accuracy: 1.0000 - val_loss: 0.0484 - val_binary_accuracy: 0.9940
-Epoch 13/20
-258/258 [==============================] - 129s 497ms/step - loss: 4.3529e-05 - binary_accuracy: 1.0000 - val_loss: 0.0500 - val_binary_accuracy: 0.9940
-Epoch 14/20
-258/258 [==============================] - 158s 611ms/step - loss: 8.1068e-04 - binary_accuracy: 0.9998 - val_loss: 0.0377 - val_binary_accuracy: 0.9936
-Epoch 15/20
-258/258 [==============================] - 144s 558ms/step - loss: 0.0016 - binary_accuracy: 0.9995 - val_loss: 0.0418 - val_binary_accuracy: 0.9935
-Epoch 16/20
-258/258 [==============================] - 131s 506ms/step - loss: 0.0018 - binary_accuracy: 0.9995 - val_loss: 0.0479 - val_binary_accuracy: 0.9931
-Epoch 17/20
-258/258 [==============================] - 127s 491ms/step - loss: 0.0012 - binary_accuracy: 0.9997 - val_loss: 0.0521 - val_binary_accuracy: 0.9931
-Epoch 18/20
-258/258 [==============================] - 153s 594ms/step - loss: 6.3144e-04 - binary_accuracy: 0.9998 - val_loss: 0.0549 - val_binary_accuracy: 0.9934
-Epoch 19/20
-258/258 [==============================] - 142s 550ms/step - loss: 3.1753e-04 - binary_accuracy: 0.9999 - val_loss: 0.0589 - val_binary_accuracy: 0.9934
-Epoch 20/20
-258/258 [==============================] - 153s 594ms/step - loss: 2.0258e-04 - binary_accuracy: 1.0000 - val_loss: 0.0585 - val_binary_accuracy: 0.9933
+
 ```
 </div>
+  2/13 ━━━[37m━━━━━━━━━━━━━━━━━  3s 307ms/step - binary_accuracy: 0.5609 - loss: 1.1359
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+  3/13 ━━━━[37m━━━━━━━━━━━━━━━━  2s 290ms/step - binary_accuracy: 0.6315 - loss: 0.9654
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+  4/13 ━━━━━━[37m━━━━━━━━━━━━━━  2s 286ms/step - binary_accuracy: 0.6785 - loss: 0.8508
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+  5/13 ━━━━━━━[37m━━━━━━━━━━━━━  2s 282ms/step - binary_accuracy: 0.7128 - loss: 0.7661
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+  6/13 ━━━━━━━━━[37m━━━━━━━━━━━  1s 283ms/step - binary_accuracy: 0.7391 - loss: 0.7006
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+  7/13 ━━━━━━━━━━[37m━━━━━━━━━━  1s 277ms/step - binary_accuracy: 0.7600 - loss: 0.6485
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+  8/13 ━━━━━━━━━━━━[37m━━━━━━━━  1s 275ms/step - binary_accuracy: 0.7770 - loss: 0.6054
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+  9/13 ━━━━━━━━━━━━━[37m━━━━━━━  1s 272ms/step - binary_accuracy: 0.7913 - loss: 0.5693
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+ 10/13 ━━━━━━━━━━━━━━━[37m━━━━━  0s 270ms/step - binary_accuracy: 0.8033 - loss: 0.5389
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+ 11/13 ━━━━━━━━━━━━━━━━[37m━━━━  0s 272ms/step - binary_accuracy: 0.8136 - loss: 0.5127
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+ 12/13 ━━━━━━━━━━━━━━━━━━[37m━━  0s 273ms/step - binary_accuracy: 0.8225 - loss: 0.4899
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+ 13/13 ━━━━━━━━━━━━━━━━━━━━ 0s 363ms/step - binary_accuracy: 0.8303 - loss: 0.4702
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+ 13/13 ━━━━━━━━━━━━━━━━━━━━ 7s 402ms/step - binary_accuracy: 0.8369 - loss: 0.4532 - val_binary_accuracy: 0.9782 - val_loss: 0.0867
+
+
+
+    
+![png](/img/examples/nlp/multi_label_classification/multi_label_classification_38_14.png)
     
 
 
-    
-![png](/img/examples/nlp/multi_label_classification/multi_label_classification_38_1.png)
-    
-
-
 
     
-![png](/img/examples/nlp/multi_label_classification/multi_label_classification_38_2.png)
+![png](/img/examples/nlp/multi_label_classification/multi_label_classification_38_15.png)
     
 
 
@@ -638,14 +682,23 @@ _, binary_acc = shallow_mlp_model.evaluate(test_dataset)
 print(f"Categorical accuracy on the test set: {round(binary_acc * 100, 2)}%.")
 ```
 
+    
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 483ms/step - binary_accuracy: 0.9734 - loss: 0.0927
+
 <div class="k-default-codeblock">
 ```
-15/15 [==============================] - 3s 196ms/step - loss: 0.0580 - binary_accuracy: 0.9933
-Categorical accuracy on the test set: 99.33%.
+
 ```
 </div>
-    
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 486ms/step - binary_accuracy: 0.9734 - loss: 0.0927
 
+
+<div class="k-default-codeblock">
+```
+Categorical accuracy on the test set: 97.34%.
+
+```
+</div>
 The trained model gives us an evaluation accuracy of ~99%.
 
 ---
@@ -664,13 +717,33 @@ asynchronous data processing.
 
 
 ```python
-# Create a model for inference.
-model_for_inference = keras.Sequential([text_vectorizer, shallow_mlp_model])
 
-# Create a small dataset just for demoing inference.
-inference_dataset = make_dataset(test_df.sample(100), is_train=False)
+# We create a custom Model to override the predict method so
+# that it first vectorizes text data
+class ModelEndtoEnd(keras.Model):
+
+    def predict(self, inputs):
+        indices = text_vectorizer(inputs)
+        return super().predict(indices)
+
+
+def get_inference_model(model):
+    inputs = shallow_mlp_model.inputs
+    outputs = shallow_mlp_model.outputs
+    end_to_end_model = ModelEndtoEnd(inputs, outputs, name="end_to_end_model")
+    end_to_end_model.compile(
+        optimizer="adam", loss="binary_crossentropy", metrics=["accuracy"]
+    )
+    return end_to_end_model
+
+
+model_for_inference = get_inference_model(shallow_mlp_model)
+
+# Create a small dataset just for demonstrating inference.
+inference_dataset = make_dataset(test_df.sample(2), is_train=False)
 text_batch, label_batch = next(iter(inference_dataset))
 predicted_probabilities = model_for_inference.predict(text_batch)
+
 
 # Perform inference.
 for i, text in enumerate(text_batch[:5]):
@@ -690,33 +763,35 @@ for i, text in enumerate(text_batch[:5]):
     print(" ")
 ```
 
+    
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 141ms/step
+
 <div class="k-default-codeblock">
 ```
-4/4 [==============================] - 0s 62ms/step
-Abstract: b'We investigate the training of sparse layers that use different parameters\nfor different inputs based on hashing in large Transformer models.\nSpecifically, we modify the feedforward layer to hash to different sets of\nweights depending on the current token, over all tokens in the sequence. We\nshow that this procedure either outperforms or is competitive with\nlearning-to-route mixture-of-expert methods such as Switch Transformers and\nBASE Layers, while requiring no routing parameters or extra terms in the\nobjective function such as a load balancing loss, and no sophisticated\nassignment algorithm. We study the performance of different hashing techniques,\nhash sizes and input features, and show that balanced and random hashes focused\non the most local features work best, compared to either learning clusters or\nusing longer-range context. We show our approach works well both on large\nlanguage modeling and dialogue tasks, and on downstream fine-tuning tasks.'
-Label(s): ['cs.LG' 'cs.CL']
-Predicted Label(s): (cs.LG, cs.CL, stat.ML)
- 
-Abstract: b'We present the first method capable of photorealistically reconstructing\ndeformable scenes using photos/videos captured casually from mobile phones. Our\napproach augments neural radiance fields (NeRF) by optimizing an additional\ncontinuous volumetric deformation field that warps each observed point into a\ncanonical 5D NeRF. We observe that these NeRF-like deformation fields are prone\nto local minima, and propose a coarse-to-fine optimization method for\ncoordinate-based models that allows for more robust optimization. By adapting\nprinciples from geometry processing and physical simulation to NeRF-like\nmodels, we propose an elastic regularization of the deformation field that\nfurther improves robustness. We show that our method can turn casually captured\nselfie photos/videos into deformable NeRF models that allow for photorealistic\nrenderings of the subject from arbitrary viewpoints, which we dub "nerfies." We\nevaluate our method by collecting time-synchronized data using a rig with two\nmobile phones, yielding train/validation images of the same pose at different\nviewpoints. We show that our method faithfully reconstructs non-rigidly\ndeforming scenes and reproduces unseen views with high fidelity.'
-Label(s): ['cs.CV' 'cs.GR']
-Predicted Label(s): (cs.CV, cs.GR, cs.RO)
- 
-Abstract: b'We propose to jointly learn multi-view geometry and warping between views of\nthe same object instances for robust cross-view object detection. What makes\nmulti-view object instance detection difficult are strong changes in viewpoint,\nlighting conditions, high similarity of neighbouring objects, and strong\nvariability in scale. By turning object detection and instance\nre-identification in different views into a joint learning task, we are able to\nincorporate both image appearance and geometric soft constraints into a single,\nmulti-view detection process that is learnable end-to-end. We validate our\nmethod on a new, large data set of street-level panoramas of urban objects and\nshow superior performance compared to various baselines. Our contribution is\nthreefold: a large-scale, publicly available data set for multi-view instance\ndetection and re-identification; an annotation tool custom-tailored for\nmulti-view instance detection; and a novel, holistic multi-view instance\ndetection and re-identification method that jointly models geometry and\nappearance across views.'
-Label(s): ['cs.CV' 'cs.LG' 'stat.ML']
-Predicted Label(s): (cs.CV, cs.RO, cs.MM)
- 
-Abstract: b'Learning graph convolutional networks (GCNs) is an emerging field which aims\nat generalizing deep learning to arbitrary non-regular domains. Most of the\nexisting GCNs follow a neighborhood aggregation scheme, where the\nrepresentation of a node is recursively obtained by aggregating its neighboring\nnode representations using averaging or sorting operations. However, these\noperations are either ill-posed or weak to be discriminant or increase the\nnumber of training parameters and thereby the computational complexity and the\nrisk of overfitting. In this paper, we introduce a novel GCN framework that\nachieves spatial graph convolution in a reproducing kernel Hilbert space\n(RKHS). The latter makes it possible to design, via implicit kernel\nrepresentations, convolutional graph filters in a high dimensional and more\ndiscriminating space without increasing the number of training parameters. The\nparticularity of our GCN model also resides in its ability to achieve\nconvolutions without explicitly realigning nodes in the receptive fields of the\nlearned graph filters with those of the input graphs, thereby making\nconvolutions permutation agnostic and well defined. Experiments conducted on\nthe challenging task of skeleton-based action recognition show the superiority\nof the proposed method against different baselines as well as the related work.'
-Label(s): ['cs.CV']
-Predicted Label(s): (cs.LG, cs.CV, cs.NE)
- 
-Abstract: b'Recurrent meta reinforcement learning (meta-RL) agents are agents that employ\na recurrent neural network (RNN) for the purpose of "learning a learning\nalgorithm". After being trained on a pre-specified task distribution, the\nlearned weights of the agent\'s RNN are said to implement an efficient learning\nalgorithm through their activity dynamics, which allows the agent to quickly\nsolve new tasks sampled from the same distribution. However, due to the\nblack-box nature of these agents, the way in which they work is not yet fully\nunderstood. In this study, we shed light on the internal working mechanisms of\nthese agents by reformulating the meta-RL problem using the Partially\nObservable Markov Decision Process (POMDP) framework. We hypothesize that the\nlearned activity dynamics is acting as belief states for such agents. Several\nillustrative experiments suggest that this hypothesis is true, and that\nrecurrent meta-RL agents can be viewed as agents that learn to act optimally in\npartially observable environments consisting of multiple related tasks. This\nview helps in understanding their failure cases and some interesting\nmodel-based results reported in the literature.'
-Label(s): ['cs.LG' 'cs.AI']
-Predicted Label(s): (stat.ML, cs.LG, cs.AI)
- 
+
 ```
 </div>
-    
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 142ms/step
 
+
+<div class="k-default-codeblock">
+```
+Abstract: b'High-resolution image segmentation remains challenging and error-prone due to\nthe enormous size of intermediate feature maps. Conventional methods avoid this\nproblem by using patch based approaches where each patch is segmented\nindependently. However, independent patch segmentation induces errors,\nparticularly at the patch boundary due to the lack of contextual information in\nvery high-resolution images where the patch size is much smaller compared to\nthe full image. To overcome these limitations, in this paper, we propose a\nnovel framework to segment a particular patch by incorporating contextual\ninformation from its neighboring patches. This allows the segmentation network\nto see the target patch with a wider field of view without the need of larger\nfeature maps. Comparative analysis from a number of experiments shows that our\nproposed framework is able to segment high resolution images with significantly\nimproved mean Intersection over Union and overall accuracy.'
+Label(s): ['cs.CV']
+Predicted Label(s): (cs.CV, eess.IV, cs.LG)
+ 
+Abstract: b"Convolutional neural networks for visual recognition require large amounts of\ntraining samples and usually benefit from data augmentation. This paper\nproposes PatchMix, a data augmentation method that creates new samples by\ncomposing patches from pairs of images in a grid-like pattern. These new\nsamples' ground truth labels are set as proportional to the number of patches\nfrom each image. We then add a set of additional losses at the patch-level to\nregularize and to encourage good representations at both the patch and image\nlevels. A ResNet-50 model trained on ImageNet using PatchMix exhibits superior\ntransfer learning capabilities across a wide array of benchmarks. Although\nPatchMix can rely on random pairings and random grid-like patterns for mixing,\nwe explore evolutionary search as a guiding strategy to discover optimal\ngrid-like patterns and image pairing jointly. For this purpose, we conceive a\nfitness function that bypasses the need to re-train a model to evaluate each\nchoice. In this way, PatchMix outperforms a base model on CIFAR-10 (+1.91),\nCIFAR-100 (+5.31), Tiny Imagenet (+3.52), and ImageNet (+1.16) by significant\nmargins, also outperforming previous state-of-the-art pairwise augmentation\nstrategies."
+Label(s): ['cs.CV' 'cs.LG' 'cs.NE']
+Predicted Label(s): (cs.CV, cs.LG, stat.ML)
+ 
+
+/home/humbulani/tensorflow-env/env/lib/python3.11/site-packages/keras/src/models/functional.py:252: UserWarning: The structure of `inputs` doesn't match the expected structure.
+Expected: ['keras_tensor_2']
+Received: inputs=Tensor(shape=(2, 20498))
+  warnings.warn(msg)
+
+```
+</div>
 The prediction results are not that great but not below the par for a simple model like
 ours. We can improve this performance with models that consider word order like LSTM or
 even those that use Transformers ([Vaswani et al.](https://arxiv.org/abs/1706.03762)).
@@ -728,5 +803,4 @@ We would like to thank [Matt Watson](https://github.com/mattdangerw) for helping
 tackle the multi-label binarization part and inverse-transforming the processed labels
 to the original form.
 
-Thanks [Cingis Kratochvil](https://github.com/cumbalik) for suggesting and extending
-this code example by the binary accuracy.
+Thanks to [Cingis Kratochvil](https://github.com/cumbalik) for suggesting and extending this code example by introducing binary accuracy as the evaluation metric.

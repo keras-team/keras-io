@@ -2,10 +2,10 @@
 Title: Large-scale multi-label text classification
 Author: [Sayak Paul](https://twitter.com/RisingSayak), [Soumik Rakshit](https://github.com/soumik12345)
 Date created: 2020/09/25
-Last modified: 2025/06/02
+Last modified: 2025/02/27
 Description: Implementing a large-scale multi-label text classification model.
 Accelerator: GPU
-Made backend-agnostic by: [Humbulani Ndou](https://github.com/Humbulani1234)
+Converted to keras 3 and made backend-agnostic by: [Humbulani Ndou](https://github.com/Humbulani1234)
 """
 
 """
@@ -54,7 +54,7 @@ some basic exploratory data analysis (EDA).
 
 arxiv_data = pd.read_csv(
     "https://github.com/soumik12345/multi-label-text-classification/releases/download/v0.2/arxiv_data.csv"
-).iloc[0:2000]
+)
 arxiv_data.head()
 
 """
@@ -333,7 +333,7 @@ There are also other suitable metrics for multi-label classification, like
 [Hamming loss](https://www.tensorflow.org/addons/api_docs/python/tfa/metrics/HammingLoss).
 """
 
-epochs = 1
+epochs = 20
 
 shallow_mlp_model = make_model()
 shallow_mlp_model.compile(
