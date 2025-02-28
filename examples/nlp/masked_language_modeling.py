@@ -116,8 +116,8 @@ def get_data_from_text_files(folder_name):
     return df
 
 
-train_df = get_data_from_text_files("train").iloc[0:500]
-test_df = get_data_from_text_files("test").iloc[0:250]
+train_df = get_data_from_text_files("train")
+test_df = get_data_from_text_files("test")
 
 all_data = train_df._append(test_df)
 
@@ -419,6 +419,8 @@ class MaskedLanguageModel(keras.Model):
     # Torch training step
     def _torch_train_step(self, inputs):
 
+        import torch
+
         if len(inputs) == 3:
             features, labels, sample_weight = inputs
         else:
@@ -525,7 +527,7 @@ bert_masked_model.summary()
 ## Train and Save
 """
 
-bert_masked_model.fit(mlm_ds, epochs=1, callbacks=[generator_callback])
+bert_masked_model.fit(mlm_ds, epochs=5, callbacks=[generator_callback])
 bert_masked_model.save("bert_mlm_imdb.keras")
 
 """
@@ -569,7 +571,7 @@ classifer_model.summary()
 # Train the classifier with frozen BERT stage
 classifer_model.fit(
     train_classifier_ds,
-    epochs=1,
+    epochs=5,
     validation_data=test_classifier_ds,
 )
 
@@ -581,7 +583,7 @@ classifer_model.compile(
 )
 classifer_model.fit(
     train_classifier_ds,
-    epochs=1,
+    epochs=5,
     validation_data=test_classifier_ds,
 )
 
