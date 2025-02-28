@@ -46,12 +46,14 @@ Install `tf-nightly` via `pip install tf-nightly`.
 
 import os
 
-os.environ["KERAS_BACKEND"] = "tensorflow"
+os.environ["KERAS_BACKEND"] = "torch"  # or jax, or tensorflow
+
 import keras_hub
+
 import keras
-import tensorflow as tf
 from keras import layers
 from keras.layers import TextVectorization
+
 from dataclasses import dataclass
 import pandas as pd
 import numpy as np
@@ -117,7 +119,7 @@ def get_data_from_text_files(folder_name):
 train_df = get_data_from_text_files("train")
 test_df = get_data_from_text_files("test")
 
-all_data = train_df.append(test_df)
+all_data = train_df._append(test_df)
 
 """
 ## Dataset preparation
@@ -134,6 +136,9 @@ Below, we define 3 preprocessing functions.
 3.  The `get_masked_input_and_labels` function will mask input token ids.
 It masks 15% of all input tokens in each sequence at random.
 """
+
+# For data pre-processing and tf.data.Dataset
+import tensorflow as tf
 
 
 def custom_standardization(input_data):
@@ -238,10 +243,8 @@ test_classifier_ds = tf.data.Dataset.from_tensor_slices((x_test, y_test)).batch(
     config.BATCH_SIZE
 )
 
-# Build dataset for end to end model input (will be used at the end)
-test_raw_classifier_ds = tf.data.Dataset.from_tensor_slices(
-    (test_df.review.values, y_test)
-).batch(config.BATCH_SIZE)
+# Dataset for end to end model input (will be used at the end)
+test_raw_classifier_ds = test_df
 
 # Prepare data for masked language model
 x_all_review = encode(all_data.review.values)
@@ -301,27 +304,142 @@ loss_tracker = keras.metrics.Mean(name="loss")
 
 
 class MaskedLanguageModel(keras.Model):
-    def train_step(self, inputs):
+
+    def train_step(self, *args, **kwargs):
+        if keras.backend.backend() == "jax":
+            return self._jax_train_step(*args, **kwargs)
+        elif keras.backend.backend() == "tensorflow":
+            return self._tensorflow_train_step(*args, **kwargs)
+        elif keras.backend.backend() == "torch":
+            return self._torch_train_step(*args, **kwargs)
+
+    # Method used by jax backend
+    def compute_loss_and_updates(
+        self,
+        trainable_variables,
+        non_trainable_variables,
+        features,
+        labels,
+        sample_weight,
+        training=False,
+    ):
+        y_pred, non_trainable_variables = self.stateless_call(
+            trainable_variables,
+            non_trainable_variables,
+            features,
+            training=training,
+        )
+        loss = loss_fn(labels, y_pred, sample_weight=sample_weight)
+        # We decided to use sum since our reduction=None in the loss_fn
+        summed_loss = loss.sum()
+        return summed_loss, (y_pred, non_trainable_variables, loss)
+
+    # Jax training loop
+    def _jax_train_step(self, state, inputs):
+
+        import jax
+
+        (
+            trainable_variables,
+            non_trainable_variables,
+            optimizer_variables,
+            metrics_variables,
+        ) = state
         if len(inputs) == 3:
             features, labels, sample_weight = inputs
         else:
             features, labels = inputs
             sample_weight = None
+        # Get the gradient function.
+        grad_fn = jax.value_and_grad(self.compute_loss_and_updates, has_aux=True)
+        # Compute the gradients.
+        (summed_loss, (y_pred, non_trainable_variables, loss)), grads = grad_fn(
+            trainable_variables,
+            non_trainable_variables,
+            features,
+            labels,
+            sample_weight,
+            training=True,
+        )
+        # Update trainable variables and optimizer variables.
+        (
+            trainable_variables,
+            optimizer_variables,
+        ) = self.optimizer.stateless_apply(
+            optimizer_variables, grads, trainable_variables
+        )
+        # Compute our own metrics, loss_tracker object was returning errors with JAX.
+        new_metrics_vars = []
+        logs = {}
+        for metric in self.metrics:
+            this_metric_vars = metrics_variables[
+                len(new_metrics_vars) : len(new_metrics_vars) + len(metric.variables)
+            ]
+            if metric.name == "loss":
+                this_metric_vars = metric.stateless_update_state(
+                    this_metric_vars, loss, sample_weight=sample_weight
+                )
+            else:
+                this_metric_vars = metric.stateless_update_state(
+                    this_metric_vars, labels, y_pred
+                )
+            logs[metric.name] = metric.stateless_result(this_metric_vars)
+            new_metrics_vars += this_metric_vars
+        # Return metric logs and updated state variables.
+        state = (
+            trainable_variables,
+            non_trainable_variables,
+            optimizer_variables,
+            new_metrics_vars,
+        )
+        # Return a dict mapping metric names to current value, and state
+        return {"loss": logs["loss"]}, state
 
+    # Tensorflow training step
+    def _tensorflow_train_step(self, inputs):
+
+        if len(inputs) == 3:
+            features, labels, sample_weight = inputs
+        else:
+            features, labels = inputs
+            sample_weight = None
         with tf.GradientTape() as tape:
             predictions = self(features, training=True)
             loss = loss_fn(labels, predictions, sample_weight=sample_weight)
-
         # Compute gradients
         trainable_vars = self.trainable_variables
         gradients = tape.gradient(loss, trainable_vars)
-
         # Update weights
         self.optimizer.apply_gradients(zip(gradients, trainable_vars))
-
         # Compute our own metrics
         loss_tracker.update_state(loss, sample_weight=sample_weight)
+        # Return a dict mapping metric names to current value
+        return {"loss": loss_tracker.result()}
 
+    # Torch training step
+    def _torch_train_step(self, inputs):
+
+        import torch
+
+        if len(inputs) == 3:
+            features, labels, sample_weight = inputs
+        else:
+            features, labels = inputs
+            sample_weight = None
+        self.zero_grad()
+        # Compute loss
+        predictions = self(features, training=True)
+        loss = loss_fn(labels, predictions, sample_weight=sample_weight)
+        # Compute gradients for the weights, and # We decided to use sum since our
+        # reduction=None in the loss_fn
+        loss.sum().backward()
+        trainable_weights = [v for v in self.trainable_weights]
+        gradients = [v.value.grad for v in trainable_weights]
+        # Update weights
+        with torch.no_grad():
+            self.optimizer.apply(gradients, trainable_weights)
+        # Compute our own metrics
+        loss_tracker.update_state(loss, sample_weight=sample_weight)
         # Return a dict mapping metric names to current value
         return {"loss": loss_tracker.result()}
 
@@ -475,16 +593,34 @@ classifer_model.fit(
 When you want to deploy a model, it's best if it already includes its preprocessing
 pipeline, so that you don't have to reimplement the preprocessing logic in your
 production environment. Let's create an end-to-end model that incorporates
-the `TextVectorization` layer, and let's evaluate. Our model will accept raw strings
-as input.
+the `TextVectorization` layer inside evalaute method, and let's evaluate. 
+We will pass raw strings as input.
 """
 
 
+# We create a custom Model to override the evaluate method so
+# that it first pre-process text data
+class ModelEndtoEnd(keras.Model):
+
+    def evaluate(self, inputs):
+        features = encode(inputs.review.values)
+        labels = inputs.sentiment.values
+        test_classifier_ds = (
+            tf.data.Dataset.from_tensor_slices((features, labels))
+            .shuffle(1000)
+            .batch(config.BATCH_SIZE)
+        )
+        return super().evaluate(test_classifier_ds)
+
+    # Build the model
+    def build(self, input_shape):
+        self.built = True
+
+
 def get_end_to_end(model):
-    inputs_string = keras.Input(shape=(1,), dtype="string")
-    indices = vectorize_layer(inputs_string)
-    outputs = model(indices)
-    end_to_end_model = keras.Model(inputs_string, outputs, name="end_to_end_model")
+    inputs = classifer_model.inputs
+    outputs = classifer_model.outputs
+    end_to_end_model = ModelEndtoEnd(inputs, outputs, name="end_to_end_model")
     optimizer = keras.optimizers.Adam(learning_rate=config.LR)
     end_to_end_model.compile(
         optimizer=optimizer, loss="binary_crossentropy", metrics=["accuracy"]
@@ -493,4 +629,5 @@ def get_end_to_end(model):
 
 
 end_to_end_classification_model = get_end_to_end(classifer_model)
+# Pass raw text dataframe to the model
 end_to_end_classification_model.evaluate(test_raw_classifier_ds)
