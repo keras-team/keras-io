@@ -34,7 +34,7 @@ remains upright. The agent, therefore, must learn to keep the pole from falling 
 
 ### References
 
-- [Environment documentation](https://www.gymlibrary.dev/environments/classic_control/cart_pole/)
+- [Environment documentation](https://gymnasium.farama.org/environments/classic_control/cart_pole/)
 - [CartPole paper](http://www.derongliu.org/adp/adp-cdrom/Barto1983.pdf)
 - [Actor Critic Method](https://hal.inria.fr/hal-00840470/document)
 """
@@ -56,9 +56,9 @@ import tensorflow as tf
 seed = 42
 gamma = 0.99  # Discount factor for past rewards
 max_steps_per_episode = 10000
-env = gym.make("CartPole-v0")  # Create the environment
 # Adding `render_mode='human'` will show the attempts of the agent
-env.seed(seed)
+env = gym.make("CartPole-v0")  # Create the environment
+env.reset(seed=seed)
 eps = np.finfo(np.float32).eps.item()  # Smallest number such that 1.0 + eps != 1.0
 
 """
@@ -116,7 +116,7 @@ while True:  # Run until solved
             action_probs_history.append(ops.log(action_probs[0, action]))
 
             # Apply the sampled action in our environment
-            state, reward, done, _, _ = env.step(action)
+            state, reward, done, *_ = env.step(action)
             rewards_history.append(reward)
             episode_reward += reward
 
