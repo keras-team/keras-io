@@ -1,5 +1,5 @@
 @import url("index.css");
-@import url("docs.css");
+@import url("nav.css");
 
 html,
 body {
@@ -36,11 +36,12 @@ body {
 }
 
 .hero__content {
-  padding: 80px 0 0 24px;
+  padding: 80px 24px 0;
 }
 
 .hero__title {
   font-size: 40px;
+  font-weight: 700;
   margin: 8px 0;
 }
 
@@ -51,8 +52,8 @@ body {
 
 .hero__buttons {
   display: flex;
-  flex-direction: column;
-  gap: 24px;
+  flex-direction: row;
+  gap: 12px;
   padding: 24px 0;
 }
 
@@ -113,11 +114,11 @@ body {
 
 .explore__image--container img {
   height: max-content;
-  width: 15%;
+  width: 80%;
 }
 
 .guide {
-  background: var(--light-grey);
+  background: var(--medium-grey);
   padding: 80px 24px 100px;
 }
 
@@ -147,11 +148,17 @@ body {
 }
 
 .guide__content {
+  background: #FFF;
   padding: 24px;
   display: flex;
   flex-direction: column;
   gap: 20px;
   position: relative;
+}
+
+.guide__content h3 {
+  color: #A30000;
+  font-weight: 700;
 }
 
 .guide .code__container {
@@ -169,6 +176,7 @@ body {
 .guide h3 {
   color: var(--text-red);
   margin-bottom: 0;
+  font-weight: 700;
 }
 
 .guide__code {
@@ -179,24 +187,12 @@ body {
 }
 
 .models {
-  background: linear-gradient(5deg, #000, var(--dark-red) 20%), linear-gradient(to top, #000, var(--dark-red));
+  background: radial-gradient(circle at 75% 50%, #d00101, #7a0000);
   clip-path: polygon(0 0, 100% 3%, 100% 100%, 0% 97%);
   display: flex;
   gap: 64px;
   padding: 104px 24px 250px;
-  transform: translateY(-50px);
-}
-
-.models::before {
-  content: "";
-  position: absolute;
-  left: -10px;
-  width: 110%;
-  height: 100px; /* Adjust height for shadow size */
-  pointer-events: none; /* Prevents pseudo-elements from interfering with clicks */
-  transform: rotate(5deg);
-  top: 18px;
-  background: linear-gradient(#6d0000, var(--dark-red) 80%);
+  transform: translateY(-60px);
 }
 
 .models__wrapper {
@@ -272,6 +268,10 @@ body {
   line-height: 20px;
 }
 
+.models__card .button__square {
+  margin: 16px 8px 0 0;
+}
+
 .guide__example--wrapper {
   padding: 0 24px 60px;
 }
@@ -283,7 +283,7 @@ body {
 .research {
   background: linear-gradient(
     0deg,
-    var(--light-grey) 95%,
+    var(--medium-grey) 90%,
     var(--shadow-grey) 105%
   );
   padding: 80px 0;
@@ -311,7 +311,7 @@ body {
 }
 
 .contacts {
-  background-color: var(--dark-red);
+  background: radial-gradient(circle at 75% 50%, #d00101, #7a0000);
   display: flex;
   padding: 80px 24px;
   margin: auto;
@@ -354,6 +354,20 @@ body {
 }
 
 @media only screen and (min-width: 1200px) {
+  h1 {
+    font-size: 72px;
+    font-weight: 700;
+  }
+
+  h2 {
+    font-size: 40px;
+    font-weight: 700;
+  }
+
+  h3 {
+    font-weight: 700;
+  }
+
   .hero {
     clip-path: polygon(0 0, 100% 0, 100% 100%, 0 75%);
     height: 758px;
@@ -424,7 +438,7 @@ body {
     flex-direction: column;
     gap: 176px;
     margin-right: 64px;
-    padding-bottom: 276px;
+    padding-bottom: 160px;
   }
 
   .explore__content {
@@ -448,6 +462,10 @@ body {
     gap: 22px;
   }
 
+  .explore__image--container img {
+    margin-bottom: 24px;
+  }
+
   .code__container {
     margin: 0;
   }
@@ -456,7 +474,7 @@ body {
     display: flex;
     flex-direction: column;
     gap: 24px;
-    padding: 146px 64px 290px;
+    padding: 110px 64px 230px;
   }
 
   .guide::before {
@@ -509,8 +527,8 @@ body {
     background: var(--white);
     display: flex;
     flex-direction: column;
-    padding: 0 64px 130px;
-    margin-top: -50px;
+    padding: 0 64px 90px;
+    margin-top: -100px;
     gap: 24px;
   }
 
@@ -555,7 +573,6 @@ body {
   }
 
   .models {
-    background: linear-gradient(5deg, #000, var(--dark-red) 20%), linear-gradient(to top, #000, var(--dark-red));
     clip-path: polygon(0 0, 100% 15%, 100% 100%, 0% 85%);
     padding: 104px 64px 250px;
     transform: translateY(-160px);
@@ -571,7 +588,7 @@ body {
 
   .models__wrapper {
     flex-direction: row;
-    padding-top: 160px;
+    padding-top: 130px;
   }
 
   .models__button-wrapper {
@@ -596,12 +613,16 @@ body {
   }
 
   .models__card {
-    height: 200px;
+    min-height: 270px;
     width: 47%;
   }
 
+  .models__card .button__square {
+    margin-right: 0;
+  }
+
   .research {
-    padding: 150px 0 200px;
+    padding: 110px 0 150px;
     text-align: center;
   }
 
@@ -616,7 +637,7 @@ body {
 
   .contacts {
     clip-path: polygon(0 0, 100% 15%, 100% 100%, 0% 100%);
-    padding: 200px 64px 160px;
+    padding: 200px 64px 120px;
     margin-top: -115px;
   }
 

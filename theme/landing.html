@@ -10,7 +10,7 @@
     <meta name="author" content="Keras Team" />
 
     <title>Keras: Deep Learning for humans</title>
-    <link rel="icon" type="image/webp" href="./img/k-keras-social.png" />
+    <link rel="icon" type="image/png" href="./img/k-keras-social.png" />
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -96,16 +96,28 @@
 
     <nav class="nav__container">
       <div class="nav__wrapper">
-        <button class="nav__menu--button"><i class="icon--menu"></i></button>
-        <button class="nav__menu--close"><i class="icon--close"></i></button>
-        <a href="/">
-          <img class="nav__logo nav__logo--desktop" src="./img/logo.png" />
-          <img class="nav__logo nav__logo--mobile" src="./img/k-logo.png" />
-        </a>
-        <button class="nav__search--mobile">
-          <i class="icon__search--mobile"></i>
-        </button>
-
+        <div class="nav__controls--mobile">
+          <button class="nav__menu--button"><i class="icon--menu"></i></button>
+          <button class="nav__menu--close"><i class="icon--close"></i></button>
+          <a href="/">
+            <img class="nav__logo nav__logo--desktop" src="./img/logo.png" />
+            <img class="nav__logo nav__logo--mobile" src="./img/k-logo.png" />
+          </a>
+          <button class="nav__search--mobile">
+            <i class="icon__search--mobile"></i>
+          </button>
+        </div>
+        <form class="nav__search nav__search-form--mobile">
+          <input
+            class="nav__search--input"
+            type="search"
+            placeholder="SEARCH"
+            aria-label="Search"
+          />
+          <button class="nav__search--button" type="submit">
+            <i class="icon--search"></i>
+          </button>
+        </form>
         <div class="k-nav" id="nav-menu">
           <div class="nav flex-column nav-pills" role="tablist" aria-orientation="vertical">
             <a class="nav-link" href="/about/" role="tab" aria-selected="">About Keras</a>
@@ -252,11 +264,7 @@
 
             <div class="explore__content">
               <div class="explore__image--container">
-                <img src="./img/jax-logo.png" />
-                <img src="./img/tensor-flow-logo.png" />
-                <img src="./img/pytorch-logo.png" />
-                <img src="./img/openvino-logo.png" />
-                <img src="./img/numpy-logo.png" />
+                <img src="./img/logo-row.png" />
               </div>
               <h2 class="text--red">
                 Welcome to multi-framework machine learning
@@ -412,41 +420,49 @@
               </a>
             </div>
 
-            <a class="models__card" href="https://www.kaggle.com/models/google/gemma-2" target="_blank">
+            <div class="models__card">
               <div class="models__card--contanier">
                 <h4 class="models__card--title">GEMMA</h4>
                 <p class="models__card--description">
                   Google’s family of lightweight language models built from the same research and technology used to create Gemini.
                 </p>
+                <a class="button__square button__square--white" href="/keras_hub/api/models/gemma/">VIEW DOCUMENTATION</a>
+                <a class="button__square button__square--white" href="https://www.kaggle.com/models/google/gemma-2" target="_blank">KAGGLE DETAILS</a>
               </div>
-            </a>
+            </div>
 
-            <a class="models__card" href="https://www.kaggle.com/models/keras/llama3" target="_blank">
+            <div class="models__card">
               <div class="models__card--contanier">
                 <h4 class="models__card--title">LLAMA</h4>
                 <p class="models__card--description">
                   Meta’s flagship open text generation models available in a wide range of sizes and precisions.
                 </p>
+                <a class="button__square button__square--white" href="/keras_hub/api/models/llama3/">VIEW DOCUMENTATION</a>
+                <a class="button__square button__square--white" href="https://www.kaggle.com/models/keras/llama3" target="_blank">KAGGLE DETAILS</a>
               </div>
-            </a>
+            </div>
 
-            <a class="models__card" href="https://www.kaggle.com/models/keras/stablediffusion3" target="_blank">
+            <div class="models__card">
               <div class="models__card--contanier">
                 <h4 class="models__card--title">STABLE DIFFUSION</h4>
                 <p class="models__card--description">
                   Generate image content with this state of the art diffusion model from Stability AI.
                 </p>
+                <a class="button__square button__square--white" href="/keras_hub/api/models/llama3/">VIEW DOCUMENTATION</a>
+                <a class="button__square button__square--white" href="https://www.kaggle.com/models/keras/llama3" target="_blank">KAGGLE DETAILS</a>
               </div>
-            </a>
+            </div>
 
-            <a class="models__card" href="https://www.kaggle.com/models/keras/mistral" target="_blank">
+            <div class="models__card">
               <div class="models__card--contanier">
                 <h4 class="models__card--title">MISTRAL</h4>
                 <p class="models__card--description">
                   A generative language from the French company Mistral AI, making frontier models accessible to all.
                 </p>
+                <a class="button__square button__square--white" href="/keras_hub/api/models/mistral/">VIEW DOCUMENTATION</a>
+                <a class="button__square button__square--white" href="https://www.kaggle.com/models/keras/mistral" target="_blank">KAGGLE DETAILS</a>
               </div>
-            </a>
+            </div>
 
             <div class="models__button-wrapper models__button-wrapper--mobile">
               <a class="button__square button__square--transparent text--white" href="/keras_hub/">

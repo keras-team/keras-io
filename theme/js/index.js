@@ -1,3 +1,4 @@
+// Mobile nav controls
 const navButton = document.querySelector('.nav__menu--button');
 const closeButton = document.querySelector('.nav__menu--close');
 const mobileNavMenu = document.querySelector('.k-nav');
@@ -23,14 +24,32 @@ copyButtons.forEach((button) => {
   });
 });
 
-const search = document.querySelector('.nav__search');
-search.addEventListener('submit', (event) => {
-  event.preventDefault();
-  const text = document.querySelector('.nav__search--input').value;
-  console.log('text', text);
-  window.location = `/search.html?query=${text}`;
+// Search controls
+const searchForms = document.querySelectorAll('.nav__search');
+const mobileNavSearchIcon = document.querySelector('.nav__search--mobile');
+const mobileNavSearchForm = document.querySelector('.nav__search-form--mobile');
+const mobileNavControls = document.querySelector('.nav__controls--mobile');
+const pageContainer = document.querySelector('.page__container');
+
+mobileNavSearchIcon.addEventListener('click', () => {
+  mobileNavControls.style.display = 'none';
+  mobileNavSearchForm.style.display = 'block';
 });
 
+searchForms.forEach((search) => {
+  search.addEventListener('submit', (event) => {
+    event.preventDefault();
+    const text = search.querySelector('.nav__search--input').value;
+    window.location = `/search.html?query=${text}`;
+  });
+});
+
+pageContainer.addEventListener('click', () => {
+  mobileNavControls.style.display = 'flex';
+  mobileNavSearchForm.style.display = 'none';
+});
+
+// Parallax functionality
 const exploreModule = document.querySelector('.explore');
 const exploreContent = document.querySelector('.explore__content');
 

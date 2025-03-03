@@ -51,7 +51,7 @@ button {
   line-height: 20px;
   font-size: 14px;
   font-weight: 700;
-  padding: 12px 24px;
+  padding: 12px 18px;
 }
 
 .button__square--white {
@@ -140,62 +140,6 @@ p {
   color: var(--text-red);
 }
 
-nav {
-  background: var(--white);
-  border-bottom: 1px solid var(--border-grey);
-  position: sticky;
-  top: 0;
-  z-index: 99;
-}
-
-.nav__logo--desktop {
-  display: none;
-}
-
-.nav__wrapper {
-  align-items: center;
-  display: flex;
-  justify-content: space-between;
-  width: 100%;
-}
-
-.nav__search {
-  max-width: 303px;
-  position: relative;
-}
-
-.nav__search--input {
-  border: 1px solid var(--grey);
-  border-radius: 8px;
-  box-shadow: inset 2px 2px 8px 0 #dcdcdc80;
-  color: var(--dark-grey);
-  cursor: pointer;
-  height: 36px;
-  padding-left: 8px;
-  transition: box-shadow 0.5s;
-  width: 303px;
-}
-
-.nav__search--input::placeholder {
-  color: var(--text-red);
-  font-weight: 700;
-  font-size: 14px;
-  line-height: 20px;
-}
-
-.nav__search--input:hover {
-  box-shadow: inset 2px 2px 8px 0 #20202080;
-}
-
-.nav__search--button {
-  background: transparent;
-  border: 0;
-  padding: 5px;
-  position: absolute;
-  right: 8px;
-  top: 6px;
-}
-
 /* Prism */
 pre[class*="language-"] {
   border-radius: 12px 12px 0 0;
@@ -218,7 +162,8 @@ footer {
   background: var(--grey);
 }
 
-footer * {
+footer a {
+  color: #000;
   font-size: 16px;
   line-height: 25.6px;
   font-weight: 500;
@@ -231,43 +176,6 @@ footer * {
 }
 
 @media only screen and (max-width: 1199px) {
-  .nav__container {
-    display: flex;
-    justify-content: space-between;
-    padding: 8px 16px;
-  }
-
-  .nav__logo {
-    padding-right: 24px;
-    width: 47px;
-  }
-
-  .nav__menu--button,
-  .nav__menu--close {
-    padding: 15px 10.5px;
-    border: none;
-    background: transparent;
-    cursor: pointer;
-  }
-
-  .nav__menu--close {
-    display: none;
-  }
-
-  .nav__search--mobile {
-    padding: 11px;
-    border: none;
-    background: transparent;
-  }
-
-  .nav__search {
-    display: none;
-  }
-
-  .nav__menu{
-    display: none;
-  }
-
   h1 {
     font-weight: 700;
     font-size: 40px;
@@ -288,64 +196,6 @@ footer * {
 @media only screen and (min-width: 1200px) {
   code[class*="language-"] {
     font-size: 14px;
-  }
-
-  .nav__container {
-    padding: 18px 64px;
-  }
-
-  .nav__wrapper {
-    margin: auto;
-    max-width: 1440px;
-  }
-
-  .nav__logo {
-    padding-right: 24px;
-    width: 169px;
-  }
-
-  .nav__logo--mobile {
-    display: none;
-  }
-
-  .nav__logo--desktop {
-    display: block;
-  }
-
-  .nav__menu--button,
-  .nav__menu--close {
-    display: none;
-  }
-
-  .nav__search--mobile {
-    display: none;
-  }
-
-  .nav__menu {
-    align-items: center;
-    display: flex;
-    justify-content: space-between;
-    width: 100%;
-  }
-
-  .nav__item--container {
-    display: flex;
-    list-style-type: none;
-    margin: 0;
-    padding: 0;
-    gap: 16px;
-  }
-
-  .nav__item {
-    font-family: "Montserrat";
-    font-weight: 700;
-    line-height: 20px;
-    font-size: 14px;
-    padding: 8px;
-  }
-
-  .nav__link {
-    color: var(--dark-grey);
   }
 
   h1 {
@@ -374,6 +224,10 @@ footer * {
     line-height: 24px;
     font-size: 18px;
     margin: 0;
+  }
+
+  .button__square {
+    padding: 12px 24px;
   }
 
   .footer__container {
