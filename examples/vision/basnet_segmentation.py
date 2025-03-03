@@ -43,7 +43,7 @@ import numpy as np
 from glob import glob
 import matplotlib.pyplot as plt
 
-import keras_cv
+import keras_hub
 import tensorflow as tf
 import keras
 from keras import layers, ops
@@ -228,15 +228,19 @@ def segmentation_head(x_input, out_classes, final_size):
     return x
 
 
-def get_resnet_block(_resnet, block_num):
-    """Extract and return ResNet-34 block."""
-    resnet_layers = [3, 4, 6, 3]  # ResNet-34 layer sizes at different block.
+def get_resnet_block(resnet, block_num):
+    """Extract and return a ResNet-34 block."""
+    extractor_levels = ["P2", "P3", "P4", "P5"]
+    num_blocks = resnet.stackwise_num_blocks
+    if block_num == 0:
+        x = resnet.get_layer("pool1_pool").output
+    else:
+        x = resnet.pyramid_outputs[extractor_levels[block_num - 1]]
+    y = resnet.get_layer(f"stack{block_num}_block{num_blocks[block_num]-1}_add").output
     return keras.models.Model(
-        inputs=_resnet.get_layer(f"v2_stack_{block_num}_block1_1_conv").input,
-        outputs=_resnet.get_layer(
-            f"v2_stack_{block_num}_block{resnet_layers[block_num]}_add"
-        ).output,
-        name=f"resnet34_block{block_num + 1}",
+        inputs=x,
+        outputs=y,
+        name=f"resnet_block{block_num + 1}",
     )
 
 
@@ -262,8 +266,13 @@ def basnet_predict(input_shape, out_classes):
     # -------------Encoder--------------
     x = layers.Conv2D(filters, kernel_size=(3, 3), padding="same")(x_input)
 
-    resnet = keras_cv.models.ResNet34Backbone(
-        include_rescaling=False,
+    resnet = keras_hub.models.ResNetBackbone(
+        input_conv_filters=[64],
+        input_conv_kernel_sizes=[7],
+        stackwise_num_filters=[64, 128, 256, 512],
+        stackwise_num_blocks=[3, 4, 6, 3],
+        stackwise_num_strides=[1, 2, 2, 2],
+        block_type="basic_block",
     )
 
     encoder_blocks = []
@@ -307,7 +316,7 @@ def basnet_predict(input_shape, out_classes):
         for decoder_block in decoder_blocks
     ]
 
-    return keras.models.Model(inputs=[x_input], outputs=decoder_blocks)
+    return keras.models.Model(inputs=x_input, outputs=decoder_blocks)
 
 
 """
@@ -352,7 +361,7 @@ def basnet_rrm(base_model, out_classes):
     # ------------- refined = coarse + residual
     x = layers.Add()([x_input, x])  # Add prediction + refinement output
 
-    return keras.models.Model(inputs=base_model.input[0], outputs=x)
+    return keras.models.Model(inputs=[base_model.input], outputs=[x])
 
 
 """
@@ -375,7 +384,7 @@ class BASNet(keras.Model):
 
         # Activations.
         output = [layers.Activation("sigmoid")(x) for x in output]
-        super().__init__(inputs=predict_model.input[0], outputs=output)
+        super().__init__(inputs=predict_model.input, outputs=output)
 
         self.smooth = 1.0e-9
         # Binary Cross Entropy loss.
@@ -453,9 +462,9 @@ iterations but it still demonstrates its capabilities. For further details about
 trainings parameters please check given link.
 """
 
-"""shell
-!gdown 1OWKouuAQ7XpXZbWA3mmxDPrFGW71Axrg
-"""
+import gdown
+
+gdown.download(id="1OWKouuAQ7XpXZbWA3mmxDPrFGW71Axrg", output="basnet_weights.h5")
 
 
 def normalize_output(prediction):
