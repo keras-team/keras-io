@@ -119,7 +119,7 @@ def get_data_from_text_files(folder_name):
 train_df = get_data_from_text_files("train")
 test_df = get_data_from_text_files("test")
 
-all_data = train_df._append(test_df)
+all_data = train_df.concat(test_df)
 
 """
 ## Dataset preparation
@@ -305,143 +305,17 @@ loss_tracker = keras.metrics.Mean(name="loss")
 
 class MaskedLanguageModel(keras.Model):
 
-    def train_step(self, *args, **kwargs):
-        if keras.backend.backend() == "jax":
-            return self._jax_train_step(*args, **kwargs)
-        elif keras.backend.backend() == "tensorflow":
-            return self._tensorflow_train_step(*args, **kwargs)
-        elif keras.backend.backend() == "torch":
-            return self._torch_train_step(*args, **kwargs)
+    def compute_loss(self, x=None, y=None, y_pred=None, sample_weight=None):
 
-    # Method used by jax backend
-    def compute_loss_and_updates(
-        self,
-        trainable_variables,
-        non_trainable_variables,
-        features,
-        labels,
-        sample_weight,
-        training=False,
-    ):
-        y_pred, non_trainable_variables = self.stateless_call(
-            trainable_variables,
-            non_trainable_variables,
-            features,
-            training=training,
-        )
-        loss = loss_fn(labels, y_pred, sample_weight=sample_weight)
-        # We decided to use sum since our reduction=None in the loss_fn
-        summed_loss = loss.sum()
-        return summed_loss, (y_pred, non_trainable_variables, loss)
-
-    # Jax training loop
-    def _jax_train_step(self, state, inputs):
-
-        import jax
-
-        (
-            trainable_variables,
-            non_trainable_variables,
-            optimizer_variables,
-            metrics_variables,
-        ) = state
-        if len(inputs) == 3:
-            features, labels, sample_weight = inputs
-        else:
-            features, labels = inputs
-            sample_weight = None
-        # Get the gradient function.
-        grad_fn = jax.value_and_grad(self.compute_loss_and_updates, has_aux=True)
-        # Compute the gradients.
-        (summed_loss, (y_pred, non_trainable_variables, loss)), grads = grad_fn(
-            trainable_variables,
-            non_trainable_variables,
-            features,
-            labels,
-            sample_weight,
-            training=True,
-        )
-        # Update trainable variables and optimizer variables.
-        (
-            trainable_variables,
-            optimizer_variables,
-        ) = self.optimizer.stateless_apply(
-            optimizer_variables, grads, trainable_variables
-        )
-        # Compute our own metrics, loss_tracker object was returning errors with JAX.
-        new_metrics_vars = []
-        logs = {}
-        for metric in self.metrics:
-            this_metric_vars = metrics_variables[
-                len(new_metrics_vars) : len(new_metrics_vars) + len(metric.variables)
-            ]
-            if metric.name == "loss":
-                this_metric_vars = metric.stateless_update_state(
-                    this_metric_vars, loss, sample_weight=sample_weight
-                )
-            else:
-                this_metric_vars = metric.stateless_update_state(
-                    this_metric_vars, labels, y_pred
-                )
-            logs[metric.name] = metric.stateless_result(this_metric_vars)
-            new_metrics_vars += this_metric_vars
-        # Return metric logs and updated state variables.
-        state = (
-            trainable_variables,
-            non_trainable_variables,
-            optimizer_variables,
-            new_metrics_vars,
-        )
-        # Return a dict mapping metric names to current value, and state
-        return {"loss": logs["loss"]}, state
-
-    # Tensorflow training step
-    def _tensorflow_train_step(self, inputs):
-
-        if len(inputs) == 3:
-            features, labels, sample_weight = inputs
-        else:
-            features, labels = inputs
-            sample_weight = None
-        with tf.GradientTape() as tape:
-            predictions = self(features, training=True)
-            loss = loss_fn(labels, predictions, sample_weight=sample_weight)
-        # Compute gradients
-        trainable_vars = self.trainable_variables
-        gradients = tape.gradient(loss, trainable_vars)
-        # Update weights
-        self.optimizer.apply_gradients(zip(gradients, trainable_vars))
-        # Compute our own metrics
+        loss = loss_fn(y, y_pred, sample_weight)
         loss_tracker.update_state(loss, sample_weight=sample_weight)
+        return loss
+
+    def compute_metrics(self, x, y, y_pred, sample_weight):
+
         # Return a dict mapping metric names to current value
         return {"loss": loss_tracker.result()}
 
-    # Torch training step
-    def _torch_train_step(self, inputs):
-
-        import torch
-
-        if len(inputs) == 3:
-            features, labels, sample_weight = inputs
-        else:
-            features, labels = inputs
-            sample_weight = None
-        self.zero_grad()
-        # Compute loss
-        predictions = self(features, training=True)
-        loss = loss_fn(labels, predictions, sample_weight=sample_weight)
-        # Compute gradients for the weights, and # We decided to use sum since our
-        # reduction=None in the loss_fn
-        loss.sum().backward()
-        trainable_weights = [v for v in self.trainable_weights]
-        gradients = [v.value.grad for v in trainable_weights]
-        # Update weights
-        with torch.no_grad():
-            self.optimizer.apply(gradients, trainable_weights)
-        # Compute our own metrics
-        loss_tracker.update_state(loss, sample_weight=sample_weight)
-        # Return a dict mapping metric names to current value
-        return {"loss": loss_tracker.result()}
 
     @property
     def metrics(self):
