@@ -90,7 +90,7 @@ blockquote {
 .k-nav {
   width: 19rem;
   float: left;
-  border-bottom: 1px solid #ccc;
+  border-bottom: 1px solid var(--grey);
   display: block;
 }
 
@@ -98,8 +98,8 @@ blockquote {
   width: 47rem;
   background: #fff;
   float: left;
-  border-left: 1px solid #ccc;
-  border-right: 1px solid #ccc;
+  border-left: 1px solid var(--grey);
+  border-right: 1px solid var(--grey);
   min-height: 1000px;
 }
 
@@ -132,6 +132,12 @@ blockquote {
 
 .nav-link-chevron--expanded {
   transform: rotate(90deg);
+}
+
+.nav-expanded-panel {
+  box-shadow: 2px 2px 8px 0 rgba(220, 220, 220, 0.50) inset;
+  display: flex;
+  flex-direction: column;
 }
 
 .nav-sublink {
@@ -240,7 +246,7 @@ blockquote {
   padding-top: 1rem;
   margin-left: 47rem;
   margin-top: 3.8rem;
-  border-top: 1px solid #ccc;
+  border-top: 1px solid var(--grey);
   color: #a20000;
   max-height: 100%;
   overflow: scroll;
@@ -255,14 +261,14 @@ blockquote {
 .k-main-top {
   float: left;
   width: 100%;
-  border-bottom: 1px solid #ccc;
+  border-bottom: 1px solid var(--grey);
   background-color: white;
 }
 
 .k-location-slug {
   width: 100%;
   padding: 1rem;
-  border-bottom: 1px solid #ccc;
+  border-bottom: 1px solid var(--grey);
   float: left;
 }
 
@@ -279,7 +285,6 @@ blockquote {
 
 .k-search-btn {
   margin-left: 0.8rem;
-  border-color: #000000;
   background-color: #333333;
   background-image: none;
   filter: none;
@@ -343,7 +348,7 @@ blockquote {
 
 .nav-pills .nav-link {
   border-radius: 0;
-  border-top: 1px solid #ddd;
+  border-top: 1px solid var(--grey);
   color: var(--text-red);
   font-size: 1rem;
   line-height: 1.25rem;
@@ -354,16 +359,13 @@ blockquote {
 .nav-pills .nav-sublink {
   padding-left: 1.5rem;
   padding-right: 0.8rem;
-  background-color: white;
   color: var(--dark-grey);
-
   text-decoration: none;
 }
 
 .nav-pills .nav-sublink2 {
   padding-left: 3rem;
   padding-right: 0.8rem;
-  background-color: white;
   color: black;
   text-decoration: none;
 }
@@ -374,7 +376,6 @@ blockquote {
 }
 
 .nav-pills .nav-link.active {
-  /* TU DODAJ CHEVRONA */
   background-color: white;
   color: var(--text-red);
 }

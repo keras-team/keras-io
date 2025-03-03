@@ -92,19 +92,23 @@
             {% endif %}
             {{item.title}}
           </a>
-            {% if item.active %}
-              {% for child in item.children %}
-                <a class="nav-sublink{% if child.active %} active{% endif %}" href="{{child.url}}">{{child.title}}</a>
+            {% if item.active and item.children|length > 0 %}
+              <div class="nav-expanded-panel">
+                {% for child in item.children %}
+                  <a class="nav-sublink{% if child.active %} active{% endif %}" href="{{child.url}}">{{child.title}}</a>
                   {% if child.active %}
                     {% for grandchild in child.children %}
                       <a class="nav-sublink2{% if grandchild.active %} active{% endif %}" href="{{grandchild.url}}">{{grandchild.title}}</a>
                     {% endfor %}
                   {% endif %}
-              {% endfor %}
+                {% endfor %}
+              </div>
             {% endif %}
           {% endif %}
         {% endfor %}
+
       </div>
+
     </div>
 
     <div class='k-main'>
