@@ -49,6 +49,12 @@
   <!-- End Google Tag Manager -->
 
   <script async defer src="https://buttons.github.io/buttons.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+          href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400&display=swap"
+          rel="stylesheet"
+  />
 
 </head>
 
@@ -59,28 +65,46 @@
   <!-- End Google Tag Manager (noscript) -->
 
   <div class='k-page'>
-  
     <div class="k-nav" id="nav-menu">
-      <a href='{{base_url}}'><img src='{{base_url}}img/logo-small.png' class='logo-small' /></a>
+      <a href='{{base_url}}'><img src='{{base_url}}img/logo-small.webp' class='logo-small' /></a>
 
+      {% set related_nav_urls_map = {
+        "/api/": ["/2.18/api/"],
+        "/2.18/api/": ["/api/"],
+        "/keras_tuner/": ["/keras_hub/"],
+        "/keras_hub/": ["/keras_tuner/"],
+      } %}
+      {% set vars = {'related_urls': []} %}
+      {% for item in nav %}
+        {% if item.active %}
+          {{ vars.update({'related_urls': related_nav_urls_map[item.url]}) }}
+        {% endif %}
+      {% endfor %}
+      <!-- version with just the active item visible -->
       <div class="nav flex-column nav-pills" role="tablist" aria-orientation="vertical">
-
         {% for item in nav %}
-          <a class="nav-link{% if item.active %} active{% endif %}" href="{{item.url}}" role="tab" aria-selected="{{item.selected}}">{{item.title}}</a>
-          {% if item.active %}
-            {% for child in item.children %}
-              <a class="nav-sublink{% if child.active %} active{% endif %}" href="{{child.url}}">{{child.title}}</a>
-                {% if child.active %}
-                  {% for grandchild in child.children %}
-                    <a class="nav-sublink2{% if grandchild.active %} active{% endif %}" href="{{grandchild.url}}">{{grandchild.title}}</a>
-                  {% endfor %}
-                {% endif %}
-            {% endfor %}
+          {% if (item.active and item.children|length > 0) or item.url in vars['related_urls'] %}
+          <a class="nav-link{% if item.active %} active{% endif %}" href="{{item.url}}" role="tab" aria-selected="{{item.selected}}">
+            {% if item.children|length > 0 %}
+              <svg class="nav-link-chevron{% if item.active %} nav-link-chevron--expanded{% endif %}" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M9.5 17L14.5 12L9.5 7V17Z"/>
+              </svg>
+            {% endif %}
+            {{item.title}}
+          </a>
+            {% if item.active %}
+              {% for child in item.children %}
+                <a class="nav-sublink{% if child.active %} active{% endif %}" href="{{child.url}}">{{child.title}}</a>
+                  {% if child.active %}
+                    {% for grandchild in child.children %}
+                      <a class="nav-sublink2{% if grandchild.active %} active{% endif %}" href="{{grandchild.url}}">{{grandchild.title}}</a>
+                    {% endfor %}
+                  {% endif %}
+              {% endfor %}
+            {% endif %}
           {% endif %}
         {% endfor %}
-
       </div>
-
     </div>
 
     <div class='k-main'>

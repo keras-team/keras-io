@@ -1,5 +1,12 @@
+:root {
+  --dark-grey: #3f3f3f;
+  --text-red: #a30000;
+  --sublink-active-red: #D00101;
+  --light-grey: #F3F3F3;
+  --grey: #E7E7E7;
+}
 body {
-  font-family: 'Open Sans', sans-serif;
+  font-family: 'Montserrat', 'Open Sans', sans-serif;
   font-size: 0.95rem
 }
 
@@ -9,24 +16,38 @@ h3,
 h4,
 h5,
 h6 {
-  font-family: 'Open Sans', sans-serif;  
+  color: #040404;
+  font-family: 'Montserrat', 'Open Sans', sans-serif;
 }
 
 h1 {
+  font-weight: 400;
+  font-size: 2.5rem;
+  line-height: 1.3;
+  margin-bottom: 2rem;
+}
+
+h2 {
   font-weight: 700;
-  font-size: 2.2rem;
+  font-size: 1.5rem;
+  line-height: 1.3;
+  letter-spacing: 1.2px;
   margin-bottom: 1rem;
 }
-h2 {
-  font-weight: 600;
-  font-size: 1.6rem;
-  margin-bottom: 0.8rem;
-}
+
 h3 {
   font-size: 1.2rem;
   font-weight: 600;
   margin-bottom: 0.6rem;
 }
+
+h3:not(:has(code)) {
+  font-size: 1.75rem;
+  font-weight: 400;
+  line-height: 1.3;
+  margin-bottom: 0.5rem;
+}
+
 h4 {
   font-size: 1.1rem;
   font-weight: 600;
@@ -36,6 +57,7 @@ h4 {
 a {
   color: #d00000;
 }
+
 a:hover {
   color: #ff0000;
 }
@@ -49,6 +71,7 @@ hr {
   margin-bottom: 2rem;
   border-top: 1px solid rgba(0, 0, 0, .2);
 }
+
 /*table {
   width: 100%;
   margin-bottom: 2rem;
@@ -60,15 +83,17 @@ blockquote {
 
 
 .k-page {
-  width:66rem;
+  width: 66rem;
   float: left;
 }
+
 .k-nav {
   width: 19rem;
   float: left;
   border-bottom: 1px solid #ccc;
   display: block;
 }
+
 .k-main {
   width: 47rem;
   background: #fff;
@@ -77,55 +102,77 @@ blockquote {
   border-right: 1px solid #ccc;
   min-height: 1000px;
 }
+
 .k-content {
   width: 47rem;
   float: left;
   padding: 1.3rem;
   padding-top: 1rem;
 }
+
 .k-search-form {
   width: 100%;
   padding: 1rem;
 }
+
 #dropdown-nav {
   display: none;
 }
+
 .nav-link {
   font-size: 1rem;
-  padding: 0.6rem 1rem;
+  padding: 0.6rem 1.5rem;
+  position: relative;
 }
+
+.nav-link-chevron {
+  position: absolute;
+  left: 0;
+}
+
+.nav-link-chevron--expanded {
+  transform: rotate(90deg);
+}
+
 .nav-sublink {
   font-size: 0.85rem;
   padding-top: 0.45rem;
   padding-bottom: 0.45rem;
 }
+
 .nav-sublink2 {
   font-size: 0.8rem;
   padding-top: 0.45rem;
   padding-bottom: 0.45rem;
 }
+
 @media screen and (max-width: 1342px) {
   .k-nav {
     width: 17rem;
   }
 }
+
 @media screen and (max-width: 1300px) {
-    .k-outline {
-        width: 0;
-        display: none !important;
-    }
+  .k-outline {
+    width: 0;
+    display: none !important;
+  }
 }
+
 @media screen and (max-width: 840px) {
   body {
     font-size: 1rem;
   }
+
   pre {
     font-size: 100%;
   }
+
   .k-page {
     width: 100%;
     min-width: 375px;
   }
+
   .k-nav {
     display: none;
     position: fixed;
@@ -136,39 +183,48 @@ blockquote {
     overflow-y: scroll;
     bottom: 0;
   }
+
   #dropdown-nav {
     display: block;
     width: 70px;
     float: left;
     cursor: pointer;
   }
+
   .k-search-form {
     width: 80%;
   }
+
   .k-main {
     width: 100%;
   }
+
   .k-main-inner {
     margin-top: 60px;
   }
+
   .k-main-top {
     position: fixed;
     background: white;
     min-width: 357px;
   }
+
   .k-content {
     width: 100%;
     padding: 2%;
     padding-top: 1%;
   }
+
   .nav-link {
     font-size: 1.1rem;
   }
+
   .nav-sublink {
     font-size: 1rem;
     padding-top: 0.6rem;
     padding-bottom: 0.6rem;
   }
+
   .nav-sublink2 {
     font-size: 1rem;
     padding-top: 0.6rem;
@@ -195,12 +251,14 @@ blockquote {
 .k-content img {
   max-width: 90%;
 }
+
 .k-main-top {
   float: left;
   width: 100%;
   border-bottom: 1px solid #ccc;
   background-color: white;
 }
+
 .k-location-slug {
   width: 100%;
   padding: 1rem;
@@ -213,6 +271,7 @@ blockquote {
   height: 1rem;
   padding-right: 0.5rem;
 }
+
 .k-dot {
   padding-left: 1rem;
   padding-right: 1rem;
@@ -231,9 +290,11 @@ blockquote {
   border: 1px solid #000;
   border-radius: 2px;
 }
+
 .k-search-btn svg {
   fill: white;
 }
+
 .k-search-input {
   display: block;
   width: 100%;
@@ -247,9 +308,10 @@ blockquote {
   background-clip: padding-box;
   border: 1px solid #ced4da;
   border-radius: .1rem;
-  transition: border-color .15s ease-in-out,box-shadow .15s ease-in-out;
+  transition: border-color .15s ease-in-out, box-shadow .15s ease-in-out;
   outline: none;
 }
+
 .k-search-input:focus {
   border-color: #d00000;
   box-shadow: 0 0 5px rgb(173 25 25 / 50%);
@@ -264,35 +326,42 @@ blockquote {
   width: 100%;
   padding-left: 10%;
   padding-right: 10%;
-  padding-top:5%;
-  padding-bottom:5%;
+  padding-top: 5%;
+  padding-bottom: 5%;
 }
 
 
 .nav-pills .nav-sublink.active {
-  background-color: #d00000;
-  color: white;
+  background-color: var(--light-grey);
+  color: var(--sublink-active-red);
 }
+
 .nav-pills .nav-sublink2.active {
-  background-color: #555555;
-  color: white;
+  background-color: var(--grey);
+  color: var(--sublink-active-red);
 }
 
 .nav-pills .nav-link {
   border-radius: 0;
   border-top: 1px solid #ddd;
-  color: #d00000;
+  color: var(--text-red);
+  font-size: 1rem;
+  line-height: 1.25rem;
+  font-weight: 700;
+  letter-spacing: .64px;
 }
+
 .nav-pills .nav-sublink {
   padding-left: 1.5rem;
   padding-right: 0.8rem;
   background-color: white;
-  color: black;
+  color: var(--dark-grey);
 
   text-decoration: none;
 }
+
 .nav-pills .nav-sublink2 {
-  padding-left: 2.5rem;
+  padding-left: 3rem;
   padding-right: 0.8rem;
   background-color: white;
   color: black;
@@ -303,23 +372,26 @@ blockquote {
   background-color: #eee;
   color: #d00000;
 }
+
 .nav-pills .nav-link.active {
-  background-color: #222;
-  color: white;
+  /* TU DODAJ CHEVRONA */
+  background-color: white;
+  color: var(--text-red);
 }
-.nav-pills .nav-sublink.active:hover,  
-.nav-pills .nav-sublink2.active:hover{
-  background-color: #f42424;
-  color: white;
+
+.nav-pills .nav-sublink.active:hover,
+.nav-pills .nav-sublink2.active:hover {
+  background-color: var(--grey);
 }
-.nav-sublink:hover, 
+
+.nav-sublink:hover,
 .nav-sublink2:hover {
   background-color: #eee;
   color: black;
 }
+
 .nav-pills .nav-link.active:hover {
-  background-color: #333;
-  color: white;
+  background-color: var(--light-grey);
 }
 
 
@@ -330,6 +402,7 @@ blockquote {
   padding-bottom: 0.3rem;
   padding-top: 0.3rem;
 }
+
 .k-outline-depth-2 {
   width: 100%;
   font-weight: 400;
@@ -337,6 +410,7 @@ blockquote {
   padding-bottom: 0.15rem;
   padding-top: 0.15rem;
 }
+
 .k-outline-depth-3 {
   width: 100%;
   font-size: 0.7rem;
@@ -437,17 +511,21 @@ table {
   border: solid 2px gray;
   font-size: 10pt;
 }
+
 tr {
   border: solid 1px gray;
 }
+
 th {
   border: solid 1px gray;
   padding: 0.3rem;
 }
+
 td {
   border: solid 1px gray;
   padding: 0.3rem;
 }
+
 .gh-btn-container {
   margin-left: 4.7em;
   padding-bottom: 10px;
@@ -463,19 +541,24 @@ td {
   background-color: #efefef40;
   text-decoration: none;
 }
+
 .example-card:hover {
   background-color: #f8f5f560;
   text-decoration: none;
 }
+
 .example-card a:hover {
   text-decoration: none;
 }
+
 .example-card-title {
   color: #d00000;
 }
+
 .example-subcategory-title {
   margin-top: 1rem;
 }
+
 .example-highlight {
   float: left;
   margin-right: 0.5rem;
@@ -488,20 +571,24 @@ td {
   font-size: 0.85rem;
   padding-top: 0.05rem;
 }
+
 .example_version_banner {
   padding: 0.5em;
   margin-bottom: 1em;
   text-align: center;
   font-weight: bolder;
-  }
+}
+
 .keras_3 {
   background: #188485;
   color: white;
 }
+
 .keras_2 {
   background: #ffedb7;
   color: black;
 }
+
 .k-location-slug-pointer {
   margin-right: 0.3em;
   color: #4f4f4f;

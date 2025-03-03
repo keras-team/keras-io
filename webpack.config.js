@@ -15,7 +15,7 @@ const htmlPlugins = pages.map((page) => {
     filename: `${page}.html`,
     inject: "body",
     minify: isProduction
-      ? { 
+      ? {
           removeComments: true,
           collapseWhitespace: true,
         }
@@ -96,6 +96,10 @@ module.exports = {
         {
           from: path.resolve(__dirname, "theme/icons"),
           to: "icons",
+        },
+        {
+          from: path.resolve(__dirname, "theme/css"),
+          to: "css",
         },
       ],
     }),
