@@ -10,6 +10,9 @@
   --dark-grey: #3F3F3F;
   --dark-red: #AB0000;
 
+  /* Medium Colors */
+  --medium-red: #D00101;
+
   /* Border Colors */
   --border-grey: #DCDCDC;
   --border-red: #A80000;
@@ -19,5 +22,5 @@
 
   /* Text Colors */
   --text-black: #292321;
-  --text-red: #D00101;
+  --text-red: #A30000;
 }

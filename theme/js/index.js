@@ -1,31 +1,48 @@
-import Glide from "@glidejs/glide";
+const navButton = document.querySelector('.nav__menu--button');
+const closeButton = document.querySelector('.nav__menu--close');
+const mobileNavMenu = document.querySelector('.k-nav');
 
-const carousels = document.querySelector(".glide");
+navButton.addEventListener('click', () => {
+  mobileNavMenu.style.display = 'block';
+  closeButton.style.display = 'block';
+  navButton.style.display = 'none';
+});
 
-if (carousels) {
-  new Glide(".glide", {
-    type: "carousel",
-    perView: 7,
-    focusAt: "center",
-    gap: 0,
-    autoplay: 1000,
-    hoverpause: true,
-    animationDuration: 500,
-  }).mount();
-}
+closeButton.addEventListener('click', () => {
+  mobileNavMenu.style.display = 'none';
+  closeButton.style.display = 'none';
+  navButton.style.display = 'block';
+});
 
-const exploreModule = document.querySelector(".explore");
-const exploreContent = document.querySelector(".explore__content");
+const copyButtons = document.querySelectorAll('.code__copy--button');
+copyButtons.forEach((button) => {
+  button.addEventListener('click', () => {
+    const parent = button.parentNode;
+    const text = parent.querySelector('.language-python').innerText;
+    navigator.clipboard.writeText(text);
+  });
+});
+
+const search = document.querySelector('.nav__search');
+search.addEventListener('submit', (event) => {
+  event.preventDefault();
+  const text = document.querySelector('.nav__search--input').value;
+  console.log('text', text);
+  window.location = `/search.html?query=${text}`;
+});
+
+const exploreModule = document.querySelector('.explore');
+const exploreContent = document.querySelector('.explore__content');
 
 const observer = new IntersectionObserver(
   (entries) => {
     entries.forEach((entry) => {
       if (entry.isIntersecting) {
-        window.addEventListener("scroll", controlExploreContent);
+        window.addEventListener('scroll', controlExploreContent);
         return;
       }
 
-      window.removeEventListener("scroll", controlExploreContent);
+      window.removeEventListener('scroll', controlExploreContent);
     });
   },
   { threshold: 0 }

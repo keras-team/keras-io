@@ -30,6 +30,13 @@ i {
   width: 27px;
 }
 
+.icon--close {
+  background-image: url("../icons/close.png");
+  background-size: cover;
+  height: 18px;
+  width: 18px;
+}
+
 .icon--colab {
   background-image: url("../icons/colab.webp");
   background-size: cover;

@@ -1,5 +1,5 @@
 body {
-  font-family: 'Open Sans', sans-serif;
+  font-family: "Montserrat", sans-serif;
   font-size: 0.95rem
 }
 
@@ -9,7 +9,7 @@ h3,
 h4,
 h5,
 h6 {
-  font-family: 'Open Sans', sans-serif;  
+  font-family: "Montserrat", sans-serif;  
 }
 
 h1 {
@@ -18,18 +18,18 @@ h1 {
   margin-bottom: 1rem;
 }
 h2 {
-  font-weight: 600;
+  font-weight: 700;
   font-size: 1.6rem;
   margin-bottom: 0.8rem;
 }
 h3 {
   font-size: 1.2rem;
-  font-weight: 600;
+  font-weight: 700;
   margin-bottom: 0.6rem;
 }
 h4 {
   font-size: 1.1rem;
-  font-weight: 600;
+  font-weight: 700;
   margin-bottom: 0.5rem;
 }
 
@@ -64,7 +64,7 @@ blockquote {
   float: left;
 }
 .k-nav {
-  width: 19rem;
+  width: 100vw;
   float: left;
   border-bottom: 1px solid #ccc;
   display: block;
@@ -91,8 +91,11 @@ blockquote {
   display: none;
 }
 .nav-link {
-  font-size: 1rem;
-  padding: 0.6rem 1rem;
+  font-size: 16px;
+  font-weight: 700;
+  padding: 20px 0;
+  margin: 0 24px;
+  width: calc(100% - 48px);
 }
 .nav-sublink {
   font-size: 0.85rem;
@@ -104,11 +107,11 @@ blockquote {
   padding-top: 0.45rem;
   padding-bottom: 0.45rem;
 }
-@media screen and (max-width: 1342px) {
-  .k-nav {
-    width: 17rem;
-  }
+.nav.flex-column {
+  display: flex;
+  flex-direction: column;
 }
+
 @media screen and (max-width: 1300px) {
     .k-outline {
         width: 0;
@@ -131,7 +134,7 @@ blockquote {
     position: fixed;
     top: 62px;
     left: 0;
-    width: 17rem;
+    width: 100vw;
     background: white;
     overflow-y: scroll;
     bottom: 0;
@@ -280,7 +283,7 @@ blockquote {
 
 .nav-pills .nav-link {
   border-radius: 0;
-  border-top: 1px solid #ddd;
+  border-bottom: 1px solid #ddd;
   color: #d00000;
 }
 .nav-pills .nav-sublink {
@@ -426,7 +429,6 @@ blockquote {
 footer {
   float: left;
   width: 100%;
-  padding: 1em;
   border-top: solid 1px #bbb;
 }
 
@@ -506,4 +508,14 @@ td {
   margin-right: 0.3em;
   color: #4f4f4f;
   font-size: 0.9em;
+}
+
+@media only screen and (min-width: 1200px) {
+  .k-nav {
+    display: none;
+  }
+  .nav__menu--button,
+  .nav__menu--close {
+    display: none !important;
+  }
 }

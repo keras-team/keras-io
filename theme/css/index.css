@@ -9,7 +9,6 @@ body {
 
 .page__container {
   margin: auto;
-  max-width: 1440px;
 }
 
 a {
@@ -67,9 +66,8 @@ button {
 }
 
 .button__square--red {
-  background: var(--text-red);
+  background: var(--medium-red);
   color: var(--white);
-  align-self: center;
 }
 
 .button__square--red:hover {
@@ -150,6 +148,17 @@ nav {
   z-index: 99;
 }
 
+.nav__logo--desktop {
+  display: none;
+}
+
+.nav__wrapper {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+}
+
 .nav__search {
   max-width: 303px;
   position: relative;
@@ -191,7 +200,7 @@ nav {
 pre[class*="language-"] {
   border-radius: 12px 12px 0 0;
   background: var(--grey);
-  padding: 0 32px;
+  padding: 1em 1.2em 1em 0;
   margin: 0;
 }
 
@@ -205,6 +214,22 @@ code[class*="language-"] * {
   background: inherit !important;
 }
 
+footer {
+  background: var(--grey);
+}
+
+footer * {
+  font-size: 16px;
+  line-height: 25.6px;
+  font-weight: 500;
+}
+
+.footer__container {
+  display: flex;
+  gap: 6px;
+  padding: 24px;
+}
+
 @media only screen and (max-width: 1199px) {
   .nav__container {
     display: flex;
@@ -215,13 +240,18 @@ code[class*="language-"] * {
   .nav__logo {
     padding-right: 24px;
     width: 47px;
-    content: url("@images/k-keras-social.webp");
   }
 
-  .nav__menu--button {
+  .nav__menu--button,
+  .nav__menu--close {
     padding: 15px 10.5px;
     border: none;
     background: transparent;
+    cursor: pointer;
+  }
+
+  .nav__menu--close {
+    display: none;
   }
 
   .nav__search--mobile {
@@ -256,21 +286,34 @@ code[class*="language-"] * {
 }
 
 @media only screen and (min-width: 1200px) {
+  code[class*="language-"] {
+    font-size: 14px;
+  }
+
   .nav__container {
-    align-items: center;
-    display: flex;
+    padding: 18px 64px;
+  }
+
+  .nav__wrapper {
     margin: auto;
     max-width: 1440px;
-    padding: 18px 64px;
   }
 
   .nav__logo {
     padding-right: 24px;
     width: 169px;
-    content: url("@images/logo-small.webp");
   }
 
-  .nav__menu--button {
+  .nav__logo--mobile {
+    display: none;
+  }
+
+  .nav__logo--desktop {
+    display: block;
+  }
+
+  .nav__menu--button,
+  .nav__menu--close {
     display: none;
   }
 
@@ -333,18 +376,9 @@ code[class*="language-"] * {
     margin: 0;
   }
 
-  footer {
-    max-width: 1312px;
-    padding: 16px 64px;
-    background: var(--grey);
+  .footer__container {
     margin: auto;
-    display: flex;
-    gap: 6px;
-  }
-
-  footer * {
-    font-size: 16px;
-    line-height: 25.6px;
-    font-weight: 500;
+    max-width: 1440px;
+    padding: 16px 64px;
   }
 }
