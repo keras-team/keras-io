@@ -116,10 +116,10 @@ def get_data_from_text_files(folder_name):
     return df
 
 
-train_df = get_data_from_text_files("train")
-test_df = get_data_from_text_files("test")
+train_df = get_data_from_text_files("train").iloc[0:500]
+test_df = get_data_from_text_files("test").iloc[0:500]
 
-all_data = train_df.concat(test_df)
+all_data = pd.concat([train_df, test_df], ignore_index=True)
 
 """
 ## Dataset preparation
@@ -309,13 +309,12 @@ class MaskedLanguageModel(keras.Model):
 
         loss = loss_fn(y, y_pred, sample_weight)
         loss_tracker.update_state(loss, sample_weight=sample_weight)
-        return loss
+        return keras.ops.sum(loss)
 
     def compute_metrics(self, x, y, y_pred, sample_weight):
 
         # Return a dict mapping metric names to current value
         return {"loss": loss_tracker.result()}
-
 
     @property
     def metrics(self):
