@@ -5,7 +5,7 @@ Date created: 2020/09/18
 Last modified: 2024/03/15
 Description: Implement a Masked Language Model (MLM) with BERT and fine-tune it on the IMDB Reviews dataset.
 Accelerator: GPU
-Converted to Keras 3 by: [Sitam Meur](https://github.com/sitamgithub-MSIT)
+Converted to Keras 3 by: [Sitam Meur](https://github.com/sitamgithub-MSIT) and made backend-agnostic by: [Humbulani Ndou](https://github.com/Humbulani1234)
 """
 
 """
@@ -116,8 +116,8 @@ def get_data_from_text_files(folder_name):
     return df
 
 
-train_df = get_data_from_text_files("train").iloc[0:500]
-test_df = get_data_from_text_files("test").iloc[0:500]
+train_df = get_data_from_text_files("train")
+test_df = get_data_from_text_files("test")
 
 all_data = pd.concat([train_df, test_df], ignore_index=True)
 
@@ -466,8 +466,7 @@ classifer_model.fit(
 When you want to deploy a model, it's best if it already includes its preprocessing
 pipeline, so that you don't have to reimplement the preprocessing logic in your
 production environment. Let's create an end-to-end model that incorporates
-the `TextVectorization` layer inside evalaute method, and let's evaluate. 
-We will pass raw strings as input.
+the `TextVectorization` layer inside evalaute method, and let's evaluate. We will pass raw strings as input.
 """
 
 
