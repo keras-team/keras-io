@@ -1,20 +1,22 @@
-      <div class='k-main-inner' id='k-main-id'>
-        <div class='k-location-slug'>
-            <span class="k-location-slug-pointer">►</span> {% for part in location_history %}
-                <a href='{{part.url}}'>{{part.title}}</a> /
-              {% endfor %} {{title}}
-        </div>
-        <div class='k-content'>
-          {{content}}
-        </div>
-        {% if outline|length > 1 %}
-        <div class='k-outline'>
-          {% for entry in outline %}
-            <div class='k-outline-depth-{{entry.depth}}'>
-              {% if entry.depth == 2 %} ◆  {% endif %}
-              <a href='{{entry.url}}'>{{entry.title}}</a>
-            </div>
-          {% endfor %}
-        </div>
-        {% endif %}
-      </div>
+<div class='k-main-inner' id='k-main-id'>
+  <div class="docs__main-content">
+    <div class='k-location-slug'>
+      <span class="k-location-slug-pointer">►</span> {% for part in location_history %}
+      <a href='{{part.url}}'>{{part.title}}</a> /
+      {% endfor %} {{title}}
+    </div>
+    <div class='k-content'>
+      {{content}}
+    </div>
+  </div>
+  {% if outline|length > 1 %}
+  <div class='k-outline'>
+    {% for entry in outline %}
+    <div class='k-outline-depth-{{entry.depth}}'>
+      {% if entry.depth == 2 %} ◆ {% endif %}
+      <a href='{{entry.url}}'>{{entry.title}}</a>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+</div>

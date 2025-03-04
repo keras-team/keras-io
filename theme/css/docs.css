@@ -1,5 +1,5 @@
-@import url("index.css");
 @import url("nav.css");
+@import url("icons.css");
 
 :root {
   --dark-grey: #3f3f3f;
@@ -88,8 +88,13 @@ blockquote {
 .flex__container {
   display: flex;
   justify-content: center;
-  max-width: 1440px;
+  margin-inline: auto;
+  max-width: 1312px;
   width: 100%;
+}
+
+.flex__container * {
+  box-sizing: border-box;
 }
 
 .k-main {
@@ -98,21 +103,14 @@ blockquote {
   border-right: 1px solid var(--grey);
   margin-left: 0;
   min-height: 1000px;
+  min-width: 0;
   width: 100%;
 }
 
-.k__outline-container {
-  border-right: 1px solid var(--grey);
-  display: none;
-  height: 100%;
-  width: 20%;
-}
-
 .k-content {
-  float: left;
   padding: 1.3rem;
   padding-top: 1rem;
-  width: 47rem;
+  width: 100%;
 }
 
 .k-search-form {
@@ -160,28 +158,25 @@ blockquote {
 
 @media screen and (min-width: 1200px) {
   .k-main {
-    width: 60%;
+    width: 100%;
   }
+}
 
-  .k__outline-container {
-    display: block;
-  }
+.k-main-inner {
+  display: flex;
 }
 
 .k-outline {
   background: white;
   border: 1px solid var(--grey);
-  color: #a20000;
+  color: var(--text-red);
   height: 100%;
-  margin-left: 47%;
-  margin-top: 0;
-  max-height: 100%;
-  overflow: scroll;
+  max-height: 80vh;
+  overflow: auto;
   padding: 1.5rem;
-  padding-bottom: 5em;
-  padding-top: 1rem;
-  position: fixed;
-  width: 286px;
+  position: sticky;
+  top: 86px;
+  flex: 0 0 286px;
 }
 
 .k-content img {
@@ -197,9 +192,8 @@ blockquote {
 
 .k-location-slug {
   border-bottom: 1px solid var(--grey);
-  float: left;
   padding: 1rem;
-  width: calc(100% - 2rem);
+  width: 100%;
 }
 
 .k-inline-icon {
@@ -456,4 +450,24 @@ td {
   color: #4f4f4f;
   font-size: 0.9em;
   margin-right: 0.3em;
+}
+
+.docs__main-content {
+  flex-grow: 1;
+  min-width: 0;
+}
+
+/* we include Bootstrap on this page, but the landing page has been created without it - we need to revert
+some changes to the navigation to make it look the same across both */
+nav.nav__container * {
+  box-sizing: content-box;
+}
+
+.nav__search-input {
+  box-sizing: border-box;
+}
+
+p {
+  margin-top: 0;
+  margin-bottom: 1rem;
 }
