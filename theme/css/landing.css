@@ -16,11 +16,16 @@ body {
 }
 
 .stacked {
+  left: 0;
   position: fixed;
   top: 0;
-  left: 0;
   width: 100%;
   z-index: 10;
+}
+
+.visually-hidden {
+  position: fixed;
+  z-index: -999;
 }
 
 .hero {
@@ -31,8 +36,8 @@ body {
 }
 
 .hero__description {
-  line-height: 25.6px;
   font-size: 16px;
+  line-height: 25.6px;
 }
 
 .hero__content {
@@ -58,12 +63,12 @@ body {
 }
 
 .code__container {
-  border-radius: 8px 8px 0 0;
   background-color: var(--grey);
-  position: relative;
+  border-radius: 8px 8px 0 0;
   box-shadow: 0px 2px 3px 0px #0000004d;
   box-shadow: 0px 6px 10px 4px #00000026;
   margin: 40px 0 60px;
+  position: relative;
 }
 
 .code__container--quickstart {
@@ -73,10 +78,10 @@ body {
 .code__copy--button {
   background-color: inherit;
   border: none;
+  height: 32px;
   position: absolute;
   right: 32px;
   top: 28px;
-  height: 32px;
   width: 32px;
 }
 
@@ -90,8 +95,8 @@ body {
 
 .explore__description {
   color: var(--text-black);
-  line-height: 25.6px;
   font-size: 16px;
+  line-height: 25.6px;
 }
 
 .explore__wrapper {
@@ -108,8 +113,8 @@ body {
 .explore__image--container {
   align-items: center;
   display: flex;
-  justify-content: space-between;
   gap: 12px;
+  justify-content: space-between;
 }
 
 .explore__image--container img {
@@ -123,13 +128,13 @@ body {
 }
 
 .guide::before {
-  content: "";
-  position: absolute;
-  width: 100%;
-  height: 250px;
-  top: -250px;
-  left: 0;
   background: linear-gradient(0deg, var(--text-black) -80%, #0000 20%);
+  content: "";
+  height: 250px;
+  left: 0;
+  position: absolute;
+  top: -250px;
+  width: 100%;
 }
 
 .guide__button--mobile {
@@ -149,10 +154,10 @@ body {
 
 .guide__content {
   background: #FFF;
-  padding: 24px;
   display: flex;
   flex-direction: column;
   gap: 20px;
+  padding: 24px;
   position: relative;
 }
 
@@ -175,8 +180,8 @@ body {
 
 .guide h3 {
   color: var(--text-red);
-  margin-bottom: 0;
   font-weight: 700;
+  margin-bottom: 0;
 }
 
 .guide__code {
@@ -219,9 +224,9 @@ body {
 
 .models__description {
   color: var(--white);
-  line-height: 36px;
   font-size: 16px;
   letter-spacing: 0.25px;
+  line-height: 36px;
 }
 
 .models__button-wrapper {
@@ -293,9 +298,9 @@ body {
 .research__content--contanier {
   display: flex;
   flex-direction: column;
+  gap: 24px;
   max-width: 800px;
   margin: auto;
-  gap: 24px;
   padding: 0 24px;
 }
 
@@ -306,18 +311,18 @@ body {
 
 .research__description {
   color: var(--text-black);
-  line-height: 36px;
   font-size: 16px;
+  line-height: 36px;
 }
 
 .contacts {
   background: radial-gradient(circle at 75% 50%, #d00101, #7a0000);
-  display: flex;
-  padding: 80px 24px;
-  margin: auto;
-  gap: 64px;
   clip-path: polygon(0 0, 100% 3%, 100% 100%, 0% 100%);
+  display: flex;
+  gap: 64px;
+  margin: auto;
   margin-top: -50px;
+  padding: 80px 24px;
 }
 
 .contacts__wrapper {
@@ -370,7 +375,8 @@ body {
 
   .hero {
     clip-path: polygon(0 0, 100% 0, 100% 100%, 0 75%);
-    height: 758px;
+    height: 100%;
+    min-height: 758px;
   }
 
   .hero__content--wrapper {
@@ -417,11 +423,11 @@ body {
     );
     clip-path: polygon(0 0, 100% 75%, 100% 100%, 0% 100%);
     content: "";
-    position: absolute;
-    width: calc(100% + 1px);
     height: 250px;
-    top: -200px;
     left: 0;
+    position: absolute;
+    top: -200px;
+    width: calc(100% + 1px);
   }
 
   .explore__wrapper {
@@ -444,11 +450,11 @@ body {
   .explore__content {
     display: flex;
     flex-direction: column;
+    gap: 24px;
     height: 100%;
     justify-content: center;
-    position: relative;
-    gap: 24px;
     padding: 30px 0 346px;
+    position: relative;
   }
 
   .explore__content h2 {
@@ -457,9 +463,9 @@ body {
 
   .explore__image--container {
     display: flex;
+    gap: 22px;
     height: 88px;
     justify-content: space-between;
-    gap: 22px;
   }
 
   .explore__image--container img {
@@ -478,13 +484,13 @@ body {
   }
 
   .guide::before {
-    content: "";
-    position: absolute;
-    width: 100%;
-    height: 250px;
-    top: -250px;
-    left: 0;
     background: linear-gradient(0deg, var(--text-black) -80%, #0000 30%);
+    content: "";
+    height: 250px;
+    left: 0;
+    position: absolute;
+    top: -250px;
+    width: 100%;
   }
 
   .guide__button {
@@ -527,9 +533,9 @@ body {
     background: var(--white);
     display: flex;
     flex-direction: column;
+    gap: 24px;
     padding: 0 64px 90px;
     margin-top: -100px;
-    gap: 24px;
   }
 
   .guide__example--wrapper {
@@ -550,9 +556,9 @@ body {
   }
 
   .guide__example::after {
+    background: var(--white);
     clip-path: polygon(0 0, 100% 75%, 100% 100%, 0% 100%);
     content: "";
-    background: var(--white);
     height: 230px;
     left: 0;
     position: absolute;
@@ -561,15 +567,15 @@ body {
   }
 
   .guide__code {
-    height: 344px;
     box-shadow: none;
+    height: 344px;
   }
 
   .guide__code--container {
     display: flex;
     flex-wrap: wrap;
-    justify-content: space-between;
     gap: 32px;
+    justify-content: space-between;
   }
 
   .models {
@@ -627,8 +633,8 @@ body {
   }
 
   .research__image {
-    padding: 40px;
     height: 180px;
+    padding: 40px;
   }
 
   .research__content--contanier h2 {
@@ -637,8 +643,8 @@ body {
 
   .contacts {
     clip-path: polygon(0 0, 100% 15%, 100% 100%, 0% 100%);
-    padding: 200px 64px 120px;
     margin-top: -115px;
+    padding: 200px 64px 120px;
   }
 
   .contacts__title {

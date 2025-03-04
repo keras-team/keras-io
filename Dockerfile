@@ -1,7 +1,6 @@
 FROM node:23.8-bullseye AS node-builder
 
 COPY ./ ./
-RUN npm install && npm run webpack:prod
 
 FROM python:3.9 AS final
 

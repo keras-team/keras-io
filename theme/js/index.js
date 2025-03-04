@@ -2,25 +2,37 @@
 const navButton = document.querySelector('.nav__menu--button');
 const closeButton = document.querySelector('.nav__menu--close');
 const mobileNavMenu = document.querySelector('.k-nav');
+const pageContainer = document.querySelector('.page__container');
 
 navButton.addEventListener('click', () => {
   mobileNavMenu.style.display = 'block';
   closeButton.style.display = 'block';
   navButton.style.display = 'none';
+  pageContainer.style.position = 'fixed';
 });
 
 closeButton.addEventListener('click', () => {
   mobileNavMenu.style.display = 'none';
   closeButton.style.display = 'none';
   navButton.style.display = 'block';
+  pageContainer.style.position = 'static';
 });
 
+// Copy code
 const copyButtons = document.querySelectorAll('.code__copy--button');
 copyButtons.forEach((button) => {
   button.addEventListener('click', () => {
     const parent = button.parentNode;
     const text = parent.querySelector('.language-python').innerText;
-    navigator.clipboard.writeText(text);
+    const inputElement = document.createElement('textarea');
+    console.log('text', text);
+    inputElement.value = text;
+    inputElement.setAttribute('class', 'visually-hidden');
+    const body = document.body;
+    body.appendChild(inputElement);
+    inputElement.select();
+    document.execCommand('copy');
+    inputElement.remove();
   });
 });
 
@@ -29,7 +41,6 @@ const searchForms = document.querySelectorAll('.nav__search');
 const mobileNavSearchIcon = document.querySelector('.nav__search--mobile');
 const mobileNavSearchForm = document.querySelector('.nav__search-form--mobile');
 const mobileNavControls = document.querySelector('.nav__controls--mobile');
-const pageContainer = document.querySelector('.page__container');
 
 mobileNavSearchIcon.addEventListener('click', () => {
   mobileNavControls.style.display = 'none';
@@ -45,6 +56,11 @@ searchForms.forEach((search) => {
 });
 
 pageContainer.addEventListener('click', () => {
+  mobileNavControls.style.display = 'flex';
+  mobileNavSearchForm.style.display = 'none';
+});
+
+mobileNavMenu.addEventListener('click', () => {
   mobileNavControls.style.display = 'flex';
   mobileNavSearchForm.style.display = 'none';
 });
@@ -67,7 +83,9 @@ const observer = new IntersectionObserver(
   { threshold: 0 }
 );
 
-observer.observe(exploreModule);
+if (exploreModule) {
+  observer.observe(exploreModule);
+}
 
 function controlExploreContent() {
   const container = exploreModule.getBoundingClientRect();

@@ -53,10 +53,10 @@ nav {
 
 .nav__menu--button,
 .nav__menu--close {
-  padding: 11px 10px;
-  border: none;
   background: transparent;
+  border: none;
   cursor: pointer;
+  padding: 11px 10px;
 }
 
 .nav__menu--close {
@@ -68,9 +68,9 @@ nav {
 }
 
 .nav__search--mobile {
-  padding: 11px;
-  border: none;
   background: transparent;
+  border: none;
+  padding: 11px;
 }
 
 .nav__search--input {
@@ -88,8 +88,8 @@ nav {
 
 .nav__search--input::placeholder {
   color: var(--text-red);
-  font-weight: 700;
   font-size: 14px;
+  font-weight: 700;
   line-height: 20px;
 }
 
@@ -113,8 +113,8 @@ nav {
 .nav-link {
   font-size: 16px;
   font-weight: 700;
-  padding: 20px 0;
   margin: 0 24px;
+  padding: 20px 0;
   width: calc(100% - 48px);
 }
 
@@ -140,22 +140,22 @@ nav {
 
 .nav-sublink {
   font-size: 1rem;
-  padding-top: 0.6rem;
   padding-bottom: 0.6rem;
+  padding-top: 0.6rem;
 }
 
 .nav-sublink2 {
   font-size: 1rem;
-  padding-top: 0.6rem;
   padding-bottom: 0.6rem;
+  padding-top: 0.6rem;
 }
 
 .logo-small {
-  width: 100%;
+  padding-bottom: 5%;
   padding-left: 10%;
   padding-right: 10%;
   padding-top: 5%;
-  padding-bottom: 5%;
+  width: 100%;
 }
 
 .nav-pills .nav-sublink.active {
@@ -169,28 +169,28 @@ nav {
 }
 
 .nav-pills .nav-link {
-  border-radius: 0;
   border-bottom: 1px solid #ddd;
-  color: #d00000;
+  border-radius: 0;
+  color: #A30000;
 }
 
 .nav-pills .nav-sublink {
+  color: var(--dark-grey);
   padding-left: 1.5rem;
   padding-right: 0.8rem;
-  color: var(--dark-grey);
   text-decoration: none;
 }
 
 .nav-pills .nav-sublink2 {
+  color: black;
   padding-left: 3rem;
   padding-right: 0.8rem;
-  color: black;
   text-decoration: none;
 }
 
 .nav-link:hover {
   background-color: #eee;
-  color: #d00000;
+  color: #A30000;
 }
 
 .nav-pills .nav-link.active {
@@ -213,23 +213,57 @@ nav {
   background-color: var(--light-grey);
 }
 
-.k-nav {
-  width: 100vw;
-  float: left;
-  border-bottom: 1px solid var(--grey);
-  display: none;
-  position: fixed;
-  top: 62px;
-  left: 0;
-  width: 100vw;
+.nav__mobile-menu,
+.nav__side-nav {
   background: white;
   overflow-y: scroll;
+}
+
+.nav__side-nav {
+  display: none;
+}
+
+.nav__mobile-menu {
+  border-bottom: 1px solid var(--grey);
   bottom: 0;
+  display: none;
+  float: left;
+  left: 0;
+  position: fixed;
+  top: 62px;
+  width: 100vw;
+}
+
+.nav__side-nav .nav {
+  border-left: 1px solid var(--grey);
+  height: 100%;
+}
+
+.nav__side-nav .nav-link {
+  border-top: 1px solid var(--grey);
+  padding: 16px 24px 15px;
+  margin: 0;
+  position: relative;
+  width: 100%;
+}
+
+.nav__side-nav .nav-sublink {
+  width: 100%;
+}
+
+.nav__mobile-nav {
+  display: none;
 }
 
 @media only screen and (min-width: 1200px) {
-  .k-nav {
-    display: none;
+  .nav__mobile-menu,
+  .nav__mobile-nav {
+    display: none !important;
+  }
+
+  .nav__side-nav {
+    display: block;
+    width: 20%;
   }
 
   .nav__container {
@@ -256,14 +290,22 @@ nav {
     display: block;
   }
 
+  .nav__controls--mobile {
+    display: none !important;
+  }
+
   .nav__menu--button,
   .nav__menu--close {
-    display: none;
+    display: none !important;
+  }
+
+  .nav__search {
+    display: block;
   }
 
   .nav__search--mobile,
   .nav__search-form--mobile {
-    display: none;
+    display: none !important;
   }
 
   .nav__search--input {
@@ -277,23 +319,28 @@ nav {
     width: 100%;
   }
 
+  .nav__menu .nav__link:hover {
+    color: #A30000;
+  }
+
   .nav__item--container {
     display: flex;
+    gap: 16px;
     list-style-type: none;
     margin: 0;
     padding: 0;
-    gap: 16px;
   }
 
   .nav__item {
-    font-family: "Montserrat";
+    font-family: 'Montserrat', 'Open Sans', sans-serif;
+    font-size: 14px;
     font-weight: 700;
     line-height: 20px;
-    font-size: 14px;
     padding: 8px;
   }
 
   .nav__link {
     color: var(--dark-grey);
+    font-family: 'Montserrat', 'Open Sans', sans-serif;
   }
 }

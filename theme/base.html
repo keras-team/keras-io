@@ -21,11 +21,13 @@
 
   <title>{{title}}</title>
 
-  <!-- Bootstrap core CSS -->
-  <link href="{{base_url}}css/bootstrap.min.css" rel="stylesheet">
-
   <!-- Custom fonts for this template -->
   <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+  <link
+      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700;800&display=swap"
+      rel="stylesheet"
+    />
 
   <!-- Custom styles for this template -->
   <link href="{{base_url}}css/docs.css" rel="stylesheet">
@@ -64,83 +66,68 @@
   height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   <!-- End Google Tag Manager (noscript) -->
 
-  <div class='k-page'>
+  <div class="k-page">
     <nav class="nav__container">
       <div class="nav__wrapper">
-        <button class="nav__menu--button"><i class="icon--menu"></i></button>
-        <button class="nav__menu--close"><i class="icon--close"></i></button>
-        <a href="/">
-          <img class="nav__logo nav__logo--desktop" src="/img/logo.png" />
-          <img class="nav__logo nav__logo--mobile" src="/img/k-logo.png" />
-        </a>
-        <button class="nav__search--mobile">
-          <i class="icon__search--mobile"></i>
-        </button>
-
-        <div class="k-nav" id="nav-menu">
-          <a href='{{base_url}}'><img src='{{base_url}}img/logo-small.png' class='logo-small' /></a>
-    
-          {% set related_nav_urls_map = {
-            "/api/": ["/2.18/api/"],
-            "/2.18/api/": ["/api/"],
-            "/keras_tuner/": ["/keras_hub/"],
-            "/keras_hub/": ["/keras_tuner/"],
-          } %}
-          {% set vars = {'related_urls': []} %}
-          {% for item in nav %}
-            {% if item.active %}
-              {{ vars.update({'related_urls': related_nav_urls_map[item.url]}) }}
-            {% endif %}
-          {% endfor %}
+        <div class="nav__controls--mobile">
+          <button class="nav__menu--button"><i class="icon--menu"></i></button>
+          <button class="nav__menu--close"><i class="icon--close"></i></button>
+          <a href="{{base_url}}">
+            <img class="nav__logo nav__logo--mobile" src="{{base_url}}img/k-logo.png" />
+          </a>
+          <button class="nav__search--mobile">
+            <i class="icon__search--mobile"></i>
+          </button>
+        </div>
+        <form class="nav__search nav__search-form--mobile">
+          <input
+            class="nav__search--input"
+            type="search"
+            placeholder="SEARCH"
+            aria-label="Search"
+          />
+          <button class="nav__search--button" type="submit">
+            <i class="icon--search"></i>
+          </button>
+        </form>
+        <div class="k-nav nav__mobile-menu" id="nav-menu">
           <!-- version with just the active item visible -->
           <div class="nav flex-column nav-pills" role="tablist" aria-orientation="vertical">
             {% for item in nav %}
-              {% if (item.active and item.children|length > 0) or item.url in vars['related_urls'] %}
-              <a class="nav-link{% if item.active %} active{% endif %}" href="{{item.url}}" role="tab" aria-selected="{{item.selected}}">
-                {% if item.children|length > 0 %}
-                  <svg class="nav-link-chevron{% if item.active %} nav-link-chevron--expanded{% endif %}" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M9.5 17L14.5 12L9.5 7V17Z"/>
-                  </svg>
-                {% endif %}
-                {{item.title}}
-              </a>
-                {% if item.active and item.children|length > 0 %}
-                  <div class="nav-expanded-panel">
-                    {% for child in item.children %}
-                      <a class="nav-sublink{% if child.active %} active{% endif %}" href="{{child.url}}">{{child.title}}</a>
-                      {% if child.active %}
-                        {% for grandchild in child.children %}
-                          <a class="nav-sublink2{% if grandchild.active %} active{% endif %}" href="{{grandchild.url}}">{{grandchild.title}}</a>
-                        {% endfor %}
-                      {% endif %}
-                    {% endfor %}
-                  </div>
-                {% endif %}
+              <a class="nav-link{% if item.active %} active{% endif %}" href="{{item.url}}" role="tab" aria-selected="{{item.selected}}">{{item.title}}</a>
+              {% if item.active %}
+                {% for child in item.children %}
+                  <a class="nav-sublink{% if child.active %} active{% endif %}" href="{{child.url}}">{{child.title}}</a>
+                    {% if child.active %}
+                      {% for grandchild in child.children %}
+                        <a class="nav-sublink2{% if grandchild.active %} active{% endif %}" href="{{grandchild.url}}">{{grandchild.title}}</a>
+                      {% endfor %}
+                    {% endif %}
+                {% endfor %}
               {% endif %}
             {% endfor %}
-    
           </div>
-    
         </div>
 
+        <img class="nav__logo nav__logo--desktop" src="{{base_url}}img/logo.png" />
         <div class="nav__menu">
           <ul class="nav__item--container">
             <li class="nav__item">
-              <a class="nav__link" href="/getting_started/">GET STARTED</a>
+              <a class="nav__link" href="{{base_url}}getting_started/">GET STARTED</a>
             </li>
             <li class="nav__item">
-              <a class="nav__link" href="/about/">ABOUT</a>
+              <a class="nav__link" href="{{base_url}}about/">ABOUT</a>
             </li>
             <li class="nav__item">
-              <a class="nav__link" href="/guides/">GUIDES</a>
+              <a class="nav__link" href="{{base_url}}guides/">GUIDES</a>
             </li>
             <li class="nav__item">
-              <a class="nav__link" href="/api/">API DOCS</a>
+              <a class="nav__link" href="{{base_url}}api/">API DOCS</a>
             </li>
             <li class="nav__item">
-              <a class="nav__link" href="/examples/">EXAMPLES</a>
+              <a class="nav__link" href="{{base_url}}examples/">EXAMPLES</a>
             </li>
-            <li class="nav__item"><a class="nav__link" href="/keras_hub/">KERASHUB</a></li>
+            <li class="nav__item"><a class="nav__link" href="{{base_url}}keras_hub/">KERASHUB</a></li>
           </ul>
 
           <form class="nav__search">
@@ -158,16 +145,64 @@
       </div>
     </nav>
 
-    <div class='k-main'>
-      {{main}}
+    <div class="page__container flex__container">
+      <div class="nav__side-nav" id="nav-menu">
+        <!-- version with just the active item visible -->
+        <div class="nav flex-column nav-pills" role="tablist" aria-orientation="vertical">
+          <div class="hidden">
+            {% set related_nav_urls_map = {
+              "/api/": ["/2.18/api/"],
+              "/2.18/api/": ["/api/"],
+              "/keras_tuner/": ["/keras_hub/"],
+              "/keras_hub/": ["/keras_tuner/"],
+            } %}
+            {% set vars = {'related_urls': []} %}
+            {% for item in nav %}
+              {% if item.active %}
+                {{ vars.update({'related_urls': related_nav_urls_map[item.url]}) }}
+              {% endif %}
+            {% endfor %}
+          </div>
+          {% for item in nav %}
+            {% if (item.active and item.children|length > 0) or item.url in vars['related_urls'] %}
+            <a class="nav-link{% if item.active %} active{% endif %}" href="{{item.url}}" role="tab" aria-selected="{{item.selected}}">
+              {% if item.children|length > 0 %}
+                <svg class="nav-link-chevron{% if item.active %} nav-link-chevron--expanded{% endif %}" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M9.5 17L14.5 12L9.5 7V17Z"/>
+                </svg>
+              {% endif %}
+              {{item.title}}
+            </a>
+              {% if item.active and item.children|length > 0 %}
+                <div class="nav-expanded-panel">
+                  {% for child in item.children %}
+                    <a class="nav-sublink{% if child.active %} active{% endif %}" href="{{child.url}}">{{child.title}}</a>
+                    {% if child.active %}
+                      {% for grandchild in child.children %}
+                        <a class="nav-sublink2{% if grandchild.active %} active{% endif %}" href="{{grandchild.url}}">{{grandchild.title}}</a>
+                      {% endfor %}
+                    {% endif %}
+                  {% endfor %}
+                </div>
+              {% endif %}
+            {% endif %}
+          {% endfor %}
+        </div>
+      </div>
+      <div class="k-main">
+        {{main}}
+      </div>
+      <div class="k__outline-container"></div>
     </div>
-
   </div>
-
+  <footer>
+    <div class="footer__container">
+      <a href="https://policies.google.com/terms">Terms</a>
+      <div>|</div>
+      <a href="https://policies.google.com/privacy">Privacy</a>
+    </div>
+  </footer>
+  <script src="{{base_url}}js/index.js"></script>
 </body>
-
-<footer style="float: left; width: 100%; padding: 1em; border-top: solid 1px #bbb;">
-  <a href="https://policies.google.com/terms">Terms</a> | <a href="https://policies.google.com/privacy">Privacy</a>
-</footer>
 
 </html>
