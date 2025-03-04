@@ -100,10 +100,14 @@ nav {
 .nav__search--button {
   background: transparent;
   border: 0;
+  cursor: pointer;
+  display: inline-block;
+  height: fit-content;
   padding: 5px;
   position: absolute;
   right: 8px;
   top: 6px;
+  width: fit-content;
 }
 
 #dropdown-nav {
@@ -139,13 +143,13 @@ nav {
 }
 
 .nav-sublink {
-  font-size: 1rem;
+  font-size: 0.875rem;
   padding-bottom: 0.6rem;
   padding-top: 0.6rem;
 }
 
 .nav-sublink2 {
-  font-size: 1rem;
+  font-size: 0.875rem;
   padding-bottom: 0.6rem;
   padding-top: 0.6rem;
 }
@@ -244,10 +248,11 @@ nav {
   padding: 16px 24px 15px;
   margin: 0;
   position: relative;
-  width: 100%;
 }
 
-.nav__side-nav .nav-sublink {
+.nav__side-nav .nav-link,
+.nav__side-nav .nav-sublink,
+.nav__side-nav .nav-sublink2 {
   width: 100%;
 }
 
@@ -263,7 +268,7 @@ nav {
 
   .nav__side-nav {
     display: block;
-    width: 20%;
+    flex: 0 0 330px;
   }
 
   .nav__container {
