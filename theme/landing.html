@@ -223,8 +223,8 @@
                   </code>
                 </pre>
                 <div class="code__container--quickstart">
-                  <a class="button__square--colab"
-                    >Run quickstart <i class="icon--colab"></i
+                  <a class="button__square--colab" href="https://colab.sandbox.google.com/github/tensorflow/docs/blob/master/site/en/tutorials/quickstart/beginner.ipynb"
+                    target="_blank">Run quickstart <i class="icon--colab"></i
                   ></a>
                 </div>
               </div>
@@ -255,8 +255,8 @@
                   </code>
                 </pre>
                 <div class="code__container--quickstart">
-                  <a class="button__square--colab"
-                    >Run quickstart <i class="icon--colab"></i
+                  <a class="button__square--colab" href="https://colab.sandbox.google.com/github/tensorflow/docs/blob/master/site/en/tutorials/quickstart/beginner.ipynb"
+                  target="_blank">Run quickstart <i class="icon--colab"></i
                   ></a>
                 </div>
               </div>
@@ -304,12 +304,19 @@
                   </button>
                   <pre>
                   <code class="language-python">
-    import numpy as np
-    import keras
-    from keras import layers
-    from keras import ops
+    encoder_input = keras.Input(
+      shape=(28, 28, 1), name="img")
+    x = layers.Conv2D(16, 3, activation="relu")
+      (encoder_input)
+    x = layers.Conv2D(32, 3, activation="relu")(x)
+    x = layers.MaxPooling2D(3)(x)
+    x = layers.Conv2D(32, 3, activation="relu")(x)
+    x = layers.Conv2D(16, 3, activation="relu")(x)
+    encoder_output = layers.GlobalMaxPooling2D()(x)
     
-    inputs = keras.Input(shape=(784,))
+    encoder = keras.Model(encoder_input,
+      encoder_output, name="encoder")
+    encoder.summary()
                   </code>
                 </pre>
                 </div>
@@ -336,12 +343,17 @@
                   </button>
                   <pre>
                   <code class="language-python">
-    import numpy as np
-    import keras
-    from keras import layers
-    from keras import ops
-    
-    inputs = keras.Input(shape=(784,))
+    model.compile(
+      loss=keras.losses
+        .SparseCategoricalCrossentropy
+        (from_logits=True),
+      optimizer=keras.optimizers.RMSprop(),
+      metrics=["accuracy"],
+    )
+  
+    history = model.fit(x_train,
+      y_train, batch_size=64,
+      epochs=2, validation_split=0.2)
                   </code>
                 </pre>
                 </div>
@@ -368,12 +380,17 @@
                   </button>
                   <pre>
                     <code class="language-python">
-      import numpy as np
-      import keras
-      from keras import layers
-      from keras import ops
-    
-      inputs = keras.Input(shape=(784,))
+    class CustomDense(layers.Layer):
+      def __init__(self, units=32):
+          super().__init__()
+          self.units = units
+
+      def build(self, input_shape):
+          self.w = self.add_weight(shape=(input_shape[-1], self.units), initializer="random_normal", trainable=True,)
+          self.b = self.add_weight(shape=(self.units,), initializer="random_normal", trainable=True)
+
+      def call(self, inputs):
+          return ops.matmul(inputs, self.w) + self.b
                     </code>
                   </pre>
                 </div>
