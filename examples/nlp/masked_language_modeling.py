@@ -466,7 +466,7 @@ classifer_model.fit(
 When you want to deploy a model, it's best if it already includes its preprocessing
 pipeline, so that you don't have to reimplement the preprocessing logic in your
 production environment. Let's create an end-to-end model that incorporates
-the `TextVectorization` layer inside evalaute method, and let's evaluate. We will pass raw strings as input.
+the `TextVectorization` layer inside evaluate method, and let's evaluate. We will pass raw strings as input.
 """
 
 
@@ -490,7 +490,7 @@ class ModelEndtoEnd(keras.Model):
 
 
 def get_end_to_end(model):
-    inputs = classifer_model.inputs
+    inputs = classifer_model.inputs[0]
     outputs = classifer_model.outputs
     end_to_end_model = ModelEndtoEnd(inputs, outputs, name="end_to_end_model")
     optimizer = keras.optimizers.Adam(learning_rate=config.LR)
