@@ -23,7 +23,7 @@ classification dataset (unprocessed version). We use the `TextVectorization` lay
 
 import os
 
-os.environ["KERAS_BACKEND"] = "torch" # or jax, or tensorflow
+os.environ["KERAS_BACKEND"] = "torch"  # or jax, or tensorflow
 
 import keras
 import numpy as np
@@ -268,7 +268,7 @@ model.compile(loss="binary_crossentropy", optimizer="adam", metrics=["accuracy"]
 ## Train the model
 """
 
-epochs = 1
+epochs = 5
 
 # Fit the model using the train and test datasets.
 model.fit(train_ds, validation_data=val_ds, epochs=epochs)
@@ -292,7 +292,7 @@ create a new model (using the weights we just trained):
 class ModelEndtoEnd(keras.Model):
 
     def evaluate(self, inputs):
-        
+
         # Turn strings into vocab indices
         test_ds = inputs.map(vectorize_text)
         indices = test_ds.cache().prefetch(buffer_size=10)
