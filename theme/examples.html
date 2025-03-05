@@ -4,7 +4,7 @@
 {% endif %}
 
 {% for category in categories %}
-	<h2><a href="{{category.path}}">{{category.title}}</a></h2>
+	<h2 class="example-category-title"><a href="{{category.path}}">{{category.title}}</a></h2>
 
 	{% if category.subcategories %}
 		{% for subcategory in category.subcategories %}
@@ -42,5 +42,5 @@
 		{% endfor %}
 	{% endif %}
 
-	<hr>
+	<hr class="examples-separator">
 {% endfor %}
