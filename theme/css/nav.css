@@ -142,16 +142,11 @@ nav {
   flex-direction: column;
 }
 
-.nav-sublink {
-  font-size: 0.875rem;
-  padding-bottom: 0.6rem;
-  padding-top: 0.6rem;
-}
-
+.nav-sublink,
 .nav-sublink2 {
   font-size: 0.875rem;
-  padding-bottom: 0.6rem;
-  padding-top: 0.6rem;
+  font-weight: 500;
+  padding-block: 0.75rem;
 }
 
 .logo-small {
@@ -164,12 +159,12 @@ nav {
 
 .nav-pills .nav-sublink.active {
   background-color: var(--light-grey);
-  color: var(--sublink-active-red);
+  color: var(--alternate-red);
 }
 
 .nav-pills .nav-sublink2.active {
   background-color: var(--grey);
-  color: var(--sublink-active-red);
+  color: var(--alternate-red);
 }
 
 .nav-pills .nav-link {
@@ -220,7 +215,7 @@ nav {
 .nav__mobile-menu,
 .nav__side-nav {
   background: white;
-  overflow-y: scroll;
+  overflow-y: auto;
 }
 
 .nav__side-nav {

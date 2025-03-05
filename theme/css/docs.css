@@ -5,7 +5,7 @@
   --dark-grey: #3f3f3f;
   --grey: #E7E7E7;
   --light-grey: #F3F3F3;
-  --sublink-active-red: #D00101;
+  --alternate-red: #d00000;
   --text-red: #a30000;
 }
 
@@ -21,7 +21,6 @@ h4,
 h5,
 h6 {
   color: #040404;
-  font-family: 'Montserrat', 'Open Sans', sans-serif;
 }
 
 h1 {
@@ -99,8 +98,7 @@ blockquote {
 
 .k-main {
   background: #fff;
-  border-left: 1px solid var(--grey);
-  border-right: 1px solid var(--grey);
+  border: 1px solid var(--grey);
   margin-left: 0;
   min-height: 1000px;
   min-width: 0;
@@ -108,8 +106,11 @@ blockquote {
 }
 
 .k-content {
-  padding: 1.3rem;
-  padding-top: 1rem;
+  border-bottom: 1px solid var(--grey);
+  border-right: 1px solid var(--grey);
+  flex-grow: 1;
+  min-width: 0;
+  padding: 2.5rem 1.5rem 1.5rem;
   width: 100%;
 }
 
@@ -143,12 +144,6 @@ blockquote {
     width: 100%;
   }
 
-  .k-main-top {
-    background: white;
-    min-width: 357px;
-    position: fixed;
-  }
-
   .k-content {
     padding: 2%;
     padding-top: 1%;
@@ -168,7 +163,7 @@ blockquote {
 
 .k-outline {
   background: white;
-  border: 1px solid var(--grey);
+  border-bottom: 1px solid var(--grey);
   color: var(--text-red);
   height: 100%;
   max-height: 80vh;
@@ -181,19 +176,6 @@ blockquote {
 
 .k-content img {
   max-width: 90%;
-}
-
-.k-main-top {
-  border-bottom: 1px solid var(--grey);
-  background-color: white;
-  float: left;
-  width: 100%;
-}
-
-.k-location-slug {
-  border-bottom: 1px solid var(--grey);
-  padding: 1rem;
-  width: 100%;
 }
 
 .k-inline-icon {
@@ -251,24 +233,31 @@ blockquote {
 
 .k-outline-depth-1 {
   font-size: 1rem;
-  font-weight: 600;
-  padding-bottom: 0.3rem;
-  padding-top: 0.3rem;
+  line-height: 1.6;
+  font-weight: 500;
+  padding-bottom: 0.5rem;
   width: 100%;
 }
 
 .k-outline-depth-2 {
-  font-size: 0.85rem;
-  font-weight: 400;
-  padding-bottom: 0.15rem;
-  padding-top: 0.15rem;
+  font-size: 0.875rem;
+  font-weight: normal;
+  padding-bottom: 0.5rem;
   width: 100%;
 }
 
 .k-outline-depth-3 {
-  font-size: 1rem;
+  font-size: 0.6875rem;
+  font-weight: normal;
+  line-height: 1.25;
   padding-left: 1rem;
+  padding-bottom: 0.25rem;
   width: 100%;
+}
+
+.k-outline-depth-2 a,
+.k-outline-depth-3 a {
+  color: var(--alternate-red);
 }
 
 .hidden {
@@ -390,12 +379,10 @@ td {
 }
 
 .example-card {
-  background-color: #efefef40;
-  margin-bottom: 0.25rem;
-  margin-top: 0.25rem;
-  padding: 0.25rem;
-  padding-left: 0.75rem;
-  padding-right: 0.75rem;
+  background: #FFF;
+  box-shadow: 0px 1px 2px 0px rgba(0, 0, 0, 0.30), 0px 2px 6px 2px rgba(0, 0, 0, 0.15);
+  margin-block: 0.5rem;
+  padding: 0.25rem 1rem;
   text-decoration: none;
 }
 
@@ -413,13 +400,18 @@ td {
 }
 
 .example-subcategory-title {
-  margin-top: 1rem;
+  margin-block: 2rem 1rem;
+  font-size: 1.25rem;
+  line-height: 1.8;
+  letter-spacing: .25px;
+  color: #212529;
 }
 
 .example-highlight {
   background-color: white;
   border: solid #ddd 1px;
   border-radius: 1rem;
+  color: var(--text-red);
   float: left;
   font-size: 0.85rem;
   height: 1.6rem;
@@ -429,11 +421,25 @@ td {
   width: 1.6rem;
 }
 
+.example-card-title {
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+.examples-separator {
+  margin-inline: 1rem;
+  background: rgba(208, 1, 1, 0.50);
+}
+
 .example_version_banner {
   font-weight: bolder;
   margin-bottom: 1em;
   padding: 0.5em;
   text-align: center;
+}
+
+.examples-separator {
+  background: rgba(208, 1, 1, 0.50);
 }
 
 .keras_3 {
@@ -444,17 +450,6 @@ td {
 .keras_2 {
   background: #ffedb7;
   color: black;
-}
-
-.k-location-slug-pointer {
-  color: #4f4f4f;
-  font-size: 0.9em;
-  margin-right: 0.3em;
-}
-
-.docs__main-content {
-  flex-grow: 1;
-  min-width: 0;
 }
 
 /* we include Bootstrap on this page, but the landing page has been created without it - we need to revert
