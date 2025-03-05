@@ -2,9 +2,10 @@
 Title: Text classification from scratch
 Authors: Mark Omernick, Francois Chollet
 Date created: 2019/11/06
-Last modified: 2020/05/17
+Last modified: 2025/03/05
 Description: Text sentiment classification starting from raw text files.
 Accelerator: GPU
+Made backend-agnostic by: [Humbulani Ndou](https://github.com/Humbulani1234)
 """
 
 """
@@ -22,10 +23,9 @@ classification dataset (unprocessed version). We use the `TextVectorization` lay
 
 import os
 
-os.environ["KERAS_BACKEND"] = "tensorflow"
+os.environ["KERAS_BACKEND"] = "torch" # or jax, or tensorflow
 
 import keras
-import tensorflow as tf
 import numpy as np
 from keras import layers
 
@@ -141,6 +141,7 @@ In particular, we remove `<br />` tags.
 
 import string
 import re
+import tensorflow as tf
 
 
 # Having looked at our data above, we see that the raw text contains HTML break
@@ -267,7 +268,7 @@ model.compile(loss="binary_crossentropy", optimizer="adam", metrics=["accuracy"]
 ## Train the model
 """
 
-epochs = 3
+epochs = 1
 
 # Fit the model using the train and test datasets.
 model.fit(train_ds, validation_data=val_ds, epochs=epochs)
@@ -285,18 +286,33 @@ If you want to obtain a model capable of processing raw strings, you can simply
 create a new model (using the weights we just trained):
 """
 
-# A string input
-inputs = keras.Input(shape=(1,), dtype="string")
-# Turn strings into vocab indices
-indices = vectorize_layer(inputs)
-# Turn vocab indices into predictions
-outputs = model(indices)
 
-# Our end to end model
-end_to_end_model = keras.Model(inputs, outputs)
-end_to_end_model.compile(
-    loss="binary_crossentropy", optimizer="adam", metrics=["accuracy"]
-)
+# We create a custom Model to override the evaluate method so
+# that it first pre-process text data
+class ModelEndtoEnd(keras.Model):
 
-# Test it with `raw_test_ds`, which yields raw strings
-end_to_end_model.evaluate(raw_test_ds)
+    def evaluate(self, inputs):
+        
+        # Turn strings into vocab indices
+        test_ds = inputs.map(vectorize_text)
+        indices = test_ds.cache().prefetch(buffer_size=10)
+        return super().evaluate(indices)
+
+    # Build the model
+    def build(self, input_shape):
+        self.built = True
+
+
+def get_end_to_end(model):
+    inputs = model.inputs[0]
+    outputs = model.outputs
+    end_to_end_model = ModelEndtoEnd(inputs, outputs, name="end_to_end_model")
+    end_to_end_model.compile(
+        optimizer="adam", loss="binary_crossentropy", metrics=["accuracy"]
+    )
+    return end_to_end_model
+
+
+end_to_end_classification_model = get_end_to_end(model)
+# Pass raw text dataframe to the model
+end_to_end_classification_model.evaluate(raw_test_ds)
