@@ -158,23 +158,6 @@ code[class*="language-"] * {
   background: inherit !important;
 }
 
-footer {
-  background: var(--grey);
-}
-
-footer a {
-  color: #000;
-  font-size: 16px;
-  line-height: 25.6px;
-  font-weight: 500;
-}
-
-.footer__container {
-  display: flex;
-  gap: 6px;
-  padding: 24px;
-}
-
 @media only screen and (max-width: 1199px) {
   h1 {
     font-weight: 700;

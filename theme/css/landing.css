@@ -4,7 +4,7 @@
 html,
 body {
   overflow-x: hidden;
-  width: 100vw;
+  width: 100%;
 }
 
 .stack--container {
@@ -69,6 +69,7 @@ body {
   box-shadow: 0px 6px 10px 4px #00000026;
   margin: 40px 0 60px;
   position: relative;
+  z-index: 1; /* place the code element above the ::before shadow from another component */
 }
 
 .code__container--quickstart {

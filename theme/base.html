@@ -70,6 +70,20 @@
   <!-- End Google Tag Manager (noscript) -->
 
   <div class="k-page">
+    <div class="hidden">
+      {% set related_nav_urls_map = {
+        "/api/": ["/2.18/api/"],
+        "/2.18/api/": ["/api/"],
+        "/keras_tuner/": ["/keras_hub/"],
+        "/keras_hub/": ["/keras_tuner/"],
+      } %}
+      {% set vars = {'related_urls': [], 'active_url': ''} %}
+      {% for item in nav %}
+        {% if item.active %}
+          {{ vars.update({'related_urls': related_nav_urls_map[item.url], 'active_url': item.url}) }}
+      {% endif %}
+      {% endfor %}
+    </div>
     <nav class="nav__container">
       <div class="nav__wrapper">
         <div class="nav__controls--mobile">
@@ -112,25 +126,24 @@
           </div>
         </div>
 
-        <img class="nav__logo nav__logo--desktop" src="{{base_url}}img/logo.png" />
+        <a href="{{base_url}}">
+          <img class="nav__logo nav__logo--desktop" src="{{base_url}}img/logo.png" alt="keras.io logo" />
+        </a>
         <div class="nav__menu">
+          {% set main_nav_items = {
+          '/getting_started/': 'Get started',
+          '/about/': 'About',
+          '/guides/': 'Guides',
+          '/api/': 'API Docs',
+          '/examples/': 'Examples',
+          '/keras_hub/': 'KerasHub',
+          } %}
           <ul class="nav__item--container">
+            {% for key, value in main_nav_items.items() %}
             <li class="nav__item">
-              <a class="nav__link" href="{{base_url}}getting_started/">GET STARTED</a>
+              <a class="nav__link{% if key == vars['active_url'] or key in vars['related_urls'] %} nav__link--active{% endif %}" href="{{ key }}">{{ value }}</a>
             </li>
-            <li class="nav__item">
-              <a class="nav__link" href="{{base_url}}about/">ABOUT</a>
-            </li>
-            <li class="nav__item">
-              <a class="nav__link" href="{{base_url}}guides/">GUIDES</a>
-            </li>
-            <li class="nav__item">
-              <a class="nav__link" href="{{base_url}}api/">API DOCS</a>
-            </li>
-            <li class="nav__item">
-              <a class="nav__link" href="{{base_url}}examples/">EXAMPLES</a>
-            </li>
-            <li class="nav__item"><a class="nav__link" href="{{base_url}}keras_hub/">KERASHUB</a></li>
+            {% endfor %}
           </ul>
 
           <form class="nav__search">
@@ -150,22 +163,7 @@
 
     <div class="page__container flex__container">
       <div class="nav__side-nav" id="nav-menu">
-        <!-- version with just the active item visible -->
         <div class="nav flex-column nav-pills" role="tablist" aria-orientation="vertical">
-          <div class="hidden">
-            {% set related_nav_urls_map = {
-              "/api/": ["/2.18/api/"],
-              "/2.18/api/": ["/api/"],
-              "/keras_tuner/": ["/keras_hub/"],
-              "/keras_hub/": ["/keras_tuner/"],
-            } %}
-            {% set vars = {'related_urls': []} %}
-            {% for item in nav %}
-              {% if item.active %}
-                {{ vars.update({'related_urls': related_nav_urls_map[item.url]}) }}
-              {% endif %}
-            {% endfor %}
-          </div>
           {% for item in nav %}
             {% if (item.active and item.children|length > 0) or item.url in vars['related_urls'] %}
             <a class="nav-link{% if item.active %} active{% endif %}" href="{{item.url}}" role="tab" aria-selected="{{item.selected}}">

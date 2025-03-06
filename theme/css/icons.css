@@ -3,10 +3,10 @@ i {
 }
 
 .icon--search {
-  background-image: url("../icons/search.png");
+  background-image: url("../icons/search-color.svg");
   background-size: cover;
-  height: 12px;
-  width: 12px;
+  height: 16px;
+  width: 16px;
 }
 
 .icon__search--mobile {
