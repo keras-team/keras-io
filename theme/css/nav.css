@@ -47,10 +47,6 @@ nav {
   width: 100%;
 }
 
-.nav__search-form--mobile .nav__search--button {
-  top: 17px;
-}
-
 .nav__menu--button,
 .nav__menu--close {
   background: transparent;
@@ -106,7 +102,8 @@ nav {
   padding: 5px;
   position: absolute;
   right: 8px;
-  top: 6px;
+  top: 50%;
+  transform: translateY(-50%);
   width: fit-content;
 }
 
@@ -342,5 +339,33 @@ nav {
   .nav__link {
     color: var(--dark-grey);
     font-family: 'Montserrat', 'Open Sans', sans-serif;
+    text-transform: uppercase;
   }
+
+  .nav__link--active {
+    color: var(--text-red);
+  }
+
+  .footer__container {
+    margin: auto;
+    max-width: 1440px;
+    padding: 16px 64px;
+  }
+}
+
+footer {
+  background: var(--grey);
+}
+
+footer a {
+  color: var(--text-black);
+  font-size: 16px;
+  line-height: 25.6px;
+  font-weight: 500;
+}
+
+.footer__container {
+  display: flex;
+  gap: 6px;
+  padding: 24px;
 }
