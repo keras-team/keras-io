@@ -55,7 +55,7 @@ a {
 }
 
 a:hover {
-  color: #ff0000;
+  color: var(--text-red);
 }
 
 b, strong {
@@ -215,7 +215,7 @@ blockquote {
 
 .k-outline-depth-2 a,
 .k-outline-depth-3 a {
-  color: var(--alternate-red);
+  color: var(--text-red);
 }
 
 .hidden {
@@ -345,7 +345,15 @@ td {
 }
 
 .example-card:hover {
-  background-color: #f8f5f560;
+  background-color: var(--text-red);
+}
+
+.example-card:hover .example-card-title {
+  color: #FFF;
+  text-decoration: none;
+}
+
+a:hover .example-card .example-card-title {
   text-decoration: none;
 }
 
@@ -374,7 +382,7 @@ td {
   font-size: 0.85rem;
   height: 1.6rem;
   margin-right: 0.5rem;
-  padding-top: 0.05rem;
+  padding-top: 0.15rem;
   text-align: center;
   width: 1.6rem;
 }
