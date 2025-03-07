@@ -92,10 +92,6 @@ nav {
   line-height: 20px;
 }
 
-.nav__search--input:hover {
-  box-shadow: inset 2px 2px 8px 0 #20202080;
-}
-
 .nav__search--button {
   background: transparent;
   border: 0;
