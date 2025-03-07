@@ -428,6 +428,46 @@ MODELS_MASTER = {
             ],
         },
         {
+            "path": "clip/",
+            "title": "CLIP",
+            "toc": True,
+            "children": [
+                {
+                    "path": "clip_tokenizer",
+                    "title": "CLIPTokenizer",
+                    "generate": [
+                        "keras_hub.tokenizers.CLIPTokenizer",
+                        "keras_hub.tokenizers.CLIPTokenizer.from_preset",
+                    ],
+                },
+                {
+                    "path": "clip_image_converter",
+                    "title": "CLIPImageConverter",
+                    "generate": [
+                        "keras_hub.layers.CLIPImageConverter",
+                        "keras_hub.layers.CLIPImageConverter.from_preset",
+                    ],
+                },
+                {
+                    "path": "clip_backbone",
+                    "title": "CLIPBackbone model",
+                    "generate": [
+                        "keras_hub.models.CLIPBackbone",
+                        "keras_hub.models.CLIPBackbone.from_preset",
+                    ],
+                },
+                {
+                    "path": "clip_preprocessor",
+                    "title": "CLIPPreprocessor",
+                    "generate": [
+                        "keras_hub.models.CLIPPreprocessor",
+                        "keras_hub.models.CLIPPreprocessor.from_preset",
+                        "keras_hub.models.CLIPPreprocessor.tokenizer",
+                    ],
+                },
+            ],
+        },
+        {
             "path": "deberta_v3/",
             "title": "DebertaV3",
             "toc": True,
