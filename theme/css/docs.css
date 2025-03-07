@@ -86,7 +86,7 @@ blockquote {
   justify-content: center;
   margin-inline: auto;
   margin-top: 72px;
-  max-width: 1440px;
+  max-width: 1568px;
   width: 100%;
 }
 
@@ -470,5 +470,6 @@ p {
 
   .flex__container { 
     margin-top: 86px;
+    padding: 0 64px;
   }
 }

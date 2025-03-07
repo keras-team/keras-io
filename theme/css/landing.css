@@ -440,7 +440,7 @@ body {
 
   .explore::before {
     background: linear-gradient(
-      187deg,
+      184deg,
       var(--shadow-grey) 20%,
       var(--white) 58%
     );

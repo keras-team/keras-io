@@ -157,6 +157,10 @@ code[class*="language-"] * {
   background: inherit !important;
 }
 
+.footer__container div {
+  transform: translateY(2px);
+}
+
 @media only screen and (max-width: 1199px) {
   h1 {
     font-weight: 700;
