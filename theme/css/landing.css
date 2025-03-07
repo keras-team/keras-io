@@ -1,9 +1,12 @@
 @import url("index.css");
 @import url("nav.css");
 
+html {
+  overflow-x: hidden;
+}
+
 html,
 body {
-  overflow-x: hidden;
   width: 100%;
 }
 
@@ -100,7 +103,6 @@ body {
 .explore {
   background: var(--white);
   display: flex;
-  flex-direction: column-reverse;
   gap: 24px;
   padding: 50px 24px 50px;
 }
@@ -114,6 +116,7 @@ body {
 .explore__wrapper {
   display: flex;
   flex-direction: column-reverse;
+  max-width: 100%;
 }
 
 .explore__content {
@@ -130,8 +133,7 @@ body {
 }
 
 .explore__image--container img {
-  height: max-content;
-  width: 80%;
+  width: 100%;
 }
 
 .guide {
@@ -454,6 +456,7 @@ body {
   }
 
   .explore__wrapper {
+    align-items: start;
     display: flex;
     flex-direction: row;
     justify-content: space-between;
@@ -472,10 +475,11 @@ body {
   }
 
   .explore__content {
-    height: 400px;
-    padding-top: 30px;
+    align-self: start;
+    padding-block: 48px;
     position: sticky;
-    top: 0;
+    top: 50%;
+    transform: translateY(-50%);
   }
 
   .explore__content h2 {
@@ -491,6 +495,8 @@ body {
 
   .explore__image--container img {
     margin-bottom: 24px;
+    height: 100%;
+    width: auto;
   }
 
   .code__container {

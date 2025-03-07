@@ -124,6 +124,7 @@ blockquote {
 .k-outline {
   background: white;
   border-bottom: 1px solid var(--grey);
+  box-shadow: 6px 2px 10px 0px rgba(220, 220, 220, 0.50) inset;
   color: var(--text-red);
   height: 100%;
   max-height: 80vh;
@@ -132,6 +133,7 @@ blockquote {
   position: sticky;
   top: 86px;
   flex: 0 0 286px;
+
 }
 
 .k-content img {
@@ -468,7 +470,7 @@ p {
     width: 100%;
   }
 
-  .flex__container { 
+  .flex__container {
     margin-top: 86px;
     padding: 0 64px;
   }
