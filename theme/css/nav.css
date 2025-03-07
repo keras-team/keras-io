@@ -319,6 +319,7 @@ nav {
 
   .nav__menu .nav__link:hover {
     color: #A30000;
+    text-decoration: none;
   }
 
   .nav__item--container {

@@ -46,6 +46,7 @@ const searchForms = document.querySelectorAll('.nav__search');
 const mobileNavSearchIcon = document.querySelector('.nav__search--mobile');
 const mobileNavSearchForm = document.querySelector('.nav__search-form--mobile');
 const mobileNavControls = document.querySelector('.nav__controls--mobile');
+const desktopSearch = document.querySelector('.nav__menu .nav__search');
 
 mobileNavSearchIcon.addEventListener('click', () => {
   mobileNavControls.style.display = 'none';
@@ -69,6 +70,11 @@ mobileNavMenu.addEventListener('click', () => {
   mobileNavControls.style.display = 'flex';
   mobileNavSearchForm.style.display = 'none';
 });
+
+if (window.location.pathname.indexOf('search.html') > -1) {
+  desktopSearch.style.display = 'none';
+  mobileNavSearchIcon.style.visibility = 'hidden';
+}
 
 // position:sticky functionality (set margin-top so that the content is correctly centered vertically)
 const exploreModule = document.querySelector('.explore');

@@ -189,10 +189,6 @@ blockquote {
   box-shadow: 0 0 5px rgb(173 25 25 / 50%);
 }
 
-.gsc-search-button-v2 {
-  margin-top: 0;
-}
-
 .k-outline-depth-1 {
   font-size: 1rem;
   line-height: 1.6;
@@ -431,6 +427,41 @@ nav.nav__container *:not(input):not(button) {
 p {
   margin-top: 0;
   margin-bottom: 1rem;
+}
+
+.gsc-wrapper,
+.gsc-result-info,
+.gs-bidi-start-align,
+.gsc-input {
+  font-family: 'Montserrat', 'Open Sans', sans-serif;
+}
+
+.gsc-result-info {
+  font-size: 16px;
+}
+
+.gsc-search-box .gsc-search-button-v2 {
+  background: #A30000;
+  border: none;
+  height: 41px;
+  margin-top: 0;
+}
+
+.gsc-results .gs-webResult.gs-result a.gs-title:link,
+.gsc-results .gs-webResult.gs-result a.gs-title:visited b,
+.gsc-input .gsst_a .gscb_a,
+.gsc-input .gsst_a .gscb_a:hover {
+  color: #A30000;
+}
+
+.gsc-results-wrapper-nooverlay .gsc-above-wrapper-area {
+  border-bottom: 1px solid #D0010180;
+}
+
+.gsc-result .gs-no-results-result .gs-snippet {
+  background-color: transparent;
+  border: none;
+  font-size: 16px;
 }
 
 @media screen and (max-width: 1300px) {

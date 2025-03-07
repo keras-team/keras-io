@@ -16,6 +16,7 @@ templates/keras_hub/getting_started.md
 templates/keras_tuner/getting_started.md
 datasets/*
 .vscode/*
+.idea/*
 
 ### JetBrains ###
 # Covers JetBrains IDEs: IntelliJ, RubyMine, PhpStorm, AppCode, PyCharm, CLion, Android Studio, WebStorm and Rider
