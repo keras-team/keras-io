@@ -8,15 +8,15 @@ body {
 }
 
 .page__container {
-  margin: auto;
+  margin: 72px auto auto;
 }
 
 a {
   cursor: pointer;
   display: inline-block;
+  height: fit-content;
   text-decoration: none;
   width: fit-content;
-  height: fit-content;
 }
 
 a:hover {
@@ -26,19 +26,18 @@ a:hover {
 button {
   cursor: pointer;
   display: inline-block;
-  width: fit-content;
   height: fit-content;
+  width: fit-content;
 }
 
 .button__round {
-  background: #ffffff80;
+  background: #ffffff25;
   border: 0;
   border-radius: 20px;
   color: var(--white);
-
-  line-height: 24px;
-  font-weight: 700;
   font-size: 16px;
+  font-weight: 700;
+  line-height: 24px;
   padding: 8px 24px;
 }
 
@@ -48,21 +47,21 @@ button {
 }
 
 .button__square {
-  line-height: 20px;
   font-size: 14px;
   font-weight: 700;
+  line-height: 20px;
   padding: 12px 18px;
 }
 
 .button__square--white {
-  color: var(--text-red);
   background: var(--white);
   border: 1px solid var(--border-grey);
+  color: var(--text-red);
 }
 
 .button__square--white:hover {
-  color: var(--white);
   background: var(--text-red);
+  color: var(--white);
 }
 
 .button__square--red {
@@ -71,8 +70,8 @@ button {
 }
 
 .button__square--red:hover {
-  color: var(--text-red);
   background: #9e9e9e;
+  color: var(--text-red);
 }
 
 .button__square--transparent {
@@ -96,8 +95,8 @@ button {
   font-size: 14px;
   gap: 12px;
   justify-content: center;
-  width: 176px;
   padding: 8px;
+  width: 176px;
 }
 
 .button__square--colab:hover {
@@ -142,10 +141,10 @@ p {
 
 /* Prism */
 pre[class*="language-"] {
-  border-radius: 12px 12px 0 0;
   background: var(--grey);
-  padding: 1em 1.2em 1em 0;
+  border-radius: 12px 12px 0 0;
   margin: 0;
+  padding: 1em 1.2em;
 }
 
 code[class*="language-"] {
@@ -170,8 +169,8 @@ code[class*="language-"] * {
   h2 {
     font-weight: 700;
     font-size: 32px;
-    line-height: 40.96px;
     letter-spacing: 0%;
+    line-height: 40.96px;
     margin: 0;
   }
 }
@@ -197,16 +196,20 @@ code[class*="language-"] * {
 
   h3 {
     color: var(--text-red);
-    line-height: 31.2px;
     font-size: 24px;
+    line-height: 31.2px;
     margin: 0;
   }
 
   h4 {
     color: var(--text-red);
-    line-height: 24px;
     font-size: 18px;
+    line-height: 24px;
     margin: 0;
+  }
+
+  .page__container {
+    margin-top: 86px;
   }
 
   .button__square {

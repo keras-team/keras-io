@@ -28,13 +28,13 @@
     <!-- Prism CSS import -->
     <link
       rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css"
+      href="css/prism.min.css"
     />
 
     <!-- GLIDE CSS import -->
     <link
       rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/Glide.js/3.6.0/css/glide.core.min.css"
+      href="css/glide.core.min.css"
     />
 
     <!-- Custom styles for this template -->
@@ -100,7 +100,7 @@
           <button class="nav__menu--button"><i class="icon--menu"></i></button>
           <button class="nav__menu--close"><i class="icon--close"></i></button>
           <a href="/">
-            <img class="nav__logo nav__logo--mobile" src="./img/k-logo.png" />
+            <img class="nav__logo nav__logo--mobile" src="./img/k-logo.png" alt="keras.io logo" />
           </a>
           <button class="nav__search--mobile">
             <i class="icon__search--mobile"></i>
@@ -129,8 +129,9 @@
             <a class="nav-link" href="/keras_hub/" role="tab" aria-selected="">KerasHub: Pretrained Models</a>
           </div>
         </div>
-
-        <img class="nav__logo nav__logo--desktop" src="./img/logo.png" />
+        <a href="/">
+          <img class="nav__logo nav__logo--desktop" src="./img/logo.png" alt="keras.io logo"/>
+        </a>
         <div class="nav__menu">
           <ul class="nav__item--container">
             <li class="nav__item">
@@ -188,7 +189,7 @@
               <a class="button__square button__square--white" href="/examples/">EXAMPLES</a>
             </div>
           </div>
-          <img class="hero__image" src="./img/k-graphic.png" />
+          <img class="hero__image" src="./img/k-graphic.png" alt="K graphic"/>
         </div>
       </div>
 
@@ -199,27 +200,28 @@
               <div class="code__container">
                 <button class="code__copy--button">
                   <i class="icon--copy"></i>
+                  <div class="code__copy--tooltip">Copied</div>
                 </button>
                 <pre>
                   <code class="language-python">
-    inputs = keras.Input(shape=(32, 32, 3))
-    x = layers.Conv2D(32, 3, activation="relu")(inputs)
-    x = layers.Conv2D(64, 3, activation="relu")(x)
-    block_1_output = layers.MaxPooling2D(3)(x)
-    
-    x = layers.Conv2D(64, 3, activation="relu")(block_1_output)
-    x = layers.Conv2D(64, 3, activation="relu")(x)
-    block_2_output = layers.add([x, block_1_output])
-    
-    x = layers.Conv2D(64, 3, activation="relu")(block_2_output)
-    x = layers.GlobalAveragePooling2D()(x)
-    x = layers.Dense(256, activation="relu")(x)
-    x = layers.Dropout(0.5)(x)
-    outputs = layers.Dense(10)(x)
-    
-    model = keras.Model(inputs, outputs, name="mini_resnet")
-    keras.utils.plot_model(model, "mini_resnet.png")
-    model.fit(dataset, epochs=10)
+inputs = keras.Input(shape=(32, 32, 3))
+x = layers.Conv2D(32, 3, activation="relu")(inputs)
+x = layers.Conv2D(64, 3, activation="relu")(x)
+block_1_output = layers.MaxPooling2D(3)(x)
+
+x = layers.Conv2D(64, 3, activation="relu")(block_1_output)
+x = layers.Conv2D(64, 3, activation="relu")(x)
+block_2_output = layers.add([x, block_1_output])
+
+x = layers.Conv2D(64, 3, activation="relu")(block_2_output)
+x = layers.GlobalAveragePooling2D()(x)
+x = layers.Dense(256, activation="relu")(x)
+x = layers.Dropout(0.5)(x)
+outputs = layers.Dense(10)(x)
+
+model = keras.Model(inputs, outputs, name="mini_resnet")
+keras.utils.plot_model(model, "mini_resnet.png")
+model.fit(dataset, epochs=10)
                   </code>
                 </pre>
                 <div class="code__container--quickstart">
@@ -232,26 +234,27 @@
               <div class="code__container">
                 <button class="code__copy--button">
                   <i class="icon--copy"></i>
+                  <div class="code__copy--tooltip">Copied</div>
                 </button>
                 <pre>
                   <code class="language-python">
-    causal_lm = keras_hub.models.CausalLM.from_preset(
-      "gemma2_instruct_2b_en",
-      dtype="float16",
-    )
-    prompt = """&lt;start_of_turn&gt;user
-    Write python code to print the first 100 primes.
-    &lt;end_of_turn&gt;
-    &lt;start_of_turn&gt;model
-    """
-    text_output = causal_lm.generate(prompt, max_length=512)
-    
-    text_to_image = keras_hub.models.TextToImage.from_preset(
-        "stable_diffusion_3_medium",
-        dtype="float16",
-    )
-    prompt = "Astronaut in a jungle, detailed"
-    image_output = text_to_image.generate(prompt)
+causal_lm = keras_hub.models.CausalLM.from_preset(
+  "gemma2_instruct_2b_en",
+  dtype="float16",
+)
+prompt = """&lt;start_of_turn&gt;user
+Write python code to print the first 100 primes.
+&lt;end_of_turn&gt;
+&lt;start_of_turn&gt;model
+"""
+text_output = causal_lm.generate(prompt, max_length=512)
+
+text_to_image = keras_hub.models.TextToImage.from_preset(
+    "stable_diffusion_3_medium",
+    dtype="float16",
+)
+prompt = "Astronaut in a jungle, detailed"
+image_output = text_to_image.generate(prompt)
                   </code>
                 </pre>
                 <div class="code__container--quickstart">
@@ -264,7 +267,7 @@
 
             <div class="explore__content">
               <div class="explore__image--container">
-                <img src="./img/logo-row.png" />
+                <img src="./img/logo-row.png" alt="Backend logos"/>
               </div>
               <h2 class="text--red">
                 Welcome to multi-framework machine learning
@@ -301,31 +304,34 @@
                 <div class="code__container guide__code">
                   <button class="code__copy--button">
                     <i class="icon--copy"></i>
+                    <div class="code__copy--tooltip">Copied</div>
                   </button>
                   <pre>
                   <code class="language-python">
-    encoder_input = keras.Input(
-      shape=(28, 28, 1), name="img")
-    x = layers.Conv2D(16, 3, activation="relu")
-      (encoder_input)
-    x = layers.Conv2D(32, 3, activation="relu")(x)
-    x = layers.MaxPooling2D(3)(x)
-    x = layers.Conv2D(32, 3, activation="relu")(x)
-    x = layers.Conv2D(16, 3, activation="relu")(x)
-    encoder_output = layers.GlobalMaxPooling2D()(x)
-    
-    encoder = keras.Model(encoder_input,
-      encoder_output, name="encoder")
-    encoder.summary()
+encoder_input = keras.Input(
+  shape=(28, 28, 1), name="img")
+x = layers.Conv2D(16, 3, activation="relu")
+  (encoder_input)
+x = layers.Conv2D(32, 3, activation="relu")(x)
+x = layers.MaxPooling2D(3)(x)
+x = layers.Conv2D(32, 3, activation="relu")(x)
+x = layers.Conv2D(16, 3, activation="relu")(x)
+encoder_output = layers.GlobalMaxPooling2D()(x)
+
+encoder = keras.Model(encoder_input,
+  encoder_output, name="encoder")
+encoder.summary()
                   </code>
                 </pre>
                 </div>
 
                 <div class="guide__content">
-                  <h3>The foundation: AKA The Functional API</h3>
-                  <p>
-                    Starting from the beginning and learn how to build models using the functional building pattern.
-                  </p>
+                  <div>
+                    <h3>The foundation: AKA The Functional API</h3>
+                    <p>
+                      Starting from the beginning and learn how to build models using the functional building pattern.
+                    </p>
+                  </div>
 
                   <a
                     class="guide__content--button button__square button__square--red"
@@ -340,29 +346,32 @@
                 <div class="code__container guide__code">
                   <button class="code__copy--button">
                     <i class="icon--copy"></i>
+                    <div class="code__copy--tooltip">Copied</div>
                   </button>
                   <pre>
                   <code class="language-python">
-    model.compile(
-      loss=keras.losses
-        .SparseCategoricalCrossentropy
-        (from_logits=True),
-      optimizer=keras.optimizers.RMSprop(),
-      metrics=["accuracy"],
-    )
-  
-    history = model.fit(x_train,
-      y_train, batch_size=64,
-      epochs=2, validation_split=0.2)
+model.compile(
+  loss=keras.losses
+    .SparseCategoricalCrossentropy
+    (from_logits=True),
+  optimizer=keras.optimizers.RMSprop(),
+  metrics=["accuracy"],
+)
+
+history = model.fit(x_train,
+  y_train, batch_size=64,
+  epochs=2, validation_split=0.2)
                   </code>
                 </pre>
                 </div>
 
                 <div class="guide__content">
-                  <h3>Training & evaluation with the built-in methods</h3>
-                  <p>
-                    Train and evaluate your model using `model.fit(...)` as well as other standard methods in Keras.
-                  </p>
+                  <div>
+                    <h3>Training & evaluation with the built-in methods</h3>
+                    <p>
+                      Train and evaluate your model using `model.fit(...)` as well as other standard methods in Keras.
+                    </p>
+                  </div>
 
                   <a
                     class="guide__content--button button__square button__square--red"
@@ -377,29 +386,32 @@
                 <div class="code__container guide__code">
                   <button class="code__copy--button">
                     <i class="icon--copy"></i>
+                    <div class="code__copy--tooltip">Copied</div>
                   </button>
                   <pre>
                     <code class="language-python">
-    class CustomDense(layers.Layer):
-      def __init__(self, units=32):
-          super().__init__()
-          self.units = units
+class CustomDense(layers.Layer):
+  def __init__(self, units=32):
+      super().__init__()
+      self.units = units
 
-      def build(self, input_shape):
-          self.w = self.add_weight(shape=(input_shape[-1], self.units), initializer="random_normal", trainable=True,)
-          self.b = self.add_weight(shape=(self.units,), initializer="random_normal", trainable=True)
+  def build(self, input_shape):
+      self.w = self.add_weight(shape=(input_shape[-1], self.units), initializer="random_normal", trainable=True,)
+      self.b = self.add_weight(shape=(self.units,), initializer="random_normal", trainable=True)
 
-      def call(self, inputs):
-          return ops.matmul(inputs, self.w) + self.b
+  def call(self, inputs):
+      return ops.matmul(inputs, self.w) + self.b
                     </code>
                   </pre>
                 </div>
 
                 <div class="guide__content">
-                  <h3>Making new layers and models via subclassing</h3>
-                  <p>
-                    Learn how to customize your model via subclassing Keras layers.
-                  </p>
+                  <div>
+                    <h3>Making new layers and models via subclassing</h3>
+                    <p>
+                      Learn how to customize your model via subclassing Keras layers.
+                    </p>
+                  </div>
 
                   <a
                     class="guide__content--button button__square button__square--red"
@@ -465,8 +477,8 @@
                 <p class="models__card--description">
                   Generate image content with this state of the art diffusion model from Stability AI.
                 </p>
-                <a class="button__square button__square--white" href="/keras_hub/api/models/llama3/">VIEW DOCUMENTATION</a>
-                <a class="button__square button__square--white" href="https://www.kaggle.com/models/keras/llama3" target="_blank">KAGGLE DETAILS</a>
+                <a class="button__square button__square--white" href="/keras_hub/api/keras_hub/models/stable_diffusion_3/">VIEW DOCUMENTATION</a>
+                <a class="button__square button__square--white" href="https://www.kaggle.com/models/keras/stablediffusion-3.5" target="_blank">KAGGLE DETAILS</a>
               </div>
             </div>
 
@@ -503,13 +515,15 @@
 
           <div class="guide__code--container">
             <div class="guide__wrapper">
-              <img class="code__container guide__code" src="./img/eye.jpeg" />
+              <img class="code__container guide__code" src="./img/eye.jpeg" alt="eye"/>
 
               <div class="guide__content">
-                <h3>Computer vision</h3>
-                <p>
-                  Take a look at our examples for doing image classification, object detection, video processing, etc.
-                </p>
+                <div>
+                  <h3>Computer vision</h3>
+                  <p>
+                    Take a look at our examples for doing image classification, object detection, video processing, etc.
+                  </p>
+                </div>
 
                 <a
                   class="guide__content--button button__square button__square--red"
@@ -521,13 +535,15 @@
             </div>
 
             <div class="guide__wrapper">
-              <img class="code__container guide__code" src="./img/text.jpeg" />
+              <img class="code__container guide__code" src="./img/text.jpeg" alt="text" />
 
               <div class="guide__content">
-                <h3>Natural Language Processing</h3>
-                <p>
-                  We also have many guides for doing NLP including text classification, machine translation, and language modeling.
-                </p>
+                <div>
+                  <h3>Natural Language Processing</h3>
+                  <p>
+                    We also have many guides for doing NLP including text classification, machine translation, and language modeling.
+                  </p>
+                </div>
 
                 <a
                   class="guide__content--button button__square button__square--red"
@@ -539,13 +555,15 @@
             </div>
 
             <div class="guide__wrapper">
-              <img class="code__container guide__code" src="./img/flower.jpeg" />
+              <img class="code__container guide__code" src="./img/flower.jpeg" alt="flower" />
 
               <div class="guide__content">
-                <h3>Generative Deep Learning</h3>
-                <p>
-                  Get started with generative deep learning with out wealth of guides involving state-of-the-art diffusion models, GANs, and transformer models.
-                </p>
+                <div>
+                  <h3>Generative Deep Learning</h3>
+                  <p>
+                    Get started with generative deep learning with out wealth of guides involving state-of-the-art diffusion models, GANs, and transformer models.
+                  </p>
+                </div>
 
                 <a
                   class="guide__content--button button__square button__square--red"
@@ -579,25 +597,25 @@
           <div data-glide-el="track" class="glide__track">
             <ul class="glide__slides">
               <li class="glide__slide">
-                <img class="research__image" src="./img/youtube-logo.png" />
+                <img class="research__image" src="./img/youtube-logo.png" alt="youtube logo" />
               </li>
               <li class="glide__slide">
-                <img class="research__image" src="./img/google-logo.png" />
+                <img class="research__image" src="./img/google-logo.png" alt="google logo" />
               </li>
               <li class="glide__slide">
-                <img class="research__image" src="./img/waymo-logo.png" />
+                <img class="research__image" src="./img/waymo-logo.png" alt="waymo logo" />
               </li>
               <li class="glide__slide">
-                <img class="research__image" src="./img/amazon-logo.png" />
+                <img class="research__image" src="./img/amazon-logo.png" alt="amazon logo" />
               </li>
               <li class="glide__slide">
-                <img class="research__image" src="./img/spotify-logo.png" />
+                <img class="research__image" src="./img/spotify-logo.png" alt="spotify logo" />
               </li>
               <li class="glide__slide">
-                <img class="research__image" src="./img/uber-logo.png" />
+                <img class="research__image" src="./img/uber-logo.png" alt="uber logo" />
               </li>
               <li class="glide__slide">
-                <img class="research__image" src="./img/netflix-logo.png" />
+                <img class="research__image" src="./img/netflix-logo.png" alt="netflix logo" />
               </li>
             </ul>
           </div>
@@ -656,31 +674,45 @@
 
     <script src="./js/index.js"></script>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Glide.js/3.2.0/glide.min.js"></script>
+    <script src="./js/glide.min.js"></script>
 
     <script>
       const carousels = document.querySelector(".glide");
       let perView = 3;
+      let glide;
 
       if (window.innerWidth > 1199) {
         perView = 7;
       }
 
       if (carousels) {
-        new Glide(".glide", {
+        glide = new Glide(".glide", {
           type: "carousel",
           perView,
           focusAt: "center",
           gap: 0,
-          autoplay: 1000,
+          autoplay: 1,
+          animationDuration: 3000,
+          animationTimingFunc: 'linear',
           hoverpause: true,
-          animationDuration: 500,
-        }).mount();
+        })
+
+        glide.mount();
+
+        window.addEventListener('resize', (event) => {
+          if (window.innerWidth > 1199) {
+            perView = 7;
+          } else {
+            perView = 3;
+          }
+
+          glide.update({ perView });
+        });
       }
     </script>
 
     <!-- Prism Script -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+    <script src="./js/prism.min.js"></script>
+    <script src="./js/prism-python.min.js"></script>
   </body>
 </html>

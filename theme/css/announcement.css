@@ -1,3 +1,11 @@
+@import url("index.css");
+
+.logo {
+    margin: 2rem 24px;
+    max-width: 100%;
+    width: 16rem;
+}
+
 .blog-content {
     text-align: justify;
     padding: 2em;
@@ -21,6 +29,22 @@ h2 {
 
 h3 {
     font-size: 1.5rem;
+}
+
+.announcement__buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    padding: 0 calc(2em + 15px);
+}
+
+.announcement__buttons .button__square {
+    width: 100%;
+}
+
+.announcement__headline {
+    font-size: 48px;
+    margin-bottom: 2rem;
 }
 
 .credits {
@@ -62,4 +86,18 @@ h3 {
 .subcredit-name {
     font-size: 0.8em;
     padding-top: 0;
+}
+
+@media only screen and (min-width: 1200px) {
+    .announcement__buttons {
+        flex-direction: row;
+    }
+
+    .announcement__buttons .button__square {
+        width: auto;
+    }
+
+    .logo {
+        width: 28rem;
+    }
 }

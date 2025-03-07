@@ -6,6 +6,15 @@ nav {
   z-index: 99;
 }
 
+.nav__container {
+  display: flex;
+  box-sizing: border-box;
+  justify-content: space-between;
+  padding: 8px 16px;
+  position: fixed;
+  width: 100%;
+}
+
 .nav__logo--desktop {
   display: none;
 }
@@ -27,12 +36,6 @@ nav {
   display: flex;
   justify-content: space-between;
   width: 100%;
-}
-
-.nav__container {
-  display: flex;
-  justify-content: space-between;
-  padding: 8px 16px;
 }
 
 .nav__search {
@@ -264,7 +267,8 @@ nav {
   }
 
   .nav__container {
-    padding: 18px 64px;
+    padding: 18px 0;
+    position: fixed;
   }
 
   .nav__wrapper {

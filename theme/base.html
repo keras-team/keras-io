@@ -167,11 +167,6 @@
           {% for item in nav %}
             {% if (item.active and item.children|length > 0) or item.url in vars['related_urls'] %}
             <a class="nav-link{% if item.active %} active{% endif %}" href="{{item.url}}" role="tab" aria-selected="{{item.selected}}">
-              {% if item.children|length > 0 %}
-                <svg class="nav-link-chevron{% if item.active %} nav-link-chevron--expanded{% endif %}" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M9.5 17L14.5 12L9.5 7V17Z"/>
-                </svg>
-              {% endif %}
               {{item.title}}
             </a>
               {% if item.active and item.children|length > 0 %}

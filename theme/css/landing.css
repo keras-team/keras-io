@@ -86,6 +86,17 @@ body {
   width: 32px;
 }
 
+.code__copy--tooltip {
+  background-color: var(--white);
+  border-radius: 4px;
+  color: var(--text-red);
+  display: none;
+  padding: 4px;
+  position: absolute;
+  right: -7px;
+  top: 31px;
+}
+
 .explore {
   background: var(--white);
   display: flex;
@@ -148,6 +159,7 @@ body {
 }
 
 .guide__wrapper {
+  background: var(--white);
   border-radius: 8px;
   box-shadow: 0px 1px 3px 0px #0000004d;
   box-shadow: 0px 4px 8px 3px #00000026;
@@ -156,11 +168,17 @@ body {
   justify-content: space-between;
 }
 
+.guide__wrapper pre {
+  box-sizing: border-box;
+  height: 100%;
+}
+
 .guide__content {
   background: #FFF;
   display: flex;
   flex-direction: column;
   gap: 20px;
+  justify-content: space-between;
   min-height: 208px;
   padding: 24px;
   position: relative;
@@ -169,6 +187,7 @@ body {
 .guide__content h3 {
   color: #A30000;
   font-weight: 700;
+  margin-bottom: 20px;
 }
 
 .guide .code__container {
@@ -186,7 +205,6 @@ body {
 .guide h3 {
   color: var(--text-red);
   font-weight: 700;
-  margin-bottom: 0;
 }
 
 .guide__code {
@@ -201,7 +219,7 @@ body {
   clip-path: polygon(0 0, 100% 3%, 100% 100%, 0% 97%);
   display: flex;
   gap: 64px;
-  padding: 104px 24px 250px;
+  padding: 104px 24px 140px;
   transform: translateY(-60px);
 }
 
@@ -441,25 +459,23 @@ body {
     justify-content: space-between;
     margin: 0 auto;
     max-width: 1440px;
+    position: relative;
     width: 100%;
   }
 
   .explore__column {
     display: flex;
     flex-direction: column;
-    gap: 176px;
+    gap: 60px;
     margin-right: 64px;
     padding-bottom: 160px;
   }
 
   .explore__content {
-    display: flex;
-    flex-direction: column;
-    gap: 24px;
-    height: 100%;
-    justify-content: center;
-    padding: 30px 0 346px;
-    position: relative;
+    height: 400px;
+    padding-top: 30px;
+    position: sticky;
+    top: 0;
   }
 
   .explore__content h2 {
@@ -634,6 +650,10 @@ body {
   .research {
     padding: 110px 0 150px;
     text-align: center;
+  }
+
+  .research__description {
+    font-size: 20px;
   }
 
   .research__image {

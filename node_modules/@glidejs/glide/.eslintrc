@@ -1,0 +1,10 @@
+{
+  "extends": "standard",
+  "parserOptions": {
+    "ecmaVersion": 6,
+    "sourceType": "module"
+  },
+  "env": {
+    "jest": true
+  }
+}

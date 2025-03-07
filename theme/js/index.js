@@ -33,6 +33,11 @@ copyButtons.forEach((button) => {
     inputElement.select();
     document.execCommand('copy');
     inputElement.remove();
+
+    button.querySelector('.code__copy--tooltip').style.display = 'block';
+    setTimeout(() => {
+      button.querySelector('.code__copy--tooltip').style.display = 'none';
+    }, 2000);
   });
 });
 
@@ -66,61 +71,61 @@ mobileNavMenu.addEventListener('click', () => {
 });
 
 // Parallax functionality
-const exploreModule = document.querySelector('.explore');
-const exploreContent = document.querySelector('.explore__content');
+// const exploreModule = document.querySelector('.explore');
+// const exploreContent = document.querySelector('.explore__content');
 
-const observer = new IntersectionObserver(
-  (entries) => {
-    entries.forEach((entry) => {
-      if (entry.isIntersecting) {
-        window.addEventListener('scroll', controlExploreContent);
-        return;
-      }
+// const observer = new IntersectionObserver(
+//   (entries) => {
+//     entries.forEach((entry) => {
+//       if (entry.isIntersecting) {
+//         window.addEventListener('scroll', controlExploreContent);
+//         return;
+//       }
 
-      window.removeEventListener('scroll', controlExploreContent);
-    });
-  },
-  { threshold: 0 }
-);
+//       window.removeEventListener('scroll', controlExploreContent);
+//     });
+//   },
+//   { threshold: 0 }
+// );
 
-if (exploreModule) {
-  observer.observe(exploreModule);
-}
+// if (exploreModule) {
+//   observer.observe(exploreModule);
+// }
 
-function controlExploreContent() {
-  const container = exploreModule.getBoundingClientRect();
-  const containerTop = container.top;
-  const containerHeight = exploreModule.clientHeight;
-  const containerCenter = containerTop + containerHeight / 2;
+// function controlExploreContent() {
+//   const container = exploreModule.getBoundingClientRect();
+//   const containerTop = container.top;
+//   const containerHeight = exploreModule.clientHeight;
+//   const containerCenter = containerTop + containerHeight / 2;
 
-  const viewportHeight = window.innerHeight;
-  const viewportCenter = viewportHeight / 2;
+//   const viewportHeight = window.innerHeight;
+//   const viewportCenter = viewportHeight / 2;
 
-  if (
-    containerCenter >= (viewportCenter - containerHeight) / 2 &&
-    containerCenter <= (viewportCenter + containerHeight) / 2
-  ) {
-    const scrollProgress = window.scrollY - containerTop;
+//   if (
+//     containerCenter >= (viewportCenter - containerHeight) / 2 &&
+//     containerCenter <= (viewportCenter + containerHeight) / 2
+//   ) {
+//     const scrollProgress = window.scrollY - containerTop;
 
-    const normalizedScroll = Math.min(
-      Math.max(scrollProgress / containerHeight, 0),
-      1
-    );
+//     const normalizedScroll = Math.min(
+//       Math.max(scrollProgress / containerHeight, 0),
+//       1
+//     );
 
-    const easeInOut =
-      normalizedScroll < 0.5
-        ? 2 * Math.pow(normalizedScroll, 2)
-        : -1 + (4 - 2 * normalizedScroll) * normalizedScroll;
+//     const easeInOut =
+//       normalizedScroll < 0.5
+//         ? 2 * Math.pow(normalizedScroll, 2)
+//         : -1 + (4 - 2 * normalizedScroll) * normalizedScroll;
 
-    const maxMove = containerHeight - exploreContent.clientHeight;
-    const moveAmount = Math.max(
-      0,
-      Math.min(maxMove, scrollProgress * easeInOut * 0.4)
-    );
+//     const maxMove = containerHeight - exploreContent.clientHeight;
+//     const moveAmount = Math.max(
+//       0,
+//       Math.min(maxMove, scrollProgress * easeInOut * 0.4)
+//     );
 
-    exploreContent.style.top = `${moveAmount}px`;
-    return;
-  }
+//     exploreContent.style.top = `${moveAmount}px`;
+//     return;
+//   }
 
-  exploreContent.style.top = `0px`;
-}
+//   exploreContent.style.top = `0px`;
+// }
