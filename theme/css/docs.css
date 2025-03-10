@@ -62,6 +62,10 @@ b, strong {
   font-weight: 700;
 }
 
+pre {
+  font-size: 100%;
+}
+
 hr {
   border-top: 1px solid #D0010180;
   margin-top: 2rem;
@@ -78,6 +82,7 @@ blockquote {
 }
 
 .k-page {
+  min-width: 375px;
   width: 100%;
 }
 
@@ -108,7 +113,7 @@ blockquote {
   border-right: 1px solid var(--grey);
   flex-grow: 1;
   min-width: 0;
-  padding: 2.5rem 1.5rem 1.5rem;
+  padding: 0 1rem 1rem;
   width: 100%;
 }
 
@@ -126,14 +131,13 @@ blockquote {
   border-bottom: 1px solid var(--grey);
   box-shadow: 6px 2px 10px 0px rgba(220, 220, 220, 0.50) inset;
   color: var(--text-red);
+  flex: 0 0 286px;
   height: 100%;
   max-height: 80vh;
   overflow: auto;
   padding: 1.5rem;
   position: sticky;
   top: 86px;
-  flex: 0 0 286px;
-
 }
 
 .k-content img {
@@ -187,6 +191,27 @@ blockquote {
 .k-search-input:focus {
   border-color: #d00000;
   box-shadow: 0 0 5px rgb(173 25 25 / 50%);
+}
+
+.k-location-slug {
+  border-bottom: 1px solid #ccc;
+  float: left;
+  font-size: 14px;
+  font-weight: 700;
+  margin-left: -1rem;
+  margin-bottom: .5rem;
+  padding: 1rem;
+  width: calc(100% + 2rem);
+}
+
+.k-location-slug a {
+  color: var(--text-red);
+}
+
+.k-location-slug-pointer {
+  margin-right: 0.3em;
+  color: var(--text-red);
+  font-size: 0.9em;
 }
 
 .k-outline-depth-1 {
@@ -479,38 +504,17 @@ p {
   }
 }
 
-@media screen and (max-width: 840px) {
-  body {
-    font-size: 1rem;
-  }
-
-  pre {
-    font-size: 100%;
-  }
-
-  .k-page {
-    min-width: 375px;
-    width: 100%;
-  }
-
-  .k-main {
-    width: 100%;
-  }
-
-  .k-content {
-    padding: 2%;
-    padding-top: 1%;
-    width: 100%;
-  }
-}
-
 @media screen and (min-width: 1200px) {
-  .k-main {
-    width: 100%;
-  }
-
   .flex__container {
     margin-top: 86px;
     padding: 0 64px;
+  }
+
+  .k-location-slug {
+    display: none;
+  }
+
+  .k-content {
+    padding: 2.5rem 1.5rem 1.5rem;
   }
 }

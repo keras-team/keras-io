@@ -44,7 +44,7 @@ body {
 }
 
 .hero__content {
-  padding: 80px 24px 0;
+  padding: 80px 24px;
 }
 
 .hero__title {
@@ -54,6 +54,7 @@ body {
 }
 
 .hero__image {
+  display: none;
   padding: 0 24px;
   width: calc(100% - 48px);
 }
@@ -430,6 +431,7 @@ body {
   }
 
   .hero__image {
+    display: block;
     width: 643px;
   }
 
@@ -704,5 +706,11 @@ body {
 
   .contacts__description {
     width: 432px;
+  }
+}
+
+@media only screen and (min-width: 1200px) and (max-width: 1409px) {
+  .hero__title {
+    font-size: 48px;
   }
 }

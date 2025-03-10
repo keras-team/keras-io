@@ -61,6 +61,7 @@ button {
 .button__square--white:hover {
   background: var(--text-red);
   color: var(--white);
+  text-decoration: none;
 }
 
 .button__square--red {

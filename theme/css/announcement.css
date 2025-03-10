@@ -1,13 +1,14 @@
 @import url("index.css");
 
-.logo {
-    margin: 2rem 24px;
-    max-width: 100%;
-    width: 16rem;
+.codehilite code {
+    font-family: 'Montserrat', 'Open Sans', sans-serif;
+}
+
+.masthead {
+    margin-top: 8rem;
 }
 
 .blog-content {
-    text-align: justify;
     padding: 2em;
 }
 
@@ -34,6 +35,7 @@ h3 {
 .announcement__buttons {
     display: flex;
     flex-direction: column;
+    justify-content: center;
     gap: 24px;
     padding: 0 calc(2em + 15px);
 }
@@ -97,7 +99,15 @@ h3 {
         width: auto;
     }
 
-    .logo {
-        width: 28rem;
+    .nav__logo {
+        width: 193px;
+    }
+
+    .nav__wrapper {
+        max-width: 1568px;
+    }
+
+    .page__container {
+        margin-top: 0;
     }
 }
