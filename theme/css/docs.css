@@ -330,7 +330,12 @@ footer {
   border-top: solid 1px #bbb;
   color: #000;
   float: left;
+  padding: 0 24px;
   width: 100%;
+}
+
+.footer__container {
+  padding: 24px 0;
 }
 
 table {

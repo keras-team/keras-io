@@ -94,7 +94,7 @@ const observer = new IntersectionObserver(
   { threshold: 0 }
 );
 
-if (exploreModule) {
+if (exploreModule && window.innerWidth > 1199) {
   observer.observe(exploreModule);
   /* let's call it once initially to align it in case a screen never gets resized */
   verticallyCenterExploreContent();
