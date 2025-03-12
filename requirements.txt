@@ -10,7 +10,7 @@ pandas
 jupyter
 pydot
 boto3
-tensorflow
+tensorflow>=2.19.0
 keras-cv
 keras-nlp
 keras-tuner
