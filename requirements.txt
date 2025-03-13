@@ -9,7 +9,6 @@ PyYAML
 pandas
 jupyter
 pydot
-boto3
 keras-cv
 keras-nlp
 keras-tuner
