@@ -13,5 +13,5 @@ boto3
 keras-cv
 keras-nlp
 keras-tuner
-tf_keras
+tf_keras>=2.19.0
 keras-hub>=0.19.1
