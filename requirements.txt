@@ -8,7 +8,7 @@ mdx_truly_sane_lists
 PyYAML
 pandas
 jupyter
-pydot
+pydot>=3.0.4
 keras-cv
 keras-nlp
 keras-tuner
