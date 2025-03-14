@@ -509,6 +509,9 @@ MODELS_MASTER = {
                 },
             ],
         },
+        """
+        # Code is not available in keras-hub v0.19.1(stable),
+        # Will be enabled once it is available to generate the API doc.
         {
             "path": "cspnet/",
             "title": "CSPNet",
@@ -551,6 +554,7 @@ MODELS_MASTER = {
                 },
             ],
         },
+        """
         {
             "path": "deberta_v3/",
             "title": "DebertaV3",
