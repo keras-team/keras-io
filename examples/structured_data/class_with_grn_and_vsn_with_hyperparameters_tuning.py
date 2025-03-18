@@ -126,7 +126,9 @@ CSV_HEADER = [
 ]
 
 data_url = "https://archive.ics.uci.edu/static/public/117/census+income+kdd.zip"
-if not os.path.isdir("/home/humbulani/.keras/datasets/census+income+kdd.zip/"):
+if not os.path.isdir(
+    os.path.join(os.path.expanduser("~"), ".keras", "datasets", "census+income+kdd.zip")
+):
     keras.utils.get_file(origin=data_url, extract=True)
 
 
@@ -139,7 +141,13 @@ extracted_path = os.path.join(
     os.path.expanduser("~"), ".keras", "datasets", "census+income+kdd.zip"
 )
 if not os.path.exists(
-    "/home/humbulani/.keras/datasets/census+income+kdd.zip/census-income.test"
+    os.path.join(
+        os.path.expanduser("~"),
+        ".keras",
+        "datasets",
+        "census+income+kdd.zip",
+        "census-income.test",
+    )
 ):
     for root, dirs, files in os.walk(extracted_path):
         for file in files:
@@ -301,7 +309,6 @@ def get_dataset_from_csv(csv_file_path, shuffle=False, batch_size=128):
         header=False,
         shuffle=shuffle,
     ).map(process)
-
     return dataset
 
 
@@ -373,7 +380,6 @@ class Graph(ak.graph.Graph):
             metrics=self._get_metrics(),
             loss=self._get_loss(),
         )
-
         return model
 
 
@@ -502,7 +508,7 @@ class GatedResidualNetwork(layers.Layer):
 
 
 """
-## Building the Autokeras `Block`
+## Building the Autokeras `VariableSelection Block`
 
 We have converted the following keras layer to an Autokeras Block to include
 hyperapameters to tune. Refer to Autokeras blocks API for writing custom Blocks.
@@ -559,7 +565,6 @@ class VariableSelection(ak.Block):
                 proj_feature = keras.ops.expand_dims(inputs[input_], -1)
                 proj_feature = layers.Dense(units=num_units)(proj_feature)
                 concat_inputs.append(proj_feature)
-
         v = layers.concatenate(concat_inputs)
         v = GatedResidualNetwork(
             num_units=num_units, dropout_rate=dropout_rate, activation=activation
@@ -631,7 +636,12 @@ class MyHyperModel(keras_tuner.HyperModel):
 
 
 """
-## Compile, train, and evaluate the model
+
+##  Using `RandomSearch` Tuner to find best HyperParameters
+
+We use the RandomSearch tuner to serach for hyparameters in the search space
+We also display the search space
+
 """
 
 print("Start training the model...")
@@ -647,6 +657,10 @@ tuner = keras_tuner.RandomSearch(
     project_name="tune_hypermodel",
 )
 
+# Show the search space summary
+print("Tuner search space summary:\n")
+tuner.search_space_summary()
+# Search for best model
 tuner.search(train_dataset, epochs=2, validation_data=valid_dataset)
 
 """
