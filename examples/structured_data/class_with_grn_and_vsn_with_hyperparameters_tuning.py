@@ -66,13 +66,11 @@ from keras import layers
 
 # KerasTuner imports
 import keras_tuner
-from keras_tuner.engine import hyperparameters
+from keras_tuner import HyperParameters
 
 # AutoKeras imports
 import autokeras as ak
-from autokeras.engine import head as head_module
-from autokeras.utils import utils
-from autokeras.utils import types
+from autokeras.utils import utils, types
 
 
 """
@@ -429,7 +427,7 @@ class ClassifierHead(ak.ClassificationHead):
             metrics = ["accuracy"]
         if loss is None:
             loss = self.infer_loss()
-        head_module.Head.__init__(self, loss=loss, metrics=metrics, **kwargs)
+        ak.Head.__init__(self, loss=loss, metrics=metrics, **kwargs)
         self.shape = self.get_expected_shape()
 
     def get_expected_shape(self):
@@ -515,27 +513,27 @@ hyperapameters to tune. Refer to Autokeras blocks API for writing custom Blocks.
 class VariableSelection(ak.Block):
     def __init__(
         self,
-        num_units: Optional[Union[int, hyperparameters.Choice]] = None,
-        dropout_rate: Optional[Union[float, hyperparameters.Choice]] = None,
-        activation: Optional[Union[str, hyperparameters.Choice]] = None,
+        num_units: Optional[Union[int, HyperParameters.Choice]] = None,
+        dropout_rate: Optional[Union[float, HyperParameters.Choice]] = None,
+        activation: Optional[Union[str, HyperParameters.Choice]] = None,
         **kwargs,
     ):
         super().__init__(**kwargs)
         self.dropout = utils.get_hyperparameter(
             dropout_rate,
-            hyperparameters.Choice("dropout", [0.0, 0.25, 0.5], default=0.0),
+            HyperParameters().Choice("dropout", [0.0, 0.25, 0.5], default=0.0),
             float,
         )
         self.num_units = utils.get_hyperparameter(
             num_units,
-            hyperparameters.Choice(
+            HyperParameters().Choice(
                 "num_units", [16, 32, 64, 128, 256, 512, 1024], default=16
             ),
             int,
         )
         self.activation = utils.get_hyperparameter(
             activation,
-            hyperparameters.Choice(
+            HyperParameters().Choice(
                 "vsn_activation", ["sigmoid", "elu"], default="sigmoid"
             ),
             str,
@@ -605,7 +603,7 @@ def create_model_inputs():
 
 """
 
-## Autokeras `HyperModel`
+## KerasTuner `HyperModel`
 
 Here we use the Autokeras `Functional` API to construct a network of BlocksSSS which will
 be built into a KerasTuner HyperModel and finally to a Keras Model.
