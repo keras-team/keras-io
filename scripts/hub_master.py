@@ -1370,6 +1370,46 @@ MODELS_MASTER = {
             ],
         },
         {
+            "path": "siglip/",
+            "title": "SigLIP",
+            "toc": True,
+            "children": [
+                {
+                    "path": "siglip_tokenizer",
+                    "title": "SigLIPTokenizer",
+                    "generate": [
+                        "keras_hub.tokenizers.SigLIPTokenizer",
+                        "keras_hub.tokenizers.SigLIPTokenizer.from_preset",
+                    ],
+                },
+                {
+                    "path": "siglip_image_converter",
+                    "title": "SigLIPImageConverter",
+                    "generate": [
+                        "keras_hub.layers.SigLIPImageConverter",
+                        "keras_hub.layers.SigLIPImageConverter.from_preset",
+                    ],
+                },
+                {
+                    "path": "siglip_backbone",
+                    "title": "SigLIPBackbone model",
+                    "generate": [
+                        "keras_hub.models.SigLIPBackbone",
+                        "keras_hub.models.SigLIPBackbone.from_preset",
+                    ],
+                },
+                {
+                    "path": "siglip_preprocessor",
+                    "title": "SigLIPPreprocessor",
+                    "generate": [
+                        "keras_hub.models.SigLIPPreprocessor",
+                        "keras_hub.models.SigLIPPreprocessor.from_preset",
+                        "keras_hub.models.SigLIPPreprocessor.tokenizer",
+                    ],
+                },
+            ],
+        },
+        {
             "path": "stable_diffusion_3/",
             "title": "Stable Diffusion 3",
             "toc": True,
@@ -1949,6 +1989,6 @@ HUB_MASTER = {
         {
             "path": "presets/",
             "title": "Pretrained models list",
-       },
+        },
     ],
 }
