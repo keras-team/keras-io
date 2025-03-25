@@ -51,11 +51,13 @@ To run this tutorial, you will need to install the following packages:
 
 * `keras-hub`
 * `keras`
+* `opencv-python`
 """
 
 """shell
 pip install -q --upgrade keras-hub
 pip install -q --upgrade keras
+pip install -q opencv-python
 """
 
 import os
@@ -437,11 +439,7 @@ predictions = object_detector.predict(image, batch_size=1)
 keras.visualization.plot_bounding_box_gallery(
     resizing(image),  # resize image as per prediction preprocessing pipeline
     bounding_box_format=gt_bbox_format,
-    y_pred={
-        "boxes": predictions["boxes"],
-        "labels": predictions["labels"],
-        "confidences": predictions["confidence"],
-    },
+    y_pred=predictions,
     scale=4,
     class_mapping=COCO_90_CLASS_MAPPING,
 )
@@ -652,12 +650,8 @@ y_pred = model.predict(images)
 keras.visualization.plot_bounding_box_gallery(
     images,
     bounding_box_format=gt_bbox_format,
-    y_true={"boxes": y_true["boxes"], "labels": y_true["classes"]},
-    y_pred={
-        "boxes": y_pred["boxes"],
-        "labels": y_pred["classes"],
-        "confidence": y_pred["confidence"],
-    },
+    y_true=y_true,
+    y_pred=y_pred,
     scale=3,
     rows=2,
     cols=2,
@@ -719,7 +713,7 @@ backbone = keras_hub.models.RetinaNetBackbone(
 """
 ### Train and visulaize RetinaNet model
 
-**Note:** Training the model (for demonstration purposes only  5  epochs). In a
+**Note:** Training the model (for demonstration purposes only 5 epochs). In a
 real scenario, you would train for many more epochs (often hundreds) to achieve
 good results.
 """
@@ -747,21 +741,10 @@ y_pred = model.predict(images)
 keras.visualization.plot_bounding_box_gallery(
     images,
     bounding_box_format=gt_bbox_format,
-    y_true={"boxes": y_true["boxes"], "labels": y_true["classes"]},
-    y_pred={
-        "boxes": y_pred["boxes"],
-        "labels": y_pred["classes"],
-        "confidence": y_pred["confidence"],
-    },
+    y_true=y_true,
+    y_pred=y_pred,
     scale=3,
     rows=2,
     cols=2,
     class_mapping=INDEX_TO_CLASS,
 )
-
-"""
-Here is a sample image showing the output of the object detector after training
-for 100 epochs on an `A100 GPU`, which takes approximately 15 hours on `JAX` backend.
-
-![retinanet](/img/guides/object_detection_retinanet/retinanet_architecture.png)
-"""
