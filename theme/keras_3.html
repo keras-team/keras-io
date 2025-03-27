@@ -14,6 +14,8 @@
   <link href="/css/bootstrap.min.css" rel="stylesheet">
 
   <!-- Custom fonts for this template -->
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700;800&display=swap"
+    rel="stylesheet" />
   <link href="https://fonts.googleapis.com/css?family=Open+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 
   <!-- Custom styles for this template -->
@@ -22,19 +24,24 @@
   <link href="{{base_url}}css/monokai.css" rel="stylesheet">
 
   <!-- Google Tag Manager -->
-  <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-  new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-  j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-  'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-  })(window,document,'script','dataLayer','GTM-5DNGF4N');
+  <script>(function (w, d, s, l, i) {
+      w[l] = w[l] || []; w[l].push({
+        'gtm.start':
+          new Date().getTime(), event: 'gtm.js'
+      }); var f = d.getElementsByTagName(s)[0],
+        j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : ''; j.async = true; j.src =
+          'https://www.googletagmanager.com/gtm.js?id=' + i + dl; f.parentNode.insertBefore(j, f);
+    })(window, document, 'script', 'dataLayer', 'GTM-5DNGF4N');
   </script>
   <script>
-  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
-  ga('create', 'UA-175165319-128', 'auto');
-  ga('send', 'pageview');
+    (function (i, s, o, g, r, a, m) {
+      i['GoogleAnalyticsObject'] = r; i[r] = i[r] || function () {
+        (i[r].q = i[r].q || []).push(arguments)
+      }, i[r].l = 1 * new Date(); a = s.createElement(o),
+        m = s.getElementsByTagName(o)[0]; a.async = 1; a.src = g; m.parentNode.insertBefore(a, m)
+    })(window, document, 'script', 'https://www.google-analytics.com/analytics.js', 'ga');
+    ga('create', 'UA-175165319-128', 'auto');
+    ga('send', 'pageview');
   </script>
   <!-- End Google Tag Manager -->
 
@@ -42,47 +49,119 @@
 
 <body>
   <!-- Google Tag Manager (noscript) -->
-  <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-5DNGF4N"
-  height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+  <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-5DNGF4N" height="0" width="0"
+      style="display:none;visibility:hidden"></iframe></noscript>
   <!-- End Google Tag Manager (noscript) -->
 
-    <!-- Masthead -->
-    <header class="masthead text-center">
-        
-        <div class="container">
-            <img src='/img/logo.png' class='logo' />
-        <div class="row">
-            <div class="col-xl-8 mx-auto">
-            <h1 class="mb-5">Introducing Keras 3.0</h1>
-            
-                <div class="row mx-auto">            
-                <div class="col-md px-1">
-                    <a href='{{base_url}}getting_started/' class="btn btn-block btn-lg btn-primary">Get started</a>
-                </div>
-                <div class="col-md px-1">
-                    <a href='{{base_url}}api/' class="btn btn-block btn-lg btn-secondary">API docs</a>
-                </div>
-                <div class="col-md px-1">
-                    <a href='{{base_url}}guides/' class="btn btn-block btn-lg btn-secondary">Guides</a>
-                </div>
-                <div class="col-md px-1">
-                    <a href='https://github.com/keras-team/keras/' class="btn btn-block btn-lg btn-secondary">GitHub</a>
-                </div>
-                </div>
-            </div>
+  <div class="hidden">
+    {% set related_nav_urls_map = {
+      "/api/": ["/2.18/api/"],
+      "/2.18/api/": ["/api/"],
+      "/keras_tuner/": ["/keras_hub/"],
+      "/keras_hub/": ["/keras_tuner/"],
+    } %}
+    {% set vars = {'related_urls': [], 'active_url': ''} %}
+    {% for item in nav %}
+      {% if item.active %}
+        {{ vars.update({'related_urls': related_nav_urls_map[item.url], 'active_url': item.url}) }}
+    {% endif %}
+    {% endfor %}
+  </div>
+  <nav class="nav__container">
+    <div class="nav__wrapper">
+      <div class="nav__controls--mobile">
+        <button class="nav__menu--button"><i class="icon--menu"></i></button>
+        <button class="nav__menu--close"><i class="icon--close"></i></button>
+        <a href="/">
+          <img class="nav__logo nav__logo--mobile" src="/img/k-logo.png" alt="keras.io logo" />
+        </a>
+        <button class="nav__search--mobile">
+          <i class="icon__search--mobile"></i>
+        </button>
+      </div>
+      <form class="nav__search nav__search-form--mobile">
+        <input
+          class="nav__search--input"
+          type="search"
+          placeholder="SEARCH"
+          aria-label="Search"
+        />
+        <button class="nav__search--button" type="submit">
+          <i class="icon--search"></i>
+        </button>
+      </form>
+      <div class="k-nav nav__mobile-menu" id="nav-menu">
+        <div class="nav flex-column nav-pills" role="tablist" aria-orientation="vertical">
+          <a class="nav-link" href="/about/" role="tab" aria-selected="">About Keras</a>
+          <a class="nav-link" href="/getting_started/" role="tab" aria-selected="">Getting started</a>
+          <a class="nav-link" href="/guides/" role="tab" aria-selected="">Developer guides</a>
+          <a class="nav-link" href="/examples/" role="tab" aria-selected="">Code examples</a>
+          <a class="nav-link" href="/api/" role="tab" aria-selected="">Keras 3 API documentation</a>
+          <a class="nav-link" href="/2.18/api/" role="tab" aria-selected="">Keras 2 API documentation</a>
+          <a class="nav-link" href="/keras_tuner/" role="tab" aria-selected="">KerasTuner: Hyperparam Tuning</a>
+          <a class="nav-link" href="/keras_hub/" role="tab" aria-selected="">KerasHub: Pretrained Models</a>
         </div>
-        
-    </header>
+      </div>
+      <a href="/">
+        <img class="nav__logo nav__logo--desktop" src="/img/logo.png" alt="keras.io logo"/>
+      </a>
+      <div class="nav__menu">
+        <ul class="nav__item--container">
+          <li class="nav__item">
+            <a class="nav__link" href="/getting_started/">GET STARTED</a>
+          </li>
+          <li class="nav__item">
+            <a class="nav__link" href="/about/">ABOUT</a>
+          </li>
+          <li class="nav__item">
+            <a class="nav__link" href="/guides/">GUIDES</a>
+          </li>
+          <li class="nav__item">
+            <a class="nav__link" href="/api/">API DOCS</a>
+          </li>
+          <li class="nav__item">
+            <a class="nav__link" href="/examples/">EXAMPLES</a>
+          </li>
+          <li class="nav__item"><a class="nav__link" href="/keras_hub/">KERASHUB</a></li>
+        </ul>
 
-    <div class="container">
-        <div class="row">
-            <div class="col-lg">
-                <div class="blog-content">
-                {{content|safe}}
-                </div>
-            </div>
-        </div>
+        <form class="nav__search">
+          <input
+            class="nav__search--input"
+            type="search"
+            placeholder="SEARCH"
+            aria-label="Search"
+          />
+          <button class="nav__search--button" type="submit">
+            <i class="icon--search"></i>
+          </button>
+        </form>
+      </div>
     </div>
+  </nav>
+  
+  <div class="page__container container">
+    <!-- Masthead -->
+    <div class="masthead text-center">
+      <div class="container">
+        <div class="row">
+          <div class="mx-auto">
+            <h1 class="announcement__headline">Introducing Keras 3.0</h1>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-lg">
+        <div class="blog-content">
+          {{content|safe}}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="{{base_url}}js/index.js"></script>
 
 </body>
+
 </html>

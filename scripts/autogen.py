@@ -776,9 +776,11 @@ class KerasIO:
                     print("...Rendering", fname)
                     self.render_single_file(src_location, fname, self.nav)
 
-        # Images & css
+        # Images & css & js
+        shutil.copytree(Path(self.theme_dir) / "js", Path(self.site_dir) / "js")
         shutil.copytree(Path(self.theme_dir) / "css", Path(self.site_dir) / "css")
         shutil.copytree(Path(self.theme_dir) / "img", Path(self.site_dir) / "img")
+        shutil.copytree(Path(self.theme_dir) / "icons", Path(self.site_dir) / "icons")
 
         # Landing page
         landing_template = jinja2.Template(
