@@ -1,3 +1,4 @@
+tensorflow==2.18.1
 black>=25.1.0
 pygments>=2.7.4
 markdown>=3.3
