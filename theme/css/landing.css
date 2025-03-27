@@ -68,7 +68,7 @@ body {
 
 .code__container {
   background-color: var(--grey);
-  border-radius: 8px 8px 0 0;
+  border-radius: 8px;
   box-shadow: 0px 2px 3px 0px #0000004d;
   box-shadow: 0px 6px 10px 4px #00000026;
   margin: 40px 0 60px;
@@ -77,17 +77,21 @@ body {
 }
 
 .code__container--quickstart {
-  padding: 0 0 32px 24px;
+  padding: 32px 24px;
 }
 
 .code__copy--button {
-  background-color: inherit;
+  background-color: var(--code-background);
   border: none;
   height: 32px;
   position: absolute;
   right: 32px;
   top: 28px;
   width: 32px;
+}
+
+.code__copy--button .icon--copy {
+  filter: invert(1);
 }
 
 .code__copy--tooltip {
@@ -185,6 +189,7 @@ body {
   min-height: 208px;
   padding: 24px;
   position: relative;
+  border-radius: 8px;
 }
 
 .guide__content h3 {
@@ -211,6 +216,7 @@ body {
 }
 
 .guide__code {
+  border-radius: 8px 8px 0 0;
   height: 380px;
   margin: 0;
   object-fit: cover;

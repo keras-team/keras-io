@@ -25,4 +25,8 @@
   --text-black: #292321;
   --text-red: #A30000;
   --alternate-red: #d00000;
+
+  /* Code Colors */
+  --code-background: #292321;
+  --code-foreground: #ccc;
 }

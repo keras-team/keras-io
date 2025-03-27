@@ -141,15 +141,15 @@ p {
 
 /* Prism */
 pre[class*="language-"] {
-  background: var(--grey);
-  border-radius: 12px 12px 0 0;
+  background: var(--code-background);
+  border-radius: 8px 8px 0 0;
   margin: 0;
-  padding: 1em 1.2em;
+  padding: 2em 1.2em;
   text-shadow: none;
 }
 
 code[class*="language-"] {
-  color: var(--text-black);
+  color: var(--code-foreground);
   font-family: "Roboto Mono", monospace;
   font-size: 14px;
   text-shadow: none;

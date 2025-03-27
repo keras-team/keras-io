@@ -138,9 +138,6 @@
               <a class="nav__link" href="/getting_started/">GET STARTED</a>
             </li>
             <li class="nav__item">
-              <a class="nav__link" href="/about/">ABOUT</a>
-            </li>
-            <li class="nav__item">
               <a class="nav__link" href="/guides/">GUIDES</a>
             </li>
             <li class="nav__item">
@@ -149,6 +146,7 @@
             <li class="nav__item">
               <a class="nav__link" href="/examples/">EXAMPLES</a>
             </li>
+            <li class="nav__item"><a class="nav__link" href="/keras_tuner/">KERASTUNER</a></li>
             <li class="nav__item"><a class="nav__link" href="/keras_hub/">KERASHUB</a></li>
           </ul>
 
@@ -202,30 +200,26 @@
                   <i class="icon--copy"></i>
                   <div class="code__copy--tooltip">Copied</div>
                 </button>
-                <pre>
-                  <code class="language-python">
-inputs = keras.Input(shape=(32, 32, 3))
+                <pre><code class="language-python">inputs = keras.Input(shape=(32, 32, 3))
 x = layers.Conv2D(32, 3, activation="relu")(inputs)
 x = layers.Conv2D(64, 3, activation="relu")(x)
-block_1_output = layers.MaxPooling2D(3)(x)
+residual = x = layers.MaxPooling2D(3)(x)
 
-x = layers.Conv2D(64, 3, activation="relu")(block_1_output)
+x = layers.Conv2D(64, 3, padding="same")(x)
+x = layers.Activation("relu")(x)
+x = layers.Conv2D(64, 3, padding="same")(x)
+x = layers.Activation("relu")(x)
+x = x + residual
+
 x = layers.Conv2D(64, 3, activation="relu")(x)
-block_2_output = layers.add([x, block_1_output])
-
-x = layers.Conv2D(64, 3, activation="relu")(block_2_output)
 x = layers.GlobalAveragePooling2D()(x)
-x = layers.Dense(256, activation="relu")(x)
-x = layers.Dropout(0.5)(x)
-outputs = layers.Dense(10)(x)
+outputs = layers.Dense(10, activation="softmax")(x)
 
 model = keras.Model(inputs, outputs, name="mini_resnet")
 keras.utils.plot_model(model, "mini_resnet.png")
-model.fit(dataset, epochs=10)
-                  </code>
-                </pre>
+model.fit(dataset, epochs=10)</code></pre>
                 <div class="code__container--quickstart">
-                  <a class="button__square--colab" href="https://colab.sandbox.google.com/github/tensorflow/docs/blob/master/site/en/tutorials/quickstart/beginner.ipynb"
+                  <a class="button__square--colab" href="https://colab.research.google.com/github/mattdangerw/keras-io/blob/new-landing-and-theme/quickstarts/keras_quickstart.ipynb"
                     target="_blank">Run quickstart <i class="icon--colab"></i
                   ></a>
                 </div>
@@ -236,9 +230,7 @@ model.fit(dataset, epochs=10)
                   <i class="icon--copy"></i>
                   <div class="code__copy--tooltip">Copied</div>
                 </button>
-                <pre>
-                  <code class="language-python">
-causal_lm = keras_hub.models.CausalLM.from_preset(
+                <pre><code class="language-python">causal_lm = keras_hub.models.CausalLM.from_preset(
   "gemma2_instruct_2b_en",
   dtype="float16",
 )
@@ -254,11 +246,9 @@ text_to_image = keras_hub.models.TextToImage.from_preset(
     dtype="float16",
 )
 prompt = "Astronaut in a jungle, detailed"
-image_output = text_to_image.generate(prompt)
-                  </code>
-                </pre>
+image_output = text_to_image.generate(prompt)</code></pre>
                 <div class="code__container--quickstart">
-                  <a class="button__square--colab" href="https://colab.sandbox.google.com/github/tensorflow/docs/blob/master/site/en/tutorials/quickstart/beginner.ipynb"
+                  <a class="button__square--colab" href="https://colab.research.google.com/github/mattdangerw/keras-io/blob/new-landing-and-theme/quickstarts/keras_hub_quickstart.ipynb"
                   target="_blank">Run quickstart <i class="icon--colab"></i
                   ></a>
                 </div>
@@ -306,28 +296,24 @@ image_output = text_to_image.generate(prompt)
                     <i class="icon--copy"></i>
                     <div class="code__copy--tooltip">Copied</div>
                   </button>
-                  <pre>
-                  <code class="language-python">
-encoder_input = keras.Input(
-  shape=(28, 28, 1), name="img")
-x = layers.Conv2D(16, 3, activation="relu")
-  (encoder_input)
+                  <pre><code class="language-python">inputs = keras.Input(shape=(28, 28, 1))
+x = inputs
+x = layers.Conv2D(16, 3, activation="relu")(x)
 x = layers.Conv2D(32, 3, activation="relu")(x)
 x = layers.MaxPooling2D(3)(x)
 x = layers.Conv2D(32, 3, activation="relu")(x)
 x = layers.Conv2D(16, 3, activation="relu")(x)
-encoder_output = layers.GlobalMaxPooling2D()(x)
+x = layers.GlobalMaxPooling2D()(x)
+x = layers.Dropout(0.5)
+outputs = layers.Dense(10)
 
-encoder = keras.Model(encoder_input,
-  encoder_output, name="encoder")
-encoder.summary()
-                  </code>
-                </pre>
+model = keras.Model(inputs, outputs)
+model.summary()</code></pre>
                 </div>
 
                 <div class="guide__content">
                   <div>
-                    <h3>The foundation: AKA The Functional API</h3>
+                    <h3>The Functional API</h3>
                     <p>
                       Starting from the beginning and learn how to build models using the functional building pattern.
                     </p>
@@ -348,28 +334,26 @@ encoder.summary()
                     <i class="icon--copy"></i>
                     <div class="code__copy--tooltip">Copied</div>
                   </button>
-                  <pre>
-                  <code class="language-python">
-model.compile(
-  loss=keras.losses
-    .SparseCategoricalCrossentropy
-    (from_logits=True),
-  optimizer=keras.optimizers.RMSprop(),
-  metrics=["accuracy"],
+                  <pre><code class="language-python">model.compile(
+    optimizer="rmsprop",
+    loss="categorical_crossentropy",
+    metrics=["accuracy"],
 )
 
-history = model.fit(x_train,
-  y_train, batch_size=64,
-  epochs=2, validation_split=0.2)
-                  </code>
-                </pre>
+history = model.fit(
+    x_train,
+    y_train,
+    batch_size=64,
+    epochs=2,
+    validation_data=(x_val, y_val),
+)</code></pre>
                 </div>
 
                 <div class="guide__content">
                   <div>
                     <h3>Training & evaluation with the built-in methods</h3>
                     <p>
-                      Train and evaluate your model using `model.fit(...)` as well as other standard methods in Keras.
+                      Train and evaluate your model using model.fit(...).
                     </p>
                   </div>
 
@@ -388,21 +372,19 @@ history = model.fit(x_train,
                     <i class="icon--copy"></i>
                     <div class="code__copy--tooltip">Copied</div>
                   </button>
-                  <pre>
-                    <code class="language-python">
-class CustomDense(layers.Layer):
-  def __init__(self, units=32):
-      super().__init__()
-      self.units = units
+                  <pre><code class="language-python">class MLPBlock(keras.layers.Layer):
+    def __init__(self):
+        super().__init__()
+        self.dense_1 = layers.Dense(32)
+        self.dense_2 = layers.Dense(32)
+        self.dense_3 = layers.Dense(1)
 
-  def build(self, input_shape):
-      self.w = self.add_weight(shape=(input_shape[-1], self.units), initializer="random_normal", trainable=True,)
-      self.b = self.add_weight(shape=(self.units,), initializer="random_normal", trainable=True)
-
-  def call(self, inputs):
-      return ops.matmul(inputs, self.w) + self.b
-                    </code>
-                  </pre>
+    def call(self, inputs):
+        x = self.dense_1(inputs)
+        x = keras.activations.relu(x)
+        x = self.dense_2(x)
+        x = keras.activations.relu(x)
+        return self.dense_3(x)</code></pre>
                 </div>
 
                 <div class="guide__content">
@@ -515,13 +497,13 @@ class CustomDense(layers.Layer):
 
           <div class="guide__code--container">
             <div class="guide__wrapper">
-              <img class="code__container guide__code" src="./img/eye.jpeg" alt="eye"/>
+              <img class="code__container guide__code" src="./img/vision.png" alt="eye"/>
 
               <div class="guide__content">
                 <div>
                   <h3>Computer vision</h3>
                   <p>
-                    Take a look at our examples for doing image classification, object detection, video processing, etc.
+                    Take a look at our examples for doing image classification, object detection, video processing, and more.
                   </p>
                 </div>
 
@@ -535,7 +517,7 @@ class CustomDense(layers.Layer):
             </div>
 
             <div class="guide__wrapper">
-              <img class="code__container guide__code" src="./img/text.jpeg" alt="text" />
+              <img class="code__container guide__code" src="./img/nlp.png" alt="text" />
 
               <div class="guide__content">
                 <div>
@@ -555,7 +537,7 @@ class CustomDense(layers.Layer):
             </div>
 
             <div class="guide__wrapper">
-              <img class="code__container guide__code" src="./img/flower.jpeg" alt="flower" />
+              <img class="code__container guide__code" src="./img/generative.png" alt="flower" />
 
               <div class="guide__content">
                 <div>

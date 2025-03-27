@@ -23,11 +23,8 @@
 
   <!-- Custom fonts for this template -->
   <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
-
-  <link
-      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700;800&display=swap"
-      rel="stylesheet"
-    />
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400&display=swap" rel="stylesheet">
 
   <!-- Bootstrap core CSS -->
   <link href="{{base_url}}css/bootstrap.min.css" rel="stylesheet">
@@ -56,10 +53,6 @@
   <script async defer src="https://buttons.github.io/buttons.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link
-          href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400&display=swap"
-          rel="stylesheet"
-  />
 
 </head>
 
@@ -74,8 +67,6 @@
       {% set related_nav_urls_map = {
         "/api/": ["/2.18/api/"],
         "/2.18/api/": ["/api/"],
-        "/keras_tuner/": ["/keras_hub/"],
-        "/keras_hub/": ["/keras_tuner/"],
       } %}
       {% set vars = {'related_urls': [], 'active_url': ''} %}
       {% for item in nav %}
@@ -132,10 +123,10 @@
         <div class="nav__menu">
           {% set main_nav_items = {
           '/getting_started/': 'Get started',
-          '/about/': 'About',
           '/guides/': 'Guides',
           '/api/': 'API Docs',
           '/examples/': 'Examples',
+          '/keras_tuner/': 'KerasTuner',
           '/keras_hub/': 'KerasHub',
           } %}
           <ul class="nav__item--container">
