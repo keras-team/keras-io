@@ -564,6 +564,16 @@ API_MASTER = {
                             "toc": True,
                             "children": [
                                 {
+                                    "path": "aug_mix",
+                                    "title": "AugMix layer",
+                                    "generate": ["keras.layers.AugMix"]
+                                },
+                                {
+                                    "path": "cut_mix",
+                                    "title": "CutMix layer",
+                                    "generate": ["keras.layers.CutMix"]
+                                },
+                                {
                                     "path": "equalization",
                                     "title": "Equalization layer",
                                     "generate": ["keras.layers.Equalization"]
@@ -572,6 +582,11 @@ API_MASTER = {
                                     "path": "mix_up",
                                     "title": "MixUp layer",
                                     "generate": ["keras.layers.MixUp"]
+                                },
+                                {
+                                    "path": "pipeline",
+                                    "title": "Pipeline layer",
+                                    "generate": ["keras.layers.Pipeline"]
                                 },
                                 {
                                     "path": "rand_augment",
@@ -604,9 +619,19 @@ API_MASTER = {
                                     "generate": ["keras.layers.RandomCrop"]
                                 },
                                 {
+                                    "path": "random_erasing",
+                                    "title": "RandomErasing layer",
+                                    "generate": ["keras.layers.RandomErasing"]
+                                },
+                                {
                                     "path": "random_flip",
                                     "title": "RandomFlip layer",
                                     "generate": ["keras.layers.RandomFlip"]
+                                },
+                                {
+                                    "path": "random_gaussian_blur",
+                                    "title": "RandomGaussianBlur layer",
+                                    "generate": ["keras.layers.RandomGaussianBlur"]
                                 },
                                 {
                                     "path": "random_grayscale",
@@ -617,6 +642,16 @@ API_MASTER = {
                                     "path": "random_hue",
                                     "title": "RandomHue layer",
                                     "generate": ["keras.layers.RandomHue"]
+                                },
+                                {
+                                    "path": "random_invert",
+                                    "title": "RandomInvert layer",
+                                    "generate": ["keras.layers.RandomInvert"]
+                                },
+                                {
+                                    "path": "random_perspective",
+                                    "title": "RandomPerspective layer",
+                                    "generate": ["keras.layers.RandomPerspective"]
                                 },
                                 {
                                     "path": "random_rotation",
@@ -652,13 +687,8 @@ API_MASTER = {
                                     "path": "solarization",
                                     "title": "Solarization layer",
                                     "generate": ["keras.layers.Solarization"]
-                                },
-                                {
-                                    "path": "pipeline",
-                                    "title": "Pipeline layer",
-                                    "generate": ["keras.layers.Pipeline"],
-                                },
-                            ],
+                                }
+                            ]
                         },
                         {
                             "path": "audio_preprocessing/",
@@ -1313,9 +1343,11 @@ API_MASTER = {
                         "keras.ops.image.affine_transform",
                         "keras.ops.image.crop_images",
                         "keras.ops.image.extract_patches",
+                        "keras.ops.image.gaussian_blur",
                         "keras.ops.image.hsv_to_rgb",
                         "keras.ops.image.map_coordinates",
                         "keras.ops.image.pad_images",
+                        "keras.ops.image.perspective_transform",
                         "keras.ops.image.resize",
                         "keras.ops.image.rgb_to_hsv",
                         "keras.ops.image.rgb_to_grayscale",
