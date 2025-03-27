@@ -14,5 +14,5 @@ tensorflow==2.18.1
 keras-cv
 keras-nlp
 keras-tuner
-tf_keras==2.18.0
+tf-keras==2.18.0
 keras-hub
