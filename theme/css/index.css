@@ -146,6 +146,7 @@ pre[class*="language-"] {
   margin: 0;
   padding: 2em 1.2em;
   text-shadow: none;
+  overflow-y: hidden;
 }
 
 code[class*="language-"] {
@@ -187,7 +188,6 @@ code[class*="language-"] * {
   }
 
   h1 {
-    line-height: 86.4px;
     font-size: 72px;
     font-weight: 700;
     margin: 0;

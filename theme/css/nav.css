@@ -42,7 +42,9 @@ nav {
 .nav__search {
   display: none;
   max-width: 303px;
+  margin-left: 32px;
   position: relative;
+  flex-grow: 1;
 }
 
 .nav__search-form--mobile {
@@ -307,10 +309,6 @@ nav {
     display: none !important;
   }
 
-  .nav__search--input {
-    width: 303px;
-  }
-
   .nav__menu {
     align-items: center;
     display: flex;
@@ -329,6 +327,7 @@ nav {
     list-style-type: none;
     margin: 0;
     padding: 0;
+    white-space: nowrap;
   }
 
   .nav__item {
