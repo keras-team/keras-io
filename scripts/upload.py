@@ -133,7 +133,9 @@ def upload_redirects(directory):
 if __name__ == "__main__":
     root = Path(__file__).parent.parent.resolve()
     hash_cache = load_hash_cache()
-    hash_cache = upload_dir(
-        os.path.join(root, "site"), include_img=True, hash_cache=hash_cache
-    )
+    site_directory = os.path.join(root, "site")
+    redirect_directory = os.path.join(root, "redirects")
+    hash_cache = upload_dir(site_directory, hash_cache=hash_cache)
+    upload_redirects(redirect_directory)
+    cleanup(site_directory, redirect_directory)
     save_hash_cache(hash_cache)
