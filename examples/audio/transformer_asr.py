@@ -372,7 +372,7 @@ def path_to_audio(path):
     # normalisation
     means = tf.math.reduce_mean(x, 1, keepdims=True)
     stddevs = tf.math.reduce_std(x, 1, keepdims=True)
-    x = (x - means) / stddevs
+    x = (x - means) / (stddevs + 1e-10)
     audio_len = tf.shape(x)[0]
     # padding to 10 seconds
     pad_len = 2754
