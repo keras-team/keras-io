@@ -845,11 +845,34 @@ class KerasIO:
         sitemap = "\n".join(all_urls_list) + "\n"
         autogen_utils.save_file(Path(self.site_dir) / "sitemap.txt", sitemap)
 
-        # Redirects
-        shutil.copytree(self.redirects_dir, self.site_dir, dirs_exist_ok=True)
-
         # Examples landing page
         self.generate_examples_landing_page()
+
+        # Redirects
+        self.check_redirects()
+        shutil.copytree(self.redirects_dir, self.site_dir, dirs_exist_ok=True)
+
+    def check_redirects(self):
+        """Validate our redirects"""
+        for file in Path(self.redirects_dir).glob("**/*.html"):
+            with open(file) as f:
+                content = f.read()
+                # Read url.
+                url = content[content.find("URL=") + 5 :]
+                url = url[: url.find("'")]
+                # Strip to path.
+                path = url.replace("https://keras.io/", "")
+                target = Path(self.site_dir) / Path(path)
+                if not target.exists():
+                    raise ValueError(
+                        f"Redirect target {path} does not exist referenced "
+                        f"from file {file}."
+                    )
+            site_path = Path(self.site_dir) / file.relative_to(self.redirects_dir)
+            if site_path.exists():
+                raise ValueError(
+                    f"Redirect at {file} would overwrite a real page."
+                )
 
     def render_single_file(self, src_location, fname, nav):
         if not fname.endswith(".md"):
