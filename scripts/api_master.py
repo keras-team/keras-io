@@ -1965,6 +1965,13 @@ API_MASTER = {
                     ],
                 },
                 {
+                    "path": "resource_management_utils",
+                    "title": "Resource management utilities",
+                    "generate": [
+                        "keras.RematScope",
+                    ],
+                },
+                {
                     "path": "model_plotting_utils",
                     "title": "Model plotting utilities",
                     "generate": [
