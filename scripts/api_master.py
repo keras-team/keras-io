@@ -1965,6 +1965,8 @@ API_MASTER = {
                     ],
                 },
                 {
+                    # reference
+                    # https://github.com/keras-team/keras/blob/master/keras/src/backend/common/remat.py
                     "path": "resource_management_utils",
                     "title": "Resource management utilities",
                     "generate": [
