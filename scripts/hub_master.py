@@ -510,6 +510,48 @@ MODELS_MASTER = {
             ],
         },
         {
+            "path": "cspnet/",
+            "title": "CSPNet",
+            "toc": True,
+            "children": [
+                {
+                    "path": "cspnet_image_converter",
+                    "title": "CSPNetImageConverter",
+                    "generate": [
+                        "keras_hub.layers.CSPNetImageConverter",
+                        "keras_hub.layers.CSPNetImageConverter.from_preset",
+                    ],
+                },
+                {
+                    "path": "cspnet_backbone",
+                    "title": "CSPNetBackbone model",
+                    "generate": [
+                        "keras_hub.models.CSPNetBackbone",
+                        "keras_hub.models.CSPNetBackbone.from_preset",
+                    ],
+                },
+                {
+                    "path": "cspnet_image_classifier",
+                    "title": "CSPNetImageClassifier model",
+                    "generate": [
+                        "keras_hub.models.CSPNetImageClassifier",
+                        "keras_hub.models.CSPNetImageClassifier.from_preset",
+                        "keras_hub.models.CSPNetImageClassifier.backbone",
+                        "keras_hub.models.CSPNetImageClassifier.preprocessor",
+                    ],
+                },
+                {
+                    "path": "cspnet_image_classifier_preprocessor",
+                    "title": "CSPNetImageClassifierPreprocessor layer",
+                    "generate": [
+                        "keras_hub.models.CSPNetImageClassifierPreprocessor",
+                        "keras_hub.models.CSPNetImageClassifierPreprocessor.from_preset",
+                        "keras_hub.models.CSPNetImageClassifierPreprocessor.image_converter",
+                    ],
+                },
+            ],
+        },
+        {
             "path": "deberta_v3/",
             "title": "DebertaV3",
             "toc": True,
