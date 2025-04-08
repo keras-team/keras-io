@@ -40,7 +40,8 @@ library and demonstrate its usage with KerasRS.
 
 ## Imports
 
-Let's install the `scann` library and import all necessary packages.
+Let's install the `scann` library and import all necessary packages. We will
+also set the backend to JAX.
 """
 
 # ruff: noqa: E402
@@ -48,6 +49,10 @@ Let's install the `scann` library and import all necessary packages.
 """shell
 pip install -q scann
 """
+
+import os
+
+os.environ["KERAS_BACKEND"] = "jax"  # `"tensorflow"`/`"torch"`
 
 import time
 import uuid
@@ -113,9 +118,7 @@ class RetrievalModel(keras.Model):
     ):
         super().__init__(**kwargs)
         # Our query tower, simply an embedding table.
-        self.user_embedding = keras.layers.Embedding(
-            num_users, embedding_dimension
-        )
+        self.user_embedding = keras.layers.Embedding(num_users, embedding_dimension)
         # Our candidate tower, simply an embedding table.
         self.candidate_embedding = keras.layers.Embedding(
             num_candidates, embedding_dimension
@@ -171,9 +174,7 @@ movies are picked. This is, of course, not very scalable when we have a huge
 number of movies.
 """
 
-candidate_embeddings = keras.ops.array(
-    model.candidate_embedding.embeddings.numpy()
-)
+candidate_embeddings = keras.ops.array(model.candidate_embedding.embeddings.numpy())
 # Artificially duplicate candidate embeddings to simulate a large number of
 # movies.
 candidate_embeddings = keras.ops.concatenate(

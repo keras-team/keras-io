@@ -59,8 +59,12 @@ Now that we know a little bit about DCN, let's start writing some code. We will
 first train a DCN on a toy dataset, and demonstrate that the model has indeed
 learnt important feature crosses.
 
-Let's get our imports sorted.
+Let's set the backend to JAX, and get our imports sorted.
 """
+
+import os
+
+os.environ["KERAS_BACKEND"] = "jax"  # `"tensorflow"`/`"torch"`
 
 import keras
 import matplotlib.pyplot as plt
@@ -169,8 +173,7 @@ def print_stats(rmse_list, num_params, model_name):
         print(f"{model_name}: RMSE = {avg_rmse}; #params = {num_params}")
     else:
         print(
-            f"{model_name}: RMSE = {avg_rmse} ± {std_rmse}; "
-            "#params = {num_params}"
+            f"{model_name}: RMSE = {avg_rmse} ± {std_rmse}; " "#params = {num_params}"
         )
 
 
@@ -362,9 +365,7 @@ that we can use that for the embedding layer.
 """
 
 vocabularies = {}
-for feature_name in (
-    MOVIELENS_CONFIG["int_features"] + MOVIELENS_CONFIG["str_features"]
-):
+for feature_name in MOVIELENS_CONFIG["int_features"] + MOVIELENS_CONFIG["str_features"]:
     vocabulary = ratings_ds.batch(10_000).map(lambda x, y: x[feature_name])
     vocabularies[feature_name] = np.unique(np.concatenate(list(vocabulary)))
 
@@ -436,9 +437,7 @@ def get_model(
     inputs = {}
     embeddings = []
     for feature_name, vocabulary in vocabularies.items():
-        inputs[feature_name] = keras.Input(
-            shape=(), dtype="int32", name=feature_name
-        )
+        inputs[feature_name] = keras.Input(shape=(), dtype="int32", name=feature_name)
         embedding_layer = keras.layers.Embedding(
             input_dim=len(vocabulary) + 1,
             output_dim=embedding_dim,
@@ -504,9 +503,7 @@ for _ in range(10):
     )
     opt_cross_network_rmse_list.append(rmse)
 
-    deep_network = get_model(
-        dense_num_units_lst=MOVIELENS_CONFIG["deep_net_num_units"]
-    )
+    deep_network = get_model(dense_num_units_lst=MOVIELENS_CONFIG["deep_net_num_units"])
     rmse, deep_network_num_params = train_and_evaluate(
         learning_rate=MOVIELENS_CONFIG["learning_rate"],
         epochs=MOVIELENS_CONFIG["num_epochs"],

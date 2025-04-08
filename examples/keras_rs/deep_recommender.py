@@ -1,6 +1,6 @@
 """
 Title: Deep Recommenders
-Author: [Abheesht Sharma](https://github.com/abheesht17/), [Fabien Hertschuh](https://github.com/hertschuh/)
+Author: [Fabien Hertschuh](https://github.com/hertschuh/), [Abheesht Sharma](https://github.com/abheesht17/)
 Date created: 2025/02/27
 Last modified: 2025/02/27
 Description: Using one model for both retrieval and ranking.
@@ -75,6 +75,10 @@ off. In this tutorial, we will illustrate how to build a deep retrieval model.
 We'll do this by building progressively more complex models to see how this
 affects model performance.
 """
+
+import os
+
+os.environ["KERAS_BACKEND"] = "jax"  # `"tensorflow"`/`"torch"`
 
 import keras
 import matplotlib.pyplot as plt
@@ -425,9 +429,7 @@ def preprocess_rating(x):
             "raw_user_age": features["raw_user_age"],
             "user_gender": features["user_gender"],
             "user_occupation_label": features["user_occupation_label"],
-            "user_gender_X_raw_user_age": features[
-                "user_gender_X_raw_user_age"
-            ],
+            "user_gender_X_raw_user_age": features["user_gender_X_raw_user_age"],
             # Movie inputs are movie ID, vectorized title and genres
             "movie_id": int(x["movie_id"]),
             "movie_title_vector": features["movie_title"],
@@ -515,9 +517,7 @@ class QueryModel(keras.Model):
         self.gender_embedding = keras.layers.Embedding(
             GENDERS_COUNT, embedding_dimension
         )
-        self.age_embedding = keras.layers.Embedding(
-            AGE_BINS_COUNT, embedding_dimension
-        )
+        self.age_embedding = keras.layers.Embedding(AGE_BINS_COUNT, embedding_dimension)
         self.gender_x_age_embedding = keras.layers.Embedding(
             USER_GENDER_CROSS_COUNT, embedding_dimension
         )
@@ -530,9 +530,7 @@ class QueryModel(keras.Model):
 
         # Use the ReLU activation for all but the last layer.
         for layer_size in layer_sizes[:-1]:
-            self.dense_layers.add(
-                keras.layers.Dense(layer_size, activation="relu")
-            )
+            self.dense_layers.add(keras.layers.Dense(layer_size, activation="relu"))
 
         # No activation for the last layer.
         self.dense_layers.add(keras.layers.Dense(layer_sizes[-1]))
@@ -544,9 +542,7 @@ class QueryModel(keras.Model):
                 self.user_embedding(inputs["user_id"]),
                 self.gender_embedding(inputs["user_gender"]),
                 self.age_embedding(inputs["raw_user_age"]),
-                self.gender_x_age_embedding(
-                    inputs["user_gender_X_raw_user_age"]
-                ),
+                self.gender_x_age_embedding(inputs["user_gender_X_raw_user_age"]),
                 self.occupation_embedding(inputs["user_occupation_label"]),
             ],
             axis=1,
@@ -614,9 +610,7 @@ class CandidateModel(keras.Model):
 
         # Use the ReLU activation for all but the last layer.
         for layer_size in layer_sizes[:-1]:
-            self.dense_layers.add(
-                keras.layers.Dense(layer_size, activation="relu")
-            )
+            self.dense_layers.add(keras.layers.Dense(layer_size, activation="relu"))
 
         # No activation for the last layer.
         self.dense_layers.add(keras.layers.Dense(layer_sizes[-1]))
@@ -687,9 +681,7 @@ class RetrievalModel(keras.Model):
                 "raw_user_age": inputs["raw_user_age"],
                 "user_gender": inputs["user_gender"],
                 "user_occupation_label": inputs["user_occupation_label"],
-                "user_gender_X_raw_user_age": inputs[
-                    "user_gender_X_raw_user_age"
-                ],
+                "user_gender_X_raw_user_age": inputs["user_gender_X_raw_user_age"],
             }
         )
         candidate_embeddings = self.candidate_model(

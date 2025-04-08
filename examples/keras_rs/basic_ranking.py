@@ -40,7 +40,7 @@ the necessary libraries.
 
 import os
 
-os.environ["KERAS_BACKEND"] = "jax"
+os.environ["KERAS_BACKEND"] = "jax"  # `"tensorflow"`/`"torch"`
 
 import keras
 import tensorflow as tf  # Needed for the dataset
@@ -144,9 +144,7 @@ class RankingModel(keras.Model):
     ):
         super().__init__(**kwargs)
         # Embedding table for users.
-        self.user_embedding = keras.layers.Embedding(
-            num_users, embedding_dimension
-        )
+        self.user_embedding = keras.layers.Embedding(num_users, embedding_dimension)
         # Embedding table for candidates.
         self.candidate_embedding = keras.layers.Embedding(
             num_candidates, embedding_dimension
@@ -167,9 +165,7 @@ class RankingModel(keras.Model):
         user_embeddings = self.user_embedding(user_id)
         candidate_embeddings = self.candidate_embedding(movie_id)
         return self.ratings(
-            keras.ops.concatenate(
-                [user_embeddings, candidate_embeddings], axis=1
-            )
+            keras.ops.concatenate([user_embeddings, candidate_embeddings], axis=1)
         )
 
 

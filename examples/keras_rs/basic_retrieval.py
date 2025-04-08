@@ -75,7 +75,7 @@ the necessary libraries.
 
 import os
 
-os.environ["KERAS_BACKEND"] = "jax"
+os.environ["KERAS_BACKEND"] = "jax"  # `"tensorflow"`/`"torch"`
 
 import keras
 import tensorflow as tf  # Needed for the dataset
@@ -249,17 +249,13 @@ class RetrievalModel(keras.Model):
     ):
         super().__init__(**kwargs)
         # Our query tower, simply an embedding table.
-        self.user_embedding = keras.layers.Embedding(
-            num_users, embedding_dimension
-        )
+        self.user_embedding = keras.layers.Embedding(num_users, embedding_dimension)
         # Our candidate tower, simply an embedding table.
         self.candidate_embedding = keras.layers.Embedding(
             num_candidates, embedding_dimension
         )
         # The layer that performs the retrieval.
-        self.retrieval = keras_rs.layers.BruteForceRetrieval(
-            k=10, return_scores=False
-        )
+        self.retrieval = keras_rs.layers.BruteForceRetrieval(k=10, return_scores=False)
         self.loss_fn = keras.losses.MeanSquaredError()
 
     def build(self, input_shape):
@@ -267,9 +263,7 @@ class RetrievalModel(keras.Model):
         self.candidate_embedding.build(input_shape)
         # In this case, the candidates are directly the movie embeddings.
         # We take a shortcut and directly reuse the variable.
-        self.retrieval.candidate_embeddings = (
-            self.candidate_embedding.embeddings
-        )
+        self.retrieval.candidate_embeddings = self.candidate_embedding.embeddings
         self.retrieval.build(input_shape)
         super().build(input_shape)
 

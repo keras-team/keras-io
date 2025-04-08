@@ -37,6 +37,10 @@ user to a movie.
 Let's start by importing the necessary packages.
 """
 
+import os
+
+os.environ["KERAS_BACKEND"] = "jax"  # `"tensorflow"`/`"torch"`
+
 import keras
 import tensorflow as tf  # Needed for the dataset
 import tensorflow_datasets as tfds
@@ -131,9 +135,7 @@ class MultiTaskModel(keras.Model):
     ):
         super().__init__(**kwargs)
         # Our query tower, simply an embedding table.
-        self.user_embedding = keras.layers.Embedding(
-            num_users, embedding_dimension
-        )
+        self.user_embedding = keras.layers.Embedding(num_users, embedding_dimension)
 
         # Our candidate tower, simply an embedding table.
         self.candidate_embedding = keras.layers.Embedding(
@@ -150,9 +152,7 @@ class MultiTaskModel(keras.Model):
         )
 
         # The layer that performs the retrieval.
-        self.retrieval = keras_rs.layers.BruteForceRetrieval(
-            k=10, return_scores=False
-        )
+        self.retrieval = keras_rs.layers.BruteForceRetrieval(k=10, return_scores=False)
 
         self.retrieval_loss_fn = keras.losses.CategoricalCrossentropy(
             from_logits=True,
@@ -180,9 +180,7 @@ class MultiTaskModel(keras.Model):
         self.candidate_embedding.build(input_shape)
         # In this case, the candidates are directly the movie embeddings.
         # We take a shortcut and directly reuse the variable.
-        self.retrieval.candidate_embeddings = (
-            self.candidate_embedding.embeddings
-        )
+        self.retrieval.candidate_embeddings = self.candidate_embedding.embeddings
         self.retrieval.build(input_shape)
 
         self.rating_model.build((None, 2 * self.embedding_dimension))
@@ -209,9 +207,7 @@ class MultiTaskModel(keras.Model):
 
             # Pass both embeddings through the rating block of the model.
             rating = self.rating_model(
-                keras.ops.concatenate(
-                    [user_embeddings, candidate_embeddings], axis=1
-                )
+                keras.ops.concatenate([user_embeddings, candidate_embeddings], axis=1)
             )
             result["rating"] = rating
 
@@ -239,9 +235,7 @@ class MultiTaskModel(keras.Model):
         num_candidates = keras.ops.shape(candidate_embeddings)[0]
         retrieval_labels = keras.ops.eye(num_users, num_candidates)
         # Retrieval loss
-        retrieval_loss = self.retrieval_loss_fn(
-            retrieval_labels, scores, sample_weight
-        )
+        retrieval_loss = self.retrieval_loss_fn(retrieval_labels, scores, sample_weight)
 
         # 2. Ranking
         ratings = y
@@ -250,9 +244,7 @@ class MultiTaskModel(keras.Model):
         # Ranking labels are just ratings.
         ranking_labels = keras.ops.expand_dims(ratings, -1)
         # Ranking loss
-        ranking_loss = self.ranking_loss_fn(
-            ranking_labels, pred_rating, sample_weight
-        )
+        ranking_loss = self.ranking_loss_fn(ranking_labels, pred_rating, sample_weight)
 
         # Total loss is a weighted combination of the two losses.
         total_loss = (
@@ -375,9 +367,7 @@ retrieved_movie_ids = model.predict(
         "user_id": keras.ops.array([user_id]),
     }
 )
-retrieved_movie_ids = keras.ops.convert_to_numpy(
-    retrieved_movie_ids["predictions"][0]
-)
+retrieved_movie_ids = keras.ops.convert_to_numpy(retrieved_movie_ids["predictions"][0])
 retrieved_movies = [movie_id_to_movie_title[x] for x in retrieved_movie_ids]
 
 """
@@ -390,9 +380,7 @@ pred_ratings = model.predict(
         "movie_id": keras.ops.array(retrieved_movie_ids),
     }
 )["rating"]
-pred_ratings = keras.ops.convert_to_numpy(
-    keras.ops.squeeze(pred_ratings, axis=1)
-)
+pred_ratings = keras.ops.convert_to_numpy(keras.ops.squeeze(pred_ratings, axis=1))
 
 for movie_id, prediction in zip(retrieved_movie_ids, pred_ratings):
     print(f"{movie_id_to_movie_title[movie_id]}: {5.0 * prediction:,.2f}")
