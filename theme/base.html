@@ -21,14 +21,16 @@
 
   <title>{{title}}</title>
 
+  <!-- Custom fonts for this template -->
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400&display=swap" rel="stylesheet">
+
   <!-- Bootstrap core CSS -->
   <link href="{{base_url}}css/bootstrap.min.css" rel="stylesheet">
 
-  <!-- Custom fonts for this template -->
-  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
-
   <!-- Custom styles for this template -->
-  <link href="{{base_url}}css/docs.css" rel="stylesheet">
+  <link href="{{base_url}}css/docs.css?v=3" rel="stylesheet">
   <link href="{{base_url}}css/monokai.css" rel="stylesheet">
 
   <!-- Google Tag Manager -->
@@ -49,6 +51,8 @@
   <!-- End Google Tag Manager -->
 
   <script async defer src="https://buttons.github.io/buttons.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
 </head>
 
@@ -58,41 +62,133 @@
   height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   <!-- End Google Tag Manager (noscript) -->
 
-  <div class='k-page'>
-  
-    <div class="k-nav" id="nav-menu">
-      <a href='{{base_url}}'><img src='{{base_url}}img/logo-small.png' class='logo-small' /></a>
-
-      <div class="nav flex-column nav-pills" role="tablist" aria-orientation="vertical">
-
-        {% for item in nav %}
-          <a class="nav-link{% if item.active %} active{% endif %}" href="{{item.url}}" role="tab" aria-selected="{{item.selected}}">{{item.title}}</a>
-          {% if item.active %}
-            {% for child in item.children %}
-              <a class="nav-sublink{% if child.active %} active{% endif %}" href="{{child.url}}">{{child.title}}</a>
-                {% if child.active %}
-                  {% for grandchild in child.children %}
-                    <a class="nav-sublink2{% if grandchild.active %} active{% endif %}" href="{{grandchild.url}}">{{grandchild.title}}</a>
-                  {% endfor %}
-                {% endif %}
+  <div class="k-page">
+    <div class="hidden">
+      {% set related_nav_urls_map = {
+        "/api/": ["/2/api/"],
+        "/2/api/": ["/api/"],
+      } %}
+      {% set vars = {'related_urls': [], 'active_url': ''} %}
+      {% for item in nav %}
+        {% if item.active %}
+          {{ vars.update({'related_urls': related_nav_urls_map[item.url], 'active_url': item.url}) }}
+      {% endif %}
+      {% endfor %}
+    </div>
+    <nav class="nav__container">
+      <div class="nav__wrapper">
+        <div class="nav__controls--mobile">
+          <button class="nav__menu--button"><i class="icon--menu"></i></button>
+          <button class="nav__menu--close"><i class="icon--close"></i></button>
+          <a href="{{base_url}}">
+            <img class="nav__logo nav__logo--mobile" src="{{base_url}}img/k-logo.png" />
+          </a>
+          <button class="nav__search--mobile">
+            <i class="icon__search--mobile"></i>
+          </button>
+        </div>
+        <form class="nav__search nav__search-form--mobile">
+          <input
+            class="nav__search--input"
+            type="search"
+            placeholder="SEARCH"
+            aria-label="Search"
+          />
+          <button class="nav__search--button" type="submit">
+            <i class="icon--search"></i>
+          </button>
+        </form>
+        <div class="k-nav nav__mobile-menu" id="nav-menu">
+          <!-- version with just the active item visible -->
+          <div class="nav flex-column nav-pills" role="tablist" aria-orientation="vertical">
+            {% for item in nav %}
+              <a class="nav-link{% if item.active %} active{% endif %}" href="{{item.url}}" role="tab" aria-selected="{{item.selected}}">{{item.title}}</a>
+              {% if item.active %}
+                {% for child in item.children %}
+                  <a class="nav-sublink{% if child.active %} active{% endif %}" href="{{child.url}}">{{child.title}}</a>
+                    {% if child.active %}
+                      {% for grandchild in child.children %}
+                        <a class="nav-sublink2{% if grandchild.active %} active{% endif %}" href="{{grandchild.url}}">{{grandchild.title}}</a>
+                      {% endfor %}
+                    {% endif %}
+                {% endfor %}
+              {% endif %}
             {% endfor %}
-          {% endif %}
-        {% endfor %}
+          </div>
+        </div>
 
+        <a href="{{base_url}}">
+          <img class="nav__logo nav__logo--desktop" src="{{base_url}}img/logo.png" alt="keras.io logo" />
+        </a>
+        <div class="nav__menu">
+          {% set main_nav_items = {
+          '/getting_started/': 'Get started',
+          '/guides/': 'Guides',
+          '/api/': 'API Docs',
+          '/examples/': 'Examples',
+          '/keras_tuner/': 'Keras Tuner',
+          '/keras_hub/': 'Keras Hub',
+          } %}
+          <ul class="nav__item--container">
+            {% for key, value in main_nav_items.items() %}
+            <li class="nav__item">
+              <a class="nav__link{% if key == vars['active_url'] or key in vars['related_urls'] %} nav__link--active{% endif %}" href="{{ key }}">{{ value }}</a>
+            </li>
+            {% endfor %}
+          </ul>
+
+          <form class="nav__search">
+            <input
+              class="nav__search--input"
+              type="search"
+              placeholder="SEARCH"
+              aria-label="Search"
+            />
+            <button class="nav__search--button" type="submit">
+              <i class="icon--search"></i>
+            </button>
+          </form>
+        </div>
       </div>
+    </nav>
 
+    <div class="page__container flex__container">
+      <div class="nav__side-nav" id="nav-menu">
+        <div class="nav flex-column nav-pills" role="tablist" aria-orientation="vertical">
+          {% for item in nav %}
+            {% if (item.active and item.children|length > 0) or item.url in vars['related_urls'] %}
+            <a class="nav-link{% if item.active %} active{% endif %}" href="{{item.url}}" role="tab" aria-selected="{{item.selected}}">
+              {{item.title}}
+            </a>
+              {% if item.active and item.children|length > 0 %}
+                <div class="nav-expanded-panel">
+                  {% for child in item.children %}
+                    <a class="nav-sublink{% if child.active %} active{% endif %}" href="{{child.url}}">{{child.title}}</a>
+                    {% if child.active %}
+                      {% for grandchild in child.children %}
+                        <a class="nav-sublink2{% if grandchild.active %} active{% endif %}" href="{{grandchild.url}}">{{grandchild.title}}</a>
+                      {% endfor %}
+                    {% endif %}
+                  {% endfor %}
+                </div>
+              {% endif %}
+            {% endif %}
+          {% endfor %}
+        </div>
+      </div>
+      <div class="k-main">
+        {{main}}
+      </div>
     </div>
-
-    <div class='k-main'>
-      {{main}}
-    </div>
-
   </div>
-
+  <footer>
+    <div class="footer__container">
+      <a href="https://policies.google.com/terms">Terms</a>
+      <div>|</div>
+      <a href="https://policies.google.com/privacy">Privacy</a>
+    </div>
+  </footer>
+  <script src="{{base_url}}js/index.js"></script>
 </body>
-
-<footer style="float: left; width: 100%; padding: 1em; border-top: solid 1px #bbb;">
-  <a href="https://policies.google.com/terms">Terms</a> | <a href="https://policies.google.com/privacy">Privacy</a>
-</footer>
 
 </html>

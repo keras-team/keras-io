@@ -11,13 +11,13 @@ MASTER = {
     "title": "Keras: the Python Deep Learning library",
     "children": [
         {
-            "path": "about",
-            "title": "About Keras",
-        },
-        {
             "path": "getting_started/",
             "title": "Getting started",
             "children": [
+              {
+                    "path": "about",
+                    "title": "About Keras",
+                },
                 {
                     "path": "intro_to_keras_for_engineers",
                     "title": "Introduction to Keras for engineers",

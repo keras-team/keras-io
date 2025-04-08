@@ -32,10 +32,10 @@ EXAMPLES_GH_LOCATION = Path("keras-team") / "keras-io" / "blob" / "master" / "ex
 GUIDES_GH_LOCATION = Path("keras-team") / "keras-io" / "blob" / "master" / "guides"
 KERAS_TEAM_GH = "https://github.com/keras-team"
 PROJECT_URL = {
-    "keras": f"{KERAS_TEAM_GH}/keras/tree/v3.9.0/",
+    "keras": f"{KERAS_TEAM_GH}/keras/tree/v3.9.2/",
     "keras_tuner": f"{KERAS_TEAM_GH}/keras-tuner/tree/v1.4.7/",
-    "keras_hub": f"{KERAS_TEAM_GH}/keras-hub/tree/v0.19.1/",
-    "tf_keras": f"{KERAS_TEAM_GH}/tf-keras/tree/v2.18.0/",
+    "keras_hub": f"{KERAS_TEAM_GH}/keras-hub/tree/v0.20.0/",
+    "tf_keras": f"{KERAS_TEAM_GH}/tf-keras/tree/v2.19.0/",
     # TODO: Use the correct version when we cut a release.
     "keras_rs": f"{KERAS_TEAM_GH}/keras-rs/tree/v0.1.0/"
 }
@@ -783,9 +783,11 @@ class KerasIO:
                     print("...Rendering", fname)
                     self.render_single_file(src_location, fname, self.nav)
 
-        # Images & css
+        # Images & css & js
+        shutil.copytree(Path(self.theme_dir) / "js", Path(self.site_dir) / "js")
         shutil.copytree(Path(self.theme_dir) / "css", Path(self.site_dir) / "css")
         shutil.copytree(Path(self.theme_dir) / "img", Path(self.site_dir) / "img")
+        shutil.copytree(Path(self.theme_dir) / "icons", Path(self.site_dir) / "icons")
 
         # Landing page
         landing_template = jinja2.Template(
@@ -850,11 +852,34 @@ class KerasIO:
         sitemap = "\n".join(all_urls_list) + "\n"
         autogen_utils.save_file(Path(self.site_dir) / "sitemap.txt", sitemap)
 
-        # Redirects
-        shutil.copytree(self.redirects_dir, self.site_dir, dirs_exist_ok=True)
-
         # Examples landing page
         self.generate_examples_landing_page()
+
+        # Redirects
+        self.check_redirects()
+        shutil.copytree(self.redirects_dir, self.site_dir, dirs_exist_ok=True)
+
+    def check_redirects(self):
+        """Validate our redirects"""
+        for file in Path(self.redirects_dir).glob("**/*.html"):
+            with open(file) as f:
+                content = f.read()
+                # Read url.
+                url = content[content.find("URL=") + 5 :]
+                url = url[: url.find("'")]
+                # Strip to path.
+                path = url.replace("https://keras.io/", "")
+                target = Path(self.site_dir) / Path(path)
+                if not target.exists():
+                    raise ValueError(
+                        f"Redirect target {path} does not exist referenced "
+                        f"from file {file}."
+                    )
+            site_path = Path(self.site_dir) / file.relative_to(self.redirects_dir)
+            if site_path.exists():
+                raise ValueError(
+                    f"Redirect at {file} would overwrite a real page."
+                )
 
     def render_single_file(self, src_location, fname, nav):
         if not fname.endswith(".md"):
