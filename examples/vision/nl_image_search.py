@@ -68,12 +68,12 @@ Note that the compressed images folder is 13GB in size.
 """
 
 root_dir = "datasets"
-annotations_dir = os.path.join(root_dir, "annotations")
-images_dir = os.path.join(root_dir, "train2014")
+annotations_dir = os.path.join(root_dir, "captions_extracted/annotations")
+images_dir = os.path.join(root_dir, "train2014_extracted/train2014")
 tfrecords_dir = os.path.join(root_dir, "tfrecords")
 annotation_file = os.path.join(annotations_dir, "captions_train2014.json")
 
-# Download caption annotation files
+Download caption annotation files
 if not os.path.exists(annotations_dir):
     annotation_zip = tf.keras.utils.get_file(
         "captions.zip",
@@ -81,7 +81,7 @@ if not os.path.exists(annotations_dir):
         origin="http://images.cocodataset.org/annotations/annotations_trainval2014.zip",
         extract=True,
     )
-    os.remove(annotation_zip)
+    os.remove(os.path.join(root_dir,"captions.zip"))
 
 # Download image files
 if not os.path.exists(images_dir):
@@ -91,7 +91,21 @@ if not os.path.exists(images_dir):
         origin="http://images.cocodataset.org/zips/train2014.zip",
         extract=True,
     )
-    os.remove(image_zip)
+    os.remove(os.path.join(root_dir,"train2014.zip"))
+
+print("Dataset is downloaded and extracted successfully.")
+
+with open(annotation_file, "r") as f:
+    annotations = json.load(f)["annotations"]
+
+image_path_to_caption = collections.defaultdict(list)
+for element in annotations:
+    caption = f"{element['caption'].lower().rstrip('.')}"
+    image_path = images_dir + "/COCO_train2014_" + "%012d.jpg" % (element["image_id"])
+    image_path_to_caption[image_path].append(caption)
+
+image_paths = list(image_path_to_caption.keys())
+print(f"Number of images: {len(image_paths)}")
 
 print("Dataset is downloaded and extracted successfully.")
 
