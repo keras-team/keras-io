@@ -427,7 +427,8 @@ the epoch takes around 8 minutes.
 print(f"Number of GPUs: {len(tf.config.list_physical_devices('GPU'))}")
 print(f"Number of examples (caption-image pairs): {train_example_count}")
 print(f"Batch size: {batch_size}")
-print(f"Steps per epoch: {int(np.ceil(train_example_count / batch_size))}")
+steps_per_epoch = int(np.ceil(train_example_count / batch_size))
+print(f"Steps per epoch: {steps_per_epoch}")
 train_dataset = get_dataset(os.path.join(tfrecords_dir, "train-*.tfrecord"), batch_size)
 valid_dataset = get_dataset(os.path.join(tfrecords_dir, "valid-*.tfrecord"), batch_size)
 # Create a learning rate scheduler callback.
@@ -441,6 +442,7 @@ early_stopping = tf.keras.callbacks.EarlyStopping(
 history = dual_encoder.fit(
     train_dataset,
     epochs=num_epochs,
+    steps_per_epoch = steps_per_epoch,
     validation_data=valid_dataset,
     callbacks=[reduce_lr, early_stopping],
 )
