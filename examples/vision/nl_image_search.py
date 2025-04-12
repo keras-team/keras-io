@@ -42,7 +42,6 @@ from tensorflow import keras
 from tensorflow.keras import layers
 import tensorflow_hub as hub
 import tensorflow_text as text
-import tensorflow_addons as tfa
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 from tqdm import tqdm
@@ -286,12 +285,7 @@ def create_text_encoder(
         name="text_preprocessing",
     )
     # Load the pre-trained BERT model to be used as the base encoder.
-    bert = hub.KerasLayer(
-        "https://tfhub.dev/tensorflow/small_bert/bert_en_uncased_L-4_H-512_A-8/1",
-        "bert",
-    )
-    # Set the trainability of the base encoder.
-    bert.trainable = trainable
+    bert = hub.KerasLayer("https://tfhub.dev/tensorflow/small_bert/bert_en_uncased_L-4_H-512_A-8/1",trainable=False,name="bert")
     # Receive the text as inputs.
     inputs = layers.Input(shape=(), dtype=tf.string, name="text_input")
     # Preprocess the text.
@@ -407,7 +401,7 @@ text_encoder = create_text_encoder(
 )
 dual_encoder = DualEncoder(text_encoder, vision_encoder, temperature=0.05)
 dual_encoder.compile(
-    optimizer=tfa.optimizers.AdamW(learning_rate=0.001, weight_decay=0.001)
+    optimizer=tf.keras.optimizers.AdamW(learning_rate=0.001, weight_decay=0.001)
 )
 
 """
