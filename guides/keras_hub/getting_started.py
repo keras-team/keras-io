@@ -39,7 +39,7 @@ install it with pip.
 """
 
 """shell
-pip install --upgrade --quiet keras-hub-nightly keras-nightly
+pip install --upgrade --quiet keras-hub keras
 """
 
 """

@@ -38,7 +38,7 @@ install it with pip.
 
 
 ```python
-!pip install --upgrade --quiet keras-hub-nightly keras-nightly
+!pip install --upgrade --quiet keras-hub keras
 ```
 
 Keras 3 was built to work on top of TensorFlow, Jax, and Torch backends. You should
