@@ -981,6 +981,51 @@ MODELS_MASTER = {
             ],
         },
         {
+            "path": "gemma3/",
+            "title": "Gemma3",
+            "toc": True,
+            "children": [
+                {
+                    "path": "gemma3_tokenizer",
+                    "title": "Gemma3Tokenizer",
+                    "generate": [
+                        "keras_hub.tokenizers.Gemma3Tokenizer",
+                        "keras_hub.tokenizers.Gemma3Tokenizer.from_preset",
+                    ],
+                },
+                {
+                    "path": "gemma3_backbone",
+                    "title": "Gemma3Backbone model",
+                    "generate": [
+                        "keras_hub.models.Gemma3Backbone",
+                        "keras_hub.models.Gemma3Backbone.from_preset",
+                        "keras_hub.models.Gemma3Backbone.token_embedding",
+                        "keras_hub.models.Gemma3Backbone.enable_lora",
+                    ],
+                },
+                {
+                    "path": "gemma3_causal_lm",
+                    "title": "Gemma3CausalLM model",
+                    "generate": [
+                        "keras_hub.models.Gemma3CausalLM",
+                        "keras_hub.models.Gemma3CausalLM.from_preset",
+                        "keras_hub.models.Gemma3CausalLM.generate",
+                        "keras_hub.models.Gemma3CausalLM.backbone",
+                        "keras_hub.models.Gemma3CausalLM.preprocessor",
+                    ],
+                },
+                {
+                    "path": "gemma3_causal_lm_preprocessor",
+                    "title": "Gemma3CausalLMPreprocessor layer",
+                    "generate": [
+                        "keras_hub.models.Gemma3CausalLMPreprocessor",
+                        "keras_hub.models.Gemma3CausalLMPreprocessor.from_preset",
+                        "keras_hub.models.Gemma3CausalLMPreprocessor.tokenizer",
+                    ],
+                },
+            ],
+        },
+        {
             "path": "gpt2/",
             "title": "GPT2",
             "toc": True,
