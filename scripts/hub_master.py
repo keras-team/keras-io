@@ -872,6 +872,40 @@ MODELS_MASTER = {
             ],
         },
         {
+            "path": "flux/",
+            "title": "Flux",
+            "toc": True,
+            "children": [
+                {
+                    "path": "flux_model",
+                    "title": "FluxBackbone model",
+                    "generate": [
+                        "keras_hub.models.FluxBackbone",
+                        "keras_hub.models.FluxBackbone.from_preset",
+                    ],
+                },
+                {
+                    "path": "flux_text_to_image",
+                    "title": "FluxTextToImage model",
+                    "generate": [
+                        "keras_hub.models.FluxTextToImage",
+                        "keras_hub.models.FluxTextToImage.from_preset",
+                        "keras_hub.models.FluxTextToImage.backbone",
+                        "keras_hub.models.FluxTextToImage.generate",
+                        "keras_hub.models.FluxTextToImage.preprocessor",
+                    ],
+                },
+                {
+                    "path": "flux_text_to_image_preprocessor",
+                    "title": "FluxTextToImagePreprocessor layer",
+                    "generate": [
+                        "keras_hub.models.FluxTextToImagePreprocessor",
+                        "keras_hub.models.FluxTextToImagePreprocessor.from_preset",
+                    ],
+                },
+            ],
+        },
+        {
             "path": "f_net/",
             "title": "FNet",
             "toc": True,
@@ -991,6 +1025,14 @@ MODELS_MASTER = {
                     "generate": [
                         "keras_hub.tokenizers.Gemma3Tokenizer",
                         "keras_hub.tokenizers.Gemma3Tokenizer.from_preset",
+                    ],
+                },
+                {
+                    "path": "gemma3_image_converter",
+                    "title": "Gemma3ImageConverter",
+                    "generate": [
+                        "keras_hub.layers.Gemma3ImageConverter",
+                        "keras_hub.layers.Gemma3ImageConverter.from_preset",
                     ],
                 },
                 {
@@ -1929,6 +1971,22 @@ MODELS_MASTER = {
                     "generate": [
                         "keras_hub.models.WhisperBackbone",
                         "keras_hub.models.WhisperBackbone.from_preset",
+                    ],
+                },
+            ],
+        },
+        {
+            "path": "xlnet/",
+            "title": "XLNet",
+            "toc": True,
+            "children": [
+                {
+                    "path": "xlnet_backbone",
+                    "title": "XLNetBackbone model",
+                    "generate": [
+                        "keras_hub.models.XLNetBackbone",
+                        "keras_hub.models.XLNetBackbone.from_preset",
+                        "keras_hub.models.XLNetBackbone.token_embedding",
                     ],
                 },
             ],
