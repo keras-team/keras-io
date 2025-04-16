@@ -241,7 +241,7 @@ def project_embeddings(
 ):
     projected_embeddings = layers.Dense(units=projection_dims)(embeddings)
     for _ in range(num_projection_layers):
-        x = tf.keras.activations.gelu(projected_embeddings)
+        x = keras.activations.gelu(projected_embeddings, axis=-1)
         x = layers.Dense(projection_dims)(x)
         x = layers.Dropout(dropout_rate)(x)
         x = layers.Add()([projected_embeddings, x])
@@ -299,7 +299,9 @@ def create_text_encoder(
         name="text_preprocessing",
     )
     # Load the pre-trained BERT model to be used as the base encoder with trainable set to false.
-    bert = hub.KerasLayer("https://tfhub.dev/tensorflow/small_bert/bert_en_uncased_L-4_H-512_A-8/1",trainable=False,name="bert")
+    bert = hub.KerasLayer("https://tfhub.dev/tensorflow/small_bert/bert_en_uncased_L-4_H-512_A-8/1",
+                          trainable=False,
+                          name="bert")
     # Receive the text as inputs.
     inputs = layers.Input(shape=(), dtype=tf.string, name="text_input")
     # Preprocess the text.
@@ -415,7 +417,7 @@ text_encoder = create_text_encoder(
 )
 dual_encoder = DualEncoder(text_encoder, vision_encoder, temperature=0.05)
 dual_encoder.compile(
-    optimizer=tf.keras.optimizers.AdamW(learning_rate=0.001, weight_decay=0.001)
+    optimizer= keras.optimizers.AdamW(learning_rate=0.001, weight_decay=0.001)
 )
 
 """
@@ -436,7 +438,7 @@ reduce_lr = keras.callbacks.ReduceLROnPlateau(
     monitor="val_loss", factor=0.2, patience=3
 )
 # Create an early stopping callback.
-early_stopping = tf.keras.callbacks.EarlyStopping(
+early_stopping = keras.callbacks.EarlyStopping(
     monitor="val_loss", patience=5, restore_best_weights=True
 )
 history = dual_encoder.fit(
