@@ -75,7 +75,7 @@ annotation_file = os.path.join(annotations_dir, "captions_train2014.json")
 
 Download caption annotation files
 if not os.path.exists(annotations_dir):
-    annotation_zip = tf.keras.utils.get_file(
+    annotation_zip = keras.utils.get_file(
         "captions.zip",
         cache_dir=os.path.abspath("."),
         origin="http://images.cocodataset.org/annotations/annotations_trainval2014.zip",
@@ -85,7 +85,7 @@ if not os.path.exists(annotations_dir):
 
 # Download image files
 if not os.path.exists(images_dir):
-    image_zip = tf.keras.utils.get_file(
+    image_zip = keras.utils.get_file(
         "train2014.zip",
         cache_dir=os.path.abspath("."),
         origin="http://images.cocodataset.org/zips/train2014.zip",
@@ -271,7 +271,7 @@ def create_vision_encoder(
     # Receive the images as inputs.
     inputs = layers.Input(shape=(299, 299, 3), name="image_input")
     # Preprocess the input image.
-    xception_input = tf.keras.applications.xception.preprocess_input(inputs)
+    xception_input = keras.applications.xception.preprocess_input(inputs)
     # Generate the embeddings for the images using the xception model.
     embeddings = xception(xception_input)
     # Project the embeddings produced by the model.
