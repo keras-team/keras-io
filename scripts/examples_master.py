@@ -633,6 +633,12 @@ EXAMPLES_MASTER = {
                     "keras_3": True,
                 },
                 {
+                    "path": "class_with_grn_and_vsn_with_hyperparameters_tuning",
+                    "title": "Classification with Gated Residual and Variable Selection Networks with HyperParameters tuning",
+                    "subcategory": "Structured data classification",
+                    "keras_3": True,
+                },
+                {
                     "path": "classification_with_tfdf",
                     "title": "Classification with TensorFlow Decision Forests",
                     "subcategory": "Structured data classification",
