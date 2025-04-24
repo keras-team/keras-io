@@ -1113,6 +1113,51 @@ MODELS_MASTER = {
                 },
             ],
         },
+         {
+            "path": "gpt_neo_x/",
+            "title": "GPT-NeoX",
+            "toc": True,
+            "children": [
+                {
+                    "path": "gpt_neo_x_tokenizer",
+                    "title": "GPTNeoXTokenizer",
+                    "generate": [
+                        "keras_hub.tokenizers.GPTNeoXTokenizer",
+                        "keras_hub.tokenizers.GPTNeoXTokenizer.from_preset",
+                    ],
+                },
+                {
+                    "path": "gpt_neo_x_backbone",
+                    "title": "GPTNeoXBackbone model",
+                    "generate": [
+                        "keras_hub.models.GPTNeoXBackbone",
+                        "keras_hub.models.GPTNeoXBackbone.from_preset",
+                        "keras_hub.models.GPTNeoXBackbone.token_embedding",
+                        "keras_hub.models.GPTNeoXBackbone.enable_lora",
+                    ],
+                },
+                {
+                    "path": "gpt_neo_x_causal_lm",
+                    "title": "GPTNeoXCausalLM model",
+                    "generate": [
+                        "keras_hub.models.GPTNeoXCausalLM",
+                        "keras_hub.models.GPTNeoXCausalLM.from_preset",
+                        "keras_hub.models.GPTNeoXCausalLM.generate",
+                        "keras_hub.models.GPTNeoXCausalLM.backbone",
+                        "keras_hub.models.GPTNeoXCausalLM.preprocessor",
+                    ],
+                },
+                {
+                    "path": "gpt_neo_x_causal_lm_preprocessor",
+                    "title": "GPTNeoXCausalLMPreprocessor layer",
+                    "generate": [
+                        "keras_hub.models.GPTNeoXCausalLMPreprocessor",
+                        "keras_hub.models.GPTNeoXCausalLMPreprocessor.from_preset",
+                        "keras_hub.models.GPTNeoXCausalLMPreprocessor.tokenizer",
+                    ],
+                },
+            ],
+        },
         {
             "path": "llama/",
             "title": "Llama",
