@@ -1,8 +1,8 @@
 """
 Title: Object Detection with KerasHub
 Authors: [Siva Sravana Kumar Neeli](https://github.com/sineeli), [Sachin Prasad](https://github.com/sachinprasadhs)
-Date created: 2025/03/21
-Last modified: 2025/03/21
+Date created: 2025/04/28
+Last modified: 2025/04/28
 Description: RetinaNet Object Detection: Training, Fine-tuning, and Inference.
 Accelerator: GPU
 """
@@ -11,6 +11,7 @@ Accelerator: GPU
 ![](https://storage.googleapis.com/keras-hub/getting_started_guide/prof_keras_intermediate.png)
 
 ## Introduction
+
 Object detection is a crucial computer vision task that goes beyond simple image
 classification. It requires models to not only identify the types of objects
 present in an image but also pinpoint their locations using bounding boxes. This
@@ -72,6 +73,9 @@ warnings.filterwarnings("ignore")
 
 """
 ### Helper functions
+We download the Pascal VOC 2012 and 2007 datasets using these helper functions,
+prepare them for the object detection task, and split them into training and
+validation datasets.
 """
 # @title Helper functions
 import logging
@@ -362,6 +366,8 @@ def load_voc(
 
 """
 ## Load the dataset
+Let's load the training data. Here, we load both the VOC 2007 and 2012 datasets
+and split them into training and validation sets.
 """
 train_ds_2007 = load_voc(
     year="2007",
@@ -388,7 +394,7 @@ consisting of a (generally pre-trained) backbone model and task-specific layers.
 Here's an example using `keras_hub.models.ImageObjectDetector` with the
 `RetinaNet` model architecture and `ResNet50` as the backbone.
 
-ResNet is a great starting model when constructing an image classification
+`ResNet` is a great starting model when constructing an image classification
 pipeline. This architecture manages to achieve high accuracy while using a
 relatively small number of parameters. If a ResNet isn't powerful enough for the
 task you are hoping to solve, be sure to check out KerasHub's other available
@@ -396,19 +402,25 @@ backbones here https://keras.io/keras_hub/presets/
 """
 
 object_detector = keras_hub.models.ImageObjectDetector.from_preset(
-    "kaggle://keras/retinanet/keras/retinanet_resnet50_fpn_coco"
+    "retinanet_resnet50_fpn_coco"
 )
 object_detector.summary()
 
 """
 ## Preprocessing Layers
+
+Let's define the below preprocessing layers:
+
+- Resizing Layer: Resizes the image and maintains the aspect ratio by applying
+padding when `pad_to_aspect_ratio=True`. Also, sets the default bounding box
+format for representing the data.
+- Max Bounding Box Layer: Limits the maximum number of bounding boxes per image.
 """
 image_size = (800, 800)
 batch_size = 4
 gt_bbox_format = "yxyx"
 epochs = 5
 
-# Resizing layer: Resizes images and pads to maintain aspect ratio
 resizing = keras.layers.Resizing(
     height=image_size[0],
     width=image_size[1],
@@ -417,14 +429,15 @@ resizing = keras.layers.Resizing(
     bounding_box_format=gt_bbox_format,
 )
 
-# Max bounding box layer: Limits the number of bounding boxes per image
 max_box_layer = keras.layers.MaxNumBoundingBoxes(
     max_number=100, bounding_box_format=gt_bbox_format
 )
 
 """
 ### Predict and Visualize
-Next, let's get some predictions from our object detector:
+Next, let's obtain predictions from our object detector by loading the image and
+visualizing them. We'll apply the preprocessing pipeline defined in the
+preprocessing layers step.
 """
 
 filepath = keras.utils.get_file(
@@ -446,6 +459,7 @@ keras.visualization.plot_bounding_box_gallery(
 
 """
 ## Fine tuning a pretrained object detector
+
 In this guide, we'll assemble a full training pipeline for a KerasHub `RetinaNet`
 object detection model. This includes data loading, augmentation, training, and
 inference using Pascal VOC 2007 & 2012 dataset!
@@ -578,8 +592,8 @@ eval_ds = eval_ds.map(convert_to_tuple, num_parallel_calls=tf.data.AUTOTUNE)
 eval_ds = eval_ds.prefetch(tf.data.AUTOTUNE)
 
 """
-## Congiure RetinaNet Model
-Configure the model with backbone, num_classes and preprocessor.
+## Configure RetinaNet Model
+Configure the model with `backbone`, `num_classes` and `preprocessor`.
 Use callbacks for recording logs and saving checkpoints.
 """
 
@@ -613,6 +627,14 @@ def get_callbacks(experiment_path: str):
 
 """
 ## Load backbone weights and preprocessor config
+
+Let's use the "retinanet_resnet50_fpn_coco" pretrained weights as the backbone
+model, applying its predefined configuration from the preprocessor of the
+"retinanet_resnet50_fpn_coco" preset.
+Define a RetinaNet object detector model with the backbone and preprocessor
+specified above, and set `num_classes` to 20 to represent the object categories
+from Pascal VOC.
+Finally, compile the model using Mean Absolute Error (MAE) as the box loss.
 """
 
 backbone = keras_hub.models.Backbone.from_preset("retinanet_resnet50_fpn_coco")
@@ -626,9 +648,14 @@ model = keras_hub.models.RetinaNetObjectDetector(
 model.compile(box_loss=keras.losses.MeanAbsoluteError(reduction="sum"))
 
 """
-## Fit the model
+## Train the model
+Now that the object detector model is compiled, let's train it using the
+training and validation data we created earlier.
+For demonstration purposes, we have used a small number of epochs. You can
+increase the number of epochs to achieve better results.
 
-**Note:** The model trained on L4 GPU, while training on T4 it takes significant time.
+**Note:** The model trained on L4 GPU, while training on T4 it takes
+significant time.
 """
 
 model.fit(
@@ -640,6 +667,7 @@ model.fit(
 
 """
 ### Prediction on evaluation data
+Let's predict the model using our evaluation dataset.
 """
 images, y_true = next(iter(eval_ds.shuffle(50).take(1)))
 y_pred = model.predict(images)
@@ -685,11 +713,12 @@ The image encoder, while typically initialized with pre-trained weights
 the image encoder (and, consequently, the entire object detection network built
 upon it) having randomly initialized weights.
 
-This configuration is equivalent to training the model from scratch, as opposed
-to fine-tuning a pre-trained model.
+Here we load pre-trained ResNet50 model.
+This will serve as the base for extracting image features.
 
-Training from scratch generally requires significantly more data and
-computational resources to achieve performance comparable to fine-tuning.
+And then Build the RetinaNet Feature Pyramid Network (FPN) on top of the ResNet50
+backbone. The FPN creates multi-scale feature maps for better object detection
+at different sizes.
 
 **Note:**
 `use_p5`: If True, the output of the last backbone layer (typically `P5` in an
@@ -699,19 +728,15 @@ map from the backbone is directly used as input for creating the coarser levels,
 bypassing any further processing of `P5` within the feature pyramid. Defaults to
 `False`.
 """
-# Load a pre-trained ResNet50 model.
-# This will serve as the base for extracting image features.
+
 image_encoder = keras_hub.models.Backbone.from_preset("resnet_50_imagenet")
 
-# Build the RetinaNet Feature Pyramid Network (FPN) on top of the ResNet50
-# backbone. The FPN creates multi-scale feature maps for better object detection
-# at different sizes.
 backbone = keras_hub.models.RetinaNetBackbone(
     image_encoder=image_encoder, min_level=3, max_level=5, use_p5=True
 )
 
 """
-### Train and visulaize RetinaNet model
+### Train and visualize RetinaNet model
 
 **Note:** Training the model (for demonstration purposes only 5 epochs). In a
 real scenario, you would train for many more epochs (often hundreds) to achieve
@@ -748,3 +773,24 @@ keras.visualization.plot_bounding_box_gallery(
     cols=2,
     class_mapping=INDEX_TO_CLASS,
 )
+
+"""
+## Conclusion
+In this tutorial, you learned how to custom train and fine-tune the RetinaNet
+object detector.
+
+You can experiment with different existing backbones trained on ImageNet as the
+image encoder, or you can fine-tune your own backbone.
+
+This configuration is equivalent to training the model from scratch, as opposed
+to fine-tuning a pre-trained model.
+
+Training from scratch generally requires significantly more data and
+computational resources to achieve performance comparable to fine-tuning.
+
+To achieve better results when fine-tuning the model, you can increase the
+number of epochs and experiment with different hyperparameter values.
+In addition to the training data used here, you can also use other object
+detection datasets, but keep in mind that custom training these requires
+high GPU memory.
+"""
