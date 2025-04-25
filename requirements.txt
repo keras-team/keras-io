@@ -10,9 +10,10 @@ pandas
 jupyter
 pydot
 boto3
-tensorflow
+tensorflow==2.18.1
 keras-cv
 keras-nlp
 keras-tuner
-tf_keras
-keras-hub-nightly  # TODO: update to keras-hub.
+tf-keras==2.18.0
+keras-hub
+
