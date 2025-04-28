@@ -237,7 +237,7 @@ test_ds = test_ds.batch(BATCH_SIZE).cache()
 """
 ## Building the model
 
-We build a typical two-tower ranking model, similar to the 
+We build a typical two-tower ranking model, similar to the
 [basic ranking tutorial](/keras_rs/examples/basic_ranking/).
 We have separate embedding layers for user ID and movie IDs. After obtaining
 these embeddings, we concatenate them and pass them through a network of dense

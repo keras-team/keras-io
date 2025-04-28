@@ -71,7 +71,7 @@ DROPOUT = 0.2
 
 Next, we need to prepare our dataset. Like we did in the
 [sequential retrieval](/keras_rs/examples/sequential_retrieval/)
-example, we are going to use the MovieLens dataset. 
+example, we are going to use the MovieLens dataset.
 
 The dataset preparation step is fairly involved. The original ratings dataset
 contains `(user, movie ID, rating, timestamp)` tuples (among other columns,

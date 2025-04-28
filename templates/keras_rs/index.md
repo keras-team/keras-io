@@ -1,6 +1,6 @@
 # Keras Recommenders
 
-<a class="github-button" href="https://github.com/keras-team/keras-hub" data-size="large" data-show-count="true" aria-label="Star keras-team/keras-hub on GitHub">Star</a>
+<a class="github-button" href="https://github.com/keras-team/keras-rs" data-size="large" data-show-count="true" aria-label="Star keras-team/keras-rs on GitHub">Star</a>
 
 Keras Recommenders is a library for building recommender systems on top of
 Keras 3. Keras Recommenders works natively with TensorFlow, JAX, or PyTorch. It

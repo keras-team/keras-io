@@ -1,13 +1,16 @@
-"""
-Title: Ranking with Deep and Cross Networks (DCN)
-Author: [Abheesht Sharma](https://github.com/abheesht17/), [Fabien Hertschuh](https://github.com/hertschuh/)
-Date created: 2025/04/28
-Last modified: 2025/04/28
-Description: Rank movies using Deep and Cross Networks (DCN).
-Accelerator: GPU
-"""
+# Ranking with Deep and Cross Networks (DCN)
 
-"""
+**Author:** [Abheesht Sharma](https://github.com/abheesht17/), [Fabien Hertschuh](https://github.com/hertschuh/)<br>
+**Date created:** 2025/04/28<br>
+**Last modified:** 2025/04/28<br>
+**Description:** Rank movies using Deep and Cross Networks (DCN).
+
+
+<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/keras_rs/ipynb/dcn.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/keras_rs/dcn.py)
+
+
+
+---
 ## Introduction
 
 This tutorial demonstrates how to use Deep & Cross Networks (DCN) to effectively
@@ -60,8 +63,9 @@ first train a DCN on a toy dataset, and demonstrate that the model has indeed
 learnt important feature crosses.
 
 Let's set the backend to JAX, and get our imports sorted.
-"""
 
+
+```python
 import os
 
 os.environ["KERAS_BACKEND"] = "jax"  # `"tensorflow"`/`"torch"`
@@ -74,11 +78,12 @@ import tensorflow_datasets as tfds
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 import keras_rs
+```
 
-"""
 Let's also define variables which will be reused throughout the example.
-"""
 
+
+```python
 TOY_CONFIG = {
     "learning_rate": 0.01,
     "num_epochs": 100,
@@ -112,13 +117,14 @@ LOOKUP_LAYERS = {
     "int": keras.layers.IntegerLookup,
     "str": keras.layers.StringLookup,
 }
+```
 
-"""
 Here, we define a helper function for visualising weights of the cross layer in
 order to better understand its functioning. Also, we define a function for
 compiling, training and evaluating a given model.
-"""
 
+
+```python
 
 def visualize_layer(matrix, features):
     plt.figure(figsize=(9, 9))
@@ -176,8 +182,9 @@ def print_stats(rmse_list, num_params, model_name):
             f"{model_name}: RMSE = {avg_rmse} ± {std_rmse}; " "#params = {num_params}"
         )
 
+```
 
-"""
+---
 ## Toy Example
 
 To illustrate the benefits of DCNs, let's consider a simple example. Suppose we
@@ -206,8 +213,9 @@ significantly by the interaction of purchasing both bananas and cookbooks
 
 Let's create synthetic data based on the above equation, and form the train-test
 splits.
-"""
 
+
+```python
 
 def get_mixer_data(data_size=100_000):
     country = np.random.randint(200, size=[data_size, 1]) / 200.0
@@ -235,8 +243,8 @@ train_x = x[:num_train]
 train_y = y[:num_train]
 test_x = x[num_train:]
 test_y = y[num_train:]
+```
 
-"""
 ### Building the model
 
 To demonstrate the advantages of a cross network in recommender systems, we'll
@@ -247,8 +255,9 @@ be stacked to form a multi-layered cross network. We will build two models:
 
 1. A cross network with a single cross layer.
 2. A deep network with wider and deeper feedforward layers.
-"""
 
+
+```python
 cross_network = keras.Sequential(
     [
         keras_rs.layers.FeatureCross(),
@@ -263,21 +272,22 @@ deep_network = keras.Sequential(
         keras.layers.Dense(128, activation="relu"),
     ]
 )
+```
 
-"""
 ### Model training
 
 Before we train the model, we need to batch our datasets.
-"""
 
+
+```python
 train_ds = tf.data.Dataset.from_tensor_slices((train_x, train_y)).batch(
     TOY_CONFIG["batch_size"]
 )
 test_ds = tf.data.Dataset.from_tensor_slices((test_x, test_y)).batch(
     TOY_CONFIG["batch_size"]
 )
+```
 
-"""
 Let's train both models. Remember we have set `verbose=0` for brevity's
 sake, so do not be alarmed if you do not see any output for a while.
 
@@ -287,8 +297,9 @@ the Root Mean Squared Error (RMSE) here.
 We observe that the cross network achieved significantly lower RMSE compared to
 a ReLU-based DNN, while also using fewer parameters. This points to the
 efficiency of the cross network in learning feature interactions.
-"""
 
+
+```python
 cross_network_rmse, cross_network_num_params = train_and_evaluate(
     learning_rate=TOY_CONFIG["learning_rate"],
     epochs=TOY_CONFIG["num_epochs"],
@@ -314,8 +325,16 @@ print_stats(
     num_params=deep_network_num_params,
     model_name="Deep Network",
 )
+```
 
-"""
+<div class="k-default-codeblock">
+```
+Cross Network: RMSE = 0.0023513431660830975; #params = 16
+
+Deep Network: RMSE = 0.00369881559163332; #params = 166272
+
+```
+</div>
 ### Visualizing feature interactions
 
 Since we already know which feature crosses are important in our data, it would
@@ -323,14 +342,32 @@ be interesting to verify whether our model has indeed learned these key feature
 interactions. This can be done by visualizing the learned weight matrix in the
 cross network, where the weight `Wij` represents the learned importance of
 the interaction between features `xi` and `xj`.
-"""
 
+
+```python
 visualize_layer(
     matrix=cross_network.weights[0].numpy(),
     features=["country", "purchased_bananas", "purchased_cookbooks"],
 )
+```
 
-"""
+<div class="k-default-codeblock">
+```
+<ipython-input-3-8046d00f84d6>:11: UserWarning: set_ticklabels() should only be used with a fixed number of ticks, i.e. after set_ticks() or using a FixedLocator.
+  ax.set_xticklabels([""] + features, rotation=45, fontsize=10)
+<ipython-input-3-8046d00f84d6>:12: UserWarning: set_ticklabels() should only be used with a fixed number of ticks, i.e. after set_ticks() or using a FixedLocator.
+  ax.set_yticklabels([""] + features, fontsize=10)
+
+<Figure size 900x900 with 0 Axes>
+
+```
+</div>
+    
+![png](/img/examples/keras_rs/dcn/dcn_16_2.png)
+    
+
+
+---
 ## Real-world example
 
 Let's use the MovieLens 100K dataset. This dataset is used to train models to
@@ -342,8 +379,9 @@ features.
 The dataset processing steps here are similar to what's given in the
 [basic ranking](/keras_rs/examples/basic_ranking/)
 tutorial. Let's load the dataset, and keep only the useful columns.
-"""
 
+
+```python
 ratings_ds = tfds.load("movielens/100k-ratings", split="train")
 ratings_ds = ratings_ds.map(
     lambda x: (
@@ -358,23 +396,25 @@ ratings_ds = ratings_ds.map(
         x["user_rating"],  # label
     )
 )
+```
 
-"""
 For every feature, let's get the list of unique values, i.e., vocabulary, so
 that we can use that for the embedding layer.
-"""
 
+
+```python
 vocabularies = {}
 for feature_name in MOVIELENS_CONFIG["int_features"] + MOVIELENS_CONFIG["str_features"]:
     vocabulary = ratings_ds.batch(10_000).map(lambda x, y: x[feature_name])
     vocabularies[feature_name] = np.unique(np.concatenate(list(vocabulary)))
+```
 
-"""
 One thing we need to do is to use `keras.layers.StringLookup` and
 `keras.layers.IntegerLookup` to convert all features into indices, which can
 then be fed into embedding layers.
-"""
 
+
+```python
 lookup_layers = {}
 lookup_layers.update(
     {
@@ -398,12 +438,13 @@ ratings_ds = ratings_ds.map(
         y,
     )
 )
+```
 
-"""
 Let's split our data into train and test sets. We also use `cache()` and
 `prefetch()` for better performance.
-"""
 
+
+```python
 ratings_ds = ratings_ds.shuffle(100_000)
 
 train_ds = (
@@ -419,14 +460,15 @@ test_ds = (
     .cache()
     .prefetch(tf.data.AUTOTUNE)
 )
+```
 
-"""
 ### Building the model
 
 The model will have embedding layers, followed by cross and/or feedforward
 layers.
-"""
 
+
+```python
 
 def get_model(
     dense_num_units_lst,
@@ -459,16 +501,17 @@ def get_model(
 
     return keras.Model(inputs=inputs, outputs=x)
 
+```
 
-"""
 We have three models - a deep cross network, an optimised deep cross
 network with a low-rank matrix (to reduce training and serving costs) and a
 normal deep network without cross layers. The deep cross network is a stacked
 DCN model, i.e., the inputs are fed to cross layers, followed by feedforward
 layers.  Let's run each model 10 times, and report the average/standard
 deviation of the RMSE.
-"""
 
+
+```python
 cross_network_rmse_list = []
 opt_cross_network_rmse_list = []
 deep_network_rmse_list = []
@@ -528,14 +571,20 @@ print_stats(
     num_params=deep_network_num_params,
     model_name="Deep Network",
 )
+```
 
-"""
+<div class="k-default-codeblock">
+```
+Cross Network: RMSE = 0.9283606112003326 ± 0.0746538288080064; #params = {num_params}
+Optimised Cross Network: RMSE = 0.9052837908267974 ± 0.0403745679488579; #params = {num_params}
+Deep Network: RMSE = 0.8862617671489715 ± 0.028625059967912505; #params = {num_params}
+
+```
+</div>
 DCN outperforms a similarly sized DNN with ReLU layers, demonstrating
 superior performance. Furthermore, the low-rank DCN effectively reduces the
 number of parameters without compromising accuracy.
-"""
 
-"""
 ### Visualizing feature interactions
 
 Like we did for the toy example, we will plot the weight matrix of the cross
@@ -548,8 +597,9 @@ the importance of feature interactions is represented by the `(i, j)`-th
 block of the weight matrix, which has dimensions `32 x 32`. To quantify the
 significance of these interactions, we use the Frobenius norm of each block. A
 larger value implies higher importance.
-"""
 
+
+```python
 features = list(vocabularies.keys())
 mat = cross_network.weights[len(features)].numpy()
 embedding_dim = MOVIELENS_CONFIG["embedding_dim"]
@@ -569,7 +619,22 @@ visualize_layer(
     matrix=block_norm,
     features=features,
 )
+```
 
-"""
+<div class="k-default-codeblock">
+```
+<ipython-input-3-8046d00f84d6>:11: UserWarning: set_ticklabels() should only be used with a fixed number of ticks, i.e. after set_ticks() or using a FixedLocator.
+  ax.set_xticklabels([""] + features, rotation=45, fontsize=10)
+<ipython-input-3-8046d00f84d6>:12: UserWarning: set_ticklabels() should only be used with a fixed number of ticks, i.e. after set_ticks() or using a FixedLocator.
+  ax.set_yticklabels([""] + features, fontsize=10)
+
+<Figure size 900x900 with 0 Axes>
+
+```
+</div>
+    
+![png](/img/examples/keras_rs/dcn/dcn_31_2.png)
+    
+
+
 And we are all done!
-"""
