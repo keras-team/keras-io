@@ -329,9 +329,9 @@ print_stats(
 
 <div class="k-default-codeblock">
 ```
-Cross Network: RMSE = 0.0023513431660830975; #params = 16
+Cross Network: RMSE = 0.004598785191774368; #params = 16
 
-Deep Network: RMSE = 0.00369881559163332; #params = 166272
+Deep Network: RMSE = 0.0032365056686103344; #params = 166272
 
 ```
 </div>
@@ -575,9 +575,9 @@ print_stats(
 
 <div class="k-default-codeblock">
 ```
-Cross Network: RMSE = 0.9283606112003326 ± 0.0746538288080064; #params = {num_params}
-Optimised Cross Network: RMSE = 0.9052837908267974 ± 0.0403745679488579; #params = {num_params}
-Deep Network: RMSE = 0.8862617671489715 ± 0.028625059967912505; #params = {num_params}
+Cross Network: RMSE = 0.8862980604171753 ± 0.02785943363424216; #params = {num_params}
+Optimised Cross Network: RMSE = 0.8959736168384552 ± 0.02930760422111321; #params = {num_params}
+Deep Network: RMSE = 0.8756072700023652 ± 0.039894984944065515; #params = {num_params}
 
 ```
 </div>
