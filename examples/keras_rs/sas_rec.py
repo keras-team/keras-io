@@ -22,6 +22,10 @@ for the same sequential recommendation task.
 Let's begin by importing all the necessary libraries.
 """
 
+import os
+
+os.environ["KERAS_BACKEND"] = "jax"  # `"tensorflow"`/`"torch"`
+
 import collections
 import os
 

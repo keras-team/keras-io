@@ -11,11 +11,10 @@ Accelerator: GPU
 ## Introduction
 
 In our
-[basic ranking tutorial](/keras_rs/examples/basic_ranking/)
-, we explored a model that learned to predict
-ratings for specific user-movie combinations. This model took (user, movie)
-pairs as input and was trained using mean-squared error to precisely predict
-the rating a user might give to a movie.
+[basic ranking tutorial](/keras_rs/examples/basic_ranking/), we explored a model
+that learned to predict ratings for specific user-movie combinations. This model
+took (user, movie) pairs as input and was trained using mean-squared error to
+precisely predict the rating a user might give to a movie.
 
 However, solely optimizing a model's accuracy in predicting individual movie
 scores isn't always the most effective strategy for developing ranking systems.
@@ -33,6 +32,10 @@ goal is to minimize the number of incorrectly ordered pairs.
 
 Let's begin by importing all the necessary libraries.
 """
+
+import os
+
+os.environ["KERAS_BACKEND"] = "jax"  # `"tensorflow"`/`"torch"`
 
 import collections
 
