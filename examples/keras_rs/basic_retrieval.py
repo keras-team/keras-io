@@ -24,7 +24,7 @@ Recommender systems are often composed of two stages:
 
 In this tutorial, we're going to focus on the first stage, retrieval. If you are
 interested in the ranking stage, have a look at our
-[ranking](https://keras.io/keras_rs/examples/basic_ranking/) tutorial.
+[ranking](/keras_rs/examples/basic_ranking/) tutorial.
 
 Retrieval models are often composed of two sub-models:
 

@@ -1,4 +1,4 @@
-# Basic ranking
+# Recommending movies: ranking
 
 **Author:** [Fabien Hertschuh](https://github.com/hertschuh/), [Abheesht Sharma](https://github.com/abheesht17/)<br>
 **Date created:** 2025/04/28<br>
@@ -10,7 +10,8 @@
 
 
 
-# Recommending movies: ranking
+---
+## Introduction
 
 Recommender systems are often composed of two stages:
 
@@ -26,7 +27,7 @@ Recommender systems are often composed of two stages:
 
 In this tutorial, we're going to focus on the second stage, ranking. If you are
 interested in the retrieval stage, have a look at our
-[retrieval](https://keras.io/keras_rs/examples/basic_retrieval/)
+[retrieval](/keras_rs/examples/basic_retrieval/)
 tutorial.
 
 In this tutorial, we're going to:
@@ -224,49 +225,49 @@ Epoch 1/5
 ```
 </div>
     
-  1/80 [37m━━━━━━━━━━━━━━━━━━━━  1:13 932ms/step - loss: 0.4391 - root_mean_squared_error: 0.6627
-
-<div class="k-default-codeblock">
-```
-
-```
-</div>
-  2/80 [37m━━━━━━━━━━━━━━━━━━━━  13s 167ms/step - loss: 0.3612 - root_mean_squared_error: 0.5975 
-
-<div class="k-default-codeblock">
-```
-
-```
-</div>
- 23/80 ━━━━━[37m━━━━━━━━━━━━━━━  0s 10ms/step - loss: 0.1433 - root_mean_squared_error: 0.3694  
+  1/80 [37m━━━━━━━━━━━━━━━━━━━━  1:21 1s/step - loss: 0.4528 - root_mean_squared_error: 0.6729
 
 <div class="k-default-codeblock">
 ```
 
 ```
 </div>
- 40/80 ━━━━━━━━━━[37m━━━━━━━━━━  0s 7ms/step - loss: 0.1214 - root_mean_squared_error: 0.3412 
+  2/80 [37m━━━━━━━━━━━━━━━━━━━━  13s 170ms/step - loss: 0.3840 - root_mean_squared_error: 0.6171
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+ 22/80 ━━━━━[37m━━━━━━━━━━━━━━━  0s 11ms/step - loss: 0.1532 - root_mean_squared_error: 0.3814  
+
+<div class="k-default-codeblock">
+```
+
+```
+</div>
+ 41/80 ━━━━━━━━━━[37m━━━━━━━━━━  0s 7ms/step - loss: 0.1256 - root_mean_squared_error: 0.3465 
 
 <div class="k-default-codeblock">
 ```
 
 ```
 </div>
- 61/80 ━━━━━━━━━━━━━━━[37m━━━━━  0s 5ms/step - loss: 0.1096 - root_mean_squared_error: 0.3253
+ 61/80 ━━━━━━━━━━━━━━━[37m━━━━━  0s 5ms/step - loss: 0.1134 - root_mean_squared_error: 0.3303
 
 <div class="k-default-codeblock">
 ```
 
 ```
 </div>
- 80/80 ━━━━━━━━━━━━━━━━━━━━ 0s 5ms/step - loss: 0.1037 - root_mean_squared_error: 0.3172
+ 80/80 ━━━━━━━━━━━━━━━━━━━━ 0s 5ms/step - loss: 0.1067 - root_mean_squared_error: 0.3213
 
 <div class="k-default-codeblock">
 ```
 
 ```
 </div>
- 80/80 ━━━━━━━━━━━━━━━━━━━━ 1s 5ms/step - loss: 0.1034 - root_mean_squared_error: 0.3168
+ 80/80 ━━━━━━━━━━━━━━━━━━━━ 1s 5ms/step - loss: 0.1065 - root_mean_squared_error: 0.3209
 
 
 <div class="k-default-codeblock">
@@ -276,28 +277,28 @@ Epoch 2/5
 ```
 </div>
     
-  1/80 [37m━━━━━━━━━━━━━━━━━━━━  13s 166ms/step - loss: 0.0782 - root_mean_squared_error: 0.2796
+  1/80 [37m━━━━━━━━━━━━━━━━━━━━  12s 152ms/step - loss: 0.0777 - root_mean_squared_error: 0.2787
 
 <div class="k-default-codeblock">
 ```
 
 ```
 </div>
- 23/80 ━━━━━[37m━━━━━━━━━━━━━━━  0s 2ms/step - loss: 0.0772 - root_mean_squared_error: 0.2779   
+ 25/80 ━━━━━━[37m━━━━━━━━━━━━━━  0s 2ms/step - loss: 0.0770 - root_mean_squared_error: 0.2774   
 
 <div class="k-default-codeblock">
 ```
 
 ```
 </div>
- 44/80 ━━━━━━━━━━━[37m━━━━━━━━━  0s 2ms/step - loss: 0.0771 - root_mean_squared_error: 0.2777
+ 48/80 ━━━━━━━━━━━━[37m━━━━━━━━  0s 2ms/step - loss: 0.0771 - root_mean_squared_error: 0.2777
 
 <div class="k-default-codeblock">
 ```
 
 ```
 </div>
- 65/80 ━━━━━━━━━━━━━━━━[37m━━━━  0s 2ms/step - loss: 0.0772 - root_mean_squared_error: 0.2778
+ 72/80 ━━━━━━━━━━━━━━━━━━[37m━━  0s 2ms/step - loss: 0.0772 - root_mean_squared_error: 0.2778
 
 <div class="k-default-codeblock">
 ```
@@ -321,21 +322,21 @@ Epoch 3/5
 
 ```
 </div>
- 26/80 ━━━━━━[37m━━━━━━━━━━━━━━  0s 2ms/step - loss: 0.0753 - root_mean_squared_error: 0.2743
+ 27/80 ━━━━━━[37m━━━━━━━━━━━━━━  0s 2ms/step - loss: 0.0752 - root_mean_squared_error: 0.2741
 
 <div class="k-default-codeblock">
 ```
 
 ```
 </div>
- 52/80 ━━━━━━━━━━━━━[37m━━━━━━━  0s 2ms/step - loss: 0.0751 - root_mean_squared_error: 0.2741
+ 53/80 ━━━━━━━━━━━━━[37m━━━━━━━  0s 2ms/step - loss: 0.0752 - root_mean_squared_error: 0.2742
 
 <div class="k-default-codeblock">
 ```
 
 ```
 </div>
- 78/80 ━━━━━━━━━━━━━━━━━━━[37m━  0s 2ms/step - loss: 0.0752 - root_mean_squared_error: 0.2742
+ 79/80 ━━━━━━━━━━━━━━━━━━━[37m━  0s 2ms/step - loss: 0.0752 - root_mean_squared_error: 0.2742
 
 <div class="k-default-codeblock">
 ```
@@ -352,35 +353,35 @@ Epoch 4/5
 ```
 </div>
     
-  1/80 [37m━━━━━━━━━━━━━━━━━━━━  0s 3ms/step - loss: 0.0727 - root_mean_squared_error: 0.2696
+  1/80 [37m━━━━━━━━━━━━━━━━━━━━  0s 3ms/step - loss: 0.0732 - root_mean_squared_error: 0.2706
 
 <div class="k-default-codeblock">
 ```
 
 ```
 </div>
- 27/80 ━━━━━━[37m━━━━━━━━━━━━━━  0s 2ms/step - loss: 0.0723 - root_mean_squared_error: 0.2689
+ 27/80 ━━━━━━[37m━━━━━━━━━━━━━━  0s 2ms/step - loss: 0.0724 - root_mean_squared_error: 0.2690
 
 <div class="k-default-codeblock">
 ```
 
 ```
 </div>
- 52/80 ━━━━━━━━━━━━━[37m━━━━━━━  0s 2ms/step - loss: 0.0722 - root_mean_squared_error: 0.2688
+ 53/80 ━━━━━━━━━━━━━[37m━━━━━━━  0s 2ms/step - loss: 0.0723 - root_mean_squared_error: 0.2688
 
 <div class="k-default-codeblock">
 ```
 
 ```
 </div>
- 75/80 ━━━━━━━━━━━━━━━━━━[37m━━  0s 2ms/step - loss: 0.0723 - root_mean_squared_error: 0.2690
+ 79/80 ━━━━━━━━━━━━━━━━━━━[37m━  0s 2ms/step - loss: 0.0723 - root_mean_squared_error: 0.2689
 
 <div class="k-default-codeblock">
 ```
 
 ```
 </div>
- 80/80 ━━━━━━━━━━━━━━━━━━━━ 0s 2ms/step - loss: 0.0724 - root_mean_squared_error: 0.2690
+ 80/80 ━━━━━━━━━━━━━━━━━━━━ 0s 2ms/step - loss: 0.0723 - root_mean_squared_error: 0.2689
 
 
 <div class="k-default-codeblock">
@@ -390,35 +391,35 @@ Epoch 5/5
 ```
 </div>
     
-  1/80 [37m━━━━━━━━━━━━━━━━━━━━  0s 3ms/step - loss: 0.0691 - root_mean_squared_error: 0.2628
+  1/80 [37m━━━━━━━━━━━━━━━━━━━━  0s 3ms/step - loss: 0.0695 - root_mean_squared_error: 0.2636
 
 <div class="k-default-codeblock">
 ```
 
 ```
 </div>
- 24/80 ━━━━━━[37m━━━━━━━━━━━━━━  0s 2ms/step - loss: 0.0687 - root_mean_squared_error: 0.2622
+ 27/80 ━━━━━━[37m━━━━━━━━━━━━━━  0s 2ms/step - loss: 0.0691 - root_mean_squared_error: 0.2629
 
 <div class="k-default-codeblock">
 ```
 
 ```
 </div>
- 47/80 ━━━━━━━━━━━[37m━━━━━━━━━  0s 2ms/step - loss: 0.0689 - root_mean_squared_error: 0.2624
+ 53/80 ━━━━━━━━━━━━━[37m━━━━━━━  0s 2ms/step - loss: 0.0695 - root_mean_squared_error: 0.2635
 
 <div class="k-default-codeblock">
 ```
 
 ```
 </div>
- 70/80 ━━━━━━━━━━━━━━━━━[37m━━━  0s 2ms/step - loss: 0.0690 - root_mean_squared_error: 0.2628
+ 79/80 ━━━━━━━━━━━━━━━━━━━[37m━  0s 2ms/step - loss: 0.0697 - root_mean_squared_error: 0.2640
 
 <div class="k-default-codeblock">
 ```
 
 ```
 </div>
- 80/80 ━━━━━━━━━━━━━━━━━━━━ 0s 2ms/step - loss: 0.0691 - root_mean_squared_error: 0.2629
+ 80/80 ━━━━━━━━━━━━━━━━━━━━ 0s 2ms/step - loss: 0.0697 - root_mean_squared_error: 0.2641
 
 
 
@@ -426,7 +427,7 @@ Epoch 5/5
 
 <div class="k-default-codeblock">
 ```
-<keras.src.callbacks.history.History at 0x3213408e0>
+<keras.src.callbacks.history.History at 0x3210408b0>
 
 ```
 </div>
@@ -441,21 +442,21 @@ model.evaluate(test_ratings, return_dict=True)
 ```
 
     
-  1/20 ━[37m━━━━━━━━━━━━━━━━━━━  13s 724ms/step - loss: 0.0677 - root_mean_squared_error: 0.2602
+  1/20 ━[37m━━━━━━━━━━━━━━━━━━━  15s 836ms/step - loss: 0.0694 - root_mean_squared_error: 0.2634
 
 <div class="k-default-codeblock">
 ```
 
 ```
 </div>
-  2/20 ━━[37m━━━━━━━━━━━━━━━━━━  1s 57ms/step - loss: 0.0668 - root_mean_squared_error: 0.2585  
+  2/20 ━━[37m━━━━━━━━━━━━━━━━━━  1s 57ms/step - loss: 0.0685 - root_mean_squared_error: 0.2616  
 
 <div class="k-default-codeblock">
 ```
 
 ```
 </div>
- 20/20 ━━━━━━━━━━━━━━━━━━━━ 1s 4ms/step - loss: 0.0656 - root_mean_squared_error: 0.2561 
+ 20/20 ━━━━━━━━━━━━━━━━━━━━ 1s 4ms/step - loss: 0.0668 - root_mean_squared_error: 0.2584 
 
 
 
@@ -463,7 +464,7 @@ model.evaluate(test_ratings, return_dict=True)
 
 <div class="k-default-codeblock">
 ```
-{'loss': 0.06643928587436676, 'root_mean_squared_error': 0.2577582001686096}
+{'loss': 0.06749406456947327, 'root_mean_squared_error': 0.2597962021827698}
 
 ```
 </div>
@@ -513,9 +514,9 @@ for movie_id, prediction in zip(movie_ids, predictions):
 
 <div class="k-default-codeblock">
 ```
-b'Back to the Future (1985)': 3.89
-b'20,000 Leagues Under the Sea (1954)': 3.80
-b"Breakfast at Tiffany's (1961)": 3.53
+b'Back to the Future (1985)': 3.25
+b'20,000 Leagues Under the Sea (1954)': 3.24
+b"Breakfast at Tiffany's (1961)": 2.91
 
 ```
 </div>

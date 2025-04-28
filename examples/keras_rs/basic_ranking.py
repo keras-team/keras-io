@@ -24,7 +24,7 @@ Recommender systems are often composed of two stages:
 
 In this tutorial, we're going to focus on the second stage, ranking. If you are
 interested in the retrieval stage, have a look at our
-[retrieval](https://keras.io/keras_rs/examples/basic_retrieval/)
+[retrieval](/keras_rs/examples/basic_retrieval/)
 tutorial.
 
 In this tutorial, we're going to:
@@ -50,7 +50,7 @@ import tensorflow_datasets as tfds
 ## Preparing the dataset
 
 We're going to use the same data as the
-[retrieval](https://keras.io/keras_rs/examples/basic_retrieval/)
+[retrieval](/keras_rs/examples/basic_retrieval/)
 tutorial. The ratings are the objectives we are trying to predict.
 """
 

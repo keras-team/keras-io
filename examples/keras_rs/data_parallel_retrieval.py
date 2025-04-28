@@ -12,7 +12,7 @@ Accelerator: TPU
 
 In this tutorial, we are going to train the exact same retrieval model as we
 did in our
-[basic retrieval](https://keras.io/keras_rs/examples/basic_retrieval/)
+[basic retrieval](/keras_rs/examples/basic_retrieval/)
 tutorial, but in a distributed way.
 
 Distributed training is used to train models on multiple devices or machines

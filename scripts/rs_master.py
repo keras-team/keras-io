@@ -220,7 +220,7 @@ RS_EXAMPLES_MASTER = {
             "path": "sequential_retrieval",
             "title": (
                 "Recommending movies: retrieval using a sequential model "
-                "[GRU4Rec]",
+                "[GRU4Rec]"
             )
         },
         {

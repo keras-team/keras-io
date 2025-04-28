@@ -68,7 +68,7 @@ LEARNING_RATE = 0.05
 ## Dataset
 
 Next, we need to prepare our dataset. Like we did in the
-[basic retrieval](https://keras.io/keras_rs/examples/basic_retrieval/)
+[basic retrieval](/keras_rs/examples/basic_retrieval/)
 example, we are going to use the MovieLens dataset.
 
 The dataset preparation step is fairly involved. The original ratings dataset

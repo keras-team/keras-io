@@ -11,9 +11,9 @@ Accelerator: GPU
 ## Introduction
 
 In the
-[basic retrieval](https://keras.io/keras_rs/examples/basic_retrieval/)
+[basic retrieval](/keras_rs/examples/basic_retrieval/)
 and
-[basic ranking](https://keras.io/keras_rs/examples/basic_ranking/)
+[basic ranking](/keras_rs/examples/basic_ranking/)
 tutorials, we created separate models for retrieval and ranking tasks,
 respectively. However, in many cases, building a single, joint model for
 multiple tasks can lead to better performance than creating distinct models for

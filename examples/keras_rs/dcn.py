@@ -340,7 +340,7 @@ features.
 ### Preparing the dataset
 
 The dataset processing steps here are similar to what's given in the
-[basic ranking](https://keras.io/keras_rs/examples/basic_ranking/)
+[basic ranking](/keras_rs/examples/basic_ranking/)
 tutorial. Let's load the dataset, and keep only the useful columns.
 """
 
