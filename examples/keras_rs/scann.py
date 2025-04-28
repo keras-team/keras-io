@@ -30,7 +30,7 @@ significantly outperform brute-force search methods, delivering fast retrieval
 with minimal loss in accuracy.
 
 We will start with the same code as the
-[basic retrieval example](https://github.com/keras-team/keras-rs/blob/main/examples/basic_retrieval.py).
+[basic retrieval example](https://keras.io/keras_rs/examples/basic_retrieval/).
 Data processing, model building, and training remain exactly the same. Feel free
 to skip this part if you have gone over the basic retrieval example before.
 

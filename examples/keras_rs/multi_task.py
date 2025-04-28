@@ -11,9 +11,9 @@ Accelerator: GPU
 # Multi-task Recommenders: Retrieval + Ranking
 
 In the
-[basic retrieval](https://github.com/keras-team/keras-rs/blob/main/examples/basic_retrieval.py)
+[basic retrieval](https://keras.io/keras_rs/examples/basic_retrieval/)
 and
-[basic ranking](https://github.com/keras-team/keras-rs/blob/main/examples/basic_ranking.py)
+[basic ranking](https://keras.io/keras_rs/examples/basic_ranking/)
 tutorials, we created separate models for retrieval and ranking tasks,
 respectively. However, in many cases, building a single, joint model for
 multiple tasks can lead to better performance than creating distinct models for

@@ -160,7 +160,6 @@ METRICS_MASTER = {
             "title": "MeanReciprocalRank metric",
             "generate": [
                 "keras_rs.metrics.MeanReciprocalRank",
-                "keras_rs.metrics.MeanReciprocalRank.call",
             ],
         },
         {
@@ -168,25 +167,22 @@ METRICS_MASTER = {
             "title": "MeanAveragePrecision metric",
             "generate": [
                 "keras_rs.metrics.MeanAveragePrecision",
-                "keras_rs.metrics.MeanAveragePrecision.call",
             ],
         },
-        {
-            "path": "dcg",
-            "title": "DCG metric",
-            "generate": [
-                "keras_rs.metrics.DCG",
-                "keras_rs.metrics.DCG.call",
-            ],
-        },
-        {
-            "path": "ndcg",
-            "title": "nDCG metric",
-            "generate": [
-                "keras_rs.metrics.nDCG",
-                "keras_rs.metrics.nDCG.call",
-            ],
-        },
+        # {
+        #     "path": "dcg",
+        #     "title": "DCG metric",
+        #     "generate": [
+        #         "keras_rs.metrics.DCG",
+        #     ],
+        # },
+        # {
+        #     "path": "ndcg",
+        #     "title": "nDCG metric",
+        #     "generate": [
+        #         "keras_rs.metrics.NDCG",
+        #     ],
+        # },
     ]
 }
 

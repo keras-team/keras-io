@@ -68,8 +68,8 @@ LEARNING_RATE = 0.05
 ## Dataset
 
 Next, we need to prepare our dataset. Like we did in the
-[basic retrieval](https://github.com/keras-team/keras-rs/blob/main/examples/basic_retrieval.py)
-example, we are going to use the MovieLens dataset. 
+[basic retrieval](https://keras.io/keras_rs/examples/basic_retrieval/)
+example, we are going to use the MovieLens dataset.
 
 The dataset preparation step is fairly involved. The original ratings dataset
 contains `(user, movie ID, rating, timestamp)` tuples (among other columns,
@@ -229,7 +229,7 @@ def generate_examples_from_user_sequences(sequences):
 """
 Let's split the dataset into train and test sets. Also, we need to
 change the format of the dataset dictionary so as to enable conversion
-to a `tf.data.Dataset` object. 
+to a `tf.data.Dataset` object.
 """
 sequences = get_movie_sequence_per_user(ratings_df)
 examples = generate_examples_from_user_sequences(sequences)

@@ -13,7 +13,7 @@ Accelerator: GPU
 Sequential recommendation is a popular model that looks at a sequence of items
 that users have interacted with previously and then predicts the next item.
 Here, the order of the items within each sequence matters. Previously, in the
-[Recommending movies: retrieval using a sequential model](https://github.com/keras-team/keras-rs/blob/main/examples/sequential_retrieval.py)
+[Recommending movies: retrieval using a sequential model](https://keras.io/keras_rs/examples/sequential_retrieval/)
 example, we built a GRU-based sequential retrieval model. In this example, we
 will build a popular Transformer decoder-based model named
 [Self-Attentive Sequential Recommendation (SASRec)](https://arxiv.org/abs/1808.09781)
@@ -70,7 +70,7 @@ DROPOUT = 0.2
 ## Dataset
 
 Next, we need to prepare our dataset. Like we did in the
-[sequential retrieval](https://github.com/keras-team/keras-rs/blob/main/examples/sequential_retrieval.py)
+[sequential retrieval](https://keras.io/keras_rs/examples/sequential_retrieval/)
 example, we are going to use the MovieLens dataset. 
 
 The dataset preparation step is fairly involved. The original ratings dataset

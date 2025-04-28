@@ -40,7 +40,7 @@ In this tutorial, we are going to incorporate multiple features in our models.
 These features will come from preprocessing the MovieLens dataset.
 
 In the
-[basic retrieval](https://github.com/keras-team/keras-rs/blob/main/examples/basic_retrieval.py)
+[basic retrieval](https://keras.io/keras_rs/examples/basic_retrieval/)
 tutorial, the models consist of only an embedding layer. In this tutorial, we
 add more dense layers to our models to increase their expressive power.
 
