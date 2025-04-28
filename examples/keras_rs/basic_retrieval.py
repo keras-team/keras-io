@@ -1,8 +1,8 @@
 """
 Title: Basic retrieval
 Author: [Fabien Hertschuh](https://github.com/hertschuh/), [Abheesht Sharma](https://github.com/abheesht17/)
-Date created: 2025/02/09
-Last modified: 2025/02/27
+Date created: 2025/04/28
+Last modified: 2025/04/28
 Description: Retrieve movies using a two tower model.
 Accelerator: GPU
 """

@@ -1,8 +1,8 @@
 """
 Title: Retrieval with data parallel training
 Author: [Abheesht Sharma](https://github.com/abheesht17/), [Fabien Hertschuh](https://github.com/hertschuh/)
-Date created: 2025/01/28
-Last modified: 2025/02/14
+Date created: 2025/04/28
+Last modified: 2025/04/28
 Description: Retrieve movies using a two tower model (data parallel training).
 Accelerator: GPU
 """
@@ -49,7 +49,7 @@ For the synchronous data parallelism strategy in distributed training,
 we will use the `DataParallel` class present in the `keras.distribution`
 API.
 """
-devices = jax.devices("gpu")  # Assume it has >1 local GPUs.
+devices = jax.devices()  # Assume it has >1 local devices.
 data_parallel = keras.distribution.DataParallel(devices=devices)
 
 """
@@ -190,7 +190,7 @@ and evaluate the model.
 """
 
 model = RetrievalModel(users_count + 1, movies_count + 1)
-model.compile(optimizer=keras.optimizers.Adagrad(learning_rate=0.1))
+model.compile(optimizer=keras.optimizers.Adagrad(learning_rate=0.2))
 
 """
 Let's train the model. Evaluation takes a bit of time, so we only evaluate the

@@ -1,9 +1,9 @@
 """
 Title: Deep Recommenders
 Author: [Fabien Hertschuh](https://github.com/hertschuh/), [Abheesht Sharma](https://github.com/abheesht17/)
-Date created: 2025/02/27
-Last modified: 2025/02/27
-Description: Using one model for both retrieval and ranking.
+Date created: 2025/04/28
+Last modified: 2025/04/28
+Description: Building a deep retrieval model with multiple stacked layers.
 Accelerator: GPU
 """
 

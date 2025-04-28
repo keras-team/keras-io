@@ -28,6 +28,14 @@ RETRIEVAL_LAYERS_MASTER = {
     "toc": True,
     "children": [
         {
+            "path": "retrieval",
+            "title": "Retrieval layer",
+            "generate": [
+                "keras_rs.layers.Retrieval",
+                "keras_rs.layers.Retrieval.call",
+            ],
+        },
+        {
             "path": "brute_force_retrieval",
             "title": "BruteForceRetrieval layer",
             "generate": [
@@ -35,14 +43,14 @@ RETRIEVAL_LAYERS_MASTER = {
                 "keras_rs.layers.BruteForceRetrieval.call",
             ],
         },
-        {
-            "path": "tpu_approximate_retrieval",
-            "title": "TPUApproximateRetrieval layer",
-            "generate": [
-                "keras_rs.layers.TPUApproximateRetrieval",
-                "keras_rs.layers.TPUApproximateRetrieval.call",
-            ],
-        },
+        # {
+        #     "path": "tpu_approximate_retrieval",
+        #     "title": "TPUApproximateRetrieval layer",
+        #     "generate": [
+        #         "keras_rs.layers.TPUApproximateRetrieval",
+        #         "keras_rs.layers.TPUApproximateRetrieval.call",
+        #     ],
+        # },
         {
             "path": "hard_negative_mining",
             "title": "HardNegativeMining layer",
@@ -70,30 +78,29 @@ RETRIEVAL_LAYERS_MASTER = {
     ]
 }
 
-
-LAYERS_MASTER = {
-    "path": "layers/",
-    "title": "Layers",
-    "toc": True,
-    "children": [
-        {
-            "path": "distributed_embedding",
-            "title": "DistributedEmbedding layer",
-            "generate": [
-                "keras_rs.layers.DistributedEmbedding",
-                "keras_rs.layers.DistributedEmbedding.call",
-            ],
-        },
-        {
-            "path": "frequency_estimator",
-            "title": "FrequencyEstimator layer",
-            "generate": [
-                "keras_rs.layers.FrequencyEstimator",
-                "keras_rs.layers.FrequencyEstimator.call",
-            ],
-        },
-    ]
-}
+# LAYERS_MASTER = {
+#     "path": "layers/",
+#     "title": "Layers",
+#     "toc": True,
+#     "children": [
+#         {
+#             "path": "distributed_embedding",
+#             "title": "DistributedEmbedding layer",
+#             "generate": [
+#                 "keras_rs.layers.DistributedEmbedding",
+#                 "keras_rs.layers.DistributedEmbedding.call",
+#             ],
+#         },
+#         {
+#             "path": "frequency_estimator",
+#             "title": "FrequencyEstimator layer",
+#             "generate": [
+#                 "keras_rs.layers.FrequencyEstimator",
+#                 "keras_rs.layers.FrequencyEstimator.call",
+#             ],
+#         },
+#     ]
+# }
 
 LOSSES_MASTER = {
     "path": "losses/",
@@ -132,14 +139,14 @@ LOSSES_MASTER = {
                 "keras_rs.losses.PairwiseSoftZeroOneLoss.call",
             ],
         },
-        {
-            "path": "list_mle_loss",
-            "title": "ListMLELoss",
-            "generate": [
-                "keras_rs.losses.ListMLELoss",
-                "keras_rs.losses.ListMLELoss.call",
-            ],
-        },
+        # {
+        #     "path": "list_mle_loss",
+        #     "title": "ListMLELoss",
+        #     "generate": [
+        #         "keras_rs.losses.ListMLELoss",
+        #         "keras_rs.losses.ListMLELoss.call",
+        #     ],
+        # },
     ]
 }
 
@@ -188,7 +195,7 @@ RS_API_MASTER = {
     "title": "API documentation",
     "toc": True,
     "children": [
-        LAYERS_MASTER,
+        # LAYERS_MASTER,
         FEATURE_INTERACTION_LAYERS_MASTER,
         RETRIEVAL_LAYERS_MASTER,
         LOSSES_MASTER,
@@ -231,27 +238,18 @@ RS_EXAMPLES_MASTER = {
         },
         {
             "path": "listwise_ranking",
-            "title": "Listwise ranking",
+            "title": "List-wise ranking",
         },
         {
             "path": "dcn",
             "title": "Ranking with Deep and Cross Networks (DCN)",
         },
         {
-            "path": "dlrm",
-            "title": "Ranking with DLRM",
-        },
-        {
-            "path": "bert_4_rec",
-            "title": "Sequential Recommendation with BERT4Rec",
-        },
-        {
-            "path": "sasrec",
-            "title": "Self-attentive Sequential Recommendation (SasRec)",
-        },
-        {
-            "path": "hstu",
-            "title": "Hierarchical Sequential Transduction Units (HSTU) for generative recommendation",
+            "path": "sas_rec",
+            "title": (
+                "Recommend movies using a Transformer-based retrieval model "
+                "(SASRec)."
+            )
         },
     ],
 }

@@ -1,8 +1,8 @@
 """
 Title: Retrieval using a sequential model [GRU4Rec]
 Author: [Abheesht Sharma](https://github.com/abheesht17/), [Fabien Hertschuh](https://github.com/hertschuh/)
-Date created: 2025/02/09
-Last modified: 2025/02/27
+Date created: 2025/04/28
+Last modified: 2025/04/28
 Description: Recommend movies using a GRU-based sequential retrieval model.
 Accelerator: GPU
 """
@@ -69,7 +69,7 @@ LEARNING_RATE = 0.05
 
 Next, we need to prepare our dataset. Like we did in the
 [basic retrieval](https://github.com/keras-team/keras-rs/blob/main/examples/basic_retrieval.py)
-example, we are going to use the MovieLens dataset.
+example, we are going to use the MovieLens dataset. 
 
 The dataset preparation step is fairly involved. The original ratings dataset
 contains `(user, movie ID, rating, timestamp)` tuples (among other columns,
@@ -229,7 +229,7 @@ def generate_examples_from_user_sequences(sequences):
 """
 Let's split the dataset into train and test sets. Also, we need to
 change the format of the dataset dictionary so as to enable conversion
-to a `tf.data.Dataset` object.
+to a `tf.data.Dataset` object. 
 """
 sequences = get_movie_sequence_per_user(ratings_df)
 examples = generate_examples_from_user_sequences(sequences)

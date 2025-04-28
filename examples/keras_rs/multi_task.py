@@ -1,8 +1,8 @@
 """
 Title: Multi-task Recommenders: Retrieval + Ranking
 Author: [Abheesht Sharma](https://github.com/abheesht17/), [Fabien Hertschuh](https://github.com/hertschuh/)
-Date created: 2025/02/19
-Last modified: 2025/02/19
+Date created: 2025/04/28
+Last modified: 2025/04/28
 Description: Using one model for both retrieval and ranking.
 Accelerator: GPU
 """
