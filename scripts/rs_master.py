@@ -206,11 +206,11 @@ RS_EXAMPLES_MASTER = {
     "children": [
         {
             "path": "basic_retrieval",
-            "title": "Basic retrieval",
+            "title": "Recommending movies: retrieval",
         },
         {
             "path": "basic_ranking",
-            "title": "Basic ranking",
+            "title": "Recommending movies: ranking",
         },
         {
             "path": "data_parallel_retrieval",
@@ -218,11 +218,16 @@ RS_EXAMPLES_MASTER = {
         },
         {
             "path": "sequential_retrieval",
-            "title": "Retrieval using a sequential model (GRU4Rec)",
+            "title": (
+                "Recommending movies: retrieval using a sequential model "
+                "[GRU4Rec]",
+            )
         },
         {
             "path": "scann",
-            "title": "Faster retrieval with Scalable Nearest Neighbours (ScANN)",
+            "title": (
+                "Faster retrieval with Scalable Nearest Neighbours (ScANN)"
+            )
         },
         {
             "path": "multi_task",
@@ -230,7 +235,7 @@ RS_EXAMPLES_MASTER = {
         },
         {
             "path": "deep_recommender",
-            "title": "Building a deep retrieval model",
+            "title": "Deep Recommenders",
         },
         {
             "path": "listwise_ranking",
@@ -243,8 +248,7 @@ RS_EXAMPLES_MASTER = {
         {
             "path": "sas_rec",
             "title": (
-                "Recommend movies using a Transformer-based retrieval model "
-                "(SASRec)."
+                "Retrieval using a Transformer-based sequential model [SasRec]"
             )
         },
     ],

@@ -8,7 +8,7 @@ Accelerator: GPU
 """
 
 """
-# Recommending movies: retrieval using a sequential transformer model (SASRec)
+## Introduction
 
 Sequential recommendation is a popular model that looks at a sequence of items
 that users have interacted with previously and then predicts the next item.

@@ -8,7 +8,7 @@ Accelerator: GPU
 """
 
 """
-# Ranking with Deep and Cross Networks
+## Introduction
 
 This tutorial demonstrates how to use Deep & Cross Networks (DCN) to effectively
 learn feature crosses. Before diving into the example, let's briefly discuss

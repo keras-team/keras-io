@@ -8,7 +8,7 @@ Accelerator: GPU
 """
 
 """
-# Building a deep retrieval model
+## Introduction
 
 One of the great advantages of using Keras to build recommender models is the
 freedom to build rich, flexible feature representations.

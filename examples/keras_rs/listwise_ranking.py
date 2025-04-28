@@ -8,7 +8,7 @@ Accelerator: GPU
 """
 
 """
-# List-wise ranking
+## Introduction
 
 In our
 [basic ranking tutorial](https://keras.io/keras_rs/examples/basic_ranking/)

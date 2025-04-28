@@ -1,5 +1,5 @@
 """
-Title: Basic ranking
+Title: Recommending movies: ranking
 Author: [Fabien Hertschuh](https://github.com/hertschuh/), [Abheesht Sharma](https://github.com/abheesht17/)
 Date created: 2025/04/28
 Last modified: 2025/04/28
@@ -8,7 +8,7 @@ Accelerator: GPU
 """
 
 """
-# Recommending movies: ranking
+## Introduction
 
 Recommender systems are often composed of two stages:
 

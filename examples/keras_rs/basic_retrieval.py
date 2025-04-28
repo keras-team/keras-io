@@ -1,5 +1,5 @@
 """
-Title: Basic retrieval
+Title: Recommending movies: retrieval
 Author: [Fabien Hertschuh](https://github.com/hertschuh/), [Abheesht Sharma](https://github.com/abheesht17/)
 Date created: 2025/04/28
 Last modified: 2025/04/28
@@ -8,7 +8,7 @@ Accelerator: GPU
 """
 
 """
-# Recommending movies: retrieval
+## Introduction
 
 Recommender systems are often composed of two stages:
 
@@ -45,7 +45,7 @@ We're going to:
 3. Fit and evaluate it.
 4. Test running predictions with the model.
 
-## The dataset
+### The dataset
 
 The Movielens dataset is a classic dataset from the
 [GroupLens](https://grouplens.org/datasets/movielens/) research group at the

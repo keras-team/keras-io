@@ -1,5 +1,5 @@
 """
-Title: Retrieval with data parallel training
+Title: Recommending movies: retrieval with data parallel training
 Author: [Abheesht Sharma](https://github.com/abheesht17/), [Fabien Hertschuh](https://github.com/hertschuh/)
 Date created: 2025/04/28
 Last modified: 2025/04/28
@@ -8,7 +8,7 @@ Accelerator: TPU
 """
 
 """
-# Recommending movies: retrieval with data parallel training
+## Introduction
 
 In this tutorial, we are going to train the exact same retrieval model as we
 did in our

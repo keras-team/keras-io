@@ -1,5 +1,5 @@
 """
-Title: Multi-task Recommenders: Retrieval + Ranking
+Title: Multi-task recommenders: retrieval + ranking
 Author: [Abheesht Sharma](https://github.com/abheesht17/), [Fabien Hertschuh](https://github.com/hertschuh/)
 Date created: 2025/04/28
 Last modified: 2025/04/28
@@ -8,7 +8,7 @@ Accelerator: GPU
 """
 
 """
-# Multi-task Recommenders: Retrieval + Ranking
+## Introduction
 
 In the
 [basic retrieval](https://keras.io/keras_rs/examples/basic_retrieval/)

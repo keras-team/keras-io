@@ -1,5 +1,5 @@
 """
-Title: Retrieval using a sequential model [GRU4Rec]
+Title: Recommending movies: retrieval using a sequential model [GRU4Rec]
 Author: [Abheesht Sharma](https://github.com/abheesht17/), [Fabien Hertschuh](https://github.com/hertschuh/)
 Date created: 2025/04/28
 Last modified: 2025/04/28
@@ -8,7 +8,7 @@ Accelerator: GPU
 """
 
 """
-# Recommending movies: retrieval using a sequential model
+## Introduction
 
 In this example, we are going to build a sequential retrieval model. Sequential
 recommendation is a popular model that looks at a sequence of items that users
