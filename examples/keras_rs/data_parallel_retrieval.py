@@ -4,7 +4,7 @@ Author: [Abheesht Sharma](https://github.com/abheesht17/), [Fabien Hertschuh](ht
 Date created: 2025/04/28
 Last modified: 2025/04/28
 Description: Retrieve movies using a two tower model (data parallel training).
-Accelerator: GPU
+Accelerator: TPU
 """
 
 """
