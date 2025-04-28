@@ -13,6 +13,80 @@ This library is an extension of the core Keras API; all high-level modules
 receive that same level of polish as core Keras. If you are familiar with Keras,
 congratulations! You already understand most of Keras Recommenders.
 
+## Quick Links
+
+- [Home page](https://keras.io/keras_rs)
+- [Examples](https://keras.io/keras_rs/examples)
+- [API documentation](https://keras.io/keras_rs/api)
+
+## Quickstart
+
+### Train your own cross network
+
+Choose a backend:
+
+```python
+import os
+os.environ["KERAS_BACKEND"] = "jax"  # Or "tensorflow" or "torch"!
+```
+
+Import KerasRS and other libraries:
+
+```python
+import keras
+import keras_rs
+import numpy as np
+```
+
+Define a simple model using the `FeatureCross` layer:
+
+```python
+vocabulary_size = 32
+embedding_dim = 6
+
+inputs = keras.Input(shape=(), name='indices', dtype="int32")
+x0 = keras.layers.Embedding(
+    input_dim=vocabulary_size,
+    output_dim=embedding_dim
+)(inputs)
+x1 = keras_rs.layers.FeatureCross()(x0, x0)
+x2 = keras_rs.layers.FeatureCross()(x0, x1)
+output = keras.layers.Dense(units=10)(x2)
+model = keras.Model(inputs, output)
+```
+
+Compile the model:
+
+```python
+model.compile(
+    loss=keras.losses.MeanSquaredError(),
+    optimizer=keras.optimizers.Adam(learning_rate=3e-4)
+)
+```
+
+Call `model.fit()` on dummy data:
+
+```python
+batch_size = 2
+x = np.random.randint(0, vocabulary_size, size=(batch_size,))
+y = np.random.random(size=(batch_size,))
+model.fit(input_data, y=y)
+```
+
+### Use ranking losses and metrics
+
+If your task is to rank items in a list, you can make use of the ranking losses
+and metrics which KerasRS provides. Below, we use the pairwise hinge loss and
+track the nDCG metric:
+
+```python
+model.compile(
+    loss=keras_rs.losses.PairwiseHingeLoss(),
+    metrics=[keras_rs.metrics.NDCG()]
+    optimizer=keras.optimizers.Adam(learning_rate=3e-4),
+)
+```
+
 ## Installation
 
 Keras Recommenders is available on PyPI as `keras-rs`:
@@ -30,10 +104,6 @@ pip install keras-rs-nightly
 
 Read [Getting started with Keras](https://keras.io/getting_started/) for more
 information on installing Keras 3 and compatibility with different frameworks.
-
-> [!IMPORTANT]
-> We recommend using Keras Recommenders with TensorFlow 2.16 or later, as
-> TF 2.16 packages Keras 3 by default.
 
 ## Configuring your backend
 
@@ -53,10 +123,6 @@ os.environ["KERAS_BACKEND"] = "jax"
 
 import keras_rs
 ```
-
-> [!IMPORTANT]
-> Make sure to set the `KERAS_BACKEND` **before** importing any Keras libraries;
-> it will be used to set up Keras when it is first imported.
 
 ## Compatibility
 
