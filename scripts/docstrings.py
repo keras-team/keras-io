@@ -138,7 +138,8 @@ def make_source_link(cls, project_url):
     module_version = copy.copy(importlib.import_module(base_module).__version__)
     if ".dev" in module_version:
         module_version = project_url_version[: module_version.find(".dev")]
-    if module_version != project_url_version:
+    # TODO: Remove keras-rs condition, this is just a temporary thing.
+    if "keras-rs" not in project_url and module_version != project_url_version:
         raise RuntimeError(
             f"For project {base_module}, URL {project_url} "
             f"has version number {project_url_version} which does not match the "
@@ -205,7 +206,15 @@ def get_signature_start(function):
 
 def get_signature_end(function):
     params = inspect.signature(function).parameters.values()
-    signature_end = "(" + ", ".join([str(x) for x in params]) + ")"
+
+    formatted_params = []
+    for x in params:
+        str_x = str(x)
+        if "<function" in str_x:
+            str_x = re.sub(r'<function (.*?) at 0x[0-9a-fA-F]+>', r'\1', str_x)
+        formatted_params.append(str_x)
+    signature_end = "(" + ", ".join(formatted_params) + ")"
+
     if ismethod(function):
         signature_end = signature_end.replace("(self, ", "(")
         signature_end = signature_end.replace("(self)", "()")

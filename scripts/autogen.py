@@ -36,6 +36,8 @@ PROJECT_URL = {
     "keras_tuner": f"{KERAS_TEAM_GH}/keras-tuner/tree/v1.4.7/",
     "keras_hub": f"{KERAS_TEAM_GH}/keras-hub/tree/v0.20.0/",
     "tf_keras": f"{KERAS_TEAM_GH}/tf-keras/tree/v2.19.0/",
+    # TODO: Use the correct version when we cut a release.
+    "keras_rs": f"{KERAS_TEAM_GH}/keras-rs/tree/main/"
 }
 USE_MULTIPROCESSING = False
 
@@ -391,6 +393,12 @@ class KerasIO:
                     shutil.rmtree(dst_dir)
                 os.makedirs(dst_dir)
                 copy_inner_contents(dir_path / "md", dst_dir, ext=".md")
+
+        shutil.copytree(
+            templates_path / "examples" / "keras_rs",
+            templates_path / "keras_rs" / "examples",
+            dirs_exist_ok=True,
+        )
 
         # Examples touch-up: add Keras version banner to each example
         example_name_to_version = {}
