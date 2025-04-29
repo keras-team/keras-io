@@ -1,4 +1,4 @@
-# Ranking with Deep and Cross Networks (DCN)
+# Ranking with Deep and Cross Networks
 
 **Author:** [Abheesht Sharma](https://github.com/abheesht17/), [Fabien Hertschuh](https://github.com/hertschuh/)<br>
 **Date created:** 2025/04/28<br>
@@ -26,7 +26,7 @@ combination of `purchased_bananas` and `purchased_cooking_books` is a feature
 cross. Feature crosses capture interaction information between individual
 features, providing richer context than the individual features alone.
 
-![Why are feature crosses important?](https://imgur.com/a/HfCx1TO)
+![Why are feature crosses important?](https://i.imgur.com/qDK6UZh.gif)
 
 Learning effective feature crosses presents several challenges. In web-scale
 applications, data is often categorical, resulting in high-dimensional and
@@ -47,7 +47,7 @@ crossing at each layer, with the highest polynomial degree of feature
 interaction increasing with depth. The following figure shows the `(i+1)`-th
 cross layer.
 
-![Feature Cross Layer](https://imgur.com/a/BXWEkX9)
+![Feature Cross Layer](https://i.imgur.com/ip5uRsl.png)
 
 The deep network is a standard feedforward multilayer perceptron
 (MLP). These two networks are then combined to form the DCN.  Two common
@@ -55,8 +55,22 @@ combination strategies exist: a stacked structure, where the deep network is
 placed on top of the cross network, and a parallel structure, where they
 operate in parallel.
 
-![Parallel Layers](https://imgur.com/a/b32gf8j)
-![Stacked Layers](https://imgur.com/a/htYCRLk)
+<table>
+  <tr>
+    <td>
+      <figure>
+        <img src="https://i.imgur.com/rNn0zxS.png" alt="Parallel layers" width="1000" height="500">
+        <figcaption>Parallel layers</figcaption>
+      </figure>
+    </td>
+    <td>
+      <figure>
+        <img src="https://i.imgur.com/g32nzCl.png" alt="Stacked layers" width="1000" height="500">
+        <figcaption>Stacked layers</figcaption>
+      </figure>
+    </td>
+  </tr>
+</table>
 
 Now that we know a little bit about DCN, let's start writing some code. We will
 first train a DCN on a toy dataset, and demonstrate that the model has indeed
@@ -329,9 +343,9 @@ print_stats(
 
 <div class="k-default-codeblock">
 ```
-Cross Network: RMSE = 0.004598785191774368; #params = 16
+Cross Network: RMSE = 0.0039838217198848724; #params = 16
 
-Deep Network: RMSE = 0.0032365056686103344; #params = 166272
+Deep Network: RMSE = 0.018396195024251938; #params = 166272
 
 ```
 </div>
@@ -575,9 +589,9 @@ print_stats(
 
 <div class="k-default-codeblock">
 ```
-Cross Network: RMSE = 0.8862980604171753 ± 0.02785943363424216; #params = {num_params}
-Optimised Cross Network: RMSE = 0.8959736168384552 ± 0.02930760422111321; #params = {num_params}
-Deep Network: RMSE = 0.8756072700023652 ± 0.039894984944065515; #params = {num_params}
+Cross Network: RMSE = 0.9215710818767547 ± 0.0366027878134903; #params = {num_params}
+Optimised Cross Network: RMSE = 0.9246280252933502 ± 0.04176179068014404; #params = {num_params}
+Deep Network: RMSE = 0.8795858860015869 ± 0.03446538829561981; #params = {num_params}
 
 ```
 </div>

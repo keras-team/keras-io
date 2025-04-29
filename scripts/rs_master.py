@@ -214,14 +214,11 @@ RS_EXAMPLES_MASTER = {
         },
         {
             "path": "data_parallel_retrieval",
-            "title": "Recommending movies: retrieval with data parallel training",
+            "title": "Retrieval with data parallel training",
         },
         {
             "path": "sequential_retrieval",
-            "title": (
-                "Recommending movies: retrieval using a sequential model "
-                "[GRU4Rec]"
-            )
+            "title": "Sequential retrieval [GRU4Rec]",
         },
         {
             "path": "scann",
@@ -243,13 +240,11 @@ RS_EXAMPLES_MASTER = {
         },
         {
             "path": "dcn",
-            "title": "Ranking with Deep and Cross Networks (DCN)",
+            "title": "Ranking with Deep and Cross Networks",
         },
         {
             "path": "sas_rec",
-            "title": (
-                "Retrieval using a Transformer-based sequential model [SasRec]"
-            )
+            "title": "Sequential retrieval using SASRec",
         },
     ],
 }
