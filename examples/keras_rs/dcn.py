@@ -23,7 +23,7 @@ combination of `purchased_bananas` and `purchased_cooking_books` is a feature
 cross. Feature crosses capture interaction information between individual
 features, providing richer context than the individual features alone.
 
-![Why are feature crosses important?](https://imgur.com/a/HfCx1TO)
+![Why are feature crosses important?](https://i.imgur.com/qDK6UZh.gif)
 
 Learning effective feature crosses presents several challenges. In web-scale
 applications, data is often categorical, resulting in high-dimensional and
@@ -44,7 +44,7 @@ crossing at each layer, with the highest polynomial degree of feature
 interaction increasing with depth. The following figure shows the `(i+1)`-th
 cross layer.
 
-![Feature Cross Layer](https://imgur.com/a/BXWEkX9)
+![Feature Cross Layer](https://i.imgur.com/ip5uRsl.png)
 
 The deep network is a standard feedforward multilayer perceptron
 (MLP). These two networks are then combined to form the DCN.  Two common
@@ -52,8 +52,8 @@ combination strategies exist: a stacked structure, where the deep network is
 placed on top of the cross network, and a parallel structure, where they
 operate in parallel.
 
-![Parallel Layers](https://imgur.com/a/b32gf8j)
-![Stacked Layers](https://imgur.com/a/htYCRLk)
+![Parallel Layers](https://i.imgur.com/C9RSw7T.png)
+![Stacked Layers](https://i.imgur.com/MxbtXBj.png)
 
 Now that we know a little bit about DCN, let's start writing some code. We will
 first train a DCN on a toy dataset, and demonstrate that the model has indeed
