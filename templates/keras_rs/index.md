@@ -2,7 +2,9 @@
 
 <a class="github-button" href="https://github.com/keras-team/keras-rs" data-size="large" data-show-count="true" aria-label="Star keras-team/keras-rs on GitHub">Star</a>
 
-![KerasRS](https://i.imgur.com/m1BX7Zd.png)
+<div style="text-align: center;">
+  <img src="https://i.imgur.com/m1BX7Zd.png" width="434" height="157">
+</div>
 
 Keras Recommenders is a library for building recommender systems on top of
 Keras 3. Keras Recommenders works natively with TensorFlow, JAX, or PyTorch. It
@@ -90,7 +92,7 @@ Call `model.fit()` on dummy data:
 batch_size = 2
 x = np.random.randint(0, vocabulary_size, size=(batch_size,))
 y = np.random.random(size=(batch_size,))
-model.fit(input_data, y=y)
+model.fit(x, y=y)
 ```
 
 ### Use ranking losses and metrics
