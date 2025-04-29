@@ -69,12 +69,12 @@ operate in parallel.
   </tr>
 </table>
 
-# Now that we know a little bit about DCN, let's start writing some code. We will
-# first train a DCN on a toy dataset, and demonstrate that the model has indeed
-# learnt important feature crosses.
+Now that we know a little bit about DCN, let's start writing some code. We will
+first train a DCN on a toy dataset, and demonstrate that the model has indeed
+learnt important feature crosses.
 
-# Let's set the backend to JAX, and get our imports sorted.
-# """
+Let's set the backend to JAX, and get our imports sorted.
+"""
 
 import os
 
