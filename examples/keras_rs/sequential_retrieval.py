@@ -134,12 +134,6 @@ ratings_df, movies_df = read_data(
 movies_count = movies_df["MovieID"].max()
 
 """
-Let's take a look at a few rows.
-"""
-ratings_df.head()
-movies_df.head()
-
-"""
 Now that we have read the dataset, let's create sequences of movies
 for every user. Here is the function for doing just that.
 """

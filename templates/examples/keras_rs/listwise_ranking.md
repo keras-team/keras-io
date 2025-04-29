@@ -373,14 +373,14 @@ Epoch 1/5
 ```
 </div>
     
- 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 3s/step - loss: 0.5147 - ndcg: 0.8853
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 2s/step - loss: 0.4960 - ndcg: 0.8892
 
 <div class="k-default-codeblock">
 ```
 
 ```
 </div>
- 1/1 ━━━━━━━━━━━━━━━━━━━━ 4s 4s/step - loss: 0.5147 - ndcg: 0.8853 - val_loss: 0.2145 - val_ndcg: 0.8852
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 3s 3s/step - loss: 0.4960 - ndcg: 0.8892 - val_loss: 0.1187 - val_ndcg: 0.8846
 
 
 <div class="k-default-codeblock">
@@ -390,14 +390,14 @@ Epoch 2/5
 ```
 </div>
     
- 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 1s/step - loss: 0.2114 - ndcg: 0.8854
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 1s/step - loss: 0.1150 - ndcg: 0.8898
 
 <div class="k-default-codeblock">
 ```
 
 ```
 </div>
- 1/1 ━━━━━━━━━━━━━━━━━━━━ 1s 1s/step - loss: 0.2114 - ndcg: 0.8854 - val_loss: 0.0902 - val_ndcg: 0.8863
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 1s 1s/step - loss: 0.1150 - ndcg: 0.8898 - val_loss: 0.0893 - val_ndcg: 0.8878
 
 
 <div class="k-default-codeblock">
@@ -407,14 +407,14 @@ Epoch 3/5
 ```
 </div>
     
- 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 5ms/step - loss: 0.0882 - ndcg: 0.8865
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 5ms/step - loss: 0.0876 - ndcg: 0.8884
 
 <div class="k-default-codeblock">
 ```
 
 ```
 </div>
- 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 19ms/step - loss: 0.0882 - ndcg: 0.8865 - val_loss: 0.0805 - val_ndcg: 0.8872
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 14ms/step - loss: 0.0876 - ndcg: 0.8884 - val_loss: 0.0864 - val_ndcg: 0.8857
 
 
 <div class="k-default-codeblock">
@@ -424,14 +424,14 @@ Epoch 4/5
 ```
 </div>
     
- 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 5ms/step - loss: 0.0789 - ndcg: 0.8860
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 5ms/step - loss: 0.0834 - ndcg: 0.8896
 
 <div class="k-default-codeblock">
 ```
 
 ```
 </div>
- 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 17ms/step - loss: 0.0789 - ndcg: 0.8860 - val_loss: 0.0805 - val_ndcg: 0.8873
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 13ms/step - loss: 0.0834 - ndcg: 0.8896 - val_loss: 0.0815 - val_ndcg: 0.8876
 
 
 <div class="k-default-codeblock">
@@ -441,14 +441,14 @@ Epoch 5/5
 ```
 </div>
     
- 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 5ms/step - loss: 0.0789 - ndcg: 0.8863
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 5ms/step - loss: 0.0794 - ndcg: 0.8887
 
 <div class="k-default-codeblock">
 ```
 
 ```
 </div>
- 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 17ms/step - loss: 0.0789 - ndcg: 0.8863 - val_loss: 0.0805 - val_ndcg: 0.8874
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 13ms/step - loss: 0.0794 - ndcg: 0.8887 - val_loss: 0.0810 - val_ndcg: 0.8868
 
 
 
@@ -456,7 +456,7 @@ Epoch 5/5
 
 <div class="k-default-codeblock">
 ```
-<keras.src.callbacks.history.History at 0x7e7246523e50>
+<keras.src.callbacks.history.History at 0x7ae9e43ccc50>
 
 ```
 </div>
@@ -484,14 +484,14 @@ Epoch 1/5
 ```
 </div>
     
- 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 1s/step - loss: 1.4069 - ndcg: 0.8842
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 1s/step - loss: 1.4067 - ndcg: 0.8933
 
 <div class="k-default-codeblock">
 ```
 
 ```
 </div>
- 1/1 ━━━━━━━━━━━━━━━━━━━━ 3s 3s/step - loss: 1.4069 - ndcg: 0.8842 - val_loss: 1.3855 - val_ndcg: 0.8861
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 2s 2s/step - loss: 1.4067 - ndcg: 0.8933 - val_loss: 1.3927 - val_ndcg: 0.8930
 
 
 <div class="k-default-codeblock">
@@ -501,14 +501,14 @@ Epoch 2/5
 ```
 </div>
     
- 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 1s/step - loss: 1.4062 - ndcg: 0.8876
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 1s/step - loss: 1.4061 - ndcg: 0.8953
 
 <div class="k-default-codeblock">
 ```
 
 ```
 </div>
- 1/1 ━━━━━━━━━━━━━━━━━━━━ 1s 1s/step - loss: 1.4062 - ndcg: 0.8876 - val_loss: 1.3854 - val_ndcg: 0.8875
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 1s 1s/step - loss: 1.4061 - ndcg: 0.8953 - val_loss: 1.3925 - val_ndcg: 0.8936
 
 
 <div class="k-default-codeblock">
@@ -518,14 +518,14 @@ Epoch 3/5
 ```
 </div>
     
- 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 5ms/step - loss: 1.4057 - ndcg: 0.8911
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 5ms/step - loss: 1.4054 - ndcg: 0.8977
 
 <div class="k-default-codeblock">
 ```
 
 ```
 </div>
- 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 18ms/step - loss: 1.4057 - ndcg: 0.8911 - val_loss: 1.3853 - val_ndcg: 0.8874
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 14ms/step - loss: 1.4054 - ndcg: 0.8977 - val_loss: 1.3923 - val_ndcg: 0.8941
 
 
 <div class="k-default-codeblock">
@@ -535,14 +535,14 @@ Epoch 4/5
 ```
 </div>
     
- 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 5ms/step - loss: 1.4051 - ndcg: 0.8932
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 5ms/step - loss: 1.4047 - ndcg: 0.8999
 
 <div class="k-default-codeblock">
 ```
 
 ```
 </div>
- 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 18ms/step - loss: 1.4051 - ndcg: 0.8932 - val_loss: 1.3853 - val_ndcg: 0.8875
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 13ms/step - loss: 1.4047 - ndcg: 0.8999 - val_loss: 1.3921 - val_ndcg: 0.8941
 
 
 <div class="k-default-codeblock">
@@ -552,14 +552,14 @@ Epoch 5/5
 ```
 </div>
     
- 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 5ms/step - loss: 1.4046 - ndcg: 0.8959
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 5ms/step - loss: 1.4041 - ndcg: 0.9004
 
 <div class="k-default-codeblock">
 ```
 
 ```
 </div>
- 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 18ms/step - loss: 1.4046 - ndcg: 0.8959 - val_loss: 1.3851 - val_ndcg: 0.8871
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 13ms/step - loss: 1.4041 - ndcg: 0.9004 - val_loss: 1.3919 - val_ndcg: 0.8940
 
 
 
@@ -567,7 +567,7 @@ Epoch 5/5
 
 <div class="k-default-codeblock">
 ```
-<keras.src.callbacks.history.History at 0x7e72306da510>
+<keras.src.callbacks.history.History at 0x7ae9e4166590>
 
 ```
 </div>
@@ -586,30 +586,30 @@ print(ndcg_mse, ndcg_hinge)
 ```
 
     
- 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 1s/step - loss: 0.0802 - ndcg: 0.8864
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 1s/step - loss: 0.0805 - ndcg: 0.8886
 
 <div class="k-default-codeblock">
 ```
 
 ```
 </div>
- 1/1 ━━━━━━━━━━━━━━━━━━━━ 1s 1s/step - loss: 0.0802 - ndcg: 0.8864
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 1s 1s/step - loss: 0.0805 - ndcg: 0.8886
 
 
     
- 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 992ms/step - loss: 1.4046 - ndcg: 0.8926
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 910ms/step - loss: 1.3878 - ndcg: 0.8924
 
 <div class="k-default-codeblock">
 ```
 
 ```
 </div>
- 1/1 ━━━━━━━━━━━━━━━━━━━━ 1s 995ms/step - loss: 1.4046 - ndcg: 0.8926
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 1s 914ms/step - loss: 1.3878 - ndcg: 0.8924
 
 
 <div class="k-default-codeblock">
 ```
-0.8863857388496399 0.8926076292991638
+0.8885537385940552 0.8924424052238464
 
 ```
 </div>
@@ -645,23 +645,23 @@ for i, movie_id in enumerate(sorted_movies):
 ```
 
     
- 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 264ms/step
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 261ms/step
 
 <div class="k-default-codeblock">
 ```
 
 ```
 </div>
- 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 266ms/step
+ 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 262ms/step
 
 
 <div class="k-default-codeblock">
 ```
-1.  b'With Honors (1994)'
-2.  b"Breakfast at Tiffany's (1961)"
-3.  b'Jack (1996)'
-4.  b'Jerry Maguire (1996)'
-5.  b'Mis\xc3\xa9rables, Les (1995)'
+1.  b'Jack (1996)'
+2.  b'Mis\xc3\xa9rables, Les (1995)'
+3.  b'Jerry Maguire (1996)'
+4.  b"Breakfast at Tiffany's (1961)"
+5.  b'With Honors (1994)'
 
 ```
 </div>

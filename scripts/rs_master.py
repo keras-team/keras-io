@@ -33,6 +33,8 @@ RETRIEVAL_LAYERS_MASTER = {
             "generate": [
                 "keras_rs.layers.Retrieval",
                 "keras_rs.layers.Retrieval.call",
+                "keras_rs.layers.Retrieval.update_candidates",
+                "keras_rs.layers.compute_score",
             ],
         },
         {
@@ -41,6 +43,7 @@ RETRIEVAL_LAYERS_MASTER = {
             "generate": [
                 "keras_rs.layers.BruteForceRetrieval",
                 "keras_rs.layers.BruteForceRetrieval.call",
+                "keras_rs.layers.BruteForceRetrieval.update_candidates",
             ],
         },
         # {
