@@ -19,9 +19,8 @@ congratulations! You already understand most of Keras Recommenders.
 
 ## Quick Links
 
-- [Home page](https://keras.io/keras_rs)
-- [Examples](https://keras.io/keras_rs/examples)
-- [API documentation](https://keras.io/keras_rs/api)
+- [API documentation](/keras_rs/api)
+- [Examples](/keras_rs/examples)
 
 ## Installation
 
@@ -38,7 +37,7 @@ package:
 pip install keras-rs-nightly
 ```
 
-Read [Getting started with Keras](https://keras.io/getting_started/) for more
+Read [Getting started with Keras](/getting_started/) for more
 information on installing Keras 3 and compatibility with different frameworks.
 
 ## Quickstart
@@ -143,7 +142,7 @@ Here is the BibTeX entry:
 ```bibtex
 @misc{kerasrecommenders2024,
   title={KerasRecommenders},
-  author={Hertschuh, Fabien and  Chollet, Fran\c{c}ois and Sharma, Abheesht and others},
+  author={Hertschuh, Fabien and Chollet, Fran\c{c}ois and Sharma, Abheesht and others},
   year={2024},
   howpublished={\url{https://github.com/keras-team/keras-rs}},
 }
