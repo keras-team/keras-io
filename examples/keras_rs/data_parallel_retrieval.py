@@ -1,5 +1,5 @@
 """
-Title: Recommending movies: retrieval with data parallel training
+Title: Retrieval with data parallel training
 Author: [Abheesht Sharma](https://github.com/abheesht17/), [Fabien Hertschuh](https://github.com/hertschuh/)
 Date created: 2025/04/28
 Last modified: 2025/04/28

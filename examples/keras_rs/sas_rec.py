@@ -1,5 +1,5 @@
 """
-Title: Retrieval using a Transformer-based sequential model [SASRec]
+Title: Sequential retrieval using SASRec
 Author: [Abheesht Sharma](https://github.com/abheesht17/), [Fabien Hertschuh](https://github.com/hertschuh/)
 Date created: 2025/04/28
 Last modified: 2025/04/28

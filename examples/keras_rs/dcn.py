@@ -1,5 +1,5 @@
 """
-Title: Ranking with Deep and Cross Networks (DCN)
+Title: Ranking with Deep and Cross Networks
 Author: [Abheesht Sharma](https://github.com/abheesht17/), [Fabien Hertschuh](https://github.com/hertschuh/)
 Date created: 2025/04/28
 Last modified: 2025/04/28

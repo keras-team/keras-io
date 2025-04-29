@@ -1,5 +1,5 @@
 """
-Title: Recommending movies: retrieval using a sequential model [GRU4Rec]
+Title: Sequential retrieval [GRU4Rec]
 Author: [Abheesht Sharma](https://github.com/abheesht17/), [Fabien Hertschuh](https://github.com/hertschuh/)
 Date created: 2025/04/28
 Last modified: 2025/04/28
