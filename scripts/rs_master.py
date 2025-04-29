@@ -169,20 +169,20 @@ METRICS_MASTER = {
                 "keras_rs.metrics.MeanAveragePrecision",
             ],
         },
-        # {
-        #     "path": "dcg",
-        #     "title": "DCG metric",
-        #     "generate": [
-        #         "keras_rs.metrics.DCG",
-        #     ],
-        # },
-        # {
-        #     "path": "ndcg",
-        #     "title": "nDCG metric",
-        #     "generate": [
-        #         "keras_rs.metrics.NDCG",
-        #     ],
-        # },
+        {
+            "path": "dcg",
+            "title": "DCG metric",
+            "generate": [
+                "keras_rs.metrics.DCG",
+            ],
+        },
+        {
+            "path": "ndcg",
+            "title": "nDCG metric",
+            "generate": [
+                "keras_rs.metrics.NDCG",
+            ],
+        },
     ]
 }
 

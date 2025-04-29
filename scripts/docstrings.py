@@ -205,7 +205,15 @@ def get_signature_start(function):
 
 def get_signature_end(function):
     params = inspect.signature(function).parameters.values()
-    signature_end = "(" + ", ".join([str(x) for x in params]) + ")"
+
+    formatted_params = []
+    for x in params:
+        str_x = str(x)
+        if "<function" in str_x:
+            str_x = re.sub(r'<function (.*?) at 0x[0-9a-fA-F]+>', r'\1', str_x)
+        formatted_params.append(str_x)
+    signature_end = "(" + ", ".join(formatted_params) + ")"
+
     if ismethod(function):
         signature_end = signature_end.replace("(self, ", "(")
         signature_end = signature_end.replace("(self)", "()")
