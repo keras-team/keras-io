@@ -34,7 +34,7 @@ RETRIEVAL_LAYERS_MASTER = {
                 "keras_rs.layers.Retrieval",
                 "keras_rs.layers.Retrieval.call",
                 "keras_rs.layers.Retrieval.update_candidates",
-                "keras_rs.layers.compute_score",
+                "keras_rs.layers.Retrieval.compute_score",
             ],
         },
         {

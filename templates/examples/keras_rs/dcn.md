@@ -344,9 +344,9 @@ print_stats(
 
 <div class="k-default-codeblock">
 ```
-Cross Network: RMSE = 0.0039838217198848724; #params = 16
+Cross Network: RMSE = 0.0001293081877520308; #params = 16
 
-Deep Network: RMSE = 0.018396195024251938; #params = 166272
+Deep Network: RMSE = 0.13307014107704163; #params = 166272
 
 ```
 </div>
@@ -413,6 +413,28 @@ ratings_ds = ratings_ds.map(
 )
 ```
 
+<div class="k-default-codeblock">
+```
+WARNING:absl:Variant folder /root/tensorflow_datasets/movielens/100k-ratings/0.1.1 has no dataset_info.json
+
+Downloading and preparing dataset Unknown size (download: Unknown size, generated: Unknown size, total: Unknown size) to /root/tensorflow_datasets/movielens/100k-ratings/0.1.1...
+
+Dl Completed...: 0 url [00:00, ? url/s]
+
+Dl Size...: 0 MiB [00:00, ? MiB/s]
+
+Extraction completed...: 0 file [00:00, ? file/s]
+
+Generating splits...:   0%|          | 0/1 [00:00<?, ? splits/s]
+
+Generating train examples...: 0 examples [00:00, ? examples/s]
+
+Shuffling /root/tensorflow_datasets/movielens/100k-ratings/incomplete.TIJJ8Y_0.1.1/movielens-train.tfrecord*..…
+
+Dataset movielens downloaded and prepared to /root/tensorflow_datasets/movielens/100k-ratings/0.1.1. Subsequent calls will reuse this data.
+
+```
+</div>
 For every feature, let's get the list of unique values, i.e., vocabulary, so
 that we can use that for the embedding layer.
 
@@ -590,9 +612,9 @@ print_stats(
 
 <div class="k-default-codeblock">
 ```
-Cross Network: RMSE = 0.9215710818767547 ± 0.0366027878134903; #params = {num_params}
-Optimised Cross Network: RMSE = 0.9246280252933502 ± 0.04176179068014404; #params = {num_params}
-Deep Network: RMSE = 0.8795858860015869 ± 0.03446538829561981; #params = {num_params}
+Cross Network: RMSE = 0.9427602052688598 ± 0.07614302893494468; #params = {num_params}
+Optimised Cross Network: RMSE = 0.9187218248844147 ± 0.031170624868084987; #params = {num_params}
+Deep Network: RMSE = 0.8789893209934234 ± 0.025684711934398047; #params = {num_params}
 
 ```
 </div>
