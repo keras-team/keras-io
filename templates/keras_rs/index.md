@@ -104,7 +104,7 @@ track the nDCG metric:
 ```python
 model.compile(
     loss=keras_rs.losses.PairwiseHingeLoss(),
-    metrics=[keras_rs.metrics.NDCG()]
+    metrics=[keras_rs.metrics.NDCG()],
     optimizer=keras.optimizers.Adam(learning_rate=3e-4),
 )
 ```
