@@ -138,7 +138,8 @@ def make_source_link(cls, project_url):
     module_version = copy.copy(importlib.import_module(base_module).__version__)
     if ".dev" in module_version:
         module_version = project_url_version[: module_version.find(".dev")]
-    if module_version != project_url_version:
+    # TODO: Remove keras-rs condition, this is just a temporary thing.
+    if "keras-rs" not in project_url and module_version != project_url_version:
         raise RuntimeError(
             f"For project {base_module}, URL {project_url} "
             f"has version number {project_url_version} which does not match the "
