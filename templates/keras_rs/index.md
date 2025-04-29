@@ -21,6 +21,24 @@ congratulations! You already understand most of Keras Recommenders.
 - [Examples](https://keras.io/keras_rs/examples)
 - [API documentation](https://keras.io/keras_rs/api)
 
+## Installation
+
+Keras Recommenders is available on PyPI as `keras-rs`:
+
+```bash
+pip install keras-rs
+```
+
+To try out the latest version of Keras Recommenders, you can use our nightly
+package:
+
+```bash
+pip install keras-rs-nightly
+```
+
+Read [Getting started with Keras](https://keras.io/getting_started/) for more
+information on installing Keras 3 and compatibility with different frameworks.
+
 ## Quickstart
 
 ### Train your own cross network
@@ -88,24 +106,6 @@ model.compile(
     optimizer=keras.optimizers.Adam(learning_rate=3e-4),
 )
 ```
-
-## Installation
-
-Keras Recommenders is available on PyPI as `keras-rs`:
-
-```bash
-pip install keras-rs
-```
-
-To try out the latest version of Keras Recommenders, you can use our nightly
-package:
-
-```bash
-pip install keras-rs-nightly
-```
-
-Read [Getting started with Keras](https://keras.io/getting_started/) for more
-information on installing Keras 3 and compatibility with different frameworks.
 
 ## Configuring your backend
 
