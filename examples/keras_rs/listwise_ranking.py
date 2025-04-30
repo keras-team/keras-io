@@ -182,16 +182,19 @@ def get_examples(
     }
     labels = []
     for user_id, user_list in sequences.items():
-        sampled_list = sample_sublist_from_list(
-            user_list,
-            num_examples_per_list,
-        )
+        for _ in range(num_list_per_user):
+            sampled_list = sample_sublist_from_list(
+                user_list,
+                num_examples_per_list,
+            )
 
-        inputs["user_id"].append(user_id)
-        inputs["movie_id"].append(
-            tf.convert_to_tensor([f["movie_id"] for f in sampled_list])
-        )
-        labels.append(tf.convert_to_tensor([f["user_rating"] for f in sampled_list]))
+            inputs["user_id"].append(user_id)
+            inputs["movie_id"].append(
+                tf.convert_to_tensor([f["movie_id"] for f in sampled_list])
+            )
+            labels.append(
+                tf.convert_to_tensor([f["user_rating"] for f in sampled_list])
+            )
 
     return (
         {"user_id": inputs["user_id"], "movie_id": inputs["movie_id"]},

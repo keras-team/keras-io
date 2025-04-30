@@ -143,7 +143,7 @@ class MultiTaskModel(keras.Model):
         )
 
         # Rating model.
-        self.rating_model = tf.keras.Sequential(
+        self.rating_model = keras.Sequential(
             [
                 keras.layers.Dense(layer_size, activation="relu")
                 for layer_size in layer_sizes
@@ -162,7 +162,7 @@ class MultiTaskModel(keras.Model):
 
         # Top-k accuracy for retrieval
         self.top_k_metric = keras.metrics.SparseTopKCategoricalAccuracy(
-            k=100, from_sorted_ids=True
+            k=10, from_sorted_ids=True
         )
         # RMSE for ranking
         self.rmse_metric = keras.metrics.RootMeanSquaredError()
@@ -306,7 +306,7 @@ model = MultiTaskModel(
     ranking_loss_wt=1.0,
     retrieval_loss_wt=0.0,
 )
-model.compile(optimizer=tf.keras.optimizers.Adagrad(0.1))
+model.compile(optimizer=keras.optimizers.Adagrad(0.1))
 model.fit(train_ratings, epochs=5)
 
 model.evaluate(test_ratings)
@@ -318,7 +318,7 @@ model = MultiTaskModel(
     ranking_loss_wt=0.0,
     retrieval_loss_wt=1.0,
 )
-model.compile(optimizer=tf.keras.optimizers.Adagrad(0.1))
+model.compile(optimizer=keras.optimizers.Adagrad(0.1))
 model.fit(train_ratings, epochs=5)
 
 model.evaluate(test_ratings)
@@ -330,7 +330,7 @@ model = MultiTaskModel(
     ranking_loss_wt=1.0,
     retrieval_loss_wt=1.0,
 )
-model.compile(optimizer=tf.keras.optimizers.Adagrad(0.1))
+model.compile(optimizer=keras.optimizers.Adagrad(0.1))
 model.fit(train_ratings, epochs=5)
 
 model.evaluate(test_ratings)

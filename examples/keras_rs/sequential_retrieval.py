@@ -368,7 +368,7 @@ Let's instantiate, compile and train our model.
 """
 
 model = SequentialRetrievalModel(
-    movies_count=movies_count + 1, embedding_dimension=EMBEDDING_DIM
+    movies_count=movies_count, embedding_dimension=EMBEDDING_DIM
 )
 
 # Compile.

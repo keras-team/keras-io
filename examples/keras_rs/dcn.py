@@ -122,10 +122,6 @@ MOVIELENS_CONFIG = {
     "batch_size": 1024,
 }
 
-LOOKUP_LAYERS = {
-    "int": keras.layers.IntegerLookup,
-    "str": keras.layers.StringLookup,
-}
 
 """
 Here, we define a helper function for visualising weights of the cross layer in
@@ -275,6 +271,7 @@ deep_network = keras.Sequential(
         keras.layers.Dense(512, activation="relu"),
         keras.layers.Dense(256, activation="relu"),
         keras.layers.Dense(128, activation="relu"),
+        keras.layers.Dense(1),
     ]
 )
 
