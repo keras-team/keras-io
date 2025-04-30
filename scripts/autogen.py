@@ -144,13 +144,6 @@ class KerasIO:
         )
         # Insert --- before H2 titles
         md_content = md_content.replace("\n## ", "\n---\n## ")
-        # Clean up progress bar output
-        if "[1m" in md_content:
-            md_content = md_content.replace("[1m", " ")
-            md_content = md_content.replace("[0m [32m", " ")
-            md_content = md_content.replace("[0m[37m[0m [1m", " ")
-            md_content = md_content.replace("[0m", "")
-            md_content = md_content.replace("[37m ", "")
         return md_content
 
     def make_tutobook_sources_for_directory(
