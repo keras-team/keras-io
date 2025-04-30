@@ -182,9 +182,7 @@ def print_stats(rmse_list, num_params, model_name):
     if num_trials == 1:
         print(f"{model_name}: RMSE = {avg_rmse}; #params = {num_params}")
     else:
-        print(
-            f"{model_name}: RMSE = {avg_rmse} ± {std_rmse}; #params = {num_params}"
-        )
+        print(f"{model_name}: RMSE = {avg_rmse} ± {std_rmse}; #params = {num_params}")
 
 
 """
