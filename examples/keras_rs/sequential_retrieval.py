@@ -62,7 +62,7 @@ BATCH_SIZE = 4096
 TEST_BATCH_SIZE = 2048
 EMBEDDING_DIM = 32
 NUM_EPOCHS = 5
-LEARNING_RATE = 0.05
+LEARNING_RATE = 0.005
 
 """
 ## Dataset
@@ -368,7 +368,7 @@ Let's instantiate, compile and train our model.
 """
 
 model = SequentialRetrievalModel(
-    movies_count=movies_count + 1, embedding_dimension=EMBEDDING_DIM
+    movies_count=movies_count, embedding_dimension=EMBEDDING_DIM
 )
 
 # Compile.

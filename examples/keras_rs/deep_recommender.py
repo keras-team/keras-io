@@ -668,7 +668,7 @@ class RetrievalModel(keras.Model):
         self.update_candidates()  # Provide an initial set of candidates
         self.loss_fn = keras.losses.MeanSquaredError()
         self.top_k_metric = keras.metrics.SparseTopKCategoricalAccuracy(
-            k=100, from_sorted_ids=True
+            k=retrieval_k, from_sorted_ids=True
         )
 
     def update_candidates(self):

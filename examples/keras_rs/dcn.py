@@ -122,10 +122,6 @@ MOVIELENS_CONFIG = {
     "batch_size": 1024,
 }
 
-LOOKUP_LAYERS = {
-    "int": keras.layers.IntegerLookup,
-    "str": keras.layers.StringLookup,
-}
 
 """
 Here, we define a helper function for visualising weights of the cross layer in
@@ -186,9 +182,7 @@ def print_stats(rmse_list, num_params, model_name):
     if num_trials == 1:
         print(f"{model_name}: RMSE = {avg_rmse}; #params = {num_params}")
     else:
-        print(
-            f"{model_name}: RMSE = {avg_rmse} ± {std_rmse}; " "#params = {num_params}"
-        )
+        print(f"{model_name}: RMSE = {avg_rmse} ± {std_rmse}; #params = {num_params}")
 
 
 """
@@ -275,6 +269,7 @@ deep_network = keras.Sequential(
         keras.layers.Dense(512, activation="relu"),
         keras.layers.Dense(256, activation="relu"),
         keras.layers.Dense(128, activation="relu"),
+        keras.layers.Dense(1),
     ]
 )
 
