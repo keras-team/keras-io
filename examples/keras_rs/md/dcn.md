@@ -127,10 +127,6 @@ MOVIELENS_CONFIG = {
     "batch_size": 1024,
 }
 
-LOOKUP_LAYERS = {
-    "int": keras.layers.IntegerLookup,
-    "str": keras.layers.StringLookup,
-}
 ```
 
 Here, we define a helper function for visualising weights of the cross layer in
@@ -192,9 +188,7 @@ def print_stats(rmse_list, num_params, model_name):
     if num_trials == 1:
         print(f"{model_name}: RMSE = {avg_rmse}; #params = {num_params}")
     else:
-        print(
-            f"{model_name}: RMSE = {avg_rmse} ± {std_rmse}; " "#params = {num_params}"
-        )
+        print(f"{model_name}: RMSE = {avg_rmse} ± {std_rmse}; #params = {num_params}")
 
 ```
 
@@ -284,6 +278,7 @@ deep_network = keras.Sequential(
         keras.layers.Dense(512, activation="relu"),
         keras.layers.Dense(256, activation="relu"),
         keras.layers.Dense(128, activation="relu"),
+        keras.layers.Dense(1),
     ]
 )
 ```
@@ -343,12 +338,11 @@ print_stats(
 
 <div class="k-default-codeblock">
 ```
-Cross Network: RMSE = 0.0001293081877520308; #params = 16
-
-Deep Network: RMSE = 0.13307014107704163; #params = 166272
-
+Cross Network: RMSE = 0.002540863584727049; #params = 16
+Deep Network: RMSE = 0.0026898200158029795; #params = 166401
 ```
 </div>
+
 ### Visualizing feature interactions
 
 Since we already know which feature crosses are important in our data, it would
@@ -367,16 +361,15 @@ visualize_layer(
 
 <div class="k-default-codeblock">
 ```
-<ipython-input-3-8046d00f84d6>:11: UserWarning: set_ticklabels() should only be used with a fixed number of ticks, i.e. after set_ticks() or using a FixedLocator.
+/var/tmp/ipykernel_674880/2224087162.py:11: UserWarning: set_ticklabels() should only be used with a fixed number of ticks, i.e. after set_ticks() or using a FixedLocator.
   ax.set_xticklabels([""] + features, rotation=45, fontsize=10)
-<ipython-input-3-8046d00f84d6>:12: UserWarning: set_ticklabels() should only be used with a fixed number of ticks, i.e. after set_ticks() or using a FixedLocator.
+/var/tmp/ipykernel_674880/2224087162.py:12: UserWarning: set_ticklabels() should only be used with a fixed number of ticks, i.e. after set_ticks() or using a FixedLocator.
   ax.set_yticklabels([""] + features, fontsize=10)
 
 <Figure size 900x900 with 0 Axes>
-
 ```
 </div>
-    
+
 ![png](/img/examples/keras_rs/dcn/dcn_16_2.png)
     
 
@@ -412,28 +405,6 @@ ratings_ds = ratings_ds.map(
 )
 ```
 
-<div class="k-default-codeblock">
-```
-WARNING:absl:Variant folder /root/tensorflow_datasets/movielens/100k-ratings/0.1.1 has no dataset_info.json
-
-Downloading and preparing dataset Unknown size (download: Unknown size, generated: Unknown size, total: Unknown size) to /root/tensorflow_datasets/movielens/100k-ratings/0.1.1...
-
-Dl Completed...: 0 url [00:00, ? url/s]
-
-Dl Size...: 0 MiB [00:00, ? MiB/s]
-
-Extraction completed...: 0 file [00:00, ? file/s]
-
-Generating splits...:   0%|          | 0/1 [00:00<?, ? splits/s]
-
-Generating train examples...: 0 examples [00:00, ? examples/s]
-
-Shuffling /root/tensorflow_datasets/movielens/100k-ratings/incomplete.TIJJ8Y_0.1.1/movielens-train.tfrecord*..…
-
-Dataset movielens downloaded and prepared to /root/tensorflow_datasets/movielens/100k-ratings/0.1.1. Subsequent calls will reuse this data.
-
-```
-</div>
 For every feature, let's get the list of unique values, i.e., vocabulary, so
 that we can use that for the embedding layer.
 
@@ -611,12 +582,12 @@ print_stats(
 
 <div class="k-default-codeblock">
 ```
-Cross Network: RMSE = 0.9427602052688598 ± 0.07614302893494468; #params = {num_params}
-Optimised Cross Network: RMSE = 0.9187218248844147 ± 0.031170624868084987; #params = {num_params}
-Deep Network: RMSE = 0.8789893209934234 ± 0.025684711934398047; #params = {num_params}
-
+Cross Network: RMSE = 0.8887265503406525 ± 0.02188869864935667; #params = 221953
+Optimised Cross Network: RMSE = 0.9222802877426147 ± 0.044382040717192484; #params = 192769
+Deep Network: RMSE = 0.8751056969165802 ± 0.029525712693164348; #params = 221953
 ```
 </div>
+
 DCN outperforms a similarly sized DNN with ReLU layers, demonstrating
 superior performance. Furthermore, the low-rank DCN effectively reduces the
 number of parameters without compromising accuracy.
@@ -659,16 +630,15 @@ visualize_layer(
 
 <div class="k-default-codeblock">
 ```
-<ipython-input-3-8046d00f84d6>:11: UserWarning: set_ticklabels() should only be used with a fixed number of ticks, i.e. after set_ticks() or using a FixedLocator.
+/var/tmp/ipykernel_674880/2224087162.py:11: UserWarning: set_ticklabels() should only be used with a fixed number of ticks, i.e. after set_ticks() or using a FixedLocator.
   ax.set_xticklabels([""] + features, rotation=45, fontsize=10)
-<ipython-input-3-8046d00f84d6>:12: UserWarning: set_ticklabels() should only be used with a fixed number of ticks, i.e. after set_ticks() or using a FixedLocator.
+/var/tmp/ipykernel_674880/2224087162.py:12: UserWarning: set_ticklabels() should only be used with a fixed number of ticks, i.e. after set_ticks() or using a FixedLocator.
   ax.set_yticklabels([""] + features, fontsize=10)
 
 <Figure size 900x900 with 0 Axes>
-
 ```
 </div>
-    
+
 ![png](/img/examples/keras_rs/dcn/dcn_31_2.png)
     
 
