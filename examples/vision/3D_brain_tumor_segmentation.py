@@ -475,7 +475,7 @@ plt.show()
 
 We will be using the 3D model architecture Swin UNEt TRansformers, i.e., 
 [`SwinUNETR`](https://arxiv.org/abs/2201.01266). It was used in the BraTS 2021 
-segmentation challenge. The model was among the top-performing methods. It uses 
+segmentation challenge by NVIDIA. The model was among the top-performing methods. It uses 
 a Swin Transformer encoder to extract features at five different resolutions. 
 A CNN-based decoder is connected to each resolution using skip connections.
 
