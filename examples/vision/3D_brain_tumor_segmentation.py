@@ -93,13 +93,17 @@ holding out a few samples from the training set.
 """
 
 import os
+import shutil
 
 import kagglehub
 
 if "KAGGLE_USERNAME" not in os.environ or "KAGGLE_KEY" not in os.environ:
     kagglehub.login()
 
-import shutil
+
+"""
+Download the dataset from kaggle.
+"""
 
 dataset_id = "ipythonx/brats2020"
 destination_path = "/content/brats2020_subset"
@@ -133,17 +137,17 @@ from medicai.transforms import (Compose, CropForeground, NormalizeIntensity,
                                 TensorBundle)
 from medicai.utils.inference import SlidingWindowInference
 
-print(
-    f"keras backend: {keras.config.backend()}\n"
-    f"keras version: {keras.version()}\n"
-    f"tensorflow version: {tf.__version__}\n"
-)
-
 # enable mixed precision
 keras.mixed_precision.set_global_policy("mixed_float16")
 
 # reproducibility
 keras.utils.set_random_seed(101)
+
+print(
+    f"keras backend: {keras.config.backend()}\n"
+    f"keras version: {keras.version()}\n"
+    f"tensorflow version: {tf.__version__}\n"
+)
 
 """
 ## Create Multi-label Brain Tumor Labels
@@ -402,6 +406,13 @@ def load_tfrecord_dataset(tfrecord_datalist, batch_size=1, shuffle=True):
     return dataset
 
 
+"""
+The training batch size can be set to more than 1 depending on the environment and available 
+resources. However, we intentionally keep the validation batch size as 1 to handle variable-sized 
+samples more flexibly. While padded or ragged batches are alternative options, a batch size of 
+1 ensures simplicity and consistency during evaluation, especially for 3D medical data.
+"""
+
 tfrecord_pattern = "/content/brats2020_subset/training_shard_*.tfrec"
 datalist = sorted(
     tf.io.gfile.glob(tfrecord_pattern),
@@ -412,14 +423,11 @@ train_datalist = datalist[:-1]
 val_datalist = datalist[-1:]
 print(len(train_datalist), len(val_datalist))
 
-print(train_datalist)
-print(val_datalist)
-
 train_ds = load_tfrecord_dataset(train_datalist, batch_size=1, shuffle=True)
 val_ds = load_tfrecord_dataset(val_datalist, batch_size=1, shuffle=False)
 
 """
-**sanity check**
+**sanity check**: Fetch a single validation sample to inspect its shape and values.
 """
 
 val_x, val_y = next(iter(val_ds))
@@ -427,6 +435,10 @@ test_image = val_x.numpy().squeeze()
 test_mask = val_y.numpy().squeeze()
 print(test_image.shape, test_mask.shape, np.unique(test_mask))
 print(test_image.min(), test_image.max())
+
+"""
+**sanity check**: Visualize the middle slice of the image and its corresponding label.
+"""
 
 slice_no = test_image.shape[0] // 2
 
@@ -436,6 +448,10 @@ ax1.set_title(f"Image shape: {test_image.shape}")
 ax2.imshow(test_mask[slice_no])
 ax2.set_title(f"Label shape: {test_mask.shape}")
 plt.show()
+
+"""
+**sanity check**: Visualize sample image and label channels at slice index `80`.
+"""
 
 print(f"image shape: {test_image.shape}")
 plt.figure("image", (24, 6))
@@ -457,10 +473,15 @@ plt.show()
 """
 ## Model
 
-We will be using the 3D model architecture
-[`SwinUNETR`](https://arxiv.org/abs/2201.01266). The BraTS dataset provides four input
-modalities: `flair`, `t1`, `t1ce`, and `t2`. Accordingly, we will build the model with
-**4** input channels and **3** output channels.
+We will be using the 3D model architecture Swin UNEt TRansformers, i.e., 
+[`SwinUNETR`](https://arxiv.org/abs/2201.01266). It was used in the BraTS 2021 
+segmentation challenge. The model was among the top-performing methods. It uses 
+a Swin Transformer encoder to extract features at five different resolutions. 
+A CNN-based decoder is connected to each resolution using skip connections.
+
+The BraTS dataset provides four input modalities: `flair`, `t1`, `t1ce`, and `t2` and 
+three multi-label outputs: `tumor-core`, `whole-tumor`, and `enhancing-tumor`. 
+Accordingly, we will initiate the model with `4` input channels and `3` output channels.
 
 ![](https://i.imgur.com/OInMRGp.png)
 """
@@ -553,6 +574,13 @@ Set more epoch for better optimization.
 
 history = model.fit(train_ds, epochs=epochs, callbacks=[swi_callback])
 
+"""
+Let’s take a quick look at how our model performed during training. 
+We'll first print the available metrics recorded in the training history, 
+save them to a CSV file for future reference, and then visualize them to 
+better understand the model’s learning progress over epochs.
+"""
+
 print(model.history.history.keys())
 his_csv = pd.DataFrame(model.history.history)
 his_csv.to_csv("brats.history.csv")
@@ -586,9 +614,8 @@ plot_training_history(his_csv)
 """
 ## Evaluation
 
-In this [Kaggle
-notebook](https://www.kaggle.com/code/ipythonx/3d-brats-segmentation-in-keras-multi-gpu/)
-(version 3), we trained the model on the entire dataset for approximately 25 epochs. The
+In this [Kaggle notebook](https://www.kaggle.com/code/ipythonx/3d-brats-segmentation-in-keras-multi-gpu/)
+(version 3), we trained the model on the entire dataset for approximately `25` epochs. The
 resulting weights will be used for further evaluation. Note that the validation set used
 in both the Colab and Kaggle notebooks is the same: `training_shard_36.tfrec`, which
 contains `8` samples.
@@ -644,6 +671,12 @@ dice_et = BinaryDiceMetric(
     num_classes=num_classes,
     name="dice_et",
 )
+
+"""
+Due to the variable size, and larger size of the validation data, we iterate 
+over the validation dataloader. The sliding window inference handles input 
+patches and computes the predictions for each batch.
+"""
 
 for sample in val_ds:
     x, y = sample
@@ -761,9 +794,9 @@ plt.show()
 The predicted output is a multi-channel binary map, where each channel corresponds to a 
 specific tumor region. To visualize it against the original ground truth, we convert it 
 into a single-channel label map. Here we assign:
-- Label 1 for Tumor Core (TC)
-- Label 2 for Whole Tumor (WT)
-- Label 4 for Enhancing Tumor (ET)
+    - Label 1 for Tumor Core (TC)
+    - Label 2 for Whole Tumor (WT)
+    - Label 4 for Enhancing Tumor (ET)
 The label values are chosen to match typical conventions used in medical segmentation 
 benchmarks like BraTS.
 """
@@ -834,4 +867,5 @@ plt.show()
 - [Covid-19 Segmentation](https://www.kaggle.com/code/ipythonx/medicai-covid-19-3d-image-segmentation)
 - [3D Multi-organ Segmentation](https://www.kaggle.com/code/ipythonx/medicai-3d-btcv-segmentation-in-keras)
 - [Spleen 3D segmentation](https://www.kaggle.com/code/ipythonx/medicai-spleen-3d-segmentation-in-keras)
+- [Medicai Documentation](https://innat.github.io/medic-ai/)
 """
