@@ -476,12 +476,12 @@ plt.show()
 We will be using the 3D model architecture Swin UNEt TRansformers, i.e., 
 [`SwinUNETR`](https://arxiv.org/abs/2201.01266). It was used in the BraTS 2021 
 segmentation challenge by NVIDIA. The model was among the top-performing methods. It uses 
-a Swin Transformer encoder to extract features at five different resolutions. 
-A CNN-based decoder is connected to each resolution using skip connections.
+a Swin Transformer encoder to extract features at five different resolutions. A CNN-based 
+decoder is connected to each resolution using skip connections.
 
 The BraTS dataset provides four input modalities: `flair`, `t1`, `t1ce`, and `t2` and 
-three multi-label outputs: `tumor-core`, `whole-tumor`, and `enhancing-tumor`. 
-Accordingly, we will initiate the model with `4` input channels and `3` output channels.
+three multi-label outputs: `tumor-core`, `whole-tumor`, and `enhancing-tumor`. Accordingly, 
+we will initiate the model with `4` input channels and `3` output channels.
 
 ![](https://i.imgur.com/OInMRGp.png)
 """
@@ -575,8 +575,8 @@ Set more epoch for better optimization.
 history = model.fit(train_ds, epochs=epochs, callbacks=[swi_callback])
 
 """
-Let’s take a quick look at how our model performed during training. 
-We'll first print the available metrics recorded in the training history, 
+Let’s take a quick look at how our model performed during training. We will
+first print the available metrics recorded in the training history, 
 save them to a CSV file for future reference, and then visualize them to 
 better understand the model’s learning progress over epochs.
 """
