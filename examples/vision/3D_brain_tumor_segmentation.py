@@ -132,9 +132,15 @@ from medicai.callbacks import SlidingWindowInferenceCallback
 from medicai.losses import BinaryDiceCELoss
 from medicai.metrics import BinaryDiceMetric
 from medicai.models import SwinUNETR
-from medicai.transforms import (Compose, CropForeground, NormalizeIntensity,
-                                RandFlip, RandShiftIntensity, RandSpatialCrop,
-                                TensorBundle)
+from medicai.transforms import (
+    Compose,
+    CropForeground,
+    NormalizeIntensity,
+    RandFlip,
+    RandShiftIntensity,
+    RandSpatialCrop,
+    TensorBundle,
+)
 from medicai.utils.inference import SlidingWindowInference
 
 # enable mixed precision
