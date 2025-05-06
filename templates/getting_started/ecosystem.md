@@ -5,14 +5,6 @@ It spans a wide range of related initiatives that cover every step of the machin
 
 ---
 
-## KerasTuner
-
-[KerasTuner Documentation](/keras_tuner/) - [KerasTuner GitHub repository](https://github.com/keras-team/keras-tuner)
-
-KerasTuner is an easy-to-use, scalable hyperparameter optimization framework that solves the pain points of hyperparameter search. Easily configure your search space with a define-by-run syntax, then leverage one of the available search algorithms to find the best hyperparameter values for your models. KerasTuner comes with Bayesian Optimization, Hyperband, and Random Search algorithms built-in, and is also designed to be easy for researchers to extend in order to experiment with new search algorithms.
-
----
-
 ## KerasHub
 
 [KerasHub Documentation](/keras_hub/) - [KerasHub GitHub repository](https://github.com/keras-team/keras-hub)
@@ -24,13 +16,11 @@ out-of-the-box and are easily customizable when more control is needed.
 
 ---
 
-## KerasCV
+## KerasTuner
 
-[KerasCV Documentation](/keras_cv/) - [KerasCV GitHub repository](https://github.com/keras-team/keras-cv)
+[KerasTuner Documentation](/keras_tuner/) - [KerasTuner GitHub repository](https://github.com/keras-team/keras-tuner)
 
-KerasCV is a repository of modular building blocks (layers, metrics, losses, data-augmentation) that applied computer vision engineers can leverage to quickly assemble production-grade, state-of-the-art training and inference pipelines for common use cases such as image classification, object detection, image segmentation, image data augmentation, etc.
-
-KerasCV can be understood as a horizontal extension of the Keras API: the components are new first-party Keras objects (layers, metrics, etc) that are too specialized to be added to core Keras, but that receive the same level of polish and backwards compatibility guarantees as the rest of the Keras API.
+KerasTuner is an easy-to-use, scalable hyperparameter optimization framework that solves the pain points of hyperparameter search. Easily configure your search space with a define-by-run syntax, then leverage one of the available search algorithms to find the best hyperparameter values for your models. KerasTuner comes with Bayesian Optimization, Hyperband, and Random Search algorithms built-in, and is also designed to be easy for researchers to extend in order to experiment with new search algorithms.
 
 ---
 
@@ -51,3 +41,15 @@ clf = ak.ImageClassifier()
 clf.fit(x_train, y_train)
 results = clf.predict(x_test)
 ```
+
+---
+
+## BayesFlow
+
+[BayesFlow documentation](https://bayesflow.org/) - [BayesFlow](https://github.com/bayesflow-org/bayesflow)
+
+A Python library for amortized Bayesian workflows using generative neural networks, built on Keras 3, featuring:
+
+- A user-friendly API for rapid Bayesian workflows
+- A rich collection of neural network architectures
+- Multi-backend support via Keras 3: You can use PyTorch, TensorFlow, or JAX
