@@ -41,6 +41,11 @@ Let's start by importing the necessary packages.
 
 
 ```python
+!pip install -q keras-rs
+```
+
+
+```python
 import os
 
 os.environ["KERAS_BACKEND"] = "jax"  # `"tensorflow"`/`"torch"`

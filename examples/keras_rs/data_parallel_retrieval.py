@@ -29,6 +29,10 @@ Before we begin, let's note down a few things:
    JAX as your backend!
 """
 
+"""shell
+pip install -q keras-rs
+"""
+
 import os
 
 os.environ["KERAS_BACKEND"] = "jax"
