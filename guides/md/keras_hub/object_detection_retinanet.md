@@ -1,8 +1,8 @@
 # Object Detection with KerasHub
 
 **Authors:** [Siva Sravana Kumar Neeli](https://github.com/sineeli), [Sachin Prasad](https://github.com/sachinprasadhs)<br>
-**Date created:** 2025/03/21<br>
-**Last modified:** 2025/03/21<br>
+**Date created:** 2025/04/28<br>
+**Last modified:** 2025/04/28<br>
 **Description:** RetinaNet Object Detection: Training, Fine-tuning, and Inference.
 
 
@@ -14,6 +14,7 @@
 
 ---
 ## Introduction
+
 Object detection is a crucial computer vision task that goes beyond simple image
 classification. It requires models to not only identify the types of objects
 present in an image but also pinpoint their locations using bounding boxes. This
@@ -41,6 +42,7 @@ speed.
 ![retinanet](/img/guides/object_detection_retinanet/retinanet_architecture.png)
 
 ### References
+
 - [Focal Loss for Dense Object Detection](https://arxiv.org/abs/1708.02002)
 - [Feature Pyramid Networks for Object Detection](https://arxiv.org/abs/1612.03144)
 
@@ -62,20 +64,29 @@ To run this tutorial, you will need to install the following packages:
 !pip install -q opencv-python
 ```
 
-
 ```python
 import os
 
-os.environ["KERAS_BACKEND"] = "jax"
+os.environ["KERAS_BACKEND"] = "jax"  # or "tensorflow" or "torch"
 import keras
 import keras_hub
 import tensorflow as tf
-import warnings
-
-warnings.filterwarnings("ignore")
 ```
+<div class="k-default-codeblock">
+```
+keras-nlp 0.19.0 requires keras-hub==0.19.0, but you have keras-hub 0.20.0 which is incompatible.
+
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+E0000 00:00:1746815719.896182    8973 cuda_dnn.cc:8310] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered
+E0000 00:00:1746815719.902635    8973 cuda_blas.cc:1418] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
+```
+</div>
 
 ### Helper functions
+
+We download the Pascal VOC 2012 and 2007 datasets using these helper functions,
+prepare them for the object detection task, and split them into training and
+validation datasets.
 
 
 ```python
@@ -85,7 +96,6 @@ import multiprocessing
 from builtins import open
 import os.path
 import xml
-from typing import Callable, Tuple, Dict, Any
 
 import tensorflow_datasets as tfds
 
@@ -94,6 +104,9 @@ VOC_2007_URL = (
 )
 VOC_2012_URL = (
     "http://host.robots.ox.ac.uk/pascal/VOC/voc2012/VOCtrainval_11-May-2012.tar"
+)
+VOC_2007_test_URL = (
+    "http://host.robots.ox.ac.uk/pascal/VOC/voc2007/VOCtest_06-Nov-2007.tar"
 )
 
 # Note that this list doesn't contain the background class. In the
@@ -215,6 +228,7 @@ def get_image_ids(data_dir, split):
         "train": "train.txt",
         "eval": "val.txt",
         "trainval": "trainval.txt",
+        "test": "test.txt",
     }
     with open(
         os.path.join(data_dir, "ImageSets", "Main", data_file_mapping[split]),
@@ -370,6 +384,9 @@ def load_voc(
 ---
 ## Load the dataset
 
+Let's load the training data. Here, we load both the VOC 2007 and 2012 datasets
+and split them into training and validation sets.
+
 
 ```python
 train_ds_2007 = load_voc(
@@ -384,23 +401,31 @@ train_ds_2012 = load_voc(
     data_dir="./",
     voc_url=VOC_2012_URL,
 )
+eval_ds = load_voc(
+    year="2007",
+    split="test",
+    data_dir="./",
+    voc_url=VOC_2007_test_URL,
+)
 ```
 
 <div class="k-default-codeblock">
 ```
 Downloading data from http://host.robots.ox.ac.uk/pascal/VOC/voc2007/VOCtrainval_06-Nov-2007.tar
 
+460032000/460032000 ━━━━━━━━━━━━━━━━━━━━ 16s 0us/step
+
+I0000 00:00:1746815741.705068    8973 gpu_device.cc:2022] Created device /job:localhost/replica:0/task:0/device:GPU:0 with 38482 MB memory:  -> device: 0, name: NVIDIA A100-SXM4-40GB, pci bus id: 0000:00:04.0, compute capability: 8.0
+
+Downloading data from http://host.robots.ox.ac.uk/pascal/VOC/voc2012/VOCtrainval_11-May-2012.tar
+
+1999639040/1999639040 ━━━━━━━━━━━━━━━━━━━━ 71s 0us/step
+
+Downloading data from http://host.robots.ox.ac.uk/pascal/VOC/voc2007/VOCtest_06-Nov-2007.tar
+
+451020800/451020800 ━━━━━━━━━━━━━━━━━━━━ 19s 0us/step
 ```
 </div>
-
-
-<div class="k-default-codeblock">
-```
-
-```
-</div>
- 1999639040/1999639040 ━━━━━━━━━━━━━━━━━━━━ 68s 0us/step
-
 
 ---
 ## Inference using a pre-trained object detector
@@ -414,7 +439,7 @@ consisting of a (generally pre-trained) backbone model and task-specific layers.
 Here's an example using `keras_hub.models.ImageObjectDetector` with the
 `RetinaNet` model architecture and `ResNet50` as the backbone.
 
-ResNet is a great starting model when constructing an image classification
+`ResNet` is a great starting model when constructing an image classification
 pipeline. This architecture manages to achieve high accuracy while using a
 relatively small number of parameters. If a ResNet isn't powerful enough for the
 task you are hoping to solve, be sure to check out KerasHub's other available
@@ -423,7 +448,7 @@ backbones here https://keras.io/keras_hub/presets/
 
 ```python
 object_detector = keras_hub.models.ImageObjectDetector.from_preset(
-    "kaggle://keras/retinanet/keras/retinanet_resnet50_fpn_coco"
+    "retinanet_resnet50_fpn_coco"
 )
 object_detector.summary()
 ```
@@ -531,30 +556,38 @@ object_detector.summary()
 ---
 ## Preprocessing Layers
 
+Let's define the below preprocessing layers:
+
+- Resizing Layer: Resizes the image and maintains the aspect ratio by applying
+padding when `pad_to_aspect_ratio=True`. Also, sets the default bounding box
+format for representing the data.
+- Max Bounding Box Layer: Limits the maximum number of bounding boxes per image.
+
 
 ```python
 image_size = (800, 800)
 batch_size = 4
-gt_bbox_format = "yxyx"
+bbox_format = "yxyx"
 epochs = 5
 
-# Resizing layer: Resizes images and pads to maintain aspect ratio
 resizing = keras.layers.Resizing(
     height=image_size[0],
     width=image_size[1],
     interpolation="bilinear",
     pad_to_aspect_ratio=True,
-    bounding_box_format=gt_bbox_format,
+    bounding_box_format=bbox_format,
 )
 
-# Max bounding box layer: Limits the number of bounding boxes per image
 max_box_layer = keras.layers.MaxNumBoundingBoxes(
-    max_number=100, bounding_box_format=gt_bbox_format
+    max_number=100, bounding_box_format=bbox_format
 )
 ```
 
 ### Predict and Visualize
-Next, let's get some predictions from our object detector:
+
+Next, let's obtain predictions from our object detector by loading the image and
+visualizing them. We'll apply the preprocessing pipeline defined in the
+preprocessing layers step.
 
 
 ```python
@@ -569,38 +602,38 @@ predictions = object_detector.predict(image, batch_size=1)
 
 keras.visualization.plot_bounding_box_gallery(
     resizing(image),  # resize image as per prediction preprocessing pipeline
-    bounding_box_format=gt_bbox_format,
+    bounding_box_format=bbox_format,
     y_pred=predictions,
     scale=4,
     class_mapping=COCO_90_CLASS_MAPPING,
 )
 ```
 
-    
- 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 8s/step
-
 <div class="k-default-codeblock">
 ```
-
+/home/sachinprasad/projects/KERAS-IO/env/lib/python3.11/site-packages/keras/src/models/functional.py:238: UserWarning: The structure of `inputs` doesn't match the expected structure.
+Expected: ['keras_tensor']
+Received: inputs=Tensor(shape=(1, 800, 800, 3))
+  warnings.warn(msg)
+
+1/1 ━━━━━━━━━━━━━━━━━━━━ 8s 8s/step
 ```
 </div>
- 1/1 ━━━━━━━━━━━━━━━━━━━━ 8s 8s/step
 
-
-
-    
-![png](/home/sachinprasad/projects/KERAS-IO/keras-io/guides/img/object_detection_retinanet/object_detection_retinanet_14_2.png)
+![png](/home/sachinprasad/projects/KERAS-IO/keras-io/guides/img/object_detection_retinanet/object_detection_retinanet_14_3.png)
     
 
 
 ---
 ## Fine tuning a pretrained object detector
+
 In this guide, we'll assemble a full training pipeline for a KerasHub `RetinaNet`
 object detection model. This includes data loading, augmentation, training, and
 inference using Pascal VOC 2007 & 2012 dataset!
 
 ---
 ## TFDS Preprocessing
+
 This preprocessing step prepares the TFDS dataset for object detection. It
 includes:
 - Merging the Pascal VOC 2007 and 2012 datasets.
@@ -612,7 +645,7 @@ box annotations.
 
 ```python
 
-def decode_custom_tfds(record: Dict[str, Any]) -> Dict[str, Any]:
+def decode_custom_tfds(record):
     """Decodes a custom TFDS record into a dictionary.
 
     Args:
@@ -630,7 +663,7 @@ def decode_custom_tfds(record: Dict[str, Any]) -> Dict[str, Any]:
     return {"images": image, "bounding_boxes": bounding_boxes}
 
 
-def convert_to_tuple(record: Dict[str, Any]) -> Tuple[tf.Tensor, Dict[str, Any]]:
+def convert_to_tuple(record):
     """Converts a decoded TFDS record to a tuple for keras-hub.
 
     Args:
@@ -645,7 +678,7 @@ def convert_to_tuple(record: Dict[str, Any]) -> Tuple[tf.Tensor, Dict[str, Any]]
     }
 
 
-def decode_tfds(record: Dict[str, Any]) -> Dict[str, Any]:
+def decode_tfds(record):
     """Decodes a standard TFDS object detection record.
 
     Args:
@@ -660,7 +693,7 @@ def decode_tfds(record: Dict[str, Any]) -> Dict[str, Any]:
     boxes = keras.utils.bounding_boxes.convert_format(
         record["objects"]["bbox"],
         source="rel_yxyx",
-        target=gt_bbox_format,
+        target=bbox_format,
         height=height,
         width=width,
     )
@@ -671,7 +704,7 @@ def decode_tfds(record: Dict[str, Any]) -> Dict[str, Any]:
     return {"images": image, "bounding_boxes": bounding_boxes}
 
 
-def preprocess_tfds(ds: tf.data.Dataset) -> tf.data.Dataset:
+def preprocess_tfds(ds):
     """Preprocesses a TFDS dataset for object detection.
 
     Args:
@@ -703,8 +736,7 @@ Load the eval data
 
 
 ```python
-eval_ds = tfds.load("voc/2007", split="test")
-eval_ds = eval_ds.map(decode_tfds, num_parallel_calls=tf.data.AUTOTUNE)
+eval_ds = eval_ds.map(decode_custom_tfds, num_parallel_calls=tf.data.AUTOTUNE)
 eval_ds = preprocess_tfds(eval_ds)
 ```
 
@@ -715,7 +747,7 @@ eval_ds = preprocess_tfds(eval_ds)
 record = next(iter(train_ds.shuffle(100).take(1)))
 keras.visualization.plot_bounding_box_gallery(
     record["images"],
-    bounding_box_format=gt_bbox_format,
+    bounding_box_format=bbox_format,
     y_true=record["bounding_boxes"],
     scale=3,
     rows=2,
@@ -742,14 +774,15 @@ eval_ds = eval_ds.prefetch(tf.data.AUTOTUNE)
 ```
 
 ---
-## Congiure RetinaNet Model
-Configure the model with backbone, num_classes and preprocessor.
+## Configure RetinaNet Model
+
+Configure the model with `backbone`, `num_classes` and `preprocessor`.
 Use callbacks for recording logs and saving checkpoints.
 
 
 ```python
 
-def get_callbacks(experiment_path: str):
+def get_callbacks(experiment_path):
     """Creates a list of callbacks for model training.
 
     Args:
@@ -758,7 +791,6 @@ def get_callbacks(experiment_path: str):
     Returns:
       List of keras callback instances.
     """
-    # models_path = os.path.join(experiment_path, "tf_models")
     tb_logs_path = os.path.join(experiment_path, "logs")
     ckpt_path = os.path.join(experiment_path, "weights")
     return [
@@ -780,6 +812,14 @@ def get_callbacks(experiment_path: str):
 ---
 ## Load backbone weights and preprocessor config
 
+Let's use the "retinanet_resnet50_fpn_coco" pretrained weights as the backbone
+model, applying its predefined configuration from the preprocessor of the
+"retinanet_resnet50_fpn_coco" preset.
+Define a RetinaNet object detector model with the backbone and preprocessor
+specified above, and set `num_classes` to 20 to represent the object categories
+from Pascal VOC.
+Finally, compile the model using Mean Absolute Error (MAE) as the box loss.
+
 
 ```python
 backbone = keras_hub.models.Backbone.from_preset("retinanet_resnet50_fpn_coco")
@@ -795,52 +835,28 @@ model.compile(box_loss=keras.losses.MeanAbsoluteError(reduction="sum"))
 
 <div class="k-default-codeblock">
 ```
-Downloading from https://www.kaggle.com/api/v1/models/keras/retinanet/keras/retinanet_resnet50_fpn_coco/2/download/config.json...
-
+Downloading from https://www.kaggle.com/api/v1/models/keras/retinanet/keras/retinanet_resnet50_fpn_coco/3/download/preprocessor.json...
 ```
 </div>
-    
-  0%|                                                                                                                                      | 0.00/1.59k [00:00<?, ?B/s]
+
+  0%|                                                                                                                                                                                                                                          | 0.00/1.80k [00:00<?, ?B/s]
 
     
-100%|█████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 1.59k/1.59k [00:00<00:00, 2.99MB/s]
-
-    
-
-
-<div class="k-default-codeblock">
-```
-Downloading from https://www.kaggle.com/api/v1/models/keras/retinanet/keras/retinanet_resnet50_fpn_coco/2/download/model.weights.h5...
-
-```
-</div>
-    
-  0%|                                                                                                                                       | 0.00/105M [00:00<?, ?B/s]
-
-    
-100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 105M/105M [00:01<00:00, 62.3MB/s]
-
-    
-
-<div class="k-default-codeblock">
-```
-Downloading from https://www.kaggle.com/api/v1/models/keras/retinanet/keras/retinanet_resnet50_fpn_coco/2/download/preprocessor.json...
-
-```
-</div>
-    
-  0%|                                                                                                                                      | 0.00/1.65k [00:00<?, ?B/s]
-
-    
-100%|█████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 1.65k/1.65k [00:00<00:00, 3.13MB/s]
+100%|█████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 1.80k/1.80k [00:00<00:00, 3.49MB/s]
 
     
 
 
 ---
-## Fit the model
+## Train the model
 
-**Note:** The model trained on L4 GPU, while training on T4 it takes significant time.
+Now that the object detector model is compiled, let's train it using the
+training and validation data we created earlier.
+For demonstration purposes, we have used a small number of epochs. You can
+increase the number of epochs to achieve better results.
+
+**Note:** The model is trained on an L4 GPU. Training for 5 epochs on a T4 GPU
+takes approximately 7 hours.
 
 
 ```python
@@ -854,149 +870,63 @@ model.fit(
 
 <div class="k-default-codeblock">
 ```
+/home/sachinprasad/projects/KERAS-IO/env/lib/python3.11/site-packages/keras/src/models/functional.py:238: UserWarning: The structure of `inputs` doesn't match the expected structure.
+Expected: ['keras_tensor_213']
+Received: inputs=Tensor(shape=(4, 800, 800, 3))
+  warnings.warn(msg)
+
 Epoch 1/5
 
-```
-</div>
-    
-    1/5534 [37m━━━━━━━━━━━━━━━━━━━━  66:07:36 43s/step - bbox_regression_loss: 37.8961 - cls_logits_loss: 8512.3418 - loss: 8550.2383
+5534/5534 ━━━━━━━━━━━━━━━━━━━━ 0s 112ms/step - bbox_regression_loss: 0.9892 - cls_logits_loss: 61.7502 - loss: 62.7394
 
-<div class="k-default-codeblock">
-```
-
-```
-</div>
- 5534/5534 ━━━━━━━━━━━━━━━━━━━━ 0s 113ms/step - bbox_regression_loss: 0.8882 - cls_logits_loss: 53.9798 - loss: 54.8681
+/home/sachinprasad/projects/KERAS-IO/env/lib/python3.11/site-packages/keras/src/models/functional.py:238: UserWarning: The structure of `inputs` doesn't match the expected structure.
+Expected: ['keras_tensor_213']
+Received: inputs=Tensor(shape=(4, 800, 800, 3))
+  warnings.warn(msg)
 
-    
-<div class="k-default-codeblock">
-```
-Epoch 1: val_loss improved from inf to 0.28274, saving model to fine_tuning/weights/0001-0.28.weights.h5
+Epoch 1: val_loss improved from inf to 0.34341, saving model to fine_tuning/weights/0001-0.34.weights.h5
 
-
-```
-</div>
- 5534/5534 ━━━━━━━━━━━━━━━━━━━━ 702s 119ms/step - bbox_regression_loss: 0.8881 - cls_logits_loss: 53.9714 - loss: 54.8596 - val_bbox_regression_loss: 0.1683 - val_cls_logits_loss: 0.1144 - val_loss: 0.2827
+5534/5534 ━━━━━━━━━━━━━━━━━━━━ 700s 119ms/step - bbox_regression_loss: 0.9891 - cls_logits_loss: 61.7406 - loss: 62.7296 - val_bbox_regression_loss: 0.2271 - val_cls_logits_loss: 0.1163 - val_loss: 0.3434
 
-
-<div class="k-default-codeblock">
-```
 Epoch 2/5
 
-```
-</div>
-    
-    1/5534 [37m━━━━━━━━━━━━━━━━━━━━  42:23:38 28s/step - bbox_regression_loss: 0.1529 - cls_logits_loss: 0.1173 - loss: 0.2702
+5534/5534 ━━━━━━━━━━━━━━━━━━━━ 0s 107ms/step - bbox_regression_loss: 0.1850 - cls_logits_loss: 0.1010 - loss: 0.2860
 
-<div class="k-default-codeblock">
-```
-
-```
-</div>
- 5534/5534 ━━━━━━━━━━━━━━━━━━━━ 0s 107ms/step - bbox_regression_loss: 0.1751 - cls_logits_loss: 0.1020 - loss: 0.2771
+Epoch 2: val_loss improved from 0.34341 to 0.24534, saving model to fine_tuning/weights/0002-0.25.weights.h5
 
-    
-<div class="k-default-codeblock">
-```
-Epoch 2: val_loss improved from 0.28274 to 0.21916, saving model to fine_tuning/weights/0002-0.22.weights.h5
+5534/5534 ━━━━━━━━━━━━━━━━━━━━ 651s 113ms/step - bbox_regression_loss: 0.1850 - cls_logits_loss: 0.1010 - loss: 0.2860 - val_bbox_regression_loss: 0.1604 - val_cls_logits_loss: 0.0850 - val_loss: 0.2453
 
-
-```
-</div>
- 5534/5534 ━━━━━━━━━━━━━━━━━━━━ 649s 112ms/step - bbox_regression_loss: 0.1751 - cls_logits_loss: 0.1020 - loss: 0.2771 - val_bbox_regression_loss: 0.1352 - val_cls_logits_loss: 0.0840 - val_loss: 0.2192
-
-
-<div class="k-default-codeblock">
-```
 Epoch 3/5
 
-```
-</div>
-    
-    1/5534 [37m━━━━━━━━━━━━━━━━━━━━  39:35 429ms/step - bbox_regression_loss: 0.1188 - cls_logits_loss: 0.0763 - loss: 0.1950
+5534/5534 ━━━━━━━━━━━━━━━━━━━━ 0s 107ms/step - bbox_regression_loss: 0.1538 - cls_logits_loss: 0.0757 - loss: 0.2295
 
-<div class="k-default-codeblock">
-```
-
-```
-</div>
- 5534/5534 ━━━━━━━━━━━━━━━━━━━━ 0s 107ms/step - bbox_regression_loss: 0.1408 - cls_logits_loss: 0.0733 - loss: 0.2141
+Epoch 3: val_loss improved from 0.24534 to 0.19833, saving model to fine_tuning/weights/0003-0.20.weights.h5
 
-    
-<div class="k-default-codeblock">
-```
-Epoch 3: val_loss improved from 0.21916 to 0.20594, saving model to fine_tuning/weights/0003-0.21.weights.h5
+5534/5534 ━━━━━━━━━━━━━━━━━━━━ 624s 113ms/step - bbox_regression_loss: 0.1538 - cls_logits_loss: 0.0757 - loss: 0.2295 - val_bbox_regression_loss: 0.1347 - val_cls_logits_loss: 0.0637 - val_loss: 0.1983
 
-
-```
-</div>
- 5534/5534 ━━━━━━━━━━━━━━━━━━━━ 621s 112ms/step - bbox_regression_loss: 0.1408 - cls_logits_loss: 0.0733 - loss: 0.2141 - val_bbox_regression_loss: 0.1406 - val_cls_logits_loss: 0.0654 - val_loss: 0.2059
-
-
-<div class="k-default-codeblock">
-```
 Epoch 4/5
 
-```
-</div>
-    
-    1/5534 [37m━━━━━━━━━━━━━━━━━━━━  41:22 449ms/step - bbox_regression_loss: 0.1649 - cls_logits_loss: 0.0613 - loss: 0.2262
+5534/5534 ━━━━━━━━━━━━━━━━━━━━ 0s 107ms/step - bbox_regression_loss: 0.1282 - cls_logits_loss: 0.0573 - loss: 0.1855
 
-<div class="k-default-codeblock">
-```
-
-```
-</div>
- 5534/5534 ━━━━━━━━━━━━━━━━━━━━ 0s 106ms/step - bbox_regression_loss: 0.1222 - cls_logits_loss: 0.0561 - loss: 0.1782
+Epoch 4: val_loss improved from 0.19833 to 0.16430, saving model to fine_tuning/weights/0004-0.16.weights.h5
 
-    
-<div class="k-default-codeblock">
-```
-Epoch 4: val_loss improved from 0.20594 to 0.17254, saving model to fine_tuning/weights/0004-0.17.weights.h5
+5534/5534 ━━━━━━━━━━━━━━━━━━━━ 623s 112ms/step - bbox_regression_loss: 0.1282 - cls_logits_loss: 0.0573 - loss: 0.1855 - val_bbox_regression_loss: 0.1115 - val_cls_logits_loss: 0.0528 - val_loss: 0.1643
 
-
-```
-</div>
- 5534/5534 ━━━━━━━━━━━━━━━━━━━━ 620s 112ms/step - bbox_regression_loss: 0.1222 - cls_logits_loss: 0.0561 - loss: 0.1782 - val_bbox_regression_loss: 0.1171 - val_cls_logits_loss: 0.0554 - val_loss: 0.1725
-
-
-<div class="k-default-codeblock">
-```
 Epoch 5/5
 
+5534/5534 ━━━━━━━━━━━━━━━━━━━━ 0s 107ms/step - bbox_regression_loss: 0.1182 - cls_logits_loss: 0.0449 - loss: 0.1631
+
+Epoch 5: val_loss did not improve from 0.16430
+
+5534/5534 ━━━━━━━━━━━━━━━━━━━━ 621s 112ms/step - bbox_regression_loss: 0.1182 - cls_logits_loss: 0.0449 - loss: 0.1631 - val_bbox_regression_loss: 0.1146 - val_cls_logits_loss: 0.0518 - val_loss: 0.1664
+
+<keras.src.callbacks.history.History at 0x7f8e3b845590>
 ```
 </div>
-    
-    1/5534 [37m━━━━━━━━━━━━━━━━━━━━  43:03 467ms/step - bbox_regression_loss: 0.1184 - cls_logits_loss: 0.0503 - loss: 0.1687
 
-<div class="k-default-codeblock">
-```
-
-```
-</div>
- 5534/5534 ━━━━━━━━━━━━━━━━━━━━ 0s 106ms/step - bbox_regression_loss: 0.1118 - cls_logits_loss: 0.0435 - loss: 0.1553
-
-    
-<div class="k-default-codeblock">
-```
-Epoch 5: val_loss did not improve from 0.17254
-
-
-```
-</div>
- 5534/5534 ━━━━━━━━━━━━━━━━━━━━ 617s 112ms/step - bbox_regression_loss: 0.1118 - cls_logits_loss: 0.0435 - loss: 0.1553 - val_bbox_regression_loss: 0.1300 - val_cls_logits_loss: 0.0536 - val_loss: 0.1835
-
-
-
-
-
-<div class="k-default-codeblock">
-```
-<keras.src.callbacks.history.History at 0x7f8c60443810>
-
-```
-</div>
 ### Prediction on evaluation data
+
+Let's predict the model using our evaluation dataset.
 
 
 ```python
@@ -1005,15 +935,11 @@ y_pred = model.predict(images)
 ```
 
     
- 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 7s/step
-
 <div class="k-default-codeblock">
 ```
-
+1/1 ━━━━━━━━━━━━━━━━━━━━ 7s 7s/step
 ```
 </div>
- 1/1 ━━━━━━━━━━━━━━━━━━━━ 7s 7s/step
-
 
 ### Plot the predictions
 
@@ -1021,7 +947,7 @@ y_pred = model.predict(images)
 ```python
 keras.visualization.plot_bounding_box_gallery(
     images,
-    bounding_box_format=gt_bbox_format,
+    bounding_box_format=bbox_format,
     y_true=y_true,
     y_pred=y_pred,
     scale=3,
@@ -1039,10 +965,12 @@ keras.visualization.plot_bounding_box_gallery(
 
 ---
 ## Custom training object detector
+
 Additionally, you can customize the object detector by modifying the image
 converter, selecting a different image encoder, etc.
 
 ### Image Converter
+
 The `RetinaNetImageConverter` class prepares images for use with the `RetinaNet`
 object detection model. Here's what it does:
 
@@ -1060,16 +988,18 @@ preprocessor = keras_hub.models.RetinaNetObjectDetectorPreprocessor(
 ```
 
 ### Image Encoder and RetinaNet Backbone
+
 The image encoder, while typically initialized with pre-trained weights
 (e.g., from ImageNet), can also be instantiated without them. This results in
 the image encoder (and, consequently, the entire object detection network built
 upon it) having randomly initialized weights.
 
-This configuration is equivalent to training the model from scratch, as opposed
-to fine-tuning a pre-trained model.
+Here we load pre-trained ResNet50 model.
+This will serve as the base for extracting image features.
 
-Training from scratch generally requires significantly more data and
-computational resources to achieve performance comparable to fine-tuning.
+And then Build the RetinaNet Feature Pyramid Network (FPN) on top of the ResNet50
+backbone. The FPN creates multi-scale feature maps for better object detection
+at different sizes.
 
 **Note:**
 `use_p5`: If True, the output of the last backbone layer (typically `P5` in an
@@ -1081,48 +1011,14 @@ bypassing any further processing of `P5` within the feature pyramid. Defaults to
 
 
 ```python
-# Load a pre-trained ResNet50 model.
-# This will serve as the base for extracting image features.
 image_encoder = keras_hub.models.Backbone.from_preset("resnet_50_imagenet")
 
-# Build the RetinaNet Feature Pyramid Network (FPN) on top of the ResNet50
-# backbone. The FPN creates multi-scale feature maps for better object detection
-# at different sizes.
 backbone = keras_hub.models.RetinaNetBackbone(
     image_encoder=image_encoder, min_level=3, max_level=5, use_p5=True
 )
 ```
 
-<div class="k-default-codeblock">
-```
-Downloading from https://www.kaggle.com/api/v1/models/keras/resnetv1/keras/resnet_50_imagenet/3/download/config.json...
-
-```
-</div>
-    
-  0%|                                                                                                                                        | 0.00/841 [00:00<?, ?B/s]
-
-    
-100%|█████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 841/841 [00:00<00:00, 1.62MB/s]
-
-    
-
-
-<div class="k-default-codeblock">
-```
-Downloading from https://www.kaggle.com/api/v1/models/keras/resnetv1/keras/resnet_50_imagenet/3/download/model.weights.h5...
-
-```
-</div>
-    
-  0%|                                                                                                                                      | 0.00/90.3M [00:00<?, ?B/s]
-    
-100%|█████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 90.3M/90.3M [00:01<00:00, 68.5MB/s]
-
-    
-
-
-### Train and visulaize RetinaNet model
+### Train and visualize RetinaNet model
 
 **Note:** Training the model (for demonstration purposes only 5 epochs). In a
 real scenario, you would train for many more epochs (often hundreds) to achieve
@@ -1153,7 +1049,7 @@ y_pred = model.predict(images)
 
 keras.visualization.plot_bounding_box_gallery(
     images,
-    bounding_box_format=gt_bbox_format,
+    bounding_box_format=bbox_format,
     y_true=y_true,
     y_pred=y_pred,
     scale=3,
@@ -1165,152 +1061,74 @@ keras.visualization.plot_bounding_box_gallery(
 
 <div class="k-default-codeblock">
 ```
+/home/sachinprasad/projects/KERAS-IO/env/lib/python3.11/site-packages/keras/src/models/functional.py:238: UserWarning: The structure of `inputs` doesn't match the expected structure.
+Expected: ['keras_tensor_432']
+Received: inputs=Tensor(shape=(4, 800, 800, 3))
+  warnings.warn(msg)
+
 Epoch 1/5
 
-```
-</div>
-    
-    1/5534 [37m━━━━━━━━━━━━━━━━━━━━  51:01:21 33s/step - bbox_regression_loss: 5.1737 - cls_logits_loss: 7534.1587 - loss: 7539.3325
+5534/5534 ━━━━━━━━━━━━━━━━━━━━ 0s 112ms/step - bbox_regression_loss: 0.2535 - cls_logits_loss: 15.1471 - loss: 15.4006
 
-<div class="k-default-codeblock">
-```
-
-```
-</div>
- 5534/5534 ━━━━━━━━━━━━━━━━━━━━ 0s 111ms/step - bbox_regression_loss: 0.2589 - cls_logits_loss: 12.9746 - loss: 13.2335
+Epoch 1: val_loss improved from inf to 0.24793, saving model to custom_training/weights/0001-0.25.weights.h5
 
-    
-<div class="k-default-codeblock">
-```
-Epoch 1: val_loss improved from inf to 0.24076, saving model to custom_training/weights/0001-0.24.weights.h5
+5534/5534 ━━━━━━━━━━━━━━━━━━━━ 691s 119ms/step - bbox_regression_loss: 0.2535 - cls_logits_loss: 15.1447 - loss: 15.3982 - val_bbox_regression_loss: 0.1391 - val_cls_logits_loss: 0.1088 - val_loss: 0.2479
 
-
-```
-</div>
- 5534/5534 ━━━━━━━━━━━━━━━━━━━━ 687s 118ms/step - bbox_regression_loss: 0.2589 - cls_logits_loss: 12.9725 - loss: 13.2314 - val_bbox_regression_loss: 0.1338 - val_cls_logits_loss: 0.1069 - val_loss: 0.2408
-
-
-<div class="k-default-codeblock">
-```
 Epoch 2/5
 
-```
-</div>
-    
-    1/5534 [37m━━━━━━━━━━━━━━━━━━━━  46:54:20 31s/step - bbox_regression_loss: 0.1345 - cls_logits_loss: 0.1115 - loss: 0.2460
+5534/5534 ━━━━━━━━━━━━━━━━━━━━ 0s 106ms/step - bbox_regression_loss: 0.1363 - cls_logits_loss: 0.1165 - loss: 0.2528
 
-<div class="k-default-codeblock">
-```
-
-```
-</div>
- 5534/5534 ━━━━━━━━━━━━━━━━━━━━ 0s 106ms/step - bbox_regression_loss: 0.1356 - cls_logits_loss: 0.1146 - loss: 0.2502
+Epoch 2: val_loss improved from 0.24793 to 0.22090, saving model to custom_training/weights/0002-0.22.weights.h5
 
-    
-<div class="k-default-codeblock">
-```
-Epoch 2: val_loss improved from 0.24076 to 0.21794, saving model to custom_training/weights/0002-0.22.weights.h5
+5534/5534 ━━━━━━━━━━━━━━━━━━━━ 649s 112ms/step - bbox_regression_loss: 0.1363 - cls_logits_loss: 0.1165 - loss: 0.2528 - val_bbox_regression_loss: 0.1198 - val_cls_logits_loss: 0.1011 - val_loss: 0.2209
 
-
-```
-</div>
- 5534/5534 ━━━━━━━━━━━━━━━━━━━━ 647s 111ms/step - bbox_regression_loss: 0.1356 - cls_logits_loss: 0.1146 - loss: 0.2502 - val_bbox_regression_loss: 0.1187 - val_cls_logits_loss: 0.0992 - val_loss: 0.2179
-
-
-<div class="k-default-codeblock">
-```
 Epoch 3/5
 
-```
-</div>
-    
-    1/5534 [37m━━━━━━━━━━━━━━━━━━━━  32:28 352ms/step - bbox_regression_loss: 0.1244 - cls_logits_loss: 0.0842 - loss: 0.2085
+5534/5534 ━━━━━━━━━━━━━━━━━━━━ 0s 106ms/step - bbox_regression_loss: 0.1168 - cls_logits_loss: 0.1009 - loss: 0.2177
 
-<div class="k-default-codeblock">
-```
-
-```
-</div>
- 5534/5534 ━━━━━━━━━━━━━━━━━━━━ 0s 106ms/step - bbox_regression_loss: 0.1145 - cls_logits_loss: 0.1014 - loss: 0.2158
+Epoch 3: val_loss improved from 0.22090 to 0.20299, saving model to custom_training/weights/0003-0.20.weights.h5
 
-    
-<div class="k-default-codeblock">
-```
-Epoch 3: val_loss improved from 0.21794 to 0.19651, saving model to custom_training/weights/0003-0.20.weights.h5
+5534/5534 ━━━━━━━━━━━━━━━━━━━━ 616s 111ms/step - bbox_regression_loss: 0.1168 - cls_logits_loss: 0.1009 - loss: 0.2177 - val_bbox_regression_loss: 0.1141 - val_cls_logits_loss: 0.0888 - val_loss: 0.2030
 
-
-```
-</div>
- 5534/5534 ━━━━━━━━━━━━━━━━━━━━ 615s 111ms/step - bbox_regression_loss: 0.1144 - cls_logits_loss: 0.1014 - loss: 0.2158 - val_bbox_regression_loss: 0.1089 - val_cls_logits_loss: 0.0876 - val_loss: 0.1965
-
-
-<div class="k-default-codeblock">
-```
 Epoch 4/5
 
-```
-</div>
-    
-    1/5534 [37m━━━━━━━━━━━━━━━━━━━━  32:10 349ms/step - bbox_regression_loss: 0.1100 - cls_logits_loss: 0.0812 - loss: 0.1912
+5534/5534 ━━━━━━━━━━━━━━━━━━━━ 0s 105ms/step - bbox_regression_loss: 0.1029 - cls_logits_loss: 0.0815 - loss: 0.1844
 
-<div class="k-default-codeblock">
-```
-
-```
-</div>
- 5534/5534 ━━━━━━━━━━━━━━━━━━━━ 0s 105ms/step - bbox_regression_loss: 0.1017 - cls_logits_loss: 0.0812 - loss: 0.1829
+Epoch 4: val_loss improved from 0.20299 to 0.18108, saving model to custom_training/weights/0004-0.18.weights.h5
 
-    
-<div class="k-default-codeblock">
-```
-Epoch 4: val_loss improved from 0.19651 to 0.18126, saving model to custom_training/weights/0004-0.18.weights.h5
+5534/5534 ━━━━━━━━━━━━━━━━━━━━ 612s 110ms/step - bbox_regression_loss: 0.1029 - cls_logits_loss: 0.0815 - loss: 0.1844 - val_bbox_regression_loss: 0.1016 - val_cls_logits_loss: 0.0795 - val_loss: 0.1811
 
-
-```
-</div>
- 5534/5534 ━━━━━━━━━━━━━━━━━━━━ 614s 111ms/step - bbox_regression_loss: 0.1017 - cls_logits_loss: 0.0812 - loss: 0.1829 - val_bbox_regression_loss: 0.1012 - val_cls_logits_loss: 0.0801 - val_loss: 0.1813
-
-
-<div class="k-default-codeblock">
-```
 Epoch 5/5
 
+5534/5534 ━━━━━━━━━━━━━━━━━━━━ 0s 105ms/step - bbox_regression_loss: 0.0919 - cls_logits_loss: 0.0650 - loss: 0.1569
+
+Epoch 5: val_loss improved from 0.18108 to 0.17948, saving model to custom_training/weights/0005-0.18.weights.h5
+
+1/1 ━━━━━━━━━━━━━━━━━━━━ 7s 7s/step
 ```
 </div>
-    
-    1/5534 [37m━━━━━━━━━━━━━━━━━━━━  31:39 343ms/step - bbox_regression_loss: 0.0963 - cls_logits_loss: 0.0638 - loss: 0.1600
 
-<div class="k-default-codeblock">
-```
-
-```
-</div>
- 5534/5534 ━━━━━━━━━━━━━━━━━━━━ 0s 105ms/step - bbox_regression_loss: 0.0902 - cls_logits_loss: 0.0648 - loss: 0.1550
-
-    
-<div class="k-default-codeblock">
-```
-Epoch 5: val_loss improved from 0.18126 to 0.17179, saving model to custom_training/weights/0005-0.17.weights.h5
-
-
-```
-</div>
- 5534/5534 ━━━━━━━━━━━━━━━━━━━━ 615s 111ms/step - bbox_regression_loss: 0.0902 - cls_logits_loss: 0.0648 - loss: 0.1550 - val_bbox_regression_loss: 0.0983 - val_cls_logits_loss: 0.0735 - val_loss: 0.1718
-
-
-    
- 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 7s/step
-
-<div class="k-default-codeblock">
-```
-
-```
-</div>
- 1/1 ━━━━━━━━━━━━━━━━━━━━ 7s 7s/step
-
-
-
-    
-![png](/home/sachinprasad/projects/KERAS-IO/keras-io/guides/img/object_detection_retinanet/object_detection_retinanet_41_27687.png)
+![png](/home/sachinprasad/projects/KERAS-IO/keras-io/guides/img/object_detection_retinanet/object_detection_retinanet_41_27688.png)
     
 
+
+---
+## Conclusion
+
+In this tutorial, you learned how to custom train and fine-tune the RetinaNet
+object detector.
+
+You can experiment with different existing backbones trained on ImageNet as the
+image encoder, or you can fine-tune your own backbone.
+
+This configuration is equivalent to training the model from scratch, as opposed
+to fine-tuning a pre-trained model.
+
+Training from scratch generally requires significantly more data and
+computational resources to achieve performance comparable to fine-tuning.
+
+To achieve better results when fine-tuning the model, you can increase the
+number of epochs and experiment with different hyperparameter values.
+In addition to the training data used here, you can also use other object
+detection datasets, but keep in mind that custom training these requires
+high GPU memory.

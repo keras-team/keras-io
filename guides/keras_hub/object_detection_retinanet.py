@@ -64,7 +64,7 @@ pip install -q opencv-python
 
 import os
 
-os.environ["KERAS_BACKEND"] = "jax" # or "tensorflow" or "torch"
+os.environ["KERAS_BACKEND"] = "jax"  # or "tensorflow" or "torch"
 import keras
 import keras_hub
 import tensorflow as tf
@@ -90,6 +90,9 @@ VOC_2007_URL = (
 )
 VOC_2012_URL = (
     "http://host.robots.ox.ac.uk/pascal/VOC/voc2012/VOCtrainval_11-May-2012.tar"
+)
+VOC_2007_test_URL = (
+    "http://host.robots.ox.ac.uk/pascal/VOC/voc2007/VOCtest_06-Nov-2007.tar"
 )
 
 # Note that this list doesn't contain the background class. In the
@@ -211,6 +214,7 @@ def get_image_ids(data_dir, split):
         "train": "train.txt",
         "eval": "val.txt",
         "trainval": "trainval.txt",
+        "test": "test.txt",
     }
     with open(
         os.path.join(data_dir, "ImageSets", "Main", data_file_mapping[split]),
@@ -379,6 +383,12 @@ train_ds_2012 = load_voc(
     split="trainval",
     data_dir="./",
     voc_url=VOC_2012_URL,
+)
+eval_ds = load_voc(
+    year="2007",
+    split="test",
+    data_dir="./",
+    voc_url=VOC_2007_test_URL,
 )
 
 """
@@ -565,8 +575,7 @@ train_ds = preprocess_tfds(train_ds)
 """
 Load the eval data
 """
-eval_ds = tfds.load("voc/2007", split="test")
-eval_ds = eval_ds.map(decode_tfds, num_parallel_calls=tf.data.AUTOTUNE)
+eval_ds = eval_ds.map(decode_custom_tfds, num_parallel_calls=tf.data.AUTOTUNE)
 eval_ds = preprocess_tfds(eval_ds)
 
 """
