@@ -21,6 +21,10 @@ Let's begin by choosing JAX as the backend we want to run on, and import all
 the necessary libraries.
 """
 
+"""shell
+pip install -q keras-rs
+"""
+
 import os
 
 os.environ["KERAS_BACKEND"] = "jax"  # `"tensorflow"`/`"torch"`

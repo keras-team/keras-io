@@ -80,6 +80,11 @@ Let's set the backend to JAX, and get our imports sorted.
 
 
 ```python
+!pip install -q keras-rs
+```
+
+
+```python
 import os
 
 os.environ["KERAS_BACKEND"] = "jax"  # `"tensorflow"`/`"torch"`
