@@ -62,6 +62,7 @@ Finally, submit a PR adding `examples/your_example.py`.
 """
 
 import os
+import re
 import sys
 import json
 import copy
@@ -486,24 +487,109 @@ def _make_output_code_blocks(md):
     is_inside_backticks = False
 
     def is_output_line(line, prev_line, output_lines):
+        if (
+            output_lines
+            and "\x08" in output_lines[-1]
+            and not output_lines[-1].replace("\x08", "").strip()
+        ):
+            # We already started a block and the last line is just deletes, that
+            # implies that the current line will be part of the block (progress
+            # bar being re-written).
+            return True
+
         if line.startswith("    ") and len(line) >= 5:
-            if output_lines or (lines[i - 1].strip() == "" and line.strip()):
+            # Non-empty indented line
+            if output_lines:
+                # Continuation of the output block
                 return True
+            if not prev_line.strip():
+                # Begining of an output block
+                return True
+        elif not line.strip():
+            # Empty line
+            if output_lines:
+                # Continuation of the output block
+                return True
+        elif line.strip()[0] in ("\x1b", "\x08"):
+            # Line starts with ESC or delete character, it must be a progress
+            # bar, which is often not indented.
+            return True
         return False
 
     def flush(output_lines, final_lines):
         final_lines.append('<div class="k-default-codeblock">')
         final_lines.append("```")
-        if len(output_lines) == 1:
-            line = output_lines[0]
-            final_lines.append(line[4:])
-        else:
-            for line in output_lines:
-                final_lines.append(line[4:])
+
+        # When not None, we are in a progress bar and this is its last state.
+        progress_bar = None
+        # Used to dedupe empty lines. Also used when in a progress bar.
+        previous_line_empty = False
+
+        for line in output_lines:
+            # Unindent.
+            if line.startswith("    "):
+                # Normal block is indented by 4 spaces.
+                line = line[4:]
+            else:
+                # Progress bar and empty lines.
+                line = line.strip()
+
+            if "\x1b" in line or "\x08" in line:
+                # This is a progress bar.
+                if "\x1b" in line:
+                    # Remove escape sequences.
+                    line = re.sub(r"\x1b\[[0-9][0-9]?m", "", line)
+
+                if "\x08" in line:
+                    # Delete characters, remove everything up to the last one.
+                    line = line[line.rindex("\x08") + 1 :].strip()
+
+                if previous_line_empty and progress_bar is None:
+                    # We're starting a progress bar, flush the empty line.
+                    final_lines.append("")
+
+                if progress_bar is None or line:
+                    # Update latest progress bar content.
+                    progress_bar = line
+
+                previous_line_empty = not line
+                # When in a progress bar, don't append.
+                continue
+
+            if progress_bar is not None and not line:
+                # In a progress bar with an empty line.
+                previous_line_empty = True
+                # We're staying in the progress bar, don't append.
+                continue
+
+            # If we get here, we're not / no longer in a progress bar.
+
+            if progress_bar:
+                # Flush progress bar content with the last value.
+                final_lines.append(progress_bar)
+                progress_bar = None
+
+            if line:
+                if previous_line_empty:
+                    # Flush empty line before appending non-empty line.
+                    final_lines.append("")
+                final_lines.append(line)
+                previous_line_empty = False
+            else:
+                previous_line_empty = True
+
+        if progress_bar:
+            # Flush progress bar content with the last value.
+            final_lines.append(progress_bar)
+
         final_lines.append("```")
         final_lines.append("</div>")
 
-    for i, line in enumerate(lines):
+        if previous_line_empty:
+            # If the last line in the block was empty, put it after the block.
+            final_lines.append("")
+
+    for line in lines:
         if line.startswith("```"):
             is_inside_backticks = not is_inside_backticks
             final_lines.append(line)
@@ -513,7 +599,7 @@ def _make_output_code_blocks(md):
             final_lines.append(line)
             continue
 
-        if i > 0 and is_output_line(line, lines[-1], output_lines):
+        if final_lines and is_output_line(line, final_lines[-1], output_lines):
             output_lines.append(line)
         elif not line:
             if output_lines:

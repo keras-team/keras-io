@@ -1953,6 +1953,23 @@ API_MASTER = {
             ],
         },
         {
+            "path": "rematerialization/",
+            "title": "Rematerialization",
+            "toc": True,
+            "children": [
+                {
+                    "path": "remat_scope",
+                    "title": "RematScope",
+                    "generate": ["keras.RematScope"],
+                },
+                {
+                    "path": "remat",
+                    "title": "Remat",
+                    "generate": ["keras.remat"],
+                },
+            ],
+        },
+        {
             "path": "utils/",
             "title": "Utilities",
             "toc": True,
