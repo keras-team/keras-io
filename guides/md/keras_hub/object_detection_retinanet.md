@@ -611,10 +611,6 @@ keras.visualization.plot_bounding_box_gallery(
 
 <div class="k-default-codeblock">
 ```
-/home/sachinprasad/projects/KERAS-IO/env/lib/python3.11/site-packages/keras/src/models/functional.py:238: UserWarning: The structure of `inputs` doesn't match the expected structure.
-Expected: ['keras_tensor']
-Received: inputs=Tensor(shape=(1, 800, 800, 3))
-  warnings.warn(msg)
 
 1/1 ━━━━━━━━━━━━━━━━━━━━ 8s 8s/step
 ```
@@ -870,19 +866,11 @@ model.fit(
 
 <div class="k-default-codeblock">
 ```
-/home/sachinprasad/projects/KERAS-IO/env/lib/python3.11/site-packages/keras/src/models/functional.py:238: UserWarning: The structure of `inputs` doesn't match the expected structure.
-Expected: ['keras_tensor_213']
-Received: inputs=Tensor(shape=(4, 800, 800, 3))
-  warnings.warn(msg)
 
 Epoch 1/5
 
 5534/5534 ━━━━━━━━━━━━━━━━━━━━ 0s 112ms/step - bbox_regression_loss: 0.9892 - cls_logits_loss: 61.7502 - loss: 62.7394
 
-/home/sachinprasad/projects/KERAS-IO/env/lib/python3.11/site-packages/keras/src/models/functional.py:238: UserWarning: The structure of `inputs` doesn't match the expected structure.
-Expected: ['keras_tensor_213']
-Received: inputs=Tensor(shape=(4, 800, 800, 3))
-  warnings.warn(msg)
 
 Epoch 1: val_loss improved from inf to 0.34341, saving model to fine_tuning/weights/0001-0.34.weights.h5
 
@@ -1061,10 +1049,6 @@ keras.visualization.plot_bounding_box_gallery(
 
 <div class="k-default-codeblock">
 ```
-/home/sachinprasad/projects/KERAS-IO/env/lib/python3.11/site-packages/keras/src/models/functional.py:238: UserWarning: The structure of `inputs` doesn't match the expected structure.
-Expected: ['keras_tensor_432']
-Received: inputs=Tensor(shape=(4, 800, 800, 3))
-  warnings.warn(msg)
 
 Epoch 1/5
 
