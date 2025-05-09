@@ -620,7 +620,7 @@ Received: inputs=Tensor(shape=(1, 800, 800, 3))
 ```
 </div>
 
-![png](/home/sachinprasad/projects/KERAS-IO/keras-io/guides/img/object_detection_retinanet/object_detection_retinanet_14_3.png)
+![png](/img/guides/object_detection_retinanet/object_detection_retinanet_14_3.png)
     
 
 
@@ -758,7 +758,7 @@ keras.visualization.plot_bounding_box_gallery(
 
 
     
-![png](/home/sachinprasad/projects/KERAS-IO/keras-io/guides/img/object_detection_retinanet/object_detection_retinanet_23_0.png)
+![png](/img/guides/object_detection_retinanet/object_detection_retinanet_23_0.png)
     
 
 
@@ -959,7 +959,7 @@ keras.visualization.plot_bounding_box_gallery(
 
 
     
-![png](/home/sachinprasad/projects/KERAS-IO/keras-io/guides/img/object_detection_retinanet/object_detection_retinanet_35_0.png)
+![png](/img/guides/object_detection_retinanet/object_detection_retinanet_35_0.png)
     
 
 
@@ -1108,7 +1108,7 @@ Epoch 5: val_loss improved from 0.18108 to 0.17948, saving model to custom_train
 ```
 </div>
 
-![png](/home/sachinprasad/projects/KERAS-IO/keras-io/guides/img/object_detection_retinanet/object_detection_retinanet_41_27688.png)
+![png](/img/guides/object_detection_retinanet/object_detection_retinanet_41_27688.png)
     
 
 
