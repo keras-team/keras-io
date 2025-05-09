@@ -39,6 +39,7 @@ speed.
 ![retinanet](/img/guides/object_detection_retinanet/retinanet_architecture.png)
 
 ### References
+
 - [Focal Loss for Dense Object Detection](https://arxiv.org/abs/1708.02002)
 - [Feature Pyramid Networks for Object Detection](https://arxiv.org/abs/1612.03144)
 """
@@ -63,16 +64,14 @@ pip install -q opencv-python
 
 import os
 
-os.environ["KERAS_BACKEND"] = "jax"
+os.environ["KERAS_BACKEND"] = "jax" # or "tensorflow" or "torch"
 import keras
 import keras_hub
 import tensorflow as tf
-import warnings
-
-warnings.filterwarnings("ignore")
 
 """
 ### Helper functions
+
 We download the Pascal VOC 2012 and 2007 datasets using these helper functions,
 prepare them for the object detection task, and split them into training and
 validation datasets.
@@ -83,7 +82,6 @@ import multiprocessing
 from builtins import open
 import os.path
 import xml
-from typing import Callable, Tuple, Dict, Any
 
 import tensorflow_datasets as tfds
 
@@ -366,6 +364,7 @@ def load_voc(
 
 """
 ## Load the dataset
+
 Let's load the training data. Here, we load both the VOC 2007 and 2012 datasets
 and split them into training and validation sets.
 """
@@ -418,7 +417,7 @@ format for representing the data.
 """
 image_size = (800, 800)
 batch_size = 4
-gt_bbox_format = "yxyx"
+bbox_format = "yxyx"
 epochs = 5
 
 resizing = keras.layers.Resizing(
@@ -426,15 +425,16 @@ resizing = keras.layers.Resizing(
     width=image_size[1],
     interpolation="bilinear",
     pad_to_aspect_ratio=True,
-    bounding_box_format=gt_bbox_format,
+    bounding_box_format=bbox_format,
 )
 
 max_box_layer = keras.layers.MaxNumBoundingBoxes(
-    max_number=100, bounding_box_format=gt_bbox_format
+    max_number=100, bounding_box_format=bbox_format
 )
 
 """
 ### Predict and Visualize
+
 Next, let's obtain predictions from our object detector by loading the image and
 visualizing them. We'll apply the preprocessing pipeline defined in the
 preprocessing layers step.
@@ -451,7 +451,7 @@ predictions = object_detector.predict(image, batch_size=1)
 
 keras.visualization.plot_bounding_box_gallery(
     resizing(image),  # resize image as per prediction preprocessing pipeline
-    bounding_box_format=gt_bbox_format,
+    bounding_box_format=bbox_format,
     y_pred=predictions,
     scale=4,
     class_mapping=COCO_90_CLASS_MAPPING,
@@ -467,6 +467,7 @@ inference using Pascal VOC 2007 & 2012 dataset!
 
 """
 ## TFDS Preprocessing
+
 This preprocessing step prepares the TFDS dataset for object detection. It
 includes:
 - Merging the Pascal VOC 2007 and 2012 datasets.
@@ -477,7 +478,7 @@ box annotations.
 """
 
 
-def decode_custom_tfds(record: Dict[str, Any]) -> Dict[str, Any]:
+def decode_custom_tfds(record):
     """Decodes a custom TFDS record into a dictionary.
 
     Args:
@@ -495,7 +496,7 @@ def decode_custom_tfds(record: Dict[str, Any]) -> Dict[str, Any]:
     return {"images": image, "bounding_boxes": bounding_boxes}
 
 
-def convert_to_tuple(record: Dict[str, Any]) -> Tuple[tf.Tensor, Dict[str, Any]]:
+def convert_to_tuple(record):
     """Converts a decoded TFDS record to a tuple for keras-hub.
 
     Args:
@@ -510,7 +511,7 @@ def convert_to_tuple(record: Dict[str, Any]) -> Tuple[tf.Tensor, Dict[str, Any]]
     }
 
 
-def decode_tfds(record: Dict[str, Any]) -> Dict[str, Any]:
+def decode_tfds(record):
     """Decodes a standard TFDS object detection record.
 
     Args:
@@ -525,7 +526,7 @@ def decode_tfds(record: Dict[str, Any]) -> Dict[str, Any]:
     boxes = keras.utils.bounding_boxes.convert_format(
         record["objects"]["bbox"],
         source="rel_yxyx",
-        target=gt_bbox_format,
+        target=bbox_format,
         height=height,
         width=width,
     )
@@ -536,7 +537,7 @@ def decode_tfds(record: Dict[str, Any]) -> Dict[str, Any]:
     return {"images": image, "bounding_boxes": bounding_boxes}
 
 
-def preprocess_tfds(ds: tf.data.Dataset) -> tf.data.Dataset:
+def preprocess_tfds(ds):
     """Preprocesses a TFDS dataset for object detection.
 
     Args:
@@ -574,7 +575,7 @@ eval_ds = preprocess_tfds(eval_ds)
 record = next(iter(train_ds.shuffle(100).take(1)))
 keras.visualization.plot_bounding_box_gallery(
     record["images"],
-    bounding_box_format=gt_bbox_format,
+    bounding_box_format=bbox_format,
     y_true=record["bounding_boxes"],
     scale=3,
     rows=2,
@@ -593,12 +594,13 @@ eval_ds = eval_ds.prefetch(tf.data.AUTOTUNE)
 
 """
 ## Configure RetinaNet Model
+
 Configure the model with `backbone`, `num_classes` and `preprocessor`.
 Use callbacks for recording logs and saving checkpoints.
 """
 
 
-def get_callbacks(experiment_path: str):
+def get_callbacks(experiment_path):
     """Creates a list of callbacks for model training.
 
     Args:
@@ -607,7 +609,6 @@ def get_callbacks(experiment_path: str):
     Returns:
       List of keras callback instances.
     """
-    # models_path = os.path.join(experiment_path, "tf_models")
     tb_logs_path = os.path.join(experiment_path, "logs")
     ckpt_path = os.path.join(experiment_path, "weights")
     return [
@@ -649,13 +650,14 @@ model.compile(box_loss=keras.losses.MeanAbsoluteError(reduction="sum"))
 
 """
 ## Train the model
+
 Now that the object detector model is compiled, let's train it using the
 training and validation data we created earlier.
 For demonstration purposes, we have used a small number of epochs. You can
 increase the number of epochs to achieve better results.
 
-**Note:** The model trained on L4 GPU, while training on T4 it takes
-significant time.
+**Note:** The model is trained on an L4 GPU. Training for 5 epochs on a T4 GPU
+takes approximately 7 hours.
 """
 
 model.fit(
@@ -667,6 +669,7 @@ model.fit(
 
 """
 ### Prediction on evaluation data
+
 Let's predict the model using our evaluation dataset.
 """
 images, y_true = next(iter(eval_ds.shuffle(50).take(1)))
@@ -677,7 +680,7 @@ y_pred = model.predict(images)
 """
 keras.visualization.plot_bounding_box_gallery(
     images,
-    bounding_box_format=gt_bbox_format,
+    bounding_box_format=bbox_format,
     y_true=y_true,
     y_pred=y_pred,
     scale=3,
@@ -688,10 +691,12 @@ keras.visualization.plot_bounding_box_gallery(
 
 """
 ## Custom training object detector
+
 Additionally, you can customize the object detector by modifying the image
 converter, selecting a different image encoder, etc.
 
 ### Image Converter
+
 The `RetinaNetImageConverter` class prepares images for use with the `RetinaNet`
 object detection model. Here's what it does:
 
@@ -708,6 +713,7 @@ preprocessor = keras_hub.models.RetinaNetObjectDetectorPreprocessor(
 
 """
 ### Image Encoder and RetinaNet Backbone
+
 The image encoder, while typically initialized with pre-trained weights
 (e.g., from ImageNet), can also be instantiated without them. This results in
 the image encoder (and, consequently, the entire object detection network built
@@ -765,7 +771,7 @@ y_pred = model.predict(images)
 
 keras.visualization.plot_bounding_box_gallery(
     images,
-    bounding_box_format=gt_bbox_format,
+    bounding_box_format=bbox_format,
     y_true=y_true,
     y_pred=y_pred,
     scale=3,
@@ -776,6 +782,7 @@ keras.visualization.plot_bounding_box_gallery(
 
 """
 ## Conclusion
+
 In this tutorial, you learned how to custom train and fine-tune the RetinaNet
 object detector.
 
