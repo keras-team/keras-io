@@ -44,9 +44,8 @@ Let's install the `scann` library and import all necessary packages. We will
 also set the backend to JAX.
 """
 
-# ruff: noqa: E402
-
 """shell
+pip install -q keras-rs
 pip install -q scann
 """
 

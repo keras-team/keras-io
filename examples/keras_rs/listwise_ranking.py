@@ -33,6 +33,10 @@ goal is to minimize the number of incorrectly ordered pairs.
 Let's begin by importing all the necessary libraries.
 """
 
+"""shell
+pip install -q keras-rs
+"""
+
 import os
 
 os.environ["KERAS_BACKEND"] = "jax"  # `"tensorflow"`/`"torch"`

@@ -76,6 +76,10 @@ We'll do this by building progressively more complex models to see how this
 affects model performance.
 """
 
+"""shell
+pip install -q keras-rs
+"""
+
 import os
 
 os.environ["KERAS_BACKEND"] = "jax"  # `"tensorflow"`/`"torch"`

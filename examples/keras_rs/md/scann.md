@@ -49,11 +49,7 @@ also set the backend to JAX.
 
 
 ```python
-# ruff: noqa: E402
-```
-
-
-```python
+!pip install -q keras-rs
 !pip install -q scann
 ```
 
