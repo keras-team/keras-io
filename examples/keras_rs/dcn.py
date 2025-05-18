@@ -441,36 +441,61 @@ layers.
 """
 
 
-def get_model(
-    dense_num_units_lst,
-    embedding_dim=MOVIELENS_CONFIG["embedding_dim"],
-    use_cross_layer=False,
-    projection_dim=None,
-):
-    inputs = {}
-    embeddings = []
-    for feature_name, vocabulary in vocabularies.items():
-        inputs[feature_name] = keras.Input(shape=(), dtype="int32", name=feature_name)
-        embedding_layer = keras.layers.Embedding(
-            input_dim=len(vocabulary) + 1,
-            output_dim=embedding_dim,
-        )
-        embedding = embedding_layer(inputs[feature_name])
-        embeddings.append(embedding)
+class DCN(keras.Model):
+    def __init__(
+        self,
+        dense_num_units_lst,
+        embedding_dim=MOVIELENS_CONFIG["embedding_dim"],
+        use_cross_layer=False,
+        projection_dim=None,
+        **kwargs,
+    ):
+        super().__init__(**kwargs)
 
-    x = keras.ops.concatenate(embeddings, axis=1)
+        # Layers.
 
-    # Cross layer.
-    if use_cross_layer:
-        x = keras_rs.layers.FeatureCross(projection_dim=projection_dim)(x)
+        self.embedding_layers = []
+        for feature_name, vocabulary in vocabularies.items():
+            self.embedding_layers.append(
+                keras.layers.Embedding(
+                    input_dim=len(vocabulary) + 1,
+                    output_dim=embedding_dim,
+                )
+            )
 
-    # Dense layer.
-    for num_units in dense_num_units_lst:
-        x = keras.layers.Dense(num_units, activation="relu")(x)
+        if use_cross_layer:
+            self.cross_layer = keras_rs.layers.FeatureCross(
+                projection_dim=projection_dim
+            )
 
-    x = keras.layers.Dense(1)(x)
+        self.dense_layers = []
+        for num_units in dense_num_units_lst:
+            self.dense_layers.append(keras.layers.Dense(num_units, activation="relu"))
 
-    return keras.Model(inputs=inputs, outputs=x)
+        self.output_layer = keras.layers.Dense(1)
+
+        # Attributes.
+        self.dense_num_units_lst = dense_num_units_lst
+        self.embedding_dim = embedding_dim
+        self.use_cross_layer = use_cross_layer
+        self.projection_dim = projection_dim
+
+    def call(self, inputs):
+        embeddings = []
+        for feature_name, embedding_layer in zip(vocabularies, self.embedding_layers):
+            embeddings.append(embedding_layer(inputs[feature_name]))
+
+        x = keras.ops.concatenate(embeddings, axis=1)
+
+        if self.use_cross_layer:
+            x = self.cross_layer(x)
+
+        for dense_layer in self.dense_layers:
+            x = dense_layer(x)
+
+        x = self.output_layer(x)
+
+        return x
 
 
 """
@@ -487,7 +512,7 @@ opt_cross_network_rmse_list = []
 deep_network_rmse_list = []
 
 for _ in range(10):
-    cross_network = get_model(
+    cross_network = DCN(
         dense_num_units_lst=MOVIELENS_CONFIG["dcn_num_units"],
         embedding_dim=MOVIELENS_CONFIG["embedding_dim"],
         use_cross_layer=True,
@@ -501,7 +526,7 @@ for _ in range(10):
     )
     cross_network_rmse_list.append(rmse)
 
-    opt_cross_network = get_model(
+    opt_cross_network = DCN(
         dense_num_units_lst=MOVIELENS_CONFIG["dcn_num_units"],
         embedding_dim=MOVIELENS_CONFIG["embedding_dim"],
         use_cross_layer=True,
@@ -516,7 +541,7 @@ for _ in range(10):
     )
     opt_cross_network_rmse_list.append(rmse)
 
-    deep_network = get_model(dense_num_units_lst=MOVIELENS_CONFIG["deep_net_num_units"])
+    deep_network = DCN(dense_num_units_lst=MOVIELENS_CONFIG["deep_net_num_units"])
     rmse, deep_network_num_params = train_and_evaluate(
         learning_rate=MOVIELENS_CONFIG["learning_rate"],
         epochs=MOVIELENS_CONFIG["num_epochs"],
