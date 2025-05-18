@@ -144,8 +144,8 @@ def visualize_layer(matrix, features):
     cax = divider.append_axes("right", size="5%", pad=0.05)
     plt.colorbar(im, cax=cax)
     cax.tick_params(labelsize=10)
-    ax.set_xticklabels([""] + features, rotation=45, fontsize=10)
-    ax.set_yticklabels([""] + features, fontsize=10)
+    ax.set_xticklabels([""] + features, rotation=45, fontsize=5)
+    ax.set_yticklabels([""] + features, fontsize=5)
 
 
 def train_and_evaluate(
