@@ -511,7 +511,7 @@ cross_network_rmse_list = []
 opt_cross_network_rmse_list = []
 deep_network_rmse_list = []
 
-for _ in range(10):
+for _ in range(20):
     cross_network = DCN(
         dense_num_units_lst=MOVIELENS_CONFIG["dcn_num_units"],
         embedding_dim=MOVIELENS_CONFIG["embedding_dim"],
