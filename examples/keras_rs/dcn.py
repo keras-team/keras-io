@@ -116,14 +116,14 @@ MOVIELENS_CONFIG = {
         "user_occupation_text",
     ],
     # model
-    "embedding_dim": 32,
+    "embedding_dim": 8,
     "deep_net_num_units": [192, 192, 192],
-    "projection_dim": 20,
+    "projection_dim": 8,
     "dcn_num_units": [192, 192],
     # training
-    "learning_rate": 0.01,
-    "num_epochs": 10,
-    "batch_size": 1024,
+    "learning_rate": 1e-2,
+    "num_epochs": 8,
+    "batch_size": 8192,
 }
 
 
@@ -543,7 +543,7 @@ print_stats(
 )
 
 """
-DCN outperforms a similarly sized DNN with ReLU layers, demonstrating
+DCN slightly outperforms a larger DNN with ReLU layers, demonstrating
 superior performance. Furthermore, the low-rank DCN effectively reduces the
 number of parameters without compromising accuracy.
 """
