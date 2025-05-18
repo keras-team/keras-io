@@ -61,7 +61,6 @@ MOVIES_FILE_NAME = "movies.dat"
 # Data processing args
 MAX_CONTEXT_LENGTH = 10
 MIN_SEQUENCE_LENGTH = 3
-TRAIN_DATA_FRACTION = 0.9
 
 RATINGS_DATA_COLUMNS = ["UserID", "MovieID", "Rating", "Timestamp"]
 MOVIES_DATA_COLUMNS = ["MovieID", "Title", "Genres"]
@@ -149,11 +148,13 @@ movies_count = movies_df["MovieID"].max()
 <div class="k-default-codeblock">
 ```
 Downloading data from https://files.grouplens.org/datasets/movielens/ml-1m.zip
-5917549/5917549 ━━━━━━━━━━━━━━━━━━━━ 0s 0us/step
 
-/var/tmp/ipykernel_688439/1372663084.py:26: ParserWarning: Falling back to the 'python' engine because the 'c' engine does not support regex separators (separators > 1 char and different from '\s+' are interpreted as regex); you can avoid this warning by specifying engine='python'.
+5917549/5917549 ━━━━━━━━━━━━━━━━━━━━ 2s 0us/step
+
+<ipython-input-4-6fc962858754>:26: ParserWarning: Falling back to the 'python' engine because the 'c' engine does not support regex separators (separators > 1 char and different from '\s+' are interpreted as regex); you can avoid this warning by specifying engine='python'.
   ratings_df = pd.read_csv(
-/var/tmp/ipykernel_688439/1372663084.py:38: ParserWarning: Falling back to the 'python' engine because the 'c' engine does not support regex separators (separators > 1 char and different from '\s+' are interpreted as regex); you can avoid this warning by specifying engine='python'.
+
+<ipython-input-4-6fc962858754>:38: ParserWarning: Falling back to the 'python' engine because the 'c' engine does not support regex separators (separators > 1 char and different from '\s+' are interpreted as regex); you can avoid this warning by specifying engine='python'.
   movies_df = pd.read_csv(
 ```
 </div>
@@ -199,6 +200,12 @@ with training the model:
    movies.
 4. Pad all sequences to `MAX_CONTEXT_LENGTH`.
 
+An important point to note is how we form the train-test splits. We do not
+form the entire dataset of sequences and then split it into train and test.
+Instead, for every user, we take the last sequence to be part of the test set,
+and all other sequences to be part of the train set. This is to prevent data
+leakage.
+
 
 ```python
 
@@ -208,7 +215,8 @@ def generate_examples_from_user_sequences(sequences):
     def generate_examples_from_user_sequence(sequence):
         """Generates examples for a single user sequence."""
 
-        examples = []
+        train_examples = []
+        test_examples = []
         for label_idx in range(1, len(sequence)):
             start_idx = max(0, label_idx - MAX_CONTEXT_LENGTH)
             context = sequence[start_idx:label_idx]
@@ -226,24 +234,32 @@ def generate_examples_from_user_sequences(sequences):
             label_movie_id = int(sequence[label_idx]["movie_id"])
             context_movie_id = [int(movie["movie_id"]) for movie in context]
 
-            examples.append(
-                {
-                    "context_movie_id": context_movie_id,
-                    "label_movie_id": label_movie_id,
-                },
-            )
-        return examples
+            example = {
+                "context_movie_id": context_movie_id,
+                "label_movie_id": label_movie_id,
+            }
 
-    all_examples = []
+            if label_idx == len(sequence) - 1:
+                test_examples.append(example)
+            else:
+                train_examples.append(example)
+
+        return train_examples, test_examples
+
+    all_train_examples = []
+    all_test_examples = []
     for sequence in sequences.values():
         if len(sequence) < MIN_SEQUENCE_LENGTH:
             continue
 
-        user_examples = generate_examples_from_user_sequence(sequence)
+        user_train_examples, user_test_example = generate_examples_from_user_sequence(
+            sequence
+        )
 
-        all_examples.extend(user_examples)
+        all_train_examples.extend(user_train_examples)
+        all_test_examples.extend(user_test_example)
 
-    return all_examples
+    return all_train_examples, all_test_examples
 
 ```
 
@@ -254,13 +270,7 @@ to a `tf.data.Dataset` object.
 
 ```python
 sequences = get_movie_sequence_per_user(ratings_df)
-examples = generate_examples_from_user_sequences(sequences)
-
-# Train-test split.
-random.shuffle(examples)
-split_index = int(TRAIN_DATA_FRACTION * len(examples))
-train_examples = examples[:split_index]
-test_examples = examples[split_index:]
+train_examples, test_examples = generate_examples_from_user_sequences(sequences)
 
 
 def list_of_dicts_to_dict_of_lists(list_of_dicts):
@@ -305,13 +315,13 @@ for sample in train_ds.take(1):
 <div class="k-default-codeblock">
 ```
 (<tf.Tensor: shape=(4096, 10), dtype=int32, numpy=
-array([[3512, 3617, 3623, ..., 3007, 2858, 1617],
-       [1952, 1206, 1233, ..., 1394, 3683,  593],
-       [2114, 1274, 2407, ..., 2100, 1257, 2001],
+array([[3186,    0,    0, ...,    0,    0,    0],
+       [3186, 1270,    0, ...,    0,    0,    0],
+       [3186, 1270, 1721, ...,    0,    0,    0],
        ...,
-       [  81, 2210, 1343, ..., 1625, 1748, 1407],
-       [ 494,  832,  543, ...,   23,  432, 1682],
-       [2421,    0,    0, ...,    0,    0,    0]], dtype=int32)>, <tf.Tensor: shape=(4096,), dtype=int32, numpy=array([3265, 1203, 2003, ..., 3044,  367,  110], dtype=int32)>)
+       [2194, 1291, 2159, ...,  300, 2076,  866],
+       [1291, 2159, 1012, ..., 2076,  866, 2206],
+       [2159, 1012, 1092, ...,  866, 2206,  377]], dtype=int32)>, <tf.Tensor: shape=(4096,), dtype=int32, numpy=array([1270, 1721, 1022, ..., 2206,  377, 1357], dtype=int32)>)
 ```
 </div>
 
@@ -432,17 +442,26 @@ model.fit(
 <div class="k-default-codeblock">
 ```
 Epoch 1/5
-207/207 ━━━━━━━━━━━━━━━━━━━━ 6s 24ms/step - loss: 7.9460 - val_loss: 6.4827
-Epoch 2/5
-207/207 ━━━━━━━━━━━━━━━━━━━━ 2s 3ms/step - loss: 7.0764 - val_loss: 6.1424
-Epoch 3/5
-207/207 ━━━━━━━━━━━━━━━━━━━━ 1s 3ms/step - loss: 6.7779 - val_loss: 6.0004
-Epoch 4/5
-207/207 ━━━━━━━━━━━━━━━━━━━━ 1s 3ms/step - loss: 6.6406 - val_loss: 5.9258
-Epoch 5/5
-207/207 ━━━━━━━━━━━━━━━━━━━━ 1s 3ms/step - loss: 6.5584 - val_loss: 5.8826
 
-<keras.src.callbacks.history.History at 0x7fd1506dc670>
+228/228 ━━━━━━━━━━━━━━━━━━━━ 7s 24ms/step - loss: 7.9319 - val_loss: 6.8823
+
+Epoch 2/5
+
+228/228 ━━━━━━━━━━━━━━━━━━━━ 2s 6ms/step - loss: 7.0997 - val_loss: 6.5517
+
+Epoch 3/5
+
+228/228 ━━━━━━━━━━━━━━━━━━━━ 1s 5ms/step - loss: 6.8198 - val_loss: 6.4342
+
+Epoch 4/5
+
+228/228 ━━━━━━━━━━━━━━━━━━━━ 1s 5ms/step - loss: 6.6873 - val_loss: 6.3748
+
+Epoch 5/5
+
+228/228 ━━━━━━━━━━━━━━━━━━━━ 1s 5ms/step - loss: 6.6105 - val_loss: 6.3444
+
+<keras.src.callbacks.history.History at 0x795792c69b90>
 ```
 </div>
 
@@ -487,22 +506,23 @@ for movie_id in predictions[0]:
 <div class="k-default-codeblock">
 ```
 ==> Movies the user has watched:
-Rob Roy (1995), Legends of the Fall (1994), French Kiss (1995), Terminator 2: Judgment Day (1991), Nikita (La Femme Nikita) (1990), Professional, The (a.k.a. Leon: The Professional) (1994), Seven (Se7en) (1995), Fugitive, The (1993), Enemy of the State (1998), Reservoir Dogs (1992)
-1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 225ms/step
+Beauty and the Beast (1991), Tarzan (1999), Close Shave, A (1995), Aladdin (1992), Toy Story (1995), Bug's Life, A (1998), Antz (1998), Hunchback of Notre Dame, The (1996), Hercules (1997), Mulan (1998)
+
+1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 272ms/step
 
 ==> Recommended movies for the above sequence:
-Red Rock West (1992)
-Casino (1995)
-Cape Fear (1991)
-Simple Plan, A (1998)
-Seven (Se7en) (1995)
-Hard 8 (a.k.a. Sydney, a.k.a. Hard Eight) (1996)
-Primal Fear (1996)
-Heat (1995)
-Scream (1996)
-Zero Effect (1998)
+Hunchback of Notre Dame, The (1996)
+Anastasia (1997)
+Beavis and Butt-head Do America (1996)
+Hercules (1997)
+Pocahontas (1995)
+Thumbelina (1994)
+James and the Giant Peach (1996)
+We're Back! A Dinosaur's Story (1993)
+Rescuers Down Under, The (1990)
+Prince of Egypt, The (1998)
 
-/opt/conda/envs/keras-jax/lib/python3.10/site-packages/keras/src/trainers/epoch_iterator.py:151: UserWarning: Your input ran out of data; interrupting training. Make sure that your dataset or generator can generate at least `steps_per_epoch * epochs` batches. You may need to use the `.repeat()` function when building your dataset.
+/usr/local/lib/python3.11/dist-packages/keras/src/trainers/epoch_iterator.py:151: UserWarning: Your input ran out of data; interrupting training. Make sure that your dataset or generator can generate at least `steps_per_epoch * epochs` batches. You may need to use the `.repeat()` function when building your dataset.
   self._interrupted_warning()
 ```
 </div>
