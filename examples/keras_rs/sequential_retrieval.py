@@ -55,7 +55,6 @@ MOVIES_FILE_NAME = "movies.dat"
 # Data processing args
 MAX_CONTEXT_LENGTH = 10
 MIN_SEQUENCE_LENGTH = 3
-TRAIN_DATA_FRACTION = 0.9
 
 RATINGS_DATA_COLUMNS = ["UserID", "MovieID", "Rating", "Timestamp"]
 MOVIES_DATA_COLUMNS = ["MovieID", "Title", "Genres"]
@@ -177,6 +176,12 @@ with training the model:
 3. Remove all user sequences with less than `MIN_SEQUENCE_LENGTH`
    movies.
 4. Pad all sequences to `MAX_CONTEXT_LENGTH`.
+
+An important point to note is how we form the train-test splits. We do not
+form the entire dataset of sequences and then split it into train and test.
+Instead, for every user, we take the last sequence to be part of the test set,
+and all other sequences to be part of the train set. This is to prevent data
+leakage.
 """
 
 
@@ -186,7 +191,8 @@ def generate_examples_from_user_sequences(sequences):
     def generate_examples_from_user_sequence(sequence):
         """Generates examples for a single user sequence."""
 
-        examples = []
+        train_examples = []
+        test_examples = []
         for label_idx in range(1, len(sequence)):
             start_idx = max(0, label_idx - MAX_CONTEXT_LENGTH)
             context = sequence[start_idx:label_idx]
@@ -204,24 +210,32 @@ def generate_examples_from_user_sequences(sequences):
             label_movie_id = int(sequence[label_idx]["movie_id"])
             context_movie_id = [int(movie["movie_id"]) for movie in context]
 
-            examples.append(
-                {
-                    "context_movie_id": context_movie_id,
-                    "label_movie_id": label_movie_id,
-                },
-            )
-        return examples
+            example = {
+                "context_movie_id": context_movie_id,
+                "label_movie_id": label_movie_id,
+            }
 
-    all_examples = []
+            if label_idx == len(sequence) - 1:
+                test_examples.append(example)
+            else:
+                train_examples.append(example)
+
+        return train_examples, test_examples
+
+    all_train_examples = []
+    all_test_examples = []
     for sequence in sequences.values():
         if len(sequence) < MIN_SEQUENCE_LENGTH:
             continue
 
-        user_examples = generate_examples_from_user_sequence(sequence)
+        user_train_examples, user_test_example = generate_examples_from_user_sequence(
+            sequence
+        )
 
-        all_examples.extend(user_examples)
+        all_train_examples.extend(user_train_examples)
+        all_test_examples.extend(user_test_example)
 
-    return all_examples
+    return all_train_examples, all_test_examples
 
 
 """
@@ -230,13 +244,7 @@ change the format of the dataset dictionary so as to enable conversion
 to a `tf.data.Dataset` object.
 """
 sequences = get_movie_sequence_per_user(ratings_df)
-examples = generate_examples_from_user_sequences(sequences)
-
-# Train-test split.
-random.shuffle(examples)
-split_index = int(TRAIN_DATA_FRACTION * len(examples))
-train_examples = examples[:split_index]
-test_examples = examples[split_index:]
+train_examples, test_examples = generate_examples_from_user_sequences(sequences)
 
 
 def list_of_dicts_to_dict_of_lists(list_of_dicts):
