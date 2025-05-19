@@ -1423,6 +1423,58 @@ MODELS_MASTER = {
             ],
         },
         {
+            "path": "moonshine/",
+            "title": "Moonshine",
+            "toc": True,
+            "children": [
+                {
+                    "path": "moonshine_tokenizer",
+                    "title": "MoonshineTokenizer",
+                    "generate": [
+                        "keras_hub.tokenizers.MoonshineTokenizer",
+                        "keras_hub.tokenizers.MoonshineTokenizer.from_preset",
+                    ],
+                },
+                {
+                    "path": "moonshine_audio_converter",
+                    "title": "MoonshineAudioConverter",
+                    "generate": [
+                        "keras_hub.layers.MoonshineAudioConverter",
+                        "keras_hub.layers.MoonshineAudioConverter.from_preset",
+                    ],
+                },
+                {
+                    "path": "moonshine_backbone",
+                    "title": "MoonshineBackbone model",
+                    "generate": [
+                        "keras_hub.models.MoonshineBackbone",
+                        "keras_hub.models.MoonshineBackbone.from_preset",
+                        "keras_hub.models.MoonshineBackbone.token_embedding",
+                    ],
+                },
+                {
+                   "path": "moonshine_audio_to_text",
+                   "title": "MoonshineAudioToText model",
+                   "generate": [
+                        "keras_hub.models.MoonshineAudioToText",
+                        "keras_hub.models.MoonshineAudioToText.from_preset",
+                        "keras_hub.models.MoonshineAudioToText.generate",
+                        "keras_hub.models.MoonshineAudioToText.backbone",
+                        "keras_hub.models.MoonshineAudioToText.preprocessor",
+                   ],
+                },
+                {
+                    "path": "moonshine_audio_to_text_preprocessor",
+                    "title": "MoonshineAudioToTextPreprocessor layer",
+                    "generate": [
+                        "keras_hub.models.MoonshineAudioToTextPreprocessor",
+                        "keras_hub.models.MoonshineAudioToTextPreprocessor.from_preset",
+                        "keras_hub.models.MoonshineAudioToTextPreprocessor.tokenizer",
+                    ],
+                },
+            ],
+        },
+        {
             "path": "opt/",
             "title": "OPT",
             "toc": True,
