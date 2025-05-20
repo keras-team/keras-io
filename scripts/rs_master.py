@@ -81,29 +81,43 @@ RETRIEVAL_LAYERS_MASTER = {
     ]
 }
 
-# LAYERS_MASTER = {
-#     "path": "layers/",
-#     "title": "Layers",
-#     "toc": True,
-#     "children": [
-#         {
-#             "path": "distributed_embedding",
-#             "title": "DistributedEmbedding layer",
-#             "generate": [
-#                 "keras_rs.layers.DistributedEmbedding",
-#                 "keras_rs.layers.DistributedEmbedding.call",
-#             ],
-#         },
-#         {
-#             "path": "frequency_estimator",
-#             "title": "FrequencyEstimator layer",
-#             "generate": [
-#                 "keras_rs.layers.FrequencyEstimator",
-#                 "keras_rs.layers.FrequencyEstimator.call",
-#             ],
-#         },
-#     ]
-# }
+EMBEDDING_LAYERS_MASTER = {
+    "path": "embedding_layers/",
+    "title": "Embedding Layers",
+    "toc": True,
+    "children": [
+        {
+            "path": "distributed_embedding",
+            "title": "DistributedEmbedding layer",
+            "generate": [
+                "keras_rs.layers.DistributedEmbedding",
+                "keras_rs.layers.DistributedEmbedding.call",
+            ],
+        },
+        {
+            "path": "table_config",
+            "title": "TableConfig configuration class",
+            "generate": [
+                "keras_rs.layers.TableConfig",
+            ],
+        },
+        {
+            "path": "feature_config",
+            "title": "FeatureConfig configuration class",
+            "generate": [
+                "keras_rs.layers.FeatureConfig",
+            ],
+        },
+        {
+            "path": "embed_reduce",
+            "title": "EmbedReduce layer",
+            "generate": [
+                "keras_rs.layers.EmbedReduce",
+                "keras_rs.layers.EmbedReduce.call",
+            ],
+        },
+    ]
+}
 
 LOSSES_MASTER = {
     "path": "losses/",
@@ -194,7 +208,7 @@ RS_API_MASTER = {
     "title": "API documentation",
     "toc": True,
     "children": [
-        # LAYERS_MASTER,
+        EMBEDDING_LAYERS_MASTER,
         FEATURE_INTERACTION_LAYERS_MASTER,
         RETRIEVAL_LAYERS_MASTER,
         LOSSES_MASTER,
