@@ -1336,6 +1336,51 @@ MODELS_MASTER = {
             ],
         },
         {
+            "path": "mixtral/",
+            "title": "Mixtral",
+            "toc": True,
+            "children": [
+                {
+                    "path": "mixtral_tokenizer",
+                    "title": "MixtralTokenizer",
+                    "generate": [
+                        "keras_hub.tokenizers.MixtralTokenizer",
+                        "keras_hub.tokenizers.MixtralTokenizer.from_preset",
+                    ],
+                },
+                {
+                    "path": "mixtral_backbone",
+                    "title": "MixtralBackbone model",
+                    "generate": [
+                        "keras_hub.models.MixtralBackbone",
+                        "keras_hub.models.MixtralBackbone.from_preset",
+                        "keras_hub.models.MixtralBackbone.token_embedding",
+                        "keras_hub.models.MixtralBackbone.enable_lora",
+                    ],
+                },
+                {
+                    "path": "mixtral_causal_lm",
+                    "title": "MixtralCausalLM model",
+                    "generate": [
+                        "keras_hub.models.MixtralCausalLM",
+                        "keras_hub.models.MixtralCausalLM.from_preset",
+                        "keras_hub.models.MixtralCausalLM.generate",
+                        "keras_hub.models.MixtralCausalLM.backbone",
+                        "keras_hub.models.MixtralCausalLM.preprocessor",
+                    ],
+                },
+                {
+                    "path": "mixtral_causal_lm_preprocessor",
+                    "title": "MixtralCausalLMPreprocessor layer",
+                    "generate": [
+                        "keras_hub.models.MixtralCausalLMPreprocessor",
+                        "keras_hub.models.MixtralCausalLMPreprocessor.from_preset",
+                        "keras_hub.models.MixtralCausalLMPreprocessor.tokenizer",
+                    ],
+                },
+            ],
+        },
+        {
             "path": "mobilenet/",
             "title": "MobileNet",
             "toc": True,
@@ -1373,6 +1418,58 @@ MODELS_MASTER = {
                         "keras_hub.models.MobileNetImageClassifierPreprocessor",
                         "keras_hub.models.MobileNetImageClassifierPreprocessor.from_preset",
                         "keras_hub.models.MobileNetImageClassifierPreprocessor.image_converter",
+                    ],
+                },
+            ],
+        },
+        {
+            "path": "moonshine/",
+            "title": "Moonshine",
+            "toc": True,
+            "children": [
+                {
+                    "path": "moonshine_tokenizer",
+                    "title": "MoonshineTokenizer",
+                    "generate": [
+                        "keras_hub.tokenizers.MoonshineTokenizer",
+                        "keras_hub.tokenizers.MoonshineTokenizer.from_preset",
+                    ],
+                },
+                {
+                    "path": "moonshine_audio_converter",
+                    "title": "MoonshineAudioConverter",
+                    "generate": [
+                        "keras_hub.layers.MoonshineAudioConverter",
+                        "keras_hub.layers.MoonshineAudioConverter.from_preset",
+                    ],
+                },
+                {
+                    "path": "moonshine_backbone",
+                    "title": "MoonshineBackbone model",
+                    "generate": [
+                        "keras_hub.models.MoonshineBackbone",
+                        "keras_hub.models.MoonshineBackbone.from_preset",
+                        "keras_hub.models.MoonshineBackbone.token_embedding",
+                    ],
+                },
+                {
+                   "path": "moonshine_audio_to_text",
+                   "title": "MoonshineAudioToText model",
+                   "generate": [
+                        "keras_hub.models.MoonshineAudioToText",
+                        "keras_hub.models.MoonshineAudioToText.from_preset",
+                        "keras_hub.models.MoonshineAudioToText.generate",
+                        "keras_hub.models.MoonshineAudioToText.backbone",
+                        "keras_hub.models.MoonshineAudioToText.preprocessor",
+                   ],
+                },
+                {
+                    "path": "moonshine_audio_to_text_preprocessor",
+                    "title": "MoonshineAudioToTextPreprocessor layer",
+                    "generate": [
+                        "keras_hub.models.MoonshineAudioToTextPreprocessor",
+                        "keras_hub.models.MoonshineAudioToTextPreprocessor.from_preset",
+                        "keras_hub.models.MoonshineAudioToTextPreprocessor.tokenizer",
                     ],
                 },
             ],
@@ -1505,6 +1602,96 @@ MODELS_MASTER = {
                         "keras_hub.models.Phi3CausalLMPreprocessor",
                         "keras_hub.models.Phi3CausalLMPreprocessor.from_preset",
                         "keras_hub.models.Phi3CausalLMPreprocessor.tokenizer",
+                    ],
+                },
+            ],
+        },
+        {
+            "path": "qwen/",
+            "title": "Qwen",
+            "toc": True,
+            "children": [
+                {
+                    "path": "qwen_tokenizer",
+                    "title": "QwenTokenizer",
+                    "generate": [
+                        "keras_hub.tokenizers.QwenTokenizer",
+                        "keras_hub.tokenizers.QwenTokenizer.from_preset",
+                    ],
+                },
+                {
+                    "path": "qwen_backbone",
+                    "title": "QwenBackbone model",
+                    "generate": [
+                        "keras_hub.models.QwenBackbone",
+                        "keras_hub.models.QwenBackbone.from_preset",
+                        "keras_hub.models.QwenBackbone.token_embedding",
+                        "keras_hub.models.QwenBackbone.enable_lora",
+                    ],
+                },
+                {
+                    "path": "qwen_causal_lm",
+                    "title": "QwenCausalLM model",
+                    "generate": [
+                        "keras_hub.models.QwenCausalLM",
+                        "keras_hub.models.QwenCausalLM.from_preset",
+                        "keras_hub.models.QwenCausalLM.generate",
+                        "keras_hub.models.QwenCausalLM.backbone",
+                        "keras_hub.models.QwenCausalLM.preprocessor",
+                    ],
+                },
+                {
+                    "path": "qwen_causal_lm_preprocessor",
+                    "title": "QwenCausalLMPreprocessor layer",
+                    "generate": [
+                        "keras_hub.models.QwenCausalLMPreprocessor",
+                        "keras_hub.models.QwenCausalLMPreprocessor.from_preset",
+                        "keras_hub.models.QwenCausalLMPreprocessor.tokenizer",
+                    ],
+                },
+            ],
+        },
+        {
+            "path": "qwen_moe/",
+            "title": "QwenMoe",
+            "toc": True,
+            "children": [
+                {
+                    "path": "qwen_moe_tokenizer",
+                    "title": "QwenMoeTokenizer",
+                    "generate": [
+                        "keras_hub.tokenizers.QwenMoeTokenizer",
+                        "keras_hub.tokenizers.QwenMoeTokenizer.from_preset",
+                    ],
+                },
+                {
+                    "path": "qwen_moe_backbone",
+                    "title": "QwenMoeBackbone model",
+                    "generate": [
+                        "keras_hub.models.QwenMoeBackbone",
+                        "keras_hub.models.QwenMoeBackbone.from_preset",
+                        "keras_hub.models.QwenMoeBackbone.token_embedding",
+                        "keras_hub.models.QwenMoeBackbone.enable_lora",
+                    ],
+                },
+                {
+                    "path": "qwen_moe_causal_lm",
+                    "title": "QwenMoeCausalLM model",
+                    "generate": [
+                        "keras_hub.models.QwenMoeCausalLM",
+                        "keras_hub.models.QwenMoeCausalLM.from_preset",
+                        "keras_hub.models.QwenMoeCausalLM.generate",
+                        "keras_hub.models.QwenMoeCausalLM.backbone",
+                        "keras_hub.models.QwenMoeCausalLM.preprocessor",
+                    ],
+                },
+                {
+                    "path": "qwen_moe_causal_lm_preprocessor",
+                    "title": "QwenMoeCausalLMPreprocessor layer",
+                    "generate": [
+                        "keras_hub.models.QwenMoeCausalLMPreprocessor",
+                        "keras_hub.models.QwenMoeCausalLMPreprocessor.from_preset",
+                        "keras_hub.models.QwenMoeCausalLMPreprocessor.tokenizer",
                     ],
                 },
             ],
@@ -2016,6 +2203,48 @@ MODELS_MASTER = {
                     "generate": [
                         "keras_hub.models.WhisperBackbone",
                         "keras_hub.models.WhisperBackbone.from_preset",
+                    ],
+                },
+            ],
+        },
+        {
+            "path": "xception/",
+            "title": "Xception",
+            "toc": True,
+            "children": [
+                {
+                    "path": "xception_image_converter",
+                    "title": "XceptionImageConverter",
+                    "generate": [
+                        "keras_hub.layers.XceptionImageConverter",
+                        "keras_hub.layers.XceptionImageConverter.from_preset",
+                    ],
+                },
+                {
+                    "path": "xception_backbone",
+                    "title": "XceptionBackbone model",
+                    "generate": [
+                        "keras_hub.models.XceptionBackbone",
+                        "keras_hub.models.XceptionBackbone.from_preset",
+                    ],
+                },
+                {
+                    "path": "xception_image_classifier",
+                    "title": "XceptionImageClassifier model",
+                    "generate": [
+                        "keras_hub.models.XceptionImageClassifier",
+                        "keras_hub.models.XceptionImageClassifier.from_preset",
+                        "keras_hub.models.XceptionImageClassifier.backbone",
+                        "keras_hub.models.XceptionImageClassifier.preprocessor",
+                    ],
+                },
+                {
+                    "path": "xception_image_classifier_preprocessor",
+                    "title": "XceptionImageClassifierPreprocessor layer",
+                    "generate": [
+                        "keras_hub.models.XceptionImageClassifierPreprocessor",
+                        "keras_hub.models.XceptionImageClassifierPreprocessor.from_preset",
+                        "keras_hub.models.XceptionImageClassifierPreprocessor.image_converter",
                     ],
                 },
             ],
