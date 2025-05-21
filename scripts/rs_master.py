@@ -92,6 +92,7 @@ EMBEDDING_LAYERS_MASTER = {
             "generate": [
                 "keras_rs.layers.DistributedEmbedding",
                 "keras_rs.layers.DistributedEmbedding.call",
+                "keras_rs.layers.DistributedEmbedding.preprocess",
             ],
         },
         {

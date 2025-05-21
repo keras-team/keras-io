@@ -1906,13 +1906,6 @@ API_MASTER = {
                     ],
                 },
                 {
-                    "path": "model_parallel",
-                    "title": "ModelParallel API",
-                    "generate": [
-                        "keras.distribution.ModelParallel",
-                    ],
-                },
-                {
                     "path": "distribution_utils",
                     "title": "Distribution utilities",
                     "generate": [
