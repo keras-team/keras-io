@@ -1629,15 +1629,6 @@ MODELS_MASTER = {
                         "keras_hub.models.QwenBackbone.enable_lora",
                     ],
                 },
-                {
-                    "path": "qwen_causal_lm_preprocessor",
-                    "title": "QwenCausalLMPreprocessor layer",
-                    "generate": [
-                        "keras_hub.models.QwenCausalLMPreprocessor",
-                        "keras_hub.models.QwenCausalLMPreprocessor.from_preset",
-                        "keras_hub.models.QwenCausalLMPreprocessor.tokenizer",
-                    ],
-                },
             ],
         },
         {
@@ -1672,15 +1663,6 @@ MODELS_MASTER = {
                         "keras_hub.models.QwenMoeCausalLM.generate",
                         "keras_hub.models.QwenMoeCausalLM.backbone",
                         "keras_hub.models.QwenMoeCausalLM.preprocessor",
-                    ],
-                },
-                {
-                    "path": "qwen_moe_causal_lm_preprocessor",
-                    "title": "QwenMoeCausalLMPreprocessor layer",
-                    "generate": [
-                        "keras_hub.models.QwenMoeCausalLMPreprocessor",
-                        "keras_hub.models.QwenMoeCausalLMPreprocessor.from_preset",
-                        "keras_hub.models.QwenMoeCausalLMPreprocessor.tokenizer",
                     ],
                 },
             ],
