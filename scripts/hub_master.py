@@ -1630,17 +1630,6 @@ MODELS_MASTER = {
                     ],
                 },
                 {
-                    "path": "qwen_causal_lm",
-                    "title": "QwenCausalLM model",
-                    "generate": [
-                        "keras_hub.models.QwenCausalLM",
-                        "keras_hub.models.QwenCausalLM.from_preset",
-                        "keras_hub.models.QwenCausalLM.generate",
-                        "keras_hub.models.QwenCausalLM.backbone",
-                        "keras_hub.models.QwenCausalLM.preprocessor",
-                    ],
-                },
-                {
                     "path": "qwen_causal_lm_preprocessor",
                     "title": "QwenCausalLMPreprocessor layer",
                     "generate": [
