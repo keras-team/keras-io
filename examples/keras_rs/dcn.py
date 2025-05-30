@@ -78,6 +78,7 @@ Let's set the backend to JAX, and get our imports sorted.
 
 """shell
 pip install -q keras-rs
+pip install -q jax-tpu-embedding
 """
 
 import os

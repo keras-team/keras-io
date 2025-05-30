@@ -31,6 +31,7 @@ Before we begin, let's note down a few things:
 
 """shell
 pip install -q keras-rs
+pip install -q jax-tpu-embedding
 """
 
 import os

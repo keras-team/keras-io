@@ -51,6 +51,7 @@ also set the backend to JAX.
 ```python
 !pip install -q keras-rs
 !pip install -q scann
+!pip install -q jax-tpu-embedding
 ```
 
 ```python

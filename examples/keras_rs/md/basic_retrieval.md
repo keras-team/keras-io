@@ -77,6 +77,7 @@ the necessary libraries.
 
 ```python
 !pip install -q keras-rs
+!pip install -q jax-tpu-embedding
 ```
 
 
