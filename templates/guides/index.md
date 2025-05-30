@@ -9,5 +9,7 @@ a hosted notebook environment that requires no setup and runs in the cloud. Goog
 
 ## Available guides
 
+### Reinforcement Learning
+- [Reinforcement Learning from Human Feedback (RLHF) with Keras](/guides/rlhf_with_keras/)
 
 {{toc}}
