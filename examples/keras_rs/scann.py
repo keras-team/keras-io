@@ -47,6 +47,7 @@ also set the backend to JAX.
 """shell
 pip install -q keras-rs
 pip install -q scann
+pip install -q jax-tpu-embedding
 """
 
 import os

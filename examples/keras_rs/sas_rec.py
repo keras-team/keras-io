@@ -24,6 +24,7 @@ Let's begin by importing all the necessary libraries.
 
 """shell
 pip install -q keras-rs
+pip install -q jax-tpu-embedding
 """
 
 import os
