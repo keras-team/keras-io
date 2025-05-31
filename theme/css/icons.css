@@ -1,0 +1,45 @@
+i {
+  display: block;
+}
+
+.icon--search {
+  background-image: url("../icons/search-color.svg");
+  background-size: cover;
+  height: 16px;
+  width: 16px;
+}
+
+.icon__search--mobile {
+  background-image: url("../icons/search.png");
+  background-size: cover;
+  height: 27px;
+  width: 27px;
+}
+
+.icon--copy {
+  background-image: url("../icons/copy.png");
+  background-size: cover;
+  height: 18px;
+  width: 18px;
+}
+
+.icon--menu {
+  background-image: url("../icons/menu.png");
+  background-size: cover;
+  height: 27px;
+  width: 27px;
+}
+
+.icon--close {
+  background-image: url("../icons/close.png");
+  background-size: cover;
+  height: 27px;
+  width: 27px;
+}
+
+.icon--colab {
+  background-image: url("../icons/colab.png");
+  background-size: cover;
+  height: 20px;
+  width: 20px;
+}

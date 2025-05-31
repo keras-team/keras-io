@@ -14,5 +14,7 @@ tensorflow
 keras-cv
 keras-nlp
 keras-tuner
-tf_keras
-keras-hub-nightly  # TODO: update to keras-hub.
+tf-keras
+keras-hub
+# temporary path for KerasRS
+git+https://github.com/keras-team/keras-rs.git

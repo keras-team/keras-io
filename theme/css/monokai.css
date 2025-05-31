@@ -1,26 +1,34 @@
 .codehilite {
-    padding: 1rem;
-    margin-bottom: 1rem;
-    padding-bottom: 0.01rem;
-    font-size: 0.92rem;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  padding-bottom: 0.01rem;
+  font-size: 0.92rem;
 }
 @media screen and (max-width: 840px) {
-    .codehilite {
-        font-size: 0.85rem;
-    }
+  .codehilite {
+    font-size: 0.85rem;
+  }
 }
 .codehilite pre {
   color: #ced4da;
 }
+
+.codehilite pre,
+.codehilite code,
+.codehilite kbd,
+.codehilite swap {
+  font-family: 'Roboto Mono';
+}
+
 .k-default-codeblock .codehilite pre {
   color: #444;
 }
 .k-default-codeblock .codehilite code span {
-    color: #444 !important;
+  color: #444 !important;
 }
 .k-default-codeblock .codehilite {
-    color: #444 !important;
-    background-color: #eee !important;
+  color: #444 !important;
+  background-color: #eee !important;
 }
 
 .codehilite .hll { background-color: #49483e }
