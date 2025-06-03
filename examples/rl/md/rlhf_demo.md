@@ -1,6 +1,6 @@
-# Reinforcement Learning from Human Feedback (RLHF) - Dummy Demo Guide
+# Reinforcement Learning from Human Feedback (RLHF) - Demo Guide
 
-This guide explains the concept of Reinforcement Learning from Human Feedback (RLHF) and walks through the components of the accompanying dummy demo script `rlhf_dummy_demo.py`.
+This guide explains the concept of Reinforcement Learning from Human Feedback (RLHF) and walks through the components of the accompanying  demo script `rlhf_demo.py`.
 
 ## 1. What is Reinforcement Learning from Human Feedback (RLHF)?
 
@@ -30,9 +30,9 @@ The RLHF process generally involves these key stages:
 
 This cycle (collecting more data, refining the reward model, and further fine-tuning the policy) can be iterated.
 
-## 3. Walking Through `rlhf_dummy_demo.py`
+## 3. Walking Through `rlhf_demo.py`
 
-The `rlhf_dummy_demo.py` script provides a very simplified, "dummy" implementation of these concepts to illustrate the basic mechanics.
+The `rlhf_demo.py` script provides a very simplified implementation of these concepts to illustrate the basic mechanics.
 
 **Important Note on Keras Backend:**
 This demo is configured to run with the JAX backend for Keras. This is set at the beginning of the script:
@@ -249,7 +249,7 @@ The core idea of RLHF is still present: we have a reward model that *could* be t
 To run the demo, execute the Python script from your terminal:
 
 ```bash
-python examples/rl/rlhf_dummy_demo.py
+python examples/rl/rlhf_demo.py
 ```
 
 This will:
@@ -261,11 +261,11 @@ This will:
 
 ## 5. Note on Current Timeout Issues (Development Context)
 
-During the development and testing of this `rlhf_dummy_demo.py` script in a specific sandboxed environment, persistent timeout issues were encountered. Even with a significantly reduced environment size (`size=3`), a small number of episodes (`num_episodes=10`), and JIT compilation enabled for JAX functions, the script would often exceed the execution time limit (approx. 6-7 minutes).
+During the development and testing of this `rlhf_demo.py` script in a specific sandboxed environment, persistent timeout issues were encountered. Even with a significantly reduced environment size (`size=3`), a small number of episodes (`num_episodes=10`), and JIT compilation enabled for JAX functions, the script would often exceed the execution time limit (approx. 6-7 minutes).
 
 The root cause of this extreme slowdown in that particular context was not definitively pinpointed but could be due to:
 *   Specific interactions or inefficiencies within the Keras/JAX stack (`model.stateless_call`, `jax.grad`, optimizer updates) for this setup.
 *   Severe performance limitations of the testing sandbox.
 *   Subtle JAX JIT recompilation issues triggered by type or shape inconsistencies that were not fully resolved.
 
-The script, as provided, represents the logical structure of a dummy RLHF loop. If you encounter similar performance issues in your environment, further profiling and investigation specific to your JAX/Keras versions and hardware would be necessary. For typical local machine execution, 10 episodes of this simple demo should complete very quickly.
+The script, as provided, represents the logical structure of a RLHF loop. If you encounter similar performance issues in your environment, further profiling and investigation specific to your JAX/Keras versions and hardware would be necessary. For typical local machine execution, 10 episodes of this simple demo should complete very quickly.
