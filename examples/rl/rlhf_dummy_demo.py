@@ -155,9 +155,11 @@ def rlhf_training_loop(env, policy_model, reward_model, num_episodes=10, learnin
             episode_policy_losses.append(current_policy_loss)
             policy_grads_step = policy_grads_dict_step["trainable"]
             # Accumulate policy gradients
-            for i, grad in enumerate(policy_grads_step):
-                if grad is not None:
-                    policy_grads_accum[i] += grad
+            policy_grads_accum = jax.tree_map(
+                lambda acc, new: acc + new if new is not None else acc,
+                policy_grads_accum,
+                policy_grads_step
+            )
 
             # --- Reward model gradient calculation ---
             reward_model_input_jax = jnp.array(reward_model_input_np)
@@ -173,9 +175,11 @@ def rlhf_training_loop(env, policy_model, reward_model, num_episodes=10, learnin
             episode_reward_losses.append(current_reward_loss)
             reward_grads_step = reward_grads_dict_step["trainable"]
             # Accumulate reward gradients
-            for i, grad in enumerate(reward_grads_step):
-                if grad is not None:
-                    reward_grads_accum[i] += grad
+            reward_grads_accum = jax.tree_map(
+                lambda acc, new: acc + new if new is not None else acc,
+                reward_grads_accum,
+                reward_grads_step
+            )
 
             num_steps_in_episode += 1
             episode_reward_sum += true_reward
