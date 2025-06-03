@@ -1,6 +1,6 @@
-# Reinforcement Learning from Human Feedback (RLHF) - Demo Guide
+# Reinforcement Learning from AI Feedback(RLAIF) - Demo Guide
 
-This guide explains the concept of Reinforcement Learning from Human Feedback (RLHF) and walks through the components of the accompanying  demo script `rlhf_demo.py`.
+This guide explains the concept of  Reinforcement Learning from AI Feedback (RLAIF) and walks through the components of the accompanying  demo script `rlhf_demo.py`.
 
 ## 1. What is Reinforcement Learning from Human Feedback (RLHF)?
 
