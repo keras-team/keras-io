@@ -8,6 +8,15 @@ import jax
 import jax.numpy as jnp
 import numpy as np
 
+# Helper function to calculate discounted returns
+def calculate_discounted_returns(rewards, gamma=0.99):
+    returns = []
+    cumulative_return = 0
+    for r in reversed(rewards):
+        cumulative_return = r + gamma * cumulative_return
+        returns.insert(0, cumulative_return)
+    return jnp.array(returns)
+
 # Define a simple environment (e.g., a GridWorld)
 class SimpleEnvironment:
     def __init__(self, size=3): # Reduced default size
@@ -24,7 +33,7 @@ class SimpleEnvironment:
             self.state = max(0, self.state - 1)
         elif action == 1:
             self.state = min(self.size - 1, self.state + 1)
-        
+
         reward = 1 if self.state == self.size - 1 else 0  # Reward for reaching the goal
         done = self.state == self.size - 1
         return self.state, reward, done
@@ -58,19 +67,20 @@ def rlhf_training_loop(env, policy_model, reward_model, num_episodes=10, learnin
 
     # Define loss functions for jax.grad
     @jax.jit
-    def policy_loss_fn(policy_model_params, state_input, action, predicted_reward_value_stopped):
+    def policy_loss_fn(policy_model_params, state_input, action, discounted_return_for_step):
         # stateless_call might return a tuple (e.g., (outputs, other_states) or just (outputs,))
         # We are interested in the first element, which should be the main output tensor.
         predictions_tuple = policy_model.stateless_call(
-            policy_model_params["trainable"], 
-            policy_model_params["non_trainable"], 
+            policy_model_params["trainable"],
+            policy_model_params["non_trainable"],
             state_input
         )
-        actual_predictions_tensor = predictions_tuple[0] 
+        actual_predictions_tensor = predictions_tuple[0]
         action_probs = actual_predictions_tensor[0] # If actual_predictions_tensor is (1,2)
-        selected_action_prob = action_probs[action]
+        selected_action_prob = action_probs[action] # action is already a JAX array if converted before call
         log_prob = jnp.log(selected_action_prob + 1e-7)
-        loss_value = -log_prob * predicted_reward_value_stopped
+        # Loss is -log_prob * G_t (discounted return)
+        loss_value = -log_prob * discounted_return_for_step
         return loss_value
 
     @jax.jit
@@ -102,10 +112,10 @@ def rlhf_training_loop(env, policy_model, reward_model, num_episodes=10, learnin
         state = env.reset()
         done = False
         episode_reward_sum = 0
-        
+
         episode_policy_losses = []
         episode_reward_losses = []
-        
+
         # Initialize gradient accumulators for the episode
         policy_grads_accum = [jnp.zeros_like(var) for var in policy_model.trainable_variables]
         reward_grads_accum = [jnp.zeros_like(var) for var in reward_model.trainable_variables]
@@ -113,25 +123,25 @@ def rlhf_training_loop(env, policy_model, reward_model, num_episodes=10, learnin
 
         while not done:
             state_input_np = np.array([state]).reshape(1, -1) # Keras model expects numpy array
-            
+
             # Get action from policy model
             # Note: policy_model directly uses its current weights, not passed params for inference
-            action_probs = policy_model(state_input_np)[0] 
+            action_probs = policy_model(state_input_np)[0]
             action = np.random.choice(env.get_action_space_n(), p=np.array(action_probs))
 
             next_state, true_reward, done = env.step(action)
 
             action_one_hot = jax.nn.one_hot(action, env.get_action_space_n())
             reward_model_input_np = np.concatenate([state_input_np.flatten(), np.array(action_one_hot).flatten()]).reshape(1, -1)
-            
+
             # Predict reward with reward model (also uses its current weights for inference)
             predicted_reward_value = reward_model(reward_model_input_np)[0] # Shape (1,)
-            
+
             # --- Policy gradient calculation ---
             stopped_predicted_reward = jax.lax.stop_gradient(predicted_reward_value[0])
             state_input_jax = jnp.array(state_input_np)
             action_jax = jnp.array(action) # Convert action to JAX array
-            
+
             policy_params_dict = {
                 "trainable": policy_model.trainable_variables,
                 "non_trainable": policy_model.non_trainable_variables
@@ -145,12 +155,9 @@ def rlhf_training_loop(env, policy_model, reward_model, num_episodes=10, learnin
             episode_policy_losses.append(current_policy_loss)
             policy_grads_step = policy_grads_dict_step["trainable"]
             # Accumulate policy gradients
-            policy_grads_accum = jax.tree_map(
-                lambda acc, new: acc + new if new is not None else acc,
-                policy_grads_accum,
-                policy_grads_step
-            )
-
+            for i, grad in enumerate(policy_grads_step):
+                if grad is not None:
+                    policy_grads_accum[i] += grad
 
             # --- Reward model gradient calculation ---
             reward_model_input_jax = jnp.array(reward_model_input_np)
@@ -166,16 +173,14 @@ def rlhf_training_loop(env, policy_model, reward_model, num_episodes=10, learnin
             episode_reward_losses.append(current_reward_loss)
             reward_grads_step = reward_grads_dict_step["trainable"]
             # Accumulate reward gradients
-            reward_grads_accum = jax.tree_map(
-                lambda acc, new: acc + new if new is not None else acc,
-                reward_grads_accum,
-                reward_grads_step
-            )
-            
+            for i, grad in enumerate(reward_grads_step):
+                if grad is not None:
+                    reward_grads_accum[i] += grad
+
             num_steps_in_episode += 1
             episode_reward_sum += true_reward
             state = next_state
-        
+
         if num_steps_in_episode > 0:
             # Average gradients over the episode and apply them
             avg_policy_grads = [jnp.clip(g / num_steps_in_episode, -1.0, 1.0) if g is not None else g for g in policy_grads_accum]
@@ -187,7 +192,7 @@ def rlhf_training_loop(env, policy_model, reward_model, num_episodes=10, learnin
             # Calculate mean losses for the episode for reporting
             mean_episode_policy_loss = jnp.mean(jnp.array(episode_policy_losses))
             mean_episode_reward_loss = jnp.mean(jnp.array(episode_reward_losses))
-            
+
             total_policy_loss_avg += mean_episode_policy_loss
             total_reward_loss_avg += mean_episode_reward_loss
             loss_count_avg +=1
