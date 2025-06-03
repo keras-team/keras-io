@@ -1,6 +1,6 @@
-# Reinforcement Learning from Human Feedback (RLHF) - Demo Guide
+# Reinforcement Learning from AI Feedback (RLAIF) - Demo Guide
 
-This guide explains the concept of Reinforcement Learning from Human Feedback (RLHF) and walks through the components of the accompanying demo script `rlhf_demo.py`.
+This guide explains the concept of Reinforcement Learning from AI Feedback (RLAIF) and walks through the components of the accompanying demo script `rlhf_demo.py`.
 
 ## 1. What is Reinforcement Learning from Human Feedback (RLHF)?
 
@@ -218,7 +218,7 @@ python examples/rl/rlhf_demo.py
 This will:
 1.  Initialize the environment, policy model, and reward model.
 2.  Print summaries of the policy and reward models.
-3.  Start the RLHF training loop for the specified number of episodes (default is 10 in the modified script).
+3.  Start the RLAIF training loop for the specified number of episodes (default is 10 in the modified script).
 4.  Print training progress (episode number, total reward, average policy loss, average reward loss).
 5.  After training, it will test the trained policy model for a few steps and print the interactions.
 
@@ -231,4 +231,4 @@ The root cause of this extreme slowdown in that particular context was not defin
 *   Severe performance limitations of the testing sandbox.
 *   Subtle JAX JIT recompilation issues triggered by type or shape inconsistencies that were not fully resolved.
 
-The script, as provided, represents the logical structure of a RLHF loop. If you encounter similar performance issues in your environment, further profiling and investigation specific to your JAX/Keras versions and hardware would be necessary. For typical local machine execution, 10 episodes of this simple demo should complete very quickly.
+The script, as provided, represents the logical structure of a RLAIF loop. If you encounter similar performance issues in your environment, further profiling and investigation specific to your JAX/Keras versions and hardware would be necessary. For typical local machine execution, 10 episodes of this simple demo should complete very quickly.
