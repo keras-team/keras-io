@@ -433,7 +433,9 @@ def preprocess_rating(x):
             "raw_user_age": features["raw_user_age"],
             "user_gender": features["user_gender"],
             "user_occupation_label": features["user_occupation_label"],
-            "user_gender_X_raw_user_age": features["user_gender_X_raw_user_age"],
+            "user_gender_X_raw_user_age": tf.squeeze(
+                features["user_gender_X_raw_user_age"], axis=-1
+            ),
             # Movie inputs are movie ID, vectorized title and genres
             "movie_id": int(x["movie_id"]),
             "movie_title_vector": features["movie_title"],
