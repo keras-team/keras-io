@@ -16,4 +16,4 @@ keras-nlp
 keras-tuner
 tf-keras
 keras-hub
-keras-rs
+keras-rs-nightly

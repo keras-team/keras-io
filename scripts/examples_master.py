@@ -567,11 +567,6 @@ EXAMPLES_MASTER = {
                     "subcategory": "Language modeling",
                     "keras_3": True,
                 },
-                {
-                    "path": "pretraining_BERT",
-                    "title": "Pretraining BERT with Hugging Face Transformers",
-                    "subcategory": "Language modeling",
-                },
                 # Parameter efficient fine-tuning.
                 {
                     "path": "parameter_efficient_finetuning_of_gpt2_with_lora",
