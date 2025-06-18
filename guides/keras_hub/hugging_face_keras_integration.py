@@ -1,11 +1,13 @@
 """
-**Title:** Load HuggingFace Transformers checkpoint into a Multi backend KerasHub model
-**Author:** [Laxma Reddy Patlolla](https://github.com/laxmareddyp), [Divyashree Sreepathihalli](https://github.com/divyashreepathihalli)<br>
-**Date created:** 20245/06/17<br>
-**Last modified:** 2025/06/17<br>
-**Description:** How to load and infer from KerasHub model weights hosted on HuggingFace.
-**Accelerator:** None
+Title: Load HuggingFace Transformers checkpoint into a multi backend KerasHub model
+Author: [Laxma Reddy Patlolla](https://github.com/laxmareddyp), [Divyashree Sreepathihalli](https://github.com/divyashreepathihalli)<br>
+Date created: 2025/06/17<br>
+Last modified: 2025/06/17<br>
+Description: How to load and run inference from KerasHub model checkpoints hosted on HuggingFace Hub.
+Accelerator: None
+"""
 
+"""
 ## Introduction
 
 KerasHub has built-in converters for HuggingFace's `.safetensors` models.
@@ -40,12 +42,13 @@ Ensure `KERAS_BACKEND` is set at the beginning of your script.
 
 import os
 
-os.environ["KERAS_BACKEND"] = "tensorflow"  # "tensorflow" or  "torch"
+os.environ["KERAS_BACKEND"] = "jax"  # "tensorflow" or  "torch"
 
 import keras
 import keras_hub
 
-"""KerasHub allows you to easily load models from HuggingFace Transformers.
+"""
+KerasHub allows you to easily load models from HuggingFace Transformers.
 Here's an example of how to load a Gemma causal language model.
 In this particular case, you will need to consent to Google's license on
 HuggingFace for being able to download model weights, and provide your
@@ -58,7 +61,10 @@ Google Colab.
 
 gemma_lm = keras_hub.models.GemmaCausalLM.from_preset("hf://google/gemma-2b")
 
-"""Let us try running some inference"""
+"""
+Let us try running some inference
+
+"""
 
 gemma_lm.generate("I want to say", max_length=30)
 
@@ -82,9 +88,10 @@ such as:
 """
 
 gemma_lm.save_to_preset("./gemma-2b-finetuned")
-keras_hub.upload_preset("hf://username/gemma-2b-finetune", "./gemma-2b-finetune")
+keras_hub.upload_preset("hf://laxmareddyp/gemma-2b-finetune", "./gemma-2b-finetuned")
 
-"""By uploading your preset, you can then load it from anywhere using:
+"""
+By uploading your preset, you can then load it from anywhere using:
 `loaded_model = keras_hub.models.GemmaCausalLM.from_preset("hf://YOUR_HF_USERNAME/gemma-2b-finetuned")`
 
 For a comprehensive, step-by-step guide on uploading your model, refer to the official KerasHub upload documentation.
@@ -139,6 +146,7 @@ gemma_lm = keras_hub.models.GemmaCausalLM.from_preset("hf://google/gemma-2b")
 Here’s an example using Llama: loading a PyTorch Hugging Face transformer checkpoint into KerasHub and running it on the JAX backend.
 """
 import os
+
 os.environ["KERAS_BACKEND"] = "jax"
 
 from keras_hub.models import Llama3CausalLM
