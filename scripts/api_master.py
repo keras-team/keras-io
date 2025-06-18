@@ -619,6 +619,11 @@ API_MASTER = {
                                     "generate": ["keras.layers.RandomCrop"]
                                 },
                                 {
+                                    "path": "random_elastic_transform",
+                                    "title": "RandomElasticTransform layer",
+                                    "generate": ["keras.layers.RandomElasticTransform"]
+                                },
+                                {
                                     "path": "random_erasing",
                                     "title": "RandomErasing layer",
                                     "generate": ["keras.layers.RandomErasing"]
@@ -652,6 +657,11 @@ API_MASTER = {
                                     "path": "random_perspective",
                                     "title": "RandomPerspective layer",
                                     "generate": ["keras.layers.RandomPerspective"]
+                                },
+                                {
+                                    "path": "random_posterization",
+                                    "title": "RandomPosterization layer",
+                                    "generate": ["keras.layers.RandomPosterization"]
                                 },
                                 {
                                     "path": "random_rotation",
@@ -1076,6 +1086,7 @@ API_MASTER = {
                         "keras.ops.all",
                         "keras.ops.amax",
                         "keras.ops.amin",
+                        "keras.ops.angle",
                         "keras.ops.any",
                         "keras.ops.append",
                         "keras.ops.arange",
