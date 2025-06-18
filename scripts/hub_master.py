@@ -2644,6 +2644,10 @@ HUB_GUIDES_MASTER = {
             "path": "transformer_pretraining",
             "title": "Pretraining a Transformer from scratch",
         },
+        {
+            "path": "hugging_face_keras_integration",
+            "title": "Load HuggingFace Transformers checkpoint into a multi backend KerasHub model",
+        },
     ],
 }
 
