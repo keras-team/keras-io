@@ -87,12 +87,13 @@ keras_hub.upload_preset("hf://username/gemma-2b-finetune", "./gemma-2b-finetune"
 """By uploading your preset, you can then load it from anywhere using:
 `loaded_model = keras_hub.models.GemmaCausalLM.from_preset("hf://YOUR_HF_USERNAME/gemma-2b-finetuned")`
 
-You can now access and use these 400K+ models with KerasHub,
-significantly expanding your model selection and capabilities
+For a comprehensive, step-by-step guide on uploading your model, refer to the official KerasHub upload documentation.
+You can find all the details here: [KerasHub Upload Guide](https://keras.io/keras_hub/guides/upload/)
 
-By integrating HuggingFace Transformers, KerasHub significantly expands
-your access to pretrained models. The HuggingFace Hub hosts over 400,000 (and growing)
-model checkpoints across various domains like NLP, Computer Vision, Audio, and more.
+By integrating HuggingFace Transformers, KerasHub significantly expands your access to pretrained models.
+The Hugging Face Hub now hosts well over 750k+ model checkpoints across various domains such as NLP,
+Computer Vision, Audio, and more. Of these, approximately 400K models are currently compatible with KerasHub,
+giving you access to a vast and diverse selection of state-of-the-art architectures for your projects.
 
 With KerasHub, you can:
 - **Tap into State-of-the-Art Models**: Easily experiment with the latest
@@ -131,14 +132,14 @@ os.environ["KERAS_BACKEND"] = "jax"
 gemma_lm = keras_hub.models.GemmaCausalLM.from_preset("hf://google/gemma-2b")
 
 """
-## Common Use Cases
+## Additional Examples
 
 ### Generation
 
-A first use case of language models is to generate text.
-Here is an example to load a transformers model and generate new tokens using the `.generate`
-method from KerasHub
+Here’s an example using Llama: loading a PyTorch Hugging Face transformer checkpoint into KerasHub and running it on the JAX backend.
 """
+import os
+os.environ["KERAS_BACKEND"] = "jax"
 
 from keras_hub.models import Llama3CausalLM
 
