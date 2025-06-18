@@ -690,7 +690,7 @@ Validation accuracy: 84.59%
 </div>
 The TabTransformer model achieves ~85% validation accuracy.
 Note that, with the default parameter configurations, both the baseline and the TabTransformer
-have similar number of trainable weights: 109,629 and 92,151 respectively, and both use the same training hyperparameters.
+have similar number of trainable weights: 109,895 and 87,745 respectively, and both use the same training hyperparameters.
 
 ---
 ## Conclusion

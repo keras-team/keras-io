@@ -138,7 +138,8 @@ def make_source_link(cls, project_url):
     module_version = copy.copy(importlib.import_module(base_module).__version__)
     if ".dev" in module_version:
         module_version = project_url_version[: module_version.find(".dev")]
-    if module_version != project_url_version:
+    # TODO: Remove keras-rs condition, this is just a temporary thing.
+    if "keras-rs" not in project_url and module_version != project_url_version:
         raise RuntimeError(
             f"For project {base_module}, URL {project_url} "
             f"has version number {project_url_version} which does not match the "
@@ -187,6 +188,64 @@ def get_function_name(function):
     return function.__name__
 
 
+def get_default_value_for_repr(value):
+    """Return a substitute for rendering the default value of a funciton arg.
+
+    Function and object instances are rendered as <Foo object at 0x00000000>
+    which can't be parsed by black. We substitute functions with the function
+    name and objects with a rendered version of the constructor like
+    `Foo(a=2, b="bar")`.
+
+    Args:
+        value: The value to find a better rendering of.
+
+    Returns:
+        Another value or `None` if no substitution is needed.
+    """
+
+    class ReprWrapper:
+        def __init__(self, representation):
+            self.representation = representation
+
+        def __repr__(self):
+            return self.representation
+
+    if value is inspect._empty:
+        return None
+
+    if inspect.isfunction(value):
+        # Render the function name instead
+        return ReprWrapper(value.__name__)
+
+    if (
+        repr(value).startswith("<")  # <Foo object at 0x00000000>
+        and hasattr(value, "__class__")  # it is an object
+        and hasattr(value, "get_config")  # it is a Keras object
+    ):
+        config = value.get_config()
+        init_args = []  # The __init__ arguments to render
+        for p in inspect.signature(value.__class__.__init__).parameters.values():
+            if p.name == "self":
+                continue
+            if p.kind == inspect.Parameter.POSITIONAL_ONLY:
+                # Required positional, render without a name
+                init_args.append(repr(config[p.name]))
+            elif p.default is inspect._empty or p.default != config[p.name]:
+                # Keyword arg with non-default value, render
+                init_args.append(p.name + "=" + repr(config[p.name]))
+            # else don't render that argument
+        return ReprWrapper(
+            value.__class__.__module__
+            + "."
+            + value.__class__.__name__
+            + "("
+            + ", ".join(init_args)
+            + ")"
+        )
+
+    return None
+
+
 def get_signature_start(function):
     """For the Dense layer, it should return the string 'keras.layers.Dense'"""
     if ismethod(function):
@@ -205,7 +264,18 @@ def get_signature_start(function):
 
 def get_signature_end(function):
     params = inspect.signature(function).parameters.values()
-    signature_end = "(" + ", ".join([str(x) for x in params]) + ")"
+
+    formatted_params = []
+    for x in params:
+        default = get_default_value_for_repr(x.default)
+        if default:
+            x = inspect.Parameter(
+                x.name, x.kind, default=default, annotation=x.annotation
+            )
+        str_x = str(x)
+        formatted_params.append(str_x)
+    signature_end = "(" + ", ".join(formatted_params) + ")"
+
     if ismethod(function):
         signature_end = signature_end.replace("(self, ", "(")
         signature_end = signature_end.replace("(self)", "()")
@@ -373,10 +443,8 @@ def get_class_from_method(meth):
                 return cls
         meth = meth.__func__  # fallback to __qualname__ parsing
     if inspect.isfunction(meth):
-        cls = getattr(
-            inspect.getmodule(meth),
-            meth.__qualname__.split(".<locals>", 1)[0].rsplit(".", 1)[0],
-        )
+        cls_name = meth.__qualname__.split(".<locals>", 1)[0].rsplit(".", 1)[0]
+        cls = getattr(inspect.getmodule(meth), cls_name, None)
         if isinstance(cls, type):
             return cls
     return getattr(meth, "__objclass__", None)  # handle special descriptor objects

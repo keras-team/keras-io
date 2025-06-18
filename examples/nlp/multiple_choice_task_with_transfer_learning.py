@@ -2,7 +2,7 @@
 Title: MultipleChoice Task with Transfer Learning
 Author: Md Awsafur Rahman
 Date created: 2023/09/14
-Last modified: 2023/09/14
+Last modified: 2025/06/16
 Description: Use pre-trained nlp models for multiplechoice task.
 Accelerator: GPU
 """
@@ -405,8 +405,8 @@ below illustrates this idea:
 
 ![Model Diagram](https://pbs.twimg.com/media/F3NUju_a8AAS8Fq?format=png&name=large)
 
-<div align="center"><b> Picture Credict: </b> <a
-href="https://twitter.com/johnowhitaker"> @johnowhitaker </a> </div></div><br>
+<div align="center"><b> Picture Credit: </b> <a href="https://twitter.com/johnowhitaker"> 
+@johnowhitaker </a> </div><br>
 
 From a coding perspective, remember that we use the same model for all five options, with
 shared weights. Despite the figure suggesting five separate models, they are, in fact,

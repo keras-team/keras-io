@@ -3,6 +3,7 @@ from examples_master import EXAMPLES_MASTER
 from api_master import API_MASTER
 from tuner_master import TUNER_MASTER
 from hub_master import HUB_MASTER
+from rs_master import RS_MASTER
 from keras2_api_master import KERAS2_API_MASTER
 
 MASTER = {
@@ -10,13 +11,13 @@ MASTER = {
     "title": "Keras: the Python Deep Learning library",
     "children": [
         {
-            "path": "about",
-            "title": "About Keras",
-        },
-        {
             "path": "getting_started/",
             "title": "Getting started",
             "children": [
+              {
+                    "path": "about",
+                    "title": "About Keras",
+                },
                 {
                     "path": "intro_to_keras_for_engineers",
                     "title": "Introduction to Keras for engineers",
@@ -42,5 +43,6 @@ MASTER = {
         KERAS2_API_MASTER,
         TUNER_MASTER,
         HUB_MASTER,
+        RS_MASTER,
     ],
 }

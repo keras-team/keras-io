@@ -1906,13 +1906,6 @@ API_MASTER = {
                     ],
                 },
                 {
-                    "path": "model_parallel",
-                    "title": "ModelParallel API",
-                    "generate": [
-                        "keras.distribution.ModelParallel",
-                    ],
-                },
-                {
                     "path": "distribution_utils",
                     "title": "Distribution utilities",
                     "generate": [
@@ -1949,6 +1942,23 @@ API_MASTER = {
                         "keras.random.truncated_normal",
                         "keras.random.uniform",
                     ],
+                },
+            ],
+        },
+        {
+            "path": "rematerialization/",
+            "title": "Rematerialization",
+            "toc": True,
+            "children": [
+                {
+                    "path": "remat_scope",
+                    "title": "RematScope",
+                    "generate": ["keras.RematScope"],
+                },
+                {
+                    "path": "remat",
+                    "title": "Remat",
+                    "generate": ["keras.remat"],
                 },
             ],
         },

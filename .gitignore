@@ -3,6 +3,7 @@ sources/*
 site/*
 *.pyc
 *.swp
+templates/examples/audio/*
 templates/examples/generative/*
 templates/examples/nlp/*
 templates/examples/vision/*
@@ -15,5 +16,6 @@ templates/**/guides/**/*.md
 templates/keras_hub/getting_started.md
 templates/keras_tuner/getting_started.md
 datasets/*
-.vscode/*
 .history
+.vscode/*
+.idea/*
