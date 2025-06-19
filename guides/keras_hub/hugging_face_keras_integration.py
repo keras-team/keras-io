@@ -1,5 +1,5 @@
 """
-Title: Load HuggingFace Transformers checkpoint into a multi backend KerasHub model
+Title: Loading HuggingFace Transformers checkpoints into  multi-backend KerasHub models
 Author: [Laxma Reddy Patlolla](https://github.com/laxmareddyp), [Divyashree Sreepathihalli](https://github.com/divyashreepathihalli)<br>
 Date created: 2025/06/17<br>
 Last modified: 2025/06/17<br>
@@ -23,6 +23,7 @@ This means you can seamlessly load a wide variety of pretrained models from the 
 Hub directly into KerasHub with just a few lines of code.
 
 Key advantages of using KerasHub converters:
+
 - **Ease of Use**: Load HuggingFace models without manual conversion steps.
 - **Broad Compatibility**: Access a vast range of models available on the HuggingFace Hub.
 - **Seamless Integration**: Work with these models using familiar Keras APIs for training,
@@ -69,7 +70,7 @@ Let us try running some inference
 gemma_lm.generate("I want to say", max_length=30)
 
 """
-### Fine-tune a Gemma Transformer checkpoint using the Keras model.fit(...) API.
+### Fine-tuning a Gemma Transformer checkpoint using the Keras `model.fit(...)` API
 
 Once you have loaded HuggingFace weights, you can use the instantiated model
 just like any other KerasHub model. For instance, you might fine-tune the model
@@ -103,6 +104,7 @@ Computer Vision, Audio, and more. Of these, approximately 400K models are curren
 giving you access to a vast and diverse selection of state-of-the-art architectures for your projects.
 
 With KerasHub, you can:
+
 - **Tap into State-of-the-Art Models**: Easily experiment with the latest
 architectures and pretrained weights from the research community and industry.
 - **Reduce Development Time**: Leverage existing models instead of training from scratch,
@@ -143,7 +145,7 @@ gemma_lm = keras_hub.models.GemmaCausalLM.from_preset("hf://google/gemma-2b")
 
 ### Generation
 
-Here’s an example using Llama: loading a PyTorch Hugging Face transformer checkpoint into KerasHub and running it on the JAX backend.
+Here’s an example using Llama: Loading a PyTorch Hugging Face transformer checkpoint into KerasHub and running it on the JAX backend.
 """
 import os
 
