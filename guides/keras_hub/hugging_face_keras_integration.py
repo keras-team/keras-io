@@ -1,5 +1,5 @@
 """
-Title: Loading HuggingFace Transformers checkpoints into  multi-backend KerasHub models
+Title: Loading HuggingFace Transformers checkpoints into multi-backend KerasHub models
 Author: [Laxma Reddy Patlolla](https://github.com/laxmareddyp), [Divyashree Sreepathihalli](https://github.com/divyashreepathihalli)<br>
 Date created: 2025/06/17<br>
 Last modified: 2025/06/17<br>

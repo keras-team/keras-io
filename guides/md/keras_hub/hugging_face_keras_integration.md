@@ -1,4 +1,4 @@
-# Load HuggingFace Transformers checkpoint into a multi backend KerasHub model
+# Loading HuggingFace Transformers checkpoints into multi-backend KerasHub models
 
 **Author:** [Laxma Reddy Patlolla](https://github.com/laxmareddyp), [Divyashree Sreepathihalli](https://github.com/divyashreepathihalli)<br><br>
 **Date created:** 2025/06/17<br><br>
@@ -26,6 +26,7 @@ This means you can seamlessly load a wide variety of pretrained models from the 
 Hub directly into KerasHub with just a few lines of code.
 
 Key advantages of using KerasHub converters:
+
 - **Ease of Use**: Load HuggingFace models without manual conversion steps.
 - **Broad Compatibility**: Access a vast range of models available on the HuggingFace Hub.
 - **Seamless Integration**: Work with these models using familiar Keras APIs for training,
@@ -56,12 +57,12 @@ import keras_hub
 <div class="k-default-codeblock">
 ```
 WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
-E0000 00:00:1750277663.371946   12245 cuda_dnn.cc:8579] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered
-E0000 00:00:1750277663.376336   12245 cuda_blas.cc:1407] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
-W0000 00:00:1750277663.387748   12245 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
-W0000 00:00:1750277663.387761   12245 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
-W0000 00:00:1750277663.387762   12245 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
-W0000 00:00:1750277663.387763   12245 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+E0000 00:00:1750320123.730040    8092 cuda_dnn.cc:8579] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered
+E0000 00:00:1750320123.734497    8092 cuda_blas.cc:1407] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
+W0000 00:00:1750320123.745803    8092 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1750320123.745816    8092 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1750320123.745818    8092 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1750320123.745819    8092 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
 ```
 </div>
 
@@ -79,17 +80,8 @@ Google Colab.
 gemma_lm = keras_hub.models.GemmaCausalLM.from_preset("hf://google/gemma-2b")
 ```
 
-
 <div class="k-default-codeblock">
 ```
-model.safetensors.index.json:   0%|          | 0.00/13.5k [00:00<?, ?B/s]
-
-model-00001-of-00002.safetensors:   0%|          | 0.00/4.95G [00:00<?, ?B/s]
-
-model-00002-of-00002.safetensors:   0%|          | 0.00/67.1M [00:00<?, ?B/s]
-
-tokenizer.model:   0%|          | 0.00/4.24M [00:00<?, ?B/s]
-
 normalizer.cc(51) LOG(INFO) precompiled_charsmap is empty. use identity normalization.
 ```
 </div>
@@ -110,7 +102,7 @@ gemma_lm.generate("I want to say", max_length=30)
 ```
 </div>
 
-### Fine-tune a Gemma Transformer checkpoint using the Keras model.fit(...) API.
+### Fine-tuning a Gemma Transformer checkpoint using the Keras `model.fit(...)` API
 
 Once you have loaded HuggingFace weights, you can use the instantiated model
 just like any other KerasHub model. For instance, you might fine-tune the model
@@ -127,7 +119,7 @@ gemma_lm.fit(x=features, batch_size=2)
 ```
 1/1 ━━━━━━━━━━━━━━━━━━━━ 35s 35s/step - loss: 0.0342 - sparse_categorical_accuracy: 0.1538
 
-<keras.src.callbacks.history.History at 0x7012f814b650>
+<keras.src.callbacks.history.History at 0x7e970c14cbf0>
 ```
 </div>
 
@@ -143,13 +135,6 @@ gemma_lm.save_to_preset("./gemma-2b-finetuned")
 keras_hub.upload_preset("hf://laxmareddyp/gemma-2b-finetune", "./gemma-2b-finetuned")
 ```
 
-
-<div class="k-default-codeblock">
-```
-model.weights.h5:   0%|          | 0.00/10.0G [00:00<?, ?B/s]
-```
-</div>
-
 By uploading your preset, you can then load it from anywhere using:
 `loaded_model = keras_hub.models.GemmaCausalLM.from_preset("hf://YOUR_HF_USERNAME/gemma-2b-finetuned")`
 
@@ -162,6 +147,7 @@ Computer Vision, Audio, and more. Of these, approximately 400K models are curren
 giving you access to a vast and diverse selection of state-of-the-art architectures for your projects.
 
 With KerasHub, you can:
+
 - **Tap into State-of-the-Art Models**: Easily experiment with the latest
 architectures and pretrained weights from the research community and industry.
 - **Reduce Development Time**: Leverage existing models instead of training from scratch,
@@ -206,7 +192,7 @@ gemma_lm = keras_hub.models.GemmaCausalLM.from_preset("hf://google/gemma-2b")
 
 ### Generation
 
-Here’s an example using Llama: loading a PyTorch Hugging Face transformer checkpoint into KerasHub and running it on the JAX backend.
+Here’s an example using Llama: Loading a PyTorch Hugging Face transformer checkpoint into KerasHub and running it on the JAX backend.
 
 
 ```python
@@ -232,25 +218,11 @@ causal_lm.generate(prompts, max_length=30)[0]
 ```
 
 
+
+
 <div class="k-default-codeblock">
 ```
-config.json:   0%|          | 0.00/700 [00:00<?, ?B/s]
-
-model.safetensors.index.json:   0%|          | 0.00/23.9k [00:00<?, ?B/s]
-
-model-00001-of-00004.safetensors:   0%|          | 0.00/4.98G [00:00<?, ?B/s]
-
-model-00004-of-00004.safetensors:   0%|          | 0.00/1.17G [00:00<?, ?B/s]
-
-model-00002-of-00004.safetensors:   0%|          | 0.00/5.00G [00:00<?, ?B/s]
-
-model-00003-of-00004.safetensors:   0%|          | 0.00/4.92G [00:00<?, ?B/s]
-
-tokenizer.json:   0%|          | 0.00/9.09M [00:00<?, ?B/s]
-
-tokenizer_config.json:   0%|          | 0.00/56.1k [00:00<?, ?B/s]
-
-'<|eot_id|>Csystem\nYou are a sentient, superintelligent artificial general intelligence, here to teach and assist me.'
+'<tool_call>Csystem\nYou are a sentient, superintelligent artificial general intelligence, here to teach and assist me.\n<tool'
 ```
 </div>
 
