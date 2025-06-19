@@ -1,7 +1,15 @@
-'''
+"""
+Title: Reinforcement Learning from AI Feedback(RLAIF) - Demo Guide
+Author: [Jules](https://jules.google.com/)
+Date created: 2025/06/02
+Last modified: 2025/06/18
+Accelerator: GPU
+"""
+
+"""
 # Reinforcement Learning from AI Feedback(RLAIF) - Demo Guide
 
-This guide explains the concept of  Reinforcement Learning from AI Feedback (RLAIF) and walks through the components of the accompanying  demo script `rlhf_demo.py`.
+This guide explains the concept of  Reinforcement Learning from AI Feedback (RLAIF) and walks through the components of the accompanying script `rlhf_demo.py`.
 
 ## 1. What is Reinforcement Learning from Human Feedback (RLHF)?
 
@@ -37,7 +45,7 @@ The `rlhf_demo.py` script provides a very simplified implementation of these con
 
 **Important Note on Keras Backend:**
 This demo is configured to run with the JAX backend for Keras. This is set at the beginning of the script:
-'''
+"""
 # Set Keras backend to JAX
 import os
 os.environ["KERAS_BACKEND"] = "jax"
@@ -57,11 +65,11 @@ def calculate_discounted_returns(rewards, gamma=0.99):
         returns.insert(0, cumulative_return)
     return jnp.array(returns)
 
-'''
+"""
 ### 3.1. The Environment (`SimpleEnvironment`)
 
 The script defines a very basic grid-world like environment where the agent's state is its position on a line.
-'''
+"""
 # Define a simple environment (e.g., a GridWorld)
 class SimpleEnvironment:
     def __init__(self, size=3): # Reduced default size
@@ -88,14 +96,14 @@ class SimpleEnvironment:
 
     def get_action_space_n(self):
         return 2 # Two possible actions: left or right      
-'''
+"""
 - The agent can move left or right.
 - It receives a "true" reward of 1 if it reaches the rightmost state (`size - 1`), otherwise 0. This "true" reward is used in the demo to simulate human feedback for training the reward model.
 
 ### 3.2. The Policy Model (`create_policy_model`)
 
 This is a simple Keras neural network that takes the current state (observation) as input and outputs probabilities for each action (left/right).
-'''
+"""
 # Define a simple policy model
 def create_policy_model(observation_space_shape, action_space_n):
     inputs = keras.Input(shape=observation_space_shape)
@@ -103,14 +111,14 @@ def create_policy_model(observation_space_shape, action_space_n):
     outputs = keras.layers.Dense(action_space_n, activation="softmax")(x)
     model = keras.Model(inputs=inputs, outputs=outputs)
     return model
-'''
+"""
 - It's a small Multi-Layer Perceptron (MLP).
 - The `softmax` activation ensures the output represents a probability distribution over actions.
 
 ### 3.3. The Reward Model (`create_reward_model`)
 
 This Keras model is designed to predict how "good" a state-action pair is. In a real RLHF setup, this model would be trained on human preference data. In this dummy demo, it's trained using the environment's "true" reward signal as a proxy for human feedback.
-'''
+"""
 # Define a simple reward model
 def create_reward_model(observation_space_shape, action_space_n):
     inputs = keras.Input(shape=(observation_space_shape[0] + action_space_n,)) # obs + action
@@ -118,14 +126,14 @@ def create_reward_model(observation_space_shape, action_space_n):
     outputs = keras.layers.Dense(1)(x) # Outputs a scalar reward
     model = keras.Model(inputs=inputs, outputs=outputs)
     return model
-'''
+"""
 - It takes the current state and the chosen action (one-hot encoded) as input.
 - It outputs a single scalar value, representing the predicted reward.
 
 ### 3.4. The RLHF Training Loop (`rlhf_training_loop`)
 
 This function contains the core logic for the RLHF process.
-'''
+"""
 # RLHF Training Loop
 def rlhf_training_loop(env, policy_model, reward_model, num_episodes=10, learning_rate=0.001): # Reduced default episodes
     policy_optimizer = keras.optimizers.Adam(learning_rate=learning_rate)
@@ -277,7 +285,7 @@ def rlhf_training_loop(env, policy_model, reward_model, num_episodes=10, learnin
 
 
     print("Training finished.")
-'''
+"""
 **Key Parts of the Training Loop (Updated):**
 
 1.  **Initialization:** Optimizers and JAX gradient functions (`policy_value_and_grad_fn`, `reward_value_and_grad_fn`) are set up. The `policy_loss_fn` is now designed to accept a `discounted_return_for_step` argument.
@@ -310,7 +318,7 @@ This will:
 3.  Start the RLHF training loop for the specified number of episodes (default is 10 in the modified script).
 4.  Print training progress (episode number, total reward, average policy loss, average reward loss).
 5.  After training, it will test the trained policy model for a few steps and print the interactions.
-'''
+"""
 # Main execution
 if __name__ == "__main__":
     env = SimpleEnvironment()
