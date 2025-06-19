@@ -3,6 +3,7 @@ Title: Reinforcement Learning from AI Feedback(RLAIF) - Demo Guide
 Author: [Jules](https://jules.google.com/)
 Date created: 2025/06/02
 Last modified: 2025/06/18
+Description: Implementing RLAIF
 Accelerator: GPU
 """
 
