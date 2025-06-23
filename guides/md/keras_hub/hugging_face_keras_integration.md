@@ -43,7 +43,7 @@ You'll primarily need `keras` and `keras_hub`.
 
 **Note:** Changing the backend after Keras has been imported might not work as expected.
 Ensure `KERAS_BACKEND` is set at the beginning of your script. Similarly, when working
-outside of colab, you might use `os.environ["HF_TOKEN"] = "YOUR_HF_TOKEN"` to authenticate
+outside of colab, you might use `os.environ["HF_TOKEN"] = "<YOUR_HF_TOKEN>"` to authenticate
 to HuggingFace. Set your `HF_TOKEN` as "Colab secret", when working with
 Google Colab.
 
@@ -147,7 +147,7 @@ such as:
 
 
 ```python
-HF_USERNAME = "laxmareddyp"  # provide your hf username
+HF_USERNAME = "<YOUR_HF_USERNAME>"  # provide your hf username
 gemma_lm.save_to_preset("./gemma-2b-finetuned")
 keras_hub.upload_preset(f"hf://{HF_USERNAME}/gemma-2b-finetune", "./gemma-2b-finetuned")
 ```
