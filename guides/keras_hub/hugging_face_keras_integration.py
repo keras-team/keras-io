@@ -1,10 +1,10 @@
 """
 Title: Loading HuggingFace Transformers checkpoints into multi-backend KerasHub models
-Author: [Laxma Reddy Patlolla](https://github.com/laxmareddyp), [Divyashree Sreepathihalli](https://github.com/divyashreepathihalli)<br>
-Date created: 2025/06/17<br>
-Last modified: 2025/06/17<br>
-Description: How to load and run inference from KerasHub model checkpoints hosted on HuggingFace Hub.
-Accelerator: None
+Author: [Laxma Reddy Patlolla](https://github.com/laxmareddyp), [Divyashree Sreepathihalli](https://github.com/divyashreepathihalli)
+Date created: 2025/06/17
+Last modified: 2025/06/23
+Description: How to load and run inference from KerasHub model checkpoints hosted on the HuggingFace Hub.
+Accelerator: GPU
 """
 
 """
@@ -38,7 +38,10 @@ Before you begin, make sure you have the necessary libraries installed.
 You'll primarily need `keras` and `keras_hub`.
 
 **Note:** Changing the backend after Keras has been imported might not work as expected.
-Ensure `KERAS_BACKEND` is set at the beginning of your script.
+Ensure `KERAS_BACKEND` is set at the beginning of your script. Similarly, when working
+outside of colab, you might use `os.environ["HF_TOKEN"] = "..."` to authenticate
+to HuggingFace. Set your `HF_TOKEN` as "Colab secret", when working with
+Google Colab.
 """
 
 import os
@@ -49,12 +52,24 @@ import keras
 import keras_hub
 
 """
+### Changing precision
+
+To perform inference and training on affordable hardware, you can adjust your
+model’s precision by configuring it through `keras.config` as follows
+
+"""
+
+import keras
+
+keras.config.set_dtype_policy("bfloat16")
+
+"""
+## Loading a HuggingFace model
+
 KerasHub allows you to easily load models from HuggingFace Transformers.
 Here's an example of how to load a Gemma causal language model.
 In this particular case, you will need to consent to Google's license on
-HuggingFace for being able to download model weights, and provide your
-`HF_TOKEN` as environment variable or as "Colab secret" when working with
-Google Colab.
+HuggingFace for being able to download model weights.
 
 """
 
@@ -88,8 +103,9 @@ upload it using standard methods. You can do this through familiar commands
 such as:
 """
 
+HF_USERNAME = "laxmareddyp" # provide your hf username
 gemma_lm.save_to_preset("./gemma-2b-finetuned")
-keras_hub.upload_preset("hf://laxmareddyp/gemma-2b-finetune", "./gemma-2b-finetuned")
+keras_hub.upload_preset(f"hf://{HF_USERNAME}/gemma-2b-finetune", "./gemma-2b-finetuned")
 
 """
 By uploading your preset, you can then load it from anywhere using:
@@ -168,21 +184,28 @@ Write a short story about Goku discovering kirby has teamed up with Majin Buu to
 causal_lm.generate(prompts, max_length=30)[0]
 
 """
-### Changing precision
+## Comparing to Transformers
 
-You can adjust your model’s precision by configuring it through `keras.config` as follows
+In the following table, we have compiled a detailed comparison of HuggingFace's Transformers library with KerasHub:
 
-"""
+| Feature                    | HF Transformers                                                   | KerasHub                                                                                                                                                                                                                                                                              |
+|----------------------------|-------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Frameworks supported       | PyTorch                                                           | JAX, PyTorch, TensorFlow, NNX                                                                                                                                                                                                                                                         |
+| Trainer                    | HF Trainer                                                        | Keras `model.fit(...)` — supports nearly all features such as distributed training, learning rate scheduling, optimizer selection, etc.                                                                                                                                             |
+| Tokenizers                 | `AutoTokenizer`                                                   | [KerasHub Tokenizers](https://keras.io/keras_hub/api/tokenizers/)                                                                                                                                                                                                                     |
+| Autoclass                  | `auto` keyword                                                    | KerasHub automatically [detects task-specific classes](https://x.com/fchollet/status/1922719664859381922)                                                                                                                                                                             |
+| Model loading              | `AutoModel.from_pretrained()`                                     | `keras_hub.models.<Task>.from_preset()`<br><br>KerasHub uses task-specific classes (e.g., `CausalLM`, `Classifier`, `Backbone`) with a `from_preset()` method to load pretrained models, analogous to HuggingFace’s method.<br><br>Supports HF URLs, Kaggle URLs, and local directories |
+| Model saving               | `model.save_pretrained()`<br>`tokenizer.save_pretrained()`        | `model.save_to_preset()` — saves the model (including tokenizer/preprocessor) into a local directory (preset). All components needed for reloading or uploading are saved.                                                                                                            |
+| Model uploading            | Uploading weights to HF platform                                  | [KerasHub Upload Guide](https://keras.io/keras_hub/guides/upload/)<br>[Keras on Hugging Face](https://huggingface.co/keras)                                                                                                                                                           |
+| Weights file sharding      | Weights file sharding                                             | Large model weights are sharded for efficient upload/download                                                                                                                                                                                                                         |
+| PEFT                       | Uses [HuggingFace PEFT](https://github.com/huggingface/peft)      | Built-in LoRA support:<br>`backbone.enable_lora(rank=n)`<br>`backbone.save_lora_weights(filepath)`<br>`backbone.load_lora_weights(filepath)`                                                                                                                                          |
+| Core model abstractions    | `PreTrainedModel`, `AutoModel`, task-specific models              | `Backbone`, `Preprocessor`, `Task`                                                                                                                                                                                                                                                    |
+| Model configs              | `PretrainedConfig`: Base class for model configurations           | Configurations stored as multiple JSON files in preset directory: `config.json`, `preprocessor.json`, `task.json`, `tokenizer.json`, etc.                                                                                                                                             |
+| Preprocessing              | Tokenizers/preprocessors often handled separately, then passed to the model | Built into task-specific models                                                                                                                                                                                                                                             |
+| Mixed precision training   | Via training arguments                                            | Keras global policy setting                                                                                                                                                                                                                                                           |
+| Compatibility with SafeTensors | Default weights format                                        | Of the 770k+ SafeTensors models on HF, those with a matching architecture in KerasHub can be loaded using `keras_hub.models.X.from_preset()`                                                                                                                                          |
 
-import keras
 
-keras.config.set_dtype_policy("bfloat16")
-
-from keras_hub.models import Llama3CausalLM
-
-causal_lm = Llama3CausalLM.from_preset("hf://NousResearch/Hermes-2-Pro-Llama-3-8B")
-
-"""
 Go try loading other model weights! You can find more options on HuggingFace
 and use them with `from_preset("hf://<namespace>/<model-name>")`.
 
