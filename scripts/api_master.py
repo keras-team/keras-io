@@ -619,6 +619,11 @@ API_MASTER = {
                                     "generate": ["keras.layers.RandomCrop"]
                                 },
                                 {
+                                    "path": "random_elastic_transform",
+                                    "title": "RandomElasticTransform layer",
+                                    "generate": ["keras.layers.RandomElasticTransform"]
+                                },
+                                {
                                     "path": "random_erasing",
                                     "title": "RandomErasing layer",
                                     "generate": ["keras.layers.RandomErasing"]
@@ -652,6 +657,11 @@ API_MASTER = {
                                     "path": "random_perspective",
                                     "title": "RandomPerspective layer",
                                     "generate": ["keras.layers.RandomPerspective"]
+                                },
+                                {
+                                    "path": "random_posterization",
+                                    "title": "RandomPosterization layer",
+                                    "generate": ["keras.layers.RandomPosterization"]
                                 },
                                 {
                                     "path": "random_rotation",
@@ -1071,11 +1081,13 @@ API_MASTER = {
                     "path": "numpy/",
                     "title": "NumPy ops",
                     "generate": [
+                        "keras.ops.abs",
                         "keras.ops.absolute",
                         "keras.ops.add",
                         "keras.ops.all",
                         "keras.ops.amax",
                         "keras.ops.amin",
+                        "keras.ops.angle",
                         "keras.ops.any",
                         "keras.ops.append",
                         "keras.ops.arange",
@@ -1092,6 +1104,7 @@ API_MASTER = {
                         "keras.ops.argsort",
                         "keras.ops.array",
                         "keras.ops.average",
+                        "keras.ops.bartlett",
                         "keras.ops.bincount",
                         "keras.ops.bitwise_and",
                         "keras.ops.bitwise_invert",
@@ -1100,6 +1113,7 @@ API_MASTER = {
                         "keras.ops.bitwise_or",
                         "keras.ops.bitwise_right_shift",
                         "keras.ops.bitwise_xor",
+                        "keras.ops.blackman",
                         "keras.ops.broadcast_to",
                         "keras.ops.ceil",
                         "keras.ops.clip",
@@ -1115,6 +1129,7 @@ API_MASTER = {
                         "keras.ops.cumprod",
                         "keras.ops.cumsum",
                         "keras.ops.diag",
+                        "keras.ops.diagflat",
                         "keras.ops.diagonal",
                         "keras.ops.diff",
                         "keras.ops.digitize",
@@ -1125,6 +1140,7 @@ API_MASTER = {
                         "keras.ops.empty",
                         "keras.ops.equal",
                         "keras.ops.exp",
+                        "keras.ops.exp2",
                         "keras.ops.expand_dims",
                         "keras.ops.expm1",
                         "keras.ops.eye",
@@ -1136,10 +1152,12 @@ API_MASTER = {
                         "keras.ops.get_item",
                         "keras.ops.greater",
                         "keras.ops.greater_equal",
+                        "keras.ops.hamming",
                         "keras.ops.histogram",
                         "keras.ops.hstack",
                         "keras.ops.identity",
                         "keras.ops.imag",
+                        "keras.ops.inner",
                         "keras.ops.isclose",
                         "keras.ops.isfinite",
                         "keras.ops.isinf",
@@ -1189,10 +1207,12 @@ API_MASTER = {
                         "keras.ops.reshape",
                         "keras.ops.right_shift",
                         "keras.ops.roll",
+                        "keras.ops.rot90",
                         "keras.ops.round",
                         "keras.ops.searchsorted",
                         "keras.ops.select",
                         "keras.ops.sign",
+                        "keras.ops.signbit",
                         "keras.ops.sin",
                         "keras.ops.sinh",
                         "keras.ops.size",
@@ -1220,6 +1240,7 @@ API_MASTER = {
                         "keras.ops.triu",
                         "keras.ops.true_divide",
                         "keras.ops.trunc",
+                        "keras.ops.unravel_index",
                         "keras.ops.var",
                         "keras.ops.vdot",
                         "keras.ops.vectorize",
