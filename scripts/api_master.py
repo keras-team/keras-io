@@ -1495,7 +1495,7 @@ API_MASTER = {
                   "path": "muon",
                   "title": "Muon",
                   "generate": ["keras.optimizers.Muon"],
-                }
+                },
             ],
         },
         {
