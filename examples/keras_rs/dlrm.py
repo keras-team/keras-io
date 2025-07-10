@@ -1,9 +1,9 @@
 """
-Title: Ranking with Deep Learning Recommendation Model using Dot Interaction
+Title: Ranking with Deep Learning Recommendation Model
 Author: Harshith Kulkarni
 Date created: 2025/06/02
 Last modified: 2025/06/20
-Description: Rank movies with DLRM using Dot Interaction
+Description: Rank movies with DLRM with KerasRS
 """
 
 """
@@ -14,10 +14,10 @@ effectively
 learn relationship between movies and ratings using DotInteraction
 
 The Deep Learning Recommendation Model (DLRM) architecture is designed for more effective
-learning of explicit and bounded-degree features. It comprises three main
-components: an input layer (typically an embedding layer), a dot interaction layer for
-modeling explicit feature interactions, and a deep network for capturing implicit
-interactions.
+learning of explicit and bounded-degree features which performs well on both categrical and 
+continuous (sparse/dense) features. It comprises of three main components: input layers 
+(typically an embedding layer for each feature), a dot interaction layer for modeling explicit 
+feature interactions, and MLP based deep network for capturing implicit interactions.
 
 The dot interaction layer is the core of the DLRM, which computes the pairwise dot
 products between different feature embeddings.
@@ -331,7 +331,7 @@ print_stats(
 
 The DotInteraction layer itself doesn't have a conventional "weight" matrix like a Dense
 layer. Instead, its function is to compute the dot product between the embedding vectors
-of your features.
+of features.
 
 To visualize the strength of these interactions, we can calculate a matrix representing
 the pairwise interaction strength between all feature embeddings. A common way to do this
