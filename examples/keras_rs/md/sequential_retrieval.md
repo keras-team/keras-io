@@ -121,6 +121,7 @@ def read_data(data_directory, min_rating=None):
         sep="::",
         names=RATINGS_DATA_COLUMNS,
         encoding="unicode_escape",
+        engine="python",
     )
     ratings_df["Timestamp"] = ratings_df["Timestamp"].apply(int)
 
@@ -133,6 +134,7 @@ def read_data(data_directory, min_rating=None):
         sep="::",
         names=MOVIES_DATA_COLUMNS,
         encoding="unicode_escape",
+        engine="python",
     )
     return ratings_df, movies_df
 
@@ -150,12 +152,6 @@ movies_count = movies_df["MovieID"].max()
 Downloading data from https://files.grouplens.org/datasets/movielens/ml-1m.zip
 
 5917549/5917549 ━━━━━━━━━━━━━━━━━━━━ 2s 0us/step
-
-<ipython-input-4-6fc962858754>:26: ParserWarning: Falling back to the 'python' engine because the 'c' engine does not support regex separators (separators > 1 char and different from '\s+' are interpreted as regex); you can avoid this warning by specifying engine='python'.
-  ratings_df = pd.read_csv(
-
-<ipython-input-4-6fc962858754>:38: ParserWarning: Falling back to the 'python' engine because the 'c' engine does not support regex separators (separators > 1 char and different from '\s+' are interpreted as regex); you can avoid this warning by specifying engine='python'.
-  movies_df = pd.read_csv(
 ```
 </div>
 
