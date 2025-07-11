@@ -1652,6 +1652,51 @@ MODELS_MASTER = {
             ],
         },
         {
+            "path": "qwen3/",
+            "title": "Qwen3",
+            "toc": True,
+            "children": [
+                {
+                    "path": "qwen3_tokenizer",
+                    "title": "Qwen3Tokenizer",
+                    "generate": [
+                        "keras_hub.tokenizers.Qwen3Tokenizer",
+                        "keras_hub.tokenizers.Qwen3Tokenizer.from_preset",
+                    ],
+                },
+                {
+                    "path": "qwen3_backbone",
+                    "title": "Qwen3Backbone model",
+                    "generate": [
+                        "keras_hub.models.Qwen3Backbone",
+                        "keras_hub.models.Qwen3Backbone.from_preset",
+                        "keras_hub.models.Qwen3Backbone.token_embedding",
+                        "keras_hub.models.Qwen3Backbone.enable_lora",
+                    ],
+                },
+                {
+                    "path": "qwen3_causal_lm",
+                    "title": "Qwen3CausalLM model",
+                    "generate": [
+                        "keras_hub.models.Qwen3CausalLM",
+                        "keras_hub.models.Qwen3CausalLM.from_preset",
+                        "keras_hub.models.Qwen3CausalLM.generate",
+                        "keras_hub.models.Qwen3CausalLM.backbone",
+                        "keras_hub.models.Qwen3CausalLM.preprocessor",
+                    ],
+                },
+                {
+                    "path": "qwen3_causal_lm_preprocessor",
+                    "title": "Qwen3CausalLMPreprocessor layer",
+                    "generate": [
+                        "keras_hub.models.Qwen3CausalLMPreprocessor",
+                        "keras_hub.models.Qwen3CausalLMPreprocessor.from_preset",
+                        "keras_hub.models.Qwen3CausalLMPreprocessor.tokenizer",
+                    ],
+                },
+            ],
+        },
+        {
             "path": "qwen_moe/",
             "title": "QwenMoe",
             "toc": True,
