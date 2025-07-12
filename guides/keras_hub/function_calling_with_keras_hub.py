@@ -181,11 +181,10 @@ def capture_code_output(code_string, globals_dict=None, locals_dict=None):
     """
     Executes Python code and captures any stdout output.
 
-    ⚠️  SECURITY WARNING ⚠️
+    
     This function uses eval() and exec() which can execute arbitrary code.
     NEVER use this function with untrusted code in production environments.
     Always validate and sanitize code from LLMs before execution.
-    Consider using a sandboxed environment or code analysis tools.
 
     Args:
         code_string (str): The code to execute (expression or statements).
