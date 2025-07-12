@@ -94,6 +94,10 @@ def convert(amount, currency, new_currency):
     if not isinstance(currency, str) or not isinstance(new_currency, str):
         raise ValueError("Currency codes must be strings")
 
+    # Normalize currency codes to uppercase to handle model-generated lowercase codes
+    currency = currency.upper().strip()
+    new_currency = new_currency.upper().strip()
+
     # In a real application, this function would call an API to get the latest
     # exchange rate. For this example, we'll just use a fixed rate.
     if currency == "USD" and new_currency == "EUR":
@@ -176,6 +180,12 @@ def extract_tool_call(response_text):
 def capture_code_output(code_string, globals_dict=None, locals_dict=None):
     """
     Executes Python code and captures any stdout output.
+
+    ⚠️  SECURITY WARNING ⚠️
+    This function uses eval() and exec() which can execute arbitrary code.
+    NEVER use this function with untrusted code in production environments.
+    Always validate and sanitize code from LLMs before execution.
+    Consider using a sandboxed environment or code analysis tools.
 
     Args:
         code_string (str): The code to execute (expression or statements).
@@ -276,11 +286,8 @@ def automated_tool_calling_example():
     # Initial user message
     user_message = "What is $500 in EUR, and then what is that amount in USD?"
 
-    for turn in range(max_turns):
-        print(f"\n--- Turn {turn + 1} ---")
-
-        # Build the conversation context
-        context = f'''
+    # Define base prompt outside the loop for better performance
+    base_prompt = f'''
 <start_of_turn>user
 At each turn, if you decide to invoke any of the function(s), it should be wrapped with ```tool_code```. The python methods described below are imported and available, you can only use defined methods and must not reimplement them. The generated code should be readable and efficient. I will provide the response wrapped in ```tool_output```, use it to call more tools or generate a helpful, friendly response. When using a ```tool_call``` think step by step why and how it should be used.
 
@@ -301,7 +308,11 @@ User: {user_message}<end_of_turn>
 <start_of_turn>model
 '''
 
-        # Add conversation history
+    for turn in range(max_turns):
+        print(f"\n--- Turn {turn + 1} ---")
+
+        # Build conversation context by appending history to base prompt
+        context = base_prompt
         for hist in conversation_history:
             context += hist + "\n"
 
@@ -477,8 +488,12 @@ We will extend our set of tools to include functions for currency conversion, fi
 tools = {
     "convert_currency": lambda amount, currency, new_currency: (
         f"{amount*USD_TO_EUR_RATE:.2f}"
-        if currency == "USD"
-        else f"{amount/USD_TO_EUR_RATE:.2f}"
+        if currency == "USD" and new_currency == "EUR"
+        else (
+            f"{amount/USD_TO_EUR_RATE:.2f}"
+            if currency == "EUR" and new_currency == "USD"
+            else f"Error: Unsupported conversion from {currency} to {new_currency}"
+        )
     ),
     "find_flights": lambda origin, destination, date: [
         {"id": 1, "price": "USD 220", "stops": 2, "duration": 4.5},
@@ -604,9 +619,23 @@ while not flight_booked and iteration_count < max_iterations:
     )
     print(response_text, f"\n\n\n{'-'*100}\n\n")
 
-    # Check if flight was booked by looking for the booking status
-    if "status" in response_text and "success" in response_text:
-        flight_booked = True
+    # Check for tool calls and track booking status
+    tool_call_id = tokenizer.token_to_id("[TOOL_CALLS]")
+    pos = np.where(res["token_ids"][0] == tool_call_id)[0]
+    if len(pos) > 0:
+        try:
+            decoder = json.JSONDecoder()
+            tool_calls, _ = decoder.raw_decode(
+                tokenizer.detokenize(res["token_ids"][0][pos[0] + 1 :])
+            )
+            if isinstance(tool_calls, list):
+                for call in tool_calls:
+                    if isinstance(call, dict) and call.get("name") == "book_flight":
+                        # Check if book_flight was called successfully
+                        flight_booked = True
+                        break
+        except (json.JSONDecodeError, KeyError, TypeError, ValueError):
+            pass
 
     # perform tool calls and extend `messages`
     messages.extend(try_parse_funccall(res["token_ids"][0]))
