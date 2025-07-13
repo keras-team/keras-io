@@ -63,7 +63,7 @@ scans can be found [here](https://www.kaggle.com/datasets/awsaf49/brats20-datase
 We have converted the raw format to `tfrecord` format. The format process can be found 
 [here](https://www.kaggle.com/code/ipythonx/brats-nii-to-tfrecord). The converted `tfrecord` dataset can 
 be found [here](https://www.kaggle.com/datasets/ipythonx/brats2020). Each `tfrecord` file contains max 10 
-file in each. As there is no publickly available validation or testing with ground truth dataset, we can keep 
+files in each. As there is no publicly available validation or testing with ground truth dataset, we can keep 
 any tfrecord file(s) aside from training for validation.
 
 [**Imaging Data Description**](https://www.med.upenn.edu/cbica/brats2020/data.html): All
