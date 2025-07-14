@@ -10,8 +10,7 @@ Description: Rank movies with DLRM with KerasRS
 ## Introduction
 
 This tutorial demonstrates how to use Deep Learning Recommendation Model (DLRM) to
-effectively
-learn relationship between movies and ratings using DotInteraction
+effectively learn relationship between movies and ratings using DotInteraction
 
 The Deep Learning Recommendation Model (DLRM) architecture is designed for more effective
 learning of explicit and bounded-degree features which performs well on both categrical and 
