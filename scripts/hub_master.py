@@ -2648,6 +2648,10 @@ HUB_GUIDES_MASTER = {
             "path": "hugging_face_keras_integration",
             "title": "Loading HuggingFace Transformers checkpoints into multi-backend KerasHub models",
         },
+        {
+            "path": "function_calling_with_keras_hub",
+            "title": "Function Calling with KerasHub models",
+        },
     ],
 }
 
