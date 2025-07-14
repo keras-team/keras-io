@@ -113,6 +113,7 @@ def read_data(data_directory, min_rating=None):
         sep="::",
         names=RATINGS_DATA_COLUMNS,
         encoding="unicode_escape",
+        engine="python",
     )
     ratings_df["Timestamp"] = ratings_df["Timestamp"].apply(int)
 
@@ -125,6 +126,7 @@ def read_data(data_directory, min_rating=None):
         sep="::",
         names=MOVIES_DATA_COLUMNS,
         encoding="unicode_escape",
+        engine="python",
     )
     return ratings_df, movies_df
 
