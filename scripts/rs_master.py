@@ -264,6 +264,10 @@ RS_EXAMPLES_MASTER = {
             "path": "sas_rec",
             "title": "Sequential retrieval using SASRec",
         },
+        {
+            "path": "distributed_embedding_jax",
+            "title": "DistributedEmbedding using TPU SparseCore and JAX",
+        },
     ],
 }
 
