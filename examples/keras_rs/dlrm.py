@@ -9,30 +9,38 @@ Description: Rank movies with DLRM with KerasRS
 """
 ## Introduction
 
-This tutorial demonstrates how to use Deep Learning Recommendation Model (DLRM) to
-effectively learn relationship between movies and ratings using DotInteraction
+This tutorial demonstrates how to use the Deep Learning Recommendation Model (DLRM) to
+effectively learn the relationships between items and user preferences using a
+dot-product interaction mechanism. For more details, please refer to the
+[DLRM](https://arxiv.org/pdf/1906.00091) paper.
 
-The Deep Learning Recommendation Model (DLRM) architecture is designed for more effective
-learning of explicit and bounded-degree features which performs well on both categrical and 
-continuous (sparse/dense) features. It comprises of three main components: input layers 
-(typically an embedding layer for each feature), a dot interaction layer for modeling explicit 
-feature interactions, and MLP based deep network for capturing implicit interactions.
+DLRM is designed to excel at capturing explicit, bounded-degree feature interactions and
+is particularly effective at processing both categorical and continuous (sparse/dense)
+input features. The architecture consists of three main components: dedicated input
+layers to handle diverse features (typically embedding layers for categorical features),
+a dot-product interaction layer to explicitly model feature interactions, and a
+Multi-Layer Perceptron (MLP) to capture implicit feature relationships.
 
-The dot interaction layer is the core of the DLRM, which computes the pairwise dot
-products between different feature embeddings.
+The dot-product interaction layer lies at the heart of DLRM, efficiently computing
+pairwise interactions between different feature embeddings. This contrasts with models
+like Deep & Cross Network (DCN), which can treat elements within a feature vector as
+independent units, potentially leading to a higher-dimensional space and increased
+computational cost. The MLP is a standard feedforward network. The DLRM is formed by
+combining the interaction layer and MLP.
 
-The deep network is a standard feedforward multilayer perceptron
-(MLP). These two networks are then combined to form the DLRM.
+The following image illustrates the DLRM architecture:
 
-Now that we know a little bit about DLRM, let's start writing some code. We will
-first train a DLRM on a real-world dataset, and demonstrate that the model has indeed
-learnt important feature crosses.
+![DLRM Architecture](https://raw.githubusercontent.com/kharshith-k/keras-io/refs/heads/keras-rs-examples/examples/keras_rs/img/dlrm/dlrm_architecture.gif)
 
-Let's set the backend to JAX, and get our imports sorted.
+
+Now that we have a foundational understanding of DLRM's architecture and key
+characteristics, let's dive into the code. We will train a DLRM on a real-world dataset
+to demonstrate its capability to learn meaningful feature interactions. Let's begin by
+setting the backend to JAX and organizing our imports.
 """
 
 """shell
-!pip install  jax_tpu_embedding keras-rs
+!pip install keras-rs
 """
 
 import os
@@ -330,7 +338,7 @@ print_stats(
 
 The DotInteraction layer itself doesn't have a conventional "weight" matrix like a Dense
 layer. Instead, its function is to compute the dot product between the embedding vectors
-of features.
+of your features.
 
 To visualize the strength of these interactions, we can calculate a matrix representing
 the pairwise interaction strength between all feature embeddings. A common way to do this
