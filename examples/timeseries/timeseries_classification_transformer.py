@@ -75,16 +75,16 @@ def transformer_encoder(inputs, head_size, num_heads, ff_dim, dropout=0):
         key_dim=head_size, num_heads=num_heads, dropout=dropout
     )(inputs, inputs)
     x = layers.Dropout(dropout)(x)
-    res = x + inputs
-    x = layers.LayerNormalization(epsilon=1e-6)(res) 
+    x = x + inputs
+    x = layers.LayerNormalization(epsilon=1e-6)(x) 
 
     # Feed Forward Part
     ffn_input = x
     x = layers.Conv1D(filters=ff_dim, kernel_size=1, activation="relu")(ffn_input)
     x = layers.Dropout(dropout)(x)
     x = layers.Conv1D(filters=inputs.shape[-1], kernel_size=1)(x)
-    res = ffn_input + x
-    x = layers.LayerNormalization(epsilon=1e-6)(res)
+    x = ffn_input + x
+    x = layers.LayerNormalization(epsilon=1e-6)(x)
     return x
 
 
