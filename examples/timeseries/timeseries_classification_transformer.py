@@ -1,10 +1,19 @@
 """
-Title: Timeseries classification with a Transformer model
-Author: [Theodoros Ntakouris](https://github.com/ntakouris)
-Date created: 2021/06/25
-Last modified: 2021/08/05
-Description: This notebook demonstrates how to do timeseries classification using a Transformer model.
-Accelerator: GPU
+Title: FILLME
+Author: FILLME
+Date created: FILLME
+Last modified: FILLME
+Description: FILLME
+"""
+
+"""
+# Timeseries classification with a Transformer model
+
+**Author:** [Theodoros Ntakouris](https://github.com/ntakouris)<br>
+**Date created:** 2021/06/25<br>
+**Last modified:** 2024/12/18<br>
+**Description:** This notebook demonstrates how to do timeseries classification using a
+Transformer model.
 """
 
 """
@@ -19,7 +28,8 @@ This example requires TensorFlow 2.4 or higher.
 ## Load the dataset
 
 We are going to use the same dataset and preprocessing as the
-[TimeSeries Classification from Scratch](https://keras.io/examples/timeseries/timeseries_classification_from_scratch)
+[TimeSeries Classification from
+Scratch](https://keras.io/examples/timeseries/timeseries_classification_from_scratch)
 example.
 """
 
@@ -111,8 +121,9 @@ def build_model(
     x = inputs
     for _ in range(num_transformer_blocks):
         x = transformer_encoder(x, head_size, num_heads, ff_dim, dropout)
-
-    x = layers.GlobalAveragePooling1D(data_format="channels_last")(x)
+    print(f"Transformer Encoder: {x}")
+    x = layers.GlobalAveragePooling1D(data_format="channels_first")(x)
+    print(f"Global Average Pooling: {x}")
     for dim in mlp_units:
         x = layers.Dense(dim, activation="relu")(x)
         x = layers.Dropout(mlp_dropout)(x)
@@ -144,6 +155,7 @@ model.compile(
 )
 model.summary()
 
+
 callbacks = [keras.callbacks.EarlyStopping(patience=10, restore_best_weights=True)]
 
 model.fit(
@@ -160,11 +172,10 @@ model.evaluate(x_test, y_test, verbose=1)
 """
 ## Conclusions
 
-In about 110-120 epochs (25s each on Colab), the model reaches a training
-accuracy of ~0.95, validation accuracy of ~84 and a testing
+In about 100-102 epochs (25s each on Colab), the model reaches a training
+accuracy of ~0.94, validation accuracy of ~84 and a testing
 accuracy of ~85, without hyperparameter tuning. And that is for a model
 with less than 100k parameters. Of course, parameter count and accuracy could be
 improved by a hyperparameter search and a more sophisticated learning rate
 schedule, or a different optimizer.
-
 """
