@@ -122,8 +122,7 @@ Now that we have a tool, we need to tell the Gemma 3 model about it. We do this 
 Here's the prompt we'll use:
 """
 
-message = '''
-<start_of_turn>user
+message = '''<start_of_turn>user
 At each turn, if you decide to invoke any of the function(s), it should be wrapped with ```tool_code```. The python methods described below are imported and available, you can only use defined methods and must not reimplement them. The generated code should be readable and efficient. I will provide the response wrapped in ```tool_output```, use it to call more tools or generate a helpful, friendly response. When using a ```tool_call``` think step by step why and how it should be used.
 
 The following Python methods are available:
@@ -181,7 +180,7 @@ def capture_code_output(code_string, globals_dict=None, locals_dict=None):
     """
     Executes Python code and captures any stdout output.
 
-    
+
     This function uses eval() and exec() which can execute arbitrary code.
     NEVER use this function with untrusted code in production environments.
     Always validate and sanitize code from LLMs before execution.
@@ -229,8 +228,7 @@ if tool_code:
         print(f"Tool execution result: {tool_result}")
 
         # Create the next message with the tool result
-        message_with_result = f'''
-<start_of_turn>user
+        message_with_result = f'''<start_of_turn>user
 At each turn, if you decide to invoke any of the function(s), it should be wrapped with ```tool_code```. The python methods described below are imported and available, you can only use defined methods and must not reimplement them. The generated code should be readable and efficient. I will provide the response wrapped in ```tool_output```, use it to call more tools or generate a helpful, friendly response. When using a ```tool_call``` think step by step why and how it should be used.
 
 The following Python methods are available:
@@ -286,8 +284,7 @@ def automated_tool_calling_example():
     user_message = "What is $500 in EUR, and then what is that amount in USD?"
 
     # Define base prompt outside the loop for better performance
-    base_prompt = f'''
-<start_of_turn>user
+    base_prompt = f'''<start_of_turn>user
 At each turn, if you decide to invoke any of the function(s), it should be wrapped with ```tool_code```. The python methods described below are imported and available, you can only use defined methods and must not reimplement them. The generated code should be readable and efficient. I will provide the response wrapped in ```tool_output```, use it to call more tools or generate a helpful, friendly response. When using a ```tool_call``` think step by step why and how it should be used.
 
 The following Python methods are available:
@@ -654,20 +651,24 @@ Book the most comfortable flight from Linz to London on the 24th of July 2025, b
 ```
 [{"name": "find_flights", "arguments": {"origin": "Linz", "destination": "London", "date": "20250724"}}]
 ```
+
 * **Tool Output:**
 ```
 [{"id": 1, "price": "USD 220", "stops": 2, "duration": 4.5}, {"id": 2, "price": "USD 22", "stops": 1, "duration": 2.0}, {"id": 3, "price": "USD 240", "stops": 2, "duration": 13.2}]
 ```
+
 * **Model:**
 ```
 Now let's convert the price from USD to EUR using the latest exchange rate:
 
  [{"name": "convert_currency", "arguments": {"amount": 22, "currency": "USD", "new_currency": "EUR"}}]
 ```
+
 * **Tool Output:**
 ```
 "18.70"
 ```
+
 * **Model:**
 ```
 The price of the flight with the id 2 in EUR is 18.70. Since it is below the 20€ limit, let's book this flight:
