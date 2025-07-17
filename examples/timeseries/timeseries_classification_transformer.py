@@ -68,6 +68,9 @@ The resulting layer can be stacked multiple times.
 The projection layers are implemented through `keras.layers.Conv1D`.
 """
 
+# This implementation applies Layer Normalization before the residual connection 
+# to improve training stability by producing better-behaved gradients and often 
+# eliminating the need for learning rate warm-up.
 
 def transformer_encoder(inputs, head_size, num_heads, ff_dim, dropout=0):
     # Attention and Normalization
@@ -75,17 +78,15 @@ def transformer_encoder(inputs, head_size, num_heads, ff_dim, dropout=0):
         key_dim=head_size, num_heads=num_heads, dropout=dropout
     )(inputs, inputs)
     x = layers.Dropout(dropout)(x)
-    x = x + inputs
-    x = layers.LayerNormalization(epsilon=1e-6)(x) 
+    x = layers.LayerNormalization(epsilon=1e-6)(x)
+    res = x + inputs
 
     # Feed Forward Part
-    res = x
     x = layers.Conv1D(filters=ff_dim, kernel_size=1, activation="relu")(res)
     x = layers.Dropout(dropout)(x)
     x = layers.Conv1D(filters=inputs.shape[-1], kernel_size=1)(x)
-    x = res + x
     x = layers.LayerNormalization(epsilon=1e-6)(x)
-    return x
+    return x + res
 
 
 """
