@@ -128,6 +128,7 @@ At each turn, if you decide to invoke any of the function(s), it should be wrapp
 
 The following Python methods are available:
 
+~~~python
 ```python
 def convert(amount, currency, new_currency):
     """Convert the currency with the latest exchange rate
@@ -138,6 +139,7 @@ def convert(amount, currency, new_currency):
       new_currency: The currency to convert to
     """
 ```
+~~~
 
 User: What is $200,000 in EUR?<end_of_turn>
 <start_of_turn>model
@@ -181,7 +183,7 @@ def capture_code_output(code_string, globals_dict=None, locals_dict=None):
     """
     Executes Python code and captures any stdout output.
 
-    
+
     This function uses eval() and exec() which can execute arbitrary code.
     NEVER use this function with untrusted code in production environments.
     Always validate and sanitize code from LLMs before execution.
@@ -235,6 +237,7 @@ At each turn, if you decide to invoke any of the function(s), it should be wrapp
 
 The following Python methods are available:
 
+~~~python
 ```python
 def convert(amount, currency, new_currency):
     """Convert the currency with the latest exchange rate
@@ -245,6 +248,7 @@ def convert(amount, currency, new_currency):
       new_currency: The currency to convert to
     """
 ```
+~~~
 
 User: What is $200,000 in EUR?<end_of_turn>
 <start_of_turn>model
@@ -292,6 +296,7 @@ At each turn, if you decide to invoke any of the function(s), it should be wrapp
 
 The following Python methods are available:
 
+~~~python
 ```python
 def convert(amount, currency, new_currency):
     """Convert the currency with the latest exchange rate
@@ -302,6 +307,7 @@ def convert(amount, currency, new_currency):
       new_currency: The currency to convert to
     """
 ```
+~~~
 
 User: {user_message}<end_of_turn>
 <start_of_turn>model
