@@ -237,7 +237,9 @@ At each turn, if you decide to invoke any of the function(s), it should be wrapp
 
 The following Python methods are available:
 
-<pre><code>def convert(amount, currency, new_currency):
+~~~python
+```python
+def convert(amount, currency, new_currency):
     """Convert the currency with the latest exchange rate
 
     Args:
@@ -245,7 +247,8 @@ The following Python methods are available:
       currency: The currency to convert from
       new_currency: The currency to convert to
     """
-</code></pre>
+```
+~~~
 
 User: What is $200,000 in EUR?<end_of_turn>
 <start_of_turn>model
@@ -292,7 +295,9 @@ At each turn, if you decide to invoke any of the function(s), it should be wrapp
 
 The following Python methods are available:
 
-<pre><code>def convert(amount, currency, new_currency):
+~~~python
+```python
+def convert(amount, currency, new_currency):
     """Convert the currency with the latest exchange rate
 
     Args:
@@ -300,7 +305,8 @@ The following Python methods are available:
       currency: The currency to convert from
       new_currency: The currency to convert to
     """
-</code></pre>
+```
+~~~
 
 User: {user_message}<end_of_turn>
 <start_of_turn>model
