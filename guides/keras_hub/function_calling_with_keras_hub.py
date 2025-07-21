@@ -181,7 +181,7 @@ def capture_code_output(code_string, globals_dict=None, locals_dict=None):
     """
     Executes Python code and captures any stdout output.
 
-    
+
     This function uses eval() and exec() which can execute arbitrary code.
     NEVER use this function with untrusted code in production environments.
     Always validate and sanitize code from LLMs before execution.
@@ -316,7 +316,7 @@ User: {user_message}<end_of_turn>
             context += hist + "\n"
 
         # Get model response
-        response = gemma.generate(context)
+        response = gemma.generate(context, strip_prompt=True)
         print(f"Model response: {response}")
 
         # Extract tool call
@@ -340,6 +340,7 @@ User: {user_message}<end_of_turn>
                 break
         else:
             print("No tool call found - conversation complete")
+            conversation_history.append(response)
             break
 
     print("\n--- Final Conversation ---")
