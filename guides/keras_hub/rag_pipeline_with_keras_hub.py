@@ -3,13 +3,10 @@ Title: RAG Pipeline with KerasHub
 Author: [Laxmareddy Patlolla](https://github.com/laxmareddyp), [Divyashree Sreepathihalli](https://github.com/divyashreepathihalli)
 Date created: 2025/07/22
 Last modified: 2025/07/22
-Description: RAG pipeline for MRI: image retrieval, context search, and report generation.
+Description: RAG pipeline for brain MRI analysis: image retrieval, context search, and report generation.
 Accelerator: GPU
-"""
 
-# =============================================================================
-# INTRODUCTION
-# =============================================================================
+"""
 
 """
 ## Introduction
@@ -25,7 +22,7 @@ using KerasHub models. We'll show you how to:
 1. Load and configure Vision Transformer (ViT) and Gemma3 language models
 2. Process brain MRI images and extract meaningful features
 3. Implement similarity search for retrieving relevant medical reports
-4. Generate comprehensive radiology reports using retrieved context
+4. Generate comprehensive radiology reports using retrieved contex
 5. Compare RAG approach with direct vision-language model generation
 
 This pipeline demonstrates how to build a sophisticated medical AI system that can:
@@ -36,10 +33,6 @@ This pipeline demonstrates how to build a sophisticated medical AI system that c
 
 Let's get started!
 """
-
-# =============================================================================
-# SETUP
-# =============================================================================
 
 """
 ## Setup
@@ -61,25 +54,17 @@ import os
 
 os.environ["KERAS_BACKEND"] = "jax"
 import keras
-import json
 import numpy as np
 
 keras.config.set_dtype_policy("bfloat16")
 import keras_hub
-import kagglehub
-import requests
 from PIL import Image
 import matplotlib.pyplot as plt
-
-# from medmnist import PathMNIST
 from nilearn import datasets, image
 
-# =============================================================================
-# MODEL LOADING AND CONFIGURATION
-# =============================================================================
 
 """
-Model Loading
+## Model Loading
 
 Loads the vision model (for image feature extraction) and the Gemma3 vision-language model (for report generation). Returns both models for use in the RAG pipeline.
 """
@@ -104,12 +89,8 @@ def load_models():
     return vision_model, vlm_model
 
 
-# =============================================================================
-# DATA PREPARATION AND PROCESSING
-# =============================================================================
-
 """
-Image and Caption Preparation
+## Image and Caption Preparation
 
 Prepares OASIS brain MRI images and generates captions for each image. Returns lists of image paths and captions.
 """
@@ -146,12 +127,8 @@ def prepare_images_and_captions(oasis, images_dir="images"):
     return image_paths, captions
 
 
-# =============================================================================
-# VISUALIZATION UTILITIES
-# =============================================================================
-
 """
-Image Visualization Utility
+## Image Visualization Utility
 
 Displays a set of processed brain MRI images with their corresponding captions.
 """
@@ -177,7 +154,7 @@ def visualize_images(image_paths, captions):
 
 
 """
-Prediction Visualization Utility
+##Prediction Visualization Utility
 
 Displays the query image and the most similar retrieved image from the database side by side.
 """
@@ -205,12 +182,8 @@ def visualize_prediction(query_img_path, db_image_paths, best_idx, db_reports):
     plt.show()
 
 
-# =============================================================================
-# FEATURE EXTRACTION AND PROCESSING
-# =============================================================================
-
 """
-Image Feature Extraction
+##Image Feature Extraction
 
 Extracts a feature vector from an image using the vision model.
 """
@@ -234,23 +207,19 @@ def extract_image_features(img_path, vision_model):
     return features
 
 
-# =============================================================================
-# DATABASE CONFIGURATION
-# =============================================================================
+"""
+## DB Reports
 
-# Example radiology reports for each DB image (replace with real reports if available)
+List of example radiology reports corresponding to each database image. Used as context for the RAG pipeline to generate new reports for query images.
+"""
 db_reports = [
     "MRI shows a 1.5cm lesion in the right frontal lobe, non-enhancing, no edema.",
     "Normal MRI scan, no abnormal findings.",
     "Diffuse atrophy noted, no focal lesions.",
 ]
 
-# =============================================================================
-# TEXT PROCESSING AND CLEANING
-# =============================================================================
-
 """
-Output Cleaning Utility
+##Output Cleaning Utility
 
 Cleans the generated text output by removing prompt echoes and unwanted headers.
 """
@@ -267,11 +236,11 @@ def clean_generated_output(generated_text, prompt):
     Returns:
         str: Cleaned text without prompt echo and headers
     """
-    # Remove the prompt from the beginning of the generated text
+    # Remove the prompt from the beginning of the generated tex
     if generated_text.startswith(prompt):
         cleaned_text = generated_text[len(prompt) :].strip()
     else:
-        # If prompt is not at the beginning, try to find and remove it
+        # If prompt is not at the beginning, try to find and remove i
         cleaned_text = generated_text.replace(prompt, "").strip()
 
     # Remove header details
@@ -311,12 +280,8 @@ def clean_generated_output(generated_text, prompt):
     return cleaned_text
 
 
-# =============================================================================
-# RAG PIPELINE IMPLEMENTATION
-# =============================================================================
-
 """
-RAG Pipeline
+## RAG Pipeline
 
 Implements the Retrieval-Augmented Generation (RAG) pipeline:
 - Extracts features from the query image and database images.
@@ -355,7 +320,7 @@ def rag_pipeline(query_img_path, db_image_paths, db_reports, vision_model, vlm_m
     print(f"[RAG] Matched image index: {best_idx}")
     print(f"[RAG] Matched image path: {db_image_paths[best_idx]}")
     print(f"[RAG] Retrieved context/report:\n{retrieved_report}\n")
-    # Prepare the prompt
+    # Prepare the promp
     PROMPT_TEMPLATE = (
         "Context:\n{context}\n\n"
         "Based on the above radiology report and the provided brain MRI image, please:\n"
@@ -376,17 +341,13 @@ def rag_pipeline(query_img_path, db_image_paths, db_reports, vision_model, vlm_m
             "prompts": prompt,
         }
     )
-    # Clean the generated output
+    # Clean the generated outpu
     cleaned_output = clean_generated_output(output, prompt)
     return best_idx, retrieved_report, cleaned_output
 
 
-# =============================================================================
-# VISION-LANGUAGE MODEL (DIRECT APPROACH)
-# =============================================================================
-
 """
-Vision-Language Model (Direct Approach)
+##Vision-Language Model (Direct Approach)
 
 Generates a radiology report directly from the query image using the Gemma3 VLM, without retrieval.
 """
@@ -400,7 +361,7 @@ def vlm_generate_report(query_img_path, vlm_model, question=None):
         vlm_model: Pre-trained vision-language model (Gemma3 VLM)
         question (str): Optional question or prompt to include
     Returns:
-        str: Generated radiology report
+        str: Generated radiology repor
     """
     PROMPT_TEMPLATE = (
         "Based on the provided brain MRI image, please:\n"
@@ -422,19 +383,15 @@ def vlm_generate_report(query_img_path, vlm_model, question=None):
             "prompts": PROMPT_TEMPLATE.format(question=question),
         }
     )
-    # Clean the generated output
+    # Clean the generated outpu
     cleaned_output = clean_generated_output(
         output, PROMPT_TEMPLATE.format(question=question)
     )
     return cleaned_output
 
 
-# =============================================================================
-# MAIN EXECUTION
-# =============================================================================
-
 """
-Main Execution
+##Main Execution
 
 Runs the RAG pipeline: loads models, prepares data, and displays results.
 """
@@ -444,7 +401,7 @@ if __name__ == "__main__":
 
     This script demonstrates:
     1. Loading pre-trained vision and language models
-    2. Processing OASIS brain MRI dataset
+    2. Processing OASIS brain MRI datase
     3. Implementing RAG pipeline with retrieval and generation
     4. Comparing RAG approach with direct VLM approach
     """
@@ -493,24 +450,21 @@ if __name__ == "__main__":
     print("\n--- Vision-Language Model (No Retrieval) Report ---\n", vlm_report)
 
 """
-Comparison: RAG Pipeline vs. Direct VLM
+##Comparison: RAG Pipeline vs Direct VLM
 
 - RAG pipeline (ViT + Gemma3 model): Produces more accurate and contextually relevant outputs by retrieving the most similar case and using its report as context for generation.
 - Gemma3 VLM (direct, no retrieval): Produces more generic and often less accurate outputs, as the model does not have access to relevant context from similar cases.
 
 In practice, the RAG approach leverages both image similarity and prior knowledge to generate more precise and clinically meaningful reports, while the direct VLM approach is limited to general knowledge and lacks case-specific context.
 """
-# =============================================================================
-# CONCLUSION
-# =============================================================================
 
 """
 ## Conclusion
 
-This demonstration showcases the power of Retrieval-Augmented Generation (RAG) in
-combining vision and language models for intelligent analysis using kerashub models.
+This demonstration showcases the power of Retrieval-Augmented Generation (RAG) in combining vision and language models for intelligent analysis using KerasHub models.
 
 **Key Achievements:**
+
 - Model Integration: Vision Transformer + Gemma3 LLM via KerasHub
 - Feature Extraction: Meaningful features from brain MRI images
 - Similarity Search: Efficient retrieval of relevant context
@@ -518,18 +472,14 @@ combining vision and language models for intelligent analysis using kerashub mod
 - Comparison Analysis: RAG vs direct VLM approaches
 
 **Key Benefits:**
+
 - Enhanced Accuracy: More contextually relevant outputs
 - Scalable Architecture: Easy to extend with different models
 - KerasHub Integration: State-of-the-art models efficiently
 - Real-world Applicability: Various vision-language tasks
 
-This guide demonstrates how KerasHub enables rapid prototyping and deployment
-of advanced AI systems for real-world applications.
+This guide demonstrates how KerasHub enables rapid prototyping and deployment of advanced AI systems for real-world applications.
 """
-
-# =============================================================================
-# SECURITY WARNING
-# =============================================================================
 
 """
 ## Security Warning
@@ -537,6 +487,7 @@ of advanced AI systems for real-world applications.
 ⚠️ **IMPORTANT SECURITY AND PRIVACY CONSIDERATIONS**
 
 This pipeline is for educational purposes only. For production use:
+
 - Anonymize medical data following HIPAA guidelines
 - Implement access controls and encryption
 - Validate inputs and secure APIs

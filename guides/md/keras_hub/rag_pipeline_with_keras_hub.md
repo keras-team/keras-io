@@ -3,19 +3,12 @@
 **Author:** [Laxmareddy Patlolla](https://github.com/laxmareddyp), [Divyashree Sreepathihalli](https://github.com/divyashreepathihalli)<br>
 **Date created:** 2025/07/22<br>
 **Last modified:** 2025/07/22<br>
-**Description:** RAG pipeline for MRI: image retrieval, context search, and report generation.
+**Description:** RAG pipeline for brain MRI analysis: image retrieval, context search, and report generation.
 
 
 <img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/guides/ipynb/keras_hub/rag_pipeline_with_keras_hub.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/guides/keras_hub/rag_pipeline_with_keras_hub.py)
 
 
-
-
-```python
-# =============================================================================
-# INTRODUCTION
-# =============================================================================
-```
 
 ---
 ## Introduction
@@ -31,7 +24,7 @@ using KerasHub models. We'll show you how to:
 1. Load and configure Vision Transformer (ViT) and Gemma3 language models
 2. Process brain MRI images and extract meaningful features
 3. Implement similarity search for retrieving relevant medical reports
-4. Generate comprehensive radiology reports using retrieved context
+4. Generate comprehensive radiology reports using retrieved contex
 5. Compare RAG approach with direct vision-language model generation
 
 This pipeline demonstrates how to build a sophisticated medical AI system that can:
@@ -41,13 +34,6 @@ This pipeline demonstrates how to build a sophisticated medical AI system that c
 - Provide diagnostic impressions and treatment recommendations
 
 Let's get started!
-
-
-```python
-# =============================================================================
-# SETUP
-# =============================================================================
-```
 
 ---
 ## Setup
@@ -68,37 +54,30 @@ import os
 
 os.environ["KERAS_BACKEND"] = "jax"
 import keras
-import json
 import numpy as np
 
 keras.config.set_dtype_policy("bfloat16")
 import keras_hub
-import kagglehub
-import requests
 from PIL import Image
 import matplotlib.pyplot as plt
-
-# from medmnist import PathMNIST
 from nilearn import datasets, image
 
-# =============================================================================
-# MODEL LOADING AND CONFIGURATION
-# =============================================================================
 ```
 
 <div class="k-default-codeblock">
 ```
 WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
-E0000 00:00:1753170679.520139   30164 cuda_dnn.cc:8579] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered
-E0000 00:00:1753170679.524906   30164 cuda_blas.cc:1407] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
-W0000 00:00:1753170679.536639   30164 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
-W0000 00:00:1753170679.536652   30164 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
-W0000 00:00:1753170679.536653   30164 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
-W0000 00:00:1753170679.536655   30164 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+E0000 00:00:1753176247.504811   34999 cuda_dnn.cc:8579] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered
+E0000 00:00:1753176247.509156   34999 cuda_blas.cc:1407] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
+W0000 00:00:1753176247.520234   34999 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1753176247.520247   34999 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1753176247.520249   34999 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1753176247.520250   34999 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
 ```
 </div>
 
-Model Loading
+---
+## Model Loading
 
 Loads the vision model (for image feature extraction) and the Gemma3 vision-language model (for report generation). Returns both models for use in the RAG pipeline.
 
@@ -123,13 +102,10 @@ def load_models():
     vlm_model = keras_hub.models.Gemma3CausalLM.from_preset("gemma3_instruct_4b")
     return vision_model, vlm_model
 
-
-# =============================================================================
-# DATA PREPARATION AND PROCESSING
-# =============================================================================
 ```
 
-Image and Caption Preparation
+---
+## Image and Caption Preparation
 
 Prepares OASIS brain MRI images and generates captions for each image. Returns lists of image paths and captions.
 
@@ -166,13 +142,10 @@ def prepare_images_and_captions(oasis, images_dir="images"):
     print("Saved 4 OASIS Brain MRI images:", image_paths)
     return image_paths, captions
 
-
-# =============================================================================
-# VISUALIZATION UTILITIES
-# =============================================================================
 ```
 
-Image Visualization Utility
+---
+## Image Visualization Utility
 
 Displays a set of processed brain MRI images with their corresponding captions.
 
@@ -199,7 +172,7 @@ def visualize_images(image_paths, captions):
 
 ```
 
-Prediction Visualization Utility
+##Prediction Visualization Utility
 
 Displays the query image and the most similar retrieved image from the database side by side.
 
@@ -227,13 +200,9 @@ def visualize_prediction(query_img_path, db_image_paths, best_idx, db_reports):
     plt.tight_layout()
     plt.show()
 
-
-# =============================================================================
-# FEATURE EXTRACTION AND PROCESSING
-# =============================================================================
 ```
 
-Image Feature Extraction
+##Image Feature Extraction
 
 Extracts a feature vector from an image using the vision model.
 
@@ -257,24 +226,23 @@ def extract_image_features(img_path, vision_model):
     features = vision_model(x)
     return features
 
+```
 
-# =============================================================================
-# DATABASE CONFIGURATION
-# =============================================================================
+---
+## DB Reports
 
-# Example radiology reports for each DB image (replace with real reports if available)
+List of example radiology reports corresponding to each database image. Used as context for the RAG pipeline to generate new reports for query images.
+
+
+```python
 db_reports = [
     "MRI shows a 1.5cm lesion in the right frontal lobe, non-enhancing, no edema.",
     "Normal MRI scan, no abnormal findings.",
     "Diffuse atrophy noted, no focal lesions.",
 ]
-
-# =============================================================================
-# TEXT PROCESSING AND CLEANING
-# =============================================================================
 ```
 
-Output Cleaning Utility
+##Output Cleaning Utility
 
 Cleans the generated text output by removing prompt echoes and unwanted headers.
 
@@ -292,11 +260,11 @@ def clean_generated_output(generated_text, prompt):
     Returns:
         str: Cleaned text without prompt echo and headers
     """
-    # Remove the prompt from the beginning of the generated text
+    # Remove the prompt from the beginning of the generated tex
     if generated_text.startswith(prompt):
         cleaned_text = generated_text[len(prompt) :].strip()
     else:
-        # If prompt is not at the beginning, try to find and remove it
+        # If prompt is not at the beginning, try to find and remove i
         cleaned_text = generated_text.replace(prompt, "").strip()
 
     # Remove header details
@@ -335,13 +303,10 @@ def clean_generated_output(generated_text, prompt):
 
     return cleaned_text
 
-
-# =============================================================================
-# RAG PIPELINE IMPLEMENTATION
-# =============================================================================
 ```
 
-RAG Pipeline
+---
+## RAG Pipeline
 
 Implements the Retrieval-Augmented Generation (RAG) pipeline:
 - Extracts features from the query image and database images.
@@ -381,7 +346,7 @@ def rag_pipeline(query_img_path, db_image_paths, db_reports, vision_model, vlm_m
     print(f"[RAG] Matched image index: {best_idx}")
     print(f"[RAG] Matched image path: {db_image_paths[best_idx]}")
     print(f"[RAG] Retrieved context/report:\n{retrieved_report}\n")
-    # Prepare the prompt
+    # Prepare the promp
     PROMPT_TEMPLATE = (
         "Context:\n{context}\n\n"
         "Based on the above radiology report and the provided brain MRI image, please:\n"
@@ -402,17 +367,13 @@ def rag_pipeline(query_img_path, db_image_paths, db_reports, vision_model, vlm_m
             "prompts": prompt,
         }
     )
-    # Clean the generated output
+    # Clean the generated outpu
     cleaned_output = clean_generated_output(output, prompt)
     return best_idx, retrieved_report, cleaned_output
 
-
-# =============================================================================
-# VISION-LANGUAGE MODEL (DIRECT APPROACH)
-# =============================================================================
 ```
 
-Vision-Language Model (Direct Approach)
+##Vision-Language Model (Direct Approach)
 
 Generates a radiology report directly from the query image using the Gemma3 VLM, without retrieval.
 
@@ -427,7 +388,7 @@ def vlm_generate_report(query_img_path, vlm_model, question=None):
         vlm_model: Pre-trained vision-language model (Gemma3 VLM)
         question (str): Optional question or prompt to include
     Returns:
-        str: Generated radiology report
+        str: Generated radiology repor
     """
     PROMPT_TEMPLATE = (
         "Based on the provided brain MRI image, please:\n"
@@ -449,19 +410,15 @@ def vlm_generate_report(query_img_path, vlm_model, question=None):
             "prompts": PROMPT_TEMPLATE.format(question=question),
         }
     )
-    # Clean the generated output
+    # Clean the generated outpu
     cleaned_output = clean_generated_output(
         output, PROMPT_TEMPLATE.format(question=question)
     )
     return cleaned_output
 
-
-# =============================================================================
-# MAIN EXECUTION
-# =============================================================================
 ```
 
-Main Execution
+##Main Execution
 
 Runs the RAG pipeline: loads models, prepares data, and displays results.
 
@@ -473,7 +430,7 @@ if __name__ == "__main__":
 
     This script demonstrates:
     1. Loading pre-trained vision and language models
-    2. Processing OASIS brain MRI dataset
+    2. Processing OASIS brain MRI datase
     3. Implementing RAG pipeline with retrieval and generation
     4. Comparing RAG approach with direct VLM approach
     """
@@ -526,499 +483,13 @@ if __name__ == "__main__":
 ```
 Loading models...
 
-Downloading from https://www.kaggle.com/api/v1/models/keras/vit/keras/vit_large_patch32_384_imagenet/2/download/config.json...
-```
-</div>
-
-  0%|                                                                                                                                                               | 0.00/699 [00:00<?, ?B/s]
-
-    
-100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 699/699 [00:00<00:00, 2.17MB/s]
-
-    
-
-
-<div class="k-default-codeblock">
-```
-Downloading from https://www.kaggle.com/api/v1/models/keras/vit/keras/vit_large_patch32_384_imagenet/2/download/model.weights.h5...
-```
-</div>
-
-  0%|                                                                                                                                                             | 0.00/1.14G [00:00<?, ?B/s]
-
-    
-  0%|▏                                                                                                                                                   | 1.00M/1.14G [00:00<03:40, 5.54MB/s]
-
-    
-  1%|█▏                                                                                                                                                  | 9.00M/1.14G [00:00<00:31, 38.0MB/s]
-
-    
-  2%|██▍                                                                                                                                                 | 19.0M/1.14G [00:00<00:20, 60.1MB/s]
-
-    
-  2%|███▎                                                                                                                                                | 26.0M/1.14G [00:00<00:27, 42.8MB/s]
-
-    
-  3%|████                                                                                                                                                | 32.0M/1.14G [00:00<00:29, 40.3MB/s]
-
-    
-  3%|████▋                                                                                                                                               | 37.0M/1.14G [00:00<00:31, 37.8MB/s]
-
-    
-  4%|█████▎                                                                                                                                              | 42.0M/1.14G [00:01<00:34, 34.7MB/s]
-
-    
-  4%|██████                                                                                                                                              | 48.0M/1.14G [00:01<00:34, 34.0MB/s]
-
-    
-  5%|██████▊                                                                                                                                             | 54.0M/1.14G [00:01<00:32, 35.5MB/s]
-
-    
-  5%|███████▎                                                                                                                                            | 58.0M/1.14G [00:01<00:34, 33.8MB/s]
-
-    
-  6%|████████▋                                                                                                                                           | 68.0M/1.14G [00:01<00:23, 48.3MB/s]
-
-    
-  6%|█████████▌                                                                                                                                          | 75.0M/1.14G [00:01<00:22, 51.4MB/s]
-
-    
-  7%|██████████▎                                                                                                                                         | 81.0M/1.14G [00:02<00:23, 49.2MB/s]
-
-    
-  7%|███████████                                                                                                                                         | 87.0M/1.14G [00:02<00:22, 51.1MB/s]
-
-    
-  8%|███████████▊                                                                                                                                        | 93.0M/1.14G [00:02<00:24, 45.6MB/s]
-
-    
-  9%|█████████████▎                                                                                                                                       | 104M/1.14G [00:02<00:18, 61.1MB/s]
-
-    
- 10%|██████████████▏                                                                                                                                      | 111M/1.14G [00:02<00:24, 44.9MB/s]
-
-    
- 11%|███████████████▋                                                                                                                                     | 123M/1.14G [00:02<00:18, 60.6MB/s]
-
-    
- 11%|████████████████▋                                                                                                                                    | 131M/1.14G [00:02<00:19, 57.0MB/s]
-
-    
- 12%|█████████████████▊                                                                                                                                   | 139M/1.14G [00:03<00:23, 46.3MB/s]
-
-    
- 13%|███████████████████                                                                                                                                  | 149M/1.14G [00:03<00:19, 55.3MB/s]
-
-    
- 13%|███████████████████▉                                                                                                                                 | 156M/1.14G [00:03<00:20, 51.8MB/s]
-
-    
- 14%|█████████████████████▏                                                                                                                               | 166M/1.14G [00:03<00:17, 59.7MB/s]
-
-    
- 15%|██████████████████████▌                                                                                                                              | 177M/1.14G [00:03<00:14, 71.0MB/s]
-
-    
- 16%|████████████████████████                                                                                                                             | 188M/1.14G [00:03<00:12, 80.6MB/s]
-
-    
- 17%|█████████████████████████▌                                                                                                                           | 200M/1.14G [00:03<00:11, 90.6MB/s]
-
-    
- 18%|███████████████████████████                                                                                                                          | 212M/1.14G [00:04<00:10, 98.6MB/s]
-
-    
- 19%|████████████████████████████▋                                                                                                                         | 223M/1.14G [00:04<00:09, 101MB/s]
-
-    
- 20%|██████████████████████████████                                                                                                                       | 235M/1.14G [00:04<00:09, 98.4MB/s]
-
-    
- 21%|███████████████████████████████▎                                                                                                                     | 245M/1.14G [00:04<00:09, 97.6MB/s]
-
-    
- 22%|████████████████████████████████▌                                                                                                                    | 255M/1.14G [00:04<00:09, 96.4MB/s]
-
-    
- 23%|██████████████████████████████████▏                                                                                                                   | 266M/1.14G [00:04<00:09, 101MB/s]
-
-    
- 24%|███████████████████████████████████▋                                                                                                                  | 278M/1.14G [00:04<00:08, 105MB/s]
-
-    
- 25%|█████████████████████████████████████▎                                                                                                                | 290M/1.14G [00:04<00:08, 109MB/s]
-
-    
- 26%|██████████████████████████████████████▋                                                                                                               | 301M/1.14G [00:04<00:08, 111MB/s]
-
-    
- 27%|████████████████████████████████████████                                                                                                              | 312M/1.14G [00:05<00:08, 112MB/s]
-
-    
- 28%|█████████████████████████████████████████▎                                                                                                           | 323M/1.14G [00:05<00:10, 83.5MB/s]
-
-    
- 28%|██████████████████████████████████████████▍                                                                                                          | 332M/1.14G [00:05<00:10, 79.7MB/s]
-
-    
- 29%|███████████████████████████████████████████▌                                                                                                         | 341M/1.14G [00:05<00:13, 64.5MB/s]
-
-    
- 30%|█████████████████████████████████████████████                                                                                                        | 353M/1.14G [00:05<00:11, 77.0MB/s]
-
-    
- 31%|██████████████████████████████████████████████▏                                                                                                      | 362M/1.14G [00:05<00:12, 67.6MB/s]
-
-    
- 32%|███████████████████████████████████████████████▋                                                                                                     | 373M/1.14G [00:06<00:11, 75.2MB/s]
-
-    
- 33%|████████████████████████████████████████████████▋                                                                                                    | 381M/1.14G [00:06<00:11, 71.2MB/s]
-
-    
- 33%|█████████████████████████████████████████████████▋                                                                                                   | 389M/1.14G [00:06<00:12, 66.3MB/s]
-
-    
- 34%|██████████████████████████████████████████████████▊                                                                                                  | 398M/1.14G [00:06<00:12, 64.4MB/s]
-
-    
- 35%|███████████████████████████████████████████████████▋                                                                                                 | 405M/1.14G [00:06<00:14, 54.9MB/s]
-
-    
- 35%|████████████████████████████████████████████████████▋                                                                                                | 413M/1.14G [00:06<00:13, 60.8MB/s]
-
-    
- 36%|█████████████████████████████████████████████████████▋                                                                                               | 420M/1.14G [00:06<00:15, 51.6MB/s]
-
-    
- 37%|███████████████████████████████████████████████████████▏                                                                                             | 432M/1.14G [00:07<00:11, 64.8MB/s]
-
-    
- 38%|████████████████████████████████████████████████████████▍                                                                                            | 442M/1.14G [00:07<00:10, 72.4MB/s]
-
-    
- 39%|█████████████████████████████████████████████████████████▍                                                                                           | 450M/1.14G [00:07<00:10, 72.1MB/s]
-
-    
- 40%|██████████████████████████████████████████████████████████▉                                                                                          | 461M/1.14G [00:07<00:08, 82.5MB/s]
-
-    
- 40%|████████████████████████████████████████████████████████████                                                                                         | 470M/1.14G [00:07<00:08, 85.2MB/s]
-
-    
- 41%|█████████████████████████████████████████████████████████████▏                                                                                       | 479M/1.14G [00:07<00:09, 75.1MB/s]
-
-    
- 42%|██████████████████████████████████████████████████████████████▏                                                                                      | 487M/1.14G [00:07<00:12, 58.4MB/s]
-
-    
- 43%|███████████████████████████████████████████████████████████████▋                                                                                     | 499M/1.14G [00:08<00:09, 72.4MB/s]
-
-    
- 43%|████████████████████████████████████████████████████████████████▊                                                                                    | 507M/1.14G [00:08<00:10, 69.1MB/s]
-
-    
- 44%|██████████████████████████████████████████████████████████████████▎                                                                                  | 519M/1.14G [00:08<00:08, 78.5MB/s]
-
-    
- 46%|███████████████████████████████████████████████████████████████████▊                                                                                 | 531M/1.14G [00:08<00:07, 88.9MB/s]
-
-    
- 46%|█████████████████████████████████████████████████████████████████████▏                                                                               | 542M/1.14G [00:08<00:07, 93.3MB/s]
-
-    
- 47%|███████████████████████████████████████████████████████████████████████▏                                                                              | 554M/1.14G [00:08<00:06, 101MB/s]
-
-    
- 48%|████████████████████████████████████████████████████████████████████████▏                                                                            | 565M/1.14G [00:08<00:06, 96.5MB/s]
-
-    
- 49%|██████████████████████████████████████████████████████████████████████████                                                                            | 576M/1.14G [00:08<00:06, 101MB/s]
-
-    
- 50%|███████████████████████████████████████████████████████████████████████████▌                                                                          | 588M/1.14G [00:08<00:05, 107MB/s]
-
-    
- 51%|█████████████████████████████████████████████████████████████████████████████▏                                                                        | 600M/1.14G [00:09<00:05, 107MB/s]
-
-    
- 52%|██████████████████████████████████████████████████████████████████████████████                                                                       | 611M/1.14G [00:09<00:06, 86.0MB/s]
-
-    
- 53%|███████████████████████████████████████████████████████████████████████████████▍                                                                     | 622M/1.14G [00:09<00:06, 92.8MB/s]
-
-    
- 54%|████████████████████████████████████████████████████████████████████████████████▋                                                                    | 632M/1.14G [00:09<00:05, 94.6MB/s]
-
-    
- 55%|██████████████████████████████████████████████████████████████████████████████████                                                                   | 643M/1.14G [00:09<00:05, 97.2MB/s]
-
-    
- 56%|████████████████████████████████████████████████████████████████████████████████████                                                                  | 654M/1.14G [00:09<00:05, 100MB/s]
-
-    
- 57%|████████████████████████████████████████████████████████████████████████████████████▊                                                                | 664M/1.14G [00:09<00:05, 99.7MB/s]
-
-    
- 58%|██████████████████████████████████████████████████████████████████████████████████████                                                               | 674M/1.14G [00:09<00:05, 89.8MB/s]
-
-    
- 59%|███████████████████████████████████████████████████████████████████████████████████████▎                                                             | 684M/1.14G [00:10<00:05, 89.1MB/s]
-
-    
- 59%|████████████████████████████████████████████████████████████████████████████████████████▌                                                            | 693M/1.14G [00:10<00:05, 89.2MB/s]
-
-    
- 60%|█████████████████████████████████████████████████████████████████████████████████████████▋                                                           | 702M/1.14G [00:10<00:05, 84.4MB/s]
-
-    
- 61%|██████████████████████████████████████████████████████████████████████████████████████████▉                                                          | 712M/1.14G [00:10<00:05, 87.8MB/s]
-
-    
- 62%|████████████████████████████████████████████████████████████████████████████████████████████▎                                                        | 723M/1.14G [00:10<00:04, 95.1MB/s]
-
-    
- 63%|█████████████████████████████████████████████████████████████████████████████████████████████▋                                                       | 734M/1.14G [00:10<00:04, 99.9MB/s]
-
-    
- 64%|███████████████████████████████████████████████████████████████████████████████████████████████▋                                                      | 744M/1.14G [00:10<00:04, 101MB/s]
-
-    
- 65%|████████████████████████████████████████████████████████████████████████████████████████████████▎                                                    | 754M/1.14G [00:10<00:04, 97.5MB/s]
-
-    
- 65%|█████████████████████████████████████████████████████████████████████████████████████████████████▌                                                   | 764M/1.14G [00:10<00:04, 96.3MB/s]
-
-    
- 66%|███████████████████████████████████████████████████████████████████████████████████████████████████▋                                                  | 775M/1.14G [00:11<00:04, 101MB/s]
-
-    
- 67%|████████████████████████████████████████████████████████████████████████████████████████████████████▎                                                | 785M/1.14G [00:11<00:04, 99.4MB/s]
-
-    
- 68%|█████████████████████████████████████████████████████████████████████████████████████████████████████▌                                               | 795M/1.14G [00:11<00:04, 96.8MB/s]
-
-    
- 69%|███████████████████████████████████████████████████████████████████████████████████████████████████████▋                                              | 806M/1.14G [00:11<00:03, 100MB/s]
-
-    
- 70%|█████████████████████████████████████████████████████████████████████████████████████████████████████████                                             | 817M/1.14G [00:11<00:03, 101MB/s]
-
-    
- 71%|██████████████████████████████████████████████████████████████████████████████████████████████████████████▎                                           | 827M/1.14G [00:11<00:03, 100MB/s]
-
-    
- 72%|██████████████████████████████████████████████████████████████████████████████████████████████████████████▉                                          | 837M/1.14G [00:11<00:03, 96.6MB/s]
-
-    
- 73%|████████████████████████████████████████████████████████████████████████████████████████████████████████████▏                                        | 847M/1.14G [00:11<00:03, 87.5MB/s]
-
-    
- 73%|█████████████████████████████████████████████████████████████████████████████████████████████████████████████▎                                       | 856M/1.14G [00:11<00:03, 84.7MB/s]
-
-    
- 74%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████▌                                      | 866M/1.14G [00:12<00:03, 86.6MB/s]
-
-    
- 75%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████                                     | 877M/1.14G [00:12<00:03, 93.1MB/s]
-
-    
- 76%|█████████████████████████████████████████████████████████████████████████████████████████████████████████████████▍                                   | 888M/1.14G [00:12<00:03, 94.4MB/s]
-
-    
- 77%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████████▊                                  | 899M/1.14G [00:12<00:02, 98.2MB/s]
-
-    
- 78%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████                                 | 909M/1.14G [00:12<00:02, 98.7MB/s]
-
-    
- 79%|█████████████████████████████████████████████████████████████████████████████████████████████████████████████████████▎                               | 919M/1.14G [00:12<00:02, 98.1MB/s]
-
-    
- 80%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████▋                              | 929M/1.14G [00:12<00:03, 78.6MB/s]
-
-    
- 80%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████▊                             | 938M/1.14G [00:12<00:03, 79.3MB/s]
-
-    
- 81%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████▉                            | 947M/1.14G [00:13<00:02, 81.0MB/s]
-
-    
- 82%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████▏                          | 957M/1.14G [00:13<00:02, 86.9MB/s]
-
-    
- 83%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████▌                         | 967M/1.14G [00:13<00:02, 72.9MB/s]
-
-    
- 84%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████▋                        | 976M/1.14G [00:13<00:02, 77.0MB/s]
-
-    
- 84%|█████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████▊                       | 985M/1.14G [00:13<00:02, 80.8MB/s]
-
-    
- 85%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████                      | 995M/1.14G [00:13<00:02, 85.8MB/s]
-
-    
- 86%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████▎                    | 0.98G/1.14G [00:13<00:02, 65.5MB/s]
-
-    
- 87%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████▋                   | 0.99G/1.14G [00:13<00:02, 72.4MB/s]
-
-    
- 88%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████                  | 1.00G/1.14G [00:14<00:01, 81.2MB/s]
-
-    
- 89%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████▍                | 1.01G/1.14G [00:14<00:01, 88.1MB/s]
-
-    
- 90%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████▊               | 1.02G/1.14G [00:14<00:01, 93.6MB/s]
-
-    
- 91%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████              | 1.03G/1.14G [00:14<00:01, 69.1MB/s]
-
-    
- 91%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████▏            | 1.04G/1.14G [00:14<00:01, 73.7MB/s]
-
-    
- 92%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████▍           | 1.05G/1.14G [00:14<00:01, 60.9MB/s]
-
-    
- 93%|█████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████▋          | 1.06G/1.14G [00:14<00:01, 69.2MB/s]
-
-    
- 94%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████▊         | 1.07G/1.14G [00:15<00:01, 73.6MB/s]
-
-    
- 94%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████▊        | 1.08G/1.14G [00:15<00:00, 75.4MB/s]
-
-    
- 95%|█████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████▏      | 1.09G/1.14G [00:15<00:00, 82.3MB/s]
-
-    
- 96%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████▍     | 1.10G/1.14G [00:15<00:00, 86.8MB/s]
-
-    
- 97%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████▌    | 1.11G/1.14G [00:15<00:00, 87.9MB/s]
-
-    
- 98%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████▋   | 1.11G/1.14G [00:15<00:00, 85.3MB/s]
-
-    
- 99%|█████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████▉  | 1.12G/1.14G [00:15<00:00, 80.0MB/s]
-
-    
-100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████▎| 1.13G/1.14G [00:15<00:00, 87.1MB/s]
-
-    
-100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 1.14G/1.14G [00:16<00:00, 76.1MB/s]
-
-    
-
-
-<div class="k-default-codeblock">
-```
-Downloading from https://www.kaggle.com/api/v1/models/keras/vit/keras/vit_large_patch32_384_imagenet/2/download/preprocessor.json...
-```
-</div>
-
-  0%|                                                                                                                                                             | 0.00/1.74k [00:00<?, ?B/s]
-
-    
-100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 1.74k/1.74k [00:00<00:00, 5.42MB/s]
-
-    
-
-
-<div class="k-default-codeblock">
-```
 normalizer.cc(51) LOG(INFO) precompiled_charsmap is empty. use identity normalization.
 
 Preparing OASIS dataset...
 ```
 </div>
 
-<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">[</span><span style="color: #000080; text-decoration-color: #000080">fetch_oasis_vbm</span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">]</span> Added README.md to <span style="color: #800080; text-decoration-color: #800080">/home/laxmareddyp/</span><span style="color: #ff00ff; text-decoration-color: #ff00ff">nilearn_data</span>
-</pre>
-
-
-
-
-<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">[</span><span style="color: #000080; text-decoration-color: #000080">fetch_oasis_vbm</span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">]</span> Dataset created in <span style="color: #800080; text-decoration-color: #800080">/home/laxmareddyp/nilearn_data/</span><span style="color: #ff00ff; text-decoration-color: #ff00ff">oasis1</span>
-</pre>
-
-
-
-
-<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">[</span><span style="color: #000080; text-decoration-color: #000080">fetch_oasis_vbm</span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">]</span> Downloading data from <span style="color: #0000ff; text-decoration-color: #0000ff; text-decoration: underline">https://www.nitrc.org/frs/download.php/6364/archive_dartel.tgz</span> <span style="color: #808000; text-decoration-color: #808000">...</span>
-</pre>
-
-
-
-
-<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">[</span><span style="color: #000080; text-decoration-color: #000080">fetch_oasis_vbm</span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">]</span> Downloaded <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">88514560</span> of <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">905208634</span> bytes <span style="font-weight: bold">(</span><span style="color: #008080; text-decoration-color: #008080; font-weight: bold">9.8</span>%%,    <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">9.</span>2s remaining<span style="font-weight: bold">)</span>
-</pre>
-
-
-
-
-<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">[</span><span style="color: #000080; text-decoration-color: #000080">fetch_oasis_vbm</span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">]</span> Downloaded <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">194355200</span> of <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">905208634</span> bytes <span style="font-weight: bold">(</span><span style="color: #008080; text-decoration-color: #008080; font-weight: bold">21.5</span>%%,    <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">7.</span>3s remaining<span style="font-weight: bold">)</span>
-</pre>
-
-
-
-
-<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">[</span><span style="color: #000080; text-decoration-color: #000080">fetch_oasis_vbm</span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">]</span> Downloaded <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">298713088</span> of <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">905208634</span> bytes <span style="font-weight: bold">(</span><span style="color: #008080; text-decoration-color: #008080; font-weight: bold">33.0</span>%%,    <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">6.</span>1s remaining<span style="font-weight: bold">)</span>
-</pre>
-
-
-
-
-<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">[</span><span style="color: #000080; text-decoration-color: #000080">fetch_oasis_vbm</span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">]</span> Downloaded <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">401899520</span> of <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">905208634</span> bytes <span style="font-weight: bold">(</span><span style="color: #008080; text-decoration-color: #008080; font-weight: bold">44.4</span>%%,    <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">5.</span>0s remaining<span style="font-weight: bold">)</span>
-</pre>
-
-
-
-
-<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">[</span><span style="color: #000080; text-decoration-color: #000080">fetch_oasis_vbm</span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">]</span> Downloaded <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">508862464</span> of <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">905208634</span> bytes <span style="font-weight: bold">(</span><span style="color: #008080; text-decoration-color: #008080; font-weight: bold">56.2</span>%%,    <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">3.</span>9s remaining<span style="font-weight: bold">)</span>
-</pre>
-
-
-
-
-<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">[</span><span style="color: #000080; text-decoration-color: #000080">fetch_oasis_vbm</span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">]</span> Downloaded <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">616652800</span> of <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">905208634</span> bytes <span style="font-weight: bold">(</span><span style="color: #008080; text-decoration-color: #008080; font-weight: bold">68.1</span>%%,    <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">2.</span>8s remaining<span style="font-weight: bold">)</span>
-</pre>
-
-
-
-
-<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">[</span><span style="color: #000080; text-decoration-color: #000080">fetch_oasis_vbm</span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">]</span> Downloaded <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">717389824</span> of <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">905208634</span> bytes <span style="font-weight: bold">(</span><span style="color: #008080; text-decoration-color: #008080; font-weight: bold">79.3</span>%%,    <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">1.</span>8s remaining<span style="font-weight: bold">)</span>
-</pre>
-
-
-
-
-<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">[</span><span style="color: #000080; text-decoration-color: #000080">fetch_oasis_vbm</span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">]</span> Downloaded <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">820551680</span> of <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">905208634</span> bytes <span style="font-weight: bold">(</span><span style="color: #008080; text-decoration-color: #008080; font-weight: bold">90.6</span>%%,    <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">0.</span>8s remaining<span style="font-weight: bold">)</span>
-</pre>
-
-
-
-
-<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">[</span><span style="color: #000080; text-decoration-color: #000080">fetch_oasis_vbm</span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">]</span>  <span style="color: #808000; text-decoration-color: #808000">...</span>done. <span style="font-weight: bold">(</span><span style="color: #008080; text-decoration-color: #008080; font-weight: bold">9</span> seconds, <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">0</span> min<span style="font-weight: bold">)</span>
-
-</pre>
-
-
-
-
-<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">[</span><span style="color: #000080; text-decoration-color: #000080">fetch_oasis_vbm</span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">]</span> Extracting data from 
-<span style="color: #800080; text-decoration-color: #800080">/home/laxmareddyp/nilearn_data/oasis1/60f82260d880dec0385d5f2ba9df2b83/</span><span style="color: #ff00ff; text-decoration-color: #ff00ff">archive_dartel.tgz...</span>
-</pre>
-
-
-
-
-<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">[</span><span style="color: #000080; text-decoration-color: #000080">fetch_oasis_vbm</span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">]</span> .. done.
-
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">[</span><span style="color: #000080; text-decoration-color: #000080">fetch_oasis_vbm</span><span style="color: #000080; text-decoration-color: #000080; font-weight: bold">]</span> Dataset found in <span style="color: #800080; text-decoration-color: #800080">/home/laxmareddyp/nilearn_data/</span><span style="color: #ff00ff; text-decoration-color: #ff00ff">oasis1</span>
 </pre>
 
 
@@ -1029,7 +500,7 @@ Saved 4 OASIS Brain MRI images: ['images/oasis_0.png', 'images/oasis_1.png', 'im
 ```
 </div>
 
-![png](/home/laxmareddyp/keras_guides/keras-io/guides/img/rag_pipeline_with_keras_hub/rag_pipeline_with_keras_hub_24_151.png)
+![png](/home/laxmareddyp/keras_guides/keras-io/guides/img/rag_pipeline_with_keras_hub/rag_pipeline_with_keras_hub_24_5.png)
     
 
 
@@ -1039,14 +510,14 @@ Extracting database features...
 
 Running RAG pipeline...
 
-[RAG] Matched image index: 1
-[RAG] Matched image path: images/oasis_1.png
+[RAG] Matched image index: 0
+[RAG] Matched image path: images/oasis_0.png
 [RAG] Retrieved context/report:
-Normal MRI scan, no abnormal findings.
+MRI shows a 1.5cm lesion in the right frontal lobe, non-enhancing, no edema.
 ```
 </div>
 
-![png](/home/laxmareddyp/keras_guides/keras-io/guides/img/rag_pipeline_with_keras_hub/rag_pipeline_with_keras_hub_24_155.png)
+![png](/home/laxmareddyp/keras_guides/keras-io/guides/img/rag_pipeline_with_keras_hub/rag_pipeline_with_keras_hub_24_9.png)
     
 
 
@@ -1058,33 +529,58 @@ RAG PIPELINE RESULTS
 ==================================================
 
 --- Retrieved Report ---
- Normal MRI scan, no abnormal findings.
+ MRI shows a 1.5cm lesion in the right frontal lobe, non-enhancing, no edema.
 
 --- Generated Report ---
  ---
 
 **Radiology Report**
 
-**Clinical Indication:** [Clinical Indication - Placeholder - e.g., Headache, Neurological Symptoms]
+**Clinical Indication:** [Clinical Indication - Placeholder - e.g., Headache, Seizures, Cognitive Changes]
 
-**1. Diagnostic Impression:**
+**Findings:**
 
-Normal Brain MRI. No evidence of acute or chronic abnormalities detected.
+*   **Brain:** The brain appears grossly normal in size and signal intensity. There is a 1.5 cm lesion located in the right frontal lobe. The lesion is non-enhancing on post-contrast imaging. No surrounding edema is identified. The lesion demonstrates a homogenous appearance.
+*   **White Matter:** No evidence of white matter abnormalities is seen.
+*   **Cerebellum:** The cerebellum appears normal in size and signal intensity.
+*   **Brainstem:** The brainstem appears normal in size and signal intensity.
+*   **Ventricles:** The ventricles are of normal size and morphology.
 
-**2. Diagnostic Reasoning:**
+**Impression:**
 
-The MRI scan demonstrates normal signal intensity and morphology of the visualized brain structures, including the cerebrum, cerebellum, brainstem, and white matter. There is no evidence of mass effect, edema, hemorrhage, or significant vascular abnormalities. Contrast enhancement is unremarkable. The ventricles are of normal size and shape. The orbits and sella turcica appear unremarkable. No significant findings are noted in the visualized portions of the brain.
+1.  **Diagnostic Impression:**  The most likely diagnosis is a small, benign, non-enhancing lesion in the right frontal lobe.  Differential diagnoses include a small metastatic lesion, a benign hamartoma, or a small, early-stage low-grade tumor.
 
-**3. Suggested Treatment Options:**
+**Diagnostic Reasoning:**
 
-Given the normal findings, no specific treatment is indicated at this time.  The patient should be monitored for any new or worsening symptoms.  If the clinical indication for the MRI remains present (e.g., headache), further investigation may be warranted based on the patient's clinical presentation and response to initial management.  This may include further neurological examination, neurocognitive testing, or consideration of alternative diagnostic modalities depending on the specific clinical concern.
+The key features supporting this impression are:
+
+*   **Size:** The lesion is relatively small (1.5 cm).
+*   **Non-enhancing:** The absence of enhancement with contrast is highly suggestive of a benign process.  Contrast enhancement is typically seen in active tumor growth or inflammation.
+*   **No Edema:** The lack of surrounding edema indicates that the lesion is not causing significant inflammation or mass effect.
+*   **Homogenous Appearance:** A homogenous appearance on MRI suggests a relatively uniform tissue composition, further reducing the likelihood of a highly aggressive tumor.
+
+However, it is crucial to acknowledge that the differential diagnosis remains broad.  While the findings are reassuring, further investigation may be warranted to definitively rule out other possibilities, particularly if the patient presents with concerning symptoms.
+
+**Possible Treatment Options:**
+
+Given the benign appearance of the lesion, immediate treatment is generally not indicated.  However, the following options should be considered:
+
+1.  **Observation:**  Serial MRI scans (e.g., every 6-12 months) to monitor for any changes in size or signal characteristics. This is the most common approach for small, stable lesions.
+2.  **Neuropsychological Testing:** If the patient is experiencing cognitive changes, neuropsychological testing can be performed to assess for any subtle functional deficits.
+3.  **Further Investigation (if indicated):** If the lesion demonstrates any change on follow-up imaging, or if the patient develops new or worsening symptoms, further investigation such as a biopsy or additional imaging (e.g., PET/CT) may be considered to determine the exact nature of the lesion.
+
+**Recommendations:**
+
+*   Discuss these findings with the patient and their referring physician.
+*   Recommend serial MRI surveillance to monitor the lesion.
+*   Consider neuropsychological testing if clinically indicated.
 
 **Radiologist:** [Radiologist Name - Placeholder]
 **Date:** [Date - Placeholder]
 
 ---
 
-**Important Disclaimer:** *This report is based solely on the provided information (normal MRI scan and a general description). A complete and accurate diagnosis requires a thorough clinical evaluation by a qualified physician, considering the patient's history, physical examination, and other relevant investigations. This report is for informational purposes only and should not be considered a substitute for professional medical advice.*
+**Disclaimer:** *This report is based solely on the provided information and should not be considered a definitive diagnosis.  A complete clinical evaluation and correlation with the patient's history and symptoms are necessary for accurate diagnosis and treatment planning.*
 <end_of_turn>
 
 ==================================================
@@ -1147,27 +643,20 @@ The treatment plan should be determined in consultation with the patient’s neu
 ```
 </div>
 
-Comparison: RAG Pipeline vs. Direct VLM
+##Comparison: RAG Pipeline vs Direct VLM
 
 - RAG pipeline (ViT + Gemma3 model): Produces more accurate and contextually relevant outputs by retrieving the most similar case and using its report as context for generation.
 - Gemma3 VLM (direct, no retrieval): Produces more generic and often less accurate outputs, as the model does not have access to relevant context from similar cases.
 
 In practice, the RAG approach leverages both image similarity and prior knowledge to generate more precise and clinically meaningful reports, while the direct VLM approach is limited to general knowledge and lacks case-specific context.
 
-
-```python
-# =============================================================================
-# CONCLUSION
-# =============================================================================
-```
-
 ---
 ## Conclusion
 
-This demonstration showcases the power of Retrieval-Augmented Generation (RAG) in
-combining vision and language models for intelligent analysis using kerashub models.
+This demonstration showcases the power of Retrieval-Augmented Generation (RAG) in combining vision and language models for intelligent analysis using KerasHub models.
 
 **Key Achievements:**
+
 - Model Integration: Vision Transformer + Gemma3 LLM via KerasHub
 - Feature Extraction: Meaningful features from brain MRI images
 - Similarity Search: Efficient retrieval of relevant context
@@ -1175,20 +664,13 @@ combining vision and language models for intelligent analysis using kerashub mod
 - Comparison Analysis: RAG vs direct VLM approaches
 
 **Key Benefits:**
+
 - Enhanced Accuracy: More contextually relevant outputs
 - Scalable Architecture: Easy to extend with different models
 - KerasHub Integration: State-of-the-art models efficiently
 - Real-world Applicability: Various vision-language tasks
 
-This guide demonstrates how KerasHub enables rapid prototyping and deployment
-of advanced AI systems for real-world applications.
-
-
-```python
-# =============================================================================
-# SECURITY WARNING
-# =============================================================================
-```
+This guide demonstrates how KerasHub enables rapid prototyping and deployment of advanced AI systems for real-world applications.
 
 ---
 ## Security Warning
@@ -1196,6 +678,7 @@ of advanced AI systems for real-world applications.
 ⚠️ **IMPORTANT SECURITY AND PRIVACY CONSIDERATIONS**
 
 This pipeline is for educational purposes only. For production use:
+
 - Anonymize medical data following HIPAA guidelines
 - Implement access controls and encryption
 - Validate inputs and secure APIs
