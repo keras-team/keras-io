@@ -2646,7 +2646,7 @@ HUB_GUIDES_MASTER = {
         },
         {
             "path": "hugging_face_keras_integration",
-            "title": "Converting Hugging Face Transformers Checkpoints",
+            "title": "Loading Hugging Face Transformers Checkpoints",
         },
         {
             "path": "function_calling_with_keras_hub",

@@ -1,4 +1,4 @@
-# Converting Hugging Face Transformers Checkpoints
+# Loading Hugging Face Transformers Checkpoints
 
 **Author:** [Laxma Reddy Patlolla](https://github.com/laxmareddyp), [Divyashree Sreepathihalli](https://github.com/divyashreepathihalli)<br>
 **Date created:** 2025/06/17<br>
