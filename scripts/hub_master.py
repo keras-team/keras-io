@@ -2652,6 +2652,11 @@ HUB_GUIDES_MASTER = {
             "path": "function_calling_with_keras_hub",
             "title": "Function Calling with KerasHub models",
         },
+        {
+            "path": "rag_pipeline_with_keras_hub",
+            "title": "RAG Pipeline with KerasHub",
+        },
+    ],
     ],
 }
 
