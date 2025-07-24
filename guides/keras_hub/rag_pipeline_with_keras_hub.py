@@ -2,7 +2,7 @@
 Title: RAG Pipeline with KerasHub
 Author: [Laxmareddy Patlolla](https://github.com/laxmareddyp), [Divyashree Sreepathihalli](https://github.com/divyashreepathihalli)
 Date created: 2025/07/22
-Last modified: 2025/07/22
+Last modified: 2025/07/24
 Description: RAG pipeline for brain MRI analysis: image retrieval, context search, and report generation.
 Accelerator: GPU
 
@@ -26,6 +26,7 @@ using KerasHub models. We'll show you how to:
 5. Compare RAG approach with direct vision-language model generation
 
 This pipeline demonstrates how to build a sophisticated medical AI system that can:
+
 - Analyze brain MRI images using state-of-the-art vision models
 - Retrieve relevant medical context from a database
 - Generate detailed radiology reports with proper medical terminology
@@ -51,6 +52,7 @@ If running in Google Colab, set up Kaggle API credentials using the `google.cola
 """
 
 import os
+import sys
 
 os.environ["KERAS_BACKEND"] = "jax"
 import keras
@@ -58,9 +60,11 @@ import numpy as np
 
 keras.config.set_dtype_policy("bfloat16")
 import keras_hub
+import tensorflow as tf
 from PIL import Image
 import matplotlib.pyplot as plt
 from nilearn import datasets, image
+import re
 
 
 """
@@ -72,21 +76,19 @@ Loads the vision model (for image feature extraction) and the Gemma3 vision-lang
 
 def load_models():
     """
-    Load and configure vision model for feature extraction and Gemma3 VLM for report generation.
+    Load and configure vision model for feature extraction, Gemma3 VLM for report generation, and a compact text model for benchmarking.
     Returns:
-        tuple: (vision_model, vlm_model)
+        tuple: (vision_model, vlm_model, text_model)
     """
-    # Vision model for feature extraction
-    backbone = keras_hub.models.Backbone.from_preset("vit_large_patch32_384_imagenet")
-    preprocessor = keras_hub.models.ViTImageClassifierPreprocessor.from_preset(
-        "vit_large_patch32_384_imagenet"
+    # Vision model for feature extraction (lightweight MobileNetV3)
+    vision_model = keras_hub.models.ImageClassifier.from_preset(
+        "mobilenet_v3_large_100_imagenet_21k"
     )
-    vision_model = keras_hub.models.ViTImageClassifier(
-        backbone=backbone, num_classes=2, preprocessor=preprocessor
-    )
-    # Gemma3 VLM for report generation
+    # Gemma3 Text model for report generation in RAG Pipeline (compact)
+    text_model = keras_hub.models.Gemma3CausalLM.from_preset("gemma3_instruct_1b")
+    # Gemma3 VLM for report generation (original, for benchmarking)
     vlm_model = keras_hub.models.Gemma3CausalLM.from_preset("gemma3_instruct_4b")
-    return vision_model, vlm_model
+    return vision_model, vlm_model, text_model
 
 
 """
@@ -142,7 +144,11 @@ def visualize_images(image_paths, captions):
         image_paths (list): List of image file paths
         captions (list): List of corresponding image captions
     """
-    fig, axes = plt.subplots(1, 4, figsize=(16, 4))
+    n = len(image_paths)
+    fig, axes = plt.subplots(1, n, figsize=(4 * n, 4))
+    # If only one image, axes is not a list
+    if n == 1:
+        axes = [axes]
     for i, (img_path, title) in enumerate(zip(image_paths, captions)):
         img = Image.open(img_path)
         axes[i].imshow(img, cmap="gray")
@@ -154,7 +160,7 @@ def visualize_images(image_paths, captions):
 
 
 """
-##Prediction Visualization Utility
+## Prediction Visualization Utility
 
 Displays the query image and the most similar retrieved image from the database side by side.
 """
@@ -183,7 +189,7 @@ def visualize_prediction(query_img_path, db_image_paths, best_idx, db_reports):
 
 
 """
-##Image Feature Extraction
+## Image Feature Extraction
 
 Extracts a feature vector from an image using the vision model.
 """
@@ -217,9 +223,8 @@ db_reports = [
     "Normal MRI scan, no abnormal findings.",
     "Diffuse atrophy noted, no focal lesions.",
 ]
-
 """
-##Output Cleaning Utility
+## Output Cleaning Utility
 
 Cleans the generated text output by removing prompt echoes and unwanted headers.
 """
@@ -236,20 +241,23 @@ def clean_generated_output(generated_text, prompt):
     Returns:
         str: Cleaned text without prompt echo and headers
     """
-    # Remove the prompt from the beginning of the generated tex
+    # Remove the prompt from the beginning of the generated text
     if generated_text.startswith(prompt):
         cleaned_text = generated_text[len(prompt) :].strip()
     else:
-        # If prompt is not at the beginning, try to find and remove i
         cleaned_text = generated_text.replace(prompt, "").strip()
 
-    # Remove header details
+    # Remove header details and unwanted formatting
     lines = cleaned_text.split("\n")
     filtered_lines = []
     skip_next = False
+    subheading_pattern = re.compile(r"^(\s*[A-Za-z0-9 .\-()]+:)(.*)")
 
     for line in lines:
-        # Skip lines with these headers
+        line = line.replace("<end_of_turn>", "").strip()
+        line = line.replace("**", "")
+        line = line.replace("*", "")
+        # Remove empty lines after headers (existing logic)
         if any(
             header in line
             for header in [
@@ -266,16 +274,29 @@ def clean_generated_output(generated_text, prompt):
             ]
         ):
             continue
-        # Skip empty lines after headers
         elif line.strip() == "" and skip_next:
             skip_next = False
             continue
         else:
-            filtered_lines.append(line)
+            # Split subheadings onto their own line if content follows
+            match = subheading_pattern.match(line)
+            if match and match.group(2).strip():
+                filtered_lines.append(match.group(1).strip())
+                filtered_lines.append(match.group(2).strip())
+                filtered_lines.append("")  # Add a blank line after subheading
+            else:
+                filtered_lines.append(line)
+                # Add a blank line after subheadings (lines ending with ':')
+                if line.endswith(":") and (
+                    len(filtered_lines) == 1 or filtered_lines[-2] != ""
+                ):
+                    filtered_lines.append("")
             skip_next = False
 
-    # Join the lines back together
-    cleaned_text = "\n".join(filtered_lines).strip()
+    # Remove any empty lines and excessive whitespace
+    cleaned_text = "\n".join(
+        [l for l in filtered_lines if l.strip() or l == ""]
+    ).strip()
 
     return cleaned_text
 
@@ -291,15 +312,15 @@ Returns the index of the matched image, the retrieved report, and the generated 
 """
 
 
-def rag_pipeline(query_img_path, db_image_paths, db_reports, vision_model, vlm_model):
+def rag_pipeline(query_img_path, db_image_paths, db_reports, vision_model, text_model):
     """
-    Retrieval-Augmented Generation pipeline using vision model for retrieval and Gemma3 VLM for report generation.
+    Retrieval-Augmented Generation pipeline using vision model for retrieval and a compact text model for report generation.
     Args:
         query_img_path (str): Path to the query image
         db_image_paths (list): List of database image paths
         db_reports (list): List of database reports
         vision_model: Vision model for feature extraction
-        vlm_model: Gemma3 VLM for report generation
+        text_model: Compact text model for report generation
     Returns:
         tuple: (best_idx, retrieved_report, generated_report)
     """
@@ -316,11 +337,9 @@ def rag_pipeline(query_img_path, db_image_paths, db_reports, vision_model, vlm_m
     similarity = np.dot(db_features_np, query_features_np.T).squeeze()
     best_idx = np.argmax(similarity)
     retrieved_report = db_reports[best_idx]
-    # Print matched image and context for debugging/inspection
     print(f"[RAG] Matched image index: {best_idx}")
     print(f"[RAG] Matched image path: {db_image_paths[best_idx]}")
     print(f"[RAG] Retrieved context/report:\n{retrieved_report}\n")
-    # Prepare the promp
     PROMPT_TEMPLATE = (
         "Context:\n{context}\n\n"
         "Based on the above radiology report and the provided brain MRI image, please:\n"
@@ -330,24 +349,18 @@ def rag_pipeline(query_img_path, db_image_paths, db_reports, vision_model, vlm_m
         "Format your answer as a structured radiology report.\n"
     )
     prompt = PROMPT_TEMPLATE.format(context=retrieved_report)
-    # Preprocess the query image for the VLM
-    img = Image.open(query_img_path).convert("RGB").resize((224, 224))
-    image = np.array(img) / 255.0
-    image = np.expand_dims(image, axis=0)
-    # Generate report using the VLM
-    output = vlm_model.generate(
+    # Generate report using the text model (text only, no image input)
+    output = text_model.generate(
         {
-            "images": image,
             "prompts": prompt,
         }
     )
-    # Clean the generated outpu
     cleaned_output = clean_generated_output(output, prompt)
     return best_idx, retrieved_report, cleaned_output
 
 
 """
-##Vision-Language Model (Direct Approach)
+## Vision-Language Model (Direct Approach)
 
 Generates a radiology report directly from the query image using the Gemma3 VLM, without retrieval.
 """
@@ -391,28 +404,20 @@ def vlm_generate_report(query_img_path, vlm_model, question=None):
 
 
 """
-##Main Execution
+## Main Execution Pipeline
 
-Runs the RAG pipeline: loads models, prepares data, and displays results.
+This section loads models, prepares data, runs the RAG pipeline, and compares RAG with direct VLM generation.
 """
+
 if __name__ == "__main__":
-    """
-    Main execution pipeline for RAG-based medical image analysis.
-
-    This script demonstrates:
-    1. Loading pre-trained vision and language models
-    2. Processing OASIS brain MRI datase
-    3. Implementing RAG pipeline with retrieval and generation
-    4. Comparing RAG approach with direct VLM approach
-    """
-
     # Load models
     print("Loading models...")
-    vision_model, vlm_model = load_models()
+    vision_model, vlm_model, text_model = load_models()
 
     # Prepare data
     print("Preparing OASIS dataset...")
-    oasis = datasets.fetch_oasis_vbm(n_subjects=4)
+    oasis = datasets.fetch_oasis_vbm(n_subjects=4)  # Use 4 images
+    print("Download dataset is completed.")
     image_paths, captions = prepare_images_and_captions(oasis)
     visualize_images(image_paths, captions)
 
@@ -429,7 +434,7 @@ if __name__ == "__main__":
     # Run RAG pipeline
     print("Running RAG pipeline...")
     best_idx, retrieved_report, generated_report = rag_pipeline(
-        query_img_path, db_image_paths, db_reports, vision_model, vlm_model
+        query_img_path, db_image_paths, db_reports, vision_model, text_model
     )
 
     # Visualize results
@@ -439,7 +444,8 @@ if __name__ == "__main__":
     print("\n" + "=" * 50)
     print("RAG PIPELINE RESULTS")
     print("=" * 50)
-    print("\n--- Retrieved Report ---\n", retrieved_report)
+    print(f"\nMatched DB Report Index: {best_idx}")
+    print(f"Matched DB Report: {retrieved_report}")
     print("\n--- Generated Report ---\n", generated_report)
 
     # Run VLM (direct approach)
@@ -450,10 +456,38 @@ if __name__ == "__main__":
     print("\n--- Vision-Language Model (No Retrieval) Report ---\n", vlm_report)
 
 """
-##Comparison: RAG Pipeline vs Direct VLM
+## Comparison: RAG Pipeline vs Direct VLM
 
-- RAG pipeline (ViT + Gemma3 model): Produces more accurate and contextually relevant outputs by retrieving the most similar case and using its report as context for generation.
-- Gemma3 VLM (direct, no retrieval): Produces more generic and often less accurate outputs, as the model does not have access to relevant context from similar cases.
+- **MobileNet + Gemma3 1B text model**: ~1B total parameters
+- **Gemma3 VLM 4B model**: ~4B total parameters
+- **Results**: The RAG pipeline (MobileNet + Gemma3 1B) is better due to its use of retrieval and context, providing more relevant and accurate reports with fewer parameters.
+
+**Detailed Comparison:**
+
+- **Accuracy & Relevance:**
+
+  - RAG pipeline leverages retrieval to provide contextually relevant and case-specific reports, often matching or exceeding the quality of much larger VLMs.
+  - Direct VLM (Gemma3 4B) produces more generic outputs, lacking access to specific prior cases.
+
+- **Speed & Resource Usage:**
+
+  - MobileNet + Gemma3 1B is significantly faster and more memory-efficient, making it suitable for edge devices and real-time applications.
+  - Gemma3 4B requires more computational resources and is slower, especially on limited hardware.
+
+- **Scalability & Flexibility:**
+
+  - The RAG approach allows easy swapping of retriever/generator models and can be adapted to different domains or datasets.
+  - Direct VLM is less flexible and requires retraining or fine-tuning for new domains.
+
+- **Interpretability:**
+
+  - RAG pipeline provides traceability by showing which database report was used for context, aiding in clinical interpretability and trust.
+  - Direct VLM does not provide this transparency.
+
+- **Practical Implications:**
+
+  - RAG is more practical for deployment in resource-constrained environments and can be incrementally improved by updating the database.
+  - Large VLMs are best suited for cloud or high-performance environments.
 
 In practice, the RAG approach leverages both image similarity and prior knowledge to generate more precise and clinically meaningful reports, while the direct VLM approach is limited to general knowledge and lacks case-specific context.
 """

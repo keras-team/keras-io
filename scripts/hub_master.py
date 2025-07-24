@@ -2657,7 +2657,6 @@ HUB_GUIDES_MASTER = {
             "title": "RAG Pipeline with KerasHub",
         },
     ],
-    ],
 }
 
 HUB_MASTER = {
