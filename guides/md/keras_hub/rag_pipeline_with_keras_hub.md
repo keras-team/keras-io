@@ -39,8 +39,8 @@ Let's get started!
 ## Setup
 
 First, let's import the necessary libraries and configure our environment. We'll be using
-KerasHub to download and run the language models, and we'll need to authenticate with
-Kaggle to access the model weights. We'll also set up the JAX backend for optimal
+`KerasHub` to download and run the language models, and we'll need to authenticate with
+`Kaggle` to access the model weights. We'll also set up the `JAX` backend for optimal
 performance on GPU accelerators.
 
 ---
@@ -70,19 +70,19 @@ import re
 <div class="k-default-codeblock">
 ```
 WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
-E0000 00:00:1753403650.004949    3556 cuda_dnn.cc:8579] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered
-E0000 00:00:1753403650.009444    3556 cuda_blas.cc:1407] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
-W0000 00:00:1753403650.021178    3556 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
-W0000 00:00:1753403650.021192    3556 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
-W0000 00:00:1753403650.021194    3556 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
-W0000 00:00:1753403650.021195    3556 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+E0000 00:00:1753406689.851729    7257 cuda_dnn.cc:8579] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered
+E0000 00:00:1753406689.856133    7257 cuda_blas.cc:1407] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
+W0000 00:00:1753406689.867166    7257 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1753406689.867180    7257 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1753406689.867182    7257 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1753406689.867183    7257 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
 ```
 </div>
 
 ---
 ## Model Loading
 
-Loads the  `vision (MobileNetV3)` model (for image feature extraction) `Gemma3 1B text` model for report generation in RAG pipeline and the `Gemma3 4B` vision-language model for report generation in direct approach.
+Loads the  `vision(MobileNetV3)` model (for image feature extraction) `Gemma3(1B) text` model for report generation in RAG pipeline and the `Gemma3(4B)` vision-language model for report generation in direct approach.
 
 
 ```python
@@ -211,7 +211,7 @@ def visualize_prediction(query_img_path, db_image_paths, best_idx, db_reports):
 ---
 ## Image Feature Extraction
 
-Extracts a feature vector from an image using the small `vision (MobileNetV3)` model.
+Extracts a feature vector from an image using the small `vision(MobileNetV3)` model.
 
 
 ```python
@@ -334,9 +334,9 @@ def clean_generated_output(generated_text, prompt):
 
 Implements the Retrieval-Augmented Generation (RAG) pipeline:
 
-- Extracts features from the query image and database images.
-- Finds the most similar image in the database.
-- Uses the retrieved report and the query image as input to the Gemma3 VLM to generate a new report.
+- Extracts `features` from the `query image` and `database images`.
+- Finds the most `similar image` in the database.
+- Uses the `retrieved report` and the `query image` as input to the `Gemma3(1B) text` model to generate a new report.
 
 Returns the index of the matched image, the retrieved report, and the generated report.
 
@@ -509,12 +509,11 @@ Preparing OASIS dataset...
 <div class="k-default-codeblock">
 ```
 Download dataset is completed.
-
 Saved 4 OASIS Brain MRI images: ['images/oasis_0.png', 'images/oasis_1.png', 'images/oasis_2.png', 'images/oasis_3.png']
 ```
 </div>
 
-![png](/home/laxmareddyp/keras_guides/keras-io/guides/img/rag_pipeline_with_keras_hub/rag_pipeline_with_keras_hub_24_6.png)
+![png](/home/laxmareddyp/keras_guides/keras-io/guides/img/rag_pipeline_with_keras_hub/rag_pipeline_with_keras_hub_24_5.png)
     
 
 
@@ -531,7 +530,7 @@ MRI shows a 1.5cm lesion in the right frontal lobe, non-enhancing, no edema.
 ```
 </div>
 
-![png](/home/laxmareddyp/keras_guides/keras-io/guides/img/rag_pipeline_with_keras_hub/rag_pipeline_with_keras_hub_24_10.png)
+![png](/home/laxmareddyp/keras_guides/keras-io/guides/img/rag_pipeline_with_keras_hub/rag_pipeline_with_keras_hub_24_9.png)
     
 
 
@@ -695,7 +694,7 @@ This is a sample report and needs to be adapted based on the specific details of
 
 - **MobileNet + Gemma3(1B) text model**: ~1B total parameters
 - **Gemma3 VLM 4B model**: ~4B total parameters
-- **Results**: The RAG pipeline `(MobileNetV3 + Gemma3(1B) text model)` report is better due to its use of retrieval and context, providing more relevant and accurate reports with fewer parameters.
+- **Results**: The RAG pipeline `MobileNetV3 + Gemma3(1B) text model` report is better due to its use of retrieval and context, providing more relevant and accurate reports with fewer parameters.
 
 **Detailed Comparison:**
 
@@ -707,7 +706,7 @@ This is a sample report and needs to be adapted based on the specific details of
 - **Speed & Resource Usage:**
 
   - `MobileNetV3 + Gemma3(1B)` is significantly faster and more memory-efficient, making it suitable for edge devices and real-time applications.
-  - `Gemma3(4B)` requires more computational resources and is slower, especially on limited hardware.
+  - `Gemma3(4B)` VLM model requires more computational resources and is slower, especially on limited hardware.
 
 - **Scalability & Flexibility:**
 
@@ -733,7 +732,7 @@ This demonstration showcases the power of Retrieval-Augmented Generation (RAG) i
 
 **Key Achievements:**
 
-- Model Integration:`[MobileNetV3 + Gemma3(1B) text model]` and `Gemma3(4B) VLM model` via `KerasHub`
+- Model Integration:`MobileNetV3 + Gemma3(1B) text model` and `Gemma3(4B) VLM model` via `KerasHub`
 - Feature Extraction: Meaningful features from brain MRI images
 - Similarity Search: Efficient retrieval of relevant context
 - Report Generation: Comprehensive reports using retrieved context
@@ -746,7 +745,7 @@ This demonstration showcases the power of Retrieval-Augmented Generation (RAG) i
 - KerasHub Integration: State-of-the-art models efficiently
 - Real-world Applicability: Various vision-language tasks
 
-This guide demonstrates how KerasHub enables rapid prototyping and deployment of advanced AI systems for real-world applications.
+This guide demonstrates how `KerasHub` enables rapid prototyping and deployment of advanced AI systems for real-world applications.
 
 ---
 ## Security Warning
