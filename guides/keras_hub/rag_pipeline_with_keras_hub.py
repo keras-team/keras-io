@@ -11,7 +11,7 @@ Accelerator: GPU
 """
 ## Introduction
 
-Retrieval-Augmented Generation (RAG) is a powerful technique that combines the strengths of
+`Retrieval-Augmented Generation (RAG)` is a powerful technique that combines the strengths of
 large language models with external knowledge retrieval. Instead of relying solely on the
 model's pre-trained knowledge, RAG allows the model to access and use relevant information
 from a database or knowledge base to generate more accurate and contextually relevant responses.
@@ -19,14 +19,13 @@ from a database or knowledge base to generate more accurate and contextually rel
 In this guide, we'll walk you through implementing a RAG pipeline for medical image analysis
 using KerasHub models. We'll show you how to:
 
-1. Load and configure Vision Transformer (ViT) and Gemma3 language models
+1. Load and configure `[MobileNetV3 + Gemma3 1B text model]` and `Gemma3 4B VLM model`
 2. Process brain MRI images and extract meaningful features
 3. Implement similarity search for retrieving relevant medical reports
 4. Generate comprehensive radiology reports using retrieved contex
 5. Compare RAG approach with direct vision-language model generation
 
 This pipeline demonstrates how to build a sophisticated medical AI system that can:
-
 - Analyze brain MRI images using state-of-the-art vision models
 - Retrieve relevant medical context from a database
 - Generate detailed radiology reports with proper medical terminology
@@ -70,7 +69,7 @@ import re
 """
 ## Model Loading
 
-Loads the vision model (for image feature extraction) and the Gemma3 vision-language model (for report generation). Returns both models for use in the RAG pipeline.
+Loads the  `vision (MobileNetV3)` model (for image feature extraction) `Gemma3 1B text` model for report generation in RAG pipeline and the `Gemma3 4B` vision-language model for report generation in direct approach.
 """
 
 
@@ -94,7 +93,7 @@ def load_models():
 """
 ## Image and Caption Preparation
 
-Prepares OASIS brain MRI images and generates captions for each image. Returns lists of image paths and captions.
+Prepares `OASIS brain MRI` images and generates captions for each image. Returns lists of image paths and captions.
 """
 
 
@@ -191,7 +190,7 @@ def visualize_prediction(query_img_path, db_image_paths, best_idx, db_reports):
 """
 ## Image Feature Extraction
 
-Extracts a feature vector from an image using the vision model.
+Extracts a feature vector from an image using the small `vision (MobileNetV3)` model.
 """
 
 
@@ -216,7 +215,7 @@ def extract_image_features(img_path, vision_model):
 """
 ## DB Reports
 
-List of example radiology reports corresponding to each database image. Used as context for the RAG pipeline to generate new reports for query images.
+List of example `radiology reports` corresponding to each database image. Used as context for the RAG pipeline to generate new reports for `query images`.
 """
 db_reports = [
     "MRI shows a 1.5cm lesion in the right frontal lobe, non-enhancing, no edema.",
@@ -226,7 +225,7 @@ db_reports = [
 """
 ## Output Cleaning Utility
 
-Cleans the generated text output by removing prompt echoes and unwanted headers.
+Cleans the `generated text` output by removing prompt echoes and unwanted headers.
 """
 
 
@@ -305,9 +304,11 @@ def clean_generated_output(generated_text, prompt):
 ## RAG Pipeline
 
 Implements the Retrieval-Augmented Generation (RAG) pipeline:
+
 - Extracts features from the query image and database images.
 - Finds the most similar image in the database.
 - Uses the retrieved report and the query image as input to the Gemma3 VLM to generate a new report.
+
 Returns the index of the matched image, the retrieved report, and the generated report.
 """
 
@@ -362,7 +363,7 @@ def rag_pipeline(query_img_path, db_image_paths, db_reports, vision_model, text_
 """
 ## Vision-Language Model (Direct Approach)
 
-Generates a radiology report directly from the query image using the Gemma3 VLM, without retrieval.
+Generates a radiology report directly from the `query image` using the `Gemma3(4B)` VLM model without retrieval.
 """
 
 
@@ -371,7 +372,7 @@ def vlm_generate_report(query_img_path, vlm_model, question=None):
     Generate a radiology report directly from the image using a vision-language model.
     Args:
         query_img_path (str): Path to the query image
-        vlm_model: Pre-trained vision-language model (Gemma3 VLM)
+        vlm_model: Pre-trained vision-language model (Gemma3(4B) VLM)
         question (str): Optional question or prompt to include
     Returns:
         str: Generated radiology repor
@@ -458,21 +459,21 @@ if __name__ == "__main__":
 """
 ## Comparison: RAG Pipeline vs Direct VLM
 
-- **MobileNet + Gemma3 1B text model**: ~1B total parameters
+- **MobileNet + Gemma3(1B) text model**: ~1B total parameters
 - **Gemma3 VLM 4B model**: ~4B total parameters
-- **Results**: The RAG pipeline (MobileNet + Gemma3 1B) is better due to its use of retrieval and context, providing more relevant and accurate reports with fewer parameters.
+- **Results**: The RAG pipeline `(MobileNetV3 + Gemma3(1B) text model)` report is better due to its use of retrieval and context, providing more relevant and accurate reports with fewer parameters.
 
 **Detailed Comparison:**
 
 - **Accuracy & Relevance:**
 
   - RAG pipeline leverages retrieval to provide contextually relevant and case-specific reports, often matching or exceeding the quality of much larger VLMs.
-  - Direct VLM (Gemma3 4B) produces more generic outputs, lacking access to specific prior cases.
+  - Direct VLM `Gemma3(4B)` produces more generic outputs, lacking access to specific prior cases.
 
 - **Speed & Resource Usage:**
 
-  - MobileNet + Gemma3 1B is significantly faster and more memory-efficient, making it suitable for edge devices and real-time applications.
-  - Gemma3 4B requires more computational resources and is slower, especially on limited hardware.
+  - `MobileNetV3 + Gemma3(1B)` is significantly faster and more memory-efficient, making it suitable for edge devices and real-time applications.
+  - `Gemma3(4B)` requires more computational resources and is slower, especially on limited hardware.
 
 - **Scalability & Flexibility:**
 
@@ -499,7 +500,7 @@ This demonstration showcases the power of Retrieval-Augmented Generation (RAG) i
 
 **Key Achievements:**
 
-- Model Integration: Vision Transformer + Gemma3 LLM via KerasHub
+- Model Integration:`[MobileNetV3 + Gemma3(1B) text model]` and `Gemma3(4B) VLM model` via `KerasHub`
 - Feature Extraction: Meaningful features from brain MRI images
 - Similarity Search: Efficient retrieval of relevant context
 - Report Generation: Comprehensive reports using retrieved context
