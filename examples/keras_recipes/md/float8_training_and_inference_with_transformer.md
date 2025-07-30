@@ -1,4 +1,4 @@
-# Float8 Quantization Aware Training and Inference with a simple Transformer model
+# Float8 Quantization-Aware Training and Inference with a simple Transformer model
 
 **Author:** [Hongyu Chiu](https://github.com/james77777778)<br>
 **Date created:** 2024/05/14<br>
