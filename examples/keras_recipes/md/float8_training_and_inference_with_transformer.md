@@ -1,9 +1,9 @@
-# Float8 training and inference with a simple Transformer model
+# Float8 Quantization Aware Training and Inference with a simple Transformer model
 
 **Author:** [Hongyu Chiu](https://github.com/james77777778)<br>
 **Date created:** 2024/05/14<br>
 **Last modified:** 2024/05/14<br>
-**Description:** Train a simple Transformer model with the float8 quantization.
+**Description:** Train a simple Transformer model with float8 quantization-aware training.
 
 
 <img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/keras_recipes/ipynb/float8_training_and_inference_with_transformer.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/keras_recipes/float8_training_and_inference_with_transformer.py)

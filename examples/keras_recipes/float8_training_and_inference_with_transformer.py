@@ -1,9 +1,9 @@
 """
-Title: Float8 training and inference with a simple Transformer model
+Title: Float8 Quantization Aware Training and Inference with a simple Transformer model
 Author: [Hongyu Chiu](https://github.com/james77777778)
 Date created: 2024/05/14
 Last modified: 2024/05/14
-Description: Train a simple Transformer model with the float8 quantization.
+Description: Train a simple Transformer model with float8 quantization-aware training.
 Accelerator: GPU
 """
 
