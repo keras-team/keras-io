@@ -959,7 +959,7 @@ EXAMPLES_MASTER = {
                 },
                 {
                     "path": "float8_training_and_inference_with_transformer",
-                    "title": "Float8 Quantization Aware Training and Inference with a simple Transformer model",
+                    "title": "Float8 Quantization-Aware Training and Inference with a simple Transformer model",
                     "subcategory": "Keras usage tips",
                     "keras_3": True,
                 },
