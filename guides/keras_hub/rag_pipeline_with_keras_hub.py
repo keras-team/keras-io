@@ -61,9 +61,11 @@ Once you've got your credentials set up, you'll be able to download and use some
 
 import os
 import sys
-os.environ['KERAS_BACKEND'] = 'jax'
+
+os.environ["KERAS_BACKEND"] = "jax"
 import keras
 import numpy as np
+
 keras.config.set_dtype_policy("bfloat16")
 import keras_hub
 import tensorflow as tf
@@ -118,6 +120,8 @@ Alright, this is where the real magic begins! We're about to load up our AI mode
 
 Let's load up our AI dream team and see what they can do! 🚀
 """
+
+
 def load_models():
     """
     Load and configure vision model for feature extraction, Gemma3 VLM for report generation, and a compact text model for benchmarking.
@@ -125,12 +129,15 @@ def load_models():
         tuple: (vision_model, vlm_model, text_model)
     """
     # Vision model for feature extraction (lightweight MobileNetV3)
-    vision_model = keras_hub.models.ImageClassifier.from_preset("mobilenet_v3_large_100_imagenet_21k")
+    vision_model = keras_hub.models.ImageClassifier.from_preset(
+        "mobilenet_v3_large_100_imagenet_21k"
+    )
     # Gemma3 Text model for report generation in RAG Pipeline (compact)
-    text_model = keras_hub.models.Gemma3CausalLM.from_preset('gemma3_instruct_1b')
+    text_model = keras_hub.models.Gemma3CausalLM.from_preset("gemma3_instruct_1b")
     # Gemma3 VLM for report generation (original, for benchmarking)
-    vlm_model = keras_hub.models.Gemma3CausalLM.from_preset('gemma3_instruct_4b')
+    vlm_model = keras_hub.models.Gemma3CausalLM.from_preset("gemma3_instruct_4b")
     return vision_model, vlm_model, text_model
+
 
 # Load models
 print("Loading models...")
@@ -155,6 +162,8 @@ Now we're getting to the really exciting part - we're going to work with real br
 
 Ready to see some real brain scans? Let's prepare our medical images! 🔬
 """
+
+
 def prepare_images_and_captions(oasis, images_dir="images"):
     """
     Prepare OASIS brain MRI images and generate captions.
@@ -173,7 +182,9 @@ def prepare_images_and_captions(oasis, images_dir="images"):
         img = image.load_img(img_path)
         data = img.get_fdata()
         slice_ = data[:, :, data.shape[2] // 2]
-        slice_ = ((slice_ - np.min(slice_)) / (np.max(slice_) - np.min(slice_)) * 255).astype(np.uint8)
+        slice_ = (
+            (slice_ - np.min(slice_)) / (np.max(slice_) - np.min(slice_)) * 255
+        ).astype(np.uint8)
         img_pil = Image.fromarray(slice_)
         fname = f"oasis_{i}.png"
         fpath = os.path.join(images_dir, fname)
@@ -182,6 +193,7 @@ def prepare_images_and_captions(oasis, images_dir="images"):
         captions.append(f"OASIS Brain MRI {i}")
     print("Saved 4 OASIS Brain MRI images:", image_paths)
     return image_paths, captions
+
 
 # Prepare data
 print("Preparing OASIS dataset...")
@@ -210,6 +222,8 @@ Alright, this is the moment we've been waiting for! We're about to visualize our
 
 Take a good look at these images - they're the foundation of everything our RAG system will do! 🧠✨
 """
+
+
 def visualize_images(image_paths, captions):
     """
     Visualize the processed brain MRI images.
@@ -225,12 +239,13 @@ def visualize_images(image_paths, captions):
         axes = [axes]
     for i, (img_path, title) in enumerate(zip(image_paths, captions)):
         img = Image.open(img_path)
-        axes[i].imshow(img, cmap='gray')
+        axes[i].imshow(img, cmap="gray")
         axes[i].set_title(title)
-        axes[i].axis('off')
+        axes[i].axis("off")
     plt.suptitle("OASIS Brain MRI Images")
     plt.tight_layout()
     plt.show()
+
 
 # Visualize the prepared images
 visualize_images(image_paths, captions)
@@ -241,6 +256,8 @@ visualize_images(image_paths, captions)
 
 Displays the query image and the most similar retrieved image from the database side by side.
 """
+
+
 def visualize_prediction(query_img_path, db_image_paths, best_idx, db_reports):
     """
     Visualize the query image and the most similar retrieved image.
@@ -252,12 +269,12 @@ def visualize_prediction(query_img_path, db_image_paths, best_idx, db_reports):
         db_reports (list): List of database reports
     """
     fig, axes = plt.subplots(1, 2, figsize=(10, 4))
-    axes[0].imshow(Image.open(query_img_path), cmap='gray')
+    axes[0].imshow(Image.open(query_img_path), cmap="gray")
     axes[0].set_title("Query Image")
-    axes[0].axis('off')
-    axes[1].imshow(Image.open(db_image_paths[best_idx]), cmap='gray')
+    axes[0].axis("off")
+    axes[1].imshow(Image.open(db_image_paths[best_idx]), cmap="gray")
     axes[1].set_title("Retrieved Context Image")
-    axes[1].axis('off')
+    axes[1].axis("off")
     plt.suptitle("Query and Most Similar Database Image")
     plt.tight_layout()
     plt.show()
@@ -268,6 +285,8 @@ def visualize_prediction(query_img_path, db_image_paths, best_idx, db_reports):
 
 Extracts a feature vector from an image using the small `vision(MobileNetV3)` model.
 """
+
+
 def extract_image_features(img_path, vision_model):
     """
     Extract features from an image using the vision model.
@@ -279,11 +298,12 @@ def extract_image_features(img_path, vision_model):
     Returns:
         numpy.ndarray: Extracted feature vector
     """
-    img = Image.open(img_path).convert("RGB").resize((384,384))
+    img = Image.open(img_path).convert("RGB").resize((384, 384))
     x = np.array(img) / 255.0
     x = np.expand_dims(x, axis=0)
     features = vision_model(x)
     return features
+
 
 """
 ## DB Reports
@@ -293,7 +313,7 @@ List of example `radiology reports` corresponding to each database image. Used a
 db_reports = [
     "MRI shows a 1.5cm lesion in the right frontal lobe, non-enhancing, no edema.",
     "Normal MRI scan, no abnormal findings.",
-    "Diffuse atrophy noted, no focal lesions."
+    "Diffuse atrophy noted, no focal lesions.",
 ]
 
 """
@@ -301,6 +321,8 @@ db_reports = [
 
 Cleans the `generated text` output by removing prompt echoes and unwanted headers.
 """
+
+
 def clean_generated_output(generated_text, prompt):
     """
     Remove prompt echo and header details from generated text.
@@ -314,25 +336,36 @@ def clean_generated_output(generated_text, prompt):
     """
     # Remove the prompt from the beginning of the generated text
     if generated_text.startswith(prompt):
-        cleaned_text = generated_text[len(prompt):].strip()
+        cleaned_text = generated_text[len(prompt) :].strip()
     else:
         cleaned_text = generated_text.replace(prompt, "").strip()
 
     # Remove header details and unwanted formatting
-    lines = cleaned_text.split('\n')
+    lines = cleaned_text.split("\n")
     filtered_lines = []
     skip_next = False
-    subheading_pattern = re.compile(r'^(\s*[A-Za-z0-9 .\-()]+:)(.*)')
+    subheading_pattern = re.compile(r"^(\s*[A-Za-z0-9 .\-()]+:)(.*)")
 
     for line in lines:
-        line = line.replace('<end_of_turn>', '').strip()
-        line = line.replace('**', '')
-        line = line.replace('*', '')
+        line = line.replace("<end_of_turn>", "").strip()
+        line = line.replace("**", "")
+        line = line.replace("*", "")
         # Remove empty lines after headers (existing logic)
-        if any(header in line for header in [
-            "**Patient:**", "**Date of Exam:**", "**Exam:**", "**Referring Physician:**",
-            "**Patient ID:**", "Patient:", "Date of Exam:", "Exam:", "Referring Physician:", "Patient ID:"
-        ]):
+        if any(
+            header in line
+            for header in [
+                "**Patient:**",
+                "**Date of Exam:**",
+                "**Exam:**",
+                "**Referring Physician:**",
+                "**Patient ID:**",
+                "Patient:",
+                "Date of Exam:",
+                "Exam:",
+                "Referring Physician:",
+                "Patient ID:",
+            ]
+        ):
             continue
         elif line.strip() == "" and skip_next:
             skip_next = False
@@ -343,16 +376,20 @@ def clean_generated_output(generated_text, prompt):
             if match and match.group(2).strip():
                 filtered_lines.append(match.group(1).strip())
                 filtered_lines.append(match.group(2).strip())
-                filtered_lines.append('')  # Add a blank line after subheading
+                filtered_lines.append("")  # Add a blank line after subheading
             else:
                 filtered_lines.append(line)
                 # Add a blank line after subheadings (lines ending with ':')
-                if line.endswith(':') and (len(filtered_lines) == 1 or filtered_lines[-2] != ''):
-                    filtered_lines.append('')
+                if line.endswith(":") and (
+                    len(filtered_lines) == 1 or filtered_lines[-2] != ""
+                ):
+                    filtered_lines.append("")
             skip_next = False
 
     # Remove any empty lines and excessive whitespace
-    cleaned_text = '\n'.join([l for l in filtered_lines if l.strip() or l == '']).strip()
+    cleaned_text = "\n".join(
+        [l for l in filtered_lines if l.strip() or l == ""]
+    ).strip()
 
     return cleaned_text
 
@@ -394,6 +431,8 @@ Imagine you're a detective trying to solve a complex case. Instead of just relyi
 
 Ready to see this magic in action? Let's run our RAG pipeline! 🎯✨
 """
+
+
 def rag_pipeline(query_img_path, db_image_paths, db_reports, vision_model, text_model):
     """
     Retrieval-Augmented Generation pipeline using vision model for retrieval and a compact text model for report generation.
@@ -409,7 +448,9 @@ def rag_pipeline(query_img_path, db_image_paths, db_reports, vision_model, text_
     # Extract features for the query image
     query_features = extract_image_features(query_img_path, vision_model)
     # Extract features for the database images
-    db_features = np.vstack([extract_image_features(p, vision_model) for p in db_image_paths])
+    db_features = np.vstack(
+        [extract_image_features(p, vision_model) for p in db_image_paths]
+    )
     # Ensure features are numpy arrays for similarity search
     db_features_np = np.array(db_features)
     query_features_np = np.array(query_features)
@@ -430,11 +471,14 @@ def rag_pipeline(query_img_path, db_image_paths, db_reports, vision_model, text_
     )
     prompt = PROMPT_TEMPLATE.format(context=retrieved_report)
     # Generate report using the text model (text only, no image input)
-    output = text_model.generate({
-        "prompts": prompt,
-    })
+    output = text_model.generate(
+        {
+            "prompts": prompt,
+        }
+    )
     cleaned_output = clean_generated_output(output, prompt)
     return best_idx, retrieved_report, cleaned_output
+
 
 # Split data: first 3 as database, last as query
 db_image_paths = image_paths[:-1]
@@ -450,9 +494,9 @@ best_idx, retrieved_report, generated_report = rag_pipeline(
 visualize_prediction(query_img_path, db_image_paths, best_idx, db_reports)
 
 # Print RAG results
-print("\n" + "="*50)
+print("\n" + "=" * 50)
 print("RAG PIPELINE RESULTS")
-print("="*50)
+print("=" * 50)
 print(f"\nMatched DB Report Index: {best_idx}")
 print(f"Matched DB Report: {retrieved_report}")
 print("\n--- Generated Report ---\n", generated_report)
@@ -485,6 +529,8 @@ Alright, now we're getting to the really exciting part! We've built our amazing 
 
 Ready to see which approach wins? Let's run the ultimate AI showdown! 🎯🏆
 """
+
+
 def vlm_generate_report(query_img_path, vlm_model, question=None):
     """
     Generate a radiology report directly from the image using a vision-language model.
@@ -509,18 +555,23 @@ def vlm_generate_report(query_img_path, vlm_model, question=None):
     image = np.array(img) / 255.0
     image = np.expand_dims(image, axis=0)
     # Generate report using the VLM
-    output = vlm_model.generate({
-        "images": image,
-        "prompts": PROMPT_TEMPLATE.format(question=question),
-    })
+    output = vlm_model.generate(
+        {
+            "images": image,
+            "prompts": PROMPT_TEMPLATE.format(question=question),
+        }
+    )
     # Clean the generated output
-    cleaned_output = clean_generated_output(output, PROMPT_TEMPLATE.format(question=question))
+    cleaned_output = clean_generated_output(
+        output, PROMPT_TEMPLATE.format(question=question)
+    )
     return cleaned_output
 
+
 # Run VLM (direct approach)
-print("\n" + "="*50)
+print("\n" + "=" * 50)
 print("VLM RESULTS (Direct Approach)")
-print("="*50)
+print("=" * 50)
 vlm_report = vlm_generate_report(query_img_path, vlm_model)
 print("\n--- Vision-Language Model (No Retrieval) Report ---\n", vlm_report)
 
@@ -530,6 +581,7 @@ print("\n--- Vision-Language Model (No Retrieval) Report ---\n", vlm_report)
 Drumroll please... 🥁 The results are in, and they're absolutely fascinating! Let's break down what we just discovered in our ultimate AI showdown.
 
 **The Numbers Don't Lie:**
+
 - **🥊 RAG Approach**: MobileNet + Gemma3 1B text model (~1B total parameters)
 - **🥊 Direct VLM Approach**: Gemma3 VLM 4B model (~4B total parameters)
 - **🏆 Winner**: RAG pipeline! (And here's why it's revolutionary...)
@@ -564,12 +616,15 @@ Drumroll please... 🥁 The results are in, and they're absolutely fascinating! 
 - In medicine, trust and transparency are everything!
 
 **🏥 Real-World Practicality - RAG is Ready for Action!**
+
 - Our RAG system can be deployed in resource-constrained environments
 - It can be continuously improved by adding new cases to the database
 - The traditional approach requires expensive cloud infrastructure
 - This is the difference between a practical solution and a research project!
 
-**The Bottom Line:** We've just proven that intelligence isn't about size - it's about having the right information at the right time. Our RAG system is smaller, faster, more accurate, and more practical than traditional approaches. This isn't just a technical victory - it's a glimpse into the future of AI! 🚀✨
+**The Bottom Line:** 
+
+We've just proven that intelligence isn't about size - it's about having the right information at the right time. Our RAG system is smaller, faster, more accurate, and more practical than traditional approaches. This isn't just a technical victory - it's a glimpse into the future of AI! 🚀✨
 """
 
 """
@@ -608,8 +663,6 @@ Wow! What an incredible journey we've been on together! We started with a simple
 **The Journey Continues:** This is just the beginning! The world of AI is evolving rapidly, and the techniques we've explored here are just the tip of the iceberg. Keep experimenting, keep learning, and keep building amazing things!
 
 **Thank you for joining this adventure!** 🚀✨
-
-*"The future belongs to those who believe in the beauty of their dreams." - Eleanor Roosevelt*
 
 And we've just built something beautiful together! 🌟
 """
