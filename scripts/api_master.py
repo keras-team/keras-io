@@ -1156,10 +1156,10 @@ API_MASTER = {
                         "keras.ops.greater",
                         "keras.ops.greater_equal",
                         "keras.ops.hamming",
-                        "keras.ops.hanning",
+                        "keras.ops.hanning"
+                        "keras.ops.heaviside",
                         "keras.ops.histogram",
                         "keras.ops.hstack",
-                        "keras.ops.heaviside",
                         "keras.ops.identity",
                         "keras.ops.imag",
                         "keras.ops.inner",
