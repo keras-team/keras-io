@@ -39,8 +39,8 @@ management and sophisticated training loops.
 
 # Getting Started: Setting Up Your Environment
 ```
-pip install -q -U keras
-pip install -U -q flax==0.11.0
+!pip install -q -U keras
+!pip install -q -U flax==0.11.0
 ```
 """
 
@@ -295,9 +295,9 @@ print("\n✅ Gemma fine-tuning step completed successfully!")
 The Keras-NNX integration represents a significant step forward, offering a
 unified framework for both rapid prototyping and high-performance,
 customizable research. You can now:
-Use familiar Keras APIs (Sequential, Model, fit, save) on a JAX backend.
-Integrate Keras layers and models directly into Flax NNX modules and training loops.
-Integrate Keras code/model with the NNX ecosystem like Qwix, Tunix, etc.
-Leverage the entire JAX ecosystem (e.g., nnx.jit, optax) with your Keras models.
-Seamlessly work with large models from KerasHub.
+- Use familiar Keras APIs (Sequential, Model, fit, save) on a JAX backend.
+- Integrate Keras layers and models directly into Flax NNX modules and training loops.
+- Integrate Keras code/model with the NNX ecosystem like Qwix, Tunix, etc.
+- Leverage the entire JAX ecosystem (e.g., nnx.jit, optax) with your Keras models.
+- Seamlessly work with large models from KerasHub.
 """
