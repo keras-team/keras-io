@@ -296,8 +296,8 @@ The Keras-NNX integration represents a significant step forward, offering a
 unified framework for both rapid prototyping and high-performance,
 customizable research. You can now:
 Use familiar Keras APIs (Sequential, Model, fit, save) on a JAX backend.
-Integrate Keras layers and models directly into Flax NNX modules and training
-loops.Integrate keras code/model with NNX ecosytem like Qwix, Tunix, etc.
+Integrate Keras layers and models directly into Flax NNX modules and training loops.
+Integrate Keras code/model with the NNX ecosystem like Qwix, Tunix, etc.
 Leverage the entire JAX ecosystem (e.g., nnx.jit, optax) with your Keras models.
 Seamlessly work with large models from KerasHub.
 """
