@@ -3,8 +3,8 @@ Title: How to use Keras with NNX backend
 Author: [Divyashree Sreepathihalli](https://github.com/divyashreepathihalli)
 Date created: 2025/08/07
 Last modified: 2025/08/07
-Description: How to use Keras with NNX backend
-Accelerator: CPU
+Description: How to use Keras with NNX backend.
+Accelerator: GPU
 """
 
 """
@@ -44,7 +44,8 @@ management and sophisticated training loops.
 ```
 """
 
-"""# Enabling NNX Mode
+"""
+# Enabling NNX Mode
 
 To activate the integration, we must set two environment variables before
 importing Keras. This tells Keras to use the JAX backend and switch to NNX as
@@ -61,7 +62,8 @@ import jax.numpy as jnp
 
 print("✅ Keras is now running on JAX with NNX enabled!")
 
-"""# The Core Integration: Keras Variables in NNX
+"""
+# The Core Integration: Keras Variables in NNX
 
 The heart of this integration is the new keras.Variable, which is designed to
 be a native citizen of the Flax NNX ecosystem. This means you can mix Keras
@@ -96,7 +98,8 @@ print("✅ Variables:", nnx.variables(model))
 # 3. Can we access its value directly?
 print("✅ Value:", model.custom_variable.value)
 
-"""What this shows:
+"""
+What this shows:
 The KerasVariable is successfully traced by NNX, just like any native
 nnx.Variable.
 The nnx.variables() function correctly identifies and lists our
@@ -156,7 +159,8 @@ if not np.array_equal(initial_weights[1], updated_weights[1]):
 else:
     print("\n❌ FAILURE: Model variables were not updated.")
 
-"""As you can see, your existing Keras code works out-of-the-box, giving you a
+"""
+As you can see, your existing Keras code works out-of-the-box, giving you a
 high-level, productive experience powered by JAX and NNX under the hood.
 
 ## Workflow 2: The Power of NNX: Custom Training Loops
@@ -231,7 +235,8 @@ for step, batch in enumerate(dataset()):
     if step >= 500:
         break
 
-"""This example shows how a keras model object is seamlessly passed to
+"""
+This example shows how a keras model object is seamlessly passed to
 nnx.Optimizer and differentiated by nnx.grad. This composition allows you
 to integrate Keras components into sophisticated JAX/NNX workflows. This
 approach also works perfectly with sequential, functional, subclassed keras
@@ -260,7 +265,8 @@ print("Restored model output:", restored_model(dummy_input))
 np.testing.assert_allclose(model(dummy_input), restored_model(dummy_input))
 print("\n✅ SUCCESS: Restored model output matches original model output.")
 
-"""# Real-World Application: Training Gemma
+"""
+# Real-World Application: Training Gemma
 
 Before trying out this KerasHub model, please make sure you have set up your
 Kaggle credentials in colab secrets. The colab pulls in `KAGGLE_KEY` and
@@ -273,9 +279,7 @@ import keras_hub
 keras.config.set_dtype_policy("float16")
 
 # Load Gemma from KerasHub
-gemma_lm = keras_hub.models.GemmaCausalLM.from_preset(
-    "gemma_1.1_instruct_2b_en"
-)
+gemma_lm = keras_hub.models.GemmaCausalLM.from_preset("gemma_1.1_instruct_2b_en")
 
 # --- 1. Inference / Generation ---
 print("--- Gemma Generation ---")
@@ -290,7 +294,8 @@ features = np.array(["The quick brown fox jumped.", "I forgot my homework."])
 gemma_lm.fit(x=features, batch_size=2)
 print("\n✅ Gemma fine-tuning step completed successfully!")
 
-"""# Conclusion
+"""
+# Conclusion
 
 The Keras-NNX integration represents a significant step forward, offering a
 unified framework for both rapid prototyping and high-performance,
