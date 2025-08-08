@@ -2,7 +2,7 @@
 Title: RAG Pipeline with KerasHub
 Author: [Laxmareddy Patlolla](https://github.com/laxmareddyp), [Divyashree Sreepathihalli](https://github.com/divyashreepathihalli)
 Date created: 2025/07/22
-Last modified: 2025/07/29
+Last modified: 2025/08/08
 Description: RAG pipeline for brain MRI analysis: image retrieval, context search, and report generation.
 Accelerator: GPU
 
@@ -622,7 +622,7 @@ Drumroll please... 🥁 The results are in, and they're absolutely fascinating! 
 - The traditional approach requires expensive cloud infrastructure
 - This is the difference between a practical solution and a research project!
 
-**The Bottom Line:** 
+**The Bottom Line:**
 
 We've just proven that intelligence isn't about size - it's about having the right information at the right time. Our RAG system is smaller, faster, more accurate, and more practical than traditional approaches. This isn't just a technical victory - it's a glimpse into the future of AI! 🚀✨
 """
