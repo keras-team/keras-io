@@ -39,7 +39,9 @@ combined with the power and explicit control of NNX and JAX for variable
 management and sophisticated training loops.
 
 # Getting Started: Setting Up Your Environment
-```
+
+
+```python
 !pip install -q -U keras
 !pip install -q -U flax==0.11.0
 ```
