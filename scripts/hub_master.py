@@ -826,6 +826,68 @@ MODELS_MASTER = {
             ],
         },
         {
+            "path": "esm/",
+            "title": "ESM",
+            "toc": True,
+            "children": [
+                {
+                    "path": "esm_tokenizer",
+                    "title": "ESMTokenizer",
+                    "generate": [
+                        "keras_hub.tokenizers.ESMTokenizer",
+                        "keras_hub.tokenizers.ESMTokenizer.from_preset",
+                    ],
+                },
+                {
+                    "path": "esm_backbone",
+                    "title": "ESMBackbone model",
+                    "generate": [
+                        "keras_hub.models.ESMBackbone",
+                        "keras_hub.models.ESMBackbone.from_preset",
+                        "keras_hub.models.ESMBackbone.token_embedding",
+                    ],
+                },
+                {
+                    "path": "esm_classifier",
+                    "title": "ESMProteinClassifier model",
+                    "generate": [
+                        "keras_hub.models.ESMProteinClassifier",
+                        "keras_hub.models.ESMProteinClassifier.from_preset",
+                        "keras_hub.models.ESMProteinClassifier.backbone",
+                        "keras_hub.models.ESMProteinClassifier.preprocessor",
+                    ],
+                },
+                {
+                    "path": "esm_classifier_preprocessor",
+                    "title": "ESMProteinClassifierPreprocessor layer",
+                    "generate": [
+                        "keras_hub.models.ESMProteinClassifierPreprocessor",
+                        "keras_hub.models.ESMProteinClassifierPreprocessor.from_preset",
+                        "keras_hub.models.ESMProteinClassifierPreprocessor.tokenizer",
+                    ],
+                },
+                {
+                    "path": "esm_masked_plm",
+                    "title": "ESMMaskedPLM model",
+                    "generate": [
+                        "keras_hub.models.ESMMaskedPLM",
+                        "keras_hub.models.ESMMaskedPLM.from_preset",
+                        "keras_hub.models.ESMMaskedPLM.backbone",
+                        "keras_hub.models.ESMMaskedPLM.preprocessor",
+                    ],
+                },
+                {
+                    "path": "esm_masked_plm_preprocessor",
+                    "title": "ESMMaskedPLMPreprocessor layer",
+                    "generate": [
+                        "keras_hub.models.ESMMaskedPLMPreprocessor",
+                        "keras_hub.models.ESMMaskedPLMPreprocessor.from_preset",
+                        "keras_hub.models.ESMMaskedPLMPreprocessor.tokenizer",
+                    ],
+                },
+            ],
+        },
+        {
             "path": "falcon/",
             "title": "Falcon",
             "toc": True,
