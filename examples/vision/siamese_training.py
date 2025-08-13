@@ -1,8 +1,8 @@
 """
 Title: Image similarity estimation using a Siamese Network with triplet loss
 Author: Amin Nasiri
-Date created: 2025/08/25
-Last modified: 2025/09/08
+Date created: 2025/07/25
+Last modified: 2025/08/13
 Description: Implementation of Siamese Networks with triplet loss for image similarity learning,
 featuring distributed training and comprehensive evaluation.
 Accelerator: GPU
@@ -47,16 +47,16 @@ such as face recognition, person re-identification, or product matching.
 
 import os
 import cv2
-import glob
 import random
+import shutil
 import numpy as np
-import matplotlib.pyplot as plt
 import seaborn as sns
+import matplotlib.pyplot as plt
 
 import tensorflow as tf
 import tensorflow_datasets as tfds
 from tensorflow.keras.callbacks import ModelCheckpoint
-from keras.saving import register_keras_serializable
+from tensorflow.keras.saving import register_keras_serializable
 
 # Set random seeds for reproducibility
 tf.random.set_seed(42)
@@ -77,13 +77,26 @@ class Config:
     TARGET_SHAPE = (224, 224)
     IMG_SHAPE = TARGET_SHAPE + (3,)
     INITIAL_EPOCHS = 1
-    FINE_TUNE_EPOCHS = 2
+    FINE_TUNE_EPOCHS = 1
     TRIPLETS_PER_EPOCH = 10000
     MARGIN = 0.5  # Triplet loss margin
     LEARNING_RATE = 0.001
     MIN_IMAGES_PER_CLASS = 20
     SPLIT_RATIO = (0.7, 0.2, 0.1)  # train, val, test
     STEPS_PER_EPOCH = TRIPLETS_PER_EPOCH // BATCH_SIZE
+    SHUFFLE_BUFFER_SIZE = TRIPLETS_PER_EPOCH
+    IMAGE_EXTENSIONS = ('.jpg', '.jpeg', '.png')
+    METRICS = ['accuracy', 'precision', 'recall']
+    SIAMESE_SAVE_PATH = "./siamese_model.keras"  # Path to save the trained Siamese model
+    EMBEDDING_SAVE_PATH = "./embedding_model.keras"  # Path to save the embedding model
+    DATASET_PATH = "./sample_data"  # Path to dataset
+    CACHE_DIR = "./Cache"  # Cache directory
+
+    # Ensure cache directory exists
+    os.makedirs(CACHE_DIR, exist_ok=True)
+
+# Initialize configuration for easy access in the script.
+config = Config()
 
 """
 ## Sample Dataset Creation
@@ -92,7 +105,7 @@ For demonstration, we'll create a simple dataset. In practice, replace this with
 Your dataset should be organized as: `path/class1/*.jpg, path/class2/*.jpg, etc.`
 """
 
-def create_sample_dataset(base_path="./sample_data"):
+def create_sample_dataset(base_path):
     """Loads the oxford_flowers102 dataset into a tf.data.Dataset.
     Iterate over the dataset and save the images of samples as: `base_path/class_001/*.jpg, base_path/class_002/*.jpg, etc.`
     """
@@ -115,6 +128,29 @@ def create_sample_dataset(base_path="./sample_data"):
     return base_path
 
 """
+## A helper function to read images from a folder
+This function reads images from a specified folder and returns a list of randomly selected image paths.
+"""
+
+def read_images_from_folder(folder_path, num_images, image_extensions):
+    """Load and sample images from a folder and return their paths."""
+    image_files = [
+        os.path.join(folder_path, f)
+        for f in os.listdir(folder_path)
+        if f.lower().endswith(image_extensions)
+        ]
+
+    if len(image_files) < num_images:
+        print(f"Not enough images in {folder_path}. Found {len(image_files)}, required {num_images}.")
+        return
+
+    random.shuffle(image_files)
+    indices = np.linspace(0, len(image_files) - 1, num_images, dtype=int)
+    selected_images = [image_files[i] for i in indices]
+
+    return selected_images
+
+"""
 ## Dataset Management
 
 The `DatasetManager` class handles dataset directory structure and creates train/validation/test splits.
@@ -123,46 +159,52 @@ The `DatasetManager` class handles dataset directory structure and creates train
 class DatasetManager:
     """Manages dataset directory structure and train/val/test splitting."""
 
-    def __init__(self, dataset_path, min_images=20, split_ratio=(0.7, 0.2, 0.1)):
+    def __init__(self, dataset_path, min_images, split_ratio, image_extensions):
         self.dataset_path = dataset_path
         self.min_images = min_images
         self.split_ratio = split_ratio
+        self.imageExtensions = image_extensions
         self.class_folders = self._collect_valid_folders()
 
     def _collect_valid_folders(self):
         """Collect folders with sufficient images."""
-        valid_folders = []
+        valid_folders = {}
 
         if not os.path.exists(self.dataset_path):
             print("Dataset path not found. Creating sample dataset...")
-            self.dataset_path = create_sample_dataset()
+            self.dataset_path = create_sample_dataset(self.dataset_path)
 
         for folder_name in os.listdir(self.dataset_path):
             folder_path = os.path.join(self.dataset_path, folder_name)
             if os.path.isdir(folder_path):
-                num_images = len([f for f in os.listdir(folder_path)
-                                if f.lower().endswith(('.jpg', '.jpeg', '.png'))])
-                if num_images >= self.min_images:
-                    valid_folders.append(folder_path)
+                imgs = read_images_from_folder(folder_path, self.min_images, self.imageExtensions)
+                if imgs:
+                    valid_folders[folder_path] = imgs
 
-        random.shuffle(valid_folders)
         print(f"Found {len(valid_folders)} valid classes")
         return valid_folders
 
     def get_splits(self):
         """Split folders into train/val/test sets."""
-        n_total = len(self.class_folders)
+        idx = list(self.class_folders.keys())
+        random.shuffle(idx)
+
+        n_total = len(idx)
         n_train = int(self.split_ratio[0] * n_total)
         n_val = int(self.split_ratio[1] * n_total)
 
-        train_folders = self.class_folders[:n_train]
-        val_folders = self.class_folders[n_train:n_train + n_val]
-        test_folders = self.class_folders[n_train + n_val:]
+        train_dirs = idx[:n_train]
+        val_dirs = idx[n_train:n_train + n_val]
+        test_dirs = idx[n_train + n_val:]
 
-        print(f"Dataset split - Train: {len(train_folders)}, "
-              f"Val: {len(val_folders)}, Test: {len(test_folders)}")
+        train_data = {folder: self.class_folders[folder] for folder in train_dirs}
+        val_data = {folder: self.class_folders[folder] for folder in val_dirs}
+        test_data = {folder: self.class_folders[folder] for folder in test_dirs}
 
-        return train_folders, val_folders, test_folders
+        print(f"Dataset split - Train: {len(train_dirs)}, "
+            f"Val: {len(val_dirs)}, Test: {len(test_dirs)}")
+
+        return train_data, val_data, test_data
 
 """
 ## Triplet Generation
@@ -179,31 +221,13 @@ the distance between anchor-negative pairs.
 class TripletGenerator:
     """Generates triplet samples for training."""
 
-    def __init__(self, class_folders, images_per_class=20, mode='Train'):
-        self.class_folders = class_folders
-        self.images_per_class = images_per_class
+    def __init__(self, class_images, mode='Train'):
+        """Initialize triplet generator."""
         self.mode = mode
-        self.class_images = self._load_class_images()
+        self.class_images = class_images
 
         print(f"[{mode}] TripletGenerator: {len(self.class_images)} classes")
 
-    def _load_class_images(self):
-        """Load and sample images for each class."""
-        class_images = {}
-
-        for class_folder in self.class_folders:
-            image_files = glob.glob(os.path.join(class_folder, "*.jpg")) + \
-                         glob.glob(os.path.join(class_folder, "*.jpeg")) + \
-                         glob.glob(os.path.join(class_folder, "*.png"))
-
-            if len(image_files) >= self.images_per_class:
-                # Sample evenly distributed images
-                indices = np.linspace(0, len(image_files) - 1,
-                                    self.images_per_class, dtype=int)
-                selected_images = [image_files[i] for i in indices]
-                class_images[class_folder] = selected_images
-
-        return class_images
 
     def generate_triplets(self):
         """Generator yielding triplet paths."""
@@ -211,8 +235,7 @@ class TripletGenerator:
 
         while True:
             # Select anchor class and different negative class
-            anchor_class = random.choice(class_names)
-            negative_class = random.choice([c for c in class_names if c != anchor_class])
+            anchor_class, negative_class = random.sample(class_names, 2)
 
             # Select images
             anchor_img, positive_img = np.random.choice(
@@ -257,10 +280,10 @@ class ImageProcessor:
 Create an optimized tf.data pipeline for efficient triplet loading and preprocessing.
 """
 
-def create_tf_dataset(class_folders, config, mode='train'):
+def create_tf_dataset(class_images, config, mode='train'):
     """Create optimized tf.data.Dataset for triplet training."""
 
-    generator = TripletGenerator(class_folders, config.MIN_IMAGES_PER_CLASS, mode.title())
+    generator = TripletGenerator(class_images, mode.title())
     processor = ImageProcessor(config.TARGET_SHAPE)
 
     # Create dataset from generator
@@ -274,14 +297,16 @@ def create_tf_dataset(class_folders, config, mode='train'):
     )
 
     # Apply processing pipeline
-    dataset = dataset.map(processor.process_triplet, num_parallel_calls=tf.data.AUTOTUNE)
-    dataset = dataset.take(config.TRIPLETS_PER_EPOCH)
-    dataset = dataset.cache()
+    dataset = dataset.map(processor.process_triplet, num_parallel_calls=1)
 
     if mode == 'train':
-        dataset = dataset.shuffle(1000)
+        dataset = dataset.shuffle(config.SHUFFLE_BUFFER_SIZE)
 
-    dataset = dataset.batch(config.BATCH_SIZE, drop_remainder=True)
+    else:
+        dataset = dataset.take(config.TRIPLETS_PER_EPOCH)
+        dataset = dataset.cache(f'{config.CACHE_DIR}/cache_{mode.title()}')
+
+    dataset = dataset.batch(config.BATCH_SIZE, drop_remainder=(mode == 'train'))
     dataset = dataset.prefetch(tf.data.AUTOTUNE)
 
     return dataset
@@ -335,26 +360,6 @@ class DistanceLayer(tf.keras.layers.Layer):
         an_distance = tf.reduce_sum(tf.square(anchor - negative), axis=-1)
         return tf.stack([ap_distance, an_distance], axis=1)
 
-
-"""
-## L2Normalization Layer
-
-Custom layer to perform L2 normalization on inputs along a specified axis.
-"""
-
-class L2Normalization(tf.keras.layers.Layer):
-    def __init__(self, axis=1, **kwargs):
-        super().__init__(**kwargs)
-        self.axis = axis
-
-    def call(self, inputs):
-        return tf.math.l2_normalize(inputs, axis=self.axis)
-
-    def get_config(self):
-        config = super().get_config()
-        config.update({"axis": self.axis})
-        return config
-
 """
 ## Model Architecture
 
@@ -395,7 +400,7 @@ def create_siamese_model(config, fine_tuning=False):
     x = tf.keras.layers.BatchNormalization()(x)
     x = tf.keras.layers.Dense(256, activation='relu')(x)
     x = tf.keras.layers.Dense(128)(x)
-    embeddings = L2Normalization(axis=1)(x)
+    embeddings = tf.keras.layers.UnitNormalization(axis=1)(x)
 
     embedding_model = tf.keras.Model(inputs, embeddings, name='embedding')
 
@@ -416,7 +421,7 @@ def create_siamese_model(config, fine_tuning=False):
         name='siamese_network'
     )
 
-    return siamese_model, embedding_model
+    return siamese_model
 
 """
 ## Visualization Functions
@@ -486,21 +491,21 @@ This progressive approach helps stabilize training and often leads to better res
 
 def train_model():
     """Main training pipeline."""
-
-    # Initialize configuration
-    config = Config()
+    print("Starting training pipeline...")
 
     # Setup distributed strategy
     strategy = tf.distribute.MirroredStrategy()
     print(f"Training on {strategy.num_replicas_in_sync} devices")
 
     # Prepare dataset
-    dataset_manager = DatasetManager("./sample_data", config.MIN_IMAGES_PER_CLASS)
+    dataset_manager = DatasetManager(config.DATASET_PATH, config.MIN_IMAGES_PER_CLASS,
+                                     config.SPLIT_RATIO, config.IMAGE_EXTENSIONS)
     train_folders, val_folders, test_folders = dataset_manager.get_splits()
 
     # Create datasets
     train_dataset = create_tf_dataset(train_folders, config, 'train')
     val_dataset = create_tf_dataset(val_folders, config, 'val')
+
 
     # Visualize sample triplets
     print("Sample triplets from training data:")
@@ -508,7 +513,7 @@ def train_model():
 
     # Build and compile model
     with strategy.scope():
-        siamese_model, embedding_model = create_siamese_model(config)
+        siamese_model = create_siamese_model(config)
 
         siamese_model.compile(
             optimizer=tf.keras.optimizers.Adam(config.LEARNING_RATE),
@@ -520,7 +525,7 @@ def train_model():
 
     # Setup callbacks
     checkpoint_cb = ModelCheckpoint(
-        filepath="./siamese_model.keras",
+        filepath=config.SIAMESE_SAVE_PATH,
         monitor='val_loss',
         save_best_only=True,
         mode='min',
@@ -541,8 +546,8 @@ def train_model():
     print(f"\n=== Phase 2: Fine-tuning ({config.FINE_TUNE_EPOCHS} epochs) ===")
 
     with strategy.scope():
-        siamese_model_ft, _ = create_siamese_model(config, fine_tuning=True)
-        siamese_model_ft.load_weights("./siamese_model.keras")
+        siamese_model_ft = create_siamese_model(config, fine_tuning=True)
+        siamese_model_ft.load_weights(config.SIAMESE_SAVE_PATH)
 
         # Use lower learning rate for fine-tuning
         siamese_model_ft.compile(
@@ -553,6 +558,7 @@ def train_model():
     history2 = siamese_model_ft.fit(
         train_dataset,
         validation_data=val_dataset,
+        steps_per_epoch=config.STEPS_PER_EPOCH,
         epochs=config.INITIAL_EPOCHS + config.FINE_TUNE_EPOCHS,
         initial_epoch=config.INITIAL_EPOCHS,
         callbacks=[checkpoint_cb]
@@ -561,7 +567,47 @@ def train_model():
     # Plot training history
     plot_training_history(history1, history2, config)
 
-    return siamese_model_ft
+    print("\nTraining completed successfully!")
+
+    return siamese_model_ft, test_folders
+
+
+"""
+## Extract embedding model and save it
+We extract the embedding model from the Siamese network and save it for later use.
+This allows us to use the trained embeddings for inference or evaluation without needing the full Siamese model.
+"""
+
+def extract_embedding_model(siamese_model, save_path):
+    """Extract the embedding model from the Siamese network."""
+
+    try:
+        embedding_model = siamese_model.get_layer('embedding')
+
+        # Save the embedding model to a file
+        embedding_model.save(save_path)
+        print(f"Embedding model saved as {os.path.basename(save_path)}")
+
+        return embedding_model
+
+    except ValueError:
+        print("Embedding model not found in the Siamese network!")
+        return
+
+"""
+## A helper function to display results as a heatmap using Seaborn.
+This function visualizes the confusion matrix results in a heatmap format.
+It provides a clear view of model performance across different classes.
+"""
+
+def display_heatmap(results, x_vals, y_vals, x_label, y_label, title, **kwargs):
+    """Display results as a heatmap."""
+    sns.heatmap(results, xticklabels=x_vals, yticklabels=y_vals, annot=True, **kwargs)
+
+    plt.title(title)
+    plt.xlabel(x_label)
+    plt.ylabel(y_label)
+    plt.show()
 
 """
 ## Model Evaluation
@@ -569,23 +615,16 @@ def train_model():
 Evaluate the trained model using a confusion matrix approach.
 """
 
-def evaluate_model(model, test_folders, config):
+def evaluate_model(embedding_model, test_folders, config):
     """Evaluate the trained model on test set."""
 
-    def load_images(folder_path, num_images=21):
+    print("\n=== Model Evaluation ===")
+
+    def load_images(imgs_path):
         """Load and preprocess images from a folder."""
-        image_files = glob.glob(os.path.join(folder_path, "*.jpg")) + \
-                     glob.glob(os.path.join(folder_path, "*.jpeg")) + \
-                     glob.glob(os.path.join(folder_path, "*.png"))
-
-        if len(image_files) < num_images:
-            return None
-
-        indices = np.linspace(0, len(image_files) - 1, num_images, dtype=int)
-        selected_files = [image_files[i] for i in indices]
 
         images = []
-        for img_path in selected_files:
+        for img_path in imgs_path:
             img = tf.io.read_file(img_path)
             img = tf.image.decode_image(img, channels=3, expand_animations=False)
             img = tf.cast(img, tf.float32) / 255.0
@@ -595,29 +634,16 @@ def evaluate_model(model, test_folders, config):
         images = tf.stack(images)
         return tf.keras.applications.resnet.preprocess_input(images)
 
-    # Extract embedding model
-    embedding_model = None
-    for layer in model.layers:
-        if hasattr(layer, 'name') and layer.name == 'embedding':
-            embedding_model = layer
-            embedding_model.save("./embedding_model.keras") # Save the trained model to a file named "embedding_model.keras"
-            break
-
-    if not embedding_model:
-        print("Embedding model not found!")
-        return
-
     # Load test data and extract embeddings
     indicators = []
     test_samples = []
 
     print("Extracting embeddings from test set...")
-    for folder in test_folders:
-        images = load_images(folder)
-        if images is not None:
-            embeddings = embedding_model(images)
-            indicators.append(embeddings[0])  # First as indicator
-            test_samples.append(embeddings[1:])  # Rest as test samples
+    for imgs_path in test_folders.values():
+        images = load_images(imgs_path)
+        embeddings = embedding_model(images)
+        indicators.append(embeddings[0])  # First as indicator
+        test_samples.append(embeddings[1:])  # Rest as test samples
 
     if not indicators:
         print("No valid test data found!")
@@ -649,14 +675,23 @@ def evaluate_model(model, test_folders, config):
             # Compute anchor-negative distances
             an_distances = tf.reduce_sum(tf.square(indicator - neg_samples), axis=-1)
 
-            # Compare distances - we want ap_distance < an_distance
-            comparisons = tf.stack([ap_distances, an_distances])
-            min_indices = tf.argmin(comparisons, axis=0)
+            # Compare distances - we want ap_distance < an_distance for all pairs
+            # Reshape for broadcasting
+            ap_distances_reshaped = tf.reshape(ap_distances, (-1, 1))
+
+            # Broadcast comparison
+            comparisons = ap_distances_reshaped < an_distances
 
             # Count correct predictions
-            correct_count = tf.reduce_sum(1 - min_indices).numpy()
-            incorrect_count = tf.reduce_sum(min_indices).numpy()
+            correct_count = tf.reduce_sum(tf.cast(comparisons, tf.int32)).numpy()
 
+            # Count total comparisons
+            total_comparisons = tf.size(ap_distances) * tf.size(an_distances)
+
+            # Count incorrect predictions
+            incorrect_count = total_comparisons.numpy() - correct_count
+
+            # Update confusion matrix row
             confusion_row[i] += correct_count
             confusion_row[j] += incorrect_count
 
@@ -666,13 +701,8 @@ def evaluate_model(model, test_folders, config):
 
     # Visualize results
     plt.figure(figsize=(10, 8))
-    class_names = [f'Class_{i}' for i in range(num_classes)]
-    sns.heatmap(confusion_matrix, annot=True, fmt='d', cmap='Blues',
-                xticklabels=class_names, yticklabels=class_names)
-    plt.title('Confusion Matrix')
-    plt.xlabel('Predicted')
-    plt.ylabel('Actual')
-    plt.show()
+    class_names = [f'ID_{i}' for i in range(num_classes)]
+    display_heatmap(confusion_matrix, class_names, class_names, 'Predicted', 'Actual', 'Confusion Matrix', fmt='d', cmap='Blues')
 
     # Compute metrics
     metrics = []
@@ -696,20 +726,29 @@ def evaluate_model(model, test_folders, config):
     print(f"Precision: {avg_metrics[1]:.3f}")
     print(f"Recall: {avg_metrics[2]:.3f}")
 
+    # Prepare metrics for heatmap
+    metrics = np.vstack([metrics, avg_metrics])
+
+    # Add label for the average metrics row
+    class_names.append('Average per class')
+
+    display_heatmap(metrics * 100, config.METRICS, class_names, 'Metrics', 'Classes', 'Per-Class Performance Metrics',
+                    fmt='.2f', cmap='Greens', linewidths=0.5, cbar_kws={'label': 'Score (%)'})
+
+    print("\nEvaluation completed successfully!")
 
 """
-## Load embedding network from disk.
-Because the model includes a custom layer (L2Normalization),
-we need to provide it in the `custom_objects` dictionary
-so Keras knows how to reconstruct that layer when loading.
+## Clear TensorFlow cache files
+This function clears TensorFlow cache files in the specified directory.
+This is useful to free up space or reset the cache for a fresh start.
 """
-def load_embedding_network(model_path="./embedding_model.keras"):
-    trainedEmbedding = tf.keras.models.load_model(
-        model_path,
-        custom_objects={"L2Normalization": L2Normalization}
-    )
-
-    return trainedEmbedding
+def clear_tf_cache(cache_dir):
+    """Clear TensorFlow cache files in the specified directory."""
+    if os.path.exists(cache_dir):
+        shutil.rmtree(cache_dir)
+        print(f"Cache directory '{cache_dir}' removed.")
+    else:
+        print(f"Cache directory '{cache_dir}' does not exist. No files to remove.")
 
 """
 ## Complete Example
@@ -717,17 +756,24 @@ def load_embedding_network(model_path="./embedding_model.keras"):
 Let's put it all together and run the complete training and evaluation pipeline.
 """
 
-# Train the model
-trained_model = train_model()
+try:
+    # Train the model
+    trained_model, test_folders = train_model()
 
-# For evaluation, we need test data
-dataset_manager = DatasetManager("./sample_data", Config.MIN_IMAGES_PER_CLASS)
-_, _, test_folders = dataset_manager.get_splits()
+    # For evaluation, we need test data and the trained embedding model
+    trained_embedding_model = extract_embedding_model(trained_model, config.EMBEDDING_SAVE_PATH)
 
-if test_folders:
-    print("\n=== Model Evaluation ===")
-    evaluate_model(trained_model, test_folders, Config())
-else:
-    print("No test data available for evaluation")
+    if test_folders and trained_embedding_model:
+        evaluate_model(trained_embedding_model, test_folders, config)
+        clear_tf_cache(config.CACHE_DIR)
 
-print("\nTraining completed successfully!")
+    elif trained_model:
+         print("\nTraining completed, but no test data or embedding model available for evaluation.")
+
+    else:
+        print("No trained model available for evaluation.")
+
+except Exception as e:
+    clear_tf_cache(config.CACHE_DIR)
+    print(f"An error occurred during training or evaluation: {e}")
+    print("Please check your dataset and configuration settings.")
