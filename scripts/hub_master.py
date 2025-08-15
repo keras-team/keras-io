@@ -699,7 +699,7 @@ MODELS_MASTER = {
         },
         {
             "path": "dinov2/",
-            "title": "DINOv2",
+            "title": "DINOV2",
             "toc": True,
             "children": [
                 {
