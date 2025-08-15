@@ -1683,8 +1683,8 @@ MODELS_MASTER = {
                     "path": "qwen3_tokenizer",
                     "title": "Qwen3Tokenizer",
                     "generate": [
-                        "keras_hub.tokenizers.Qwen3Tokenizer",
-                        "keras_hub.tokenizers.Qwen3Tokenizer.from_preset",
+                        "keras_hub.models.Qwen3Tokenizer",
+                        "keras_hub.models.Qwen3Tokenizer.from_preset",
                     ],
                 },
                 {
