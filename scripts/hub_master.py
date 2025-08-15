@@ -2691,7 +2691,15 @@ HUB_GUIDES_MASTER = {
         },
         {
             "path": "hugging_face_keras_integration",
-            "title": "Loading HuggingFace Transformers checkpoints into multi-backend KerasHub models",
+            "title": "Loading Hugging Face Transformers Checkpoints",
+        },
+        {
+            "path": "function_calling_with_keras_hub",
+            "title": "Function Calling with KerasHub models",
+        },
+        {
+            "path": "rag_pipeline_with_keras_hub",
+            "title": "RAG Pipeline with KerasHub",
         },
     ],
 }
