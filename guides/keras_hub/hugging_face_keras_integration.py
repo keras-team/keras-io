@@ -1,8 +1,8 @@
 """
-Title: Loading HuggingFace Transformers checkpoints into multi-backend KerasHub models
+Title: Loading Hugging Face Transformers Checkpoints
 Author: [Laxma Reddy Patlolla](https://github.com/laxmareddyp), [Divyashree Sreepathihalli](https://github.com/divyashreepathihalli)
 Date created: 2025/06/17
-Last modified: 2025/06/23
+Last modified: 2025/07/22
 Description: How to load and run inference from KerasHub model checkpoints hosted on the HuggingFace Hub.
 Accelerator: GPU
 """
