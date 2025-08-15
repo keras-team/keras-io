@@ -740,6 +740,29 @@ MODELS_MASTER = {
             ],
         },
         {
+            "path": "dinov2/",
+            "title": "DINOV2",
+            "toc": True,
+            "children": [
+                {
+                    "path": "dinov2_image_converter",
+                    "title": "DINOV2ImageConverter",
+                    "generate": [
+                        "keras_hub.layers.DINOV2ImageConverter",
+                        "keras_hub.layers.DINOV2ImageConverter.from_preset",
+                    ],
+                },
+                {
+                    "path": "dinov2_backbone",
+                    "title": "DINOV2Backbone model",
+                    "generate": [
+                        "keras_hub.models.DINOV2Backbone",
+                        "keras_hub.models.DINOV2Backbone.from_preset",
+                    ],
+                },
+            ],
+        },
+        {
             "path": "distil_bert/",
             "title": "DistilBert",
             "toc": True,
