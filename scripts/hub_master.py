@@ -1182,6 +1182,48 @@ MODELS_MASTER = {
             ],
         },
         {
+            "path": "hgnetv2/",
+            "title": "HGNetV2",
+            "toc": True,
+            "children": [
+                {
+                    "path": "hgnetv2_image_converter",
+                    "title": "HGNetV2ImageConverter",
+                    "generate": [
+                        "keras_hub.layers.HGNetV2ImageConverter",
+                        "keras_hub.layers.HGNetV2ImageConverter.from_preset",
+                    ],
+                },
+                {
+                    "path": "hgnetv2_backbone",
+                    "title": "HGNetV2Backbone model",
+                    "generate": [
+                        "keras_hub.models.HGNetV2Backbone",
+                        "keras_hub.models.HGNetV2Backbone.from_preset",
+                    ],
+                },
+                {
+                    "path": "hgnetv2_image_classifier",
+                    "title": "HGNetV2ImageClassifier model",
+                    "generate": [
+                        "keras_hub.models.HGNetV2ImageClassifier",
+                        "keras_hub.models.HGNetV2ImageClassifier.from_preset",
+                        "keras_hub.models.HGNetV2ImageClassifier.backbone",
+                        "keras_hub.models.HGNetV2ImageClassifier.preprocessor",
+                    ],
+                },
+                {
+                    "path": "hgnetv2_image_classifier_preprocessor",
+                    "title": "HGNetV2ImageClassifierPreprocessor layer",
+                    "generate": [
+                        "keras_hub.models.HGNetV2ImageClassifierPreprocessor",
+                        "keras_hub.models.HGNetV2ImageClassifierPreprocessor.from_preset",
+                        "keras_hub.models.HGNetV2ImageClassifierPreprocessor.image_converter",
+                    ],
+                },
+            ],
+        },
+        {
             "path": "llama/",
             "title": "Llama",
             "toc": True,
