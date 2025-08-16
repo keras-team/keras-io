@@ -45,7 +45,7 @@ remains upright. The agent, therefore, must learn to keep the pole from falling 
 import os
 
 os.environ["KERAS_BACKEND"] = "tensorflow"
-import gym
+import gymnasium as gym
 import numpy as np
 import keras
 from keras import ops
@@ -98,13 +98,13 @@ running_reward = 0
 episode_count = 0
 
 while True:  # Run until solved
-    state = env.reset()[0]
+    obs, _ = env.reset()
     episode_reward = 0
     with tf.GradientTape() as tape:
         for timestep in range(1, max_steps_per_episode):
 
-            state = ops.convert_to_tensor(state)
-            state = ops.expand_dims(state, 0)
+            state = tf.convert_to_tensor(state)
+            state = tf.expand_dims(state, 0)
 
             # Predict action probabilities and estimated future rewards
             # from environment state
