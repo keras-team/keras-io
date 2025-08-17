@@ -65,6 +65,9 @@ Let's get our tools ready and start building something amazing!
 import os
 import re
 import json
+
+# Use ast.literal_eval for safer evaluation (only allows literals, no function calls)
+import ast
 from typing import Dict, List, Any, Callable, Optional
 
 # Set Keras backend to jax for optimal performance
@@ -73,6 +76,7 @@ os.environ["KERAS_BACKEND"] = "jax"
 import keras
 from keras import layers
 import keras_hub
+
 
 """
 ## Loading Our AI Dream Team! 🤖
@@ -180,9 +184,6 @@ def calculator_tool(expression: str) -> str:
     try:
         # Clean the expression to only allow safe mathematical operations
         cleaned_expr = re.sub(r"[^0-9+\-*/().\s]", "", expression)
-
-        # Use ast.literal_eval for safer evaluation (only allows literals, no function calls)
-        import ast
 
         # Convert mathematical expression to a safe format
         # Replace mathematical operators with Python equivalents

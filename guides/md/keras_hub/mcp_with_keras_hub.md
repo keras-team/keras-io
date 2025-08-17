@@ -69,6 +69,9 @@ Let's get our tools ready and start building something amazing!
 import os
 import re
 import json
+
+# Use ast.literal_eval for safer evaluation (only allows literals, no function calls)
+import ast
 from typing import Dict, List, Any, Callable, Optional
 
 # Set Keras backend to jax for optimal performance
@@ -77,17 +80,18 @@ os.environ["KERAS_BACKEND"] = "jax"
 import keras
 from keras import layers
 import keras_hub
+
 ```
 
 <div class="k-default-codeblock">
 ```
 WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
-E0000 00:00:1755412472.489773    8350 cuda_dnn.cc:8579] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered
-E0000 00:00:1755412472.494151    8350 cuda_blas.cc:1407] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
-W0000 00:00:1755412472.505472    8350 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
-W0000 00:00:1755412472.505484    8350 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
-W0000 00:00:1755412472.505485    8350 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
-W0000 00:00:1755412472.505487    8350 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+E0000 00:00:1755415028.474192   11037 cuda_dnn.cc:8579] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered
+E0000 00:00:1755415028.478459   11037 cuda_blas.cc:1407] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
+W0000 00:00:1755415028.489546   11037 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1755415028.489561   11037 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1755415028.489562   11037 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1755415028.489564   11037 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
 ```
 </div>
 
@@ -198,9 +202,6 @@ def calculator_tool(expression: str) -> str:
     try:
         # Clean the expression to only allow safe mathematical operations
         cleaned_expr = re.sub(r"[^0-9+\-*/().\s]", "", expression)
-
-        # Use ast.literal_eval for safer evaluation (only allows literals, no function calls)
-        import ast
 
         # Convert mathematical expression to a safe format
         # Replace mathematical operators with Python equivalents
