@@ -1,19 +1,14 @@
-# Model Context Protocol (MCP) with KerasHub Models
+# Model Context Protocol (MCP) with KerasHub
 
 **Author:** [Laxmareddypatlolla](https://github.com/laxmareddypatlolla),[Divyashree Sreepathihalli](https://github.com/divyashreepathihalli)<br>
 **Date created:** 2025/08/16<br>
 **Last modified:** 2025/08/16<br>
-**Description:** A guide to building MCP systems using KerasHub models for intelligent tool calling.
+**Description:** Complete guide to building MCP systems using KerasHub models for intelligent tool calling.
 
 
 <img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/guides/ipynb/keras_hub/mcp_with_keras_hub.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/guides/keras_hub/mcp_with_keras_hub.py)
 
 
-
----
-## Introduction
-
-**View in Colab** • **GitHub source**
 
 ---
 ## Welcome to Your MCP Adventure! 🚀
@@ -87,12 +82,12 @@ import keras_hub
 <div class="k-default-codeblock">
 ```
 WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
-E0000 00:00:1755408252.625500    4278 cuda_dnn.cc:8579] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered
-E0000 00:00:1755408252.630188    4278 cuda_blas.cc:1407] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
-W0000 00:00:1755408252.641944    4278 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
-W0000 00:00:1755408252.641957    4278 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
-W0000 00:00:1755408252.641958    4278 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
-W0000 00:00:1755408252.641960    4278 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+E0000 00:00:1755412472.489773    8350 cuda_dnn.cc:8579] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered
+E0000 00:00:1755412472.494151    8350 cuda_blas.cc:1407] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
+W0000 00:00:1755412472.505472    8350 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1755412472.505484    8350 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1755412472.505485    8350 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1755412472.505487    8350 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
 ```
 </div>
 
@@ -101,11 +96,11 @@ W0000 00:00:1755408252.641960    4278 computation_placer.cc:177] computation pla
 
 Alright, this is where the real magic begins! We're about to load up our AI model - think of this as assembling the ultimate specialist with the superpower of understanding and responding to human requests!
 
-**What we're doing here:** We're loading the Gemma3 Instruct 1B model from KerasHub. This model is like having a brilliant conversationalist who can understand complex requests and figure out when to use tools versus when to respond directly.
+**What we're doing here:** We're loading the `Gemma3 Instruct 1B` model from KerasHub. This model is like having a brilliant conversationalist who can understand complex requests and figure out when to use tools versus when to respond directly.
 
 **Why Gemma3?** This model is specifically designed for instruction-following and tool usage. It's like having an AI that's been trained to be helpful and actionable, not just chatty!
 
-**The magic of KerasHub:** Instead of downloading and setting up complex model files, we just call `keras_hub.load()` and KerasHub handles all the heavy lifting for us. It's like having a personal assistant who sets up your entire workspace!
+**The magic of KerasHub:** Instead of downloading and setting up complex model files, we just call `keras_hub.models.CausalLM.from_preset()` and KerasHub handles all the heavy lifting for us. It's like having a personal assistant who sets up your entire workspace!
 
 
 ```python
@@ -135,16 +130,20 @@ Now we're getting to the really fun part! We're building our collection of tools
 **What we're building here:**
 
 We're creating three essential tools that demonstrate different types of capabilities:
+
 1. **Weather Tool** - Shows how to work with external data and APIs
 2. **Calculator Tool** - Shows how to handle mathematical computations
 3. **Search Tool** - Shows how to provide information retrieval
 
 **Why these tools?** Each tool represents a different category of AI capabilities:
+
 - **Data Access** (weather) - Getting real-time information
-- **Computation** (calculator) - Processing and analyzing data
+- **Computation** (calculator) - Processing and analyzing data with security considerations
 - **Knowledge Retrieval** (search) - Finding and organizing information
 
 **The magic of tool design:** Each tool is designed to be simple, reliable, and focused. It's like building with LEGO blocks - each piece has a specific purpose, and together they create something amazing!
+
+**Security considerations:** Our calculator tool demonstrates safe mathematical evaluation techniques, but in production environments, you should use specialized math libraries for enhanced security.
 
 Let's build our tools and see how they work!
 
@@ -180,6 +179,9 @@ def weather_tool(city: str) -> str:
         return f"Weather data not available for {city_normalized}"
 
 
+# ⚠️ SECURITY WARNING: This tool demonstrates safe mathematical evaluation.
+# In production, consider using specialized math libraries like 'ast.literal_eval'
+# or 'sympy' for more robust and secure mathematical expression handling.
 def calculator_tool(expression: str) -> str:
     """
     Calculate mathematical expressions safely.
@@ -197,8 +199,37 @@ def calculator_tool(expression: str) -> str:
         # Clean the expression to only allow safe mathematical operations
         cleaned_expr = re.sub(r"[^0-9+\-*/().\s]", "", expression)
 
-        # Evaluate the expression safely
-        result = eval(cleaned_expr)
+        # Use ast.literal_eval for safer evaluation (only allows literals, no function calls)
+        import ast
+
+        # Convert mathematical expression to a safe format
+        # Replace mathematical operators with Python equivalents
+        safe_expr = cleaned_expr.replace("×", "*").replace("÷", "/")
+
+        # Create a safe evaluation environment
+        allowed_names = {
+            "abs": abs,
+            "round": round,
+            "min": min,
+            "max": max,
+            "sum": sum,
+            "pow": pow,
+        }
+
+        # Parse and evaluate safely
+        tree = ast.parse(safe_expr, mode="eval")
+
+        # Only allow basic arithmetic operations
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Call):
+                if (
+                    not isinstance(node.func, ast.Name)
+                    or node.func.id not in allowed_names
+                ):
+                    raise ValueError("Function calls not allowed")
+
+        # Evaluate in restricted environment
+        result = eval(safe_expr, {"__builtins__": {}}, allowed_names)
 
         # Format the result nicely
         if isinstance(result, (int, float)):
@@ -405,6 +436,7 @@ class MCPToolRegistry:
 Now we're creating the heart of our MCP system - the client that bridges the gap between our AI model and our tools. Think of this as building a translator that can understand both human language and machine instructions!
 
 **What we're building here:** We're creating a system that:
+
 1. **Understands user requests** - Processes natural language input
 2. **Generates appropriate prompts** - Creates context for the AI model
 3. **Parses AI responses** - Extracts tool calls from the model's output
@@ -589,11 +621,13 @@ Assistant:"""
             city_match = re.search(r'city="([^"]+)"', tool_code)
             if city_match:
                 return {"name": "weather", "arguments": {"city": city_match.group(1)}}
-        elif "calculator.add" in tool_code:
-            numbers = re.findall(r"[-]?\d+", tool_code)
-            if numbers:
-                expression = " + ".join(numbers)
-                return {"name": "calculator", "arguments": {"expression": expression}}
+        elif "calculator" in tool_code:
+            expression_match = re.search(r'expression="([^"]+)"', tool_code)
+            if expression_match:
+                return {
+                    "name": "calculator",
+                    "arguments": {"expression": expression_match.group(1)},
+                }
         elif "search." in tool_code:
             query_match = re.search(r'query="([^"]+)"', tool_code)
             if query_match:
@@ -671,12 +705,14 @@ Assistant:"""
 Now we're putting all the pieces together! Think of this as the moment when all the individual components come together to create something greater than the sum of its parts.
 
 **What we're doing here:** We're creating the main function that:
+
 1. **Sets up our tool registry** - Registers all available tools
 2. **Loads our AI model** - Gets our language model ready
 3. **Creates our MCP client** - Connects everything together
 4. **Demonstrates the system** - Shows how everything works in action
 
 **Why this structure?** This design creates a clean, modular system where:
+
 - **Tool registration** is separate from tool execution
 - **Model loading** is separate from client creation
 - **Demonstration** is separate from system setup
