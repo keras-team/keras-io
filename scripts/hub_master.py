@@ -698,6 +698,29 @@ MODELS_MASTER = {
             ],
         },
         {
+            "path": "dinov2/",
+            "title": "DINOV2",
+            "toc": True,
+            "children": [
+                {
+                    "path": "dinov2_image_converter",
+                    "title": "DINOV2ImageConverter",
+                    "generate": [
+                        "keras_hub.layers.DINOV2ImageConverter",
+                        "keras_hub.layers.DINOV2ImageConverter.from_preset",
+                    ],
+                },
+                {
+                    "path": "dinov2_backbone",
+                    "title": "DINOV2Backbone model",
+                    "generate": [
+                        "keras_hub.models.DINOV2Backbone",
+                        "keras_hub.models.DINOV2Backbone.from_preset",
+                    ],
+                },
+            ],
+        },
+        {
             "path": "distil_bert/",
             "title": "DistilBert",
             "toc": True,
@@ -1154,6 +1177,48 @@ MODELS_MASTER = {
                         "keras_hub.models.GPTNeoXCausalLMPreprocessor",
                         "keras_hub.models.GPTNeoXCausalLMPreprocessor.from_preset",
                         "keras_hub.models.GPTNeoXCausalLMPreprocessor.tokenizer",
+                    ],
+                },
+            ],
+        },
+        {
+            "path": "hgnetv2/",
+            "title": "HGNetV2",
+            "toc": True,
+            "children": [
+                {
+                    "path": "hgnetv2_image_converter",
+                    "title": "HGNetV2ImageConverter",
+                    "generate": [
+                        "keras_hub.layers.HGNetV2ImageConverter",
+                        "keras_hub.layers.HGNetV2ImageConverter.from_preset",
+                    ],
+                },
+                {
+                    "path": "hgnetv2_backbone",
+                    "title": "HGNetV2Backbone model",
+                    "generate": [
+                        "keras_hub.models.HGNetV2Backbone",
+                        "keras_hub.models.HGNetV2Backbone.from_preset",
+                    ],
+                },
+                {
+                    "path": "hgnetv2_image_classifier",
+                    "title": "HGNetV2ImageClassifier model",
+                    "generate": [
+                        "keras_hub.models.HGNetV2ImageClassifier",
+                        "keras_hub.models.HGNetV2ImageClassifier.from_preset",
+                        "keras_hub.models.HGNetV2ImageClassifier.backbone",
+                        "keras_hub.models.HGNetV2ImageClassifier.preprocessor",
+                    ],
+                },
+                {
+                    "path": "hgnetv2_image_classifier_preprocessor",
+                    "title": "HGNetV2ImageClassifierPreprocessor layer",
+                    "generate": [
+                        "keras_hub.models.HGNetV2ImageClassifierPreprocessor",
+                        "keras_hub.models.HGNetV2ImageClassifierPreprocessor.from_preset",
+                        "keras_hub.models.HGNetV2ImageClassifierPreprocessor.image_converter",
                     ],
                 },
             ],
@@ -1647,6 +1712,51 @@ MODELS_MASTER = {
                         "keras_hub.models.QwenCausalLMPreprocessor",
                         "keras_hub.models.QwenCausalLMPreprocessor.from_preset",
                         "keras_hub.models.QwenCausalLMPreprocessor.tokenizer",
+                    ],
+                },
+            ],
+        },
+        {
+            "path": "qwen3/",
+            "title": "Qwen3",
+            "toc": True,
+            "children": [
+                {
+                    "path": "qwen3_tokenizer",
+                    "title": "Qwen3Tokenizer",
+                    "generate": [
+                        "keras_hub.models.Qwen3Tokenizer",
+                        "keras_hub.models.Qwen3Tokenizer.from_preset",
+                    ],
+                },
+                {
+                    "path": "qwen3_backbone",
+                    "title": "Qwen3Backbone model",
+                    "generate": [
+                        "keras_hub.models.Qwen3Backbone",
+                        "keras_hub.models.Qwen3Backbone.from_preset",
+                        "keras_hub.models.Qwen3Backbone.token_embedding",
+                        "keras_hub.models.Qwen3Backbone.enable_lora",
+                    ],
+                },
+                {
+                    "path": "qwen3_causal_lm",
+                    "title": "Qwen3CausalLM model",
+                    "generate": [
+                        "keras_hub.models.Qwen3CausalLM",
+                        "keras_hub.models.Qwen3CausalLM.from_preset",
+                        "keras_hub.models.Qwen3CausalLM.generate",
+                        "keras_hub.models.Qwen3CausalLM.backbone",
+                        "keras_hub.models.Qwen3CausalLM.preprocessor",
+                    ],
+                },
+                {
+                    "path": "qwen3_causal_lm_preprocessor",
+                    "title": "Qwen3CausalLMPreprocessor layer",
+                    "generate": [
+                        "keras_hub.models.Qwen3CausalLMPreprocessor",
+                        "keras_hub.models.Qwen3CausalLMPreprocessor.from_preset",
+                        "keras_hub.models.Qwen3CausalLMPreprocessor.tokenizer",
                     ],
                 },
             ],
