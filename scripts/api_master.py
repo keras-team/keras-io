@@ -15,6 +15,7 @@ API_MASTER = {
                         "keras.Model",
                         "keras.Model.summary",
                         "keras.Model.get_layer",
+                        "keras.Model.get_state_tree"
                     ],
                 },
                 {
