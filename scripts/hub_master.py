@@ -656,6 +656,48 @@ MODELS_MASTER = {
             ],
         },
         {
+            "path": "deit/",
+            "title": "DeiT",
+            "toc": True,
+            "children": [
+                {
+                    "path": "deit_image_converter",
+                    "title": "DeiTImageConverter",
+                    "generate": [
+                        "keras_hub.layers.DeiTImageConverter",
+                        "keras_hub.layers.DeiTImageConverter.from_preset",
+                    ],
+                },
+                {
+                    "path": "deit_backbone",
+                    "title": "DeiTBackbone model",
+                    "generate": [
+                        "keras_hub.models.DeiTBackbone",
+                        "keras_hub.models.DeiTBackbone.from_preset",
+                    ],
+                },
+                {
+                    "path": "deit_image_classifier",
+                    "title": "DeiTImageClassifier model",
+                    "generate": [
+                        "keras_hub.models.DeiTImageClassifier",
+                        "keras_hub.models.DeiTImageClassifier.from_preset",
+                        "keras_hub.models.DeiTImageClassifier.backbone",
+                        "keras_hub.models.DeiTImageClassifier.preprocessor",
+                    ],
+                },
+                {
+                    "path": "deit_image_classifier_preprocessor",
+                    "title": "DeiTImageClassifierPreprocessor layer",
+                    "generate": [
+                        "keras_hub.models.DeiTImageClassifierPreprocessor",
+                        "keras_hub.models.DeiTImageClassifierPreprocessor.from_preset",
+                        "keras_hub.models.DeiTImageClassifierPreprocessor.image_converter",
+                    ],
+                },
+            ],
+        },
+        {
             "path": "densenet/",
             "title": "DenseNet",
             "toc": True,
