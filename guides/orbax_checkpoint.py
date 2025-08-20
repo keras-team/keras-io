@@ -111,8 +111,9 @@ class KerasOrbaxCheckpointManager(ocp.CheckpointManager):
           step: The step number to restore the state from. Default=None
             restores the latest step.
         """
+        step = step or self.latest_step()
         if step is None:
-            step = self.latest_step()
+            return
         # Restore the model state only, not metrics.
         state, _ = self._get_state()
         restored_state = self.restore(step, args=ocp.args.StandardRestore(item=state))
