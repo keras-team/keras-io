@@ -81,14 +81,8 @@ class KerasOrbaxCheckpointManager(ocp.CheckpointManager):
 
     def _get_state(self):
         """Gets the model state and metrics"""
-        model_state = self._model.get_state_tree()
-        state = {}
-        metrics = None
-        for k, v in model_state.items():
-            if k == "metrics_variables":
-                metrics = v
-            else:
-                state[k] = v
+        state = self._model.get_state_tree().copy()
+        metrics = state.pop("metrics_variables", None)
         return state, metrics
 
     def save_state(self, epoch):
