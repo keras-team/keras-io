@@ -75,7 +75,7 @@ class KerasOrbaxCheckpointManager(ocp.CheckpointManager):
         **kwargs,
     ):
         """Initialize the Keras Orbax Checkpoint Manager.
-        
+
         Args:
             model: The Keras model to checkpoint.
             checkpoint_dir: Directory path where checkpoints will be saved.
@@ -95,10 +95,10 @@ class KerasOrbaxCheckpointManager(ocp.CheckpointManager):
 
     def _get_state(self):
         """Gets the model state and metrics.
-        
+
         This method retrieves the complete state tree from the model and separates
         the metrics variables from the rest of the state.
-        
+
         Returns:
             A tuple containing:
                 - state: A dictionary containing the model's state (weights, optimizer state, etc.)
@@ -149,7 +149,7 @@ class OrbaxCheckpointCallback(keras.callbacks.Callback):
         **kwargs,
     ):
         """Initialize the Orbax checkpoint callback.
-        
+
         Args:
             model: The Keras model to checkpoint.
             checkpoint_dir: Directory path where checkpoints will be saved.
@@ -158,9 +158,6 @@ class OrbaxCheckpointCallback(keras.callbacks.Callback):
             steps_per_epoch: Number of steps per epoch. Default is 1.
             **kwargs: Additional keyword arguments to pass to Orbax's
                 CheckpointManagerOptions.
-                
-        Raises:
-            ValueError: If the backend is not JAX.
         """
         if keras.config.backend() != "jax":
             raise ValueError(
