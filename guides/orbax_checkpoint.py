@@ -3,35 +3,37 @@ Title: Orbax Checkpointing in Keras
 Author: [Samaneh Saadat](https://github.com/SamanehSaadat/)
 Date created: 2025/08/20
 Last modified: 2025/08/20
-Description: A guide on how to save Orbax checkpoints during model training with the Jax backend.
+Description: A guide on how to save Orbax checkpoints during model training with the JAX backend.
 Accelerator: GPU
 """
 
 """
 ## Introduction
+
 Orbax is the default checkpointing library recommended for JAX ecosystem
 users. It is a high-level checkpointing library which provides functionality
 for both checkpoint management and composable and extensible serialization.
 This guide explains how to do Orbax checkpointing when training a model in
-the Jax backend.
+the JAX backend.
 
-The default `.keras` format doesn't support multi-host checkpointing so if
-you are using Keras distribution API for multi-host training, you need to
-use Orbax checkpointing.
+Note that you should use Orbax checkpointing for multi-host training using
+Keras distribution API as the default Keras checkpointing currently does not
+support multi-host.
 """
 
 """
 ## Setup
+
 Let's start by installing Orbax checkpointing library:
 """
 
 """shell
-pip install -q -u orbax-checkpoint
+pip install -q -U orbax-checkpoint
 """
 
 """
-We need to set the Keras backend to Jax as this guide is intended for the
-Jax backend. Then we import Keras and other libraries needed including the
+We need to set the Keras backend to JAX as this guide is intended for the
+JAX backend. Then we import Keras and other libraries needed including the
 Orbax checkpointing library.
 """
 
@@ -45,22 +47,23 @@ import orbax.checkpoint as ocp
 
 """
 ## Orbax Callback
+
 We need to create two main utilities to manage Orbax checkpointing in Keras:
 1. `KerasOrbaxCheckpointManager`: A wrapper around
-`orbax.checkpoint.CheckpointManager` for Keras models.
-`KerasOrbaxCheckpointManager` uses `Model`'s `get_state_tree` and
-`set_state_tree` APIs to save and restore the model variables.
+   `orbax.checkpoint.CheckpointManager` for Keras models.
+   `KerasOrbaxCheckpointManager` uses `Model`'s `get_state_tree` and
+   `set_state_tree` APIs to save and restore the model variables.
 2. `OrbaxCheckpointCallback`: A Keras callback that uses
-`KerasOrbaxCheckpointManager` to automatically save and restore model states
-during training.
+   `KerasOrbaxCheckpointManager` to automatically save and restore model states
+   during training.
 
 Orbax checkpointing in Keras is as simple as copying these utilities to your
-own codebase and passing `OrbaxCheckpointCallback` to the `fit`.
+own codebase and passing `OrbaxCheckpointCallback` to the `fit` method.
 """
 
 
 class KerasOrbaxCheckpointManager(ocp.CheckpointManager):
-    """A wrapper over Orbax CheckpointManager for Keras with the Jax
+    """A wrapper over Orbax CheckpointManager for Keras with the JAX
     backend."""
 
     def __init__(
@@ -71,6 +74,17 @@ class KerasOrbaxCheckpointManager(ocp.CheckpointManager):
         steps_per_epoch=1,
         **kwargs,
     ):
+        """Initialize the Keras Orbax Checkpoint Manager.
+        
+        Args:
+            model: The Keras model to checkpoint.
+            checkpoint_dir: Directory path where checkpoints will be saved.
+            max_to_keep: Maximum number of checkpoints to keep in the directory.
+                Default is 5.
+            steps_per_epoch: Number of steps per epoch. Default is 1.
+            **kwargs: Additional keyword arguments to pass to Orbax's
+                CheckpointManagerOptions.
+        """
         options = ocp.CheckpointManagerOptions(
             max_to_keep=max_to_keep, enable_async_checkpointing=False, **kwargs
         )
@@ -80,7 +94,16 @@ class KerasOrbaxCheckpointManager(ocp.CheckpointManager):
         super().__init__(checkpoint_dir, options=options)
 
     def _get_state(self):
-        """Gets the model state and metrics"""
+        """Gets the model state and metrics.
+        
+        This method retrieves the complete state tree from the model and separates
+        the metrics variables from the rest of the state.
+        
+        Returns:
+            A tuple containing:
+                - state: A dictionary containing the model's state (weights, optimizer state, etc.)
+                - metrics: The model's metrics variables, if any
+        """
         state = self._model.get_state_tree().copy()
         metrics = state.pop("metrics_variables", None)
         return state, metrics
@@ -125,10 +148,24 @@ class OrbaxCheckpointCallback(keras.callbacks.Callback):
         steps_per_epoch=1,
         **kwargs,
     ):
+        """Initialize the Orbax checkpoint callback.
+        
+        Args:
+            model: The Keras model to checkpoint.
+            checkpoint_dir: Directory path where checkpoints will be saved.
+            max_to_keep: Maximum number of checkpoints to keep in the directory.
+                Default is 5.
+            steps_per_epoch: Number of steps per epoch. Default is 1.
+            **kwargs: Additional keyword arguments to pass to Orbax's
+                CheckpointManagerOptions.
+                
+        Raises:
+            ValueError: If the backend is not JAX.
+        """
         if keras.config.backend() != "jax":
             raise ValueError(
-                "`OrbaxCheckpointCallback` is only supported on a "
-                "`jax` backend. Provided backend is %s." % keras.config.backend()
+                f"`OrbaxCheckpointCallback` is only supported on a "
+                f"`jax` backend. Provided backend is {keras.config.backend()}."
             )
         self._checkpoint_manager = KerasOrbaxCheckpointManager(
             model, checkpoint_dir, max_to_keep, steps_per_epoch, **kwargs
@@ -152,6 +189,7 @@ class OrbaxCheckpointCallback(keras.callbacks.Callback):
 
 """
 ## An Orbax checkpointing example
+
 Let's look at how we can use `OrbaxCheckpointCallback` to save Orbax
 checkpoints during the training. To get started, let's define a simple model
 and a toy training dataset.
@@ -174,7 +212,7 @@ y_train = np.random.random((128, 1))
 
 """
 Then, we create an Orbax checkpointing callback and pass it to the
-`callbacks` argument in the `fit` function.
+`callbacks` argument in the `fit` method.
 """
 
 orbax_callback = OrbaxCheckpointCallback(
@@ -196,4 +234,8 @@ history = model.fit(
 """
 Now if you look at the Orbax checkpoint directory, you can see all the files
 saved as part of Orbax checkpointing.
+"""
+
+"""shell
+ls -R /tmp/ckpt
 """
