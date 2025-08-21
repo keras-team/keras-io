@@ -27,6 +27,12 @@ libraries.
 
 
 ```python
+!pip install -q jax-tpu-embedding
+!pip install -q tensorflow-cpu
+!pip install -q keras-rs
+```
+
+```python
 import os
 
 os.environ["KERAS_BACKEND"] = "jax"
@@ -73,7 +79,7 @@ index in the user embedding table.
 
 
 ```python
-users_count = (
+users_count = int(
     ratings.map(lambda x: tf.strings.to_number(x["user_id"], out_type=tf.int32))
     .reduce(tf.constant(0, tf.int32), tf.maximum)
     .numpy()
@@ -85,7 +91,7 @@ as an index in the movie embedding table.
 
 
 ```python
-movies_count = movies.cardinality().numpy()
+movies_count = int(movies.cardinality().numpy())
 ```
 
 The inputs to the model are the user IDs and movie IDs and the labels are the
