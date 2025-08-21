@@ -119,6 +119,10 @@ GUIDES_MASTER = {
             "path": "keras_nnx_guide",
             "title": "How to use Keras with NNX backend",
         },
+        {
+            "path": "orbax_checkpoint",
+            "title": "Orbax Checkpointing in Keras",
+        },
         # {
         #     "path": "preprocessing_layers",
         #     "title": "Working with preprocessing layers",
