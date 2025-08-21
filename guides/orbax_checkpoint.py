@@ -54,7 +54,6 @@ We need to create two main utilities to manage Orbax checkpointing in Keras:
    `orbax.checkpoint.CheckpointManager` for Keras models.
    `KerasOrbaxCheckpointManager` uses `Model`'s `get_state_tree` and
    `set_state_tree` APIs to save and restore the model variables.
-
 2. `OrbaxCheckpointCallback`: A Keras callback that uses
    `KerasOrbaxCheckpointManager` to automatically save and restore model states
    during training.
