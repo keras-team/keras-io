@@ -52,6 +52,7 @@ import orbax.checkpoint as ocp
 ## Orbax Callback
 
 We need to create two main utilities to manage Orbax checkpointing in Keras:
+
 1. `KerasOrbaxCheckpointManager`: A wrapper around
    `orbax.checkpoint.CheckpointManager` for Keras models.
    `KerasOrbaxCheckpointManager` uses `Model`'s `get_state_tree` and
@@ -278,8 +279,5 @@ d  manifest.ocdbt
 08372fc5734e445753b38235cb522988  c8af54d085d2d516444bd71f32a3787c
 4601db15b67650f7c8818bfc8afeb9f5  cfe1e3ea313d637df6f6d2b2c66ca17a
 a6ca20e04d8fe161ed95f6f71e8fe113
-
-/usr/local/google/home/ssaadat/anaconda3/envs/keras-io/lib/python3.10/pty.py:89: RuntimeWarning: os.fork() was called. os.fork() is incompatible with multithreaded code, and JAX is multithreaded, so this will likely lead to a deadlock.
-  pid, fd = os.forkpty()
 ```
 </div>

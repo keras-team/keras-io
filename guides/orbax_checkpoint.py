@@ -49,6 +49,7 @@ import orbax.checkpoint as ocp
 ## Orbax Callback
 
 We need to create two main utilities to manage Orbax checkpointing in Keras:
+
 1. `KerasOrbaxCheckpointManager`: A wrapper around
    `orbax.checkpoint.CheckpointManager` for Keras models.
    `KerasOrbaxCheckpointManager` uses `Model`'s `get_state_tree` and
