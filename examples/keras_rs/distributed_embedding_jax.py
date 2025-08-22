@@ -23,6 +23,12 @@ Let's begin by choosing JAX as the backend and importing all the necessary
 libraries.
 """
 
+"""shell
+pip install -q jax-tpu-embedding
+pip install -q tensorflow-cpu
+pip install -q keras-rs
+"""
+
 import os
 
 os.environ["KERAS_BACKEND"] = "jax"
@@ -64,7 +70,7 @@ We need to know the number of users as we're using the user ID directly as an
 index in the user embedding table.
 """
 
-users_count = (
+users_count = int(
     ratings.map(lambda x: tf.strings.to_number(x["user_id"], out_type=tf.int32))
     .reduce(tf.constant(0, tf.int32), tf.maximum)
     .numpy()
@@ -75,7 +81,7 @@ We also need do know the number of movies as we're using the movie ID directly
 as an index in the movie embedding table.
 """
 
-movies_count = movies.cardinality().numpy()
+movies_count = int(movies.cardinality().numpy())
 
 """
 The inputs to the model are the user IDs and movie IDs and the labels are the
