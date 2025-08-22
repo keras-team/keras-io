@@ -1,6 +1,7 @@
 tmp/*
 sources/*
 site/*
+*.DS_Store
 *.pyc
 *.swp
 templates/examples/audio/*
