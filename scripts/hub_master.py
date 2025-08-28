@@ -656,6 +656,48 @@ MODELS_MASTER = {
             ],
         },
         {
+            "path": "deit/",
+            "title": "DeiT",
+            "toc": True,
+            "children": [
+                {
+                    "path": "deit_image_converter",
+                    "title": "DeiTImageConverter",
+                    "generate": [
+                        "keras_hub.layers.DeiTImageConverter",
+                        "keras_hub.layers.DeiTImageConverter.from_preset",
+                    ],
+                },
+                {
+                    "path": "deit_backbone",
+                    "title": "DeiTBackbone model",
+                    "generate": [
+                        "keras_hub.models.DeiTBackbone",
+                        "keras_hub.models.DeiTBackbone.from_preset",
+                    ],
+                },
+                {
+                    "path": "deit_image_classifier",
+                    "title": "DeiTImageClassifier model",
+                    "generate": [
+                        "keras_hub.models.DeiTImageClassifier",
+                        "keras_hub.models.DeiTImageClassifier.from_preset",
+                        "keras_hub.models.DeiTImageClassifier.backbone",
+                        "keras_hub.models.DeiTImageClassifier.preprocessor",
+                    ],
+                },
+                {
+                    "path": "deit_image_classifier_preprocessor",
+                    "title": "DeiTImageClassifierPreprocessor layer",
+                    "generate": [
+                        "keras_hub.models.DeiTImageClassifierPreprocessor",
+                        "keras_hub.models.DeiTImageClassifierPreprocessor.from_preset",
+                        "keras_hub.models.DeiTImageClassifierPreprocessor.image_converter",
+                    ],
+                },
+            ],
+        },
+        {
             "path": "densenet/",
             "title": "DenseNet",
             "toc": True,
@@ -844,6 +886,68 @@ MODELS_MASTER = {
                         "keras_hub.models.ElectraBackbone",
                         "keras_hub.models.ElectraBackbone.from_preset",
                         "keras_hub.models.ElectraBackbone.token_embedding",
+                    ],
+                },
+            ],
+        },
+        {
+            "path": "esm/",
+            "title": "ESM",
+            "toc": True,
+            "children": [
+                {
+                    "path": "esm_tokenizer",
+                    "title": "ESMTokenizer",
+                    "generate": [
+                        "keras_hub.tokenizers.ESMTokenizer",
+                        "keras_hub.tokenizers.ESMTokenizer.from_preset",
+                    ],
+                },
+                {
+                    "path": "esm_backbone",
+                    "title": "ESMBackbone model",
+                    "generate": [
+                        "keras_hub.models.ESMBackbone",
+                        "keras_hub.models.ESMBackbone.from_preset",
+                        "keras_hub.models.ESMBackbone.token_embedding",
+                    ],
+                },
+                {
+                    "path": "esm_classifier",
+                    "title": "ESMProteinClassifier model",
+                    "generate": [
+                        "keras_hub.models.ESMProteinClassifier",
+                        "keras_hub.models.ESMProteinClassifier.from_preset",
+                        "keras_hub.models.ESMProteinClassifier.backbone",
+                        "keras_hub.models.ESMProteinClassifier.preprocessor",
+                    ],
+                },
+                {
+                    "path": "esm_classifier_preprocessor",
+                    "title": "ESMProteinClassifierPreprocessor layer",
+                    "generate": [
+                        "keras_hub.models.ESMProteinClassifierPreprocessor",
+                        "keras_hub.models.ESMProteinClassifierPreprocessor.from_preset",
+                        "keras_hub.models.ESMProteinClassifierPreprocessor.tokenizer",
+                    ],
+                },
+                {
+                    "path": "esm_masked_plm",
+                    "title": "ESMMaskedPLM model",
+                    "generate": [
+                        "keras_hub.models.ESMMaskedPLM",
+                        "keras_hub.models.ESMMaskedPLM.from_preset",
+                        "keras_hub.models.ESMMaskedPLM.backbone",
+                        "keras_hub.models.ESMMaskedPLM.preprocessor",
+                    ],
+                },
+                {
+                    "path": "esm_masked_plm_preprocessor",
+                    "title": "ESMMaskedPLMPreprocessor layer",
+                    "generate": [
+                        "keras_hub.models.ESMMaskedPLMPreprocessor",
+                        "keras_hub.models.ESMMaskedPLMPreprocessor.from_preset",
+                        "keras_hub.models.ESMMaskedPLMPreprocessor.tokenizer",
                     ],
                 },
             ],
