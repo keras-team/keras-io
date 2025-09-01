@@ -2,8 +2,8 @@
 Title: Ranking with Deep Learning Recommendation Model
 Author: Harshith Kulkarni
 Date created: 2025/06/02
-Last modified: 2025/08/18
-Description: Rank movies with DLRM with KerasRS
+Last modified: 2025/09/01
+Description: Rank movies with DLRM using KerasRS
 """
 
 """
@@ -17,9 +17,8 @@ dot-product interaction mechanism. For more details, please refer to the
 DLRM is designed to excel at capturing explicit, bounded-degree feature interactions and
 is particularly effective at processing both categorical and continuous (sparse/dense)
 input features. The architecture consists of three main components: dedicated input
-layers to handle diverse features (typically embedding layers for categorical features),
-a dot-product interaction layer to explicitly model feature interactions, and a
-Multi-Layer Perceptron (MLP) to capture implicit feature relationships.
+layers to handle diverse features, a dot-product interaction layer to explicitly model 
+feature interactions, and a Multi-Layer Perceptron (MLP) to capture implicit feature relationships.
 
 The dot-product interaction layer lies at the heart of DLRM, efficiently computing
 pairwise interactions between different feature embeddings. This contrasts with models
@@ -32,7 +31,6 @@ The following image illustrates the DLRM architecture:
 
 ![DLRM Architecture](https://raw.githubusercontent.com/kharshith-k/keras-io/refs/heads/keras-rs-examples/examples/keras_rs/img/dlrm/dlrm_architecture.gif)
 
-
 Now that we have a foundational understanding of DLRM's architecture and key
 characteristics, let's dive into the code. We will train a DLRM on a real-world dataset
 to demonstrate its capability to learn meaningful feature interactions. Let's begin by
@@ -40,7 +38,7 @@ setting the backend to JAX and organizing our imports.
 """
 
 """shell
-!pip install keras-rs -q
+!pip install -q keras-rs
 """
 
 import os
@@ -64,7 +62,10 @@ MOVIELENS_CONFIG = {
     # features
     "continuous_features": [
         "raw_user_age",
-        "timestamp",
+        "hour_of_day_sin",
+        "hour_of_day_cos",
+        "hour_of_week_sin",
+        "hour_of_week_cos",
     ],
     "categorical_int_features": [
         "user_gender",
@@ -188,28 +189,45 @@ tutorial. Let's load the dataset, and keep only the useful columns.
 
 ratings_ds = tfds.load(
     "movielens/100k-ratings",
-    split="train",
-    download_and_prepare_kwargs={
-        "download_config": tfds.download.DownloadConfig(
-            verify_ssl=False,
-        )
-    },
+    split="train"
 )
 
-ratings_ds = ratings_ds.map(
-    lambda x: (
-        {
-            "movie_id": x["movie_id"],
-            "user_id": x["user_id"],
-            "user_gender": tf.cast(x["user_gender"], dtype=tf.int32),
-            "user_zip_code": x["user_zip_code"],
-            "user_occupation_text": x["user_occupation_text"],
-            "raw_user_age": tf.cast(x["raw_user_age"], dtype=tf.float32),
-            "timestamp": tf.cast(x["timestamp"], dtype=tf.float32),
-        },
-        tf.cast(x["user_rating"], dtype=tf.float32),
-    )
-)
+
+def preprocess_features(x):
+    """Extracts and cyclically encodes timestamp features."""
+    features = {
+        "movie_id": x["movie_id"],
+        "user_id": x["user_id"],
+        "user_gender": tf.cast(x["user_gender"], dtype=tf.int32),
+        "user_zip_code": x["user_zip_code"],
+        "user_occupation_text": x["user_occupation_text"],
+        "raw_user_age": tf.cast(x["raw_user_age"], dtype=tf.float32),
+    }
+    label = tf.cast(x["user_rating"], dtype=tf.float32)
+
+    # The timestamp is in seconds since the epoch.
+    timestamp = tf.cast(x["timestamp"], dtype=tf.float32)
+
+    # Constants for time periods
+    SECONDS_IN_HOUR = 3600.0
+    HOURS_IN_DAY = 24.0
+    HOURS_IN_WEEK = 168.0
+
+    # Calculate hour of day and encode it
+    hour_of_day = (timestamp / SECONDS_IN_HOUR) % HOURS_IN_DAY
+    features["hour_of_day_sin"] = tf.sin(2 * np.pi * hour_of_day / HOURS_IN_DAY)
+    features["hour_of_day_cos"] = tf.cos(2 * np.pi * hour_of_day / HOURS_IN_DAY)
+
+    # Calculate hour of week and encode it
+    hour_of_week = (timestamp / SECONDS_IN_HOUR) % HOURS_IN_WEEK
+    features["hour_of_week_sin"] = tf.sin(2 * np.pi * hour_of_week / HOURS_IN_WEEK)
+    features["hour_of_week_cos"] = tf.cos(2 * np.pi * hour_of_week / HOURS_IN_WEEK)
+
+    return features, label
+
+
+# Apply the new preprocessing function
+ratings_ds = ratings_ds.map(preprocess_features)
 
 """
 For every categorical feature, let's get the list of unique values, i.e., vocabulary, so
@@ -227,7 +245,8 @@ for feature_name in (
 """
 One thing we need to do is to use `keras.layers.StringLookup` and
 `keras.layers.IntegerLookup` to convert all the categorical features into indices, which
-can then be fed into embedding layers.
+can
+then be fed into embedding layers.
 """
 
 lookup_layers = {}
@@ -306,8 +325,7 @@ test_ds = (
 """
 ### Building the model
 
-The model will have embedding layers for categorical features, dense layer for continuous
-features followed by DotInteraction and feedforward
+The model will have embedding layers, followed by DotInteraction and feedforward
 layers.
 """
 
@@ -322,7 +340,7 @@ class DLRM(keras.Model):
     ):
         super().__init__(**kwargs)
 
-        # Layers for categorical features.
+        # Layers for categorical features (unchanged).
         self.embedding_layers = {}
         for feature_name in (
             MOVIELENS_CONFIG["categorical_int_features"]
@@ -334,16 +352,13 @@ class DLRM(keras.Model):
                 output_dim=embedding_dim,
             )
 
-        # Layers for continuous features.
-        self.continuous_dense_layers = {}
-        for feature_name in MOVIELENS_CONFIG["continuous_features"]:
-            # Use a small MLP to process continuous features
-            self.continuous_dense_layers[feature_name] = keras.Sequential(
-                [
-                    keras.layers.Dense(mlp_dim, activation="relu"),
-                    keras.layers.Dense(mlp_dim),
-                ]
-            )
+        # A single MLP for all continuous features.
+        self.continuous_mlp = keras.Sequential(
+            [
+                keras.layers.Dense(mlp_dim, activation="relu"),
+                keras.layers.Dense(embedding_dim),  # Output must match embedding_dim
+            ]
+        )
 
         self.dot_layer = keras_rs.layers.DotInteraction()
 
@@ -358,6 +373,7 @@ class DLRM(keras.Model):
         self.embedding_dim = embedding_dim
 
     def call(self, inputs):
+        # Process categorical features to get embeddings (unchanged).
         embeddings = []
         for feature_name in (
             MOVIELENS_CONFIG["categorical_int_features"]
@@ -366,21 +382,25 @@ class DLRM(keras.Model):
             embedding = self.embedding_layers[feature_name](inputs[feature_name])
             embeddings.append(embedding)
 
-        # Process continuous features
-        continuous_vectors = []
+        # Process all continuous features together.
+        continuous_inputs = []
         for feature_name in MOVIELENS_CONFIG["continuous_features"]:
-            continuous_input = keras.ops.reshape(
+            # Reshape each feature to (batch_size, 1)
+            feature = keras.ops.reshape(
                 keras.ops.cast(inputs[feature_name], dtype="float32"), (-1, 1)
             )
-            processed_continuous = self.continuous_dense_layers[feature_name](
-                continuous_input
-            )
-            continuous_vectors.append(processed_continuous)
+            continuous_inputs.append(feature)
 
-        # Combine continuous vectors and categorical embeddings
-        combined_features = embeddings + continuous_vectors
+        # Concatenate into a single tensor: (batch_size, num_continuous_features)
+        concatenated_continuous = keras.ops.concatenate(continuous_inputs, axis=1)
 
-        # Pass the list of combined features to the DotInteraction layer
+        # Pass through the single MLP to get one combined vector.
+        processed_continuous = self.continuous_mlp(concatenated_continuous)
+
+# Combine with categorical embeddings. Note: we add a list containing the single tensor.
+        combined_features = embeddings + [processed_continuous]
+
+        # Pass the list of features to the DotInteraction layer.
         x = self.dot_layer(combined_features)
 
         for dense_layer in self.dense_layers:
@@ -427,54 +447,52 @@ represents the overall interaction strength.
 
 
 def get_dot_interaction_matrix(model, categorical_features, continuous_features):
-    all_feature_names = categorical_features + continuous_features
+    # The new feature list for the plot labels
+    all_feature_names = categorical_features + ["all_continuous_features"]
     num_features = len(all_feature_names)
 
+    # Store all feature outputs in the correct order.
     all_feature_outputs = []
 
+    # Get outputs for categorical features from embedding layers (unchanged).
     for feature_name in categorical_features:
         embedding = model.embedding_layers[feature_name](keras.ops.array([0]))
         all_feature_outputs.append(embedding)
 
-    # Get outputs for continuous features from dense layers by passing a dummy input.
-    for feature_name in continuous_features:
-        # Pass a dummy input (value 0.0) to the continuous dense layer
-        processed_continuous = model.continuous_dense_layers[feature_name](
-            keras.ops.array([[0.0]])
-        )
-        all_feature_outputs.append(processed_continuous)
+    # Get a single output for ALL continuous features from the shared MLP.
+    num_continuous_features = len(continuous_features)
+    # Create a dummy input of zeros for the MLP
+    dummy_continuous_input = keras.ops.zeros((1, num_continuous_features))
+    processed_continuous = model.continuous_mlp(dummy_continuous_input)
+    all_feature_outputs.append(processed_continuous)
 
     interaction_matrix = np.zeros((num_features, num_features))
 
-    # Iterate through each pair of features to calculate their interaction strength.
+    # Iterate through each pair to calculate interaction strength.
     for i in range(num_features):
         for j in range(num_features):
-            # Calculate the dot product between the two feature output vectors
             interaction = keras.ops.dot(
                 all_feature_outputs[i], keras.ops.transpose(all_feature_outputs[j])
             )
-
             interaction_strength = keras.ops.convert_to_numpy(np.abs(interaction))[0][0]
             interaction_matrix[i, j] = interaction_strength
 
-    return interaction_matrix
+    return interaction_matrix, all_feature_names
 
 
-# Get the list of feature names in the correct order.
-feature_names = (
+# Get the list of categorical feature names.
+categorical_feature_names = (
     MOVIELENS_CONFIG["categorical_int_features"]
     + MOVIELENS_CONFIG["categorical_str_features"]
-    + MOVIELENS_CONFIG["continuous_features"]
 )
 
 # Calculate the interaction matrix with the corrected function.
-interaction_matrix = get_dot_interaction_matrix(
+interaction_matrix, feature_names = get_dot_interaction_matrix(
     model=dot_network,
-    categorical_features=MOVIELENS_CONFIG["categorical_int_features"]
-    + MOVIELENS_CONFIG["categorical_str_features"],
+    categorical_features=categorical_feature_names,
     continuous_features=MOVIELENS_CONFIG["continuous_features"],
 )
 
 # Visualize the matrix as a heatmap.
-print("\nVisualizing the feature interaction strengths (corrected):")
+print("\nVisualizing the feature interaction strengths:")
 visualize_layer(interaction_matrix, feature_names)
