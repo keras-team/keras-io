@@ -552,6 +552,48 @@ MODELS_MASTER = {
             ],
         },
         {
+            "path": "d_fine/",
+            "title": "D-FINE",
+            "toc": True,
+            "children": [
+                {
+                    "path": "d_fine_image_converter",
+                    "title": "DFineImageConverter",
+                    "generate": [
+                        "keras_hub.layers.DFineImageConverter",
+                        "keras_hub.layers.DFineImageConverter.from_preset",
+                    ],
+                },
+                {
+                    "path": "d_fine_backbone",
+                    "title": "DFineBackbone model",
+                    "generate": [
+                        "keras_hub.models.DFineBackbone",
+                        "keras_hub.models.DFineBackbone.from_preset",
+                    ],
+                },
+                {
+                    "path": "d_fine_object_detector",
+                    "title": "DFineObjectDetector model",
+                    "generate": [
+                        "keras_hub.models.DFineObjectDetector",
+                        "keras_hub.models.DFineObjectDetector.from_preset",
+                        "keras_hub.models.DFineObjectDetector.backbone",
+                        "keras_hub.models.DFineObjectDetector.preprocessor",
+                    ],
+                },
+                {
+                    "path": "d_fine_object_detector_preprocessor",
+                    "title": "DFineObjectDetectorPreprocessor layer",
+                    "generate": [
+                        "keras_hub.models.DFineObjectDetectorPreprocessor",
+                        "keras_hub.models.DFineObjectDetectorPreprocessor.from_preset",
+                        "keras_hub.models.DFineObjectDetectorPreprocessor.image_converter",
+                    ],
+                },
+            ],
+        },
+        {
             "path": "deberta_v3/",
             "title": "DebertaV3",
             "toc": True,
@@ -2287,6 +2329,54 @@ MODELS_MASTER = {
                         "keras_hub.models.T5Preprocessor",
                         "keras_hub.models.T5Preprocessor.from_preset",
                         "keras_hub.models.T5Preprocessor.tokenizer",
+                    ],
+                },
+            ],
+        },
+        {
+            "path": "t5gemma/",
+            "title": "T5Gemma",
+            "toc": True,
+            "children": [
+                {
+                    "path": "t5gemma_tokenizer",
+                    "title": "T5GemmaTokenizer",
+                    "generate": [
+                        "keras_hub.tokenizers.T5GemmaTokenizer",
+                        "keras_hub.tokenizers.T5GemmaTokenizer.from_preset",
+                        "keras_hub.models.T5GemmaTokenizer",
+                        "keras_hub.models.T5GemmaTokenizer.from_preset"
+                    ],
+                },
+                {
+                    "path": "t5gemma_backbone",
+                    "title": "T5GemmaBackbone model",
+                    "generate": [
+                        "keras_hub.models.T5GemmaBackbone",
+                        "keras_hub.models.T5GemmaBackbone.from_preset",
+                        "keras_hub.models.T5GemmaBackbone.token_embedding",
+                    ],
+                },
+                {
+                    "path": "t5gemma_seq_2_seq_lm",
+                    "title": "T5GemmaSeq2SeqLM model",
+                    "generate": [
+                        "keras_hub.models.T5GemmaSeq2SeqLM",
+                        "keras_hub.models.T5GemmaSeq2SeqLM.from_preset",
+                        "keras_hub.models.T5GemmaSeq2SeqLM.generate",
+                        "keras_hub.models.T5GemmaSeq2SeqLM.backbone",
+                        "keras_hub.models.T5GemmaSeq2SeqLM.preprocessor",
+                    ],
+                },
+                {
+                    "path": "t5gemma_seq_2_seq_lm_preprocessor",
+                    "title": "T5GemmaSeq2SeqLMPreprocessor layer",
+                    "generate": [
+                        "keras_hub.models.T5GemmaSeq2SeqLMPreprocessor",
+                        "keras_hub.models.T5GemmaSeq2SeqLMPreprocessor.from_preset",
+                        "keras_hub.models.T5GemmaSeq2SeqLMPreprocessor.generate_preprocess",
+                        "keras_hub.models.T5GemmaSeq2SeqLMPreprocessor.generate_postprocess",
+                        "keras_hub.models.T5GemmaSeq2SeqLMPreprocessor.tokenizer",
                     ],
                 },
             ],
