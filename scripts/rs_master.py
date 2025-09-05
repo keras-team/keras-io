@@ -268,6 +268,10 @@ RS_EXAMPLES_MASTER = {
             "path": "distributed_embedding_jax",
             "title": "DistributedEmbedding using TPU SparseCore and JAX",
         },
+        {
+            "path": "distributed_embedding_tf",
+            "title": "DistributedEmbedding using TPU SparseCore and TensorFlow",
+        },
     ],
 }
 
