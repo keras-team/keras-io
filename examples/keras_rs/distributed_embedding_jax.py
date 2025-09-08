@@ -1,8 +1,8 @@
 """
 Title: DistributedEmbedding using TPU SparseCore and JAX
-Author: [Fabien Hertschuh](https://github.com/hertschuh/), [Abheesht Sharma](https://github.com/abheesht17/)
+Author: [Fabien Hertschuh](https://github.com/hertschuh/), [Abheesht Sharma](https://github.com/abheesht17/), [C. Antonio Sánchez](https://github.com/cantonios/)
 Date created: 2025/06/03
-Last modified: 2025/06/03
+Last modified: 2025/09/02
 Description: Rank movies using a two tower model with embeddings on SparseCore.
 Accelerator: TPU
 """
@@ -21,6 +21,12 @@ v6e.
 
 Let's begin by choosing JAX as the backend and importing all the necessary
 libraries.
+"""
+
+"""shell
+pip install -q jax-tpu-embedding
+pip install -q tensorflow-cpu
+pip install -q keras-rs
 """
 
 import os
@@ -50,7 +56,7 @@ keras.distribution.set_distribution(distribution)
 """
 ## Preparing the dataset
 
-We're going to use the same Movielens data. The ratings are the objectives we
+We're going to use the same MovieLens data. The ratings are the objectives we
 are trying to predict.
 """
 
@@ -64,7 +70,7 @@ We need to know the number of users as we're using the user ID directly as an
 index in the user embedding table.
 """
 
-users_count = (
+users_count = int(
     ratings.map(lambda x: tf.strings.to_number(x["user_id"], out_type=tf.int32))
     .reduce(tf.constant(0, tf.int32), tf.maximum)
     .numpy()
@@ -75,7 +81,7 @@ We also need do know the number of movies as we're using the movie ID directly
 as an index in the movie embedding table.
 """
 
-movies_count = movies.cardinality().numpy()
+movies_count = int(movies.cardinality().numpy())
 
 """
 The inputs to the model are the user IDs and movie IDs and the labels are the
@@ -144,8 +150,8 @@ Features are configured using `keras_rs.layers.FeatureConfig`, which has:
 
 - A name.
 - A table, the embedding table to use.
-- An input shape (per replica).
-- An output shape (per replica).
+- An input shape (batch size is for all TPUs).
+- An output shape (batch size is for all TPUs).
 
 We can organize features in any structure we want, which can be nested. A dict
 is often a good choice to have names for the inputs and outputs.

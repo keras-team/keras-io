@@ -656,6 +656,48 @@ MODELS_MASTER = {
             ],
         },
         {
+            "path": "deit/",
+            "title": "DeiT",
+            "toc": True,
+            "children": [
+                {
+                    "path": "deit_image_converter",
+                    "title": "DeiTImageConverter",
+                    "generate": [
+                        "keras_hub.layers.DeiTImageConverter",
+                        "keras_hub.layers.DeiTImageConverter.from_preset",
+                    ],
+                },
+                {
+                    "path": "deit_backbone",
+                    "title": "DeiTBackbone model",
+                    "generate": [
+                        "keras_hub.models.DeiTBackbone",
+                        "keras_hub.models.DeiTBackbone.from_preset",
+                    ],
+                },
+                {
+                    "path": "deit_image_classifier",
+                    "title": "DeiTImageClassifier model",
+                    "generate": [
+                        "keras_hub.models.DeiTImageClassifier",
+                        "keras_hub.models.DeiTImageClassifier.from_preset",
+                        "keras_hub.models.DeiTImageClassifier.backbone",
+                        "keras_hub.models.DeiTImageClassifier.preprocessor",
+                    ],
+                },
+                {
+                    "path": "deit_image_classifier_preprocessor",
+                    "title": "DeiTImageClassifierPreprocessor layer",
+                    "generate": [
+                        "keras_hub.models.DeiTImageClassifierPreprocessor",
+                        "keras_hub.models.DeiTImageClassifierPreprocessor.from_preset",
+                        "keras_hub.models.DeiTImageClassifierPreprocessor.image_converter",
+                    ],
+                },
+            ],
+        },
+        {
             "path": "densenet/",
             "title": "DenseNet",
             "toc": True,
@@ -693,6 +735,29 @@ MODELS_MASTER = {
                         "keras_hub.models.DenseNetImageClassifierPreprocessor",
                         "keras_hub.models.DenseNetImageClassifierPreprocessor.from_preset",
                         "keras_hub.models.DenseNetImageClassifierPreprocessor.image_converter",
+                    ],
+                },
+            ],
+        },
+        {
+            "path": "dinov2/",
+            "title": "DINOV2",
+            "toc": True,
+            "children": [
+                {
+                    "path": "dinov2_image_converter",
+                    "title": "DINOV2ImageConverter",
+                    "generate": [
+                        "keras_hub.layers.DINOV2ImageConverter",
+                        "keras_hub.layers.DINOV2ImageConverter.from_preset",
+                    ],
+                },
+                {
+                    "path": "dinov2_backbone",
+                    "title": "DINOV2Backbone model",
+                    "generate": [
+                        "keras_hub.models.DINOV2Backbone",
+                        "keras_hub.models.DINOV2Backbone.from_preset",
                     ],
                 },
             ],
@@ -821,6 +886,68 @@ MODELS_MASTER = {
                         "keras_hub.models.ElectraBackbone",
                         "keras_hub.models.ElectraBackbone.from_preset",
                         "keras_hub.models.ElectraBackbone.token_embedding",
+                    ],
+                },
+            ],
+        },
+        {
+            "path": "esm/",
+            "title": "ESM",
+            "toc": True,
+            "children": [
+                {
+                    "path": "esm_tokenizer",
+                    "title": "ESMTokenizer",
+                    "generate": [
+                        "keras_hub.tokenizers.ESMTokenizer",
+                        "keras_hub.tokenizers.ESMTokenizer.from_preset",
+                    ],
+                },
+                {
+                    "path": "esm_backbone",
+                    "title": "ESMBackbone model",
+                    "generate": [
+                        "keras_hub.models.ESMBackbone",
+                        "keras_hub.models.ESMBackbone.from_preset",
+                        "keras_hub.models.ESMBackbone.token_embedding",
+                    ],
+                },
+                {
+                    "path": "esm_classifier",
+                    "title": "ESMProteinClassifier model",
+                    "generate": [
+                        "keras_hub.models.ESMProteinClassifier",
+                        "keras_hub.models.ESMProteinClassifier.from_preset",
+                        "keras_hub.models.ESMProteinClassifier.backbone",
+                        "keras_hub.models.ESMProteinClassifier.preprocessor",
+                    ],
+                },
+                {
+                    "path": "esm_classifier_preprocessor",
+                    "title": "ESMProteinClassifierPreprocessor layer",
+                    "generate": [
+                        "keras_hub.models.ESMProteinClassifierPreprocessor",
+                        "keras_hub.models.ESMProteinClassifierPreprocessor.from_preset",
+                        "keras_hub.models.ESMProteinClassifierPreprocessor.tokenizer",
+                    ],
+                },
+                {
+                    "path": "esm_masked_plm",
+                    "title": "ESMMaskedPLM model",
+                    "generate": [
+                        "keras_hub.models.ESMMaskedPLM",
+                        "keras_hub.models.ESMMaskedPLM.from_preset",
+                        "keras_hub.models.ESMMaskedPLM.backbone",
+                        "keras_hub.models.ESMMaskedPLM.preprocessor",
+                    ],
+                },
+                {
+                    "path": "esm_masked_plm_preprocessor",
+                    "title": "ESMMaskedPLMPreprocessor layer",
+                    "generate": [
+                        "keras_hub.models.ESMMaskedPLMPreprocessor",
+                        "keras_hub.models.ESMMaskedPLMPreprocessor.from_preset",
+                        "keras_hub.models.ESMMaskedPLMPreprocessor.tokenizer",
                     ],
                 },
             ],
@@ -1154,6 +1281,48 @@ MODELS_MASTER = {
                         "keras_hub.models.GPTNeoXCausalLMPreprocessor",
                         "keras_hub.models.GPTNeoXCausalLMPreprocessor.from_preset",
                         "keras_hub.models.GPTNeoXCausalLMPreprocessor.tokenizer",
+                    ],
+                },
+            ],
+        },
+        {
+            "path": "hgnetv2/",
+            "title": "HGNetV2",
+            "toc": True,
+            "children": [
+                {
+                    "path": "hgnetv2_image_converter",
+                    "title": "HGNetV2ImageConverter",
+                    "generate": [
+                        "keras_hub.layers.HGNetV2ImageConverter",
+                        "keras_hub.layers.HGNetV2ImageConverter.from_preset",
+                    ],
+                },
+                {
+                    "path": "hgnetv2_backbone",
+                    "title": "HGNetV2Backbone model",
+                    "generate": [
+                        "keras_hub.models.HGNetV2Backbone",
+                        "keras_hub.models.HGNetV2Backbone.from_preset",
+                    ],
+                },
+                {
+                    "path": "hgnetv2_image_classifier",
+                    "title": "HGNetV2ImageClassifier model",
+                    "generate": [
+                        "keras_hub.models.HGNetV2ImageClassifier",
+                        "keras_hub.models.HGNetV2ImageClassifier.from_preset",
+                        "keras_hub.models.HGNetV2ImageClassifier.backbone",
+                        "keras_hub.models.HGNetV2ImageClassifier.preprocessor",
+                    ],
+                },
+                {
+                    "path": "hgnetv2_image_classifier_preprocessor",
+                    "title": "HGNetV2ImageClassifierPreprocessor layer",
+                    "generate": [
+                        "keras_hub.models.HGNetV2ImageClassifierPreprocessor",
+                        "keras_hub.models.HGNetV2ImageClassifierPreprocessor.from_preset",
+                        "keras_hub.models.HGNetV2ImageClassifierPreprocessor.image_converter",
                     ],
                 },
             ],
@@ -1647,6 +1816,51 @@ MODELS_MASTER = {
                         "keras_hub.models.QwenCausalLMPreprocessor",
                         "keras_hub.models.QwenCausalLMPreprocessor.from_preset",
                         "keras_hub.models.QwenCausalLMPreprocessor.tokenizer",
+                    ],
+                },
+            ],
+        },
+        {
+            "path": "qwen3/",
+            "title": "Qwen3",
+            "toc": True,
+            "children": [
+                {
+                    "path": "qwen3_tokenizer",
+                    "title": "Qwen3Tokenizer",
+                    "generate": [
+                        "keras_hub.models.Qwen3Tokenizer",
+                        "keras_hub.models.Qwen3Tokenizer.from_preset",
+                    ],
+                },
+                {
+                    "path": "qwen3_backbone",
+                    "title": "Qwen3Backbone model",
+                    "generate": [
+                        "keras_hub.models.Qwen3Backbone",
+                        "keras_hub.models.Qwen3Backbone.from_preset",
+                        "keras_hub.models.Qwen3Backbone.token_embedding",
+                        "keras_hub.models.Qwen3Backbone.enable_lora",
+                    ],
+                },
+                {
+                    "path": "qwen3_causal_lm",
+                    "title": "Qwen3CausalLM model",
+                    "generate": [
+                        "keras_hub.models.Qwen3CausalLM",
+                        "keras_hub.models.Qwen3CausalLM.from_preset",
+                        "keras_hub.models.Qwen3CausalLM.generate",
+                        "keras_hub.models.Qwen3CausalLM.backbone",
+                        "keras_hub.models.Qwen3CausalLM.preprocessor",
+                    ],
+                },
+                {
+                    "path": "qwen3_causal_lm_preprocessor",
+                    "title": "Qwen3CausalLMPreprocessor layer",
+                    "generate": [
+                        "keras_hub.models.Qwen3CausalLMPreprocessor",
+                        "keras_hub.models.Qwen3CausalLMPreprocessor.from_preset",
+                        "keras_hub.models.Qwen3CausalLMPreprocessor.tokenizer",
                     ],
                 },
             ],

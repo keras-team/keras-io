@@ -115,6 +115,14 @@ GUIDES_MASTER = {
             "path": "migrating_to_keras_3",
             "title": "Migrating Keras 2 code to Keras 3",
         },
+        {
+            "path": "keras_nnx_guide",
+            "title": "How to use Keras with NNX backend",
+        },
+        {
+            "path": "orbax_checkpoint",
+            "title": "Orbax Checkpointing in Keras",
+        },
         # {
         #     "path": "preprocessing_layers",
         #     "title": "Working with preprocessing layers",
