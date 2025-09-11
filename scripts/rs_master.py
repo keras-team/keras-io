@@ -261,6 +261,10 @@ RS_EXAMPLES_MASTER = {
             "title": "Ranking with Deep and Cross Networks",
         },
         {
+            "path" : "dlrm",
+            "title" : "Rank movies with DLRM using KerasRS",
+        },
+        {
             "path": "sas_rec",
             "title": "Sequential retrieval using SASRec",
         },
