@@ -27,6 +27,7 @@ libraries.
 
 
 ```python
+!pip install -q -U jax[tpu]>=0.7.0
 !pip install -q jax-tpu-embedding
 !pip install -q tensorflow-cpu
 !pip install -q keras-rs
