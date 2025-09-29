@@ -208,7 +208,8 @@ def train_step(model, optimizer, batch):
         y_pred = model_(x)
         return jnp.mean((y - y_pred) ** 2)
 
-    grads = nnx.grad(loss_fn, wrt=trainable_var)(model)
+    diff_state = nnx.DiffState(0, trainable_var)
+    grads = nnx.grad(loss_fn, argnums=diff_state)(model)
     optimizer.update(model, grads)
 
 
