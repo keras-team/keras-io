@@ -317,10 +317,7 @@ functional, step-by-step manner, rather than using a built-in Keras layer.
 
 def keras_layer_norm(x, weight, bias, eps):
     # Functional Layer Norm steps
-    mean = ops.mean(x, axis=-1, keepdims=True)
-    variance = ops.mean(ops.square(x - mean), axis=-1, keepdims=True)
-    std = ops.sqrt(variance + eps)
-    normalized_x = (x - mean) / std
+    normalized_x = ops.layer_norm(x, axis=-1, epsilon=eps)
     return normalized_x * weight + bias
 
 
