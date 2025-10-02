@@ -261,12 +261,20 @@ RS_EXAMPLES_MASTER = {
             "title": "Ranking with Deep and Cross Networks",
         },
         {
+            "path" : "dlrm",
+            "title" : "Rank movies with DLRM using KerasRS",
+        },
+        {
             "path": "sas_rec",
             "title": "Sequential retrieval using SASRec",
         },
         {
             "path": "distributed_embedding_jax",
             "title": "DistributedEmbedding using TPU SparseCore and JAX",
+        },
+        {
+            "path": "distributed_embedding_tf",
+            "title": "DistributedEmbedding using TPU SparseCore and TensorFlow",
         },
     ],
 }

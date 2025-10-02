@@ -1,8 +1,8 @@
 """
 Title: DistributedEmbedding using TPU SparseCore and JAX
-Author: [Fabien Hertschuh](https://github.com/hertschuh/), [Abheesht Sharma](https://github.com/abheesht17/)
+Author: [Fabien Hertschuh](https://github.com/hertschuh/), [Abheesht Sharma](https://github.com/abheesht17/), [C. Antonio Sánchez](https://github.com/cantonios/)
 Date created: 2025/06/03
-Last modified: 2025/06/03
+Last modified: 2025/09/02
 Description: Rank movies using a two tower model with embeddings on SparseCore.
 Accelerator: TPU
 """
@@ -24,6 +24,7 @@ libraries.
 """
 
 """shell
+pip install -q -U jax[tpu]>=0.7.0
 pip install -q jax-tpu-embedding
 pip install -q tensorflow-cpu
 pip install -q keras-rs
@@ -56,7 +57,7 @@ keras.distribution.set_distribution(distribution)
 """
 ## Preparing the dataset
 
-We're going to use the same Movielens data. The ratings are the objectives we
+We're going to use the same MovieLens data. The ratings are the objectives we
 are trying to predict.
 """
 
@@ -150,8 +151,8 @@ Features are configured using `keras_rs.layers.FeatureConfig`, which has:
 
 - A name.
 - A table, the embedding table to use.
-- An input shape (per replica).
-- An output shape (per replica).
+- An input shape (batch size is for all TPUs).
+- An output shape (batch size is for all TPUs).
 
 We can organize features in any structure we want, which can be nested. A dict
 is often a good choice to have names for the inputs and outputs.

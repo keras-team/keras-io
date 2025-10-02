@@ -1,16 +1,13 @@
-# DistributedEmbedding using TPU SparseCore and JAX
+"""
+Title: DistributedEmbedding using TPU SparseCore and TensorFlow
+Author: [Fabien Hertschuh](https://github.com/hertschuh/), [Abheesht Sharma](https://github.com/abheesht17/)
+Date created: 2025/09/02
+Last modified: 2025/09/02
+Description: Rank movies using a two tower model with embeddings on SparseCore.
+Accelerator: TPU
+"""
 
-**Author:** [Fabien Hertschuh](https://github.com/hertschuh/), [Abheesht Sharma](https://github.com/abheesht17/), [C. Antonio Sánchez](https://github.com/cantonios/)<br>
-**Date created:** 2025/06/03<br>
-**Last modified:** 2025/09/02<br>
-**Description:** Rank movies using a two tower model with embeddings on SparseCore.
-
-
-<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/keras_rs/ipynb/distributed_embedding_jax.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/keras_rs/distributed_embedding_jax.py)
-
-
-
----
+"""
 ## Introduction
 
 In the [basic ranking](/keras_rs/examples/basic_ranking/) tutorial, we showed
@@ -19,87 +16,120 @@ users.
 
 This tutorial implements the same model trained on the same dataset but with the
 use of `keras_rs.layers.DistributedEmbedding`, which makes use of SparseCore on
-TPU. This is the JAX version of the tutorial. It needs to be run on TPU v5p or
-v6e.
+TPU. This is the TensorFlow version of the tutorial. It needs to be run on TPU
+v5p or v6e.
 
-Let's begin by choosing JAX as the backend and importing all the necessary
-libraries.
+Let's begin by installing the necessary libraries. Note that we need
+`tensorflow-tpu` version 2.19. We'll also install `keras-rs`.
+"""
 
+"""shell
+pip install -U -q tensorflow-tpu==2.19.1
+pip install -q keras-rs
+"""
 
-```python
-!pip install -q -U jax[tpu]>=0.7.0
-!pip install -q jax-tpu-embedding
-!pip install -q tensorflow-cpu
-!pip install -q keras-rs
-```
+"""
+We're using the PJRT version of the runtime for TensorFlow. We're also enabling
+the MLIR bridge. This requires setting a few flags before importing TensorFlow.
+"""
 
-```python
 import os
+import libtpu
 
-os.environ["KERAS_BACKEND"] = "jax"
+os.environ["PJRT_DEVICE"] = "TPU"
+os.environ["NEXT_PLUGGABLE_DEVICE_USE_C_API"] = "true"
+os.environ["TF_PLUGGABLE_DEVICE_LIBRARY_PATH"] = libtpu.get_library_path()
+os.environ["TF_XLA_FLAGS"] = (
+    "--tf_mlir_enable_mlir_bridge=true "
+    "--tf_mlir_enable_convert_control_to_data_outputs_pass=true "
+    "--tf_mlir_enable_merge_control_flow_pass=true"
+)
 
-import jax
+import tensorflow as tf
+
+"""
+We now set the Keras backend to TensorFlow and import the necessary libraries.
+"""
+
+os.environ["KERAS_BACKEND"] = "tensorflow"
+
 import keras
 import keras_rs
-import tensorflow as tf  # Needed for the dataset
 import tensorflow_datasets as tfds
-```
 
----
+"""
+## Creating a `TPUStrategy`
+
+To run TensorFlow on TPU, you need to use a
+[`tf.distribute.TPUStrategy`](https://www.tensorflow.org/api_docs/python/tf/distribute/TPUStrategy)
+to handle the distribution of the model.
+
+The core of the model is replicated across TPU instances, which is done by the
+`TPUStrategy`. Note that on GPU you would use
+[`tf.distribute.MirroredStrategy`](https://www.tensorflow.org/api_docs/python/tf/distribute/MirroredStrategy)
+instead, but this strategy is not for TPU.
+
+Only the embedding tables handled by `DistributedEmbedding` are sharded across
+the SparseCore chips of all the available TPUs.
+"""
+
+resolver = tf.distribute.cluster_resolver.TPUClusterResolver(tpu="local")
+topology = tf.tpu.experimental.initialize_tpu_system(resolver)
+tpu_metadata = resolver.get_tpu_system_metadata()
+
+device_assignment = tf.tpu.experimental.DeviceAssignment.build(
+    topology, num_replicas=tpu_metadata.num_cores
+)
+strategy = tf.distribute.TPUStrategy(
+    resolver, experimental_device_assignment=device_assignment
+)
+
+"""
 ## Dataset distribution
 
 While the model is replicated and the embedding tables are sharded across
 SparseCores, the dataset is distributed by sharding each batch across the TPUs.
 We need to make sure the batch size is a multiple of the number of TPUs.
+"""
 
-
-```python
 PER_REPLICA_BATCH_SIZE = 256
-BATCH_SIZE = PER_REPLICA_BATCH_SIZE * jax.local_device_count("tpu")
+BATCH_SIZE = PER_REPLICA_BATCH_SIZE * strategy.num_replicas_in_sync
 
-distribution = keras.distribution.DataParallel(devices=jax.devices("tpu"))
-keras.distribution.set_distribution(distribution)
-```
-
----
+"""
 ## Preparing the dataset
 
 We're going to use the same MovieLens data. The ratings are the objectives we
 are trying to predict.
+"""
 
-
-```python
 # Ratings data.
 ratings = tfds.load("movielens/100k-ratings", split="train")
 # Features of all the available movies.
 movies = tfds.load("movielens/100k-movies", split="train")
-```
 
+"""
 We need to know the number of users as we're using the user ID directly as an
 index in the user embedding table.
+"""
 
-
-```python
 users_count = int(
     ratings.map(lambda x: tf.strings.to_number(x["user_id"], out_type=tf.int32))
     .reduce(tf.constant(0, tf.int32), tf.maximum)
     .numpy()
 )
-```
 
+"""
 We also need do know the number of movies as we're using the movie ID directly
 as an index in the movie embedding table.
+"""
 
-
-```python
 movies_count = int(movies.cardinality().numpy())
-```
 
+"""
 The inputs to the model are the user IDs and movie IDs and the labels are the
 ratings.
+"""
 
-
-```python
 
 def preprocess_rating(x):
     return (
@@ -112,13 +142,12 @@ def preprocess_rating(x):
         (x["user_rating"] - 1.0) / 4.0,
     )
 
-```
 
+"""
 We'll split the data by putting 80% of the ratings in the train set, and 20% in
 the test set.
+"""
 
-
-```python
 shuffled_ratings = ratings.map(preprocess_rating).shuffle(
     100_000, seed=42, reshuffle_each_iteration=False
 )
@@ -131,9 +160,8 @@ test_ratings = (
     .batch(BATCH_SIZE, drop_remainder=True)
     .cache()
 )
-```
 
----
+"""
 ## Configuring DistributedEmbedding
 
 The `keras_rs.layers.DistributedEmbedding` handles multiple features and
@@ -169,9 +197,8 @@ Features are configured using `keras_rs.layers.FeatureConfig`, which has:
 
 We can organize features in any structure we want, which can be nested. A dict
 is often a good choice to have names for the inputs and outputs.
+"""
 
-
-```python
 EMBEDDING_DIMENSION = 32
 
 movie_table = keras_rs.layers.TableConfig(
@@ -203,9 +230,8 @@ FEATURE_CONFIGS = {
         output_shape=(BATCH_SIZE, EMBEDDING_DIMENSION),
     ),
 }
-```
 
----
+"""
 ## Defining the Model
 
 We're now ready to create a `DistributedEmbedding` inside a model. Once we have
@@ -216,9 +242,8 @@ we call.
 The ouputs have the exact same structure as the inputs. In our example, we
 concatenate the embeddings we got as outputs and run them through a tower of
 dense layers.
+"""
 
-
-```python
 
 class EmbeddingModel(keras.Model):
     """Create the model with the embedding configuration.
@@ -243,9 +268,9 @@ class EmbeddingModel(keras.Model):
             ]
         )
 
-    def call(self, preprocessed_features):
+    def call(self, features):
         # Embedding lookup. Outputs have the same structure as the inputs.
-        embedding = self.embedding_layer(preprocessed_features)
+        embedding = self.embedding_layer(features)
         return self.ratings(
             keras.ops.concatenate(
                 [embedding["user_id"], embedding["movie_id"]],
@@ -253,95 +278,42 @@ class EmbeddingModel(keras.Model):
             )
         )
 
-```
 
+"""
 Let's now instantiate the model. We then use `model.compile()` to configure the
 loss, metrics and optimizer. Again, this Adagrad optimizer will only apply to
 the dense layers and not the embedding tables.
+"""
 
+with strategy.scope():
+    model = EmbeddingModel(FEATURE_CONFIGS)
 
-```python
-model = EmbeddingModel(FEATURE_CONFIGS)
+    model.compile(
+        loss=keras.losses.MeanSquaredError(),
+        metrics=[keras.metrics.RootMeanSquaredError()],
+        optimizer="adagrad",
+    )
 
-model.compile(
-    loss=keras.losses.MeanSquaredError(),
-    metrics=[keras.metrics.RootMeanSquaredError()],
-    optimizer="adagrad",
-)
-```
-
-With the JAX backend, we need to preprocess the inputs to convert them to a
-hardware-dependent format required for use with SparseCores. We'll do this by
-wrapping the datasets into generator functions.
-
-
-```python
-
-def train_dataset_generator():
-    for inputs, labels in iter(train_ratings):
-        yield model.embedding_layer.preprocess(inputs, training=True), labels
-
-
-def test_dataset_generator():
-    for inputs, labels in iter(test_ratings):
-        yield model.embedding_layer.preprocess(inputs, training=False), labels
-
-```
-
----
+"""
 ## Fitting and evaluating
 
 We can use the standard Keras `model.fit()` to train the model. Keras will
 automatically use the `TPUStrategy` to distribute the model and the data.
+"""
 
+with strategy.scope():
+    model.fit(train_ratings, epochs=5)
 
-```python
-model.fit(train_dataset_generator(), epochs=5)
-```
-
-<div class="k-default-codeblock">
-```
-Epoch 1/5
-
-312/312 ━━━━━━━━━━━━━━━━━━━━ 14s 37ms/step - loss: 0.2746 - root_mean_squared_error: 0.5200
-
-Epoch 2/5
-
-312/312 ━━━━━━━━━━━━━━━━━━━━ 2s 16us/step - loss: 0.0924 - root_mean_squared_error: 0.3040
-
-Epoch 3/5
-
-312/312 ━━━━━━━━━━━━━━━━━━━━ 0s 18us/step - loss: 0.0922 - root_mean_squared_error: 0.3037
-
-Epoch 4/5
-
-312/312 ━━━━━━━━━━━━━━━━━━━━ 0s 17us/step - loss: 0.0921 - root_mean_squared_error: 0.3034
-
-Epoch 5/5
-
-312/312 ━━━━━━━━━━━━━━━━━━━━ 0s 18us/step - loss: 0.0919 - root_mean_squared_error: 0.3031
-
-<keras.src.callbacks.history.History at 0x775c331de5f0>
-```
-</div>
-
+"""
 Same for `model.evaluate()`.
+"""
 
+with strategy.scope():
+    model.evaluate(test_ratings, return_dict=True)
 
-```python
-model.evaluate(test_dataset_generator(), return_dict=True)
-```
-
-    
-<div class="k-default-codeblock">
-```
-78/78 ━━━━━━━━━━━━━━━━━━━━ 2s 11ms/step - loss: 0.0964 - root_mean_squared_error: 0.3105
-
-{'loss': 0.09723417460918427, 'root_mean_squared_error': 0.31182393431663513}
-```
-</div>
-
+"""
 That's it.
 
-This example shows that after configuring the `DistributedEmbedding` and setting
-up the required preprocessing, you can use the standard Keras workflows.
+This example shows that after setting up the `TPUStrategy` and configuring the
+`DistributedEmbedding`, you can use the standard Keras workflows.
+"""
