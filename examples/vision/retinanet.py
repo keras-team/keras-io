@@ -653,7 +653,7 @@ class RetinaNet(keras.Model):
         self.fpn = FeaturePyramid(backbone)
         self.num_classes = num_classes
 
-        prior_probability = prior_probability = keras.initializers.Constant(-np.log((1 - 0.01) / 0.01))
+        prior_probability = keras.initializers.Constant(-np.log((1 - 0.01) / 0.01))
         self.cls_head = build_head(9 * num_classes, prior_probability)
         self.box_head = build_head(9 * 4, "zeros")
 
@@ -783,7 +783,7 @@ class RetinaNetClassificationLoss(keras.losses.Loss):
 
     def call(self, y_true, y_pred):
         cross_entropy = keras.ops.binary_crossentropy(
-            y_true, y_pred
+            y_true, y_pred, from_logits = True
         )
         probs = keras.ops.sigmoid(y_pred)
         alpha = keras.ops.where(keras.ops.equal(y_true, 1.0), self._alpha, (1.0 - self._alpha))
@@ -802,24 +802,24 @@ class RetinaNetLoss(keras.losses.Loss):
         self._num_classes = num_classes
 
     def call(self, y_true, y_pred):
-        y_pred = tf.cast(y_pred, dtype=tf.float32)
+        y_pred = keras.ops.cast(y_pred, dtype="float32")
         box_labels = y_true[:, :, :4]
         box_predictions = y_pred[:, :, :4]
-        cls_labels = tf.one_hot(
+        cls_labels = keras.ops.one_hot(
             keras.ops.cast(y_true[:, :, 4], dtype="int32"),
-            depth=self._num_classes,
-            dtype=tf.float32,
+            num_classes=self._num_classes,
+            dtype="float32",
         )
         cls_predictions = y_pred[:, :, 4:]
-        positive_mask = keras.ops.cast(tf.greater(y_true[:, :, 4], -1.0), dtype="float32")
+        positive_mask = keras.ops.cast(keras.ops.greater(y_true[:, :, 4], -1.0), dtype="float32")
         ignore_mask = keras.ops.cast(keras.ops.equal(y_true[:, :, 4], -2.0), dtype="float32")
         clf_loss = self._clf_loss(cls_labels, cls_predictions)
         box_loss = self._box_loss(box_labels, box_predictions)
-        clf_loss = tf.where(tf.equal(ignore_mask, 1.0), 0.0, clf_loss)
-        box_loss = tf.where(tf.equal(positive_mask, 1.0), box_loss, 0.0)
-        normalizer = tf.reduce_sum(positive_mask, axis=-1)
-        clf_loss = tf.math.divide_no_nan(tf.reduce_sum(clf_loss, axis=-1), normalizer)
-        box_loss = tf.math.divide_no_nan(tf.reduce_sum(box_loss, axis=-1), normalizer)
+        clf_loss = keras.ops.where(keras.ops.equal(ignore_mask, 1.0), 0.0, clf_loss)
+        box_loss = keras.ops.where(keras.ops.equal(positive_mask, 1.0), box_loss, 0.0)
+        normalizer = keras.ops.sum(positive_mask, axis=-1)
+        clf_loss = keras.ops.divide_no_nan(keras.ops.sum(clf_loss, axis=-1), normalizer)
+        box_loss = keras.ops.divide_no_nan(keras.ops.sum(box_loss, axis=-1), normalizer)
         loss = clf_loss + box_loss
         return loss
 
@@ -939,7 +939,6 @@ model.fit(
 ## Loading weights
 """
 
-# Change this to `model_dir` when not using the downloaded weights
 
 def get_latest_weights(model_dir):
     weight_files = glob.glob(os.path.join(model_dir, "*.weights.h5"))
