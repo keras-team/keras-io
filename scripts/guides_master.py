@@ -123,6 +123,10 @@ GUIDES_MASTER = {
             "path": "orbax_checkpoint",
             "title": "Orbax Checkpointing in Keras",
         },
+        {
+            "path": "quantization/overview",
+            "title": "Quantization in Keras",
+        },
         # {
         #     "path": "preprocessing_layers",
         #     "title": "Working with preprocessing layers",
