@@ -21,7 +21,8 @@ At a high level, Keras supports:
 * Joint weight + activation PTQ in `int4`, `int8`, and `float8`.
 * Weight-only PTQ via **GPTQ** (2/3/4/8-bit) to maximize compression with minimal accuracy impact, especially for large language models (LLMs).
 
-**Terminology**
+### Terminology
+
 * *Scale / zero-point:* Quantization maps real values `x` to integers `q` using a scale (and optionally a zero-point). Symmetric schemes use only a scale.
 * *Per-channel vs per-tensor:* A separate scale per output channel (e.g., per hidden unit) usually preserves accuracy better than a single scale for the whole tensor.
 * *Calibration:* A short pass over sample data to estimate activation ranges (e.g., max absolute value).
@@ -55,7 +56,7 @@ Keras currently focuses on the following numeric formats. Each mode can be appli
   * **Why use it:** Strong accuracy retention at very low bit-widths without retraining; ideal for rapid LLM compression.
   * **What to expect:** Large storage/VRAM savings with small perplexity/accuracy deltas on many decoder-only models when calibrated on task-relevant samples.
 
-**Implementation notes**
+### Implementation notes
 
 * For `int4`, Keras packs signed 4-bit values (range ≈ [-8, 7]) and stores per-channel scales such as `kernel_scale`. Dequantization happens on the fly, and matmuls use 8-bit (unpacked) kernels.
 * Activation scaling for `int4` / `int8` / `float8` uses **AbsMax calibration** by default (range set by the maximum absolute value observed). Alternative calibration methods (e.g., percentile) may be added in future releases.
@@ -114,7 +115,7 @@ layer.build(input_shape)
 layer.quantize("int4")  # Or "int8", "float8", etc.
 
 """
-**When to use layer-wise quantization**
+### When to use layer-wise quantization
 
 * To keep numerically sensitive blocks (e.g., small residual paths, logits) at higher precision while quantizing large projection layers.
 * To mix modes (e.g., attention projections in int4, feed-forward in int8) and measure trade-offs incrementally.
@@ -133,7 +134,7 @@ Any composite layers that are built from the above (for example, `MultiHeadAtten
 
 Since all KerasHub models subclass `keras.Model`, they automatically support the `model.quantize(...)` API. In practice, this means you can take a popular LLM preset, call a single function to obtain an int8/int4/GPTQ-quantized variant, and then save or serve it—without changing your training code.
 
-**Practical guidance**
+## Practical guidance
 
 * For GPTQ, use a calibration set that matches your inference domain (a few hundred to a few thousand tokens is often enough to see strong retention).
 * Measure both **VRAM** and **throughput/latency**: memory savings are immediate; speedups depend on the availability of fused low-precision kernels on your device.
