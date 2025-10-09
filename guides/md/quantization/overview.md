@@ -85,21 +85,21 @@ Typical workflow:
 import keras
 import numpy as np
 
-# Sample training data
+# Sample training data.
 x_train = keras.ops.array(np.random.rand(100, 10))
 y_train = keras.ops.array(np.random.rand(100, 1))
 
-# Build the model
+# Build the model.
 model = keras.Sequential([
     keras.layers.Dense(32, activation="relu", input_shape=(10,)),
     keras.layers.Dense(1)
 ])
 
-# Compile and fit the model
+# Compile and fit the model.
 model.compile(optimizer="adam", loss="mean_squared_error")
 model.fit(x_train, y_train, epochs=1, verbose=0)
 
-# Quantize the model
+# Quantize the model.
 model.quantize("int8")
 ```
 
