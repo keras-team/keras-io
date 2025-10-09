@@ -118,7 +118,7 @@ input_shape = (10,)
 layer = layers.Dense(32, activation="relu", input_shape=input_shape)
 layer.build(input_shape)
 
-layer.quantize("int4")  # or "int8", "float8", etc.
+layer.quantize("int4")  # Or "int8", "float8", etc.
 ```
 
 ### When to use layer-wise quantization
