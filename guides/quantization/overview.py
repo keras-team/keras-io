@@ -58,7 +58,7 @@ Keras currently focuses on the following numeric formats. Each mode can be appli
 
 ### Implementation notes
 
-* For `int4`, Keras packs signed 4-bit values (range ≈ [-8, 7]) and stores per-channel scales such as `kernel_scale`. Dequantization happens on the fly, and matmuls use 8-bit (unpacked) kernels.
+* For `int4`, Keras packs signed 4-bit values (range = [-8, 7]) and stores per-channel scales such as `kernel_scale`. Dequantization happens on the fly, and matmuls use 8-bit (unpacked) kernels.
 * Activation scaling for `int4` / `int8` / `float8` uses **AbsMax calibration** by default (range set by the maximum absolute value observed). Alternative calibration methods (e.g., percentile) may be added in future releases.
 * Per-channel scaling is the default for weights where supported, because it materially improves accuracy at negligible overhead.
 

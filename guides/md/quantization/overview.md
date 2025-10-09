@@ -52,7 +52,7 @@ Keras currently focuses on the following numeric formats. Each mode can be appli
 
   * **How it works:** Two signed 4-bit "nibbles" are packed per int8 byte. Keras uses symmetric per-output-channel scales to dequantize efficiently inside matmul.
   * **Why use it:** Significant VRAM/storage savings for LLMs with acceptable accuracy when combined with robust per-channel scaling.
-  * **What to expect:** ~8× smaller than FP32 (~4× vs FP16) for weights; throughput gains depend on kernel availability and memory bandwidth. Competitive accuracy deltas for encoder-only architectures, may show larger regressions on decoder-only models.
+  * **What to expect:** ~8x smaller than FP32 (~4x vs FP16) for weights; throughput gains depend on kernel availability and memory bandwidth. Competitive accuracy deltas for encoder-only architectures, may show larger regressions on decoder-only models.
 
 * **`GPTQ` (weight-only 2/3/4/8 bits)**: *Second-order, post-training* method minimizing layer output error.
 
@@ -62,7 +62,7 @@ Keras currently focuses on the following numeric formats. Each mode can be appli
 
 ### Implementation notes
 
-* For `int4`, Keras packs signed 4-bit values (range ≈ [−8, 7]) and stores per-channel scales such as `kernel_scale`. Dequantization happens on the fly, and matmuls use 8-bit (unpacked) kernels.
+* For `int4`, Keras packs signed 4-bit values (range = [−8, 7]) and stores per-channel scales such as `kernel_scale`. Dequantization happens on the fly, and matmuls use 8-bit (unpacked) kernels.
 * Activation scaling for `int4` / `int8` / `float8` uses **AbsMax calibration** by default (range set by the maximum absolute value observed). Alternative calibration methods (e.g., percentile) may be added in future releases.
 * Per-channel scaling is the default for weights where supported, because it materially improves accuracy at negligible overhead.
 
@@ -141,6 +141,8 @@ Keras supports the following core layers in its quantization framework:
 Any composite layers that are built from the above (for example, `MultiHeadAttention`, `GroupedQueryAttention`, feed-forward blocks in Transformers) inherit quantization support by construction. This covers the majority of modern encoder-only and decoder-only Transformer architectures.
 
 Since all KerasHub models subclass `keras.Model`, they automatically support the `model.quantize(...)` API. In practice, this means you can take a popular LLM preset, call a single function to obtain an int8/int4/GPTQ-quantized variant, and then save or serve it—without changing your training code.
+
+---
 
 ## Practical guidance
 
