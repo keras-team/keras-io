@@ -2,7 +2,7 @@
 Title: When Recurrence meets Transformers
 Author: [Aritra Roy Gosthipaty](https://twitter.com/ariG23498), [Suvaditya Mukherjee](https://twitter.com/halcyonrayes)
 Date created: 2023/03/12
-Last modified: 2024/10/29
+Last modified: 2025/10/10
 Description: Image Classification with Temporal Latent Bottleneck Networks.
 Accelerator: GPU
 """
