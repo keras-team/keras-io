@@ -5,10 +5,12 @@
 **Last modified:** 2025/10/09<br>
 **Description:** Overview of quantization in Keras (int8, float8, int4, GPTQ).
 
+
 <img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/guides/ipynb/quantization_overview.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/guides/quantization_overview.py)
 
----
 
+
+---
 ## Introduction
 
 Modern large models are often **memory- and bandwidth-bound**: most inference time is spent moving tensors between memory and compute units rather than doing math. Quantization reduces the number of bits used to represent the model's weights and (optionally) activations, which:
@@ -24,14 +26,13 @@ At a high level, Keras supports:
 * Joint weight + activation PTQ in `int4`, `int8`, and `float8`.
 * Weight-only PTQ via **GPTQ** (2/3/4/8-bit) to maximize compression with minimal accuracy impact, especially for large language models (LLMs).
 
-> **Terminology**
->
-> * *Scale / zero-point:* Quantization maps real values `x` to integers `q` using a scale (and optionally a zero-point). Symmetric schemes use only a scale.
-> * *Per-channel vs per-tensor:* A separate scale per output channel (e.g., per hidden unit) usually preserves accuracy better than a single scale for the whole tensor.
-> * *Calibration:* A short pass over sample data to estimate activation ranges (e.g., max absolute value).
+### Terminology
+
+* *Scale / zero-point:* Quantization maps real values `x` to integers `q` using a scale (and optionally a zero-point). Symmetric schemes use only a scale.
+* *Per-channel vs per-tensor:* A separate scale per output channel (e.g., per hidden unit) usually preserves accuracy better than a single scale for the whole tensor.
+* *Calibration:* A short pass over sample data to estimate activation ranges (e.g., max absolute value).
 
 ---
-
 ## Quantization Modes
 
 Keras currently focuses on the following numeric formats. Each mode can be applied selectively to layers or to the whole model via the same API.
@@ -62,12 +63,12 @@ Keras currently focuses on the following numeric formats. Each mode can be appli
 
 ### Implementation notes
 
-* For `int4`, Keras packs signed 4-bit values (range = [−8, 7]) and stores per-channel scales such as `kernel_scale`. Dequantization happens on the fly, and matmuls use 8-bit (unpacked) kernels.
-* Activation scaling for `int4` / `int8` / `float8` uses **AbsMax calibration** by default (range set by the maximum absolute value observed). Alternative calibration methods (e.g., percentile) may be added in future releases.
+* **Dynamic activation quantization**: In the `int4`, `int8` PTQ path, activation scales are computed on-the-fly at runtime (per tensor and per batch) using an AbsMax estimator. This avoids maintaining a separate, fixed set of activation scales from a calibration pass and adapts to varying input ranges.
+* **4-bit packing**: For `int4`, Keras packs signed 4-bit values (range = [-8, 7]) and stores per-channel scales such as `kernel_scale`. Dequantization happens on the fly, and matmuls use 8-bit (unpacked) kernels.
+* **Calibration Strategy**: Activation scaling for `int4` / `int8` / `float8` uses **AbsMax calibration** by default (range set by the maximum absolute value observed). Alternative calibration methods (e.g., percentile) may be added in future releases.
 * Per-channel scaling is the default for weights where supported, because it materially improves accuracy at negligible overhead.
 
 ---
-
 ## Quantizing Keras Models
 
 Quantization is applied explicitly after layers or models are built. The API is designed to be predictable: you call quantize, the graph is rewritten, the weights are replaced, and you can immediately run inference or save the model.
@@ -81,6 +82,7 @@ Typical workflow:
 
 ### Model Quantization
 
+
 ```python
 import keras
 import numpy as np
@@ -90,10 +92,13 @@ x_train = keras.ops.array(np.random.rand(100, 10))
 y_train = keras.ops.array(np.random.rand(100, 1))
 
 # Build the model.
-model = keras.Sequential([
-    keras.layers.Dense(32, activation="relu", input_shape=(10,)),
-    keras.layers.Dense(1)
-])
+model = keras.Sequential(
+    [
+        keras.Input(shape=(10,)),
+        keras.layers.Dense(32, activation="relu"),
+        keras.layers.Dense(1),
+    ]
+)
 
 # Compile and fit the model.
 model.compile(optimizer="adam", loss="mean_squared_error")
@@ -103,6 +108,13 @@ model.fit(x_train, y_train, epochs=1, verbose=0)
 model.quantize("int8")
 ```
 
+<div class="k-default-codeblock">
+```
+/Users/jyotindersingh/miniconda3/envs/keras-io-env-3.10/lib/python3.10/site-packages/keras/src/models/model.py:455: UserWarning: Layer InputLayer does not have a `quantize` method implemented.
+  warnings.warn(str(e))
+```
+</div>
+
 **What this does:** Quantizes the weights of the supported layers, and re-wires their forward paths to be compatible with the quantized kernels and quantization scales.
 
 **Note**: Throughput gains depend on backend/hardware kernels; in cases where kernels fall back to dequantized matmul, you still get memory savings but smaller speedups.
@@ -111,11 +123,12 @@ model.quantize("int8")
 
 The Keras quantization framework allows you to quantize each layer separately, without having to quantize the entire model using the same unified API.
 
+
 ```python
 from keras import layers
 
 input_shape = (10,)
-layer = layers.Dense(32, activation="relu", input_shape=input_shape)
+layer = layers.Dense(32, activation="relu")
 layer.build(input_shape)
 
 layer.quantize("int4")  # Or "int8", "float8", etc.
@@ -128,7 +141,6 @@ layer.quantize("int4")  # Or "int8", "float8", etc.
 * Always validate on a small eval set after each step; mixing precisions across residual connections can shift distributions.
 
 ---
-
 ## Layer & model coverage
 
 Keras supports the following core layers in its quantization framework:
@@ -143,7 +155,6 @@ Any composite layers that are built from the above (for example, `MultiHeadAtten
 Since all KerasHub models subclass `keras.Model`, they automatically support the `model.quantize(...)` API. In practice, this means you can take a popular LLM preset, call a single function to obtain an int8/int4/GPTQ-quantized variant, and then save or serve it—without changing your training code.
 
 ---
-
 ## Practical guidance
 
 * For GPTQ, use a calibration set that matches your inference domain (a few hundred to a few thousand tokens is often enough to see strong retention).

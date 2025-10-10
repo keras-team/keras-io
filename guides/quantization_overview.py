@@ -1,11 +1,13 @@
 """
 Title: Quantization in Keras
-Author: [Jyotinder Singh](https://x.com/Jyotinder_Singh)<br>
-Date created: 2025/10/09<br>
-Last modified: 2025/10/09<br>
+Author: [Jyotinder Singh](https://x.com/Jyotinder_Singh)
+Date created: 2025/10/09
+Last modified: 2025/10/09
 Description: Overview of quantization in Keras (int8, float8, int4, GPTQ).
 Accelerator: GPU
+"""
 
+"""
 ## Introduction
 
 Modern large models are often **memory- and bandwidth-bound**: most inference time is spent moving tensors between memory and compute units rather than doing math. Quantization reduces the number of bits used to represent the model's weights and (optionally) activations, which:
@@ -26,8 +28,9 @@ At a high level, Keras supports:
 * *Scale / zero-point:* Quantization maps real values `x` to integers `q` using a scale (and optionally a zero-point). Symmetric schemes use only a scale.
 * *Per-channel vs per-tensor:* A separate scale per output channel (e.g., per hidden unit) usually preserves accuracy better than a single scale for the whole tensor.
 * *Calibration:* A short pass over sample data to estimate activation ranges (e.g., max absolute value).
+"""
 
-
+"""
 ## Quantization Modes
 
 Keras currently focuses on the following numeric formats. Each mode can be applied selectively to layers or to the whole model via the same API.
@@ -58,10 +61,13 @@ Keras currently focuses on the following numeric formats. Each mode can be appli
 
 ### Implementation notes
 
-* For `int4`, Keras packs signed 4-bit values (range = [-8, 7]) and stores per-channel scales such as `kernel_scale`. Dequantization happens on the fly, and matmuls use 8-bit (unpacked) kernels.
-* Activation scaling for `int4` / `int8` / `float8` uses **AbsMax calibration** by default (range set by the maximum absolute value observed). Alternative calibration methods (e.g., percentile) may be added in future releases.
+* **Dynamic activation quantization**: In the `int4`, `int8` PTQ path, activation scales are computed on-the-fly at runtime (per tensor and per batch) using an AbsMax estimator. This avoids maintaining a separate, fixed set of activation scales from a calibration pass and adapts to varying input ranges.
+* **4-bit packing**: For `int4`, Keras packs signed 4-bit values (range = [-8, 7]) and stores per-channel scales such as `kernel_scale`. Dequantization happens on the fly, and matmuls use 8-bit (unpacked) kernels.
+* **Calibration Strategy**: Activation scaling for `int4` / `int8` / `float8` uses **AbsMax calibration** by default (range set by the maximum absolute value observed). Alternative calibration methods (e.g., percentile) may be added in future releases.
 * Per-channel scaling is the default for weights where supported, because it materially improves accuracy at negligible overhead.
+"""
 
+"""
 ## Quantizing Keras Models
 
 Quantization is applied explicitly after layers or models are built. The API is designed to be predictable: you call quantize, the graph is rewritten, the weights are replaced, and you can immediately run inference or save the model.
@@ -84,10 +90,13 @@ x_train = keras.ops.array(np.random.rand(100, 10))
 y_train = keras.ops.array(np.random.rand(100, 1))
 
 # Build the model.
-model = keras.Sequential([
-    keras.layers.Dense(32, activation="relu", input_shape=(10,)),
-    keras.layers.Dense(1)
-])
+model = keras.Sequential(
+    [
+        keras.Input(shape=(10,)),
+        keras.layers.Dense(32, activation="relu"),
+        keras.layers.Dense(1),
+    ]
+)
 
 # Compile and fit the model.
 model.compile(optimizer="adam", loss="mean_squared_error")
@@ -109,7 +118,7 @@ The Keras quantization framework allows you to quantize each layer separately, w
 from keras import layers
 
 input_shape = (10,)
-layer = layers.Dense(32, activation="relu", input_shape=input_shape)
+layer = layers.Dense(32, activation="relu")
 layer.build(input_shape)
 
 layer.quantize("int4")  # Or "int8", "float8", etc.
@@ -120,7 +129,9 @@ layer.quantize("int4")  # Or "int8", "float8", etc.
 * To keep numerically sensitive blocks (e.g., small residual paths, logits) at higher precision while quantizing large projection layers.
 * To mix modes (e.g., attention projections in int4, feed-forward in int8) and measure trade-offs incrementally.
 * Always validate on a small eval set after each step; mixing precisions across residual connections can shift distributions.
+"""
 
+"""
 ## Layer & model coverage
 
 Keras supports the following core layers in its quantization framework:
