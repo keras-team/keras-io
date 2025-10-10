@@ -108,13 +108,6 @@ model.fit(x_train, y_train, epochs=1, verbose=0)
 model.quantize("int8")
 ```
 
-<div class="k-default-codeblock">
-```
-/Users/jyotindersingh/miniconda3/envs/keras-io-env-3.10/lib/python3.10/site-packages/keras/src/models/model.py:455: UserWarning: Layer InputLayer does not have a `quantize` method implemented.
-  warnings.warn(str(e))
-```
-</div>
-
 **What this does:** Quantizes the weights of the supported layers, and re-wires their forward paths to be compatible with the quantized kernels and quantization scales.
 
 **Note**: Throughput gains depend on backend/hardware kernels; in cases where kernels fall back to dequantized matmul, you still get memory savings but smaller speedups.
