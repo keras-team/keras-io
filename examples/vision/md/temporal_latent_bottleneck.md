@@ -2,7 +2,7 @@
 
 **Author:** [Aritra Roy Gosthipaty](https://twitter.com/ariG23498), [Suvaditya Mukherjee](https://twitter.com/halcyonrayes)<br>
 **Date created:** 2023/03/12<br>
-**Last modified:** 2024/11/12<br>
+**Last modified:** 2025/10/10<br>
 **Description:** Image Classification with Temporal Latent Bottleneck Networks.
 
 
@@ -879,6 +879,9 @@ Epoch 29/30
 Epoch 30/30
 19/19 ━━━━━━━━━━━━━━━━━━━━ 1146s 60s/step - accuracy: 0.5076 - loss: 1.3592 - val_accuracy: 0.4890 - val_loss: 1.3961
 ---
+```
+</div>
+
 ## Visualize training metrics
 
 The `model.fit()` will return a `history` object, which stores the values of the metrics
