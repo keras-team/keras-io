@@ -124,7 +124,7 @@ GUIDES_MASTER = {
             "title": "Orbax Checkpointing in Keras",
         },
         {
-            "path": "quantization/overview",
+            "path": "quantization_overview",
             "title": "Quantization in Keras",
         },
         # {

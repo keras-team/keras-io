@@ -5,7 +5,7 @@
 **Last modified:** 2025/10/09<br>
 **Description:** Overview of quantization in Keras (int8, float8, int4, GPTQ).
 
-<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/guides/ipynb/quantization/overview.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/guides/quantization/overview.py)
+<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/guides/ipynb/quantization_overview.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/guides/quantization_overview.py)
 
 ---
 
@@ -135,7 +135,7 @@ Keras supports the following core layers in its quantization framework:
 
 * `Dense`
 * `EinsumDense`
-* `Embedding` (available in KerasHub)
+* `Embedding`
 * `ReversibleEmbedding` (available in KerasHub)
 
 Any composite layers that are built from the above (for example, `MultiHeadAttention`, `GroupedQueryAttention`, feed-forward blocks in Transformers) inherit quantization support by construction. This covers the majority of modern encoder-only and decoder-only Transformer architectures.

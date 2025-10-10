@@ -127,7 +127,7 @@ Keras supports the following core layers in its quantization framework:
 
 * `Dense`
 * `EinsumDense`
-* `Embedding` (available in KerasHub)
+* `Embedding`
 * `ReversibleEmbedding` (available in KerasHub)
 
 Any composite layers that are built from the above (for example, `MultiHeadAttention`, `GroupedQueryAttention`, feed-forward blocks in Transformers) inherit quantization support by construction. This covers the majority of modern encoder-only and decoder-only Transformer architectures.
