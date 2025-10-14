@@ -390,6 +390,25 @@ body {
   margin-top: 32px;
 }
 
+.survey__banner {
+    background-color: #A30000;
+    padding: 10px;
+    text-align: center;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 100;
+    box-sizing: border-box;
+}
+
+.survey__banner a {
+    color: white;
+    font-size: 15px;
+    font-weight: 500;
+    margin: 0;
+}
+
 @media only screen and (min-width: 1200px) {
   h1 {
     font-size: 72px;

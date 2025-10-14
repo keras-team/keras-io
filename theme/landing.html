@@ -83,6 +83,13 @@
   </head>
 
   <body>
+
+    <div class="survey__banner">
+      <a href="https://google.qualtrics.com/jfe/form/SV_5psTvNYQKv2mAwC">
+        Shape the future of Keras! Take a quick 3-minute survey by October 17 to share your experience.
+      </a>
+    </div>
+
     <!-- Google Tag Manager (noscript) -->
     <noscript
       ><iframe
@@ -660,6 +667,21 @@ history = model.fit(
     <script src="./js/index.js"></script>
 
     <script src="./js/glide.min.js"></script>
+
+    <script>
+      function adjustNavMargin() {
+        const banner = document.querySelector('.survey__banner');
+        const nav = document.querySelector('.nav__container');
+
+        if (banner && nav) {
+          const bannerHeight = banner.offsetHeight;
+          nav.style.marginTop = bannerHeight + 'px';
+        }
+      }
+
+      document.addEventListener('DOMContentLoaded', adjustNavMargin);
+      window.addEventListener('resize', adjustNavMargin);
+    </script>
 
     <script>
       const carousels = document.querySelector(".glide");
