@@ -85,9 +85,12 @@ Typical workflow:
 import keras
 import numpy as np
 
+# Create a random number generator.
+rng = np.random.default_rng(7)
+
 # Sample training data.
-x_train = keras.ops.array(np.random.rand(100, 10))
-y_train = keras.ops.array(np.random.rand(100, 1))
+x_train = rng.random((100, 10)).astype("float32")
+y_train = rng.random((100, 1)).astype("float32")
 
 # Build the model.
 model = keras.Sequential(
