@@ -37,7 +37,7 @@ overhead for stronger compression.
 
 ## Benefits
 * Memory / bandwidth bound models: When the implementation spends most of its time on memory I/O,
-  reducing the computation time does not reduce their overall runtime. INT4 reduces bytes
+  reducing the computation time does not reduce its overall runtime. INT4 reduces bytes
   moved by ~8x vs `float32`, improving cache behavior and reducing memory stalls;
   this often helps more than increasing raw FLOPs.
 * Accuracy: Many architectures retain acceptable accuracy with INT4; encoder-only models
