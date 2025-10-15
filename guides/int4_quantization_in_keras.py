@@ -15,10 +15,10 @@ and often speed up inference, at the cost of a small accuracy drop. INT4 post-tr
 quantization (PTQ) stores model weights in 4-bit signed integers and dynamically quantizes
 activations to 8-bit at runtime (a W4A8 scheme). Compared with FP32 this can shrink weight
 storage ~8x (2x vs INT8) while retaining acceptable accuracy for many encoder models and
-some decoder models. Compute still leverages widely available INT8 Tensor Cores.
+some decoder models. Compute still leverages widely available NVIDIA INT8 Tensor Cores.
 
-4-bit is a more aggressive compression than 8-bit and may
-induce larger quality regressions, especially for large autoregressive language models.
+4-bit is a more aggressive compression than 8-bit and may induce larger quality regressions,
+especially for large autoregressive language models.
 
 ## How it works
 
@@ -38,7 +38,7 @@ overhead for stronger compression.
 ## Benefits
 * Memory / bandwidth bound models: When the implementation spends most of its time on memory I/O,
   reducing the computation time does not reduce its overall runtime. INT4 reduces bytes
-  moved by ~8x vs `float32`, improving cache behavior and reducing memory stalls;
+  moved by ~8x vs FP32, improving cache behavior and reducing memory stalls;
   this often helps more than increasing raw FLOPs.
 * Accuracy: Many architectures retain acceptable accuracy with INT4; encoder-only models
   often fare better than decoder LLMs. Always validate on your own dataset.
@@ -52,7 +52,7 @@ overhead for stronger compression.
 * **Weights**: per-output-channel scales to preserve accuracy.
 * **Activations**: **dynamic AbsMax** scaling computed at runtime.
 * **Graph rewrite**: Quantization is applied after weights are trained and built; the graph
-is rewritten so you can run or save immediately.
+  is rewritten so you can run or save immediately.
 """
 
 """
