@@ -86,7 +86,7 @@ import keras
 import numpy as np
 
 # Create a random number generator.
-rng = np.random.default_rng(7)
+rng = np.random.default_rng()
 
 # Sample training data.
 x_train = rng.random((100, 10)).astype("float32")
