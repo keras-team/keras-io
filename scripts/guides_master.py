@@ -139,6 +139,10 @@ GUIDES_MASTER = {
         {
             "path": "gptq_quantization_in_keras",
             "title": "GPTQ quantization in Keras",
+        },
+        {
+            "path": "writing_quantization_compatible_layers",
+            "title": "Writing quantization-compatible layers in Keras",
         }
         # {
         #     "path": "preprocessing_layers",
