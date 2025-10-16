@@ -175,8 +175,7 @@ quantized variables allocated in `_int8_build(...)` and de-scales the output
 back to floating-point.
 
 The base `keras.Layer` class automatically dispatches to this method when the
-layer is quantized. Your regular call() method will be used for the
-full-precision forward pass.
+layer is quantized, without requiring you to wire it up manually.
 
 The INT8 path mirrors the float computation `y = x * w` but performs:
 
@@ -294,8 +293,8 @@ print("SimpleScale INT8 sample:", y_int8[0].numpy())
 
 <div class="k-default-codeblock">
 ```
-SimpleScale FP32 sample: [ 0.00074363 -0.02807784 -0.0032404  -0.03456082]
-SimpleScale INT8 sample: [ 0.00074166 -0.0279077  -0.00322246 -0.03456089]
+SimpleScale FP32 sample: [-0.00359688  0.00296069 -0.00846314  0.00070467]
+SimpleScale INT8 sample: [-0.00359092  0.00290875 -0.00846319  0.00070462]
 ```
 </div>
 
@@ -548,11 +547,8 @@ print("Loaded INT8 sample:", y_loaded[0].numpy())
 
 <div class="k-default-codeblock">
 ```
-SimpleScale INT8 sample: [-0.00047286  0.02926966 -0.00708966  0.03041461]
-Loaded INT8 sample: [-0.00047286  0.02926966 -0.00708966  0.03041461]
-
-/Users/jyotindersingh/miniconda3/envs/keras-io-env-3.12/lib/python3.12/site-packages/keras/src/models/model.py:472: UserWarning: Layer InputLayer does not have a `quantize` method implemented.
-  warnings.warn(str(e))
+SimpleScale INT8 sample: [0.00825868 0.01510935 0.02154977 0.00205997]
+Loaded INT8 sample: [0.00825868 0.01510935 0.02154977 0.00205997]
 ```
 </div>
 

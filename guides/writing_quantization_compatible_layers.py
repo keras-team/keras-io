@@ -174,8 +174,7 @@ quantized variables allocated in `_int8_build(...)` and de-scales the output
 back to floating-point.
 
 The base `keras.Layer` class automatically dispatches to this method when the
-layer is quantized. Your regular call() method will be used for the
-full-precision forward pass.
+layer is quantized, without requiring you to wire it up manually.
 
 The INT8 path mirrors the float computation `y = x * w` but performs:
 
