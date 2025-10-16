@@ -96,10 +96,12 @@ def quantize(self, mode, **kwargs):
     )
     scale = ops.squeeze(scale, axis=0)
 
+    kernel_shape = self._kernel.shape
+
     del self._kernel
 
     # Allocate INT8 variables. Discussed in the next section.
-    self._int8_build(kernel_shape=self._kernel.shape)
+    self._int8_build(kernel_shape)
 
     self._kernel.assign(quantized_kernel)
     self.scale.assign(scale)
@@ -171,6 +173,10 @@ The `_int8_call(...)` method implements a minimal INT8 forward path. It uses the
 quantized variables allocated in `_int8_build(...)` and de-scales the output
 back to floating-point.
 
+The base `keras.Layer` class automatically dispatches to this method when the
+layer is quantized. Your regular call() method will be used for the
+full-precision forward pass.
+
 The INT8 path mirrors the float computation `y = x * w` but performs:
 
 1. Elementwise multiply using the quantized weight.
@@ -223,7 +229,7 @@ class SimpleScale(Layer):
 
         del self._kernel
 
-        self._int8_build(kernel_shape=kernel_shape)
+        self._int8_build(kernel_shape)
 
         self._kernel.assign(quantized_kernel)
         self.scale.assign(scale)
@@ -429,7 +435,7 @@ class SimpleScale(Layer):
 
         del self._kernel
 
-        self._int8_build(kernel_shape=kernel_shape)
+        self._int8_build(kernel_shape)
 
         self._kernel.assign(quantized_kernel)
         self.scale.assign(scale)
@@ -532,8 +538,8 @@ Here are concrete patterns you can reuse when making your own layers PTQ-friendl
   - The axis you packed along (e.g., `_int4_pack_axis`).
   - The original (unpacked) length on that axis (e.g., `_original_input_dim` or
     `_original_length_along_pack_axis`).
-- In `call(...)`, compute with the quantized buffers and de-scale back to float
-  at the end, wherever possible. This allows you to leverage optimized
+- In quantized call hooks, compute with the quantized buffers and de-scale back
+  to float at the end, wherever possible. This allows you to leverage optimized
   low-precision kernels (e.g., cuBLAS INT8 GEMM).
 
 - INT4 specifics (packed nibbles)
