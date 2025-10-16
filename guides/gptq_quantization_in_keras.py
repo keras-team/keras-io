@@ -133,9 +133,8 @@ preserved after quantization.
 """
 ## Practical tips
 
-* GPTQ is weight-only; training after quantization is not supported.
+* GPTQ is a post-training technique; training after quantization is not supported.
 * Always use the model's own tokenizer for calibration.
 * Use a representative calibration set; small slices are only for demos.
 * Start with W4 group_size=128; tune per model/task.
-* Save to `.keras` or to a preset for reuse elsewhere.
 """
