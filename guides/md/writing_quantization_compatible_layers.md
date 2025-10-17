@@ -137,7 +137,7 @@ INT8 variables. It should allocate:
 
 - `self._kernel` as an INT8 vector of shape `(input_dim,)` (the same shape as
   the original full-precision kernel).
-- `self.scale` as the scalar quantization scale in the layer's compute dtype,
+- `self.scale` as the scalar quantization scale in the layer's variable dtype,
   which is FP32 in this case.
 
 
