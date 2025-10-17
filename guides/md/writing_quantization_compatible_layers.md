@@ -95,7 +95,7 @@ def quantize(self, mode, **kwargs):
         raise NotImplementedError(f"Unsupported quantization mode: {mode}")
 
     quantized_kernel, scale = quantizers.abs_max_quantize(
-        self._kernel, axis=0, to_numpy=True
+        self._kernel, axis=0, dtype="int8", to_numpy=True
     )
     scale = ops.squeeze(scale, axis=0)
 
@@ -137,7 +137,8 @@ INT8 variables. It should allocate:
 
 - `self._kernel` as an INT8 vector of shape `(input_dim,)` (the same shape as
   the original full-precision kernel).
-- `self.scale` as the scalar quantization scale in FP32.
+- `self.scale` as the scalar quantization scale in the layer's compute dtype,
+  which is FP32 in this case.
 
 
 ```python
@@ -161,12 +162,16 @@ def _int8_build(self, kernel_shape):
 
 #### Note
 
-1. The INT8 variables should be `trainable=False` since PTQ does not involve
-  further training.
+1. INT8 variables should be created with `trainable=False`, as quantized parameters
+  are not meant to be updated during training. Subsequent fine-tuning should not
+  alter these quantized variables.
 2. If you support INT4 quantization, implement a similar `_int4_build(...)`
   method that allocates packed INT4 storage (often packed into INT8) plus
   per-feature scales. The original unpacked dimensions and packing axis should
-  be recorded as instance variables for use in the call path.
+  be recorded as instance variables for use in the call path. A reference
+  implementation is available in the Keras
+  [Dense](https://github.com/keras-team/keras/blob/3c3d6adc08db627d89b5ad5e7f9b0ba3e88f2641/keras/src/layers/core/dense.py#L481-L512)
+  layer.
 
 ### The `_int8_call(...)` method
 
@@ -187,7 +192,6 @@ The INT8 path mirrors the float computation `y = x * w` but performs:
 
 def _int8_call(self, inputs, training=None):
     x = ops.multiply(inputs, self._kernel)
-    x = ops.cast(x, self.compute_dtype)
     x = ops.divide(x, self.scale)
     return x
 
@@ -224,7 +228,7 @@ class SimpleScale(Layer):
             raise NotImplementedError(f"Unsupported quantization mode: {mode}")
 
         quantized_kernel, scale = quantizers.abs_max_quantize(
-            self._kernel, axis=0, to_numpy=True
+            self._kernel, axis=0, dtype="int8", to_numpy=True
         )
         scale = ops.squeeze(scale, axis=0)
 
@@ -260,7 +264,6 @@ class SimpleScale(Layer):
 
     def _int8_call(self, inputs, training=None):
         x = ops.multiply(inputs, self._kernel)
-        x = ops.cast(x, self.compute_dtype)
         x = ops.divide(x, self.scale)
         return x
 
@@ -293,8 +296,8 @@ print("SimpleScale INT8 sample:", y_int8[0].numpy())
 
 <div class="k-default-codeblock">
 ```
-SimpleScale FP32 sample: [-0.00359688  0.00296069 -0.00846314  0.00070467]
-SimpleScale INT8 sample: [-0.00359092  0.00290875 -0.00846319  0.00070462]
+SimpleScale FP32 sample: [-0.01259411  0.00385596  0.0053392  -0.00877095]
+SimpleScale INT8 sample: [-0.01256325  0.0038252   0.00535317 -0.00877098]
 ```
 </div>
 
@@ -308,7 +311,7 @@ If you want to support INT4 quantization, add:
 - `quantize("int4")`: quantize weights with `value_range=(-8, 7)`, then pack to int4 storage
 
 See the
-[Dense](https://github.com/keras-team/keras/blob/3c3d6adc08db627d89b5ad5e7f9b0ba3e88f2641/keras/src/layers/core/dense.py)
+[Dense](https://github.com/keras-team/keras/blob/3c3d6adc08db627d89b5ad5e7f9b0ba3e88f2641/keras/src/layers/core/dense.py#L602-L653)
 reference for a complete packed int4 example, including how to track and use the
 original (unpacked) dimension in the call path.
 
@@ -443,7 +446,7 @@ class SimpleScale(Layer):
             raise NotImplementedError(f"Unsupported quantization mode: {mode}")
 
         quantized_kernel, scale = quantizers.abs_max_quantize(
-            self._kernel, axis=0, to_numpy=True
+            self._kernel, axis=0, dtype="int8", to_numpy=True
         )
         scale = ops.squeeze(scale, axis=0)
 
@@ -479,7 +482,6 @@ class SimpleScale(Layer):
 
     def _int8_call(self, inputs, training=None):
         x = ops.multiply(inputs, self._kernel)
-        x = ops.cast(x, self.compute_dtype)
         x = ops.divide(x, self.scale)
         return x
 
@@ -522,7 +524,7 @@ class SimpleScale(Layer):
 #### Note
 
 The `@keras.saving.register_keras_serializable()` decorator is needed to
-  register the class for serialization.
+register the class for serialization.
 
 ---
 ## Try it: quantize, save, and load
@@ -547,8 +549,8 @@ print("Loaded INT8 sample:", y_loaded[0].numpy())
 
 <div class="k-default-codeblock">
 ```
-SimpleScale INT8 sample: [0.00825868 0.01510935 0.02154977 0.00205997]
-Loaded INT8 sample: [0.00825868 0.01510935 0.02154977 0.00205997]
+SimpleScale INT8 sample: [ 0.01568618 -0.00546078  0.00163636  0.00331613]
+Loaded INT8 sample: [ 0.01568618 -0.00546078  0.00163636  0.00331613]
 ```
 </div>
 
@@ -589,11 +591,10 @@ Here are concrete patterns you can reuse when making your own layers PTQ-friendl
     avoid an infinite loop.
 
 - Serialization contract
-    - Provide a fixed-order logic for variable serialization so save/load is
-      deterministic.
-    - Write variables in a fixed order per mode (e.g., None: [kernel, bias],
-      `"int8"`: [kernel, bias, kernel_scale], `"int4"`:
-      [kernel, bias, kernel_scale]).
+  - Provide a fixed-order logic for variable serialization so save/load is
+    deterministic.
+  - Write variables in a fixed order per mode (e.g., None: [kernel, bias],
+    `"int8"`: [kernel, bias, kernel_scale], `"int4"`: [kernel, bias, kernel_scale]).
 
 - Validation and error handling
   - Validate `mode` early and raise a `NotImplementedError` for unsupported
