@@ -135,6 +135,11 @@ GUIDES_MASTER = {
             "path": "int4_quantization_in_keras",
             "title": "4-bit integer quantization in Keras",
         }
+        ,
+        {
+            "path": "gptq_quantization_in_keras",
+            "title": "GPTQ quantization in Keras",
+        }
         # {
         #     "path": "preprocessing_layers",
         #     "title": "Working with preprocessing layers",
