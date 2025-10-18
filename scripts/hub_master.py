@@ -2870,6 +2870,10 @@ HUB_GUIDES_MASTER = {
             "path": "rag_pipeline_with_keras_hub",
             "title": "RAG Pipeline with KerasHub",
         },
+        {   
+            "path": "mcp_with_keras_hub",
+            "title": "Model Context Protocol (MCP) with KerasHub",
+        },
     ],
 }
 
