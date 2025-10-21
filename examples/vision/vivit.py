@@ -2,7 +2,7 @@
 Title: Video Vision Transformer
 Author: [Aritra Roy Gosthipaty](https://twitter.com/ariG23498), [Ayush Thakur](https://twitter.com/ayushthakur0) (equal contribution)
 Date created: 2022/01/12
-Last modified:  2024/01/15
+Last modified:  2025/10/16
 Description: A Transformer-based architecture for video classification.
 Accelerator: GPU
 """
