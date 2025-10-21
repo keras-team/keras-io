@@ -84,12 +84,6 @@
 
   <body>
 
-    <div class="survey__banner">
-      <a href="https://google.qualtrics.com/jfe/form/SV_5psTvNYQKv2mAwC">
-        Shape the future of Keras! Take a quick 3-minute survey by October 17 to share your experience.
-      </a>
-    </div>
-
     <!-- Google Tag Manager (noscript) -->
     <noscript
       ><iframe
@@ -134,7 +128,6 @@
             <a class="nav-link" href="/2.18/api/" role="tab" aria-selected="">Keras 2 API documentation</a>
             <a class="nav-link" href="/keras_tuner/" role="tab" aria-selected="">KerasTuner: Hyperparam Tuning</a>
             <a class="nav-link" href="/keras_hub/" role="tab" aria-selected="">KerasHub: Pretrained Models</a>
-            <a class="nav-link" href="https://google.qualtrics.com/jfe/form/SV_5psTvNYQKv2mAwC" role="tab" aria-selected="">Take Our Survey!</a>
           </div>
         </div>
         <a href="/">
@@ -157,7 +150,6 @@
             <li class="nav__item"><a class="nav__link" href="/keras_tuner/">KERAS TUNER</a></li>
             <li class="nav__item"><a class="nav__link" href="/keras_rs/">KERAS RS</a></li>
             <li class="nav__item"><a class="nav__link" href="/keras_hub/">KERAS HUB</a></li>
-            <li class="nav__item"><a class="nav__link" href="https://google.qualtrics.com/jfe/form/SV_5psTvNYQKv2mAwC" style="color:blue;">2025 SURVEY</a></li>
           </ul>
 
           <form class="nav__search">
@@ -179,8 +171,7 @@
       <div class="hero">
         <div class="hero__content--wrapper">
           <div class="hero__content">
-            <a class="button__round" href="https://google.qualtrics.com/jfe/form/SV_5psTvNYQKv2mAwC">TAKE OUR SURVEY!</a>
-
+              <a class="button__round" href="/keras_3/">KERAS 3.0 RELEASED</a>
             <h1 class="hero__title text--white">A superpower for ML developers</h1>
 
             <p class="hero__description text--white">
@@ -667,21 +658,6 @@ history = model.fit(
     <script src="./js/index.js"></script>
 
     <script src="./js/glide.min.js"></script>
-
-    <script>
-      function adjustNavMargin() {
-        const banner = document.querySelector('.survey__banner');
-        const nav = document.querySelector('.nav__container');
-
-        if (banner && nav) {
-          const bannerHeight = banner.offsetHeight;
-          nav.style.marginTop = bannerHeight + 'px';
-        }
-      }
-
-      document.addEventListener('DOMContentLoaded', adjustNavMargin);
-      window.addEventListener('resize', adjustNavMargin);
-    </script>
 
     <script>
       const carousels = document.querySelector(".glide");
