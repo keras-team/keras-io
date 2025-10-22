@@ -660,6 +660,21 @@ history = model.fit(
     <script src="./js/glide.min.js"></script>
 
     <script>
+      function adjustNavMargin() {
+        const banner = document.querySelector('.survey__banner');
+        const nav = document.querySelector('.nav__container');
+
+        if (banner && nav) {
+          const bannerHeight = banner.offsetHeight;
+          nav.style.marginTop = bannerHeight + 'px';
+        }
+      }
+
+      document.addEventListener('DOMContentLoaded', adjustNavMargin);
+      window.addEventListener('resize', adjustNavMargin);
+    </script>
+
+    <script>
       const carousels = document.querySelector(".glide");
       let perView = 3;
       let glide;

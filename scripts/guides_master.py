@@ -127,6 +127,23 @@ GUIDES_MASTER = {
             "path": "quantization_overview",
             "title": "Quantization in Keras",
         },
+        {
+            "path": "int8_quantization_in_keras",
+            "title": "8-bit integer quantization in Keras",
+        },
+        {
+            "path": "int4_quantization_in_keras",
+            "title": "4-bit integer quantization in Keras",
+        }
+        ,
+        {
+            "path": "gptq_quantization_in_keras",
+            "title": "GPTQ quantization in Keras",
+        },
+        {
+            "path": "writing_quantization_compatible_layers",
+            "title": "Writing quantization-compatible layers in Keras",
+        }
         # {
         #     "path": "preprocessing_layers",
         #     "title": "Working with preprocessing layers",
