@@ -2,7 +2,7 @@
 Title: MobileViT: A mobile-friendly Transformer-based model for image classification
 Author: [Sayak Paul](https://twitter.com/RisingSayak)
 Date created: 2021/10/20
-Last modified: 2024/02/11
+Last modified: 2025/09/30
 Description: MobileViT for image classification with combined benefits of convolutions and Transformers.
 Accelerator: GPU
 """

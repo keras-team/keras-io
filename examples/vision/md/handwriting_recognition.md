@@ -2,7 +2,7 @@
 
 **Authors:** [A_K_Nain](https://twitter.com/A_K_Nain), [Sayak Paul](https://twitter.com/RisingSayak)<br>
 **Date created:** 2021/08/16<br>
-**Last modified:** 2024/09/01<br>
+**Last modified:** 2025/09/29<br>
 **Description:** Training a handwriting recognition model with variable-length sequences.
 
 
@@ -687,6 +687,7 @@ Epoch 9/10
 
 Epoch 10/10
   1357/1357 ━━━━━━━━━━━━━━━━━━━━ 208s 153ms/step - loss: 245.5216 - val_loss: 195.7952
+```
 </div>
 
 ---
