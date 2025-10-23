@@ -48,8 +48,8 @@ Before we start implementing the pipeline, let's import all the libraries we nee
 ```python
 !pip install -q --upgrade rouge-score
 !pip install -q --upgrade keras-hub
-!pip install -q --upgrade keras  # Upgrade to Keras 3.
 ```
+
 
 ```python
 import keras_hub
@@ -60,18 +60,8 @@ import keras
 from keras import ops
 
 import tensorflow.data as tf_data
-from tensorflow_text.tools.wordpiece_vocab import (
-    bert_vocab_from_dataset as bert_vocab,
-)
 ```
-<div class="k-default-codeblock">
-```
-[31mERROR: pip's dependency resolver does not currently take into account all the packages that are installed. This behaviour is the source of the following dependency conflicts.
-tensorflow 2.15.1 requires keras<2.16,>=2.15.0, but you have keras 3.3.3 which is incompatible.[31m
 
-
-```
-</div>
 Let's also define our parameters/hyperparameters.
 
 
@@ -100,16 +90,17 @@ text_file = keras.utils.get_file(
     origin="http://storage.googleapis.com/download.tensorflow.org/data/spa-eng.zip",
     extract=True,
 )
-text_file = pathlib.Path(text_file).parent / "spa-eng" / "spa.txt"
+text_file = pathlib.Path(text_file) / "spa-eng" / "spa.txt"
 ```
 
 <div class="k-default-codeblock">
 ```
 Downloading data from http://storage.googleapis.com/download.tensorflow.org/data/spa-eng.zip
- 2638744/2638744 ━━━━━━━━━━━━━━━━━━━━ 0s 0us/step
 
+2638744/2638744 ━━━━━━━━━━━━━━━━━━━━ 0s 0us/step
 ```
 </div>
+
 ---
 ## Parsing the data
 
@@ -139,14 +130,14 @@ for _ in range(5):
 
 <div class="k-default-codeblock">
 ```
-('tom heard that mary had bought a new computer.', 'tom oyó que mary se había comprado un computador nuevo.')
-('will you stay at home?', '¿te vas a quedar en casa?')
-('where is this train going?', '¿adónde va este tren?')
-('tom panicked.', 'tom entró en pánico.')
-("we'll help you rescue tom.", 'te ayudaremos a rescatar a tom.')
-
+('i went to bed a little earlier than usual.', 'me fui a la cama un poco antes de lo habitual.')
+('she trusted you.', 'ella confiaba en ti.')
+('tom is more intelligent than i am.', 'tom es más inteligente que yo.')
+('he kept on smoking all the time.', 'seguía fumando todo el tiempo.')
+("it's two miles from here to the station.", 'son dos millas de aquí a la estación.')
 ```
 </div>
+
 Now, let's split the sentence pairs into a training set, a validation set,
 and a test set.
 
@@ -172,9 +163,9 @@ print(f"{len(test_pairs)} test pairs")
 83276 training pairs
 17844 validation pairs
 17844 test pairs
-
 ```
 </div>
+
 ---
 ## Tokenizing the data
 
@@ -236,11 +227,11 @@ print("Spanish Tokens: ", spa_vocab[100:110])
 
 <div class="k-default-codeblock">
 ```
-English Tokens:  ['at', 'know', 'him', 'there', 'go', 'they', 'her', 'has', 'time', 'will']
-Spanish Tokens:  ['le', 'para', 'te', 'mary', 'las', 'más', 'al', 'yo', 'tu', 'estoy']
-
+English Tokens:  ['him', 'there', 'they', 'go', 'her', 'has', 're', 'will', 'time', 'll']
+Spanish Tokens:  ['le', 'qué', 'ella', 'te', 'para', 'mary', 'las', 'más', 'al', 'yo']
 ```
 </div>
+
 Now, let's define the tokenizers. We will configure the tokenizers with the
 the vocabularies trained above.
 
@@ -283,20 +274,16 @@ print(
 
 <div class="k-default-codeblock">
 ```
-English sentence:  i am leaving the books here.
-Tokens:  tf.Tensor([ 35 163 931  66 356 119  12], shape=(7,), dtype=int32)
-Recovered text after detokenizing:  tf.Tensor(b'i am leaving the books here .', shape=(), dtype=string)
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-Spanish sentence:  dejo los libros aquí.
-Tokens:  tf.Tensor([2962   93  350  122   14], shape=(5,), dtype=int32)
-Recovered text after detokenizing:  tf.Tensor(b'dejo los libros aqu\xc3\xad .', shape=(), dtype=string)
+English sentence:  do you need a ride?
+Tokens:  tf.Tensor([  75   66  145   26 1075   25], shape=(6,), dtype=int32)
+Recovered text after detokenizing:  do you need a ride ?
 
+Spanish sentence:  ¿necesitas que te lleven?
+Tokens:  tf.Tensor([  63  592   80  103 2994  128   29], shape=(7,), dtype=int32)
+Recovered text after detokenizing:  ¿ necesitas que te lleven ?
 ```
 </div>
+
 ---
 ## Format datasets
 
@@ -323,8 +310,6 @@ This can be easily done using `keras_hub.layers.StartEndPacker`.
 ```python
 
 def preprocess_batch(eng, spa):
-    batch_size = ops.shape(spa)[0]
-
     eng = eng_tokenizer(eng)
     spa = spa_tokenizer(spa)
 
@@ -384,9 +369,9 @@ for inputs, targets in train_ds.take(1):
 inputs["encoder_inputs"].shape: (64, 40)
 inputs["decoder_inputs"].shape: (64, 40)
 targets.shape: (64, 40)
-
 ```
 </div>
+
 ---
 ## Building the model
 
@@ -508,7 +493,7 @@ transformer.fit(train_ds, epochs=EPOCHS, validation_data=val_ds)
 │ transformer_encoder │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">256</span>) │  <span style="color: #00af00; text-decoration-color: #00af00">1,315,072</span> │ token_and_positi… │
 │ (<span style="color: #0087ff; text-decoration-color: #0087ff">TransformerEncode…</span> │                   │            │                   │
 ├─────────────────────┼───────────────────┼────────────┼───────────────────┤
-│ functional_3        │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>,      │  <span style="color: #00af00; text-decoration-color: #00af00">9,283,992</span> │ decoder_inputs[<span style="color: #00af00; text-decoration-color: #00af00">0</span>… │
+│ functional_1        │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>,      │  <span style="color: #00af00; text-decoration-color: #00af00">9,283,992</span> │ decoder_inputs[<span style="color: #00af00; text-decoration-color: #00af00">0</span>… │
 │ (<span style="color: #0087ff; text-decoration-color: #0087ff">Functional</span>)        │ <span style="color: #00af00; text-decoration-color: #00af00">15000</span>)            │            │ transformer_enco… │
 └─────────────────────┴───────────────────┴────────────┴───────────────────┘
 </pre>
@@ -533,14 +518,15 @@ transformer.fit(train_ds, epochs=EPOCHS, validation_data=val_ds)
 
 
 
+    
 <div class="k-default-codeblock">
 ```
- 1302/1302 ━━━━━━━━━━━━━━━━━━━━ 1701s 1s/step - accuracy: 0.8168 - loss: 1.4819 - val_accuracy: 0.8650 - val_loss: 0.8129
+1302/1302 ━━━━━━━━━━━━━━━━━━━━ 688s 527ms/step - accuracy: 0.8385 - loss: 1.1014 - val_accuracy: 0.8661 - val_loss: 0.8040
 
-<keras.src.callbacks.history.History at 0x7efdd7ee6a50>
-
+<keras.src.callbacks.history.History at 0x3520df0d0>
 ```
 </div>
+
 ---
 ## Decoding test sentences (qualitative analysis)
 
@@ -561,12 +547,15 @@ def decode_sequences(input_sentences):
     batch_size = 1
 
     # Tokenize the encoder input.
-    encoder_input_tokens = ops.convert_to_tensor(eng_tokenizer(input_sentences))
-    if len(encoder_input_tokens[0]) < MAX_SEQUENCE_LENGTH:
-        pads = ops.full((1, MAX_SEQUENCE_LENGTH - len(encoder_input_tokens[0])), 0)
-        encoder_input_tokens = ops.concatenate(
-            [encoder_input_tokens.to_tensor(), pads], 1
+    encoder_input_tokens = ops.convert_to_tensor(
+        eng_tokenizer(input_sentences), sparse=False, ragged=False
+    )
+    if ops.shape(encoder_input_tokens)[1] < MAX_SEQUENCE_LENGTH:
+        pads = ops.zeros(
+            (1, MAX_SEQUENCE_LENGTH - ops.shape(encoder_input_tokens)[1]),
+            dtype=encoder_input_tokens.dtype,
         )
+        encoder_input_tokens = ops.concatenate([encoder_input_tokens, pads], 1)
 
     # Define a function that outputs the next token's probability given the
     # input sequence.
@@ -595,8 +584,7 @@ def decode_sequences(input_sentences):
 test_eng_texts = [pair[0] for pair in test_pairs]
 for i in range(2):
     input_sentence = random.choice(test_eng_texts)
-    translated = decode_sequences([input_sentence])
-    translated = translated.numpy()[0].decode("utf-8")
+    translated = decode_sequences([input_sentence])[0]
     translated = (
         translated.replace("[PAD]", "")
         .replace("[START]", "")
@@ -612,23 +600,19 @@ for i in range(2):
 <div class="k-default-codeblock">
 ```
 WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
-I0000 00:00:1714519073.816969   34774 device_compiler.h:186] Compiled cluster using XLA!  This line is logged at most once for the lifetime of the process.
+I0000 00:00:1761330728.196220 3674624 service.cc:152] XLA service 0x600002a54000 initialized for platform Host (this does not guarantee that XLA will be used). Devices:
+I0000 00:00:1761330728.196232 3674624 service.cc:160]   StreamExecutor device (0): Host, Default Version
+I0000 00:00:1761330728.304584 3674624 device_compiler.h:188] Compiled cluster using XLA!  This line is logged at most once for the lifetime of the process.
 
 ** Example 0 **
-i got the ticket free of charge.
-me pregunto la comprome .
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-** Example 1 **
-i think maybe that's all you have to do.
-creo que tom le dije que hacer eso .
-```
-</div>
-    
+tom used to play the piano professionally.
+tom se a la fiesta de la vida .
 
+** Example 1 **
+i had to leave boston.
+tuve que ir a boston .
+```
+</div>
 
 ---
 ## Evaluating our model (quantitative analysis)
@@ -651,8 +635,7 @@ for test_pair in test_pairs[:30]:
     input_sentence = test_pair[0]
     reference_sentence = test_pair[1]
 
-    translated_sentence = decode_sequences([input_sentence])
-    translated_sentence = translated_sentence.numpy()[0].decode("utf-8")
+    translated_sentence = decode_sequences([input_sentence])[0]
     translated_sentence = (
         translated_sentence.replace("[PAD]", "")
         .replace("[START]", "")
@@ -669,11 +652,11 @@ print("ROUGE-2 Score: ", rouge_2.result())
 
 <div class="k-default-codeblock">
 ```
-ROUGE-1 Score:  {'precision': <tf.Tensor: shape=(), dtype=float32, numpy=0.30989552>, 'recall': <tf.Tensor: shape=(), dtype=float32, numpy=0.37136248>, 'f1_score': <tf.Tensor: shape=(), dtype=float32, numpy=0.33032653>}
-ROUGE-2 Score:  {'precision': <tf.Tensor: shape=(), dtype=float32, numpy=0.08999339>, 'recall': <tf.Tensor: shape=(), dtype=float32, numpy=0.09524643>, 'f1_score': <tf.Tensor: shape=(), dtype=float32, numpy=0.08855649>}
-
+ROUGE-1 Score:  {'precision': <tf.Tensor: shape=(), dtype=float32, numpy=0.3267246186733246>, 'recall': <tf.Tensor: shape=(), dtype=float32, numpy=0.3378041982650757>, 'f1_score': <tf.Tensor: shape=(), dtype=float32, numpy=0.320748895406723>}
+ROUGE-2 Score:  {'precision': <tf.Tensor: shape=(), dtype=float32, numpy=0.0940079391002655>, 'recall': <tf.Tensor: shape=(), dtype=float32, numpy=0.10507937520742416>, 'f1_score': <tf.Tensor: shape=(), dtype=float32, numpy=0.09657182544469833>}
 ```
 </div>
+
 After 10 epochs, the scores are as follows:
 
 |               | **ROUGE-1** | **ROUGE-2** |
