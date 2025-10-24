@@ -38,6 +38,11 @@ Let's begin by importing all the necessary libraries.
 
 
 ```python
+!pip install -q keras-rs
+```
+
+
+```python
 import os
 
 os.environ["KERAS_BACKEND"] = "jax"  # `"tensorflow"`/`"torch"`
@@ -192,16 +197,19 @@ def get_examples(
     }
     labels = []
     for user_id, user_list in sequences.items():
-        sampled_list = sample_sublist_from_list(
-            user_list,
-            num_examples_per_list,
-        )
+        for _ in range(num_list_per_user):
+            sampled_list = sample_sublist_from_list(
+                user_list,
+                num_examples_per_list,
+            )
 
-        inputs["user_id"].append(user_id)
-        inputs["movie_id"].append(
-            tf.convert_to_tensor([f["movie_id"] for f in sampled_list])
-        )
-        labels.append(tf.convert_to_tensor([f["user_rating"] for f in sampled_list]))
+            inputs["user_id"].append(user_id)
+            inputs["movie_id"].append(
+                tf.convert_to_tensor([f["movie_id"] for f in sampled_list])
+            )
+            labels.append(
+                tf.convert_to_tensor([f["user_rating"] for f in sampled_list])
+            )
 
     return (
         {"user_id": inputs["user_id"], "movie_id": inputs["movie_id"]},
@@ -369,97 +377,20 @@ model_mse.fit(train_ds, validation_data=val_ds, epochs=EPOCHS)
 <div class="k-default-codeblock">
 ```
 Epoch 1/5
-
-```
-</div>
-    
- 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 2s/step - loss: 0.4960 - ndcg: 0.8892
-
-<div class="k-default-codeblock">
-```
-
-```
-</div>
- 1/1 ━━━━━━━━━━━━━━━━━━━━ 3s 3s/step - loss: 0.4960 - ndcg: 0.8892 - val_loss: 0.1187 - val_ndcg: 0.8846
-
-
-<div class="k-default-codeblock">
-```
+47/47 ━━━━━━━━━━━━━━━━━━━━ 6s 82ms/step - loss: 0.1209 - ndcg: 0.8871 - val_loss: 0.0782 - val_ndcg: 0.8943
 Epoch 2/5
-
-```
-</div>
-    
- 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 1s/step - loss: 0.1150 - ndcg: 0.8898
-
-<div class="k-default-codeblock">
-```
-
-```
-</div>
- 1/1 ━━━━━━━━━━━━━━━━━━━━ 1s 1s/step - loss: 0.1150 - ndcg: 0.8898 - val_loss: 0.0893 - val_ndcg: 0.8878
-
-
-<div class="k-default-codeblock">
-```
+47/47 ━━━━━━━━━━━━━━━━━━━━ 1s 3ms/step - loss: 0.0780 - ndcg: 0.8928 - val_loss: 0.0776 - val_ndcg: 0.9020
 Epoch 3/5
-
-```
-</div>
-    
- 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 5ms/step - loss: 0.0876 - ndcg: 0.8884
-
-<div class="k-default-codeblock">
-```
-
-```
-</div>
- 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 14ms/step - loss: 0.0876 - ndcg: 0.8884 - val_loss: 0.0864 - val_ndcg: 0.8857
-
-
-<div class="k-default-codeblock">
-```
+47/47 ━━━━━━━━━━━━━━━━━━━━ 0s 3ms/step - loss: 0.0774 - ndcg: 0.8975 - val_loss: 0.0770 - val_ndcg: 0.9052
 Epoch 4/5
-
-```
-</div>
-    
- 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 5ms/step - loss: 0.0834 - ndcg: 0.8896
-
-<div class="k-default-codeblock">
-```
-
-```
-</div>
- 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 13ms/step - loss: 0.0834 - ndcg: 0.8896 - val_loss: 0.0815 - val_ndcg: 0.8876
-
-
-<div class="k-default-codeblock">
-```
+47/47 ━━━━━━━━━━━━━━━━━━━━ 0s 3ms/step - loss: 0.0768 - ndcg: 0.9008 - val_loss: 0.0765 - val_ndcg: 0.9089
 Epoch 5/5
+47/47 ━━━━━━━━━━━━━━━━━━━━ 0s 3ms/step - loss: 0.0762 - ndcg: 0.9043 - val_loss: 0.0756 - val_ndcg: 0.9121
 
+<keras.src.callbacks.history.History at 0x7f0bd21e8df0>
 ```
 </div>
-    
- 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 5ms/step - loss: 0.0794 - ndcg: 0.8887
 
-<div class="k-default-codeblock">
-```
-
-```
-</div>
- 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 13ms/step - loss: 0.0794 - ndcg: 0.8887 - val_loss: 0.0810 - val_ndcg: 0.8868
-
-
-
-
-
-<div class="k-default-codeblock">
-```
-<keras.src.callbacks.history.History at 0x7ae9e43ccc50>
-
-```
-</div>
 And now, the model with pairwise hinge loss.
 
 
@@ -480,97 +411,20 @@ model_hinge.fit(train_ds, validation_data=val_ds, epochs=EPOCHS)
 <div class="k-default-codeblock">
 ```
 Epoch 1/5
-
-```
-</div>
-    
- 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 1s/step - loss: 1.4067 - ndcg: 0.8933
-
-<div class="k-default-codeblock">
-```
-
-```
-</div>
- 1/1 ━━━━━━━━━━━━━━━━━━━━ 2s 2s/step - loss: 1.4067 - ndcg: 0.8933 - val_loss: 1.3927 - val_ndcg: 0.8930
-
-
-<div class="k-default-codeblock">
-```
+47/47 ━━━━━━━━━━━━━━━━━━━━ 5s 76ms/step - loss: 1.3971 - ndcg: 0.8887 - val_loss: 1.3608 - val_ndcg: 0.8992
 Epoch 2/5
-
-```
-</div>
-    
- 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 1s/step - loss: 1.4061 - ndcg: 0.8953
-
-<div class="k-default-codeblock">
-```
-
-```
-</div>
- 1/1 ━━━━━━━━━━━━━━━━━━━━ 1s 1s/step - loss: 1.4061 - ndcg: 0.8953 - val_loss: 1.3925 - val_ndcg: 0.8936
-
-
-<div class="k-default-codeblock">
-```
+47/47 ━━━━━━━━━━━━━━━━━━━━ 1s 3ms/step - loss: 1.3866 - ndcg: 0.9021 - val_loss: 1.2919 - val_ndcg: 0.9147
 Epoch 3/5
-
-```
-</div>
-    
- 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 5ms/step - loss: 1.4054 - ndcg: 0.8977
-
-<div class="k-default-codeblock">
-```
-
-```
-</div>
- 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 14ms/step - loss: 1.4054 - ndcg: 0.8977 - val_loss: 1.3923 - val_ndcg: 0.8941
-
-
-<div class="k-default-codeblock">
-```
+47/47 ━━━━━━━━━━━━━━━━━━━━ 0s 3ms/step - loss: 1.2492 - ndcg: 0.9162 - val_loss: 1.1026 - val_ndcg: 0.9272
 Epoch 4/5
-
-```
-</div>
-    
- 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 5ms/step - loss: 1.4047 - ndcg: 0.8999
-
-<div class="k-default-codeblock">
-```
-
-```
-</div>
- 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 13ms/step - loss: 1.4047 - ndcg: 0.8999 - val_loss: 1.3921 - val_ndcg: 0.8941
-
-
-<div class="k-default-codeblock">
-```
+47/47 ━━━━━━━━━━━━━━━━━━━━ 0s 3ms/step - loss: 1.0838 - ndcg: 0.9267 - val_loss: 1.0412 - val_ndcg: 0.9298
 Epoch 5/5
+47/47 ━━━━━━━━━━━━━━━━━━━━ 0s 3ms/step - loss: 1.0409 - ndcg: 0.9298 - val_loss: 1.0267 - val_ndcg: 0.9303
 
+<keras.src.callbacks.history.History at 0x7f0b8c238490>
 ```
 </div>
-    
- 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 5ms/step - loss: 1.4041 - ndcg: 0.9004
 
-<div class="k-default-codeblock">
-```
-
-```
-</div>
- 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 13ms/step - loss: 1.4041 - ndcg: 0.9004 - val_loss: 1.3919 - val_ndcg: 0.8940
-
-
-
-
-
-<div class="k-default-codeblock">
-```
-<keras.src.callbacks.history.History at 0x7ae9e4166590>
-
-```
-</div>
 ---
 ## Evaluation
 
@@ -585,34 +439,13 @@ ndcg_hinge = model_hinge.evaluate(test_ds, return_dict=True)["ndcg"]
 print(ndcg_mse, ndcg_hinge)
 ```
 
-    
- 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 1s/step - loss: 0.0805 - ndcg: 0.8886
-
 <div class="k-default-codeblock">
 ```
-
+1/1 ━━━━━━━━━━━━━━━━━━━━ 1s 898ms/step - loss: 1.0489 - ndcg: 0.9348
+0.9109011292457581 0.9348157048225403
 ```
 </div>
- 1/1 ━━━━━━━━━━━━━━━━━━━━ 1s 1s/step - loss: 0.0805 - ndcg: 0.8886
 
-
-    
- 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 910ms/step - loss: 1.3878 - ndcg: 0.8924
-
-<div class="k-default-codeblock">
-```
-
-```
-</div>
- 1/1 ━━━━━━━━━━━━━━━━━━━━ 1s 914ms/step - loss: 1.3878 - ndcg: 0.8924
-
-
-<div class="k-default-codeblock">
-```
-0.8885537385940552 0.8924424052238464
-
-```
-</div>
 ---
 ## Prediction
 
@@ -644,26 +477,16 @@ for i, movie_id in enumerate(sorted_movies):
     print(f"{i + 1}. ", movie_id_to_movie_title[movie_id])
 ```
 
-    
- 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 261ms/step
-
 <div class="k-default-codeblock">
 ```
-
-```
-</div>
- 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 262ms/step
-
-
-<div class="k-default-codeblock">
-```
-1.  b'Jack (1996)'
+1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 168ms/step
+1.  b'With Honors (1994)'
 2.  b'Mis\xc3\xa9rables, Les (1995)'
-3.  b'Jerry Maguire (1996)'
+3.  b'Jack (1996)'
 4.  b"Breakfast at Tiffany's (1961)"
-5.  b'With Honors (1994)'
-
+5.  b'Jerry Maguire (1996)'
 ```
 </div>
+
 And we're all done!
 

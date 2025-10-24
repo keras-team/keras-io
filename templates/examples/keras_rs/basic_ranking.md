@@ -67,51 +67,11 @@ ratings = tfds.load("movielens/100k-ratings", split="train")
 movies = tfds.load("movielens/100k-movies", split="train")
 ```
 
-<div class="k-default-codeblock">
-```
-WARNING:absl:Variant folder /root/tensorflow_datasets/movielens/100k-ratings/0.1.1 has no dataset_info.json
-
-Downloading and preparing dataset Unknown size (download: Unknown size, generated: Unknown size, total: Unknown size) to /root/tensorflow_datasets/movielens/100k-ratings/0.1.1...
-
-Dl Completed...: 0 url [00:00, ? url/s]
-
-Dl Size...: 0 MiB [00:00, ? MiB/s]
-
-Extraction completed...: 0 file [00:00, ? file/s]
-
-Generating splits...:   0%|          | 0/1 [00:00<?, ? splits/s]
-
-Generating train examples...: 0 examples [00:00, ? examples/s]
-
-Shuffling /root/tensorflow_datasets/movielens/100k-ratings/incomplete.1TJF4P_0.1.1/movielens-train.tfrecord*..…
-
-Dataset movielens downloaded and prepared to /root/tensorflow_datasets/movielens/100k-ratings/0.1.1. Subsequent calls will reuse this data.
-
-WARNING:absl:Variant folder /root/tensorflow_datasets/movielens/100k-movies/0.1.1 has no dataset_info.json
-
-Downloading and preparing dataset Unknown size (download: Unknown size, generated: Unknown size, total: Unknown size) to /root/tensorflow_datasets/movielens/100k-movies/0.1.1...
-
-Dl Completed...: 0 url [00:00, ? url/s]
-
-Dl Size...: 0 MiB [00:00, ? MiB/s]
-
-Extraction completed...: 0 file [00:00, ? file/s]
-
-Generating splits...:   0%|          | 0/1 [00:00<?, ? splits/s]
-
-Generating train examples...: 0 examples [00:00, ? examples/s]
-
-Shuffling /root/tensorflow_datasets/movielens/100k-movies/incomplete.YU08UX_0.1.1/movielens-train.tfrecord*...…
-
-Dataset movielens downloaded and prepared to /root/tensorflow_datasets/movielens/100k-movies/0.1.1. Subsequent calls will reuse this data.
-
-```
-</div>
 In the Movielens dataset, user IDs are integers (represented as strings)
 starting at 1 and with no gap. Normally, you would need to create a lookup table
 to map user IDs to integers from 0 to N-1. But as a simplication, we'll use the
 user id directly as an index in our model, in particular to lookup the user
-embedding from the user embedding table. So we need do know the number of users.
+embedding from the user embedding table. So we need to know the number of users.
 
 
 ```python
@@ -126,7 +86,7 @@ In the Movielens dataset, movie IDs are integers (represented as strings)
 starting at 1 and with no gap. Normally, you would need to create a lookup table
 to map movie IDs to integers from 0 to N-1. But as a simplication, we'll use the
 movie id directly as an index in our model, in particular to lookup the movie
-embedding from the movie embedding table. So we need do know the number of
+embedding from the movie embedding table. So we need to know the number of
 movies.
 
 
@@ -262,260 +222,20 @@ model.fit(train_ratings, epochs=5)
 <div class="k-default-codeblock">
 ```
 Epoch 1/5
-
-```
-</div>
-    
-  1/80 [37m━━━━━━━━━━━━━━━━━━━━  3:31 3s/step - loss: 0.4544 - root_mean_squared_error: 0.6741
-
-<div class="k-default-codeblock">
-```
-
-```
-</div>
-  2/80 [37m━━━━━━━━━━━━━━━━━━━━  36s 465ms/step - loss: 0.3822 - root_mean_squared_error: 0.6155
-
-<div class="k-default-codeblock">
-```
-
-```
-</div>
- 29/80 ━━━━━━━[37m━━━━━━━━━━━━━  0s 18ms/step - loss: 0.1384 - root_mean_squared_error: 0.3630  
-
-<div class="k-default-codeblock">
-```
-
-```
-</div>
- 30/80 ━━━━━━━[37m━━━━━━━━━━━━━  0s 18ms/step - loss: 0.1370 - root_mean_squared_error: 0.3611
-
-<div class="k-default-codeblock">
-```
-
-```
-</div>
- 51/80 ━━━━━━━━━━━━[37m━━━━━━━━  0s 11ms/step - loss: 0.1177 - root_mean_squared_error: 0.3360
-
-<div class="k-default-codeblock">
-```
-
-```
-</div>
- 52/80 ━━━━━━━━━━━━━[37m━━━━━━━  0s 11ms/step - loss: 0.1171 - root_mean_squared_error: 0.3352
-
-<div class="k-default-codeblock">
-```
-
-```
-</div>
- 74/80 ━━━━━━━━━━━━━━━━━━[37m━━  0s 9ms/step - loss: 0.1078 - root_mean_squared_error: 0.3227 
-
-<div class="k-default-codeblock">
-```
-
-```
-</div>
- 80/80 ━━━━━━━━━━━━━━━━━━━━ 3s 10ms/step - loss: 0.1058 - root_mean_squared_error: 0.3200
-
-
-<div class="k-default-codeblock">
-```
+80/80 ━━━━━━━━━━━━━━━━━━━━ 4s 10ms/step - loss: 0.1071 - root_mean_squared_error: 0.3218
 Epoch 2/5
-
-```
-</div>
-    
-  1/80 [37m━━━━━━━━━━━━━━━━━━━━  36s 462ms/step - loss: 0.0780 - root_mean_squared_error: 0.2794
-
-<div class="k-default-codeblock">
-```
-
-```
-</div>
- 25/80 ━━━━━━[37m━━━━━━━━━━━━━━  0s 2ms/step - loss: 0.0773 - root_mean_squared_error: 0.2781   
-
-<div class="k-default-codeblock">
-```
-
-```
-</div>
- 26/80 ━━━━━━[37m━━━━━━━━━━━━━━  0s 2ms/step - loss: 0.0773 - root_mean_squared_error: 0.2781
-
-<div class="k-default-codeblock">
-```
-
-```
-</div>
- 53/80 ━━━━━━━━━━━━━[37m━━━━━━━  0s 2ms/step - loss: 0.0774 - root_mean_squared_error: 0.2782
-
-<div class="k-default-codeblock">
-```
-
-```
-</div>
- 54/80 ━━━━━━━━━━━━━[37m━━━━━━━  0s 2ms/step - loss: 0.0774 - root_mean_squared_error: 0.2782
-
-<div class="k-default-codeblock">
-```
-
-```
-</div>
- 80/80 ━━━━━━━━━━━━━━━━━━━━ 1s 2ms/step - loss: 0.0774 - root_mean_squared_error: 0.2783
-
-
-<div class="k-default-codeblock">
-```
+80/80 ━━━━━━━━━━━━━━━━━━━━ 1s 3ms/step - loss: 0.0769 - root_mean_squared_error: 0.2773
 Epoch 3/5
-
-```
-</div>
-    
-  1/80 [37m━━━━━━━━━━━━━━━━━━━━  0s 5ms/step - loss: 0.0767 - root_mean_squared_error: 0.2769
-
-    
-  2/80 [37m━━━━━━━━━━━━━━━━━━━━  0s 2ms/step - loss: 0.0771 - root_mean_squared_error: 0.2777
-
-<div class="k-default-codeblock">
-```
-
-```
-</div>
- 30/80 ━━━━━━━[37m━━━━━━━━━━━━━  0s 2ms/step - loss: 0.0760 - root_mean_squared_error: 0.2756
-
-<div class="k-default-codeblock">
-```
-
-```
-</div>
- 31/80 ━━━━━━━[37m━━━━━━━━━━━━━  0s 2ms/step - loss: 0.0760 - root_mean_squared_error: 0.2756
-
-<div class="k-default-codeblock">
-```
-
-```
-</div>
- 60/80 ━━━━━━━━━━━━━━━[37m━━━━━  0s 2ms/step - loss: 0.0759 - root_mean_squared_error: 0.2755
-
-<div class="k-default-codeblock">
-```
-
-```
-</div>
- 61/80 ━━━━━━━━━━━━━━━[37m━━━━━  0s 2ms/step - loss: 0.0759 - root_mean_squared_error: 0.2755
-
-<div class="k-default-codeblock">
-```
-
-```
-</div>
- 80/80 ━━━━━━━━━━━━━━━━━━━━ 0s 2ms/step - loss: 0.0759 - root_mean_squared_error: 0.2754
-
-
-<div class="k-default-codeblock">
-```
+80/80 ━━━━━━━━━━━━━━━━━━━━ 0s 2ms/step - loss: 0.0745 - root_mean_squared_error: 0.2730
 Epoch 4/5
-
-```
-</div>
-    
-  1/80 [37m━━━━━━━━━━━━━━━━━━━━  0s 5ms/step - loss: 0.0746 - root_mean_squared_error: 0.2730
-
-    
-  2/80 [37m━━━━━━━━━━━━━━━━━━━━  0s 4ms/step - loss: 0.0753 - root_mean_squared_error: 0.2743
-
-<div class="k-default-codeblock">
-```
-
-```
-</div>
- 30/80 ━━━━━━━[37m━━━━━━━━━━━━━  0s 2ms/step - loss: 0.0738 - root_mean_squared_error: 0.2717
-
-<div class="k-default-codeblock">
-```
-
-```
-</div>
- 31/80 ━━━━━━━[37m━━━━━━━━━━━━━  0s 2ms/step - loss: 0.0738 - root_mean_squared_error: 0.2717
-
-<div class="k-default-codeblock">
-```
-
-```
-</div>
- 58/80 ━━━━━━━━━━━━━━[37m━━━━━━  0s 2ms/step - loss: 0.0736 - root_mean_squared_error: 0.2712
-
-<div class="k-default-codeblock">
-```
-
-```
-</div>
- 59/80 ━━━━━━━━━━━━━━[37m━━━━━━  0s 2ms/step - loss: 0.0736 - root_mean_squared_error: 0.2712
-
-<div class="k-default-codeblock">
-```
-
-```
-</div>
- 80/80 ━━━━━━━━━━━━━━━━━━━━ 0s 2ms/step - loss: 0.0735 - root_mean_squared_error: 0.2711
-
-
-<div class="k-default-codeblock">
-```
+80/80 ━━━━━━━━━━━━━━━━━━━━ 0s 2ms/step - loss: 0.0713 - root_mean_squared_error: 0.2670
 Epoch 5/5
+80/80 ━━━━━━━━━━━━━━━━━━━━ 0s 2ms/step - loss: 0.0682 - root_mean_squared_error: 0.2612
 
+<keras.src.callbacks.history.History at 0x7f69980ee5f0>
 ```
 </div>
-    
-  1/80 [37m━━━━━━━━━━━━━━━━━━━━  0s 4ms/step - loss: 0.0709 - root_mean_squared_error: 0.2663
 
-    
-  2/80 [37m━━━━━━━━━━━━━━━━━━━━  0s 2ms/step - loss: 0.0722 - root_mean_squared_error: 0.2686
-
-<div class="k-default-codeblock">
-```
-
-```
-</div>
- 30/80 ━━━━━━━[37m━━━━━━━━━━━━━  0s 2ms/step - loss: 0.0707 - root_mean_squared_error: 0.2658
-
-<div class="k-default-codeblock">
-```
-
-```
-</div>
- 31/80 ━━━━━━━[37m━━━━━━━━━━━━━  0s 2ms/step - loss: 0.0706 - root_mean_squared_error: 0.2658
-
-<div class="k-default-codeblock">
-```
-
-```
-</div>
- 58/80 ━━━━━━━━━━━━━━[37m━━━━━━  0s 2ms/step - loss: 0.0703 - root_mean_squared_error: 0.2651
-
-<div class="k-default-codeblock">
-```
-
-```
-</div>
- 59/80 ━━━━━━━━━━━━━━[37m━━━━━━  0s 2ms/step - loss: 0.0703 - root_mean_squared_error: 0.2651
-
-<div class="k-default-codeblock">
-```
-
-```
-</div>
- 80/80 ━━━━━━━━━━━━━━━━━━━━ 0s 2ms/step - loss: 0.0703 - root_mean_squared_error: 0.2651
-
-
-
-
-
-<div class="k-default-codeblock">
-```
-<keras.src.callbacks.history.History at 0x7db93c17f710>
-
-```
-</div>
 As the model trains, the loss is falling and the RMSE metric is improving.
 
 Finally, we can evaluate our model on the test set. The lower the RMSE metric,
@@ -526,40 +246,14 @@ the more accurate our model is at predicting ratings.
 model.evaluate(test_ratings, return_dict=True)
 ```
 
-    
-  1/20 ━[37m━━━━━━━━━━━━━━━━━━━  36s 2s/step - loss: 0.0732 - root_mean_squared_error: 0.2705
-
 <div class="k-default-codeblock">
 ```
-
+20/20 ━━━━━━━━━━━━━━━━━━━━ 3s 12ms/step - loss: 0.0649 - root_mean_squared_error: 0.2548
+
+{'loss': 0.06562447547912598, 'root_mean_squared_error': 0.2561727464199066}
 ```
 </div>
-  2/20 ━━[37m━━━━━━━━━━━━━━━━━━  3s 187ms/step - loss: 0.0724 - root_mean_squared_error: 0.2690
 
-<div class="k-default-codeblock">
-```
-
-```
-</div>
-  3/20 ━━━[37m━━━━━━━━━━━━━━━━━  1s 95ms/step - loss: 0.0719 - root_mean_squared_error: 0.2681 
-
-<div class="k-default-codeblock">
-```
-
-```
-</div>
- 20/20 ━━━━━━━━━━━━━━━━━━━━ 2s 12ms/step - loss: 0.0707 - root_mean_squared_error: 0.2658
-
-
-
-
-
-<div class="k-default-codeblock">
-```
-{'loss': 0.0712985172867775, 'root_mean_squared_error': 0.26701781153678894}
-
-```
-</div>
 ---
 ## Testing the ranking model
 
@@ -593,22 +287,12 @@ for movie_id, prediction in zip(movie_ids, predictions):
     print(f"{movie_id_to_movie_title[movie_id]}: {5.0 * prediction:,.2f}")
 ```
 
-    
- 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 271ms/step
-
 <div class="k-default-codeblock">
 ```
-
+1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 153ms/step
+b'Back to the Future (1985)': 3.53
+b'20,000 Leagues Under the Sea (1954)': 3.26
+b"Breakfast at Tiffany's (1961)": 3.43
 ```
 </div>
- 1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 273ms/step
 
-
-<div class="k-default-codeblock">
-```
-b'Back to the Future (1985)': 3.86
-b'20,000 Leagues Under the Sea (1954)': 3.93
-b"Breakfast at Tiffany's (1961)": 3.72
-
-```
-</div>
