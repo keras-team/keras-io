@@ -766,7 +766,7 @@ MODELS_MASTER = {
                     "generate": [
                         "keras_hub.models.DepthAnythingDepthEstimator",
                         "keras_hub.models.DepthAnythingDepthEstimator.from_preset",
-                        "keras_hub.models.DepthAnythingImageToDepth.backbone",
+                        "keras_hub.models.DepthAnythingDepthEstimator.backbone",
                     ],
                 },
             ],
@@ -1653,6 +1653,14 @@ MODELS_MASTER = {
                         "keras_hub.models.MobileNetV5ImageClassifier.preprocessor",
                     ],
                 },
+                {
+                    "path": "mobilenetv5_image_classifier_preprocessor",
+                    "title": "MobileNetV5ImageClassifierPreprocessor layer",
+                    "generate": [
+                        "keras_hub.models.MobileNetV5ImageClassifierPreprocessor",
+                        "keras_hub.models.MobileNetV5ImageClassifierPreprocessor.image_converter",
+                    ],
+                },
             ],
         },
         {
@@ -1800,6 +1808,14 @@ MODELS_MASTER = {
             "title": "ParSeq",
             "toc": True,
             "children": [
+                {
+                    "path": "parseq_tokenizer",
+                    "title": "ParSeqTokenizer",
+                    "generate": [
+                        "keras_hub.tokenizers.ParSeqtTokenizer",
+                        "keras_hub.tokenizers.ParSeqTokenizer.from_preset",
+                    ],
+                },
                 {
                     "path": "parseq_backbone",
                     "title": "ParSeqBackbone model",
@@ -2348,8 +2364,6 @@ MODELS_MASTER = {
                     "path": "smollm3_tokenizer",
                     "title": "SmollLM3Tokenizer",
                     "generate": [
-                        "keras_hub.tokenizers.SmollLM3Tokenizer",
-                        "keras_hub.tokenizers.SmollLM3Tokenizer.from_preset",
                         "keras_hub.models.SmollLM3Tokenizer",
                         "keras_hub.models.SmollLM3Tokenizer.from_preset",
                     ],
@@ -2372,6 +2386,15 @@ MODELS_MASTER = {
                         "keras_hub.models.SmollLM3CausalLM.generate",
                         "keras_hub.models.SmollLM3CausalLM.backbone",
                         "keras_hub.models.SmollLM3CausalLM.preprocessor",
+                    ],
+                },
+                {
+                    "path": "smollm3_causal_lm_preprocessor",
+                    "title": "SmolLM3CausalLMPreprocessor layer",
+                    "generate": [
+                        "keras_hub.models.SmolLM3CausalLMPreprocessor",
+                        "keras_hub.models.SmolLM3CausalLMPreprocessor.from_preset",
+                        "keras_hub.models.SmolLM3CausalLMPreprocessor.tokenizer",
                     ],
                 },
             ],
