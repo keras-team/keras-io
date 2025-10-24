@@ -34,7 +34,7 @@ combining the interaction layer and MLP.
 
 The following image illustrates the DLRM architecture:
 
-![DLRM Architecture](https://raw.githubusercontent.com/kharshith-k/keras-io/refs/heads/keras-rs-examples/examples/keras_rs/img/dlrm/dlrm_architecture.gif)
+![DLRM Architecture](/img/examples/keras_rs/dlrm/dlrm_architecture.gif)
 
 
 Now that we have a foundational understanding of DLRM's architecture and key
