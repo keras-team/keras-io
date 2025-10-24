@@ -1812,7 +1812,7 @@ MODELS_MASTER = {
                     "path": "parseq_tokenizer",
                     "title": "ParSeqTokenizer",
                     "generate": [
-                        "keras_hub.tokenizers.ParSeqtTokenizer",
+                        "keras_hub.tokenizers.ParSeqTokenizer",
                         "keras_hub.tokenizers.ParSeqTokenizer.from_preset",
                     ],
                 },
