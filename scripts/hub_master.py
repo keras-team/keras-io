@@ -1822,7 +1822,6 @@ MODELS_MASTER = {
                     "generate": [
                         "keras_hub.models.ParSeqBackbone",
                         "keras_hub.models.ParSeqBackbone.from_preset",
-                        "keras_hub.models.ParSeqBackbone.token_embedding",
                     ],
                 },
                 {
@@ -2357,35 +2356,35 @@ MODELS_MASTER = {
         },
         {
             "path": "smollm3/",
-            "title": "SmollLM3",
+            "title": "SmolLM3",
             "toc": True,
             "children": [
                 {
                     "path": "smollm3_tokenizer",
-                    "title": "SmollLM3Tokenizer",
+                    "title": "SmolLM3Tokenizer",
                     "generate": [
-                        "keras_hub.models.SmollLM3Tokenizer",
-                        "keras_hub.models.SmollLM3Tokenizer.from_preset",
+                        "keras_hub.models.SmolLM3Tokenizer",
+                        "keras_hub.models.SmolLM3Tokenizer.from_preset",
                     ],
                 },
                 {
                     "path": "smollm3_backbone",
-                    "title": "SmollLM3Backbone model",
+                    "title": "SmolLM3Backbone model",
                     "generate": [
-                        "keras_hub.models.SmollLM3Backbone",
-                        "keras_hub.models.SmollLM3Backbone.from_preset",
-                        "keras_hub.models.SmollLM3Backbone.token_embedding",
+                        "keras_hub.models.SmolLM3Backbone",
+                        "keras_hub.models.SmolLM3Backbone.from_preset",
+                        "keras_hub.models.SmolLM3Backbone.token_embedding",
                     ],
                 },
                 {
                     "path": "smollm3_causal_lm",
-                    "title": "SmollLM3CausalLM model",
+                    "title": "SmolLM3CausalLM model",
                     "generate": [
-                        "keras_hub.models.SmollLM3CausalLM",
-                        "keras_hub.models.SmollLM3CausalLM.from_preset",
-                        "keras_hub.models.SmollLM3CausalLM.generate",
-                        "keras_hub.models.SmollLM3CausalLM.backbone",
-                        "keras_hub.models.SmollLM3CausalLM.preprocessor",
+                        "keras_hub.models.SmolLM3CausalLM",
+                        "keras_hub.models.SmolLM3CausalLM.from_preset",
+                        "keras_hub.models.SmolLM3CausalLM.generate",
+                        "keras_hub.models.SmolLM3CausalLM.backbone",
+                        "keras_hub.models.SmolLM3CausalLM.preprocessor",
                     ],
                 },
                 {
