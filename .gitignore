@@ -16,6 +16,7 @@ templates/examples/graph/*
 templates/**/guides/**/*.md
 templates/keras_hub/getting_started.md
 templates/keras_tuner/getting_started.md
+templates/keras_rs/examples/*
 datasets/*
 .history
 .vscode/*
