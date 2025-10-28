@@ -226,7 +226,6 @@ def get_default_value_for_repr(value):
         repr(value).startswith("<")  # <Foo object at 0x00000000>
         and hasattr(value, "__class__")  # it is an object
         and hasattr(value, "get_config")  # it is a Keras object
-        and not inspect.isclass(value)  # ensure it's an instance, not a class
     ):
         config = value.get_config()
         init_args = []  # The __init__ arguments to render
