@@ -395,7 +395,7 @@ surface anomalous examples within the class.
 """
 
 idx_no_match = np.where(np.array(matches) == 10)
-no_match_queries = no_match_queries = keras.ops.take(x_confusion, keras.ops.cast(idx_no_match[0], dtype="int32"), axis=0)
+no_match_queries = keras.ops.take(x_confusion, keras.ops.cast(idx_no_match[0], dtype="int32"), axis=0)
 if len(no_match_queries):
     plt.imshow(no_match_queries[0])
 else:
