@@ -217,6 +217,11 @@ def get_default_value_for_repr(value):
         # Render the function name instead
         return ReprWrapper(value.__name__)
 
+    if inspect.isclass(value):
+        # Render classes as module.ClassName to produce a valid python
+        # dotted-name expression in the fake signature (black can parse it).
+        return ReprWrapper(value.__module__ + "." + value.__name__)
+
     if (
         repr(value).startswith("<")  # <Foo object at 0x00000000>
         and hasattr(value, "__class__")  # it is an object
