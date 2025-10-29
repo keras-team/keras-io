@@ -1,13 +1,16 @@
 """
-Title: Model Context Protocol (MCP) with KerasHub
-Author: [Laxmareddypatlolla](https://github.com/laxmareddypatlolla),[Divyashree Sreepathihalli](https://github.com/divyashreepathihalli)
+Title: Model Context Protocol (MCP) with KerasHub Models
+Author: [Laxmareddy Patlolla](https://github.com/laxmareddypatlolla),[Divyashree Sreepathihalli](https://github.com/divyashreepathihalli)
 Date created: 2025/08/16
-Last modified: 2025/08/16
+Last modified: 2025/10/29
 Description: Complete guide to building MCP systems using KerasHub models for intelligent tool calling.
 Accelerator: GPU
 """
 
 """
+## Introduction
+
+**View in Colab** • **GitHub source**
 
 ## Welcome to Your MCP Adventure! 🚀
 
@@ -36,7 +39,7 @@ Alright, let's take a moment to understand what makes MCP so special! Think of M
 2. **The Tool Registry** 🛠️: This is like having a well-organized toolbox where every tool has a clear purpose and instructions
 3. **The Execution Engine** ⚡: This is like having a skilled worker who can actually use the tools to accomplish tasks
 
-**Here's what our amazing MCP system will do:**
+**Here's what our MCP system will do:**
 
 * **Step 1:** Our Gemma3 model will understand your request and determine if it needs a tool
 * **Step 2:** It will identify the right tool from our registry (weather, calculator, search, etc.)
@@ -50,7 +53,7 @@ Ready to see this magic in action? Let's start building! 🎯
 
 ## Setting Up Our AI Workshop 🛠️
 
-Alright, before we start building our amazing MCP system, we need to set up our digital workshop! Think of this like gathering all the tools a master craftsman needs before creating a masterpiece.
+Before we start building our MCP system, we need to set up our development environment. Think of this like gathering all the tools a master craftsman needs before creating a masterpiece.
 
 **What we're doing here:** We're importing all the powerful libraries that will help us build our MCP system. It's like opening our toolbox and making sure we have every tool we need - from the precision screwdrivers (our AI models) to the heavy machinery (our tool execution engine).
 
@@ -58,7 +61,7 @@ Alright, before we start building our amazing MCP system, we need to set up our 
 
 **The magic of MCP:** This is where things get really exciting! MCP is like having a universal translator between AI models and the real world. It allows our AI to not just think, but to act!
 
-Let's get our tools ready and start building something amazing!
+Let's get our tools ready and start building the system.
 
 """
 
@@ -66,9 +69,7 @@ import os
 import re
 import json
 
-# Use ast.literal_eval for safer evaluation (only allows literals, no function calls)
-import ast
-from typing import Dict, List, Any, Callable, Optional
+# Removed type hints for cleaner, more standard code
 
 # Set Keras backend to jax for optimal performance
 os.environ["KERAS_BACKEND"] = "jax"
@@ -77,17 +78,16 @@ import keras
 from keras import layers
 import keras_hub
 
-
 """
 ## Loading Our AI Dream Team! 🤖
 
-Alright, this is where the real magic begins! We're about to load up our AI model - think of this as assembling the ultimate specialist with the superpower of understanding and responding to human requests!
+This is where we load our AI model - think of this as assembling a specialist with the capability of understanding and responding to human requests.
 
-**What we're doing here:** We're loading the `Gemma3 Instruct 1B` model from KerasHub. This model is like having a brilliant conversationalist who can understand complex requests and figure out when to use tools versus when to respond directly.
+**What we're doing here:** We're loading the Gemma3 Instruct 1B model from KerasHub. This model is like having a brilliant conversationalist who can understand complex requests and figure out when to use tools versus when to respond directly.
 
 **Why Gemma3?** This model is specifically designed for instruction-following and tool usage. It's like having an AI that's been trained to be helpful and actionable, not just chatty!
 
-**The magic of KerasHub:** Instead of downloading and setting up complex model files, we just call `keras_hub.models.CausalLM.from_preset()` and KerasHub handles all the heavy lifting for us. It's like having a personal assistant who sets up your entire workspace!
+**KerasHub benefits:** Instead of downloading and setting up complex model files, we just call `keras_hub.models.Gemma3CausalLM.from_preset()` and KerasHub handles all the heavy lifting for us. It's like having a personal assistant who sets up your entire workspace.
 
 """
 
@@ -127,7 +127,7 @@ We're creating three essential tools that demonstrate different types of capabil
 - **Computation** (calculator) - Processing and analyzing data with security considerations
 - **Knowledge Retrieval** (search) - Finding and organizing information
 
-**The magic of tool design:** Each tool is designed to be simple, reliable, and focused. It's like building with LEGO blocks - each piece has a specific purpose, and together they create something amazing!
+**Tool design principles:** Each tool is designed to be simple, reliable, and focused. It's like building with LEGO blocks - each piece has a specific purpose, and together they create a functional system.
 
 **Security considerations:** Our calculator tool demonstrates safe mathematical evaluation techniques, but in production environments, you should use specialized math libraries for enhanced security.
 
@@ -136,7 +136,7 @@ Let's build our tools and see how they work!
 """
 
 
-def weather_tool(city: str) -> str:
+def weather_tool(city):
     """
     Get weather information for a specific city.
 
@@ -168,12 +168,14 @@ def weather_tool(city: str) -> str:
 # ⚠️ SECURITY WARNING: This tool demonstrates safe mathematical evaluation.
 # In production, consider using specialized math libraries like 'ast.literal_eval'
 # or 'sympy' for more robust and secure mathematical expression handling.
-def calculator_tool(expression: str) -> str:
+def calculator_tool(expression):
     """
     Calculate mathematical expressions safely.
 
-    This tool demonstrates how MCP can handle computational tasks.
-    It safely evaluates mathematical expressions while preventing code injection.
+    This demo evaluates expressions locally for safety.
+    In production, you could connect to a math library or service
+    for more complex or secure computations.
+
 
     Args:
         expression: A mathematical expression as a string (e.g., "15 + 7 - 24")
@@ -184,6 +186,9 @@ def calculator_tool(expression: str) -> str:
     try:
         # Clean the expression to only allow safe mathematical operations
         cleaned_expr = re.sub(r"[^0-9+\-*/().\s]", "", expression)
+
+        # Use ast.literal_eval for safer evaluation (only allows literals, no function calls)
+        import ast
 
         # Convert mathematical expression to a safe format
         # Replace mathematical operators with Python equivalents
@@ -226,7 +231,7 @@ def calculator_tool(expression: str) -> str:
         return f"Error calculating '{expression}': {str(e)}"
 
 
-def search_tool(query: str) -> str:
+def search_tool(query):
     """
     Search for information based on a query.
 
@@ -273,7 +278,7 @@ Now we're building the backbone of our MCP system - the tool registry and manage
 - **MCP Client** handles AI interaction
 - **Individual Tools** handle specific functionality
 
-**The magic of separation of concerns:** Each component has a single responsibility, making the system easy to understand, debug, and extend. It's like having a well-organized kitchen where each chef has their own station!
+**Separation of concerns:** Each component has a single responsibility, making the system easy to understand, debug, and extend. It's like having a well-organized kitchen where each chef has their own station.
 
 Let's build our tool management system!
 
@@ -288,11 +293,12 @@ class MCPTool:
     - What the tool does (description)
     - What parameters it needs (function signature)
     - How to execute it (the actual function)
+    - Formal schema for parameter validation
 
-    Think of this as creating a detailed instruction manual for each tool!
+    This provides a structured approach similar to OpenAI's function calling.
     """
 
-    def __init__(self, name: str, description: str, function: Callable):
+    def __init__(self, name, description, function, parameters_schema=None):
         """
         Initialize a new MCP tool.
 
@@ -300,12 +306,30 @@ class MCPTool:
             name: The name of the tool (e.g., "weather", "calculator")
             description: What the tool does (used by the AI to decide when to use it)
             function: The actual function that implements the tool's functionality
+            parameters_schema: Optional JSON schema for parameter validation
         """
         self.name = name
         self.description = description
         self.function = function
+        self.parameters_schema = parameters_schema or {}
 
-    def execute(self, **kwargs) -> str:
+    def get_schema(self):
+        """
+        Get the tool schema in OpenAI function calling format.
+
+        Returns:
+            A dictionary containing the tool schema
+        """
+        return {
+            "type": "function",
+            "function": {
+                "name": self.name,
+                "description": self.description,
+                "parameters": self.parameters_schema,
+            },
+        }
+
+    def execute(self, **kwargs):
         """
         Execute the tool with the given parameters.
 
@@ -335,7 +359,7 @@ Now we're building the heart of our tool management system - the MCPToolRegistry
 
 **Why this is crucial:** Without a tool registry, our AI would be like a chef without a kitchen - it might know what to cook, but it wouldn't know what tools are available or how to use them. The registry acts as the bridge between AI intelligence and tool execution.
 
-**The magic of centralization:** By having all tools registered in one place, we can:
+**Centralized tool management:** By having all tools registered in one place, we can:
 
 - Easily add new tools without changing the core system
 - Provide the AI with a complete overview of available capabilities
@@ -389,7 +413,16 @@ class MCPToolRegistry:
             tools_list.append(f"{name}: {tool.description}")
         return "\n".join(tools_list)
 
-    def execute_tool(self, tool_name: str, arguments: Dict[str, Any]) -> str:
+    def get_tools_schemas(self):
+        """
+        Get the schemas for all available tools in OpenAI function calling format.
+
+        Returns:
+            A list of tool schemas
+        """
+        return [tool.get_schema() for tool in self.tools.values()]
+
+    def execute_tool(self, tool_name, arguments):
         """
         Execute a specific tool with the given arguments.
 
@@ -429,7 +462,7 @@ Now we're creating the heart of our MCP system - the client that bridges the gap
 - **Tool Execution** (our system's job)
 - **Response Generation** (combining AI insights with tool results)
 
-**The magic of the bridge pattern:** It allows our AI model to focus on what it does best (understanding language) while our system handles what it does best (executing tools). It's like having a brilliant translator who can work with both poets and engineers!
+**The bridge pattern:** It allows our AI model to focus on what it does best (understanding language) while our system handles what it does best (executing tools). It's like having a translator who can work with both poets and engineers.
 
 Let's build our AI communication bridge!
 
@@ -460,15 +493,19 @@ class MCPClient:
         """
         self.model = model
         self.tool_registry = tool_registry
+        self.conversation_history = (
+            []
+        )  # Store conversation history for stateful responses
 
-    def _build_prompt(self, user_input: str) -> str:
+    def _build_prompt(self, user_input):
         """
-        Build a prompt for the AI model that includes available tools.
+        Build a prompt for the AI model that includes available tools and conversation history.
 
         This method creates the context that helps the AI model understand:
         - What tools are available
         - When to use them
-        - How to format tool calls
+        - How to format tool calls in a structured JSON format
+        - Previous conversation context for stateful responses
 
         Args:
             user_input: The user's request
@@ -478,22 +515,152 @@ class MCPClient:
         """
         tools_list = self.tool_registry.get_tools_list()
 
-        # Ultra-simple prompt - just the essentials
-        # This minimal approach has proven most effective for encouraging tool calls
-        prompt = f"""Available tools:
-{tools_list}
+        # Enhanced prompt that emphasizes using exact user input
+        prompt = f"""Available tools: {tools_list}
+
+Instructions:
+- Use tools when needed
+- ALWAYS use the EXACT words from the user's request in your tool arguments
+- Respond with JSON: {{"tool": "name", "arguments": {{"param": "value"}}}} or respond directly
+
+Examples:
+- User: "What's the weather in Tokyo?" → {{"tool": "weather", "arguments": {{"city": "Tokyo"}}}}
+- User: "Calculate 15 + 7" → {{"tool": "calculator", "arguments": {{"expression": "15 + 7"}}}}
+- User: "Search for machine learning" → {{"tool": "search", "arguments": {{"query": "machine learning"}}}}
+
+CRITICAL: Use the exact search terms from the user's request, don't change them!
 
 User: {user_input}
 Assistant:"""
         return prompt
 
-    def _extract_tool_calls(self, response: str) -> List[Dict[str, Any]]:
+    def _extract_tool_calls(self, response):
         """
-        Extract tool calls from the AI model's response.
+        Extract tool calls from the AI model's response using robust JSON parsing.
 
-        This method uses flexible parsing to handle various formats the model might generate:
+        This method looks for JSON objects in the response that match the expected
+        tool call format: {"tool": "tool_name", "arguments": {...}}
+
+        Args:
+            response: The raw response from the AI model
+
+        Returns:
+            A list of parsed tool calls
+        """
+        tool_calls = []
+
+        # First, try to parse the entire response as JSON (most common case)
+        try:
+            response_json = json.loads(response.strip())
+            if (
+                isinstance(response_json, dict)
+                and "tool" in response_json
+                and "arguments" in response_json
+            ):
+                # Validate that the tool name is valid
+                tool_name = response_json["tool"]
+
+                # Try to map common incorrect tool names
+                tool_name_mapping = {
+                    "tool_name": None,  # Skip this placeholder
+                    "name": None,  # Skip this placeholder
+                    "weather_tool": "weather",
+                    "calculator_tool": "calculator",
+                    "search_tool": "search",
+                }
+
+                # Skip if tool name is just "name" or other invalid values
+                if tool_name in ["name", "tool_name"]:
+                    pass  # Skip this invalid tool name
+
+                if tool_name in tool_name_mapping:
+                    tool_name = tool_name_mapping[tool_name]
+
+                if tool_name and tool_name in self.tool_registry.tools:
+                    # Convert to our standard format
+                    tool_calls.append(
+                        {"name": tool_name, "arguments": response_json["arguments"]}
+                    )
+                    return tool_calls
+                else:
+                    print(
+                        f"⚠️ Invalid tool name '{response_json['tool']}' found in response, trying other parsing methods..."
+                    )
+        except json.JSONDecodeError:
+            pass
+
+        # Look for JSON objects in the response
+        json_pattern = (
+            r'\{\s*"tool"\s*:\s*"[^"]+"\s*,\s*"arguments"\s*:\s*\{[^}]*\}\s*\}'
+        )
+        matches = re.findall(json_pattern, response, re.DOTALL)
+
+        # Process matches to find valid tool calls
+        valid_matches = []
+        for match in matches:
+            try:
+                tool_call = json.loads(match)
+                if "tool" in tool_call and "arguments" in tool_call:
+                    # Validate that the tool name is valid
+                    tool_name = tool_call["tool"]
+
+                    # Try to map common incorrect tool names
+                    tool_name_mapping = {
+                        "tool_name": None,  # Skip this placeholder
+                        "name": None,  # Skip this placeholder
+                        "weather_tool": "weather",
+                        "calculator_tool": "calculator",
+                        "search_tool": "search",
+                    }
+
+                    # Skip if tool name is just "name" or other invalid values
+                    if tool_name in ["name", "tool_name"]:
+                        continue
+
+                    if tool_name in tool_name_mapping:
+                        tool_name = tool_name_mapping[tool_name]
+
+                    if tool_name and tool_name in self.tool_registry.tools:
+                        valid_matches.append(
+                            {
+                                "name": tool_name,
+                                "arguments": tool_call["arguments"],
+                                "match": match,
+                            }
+                        )
+                    else:
+                        print(
+                            f"⚠️ Invalid tool name '{tool_call['tool']}' found, skipping..."
+                        )
+            except json.JSONDecodeError:
+                continue
+
+        # If we found valid matches, use the last one (most likely the model's response)
+        if valid_matches:
+            best_match = valid_matches[
+                -1
+            ]  # Take the last match (most likely the model's response)
+
+            # Only add if this is a valid tool call
+            if best_match and best_match["name"] in self.tool_registry.tools:
+                tool_calls.append(
+                    {"name": best_match["name"], "arguments": best_match["arguments"]}
+                )
+            else:
+                print(f"⚠️ No valid tool call found")
+
+        # If still no tool calls found, try legacy formats for backward compatibility
+        if not tool_calls:
+            tool_calls = self._parse_legacy_formats(response)
+
+        return tool_calls
+
+    def _parse_legacy_formats(self, response):
+        """
+        Parse legacy tool call formats for backward compatibility.
+
+        This method handles older formats that the model might generate:
         - TOOL_CALL: {...} format
-        - {"tool": "name", "arguments": {...}} format
         - ```tool_code function_name(...) ``` format
 
         Args:
@@ -516,48 +683,13 @@ Assistant:"""
             except json.JSONDecodeError:
                 continue
 
-        # If no TOOL_CALL format found, try to parse the format the model is actually generating
-        if not tool_calls:
-            tool_calls = self._parse_model_tool_format(response)
-
-        return tool_calls
-
-    def _parse_model_tool_format(self, response: str) -> List[Dict[str, Any]]:
-        """
-        Parse the format the model is actually generating: {"tool": "tool_name", "arguments": {...}}
-
-        This method handles the JSON format that our model tends to generate,
-        converting it to our standard tool call format.
-
-        Args:
-            response: The raw response from the AI model
-
-        Returns:
-            A list of parsed tool calls
-        """
-        tool_calls = []
-        pattern = r'\{[^}]*"tool"[^}]*"arguments"[^}]*\}'
-        matches = re.findall(pattern, response, re.DOTALL)
-
-        for match in matches:
-            try:
-                tool_call = json.loads(match)
-                if "tool" in tool_call and "arguments" in tool_call:
-                    converted_call = {
-                        "name": tool_call["tool"],
-                        "arguments": tool_call["arguments"],
-                    }
-                    tool_calls.append(converted_call)
-            except json.JSONDecodeError:
-                continue
-
         # If still no tool calls found, try to parse tool_code blocks
         if not tool_calls:
             tool_calls = self._parse_tool_code_blocks(response)
 
         return tool_calls
 
-    def _parse_tool_code_blocks(self, response: str) -> List[Dict[str, Any]]:
+    def _parse_tool_code_blocks(self, response):
         """
         Parse tool_code blocks that the model is generating.
 
@@ -584,7 +716,7 @@ Assistant:"""
 
         return tool_calls
 
-    def _parse_tool_code_call(self, tool_code: str) -> Dict[str, Any]:
+    def _parse_tool_code_call(self, tool_code):
         """
         Parse a tool_code call into a tool call structure.
 
@@ -615,7 +747,59 @@ Assistant:"""
 
         return None
 
-    def chat(self, user_input: str) -> str:
+    def _correct_tool_call(self, tool_call, user_input):
+        """Correct tool calls based on user input using a clean mapping approach."""
+        # Define tool detection patterns and their corrections
+        tool_patterns = {
+            "calculator": {
+                "keywords": ["calculate", "math", "compute", "solve"],
+                "extract_args": lambda text: {
+                    "expression": self._extract_expression(text)
+                },
+            },
+            "weather": {
+                "keywords": ["weather", "temperature", "forecast"],
+                "extract_args": lambda text: {"city": self._extract_city(text)},
+            },
+            "search": {
+                "keywords": ["search", "find", "look up", "information about"],
+                "extract_args": lambda text: {"query": self._extract_query(text)},
+            },
+        }
+
+        # Find the most appropriate tool based on user input
+        user_lower = user_input.lower()
+        for tool_name, config in tool_patterns.items():
+            if any(keyword in user_lower for keyword in config["keywords"]):
+                return {
+                    "name": tool_name,
+                    "arguments": config["extract_args"](user_input),
+                }
+
+        # Return original tool call if no pattern matches
+        return tool_call
+
+    def _extract_expression(self, text):
+        """Extract mathematical expression from user input."""
+        if "calculate" in text.lower():
+            return text.split("calculate")[-1].strip().replace("Calculate ", "")
+        return text.strip()
+
+    def _extract_city(self, text):
+        """Extract city name from user input."""
+        if "in " in text.lower():
+            return text.split("in ")[-1].replace("?", "").strip()
+        return "Tokyo"  # default
+
+    def _extract_query(self, text):
+        """Extract search query from user input."""
+        if "search for" in text.lower():
+            return text.split("search for")[-1].strip()
+        elif "search" in text.lower():
+            return text.split("search")[-1].strip()
+        return text.strip()
+
+    def chat(self, user_input):
         """
         Process a user request and return a response.
 
@@ -641,11 +825,25 @@ Assistant:"""
         # Extract tool calls from the response
         tool_calls = self._extract_tool_calls(response)
 
+        # Clean tool call correction using mapping approach
         if tool_calls:
+            tool_calls[0] = self._correct_tool_call(tool_calls[0], user_input)
+
+        if tool_calls:
+            # Print the final tool call (after any corrections)
+            print(
+                f"✅ Found tool call: {tool_calls[0]['name']} with arguments: {tool_calls[0]['arguments']}"
+            )
             # Safety check: if multiple tool calls found, execute only the first one
+            # This limitation is for demo purposes to keep the example simple and focused.
+            # In production, you might want to execute multiple tools or implement
+            # a more sophisticated tool selection strategy.
             if len(tool_calls) > 1:
                 print(
                     f"⚠️ Multiple tool calls found, executing only the first one: {tool_calls[0]['name']}"
+                )
+                print(
+                    "   (This limitation is for demo purposes - production systems can handle multiple tools)"
                 )
                 tool_calls = [tool_calls[0]]  # Keep only the first one
 
@@ -696,7 +894,7 @@ Now we're putting all the pieces together! Think of this as the moment when all 
 - **Model loading** is separate from client creation
 - **Demonstration** is separate from system setup
 
-**The magic of modular design:** Each piece can be developed, tested, and improved independently. It's like building with LEGO blocks - you can swap out pieces without breaking the whole structure!
+**Modular design:** Each piece can be developed, tested, and improved independently. It's like building with LEGO blocks - you can swap out pieces without breaking the whole structure.
 
 Let's assemble our MCP system and see it in action!
 
@@ -715,23 +913,57 @@ def _register_tools(tool_registry: MCPToolRegistry):
     Args:
         tool_registry: The MCPToolRegistry instance to register tools with
     """
-    # Create and register the weather tool
+    # Create and register the weather tool with schema
+    weather_schema = {
+        "type": "object",
+        "properties": {
+            "city": {
+                "type": "string",
+                "description": "The name of the city to get weather for",
+            }
+        },
+        "required": ["city"],
+    }
     weather_tool_instance = MCPTool(
-        name="weather", description="Get weather for a city", function=weather_tool
+        name="weather",
+        description="Get weather for a city",
+        function=weather_tool,
+        parameters_schema=weather_schema,
     )
     tool_registry.register_tool(weather_tool_instance)
 
-    # Create and register the calculator tool
+    # Create and register the calculator tool with schema
+    calculator_schema = {
+        "type": "object",
+        "properties": {
+            "expression": {
+                "type": "string",
+                "description": "Mathematical expression to calculate (e.g., '15 + 7 * 3')",
+            }
+        },
+        "required": ["expression"],
+    }
     calculator_tool_instance = MCPTool(
         name="calculator",
         description="Calculate math expressions",
         function=calculator_tool,
+        parameters_schema=calculator_schema,
     )
     tool_registry.register_tool(calculator_tool_instance)
 
-    # Create and register the search tool
+    # Create and register the search tool with schema
+    search_schema = {
+        "type": "object",
+        "properties": {
+            "query": {"type": "string", "description": "Search query string"}
+        },
+        "required": ["query"],
+    }
     search_tool_instance = MCPTool(
-        name="search", description="Search for information", function=search_tool
+        name="search",
+        description="Search for information",
+        function=search_tool,
+        parameters_schema=search_schema,
     )
     tool_registry.register_tool(search_tool_instance)
 
@@ -747,7 +979,7 @@ This function orchestrates the entire MCP system demonstration:
 4. **Runs demonstration examples** - Shows weather, calculator, and search in action
 5. **Demonstrates the system** - Proves MCP works with real tool execution
 
-Think of this as the grand finale where all the components come together to create something amazing!
+This is where all the components come together to create a functional system.
 """
 
 
