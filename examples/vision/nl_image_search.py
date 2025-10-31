@@ -460,7 +460,7 @@ class DualEncoder(keras.Model):
         targets = keras.activations.softmax(
             (captions_similarity + images_similarity) / (2 * self.temperature)
         )
-        
+
         # Compute the loss for the captions using cross-entropy
         captions_loss = keras.losses.categorical_crossentropy(
             y_true=targets, y_pred=logits, from_logits=True
@@ -503,7 +503,7 @@ class DualEncoder(keras.Model):
         # Monitor loss
         self.loss_tracker.update_state(loss)
         return {"loss": self.loss_tracker.result()}
-
+    
     def test_step(self, features):
         caption_embeddings, image_embeddings = self(features, training=False)
         loss = self.compute_loss(caption_embeddings, image_embeddings)
