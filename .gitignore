@@ -21,7 +21,3 @@ datasets/*
 .history
 .vscode/*
 .idea/*
-
-temp/datasets/
-*.zip
-*.keras
