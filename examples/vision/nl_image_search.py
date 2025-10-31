@@ -574,7 +574,7 @@ You might see some 'ptxas warning :' messages depending on tensorflow verison.
 
 history = dual_encoder.fit(
     train_dataset,
-    epochs=5,
+    epochs=num_epochs,
     validation_data=valid_dataset,
     callbacks=[reduce_lr, model_checkpoint_callback],
 )
