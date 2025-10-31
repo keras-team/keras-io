@@ -557,7 +557,6 @@ print(f"Steps per epoch: {int(np.ceil(train_example_count / batch_size))}")
 train_dataset = get_dataset(os.path.join(tfrecords_dir, "train-*.tfrecord"), batch_size)
 valid_dataset = get_dataset(os.path.join(tfrecords_dir, "valid-*.tfrecord"), batch_size)
 
-optimizer = keras.optimizers.Adam(learning_rate=0.03)
 # Create a learning rate scheduler callback.
 reduce_lr = keras.callbacks.ReduceLROnPlateau(
     monitor="val_loss", factor=0.2, patience=3
