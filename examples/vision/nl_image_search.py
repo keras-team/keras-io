@@ -72,7 +72,7 @@ folder is 13GB in size.
 
 root_dir = "datasets"
 annotations_dir = os.path.join(root_dir, "annotations")
-images_dir = os.path.join(root_dir, "train2014", "train2014")
+images_dir = os.path.join(root_dir, "train2014")
 tfrecords_dir = os.path.join(root_dir, "tfrecords")
 annotation_file = os.path.join(
     annotations_dir, "annotations", "captions_train2014.json"
@@ -91,7 +91,7 @@ if not os.path.exists(images_dir):
     image_zip = wget.download("http://images.cocodataset.org/zips/train2014.zip")
     print("Downloaded the images.\nunzipping")
     with zipfile.ZipFile(image_zip, "r") as zip_ref:
-        zip_ref.extractall(images_dir)
+        zip_ref.extractall(root_dir)
 
 print("\nDataset is downloaded and extracted successfully.")
 
@@ -104,13 +104,12 @@ for element in annotations:
     image_path = images_dir + "/COCO_train2014_" + "%012d.jpg" % (element["image_id"])
     image_path_to_caption[image_path].append(caption)
 
-images = glob.glob("datasets/train2014/*.jpg")
+images = glob.glob(os.path.join(images_dir, "*.jpg"))  
 image_paths = list(image_path_to_caption.keys())
 if len(images) != len(image_paths):
-    print(
-f"Not all images extracted correctly, expected {len(image_paths)} images, found
-{len(images)} images"
-    )
+    print(f"Not all images extracted correctly,\n",
+          f"expected {len(image_paths)} images,\n",
+          f"found: {len(images)} images")
 print(f"Number of images: {len(image_paths)}")
 
 """
@@ -188,7 +187,8 @@ if len(found_files) != num_train_files:
 else:
     print(f"{num_train_files} tfrecord files found.")
     print(f"{num_train_files*images_per_file} training examples in the tfrecord files.")
-    train_example_count = 60000
+    train_example_count =  train_size * captions_per_image  
+
 
 found_files = glob.glob(os.path.join(root_dir, "tfrecords", "valid-*.tfrecord"))
 if len(found_files) != num_valid_files:
@@ -199,7 +199,7 @@ if len(found_files) != num_valid_files:
 else:
     print(f"{num_valid_files} tfrecord files found.")
     print(f"{num_valid_files*images_per_file} training examples in the tfrecord files.")
-    valid_example_count = 10000
+    valid_example_count = valid_size * captions_per_image  
 
 """
 ### Create a
@@ -441,25 +441,26 @@ class DualEncoder(keras.Model):
         return caption_embeddings, image_embeddings
 
     def compute_loss(self, caption_embeddings, image_embeddings):
-        # logits[i][j] is the dot_similarity(caption_i, image_j).
+        # similarity between all image and caption embeddings
         logits = ops.divide(
             ops.einsum("ae,be -> ab", caption_embeddings, image_embeddings),
             self.temperature,
         )
 
-        # images_similarity[i][j] is the dot_similarity(image_i, image_j).
+        # similarity between all image and image embeddings
         images_similarity = ops.einsum(
             "ae,be -> ab", image_embeddings, image_embeddings
         )
-        # captions_similarity[i][j] is the dot_similarity(caption_i, caption_j).
+
+        # similarity between all caption and caption embeddings
         captions_similarity = ops.einsum(
             "ae,be -> ab", caption_embeddings, caption_embeddings
         )
-# targets[i][j] = avarage dot_similarity(caption_i, caption_j) and
-dot_similarity(image_i, image_j).
+
         targets = keras.activations.softmax(
             (captions_similarity + images_similarity) / (2 * self.temperature)
         )
+        
         # Compute the loss for the captions using cross-entropy
         captions_loss = keras.losses.categorical_crossentropy(
             y_true=targets, y_pred=logits, from_logits=True
