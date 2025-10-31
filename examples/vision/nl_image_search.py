@@ -515,10 +515,8 @@ We now create the DualEncoder with the [AdamW](https://keras.io/api/optimizers/a
 optimizer. We also set the `run_eagerly` to `False` to improve training performance and
 efficiency. 
 
-The `temperature` parameter is used to make the softmax function more seperable. This is
-explained in greater detail in [this stack
-exachange](https://stats.stackexchange.com/questions/527080/what-is-the-role-of-temperature-in-softmax).
-exachange](https://stats.stackexchange.com/questions/527080/what-is-the-role-of-temperature-in-softmax).
+The `temperature` parameter is used to make the softmax function more separable. This is
+explained in greater detail in [this stack exchange](https://stats.stackexchange.com/questions/527080/what-is-the-role-of-temperature-in-softmax).
 """
 
 dual_encoder = DualEncoder(
