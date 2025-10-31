@@ -84,7 +84,6 @@ if not os.path.exists(annotations_dir):
     )
     with zipfile.ZipFile(annotation_zip, "r") as zip_ref:
         zip_ref.extractall(annotations_dir)
-    # os.remove(os.path.join(root_dir,"captions.zip"))
 
 print("\nDownloading the images.")
 
@@ -93,7 +92,6 @@ if not os.path.exists(images_dir):
     print("Downloaded the images.\nunzipping")
     with zipfile.ZipFile(image_zip, "r") as zip_ref:
         zip_ref.extractall(images_dir)
-    # os.remove(os.path.join(root_dir,"train2014.zip"))
 
 print("\nDataset is downloaded and extracted successfully.")
 
@@ -251,6 +249,7 @@ def get_dataset(file_pattern, batch_size):
             num_parallel_calls=tf.data.AUTOTUNE,
             deterministic=False,
         )
+        .shuffle(batch_size * 10)
         .batch(batch_size)
         .prefetch(tf.data.AUTOTUNE)
     )
