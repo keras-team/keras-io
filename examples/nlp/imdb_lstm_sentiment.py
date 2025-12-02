@@ -2,7 +2,7 @@
 Title: Sentiment analysis with LSTM on the IMDB dataset
 Author: Madhur Jain
 Date created: 2025/11/19
-Last Modified: 2025/11/24 (Refactored)
+Last Modified: 2025/12/02 
 Description: A simple LSTM-based sentiment classifier trained on IMDB text reviews,
              demonstrating the modern Keras TextVectorization layer.
 """
@@ -14,7 +14,6 @@ import tensorflow as tf # Needed for tf.data.Dataset
 import pandas as pd
 from keras import layers
 from keras.models import Sequential
-from keras.layers import TextVectorization # Modern Keras text preprocessing
 
 # Set the Keras backend
 os.environ["KERAS_BACKEND"] = "tensorflow"
@@ -30,7 +29,7 @@ data_url = "https://ai.stanford.edu/~amaas/data/sentiment/aclImdb_v1.tar.gz"
 dataset_path = keras.utils.get_file(
     "aclImdb_v1.tar.gz", data_url, untar=True, cache_dir=".", cache_subdir=""
 )
-main_dir = os.path.join(dataset_path, "aclImdb")
+main_dir = os.path.join(os.path.dirname(dataset_path), "aclImdb")
 train_dir = os.path.join(main_dir, "train")
 test_dir = os.path.join(main_dir, "test")
 
@@ -78,7 +77,7 @@ sequence_length = 200 # Pad/truncate all sequences to a fixed length
 embedding_dim = 128  # Size of the output vector for each word
 
 # 1. Create the TextVectorization layer
-vectorize_layer = TextVectorization(
+vectorize_layer = layers.TextVectorization(
     max_tokens=max_features,
     output_mode="int", # Outputs integer indices
     output_sequence_length=sequence_length,
@@ -140,18 +139,18 @@ loss, accuracy = model.evaluate(X_test_text, Y_test)
 print(f"Test Loss: {loss:.4f}")
 print(f"Test Accuracy: {accuracy:.4f}")
 
----
-
 ## 🔮 Predicting Values (Simplified Inference)
 
+# We use this function for single, quick predictions if needed, 
+# but the batch method below is preferred for multiple examples.
 def predict_sentiment(review):
     """Predicts sentiment for a raw text review using the end-to-end model."""
     # The model accepts a list/array of raw strings directly
-    prediction = model.predict([review])
+    prediction = model.predict([review]) 
     
     # Sigmoid output is a probability
-    sentiment = "positive" if prediction[0][0] > 0.5 else "negative"
     probability = prediction[0][0]
+    sentiment = "positive" if probability > 0.5 else "negative"
     return sentiment, probability
 
 # Examples
@@ -163,10 +162,17 @@ examples = [
     "Mid movie"
 ]
 
-for review in examples:
-    sentiment, prob = predict_sentiment(review)
+# Predict on the batch of examples for efficiency
+predictions = model.predict(examples)
+
+for review, prediction in zip(examples, predictions):
+    prob = prediction[0]
+    sentiment = "positive" if prob > 0.5 else "negative"
     print(f"Review: '{review[:30]}...' -> Sentiment: {sentiment} ({prob:.2f})")
 
-# Clean up the downloaded directory
+# Clean up the downloaded directory and archive
 if os.path.exists(main_dir):
     shutil.rmtree(main_dir)
+# This removes the downloaded archive file (e.g., aclImdb_v1.tar.gz)
+if os.path.exists(dataset_path):
+    os.remove(dataset_path)
