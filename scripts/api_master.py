@@ -133,14 +133,14 @@ API_MASTER = {
                         },
                         {
                             "path": "logits_distillation",
-                            "title": "Logits distillation",
+                            "title": "Logits distillation loss",
                             "generate": [
                                 "keras.distillation.LogitsDistillation",
                             ],
                         },
                         {
                             "path": "feature_distillation",
-                            "title": "Feature distillation",
+                            "title": "Feature distillation loss",
                             "generate": [
                                 "keras.distillation.FeatureDistillation",
                             ],
