@@ -112,6 +112,41 @@ API_MASTER = {
                         },
                     ],
                 },
+                {
+                    "path": "distillation/",
+                    "title": "Knowledge distillation",
+                    "toc": True,
+                    "children": [
+                        {
+                            "path": "distiller",
+                            "title": "Distiller model",
+                            "generate": [
+                                "keras.distillation.Distiller",
+                            ],
+                        },
+                        {
+                            "path": "distillation_loss",
+                            "title": "Base distillation loss",
+                            "generate": [
+                                "keras.distillation.DistillationLoss",
+                            ],
+                        },
+                        {
+                            "path": "logits_distillation",
+                            "title": "Logits distillation",
+                            "generate": [
+                                "keras.distillation.LogitsDistillation",
+                            ],
+                        },
+                        {
+                            "path": "feature_distillation",
+                            "title": "Feature distillation",
+                            "generate": [
+                                "keras.distillation.FeatureDistillation",
+                            ],
+                        },
+                    ],
+                },
             ],
         },
         {
