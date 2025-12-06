@@ -2,8 +2,8 @@
 
 **Author:** Mansi Mehta<br>
 **Date created:** 26/11/2025<br>
-**Last modified:** 26/11/2025<br>
-**Description:** Recommender System with Ranking and Retrival model for Marketing interaction.
+**Last modified:** 06/12/2025<br>
+**Description:** Recommender System with Ranking and Retrieval model for Marketing interaction.
 
 
 <img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/keras_rs/ipynb/two_stage_rs_with_marketing_interaction.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/keras_rs/two_stage_rs_with_marketing_interaction.py)
@@ -32,7 +32,8 @@ A Deep Neural Network (MLP).
 Interaction: It takes the User Embedding, Ad Embedding, and their similarity score to
 predict a precise probability (0% to 100%) that the user will click.
 
-![jpg](/img/examples/keras_rs/two_stage_rs_with_marketing_interaction/architecture.jpg)
+![jpg](examples/keras_rs/img/two_stage_rs_with_marketing_interaction/architecture.jpg)
+
 
 # **Dataset**
 We will use the [Ad Click
@@ -56,9 +57,8 @@ recommendations for a specific user.
 
 
 ```python
-!!pip install -q keras-rs
+!pip install -q keras-rs
 ```
-
 
 
 ```python
@@ -71,54 +71,27 @@ import numpy as np
 import tensorflow as tf
 import pandas as pd
 import keras_rs
-import tensorflow_datasets as tfds
-from mpl_toolkits.axes_grid1 import make_axes_locatable
+
 from keras import layers
 from concurrent.futures import ThreadPoolExecutor
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import MinMaxScaler
 
 ```
-<div class="k-default-codeblock">
-```
-['',
- '\x1b[1m[\x1b[0m\x1b[34;49mnotice\x1b[0m\x1b[1;39;49m]\x1b[0m\x1b[39;49m A new release of pip is available: \x1b[0m\x1b[31;49m23.2.1\x1b[0m\x1b[39;49m -> \x1b[0m\x1b[32;49m25.3\x1b[0m',
- '\x1b[1m[\x1b[0m\x1b[34;49mnotice\x1b[0m\x1b[1;39;49m]\x1b[0m\x1b[39;49m To update, run: \x1b[0m\x1b[32;49mpip install --upgrade pip\x1b[0m']
-```
-</div>
 
 # **Preparing Dataset**
 
 
 ```python
 !pip install -q kaggle
-!# Download the dataset (requires Kaggle API key in ~/.kaggle/kaggle.json)
 !kaggle datasets download -d mafrojaakter/ad-click-data --unzip -p ./ad_click_dataset
 ```
 
-    
-<div class="k-default-codeblock">
-```
-[[34;49mnotice[1;39;49m][39;49m To update, run: [32;49mpip install --upgrade pip
-
-Dataset URL: https://www.kaggle.com/datasets/mafrojaakter/ad-click-data
-License(s): unknown
-
-Downloading ad-click-data.zip to ./ad_click_dataset
-```
-</div>
-
-  0%|                                               | 0.00/37.6k [00:00<?, ?B/s]
-
-    
-100%|███████████████████████████████████████| 37.6k/37.6k [00:00<00:00, 207kB/s]
-    
-100%|███████████████████████████████████████| 37.6k/37.6k [00:00<00:00, 206kB/s]
 
 
 
 ```python
-data_path = "./ad_click_dataset/Ad_click_data.csv"
+data_path = "./ad_click_dataset/Ad Click Data.csv"
 if not os.path.exists(data_path):
     # Fallback for filenames with spaces or different casing
     data_path = "./ad_click_dataset/Ad Click Data.csv"
@@ -172,16 +145,17 @@ def create_retrieval_dataset(
     continuous_features_list,
 ):
 
-    # Filter for Positive Interactions (Cicks)
+    # Filter for Positive Interactions (Clicks)
     positive_interactions = data_df[data_df["Clicked on Ad"] == 1].copy()
 
     if positive_interactions.empty:
         return None
 
     def sample_negative(positive_ad_id):
-        neg_ad_id = positive_ad_id
-        while neg_ad_id == positive_ad_id:
-            neg_ad_id = np.random.choice(all_ad_ids)
+        all_ad_ids_filtered = [aid for aid in all_ad_ids if aid != positive_ad_id]
+        if not all_ad_ids_filtered:
+            return positive_ad_id
+        neg_ad_id = np.random.choice(all_ad_ids_filtered)
         return neg_ad_id
 
     def create_triplets_row(pos_row):
@@ -203,7 +177,7 @@ def create_retrieval_dataset(
             "negative_ad": neg_ad_features_dict,
         }
 
-    with ThreadPoolExecutor(max_workers=8) as executor:
+    with ThreadPoolExecutor(max_workers=os.cpu_count() or 8) as executor:
         triplets = list(
             executor.map(
                 create_triplets_row, positive_interactions.itertuples(index=False)
@@ -287,8 +261,19 @@ retrieval_test_dataset = create_retrieval_dataset(
     continuous_features_list=continuous_features,
 )
 ```
+<div class="k-default-codeblock">
+```
+['Dataset URL: https://www.kaggle.com/datasets/mafrojaakter/ad-click-data',
+ 'License(s): unknown',
+ 'Downloading ad-click-data.zip to ./ad_click_dataset',
+ '',
+ '  0%|          | 0.00/37.6k [00:00<?, ?B/s]',
+ '100%|██████████| 37.6k/37.6k [00:00<00:00, 8.62MB/s]',
+ '']
+```
+</div>
 
-# **Implement the Retrival Model**
+# **Implement the Retrieval Model**
 For the Retrieval stage, we will build a Two-Tower Model.
 
 **The Architecture Components:**
@@ -357,15 +342,14 @@ user_tower = build_tower(
 ad_tower = build_tower(["ad_id", "ad_topic"], name="ad_tower")
 
 
-def bpr_hinge_loss(y_true, y_pred):
-    margin = 1.0
+def pairwise_logistic_loss(y_true, y_pred):
     return -tf.math.log(tf.nn.sigmoid(y_pred) + 1e-10)
 
 
 class RetrievalModel(keras.Model):
     def __init__(self, user_tower_instance, ad_tower_instance, **kwargs):
         super().__init__(**kwargs)
-        self.user_tower = user_tower
+        self.user_tower = user_tower_instance
         self.ad_tower = ad_tower
         self.ln_user = layers.LayerNormalization()
         self.ln_ad = layers.LayerNormalization()
@@ -387,12 +371,12 @@ class RetrievalModel(keras.Model):
 
 retrieval_model = RetrievalModel(user_tower, ad_tower)
 retrieval_model.compile(
-    optimizer=keras.optimizers.Adam(learning_rate=1e-3), loss=bpr_hinge_loss
+    optimizer=keras.optimizers.Adam(learning_rate=1e-3), loss=pairwise_logistic_loss
 )
 history = retrieval_model.fit(retrieval_train_dataset, epochs=30)
 
 pd.DataFrame(history.history).plot(
-    subplots=True, layout=(1, 3), figsize=(12, 4), title="Retrival Model Metrics"
+    subplots=True, layout=(1, 3), figsize=(12, 4), title="Retrieval Model Metrics"
 )
 plt.show()
 ```
@@ -401,123 +385,123 @@ plt.show()
 ```
 Epoch 1/30
 
-6/6 ━━━━━━━━━━━━━━━━━━━━ 2s 2ms/step - loss: 2.8117
+6/6 ━━━━━━━━━━━━━━━━━━━━ 1s 2ms/step - loss: 2.8780
 
 Epoch 2/30
 
-6/6 ━━━━━━━━━━━━━━━━━━━━ 0s 2ms/step - loss: 1.3631
+6/6 ━━━━━━━━━━━━━━━━━━━━ 0s 1ms/step - loss: 1.3763
 
 Epoch 3/30
 
-6/6 ━━━━━━━━━━━━━━━━━━━━ 0s 2ms/step - loss: 1.0918
+6/6 ━━━━━━━━━━━━━━━━━━━━ 0s 1ms/step - loss: 1.1240
 
 Epoch 4/30
 
-6/6 ━━━━━━━━━━━━━━━━━━━━ 0s 2ms/step - loss: 0.9143
+6/6 ━━━━━━━━━━━━━━━━━━━━ 0s 975us/step - loss: 0.9370
 
 Epoch 5/30
 
-6/6 ━━━━━━━━━━━━━━━━━━━━ 0s 2ms/step - loss: 0.7872
+6/6 ━━━━━━━━━━━━━━━━━━━━ 0s 1ms/step - loss: 0.8033
 
 Epoch 6/30
 
-6/6 ━━━━━━━━━━━━━━━━━━━━ 0s 2ms/step - loss: 0.6925
+6/6 ━━━━━━━━━━━━━━━━━━━━ 0s 1ms/step - loss: 0.7029
 
 Epoch 7/30
 
-6/6 ━━━━━━━━━━━━━━━━━━━━ 0s 2ms/step - loss: 0.6203
+6/6 ━━━━━━━━━━━━━━━━━━━━ 0s 979us/step - loss: 0.6264
 
 Epoch 8/30
 
-6/6 ━━━━━━━━━━━━━━━━━━━━ 0s 2ms/step - loss: 0.5641
+6/6 ━━━━━━━━━━━━━━━━━━━━ 0s 992us/step - loss: 0.5672
 
 Epoch 9/30
 
-6/6 ━━━━━━━━━━━━━━━━━━━━ 0s 2ms/step - loss: 0.5190
+6/6 ━━━━━━━━━━━━━━━━━━━━ 0s 1ms/step - loss: 0.5200
 
 Epoch 10/30
 
-6/6 ━━━━━━━━━━━━━━━━━━━━ 0s 2ms/step - loss: 0.4817
+6/6 ━━━━━━━━━━━━━━━━━━━━ 0s 1ms/step - loss: 0.4814
 
 Epoch 11/30
 
-6/6 ━━━━━━━━━━━━━━━━━━━━ 0s 2ms/step - loss: 0.4499
+6/6 ━━━━━━━━━━━━━━━━━━━━ 0s 1ms/step - loss: 0.4487
 
 Epoch 12/30
 
-6/6 ━━━━━━━━━━━━━━━━━━━━ 0s 2ms/step - loss: 0.4220
+6/6 ━━━━━━━━━━━━━━━━━━━━ 0s 1ms/step - loss: 0.4201
 
 Epoch 13/30
 
-6/6 ━━━━━━━━━━━━━━━━━━━━ 0s 8ms/step - loss: 0.3970
+6/6 ━━━━━━━━━━━━━━━━━━━━ 0s 942us/step - loss: 0.3948
 
 Epoch 14/30
 
-6/6 ━━━━━━━━━━━━━━━━━━━━ 0s 6ms/step - loss: 0.3743
+6/6 ━━━━━━━━━━━━━━━━━━━━ 0s 943us/step - loss: 0.3719
 
 Epoch 15/30
 
-6/6 ━━━━━━━━━━━━━━━━━━━━ 0s 2ms/step - loss: 0.3537
+6/6 ━━━━━━━━━━━━━━━━━━━━ 0s 952us/step - loss: 0.3510
 
 Epoch 16/30
 
-6/6 ━━━━━━━━━━━━━━━━━━━━ 0s 2ms/step - loss: 0.3346
+6/6 ━━━━━━━━━━━━━━━━━━━━ 0s 961us/step - loss: 0.3318
 
 Epoch 17/30
 
-6/6 ━━━━━━━━━━━━━━━━━━━━ 0s 3ms/step - loss: 0.3171
+6/6 ━━━━━━━━━━━━━━━━━━━━ 0s 979us/step - loss: 0.3142
 
 Epoch 18/30
 
-6/6 ━━━━━━━━━━━━━━━━━━━━ 0s 3ms/step - loss: 0.3009
+6/6 ━━━━━━━━━━━━━━━━━━━━ 0s 935us/step - loss: 0.2979
 
 Epoch 19/30
 
-6/6 ━━━━━━━━━━━━━━━━━━━━ 0s 3ms/step - loss: 0.2858
+6/6 ━━━━━━━━━━━━━━━━━━━━ 0s 900us/step - loss: 0.2828
 
 Epoch 20/30
 
-6/6 ━━━━━━━━━━━━━━━━━━━━ 0s 3ms/step - loss: 0.2718
+6/6 ━━━━━━━━━━━━━━━━━━━━ 0s 915us/step - loss: 0.2687
 
 Epoch 21/30
 
-6/6 ━━━━━━━━━━━━━━━━━━━━ 0s 3ms/step - loss: 0.2587
+6/6 ━━━━━━━━━━━━━━━━━━━━ 0s 922us/step - loss: 0.2556
 
 Epoch 22/30
 
-6/6 ━━━━━━━━━━━━━━━━━━━━ 0s 3ms/step - loss: 0.2465
+6/6 ━━━━━━━━━━━━━━━━━━━━ 0s 970us/step - loss: 0.2434
 
 Epoch 23/30
 
-6/6 ━━━━━━━━━━━━━━━━━━━━ 0s 3ms/step - loss: 0.2350
+6/6 ━━━━━━━━━━━━━━━━━━━━ 0s 950us/step - loss: 0.2320
 
 Epoch 24/30
 
-6/6 ━━━━━━━━━━━━━━━━━━━━ 0s 3ms/step - loss: 0.2243
+6/6 ━━━━━━━━━━━━━━━━━━━━ 0s 1ms/step - loss: 0.2212
 
 Epoch 25/30
 
-6/6 ━━━━━━━━━━━━━━━━━━━━ 0s 3ms/step - loss: 0.2142
+6/6 ━━━━━━━━━━━━━━━━━━━━ 0s 957us/step - loss: 0.2111
 
 Epoch 26/30
 
-6/6 ━━━━━━━━━━━━━━━━━━━━ 0s 3ms/step - loss: 0.2046
+6/6 ━━━━━━━━━━━━━━━━━━━━ 0s 911us/step - loss: 0.2016
 
 Epoch 27/30
 
-6/6 ━━━━━━━━━━━━━━━━━━━━ 0s 3ms/step - loss: 0.1956
+6/6 ━━━━━━━━━━━━━━━━━━━━ 0s 907us/step - loss: 0.1926
 
 Epoch 28/30
 
-6/6 ━━━━━━━━━━━━━━━━━━━━ 0s 3ms/step - loss: 0.1871
+6/6 ━━━━━━━━━━━━━━━━━━━━ 0s 890us/step - loss: 0.1842
 
 Epoch 29/30
 
-6/6 ━━━━━━━━━━━━━━━━━━━━ 0s 3ms/step - loss: 0.1791
+6/6 ━━━━━━━━━━━━━━━━━━━━ 0s 964us/step - loss: 0.1762
 
 Epoch 30/30
 
-6/6 ━━━━━━━━━━━━━━━━━━━━ 0s 3ms/step - loss: 0.1715
+6/6 ━━━━━━━━━━━━━━━━━━━━ 0s 987us/step - loss: 0.1686
 ```
 </div>
 
@@ -525,10 +509,8 @@ Epoch 30/30
     
 
 
-# **Predictions of Retrival Model**
-Two-Tower model is trained, we need to use it to generate candidates.
-
-We can implement inference pipeline using three steps:
+# **Predictions of Retrieval Model**
+We can implement inference pipeline for retrieval Model using three steps:
 1. Indexing: We can run the Item Tower once for all available ads to generate their
 embeddings.
 2. Query Encoding: When a user arrives, we pass their features through the User Tower to
@@ -602,7 +584,7 @@ top_ads = retrieval_engine.decode_results(scores, indices)[0]
 # **Implementation of Ranking Model**
 Retrieval model  only calculates a simple similarity score (Dot Product). It doesn't
 account for complex feature interactions.
-So we need to build ranking model after words retrival model.
+So we need to build ranking model after words retrieval model.
 
 **Architecture**
 1. **Feature Extraction:** We reuse the trained User Tower and Ad Tower from the
@@ -680,83 +662,83 @@ ranking_model.evaluate(ranking_test_dataset)
 ```
 Epoch 1/20
 
-3/3 ━━━━━━━━━━━━━━━━━━━━ 1s 5ms/step - AUC: 0.6079 - accuracy: 0.4961 - loss: 0.6890
+3/3 ━━━━━━━━━━━━━━━━━━━━ 1s 3ms/step - AUC: 0.6864 - accuracy: 0.5215 - loss: 0.6704
 
 Epoch 2/20
 
-3/3 ━━━━━━━━━━━━━━━━━━━━ 0s 4ms/step - AUC: 0.8329 - accuracy: 0.5748 - loss: 0.6423
+3/3 ━━━━━━━━━━━━━━━━━━━━ 0s 2ms/step - AUC: 0.8450 - accuracy: 0.6689 - loss: 0.6268
 
 Epoch 3/20
 
-3/3 ━━━━━━━━━━━━━━━━━━━━ 0s 5ms/step - AUC: 0.9284 - accuracy: 0.7467 - loss: 0.5995
+3/3 ━━━━━━━━━━━━━━━━━━━━ 0s 2ms/step - AUC: 0.9313 - accuracy: 0.7846 - loss: 0.5877
 
 Epoch 4/20
 
-3/3 ━━━━━━━━━━━━━━━━━━━━ 0s 4ms/step - AUC: 0.9636 - accuracy: 0.8766 - loss: 0.5599
+3/3 ━━━━━━━━━━━━━━━━━━━━ 0s 2ms/step - AUC: 0.9635 - accuracy: 0.8427 - loss: 0.5578
 
 Epoch 5/20
 
-3/3 ━━━━━━━━━━━━━━━━━━━━ 0s 3ms/step - AUC: 0.9763 - accuracy: 0.9213 - loss: 0.5229
+3/3 ━━━━━━━━━━━━━━━━━━━━ 0s 2ms/step - AUC: 0.9785 - accuracy: 0.9075 - loss: 0.5191
 
 Epoch 6/20
 
-3/3 ━━━━━━━━━━━━━━━━━━━━ 0s 4ms/step - AUC: 0.9824 - accuracy: 0.9304 - loss: 0.4876
+3/3 ━━━━━━━━━━━━━━━━━━━━ 0s 2ms/step - AUC: 0.9877 - accuracy: 0.9306 - loss: 0.4860
 
 Epoch 7/20
 
-3/3 ━━━━━━━━━━━━━━━━━━━━ 0s 4ms/step - AUC: 0.9862 - accuracy: 0.9331 - loss: 0.4540
+3/3 ━━━━━━━━━━━━━━━━━━━━ 0s 2ms/step - AUC: 0.9882 - accuracy: 0.9368 - loss: 0.4592
 
 Epoch 8/20
 
-3/3 ━━━━━━━━━━━━━━━━━━━━ 0s 3ms/step - AUC: 0.9880 - accuracy: 0.9357 - loss: 0.4224
+3/3 ━━━━━━━━━━━━━━━━━━━━ 0s 2ms/step - AUC: 0.9923 - accuracy: 0.9417 - loss: 0.4261
 
 Epoch 9/20
 
-3/3 ━━━━━━━━━━━━━━━━━━━━ 0s 4ms/step - AUC: 0.9898 - accuracy: 0.9436 - loss: 0.3920
+3/3 ━━━━━━━━━━━━━━━━━━━━ 0s 2ms/step - AUC: 0.9926 - accuracy: 0.9480 - loss: 0.3950
 
 Epoch 10/20
 
-3/3 ━━━━━━━━━━━━━━━━━━━━ 0s 4ms/step - AUC: 0.9911 - accuracy: 0.9475 - loss: 0.3633
+3/3 ━━━━━━━━━━━━━━━━━━━━ 0s 2ms/step - AUC: 0.9941 - accuracy: 0.9494 - loss: 0.3702
 
 Epoch 11/20
 
-3/3 ━━━━━━━━━━━━━━━━━━━━ 0s 3ms/step - AUC: 0.9914 - accuracy: 0.9528 - loss: 0.3361
+3/3 ━━━━━━━━━━━━━━━━━━━━ 0s 2ms/step - AUC: 0.9950 - accuracy: 0.9603 - loss: 0.3443
 
 Epoch 12/20
 
-3/3 ━━━━━━━━━━━━━━━━━━━━ 0s 3ms/step - AUC: 0.9923 - accuracy: 0.9580 - loss: 0.3103
+3/3 ━━━━━━━━━━━━━━━━━━━━ 0s 2ms/step - AUC: 0.9952 - accuracy: 0.9640 - loss: 0.3225
 
 Epoch 13/20
 
-3/3 ━━━━━━━━━━━━━━━━━━━━ 0s 4ms/step - AUC: 0.9925 - accuracy: 0.9619 - loss: 0.2866
+3/3 ━━━━━━━━━━━━━━━━━━━━ 0s 2ms/step - AUC: 0.9956 - accuracy: 0.9693 - loss: 0.2917
 
 Epoch 14/20
 
-3/3 ━━━━━━━━━━━━━━━━━━━━ 0s 4ms/step - AUC: 0.9931 - accuracy: 0.9633 - loss: 0.2643
+3/3 ━━━━━━━━━━━━━━━━━━━━ 0s 2ms/step - AUC: 0.9960 - accuracy: 0.9689 - loss: 0.2667
 
 Epoch 15/20
 
-3/3 ━━━━━━━━━━━━━━━━━━━━ 0s 4ms/step - AUC: 0.9935 - accuracy: 0.9633 - loss: 0.2436
+3/3 ━━━━━━━━━━━━━━━━━━━━ 0s 2ms/step - AUC: 0.9963 - accuracy: 0.9685 - loss: 0.2506
 
 Epoch 16/20
 
-3/3 ━━━━━━━━━━━━━━━━━━━━ 0s 4ms/step - AUC: 0.9938 - accuracy: 0.9659 - loss: 0.2247
+3/3 ━━━━━━━━━━━━━━━━━━━━ 0s 2ms/step - AUC: 0.9962 - accuracy: 0.9660 - loss: 0.2298
 
 Epoch 17/20
 
-3/3 ━━━━━━━━━━━━━━━━━━━━ 0s 4ms/step - AUC: 0.9942 - accuracy: 0.9646 - loss: 0.2076
+3/3 ━━━━━━━━━━━━━━━━━━━━ 0s 2ms/step - AUC: 0.9963 - accuracy: 0.9724 - loss: 0.2133
 
 Epoch 18/20
 
-3/3 ━━━━━━━━━━━━━━━━━━━━ 0s 3ms/step - AUC: 0.9945 - accuracy: 0.9659 - loss: 0.1918
+3/3 ━━━━━━━━━━━━━━━━━━━━ 0s 2ms/step - AUC: 0.9959 - accuracy: 0.9696 - loss: 0.1973
 
 Epoch 19/20
 
-3/3 ━━━━━━━━━━━━━━━━━━━━ 0s 4ms/step - AUC: 0.9947 - accuracy: 0.9672 - loss: 0.1777
+3/3 ━━━━━━━━━━━━━━━━━━━━ 0s 2ms/step - AUC: 0.9966 - accuracy: 0.9683 - loss: 0.1819
 
 Epoch 20/20
 
-3/3 ━━━━━━━━━━━━━━━━━━━━ 0s 4ms/step - AUC: 0.9953 - accuracy: 0.9685 - loss: 0.1645
+3/3 ━━━━━━━━━━━━━━━━━━━━ 0s 2ms/step - AUC: 0.9955 - accuracy: 0.9665 - loss: 0.1645
 ```
 </div>
 
@@ -767,9 +749,9 @@ Epoch 20/20
     
 <div class="k-default-codeblock">
 ```
-1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 230ms/step - AUC: 0.9904 - accuracy: 0.9476 - loss: 0.2319
+1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 110ms/step - AUC: 0.9908 - accuracy: 0.9634 - loss: 0.2025
 
-[0.2318607121706009, 0.9903508424758911, 0.9476439952850342]
+[0.20246028900146484, 0.9908442497253418, 0.963350772857666]
 ```
 </div>
 
@@ -811,26 +793,26 @@ scores, indices = retrieval_engine.query_batch(pd.DataFrame([sample_user]))
 top_ads = retrieval_engine.decode_results(scores, indices)[0]
 final_ranked_ads = rerank_ads_for_user(sample_user, top_ads, ranking_model)
 print(f"User: {sample_user['user_id']}")
-print(f"{'Ad ID':<10} | {'Topic':<30} | {'Retrival Score':<11} | {'Rank Probability'}")
+print(f"{'Ad ID':<10} | {'Topic':<30} | {'Retrieval Score':<11} | {'Rank Probability'}")
 for item in final_ranked_ads:
     print(
-        f"{item['ad_id']:<10} | {item['ad_topic'][:28]:<30} | {item['score']:.4f}      |{item['ranking_score']*100:.2f}%"
+        f"{item['ad_id']:<10} | {item['ad_topic'][:28]:<30} | {item['score']:.4f} | {item['ranking_score']*100:.2f}%"
     )
 ```
 
 <div class="k-default-codeblock">
 ```
 User: user_216
-Ad ID      | Topic                          | Retrival Score | Rank Probability
-ad_305     | Front-line fault-tolerant in   | 8.2131      |99.27%
-ad_318     | Front-line upward-trending g   | 7.6231      |99.17%
-ad_758     | Right-sized multi-tasking so   | 7.1814      |99.06%
-ad_767     | Robust object-oriented Graph   | 7.2068      |99.02%
-ad_620     | Polarized modular function     | 7.2857      |98.92%
-ad_522     | Open-architected full-range    | 7.0892      |98.82%
-ad_771     | Robust web-enabled attitude    | 7.3828      |98.81%
-ad_810     | Sharable optimal capacity      | 6.7046      |98.69%
-ad_31      | Ameliorated well-modulated c   | 6.9498      |98.40%
-ad_104     | Configurable 24/7 hub          | 6.7244      |98.39%
+Ad ID      | Topic                          | Retrieval Score | Rank Probability
+ad_916     | Universal multi-state system   | 6.7579 | 98.97%
+ad_853     | Synergistic asynchronous sup   | 7.0611 | 98.75%
+ad_424     | Inverse discrete extranet      | 6.6511 | 98.62%
+ad_716     | Reactive bi-directional stan   | 4.6533 | 98.51%
+ad_861     | Synergized clear-thinking pr   | 5.5220 | 98.49%
+ad_981     | Vision-oriented asynchronous   | 4.8622 | 98.34%
+ad_842     | Synchronized full-range port   | 4.8333 | 98.32%
+ad_565     | Organic asynchronous hierarc   | 4.6900 | 98.25%
+ad_825     | Stand-alone tangible moderat   | 4.7890 | 98.12%
+ad_327     | Fully-configurable high-leve   | 4.5719 | 97.52%
 ```
 </div>

@@ -2,8 +2,8 @@
 Title: Two Stage Recommender System with Marketing Interaction
 Author: Mansi Mehta
 Date created: 26/11/2025
-Last modified: 26/11/2025
-Description: Recommender System with Ranking and Retrival model for Marketing interaction.
+Last modified: 06/12/2025
+Description: Recommender System with Ranking and Retrieval model for Marketing interaction.
 Accelerator: GPU
 """
 
@@ -56,7 +56,7 @@ recommendations for a specific user.
 """
 
 """shell
-!pip install -q keras-rs
+# !pip install -q keras-rs
 """
 
 import os
@@ -68,8 +68,7 @@ import numpy as np
 import tensorflow as tf
 import pandas as pd
 import keras_rs
-import tensorflow_datasets as tfds
-from mpl_toolkits.axes_grid1 import make_axes_locatable
+
 from keras import layers
 from concurrent.futures import ThreadPoolExecutor
 from sklearn.model_selection import train_test_split
@@ -81,11 +80,11 @@ from sklearn.preprocessing import MinMaxScaler
 """
 
 """shell
-pip install -q kaggle
-# Download the dataset (requires Kaggle API key in ~/.kaggle/kaggle.json)
-kaggle datasets download -d mafrojaakter/ad-click-data --unzip -p ./ad_click_dataset
+!pip install -q kaggle
+!kaggle datasets download -d mafrojaakter/ad-click-data --unzip -p ./ad_click_dataset
 """
-data_path = "./ad_click_dataset/Ad_click_data.csv"
+
+data_path = "./ad_click_dataset/Ad Click Data.csv"
 if not os.path.exists(data_path):
     # Fallback for filenames with spaces or different casing
     data_path = "./ad_click_dataset/Ad Click Data.csv"
@@ -139,16 +138,17 @@ def create_retrieval_dataset(
     continuous_features_list,
 ):
 
-    # Filter for Positive Interactions (Cicks)
+    # Filter for Positive Interactions (Clicks)
     positive_interactions = data_df[data_df["Clicked on Ad"] == 1].copy()
 
     if positive_interactions.empty:
         return None
 
     def sample_negative(positive_ad_id):
-        neg_ad_id = positive_ad_id
-        while neg_ad_id == positive_ad_id:
-            neg_ad_id = np.random.choice(all_ad_ids)
+        all_ad_ids_filtered = [aid for aid in all_ad_ids if aid != positive_ad_id]
+        if not all_ad_ids_filtered:
+            return positive_ad_id
+        neg_ad_id = np.random.choice(all_ad_ids_filtered)
         return neg_ad_id
 
     def create_triplets_row(pos_row):
@@ -170,7 +170,7 @@ def create_retrieval_dataset(
             "negative_ad": neg_ad_features_dict,
         }
 
-    with ThreadPoolExecutor(max_workers=8) as executor:
+    with ThreadPoolExecutor(max_workers=os.cpu_count() or 8) as executor:
         triplets = list(
             executor.map(
                 create_triplets_row, positive_interactions.itertuples(index=False)
@@ -255,7 +255,7 @@ retrieval_test_dataset = create_retrieval_dataset(
 )
 
 """
-# **Implement the Retrival Model**
+# **Implement the Retrieval Model**
 For the Retrieval stage, we will build a Two-Tower Model.
 
 **The Architecture Components:**
@@ -323,15 +323,14 @@ user_tower = build_tower(
 ad_tower = build_tower(["ad_id", "ad_topic"], name="ad_tower")
 
 
-def bpr_hinge_loss(y_true, y_pred):
-    margin = 1.0
+def pairwise_logistic_loss(y_true, y_pred):
     return -tf.math.log(tf.nn.sigmoid(y_pred) + 1e-10)
 
 
 class RetrievalModel(keras.Model):
     def __init__(self, user_tower_instance, ad_tower_instance, **kwargs):
         super().__init__(**kwargs)
-        self.user_tower = user_tower
+        self.user_tower = user_tower_instance
         self.ad_tower = ad_tower
         self.ln_user = layers.LayerNormalization()
         self.ln_ad = layers.LayerNormalization()
@@ -353,20 +352,18 @@ class RetrievalModel(keras.Model):
 
 retrieval_model = RetrievalModel(user_tower, ad_tower)
 retrieval_model.compile(
-    optimizer=keras.optimizers.Adam(learning_rate=1e-3), loss=bpr_hinge_loss
+    optimizer=keras.optimizers.Adam(learning_rate=1e-3), loss=pairwise_logistic_loss
 )
 history = retrieval_model.fit(retrieval_train_dataset, epochs=30)
 
 pd.DataFrame(history.history).plot(
-    subplots=True, layout=(1, 3), figsize=(12, 4), title="Retrival Model Metrics"
+    subplots=True, layout=(1, 3), figsize=(12, 4), title="Retrieval Model Metrics"
 )
 plt.show()
 
 """
-# **Predictions of Retrival Model**
-Two-Tower model is trained, we need to use it to generate candidates.
-
-We can implement inference pipeline using three steps:
+# **Predictions of Retrieval Model**
+We can implement inference pipeline for retrieval Model using three steps:
 1. Indexing: We can run the Item Tower once for all available ads to generate their
 embeddings.
 2. Query Encoding: When a user arrives, we pass their features through the User Tower to
@@ -439,7 +436,7 @@ top_ads = retrieval_engine.decode_results(scores, indices)[0]
 # **Implementation of Ranking Model**
 Retrieval model  only calculates a simple similarity score (Dot Product). It doesn't
 account for complex feature interactions.
-So we need to build ranking model after words retrival model.
+So we need to build ranking model after words retrieval model.
 
 **Architecture**
 1. **Feature Extraction:** We reuse the trained User Tower and Ad Tower from the
@@ -549,8 +546,8 @@ scores, indices = retrieval_engine.query_batch(pd.DataFrame([sample_user]))
 top_ads = retrieval_engine.decode_results(scores, indices)[0]
 final_ranked_ads = rerank_ads_for_user(sample_user, top_ads, ranking_model)
 print(f"User: {sample_user['user_id']}")
-print(f"{'Ad ID':<10} | {'Topic':<30} | {'Retrival Score':<11} | {'Rank Probability'}")
+print(f"{'Ad ID':<10} | {'Topic':<30} | {'Retrieval Score':<11} | {'Rank Probability'}")
 for item in final_ranked_ads:
     print(
-        f"{item['ad_id']:<10} | {item['ad_topic'][:28]:<30} | {item['score']:.4f}      |{item['ranking_score']*100:.2f}%"
+        f"{item['ad_id']:<10} | {item['ad_topic'][:28]:<30} | {item['score']:.4f} | {item['ranking_score']*100:.2f}%"
     )
