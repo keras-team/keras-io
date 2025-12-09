@@ -747,11 +747,11 @@ API_MASTER = {
                                     "title": "MelSpectrogram layer",
                                     "generate": ["keras.layers.MelSpectrogram"],
                                 },
-                                # {
-                                #     "path": "stft_spectrogram",
-                                #     "title": "STFTSpectrogram layer",
-                                #     "generate": ["keras.layers.STFTSpectrogram"],
-                                # },
+                                {
+                                    "path": "stft_spectrogram",
+                                    "title": "STFTSpectrogram layer",
+                                    "generate": ["keras.layers.STFTSpectrogram"],
+                                },
                             ],
                         },
                     ],
