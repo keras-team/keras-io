@@ -2001,7 +2001,7 @@ API_MASTER = {
                         "keras.distribution.distribution",
                         "keras.distribution.list_devices",
                         "keras.distribution.initialize",
-                        "keras.distribution.get_device_count",
+                        # "keras.distribution.get_device_count",
                     ],
                 },
             ],
