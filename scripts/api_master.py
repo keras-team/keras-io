@@ -616,6 +616,11 @@ API_MASTER = {
                                     "generate": ["keras.layers.Equalization"]
                                 },
                                 {
+                                    "path": "max_num_bounding_boxes",
+                                    "title": "MaxNumBoundingBoxes layer",
+                                    "generate": ["keras.layers.MaxNumBoundingBoxes"]
+                                },
+                                {
                                     "path": "mix_up",
                                     "title": "MixUp layer",
                                     "generate": ["keras.layers.MixUp"]
@@ -735,11 +740,6 @@ API_MASTER = {
                                     "title": "Solarization layer",
                                     "generate": ["keras.layers.Solarization"]
                                 },
-                                {
-                                    "path": "max_num_bounding_boxes",
-                                    "title": "MaxNumBoundingBoxes layer",
-                                    "generate": ["keras.layers.MaxNumBoundingBoxes"]
-                                }
                             ]
                         },
                         {
