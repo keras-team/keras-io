@@ -2133,9 +2133,9 @@ API_MASTER = {
                     "generate": [
                         "keras.utils.get_source_inputs",
                         "keras.utils.is_keras_tensor",
-                        "keras.backend.standardize_dtype",
                         "keras.backend.is_float_dtype",
                         "keras.backend.is_int_dtype",
+                        "keras.backend.standardize_dtype",
                     ],
                 },
                 {
