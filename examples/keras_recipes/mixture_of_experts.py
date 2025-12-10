@@ -558,7 +558,10 @@ if dense_moe_layer:
     )
     if dense_moe_layer.use_gating_bias:
         gating_outputs = gating_outputs + dense_moe_layer.gating_bias
-    gating_weights = activations.softmax(gating_outputs)
+    if dense_moe_layer.gating_activation is not None:
+        gating_weights = dense_moe_layer.gating_activation(gating_outputs)
+    else:
+        gating_weights = gating_outputs
 
     # Convert to numpy for analysis
     gating_weights_np = ops.convert_to_numpy(gating_weights)
@@ -621,4 +624,11 @@ You can use `DenseMoE` and `Conv2DMoE` in your own models wherever you would
 normally use `Dense` or `Conv2D` layers. Try experimenting with different numbers
 of experts and observe how the gating network learns to route inputs for your
 specific task and dataset.
+
+For further reading on Mixture-of-Experts:
+
+- [Outrageously Large Neural Networks (original MoE paper)](https://arxiv.org/abs/1701.06538)
+- [Switch Transformers (top-k MoE variant)](https://arxiv.org/abs/2101.03961)
+- [Switch Transformer example on keras.io](https://keras.io/examples/nlp/text_classification_with_switch_transformer/)
+- [Reference implementation](https://github.com/eminorhan/mixture-of-experts)
 """
