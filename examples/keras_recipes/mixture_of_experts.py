@@ -40,6 +40,7 @@ compare performance against a baseline model using standard layers.
 import keras
 from keras import layers, ops, activations, optimizers
 from keras.datasets import cifar10
+import matplotlib.pyplot as plt
 
 """
 ## Implement the DenseMoE layer
@@ -90,7 +91,6 @@ class DenseMoE(layers.Layer):
     def build(self, input_shape):
         input_dim = input_shape[-1]
 
-        # Expert kernels: (input_dim, units, n_experts)
         self.expert_kernel = self.add_weight(
             name="expert_kernel",
             shape=(input_dim, self.units, self.n_experts),
@@ -98,7 +98,6 @@ class DenseMoE(layers.Layer):
             trainable=True,
         )
 
-        # Expert biases: (units, n_experts)
         if self.use_expert_bias:
             self.expert_bias = self.add_weight(
                 name="expert_bias",
@@ -107,7 +106,6 @@ class DenseMoE(layers.Layer):
                 trainable=True,
             )
 
-        # Gating kernel: (input_dim, n_experts)
         self.gating_kernel = self.add_weight(
             name="gating_kernel",
             shape=(input_dim, self.n_experts),
@@ -115,7 +113,6 @@ class DenseMoE(layers.Layer):
             trainable=True,
         )
 
-        # Gating bias: (n_experts,)
         if self.use_gating_bias:
             self.gating_bias = self.add_weight(
                 name="gating_bias",
@@ -128,29 +125,25 @@ class DenseMoE(layers.Layer):
 
     def call(self, inputs):
         # Compute expert outputs
-        # Shape: (batch_size, units, n_experts)
         expert_outputs = ops.tensordot(inputs, self.expert_kernel, axes=1)
-
         if self.use_expert_bias:
             expert_outputs = expert_outputs + self.expert_bias
-
         expert_outputs = self.expert_activation(expert_outputs)
 
         # Compute gating weights
-        # Shape: (batch_size, n_experts)
         gating_outputs = ops.tensordot(inputs, self.gating_kernel, axes=1)
-
         if self.use_gating_bias:
             gating_outputs = gating_outputs + self.gating_bias
-
         gating_outputs = self.gating_activation(gating_outputs)
 
-        # Expand gating weights to broadcast with expert outputs
-        # Shape: (batch_size, 1, n_experts)
-        gating_outputs = ops.expand_dims(gating_outputs, axis=1)
+        # Load balancing loss: encourages uniform expert utilization
+        if self.trainable:
+            importance = ops.mean(gating_outputs, axis=0)
+            load_loss = self.n_experts * ops.sum(ops.square(importance))
+            self.add_loss(1e-2 * load_loss)
 
         # Weighted combination of expert outputs
-        # Shape: (batch_size, units)
+        gating_outputs = ops.expand_dims(gating_outputs, axis=1)
         output = ops.sum(expert_outputs * gating_outputs, axis=-1)
 
         return output
@@ -230,7 +223,6 @@ class Conv2DMoE(layers.Layer):
     def build(self, input_shape):
         input_channels = input_shape[-1]
 
-        # Expert kernels: (kernel_h, kernel_w, input_channels, filters, n_experts)
         self.expert_kernel = self.add_weight(
             name="expert_kernel",
             shape=(
@@ -244,7 +236,6 @@ class Conv2DMoE(layers.Layer):
             trainable=True,
         )
 
-        # Expert biases: (filters, n_experts)
         if self.use_expert_bias:
             self.expert_bias = self.add_weight(
                 name="expert_bias",
@@ -253,8 +244,7 @@ class Conv2DMoE(layers.Layer):
                 trainable=True,
             )
 
-        # Gating kernel: (1, 1, input_channels, n_experts)
-        # Uses 1x1 convolution for efficient per-position gating
+        # Gating uses 1x1 convolution for efficient per-position gating
         self.gating_kernel = self.add_weight(
             name="gating_kernel",
             shape=(1, 1, input_channels, self.n_experts),
@@ -262,7 +252,6 @@ class Conv2DMoE(layers.Layer):
             trainable=True,
         )
 
-        # Gating bias: (n_experts,)
         if self.use_gating_bias:
             self.gating_bias = self.add_weight(
                 name="gating_bias",
@@ -274,7 +263,7 @@ class Conv2DMoE(layers.Layer):
         super().build(input_shape)
 
     def call(self, inputs):
-        # Process each expert and collect outputs
+        # Compute expert outputs
         expert_kernel = ops.reshape(
             self.expert_kernel,
             (
@@ -284,15 +273,12 @@ class Conv2DMoE(layers.Layer):
                 self.filters * self.n_experts,
             ),
         )
-
         expert_outputs = ops.conv(
             inputs,
             expert_kernel,
             strides=self.strides,
             padding=self.padding,
         )
-
-        # Reshape output to split the experts dimension.
         output_shape = ops.shape(expert_outputs)
         expert_outputs = ops.reshape(
             expert_outputs,
@@ -304,32 +290,29 @@ class Conv2DMoE(layers.Layer):
                 self.n_experts,
             ),
         )
-
         if self.use_expert_bias:
             expert_outputs = expert_outputs + self.expert_bias
-
         expert_outputs = self.expert_activation(expert_outputs)
 
         # Compute gating weights using 1x1 convolution
-        # Shape: (batch, height, width, n_experts)
         gating_outputs = ops.conv(
             inputs,
             self.gating_kernel,
             strides=self.strides,
             padding=self.padding,
         )
-
         if self.use_gating_bias:
             gating_outputs = gating_outputs + self.gating_bias
-
         gating_outputs = self.gating_activation(gating_outputs)
 
-        # Expand gating to broadcast with expert outputs
-        # Shape: (batch, height, width, 1, n_experts)
-        gating_outputs = ops.expand_dims(gating_outputs, axis=-2)
+        # Load balancing loss: encourages uniform expert utilization
+        if self.trainable:
+            importance = ops.mean(gating_outputs, axis=[0, 1, 2])
+            load_loss = self.n_experts * ops.sum(ops.square(importance))
+            self.add_loss(1e-2 * load_loss)
 
         # Weighted combination of expert outputs
-        # Shape: (batch, height, width, filters)
+        gating_outputs = ops.expand_dims(gating_outputs, axis=-2)
         output = ops.sum(expert_outputs * gating_outputs, axis=-1)
 
         return output
@@ -359,17 +342,10 @@ For this example, we use the CIFAR-10 dataset. To keep training time
 reasonable for demonstration purposes, we use only a subset of the training data.
 """
 
-# Load CIFAR-10 dataset
 (x_train, y_train), (x_test, y_test) = cifar10.load_data()
 
-# Normalize pixel values
 x_train = x_train.astype("float32") / 255.0
 x_test = x_test.astype("float32") / 255.0
-
-# Use a subset for faster training in this demo
-subset_size = 10000
-x_train = x_train[:subset_size]
-y_train = y_train[:subset_size]
 
 print(f"Training samples: {len(x_train)}")
 print(f"Test samples: {len(x_test)}")
@@ -384,7 +360,6 @@ First, we create a baseline CNN model using standard Keras layers.
 def create_baseline_model():
     inputs = keras.Input(shape=(32, 32, 3))
 
-    # Convolutional feature extraction
     x = layers.Conv2D(32, 3, activation="relu", padding="same")(inputs)
     x = layers.BatchNormalization()(x)
     x = layers.MaxPooling2D(2)(x)
@@ -393,7 +368,6 @@ def create_baseline_model():
     x = layers.BatchNormalization()(x)
     x = layers.MaxPooling2D(2)(x)
 
-    # Dense classification head
     x = layers.Flatten()(x)
     x = layers.Dense(128, activation="relu")(x)
     x = layers.Dropout(0.5)(x)
@@ -415,7 +389,6 @@ and Dense layers with their MoE counterparts: Conv2DMoE and DenseMoE.
 def create_moe_model():
     inputs = keras.Input(shape=(32, 32, 3))
 
-    # MoE convolutional feature extraction
     x = Conv2DMoE(
         32,
         3,
@@ -438,7 +411,6 @@ def create_moe_model():
     x = layers.BatchNormalization()(x)
     x = layers.MaxPooling2D(2)(x)
 
-    # MoE dense classification head
     x = layers.Flatten()(x)
     x = DenseMoE(
         128,
@@ -467,11 +439,9 @@ total parameters due to the multiple expert networks, but can potentially
 learn more diverse representations through expert specialization.
 """
 
-# Training parameters
 epochs = 10
 batch_size = 128
 
-# Create and compile baseline model
 print("BASELINE MODEL")
 baseline_model = create_baseline_model()
 baseline_model.compile(
@@ -481,7 +451,6 @@ baseline_model.compile(
 )
 baseline_model.summary()
 
-# Train baseline
 print("\nTraining baseline model...")
 baseline_history = baseline_model.fit(
     x_train,
@@ -492,13 +461,11 @@ baseline_history = baseline_model.fit(
     verbose=1,
 )
 
-# Evaluate baseline
 baseline_test_loss, baseline_test_acc = baseline_model.evaluate(
     x_test, y_test, verbose=0
 )
 print(f"\nBaseline Test Accuracy: {baseline_test_acc:.4f}")
 
-# Create and compile MoE model
 print("\nMIXTURE-OF-EXPERTS MODEL")
 moe_model = create_moe_model()
 moe_model.compile(
@@ -508,7 +475,6 @@ moe_model.compile(
 )
 moe_model.summary()
 
-# Train MoE model
 print("\nTraining MoE model...")
 moe_history = moe_model.fit(
     x_train,
@@ -519,11 +485,9 @@ moe_history = moe_model.fit(
     verbose=1,
 )
 
-# Evaluate MoE model
 moe_test_loss, moe_test_acc = moe_model.evaluate(x_test, y_test, verbose=0)
 print(f"\nMoE Test Accuracy: {moe_test_acc:.4f}")
 
-# Compare results
 print("\nMODEL COMPARISON")
 print(
     f"Baseline - Params: {baseline_model.count_params():,} | "
@@ -535,6 +499,39 @@ print(
 )
 
 """
+## Visualize training history
+
+Let's compare the training curves of both models to understand their learning dynamics.
+"""
+
+plt.figure(figsize=(12, 4))
+
+plt.subplot(1, 2, 1)
+plt.plot(baseline_history.history["accuracy"], label="Baseline Train", linestyle="--")
+plt.plot(baseline_history.history["val_accuracy"], label="Baseline Val", linestyle="--")
+plt.plot(moe_history.history["accuracy"], label="MoE Train")
+plt.plot(moe_history.history["val_accuracy"], label="MoE Val")
+plt.xlabel("Epoch")
+plt.ylabel("Accuracy")
+plt.title("Model Accuracy Comparison")
+plt.legend()
+plt.grid(True, alpha=0.3)
+
+plt.subplot(1, 2, 2)
+plt.plot(baseline_history.history["loss"], label="Baseline Train", linestyle="--")
+plt.plot(baseline_history.history["val_loss"], label="Baseline Val", linestyle="--")
+plt.plot(moe_history.history["loss"], label="MoE Train")
+plt.plot(moe_history.history["val_loss"], label="MoE Val")
+plt.xlabel("Epoch")
+plt.ylabel("Loss")
+plt.title("Model Loss Comparison")
+plt.legend()
+plt.grid(True, alpha=0.3)
+
+plt.tight_layout()
+plt.show()
+
+"""
 ## Analyzing expert utilization
 
 One key aspect of MoE models is how the gating network learns to distribute
@@ -542,7 +539,6 @@ inputs across experts. Let's examine the gating weights to understand expert
 utilization patterns.
 """
 
-# Get the first DenseMoE layer from the MoE model
 dense_moe_layer = None
 for layer in moe_model.layers:
     if isinstance(layer, DenseMoE):
@@ -550,22 +546,18 @@ for layer in moe_model.layers:
         break
 
 if dense_moe_layer:
-    # Create a model to extract features before the MoE layer
     feature_extractor = keras.Model(
         inputs=moe_model.input,
-        outputs=dense_moe_layer.input,  # Input to the first DenseMoE layer
+        outputs=dense_moe_layer.input,
     )
 
-    # Get features for a sample of test data
     test_features = feature_extractor.predict(x_test[:100], verbose=0)
 
-    # Compute gating weights directly using the layer's learned parameters
     gating_logits = ops.tensordot(test_features, dense_moe_layer.gating_kernel, axes=1)
     if dense_moe_layer.use_gating_bias:
         gating_logits = gating_logits + dense_moe_layer.gating_bias
     gating_weights = dense_moe_layer.gating_activation(gating_logits)
 
-    # Convert to numpy for analysis
     gating_weights_np = ops.convert_to_numpy(gating_weights)
 
     print("\nGating weights distribution across experts:")
@@ -573,6 +565,27 @@ if dense_moe_layer:
     print(f"Std of gating weights per expert: {gating_weights_np.std(axis=0)}")
     print("\nA more uniform distribution indicates all experts are being utilized.")
     print("Highly skewed distributions suggest some experts dominate.")
+
+    mean_weights = gating_weights_np.mean(axis=0)
+
+    plt.figure(figsize=(12, 4))
+
+    plt.subplot(1, 2, 1)
+    plt.bar(range(len(mean_weights)), mean_weights)
+    plt.xlabel("Expert Index")
+    plt.ylabel("Average Gating Weight")
+    plt.title("Average Expert Utilization")
+    plt.grid(True, alpha=0.3, axis="y")
+
+    plt.subplot(1, 2, 2)
+    plt.imshow(gating_weights_np[:50].T, aspect="auto", cmap="viridis")
+    plt.xlabel("Sample Index")
+    plt.ylabel("Expert Index")
+    plt.title("Gating Weights Heatmap (50 samples)")
+    plt.colorbar(label="Gating Weight")
+
+    plt.tight_layout()
+    plt.show()
 
 """
 ## Key takeaways
@@ -609,9 +622,16 @@ replacements for standard Keras layers. Here are the main points:
 
 This implementation uses soft routing, which computes a weighted combination of
 all expert outputs. This approach provides smooth gradients and is well-suited
-for moderate numbers of experts (4-8). For very large expert counts, hard top-k
-routing may be more efficient, though it requires additional considerations
-like load balancing losses.
+for moderate numbers of experts (4-8).
+
+We also include a **load balancing loss** that encourages uniform expert utilization.
+Without this loss, the model may learn to rely heavily on just one or two dominant
+experts, wasting the capacity of the others. The load balancing loss penalizes
+imbalanced gating distributions, helping ensure all experts contribute to the model.
+
+For very large expert counts (100+), consider top-k routing for efficiency
+(see the [Switch Transformer example](https://keras.io/examples/nlp/text_classification_with_switch_transformer/)),
+where load balancing becomes even more critical.
 """
 
 """
