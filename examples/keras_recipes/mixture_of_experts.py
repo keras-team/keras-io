@@ -282,7 +282,7 @@ class Conv2DMoE(layers.Layer):
             (
                 self.kernel_size[0],
                 self.kernel_size[1],
-                inputs,
+                ops.shape(inputs)[-1],
                 self.filters * self.n_experts,
             ),
         )
