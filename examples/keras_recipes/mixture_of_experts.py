@@ -277,30 +277,41 @@ class Conv2DMoE(layers.Layer):
 
     def call(self, inputs):
         # Process each expert and collect outputs
-        expert_outputs = []
-        for i in range(self.n_experts):
-            # Extract kernel for this expert
-            expert_kernel_i = self.expert_kernel[:, :, :, :, i]
-
-            # Apply convolution
-            expert_output = ops.conv(
+        expert_kernel = ops.reshape(
+            self.expert_kernel,
+            (
+                self.kernel_size[0],
+                self.kernel_size[1],
                 inputs,
-                expert_kernel_i,
-                strides=self.strides,
-                padding=self.padding,
-            )
+                self.filters * self.n_experts,
+            ),
+        )
 
-            if self.use_expert_bias:
-                expert_output = expert_output + self.expert_bias[:, i]
+        expert_outputs = ops.conv(
+            inputs,
+            expert_kernel,
+            strides=self.strides,
+            padding=self.padding,
+        )
 
-            if self.expert_activation is not None:
-                expert_output = self.expert_activation(expert_output)
+        # Reshape output to split the experts dimension.
+        output_shape = ops.shape(expert_outputs)
+        expert_outputs = ops.reshape(
+            expert_outputs,
+            (
+                batch_size,
+                output_shape[1],
+                output_shape[2],
+                self.filters,
+                self.n_experts,
+            ),
+        )
 
-            expert_outputs.append(expert_output)
+        if self.use_expert_bias:
+            expert_outputs = expert_outputs + self.expert_bias
 
-        # Stack expert outputs
-        # Shape: (batch, height, width, filters, n_experts)
-        expert_outputs = ops.stack(expert_outputs, axis=-1)
+        if self.expert_activation is not None:
+            expert_outputs = self.expert_activation(expert_outputs)
 
         # Compute gating weights using 1x1 convolution
         # Shape: (batch, height, width, n_experts)
