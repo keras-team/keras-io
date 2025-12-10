@@ -299,7 +299,7 @@ class Conv2DMoE(layers.Layer):
         expert_outputs = ops.reshape(
             expert_outputs,
             (
-                batch_size,
+                output_shape[0],
                 output_shape[1],
                 output_shape[2],
                 self.filters,
