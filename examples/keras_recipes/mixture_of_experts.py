@@ -557,7 +557,7 @@ if dense_moe_layer:
     # Create a model to extract features before the MoE layer
     feature_extractor = keras.Model(
         inputs=moe_model.input,
-        outputs=moe_model.layers[-5].output,  # Output of Flatten layer
+        outputs=dense_moe_layer.input,  # Input to the first DenseMoE layer
     )
 
     # Get features for a sample of test data
