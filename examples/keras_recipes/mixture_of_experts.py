@@ -134,8 +134,7 @@ class DenseMoE(layers.Layer):
         if self.use_expert_bias:
             expert_outputs = expert_outputs + self.expert_bias
 
-        if self.expert_activation is not None:
-            expert_outputs = self.expert_activation(expert_outputs)
+        expert_outputs = self.expert_activation(expert_outputs)
 
         # Compute gating weights
         # Shape: (batch_size, n_experts)
@@ -144,8 +143,7 @@ class DenseMoE(layers.Layer):
         if self.use_gating_bias:
             gating_outputs = gating_outputs + self.gating_bias
 
-        if self.gating_activation is not None:
-            gating_outputs = self.gating_activation(gating_outputs)
+        gating_outputs = self.gating_activation(gating_outputs)
 
         # Expand gating weights to broadcast with expert outputs
         # Shape: (batch_size, 1, n_experts)
