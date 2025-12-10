@@ -564,15 +564,17 @@ if dense_moe_layer:
     test_features = feature_extractor.predict(x_test[:100], verbose=0)
 
     # Compute gating weights for these samples
-    gating_outputs = ops.tensordot(
-        test_features, dense_moe_layer.gating_kernel, axes=1
+    gating_layer = layers.Dense(
+        units=dense_moe_layer.n_experts,
+        activation=dense_moe_layer.gating_activation,
+        use_bias=dense_moe_layer.use_gating_bias,
     )
+    gating_layer.build(test_features.shape)
+    weights = [dense_moe_layer.gating_kernel]
     if dense_moe_layer.use_gating_bias:
-        gating_outputs = gating_outputs + dense_moe_layer.gating_bias
-    if dense_moe_layer.gating_activation is not None:
-        gating_weights = dense_moe_layer.gating_activation(gating_outputs)
-    else:
-        gating_weights = gating_outputs
+        weights.append(dense_moe_layer.gating_bias)
+    gating_layer.set_weights(weights)
+    gating_weights = gating_layer(test_features)
 
     # Convert to numpy for analysis
     gating_weights_np = ops.convert_to_numpy(gating_weights)
