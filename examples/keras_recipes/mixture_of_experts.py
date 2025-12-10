@@ -308,8 +308,7 @@ class Conv2DMoE(layers.Layer):
         if self.use_expert_bias:
             expert_outputs = expert_outputs + self.expert_bias
 
-        if self.expert_activation is not None:
-            expert_outputs = self.expert_activation(expert_outputs)
+        expert_outputs = self.expert_activation(expert_outputs)
 
         # Compute gating weights using 1x1 convolution
         # Shape: (batch, height, width, n_experts)
@@ -323,8 +322,7 @@ class Conv2DMoE(layers.Layer):
         if self.use_gating_bias:
             gating_outputs = gating_outputs + self.gating_bias
 
-        if self.gating_activation is not None:
-            gating_outputs = self.gating_activation(gating_outputs)
+        gating_outputs = self.gating_activation(gating_outputs)
 
         # Expand gating to broadcast with expert outputs
         # Shape: (batch, height, width, 1, n_experts)
