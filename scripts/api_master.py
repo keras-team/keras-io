@@ -616,6 +616,11 @@ API_MASTER = {
                                     "generate": ["keras.layers.Equalization"]
                                 },
                                 {
+                                    "path": "max_num_bounding_boxes",
+                                    "title": "MaxNumBoundingBoxes layer",
+                                    "generate": ["keras.layers.MaxNumBoundingBoxes"]
+                                },
+                                {
                                     "path": "mix_up",
                                     "title": "MixUp layer",
                                     "generate": ["keras.layers.MixUp"]
@@ -734,7 +739,7 @@ API_MASTER = {
                                     "path": "solarization",
                                     "title": "Solarization layer",
                                     "generate": ["keras.layers.Solarization"]
-                                }
+                                },
                             ]
                         },
                         {
@@ -747,11 +752,11 @@ API_MASTER = {
                                     "title": "MelSpectrogram layer",
                                     "generate": ["keras.layers.MelSpectrogram"],
                                 },
-                                # {
-                                #     "path": "stft_spectrogram",
-                                #     "title": "STFTSpectrogram layer",
-                                #     "generate": ["keras.layers.STFTSpectrogram"],
-                                # },
+                                {
+                                    "path": "stft_spectrogram",
+                                    "title": "STFTSpectrogram layer",
+                                    "generate": ["keras.layers.STFTSpectrogram"],
+                                },
                             ],
                         },
                     ],
@@ -780,6 +785,11 @@ API_MASTER = {
                             "path": "group_normalization",
                             "title": "GroupNormalization layer",
                             "generate": ["keras.layers.GroupNormalization"],
+                        },
+                        {
+                            "path": "rms_normalization",
+                            "title": "RMSNormalization layer",
+                            "generate": ["keras.layers.RMSNormalization"],
                         },
                     ],
                 },
@@ -1991,6 +2001,7 @@ API_MASTER = {
                         "keras.distribution.distribution",
                         "keras.distribution.list_devices",
                         "keras.distribution.initialize",
+                        # "keras.distribution.get_device_count",
                     ],
                 },
             ],
@@ -2019,6 +2030,55 @@ API_MASTER = {
                         "keras.random.shuffle",
                         "keras.random.truncated_normal",
                         "keras.random.uniform",
+                    ],
+                },
+            ],
+        },
+        {
+            "path": "quantizers/",
+            "title": "Quantizers",
+            "toc": True,
+            "generate": [
+                "keras.quantizers.Quantizer",
+            ],
+            "children": [
+                {
+                    "path": "quantizer_classes",
+                    "title": "Quantizer classes",
+                    "generate": [
+                        "keras.quantizers.Quantizer",
+                        "keras.quantizers.AbsMaxQuantizer",
+                    ],
+                },
+                {
+                    "path": "quantizer_utils",
+                    "title": "Quantizer utilities",
+                    "generate": [
+                        "keras.quantizers.abs_max_quantize",
+                        "keras.quantizers.compute_float8_amax_history",
+                        "keras.quantizers.compute_float8_scale",
+                        "keras.quantizers.deserialize",
+                        "keras.quantizers.fake_quant_with_min_max_vars",
+                        "keras.quantizers.get",
+                        "keras.quantizers.pack_int4",
+                        "keras.quantizers.quantize_and_dequantize",
+                        "keras.quantizers.serialize",
+                        "keras.quantizers.unpack_int4",
+                    ],
+                },
+            ],
+        },
+        {
+            "path": "scope/",
+            "title": "Scope",
+            "toc": True,
+            "children": [
+                {
+                    "path": "scope_classes",
+                    "title": "Scope classes",
+                    "generate": [
+                        "keras.SymbolicScope",
+                        "keras.StatelessScope",
                     ],
                 },
             ],
@@ -2073,9 +2133,9 @@ API_MASTER = {
                     "generate": [
                         "keras.utils.get_source_inputs",
                         "keras.utils.is_keras_tensor",
-                        # "keras.backend.standardize_dtype",  # TODO: enable later
-                        # "keras.backend.is_float_dtype",
-                        # "keras.backend.is_int_dtype",
+                        "keras.backend.is_float_dtype",
+                        "keras.backend.is_int_dtype",
+                        "keras.backend.standardize_dtype",
                     ],
                 },
                 {
