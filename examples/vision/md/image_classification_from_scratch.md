@@ -21,25 +21,22 @@ classification dataset.
 We use the `image_dataset_from_directory` utility to generate the datasets, and
 we use Keras image preprocessing layers for image standardization and data augmentation.
 
-"""
+
+---
 ## Prerequisites
 
 This example assumes familiarity with the following concepts:
 
-- **Basic Python programming and NumPy usage**
-  (general Python/NumPy skills; see also the Quick Keras Recipes example on
-  writing Keras models with TensorFlow NumPy:
-  https://keras.io/examples/keras_recipes/tensorflow_numpy_models/)
+- **Basic Python programming and NumPy usage**  
+  (general Python/NumPy skills; see also the  
+  [Quick Keras Recipes example on writing Keras models with TensorFlow NumPy](https://keras.io/examples/keras_recipes/tensorflow_numpy_models/))
 
-- **The Keras Functional API**
-  https://keras.io/guides/functional_api/
+- **[The Keras Functional API](https://keras.io/guides/functional_api/)**
 
-- **Training and evaluation with built-in methods (`compile`, `fit`, `evaluate`)**
-  https://keras.io/guides/training_with_built_in_methods/
+- **[Training and evaluation with built-in methods (`compile`, `fit`, `evaluate`)](https://keras.io/guides/training_with_built_in_methods/)**
 
-- **Basic convolutional neural network (CNN) concepts**
+- **Basic convolutional neural network (CNN) concepts**  
   (e.g., convolution, pooling, feature maps)
-"""
 
 ---
 ## Setup
