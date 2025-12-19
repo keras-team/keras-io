@@ -4,7 +4,7 @@ Author: [jeffcarp](https://www.jeffcarp.com/)
 Date created: 2025/12/18
 Last modified: 2025/12/18
 Description: Write high-performance custom Keras layers for TPUs and GPUs.
-Accelerator: TPU
+Accelerator: v5e-1 TPU
 """
 
 """
