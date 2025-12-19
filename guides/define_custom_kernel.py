@@ -47,6 +47,8 @@ add two vectors together.
 
 from functools import partial
 import os
+import time
+
 
 os.environ["KERAS_BACKEND"] = "jax"
 
@@ -129,13 +131,9 @@ here](https://docs.jax.dev/en/latest/pallas/grid_blockspec.html#blockspec-a-k-a-
 In this section, we'll take two operations that commonly appear together: a
 matrix multiplication (like in a `Dense` layer) and a ReLU activation. We will
 write a new op that fuses them together for better performance.
-"""
 
-"""
 ## Original Unoptimized Implementation
 """
-
-from keras import ops
 
 
 class StandardDenseReLU(keras.layers.Layer):
@@ -156,9 +154,9 @@ class StandardDenseReLU(keras.layers.Layer):
         # The standard implementation performs two separate operations.
         # Each one involves expensive data transfer with the main device memory (HBM).
         # 1. Matmul: inputs (HBM) -> compute -> intermediate (HBM)
-        y = ops.matmul(inputs, self.w)
+        y = keras.ops.matmul(inputs, self.w)
         # 2. ReLU: intermediate (HBM) -> compute -> output (HBM)
-        return ops.relu(y)
+        return keras.ops.relu(y)
 
 
 """
@@ -191,9 +189,9 @@ def matmul_relu_kernel(a_ref, b_ref, c_ref):
 Since the input matrices are usually too large to fit into VMEM, Pallas needs ot
 know how to "slice" them for loading from HBM to VMEM.
 
-We define this using `BlockSpec` - this tells the hardware: "Take a 128x128
-chunk of Matrix A and a 128x128 chunk of Matrix B to produce a tile of Matrix
-C."
+We define this using `BlockSpec` - this tells the hardware: "Take a 128-row
+chunk of Matrix A and a 128-column chunk of Matrix B to produce a 128x128 tile
+of Matrix C."
 """
 
 
@@ -261,12 +259,6 @@ FusedDense(256)(jnp.ones((256, 256)))
 """
 ## 4. Benchmarking the Speedup
 """
-
-import time
-import jax
-import jax.numpy as jnp
-import keras
-from keras import ops
 
 # 1. Setup Data
 N = 8192  # Large enough to be memory bound
@@ -336,7 +328,7 @@ through Pallas kernels. Without it, you might see an error like this:
 ```
 model = keras.Sequential([FusedDense(256)])
 model.compile(optimizer="adam", loss="mse")
-model.fit(jnp.ones((256, 256)), jnp.ones((256, 8)))
+model.fit(jnp.ones((256, 256)), jnp.ones((256, 256)))
 >>> Linearization failed to produce known values for all output primals. This is
 typically caused by attempting to differentiate a function uses an operation
 that does not support reverse-mode autodiff.
