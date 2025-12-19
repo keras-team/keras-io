@@ -13,9 +13,12 @@ Accelerator: TPU
 Keras has [many pre-made layers to choose from](/api/layers/), and the
 ability to easily [create your
 own](/guides/making_new_layers_and_models_via_subclassing/) if you can't
-find the exact one you need. However, if you need to customize memory and computation
-behavior at the hardware level, or you have a need for speed, you may be interested in
-writing your own custom kernel.
+find the exact one you need. However, if you have a need for speed, or otherwise
+need to customize the exact behavior of your model at the hardware level, you
+may want to look into writing a custom kernel. A good way to know if you need a
+custom kernel is to look at the profile of your model and see if there are any
+idle gaps caused by computation or memory transfer bottlenecks (see the
+[TensorBoard callback](/api/callbacks/tensorboard/) for how to get a profile).
 
 This guide will explore how to write a custom kernel and add it to your
 Keras model. We will utilize **Pallas**, a library that lets you write
@@ -35,16 +38,6 @@ https://storage.googleapis.com/jax-releases/libtpu_releases.html
 ```
 """
 
-"""
-# Simple Example
-"""
-
-"""
-Let's start with the example from the [Pallas
-quickstart](https://docs.jax.dev/en/latest/pallas/quickstart.html): a simple kernel to
-add two vectors together.
-"""
-
 from functools import partial
 import os
 import time
@@ -59,6 +52,14 @@ import keras
 
 assert keras.backend.backend() == "jax", "Must use JAX for this guide."
 
+
+"""
+# Simple Example
+
+Let's start with the example from the [Pallas
+quickstart](https://docs.jax.dev/en/latest/pallas/quickstart.html): a simple
+kernel to add two vectors together.
+"""
 
 def add_vectors_kernel(x_ref, y_ref, o_ref):
     """Pallas kernel for adding two vectors together."""
