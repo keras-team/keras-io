@@ -1,13 +1,15 @@
-"""
-Title: Define a Custom TPU/GPU Kernel
-Author: [jeffcarp](https://www.jeffcarp.com/)
-Date created: 2025/12/18
-Last modified: 2025/12/18
-Description: Write high-performance custom Keras layers for TPUs and GPUs.
-Accelerator: TPU
-"""
+# Define a Custom TPU/GPU Kernel
 
-"""
+**Author:** [jeffcarp](https://www.jeffcarp.com/)<br>
+**Date created:** 2025/12/18<br>
+**Last modified:** 2025/12/18<br>
+**Description:** Write high-performance custom Keras layers for TPUs and GPUs.
+
+
+<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/guides/ipynb/define_custom_kernel.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/guides/define_custom_kernel.py)
+
+
+
 # How to Write a Custom TPU or GPU Kernel in Keras
 
 Keras has [many pre-made layers to choose from](/api/layers/), and the
@@ -36,12 +38,14 @@ If you're running in Colab, the v5e-1 in the free tier supports running this
 guide.
 
 First, make sure you're running the latest version of `libtpu`:
-"""
 
-"""shell
-pip install --upgrade -q "jax[tpu]" -f https://storage.googleapis.com/jax-releases/libtpu_releases.html
-"""
 
+```python
+!pip install --upgrade -q "jax[tpu]" -f https://storage.googleapis.com/jax-releases/libtpu_releases.html
+```
+
+
+```python
 from functools import partial
 import os
 import time
@@ -54,26 +58,28 @@ from jax.experimental import pallas as pl
 import jax.numpy as jnp
 import keras
 
+```
 
-"""
 # Simple Example
 
 Let's start with the example from the [Pallas
 quickstart](https://docs.jax.dev/en/latest/pallas/quickstart.html): a simple
 kernel to add two vectors together.
-"""
 
+
+```python
 
 def add_vectors_kernel(x_ref, y_ref, o_ref):
     """Pallas kernel for adding two vectors together."""
     x, y = x_ref[...], y_ref[...]
     o_ref[...] = x + y
 
+```
 
-"""
 Now jit-compile the Pallas function into a function that can be used by JAX.
-"""
 
+
+```python
 
 @jax.jit
 def add_vectors(x: jax.Array, y: jax.Array) -> jax.Array:
@@ -83,12 +89,13 @@ def add_vectors(x: jax.Array, y: jax.Array) -> jax.Array:
 
 
 add_vectors(jnp.arange(8), jnp.arange(8))
+```
 
-"""
 Now we can embed the jitted `add_vectors` function containing the Pallas kernel into a
 Keras layer, just by calling it there.
-"""
 
+
+```python
 
 class PallasAddLayer(keras.Layer):
     def call(self, x, y):
@@ -102,13 +109,11 @@ x_data = jnp.arange(8, dtype=jnp.int32)
 y_data = jnp.arange(8, dtype=jnp.int32)
 
 layer(x_data, y_data)
+```
 
-"""
 That's how to integrate a Pallas kernel into a Keras layer! Now for a more
 in-depth example.
-"""
 
-"""
 # Writing a Fused Linear Activation Layer
 
 Some common reasons you might want to write a custom kernel is to take advantage of
@@ -136,9 +141,11 @@ In this section, we'll take two operations that commonly appear together: a
 matrix multiplication (like in a `Dense` layer) and a ReLU activation. We will
 write a new op that fuses them together for better performance.
 
+---
 ## Original Unoptimized Implementation
-"""
 
+
+```python
 
 class StandardDenseReLU(keras.layers.Layer):
     """Standard Matmul and ReLU implementation using keras.ops."""
@@ -162,14 +169,16 @@ class StandardDenseReLU(keras.layers.Layer):
         # 2. ReLU: intermediate (HBM) -> compute -> output (HBM)
         return keras.ops.relu(y)
 
+```
 
-"""
+---
 ## 1. Define the Fused Kernel
 
 First we create an inner kernel function that defines the fused computation that
 combines both matmul (`pl.dot`) and activation (`jnp.maximum`).
-"""
 
+
+```python
 import jax.numpy as jnp
 from jax.experimental import pallas as pl
 
@@ -186,8 +195,9 @@ def matmul_relu_kernel(a_ref, b_ref, c_ref):
     # Write the final result to the output reference
     c_ref[...] = result
 
+```
 
-"""
+---
 ## 2. Specify the Tiling (BlockSpec)
 
 Since the input matrices are usually too large to fit into VMEM, Pallas needs ot
@@ -196,8 +206,9 @@ know how to "slice" them for loading from HBM to VMEM.
 We define this using `BlockSpec` - this tells the hardware: "Take a 128-row
 chunk of Matrix A and a 128-column chunk of Matrix B to produce a 128x128 tile
 of Matrix C."
-"""
 
+
+```python
 
 @jax.jit
 def fused_matmul(a, b):
@@ -232,14 +243,16 @@ def fused_matmul(a, b):
 
 
 fused_matmul(jnp.ones((256, 256)), jnp.ones((256, 256)))
+```
 
-"""
+---
 ## 3. Integrating into a Keras Layer
 
 Now for the final step, call the jit-compiled `fused_matmul` kernel from a
 `keras.Layer`.
-"""
 
+
+```python
 
 class FusedDense(keras.layers.Layer):
     """Custom Keras layer that applies the fused Dense and ReLU op."""
@@ -259,11 +272,13 @@ class FusedDense(keras.layers.Layer):
 
 
 FusedDense(256)(jnp.ones((256, 256)))
+```
 
-"""
+---
 ## 4. Benchmarking the Speedup
-"""
 
+
+```python
 # 1. Setup Data
 N = 8192  # Large enough to be memory bound
 input_data = jnp.ones((N, N), dtype="float32")
@@ -296,8 +311,8 @@ print(f"Benchmarking Matrix Size: {N}x{N}\n" + "-" * 30)
 benchmark(standard_layer, input_data, "Standard Keras (Matmul + ReLU)")
 benchmark(pallas_layer, input_data, "Pallas Fused (Matmul + ReLU)")
 
+```
 
-"""
 ### Why this Works
 
 **Memory Bandwidth Efficiency:** By fusing the matrix multiplication and
@@ -311,9 +326,8 @@ cores (whether TPU MXUs or GPU Tensor Cores).
 **Drop-in Inference Speed:** This `FusedDense` kernel can be integrated into any
 Keras model, giving an example of improving serving/inference performance with
 minimal code changes.
-"""
 
-"""
+---
 ## 5. Enabling Training
 
 In order for a Pallas kernel to be trainable, you must also supply
@@ -331,8 +345,9 @@ that does not support reverse-mode autodiff.
 ```
 
 To extend our fused matmul example above:
-"""
 
+
+```python
 
 # 1. Define the wrapper with `custom_vjp` using our original `fused_matmul`.
 @jax.custom_vjp
@@ -383,8 +398,8 @@ class FusedDenseTrainable(FusedDense):
 model = keras.Sequential([FusedDenseTrainable(256)])
 model.compile(optimizer="adam", loss="mse")
 model.fit(jnp.ones((256, 256)), jnp.ones((256, 256)), batch_size=128)
+```
 
-"""
 # Followups
 
 In this guide we covered how to define a simple custom Pallas kernel performing vector
@@ -397,4 +412,3 @@ docs](https://docs.jax.dev/en/latest/pallas/index.html#) for further
 documentation on writing custom kernels. Additionally to explore more examples
 of Pallas kernels, including FlashAttention and MoE layers, check out the
 [Tokamax](https://github.com/openxla/tokamax) library.
-"""
