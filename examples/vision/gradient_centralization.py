@@ -123,6 +123,7 @@ test_ds = prepare(test_ds)
 In this section we will define a Convolutional neural network.
 """
 
+
 def make_model():
     return keras.Sequential(
         [
@@ -145,6 +146,7 @@ def make_model():
             layers.Dense(1, activation="sigmoid"),
         ]
     )
+
 
 """
 ## Implement Gradient Centralization
