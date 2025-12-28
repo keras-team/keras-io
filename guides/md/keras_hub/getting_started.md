@@ -1,6 +1,6 @@
 # Getting Started with KerasHub
 
-**Author:** [Matthew Watson](https://github.com/mattdangerw/), [Jonathan Bischof](https://github.com/jbischof)<br>
+**Author:** [Matthew Watson](https://github.com/mattdangerw/), [Jonathan Bischof](https://github.com/jbischof), [Ugeun Park](https://github.com/shashaka)<br>
 **Date created:** 2022/12/15<br>
 **Last modified:** 2024/10/17<br>
 **Description:** An introduction to the KerasHub API.
@@ -142,11 +142,22 @@ California Quail and classify it.
 
 ```python
 import keras
-import numpy as np
 import matplotlib.pyplot as plt
+import requests
+from pathlib import Path
 
 image_url = "https://upload.wikimedia.org/wikipedia/commons/a/aa/California_quail.jpg"
-image_path = keras.utils.get_file(origin=image_url)
+image_path = Path("california_quail.jpg")
+
+if not image_path.exists():
+    response = requests.get(
+        image_url,
+        headers={"User-Agent": "Mozilla/5.0"},
+        timeout=10,
+    )
+    response.raise_for_status()
+    image_path.write_bytes(response.content)
+
 image = keras.utils.load_img(image_path)
 plt.imshow(image)
 ```
