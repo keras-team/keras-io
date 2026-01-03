@@ -45,11 +45,10 @@ import os
 os.environ["KERAS_BACKEND"] = "tensorflow"
 
 import shutil
+import zipfile
 import numpy as np
-
 import tensorflow as tf
 import keras
-import zipfile
 from pathlib import Path
 from IPython.display import display, Audio
 
