@@ -49,17 +49,25 @@ import numpy as np
 
 import tensorflow as tf
 import keras
-
+import zipfile
 from pathlib import Path
 from IPython.display import display, Audio
 
-# Get the data from https://www.kaggle.com/kongaevans/speaker-recognition-dataset/
-# and save it to ./speaker-recognition-dataset.zip
-# then unzip it to ./16000_pcm_speeches
-"""shell
-kaggle datasets download -d kongaevans/speaker-recognition-dataset
-unzip -qq speaker-recognition-dataset.zip
-"""
+DATASET_ROOT = "16000_pcm_speeches"
+ZIP_FILE = "speaker-recognition-dataset.zip"
+
+# Check if we need to extract the dataset
+if not os.path.exists(DATASET_ROOT):
+    if os.path.exists(ZIP_FILE):
+        print(f"Extracting {ZIP_FILE}...")
+        with zipfile.ZipFile(ZIP_FILE, "r") as zip_ref:
+            zip_ref.extractall(DATASET_ROOT)
+        print("Extraction complete.")
+    else:
+        print(f"Dataset not found. Please download it from:")
+        print("https://www.kaggle.com/kongaevans/speaker-recognition-dataset")
+        print(f"Save it as '{ZIP_FILE}' in this directory and run again.")
+        exit()
 
 DATASET_ROOT = "16000_pcm_speeches"
 
