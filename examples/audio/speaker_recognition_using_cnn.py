@@ -55,19 +55,23 @@ from IPython.display import display, Audio
 DATASET_ROOT = "16000_pcm_speeches"
 ZIP_FILE = "speaker-recognition-dataset.zip"
 
-# Check if we need to extract the dataset
-if not os.path.exists(DATASET_ROOT):
-    if os.path.exists(ZIP_FILE):
+DATASET_ROOT = Path("16000_pcm_speeches")
+ZIP_FILE = Path("speaker-recognition-dataset.zip")
+
+# Check if the dataset is already extracted
+if not DATASET_ROOT.exists():
+    # Check if the zip file is present
+    if ZIP_FILE.exists():
         print(f"Extracting {ZIP_FILE}...")
         with zipfile.ZipFile(ZIP_FILE, "r") as zip_ref:
             zip_ref.extractall(DATASET_ROOT)
         print("Extraction complete.")
     else:
+        # If neither exists, guide the user
         print(f"Dataset not found. Please download it from:")
         print("https://www.kaggle.com/kongaevans/speaker-recognition-dataset")
         print(f"Save it as '{ZIP_FILE}' in this directory and run again.")
         exit()
-
 DATASET_ROOT = "16000_pcm_speeches"
 
 # The folders in which we will put the audio samples and the noise samples
