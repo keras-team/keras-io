@@ -5,11 +5,6 @@
 **Last modified:** 2025/12/18<br>
 **Description:** Write high-performance custom Keras layers for TPUs and GPUs.
 
-
-<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/guides/ipynb/define_custom_kernel.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/guides/define_custom_kernel.py)
-
-
-
 # How to Write a Custom TPU or GPU Kernel in Keras
 
 Keras has [many pre-made layers to choose from](/api/layers/), and the
@@ -44,6 +39,9 @@ First, make sure you're running the latest version of `libtpu`:
 !pip install --upgrade -q "jax[tpu]" -f https://storage.googleapis.com/jax-releases/libtpu_releases.html
 ```
 
+    [33mDEPRECATION: The HTML index page being used (https://storage.googleapis.com/jax-releases/libtpu_releases.html) is not a proper HTML 5 document. This is in violation of PEP 503 which requires these pages to be well-formed HTML 5 documents. Please reach out to the owners of this index page, and ask them to update this index page to a valid HTML 5 document. pip 22.2 will enforce this behaviour change. Discussion can be found at https://github.com/pypa/pip/issues/10825[0m[33m
+    [0m
+
 
 ```python
 from functools import partial
@@ -59,6 +57,10 @@ import jax.numpy as jnp
 import keras
 
 ```
+
+    /home/jeffcarp/.local/lib/python3.10/site-packages/jax/_src/cloud_tpu_init.py:84: UserWarning: Transparent hugepages are not enabled. TPU runtime startup and shutdown time should be significantly improved on TPU v5e and newer. If not already set, you may need to enable transparent hugepages in your VM image (sudo sh -c "echo always > /sys/kernel/mm/transparent_hugepage/enabled")
+      warnings.warn(
+
 
 # Simple Example
 
@@ -91,6 +93,13 @@ def add_vectors(x: jax.Array, y: jax.Array) -> jax.Array:
 add_vectors(jnp.arange(8), jnp.arange(8))
 ```
 
+
+
+
+    Array([ 0,  2,  4,  6,  8, 10, 12, 14], dtype=int32)
+
+
+
 Now we can embed the jitted `add_vectors` function containing the Pallas kernel into a
 Keras layer, just by calling it there.
 
@@ -110,6 +119,13 @@ y_data = jnp.arange(8, dtype=jnp.int32)
 
 layer(x_data, y_data)
 ```
+
+
+
+
+    Array([ 0,  2,  4,  6,  8, 10, 12, 14], dtype=int32)
+
+
 
 That's how to integrate a Pallas kernel into a Keras layer! Now for a more
 in-depth example.
@@ -141,7 +157,6 @@ In this section, we'll take two operations that commonly appear together: a
 matrix multiplication (like in a `Dense` layer) and a ReLU activation. We will
 write a new op that fuses them together for better performance.
 
----
 ## Original Unoptimized Implementation
 
 
@@ -171,7 +186,6 @@ class StandardDenseReLU(keras.layers.Layer):
 
 ```
 
----
 ## 1. Define the Fused Kernel
 
 First we create an inner kernel function that defines the fused computation that
@@ -197,7 +211,6 @@ def matmul_relu_kernel(a_ref, b_ref, c_ref):
 
 ```
 
----
 ## 2. Specify the Tiling (BlockSpec)
 
 Since the input matrices are usually too large to fit into VMEM, Pallas needs ot
@@ -245,7 +258,19 @@ def fused_matmul(a, b):
 fused_matmul(jnp.ones((256, 256)), jnp.ones((256, 256)))
 ```
 
----
+
+
+
+    Array([[256., 256., 256., ..., 256., 256., 256.],
+           [256., 256., 256., ..., 256., 256., 256.],
+           [256., 256., 256., ..., 256., 256., 256.],
+           ...,
+           [256., 256., 256., ..., 256., 256., 256.],
+           [256., 256., 256., ..., 256., 256., 256.],
+           [256., 256., 256., ..., 256., 256., 256.]], dtype=float32)
+
+
+
 ## 3. Integrating into a Keras Layer
 
 Now for the final step, call the jit-compiled `fused_matmul` kernel from a
@@ -274,7 +299,19 @@ class FusedDense(keras.layers.Layer):
 FusedDense(256)(jnp.ones((256, 256)))
 ```
 
----
+
+
+
+    Array([[0., 0., 0., ..., 0., 0., 0.],
+           [0., 0., 0., ..., 0., 0., 0.],
+           [0., 0., 0., ..., 0., 0., 0.],
+           ...,
+           [0., 0., 0., ..., 0., 0., 0.],
+           [0., 0., 0., ..., 0., 0., 0.],
+           [0., 0., 0., ..., 0., 0., 0.]], dtype=float32)
+
+
+
 ## 4. Benchmarking the Speedup
 
 
@@ -313,6 +350,16 @@ benchmark(pallas_layer, input_data, "Pallas Fused (Matmul + ReLU)")
 
 ```
 
+    Benchmarking Matrix Size: 8192x8192
+    ------------------------------
+
+
+    Standard Keras (Matmul + ReLU) Average Latency: 7.787 ms
+
+
+    Pallas Fused (Matmul + ReLU) Average Latency: 34.997 ms
+
+
 ### Why this Works
 
 **Memory Bandwidth Efficiency:** By fusing the matrix multiplication and
@@ -327,7 +374,6 @@ cores (whether TPU MXUs or GPU Tensor Cores).
 Keras model, giving an example of improving serving/inference performance with
 minimal code changes.
 
----
 ## 5. Enabling Training
 
 In order for a Pallas kernel to be trainable, you must also supply
@@ -399,6 +445,18 @@ model = keras.Sequential([FusedDenseTrainable(256)])
 model.compile(optimizer="adam", loss="mse")
 model.fit(jnp.ones((256, 256)), jnp.ones((256, 256)), batch_size=128)
 ```
+
+    [1m1/2[0m [32m━━━━━━━━━━[0m[37m━━━━━━━━━━[0m [1m0s[0m 258ms/step - loss: 0.7593
+
+    [1m2/2[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m0s[0m 66ms/step - loss: 0.7040 
+
+
+
+
+
+    <keras.src.callbacks.history.History at 0x7fbf4c866500>
+
+
 
 # Followups
 
