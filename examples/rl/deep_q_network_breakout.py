@@ -58,7 +58,7 @@ import keras
 from keras import layers
 
 import gymnasium as gym
-from gymnasium.wrappers import AtariPreprocessing, FrameStack
+from gymnasium.wrappers import AtariPreprocessing, FrameStackObservation
 import numpy as np
 import tensorflow as tf
 
@@ -72,7 +72,7 @@ epsilon_interval = (
     epsilon_max - epsilon_min
 )  # Rate at which to reduce chance of random action being taken
 batch_size = 32  # Size of batch taken from replay buffer
-max_steps_per_episode = 10000
+max_steps_per_episode = 100
 max_episodes = 10  # Limit training episodes, will run until solved if smaller than 1
 
 # Use the Atari environment
@@ -81,7 +81,7 @@ env = gym.make("BreakoutNoFrameskip-v4")  # , render_mode="human")
 # Environment preprocessing
 env = AtariPreprocessing(env)
 # Stack four frames
-env = FrameStack(env, 4)
+env = FrameStackObservation(env, stack_size=4)
 env.seed(seed)
 """
 ## Implement the Deep Q-Network
@@ -148,7 +148,7 @@ epsilon_random_frames = 50000
 epsilon_greedy_frames = 1000000.0
 # Maximum replay length
 # Note: The Deepmind paper suggests 1000000 however this causes memory issues
-max_memory_length = 100000
+max_memory_length = 2000
 # Train the model after 4 actions
 update_after_actions = 4
 # How often to update the target network
