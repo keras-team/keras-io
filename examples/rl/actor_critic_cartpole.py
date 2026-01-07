@@ -103,8 +103,8 @@ while True:  # Run until solved
     with tf.GradientTape() as tape:
         for timestep in range(1, max_steps_per_episode):
 
-            state = tf.convert_to_tensor(obs)
-            state = tf.expand_dims(state, 0)
+            state = ops.convert_to_tensor(obs)
+            state = ops.expand_dims(state, 0)
 
             # Predict action probabilities and estimated future rewards
             # from environment state
