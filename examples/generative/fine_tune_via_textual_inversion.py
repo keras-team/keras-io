@@ -170,12 +170,12 @@ Let's try this out with some sample images and prompts.
 """
 
 train_ds = assemble_dataset(
-    urls=[
-        "https://i.imgur.com/VIedH1X.jpg",
-        "https://i.imgur.com/eBw13hE.png",
-        "https://i.imgur.com/oJ3rSg7.png",
-        "https://i.imgur.com/5mCL6Df.jpg",
-        "https://i.imgur.com/4Q6WWyI.jpg",
+   urls=[
+        "https://huggingface.co/datasets/diffusers/cat_toy_example/resolve/main/1.jpeg",
+        "https://huggingface.co/datasets/diffusers/cat_toy_example/resolve/main/2.jpeg",
+        "https://huggingface.co/datasets/diffusers/cat_toy_example/resolve/main/3.jpeg",
+        "https://huggingface.co/datasets/diffusers/cat_toy_example/resolve/main/4.jpeg",
+        "https://huggingface.co/datasets/diffusers/cat_toy_example/resolve/main/1.jpeg", 
     ],
     prompts=[
         "a photo of a {}",
@@ -232,12 +232,12 @@ Keeping this in mind, we assemble our final training dataset below:
 """
 
 single_ds = assemble_dataset(
-    urls=[
-        "https://i.imgur.com/VIedH1X.jpg",
-        "https://i.imgur.com/eBw13hE.png",
-        "https://i.imgur.com/oJ3rSg7.png",
-        "https://i.imgur.com/5mCL6Df.jpg",
-        "https://i.imgur.com/4Q6WWyI.jpg",
+  urls=[
+        "https://huggingface.co/datasets/diffusers/cat_toy_example/resolve/main/1.jpeg",
+        "https://huggingface.co/datasets/diffusers/cat_toy_example/resolve/main/2.jpeg",
+        "https://huggingface.co/datasets/diffusers/cat_toy_example/resolve/main/3.jpeg",
+        "https://huggingface.co/datasets/diffusers/cat_toy_example/resolve/main/4.jpeg",
+        "https://huggingface.co/datasets/diffusers/cat_toy_example/resolve/main/1.jpeg", 
     ],
     prompts=[
         "a photo of a {}",
@@ -278,9 +278,9 @@ Next, we assemble a dataset of groups of our GitHub avatars:
 
 group_ds = assemble_dataset(
     urls=[
-        "https://i.imgur.com/yVmZ2Qa.jpg",
-        "https://i.imgur.com/JbyFbZJ.jpg",
-        "https://i.imgur.com/CCubd3q.jpg",
+        "https://huggingface.co/datasets/diffusers/cat_toy_example/resolve/main/6.jpeg",
+        "https://huggingface.co/datasets/diffusers/cat_toy_example/resolve/main/7.jpeg",
+        "https://huggingface.co/datasets/diffusers/cat_toy_example/resolve/main/3.jpeg", 
     ],
     prompts=[
         "a photo of a group of {}",
