@@ -303,3 +303,8 @@ probabilities = end_to_end_model(
 )
 
 print(class_names[np.argmax(probabilities[0])])
+
+"""
+## Relevant Chapters
+- [Chapter 14: Text classification](https://deeplearningwithpython.io/chapters/chapter14_text-classification)
+"""

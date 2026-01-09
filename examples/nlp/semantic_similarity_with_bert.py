@@ -395,3 +395,9 @@ Example available on HuggingFace
 | :--: | :--: |
 | [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Model-semantic%20similarity%20with%20bert-black.svg)](https://huggingface.co/keras-io/bert-semantic-similarity) | [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Spaces-semantic%20similarity%20with%20bert-black.svg)](https://huggingface.co/spaces/keras-io/bert-semantic-similarity) |
 """
+
+"""
+## Relevant Chapters
+- [Chapter 14: Text classification](https://deeplearningwithpython.io/chapters/chapter14_text-classification)
+- [Chapter 15: Language models and the Transformer](https://deeplearningwithpython.io/chapters/chapter15_language-models-and-the-transformer)
+"""

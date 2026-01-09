@@ -670,3 +670,8 @@ overall accuracy (drop of 0.75%).
 | **Validation Accuracy** |        85.21%       |           86.42%           |
 |    **Test Accuracy**    |        83.94%       |           84.69%           |
 |       **#Params**       |      2,321,921      |          2,520,065         |
+
+
+## Relevant Chapters
+- [Chapter 14: Text classification](https://deeplearningwithpython.io/chapters/chapter14_text-classification)
+- [Chapter 15: Language models and the Transformer](https://deeplearningwithpython.io/chapters/chapter15_language-models-and-the-transformer)

@@ -1657,3 +1657,6 @@ end_to_end_classification_model.evaluate(test_raw_classifier_ds)
 
 ```
 </div>
+
+## Relevant Chapters
+- [Chapter 15: Language models and the Transformer](https://deeplearningwithpython.io/chapters/chapter15_language-models-and-the-transformer)

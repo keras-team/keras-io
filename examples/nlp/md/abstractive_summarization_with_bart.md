@@ -424,3 +424,8 @@ Ground Truth Summary: b'Jude is coming to Warsaw on the 10th of December and wan
 </div>
 The generated summaries look awesome! Not bad for a model trained only for 1
 epoch and on 5000 examples :)
+
+
+## Relevant Chapters
+- [Chapter 15: Language models and the Transformer](https://deeplearningwithpython.io/chapters/chapter15_language-models-and-the-transformer)
+- [Chapter 16: Text generation](https://deeplearningwithpython.io/chapters/chapter16_text-generation)

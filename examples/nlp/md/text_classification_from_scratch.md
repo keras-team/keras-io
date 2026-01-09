@@ -391,3 +391,6 @@ end_to_end_model.evaluate(raw_test_ds)
 
 ```
 </div>
+
+## Relevant Chapters
+- [Chapter 14: Text classification](https://deeplearningwithpython.io/chapters/chapter14_text-classification)

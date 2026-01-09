@@ -578,3 +578,6 @@ comp.graphics
 
 ```
 </div>
+
+## Relevant Chapters
+- [Chapter 14: Text classification](https://deeplearningwithpython.io/chapters/chapter14_text-classification)

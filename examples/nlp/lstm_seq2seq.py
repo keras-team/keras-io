@@ -272,3 +272,9 @@ for seq_index in range(20):
     print("-")
     print("Input sentence:", input_texts[seq_index])
     print("Decoded sentence:", decoded_sentence)
+
+"""
+## Relevant Chapters
+- [Chapter 15: Language models and the Transformer](https://deeplearningwithpython.io/chapters/chapter15_language-models-and-the-transformer)
+- [Chapter 16: Text generation](https://deeplearningwithpython.io/chapters/chapter16_text-generation)
+"""

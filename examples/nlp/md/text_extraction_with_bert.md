@@ -449,3 +449,7 @@ epoch=1, exact match score=0.78
 
 ```
 </div>
+
+
+## Relevant Chapters
+- [Chapter 15: Language models and the Transformer](https://deeplearningwithpython.io/chapters/chapter15_language-models-and-the-transformer)
