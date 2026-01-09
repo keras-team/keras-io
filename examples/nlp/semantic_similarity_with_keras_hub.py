@@ -321,3 +321,9 @@ text, including pretrained state-of-the-art models and low-level Transformer Enc
 layers. We believe that this makes experimenting with natural language solutions
 more accessible and efficient.
 """
+
+"""
+## Relevant Chapters
+- [Chapter 14: Text classification](https://deeplearningwithpython.io/chapters/chapter14_text-classification)
+- [Chapter 15: Language models and the Transformer](https://deeplearningwithpython.io/chapters/chapter15_language-models-and-the-transformer)
+"""

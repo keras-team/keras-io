@@ -887,3 +887,7 @@ HF](https://twitter.com/johnowhitaker/status/1689790373454041089?s=20)
 [Train]](https://www.kaggle.com/code/awsaf49/birdclef23-pretraining-is-all-you-need-train)
 * [Triple Stratified KFold with
 TFRecords](https://www.kaggle.com/code/cdeotte/triple-stratified-kfold-with-tfrecords)
+
+---
+## Relevant Chapters
+- [Chapter 14: Text classification](https://deeplearningwithpython.io/chapters/chapter14_text-classification)

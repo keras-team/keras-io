@@ -503,3 +503,9 @@ After 10 epochs, the scores are as follows:
 |   **Recall**  |    0.615    |    0.394    |
 |  **F1 Score** |    0.579    |    0.381    |
 """
+
+"""
+## Relevant Chapters
+- [Chapter 15: Language models and the Transformer](https://deeplearningwithpython.io/chapters/chapter15_language-models-and-the-transformer)
+- [Chapter 16: Text generation](https://deeplearningwithpython.io/chapters/chapter16_text-generation)
+"""

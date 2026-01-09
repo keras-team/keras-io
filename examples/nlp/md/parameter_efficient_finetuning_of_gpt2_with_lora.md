@@ -859,3 +859,8 @@ Total Time Elapsed: 0.32s
 ```
 </div>
 And we're all done!
+
+---
+## Relevant Chapters
+- [Chapter 16: Text generation](https://deeplearningwithpython.io/chapters/chapter16_text-generation)
+- [Chapter 18: Best practices for the real world](https://deeplearningwithpython.io/chapters/chapter18_best-practices-for-the-real-world)

@@ -1618,3 +1618,7 @@ open source libraries/implementations, you can refer to the resources below:
 1. [Active Learning Literature Survey](http://burrsettles.com/pub/settles.activelearning.pdf) (Burr Settles, 2010).
 2. [modAL](https://github.com/modAL-python/modAL): A Modular Active Learning framework.
 3. Google's unofficial [Active Learning playground](https://github.com/google/active-learning).
+
+---
+## Relevant Chapters
+- [Chapter 14: Text classification](https://deeplearningwithpython.io/chapters/chapter14_text-classification)
