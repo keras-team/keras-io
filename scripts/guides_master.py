@@ -143,7 +143,14 @@ GUIDES_MASTER = {
         {
             "path": "writing_quantization_compatible_layers",
             "title": "Writing quantization-compatible layers in Keras",
+        },
+        {
+            "path": "customizing_quantization",
+            "title": "Customizing quantization in Keras",
         }
+            "path": "define_custom_kernel",
+            "title": "Define a Custom TPU/GPU Kernel",
+        },
         # {
         #     "path": "preprocessing_layers",
         #     "title": "Working with preprocessing layers",
