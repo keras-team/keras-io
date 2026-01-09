@@ -41,48 +41,6 @@ model = keras.Model(inputs, outputs)
 model.summary()
 ```
 
-
-<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold">Model: "functional_1"</span>
-</pre>
-
-
-
-
-<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━┓
-┃<span style="font-weight: bold"> Layer (type)                    </span>┃<span style="font-weight: bold"> Output Shape              </span>┃<span style="font-weight: bold">    Param # </span>┃
-┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━┩
-│ input_layer (<span style="color: #0087ff; text-decoration-color: #0087ff">InputLayer</span>)        │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>)              │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │
-├─────────────────────────────────┼───────────────────────────┼────────────┤
-│ embedding (<span style="color: #0087ff; text-decoration-color: #0087ff">Embedding</span>)           │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">128</span>)         │  <span style="color: #00af00; text-decoration-color: #00af00">2,560,000</span> │
-├─────────────────────────────────┼───────────────────────────┼────────────┤
-│ bidirectional (<span style="color: #0087ff; text-decoration-color: #0087ff">Bidirectional</span>)   │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">128</span>)         │     <span style="color: #00af00; text-decoration-color: #00af00">98,816</span> │
-├─────────────────────────────────┼───────────────────────────┼────────────┤
-│ bidirectional_1 (<span style="color: #0087ff; text-decoration-color: #0087ff">Bidirectional</span>) │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">128</span>)               │     <span style="color: #00af00; text-decoration-color: #00af00">98,816</span> │
-├─────────────────────────────────┼───────────────────────────┼────────────┤
-│ dense (<span style="color: #0087ff; text-decoration-color: #0087ff">Dense</span>)                   │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>)                 │        <span style="color: #00af00; text-decoration-color: #00af00">129</span> │
-└─────────────────────────────────┴───────────────────────────┴────────────┘
-</pre>
-
-
-
-
-<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Total params: </span><span style="color: #00af00; text-decoration-color: #00af00">2,757,761</span> (10.52 MB)
-</pre>
-
-
-
-
-<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Trainable params: </span><span style="color: #00af00; text-decoration-color: #00af00">2,757,761</span> (10.52 MB)
-</pre>
-
-
-
-
-<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Non-trainable params: </span><span style="color: #00af00; text-decoration-color: #00af00">0</span> (0.00 B)
-</pre>
-
-
-
 ---
 ## Load the IMDB movie review sentiment data
 
@@ -99,15 +57,6 @@ x_train = keras.utils.pad_sequences(x_train, maxlen=maxlen)
 x_val = keras.utils.pad_sequences(x_val, maxlen=maxlen)
 ```
 
-<div class="k-default-codeblock">
-```
-Downloading data from https://storage.googleapis.com/tensorflow/tf-keras-datasets/imdb.npz
- 17464789/17464789 ━━━━━━━━━━━━━━━━━━━━ 0s 0us/step
-25000 Training sequences
-25000 Validation sequences
-
-```
-</div>
 ---
 ## Train and evaluate the model
 
@@ -120,17 +69,6 @@ model.compile(optimizer="adam", loss="binary_crossentropy", metrics=["accuracy"]
 model.fit(x_train, y_train, batch_size=32, epochs=2, validation_data=(x_val, y_val))
 ```
 
-<div class="k-default-codeblock">
-```
-Epoch 1/2
- 782/782 ━━━━━━━━━━━━━━━━━━━━ 61s 75ms/step - accuracy: 0.7540 - loss: 0.4697 - val_accuracy: 0.8269 - val_loss: 0.4202
-Epoch 2/2
- 782/782 ━━━━━━━━━━━━━━━━━━━━ 54s 69ms/step - accuracy: 0.9151 - loss: 0.2263 - val_accuracy: 0.8428 - val_loss: 0.3650
-
-<keras.src.callbacks.history.History at 0x7f3efd663850>
-
-```
-</div>
-
+---
 ## Relevant Chapters
 - [Chapter 14: Text classification](https://deeplearningwithpython.io/chapters/chapter14_text-classification)

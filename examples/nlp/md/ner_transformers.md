@@ -35,30 +35,6 @@ We also download the script used to evaluate NER models.
 !wget https://raw.githubusercontent.com/sighsmile/conlleval/master/conlleval.py
 ```
 
-<div class="k-default-codeblock">
-```
-Resolving raw.githubusercontent.com (raw.githubusercontent.com)... 185.199.108.133, 185.199.110.133, 185.199.111.133, ...
-Connecting to raw.githubusercontent.com (raw.githubusercontent.com)|185.199.108.133|:443... connected.
-HTTP request sent, awaiting response... 200 OK
-Length: 7502 (7.3K) [text/plain]
-Saving to: ‘conlleval.py’
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-conlleval.py        100%[===================>]   7.33K  --.-KB/s    in 0s      
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-2023-11-10 16:58:25 (217 MB/s) - ‘conlleval.py’ saved [7502/7502]
-```
-</div>
-    
-
-
 
 ```python
 import os
@@ -222,12 +198,6 @@ mapping = make_tag_lookup_table()
 print(mapping)
 ```
 
-<div class="k-default-codeblock">
-```
-{0: '[PAD]', 1: 'O', 2: 'B-PER', 3: 'I-PER', 4: 'B-ORG', 5: 'I-ORG', 6: 'B-LOC', 7: 'I-LOC', 8: 'B-MISC', 9: 'I-MISC'}
-
-```
-</div>
 Get a list of all tokens in the training dataset. This will be used to create the
 vocabulary.
 
@@ -251,12 +221,6 @@ vocabulary = [token for token, count in counter.most_common(vocab_size - 2)]
 lookup_layer = keras.layers.StringLookup(vocabulary=vocabulary)
 ```
 
-<div class="k-default-codeblock">
-```
-21009
-
-```
-</div>
 Create 2 new `Dataset` objects from the training and validation data
 
 
@@ -273,12 +237,6 @@ After that we will have all the tokens followed by all the ner tags.
 print(list(train_data.take(1).as_numpy_iterator()))
 ```
 
-<div class="k-default-codeblock">
-```
-[b'9\tEU\trejects\tGerman\tcall\tto\tboycott\tBritish\tlamb\t.\t3\t0\t7\t0\t0\t0\t7\t0\t0']
-
-```
-</div>
 We will be using the following map function to transform the data in the dataset:
 
 
@@ -368,34 +326,6 @@ prediction = [mapping[i] for i in prediction]
 print(prediction)
 ```
 
-<div class="k-default-codeblock">
-```
-Epoch 1/10
- 439/439 ━━━━━━━━━━━━━━━━━━━━ 300s 671ms/step - loss: 0.9260
-Epoch 2/10
- 439/439 ━━━━━━━━━━━━━━━━━━━━ 1s 3ms/step - loss: 0.2909
-Epoch 3/10
- 439/439 ━━━━━━━━━━━━━━━━━━━━ 1s 3ms/step - loss: 0.1589
-Epoch 4/10
- 439/439 ━━━━━━━━━━━━━━━━━━━━ 1s 3ms/step - loss: 0.1176
-Epoch 5/10
- 439/439 ━━━━━━━━━━━━━━━━━━━━ 1s 3ms/step - loss: 0.0941
-Epoch 6/10
- 439/439 ━━━━━━━━━━━━━━━━━━━━ 1s 3ms/step - loss: 0.0747
-Epoch 7/10
- 439/439 ━━━━━━━━━━━━━━━━━━━━ 1s 3ms/step - loss: 0.0597
-Epoch 8/10
- 439/439 ━━━━━━━━━━━━━━━━━━━━ 1s 3ms/step - loss: 0.0534
-Epoch 9/10
- 439/439 ━━━━━━━━━━━━━━━━━━━━ 1s 3ms/step - loss: 0.0459
-Epoch 10/10
- 439/439 ━━━━━━━━━━━━━━━━━━━━ 1s 3ms/step - loss: 0.0408
-tf.Tensor([[  988 10950   204   628     6  3938   215  5773]], shape=(1, 8), dtype=int64)
- 1/1 ━━━━━━━━━━━━━━━━━━━━ 1s 600ms/step
-['B-ORG', 'O', 'B-MISC', 'O', 'O', 'O', 'B-MISC', 'O']
-
-```
-</div>
 ---
 ## Metrics calculation
 
@@ -434,18 +364,6 @@ def calculate_metrics(dataset):
 calculate_metrics(val_dataset)
 ```
 
-<div class="k-default-codeblock">
-```
-processed 51362 tokens with 5942 phrases; found: 5659 phrases; correct: 3941.
-accuracy:  64.49%; (non-O)
-accuracy:  93.23%; precision:  69.64%; recall:  66.32%; FB1:  67.94
-              LOC: precision:  82.77%; recall:  79.26%; FB1:  80.98  1759
-             MISC: precision:  74.94%; recall:  68.11%; FB1:  71.36  838
-              ORG: precision:  55.94%; recall:  65.32%; FB1:  60.27  1566
-              PER: precision:  65.57%; recall:  53.26%; FB1:  58.78  1496
-
-```
-</div>
 ---
 ## Conclusions
 
@@ -459,6 +377,9 @@ You can use the trained model hosted on [Hugging Face Hub](https://huggingface.c
 and try the demo on [Hugging Face Spaces](https://huggingface.co/spaces/keras-io/ner_with_transformers)."""
 
 
+```python
+---
 ## Relevant Chapters
 - [Chapter 14: Text classification](https://deeplearningwithpython.io/chapters/chapter14_text-classification)
 - [Chapter 15: Language models and the Transformer](https://deeplearningwithpython.io/chapters/chapter15_language-models-and-the-transformer)
+```

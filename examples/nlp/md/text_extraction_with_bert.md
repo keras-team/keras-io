@@ -3,12 +3,12 @@
 **Author:** [Apoorv Nandan](https://twitter.com/NandanApoorv)<br>
 **Date created:** 2020/05/23<br>
 **Last modified:** 2020/05/23<br>
+**Description:** Fine tune pretrained BERT from HuggingFace Transformers on SQuAD.
 
 
 <img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/nlp/ipynb/text_extraction_with_bert.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/nlp/text_extraction_with_bert.py)
 
 
-**Description:** Fine tune pretrained BERT from HuggingFace Transformers on SQuAD.
 
 ---
 ## Introduction
@@ -35,10 +35,10 @@ We fine-tune a BERT model to perform this task as follows:
 
 **References:**
 
-- [BERT](https://arxiv.org/pdf/1810.04805.pdf)
+- [BERT](https://arxiv.org/abs/1810.04805)
 - [SQuAD](https://arxiv.org/abs/1606.05250)
 
-
+---
 ## Setup
 
 
@@ -56,12 +56,10 @@ from transformers import BertTokenizer, TFBertModel, BertConfig
 
 max_len = 384
 configuration = BertConfig()  # default parameters and configuration for BERT
-
 ```
 
 ---
 ## Set-up BERT tokenizer
-
 
 
 ```python
@@ -74,12 +72,10 @@ slow_tokenizer.save_pretrained(save_path)
 
 # Load the fast tokenizer from saved file
 tokenizer = BertWordPieceTokenizer("bert_base_uncased/vocab.txt", lowercase=True)
-
 ```
 
 ---
 ## Load the data
-
 
 
 ```python
@@ -87,7 +83,6 @@ train_data_url = "https://rajpurkar.github.io/SQuAD-explorer/dataset/train-v1.1.
 train_path = keras.utils.get_file("train.json", train_data_url)
 eval_data_url = "https://rajpurkar.github.io/SQuAD-explorer/dataset/dev-v1.1.json"
 eval_path = keras.utils.get_file("eval.json", eval_data_url)
-
 ```
 
 ---
@@ -95,7 +90,6 @@ eval_path = keras.utils.get_file("eval.json", eval_data_url)
 
 1. Go through the JSON file and store every record as a `SquadExample` object.
 2. Go through each `SquadExample` and create `x_train, y_train, x_eval, y_eval`.
-
 
 
 ```python
@@ -233,18 +227,9 @@ print(f"{len(train_squad_examples)} training points created.")
 eval_squad_examples = create_squad_examples(raw_eval_data)
 x_eval, y_eval = create_inputs_targets(eval_squad_examples)
 print(f"{len(eval_squad_examples)} evaluation points created.")
-
 ```
 
-<div class="k-default-codeblock">
-```
-87599 training points created.
-10570 evaluation points created.
-
-```
-</div>
 Create the Question-Answering Model using BERT and Functional API
-
 
 
 ```python
@@ -279,12 +264,10 @@ def create_model():
     model.compile(optimizer=optimizer, loss=[loss, loss])
     return model
 
-
 ```
 
 This code should preferably be run on Google Colab TPU runtime.
 With Colab TPUs, each epoch will take 5-6 minutes.
-
 
 
 ```python
@@ -301,64 +284,13 @@ else:
     model = create_model()
 
 model.summary()
-
 ```
 
-<div class="k-default-codeblock">
-```
-INFO:absl:Entering into master device scope: /job:worker/replica:0/task:0/device:CPU:0
-
-INFO:tensorflow:Initializing the TPU system: grpc://10.48.159.170:8470
-
-INFO:tensorflow:Clearing out eager caches
-
-INFO:tensorflow:Finished initializing TPU system.
-
-INFO:tensorflow:Found TPU system:
-
-INFO:tensorflow:*** Num TPU Cores: 8
-
-INFO:tensorflow:*** Num TPU Workers: 1
-
-INFO:tensorflow:*** Num TPU Cores Per Worker: 8
-
-Model: "model"
-__________________________________________________________________________________________________
-Layer (type)                    Output Shape         Param #     Connected to                     
-==================================================================================================
-input_1 (InputLayer)            [(None, 384)]        0                                            
-__________________________________________________________________________________________________
-input_3 (InputLayer)            [(None, 384)]        0                                            
-__________________________________________________________________________________________________
-input_2 (InputLayer)            [(None, 384)]        0                                            
-__________________________________________________________________________________________________
-tf_bert_model (TFBertModel)     ((None, 384, 768), ( 109482240   input_1[0][0]                    
-__________________________________________________________________________________________________
-start_logit (Dense)             (None, 384, 1)       768         tf_bert_model[0][0]              
-__________________________________________________________________________________________________
-end_logit (Dense)               (None, 384, 1)       768         tf_bert_model[0][0]              
-__________________________________________________________________________________________________
-flatten (Flatten)               (None, 384)          0           start_logit[0][0]                
-__________________________________________________________________________________________________
-flatten_1 (Flatten)             (None, 384)          0           end_logit[0][0]                  
-__________________________________________________________________________________________________
-activation_7 (Activation)       (None, 384)          0           flatten[0][0]                    
-__________________________________________________________________________________________________
-activation_8 (Activation)       (None, 384)          0           flatten_1[0][0]                  
-==================================================================================================
-Total params: 109,483,776
-Trainable params: 109,483,776
-Non-trainable params: 0
-__________________________________________________________________________________________________
-
-```
-</div>
 ---
 ## Create evaluation Callback
 
 This callback will compute the exact match score using the validation data
 after every epoch.
-
 
 
 ```python
@@ -418,12 +350,10 @@ class ExactMatch(keras.callbacks.Callback):
         acc = count / len(self.y_eval[0])
         print(f"\nepoch={epoch+1}, exact match score={acc:.2f}")
 
-
 ```
 
 ---
 ## Train and Evaluate
-
 
 
 ```python
@@ -436,20 +366,8 @@ model.fit(
     batch_size=64,
     callbacks=[exact_match_callback],
 )
-
 ```
 
-<div class="k-default-codeblock">
-```
-
-epoch=1, exact match score=0.78
-1346/1346 - 350s - activation_7_loss: 1.3488 - loss: 2.5905 - activation_8_loss: 1.2417
-
-<tensorflow.python.keras.callbacks.History at 0x7fc78b4458d0>
-
-```
-</div>
-
-
+---
 ## Relevant Chapters
 - [Chapter 15: Language models and the Transformer](https://deeplearningwithpython.io/chapters/chapter15_language-models-and-the-transformer)

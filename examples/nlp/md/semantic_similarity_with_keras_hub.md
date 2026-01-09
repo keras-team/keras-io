@@ -45,6 +45,7 @@ give us a particularly fast train step below.
 !pip install -q --upgrade keras  # Upgrade to Keras 3.
 ```
 
+
 ```python
 import numpy as np
 import tensorflow as tf
@@ -52,11 +53,7 @@ import keras
 import keras_hub
 import tensorflow_datasets as tfds
 ```
-<div class="k-default-codeblock">
-```
 
-```
-</div>
 To load the SNLI dataset, we use the tensorflow-datasets library, which
 contains over 550,000 samples in total. However, to ensure that this example runs
 quickly, we use only 20% of the training samples.
@@ -87,26 +84,6 @@ sample = snli_test.batch(4).take(1).get_single_element()
 sample
 ```
 
-
-
-
-<div class="k-default-codeblock">
-```
-{'hypothesis': <tf.Tensor: shape=(4,), dtype=string, numpy=
- array([b'A girl is entertaining on stage',
-        b'A group of people posing in front of a body of water.',
-        b"The group of people aren't inide of the building.",
-        b'The people are taking a carriage ride.'], dtype=object)>,
- 'label': <tf.Tensor: shape=(4,), dtype=int64, numpy=array([0, 0, 0, 0])>,
- 'premise': <tf.Tensor: shape=(4,), dtype=string, numpy=
- array([b'A girl in a blue leotard hula hoops on a stage with balloon shapes in the background.',
-        b'A group of people taking pictures on a walkway in front of a large body of water.',
-        b'Many people standing outside of a place talking to each other in front of a building that has a sign that says "HI-POINTE."',
-        b'Three people are riding a carriage pulled by four horses.'],
-       dtype=object)>}
-
-```
-</div>
 ### Preprocessing
 
 In our dataset, we have identified that some samples have missing or incorrectly labeled
@@ -186,14 +163,6 @@ instantiated by calling the `fit()` method.
 bert_classifier.fit(train_ds, validation_data=val_ds, epochs=1)
 ```
 
-<div class="k-default-codeblock">
-```
- 6867/6867 ━━━━━━━━━━━━━━━━━━━━ 61s 8ms/step - loss: 0.8732 - sparse_categorical_accuracy: 0.5864 - val_loss: 0.5900 - val_sparse_categorical_accuracy: 0.7602
-
-<keras.src.callbacks.history.History at 0x7f4660171fc0>
-
-```
-</div>
 Our BERT classifier achieved an accuracy of around 76% on the validation split. Now,
 let's evaluate its performance on the test split.
 
@@ -204,14 +173,6 @@ let's evaluate its performance on the test split.
 bert_classifier.evaluate(test_ds)
 ```
 
-<div class="k-default-codeblock">
-```
- 614/614 ━━━━━━━━━━━━━━━━━━━━ 2s 3ms/step - loss: 0.5815 - sparse_categorical_accuracy: 0.7628
-
-[0.5895748734474182, 0.7618078589439392]
-
-```
-</div>
 Our baseline BERT model achieved a similar accuracy of around 76% on the test split.
 Now, let's try to improve its performance by recompiling the model with a slightly
 higher learning rate.
@@ -231,15 +192,6 @@ bert_classifier.fit(train_ds, validation_data=val_ds, epochs=1)
 bert_classifier.evaluate(test_ds)
 ```
 
-<div class="k-default-codeblock">
-```
- 6867/6867 ━━━━━━━━━━━━━━━━━━━━ 59s 8ms/step - accuracy: 0.6007 - loss: 0.8636 - val_accuracy: 0.7648 - val_loss: 0.5800
- 614/614 ━━━━━━━━━━━━━━━━━━━━ 2s 3ms/step - accuracy: 0.7700 - loss: 0.5692
-
-[0.578984260559082, 0.7686278820037842]
-
-```
-</div>
 Just tweaking the learning rate alone was not enough to boost performance, which
 stayed right around 76%. Let's try again, but this time with
 `keras.optimizers.AdamW`, and a learning rate schedule.
@@ -292,19 +244,6 @@ bert_classifier.compile(
 bert_classifier.fit(train_ds, validation_data=val_ds, epochs=epochs)
 ```
 
-<div class="k-default-codeblock">
-```
-Epoch 1/3
- 6867/6867 ━━━━━━━━━━━━━━━━━━━━ 59s 8ms/step - accuracy: 0.5457 - loss: 0.9317 - val_accuracy: 0.7633 - val_loss: 0.5825
-Epoch 2/3
- 6867/6867 ━━━━━━━━━━━━━━━━━━━━ 55s 8ms/step - accuracy: 0.7291 - loss: 0.6515 - val_accuracy: 0.7809 - val_loss: 0.5399
-Epoch 3/3
- 6867/6867 ━━━━━━━━━━━━━━━━━━━━ 55s 8ms/step - accuracy: 0.7708 - loss: 0.5695 - val_accuracy: 0.7918 - val_loss: 0.5214
-
-<keras.src.callbacks.history.History at 0x7f45645b3370>
-
-```
-</div>
 Success! With the learning rate scheduler and the `AdamW` optimizer, our validation
 accuracy improved to around 79%.
 
@@ -315,14 +254,6 @@ Now, let's evaluate our final model on the test set and see how it performs.
 bert_classifier.evaluate(test_ds)
 ```
 
-<div class="k-default-codeblock">
-```
- 614/614 ━━━━━━━━━━━━━━━━━━━━ 2s 3ms/step - accuracy: 0.7956 - loss: 0.5128
-
-[0.5245093703269958, 0.7890879511833191]
-
-```
-</div>
 Our Tiny BERT model achieved an accuracy of approximately 79% on the test set
 with the use of a learning rate scheduler. This is a significant improvement over
 our previous results. Fine-tuning a pretrained BERT
@@ -342,14 +273,6 @@ restored_model = keras.models.load_model("bert_classifier.keras")
 restored_model.evaluate(test_ds)
 ```
 
-<div class="k-default-codeblock">
-```
- 614/614 ━━━━━━━━━━━━━━━━━━━━ 2s 3ms/step - loss: 0.5128 - sparse_categorical_accuracy: 0.7956
-
-[0.5245093703269958, 0.7890879511833191]
-
-```
-</div>
 ---
 ## Performing inference with the model.
 
@@ -362,25 +285,6 @@ sample = (sample["hypothesis"], sample["premise"])
 sample
 ```
 
-
-
-
-<div class="k-default-codeblock">
-```
-(<tf.Tensor: shape=(4,), dtype=string, numpy=
- array([b'A girl is entertaining on stage',
-        b'A group of people posing in front of a body of water.',
-        b"The group of people aren't inide of the building.",
-        b'The people are taking a carriage ride.'], dtype=object)>,
- <tf.Tensor: shape=(4,), dtype=string, numpy=
- array([b'A girl in a blue leotard hula hoops on a stage with balloon shapes in the background.',
-        b'A group of people taking pictures on a walkway in front of a large body of water.',
-        b'Many people standing outside of a place talking to each other in front of a building that has a sign that says "HI-POINTE."',
-        b'Three people are riding a carriage pulled by four horses.'],
-       dtype=object)>)
-
-```
-</div>
 The default preprocessor in KerasHub models handles input tokenization automatically,
 so we don't need to perform tokenization explicitly.
 
@@ -397,12 +301,6 @@ def softmax(x):
 predictions = softmax(predictions)
 ```
 
-<div class="k-default-codeblock">
-```
- 1/1 ━━━━━━━━━━━━━━━━━━━━ 1s 711ms/step
-
-```
-</div>
 ---
 ## Improving accuracy with RoBERTa
 
@@ -422,15 +320,6 @@ roberta_classifier.fit(train_ds, validation_data=val_ds, epochs=1)
 roberta_classifier.evaluate(test_ds)
 ```
 
-<div class="k-default-codeblock">
-```
- 6867/6867 ━━━━━━━━━━━━━━━━━━━━ 2049s 297ms/step - loss: 0.5509 - sparse_categorical_accuracy: 0.7740 - val_loss: 0.3292 - val_sparse_categorical_accuracy: 0.8789
- 614/614 ━━━━━━━━━━━━━━━━━━━━ 56s 88ms/step - loss: 0.3307 - sparse_categorical_accuracy: 0.8784
-
-[0.33771008253097534, 0.874796450138092]
-
-```
-</div>
 The RoBERTa base model has significantly more trainable parameters than the BERT
 Tiny model, with almost 30 times as many at 124,645,635 parameters. As a result, it took
 approximately 1.5 hours to train on a P100 GPU. However, the performance
@@ -447,13 +336,6 @@ predictions = roberta_classifier.predict(sample)
 print(tf.math.argmax(predictions, axis=1).numpy())
 ```
 
-<div class="k-default-codeblock">
-```
- 1/1 ━━━━━━━━━━━━━━━━━━━━ 4s 4s/step
-[0 0 0 0]
-
-```
-</div>
 We hope this tutorial has been helpful in demonstrating the ease and effectiveness
 of using KerasHub and BERT for semantic similarity tasks.
 
@@ -466,7 +348,7 @@ text, including pretrained state-of-the-art models and low-level Transformer Enc
 layers. We believe that this makes experimenting with natural language solutions
 more accessible and efficient.
 
-
+---
 ## Relevant Chapters
 - [Chapter 14: Text classification](https://deeplearningwithpython.io/chapters/chapter14_text-classification)
 - [Chapter 15: Language models and the Transformer](https://deeplearningwithpython.io/chapters/chapter15_language-models-and-the-transformer)

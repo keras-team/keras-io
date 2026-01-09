@@ -107,16 +107,6 @@ for _ in range(5):
     print(random.choice(text_pairs))
 ```
 
-<div class="k-default-codeblock">
-```
-('The trouble is that we have nowhere to stay tonight.', '[start] El problema es que no tenemos donde quedarnos esta noche. [end]')
-("I want to help you, but I can't.", '[start] Quiero ayudarte, pero no puedo. [end]')
-('I can help.', '[start] Yo puedo ayudar. [end]')
-('Tom fed his dog table scraps.', '[start] Tom alimentó a su perro con sobras de la mesa. [end]')
-('Tom never eats junk food.', '[start] Tom nunca come comida chatarra. [end]')
-
-```
-</div>
 Now, let's split the sentence pairs into a training set, a validation set,
 and a test set.
 
@@ -135,15 +125,6 @@ print(f"{len(val_pairs)} validation pairs")
 print(f"{len(test_pairs)} test pairs")
 ```
 
-<div class="k-default-codeblock">
-```
-118964 total pairs
-83276 training pairs
-17844 validation pairs
-17844 test pairs
-
-```
-</div>
 ---
 ## Vectorizing the text data
 
@@ -248,14 +229,6 @@ for inputs, targets in train_ds.take(1):
     print(f"targets.shape: {targets.shape}")
 ```
 
-<div class="k-default-codeblock">
-```
-inputs["encoder_inputs"].shape: (64, 20)
-inputs["decoder_inputs"].shape: (64, 20)
-targets.shape: (64, 20)
-
-```
-</div>
 ---
 ## Building the model
 
@@ -489,74 +462,6 @@ transformer.compile(
 transformer.fit(train_ds, epochs=epochs, validation_data=val_ds)
 ```
 
-
-<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold">Model: "transformer"</span>
-</pre>
-
-
-
-
-<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">┏━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━┓
-┃<span style="font-weight: bold"> Layer (type)        </span>┃<span style="font-weight: bold"> Output Shape      </span>┃<span style="font-weight: bold">    Param # </span>┃<span style="font-weight: bold"> Connected to      </span>┃
-┡━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━┩
-│ encoder_inputs      │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>)      │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ -                 │
-│ (<span style="color: #0087ff; text-decoration-color: #0087ff">InputLayer</span>)        │                   │            │                   │
-├─────────────────────┼───────────────────┼────────────┼───────────────────┤
-│ decoder_inputs      │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>)      │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ -                 │
-│ (<span style="color: #0087ff; text-decoration-color: #0087ff">InputLayer</span>)        │                   │            │                   │
-├─────────────────────┼───────────────────┼────────────┼───────────────────┤
-│ positional_embeddi… │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">256</span>) │  <span style="color: #00af00; text-decoration-color: #00af00">3,845,120</span> │ encoder_inputs[<span style="color: #00af00; text-decoration-color: #00af00">0</span>… │
-│ (<span style="color: #0087ff; text-decoration-color: #0087ff">PositionalEmbeddi…</span> │                   │            │                   │
-├─────────────────────┼───────────────────┼────────────┼───────────────────┤
-│ not_equal           │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>)      │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ encoder_inputs[<span style="color: #00af00; text-decoration-color: #00af00">0</span>… │
-│ (<span style="color: #0087ff; text-decoration-color: #0087ff">NotEqual</span>)          │                   │            │                   │
-├─────────────────────┼───────────────────┼────────────┼───────────────────┤
-│ positional_embeddi… │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">256</span>) │  <span style="color: #00af00; text-decoration-color: #00af00">3,845,120</span> │ decoder_inputs[<span style="color: #00af00; text-decoration-color: #00af00">0</span>… │
-│ (<span style="color: #0087ff; text-decoration-color: #0087ff">PositionalEmbeddi…</span> │                   │            │                   │
-├─────────────────────┼───────────────────┼────────────┼───────────────────┤
-│ transformer_encoder │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">256</span>) │  <span style="color: #00af00; text-decoration-color: #00af00">3,155,456</span> │ positional_embed… │
-│ (<span style="color: #0087ff; text-decoration-color: #0087ff">TransformerEncode…</span> │                   │            │ not_equal[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>]   │
-├─────────────────────┼───────────────────┼────────────┼───────────────────┤
-│ not_equal_1         │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>)      │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ decoder_inputs[<span style="color: #00af00; text-decoration-color: #00af00">0</span>… │
-│ (<span style="color: #0087ff; text-decoration-color: #0087ff">NotEqual</span>)          │                   │            │                   │
-├─────────────────────┼───────────────────┼────────────┼───────────────────┤
-│ transformer_decoder │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">256</span>) │  <span style="color: #00af00; text-decoration-color: #00af00">5,259,520</span> │ positional_embed… │
-│ (<span style="color: #0087ff; text-decoration-color: #0087ff">TransformerDecode…</span> │                   │            │ transformer_enco… │
-│                     │                   │            │ not_equal_1[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>… │
-│                     │                   │            │ not_equal[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>]   │
-├─────────────────────┼───────────────────┼────────────┼───────────────────┤
-│ dropout_3 (<span style="color: #0087ff; text-decoration-color: #0087ff">Dropout</span>) │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">256</span>) │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ transformer_deco… │
-├─────────────────────┼───────────────────┼────────────┼───────────────────┤
-│ dense_4 (<span style="color: #0087ff; text-decoration-color: #0087ff">Dense</span>)     │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>,      │  <span style="color: #00af00; text-decoration-color: #00af00">3,855,000</span> │ dropout_3[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>]   │
-│                     │ <span style="color: #00af00; text-decoration-color: #00af00">15000</span>)            │            │                   │
-└─────────────────────┴───────────────────┴────────────┴───────────────────┘
-</pre>
-
-
-
-
-<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Total params: </span><span style="color: #00af00; text-decoration-color: #00af00">19,960,216</span> (76.14 MB)
-</pre>
-
-
-
-
-<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Trainable params: </span><span style="color: #00af00; text-decoration-color: #00af00">19,960,216</span> (76.14 MB)
-</pre>
-
-
-
-
-<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Non-trainable params: </span><span style="color: #00af00; text-decoration-color: #00af00">0</span> (0.00 B)
-</pre>
-
-
-
-<div class="k-default-codeblock">
-```
-<keras.src.callbacks.history.History at 0x7ffae0753a60>
-```
-</div>
 ---
 ## Decoding test sentences
 
@@ -622,7 +527,7 @@ After 30 epochs, we get results such as:
 > My hotel told me to call you.
 > [start] mi hotel me dijo que te [UNK] [end]
 
-
+---
 ## Relevant Chapters
 - [Chapter 15: Language models and the Transformer](https://deeplearningwithpython.io/chapters/chapter15_language-models-and-the-transformer)
 - [Chapter 16: Text generation](https://deeplearningwithpython.io/chapters/chapter16_text-generation)

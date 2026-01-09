@@ -93,14 +93,6 @@ text_file = keras.utils.get_file(
 text_file = pathlib.Path(text_file) / "spa-eng" / "spa.txt"
 ```
 
-<div class="k-default-codeblock">
-```
-Downloading data from http://storage.googleapis.com/download.tensorflow.org/data/spa-eng.zip
-
-2638744/2638744 ━━━━━━━━━━━━━━━━━━━━ 0s 0us/step
-```
-</div>
-
 ---
 ## Parsing the data
 
@@ -128,16 +120,6 @@ for _ in range(5):
     print(random.choice(text_pairs))
 ```
 
-<div class="k-default-codeblock">
-```
-('i went to bed a little earlier than usual.', 'me fui a la cama un poco antes de lo habitual.')
-('she trusted you.', 'ella confiaba en ti.')
-('tom is more intelligent than i am.', 'tom es más inteligente que yo.')
-('he kept on smoking all the time.', 'seguía fumando todo el tiempo.')
-("it's two miles from here to the station.", 'son dos millas de aquí a la estación.')
-```
-</div>
-
 Now, let's split the sentence pairs into a training set, a validation set,
 and a test set.
 
@@ -156,15 +138,6 @@ print(f"{len(val_pairs)} validation pairs")
 print(f"{len(test_pairs)} test pairs")
 
 ```
-
-<div class="k-default-codeblock">
-```
-118964 total pairs
-83276 training pairs
-17844 validation pairs
-17844 test pairs
-```
-</div>
 
 ---
 ## Tokenizing the data
@@ -225,13 +198,6 @@ print("English Tokens: ", eng_vocab[100:110])
 print("Spanish Tokens: ", spa_vocab[100:110])
 ```
 
-<div class="k-default-codeblock">
-```
-English Tokens:  ['him', 'there', 'they', 'go', 'her', 'has', 're', 'will', 'time', 'll']
-Spanish Tokens:  ['le', 'qué', 'ella', 'te', 'para', 'mary', 'las', 'más', 'al', 'yo']
-```
-</div>
-
 Now, let's define the tokenizers. We will configure the tokenizers with the
 the vocabularies trained above.
 
@@ -271,18 +237,6 @@ print(
     spa_tokenizer.detokenize(spa_tokens_ex),
 )
 ```
-
-<div class="k-default-codeblock">
-```
-English sentence:  do you need a ride?
-Tokens:  tf.Tensor([  75   66  145   26 1075   25], shape=(6,), dtype=int32)
-Recovered text after detokenizing:  do you need a ride ?
-
-Spanish sentence:  ¿necesitas que te lleven?
-Tokens:  tf.Tensor([  63  592   80  103 2994  128   29], shape=(7,), dtype=int32)
-Recovered text after detokenizing:  ¿ necesitas que te lleven ?
-```
-</div>
 
 ---
 ## Format datasets
@@ -363,14 +317,6 @@ for inputs, targets in train_ds.take(1):
     print(f"targets.shape: {targets.shape}")
 
 ```
-
-<div class="k-default-codeblock">
-```
-inputs["encoder_inputs"].shape: (64, 40)
-inputs["decoder_inputs"].shape: (64, 40)
-targets.shape: (64, 40)
-```
-</div>
 
 ---
 ## Building the model
@@ -471,62 +417,6 @@ transformer.compile(
 transformer.fit(train_ds, epochs=EPOCHS, validation_data=val_ds)
 ```
 
-
-<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold">Model: "transformer"</span>
-</pre>
-
-
-
-
-<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">┏━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━┓
-┃<span style="font-weight: bold"> Layer (type)        </span>┃<span style="font-weight: bold"> Output Shape      </span>┃<span style="font-weight: bold">    Param # </span>┃<span style="font-weight: bold"> Connected to      </span>┃
-┡━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━┩
-│ encoder_inputs      │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>)      │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ -                 │
-│ (<span style="color: #0087ff; text-decoration-color: #0087ff">InputLayer</span>)        │                   │            │                   │
-├─────────────────────┼───────────────────┼────────────┼───────────────────┤
-│ token_and_position… │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">256</span>) │  <span style="color: #00af00; text-decoration-color: #00af00">3,850,240</span> │ encoder_inputs[<span style="color: #00af00; text-decoration-color: #00af00">0</span>… │
-│ (<span style="color: #0087ff; text-decoration-color: #0087ff">TokenAndPositionE…</span> │                   │            │                   │
-├─────────────────────┼───────────────────┼────────────┼───────────────────┤
-│ decoder_inputs      │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>)      │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ -                 │
-│ (<span style="color: #0087ff; text-decoration-color: #0087ff">InputLayer</span>)        │                   │            │                   │
-├─────────────────────┼───────────────────┼────────────┼───────────────────┤
-│ transformer_encoder │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">256</span>) │  <span style="color: #00af00; text-decoration-color: #00af00">1,315,072</span> │ token_and_positi… │
-│ (<span style="color: #0087ff; text-decoration-color: #0087ff">TransformerEncode…</span> │                   │            │                   │
-├─────────────────────┼───────────────────┼────────────┼───────────────────┤
-│ functional_1        │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>,      │  <span style="color: #00af00; text-decoration-color: #00af00">9,283,992</span> │ decoder_inputs[<span style="color: #00af00; text-decoration-color: #00af00">0</span>… │
-│ (<span style="color: #0087ff; text-decoration-color: #0087ff">Functional</span>)        │ <span style="color: #00af00; text-decoration-color: #00af00">15000</span>)            │            │ transformer_enco… │
-└─────────────────────┴───────────────────┴────────────┴───────────────────┘
-</pre>
-
-
-
-
-<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Total params: </span><span style="color: #00af00; text-decoration-color: #00af00">14,449,304</span> (55.12 MB)
-</pre>
-
-
-
-
-<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Trainable params: </span><span style="color: #00af00; text-decoration-color: #00af00">14,449,304</span> (55.12 MB)
-</pre>
-
-
-
-
-<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Non-trainable params: </span><span style="color: #00af00; text-decoration-color: #00af00">0</span> (0.00 B)
-</pre>
-
-
-
-    
-<div class="k-default-codeblock">
-```
-1302/1302 ━━━━━━━━━━━━━━━━━━━━ 688s 527ms/step - accuracy: 0.8385 - loss: 1.1014 - val_accuracy: 0.8661 - val_loss: 0.8040
-
-<keras.src.callbacks.history.History at 0x3520df0d0>
-```
-</div>
-
 ---
 ## Decoding test sentences (qualitative analysis)
 
@@ -597,23 +487,6 @@ for i in range(2):
     print()
 ```
 
-<div class="k-default-codeblock">
-```
-WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
-I0000 00:00:1761330728.196220 3674624 service.cc:152] XLA service 0x600002a54000 initialized for platform Host (this does not guarantee that XLA will be used). Devices:
-I0000 00:00:1761330728.196232 3674624 service.cc:160]   StreamExecutor device (0): Host, Default Version
-I0000 00:00:1761330728.304584 3674624 device_compiler.h:188] Compiled cluster using XLA!  This line is logged at most once for the lifetime of the process.
-
-** Example 0 **
-tom used to play the piano professionally.
-tom se a la fiesta de la vida .
-
-** Example 1 **
-i had to leave boston.
-tuve que ir a boston .
-```
-</div>
-
 ---
 ## Evaluating our model (quantitative analysis)
 
@@ -650,13 +523,6 @@ print("ROUGE-1 Score: ", rouge_1.result())
 print("ROUGE-2 Score: ", rouge_2.result())
 ```
 
-<div class="k-default-codeblock">
-```
-ROUGE-1 Score:  {'precision': <tf.Tensor: shape=(), dtype=float32, numpy=0.3267246186733246>, 'recall': <tf.Tensor: shape=(), dtype=float32, numpy=0.3378041982650757>, 'f1_score': <tf.Tensor: shape=(), dtype=float32, numpy=0.320748895406723>}
-ROUGE-2 Score:  {'precision': <tf.Tensor: shape=(), dtype=float32, numpy=0.0940079391002655>, 'recall': <tf.Tensor: shape=(), dtype=float32, numpy=0.10507937520742416>, 'f1_score': <tf.Tensor: shape=(), dtype=float32, numpy=0.09657182544469833>}
-```
-</div>
-
 After 10 epochs, the scores are as follows:
 
 |               | **ROUGE-1** | **ROUGE-2** |
@@ -665,7 +531,7 @@ After 10 epochs, the scores are as follows:
 |   **Recall**  |    0.615    |    0.394    |
 |  **F1 Score** |    0.579    |    0.381    |
 
-
+---
 ## Relevant Chapters
 - [Chapter 15: Language models and the Transformer](https://deeplearningwithpython.io/chapters/chapter15_language-models-and-the-transformer)
 - [Chapter 16: Text generation](https://deeplearningwithpython.io/chapters/chapter16_text-generation)

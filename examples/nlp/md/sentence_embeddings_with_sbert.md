@@ -160,56 +160,6 @@ for x, y in stsb_train:
     break
 ```
 
-<div class="k-default-codeblock">
-```
-sentence 1 : b"A young girl is sitting on Santa's lap." 
-sentence 2 : b"A little girl is sitting on Santa's lap" 
-similarity : [0.9200001] 
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-sentence 1 : b'A women sitting at a table drinking with a basketball picture in the background.' 
-sentence 2 : b'A woman in a sari drinks something while sitting at a table.' 
-similarity : [0.03999996] 
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-sentence 1 : b'Norway marks anniversary of massacre' 
-sentence 2 : b"Norway Marks Anniversary of Breivik's Massacre" 
-similarity : [0.52] 
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-sentence 1 : b'US drone kills six militants in Pakistan: officials' 
-sentence 2 : b'US missiles kill 15 in Pakistan: officials' 
-similarity : [-0.03999996] 
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-sentence 1 : b'On Tuesday, the central bank left interest rates steady, as expected, but also declared that overall risks were weighted toward weakness and warned of deflation risks.' 
-sentence 2 : b"The central bank's policy board left rates steady for now, as widely expected, but surprised the market by declaring that overall risks were weighted toward weakness." 
-similarity : [0.6] 
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-sentence 1 : b'At one of the three sampling sites at Huntington Beach, the bacteria reading came back at 160 on June 16 and at 120 on June 23.' 
-sentence 2 : b'The readings came back at 160 on June 16 and 120 at June 23 at one of three sampling sites at Huntington Beach.' 
-similarity : [0.29999995] 
-```
-</div>
-    
-
-
 #### Build the encoder model.
 
 Now, we'll build the encoder model that will produce the sentence embeddings. It consists
@@ -238,53 +188,6 @@ roberta_normal_encoder = keras.Model(inputs=inputs, outputs=n_embedding)
 
 roberta_normal_encoder.summary()
 ```
-
-
-<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold">Model: "functional_1"</span>
-</pre>
-
-
-
-
-<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">┏━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━┓
-┃<span style="font-weight: bold"> Layer (type)        </span>┃<span style="font-weight: bold"> Output Shape      </span>┃<span style="font-weight: bold"> Param # </span>┃<span style="font-weight: bold"> Connected to         </span>┃
-┡━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━┩
-│ sentence            │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>)         │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ -                    │
-│ (<span style="color: #0087ff; text-decoration-color: #0087ff">InputLayer</span>)        │                   │         │                      │
-├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
-│ roberta_preprocess… │ [(<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">512</span>),     │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ sentence[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>]       │
-│ (<span style="color: #0087ff; text-decoration-color: #0087ff">RobertaPreprocess…</span> │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">512</span>)]      │         │                      │
-├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
-│ roberta_backbone    │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">512</span>, <span style="color: #00af00; text-decoration-color: #00af00">768</span>)  │ <span style="color: #00af00; text-decoration-color: #00af00">124,05…</span> │ roberta_preprocesso… │
-│ (<span style="color: #0087ff; text-decoration-color: #0087ff">RobertaBackbone</span>)   │                   │         │ roberta_preprocesso… │
-├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
-│ pooling_layer       │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">768</span>)       │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ roberta_backbone[<span style="color: #00af00; text-decoration-color: #00af00">0</span>]… │
-│ (<span style="color: #0087ff; text-decoration-color: #0087ff">GlobalAveragePool…</span> │                   │         │ roberta_preprocesso… │
-├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
-│ unit_normalization  │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">768</span>)       │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ pooling_layer[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>]  │
-│ (<span style="color: #0087ff; text-decoration-color: #0087ff">UnitNormalization</span>) │                   │         │                      │
-└─────────────────────┴───────────────────┴─────────┴──────────────────────┘
-</pre>
-
-
-
-
-<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Total params: </span><span style="color: #00af00; text-decoration-color: #00af00">124,052,736</span> (473.22 MB)
-</pre>
-
-
-
-
-<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Trainable params: </span><span style="color: #00af00; text-decoration-color: #00af00">124,052,736</span> (473.22 MB)
-</pre>
-
-
-
-
-<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Non-trainable params: </span><span style="color: #00af00; text-decoration-color: #00af00">0</span> (0.00 B)
-</pre>
-
-
 
 #### Build the Siamese network with the regression objective function.
 
@@ -344,14 +247,6 @@ for i, sim in enumerate(cosine_similarity_scores[0]):
     print(f"cosine similarity score between sentence {i+1} and the query = {sim} ")
 ```
 
-<div class="k-default-codeblock">
-```
-cosine similarity score between sentence 1 and the query = 0.96630859375 
-cosine similarity score between sentence 2 and the query = 0.97607421875 
-cosine similarity score between sentence 3 and the query = 0.99365234375 
-
-```
-</div>
 For the training we will use `MeanSquaredError()` as loss function, and `Adam()`
 optimizer with learning rate = 2e-5.
 
@@ -368,14 +263,6 @@ roberta_regression_siamese.compile(
 roberta_regression_siamese.fit(stsb_train, validation_data=stsb_valid, epochs=1)
 ```
 
-<div class="k-default-codeblock">
-```
- 300/300 ━━━━━━━━━━━━━━━━━━━━ 115s 297ms/step - loss: 0.4751 - val_loss: 0.4025
-
-<keras.src.callbacks.history.History at 0x7f5a78392140>
-
-```
-</div>
 Let's try the model after training, we will notice a huge difference in the output. That
 means that the model after fine-tuning is capable of producing semantically meaningful
 embeddings. where the semantically similar sentences have a small angle between them. and
@@ -400,14 +287,6 @@ for i, sim in enumerate(cosine_simalarities[0]):
     print(f"cosine similarity between sentence {i+1} and the query = {sim} ")
 ```
 
-<div class="k-default-codeblock">
-```
-cosine similarity between sentence 1 and the query = 0.10986328125 
-cosine similarity between sentence 2 and the query = 0.53466796875 
-cosine similarity between sentence 3 and the query = 0.83544921875 
-
-```
-</div>
 ### Fine-tune Using the triplet Objective Function
 
 For the Siamese network with the triplet objective function, three sentences are passed
@@ -432,6 +311,7 @@ example, we will only use 1200 triplets for training and 300 for testing.
 !wget https://sbert.net/datasets/wikipedia-sections-triplets.zip -q
 !unzip wikipedia-sections-triplets.zip  -d  wikipedia-sections-triplets
 ```
+
 
 ```python
 NUM_TRAIN_BATCHES = 200
@@ -463,16 +343,7 @@ wiki_test = tf.data.experimental.make_csv_dataset(
 wiki_train = prepare_wiki_data(wiki_train, NUM_TRAIN_BATCHES)
 wiki_test = prepare_wiki_data(wiki_test, NUM_TEST_BATCHES)
 ```
-<div class="k-default-codeblock">
-```
-Archive:  wikipedia-sections-triplets.zip
-  inflating: wikipedia-sections-triplets/validation.csv  
-  inflating: wikipedia-sections-triplets/Readme.txt  
-  inflating: wikipedia-sections-triplets/test.csv  
-  inflating: wikipedia-sections-triplets/train.csv  
 
-```
-</div>
 #### Build the encoder model
 
 For this encoder model, we will use RoBERTa with mean pooling and we will not normalize
@@ -500,50 +371,6 @@ roberta_encoder = keras.Model(inputs=input, outputs=embedding)
 
 roberta_encoder.summary()
 ```
-
-
-<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold">Model: "functional_3"</span>
-</pre>
-
-
-
-
-<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">┏━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━┓
-┃<span style="font-weight: bold"> Layer (type)        </span>┃<span style="font-weight: bold"> Output Shape      </span>┃<span style="font-weight: bold"> Param # </span>┃<span style="font-weight: bold"> Connected to         </span>┃
-┡━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━┩
-│ sentence            │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>)         │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ -                    │
-│ (<span style="color: #0087ff; text-decoration-color: #0087ff">InputLayer</span>)        │                   │         │                      │
-├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
-│ roberta_preprocess… │ [(<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">512</span>),     │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ sentence[<span style="color: #00af00; text-decoration-color: #00af00">0</span>][<span style="color: #00af00; text-decoration-color: #00af00">0</span>]       │
-│ (<span style="color: #0087ff; text-decoration-color: #0087ff">RobertaPreprocess…</span> │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">512</span>)]      │         │                      │
-├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
-│ roberta_backbone_1  │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">512</span>, <span style="color: #00af00; text-decoration-color: #00af00">768</span>)  │ <span style="color: #00af00; text-decoration-color: #00af00">124,05…</span> │ roberta_preprocesso… │
-│ (<span style="color: #0087ff; text-decoration-color: #0087ff">RobertaBackbone</span>)   │                   │         │ roberta_preprocesso… │
-├─────────────────────┼───────────────────┼─────────┼──────────────────────┤
-│ pooling_layer       │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">768</span>)       │       <span style="color: #00af00; text-decoration-color: #00af00">0</span> │ roberta_backbone_1[<span style="color: #00af00; text-decoration-color: #00af00">…</span> │
-│ (<span style="color: #0087ff; text-decoration-color: #0087ff">GlobalAveragePool…</span> │                   │         │ roberta_preprocesso… │
-└─────────────────────┴───────────────────┴─────────┴──────────────────────┘
-</pre>
-
-
-
-
-<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Total params: </span><span style="color: #00af00; text-decoration-color: #00af00">124,052,736</span> (473.22 MB)
-</pre>
-
-
-
-
-<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Trainable params: </span><span style="color: #00af00; text-decoration-color: #00af00">124,052,736</span> (473.22 MB)
-</pre>
-
-
-
-
-<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Non-trainable params: </span><span style="color: #00af00; text-decoration-color: #00af00">0</span> (0.00 B)
-</pre>
-
-
 
 #### Build the Siamese network with the triplet objective function
 
@@ -629,14 +456,6 @@ roberta_triplet_siamese.compile(
 roberta_triplet_siamese.fit(wiki_train, validation_data=wiki_test, epochs=1)
 ```
 
-<div class="k-default-codeblock">
-```
- 200/200 ━━━━━━━━━━━━━━━━━━━━ 128s 467ms/step - loss: 0.7822 - val_loss: 0.7126
-
-<keras.src.callbacks.history.History at 0x7f5c3636c580>
-
-```
-</div>
 Let's try this model in a clustering example. Here are 6 questions. first 3 questions
 about learning English, and the last 3 questions about working online. Let's see if the
 embeddings produced by our encoder will cluster them correctly.
@@ -660,18 +479,7 @@ for i, label in enumerate(kmeans.labels_):
     print(f"sentence ({questions[i]}) belongs to cluster {label}")
 ```
 
-<div class="k-default-codeblock">
-```
-sentence (What should I do to improve my English writting?) belongs to cluster 1
-sentence (How to be good at speaking English?) belongs to cluster 1
-sentence (How can I improve my English?) belongs to cluster 1
-sentence (How to earn money online?) belongs to cluster 0
-sentence (How do I earn money online?) belongs to cluster 0
-sentence (How to work and earn money through internet?) belongs to cluster 0
-
-```
-</div>
-
+---
 ## Relevant Chapters
 - [Chapter 14: Text classification](https://deeplearningwithpython.io/chapters/chapter14_text-classification)
 - [Chapter 15: Language models and the Transformer](https://deeplearningwithpython.io/chapters/chapter15_language-models-and-the-transformer)

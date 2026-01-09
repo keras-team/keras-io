@@ -66,58 +66,12 @@ print("Number of files in comp.graphics:", len(fnames))
 print("Some example filenames:", fnames[:5])
 ```
 
-<div class="k-default-codeblock">
-```
-Number of directories: 20
-Directory names: ['comp.sys.ibm.pc.hardware', 'comp.os.ms-windows.misc', 'comp.windows.x', 'sci.space', 'sci.crypt', 'sci.med', 'alt.atheism', 'rec.autos', 'rec.sport.hockey', 'talk.politics.misc', 'talk.politics.mideast', 'rec.motorcycles', 'talk.politics.guns', 'misc.forsale', 'sci.electronics', 'talk.religion.misc', 'comp.graphics', 'soc.religion.christian', 'comp.sys.mac.hardware', 'rec.sport.baseball']
-Number of files in comp.graphics: 1000
-Some example filenames: ['39638', '38747', '38242', '39057', '39031']
-
-```
-</div>
 Here's a example of what one file contains:
 
 
 ```python
 print(open(data_dir / "comp.graphics" / "38987").read())
 ```
-
-<div class="k-default-codeblock">
-```
-Newsgroups: comp.graphics
-Path: cantaloupe.srv.cs.cmu.edu!das-news.harvard.edu!noc.near.net!howland.reston.ans.net!agate!dog.ee.lbl.gov!network.ucsd.edu!usc!rpi!nason110.its.rpi.edu!mabusj
-From: mabusj@nason110.its.rpi.edu (Jasen M. Mabus)
-Subject: Looking for Brain in CAD
-Message-ID: <c285m+p@rpi.edu>
-Nntp-Posting-Host: nason110.its.rpi.edu
-Reply-To: mabusj@rpi.edu
-Organization: Rensselaer Polytechnic Institute, Troy, NY.
-Date: Thu, 29 Apr 1993 23:27:20 GMT
-Lines: 7
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-Jasen Mabus
-RPI student
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-	I am looking for a hman brain in any CAD (.dxf,.cad,.iges,.cgm,etc.) or picture (.gif,.jpg,.ras,etc.) format for an animation demonstration. If any has or knows of a location please reply by e-mail to mabusj@rpi.edu.
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-Thank you in advance,
-Jasen Mabus  
-```
-</div>
-    
-
 
 As you can see, there are header lines that are leaking the file's category, either
 explicitly (the first line is literally the category name), or implicitly, e.g. via the
@@ -149,33 +103,6 @@ print("Classes:", class_names)
 print("Number of samples:", len(samples))
 ```
 
-<div class="k-default-codeblock">
-```
-Processing alt.atheism, 1000 files found
-Processing comp.graphics, 1000 files found
-Processing comp.os.ms-windows.misc, 1000 files found
-Processing comp.sys.ibm.pc.hardware, 1000 files found
-Processing comp.sys.mac.hardware, 1000 files found
-Processing comp.windows.x, 1000 files found
-Processing misc.forsale, 1000 files found
-Processing rec.autos, 1000 files found
-Processing rec.motorcycles, 1000 files found
-Processing rec.sport.baseball, 1000 files found
-Processing rec.sport.hockey, 1000 files found
-Processing sci.crypt, 1000 files found
-Processing sci.electronics, 1000 files found
-Processing sci.med, 1000 files found
-Processing sci.space, 1000 files found
-Processing soc.religion.christian, 997 files found
-Processing talk.politics.guns, 1000 files found
-Processing talk.politics.mideast, 1000 files found
-Processing talk.politics.misc, 1000 files found
-Processing talk.religion.misc, 1000 files found
-Classes: ['alt.atheism', 'comp.graphics', 'comp.os.ms-windows.misc', 'comp.sys.ibm.pc.hardware', 'comp.sys.mac.hardware', 'comp.windows.x', 'misc.forsale', 'rec.autos', 'rec.motorcycles', 'rec.sport.baseball', 'rec.sport.hockey', 'sci.crypt', 'sci.electronics', 'sci.med', 'sci.space', 'soc.religion.christian', 'talk.politics.guns', 'talk.politics.mideast', 'talk.politics.misc', 'talk.religion.misc']
-Number of samples: 19997
-
-```
-</div>
 There's actually one category that doesn't have the expected number of files, but the
 difference is small enough that the problem remains a balanced classification problem.
 
@@ -224,15 +151,6 @@ print the top 5 words:
 vectorizer.get_vocabulary()[:5]
 ```
 
-
-
-
-<div class="k-default-codeblock">
-```
-['', '[UNK]', 'the', 'to', 'of']
-
-```
-</div>
 Let's vectorize a test sentence:
 
 
@@ -241,15 +159,6 @@ output = vectorizer([["the cat sat on the mat"]])
 output.numpy()[0, :6]
 ```
 
-
-
-
-<div class="k-default-codeblock">
-```
-array([   2, 3480, 1818,   15,    2, 5830])
-
-```
-</div>
 As you can see, "the" gets represented as "2". Why not 0, given that "the" was the first
 word in the vocabulary? That's because index 0 is reserved for padding and index 1 is
 reserved for "out of vocabulary" tokens.
@@ -270,15 +179,6 @@ test = ["the", "cat", "sat", "on", "the", "mat"]
 [word_index[w] for w in test]
 ```
 
-
-
-
-<div class="k-default-codeblock">
-```
-[2, 3480, 1818, 15, 2, 5830]
-
-```
-</div>
 ---
 ## Load pre-trained word embeddings
 
@@ -291,31 +191,6 @@ You'll need to run the following commands:
 !wget https://downloads.cs.stanford.edu/nlp/data/glove.6B.zip
 !unzip -q glove.6B.zip
 ```
-
-<div class="k-default-codeblock">
-```
---2023-11-19 22:45:27--  https://downloads.cs.stanford.edu/nlp/data/glove.6B.zip
-Resolving downloads.cs.stanford.edu (downloads.cs.stanford.edu)... 171.64.64.22
-Connecting to downloads.cs.stanford.edu (downloads.cs.stanford.edu)|171.64.64.22|:443... connected.
-HTTP request sent, awaiting response... 200 OK
-Length: 862182613 (822M) [application/zip]
-Saving to: ‘glove.6B.zip’
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-glove.6B.zip        100%[===================>] 822.24M  5.05MB/s    in 2m 39s  
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-2023-11-19 22:48:06 (5.19 MB/s) - ‘glove.6B.zip’ saved [862182613/862182613]
-```
-</div>
-    
-
 
 The archive contains text-encoded vectors of various sizes: 50-dimensional,
 100-dimensional, 200-dimensional, 300-dimensional. We'll use the 100D ones.
@@ -336,12 +211,6 @@ with open(path_to_glove_file) as f:
 print("Found %s word vectors." % len(embeddings_index))
 ```
 
-<div class="k-default-codeblock">
-```
-Found 400000 word vectors.
-
-```
-</div>
 Now, let's prepare a corresponding embedding matrix that we can use in a Keras
 `Embedding` layer. It's a simple NumPy matrix where entry at index `i` is the pre-trained
 vector for the word of index `i` in our `vectorizer`'s vocabulary.
@@ -368,12 +237,6 @@ print("Converted %d words (%d misses)" % (hits, misses))
 
 ```
 
-<div class="k-default-codeblock">
-```
-Converted 18021 words (1979 misses)
-
-```
-</div>
 Next, we load the pre-trained word embeddings matrix into an `Embedding` layer.
 
 Note that we set `trainable=False` so as to keep the embeddings fixed (we don't want to
@@ -414,61 +277,6 @@ model = keras.Model(int_sequences_input, preds)
 model.summary()
 ```
 
-
-<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold">Model: "functional_1"</span>
-</pre>
-
-
-
-
-<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━┓
-┃<span style="font-weight: bold"> Layer (type)                    </span>┃<span style="font-weight: bold"> Output Shape              </span>┃<span style="font-weight: bold">    Param # </span>┃
-┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━┩
-│ input_layer (<span style="color: #0087ff; text-decoration-color: #0087ff">InputLayer</span>)        │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>)              │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │
-├─────────────────────────────────┼───────────────────────────┼────────────┤
-│ embedding (<span style="color: #0087ff; text-decoration-color: #0087ff">Embedding</span>)           │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">100</span>)         │  <span style="color: #00af00; text-decoration-color: #00af00">2,000,200</span> │
-├─────────────────────────────────┼───────────────────────────┼────────────┤
-│ conv1d (<span style="color: #0087ff; text-decoration-color: #0087ff">Conv1D</span>)                 │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">128</span>)         │     <span style="color: #00af00; text-decoration-color: #00af00">64,128</span> │
-├─────────────────────────────────┼───────────────────────────┼────────────┤
-│ max_pooling1d (<span style="color: #0087ff; text-decoration-color: #0087ff">MaxPooling1D</span>)    │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">128</span>)         │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │
-├─────────────────────────────────┼───────────────────────────┼────────────┤
-│ conv1d_1 (<span style="color: #0087ff; text-decoration-color: #0087ff">Conv1D</span>)               │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">128</span>)         │     <span style="color: #00af00; text-decoration-color: #00af00">82,048</span> │
-├─────────────────────────────────┼───────────────────────────┼────────────┤
-│ max_pooling1d_1 (<span style="color: #0087ff; text-decoration-color: #0087ff">MaxPooling1D</span>)  │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">128</span>)         │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │
-├─────────────────────────────────┼───────────────────────────┼────────────┤
-│ conv1d_2 (<span style="color: #0087ff; text-decoration-color: #0087ff">Conv1D</span>)               │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">128</span>)         │     <span style="color: #00af00; text-decoration-color: #00af00">82,048</span> │
-├─────────────────────────────────┼───────────────────────────┼────────────┤
-│ global_max_pooling1d            │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">128</span>)               │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │
-│ (<span style="color: #0087ff; text-decoration-color: #0087ff">GlobalMaxPooling1D</span>)            │                           │            │
-├─────────────────────────────────┼───────────────────────────┼────────────┤
-│ dense (<span style="color: #0087ff; text-decoration-color: #0087ff">Dense</span>)                   │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">128</span>)               │     <span style="color: #00af00; text-decoration-color: #00af00">16,512</span> │
-├─────────────────────────────────┼───────────────────────────┼────────────┤
-│ dropout (<span style="color: #0087ff; text-decoration-color: #0087ff">Dropout</span>)               │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">128</span>)               │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │
-├─────────────────────────────────┼───────────────────────────┼────────────┤
-│ dense_1 (<span style="color: #0087ff; text-decoration-color: #0087ff">Dense</span>)                 │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">20</span>)                │      <span style="color: #00af00; text-decoration-color: #00af00">2,580</span> │
-└─────────────────────────────────┴───────────────────────────┴────────────┘
-</pre>
-
-
-
-
-<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Total params: </span><span style="color: #00af00; text-decoration-color: #00af00">2,247,516</span> (8.57 MB)
-</pre>
-
-
-
-
-<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Trainable params: </span><span style="color: #00af00; text-decoration-color: #00af00">2,247,516</span> (8.57 MB)
-</pre>
-
-
-
-
-<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Non-trainable params: </span><span style="color: #00af00; text-decoration-color: #00af00">0</span> (0.00 B)
-</pre>
-
-
-
 ---
 ## Train the model
 
@@ -495,58 +303,6 @@ model.compile(
 model.fit(x_train, y_train, batch_size=128, epochs=20, validation_data=(x_val, y_val))
 ```
 
-<div class="k-default-codeblock">
-```
-Epoch 1/20
-   2/125 [37m━━━━━━━━━━━━━━━━━━━━  9s 78ms/step - acc: 0.0352 - loss: 3.2164 
-
-WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
-I0000 00:00:1700434131.619687    6780 device_compiler.h:187] Compiled cluster using XLA!  This line is logged at most once for the lifetime of the process.
-
- 125/125 ━━━━━━━━━━━━━━━━━━━━ 22s 123ms/step - acc: 0.0926 - loss: 2.8961 - val_acc: 0.2451 - val_loss: 2.1965
-Epoch 2/20
- 125/125 ━━━━━━━━━━━━━━━━━━━━ 10s 78ms/step - acc: 0.2628 - loss: 2.1377 - val_acc: 0.4421 - val_loss: 1.6594
-Epoch 3/20
- 125/125 ━━━━━━━━━━━━━━━━━━━━ 10s 78ms/step - acc: 0.4504 - loss: 1.5765 - val_acc: 0.5849 - val_loss: 1.2577
-Epoch 4/20
- 125/125 ━━━━━━━━━━━━━━━━━━━━ 10s 76ms/step - acc: 0.5711 - loss: 1.2639 - val_acc: 0.6277 - val_loss: 1.1153
-Epoch 5/20
- 125/125 ━━━━━━━━━━━━━━━━━━━━ 9s 74ms/step - acc: 0.6430 - loss: 1.0318 - val_acc: 0.6684 - val_loss: 0.9902
-Epoch 6/20
- 125/125 ━━━━━━━━━━━━━━━━━━━━ 9s 72ms/step - acc: 0.6990 - loss: 0.8844 - val_acc: 0.6619 - val_loss: 1.0109
-Epoch 7/20
- 125/125 ━━━━━━━━━━━━━━━━━━━━ 9s 70ms/step - acc: 0.7330 - loss: 0.7614 - val_acc: 0.6832 - val_loss: 0.9585
-Epoch 8/20
- 125/125 ━━━━━━━━━━━━━━━━━━━━ 8s 68ms/step - acc: 0.7795 - loss: 0.6328 - val_acc: 0.6847 - val_loss: 0.9917
-Epoch 9/20
- 125/125 ━━━━━━━━━━━━━━━━━━━━ 8s 64ms/step - acc: 0.8203 - loss: 0.5242 - val_acc: 0.7187 - val_loss: 0.9224
-Epoch 10/20
- 125/125 ━━━━━━━━━━━━━━━━━━━━ 8s 60ms/step - acc: 0.8506 - loss: 0.4265 - val_acc: 0.7342 - val_loss: 0.9098
-Epoch 11/20
- 125/125 ━━━━━━━━━━━━━━━━━━━━ 7s 56ms/step - acc: 0.8756 - loss: 0.3659 - val_acc: 0.7204 - val_loss: 1.0022
-Epoch 12/20
- 125/125 ━━━━━━━━━━━━━━━━━━━━ 7s 54ms/step - acc: 0.8921 - loss: 0.3079 - val_acc: 0.7209 - val_loss: 1.0477
-Epoch 13/20
- 125/125 ━━━━━━━━━━━━━━━━━━━━ 7s 54ms/step - acc: 0.9077 - loss: 0.2767 - val_acc: 0.7169 - val_loss: 1.0915
-Epoch 14/20
- 125/125 ━━━━━━━━━━━━━━━━━━━━ 6s 50ms/step - acc: 0.9244 - loss: 0.2253 - val_acc: 0.7382 - val_loss: 1.1397
-Epoch 15/20
- 125/125 ━━━━━━━━━━━━━━━━━━━━ 6s 49ms/step - acc: 0.9301 - loss: 0.2054 - val_acc: 0.7562 - val_loss: 1.0984
-Epoch 16/20
- 125/125 ━━━━━━━━━━━━━━━━━━━━ 5s 42ms/step - acc: 0.9373 - loss: 0.1769 - val_acc: 0.7387 - val_loss: 1.2294
-Epoch 17/20
- 125/125 ━━━━━━━━━━━━━━━━━━━━ 5s 41ms/step - acc: 0.9467 - loss: 0.1626 - val_acc: 0.7009 - val_loss: 1.4906
-Epoch 18/20
- 125/125 ━━━━━━━━━━━━━━━━━━━━ 5s 39ms/step - acc: 0.9471 - loss: 0.1544 - val_acc: 0.7184 - val_loss: 1.6050
-Epoch 19/20
- 125/125 ━━━━━━━━━━━━━━━━━━━━ 5s 37ms/step - acc: 0.9532 - loss: 0.1388 - val_acc: 0.7407 - val_loss: 1.4360
-Epoch 20/20
- 125/125 ━━━━━━━━━━━━━━━━━━━━ 5s 37ms/step - acc: 0.9519 - loss: 0.1388 - val_acc: 0.7309 - val_loss: 1.5327
-
-<keras.src.callbacks.history.History at 0x7fbf50e6b910>
-
-```
-</div>
 ---
 ## Export an end-to-end model
 
@@ -572,12 +328,6 @@ probabilities = end_to_end_model(
 print(class_names[np.argmax(probabilities[0])])
 ```
 
-<div class="k-default-codeblock">
-```
-comp.graphics
-
-```
-</div>
-
+---
 ## Relevant Chapters
 - [Chapter 14: Text classification](https://deeplearningwithpython.io/chapters/chapter14_text-classification)

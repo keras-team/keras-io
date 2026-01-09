@@ -70,6 +70,7 @@ which has only one GPU available.
 !nvidia-smi --query-gpu=memory.total --format=csv,noheader
 ```
 
+
 ```python
 physical_devices = tf.config.list_physical_devices("GPU")
 tf.config.set_logical_device_configuration(
@@ -86,12 +87,7 @@ logical_devices
 EPOCHS = 3
 
 ```
-<div class="k-default-codeblock">
-```
-24576 MiB
 
-```
-</div>
 To do single-host, multi-device synchronous training with a Keras model, you would use
 the `tf.distribute.MirroredStrategy` API. Here's how it works:
 
@@ -108,13 +104,6 @@ strategy = tf.distribute.MirroredStrategy()
 print(f"Number of devices: {strategy.num_replicas_in_sync}")
 ```
 
-<div class="k-default-codeblock">
-```
-INFO:tensorflow:Using MirroredStrategy with devices ('/job:localhost/replica:0/task:0/device:GPU:0', '/job:localhost/replica:0/task:0/device:GPU:1')
-Number of devices: 2
-
-```
-</div>
 Base batch size and learning rate
 
 
@@ -213,12 +202,6 @@ print(tf.config.list_physical_devices("GPU"))
 
 ```
 
-<div class="k-default-codeblock">
-```
-[PhysicalDevice(name='/physical_device:GPU:0', device_type='GPU')]
-
-```
-</div>
 With the datasets prepared, we now initialize and compile our model and optimizer within
 the `strategy.scope()`:
 
@@ -245,22 +228,6 @@ with strategy.scope():
     )
 ```
 
-<div class="k-default-codeblock">
-```
-Epoch 1/3
-Learning rate for epoch 1 is 0.00019999999494757503
- 239/239 ━━━━━━━━━━━━━━━━━━━━ 43s 136ms/step - loss: 3.7009 - sparse_categorical_accuracy: 0.1499 - val_loss: 1.1509 - val_sparse_categorical_accuracy: 0.3485
-Epoch 2/3
- 239/239 ━━━━━━━━━━━━━━━━━━━━ 0s 122ms/step - loss: 2.6094 - sparse_categorical_accuracy: 0.5284
-Learning rate for epoch 2 is 0.00019999999494757503
- 239/239 ━━━━━━━━━━━━━━━━━━━━ 32s 133ms/step - loss: 2.6038 - sparse_categorical_accuracy: 0.5274 - val_loss: 0.9812 - val_sparse_categorical_accuracy: 0.4006
-Epoch 3/3
- 239/239 ━━━━━━━━━━━━━━━━━━━━ 0s 123ms/step - loss: 2.3564 - sparse_categorical_accuracy: 0.6053
-Learning rate for epoch 3 is 0.00019999999494757503
- 239/239 ━━━━━━━━━━━━━━━━━━━━ 32s 134ms/step - loss: 2.3514 - sparse_categorical_accuracy: 0.6040 - val_loss: 0.9213 - val_sparse_categorical_accuracy: 0.4230
-
-```
-</div>
 After fitting our model under the scope, we evaluate it normally!
 
 
@@ -268,14 +235,6 @@ After fitting our model under the scope, we evaluate it normally!
 model_dist.evaluate(wiki_test_ds)
 ```
 
-<div class="k-default-codeblock">
-```
- 29/29 ━━━━━━━━━━━━━━━━━━━━ 3s 60ms/step - loss: 1.9197 - sparse_categorical_accuracy: 0.8527
-
-[0.9470901489257812, 0.4373602867126465]
-
-```
-</div>
 For distributed training across multiple machines (as opposed to training that only leverages
 multiple devices on a single machine), there are two distribution strategies you
 could use: `MultiWorkerMirroredStrategy` and `ParameterServerStrategy`:
@@ -295,7 +254,7 @@ workers update the gradients to parameter servers asynchronously.
 4. [MultiWorkerMirroredStrategy docs](https://www.tensorflow.org/api_docs/python/tf/distribute/experimental/MultiWorkerMirroredStrategy)
 5. [Distributed training in tf.keras with Weights & Biases](https://towardsdatascience.com/distributed-training-in-tf-keras-with-w-b-ccf021f9322e)
 
-
+---
 ## Relevant Chapters
 - [Chapter 7: A deep dive on Keras](https://deeplearningwithpython.io/chapters/chapter07_deep-dive-keras)
 - [Chapter 18: Best practices for the real world](https://deeplearningwithpython.io/chapters/chapter18_best-practices-for-the-real-world)

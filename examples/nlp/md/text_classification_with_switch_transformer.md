@@ -53,13 +53,6 @@ x_train = keras.utils.pad_sequences(x_train, maxlen=num_tokens_per_example)
 x_val = keras.utils.pad_sequences(x_val, maxlen=num_tokens_per_example)
 ```
 
-<div class="k-default-codeblock">
-```
-25000 Training sequences
-25000 Validation sequences
-
-```
-</div>
 ---
 ## Define hyperparameters
 
@@ -79,12 +72,6 @@ num_tokens_per_batch = (
 print(f"Number of tokens per batch: {num_tokens_per_batch}")
 ```
 
-<div class="k-default-codeblock">
-```
-Number of tokens per batch: 10000
-
-```
-</div>
 ---
 ## Implement token & position embedding layer
 
@@ -354,19 +341,6 @@ run_experiment(classifier)
 
 ```
 
-<div class="k-default-codeblock">
-```
-Epoch 1/3
- 500/500 ━━━━━━━━━━━━━━━━━━━━ 251s 485ms/step - accuracy: 0.7121 - loss: 1.5394 - val_accuracy: 0.8748 - val_loss: 1.2891
-Epoch 2/3
- 500/500 ━━━━━━━━━━━━━━━━━━━━ 240s 480ms/step - accuracy: 0.9243 - loss: 1.2063 - val_accuracy: 0.8752 - val_loss: 1.3090
-Epoch 3/3
- 500/500 ━━━━━━━━━━━━━━━━━━━━ 242s 485ms/step - accuracy: 0.9572 - loss: 1.1222 - val_accuracy: 0.8614 - val_loss: 1.3744
-
-<keras.src.callbacks.history.History at 0x7efb79d82a90>
-
-```
-</div>
 ---
 ## Conclusion
 
@@ -374,7 +348,7 @@ Compared to the standard Transformer architecture, the Switch Transformer can ha
 larger number of parameters, leading to increased model
 capacity, while maintaining a reasonable computational cost.
 
-
+---
 ## Relevant Chapters
 - [Chapter 14: Text classification](https://deeplearningwithpython.io/chapters/chapter14_text-classification)
 - [Chapter 15: Language models and the Transformer](https://deeplearningwithpython.io/chapters/chapter15_language-models-and-the-transformer)

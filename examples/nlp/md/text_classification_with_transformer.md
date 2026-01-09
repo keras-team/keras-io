@@ -32,7 +32,10 @@ class TransformerBlock(layers.Layer):
         super().__init__()
         self.att = layers.MultiHeadAttention(num_heads=num_heads, key_dim=embed_dim)
         self.ffn = keras.Sequential(
-            [layers.Dense(ff_dim, activation="relu"), layers.Dense(embed_dim),]
+            [
+                layers.Dense(ff_dim, activation="relu"),
+                layers.Dense(embed_dim),
+            ]
         )
         self.layernorm1 = layers.LayerNormalization(epsilon=1e-6)
         self.layernorm2 = layers.LayerNormalization(epsilon=1e-6)
@@ -86,22 +89,6 @@ x_train = keras.utils.pad_sequences(x_train, maxlen=maxlen)
 x_val = keras.utils.pad_sequences(x_val, maxlen=maxlen)
 ```
 
-<div class="k-default-codeblock">
-```
-Downloading data from https://storage.googleapis.com/tensorflow/tf-keras-datasets/imdb.npz
-17465344/17464789 [==============================] - 0s 0us/step
-
-<string>:6: VisibleDeprecationWarning: Creating an ndarray from ragged nested sequences (which is a list-or-tuple of lists-or-tuples-or ndarrays with different lengths or shapes) is deprecated. If you meant to do this, you must specify 'dtype=object' when creating the ndarray
-/usr/local/lib/python3.6/dist-packages/tensorflow/python/keras/datasets/imdb.py:159: VisibleDeprecationWarning: Creating an ndarray from ragged nested sequences (which is a list-or-tuple of lists-or-tuples-or ndarrays with different lengths or shapes) is deprecated. If you meant to do this, you must specify 'dtype=object' when creating the ndarray
-  x_train, y_train = np.array(xs[:idx]), np.array(labels[:idx])
-/usr/local/lib/python3.6/dist-packages/tensorflow/python/keras/datasets/imdb.py:160: VisibleDeprecationWarning: Creating an ndarray from ragged nested sequences (which is a list-or-tuple of lists-or-tuples-or ndarrays with different lengths or shapes) is deprecated. If you meant to do this, you must specify 'dtype=object' when creating the ndarray
-  x_test, y_test = np.array(xs[idx:]), np.array(labels[idx:])
-
-25000 Training sequences
-25000 Validation sequences
-
-```
-</div>
 ---
 ## Create classifier model using transformer layer
 
@@ -136,22 +123,15 @@ model = keras.Model(inputs=inputs, outputs=outputs)
 
 
 ```python
-model.compile(optimizer="adam", loss="sparse_categorical_crossentropy", metrics=["accuracy"])
+model.compile(
+    optimizer="adam", loss="sparse_categorical_crossentropy", metrics=["accuracy"]
+)
 history = model.fit(
     x_train, y_train, batch_size=32, epochs=2, validation_data=(x_val, y_val)
 )
 ```
 
-<div class="k-default-codeblock">
-```
-Epoch 1/2
-782/782 [==============================] - 15s 18ms/step - loss: 0.5112 - accuracy: 0.7070 - val_loss: 0.3598 - val_accuracy: 0.8444
-Epoch 2/2
-782/782 [==============================] - 13s 17ms/step - loss: 0.1942 - accuracy: 0.9297 - val_loss: 0.2977 - val_accuracy: 0.8745
-
-```
-</div>
-
+---
 ## Relevant Chapters
 - [Chapter 14: Text classification](https://deeplearningwithpython.io/chapters/chapter14_text-classification)
 - [Chapter 15: Language models and the Transformer](https://deeplearningwithpython.io/chapters/chapter15_language-models-and-the-transformer)
