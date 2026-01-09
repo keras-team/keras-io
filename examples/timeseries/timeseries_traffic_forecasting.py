@@ -83,9 +83,13 @@ The full description of the dataset can be found in
 """
 
 url = "https://github.com/VeritasYin/STGCN_IJCAI-18/raw/master/dataset/PeMSD7_Full.zip"
-data_dir = keras.utils.get_file(origin=url, extract=True, archive_format="zip")
-data_dir = data_dir.rstrip("PeMSD7_Full.zip")
+# 1. Download and extract normally
+zip_path = keras.utils.get_file(origin=url, extract=True, archive_format="zip")
 
+# 2. FIX: Use os.path.dirname to safely get the folder where it was extracted
+data_dir = os.path.dirname(zip_path)
+
+# 3. Construct the paths to the inner files safely
 route_distances = pd.read_csv(
     os.path.join(data_dir, "PeMSD7_W_228.csv"), header=None
 ).to_numpy()
