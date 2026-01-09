@@ -224,7 +224,7 @@ def nb_to_md(nb_path, md_path, img_dir, working_dir=None):
     del_working_dir = False
     if working_dir is None:
         del_working_dir = True
-        working_dir = "tmp_" + str(random.randint(1e6, 1e7))
+        working_dir = "tmp_" + str(random.randint(int(1e6), int(1e7)))
     if not os.path.exists(working_dir):
         os.makedirs(working_dir)
     print("Using working_dir:", working_dir)
@@ -335,7 +335,7 @@ def validate(py):
     # Validate style with black
 
     tmp = tempfile.gettempdir()
-    fpath = os.path.join(tmp, str(random.randint(1e6, 1e7)) + ".py")
+    fpath = os.path.join(tmp, str(random.randint(int(1e6), int(1e7))) + ".py")
     f = open(fpath, "w")
     pre_formatting = "\n".join(lines)
     f.write(pre_formatting)

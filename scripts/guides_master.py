@@ -148,6 +148,9 @@ GUIDES_MASTER = {
             "path": "customizing_quantization",
             "title": "Customizing quantization in Keras",
         }
+            "path": "define_custom_kernel",
+            "title": "Define a Custom TPU/GPU Kernel",
+        },
         # {
         #     "path": "preprocessing_layers",
         #     "title": "Working with preprocessing layers",
