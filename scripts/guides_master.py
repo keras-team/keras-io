@@ -134,8 +134,7 @@ GUIDES_MASTER = {
         {
             "path": "int4_quantization_in_keras",
             "title": "4-bit integer quantization in Keras",
-        }
-        ,
+        },
         {
             "path": "gptq_quantization_in_keras",
             "title": "GPTQ quantization in Keras",
@@ -147,7 +146,8 @@ GUIDES_MASTER = {
         {
             "path": "customizing_quantization",
             "title": "Customizing quantization in Keras",
-        }
+        },
+        {
             "path": "define_custom_kernel",
             "title": "Define a Custom TPU/GPU Kernel",
         },
