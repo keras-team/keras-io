@@ -2,7 +2,7 @@
 Title: Probabilistic Bayesian Neural Networks
 Author: [Khalid Salama](https://www.linkedin.com/in/khalid-salama-24403144/)
 Date created: 2021/01/15
-Last modified: 2021/01/15
+Last modified: 2025/01/11
 Description: Building probabilistic Bayesian neural network models with TensorFlow Probability.
 Accelerator: GPU
 """
@@ -225,7 +225,8 @@ def prior(kernel_size, bias_size, dtype=None):
         [
             tfp.layers.DistributionLambda(
                 lambda t: tfp.distributions.MultivariateNormalDiag(
-                    loc=tf.zeros(n), scale_diag=tf.ones(n)
+                    loc=tf.zeros(n, dtype=tf.float32),
+                    scale_diag=tf.ones(n, dtype=tf.float32),
                 )
             )
         ]
@@ -241,9 +242,9 @@ def posterior(kernel_size, bias_size, dtype=None):
     posterior_model = keras.Sequential(
         [
             tfp.layers.VariableLayer(
-                tfp.layers.MultivariateNormalTriL.params_size(n), dtype=dtype
+                tfp.layers.MultivariateNormalTriL.params_size(n), dtype=tf.float32
             ),
-            tfp.layers.MultivariateNormalTriL(n),
+            tfp.layers.MultivariateNormalTriL(n, dtype=tf.float32),
         ]
     )
     return posterior_model
@@ -268,6 +269,7 @@ def create_bnn_model(train_size):
             make_posterior_fn=posterior,
             kl_weight=1 / train_size,
             activation="sigmoid",
+            dtype=tf.float32,
         )(features)
 
     # The output is deterministic: a single point estimate.
@@ -373,13 +375,14 @@ def create_probablistic_bnn_model(train_size):
             make_posterior_fn=posterior,
             kl_weight=1 / train_size,
             activation="sigmoid",
+            dtype=tf.float32,
         )(features)
 
-    # Create a probabilisticå output (Normal distribution), and use the `Dense` layer
+    # Create a probabilistic output (Normal distribution), and use the `Dense` layer
     # to produce the parameters of the distribution.
     # We set units=2 to learn both the mean and the variance of the Normal distribution.
-    distribution_params = layers.Dense(units=2)(features)
-    outputs = tfp.layers.IndependentNormal(1)(distribution_params)
+    distribution_params = layers.Dense(units=2, dtype=tf.float32)(features)
+    outputs = tfp.layers.IndependentNormal(1, dtype=tf.float32)(distribution_params)
 
     model = keras.Model(inputs=inputs, outputs=outputs)
     return model
@@ -394,7 +397,7 @@ estimated distribution produced by the model.
 
 
 def negative_loglikelihood(targets, estimated_distribution):
-    return -estimated_distribution.log_prob(targets)
+    return -estimated_distribution.log_prob(tf.cast(targets, tf.float32))
 
 
 num_epochs = 1000
