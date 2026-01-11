@@ -225,8 +225,8 @@ def prior(kernel_size, bias_size, dtype=None):
         [
             tfp.layers.DistributionLambda(
                 lambda t: tfp.distributions.MultivariateNormalDiag(
-                    loc=tf.zeros(n, dtype=tf.float32),
-                    scale_diag=tf.ones(n, dtype=tf.float32),
+                    loc=tf.zeros(n, dtype=dtype or tf.float32),
+                    scale_diag=tf.ones(n, dtype=dtype or tf.float32),
                 )
             )
         ]
@@ -242,9 +242,10 @@ def posterior(kernel_size, bias_size, dtype=None):
     posterior_model = keras.Sequential(
         [
             tfp.layers.VariableLayer(
-                tfp.layers.MultivariateNormalTriL.params_size(n), dtype=tf.float32
+                tfp.layers.MultivariateNormalTriL.params_size(n),
+                dtype=dtype or tf.float32,
             ),
-            tfp.layers.MultivariateNormalTriL(n, dtype=tf.float32),
+            tfp.layers.MultivariateNormalTriL(n, dtype=dtype or tf.float32),
         ]
     )
     return posterior_model
