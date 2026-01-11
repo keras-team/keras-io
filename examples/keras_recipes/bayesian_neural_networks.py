@@ -2,7 +2,7 @@
 Title: Probabilistic Bayesian Neural Networks
 Author: [Khalid Salama](https://www.linkedin.com/in/khalid-salama-24403144/)
 Date created: 2021/01/15
-Last modified: 2025/01/11
+Last modified: 2026/01/11
 Description: Building probabilistic Bayesian neural network models with TensorFlow Probability.
 Accelerator: GPU
 """
@@ -53,8 +53,8 @@ pip install tensorflow-datasets
 
 import numpy as np
 import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras import layers
+import tf_keras as keras
+from tf_keras import layers
 import tensorflow_datasets as tfds
 import tensorflow_probability as tfp
 
