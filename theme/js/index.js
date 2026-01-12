@@ -22,14 +22,18 @@ closeButton.addEventListener('click', () => {
 function addCopyButtonsToCodeBlocks() {
   // Find all code blocks: .k-default-codeblock divs and standalone <pre> tags with <code>
   const wrappedCodeBlocks = document.querySelectorAll('.k-default-codeblock');
-  const preElements = document.querySelectorAll('pre:has(code)');
+  const allPreElements = document.querySelectorAll('pre');
   
   // Combine both types of code blocks
   const allCodeBlocks = [...wrappedCodeBlocks];
   
-  // Add standalone pre elements that aren't already inside k-default-codeblock
-  preElements.forEach((pre) => {
-    if (!pre.closest('.k-default-codeblock') && !pre.closest('.code-block-wrapper')) {
+  // Add standalone pre elements that contain code
+  allPreElements.forEach((pre) => {
+    const hasCode = pre.querySelector('code');
+    const isInsideDefault = pre.closest('.k-default-codeblock');
+    const isInsideWrapper = pre.closest('.code-block-wrapper');
+    
+    if (hasCode && !isInsideDefault && !isInsideWrapper) {
       allCodeBlocks.push(pre);
     }
   });
