@@ -520,6 +520,7 @@ p {
 .k-default-codeblock,
 .code-block-wrapper {
   position: relative;
+  min-height: 36px;
 }
 
 .code__copy--button {
@@ -531,10 +532,10 @@ p {
   align-items: center;
   justify-content: center;
   opacity: 0.7;
-  padding: 6px;
+  padding: 4px;
   position: absolute;
-  right: 8px;
-  top: 8px;
+  right: 4px;
+  top: 4px;
   transition: opacity 0.2s, background-color 0.2s;
   z-index: 10;
 }
