@@ -20,13 +20,38 @@ closeButton.addEventListener('click', () => {
 
 // Copy code
 function addCopyButtonsToCodeBlocks() {
-  // Find all code blocks with k-default-codeblock class
-  const codeBlocks = document.querySelectorAll('.k-default-codeblock');
+  // Find all code blocks: .k-default-codeblock divs and standalone <pre> tags with <code>
+  const wrappedCodeBlocks = document.querySelectorAll('.k-default-codeblock');
+  const preElements = document.querySelectorAll('.k-content pre');
   
-  codeBlocks.forEach((block) => {
+  // Combine both types of code blocks
+  const allCodeBlocks = [...wrappedCodeBlocks];
+  
+  // Add standalone pre elements that aren't already inside k-default-codeblock
+  preElements.forEach((pre) => {
+    if (!pre.closest('.k-default-codeblock') && pre.querySelector('code')) {
+      allCodeBlocks.push(pre);
+    }
+  });
+  
+  allCodeBlocks.forEach((block) => {
     // Skip if button already exists
     if (block.querySelector('.code__copy--button')) {
       return;
+    }
+    
+    // Create a wrapper div if the block is a <pre> element
+    let container = block;
+    if (block.tagName === 'PRE') {
+      const wrapper = document.createElement('div');
+      wrapper.className = 'code-block-wrapper';
+      wrapper.style.position = 'relative';
+      block.parentNode.insertBefore(wrapper, block);
+      wrapper.appendChild(block);
+      container = wrapper;
+    } else {
+      // For k-default-codeblock divs
+      block.style.position = 'relative';
     }
     
     // Create copy button
@@ -45,14 +70,13 @@ function addCopyButtonsToCodeBlocks() {
     tooltip.textContent = 'Copied!';
     button.appendChild(tooltip);
     
-    // Add button to code block
-    block.style.position = 'relative';
-    block.insertBefore(button, block.firstChild);
+    // Add button to container
+    container.insertBefore(button, container.firstChild);
     
     // Add click event listener
     button.addEventListener('click', () => {
       // Find the code element
-      const codeElement = block.querySelector('pre code') || block.querySelector('pre');
+      const codeElement = container.querySelector('pre code') || container.querySelector('pre');
       if (!codeElement) return;
       
       const text = codeElement.innerText || codeElement.textContent;
