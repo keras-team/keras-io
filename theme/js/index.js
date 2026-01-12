@@ -19,6 +19,93 @@ closeButton.addEventListener('click', () => {
 });
 
 // Copy code
+function addCopyButtonsToCodeBlocks() {
+  // Find all code blocks with k-default-codeblock class
+  const codeBlocks = document.querySelectorAll('.k-default-codeblock');
+  
+  codeBlocks.forEach((block) => {
+    // Skip if button already exists
+    if (block.querySelector('.code__copy--button')) {
+      return;
+    }
+    
+    // Create copy button
+    const button = document.createElement('button');
+    button.className = 'code__copy--button';
+    button.setAttribute('aria-label', 'Copy code to clipboard');
+    
+    // Create icon element
+    const icon = document.createElement('i');
+    icon.className = 'icon--copy';
+    button.appendChild(icon);
+    
+    // Create tooltip
+    const tooltip = document.createElement('div');
+    tooltip.className = 'code__copy--tooltip';
+    tooltip.textContent = 'Copied!';
+    button.appendChild(tooltip);
+    
+    // Add button to code block
+    block.style.position = 'relative';
+    block.insertBefore(button, block.firstChild);
+    
+    // Add click event listener
+    button.addEventListener('click', () => {
+      // Find the code element
+      const codeElement = block.querySelector('pre code') || block.querySelector('pre');
+      if (!codeElement) return;
+      
+      const text = codeElement.innerText || codeElement.textContent;
+      
+      // Use modern clipboard API if available
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(() => {
+          showCopyTooltip(button);
+        }).catch(() => {
+          // Fallback method
+          copyWithFallback(text, button);
+        });
+      } else {
+        // Fallback for older browsers
+        copyWithFallback(text, button);
+      }
+    });
+  });
+}
+
+function copyWithFallback(text, button) {
+  const inputElement = document.createElement('textarea');
+  inputElement.value = text;
+  inputElement.setAttribute('readonly', '');
+  inputElement.style.position = 'absolute';
+  inputElement.style.left = '-9999px';
+  document.body.appendChild(inputElement);
+  inputElement.select();
+  
+  try {
+    document.execCommand('copy');
+    showCopyTooltip(button);
+  } catch (err) {
+    console.error('Failed to copy text:', err);
+  }
+  
+  inputElement.remove();
+}
+
+function showCopyTooltip(button) {
+  const tooltip = button.querySelector('.code__copy--tooltip');
+  if (tooltip) {
+    tooltip.style.display = 'block';
+    setTimeout(() => {
+      tooltip.style.display = 'none';
+    }, 2000);
+  }
+}
+
+// Add copy buttons on page load
+document.addEventListener('DOMContentLoaded', addCopyButtonsToCodeBlocks);
+
+// Existing copy buttons (for landing page compatibility)
 const copyButtons = document.querySelectorAll('.code__copy--button');
 copyButtons.forEach((button) => {
   button.addEventListener('click', () => {
