@@ -79,7 +79,10 @@ function addCopyButtonsToCodeBlocks() {
       const codeElement = container.querySelector('pre code') || container.querySelector('pre');
       if (!codeElement) return;
       
-      const text = codeElement.innerText || codeElement.textContent;
+      let text = codeElement.innerText || codeElement.textContent;
+      
+      // Clean the text: remove Python prompts and continuation markers
+      text = cleanCodeText(text);
       
       // Use modern clipboard API if available
       if (navigator.clipboard && navigator.clipboard.writeText) {
@@ -95,6 +98,21 @@ function addCopyButtonsToCodeBlocks() {
       }
     });
   });
+}
+
+function cleanCodeText(text) {
+  // Remove Python interactive prompt characters (>>>, ...)
+  // Split by lines, process each line, then rejoin
+  const lines = text.split('\n');
+  const cleanedLines = lines.map(line => {
+    // Remove >>> at the start of line (with optional spaces)
+    line = line.replace(/^\s*>>>\s?/, '');
+    // Remove ... at the start of line (with optional spaces) - continuation prompt
+    line = line.replace(/^\s*\.\.\.\s?/, '');
+    return line;
+  });
+  
+  return cleanedLines.join('\n');
 }
 
 function copyWithFallback(text, button) {

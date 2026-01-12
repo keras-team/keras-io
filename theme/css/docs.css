@@ -520,28 +520,27 @@ p {
 .k-default-codeblock,
 .code-block-wrapper {
   position: relative;
-  min-height: 36px;
 }
 
 .code__copy--button {
-  background-color: rgba(39, 40, 34, 0.8);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 4px;
+  background-color: rgba(39, 40, 34, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 3px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  opacity: 0.7;
-  padding: 4px;
+  opacity: 0.6;
+  padding: 5px;
   position: absolute;
-  right: 4px;
-  top: 4px;
+  right: 8px;
+  top: 8px;
   transition: opacity 0.2s, background-color 0.2s;
   z-index: 10;
 }
 
 .code__copy--button:hover {
-  background-color: rgba(39, 40, 34, 1);
+  background-color: rgba(39, 40, 34, 0.95);
   opacity: 1;
 }
 
@@ -560,7 +559,7 @@ p {
   padding: 4px 8px;
   position: absolute;
   right: 0;
-  top: 38px;
+  top: 36px;
   white-space: nowrap;
   z-index: 11;
 }
