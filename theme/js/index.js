@@ -20,23 +20,8 @@ closeButton.addEventListener('click', () => {
 
 // Copy code
 function addCopyButtonsToCodeBlocks() {
-  // Find all code blocks: .k-default-codeblock divs and standalone <pre> tags with <code>
-  const wrappedCodeBlocks = document.querySelectorAll('.k-default-codeblock');
-  const allPreElements = document.querySelectorAll('pre');
-  
-  // Combine both types of code blocks
-  const allCodeBlocks = [...wrappedCodeBlocks];
-  
-  // Add standalone pre elements that contain code
-  allPreElements.forEach((pre) => {
-    const hasCode = pre.querySelector('code');
-    const isInsideDefault = pre.closest('.k-default-codeblock');
-    const isInsideWrapper = pre.closest('.code-block-wrapper');
-    
-    if (hasCode && !isInsideDefault && !isInsideWrapper) {
-      allCodeBlocks.push(pre);
-    }
-  });
+  // Find all code blocks with .codehilite class
+  const allCodeBlocks = document.querySelectorAll('.codehilite');
   
   allCodeBlocks.forEach((block) => {
     // Skip if button already exists
@@ -44,19 +29,8 @@ function addCopyButtonsToCodeBlocks() {
       return;
     }
     
-    // Create a wrapper div if the block is a <pre> element
-    let container = block;
-    if (block.tagName === 'PRE') {
-      const wrapper = document.createElement('div');
-      wrapper.className = 'code-block-wrapper';
-      wrapper.style.position = 'relative';
-      block.parentNode.insertBefore(wrapper, block);
-      wrapper.appendChild(block);
-      container = wrapper;
-    } else {
-      // For k-default-codeblock divs
-      block.style.position = 'relative';
-    }
+    // Set relative positioning on the container
+    block.style.position = 'relative';
     
     // Create copy button
     const button = document.createElement('button');
@@ -75,12 +49,12 @@ function addCopyButtonsToCodeBlocks() {
     button.appendChild(tooltip);
     
     // Add button to container
-    container.insertBefore(button, container.firstChild);
+    block.insertBefore(button, block.firstChild);
     
     // Add click event listener
     button.addEventListener('click', () => {
       // Find the code element
-      const codeElement = container.querySelector('pre code') || container.querySelector('pre');
+      const codeElement = block.querySelector('pre code') || block.querySelector('code') || block.querySelector('pre');
       if (!codeElement) return;
       
       let text = codeElement.innerText || codeElement.textContent;

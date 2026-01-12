@@ -517,8 +517,7 @@ p {
 }
 
 /* Copy code button styles */
-.k-default-codeblock,
-.code-block-wrapper {
+.codehilite {
   position: relative;
 }
 
