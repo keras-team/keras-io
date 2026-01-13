@@ -29,9 +29,6 @@ function addCopyButtonsToCodeBlocks() {
       return;
     }
     
-    // Set relative positioning on the container
-    block.style.position = 'relative';
-    
     // Create copy button
     const button = document.createElement('button');
     button.className = 'code__copy--button';
@@ -62,18 +59,8 @@ function addCopyButtonsToCodeBlocks() {
       // Clean the text: remove Python prompts and continuation markers
       text = cleanCodeText(text);
       
-      // Use modern clipboard API if available
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(text).then(() => {
-          showCopyTooltip(button);
-        }).catch(() => {
-          // Fallback method
-          copyWithFallback(text, button);
-        });
-      } else {
-        // Fallback for older browsers
-        copyWithFallback(text, button);
-      }
+      // Copy to clipboard using fallback method for better reliability
+      copyWithFallback(text, button);
     });
   });
 }
