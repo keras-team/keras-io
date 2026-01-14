@@ -54,7 +54,7 @@ style_reference_image_path = keras.utils.get_file(
     "starry_night.jpg",
     "https://raw.githubusercontent.com/jcjohnson/neural-style/master/examples/inputs/starry_night.jpg",
 )
-# ✅ NEW
+
 result_prefix = "style_transfer_result"
 
 # Weights of the different loss components
