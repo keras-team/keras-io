@@ -175,7 +175,7 @@ train_ds = assemble_dataset(
         "https://huggingface.co/datasets/diffusers/cat_toy_example/resolve/main/2.jpeg",
         "https://huggingface.co/datasets/diffusers/cat_toy_example/resolve/main/3.jpeg",
         "https://huggingface.co/datasets/diffusers/cat_toy_example/resolve/main/4.jpeg",
-        "https://huggingface.co/datasets/diffusers/cat_toy_example/resolve/main/1.jpeg", 
+        "https://huggingface.co/datasets/diffusers/cat_toy_example/resolve/main/5.jpeg", 
     ],
     prompts=[
         "a photo of a {}",
@@ -237,7 +237,7 @@ single_ds = assemble_dataset(
         "https://huggingface.co/datasets/diffusers/cat_toy_example/resolve/main/2.jpeg",
         "https://huggingface.co/datasets/diffusers/cat_toy_example/resolve/main/3.jpeg",
         "https://huggingface.co/datasets/diffusers/cat_toy_example/resolve/main/4.jpeg",
-        "https://huggingface.co/datasets/diffusers/cat_toy_example/resolve/main/1.jpeg", 
+        "https://huggingface.co/datasets/diffusers/cat_toy_example/resolve/main/5.jpeg", 
     ],
     prompts=[
         "a photo of a {}",
@@ -280,7 +280,7 @@ group_ds = assemble_dataset(
     urls=[
         "https://huggingface.co/datasets/diffusers/cat_toy_example/resolve/main/6.jpeg",
         "https://huggingface.co/datasets/diffusers/cat_toy_example/resolve/main/7.jpeg",
-        "https://huggingface.co/datasets/diffusers/cat_toy_example/resolve/main/3.jpeg", 
+        "https://huggingface.co/datasets/diffusers/cat_toy_example/resolve/main/8.jpeg", 
     ],
     prompts=[
         "a photo of a group of {}",
