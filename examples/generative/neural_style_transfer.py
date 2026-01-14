@@ -46,16 +46,11 @@ import numpy as np
 import tensorflow as tf
 from keras.applications import vgg19
 
-base_image_path = keras.utils.get_file(
-    "YellowLabradorLooking_new.jpg",
-    "https://storage.googleapis.com/download.tensorflow.org/example_images/YellowLabradorLooking_new.jpg",
-)
+base_image_path = keras.utils.get_file("paris.jpg", "https://i.imgur.com/F28w3Ac.jpg")
 style_reference_image_path = keras.utils.get_file(
-    "starry_night.jpg",
-    "https://raw.githubusercontent.com/jcjohnson/neural-style/master/examples/inputs/starry_night.jpg",
+    "starry_night.jpg", "https://i.imgur.com/9ooB60I.jpg"
 )
-# ✅ NEW
-result_prefix = "style_transfer_result"
+result_prefix = "paris_generated"
 
 # Weights of the different loss components
 total_variation_weight = 1e-6

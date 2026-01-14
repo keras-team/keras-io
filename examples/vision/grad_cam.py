@@ -45,9 +45,9 @@ last_conv_layer_name = "block14_sepconv2_act"
 
 # The local path to our target image
 img_path = keras.utils.get_file(
-    "YellowLabradorLooking_new.jpg",
-    "https://storage.googleapis.com/download.tensorflow.org/example_images/YellowLabradorLooking_new.jpg",
+    "african_elephant.jpg", "https://i.imgur.com/Bvro0YD.png"
 )
+
 display(Image(img_path))
 
 
