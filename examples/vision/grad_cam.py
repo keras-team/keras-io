@@ -70,8 +70,8 @@ def get_img_array(img_path, size):
 def make_gradcam_heatmap(img_array, model, last_conv_layer_name, pred_index=None):
     # First, we create a model that maps the input image to the activations
     # of the last conv layer as well as the output predictions
-    grad_model = keras.models.Model(
-        model.inputs, [model.get_layer(last_conv_layer_name).output, model.output]
+   grad_model = keras.models.Model(
+        model.input, [model.get_layer(last_conv_layer_name).output, model.output]
     )
 
     # Then, we compute the gradient of the top predicted class for our input image
