@@ -161,6 +161,34 @@ Perplexity increases only marginally, indicating model quality is largely
 preserved after quantization.
 
 ---
+## GPTQ vs AWQ?
+
+Both GPTQ and AWQ are weight-only quantization methods that require calibration
+data. Here's how to choose between them:
+
+| Aspect | GPTQ | AWQ |
+| ------ | ---- | --- |
+| **Algorithm** | Hessian-based second-order optimization | Grid search for activation-aware scales |
+| **Quantization speed** | Slower (requires Hessian estimation) | Faster (no Hessian computation) |
+| **Bit-widths supported** | 2/3/4/8-bit | Only 4-bit supported for now |
+| **Accuracy** | Often slightly better on decoder LLMs | Competitive, especially on encoder models |
+| **Memory during quantization** | Higher (Hessian storage) | Lower |
+| **Calibration sensitivity** | May overfit calibration set, affecting out-of-distribution performance | Less prone to overfitting |
+
+**Choose GPTQ when:**
+
+* You need bit-widths other than 4 (e.g., 2-bit or 8-bit).
+* Maximum accuracy is critical and you can afford longer quantization time.
+* You're working with decoder-only LLMs where GPTQ may have a slight edge.
+
+**Choose AWQ when:**
+
+* You need faster quantization (AWQ is typically 2-3x faster than GPTQ).
+* Memory during quantization is constrained.
+* 4-bit is sufficient for your use case.
+* Your model will be used on diverse/out-of-distribution data (AWQ is less prone to overfitting on calibration data).
+
+---
 ## Practical tips
 
 * GPTQ is a post-training technique; training after quantization is not supported.
