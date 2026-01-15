@@ -157,14 +157,14 @@ LOSSES_MASTER = {
                 "keras_rs.losses.PairwiseSoftZeroOneLoss.call",
             ],
         },
-        # {
-        #     "path": "list_mle_loss",
-        #     "title": "ListMLELoss",
-        #     "generate": [
-        #         "keras_rs.losses.ListMLELoss",
-        #         "keras_rs.losses.ListMLELoss.call",
-        #     ],
-        # },
+        {
+            "path": "list_mle_loss",
+            "title": "ListMLELoss",
+            "generate": [
+                "keras_rs.losses.ListMLELoss",
+                "keras_rs.losses.ListMLELoss.call",
+            ],
+        },
     ]
 }
 
