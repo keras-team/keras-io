@@ -435,7 +435,7 @@ EXAMPLES_MASTER = {
                     "title": "Self-supervised contrastive learning with SimSiam",
                     "subcategory": "Image similarity search",
                     "keras_3": True,
-                },               
+                },
             ],
         },
         {
@@ -677,7 +677,7 @@ EXAMPLES_MASTER = {
                     "title": "Classification with Gated Residual and Variable Selection Networks with HyperParameters tuning",
                     "subcategory": "Structured data classification",
                     "keras_3": True,
-                },                  
+                },
             ],
         },
         {
@@ -927,12 +927,6 @@ EXAMPLES_MASTER = {
                 {
                     "path": "transformer_asr",
                     "title": "Automatic Speech Recognition with Transformer",
-                    "subcategory": "Speech recognition",
-                    "keras_3": True,
-                },
-                 {
-                    "path": "speaker_recognition_using_cnn",
-                    "title": "Speaker Recognition",
                     "subcategory": "Speech recognition",
                     "keras_3": True,
                 },
