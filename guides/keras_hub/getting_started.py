@@ -65,7 +65,7 @@ guide, so we can follow the following steps:
 
 1. Go to the [Gemma 2](https://www.kaggle.com/models/keras/gemma2) model page, and accept
    the license at the banner at the top.
-2. Generate an Kaggle API key by going to [Kaggle settings](https://www.kaggle.com/settings)
+2. Generate a Kaggle API key by going to [Kaggle settings](https://www.kaggle.com/settings)
    and clicking "Create New Token" button under the "API" section.
 3. Inside your colab notebook, click on the key icon on the left hand toolbar. Add two
    secrets: `KAGGLE_USERNAME` with your username, and `KAGGLE_KEY` with the API key you just
@@ -116,7 +116,7 @@ Before we begin, let's take a look at the key classes we will use in the KerasHu
     range, or resizing inputs to a specific size. This class encapsulates the image-specific
     preprocessing.
   * **Inherits from**: `keras.layers.Layer`.
-* **AudioConveter**: `keras_hub.layers.AudioConveter`.
+* **AudioConverter**: `keras_hub.layers.AudioConverter`.
   * **What it does**: Converts raw audio to model ready input.
   * **Why it's important**: Audio models often need to preprocess raw audio input before
     passing it to a model, e.g. by computing a spectrogram of the audio signal. This class
@@ -128,7 +128,7 @@ the component with weights and state for the given pre-trained model identifier.
 `keras_hub.tokenizers.Tokenizer.from_preset("gemma2_2b_en")` will create a layer that
 tokenizes text using a Gemma2 tokenizer vocabulary.
 
-The figure below shows how all these core classes interact. Arrow indicate composition
+The figure below shows how all these core classes interact. Arrows indicate composition
 not inheritance (e.g., a task *has a* backbone).
 
 ![png](/img/guides/getting_started/class-diagram.png)
@@ -215,7 +215,7 @@ pretrained model's latent space. We can then map this latent space to any number
 specific outputs, depending on what we are trying to do with the model.
 
 A **preprocessor** is just a Keras layer that does all the preprocessing for a specific
-task. In our case, preprocessing with will resize our input image and rescale it to the
+task. In our case, preprocessing will resize our input image and rescale it to the
 range `[0, 1]` using some ImageNet specific mean and variance data. Let's call our
 task's preprocessor and backbone in succession to see what happens to our input shape.
 """
@@ -488,8 +488,8 @@ One of the most powerful features of KerasHub is the ability upload models to Ka
 Huggingface models hub and share them with others. `keras_hub.upload_preset` allows you
 to upload a saved preset.
 
-In this case, we will upload to Kaggle. We have already authenticated with Kaggle to,
-download the Gemma model earlier. Running the following cell well upload a new model
+In this case, we will upload to Kaggle. We have already authenticated with Kaggle to
+download the Gemma model earlier. Running the following cell will upload a new model
 to Kaggle.
 """
 
@@ -552,7 +552,7 @@ extract_dir = keras.utils.get_file(
 data_dir = pathlib.Path(extract_dir) / "aclImdb"
 
 """
-The IMDb dataset contrains a large amount of unlabeled movie reviews. We don't need those
+The IMDb dataset contains a large amount of unlabeled movie reviews. We don't need those
 here, we can simply delete them.
 """
 
@@ -737,7 +737,7 @@ backbone.enable_lora(4)
 text_classifier.summary()
 
 """
-After enabling LoRA, our model goes from 10GB of traininable parameters to just 20MB.
+After enabling LoRA, our model goes from 10GB of trainable parameters to just 20MB.
 That means the space used by optimizer variables will no longer be a concern.
 
 With all that set up, we can compile and train our model as normal.
