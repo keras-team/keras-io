@@ -119,9 +119,7 @@ raw_val_ds = keras.utils.text_dataset_from_directory(
     seed=1337,
     class_names=["pos", "neg"],
 )
-raw_test_ds = keras.utils.text_dataset_from_directory(
-    test_dir, batch_size=batch_size
-)
+raw_test_ds = keras.utils.text_dataset_from_directory(test_dir, batch_size=batch_size)
 
 print(f"Number of batches in raw_train_ds: {raw_train_ds.cardinality()}")
 print(f"Number of batches in raw_val_ds: {raw_val_ds.cardinality()}")
