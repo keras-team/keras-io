@@ -51,7 +51,6 @@ Index| Features      |Format             |Description
 """
 
 
-
 from zipfile import ZipFile
 
 uri = "https://storage.googleapis.com/tensorflow/tf-keras-datasets/jena_climate_2009_2016.csv.zip"
