@@ -35,14 +35,10 @@ from keras import layers
 Let's download the data and inspect its structure.
 """
 
-dataset_url = "https://ai.stanford.edu/~amaas/data/sentiment/aclImdb_v1.tar.gz"
-dataset_zip = keras.utils.get_file(
-    "aclImdb_v1.tar.gz",
-    dataset_url,
-    extract=True,
-)
-# The dataset is extracted into the same folder as the zip
-dataset_dir = os.path.join(os.path.dirname(dataset_zip), "aclImdb")
+"""shell
+curl -O https://ai.stanford.edu/~amaas/data/sentiment/aclImdb_v1.tar.gz
+tar -xf aclImdb_v1.tar.gz
+"""
 
 """
 The `aclImdb` folder contains a `train` and `test` subfolder:
@@ -100,25 +96,22 @@ get have no overlap.
 """
 
 batch_size = 32
-train_dir = os.path.join(dataset_dir, "train")
-test_dir = os.path.join(dataset_dir, "test")
-
 raw_train_ds = keras.utils.text_dataset_from_directory(
-    train_dir,
+    "aclImdb/train",
     batch_size=batch_size,
     validation_split=0.2,
     subset="training",
     seed=1337,
 )
 raw_val_ds = keras.utils.text_dataset_from_directory(
-    train_dir,
+    "aclImdb/train",
     batch_size=batch_size,
     validation_split=0.2,
     subset="validation",
     seed=1337,
 )
 raw_test_ds = keras.utils.text_dataset_from_directory(
-    test_dir, batch_size=batch_size
+    "aclImdb/test", batch_size=batch_size
 )
 
 print(f"Number of batches in raw_train_ds: {raw_train_ds.cardinality()}")
