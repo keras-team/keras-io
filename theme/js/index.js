@@ -106,4 +106,3 @@ if (exploreModule && window.innerWidth > 1199) {
 function verticallyCenterExploreContent() {
   exploreContent.style.marginTop = `${Math.round(exploreContent.getBoundingClientRect().height / 2)}px`;
 }
-
