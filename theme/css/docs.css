@@ -124,7 +124,7 @@ pre {
   z-index: 101;
   white-space: nowrap;
   background-color: #ffffff;
-  color: #AB0000
+  color: var(--text-red);
 }
 
 hr {
