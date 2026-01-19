@@ -66,26 +66,22 @@ pre {
   font-size: 100%;
 }
 
-/* 1. The container acts as the anchor for the floating button */
 .code__container {
   position: relative;
-  display: block; /* Standard block behavior restores natural spacing */
-  /* margin: 20px 0; */
-  /* border-radius: 8px; */
-  overflow: hidden; /* Ensures code doesn't spill out of corners */
+  display: block; 
+  overflow: hidden; 
 }
 
-/* 2. Position the button ABSOLUTELY so it sits INSIDE the code area */
 .code__copy--button {
   position: absolute;
-  right: 8px; /* Shifted towards the right edge */
-  top: 5px;
-  background-color: rgba(255, 255, 255, 0.1); /* Subtle dark-mode look */
+  right: 10px; 
+  top: 0;
+  background-color: rgba(255, 255, 255, 0.1); 
   border: none;
   border-radius: 4px;
   cursor: pointer;
   width: 32px;
-  height: 32px; /* Set height so it is clickable */
+  height: 32px; 
   z-index: 10;
   display: flex;
   align-items: center;
@@ -93,20 +89,14 @@ pre {
   transition: background-color 0.2s;
 }
 
-/* 3. The code block recovers its original spacing and "gap" */
 .code__container pre {
   margin: 0;
-  /* Extra right padding (45px) ensures code doesn't go under the button */
-  padding: 20px 45px 24px 24px; 
-  /* background-color: #000000 !important; Pure black like the Keras images */
-  /* color: #eeffff; */
+  padding: 28px 45px 24px 24px; 
   overflow-x: auto;
   border-radius: 8px;
-  line-height: 1.5; /* Restores vertical breathing room */
-  /* font-family: 'Fira Code', 'Courier New', monospace; Modern coding font */
+  line-height: 1.5; 
 }
 
-/* 4. Icon styling */
 .code__copy--button .icon--copy {
   filter: invert(1); 
   width: 18px;
@@ -122,19 +112,19 @@ pre {
   opacity: 1;
 }
 
-/* 5. Tooltip stays aligned with the button */
 .code__copy--tooltip {
-  /* background-color: #000000; */
-  /* color: #fff; */
   font-size: 11px;
-  padding: 4px 8px;
+  padding: 4px 4px;
   position: absolute;
-  right: 45px; /* Sits to the left of the button */
-  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  top: 40px;
   display: none;
   border-radius: 4px;
   z-index: 101;
   white-space: nowrap;
+  background-color: #ffffff;
+  color: #AB0000
 }
 
 hr {

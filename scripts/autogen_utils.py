@@ -77,34 +77,30 @@ def add_copy_buttons_to_code(html_content):
     def add_button(match):
         full_match = match.group(0)
         
-        # EXCLUSION 1: Explicit output blocks
         if 'class="k-default-codeblock"' in full_match:
             return full_match
             
-        # EXCLUSION 2: Model summary blocks (check for specific style or font)
         if 'style="white-space:pre;overflow-x:auto' in full_match or "DejaVu Sans Mono" in full_match:
             return full_match
 
-        # EXCLUSION 3: Content-based check for table borders or summary keywords
         if "┏━━━━━━" in full_match or "Total params:" in full_match:
             return full_match
 
         copy_button_html = (
             '<div class="code__container">'
-            '<button class="code__copy--button" onclick="copyCode(this)">'
+            '<button class="code__copy--button">'
             '<i class="icon--copy"></i>'
             '<span class="code__copy--tooltip">Copy</span>'
             '</button>'
         )
         return f'{copy_button_html}{full_match}</div>'
 
-    # Broaden pattern to capture all <pre> tags, including those with style attributes
     combined_pattern = r'(<div class="k-default-codeblock">.*?</div>)|(<pre[^>]*>.*?</pre>)'
     
     def handle_match(m):
-        if m.group(1): # It is a k-default-codeblock output
+        if m.group(1):
             return m.group(1)
-        else: # It is a <pre> tag, evaluate for button
+        else:
             return add_button(m)
 
     return re.sub(combined_pattern, handle_match, html_content, flags=re.DOTALL)

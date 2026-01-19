@@ -23,7 +23,7 @@ const copyButtons = document.querySelectorAll('.code__copy--button');
 copyButtons.forEach((button) => {
   button.addEventListener('click', () => {
     const parent = button.parentNode;
-    const text = parent.querySelector('.language-python').innerText;
+    const text = parent.querySelector('code').innerText;
     const inputElement = document.createElement('textarea');
     console.log('text', text);
     inputElement.value = text;
@@ -34,9 +34,12 @@ copyButtons.forEach((button) => {
     document.execCommand('copy');
     inputElement.remove();
 
-    button.querySelector('.code__copy--tooltip').style.display = 'block';
+    const tooltip = button.querySelector('.code__copy--tooltip');
+    tooltip.textContent = 'Copied!';
+    tooltip.style.display = 'block';
     setTimeout(() => {
-      button.querySelector('.code__copy--tooltip').style.display = 'none';
+      tooltip.textContent = 'Copy';
+      tooltip.style.display = 'none';
     }, 2000);
   });
 });
@@ -103,3 +106,4 @@ if (exploreModule && window.innerWidth > 1199) {
 function verticallyCenterExploreContent() {
   exploreContent.style.marginTop = `${Math.round(exploreContent.getBoundingClientRect().height / 2)}px`;
 }
+
