@@ -132,6 +132,12 @@ EXAMPLES_MASTER = {
                     "subcategory": "Image classification",
                     "keras_3": True,
                 },
+                {
+                    "path": "forwardforward",
+                    "title": "Using the Forward-Forward Algorithm for Image Classification",
+                    "subcategory": "Image classification",
+                    "keras_3": True,
+                },
                 # Image segmentation
                 {
                     "path": "oxford_pets_image_segmentation",
@@ -350,6 +356,12 @@ EXAMPLES_MASTER = {
                     "subcategory": "Image similarity search",
                     "keras_3": True,
                 },
+                {
+                    "path": "simsiam",
+                    "title": "Self-supervised contrastive learning with SimSiam",
+                    "subcategory": "Image similarity search",
+                    "keras_3": True,
+                },
                 # Video
                 {
                     "path": "video_classification",
@@ -422,18 +434,6 @@ EXAMPLES_MASTER = {
                     "path": "learnable_resizer",
                     "title": "Learning to Resize",
                     "subcategory": "Performance recipes",
-                    "keras_3": True,
-                },
-                {
-                    "path": "forwardforward",
-                    "title": "Using the Forward-Forward Algorithm for Image Classification",
-                    "subcategory": "Image classification",
-                    "keras_3": True,
-                },
-                {
-                    "path": "simsiam",
-                    "title": "Self-supervised contrastive learning with SimSiam",
-                    "subcategory": "Image similarity search",
                     "keras_3": True,
                 },
             ],
@@ -659,6 +659,12 @@ EXAMPLES_MASTER = {
                     "subcategory": "Structured data classification",
                     "keras_3": True,
                 },
+                {
+                    "path": "class_with_grn_and_vsn_with_hyperparameters_tuning",
+                    "title": "Classification with Gated Residual and Variable Selection Networks with HyperParameters tuning",
+                    "subcategory": "Structured data classification",
+                    "keras_3": True,
+                },
                 # Recommendation
                 {
                     "path": "collaborative_filtering_movielens",
@@ -670,12 +676,6 @@ EXAMPLES_MASTER = {
                     "path": "movielens_recommendations_transformers",
                     "title": "A Transformer-based recommendation system",
                     "subcategory": "Recommendation",
-                    "keras_3": True,
-                },
-                {
-                    "path": "class_with_grn_and_vsn_with_hyperparameters_tuning",
-                    "title": "Classification with Gated Residual and Variable Selection Networks with HyperParameters tuning",
-                    "subcategory": "Structured data classification",
                     "keras_3": True,
                 },
             ],
@@ -711,6 +711,12 @@ EXAMPLES_MASTER = {
                     "subcategory": "Timeseries classification",
                     "keras_3": True,
                 },
+                {
+                    "path": "eeg_bci_ssvepformer",
+                    "title": "Electroencephalogram Signal Classification for Brain-Computer Interface",
+                    "subcategory": "Timeseries classification",
+                    "keras_3": True,
+                },
                 # Anomaly detection
                 {
                     "path": "timeseries_anomaly_detection",
@@ -729,12 +735,6 @@ EXAMPLES_MASTER = {
                     "path": "timeseries_weather_forecasting",
                     "title": "Timeseries forecasting for weather prediction",
                     "subcategory": "Timeseries forecasting",
-                    "keras_3": True,
-                },
-                {
-                    "path": "eeg_bci_ssvepformer",
-                    "title": "Electroencephalogram Signal Classification for Brain-Computer Interface",
-                    "subcategory": "Timeseries classification",
                     "keras_3": True,
                 },
             ],
@@ -984,6 +984,7 @@ EXAMPLES_MASTER = {
             "title": "Quick Keras Recipes",
             "toc": True,
             "children": [
+                # Keras usage tips
                 {
                     "path": "parameter_efficient_finetuning_of_gemma_with_lora_and_qlora",
                     "title": "Parameter-efficient fine-tuning of Gemma with LoRA and QLoRA",
@@ -994,12 +995,6 @@ EXAMPLES_MASTER = {
                     "path": "float8_training_and_inference_with_transformer",
                     "title": "Float8 training and inference with a simple Transformer model",
                     "subcategory": "Keras usage tips",
-                    "keras_3": True,
-                },
-                {
-                    "path": "tf_serving",
-                    "title": "Serving TensorFlow models with TFServing",
-                    "subcategory": "Serving",
                     "keras_3": True,
                 },
                 {
@@ -1045,6 +1040,26 @@ EXAMPLES_MASTER = {
                     "keras_3": True,
                 },
                 {
+                    "path": "packaging_keras_models_for_wide_distribution",
+                    "title": "Packaging Keras models for wide distribution using Functional Subclassing",
+                    "subcategory": "Keras usage tips",
+                    "keras_3": True,
+                },
+                {
+                    "path": "approximating_non_function_mappings",
+                    "title": "Approximating non-Function Mappings with Mixture Density Networks",
+                    "subcategory": "Keras usage tips",
+                    "keras_3": True,
+                },
+                # Serving
+                {
+                    "path": "tf_serving",
+                    "title": "Serving TensorFlow models with TFServing",
+                    "subcategory": "Serving",
+                    "keras_3": True,
+                },
+                # ML best practices
+                {
                     "path": "sample_size_estimate",
                     "title": "Estimating required sample size for model training",
                     "subcategory": "ML best practices",
@@ -1060,18 +1075,6 @@ EXAMPLES_MASTER = {
                     "path": "creating_tfrecords",
                     "title": "Creating TFRecords",
                     "subcategory": "ML best practices",
-                    "keras_3": True,
-                },
-                {
-                    "path": "approximating_non_function_mappings",
-                    "title": "Approximating non-Function Mappings with Mixture Density Networks",
-                    "subcategory": "Keras usage tips",
-                    "keras_3": True,
-                },
-                {
-                    "path": "packaging_keras_models_for_wide_distribution",
-                    "title": "Packaging Keras models for wide distribution using Functional Subclassing",
-                    "subcategory": "Keras usage tips",
                     "keras_3": True,
                 },
                 # Rest will be autogenerated
