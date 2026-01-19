@@ -76,11 +76,8 @@ def make_outline(md_source):
 def add_copy_buttons_to_code(html_content):
     def add_button(match):
         full_match = match.group(0)
-        
-        if 'class="k-default-codeblock"' in full_match:
-            return full_match
-            
-        if 'style="white-space:pre;overflow-x:auto' in full_match or "DejaVu Sans Mono" in full_match:
+
+        if 'style="white-space:pre;overflow-x:auto' in full_match:
             return full_match
 
         if "┏━━━━━━" in full_match or "Total params:" in full_match:
