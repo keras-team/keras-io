@@ -163,8 +163,8 @@ y = y[indices]
 
 # Explicitly set apart 10% for validation data that we never train over.
 split_at = len(x) - len(x) // 10
-(x_train, x_val) = x[:split_at], x[split_at:]
-(y_train, y_val) = y[:split_at], y[split_at:]
+x_train, x_val = x[:split_at], x[split_at:]
+y_train, y_val = y[:split_at], y[split_at:]
 
 print("Training Data:")
 print(x_train.shape)

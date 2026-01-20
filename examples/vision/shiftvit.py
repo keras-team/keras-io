@@ -668,7 +668,7 @@ class ShiftViTModel(keras.Model):
         return config
 
     def _calculate_loss(self, data, training=False):
-        (images, labels) = data
+        images, labels = data
 
         # Augment the images
         augmented_images = self.data_augmentation(images, training=training)

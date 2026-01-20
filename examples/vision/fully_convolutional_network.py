@@ -103,7 +103,7 @@ We set a `batch_size` parameter that will batch our samples together, use a `shu
 parameter to mix our samples together.
 """
 
-(train_ds, valid_ds, test_ds) = tfds.load(
+train_ds, valid_ds, test_ds = tfds.load(
     "oxford_iiit_pet",
     split=["train[:85%]", "train[85%:]", "test"],
     batch_size=BATCH_SIZE,

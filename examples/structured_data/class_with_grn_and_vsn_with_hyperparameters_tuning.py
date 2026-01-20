@@ -89,7 +89,6 @@ from keras_tuner import HyperParameters
 import autokeras as ak
 from autokeras.utils import utils, types
 
-
 """
 ## Preparing the data
 

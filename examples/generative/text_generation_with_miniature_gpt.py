@@ -56,7 +56,6 @@ import tensorflow
 import tensorflow.data as tf_data
 import tensorflow.strings as tf_strings
 
-
 """
 ## Implement a Transformer block as a layer
 """

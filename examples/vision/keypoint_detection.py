@@ -275,7 +275,7 @@ class KeyPointsDataset(keras.utils.PyDataset):
     def __getitem__(self, index):
         indexes = self.indexes[index * self.batch_size : (index + 1) * self.batch_size]
         image_keys_temp = [self.image_keys[k] for k in indexes]
-        (images, keypoints) = self.__data_generation(image_keys_temp)
+        images, keypoints = self.__data_generation(image_keys_temp)
 
         return (images, keypoints)
 
@@ -300,7 +300,7 @@ class KeyPointsDataset(keras.utils.PyDataset):
             kps_obj = KeypointsOnImage(kps, shape=current_image.shape)
 
             # Apply the augmentation pipeline.
-            (new_image, new_kps_obj) = self.aug(image=current_image, keypoints=kps_obj)
+            new_image, new_kps_obj = self.aug(image=current_image, keypoints=kps_obj)
             batch_images[i,] = new_image
 
             # Parse the coordinates from the new keypoint object.

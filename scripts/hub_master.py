@@ -1337,7 +1337,7 @@ MODELS_MASTER = {
                 },
             ],
         },
-         {
+        {
             "path": "gpt_neo_x/",
             "title": "GPT-NeoX",
             "toc": True,
@@ -1759,15 +1759,15 @@ MODELS_MASTER = {
                     ],
                 },
                 {
-                   "path": "moonshine_audio_to_text",
-                   "title": "MoonshineAudioToText model",
-                   "generate": [
+                    "path": "moonshine_audio_to_text",
+                    "title": "MoonshineAudioToText model",
+                    "generate": [
                         "keras_hub.models.MoonshineAudioToText",
                         "keras_hub.models.MoonshineAudioToText.from_preset",
                         "keras_hub.models.MoonshineAudioToText.generate",
                         "keras_hub.models.MoonshineAudioToText.backbone",
                         "keras_hub.models.MoonshineAudioToText.preprocessor",
-                   ],
+                    ],
                 },
                 {
                     "path": "moonshine_audio_to_text_preprocessor",
@@ -2572,7 +2572,7 @@ MODELS_MASTER = {
                         "keras_hub.tokenizers.T5GemmaTokenizer",
                         "keras_hub.tokenizers.T5GemmaTokenizer.from_preset",
                         "keras_hub.models.T5GemmaTokenizer",
-                        "keras_hub.models.T5GemmaTokenizer.from_preset"
+                        "keras_hub.models.T5GemmaTokenizer.from_preset",
                     ],
                 },
                 {

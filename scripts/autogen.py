@@ -27,7 +27,6 @@ import tutobooks
 import generate_tf_guides
 import render_presets
 
-
 EXAMPLES_GH_LOCATION = Path("keras-team") / "keras-io" / "blob" / "master" / "examples"
 GUIDES_GH_LOCATION = Path("keras-team") / "keras-io" / "blob" / "master" / "guides"
 KERAS_TEAM_GH = "https://github.com/keras-team"
@@ -36,7 +35,7 @@ PROJECT_URL = {
     "keras_tuner": f"{KERAS_TEAM_GH}/keras-tuner/tree/v1.4.8/",
     "keras_hub": f"{KERAS_TEAM_GH}/keras-hub/tree/v0.25.1/",
     "tf_keras": f"{KERAS_TEAM_GH}/tf-keras/tree/v2.19.0/",
-    "keras_rs": f"{KERAS_TEAM_GH}/keras-rs/tree/v0.4.0/"
+    "keras_rs": f"{KERAS_TEAM_GH}/keras-rs/tree/v0.4.0/",
 }
 USE_MULTIPROCESSING = False
 
@@ -353,9 +352,7 @@ class KerasIO:
         templates_path = Path(self.templates_dir)
         shutil.copyfile(
             templates_path / "guides" / "intro_to_keras_for_engineers.md",
-            templates_path
-            / "getting_started"
-            / "intro_to_keras_for_engineers.md",
+            templates_path / "getting_started" / "intro_to_keras_for_engineers.md",
         )
         shutil.copyfile(
             templates_path / "guides" / "keras_hub" / "getting_started.md",
@@ -870,9 +867,7 @@ class KerasIO:
                     )
             site_path = Path(self.site_dir) / file.relative_to(self.redirects_dir)
             if site_path.exists():
-                raise ValueError(
-                    f"Redirect at {file} would overwrite a real page."
-                )
+                raise ValueError(f"Redirect at {file} would overwrite a real page.")
 
     def render_single_file(self, src_location, fname, nav):
         if not fname.endswith(".md"):

@@ -316,7 +316,7 @@ class PatchEncoder(layers.Layer):
         )
 
     def build(self, input_shape):
-        (_, self.num_patches, self.patch_area) = input_shape
+        _, self.num_patches, self.patch_area = input_shape
 
         # Create the projection layer for the patches.
         self.projection = layers.Dense(units=self.projection_dim)

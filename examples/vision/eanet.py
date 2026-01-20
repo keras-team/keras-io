@@ -31,7 +31,6 @@ from keras import ops
 
 import matplotlib.pyplot as plt
 
-
 """
 ## Prepare the data
 """
