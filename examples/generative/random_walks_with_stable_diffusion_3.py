@@ -174,7 +174,7 @@ elif keras.config.backend() == "jax":
 
     @jax.jit
     def compiled_function(state, *args, **kwargs):
-        (trainable_variables, non_trainable_variables) = state
+        trainable_variables, non_trainable_variables = state
         mapping = itertools.chain(
             zip(backbone.trainable_variables, trainable_variables),
             zip(backbone.non_trainable_variables, non_trainable_variables),

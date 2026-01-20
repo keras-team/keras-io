@@ -46,14 +46,12 @@ from functools import partial
 import os
 import time
 
-
 os.environ["KERAS_BACKEND"] = "jax"
 
 import jax
 from jax.experimental import pallas as pl
 import jax.numpy as jnp
 import keras
-
 
 """
 # Simple Example

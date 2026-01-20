@@ -21,7 +21,6 @@ import os
 import gdown
 from zipfile import ZipFile
 
-
 """
 ## Prepare CelebA data
 

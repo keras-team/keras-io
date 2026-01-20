@@ -692,7 +692,7 @@ class GauGAN(keras.Model):
         discriminator_loss = self.train_discriminator(
             latent_vector, segmentation_map, image, labels
         )
-        (generator_loss, feature_loss, vgg_loss, kl_loss) = self.train_generator(
+        generator_loss, feature_loss, vgg_loss, kl_loss = self.train_generator(
             latent_vector, segmentation_map, labels, image, mean, variance
         )
 

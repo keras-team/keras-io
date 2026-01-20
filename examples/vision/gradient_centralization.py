@@ -43,7 +43,6 @@ from keras import ops
 from tensorflow import data as tf_data
 import tensorflow_datasets as tfds
 
-
 """
 ## Prepare the data
 
