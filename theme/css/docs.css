@@ -69,7 +69,7 @@ pre {
 .code__container {
   position: relative;
   display: block; 
-  overflow: hidden; 
+  overflow: visible; 
 }
 
 .code__copy--button {
@@ -114,7 +114,7 @@ pre {
 
 .code__copy--tooltip {
   font-size: 11px;
-  padding: 4px 4px;
+  padding: 4px 8px;
   position: absolute;
   left: 50%;
   transform: translateX(-50%);
@@ -125,6 +125,10 @@ pre {
   white-space: nowrap;
   background-color: #ffffff;
   color: var(--text-red);
+}
+
+.code__copy--button.active .code__copy--tooltip {
+  display: block;
 }
 
 hr {
