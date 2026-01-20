@@ -19,6 +19,100 @@ closeButton.addEventListener('click', () => {
 });
 
 // Copy code
+function addCopyButtonsToCodeBlocks() {
+  // Find all code blocks with .codehilite class
+  const allCodeBlocks = document.querySelectorAll('.codehilite');
+  
+  allCodeBlocks.forEach((block) => {
+    // Skip if button already exists
+    if (block.querySelector('.code__copy--button')) {
+      return;
+    }
+    
+    // Create copy button
+    const button = document.createElement('button');
+    button.className = 'code__copy--button';
+    button.setAttribute('aria-label', 'Copy code to clipboard');
+    
+    // Create icon element
+    const icon = document.createElement('i');
+    icon.className = 'icon--copy';
+    button.appendChild(icon);
+    
+    // Create tooltip
+    const tooltip = document.createElement('div');
+    tooltip.className = 'code__copy--tooltip';
+    tooltip.textContent = 'Copied!';
+    button.appendChild(tooltip);
+    
+    // Add button to container
+    block.insertBefore(button, block.firstChild);
+    
+    // Add click event listener
+    button.addEventListener('click', () => {
+      // Find the code element
+      const codeElement = block.querySelector('pre code') || block.querySelector('code') || block.querySelector('pre');
+      if (!codeElement) return;
+      
+      let text = codeElement.innerText || codeElement.textContent;
+      
+      // Clean the text: remove Python prompts and continuation markers
+      text = cleanCodeText(text);
+      
+      // Copy to clipboard using fallback method for better reliability
+      copyWithFallback(text, button);
+    });
+  });
+}
+
+function cleanCodeText(text) {
+  // Remove Python interactive prompt characters (>>>, ...)
+  // Split by lines, process each line, then rejoin
+  const lines = text.split('\n');
+  const cleanedLines = lines.map(line => {
+    // Remove >>> at the start of line (with optional spaces)
+    line = line.replace(/^\s*>>>\s?/, '');
+    // Remove ... at the start of line (with optional spaces) - continuation prompt
+    line = line.replace(/^\s*\.\.\.\s?/, '');
+    return line;
+  });
+  
+  return cleanedLines.join('\n');
+}
+
+function copyWithFallback(text, button) {
+  const inputElement = document.createElement('textarea');
+  inputElement.value = text;
+  inputElement.setAttribute('readonly', '');
+  inputElement.style.position = 'absolute';
+  inputElement.style.left = '-9999px';
+  document.body.appendChild(inputElement);
+  inputElement.select();
+  
+  try {
+    document.execCommand('copy');
+    showCopyTooltip(button);
+  } catch (err) {
+    console.error('Failed to copy text:', err);
+  }
+  
+  inputElement.remove();
+}
+
+function showCopyTooltip(button) {
+  const tooltip = button.querySelector('.code__copy--tooltip');
+  if (tooltip) {
+    tooltip.style.display = 'block';
+    setTimeout(() => {
+      tooltip.style.display = 'none';
+    }, 2000);
+  }
+}
+
+// Add copy buttons on page load
+document.addEventListener('DOMContentLoaded', addCopyButtonsToCodeBlocks);
+
+// Existing copy buttons (for landing page compatibility)
 const copyButtons = document.querySelectorAll('.code__copy--button');
 copyButtons.forEach((button) => {
   button.addEventListener('click', () => {
