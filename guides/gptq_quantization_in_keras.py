@@ -35,7 +35,6 @@ import keras
 from keras_hub.models import Gemma3CausalLM
 from datasets import load_dataset
 
-
 prompt = "Keras is a"
 
 model = Gemma3CausalLM.from_preset("gemma3_1b")

@@ -36,7 +36,6 @@ import keras
 import tensorflow as tf
 from keras import layers
 
-
 """
 ## Prepare the Fashion-MNIST data
 

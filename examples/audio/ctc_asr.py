@@ -64,7 +64,6 @@ import matplotlib.pyplot as plt
 from IPython import display
 from jiwer import wer
 
-
 """
 ## Load the LJSpeech Dataset
 

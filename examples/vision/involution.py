@@ -104,7 +104,7 @@ class Involution(keras.layers.Layer):
 
     def build(self, input_shape):
         # Get the shape of the input.
-        (_, height, width, num_channels) = input_shape
+        _, height, width, num_channels = input_shape
 
         # Scale the height and width with respect to the strides.
         height = height // self.stride
@@ -247,7 +247,7 @@ print("loading the CIFAR10 dataset...")
 ) = keras.datasets.cifar10.load_data()
 
 # Normalize pixel values to be between 0 and 1.
-(train_images, test_images) = (train_images / 255.0, test_images / 255.0)
+train_images, test_images = (train_images / 255.0, test_images / 255.0)
 
 # Shuffle and batch the dataset.
 train_ds = (
@@ -441,7 +441,7 @@ vis_model = keras.Model(inv_model.input, outputs)
 fig, axes = plt.subplots(nrows=10, ncols=4, figsize=(10, 30))
 
 for ax, test_image in zip(axes, test_images[:10]):
-    (inv1_kernel, inv2_kernel, inv3_kernel) = vis_model.predict(test_image[None, ...])
+    inv1_kernel, inv2_kernel, inv3_kernel = vis_model.predict(test_image[None, ...])
     inv1_kernel = tf.reduce_sum(inv1_kernel, axis=[-1, -2, -3])
     inv2_kernel = tf.reduce_sum(inv2_kernel, axis=[-1, -2, -3])
     inv3_kernel = tf.reduce_sum(inv3_kernel, axis=[-1, -2, -3])

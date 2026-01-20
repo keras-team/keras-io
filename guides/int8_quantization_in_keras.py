@@ -69,7 +69,6 @@ import numpy as np
 import keras
 from keras import layers
 
-
 # Create a random number generator.
 rng = np.random.default_rng()
 

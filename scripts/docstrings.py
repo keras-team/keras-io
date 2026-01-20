@@ -1,5 +1,4 @@
-"""Lightweight fork of Keras-Autodocs.
-"""
+"""Lightweight fork of Keras-Autodocs."""
 
 import warnings
 import black
@@ -97,7 +96,9 @@ class KerasDocumentationGenerator:
             subblocks.append(docstring)
         # Render preset table for KerasCV and KerasHub
         if element.endswith("from_preset"):
-            table = render_presets.render_table(import_object(element.rsplit(".", 1)[0]))
+            table = render_presets.render_table(
+                import_object(element.rsplit(".", 1)[0])
+            )
             if table is not None:
                 subblocks.append(table)
         return "\n\n".join(subblocks) + "\n\n----\n\n"

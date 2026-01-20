@@ -16,7 +16,6 @@ import keras
 from keras import ops
 from keras import layers
 
-
 """
 ## Implement a Transformer block as a layer
 """

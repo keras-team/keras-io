@@ -58,7 +58,6 @@ import keras_hub
 import tensorflow as tf
 import tensorflow_datasets as tfds
 
-
 """
 ## Inference with a pretrained classifier
 

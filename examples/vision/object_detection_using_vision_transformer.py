@@ -95,7 +95,7 @@ for i in range(0, len(annot_paths)):
     image = keras.utils.load_img(
         path_images + image_paths[i],
     )
-    (w, h) = image.size[:2]
+    w, h = image.size[:2]
 
     # resize images
     image = image.resize((image_size, image_size))
@@ -448,7 +448,7 @@ for input_image in x_test[:10]:
     input_image = np.expand_dims(input_image, axis=0)
     preds = vit_object_detector.predict(input_image)[0]
 
-    (h, w) = (im).shape[0:2]
+    h, w = (im).shape[0:2]
 
     top_left_x, top_left_y = int(preds[0] * w), int(preds[1] * h)
 

@@ -58,7 +58,6 @@ from tensorflow import keras
 
 import tensorflow_similarity as tfsim
 
-
 tfsim.utils.tf_cap_memory()
 
 print("TensorFlow:", tf.__version__)
