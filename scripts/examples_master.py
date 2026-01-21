@@ -165,11 +165,11 @@ EXAMPLES_MASTER = {
                     "keras_3": True,
                 },
                 # Object Detection
-                {
-                    "path": "retinanet",
-                    "title": "Object Detection with RetinaNet",
-                    "subcategory": "Object detection",
-                },
+                # {
+                #     "path": "retinanet",
+                #     "title": "Object Detection with RetinaNet",
+                #     "subcategory": "Object detection",
+                # },
                 {
                     "path": "keypoint_detection",
                     "title": "Keypoint Detection with Transfer Learning",
@@ -285,11 +285,11 @@ EXAMPLES_MASTER = {
                     "highlight": True,
                     "keras_3": True,
                 },
-                {
-                    "path": "nl_image_search",
-                    "title": "Natural language image search with a Dual Encoder",
-                    "subcategory": "Image & Text",
-                },
+                # {
+                #     "path": "nl_image_search",
+                #     "title": "Natural language image search with a Dual Encoder",
+                #     "subcategory": "Image & Text",
+                # },
                 # Vision models interpretability
                 {
                     "path": "visualizing_what_convnets_learn",
@@ -316,11 +316,11 @@ EXAMPLES_MASTER = {
                     "keras_3": True,
                 },
                 # Image similarity search
-                {
-                    "path": "near_dup_search",
-                    "title": "Near-duplicate image search",
-                    "subcategory": "Image similarity search",
-                },
+                # {
+                #     "path": "near_dup_search",
+                #     "title": "Near-duplicate image search",
+                #     "subcategory": "Image similarity search",
+                # },
                 {
                     "path": "semantic_image_clustering",
                     "title": "Semantic Image Clustering",
@@ -345,11 +345,11 @@ EXAMPLES_MASTER = {
                     "subcategory": "Image similarity search",
                     "keras_3": True,
                 },
-                {
-                    "path": "metric_learning_tf_similarity",
-                    "title": "Metric learning for image similarity search using TensorFlow Similarity",
-                    "subcategory": "Image similarity search",
-                },
+                # {
+                #     "path": "metric_learning_tf_similarity",
+                #     "title": "Metric learning for image similarity search using TensorFlow Similarity",
+                #     "subcategory": "Image similarity search",
+                # },
                 {
                     "path": "nnclr",
                     "title": "Self-supervised contrastive learning with NNCLR",
@@ -481,11 +481,11 @@ EXAMPLES_MASTER = {
                     "subcategory": "Text classification",
                     "keras_3": True,
                 },
-                {
-                    "path": "tweet-classification-using-tfdf",
-                    "title": "Text classification using Decision Forests and pretrained embeddings",
-                    "subcategory": "Text classification",
-                },
+                # {
+                #     "path": "tweet-classification-using-tfdf",
+                #     "title": "Text classification using Decision Forests and pretrained embeddings",
+                #     "subcategory": "Text classification",
+                # },
                 {
                     "path": "pretrained_word_embeddings",
                     "title": "Using pre-trained word embeddings",
@@ -539,11 +539,11 @@ EXAMPLES_MASTER = {
                     "keras_3": True,
                 },
                 # Sequence-to-sequence
-                {
-                    "path": "text_extraction_with_bert",
-                    "title": "Text Extraction with BERT",
-                    "subcategory": "Sequence-to-sequence",
-                },
+                # {
+                #     "path": "text_extraction_with_bert",
+                #     "title": "Text Extraction with BERT",
+                #     "subcategory": "Sequence-to-sequence",
+                # },
                 {
                     "path": "addition_rnn",
                     "title": "Sequence to sequence learning for performing number addition",
@@ -642,11 +642,11 @@ EXAMPLES_MASTER = {
                     "subcategory": "Structured data classification",
                     "keras_3": True,
                 },
-                {
-                    "path": "classification_with_tfdf",
-                    "title": "Classification with TensorFlow Decision Forests",
-                    "subcategory": "Structured data classification",
-                },
+                # {
+                #     "path": "classification_with_tfdf",
+                #     "title": "Classification with TensorFlow Decision Forests",
+                #     "subcategory": "Structured data classification",
+                # },
                 {
                     "path": "deep_neural_decision_forests",
                     "title": "Classification with Neural Decision Forests",
@@ -759,26 +759,26 @@ EXAMPLES_MASTER = {
                     "highlight": True,
                     "keras_3": True,
                 },
-                {
-                    "path": "dreambooth",
-                    "title": "DreamBooth",
-                    "subcategory": "Image generation",
-                },
-                {
-                    "path": "ddpm",
-                    "title": "Denoising Diffusion Probabilistic Models",
-                    "subcategory": "Image generation",
-                },
-                {
-                    "path": "fine_tune_via_textual_inversion",
-                    "title": "Teach StableDiffusion new concepts via Textual Inversion",
-                    "subcategory": "Image generation",
-                },
-                {
-                    "path": "finetune_stable_diffusion",
-                    "title": "Fine-tuning Stable Diffusion",
-                    "subcategory": "Image generation",
-                },
+                # {
+                #     "path": "dreambooth",
+                #     "title": "DreamBooth",
+                #     "subcategory": "Image generation",
+                # },
+                # {
+                #     "path": "ddpm",
+                #     "title": "Denoising Diffusion Probabilistic Models",
+                #     "subcategory": "Image generation",
+                # },
+                # {
+                #     "path": "fine_tune_via_textual_inversion",
+                #     "title": "Teach StableDiffusion new concepts via Textual Inversion",
+                #     "subcategory": "Image generation",
+                # },
+                # {
+                #     "path": "finetune_stable_diffusion",
+                #     "title": "Fine-tuning Stable Diffusion",
+                #     "subcategory": "Image generation",
+                # },
                 {
                     "path": "vae",
                     "title": "Variational AutoEncoder",
@@ -833,16 +833,16 @@ EXAMPLES_MASTER = {
                     "subcategory": "Image generation",
                     "keras_3": True,
                 },
-                {
-                    "path": "stylegan",
-                    "title": "Face image generation with StyleGAN",
-                    "subcategory": "Image generation",
-                },
-                {
-                    "path": "vq_vae",
-                    "title": "Vector-Quantized Variational Autoencoders",
-                    "subcategory": "Image generation",
-                },
+                # {
+                #     "path": "stylegan",
+                #     "title": "Face image generation with StyleGAN",
+                #     "subcategory": "Image generation",
+                # },
+                # {
+                #     "path": "vq_vae",
+                #     "title": "Vector-Quantized Variational Autoencoders",
+                #     "subcategory": "Image generation",
+                # },
                 {
                     "path": "random_walks_with_stable_diffusion",
                     "title": "A walk through latent space with Stable Diffusion",
@@ -856,11 +856,11 @@ EXAMPLES_MASTER = {
                     "subcategory": "Style transfer",
                     "keras_3": True,
                 },
-                {
-                    "path": "adain",
-                    "title": "Neural Style Transfer with AdaIN",
-                    "subcategory": "Style transfer",
-                },
+                # {
+                #     "path": "adain",
+                #     "title": "Neural Style Transfer with AdaIN",
+                #     "subcategory": "Style transfer",
+                # },
                 # Text generation
                 {
                     "path": "gpt2_text_generation_with_keras_hub",
@@ -887,11 +887,11 @@ EXAMPLES_MASTER = {
                     "subcategory": "Text generation",
                     "keras_3": True,
                 },
-                {
-                    "path": "text_generation_fnet",
-                    "title": "Text Generation using FNet",
-                    "subcategory": "Text generation",
-                },
+                # {
+                #     "path": "text_generation_fnet",
+                #     "title": "Text Generation using FNet",
+                #     "subcategory": "Text generation",
+                # },
                 # Audio / midi generation
                 {
                     "path": "midi_generation_with_transformer",
@@ -906,11 +906,11 @@ EXAMPLES_MASTER = {
                     "subcategory": "Graph generation",
                     "keras_3": True,
                 },
-                {
-                    "path": "wgan-graphs",
-                    "title": "WGAN-GP with R-GCN for the generation of small molecular graphs",
-                    "subcategory": "Graph generation",
-                },
+                # {
+                #     "path": "wgan-graphs",
+                #     "title": "WGAN-GP with R-GCN for the generation of small molecular graphs",
+                #     "subcategory": "Graph generation",
+                # },
             ],
         },
         {
