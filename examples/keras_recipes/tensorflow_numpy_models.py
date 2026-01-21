@@ -345,3 +345,8 @@ great follow up learning exercise.
 
 Several open source NumPy ResNet implementations are available online.
 """
+
+"""
+## Relevant Chapters from Deep Learning with Python
+- [Chapter 7: A deep dive on Keras](https://deeplearningwithpython.io/chapters/chapter07_deep-dive-keras)
+"""

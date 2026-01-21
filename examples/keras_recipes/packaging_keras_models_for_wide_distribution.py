@@ -310,3 +310,8 @@ history = model.fit(
     epochs=EPOCHS,
     validation_data=dict_test_data,
 )
+
+"""
+## Relevant Chapters from Deep Learning with Python
+- [Chapter 18: Best practices for the real world](https://deeplearningwithpython.io/chapters/chapter18_best-practices-for-the-real-world)
+"""
