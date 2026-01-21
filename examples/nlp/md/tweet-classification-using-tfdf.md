@@ -937,5 +937,5 @@ the Gradient Boosted Tree model with pretrained embeddings achieved 81.6%
 test accuracy while the plain Gradient Boosted Tree model had 54.4% accuracy.
 
 ---
-## Relevant Chapters
+## Relevant Chapters from Deep Learning with Python.
 - [Chapter 14: Text classification](https://deeplearningwithpython.io/chapters/chapter14_text-classification)

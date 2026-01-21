@@ -713,7 +713,7 @@ and try the demo on [Hugging Face Spaces](https://huggingface.co/spaces/keras-io
 """
 
 """
-## Relevant Chapters
+## Relevant Chapters from Deep Learning with Python.
 - [Chapter 9: ConvNet architecture patterns](https://deeplearningwithpython.io/chapters/chapter09_convnet-architecture-patterns)
 - [Chapter 14: Text classification](https://deeplearningwithpython.io/chapters/chapter14_text-classification)
 """

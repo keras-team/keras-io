@@ -1620,5 +1620,5 @@ open source libraries/implementations, you can refer to the resources below:
 3. Google's unofficial [Active Learning playground](https://github.com/google/active-learning).
 
 ---
-## Relevant Chapters
+## Relevant Chapters from Deep Learning with Python.
 - [Chapter 14: Text classification](https://deeplearningwithpython.io/chapters/chapter14_text-classification)

@@ -118,7 +118,7 @@ history = model.fit(
 )
 
 """
-## Relevant Chapters
+## Relevant Chapters from Deep Learning with Python.
 - [Chapter 14: Text classification](https://deeplearningwithpython.io/chapters/chapter14_text-classification)
 - [Chapter 15: Language models and the Transformer](https://deeplearningwithpython.io/chapters/chapter15_language-models-and-the-transformer)
 """

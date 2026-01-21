@@ -607,7 +607,7 @@ And we're all done!
 """
 
 """
-## Relevant Chapters
+## Relevant Chapters from Deep Learning with Python.
 - [Chapter 16: Text generation](https://deeplearningwithpython.io/chapters/chapter16_text-generation)
 - [Chapter 18: Best practices for the real world](https://deeplearningwithpython.io/chapters/chapter18_best-practices-for-the-real-world)
 """

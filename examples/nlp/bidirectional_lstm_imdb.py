@@ -59,6 +59,6 @@ model.compile(optimizer="adam", loss="binary_crossentropy", metrics=["accuracy"]
 model.fit(x_train, y_train, batch_size=32, epochs=2, validation_data=(x_val, y_val))
 
 """
-## Relevant Chapters
+## Relevant Chapters from Deep Learning with Python.
 - [Chapter 14: Text classification](https://deeplearningwithpython.io/chapters/chapter14_text-classification)
 """

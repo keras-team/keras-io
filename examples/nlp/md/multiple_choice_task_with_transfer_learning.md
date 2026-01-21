@@ -889,5 +889,5 @@ HF](https://twitter.com/johnowhitaker/status/1689790373454041089?s=20)
 TFRecords](https://www.kaggle.com/code/cdeotte/triple-stratified-kfold-with-tfrecords)
 
 ---
-## Relevant Chapters
+## Relevant Chapters from Deep Learning with Python.
 - [Chapter 14: Text classification](https://deeplearningwithpython.io/chapters/chapter14_text-classification)
