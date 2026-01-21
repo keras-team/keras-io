@@ -130,3 +130,8 @@ for epoch in range(epochs):
 
         print("...Generated: ", generated)
         print("-")
+
+"""
+## Relevant Chapters from Deep Learning with Python
+- [Chapter 16: Text generation](https://deeplearningwithpython.io/chapters/chapter16_text-generation)
+"""

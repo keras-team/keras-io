@@ -770,3 +770,8 @@ image_row = np.hstack([images[0], images[1], mix_images[0]])
 plt.figure(figsize=(9, 3))
 plt.imshow(image_row)
 plt.axis("off")
+
+"""
+## Relevant Chapters from Deep Learning with Python
+- [Chapter 17: Image generation](https://deeplearningwithpython.io/chapters/chapter17_image-generation)
+"""

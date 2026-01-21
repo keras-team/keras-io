@@ -903,3 +903,7 @@ attempts unifying diffusion methods under a common framework
 * Large diffusion models: [GLIDE](https://arxiv.org/abs/2112.10741),
 [DALL-E 2](https://arxiv.org/abs/2204.06125/), [Imagen](https://arxiv.org/abs/2205.11487)
 
+
+---
+## Relevant Chapters from Deep Learning with Python
+- [Chapter 17: Image generation](https://deeplearningwithpython.io/chapters/chapter17_image-generation)

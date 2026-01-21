@@ -230,3 +230,8 @@ Some of the last generated images around epoch 30
 
 ![results](https://i.imgur.com/h5MtQZ7l.png)
 """
+
+"""
+## Relevant Chapters from Deep Learning with Python
+- [Chapter 17: Image generation](https://deeplearningwithpython.io/chapters/chapter17_image-generation)
+"""

@@ -313,3 +313,9 @@ Note: This code should preferably be run on GPU.
 model = create_model()
 
 model.fit(text_ds, verbose=2, epochs=25, callbacks=[text_gen_callback])
+
+"""
+## Relevant Chapters from Deep Learning with Python
+- [Chapter 15: Language models and the Transformer](https://deeplearningwithpython.io/chapters/chapter15_language-models-and-the-transformer)
+- [Chapter 16: Text generation](https://deeplearningwithpython.io/chapters/chapter16_text-generation)
+"""
