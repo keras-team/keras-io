@@ -607,3 +607,7 @@ To get better responses from the fine-tuned model, you can experiment with:
 - Setting a higher LoRA rank.
 - Modifying the hyperparameter values such as `learning_rate` and
 `weight_decay`.
+
+---
+## Relevant Chapters from Deep Learning with Python
+- [Chapter 16: Text generation](https://deeplearningwithpython.io/chapters/chapter16_text-generation)
