@@ -185,3 +185,8 @@ display(Image("generated_image_0.png"))
 display(Image("generated_image_1.png"))
 display(Image("generated_image_2.png"))
 display(Image("generated_image_3.png"))
+
+"""
+## Relevant Chapters from Deep Learning with Python
+- [Chapter 17: Image generation](https://deeplearningwithpython.io/chapters/chapter17_image-generation)
+"""

@@ -438,3 +438,8 @@ from IPython.display import Image, display
 display(Image("generated_img_0_19.png"))
 display(Image("generated_img_1_19.png"))
 display(Image("generated_img_2_19.png"))
+
+"""
+## Relevant Chapters from Deep Learning with Python
+- [Chapter 17: Image generation](https://deeplearningwithpython.io/chapters/chapter17_image-generation)
+"""
