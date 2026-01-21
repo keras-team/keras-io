@@ -300,3 +300,8 @@ end_to_end_model.compile(
 
 # Test it with `raw_test_ds`, which yields raw strings
 end_to_end_model.evaluate(raw_test_ds)
+
+"""
+## Relevant Chapters from Deep Learning with Python
+- [Chapter 14: Text classification](https://deeplearningwithpython.io/chapters/chapter14_text-classification)
+"""
