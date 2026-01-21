@@ -190,3 +190,7 @@ Test accuracy: 0.9919000267982483
 
 ```
 </div>
+
+---
+## Relevant Chapters from Deep Learning with Python
+- [Chapter 8: Image classification](https://deeplearningwithpython.io/chapters/chapter08_image-classification)

@@ -519,3 +519,8 @@ to predict the bounding boxes of an object in a given image,
 thus extending the use of Transformers to object detection tasks.
 The model can be improved further by tuning hyper-parameters and pre-training.
 """
+
+"""
+## Relevant Chapters from Deep Learning with Python
+- [Chapter 12: Object detection](https://deeplearningwithpython.io/chapters/chapter12_object-detection)
+"""

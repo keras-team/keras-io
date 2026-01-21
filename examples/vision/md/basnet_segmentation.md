@@ -1726,3 +1726,7 @@ for (image, mask), _ in zip(val_dataset, range(1)):
 ![png](/img/examples/vision/basnet_segmentation/basnet_segmentation_27_2.png)
     
 
+
+---
+## Relevant Chapters from Deep Learning with Python
+- [Chapter 11: Image segmentation](https://deeplearningwithpython.io/chapters/chapter11_image-segmentation)

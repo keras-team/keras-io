@@ -493,3 +493,8 @@ vis.visualize(
     morphological_cleanup=True,
     outlines=True,
 )
+
+"""
+## Relevant Chapters from Deep Learning with Python
+- [Chapter 10: Interpreting what ConvNets learn](https://deeplearningwithpython.io/chapters/chapter10_interpreting-what-convnets-learn)
+"""

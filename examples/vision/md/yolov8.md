@@ -705,3 +705,7 @@ visualize_detections(yolo, dataset=val_ds, bounding_box_format="xyxy")
 ![png](/img/examples/vision/yolov8/yolov8_49_1.png)
     
 
+
+---
+## Relevant Chapters from Deep Learning with Python
+- [Chapter 12: Object detection](https://deeplearningwithpython.io/chapters/chapter12_object-detection)

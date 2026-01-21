@@ -717,3 +717,7 @@ This model is 67.01 percent confident that CT scan is abnormal
 
 ```
 </div>
+
+---
+## Relevant Chapters from Deep Learning with Python
+- [Chapter 8: Image classification](https://deeplearningwithpython.io/chapters/chapter08_image-classification)

@@ -632,3 +632,8 @@ I also thank the [Google Developer
 Experts](https://developers.google.com/community/experts) program.
 
 """
+
+"""
+## Relevant Chapters from Deep Learning with Python
+- [Chapter 11: Image segmentation](https://deeplearningwithpython.io/chapters/chapter11_image-segmentation)
+"""

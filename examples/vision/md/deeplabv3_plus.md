@@ -1071,3 +1071,7 @@ plot_predictions(val_images[:4], colormap, model=model)
 ![png](/img/examples/vision/deeplabv3_plus/deeplabv3_plus_18_3.png)
     
 
+
+---
+## Relevant Chapters from Deep Learning with Python
+- [Chapter 11: Image segmentation](https://deeplearningwithpython.io/chapters/chapter11_image-segmentation)

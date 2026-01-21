@@ -481,3 +481,8 @@ Moving forward one can:
 You can use the trained model hosted on [Hugging Face Hub](https://huggingface.co/keras-io/involution)
 and try the demo on [Hugging Face Spaces](https://huggingface.co/spaces/keras-io/involution).
 """
+
+"""
+## Relevant Chapters from Deep Learning with Python
+- [Chapter 9: ConvNet architecture patterns](https://deeplearningwithpython.io/chapters/chapter09_convnet-architecture-patterns)
+"""
