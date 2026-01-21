@@ -1270,6 +1270,7 @@ API_MASTER = {
                         "keras.ops.log1p",
                         "keras.ops.log2",
                         "keras.ops.logaddexp",
+                        "keras.ops.logaddexp2",
                         "keras.ops.logical_and",
                         "keras.ops.logical_not",
                         "keras.ops.logical_or",
