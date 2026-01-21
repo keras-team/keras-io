@@ -607,24 +607,156 @@ API_MASTER = {
                             "toc": True,
                             "children": [
                                 {
+                                    "path": "aug_mix",
+                                    "title": "Aug Mix layer",
+                                    "generate": ["keras.layers.AugMix"],
+                                },
+                                {
+                                    "path": "auto_contrast",
+                                    "title": "Auto Contrast layer",
+                                    "generate": ["keras.layers.AutoContrast"],
+                                },
+                                {
+                                    "path": "center_crop",
+                                    "title": "Center Crop layer",
+                                    "generate": ["keras.layers.CenterCrop"],
+                                },
+                                {
+                                    "path": "cut_mix",
+                                    "title": "Cut Mix layer",
+                                    "generate": ["keras.layers.CutMix"],
+                                },
+                                {
+                                    "path": "equalization",
+                                    "title": "Equalization layer",
+                                    "generate": ["keras.layers.Equalization"],
+                                },
+                                {
+                                    "path": "max_num_bounding_box",
+                                    "title": "Max Number of Bounding Boxes layer",
+                                    "generate": ["keras.layers.MaxNumBoundingBoxes"],
+                                },
+                                {
+                                    "path": "mix_up",
+                                    "title": "Mix Up layer",
+                                    "generate": ["keras.layers.MixUp"],
+                                },
+                                {
+                                    "path": "rand_augment",
+                                    "title": "Rand Augment layer",
+                                    "generate": ["keras.layers.RandAugment"],
+                                },
+                                {
+                                    "path": "random_brightness",
+                                    "title": "Random Brightness layer",
+                                    "generate": ["keras.layers.RandomBrightness"],
+                                },
+                                {
+                                    "path": "random_color_degeneration",
+                                    "title": "Random Color Degeneration layer",
+                                    "generate": [
+                                        "keras.layers.RandomColorDegeneration"
+                                    ],
+                                },
+                                {
+                                    "path": "random_color_jitter",
+                                    "title": "Random Color Jitter layer",
+                                    "generate": ["keras.layers.RandomColorJitter"],
+                                },
+                                {
+                                    "path": "random_contrast",
+                                    "title": "Random Contrast layer",
+                                    "generate": ["keras.layers.RandomContrast"],
+                                },
+                                {
+                                    "path": "random_crop",
+                                    "title": "Random Crop layer",
+                                    "generate": ["keras.layers.RandomCrop"],
+                                },
+                                {
+                                    "path": "random_elastic_transform",
+                                    "title": "Random Elastic Transform layer",
+                                    "generate": ["keras.layers.RandomElasticTransform"],
+                                },
+                                {
+                                    "path": "random_erasing",
+                                    "title": "Random Erasing layer",
+                                    "generate": ["keras.layers.RandomErasing"],
+                                },
+                                {
+                                    "path": "random_flip",
+                                    "title": "Random Flip layer",
+                                    "generate": ["keras.layers.RandomFlip"],
+                                },
+                                {
+                                    "path": "random_gaussian_blur",
+                                    "title": "Random Gaussian Blur layer",
+                                    "generate": ["keras.layers.RandomGaussianBlur"],
+                                },
+                                {
+                                    "path": "random_grayscale",
+                                    "title": "Random Grayscale layer",
+                                    "generate": ["keras.layers.RandomGrayscale"],
+                                },
+                                {
+                                    "path": "random_hue",
+                                    "title": "Random Hue layer",
+                                    "generate": ["keras.layers.RandomHue"],
+                                },
+                                {
+                                    "path": "random_invert",
+                                    "title": "Random Invert layer",
+                                    "generate": ["keras.layers.RandomInvert"],
+                                },
+                                {
+                                    "path": "random_perspective",
+                                    "title": "Random Perspective layer",
+                                    "generate": ["keras.layers.RandomPerspective"],
+                                },
+                                {
+                                    "path": "random_posterization",
+                                    "title": "Random Posterization layer",
+                                    "generate": ["keras.layers.RandomPosterization"],
+                                },
+                                {
+                                    "path": "random_rotation",
+                                    "title": "Random Rotation layer",
+                                    "generate": ["keras.layers.RandomRotation"],
+                                },
+                                {
+                                    "path": "random_saturation",
+                                    "title": "Random Saturation layer",
+                                    "generate": ["keras.layers.RandomSaturation"],
+                                },
+                                {
+                                    "path": "random_sharpness",
+                                    "title": "Random Sharpness layer",
+                                    "generate": ["keras.layers.RandomSharpness"],
+                                },
+                                {
+                                    "path": "random_shear",
+                                    "title": "Random Shear layer",
+                                    "generate": ["keras.layers.RandomShear"],
+                                },
+                                {
+                                    "path": "random_translation",
+                                    "title": "Random Translation layer",
+                                    "generate": ["keras.layers.RandomTranslation"],
+                                },
+                                {
+                                    "path": "random_zoom",
+                                    "title": "Random Zoom layer",
+                                    "generate": ["keras.layers.RandomZoom"],
+                                },
+                                {
                                     "path": "resizing",
                                     "title": "Resizing layer",
                                     "generate": ["keras.layers.Resizing"],
                                 },
                                 {
-                                    "path": "rescaling",
-                                    "title": "Rescaling layer",
-                                    "generate": ["keras.layers.Rescaling"],
-                                },
-                                {
-                                    "path": "center_crop",
-                                    "title": "CenterCrop layer",
-                                    "generate": ["keras.layers.CenterCrop"],
-                                },
-                                {
-                                    "path": "auto_constrast",
-                                    "title": "AutoContrast layer",
-                                    "generate": ["keras.layers.AutoContrast"],
+                                    "path": "solarization",
+                                    "title": "Solarization layer",
+                                    "generate": ["keras.layers.Solarization"],
                                 },
                             ],
                         },
