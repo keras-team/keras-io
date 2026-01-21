@@ -939,3 +939,7 @@ interested you can check out
 * To further enhance the quality of the generated samples,
 [VQ-VAE-2](https://arxiv.org/abs/1906.00446) was proposed that follows a cascaded
 approach to learn the codebook and to generate the images.
+
+---
+## Relevant Chapters from Deep Learning with Python
+- [Chapter 17: Image generation](https://deeplearningwithpython.io/chapters/chapter17_image-generation)

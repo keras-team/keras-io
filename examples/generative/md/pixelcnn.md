@@ -393,3 +393,7 @@ display(Image("generated_image_3.png"))
 ![png](/img/examples/generative/pixelcnn/pixelcnn_10_60.png)
     
 
+
+---
+## Relevant Chapters from Deep Learning with Python
+- [Chapter 17: Image generation](https://deeplearningwithpython.io/chapters/chapter17_image-generation)

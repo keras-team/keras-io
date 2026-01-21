@@ -866,3 +866,8 @@ attempts unifying diffusion methods under a common framework
 
 
 """
+
+"""
+## Relevant Chapters from Deep Learning with Python
+- [Chapter 17: Image generation](https://deeplearningwithpython.io/chapters/chapter17_image-generation)
+"""
