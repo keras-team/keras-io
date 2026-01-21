@@ -527,3 +527,7 @@ increasing the number of gMLP blocks, and training the model for longer.
 You may also try to increase the size of the input images and use different patch sizes.
 Note that, the paper used advanced regularization strategies, such as MixUp and CutMix,
 as well as AutoAugment.
+
+---
+## Relevant Chapters from Deep Learning with Python
+- [Chapter 8: Image classification](https://deeplearningwithpython.io/chapters/chapter08_image-classification)

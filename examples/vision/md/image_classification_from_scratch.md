@@ -408,3 +408,7 @@ This image is 94.30% cat and 5.70% dog.
 ![png](/img/examples/vision/image_classification_from_scratch/image_classification_from_scratch_29_1.png)
     
 
+
+---
+## Relevant Chapters from Deep Learning with Python
+- [Chapter 8: Image classification](https://deeplearningwithpython.io/chapters/chapter08_image-classification)

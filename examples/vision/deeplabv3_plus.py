@@ -329,3 +329,8 @@ and try the demo on [Hugging Face Spaces](https://huggingface.co/spaces/keras-io
 """
 
 plot_predictions(val_images[:4], colormap, model=model)
+
+"""
+## Relevant Chapters from Deep Learning with Python
+- [Chapter 11: Image segmentation](https://deeplearningwithpython.io/chapters/chapter11_image-segmentation)
+"""

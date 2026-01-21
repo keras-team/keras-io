@@ -319,3 +319,8 @@ important for tasks like object detection and segmentation.
 to resize images/feature maps adaptively during training. [EfficientV2](https://arxiv.org/abs/2104.00298)
 uses this idea.
 """
+
+"""
+## Relevant Chapters from Deep Learning with Python
+- [Chapter 9: ConvNet architecture patterns](https://deeplearningwithpython.io/chapters/chapter09_convnet-architecture-patterns)
+"""

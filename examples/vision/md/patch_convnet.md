@@ -948,3 +948,7 @@ accuracy.
 
 I would like to thank [JarvisLabs.ai](https://jarvislabs.ai/) for
 providing GPU credits for this project.
+
+---
+## Relevant Chapters from Deep Learning with Python
+- [Chapter 9: ConvNet architecture patterns](https://deeplearningwithpython.io/chapters/chapter09_convnet-architecture-patterns)

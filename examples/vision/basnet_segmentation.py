@@ -483,3 +483,8 @@ basnet_model.load_weights("./basnet_weights.h5")
 for (image, mask), _ in zip(val_dataset, range(1)):
     pred_mask = basnet_model.predict(image)
     display([image[0], mask[0], normalize_output(pred_mask[0][0])])
+
+"""
+## Relevant Chapters from Deep Learning with Python
+- [Chapter 11: Image segmentation](https://deeplearningwithpython.io/chapters/chapter11_image-segmentation)
+"""
