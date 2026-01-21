@@ -560,6 +560,6 @@ TFRecords](https://www.kaggle.com/code/cdeotte/triple-stratified-kfold-with-tfre
 """
 
 """
-## Relevant Chapters from Deep Learning with Python.
+## Relevant Chapters from Deep Learning with Python
 - [Chapter 14: Text classification](https://deeplearningwithpython.io/chapters/chapter14_text-classification)
 """

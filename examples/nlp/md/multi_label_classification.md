@@ -806,5 +806,5 @@ to the original form.
 Thanks to [Cingis Kratochvil](https://github.com/cumbalik) for suggesting and extending this code example by introducing binary accuracy as the evaluation metric.
 
 ---
-## Relevant Chapters from Deep Learning with Python.
+## Relevant Chapters from Deep Learning with Python
 - [Chapter 14: Text classification](https://deeplearningwithpython.io/chapters/chapter14_text-classification)

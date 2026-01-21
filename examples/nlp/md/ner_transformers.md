@@ -459,6 +459,6 @@ You can use the trained model hosted on [Hugging Face Hub](https://huggingface.c
 and try the demo on [Hugging Face Spaces](https://huggingface.co/spaces/keras-io/ner_with_transformers)."""
 
 ---
-## Relevant Chapters from Deep Learning with Python.
+## Relevant Chapters from Deep Learning with Python
 - [Chapter 14: Text classification](https://deeplearningwithpython.io/chapters/chapter14_text-classification)
 - [Chapter 15: Language models and the Transformer](https://deeplearningwithpython.io/chapters/chapter15_language-models-and-the-transformer)

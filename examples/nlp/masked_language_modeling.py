@@ -505,6 +505,6 @@ end_to_end_classification_model = get_end_to_end(classifer_model)
 end_to_end_classification_model.evaluate(test_raw_classifier_ds)
 
 """
-## Relevant Chapters from Deep Learning with Python.
+## Relevant Chapters from Deep Learning with Python
 - [Chapter 15: Language models and the Transformer](https://deeplearningwithpython.io/chapters/chapter15_language-models-and-the-transformer)
 """

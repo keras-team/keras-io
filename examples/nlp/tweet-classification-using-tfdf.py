@@ -297,6 +297,6 @@ test accuracy while the plain Gradient Boosted Tree model had 54.4% accuracy.
 """
 
 """
-## Relevant Chapters from Deep Learning with Python.
+## Relevant Chapters from Deep Learning with Python
 - [Chapter 14: Text classification](https://deeplearningwithpython.io/chapters/chapter14_text-classification)
 """
