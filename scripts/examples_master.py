@@ -165,11 +165,12 @@ EXAMPLES_MASTER = {
                     "keras_3": True,
                 },
                 # Object Detection
-                # {
-                #     "path": "retinanet",
-                #     "title": "Object Detection with RetinaNet",
-                #     "subcategory": "Object detection",
-                # },
+                {
+                    "path": "retinanet",
+                    "title": "Object Detection with RetinaNet",
+                    "subcategory": "Object detection",
+                    "keras_2": True,
+                },
                 {
                     "path": "keypoint_detection",
                     "title": "Keypoint Detection with Transfer Learning",
@@ -181,6 +182,12 @@ EXAMPLES_MASTER = {
                     "title": "Object detection with Vision Transformers",
                     "subcategory": "Object detection",
                     "keras_3": True,
+                },
+                {
+                    "path": "yolov8",
+                    "title": "Efficient Object Detection with YOLOV8 and KerasCV",
+                    "subcategory": "Object detection",
+                    "keras_2": True,
                 },
                 # 3D
                 {
@@ -285,11 +292,12 @@ EXAMPLES_MASTER = {
                     "highlight": True,
                     "keras_3": True,
                 },
-                # {
-                #     "path": "nl_image_search",
-                #     "title": "Natural language image search with a Dual Encoder",
-                #     "subcategory": "Image & Text",
-                # },
+                {
+                    "path": "nl_image_search",
+                    "title": "Natural language image search with a Dual Encoder",
+                    "subcategory": "Image & Text",
+                    "keras_2": True,
+                },
                 # Vision models interpretability
                 {
                     "path": "visualizing_what_convnets_learn",
@@ -316,11 +324,12 @@ EXAMPLES_MASTER = {
                     "keras_3": True,
                 },
                 # Image similarity search
-                # {
-                #     "path": "near_dup_search",
-                #     "title": "Near-duplicate image search",
-                #     "subcategory": "Image similarity search",
-                # },
+                {
+                    "path": "near_dup_search",
+                    "title": "Near-duplicate image search",
+                    "subcategory": "Image similarity search",
+                    "keras_2": True,
+                },
                 {
                     "path": "semantic_image_clustering",
                     "title": "Semantic Image Clustering",
@@ -345,11 +354,12 @@ EXAMPLES_MASTER = {
                     "subcategory": "Image similarity search",
                     "keras_3": True,
                 },
-                # {
-                #     "path": "metric_learning_tf_similarity",
-                #     "title": "Metric learning for image similarity search using TensorFlow Similarity",
-                #     "subcategory": "Image similarity search",
-                # },
+                {
+                    "path": "metric_learning_tf_similarity",
+                    "title": "Metric learning for image similarity search using TensorFlow Similarity",
+                    "subcategory": "Image similarity search",
+                    "keras_2": True,
+                },
                 {
                     "path": "nnclr",
                     "title": "Self-supervised contrastive learning with NNCLR",
@@ -436,6 +446,48 @@ EXAMPLES_MASTER = {
                     "subcategory": "Performance recipes",
                     "keras_3": True,
                 },
+                {
+                    "path": "adamatch",
+                    "title": "Semi-supervision and domain adaptation with AdaMatch",
+                    "subcategory": "Performance recipes",
+                    "keras_2": True,
+                },
+                {
+                    "path": "barlow_twins",
+                    "title": "Barlow Twins for Contrastive SSL",
+                    "subcategory": "Image similarity search",
+                    "keras_2": True,
+                },
+                {
+                    "path": "consistency_training",
+                    "title": "Consistency training with supervision",
+                    "subcategory": "Performance recipes",
+                    "keras_2": True,
+                },
+                {
+                    "path": "deit",
+                    "title": "Distilling Vision Transformers",
+                    "subcategory": "Performance recipes",
+                    "keras_2": True,
+                },
+                {
+                    "path": "focal_modulation_network",
+                    "title": "Focal Modulation: A replacement for Self-Attention",
+                    "subcategory": "Image classification",
+                    "keras_2": True,
+                },
+                {
+                    "path": "masked_image_modeling",
+                    "title": "Masked image modeling with Autoencoders",
+                    "subcategory": "Performance recipes",
+                    "keras_2": True,
+                },
+                {
+                    "path": "supervised-contrastive-learning",
+                    "title": "Supervised Contrastive Learning",
+                    "subcategory": "Performance recipes",
+                    "keras_2": True,
+                },
             ],
         },
         {
@@ -481,11 +533,12 @@ EXAMPLES_MASTER = {
                     "subcategory": "Text classification",
                     "keras_3": True,
                 },
-                # {
-                #     "path": "tweet-classification-using-tfdf",
-                #     "title": "Text classification using Decision Forests and pretrained embeddings",
-                #     "subcategory": "Text classification",
-                # },
+                {
+                    "path": "tweet-classification-using-tfdf",
+                    "title": "Text classification using Decision Forests and pretrained embeddings",
+                    "subcategory": "Text classification",
+                    "keras_2": True,
+                },
                 {
                     "path": "pretrained_word_embeddings",
                     "title": "Using pre-trained word embeddings",
@@ -501,6 +554,12 @@ EXAMPLES_MASTER = {
                 {
                     "path": "data_parallel_training_with_keras_hub",
                     "title": "Data Parallel Training with KerasHub and tf.distribute",
+                    "subcategory": "Text classification",
+                    "keras_3": True,
+                },
+                {
+                    "path": "multiple_choice_task_with_transfer_learning",
+                    "title": "MultipleChoice Task with Transfer Learning",
                     "subcategory": "Text classification",
                     "keras_3": True,
                 },
@@ -539,11 +598,12 @@ EXAMPLES_MASTER = {
                     "keras_3": True,
                 },
                 # Sequence-to-sequence
-                # {
-                #     "path": "text_extraction_with_bert",
-                #     "title": "Text Extraction with BERT",
-                #     "subcategory": "Sequence-to-sequence",
-                # },
+                {
+                    "path": "text_extraction_with_bert",
+                    "title": "Text Extraction with BERT",
+                    "subcategory": "Sequence-to-sequence",
+                    "keras_2": True,
+                },
                 {
                     "path": "addition_rnn",
                     "title": "Sequence to sequence learning for performing number addition",
@@ -642,11 +702,12 @@ EXAMPLES_MASTER = {
                     "subcategory": "Structured data classification",
                     "keras_3": True,
                 },
-                # {
-                #     "path": "classification_with_tfdf",
-                #     "title": "Classification with TensorFlow Decision Forests",
-                #     "subcategory": "Structured data classification",
-                # },
+                {
+                    "path": "classification_with_tfdf",
+                    "title": "Classification with TensorFlow Decision Forests",
+                    "subcategory": "Structured data classification",
+                    "keras_2": True,
+                },
                 {
                     "path": "deep_neural_decision_forests",
                     "title": "Classification with Neural Decision Forests",
@@ -759,26 +820,30 @@ EXAMPLES_MASTER = {
                     "highlight": True,
                     "keras_3": True,
                 },
-                # {
-                #     "path": "dreambooth",
-                #     "title": "DreamBooth",
-                #     "subcategory": "Image generation",
-                # },
-                # {
-                #     "path": "ddpm",
-                #     "title": "Denoising Diffusion Probabilistic Models",
-                #     "subcategory": "Image generation",
-                # },
-                # {
-                #     "path": "fine_tune_via_textual_inversion",
-                #     "title": "Teach StableDiffusion new concepts via Textual Inversion",
-                #     "subcategory": "Image generation",
-                # },
-                # {
-                #     "path": "finetune_stable_diffusion",
-                #     "title": "Fine-tuning Stable Diffusion",
-                #     "subcategory": "Image generation",
-                # },
+                {
+                    "path": "dreambooth",
+                    "title": "DreamBooth",
+                    "subcategory": "Image generation",
+                    "keras_2": True,
+                },
+                {
+                    "path": "ddpm",
+                    "title": "Denoising Diffusion Probabilistic Models",
+                    "subcategory": "Image generation",
+                    "keras_2": True,
+                },
+                {
+                    "path": "fine_tune_via_textual_inversion",
+                    "title": "Teach StableDiffusion new concepts via Textual Inversion",
+                    "subcategory": "Image generation",
+                    "keras_2": True,
+                },
+                {
+                    "path": "finetune_stable_diffusion",
+                    "title": "Fine-tuning Stable Diffusion",
+                    "subcategory": "Image generation",
+                    "keras_2": True,
+                },
                 {
                     "path": "vae",
                     "title": "Variational AutoEncoder",
@@ -833,16 +898,18 @@ EXAMPLES_MASTER = {
                     "subcategory": "Image generation",
                     "keras_3": True,
                 },
-                # {
-                #     "path": "stylegan",
-                #     "title": "Face image generation with StyleGAN",
-                #     "subcategory": "Image generation",
-                # },
-                # {
-                #     "path": "vq_vae",
-                #     "title": "Vector-Quantized Variational Autoencoders",
-                #     "subcategory": "Image generation",
-                # },
+                {
+                    "path": "stylegan",
+                    "title": "Face image generation with StyleGAN",
+                    "subcategory": "Image generation",
+                    "keras_2": True,
+                },
+                {
+                    "path": "vq_vae",
+                    "title": "Vector-Quantized Variational Autoencoders",
+                    "subcategory": "Image generation",
+                    "keras_2": True,
+                },
                 {
                     "path": "random_walks_with_stable_diffusion",
                     "title": "A walk through latent space with Stable Diffusion",
@@ -856,11 +923,12 @@ EXAMPLES_MASTER = {
                     "subcategory": "Style transfer",
                     "keras_3": True,
                 },
-                # {
-                #     "path": "adain",
-                #     "title": "Neural Style Transfer with AdaIN",
-                #     "subcategory": "Style transfer",
-                # },
+                {
+                    "path": "adain",
+                    "title": "Neural Style Transfer with AdaIN",
+                    "subcategory": "Style transfer",
+                    "keras_2": True,
+                },
                 # Text generation
                 {
                     "path": "gpt2_text_generation_with_keras_hub",
@@ -887,11 +955,12 @@ EXAMPLES_MASTER = {
                     "subcategory": "Text generation",
                     "keras_3": True,
                 },
-                # {
-                #     "path": "text_generation_fnet",
-                #     "title": "Text Generation using FNet",
-                #     "subcategory": "Text generation",
-                # },
+                {
+                    "path": "text_generation_fnet",
+                    "title": "Text Generation using FNet",
+                    "subcategory": "Text generation",
+                    "keras_2": True,
+                },
                 # Audio / midi generation
                 {
                     "path": "midi_generation_with_transformer",
@@ -906,11 +975,19 @@ EXAMPLES_MASTER = {
                     "subcategory": "Graph generation",
                     "keras_3": True,
                 },
-                # {
-                #     "path": "wgan-graphs",
-                #     "title": "WGAN-GP with R-GCN for the generation of small molecular graphs",
-                #     "subcategory": "Graph generation",
-                # },
+                # Density estimation
+                {
+                    "path": "real_nvp",
+                    "title": "Density estimation using Real NVP",
+                    "subcategory": "Density estimation",
+                    "keras_2": True,
+                },
+                {
+                    "path": "wgan-graphs",
+                    "title": "WGAN-GP with R-GCN for the generation of small molecular graphs",
+                    "subcategory": "Graph generation",
+                    "keras_2": True,
+                },
             ],
         },
         {
@@ -918,6 +995,7 @@ EXAMPLES_MASTER = {
             "title": "Audio Data",
             "toc": True,
             "children": [
+                # Speech recognition
                 {
                     "path": "vocal_track_separation",
                     "title": "Vocal Track Separation with Encoder-Decoder Architecture",
@@ -931,10 +1009,36 @@ EXAMPLES_MASTER = {
                     "keras_3": True,
                 },
                 {
+                    "path": "ctc_asr",
+                    "title": "Automatic Speech Recognition using CTC",
+                    "subcategory": "Speech recognition",
+                    "keras_2": True,
+                },
+                # Audio classification
+                {
                     "path": "stft",
                     "title": "Audio Classification with the STFTSpectrogram layer",
                     "subcategory": "Audio classification",
                     "keras_3": True,
+                },
+                {
+                    "path": "speaker_recognition_using_cnn",
+                    "title": "Speaker Recognition",
+                    "subcategory": "Audio classification",
+                    "keras_3": True,
+                },
+                {
+                    "path": "uk_ireland_accent_recognition",
+                    "title": "English speaker accent recognition using Transfer Learning",
+                    "subcategory": "Audio classification",
+                    "keras_2": True,
+                },
+                # Audio generation
+                {
+                    "path": "melgan_spectrogram_inversion",
+                    "title": "MelGAN-based spectrogram inversion using feature matching",
+                    "subcategory": "Audio generation",
+                    "keras_2": True,
                 },
                 # Rest will be autogenerated
             ],
@@ -976,7 +1080,33 @@ EXAMPLES_MASTER = {
             "title": "Graph Data",
             "toc": True,
             "children": [
-                # Will be autogenerated
+                # Node classification
+                {
+                    "path": "gat_node_classification",
+                    "title": "Graph attention network (GAT) for node classification",
+                    "subcategory": "Node classification",
+                    "keras_2": True,
+                },
+                {
+                    "path": "gnn_citations",
+                    "title": "Node Classification with Graph Neural Networks",
+                    "subcategory": "Node classification",
+                    "keras_2": True,
+                },
+                # Molecular property prediction
+                {
+                    "path": "mpnn-molecular-graphs",
+                    "title": "Message-passing neural network (MPNN) for molecular property prediction",
+                    "subcategory": "Molecular property prediction",
+                    "keras_2": True,
+                },
+                # Graph representation learning
+                {
+                    "path": "node2vec_movielens",
+                    "title": "Graph representation learning with node2vec",
+                    "subcategory": "Graph representation learning",
+                    "keras_2": True,
+                },
             ],
         },
         {
@@ -1076,6 +1206,30 @@ EXAMPLES_MASTER = {
                     "title": "Creating TFRecords",
                     "subcategory": "ML best practices",
                     "keras_3": True,
+                },
+                {
+                    "path": "bayesian_neural_networks",
+                    "title": "Probabilistic Bayesian Neural Networks",
+                    "subcategory": "ML best practices",
+                    "keras_2": True,
+                },
+                {
+                    "path": "better_knowledge_distillation",
+                    "title": "Knowledge distillation recipes",
+                    "subcategory": "ML best practices",
+                    "keras_3": True,
+                },
+                {
+                    "path": "sklearn_metric_callbacks",
+                    "title": "Evaluating and exporting scikit-learn metrics in a Keras callback",
+                    "subcategory": "Keras usage tips",
+                    "keras_3": True,
+                },
+                {
+                    "path": "tfrecord",
+                    "title": "How to train a Keras model on TFRecord files",
+                    "subcategory": "ML best practices",
+                    "keras_2": True,
                 },
                 # Rest will be autogenerated
             ],

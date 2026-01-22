@@ -92,7 +92,13 @@ class KerasIO:
                         f.close()
                         assert title_line.startswith("Title: ")
                         title = title_line[len("Title: ") :]
-                        children.append({"path": example_path, "title": title.strip()})
+                        children.append(
+                            {
+                                "path": example_path,
+                                "title": title.strip(),
+                                "keras_3": True,
+                            }
+                        )
             entry["children"] = children
 
     def make_md_sources(self):
@@ -645,6 +651,9 @@ class KerasIO:
             examples_by_subcategory = {}
             subcategory_names = []
             for example in examples_by_category[category_name]:
+                # Skip rendering for Keras 2 examples
+                if example.get("keras_2"):
+                    continue
                 subcategory_name = example.get("subcategory", "Other")
                 if subcategory_name not in examples_by_subcategory:
                     examples_by_subcategory[subcategory_name] = []
@@ -652,14 +661,21 @@ class KerasIO:
                 example["path"] = "/examples/" + category_path + example["path"]
                 examples_by_subcategory[subcategory_name].append(example)
 
+            # Build subcategories, keeping only non-empty ones
             subcategories_to_render = []
             for subcategory_name in subcategory_names:
-                subcategories_to_render.append(
-                    {
-                        "title": subcategory_name,
-                        "examples": examples_by_subcategory[subcategory_name],
-                    }
-                )
+                examples_list = examples_by_subcategory.get(subcategory_name, [])
+                if examples_list:
+                    subcategories_to_render.append(
+                        {
+                            "title": subcategory_name,
+                            "examples": examples_list,
+                        }
+                    )
+
+            # If nothing remains after filtering, skip this category
+            if not subcategories_to_render:
+                continue
 
             category_dict = {
                 "title": category_name,
