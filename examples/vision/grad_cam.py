@@ -26,7 +26,6 @@ from IPython.display import Image, display
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 
-
 """
 ## Configurable parameters
 
