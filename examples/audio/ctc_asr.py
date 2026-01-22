@@ -1,10 +1,19 @@
 """
-Title: Automatic Speech Recognition using CTC
-Authors: [Mohamed Reda Bouadjenek](https://rbouadjenek.github.io/) and [Ngoc Dung Huynh](https://www.linkedin.com/in/parkerhuynh/)
-Date created: 2021/09/26
-Last modified: 2021/09/26
-Description: Training a CTC-based model for automatic speech recognition.
-Accelerator: GPU
+Title: FILLME
+Author: FILLME
+Date created: FILLME
+Last modified: FILLME
+Description: FILLME
+"""
+
+"""
+# Automatic Speech Recognition using CTC
+
+**Authors:** [Mohamed Reda Bouadjenek](https://rbouadjenek.github.io/) and [Ngoc Dung
+Huynh](https://www.linkedin.com/in/parkerhuynh/)<br>
+**Date created:** 2021/09/26<br>
+**Last modified:** 2026/01/22<br>
+**Description:** Training a CTC-based model for automatic speech recognition.
 """
 
 """
@@ -24,6 +33,7 @@ used to train deep neural networks in speech recognition, handwriting
 recognition and other sequence problems. CTC is used when  we don’t know
 how the input aligns with the output (how the characters in the transcript
 align to the audio). The model we create is similar to
+[DeepSpeech2](https://nvidia.github.io/OpenSeq2Seq/html/speech-recognition/deepspeech2.html).
 [DeepSpeech2](https://nvidia.github.io/OpenSeq2Seq/html/speech-recognition/deepspeech2.html).
 
 We will use the LJSpeech dataset from the
@@ -47,8 +57,9 @@ pip install jiwer
 - [LJSpeech Dataset](https://keithito.com/LJ-Speech-Dataset/)
 - [Speech recognition](https://en.wikipedia.org/wiki/Speech_recognition)
 - [Sequence Modeling With CTC](https://distill.pub/2017/ctc/)
-- [DeepSpeech2](https://nvidia.github.io/OpenSeq2Seq/html/speech-recognition/deepspeech2.html)
-
+-
+[DeepSpeech2](https://nvidia.github.io/OpenSeq2Seq/html/speech-recognition/deepspeech2.html)
+[DeepSpeech2](https://nvidia.github.io/OpenSeq2Seq/html/speech-recognition/deepspeech2.html)
 """
 
 """
@@ -58,8 +69,9 @@ pip install jiwer
 import pandas as pd
 import numpy as np
 import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras import layers
+import keras
+from keras import layers
+from keras import ops
 import matplotlib.pyplot as plt
 from IPython import display
 from jiwer import wer
@@ -85,7 +97,7 @@ Each audio file is a single-channel 16-bit PCM WAV with a sample rate of 22,050 
 data_url = "https://data.keithito.com/data/speech/LJSpeech-1.1.tar.bz2"
 data_path = keras.utils.get_file("LJSpeech-1.1", data_url, untar=True)
 wavs_path = data_path + "/wavs/"
-metadata_path = data_path + "/metadata.csv"
+metadata_path = data_path + "/LJSpeech-1.1" + "/metadata.csv"
 
 
 # Read metadata file and parse it
@@ -94,7 +106,6 @@ metadata_df.columns = ["file_name", "transcription", "normalized_transcription"]
 metadata_df = metadata_df[["file_name", "normalized_transcription"]]
 metadata_df = metadata_df.sample(frac=1).reset_index(drop=True)
 metadata_df.head(3)
-
 
 """
 We now split the data into training and validation set.
@@ -106,7 +117,6 @@ df_val = metadata_df[split:]
 
 print(f"Size of the training set: {len(df_train)}")
 print(f"Size of the training set: {len(df_val)}")
-
 
 """
 ## Preprocessing
@@ -206,7 +216,6 @@ validation_dataset = (
     .prefetch(buffer_size=tf.data.AUTOTUNE)
 )
 
-
 """
 ## Visualize the data
 
@@ -245,19 +254,30 @@ We first define the CTC Loss function.
 
 def CTCLoss(y_true, y_pred):
     # Compute the training-time loss value
-    batch_len = tf.cast(tf.shape(y_true)[0], dtype="int64")
-    input_length = tf.cast(tf.shape(y_pred)[1], dtype="int64")
-    label_length = tf.cast(tf.shape(y_true)[1], dtype="int64")
+    batch_len = ops.shape(y_true)[0]
+    input_length = ops.shape(y_pred)[1]
+    label_length = ops.shape(y_true)[1]
 
-    input_length = input_length * tf.ones(shape=(batch_len, 1), dtype="int64")
-    label_length = label_length * tf.ones(shape=(batch_len, 1), dtype="int64")
+    # Create length tensors - CTC needs to know the actual sequence lengths
+    input_length = input_length * ops.ones(shape=(batch_len,), dtype="int32")
+    label_length = label_length * ops.ones(shape=(batch_len,), dtype="int32")
 
-    loss = keras.backend.ctc_batch_cost(y_true, y_pred, input_length, label_length)
+    # Use TensorFlow's CTC loss (no backend-agnostic equivalent in Keras 3)
+    # blank_index=-1 means the blank label is the last class (output_dim + 1)
+    loss = tf.nn.ctc_loss(
+        labels=ops.cast(y_true, "int32"),
+        logits=y_pred,
+        label_length=label_length,
+        logit_length=input_length,
+        logits_time_major=False,
+        blank_index=-1,
+    )
     return loss
 
 
 """
 We now define our model. We will define a model similar to
+[DeepSpeech2](https://nvidia.github.io/OpenSeq2Seq/html/speech-recognition/deepspeech2.html).
 [DeepSpeech2](https://nvidia.github.io/OpenSeq2Seq/html/speech-recognition/deepspeech2.html).
 """
 
@@ -339,11 +359,22 @@ model.summary(line_length=110)
 # A utility function to decode the output of the network
 def decode_batch_predictions(pred):
     input_len = np.ones(pred.shape[0]) * pred.shape[1]
-    # Use greedy search. For complex tasks, you can use beam search
-    results = keras.backend.ctc_decode(pred, input_length=input_len, greedy=True)[0][0]
+
+    # Use TensorFlow's ctc_greedy_decoder (no backend-agnostic equivalent in Keras 3)
+    # Note: TF's decoder expects time-major format [time, batch, dim]
+    results, _ = tf.nn.ctc_greedy_decoder(
+        inputs=ops.transpose(pred, axes=[1, 0, 2]),
+        sequence_length=ops.cast(input_len, "int32"),
+    )
+
+    # ctc_greedy_decoder returns a list of SparseTensor, take the first one
+    results = tf.sparse.to_dense(results[0], default_value=-1)
+
     # Iterate over the results and get back the text
     output_text = []
     for result in results:
+        # Remove padding values (-1) - using TensorFlow for boolean indexing
+        result = tf.boolean_mask(result, result >= 0)
         result = tf.strings.reduce_join(num_to_char(result)).numpy().decode("utf-8")
         output_text.append(result)
     return output_text
@@ -384,6 +415,28 @@ class CallbackEval(keras.callbacks.Callback):
 Let's start the training process.
 """
 
+# Fix the wavs_path which was missing the subdirectory
+wavs_path = data_path + "/LJSpeech-1.1/wavs/"
+
+# Re-create the datasets with the correct path
+train_dataset = tf.data.Dataset.from_tensor_slices(
+    (list(df_train["file_name"]), list(df_train["normalized_transcription"]))
+)
+train_dataset = (
+    train_dataset.map(encode_single_sample, num_parallel_calls=tf.data.AUTOTUNE)
+    .padded_batch(batch_size)
+    .prefetch(buffer_size=tf.data.AUTOTUNE)
+)
+
+validation_dataset = tf.data.Dataset.from_tensor_slices(
+    (list(df_val["file_name"]), list(df_val["normalized_transcription"]))
+)
+validation_dataset = (
+    validation_dataset.map(encode_single_sample, num_parallel_calls=tf.data.AUTOTUNE)
+    .padded_batch(batch_size)
+    .prefetch(buffer_size=tf.data.AUTOTUNE)
+)
+
 # Define the number of epochs.
 epochs = 1
 # Callback function to check transcription on the val set.
@@ -395,7 +448,6 @@ history = model.fit(
     epochs=epochs,
     callbacks=[validation_callback],
 )
-
 
 """
 ## Inference
@@ -420,7 +472,6 @@ for i in np.random.randint(0, len(predictions), 5):
     print(f"Target    : {targets[i]}")
     print(f"Prediction: {predictions[i]}")
     print("-" * 100)
-
 
 """
 ## Conclusion
@@ -458,6 +509,9 @@ thirtytwo
 Example available on HuggingFace.
 | Trained Model | Demo |
 | :--: | :--: |
-| [![Generic badge](https://img.shields.io/badge/🤗%20Model-CTC%20ASR-black.svg)](https://huggingface.co/keras-io/ctc_asr) | [![Generic badge](https://img.shields.io/badge/🤗%20Spaces-CTC%20ASR-black.svg)](https://huggingface.co/spaces/keras-io/ctc_asr) |
-
+| [![Generic
+badge](https://img.shields.io/badge/🤗%20Model-CTC%20ASR-black.svg)](https://huggingface.co
+/keras-io/ctc_asr) | [![Generic
+badge](https://img.shields.io/badge/🤗%20Spaces-CTC%20ASR-black.svg)](https://huggingface.c
+o/spaces/keras-io/ctc_asr) |
 """
