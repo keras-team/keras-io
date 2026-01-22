@@ -34,9 +34,9 @@ parameter) causal language model.
 
 
 ```python
+from datasets import load_dataset
 import keras
 from keras_hub.models import Gemma3CausalLM
-from datasets import load_dataset
 
 
 prompt = "Keras is a"
@@ -119,7 +119,6 @@ model.save_to_preset("gemma3_gptq_w4gs128_preset")
 model_from_preset = Gemma3CausalLM.from_preset("gemma3_gptq_w4gs128_preset")
 output = model_from_preset.generate(prompt, max_length=30)
 print(output)
-
 ```
 
 <div class="k-default-codeblock">
@@ -170,7 +169,7 @@ data. Here's how to choose between them:
 | ------ | ---- | --- |
 | **Algorithm** | Hessian-based second-order optimization | Grid search for activation-aware scales |
 | **Quantization speed** | Slower (requires Hessian estimation) | Faster (no Hessian computation) |
-| **Bit-widths supported** | 2/3/4/8-bit | Only 4-bit supported for now |
+| **Bit-widths supported** | 2/3/4/8-bit | 4-bit |
 | **Accuracy** | Often slightly better on decoder LLMs | Competitive, especially on encoder models |
 | **Memory during quantization** | Higher (Hessian storage) | Lower |
 | **Calibration sensitivity** | May overfit calibration set, affecting out-of-distribution performance | Less prone to overfitting |

@@ -51,9 +51,9 @@ This guide uses the `Gemma3CausalLM` model from KerasHub, a small (1B
 parameter) causal language model.
 
 """
+from datasets import load_dataset
 import keras
 from keras_hub.models import Gemma3CausalLM
-from datasets import load_dataset
 
 
 prompt = "Keras is a"
@@ -93,9 +93,12 @@ the model using the `.quantize(...)` API.
 # Calibration slice (use a larger/representative set in practice)
 texts = load_dataset("wikitext", "wikitext-2-raw-v1", split="train[:1%]")["text"]
 
-calibration_dataset = [
-    s + "." for text in texts for s in map(str.strip, text.split(".")) if s
-]
+calibration_dataset = []
+for text in texts:
+    for s in text.split("."):
+        s = s.strip()
+        if s:
+            calibration_dataset.append(s + ".")
 
 awq_config = keras.quantizers.AWQConfig(
     dataset=calibration_dataset,
@@ -161,7 +164,7 @@ data. Here's how to choose between them:
 | ------ | --- | ---- |
 | **Algorithm** | Grid search for activation-aware scales | Hessian-based second-order optimization |
 | **Quantization speed** | Faster (no Hessian computation) | Slower (requires Hessian estimation) |
-| **Bit-widths supported** | only 4-bit supported for now | 2/3/4/8-bit |
+| **Bit-widths supported** | 4-bit | 2/3/4/8-bit |
 | **Accuracy** | Competitive, especially on encoder models | Often slightly better on decoder LLMs |
 | **Memory during quantization** | Lower | Higher (Hessian storage) |
 | **Calibration sensitivity** | Less prone to overfitting | May overfit calibration set, affecting out-of-distribution performance |
