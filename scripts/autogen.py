@@ -661,17 +661,11 @@ class KerasIO:
                 example["path"] = "/examples/" + category_path + example["path"]
                 examples_by_subcategory[subcategory_name].append(example)
 
-            # Build subcategories, keeping only non-empty ones
-            subcategories_to_render = []
-            for subcategory_name in subcategory_names:
-                examples_list = examples_by_subcategory.get(subcategory_name, [])
-                if examples_list:
-                    subcategories_to_render.append(
-                        {
-                            "title": subcategory_name,
-                            "examples": examples_list,
-                        }
-                    )
+            # Build subcategories
+            subcategories_to_render = [
+                {"title": name, "examples": examples_by_subcategory[name]}
+                for name in subcategory_names
+            ]
 
             # If nothing remains after filtering, skip this category
             if not subcategories_to_render:
