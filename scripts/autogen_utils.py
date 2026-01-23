@@ -5,6 +5,9 @@ import copy
 import pathlib
 import os
 
+import pasta
+from pasta.base import scope
+
 
 def save_file(path, content):
     parent = pathlib.Path(path).parent
@@ -114,3 +117,39 @@ def set_active_flag_in_nav_entry(entry, relative_url):
     ]
     entry["children"] = children
     return entry
+
+
+def find_all_symbols(path, packages):
+    """Parse a Python file and find all symbols from specific packages.
+
+    Args:
+        path: the path to the Python file
+        packages: collection of Python package, for instance ["keras"]
+
+    Returns:
+        a collection of symbols found in the Python code, for instance
+        ["keras", "keras.layers", "keras.layers.Dense"]
+    """
+    with open(path, "r") as src_file:
+        src = src_file.read()
+
+    try:
+        tree = pasta.parse(src)
+    except Exception:
+        return None
+    s = scope.analyze(tree)
+    symbols = set()
+
+    def explore(path, attrs):
+        symbols.add(path)
+        for name, attr in attrs.items():
+            new_path = path + "." + name
+            explore(new_path, attr.attrs)
+
+    for package in packages:
+        refs = s.external_references.get(package, [])
+        for ref in refs:
+            if ref.name_ref is not None:
+                explore(package, ref.name_ref.attrs)
+
+    return symbols
