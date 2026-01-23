@@ -23,7 +23,7 @@ built-in tasks.
 
 Keras Recommenders is a library for building recommender systems on top of
 Keras. It provides a collection of building blocks which help with the full
-workflow of creating a recommender system. 
+workflow of creating a recommender system.
 
 ---
 
