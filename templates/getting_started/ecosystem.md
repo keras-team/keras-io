@@ -19,7 +19,7 @@ built-in tasks.
 
 ## KerasRS
 
-[KerasRS Documentation](/keras_rs/) - [KerasHub GitHub repository](https://github.com/keras-team/keras-rs)
+[KerasRS Documentation](/keras_rs/) - [KerasRS GitHub repository](https://github.com/keras-team/keras-rs)
 
 Keras Recommenders is a library for building recommender systems on top of
 Keras. It provides a collection of building blocks which help with the full
