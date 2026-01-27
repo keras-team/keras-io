@@ -27,6 +27,7 @@ the class segmentation of the training inputs.
 import random
 import numpy as np
 import keras
+from keras import layers
 from keras import ops
 import matplotlib.pyplot as plt
 
@@ -265,27 +266,50 @@ def euclidean_distance(vects):
         Tensor containing euclidean distance
         (as floating point value) between vectors.
     """
-
     x, y = vects
     sum_square = ops.sum(ops.square(x - y), axis=1, keepdims=True)
     return ops.sqrt(ops.maximum(sum_square, keras.backend.epsilon()))
 
 
-input = keras.layers.Input((28, 28, 1))
-x = keras.layers.BatchNormalization()(input)
-x = keras.layers.Conv2D(4, (5, 5), activation="tanh")(x)
-x = keras.layers.AveragePooling2D(pool_size=(2, 2))(x)
-x = keras.layers.Conv2D(16, (5, 5), activation="tanh")(x)
-x = keras.layers.AveragePooling2D(pool_size=(2, 2))(x)
-x = keras.layers.Flatten()(x)
+def create_embedding_network():
+    """Creates a convolutional neural network for image embedding.
 
-x = keras.layers.BatchNormalization()(x)
-x = keras.layers.Dense(10, activation="tanh")(x)
-embedding_network = keras.Model(input, x)
+    The network takes a grayscale image as input and outputs a 10-dimensional
+    latent representation (embedding). It uses a series of Conv2D and
+    AveragePooling2D layers to extract features, followed by a Dense layer
+    with tanh activation.
+
+    Architecture:
+        - Input: (28, 28, 1)
+        - BatchNormalization
+        - Conv2D (4 filters, 5x5 kernel, tanh)
+        - AveragePooling2D (2x2)
+        - Conv2D (16 filters, 5x5 kernel, tanh)
+        - AveragePooling2D (2x2)
+        - Flatten
+        - BatchNormalization
+        - Dense (10 units, tanh)
+
+    Returns:
+        keras.Model: A Functional API model instance mapping (28, 28, 1) images
+            to 10D embedding vectors.
+    """
+    inputs = layers.Input((28, 28, 1))
+    x = layers.BatchNormalization()(inputs)
+    x = layers.Conv2D(4, (5, 5), activation="tanh")(x)
+    x = layers.AveragePooling2D(pool_size=(2, 2))(x)
+    x = layers.Conv2D(16, (5, 5), activation="tanh")(x)
+    x = layers.AveragePooling2D(pool_size=(2, 2))(x)
+    x = layers.Flatten()(x)
+    x = layers.BatchNormalization()(x)
+    x = layers.Dense(10, activation="tanh")(x)
+    return keras.Model(inputs, x, name="embedding")
 
 
-input_1 = keras.layers.Input((28, 28, 1))
-input_2 = keras.layers.Input((28, 28, 1))
+embedding_network = create_embedding_network()
+
+input_1 = layers.Input((28, 28, 1))
+input_2 = layers.Input((28, 28, 1))
 
 # As mentioned above, Siamese Network share weights between
 # tower networks (sister networks). To allow this, we will use
@@ -293,12 +317,9 @@ input_2 = keras.layers.Input((28, 28, 1))
 tower_1 = embedding_network(input_1)
 tower_2 = embedding_network(input_2)
 
-merge_layer = keras.layers.Lambda(euclidean_distance, output_shape=(1,))(
-    [tower_1, tower_2]
-)
-normal_layer = keras.layers.BatchNormalization()(merge_layer)
-output_layer = keras.layers.Dense(1, activation="sigmoid")(normal_layer)
-siamese = keras.Model(inputs=[input_1, input_2], outputs=output_layer)
+# Distance is the output, remove the final Dense Sigmoid layer
+distance = layers.Lambda(euclidean_distance)([tower_1, tower_2])
+siamese = keras.Model(inputs=[input_1, input_2], outputs=distance)
 
 
 """
@@ -339,10 +360,37 @@ def loss(margin=1):
 
 
 """
+## Define accuracy metric
+
+"""
+
+
+def accuracy(y_true, y_pred):
+    """Computes the accuracy of the predictions.
+
+    Arguments:
+        y_true: List of labels, each label is of type float32.
+        y_pred: List of predictions of same length as of y_true,
+                each label is of type float32.
+
+    Returns:
+        A tensor containing accuracy as floating point value.
+    """
+    y_true = ops.cast(y_true, "float32")
+
+    y_true = ops.reshape(y_true, [-1])
+    y_pred = ops.reshape(y_pred, [-1])
+
+    # 0 for similar (<0.5), 1 for dissimilar (>0.5)
+    preds = ops.cast(y_pred > 0.5, "float32")
+    return ops.mean(ops.equal(y_true, preds))
+
+
+"""
 ## Compile the model with the contrastive loss
 """
 
-siamese.compile(loss=loss(margin=margin), optimizer="RMSprop", metrics=["accuracy"])
+siamese.compile(loss=loss(margin=margin), optimizer="RMSprop", metrics=[accuracy])
 siamese.summary()
 
 
