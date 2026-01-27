@@ -1,12 +1,4 @@
 """
-Title: FILLME
-Author: FILLME
-Date created: FILLME
-Last modified: FILLME
-Description: FILLME
-"""
-
-"""
 # Automatic Speech Recognition using CTC
 
 **Authors:** [Mohamed Reda Bouadjenek](https://rbouadjenek.github.io/) and [Ngoc Dung
@@ -33,7 +25,6 @@ used to train deep neural networks in speech recognition, handwriting
 recognition and other sequence problems. CTC is used when  we don’t know
 how the input aligns with the output (how the characters in the transcript
 align to the audio). The model we create is similar to
-[DeepSpeech2](https://nvidia.github.io/OpenSeq2Seq/html/speech-recognition/deepspeech2.html).
 [DeepSpeech2](https://nvidia.github.io/OpenSeq2Seq/html/speech-recognition/deepspeech2.html).
 
 We will use the LJSpeech dataset from the
@@ -96,7 +87,7 @@ Each audio file is a single-channel 16-bit PCM WAV with a sample rate of 22,050 
 
 data_url = "https://data.keithito.com/data/speech/LJSpeech-1.1.tar.bz2"
 data_path = keras.utils.get_file("LJSpeech-1.1", data_url, untar=True)
-wavs_path = data_path + "/wavs/"
+wavs_path = data_path + "/LJSpeech-1.1/wavs/"
 metadata_path = data_path + "/LJSpeech-1.1" + "/metadata.csv"
 
 
@@ -374,7 +365,7 @@ def decode_batch_predictions(pred):
     output_text = []
     for result in results:
         # Remove padding values (-1) - using TensorFlow for boolean indexing
-        result = tf.boolean_mask(result, result >= 0)
+        result = result[result >= 0]
         result = tf.strings.reduce_join(num_to_char(result)).numpy().decode("utf-8")
         output_text.append(result)
     return output_text
@@ -414,28 +405,6 @@ class CallbackEval(keras.callbacks.Callback):
 """
 Let's start the training process.
 """
-
-# Fix the wavs_path which was missing the subdirectory
-wavs_path = data_path + "/LJSpeech-1.1/wavs/"
-
-# Re-create the datasets with the correct path
-train_dataset = tf.data.Dataset.from_tensor_slices(
-    (list(df_train["file_name"]), list(df_train["normalized_transcription"]))
-)
-train_dataset = (
-    train_dataset.map(encode_single_sample, num_parallel_calls=tf.data.AUTOTUNE)
-    .padded_batch(batch_size)
-    .prefetch(buffer_size=tf.data.AUTOTUNE)
-)
-
-validation_dataset = tf.data.Dataset.from_tensor_slices(
-    (list(df_val["file_name"]), list(df_val["normalized_transcription"]))
-)
-validation_dataset = (
-    validation_dataset.map(encode_single_sample, num_parallel_calls=tf.data.AUTOTUNE)
-    .padded_batch(batch_size)
-    .prefetch(buffer_size=tf.data.AUTOTUNE)
-)
 
 # Define the number of epochs.
 epochs = 1
