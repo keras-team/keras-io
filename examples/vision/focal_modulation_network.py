@@ -83,8 +83,7 @@ import numpy as np
 import keras
 from keras import layers
 from keras import ops
-
-# from typing import Optional, Tuple, List
+from typing import Optional
 from matplotlib import pyplot as plt
 from random import randint
 
@@ -274,7 +273,12 @@ The Focal Modulation Block consists of:
 """
 
 
-def MLP(in_features, hidden_features=None, out_features=None, mlp_drop_rate=0.0):
+def MLP(
+    in_features: int,
+    hidden_features: Optional[int] = None,
+    out_features: Optional[int] = None,
+    mlp_drop_rate: float = 0.0,
+):
     hidden_features = hidden_features or in_features
     out_features = out_features or in_features
     return keras.Sequential(
@@ -358,7 +362,7 @@ produces `Z^0`. Where `Z^0` can be expressed as follows:
 | Equation 5: Linear projection of `Z^0` (Source: Aritra and Ritwik) |
 
 `Z^0` is then passed on to a series of Depth-Wise (DWConv) Conv and
-[GeLU](https://github.com/keras-team/keras/blob/8914427b7fa9d90f3c476cb2ee65d55d4f808e65/keras/src/activations/activations.py#L339) layers. The
+[GeLU](hhttps://keras.io/api/layers/activations/#gelu-function) layers. The
 authors term each block of DWConv and GeLU as levels denoted by `l`. In **Figure 6** we
 have two levels. Mathematically this is represented as:
 

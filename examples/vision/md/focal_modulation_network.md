@@ -86,8 +86,7 @@ import numpy as np
 import keras
 from keras import layers
 from keras import ops
-
-# from typing import Optional, Tuple, List
+from typing import Optional
 from matplotlib import pyplot as plt
 from random import randint
 
@@ -281,7 +280,12 @@ The Focal Modulation Block consists of:
 
 ```python
 
-def MLP(in_features, hidden_features=None, out_features=None, mlp_drop_rate=0.0):
+def MLP(
+    in_features: int,
+    hidden_features: Optional[int] = None,
+    out_features: Optional[int] = None,
+    mlp_drop_rate: float = 0.0,
+):
     hidden_features = hidden_features or in_features
     out_features = out_features or in_features
     return keras.Sequential(
@@ -361,7 +365,7 @@ produces `Z^0`. Where `Z^0` can be expressed as follows:
 | Equation 5: Linear projection of `Z^0` (Source: Aritra and Ritwik) |
 
 `Z^0` is then passed on to a series of Depth-Wise (DWConv) Conv and
-[GeLU](https://github.com/keras-team/keras/blob/8914427b7fa9d90f3c476cb2ee65d55d4f808e65/keras/src/activations/activations.py#L339) layers. The
+[GeLU](hhttps://keras.io/api/layers/activations/#gelu-function) layers. The
 authors term each block of DWConv and GeLU as levels denoted by `l`. In **Figure 6** we
 have two levels. Mathematically this is represented as:
 
@@ -866,6 +870,7 @@ history = model.fit(
   warnings.warn(
 /Users/lakshmikala/fmn_tutorial_env/lib/python3.12/site-packages/keras/src/layers/layer.py:424: UserWarning: `build()` was called on layer 'focal_modulation_block_5', however the layer does not have a `build()` method implemented and it looks like it has unbuilt state. This will cause the layer to be marked as built, despite not being actually built, which may cause failures down the line. Make sure to implement a proper `build()` method.
   warnings.warn(
+
 /Users/lakshmikala/fmn_tutorial_env/lib/python3.12/site-packages/keras/src/layers/layer.py:424: UserWarning: `build()` was called on layer 'focal_modulation_block_6', however the layer does not have a `build()` method implemented and it looks like it has unbuilt state. This will cause the layer to be marked as built, despite not being actually built, which may cause failures down the line. Make sure to implement a proper `build()` method.
   warnings.warn(
 /Users/lakshmikala/fmn_tutorial_env/lib/python3.12/site-packages/keras/src/layers/layer.py:424: UserWarning: `build()` was called on layer 'focal_modulation_network', however the layer does not have a `build()` method implemented and it looks like it has unbuilt state. This will cause the layer to be marked as built, despite not being actually built, which may cause failures down the line. Make sure to implement a proper `build()` method.
@@ -873,123 +878,123 @@ history = model.fit(
 
 Epoch 1/20
 
-313/313 ━━━━━━━━━━━━━━━━━━━━ 249s 724ms/step - accuracy: 0.1817 - loss: 2.1822 - val_accuracy: 0.2481 - val_loss: 2.0263
+313/313 ━━━━━━━━━━━━━━━━━━━━ 249s 721ms/step - accuracy: 0.1817 - loss: 2.1822 - val_accuracy: 0.2481 - val_loss: 2.0263
 
 Epoch 2/20
 
-313/313 ━━━━━━━━━━━━━━━━━━━━ 192s 612ms/step - accuracy: 0.2880 - loss: 1.8978 - val_accuracy: 0.3367 - val_loss: 1.8037
+313/313 ━━━━━━━━━━━━━━━━━━━━ 191s 610ms/step - accuracy: 0.2880 - loss: 1.8978 - val_accuracy: 0.3367 - val_loss: 1.8037
 
 Epoch 3/20
 
-313/313 ━━━━━━━━━━━━━━━━━━━━ 191s 609ms/step - accuracy: 0.3679 - loss: 1.6964 - val_accuracy: 0.3927 - val_loss: 1.6486
+313/313 ━━━━━━━━━━━━━━━━━━━━ 196s 627ms/step - accuracy: 0.3679 - loss: 1.6964 - val_accuracy: 0.3927 - val_loss: 1.6486
 
 Epoch 4/20
 
-313/313 ━━━━━━━━━━━━━━━━━━━━ 189s 603ms/step - accuracy: 0.4297 - loss: 1.5512 - val_accuracy: 0.4249 - val_loss: 1.5567
+313/313 ━━━━━━━━━━━━━━━━━━━━ 197s 629ms/step - accuracy: 0.4297 - loss: 1.5512 - val_accuracy: 0.4249 - val_loss: 1.5567
 
 Epoch 5/20
 
-313/313 ━━━━━━━━━━━━━━━━━━━━ 0s 577ms/step - accuracy: 0.4586 - loss: 1.4821
+313/313 ━━━━━━━━━━━━━━━━━━━━ 0s 626ms/step - accuracy: 0.4586 - loss: 1.4821
 ```
 </div>
 
-![png](/img/examples/vision/focal_modulation_network/focal_modulation_network_33_1575.png)
+![png](/img/examples/vision/focal_modulation_network/focal_modulation_network_33_1576.png)
     
 
 
 <div class="k-default-codeblock">
 ```
-313/313 ━━━━━━━━━━━━━━━━━━━━ 189s 604ms/step - accuracy: 0.4709 - loss: 1.4549 - val_accuracy: 0.4661 - val_loss: 1.4864
+313/313 ━━━━━━━━━━━━━━━━━━━━ 205s 654ms/step - accuracy: 0.4709 - loss: 1.4549 - val_accuracy: 0.4661 - val_loss: 1.4864
 
 Epoch 6/20
 
-313/313 ━━━━━━━━━━━━━━━━━━━━ 189s 604ms/step - accuracy: 0.5006 - loss: 1.3829 - val_accuracy: 0.4975 - val_loss: 1.4074
+313/313 ━━━━━━━━━━━━━━━━━━━━ 199s 636ms/step - accuracy: 0.5006 - loss: 1.3829 - val_accuracy: 0.4975 - val_loss: 1.4074
 
 Epoch 7/20
 
-313/313 ━━━━━━━━━━━━━━━━━━━━ 190s 606ms/step - accuracy: 0.5200 - loss: 1.3344 - val_accuracy: 0.4945 - val_loss: 1.4050
+313/313 ━━━━━━━━━━━━━━━━━━━━ 201s 641ms/step - accuracy: 0.5200 - loss: 1.3344 - val_accuracy: 0.4945 - val_loss: 1.4050
 
 Epoch 8/20
 
-313/313 ━━━━━━━━━━━━━━━━━━━━ 192s 612ms/step - accuracy: 0.5375 - loss: 1.2885 - val_accuracy: 0.5062 - val_loss: 1.3712
+313/313 ━━━━━━━━━━━━━━━━━━━━ 205s 653ms/step - accuracy: 0.5375 - loss: 1.2885 - val_accuracy: 0.5062 - val_loss: 1.3712
 
 Epoch 9/20
 
-313/313 ━━━━━━━━━━━━━━━━━━━━ 191s 611ms/step - accuracy: 0.5518 - loss: 1.2532 - val_accuracy: 0.5217 - val_loss: 1.3348
+313/313 ━━━━━━━━━━━━━━━━━━━━ 203s 647ms/step - accuracy: 0.5518 - loss: 1.2532 - val_accuracy: 0.5217 - val_loss: 1.3348
 
 Epoch 10/20
 
-313/313 ━━━━━━━━━━━━━━━━━━━━ 0s 580ms/step - accuracy: 0.5625 - loss: 1.2337
+313/313 ━━━━━━━━━━━━━━━━━━━━ 0s 617ms/step - accuracy: 0.5625 - loss: 1.2337
 ```
 </div>
 
-![png](/img/examples/vision/focal_modulation_network/focal_modulation_network_33_3151.png)
+![png](/img/examples/vision/focal_modulation_network/focal_modulation_network_33_3152.png)
     
 
 
 <div class="k-default-codeblock">
 ```
-313/313 ━━━━━━━━━━━━━━━━━━━━ 190s 606ms/step - accuracy: 0.5646 - loss: 1.2220 - val_accuracy: 0.5434 - val_loss: 1.3018
+313/313 ━━━━━━━━━━━━━━━━━━━━ 202s 646ms/step - accuracy: 0.5646 - loss: 1.2220 - val_accuracy: 0.5434 - val_loss: 1.3018
 
 Epoch 11/20
 
-313/313 ━━━━━━━━━━━━━━━━━━━━ 190s 608ms/step - accuracy: 0.5821 - loss: 1.1802 - val_accuracy: 0.5463 - val_loss: 1.2732
+313/313 ━━━━━━━━━━━━━━━━━━━━ 199s 635ms/step - accuracy: 0.5821 - loss: 1.1802 - val_accuracy: 0.5463 - val_loss: 1.2732
 
 Epoch 12/20
 
-313/313 ━━━━━━━━━━━━━━━━━━━━ 190s 608ms/step - accuracy: 0.5925 - loss: 1.1532 - val_accuracy: 0.5622 - val_loss: 1.2473
+313/313 ━━━━━━━━━━━━━━━━━━━━ 201s 642ms/step - accuracy: 0.5925 - loss: 1.1532 - val_accuracy: 0.5622 - val_loss: 1.2473
 
 Epoch 13/20
 
-313/313 ━━━━━━━━━━━━━━━━━━━━ 190s 606ms/step - accuracy: 0.6007 - loss: 1.1298 - val_accuracy: 0.5610 - val_loss: 1.2580
+313/313 ━━━━━━━━━━━━━━━━━━━━ 202s 644ms/step - accuracy: 0.6007 - loss: 1.1298 - val_accuracy: 0.5610 - val_loss: 1.2580
 
 Epoch 14/20
 
-313/313 ━━━━━━━━━━━━━━━━━━━━ 189s 605ms/step - accuracy: 0.6095 - loss: 1.1042 - val_accuracy: 0.5711 - val_loss: 1.2208
+313/313 ━━━━━━━━━━━━━━━━━━━━ 198s 632ms/step - accuracy: 0.6095 - loss: 1.1042 - val_accuracy: 0.5711 - val_loss: 1.2208
 
 Epoch 15/20
 
-313/313 ━━━━━━━━━━━━━━━━━━━━ 0s 579ms/step - accuracy: 0.6154 - loss: 1.0897
+313/313 ━━━━━━━━━━━━━━━━━━━━ 0s 4s/step - accuracy: 0.6154 - loss: 1.0897
 ```
 </div>
 
-![png](/img/examples/vision/focal_modulation_network/focal_modulation_network_33_4727.png)
+![png](/img/examples/vision/focal_modulation_network/focal_modulation_network_33_4728.png)
     
 
 
 <div class="k-default-codeblock">
 ```
-313/313 ━━━━━━━━━━━━━━━━━━━━ 190s 606ms/step - accuracy: 0.6148 - loss: 1.0910 - val_accuracy: 0.5685 - val_loss: 1.2344
+313/313 ━━━━━━━━━━━━━━━━━━━━ 1243s 4s/step - accuracy: 0.6148 - loss: 1.0910 - val_accuracy: 0.5685 - val_loss: 1.2344
 
 Epoch 16/20
 
-313/313 ━━━━━━━━━━━━━━━━━━━━ 189s 605ms/step - accuracy: 0.6184 - loss: 1.0740 - val_accuracy: 0.5781 - val_loss: 1.2013
+313/313 ━━━━━━━━━━━━━━━━━━━━ 211s 675ms/step - accuracy: 0.6184 - loss: 1.0740 - val_accuracy: 0.5781 - val_loss: 1.2013
 
 Epoch 17/20
 
-313/313 ━━━━━━━━━━━━━━━━━━━━ 199s 635ms/step - accuracy: 0.6250 - loss: 1.0632 - val_accuracy: 0.5765 - val_loss: 1.2031
+313/313 ━━━━━━━━━━━━━━━━━━━━ 203s 647ms/step - accuracy: 0.6250 - loss: 1.0632 - val_accuracy: 0.5765 - val_loss: 1.2031
 
 Epoch 18/20
 
-313/313 ━━━━━━━━━━━━━━━━━━━━ 190s 607ms/step - accuracy: 0.6244 - loss: 1.0607 - val_accuracy: 0.5864 - val_loss: 1.1826
+313/313 ━━━━━━━━━━━━━━━━━━━━ 204s 651ms/step - accuracy: 0.6244 - loss: 1.0607 - val_accuracy: 0.5864 - val_loss: 1.1826
 
 Epoch 19/20
 
-313/313 ━━━━━━━━━━━━━━━━━━━━ 187s 597ms/step - accuracy: 0.6304 - loss: 1.0513 - val_accuracy: 0.5843 - val_loss: 1.1884
+313/313 ━━━━━━━━━━━━━━━━━━━━ 212s 678ms/step - accuracy: 0.6304 - loss: 1.0513 - val_accuracy: 0.5843 - val_loss: 1.1884
 
 Epoch 20/20
 
-313/313 ━━━━━━━━━━━━━━━━━━━━ 0s 573ms/step - accuracy: 0.6304 - loss: 1.0573
+313/313 ━━━━━━━━━━━━━━━━━━━━ 0s 619ms/step - accuracy: 0.6304 - loss: 1.0573
 ```
 </div>
 
-![png](/img/examples/vision/focal_modulation_network/focal_modulation_network_33_6303.png)
+![png](/img/examples/vision/focal_modulation_network/focal_modulation_network_33_6304.png)
     
 
 
 <div class="k-default-codeblock">
 ```
-313/313 ━━━━━━━━━━━━━━━━━━━━ 188s 599ms/step - accuracy: 0.6321 - loss: 1.0518 - val_accuracy: 0.5851 - val_loss: 1.1841
+313/313 ━━━━━━━━━━━━━━━━━━━━ 202s 646ms/step - accuracy: 0.6321 - loss: 1.0518 - val_accuracy: 0.5851 - val_loss: 1.1841
 ```
 </div>
 
