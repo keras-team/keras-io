@@ -1383,6 +1383,50 @@ MODELS_MASTER = {
             ],
         },
         {
+            "path": "gpt_oss/",
+            "title": "GPT-OSS",
+            "toc": True,
+            "children": [
+                {
+                    "path": "gpt_oss_tokenizer",
+                    "title": "GptOssTokenizer",
+                    "generate": [
+                        "keras_hub.tokenizers.GptOssTokenizer",
+                        "keras_hub.tokenizers.GptOssTokenizer.from_preset",
+                    ],
+                },
+                {
+                    "path": "gpt_oss_backbone",
+                    "title": "GptOssBackbone model",
+                    "generate": [
+                        "keras_hub.models.GptOssBackbone",
+                        "keras_hub.models.GptOssBackbone.from_preset",
+                        "keras_hub.models.GptOssBackbone.token_embedding",
+                    ],
+                },
+                {
+                    "path": "gpt_oss_causal_lm",
+                    "title": "GptOssCausalLM model",
+                    "generate": [
+                        "keras_hub.models.GptOssCausalLM",
+                        "keras_hub.models.GptOssCausalLM.from_preset",
+                        "keras_hub.models.GptOssCausalLM.generate",
+                        "keras_hub.models.GptOssCausalLM.backbone",
+                        "keras_hub.models.GptOssCausalLM.preprocessor",
+                    ],
+                },
+                {
+                    "path": "gpt_oss_causal_lm_preprocessor",
+                    "title": "GptOssCausalLMPreprocessor layer",
+                    "generate": [
+                        "keras_hub.models.GptOssCausalLMPreprocessor",
+                        "keras_hub.models.GptOssCausalLMPreprocessor.from_preset",
+                        "keras_hub.models.GptOssCausalLMPreprocessor.tokenizer",
+                    ],
+                },
+            ],
+        },
+        {
             "path": "hgnetv2/",
             "title": "HGNetV2",
             "toc": True,
