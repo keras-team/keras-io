@@ -32,7 +32,7 @@ EXAMPLES_GH_LOCATION = Path("keras-team") / "keras-io" / "blob" / "master" / "ex
 GUIDES_GH_LOCATION = Path("keras-team") / "keras-io" / "blob" / "master" / "guides"
 KERAS_TEAM_GH = "https://github.com/keras-team"
 PROJECT_URL = {
-    "keras": f"{KERAS_TEAM_GH}/keras/tree/v3.13.1/",
+    "keras": f"{KERAS_TEAM_GH}/keras/tree/v3.13.2/",
     "keras_tuner": f"{KERAS_TEAM_GH}/keras-tuner/tree/v1.4.8/",
     "keras_hub": f"{KERAS_TEAM_GH}/keras-hub/tree/v0.25.1/",
     "tf_keras": f"{KERAS_TEAM_GH}/tf-keras/tree/v2.19.0/",
@@ -473,6 +473,12 @@ class KerasIO:
                                 i,
                                 f"<div class='example_version_banner keras_{version}'>ⓘ This example uses Keras {version}</div>",
                             )
+                            # Add warning for Keras 2 examples
+                            if version == 2:
+                                md_content_lines.insert(
+                                    i + 1,
+                                    "<div class='example_keras2_warning'><strong>Warning:</strong> This example uses Keras 2 and may not be compatible with the latest version of Keras. Please check out all of our <a href=\"https://keras.io/examples/\">Keras 3 examples here</a>.</div>",
+                                )
                             break
                     md_content = "\n".join(md_content_lines) + "\n"
                     with open(md_path, "w") as f:
