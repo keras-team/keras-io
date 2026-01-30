@@ -19,8 +19,9 @@ import signal
 import docstrings
 import jinja2
 import multiprocessing
-import autogen_utils
+import warnings
 
+import autogen_utils
 from master import MASTER
 from examples_master import EXAMPLES_MASTER
 import tutobooks
@@ -113,8 +114,53 @@ class KerasIO:
         )
         self.sync_tutobook_templates()
 
+        # Find all symbols for all guides and examples in MASTER
+        self.find_apis_in_tutobook(MASTER, [])
+
         # Recursively generate all md sources based on the MASTER tree
         self.make_md_source_for_entry(self.master, path_stack=[], title_stack=[])
+
+    def find_apis_in_tutobook(self, entry, path_stack):
+        path = entry["path"]
+        if "children" in entry:
+            # This is a TOC, recurse in tree
+            sub_path_stack = path_stack + [path] if path != "/" else path_stack
+            for child in entry["children"]:
+                self.find_apis_in_tutobook(child, sub_path_stack)
+            return
+        elif "generate" in entry:
+            # This is an API, ignore
+            return
+
+        # This is a guide / example, reverse engineer the path to the Python.
+        url = "/" + str(Path(*path_stack) / path) + "/"
+        is_guide = False
+        if path_stack[0] == "examples/":
+            py_path_stack = [self.examples_dir] + path_stack[1:]
+        elif path_stack[0] == "guides/":
+            py_path_stack = [self.guides_dir] + path_stack[1:]
+            is_guide = True
+        elif len(path_stack) < 2:
+            return
+        elif path_stack[1] == "examples/":
+            py_path_stack = [self.examples_dir, path_stack[0]] + path_stack[2:]
+        elif path_stack[1] == "guides/":
+            py_path_stack = [self.guides_dir, path_stack[0]] + path_stack[2:]
+            is_guide = True
+        else:
+            return
+
+        py_path = os.path.join(*py_path_stack, path + ".py")
+
+        # Parse the Python file and extract all the symbols from Keras packages.
+        apis = autogen_utils.find_all_symbols(
+            py_path, ["keras", "keras_hub", "keras_rs"]
+        )
+        if apis is None:
+            warnings.warn(f"Could not parse '{py_path}'")
+        else:
+            # Provide the results to the docstring_printer.
+            self.docstring_printer.add_example_apis(url, entry["title"], is_guide, apis)
 
     def preprocess_tutobook_md_source(
         self, md_content, fname, github_repo_dir, img_dir, site_img_dir
