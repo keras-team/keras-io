@@ -37,6 +37,10 @@ user to a movie.
 Let's start by importing the necessary packages.
 """
 
+"""shell
+pip install -q keras-rs
+"""
+
 import os
 
 os.environ["KERAS_BACKEND"] = "jax"  # `"tensorflow"`/`"torch"`

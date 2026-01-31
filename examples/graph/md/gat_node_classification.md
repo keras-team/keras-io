@@ -570,3 +570,8 @@ made by fine-tuning the hyper-parameters of the GAT. For instance, try changing 
 the number of hidden units, or the optimizer/learning rate; add regularization (e.g., dropout);
 or modify the preprocessing step. We could also try to implement *self-loops*
 (i.e., paper X cites paper X) and/or make the graph *undirected*.
+
+---
+## Relevant Chapters from Deep Learning with Python
+- [Chapter 7: A deep dive on Keras](https://deeplearningwithpython.io/chapters/chapter07_deep-dive-keras)
+- [Chapter 15: Language models and the Transformer](https://deeplearningwithpython.io/chapters/chapter15_language-models-and-the-transformer)

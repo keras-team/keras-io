@@ -19,7 +19,7 @@ FEATURE_INTERACTION_LAYERS_MASTER = {
                 "keras_rs.layers.FeatureCross.call",
             ],
         },
-    ]
+    ],
 }
 
 RETRIEVAL_LAYERS_MASTER = {
@@ -78,32 +78,47 @@ RETRIEVAL_LAYERS_MASTER = {
                 "keras_rs.layers.SamplingProbabilityCorrection.call",
             ],
         },
-    ]
+    ],
 }
 
-# LAYERS_MASTER = {
-#     "path": "layers/",
-#     "title": "Layers",
-#     "toc": True,
-#     "children": [
-#         {
-#             "path": "distributed_embedding",
-#             "title": "DistributedEmbedding layer",
-#             "generate": [
-#                 "keras_rs.layers.DistributedEmbedding",
-#                 "keras_rs.layers.DistributedEmbedding.call",
-#             ],
-#         },
-#         {
-#             "path": "frequency_estimator",
-#             "title": "FrequencyEstimator layer",
-#             "generate": [
-#                 "keras_rs.layers.FrequencyEstimator",
-#                 "keras_rs.layers.FrequencyEstimator.call",
-#             ],
-#         },
-#     ]
-# }
+EMBEDDING_LAYERS_MASTER = {
+    "path": "embedding_layers/",
+    "title": "Embedding Layers",
+    "toc": True,
+    "children": [
+        {
+            "path": "distributed_embedding",
+            "title": "DistributedEmbedding layer",
+            "generate": [
+                "keras_rs.layers.DistributedEmbedding",
+                "keras_rs.layers.DistributedEmbedding.call",
+                "keras_rs.layers.DistributedEmbedding.preprocess",
+            ],
+        },
+        {
+            "path": "table_config",
+            "title": "TableConfig configuration class",
+            "generate": [
+                "keras_rs.layers.TableConfig",
+            ],
+        },
+        {
+            "path": "feature_config",
+            "title": "FeatureConfig configuration class",
+            "generate": [
+                "keras_rs.layers.FeatureConfig",
+            ],
+        },
+        {
+            "path": "embed_reduce",
+            "title": "EmbedReduce layer",
+            "generate": [
+                "keras_rs.layers.EmbedReduce",
+                "keras_rs.layers.EmbedReduce.call",
+            ],
+        },
+    ],
+}
 
 LOSSES_MASTER = {
     "path": "losses/",
@@ -150,7 +165,7 @@ LOSSES_MASTER = {
         #         "keras_rs.losses.ListMLELoss.call",
         #     ],
         # },
-    ]
+    ],
 }
 
 METRICS_MASTER = {
@@ -186,7 +201,7 @@ METRICS_MASTER = {
                 "keras_rs.metrics.NDCG",
             ],
         },
-    ]
+    ],
 }
 
 RS_API_MASTER = {
@@ -194,7 +209,7 @@ RS_API_MASTER = {
     "title": "API documentation",
     "toc": True,
     "children": [
-        # LAYERS_MASTER,
+        EMBEDDING_LAYERS_MASTER,
         FEATURE_INTERACTION_LAYERS_MASTER,
         RETRIEVAL_LAYERS_MASTER,
         LOSSES_MASTER,
@@ -225,9 +240,7 @@ RS_EXAMPLES_MASTER = {
         },
         {
             "path": "scann",
-            "title": (
-                "Faster retrieval with Scalable Nearest Neighbours (ScANN)"
-            )
+            "title": ("Faster retrieval with Scalable Nearest Neighbours (ScANN)"),
         },
         {
             "path": "multi_task",
@@ -246,8 +259,20 @@ RS_EXAMPLES_MASTER = {
             "title": "Ranking with Deep and Cross Networks",
         },
         {
+            "path": "dlrm",
+            "title": "Rank movies with DLRM using KerasRS",
+        },
+        {
             "path": "sas_rec",
             "title": "Sequential retrieval using SASRec",
+        },
+        {
+            "path": "distributed_embedding_jax",
+            "title": "DistributedEmbedding using TPU SparseCore and JAX",
+        },
+        {
+            "path": "distributed_embedding_tf",
+            "title": "DistributedEmbedding using TPU SparseCore and TensorFlow",
         },
     ],
 }

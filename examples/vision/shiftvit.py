@@ -668,7 +668,7 @@ class ShiftViTModel(keras.Model):
         return config
 
     def _calculate_loss(self, data, training=False):
-        (images, labels) = data
+        images, labels = data
 
         # Augment the images
         augmented_images = self.data_augmentation(images, training=training)
@@ -1050,4 +1050,9 @@ helping us with the Learning Rate Schedule.
 | Trained Model | Demo |
 | :--: | :--: |
 | [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Model-ShiftViT-brightgreen)](https://huggingface.co/keras-io/shiftvit) | [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Space-ShiftViT-brightgreen)](https://huggingface.co/spaces/keras-io/shiftvit) |
+"""
+
+"""
+## Relevant Chapters from Deep Learning with Python
+- [Chapter 8: Image classification](https://deeplearningwithpython.io/chapters/chapter08_image-classification)
 """

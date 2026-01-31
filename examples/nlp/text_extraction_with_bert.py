@@ -345,3 +345,8 @@ model.fit(
     batch_size=64,
     callbacks=[exact_match_callback],
 )
+
+"""
+## Relevant Chapters from Deep Learning with Python
+- [Chapter 15: Language models and the Transformer](https://deeplearningwithpython.io/chapters/chapter15_language-models-and-the-transformer)
+"""

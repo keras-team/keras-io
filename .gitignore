@@ -1,6 +1,7 @@
 tmp/*
 sources/*
 site/*
+*.DS_Store
 *.pyc
 *.swp
 templates/examples/audio/*
@@ -10,11 +11,13 @@ templates/examples/vision/*
 templates/examples/structured_data/*
 templates/examples/rl/*
 templates/examples/keras_recipes/*
+templates/examples/keras_rs/*
 templates/examples/timeseries/*
 templates/examples/graph/*
 templates/**/guides/**/*.md
 templates/keras_hub/getting_started.md
 templates/keras_tuner/getting_started.md
+templates/keras_rs/examples/*
 datasets/*
 .history
 .vscode/*

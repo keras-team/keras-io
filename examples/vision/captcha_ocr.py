@@ -365,11 +365,11 @@ def ctc_decode(y_pred, input_length, greedy=True, beam_width=100, top_paths=1):
     input_length = ops.cast(input_length, dtype="int32")
 
     if greedy:
-        (decoded, log_prob) = tf.nn.ctc_greedy_decoder(
+        decoded, log_prob = tf.nn.ctc_greedy_decoder(
             inputs=y_pred, sequence_length=input_length
         )
     else:
-        (decoded, log_prob) = tf.compat.v1.nn.ctc_beam_search_decoder(
+        decoded, log_prob = tf.compat.v1.nn.ctc_beam_search_decoder(
             inputs=y_pred,
             sequence_length=input_length,
             beam_width=beam_width,

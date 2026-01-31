@@ -221,3 +221,8 @@ axes[1, 1].scatter(x[:, 0], x[:, 1], color="g")
 axes[1, 1].set(title="Generated data space X", label="x", ylabel="y")
 axes[1, 1].set_xlim([-2, 2])
 axes[1, 1].set_ylim([-2, 2])
+
+"""
+## Relevant Chapters from Deep Learning with Python
+- [Chapter 17: Image generation](https://deeplearningwithpython.io/chapters/chapter17_image-generation)
+"""

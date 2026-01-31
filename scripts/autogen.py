@@ -19,25 +19,24 @@ import signal
 import docstrings
 import jinja2
 import multiprocessing
-import autogen_utils
+import warnings
 
+import autogen_utils
 from master import MASTER
 from examples_master import EXAMPLES_MASTER
 import tutobooks
 import generate_tf_guides
 import render_presets
 
-
 EXAMPLES_GH_LOCATION = Path("keras-team") / "keras-io" / "blob" / "master" / "examples"
 GUIDES_GH_LOCATION = Path("keras-team") / "keras-io" / "blob" / "master" / "guides"
 KERAS_TEAM_GH = "https://github.com/keras-team"
 PROJECT_URL = {
-    "keras": f"{KERAS_TEAM_GH}/keras/tree/v3.9.2/",
-    "keras_tuner": f"{KERAS_TEAM_GH}/keras-tuner/tree/v1.4.7/",
-    "keras_hub": f"{KERAS_TEAM_GH}/keras-hub/tree/v0.20.0/",
+    "keras": f"{KERAS_TEAM_GH}/keras/tree/v3.13.2/",
+    "keras_tuner": f"{KERAS_TEAM_GH}/keras-tuner/tree/v1.4.8/",
+    "keras_hub": f"{KERAS_TEAM_GH}/keras-hub/tree/v0.25.1/",
     "tf_keras": f"{KERAS_TEAM_GH}/tf-keras/tree/v2.19.0/",
-    # TODO: Use the correct version when we cut a release.
-    "keras_rs": f"{KERAS_TEAM_GH}/keras-rs/tree/main/"
+    "keras_rs": f"{KERAS_TEAM_GH}/keras-rs/tree/v0.4.0/",
 }
 USE_MULTIPROCESSING = False
 
@@ -109,8 +108,53 @@ class KerasIO:
         )
         self.sync_tutobook_templates()
 
+        # Find all symbols for all guides and examples in MASTER
+        self.find_apis_in_tutobook(MASTER, [])
+
         # Recursively generate all md sources based on the MASTER tree
         self.make_md_source_for_entry(self.master, path_stack=[], title_stack=[])
+
+    def find_apis_in_tutobook(self, entry, path_stack):
+        path = entry["path"]
+        if "children" in entry:
+            # This is a TOC, recurse in tree
+            sub_path_stack = path_stack + [path] if path != "/" else path_stack
+            for child in entry["children"]:
+                self.find_apis_in_tutobook(child, sub_path_stack)
+            return
+        elif "generate" in entry:
+            # This is an API, ignore
+            return
+
+        # This is a guide / example, reverse engineer the path to the Python.
+        url = "/" + str(Path(*path_stack) / path) + "/"
+        is_guide = False
+        if path_stack[0] == "examples/":
+            py_path_stack = [self.examples_dir] + path_stack[1:]
+        elif path_stack[0] == "guides/":
+            py_path_stack = [self.guides_dir] + path_stack[1:]
+            is_guide = True
+        elif len(path_stack) < 2:
+            return
+        elif path_stack[1] == "examples/":
+            py_path_stack = [self.examples_dir, path_stack[0]] + path_stack[2:]
+        elif path_stack[1] == "guides/":
+            py_path_stack = [self.guides_dir, path_stack[0]] + path_stack[2:]
+            is_guide = True
+        else:
+            return
+
+        py_path = os.path.join(*py_path_stack, path + ".py")
+
+        # Parse the Python file and extract all the symbols from Keras packages.
+        apis = autogen_utils.find_all_symbols(
+            py_path, ["keras", "keras_hub", "keras_rs"]
+        )
+        if apis is None:
+            warnings.warn(f"Could not parse '{py_path}'")
+        else:
+            # Provide the results to the docstring_printer.
+            self.docstring_printer.add_example_apis(url, entry["title"], is_guide, apis)
 
     def preprocess_tutobook_md_source(
         self, md_content, fname, github_repo_dir, img_dir, site_img_dir
@@ -354,9 +398,7 @@ class KerasIO:
         templates_path = Path(self.templates_dir)
         shutil.copyfile(
             templates_path / "guides" / "intro_to_keras_for_engineers.md",
-            templates_path
-            / "getting_started"
-            / "intro_to_keras_for_engineers.md",
+            templates_path / "getting_started" / "intro_to_keras_for_engineers.md",
         )
         shutil.copyfile(
             templates_path / "guides" / "keras_hub" / "getting_started.md",
@@ -871,9 +913,7 @@ class KerasIO:
                     )
             site_path = Path(self.site_dir) / file.relative_to(self.redirects_dir)
             if site_path.exists():
-                raise ValueError(
-                    f"Redirect at {file} would overwrite a real page."
-                )
+                raise ValueError(f"Redirect at {file} would overwrite a real page.")
 
     def render_single_file(self, src_location, fname, nav):
         if not fname.endswith(".md"):

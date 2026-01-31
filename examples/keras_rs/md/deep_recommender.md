@@ -20,6 +20,7 @@ The first step in doing so is preparing the features, as raw features will
 usually not be immediately usable in a model.
 
 For example:
+
 - User and item IDs may be strings (titles, usernames) or large, non-contiguous
   integers (database IDs).
 - Item descriptions could be raw text.
@@ -27,6 +28,7 @@ For example:
 
 These need to be appropriately transformed in order to be useful in building
 models:
+
 - User and item IDs have to be translated into embedding vectors,
   high-dimensional numerical representations that are adjusted during training
   to help the model predict its objective better.
@@ -77,6 +79,11 @@ Nevertheless, effort put into building and fine-tuning larger models often pays
 off. In this tutorial, we will illustrate how to build a deep retrieval model.
 We'll do this by building progressively more complex models to see how this
 affects model performance.
+
+
+```python
+!pip install -q keras-rs
+```
 
 
 ```python
@@ -492,7 +499,9 @@ def preprocess_rating(x):
             "raw_user_age": features["raw_user_age"],
             "user_gender": features["user_gender"],
             "user_occupation_label": features["user_occupation_label"],
-            "user_gender_X_raw_user_age": features["user_gender_X_raw_user_age"],
+            "user_gender_X_raw_user_age": tf.squeeze(
+                features["user_gender_X_raw_user_age"], axis=-1
+            ),
             # Movie inputs are movie ID, vectorized title and genres
             "movie_id": int(x["movie_id"]),
             "movie_title_vector": features["movie_title"],

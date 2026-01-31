@@ -1871,3 +1871,7 @@ Instance 7:
 </div>
 Notice that the probabilities of the expected subjects
 (to which several citations are added) are higher compared to the baseline model.
+
+---
+## Relevant Chapters from Deep Learning with Python
+- [Chapter 7: A deep dive on Keras](https://deeplearningwithpython.io/chapters/chapter07_deep-dive-keras)

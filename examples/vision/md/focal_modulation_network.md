@@ -1245,3 +1245,7 @@ and also Microsoft Research for providing an
 We would also like to extend our gratitude to the first author of the
 paper [Jianwei Yang](https://twitter.com/jw2yang4ai) who reviewed this tutorial
 extensively.
+
+---
+## Relevant Chapters from Deep Learning with Python
+- [Chapter 8: Image classification](https://deeplearningwithpython.io/chapters/chapter08_image-classification)

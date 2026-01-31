@@ -1239,3 +1239,7 @@ Index selected: 26
 If you are interested in learning more about this topic, you may find
 [this repository](https://github.com/soumik12345/point-cloud-segmentation)
 useful.
+
+---
+## Relevant Chapters from Deep Learning with Python
+- [Chapter 11: Image segmentation](https://deeplearningwithpython.io/chapters/chapter11_image-segmentation)

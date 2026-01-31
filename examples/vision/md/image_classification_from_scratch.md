@@ -236,8 +236,7 @@ If you're training on GPU, this may be a good option.
 augmented images, like this:
 
 ```python
-augmented_train_ds = train_ds.map(
-    lambda x, y: (data_augmentation(x, training=True), y))
+augmented_train_ds = train_ds.map(lambda x, y: (data_augmentation(x), y))
 ```
 
 With this option, your data augmentation will happen **on CPU**, asynchronously, and will
@@ -409,3 +408,7 @@ This image is 94.30% cat and 5.70% dog.
 ![png](/img/examples/vision/image_classification_from_scratch/image_classification_from_scratch_29_1.png)
     
 
+
+---
+## Relevant Chapters from Deep Learning with Python
+- [Chapter 8: Image classification](https://deeplearningwithpython.io/chapters/chapter08_image-classification)

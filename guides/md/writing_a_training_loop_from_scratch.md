@@ -499,7 +499,7 @@ A GAN training loop looks like this:
 as real.
 
 For a much more detailed overview of how GANs works, see
-[Deep Learning with Python](https://www.manning.com/books/deep-learning-with-python).
+[Deep Learning with Python](https://deeplearningwithpython.io/).
 
 Let's implement this training loop. First, create the discriminator meant to classify
 fake vs real digits:

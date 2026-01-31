@@ -2,7 +2,7 @@
 Title: Audio Classification with the STFTSpectrogram layer
 Author: [Mostafa M. Amin](https://mostafa-amin.com)
 Date created: 2024/10/04
-Last modified: 2024/10/04
+Last modified: 2025/12/08
 Description: Introducing the `STFTSpectrogram` layer to extract spectrograms for audio classification.
 Accelerator: GPU
 """

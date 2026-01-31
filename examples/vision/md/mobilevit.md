@@ -2,7 +2,7 @@
 
 **Author:** [Sayak Paul](https://twitter.com/RisingSayak)<br>
 **Date created:** 2021/10/20<br>
-**Last modified:** 2024/02/11<br>
+**Last modified:** 2025/09/30<br>
 **Description:** MobileViT for image classification with combined benefits of convolutions and Transformers.
 
 
@@ -727,6 +727,7 @@ print(f"Number of validation examples: {num_val}")
 train_dataset = prepare_dataset(train_dataset, is_training=True)
 val_dataset = prepare_dataset(val_dataset, is_training=False)
 ```
+</div>
 
 <div class="k-default-codeblock">
 ```
@@ -873,3 +874,8 @@ inference with TFLite models, check out
 
 You can use the trained model hosted on [Hugging Face Hub](https://huggingface.co/keras-io/mobile-vit-xxs)
 and try the demo on [Hugging Face Spaces](https://huggingface.co/spaces/keras-io/Flowers-Classification-MobileViT).
+
+---
+## Relevant Chapters from Deep Learning with Python
+- [Chapter 8: Image classification](https://deeplearningwithpython.io/chapters/chapter08_image-classification)
+- [Chapter 15: Language models and the Transformer](https://deeplearningwithpython.io/chapters/chapter15_language-models-and-the-transformer)

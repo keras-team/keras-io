@@ -577,3 +577,7 @@ the results.
 not [fine-tune](https://keras.io/guides/transfer_learning/) it. You are encouraged to fine-tune it on this task and see if that
 improves the performance. You can also try different architectures and see how they
 affect the final performance.
+
+---
+## Relevant Chapters from Deep Learning with Python
+- [Chapter 12: Object detection](https://deeplearningwithpython.io/chapters/chapter12_object-detection)

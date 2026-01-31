@@ -115,6 +115,42 @@ GUIDES_MASTER = {
             "path": "migrating_to_keras_3",
             "title": "Migrating Keras 2 code to Keras 3",
         },
+        {
+            "path": "keras_nnx_guide",
+            "title": "How to use Keras with NNX backend",
+        },
+        {
+            "path": "orbax_checkpoint",
+            "title": "Orbax Checkpointing in Keras",
+        },
+        {
+            "path": "quantization_overview",
+            "title": "Quantization in Keras",
+        },
+        {
+            "path": "int8_quantization_in_keras",
+            "title": "8-bit integer quantization in Keras",
+        },
+        {
+            "path": "int4_quantization_in_keras",
+            "title": "4-bit integer quantization in Keras",
+        },
+        {
+            "path": "gptq_quantization_in_keras",
+            "title": "GPTQ quantization in Keras",
+        },
+        {
+            "path": "writing_quantization_compatible_layers",
+            "title": "Writing quantization-compatible layers in Keras",
+        },
+        {
+            "path": "customizing_quantization",
+            "title": "Customizing quantization in Keras",
+        },
+        {
+            "path": "define_custom_kernel",
+            "title": "Define a Custom TPU/GPU Kernel",
+        },
         # {
         #     "path": "preprocessing_layers",
         #     "title": "Working with preprocessing layers",

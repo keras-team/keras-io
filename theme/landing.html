@@ -83,6 +83,7 @@
   </head>
 
   <body>
+
     <!-- Google Tag Manager (noscript) -->
     <noscript
       ><iframe
@@ -147,6 +148,7 @@
               <a class="nav__link" href="/examples/">EXAMPLES</a>
             </li>
             <li class="nav__item"><a class="nav__link" href="/keras_tuner/">KERAS TUNER</a></li>
+            <li class="nav__item"><a class="nav__link" href="/keras_rs/">KERAS RS</a></li>
             <li class="nav__item"><a class="nav__link" href="/keras_hub/">KERAS HUB</a></li>
           </ul>
 
@@ -169,8 +171,7 @@
       <div class="hero">
         <div class="hero__content--wrapper">
           <div class="hero__content">
-            <a class="button__round" href="/keras_3/">KERAS 3.0 RELEASED</a>
-
+              <a class="button__round" href="/keras_3/">KERAS 3.0 RELEASED</a>
             <h1 class="hero__title text--white">A superpower for ML developers</h1>
 
             <p class="hero__description text--white">
@@ -543,7 +544,7 @@ history = model.fit(
                 <div>
                   <h3>Generative Deep Learning</h3>
                   <p>
-                    Get started with generative deep learning with out wealth of guides involving state-of-the-art diffusion models, GANs, and transformer models.
+                    Get started with generative deep learning with our wealth of guides involving state-of-the-art diffusion models, GANs, and transformer models.
                   </p>
                 </div>
 
@@ -657,6 +658,21 @@ history = model.fit(
     <script src="./js/index.js"></script>
 
     <script src="./js/glide.min.js"></script>
+
+    <script>
+      function adjustNavMargin() {
+        const banner = document.querySelector('.survey__banner');
+        const nav = document.querySelector('.nav__container');
+
+        if (banner && nav) {
+          const bannerHeight = banner.offsetHeight;
+          nav.style.marginTop = bannerHeight + 'px';
+        }
+      }
+
+      document.addEventListener('DOMContentLoaded', adjustNavMargin);
+      window.addEventListener('resize', adjustNavMargin);
+    </script>
 
     <script>
       const carousels = document.querySelector(".glide");

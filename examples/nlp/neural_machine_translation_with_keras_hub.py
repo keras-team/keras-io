@@ -46,7 +46,6 @@ Before we start implementing the pipeline, let's import all the libraries we nee
 """shell
 pip install -q --upgrade rouge-score
 pip install -q --upgrade keras-hub
-pip install -q --upgrade keras  # Upgrade to Keras 3.
 """
 
 import keras_hub
@@ -57,9 +56,6 @@ import keras
 from keras import ops
 
 import tensorflow.data as tf_data
-from tensorflow_text.tools.wordpiece_vocab import (
-    bert_vocab_from_dataset as bert_vocab,
-)
 
 """
 Let's also define our parameters/hyperparameters.
@@ -87,7 +83,7 @@ text_file = keras.utils.get_file(
     origin="http://storage.googleapis.com/download.tensorflow.org/data/spa-eng.zip",
     extract=True,
 )
-text_file = pathlib.Path(text_file).parent / "spa-eng" / "spa.txt"
+text_file = pathlib.Path(text_file) / "spa-eng" / "spa.txt"
 
 """
 ## Parsing the data
@@ -249,8 +245,6 @@ This can be easily done using `keras_hub.layers.StartEndPacker`.
 
 
 def preprocess_batch(eng, spa):
-    batch_size = ops.shape(spa)[0]
-
     eng = eng_tokenizer(eng)
     spa = spa_tokenizer(spa)
 
@@ -417,12 +411,15 @@ def decode_sequences(input_sentences):
     batch_size = 1
 
     # Tokenize the encoder input.
-    encoder_input_tokens = ops.convert_to_tensor(eng_tokenizer(input_sentences))
-    if len(encoder_input_tokens[0]) < MAX_SEQUENCE_LENGTH:
-        pads = ops.full((1, MAX_SEQUENCE_LENGTH - len(encoder_input_tokens[0])), 0)
-        encoder_input_tokens = ops.concatenate(
-            [encoder_input_tokens.to_tensor(), pads], 1
+    encoder_input_tokens = ops.convert_to_tensor(
+        eng_tokenizer(input_sentences), sparse=False, ragged=False
+    )
+    if ops.shape(encoder_input_tokens)[1] < MAX_SEQUENCE_LENGTH:
+        pads = ops.zeros(
+            (1, MAX_SEQUENCE_LENGTH - ops.shape(encoder_input_tokens)[1]),
+            dtype=encoder_input_tokens.dtype,
         )
+        encoder_input_tokens = ops.concatenate([encoder_input_tokens, pads], 1)
 
     # Define a function that outputs the next token's probability given the
     # input sequence.
@@ -451,8 +448,7 @@ def decode_sequences(input_sentences):
 test_eng_texts = [pair[0] for pair in test_pairs]
 for i in range(2):
     input_sentence = random.choice(test_eng_texts)
-    translated = decode_sequences([input_sentence])
-    translated = translated.numpy()[0].decode("utf-8")
+    translated = decode_sequences([input_sentence])[0]
     translated = (
         translated.replace("[PAD]", "")
         .replace("[START]", "")
@@ -484,8 +480,7 @@ for test_pair in test_pairs[:30]:
     input_sentence = test_pair[0]
     reference_sentence = test_pair[1]
 
-    translated_sentence = decode_sequences([input_sentence])
-    translated_sentence = translated_sentence.numpy()[0].decode("utf-8")
+    translated_sentence = decode_sequences([input_sentence])[0]
     translated_sentence = (
         translated_sentence.replace("[PAD]", "")
         .replace("[START]", "")
@@ -507,4 +502,10 @@ After 10 epochs, the scores are as follows:
 | **Precision** |    0.568    |    0.374    |
 |   **Recall**  |    0.615    |    0.394    |
 |  **F1 Score** |    0.579    |    0.381    |
+"""
+
+"""
+## Relevant Chapters from Deep Learning with Python
+- [Chapter 15: Language models and the Transformer](https://deeplearningwithpython.io/chapters/chapter15_language-models-and-the-transformer)
+- [Chapter 16: Text generation](https://deeplearningwithpython.io/chapters/chapter16_text-generation)
 """

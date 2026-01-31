@@ -80,6 +80,11 @@ Let's set the backend to JAX, and get our imports sorted.
 
 
 ```python
+!pip install -q keras-rs
+```
+
+
+```python
 import os
 
 os.environ["KERAS_BACKEND"] = "jax"  # `"tensorflow"`/`"torch"`
@@ -117,14 +122,14 @@ MOVIELENS_CONFIG = {
         "user_occupation_text",
     ],
     # model
-    "embedding_dim": 32,
+    "embedding_dim": 8,
     "deep_net_num_units": [192, 192, 192],
-    "projection_dim": 20,
+    "projection_dim": 8,
     "dcn_num_units": [192, 192],
     # training
-    "learning_rate": 0.01,
-    "num_epochs": 10,
-    "batch_size": 1024,
+    "learning_rate": 1e-2,
+    "num_epochs": 8,
+    "batch_size": 8192,
 }
 
 ```
@@ -146,8 +151,8 @@ def visualize_layer(matrix, features):
     cax = divider.append_axes("right", size="5%", pad=0.05)
     plt.colorbar(im, cax=cax)
     cax.tick_params(labelsize=10)
-    ax.set_xticklabels([""] + features, rotation=45, fontsize=10)
-    ax.set_yticklabels([""] + features, fontsize=10)
+    ax.set_xticklabels([""] + features, rotation=45, fontsize=5)
+    ax.set_yticklabels([""] + features, fontsize=5)
 
 
 def train_and_evaluate(
@@ -338,8 +343,9 @@ print_stats(
 
 <div class="k-default-codeblock">
 ```
-Cross Network: RMSE = 0.002540863584727049; #params = 16
-Deep Network: RMSE = 0.0026898200158029795; #params = 166401
+Cross Network: RMSE = 0.0033086808398365974; #params = 16
+
+Deep Network: RMSE = 0.03210094943642616; #params = 166401
 ```
 </div>
 
@@ -361,16 +367,16 @@ visualize_layer(
 
 <div class="k-default-codeblock">
 ```
-/var/tmp/ipykernel_674880/2224087162.py:11: UserWarning: set_ticklabels() should only be used with a fixed number of ticks, i.e. after set_ticks() or using a FixedLocator.
-  ax.set_xticklabels([""] + features, rotation=45, fontsize=10)
-/var/tmp/ipykernel_674880/2224087162.py:12: UserWarning: set_ticklabels() should only be used with a fixed number of ticks, i.e. after set_ticks() or using a FixedLocator.
-  ax.set_yticklabels([""] + features, fontsize=10)
+<ipython-input-4-c58988d7961d>:11: UserWarning: set_ticklabels() should only be used with a fixed number of ticks, i.e. after set_ticks() or using a FixedLocator.
+  ax.set_xticklabels([""] + features, rotation=45, fontsize=5)
+<ipython-input-4-c58988d7961d>:12: UserWarning: set_ticklabels() should only be used with a fixed number of ticks, i.e. after set_ticks() or using a FixedLocator.
+  ax.set_yticklabels([""] + features, fontsize=5)
 
 <Figure size 900x900 with 0 Axes>
 ```
 </div>
 
-![png](/img/examples/keras_rs/dcn/dcn_16_2.png)
+![png](/img/examples/keras_rs/dcn/dcn_17_2.png)
     
 
 
@@ -404,6 +410,28 @@ ratings_ds = ratings_ds.map(
     )
 )
 ```
+
+<div class="k-default-codeblock">
+```
+WARNING:absl:Variant folder /root/tensorflow_datasets/movielens/100k-ratings/0.1.1 has no dataset_info.json
+
+Downloading and preparing dataset Unknown size (download: Unknown size, generated: Unknown size, total: Unknown size) to /root/tensorflow_datasets/movielens/100k-ratings/0.1.1...
+
+Dl Completed...: 0 url [00:00, ? url/s]
+
+Dl Size...: 0 MiB [00:00, ? MiB/s]
+
+Extraction completed...: 0 file [00:00, ? file/s]
+
+Generating splits...:   0%|          | 0/1 [00:00<?, ? splits/s]
+
+Generating train examples...: 0 examples [00:00, ? examples/s]
+
+Shuffling /root/tensorflow_datasets/movielens/100k-ratings/incomplete.3VSR4M_0.1.1/movielens-train.tfrecord*..…
+
+Dataset movielens downloaded and prepared to /root/tensorflow_datasets/movielens/100k-ratings/0.1.1. Subsequent calls will reuse this data.
+```
+</div>
 
 For every feature, let's get the list of unique values, i.e., vocabulary, so
 that we can use that for the embedding layer.
@@ -477,36 +505,61 @@ layers.
 
 ```python
 
-def get_model(
-    dense_num_units_lst,
-    embedding_dim=MOVIELENS_CONFIG["embedding_dim"],
-    use_cross_layer=False,
-    projection_dim=None,
-):
-    inputs = {}
-    embeddings = []
-    for feature_name, vocabulary in vocabularies.items():
-        inputs[feature_name] = keras.Input(shape=(), dtype="int32", name=feature_name)
-        embedding_layer = keras.layers.Embedding(
-            input_dim=len(vocabulary) + 1,
-            output_dim=embedding_dim,
-        )
-        embedding = embedding_layer(inputs[feature_name])
-        embeddings.append(embedding)
+class DCN(keras.Model):
+    def __init__(
+        self,
+        dense_num_units_lst,
+        embedding_dim=MOVIELENS_CONFIG["embedding_dim"],
+        use_cross_layer=False,
+        projection_dim=None,
+        **kwargs,
+    ):
+        super().__init__(**kwargs)
 
-    x = keras.ops.concatenate(embeddings, axis=1)
+        # Layers.
 
-    # Cross layer.
-    if use_cross_layer:
-        x = keras_rs.layers.FeatureCross(projection_dim=projection_dim)(x)
+        self.embedding_layers = []
+        for feature_name, vocabulary in vocabularies.items():
+            self.embedding_layers.append(
+                keras.layers.Embedding(
+                    input_dim=len(vocabulary) + 1,
+                    output_dim=embedding_dim,
+                )
+            )
 
-    # Dense layer.
-    for num_units in dense_num_units_lst:
-        x = keras.layers.Dense(num_units, activation="relu")(x)
+        if use_cross_layer:
+            self.cross_layer = keras_rs.layers.FeatureCross(
+                projection_dim=projection_dim
+            )
 
-    x = keras.layers.Dense(1)(x)
+        self.dense_layers = []
+        for num_units in dense_num_units_lst:
+            self.dense_layers.append(keras.layers.Dense(num_units, activation="relu"))
 
-    return keras.Model(inputs=inputs, outputs=x)
+        self.output_layer = keras.layers.Dense(1)
+
+        # Attributes.
+        self.dense_num_units_lst = dense_num_units_lst
+        self.embedding_dim = embedding_dim
+        self.use_cross_layer = use_cross_layer
+        self.projection_dim = projection_dim
+
+    def call(self, inputs):
+        embeddings = []
+        for feature_name, embedding_layer in zip(vocabularies, self.embedding_layers):
+            embeddings.append(embedding_layer(inputs[feature_name]))
+
+        x = keras.ops.concatenate(embeddings, axis=1)
+
+        if self.use_cross_layer:
+            x = self.cross_layer(x)
+
+        for dense_layer in self.dense_layers:
+            x = dense_layer(x)
+
+        x = self.output_layer(x)
+
+        return x
 
 ```
 
@@ -523,8 +576,8 @@ cross_network_rmse_list = []
 opt_cross_network_rmse_list = []
 deep_network_rmse_list = []
 
-for _ in range(10):
-    cross_network = get_model(
+for _ in range(20):
+    cross_network = DCN(
         dense_num_units_lst=MOVIELENS_CONFIG["dcn_num_units"],
         embedding_dim=MOVIELENS_CONFIG["embedding_dim"],
         use_cross_layer=True,
@@ -538,7 +591,7 @@ for _ in range(10):
     )
     cross_network_rmse_list.append(rmse)
 
-    opt_cross_network = get_model(
+    opt_cross_network = DCN(
         dense_num_units_lst=MOVIELENS_CONFIG["dcn_num_units"],
         embedding_dim=MOVIELENS_CONFIG["embedding_dim"],
         use_cross_layer=True,
@@ -553,7 +606,7 @@ for _ in range(10):
     )
     opt_cross_network_rmse_list.append(rmse)
 
-    deep_network = get_model(dense_num_units_lst=MOVIELENS_CONFIG["deep_net_num_units"])
+    deep_network = DCN(dense_num_units_lst=MOVIELENS_CONFIG["deep_net_num_units"])
     rmse, deep_network_num_params = train_and_evaluate(
         learning_rate=MOVIELENS_CONFIG["learning_rate"],
         epochs=MOVIELENS_CONFIG["num_epochs"],
@@ -582,13 +635,13 @@ print_stats(
 
 <div class="k-default-codeblock">
 ```
-Cross Network: RMSE = 0.8887265503406525 ± 0.02188869864935667; #params = 221953
-Optimised Cross Network: RMSE = 0.9222802877426147 ± 0.044382040717192484; #params = 192769
-Deep Network: RMSE = 0.8751056969165802 ± 0.029525712693164348; #params = 221953
+Cross Network: RMSE = 0.9135891020298004 ± 0.0030034825614508568; #params = 76657
+Optimised Cross Network: RMSE = 0.9156497985124588 ± 0.001790475212077632; #params = 75121
+Deep Network: RMSE = 0.9173523932695389 ± 0.005951893245769413; #params = 111361
 ```
 </div>
 
-DCN outperforms a similarly sized DNN with ReLU layers, demonstrating
+DCN slightly outperforms a larger DNN with ReLU layers, demonstrating
 superior performance. Furthermore, the low-rank DCN effectively reduces the
 number of parameters without compromising accuracy.
 
@@ -630,16 +683,16 @@ visualize_layer(
 
 <div class="k-default-codeblock">
 ```
-/var/tmp/ipykernel_674880/2224087162.py:11: UserWarning: set_ticklabels() should only be used with a fixed number of ticks, i.e. after set_ticks() or using a FixedLocator.
-  ax.set_xticklabels([""] + features, rotation=45, fontsize=10)
-/var/tmp/ipykernel_674880/2224087162.py:12: UserWarning: set_ticklabels() should only be used with a fixed number of ticks, i.e. after set_ticks() or using a FixedLocator.
-  ax.set_yticklabels([""] + features, fontsize=10)
+<ipython-input-4-c58988d7961d>:11: UserWarning: set_ticklabels() should only be used with a fixed number of ticks, i.e. after set_ticks() or using a FixedLocator.
+  ax.set_xticklabels([""] + features, rotation=45, fontsize=5)
+<ipython-input-4-c58988d7961d>:12: UserWarning: set_ticklabels() should only be used with a fixed number of ticks, i.e. after set_ticks() or using a FixedLocator.
+  ax.set_yticklabels([""] + features, fontsize=5)
 
 <Figure size 900x900 with 0 Axes>
 ```
 </div>
 
-![png](/img/examples/keras_rs/dcn/dcn_31_2.png)
+![png](/img/examples/keras_rs/dcn/dcn_32_2.png)
     
 
 

@@ -366,3 +366,7 @@ display(Image(result_prefix + "_at_iteration_4000.png"))
 
     
 ![png](/img/examples/generative/neural_style_transfer/neural_style_transfer_19_0.png)
+
+---
+## Relevant Chapters from Deep Learning with Python
+- [Chapter 17: Image generation](https://deeplearningwithpython.io/chapters/chapter17_image-generation)

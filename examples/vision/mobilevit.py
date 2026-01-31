@@ -2,7 +2,7 @@
 Title: MobileViT: A mobile-friendly Transformer-based model for image classification
 Author: [Sayak Paul](https://twitter.com/RisingSayak)
 Date created: 2021/10/20
-Last modified: 2024/02/11
+Last modified: 2025/09/30
 Description: MobileViT for image classification with combined benefits of convolutions and Transformers.
 Accelerator: GPU
 """
@@ -401,4 +401,10 @@ inference with TFLite models, check out
 
 You can use the trained model hosted on [Hugging Face Hub](https://huggingface.co/keras-io/mobile-vit-xxs)
 and try the demo on [Hugging Face Spaces](https://huggingface.co/spaces/keras-io/Flowers-Classification-MobileViT).
+"""
+
+"""
+## Relevant Chapters from Deep Learning with Python
+- [Chapter 8: Image classification](https://deeplearningwithpython.io/chapters/chapter08_image-classification)
+- [Chapter 15: Language models and the Transformer](https://deeplearningwithpython.io/chapters/chapter15_language-models-and-the-transformer)
 """
