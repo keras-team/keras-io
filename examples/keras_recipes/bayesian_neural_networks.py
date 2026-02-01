@@ -56,6 +56,16 @@ import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
 import tensorflow_datasets as tfds
+
+# Compatibility patch for TFP with Keras 3 / TF 2.19+
+try:
+    if not hasattr(tf._api.v2.compat.v2.__internal__, "register_load_context_function"):
+        tf._api.v2.compat.v2.__internal__.register_load_context_function = (
+            tf._api.v2.compat.v2.__internal__.register_call_context_function
+        )
+except AttributeError:
+    pass
+
 import tensorflow_probability as tfp
 
 """
@@ -171,49 +181,53 @@ the examples, respectively.
 dataset_size = 4898
 batch_size = 256
 train_size = int(dataset_size * 0.85)
-train_dataset, test_dataset = get_train_and_test_splits(train_size, batch_size)
 
-"""
-Now let's train the baseline model. We use the `MeanSquaredError`
-as the loss function.
-"""
+if __name__ == "__main__":
+    train_dataset, test_dataset = get_train_and_test_splits(train_size, batch_size)
 
-num_epochs = 100
-mse_loss = keras.losses.MeanSquaredError()
-baseline_model = create_baseline_model()
-run_experiment(baseline_model, mse_loss, train_dataset, test_dataset)
+    """
+    Now let's train the baseline model. We use the `MeanSquaredError`
+    as the loss function.
+    """
 
-"""
-We take a sample from the test set use the model to obtain predictions for them.
-Note that since the baseline model is deterministic, we get a single a
-*point estimate* prediction for each test example, with no information about the
-uncertainty of the model nor the prediction.
-"""
+    num_epochs = 100
+    mse_loss = keras.losses.MeanSquaredError()
+    baseline_model = create_baseline_model()
+    run_experiment(baseline_model, mse_loss, train_dataset, test_dataset)
 
-sample = 10
-examples, targets = list(test_dataset.unbatch().shuffle(batch_size * 10).batch(sample))[
-    0
-]
+    """
+    We take a sample from the test set use the model to obtain predictions for them.
+    Note that since the baseline model is deterministic, we get a single a
+    *point estimate* prediction for each test example, with no information about the
+    uncertainty of the model nor the prediction.
+    """
 
-predicted = baseline_model(examples).numpy()
-for idx in range(sample):
-    print(f"Predicted: {round(float(predicted[idx][0]), 1)} - Actual: {targets[idx]}")
+    sample = 10
+    examples, targets = list(
+        test_dataset.unbatch().shuffle(batch_size * 10).batch(sample)
+    )[0]
 
-"""
-## Experiment 2: Bayesian neural network (BNN)
+    predicted = baseline_model(examples).numpy()
+    for idx in range(sample):
+        print(
+            f"Predicted: {round(float(predicted[idx][0]), 1)} - Actual: {targets[idx]}"
+        )
 
-The object of the Bayesian approach for modeling neural networks is to capture
-the *epistemic uncertainty*, which is uncertainty about the model fitness,
-due to limited training data.
+    """
+    ## Experiment 2: Bayesian neural network (BNN)
 
-The idea is that, instead of learning specific weight (and bias) *values* in the
-neural network, the Bayesian approach learns weight *distributions*
-- from which we can sample to produce an output for a given input -
-to encode weight uncertainty.
+    The object of the Bayesian approach for modeling neural networks is to capture
+    the *epistemic uncertainty*, which is uncertainty about the model fitness,
+    due to limited training data.
 
-Thus, we need to define prior and the posterior distributions of these weights,
-and the training process is to learn the parameters of these distributions.
-"""
+    The idea is that, instead of learning specific weight (and bias) *values* in the
+    neural network, the Bayesian approach learns weight *distributions*
+    - from which we can sample to produce an output for a given input -
+    to encode weight uncertainty.
+
+    Thus, we need to define prior and the posterior distributions of these weights,
+    and the training process is to learn the parameters of these distributions.
+    """
 
 
 # Define the prior weight distribution as Normal of mean=0 and stddev=1.
@@ -288,143 +302,142 @@ the training set, and then on the full training set, to compare the output varia
 ### Train BNN  with a small training subset.
 """
 
-num_epochs = 500
-train_sample_size = int(train_size * 0.3)
-small_train_dataset = train_dataset.unbatch().take(train_sample_size).batch(batch_size)
+if __name__ == "__main__":
+    num_epochs = 500
+    train_sample_size = int(train_size * 0.3)
+    small_train_dataset = (
+        train_dataset.unbatch().take(train_sample_size).batch(batch_size)
+    )
 
-bnn_model_small = create_bnn_model(train_sample_size)
-run_experiment(bnn_model_small, mse_loss, small_train_dataset, test_dataset)
+    bnn_model_small = create_bnn_model(train_sample_size)
+    run_experiment(bnn_model_small, mse_loss, small_train_dataset, test_dataset)
 
-"""
-Since we have trained a BNN model, the model produces a different output each time
-we call it with the same input, since each time a new set of weights are sampled
-from the distributions to construct the network and produce an output.
-The less certain the mode weights are, the more variability (wider range) we will
-see in the outputs of the same inputs.
-"""
+    """
+    Since we have trained a BNN model, the model produces a different output each time
+    we call it with the same input, since each time a new set of weights are sampled
+    from the distributions to construct the network and produce an output.
+    The less certain the mode weights are, the more variability (wider range) we will
+    see in the outputs of the same inputs.
+    """
 
+    def compute_predictions(model, iterations=100):
+        predicted = []
+        for _ in range(iterations):
+            predicted.append(model(examples).numpy())
+        predicted = np.concatenate(predicted, axis=1)
 
-def compute_predictions(model, iterations=100):
-    predicted = []
-    for _ in range(iterations):
-        predicted.append(model(examples).numpy())
-    predicted = np.concatenate(predicted, axis=1)
+        prediction_mean = np.mean(predicted, axis=1).tolist()
+        prediction_min = np.min(predicted, axis=1).tolist()
+        prediction_max = np.max(predicted, axis=1).tolist()
+        prediction_range = (
+            np.max(predicted, axis=1) - np.min(predicted, axis=1)
+        ).tolist()
 
-    prediction_mean = np.mean(predicted, axis=1).tolist()
-    prediction_min = np.min(predicted, axis=1).tolist()
-    prediction_max = np.max(predicted, axis=1).tolist()
-    prediction_range = (np.max(predicted, axis=1) - np.min(predicted, axis=1)).tolist()
+        for idx in range(sample):
+            print(
+                f"Predictions mean: {round(prediction_mean[idx], 2)}, "
+                f"min: {round(prediction_min[idx], 2)}, "
+                f"max: {round(prediction_max[idx], 2)}, "
+                f"range: {round(prediction_range[idx], 2)} - "
+                f"Actual: {targets[idx]}"
+            )
+
+    compute_predictions(bnn_model_small)
+
+    """
+    ### Train BNN  with the whole training set.
+    """
+
+    num_epochs = 500
+    bnn_model_full = create_bnn_model(train_size)
+    run_experiment(bnn_model_full, mse_loss, train_dataset, test_dataset)
+
+    compute_predictions(bnn_model_full)
+
+    """
+    Notice that the model trained with the full training dataset shows smaller range
+    (uncertainty) in the prediction values for the same inputs, compared to the model
+    trained with a subset of the training dataset.
+    """
+
+    """
+    ## Experiment 3: probabilistic Bayesian neural network
+
+    So far, the output of the standard and the Bayesian NN models that we built is
+    deterministic, that is, produces a point estimate as a prediction for a given example.
+    We can create a probabilistic NN by letting the model output a distribution.
+    In this case, the model captures the *aleatoric uncertainty* as well,
+    which is due to irreducible noise in the data, or to the stochastic nature of the
+    process generating the data.
+
+    In this example, we model the output as a `IndependentNormal` distribution,
+    with learnable mean and variance parameters. If the task was classification,
+    we would have used `IndependentBernoulli` with binary classes, and `OneHotCategorical`
+    with multiple classes, to model distribution of the model output.
+    """
+
+    def create_probablistic_bnn_model(train_size):
+        inputs = create_model_inputs()
+        features = keras.layers.concatenate(list(inputs.values()))
+        features = layers.BatchNormalization()(features)
+
+        # Create hidden layers with weight uncertainty using the DenseVariational layer.
+        for units in hidden_units:
+            features = tfp.layers.DenseVariational(
+                units=units,
+                make_prior_fn=prior,
+                make_posterior_fn=posterior,
+                kl_weight=1 / train_size,
+                activation="sigmoid",
+            )(features)
+
+        # Create a probabilisticå output (Normal distribution), and use the `Dense` layer
+        # to produce the parameters of the distribution.
+        # We set units=2 to learn both the mean and the variance of the Normal distribution.
+        distribution_params = layers.Dense(units=2)(features)
+        outputs = tfp.layers.IndependentNormal(1)(distribution_params)
+
+        model = keras.Model(inputs=inputs, outputs=outputs)
+        return model
+
+    """
+    Since the output of the model is a distribution, rather than a point estimate,
+    we use the [negative loglikelihood](https://en.wikipedia.org/wiki/Likelihood_function)
+    as our loss function to compute how likely to see the true data (targets) from the
+    estimated distribution produced by the model.
+    """
+
+    def negative_loglikelihood(targets, estimated_distribution):
+        return -estimated_distribution.log_prob(targets)
+
+    num_epochs = 1000
+    prob_bnn_model = create_probablistic_bnn_model(train_size)
+    run_experiment(prob_bnn_model, negative_loglikelihood, train_dataset, test_dataset)
+
+    """
+    Now let's produce an output from the model given the test examples.
+    The output is now a distribution, and we can use its mean and variance
+    to compute the confidence intervals (CI) of the prediction.
+    """
+
+    prediction_distribution = prob_bnn_model(examples)
+    prediction_mean = prediction_distribution.mean().numpy().tolist()
+    prediction_stdv = prediction_distribution.stddev().numpy()
+
+    # The 95% CI is computed as mean ± (1.96 * stdv)
+    upper = (prediction_mean + (1.96 * prediction_stdv)).tolist()
+    lower = (prediction_mean - (1.96 * prediction_stdv)).tolist()
+    prediction_stdv = prediction_stdv.tolist()
 
     for idx in range(sample):
         print(
-            f"Predictions mean: {round(prediction_mean[idx], 2)}, "
-            f"min: {round(prediction_min[idx], 2)}, "
-            f"max: {round(prediction_max[idx], 2)}, "
-            f"range: {round(prediction_range[idx], 2)} - "
-            f"Actual: {targets[idx]}"
+            f"Prediction mean: {round(prediction_mean[idx][0], 2)}, "
+            f"stddev: {round(prediction_stdv[idx][0], 2)}, "
+            f"95% CI: [{round(upper[idx][0], 2)} - {round(lower[idx][0], 2)}]"
+            f" - Actual: {targets[idx]}"
         )
 
-
-compute_predictions(bnn_model_small)
-
-"""
-### Train BNN  with the whole training set.
-"""
-
-num_epochs = 500
-bnn_model_full = create_bnn_model(train_size)
-run_experiment(bnn_model_full, mse_loss, train_dataset, test_dataset)
-
-compute_predictions(bnn_model_full)
-
-"""
-Notice that the model trained with the full training dataset shows smaller range
-(uncertainty) in the prediction values for the same inputs, compared to the model
-trained with a subset of the training dataset.
-"""
-
-"""
-## Experiment 3: probabilistic Bayesian neural network
-
-So far, the output of the standard and the Bayesian NN models that we built is
-deterministic, that is, produces a point estimate as a prediction for a given example.
-We can create a probabilistic NN by letting the model output a distribution.
-In this case, the model captures the *aleatoric uncertainty* as well,
-which is due to irreducible noise in the data, or to the stochastic nature of the
-process generating the data.
-
-In this example, we model the output as a `IndependentNormal` distribution,
-with learnable mean and variance parameters. If the task was classification,
-we would have used `IndependentBernoulli` with binary classes, and `OneHotCategorical`
-with multiple classes, to model distribution of the model output.
-"""
-
-
-def create_probablistic_bnn_model(train_size):
-    inputs = create_model_inputs()
-    features = keras.layers.concatenate(list(inputs.values()))
-    features = layers.BatchNormalization()(features)
-
-    # Create hidden layers with weight uncertainty using the DenseVariational layer.
-    for units in hidden_units:
-        features = tfp.layers.DenseVariational(
-            units=units,
-            make_prior_fn=prior,
-            make_posterior_fn=posterior,
-            kl_weight=1 / train_size,
-            activation="sigmoid",
-        )(features)
-
-    # Create a probabilisticå output (Normal distribution), and use the `Dense` layer
-    # to produce the parameters of the distribution.
-    # We set units=2 to learn both the mean and the variance of the Normal distribution.
-    distribution_params = layers.Dense(units=2)(features)
-    outputs = tfp.layers.IndependentNormal(1)(distribution_params)
-
-    model = keras.Model(inputs=inputs, outputs=outputs)
-    return model
-
-
-"""
-Since the output of the model is a distribution, rather than a point estimate,
-we use the [negative loglikelihood](https://en.wikipedia.org/wiki/Likelihood_function)
-as our loss function to compute how likely to see the true data (targets) from the
-estimated distribution produced by the model.
-"""
-
-
-def negative_loglikelihood(targets, estimated_distribution):
-    return -estimated_distribution.log_prob(targets)
-
-
-num_epochs = 1000
-prob_bnn_model = create_probablistic_bnn_model(train_size)
-run_experiment(prob_bnn_model, negative_loglikelihood, train_dataset, test_dataset)
-
-"""
-Now let's produce an output from the model given the test examples.
-The output is now a distribution, and we can use its mean and variance
-to compute the confidence intervals (CI) of the prediction.
-"""
-
-prediction_distribution = prob_bnn_model(examples)
-prediction_mean = prediction_distribution.mean().numpy().tolist()
-prediction_stdv = prediction_distribution.stddev().numpy()
-
-# The 95% CI is computed as mean ± (1.96 * stdv)
-upper = (prediction_mean + (1.96 * prediction_stdv)).tolist()
-lower = (prediction_mean - (1.96 * prediction_stdv)).tolist()
-prediction_stdv = prediction_stdv.tolist()
-
-for idx in range(sample):
-    print(
-        f"Prediction mean: {round(prediction_mean[idx][0], 2)}, "
-        f"stddev: {round(prediction_stdv[idx][0], 2)}, "
-        f"95% CI: [{round(upper[idx][0], 2)} - {round(lower[idx][0], 2)}]"
-        f" - Actual: {targets[idx]}"
-    )
-
-"""
-## Relevant Chapters from Deep Learning with Python
-- [Chapter 5: Fundamentals of machine learning](https://deeplearningwithpython.io/chapters/chapter05_fundamentals-of-ml)
-"""
+    """
+    ## Relevant Chapters from Deep Learning with Python
+    - [Chapter 5: Fundamentals of machine learning](https://deeplearningwithpython.io/chapters/chapter05_fundamentals-of-ml)
+    """

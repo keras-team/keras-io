@@ -49,8 +49,18 @@ import matplotlib.pyplot as plt
 
 from tensorflow import keras
 from tensorflow.keras import layers
-import tensorflow_probability as tfp
 import tensorflow as tf
+
+# Compatibility patch for TFP with Keras 3 / TF 2.19+
+try:
+    if not hasattr(tf._api.v2.compat.v2.__internal__, "register_load_context_function"):
+        tf._api.v2.compat.v2.__internal__.register_load_context_function = (
+            tf._api.v2.compat.v2.__internal__.register_call_context_function
+        )
+except AttributeError:
+    pass
+
+import tensorflow_probability as tfp
 
 """
 ## `VectorQuantizer` layer
@@ -275,36 +285,35 @@ data_variance = np.var(x_train / 255.0)
 ## Train the VQ-VAE model
 """
 
-vqvae_trainer = VQVAETrainer(data_variance, latent_dim=16, num_embeddings=128)
-vqvae_trainer.compile(optimizer=keras.optimizers.Adam())
-vqvae_trainer.fit(x_train_scaled, epochs=30, batch_size=128)
+if __name__ == "__main__":
+    vqvae_trainer = VQVAETrainer(data_variance, latent_dim=16, num_embeddings=128)
+    vqvae_trainer.compile(optimizer=keras.optimizers.Adam())
+    vqvae_trainer.fit(x_train_scaled, epochs=30, batch_size=128)
 
-"""
-## Reconstruction results on the test set
-"""
+    """
+    ## Reconstruction results on the test set
+    """
 
+    def show_subplot(original, reconstructed):
+        plt.subplot(1, 2, 1)
+        plt.imshow(original.squeeze() + 0.5)
+        plt.title("Original")
+        plt.axis("off")
 
-def show_subplot(original, reconstructed):
-    plt.subplot(1, 2, 1)
-    plt.imshow(original.squeeze() + 0.5)
-    plt.title("Original")
-    plt.axis("off")
+        plt.subplot(1, 2, 2)
+        plt.imshow(reconstructed.squeeze() + 0.5)
+        plt.title("Reconstructed")
+        plt.axis("off")
 
-    plt.subplot(1, 2, 2)
-    plt.imshow(reconstructed.squeeze() + 0.5)
-    plt.title("Reconstructed")
-    plt.axis("off")
+        plt.show()
 
-    plt.show()
+    trained_vqvae_model = vqvae_trainer.vqvae
+    idx = np.random.choice(len(x_test_scaled), 10)
+    test_images = x_test_scaled[idx]
+    reconstructions_test = trained_vqvae_model.predict(test_images)
 
-
-trained_vqvae_model = vqvae_trainer.vqvae
-idx = np.random.choice(len(x_test_scaled), 10)
-test_images = x_test_scaled[idx]
-reconstructions_test = trained_vqvae_model.predict(test_images)
-
-for test_image, reconstructed_image in zip(test_images, reconstructions_test):
-    show_subplot(test_image, reconstructed_image)
+    for test_image, reconstructed_image in zip(test_images, reconstructions_test):
+        show_subplot(test_image, reconstructed_image)
 
 """
 These results look decent. You are encouraged to play with different hyperparameters
