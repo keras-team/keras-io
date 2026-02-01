@@ -182,52 +182,23 @@ dataset_size = 4898
 batch_size = 256
 train_size = int(dataset_size * 0.85)
 
-if __name__ == "__main__":
-    train_dataset, test_dataset = get_train_and_test_splits(train_size, batch_size)
 
-    """
-    Now let's train the baseline model. We use the `MeanSquaredError`
-    as the loss function.
-    """
 
-    num_epochs = 100
-    mse_loss = keras.losses.MeanSquaredError()
-    baseline_model = create_baseline_model()
-    run_experiment(baseline_model, mse_loss, train_dataset, test_dataset)
+"""
+## Experiment 2: Bayesian neural network (BNN)
 
-    """
-    We take a sample from the test set use the model to obtain predictions for them.
-    Note that since the baseline model is deterministic, we get a single a
-    *point estimate* prediction for each test example, with no information about the
-    uncertainty of the model nor the prediction.
-    """
+The object of the Bayesian approach for modeling neural networks is to capture
+the *epistemic uncertainty*, which is uncertainty about the model fitness,
+due to limited training data.
 
-    sample = 10
-    examples, targets = list(
-        test_dataset.unbatch().shuffle(batch_size * 10).batch(sample)
-    )[0]
+The idea is that, instead of learning specific weight (and bias) *values* in the
+neural network, the Bayesian approach learns weight *distributions*
+- from which we can sample to produce an output for a given input -
+to encode weight uncertainty.
 
-    predicted = baseline_model(examples).numpy()
-    for idx in range(sample):
-        print(
-            f"Predicted: {round(float(predicted[idx][0]), 1)} - Actual: {targets[idx]}"
-        )
-
-    """
-    ## Experiment 2: Bayesian neural network (BNN)
-
-    The object of the Bayesian approach for modeling neural networks is to capture
-    the *epistemic uncertainty*, which is uncertainty about the model fitness,
-    due to limited training data.
-
-    The idea is that, instead of learning specific weight (and bias) *values* in the
-    neural network, the Bayesian approach learns weight *distributions*
-    - from which we can sample to produce an output for a given input -
-    to encode weight uncertainty.
-
-    Thus, we need to define prior and the posterior distributions of these weights,
-    and the training process is to learn the parameters of these distributions.
-    """
+Thus, we need to define prior and the posterior distributions of these weights,
+and the training process is to learn the parameters of these distributions.
+"""
 
 
 # Define the prior weight distribution as Normal of mean=0 and stddev=1.
@@ -303,6 +274,36 @@ the training set, and then on the full training set, to compare the output varia
 """
 
 if __name__ == "__main__":
+    train_dataset, test_dataset = get_train_and_test_splits(train_size, batch_size)
+
+    """
+    Now let's train the baseline model. We use the `MeanSquaredError`
+    as the loss function.
+    """
+
+    num_epochs = 100
+    mse_loss = keras.losses.MeanSquaredError()
+    baseline_model = create_baseline_model()
+    run_experiment(baseline_model, mse_loss, train_dataset, test_dataset)
+
+    """
+    We take a sample from the test set use the model to obtain predictions for them.
+    Note that since the baseline model is deterministic, we get a single a
+    *point estimate* prediction for each test example, with no information about the
+    uncertainty of the model nor the prediction.
+    """
+
+    sample = 10
+    examples, targets = list(
+        test_dataset.unbatch().shuffle(batch_size * 10).batch(sample)
+    )[0]
+
+    predicted = baseline_model(examples).numpy()
+    for idx in range(sample):
+        print(
+            f"Predicted: {round(float(predicted[idx][0]), 1)} - Actual: {targets[idx]}"
+        )
+
     num_epochs = 500
     train_sample_size = int(train_size * 0.3)
     small_train_dataset = (
