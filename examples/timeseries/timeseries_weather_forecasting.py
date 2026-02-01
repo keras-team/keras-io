@@ -2,7 +2,7 @@
 Title: Timeseries forecasting for weather prediction
 Authors: [Prabhanshu Attri](https://prabhanshu.com/github), [Yashika Sharma](https://github.com/yashika51), [Kristi Takach](https://github.com/ktakattack), [Falak Shah](https://github.com/falaktheoptimist)
 Date created: 2020/06/23
-Last modified: 2023/11/22
+Last modified: 2026/02/01
 Description: This notebook demonstrates how to do timeseries forecasting using a LSTM model.
 Accelerator: GPU
 """
@@ -10,7 +10,7 @@ Accelerator: GPU
 """
 ## Setup
 """
-
+import os
 import pandas as pd
 import matplotlib.pyplot as plt
 import keras
@@ -50,13 +50,18 @@ Index| Features      |Format             |Description
 15   |wd (deg)       |152.3              |Wind direction in degrees
 """
 
+
 from zipfile import ZipFile
 
 uri = "https://storage.googleapis.com/tensorflow/tf-keras-datasets/jena_climate_2009_2016.csv.zip"
 zip_path = keras.utils.get_file(origin=uri, fname="jena_climate_2009_2016.csv.zip")
 zip_file = ZipFile(zip_path)
-zip_file.extractall()
-csv_path = "jena_climate_2009_2016.csv"
+
+# FIX: Extract to the cache directory, not the current working directory
+zip_file.extractall(path=os.path.dirname(zip_path))
+
+# FIX: Construct the absolute path safely (works on Windows/Linux/Mac)
+csv_path = os.path.join(os.path.dirname(zip_path), "jena_climate_2009_2016.csv")
 
 df = pd.read_csv(csv_path)
 
