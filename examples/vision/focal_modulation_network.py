@@ -5,6 +5,7 @@ Date created: 2023/01/25
 Last modified: 2026/01/27
 Description: Image classification with Focal Modulation Networks.
 Accelerator: GPU
+Converted to Keras 3 by: [LakshmiKalaKadali](https://github.com/LakshmiKalaKadali)
 """
 
 """
