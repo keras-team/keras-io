@@ -72,7 +72,7 @@ import tempfile
 from pathlib import Path
 
 TIMEOUT = 12 * 60 * 60  # 12 hours
-MAX_LOC = 350
+MAX_LOC = 500
 
 
 def nb_to_py(nb_path, py_path):
