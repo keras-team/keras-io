@@ -155,7 +155,11 @@ def encode_single_sample(wav_file, label):
     audio = ops.cast(audio, "float32")
     # 4. Get the spectrogram
     stft_output = ops.stft(
-        audio, sequence_length=frame_length, sequence_stride=frame_step, fft_length=fft_length, center=False
+        audio,
+        sequence_length=frame_length,
+        sequence_stride=frame_step,
+        fft_length=fft_length,
+        center=False,
     )
     # 5. We only need the magnitude, which can be computed from real and imaginary parts
     # stft returns (real, imag) tuple - compute magnitude as sqrt(real^2 + imag^2)
@@ -362,7 +366,7 @@ def decode_batch_predictions(pred):
     # For greedy strategy, decoded_sequences has shape: (1, batch_size, max_length)
     # So we need decoded[0][0] to get the batch with shape (batch_size, max_length)
     decoded_sequences = decoded[0][0]
-    
+
     # Convert to numpy once for the whole batch
     decoded_sequences = ops.convert_to_numpy(decoded_sequences)
 
