@@ -89,7 +89,10 @@ Kaggle, and [`medicai`](https://github.com/innat/medic-ai) for accessing special
 
 
 import os
+import warnings
 import shutil
+
+warnings.filterwarnings("ignore")
 
 import kagglehub
 
@@ -214,9 +217,7 @@ class ConvertToMultiChannelBasedOnBratsClasses:
             tc = tf.logical_or(tf.equal(data, 1), tf.equal(data, 4))
 
             # WT: label == 1 or 2 or 4
-            wt = tf.logical_or(
-                tf.logical_or(tf.equal(data, 1), tf.equal(data, 4)), tf.equal(data, 2)
-            )
+            wt = tf.logical_or(tc, tf.equal(data, 2))
 
             # ET: label == 4
             et = tf.equal(data, 4)
@@ -686,20 +687,12 @@ print(f"Dice Score on enhancing tumor (ET): {dice_score_et:.4f}")
 """
 ## Analyse and Visualize
 
-Let's analyse the model predictions and visualize them. First, we will implement the test transformation pipeline. This is almost same as validation transformation.
+Let's analyse the model predictions and visualize them. First, we will implement the test transformation pipeline. This is same as validation transformation.
 """
 
 
 def test_transformation(sample):
-    data = {"image": sample["image"], "label": sample["label"]}
-    pipeline = Compose(
-        [
-            ConvertToMultiChannelBasedOnBratsClasses(keys=["label"]),
-            NormalizeIntensity(keys=["image"], nonzero=True, channel_wise=True),
-        ]
-    )
-    result = pipeline(data)
-    return result["image"], result["label"]
+    return val_transformation(sample)
 
 
 """
