@@ -5,16 +5,7 @@ Date created: 2021/09/26
 Last modified: 2026/01/27
 Description: Training a CTC-based model for automatic speech recognition.
 Accelerator: GPU
-"""
-
-"""
-# Automatic Speech Recognition using CTC
-
-**Authors:** [Mohamed Reda Bouadjenek](https://rbouadjenek.github.io/) and [Ngoc Dung
-Huynh](https://www.linkedin.com/in/parkerhuynh/)<br>
-**Date created:** 2021/09/26<br>
-**Last modified:** 2026/01/22<br>
-**Description:** Training a CTC-based model for automatic speech recognition.
+Migrated By: [Harshith K](https://github.com/kharshith-k/)
 """
 
 """
@@ -58,7 +49,6 @@ pip install jiwer
 - [Speech recognition](https://en.wikipedia.org/wiki/Speech_recognition)
 - [Sequence Modeling With CTC](https://distill.pub/2017/ctc/)
 -
-[DeepSpeech2](https://nvidia.github.io/OpenSeq2Seq/html/speech-recognition/deepspeech2.html)
 [DeepSpeech2](https://nvidia.github.io/OpenSeq2Seq/html/speech-recognition/deepspeech2.html)
 """
 
@@ -160,19 +150,20 @@ def encode_single_sample(wav_file, label):
     file = tf.io.read_file(wavs_path + wav_file + ".wav")
     # 2. Decode the wav file
     audio, _ = tf.audio.decode_wav(file)
-    audio = tf.squeeze(audio, axis=-1)
+    audio = ops.squeeze(audio)
     # 3. Change type to float
-    audio = tf.cast(audio, tf.float32)
+    audio = ops.cast(audio, "float32")
     # 4. Get the spectrogram
-    spectrogram = tf.signal.stft(
-        audio, frame_length=frame_length, frame_step=frame_step, fft_length=fft_length
+    stft_output = ops.stft(
+        audio, sequence_length=frame_length, sequence_stride=frame_step, fft_length=fft_length, center=False
     )
-    # 5. We only need the magnitude, which can be derived by applying tf.abs
-    spectrogram = tf.abs(spectrogram)
-    spectrogram = tf.math.pow(spectrogram, 0.5)
+    # 5. We only need the magnitude, which can be computed from real and imaginary parts
+    # stft returns (real, imag) tuple - compute magnitude as sqrt(real^2 + imag^2)
+    spectrogram = ops.sqrt(ops.square(stft_output[0]) + ops.square(stft_output[1]))
+    spectrogram = ops.power(spectrogram, 0.5)
     # 6. normalisation
-    means = tf.math.reduce_mean(spectrogram, 1, keepdims=True)
-    stddevs = tf.math.reduce_std(spectrogram, 1, keepdims=True)
+    means = ops.mean(spectrogram, axis=1, keepdims=True)
+    stddevs = ops.std(spectrogram, axis=1, keepdims=True)
     spectrogram = (spectrogram - means) / (stddevs + 1e-10)
     ###########################################
     ##  Process the label
@@ -202,7 +193,7 @@ train_dataset = tf.data.Dataset.from_tensor_slices(
 )
 train_dataset = (
     train_dataset.map(encode_single_sample, num_parallel_calls=tf.data.AUTOTUNE)
-    .padded_batch(batch_size)
+    .padded_batch(batch_size, padded_shapes=([None, fft_length // 2 + 1], [None]))
     .prefetch(buffer_size=tf.data.AUTOTUNE)
 )
 
@@ -212,7 +203,7 @@ validation_dataset = tf.data.Dataset.from_tensor_slices(
 )
 validation_dataset = (
     validation_dataset.map(encode_single_sample, num_parallel_calls=tf.data.AUTOTUNE)
-    .padded_batch(batch_size)
+    .padded_batch(batch_size, padded_shapes=([None, fft_length // 2 + 1], [None]))
     .prefetch(buffer_size=tf.data.AUTOTUNE)
 )
 
@@ -262,22 +253,21 @@ def CTCLoss(y_true, y_pred):
     input_length = input_length * ops.ones(shape=(batch_len,), dtype="int32")
     label_length = label_length * ops.ones(shape=(batch_len,), dtype="int32")
 
-    # Use TensorFlow's CTC loss (no backend-agnostic equivalent in Keras 3)
-    # blank_index=-1 means the blank label is the last class (output_dim + 1)
-    loss = tf.nn.ctc_loss(
-        labels=ops.cast(y_true, "int32"),
-        logits=y_pred,
-        label_length=label_length,
-        logit_length=input_length,
-        logits_time_major=False,
-        blank_index=-1,
+    # Use Keras ops CTC loss (backend-agnostic)
+    # Note: mask_index should match the blank token index
+    # With StringLookup(oov_token=""), index 0 is reserved, so we use 0 as mask
+    loss = ops.nn.ctc_loss(
+        target=ops.cast(y_true, "int32"),
+        output=y_pred,
+        target_length=label_length,
+        output_length=input_length,
+        mask_index=0,
     )
     return loss
 
 
 """
 We now define our model. We will define a model similar to
-[DeepSpeech2](https://nvidia.github.io/OpenSeq2Seq/html/speech-recognition/deepspeech2.html).
 [DeepSpeech2](https://nvidia.github.io/OpenSeq2Seq/html/speech-recognition/deepspeech2.html).
 """
 
@@ -360,23 +350,30 @@ model.summary(line_length=110)
 def decode_batch_predictions(pred):
     input_len = np.ones(pred.shape[0]) * pred.shape[1]
 
-    # Use TensorFlow's ctc_greedy_decoder (no backend-agnostic equivalent in Keras 3)
-    # Note: TF's decoder expects time-major format [time, batch, dim]
-    results, _ = tf.nn.ctc_greedy_decoder(
-        inputs=ops.transpose(pred, axes=[1, 0, 2]),
-        sequence_length=ops.cast(input_len, "int32"),
+    # Use Keras ops CTC decoder with greedy strategy (backend-agnostic)
+    decoded = ops.nn.ctc_decode(
+        inputs=pred,
+        sequence_lengths=ops.cast(input_len, "int32"),
+        strategy="greedy",
+        mask_index=0,
     )
 
-    # ctc_greedy_decoder returns a list of SparseTensor, take the first one
-    results = tf.sparse.to_dense(results[0], default_value=-1)
+    # ctc_decode returns a tuple of (decoded_sequences, log_probabilities)
+    # For greedy strategy, decoded_sequences has shape: (1, batch_size, max_length)
+    # So we need decoded[0][0] to get the batch with shape (batch_size, max_length)
+    decoded_sequences = decoded[0][0]
+    
+    # Convert to numpy once for the whole batch
+    decoded_sequences = ops.convert_to_numpy(decoded_sequences)
 
     # Iterate over the results and get back the text
     output_text = []
-    for result in results:
-        # Remove padding values (-1) - using TensorFlow for boolean indexing
-        result = result[result >= 0]
-        result = tf.strings.reduce_join(num_to_char(result)).numpy().decode("utf-8")
-        output_text.append(result)
+    for sequence in decoded_sequences:
+        # Remove padding/mask values (0 is the mask index)
+        sequence = sequence[sequence > 0]
+        # Convert indices to characters
+        text = tf.strings.reduce_join(num_to_char(sequence)).numpy().decode("utf-8")
+        output_text.append(text)
     return output_text
 
 
@@ -391,16 +388,23 @@ class CallbackEval(keras.callbacks.Callback):
     def on_epoch_end(self, epoch: int, logs=None):
         predictions = []
         targets = []
-        for batch in self.dataset:
+        # Limit to 10 batches to avoid long evaluation times
+        for i, batch in enumerate(self.dataset):
+            if i >= 10:
+                break
             X, y = batch
-            batch_predictions = model.predict(X)
+            print(f"Batch {i}: X shape = {X.shape}, y shape = {y.shape}")
+            batch_predictions = model.predict(X, verbose=0)
+            print(f"Batch {i}: predictions shape = {batch_predictions.shape}")
             batch_predictions = decode_batch_predictions(batch_predictions)
+            print(f"Batch {i}: decoded {len(batch_predictions)} predictions")
             predictions.extend(batch_predictions)
             for label in y:
                 label = (
                     tf.strings.reduce_join(num_to_char(label)).numpy().decode("utf-8")
                 )
                 targets.append(label)
+        print(f"\nTotal: {len(predictions)} predictions, {len(targets)} targets")
         wer_score = wer(targets, predictions)
         print("-" * 100)
         print(f"Word Error Rate: {wer_score:.4f}")
@@ -489,7 +493,5 @@ Example available on HuggingFace.
 | :--: | :--: |
 | [![Generic
 badge](https://img.shields.io/badge/🤗%20Model-CTC%20ASR-black.svg)](https://huggingface.co
-/keras-io/ctc_asr) | [![Generic
-badge](https://img.shields.io/badge/🤗%20Spaces-CTC%20ASR-black.svg)](https://huggingface.c
-o/spaces/keras-io/ctc_asr) |
+/keras-io/ctc_asr)
 """
