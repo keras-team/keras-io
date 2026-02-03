@@ -2,7 +2,7 @@
 Title: Deep Q-Learning for Atari Breakout
 Author: [Jacob Chapman](https://twitter.com/jacoblchapman) and [Mathias Lechner](https://twitter.com/MLech20)
 Date created: 2020/05/23
-Last modified: 2024/03/17
+Last modified: 2026/02/03
 Description: Play Atari Breakout with a Deep Q-Network.
 Accelerator: None
 """
