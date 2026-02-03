@@ -2,25 +2,23 @@
 
 **Authors:** Mark Omernick, Francois Chollet<br>
 **Date created:** 2019/11/06<br>
-**Last modified:** 2020/05/17<br>
+**Last modified:** 2026/02/02<br>
 **Description:** Text sentiment classification starting from raw text files.
 
-
-<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/nlp/ipynb/text_classification_from_scratch.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/nlp/text_classification_from_scratch.py)
-
-
+<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/nlp/ipynb/text_classification_from_scratch.ipynb) <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/nlp/text_classification_from_scratch.py)
 
 ---
+
 ## Introduction
 
 This example shows how to do text classification starting from raw text (as
 a set of text files on disk). We demonstrate the workflow on the IMDB sentiment
 classification dataset (unprocessed version). We use the `TextVectorization` layer for
- word splitting & indexing.
+word splitting & indexing.
 
 ---
-## Setup
 
+## Setup
 
 ```python
 import os
@@ -34,10 +32,10 @@ from keras import layers
 ```
 
 ---
+
 ## Load the data: IMDB movie review sentiment classification
 
 Let's download the data and inspect its structure.
-
 
 ```python
 !curl -O https://ai.stanford.edu/~amaas/data/sentiment/aclImdb_v1.tar.gz
@@ -50,31 +48,33 @@ Let's download the data and inspect its structure.
                                  Dload  Upload   Total   Spent    Left  Speed
 100 80.2M  100 80.2M    0     0  87.7M      0 --:--:-- --:--:-- --:--:-- 87.7M
 
-```
+````
 </div>
 The `aclImdb` folder contains a `train` and `test` subfolder:
 
 
 ```python
 !ls aclImdb
-```
+````
 
 ```python
 !ls aclImdb/test
 ```
+
 ```python
 !ls aclImdb/train
 ```
+
 <div class="k-default-codeblock">
 ```
 imdbEr.txt  imdb.vocab	README	test  train
 
-labeledBow.feat  neg  pos  urls_neg.txt  urls_pos.txt
+labeledBow.feat neg pos urls_neg.txt urls_pos.txt
 
-labeledBow.feat  pos	unsupBow.feat  urls_pos.txt
-neg		 unsup	urls_neg.txt   urls_unsup.txt
+labeledBow.feat pos unsupBow.feat urls_pos.txt
+neg unsup urls_neg.txt urls_unsup.txt
 
-```
+````
 </div>
 The `aclImdb/train/pos` and `aclImdb/train/neg` folders contain text files, each of
  which represents one review (either positive or negative):
@@ -82,24 +82,24 @@ The `aclImdb/train/pos` and `aclImdb/train/neg` folders contain text files, each
 
 ```python
 !cat aclImdb/train/pos/6248_7.txt
-```
+````
 
 <div class="k-default-codeblock">
 ```
 Being an Austrian myself this has been a straight knock in my face. Fortunately I don't live nowhere near the place where this movie takes place but unfortunately it portrays everything that the rest of Austria hates about Viennese people (or people close to that region). And it is very easy to read that this is exactly the directors intention: to let your head sink into your hands and say "Oh my god, how can THAT be possible!". No, not with me, the (in my opinion) totally exaggerated uncensored swinger club scene is not necessary, I watch porn, sure, but in this context I was rather disgusted than put in the right context.<br /><br />This movie tells a story about how misled people who suffer from lack of education or bad company try to survive and live in a world of redundancy and boring horizons. A girl who is treated like a whore by her super-jealous boyfriend (and still keeps coming back), a female teacher who discovers her masochism by putting the life of her super-cruel "lover" on the line, an old couple who has an almost mathematical daily cycle (she is the "official replacement" of his ex wife), a couple that has just divorced and has the ex husband suffer under the acts of his former wife obviously having a relationship with her masseuse and finally a crazy hitchhiker who asks her drivers the most unusual questions and stretches their nerves by just being super-annoying.<br /><br />After having seen it you feel almost nothing. You're not even shocked, sad, depressed or feel like doing anything... Maybe that's why I gave it 7 points, it made me react in a way I never reacted before. If that's good or bad is up to you!
 
-```
+````
 </div>
 We are only interested in the `pos` and `neg` subfolders, so let's delete the other subfolder that has text files in it:
 
 
 ```python
 !rm -r aclImdb/train/unsup
-```
+````
 
 You can use the utility `keras.utils.text_dataset_from_directory` to
 generate a labeled `tf.data.Dataset` object from a set of text files on disk filed
- into class-specific folders.
+into class-specific folders.
 
 Let's use it to generate the training, validation, and test datasets. The validation
 and training datasets are generated from two subsets of the `train` directory, with 20%
@@ -115,7 +115,6 @@ available training data (without creating a validation dataset), so its performa
 When using the `validation_split` & `subset` arguments, make sure to either specify a
 random seed, or to pass `shuffle=False`, so that the validation & training splits you
 get have no overlap.
-
 
 ```python
 batch_size = 32
@@ -153,7 +152,7 @@ Number of batches in raw_train_ds: 625
 Number of batches in raw_val_ds: 157
 Number of batches in raw_test_ds: 782
 
-```
+````
 </div>
 Let's preview a few samples:
 
@@ -169,7 +168,7 @@ for text_batch, label_batch in raw_train_ds.take(1):
     for i in range(5):
         print(text_batch.numpy()[i])
         print(label_batch.numpy()[i])
-```
+````
 
 <div class="k-default-codeblock">
 ```
@@ -184,7 +183,7 @@ b"I was talked into watching this movie by a friend who blubbered on about what 
 b"Michelle Rodriguez is the defining actress who could be the charging force for other actresses to look out for. She has the audacity to place herself in a rarely seen tough-girl role very early in her career (and pull it off), which is a feat that should be recognized. Although her later films pigeonhole her to that same role, this film was made for her ruggedness.<br /><br />Her character is a romanticized student/fighter/lover, struggling to overcome her disenchanted existence in the projects, which is a little overdone in film...but not by a girl. That aspect of this film isn't very original, but the story goes in depth when the heated relationships that this girl has to deal with come to a boil and her primal rage takes over.<br /><br />I haven't seen an actress take such an aggressive stance in movie-making yet, and I'm glad that she's getting that original twist out there in Hollywood. This film got a 7 from me because of the average story of ghetto youth, but it has such a great actress portraying a rarely-seen role in a minimal budget movie. Great work."
 1
 
-```
+````
 </div>
 ---
 ## Prepare the data
@@ -236,15 +235,16 @@ vectorize_layer = keras.layers.TextVectorization(
 text_ds = raw_train_ds.map(lambda x, y: x)
 # Let's call `adapt`:
 vectorize_layer.adapt(text_ds)
-```
+````
 
 ---
+
 ## Two options to vectorize the data
 
 There are 2 ways we can use our text vectorization layer:
 
 **Option 1: Make it part of the model**, so as to obtain a model that processes raw
- strings, like this:
+strings, like this:
 
 ```python
 text_input = keras.Input(shape=(1,), dtype=tf.string, name='text')
@@ -254,18 +254,16 @@ x = layers.Embedding(max_features + 1, embedding_dim)(x)
 ```
 
 **Option 2: Apply it to the text dataset** to obtain a dataset of word indices, then
- feed it into a model that expects integer sequences as inputs.
+feed it into a model that expects integer sequences as inputs.
 
 An important difference between the two is that option 2 enables you to do
 **asynchronous CPU processing and buffering** of your data when training on GPU.
 So if you're training the model on GPU, you probably want to go with this option to get
- the best performance. This is what we will do below.
+the best performance. This is what we will do below.
 
 If we were to export our model to production, we'd ship a model that accepts raw
 strings as input, like in the code snippet for option 1 above. This can be done after
- training. We do this in the last section.
-
-
+training. We do this in the last section.
 
 ```python
 
@@ -286,10 +284,10 @@ test_ds = test_ds.cache().prefetch(buffer_size=10)
 ```
 
 ---
+
 ## Build a model
 
 We choose a simple 1D convnet starting with an `Embedding` layer.
-
 
 ```python
 # A integer input for vocab indices.
@@ -319,8 +317,8 @@ model.compile(loss="binary_crossentropy", optimizer="adam", metrics=["accuracy"]
 ```
 
 ---
-## Train the model
 
+## Train the model
 
 ```python
 epochs = 3
@@ -340,7 +338,7 @@ Epoch 3/3
 
 <keras.src.callbacks.history.History at 0x7ff434de94b0>
 
-```
+````
 </div>
 ---
 ## Evaluate the model on the test set
@@ -348,7 +346,7 @@ Epoch 3/3
 
 ```python
 model.evaluate(test_ds)
-```
+````
 
 <div class="k-default-codeblock">
 ```
@@ -356,7 +354,7 @@ model.evaluate(test_ds)
 
 [0.3857516348361969, 0.8642103672027588]
 
-```
+````
 </div>
 ---
 ## Make an end-to-end model
@@ -381,7 +379,7 @@ end_to_end_model.compile(
 
 # Test it with `raw_test_ds`, which yields raw strings
 end_to_end_model.evaluate(raw_test_ds)
-```
+````
 
 <div class="k-default-codeblock">
 ```
@@ -391,3 +389,4 @@ end_to_end_model.evaluate(raw_test_ds)
 
 ```
 </div>
+```
