@@ -2,7 +2,7 @@
 Title: Masked image modeling with Autoencoders
 Author: [Aritra Roy Gosthipaty](https://twitter.com/arig23498), [Sayak Paul](https://twitter.com/RisingSayak)
 Date created: 2021/12/20
-Last modified: 2026/02/02
+Last modified: 2026/02/04
 Description: Implementing Masked Autoencoders for self-supervised pretraining.
 Accelerator: GPU
 Converted to Keras 3 by: [Maitry Sinha](https://github.com/maitry63)
