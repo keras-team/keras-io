@@ -163,3 +163,8 @@ input images.
 
 predictions = autoencoder.predict(noisy_test_data)
 display(noisy_test_data, predictions)
+
+"""
+## Relevant Chapters from Deep Learning with Python
+- [Chapter 17: Image generation](https://deeplearningwithpython.io/chapters/chapter17_image-generation)
+"""

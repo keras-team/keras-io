@@ -508,3 +508,8 @@ model.compile(
     metrics=["sparse_categorical_accuracy"],
 )
 model.fit(x_train, y_train, epochs=50, batch_size=2048, validation_split=0.1)
+
+"""
+## Relevant Chapters from Deep Learning with Python
+- [Chapter 7: A deep dive on Keras](https://deeplearningwithpython.io/chapters/chapter07_deep-dive-keras)
+"""

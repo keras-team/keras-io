@@ -26,7 +26,6 @@ from IPython.display import Image, display
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 
-
 """
 ## Configurable parameters
 
@@ -201,3 +200,8 @@ We generate class activation heatmap for "egyptian cat," the class index is 285
 heatmap = make_gradcam_heatmap(img_array, model, last_conv_layer_name, pred_index=285)
 
 save_and_display_gradcam(img_path, heatmap)
+
+"""
+## Relevant Chapters from Deep Learning with Python
+- [Chapter 10: Interpreting what ConvNets learn](https://deeplearningwithpython.io/chapters/chapter10_interpreting-what-convnets-learn)
+"""

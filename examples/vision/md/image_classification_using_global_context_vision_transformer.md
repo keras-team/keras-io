@@ -1333,3 +1333,7 @@ Epoch 5/5
 
 * [gcvit-tf - A Python library for GCViT with TF2.0](https://github.com/awsaf49/gcvit-tf)
 * [gcvit - Official codebase for GCViT](https://github.com/NVlabs/GCVit)
+
+---
+## Relevant Chapters from Deep Learning with Python
+- [Chapter 8: Image classification](https://deeplearningwithpython.io/chapters/chapter08_image-classification)

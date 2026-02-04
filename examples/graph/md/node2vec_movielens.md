@@ -935,3 +935,7 @@ in the [Embedding Projector](https://projector.tensorflow.org/).
 | Trained Model | Demo |
 | :--: | :--: |
 | [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Model%3A%20-Node2Vec%20Movielens-black.svg)](https://huggingface.co/keras-io/Node2Vec_MovieLens) | [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Spaces%3A-Node2Vec%20Movielens-black.svg)](https://huggingface.co/spaces/keras-io/Node2Vec_MovieLens) |
+
+---
+## Relevant Chapters from Deep Learning with Python
+- [Chapter 14: Text classification](https://deeplearningwithpython.io/chapters/chapter14_text-classification)

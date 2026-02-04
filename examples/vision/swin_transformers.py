@@ -599,3 +599,9 @@ This example takes inspiration from the official
 [TensorFlow](https://github.com/VcampSoldiers/Swin-Transformer-Tensorflow)
 implementations.
 """
+
+"""
+## Relevant Chapters from Deep Learning with Python
+- [Chapter 8: Image classification](https://deeplearningwithpython.io/chapters/chapter08_image-classification)
+- [Chapter 15: Language models and the Transformer](https://deeplearningwithpython.io/chapters/chapter15_language-models-and-the-transformer)
+"""

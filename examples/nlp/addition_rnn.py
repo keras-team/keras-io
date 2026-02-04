@@ -163,8 +163,8 @@ y = y[indices]
 
 # Explicitly set apart 10% for validation data that we never train over.
 split_at = len(x) - len(x) // 10
-(x_train, x_val) = x[:split_at], x[split_at:]
-(y_train, y_val) = y[:split_at], y[split_at:]
+x_train, x_val = x[:split_at], x[split_at:]
+y_train, y_val = y[:split_at], y[split_at:]
 
 print("Training Data:")
 print(x_train.shape)
@@ -248,4 +248,10 @@ for epoch in range(1, epochs):
 
 """
 You'll get to 99+% validation accuracy after ~30 epochs.
+"""
+
+"""
+## Relevant Chapters from Deep Learning with Python
+- [Chapter 15: Language models and the Transformer](https://deeplearningwithpython.io/chapters/chapter15_language-models-and-the-transformer)
+- [Chapter 16: Text generation](https://deeplearningwithpython.io/chapters/chapter16_text-generation)
 """

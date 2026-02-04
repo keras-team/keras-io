@@ -439,7 +439,7 @@ class BaseAttention(layers.Layer):
         query = self.query_layernorm(input_query)
         key = self.key_layernorm(key)
         value = self.value_layernorm(value)
-        (attention_outputs, attention_scores) = self.multi_head_attention(
+        attention_outputs, attention_scores = self.multi_head_attention(
             query=query,
             key=key,
             value=value,

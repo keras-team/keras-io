@@ -19,7 +19,7 @@ FEATURE_INTERACTION_LAYERS_MASTER = {
                 "keras_rs.layers.FeatureCross.call",
             ],
         },
-    ]
+    ],
 }
 
 RETRIEVAL_LAYERS_MASTER = {
@@ -78,7 +78,7 @@ RETRIEVAL_LAYERS_MASTER = {
                 "keras_rs.layers.SamplingProbabilityCorrection.call",
             ],
         },
-    ]
+    ],
 }
 
 EMBEDDING_LAYERS_MASTER = {
@@ -117,7 +117,7 @@ EMBEDDING_LAYERS_MASTER = {
                 "keras_rs.layers.EmbedReduce.call",
             ],
         },
-    ]
+    ],
 }
 
 LOSSES_MASTER = {
@@ -165,7 +165,7 @@ LOSSES_MASTER = {
         #         "keras_rs.losses.ListMLELoss.call",
         #     ],
         # },
-    ]
+    ],
 }
 
 METRICS_MASTER = {
@@ -201,7 +201,7 @@ METRICS_MASTER = {
                 "keras_rs.metrics.NDCG",
             ],
         },
-    ]
+    ],
 }
 
 RS_API_MASTER = {
@@ -240,9 +240,7 @@ RS_EXAMPLES_MASTER = {
         },
         {
             "path": "scann",
-            "title": (
-                "Faster retrieval with Scalable Nearest Neighbours (ScANN)"
-            )
+            "title": ("Faster retrieval with Scalable Nearest Neighbours (ScANN)"),
         },
         {
             "path": "multi_task",
@@ -261,8 +259,8 @@ RS_EXAMPLES_MASTER = {
             "title": "Ranking with Deep and Cross Networks",
         },
         {
-            "path" : "dlrm",
-            "title" : "Rank movies with DLRM using KerasRS",
+            "path": "dlrm",
+            "title": "Rank movies with DLRM using KerasRS",
         },
         {
             "path": "sas_rec",

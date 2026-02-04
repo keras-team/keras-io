@@ -26,8 +26,7 @@ TABLE_HEADER = (
 )
 
 TABLE_HEADER_PER_MODEL = (
-    "Preset | Parameters | Description\n"
-    "-------|------------|------------\n"
+    "Preset | Parameters | Description\n" "-------|------------|------------\n"
 )
 
 
@@ -78,7 +77,7 @@ def sort_presets(presets):
         key=lambda x: (
             presets[x]["metadata"]["path"],
             presets[x]["metadata"]["params"],
-        )
+        ),
     )
 
 

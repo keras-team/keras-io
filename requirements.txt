@@ -7,6 +7,7 @@ requests
 mdx_truly_sane_lists
 PyYAML
 pandas
+google-pasta
 jupyter
 pydot
 boto3
@@ -16,4 +17,5 @@ keras-nlp
 keras-tuner
 tf-keras==2.19.0
 keras-hub
-keras-rs-nightly
+keras-rs
+pymdown-extensions==10.20

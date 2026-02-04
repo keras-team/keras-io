@@ -1077,3 +1077,6 @@ Generating text after epoch: 39
 
 ```
 </div>
+---
+## Relevant Chapters from Deep Learning with Python
+- [Chapter 16: Text generation](https://deeplearningwithpython.io/chapters/chapter16_text-generation)

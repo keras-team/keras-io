@@ -685,3 +685,7 @@ This image is 52.81 percent PNEUMONIA
 </div>
 ![png](/img/examples/vision/xray_classification_with_tpus/xray_classification_with_tpus_46_2.png)
 
+
+---
+## Relevant Chapters from Deep Learning with Python
+- [Chapter 8: Image classification](https://deeplearningwithpython.io/chapters/chapter08_image-classification)

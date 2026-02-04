@@ -1337,7 +1337,7 @@ MODELS_MASTER = {
                 },
             ],
         },
-         {
+        {
             "path": "gpt_neo_x/",
             "title": "GPT-NeoX",
             "toc": True,
@@ -1378,6 +1378,50 @@ MODELS_MASTER = {
                         "keras_hub.models.GPTNeoXCausalLMPreprocessor",
                         "keras_hub.models.GPTNeoXCausalLMPreprocessor.from_preset",
                         "keras_hub.models.GPTNeoXCausalLMPreprocessor.tokenizer",
+                    ],
+                },
+            ],
+        },
+        {
+            "path": "gpt_oss/",
+            "title": "GPT-OSS",
+            "toc": True,
+            "children": [
+                {
+                    "path": "gpt_oss_tokenizer",
+                    "title": "GptOssTokenizer",
+                    "generate": [
+                        "keras_hub.tokenizers.GptOssTokenizer",
+                        "keras_hub.tokenizers.GptOssTokenizer.from_preset",
+                    ],
+                },
+                {
+                    "path": "gpt_oss_backbone",
+                    "title": "GptOssBackbone model",
+                    "generate": [
+                        "keras_hub.models.GptOssBackbone",
+                        "keras_hub.models.GptOssBackbone.from_preset",
+                        "keras_hub.models.GptOssBackbone.token_embedding",
+                    ],
+                },
+                {
+                    "path": "gpt_oss_causal_lm",
+                    "title": "GptOssCausalLM model",
+                    "generate": [
+                        "keras_hub.models.GptOssCausalLM",
+                        "keras_hub.models.GptOssCausalLM.from_preset",
+                        "keras_hub.models.GptOssCausalLM.generate",
+                        "keras_hub.models.GptOssCausalLM.backbone",
+                        "keras_hub.models.GptOssCausalLM.preprocessor",
+                    ],
+                },
+                {
+                    "path": "gpt_oss_causal_lm_preprocessor",
+                    "title": "GptOssCausalLMPreprocessor layer",
+                    "generate": [
+                        "keras_hub.models.GptOssCausalLMPreprocessor",
+                        "keras_hub.models.GptOssCausalLMPreprocessor.from_preset",
+                        "keras_hub.models.GptOssCausalLMPreprocessor.tokenizer",
                     ],
                 },
             ],
@@ -1759,15 +1803,15 @@ MODELS_MASTER = {
                     ],
                 },
                 {
-                   "path": "moonshine_audio_to_text",
-                   "title": "MoonshineAudioToText model",
-                   "generate": [
+                    "path": "moonshine_audio_to_text",
+                    "title": "MoonshineAudioToText model",
+                    "generate": [
                         "keras_hub.models.MoonshineAudioToText",
                         "keras_hub.models.MoonshineAudioToText.from_preset",
                         "keras_hub.models.MoonshineAudioToText.generate",
                         "keras_hub.models.MoonshineAudioToText.backbone",
                         "keras_hub.models.MoonshineAudioToText.preprocessor",
-                   ],
+                    ],
                 },
                 {
                     "path": "moonshine_audio_to_text_preprocessor",
@@ -2572,7 +2616,7 @@ MODELS_MASTER = {
                         "keras_hub.tokenizers.T5GemmaTokenizer",
                         "keras_hub.tokenizers.T5GemmaTokenizer.from_preset",
                         "keras_hub.models.T5GemmaTokenizer",
-                        "keras_hub.models.T5GemmaTokenizer.from_preset"
+                        "keras_hub.models.T5GemmaTokenizer.from_preset",
                     ],
                 },
                 {

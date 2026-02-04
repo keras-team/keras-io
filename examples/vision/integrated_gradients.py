@@ -62,7 +62,6 @@ import keras
 from keras import layers
 from keras.applications import xception
 
-
 # Size of the input image
 img_size = (299, 299, 3)
 
@@ -344,10 +343,8 @@ class GradVisualizer:
         overlay=True,
     ):
         if polarity not in ["positive", "negative"]:
-            raise ValueError(
-                f""" Allowed polarity values: 'positive' or 'negative'
-                                    but provided {polarity}"""
-            )
+            raise ValueError(f""" Allowed polarity values: 'positive' or 'negative'
+                                    but provided {polarity}""")
         if clip_above_percentile < 0 or clip_above_percentile > 100:
             raise ValueError("clip_above_percentile must be in [0, 100]")
 
@@ -496,3 +493,8 @@ vis.visualize(
     morphological_cleanup=True,
     outlines=True,
 )
+
+"""
+## Relevant Chapters from Deep Learning with Python
+- [Chapter 10: Interpreting what ConvNets learn](https://deeplearningwithpython.io/chapters/chapter10_interpreting-what-convnets-learn)
+"""

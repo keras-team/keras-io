@@ -439,3 +439,8 @@ scores = [1 - prediction, prediction]
 
 for score, name in zip(scores, CLASS_NAMES):
     print("This image is %.2f percent %s" % ((100 * score), name))
+
+"""
+## Relevant Chapters from Deep Learning with Python
+- [Chapter 8: Image classification](https://deeplearningwithpython.io/chapters/chapter08_image-classification)
+"""

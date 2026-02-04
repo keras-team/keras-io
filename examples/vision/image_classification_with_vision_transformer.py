@@ -330,3 +330,9 @@ but also by parameters such as the learning rate schedule, optimizer, weight dec
 In practice, it's recommended to fine-tune a ViT model
 that was pre-trained using a large, high-resolution dataset.
 """
+
+"""
+## Relevant Chapters from Deep Learning with Python
+- [Chapter 8: Image classification](https://deeplearningwithpython.io/chapters/chapter08_image-classification)
+- [Chapter 15: Language models and the Transformer](https://deeplearningwithpython.io/chapters/chapter15_language-models-and-the-transformer)
+"""

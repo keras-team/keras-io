@@ -11,6 +11,7 @@ templates/examples/vision/*
 templates/examples/structured_data/*
 templates/examples/rl/*
 templates/examples/keras_recipes/*
+templates/examples/keras_rs/*
 templates/examples/timeseries/*
 templates/examples/graph/*
 templates/**/guides/**/*.md

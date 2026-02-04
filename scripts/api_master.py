@@ -15,8 +15,10 @@ API_MASTER = {
                         "keras.Model",
                         "keras.Model.summary",
                         "keras.Model.get_layer",
+                        "keras.Model.get_quantization_layer_structure",
                         "keras.Model.get_state_tree",
                         "keras.Model.set_state_tree",
+                        "keras.Model.quantize",
                     ],
                 },
                 {
@@ -70,6 +72,7 @@ API_MASTER = {
                                 "keras.Model.get_config",
                                 "keras.Model.from_config",
                                 "keras.models.clone_model",
+                                "keras.models.model_from_json",
                             ],
                         },
                         {
@@ -423,6 +426,36 @@ API_MASTER = {
                             "title": "GlobalAveragePooling3D layer",
                             "generate": ["keras.layers.GlobalAveragePooling3D"],
                         },
+                        {
+                            "path": "adaptive_average_pooling1d",
+                            "title": "AdaptiveAveragePooling1D layer",
+                            "generate": ["keras.layers.AdaptiveAveragePooling1D"],
+                        },
+                        {
+                            "path": "adaptive_average_pooling2d",
+                            "title": "AdaptiveAveragePooling2D layer",
+                            "generate": ["keras.layers.AdaptiveAveragePooling2D"],
+                        },
+                        {
+                            "path": "adaptive_average_pooling3d",
+                            "title": "AdaptiveAveragePooling3D layer",
+                            "generate": ["keras.layers.AdaptiveAveragePooling3D"],
+                        },
+                        {
+                            "path": "adaptive_max_pooling1d",
+                            "title": "AdaptiveMaxPooling1D layer",
+                            "generate": ["keras.layers.AdaptiveMaxPooling1D"],
+                        },
+                        {
+                            "path": "adaptive_max_pooling2d",
+                            "title": "AdaptiveMaxPooling2D layer",
+                            "generate": ["keras.layers.AdaptiveMaxPooling2D"],
+                        },
+                        {
+                            "path": "adaptive_max_pooling3d",
+                            "title": "AdaptiveMaxPooling3D layer",
+                            "generate": ["keras.layers.AdaptiveMaxPooling3D"],
+                        },
                     ],
                 },
                 {
@@ -603,144 +636,146 @@ API_MASTER = {
                                 {
                                     "path": "aug_mix",
                                     "title": "AugMix layer",
-                                    "generate": ["keras.layers.AugMix"]
+                                    "generate": ["keras.layers.AugMix"],
                                 },
                                 {
                                     "path": "cut_mix",
                                     "title": "CutMix layer",
-                                    "generate": ["keras.layers.CutMix"]
+                                    "generate": ["keras.layers.CutMix"],
                                 },
                                 {
                                     "path": "equalization",
                                     "title": "Equalization layer",
-                                    "generate": ["keras.layers.Equalization"]
+                                    "generate": ["keras.layers.Equalization"],
                                 },
                                 {
                                     "path": "max_num_bounding_boxes",
                                     "title": "MaxNumBoundingBoxes layer",
-                                    "generate": ["keras.layers.MaxNumBoundingBoxes"]
+                                    "generate": ["keras.layers.MaxNumBoundingBoxes"],
                                 },
                                 {
                                     "path": "mix_up",
                                     "title": "MixUp layer",
-                                    "generate": ["keras.layers.MixUp"]
+                                    "generate": ["keras.layers.MixUp"],
                                 },
                                 {
                                     "path": "pipeline",
                                     "title": "Pipeline layer",
-                                    "generate": ["keras.layers.Pipeline"]
+                                    "generate": ["keras.layers.Pipeline"],
                                 },
                                 {
                                     "path": "rand_augment",
                                     "title": "RandAugment layer",
-                                    "generate": ["keras.layers.RandAugment"]
+                                    "generate": ["keras.layers.RandAugment"],
                                 },
                                 {
                                     "path": "random_brightness",
                                     "title": "RandomBrightness layer",
-                                    "generate": ["keras.layers.RandomBrightness"]
+                                    "generate": ["keras.layers.RandomBrightness"],
                                 },
                                 {
                                     "path": "random_color_degeneration",
                                     "title": "RandomColorDegeneration layer",
-                                    "generate": ["keras.layers.RandomColorDegeneration"]
+                                    "generate": [
+                                        "keras.layers.RandomColorDegeneration"
+                                    ],
                                 },
                                 {
                                     "path": "random_color_jitter",
                                     "title": "RandomColorJitter layer",
-                                    "generate": ["keras.layers.RandomColorJitter"]
+                                    "generate": ["keras.layers.RandomColorJitter"],
                                 },
                                 {
                                     "path": "random_contrast",
                                     "title": "RandomContrast layer",
-                                    "generate": ["keras.layers.RandomContrast"]
+                                    "generate": ["keras.layers.RandomContrast"],
                                 },
                                 {
                                     "path": "random_crop",
                                     "title": "RandomCrop layer",
-                                    "generate": ["keras.layers.RandomCrop"]
+                                    "generate": ["keras.layers.RandomCrop"],
                                 },
                                 {
                                     "path": "random_elastic_transform",
                                     "title": "RandomElasticTransform layer",
-                                    "generate": ["keras.layers.RandomElasticTransform"]
+                                    "generate": ["keras.layers.RandomElasticTransform"],
                                 },
                                 {
                                     "path": "random_erasing",
                                     "title": "RandomErasing layer",
-                                    "generate": ["keras.layers.RandomErasing"]
+                                    "generate": ["keras.layers.RandomErasing"],
                                 },
                                 {
                                     "path": "random_flip",
                                     "title": "RandomFlip layer",
-                                    "generate": ["keras.layers.RandomFlip"]
+                                    "generate": ["keras.layers.RandomFlip"],
                                 },
                                 {
                                     "path": "random_gaussian_blur",
                                     "title": "RandomGaussianBlur layer",
-                                    "generate": ["keras.layers.RandomGaussianBlur"]
+                                    "generate": ["keras.layers.RandomGaussianBlur"],
                                 },
                                 {
                                     "path": "random_grayscale",
                                     "title": "RandomGrayscale layer",
-                                    "generate": ["keras.layers.RandomGrayscale"]
+                                    "generate": ["keras.layers.RandomGrayscale"],
                                 },
                                 {
                                     "path": "random_hue",
                                     "title": "RandomHue layer",
-                                    "generate": ["keras.layers.RandomHue"]
+                                    "generate": ["keras.layers.RandomHue"],
                                 },
                                 {
                                     "path": "random_invert",
                                     "title": "RandomInvert layer",
-                                    "generate": ["keras.layers.RandomInvert"]
+                                    "generate": ["keras.layers.RandomInvert"],
                                 },
                                 {
                                     "path": "random_perspective",
                                     "title": "RandomPerspective layer",
-                                    "generate": ["keras.layers.RandomPerspective"]
+                                    "generate": ["keras.layers.RandomPerspective"],
                                 },
                                 {
                                     "path": "random_posterization",
                                     "title": "RandomPosterization layer",
-                                    "generate": ["keras.layers.RandomPosterization"]
+                                    "generate": ["keras.layers.RandomPosterization"],
                                 },
                                 {
                                     "path": "random_rotation",
                                     "title": "RandomRotation layer",
-                                    "generate": ["keras.layers.RandomRotation"]
+                                    "generate": ["keras.layers.RandomRotation"],
                                 },
                                 {
                                     "path": "random_saturation",
                                     "title": "RandomSaturation layer",
-                                    "generate": ["keras.layers.RandomSaturation"]
+                                    "generate": ["keras.layers.RandomSaturation"],
                                 },
                                 {
                                     "path": "random_sharpness",
                                     "title": "RandomSharpness layer",
-                                    "generate": ["keras.layers.RandomSharpness"]
+                                    "generate": ["keras.layers.RandomSharpness"],
                                 },
                                 {
                                     "path": "random_shear",
                                     "title": "RandomShear layer",
-                                    "generate": ["keras.layers.RandomShear"]
+                                    "generate": ["keras.layers.RandomShear"],
                                 },
                                 {
                                     "path": "random_translation",
                                     "title": "RandomTranslation layer",
-                                    "generate": ["keras.layers.RandomTranslation"]
+                                    "generate": ["keras.layers.RandomTranslation"],
                                 },
                                 {
                                     "path": "random_zoom",
                                     "title": "RandomZoom layer",
-                                    "generate": ["keras.layers.RandomZoom"]
+                                    "generate": ["keras.layers.RandomZoom"],
                                 },
                                 {
                                     "path": "solarization",
                                     "title": "Solarization layer",
-                                    "generate": ["keras.layers.Solarization"]
+                                    "generate": ["keras.layers.Solarization"],
                                 },
-                            ]
+                            ],
                         },
                         {
                             "path": "audio_preprocessing/",
@@ -1150,6 +1185,7 @@ API_MASTER = {
                         "keras.ops.argpartition",
                         "keras.ops.argsort",
                         "keras.ops.array",
+                        "keras.ops.array_split",
                         "keras.ops.average",
                         "keras.ops.bartlett",
                         "keras.ops.bincount",
@@ -1188,6 +1224,7 @@ API_MASTER = {
                         "keras.ops.dot",
                         "keras.ops.einsum",
                         "keras.ops.empty",
+                        "keras.ops.empty_like",
                         "keras.ops.equal",
                         "keras.ops.exp",
                         "keras.ops.exp2",
@@ -1215,6 +1252,7 @@ API_MASTER = {
                         "keras.ops.isclose",
                         "keras.ops.isfinite",
                         "keras.ops.isinf",
+                        "keras.ops.isin",
                         "keras.ops.isnan",
                         "keras.ops.isneginf",
                         "keras.ops.isposinf",
@@ -1222,6 +1260,7 @@ API_MASTER = {
                         "keras.ops.kaiser",
                         "keras.ops.kron",
                         "keras.ops.lcm",
+                        "keras.ops.ldexp",
                         "keras.ops.left_shift",
                         "keras.ops.less",
                         "keras.ops.less_equal",
@@ -1231,6 +1270,7 @@ API_MASTER = {
                         "keras.ops.log1p",
                         "keras.ops.log2",
                         "keras.ops.logaddexp",
+                        "keras.ops.logaddexp2",
                         "keras.ops.logical_and",
                         "keras.ops.logical_not",
                         "keras.ops.logical_or",
@@ -1302,6 +1342,7 @@ API_MASTER = {
                         "keras.ops.true_divide",
                         "keras.ops.trunc",
                         "keras.ops.unravel_index",
+                        "keras.ops.vander",
                         "keras.ops.var",
                         "keras.ops.vdot",
                         "keras.ops.vectorize",
@@ -1316,6 +1357,8 @@ API_MASTER = {
                     "path": "nn/",
                     "title": "NN ops",
                     "generate": [
+                        "keras.ops.adaptive_average_pool",
+                        "keras.ops.adaptive_max_pool",
                         "keras.ops.average_pool",
                         "keras.ops.batch_normalization",
                         "keras.ops.binary_crossentropy",
@@ -2001,7 +2044,7 @@ API_MASTER = {
                         "keras.distribution.distribution",
                         "keras.distribution.list_devices",
                         "keras.distribution.initialize",
-                        # "keras.distribution.get_device_count",
+                        "keras.distribution.get_device_count",
                     ],
                 },
             ],
@@ -2048,6 +2091,9 @@ API_MASTER = {
                     "generate": [
                         "keras.quantizers.Quantizer",
                         "keras.quantizers.AbsMaxQuantizer",
+                        "keras.quantizers.QuantizationConfig",
+                        "keras.quantizers.Int8QuantizationConfig",
+                        "keras.quantizers.GPTQConfig",
                     ],
                 },
                 {

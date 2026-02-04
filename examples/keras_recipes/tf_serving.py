@@ -551,3 +551,8 @@ Predicted class: [[b'banana']]
 - [Train and serve a TensorFlow model with TensorFlow Serving - TensorFlow blog](https://www.tensorflow.org/tfx/tutorials/serving/rest_simple#make_a_request_to_your_model_in_tensorflow_serving)
 - [TensorFlow Serving playlist - TensorFlow YouTube channel](https://www.youtube.com/playlist?list=PLQY2H8rRoyvwHdpVQVohY7-qcYf2s1UYK)
 """
+
+"""
+## Relevant Chapters from Deep Learning with Python
+- [Chapter 18: Best practices for the real world](https://deeplearningwithpython.io/chapters/chapter18_best-practices-for-the-real-world)
+"""
