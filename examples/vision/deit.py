@@ -169,7 +169,9 @@ class StochasticDepth(layers.Layer):
         if training:
             keep_prob = 1 - self.drop_prob
             shape = (keras.ops.shape(x)[0],) + (1,) * (len(keras.ops.shape(x)) - 1)
-            random_tensor = keep_prob + keras.random.uniform(shape, 0, 1, seed=self.seed_generator)
+            random_tensor = keep_prob + keras.random.uniform(
+                shape, 0, 1, seed=self.seed_generator
+            )
             random_tensor = keras.ops.floor(random_tensor)
             return (x / keep_prob) * random_tensor
         return x
@@ -299,7 +301,9 @@ class ViTClassifier(keras.Model):
         projected_patches = self.projection(inputs)
         cls_token = keras.ops.tile(self.cls_token, (n, 1, 1))
         cls_token = keras.ops.cast(cls_token, projected_patches.dtype)
-        projected_patches = keras.ops.concatenate([cls_token, projected_patches], axis=1)
+        projected_patches = keras.ops.concatenate(
+            [cls_token, projected_patches], axis=1
+        )
 
         # Add positional embeddings to the projected patches.
         encoded_patches = (
@@ -322,7 +326,7 @@ class ViTClassifier(keras.Model):
         # Classification head.
 
         output = self.head(encoded_patches)
-        
+
         return output
 
 
@@ -364,7 +368,7 @@ class ViTDistilled(ViTClassifier):
             trainable=True,
             name="cls",
         )
-        
+
         # Distillation token.
         self.dist_token = self.add_weight(
             shape=(1, 1, PROJECTION_DIM),
@@ -372,7 +376,7 @@ class ViTDistilled(ViTClassifier):
             trainable=True,
             name="dist_token",
         )
-        
+
         # Positional embedding (for NUM_PATCHES + 2 tokens: cls + dist).
         self.positional_embedding = self.add_weight(
             shape=(1, NUM_PATCHES + self.num_tokens, PROJECTION_DIM),
@@ -493,7 +497,7 @@ class DeiT(keras.Model):
 
         # Normalize for student (ViT expects [0, 1])
         x_student = keras.ops.cast(x, "float32") / 255.0
-        
+
         # Teacher expects raw [0, 255] float32 (no normalization)
         x_teacher = keras.ops.cast(x, "float32")
 
@@ -597,7 +601,9 @@ deit_distiller = DeiT(student=deit_tiny, teacher=bit_teacher_flowers)
 
 lr_scaled = (BASE_LR / 512) * BATCH_SIZE
 deit_distiller.compile(
-    optimizer=keras.optimizers.AdamW(weight_decay=WEIGHT_DECAY, learning_rate=lr_scaled),
+    optimizer=keras.optimizers.AdamW(
+        weight_decay=WEIGHT_DECAY, learning_rate=lr_scaled
+    ),
     student_loss_fn=keras.losses.CategoricalCrossentropy(
         from_logits=True, label_smoothing=0.1
     ),
