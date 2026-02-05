@@ -123,7 +123,7 @@ for i in [0, 1, 36]:
     path = kagglehub.dataset_download(dataset_id, path=filename)
     shutil.move(path, destination_path)
 
-# Commented out to observe the progress bar
+# Comment this line to keep the logs visible
 clear_output()
 ```
 
@@ -176,12 +176,12 @@ print(
 <div class="k-default-codeblock">
 ```
 WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
-E0000 00:00:1770277459.543713   39680 cuda_dnn.cc:8579] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered
-E0000 00:00:1770277459.550956   39680 cuda_blas.cc:1407] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
-W0000 00:00:1770277459.569194   39680 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
-W0000 00:00:1770277459.569212   39680 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
-W0000 00:00:1770277459.569215   39680 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
-W0000 00:00:1770277459.569217   39680 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+E0000 00:00:1770279715.556142   50403 cuda_dnn.cc:8579] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered
+E0000 00:00:1770279715.563302   50403 cuda_blas.cc:1407] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
+W0000 00:00:1770279715.580854   50403 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1770279715.580872   50403 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1770279715.580874   50403 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1770279715.580877   50403 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
 
 keras backend: jax
 keras version: 3.13.2
@@ -469,7 +469,7 @@ val_ds = load_tfrecord_dataset(val_datalist, batch_size=1, shuffle=False)
 ```
 2 1
 
-I0000 00:00:1770277461.761203   39680 gpu_device.cc:2019] Created device /job:localhost/replica:0/task:0/device:GPU:0 with 13764 MB memory:  -> device: 0, name: Tesla T4, pci bus id: 0000:00:04.0, compute capability: 7.5
+I0000 00:00:1770279717.686753   50403 gpu_device.cc:2019] Created device /job:localhost/replica:0/task:0/device:GPU:0 with 13764 MB memory:  -> device: 0, name: Tesla T4, pci bus id: 0000:00:04.0, compute capability: 7.5
 
 WARNING:tensorflow:From /home/jupyter/py311/lib/python3.11/site-packages/tensorflow/python/util/deprecation.py:660: calling map_fn_v2 (from tensorflow.python.ops.map_fn) with dtype is deprecated and will be removed in a future version.
 Instructions for updating:
@@ -692,7 +692,7 @@ Set more epoch for better optimization.
 ```python
 history = model.fit(train_ds, epochs=epochs, callbacks=[swi_callback])
 
-# Commented out to observe the progress bar
+# Comment this line to keep the logs visible
 clear_output()
 ```
 
@@ -828,7 +828,7 @@ dice_score_tc = float(ops.convert_to_numpy(dice_tc.result()))
 dice_score_wt = float(ops.convert_to_numpy(dice_wt.result()))
 dice_score_et = float(ops.convert_to_numpy(dice_et.result()))
 
-# Commented out to observe the progress bar
+# Comment this line to keep the logs visible
 clear_output()
 
 print(f"Dice Score: {dice_score:.4f}")
@@ -900,7 +900,7 @@ Pass the preprocessed sample to the inference object, ensuring that a batch axis
 ```python
 y_pred = swi(pre_image[None, ...])
 
-# Commented out to observe the progress bar
+# Comment this line to keep the logs visible
 clear_output()
 
 print(y_pred.shape)
@@ -1054,7 +1054,7 @@ Finally, create a clean GIF visualizer showing the input image, ground-truth lab
 ```python
 # The input volume contains large black margins, so we crop
 # the foreground region of interest (ROI).
-crop_forground = CropForeground(
+crop_foreground = CropForeground(
     keys=("image", "label", "prediction"), source_key="image"
 )
 
@@ -1063,7 +1063,7 @@ data = {
     "label": orig_label[..., None],
     "prediction": prediction[..., None],
 }
-results = crop_forground(data)
+results = crop_foreground(data)
 crop_orig_image = results["image"]
 crop_orig_label = results["label"]
 crop_prediction = results["prediction"]
@@ -1101,7 +1101,7 @@ pred_im = ax_pred.imshow(
 )
 
 # Tight layout for a compact GIF
-plt.subplots_adjust(left=0.01, right=0.99, bottom=0.02, top=0.9, wspace=0.01)
+plt.subplots_adjust(left=0.01, right=0.99, bottom=0.02, top=0.8, wspace=0.01)
 
 for ax, t in zip(axes, ["FLAIR", "Label", "Prediction"]):
     ax.set_title(t, fontsize=19, pad=10)
@@ -1112,7 +1112,7 @@ for ax, t in zip(axes, ["FLAIR", "Label", "Prediction"]):
 def update(i):
     img_im.set_data(crop_orig_image[i, :, :, 0])
     lbl_im.set_data(crop_orig_label[i])
-    pred_im.set_data(crop_prediction[i])
+    pred_im.set_data(viz_pred[i])
     fig.suptitle(f"Slice {i}", fontsize=14)
     return img_im, lbl_im, pred_im
 

@@ -114,7 +114,7 @@ for i in [0, 1, 36]:
     path = kagglehub.dataset_download(dataset_id, path=filename)
     shutil.move(path, destination_path)
 
-# Commented out to observe the progress bar
+# Comment this line to keep the logs visible
 clear_output()
 
 """
@@ -573,7 +573,7 @@ Set more epoch for better optimization.
 
 history = model.fit(train_ds, epochs=epochs, callbacks=[swi_callback])
 
-# Commented out to observe the progress bar
+# Comment this line to keep the logs visible
 clear_output()
 
 """
@@ -687,7 +687,7 @@ dice_score_tc = float(ops.convert_to_numpy(dice_tc.result()))
 dice_score_wt = float(ops.convert_to_numpy(dice_wt.result()))
 dice_score_et = float(ops.convert_to_numpy(dice_et.result()))
 
-# Commented out to observe the progress bar
+# Comment this line to keep the logs visible
 clear_output()
 
 print(f"Dice Score: {dice_score:.4f}")
@@ -733,7 +733,7 @@ Pass the preprocessed sample to the inference object, ensuring that a batch axis
 
 y_pred = swi(pre_image[None, ...])
 
-# Commented out to observe the progress bar
+# Comment this line to keep the logs visible
 clear_output()
 
 print(y_pred.shape)
@@ -837,7 +837,7 @@ Finally, create a clean GIF visualizer showing the input image, ground-truth lab
 """
 # The input volume contains large black margins, so we crop
 # the foreground region of interest (ROI).
-crop_forground = CropForeground(
+crop_foreground = CropForeground(
     keys=("image", "label", "prediction"), source_key="image"
 )
 
@@ -846,7 +846,7 @@ data = {
     "label": orig_label[..., None],
     "prediction": prediction[..., None],
 }
-results = crop_forground(data)
+results = crop_foreground(data)
 crop_orig_image = results["image"]
 crop_orig_label = results["label"]
 crop_prediction = results["prediction"]
@@ -883,7 +883,7 @@ pred_im = ax_pred.imshow(
 )
 
 # Tight layout for a compact GIF
-plt.subplots_adjust(left=0.01, right=0.99, bottom=0.02, top=0.9, wspace=0.01)
+plt.subplots_adjust(left=0.01, right=0.99, bottom=0.02, top=0.8, wspace=0.01)
 
 for ax, t in zip(axes, ["FLAIR", "Label", "Prediction"]):
     ax.set_title(t, fontsize=19, pad=10)
@@ -894,7 +894,7 @@ for ax, t in zip(axes, ["FLAIR", "Label", "Prediction"]):
 def update(i):
     img_im.set_data(crop_orig_image[i, :, :, 0])
     lbl_im.set_data(crop_orig_label[i])
-    pred_im.set_data(crop_prediction[i])
+    pred_im.set_data(viz_pred[i])
     fig.suptitle(f"Slice {i}", fontsize=14)
     return img_im, lbl_im, pred_im
 
