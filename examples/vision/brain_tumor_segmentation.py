@@ -84,25 +84,21 @@ Kaggle, and [`medicai`](https://github.com/innat/medic-ai) for accessing special
 !pip install git+https://github.com/innat/medic-ai.git -qU
 ```
 """
-
-
 import os
 import warnings
-import shutil
-from IPython.display import clear_output
 
 warnings.filterwarnings("ignore")
 
+import shutil
 import kagglehub
+from IPython.display import clear_output
 
 if "KAGGLE_USERNAME" not in os.environ or "KAGGLE_KEY" not in os.environ:
     kagglehub.login()
 
-
 """
 Download the dataset from kaggle.
 """
-
 dataset_id = "ipythonx/brats2020"
 destination_path = "brats2020_subset"
 os.makedirs(destination_path, exist_ok=True)
@@ -396,16 +392,52 @@ def parse_tfrecord_fn(example_proto):
 """
 
 
-def load_tfrecord_dataset(tfrecord_datalist, batch_size=1, shuffle=True):
+def train_dataloader(
+    tfrecord_datalist,
+    batch_size=1,
+    shuffle_buffer=100,
+):
     dataset = tf.data.TFRecordDataset(tfrecord_datalist)
-    dataset = dataset.shuffle(buffer_size=100) if shuffle else dataset
-    dataset = dataset.map(parse_tfrecord_fn, num_parallel_calls=tf.data.AUTOTUNE)
-    dataset = dataset.map(rearrange_shape, num_parallel_calls=tf.data.AUTOTUNE)
-    if shuffle:
-        dataset = dataset.map(train_transformation, num_parallel_calls=tf.data.AUTOTUNE)
-    else:
-        dataset = dataset.map(val_transformation, num_parallel_calls=tf.data.AUTOTUNE)
-    dataset = dataset.batch(batch_size).prefetch(tf.data.AUTOTUNE)
+    dataset = dataset.shuffle(shuffle_buffer)
+    dataset = dataset.map(
+        parse_tfrecord_fn,
+        num_parallel_calls=tf.data.AUTOTUNE,
+    )
+    dataset = dataset.map(
+        rearrange_shape,
+        num_parallel_calls=tf.data.AUTOTUNE,
+    )
+    dataset = dataset.map(
+        train_transformation,
+        num_parallel_calls=tf.data.AUTOTUNE,
+    )
+    dataset = dataset.batch(
+        batch_size,
+        drop_remainder=True,
+    )
+    dataset = dataset.prefetch(tf.data.AUTOTUNE)
+    return dataset
+
+
+def val_dataloader(
+    tfrecord_datalist,
+    batch_size=1,
+):
+    dataset = tf.data.TFRecordDataset(tfrecord_datalist)
+    dataset = dataset.map(
+        parse_tfrecord_fn,
+        num_parallel_calls=tf.data.AUTOTUNE,
+    )
+    dataset = dataset.map(
+        rearrange_shape,
+        num_parallel_calls=tf.data.AUTOTUNE,
+    )
+    dataset = dataset.map(
+        val_transformation,
+        num_parallel_calls=tf.data.AUTOTUNE,
+    )
+    dataset = dataset.batch(batch_size)
+    dataset = dataset.prefetch(tf.data.AUTOTUNE)
     return dataset
 
 
@@ -423,8 +455,8 @@ train_datalist = datalist[:-1]
 val_datalist = datalist[-1:]
 print(len(train_datalist), len(val_datalist))
 
-train_ds = load_tfrecord_dataset(train_datalist, batch_size=1, shuffle=True)
-val_ds = load_tfrecord_dataset(val_datalist, batch_size=1, shuffle=False)
+train_ds = train_dataloader(train_datalist, batch_size=1)
+val_ds = val_dataloader(val_datalist, batch_size=1)
 
 """
 **sanity check**: Fetch a single validation sample to inspect its shape and values.
@@ -912,7 +944,7 @@ plt.close(fig)
 """
 When you open the saved GIF, you should see a visualization similar to this.
 
-![](https://i.imgur.com/CbaQGf2.gif)
+![Animation of the brain tumor segmentation results](https://i.imgur.com/CbaQGf2.gif)
 """
 
 """

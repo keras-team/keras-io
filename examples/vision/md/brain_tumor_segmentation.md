@@ -86,19 +86,17 @@ Kaggle, and [`medicai`](https://github.com/innat/medic-ai) for accessing special
 
 
 ```python
-
 import os
 import warnings
-import shutil
-from IPython.display import clear_output
 
 warnings.filterwarnings("ignore")
 
+import shutil
 import kagglehub
+from IPython.display import clear_output
 
 if "KAGGLE_USERNAME" not in os.environ or "KAGGLE_KEY" not in os.environ:
     kagglehub.login()
-
 ```
 
 
@@ -176,12 +174,12 @@ print(
 <div class="k-default-codeblock">
 ```
 WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
-E0000 00:00:1770279715.556142   50403 cuda_dnn.cc:8579] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered
-E0000 00:00:1770279715.563302   50403 cuda_blas.cc:1407] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
-W0000 00:00:1770279715.580854   50403 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
-W0000 00:00:1770279715.580872   50403 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
-W0000 00:00:1770279715.580874   50403 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
-W0000 00:00:1770279715.580877   50403 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+E0000 00:00:1770323093.743310    8167 cuda_dnn.cc:8579] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered
+E0000 00:00:1770323093.750920    8167 cuda_blas.cc:1407] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
+W0000 00:00:1770323093.769755    8167 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1770323093.769779    8167 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1770323093.769782    8167 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1770323093.769784    8167 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
 
 keras backend: jax
 keras version: 3.13.2
@@ -433,16 +431,52 @@ def parse_tfrecord_fn(example_proto):
 
 ```python
 
-def load_tfrecord_dataset(tfrecord_datalist, batch_size=1, shuffle=True):
+def train_dataloader(
+    tfrecord_datalist,
+    batch_size=1,
+    shuffle_buffer=100,
+):
     dataset = tf.data.TFRecordDataset(tfrecord_datalist)
-    dataset = dataset.shuffle(buffer_size=100) if shuffle else dataset
-    dataset = dataset.map(parse_tfrecord_fn, num_parallel_calls=tf.data.AUTOTUNE)
-    dataset = dataset.map(rearrange_shape, num_parallel_calls=tf.data.AUTOTUNE)
-    if shuffle:
-        dataset = dataset.map(train_transformation, num_parallel_calls=tf.data.AUTOTUNE)
-    else:
-        dataset = dataset.map(val_transformation, num_parallel_calls=tf.data.AUTOTUNE)
-    dataset = dataset.batch(batch_size).prefetch(tf.data.AUTOTUNE)
+    dataset = dataset.shuffle(shuffle_buffer)
+    dataset = dataset.map(
+        parse_tfrecord_fn,
+        num_parallel_calls=tf.data.AUTOTUNE,
+    )
+    dataset = dataset.map(
+        rearrange_shape,
+        num_parallel_calls=tf.data.AUTOTUNE,
+    )
+    dataset = dataset.map(
+        train_transformation,
+        num_parallel_calls=tf.data.AUTOTUNE,
+    )
+    dataset = dataset.batch(
+        batch_size,
+        drop_remainder=True,
+    )
+    dataset = dataset.prefetch(tf.data.AUTOTUNE)
+    return dataset
+
+
+def val_dataloader(
+    tfrecord_datalist,
+    batch_size=1,
+):
+    dataset = tf.data.TFRecordDataset(tfrecord_datalist)
+    dataset = dataset.map(
+        parse_tfrecord_fn,
+        num_parallel_calls=tf.data.AUTOTUNE,
+    )
+    dataset = dataset.map(
+        rearrange_shape,
+        num_parallel_calls=tf.data.AUTOTUNE,
+    )
+    dataset = dataset.map(
+        val_transformation,
+        num_parallel_calls=tf.data.AUTOTUNE,
+    )
+    dataset = dataset.batch(batch_size)
+    dataset = dataset.prefetch(tf.data.AUTOTUNE)
     return dataset
 
 ```
@@ -461,15 +495,15 @@ train_datalist = datalist[:-1]
 val_datalist = datalist[-1:]
 print(len(train_datalist), len(val_datalist))
 
-train_ds = load_tfrecord_dataset(train_datalist, batch_size=1, shuffle=True)
-val_ds = load_tfrecord_dataset(val_datalist, batch_size=1, shuffle=False)
+train_ds = train_dataloader(train_datalist, batch_size=1)
+val_ds = val_dataloader(val_datalist, batch_size=1)
 ```
 
 <div class="k-default-codeblock">
 ```
 2 1
 
-I0000 00:00:1770279717.686753   50403 gpu_device.cc:2019] Created device /job:localhost/replica:0/task:0/device:GPU:0 with 13764 MB memory:  -> device: 0, name: Tesla T4, pci bus id: 0000:00:04.0, compute capability: 7.5
+I0000 00:00:1770323097.105766    8167 gpu_device.cc:2019] Created device /job:localhost/replica:0/task:0/device:GPU:0 with 13764 MB memory:  -> device: 0, name: Tesla T4, pci bus id: 0000:00:04.0, compute capability: 7.5
 
 WARNING:tensorflow:From /home/jupyter/py311/lib/python3.11/site-packages/tensorflow/python/util/deprecation.py:660: calling map_fn_v2 (from tensorflow.python.ops.map_fn) with dtype is deprecated and will be removed in a future version.
 Instructions for updating:
@@ -1130,7 +1164,7 @@ plt.close(fig)
 
 When you open the saved GIF, you should see a visualization similar to this.
 
-![](https://i.imgur.com/CbaQGf2.gif)
+![Animation of the brain tumor segmentation results](https://i.imgur.com/CbaQGf2.gif)
 
 ---
 ## Additional Resources
