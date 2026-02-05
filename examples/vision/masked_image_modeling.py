@@ -2,7 +2,7 @@
 Title: Masked image modeling with Autoencoders
 Author: [Aritra Roy Gosthipaty](https://twitter.com/arig23498), [Sayak Paul](https://twitter.com/RisingSayak)
 Date created: 2021/12/20
-Last modified: 2026/02/04
+Last modified: 2026/02/05
 Description: Implementing Masked Autoencoders for self-supervised pretraining.
 Accelerator: GPU
 Converted to Keras 3 by: [Maitry Sinha](https://github.com/maitry63)
@@ -85,7 +85,7 @@ LEARNING_RATE = 5e-3
 WEIGHT_DECAY = 1e-4
 
 # PRETRAINING
-EPOCHS = 1
+EPOCHS = 100
 
 # AUGMENTATION
 IMAGE_SIZE = 48  # We will resize input images to this size.
@@ -243,7 +243,6 @@ class Patches(layers.Layer):
             plt.axis("off")
         plt.show()
 
-        # Return the index chosen to validate it outside the method.
         return idx
 
     # taken from https://stackoverflow.com/a/58082878/10319735
@@ -852,12 +851,8 @@ history = mae_model.fit(
 # Measure its performance.
 loss, metrics_dict = mae_model.evaluate(test_ds)
 print(f"Loss: {loss:.2f}")
+print(f"MAE: {metrics_dict['mae']:.2f}")
 
-
-for name, value in metrics_dict.items():
-    print(f"{name}: {value:.2f}")
-    if name == "mae":
-        print(f"MAE: {value:.2f}")
 
 """
 ## Evaluation with linear probing
@@ -916,10 +911,10 @@ def prepare_data(images, labels, is_train=True):
         train_augmentation_model if is_train else test_augmentation_model
     )
     dataset = dataset.map(
-        lambda x, y: (augmentation_model(x), y), num_parallel_calls=tf.data.AUTOTUNE
+        lambda x, y: (augmentation_model(x), y), num_parallel_calls=AUTO
     )
 
-    return dataset.prefetch(tf.data.AUTOTUNE)
+    return dataset.prefetch(AUTO)
 
 
 train_ds = prepare_data(x_train, y_train)
@@ -930,7 +925,7 @@ test_ds = prepare_data(x_test, y_test, is_train=False)
 ### Perform linear probing
 """
 
-linear_probe_epochs = 2
+linear_probe_epochs = 50
 linear_prob_lr = 0.1
 warm_epoch_percentage = 0.1
 steps = int((len(x_train) // BATCH_SIZE) * linear_probe_epochs)
