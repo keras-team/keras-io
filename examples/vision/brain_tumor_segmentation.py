@@ -8,8 +8,6 @@ Accelerator: GPU
 """
 
 """
-# Brain Tumor Segmentation
-
 Brain tumor segmentation is a core task in medical image analysis, where the goal is to automatically identify and label different tumor sub-regions from 3D MRI scans. Accurate segmentation helps clinicians with diagnosis, treatment planning, and disease monitoring. In this tutorial, we focus on multimodal MRI-based brain tumor segmentation using the widely adopted **BraTS** (**Brain Tumor Segmentation**) dataset.
 
 ## The BraTS Dataset
@@ -86,24 +84,21 @@ Kaggle, and [`medicai`](https://github.com/innat/medic-ai) for accessing special
 !pip install git+https://github.com/innat/medic-ai.git -qU
 ```
 """
-
-
 import os
 import warnings
-import shutil
 
 warnings.filterwarnings("ignore")
 
+import shutil
 import kagglehub
+from IPython.display import clear_output
 
 if "KAGGLE_USERNAME" not in os.environ or "KAGGLE_KEY" not in os.environ:
     kagglehub.login()
 
-
 """
 Download the dataset from kaggle.
 """
-
 dataset_id = "ipythonx/brats2020"
 destination_path = "brats2020_subset"
 os.makedirs(destination_path, exist_ok=True)
@@ -115,19 +110,25 @@ for i in [0, 1, 36]:
     path = kagglehub.dataset_download(dataset_id, path=filename)
     shutil.move(path, destination_path)
 
+# Comment this line to keep the logs visible
+clear_output()
+
 """
 ## Imports
 """
-
 os.environ["KERAS_BACKEND"] = "jax"  # tensorflow, torch, jax
 
-
-import keras
 import numpy as np
 import pandas as pd
-import tensorflow as tf
+
+import keras
 from keras import ops
+import tensorflow as tf
+
 from matplotlib import pyplot as plt
+import matplotlib.animation as animation
+from matplotlib.colors import ListedColormap
+
 from medicai.callbacks import SlidingWindowInferenceCallback
 from medicai.losses import BinaryDiceCELoss
 from medicai.metrics import BinaryDiceMetric
@@ -391,16 +392,52 @@ def parse_tfrecord_fn(example_proto):
 """
 
 
-def load_tfrecord_dataset(tfrecord_datalist, batch_size=1, shuffle=True):
+def train_dataloader(
+    tfrecord_datalist,
+    batch_size=1,
+    shuffle_buffer=100,
+):
     dataset = tf.data.TFRecordDataset(tfrecord_datalist)
-    dataset = dataset.shuffle(buffer_size=100) if shuffle else dataset
-    dataset = dataset.map(parse_tfrecord_fn, num_parallel_calls=tf.data.AUTOTUNE)
-    dataset = dataset.map(rearrange_shape, num_parallel_calls=tf.data.AUTOTUNE)
-    if shuffle:
-        dataset = dataset.map(train_transformation, num_parallel_calls=tf.data.AUTOTUNE)
-    else:
-        dataset = dataset.map(val_transformation, num_parallel_calls=tf.data.AUTOTUNE)
-    dataset = dataset.batch(batch_size).prefetch(tf.data.AUTOTUNE)
+    dataset = dataset.shuffle(shuffle_buffer)
+    dataset = dataset.map(
+        parse_tfrecord_fn,
+        num_parallel_calls=tf.data.AUTOTUNE,
+    )
+    dataset = dataset.map(
+        rearrange_shape,
+        num_parallel_calls=tf.data.AUTOTUNE,
+    )
+    dataset = dataset.map(
+        train_transformation,
+        num_parallel_calls=tf.data.AUTOTUNE,
+    )
+    dataset = dataset.batch(
+        batch_size,
+        drop_remainder=True,
+    )
+    dataset = dataset.prefetch(tf.data.AUTOTUNE)
+    return dataset
+
+
+def val_dataloader(
+    tfrecord_datalist,
+    batch_size=1,
+):
+    dataset = tf.data.TFRecordDataset(tfrecord_datalist)
+    dataset = dataset.map(
+        parse_tfrecord_fn,
+        num_parallel_calls=tf.data.AUTOTUNE,
+    )
+    dataset = dataset.map(
+        rearrange_shape,
+        num_parallel_calls=tf.data.AUTOTUNE,
+    )
+    dataset = dataset.map(
+        val_transformation,
+        num_parallel_calls=tf.data.AUTOTUNE,
+    )
+    dataset = dataset.batch(batch_size)
+    dataset = dataset.prefetch(tf.data.AUTOTUNE)
     return dataset
 
 
@@ -418,8 +455,8 @@ train_datalist = datalist[:-1]
 val_datalist = datalist[-1:]
 print(len(train_datalist), len(val_datalist))
 
-train_ds = load_tfrecord_dataset(train_datalist, batch_size=1, shuffle=True)
-val_ds = load_tfrecord_dataset(val_datalist, batch_size=1, shuffle=False)
+train_ds = train_dataloader(train_datalist, batch_size=1)
+val_ds = val_dataloader(val_datalist, batch_size=1)
 
 """
 **sanity check**: Fetch a single validation sample to inspect its shape and values.
@@ -528,7 +565,7 @@ model.compile(
     ],
 )
 
-# ALERT: This `instance_describe` attributes only available in medicai (not in core keras)
+# ALERT: This `instance_describe` attributes available in medicai.
 try:
     print(model.instance_describe())
 except AttributeError:
@@ -567,6 +604,9 @@ Set more epoch for better optimization.
 """
 
 history = model.fit(train_ds, epochs=epochs, callbacks=[swi_callback])
+
+# Comment this line to keep the logs visible
+clear_output()
 
 """
 Let’s take a quick look at how our model performed during training. We will first print the available metrics recorded in the training history, save them to a CSV file for future reference, and then visualize them to better understand the model’s learning progress over epochs.
@@ -679,6 +719,9 @@ dice_score_tc = float(ops.convert_to_numpy(dice_tc.result()))
 dice_score_wt = float(ops.convert_to_numpy(dice_wt.result()))
 dice_score_et = float(ops.convert_to_numpy(dice_et.result()))
 
+# Comment this line to keep the logs visible
+clear_output()
+
 print(f"Dice Score: {dice_score:.4f}")
 print(f"Dice Score on tumor core (TC): {dice_score_tc:.4f}")
 print(f"Dice Score on whole tumor (WT): {dice_score_wt:.4f}")
@@ -707,8 +750,7 @@ dataset = dataset.map(rearrange_shape, num_parallel_calls=tf.data.AUTOTUNE)
 sample = next(iter(dataset))
 orig_image = sample["image"]
 orig_label = sample["label"]
-orig_affine = sample["affine"]
-print(orig_image.shape, orig_label.shape, orig_affine.shape, np.unique(orig_label))
+print(orig_image.shape, orig_label.shape, np.unique(orig_label))
 
 """
 Run the transformation to prepare the inputs.
@@ -722,6 +764,10 @@ Pass the preprocessed sample to the inference object, ensuring that a batch axis
 """
 
 y_pred = swi(pre_image[None, ...])
+
+# Comment this line to keep the logs visible
+clear_output()
+
 print(y_pred.shape)
 
 """
@@ -817,6 +863,89 @@ plt.imshow(prediction[slice_num, :, :])
 
 plt.tight_layout()
 plt.show()
+
+"""
+Finally, create a clean GIF visualizer showing the input image, ground-truth label, and model prediction.
+"""
+# The input volume contains large black margins, so we crop
+# the foreground region of interest (ROI).
+crop_foreground = CropForeground(
+    keys=("image", "label", "prediction"), source_key="image"
+)
+
+data = {
+    "image": orig_image,
+    "label": orig_label[..., None],
+    "prediction": prediction[..., None],
+}
+results = crop_foreground(data)
+crop_orig_image = results["image"]
+crop_orig_label = results["label"]
+crop_prediction = results["prediction"]
+
+"""
+Prepare a visualization-friendly prediction map by remapping label values to a compact index range.
+"""
+
+viz_pred = np.zeros_like(crop_prediction, dtype="uint8")
+viz_pred[crop_prediction == 1] = 1
+viz_pred[crop_prediction == 2] = 2
+viz_pred[crop_prediction == 4] = 3
+
+# Colormap for background, tumor core, edema, and enhancing regions
+cmap = ListedColormap(
+    [
+        "#000000",  # background
+        "#E57373",  # muted red
+        "#64B5F6",  # muted blue
+        "#81C784",  # muted green
+    ]
+)
+
+# Create side-by-side views for input, label, and prediction
+fig, axes = plt.subplots(1, 3, figsize=(10, 4))
+ax_img, ax_lbl, ax_pred = axes
+
+img_im = ax_img.imshow(crop_orig_image[0, :, :, 0], cmap="gray")
+lbl_im = ax_lbl.imshow(
+    crop_orig_label[0], vmin=0, vmax=3, cmap=cmap, interpolation="nearest"
+)
+pred_im = ax_pred.imshow(
+    viz_pred[0], vmin=0, vmax=3, cmap=cmap, interpolation="nearest"
+)
+
+# Tight layout for a compact GIF
+plt.subplots_adjust(left=0.01, right=0.99, bottom=0.02, top=0.8, wspace=0.01)
+
+for ax, t in zip(axes, ["FLAIR", "Label", "Prediction"]):
+    ax.set_title(t, fontsize=19, pad=10)
+    ax.axis("off")
+    ax.set_adjustable("box")
+
+
+def update(i):
+    img_im.set_data(crop_orig_image[i, :, :, 0])
+    lbl_im.set_data(crop_orig_label[i])
+    pred_im.set_data(viz_pred[i])
+    fig.suptitle(f"Slice {i}", fontsize=14)
+    return img_im, lbl_im, pred_im
+
+
+ani = animation.FuncAnimation(
+    fig, update, frames=crop_orig_image.shape[0], interval=120
+)
+ani.save(
+    "segmentation_slices.gif",
+    writer="pillow",
+    dpi=100,
+)
+plt.close(fig)
+
+"""
+When you open the saved GIF, you should see a visualization similar to this.
+
+![Animation of the brain tumor segmentation results](https://i.imgur.com/CbaQGf2.gif)
+"""
 
 """
 ## Additional Resources

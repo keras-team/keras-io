@@ -184,6 +184,12 @@ EXAMPLES_MASTER = {
                 },
                 # 3D
                 {
+                    "path": "brain_tumor_segmentation",
+                    "title": "3D Multimodal Brain Tumor Segmentation",
+                    "subcategory": "3D",
+                    "keras_3": True,
+                },
+                {
                     "path": "3D_image_classification",
                     "title": "3D image classification from CT scans",
                     "subcategory": "3D",
