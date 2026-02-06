@@ -2334,8 +2334,8 @@ MODELS_MASTER = {
                     "path": "rwkv7_tokenizer",
                     "title": "RWKV7Tokenizer",
                     "generate": [
-                        "keras_hub.tokenizers.RWKV7Tokenizer",
-                        "keras_hub.tokenizers.RWKV7Tokenizer.from_preset",
+                        "keras_hub.tokenizers.RWKVTokenizer",
+                        "keras_hub.tokenizers.RWKVTokenizer.from_preset",
                     ],
                 },
                 {
