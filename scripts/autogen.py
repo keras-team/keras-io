@@ -93,7 +93,13 @@ class KerasIO:
                         f.close()
                         assert title_line.startswith("Title: ")
                         title = title_line[len("Title: ") :]
-                        children.append({"path": example_path, "title": title.strip()})
+                        children.append(
+                            {
+                                "path": example_path,
+                                "title": title.strip(),
+                                "keras_3": True,
+                            }
+                        )
             entry["children"] = children
 
     def make_md_sources(self):
@@ -463,10 +469,11 @@ class KerasIO:
                     md_content_lines = md_content.split("\n")
                     for i, line in enumerate(md_content_lines):
                         if "View in Colab" in line:
-                            md_content_lines.insert(
-                                i,
-                                f"<div class='example_version_banner keras_{version}'>ⓘ This example uses Keras {version}</div>",
-                            )
+                            if version == 2:
+                                banner_text = f"<div class='example_version_banner keras_{version}'>ⓘ This example uses Keras {version}. This example may not be compatible with the latest version of Keras. Please check out all of our <a href=\"https://keras.io/examples/\">Keras 3 examples here</a>.</div>"
+                            else:
+                                banner_text = f"<div class='example_version_banner keras_{version}'>ⓘ This example uses Keras {version}</div>"
+                            md_content_lines.insert(i, banner_text)
                             break
                     md_content = "\n".join(md_content_lines) + "\n"
                     with open(md_path, "w") as f:
@@ -691,6 +698,9 @@ class KerasIO:
             examples_by_subcategory = {}
             subcategory_names = []
             for example in examples_by_category[category_name]:
+                # Skip rendering for Keras 2 examples
+                if example.get("keras_2"):
+                    continue
                 subcategory_name = example.get("subcategory", "Other")
                 if subcategory_name not in examples_by_subcategory:
                     examples_by_subcategory[subcategory_name] = []
@@ -698,14 +708,15 @@ class KerasIO:
                 example["path"] = "/examples/" + category_path + example["path"]
                 examples_by_subcategory[subcategory_name].append(example)
 
-            subcategories_to_render = []
-            for subcategory_name in subcategory_names:
-                subcategories_to_render.append(
-                    {
-                        "title": subcategory_name,
-                        "examples": examples_by_subcategory[subcategory_name],
-                    }
-                )
+            # Build subcategories
+            subcategories_to_render = [
+                {"title": name, "examples": examples_by_subcategory[name]}
+                for name in subcategory_names
+            ]
+
+            # If nothing remains after filtering, skip this category
+            if not subcategories_to_render:
+                continue
 
             category_dict = {
                 "title": category_name,
