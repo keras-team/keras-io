@@ -76,9 +76,38 @@ def make_outline(md_source):
             )
     return outline
 
+def add_copy_buttons_to_code(html_content):
+    def add_button(match):
+        full_match = match.group(0)
+
+        if 'style="white-space:pre;overflow-x:auto' in full_match:
+            return full_match
+
+        if "┏━━━━━━" in full_match or "Total params:" in full_match:
+            return full_match
+
+        copy_button_html = (
+            '<div class="code__container">'
+            '<button class="code__copy--button">'
+            '<i class="icon--copy"></i>'
+            '<span class="code__copy--tooltip">Copy</span>'
+            '</button>'
+        )
+        return f'{copy_button_html}{full_match}</div>'
+
+    combined_pattern = r'(<div class="k-default-codeblock">.*?</div>)|(<pre[^>]*>.*?</pre>)'
+    
+    def handle_match(m):
+        if m.group(1):
+            return m.group(1)
+        else:
+            return add_button(m)
+
+    return re.sub(combined_pattern, handle_match, html_content, flags=re.DOTALL)
+
 
 def render_markdown_to_html(md_content):
-    return markdown.markdown(
+    html_content = markdown.markdown(
         md_content,
         extensions=[
             "fenced_code",
@@ -103,6 +132,8 @@ def render_markdown_to_html(md_content):
             },
         },
     )
+    html_content = add_copy_buttons_to_code(html_content)
+    return html_content
 
 
 def set_active_flag_in_nav_entry(entry, relative_url):
