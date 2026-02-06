@@ -2326,6 +2326,50 @@ MODELS_MASTER = {
             ],
         },
         {
+            "path": "rwkv7/",
+            "title": "RWKV7",
+            "toc": True,
+            "children": [
+                {
+                    "path": "rwkv7_tokenizer",
+                    "title": "RWKV7Tokenizer",
+                    "generate": [
+                        "keras_hub.tokenizers.RWKVTokenizer",
+                        "keras_hub.tokenizers.RWKVTokenizer.from_preset",
+                    ],
+                },
+                {
+                    "path": "rwkv7_backbone",
+                    "title": "RWKV7Backbone model",
+                    "generate": [
+                        "keras_hub.models.RWKV7Backbone",
+                        "keras_hub.models.RWKV7Backbone.from_preset",
+                        "keras_hub.models.RWKV7Backbone.token_embedding",
+                    ],
+                },
+                {
+                    "path": "rwkv7_causal_lm",
+                    "title": "RWKV7CausalLM model",
+                    "generate": [
+                        "keras_hub.models.RWKV7CausalLM",
+                        "keras_hub.models.RWKV7CausalLM.from_preset",
+                        "keras_hub.models.RWKV7CausalLM.generate",
+                        "keras_hub.models.RWKV7CausalLM.backbone",
+                        "keras_hub.models.RWKV7CausalLM.preprocessor",
+                    ],
+                },
+                {
+                    "path": "rwkv7_causal_lm_preprocessor",
+                    "title": "RWKV7CausalLMPreprocessor layer",
+                    "generate": [
+                        "keras_hub.models.RWKV7CausalLMPreprocessor",
+                        "keras_hub.models.RWKV7CausalLMPreprocessor.from_preset",
+                        "keras_hub.models.RWKV7CausalLMPreprocessor.tokenizer",
+                    ],
+                },
+            ],
+        },
+        {
             "path": "segformer/",
             "title": "SegFormer",
             "toc": True,
@@ -2419,6 +2463,56 @@ MODELS_MASTER = {
                     "title": "SAMMaskDecoder layer",
                     "generate": [
                         "keras_hub.layers.SAMMaskDecoder",
+                    ],
+                },
+            ],
+        },
+        {
+            "path": "sam3/",
+            "title": "Segment Anything Model 3",
+            "toc": True,
+            "children": [
+                {
+                    "path": "sam3_tokenizer",
+                    "title": "SAM3Tokenizer",
+                    "generate": [
+                        "keras_hub.tokenizers.SAM3Tokenizer",
+                        "keras_hub.tokenizers.SAM3Tokenizer.from_preset",
+                    ],
+                },
+                {
+                    "path": "sam3_image_converter",
+                    "title": "SAM3ImageConverter",
+                    "generate": [
+                        "keras_hub.layers.SAM3ImageConverter",
+                        "keras_hub.layers.SAM3ImageConverter.from_preset",
+                    ],
+                },
+                {
+                    "path": "sam3_pc_backbone",
+                    "title": "SAM3PromptableConceptBackbone model",
+                    "generate": [
+                        "keras_hub.models.SAM3PromptableConceptBackbone",
+                        "keras_hub.models.SAM3PromptableConceptBackbone.from_preset",
+                    ],
+                },
+                {
+                    "path": "sam3_pc_image_segmenter",
+                    "title": "SAM3PromptableConceptImageSegmenter model",
+                    "generate": [
+                        "keras_hub.models.SAM3PromptableConceptImageSegmenter",
+                        "keras_hub.models.SAM3PromptableConceptImageSegmenter.from_preset",
+                        "keras_hub.models.SAM3PromptableConceptImageSegmenter.backbone",
+                        "keras_hub.models.SAM3PromptableConceptImageSegmenter.preprocessor",
+                    ],
+                },
+                {
+                    "path": "sam3_pc_image_segmenter_preprocessor",
+                    "title": "SAM3PromptableConceptImageSegmenterPreprocessor layer",
+                    "generate": [
+                        "keras_hub.models.SAM3PromptableConceptImageSegmenterPreprocessor",
+                        "keras_hub.models.SAM3PromptableConceptImageSegmenterPreprocessor.from_preset",
+                        "keras_hub.models.SAM3PromptableConceptImageSegmenterPreprocessor.image_converter",
                     ],
                 },
             ],
