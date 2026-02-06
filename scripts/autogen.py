@@ -469,16 +469,11 @@ class KerasIO:
                     md_content_lines = md_content.split("\n")
                     for i, line in enumerate(md_content_lines):
                         if "View in Colab" in line:
-                            md_content_lines.insert(
-                                i,
-                                f"<div class='example_version_banner keras_{version}'>ⓘ This example uses Keras {version}</div>",
-                            )
-                            # Add warning for Keras 2 examples
                             if version == 2:
-                                md_content_lines.insert(
-                                    i + 1,
-                                    "<div class='example_keras2_warning'><strong>Warning:</strong> This example uses Keras 2 and may not be compatible with the latest version of Keras. Please check out all of our <a href=\"https://keras.io/examples/\">Keras 3 examples here</a>.</div>",
-                                )
+                                banner_text = f"<div class='example_version_banner keras_{version}'>ⓘ This example uses Keras {version}. This example may not be compatible with the latest version of Keras. Please check out all of our <a href=\"https://keras.io/examples/\">Keras 3 examples here</a>.</div>"
+                            else:
+                                banner_text = f"<div class='example_version_banner keras_{version}'>ⓘ This example uses Keras {version}</div>"
+                            md_content_lines.insert(i, banner_text)
                             break
                     md_content = "\n".join(md_content_lines) + "\n"
                     with open(md_path, "w") as f:
