@@ -258,14 +258,14 @@ def nb_to_md(nb_path, md_path, img_dir, working_dir=None):
                     shutil.copyfile(src, target)
 
         os.chdir(current_dir)
-        md_content = open(Path(working_dir) / (md_name + ".md")).read()
+        md_content = open(Path(working_dir) / (md_name + ".md"), encoding="utf-8").read()
         for ext in img_exts:
             md_content = md_content.replace(
                 "![" + ext + "](" + md_name + "_files",
                 "![" + ext + "](" + original_img_dir + "/" + md_name,
             )
         md_content = _make_output_code_blocks(md_content)
-        open(md_path, "w").write(md_content)
+        open(md_path, "w", encoding="utf-8").write(md_content)
     else:
         success = False
         os.chdir(current_dir)
