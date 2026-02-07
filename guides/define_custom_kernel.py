@@ -203,9 +203,9 @@ def fused_matmul(a, b):
     _, n = b.shape
 
     # Define tile sizes
-    tile_m, tile_n = 128, 128
+    tile_m, tile_k, tile_n = 128, 128, 128
     assert (
-        m % tile_m == 0 and n % tile_n == 0
+        m % tile_m == 0 and k % tile_k == 0 and n % tile_n == 0
     ), "Inputs must be multiples of 128 for this demo"
 
     return pl.pallas_call(
@@ -213,18 +213,14 @@ def fused_matmul(a, b):
         # Map output indices to input blocks
         out_shape=jax.ShapeDtypeStruct((m, n), a.dtype),
         in_specs=[
-            # For each output tile, we take a slice of A of shape (tile_m, k)
-            pl.BlockSpec(
-                index_map=lambda i, j: (i, 0), block_shape=(tile_m, k)
-            ),  # Matrix A
-            # For each output tile, we take a slice of B of shape (k, tile_n)
-            pl.BlockSpec(
-                index_map=lambda i, j: (0, j), block_shape=(k, tile_n)
-            ),  # Matrix B
+            # For each output tile, we take a (tile_m, tile_k) slice of A
+            pl.BlockSpec(index_map=lambda i, j: (i, 0), block_shape=(tile_m, tile_k)),
+            # For each output tile, we take a (tile_k, tile_n) slice of B
+            pl.BlockSpec(index_map=lambda i, j: (0, j), block_shape=(tile_k, tile_n)),
         ],
         out_specs=pl.BlockSpec(
             index_map=lambda i, j: (i, j), block_shape=(tile_m, tile_n)
-        ),  # Matrix C
+        ),
         grid=(m // tile_m, n // tile_n),
     )(a, b)
 

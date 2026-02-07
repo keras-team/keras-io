@@ -50,14 +50,12 @@ from functools import partial
 import os
 import time
 
-
 os.environ["KERAS_BACKEND"] = "jax"
 
 import jax
 from jax.experimental import pallas as pl
 import jax.numpy as jnp
 import keras
-
 ```
 <div class="k-default-codeblock">
 ```
@@ -242,9 +240,9 @@ def fused_matmul(a, b):
     _, n = b.shape
 
     # Define tile sizes
-    tile_m, tile_n = 128, 128
+    tile_m, tile_k, tile_n = 128, 128, 128
     assert (
-        m % tile_m == 0 and n % tile_n == 0
+        m % tile_m == 0 and k % tile_k == 0 and n % tile_n == 0
     ), "Inputs must be multiples of 128 for this demo"
 
     return pl.pallas_call(
@@ -252,18 +250,14 @@ def fused_matmul(a, b):
         # Map output indices to input blocks
         out_shape=jax.ShapeDtypeStruct((m, n), a.dtype),
         in_specs=[
-            # For each output tile, we take a slice of A of shape (tile_m, k)
-            pl.BlockSpec(
-                index_map=lambda i, j: (i, 0), block_shape=(tile_m, k)
-            ),  # Matrix A
-            # For each output tile, we take a slice of B of shape (k, tile_n)
-            pl.BlockSpec(
-                index_map=lambda i, j: (0, j), block_shape=(k, tile_n)
-            ),  # Matrix B
+            # For each output tile, we take a (tile_m, tile_k) slice of A
+            pl.BlockSpec(index_map=lambda i, j: (i, 0), block_shape=(tile_m, tile_k)),
+            # For each output tile, we take a (tile_k, tile_n) slice of B
+            pl.BlockSpec(index_map=lambda i, j: (0, j), block_shape=(tile_k, tile_n)),
         ],
         out_specs=pl.BlockSpec(
             index_map=lambda i, j: (i, j), block_shape=(tile_m, tile_n)
-        ),  # Matrix C
+        ),
         grid=(m // tile_m, n // tile_n),
     )(a, b)
 
@@ -276,13 +270,13 @@ fused_matmul(jnp.ones((256, 256)), jnp.ones((256, 256)))
 
 <div class="k-default-codeblock">
 ```
-Array([[256., 256., 256., ..., 256., 256., 256.],
-       [256., 256., 256., ..., 256., 256., 256.],
-       [256., 256., 256., ..., 256., 256., 256.],
+Array([[128., 128., 128., ..., 128., 128., 128.],
+       [128., 128., 128., ..., 128., 128., 128.],
+       [128., 128., 128., ..., 128., 128., 128.],
        ...,
-       [256., 256., 256., ..., 256., 256., 256.],
-       [256., 256., 256., ..., 256., 256., 256.],
-       [256., 256., 256., ..., 256., 256., 256.]], dtype=float32)
+       [128., 128., 128., ..., 128., 128., 128.],
+       [128., 128., 128., ..., 128., 128., 128.],
+       [128., 128., 128., ..., 128., 128., 128.]], dtype=float32)
 ```
 </div>
 
@@ -320,19 +314,19 @@ FusedDense(256)(jnp.ones((256, 256)))
 
 <div class="k-default-codeblock">
 ```
-Array([[0.        , 0.511034  , 0.19506836, ..., 0.29304314, 0.        ,
-        0.04899597],
-       [0.        , 0.511034  , 0.19506836, ..., 0.29304314, 0.        ,
-        0.04899597],
-       [0.        , 0.511034  , 0.19506836, ..., 0.29304314, 0.        ,
-        0.04899597],
+Array([[0.02645111, 0.09155273, 0.58961487, ..., 1.376648  , 0.6003609 ,
+        0.        ],
+       [0.02645111, 0.09155273, 0.58961487, ..., 1.376648  , 0.6003609 ,
+        0.        ],
+       [0.02645111, 0.09155273, 0.58961487, ..., 1.376648  , 0.6003609 ,
+        0.        ],
        ...,
-       [0.        , 0.511034  , 0.19506836, ..., 0.29304314, 0.        ,
-        0.04899597],
-       [0.        , 0.511034  , 0.19506836, ..., 0.29304314, 0.        ,
-        0.04899597],
-       [0.        , 0.511034  , 0.19506836, ..., 0.29304314, 0.        ,
-        0.04899597]], dtype=float32)
+       [0.02645111, 0.09155273, 0.58961487, ..., 1.376648  , 0.6003609 ,
+        0.        ],
+       [0.02645111, 0.09155273, 0.58961487, ..., 1.376648  , 0.6003609 ,
+        0.        ],
+       [0.02645111, 0.09155273, 0.58961487, ..., 1.376648  , 0.6003609 ,
+        0.        ]], dtype=float32)
 ```
 </div>
 
@@ -380,9 +374,9 @@ benchmark(pallas_layer, input_data, "Pallas Fused (Matmul + ReLU)")
 Benchmarking Matrix Size: 8192x8192
 ------------------------------
 
-Standard Keras (Matmul + ReLU) Average Latency: 7.811 ms
+Standard Keras (Matmul + ReLU) Average Latency: 7.807 ms
 
-Pallas Fused (Matmul + ReLU) Average Latency: 35.039 ms
+Pallas Fused (Matmul + ReLU) Average Latency: 2.240 ms
 ```
 </div>
 
@@ -476,9 +470,9 @@ model.fit(jnp.ones((256, 256)), jnp.ones((256, 256)), batch_size=128)
     
 <div class="k-default-codeblock">
 ```
-2/2 ━━━━━━━━━━━━━━━━━━━━ 0s 65ms/step - loss: 0.6481
+2/2 ━━━━━━━━━━━━━━━━━━━━ 0s 66ms/step - loss: 0.6153
 
-<keras.src.callbacks.history.History at 0x7f58a97bcac0>
+<keras.src.callbacks.history.History at 0x7f252ce30e20>
 ```
 </div>
 
