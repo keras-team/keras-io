@@ -2,8 +2,9 @@
 Title: Graph representation learning with node2vec
 Author: [Khalid Salama](https://www.linkedin.com/in/khalid-salama-24403144/)
 Date created: 2021/05/15
-Last modified: 2021/05/15
+Last modified: 2026/02/04
 Description: Implementing the node2vec model to generate embeddings for movies from the MovieLens dataset.
+
 Accelerator: GPU
 """
 
@@ -60,10 +61,16 @@ from zipfile import ZipFile
 from urllib.request import urlretrieve
 import numpy as np
 import pandas as pd
-import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras import layers
+
+import keras
+from keras import ops
+from keras import layers
 import matplotlib.pyplot as plt
+
+# Set seed for reproducibility
+keras.utils.set_random_seed(42)
+os.environ["KERAS_BACKEND"] = "jax"  # "jax", "torch", "tensorflow"
+print(f"Keras backend: {keras.backend.backend()}")
 
 """
 ## Download the MovieLens dataset and prepare the data
@@ -245,57 +252,36 @@ to visit nodes which are further away.
 """
 
 
+"""## Biased Random Walk (Same as Keras 2)"""
+
+
 def next_step(graph, previous, current, p, q):
     neighbors = list(graph.neighbors(current))
-
     weights = []
-    # Adjust the weights of the edges to the neighbors with respect to p and q.
     for neighbor in neighbors:
         if neighbor == previous:
-            # Control the probability to return to the previous node.
             weights.append(graph[current][neighbor]["weight"] / p)
         elif graph.has_edge(neighbor, previous):
-            # The probability of visiting a local node.
             weights.append(graph[current][neighbor]["weight"])
         else:
-            # Control the probability to move forward.
             weights.append(graph[current][neighbor]["weight"] / q)
 
-    # Compute the probabilities of visiting each neighbor.
-    weight_sum = sum(weights)
-    probabilities = [weight / weight_sum for weight in weights]
-    # Probabilistically select a neighbor to visit.
-    next = np.random.choice(neighbors, size=1, p=probabilities)[0]
-    return next
+    probabilities = [weight / sum(weights) for weight in weights]
+    return np.random.choice(neighbors, size=1, p=probabilities)[0]
 
 
 def random_walk(graph, num_walks, num_steps, p, q):
     walks = []
     nodes = list(graph.nodes())
-    # Perform multiple iterations of the random walk.
     for walk_iteration in range(num_walks):
         random.shuffle(nodes)
-
-        for node in tqdm(
-            nodes,
-            position=0,
-            leave=True,
-            desc=f"Random walks iteration {walk_iteration + 1} of {num_walks}",
-        ):
-            # Start the walk with a random node from the graph.
+        for node in tqdm(nodes, desc=f"Walk iteration {walk_iteration + 1}"):
             walk = [node]
-            # Randomly walk for num_steps.
             while len(walk) < num_steps:
                 current = walk[-1]
                 previous = walk[-2] if len(walk) > 1 else None
-                # Compute the next node to visit.
-                next = next_step(graph, previous, current, p, q)
-                walk.append(next)
-            # Replace node ids (movie ids) in the walk with token ids.
-            walk = [vocabulary_lookup[token] for token in walk]
-            # Add the walk to the generated sequence.
-            walks.append(walk)
-
+                walk.append(next_step(graph, previous, current, p, q))
+            walks.append([vocabulary_lookup[token] for token in walk])
     return walks
 
 
@@ -321,7 +307,10 @@ print("Number of walks generated:", len(walks))
 ## Generate positive and negative examples
 
 To train a skip-gram model, we use the generated walks to create positive and
-negative training examples. Each example includes the following features:
+negative training examples. In Keras 3, the legacy preprocessing module 
+has been removed. We now implement a manual skip-gram sampling function 
+using NumPy to generate positive and negative training examples from our 
+random walks.Each example includes the following features:
 
 1. `target`: A movie in a walk sequence.
 2. `context`: Another movie in a walk sequence.
@@ -335,22 +324,50 @@ otherwise (i.e., if randomly sampled) the label is 0.
 """
 
 
+def manual_skipgrams(sequence, vocabulary_size, window_size=5, negative_samples=4):
+    """
+    A NumPy-based replacement for the legacy keras.preprocessing.sequence.skipgrams.
+    Generates (target, context) pairs with positive and negative labels.
+    """
+    pairs = []
+    labels = []
+
+    for i, target in enumerate(sequence):
+        # Generate positive samples within the window
+        start = max(0, i - window_size)
+        end = min(len(sequence), i + window_size + 1)
+        for j in range(start, end):
+            if i == j:
+                continue
+            context = sequence[j]
+            pairs.append([target, context])
+            labels.append(1)
+
+            # Generate negative samples
+            for _ in range(negative_samples):
+                negative_context = np.random.randint(0, vocabulary_size)
+                # Ensure negative sample is not the target
+                while negative_context == target:
+                    negative_context = np.random.randint(0, vocabulary_size)
+                pairs.append([target, negative_context])
+                labels.append(0)
+
+    return pairs, labels
+
+
 def generate_examples(sequences, window_size, num_negative_samples, vocabulary_size):
     example_weights = defaultdict(int)
-    # Iterate over all sequences (walks).
-    for sequence in tqdm(
-        sequences,
-        position=0,
-        leave=True,
-        desc=f"Generating positive  and negative examples",
-    ):
-        # Generate positive and negative skip-gram pairs for a sequence (walk).
-        pairs, labels = keras.preprocessing.sequence.skipgrams(
+
+    # Iterate over all walks
+    for sequence in tqdm(sequences, desc="Generating positive and negative examples"):
+        # Use our manual skipgrams function
+        pairs, labels = manual_skipgrams(
             sequence,
             vocabulary_size=vocabulary_size,
             window_size=window_size,
             negative_samples=num_negative_samples,
         )
+
         for idx in range(len(pairs)):
             pair = pairs[idx]
             label = labels[idx]
@@ -361,17 +378,22 @@ def generate_examples(sequences, window_size, num_negative_samples, vocabulary_s
             example_weights[entry] += 1
 
     targets, contexts, labels, weights = [], [], [], []
-    for entry in example_weights:
-        weight = example_weights[entry]
+    for entry, weight in example_weights.items():
         target, context, label = entry
         targets.append(target)
         contexts.append(context)
         labels.append(label)
         weights.append(weight)
 
-    return np.array(targets), np.array(contexts), np.array(labels), np.array(weights)
+    return (
+        np.array(targets, dtype="int32"),
+        np.array(contexts, dtype="int32"),
+        np.array(labels, dtype="float32"),
+        np.array(weights, dtype="float32"),
+    )
 
 
+# Execute the generation
 num_negative_samples = 4
 targets, contexts, labels, weights = generate_examples(
     sequences=walks,
@@ -390,31 +412,41 @@ print(f"Labels shape: {labels.shape}")
 print(f"Weights shape: {weights.shape}")
 
 """
-### Convert the data into `tf.data.Dataset` objects
+### Data Loading with PyDataset
+We replace the tf.data pipeline with keras.utils.PyDataset. 
+This ensures our data pipeline is fully backend-agnostic and 
+avoids symbolic tensor errors when running on JAX or PyTorch.
 """
 
 batch_size = 1024
 
 
-def create_dataset(targets, contexts, labels, weights, batch_size):
-    inputs = {
-        "target": targets,
-        "context": contexts,
-    }
-    dataset = tf.data.Dataset.from_tensor_slices((inputs, labels, weights))
-    dataset = dataset.shuffle(buffer_size=batch_size * 2)
-    dataset = dataset.batch(batch_size, drop_remainder=True)
-    dataset = dataset.prefetch(tf.data.AUTOTUNE)
-    return dataset
+class MovieLensDataset(keras.utils.PyDataset):
+    def __init__(self, targets, contexts, labels, weights, batch_size, **kwargs):
+        super().__init__(**kwargs)
+        self.targets = targets
+        self.contexts = contexts
+        self.labels = labels
+        self.weights = weights
+        self.batch_size = batch_size
+
+    def __len__(self):
+        return len(self.targets) // self.batch_size
+
+    def __getitem__(self, index):
+        low = index * self.batch_size
+        high = (index + 1) * self.batch_size
+
+        target = self.targets[low:high]
+        context = self.contexts[low:high]
+        label = self.labels[low:high]
+        weight = self.weights[low:high]
+
+        return {"target": target, "context": context}, label, weight
 
 
-dataset = create_dataset(
-    targets=targets,
-    contexts=contexts,
-    labels=labels,
-    weights=weights,
-    batch_size=batch_size,
-)
+batch_size = 1024
+dataset = MovieLensDataset(targets, contexts, labels, weights, batch_size)
 
 """
 ## Train the skip-gram model
@@ -438,11 +470,9 @@ num_epochs = 10
 
 
 def create_model(vocabulary_size, embedding_dim):
-    inputs = {
-        "target": layers.Input(name="target", shape=(), dtype="int32"),
-        "context": layers.Input(name="context", shape=(), dtype="int32"),
-    }
-    # Initialize item embeddings.
+    target_in = layers.Input(name="target", shape=(1,), dtype="int32")
+    context_in = layers.Input(name="context", shape=(1,), dtype="int32")
+
     embed_item = layers.Embedding(
         input_dim=vocabulary_size,
         output_dim=embedding_dim,
@@ -450,17 +480,18 @@ def create_model(vocabulary_size, embedding_dim):
         embeddings_regularizer=keras.regularizers.l2(1e-6),
         name="item_embeddings",
     )
-    # Lookup embeddings for target.
-    target_embeddings = embed_item(inputs["target"])
-    # Lookup embeddings for context.
-    context_embeddings = embed_item(inputs["context"])
-    # Compute dot similarity between target and context embeddings.
-    logits = layers.Dot(axes=1, normalize=False, name="dot_similarity")(
-        [target_embeddings, context_embeddings]
+
+    target_embed = embed_item(target_in)
+    context_embed = embed_item(context_in)
+
+    # Keras 3 Dot layer works on all backends
+    dot_similarity = layers.Dot(axes=2, normalize=False, name="dot_similarity")(
+        [target_embed, context_embed]
     )
-    # Create the model.
-    model = keras.Model(inputs=inputs, outputs=logits)
-    return model
+    # Flatten to (batch_size, 1)
+    output = layers.Flatten()(dot_similarity)
+
+    return keras.Model(inputs=[target_in, context_in], outputs=output)
 
 
 """
@@ -528,42 +559,56 @@ query_movies = [
 Get the embeddings of the movies in `query_movies`.
 """
 
-query_embeddings = []
+query_tokens = []
+for title in query_movies:
+    movieId = get_movie_id_by_title(title)
+    query_tokens.append(vocabulary_lookup[movieId])
 
-for movie_title in query_movies:
-    movieId = get_movie_id_by_title(movie_title)
-    token_id = vocabulary_lookup[movieId]
-    movie_embedding = movie_embeddings[token_id]
-    query_embeddings.append(movie_embedding)
-
-query_embeddings = np.array(query_embeddings)
+query_tokens = np.array(query_tokens, dtype="int32")
 
 """
 Compute the [consine similarity](https://en.wikipedia.org/wiki/Cosine_similarity) between the embeddings of `query_movies`
 and all the other movies, then pick the top k for each.
 """
 
-similarities = tf.linalg.matmul(
-    tf.math.l2_normalize(query_embeddings),
-    tf.math.l2_normalize(movie_embeddings),
-    transpose_b=True,
-)
 
-_, indices = tf.math.top_k(similarities, k=5)
-indices = indices.numpy().tolist()
+# Using keras.ops for backend-agnostic similarity calculation
+def compute_similarities(query_indices, all_embeddings):
+    # Lookup embeddings
+    query_embeds = ops.take(all_embeddings, query_indices, axis=0)
+
+    # L2 Normalize using Keras Ops
+    def l2_norm(x):
+        # Ensure x is a Keras Tensor before operations with keras.ops
+        x_tensor = ops.convert_to_tensor(x)
+        return x_tensor / ops.sqrt(
+            ops.maximum(ops.sum(ops.square(x_tensor), axis=-1, keepdims=True), 1e-12)
+        )
+
+    query_embeds = l2_norm(query_embeds)
+    all_embeddings = l2_norm(all_embeddings)
+
+    # Cosine Similarity
+    similarities = ops.matmul(query_embeds, ops.transpose(all_embeddings))
+
+    # Get Top K
+    vals, inds = ops.top_k(similarities, k=5)
+    return inds
+
+
+# Convert movie_embeddings to a Keras Tensor before calling compute_similarities
+movie_embeddings_tensor = ops.convert_to_tensor(movie_embeddings)
+indices = compute_similarities(query_tokens, movie_embeddings_tensor)
+indices = keras.ops.convert_to_numpy(indices).tolist()
 
 """
 Display the top related movies in `query_movies`.
 """
 
 for idx, title in enumerate(query_movies):
-    print(title)
-    print("".rjust(len(title), "-"))
-    similar_tokens = indices[idx]
-    for token in similar_tokens:
-        similar_movieId = vocabulary[token]
-        similar_title = get_movie_title_by_id(similar_movieId)
-        print(f"- {similar_title}")
+    print(f"{title}\n{'-' * len(title)}")
+    for token in indices[idx]:
+        print(f"- {get_movie_title_by_id(vocabulary[token])}")
     print()
 
 """
@@ -572,17 +617,29 @@ for idx, title in enumerate(query_movies):
 
 import io
 
+# Ensure embeddings are converted to a standard format regardless of the backend
+# This is the "Keras 3 way" to access trained weights for post-processing
+embeddings_np = ops.convert_to_numpy(movie_embeddings)
+
 out_v = io.open("embeddings.tsv", "w", encoding="utf-8")
 out_m = io.open("metadata.tsv", "w", encoding="utf-8")
 
+# We skip the 'NA' token at index 0 to match the original tutorial logic
 for idx, movie_id in enumerate(vocabulary[1:]):
-    movie_title = list(movies[movies.movieId == movie_id].title)[0]
-    vector = movie_embeddings[idx]
+    # The movie_id at vocabulary[1:] corresponds to weights at index 1 and onwards
+    vector = embeddings_np[idx + 1]
+
+    # Standard Pandas/Python logic for metadata
+    movie_title = movies[movies.movieId == movie_id]["title"].values[0]
+
+    # Write tab-separated values for the projector
     out_v.write("\t".join([str(x) for x in vector]) + "\n")
     out_m.write(movie_title + "\n")
 
 out_v.close()
 out_m.close()
+
+print("Embeddings and metadata saved for projector.")
 
 """
 Download the `embeddings.tsv` and `metadata.tsv` to analyze the obtained embeddings
