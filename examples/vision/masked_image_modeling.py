@@ -2,7 +2,7 @@
 Title: Masked image modeling with Autoencoders
 Author: [Aritra Roy Gosthipaty](https://twitter.com/arig23498), [Sayak Paul](https://twitter.com/RisingSayak)
 Date created: 2021/12/20
-Last modified: 2026/02/05
+Last modified: 2026/02/09
 Description: Implementing Masked Autoencoders for self-supervised pretraining.
 Accelerator: GPU
 Converted to Keras 3 by: [Maitry Sinha](https://github.com/maitry63)
@@ -55,6 +55,8 @@ import keras
 import matplotlib.pyplot as plt
 import numpy as np
 import tensorflow as tf
+import torch
+import jax
 from keras import layers, ops
 
 # Setting seeds for reproducibility.
@@ -76,7 +78,6 @@ BUFFER_SIZE = 1024
 BATCH_SIZE = 32
 # BATCH_SIZE = 256
 
-AUTO = tf.data.AUTOTUNE
 INPUT_SHAPE = (32, 32, 3)
 NUM_CLASSES = 10
 
@@ -85,7 +86,7 @@ LEARNING_RATE = 5e-3
 WEIGHT_DECAY = 1e-4
 
 # PRETRAINING
-EPOCHS = 100
+EPOCHS = 1
 
 # AUGMENTATION
 IMAGE_SIZE = 48  # We will resize input images to this size.
@@ -145,6 +146,30 @@ class MaskedImageDataset(keras.utils.PyDataset):
         batch_x_resized = ops.image.resize(batch_x, (IMAGE_SIZE, IMAGE_SIZE))
 
         return (batch_x_resized,)
+
+
+class MaskedImageDataset(keras.utils.PyDataset):
+    def __init__(self, x, batch_size, shuffle=False, **kwargs):
+        super().__init__(**kwargs)
+        self.x = x
+        self.batch_size = batch_size
+        self.shuffle = shuffle
+        self.indices = np.arange(len(self.x))
+        if self.shuffle:
+            np.random.shuffle(self.indices)
+
+    def __len__(self):
+        return int(np.ceil(len(self.x) / self.batch_size))
+
+    def __getitem__(self, idx):
+        start, end = idx * self.batch_size, (idx + 1) * self.batch_size
+        batch_indices = self.indices[start:end]
+        batch_x = ops.cast(self.x[batch_indices], "float32")
+        return (batch_x,)
+
+    def on_epoch_end(self):
+        if self.shuffle:
+            np.random.shuffle(self.indices)
 
 
 """
@@ -298,7 +323,9 @@ class PatchEncoder(layers.Layer):
         # This is a trainable mask token initialized randomly from a normal
         # distribution.
         self.mask_token = keras.Variable(
-            keras.random.normal(mask_token_shape), trainable=True, name="mask_token"
+            keras.random.normal(mask_token_shape),
+            trainable=True,
+            name="mask_token",
         )
 
     def build(self, input_shape):
@@ -366,7 +393,9 @@ class PatchEncoder(layers.Layer):
     def get_random_indices(self, batch_size):
         # Create random indices from a uniform distribution and then split
         # it into mask and unmask indices.
-        probs = keras.random.uniform(shape=(batch_size, self.num_patches))
+        probs = keras.random.uniform(
+            shape=(batch_size, self.num_patches),
+        )
         rand_indices = ops.argsort(probs, axis=-1)
         mask_indices = rand_indices[:, : self.num_mask]
         unmask_indices = rand_indices[:, self.num_mask :]
@@ -395,10 +424,13 @@ patch_encoder = PatchEncoder(
 """
 ## Prepare the Dataset
 """
-
-train_ds = MaskedImageDataset(x_train, batch_size=BATCH_SIZE)
+train_ds = MaskedImageDataset(x_train, batch_size=BATCH_SIZE, shuffle=True)
 val_ds = MaskedImageDataset(x_val, batch_size=BATCH_SIZE)
 test_ds = MaskedImageDataset(x_test, batch_size=BATCH_SIZE)
+
+# train_ds = MaskedImageDataset(x_train, batch_size=BATCH_SIZE)
+# val_ds = MaskedImageDataset(x_val, batch_size=BATCH_SIZE)
+# test_ds = MaskedImageDataset(x_test, batch_size=BATCH_SIZE)
 
 """
 Let's visualize the image patches.
@@ -554,7 +586,7 @@ def create_decoder(
 """
 ## MAE trainer
 
-This is the trainer module. We wrap the encoder and decoder inside of a `tf.keras.Model`
+This is the trainer module. We wrap the encoder and decoder inside of a `keras.Model`
 subclass. This allows us to customize what happens in the `model.fit()` loop.
 """
 
@@ -620,32 +652,20 @@ class MaskedAutoencoder(keras.Model):
         return total_loss, loss_patch, loss_output
 
     def call(self, images, training=False):
-        # A call method to  build/trace the model
+        # A call method to build/trace the model
         _, _, loss_output = self.calculate_loss(images, training=training)
         return loss_output
 
     def train_step(self, data):
-        if isinstance(data, (list, tuple)):
-            images = data[0]
-        else:
-            images = data
+        images = data[0] if isinstance(data, (list, tuple)) else data
+        total_loss, loss_patch, loss_output = self.calculate_loss(images, training=True)
 
-        with tf.GradientTape() as tape:
-            total_loss, loss_patch, loss_output = self.calculate_loss(
-                images, training=True
-            )
-
-        train_vars = self.trainable_variables
-        grads = tape.gradient(total_loss, train_vars)
-        self.optimizer.apply_gradients(zip(grads, train_vars))
-
-        # Report progress.
+        self.add_loss(total_loss)
         results = {}
         for metric in self.metrics:
             metric.update_state(loss_patch, loss_output)
             results[metric.name] = metric.result()
 
-        # Ensure "loss" is in results to prevent backend errors
         if "loss" not in results:
             results["loss"] = total_loss
 
@@ -831,16 +851,14 @@ train_callbacks = [TrainMonitor(epoch_interval=5)]
 ## Model compilation and training
 """
 
-optimizer = keras.optimizers.AdamW(
+optimizer = keras.optimizers.Adam(
     learning_rate=scheduled_lrs, weight_decay=WEIGHT_DECAY
 )
 
 # Compile and pretrain the model.
-
 mae_model.compile(
     optimizer=optimizer, loss=keras.losses.MeanSquaredError(), metrics=["mae"]
 )
-
 history = mae_model.fit(
     train_ds,
     epochs=EPOCHS,
@@ -849,10 +867,9 @@ history = mae_model.fit(
 )
 
 # Measure its performance.
-loss, metrics_dict = mae_model.evaluate(test_ds)
-print(f"Loss: {loss:.2f}")
-print(f"MAE: {metrics_dict['mae']:.2f}")
-
+metrics = mae_model.evaluate(test_ds, return_dict=True)
+print(f"Loss: {metrics['loss']:.2f}")
+# print(f"MAE: {metrics['mae']:.2f}")
 
 """
 ## Evaluation with linear probing
@@ -900,32 +917,67 @@ token during the downstream tasks.
 
 ### Prepare datasets for linear probing
 """
+"""
+We are using average pooling to extract learned representations from the MAE encoder.
+Another approach would be to use a learnable dummy token inside the encoder during
+pretraining (resembling the [CLS] token). Then we can extract representations from that
+token during the downstream tasks.
 
+### Prepare datasets for linear probing
+"""
+class ClassificationDataset(keras.utils.PyDataset):
+    def __init__(self, x, y, batch_size, augmentation_model=None, shuffle=False, **kwargs):
+        super().__init__(**kwargs)
+        self.x = x
+        self.y = y
+        self.batch_size = batch_size
+        self.augmentation_model = augmentation_model
+        self.shuffle = shuffle
+        self.indices = np.arange(len(self.x))
+        if self.shuffle:
+            self.on_epoch_end()
 
-def prepare_data(images, labels, is_train=True):
-    dataset = tf.data.Dataset.from_tensor_slices((images, labels))
-    if is_train:
-        dataset = dataset.shuffle(BUFFER_SIZE)
-    dataset = dataset.batch(BATCH_SIZE)
-    augmentation_model = (
-        train_augmentation_model if is_train else test_augmentation_model
+    def __len__(self):
+        return int(np.ceil(len(self.x) / self.batch_size))
+
+    def on_epoch_end(self):
+        """
+        Shuffle indices at the end of every epoch.
+        """
+        if self.shuffle:
+            np.random.shuffle(self.indices)
+
+    def __getitem__(self, idx):
+        start, end = idx * self.batch_size, (idx + 1) * self.batch_size
+        batch_indices = self.indices[start:end]
+        
+        batch_x = ops.cast(self.x[batch_indices], "float32")
+        batch_y = ops.cast(self.y[batch_indices], "int32")
+        
+        if self.augmentation_model is not None:
+            batch_x = self.augmentation_model(batch_x, training=self.shuffle)
+            
+        return batch_x, batch_y
+
+def prepare_data(images, labels, batch_size, is_train=True):
+    aug_model = train_augmentation_model if is_train else test_augmentation_model
+    
+    return ClassificationDataset(
+        x=images,
+        y=labels,
+        batch_size=batch_size,
+        augmentation_model=aug_model,
+        shuffle=is_train
     )
-    dataset = dataset.map(
-        lambda x, y: (augmentation_model(x), y), num_parallel_calls=AUTO
-    )
 
-    return dataset.prefetch(AUTO)
-
-
-train_ds = prepare_data(x_train, y_train)
-val_ds = prepare_data(x_train, y_train, is_train=False)
-test_ds = prepare_data(x_test, y_test, is_train=False)
+train_ds = prepare_data(x_train, y_train, BATCH_SIZE, is_train=True)
+val_ds   = prepare_data(x_val, y_val, BATCH_SIZE, is_train=False)
+test_ds  = prepare_data(x_test, y_test, BATCH_SIZE, is_train=False)
 
 """
 ### Perform linear probing
 """
-
-linear_probe_epochs = 50
+linear_probe_epochs = 2
 linear_prob_lr = 0.1
 warm_epoch_percentage = 0.1
 steps = int((len(x_train) // BATCH_SIZE) * linear_probe_epochs)
@@ -947,7 +999,6 @@ downstream_model.fit(train_ds, validation_data=val_ds, epochs=linear_probe_epoch
 loss, accuracy = downstream_model.evaluate(test_ds)
 accuracy = round(accuracy * 100, 2)
 print(f"Accuracy on the test set: {accuracy}%.")
-
 """
 We believe that with a more sophisticated hyperparameter tuning process and a longer
 pretraining it is possible to improve this performance further. For comparison, we took
