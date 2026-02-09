@@ -249,6 +249,7 @@ to visit nodes which are further away.
 
 """
 
+
 def next_step(graph, previous, current, p, q):
     neighbors = list(graph.neighbors(current))
 
@@ -260,10 +261,10 @@ def next_step(graph, previous, current, p, q):
             weights.append(graph[current][neighbor]["weight"])
         else:
             weights.append(graph[current][neighbor]["weight"] / q)
-            
+
     weight_sum = sum(weights)
     probabilities = [weight / weight_sum for weight in weights]
-    
+
     next_node = np.random.choice(neighbors, size=1, p=probabilities)[0]
     return next_node
 
@@ -471,6 +472,7 @@ num_epochs = 10
 ### Implement the model
 """
 
+
 def create_model(vocabulary_size, embedding_dim):
     target_in = layers.Input(name="target", shape=(), dtype="int32")
     context_in = layers.Input(name="context", shape=(), dtype="int32")
@@ -492,6 +494,7 @@ def create_model(vocabulary_size, embedding_dim):
     output = layers.Reshape((1,))(dot_similarity)
 
     return keras.Model(inputs=[target_in, context_in], outputs=output)
+
 
 """
 ### Train the model
@@ -573,6 +576,7 @@ query_tokens = np.array(query_tokens, dtype="int32")
 Compute the [consine similarity](https://en.wikipedia.org/wiki/Cosine_similarity) between the embeddings of `query_movies`
 and all the other movies, then pick the top k for each.
 """
+
 
 def compute_similarities(query_indices, all_embeddings):
     # Lookup embeddings
