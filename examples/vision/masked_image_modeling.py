@@ -925,8 +925,12 @@ token during the downstream tasks.
 
 ### Prepare datasets for linear probing
 """
+
+
 class ClassificationDataset(keras.utils.PyDataset):
-    def __init__(self, x, y, batch_size, augmentation_model=None, shuffle=False, **kwargs):
+    def __init__(
+        self, x, y, batch_size, augmentation_model=None, shuffle=False, **kwargs
+    ):
         super().__init__(**kwargs)
         self.x = x
         self.y = y
@@ -950,29 +954,31 @@ class ClassificationDataset(keras.utils.PyDataset):
     def __getitem__(self, idx):
         start, end = idx * self.batch_size, (idx + 1) * self.batch_size
         batch_indices = self.indices[start:end]
-        
+
         batch_x = ops.cast(self.x[batch_indices], "float32")
         batch_y = ops.cast(self.y[batch_indices], "int32")
-        
+
         if self.augmentation_model is not None:
             batch_x = self.augmentation_model(batch_x, training=self.shuffle)
-            
+
         return batch_x, batch_y
+
 
 def prepare_data(images, labels, batch_size, is_train=True):
     aug_model = train_augmentation_model if is_train else test_augmentation_model
-    
+
     return ClassificationDataset(
         x=images,
         y=labels,
         batch_size=batch_size,
         augmentation_model=aug_model,
-        shuffle=is_train
+        shuffle=is_train,
     )
 
+
 train_ds = prepare_data(x_train, y_train, BATCH_SIZE, is_train=True)
-val_ds   = prepare_data(x_val, y_val, BATCH_SIZE, is_train=False)
-test_ds  = prepare_data(x_test, y_test, BATCH_SIZE, is_train=False)
+val_ds = prepare_data(x_val, y_val, BATCH_SIZE, is_train=False)
+test_ds = prepare_data(x_test, y_test, BATCH_SIZE, is_train=False)
 
 """
 ### Perform linear probing
