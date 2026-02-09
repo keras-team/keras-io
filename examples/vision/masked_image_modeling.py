@@ -54,9 +54,6 @@ os.environ["KERAS_BACKEND"] = "tensorflow"
 import keras
 import matplotlib.pyplot as plt
 import numpy as np
-import tensorflow as tf
-import torch
-import jax
 from keras import layers, ops
 
 # Setting seeds for reproducibility.
@@ -129,23 +126,6 @@ print(f"Testing samples: {len(x_test)}")
 """
 ## PyDataset Implementation
 """
-
-
-class MaskedImageDataset(keras.utils.PyDataset):
-    def __init__(self, x, batch_size, **kwargs):
-        super().__init__(**kwargs)
-        self.x, self.batch_size = x, batch_size
-
-    def __len__(self):
-        return int(np.ceil(len(self.x) / self.batch_size))
-
-    def __getitem__(self, idx):
-        start, end = idx * self.batch_size, (idx + 1) * self.batch_size
-        batch_x = ops.cast(self.x[start:end], "float32")
-
-        batch_x_resized = ops.image.resize(batch_x, (IMAGE_SIZE, IMAGE_SIZE))
-
-        return (batch_x_resized,)
 
 
 class MaskedImageDataset(keras.utils.PyDataset):
@@ -360,7 +340,6 @@ class PatchEncoder(layers.Layer):
             return patch_embeddings
 
         mask_indices, unmask_indices = self.get_random_indices(batch_size)
-
         u_idx, m_idx = unmask_indices[..., None], mask_indices[..., None]
         # The encoder input is the unmasked patch embeddings. Here we gather
         # all the patches that should be unmasked.
@@ -373,7 +352,9 @@ class PatchEncoder(layers.Layer):
         unmasked_positions = ops.take_along_axis(
             pos_embeddings, u_idx, axis=1
         )  # (B, unmask_numbers, projection_dim)
-        masked_positions = ops.take_along_axis(pos_embeddings, m_idx, axis=1)
+        masked_positions = ops.take_along_axis(
+            pos_embeddings, m_idx, axis=1
+        )  # (B, mask_numbers, projection_dim)
 
         # Repeat the mask token number of mask times.
         # Mask tokens replace the masks of the image.
@@ -403,15 +384,17 @@ class PatchEncoder(layers.Layer):
 
     def generate_masked_image(self, patches, unmask_indices):
         # Choose a random patch and it corresponding unmask index.
-        p_np, u_np = ops.convert_to_numpy(patches), ops.convert_to_numpy(unmask_indices)
-        idx = np.random.choice(p_np.shape[0])
-        patch, unmask_idx = p_np[idx], u_np[idx]
+        idx = np.random.choice(patches.shape[0])
+        patch = patches[idx]
+        unmask_index = unmask_indices[idx]
 
         # Build a numpy array of same shape as patch.
         new_patch = np.zeros_like(patch)
 
-        # Plug the unmasked patches.
-        new_patch[unmask_idx] = patch[unmask_idx]
+        # Iterate of the new_patch and plug the unmasked patches.
+        count = 0
+        for i in range(unmask_index.shape[0]):
+            new_patch[unmask_index[i]] = patch[unmask_index[i]]
         return new_patch, idx
 
 
@@ -427,10 +410,6 @@ patch_encoder = PatchEncoder(
 train_ds = MaskedImageDataset(x_train, batch_size=BATCH_SIZE, shuffle=True)
 val_ds = MaskedImageDataset(x_val, batch_size=BATCH_SIZE)
 test_ds = MaskedImageDataset(x_test, batch_size=BATCH_SIZE)
-
-# train_ds = MaskedImageDataset(x_train, batch_size=BATCH_SIZE)
-# val_ds = MaskedImageDataset(x_val, batch_size=BATCH_SIZE)
-# test_ds = MaskedImageDataset(x_test, batch_size=BATCH_SIZE)
 
 """
 Let's visualize the image patches.
@@ -563,7 +542,7 @@ def create_decoder(
 
         # Create a multi-head attention layer.
         attention_output = layers.MultiHeadAttention(
-            num_heads=num_heads, key_dim=DEC_PROJECTION_DIM
+            num_heads=num_heads, key_dim=DEC_PROJECTION_DIM, dropout=0.1
         )(x1, x1)
         # Skip connection .
         x2 = layers.Add()([attention_output, x])
@@ -641,7 +620,7 @@ class MaskedAutoencoder(keras.Model):
         decoder_outputs = self.decoder(decoder_inputs)
         decoder_patches = self.patch_layer(decoder_outputs)
 
-        # Extract only the masked patches using ops.take_along_axis (Backend-agnostic)
+        # Extract only the masked patches using ops.take_along_axis
         m_idx = mask_indices[..., None]
         loss_patch = ops.take_along_axis(patches, m_idx, axis=1)
         loss_output = ops.take_along_axis(decoder_patches, m_idx, axis=1)
@@ -718,14 +697,14 @@ mae_model = MaskedAutoencoder(
     decoder=decoder,
 )
 
+# Taking a batch of test inputs to measure model's progress.
+test_images = next(iter(test_ds))
+
 """
 ## Training callbacks
 
 ### Visualization callback
 """
-
-# Taking a batch of test inputs to measure model's progress.
-test_images = next(iter(test_ds))
 
 
 class TrainMonitor(keras.callbacks.Callback):
@@ -869,7 +848,6 @@ history = mae_model.fit(
 # Measure its performance.
 metrics = mae_model.evaluate(test_ds, return_dict=True)
 print(f"Loss: {metrics['loss']:.2f}")
-# print(f"MAE: {metrics['mae']:.2f}")
 
 """
 ## Evaluation with linear probing
@@ -909,14 +887,6 @@ for layer in downstream_model.layers[:-1]:
 
 downstream_model.summary()
 
-"""
-We are using average pooling to extract learned representations from the MAE encoder.
-Another approach would be to use a learnable dummy token inside the encoder during
-pretraining (resembling the [CLS] token). Then we can extract representations from that
-token during the downstream tasks.
-
-### Prepare datasets for linear probing
-"""
 """
 We are using average pooling to extract learned representations from the MAE encoder.
 Another approach would be to use a learnable dummy token inside the encoder during
