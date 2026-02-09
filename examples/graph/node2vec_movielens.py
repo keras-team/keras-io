@@ -4,8 +4,8 @@ Author: [Khalid Salama](https://www.linkedin.com/in/khalid-salama-24403144/)
 Date created: 2021/05/15
 Last modified: 2026/02/04
 Description: Implementing the node2vec model to generate embeddings for movies from the MovieLens dataset.
-
 Accelerator: GPU
+Converted to Keras 3 by: [LakshmiKalaKadali](https://github.com/LakshmiKalaKadali)
 """
 
 """
@@ -61,7 +61,6 @@ from zipfile import ZipFile
 from urllib.request import urlretrieve
 import numpy as np
 import pandas as pd
-
 import keras
 from keras import ops
 from keras import layers
@@ -70,7 +69,6 @@ import matplotlib.pyplot as plt
 # Set seed for reproducibility
 keras.utils.set_random_seed(42)
 os.environ["KERAS_BACKEND"] = "jax"  # "jax", "torch", "tensorflow"
-print(f"Keras backend: {keras.backend.backend()}")
 
 """
 ## Download the MovieLens dataset and prepare the data
@@ -251,12 +249,9 @@ to visit nodes which are further away.
 
 """
 
-
-"""## Biased Random Walk (Same as Keras 2)"""
-
-
 def next_step(graph, previous, current, p, q):
     neighbors = list(graph.neighbors(current))
+
     weights = []
     for neighbor in neighbors:
         if neighbor == previous:
@@ -265,9 +260,12 @@ def next_step(graph, previous, current, p, q):
             weights.append(graph[current][neighbor]["weight"])
         else:
             weights.append(graph[current][neighbor]["weight"] / q)
-
-    probabilities = [weight / sum(weights) for weight in weights]
-    return np.random.choice(neighbors, size=1, p=probabilities)[0]
+            
+    weight_sum = sum(weights)
+    probabilities = [weight / weight_sum for weight in weights]
+    
+    next_node = np.random.choice(neighbors, size=1, p=probabilities)[0]
+    return next_node
 
 
 def random_walk(graph, num_walks, num_steps, p, q):
@@ -275,7 +273,7 @@ def random_walk(graph, num_walks, num_steps, p, q):
     nodes = list(graph.nodes())
     for walk_iteration in range(num_walks):
         random.shuffle(nodes)
-        for node in tqdm(nodes, desc=f"Walk iteration {walk_iteration + 1}"):
+        for node in tqdm(nodes, desc=f"Random walks iteration {walk_iteration + 1}"):
             walk = [node]
             while len(walk) < num_steps:
                 current = walk[-1]
@@ -310,7 +308,7 @@ To train a skip-gram model, we use the generated walks to create positive and
 negative training examples. In Keras 3, the legacy preprocessing module 
 has been removed. We now implement a manual skip-gram sampling function 
 using NumPy to generate positive and negative training examples from our 
-random walks.Each example includes the following features:
+random walks. Each example includes the following features:
 
 1. `target`: A movie in a walk sequence.
 2. `context`: Another movie in a walk sequence.
@@ -327,28 +325,33 @@ otherwise (i.e., if randomly sampled) the label is 0.
 def manual_skipgrams(sequence, vocabulary_size, window_size=5, negative_samples=4):
     """
     A NumPy-based replacement for the legacy keras.preprocessing.sequence.skipgrams.
-    Generates (target, context) pairs with positive and negative labels.
+    Generates (target, context) pairs with positive and negative labels,
+    ensuring negative samples are not in the positive context window.
     """
     pairs = []
     labels = []
 
     for i, target in enumerate(sequence):
-        # Generate positive samples within the window
         start = max(0, i - window_size)
         end = min(len(sequence), i + window_size + 1)
+        positive_contexts = {sequence[j] for j in range(start, end) if i != j}
+
         for j in range(start, end):
             if i == j:
                 continue
             context = sequence[j]
+
             pairs.append([target, context])
             labels.append(1)
 
-            # Generate negative samples
             for _ in range(negative_samples):
                 negative_context = np.random.randint(0, vocabulary_size)
-                # Ensure negative sample is not the target
-                while negative_context == target:
+
+                while (
+                    negative_context == target or negative_context in positive_contexts
+                ):
                     negative_context = np.random.randint(0, vocabulary_size)
+
                 pairs.append([target, negative_context])
                 labels.append(0)
 
@@ -468,10 +471,9 @@ num_epochs = 10
 ### Implement the model
 """
 
-
 def create_model(vocabulary_size, embedding_dim):
-    target_in = layers.Input(name="target", shape=(1,), dtype="int32")
-    context_in = layers.Input(name="context", shape=(1,), dtype="int32")
+    target_in = layers.Input(name="target", shape=(), dtype="int32")
+    context_in = layers.Input(name="context", shape=(), dtype="int32")
 
     embed_item = layers.Embedding(
         input_dim=vocabulary_size,
@@ -480,19 +482,16 @@ def create_model(vocabulary_size, embedding_dim):
         embeddings_regularizer=keras.regularizers.l2(1e-6),
         name="item_embeddings",
     )
-
     target_embed = embed_item(target_in)
     context_embed = embed_item(context_in)
 
-    # Keras 3 Dot layer works on all backends
-    dot_similarity = layers.Dot(axes=2, normalize=False, name="dot_similarity")(
+    dot_similarity = layers.Dot(axes=1, normalize=False, name="dot_similarity")(
         [target_embed, context_embed]
     )
-    # Flatten to (batch_size, 1)
-    output = layers.Flatten()(dot_similarity)
+
+    output = layers.Reshape((1,))(dot_similarity)
 
     return keras.Model(inputs=[target_in, context_in], outputs=output)
-
 
 """
 ### Train the model
@@ -512,12 +511,15 @@ model.compile(
 Let's plot the model.
 """
 
-keras.utils.plot_model(
-    model,
-    show_shapes=True,
-    show_dtype=True,
-    show_layer_names=True,
-)
+try:
+    keras.utils.plot_model(
+        model,
+        show_shapes=True,
+        show_dtype=True,
+        show_layer_names=True,
+    )
+except Exception:
+    print("plot_model skipped (pydot not installed or plotting failed). Continuing...")
 
 """
 Now we train the model on the `dataset`.
@@ -532,7 +534,8 @@ Finally we plot the learning history.
 plt.plot(history.history["loss"])
 plt.ylabel("loss")
 plt.xlabel("epoch")
-plt.show()
+plt.savefig("loss.png")
+print("Saved loss plot to loss.png")
 
 """
 ## Analyze the learnt embeddings.
@@ -571,8 +574,6 @@ Compute the [consine similarity](https://en.wikipedia.org/wiki/Cosine_similarity
 and all the other movies, then pick the top k for each.
 """
 
-
-# Using keras.ops for backend-agnostic similarity calculation
 def compute_similarities(query_indices, all_embeddings):
     # Lookup embeddings
     query_embeds = ops.take(all_embeddings, query_indices, axis=0)
@@ -624,7 +625,6 @@ embeddings_np = ops.convert_to_numpy(movie_embeddings)
 out_v = io.open("embeddings.tsv", "w", encoding="utf-8")
 out_m = io.open("metadata.tsv", "w", encoding="utf-8")
 
-# We skip the 'NA' token at index 0 to match the original tutorial logic
 for idx, movie_id in enumerate(vocabulary[1:]):
     # The movie_id at vocabulary[1:] corresponds to weights at index 1 and onwards
     vector = embeddings_np[idx + 1]
