@@ -84,7 +84,6 @@ import numpy as np
 import keras
 from keras import layers
 from keras import ops
-from typing import Optional
 from matplotlib import pyplot as plt
 from random import randint
 
@@ -111,10 +110,10 @@ EPOCHS = 20
 
 """
 ## Data Loading with PyDataset
+
 Keras 3 introduces PyDataset as a standardized way to handle data.
 It works identically across all backends and avoids the "Symbolic Tensor" issues often found
 when using tf.data with JAX or PyTorch.
-
 """
 
 (x_train, y_train), (x_test, y_test) = keras.datasets.cifar10.load_data()
@@ -274,12 +273,7 @@ The Focal Modulation Block consists of:
 """
 
 
-def MLP(
-    in_features: int,
-    hidden_features: Optional[int] = None,
-    out_features: Optional[int] = None,
-    mlp_drop_rate: float = 0.0,
-):
+def MLP(in_features, hidden_features=None, out_features=None, mlp_drop_rate=0.0):
     hidden_features = hidden_features or in_features
     out_features = out_features or in_features
     return keras.Sequential(
@@ -363,7 +357,7 @@ produces `Z^0`. Where `Z^0` can be expressed as follows:
 | Equation 5: Linear projection of `Z^0` (Source: Aritra and Ritwik) |
 
 `Z^0` is then passed on to a series of Depth-Wise (DWConv) Conv and
-[GeLU](hhttps://keras.io/api/layers/activations/#gelu-function) layers. The
+[GeLU](https://keras.io/api/layers/activations/#gelu-function) layers. The
 authors term each block of DWConv and GeLU as levels denoted by `l`. In **Figure 6** we
 have two levels. Mathematically this is represented as:
 
