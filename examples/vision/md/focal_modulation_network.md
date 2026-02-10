@@ -2,7 +2,7 @@
 
 **Author:** [Aritra Roy Gosthipaty](https://twitter.com/ariG23498), [Ritwik Raha](https://twitter.com/ritwik_raha)<br>
 **Date created:** 2023/01/25<br>
-**Last modified:** 2023/02/15<br>
+**Last modified:** 2026/01/27<br>
 **Description:** Image classification with Focal Modulation Networks.
 
 
@@ -73,21 +73,24 @@ Note: We try to align our implementation with the
 ---
 ## Setup and Imports
 
-We use tensorflow version `2.11.0` for this tutorial.
+Keras 3 allows this model to run on JAX, PyTorch, or TensorFlow. We use keras.ops for all mathematical operations to ensure the code remains backend-agnostic.
 
 
 ```python
+import os
+
+# Set backend before importing keras
+os.environ["KERAS_BACKEND"] = "tensorflow"  # Or "torch" or "tensorflow"
+
 import numpy as np
-import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras import layers
-from tensorflow.keras.optimizers.experimental import AdamW
-from typing import Optional, Tuple, List
+import keras
+from keras import layers
+from keras import ops
 from matplotlib import pyplot as plt
 from random import randint
 
-# Set seed for reproducibility.
-tf.keras.utils.set_random_seed(42)
+# Set seed for reproducibility using Keras 3 utility.
+keras.utils.set_random_seed(42)
 ```
 
 ---
@@ -98,25 +101,24 @@ free to change the configuration and train the model.
 
 
 ```python
-# DATA
+# --- GLOBAL CONFIGURATION ---
 TRAIN_SLICE = 40000
-BUFFER_SIZE = 2048
-BATCH_SIZE = 1024
-AUTO = tf.data.AUTOTUNE
+BATCH_SIZE = 128  # 1024
 INPUT_SHAPE = (32, 32, 3)
 IMAGE_SIZE = 48
 NUM_CLASSES = 10
 
-# OPTIMIZER
 LEARNING_RATE = 1e-4
 WEIGHT_DECAY = 1e-4
-
-# TRAINING
-EPOCHS = 25
+EPOCHS = 20
 ```
 
 ---
-## Load and process the CIFAR-10 dataset
+## Data Loading with PyDataset
+
+Keras 3 introduces PyDataset as a standardized way to handle data.
+It works identically across all backends and avoids the "Symbolic Tensor" issues often found
+when using tf.data with JAX or PyTorch.
 
 
 ```python
@@ -125,80 +127,46 @@ EPOCHS = 25
     (x_train[:TRAIN_SLICE], y_train[:TRAIN_SLICE]),
     (x_train[TRAIN_SLICE:], y_train[TRAIN_SLICE:]),
 )
+
+
+class FocalDataset(keras.utils.PyDataset):
+    def __init__(self, x_data, y_data, batch_size, shuffle=False, **kwargs):
+        super().__init__(**kwargs)
+        self.x_data = x_data
+        self.y_data = y_data
+        self.batch_size = batch_size
+        self.shuffle = shuffle
+        self.indices = np.arange(len(x_data))
+        if self.shuffle:
+            np.random.shuffle(self.indices)
+
+    def __len__(self):
+        return int(np.ceil(len(self.x_data) / self.batch_size))
+
+    def __getitem__(self, idx):
+        start = idx * self.batch_size
+        end = min((idx + 1) * self.batch_size, len(self.x_data))
+        batch_indices = self.indices[start:end]
+
+        x_batch = self.x_data[batch_indices]
+        y_batch = self.y_data[batch_indices]
+
+        # Convert to backend-native tensors
+        x_batch = ops.convert_to_tensor(x_batch, dtype="float32")
+        y_batch = ops.convert_to_tensor(y_batch, dtype="int32")
+
+        return x_batch, y_batch
+
+    def on_epoch_end(self):
+        if self.shuffle:
+            np.random.shuffle(self.indices)
+
+
+train_ds = FocalDataset(x_train, y_train, batch_size=BATCH_SIZE, shuffle=True)
+val_ds = FocalDataset(x_val, y_val, batch_size=BATCH_SIZE, shuffle=False)
+test_ds = FocalDataset(x_test, y_test, batch_size=BATCH_SIZE, shuffle=False)
 ```
 
-<div class="k-default-codeblock">
-```
-Downloading data from https://www.cs.toronto.edu/~kriz/cifar-10-python.tar.gz
-170498071/170498071 [==============================] - 30s 0us/step
-
-```
-</div>
-### Build the augmentations
-
-We use the `keras.Sequential` API to compose all the individual augmentation steps
-into one API.
-
-
-```python
-# Build the `train` augmentation pipeline.
-train_aug = keras.Sequential(
-    [
-        layers.Rescaling(1 / 255.0),
-        layers.Resizing(INPUT_SHAPE[0] + 20, INPUT_SHAPE[0] + 20),
-        layers.RandomCrop(IMAGE_SIZE, IMAGE_SIZE),
-        layers.RandomFlip("horizontal"),
-    ],
-    name="train_data_augmentation",
-)
-
-# Build the `val` and `test` data pipeline.
-test_aug = keras.Sequential(
-    [
-        layers.Rescaling(1 / 255.0),
-        layers.Resizing(IMAGE_SIZE, IMAGE_SIZE),
-    ],
-    name="test_data_augmentation",
-)
-```
-
-### Build `tf.data` pipeline
-
-
-```python
-train_ds = tf.data.Dataset.from_tensor_slices((x_train, y_train))
-train_ds = (
-    train_ds.map(
-        lambda image, label: (train_aug(image), label), num_parallel_calls=AUTO
-    )
-    .shuffle(BUFFER_SIZE)
-    .batch(BATCH_SIZE)
-    .prefetch(AUTO)
-)
-
-val_ds = tf.data.Dataset.from_tensor_slices((x_val, y_val))
-val_ds = (
-    val_ds.map(lambda image, label: (test_aug(image), label), num_parallel_calls=AUTO)
-    .batch(BATCH_SIZE)
-    .prefetch(AUTO)
-)
-
-test_ds = tf.data.Dataset.from_tensor_slices((x_test, y_test))
-test_ds = (
-    test_ds.map(lambda image, label: (test_aug(image), label), num_parallel_calls=AUTO)
-    .batch(BATCH_SIZE)
-    .prefetch(AUTO)
-)
-```
-
-<div class="k-default-codeblock">
-```
-WARNING:tensorflow:From /usr/local/lib/python3.8/dist-packages/tensorflow/python/autograph/pyct/static_analysis/liveness.py:83: Analyzer.lamba_check (from tensorflow.python.autograph.pyct.static_analysis.liveness) is deprecated and will be removed after 2023-09-23.
-Instructions for updating:
-Lambda fuctions will be no more assumed to be used in the statement where they are used, or at least in the same block. https://github.com/tensorflow/tensorflow/issues/56089
-
-```
-</div>
 ---
 ## Architecture
 
@@ -256,29 +224,20 @@ class PatchEmbed(layers.Layer):
     """
 
     def __init__(
-        self,
-        image_size: Tuple[int] = (224, 224),
-        patch_size: Tuple[int] = (4, 4),
-        embed_dim: int = 96,
-        **kwargs,
+        self, image_size=(224, 224), patch_size=(4, 4), embed_dim=96, **kwargs
     ):
         super().__init__(**kwargs)
-        patch_resolution = [
+        self.patch_resolution = [
             image_size[0] // patch_size[0],
             image_size[1] // patch_size[1],
         ]
-        self.image_size = image_size
-        self.patch_size = patch_size
-        self.embed_dim = embed_dim
-        self.patch_resolution = patch_resolution
-        self.num_patches = patch_resolution[0] * patch_resolution[1]
         self.proj = layers.Conv2D(
             filters=embed_dim, kernel_size=patch_size, strides=patch_size
         )
         self.flatten = layers.Reshape(target_shape=(-1, embed_dim))
-        self.norm = keras.layers.LayerNormalization(epsilon=1e-7)
+        self.norm = layers.LayerNormalization(epsilon=1e-7)
 
-    def call(self, x: tf.Tensor) -> Tuple[tf.Tensor, int, int, int]:
+    def call(self, x):
         """Patchifies the image and converts into tokens.
 
         Args:
@@ -289,17 +248,10 @@ class PatchEmbed(layers.Layer):
             feature map, width of the projected feature map, number
             of channels of the projected feature map.
         """
-        # Project the inputs.
         x = self.proj(x)
-
-        # Obtain the shape from the projected tensor.
-        height = tf.shape(x)[1]
-        width = tf.shape(x)[2]
-        channels = tf.shape(x)[3]
-
-        # B, H, W, C -> B, H*W, C
+        shape = ops.shape(x)
+        height, width, channels = shape[1], shape[2], shape[3]
         x = self.norm(self.flatten(x))
-
         return x, height, width, channels
 
 ```
@@ -328,18 +280,12 @@ The Focal Modulation Block consists of:
 
 ```python
 
-def MLP(
-    in_features: int,
-    hidden_features: Optional[int] = None,
-    out_features: Optional[int] = None,
-    mlp_drop_rate: float = 0.0,
-):
+def MLP(in_features, hidden_features=None, out_features=None, mlp_drop_rate=0.0):
     hidden_features = hidden_features or in_features
     out_features = out_features or in_features
-
     return keras.Sequential(
         [
-            layers.Dense(units=hidden_features, activation=keras.activations.gelu),
+            layers.Dense(units=hidden_features, activation="gelu"),
             layers.Dense(units=out_features),
             layers.Dropout(rate=mlp_drop_rate),
         ]
@@ -414,7 +360,7 @@ produces `Z^0`. Where `Z^0` can be expressed as follows:
 | Equation 5: Linear projection of `Z^0` (Source: Aritra and Ritwik) |
 
 `Z^0` is then passed on to a series of Depth-Wise (DWConv) Conv and
-[GeLU](https://www.tensorflow.org/api_docs/python/tf/keras/activations/gelu) layers. The
+[GeLU](https://keras.io/api/layers/activations/#gelu-function) layers. The
 authors term each block of DWConv and GeLU as levels denoted by `l`. In **Figure 6** we
 have two levels. Mathematically this is represented as:
 
@@ -485,92 +431,63 @@ class FocalModulationLayer(layers.Layer):
 
     def __init__(
         self,
-        dim: int,
-        focal_window: int,
-        focal_level: int,
-        focal_factor: int = 2,
-        proj_drop_rate: float = 0.0,
+        dim,
+        focal_window,
+        focal_level,
+        focal_factor=2,
+        proj_drop_rate=0.0,
         **kwargs,
     ):
         super().__init__(**kwargs)
-        self.dim = dim
-        self.focal_window = focal_window
-        self.focal_level = focal_level
-        self.focal_factor = focal_factor
-        self.proj_drop_rate = proj_drop_rate
-
-        # Project the input feature into a new feature space using a
-        # linear layer. Note the `units` used. We will be projecting the input
-        # feature all at once and split the projection into query, context,
-        # and gates.
-        self.initial_proj = layers.Dense(
-            units=(2 * self.dim) + (self.focal_level + 1),
-            use_bias=True,
-        )
-        self.focal_layers = list()
-        self.kernel_sizes = list()
-        for idx in range(self.focal_level):
-            kernel_size = (self.focal_factor * idx) + self.focal_window
-            depth_gelu_block = keras.Sequential(
+        self.dim, self.focal_level = dim, focal_level
+        self.initial_proj = layers.Dense(units=(2 * dim) + (focal_level + 1))
+        self.focal_layers = [
+            keras.Sequential(
                 [
-                    layers.ZeroPadding2D(padding=(kernel_size // 2, kernel_size // 2)),
+                    layers.ZeroPadding2D(
+                        padding=((focal_factor * i + focal_window) // 2)
+                    ),
                     layers.Conv2D(
-                        filters=self.dim,
-                        kernel_size=kernel_size,
-                        activation=keras.activations.gelu,
-                        groups=self.dim,
+                        filters=dim,
+                        kernel_size=(focal_factor * i + focal_window),
+                        activation="gelu",
+                        groups=dim,
                         use_bias=False,
                     ),
                 ]
             )
-            self.focal_layers.append(depth_gelu_block)
-            self.kernel_sizes.append(kernel_size)
-        self.activation = keras.activations.gelu
+            for i in range(focal_level)
+        ]
         self.gap = layers.GlobalAveragePooling2D(keepdims=True)
-        self.modulator_proj = layers.Conv2D(
-            filters=self.dim,
-            kernel_size=(1, 1),
-            use_bias=True,
-        )
-        self.proj = layers.Dense(units=self.dim)
-        self.proj_drop = layers.Dropout(self.proj_drop_rate)
+        self.mod_proj = layers.Conv2D(filters=dim, kernel_size=1)
+        self.proj = layers.Dense(units=dim)
+        self.proj_drop = layers.Dropout(proj_drop_rate)
 
-    def call(self, x: tf.Tensor, training: Optional[bool] = None) -> tf.Tensor:
+    def call(self, x, training=None):
         """Forward pass of the layer.
 
         Args:
             x: Tensor of shape (B, H, W, C)
         """
-        # Apply the linear projecion to the input feature map
         x_proj = self.initial_proj(x)
+        query, context, gates = ops.split(x_proj, [self.dim, 2 * self.dim], axis=-1)
 
-        # Split the projected x into query, context and gates
-        query, context, self.gates = tf.split(
-            value=x_proj,
-            num_or_size_splits=[self.dim, self.dim, self.focal_level + 1],
-            axis=-1,
-        )
+        # Apply Softmax for numerical stability
+        gates = ops.softmax(gates, axis=-1)
+        self.gates = gates
 
-        # Context aggregation
         context = self.focal_layers[0](context)
-        context_all = context * self.gates[..., 0:1]
-        for idx in range(1, self.focal_level):
-            context = self.focal_layers[idx](context)
-            context_all += context * self.gates[..., idx : idx + 1]
+        context_all = context * gates[..., 0:1]
+        for i in range(1, self.focal_level):
+            context = self.focal_layers[i](context)
+            context_all = context_all + (context * gates[..., i : i + 1])
 
-        # Build the global context
-        context_global = self.activation(self.gap(context))
-        context_all += context_global * self.gates[..., self.focal_level :]
+        context_global = ops.gelu(self.gap(context))
+        context_all = context_all + (context_global * gates[..., self.focal_level :])
 
-        # Focal Modulation
-        self.modulator = self.modulator_proj(context_all)
-        x_output = query * self.modulator
-
-        # Project the output and apply dropout
-        x_output = self.proj(x_output)
-        x_output = self.proj_drop(x_output)
-
-        return x_output
+        self.modulator = self.mod_proj(context_all)
+        x_out = query * self.modulator
+        return self.proj_drop(self.proj(x_out), training=training)
 
 ```
 
@@ -587,50 +504,28 @@ class FocalModulationBlock(layers.Layer):
 
     Args:
         dim (int): Number of input channels.
-        input_resolution (Tuple[int]): Input resulotion.
         mlp_ratio (float): Ratio of mlp hidden dim to embedding dim.
         drop (float): Dropout rate.
-        drop_path (float): Stochastic depth rate.
         focal_level (int): Number of focal levels.
         focal_window (int): Focal window size at first focal level
     """
 
     def __init__(
-        self,
-        dim: int,
-        input_resolution: Tuple[int],
-        mlp_ratio: float = 4.0,
-        drop: float = 0.0,
-        drop_path: float = 0.0,
-        focal_level: int = 1,
-        focal_window: int = 3,
-        **kwargs,
+        self, dim, mlp_ratio=4.0, drop=0.0, focal_level=1, focal_window=3, **kwargs
     ):
         super().__init__(**kwargs)
-        self.dim = dim
-        self.input_resolution = input_resolution
-        self.mlp_ratio = mlp_ratio
-        self.focal_level = focal_level
-        self.focal_window = focal_window
-        self.norm = layers.LayerNormalization(epsilon=1e-5)
+        self.norm1 = layers.LayerNormalization(epsilon=1e-5)
         self.modulation = FocalModulationLayer(
-            dim=self.dim,
-            focal_window=self.focal_window,
-            focal_level=self.focal_level,
-            proj_drop_rate=drop,
+            dim, focal_window, focal_level, proj_drop_rate=drop
         )
-        mlp_hidden_dim = int(self.dim * self.mlp_ratio)
-        self.mlp = MLP(
-            in_features=self.dim,
-            hidden_features=mlp_hidden_dim,
-            mlp_drop_rate=drop,
-        )
+        self.norm2 = layers.LayerNormalization(epsilon=1e-5)
+        self.mlp = MLP(dim, int(dim * mlp_ratio), mlp_drop_rate=drop)
 
-    def call(self, x: tf.Tensor, height: int, width: int, channels: int) -> tf.Tensor:
+    def call(self, x, height=None, width=None, channels=None, training=None):
         """Processes the input tensor through the focal modulation block.
 
         Args:
-            x (tf.Tensor): Inputs of the shape (B, L, C)
+            x : Inputs of the shape (B, L, C)
             height (int): The height of the feature map
             width (int): The width of the feature map
             channels (int): The number of channels of the feature map
@@ -638,17 +533,12 @@ class FocalModulationBlock(layers.Layer):
         Returns:
             The processed tensor.
         """
-        shortcut = x
-
-        # Focal Modulation
-        x = tf.reshape(x, shape=(-1, height, width, channels))
-        x = self.modulation(x)
-        x = tf.reshape(x, shape=(-1, height * width, channels))
-
-        # FFN
-        x = shortcut + x
-        x = x + self.mlp(self.norm(x))
-        return x
+        res = x
+        x = ops.reshape(x, (-1, height, width, channels))
+        x = self.modulation(x, training=training)
+        x = ops.reshape(x, (-1, height * width, channels))
+        x = res + x
+        return x + self.mlp(self.norm2(x), training=training)
 
 ```
 
@@ -674,61 +564,44 @@ class BasicLayer(layers.Layer):
     Args:
         dim (int): Dimensions of the model.
         out_dim (int): Dimension used by the Patch Embedding Layer.
-        input_resolution (Tuple[int]): Input image resolution.
+        input_res (Tuple[int]): Input image resolution.
         depth (int): The number of Focal Modulation Blocks.
         mlp_ratio (float): Ratio of mlp hidden dim to embedding dim.
         drop (float): Dropout rate.
-        downsample (tf.keras.layers.Layer): Downsampling layer at the end of the layer.
+        downsample (keras.layers.Layer): Downsampling layer at the end of the layer.
         focal_level (int): The current focal level.
         focal_window (int): Focal window used.
     """
 
     def __init__(
         self,
-        dim: int,
-        out_dim: int,
-        input_resolution: Tuple[int],
-        depth: int,
-        mlp_ratio: float = 4.0,
-        drop: float = 0.0,
+        dim,
+        out_dim,
+        input_res,
+        depth,
+        mlp_ratio=4.0,
+        drop=0.0,
         downsample=None,
-        focal_level: int = 1,
-        focal_window: int = 1,
+        focal_level=1,
+        focal_window=1,
         **kwargs,
     ):
         super().__init__(**kwargs)
-        self.dim = dim
-        self.input_resolution = input_resolution
-        self.depth = depth
         self.blocks = [
-            FocalModulationBlock(
-                dim=dim,
-                input_resolution=input_resolution,
-                mlp_ratio=mlp_ratio,
-                drop=drop,
-                focal_level=focal_level,
-                focal_window=focal_window,
-            )
-            for i in range(self.depth)
+            FocalModulationBlock(dim, mlp_ratio, drop, focal_level, focal_window)
+            for _ in range(depth)
         ]
+        self.downsample = (
+            downsample(image_size=input_res, patch_size=(2, 2), embed_dim=out_dim)
+            if downsample
+            else None
+        )
 
-        # Downsample layer at the end of the layer
-        if downsample is not None:
-            self.downsample = downsample(
-                image_size=input_resolution,
-                patch_size=(2, 2),
-                embed_dim=out_dim,
-            )
-        else:
-            self.downsample = None
-
-    def call(
-        self, x: tf.Tensor, height: int, width: int, channels: int
-    ) -> Tuple[tf.Tensor, int, int, int]:
+    def call(self, x, height=None, width=None, channels=None, training=None):
         """Forward pass of the layer.
 
         Args:
-            x (tf.Tensor): Tensor of shape (B, L, C)
+            x : Tensor of shape (B, L, C)
             height (int): Height of feature map
             width (int): Width of feature map
             channels (int): Embed Dim of feature map
@@ -737,19 +610,14 @@ class BasicLayer(layers.Layer):
             A tuple of the processed tensor, changed height, width, and
             dim of the tensor.
         """
-        # Apply Focal Modulation Blocks
         for block in self.blocks:
-            x = block(x, height, width, channels)
-
-        # Except the last Basic Layer, all the layers have
-        # downsample at the end of it.
-        if self.downsample is not None:
-            x = tf.reshape(x, shape=(-1, height, width, channels))
-            x, height_o, width_o, channels_o = self.downsample(x)
-        else:
-            height_o, width_o, channels_o = height, width, channels
-
-        return x, height_o, width_o, channels_o
+            x = block(
+                x, height=height, width=width, channels=channels, training=training
+            )
+        if self.downsample:
+            x = ops.reshape(x, (-1, height, width, channels))
+            x, height, width, channels = self.downsample(x)
+        return x, height, width, channels
 
 ```
 
@@ -772,67 +640,43 @@ class FocalModulationNetwork(keras.Model):
         num_classes (int): Number of classes used for classification.
         embed_dim (int): Patch embedding dimension.
         depths (List[int]): Depth of each Focal Transformer block.
-        mlp_ratio (float): Ratio of expansion for the intermediate layer of MLP.
-        drop_rate (float): The dropout rate for FM and MLP layers.
-        focal_levels (list): How many focal levels at all stages.
-            Note that this excludes the finest-grain level.
-        focal_windows (list): The focal window size at all stages.
     """
 
     def __init__(
         self,
-        image_size: Tuple[int] = (48, 48),
-        patch_size: Tuple[int] = (4, 4),
-        num_classes: int = 10,
-        embed_dim: int = 256,
-        depths: List[int] = [2, 3, 2],
-        mlp_ratio: float = 4.0,
-        drop_rate: float = 0.1,
-        focal_levels=[2, 2, 2],
-        focal_windows=[3, 3, 3],
+        image_size=(48, 48),
+        patch_size=(4, 4),
+        num_classes=10,
+        embed_dim=64,
+        depths=[2, 3, 2],
         **kwargs,
     ):
         super().__init__(**kwargs)
-        self.num_layers = len(depths)
-        embed_dim = [embed_dim * (2**i) for i in range(self.num_layers)]
-        self.num_classes = num_classes
-        self.embed_dim = embed_dim
-        self.num_features = embed_dim[-1]
-        self.mlp_ratio = mlp_ratio
-        self.patch_embed = PatchEmbed(
-            image_size=image_size,
-            patch_size=patch_size,
-            embed_dim=embed_dim[0],
-        )
-        num_patches = self.patch_embed.num_patches
-        patches_resolution = self.patch_embed.patch_resolution
-        self.patches_resolution = patches_resolution
-        self.pos_drop = layers.Dropout(drop_rate)
-        self.basic_layers = list()
-        for i_layer in range(self.num_layers):
-            layer = BasicLayer(
-                dim=embed_dim[i_layer],
-                out_dim=embed_dim[i_layer + 1]
-                if (i_layer < self.num_layers - 1)
-                else None,
-                input_resolution=(
-                    patches_resolution[0] // (2**i_layer),
-                    patches_resolution[1] // (2**i_layer),
-                ),
-                depth=depths[i_layer],
-                mlp_ratio=self.mlp_ratio,
-                drop=drop_rate,
-                downsample=PatchEmbed if (i_layer < self.num_layers - 1) else None,
-                focal_level=focal_levels[i_layer],
-                focal_window=focal_windows[i_layer],
-            )
-            self.basic_layers.append(layer)
-        self.norm = keras.layers.LayerNormalization(epsilon=1e-7)
-        self.avgpool = layers.GlobalAveragePooling1D()
-        self.flatten = layers.Flatten()
-        self.head = layers.Dense(self.num_classes, activation="softmax")
+        # Preprocessing integrated in model for backend-agnostic behavior
+        self.rescaling = layers.Rescaling(1.0 / 255.0)
+        self.resizing_larger = layers.Resizing(image_size[0] + 10, image_size[1] + 10)
+        self.random_crop = layers.RandomCrop(image_size[0], image_size[1])
+        self.resizing_target = layers.Resizing(image_size[0], image_size[1])
+        self.random_flip = layers.RandomFlip("horizontal")
 
-    def call(self, x: tf.Tensor) -> tf.Tensor:
+        self.patch_embed = PatchEmbed(image_size, patch_size, embed_dim)
+        self.basic_layers = []
+        for i in range(len(depths)):
+            d = embed_dim * (2**i)
+            self.basic_layers.append(
+                BasicLayer(
+                    dim=d,
+                    out_dim=d * 2 if i < len(depths) - 1 else None,
+                    input_res=(image_size[0] // (2**i), image_size[1] // (2**i)),
+                    depth=depths[i],
+                    downsample=PatchEmbed if i < len(depths) - 1 else None,
+                )
+            )
+        self.norm = layers.LayerNormalization(epsilon=1e-7)
+        self.avgpool = layers.GlobalAveragePooling1D()
+        self.head = layers.Dense(num_classes, activation="softmax")
+
+    def call(self, x, training=None):
         """Forward pass of the layer.
 
         Args:
@@ -841,18 +685,18 @@ class FocalModulationNetwork(keras.Model):
         Returns:
             The logits.
         """
-        # Patch Embed the input images.
-        x, height, width, channels = self.patch_embed(x)
-        x = self.pos_drop(x)
+        x = self.rescaling(x)
+        if training:
+            x = self.resizing_larger(x)
+            x = self.random_crop(x)
+            x = self.random_flip(x)
+        else:
+            x = self.resizing_target(x)
 
-        for idx, layer in enumerate(self.basic_layers):
-            x, height, width, channels = layer(x, height, width, channels)
-
-        x = self.norm(x)
-        x = self.avgpool(x)
-        x = self.flatten(x)
-        x = self.head(x)
-        return x
+        x, h, w, c = self.patch_embed(x)
+        for layer in self.basic_layers:
+            x, h, w, c = layer(x, height=h, width=w, channels=c, training=training)
+        return self.head(self.avgpool(self.norm(x)))
 
 ```
 
@@ -886,47 +730,35 @@ accuracy.
 
 ```python
 
-def display_grid(
-    test_images: tf.Tensor,
-    gates: tf.Tensor,
-    modulator: tf.Tensor,
-):
+def display_grid(test_images, gates, modulator):
     """Displays the image with the gates and modulator overlayed.
 
     Args:
-        test_images (tf.Tensor): A batch of test images.
-        gates (tf.Tensor): The gates of the Focal Modualtion Layer.
-        modulator (tf.Tensor): The modulator of the Focal Modulation Layer.
+        test_images: A batch of test images.
+        gates: The gates of the Focal Modualtion Layer.
+        modulator: The modulator of the Focal Modulation Layer.
     """
-    fig, ax = plt.subplots(nrows=1, ncols=5, figsize=(25, 5))
+    test_images_np = ops.convert_to_numpy(test_images) / 255.0
+    gates_np = ops.convert_to_numpy(gates)
+    mod_np = ops.convert_to_numpy(ops.norm(modulator, axis=-1))
 
-    # Radomly sample an image from the batch.
-    index = randint(0, BATCH_SIZE - 1)
-    orig_image = test_images[index]
-    gate_image = gates[index]
-    modulator_image = modulator[index]
+    num_gates = gates_np.shape[-1]
+    idx = randint(0, test_images_np.shape[0] - 1)
+    fig, ax = plt.subplots(1, num_gates + 2, figsize=((num_gates + 2) * 4, 4))
 
-    # Original Image
-    ax[0].imshow(orig_image)
-    ax[0].set_title("Original:")
+    ax[0].imshow(test_images_np[idx])
+    ax[0].set_title("Original")
     ax[0].axis("off")
+    for i in range(num_gates):
+        ax[i + 1].imshow(test_images_np[idx])
+        ax[i + 1].imshow(gates_np[idx, ..., i], cmap="inferno", alpha=0.6)
+        ax[i + 1].set_title(f"Gate {i+1}")
+        ax[i + 1].axis("off")
 
-    for index in range(1, 5):
-        img = ax[index].imshow(orig_image)
-        if index != 4:
-            overlay_image = gate_image[..., index - 1]
-            title = f"G {index}:"
-        else:
-            overlay_image = tf.norm(modulator_image, ord=2, axis=-1)
-            title = f"MOD:"
-
-        ax[index].imshow(
-            overlay_image, cmap="inferno", alpha=0.6, extent=img.get_extent()
-        )
-        ax[index].set_title(title)
-        ax[index].axis("off")
-
-    plt.axis("off")
+    ax[-1].imshow(test_images_np[idx])
+    ax[-1].imshow(mod_np[idx], cmap="inferno", alpha=0.6)
+    ax[-1].set_title("Modulator")
+    ax[-1].axis("off")
     plt.show()
     plt.close()
 
@@ -936,30 +768,25 @@ def display_grid(
 
 
 ```python
-# Taking a batch of test inputs to measure the model's progress.
-test_images, test_labels = next(iter(test_ds))
-upsampler = tf.keras.layers.UpSampling2D(
-    size=(4, 4),
-    interpolation="bilinear",
-)
+# Fetch test batch for callback
+test_batch_images, _ = test_ds[0]
 
 
 class TrainMonitor(keras.callbacks.Callback):
-    def __init__(self, epoch_interval=None):
+    def __init__(self, epoch_interval=10):
+        super().__init__()
         self.epoch_interval = epoch_interval
+        self.upsampler = layers.UpSampling2D(size=(4, 4), interpolation="bilinear")
 
     def on_epoch_end(self, epoch, logs=None):
-        if self.epoch_interval and epoch % self.epoch_interval == 0:
-            _ = self.model(test_images)
-
-            # Take the mid layer for visualization
-            gates = self.model.basic_layers[1].blocks[-1].modulation.gates
-            gates = upsampler(gates)
-            modulator = self.model.basic_layers[1].blocks[-1].modulation.modulator
-            modulator = upsampler(modulator)
-
-            # Display the grid of gates and modulator.
-            display_grid(test_images=test_images, gates=gates, modulator=modulator)
+        if (epoch + 1) % self.epoch_interval == 0:
+            _ = self.model(test_batch_images, training=False)
+            layer = self.model.basic_layers[1].blocks[-1].modulation
+            display_grid(
+                test_batch_images,
+                self.upsampler(layer.gates),
+                self.upsampler(layer.modulator),
+            )
 
 ```
 
@@ -967,191 +794,237 @@ class TrainMonitor(keras.callbacks.Callback):
 
 
 ```python
-# Some code is taken from:
-# https://www.kaggle.com/ashusma/training-rfcx-tensorflow-tpu-effnet-b2.
+
 class WarmUpCosine(keras.optimizers.schedules.LearningRateSchedule):
-    def __init__(
-        self, learning_rate_base, total_steps, warmup_learning_rate, warmup_steps
-    ):
+    def __init__(self, lr_base, total_steps, warmup_steps):
         super().__init__()
-        self.learning_rate_base = learning_rate_base
-        self.total_steps = total_steps
-        self.warmup_learning_rate = warmup_learning_rate
-        self.warmup_steps = warmup_steps
-        self.pi = tf.constant(np.pi)
+        self.lr_base, self.total_steps, self.warmup_steps = (
+            lr_base,
+            total_steps,
+            warmup_steps,
+        )
 
     def __call__(self, step):
-        if self.total_steps < self.warmup_steps:
-            raise ValueError("Total_steps must be larger or equal to warmup_steps.")
-        cos_annealed_lr = tf.cos(
-            self.pi
-            * (tf.cast(step, tf.float32) - self.warmup_steps)
-            / float(self.total_steps - self.warmup_steps)
-        )
-        learning_rate = 0.5 * self.learning_rate_base * (1 + cos_annealed_lr)
-        if self.warmup_steps > 0:
-            if self.learning_rate_base < self.warmup_learning_rate:
-                raise ValueError(
-                    "Learning_rate_base must be larger or equal to "
-                    "warmup_learning_rate."
+        step = ops.cast(step, "float32")
+        cos_lr = (
+            0.5
+            * self.lr_base
+            * (
+                1
+                + ops.cos(
+                    np.pi
+                    * (step - self.warmup_steps)
+                    / (self.total_steps - self.warmup_steps)
                 )
-            slope = (
-                self.learning_rate_base - self.warmup_learning_rate
-            ) / self.warmup_steps
-            warmup_rate = slope * tf.cast(step, tf.float32) + self.warmup_learning_rate
-            learning_rate = tf.where(
-                step < self.warmup_steps, warmup_rate, learning_rate
             )
-        return tf.where(
-            step > self.total_steps, 0.0, learning_rate, name="learning_rate"
+        )
+        warmup_lr = (self.lr_base / self.warmup_steps) * step
+        return ops.where(
+            step < self.warmup_steps,
+            warmup_lr,
+            ops.where(step > self.total_steps, 0.0, cos_lr),
         )
 
 
-total_steps = int((len(x_train) / BATCH_SIZE) * EPOCHS)
-warmup_epoch_percentage = 0.15
-warmup_steps = int(total_steps * warmup_epoch_percentage)
-scheduled_lrs = WarmUpCosine(
-    learning_rate_base=LEARNING_RATE,
-    total_steps=total_steps,
-    warmup_learning_rate=0.0,
-    warmup_steps=warmup_steps,
-)
+total_steps = (len(x_train) // BATCH_SIZE) * EPOCHS
+scheduled_lrs = WarmUpCosine(LEARNING_RATE, total_steps, int(total_steps * 0.15))
 ```
 
 ### Initialize, compile and train the model
 
 
 ```python
-focal_mod_net = FocalModulationNetwork()
-optimizer = AdamW(learning_rate=scheduled_lrs, weight_decay=WEIGHT_DECAY)
-
-# Compile and train the model.
-focal_mod_net.compile(
-    optimizer=optimizer,
+model = FocalModulationNetwork(image_size=(IMAGE_SIZE, IMAGE_SIZE))
+model.compile(
+    optimizer=keras.optimizers.AdamW(
+        learning_rate=scheduled_lrs, weight_decay=WEIGHT_DECAY, clipnorm=1.0
+    ),
     loss="sparse_categorical_crossentropy",
     metrics=["accuracy"],
 )
-history = focal_mod_net.fit(
+
+history = model.fit(
     train_ds,
-    epochs=EPOCHS,
     validation_data=val_ds,
-    callbacks=[TrainMonitor(epoch_interval=10)],
+    epochs=EPOCHS,
+    callbacks=[TrainMonitor(epoch_interval=5)],
 )
 ```
 
 <div class="k-default-codeblock">
 ```
-Epoch 1/25
-40/40 [==============================] - ETA: 0s - loss: 2.3925 - accuracy: 0.1401
+Epoch 1/20
 
+/Users/lakshmikala/node2vec_env/lib/python3.12/site-packages/keras/src/layers/layer.py:424: UserWarning: `build()` was called on layer 'focal_modulation_block', however the layer does not have a `build()` method implemented and it looks like it has unbuilt state. This will cause the layer to be marked as built, despite not being actually built, which may cause failures down the line. Make sure to implement a proper `build()` method.
+  warnings.warn(
+/Users/lakshmikala/node2vec_env/lib/python3.12/site-packages/keras/src/layers/layer.py:424: UserWarning: `build()` was called on layer 'focal_modulation_block_1', however the layer does not have a `build()` method implemented and it looks like it has unbuilt state. This will cause the layer to be marked as built, despite not being actually built, which may cause failures down the line. Make sure to implement a proper `build()` method.
+  warnings.warn(
+
+/Users/lakshmikala/node2vec_env/lib/python3.12/site-packages/keras/src/layers/layer.py:424: UserWarning: `build()` was called on layer 'focal_modulation_block_2', however the layer does not have a `build()` method implemented and it looks like it has unbuilt state. This will cause the layer to be marked as built, despite not being actually built, which may cause failures down the line. Make sure to implement a proper `build()` method.
+  warnings.warn(
+/Users/lakshmikala/node2vec_env/lib/python3.12/site-packages/keras/src/layers/layer.py:424: UserWarning: `build()` was called on layer 'focal_modulation_block_3', however the layer does not have a `build()` method implemented and it looks like it has unbuilt state. This will cause the layer to be marked as built, despite not being actually built, which may cause failures down the line. Make sure to implement a proper `build()` method.
+  warnings.warn(
+
+/Users/lakshmikala/node2vec_env/lib/python3.12/site-packages/keras/src/layers/layer.py:424: UserWarning: `build()` was called on layer 'focal_modulation_block_4', however the layer does not have a `build()` method implemented and it looks like it has unbuilt state. This will cause the layer to be marked as built, despite not being actually built, which may cause failures down the line. Make sure to implement a proper `build()` method.
+  warnings.warn(
+
+/Users/lakshmikala/node2vec_env/lib/python3.12/site-packages/keras/src/layers/layer.py:424: UserWarning: `build()` was called on layer 'focal_modulation_block_5', however the layer does not have a `build()` method implemented and it looks like it has unbuilt state. This will cause the layer to be marked as built, despite not being actually built, which may cause failures down the line. Make sure to implement a proper `build()` method.
+  warnings.warn(
+/Users/lakshmikala/node2vec_env/lib/python3.12/site-packages/keras/src/layers/layer.py:424: UserWarning: `build()` was called on layer 'focal_modulation_block_6', however the layer does not have a `build()` method implemented and it looks like it has unbuilt state. This will cause the layer to be marked as built, despite not being actually built, which may cause failures down the line. Make sure to implement a proper `build()` method.
+  warnings.warn(
+
+/Users/lakshmikala/node2vec_env/lib/python3.12/site-packages/keras/src/layers/layer.py:424: UserWarning: `build()` was called on layer 'focal_modulation_network', however the layer does not have a `build()` method implemented and it looks like it has unbuilt state. This will cause the layer to be marked as built, despite not being actually built, which may cause failures down the line. Make sure to implement a proper `build()` method.
+  warnings.warn(
+
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1770700186.220793 2002752 service.cc:152] XLA service 0x16cf639d0 initialized for platform Host (this does not guarantee that XLA will be used). Devices:
+I0000 00:00:1770700186.220808 2002752 service.cc:160]   StreamExecutor device (0): Host, Default Version
+I0000 00:00:1770700186.251643 2002752 device_compiler.h:188] Compiled cluster using XLA!  This line is logged at most once for the lifetime of the process.
+
+313/313 ━━━━━━━━━━━━━━━━━━━━ 312s 964ms/step - accuracy: 0.1826 - loss: 2.1990 - val_accuracy: 0.2426 - val_loss: 2.0434
+
+Epoch 2/20
+
+313/313 ━━━━━━━━━━━━━━━━━━━━ 302s 964ms/step - accuracy: 0.2891 - loss: 1.8906 - val_accuracy: 0.3191 - val_loss: 1.8333
+
+Epoch 3/20
+
+313/313 ━━━━━━━━━━━━━━━━━━━━ 303s 968ms/step - accuracy: 0.3669 - loss: 1.7095 - val_accuracy: 0.3869 - val_loss: 1.6693
+
+Epoch 4/20
+
+313/313 ━━━━━━━━━━━━━━━━━━━━ 308s 984ms/step - accuracy: 0.4221 - loss: 1.5685 - val_accuracy: 0.4188 - val_loss: 1.5894
+
+Epoch 5/20
+
+313/313 ━━━━━━━━━━━━━━━━━━━━ 0s 905ms/step - accuracy: 0.4501 - loss: 1.5031
+
+WARNING:tensorflow:5 out of the last 5 calls to <function conv.<locals>._conv_xla at 0x3190abc40> triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
+
+WARNING:tensorflow:6 out of the last 6 calls to <function conv.<locals>._conv_xla at 0x3190abd80> triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
 ```
 </div>
-    
-![png](/img/examples/vision/focal_modulation_network/focal_modulation_network_37_1.png)
+
+![png](/img/examples/vision/focal_modulation_network/focal_modulation_network_33_1582.png)
     
 
 
 <div class="k-default-codeblock">
 ```
-40/40 [==============================] - 57s 724ms/step - loss: 2.3925 - accuracy: 0.1401 - val_loss: 2.2182 - val_accuracy: 0.1768
-Epoch 2/25
-40/40 [==============================] - 20s 483ms/step - loss: 2.0790 - accuracy: 0.2261 - val_loss: 2.2933 - val_accuracy: 0.1795
-Epoch 3/25
-40/40 [==============================] - 19s 479ms/step - loss: 2.0130 - accuracy: 0.2585 - val_loss: 2.6833 - val_accuracy: 0.2022
-Epoch 4/25
-40/40 [==============================] - 21s 507ms/step - loss: 1.8270 - accuracy: 0.3315 - val_loss: 1.9127 - val_accuracy: 0.3215
-Epoch 5/25
-40/40 [==============================] - 19s 475ms/step - loss: 1.6037 - accuracy: 0.4173 - val_loss: 1.7226 - val_accuracy: 0.3938
-Epoch 6/25
-40/40 [==============================] - 19s 476ms/step - loss: 1.4758 - accuracy: 0.4658 - val_loss: 1.5097 - val_accuracy: 0.4733
-Epoch 7/25
-40/40 [==============================] - 19s 476ms/step - loss: 1.3677 - accuracy: 0.5075 - val_loss: 1.4630 - val_accuracy: 0.4986
-Epoch 8/25
-40/40 [==============================] - 21s 508ms/step - loss: 1.2599 - accuracy: 0.5490 - val_loss: 1.2908 - val_accuracy: 0.5492
-Epoch 9/25
-40/40 [==============================] - 19s 478ms/step - loss: 1.1689 - accuracy: 0.5818 - val_loss: 1.2750 - val_accuracy: 0.5518
-Epoch 10/25
-40/40 [==============================] - 19s 476ms/step - loss: 1.0843 - accuracy: 0.6140 - val_loss: 1.1444 - val_accuracy: 0.6002
-Epoch 11/25
-39/40 [============================>.] - ETA: 0s - loss: 1.0040 - accuracy: 0.6453
+313/313 ━━━━━━━━━━━━━━━━━━━━ 313s 1s/step - accuracy: 0.4618 - loss: 1.4759 - val_accuracy: 0.4519 - val_loss: 1.5107
 
+Epoch 6/20
+
+313/313 ━━━━━━━━━━━━━━━━━━━━ 316s 1s/step - accuracy: 0.4919 - loss: 1.4076 - val_accuracy: 0.4692 - val_loss: 1.4941
+
+Epoch 7/20
+
+313/313 ━━━━━━━━━━━━━━━━━━━━ 312s 997ms/step - accuracy: 0.5189 - loss: 1.3461 - val_accuracy: 0.5032 - val_loss: 1.3940
+
+Epoch 8/20
+
+313/313 ━━━━━━━━━━━━━━━━━━━━ 307s 981ms/step - accuracy: 0.5356 - loss: 1.3025 - val_accuracy: 0.5182 - val_loss: 1.3580
+
+Epoch 9/20
+
+313/313 ━━━━━━━━━━━━━━━━━━━━ 299s 954ms/step - accuracy: 0.5440 - loss: 1.2654 - val_accuracy: 0.5273 - val_loss: 1.3291
+
+Epoch 10/20
+
+313/313 ━━━━━━━━━━━━━━━━━━━━ 0s 866ms/step - accuracy: 0.5588 - loss: 1.2346
 ```
 </div>
-    
-![png](/img/examples/vision/focal_modulation_network/focal_modulation_network_37_3.png)
+
+![png](/img/examples/vision/focal_modulation_network/focal_modulation_network_33_3158.png)
     
 
 
 <div class="k-default-codeblock">
 ```
-40/40 [==============================] - 20s 489ms/step - loss: 1.0041 - accuracy: 0.6452 - val_loss: 1.1765 - val_accuracy: 0.5939
-Epoch 12/25
-40/40 [==============================] - 20s 480ms/step - loss: 0.9401 - accuracy: 0.6701 - val_loss: 1.1276 - val_accuracy: 0.6181
-Epoch 13/25
-40/40 [==============================] - 19s 480ms/step - loss: 0.8787 - accuracy: 0.6910 - val_loss: 0.9990 - val_accuracy: 0.6547
-Epoch 14/25
-40/40 [==============================] - 19s 479ms/step - loss: 0.8198 - accuracy: 0.7122 - val_loss: 1.0074 - val_accuracy: 0.6562
-Epoch 15/25
-40/40 [==============================] - 19s 480ms/step - loss: 0.7831 - accuracy: 0.7275 - val_loss: 0.9739 - val_accuracy: 0.6686
-Epoch 16/25
-40/40 [==============================] - 19s 478ms/step - loss: 0.7358 - accuracy: 0.7428 - val_loss: 0.9578 - val_accuracy: 0.6753
-Epoch 17/25
-40/40 [==============================] - 19s 478ms/step - loss: 0.7018 - accuracy: 0.7557 - val_loss: 0.9414 - val_accuracy: 0.6789
-Epoch 18/25
-40/40 [==============================] - 20s 480ms/step - loss: 0.6678 - accuracy: 0.7678 - val_loss: 0.9492 - val_accuracy: 0.6771
-Epoch 19/25
-40/40 [==============================] - 19s 476ms/step - loss: 0.6423 - accuracy: 0.7783 - val_loss: 0.9422 - val_accuracy: 0.6832
-Epoch 20/25
-40/40 [==============================] - 19s 479ms/step - loss: 0.6202 - accuracy: 0.7868 - val_loss: 0.9324 - val_accuracy: 0.6860
-Epoch 21/25
-40/40 [==============================] - ETA: 0s - loss: 0.6005 - accuracy: 0.7938
+313/313 ━━━━━━━━━━━━━━━━━━━━ 301s 961ms/step - accuracy: 0.5600 - loss: 1.2305 - val_accuracy: 0.5273 - val_loss: 1.3158
 
+Epoch 11/20
+
+313/313 ━━━━━━━━━━━━━━━━━━━━ 302s 965ms/step - accuracy: 0.5741 - loss: 1.1958 - val_accuracy: 0.5248 - val_loss: 1.3298
+
+Epoch 12/20
+
+313/313 ━━━━━━━━━━━━━━━━━━━━ 302s 965ms/step - accuracy: 0.5836 - loss: 1.1713 - val_accuracy: 0.5500 - val_loss: 1.2602
+
+Epoch 13/20
+
+313/313 ━━━━━━━━━━━━━━━━━━━━ 297s 947ms/step - accuracy: 0.5900 - loss: 1.1483 - val_accuracy: 0.5626 - val_loss: 1.2348
+
+Epoch 14/20
+
+313/313 ━━━━━━━━━━━━━━━━━━━━ 304s 970ms/step - accuracy: 0.5987 - loss: 1.1270 - val_accuracy: 0.5657 - val_loss: 1.2249
+
+Epoch 15/20
+
+313/313 ━━━━━━━━━━━━━━━━━━━━ 0s 884ms/step - accuracy: 0.6118 - loss: 1.1106
 ```
 </div>
-    
-![png](/img/examples/vision/focal_modulation_network/focal_modulation_network_37_5.png)
+
+![png](/img/examples/vision/focal_modulation_network/focal_modulation_network_33_4734.png)
     
 
 
 <div class="k-default-codeblock">
 ```
-40/40 [==============================] - 20s 488ms/step - loss: 0.6005 - accuracy: 0.7938 - val_loss: 0.9326 - val_accuracy: 0.6880
-Epoch 22/25
-40/40 [==============================] - 19s 478ms/step - loss: 0.5937 - accuracy: 0.7970 - val_loss: 0.9339 - val_accuracy: 0.6875
-Epoch 23/25
-40/40 [==============================] - 19s 478ms/step - loss: 0.5899 - accuracy: 0.7984 - val_loss: 0.9294 - val_accuracy: 0.6894
-Epoch 24/25
-40/40 [==============================] - 19s 478ms/step - loss: 0.5840 - accuracy: 0.8012 - val_loss: 0.9315 - val_accuracy: 0.6881
-Epoch 25/25
-40/40 [==============================] - 19s 478ms/step - loss: 0.5853 - accuracy: 0.7997 - val_loss: 0.9315 - val_accuracy: 0.6880
+313/313 ━━━━━━━━━━━━━━━━━━━━ 308s 982ms/step - accuracy: 0.6081 - loss: 1.1134 - val_accuracy: 0.5671 - val_loss: 1.2246
 
+Epoch 16/20
+
+313/313 ━━━━━━━━━━━━━━━━━━━━ 298s 954ms/step - accuracy: 0.6105 - loss: 1.0981 - val_accuracy: 0.5708 - val_loss: 1.2035
+
+Epoch 17/20
+
+313/313 ━━━━━━━━━━━━━━━━━━━━ 302s 964ms/step - accuracy: 0.6144 - loss: 1.0838 - val_accuracy: 0.5770 - val_loss: 1.2002
+
+Epoch 18/20
+
+313/313 ━━━━━━━━━━━━━━━━━━━━ 308s 984ms/step - accuracy: 0.6209 - loss: 1.0799 - val_accuracy: 0.5764 - val_loss: 1.1978
+
+Epoch 19/20
+
+313/313 ━━━━━━━━━━━━━━━━━━━━ 315s 1s/step - accuracy: 0.6174 - loss: 1.0772 - val_accuracy: 0.5777 - val_loss: 1.1951
+
+Epoch 20/20
+
+313/313 ━━━━━━━━━━━━━━━━━━━━ 0s 896ms/step - accuracy: 0.6249 - loss: 1.0723
 ```
 </div>
+
+![png](/img/examples/vision/focal_modulation_network/focal_modulation_network_33_6310.png)
+    
+
+
+<div class="k-default-codeblock">
+```
+313/313 ━━━━━━━━━━━━━━━━━━━━ 311s 993ms/step - accuracy: 0.6240 - loss: 1.0710 - val_accuracy: 0.5775 - val_loss: 1.1971
+```
+</div>
+
 ---
 ## Plot loss and accuracy
 
 
 ```python
-plt.plot(history.history["loss"], label="loss")
-plt.plot(history.history["val_loss"], label="val_loss")
+plt.figure(figsize=(12, 4))
+plt.subplot(1, 2, 1)
+plt.plot(history.history["loss"], label="Train Loss")
+plt.plot(history.history["val_loss"], label="Val Loss")
 plt.legend()
-plt.show()
-
-plt.plot(history.history["accuracy"], label="accuracy")
-plt.plot(history.history["val_accuracy"], label="val_accuracy")
+plt.subplot(1, 2, 2)
+plt.plot(history.history["accuracy"], label="Train Acc")
+plt.plot(history.history["val_accuracy"], label="Val Acc")
 plt.legend()
 plt.show()
 ```
 
 
     
-![png](/img/examples/vision/focal_modulation_network/focal_modulation_network_39_0.png)
-    
-
-
-
-    
-![png](/img/examples/vision/focal_modulation_network/focal_modulation_network_39_1.png)
+![png](/img/examples/vision/focal_modulation_network/focal_modulation_network_35_0.png)
     
 
 
@@ -1163,50 +1036,52 @@ Let's test our model on some test images and see how the gates look like.
 
 ```python
 test_images, test_labels = next(iter(test_ds))
-_ = focal_mod_net(test_images)
 
-# Take the mid layer for visualization
-gates = focal_mod_net.basic_layers[1].blocks[-1].modulation.gates
-gates = upsampler(gates)
-modulator = focal_mod_net.basic_layers[1].blocks[-1].modulation.modulator
-modulator = upsampler(modulator)
+_ = model(test_images, training=False)
 
-# Plot the test images with the gates and modulator overlayed.
+target_layer = model.basic_layers[1].blocks[-1].modulation
+gates = target_layer.gates
+modulator = target_layer.modulator
+
+upsampler = layers.UpSampling2D(size=(4, 4), interpolation="bilinear")
+gates_upsampled = upsampler(gates)
+modulator_upsampled = upsampler(modulator)
+
 for row in range(5):
     display_grid(
         test_images=test_images,
-        gates=gates,
-        modulator=modulator,
+        gates=gates_upsampled,
+        modulator=modulator_upsampled,
     )
 ```
 
 
     
-![png](/img/examples/vision/focal_modulation_network/focal_modulation_network_41_0.png)
+![png](/img/examples/vision/focal_modulation_network/focal_modulation_network_37_0.png)
     
 
 
 
     
-![png](/img/examples/vision/focal_modulation_network/focal_modulation_network_41_1.png)
+![png](/img/examples/vision/focal_modulation_network/focal_modulation_network_37_1.png)
     
 
 
 
     
-![png](/img/examples/vision/focal_modulation_network/focal_modulation_network_41_2.png)
+![png](/img/examples/vision/focal_modulation_network/focal_modulation_network_37_2.png)
     
 
 
 
     
-![png](/img/examples/vision/focal_modulation_network/focal_modulation_network_41_3.png)
+![png](/img/examples/vision/focal_modulation_network/focal_modulation_network_37_3.png)
     
 
 
 
     
-![png](/img/examples/vision/focal_modulation_network/focal_modulation_network_41_4.png)
+![png](/img/examples/vision/focal_modulation_network/focal_modulation_network_37_4.png)
     
 
 
