@@ -306,9 +306,9 @@ print("Number of walks generated:", len(walks))
 ## Generate positive and negative examples
 
 To train a skip-gram model, we use the generated walks to create positive and
-negative training examples. In Keras 3, the legacy preprocessing module 
-has been removed. We now implement a manual skip-gram sampling function 
-using NumPy to generate positive and negative training examples from our 
+negative training examples. In Keras 3, the legacy preprocessing module
+has been removed. We now implement a manual skip-gram sampling function
+using NumPy to generate positive and negative training examples from our
 random walks. Each example includes the following features:
 
 1. `target`: A movie in a walk sequence.
@@ -418,8 +418,8 @@ print(f"Weights shape: {weights.shape}")
 """
 ### Data Loading with PyDataset
 
-We replace the tf.data pipeline with keras.utils.PyDataset. 
-This ensures our data pipeline is fully backend-agnostic and 
+We replace the tf.data pipeline with keras.utils.PyDataset.
+This ensures our data pipeline is fully backend-agnostic and
 avoids symbolic tensor errors when running on JAX or PyTorch.
 """
 
