@@ -417,6 +417,7 @@ print(f"Weights shape: {weights.shape}")
 
 """
 ### Data Loading with PyDataset
+
 We replace the tf.data pipeline with keras.utils.PyDataset. 
 This ensures our data pipeline is fully backend-agnostic and 
 avoids symbolic tensor errors when running on JAX or PyTorch.
@@ -514,15 +515,12 @@ model.compile(
 Let's plot the model.
 """
 
-try:
-    keras.utils.plot_model(
-        model,
-        show_shapes=True,
-        show_dtype=True,
-        show_layer_names=True,
-    )
-except Exception:
-    print("plot_model skipped (pydot not installed or plotting failed). Continuing...")
+keras.utils.plot_model(
+    model,
+    show_shapes=True,
+    show_dtype=True,
+    show_layer_names=True,
+)
 
 """
 Now we train the model on the `dataset`.
