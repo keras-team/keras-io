@@ -2,10 +2,10 @@
 Title: Distilling Vision Transformers
 Author: [Sayak Paul](https://twitter.com/RisingSayak)
 Date created: 2022/04/05
-Last modified: 2022/04/08
+Last modified: 2026/02/10
 Description: Distillation of Vision Transformers through attention.
 Accelerator: GPU
-Migrated By: [Harshith K](https://github.com/kharshith-k/)
+Converted to Keras 3 by: [Harshith K](https://github.com/kharshith-k/)
 """
 
 """
@@ -641,7 +641,7 @@ model rather than a Transformer as shown in the paper.
 * ViT models are initialized with a combination of different initializers including
 truncated normal, random normal, Glorot uniform, etc. If you're looking for
 end-to-end reproduction of the original results, don't forget to initialize the ViTs well.
-* If you want to explore the pre-trained DeiT models in TensorFlow and Keras with code
+* If you want to explore the pre-trained DeiT models in Keras with code
 for fine-tuning, [check out these models on TF-Hub](https://tfhub.dev/sayakpaul/collections/deit/1).
 
 ## Acknowledgements
@@ -649,7 +649,7 @@ for fine-tuning, [check out these models on TF-Hub](https://tfhub.dev/sayakpaul/
 * Ross Wightman for keeping
 [`timm`](https://github.com/rwightman/pytorch-image-models)
 updated with readable implementations. I referred to the implementations of ViT and DeiT
-a lot during implementing them in TensorFlow.
+a lot during implementing them in Keras.
 * [Aritra Roy Gosthipaty](https://github.com/ariG23498)
 who implemented some portions of the `ViTClassifier` in another project.
 * [Google Developers Experts](https://developers.google.com/programs/experts/)
