@@ -3,9 +3,8 @@
 **Author:** [Sayak Paul](https://twitter.com/RisingSayak)<br>
 **Date created:** 2022/04/05<br>
 **Last modified:** 2026/02/10<br>
-**Description:** Distillation of Vision Transformers through attention.<br>
+**Description:** Distillation of Vision Transformers through attention.
 **Converted to Keras 3 by:** [Harshith K](https://github.com/kharshith-k/)
-
 
 <img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/vision/ipynb/deit.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/vision/deit.py)
 
@@ -58,6 +57,18 @@ from keras import layers
 tfds.disable_progress_bar()
 keras.utils.set_random_seed(42)
 ```
+
+<div class="k-default-codeblock">
+```
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+E0000 00:00:1770754850.038391    5167 cuda_dnn.cc:8579] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered
+E0000 00:00:1770754850.043322    5167 cuda_blas.cc:1407] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
+W0000 00:00:1770754850.055075    5167 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1770754850.055088    5167 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1770754850.055089    5167 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1770754850.055090    5167 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+```
+</div>
 
 ---
 ## Constants
@@ -157,9 +168,9 @@ val_dataset = prepare_dataset(val_dataset, is_training=False)
 ```
 Number of training examples: 3303
 Number of validation examples: 367
-
 ```
 </div>
+
 ---
 ## Implementing the DeiT variants of ViT
 
@@ -172,6 +183,7 @@ which is used in DeiT for regularization.
 
 
 ```python
+
 # Referred from: github.com:rwightman/pytorch-image-models.
 class StochasticDepth(layers.Layer):
     def __init__(self, drop_prop, **kwargs):
@@ -201,10 +213,10 @@ def mlp(x, dropout_rate: float, hidden_units: List):
     """FFN for a Transformer block."""
     # Iterate over the hidden units and
     # add Dense => Dropout.
-    for (idx, units) in enumerate(hidden_units):
+    for idx, units in enumerate(hidden_units):
         x = layers.Dense(
             units,
-            activation=tf.nn.gelu if idx == 0 else None,
+            activation="gelu" if idx == 0 else None,
         )(x)
         x = layers.Dropout(dropout_rate)(x)
     return x
@@ -340,7 +352,9 @@ class ViTClassifier(keras.Model):
         encoded_patches = representation[:, 0]
 
         # Classification head.
+
         output = self.head(encoded_patches)
+
         return output
 
 ```
@@ -442,8 +456,7 @@ class ViTDistilled(ViTClassifier):
             return x, x_dist
         # During standard train / finetune, inference average the classifier
         # predictions.
-        else:
-            return (x + x_dist) / 2
+        return (x + x_dist) / 2
 
 ```
 
@@ -461,9 +474,9 @@ print(outputs.shape)
 <div class="k-default-codeblock">
 ```
 (2, 5)
-
 ```
 </div>
+
 ---
 ## Implementing the trainer
 
@@ -609,10 +622,11 @@ to know how the training was performed. The teacher model has about 212 Million 
 which is about **40x more** than the student.
 
 
-```shell
-wget -q https://github.com/sayakpaul/deit-tf/releases/download/v0.1.0/bit_teacher_flowers.zip
-unzip -q bit_teacher_flowers.zip
+```python
+!wget -q https://github.com/sayakpaul/deit-tf/releases/download/v0.1.0/bit_teacher_flowers.zip
+!unzip -q bit_teacher_flowers.zip
 ```
+
 
 ```python
 bit_teacher_flowers = keras.layers.TFSMLayer(
@@ -644,48 +658,87 @@ _ = deit_distiller.fit(train_dataset, validation_data=val_dataset, epochs=NUM_EP
 <div class="k-default-codeblock">
 ```
 Epoch 1/20
-13/13 [==============================] - 44s 2s/step - accuracy: 0.2343 - student_loss: 2.2630 - distillation_loss: 1.7818 - val_accuracy: 0.2234 - val_student_loss: 1.6622 - val_distillation_loss: 0.0000e+00
-Epoch 2/20
-13/13 [==============================] - 16s 1s/step - accuracy: 0.2150 - student_loss: 1.6377 - distillation_loss: 1.6138 - val_accuracy: 0.1907 - val_student_loss: 1.6150 - val_distillation_loss: 0.0000e+00
-Epoch 3/20
-13/13 [==============================] - 16s 1s/step - accuracy: 0.2552 - student_loss: 1.6073 - distillation_loss: 1.5970 - val_accuracy: 0.1907 - val_student_loss: 1.6093 - val_distillation_loss: 0.0000e+00
-Epoch 4/20
-13/13 [==============================] - 16s 1s/step - accuracy: 0.2564 - student_loss: 1.5954 - distillation_loss: 1.5902 - val_accuracy: 0.2997 - val_student_loss: 1.5958 - val_distillation_loss: 0.0000e+00
-Epoch 5/20
-13/13 [==============================] - 16s 1s/step - accuracy: 0.2922 - student_loss: 1.5839 - distillation_loss: 1.5704 - val_accuracy: 0.3488 - val_student_loss: 1.5635 - val_distillation_loss: 0.0000e+00
-Epoch 6/20
-13/13 [==============================] - 16s 1s/step - accuracy: 0.3815 - student_loss: 1.4865 - distillation_loss: 1.4551 - val_accuracy: 0.3815 - val_student_loss: 1.4975 - val_distillation_loss: 0.0000e+00
-Epoch 7/20
-13/13 [==============================] - 16s 1s/step - accuracy: 0.4151 - student_loss: 1.4027 - distillation_loss: 1.3441 - val_accuracy: 0.3733 - val_student_loss: 1.4083 - val_distillation_loss: 0.0000e+00
-Epoch 8/20
-13/13 [==============================] - 16s 1s/step - accuracy: 0.4423 - student_loss: 1.3616 - distillation_loss: 1.2877 - val_accuracy: 0.4005 - val_student_loss: 1.4014 - val_distillation_loss: 0.0000e+00
-Epoch 9/20
-13/13 [==============================] - 16s 1s/step - accuracy: 0.4475 - student_loss: 1.3095 - distillation_loss: 1.2200 - val_accuracy: 0.4496 - val_student_loss: 1.3211 - val_distillation_loss: 0.0000e+00
-Epoch 10/20
-13/13 [==============================] - 16s 1s/step - accuracy: 0.4959 - student_loss: 1.2638 - distillation_loss: 1.1508 - val_accuracy: 0.4932 - val_student_loss: 1.2839 - val_distillation_loss: 0.0000e+00
-Epoch 11/20
-13/13 [==============================] - 16s 1s/step - accuracy: 0.5431 - student_loss: 1.2063 - distillation_loss: 1.0948 - val_accuracy: 0.5559 - val_student_loss: 1.1938 - val_distillation_loss: 0.0000e+00
-Epoch 12/20
-13/13 [==============================] - 16s 1s/step - accuracy: 0.5771 - student_loss: 1.1742 - distillation_loss: 1.0461 - val_accuracy: 0.5695 - val_student_loss: 1.1362 - val_distillation_loss: 0.0000e+00
-Epoch 13/20
-13/13 [==============================] - 16s 1s/step - accuracy: 0.5601 - student_loss: 1.1724 - distillation_loss: 1.0457 - val_accuracy: 0.5477 - val_student_loss: 1.1929 - val_distillation_loss: 0.0000e+00
-Epoch 14/20
-13/13 [==============================] - 16s 1s/step - accuracy: 0.5777 - student_loss: 1.1717 - distillation_loss: 1.0378 - val_accuracy: 0.5777 - val_student_loss: 1.1171 - val_distillation_loss: 0.0000e+00
-Epoch 15/20
-13/13 [==============================] - 16s 1s/step - accuracy: 0.6173 - student_loss: 1.1232 - distillation_loss: 0.9782 - val_accuracy: 0.5640 - val_student_loss: 1.1229 - val_distillation_loss: 0.0000e+00
-Epoch 16/20
-13/13 [==============================] - 16s 1s/step - accuracy: 0.6237 - student_loss: 1.1091 - distillation_loss: 0.9627 - val_accuracy: 0.5886 - val_student_loss: 1.1371 - val_distillation_loss: 0.0000e+00
-Epoch 17/20
-13/13 [==============================] - 16s 1s/step - accuracy: 0.6261 - student_loss: 1.0880 - distillation_loss: 0.9341 - val_accuracy: 0.6322 - val_student_loss: 1.0972 - val_distillation_loss: 0.0000e+00
-Epoch 18/20
-13/13 [==============================] - 16s 1s/step - accuracy: 0.6427 - student_loss: 1.0688 - distillation_loss: 0.9117 - val_accuracy: 0.6431 - val_student_loss: 1.0548 - val_distillation_loss: 0.0000e+00
-Epoch 19/20
-13/13 [==============================] - 16s 1s/step - accuracy: 0.6458 - student_loss: 1.0529 - distillation_loss: 0.8903 - val_accuracy: 0.6076 - val_student_loss: 1.0761 - val_distillation_loss: 0.0000e+00
-Epoch 20/20
-13/13 [==============================] - 16s 1s/step - accuracy: 0.6382 - student_loss: 1.0641 - distillation_loss: 0.9049 - val_accuracy: 0.6240 - val_student_loss: 1.0521 - val_distillation_loss: 0.0000e+00
 
+13/13 ━━━━━━━━━━━━━━━━━━━━ 130s 8s/step - accuracy: 0.2150 - distillation_loss: 2.1021 - loss: 0.0000e+00 - student_loss: 1.8120 - val_accuracy: 0.2616 - val_loss: 1.6223 - val_student_loss: 1.6278
+
+Epoch 2/20
+
+13/13 ━━━━━━━━━━━━━━━━━━━━ 103s 8s/step - accuracy: 0.2416 - distillation_loss: 1.6185 - loss: 0.0000e+00 - student_loss: 1.6297 - val_accuracy: 0.1662 - val_loss: 1.6018 - val_student_loss: 1.6075
+
+Epoch 3/20
+
+13/13 ━━━━━━━━━━━━━━━━━━━━ 104s 8s/step - accuracy: 0.2467 - distillation_loss: 1.6028 - loss: 0.0000e+00 - student_loss: 1.6087 - val_accuracy: 0.2316 - val_loss: 1.5954 - val_student_loss: 1.6009
+
+Epoch 4/20
+
+13/13 ━━━━━━━━━━━━━━━━━━━━ 103s 8s/step - accuracy: 0.2349 - distillation_loss: 1.5968 - loss: 0.0000e+00 - student_loss: 1.6022 - val_accuracy: 0.2289 - val_loss: 1.5922 - val_student_loss: 1.6017
+
+Epoch 5/20
+
+13/13 ━━━━━━━━━━━━━━━━━━━━ 103s 8s/step - accuracy: 0.2634 - distillation_loss: 1.5902 - loss: 0.0000e+00 - student_loss: 1.5928 - val_accuracy: 0.3025 - val_loss: 1.5703 - val_student_loss: 1.5795
+
+Epoch 6/20
+
+13/13 ━━━━━━━━━━━━━━━━━━━━ 103s 8s/step - accuracy: 0.3279 - distillation_loss: 1.5441 - loss: 0.0000e+00 - student_loss: 1.5456 - val_accuracy: 0.3515 - val_loss: 1.4880 - val_student_loss: 1.4937
+
+Epoch 7/20
+
+13/13 ━━━━━━━━━━━━━━━━━━━━ 103s 8s/step - accuracy: 0.3966 - distillation_loss: 1.4085 - loss: 0.0000e+00 - student_loss: 1.4534 - val_accuracy: 0.3706 - val_loss: 1.4348 - val_student_loss: 1.4335
+
+Epoch 8/20
+
+13/13 ━━━━━━━━━━━━━━━━━━━━ 103s 8s/step - accuracy: 0.3890 - distillation_loss: 1.3647 - loss: 0.0000e+00 - student_loss: 1.4229 - val_accuracy: 0.3297 - val_loss: 1.4575 - val_student_loss: 1.4463
+
+Epoch 9/20
+
+13/13 ━━━━━━━━━━━━━━━━━━━━ 103s 8s/step - accuracy: 0.4223 - distillation_loss: 1.3332 - loss: 0.0000e+00 - student_loss: 1.3850 - val_accuracy: 0.4114 - val_loss: 1.3888 - val_student_loss: 1.3763
+
+Epoch 10/20
+
+13/13 ━━━━━━━━━━━━━━━━━━━━ 103s 8s/step - accuracy: 0.4475 - distillation_loss: 1.2577 - loss: 0.0000e+00 - student_loss: 1.3548 - val_accuracy: 0.4441 - val_loss: 1.3202 - val_student_loss: 1.3331
+
+Epoch 11/20
+
+13/13 ━━━━━━━━━━━━━━━━━━━━ 103s 8s/step - accuracy: 0.4717 - distillation_loss: 1.2107 - loss: 0.0000e+00 - student_loss: 1.2995 - val_accuracy: 0.4632 - val_loss: 1.3016 - val_student_loss: 1.2872
+
+Epoch 12/20
+
+13/13 ━━━━━━━━━━━━━━━━━━━━ 103s 8s/step - accuracy: 0.5017 - distillation_loss: 1.1562 - loss: 0.0000e+00 - student_loss: 1.2542 - val_accuracy: 0.5395 - val_loss: 1.2761 - val_student_loss: 1.2575
+
+Epoch 13/20
+
+13/13 ━━━━━━━━━━━━━━━━━━━━ 103s 8s/step - accuracy: 0.5328 - distillation_loss: 1.1119 - loss: 0.0000e+00 - student_loss: 1.2223 - val_accuracy: 0.5068 - val_loss: 1.2102 - val_student_loss: 1.2383
+
+Epoch 14/20
+
+13/13 ━━━━━━━━━━━━━━━━━━━━ 102s 8s/step - accuracy: 0.5655 - distillation_loss: 1.0595 - loss: 0.0000e+00 - student_loss: 1.1837 - val_accuracy: 0.5722 - val_loss: 1.1773 - val_student_loss: 1.1774
+
+Epoch 15/20
+
+13/13 ━━━━━━━━━━━━━━━━━━━━ 103s 8s/step - accuracy: 0.5998 - distillation_loss: 1.0133 - loss: 0.0000e+00 - student_loss: 1.1465 - val_accuracy: 0.5204 - val_loss: 1.2519 - val_student_loss: 1.2340
+
+Epoch 16/20
+
+13/13 ━━━━━━━━━━━━━━━━━━━━ 103s 8s/step - accuracy: 0.6110 - distillation_loss: 0.9992 - loss: 0.0000e+00 - student_loss: 1.1359 - val_accuracy: 0.6104 - val_loss: 1.0947 - val_student_loss: 1.1090
+
+Epoch 17/20
+
+13/13 ━━━━━━━━━━━━━━━━━━━━ 103s 8s/step - accuracy: 0.6191 - distillation_loss: 0.9635 - loss: 0.0000e+00 - student_loss: 1.1101 - val_accuracy: 0.6076 - val_loss: 1.0678 - val_student_loss: 1.0952
+
+Epoch 18/20
+
+13/13 ━━━━━━━━━━━━━━━━━━━━ 103s 8s/step - accuracy: 0.6400 - distillation_loss: 0.9460 - loss: 0.0000e+00 - student_loss: 1.0902 - val_accuracy: 0.6076 - val_loss: 1.0256 - val_student_loss: 1.0681
+
+Epoch 19/20
+
+13/13 ━━━━━━━━━━━━━━━━━━━━ 103s 8s/step - accuracy: 0.6340 - distillation_loss: 0.9411 - loss: 0.0000e+00 - student_loss: 1.0943 - val_accuracy: 0.6213 - val_loss: 1.0353 - val_student_loss: 1.0702
+
+Epoch 20/20
+
+13/13 ━━━━━━━━━━━━━━━━━━━━ 103s 8s/step - accuracy: 0.6506 - distillation_loss: 0.9121 - loss: 0.0000e+00 - student_loss: 1.0674 - val_accuracy: 0.6376 - val_loss: 1.0027 - val_student_loss: 1.0602
 ```
 </div>
+
 If we had trained the same model (the `ViTClassifier`) from scratch with the exact same
 hyperparameters, the model would have scored about 59% accuracy. You can adapt the following code
 to reproduce this result:
