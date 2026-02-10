@@ -4,7 +4,6 @@
 **Date created:** 2022/04/05<br>
 **Last modified:** 2026/02/10<br>
 **Description:** Distillation of Vision Transformers through attention.
-**Converted to Keras 3 by:** [Harshith K](https://github.com/kharshith-k/)
 
 <img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/vision/ipynb/deit.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/vision/deit.py)
 
