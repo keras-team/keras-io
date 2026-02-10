@@ -2,9 +2,8 @@
 
 **Author:** [Sayak Paul](https://twitter.com/RisingSayak)<br>
 **Date created:** 2022/04/05<br>
-**Last modified:** 2022/04/08<br>
+**Last modified:** 2026/02/10<br>
 **Description:** Distillation of Vision Transformers through attention.
-
 
 <img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/vision/ipynb/deit.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/vision/deit.py)
 
@@ -35,13 +34,6 @@ In this example, we implement the distillation recipe proposed in DeiT. This
 requires us to slightly tweak the original ViT architecture and write a custom training
 loop to implement the distillation recipe.
 
-To run the example, you'll need TensorFlow Addons, which you can install with the
-following command:
-
-```
-pip install tensorflow-addons
-```
-
 To comfortably navigate through this example, you'll be expected to know how a ViT and
 knowledge distillation work. The following are good resources in case you needed a
 refresher:
@@ -57,15 +49,25 @@ refresher:
 from typing import List
 
 import tensorflow as tf
-import tensorflow_addons as tfa
 import tensorflow_datasets as tfds
-import tensorflow_hub as hub
-from tensorflow import keras
-from tensorflow.keras import layers
+import keras
+from keras import layers
 
 tfds.disable_progress_bar()
-tf.keras.utils.set_random_seed(42)
+keras.utils.set_random_seed(42)
 ```
+
+<div class="k-default-codeblock">
+```
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+E0000 00:00:1770754850.038391    5167 cuda_dnn.cc:8579] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered
+E0000 00:00:1770754850.043322    5167 cuda_blas.cc:1407] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
+W0000 00:00:1770754850.055075    5167 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1770754850.055088    5167 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1770754850.055089    5167 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1770754850.055090    5167 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+```
+</div>
 
 ---
 ## Constants
@@ -119,12 +121,24 @@ def preprocess_dataset(is_training=True):
         if is_training:
             # Resize to a bigger spatial resolution and take the random
             # crops.
-            image = tf.image.resize(image, (RESOLUTION + 20, RESOLUTION + 20))
-            image = tf.image.random_crop(image, (RESOLUTION, RESOLUTION, 3))
-            image = tf.image.random_flip_left_right(image)
+            image = keras.ops.image.resize(image, (RESOLUTION + 20, RESOLUTION + 20))
+            # Perform random crop using TensorFlow ops for graph compatibility
+            # Get random crop coordinates (0 to 20 pixels offset)
+            crop_top = tf.random.uniform((), 0, 21, dtype=tf.int32)
+            crop_left = tf.random.uniform((), 0, 21, dtype=tf.int32)
+            image = tf.image.crop_to_bounding_box(
+                image,
+                offset_height=crop_top,
+                offset_width=crop_left,
+                target_height=RESOLUTION,
+                target_width=RESOLUTION,
+            )
+            # Random horizontal flip
+            if tf.random.uniform(()) > 0.5:
+                image = tf.image.flip_left_right(image)
         else:
-            image = tf.image.resize(image, (RESOLUTION, RESOLUTION))
-        label = tf.one_hot(label, depth=NUM_CLASSES)
+            image = keras.ops.image.resize(image, (RESOLUTION, RESOLUTION))
+        label = keras.ops.one_hot(label, num_classes=NUM_CLASSES)
         return image, label
 
     return fn
@@ -153,9 +167,9 @@ val_dataset = prepare_dataset(val_dataset, is_training=False)
 ```
 Number of training examples: 3303
 Number of validation examples: 367
-
 ```
 </div>
+
 ---
 ## Implementing the DeiT variants of ViT
 
@@ -168,18 +182,22 @@ which is used in DeiT for regularization.
 
 
 ```python
+
 # Referred from: github.com:rwightman/pytorch-image-models.
 class StochasticDepth(layers.Layer):
     def __init__(self, drop_prop, **kwargs):
         super().__init__(**kwargs)
         self.drop_prob = drop_prop
+        self.seed_generator = keras.random.SeedGenerator(1337)
 
     def call(self, x, training=True):
         if training:
             keep_prob = 1 - self.drop_prob
-            shape = (tf.shape(x)[0],) + (1,) * (len(tf.shape(x)) - 1)
-            random_tensor = keep_prob + tf.random.uniform(shape, 0, 1)
-            random_tensor = tf.floor(random_tensor)
+            shape = (keras.ops.shape(x)[0],) + (1,) * (len(keras.ops.shape(x)) - 1)
+            random_tensor = keep_prob + keras.random.uniform(
+                shape, 0, 1, seed=self.seed_generator
+            )
+            random_tensor = keras.ops.floor(random_tensor)
             return (x / keep_prob) * random_tensor
         return x
 
@@ -194,10 +212,10 @@ def mlp(x, dropout_rate: float, hidden_units: List):
     """FFN for a Transformer block."""
     # Iterate over the hidden units and
     # add Dense => Dropout.
-    for (idx, units) in enumerate(hidden_units):
+    for idx, units in enumerate(hidden_units):
         x = layers.Dense(
             units,
-            activation=tf.nn.gelu if idx == 0 else None,
+            activation="gelu" if idx == 0 else None,
         )(x)
         x = layers.Dropout(dropout_rate)(x)
     return x
@@ -270,28 +288,12 @@ class ViTClassifier(keras.Model):
             name="projection",
         )
 
-        # Positional embedding.
-        init_shape = (
-            1,
-            NUM_PATCHES + 1,
-            PROJECTION_DIM,
-        )
-        self.positional_embedding = tf.Variable(
-            tf.zeros(init_shape), name="pos_embedding"
-        )
-
         # Transformer blocks.
-        dpr = [x for x in tf.linspace(0.0, DROP_PATH_RATE, NUM_LAYERS)]
+        dpr = [x for x in keras.ops.linspace(0.0, DROP_PATH_RATE, NUM_LAYERS)]
         self.transformer_blocks = [
             transformer(drop_prob=dpr[i], name=f"transformer_block_{i}")
             for i in range(NUM_LAYERS)
         ]
-
-        # CLS token.
-        initial_value = tf.zeros((1, 1, PROJECTION_DIM))
-        self.cls_token = tf.Variable(
-            initial_value=initial_value, trainable=True, name="cls"
-        )
 
         # Other layers.
         self.dropout = layers.Dropout(DROPOUT_RATE)
@@ -301,16 +303,34 @@ class ViTClassifier(keras.Model):
             name="classification_head",
         )
 
+    def build(self, input_shape):
+        # Positional embedding.
+        self.positional_embedding = self.add_weight(
+            shape=(1, NUM_PATCHES + 1, PROJECTION_DIM),
+            initializer=keras.initializers.Zeros(),
+            trainable=True,
+            name="pos_embedding",
+        )
+
+        # CLS token.
+        self.cls_token = self.add_weight(
+            shape=(1, 1, PROJECTION_DIM),
+            initializer=keras.initializers.Zeros(),
+            trainable=True,
+            name="cls",
+        )
+        super().build(input_shape)
+
     def call(self, inputs, training=True):
-        n = tf.shape(inputs)[0]
+        n = keras.ops.shape(inputs)[0]
 
         # Create patches and project the patches.
         projected_patches = self.projection(inputs)
-
-        # Append class token if needed.
-        cls_token = tf.tile(self.cls_token, (n, 1, 1))
-        cls_token = tf.cast(cls_token, projected_patches.dtype)
-        projected_patches = tf.concat([cls_token, projected_patches], axis=1)
+        cls_token = keras.ops.tile(self.cls_token, (n, 1, 1))
+        cls_token = keras.ops.cast(cls_token, projected_patches.dtype)
+        projected_patches = keras.ops.concatenate(
+            [cls_token, projected_patches], axis=1
+        )
 
         # Add positional embeddings to the projected patches.
         encoded_patches = (
@@ -331,7 +351,9 @@ class ViTClassifier(keras.Model):
         encoded_patches = representation[:, 0]
 
         # Classification head.
+
         output = self.head(encoded_patches)
+
         return output
 
 ```
@@ -356,20 +378,6 @@ class ViTDistilled(ViTClassifier):
         self.num_tokens = 2
         self.regular_training = regular_training
 
-        # CLS and distillation tokens, positional embedding.
-        init_value = tf.zeros((1, 1, PROJECTION_DIM))
-        self.dist_token = tf.Variable(init_value, name="dist_token")
-        self.positional_embedding = tf.Variable(
-            tf.zeros(
-                (
-                    1,
-                    NUM_PATCHES + self.num_tokens,
-                    PROJECTION_DIM,
-                )
-            ),
-            name="pos_embedding",
-        )
-
         # Head layers.
         self.head = layers.Dense(
             NUM_CLASSES,
@@ -380,18 +388,43 @@ class ViTDistilled(ViTClassifier):
             name="distillation_head",
         )
 
+    def build(self, input_shape):
+        # CLS token.
+        self.cls_token = self.add_weight(
+            shape=(1, 1, PROJECTION_DIM),
+            initializer=keras.initializers.Zeros(),
+            trainable=True,
+            name="cls",
+        )
+
+        # Distillation token.
+        self.dist_token = self.add_weight(
+            shape=(1, 1, PROJECTION_DIM),
+            initializer=keras.initializers.Zeros(),
+            trainable=True,
+            name="dist_token",
+        )
+
+        # Positional embedding (for NUM_PATCHES + 2 tokens: cls + dist).
+        self.positional_embedding = self.add_weight(
+            shape=(1, NUM_PATCHES + self.num_tokens, PROJECTION_DIM),
+            initializer=keras.initializers.Zeros(),
+            trainable=True,
+            name="pos_embedding",
+        )
+
     def call(self, inputs, training=True):
-        n = tf.shape(inputs)[0]
+        n = keras.ops.shape(inputs)[0]
 
         # Create patches and project the patches.
         projected_patches = self.projection(inputs)
 
         # Append the tokens.
-        cls_token = tf.tile(self.cls_token, (n, 1, 1))
-        dist_token = tf.tile(self.dist_token, (n, 1, 1))
-        cls_token = tf.cast(cls_token, projected_patches.dtype)
-        dist_token = tf.cast(dist_token, projected_patches.dtype)
-        projected_patches = tf.concat(
+        cls_token = keras.ops.tile(self.cls_token, (n, 1, 1))
+        dist_token = keras.ops.tile(self.dist_token, (n, 1, 1))
+        cls_token = keras.ops.cast(cls_token, projected_patches.dtype)
+        dist_token = keras.ops.cast(dist_token, projected_patches.dtype)
+        projected_patches = keras.ops.concatenate(
             [cls_token, dist_token, projected_patches], axis=1
         )
 
@@ -416,15 +449,13 @@ class ViTDistilled(ViTClassifier):
             self.head_dist(representation[:, 1]),
         )
 
-        if not training or self.regular_training:
-            # During standard train / finetune, inference average the classifier
-            # predictions.
-            return (x + x_dist) / 2
-
-        elif training:
-            # Only return separate classification predictions when training in distilled
-            # mode.
+        # Only return separate classification predictions when training in distilled
+        # mode.
+        if training and not self.regular_training:
             return x, x_dist
+        # During standard train / finetune, inference average the classifier
+        # predictions.
+        return (x + x_dist) / 2
 
 ```
 
@@ -442,9 +473,9 @@ print(outputs.shape)
 <div class="k-default-codeblock">
 ```
 (2, 5)
-
 ```
 </div>
+
 ---
 ## Implementing the trainer
 
@@ -477,22 +508,23 @@ class DeiT(keras.Model):
 
         self.student_loss_tracker = keras.metrics.Mean(name="student_loss")
         self.dist_loss_tracker = keras.metrics.Mean(name="distillation_loss")
+        self.accuracy_metric = keras.metrics.CategoricalAccuracy(name="accuracy")
 
     @property
     def metrics(self):
         metrics = super().metrics
         metrics.append(self.student_loss_tracker)
         metrics.append(self.dist_loss_tracker)
+        metrics.append(self.accuracy_metric)
         return metrics
 
     def compile(
         self,
         optimizer,
-        metrics,
         student_loss_fn,
         distillation_loss_fn,
     ):
-        super().compile(optimizer=optimizer, metrics=metrics)
+        super().compile(optimizer=optimizer)
         self.student_loss_fn = student_loss_fn
         self.distillation_loss_fn = distillation_loss_fn
 
@@ -500,13 +532,24 @@ class DeiT(keras.Model):
         # Unpack data.
         x, y = data
 
+        # Normalize for student (ViT expects [0, 1])
+        x_student = keras.ops.cast(x, "float32") / 255.0
+
+        # Teacher expects raw [0, 255] float32 (no normalization)
+        x_teacher = keras.ops.cast(x, "float32")
+
         # Forward pass of teacher
-        teacher_predictions = tf.nn.softmax(self.teacher(x, training=False), -1)
-        teacher_predictions = tf.argmax(teacher_predictions, -1)
+        # TFSMLayer returns a dictionary, extract the output
+        teacher_output = self.teacher(x_teacher, training=False)
+        if isinstance(teacher_output, dict):
+            # Get the first (and likely only) output from the dictionary
+            teacher_output = list(teacher_output.values())[0]
+        # Use soft targets (probabilities) for distillation
+        teacher_predictions = keras.ops.nn.softmax(teacher_output, -1)
 
         with tf.GradientTape() as tape:
             # Forward pass of student.
-            cls_predictions, dist_predictions = self.student(x / 255.0, training=True)
+            cls_predictions, dist_predictions = self.student(x_student, training=True)
 
             # Compute losses.
             student_loss = self.student_loss_fn(y, cls_predictions)
@@ -522,36 +565,48 @@ class DeiT(keras.Model):
         # Update weights.
         self.optimizer.apply_gradients(zip(gradients, trainable_vars))
 
-        # Update the metrics configured in `compile()`.
+        # Update the metrics.
         student_predictions = (cls_predictions + dist_predictions) / 2
-        self.compiled_metrics.update_state(y, student_predictions)
+        self.accuracy_metric.update_state(y, student_predictions)
         self.dist_loss_tracker.update_state(distillation_loss)
         self.student_loss_tracker.update_state(student_loss)
 
-        # Return a dict of performance.
-        results = {m.name: m.result() for m in self.metrics}
-        return results
+        # Return a dict of performance - include loss
+        return {
+            "loss": loss,
+            "student_loss": self.student_loss_tracker.result(),
+            "distillation_loss": self.dist_loss_tracker.result(),
+            "accuracy": self.accuracy_metric.result(),
+        }
 
     def test_step(self, data):
         # Unpack the data.
         x, y = data
 
+        # Convert to float32 and normalize for student
+        x_normalized = keras.ops.cast(x, "float32") / 255.0
+
         # Compute predictions.
-        y_prediction = self.student(x / 255.0, training=False)
+        y_prediction = self.student(x_normalized, training=False)
 
         # Calculate the loss.
         student_loss = self.student_loss_fn(y, y_prediction)
 
         # Update the metrics.
-        self.compiled_metrics.update_state(y, y_prediction)
+        self.accuracy_metric.update_state(y, y_prediction)
         self.student_loss_tracker.update_state(student_loss)
 
-        # Return a dict of performance.
-        results = {m.name: m.result() for m in self.metrics}
-        return results
+        # Return a dict of performance
+        return {
+            "loss": student_loss,
+            "student_loss": self.student_loss_tracker.result(),
+            "accuracy": self.accuracy_metric.result(),
+        }
 
     def call(self, inputs):
-        return self.student(inputs / 255.0, training=False)
+        # Convert to float32 and normalize for student
+        inputs_normalized = keras.ops.cast(inputs, "float32") / 255.0
+        return self.student(inputs_normalized, training=False)
 
 ```
 
@@ -573,7 +628,9 @@ which is about **40x more** than the student.
 
 
 ```python
-bit_teacher_flowers = keras.models.load_model("bit_teacher_flowers")
+bit_teacher_flowers = keras.layers.TFSMLayer(
+    "bit_teacher_flowers", call_endpoint="serving_default"
+)
 ```
 
 ---
@@ -586,12 +643,13 @@ deit_distiller = DeiT(student=deit_tiny, teacher=bit_teacher_flowers)
 
 lr_scaled = (BASE_LR / 512) * BATCH_SIZE
 deit_distiller.compile(
-    optimizer=tfa.optimizers.AdamW(weight_decay=WEIGHT_DECAY, learning_rate=lr_scaled),
-    metrics=["accuracy"],
+    optimizer=keras.optimizers.AdamW(
+        weight_decay=WEIGHT_DECAY, learning_rate=lr_scaled
+    ),
     student_loss_fn=keras.losses.CategoricalCrossentropy(
         from_logits=True, label_smoothing=0.1
     ),
-    distillation_loss_fn=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+    distillation_loss_fn=keras.losses.CategoricalCrossentropy(from_logits=True),
 )
 _ = deit_distiller.fit(train_dataset, validation_data=val_dataset, epochs=NUM_EPOCHS)
 ```
@@ -599,48 +657,87 @@ _ = deit_distiller.fit(train_dataset, validation_data=val_dataset, epochs=NUM_EP
 <div class="k-default-codeblock">
 ```
 Epoch 1/20
-13/13 [==============================] - 44s 2s/step - accuracy: 0.2343 - student_loss: 2.2630 - distillation_loss: 1.7818 - val_accuracy: 0.2234 - val_student_loss: 1.6622 - val_distillation_loss: 0.0000e+00
-Epoch 2/20
-13/13 [==============================] - 16s 1s/step - accuracy: 0.2150 - student_loss: 1.6377 - distillation_loss: 1.6138 - val_accuracy: 0.1907 - val_student_loss: 1.6150 - val_distillation_loss: 0.0000e+00
-Epoch 3/20
-13/13 [==============================] - 16s 1s/step - accuracy: 0.2552 - student_loss: 1.6073 - distillation_loss: 1.5970 - val_accuracy: 0.1907 - val_student_loss: 1.6093 - val_distillation_loss: 0.0000e+00
-Epoch 4/20
-13/13 [==============================] - 16s 1s/step - accuracy: 0.2564 - student_loss: 1.5954 - distillation_loss: 1.5902 - val_accuracy: 0.2997 - val_student_loss: 1.5958 - val_distillation_loss: 0.0000e+00
-Epoch 5/20
-13/13 [==============================] - 16s 1s/step - accuracy: 0.2922 - student_loss: 1.5839 - distillation_loss: 1.5704 - val_accuracy: 0.3488 - val_student_loss: 1.5635 - val_distillation_loss: 0.0000e+00
-Epoch 6/20
-13/13 [==============================] - 16s 1s/step - accuracy: 0.3815 - student_loss: 1.4865 - distillation_loss: 1.4551 - val_accuracy: 0.3815 - val_student_loss: 1.4975 - val_distillation_loss: 0.0000e+00
-Epoch 7/20
-13/13 [==============================] - 16s 1s/step - accuracy: 0.4151 - student_loss: 1.4027 - distillation_loss: 1.3441 - val_accuracy: 0.3733 - val_student_loss: 1.4083 - val_distillation_loss: 0.0000e+00
-Epoch 8/20
-13/13 [==============================] - 16s 1s/step - accuracy: 0.4423 - student_loss: 1.3616 - distillation_loss: 1.2877 - val_accuracy: 0.4005 - val_student_loss: 1.4014 - val_distillation_loss: 0.0000e+00
-Epoch 9/20
-13/13 [==============================] - 16s 1s/step - accuracy: 0.4475 - student_loss: 1.3095 - distillation_loss: 1.2200 - val_accuracy: 0.4496 - val_student_loss: 1.3211 - val_distillation_loss: 0.0000e+00
-Epoch 10/20
-13/13 [==============================] - 16s 1s/step - accuracy: 0.4959 - student_loss: 1.2638 - distillation_loss: 1.1508 - val_accuracy: 0.4932 - val_student_loss: 1.2839 - val_distillation_loss: 0.0000e+00
-Epoch 11/20
-13/13 [==============================] - 16s 1s/step - accuracy: 0.5431 - student_loss: 1.2063 - distillation_loss: 1.0948 - val_accuracy: 0.5559 - val_student_loss: 1.1938 - val_distillation_loss: 0.0000e+00
-Epoch 12/20
-13/13 [==============================] - 16s 1s/step - accuracy: 0.5771 - student_loss: 1.1742 - distillation_loss: 1.0461 - val_accuracy: 0.5695 - val_student_loss: 1.1362 - val_distillation_loss: 0.0000e+00
-Epoch 13/20
-13/13 [==============================] - 16s 1s/step - accuracy: 0.5601 - student_loss: 1.1724 - distillation_loss: 1.0457 - val_accuracy: 0.5477 - val_student_loss: 1.1929 - val_distillation_loss: 0.0000e+00
-Epoch 14/20
-13/13 [==============================] - 16s 1s/step - accuracy: 0.5777 - student_loss: 1.1717 - distillation_loss: 1.0378 - val_accuracy: 0.5777 - val_student_loss: 1.1171 - val_distillation_loss: 0.0000e+00
-Epoch 15/20
-13/13 [==============================] - 16s 1s/step - accuracy: 0.6173 - student_loss: 1.1232 - distillation_loss: 0.9782 - val_accuracy: 0.5640 - val_student_loss: 1.1229 - val_distillation_loss: 0.0000e+00
-Epoch 16/20
-13/13 [==============================] - 16s 1s/step - accuracy: 0.6237 - student_loss: 1.1091 - distillation_loss: 0.9627 - val_accuracy: 0.5886 - val_student_loss: 1.1371 - val_distillation_loss: 0.0000e+00
-Epoch 17/20
-13/13 [==============================] - 16s 1s/step - accuracy: 0.6261 - student_loss: 1.0880 - distillation_loss: 0.9341 - val_accuracy: 0.6322 - val_student_loss: 1.0972 - val_distillation_loss: 0.0000e+00
-Epoch 18/20
-13/13 [==============================] - 16s 1s/step - accuracy: 0.6427 - student_loss: 1.0688 - distillation_loss: 0.9117 - val_accuracy: 0.6431 - val_student_loss: 1.0548 - val_distillation_loss: 0.0000e+00
-Epoch 19/20
-13/13 [==============================] - 16s 1s/step - accuracy: 0.6458 - student_loss: 1.0529 - distillation_loss: 0.8903 - val_accuracy: 0.6076 - val_student_loss: 1.0761 - val_distillation_loss: 0.0000e+00
-Epoch 20/20
-13/13 [==============================] - 16s 1s/step - accuracy: 0.6382 - student_loss: 1.0641 - distillation_loss: 0.9049 - val_accuracy: 0.6240 - val_student_loss: 1.0521 - val_distillation_loss: 0.0000e+00
 
+13/13 ━━━━━━━━━━━━━━━━━━━━ 130s 8s/step - accuracy: 0.2150 - distillation_loss: 2.1021 - loss: 0.0000e+00 - student_loss: 1.8120 - val_accuracy: 0.2616 - val_loss: 1.6223 - val_student_loss: 1.6278
+
+Epoch 2/20
+
+13/13 ━━━━━━━━━━━━━━━━━━━━ 103s 8s/step - accuracy: 0.2416 - distillation_loss: 1.6185 - loss: 0.0000e+00 - student_loss: 1.6297 - val_accuracy: 0.1662 - val_loss: 1.6018 - val_student_loss: 1.6075
+
+Epoch 3/20
+
+13/13 ━━━━━━━━━━━━━━━━━━━━ 104s 8s/step - accuracy: 0.2467 - distillation_loss: 1.6028 - loss: 0.0000e+00 - student_loss: 1.6087 - val_accuracy: 0.2316 - val_loss: 1.5954 - val_student_loss: 1.6009
+
+Epoch 4/20
+
+13/13 ━━━━━━━━━━━━━━━━━━━━ 103s 8s/step - accuracy: 0.2349 - distillation_loss: 1.5968 - loss: 0.0000e+00 - student_loss: 1.6022 - val_accuracy: 0.2289 - val_loss: 1.5922 - val_student_loss: 1.6017
+
+Epoch 5/20
+
+13/13 ━━━━━━━━━━━━━━━━━━━━ 103s 8s/step - accuracy: 0.2634 - distillation_loss: 1.5902 - loss: 0.0000e+00 - student_loss: 1.5928 - val_accuracy: 0.3025 - val_loss: 1.5703 - val_student_loss: 1.5795
+
+Epoch 6/20
+
+13/13 ━━━━━━━━━━━━━━━━━━━━ 103s 8s/step - accuracy: 0.3279 - distillation_loss: 1.5441 - loss: 0.0000e+00 - student_loss: 1.5456 - val_accuracy: 0.3515 - val_loss: 1.4880 - val_student_loss: 1.4937
+
+Epoch 7/20
+
+13/13 ━━━━━━━━━━━━━━━━━━━━ 103s 8s/step - accuracy: 0.3966 - distillation_loss: 1.4085 - loss: 0.0000e+00 - student_loss: 1.4534 - val_accuracy: 0.3706 - val_loss: 1.4348 - val_student_loss: 1.4335
+
+Epoch 8/20
+
+13/13 ━━━━━━━━━━━━━━━━━━━━ 103s 8s/step - accuracy: 0.3890 - distillation_loss: 1.3647 - loss: 0.0000e+00 - student_loss: 1.4229 - val_accuracy: 0.3297 - val_loss: 1.4575 - val_student_loss: 1.4463
+
+Epoch 9/20
+
+13/13 ━━━━━━━━━━━━━━━━━━━━ 103s 8s/step - accuracy: 0.4223 - distillation_loss: 1.3332 - loss: 0.0000e+00 - student_loss: 1.3850 - val_accuracy: 0.4114 - val_loss: 1.3888 - val_student_loss: 1.3763
+
+Epoch 10/20
+
+13/13 ━━━━━━━━━━━━━━━━━━━━ 103s 8s/step - accuracy: 0.4475 - distillation_loss: 1.2577 - loss: 0.0000e+00 - student_loss: 1.3548 - val_accuracy: 0.4441 - val_loss: 1.3202 - val_student_loss: 1.3331
+
+Epoch 11/20
+
+13/13 ━━━━━━━━━━━━━━━━━━━━ 103s 8s/step - accuracy: 0.4717 - distillation_loss: 1.2107 - loss: 0.0000e+00 - student_loss: 1.2995 - val_accuracy: 0.4632 - val_loss: 1.3016 - val_student_loss: 1.2872
+
+Epoch 12/20
+
+13/13 ━━━━━━━━━━━━━━━━━━━━ 103s 8s/step - accuracy: 0.5017 - distillation_loss: 1.1562 - loss: 0.0000e+00 - student_loss: 1.2542 - val_accuracy: 0.5395 - val_loss: 1.2761 - val_student_loss: 1.2575
+
+Epoch 13/20
+
+13/13 ━━━━━━━━━━━━━━━━━━━━ 103s 8s/step - accuracy: 0.5328 - distillation_loss: 1.1119 - loss: 0.0000e+00 - student_loss: 1.2223 - val_accuracy: 0.5068 - val_loss: 1.2102 - val_student_loss: 1.2383
+
+Epoch 14/20
+
+13/13 ━━━━━━━━━━━━━━━━━━━━ 102s 8s/step - accuracy: 0.5655 - distillation_loss: 1.0595 - loss: 0.0000e+00 - student_loss: 1.1837 - val_accuracy: 0.5722 - val_loss: 1.1773 - val_student_loss: 1.1774
+
+Epoch 15/20
+
+13/13 ━━━━━━━━━━━━━━━━━━━━ 103s 8s/step - accuracy: 0.5998 - distillation_loss: 1.0133 - loss: 0.0000e+00 - student_loss: 1.1465 - val_accuracy: 0.5204 - val_loss: 1.2519 - val_student_loss: 1.2340
+
+Epoch 16/20
+
+13/13 ━━━━━━━━━━━━━━━━━━━━ 103s 8s/step - accuracy: 0.6110 - distillation_loss: 0.9992 - loss: 0.0000e+00 - student_loss: 1.1359 - val_accuracy: 0.6104 - val_loss: 1.0947 - val_student_loss: 1.1090
+
+Epoch 17/20
+
+13/13 ━━━━━━━━━━━━━━━━━━━━ 103s 8s/step - accuracy: 0.6191 - distillation_loss: 0.9635 - loss: 0.0000e+00 - student_loss: 1.1101 - val_accuracy: 0.6076 - val_loss: 1.0678 - val_student_loss: 1.0952
+
+Epoch 18/20
+
+13/13 ━━━━━━━━━━━━━━━━━━━━ 103s 8s/step - accuracy: 0.6400 - distillation_loss: 0.9460 - loss: 0.0000e+00 - student_loss: 1.0902 - val_accuracy: 0.6076 - val_loss: 1.0256 - val_student_loss: 1.0681
+
+Epoch 19/20
+
+13/13 ━━━━━━━━━━━━━━━━━━━━ 103s 8s/step - accuracy: 0.6340 - distillation_loss: 0.9411 - loss: 0.0000e+00 - student_loss: 1.0943 - val_accuracy: 0.6213 - val_loss: 1.0353 - val_student_loss: 1.0702
+
+Epoch 20/20
+
+13/13 ━━━━━━━━━━━━━━━━━━━━ 103s 8s/step - accuracy: 0.6506 - distillation_loss: 0.9121 - loss: 0.0000e+00 - student_loss: 1.0674 - val_accuracy: 0.6376 - val_loss: 1.0027 - val_student_loss: 1.0602
 ```
 </div>
+
 If we had trained the same model (the `ViTClassifier`) from scratch with the exact same
 hyperparameters, the model would have scored about 59% accuracy. You can adapt the following code
 to reproduce this result:
@@ -668,7 +765,7 @@ model rather than a Transformer as shown in the paper.
 * ViT models are initialized with a combination of different initializers including
 truncated normal, random normal, Glorot uniform, etc. If you're looking for
 end-to-end reproduction of the original results, don't forget to initialize the ViTs well.
-* If you want to explore the pre-trained DeiT models in TensorFlow and Keras with code
+* If you want to explore the pre-trained DeiT models in Keras with code
 for fine-tuning, [check out these models on TF-Hub](https://tfhub.dev/sayakpaul/collections/deit/1).
 
 ---
@@ -677,7 +774,7 @@ for fine-tuning, [check out these models on TF-Hub](https://tfhub.dev/sayakpaul/
 * Ross Wightman for keeping
 [`timm`](https://github.com/rwightman/pytorch-image-models)
 updated with readable implementations. I referred to the implementations of ViT and DeiT
-a lot during implementing them in TensorFlow.
+a lot during implementing them in Keras.
 * [Aritra Roy Gosthipaty](https://github.com/ariG23498)
 who implemented some portions of the `ViTClassifier` in another project.
 * [Google Developers Experts](https://developers.google.com/programs/experts/)
