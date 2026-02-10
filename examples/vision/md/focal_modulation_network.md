@@ -80,13 +80,12 @@ Keras 3 allows this model to run on JAX, PyTorch, or TensorFlow. We use keras.op
 import os
 
 # Set backend before importing keras
-os.environ["KERAS_BACKEND"] = "jax"  # Or "torch" or "tensorflow"
+os.environ["KERAS_BACKEND"] = "tensorflow"  # Or "torch" or "tensorflow"
 
 import numpy as np
 import keras
 from keras import layers
 from keras import ops
-from typing import Optional
 from matplotlib import pyplot as plt
 from random import randint
 
@@ -116,6 +115,7 @@ EPOCHS = 20
 
 ---
 ## Data Loading with PyDataset
+
 Keras 3 introduces PyDataset as a standardized way to handle data.
 It works identically across all backends and avoids the "Symbolic Tensor" issues often found
 when using tf.data with JAX or PyTorch.
@@ -280,12 +280,7 @@ The Focal Modulation Block consists of:
 
 ```python
 
-def MLP(
-    in_features: int,
-    hidden_features: Optional[int] = None,
-    out_features: Optional[int] = None,
-    mlp_drop_rate: float = 0.0,
-):
+def MLP(in_features, hidden_features=None, out_features=None, mlp_drop_rate=0.0):
     hidden_features = hidden_features or in_features
     out_features = out_features or in_features
     return keras.Sequential(
@@ -365,7 +360,7 @@ produces `Z^0`. Where `Z^0` can be expressed as follows:
 | Equation 5: Linear projection of `Z^0` (Source: Aritra and Ritwik) |
 
 `Z^0` is then passed on to a series of Depth-Wise (DWConv) Conv and
-[GeLU](hhttps://keras.io/api/layers/activations/#gelu-function) layers. The
+[GeLU](https://keras.io/api/layers/activations/#gelu-function) layers. The
 authors term each block of DWConv and GeLU as levels denoted by `l`. In **Figure 6** we
 have two levels. Mathematically this is represented as:
 
@@ -858,143 +853,155 @@ history = model.fit(
 
 <div class="k-default-codeblock">
 ```
-/Users/lakshmikala/fmn_tutorial_env/lib/python3.12/site-packages/keras/src/layers/layer.py:424: UserWarning: `build()` was called on layer 'focal_modulation_block', however the layer does not have a `build()` method implemented and it looks like it has unbuilt state. This will cause the layer to be marked as built, despite not being actually built, which may cause failures down the line. Make sure to implement a proper `build()` method.
-  warnings.warn(
-/Users/lakshmikala/fmn_tutorial_env/lib/python3.12/site-packages/keras/src/layers/layer.py:424: UserWarning: `build()` was called on layer 'focal_modulation_block_1', however the layer does not have a `build()` method implemented and it looks like it has unbuilt state. This will cause the layer to be marked as built, despite not being actually built, which may cause failures down the line. Make sure to implement a proper `build()` method.
-  warnings.warn(
-/Users/lakshmikala/fmn_tutorial_env/lib/python3.12/site-packages/keras/src/layers/layer.py:424: UserWarning: `build()` was called on layer 'focal_modulation_block_2', however the layer does not have a `build()` method implemented and it looks like it has unbuilt state. This will cause the layer to be marked as built, despite not being actually built, which may cause failures down the line. Make sure to implement a proper `build()` method.
-  warnings.warn(
-/Users/lakshmikala/fmn_tutorial_env/lib/python3.12/site-packages/keras/src/layers/layer.py:424: UserWarning: `build()` was called on layer 'focal_modulation_block_3', however the layer does not have a `build()` method implemented and it looks like it has unbuilt state. This will cause the layer to be marked as built, despite not being actually built, which may cause failures down the line. Make sure to implement a proper `build()` method.
-  warnings.warn(
-/Users/lakshmikala/fmn_tutorial_env/lib/python3.12/site-packages/keras/src/layers/layer.py:424: UserWarning: `build()` was called on layer 'focal_modulation_block_4', however the layer does not have a `build()` method implemented and it looks like it has unbuilt state. This will cause the layer to be marked as built, despite not being actually built, which may cause failures down the line. Make sure to implement a proper `build()` method.
-  warnings.warn(
-/Users/lakshmikala/fmn_tutorial_env/lib/python3.12/site-packages/keras/src/layers/layer.py:424: UserWarning: `build()` was called on layer 'focal_modulation_block_5', however the layer does not have a `build()` method implemented and it looks like it has unbuilt state. This will cause the layer to be marked as built, despite not being actually built, which may cause failures down the line. Make sure to implement a proper `build()` method.
-  warnings.warn(
-
-/Users/lakshmikala/fmn_tutorial_env/lib/python3.12/site-packages/keras/src/layers/layer.py:424: UserWarning: `build()` was called on layer 'focal_modulation_block_6', however the layer does not have a `build()` method implemented and it looks like it has unbuilt state. This will cause the layer to be marked as built, despite not being actually built, which may cause failures down the line. Make sure to implement a proper `build()` method.
-  warnings.warn(
-/Users/lakshmikala/fmn_tutorial_env/lib/python3.12/site-packages/keras/src/layers/layer.py:424: UserWarning: `build()` was called on layer 'focal_modulation_network', however the layer does not have a `build()` method implemented and it looks like it has unbuilt state. This will cause the layer to be marked as built, despite not being actually built, which may cause failures down the line. Make sure to implement a proper `build()` method.
-  warnings.warn(
-
 Epoch 1/20
 
-313/313 ━━━━━━━━━━━━━━━━━━━━ 249s 721ms/step - accuracy: 0.1817 - loss: 2.1822 - val_accuracy: 0.2481 - val_loss: 2.0263
+/Users/lakshmikala/node2vec_env/lib/python3.12/site-packages/keras/src/layers/layer.py:424: UserWarning: `build()` was called on layer 'focal_modulation_block', however the layer does not have a `build()` method implemented and it looks like it has unbuilt state. This will cause the layer to be marked as built, despite not being actually built, which may cause failures down the line. Make sure to implement a proper `build()` method.
+  warnings.warn(
+/Users/lakshmikala/node2vec_env/lib/python3.12/site-packages/keras/src/layers/layer.py:424: UserWarning: `build()` was called on layer 'focal_modulation_block_1', however the layer does not have a `build()` method implemented and it looks like it has unbuilt state. This will cause the layer to be marked as built, despite not being actually built, which may cause failures down the line. Make sure to implement a proper `build()` method.
+  warnings.warn(
+
+/Users/lakshmikala/node2vec_env/lib/python3.12/site-packages/keras/src/layers/layer.py:424: UserWarning: `build()` was called on layer 'focal_modulation_block_2', however the layer does not have a `build()` method implemented and it looks like it has unbuilt state. This will cause the layer to be marked as built, despite not being actually built, which may cause failures down the line. Make sure to implement a proper `build()` method.
+  warnings.warn(
+/Users/lakshmikala/node2vec_env/lib/python3.12/site-packages/keras/src/layers/layer.py:424: UserWarning: `build()` was called on layer 'focal_modulation_block_3', however the layer does not have a `build()` method implemented and it looks like it has unbuilt state. This will cause the layer to be marked as built, despite not being actually built, which may cause failures down the line. Make sure to implement a proper `build()` method.
+  warnings.warn(
+
+/Users/lakshmikala/node2vec_env/lib/python3.12/site-packages/keras/src/layers/layer.py:424: UserWarning: `build()` was called on layer 'focal_modulation_block_4', however the layer does not have a `build()` method implemented and it looks like it has unbuilt state. This will cause the layer to be marked as built, despite not being actually built, which may cause failures down the line. Make sure to implement a proper `build()` method.
+  warnings.warn(
+
+/Users/lakshmikala/node2vec_env/lib/python3.12/site-packages/keras/src/layers/layer.py:424: UserWarning: `build()` was called on layer 'focal_modulation_block_5', however the layer does not have a `build()` method implemented and it looks like it has unbuilt state. This will cause the layer to be marked as built, despite not being actually built, which may cause failures down the line. Make sure to implement a proper `build()` method.
+  warnings.warn(
+/Users/lakshmikala/node2vec_env/lib/python3.12/site-packages/keras/src/layers/layer.py:424: UserWarning: `build()` was called on layer 'focal_modulation_block_6', however the layer does not have a `build()` method implemented and it looks like it has unbuilt state. This will cause the layer to be marked as built, despite not being actually built, which may cause failures down the line. Make sure to implement a proper `build()` method.
+  warnings.warn(
+
+/Users/lakshmikala/node2vec_env/lib/python3.12/site-packages/keras/src/layers/layer.py:424: UserWarning: `build()` was called on layer 'focal_modulation_network', however the layer does not have a `build()` method implemented and it looks like it has unbuilt state. This will cause the layer to be marked as built, despite not being actually built, which may cause failures down the line. Make sure to implement a proper `build()` method.
+  warnings.warn(
+
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1770700186.220793 2002752 service.cc:152] XLA service 0x16cf639d0 initialized for platform Host (this does not guarantee that XLA will be used). Devices:
+I0000 00:00:1770700186.220808 2002752 service.cc:160]   StreamExecutor device (0): Host, Default Version
+I0000 00:00:1770700186.251643 2002752 device_compiler.h:188] Compiled cluster using XLA!  This line is logged at most once for the lifetime of the process.
+
+313/313 ━━━━━━━━━━━━━━━━━━━━ 312s 964ms/step - accuracy: 0.1826 - loss: 2.1990 - val_accuracy: 0.2426 - val_loss: 2.0434
 
 Epoch 2/20
 
-313/313 ━━━━━━━━━━━━━━━━━━━━ 191s 610ms/step - accuracy: 0.2880 - loss: 1.8978 - val_accuracy: 0.3367 - val_loss: 1.8037
+313/313 ━━━━━━━━━━━━━━━━━━━━ 302s 964ms/step - accuracy: 0.2891 - loss: 1.8906 - val_accuracy: 0.3191 - val_loss: 1.8333
 
 Epoch 3/20
 
-313/313 ━━━━━━━━━━━━━━━━━━━━ 196s 627ms/step - accuracy: 0.3679 - loss: 1.6964 - val_accuracy: 0.3927 - val_loss: 1.6486
+313/313 ━━━━━━━━━━━━━━━━━━━━ 303s 968ms/step - accuracy: 0.3669 - loss: 1.7095 - val_accuracy: 0.3869 - val_loss: 1.6693
 
 Epoch 4/20
 
-313/313 ━━━━━━━━━━━━━━━━━━━━ 197s 629ms/step - accuracy: 0.4297 - loss: 1.5512 - val_accuracy: 0.4249 - val_loss: 1.5567
+313/313 ━━━━━━━━━━━━━━━━━━━━ 308s 984ms/step - accuracy: 0.4221 - loss: 1.5685 - val_accuracy: 0.4188 - val_loss: 1.5894
 
 Epoch 5/20
 
-313/313 ━━━━━━━━━━━━━━━━━━━━ 0s 626ms/step - accuracy: 0.4586 - loss: 1.4821
+313/313 ━━━━━━━━━━━━━━━━━━━━ 0s 905ms/step - accuracy: 0.4501 - loss: 1.5031
+
+WARNING:tensorflow:5 out of the last 5 calls to <function conv.<locals>._conv_xla at 0x3190abc40> triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
+
+WARNING:tensorflow:6 out of the last 6 calls to <function conv.<locals>._conv_xla at 0x3190abd80> triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
 ```
 </div>
 
-![png](/img/examples/vision/focal_modulation_network/focal_modulation_network_33_1576.png)
+![png](/img/examples/vision/focal_modulation_network/focal_modulation_network_33_1582.png)
     
 
 
 <div class="k-default-codeblock">
 ```
-313/313 ━━━━━━━━━━━━━━━━━━━━ 205s 654ms/step - accuracy: 0.4709 - loss: 1.4549 - val_accuracy: 0.4661 - val_loss: 1.4864
+313/313 ━━━━━━━━━━━━━━━━━━━━ 313s 1s/step - accuracy: 0.4618 - loss: 1.4759 - val_accuracy: 0.4519 - val_loss: 1.5107
 
 Epoch 6/20
 
-313/313 ━━━━━━━━━━━━━━━━━━━━ 199s 636ms/step - accuracy: 0.5006 - loss: 1.3829 - val_accuracy: 0.4975 - val_loss: 1.4074
+313/313 ━━━━━━━━━━━━━━━━━━━━ 316s 1s/step - accuracy: 0.4919 - loss: 1.4076 - val_accuracy: 0.4692 - val_loss: 1.4941
 
 Epoch 7/20
 
-313/313 ━━━━━━━━━━━━━━━━━━━━ 201s 641ms/step - accuracy: 0.5200 - loss: 1.3344 - val_accuracy: 0.4945 - val_loss: 1.4050
+313/313 ━━━━━━━━━━━━━━━━━━━━ 312s 997ms/step - accuracy: 0.5189 - loss: 1.3461 - val_accuracy: 0.5032 - val_loss: 1.3940
 
 Epoch 8/20
 
-313/313 ━━━━━━━━━━━━━━━━━━━━ 205s 653ms/step - accuracy: 0.5375 - loss: 1.2885 - val_accuracy: 0.5062 - val_loss: 1.3712
+313/313 ━━━━━━━━━━━━━━━━━━━━ 307s 981ms/step - accuracy: 0.5356 - loss: 1.3025 - val_accuracy: 0.5182 - val_loss: 1.3580
 
 Epoch 9/20
 
-313/313 ━━━━━━━━━━━━━━━━━━━━ 203s 647ms/step - accuracy: 0.5518 - loss: 1.2532 - val_accuracy: 0.5217 - val_loss: 1.3348
+313/313 ━━━━━━━━━━━━━━━━━━━━ 299s 954ms/step - accuracy: 0.5440 - loss: 1.2654 - val_accuracy: 0.5273 - val_loss: 1.3291
 
 Epoch 10/20
 
-313/313 ━━━━━━━━━━━━━━━━━━━━ 0s 617ms/step - accuracy: 0.5625 - loss: 1.2337
+313/313 ━━━━━━━━━━━━━━━━━━━━ 0s 866ms/step - accuracy: 0.5588 - loss: 1.2346
 ```
 </div>
 
-![png](/img/examples/vision/focal_modulation_network/focal_modulation_network_33_3152.png)
+![png](/img/examples/vision/focal_modulation_network/focal_modulation_network_33_3158.png)
     
 
 
 <div class="k-default-codeblock">
 ```
-313/313 ━━━━━━━━━━━━━━━━━━━━ 202s 646ms/step - accuracy: 0.5646 - loss: 1.2220 - val_accuracy: 0.5434 - val_loss: 1.3018
+313/313 ━━━━━━━━━━━━━━━━━━━━ 301s 961ms/step - accuracy: 0.5600 - loss: 1.2305 - val_accuracy: 0.5273 - val_loss: 1.3158
 
 Epoch 11/20
 
-313/313 ━━━━━━━━━━━━━━━━━━━━ 199s 635ms/step - accuracy: 0.5821 - loss: 1.1802 - val_accuracy: 0.5463 - val_loss: 1.2732
+313/313 ━━━━━━━━━━━━━━━━━━━━ 302s 965ms/step - accuracy: 0.5741 - loss: 1.1958 - val_accuracy: 0.5248 - val_loss: 1.3298
 
 Epoch 12/20
 
-313/313 ━━━━━━━━━━━━━━━━━━━━ 201s 642ms/step - accuracy: 0.5925 - loss: 1.1532 - val_accuracy: 0.5622 - val_loss: 1.2473
+313/313 ━━━━━━━━━━━━━━━━━━━━ 302s 965ms/step - accuracy: 0.5836 - loss: 1.1713 - val_accuracy: 0.5500 - val_loss: 1.2602
 
 Epoch 13/20
 
-313/313 ━━━━━━━━━━━━━━━━━━━━ 202s 644ms/step - accuracy: 0.6007 - loss: 1.1298 - val_accuracy: 0.5610 - val_loss: 1.2580
+313/313 ━━━━━━━━━━━━━━━━━━━━ 297s 947ms/step - accuracy: 0.5900 - loss: 1.1483 - val_accuracy: 0.5626 - val_loss: 1.2348
 
 Epoch 14/20
 
-313/313 ━━━━━━━━━━━━━━━━━━━━ 198s 632ms/step - accuracy: 0.6095 - loss: 1.1042 - val_accuracy: 0.5711 - val_loss: 1.2208
+313/313 ━━━━━━━━━━━━━━━━━━━━ 304s 970ms/step - accuracy: 0.5987 - loss: 1.1270 - val_accuracy: 0.5657 - val_loss: 1.2249
 
 Epoch 15/20
 
-313/313 ━━━━━━━━━━━━━━━━━━━━ 0s 4s/step - accuracy: 0.6154 - loss: 1.0897
+313/313 ━━━━━━━━━━━━━━━━━━━━ 0s 884ms/step - accuracy: 0.6118 - loss: 1.1106
 ```
 </div>
 
-![png](/img/examples/vision/focal_modulation_network/focal_modulation_network_33_4728.png)
+![png](/img/examples/vision/focal_modulation_network/focal_modulation_network_33_4734.png)
     
 
 
 <div class="k-default-codeblock">
 ```
-313/313 ━━━━━━━━━━━━━━━━━━━━ 1243s 4s/step - accuracy: 0.6148 - loss: 1.0910 - val_accuracy: 0.5685 - val_loss: 1.2344
+313/313 ━━━━━━━━━━━━━━━━━━━━ 308s 982ms/step - accuracy: 0.6081 - loss: 1.1134 - val_accuracy: 0.5671 - val_loss: 1.2246
 
 Epoch 16/20
 
-313/313 ━━━━━━━━━━━━━━━━━━━━ 211s 675ms/step - accuracy: 0.6184 - loss: 1.0740 - val_accuracy: 0.5781 - val_loss: 1.2013
+313/313 ━━━━━━━━━━━━━━━━━━━━ 298s 954ms/step - accuracy: 0.6105 - loss: 1.0981 - val_accuracy: 0.5708 - val_loss: 1.2035
 
 Epoch 17/20
 
-313/313 ━━━━━━━━━━━━━━━━━━━━ 203s 647ms/step - accuracy: 0.6250 - loss: 1.0632 - val_accuracy: 0.5765 - val_loss: 1.2031
+313/313 ━━━━━━━━━━━━━━━━━━━━ 302s 964ms/step - accuracy: 0.6144 - loss: 1.0838 - val_accuracy: 0.5770 - val_loss: 1.2002
 
 Epoch 18/20
 
-313/313 ━━━━━━━━━━━━━━━━━━━━ 204s 651ms/step - accuracy: 0.6244 - loss: 1.0607 - val_accuracy: 0.5864 - val_loss: 1.1826
+313/313 ━━━━━━━━━━━━━━━━━━━━ 308s 984ms/step - accuracy: 0.6209 - loss: 1.0799 - val_accuracy: 0.5764 - val_loss: 1.1978
 
 Epoch 19/20
 
-313/313 ━━━━━━━━━━━━━━━━━━━━ 212s 678ms/step - accuracy: 0.6304 - loss: 1.0513 - val_accuracy: 0.5843 - val_loss: 1.1884
+313/313 ━━━━━━━━━━━━━━━━━━━━ 315s 1s/step - accuracy: 0.6174 - loss: 1.0772 - val_accuracy: 0.5777 - val_loss: 1.1951
 
 Epoch 20/20
 
-313/313 ━━━━━━━━━━━━━━━━━━━━ 0s 619ms/step - accuracy: 0.6304 - loss: 1.0573
+313/313 ━━━━━━━━━━━━━━━━━━━━ 0s 896ms/step - accuracy: 0.6249 - loss: 1.0723
 ```
 </div>
 
-![png](/img/examples/vision/focal_modulation_network/focal_modulation_network_33_6304.png)
+![png](/img/examples/vision/focal_modulation_network/focal_modulation_network_33_6310.png)
     
 
 
 <div class="k-default-codeblock">
 ```
-313/313 ━━━━━━━━━━━━━━━━━━━━ 202s 646ms/step - accuracy: 0.6321 - loss: 1.0518 - val_accuracy: 0.5851 - val_loss: 1.1841
+313/313 ━━━━━━━━━━━━━━━━━━━━ 311s 993ms/step - accuracy: 0.6240 - loss: 1.0710 - val_accuracy: 0.5775 - val_loss: 1.1971
 ```
 </div>
 

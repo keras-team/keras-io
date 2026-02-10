@@ -78,7 +78,7 @@ Keras 3 allows this model to run on JAX, PyTorch, or TensorFlow. We use keras.op
 import os
 
 # Set backend before importing keras
-os.environ["KERAS_BACKEND"] = "jax"  # Or "torch" or "tensorflow"
+os.environ["KERAS_BACKEND"] = "tensorflow"  # Or "torch" or "tensorflow"
 
 import numpy as np
 import keras
