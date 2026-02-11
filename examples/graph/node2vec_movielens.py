@@ -535,8 +535,8 @@ Finally we plot the learning history.
 plt.plot(history.history["loss"])
 plt.ylabel("loss")
 plt.xlabel("epoch")
-plt.savefig("loss.png")
-print("Saved loss plot to loss.png")
+plt.show()
+
 
 """
 ## Analyze the learnt embeddings.
