@@ -1445,6 +1445,7 @@ MODELS_MASTER = {
                         "keras_hub.models.LlamaBackbone.from_preset",
                         "keras_hub.models.LlamaBackbone.token_embedding",
                         "keras_hub.models.LlamaBackbone.enable_lora",
+                        "keras_hub.models.LlamaBackbone.get_layout_map",
                     ],
                 },
                 {
