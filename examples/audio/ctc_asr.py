@@ -5,7 +5,7 @@ Date created: 2021/09/26
 Last modified: 2026/01/27
 Description: Training a CTC-based model for automatic speech recognition.
 Accelerator: GPU
-Migrated By: [Harshith K](https://github.com/kharshith-k/)
+Converted to Keras 3 by: [Harshith K](https://github.com/kharshith-k/)
 """
 
 """
@@ -48,8 +48,7 @@ pip install jiwer
 - [LJSpeech Dataset](https://keithito.com/LJ-Speech-Dataset/)
 - [Speech recognition](https://en.wikipedia.org/wiki/Speech_recognition)
 - [Sequence Modeling With CTC](https://distill.pub/2017/ctc/)
--
-[DeepSpeech2](https://nvidia.github.io/OpenSeq2Seq/html/speech-recognition/deepspeech2.html)
+- [DeepSpeech2](https://nvidia.github.io/OpenSeq2Seq/html/speech-recognition/deepspeech2.html)
 """
 
 """
@@ -463,7 +462,7 @@ for i in np.random.randint(0, len(predictions), 5):
 ## Conclusion
 
 In practice, you should train for around 50 epochs or more. Each epoch
-takes approximately 5-6mn using a `GeForce RTX 2080 Ti` GPU.
+takes approximately 8-10 minutes using a `Colab A100` GPU.
 The model we trained at 50 epochs has a `Word Error Rate (WER) ≈ 16% to 17%`.
 
 Some of the transcriptions around epoch 50:
