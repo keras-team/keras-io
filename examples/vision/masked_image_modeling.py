@@ -2,7 +2,7 @@
 Title: Masked image modeling with Autoencoders
 Author: [Aritra Roy Gosthipaty](https://twitter.com/arig23498), [Sayak Paul](https://twitter.com/RisingSayak)
 Date created: 2021/12/20
-Last modified: 2026/02/09
+Last modified: 2026/02/12
 Description: Implementing Masked Autoencoders for self-supervised pretraining.
 Accelerator: GPU
 Converted to Keras 3 by: [Maitry Sinha](https://github.com/maitry63)
@@ -60,7 +60,6 @@ from keras import layers, ops
 SEED = 42
 keras.utils.set_random_seed(SEED)
 
-
 """
 ## Hyperparameters for pretraining
 
@@ -83,7 +82,7 @@ LEARNING_RATE = 5e-3
 WEIGHT_DECAY = 1e-4
 
 # PRETRAINING
-EPOCHS = 1
+EPOCHS = 100
 
 # AUGMENTATION
 IMAGE_SIZE = 48  # We will resize input images to this size.
@@ -405,14 +404,14 @@ patch_encoder = PatchEncoder(
 )
 
 """
-## Prepare the Dataset
+### Prepare the Dataset
 """
 train_ds = MaskedImageDataset(x_train, batch_size=BATCH_SIZE, shuffle=True)
 val_ds = MaskedImageDataset(x_val, batch_size=BATCH_SIZE)
 test_ds = MaskedImageDataset(x_test, batch_size=BATCH_SIZE)
 
 """
-Let's visualize the image patches.
+### Let's visualize the image patches.
 """
 
 # Get a batch of images.
@@ -528,7 +527,6 @@ lightweight decoder that takes "<10% computation per token vs. the encoder". We 
 specific with the "<10% computation" in our implementation but have used a smaller
 decoder (both in terms of depth and projection dimensions).
 """
-
 
 def create_decoder(
     num_layers=DEC_LAYERS, num_heads=DEC_NUM_HEADS, image_size=IMAGE_SIZE
@@ -700,9 +698,9 @@ mae_model = MaskedAutoencoder(
 # Taking a batch of test inputs to measure model's progress.
 test_images = next(iter(test_ds))
 
-"""
 ## Training callbacks
 
+"""
 ### Visualization callback
 """
 
@@ -892,7 +890,9 @@ We are using average pooling to extract learned representations from the MAE enc
 Another approach would be to use a learnable dummy token inside the encoder during
 pretraining (resembling the [CLS] token). Then we can extract representations from that
 token during the downstream tasks.
+"""
 
+"""
 ### Prepare datasets for linear probing
 """
 
@@ -953,7 +953,7 @@ test_ds = prepare_data(x_test, y_test, BATCH_SIZE, is_train=False)
 """
 ### Perform linear probing
 """
-linear_probe_epochs = 2
+linear_probe_epochs = 50
 linear_prob_lr = 0.1
 warm_epoch_percentage = 0.1
 steps = int((len(x_train) // BATCH_SIZE) * linear_probe_epochs)
@@ -975,35 +975,18 @@ downstream_model.fit(train_ds, validation_data=val_ds, epochs=linear_probe_epoch
 loss, accuracy = downstream_model.evaluate(test_ds)
 accuracy = round(accuracy * 100, 2)
 print(f"Accuracy on the test set: {accuracy}%.")
+
 """
-We believe that with a more sophisticated hyperparameter tuning process and a longer
-pretraining it is possible to improve this performance further. For comparison, we took
-the encoder architecture and
-[trained it from scratch](https://github.com/ariG23498/mae-scalable-vision-learners/blob/master/regular-classification.ipynb)
-in a fully supervised manner. This gave us ~76% test top-1 accuracy. The authors of
-MAE demonstrates strong performance on the ImageNet-1k dataset as well as
-other downstream tasks like object detection and semantic segmentation.
+## Final remarks
 
-## Final notes
+You can obtain better results by increasing the size of the training sample,
+train for more  epochs, explore other base encoders for images and text,
+set the base encoders to be trainable, and tune the hyperparameters,
+especially the `temperature` for the softmax in the loss computation.
 
-We refer the interested readers to other examples on self-supervised learning present on
-keras.io:
+Example available on HuggingFace
 
-* [SimCLR](https://keras.io/examples/vision/semisupervised_simclr/)
-* [NNCLR](https://keras.io/examples/vision/nnclr)
-* [SimSiam](https://keras.io/examples/vision/simsiam)
-
-This idea of using BERT flavored pretraining in computer vision was also explored in
-[Selfie](https://arxiv.org/abs/1906.02940), but it could not demonstrate strong results.
-Another concurrent work that explores the idea of masked image modeling is
-[SimMIM](https://arxiv.org/abs/2111.09886). Finally, as a fun fact, we, the authors of
-this example also explored the idea of ["reconstruction as a pretext task"](https://i.ibb.co/k5CpwDX/image.png)
-in 2020 but we could not prevent the network from representation collapse, and
-hence we did not get strong downstream performance.
-
-We would like to thank [Xinlei Chen](http://xinleic.xyz/)
-(one of the authors of MAE) for helpful discussions. We are grateful to
-[JarvisLabs](https://jarvislabs.ai/) and
-[Google Developers Experts](https://developers.google.com/programs/experts/)
-program for helping with GPU credits.
+| Trained Model | Demo |
+| :--: | :--: |
+| [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Model-nl%20image%20search-black.svg)](https://huggingface.co/keras-io/dual-encoder-image-search) | [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Spaces-nl%20image%20search-black.svg)](https://huggingface.co/spaces/keras-io/dual-encoder-image-search) |
 """
