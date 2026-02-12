@@ -528,6 +528,7 @@ specific with the "<10% computation" in our implementation but have used a small
 decoder (both in terms of depth and projection dimensions).
 """
 
+
 def create_decoder(
     num_layers=DEC_LAYERS, num_heads=DEC_NUM_HEADS, image_size=IMAGE_SIZE
 ):
