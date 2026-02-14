@@ -2,7 +2,7 @@
 
 **Authors:** [Prabhanshu Attri](https://prabhanshu.com/github), [Yashika Sharma](https://github.com/yashika51), [Kristi Takach](https://github.com/ktakattack), [Falak Shah](https://github.com/falaktheoptimist)<br>
 **Date created:** 2020/06/23<br>
-**Last modified:** 2023/11/22<br>
+**Last modified:** 2026/02/01<br>
 **Description:** This notebook demonstrates how to do timeseries forecasting using a LSTM model.
 
 
@@ -15,10 +15,23 @@
 
 
 ```python
+import os
 import pandas as pd
 import matplotlib.pyplot as plt
 import keras
 ```
+
+<div class="k-default-codeblock">
+```
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+E0000 00:00:1771098579.961928   24958 cuda_dnn.cc:8579] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered
+E0000 00:00:1771098579.966156   24958 cuda_blas.cc:1407] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
+W0000 00:00:1771098579.978170   24958 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1771098579.978182   24958 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1771098579.978184   24958 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1771098579.978186   24958 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+```
+</div>
 
 ---
 ## Climate Data Time-Series
@@ -56,13 +69,18 @@ Index| Features      |Format             |Description
 
 
 ```python
+
 from zipfile import ZipFile
 
 uri = "https://storage.googleapis.com/tensorflow/tf-keras-datasets/jena_climate_2009_2016.csv.zip"
 zip_path = keras.utils.get_file(origin=uri, fname="jena_climate_2009_2016.csv.zip")
 zip_file = ZipFile(zip_path)
-zip_file.extractall()
-csv_path = "jena_climate_2009_2016.csv"
+
+# FIX: Extract to the cache directory, not the current working directory
+zip_file.extractall(path=os.path.dirname(zip_path))
+
+# FIX: Construct the absolute path safely (works on Windows/Linux/Mac)
+csv_path = os.path.join(os.path.dirname(zip_path), "jena_climate_2009_2016.csv")
 
 df = pd.read_csv(csv_path)
 ```
@@ -190,7 +208,7 @@ past = 720
 future = 72
 learning_rate = 0.001
 batch_size = 256
-epochs = 10
+epochs = 1
 
 
 def normalize(data, train_split):
@@ -225,9 +243,9 @@ val_data = features.loc[train_split:]
 <div class="k-default-codeblock">
 ```
 The selected parameters are: Pressure, Temperature, Saturation vapor pressure, Vapor pressure deficit, Specific humidity, Airtight, Wind speed
-
 ```
 </div>
+
 # Training dataset
 
 The training dataset labels starts from the 792nd observation (720 + 72).
@@ -297,9 +315,9 @@ print("Target shape:", targets.numpy().shape)
 ```
 Input shape: (256, 120, 7)
 Target shape: (256, 1)
-
 ```
 </div>
+
 ---
 ## Training
 
@@ -314,27 +332,22 @@ model.compile(optimizer=keras.optimizers.Adam(learning_rate=learning_rate), loss
 model.summary()
 ```
 
-<div class="k-default-codeblock">
-```
-CUDA backend failed to initialize: Found cuSOLVER version 11405, but JAX was built against version 11502, which is newer. The copy of cuSOLVER that is installed must be at least as new as the version against which JAX was built. (Set TF_CPP_MIN_LOG_LEVEL=0 and rerun for more info.)
 
-```
-</div>
-<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold">Model: "functional_1"</span>
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold">Model: "functional"</span>
 </pre>
 
 
 
 
-<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━┓
-┃<span style="font-weight: bold"> Layer (type)                    </span>┃<span style="font-weight: bold"> Output Shape              </span>┃<span style="font-weight: bold">    Param # </span>┃
-┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━┩
-│ input_layer (<span style="color: #0087ff; text-decoration-color: #0087ff">InputLayer</span>)        │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">120</span>, <span style="color: #00af00; text-decoration-color: #00af00">7</span>)            │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │
-├─────────────────────────────────┼───────────────────────────┼────────────┤
-│ lstm (<span style="color: #0087ff; text-decoration-color: #0087ff">LSTM</span>)                     │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">32</span>)                │      <span style="color: #00af00; text-decoration-color: #00af00">5,120</span> │
-├─────────────────────────────────┼───────────────────────────┼────────────┤
-│ dense (<span style="color: #0087ff; text-decoration-color: #0087ff">Dense</span>)                   │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>)                 │         <span style="color: #00af00; text-decoration-color: #00af00">33</span> │
-└─────────────────────────────────┴───────────────────────────┴────────────┘
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━┓
+┃<span style="font-weight: bold"> Layer (type)                    </span>┃<span style="font-weight: bold"> Output Shape           </span>┃<span style="font-weight: bold">       Param # </span>┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━┩
+│ input_layer (<span style="color: #0087ff; text-decoration-color: #0087ff">InputLayer</span>)        │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">120</span>, <span style="color: #00af00; text-decoration-color: #00af00">7</span>)         │             <span style="color: #00af00; text-decoration-color: #00af00">0</span> │
+├─────────────────────────────────┼────────────────────────┼───────────────┤
+│ lstm (<span style="color: #0087ff; text-decoration-color: #0087ff">LSTM</span>)                     │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">32</span>)             │         <span style="color: #00af00; text-decoration-color: #00af00">5,120</span> │
+├─────────────────────────────────┼────────────────────────┼───────────────┤
+│ dense (<span style="color: #0087ff; text-decoration-color: #0087ff">Dense</span>)                   │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">1</span>)              │            <span style="color: #00af00; text-decoration-color: #00af00">33</span> │
+└─────────────────────────────────┴────────────────────────┴───────────────┘
 </pre>
 
 
@@ -382,51 +395,19 @@ history = model.fit(
 )
 ```
 
+    
 <div class="k-default-codeblock">
 ```
-Epoch 1/10
- 1172/1172 ━━━━━━━━━━━━━━━━━━━━ 0s 70ms/step - loss: 0.3008
-Epoch 1: val_loss improved from inf to 0.15039, saving model to model_checkpoint.weights.h5
- 1172/1172 ━━━━━━━━━━━━━━━━━━━━ 104s 88ms/step - loss: 0.3007 - val_loss: 0.1504
-Epoch 2/10
- 1171/1172 ━━━━━━━━━━━━━━━━━━━[37m━  0s 66ms/step - loss: 0.1397
-Epoch 2: val_loss improved from 0.15039 to 0.14231, saving model to model_checkpoint.weights.h5
- 1172/1172 ━━━━━━━━━━━━━━━━━━━━ 97s 83ms/step - loss: 0.1396 - val_loss: 0.1423
-Epoch 3/10
- 1171/1172 ━━━━━━━━━━━━━━━━━━━[37m━  0s 69ms/step - loss: 0.1242
-Epoch 3: val_loss did not improve from 0.14231
- 1172/1172 ━━━━━━━━━━━━━━━━━━━━ 101s 86ms/step - loss: 0.1242 - val_loss: 0.1513
-Epoch 4/10
- 1172/1172 ━━━━━━━━━━━━━━━━━━━━ 0s 68ms/step - loss: 0.1182
-Epoch 4: val_loss did not improve from 0.14231
- 1172/1172 ━━━━━━━━━━━━━━━━━━━━ 102s 87ms/step - loss: 0.1182 - val_loss: 0.1503
-Epoch 5/10
- 1171/1172 ━━━━━━━━━━━━━━━━━━━[37m━  0s 67ms/step - loss: 0.1160
-Epoch 5: val_loss did not improve from 0.14231
- 1172/1172 ━━━━━━━━━━━━━━━━━━━━ 100s 85ms/step - loss: 0.1160 - val_loss: 0.1500
-Epoch 6/10
- 1171/1172 ━━━━━━━━━━━━━━━━━━━[37m━  0s 69ms/step - loss: 0.1130
-Epoch 6: val_loss did not improve from 0.14231
- 1172/1172 ━━━━━━━━━━━━━━━━━━━━ 100s 86ms/step - loss: 0.1130 - val_loss: 0.1469
-Epoch 7/10
- 1172/1172 ━━━━━━━━━━━━━━━━━━━━ 0s 70ms/step - loss: 0.1106
-Epoch 7: val_loss improved from 0.14231 to 0.13916, saving model to model_checkpoint.weights.h5
- 1172/1172 ━━━━━━━━━━━━━━━━━━━━ 104s 89ms/step - loss: 0.1106 - val_loss: 0.1392
-Epoch 8/10
- 1171/1172 ━━━━━━━━━━━━━━━━━━━[37m━  0s 66ms/step - loss: 0.1097
-Epoch 8: val_loss improved from 0.13916 to 0.13257, saving model to model_checkpoint.weights.h5
- 1172/1172 ━━━━━━━━━━━━━━━━━━━━ 98s 84ms/step - loss: 0.1097 - val_loss: 0.1326
-Epoch 9/10
- 1171/1172 ━━━━━━━━━━━━━━━━━━━[37m━  0s 68ms/step - loss: 0.1075
-Epoch 9: val_loss improved from 0.13257 to 0.13057, saving model to model_checkpoint.weights.h5
- 1172/1172 ━━━━━━━━━━━━━━━━━━━━ 100s 85ms/step - loss: 0.1075 - val_loss: 0.1306
-Epoch 10/10
- 1172/1172 ━━━━━━━━━━━━━━━━━━━━ 0s 66ms/step - loss: 0.1065
-Epoch 10: val_loss improved from 0.13057 to 0.12671, saving model to model_checkpoint.weights.h5
- 1172/1172 ━━━━━━━━━━━━━━━━━━━━ 98s 84ms/step - loss: 0.1065 - val_loss: 0.1267
+1172/1172 ━━━━━━━━━━━━━━━━━━━━ 0s 62ms/step - loss: 0.3293
 
+Epoch 1: val_loss improved from None to 0.15638, saving model to model_checkpoint.weights.h5
+
+Epoch 1: finished saving model to model_checkpoint.weights.h5
+
+1172/1172 ━━━━━━━━━━━━━━━━━━━━ 92s 78ms/step - loss: 0.1987 - val_loss: 0.1564
 ```
 </div>
+
 We can visualize the loss with the function below. After one point, the loss stops
 decreasing.
 
@@ -495,57 +476,57 @@ for x, y in dataset_val.take(5):
     )
 ```
 
+    
 <div class="k-default-codeblock">
 ```
- 8/8 ━━━━━━━━━━━━━━━━━━━━ 0s 4ms/step  
-
+8/8 ━━━━━━━━━━━━━━━━━━━━ 0s 6ms/step
 ```
 </div>
-    
-![png](/img/examples/timeseries/timeseries_weather_forecasting/timeseries_weather_forecasting_24_1.png)
+
+![png](/img/examples/timeseries/timeseries_weather_forecasting/timeseries_weather_forecasting_24_2.png)
     
 
 
+    
 <div class="k-default-codeblock">
 ```
- 8/8 ━━━━━━━━━━━━━━━━━━━━ 0s 4ms/step
-
+8/8 ━━━━━━━━━━━━━━━━━━━━ 0s 9ms/step
 ```
 </div>
-    
-![png](/img/examples/timeseries/timeseries_weather_forecasting/timeseries_weather_forecasting_24_3.png)
+
+![png](/img/examples/timeseries/timeseries_weather_forecasting/timeseries_weather_forecasting_24_6.png)
     
 
 
+    
 <div class="k-default-codeblock">
 ```
- 8/8 ━━━━━━━━━━━━━━━━━━━━ 0s 5ms/step
-
+8/8 ━━━━━━━━━━━━━━━━━━━━ 0s 7ms/step
 ```
 </div>
-    
-![png](/img/examples/timeseries/timeseries_weather_forecasting/timeseries_weather_forecasting_24_5.png)
-    
 
-
-<div class="k-default-codeblock">
-```
- 8/8 ━━━━━━━━━━━━━━━━━━━━ 0s 5ms/step
-
-```
-</div>
-    
-![png](/img/examples/timeseries/timeseries_weather_forecasting/timeseries_weather_forecasting_24_7.png)
-    
-
-
-<div class="k-default-codeblock">
-```
- 8/8 ━━━━━━━━━━━━━━━━━━━━ 0s 4ms/step
-
-```
-</div>
-    
 ![png](/img/examples/timeseries/timeseries_weather_forecasting/timeseries_weather_forecasting_24_9.png)
+    
+
+
+    
+<div class="k-default-codeblock">
+```
+8/8 ━━━━━━━━━━━━━━━━━━━━ 0s 9ms/step
+```
+</div>
+
+![png](/img/examples/timeseries/timeseries_weather_forecasting/timeseries_weather_forecasting_24_12.png)
+    
+
+
+    
+<div class="k-default-codeblock">
+```
+8/8 ━━━━━━━━━━━━━━━━━━━━ 0s 6ms/step
+```
+</div>
+
+![png](/img/examples/timeseries/timeseries_weather_forecasting/timeseries_weather_forecasting_24_15.png)
     
 
