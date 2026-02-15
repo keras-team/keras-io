@@ -24,6 +24,8 @@ space, such that the caption embeddings are located near the embeddings of the i
 
 import os
 import json
+import zipfile
+import urllib.request
 import ssl
 import collections
 import numpy as np
@@ -54,42 +56,59 @@ one with images, and the other—with associated image captions.
 Note that the compressed images folder is 13GB in size.
 """
 
-ssl._create_default_https_context = ssl._create_unverified_context
-root_dir = "datasets"
-annotation_file = os.path.join(
-    root_dir, "captions_extracted/annotations/captions_train2014.json"
-)
-images_dir_marker = os.path.join(root_dir, "train2014_extracted/train2014")
 
-os.makedirs(root_dir, exist_ok=True)
-if not os.path.exists(annotation_file):
-    print("Downloading annotations zip...")
-    keras.utils.get_file(
-        "captions.zip",
-        origin="https://images.cocodataset.org/annotations/annotations_trainval2014.zip",
-        extract=True,
+def download_and_extract(url, fname, dest_dir, cache_dir):
+    # Download and extract a zip file with SSL bypass.
+    context = ssl._create_unverified_context()
+    opener = urllib.request.build_opener(urllib.request.HTTPSHandler(context=context))
+    urllib.request.install_opener(opener)
+
+    try:
+        path_to_zip = keras.utils.get_file(
+            fname,
+            origin=url,
+            extract=False,
+            cache_dir=cache_dir,
+        )
+    finally:
+        urllib.request.install_opener(None)
+
+    print(f"Extracting {fname}...")
+    with zipfile.ZipFile(path_to_zip, "r") as zip_ref:
+        for member in zip_ref.infolist():
+            filename = os.path.normpath(member.filename)
+            if filename.startswith(("/", "..")) or ".." in filename:
+                raise RuntimeError(f"Unsafe file path detected: {filename}")
+            zip_ref.extract(member, dest_dir)
+
+    return path_to_zip
+
+
+root_dir = os.path.abspath(".")
+extract_path = os.path.join(root_dir, "captions_extracted")
+annotation_json = os.path.join(extract_path, "annotations", "captions_train2014.json")
+images_dir = os.path.join(root_dir, "train2014_extracted")
+
+if not os.path.exists(annotation_json):
+    download_and_extract(
+        url="https://images.cocodataset.org/annotations/annotations_trainval2014.zip",
+        fname="captions.zip",
+        dest_dir=extract_path,
         cache_dir=root_dir,
-        cache_subdir="captions_extracted",
     )
-else:
-    print("Found existing annotations file. Skipping download.")
-if not os.path.exists(images_dir_marker):
+if not os.path.exists(images_dir):
     print("Downloading train2014 images zip (this is large)...")
-    keras.utils.get_file(
-        "train2014.zip",
-        origin="https://images.cocodataset.org/zips/train2014.zip",
-        extract=True,
+    download_and_extract(
+        url="https://images.cocodataset.org/zips/train2014.zip",
+        fname="train2014.zip",
+        dest_dir=images_dir,
         cache_dir=root_dir,
-        cache_subdir="train2014_extracted",
     )
-else:
-    print("Found existing images folder. Skipping download.")
-
-with open(annotation_file, "r") as f:
+with open(annotation_json, "r") as f:
     annotations = json.load(f)["annotations"]
 
 image_path_to_caption = collections.defaultdict(list)
-actual_image_folder = os.path.join(root_dir, "train2014_extracted", "train2014")
+actual_image_folder = os.path.join(images_dir, "train2014")
 
 for ann in annotations:
     caption = ann["caption"].lower().rstrip(".")
@@ -99,7 +118,7 @@ for ann in annotations:
     image_path_to_caption[image_path].append(caption)
 
 image_paths = list(image_path_to_caption.keys())
-print(f"Number of images: {len(image_paths)}")
+print(f"Number of images : {len(image_paths)}")
 
 """
 ## Process and save the data
