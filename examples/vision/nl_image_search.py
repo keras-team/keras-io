@@ -166,11 +166,11 @@ the same embedding space with the same dimensionality.
 
 def project_embeddings(x, num_layers, dim, dropout):
     for _ in range(num_layers):
-        residual = layers.Dense(dim)(x)
-        x = layers.Dense(dim)(residual)
-        x = layers.Activation("gelu")(x)
-        x = layers.Dropout(dropout)(x)
-        x = layers.Add()([x, residual])
+        projected_x = layers.Dense(dim)(x)
+        block_output = layers.Dense(dim)(projected_x)
+        block_output = layers.Activation("gelu")(block_output)
+        block_output = layers.Dropout(dropout)(block_output)
+        x = layers.Add()([block_output, projected_x])
         x = layers.LayerNormalization()(x)
     return x
 
