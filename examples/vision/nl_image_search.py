@@ -63,7 +63,7 @@ os.makedirs(root_dir, exist_ok=True)
 if not os.path.exists(annotations_dir):
     zip_path = keras.utils.get_file(
         "captions.zip",
-        origin="http://images.cocodataset.org/annotations/annotations_trainval2014.zip",
+        origin="https://images.cocodataset.org/annotations/annotations_trainval2014.zip",
         extract=True,
         cache_dir=".",
     )
@@ -71,7 +71,7 @@ if not os.path.exists(annotations_dir):
 if not os.path.exists(images_dir):
     zip_path = keras.utils.get_file(
         "train2014.zip",
-        origin="http://images.cocodataset.org/zips/train2014.zip",
+        origin="https://images.cocodataset.org/zips/train2014.zip",
         extract=True,
         cache_dir=".",
     )
@@ -112,29 +112,39 @@ bert_preprocessor = keras_nlp.models.BertPreprocessor.from_preset(
 
 
 class ImageCaptionDataset(PyDataset):
-    def __init__(self, image_paths, batch_size, **kwargs):
+    def __init__(self, image_paths, batch_size, captions_per_image=2, **kwargs):
         super().__init__(**kwargs)
         self.image_paths = image_paths
         self.batch_size = batch_size
+        self.captions_per_image = captions_per_image
+
+        # Total number of image, caption pairs
+        self.total_samples = len(self.image_paths) * self.captions_per_image
 
     @property
     def num_batches(self):
-        return int(np.ceil(len(self.image_paths) / self.batch_size))
+        return int(np.ceil(self.total_samples / self.batch_size))
 
     def __len__(self):
         return self.num_batches
 
     def __getitem__(self, idx):
-        batch_paths = self.image_paths[
-            idx * self.batch_size : (idx + 1) * self.batch_size
-        ]
+        start = idx * self.batch_size
+        end = min((idx + 1) * self.batch_size, self.total_samples)
+
         images, captions = [], []
 
-        for path in batch_paths:
+        for sample_idx in range(start, end):
+            image_idx = sample_idx // self.captions_per_image
+            caption_idx = sample_idx % self.captions_per_image
+
+            path = self.image_paths[image_idx]
+
             img = load_img(path, target_size=(299, 299))
             img = (img_to_array(img) / 127.5) - 1.0
+
             images.append(img)
-            captions.append(image_path_to_caption[path][0])
+            captions.append(image_path_to_caption[path][caption_idx])
 
         tokenized = bert_preprocessor(np.array(captions))
 
@@ -307,7 +317,9 @@ vision_encoder = create_vision_encoder(1, 256, 0.1)
 text_encoder = create_text_encoder(1, 256, 0.1)
 dual_encoder = DualEncoder(text_encoder, vision_encoder)
 
-dual_encoder.compile(optimizer=keras.optimizers.AdamW(1e-3))
+dual_encoder.compile(
+    optimizer=keras.optimizers.AdamW(learning_rate=1e-3, weight_decay=1e-3)
+)
 
 """
 ## Note that training the model with 60,000 image-caption pairs, with a batch size of 256,
@@ -415,11 +427,14 @@ def find_matches(image_embeddings, queries, k=9):
     query_embedding = query_embedding / (
         np.linalg.norm(query_embedding, axis=-1, keepdims=True) + 1e-12
     )
-    image_embedding = image_embeddings / (
+    # Compute the dot product between the query and the image embeddings.
+    dot_similarity = np.dot(query_embedding, image_embeddings.T)
+
+    image_embeddings = image_embeddings / (
         np.linalg.norm(image_embeddings, axis=-1, keepdims=True) + 1e-12
     )
     # Compute the dot product between the query and the image embeddings.
-    dot_similarity = np.dot(query_embedding, image_embedding.T)
+    dot_similarity = np.dot(query_embedding, image_embeddings.T)
     # Retrieve top k indices.
     results = np.argsort(dot_similarity, axis=-1)[:, ::-1][:, :k]
     # Return matching image paths.
