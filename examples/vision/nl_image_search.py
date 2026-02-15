@@ -85,7 +85,6 @@ if not os.path.exists(images_dir_marker):
 else:
     print("Found existing images folder. Skipping download.")
 
-print("\nProcessing data...")
 with open(annotation_file, "r") as f:
     annotations = json.load(f)["annotations"]
 
