@@ -24,6 +24,7 @@ space, such that the caption embeddings are located near the embeddings of the i
 
 import os
 import json
+import ssl
 import collections
 import numpy as np
 import matplotlib.pyplot as plt
@@ -53,36 +54,49 @@ one with images, and the other—with associated image captions.
 Note that the compressed images folder is 13GB in size.
 """
 
+ssl._create_default_https_context = ssl._create_unverified_context
 root_dir = "datasets"
-annotations_dir = os.path.join(root_dir, "captions_extracted/annotations")
-images_dir = os.path.join(root_dir, "train2014_extracted/train2014")
-annotation_file = os.path.join(annotations_dir, "captions_train2014.json")
+annotation_file = os.path.join(
+    root_dir, "captions_extracted/annotations/captions_train2014.json"
+)
+images_dir_marker = os.path.join(root_dir, "train2014_extracted/train2014")
 
 os.makedirs(root_dir, exist_ok=True)
-
-if not os.path.exists(annotations_dir):
-    zip_path = keras.utils.get_file(
+if not os.path.exists(annotation_file):
+    print("Downloading annotations zip...")
+    keras.utils.get_file(
         "captions.zip",
         origin="https://images.cocodataset.org/annotations/annotations_trainval2014.zip",
         extract=True,
-        cache_dir=".",
+        cache_dir=root_dir,
+        cache_subdir="captions_extracted",
     )
-
-if not os.path.exists(images_dir):
-    zip_path = keras.utils.get_file(
+else:
+    print("Found existing annotations file. Skipping download.")
+if not os.path.exists(images_dir_marker):
+    print("Downloading train2014 images zip (this is large)...")
+    keras.utils.get_file(
         "train2014.zip",
         origin="https://images.cocodataset.org/zips/train2014.zip",
         extract=True,
-        cache_dir=".",
+        cache_dir=root_dir,
+        cache_subdir="train2014_extracted",
     )
+else:
+    print("Found existing images folder. Skipping download.")
 
+print("\nProcessing data...")
 with open(annotation_file, "r") as f:
     annotations = json.load(f)["annotations"]
 
 image_path_to_caption = collections.defaultdict(list)
+actual_image_folder = os.path.join(root_dir, "train2014_extracted", "train2014")
+
 for ann in annotations:
     caption = ann["caption"].lower().rstrip(".")
-    image_path = os.path.join(images_dir, f"COCO_train2014_{ann['image_id']:012d}.jpg")
+    image_path = os.path.join(
+        actual_image_folder, f"COCO_train2014_{ann['image_id']:012d}.jpg"
+    )
     image_path_to_caption[image_path].append(caption)
 
 image_paths = list(image_path_to_caption.keys())
@@ -427,9 +441,6 @@ def find_matches(image_embeddings, queries, k=9):
     query_embedding = query_embedding / (
         np.linalg.norm(query_embedding, axis=-1, keepdims=True) + 1e-12
     )
-    # Compute the dot product between the query and the image embeddings.
-    dot_similarity = np.dot(query_embedding, image_embeddings.T)
-
     image_embeddings = image_embeddings / (
         np.linalg.norm(image_embeddings, axis=-1, keepdims=True) + 1e-12
     )
