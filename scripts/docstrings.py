@@ -6,14 +6,28 @@ import re
 import inspect
 import importlib
 import itertools
+from collections import defaultdict
+from collections import namedtuple
 import copy
 
 import render_presets
 
 
+# Maximum number of links to guides and examples
+MAX_EXAMPLE_LINKS = 8
+
+ExampleInfo = namedtuple("ExampleInfo", ["url", "title", "is_guide"])
+
+
 class KerasDocumentationGenerator:
     def __init__(self, project_url=None):
         self.project_url = project_url
+        self.api_to_example = defaultdict(list)
+
+    def add_example_apis(self, url, title, is_guide, apis):
+        example = ExampleInfo(url, title, is_guide)
+        for api in apis:
+            self.api_to_example[api].append(example)
 
     def process_docstring(self, docstring):
         docstring = docstring.replace("Args:", "# Arguments")
@@ -101,6 +115,11 @@ class KerasDocumentationGenerator:
             )
             if table is not None:
                 subblocks.append(table)
+
+        examples = self.api_to_example.get(element, None)
+        if examples:
+            subblocks.append(get_examples_block(element, examples))
+
         return "\n\n".join(subblocks) + "\n\n----\n\n"
 
 
@@ -368,6 +387,27 @@ def get_section_end(docstring, section_start):
         return section_end
     else:
         return section_end - 2
+
+
+def get_examples_block(name, guides_and_examples):
+    # Prefer guides to examples, so put them first.
+    # But we otherwise keep the order, which is the order in the TOC.
+    guides = [e for e in guides_and_examples if e.is_guide]
+    examples = [e for e in guides_and_examples if not e.is_guide]
+    guides_and_examples = guides + examples
+
+    # Cap the number of links.
+    if len(guides_and_examples) > MAX_EXAMPLE_LINKS:
+        guides_and_examples = guides_and_examples[:MAX_EXAMPLE_LINKS]
+
+    # Remove module in name.
+    name = name.split(".")[-1]
+
+    return (
+        f"**Guides and examples using `{name}`**\n\n"
+        + "\n".join([f"- [{e.title}]({e.url})" for e in guides_and_examples])
+        + "\n"
+    )
 
 
 def get_google_style_sections_without_code(docstring):

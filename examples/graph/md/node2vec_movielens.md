@@ -2,7 +2,7 @@
 
 **Author:** [Khalid Salama](https://www.linkedin.com/in/khalid-salama-24403144/)<br>
 **Date created:** 2021/05/15<br>
-**Last modified:** 2021/05/15<br>
+**Last modified:** 2026/02/04<br>
 **Description:** Implementing the node2vec model to generate embeddings for movies from the MovieLens dataset.
 
 
@@ -63,10 +63,14 @@ from zipfile import ZipFile
 from urllib.request import urlretrieve
 import numpy as np
 import pandas as pd
-import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras import layers
+import keras
+from keras import ops
+from keras import layers
 import matplotlib.pyplot as plt
+
+# Set seed for reproducibility
+keras.utils.set_random_seed(42)
+os.environ["KERAS_BACKEND"] = "jax"  # "jax", "torch", "tensorflow"
 ```
 
 ---
@@ -111,9 +115,9 @@ print("Ratings data shape:", ratings.shape)
 ```
 Movies data shape: (9742, 3)
 Ratings data shape: (100836, 4)
-
 ```
 </div>
+
 Let's inspect a sample instance of the `ratings` DataFrame.
 
 
@@ -324,12 +328,21 @@ for group in tqdm(
             pair_frequency[(x, y)] += 1
 ```
 
-<div class="k-default-codeblock">
-```
-Compute movie rating frequencies: 100%|███████████████████████████████████████████████████████████████████████████| 573/573 [00:00<00:00, 1049.83it/s]
+    
+Compute movie rating frequencies:   0%|                                                                               | 0/573 [00:00<?, ?it/s]
 
-```
-</div>
+    
+Compute movie rating frequencies:  49%|█████████████████████████████████                                  | 283/573 [00:00<00:00, 2654.37it/s]
+
+    
+Compute movie rating frequencies:  96%|████████████████████████████████████████████████████████████████▏  | 549/573 [00:00<00:00, 2520.45it/s]
+
+    
+Compute movie rating frequencies: 100%|███████████████████████████████████████████████████████████████████| 573/573 [00:00<00:00, 2322.37it/s]
+
+    
+
+
 ### Step 2: create the graph with the nodes and the edges
 
 To reduce the number of edges between nodes, we only add an edge between movies
@@ -358,12 +371,21 @@ for pair in tqdm(
         movies_graph.add_edge(x, y, weight=weight)
 ```
 
-<div class="k-default-codeblock">
-```
-Creating the movie graph: 100%|███████████████████████████████████████████████████████████████████████████| 298586/298586 [00:00<00:00, 552893.62it/s]
+    
+Creating the movie graph:   0%|                                                                                    | 0/298586 [00:00<?, ?it/s]
 
-```
-</div>
+    
+Creating the movie graph:  42%|███████████████████████████▌                                      | 124515/298586 [00:00<00:00, 1245097.75it/s]
+
+    
+Creating the movie graph:  89%|██████████████████████████████████████████████████████████▉       | 266765/298586 [00:00<00:00, 1349428.26it/s]
+
+    
+Creating the movie graph: 100%|██████████████████████████████████████████████████████████████████| 298586/298586 [00:00<00:00, 1355053.16it/s]
+
+    
+
+
 Let's display the total number of nodes and edges in the graph.
 Note that the number of nodes is less than the total number of movies,
 since only the movies that have edges to other movies are added.
@@ -378,9 +400,9 @@ print("Total number of graph edges:", movies_graph.number_of_edges())
 ```
 Total number of graph nodes: 1405
 Total number of graph edges: 40043
-
 ```
 </div>
+
 Let's display the average node degree (number of neighbours) in the graph.
 
 
@@ -395,9 +417,9 @@ print("Average node degree:", round(sum(degrees) / len(degrees), 2))
 <div class="k-default-codeblock">
 ```
 Average node degree: 57.0
-
 ```
 </div>
+
 ### Step 3: Create vocabulary and a mapping from tokens to integer indices
 
 The vocabulary is the nodes (movie IDs) in the graph.
@@ -435,53 +457,33 @@ def next_step(graph, previous, current, p, q):
     neighbors = list(graph.neighbors(current))
 
     weights = []
-    # Adjust the weights of the edges to the neighbors with respect to p and q.
     for neighbor in neighbors:
         if neighbor == previous:
-            # Control the probability to return to the previous node.
             weights.append(graph[current][neighbor]["weight"] / p)
         elif graph.has_edge(neighbor, previous):
-            # The probability of visiting a local node.
             weights.append(graph[current][neighbor]["weight"])
         else:
-            # Control the probability to move forward.
             weights.append(graph[current][neighbor]["weight"] / q)
 
-    # Compute the probabilities of visiting each neighbor.
     weight_sum = sum(weights)
     probabilities = [weight / weight_sum for weight in weights]
-    # Probabilistically select a neighbor to visit.
-    next = np.random.choice(neighbors, size=1, p=probabilities)[0]
-    return next
+
+    next_node = np.random.choice(neighbors, size=1, p=probabilities)[0]
+    return next_node
 
 
 def random_walk(graph, num_walks, num_steps, p, q):
     walks = []
     nodes = list(graph.nodes())
-    # Perform multiple iterations of the random walk.
     for walk_iteration in range(num_walks):
         random.shuffle(nodes)
-
-        for node in tqdm(
-            nodes,
-            position=0,
-            leave=True,
-            desc=f"Random walks iteration {walk_iteration + 1} of {num_walks}",
-        ):
-            # Start the walk with a random node from the graph.
+        for node in tqdm(nodes, desc=f"Random walks iteration {walk_iteration + 1}"):
             walk = [node]
-            # Randomly walk for num_steps.
             while len(walk) < num_steps:
                 current = walk[-1]
                 previous = walk[-2] if len(walk) > 1 else None
-                # Compute the next node to visit.
-                next = next_step(graph, previous, current, p, q)
-                walk.append(next)
-            # Replace node ids (movie ids) in the walk with token ids.
-            walk = [vocabulary_lookup[token] for token in walk]
-            # Add the walk to the generated sequence.
-            walks.append(walk)
-
+                walk.append(next_step(graph, previous, current, p, q))
+            walks.append([vocabulary_lookup[token] for token in walk])
     return walks
 
 ```
@@ -507,30 +509,276 @@ walks = random_walk(movies_graph, num_walks, num_steps, p, q)
 print("Number of walks generated:", len(walks))
 ```
 
-<div class="k-default-codeblock">
-```
-Random walks iteration 1 of 5: 100%|█████████████████████████████████████████████████████████████████████████████| 1405/1405 [00:04<00:00, 291.76it/s]
-Random walks iteration 2 of 5: 100%|█████████████████████████████████████████████████████████████████████████████| 1405/1405 [00:04<00:00, 302.56it/s]
-Random walks iteration 3 of 5: 100%|█████████████████████████████████████████████████████████████████████████████| 1405/1405 [00:04<00:00, 294.52it/s]
-Random walks iteration 4 of 5: 100%|█████████████████████████████████████████████████████████████████████████████| 1405/1405 [00:04<00:00, 304.06it/s]
-Random walks iteration 5 of 5: 100%|█████████████████████████████████████████████████████████████████████████████| 1405/1405 [00:04<00:00, 302.15it/s]
+    
+Random walks iteration 1:   0%|                                                                                      | 0/1405 [00:00<?, ?it/s]
 
-Number of walks generated: 7025
+    
+Random walks iteration 1:   6%|████▏                                                                       | 78/1405 [00:00<00:01, 770.26it/s]
 
-```
-</div>
+    
+Random walks iteration 1:  11%|████████▍                                                                  | 159/1405 [00:00<00:01, 791.24it/s]
+
+    
+Random walks iteration 1:  17%|████████████▊                                                              | 240/1405 [00:00<00:01, 796.93it/s]
+
+    
+Random walks iteration 1:  24%|██████████████████                                                         | 339/1405 [00:00<00:01, 869.95it/s]
+
+    
+Random walks iteration 1:  31%|███████████████████████▍                                                   | 438/1405 [00:00<00:01, 912.00it/s]
+
+    
+Random walks iteration 1:  39%|████████████████████████████▉                                              | 542/1405 [00:00<00:00, 952.69it/s]
+
+    
+Random walks iteration 1:  45%|██████████████████████████████████                                         | 639/1405 [00:00<00:00, 955.77it/s]
+
+    
+Random walks iteration 1:  52%|███████████████████████████████████████▏                                   | 735/1405 [00:00<00:00, 951.24it/s]
+
+    
+Random walks iteration 1:  59%|████████████████████████████████████████████▌                              | 835/1405 [00:00<00:00, 966.05it/s]
+
+    
+Random walks iteration 1:  66%|█████████████████████████████████████████████████▊                         | 932/1405 [00:01<00:00, 948.85it/s]
+
+    
+Random walks iteration 1:  73%|██████████████████████████████████████████████████████▏                   | 1029/1405 [00:01<00:00, 954.36it/s]
+
+    
+Random walks iteration 1:  80%|███████████████████████████████████████████████████████████▎              | 1127/1405 [00:01<00:00, 960.53it/s]
+
+    
+Random walks iteration 1:  87%|████████████████████████████████████████████████████████████████▌         | 1225/1405 [00:01<00:00, 966.30it/s]
+
+    
+Random walks iteration 1:  95%|█████████████████████████████████████████████████████████████████████▎   | 1334/1405 [00:01<00:00, 1000.41it/s]
+
+    
+Random walks iteration 1: 100%|██████████████████████████████████████████████████████████████████████████| 1405/1405 [00:01<00:00, 943.49it/s]
+
     
 
+
+    
+Random walks iteration 2:   0%|                                                                                      | 0/1405 [00:00<?, ?it/s]
+
+    
+Random walks iteration 2:   7%|█████▏                                                                      | 96/1405 [00:00<00:01, 959.82it/s]
+
+    
+Random walks iteration 2:  14%|██████████▍                                                                | 195/1405 [00:00<00:01, 974.04it/s]
+
+    
+Random walks iteration 2:  21%|███████████████▋                                                           | 293/1405 [00:00<00:01, 974.90it/s]
+
+    
+Random walks iteration 2:  28%|████████████████████▉                                                      | 392/1405 [00:00<00:01, 980.83it/s]
+
+    
+Random walks iteration 2:  35%|██████████████████████████▏                                                | 491/1405 [00:00<00:00, 982.21it/s]
+
+    
+Random walks iteration 2:  42%|███████████████████████████████▍                                           | 590/1405 [00:00<00:00, 984.36it/s]
+
+    
+Random walks iteration 2:  49%|████████████████████████████████████▌                                     | 695/1405 [00:00<00:00, 1005.56it/s]
+
+    
+Random walks iteration 2:  57%|██████████████████████████████████████████▍                                | 796/1405 [00:00<00:00, 992.63it/s]
+
+    
+Random walks iteration 2:  64%|███████████████████████████████████████████████▊                           | 896/1405 [00:00<00:00, 966.18it/s]
+
+    
+Random walks iteration 2:  71%|█████████████████████████████████████████████████████                      | 993/1405 [00:01<00:00, 963.92it/s]
+
+    
+Random walks iteration 2:  78%|█████████████████████████████████████████████████████████▍                | 1091/1405 [00:01<00:00, 966.43it/s]
+
+    
+Random walks iteration 2:  85%|██████████████████████████████████████████████████████████████▌           | 1188/1405 [00:01<00:00, 966.60it/s]
+
+    
+Random walks iteration 2:  92%|███████████████████████████████████████████████████████████████████▊      | 1288/1405 [00:01<00:00, 973.54it/s]
+
+    
+Random walks iteration 2:  99%|████████████████████████████████████████████████████████████████████████▉ | 1386/1405 [00:01<00:00, 959.81it/s]
+
+    
+Random walks iteration 2: 100%|██████████████████████████████████████████████████████████████████████████| 1405/1405 [00:01<00:00, 971.91it/s]
+
+    
+
+
+    
+Random walks iteration 3:   0%|                                                                                      | 0/1405 [00:00<?, ?it/s]
+
+    
+Random walks iteration 3:   7%|█████▏                                                                      | 95/1405 [00:00<00:01, 946.17it/s]
+
+    
+Random walks iteration 3:  14%|██████████▌                                                                | 198/1405 [00:00<00:01, 993.42it/s]
+
+    
+Random walks iteration 3:  21%|███████████████▉                                                           | 298/1405 [00:00<00:01, 988.51it/s]
+
+    
+Random walks iteration 3:  28%|█████████████████████▎                                                     | 399/1405 [00:00<00:01, 992.78it/s]
+
+    
+Random walks iteration 3:  36%|██████████████████████████▋                                                | 499/1405 [00:00<00:00, 954.35it/s]
+
+    
+Random walks iteration 3:  43%|███████████████████████████████▉                                           | 599/1405 [00:00<00:00, 969.08it/s]
+
+    
+Random walks iteration 3:  50%|█████████████████████████████████████▏                                     | 697/1405 [00:00<00:00, 947.02it/s]
+
+    
+Random walks iteration 3:  56%|██████████████████████████████████████████▎                                | 792/1405 [00:00<00:00, 927.55it/s]
+
+    
+Random walks iteration 3:  64%|███████████████████████████████████████████████▋                           | 893/1405 [00:00<00:00, 949.68it/s]
+
+    
+Random walks iteration 3:  70%|████████████████████████████████████████████████████▊                      | 989/1405 [00:01<00:00, 941.90it/s]
+
+    
+Random walks iteration 3:  77%|█████████████████████████████████████████████████████████                 | 1084/1405 [00:01<00:00, 910.75it/s]
+
+    
+Random walks iteration 3:  84%|█████████████████████████████████████████████████████████████▉            | 1176/1405 [00:01<00:00, 897.82it/s]
+
+    
+Random walks iteration 3:  90%|██████████████████████████████████████████████████████████████████▉       | 1271/1405 [00:01<00:00, 912.81it/s]
+
+    
+Random walks iteration 3:  97%|███████████████████████████████████████████████████████████████████████▉  | 1366/1405 [00:01<00:00, 922.46it/s]
+
+    
+Random walks iteration 3: 100%|██████████████████████████████████████████████████████████████████████████| 1405/1405 [00:01<00:00, 936.88it/s]
+
+    
+
+
+    
+Random walks iteration 4:   0%|                                                                                      | 0/1405 [00:00<?, ?it/s]
+
+    
+Random walks iteration 4:   7%|█████▏                                                                      | 97/1405 [00:00<00:01, 969.40it/s]
+
+    
+Random walks iteration 4:  14%|██████████▎                                                                | 194/1405 [00:00<00:01, 967.55it/s]
+
+    
+Random walks iteration 4:  21%|███████████████▌                                                           | 291/1405 [00:00<00:01, 934.53it/s]
+
+    
+Random walks iteration 4:  28%|█████████████████████▏                                                     | 396/1405 [00:00<00:01, 975.60it/s]
+
+    
+Random walks iteration 4:  35%|██████████████████████████▎                                                | 494/1405 [00:00<00:00, 963.33it/s]
+
+    
+Random walks iteration 4:  42%|███████████████████████████████▋                                           | 594/1405 [00:00<00:00, 975.50it/s]
+
+    
+Random walks iteration 4:  49%|████████████████████████████████████▉                                      | 692/1405 [00:00<00:00, 966.69it/s]
+
+    
+Random walks iteration 4:  56%|██████████████████████████████████████████▎                                | 792/1405 [00:00<00:00, 973.46it/s]
+
+    
+Random walks iteration 4:  63%|███████████████████████████████████████████████▌                           | 890/1405 [00:00<00:00, 959.86it/s]
+
+    
+Random walks iteration 4:  70%|████████████████████████████████████████████████████▊                      | 989/1405 [00:01<00:00, 967.23it/s]
+
+    
+Random walks iteration 4:  77%|█████████████████████████████████████████████████████████▏                | 1086/1405 [00:01<00:00, 955.65it/s]
+
+    
+Random walks iteration 4:  84%|██████████████████████████████████████████████████████████████▎           | 1182/1405 [00:01<00:00, 910.11it/s]
+
+    
+Random walks iteration 4:  91%|███████████████████████████████████████████████████████████████████▎      | 1278/1405 [00:01<00:00, 924.06it/s]
+
+    
+Random walks iteration 4:  98%|████████████████████████████████████████████████████████████████████████▏ | 1371/1405 [00:01<00:00, 832.62it/s]
+
+    
+Random walks iteration 4: 100%|██████████████████████████████████████████████████████████████████████████| 1405/1405 [00:01<00:00, 922.70it/s]
+
+    
+
+
+    
+Random walks iteration 5:   0%|                                                                                      | 0/1405 [00:00<?, ?it/s]
+
+    
+Random walks iteration 5:   7%|█████▏                                                                      | 96/1405 [00:00<00:01, 956.28it/s]
+
+    
+Random walks iteration 5:  14%|██████████▏                                                                | 192/1405 [00:00<00:01, 915.95it/s]
+
+    
+Random walks iteration 5:  21%|███████████████▍                                                           | 289/1405 [00:00<00:01, 939.39it/s]
+
+    
+Random walks iteration 5:  28%|████████████████████▊                                                      | 389/1405 [00:00<00:01, 960.28it/s]
+
+    
+Random walks iteration 5:  35%|██████████████████████████                                                 | 489/1405 [00:00<00:00, 974.25it/s]
+
+    
+Random walks iteration 5:  42%|███████████████████████████████▎                                           | 587/1405 [00:00<00:00, 971.52it/s]
+
+    
+Random walks iteration 5:  49%|████████████████████████████████████▌                                      | 685/1405 [00:00<00:00, 957.60it/s]
+
+    
+Random walks iteration 5:  56%|█████████████████████████████████████████▋                                 | 781/1405 [00:00<00:00, 956.02it/s]
+
+    
+Random walks iteration 5:  62%|██████████████████████████████████████████████▊                            | 878/1405 [00:00<00:00, 959.40it/s]
+
+    
+Random walks iteration 5:  70%|████████████████████████████████████████████████████▏                      | 978/1405 [00:01<00:00, 971.70it/s]
+
+    
+Random walks iteration 5:  77%|████████████████████████████████████████████████████████▋                 | 1076/1405 [00:01<00:00, 961.12it/s]
+
+    
+Random walks iteration 5:  84%|█████████████████████████████████████████████████████████████▉            | 1177/1405 [00:01<00:00, 974.51it/s]
+
+    
+Random walks iteration 5:  91%|███████████████████████████████████████████████████████████████████▏      | 1275/1405 [00:01<00:00, 965.41it/s]
+
+    
+Random walks iteration 5:  98%|████████████████████████████████████████████████████████████████████████▎ | 1372/1405 [00:01<00:00, 958.60it/s]
+
+    
+Random walks iteration 5: 100%|██████████████████████████████████████████████████████████████████████████| 1405/1405 [00:01<00:00, 959.98it/s]
+
+<div class="k-default-codeblock">
+```
+Number of walks generated: 7025
+```
+</div>
 
 ---
 ## Generate positive and negative examples
 
 To train a skip-gram model, we use the generated walks to create positive and
-negative training examples. Each example includes the following features:
+negative training examples. In Keras 3, the legacy preprocessing module
+has been removed. We now implement a manual skip-gram sampling function
+using NumPy to generate positive and negative training examples from our
+random walks. Each example includes the following features:
 
 1. `target`: A movie in a walk sequence.
 2. `context`: Another movie in a walk sequence.
-3. `weight`: How many times these two movies occurred in walk sequences.
+3. `weight`: How many times these two movies occurred  in walk sequences.
 4. `label`: The label is 1 if these two movies are samples from the walk sequences,
 otherwise (i.e., if randomly sampled) the label is 0.
 
@@ -539,22 +787,55 @@ otherwise (i.e., if randomly sampled) the label is 0.
 
 ```python
 
+def manual_skipgrams(sequence, vocabulary_size, window_size=5, negative_samples=4):
+    """
+    A NumPy-based replacement for the legacy keras.preprocessing.sequence.skipgrams.
+    Generates (target, context) pairs with positive and negative labels,
+    ensuring negative samples are not in the positive context window.
+    """
+    pairs = []
+    labels = []
+
+    for i, target in enumerate(sequence):
+        start = max(0, i - window_size)
+        end = min(len(sequence), i + window_size + 1)
+        positive_contexts = {sequence[j] for j in range(start, end) if i != j}
+
+        for j in range(start, end):
+            if i == j:
+                continue
+            context = sequence[j]
+
+            pairs.append([target, context])
+            labels.append(1)
+
+            for _ in range(negative_samples):
+                negative_context = np.random.randint(0, vocabulary_size)
+
+                while (
+                    negative_context == target or negative_context in positive_contexts
+                ):
+                    negative_context = np.random.randint(0, vocabulary_size)
+
+                pairs.append([target, negative_context])
+                labels.append(0)
+
+    return pairs, labels
+
+
 def generate_examples(sequences, window_size, num_negative_samples, vocabulary_size):
     example_weights = defaultdict(int)
-    # Iterate over all sequences (walks).
-    for sequence in tqdm(
-        sequences,
-        position=0,
-        leave=True,
-        desc=f"Generating positive and negative examples",
-    ):
-        # Generate positive and negative skip-gram pairs for a sequence (walk).
-        pairs, labels = keras.preprocessing.sequence.skipgrams(
+
+    # Iterate over all walks
+    for sequence in tqdm(sequences, desc="Generating positive and negative examples"):
+        # Use our manual skipgrams function
+        pairs, labels = manual_skipgrams(
             sequence,
             vocabulary_size=vocabulary_size,
             window_size=window_size,
             negative_samples=num_negative_samples,
         )
+
         for idx in range(len(pairs)):
             pair = pairs[idx]
             label = labels[idx]
@@ -565,17 +846,22 @@ def generate_examples(sequences, window_size, num_negative_samples, vocabulary_s
             example_weights[entry] += 1
 
     targets, contexts, labels, weights = [], [], [], []
-    for entry in example_weights:
-        weight = example_weights[entry]
+    for entry, weight in example_weights.items():
         target, context, label = entry
         targets.append(target)
         contexts.append(context)
         labels.append(label)
         weights.append(weight)
 
-    return np.array(targets), np.array(contexts), np.array(labels), np.array(weights)
+    return (
+        np.array(targets, dtype="int32"),
+        np.array(contexts, dtype="int32"),
+        np.array(labels, dtype="float32"),
+        np.array(weights, dtype="float32"),
+    )
 
 
+# Execute the generation
 num_negative_samples = 4
 targets, contexts, labels, weights = generate_examples(
     sequences=walks,
@@ -585,12 +871,174 @@ targets, contexts, labels, weights = generate_examples(
 )
 ```
 
-<div class="k-default-codeblock">
-```
-Generating positive and negative examples: 100%|██████████████████████████████████████████████████████████████████| 7025/7025 [00:11<00:00, 617.64it/s]
+    
+Generating positive and negative examples:   0%|                                                                     | 0/7025 [00:00<?, ?it/s]
 
-```
-</div>
+    
+Generating positive and negative examples:   2%|█▏                                                       | 149/7025 [00:00<00:04, 1480.47it/s]
+
+    
+Generating positive and negative examples:   4%|██▍                                                      | 298/7025 [00:00<00:04, 1477.76it/s]
+
+    
+Generating positive and negative examples:   6%|███▌                                                     | 446/7025 [00:00<00:04, 1471.28it/s]
+
+    
+Generating positive and negative examples:   8%|████▊                                                    | 594/7025 [00:00<00:04, 1444.59it/s]
+
+    
+Generating positive and negative examples:  11%|█████▉                                                   | 739/7025 [00:00<00:04, 1310.46it/s]
+
+    
+Generating positive and negative examples:  12%|███████                                                  | 872/7025 [00:00<00:04, 1300.17it/s]
+
+    
+Generating positive and negative examples:  14%|████████                                                | 1004/7025 [00:00<00:05, 1060.46it/s]
+
+    
+Generating positive and negative examples:  16%|█████████                                               | 1143/7025 [00:00<00:05, 1145.10it/s]
+
+    
+Generating positive and negative examples:  18%|██████████▏                                             | 1276/7025 [00:01<00:04, 1194.00it/s]
+
+    
+Generating positive and negative examples:  20%|███████████▏                                            | 1411/7025 [00:01<00:04, 1236.20it/s]
+
+    
+Generating positive and negative examples:  22%|████████████▎                                           | 1546/7025 [00:01<00:04, 1267.97it/s]
+
+    
+Generating positive and negative examples:  24%|█████████████▍                                          | 1681/7025 [00:01<00:04, 1290.49it/s]
+
+    
+Generating positive and negative examples:  26%|██████████████▍                                         | 1816/7025 [00:01<00:03, 1305.88it/s]
+
+    
+Generating positive and negative examples:  28%|███████████████▌                                        | 1949/7025 [00:01<00:03, 1310.88it/s]
+
+    
+Generating positive and negative examples:  30%|████████████████▌                                       | 2083/7025 [00:01<00:03, 1316.91it/s]
+
+    
+Generating positive and negative examples:  32%|█████████████████▋                                      | 2217/7025 [00:01<00:03, 1321.22it/s]
+
+    
+Generating positive and negative examples:  33%|██████████████████▋                                     | 2350/7025 [00:01<00:03, 1322.42it/s]
+
+    
+Generating positive and negative examples:  35%|███████████████████▊                                    | 2484/7025 [00:01<00:03, 1325.62it/s]
+
+    
+Generating positive and negative examples:  37%|████████████████████▊                                   | 2617/7025 [00:02<00:03, 1322.78it/s]
+
+    
+Generating positive and negative examples:  39%|█████████████████████▉                                  | 2750/7025 [00:02<00:03, 1318.66it/s]
+
+    
+Generating positive and negative examples:  41%|██████████████████████▉                                 | 2883/7025 [00:02<00:03, 1313.22it/s]
+
+    
+Generating positive and negative examples:  43%|████████████████████████                                | 3015/7025 [00:02<00:03, 1314.43it/s]
+
+    
+Generating positive and negative examples:  45%|█████████████████████████                               | 3147/7025 [00:02<00:02, 1308.94it/s]
+
+    
+Generating positive and negative examples:  47%|██████████████████████████▏                             | 3278/7025 [00:02<00:02, 1304.27it/s]
+
+    
+Generating positive and negative examples:  49%|███████████████████████████▏                            | 3410/7025 [00:02<00:02, 1307.06it/s]
+
+    
+Generating positive and negative examples:  50%|████████████████████████████▏                           | 3541/7025 [00:02<00:02, 1306.07it/s]
+
+    
+Generating positive and negative examples:  52%|█████████████████████████████▎                          | 3672/7025 [00:02<00:02, 1305.56it/s]
+
+    
+Generating positive and negative examples:  54%|██████████████████████████████▎                         | 3803/7025 [00:02<00:02, 1305.49it/s]
+
+    
+Generating positive and negative examples:  56%|███████████████████████████████▎                        | 3934/7025 [00:03<00:02, 1305.95it/s]
+
+    
+Generating positive and negative examples:  58%|████████████████████████████████▍                       | 4065/7025 [00:03<00:02, 1240.41it/s]
+
+    
+Generating positive and negative examples:  60%|█████████████████████████████████▍                      | 4192/7025 [00:03<00:02, 1247.10it/s]
+
+    
+Generating positive and negative examples:  61%|██████████████████████████████████▍                     | 4319/7025 [00:03<00:02, 1252.92it/s]
+
+    
+Generating positive and negative examples:  63%|███████████████████████████████████▍                    | 4446/7025 [00:03<00:02, 1257.71it/s]
+
+    
+Generating positive and negative examples:  65%|████████████████████████████████████▍                   | 4573/7025 [00:03<00:01, 1257.47it/s]
+
+    
+Generating positive and negative examples:  67%|█████████████████████████████████████▍                  | 4699/7025 [00:03<00:01, 1249.81it/s]
+
+    
+Generating positive and negative examples:  69%|██████████████████████████████████████▍                 | 4825/7025 [00:03<00:01, 1247.82it/s]
+
+    
+Generating positive and negative examples:  70%|███████████████████████████████████████▍                | 4952/7025 [00:03<00:01, 1252.94it/s]
+
+    
+Generating positive and negative examples:  72%|████████████████████████████████████████▍               | 5080/7025 [00:03<00:01, 1258.48it/s]
+
+    
+Generating positive and negative examples:  74%|█████████████████████████████████████████▍              | 5206/7025 [00:04<00:01, 1256.32it/s]
+
+    
+Generating positive and negative examples:  76%|██████████████████████████████████████████▌             | 5333/7025 [00:04<00:01, 1258.27it/s]
+
+    
+Generating positive and negative examples:  78%|███████████████████████████████████████████▌            | 5461/7025 [00:04<00:01, 1263.60it/s]
+
+    
+Generating positive and negative examples:  80%|████████████████████████████████████████████▌           | 5589/7025 [00:04<00:01, 1268.09it/s]
+
+    
+Generating positive and negative examples:  81%|█████████████████████████████████████████████▌          | 5716/7025 [00:04<00:01, 1266.32it/s]
+
+    
+Generating positive and negative examples:  83%|██████████████████████████████████████████████▌         | 5843/7025 [00:04<00:00, 1264.77it/s]
+
+    
+Generating positive and negative examples:  85%|███████████████████████████████████████████████▌        | 5970/7025 [00:04<00:00, 1263.65it/s]
+
+    
+Generating positive and negative examples:  87%|████████████████████████████████████████████████▌       | 6097/7025 [00:04<00:00, 1262.36it/s]
+
+    
+Generating positive and negative examples:  89%|█████████████████████████████████████████████████▌      | 6224/7025 [00:04<00:00, 1031.00it/s]
+
+    
+Generating positive and negative examples:  90%|██████████████████████████████████████████████████▋     | 6351/7025 [00:05<00:00, 1091.13it/s]
+
+    
+Generating positive and negative examples:  92%|███████████████████████████████████████████████████▋    | 6479/7025 [00:05<00:00, 1140.10it/s]
+
+    
+Generating positive and negative examples:  94%|████████████████████████████████████████████████████▋   | 6603/7025 [00:05<00:00, 1166.60it/s]
+
+    
+Generating positive and negative examples:  96%|█████████████████████████████████████████████████████▋  | 6729/7025 [00:05<00:00, 1192.49it/s]
+
+    
+Generating positive and negative examples:  98%|██████████████████████████████████████████████████████▋ | 6853/7025 [00:05<00:00, 1204.79it/s]
+
+    
+Generating positive and negative examples:  99%|███████████████████████████████████████████████████████▌| 6976/7025 [00:05<00:00, 1206.19it/s]
+
+    
+Generating positive and negative examples: 100%|████████████████████████████████████████████████████████| 7025/7025 [00:05<00:00, 1257.73it/s]
+
+    
+
+
 Let's display the shapes of the outputs
 
 
@@ -603,39 +1051,50 @@ print(f"Weights shape: {weights.shape}")
 
 <div class="k-default-codeblock">
 ```
-Targets shape: (881412,)
-Contexts shape: (881412,)
-Labels shape: (881412,)
-Weights shape: (881412,)
-
+Targets shape: (883654,)
+Contexts shape: (883654,)
+Labels shape: (883654,)
+Weights shape: (883654,)
 ```
 </div>
-### Convert the data into `tf.data.Dataset` objects
+
+### Data Loading with PyDataset
+
+We replace the tf.data pipeline with keras.utils.PyDataset.
+This ensures our data pipeline is fully backend-agnostic and
+avoids symbolic tensor errors when running on JAX or PyTorch.
 
 
 ```python
 batch_size = 1024
 
 
-def create_dataset(targets, contexts, labels, weights, batch_size):
-    inputs = {
-        "target": targets,
-        "context": contexts,
-    }
-    dataset = tf.data.Dataset.from_tensor_slices((inputs, labels, weights))
-    dataset = dataset.shuffle(buffer_size=batch_size * 2)
-    dataset = dataset.batch(batch_size, drop_remainder=True)
-    dataset = dataset.prefetch(tf.data.AUTOTUNE)
-    return dataset
+class MovieLensDataset(keras.utils.PyDataset):
+    def __init__(self, targets, contexts, labels, weights, batch_size, **kwargs):
+        super().__init__(**kwargs)
+        self.targets = targets
+        self.contexts = contexts
+        self.labels = labels
+        self.weights = weights
+        self.batch_size = batch_size
+
+    def __len__(self):
+        return len(self.targets) // self.batch_size
+
+    def __getitem__(self, index):
+        low = index * self.batch_size
+        high = (index + 1) * self.batch_size
+
+        target = self.targets[low:high]
+        context = self.contexts[low:high]
+        label = self.labels[low:high]
+        weight = self.weights[low:high]
+
+        return {"target": target, "context": context}, label, weight
 
 
-dataset = create_dataset(
-    targets=targets,
-    contexts=contexts,
-    labels=labels,
-    weights=weights,
-    batch_size=batch_size,
-)
+batch_size = 1024
+dataset = MovieLensDataset(targets, contexts, labels, weights, batch_size)
 ```
 
 ---
@@ -662,12 +1121,9 @@ num_epochs = 10
 ```python
 
 def create_model(vocabulary_size, embedding_dim):
+    target_in = layers.Input(name="target", shape=(), dtype="int32")
+    context_in = layers.Input(name="context", shape=(), dtype="int32")
 
-    inputs = {
-        "target": layers.Input(name="target", shape=(), dtype="int32"),
-        "context": layers.Input(name="context", shape=(), dtype="int32"),
-    }
-    # Initialize item embeddings.
     embed_item = layers.Embedding(
         input_dim=vocabulary_size,
         output_dim=embedding_dim,
@@ -675,17 +1131,16 @@ def create_model(vocabulary_size, embedding_dim):
         embeddings_regularizer=keras.regularizers.l2(1e-6),
         name="item_embeddings",
     )
-    # Lookup embeddings for target.
-    target_embeddings = embed_item(inputs["target"])
-    # Lookup embeddings for context.
-    context_embeddings = embed_item(inputs["context"])
-    # Compute dot similarity between target and context embeddings.
-    logits = layers.Dot(axes=1, normalize=False, name="dot_similarity")(
-        [target_embeddings, context_embeddings]
+    target_embed = embed_item(target_in)
+    context_embed = embed_item(context_in)
+
+    dot_similarity = layers.Dot(axes=1, normalize=False, name="dot_similarity")(
+        [target_embed, context_embed]
     )
-    # Create the model.
-    model = keras.Model(inputs=inputs, outputs=logits)
-    return model
+
+    output = layers.Reshape((1,))(dot_similarity)
+
+    return keras.Model(inputs=[target_in, context_in], outputs=output)
 
 ```
 
@@ -714,14 +1169,7 @@ keras.utils.plot_model(
 )
 ```
 
-
-
-
-    
 ![png](/img/examples/graph/node2vec_movielens/node2vec_movielens_44_0.png)
-    
-
-
 
 Now we train the model on the `dataset`.
 
@@ -733,28 +1181,47 @@ history = model.fit(dataset, epochs=num_epochs)
 <div class="k-default-codeblock">
 ```
 Epoch 1/10
-860/860 [==============================] - 5s 5ms/step - loss: 2.4527
-Epoch 2/10
-860/860 [==============================] - 4s 5ms/step - loss: 2.3431
-Epoch 3/10
-860/860 [==============================] - 4s 4ms/step - loss: 2.3351
-Epoch 4/10
-860/860 [==============================] - 4s 4ms/step - loss: 2.3301
-Epoch 5/10
-860/860 [==============================] - 4s 5ms/step - loss: 2.3259
-Epoch 6/10
-860/860 [==============================] - 4s 4ms/step - loss: 2.3223
-Epoch 7/10
-860/860 [==============================] - 4s 5ms/step - loss: 2.3191
-Epoch 8/10
-860/860 [==============================] - 4s 4ms/step - loss: 2.3160
-Epoch 9/10
-860/860 [==============================] - 4s 4ms/step - loss: 2.3130
-Epoch 10/10
-860/860 [==============================] - 4s 5ms/step - loss: 2.3104
 
+862/862 ━━━━━━━━━━━━━━━━━━━━ 1s 1ms/step - loss: 2.4523
+
+Epoch 2/10
+
+862/862 ━━━━━━━━━━━━━━━━━━━━ 1s 1ms/step - loss: 2.3459
+
+Epoch 3/10
+
+862/862 ━━━━━━━━━━━━━━━━━━━━ 1s 1ms/step - loss: 2.3349
+
+Epoch 4/10
+
+862/862 ━━━━━━━━━━━━━━━━━━━━ 1s 1ms/step - loss: 2.3312
+
+Epoch 5/10
+
+862/862 ━━━━━━━━━━━━━━━━━━━━ 1s 1ms/step - loss: 2.3273
+
+Epoch 6/10
+
+862/862 ━━━━━━━━━━━━━━━━━━━━ 1s 1ms/step - loss: 2.3236
+
+Epoch 7/10
+
+862/862 ━━━━━━━━━━━━━━━━━━━━ 1s 1ms/step - loss: 2.3201
+
+Epoch 8/10
+
+862/862 ━━━━━━━━━━━━━━━━━━━━ 1s 1ms/step - loss: 2.3177
+
+Epoch 9/10
+
+862/862 ━━━━━━━━━━━━━━━━━━━━ 1s 1ms/step - loss: 2.3149
+
+Epoch 10/10
+
+862/862 ━━━━━━━━━━━━━━━━━━━━ 1s 1ms/step - loss: 2.3127
 ```
 </div>
+
 Finally we plot the learning history.
 
 
@@ -763,6 +1230,7 @@ plt.plot(history.history["loss"])
 plt.ylabel("loss")
 plt.xlabel("epoch")
 plt.show()
+
 ```
 
 
@@ -783,9 +1251,9 @@ print("Embeddings shape:", movie_embeddings.shape)
 <div class="k-default-codeblock">
 ```
 Embeddings shape: (1406, 50)
-
 ```
 </div>
+
 ### Find related movies
 
 Define a list with some movies called `query_movies`.
@@ -805,15 +1273,12 @@ Get the embeddings of the movies in `query_movies`.
 
 
 ```python
-query_embeddings = []
+query_tokens = []
+for title in query_movies:
+    movieId = get_movie_id_by_title(title)
+    query_tokens.append(vocabulary_lookup[movieId])
 
-for movie_title in query_movies:
-    movieId = get_movie_id_by_title(movie_title)
-    token_id = vocabulary_lookup[movieId]
-    movie_embedding = movie_embeddings[token_id]
-    query_embeddings.append(movie_embedding)
-
-query_embeddings = np.array(query_embeddings)
+query_tokens = np.array(query_tokens, dtype="int32")
 ```
 
 Compute the [consine similarity](https://en.wikipedia.org/wiki/Cosine_similarity) between the embeddings of `query_movies`
@@ -821,14 +1286,34 @@ and all the other movies, then pick the top k for each.
 
 
 ```python
-similarities = tf.linalg.matmul(
-    tf.math.l2_normalize(query_embeddings),
-    tf.math.l2_normalize(movie_embeddings),
-    transpose_b=True,
-)
 
-_, indices = tf.math.top_k(similarities, k=5)
-indices = indices.numpy().tolist()
+def compute_similarities(query_indices, all_embeddings):
+    # Lookup embeddings
+    query_embeds = ops.take(all_embeddings, query_indices, axis=0)
+
+    # L2 Normalize using Keras Ops
+    def l2_norm(x):
+        # Ensure x is a Keras Tensor before operations with keras.ops
+        x_tensor = ops.convert_to_tensor(x)
+        return x_tensor / ops.sqrt(
+            ops.maximum(ops.sum(ops.square(x_tensor), axis=-1, keepdims=True), 1e-12)
+        )
+
+    query_embeds = l2_norm(query_embeds)
+    all_embeddings = l2_norm(all_embeddings)
+
+    # Cosine Similarity
+    similarities = ops.matmul(query_embeds, ops.transpose(all_embeddings))
+
+    # Get Top K
+    vals, inds = ops.top_k(similarities, k=5)
+    return inds
+
+
+# Convert movie_embeddings to a Keras Tensor before calling compute_similarities
+movie_embeddings_tensor = ops.convert_to_tensor(movie_embeddings)
+indices = compute_similarities(query_tokens, movie_embeddings_tensor)
+indices = keras.ops.convert_to_numpy(indices).tolist()
 ```
 
 Display the top related movies in `query_movies`.
@@ -836,13 +1321,9 @@ Display the top related movies in `query_movies`.
 
 ```python
 for idx, title in enumerate(query_movies):
-    print(title)
-    print("".rjust(len(title), "-"))
-    similar_tokens = indices[idx]
-    for token in similar_tokens:
-        similar_movieId = vocabulary[token]
-        similar_title = get_movie_title_by_id(similar_movieId)
-        print(f"- {similar_title}")
+    print(f"{title}\n{'-' * len(title)}")
+    for token in indices[idx]:
+        print(f"- {get_movie_title_by_id(vocabulary[token])}")
     print()
 ```
 
@@ -851,62 +1332,44 @@ for idx, title in enumerate(query_movies):
 Matrix, The (1999)
 ------------------
 - Matrix, The (1999)
-- Raiders of the Lost Ark (Indiana Jones and the Raiders of the Lost Ark) (1981)
-- Schindler's List (1993)
-- Star Wars: Episode IV - A New Hope (1977)
-- Lord of the Rings: The Fellowship of the Ring, The (2001)
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
+- Pulp Fiction (1994)
+- Saving Private Ryan (1998)
+- Star Wars: Episode V - The Empire Strikes Back (1980)
+- Full Metal Jacket (1987)
+
 Star Wars: Episode IV - A New Hope (1977)
 -----------------------------------------
 - Star Wars: Episode IV - A New Hope (1977)
-- Schindler's List (1993)
+- Princess Bride, The (1987)
+- Star Wars: Episode V - The Empire Strikes Back (1980)
+- Monty Python and the Holy Grail (1975)
 - Raiders of the Lost Ark (Indiana Jones and the Raiders of the Lost Ark) (1981)
-- Matrix, The (1999)
-- Pulp Fiction (1994)
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
+
 Lion King, The (1994)
 ---------------------
 - Lion King, The (1994)
-- Jurassic Park (1993)
-- Independence Day (a.k.a. ID4) (1996)
 - Beauty and the Beast (1991)
+- Speed (1994)
+- Die Hard: With a Vengeance (1995)
 - Mrs. Doubtfire (1993)
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
+
 Terminator 2: Judgment Day (1991)
 ---------------------------------
-- Schindler's List (1993)
-- Jurassic Park (1993)
 - Terminator 2: Judgment Day (1991)
-- Star Wars: Episode IV - A New Hope (1977)
-- Back to the Future (1985)
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
+- Braveheart (1995)
+- Forrest Gump (1994)
+- Star Wars: Episode V - The Empire Strikes Back (1980)
+- Shawshank Redemption, The (1994)
+
 Godfather, The (1972)
 ---------------------
-- Apocalypse Now (1979)
-- Fargo (1996)
 - Godfather, The (1972)
-- Schindler's List (1993)
-- Casablanca (1942)
+- Godfather: Part II, The (1974)
+- American Beauty (1999)
+- Dr. Strangelove or: How I Learned to Stop Worrying and Love the Bomb (1964)
+- Monty Python and the Holy Grail (1975)
 ```
 </div>
-    
-
 
 ### Visualize the embeddings using the Embedding Projector
 
@@ -914,18 +1377,35 @@ Godfather, The (1972)
 ```python
 import io
 
+# Ensure embeddings are converted to a standard format regardless of the backend
+# This is the "Keras 3 way" to access trained weights for post-processing
+embeddings_np = ops.convert_to_numpy(movie_embeddings)
+
 out_v = io.open("embeddings.tsv", "w", encoding="utf-8")
 out_m = io.open("metadata.tsv", "w", encoding="utf-8")
 
 for idx, movie_id in enumerate(vocabulary[1:]):
-    movie_title = list(movies[movies.movieId == movie_id].title)[0]
-    vector = movie_embeddings[idx]
+    # The movie_id at vocabulary[1:] corresponds to weights at index 1 and onwards
+    vector = embeddings_np[idx + 1]
+
+    # Standard Pandas/Python logic for metadata
+    movie_title = movies[movies.movieId == movie_id]["title"].values[0]
+
+    # Write tab-separated values for the projector
     out_v.write("\t".join([str(x) for x in vector]) + "\n")
     out_m.write(movie_title + "\n")
 
 out_v.close()
 out_m.close()
+
+print("Embeddings and metadata saved for projector.")
 ```
+
+<div class="k-default-codeblock">
+```
+Embeddings and metadata saved for projector.
+```
+</div>
 
 Download the `embeddings.tsv` and `metadata.tsv` to analyze the obtained embeddings
 in the [Embedding Projector](https://projector.tensorflow.org/).
