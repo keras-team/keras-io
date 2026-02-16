@@ -57,7 +57,6 @@ Note that the compressed images folder is 13GB in size.
 
 
 def download_and_extract(url, fname, dest_dir, cache_dir):
-    # Download and extract a zip file with SSL bypass.
     context = ssl._create_unverified_context()
     opener = urllib.request.build_opener(urllib.request.HTTPSHandler(context=context))
     urllib.request.install_opener(opener)
@@ -103,6 +102,7 @@ if not os.path.exists(images_dir):
         dest_dir=images_dir,
         cache_dir=root_dir,
     )
+print("Processing data...")
 with open(annotation_json, "r") as f:
     annotations = json.load(f)["annotations"]
 
@@ -117,7 +117,7 @@ for ann in annotations:
     image_path_to_caption[image_path].append(caption)
 
 image_paths = list(image_path_to_caption.keys())
-print(f"Number of images : {len(image_paths)}")
+print(f"Number of images indexed: {len(image_paths)}")
 
 
 """
@@ -300,6 +300,7 @@ class DualEncoder(keras.Model):
         else:
             text_emb, vision_emb = y_pred
 
+        # Logic for soft targets
         caption_similarity = ops.matmul(text_emb, ops.transpose(text_emb))
         image_similarity = ops.matmul(vision_emb, ops.transpose(vision_emb))
 
@@ -318,16 +319,17 @@ class DualEncoder(keras.Model):
         )
         loss = ops.mean((loss_txt + loss_img) / 2.0)
 
+        # Track the progress
+        self.loss_tracker.update_state(loss)
+
         return loss
 
     def call(self, x, training=False):
-        # Forward pass
         text_emb = self.text_encoder(
             [x["token_ids"], x["padding_mask"], x["segment_ids"]], training=training
         )
         vision_emb = self.vision_encoder(x["image"], training=training)
 
-        # Normalize embeddings
         text_emb = ops.divide(
             text_emb, ops.norm(text_emb, axis=-1, keepdims=True) + 1e-12
         )
@@ -335,7 +337,6 @@ class DualEncoder(keras.Model):
             vision_emb, ops.norm(vision_emb, axis=-1, keepdims=True) + 1e-12
         )
 
-        # Track the progress
         return {
             "text_emb": text_emb,
             "vision_emb": vision_emb,
@@ -353,7 +354,7 @@ In this experiment, we freeze the base encoders for text and images, and make on
 the projection head trainable.
 """
 
-num_epochs = 1  # In practice, train for at least 30 epochs
+num_epochs = 5  # In practice, train for at least 30 epochs
 batch_size = 256
 vision_encoder = create_vision_encoder(1, 256, 0.1)
 text_encoder = create_text_encoder(1, 256, 0.1)
