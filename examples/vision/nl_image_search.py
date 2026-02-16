@@ -2,7 +2,7 @@
 Title: Natural language image search with a Dual Encoder
 Author: Khalid Salama
 Date created: 2021/01/30
-Last modified: 2026/02/15
+Last modified: 2026/02/16
 Description: Implementation of a dual encoder model for retrieving images that match natural language queries.
 Accelerator: GPU
 Converted to Keras 3 by: [Maitry Sinha](https://github.com/maitry63)
@@ -25,18 +25,17 @@ space, such that the caption embeddings are located near the embeddings of the i
 import os
 import json
 import zipfile
-import urllib.request
 import ssl
+import urllib.request
 import collections
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 from tqdm import tqdm
-
+import keras_nlp
 import keras
 from keras import layers, ops
 from keras.utils import PyDataset, load_img, img_to_array
-import keras_nlp
 
 """
 ## Prepare the data
@@ -120,6 +119,7 @@ for ann in annotations:
 image_paths = list(image_path_to_caption.keys())
 print(f"Number of images : {len(image_paths)}")
 
+
 """
 ## Process and save the data
 
@@ -197,12 +197,13 @@ the same embedding space with the same dimensionality.
 
 
 def project_embeddings(x, num_layers, dim, dropout):
+    x = layers.Dense(dim)(x)
     for _ in range(num_layers):
-        projected_x = layers.Dense(dim)(x)
-        block_output = layers.Dense(dim)(projected_x)
-        block_output = layers.Activation("gelu")(block_output)
-        block_output = layers.Dropout(dropout)(block_output)
-        x = layers.Add()([block_output, projected_x])
+        residual = x
+        x = layers.Activation("gelu")(x)
+        x = layers.Dense(dim)(x)
+        x = layers.Dropout(dropout)(x)
+        x = layers.Add()([residual, x])
         x = layers.LayerNormalization()(x)
     return x
 
@@ -293,11 +294,38 @@ class DualEncoder(keras.Model):
         self.loss_tracker = keras.metrics.Mean(name="loss")
 
     def compute_loss(self, x=None, y=None, y_pred=None, sample_weight=None):
+        if isinstance(y_pred, dict):
+            text_emb = y_pred["text_emb"]
+            vision_emb = y_pred["vision_emb"]
+        else:
+            text_emb, vision_emb = y_pred
+
+        caption_similarity = ops.matmul(text_emb, ops.transpose(text_emb))
+        image_similarity = ops.matmul(vision_emb, ops.transpose(vision_emb))
+
+        targets = (caption_similarity + image_similarity) / 2.0
+        targets = ops.softmax(targets, axis=-1)
+
+        # Contrastive Loss
+        logits = ops.matmul(text_emb, ops.transpose(vision_emb)) / self.temperature
+
+        # Symmetric Cross-Entropy Loss
+        loss_txt = keras.losses.categorical_crossentropy(
+            targets, logits, from_logits=True
+        )
+        loss_img = keras.losses.categorical_crossentropy(
+            ops.transpose(targets), ops.transpose(logits), from_logits=True
+        )
+        loss = ops.mean((loss_txt + loss_img) / 2.0)
+
+        return loss
+
+    def call(self, x, training=False):
         # Forward pass
         text_emb = self.text_encoder(
-            [x["token_ids"], x["padding_mask"], x["segment_ids"]]
+            [x["token_ids"], x["padding_mask"], x["segment_ids"]], training=training
         )
-        vision_emb = self.vision_encoder(x["image"])
+        vision_emb = self.vision_encoder(x["image"], training=training)
 
         # Normalize embeddings
         text_emb = ops.divide(
@@ -307,29 +335,11 @@ class DualEncoder(keras.Model):
             vision_emb, ops.norm(vision_emb, axis=-1, keepdims=True) + 1e-12
         )
 
-        # Contrastive Loss
-        logits = ops.matmul(text_emb, ops.transpose(vision_emb)) / self.temperature
-        targets = ops.eye(ops.shape(logits)[0])
-
-        # Symmetric Cross-Entropy
-        loss_txt = keras.losses.categorical_crossentropy(
-            targets, logits, from_logits=True
-        )
-        loss_img = keras.losses.categorical_crossentropy(
-            targets, ops.transpose(logits), from_logits=True
-        )
-        loss = ops.mean((loss_txt + loss_img) / 2.0)
-
         # Track the progress
-        self.loss_tracker.update_state(loss)
-        return loss
-
-    def call(self, x):
-        text_emb = self.text_encoder(
-            [x["token_ids"], x["padding_mask"], x["segment_ids"]]
-        )
-        vision_emb = self.vision_encoder(x["image"])
-        return ops.matmul(text_emb, ops.transpose(vision_emb))
+        return {
+            "text_emb": text_emb,
+            "vision_emb": vision_emb,
+        }
 
     @property
     def metrics(self):
@@ -343,7 +353,7 @@ In this experiment, we freeze the base encoders for text and images, and make on
 the projection head trainable.
 """
 
-num_epochs = 5  # In practice, train for at least 30 epochs
+num_epochs = 1  # In practice, train for at least 30 epochs
 batch_size = 256
 vision_encoder = create_vision_encoder(1, 256, 0.1)
 text_encoder = create_text_encoder(1, 256, 0.1)
@@ -360,7 +370,7 @@ the epoch takes around 8 minutes.
 """
 
 print(f"Batch size: {batch_size}")
-# print(f"Steps per epoch: {int(np.ceil(train_example_count / batch_size))}")
+
 train_dataset = ImageCaptionDataset(train_image_paths, batch_size)
 valid_dataset = ImageCaptionDataset(valid_image_paths, batch_size)
 
@@ -430,9 +440,23 @@ def read_image(path):
 
 
 print(f"Generating embeddings for images...")
+
+
+def image_generator(image_paths, batch_size):
+    for i in range(0, len(image_paths), batch_size):
+        batch_paths = image_paths[i : i + batch_size]
+        batch_images = np.stack([read_image(p) for p in batch_paths])
+        yield batch_images
+
+
+# Use the first 2000
+target_paths = image_paths[:2000]
+gen = image_generator(target_paths, batch_size)
 image_embeddings = vision_encoder.predict(
-    np.array([read_image(p) for p in image_paths[:2000]]),
-    batch_size=batch_size,
+    gen,
+    # steps= (total_images // batch_size)
+    steps=(len(target_paths) + batch_size - 1) // batch_size,
+    verbose=1,
 )
 print(f"Image embeddings shape: {image_embeddings.shape}.")
 
