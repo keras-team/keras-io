@@ -4,7 +4,7 @@ Author: [Apoorv Nandan](https://twitter.com/NandanApoorv)
 Date created: 2020/05/13
 Last modified: 2025/01/07
 Description: Implement Actor Critic Method in CartPole environment.
-Accelerator: NONE
+Accelerator: None
 Converted to Keras 3 by: [Sitam Meur](https://github.com/sitamgithub-MSIT)
 """
 
