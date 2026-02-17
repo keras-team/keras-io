@@ -78,7 +78,8 @@ pip -q install pandas
 pip -q install Pillow
 pip -q install matplotlib
 pip -q install pydot
-pip -q install graphviz```
+pip -q install graphviz
+```
 """
 
 """
@@ -316,15 +317,6 @@ for s in tqdm(df.smiles.values):
     else:
         processed_data.append(graph)
 
-# Randomly shuffle and split the indices of the processed data
-permuted_indices = np.random.permutation(np.arange(df.shape[0]))
-
-# Train set: 80% | Valid set: 19% | Test set: 1%
-train_index = permuted_indices[: int(df.shape[0] * 0.8)]
-valid_index = permuted_indices[int(df.shape[0] * 0.8) : int(df.shape[0] * 0.99)]
-test_index = permuted_indices[int(df.shape[0] * 0.99) :]
-
-
 print("Pre-featurizing Dataset...")
 processed_data = [
     smiles_to_graph(s)
@@ -423,7 +415,7 @@ perm = np.random.permutation(len(processed_data))
 # Train: 80% | Valid: 19% | Test: 1%
 train_idx = perm[: int(len(df) * 0.8)]
 val_idx = perm[int(len(df) * 0.8) : int(len(df) * 0.99)]
-test_idx = perm[int(len(df) * 0.99) :]  # Updated to include the remaining 1%
+test_idx = perm[int(len(df) * 0.99) :]
 
 # Create the PyDatasets
 train_dataset = MPNNDataset(
@@ -643,8 +635,7 @@ plt.title("Optimized Stable MPNN Training")
 plt.xlabel("Epochs")
 plt.ylabel("AUC")
 plt.legend()
-plt.savefig("auc.png")
-print("Saved AUC plot to auc.png")
+
 
 """
 ### Predicting
