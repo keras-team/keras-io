@@ -2428,6 +2428,21 @@ API_MASTER = {
                     ],
                 },
                 {
+                    "path": "bounding_boxes",
+                    "title": "Bounding boxes",
+                    "generate": [
+                        "keras.utils.bounding_boxes.affine_transform",
+                        "keras.utils.bounding_boxes.clip_to_image_size",
+                        "keras.utils.bounding_boxes.compute_ciou",
+                        "keras.utils.bounding_boxes.compute_iou",
+                        "keras.utils.bounding_boxes.convert_format",
+                        "keras.utils.bounding_boxes.crop",
+                        "keras.utils.bounding_boxes.decode_deltas_to_boxes",
+                        "keras.utils.bounding_boxes.encode_box_to_deltas",
+                        "keras.utils.bounding_boxes.pad",
+                    ],
+                },
+                {
                     "path": "python_utils",
                     "title": "Python & NumPy utilities",
                     "generate": [
