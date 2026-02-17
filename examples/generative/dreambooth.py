@@ -264,15 +264,11 @@ if gpus:
     except RuntimeError as e:
         # Fallback to default device placement if explicit placement fails
         print(f"GPU placement failed: {e}. Using default device placement.")
-        embedded_text = text_encoder(
-            [tokenized_texts, POS_IDS], training=False
-        ).numpy()
+        embedded_text = text_encoder([tokenized_texts, POS_IDS], training=False).numpy()
 else:
     # No GPU available, compute on CPU
     print("No GPU detected. Computing text embeddings on CPU.")
-    embedded_text = text_encoder(
-        [tokenized_texts, POS_IDS], training=False
-    ).numpy()
+    embedded_text = text_encoder([tokenized_texts, POS_IDS], training=False).numpy()
 
 # To ensure text_encoder doesn't occupy any GPU space.
 del text_encoder
@@ -379,6 +375,7 @@ implementation that also performs the additional fine-tuning of the text encoder
 to [this repository](https://github.com/sayakpaul/dreambooth-keras/).
 """
 
+
 class DreamBoothTrainer(keras.Model):
     # Reference:
     # https://github.com/huggingface/diffusers/blob/main/examples/dreambooth/train_dreambooth.py
@@ -414,7 +411,9 @@ class DreamBoothTrainer(keras.Model):
         class_embedded_text = class_batch["class_embedded_texts"]
 
         images = keras.ops.concatenate([instance_images, class_images], axis=0)
-        embedded_texts = keras.ops.concatenate([instance_embedded_text, class_embedded_text], axis=0)
+        embedded_texts = keras.ops.concatenate(
+            [instance_embedded_text, class_embedded_text], axis=0
+        )
         batch_size = tf.shape(images)[0]
 
         with tf.GradientTape() as tape:
@@ -430,10 +429,10 @@ class DreamBoothTrainer(keras.Model):
 
             # Sample a random timestep for each image.
             timesteps = tf.random.uniform(
-                (batch_size,), 
-                minval=0, 
-                maxval=self.noise_scheduler.train_timesteps, 
-                dtype=tf.int32
+                (batch_size,),
+                minval=0,
+                maxval=self.noise_scheduler.train_timesteps,
+                dtype=tf.int32,
             )
 
             # Add noise to the latents according to the noise magnitude at each timestep
@@ -470,7 +469,9 @@ class DreamBoothTrainer(keras.Model):
             -log_max_period * keras.ops.arange(0, half, dtype="float32") / half
         )
         args = keras.ops.convert_to_tensor([timestep], dtype="float32") * freqs
-        embedding = keras.ops.concatenate([keras.ops.cos(args), keras.ops.sin(args)], axis=0)
+        embedding = keras.ops.concatenate(
+            [keras.ops.cos(args), keras.ops.sin(args)], axis=0
+        )
         return embedding
 
     def sample_from_encoder_outputs(self, outputs):
@@ -485,9 +486,7 @@ class DreamBoothTrainer(keras.Model):
         # on each part separately.
         # Since the first half of the inputs has instance samples and the second half
         # has class samples, we do the chunking accordingly.
-        model_pred, model_pred_prior = keras.ops.split(
-            model_pred, 2, axis=0
-        )
+        model_pred, model_pred_prior = keras.ops.split(model_pred, 2, axis=0)
         target, target_prior = keras.ops.split(target, 2, axis=0)
 
         # Cast to float32 to avoid dtype mismatch in mixed precision training
