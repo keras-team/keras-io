@@ -2,7 +2,7 @@
 Title: Graph attention network (GAT) for node classification
 Author: [akensert](https://github.com/akensert)
 Date created: 2021/09/13
-Last modified: 2021/12/26
+Last modified: 2026/02/17
 Description: An implementation of a Graph Attention Network (GAT) for node classification.
 Accelerator: GPU
 Converted to Keras 3 by: [LakshmiKalaKadali](https://github.com/LakshmiKalaKadali)
