@@ -74,6 +74,10 @@ API_MASTER = {
                                 "keras.Model.save_weights",
                                 "keras.Model.load_weights",
                             ],
+                            "aliases": {
+                                "keras.Model.save_weights": ["keras.saving.save_weights"],
+                                "keras.Model.load_weights": ["keras.saving.load_weights"]
+                            }
                         },
                         {
                             "path": "model_config_serialization",
@@ -1281,7 +1285,6 @@ API_MASTER = {
                     "path": "callback_utilities",
                     "title": "Callback utilities",
                     "generate": [
-                        "keras.callbacks.CallbackList",
                         "keras.callbacks.History",
                         # "keras.callbacks.OrbaxCheckpoint",
                     ],
@@ -1612,7 +1615,6 @@ API_MASTER = {
                         "keras.ops.image.rgb_to_hsv",
                         "keras.ops.image.rgb_to_grayscale",
                         "keras.ops.image.elastic_transform",
-                        "keras.ops.image.extract_patches_3d",
                         "keras.ops.image.scale_and_translate",
                     ],
                 },
@@ -2632,14 +2634,6 @@ API_MASTER = {
                         "keras.visualization.plot_bounding_box_gallery",
                         "keras.visualization.plot_image_gallery",
                         "keras.visualization.plot_segmentation_mask_gallery",
-                    ],
-                },
-                {
-                    "path": "saving_loading_utils",
-                    "title": "Saving and loading utilities",
-                    "generate": [
-                        "keras.saving.load_weights",
-                        "keras.saving.save_weights",
                     ],
                 },
                 {
