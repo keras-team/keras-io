@@ -25,7 +25,6 @@ space, such that the caption embeddings are located near the embeddings of the i
 import os
 import json
 import zipfile
-import ssl
 import urllib.request
 import collections
 import numpy as np
@@ -57,10 +56,6 @@ Note that the compressed images folder is 13GB in size.
 
 
 def download_and_extract(url, fname, dest_dir, cache_dir):
-    context = ssl._create_unverified_context()
-    opener = urllib.request.build_opener(urllib.request.HTTPSHandler(context=context))
-    urllib.request.install_opener(opener)
-
     try:
         path_to_zip = keras.utils.get_file(
             fname,
@@ -89,7 +84,7 @@ images_dir = os.path.join(root_dir, "train2014_extracted")
 
 if not os.path.exists(annotation_json):
     download_and_extract(
-        url="https://images.cocodataset.org/annotations/annotations_trainval2014.zip",
+        url="http://images.cocodataset.org/annotations/annotations_trainval2014.zip",
         fname="captions.zip",
         dest_dir=extract_path,
         cache_dir=root_dir,
@@ -97,7 +92,7 @@ if not os.path.exists(annotation_json):
 if not os.path.exists(images_dir):
     print("Downloading train2014 images zip (this is large)...")
     download_and_extract(
-        url="https://images.cocodataset.org/zips/train2014.zip",
+        url="http://images.cocodataset.org/zips/train2014.zip",
         fname="train2014.zip",
         dest_dir=images_dir,
         cache_dir=root_dir,
@@ -354,7 +349,7 @@ In this experiment, we freeze the base encoders for text and images, and make on
 the projection head trainable.
 """
 
-num_epochs = 5  # In practice, train for at least 30 epochs
+num_epochs = 2  # In practice, train for at least 30 epochs
 batch_size = 256
 vision_encoder = create_vision_encoder(1, 256, 0.1)
 text_encoder = create_text_encoder(1, 256, 0.1)
