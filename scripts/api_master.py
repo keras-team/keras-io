@@ -47,6 +47,7 @@ API_MASTER = {
                         "keras.Model.train_on_batch",
                         "keras.Model.test_on_batch",
                         "keras.Model.predict_on_batch",
+                        "keras.callbacks.History",
                     ],
                 },
                 {
@@ -1281,14 +1282,11 @@ API_MASTER = {
                     "title": "SwapEMAWeights",
                     "generate": ["keras.callbacks.SwapEMAWeights"],
                 },
-                {
-                    "path": "callback_utilities",
-                    "title": "Callback utilities",
-                    "generate": [
-                        "keras.callbacks.History",
-                        # "keras.callbacks.OrbaxCheckpoint",
-                    ],
-                },
+                # {
+                #     "path": "orbax_checkpoint",
+                #     "title": "OrbaxCheckpoint",
+                #     "generate": ["keras.callbacks.OrbaxCheckpoint"],
+                # }, #Enable after 3.14 release.
             ],
         },
         {
@@ -1541,6 +1539,9 @@ API_MASTER = {
                         "keras.ops.tanh_shrink",
                         "keras.ops.hard_tanh",
                         "keras.ops.hard_shrink",
+                        "keras.ops.polar",
+                        "keras.ops.sparse_sigmoid",
+                        "keras.ops.unfold",
                     ],
                 },
                 {
@@ -1552,6 +1553,7 @@ API_MASTER = {
                         "keras.ops.eig",
                         "keras.ops.eigh",
                         "keras.ops.inv",
+                        "keras.ops.jvp",
                         "keras.ops.logdet",
                         "keras.ops.lstsq",
                         "keras.ops.lu_factor",
@@ -1632,14 +1634,16 @@ API_MASTER = {
                     ],
                 },
                 {
-                    "path": "other_ops",
-                    "title": "Other ops",
+                    "path": "einops/",
+                    "title": "Einops ops",
                     "generate": [
-                        "keras.ops.jvp",
-                        "keras.ops.polar",
                         "keras.ops.rearrange",
-                        "keras.ops.sparse_sigmoid",
-                        "keras.ops.unfold",
+                    ],
+                },
+                {
+                    "path": "math/",
+                    "title": "Math ops",
+                    "generate": [
                         "keras.ops.view_as_complex",
                         "keras.ops.view_as_real",
                     ],
@@ -1812,11 +1816,6 @@ API_MASTER = {
                         "keras.metrics.SparseCategoricalAccuracy",
                         "keras.metrics.TopKCategoricalAccuracy",
                         "keras.metrics.SparseTopKCategoricalAccuracy",
-                        "keras.metrics.binary_accuracy",
-                        "keras.metrics.categorical_accuracy",
-                        "keras.metrics.sparse_categorical_accuracy",
-                        "keras.metrics.sparse_top_k_categorical_accuracy",
-                        "keras.metrics.top_k_categorical_accuracy",
                     ],
                 },
                 {
@@ -1842,7 +1841,6 @@ API_MASTER = {
                         "keras.metrics.CosineSimilarity",
                         "keras.metrics.LogCoshError",
                         "keras.metrics.R2Score",
-                        "keras.metrics.huber",
                     ],
                 },
                 {
@@ -1954,6 +1952,9 @@ API_MASTER = {
                         "keras.losses.tversky",
                         "keras.losses.dice",
                     ],
+                    "aliases": {
+                        "keras.losses.huber": ["keras.metrics.huber"]
+                    }
                 },
                 {
                     "path": "hinge_losses",
@@ -2211,9 +2212,11 @@ API_MASTER = {
                             "generate": [
                                 "keras.applications.VGG16",
                                 "keras.applications.VGG19",
-                                "keras.applications.vgg16.VGG16",
-                                "keras.applications.vgg19.VGG19",
                             ],
+                            "aliases": {
+                                "keras.applications.VGG16": ["keras.applications.vgg16.VGG16"],
+                                "keras.applications.VGG19": ["keras.applications.vgg19.VGG19"]
+                            }
                         },
                         {
                             "path": "vgg_preprocessing",
@@ -2655,11 +2658,6 @@ API_MASTER = {
                     "generate": [
                         "keras.backend.get_uid",
                         "keras.backend.result_type",
-                        "keras.backend.clear_session",
-                        "keras.backend.epsilon",
-                        "keras.backend.set_epsilon",
-                        "keras.backend.floatx",
-                        "keras.backend.set_floatx",
                     ],
                 },
                 {
@@ -2703,6 +2701,13 @@ API_MASTER = {
                         "keras.device",
                         "keras.name_scope",
                     ],
+                    "aliases": {
+                        "keras.utils.clear_session": ["keras.backend.clear_session"],
+                        "keras.config.epsilon": ["keras.backend.epsilon"],
+                        "keras.config.set_epsilon": ["keras.backend.set_epsilon"],
+                        "keras.config.floatx": ["keras.backend.floatx"],
+                        "keras.config.set_floatx": ["keras.backend.set_floatx"]
+                    }
                 },
             ],
         },
