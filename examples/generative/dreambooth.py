@@ -464,7 +464,7 @@ class DreamBoothTrainer(keras.Model):
 
     def get_timestep_embedding(self, timesteps, dim=320, max_period=10000):
         """Generate sinusoidal timestep embeddings (backend-agnostic).
-        
+
         Args:
             timesteps: a 1-D Tensor of N indices, one per batch element.
         Returns:
