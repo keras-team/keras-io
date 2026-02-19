@@ -241,7 +241,7 @@ API_MASTER = {
                     "path": "regularizers",
                     "title": "Layer weight regularizers",
                     "generate": [
-                        "keras.Regularizer",
+                        "keras.regularizers.Regularizer",
                         "keras.regularizers.L1",
                         "keras.regularizers.L2",
                         "keras.regularizers.L1L2",
