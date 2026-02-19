@@ -1563,7 +1563,7 @@ API_MASTER = {
             "title": "Optimizers",
             "toc": True,
             "generate": [
-                "keras.Optimizer",
+                "keras.optimizers.Optimizer",
                 "keras.optimizers.Optimizer.apply_gradients",
                 "keras.optimizers.Optimizer.variables",
             ],
@@ -1698,7 +1698,7 @@ API_MASTER = {
                     "path": "base_metric",
                     "title": "Base Metric class",
                     "generate": [
-                        "keras.Metric",
+                        "keras.metrics.Metric",
                     ],
                 },
                 {
@@ -1795,7 +1795,7 @@ API_MASTER = {
             "title": "Losses",
             "toc": True,
             "generate": [
-                "keras.Loss",
+                "keras.losses.Loss",
             ],
             "children": [
                 {
@@ -1810,12 +1810,6 @@ API_MASTER = {
                         "keras.losses.Poisson",
                         "keras.losses.CTC",
                         "keras.losses.KLDivergence",
-                        "keras.losses.binary_crossentropy",
-                        "keras.losses.categorical_crossentropy",
-                        "keras.losses.sparse_categorical_crossentropy",
-                        "keras.losses.poisson",
-                        "keras.losses.ctc",
-                        "keras.losses.kl_divergence",
                     ],
                 },
                 {
@@ -1831,15 +1825,6 @@ API_MASTER = {
                         "keras.losses.LogCosh",
                         "keras.losses.Tversky",
                         "keras.losses.Dice",
-                        "keras.losses.mean_squared_error",
-                        "keras.losses.mean_absolute_error",
-                        "keras.losses.mean_absolute_percentage_error",
-                        "keras.losses.mean_squared_logarithmic_error",
-                        "keras.losses.cosine_similarity",
-                        "keras.losses.huber",
-                        "keras.losses.log_cosh",
-                        "keras.losses.tversky",
-                        "keras.losses.dice",
                     ],
                 },
                 {
@@ -1849,13 +1834,8 @@ API_MASTER = {
                         "keras.losses.Hinge",
                         "keras.losses.SquaredHinge",
                         "keras.losses.CategoricalHinge",
-                        "keras.losses.hinge",
-                        "keras.losses.squared_hinge",
-                        "keras.losses.categorical_hinge",
                         "keras.losses.CategoricalGeneralizedCrossEntropy",
                         "keras.losses.Circle",
-                        "keras.losses.categorical_generalized_cross_entropy",
-                        "keras.losses.circle",
 
                     ],
                 },
