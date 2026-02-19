@@ -474,13 +474,13 @@ EXAMPLES_MASTER = {
                     "path": "deit",
                     "title": "Distilling Vision Transformers",
                     "subcategory": "Performance recipes",
-                    "keras_2": True,
+                    "keras_3": True,
                 },
                 {
                     "path": "focal_modulation_network",
                     "title": "Focal Modulation: A replacement for Self-Attention",
                     "subcategory": "Image classification",
-                    "keras_2": True,
+                    "keras_3": True,
                 },
                 {
                     "path": "masked_image_modeling",
@@ -1018,7 +1018,7 @@ EXAMPLES_MASTER = {
                     "path": "ctc_asr",
                     "title": "Automatic Speech Recognition using CTC",
                     "subcategory": "Speech recognition",
-                    "keras_2": True,
+                    "keras_3": True,
                 },
                 # Audio classification
                 {
@@ -1111,7 +1111,7 @@ EXAMPLES_MASTER = {
                     "path": "node2vec_movielens",
                     "title": "Graph representation learning with node2vec",
                     "subcategory": "Graph representation learning",
-                    "keras_2": True,
+                    "keras_3": True,
                 },
             ],
         },
