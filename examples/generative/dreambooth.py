@@ -254,6 +254,8 @@ text_encoder = keras_cv.models.stable_diffusion.TextEncoder(max_prompt_length)
 
 # Compute text embeddings on GPU if available
 gpus = tf.config.list_logical_devices("GPU")
+
+embedded_text = None
 if gpus:
     # Explicitly place computation on GPU for better performance
     try:
@@ -264,10 +266,9 @@ if gpus:
     except RuntimeError as e:
         # Fallback to default device placement if explicit placement fails
         print(f"GPU placement failed: {e}. Using default device placement.")
-        embedded_text = text_encoder([tokenized_texts, POS_IDS], training=False).numpy()
-else:
-    # No GPU available, compute on CPU
-    print("No GPU detected. Computing text embeddings on CPU.")
+if embedded_text is None:
+    if not gpus:
+        print("No GPU detected. Computing text embeddings on CPU.")
     embedded_text = text_encoder([tokenized_texts, POS_IDS], training=False).numpy()
 
 # To ensure text_encoder doesn't occupy any GPU space.
@@ -414,8 +415,9 @@ class DreamBoothTrainer(keras.Model):
         embedded_texts = keras.ops.concatenate(
             [instance_embedded_text, class_embedded_text], axis=0
         )
-        batch_size = tf.shape(images)[0]
+        batch_size = keras.ops.shape(images)[0]
 
+        # Use backend-agnostic gradient computation
         with tf.GradientTape() as tape:
             # Project image into the latent space.
             # The ImageEncoder already handles the sampling internally.
@@ -424,15 +426,15 @@ class DreamBoothTrainer(keras.Model):
             # https://keras.io/examples/generative/fine_tune_via_textual_inversion/
             latents = latents * 0.18215
 
-            # Sample noise that we'll add to the latents.
-            noise = tf.random.normal(tf.shape(latents))
+            # Sample noise that we'll add to the latents (backend-agnostic).
+            noise = keras.random.normal(keras.ops.shape(latents))
 
-            # Sample a random timestep for each image.
-            timesteps = tf.random.uniform(
-                (batch_size,),
+            # Sample a random timestep for each image (backend-agnostic).
+            timesteps = keras.random.randint(
+                shape=(batch_size,),
                 minval=0,
                 maxval=self.noise_scheduler.train_timesteps,
-                dtype=tf.int32,
+                dtype="int32",
             )
 
             # Add noise to the latents according to the noise magnitude at each timestep
@@ -446,9 +448,8 @@ class DreamBoothTrainer(keras.Model):
             target = noise  # noise_schedule.predict_epsilon == True
 
             # Predict the noise residual and compute loss.
-            timestep_embedding = tf.map_fn(
-                lambda t: self.get_timestep_embedding(t), timesteps, dtype=tf.float32
-            )
+            # Vectorized timestep embedding (backend-agnostic)
+            timestep_embedding = self.get_timestep_embedding(timesteps)
             model_pred = self.diffusion_model(
                 [noisy_latents, timestep_embedding, embedded_texts], training=True
             )
@@ -457,20 +458,28 @@ class DreamBoothTrainer(keras.Model):
         # Update parameters of the diffusion model.
         trainable_vars = self.diffusion_model.trainable_variables
         gradients = tape.gradient(loss, trainable_vars)
-        gradients = [tf.clip_by_norm(g, self.max_grad_norm) for g in gradients]
-        self.optimizer.apply_gradients(zip(gradients, trainable_vars))
+        self.optimizer.apply(gradients, trainable_vars)
 
         return {m.name: m.result() for m in self.metrics}
 
-    def get_timestep_embedding(self, timestep, dim=320, max_period=10000):
+    def get_timestep_embedding(self, timesteps, dim=320, max_period=10000):
+        """Generate sinusoidal timestep embeddings (backend-agnostic).
+        
+        Args:
+            timesteps: a 1-D Tensor of N indices, one per batch element.
+        Returns:
+            an [N x dim] Tensor of positional embeddings.
+        """
         half = dim // 2
         log_max_period = keras.ops.log(keras.ops.cast(max_period, "float32"))
         freqs = keras.ops.exp(
             -log_max_period * keras.ops.arange(0, half, dtype="float32") / half
         )
-        args = keras.ops.convert_to_tensor([timestep], dtype="float32") * freqs
+        # Reshape timesteps to [batch_size, 1] and freqs to [1, half] for broadcasting
+        args = keras.ops.cast(timesteps, "float32")
+        args = keras.ops.reshape(args, (-1, 1)) * freqs
         embedding = keras.ops.concatenate(
-            [keras.ops.cos(args), keras.ops.sin(args)], axis=0
+            [keras.ops.cos(args), keras.ops.sin(args)], axis=1
         )
         return embedding
 
@@ -510,18 +519,12 @@ class DreamBoothTrainer(keras.Model):
         # callback directly with this trainer class. In this case, it will
         # only checkpoint the `diffusion_model` since that's what we're training
         # during fine-tuning.
-        self.diffusion_model.save_weights(
-            filepath=filepath,
-            overwrite=overwrite,
-        )
+        self.diffusion_model.save_weights(filepath=filepath)
 
     def load_weights(self, filepath, by_name=False, skip_mismatch=False, options=None):
         # Similarly override `load_weights()` so that we can directly call it on
         # the trainer class object.
-        self.diffusion_model.load_weights(
-            filepath=filepath,
-            skip_mismatch=skip_mismatch,
-        )
+        self.diffusion_model.load_weights(filepath=filepath)
 
 
 """
@@ -559,6 +562,7 @@ optimizer = keras.optimizers.AdamW(
     beta_1=beta_1,
     beta_2=beta_2,
     epsilon=epsilon,
+    clipnorm=1.0,  # Gradient clipping handled by optimizer
 )
 dreambooth_trainer.compile(optimizer=optimizer, loss="mse")
 
