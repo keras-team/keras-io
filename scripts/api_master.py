@@ -21,9 +21,6 @@ API_MASTER = {
                         "keras.Model.set_state_tree",
                         "keras.Model.quantize",
                     ],
-                    "aliases": {
-                        "keras.Model": ["keras.models.Model"]
-                    }
                 },
                 {
                     "path": "sequential",
@@ -33,9 +30,6 @@ API_MASTER = {
                         "keras.Sequential.add",
                         "keras.Sequential.pop",
                     ],
-                    "aliases": {
-                        "keras.Sequential": ["keras.models.Sequential"]
-                    }
                 },
                 {
                     "path": "model_training_apis",
@@ -64,10 +58,6 @@ API_MASTER = {
                                 "keras.saving.save_model",
                                 "keras.saving.load_model",
                             ],
-                            "aliases": {
-                                "keras.saving.save_model": ["keras.models.save_model"],
-                                "keras.saving.load_model": ["keras.models.load_model"]
-                            }
                         },
                         {
                             "path": "weights_saving_and_loading",
@@ -76,10 +66,6 @@ API_MASTER = {
                                 "keras.Model.save_weights",
                                 "keras.Model.load_weights",
                             ],
-                            "aliases": {
-                                "keras.Model.save_weights": ["keras.saving.save_weights"],
-                                "keras.Model.load_weights": ["keras.saving.load_weights"]
-                            }
                         },
                         {
                             "path": "model_config_serialization",
@@ -190,9 +176,6 @@ API_MASTER = {
                         "keras.layers.Layer.losses",
                         "keras.Variable",
                     ],
-                    "aliases": {
-                        "keras.Layer": ["keras.layers.Layer"]
-                    }
                 },
                 {
                     "path": "activations",
@@ -231,10 +214,6 @@ API_MASTER = {
                         "keras.activations.tanh_shrink",
                         "keras.activations.threshold",
                     ],
-                    "aliases": {
-                        "keras.activations.silu": ["keras.activations.swish"],
-                        "keras.activations.hard_silu": ["keras.activations.hard_swish"]
-                    }
                 },
                 {
                     "path": "initializers",
@@ -257,24 +236,6 @@ API_MASTER = {
                         "keras.initializers.LecunUniform",
                         "keras.initializers.IdentityInitializer",
                     ],
-                    "aliases": {
-                        "keras.Initializer": ["keras.initializers.Initializer"],
-                        "keras.initializers.Zeros": ["keras.initializers.zeros"],
-                        "keras.initializers.Ones": ["keras.initializers.ones"],
-                        "keras.initializers.Constant": ["keras.initializers.constant"],
-                        "keras.initializers.HeNormal": ["keras.initializers.he_normal"],
-                        "keras.initializers.HeUniform": ["keras.initializers.he_uniform"],
-                        "keras.initializers.LecunNormal": ["keras.initializers.lecun_normal"],
-                        "keras.initializers.LecunUniform": ["keras.initializers.lecun_uniform"],
-                        "keras.initializers.GlorotNormal": ["keras.initializers.glorot_normal"],
-                        "keras.initializers.GlorotUniform": ["keras.initializers.glorot_uniform"],
-                        "keras.initializers.RandomNormal": ["keras.initializers.random_normal"],
-                        "keras.initializers.RandomUniform": ["keras.initializers.random_uniform"],
-                        "keras.initializers.TruncatedNormal": ["keras.initializers.truncated_normal"],
-                        "keras.initializers.VarianceScaling": ["keras.initializers.variance_scaling"],
-                        "keras.initializers.Orthogonal": ["keras.initializers.OrthogonalInitializer", "keras.initializers.orthogonal"],
-                        "keras.initializers.IdentityInitializer": ["keras.initializers.Identity", "keras.initializers.identity"]
-                    }
                 },
                 {
                     "path": "regularizers",
@@ -286,13 +247,6 @@ API_MASTER = {
                         "keras.regularizers.L1L2",
                         "keras.regularizers.OrthogonalRegularizer",
                     ],
-                    "aliases": {
-                        "keras.Regularizer": ["keras.regularizers.Regularizer"],
-                        "keras.regularizers.L1": ["keras.regularizers.l1"],
-                        "keras.regularizers.L2": ["keras.regularizers.l2"],
-                        "keras.regularizers.L1L2": ["keras.regularizers.l1_l2"],
-                        "keras.regularizers.OrthogonalRegularizer": ["keras.regularizers.orthogonal_regularizer"]
-                    }
                 },
                 {
                     "path": "constraints",
@@ -303,12 +257,6 @@ API_MASTER = {
                         "keras.constraints.NonNeg",
                         "keras.constraints.UnitNorm",
                     ],
-                    "aliases": {
-                        "keras.constraints.MaxNorm": ["keras.constraints.max_norm"],
-                        "keras.constraints.MinMaxNorm": ["keras.constraints.min_max_norm"],
-                        "keras.constraints.NonNeg": ["keras.constraints.non_neg"],
-                        "keras.constraints.UnitNorm": ["keras.constraints.unit_norm"]
-                    }
                 },
                 {
                     "path": "core_layers/",
@@ -321,9 +269,6 @@ API_MASTER = {
                             "generate": [
                                 "keras.Input",
                             ],
-                            "aliases": {
-                                "keras.Input": ["keras.layers.Input"]
-                            }
                         },
                         {
                             "path": "input_spec",
@@ -331,9 +276,6 @@ API_MASTER = {
                             "generate": [
                                 "keras.InputSpec",
                             ],
-                            "aliases": {
-                                "keras.InputSpec": ["keras.layers.InputSpec"]
-                            }
                         },
                         {
                             "path": "dense",
@@ -386,9 +328,6 @@ API_MASTER = {
                             "generate": [
                                 "keras.layers.Conv1D",
                             ],
-                            "aliases": {
-                                "keras.layers.Conv1D": ["keras.layers.Convolution1D"]
-                            }
                         },
                         {
                             "path": "convolution2d",
@@ -396,9 +335,6 @@ API_MASTER = {
                             "generate": [
                                 "keras.layers.Conv2D",
                             ],
-                            "aliases": {
-                                "keras.layers.Conv2D": ["keras.layers.Convolution2D"]
-                            }
                         },
                         {
                             "path": "convolution3d",
@@ -406,9 +342,6 @@ API_MASTER = {
                             "generate": [
                                 "keras.layers.Conv3D",
                             ],
-                            "aliases": {
-                                "keras.layers.Conv3D": ["keras.layers.Convolution3D"]
-                            }
                         },
                         {
                             "path": "separable_convolution1d",
@@ -458,9 +391,6 @@ API_MASTER = {
                             "generate": [
                                 "keras.layers.MaxPooling1D",
                             ],
-                            "aliases": {
-                                "keras.layers.MaxPooling1D": ["keras.layers.MaxPool1D"]
-                            }
                         },
                         {
                             "path": "max_pooling2d",
@@ -468,9 +398,6 @@ API_MASTER = {
                             "generate": [
                                 "keras.layers.MaxPooling2D",
                             ],
-                            "aliases": {
-                                "keras.layers.MaxPooling2D": ["keras.layers.MaxPool2D"]
-                            }
                         },
                         {
                             "path": "max_pooling3d",
@@ -478,9 +405,6 @@ API_MASTER = {
                             "generate": [
                                 "keras.layers.MaxPooling3D",
                             ],
-                            "aliases": {
-                                "keras.layers.MaxPooling3D": ["keras.layers.MaxPool3D"]
-                            }
                         },
                         {
                             "path": "average_pooling1d",
@@ -488,9 +412,6 @@ API_MASTER = {
                             "generate": [
                                 "keras.layers.AveragePooling1D",
                             ],
-                            "aliases": {
-                                "keras.layers.AveragePooling1D": ["keras.layers.AvgPool1D"]
-                            }
                         },
                         {
                             "path": "average_pooling2d",
@@ -498,9 +419,6 @@ API_MASTER = {
                             "generate": [
                                 "keras.layers.AveragePooling2D",
                             ],
-                            "aliases": {
-                                "keras.layers.AveragePooling2D": ["keras.layers.AvgPool2D"]
-                            }
                         },
                         {
                             "path": "average_pooling3d",
@@ -508,9 +426,6 @@ API_MASTER = {
                             "generate": [
                                 "keras.layers.AveragePooling3D",
                             ],
-                            "aliases": {
-                                "keras.layers.AveragePooling3D": ["keras.layers.AvgPool3D"]
-                            }
                         },
                         {
                             "path": "global_max_pooling1d",
@@ -1652,9 +1567,6 @@ API_MASTER = {
                 "keras.optimizers.Optimizer.apply_gradients",
                 "keras.optimizers.Optimizer.variables",
             ],
-            "aliases": {
-                "keras.Optimizer": ["keras.optimizers.Optimizer"]
-            },
             "children": [
                 {
                     "path": "sgd",
@@ -1775,13 +1687,6 @@ API_MASTER = {
                     "title": "Muon",
                     "generate": ["keras.optimizers.Muon"],
                 },
-                {
-                    "path": "optimizer_utilities",
-                    "title": "Optimizer utilities",
-                    "generate": [
-
-                    ],
-                },
             ],
         },
         {
@@ -1795,9 +1700,6 @@ API_MASTER = {
                     "generate": [
                         "keras.Metric",
                     ],
-                    "aliases": {
-                        "keras.Metric": ["keras.metrics.Metric"]
-                    }
                 },
                 {
                     "path": "accuracy_metrics",
@@ -1855,8 +1757,6 @@ API_MASTER = {
                         "keras.metrics.FBetaScore",
                         "keras.metrics.PearsonCorrelation",
                         "keras.metrics.ConcordanceCorrelation",
-                        "keras.metrics.pearson_correlation",
-                        "keras.metrics.concordance_correlation",
                     ],
                 },
                 {
@@ -1886,7 +1786,6 @@ API_MASTER = {
                         "keras.metrics.MeanMetricWrapper",
                         "keras.metrics.Mean",
                         "keras.metrics.Sum",
-
                     ],
                 },
             ],
@@ -1898,9 +1797,6 @@ API_MASTER = {
             "generate": [
                 "keras.Loss",
             ],
-            "aliases": {
-                "keras.Loss": ["keras.losses.Loss"]
-            },
             "children": [
                 {
                     "path": "probabilistic_losses",
@@ -1945,9 +1841,6 @@ API_MASTER = {
                         "keras.losses.tversky",
                         "keras.losses.dice",
                     ],
-                    "aliases": {
-                        "keras.losses.huber": ["keras.metrics.huber"]
-                    }
                 },
                 {
                     "path": "hinge_losses",
@@ -2206,10 +2099,6 @@ API_MASTER = {
                                 "keras.applications.VGG16",
                                 "keras.applications.VGG19",
                             ],
-                            "aliases": {
-                                "keras.applications.VGG16": ["keras.applications.vgg16.VGG16"],
-                                "keras.applications.VGG19": ["keras.applications.vgg19.VGG19"]
-                            }
                         },
                         {
                             "path": "vgg_preprocessing",
@@ -2472,9 +2361,6 @@ API_MASTER = {
             "generate": [
                 "keras.Quantizer",
             ],
-            "aliases": {
-                "keras.Quantizer": ["keras.quantizers.Quantizer"]
-            },
             "children": [
                 {
                     "path": "quantizer_classes",
@@ -2581,9 +2467,6 @@ API_MASTER = {
                         "keras.backend.is_int_dtype",
                         "keras.backend.standardize_dtype",
                     ],
-                    "aliases": {
-                        "keras.utils.is_keras_tensor": ["keras.backend.is_keras_tensor"]
-                    }
                 },
                 {
                     "path": "bounding_boxes",
@@ -2649,9 +2532,6 @@ API_MASTER = {
                         "keras.preprocessing.image.save_img",
                         "keras.utils.PyDataset",
                     ],
-                    "aliases": {
-                        "keras.utils.PyDataset": ["keras.utils.Sequence"]
-                    }
                 },
                 {
                     "path": "backend_utils",
@@ -2700,13 +2580,6 @@ API_MASTER = {
                         "keras.config.max_steps_per_epoch",
                         "keras.config.set_max_steps_per_epoch",
                     ],
-                    "aliases": {
-                        "keras.utils.clear_session": ["keras.backend.clear_session"],
-                        "keras.config.epsilon": ["keras.backend.epsilon"],
-                        "keras.config.set_epsilon": ["keras.backend.set_epsilon"],
-                        "keras.config.floatx": ["keras.backend.floatx"],
-                        "keras.config.set_floatx": ["keras.backend.set_floatx"]
-                    }
                 },
             ],
         },
