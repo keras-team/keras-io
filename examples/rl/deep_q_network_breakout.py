@@ -2,7 +2,7 @@
 Title: Deep Q-Learning for Atari Breakout
 Author: [Jacob Chapman](https://twitter.com/jacoblchapman) and [Mathias Lechner](https://twitter.com/MLech20)
 Date created: 2020/05/23
-Last modified: 2024/03/17
+Last modified: 2026/02/03
 Description: Play Atari Breakout with a Deep Q-Network.
 Accelerator: None
 """
@@ -58,7 +58,7 @@ import keras
 from keras import layers
 
 import gymnasium as gym
-from gymnasium.wrappers import AtariPreprocessing, FrameStack
+from gymnasium.wrappers import AtariPreprocessing, FrameStackObservation
 import numpy as np
 import tensorflow as tf
 
@@ -81,7 +81,7 @@ env = gym.make("BreakoutNoFrameskip-v4")  # , render_mode="human")
 # Environment preprocessing
 env = AtariPreprocessing(env)
 # Stack four frames
-env = FrameStack(env, 4)
+env = FrameStackObservation(env, stack_size=4)
 env.seed(seed)
 """
 ## Implement the Deep Q-Network
