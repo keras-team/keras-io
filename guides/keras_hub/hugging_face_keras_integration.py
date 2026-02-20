@@ -8,6 +8,13 @@ Accelerator: GPU
 """
 
 """
+
+## Video Guide
+
+[https://www.youtube.com/watch?v=OpSddL3Lv7I](https://www.youtube.com/watch?v=OpSddL3Lv7I&list=PL9f9vdy2ar1IdH6O6kQGn4Ln-_oLH_Ra3&index=2)
+
+[![How to use KerasHub with Hugging Face](http://img.youtube.com/vi/OpSddL3Lv7I/maxresdefault.jpg)](https://www.youtube.com/watch?v=OpSddL3Lv7I&list=PL9f9vdy2ar1IdH6O6kQGn4Ln-_oLH_Ra3&index=2)
+
 ## Introduction
 
 KerasHub has built-in converters for HuggingFace's `.safetensors` models.
