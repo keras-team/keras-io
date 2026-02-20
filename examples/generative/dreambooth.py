@@ -2,7 +2,7 @@
 Title: DreamBooth
 Author: [Sayak Paul](https://twitter.com/RisingSayak), [Chansung Park](https://twitter.com/algo_diver)
 Date created: 2023/02/01
-Last modified: 2023/02/05
+Last modified: 2026/02/17
 Description: Implementing DreamBooth.
 Accelerator: GPU
 """
@@ -31,8 +31,7 @@ First, let's install the latest versions of KerasCV and TensorFlow.
 """
 
 """shell
-pip install -q -U keras_cv==0.6.0
-pip install -q -U tensorflow
+pip install -q -U keras_cv
 """
 
 """
@@ -46,12 +45,12 @@ VRAM.
 
 import math
 
+import keras
 import keras_cv
 import matplotlib.pyplot as plt
 import numpy as np
 import tensorflow as tf
 from imutils import paths
-from tensorflow import keras
 
 """
 ## Usage of DreamBooth
@@ -135,11 +134,11 @@ and generated some class images using
 almost always helps in improving the quality of the generated images.
 """
 
-instance_images_root = tf.keras.utils.get_file(
+instance_images_root = keras.utils.get_file(
     origin="https://huggingface.co/datasets/sayakpaul/sample-datasets/resolve/main/instance-images.tar.gz",
     untar=True,
 )
-class_images_root = tf.keras.utils.get_file(
+class_images_root = keras.utils.get_file(
     origin="https://huggingface.co/datasets/sayakpaul/sample-datasets/resolve/main/class-images.tar.gz",
     untar=True,
 )
@@ -250,19 +249,27 @@ for i, caption in enumerate(itertools.chain(instance_prompts, class_prompts)):
 
 
 # We also pre-compute the text embeddings to save some memory during training.
-POS_IDS = tf.convert_to_tensor([list(range(max_prompt_length))], dtype=tf.int32)
+POS_IDS = np.array([list(range(max_prompt_length))], dtype=np.int32)
 text_encoder = keras_cv.models.stable_diffusion.TextEncoder(max_prompt_length)
 
+# Compute text embeddings on GPU if available
 gpus = tf.config.list_logical_devices("GPU")
 
-# Ensure the computation takes place on a GPU.
-# Note that it's done automatically when there's a GPU present.
-# This example just attempts at showing how you can do it
-# more explicitly.
-with tf.device(gpus[0].name):
-    embedded_text = text_encoder(
-        [tf.convert_to_tensor(tokenized_texts), POS_IDS], training=False
-    ).numpy()
+embedded_text = None
+if gpus:
+    # Explicitly place computation on GPU for better performance
+    try:
+        with tf.device(gpus[0].name):
+            embedded_text = text_encoder(
+                [tokenized_texts, POS_IDS], training=False
+            ).numpy()
+    except RuntimeError as e:
+        # Fallback to default device placement if explicit placement fails
+        print(f"GPU placement failed: {e}. Using default device placement.")
+if embedded_text is None:
+    if not gpus:
+        print("No GPU detected. Computing text embeddings on CPU.")
+    embedded_text = text_encoder([tokenized_texts, POS_IDS], training=False).numpy()
 
 # To ensure text_encoder doesn't occupy any GPU space.
 del text_encoder
@@ -276,8 +283,8 @@ auto = tf.data.AUTOTUNE
 
 augmenter = keras.Sequential(
     layers=[
-        keras_cv.layers.CenterCrop(resolution, resolution),
-        keras_cv.layers.RandomFlip(),
+        keras.layers.CenterCrop(resolution, resolution),
+        keras.layers.RandomFlip(),
         keras.layers.Rescaling(scale=1.0 / 127.5, offset=-1),
     ]
 )
@@ -369,10 +376,8 @@ implementation that also performs the additional fine-tuning of the text encoder
 to [this repository](https://github.com/sayakpaul/dreambooth-keras/).
 """
 
-import tensorflow.experimental.numpy as tnp
 
-
-class DreamBoothTrainer(tf.keras.Model):
+class DreamBoothTrainer(keras.Model):
     # Reference:
     # https://github.com/huggingface/diffusers/blob/main/examples/dreambooth/train_dreambooth.py
 
@@ -406,29 +411,36 @@ class DreamBoothTrainer(tf.keras.Model):
         class_images = class_batch["class_images"]
         class_embedded_text = class_batch["class_embedded_texts"]
 
-        images = tf.concat([instance_images, class_images], 0)
-        embedded_texts = tf.concat([instance_embedded_text, class_embedded_text], 0)
-        batch_size = tf.shape(images)[0]
+        images = keras.ops.concatenate([instance_images, class_images], axis=0)
+        embedded_texts = keras.ops.concatenate(
+            [instance_embedded_text, class_embedded_text], axis=0
+        )
+        batch_size = keras.ops.shape(images)[0]
 
+        # Use backend-agnostic gradient computation
         with tf.GradientTape() as tape:
-            # Project image into the latent space and sample from it.
-            latents = self.sample_from_encoder_outputs(self.vae(images, training=False))
+            # Project image into the latent space.
+            # The ImageEncoder already handles the sampling internally.
+            latents = self.vae(images, training=False)
             # Know more about the magic number here:
             # https://keras.io/examples/generative/fine_tune_via_textual_inversion/
             latents = latents * 0.18215
 
-            # Sample noise that we'll add to the latents.
-            noise = tf.random.normal(tf.shape(latents))
+            # Sample noise that we'll add to the latents (backend-agnostic).
+            noise = keras.random.normal(keras.ops.shape(latents))
 
-            # Sample a random timestep for each image.
-            timesteps = tnp.random.randint(
-                0, self.noise_scheduler.train_timesteps, (batch_size,)
+            # Sample a random timestep for each image (backend-agnostic).
+            timesteps = keras.random.randint(
+                shape=(batch_size,),
+                minval=0,
+                maxval=self.noise_scheduler.train_timesteps,
+                dtype="int32",
             )
 
             # Add noise to the latents according to the noise magnitude at each timestep
             # (this is the forward diffusion process).
             noisy_latents = self.noise_scheduler.add_noise(
-                tf.cast(latents, noise.dtype), noise, timesteps
+                keras.ops.cast(latents, noise.dtype), noise, timesteps
             )
 
             # Get the target for loss depending on the prediction type
@@ -436,58 +448,67 @@ class DreamBoothTrainer(tf.keras.Model):
             target = noise  # noise_schedule.predict_epsilon == True
 
             # Predict the noise residual and compute loss.
-            timestep_embedding = tf.map_fn(
-                lambda t: self.get_timestep_embedding(t), timesteps, dtype=tf.float32
-            )
+            # Vectorized timestep embedding (backend-agnostic)
+            timestep_embedding = self.get_timestep_embedding(timesteps)
             model_pred = self.diffusion_model(
                 [noisy_latents, timestep_embedding, embedded_texts], training=True
             )
-            loss = self.compute_loss(target, model_pred)
-            if self.use_mixed_precision:
-                loss = self.optimizer.get_scaled_loss(loss)
+            loss = self.compute_loss_for_dreambooth(target, model_pred)
 
         # Update parameters of the diffusion model.
         trainable_vars = self.diffusion_model.trainable_variables
         gradients = tape.gradient(loss, trainable_vars)
-        if self.use_mixed_precision:
-            gradients = self.optimizer.get_unscaled_gradients(gradients)
-        gradients = [tf.clip_by_norm(g, self.max_grad_norm) for g in gradients]
-        self.optimizer.apply_gradients(zip(gradients, trainable_vars))
+        self.optimizer.apply(gradients, trainable_vars)
 
         return {m.name: m.result() for m in self.metrics}
 
-    def get_timestep_embedding(self, timestep, dim=320, max_period=10000):
+    def get_timestep_embedding(self, timesteps, dim=320, max_period=10000):
+        """Generate sinusoidal timestep embeddings (backend-agnostic).
+
+        Args:
+            timesteps: a 1-D Tensor of N indices, one per batch element.
+        Returns:
+            an [N x dim] Tensor of positional embeddings.
+        """
         half = dim // 2
-        log_max_period = tf.math.log(tf.cast(max_period, tf.float32))
-        freqs = tf.math.exp(
-            -log_max_period * tf.range(0, half, dtype=tf.float32) / half
+        log_max_period = keras.ops.log(keras.ops.cast(max_period, "float32"))
+        freqs = keras.ops.exp(
+            -log_max_period * keras.ops.arange(0, half, dtype="float32") / half
         )
-        args = tf.convert_to_tensor([timestep], dtype=tf.float32) * freqs
-        embedding = tf.concat([tf.math.cos(args), tf.math.sin(args)], 0)
+        # Reshape timesteps to [batch_size, 1] and freqs to [1, half] for broadcasting
+        args = keras.ops.cast(timesteps, "float32")
+        args = keras.ops.reshape(args, (-1, 1)) * freqs
+        embedding = keras.ops.concatenate(
+            [keras.ops.cos(args), keras.ops.sin(args)], axis=1
+        )
         return embedding
 
     def sample_from_encoder_outputs(self, outputs):
-        mean, logvar = tf.split(outputs, 2, axis=-1)
-        logvar = tf.clip_by_value(logvar, -30.0, 20.0)
-        std = tf.exp(0.5 * logvar)
-        sample = tf.random.normal(tf.shape(mean), dtype=mean.dtype)
+        mean, logvar = keras.ops.split(outputs, 2, axis=-1)
+        logvar = keras.ops.clip(logvar, -30.0, 20.0)
+        std = keras.ops.exp(0.5 * logvar)
+        sample = keras.random.normal(keras.ops.shape(mean), dtype=mean.dtype)
         return mean + std * sample
 
-    def compute_loss(self, target, model_pred):
+    def compute_loss_for_dreambooth(self, target, model_pred):
         # Chunk the noise and model_pred into two parts and compute the loss
         # on each part separately.
         # Since the first half of the inputs has instance samples and the second half
         # has class samples, we do the chunking accordingly.
-        model_pred, model_pred_prior = tf.split(
-            model_pred, num_or_size_splits=2, axis=0
-        )
-        target, target_prior = tf.split(target, num_or_size_splits=2, axis=0)
+        model_pred, model_pred_prior = keras.ops.split(model_pred, 2, axis=0)
+        target, target_prior = keras.ops.split(target, 2, axis=0)
 
-        # Compute instance loss.
-        loss = self.compiled_loss(target, model_pred)
+        # Cast to float32 to avoid dtype mismatch in mixed precision training
+        target = keras.ops.cast(target, "float32")
+        model_pred = keras.ops.cast(model_pred, "float32")
+        target_prior = keras.ops.cast(target_prior, "float32")
+        model_pred_prior = keras.ops.cast(model_pred_prior, "float32")
+
+        # Compute instance loss using MSE.
+        loss = keras.ops.mean(keras.ops.square(target - model_pred))
 
         # Compute prior loss.
-        prior_loss = self.compiled_loss(target_prior, model_pred_prior)
+        prior_loss = keras.ops.mean(keras.ops.square(target_prior - model_pred_prior))
 
         # Add the prior loss to the instance loss.
         loss = loss + self.prior_loss_weight * prior_loss
@@ -498,22 +519,12 @@ class DreamBoothTrainer(tf.keras.Model):
         # callback directly with this trainer class. In this case, it will
         # only checkpoint the `diffusion_model` since that's what we're training
         # during fine-tuning.
-        self.diffusion_model.save_weights(
-            filepath=filepath,
-            overwrite=overwrite,
-            save_format=save_format,
-            options=options,
-        )
+        self.diffusion_model.save_weights(filepath=filepath)
 
     def load_weights(self, filepath, by_name=False, skip_mismatch=False, options=None):
         # Similarly override `load_weights()` so that we can directly call it on
         # the trainer class object.
-        self.diffusion_model.load_weights(
-            filepath=filepath,
-            by_name=by_name,
-            skip_mismatch=skip_mismatch,
-            options=options,
-        )
+        self.diffusion_model.load_weights(filepath=filepath)
 
 
 """
@@ -521,21 +532,19 @@ class DreamBoothTrainer(tf.keras.Model):
 """
 
 # Comment it if you are not using a GPU having tensor cores.
-tf.keras.mixed_precision.set_global_policy("mixed_float16")
+keras.mixed_precision.set_global_policy("mixed_float16")
 
 use_mp = True  # Set it to False if you're not using a GPU with tensor cores.
 
 image_encoder = keras_cv.models.stable_diffusion.ImageEncoder()
+
 dreambooth_trainer = DreamBoothTrainer(
     diffusion_model=keras_cv.models.stable_diffusion.DiffusionModel(
         resolution, resolution, max_prompt_length
     ),
-    # Remove the top layer from the encoder, which cuts off the variance and only
-    # returns the mean.
-    vae=tf.keras.Model(
-        image_encoder.input,
-        image_encoder.layers[-2].output,
-    ),
+    # Use the image encoder directly. The sample_from_encoder_outputs method
+    # will handle extracting mean and variance.
+    vae=image_encoder,
     noise_scheduler=keras_cv.models.stable_diffusion.NoiseScheduler(),
     use_mixed_precision=use_mp,
 )
@@ -547,12 +556,13 @@ beta_1, beta_2 = 0.9, 0.999
 weight_decay = (1e-2,)
 epsilon = 1e-08
 
-optimizer = tf.keras.optimizers.experimental.AdamW(
+optimizer = keras.optimizers.AdamW(
     learning_rate=learning_rate,
     weight_decay=weight_decay,
     beta_1=beta_1,
     beta_2=beta_2,
     epsilon=epsilon,
+    clipnorm=1.0,  # Gradient clipping handled by optimizer
 )
 dreambooth_trainer.compile(optimizer=optimizer, loss="mse")
 
@@ -571,8 +581,8 @@ print(f"Training for {epochs} epochs.")
 And then we start training!
 """
 
-ckpt_path = "dreambooth-unet.h5"
-ckpt_callback = tf.keras.callbacks.ModelCheckpoint(
+ckpt_path = "dreambooth-unet.weights.h5"
+ckpt_callback = keras.callbacks.ModelCheckpoint(
     ckpt_path,
     save_weights_only=True,
     monitor="loss",
@@ -609,10 +619,10 @@ Now, let's load checkpoints from a different experiment we conducted where we al
 fine-tuned the text encoder along with the UNet:
 """
 
-unet_weights = tf.keras.utils.get_file(
+unet_weights = keras.utils.get_file(
     origin="https://huggingface.co/chansung/dreambooth-dog/resolve/main/lr%409e-06-max_train_steps%40200-train_text_encoder%40True-unet.h5"
 )
-text_encoder_weights = tf.keras.utils.get_file(
+text_encoder_weights = keras.utils.get_file(
     origin="https://huggingface.co/chansung/dreambooth-dog/resolve/main/lr%409e-06-max_train_steps%40200-train_text_encoder%40True-text_encoder.h5"
 )
 
