@@ -2,7 +2,7 @@
 Title: Traffic forecasting using graph neural networks and LSTM
 Author: [Arash Khodadadi](https://www.linkedin.com/in/arash-khodadadi-08a02490/)
 Date created: 2021/12/28
-Last modified: 2023/11/22
+Last modified: 2026/02/01
 Description: This example demonstrates how to do timeseries forecasting over graphs.
 Accelerator: GPU
 """
@@ -83,9 +83,13 @@ The full description of the dataset can be found in
 """
 
 url = "https://github.com/VeritasYin/STGCN_IJCAI-18/raw/master/dataset/PeMSD7_Full.zip"
-data_dir = keras.utils.get_file(origin=url, extract=True, archive_format="zip")
-data_dir = data_dir.rstrip("PeMSD7_Full.zip")
+# 1. Download and extract normally
+zip_path = keras.utils.get_file(origin=url, extract=True, archive_format="zip")
 
+# 2. FIX: Use os.path.dirname to safely get the folder where it was extracted
+data_dir = os.path.dirname(zip_path)
+
+# 3. Construct the paths to the inner files safely
 route_distances = pd.read_csv(
     os.path.join(data_dir, "PeMSD7_W_228.csv"), header=None
 ).to_numpy()
