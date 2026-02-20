@@ -66,6 +66,71 @@ pre {
   font-size: 100%;
 }
 
+.code__container {
+  position: relative;
+  display: block; 
+  overflow: visible; 
+}
+
+.code__copy--button {
+  position: absolute;
+  right: 0;
+  top: 0;
+  background-color: rgba(255, 255, 255, 0.1);
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  width: 32px;
+  height: 32px; 
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s;
+}
+
+.code__container pre {
+  margin: 0;
+  padding: 28px 45px 24px 24px; 
+  overflow-x: auto;
+  border-radius: 8px;
+  line-height: 1.5; 
+}
+
+.code__copy--button .icon--copy {
+  filter: invert(1); 
+  width: 18px;
+  height: 18px;
+  opacity: 0.6;
+}
+
+.code__copy--button:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.code__copy--button:hover .icon--copy {
+  opacity: 1;
+}
+
+.code__copy--tooltip {
+  font-size: 11px;
+  padding: 4px 8px;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  top: 40px;
+  display: none;
+  border-radius: 4px;
+  z-index: 101;
+  white-space: nowrap;
+  background-color: #ffffff;
+  color: var(--text-red);
+}
+
+.code__copy--button.active .code__copy--tooltip {
+  display: block;
+}
+
 hr {
   margin-top: 2rem;
   margin-bottom: 2rem;

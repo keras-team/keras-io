@@ -117,7 +117,15 @@ const copyButtons = document.querySelectorAll('.code__copy--button');
 copyButtons.forEach((button) => {
   button.addEventListener('click', () => {
     const parent = button.parentNode;
-    const text = parent.querySelector('.language-python').innerText;
+    let text = parent.querySelector('code').innerText;
+
+    if (text.includes('>>>')) {
+      text = text.split('\n')
+        .filter(line => /^(>>>|\.\.\.)/.test(line.trim()))
+        .map(line => line.replace(/^(>>>|\.\.\.) ?/, ""))
+        .join('\n');
+    }
+
     const inputElement = document.createElement('textarea');
     console.log('text', text);
     inputElement.value = text;
@@ -128,9 +136,12 @@ copyButtons.forEach((button) => {
     document.execCommand('copy');
     inputElement.remove();
 
-    button.querySelector('.code__copy--tooltip').style.display = 'block';
+    const tooltip = button.querySelector('.code__copy--tooltip');
+    tooltip.textContent = 'Copied!';
+    tooltip.style.display = 'block';
     setTimeout(() => {
-      button.querySelector('.code__copy--tooltip').style.display = 'none';
+      tooltip.textContent = 'Copy';
+      tooltip.style.display = 'none';
     }, 2000);
   });
 });
