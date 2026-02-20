@@ -36,6 +36,7 @@ import matplotlib.pyplot as plt
 
 ---
 ## Load the data: the Cats vs Dogs dataset
+The dataset is organized using a directory-based structure, where each subdirectory name is interpreted as a class label. This layout allows Keras utilities to automatically infer labels and build efficient input pipelines directly from image files stored on disk.
 
 ### Raw data download
 
@@ -111,6 +112,7 @@ Deleted 1590 images.
 </div>
 ---
 ## Generate a `Dataset`
+Here, we create training and validation datasets directly from the directory structure. The utility handles label assignment, batching, resizing, and shuffling, while producing tf.data.Dataset objects that integrate efficiently with the Keras training workflow.
 
 
 ```python
@@ -138,6 +140,8 @@ Using 4682 files for validation.
 ---
 ## Visualize the data
 
+Visualizing a few samples helps verify that images and labels are being loaded correctly, and provides intuition about class appearance, image resolution, and variability in the dataset.
+
 Here are the first 9 images in the training dataset.
 
 
@@ -164,6 +168,9 @@ introduce sample diversity by applying random yet realistic transformations to t
 training images, such as random horizontal flipping or small random rotations. This
 helps expose the model to different aspects of the training data while slowing down
 overfitting.
+
+By applying these transformations on the fly, the model is encouraged to 
+learn more generalizable features rather than memorizing specific training examples.
 
 
 ```python
@@ -202,7 +209,9 @@ for images, _ in train_ds.take(1):
 ---
 ## Standardizing the data
 
-Our image are already in a standard size (180x180), as they are being yielded as
+Standardizing input values improves numerical stability during training and helps the model converge faster.
+
+Our images are already in a standard size (180x180), as they are being yielded as
 contiguous `float32` batches by our dataset. However, their RGB channel values are in
 the `[0, 255]` range. This is not ideal for a neural network;
 in general you should seek to make your input values small. Here, we will
@@ -251,6 +260,8 @@ which one to pick, this second option (asynchronous preprocessing) is always a s
 ---
 ## Configure the dataset for performance
 
+Efficient input pipelines are critical for high training throughput, especially when working with large image datasets.
+
 Let's apply data augmentation to our training dataset,
 and let's make sure to use buffered prefetching so we can yield data from disk without
 having I/O becoming blocking:
@@ -269,6 +280,8 @@ val_ds = val_ds.prefetch(tf_data.AUTOTUNE)
 
 ---
 ## Build a model
+
+The model architecture follows a convolutional design that progressively extracts higher-level visual features while reducing spatial resolution. Residual connections are used to improve gradient flow and enable deeper representations without significantly increasing optimization difficulty.
 
 We'll build a small version of the Xception network. We haven't particularly tried to
 optimize the architecture; if you want to do a systematic search for the best model
@@ -345,6 +358,8 @@ keras.utils.plot_model(model, show_shapes=True)
 ---
 ## Train the model
 
+The model is trained using a supervised classification objective, comparing predicted logits against ground-truth labels. Validation data is evaluated at the end of each epoch to monitor generalization performance and detect overfitting during training.
+
 
 ```python
 epochs = 25
@@ -381,6 +396,8 @@ We get to >90% validation accuracy after training for 25 epochs on the full data
 
 ---
 ## Run inference on new data
+
+Once training is complete, the model can be used to make predictions on individual images that were not part of the training or validation sets.
 
 Note that data augmentation and dropout are inactive at inference time.
 
