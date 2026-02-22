@@ -277,9 +277,9 @@ you'd need to call it on a batch of data to build it.
 # Build optimizer variables.
 optimizer.build(model.trainable_variables)
 
-trainable_variables = model.trainable_variables
-non_trainable_variables = model.non_trainable_variables
-optimizer_variables = optimizer.variables
+trainable_variables = [v.value for v in model.trainable_variables]
+non_trainable_variables = [v.value for v in model.non_trainable_variables]
+optimizer_variables = [v.value for v in optimizer.variables]
 state = trainable_variables, non_trainable_variables, optimizer_variables
 
 # Training loop
