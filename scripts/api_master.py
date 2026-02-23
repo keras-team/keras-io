@@ -2352,6 +2352,7 @@ API_MASTER = {
                         "keras.quantizers.Int8QuantizationConfig",
                         "keras.quantizers.Int4QuantizationConfig",
                         "keras.quantizers.Float8QuantizationConfig",
+                        "keras.quantizers.AWQConfig",
                         "keras.quantizers.GPTQConfig",
                     ],
                 },
