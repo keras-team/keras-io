@@ -262,9 +262,8 @@ class FNetDecoder(layers.Layer):
 
         if mask is not None:
             padding_mask = ops.cast(mask[:, None, :], "int32")
-            padding_mask = ops.minimum(padding_mask, causal_mask)
         else:
-            padding_mask = causal_mask
+            padding_mask = None
 
         attention_output_1 = self.attention_1(
             query=inputs, value=inputs, key=inputs, attention_mask=causal_mask
