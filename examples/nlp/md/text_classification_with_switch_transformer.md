@@ -241,11 +241,11 @@ class Switch(layers.Layer):
 
         # inputs shape: [num_tokens_per_batch, embed_dim]
         inputs = ops.reshape(inputs, [num_tokens_per_batch, self.embed_dim])
-        # dispatch_tensor shape: [tokens_per_batch, num_experts, expert_capacity]
-        # combine_tensor shape: [tokens_per_batch, num_experts, expert_capacity]
-        dispatch_tensor, combine_tensor = self.router(inputs)
-        # expert_inputs shape: [num_experts, expert_capacity, embed_dim]
-        # "ab" = [tokens, dim], "acd" = [tokens, experts, capacity] -> "cdb" = [experts, capacity, dim]
+# dispatch_tensor shape: [tokens_per_batch, num_experts, expert_capacity]
+# combine_tensor shape: [tokens_per_batch, num_experts, expert_capacity]
+dispatch_tensor, combine_tensor = self.router(inputs)
+# expert_inputs shape: [num_experts, expert_capacity, embed_dim]
+# "ab" = [tokens, dim], "acd" = [tokens, experts, capacity] -> "cdb" = [experts, capacity, dim]
         expert_inputs = ops.einsum("ab,acd->cdb", inputs, dispatch_tensor)
         expert_inputs = ops.reshape(
             expert_inputs, [self.num_experts, self.expert_capacity, self.embed_dim]
