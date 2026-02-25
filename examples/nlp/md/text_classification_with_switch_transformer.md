@@ -209,8 +209,8 @@ class Router(layers.Layer):
 
         # Create binary dispatch_tensor [tokens_per_batch, num_experts, expert_capacity]
         # that is 1 if the token gets routed to the corresponding expert.
-        # cast to float32 so it can be used in the einsum product in the Switch layer.
-        dispatch_tensor = ops.cast(combined_tensor, dtype="float32")
+# cast to float32 so it can be used in the einsum product in the Switch layer.
+dispatch_tensor = ops.cast(combined_tensor, dtype="float32")
 
         return dispatch_tensor, combined_tensor
 
