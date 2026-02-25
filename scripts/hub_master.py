@@ -3326,6 +3326,10 @@ HUB_GUIDES_MASTER = {
             "path": "rag_pipeline_with_keras_hub",
             "title": "RAG Pipeline with KerasHub",
         },
+        {
+            "path": "function_gemma_with_keras",
+            "title": "Native Function Calling with FunctionGemma",
+        },
     ],
 }
 
