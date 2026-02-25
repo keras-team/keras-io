@@ -2,7 +2,7 @@
 Title: Native Function Calling with FunctionGemma in KerasHub
 Author: [Laxmareddy Patlolla](https://github.com/laxmareddyp)
 Date created: 2026/02/24
-Last modified: 2026/02/24
+Last modified: 2026/02/25
 Description: A guide to using the function calling feature in KerasHub with FunctionGemma.
 Accelerator: GPU
 """
@@ -148,9 +148,7 @@ def get_stock_price(symbol):
             "date": current_date,
         }
     except Exception as e:
-        return {
-            "error": f"Symbol '{symbol}' not found. Please check the ticker symbol and try again."
-        }
+        return {"error": f"Failed to get stock price for '{symbol}'. Reason: {e}"}
 
 
 """
@@ -186,72 +184,74 @@ then use Python's pytz library to calculate the current time.
 """
 
 
+TIMEZONE_MAP = {
+    # Countries
+    "india": "Asia/Kolkata",
+    "usa": "America/New_York",
+    "uk": "Europe/London",
+    "japan": "Asia/Tokyo",
+    "china": "Asia/Shanghai",
+    "australia": "Australia/Sydney",
+    "france": "Europe/Paris",
+    "germany": "Europe/Berlin",
+    "russia": "Europe/Moscow",
+    "brazil": "America/Sao_Paulo",
+    "canada": "America/Toronto",
+    "mexico": "America/Mexico_City",
+    "spain": "Europe/Madrid",
+    "italy": "Europe/Rome",
+    # US States & Major Cities
+    "california": "America/Los_Angeles",
+    "new york": "America/New_York",
+    "texas": "America/Chicago",
+    "florida": "America/New_York",
+    "washington": "America/Los_Angeles",
+    "oregon": "America/Los_Angeles",
+    "nevada": "America/Los_Angeles",
+    "arizona": "America/Phoenix",
+    "colorado": "America/Denver",
+    "utah": "America/Denver",
+    "illinois": "America/Chicago",
+    "michigan": "America/Detroit",
+    "massachusetts": "America/New_York",
+    "pennsylvania": "America/New_York",
+    # Major World Cities
+    "los angeles": "America/Los_Angeles",
+    "san francisco": "America/Los_Angeles",
+    "seattle": "America/Los_Angeles",
+    "chicago": "America/Chicago",
+    "boston": "America/New_York",
+    "miami": "America/New_York",
+    "london": "Europe/London",
+    "paris": "Europe/Paris",
+    "tokyo": "Asia/Tokyo",
+    "beijing": "Asia/Shanghai",
+    "shanghai": "Asia/Shanghai",
+    "dubai": "Asia/Dubai",
+    "singapore": "Asia/Singapore",
+    "hong kong": "Asia/Hong_Kong",
+    "seoul": "Asia/Seoul",
+    "moscow": "Europe/Moscow",
+    "sydney": "Australia/Sydney",
+    "mumbai": "Asia/Kolkata",
+    "delhi": "Asia/Kolkata",
+    "berlin": "Europe/Berlin",
+    "rome": "Europe/Rome",
+    "madrid": "Europe/Madrid",
+    "toronto": "America/Toronto",
+    "vancouver": "America/Vancouver",
+    "montreal": "America/Toronto",
+    # Special
+    "utc": "UTC",
+    "gmt": "GMT",
+}
+
+
 def get_timezone_for_location(location):
     """Map location to timezone."""
 
     loc = location.lower().strip()
-    timezone_map = {
-        # Countries
-        "india": "Asia/Kolkata",
-        "usa": "America/New_York",
-        "uk": "Europe/London",
-        "japan": "Asia/Tokyo",
-        "china": "Asia/Shanghai",
-        "australia": "Australia/Sydney",
-        "france": "Europe/Paris",
-        "germany": "Europe/Berlin",
-        "russia": "Europe/Moscow",
-        "brazil": "America/Sao_Paulo",
-        "canada": "America/Toronto",
-        "mexico": "America/Mexico_City",
-        "spain": "Europe/Madrid",
-        "italy": "Europe/Rome",
-        # US States & Major Cities
-        "california": "America/Los_Angeles",
-        "new york": "America/New_York",
-        "texas": "America/Chicago",
-        "florida": "America/New_York",
-        "washington": "America/Los_Angeles",
-        "oregon": "America/Los_Angeles",
-        "nevada": "America/Los_Angeles",
-        "arizona": "America/Phoenix",
-        "colorado": "America/Denver",
-        "utah": "America/Denver",
-        "illinois": "America/Chicago",
-        "michigan": "America/Detroit",
-        "massachusetts": "America/New_York",
-        "pennsylvania": "America/New_York",
-        # Major World Cities
-        "los angeles": "America/Los_Angeles",
-        "san francisco": "America/Los_Angeles",
-        "seattle": "America/Los_Angeles",
-        "chicago": "America/Chicago",
-        "boston": "America/New_York",
-        "miami": "America/New_York",
-        "london": "Europe/London",
-        "paris": "Europe/Paris",
-        "tokyo": "Asia/Tokyo",
-        "beijing": "Asia/Shanghai",
-        "shanghai": "Asia/Shanghai",
-        "dubai": "Asia/Dubai",
-        "singapore": "Asia/Singapore",
-        "hong kong": "Asia/Hong_Kong",
-        "seoul": "Asia/Seoul",
-        "moscow": "Europe/Moscow",
-        "sydney": "Australia/Sydney",
-        "mumbai": "Asia/Kolkata",
-        "delhi": "Asia/Kolkata",
-        "berlin": "Europe/Berlin",
-        "rome": "Europe/Rome",
-        "madrid": "Europe/Madrid",
-        "toronto": "America/Toronto",
-        "vancouver": "America/Vancouver",
-        "montreal": "America/Toronto",
-        # Special
-        "utc": "UTC",
-        "gmt": "GMT",
-    }
-    return timezone_map.get(loc)
+    return TIMEZONE_MAP.get(loc)
 
 
 """
@@ -403,6 +403,14 @@ and parses the function name and arguments into a Python dictionary.
 """
 
 
+FUNCTION_CALL_PATTERN = re.compile(
+    r"<start_function_call>call:(\w+)\{([^}]*)\}<end_function_call>"
+)
+ARGUMENT_PATTERN = re.compile(
+    r'(\w+):\s*("(?:[^"\\]|\\.)*"|\'(?:[^\'\\]|\\.)*\'|[^,]+)'
+)
+
+
 def parse_function_call(output):
     """Parse function call from FunctionGemma model output.
 
@@ -416,8 +424,7 @@ def parse_function_call(output):
         Dictionary with "name" (function name) and "arguments" (dict of args),
 
     """
-    pattern = r"<start_function_call>call:(\w+)\{([^}]*)\}<end_function_call>"
-    match = re.search(pattern, output)
+    match = FUNCTION_CALL_PATTERN.search(output)
 
     if not match:
         return None
@@ -429,8 +436,7 @@ def parse_function_call(output):
     args = {}
     if args_str:
         # Matches key:"value" or key:'value' or key:value
-        pattern = r'(\w+):\s*("(?:[^"\\]|\\.)*"|\'(?:[^\'\\]|\\.)*\'|[^,]+)'
-        arg_pairs = re.findall(pattern, args_str)
+        arg_pairs = ARGUMENT_PATTERN.findall(args_str)
         for key, value in arg_pairs:
             value = value.strip()
 
@@ -593,11 +599,7 @@ def format_tool_response(tool_name, result):
             return output
         return "No results found"
 
-    if tool_name == "web_search":
-        # Should be handled above, but just in case
-        return str(result)
-
-    elif tool_name == "get_stock_price":
+    if tool_name == "get_stock_price":
         return f"Stock {result['symbol']}: ${result['price']} {result['currency']} (as of {result['date']})"
 
     elif tool_name == "get_current_time":
@@ -712,9 +714,6 @@ def chat(model):
                 response = response.split("<start_function_response>")[0].strip()
             if "<start_of_turn>" in response:
                 response = response.split("<start_of_turn>")[0].strip()
-            if "<end_function_call>" in response:
-                pass
-
             # Remove end tokens
             response = response.replace("<end_of_turn>", "").strip()
 
@@ -771,16 +770,17 @@ def chat(model):
             continue
 
 
-"""invisible
+"""
 This is where the program starts execution. When you run this script:
-1. The FunctionGemma model is loaded from the specified path
-2. The interactive chat loop begins, waiting for user input
-3. The Assistant processes queries and executes tools until the user types 'exit'
+
+-  The FunctionGemma model is loaded from the specified path
+-  The interactive chat loop begins, waiting for user input
+-  The Assistant processes queries and executes tools until the user types 'exit'
+"""
 
 if __name__ == "__main__":
     model = load_model()
     chat(model)
-"""
 
 """
 # Conclusion
