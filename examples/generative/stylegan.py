@@ -37,11 +37,10 @@ import matplotlib.pyplot as plt
 
 from functools import partial
 
-import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras import layers
-from tensorflow.keras.models import Sequential
-from tensorflow_addons.layers import InstanceNormalization
+
+import keras
+from keras import layers
+from keras.models import Sequential
 
 import gdown
 from zipfile import ZipFile
@@ -59,44 +58,39 @@ def log2(x):
 
 # we use different batch size for different resolution, so larger image size
 # could fit into GPU memory. The keys is image resolution in log2
-batch_sizes = {2: 16, 3: 16, 4: 16, 5: 16, 6: 16, 7: 8, 8: 4, 9: 2, 10: 1}
+# Optimized for A100 40GB - increased batch sizes for better GPU utilization
+batch_sizes = {2: 128, 3: 128, 4: 128, 5: 64, 6: 32, 7: 16, 8: 8, 9: 4, 10: 2}
 # We adjust the train step accordingly
 train_step_ratio = {k: batch_sizes[2] / v for k, v in batch_sizes.items()}
 
 
-os.makedirs("celeba_gan")
-
+os.makedirs("celeba_gan", exist_ok=True)
 url = "https://drive.google.com/uc?id=1O7m1010EJjLE5QxLZiM9Fpjs7Oj6e684"
 output = "celeba_gan/data.zip"
-gdown.download(url, output, quiet=True)
-
+if not os.path.exists(output):
+    gdown.download(url, output, quiet=False)
 with ZipFile("celeba_gan/data.zip", "r") as zipobj:
     zipobj.extractall("celeba_gan")
 
-# Create a dataset from our folder, and rescale the images to the [0-1] range:
-
+# Create a Keras dataset from the extracted images
 ds_train = keras.utils.image_dataset_from_directory(
-    "celeba_gan", label_mode=None, image_size=(64, 64), batch_size=32
+    "celeba_gan", label_mode=None, image_size=(218, 178), batch_size=None, shuffle=True, interpolation="nearest"
 )
 
 
+
 def resize_image(res, image):
-    # only downsampling, so use nearest neighbor that is faster to run
-    image = tf.image.resize(
-        image, (res, res), method=tf.image.ResizeMethod.NEAREST_NEIGHBOR
-    )
-    image = tf.cast(image, tf.float32) / 127.5 - 1.0
+    # Only downsampling, so use nearest neighbor that is faster to run
+    image = keras.ops.image.resize(image, (res, res), interpolation="nearest")
+    image = keras.ops.cast(image, "float32") / 127.5 - 1.0
     return image
+
 
 
 def create_dataloader(res):
     batch_size = batch_sizes[log2(res)]
-    # NOTE: we unbatch the dataset so we can `batch()` it again with the `drop_remainder=True` option
-    # since the model only supports a single batch size
-    dl = ds_train.map(
-        partial(resize_image, res), num_parallel_calls=tf.data.AUTOTUNE
-    ).unbatch()
-    dl = dl.shuffle(200).batch(batch_size, drop_remainder=True).prefetch(1).repeat()
+    dl = ds_train.map(lambda x: resize_image(res, x))
+    dl = dl.unbatch().shuffle(200).batch(batch_size, drop_remainder=True).prefetch(1).repeat()
     return dl
 
 
@@ -138,23 +132,35 @@ def fade_in(alpha, a, b):
     return alpha * a + (1.0 - alpha) * b
 
 
+
 def wasserstein_loss(y_true, y_pred):
-    return -tf.reduce_mean(y_true * y_pred)
+    return -keras.ops.mean(y_true * y_pred)
+
 
 
 def pixel_norm(x, epsilon=1e-8):
-    return x / tf.math.sqrt(tf.reduce_mean(x**2, axis=-1, keepdims=True) + epsilon)
+    return x / keras.ops.sqrt(keras.ops.mean(x**2, axis=-1, keepdims=True) + epsilon)
 
 
-def minibatch_std(input_tensor, epsilon=1e-8):
-    n, h, w, c = tf.shape(input_tensor)
-    group_size = tf.minimum(4, n)
-    x = tf.reshape(input_tensor, [group_size, -1, h, w, c])
-    group_mean, group_var = tf.nn.moments(x, axes=(0), keepdims=False)
-    group_std = tf.sqrt(group_var + epsilon)
-    avg_std = tf.reduce_mean(group_std, axis=[1, 2, 3], keepdims=True)
-    x = tf.tile(avg_std, [group_size, h, w, 1])
-    return tf.concat([input_tensor, x], axis=-1)
+
+class MinibatchStd(layers.Layer):
+    def __init__(self, group_size=4, epsilon=1e-8, **kwargs):
+        super().__init__(**kwargs)
+        self.group_size = group_size
+        self.epsilon = epsilon
+
+    def call(self, input_tensor):
+        shape = keras.ops.shape(input_tensor)
+        n, h, w, c = shape[0], shape[1], shape[2], shape[3]
+        group_size = keras.ops.minimum(self.group_size, n)
+        x = keras.ops.reshape(input_tensor, (group_size, -1, h, w, c))
+        group_mean = keras.ops.mean(x, axis=0, keepdims=False)
+        group_var = keras.ops.var(x, axis=0, keepdims=False)
+        group_std = keras.ops.sqrt(group_var + self.epsilon)
+        avg_std = keras.ops.mean(group_std, axis=[1, 2, 3], keepdims=True)
+        x_std = keras.ops.tile(avg_std, (group_size, h, w, 1))
+        return keras.ops.concatenate([input_tensor, x_std], axis=-1)
+
 
 
 class EqualizedConv(layers.Layer):
@@ -164,6 +170,7 @@ class EqualizedConv(layers.Layer):
         self.out_channels = out_channels
         self.gain = gain
         self.pad = kernel != 1
+        self.conv2d = None
 
     def build(self, input_shape):
         self.in_channels = input_shape[-1]
@@ -178,17 +185,27 @@ class EqualizedConv(layers.Layer):
             shape=(self.out_channels,), initializer="zeros", trainable=True, name="bias"
         )
         fan_in = self.kernel * self.kernel * self.in_channels
-        self.scale = tf.sqrt(self.gain / fan_in)
+        self.scale = float(np.sqrt(self.gain / fan_in))
+        # Create a Conv2D layer for the actual convolution
+        self.conv2d = layers.Conv2D(
+            filters=self.out_channels,
+            kernel_size=self.kernel,
+            strides=1,
+            padding="valid",
+            use_bias=False,
+        )
+        self.conv2d.build(input_shape)
 
     def call(self, inputs):
         if self.pad:
-            x = tf.pad(inputs, [[0, 0], [1, 1], [1, 1], [0, 0]], mode="REFLECT")
+            x = keras.ops.pad(inputs, [[0, 0], [1, 1], [1, 1], [0, 0]], mode="reflect")
         else:
             x = inputs
-        output = (
-            tf.nn.conv2d(x, self.scale * self.w, strides=1, padding="VALID") + self.b
-        )
+        # Set the kernel weights of the Conv2D layer to the scaled weights
+        self.conv2d.kernel.assign(self.scale * self.w)
+        output = self.conv2d(x) + self.b
         return output
+
 
 
 class EqualizedDense(layers.Layer):
@@ -213,11 +230,12 @@ class EqualizedDense(layers.Layer):
             shape=(self.units,), initializer="zeros", trainable=True, name="bias"
         )
         fan_in = self.in_channels
-        self.scale = tf.sqrt(self.gain / fan_in)
+        self.scale = float(np.sqrt(self.gain / fan_in))
 
     def call(self, inputs):
-        output = tf.add(tf.matmul(inputs, self.scale * self.w), self.b)
+        output = keras.ops.add(keras.ops.matmul(inputs, self.scale * self.w), self.b)
         return output * self.learning_rate_multiplier
+
 
 
 class AddNoise(layers.Layer):
@@ -234,25 +252,27 @@ class AddNoise(layers.Layer):
         return output
 
 
+
 class AdaIN(layers.Layer):
     def __init__(self, gain=1, **kwargs):
         super().__init__(**kwargs)
         self.gain = gain
+        self.dense_1 = None
+        self.dense_2 = None
 
     def build(self, input_shapes):
         x_shape = input_shapes[0]
         w_shape = input_shapes[1]
-
         self.w_channels = w_shape[-1]
         self.x_channels = x_shape[-1]
-
-        self.dense_1 = EqualizedDense(self.x_channels, gain=1)
-        self.dense_2 = EqualizedDense(self.x_channels, gain=1)
+        if self.dense_1 is None:
+            self.dense_1 = EqualizedDense(self.x_channels, gain=1)
+            self.dense_2 = EqualizedDense(self.x_channels, gain=1)
 
     def call(self, inputs):
         x, w = inputs
-        ys = tf.reshape(self.dense_1(w), (-1, 1, 1, self.x_channels))
-        yb = tf.reshape(self.dense_2(w), (-1, 1, 1, self.x_channels))
+        ys = keras.ops.reshape(self.dense_1(w), (-1, 1, 1, self.x_channels))
+        yb = keras.ops.reshape(self.dense_2(w), (-1, 1, 1, self.x_channels))
         return ys * x + yb
 
 
