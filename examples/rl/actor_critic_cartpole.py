@@ -2,7 +2,7 @@
 Title: Actor Critic Method
 Author: [Apoorv Nandan](https://twitter.com/NandanApoorv)
 Date created: 2020/05/13
-Last modified: 2024/02/22
+Last modified: 2026/02/28
 Description: Implement Actor Critic Method in CartPole environment.
 Accelerator: NONE
 Converted to Keras 3 by: [Sitam Meur](https://github.com/sitamgithub-MSIT)
@@ -11,7 +11,7 @@ Converted to Keras 3 by: [Sitam Meur](https://github.com/sitamgithub-MSIT)
 """
 ## Introduction
 
-This script shows an implementation of Actor Critic method on CartPole-V0 environment.
+This script shows an implementation of Actor Critic method on CartPole-V1 environment.
 
 ### Actor Critic Method
 
@@ -26,7 +26,7 @@ the observed state of the environment to two possible outputs:
 Agent and Critic learn to perform their tasks, such that the recommended actions
 from the actor maximize the rewards.
 
-### CartPole-V0
+### CartPole-V1
 
 A pole is attached to a cart placed on a frictionless track. The agent has to apply
 force to move the cart. It is rewarded for every time step the pole
@@ -45,7 +45,7 @@ remains upright. The agent, therefore, must learn to keep the pole from falling 
 import os
 
 os.environ["KERAS_BACKEND"] = "tensorflow"
-import gym
+import gymnasium as gym
 import numpy as np
 import keras
 from keras import ops
@@ -57,8 +57,7 @@ seed = 42
 gamma = 0.99  # Discount factor for past rewards
 max_steps_per_episode = 10000
 # Adding `render_mode='human'` will show the attempts of the agent
-env = gym.make("CartPole-v0")  # Create the environment
-env.reset(seed=seed)
+env = gym.make("CartPole-v1")  # Create the environment
 eps = np.finfo(np.float32).eps.item()  # Smallest number such that 1.0 + eps != 1.0
 
 """
@@ -98,12 +97,12 @@ running_reward = 0
 episode_count = 0
 
 while True:  # Run until solved
-    state = env.reset()[0]
+    state, _ = env.reset(seed=seed)
     episode_reward = 0
     with tf.GradientTape() as tape:
         for timestep in range(1, max_steps_per_episode):
 
-            state = ops.convert_to_tensor(state)
+            state = ops.convert_to_tensor(np.array(state, dtype=np.float32))
             state = ops.expand_dims(state, 0)
 
             # Predict action probabilities and estimated future rewards
@@ -116,7 +115,8 @@ while True:  # Run until solved
             action_probs_history.append(ops.log(action_probs[0, action]))
 
             # Apply the sampled action in our environment
-            state, reward, done, *_ = env.step(action)
+            state, reward, terminated, truncated, _ = env.step(action)
+            done = terminated or truncated
             rewards_history.append(reward)
             episode_reward += reward
 
@@ -176,7 +176,7 @@ while True:  # Run until solved
         template = "running reward: {:.2f} at episode {}"
         print(template.format(running_reward, episode_count))
 
-    if running_reward > 195:  # Condition to consider the task solved
+    if running_reward > 475:  # Condition to consider the task solved
         print("Solved at episode {}!".format(episode_count))
         break
 """
