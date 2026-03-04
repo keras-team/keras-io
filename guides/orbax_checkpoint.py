@@ -245,18 +245,8 @@ keras.distribution.set_distribution(distribution)
 ### Train with distributed checkpointing
 """
 
-
-def get_distributed_model():
-    inputs = keras.Input(shape=(32,))
-    x = keras.layers.Dense(64, activation="relu", name="dense_1")(inputs)
-    outputs = keras.layers.Dense(1, name="dense_2")(x)
-    model = keras.Model(inputs, outputs)
-    model.compile(optimizer="adam", loss="mse")
-    return model
-
-
 dist_dir = "/tmp/orbax_ckpt_dist"
-dist_model = get_distributed_model()
+dist_model = get_model()
 
 dist_callback = keras.callbacks.OrbaxCheckpoint(
     directory=dist_dir,
