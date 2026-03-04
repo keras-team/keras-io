@@ -14,7 +14,7 @@ Accelerator: None
 for the JAX ecosystem. It provides high-level functionality for checkpoint
 management, composable serialization, and multi-host coordination.
 
-Starting with Keras 3, the built-in `keras.callbacks.OrbaxCheckpoint` callback
+Starting with Keras 3.14, the built-in `keras.callbacks.OrbaxCheckpoint` callback
 makes it easy to:
 
 - Save and restore model checkpoints (weights, optimizer state, metrics) during
@@ -43,16 +43,17 @@ demo, and import the required libraries.
 
 import os
 
-# MUST be set before importing keras or jax. This is required for simulation;
-# remove if using real multi-device hardware.
 os.environ["KERAS_BACKEND"] = "jax"
-os.environ["XLA_FLAGS"] = "--xla_force_host_platform_device_count=4"
 
 import shutil
 
+import jax
 import keras
 import numpy as np
-import jax
+
+# Simulate 4 CPU devices for the distributed demo.
+# Remove this line if using real multi-device hardware.
+jax.config.update("jax_num_cpu_devices", 4)
 
 """
 ## Basic Usage
@@ -130,9 +131,10 @@ If you already have a model instance and just want to load the weights, use
 fresh_model = get_model()
 fresh_model.load_weights(checkpoint_dir)
 
-# Verify the weights match.
-for orig, loaded in zip(model.weights, fresh_model.weights):
-    np.testing.assert_allclose(orig.numpy(), loaded.numpy(), atol=1e-6)
+# Verify both loaded_model and fresh_model match the original.
+for m in [loaded_model, fresh_model]:
+    for orig, restored in zip(model.weights, m.weights):
+        np.testing.assert_allclose(orig.numpy(), restored.numpy(), atol=1e-6)
 print("Weights match!")
 
 """

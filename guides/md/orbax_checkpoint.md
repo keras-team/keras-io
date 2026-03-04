@@ -11,7 +11,7 @@
 for the JAX ecosystem. It provides high-level functionality for checkpoint
 management, composable serialization, and multi-host coordination.
 
-Starting with Keras 3, the built-in `keras.callbacks.OrbaxCheckpoint` callback
+Starting with Keras 3.14, the built-in `keras.callbacks.OrbaxCheckpoint` callback
 makes it easy to:
 
 - Save and restore model checkpoints (weights, optimizer state, metrics) during
@@ -45,16 +45,17 @@ demo, and import the required libraries.
 ```python
 import os
 
-# MUST be set before importing keras or jax. This is required for simulation;
-# remove if using real multi-device hardware.
 os.environ["KERAS_BACKEND"] = "jax"
-os.environ["XLA_FLAGS"] = "--xla_force_host_platform_device_count=4"
 
 import shutil
 
+import jax
 import keras
 import numpy as np
-import jax
+
+# Simulate 4 CPU devices for the distributed demo.
+# Remove this line if using real multi-device hardware.
+jax.config.update("jax_num_cpu_devices", 4)
 ```
 
 ## Basic Usage
@@ -108,23 +109,23 @@ history = model.fit(
 ```
 Epoch 1/3
 
-7/7 ━━━━━━━━━━━━━━━━━━━━ 3s 516ms/step - loss: 1.0759 - val_loss: 0.4760
+7/7 ━━━━━━━━━━━━━━━━━━━━ 3s 518ms/step - loss: 0.1514 - val_loss: 0.1539
 
 Epoch 2/3
 
-1/7 ━━━━━━━━━━━━━━━━━━━━ 0s 11ms/step - loss: 0.3141
+1/7 ━━━━━━━━━━━━━━━━━━━━ 0s 11ms/step - loss: 0.1336
 
-WARNING:absl:[process=0][thread=Thread-11 (_target_setting_result)] Skipping merge of OCDBT checkpoints: No per-process OCDBT checkpoint subdirs found in /tmp/orbax_ckpt_basic/0.orbax-checkpoint-tmp/model_config.orbax-checkpoint-tmp, 
+WARNING:absl:[process=0][thread=Thread-10 (_target_setting_result)] Skipping merge of OCDBT checkpoints: No per-process OCDBT checkpoint subdirs found in /tmp/orbax_ckpt_basic/0.orbax-checkpoint-tmp/model_config.orbax-checkpoint-tmp, 
 
-7/7 ━━━━━━━━━━━━━━━━━━━━ 0s 4ms/step - loss: 0.2514 - val_loss: 0.1391
+7/7 ━━━━━━━━━━━━━━━━━━━━ 0s 4ms/step - loss: 0.1314 - val_loss: 0.1384
 
 Epoch 3/3
 
-1/7 ━━━━━━━━━━━━━━━━━━━━ 0s 2ms/step - loss: 0.1493
+1/7 ━━━━━━━━━━━━━━━━━━━━ 0s 2ms/step - loss: 0.0898
 
-WARNING:absl:[process=0][thread=Thread-17 (_target_setting_result)] Skipping merge of OCDBT checkpoints: No per-process OCDBT checkpoint subdirs found in /tmp/orbax_ckpt_basic/1.orbax-checkpoint-tmp/model_config.orbax-checkpoint-tmp, 
+WARNING:absl:[process=0][thread=Thread-16 (_target_setting_result)] Skipping merge of OCDBT checkpoints: No per-process OCDBT checkpoint subdirs found in /tmp/orbax_ckpt_basic/1.orbax-checkpoint-tmp/model_config.orbax-checkpoint-tmp, 
 
-7/7 ━━━━━━━━━━━━━━━━━━━━ 0s 3ms/step - loss: 0.1723 - val_loss: 0.1903
+7/7 ━━━━━━━━━━━━━━━━━━━━ 0s 4ms/step - loss: 0.1183 - val_loss: 0.1264
 
 WARNING:absl:[process=0][thread=Thread-23 (_target_setting_result)] Skipping merge of OCDBT checkpoints: No per-process OCDBT checkpoint subdirs found in /tmp/orbax_ckpt_basic/2.orbax-checkpoint-tmp/model_config.orbax-checkpoint-tmp, 
 ```
@@ -140,10 +141,10 @@ saved epoch.
 
 <div class="k-default-codeblock">
 ```
-0[m[m 1[m[m 2[m[m
-
 /opt/homebrew/Cellar/python@3.13/3.13.7/Frameworks/Python.framework/Versions/3.13/lib/python3.13/pty.py:95: RuntimeWarning: os.fork() was called. os.fork() is incompatible with multithreaded code, and JAX is multithreaded, so this will likely lead to a deadlock.
   pid, fd = os.forkpty()
+
+0[m[m 1[m[m 2[m[m
 ```
 </div>
 
@@ -218,9 +219,10 @@ If you already have a model instance and just want to load the weights, use
 fresh_model = get_model()
 fresh_model.load_weights(checkpoint_dir)
 
-# Verify the weights match.
-for orig, loaded in zip(model.weights, fresh_model.weights):
-    np.testing.assert_allclose(orig.numpy(), loaded.numpy(), atol=1e-6)
+# Verify both loaded_model and fresh_model match the original.
+for m in [loaded_model, fresh_model]:
+    for orig, restored in zip(model.weights, m.weights):
+        np.testing.assert_allclose(orig.numpy(), restored.numpy(), atol=1e-6)
 print("Weights match!")
 ```
 
@@ -263,19 +265,19 @@ resumed_model.fit(
 ```
 Epoch 4/5
 
-7/7 ━━━━━━━━━━━━━━━━━━━━ 0s 61ms/step - loss: 0.2045 - val_loss: 0.1594
+7/7 ━━━━━━━━━━━━━━━━━━━━ 0s 64ms/step - loss: 0.1094 - val_loss: 0.1176
 
 Epoch 5/5
 
-1/7 ━━━━━━━━━━━━━━━━━━━━ 0s 3ms/step - loss: 0.1240
+1/7 ━━━━━━━━━━━━━━━━━━━━ 0s 3ms/step - loss: 0.1179
 
-WARNING:absl:[process=0][thread=Thread-28 (_target_setting_result)] Skipping merge of OCDBT checkpoints: No per-process OCDBT checkpoint subdirs found in /tmp/orbax_ckpt_basic/3.orbax-checkpoint-tmp/model_config.orbax-checkpoint-tmp, 
+WARNING:absl:[process=0][thread=Thread-29 (_target_setting_result)] Skipping merge of OCDBT checkpoints: No per-process OCDBT checkpoint subdirs found in /tmp/orbax_ckpt_basic/3.orbax-checkpoint-tmp/model_config.orbax-checkpoint-tmp, 
 
-7/7 ━━━━━━━━━━━━━━━━━━━━ 0s 3ms/step - loss: 0.1525 - val_loss: 0.1324
+7/7 ━━━━━━━━━━━━━━━━━━━━ 0s 3ms/step - loss: 0.0996 - val_loss: 0.1141
 
-WARNING:absl:[process=0][thread=Thread-34 (_target_setting_result)] Skipping merge of OCDBT checkpoints: No per-process OCDBT checkpoint subdirs found in /tmp/orbax_ckpt_basic/4.orbax-checkpoint-tmp/model_config.orbax-checkpoint-tmp, 
+WARNING:absl:[process=0][thread=Thread-35 (_target_setting_result)] Skipping merge of OCDBT checkpoints: No per-process OCDBT checkpoint subdirs found in /tmp/orbax_ckpt_basic/4.orbax-checkpoint-tmp/model_config.orbax-checkpoint-tmp, 
 
-<keras.src.callbacks.history.History at 0x1440a9f90>
+<keras.src.callbacks.history.History at 0x1483120d0>
 ```
 </div>
 
@@ -312,35 +314,39 @@ model_best.fit(
 ```
 Epoch 1/5
 
-7/7 ━━━━━━━━━━━━━━━━━━━━ 0s 45ms/step - loss: 0.5046 - val_loss: 0.1870
+7/7 ━━━━━━━━━━━━━━━━━━━━ 0s 50ms/step - loss: 0.1190 - val_loss: 0.1004
 
 Epoch 2/5
 
-1/7 ━━━━━━━━━━━━━━━━━━━━ 0s 2ms/step - loss: 0.1962
+1/7 ━━━━━━━━━━━━━━━━━━━━ 0s 2ms/step - loss: 0.1280
 
-WARNING:absl:[process=0][thread=Thread-40 (_target_setting_result)] Skipping merge of OCDBT checkpoints: No per-process OCDBT checkpoint subdirs found in /tmp/orbax_ckpt_best/0.orbax-checkpoint-tmp/model_config.orbax-checkpoint-tmp, 
+WARNING:absl:[process=0][thread=Thread-41 (_target_setting_result)] Skipping merge of OCDBT checkpoints: No per-process OCDBT checkpoint subdirs found in /tmp/orbax_ckpt_best/0.orbax-checkpoint-tmp/model_config.orbax-checkpoint-tmp, 
 
-7/7 ━━━━━━━━━━━━━━━━━━━━ 0s 3ms/step - loss: 0.1466 - val_loss: 0.2263
+7/7 ━━━━━━━━━━━━━━━━━━━━ 0s 5ms/step - loss: 0.1061 - val_loss: 0.0984
 
 Epoch 3/5
 
-7/7 ━━━━━━━━━━━━━━━━━━━━ 0s 302us/step - loss: 0.1781 - val_loss: 0.2043
+1/7 ━━━━━━━━━━━━━━━━━━━━ 0s 3ms/step - loss: 0.1057
+
+WARNING:absl:[process=0][thread=Thread-47 (_target_setting_result)] Skipping merge of OCDBT checkpoints: No per-process OCDBT checkpoint subdirs found in /tmp/orbax_ckpt_best/1.orbax-checkpoint-tmp/model_config.orbax-checkpoint-tmp, 
+
+7/7 ━━━━━━━━━━━━━━━━━━━━ 0s 4ms/step - loss: 0.0967 - val_loss: 0.0876
 
 Epoch 4/5
 
-7/7 ━━━━━━━━━━━━━━━━━━━━ 0s 1ms/step - loss: 0.1366 - val_loss: 0.1583
+1/7 ━━━━━━━━━━━━━━━━━━━━ 0s 3ms/step - loss: 0.1130
+
+WARNING:absl:[process=0][thread=Thread-52 (_target_setting_result)] Skipping merge of OCDBT checkpoints: No per-process OCDBT checkpoint subdirs found in /tmp/orbax_ckpt_best/2.orbax-checkpoint-tmp/model_config.orbax-checkpoint-tmp, 
+
+7/7 ━━━━━━━━━━━━━━━━━━━━ 0s 1ms/step - loss: 0.0893 - val_loss: 0.0881
 
 Epoch 5/5
 
-1/7 ━━━━━━━━━━━━━━━━━━━━ 0s 3ms/step - loss: 0.1269
+7/7 ━━━━━━━━━━━━━━━━━━━━ 0s 2ms/step - loss: 0.0861 - val_loss: 0.0797
 
-WARNING:absl:[process=0][thread=Thread-47 (_target_setting_result)] Skipping merge of OCDBT checkpoints: No per-process OCDBT checkpoint subdirs found in /tmp/orbax_ckpt_best/3.orbax-checkpoint-tmp/model_config.orbax-checkpoint-tmp, 
+WARNING:absl:[process=0][thread=Thread-59 (_target_setting_result)] Skipping merge of OCDBT checkpoints: No per-process OCDBT checkpoint subdirs found in /tmp/orbax_ckpt_best/4.orbax-checkpoint-tmp/model_config.orbax-checkpoint-tmp, 
 
-7/7 ━━━━━━━━━━━━━━━━━━━━ 0s 3ms/step - loss: 0.1215 - val_loss: 0.1526
-
-WARNING:absl:[process=0][thread=Thread-52 (_target_setting_result)] Skipping merge of OCDBT checkpoints: No per-process OCDBT checkpoint subdirs found in /tmp/orbax_ckpt_best/4.orbax-checkpoint-tmp/model_config.orbax-checkpoint-tmp, 
-
-<keras.src.callbacks.history.History at 0x144302e90>
+<keras.src.callbacks.history.History at 0x14856aad0>
 ```
 </div>
 
@@ -375,25 +381,25 @@ model_batch.fit(
 ```
 Epoch 1/2
 
-1/8 ━━━━━━━━━━━━━━━━━━━━ 0s 73ms/step - loss: 0.2326
+1/8 ━━━━━━━━━━━━━━━━━━━━ 0s 85ms/step - loss: 0.9480
 
-WARNING:absl:[process=0][thread=Thread-58 (_target_setting_result)] Skipping merge of OCDBT checkpoints: No per-process OCDBT checkpoint subdirs found in /tmp/orbax_ckpt_batch/4.orbax-checkpoint-tmp/model_config.orbax-checkpoint-tmp, 
+WARNING:absl:[process=0][thread=Thread-65 (_target_setting_result)] Skipping merge of OCDBT checkpoints: No per-process OCDBT checkpoint subdirs found in /tmp/orbax_ckpt_batch/4.orbax-checkpoint-tmp/model_config.orbax-checkpoint-tmp, 
 
-8/8 ━━━━━━━━━━━━━━━━━━━━ 0s 4ms/step - loss: 0.1706
+8/8 ━━━━━━━━━━━━━━━━━━━━ 0s 5ms/step - loss: 0.6971
 
 Epoch 2/2
 
-1/8 ━━━━━━━━━━━━━━━━━━━━ 0s 3ms/step - loss: 0.1282
+1/8 ━━━━━━━━━━━━━━━━━━━━ 0s 2ms/step - loss: 0.3194
 
-WARNING:absl:[process=0][thread=Thread-65 (_target_setting_result)] Skipping merge of OCDBT checkpoints: No per-process OCDBT checkpoint subdirs found in /tmp/orbax_ckpt_batch/8.orbax-checkpoint-tmp/model_config.orbax-checkpoint-tmp, 
+WARNING:absl:[process=0][thread=Thread-70 (_target_setting_result)] Skipping merge of OCDBT checkpoints: No per-process OCDBT checkpoint subdirs found in /tmp/orbax_ckpt_batch/8.orbax-checkpoint-tmp/model_config.orbax-checkpoint-tmp, 
 
-WARNING:absl:[process=0][thread=Thread-71 (_target_setting_result)] Skipping merge of OCDBT checkpoints: No per-process OCDBT checkpoint subdirs found in /tmp/orbax_ckpt_batch/12.orbax-checkpoint-tmp/model_config.orbax-checkpoint-tmp, 
+WARNING:absl:[process=0][thread=Thread-77 (_target_setting_result)] Skipping merge of OCDBT checkpoints: No per-process OCDBT checkpoint subdirs found in /tmp/orbax_ckpt_batch/12.orbax-checkpoint-tmp/model_config.orbax-checkpoint-tmp, 
 
-8/8 ━━━━━━━━━━━━━━━━━━━━ 0s 5ms/step - loss: 0.1321
+8/8 ━━━━━━━━━━━━━━━━━━━━ 0s 6ms/step - loss: 0.2006
 
-WARNING:absl:[process=0][thread=Thread-76 (_target_setting_result)] Skipping merge of OCDBT checkpoints: No per-process OCDBT checkpoint subdirs found in /tmp/orbax_ckpt_batch/16.orbax-checkpoint-tmp/model_config.orbax-checkpoint-tmp, 
+WARNING:absl:[process=0][thread=Thread-82 (_target_setting_result)] Skipping merge of OCDBT checkpoints: No per-process OCDBT checkpoint subdirs found in /tmp/orbax_ckpt_batch/16.orbax-checkpoint-tmp/model_config.orbax-checkpoint-tmp, 
 
-<keras.src.callbacks.history.History at 0x1223ef5c0>
+<keras.src.callbacks.history.History at 0x13b892060>
 ```
 </div>
 
@@ -430,7 +436,6 @@ mesh = keras.distribution.DeviceMesh(
 
 layout_map = keras.distribution.LayoutMap(mesh)
 layout_map["dense_1/kernel"] = (None, "model")
-# dense_2/kernel has shape (64, 1) — too small to shard, so we leave it out.
 
 distribution = keras.distribution.ModelParallel(
     layout_map=layout_map, batch_dim_name="data"
@@ -466,23 +471,23 @@ dist_model.fit(
 ```
 Epoch 1/3
 
-7/7 ━━━━━━━━━━━━━━━━━━━━ 1s 77ms/step - loss: 0.2073 - val_loss: 0.1827
+7/7 ━━━━━━━━━━━━━━━━━━━━ 1s 83ms/step - loss: 0.3819 - val_loss: 0.1660
 
 Epoch 2/3
 
-WARNING:absl:[process=0][thread=Thread-82 (_target_setting_result)] Skipping merge of OCDBT checkpoints: No per-process OCDBT checkpoint subdirs found in /tmp/orbax_ckpt_dist/0.orbax-checkpoint-tmp/model_config.orbax-checkpoint-tmp, 
+WARNING:absl:[process=0][thread=Thread-89 (_target_setting_result)] Skipping merge of OCDBT checkpoints: No per-process OCDBT checkpoint subdirs found in /tmp/orbax_ckpt_dist/0.orbax-checkpoint-tmp/model_config.orbax-checkpoint-tmp, 
 
-7/7 ━━━━━━━━━━━━━━━━━━━━ 0s 3ms/step - loss: 0.1506 - val_loss: 0.1657
+7/7 ━━━━━━━━━━━━━━━━━━━━ 0s 3ms/step - loss: 0.1216 - val_loss: 0.1554
 
 Epoch 3/3
 
-WARNING:absl:[process=0][thread=Thread-89 (_target_setting_result)] Skipping merge of OCDBT checkpoints: No per-process OCDBT checkpoint subdirs found in /tmp/orbax_ckpt_dist/1.orbax-checkpoint-tmp/model_config.orbax-checkpoint-tmp, 
+WARNING:absl:[process=0][thread=Thread-95 (_target_setting_result)] Skipping merge of OCDBT checkpoints: No per-process OCDBT checkpoint subdirs found in /tmp/orbax_ckpt_dist/1.orbax-checkpoint-tmp/model_config.orbax-checkpoint-tmp, 
 
-7/7 ━━━━━━━━━━━━━━━━━━━━ 0s 3ms/step - loss: 0.1305 - val_loss: 0.1688
+7/7 ━━━━━━━━━━━━━━━━━━━━ 0s 3ms/step - loss: 0.1520 - val_loss: 0.1450
 
-WARNING:absl:[process=0][thread=Thread-94 (_target_setting_result)] Skipping merge of OCDBT checkpoints: No per-process OCDBT checkpoint subdirs found in /tmp/orbax_ckpt_dist/2.orbax-checkpoint-tmp/model_config.orbax-checkpoint-tmp, 
+WARNING:absl:[process=0][thread=Thread-100 (_target_setting_result)] Skipping merge of OCDBT checkpoints: No per-process OCDBT checkpoint subdirs found in /tmp/orbax_ckpt_dist/2.orbax-checkpoint-tmp/model_config.orbax-checkpoint-tmp, 
 
-<keras.src.callbacks.history.History at 0x1375cb6f0>
+<keras.src.callbacks.history.History at 0x13b893ce0>
 ```
 </div>
 
@@ -527,7 +532,6 @@ keras.distribution.set_distribution(None)
 # Define a new layout that shards dense_1/kernel on a different axis.
 new_layout_map = keras.distribution.LayoutMap(mesh)
 new_layout_map["dense_1/kernel"] = ("data", None)
-# Previously (None, "model") — now ("data", None): resharded on load.
 
 new_distribution = keras.distribution.ModelParallel(
     layout_map=new_layout_map, batch_dim_name="data"
