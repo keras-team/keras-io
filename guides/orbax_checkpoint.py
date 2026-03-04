@@ -3,7 +3,8 @@ Title: Orbax Checkpointing in Keras
 Author: [Amit Srivastava](https://github.com/amitsrivastava78)
 Date created: 2025/11/20
 Last modified: 2026/03/04
-Description: Save and load Orbax checkpoints during Keras model training, including distributed and cross-layout resharding.
+Description: Save and load Orbax checkpoints with distributed resharding.
+Accelerator: None
 """
 
 """
@@ -47,6 +48,8 @@ import os
 os.environ["KERAS_BACKEND"] = "jax"
 os.environ["XLA_FLAGS"] = "--xla_force_host_platform_device_count=4"
 
+import shutil
+
 import keras
 import numpy as np
 import jax
@@ -81,6 +84,7 @@ y_train = np.random.random((256, 1))
 """
 
 checkpoint_dir = "/tmp/orbax_ckpt_basic"
+shutil.rmtree(checkpoint_dir, ignore_errors=True)
 
 callback = keras.callbacks.OrbaxCheckpoint(
     directory=checkpoint_dir,
@@ -135,8 +139,8 @@ print("Weights match!")
 ## Resuming training
 
 When you pass `OrbaxCheckpoint` to a new `fit()` call, training resumes from
-the correct step number. The callback recovers the step count from the
-optimizer's `iterations` variable.
+the correct step number. Pass `initial_epoch` to continue the epoch
+count from where you left off.
 """
 
 resumed_model = keras.saving.load_model(checkpoint_dir)
@@ -147,12 +151,13 @@ resume_callback = keras.callbacks.OrbaxCheckpoint(
     max_to_keep=5,
 )
 
-# Continue training — new checkpoints are saved at subsequent steps.
+# Continue training — epochs 3 and 4 (picking up from epoch 3).
 resumed_model.fit(
     x_train,
     y_train,
     batch_size=32,
-    epochs=2,
+    epochs=5,
+    initial_epoch=3,
     verbose=1,
     validation_split=0.2,
     callbacks=[resume_callback],
@@ -165,6 +170,7 @@ Monitor a metric and keep only the best checkpoint:
 """
 
 best_dir = "/tmp/orbax_ckpt_best"
+shutil.rmtree(best_dir, ignore_errors=True)
 
 best_callback = keras.callbacks.OrbaxCheckpoint(
     directory=best_dir,
@@ -193,6 +199,7 @@ integer:
 """
 
 batch_dir = "/tmp/orbax_ckpt_batch"
+shutil.rmtree(batch_dir, ignore_errors=True)
 
 batch_callback = keras.callbacks.OrbaxCheckpoint(
     directory=batch_dir,
@@ -236,9 +243,10 @@ mesh = keras.distribution.DeviceMesh(
 
 layout_map = keras.distribution.LayoutMap(mesh)
 layout_map["dense_1/kernel"] = (None, "model")
-layout_map["dense_2/kernel"] = (None, "model")
 
-distribution = keras.distribution.ModelParallel(layout_map, batch_dim_name="data")
+distribution = keras.distribution.ModelParallel(
+    layout_map=layout_map, batch_dim_name="data"
+)
 keras.distribution.set_distribution(distribution)
 
 """
@@ -246,6 +254,7 @@ keras.distribution.set_distribution(distribution)
 """
 
 dist_dir = "/tmp/orbax_ckpt_dist"
+shutil.rmtree(dist_dir, ignore_errors=True)
 dist_model = get_model()
 
 dist_callback = keras.callbacks.OrbaxCheckpoint(
@@ -281,24 +290,24 @@ ability to load a checkpoint saved with one sharding layout and restore it
 under a **different** layout. Keras automatically provides the target
 shardings to Orbax so arrays are resharded on load.
 
-For example, a checkpoint saved with both layers sharded can be loaded with
-only one layer sharded:
+For example, a checkpoint saved with `dense_1/kernel` sharded on the
+`"model"` axis can be loaded with that same kernel sharded on the `"data"`
+axis instead:
 """
 
 # Clear the current distribution first.
 keras.distribution.set_distribution(None)
 
-# Define a new layout that only shards dense_2.
+# Define a new layout that shards dense_1/kernel on a different axis.
 new_layout_map = keras.distribution.LayoutMap(mesh)
-new_layout_map["dense_2/kernel"] = (None, "model")
-# dense_1/kernel is NOT in the layout map, so it will be replicated.
+new_layout_map["dense_1/kernel"] = ("data", None)
 
 new_distribution = keras.distribution.ModelParallel(
-    new_layout_map, batch_dim_name="data"
+    layout_map=new_layout_map, batch_dim_name="data"
 )
 keras.distribution.set_distribution(new_distribution)
 
-# Load the checkpoint saved with the original (fully sharded) layout.
+# Load the checkpoint saved with the original layout.
 resharded_model = keras.saving.load_model(dist_dir)
 
 print("\nResharded variable shardings:")
@@ -306,9 +315,9 @@ for v in resharded_model.trainable_variables:
     print(f"  {v.path}: sharding={v.value.sharding}")
 
 """
-The `dense_1/kernel` variable is now replicated (no sharding) even though it
-was sharded when saved. The `dense_2/kernel` remains sharded per the new
-layout. Orbax handles the data movement automatically.
+The `dense_1/kernel` variable was originally sharded as `(None, "model")`
+but is now sharded as `("data", None)`. Orbax handles the data movement
+automatically during loading.
 """
 
 """
