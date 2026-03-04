@@ -1,10 +1,9 @@
 """
 Title: Orbax Checkpointing in Keras
 Author: [Amit Srivastava](https://github.com/amitsrivastava78)
-Date created: 2025/08/20
+Date created: 2025/11/20
 Last modified: 2026/03/04
 Description: Save and load Orbax checkpoints during Keras model training, including distributed and cross-layout resharding.
-Accelerator: GPU
 """
 
 """
@@ -37,15 +36,19 @@ pip install -q -U orbax-checkpoint
 """
 
 """
-Set the Keras backend to JAX and import the required libraries.
+Set the Keras backend to JAX, configure virtual devices for the distributed
+demo, and import the required libraries.
 """
 
 import os
 
+# MUST be set before importing keras or jax.
 os.environ["KERAS_BACKEND"] = "jax"
+os.environ["XLA_FLAGS"] = "--xla_force_host_platform_device_count=4"
 
 import keras
 import numpy as np
+import jax
 
 """
 ## Basic Usage
@@ -216,11 +219,6 @@ your `LayoutMap` and checkpoints capture the distributed state.
 > **Note**: The example below uses virtual devices to simulate a multi-device
 > environment. In production, use your actual accelerators (GPUs/TPUs).
 """
-
-import jax
-
-# Simulate 4 devices for this guide.
-os.environ["XLA_FLAGS"] = "--xla_force_host_platform_device_count=4"
 
 devices = jax.devices()
 print(f"Available devices: {len(devices)}")
