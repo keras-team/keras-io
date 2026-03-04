@@ -42,7 +42,8 @@ demo, and import the required libraries.
 
 import os
 
-# MUST be set before importing keras or jax.
+# MUST be set before importing keras or jax. This is required for simulation;
+# remove if using real multi-device hardware.
 os.environ["KERAS_BACKEND"] = "jax"
 os.environ["XLA_FLAGS"] = "--xla_force_host_platform_device_count=4"
 
