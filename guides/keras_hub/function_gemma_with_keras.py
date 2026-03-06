@@ -778,9 +778,9 @@ This is where the program starts execution. When you run this script:
 -  The Assistant processes queries and executes tools until the user types 'exit'
 """
 
-# if __name__ == "__main__":
-#    model = load_model()
-#   chat(model)
+if __name__ == "__main__":
+    model = load_model()
+    chat(model)
 
 """
 # Conclusion

@@ -815,8 +815,8 @@ This is where the program starts execution. When you run this script:
 
 ```python
  if __name__ == "__main__":
-    model = load_model()
-    chat(model)
+     model = load_model()
+     chat(model)
 ```
 
 # Conclusion
