@@ -2,7 +2,7 @@
 Title: Native Function Calling with FunctionGemma in KerasHub
 Author: [Laxmareddy Patlolla](https://github.com/laxmareddyp)
 Date created: 2026/02/24
-Last modified: 2026/02/25
+Last modified: 2026/03/06
 Description: A guide to using the function calling feature in KerasHub with FunctionGemma.
 Accelerator: GPU
 """
