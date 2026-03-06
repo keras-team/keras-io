@@ -72,7 +72,6 @@ ds_train = keras.utils.image_dataset_from_directory(
 )
 
 
-
 def resize_image(res, image):
     # Only downsampling, so use nearest neighbor that is faster to run
     image = keras.ops.image.resize(image, (res, res), interpolation="nearest")
@@ -80,11 +79,16 @@ def resize_image(res, image):
     return image
 
 
-
 def create_dataloader(res):
     batch_size = batch_sizes[log2(res)]
     dl = ds_train.map(lambda x: resize_image(res, x))
-    dl = dl.unbatch().shuffle(200).batch(batch_size, drop_remainder=True).prefetch(1).repeat()
+    dl = (
+        dl.unbatch()
+        .shuffle(200)
+        .batch(batch_size, drop_remainder=True)
+        .prefetch(1)
+        .repeat()
+    )
     return dl
 
 
@@ -126,15 +130,12 @@ def fade_in(alpha, a, b):
     return alpha * a + (1.0 - alpha) * b
 
 
-
 def wasserstein_loss(y_true, y_pred):
     return -keras.ops.mean(y_true * y_pred)
 
 
-
 def pixel_norm(x, epsilon=1e-8):
     return x / keras.ops.sqrt(keras.ops.mean(x**2, axis=-1, keepdims=True) + epsilon)
-
 
 
 class MinibatchStd(layers.Layer):
@@ -157,7 +158,6 @@ class MinibatchStd(layers.Layer):
 
     def compute_output_shape(self, input_shape):
         return input_shape[:-1] + (input_shape[-1] + 1,)
-
 
 
 class EqualizedConv(layers.Layer):
@@ -207,7 +207,6 @@ class EqualizedConv(layers.Layer):
         return input_shape[:-1] + (self.out_channels,)
 
 
-
 class EqualizedDense(layers.Layer):
     def __init__(self, units, gain=2, learning_rate_multiplier=1, **kwargs):
         super().__init__(**kwargs)
@@ -237,7 +236,6 @@ class EqualizedDense(layers.Layer):
         return output * self.learning_rate_multiplier
 
 
-
 class AddNoise(layers.Layer):
     def build(self, input_shape):
         n, h, w, c = input_shape[0]
@@ -250,7 +248,6 @@ class AddNoise(layers.Layer):
         x, noise = inputs
         output = x + self.b * noise
         return output
-
 
 
 class AdaIN(layers.Layer):
@@ -275,11 +272,13 @@ class AdaIN(layers.Layer):
         yb = keras.ops.reshape(self.dense_2(w), (-1, 1, 1, self.x_channels))
         return ys * x + yb
 
+
 class SpectralNormalization(layers.Wrapper):
     """Spectral Normalization wrapper for convolutional layers.
     Constrains the spectral norm of the weight matrix to stabilize discriminator training.
     Based on "Spectral Normalization for Generative Adversarial Networks" (Miyato et al., 2018).
     """
+
     def __init__(self, layer, power_iterations=1, **kwargs):
         super().__init__(layer, **kwargs)
         self.power_iterations = power_iterations
@@ -287,9 +286,9 @@ class SpectralNormalization(layers.Wrapper):
 
     def build(self, input_shape):
         super().build(input_shape)
-        if hasattr(self.layer, 'w'):
+        if hasattr(self.layer, "w"):
             weight = self.layer.w
-        elif hasattr(self.layer, 'kernel'):
+        elif hasattr(self.layer, "kernel"):
             weight = self.layer.kernel
         else:
             raise ValueError("Layer must have 'kernel' or 'w' attribute")
@@ -299,8 +298,8 @@ class SpectralNormalization(layers.Wrapper):
             shape=(1, width),
             initializer=keras.initializers.TruncatedNormal(stddev=0.02),
             trainable=False,
-            name='sn_u',
-            dtype=weight.dtype
+            name="sn_u",
+            dtype=weight.dtype,
         )
 
     def call(self, inputs, training=None):
@@ -308,9 +307,9 @@ class SpectralNormalization(layers.Wrapper):
         return self.layer(inputs)
 
     def normalize_weights(self):
-        if hasattr(self.layer, 'w'):
+        if hasattr(self.layer, "w"):
             weight = self.layer.w
-        elif hasattr(self.layer, 'kernel'):
+        elif hasattr(self.layer, "kernel"):
             weight = self.layer.kernel
         else:
             return
@@ -328,13 +327,14 @@ class SpectralNormalization(layers.Wrapper):
         self.u.assign(u)
         sigma = keras.ops.sum(keras.ops.matmul(u, keras.ops.transpose(weight_mat)) * v)
         weight_normalized = weight / (sigma + 1e-12)
-        if hasattr(self.layer, 'w'):
+        if hasattr(self.layer, "w"):
             self.layer.w.assign(weight_normalized)
-        elif hasattr(self.layer, 'kernel'):
+        elif hasattr(self.layer, "kernel"):
             self.layer.kernel.assign(weight_normalized)
 
     def compute_output_shape(self, input_shape):
         return self.layer.compute_output_shape(input_shape)
+
 
 """
 Next we build the following:
@@ -400,7 +400,9 @@ class Generator:
                 [
                     layers.InputLayer(input_shape=(res, res, filter_num)),
                     EqualizedConv(3, 1, gain=1),
-                    layers.Activation("tanh"),  # Constrain output to [-1, 1] to match real images
+                    layers.Activation(
+                        "tanh"
+                    ),  # Constrain output to [-1, 1] to match real images
                 ],
                 name=f"to_rgb_{res}x{res}",
             )
@@ -571,7 +573,16 @@ class Discriminator:
 
 
 class StyleGAN(keras.Model):
-    def __init__(self, z_dim=512, target_res=64, start_res=4, d_builder=None, g_builder=None, mapping=None, current_res=None):
+    def __init__(
+        self,
+        z_dim=512,
+        target_res=64,
+        start_res=4,
+        d_builder=None,
+        g_builder=None,
+        mapping=None,
+        current_res=None,
+    ):
         super().__init__()
         self.z_dim = z_dim
         self.target_res_log2 = log2(target_res)
@@ -635,7 +646,9 @@ class StyleGAN(keras.Model):
 
     def gradient_loss(self, grad):
         loss = keras.ops.square(grad)
-        loss = keras.ops.sum(loss, axis=keras.ops.arange(1, keras.ops.size(keras.ops.shape(loss))))
+        loss = keras.ops.sum(
+            loss, axis=keras.ops.arange(1, keras.ops.size(keras.ops.shape(loss)))
+        )
         loss = keras.ops.sqrt(loss)
         loss = keras.ops.mean(keras.ops.square(loss - 1))
         return loss
@@ -648,7 +661,9 @@ class StyleGAN(keras.Model):
         self.train_step_counter.assign_add(1)
         if self.phase == "TRANSITION":
             self.alpha.assign(
-                keras.ops.cast(self.train_step_counter / self.steps_per_epoch, "float32")
+                keras.ops.cast(
+                    self.train_step_counter / self.steps_per_epoch, "float32"
+                )
             )
         elif self.phase == "STABLE":
             self.alpha.assign(1.0)
@@ -676,13 +691,18 @@ class StyleGAN(keras.Model):
         interpolates = epsilon * real_images + (1 - epsilon) * fake_images
         pred_fake_grad = self.discriminator([interpolates, alpha])
         gradient_penalty = 0.0
-        drift_loss = self.loss_weights["drift"] * keras.ops.mean(keras.ops.concatenate([pred_fake, pred_real], axis=0) ** 2)
+        drift_loss = self.loss_weights["drift"] * keras.ops.mean(
+            keras.ops.concatenate([pred_fake, pred_real], axis=0) ** 2
+        )
         d_loss = loss_fake + loss_real + gradient_penalty + drift_loss
         self.add_loss(g_loss)
         self.add_loss(d_loss)
         self.d_loss_metric.update_state(d_loss)
         self.g_loss_metric.update_state(g_loss)
-        return {"d_loss": self.d_loss_metric.result(), "g_loss": self.g_loss_metric.result()}
+        return {
+            "d_loss": self.d_loss_metric.result(),
+            "g_loss": self.g_loss_metric.result(),
+        }
 
     def call(self, inputs: dict()):
         style_code = inputs.get("style_code", None)
@@ -709,7 +729,9 @@ class StyleGAN(keras.Model):
             noise = self.generate_noise(batch_size)
         num_stages = self.current_res_log2 - self.start_res_log2 + 1
         const_input = keras.ops.ones([batch_size] + list(self.g_input_shape))
-        images = self.generator([const_input, style_code] + noise[:num_stages] + [alpha])
+        images = self.generator(
+            [const_input, style_code] + noise[:num_stages] + [alpha]
+        )
         images = keras.ops.clip((images * 0.5 + 0.5) * 255, 0, 255)
         images = keras.ops.cast(images, "uint8")
         return images.numpy()
@@ -750,11 +772,23 @@ def train(
     # - Discriminator update ratio (1:2) - balances G/D training dynamics
     # - Combined approach: spectral norm provides architectural stability + update ratio balances training
     # Previous attempts: 1:2 ratio alone delayed divergence 3-4x but still diverged by step 1500
-    d_opt_cfg = {"learning_rate": 2e-5, "beta_1": 0.0, "beta_2": 0.99, "epsilon": 1e-8, "clipnorm": 1.0}
-    g_opt_cfg = {"learning_rate": 5e-5, "beta_1": 0.0, "beta_2": 0.99, "epsilon": 1e-8, "clipnorm": 1.0}
+    d_opt_cfg = {
+        "learning_rate": 2e-5,
+        "beta_1": 0.0,
+        "beta_2": 0.99,
+        "epsilon": 1e-8,
+        "clipnorm": 1.0,
+    }
+    g_opt_cfg = {
+        "learning_rate": 5e-5,
+        "beta_1": 0.0,
+        "beta_2": 0.99,
+        "epsilon": 1e-8,
+        "clipnorm": 1.0,
+    }
 
     val_batch_size = 16
-    val_z = keras.random.normal((val_batch_size, 512)) # 512 is z_dim default
+    val_z = keras.random.normal((val_batch_size, 512))  # 512 is z_dim default
     # We need to access generate_noise, but style_gan is not created yet.
     # generate_noise logic relies on start/target res.
     # We can create a dummy helper or use the first instance.
@@ -771,10 +805,10 @@ def train(
     # Create checkpoints directory if it doesn't exist
     os.makedirs("checkpoints", exist_ok=True)
 
-    global style_gan # Make accessible to outer scope
+    global style_gan  # Make accessible to outer scope
 
     # Track best metrics for early stopping and checkpoint saving
-    best_g_loss = float('inf')
+    best_g_loss = float("inf")
     phases_without_improvement = 0
 
     for res_log2 in range(start_res_log2, target_res_log2 + 1):
@@ -787,7 +821,7 @@ def train(
             d_builder=d_builder,
             g_builder=g_builder,
             mapping=mapping,
-            current_res=res
+            current_res=res,
         )
 
         # Generate validation noise using the current model instance
@@ -796,7 +830,7 @@ def train(
         # StyleGAN.generate_noise creates noise for ALL stages up to target.
         # So it's fine.
         if res_log2 == start_res_log2:
-             val_noise = style_gan.generate_noise(val_batch_size)
+            val_noise = style_gan.generate_noise(val_batch_size)
 
         for phase in ["TRANSITION", "STABLE"]:
             if res == start_res and phase == "TRANSITION":
@@ -825,8 +859,8 @@ def train(
             )
 
             # Get final losses from training
-            final_g_loss = history.history['g_loss'][-1]
-            final_d_loss = history.history['d_loss'][-1]
+            final_g_loss = history.history["g_loss"][-1]
+            final_d_loss = history.history["d_loss"][-1]
 
             print(f"Final losses - G: {final_g_loss:.4f}, D: {final_d_loss:.4f}")
 
@@ -840,24 +874,42 @@ def train(
 
                 # Save checkpoint (always or only when improved)
                 if not save_best_only or improved:
-                    style_gan.generator.save_weights(f"checkpoints/best_generator_{res}x{res}.weights.h5")
-                    style_gan.discriminator.save_weights(f"checkpoints/best_discriminator_{res}x{res}.weights.h5")
+                    style_gan.generator.save_weights(
+                        f"checkpoints/best_generator_{res}x{res}.weights.h5"
+                    )
+                    style_gan.discriminator.save_weights(
+                        f"checkpoints/best_discriminator_{res}x{res}.weights.h5"
+                    )
                     print(f"✓ Checkpoint saved: best_*_{res}x{res}.weights.h5")
             else:
                 phases_without_improvement += 1
-                print(f"✗ No improvement ({phases_without_improvement}/{early_stopping_patience})")
+                print(
+                    f"✗ No improvement ({phases_without_improvement}/{early_stopping_patience})"
+                )
 
             # Always save latest checkpoint for resume capability
-            style_gan.generator.save_weights(f"checkpoints/generator_{res}x{res}.weights.h5")
-            style_gan.discriminator.save_weights(f"checkpoints/discriminator_{res}x{res}.weights.h5")
+            style_gan.generator.save_weights(
+                f"checkpoints/generator_{res}x{res}.weights.h5"
+            )
+            style_gan.discriminator.save_weights(
+                f"checkpoints/discriminator_{res}x{res}.weights.h5"
+            )
 
             if display_images:
-                images = style_gan({"z": val_z, "noise": val_noise, "alpha": keras.ops.convert_to_tensor(1.0)})
+                images = style_gan(
+                    {
+                        "z": val_z,
+                        "noise": val_noise,
+                        "alpha": keras.ops.convert_to_tensor(1.0),
+                    }
+                )
                 plot_images(images, res_log2)
 
             # Early stopping check
             if phases_without_improvement >= early_stopping_patience:
-                print(f"\n⚠ Early stopping triggered after {phases_without_improvement} phases without improvement")
+                print(
+                    f"\n⚠ Early stopping triggered after {phases_without_improvement} phases without improvement"
+                )
                 print(f"Best G loss achieved: {best_g_loss:.4f}")
                 return style_gan  # Return the model early
 
@@ -872,8 +924,15 @@ value of 1 is used to sanity-check the code is working alright. In practice, a l
 is required to get decent results.
 """
 
-train(start_res=4, target_res=128, steps_per_epoch=100, display_images=True,
-      early_stopping_patience=3, save_best_only=True, d_updates_per_g_update=2)
+train(
+    start_res=4,
+    target_res=128,
+    steps_per_epoch=100,
+    display_images=True,
+    early_stopping_patience=3,
+    save_best_only=True,
+    d_updates_per_g_update=2,
+)
 
 """
 ## Results
@@ -888,7 +947,7 @@ train the model yourself and save using `.weights.h5` format, or convert the che
 Keras 3 format. The code below is commented out but shows the intended usage pattern.
 """
 
-# Note: This cell is commented out because the pre-trained weights are in 
+# Note: This cell is commented out because the pre-trained weights are in
 # TensorFlow checkpoint format, which is not compatible with Keras 3.
 # To run inference, train your own model and save weights in .weights.h5 format.
 
