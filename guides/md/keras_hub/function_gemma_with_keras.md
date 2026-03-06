@@ -1,19 +1,23 @@
-"""
-Title: Native Function Calling with FunctionGemma in KerasHub
-Author: [Laxmareddy Patlolla](https://github.com/laxmareddyp)
-Date created: 2026/02/24
-Last modified: 2026/02/25
-Description: A guide to using the function calling feature in KerasHub with FunctionGemma.
-Accelerator: GPU
-"""
+# Native Function Calling with FunctionGemma in KerasHub
 
-"""
+**Author:** [Laxmareddy Patlolla](https://github.com/laxmareddyp)<br>
+**Date created:** 2026/02/24<br>
+**Last modified:** 2026/02/25<br>
+**Description:** A guide to using the function calling feature in KerasHub with FunctionGemma.
+
+
+<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/guides/ipynb/keras_hub/function_gemma_with_keras.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/guides/keras_hub/function_gemma_with_keras.py)
+
+
+
+---
 ## Introduction
 
 This example demonstrates how to build a multi-tool AI Assistant using FunctionGemma native
 function calling capabilities in KerasHub. The Assistant can execute multiple tools
 including web search, stock prices, world time, and system stats.
 
+---
 ## Overview
 
 Function calling enables language models to interact with
@@ -21,6 +25,7 @@ external APIs and tools by generating structured function calls. This implementa
 uses FunctionGemma native function calling format with proper tool declarations and
 function call parsing.
 
+---
 ## Architecture
 
 The Assistant follows this flow:
@@ -32,6 +37,7 @@ The Assistant follows this flow:
 -  **Execution**: Execute the corresponding Python function
 -  **Response**: Return formatted results to the user
 
+---
 ## Key Components
 
 - `TOOL_DEFINITIONS`: Function Calling Format tool schemas
@@ -39,6 +45,7 @@ The Assistant follows this flow:
 - `parse_function_call()`: Extract function calls from model output
 - `TOOLS`: Registry mapping tool names to Python functions
 
+---
 ## Setup
 Before starting this tutorial, complete the following steps:
 ```
@@ -56,9 +63,11 @@ Generate a `Kaggle Access Token` by visiting kaggle [settings](https://www.kaggl
 
 This notebook will run on either CPU or GPU.
 
+---
 ## Install Python packages
-"""
 
+
+```python
 import os
 import datetime
 import psutil
@@ -72,21 +81,23 @@ import warnings
 warnings.filterwarnings("ignore")
 
 os.environ["KERAS_BACKEND"] = "jax"
+```
 
-"""
 # Tool Implementations
 
 We'll start by defining the actual Python functions that our Assistant will be able
 to call. Each of these functions represents a "tool" that extends the model's
 capabilities beyond just text generation.
 
+---
 ## Web Search Tool
 
 This function allows the model to search the web for information using DuckDuckGo.
 In a real application, you might use more sophisticated search APIs or custom
 search implementations tailored to your domain.
-"""
 
+
+```python
 
 def web_search(query, max_results=5):
     """Search the web using DuckDuckGo.
@@ -115,15 +126,17 @@ def web_search(query, max_results=5):
         return {"error": f"Search failed: {str(e)}"}
     return {"results": results}
 
+```
 
-"""
+---
 ## Stock Price Tool
 
 This function retrieves real-time stock prices from Yahoo Finance. The model
 can use this to answer questions about current market prices for publicly
 traded companies.
-"""
 
+
+```python
 
 def get_stock_price(symbol):
     """Get real-time stock price from Yahoo Finance.
@@ -150,14 +163,16 @@ def get_stock_price(symbol):
     except Exception as e:
         return {"error": f"Failed to get stock price for '{symbol}'. Reason: {e}"}
 
+```
 
-"""
+---
 ## System Statistics Tool
 
 This function provides information about the current system's CPU and memory
 usage. It demonstrates how the model can interact with the local environment.
-"""
 
+
+```python
 
 def get_system_stats(**kwargs):
     """Get CPU and memory usage.
@@ -174,15 +189,17 @@ def get_system_stats(**kwargs):
         "total_gb": round(mem.total / 1e9, 2),
     }
 
+```
 
-"""
+---
 ## Time and Timezone Helpers
 
 These functions work together to provide accurate time information for locations
 worldwide. We maintain a mapping of common locations to their timezone identifiers,
 then use Python's pytz library to calculate the current time.
-"""
 
+
+```python
 
 TIMEZONE_MAP = {
     # Countries
@@ -253,15 +270,17 @@ def get_timezone_for_location(location):
     loc = location.lower().strip()
     return TIMEZONE_MAP.get(loc)
 
+```
 
-"""
+---
 ## World Time Tool
 
 This function gets the current time for a specific location. It uses the
 helper function `get_timezone_for_location` to determine the correct timezone
 and then returns the formatted time, date, and day.
-"""
 
+
+```python
 
 def get_current_time(time_location=None):
     """Get current time for a location."""
@@ -293,8 +312,9 @@ def get_current_time(time_location=None):
     except Exception as e:
         return {"error": str(e)}
 
+```
 
-"""
+---
 ## Tool Definitions (Function Calling Format)
 
 Now we need to tell the model about these tools. We do this by defining tool
@@ -305,8 +325,9 @@ schemas in a format that the model can understand. Each tool definition includes
 - Parameters: The arguments the function accepts
 
 This format follows the standard function calling convention used by FunctionGemma.
-"""
 
+
+```python
 TOOL_DEFINITIONS = [
     {
         "type": "function",
@@ -365,8 +386,9 @@ TOOL_DEFINITIONS = [
         },
     },
 ]
+```
 
-"""
+---
 ## Tool Registry
 
 This dictionary maps tool names (as strings) to their actual Python function
@@ -375,8 +397,9 @@ we use this registry to look up and execute the corresponding Python function.
 
 This pattern allows for dynamic tool execution - we can easily add or remove tools
 by updating both `TOOL_DEFINITIONS` and this registry.
-"""
 
+
+```python
 # Tool registry
 TOOLS = {
     "web_search": web_search,
@@ -384,8 +407,9 @@ TOOLS = {
     "get_current_time": get_current_time,
     "get_system_stats": get_system_stats,
 }
+```
 
-"""
+---
 ## Helper Functions For Function Calling
 
 The following functions handle the mechanics of function calling:
@@ -395,13 +419,15 @@ The following functions handle the mechanics of function calling:
 -  Constructing the full conversation prompt
 -  Formatting tool results for display
 
+---
 ## Function Call Parser
 
 This function is responsible for extracting the structured function call from
 the model's text output. It looks for the special `<start_function_call>` tags
 and parses the function name and arguments into a Python dictionary.
-"""
 
+
+```python
 
 FUNCTION_CALL_PATTERN = re.compile(
     r"<start_function_call>call:(\w+)\{([^}]*)\}<end_function_call>"
@@ -453,15 +479,17 @@ def parse_function_call(output):
 
     return {"name": tool_name, "arguments": args}
 
+```
 
-"""
+---
 ## Tool Declaration Formatter
 
 This function converts our Python tool definitions into the specific format
 expected by `FunctionGemma`. It handles the mapping of types and descriptions to the
 `declaration:..` string format used in the system prompt.
-"""
 
+
+```python
 
 def format_tool_declaration(tool):
     """Format a tool declaration for FunctionGemma function calling."""
@@ -498,8 +526,9 @@ def format_tool_declaration(tool):
 
     return declaration
 
+```
 
-"""
+---
 ## Prompt Constructor
 
 This is the core function for building the prompt. It combines:
@@ -508,8 +537,9 @@ This is the core function for building the prompt. It combines:
 -  Few-shot examples to guide the model
 -  The conversation history (user and assistant messages)
 -  The final generation prompt
-"""
 
+
+```python
 
 def format_prompt_with_tools(messages, tools):
     """Manually construct FunctionGemma function calling prompt.
@@ -574,15 +604,17 @@ def format_prompt_with_tools(messages, tools):
 
     return prompt
 
+```
 
-"""
+---
 ## Tool Response Formatter
 
 After a tool is executed, this function formats the result back into a string
 that can be displayed to the user or fed back into the model. It handles
 specific formatting for different tools (like adding currency to stock prices).
-"""
 
+
+```python
 
 def format_tool_response(tool_name, result):
     """Format tool result for conversation."""
@@ -613,8 +645,8 @@ def format_tool_response(tool_name, result):
 
     return str(result)
 
+```
 
-"""
 # Interactive Chat Loop
 
 This section implements the main conversation loop. The agent:
@@ -627,6 +659,7 @@ This section implements the main conversation loop. The agent:
 After each successful tool execution, we clear the conversation history to
 prevent token overflow and keep the model focused.
 
+---
 ## Model Loading
 
 This function loads the FunctionGemma, a specialized version of our Gemma 3 270M model tuned for function calling using KerasHub's `from_preset` method.
@@ -635,8 +668,9 @@ or from a local path if you've downloaded the model to your machine.
 
 Update the path to match your model location. The model is loaded once at
 startup and then used throughout the chat session.
-"""
 
+
+```python
 
 def load_model():
     """Load FunctionGemma 270M model."""
@@ -645,8 +679,8 @@ def load_model():
     print("Model loaded!\n")
     return model
 
+```
 
-"""
 This is the main function that runs the interactive conversation with the user.
 
 It handles the complete cycle of:
@@ -660,8 +694,9 @@ It handles the complete cycle of:
 -  Managing conversation history to prevent token overflow
 
 The loop continues until the user types 'exit', 'quit', or 'q'.
-"""
 
+
+```python
 
 def chat(model):
     """Main chat loop with native function calling."""
@@ -769,22 +804,24 @@ def chat(model):
             messages.pop()  # Remove user message on error
             continue
 
+```
 
-"""
 This is where the program starts execution. When you run this script:
 
 -  The FunctionGemma model is loaded from the specified path
 -  The interactive chat loop begins, waiting for user input
 -  The Assistant processes queries and executes tools until the user types 'exit'
-"""
 
-# if __name__ == "__main__":
-#    model = load_model()
-#   chat(model)
 
-"""
+```python
+ if __name__ == "__main__":
+    model = load_model()
+    chat(model)
+```
+
 # Conclusion
 
+---
 ## What You've Achieved
 
 By following this guide, you've learned how to build a production-ready AI Assistant with
@@ -823,6 +860,7 @@ This pattern can be extended to build:
 - Personal productivity Assistants with calendar and email integration
 - Domain-specific assistants (medical, legal, financial) with specialized tools
 
+---
 ## Key Takeaways
 
 - **Small models can be powerful**: Even a 270M parameter model can reliably use tools
@@ -834,6 +872,7 @@ This pattern can be extended to build:
 - **Function calling is composable**: The same pattern works for any number of tools,
   making it easy to extend your Assistant's capabilities.
 
+---
 ## Next Steps
 
 To further improve this agent, consider:
@@ -845,4 +884,3 @@ To further improve this agent, consider:
 - Adding more sophisticated error recovery strategies.
 
 Happy building! 🚀
-"""
