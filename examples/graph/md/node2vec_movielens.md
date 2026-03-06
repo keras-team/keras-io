@@ -329,16 +329,16 @@ for group in tqdm(
 ```
 
     
-Compute movie rating frequencies:   0%|                                                                               | 0/573 [00:00<?, ?it/s]
+Compute movie rating frequencies:   0%|                                                                                      | 0/573 [00:00<?, ?it/s]
 
     
-Compute movie rating frequencies:  49%|█████████████████████████████████                                  | 283/573 [00:00<00:00, 2654.37it/s]
+Compute movie rating frequencies:  49%|████████████████████████████████████▌                                     | 283/573 [00:00<00:00, 2665.28it/s]
 
     
-Compute movie rating frequencies:  96%|████████████████████████████████████████████████████████████████▏  | 549/573 [00:00<00:00, 2520.45it/s]
+Compute movie rating frequencies:  96%|███████████████████████████████████████████████████████████████████████   | 550/573 [00:00<00:00, 2460.74it/s]
 
     
-Compute movie rating frequencies: 100%|███████████████████████████████████████████████████████████████████| 573/573 [00:00<00:00, 2322.37it/s]
+Compute movie rating frequencies: 100%|██████████████████████████████████████████████████████████████████████████| 573/573 [00:00<00:00, 2288.26it/s]
 
     
 
@@ -372,16 +372,16 @@ for pair in tqdm(
 ```
 
     
-Creating the movie graph:   0%|                                                                                    | 0/298586 [00:00<?, ?it/s]
+Creating the movie graph:   0%|                                                                                           | 0/298586 [00:00<?, ?it/s]
 
     
-Creating the movie graph:  42%|███████████████████████████▌                                      | 124515/298586 [00:00<00:00, 1245097.75it/s]
+Creating the movie graph:  46%|█████████████████████████████████▍                                       | 136673/298586 [00:00<00:00, 1366688.94it/s]
 
     
-Creating the movie graph:  89%|██████████████████████████████████████████████████████████▉       | 266765/298586 [00:00<00:00, 1349428.26it/s]
+Creating the movie graph:  99%|████████████████████████████████████████████████████████████████████████▎| 295749/298586 [00:00<00:00, 1498456.83it/s]
 
     
-Creating the movie graph: 100%|██████████████████████████████████████████████████████████████████| 298586/298586 [00:00<00:00, 1355053.16it/s]
+Creating the movie graph: 100%|█████████████████████████████████████████████████████████████████████████| 298586/298586 [00:00<00:00, 1476425.78it/s]
 
     
 
@@ -477,7 +477,12 @@ def random_walk(graph, num_walks, num_steps, p, q):
     nodes = list(graph.nodes())
     for walk_iteration in range(num_walks):
         random.shuffle(nodes)
-        for node in tqdm(nodes, desc=f"Random walks iteration {walk_iteration + 1}"):
+        for node in tqdm(
+            nodes,
+            desc=f"Random walks iteration {walk_iteration + 1}",
+            leave=False,
+            mininterval=1.0,
+        ):
             walk = [node]
             while len(walk) < num_steps:
                 current = walk[-1]
@@ -510,259 +515,64 @@ print("Number of walks generated:", len(walks))
 ```
 
     
-Random walks iteration 1:   0%|                                                                                      | 0/1405 [00:00<?, ?it/s]
+Random walks iteration 1:   0%|                                                                                             | 0/1405 [00:00<?, ?it/s]
 
     
-Random walks iteration 1:   6%|████▏                                                                       | 78/1405 [00:00<00:01, 770.26it/s]
+Random walks iteration 1:  72%|█████████████████████████████████████████████████████████▌                      | 1012/1405 [00:01<00:00, 1011.26it/s]
 
     
-Random walks iteration 1:  11%|████████▍                                                                  | 159/1405 [00:00<00:01, 791.24it/s]
-
-    
-Random walks iteration 1:  17%|████████████▊                                                              | 240/1405 [00:00<00:01, 796.93it/s]
-
-    
-Random walks iteration 1:  24%|██████████████████                                                         | 339/1405 [00:00<00:01, 869.95it/s]
-
-    
-Random walks iteration 1:  31%|███████████████████████▍                                                   | 438/1405 [00:00<00:01, 912.00it/s]
-
-    
-Random walks iteration 1:  39%|████████████████████████████▉                                              | 542/1405 [00:00<00:00, 952.69it/s]
-
-    
-Random walks iteration 1:  45%|██████████████████████████████████                                         | 639/1405 [00:00<00:00, 955.77it/s]
-
-    
-Random walks iteration 1:  52%|███████████████████████████████████████▏                                   | 735/1405 [00:00<00:00, 951.24it/s]
-
-    
-Random walks iteration 1:  59%|████████████████████████████████████████████▌                              | 835/1405 [00:00<00:00, 966.05it/s]
-
-    
-Random walks iteration 1:  66%|█████████████████████████████████████████████████▊                         | 932/1405 [00:01<00:00, 948.85it/s]
-
-    
-Random walks iteration 1:  73%|██████████████████████████████████████████████████████▏                   | 1029/1405 [00:01<00:00, 954.36it/s]
-
-    
-Random walks iteration 1:  80%|███████████████████████████████████████████████████████████▎              | 1127/1405 [00:01<00:00, 960.53it/s]
-
-    
-Random walks iteration 1:  87%|████████████████████████████████████████████████████████████████▌         | 1225/1405 [00:01<00:00, 966.30it/s]
-
-    
-Random walks iteration 1:  95%|█████████████████████████████████████████████████████████████████████▎   | 1334/1405 [00:01<00:00, 1000.41it/s]
-
-    
-Random walks iteration 1: 100%|██████████████████████████████████████████████████████████████████████████| 1405/1405 [00:01<00:00, 943.49it/s]
-
-    
-
-
-    
-Random walks iteration 2:   0%|                                                                                      | 0/1405 [00:00<?, ?it/s]
-
-    
-Random walks iteration 2:   7%|█████▏                                                                      | 96/1405 [00:00<00:01, 959.82it/s]
-
-    
-Random walks iteration 2:  14%|██████████▍                                                                | 195/1405 [00:00<00:01, 974.04it/s]
-
-    
-Random walks iteration 2:  21%|███████████████▋                                                           | 293/1405 [00:00<00:01, 974.90it/s]
-
-    
-Random walks iteration 2:  28%|████████████████████▉                                                      | 392/1405 [00:00<00:01, 980.83it/s]
-
-    
-Random walks iteration 2:  35%|██████████████████████████▏                                                | 491/1405 [00:00<00:00, 982.21it/s]
-
-    
-Random walks iteration 2:  42%|███████████████████████████████▍                                           | 590/1405 [00:00<00:00, 984.36it/s]
-
-    
-Random walks iteration 2:  49%|████████████████████████████████████▌                                     | 695/1405 [00:00<00:00, 1005.56it/s]
-
-    
-Random walks iteration 2:  57%|██████████████████████████████████████████▍                                | 796/1405 [00:00<00:00, 992.63it/s]
-
-    
-Random walks iteration 2:  64%|███████████████████████████████████████████████▊                           | 896/1405 [00:00<00:00, 966.18it/s]
-
-    
-Random walks iteration 2:  71%|█████████████████████████████████████████████████████                      | 993/1405 [00:01<00:00, 963.92it/s]
-
-    
-Random walks iteration 2:  78%|█████████████████████████████████████████████████████████▍                | 1091/1405 [00:01<00:00, 966.43it/s]
-
-    
-Random walks iteration 2:  85%|██████████████████████████████████████████████████████████████▌           | 1188/1405 [00:01<00:00, 966.60it/s]
-
-    
-Random walks iteration 2:  92%|███████████████████████████████████████████████████████████████████▊      | 1288/1405 [00:01<00:00, 973.54it/s]
-
-    
-Random walks iteration 2:  99%|████████████████████████████████████████████████████████████████████████▉ | 1386/1405 [00:01<00:00, 959.81it/s]
-
-    
-Random walks iteration 2: 100%|██████████████████████████████████████████████████████████████████████████| 1405/1405 [00:01<00:00, 971.91it/s]
-
-    
-
-
-    
-Random walks iteration 3:   0%|                                                                                      | 0/1405 [00:00<?, ?it/s]
-
-    
-Random walks iteration 3:   7%|█████▏                                                                      | 95/1405 [00:00<00:01, 946.17it/s]
-
-    
-Random walks iteration 3:  14%|██████████▌                                                                | 198/1405 [00:00<00:01, 993.42it/s]
-
-    
-Random walks iteration 3:  21%|███████████████▉                                                           | 298/1405 [00:00<00:01, 988.51it/s]
-
-    
-Random walks iteration 3:  28%|█████████████████████▎                                                     | 399/1405 [00:00<00:01, 992.78it/s]
-
-    
-Random walks iteration 3:  36%|██████████████████████████▋                                                | 499/1405 [00:00<00:00, 954.35it/s]
-
-    
-Random walks iteration 3:  43%|███████████████████████████████▉                                           | 599/1405 [00:00<00:00, 969.08it/s]
-
-    
-Random walks iteration 3:  50%|█████████████████████████████████████▏                                     | 697/1405 [00:00<00:00, 947.02it/s]
-
-    
-Random walks iteration 3:  56%|██████████████████████████████████████████▎                                | 792/1405 [00:00<00:00, 927.55it/s]
-
-    
-Random walks iteration 3:  64%|███████████████████████████████████████████████▋                           | 893/1405 [00:00<00:00, 949.68it/s]
-
-    
-Random walks iteration 3:  70%|████████████████████████████████████████████████████▊                      | 989/1405 [00:01<00:00, 941.90it/s]
-
-    
-Random walks iteration 3:  77%|█████████████████████████████████████████████████████████                 | 1084/1405 [00:01<00:00, 910.75it/s]
-
-    
-Random walks iteration 3:  84%|█████████████████████████████████████████████████████████████▉            | 1176/1405 [00:01<00:00, 897.82it/s]
-
-    
-Random walks iteration 3:  90%|██████████████████████████████████████████████████████████████████▉       | 1271/1405 [00:01<00:00, 912.81it/s]
-
-    
-Random walks iteration 3:  97%|███████████████████████████████████████████████████████████████████████▉  | 1366/1405 [00:01<00:00, 922.46it/s]
-
-    
-Random walks iteration 3: 100%|██████████████████████████████████████████████████████████████████████████| 1405/1405 [00:01<00:00, 936.88it/s]
-
-    
-
-
-    
-Random walks iteration 4:   0%|                                                                                      | 0/1405 [00:00<?, ?it/s]
-
-    
-Random walks iteration 4:   7%|█████▏                                                                      | 97/1405 [00:00<00:01, 969.40it/s]
-
-    
-Random walks iteration 4:  14%|██████████▎                                                                | 194/1405 [00:00<00:01, 967.55it/s]
-
-    
-Random walks iteration 4:  21%|███████████████▌                                                           | 291/1405 [00:00<00:01, 934.53it/s]
-
-    
-Random walks iteration 4:  28%|█████████████████████▏                                                     | 396/1405 [00:00<00:01, 975.60it/s]
-
-    
-Random walks iteration 4:  35%|██████████████████████████▎                                                | 494/1405 [00:00<00:00, 963.33it/s]
-
-    
-Random walks iteration 4:  42%|███████████████████████████████▋                                           | 594/1405 [00:00<00:00, 975.50it/s]
-
-    
-Random walks iteration 4:  49%|████████████████████████████████████▉                                      | 692/1405 [00:00<00:00, 966.69it/s]
-
-    
-Random walks iteration 4:  56%|██████████████████████████████████████████▎                                | 792/1405 [00:00<00:00, 973.46it/s]
-
-    
-Random walks iteration 4:  63%|███████████████████████████████████████████████▌                           | 890/1405 [00:00<00:00, 959.86it/s]
-
-    
-Random walks iteration 4:  70%|████████████████████████████████████████████████████▊                      | 989/1405 [00:01<00:00, 967.23it/s]
-
-    
-Random walks iteration 4:  77%|█████████████████████████████████████████████████████████▏                | 1086/1405 [00:01<00:00, 955.65it/s]
-
-    
-Random walks iteration 4:  84%|██████████████████████████████████████████████████████████████▎           | 1182/1405 [00:01<00:00, 910.11it/s]
-
-    
-Random walks iteration 4:  91%|███████████████████████████████████████████████████████████████████▎      | 1278/1405 [00:01<00:00, 924.06it/s]
-
-    
-Random walks iteration 4:  98%|████████████████████████████████████████████████████████████████████████▏ | 1371/1405 [00:01<00:00, 832.62it/s]
-
-    
-Random walks iteration 4: 100%|██████████████████████████████████████████████████████████████████████████| 1405/1405 [00:01<00:00, 922.70it/s]
-
-    
-
-
-    
-Random walks iteration 5:   0%|                                                                                      | 0/1405 [00:00<?, ?it/s]
-
-    
-Random walks iteration 5:   7%|█████▏                                                                      | 96/1405 [00:00<00:01, 956.28it/s]
-
-    
-Random walks iteration 5:  14%|██████████▏                                                                | 192/1405 [00:00<00:01, 915.95it/s]
-
-    
-Random walks iteration 5:  21%|███████████████▍                                                           | 289/1405 [00:00<00:01, 939.39it/s]
-
-    
-Random walks iteration 5:  28%|████████████████████▊                                                      | 389/1405 [00:00<00:01, 960.28it/s]
-
-    
-Random walks iteration 5:  35%|██████████████████████████                                                 | 489/1405 [00:00<00:00, 974.25it/s]
-
-    
-Random walks iteration 5:  42%|███████████████████████████████▎                                           | 587/1405 [00:00<00:00, 971.52it/s]
-
-    
-Random walks iteration 5:  49%|████████████████████████████████████▌                                      | 685/1405 [00:00<00:00, 957.60it/s]
-
-    
-Random walks iteration 5:  56%|█████████████████████████████████████████▋                                 | 781/1405 [00:00<00:00, 956.02it/s]
-
-    
-Random walks iteration 5:  62%|██████████████████████████████████████████████▊                            | 878/1405 [00:00<00:00, 959.40it/s]
-
-    
-Random walks iteration 5:  70%|████████████████████████████████████████████████████▏                      | 978/1405 [00:01<00:00, 971.70it/s]
-
-    
-Random walks iteration 5:  77%|████████████████████████████████████████████████████████▋                 | 1076/1405 [00:01<00:00, 961.12it/s]
-
-    
-Random walks iteration 5:  84%|█████████████████████████████████████████████████████████████▉            | 1177/1405 [00:01<00:00, 974.51it/s]
-
-    
-Random walks iteration 5:  91%|███████████████████████████████████████████████████████████████████▏      | 1275/1405 [00:01<00:00, 965.41it/s]
-
-    
-Random walks iteration 5:  98%|████████████████████████████████████████████████████████████████████████▎ | 1372/1405 [00:01<00:00, 958.60it/s]
-
-    
-Random walks iteration 5: 100%|██████████████████████████████████████████████████████████████████████████| 1405/1405 [00:01<00:00, 959.98it/s]
-
 <div class="k-default-codeblock">
 ```
+                                                                                                                                                 
+```
+</div>
+
+Random walks iteration 2:   0%|                                                                                             | 0/1405 [00:00<?, ?it/s]
+
+    
+Random walks iteration 2:  72%|█████████████████████████████████████████████████████████▊                      | 1016/1405 [00:01<00:00, 1015.77it/s]
+
+    
+<div class="k-default-codeblock">
+```
+                                                                                                                                                 
+```
+</div>
+
+Random walks iteration 3:   0%|                                                                                             | 0/1405 [00:00<?, ?it/s]
+
+    
+Random walks iteration 3:  75%|████████████████████████████████████████████████████████████                    | 1054/1405 [00:01<00:00, 1053.31it/s]
+
+    
+<div class="k-default-codeblock">
+```
+                                                                                                                                                 
+```
+</div>
+
+Random walks iteration 4:   0%|                                                                                             | 0/1405 [00:00<?, ?it/s]
+
+    
+Random walks iteration 4:  74%|██████████████████████████████████████████████████████████▊                     | 1033/1405 [00:01<00:00, 1032.74it/s]
+
+    
+<div class="k-default-codeblock">
+```
+                                                                                                                                                 
+```
+</div>
+
+Random walks iteration 5:   0%|                                                                                             | 0/1405 [00:00<?, ?it/s]
+
+    
+Random walks iteration 5:  74%|███████████████████████████████████████████████████████████                     | 1037/1405 [00:01<00:00, 1035.86it/s]
+
+    
+<div class="k-default-codeblock">
+```
+                                                                                                                                                 
+
 Number of walks generated: 7025
 ```
 </div>
@@ -827,7 +637,12 @@ def generate_examples(sequences, window_size, num_negative_samples, vocabulary_s
     example_weights = defaultdict(int)
 
     # Iterate over all walks
-    for sequence in tqdm(sequences, desc="Generating positive and negative examples"):
+    for sequence in tqdm(
+        sequences,
+        desc="Generating positive and negative examples",
+        leave=False,
+        mininterval=1.0,
+    ):
         # Use our manual skipgrams function
         pairs, labels = manual_skipgrams(
             sequence,
@@ -872,172 +687,29 @@ targets, contexts, labels, weights = generate_examples(
 ```
 
     
-Generating positive and negative examples:   0%|                                                                     | 0/7025 [00:00<?, ?it/s]
+Generating positive and negative examples:   0%|                                                                            | 0/7025 [00:00<?, ?it/s]
 
     
-Generating positive and negative examples:   2%|█▏                                                       | 149/7025 [00:00<00:04, 1480.47it/s]
+Generating positive and negative examples:  19%|███████████▊                                                   | 1320/7025 [00:01<00:04, 1319.75it/s]
 
     
-Generating positive and negative examples:   4%|██▍                                                      | 298/7025 [00:00<00:04, 1477.76it/s]
+Generating positive and negative examples:  38%|████████████████████████▏                                      | 2700/7025 [00:02<00:03, 1354.92it/s]
 
     
-Generating positive and negative examples:   6%|███▌                                                     | 446/7025 [00:00<00:04, 1471.28it/s]
+Generating positive and negative examples:  58%|████████████████████████████████████▎                          | 4055/7025 [00:03<00:02, 1351.41it/s]
 
     
-Generating positive and negative examples:   8%|████▊                                                    | 594/7025 [00:00<00:04, 1444.59it/s]
+Generating positive and negative examples:  77%|████████████████████████████████████████████████▍              | 5407/7025 [00:04<00:01, 1339.05it/s]
 
     
-Generating positive and negative examples:  11%|█████▉                                                   | 739/7025 [00:00<00:04, 1310.46it/s]
+Generating positive and negative examples:  96%|████████████████████████████████████████████████████████████▌  | 6747/7025 [00:05<00:00, 1300.35it/s]
 
     
-Generating positive and negative examples:  12%|███████                                                  | 872/7025 [00:00<00:04, 1300.17it/s]
-
-    
-Generating positive and negative examples:  14%|████████                                                | 1004/7025 [00:00<00:05, 1060.46it/s]
-
-    
-Generating positive and negative examples:  16%|█████████                                               | 1143/7025 [00:00<00:05, 1145.10it/s]
-
-    
-Generating positive and negative examples:  18%|██████████▏                                             | 1276/7025 [00:01<00:04, 1194.00it/s]
-
-    
-Generating positive and negative examples:  20%|███████████▏                                            | 1411/7025 [00:01<00:04, 1236.20it/s]
-
-    
-Generating positive and negative examples:  22%|████████████▎                                           | 1546/7025 [00:01<00:04, 1267.97it/s]
-
-    
-Generating positive and negative examples:  24%|█████████████▍                                          | 1681/7025 [00:01<00:04, 1290.49it/s]
-
-    
-Generating positive and negative examples:  26%|██████████████▍                                         | 1816/7025 [00:01<00:03, 1305.88it/s]
-
-    
-Generating positive and negative examples:  28%|███████████████▌                                        | 1949/7025 [00:01<00:03, 1310.88it/s]
-
-    
-Generating positive and negative examples:  30%|████████████████▌                                       | 2083/7025 [00:01<00:03, 1316.91it/s]
-
-    
-Generating positive and negative examples:  32%|█████████████████▋                                      | 2217/7025 [00:01<00:03, 1321.22it/s]
-
-    
-Generating positive and negative examples:  33%|██████████████████▋                                     | 2350/7025 [00:01<00:03, 1322.42it/s]
-
-    
-Generating positive and negative examples:  35%|███████████████████▊                                    | 2484/7025 [00:01<00:03, 1325.62it/s]
-
-    
-Generating positive and negative examples:  37%|████████████████████▊                                   | 2617/7025 [00:02<00:03, 1322.78it/s]
-
-    
-Generating positive and negative examples:  39%|█████████████████████▉                                  | 2750/7025 [00:02<00:03, 1318.66it/s]
-
-    
-Generating positive and negative examples:  41%|██████████████████████▉                                 | 2883/7025 [00:02<00:03, 1313.22it/s]
-
-    
-Generating positive and negative examples:  43%|████████████████████████                                | 3015/7025 [00:02<00:03, 1314.43it/s]
-
-    
-Generating positive and negative examples:  45%|█████████████████████████                               | 3147/7025 [00:02<00:02, 1308.94it/s]
-
-    
-Generating positive and negative examples:  47%|██████████████████████████▏                             | 3278/7025 [00:02<00:02, 1304.27it/s]
-
-    
-Generating positive and negative examples:  49%|███████████████████████████▏                            | 3410/7025 [00:02<00:02, 1307.06it/s]
-
-    
-Generating positive and negative examples:  50%|████████████████████████████▏                           | 3541/7025 [00:02<00:02, 1306.07it/s]
-
-    
-Generating positive and negative examples:  52%|█████████████████████████████▎                          | 3672/7025 [00:02<00:02, 1305.56it/s]
-
-    
-Generating positive and negative examples:  54%|██████████████████████████████▎                         | 3803/7025 [00:02<00:02, 1305.49it/s]
-
-    
-Generating positive and negative examples:  56%|███████████████████████████████▎                        | 3934/7025 [00:03<00:02, 1305.95it/s]
-
-    
-Generating positive and negative examples:  58%|████████████████████████████████▍                       | 4065/7025 [00:03<00:02, 1240.41it/s]
-
-    
-Generating positive and negative examples:  60%|█████████████████████████████████▍                      | 4192/7025 [00:03<00:02, 1247.10it/s]
-
-    
-Generating positive and negative examples:  61%|██████████████████████████████████▍                     | 4319/7025 [00:03<00:02, 1252.92it/s]
-
-    
-Generating positive and negative examples:  63%|███████████████████████████████████▍                    | 4446/7025 [00:03<00:02, 1257.71it/s]
-
-    
-Generating positive and negative examples:  65%|████████████████████████████████████▍                   | 4573/7025 [00:03<00:01, 1257.47it/s]
-
-    
-Generating positive and negative examples:  67%|█████████████████████████████████████▍                  | 4699/7025 [00:03<00:01, 1249.81it/s]
-
-    
-Generating positive and negative examples:  69%|██████████████████████████████████████▍                 | 4825/7025 [00:03<00:01, 1247.82it/s]
-
-    
-Generating positive and negative examples:  70%|███████████████████████████████████████▍                | 4952/7025 [00:03<00:01, 1252.94it/s]
-
-    
-Generating positive and negative examples:  72%|████████████████████████████████████████▍               | 5080/7025 [00:03<00:01, 1258.48it/s]
-
-    
-Generating positive and negative examples:  74%|█████████████████████████████████████████▍              | 5206/7025 [00:04<00:01, 1256.32it/s]
-
-    
-Generating positive and negative examples:  76%|██████████████████████████████████████████▌             | 5333/7025 [00:04<00:01, 1258.27it/s]
-
-    
-Generating positive and negative examples:  78%|███████████████████████████████████████████▌            | 5461/7025 [00:04<00:01, 1263.60it/s]
-
-    
-Generating positive and negative examples:  80%|████████████████████████████████████████████▌           | 5589/7025 [00:04<00:01, 1268.09it/s]
-
-    
-Generating positive and negative examples:  81%|█████████████████████████████████████████████▌          | 5716/7025 [00:04<00:01, 1266.32it/s]
-
-    
-Generating positive and negative examples:  83%|██████████████████████████████████████████████▌         | 5843/7025 [00:04<00:00, 1264.77it/s]
-
-    
-Generating positive and negative examples:  85%|███████████████████████████████████████████████▌        | 5970/7025 [00:04<00:00, 1263.65it/s]
-
-    
-Generating positive and negative examples:  87%|████████████████████████████████████████████████▌       | 6097/7025 [00:04<00:00, 1262.36it/s]
-
-    
-Generating positive and negative examples:  89%|█████████████████████████████████████████████████▌      | 6224/7025 [00:04<00:00, 1031.00it/s]
-
-    
-Generating positive and negative examples:  90%|██████████████████████████████████████████████████▋     | 6351/7025 [00:05<00:00, 1091.13it/s]
-
-    
-Generating positive and negative examples:  92%|███████████████████████████████████████████████████▋    | 6479/7025 [00:05<00:00, 1140.10it/s]
-
-    
-Generating positive and negative examples:  94%|████████████████████████████████████████████████████▋   | 6603/7025 [00:05<00:00, 1166.60it/s]
-
-    
-Generating positive and negative examples:  96%|█████████████████████████████████████████████████████▋  | 6729/7025 [00:05<00:00, 1192.49it/s]
-
-    
-Generating positive and negative examples:  98%|██████████████████████████████████████████████████████▋ | 6853/7025 [00:05<00:00, 1204.79it/s]
-
-    
-Generating positive and negative examples:  99%|███████████████████████████████████████████████████████▌| 6976/7025 [00:05<00:00, 1206.19it/s]
-
-    
-Generating positive and negative examples: 100%|████████████████████████████████████████████████████████| 7025/7025 [00:05<00:00, 1257.73it/s]
-
-    
-
+<div class="k-default-codeblock">
+```
+                                                                                                                                                 
+```
+</div>
 
 Let's display the shapes of the outputs
 
@@ -1169,7 +841,11 @@ keras.utils.plot_model(
 )
 ```
 
-![png](/img/examples/graph/node2vec_movielens/node2vec_movielens_44_0.png)
+<div class="k-default-codeblock">
+```
+You must install graphviz (see instructions at https://graphviz.gitlab.io/download/) for `plot_model` to work.
+```
+</div>
 
 Now we train the model on the `dataset`.
 

@@ -274,7 +274,12 @@ def random_walk(graph, num_walks, num_steps, p, q):
     nodes = list(graph.nodes())
     for walk_iteration in range(num_walks):
         random.shuffle(nodes)
-        for node in tqdm(nodes, desc=f"Random walks iteration {walk_iteration + 1}"):
+        for node in tqdm(
+            nodes,
+            desc=f"Random walks iteration {walk_iteration + 1}",
+            leave=False,
+            mininterval=1.0,
+        ):
             walk = [node]
             while len(walk) < num_steps:
                 current = walk[-1]
@@ -363,7 +368,12 @@ def generate_examples(sequences, window_size, num_negative_samples, vocabulary_s
     example_weights = defaultdict(int)
 
     # Iterate over all walks
-    for sequence in tqdm(sequences, desc="Generating positive and negative examples"):
+    for sequence in tqdm(
+        sequences,
+        desc="Generating positive and negative examples",
+        leave=False,
+        mininterval=1.0,
+    ):
         # Use our manual skipgrams function
         pairs, labels = manual_skipgrams(
             sequence,
