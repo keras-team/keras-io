@@ -185,7 +185,11 @@ def load_flower_file_paths(validation_split=0.1):
     extracted = Path(keras.utils.get_file(origin=FLOWERS_URL, untar=True))
     # keras.utils.get_file(untar=True) returns the extraction cache directory,
     # not the inner flower_photos/ folder. Navigate into it when needed.
-    data_dir = extracted / "flower_photos" if (extracted / "flower_photos").is_dir() else extracted
+    data_dir = (
+        extracted / "flower_photos"
+        if (extracted / "flower_photos").is_dir()
+        else extracted
+    )
     class_names = sorted([p.name for p in data_dir.iterdir() if p.is_dir()])
     class_to_index = {name: idx for idx, name in enumerate(class_names)}
 
@@ -200,9 +204,7 @@ def load_flower_file_paths(validation_split=0.1):
         val_paths.extend(class_files[:num_val])
         val_labels.extend([class_to_index[class_name]] * num_val)
         train_paths.extend(class_files[num_val:])
-        train_labels.extend(
-            [class_to_index[class_name]] * (len(class_files) - num_val)
-        )
+        train_labels.extend([class_to_index[class_name]] * (len(class_files) - num_val))
 
     return train_paths, train_labels, val_paths, val_labels
 
