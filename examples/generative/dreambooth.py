@@ -1,10 +1,10 @@
 """
-# DreamBooth
-
-**Author:** [Sayak Paul](https://twitter.com/RisingSayak), [Chansung Park](https://twitter.com/algo_diver)<br>
-**Date created:** 2023/02/01<br>
-**Last modified:** 2026/03/06<br>
-**Description:** Implementing DreamBooth.
+Title: DreamBooth
+Author: [Sayak Paul](https://twitter.com/RisingSayak), [Chansung Park](https://twitter.com/algo_diver)
+Date created: 2023/02/01
+Last modified: 2026/03/06
+Description: Implementing DreamBooth.
+Accelerator: GPU
 """
 
 """
@@ -28,8 +28,7 @@ help you to get familiarized quickly:
 
 
 """
-If you're running the code, please ensure you're using a GPU with at least 80 GBs of
-VRAM.
+This example is resource-intensive. For reliable execution, use a GPU with at least 80 GB of VRAM.
 """
 
 
@@ -44,7 +43,6 @@ import keras
 import keras_hub
 import matplotlib.pyplot as plt
 import numpy as np
-import tensorflow as tf
 from imutils import paths
 
 
@@ -143,27 +141,24 @@ images.
 """
 
 
-new_instance_image_paths = []
-for index in range(len(class_image_paths)):
-    instance_image = instance_image_paths[index % len(instance_image_paths)]
-    new_instance_image_paths.append(instance_image)
+new_instance_image_paths = [
+    instance_image_paths[index % len(instance_image_paths)]
+    for index in range(len(class_image_paths))
+]
+instance_count = len(new_instance_image_paths)
+class_count = len(class_image_paths)
 
 unique_id = "sks"
 class_label = "dog"
 
 instance_prompt = f"a photo of {unique_id} {class_label}"
-instance_prompts = [instance_prompt] * len(new_instance_image_paths)
-
 class_prompt = f"a photo of {class_label}"
-class_prompts = [class_prompt] * len(class_image_paths)
 
 
 """
 Next, we embed the prompts to save some compute.
 """
 
-
-import itertools
 
 print("Loading Stable Diffusion 3 (will be reused for training)...")
 sd3_backbone = keras_hub.models.StableDiffusion3Backbone.from_preset(
@@ -176,7 +171,7 @@ sd3_preprocessor = keras_hub.models.StableDiffusion3TextToImagePreprocessor.from
 
 unique_prompts = [instance_prompt, class_prompt]
 print(
-    f"Encoding {len(unique_prompts)} unique prompts (instead of {len(instance_prompts) + len(class_prompts)})..."
+    f"Encoding {len(unique_prompts)} unique prompts (instead of {instance_count + class_count})..."
 )
 
 token_ids = sd3_preprocessor.generate_preprocess(unique_prompts)
@@ -194,22 +189,21 @@ class_embedding = positive_embeddings[1:2]
 instance_pooled = positive_pooled[0:1]
 class_pooled_single = positive_pooled[1:2]
 
-instance_embedded_texts = np.tile(
-    instance_embedding, (len(new_instance_image_paths), 1, 1)
-)
-class_embedded_texts = np.tile(class_embedding, (len(class_image_paths), 1, 1))
-instance_pooled_embeddings = np.tile(
-    instance_pooled, (len(new_instance_image_paths), 1)
-)
-class_pooled_embeddings = np.tile(class_pooled_single, (len(class_image_paths), 1))
+def repeat_embedding(embedding, count):
+    return np.repeat(embedding, count, axis=0)
 
-embedded_text = np.concatenate([instance_embedded_texts, class_embedded_texts], axis=0)
-pooled_embeddings = np.concatenate(
-    [instance_pooled_embeddings, class_pooled_embeddings], axis=0
-)
 
-print(f"Text embeddings shape: {embedded_text.shape}")
-print(f"Pooled embeddings shape: {pooled_embeddings.shape}")
+instance_embedded_texts = repeat_embedding(instance_embedding, instance_count)
+class_embedded_texts = repeat_embedding(class_embedding, class_count)
+instance_pooled_embeddings = repeat_embedding(instance_pooled, instance_count)
+class_pooled_embeddings = repeat_embedding(class_pooled_single, class_count)
+
+print(
+    f"Text embedding shapes: {instance_embedded_texts.shape}, {class_embedded_texts.shape}"
+)
+print(
+    f"Pooled embedding shapes: {instance_pooled_embeddings.shape}, {class_pooled_embeddings.shape}"
+)
 
 
 """
@@ -246,7 +240,7 @@ class DreamBoothDataset(keras.utils.PyDataset):
         batch_size=1,
         shuffle=True,
         seed=42,
-        **kwargs,
+        **kwargs
     ):
         super().__init__(**kwargs)
         self.instance_image_paths = instance_image_paths
@@ -274,46 +268,49 @@ class DreamBoothDataset(keras.utils.PyDataset):
         if self.shuffle:
             self.rng.shuffle(self.indices)
 
+    def _get_batch_indices(self, batch_indices, num_items=None):
+        if num_items is None:
+            return batch_indices
+        return [index % num_items for index in batch_indices]
+
+    def _load_batch_images(self, image_paths, batch_indices, repeat=False):
+        indices = self._get_batch_indices(
+            batch_indices, len(image_paths) if repeat else None
+        )
+        images = [
+            keras.utils.img_to_array(
+                keras.utils.load_img(
+                    image_paths[index], target_size=(resolution, resolution)
+                )
+            )
+            for index in indices
+        ]
+        return np.array(images)
+
+    def _gather_batch(self, values, batch_indices, repeat=False):
+        indices = self._get_batch_indices(batch_indices, len(values) if repeat else None)
+        return np.array([values[index] for index in indices])
+
     def __getitem__(self, idx):
         """Generate one batch of data."""
         batch_indices = self.indices[
             idx * self.batch_size : (idx + 1) * self.batch_size
         ]
 
-        instance_images = []
-        for i in batch_indices:
-            img_idx = i % len(self.instance_image_paths)
-            img = keras.utils.load_img(
-                self.instance_image_paths[img_idx], target_size=(resolution, resolution)
-            )
-            instance_images.append(keras.utils.img_to_array(img))
-        instance_images = np.array(instance_images)
-
-        class_images = []
-        for i in batch_indices:
-            img = keras.utils.load_img(
-                self.class_image_paths[i], target_size=(resolution, resolution)
-            )
-            class_images.append(keras.utils.img_to_array(img))
-        class_images = np.array(class_images)
-
-        instance_embeds = np.array(
-            [
-                self.instance_embedded_texts[i % len(self.instance_image_paths)]
-                for i in batch_indices
-            ]
+        instance_images = self._load_batch_images(
+            self.instance_image_paths, batch_indices, repeat=True
         )
-        class_embeds = np.array([self.class_embedded_texts[i] for i in batch_indices])
+        class_images = self._load_batch_images(self.class_image_paths, batch_indices)
 
-        instance_pooled = np.array(
-            [
-                self.instance_pooled_embeddings[i % len(self.instance_image_paths)]
-                for i in batch_indices
-            ]
+        instance_embeds = self._gather_batch(
+            self.instance_embedded_texts, batch_indices, repeat=True
         )
-        class_pooled = np.array(
-            [self.class_pooled_embeddings[i] for i in batch_indices]
+        class_embeds = self._gather_batch(self.class_embedded_texts, batch_indices)
+
+        instance_pooled = self._gather_batch(
+            self.instance_pooled_embeddings, batch_indices, repeat=True
         )
+        class_pooled = self._gather_batch(self.class_pooled_embeddings, batch_indices)
 
         instance_images = self.augmenter(instance_images, training=True)
         class_images = self.augmenter(class_images, training=True)
@@ -340,10 +337,10 @@ class DreamBoothDataset(keras.utils.PyDataset):
 train_dataset = DreamBoothDataset(
     instance_image_paths=new_instance_image_paths,
     class_image_paths=class_image_paths,
-    instance_embedded_texts=embedded_text[: len(new_instance_image_paths)],
-    class_embedded_texts=embedded_text[len(new_instance_image_paths) :],
-    instance_pooled_embeddings=pooled_embeddings[: len(new_instance_image_paths)],
-    class_pooled_embeddings=pooled_embeddings[len(new_instance_image_paths) :],
+    instance_embedded_texts=instance_embedded_texts,
+    class_embedded_texts=class_embedded_texts,
+    instance_pooled_embeddings=instance_pooled_embeddings,
+    class_pooled_embeddings=class_pooled_embeddings,
     augmenter=augmenter,
     batch_size=1,
     shuffle=True,
@@ -443,13 +440,9 @@ class DreamBoothTrainer(keras.Model):
         )
         batch_size = keras.ops.shape(images)[0]
 
-        return self._compute_dreambooth_loss(
-            images, embedded_texts, pooled_embeddings, batch_size
-        )
+        return self._compute_dreambooth_loss(images, embedded_texts, pooled_embeddings, batch_size)
 
-    def _compute_dreambooth_loss(
-        self, images, embedded_texts, pooled_embeddings, batch_size
-    ):
+    def _compute_dreambooth_loss(self, images, embedded_texts, pooled_embeddings, batch_size):
         """Internal logic for DreamBooth loss (Flow Matching)."""
         latents = self.backbone.encode_image_step(images)
 
@@ -487,7 +480,9 @@ class DreamBoothTrainer(keras.Model):
 
     def _compute_split_loss(self, target, model_pred):
         """Compute split loss for instance and class images."""
-        model_pred, model_pred_prior = keras.ops.split(model_pred, 2, axis=0)
+        model_pred, model_pred_prior = keras.ops.split(
+            model_pred, 2, axis=0
+        )
         target, target_prior = keras.ops.split(target, 2, axis=0)
 
         target = keras.ops.cast(target, "float32")
@@ -512,9 +507,9 @@ class DreamBoothTrainer(keras.Model):
 """
 
 
-keras.mixed_precision.set_global_policy("mixed_float16")
-
 use_mp = True
+
+keras.mixed_precision.set_global_policy("mixed_float16")
 
 print("Reusing SD3 backbone from text encoding step...")
 
@@ -571,11 +566,6 @@ ckpt_callback = keras.callbacks.ModelCheckpoint(
     mode="min",
 )
 
-num_update_steps_per_epoch = len(train_dataset)
-max_train_steps = 1200
-epochs = math.ceil(max_train_steps / num_update_steps_per_epoch)
-print(f"Training for {epochs} epochs...")
-
 dreambooth_trainer.fit(train_dataset, epochs=epochs, callbacks=[ckpt_callback])
 
 
@@ -615,7 +605,11 @@ print(f"Generating images for prompt: '{prompt}'...")
 
 prompts = [prompt] * 3
 
-images_dreamboothed = dreambooth_model_512.generate(prompts, num_steps=100, seed=42)
+images_dreamboothed = dreambooth_model_512.generate(
+    prompts,
+    num_steps=100,
+    seed=42
+)
 
 images_dreamboothed = np.array(images_dreamboothed)
 if images_dreamboothed.ndim == 3:
