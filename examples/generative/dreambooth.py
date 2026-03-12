@@ -189,6 +189,7 @@ class_embedding = positive_embeddings[1:2]
 instance_pooled = positive_pooled[0:1]
 class_pooled_single = positive_pooled[1:2]
 
+
 def repeat_embedding(embedding, count):
     return np.repeat(embedding, count, axis=0)
 
@@ -240,7 +241,7 @@ class DreamBoothDataset(keras.utils.PyDataset):
         batch_size=1,
         shuffle=True,
         seed=42,
-        **kwargs
+        **kwargs,
     ):
         super().__init__(**kwargs)
         self.instance_image_paths = instance_image_paths
@@ -288,7 +289,9 @@ class DreamBoothDataset(keras.utils.PyDataset):
         return np.array(images)
 
     def _gather_batch(self, values, batch_indices, repeat=False):
-        indices = self._get_batch_indices(batch_indices, len(values) if repeat else None)
+        indices = self._get_batch_indices(
+            batch_indices, len(values) if repeat else None
+        )
         return np.array([values[index] for index in indices])
 
     def __getitem__(self, idx):
@@ -440,9 +443,13 @@ class DreamBoothTrainer(keras.Model):
         )
         batch_size = keras.ops.shape(images)[0]
 
-        return self._compute_dreambooth_loss(images, embedded_texts, pooled_embeddings, batch_size)
+        return self._compute_dreambooth_loss(
+            images, embedded_texts, pooled_embeddings, batch_size
+        )
 
-    def _compute_dreambooth_loss(self, images, embedded_texts, pooled_embeddings, batch_size):
+    def _compute_dreambooth_loss(
+        self, images, embedded_texts, pooled_embeddings, batch_size
+    ):
         """Internal logic for DreamBooth loss (Flow Matching)."""
         latents = self.backbone.encode_image_step(images)
 
@@ -480,9 +487,7 @@ class DreamBoothTrainer(keras.Model):
 
     def _compute_split_loss(self, target, model_pred):
         """Compute split loss for instance and class images."""
-        model_pred, model_pred_prior = keras.ops.split(
-            model_pred, 2, axis=0
-        )
+        model_pred, model_pred_prior = keras.ops.split(model_pred, 2, axis=0)
         target, target_prior = keras.ops.split(target, 2, axis=0)
 
         target = keras.ops.cast(target, "float32")
@@ -605,11 +610,7 @@ print(f"Generating images for prompt: '{prompt}'...")
 
 prompts = [prompt] * 3
 
-images_dreamboothed = dreambooth_model_512.generate(
-    prompts,
-    num_steps=100,
-    seed=42
-)
+images_dreamboothed = dreambooth_model_512.generate(prompts, num_steps=100, seed=42)
 
 images_dreamboothed = np.array(images_dreamboothed)
 if images_dreamboothed.ndim == 3:
