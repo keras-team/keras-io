@@ -2,9 +2,10 @@
 Title: Text Generation using FNet
 Author: [Darshan Deshpande](https://twitter.com/getdarshan)
 Date created: 2021/10/05
-Last modified: 2021/10/05
+Last modified: 2026/03/18
 Description: FNet transformer for text generation in Keras.
 Accelerator: GPU
+Converted to Keras 3 by: [Jasmine Dhantule](https://github.com/dhantule)
 """
 
 """
@@ -191,7 +192,7 @@ class FNetEncoder(layers.Layer):
         inp_imag = ops.zeros_like(inp_real)
 
         # Apply 2D FFT - returns tuple of (real, imaginary)
-        fft_real, fft_imag = ops.fft2((inp_real, inp_imag))
+        fft_real, fft_imag = ops.fft((inp_real, inp_imag))
         # Use only the real component
         proj_input = self.layernorm_1(inputs + fft_real)
         proj_output = self.dense_proj(proj_input)
@@ -321,7 +322,7 @@ fnet = create_model()
 fnet.compile("adam", loss="sparse_categorical_crossentropy", metrics=["accuracy"])
 
 """
-The model as configured here uses a simplified architecture to keep training time manageable for a tutorial. The text generation quality 
+The model as configured here uses a simplified architecture to keep training time manageable for a tutorial. The text generation quality
 will be limited - outputs may be generic.
 Although accuracy is not a good measure for this task, we will use it just to get a hint of the improvement
 of the network.
