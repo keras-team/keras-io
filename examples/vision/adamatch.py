@@ -2,7 +2,7 @@
 Title: Semi-supervision and domain adaptation with AdaMatch
 Author: [Sayak Paul](https://twitter.com/RisingSayak)
 Date created: 2021/06/19
-Last modified: 2026/03/12
+Last modified: 2026/03/26
 Description: Unifying semi-supervised learning and unsupervised domain adaptation with AdaMatch.
 Accelerator: GPU
 Converted to Keras 3 by: [Maitry Sinha](https://github.com/maitry63)
@@ -54,18 +54,25 @@ Popular domain adaptation algorithms in deep learning include
 
 """
 ## Setup
+
+To run this example, ensure you have the following dependencies installed:
+
+```shell
+pip install scipy pillow
+```
 """
 
 import os
 
-os.environ["KERAS_BACKEND"] = "tensorflow"
+os.environ["KERAS_BACKEND"] = "tensorflow"  # "jax" or "torch"
 
 import keras
 
 keras.utils.set_random_seed(42)
 
 import numpy as np
-from keras import layers, ops
+from keras import layers
+from keras import ops
 import scipy.io
 from PIL import Image
 
@@ -118,8 +125,18 @@ INIT = "he_normal"
 DEPTH = 28
 WIDTH_MULT = 2
 
+
 """
-## Data loading utilities
+## Data Loading and Augmentation Utilities
+
+For custom data loading and preprocessing in Keras 3, it is recommended to
+use `keras.utils.PyDataset`. It ensures thread-safe data iteration and
+multi-backend compatibility.
+
+A standard element of SSL algorithms is to feed weakly and strongly augmented
+versions of the same images to the model to ensure consistent predictions.
+For strong augmentation, [RandAugment](https://arxiv.org/abs/1909.13719) is
+used. For weak augmentation, we use horizontal flipping and random translation.
 """
 
 
@@ -177,7 +194,7 @@ class AdaMatchDataset(keras.utils.PyDataset):
         s_idx = np.random.choice(len(self.source_x), SOURCE_BATCH_SIZE)
         t_idx = np.random.choice(len(self.target_x), TARGET_BATCH_SIZE)
         s_imgs = self.resize_and_pad(self.source_x[s_idx])
-        s_imgs = ops.tile(s_imgs, (1, 1, 1, 3))
+        s_imgs = np.tile(s_imgs, (1, 1, 1, 3))
 
         t_imgs = self.target_x[t_idx].astype("float32")
 
@@ -215,23 +232,14 @@ we will discuss shortly).
 6. We compute the loss and update the gradients of the underlying model.
 """
 
-"""
-## Data augmentation utilities
-
-A standard element of SSL algorithms is to feed weakly and strongly augmented versions of
-the same images to the learning model to make its predictions consistent. For strong
-augmentation, [RandAugment](https://arxiv.org/abs/1909.13719) is a standard choice. For
-weak augmentation, we will use horizontal flipping and random cropping.
-"""
-
 
 class AdaMatch(keras.Model):
-    def __init__(self, model, total_steps, tau=0.9):
-        super().__init__()
+    def __init__(self, model, total_steps, tau=0.9, **kwargs):
+        super().__init__(**kwargs)
         self.model = model
         self.tau = tau
         self.total_steps = total_steps
-        self.current_step = keras.Variable(0.0, dtype="float32")
+        self.current_step = keras.Variable(0.0, dtype="float32", trainable=False)
         self.loss_tracker = keras.metrics.Mean(name="loss")
 
         self.weak_augment = keras.Sequential(
@@ -240,9 +248,13 @@ class AdaMatch(keras.Model):
                 layers.RandomTranslation(0.1, 0.1, fill_mode="constant"),
             ]
         )
-
         rand_aug = layers.RandAugment(value_range=(0, 255), num_ops=2, factor=0.5)
         self.strong_aug = rand_aug
+
+    def build(self, input_shape):
+        self.model.build(input_shape[0])  # input_shape[0] is the source_imgs shape
+        self.weak_augment.build(input_shape[0])
+        super().build(input_shape)
 
     @property
     def metrics(self):
@@ -335,9 +347,9 @@ class AdaMatch(keras.Model):
             * mask
         )
 
-        t = self.compute_mu()  # Compute weight for the target loss
+        target_loss_weight = self.compute_mu()  # Compute weight for the target loss
         total_loss = source_loss + (
-            t * target_loss
+            target_loss_weight * target_loss
         )  # Update current training step for the scheduler
 
         self.current_step.assign_add(1.0)
