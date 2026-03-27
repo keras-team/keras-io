@@ -297,10 +297,11 @@ def parse_single_image(annotation_file_path):
 def build_metadata(data_dir, image_ids):
     """Transpose the metadata which converts from a list of dicts to a dict of lists."""
     # Parallel process all the images.
-    annotation_file_paths = tf.io.gfile.glob(
-        os.path.join(data_dir, "Annotations", "*.xml")
-    )
-    pool_size = 10 if len(image_ids) > 10 else len(annotation_file_paths)
+    annotation_file_paths = [
+        os.path.join(data_dir, "Annotations", f"{image_id}.xml")
+        for image_id in image_ids
+    ]
+    pool_size = min(10, len(image_ids))
     with multiprocessing.Pool(pool_size) as p:
         metadata = p.map(parse_single_image, annotation_file_paths)
 
@@ -320,8 +321,8 @@ def build_metadata(data_dir, image_ids):
     for key in ["label", "bbox"]:
         values = []
         objects = [value["objects"] for value in metadata]
-        for object in objects:
-            values.append([o[key] for o in object])
+        for obj_list in objects:
+            values.append([o[key] for o in obj_list])
         result["objects/" + key] = values
     return result
 
@@ -353,7 +354,7 @@ def load_voc(
         cache_dir=data_dir,
         extract=True,
     )
-    data_dir = os.path.join(os.path.dirname(get_data), extracted_dir)
+    data_dir = os.path.join(get_data, extracted_dir)
     image_ids = get_image_ids(data_dir, split)
     metadata = build_metadata(data_dir, image_ids)
     dataset = build_dataset_from_metadata(metadata)
@@ -446,7 +447,7 @@ preprocessing layers step.
 """
 
 filepath = keras.utils.get_file(
-    origin="http://farm4.staticflickr.com/3755/10245052896_958cbf4766_z.jpg"
+    origin="http://images.cocodataset.org/val2017/000000039769.jpg",
 )
 image = keras.utils.load_img(filepath)
 image = keras.ops.cast(image, "float32")
