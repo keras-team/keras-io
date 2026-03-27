@@ -869,3 +869,7 @@ axes[1, 1].set_ylim([-2, 2])
 ![png](/img/examples/generative/real_nvp/real_nvp_13_2.png)
     
 
+
+---
+## Relevant Chapters from Deep Learning with Python
+- [Chapter 17: Image generation](https://deeplearningwithpython.io/chapters/chapter17_image-generation)

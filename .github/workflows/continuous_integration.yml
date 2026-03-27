@@ -12,10 +12,10 @@ jobs:
   black:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
-    - uses: actions/setup-python@v1
+    - uses: actions/checkout@v4
+    - uses: actions/setup-python@v5
       with:
-        python-version: 3.9
+        python-version: '3.11'
     - name: Ensure files are formatted with black
       run: |
         pip install --upgrade pip
@@ -24,7 +24,7 @@ jobs:
   docker-image:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
     - name: Ensure the docker image works and can start.
       run: |
         make container-test

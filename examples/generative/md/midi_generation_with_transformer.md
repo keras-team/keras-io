@@ -916,3 +916,8 @@ using a seed MIDI file.
 We could further improve inference times by caching attention weights during the
 forward pass, in a similar way as `keras_hub` `CausalLM` models, which use the
 `CachedMultiHeadAttention` layer.
+
+---
+## Relevant Chapters from Deep Learning with Python
+- [Chapter 15: Language models and the Transformer](https://deeplearningwithpython.io/chapters/chapter15_language-models-and-the-transformer)
+- [Chapter 16: Text generation](https://deeplearningwithpython.io/chapters/chapter16_text-generation)

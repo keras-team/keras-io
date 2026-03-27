@@ -187,8 +187,7 @@ If you're training on GPU, this may be a good option.
 augmented images, like this:
 
 ```python
-augmented_train_ds = train_ds.map(
-    lambda x, y: (data_augmentation(x, training=True), y))
+augmented_train_ds = train_ds.map(lambda x, y: (data_augmentation(x), y))
 ```
 
 With this option, your data augmentation will happen **on CPU**, asynchronously, and will
@@ -323,3 +322,8 @@ img_array = keras.ops.expand_dims(img_array, 0)  # Create batch axis
 predictions = model.predict(img_array)
 score = float(keras.ops.sigmoid(predictions[0][0]))
 print(f"This image is {100 * (1 - score):.2f}% cat and {100 * score:.2f}% dog.")
+
+"""
+## Relevant Chapters from Deep Learning with Python
+- [Chapter 8: Image classification](https://deeplearningwithpython.io/chapters/chapter08_image-classification)
+"""

@@ -42,7 +42,6 @@ import tensorflow as tf
 import keras
 import numpy as np
 
-
 x_train = np.random.rand(1000, 28, 28, 1)
 y_train = np.random.randint(0, 10, (1000, 1))
 x_val = np.random.rand(1000, 28, 28, 1)

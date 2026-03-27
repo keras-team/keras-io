@@ -110,13 +110,13 @@ class VAE(keras.Model):
             total_loss = reconstruction_loss + kl_loss
         grads = tape.gradient(total_loss, self.trainable_weights)
         self.optimizer.apply_gradients(zip(grads, self.trainable_weights))
-        self.total_loss_tracker.update_state(total_loss)
         self.reconstruction_loss_tracker.update_state(reconstruction_loss)
         self.kl_loss_tracker.update_state(kl_loss)
+        self.total_loss_tracker.update_state(total_loss)
         return {
-            "loss": self.total_loss_tracker.result(),
             "reconstruction_loss": self.reconstruction_loss_tracker.result(),
             "kl_loss": self.kl_loss_tracker.result(),
+            "total_loss": self.total_loss_tracker.result(),
         }
 
 
@@ -195,3 +195,8 @@ def plot_label_clusters(vae, data, labels):
 x_train = np.expand_dims(x_train, -1).astype("float32") / 255
 
 plot_label_clusters(vae, x_train, y_train)
+
+"""
+## Relevant Chapters from Deep Learning with Python
+- [Chapter 17: Image generation](https://deeplearningwithpython.io/chapters/chapter17_image-generation)
+"""

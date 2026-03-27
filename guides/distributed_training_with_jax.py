@@ -166,7 +166,7 @@ optimizer = keras.optimizers.Adam(1e-3)
 loss = keras.losses.SparseCategoricalCrossentropy(from_logits=True)
 
 # Initialize all state with .build()
-(one_batch, one_batch_labels) = next(iter(train_data))
+one_batch, one_batch_labels = next(iter(train_data))
 model.build(one_batch)
 optimizer.build(model.trainable_variables)
 

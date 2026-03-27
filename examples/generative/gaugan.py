@@ -692,7 +692,7 @@ class GauGAN(keras.Model):
         discriminator_loss = self.train_discriminator(
             latent_vector, segmentation_map, image, labels
         )
-        (generator_loss, feature_loss, vgg_loss, kl_loss) = self.train_generator(
+        generator_loss, feature_loss, vgg_loss, kl_loss = self.train_generator(
             latent_vector, segmentation_map, labels, image, mean, variance
         )
 
@@ -842,4 +842,9 @@ Example available on HuggingFace.
 | Trained Model | Demo |
 | :--: | :--: |
 | [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Model-GauGAN%20Image%20Generation-black.svg)](https://huggingface.co/keras-io/GauGAN-Image-generation) | [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Spaces-GauGAN%20Image%20Generation-black.svg)](https://huggingface.co/spaces/keras-io/GauGAN_Conditional_Image_Generation) |
+"""
+
+"""
+## Relevant Chapters from Deep Learning with Python
+- [Chapter 17: Image generation](https://deeplearningwithpython.io/chapters/chapter17_image-generation)
 """

@@ -142,3 +142,8 @@ trainer_2.compile(optimizer=keras.optimizers.Adam())
 trainer_2.fit(
     x_train, y_train, epochs=5, batch_size=64, validation_data=(x_test, y_test)
 )
+
+"""
+## Relevant Chapters from Deep Learning with Python
+- [Chapter 7: A deep dive on Keras](https://deeplearningwithpython.io/chapters/chapter07_deep-dive-keras)
+"""

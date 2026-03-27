@@ -70,7 +70,7 @@ In the Movielens dataset, user IDs are integers (represented as strings)
 starting at 1 and with no gap. Normally, you would need to create a lookup table
 to map user IDs to integers from 0 to N-1. But as a simplication, we'll use the
 user id directly as an index in our model, in particular to lookup the user
-embedding from the user embedding table. So we need do know the number of users.
+embedding from the user embedding table. So we need to know the number of users.
 
 
 ```python
@@ -85,7 +85,7 @@ In the Movielens dataset, movie IDs are integers (represented as strings)
 starting at 1 and with no gap. Normally, you would need to create a lookup table
 to map movie IDs to integers from 0 to N-1. But as a simplication, we'll use the
 movie id directly as an index in our model, in particular to lookup the movie
-embedding from the movie embedding table. So we need do know the number of
+embedding from the movie embedding table. So we need to know the number of
 movies.
 
 

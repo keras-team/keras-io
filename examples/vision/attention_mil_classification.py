@@ -563,3 +563,8 @@ bag sizes are fixed here.
 - In order not to rely on the random initial weights of a single model, averaging ensemble
 methods should be considered.
 """
+
+"""
+## Relevant Chapters from Deep Learning with Python
+- [Chapter 8: Image classification](https://deeplearningwithpython.io/chapters/chapter08_image-classification)
+"""

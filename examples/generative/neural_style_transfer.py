@@ -271,3 +271,8 @@ After 4000 iterations, you get the following result:
 """
 
 display(Image(result_prefix + "_at_iteration_4000.png"))
+
+"""
+## Relevant Chapters from Deep Learning with Python
+- [Chapter 17: Image generation](https://deeplearningwithpython.io/chapters/chapter17_image-generation)
+"""

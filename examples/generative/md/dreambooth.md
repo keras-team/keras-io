@@ -750,3 +750,7 @@ general recommendations
 Thanks to
 [Abhishek Thakur](https://no.linkedin.com/in/abhi1thakur)
 for helping with these.
+
+---
+## Relevant Chapters from Deep Learning with Python
+- [Chapter 17: Image generation](https://deeplearningwithpython.io/chapters/chapter17_image-generation)

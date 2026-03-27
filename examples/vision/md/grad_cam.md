@@ -268,3 +268,7 @@ save_and_display_gradcam(img_path, heatmap)
 ![jpeg](/img/examples/vision/grad_cam/grad_cam_16_0.jpg)
     
 
+
+---
+## Relevant Chapters from Deep Learning with Python
+- [Chapter 10: Interpreting what ConvNets learn](https://deeplearningwithpython.io/chapters/chapter10_interpreting-what-convnets-learn)

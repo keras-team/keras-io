@@ -105,7 +105,7 @@ We recommend a clean python environment for each backend to avoid CUDA version m
 As an example, here is how to create a JAX GPU environment with [Conda](https://docs.conda.io/en/latest/):
 
 ```
-conda create -y -n keras-jax python=3.10
+conda create -y -n keras-jax python=3.11
 conda activate keras-jax
 pip install -r requirements-jax-cuda.txt
 pip install --upgrade keras

@@ -64,17 +64,10 @@ Let's start from a simple example:
 - We implement a fully-stateless `compute_loss_and_updates()` method
 to compute the loss as well as the updated values for the non-trainable
 variables of the model. Internally, it calls `stateless_call()` and
-the built-in `compute_loss()`.
+the built-in `stateless_compute_loss()`.
 - We implement a fully-stateless `train_step()` method to compute current
 metric values (including the loss) as well as updated values for the
 trainable variables, the optimizer variables, and the metric variables.
-
-Note that you can also take into account the `sample_weight` argument by:
-
-- Unpacking the data as `x, y, sample_weight = data`
-- Passing `sample_weight` to `compute_loss()`
-- Passing `sample_weight` alongside `y` and `y_pred`
-to metrics in `stateless_update_state()`
 
 
 ```python
@@ -84,8 +77,10 @@ class CustomModel(keras.Model):
         self,
         trainable_variables,
         non_trainable_variables,
+        metrics_variables,
         x,
         y,
+        sample_weight,
         training=False,
     ):
         y_pred, non_trainable_variables = self.stateless_call(
@@ -94,8 +89,21 @@ class CustomModel(keras.Model):
             x,
             training=training,
         )
-        loss = self.compute_loss(x, y, y_pred)
-        return loss, (y_pred, non_trainable_variables)
+        loss, (
+            trainable_variables,
+            non_trainable_variables,
+            metrics_variables,
+        ) = self.stateless_compute_loss(
+            trainable_variables,
+            non_trainable_variables,
+            metrics_variables,
+            x=x,
+            y=y,
+            y_pred=y_pred,
+            sample_weight=sample_weight,
+            training=training,
+        )
+        return loss, (y_pred, non_trainable_variables, metrics_variables)
 
     def train_step(self, state, data):
         (
@@ -104,25 +112,24 @@ class CustomModel(keras.Model):
             optimizer_variables,
             metrics_variables,
         ) = state
-        x, y = data
+        x, y, sample_weight = keras.utils.unpack_x_y_sample_weight(data)
 
         # Get the gradient function.
         grad_fn = jax.value_and_grad(self.compute_loss_and_updates, has_aux=True)
 
         # Compute the gradients.
-        (loss, (y_pred, non_trainable_variables)), grads = grad_fn(
+        (loss, (y_pred, non_trainable_variables, metrics_variables)), grads = grad_fn(
             trainable_variables,
             non_trainable_variables,
+            metrics_variables,
             x,
             y,
+            sample_weight,
             training=True,
         )
 
         # Update trainable variables and optimizer variables.
-        (
-            trainable_variables,
-            optimizer_variables,
-        ) = self.optimizer.stateless_apply(
+        trainable_variables, optimizer_variables = self.optimizer.stateless_apply(
             optimizer_variables, grads, trainable_variables
         )
 
@@ -134,10 +141,12 @@ class CustomModel(keras.Model):
                 len(new_metrics_vars) : len(new_metrics_vars) + len(metric.variables)
             ]
             if metric.name == "loss":
-                this_metric_vars = metric.stateless_update_state(this_metric_vars, loss)
+                this_metric_vars = metric.stateless_update_state(
+                    this_metric_vars, loss, sample_weight=sample_weight
+                )
             else:
                 this_metric_vars = metric.stateless_update_state(
-                    this_metric_vars, y, y_pred
+                    this_metric_vars, y, y_pred, sample_weight=sample_weight
                 )
             logs[metric.name] = metric.stateless_result(this_metric_vars)
             new_metrics_vars += this_metric_vars
@@ -173,16 +182,21 @@ model.fit(x, y, epochs=3)
 <div class="k-default-codeblock">
 ```
 Epoch 1/3
- 32/32 ━━━━━━━━━━━━━━━━━━━━ 0s 3ms/step - mae: 1.0022 - loss: 1.2464
+
+32/32 ━━━━━━━━━━━━━━━━━━━━ 0s 3ms/step - mae: 0.3765 - loss: 0.2093
+
 Epoch 2/3
- 32/32 ━━━━━━━━━━━━━━━━━━━━ 0s 198us/step - mae: 0.5811 - loss: 0.4912
+
+32/32 ━━━━━━━━━━━━━━━━━━━━ 0s 232us/step - mae: 0.3634 - loss: 0.1968
+
 Epoch 3/3
- 32/32 ━━━━━━━━━━━━━━━━━━━━ 0s 231us/step - mae: 0.4386 - loss: 0.2905
 
-<keras.src.callbacks.history.History at 0x14da599c0>
+32/32 ━━━━━━━━━━━━━━━━━━━━ 0s 228us/step - mae: 0.3543 - loss: 0.1877
 
+<keras.src.callbacks.history.History at 0x15d8472e0>
 ```
 </div>
+
 ---
 ## Going lower-level
 
@@ -207,6 +221,7 @@ class CustomModel(keras.Model):
         non_trainable_variables,
         x,
         y,
+        sample_weight,
         training=False,
     ):
         y_pred, non_trainable_variables = self.stateless_call(
@@ -215,7 +230,7 @@ class CustomModel(keras.Model):
             x,
             training=training,
         )
-        loss = self.loss_fn(y, y_pred)
+        loss = self.loss_fn(y, y_pred, sample_weight=sample_weight)
         return loss, (y_pred, non_trainable_variables)
 
     def train_step(self, state, data):
@@ -225,7 +240,7 @@ class CustomModel(keras.Model):
             optimizer_variables,
             metrics_variables,
         ) = state
-        x, y = data
+        x, y, sample_weight = keras.utils.unpack_x_y_sample_weight(data)
 
         # Get the gradient function.
         grad_fn = jax.value_and_grad(self.compute_loss_and_updates, has_aux=True)
@@ -236,14 +251,12 @@ class CustomModel(keras.Model):
             non_trainable_variables,
             x,
             y,
+            sample_weight,
             training=True,
         )
 
         # Update trainable variables and optimizer variables.
-        (
-            trainable_variables,
-            optimizer_variables,
-        ) = self.optimizer.stateless_apply(
+        trainable_variables, optimizer_variables = self.optimizer.stateless_apply(
             optimizer_variables, grads, trainable_variables
         )
 
@@ -252,10 +265,10 @@ class CustomModel(keras.Model):
         mae_metric_vars = metrics_variables[len(self.loss_tracker.variables) :]
 
         loss_tracker_vars = self.loss_tracker.stateless_update_state(
-            loss_tracker_vars, loss
+            loss_tracker_vars, loss, sample_weight=sample_weight
         )
         mae_metric_vars = self.mae_metric.stateless_update_state(
-            mae_metric_vars, y, y_pred
+            mae_metric_vars, y, y_pred, sample_weight=sample_weight
         )
 
         logs = {}
@@ -301,20 +314,29 @@ model.fit(x, y, epochs=5)
 <div class="k-default-codeblock">
 ```
 Epoch 1/5
- 32/32 ━━━━━━━━━━━━━━━━━━━━ 0s 2ms/step - loss: 0.6085 - mae: 0.6580
+
+32/32 ━━━━━━━━━━━━━━━━━━━━ 0s 2ms/step - loss: 0.9146 - mae: 0.8248
+
 Epoch 2/5
- 32/32 ━━━━━━━━━━━━━━━━━━━━ 0s 215us/step - loss: 0.2630 - mae: 0.4141
+
+32/32 ━━━━━━━━━━━━━━━━━━━━ 0s 225us/step - loss: 0.4087 - mae: 0.5116
+
 Epoch 3/5
- 32/32 ━━━━━━━━━━━━━━━━━━━━ 0s 202us/step - loss: 0.2271 - mae: 0.3835
+
+32/32 ━━━━━━━━━━━━━━━━━━━━ 0s 230us/step - loss: 0.2766 - mae: 0.4233
+
 Epoch 4/5
- 32/32 ━━━━━━━━━━━━━━━━━━━━ 0s 192us/step - loss: 0.2093 - mae: 0.3714
+
+32/32 ━━━━━━━━━━━━━━━━━━━━ 0s 202us/step - loss: 0.2631 - mae: 0.4106
+
 Epoch 5/5
- 32/32 ━━━━━━━━━━━━━━━━━━━━ 0s 194us/step - loss: 0.2188 - mae: 0.3818
 
-<keras.src.callbacks.history.History at 0x14de01420>
+32/32 ━━━━━━━━━━━━━━━━━━━━ 0s 198us/step - loss: 0.2604 - mae: 0.4070
 
+<keras.src.callbacks.history.History at 0x15dccb0a0>
 ```
 </div>
+
 ---
 ## Providing your own evaluation step
 
@@ -327,7 +349,7 @@ override `test_step` in exactly the same way. Here's what it looks like:
 class CustomModel(keras.Model):
     def test_step(self, state, data):
         # Unpack the data.
-        x, y = data
+        x, y, sample_weight = keras.utils.unpack_x_y_sample_weight(data)
         (
             trainable_variables,
             non_trainable_variables,
@@ -341,21 +363,37 @@ class CustomModel(keras.Model):
             x,
             training=False,
         )
-        loss = self.compute_loss(x, y, y_pred)
+        loss, (
+            trainable_variables,
+            non_trainable_variables,
+            metrics_variables,
+        ) = self.stateless_compute_loss(
+            trainable_variables,
+            non_trainable_variables,
+            metrics_variables,
+            x=x,
+            y=y,
+            y_pred=y_pred,
+            sample_weight=sample_weight,
+            training=False,
+        )
 
         # Update metrics.
         new_metrics_vars = []
+        logs = {}
         for metric in self.metrics:
             this_metric_vars = metrics_variables[
                 len(new_metrics_vars) : len(new_metrics_vars) + len(metric.variables)
             ]
             if metric.name == "loss":
-                this_metric_vars = metric.stateless_update_state(this_metric_vars, loss)
+                this_metric_vars = metric.stateless_update_state(
+                    this_metric_vars, loss, sample_weight=sample_weight
+                )
             else:
                 this_metric_vars = metric.stateless_update_state(
-                    this_metric_vars, y, y_pred
+                    this_metric_vars, y, y_pred, sample_weight=sample_weight
                 )
-            logs = metric.stateless_result(this_metric_vars)
+            logs[metric.name] = metric.stateless_result(this_metric_vars)
             new_metrics_vars += this_metric_vars
 
         # Return metric logs and updated state variables.
@@ -376,16 +414,18 @@ model.compile(loss="mse", metrics=["mae"])
 # Evaluate with our custom test_step
 x = np.random.random((1000, 32))
 y = np.random.random((1000, 1))
-model.evaluate(x, y)
+model.evaluate(x, y, return_dict=True)
 
 ```
 
+    
 <div class="k-default-codeblock">
 ```
- 32/32 ━━━━━━━━━━━━━━━━━━━━ 0s 973us/step - mae: 0.7887 - loss: 0.8385
+32/32 ━━━━━━━━━━━━━━━━━━━━ 0s 1ms/step - mae: 0.5369 - loss: 0.4170
 
-[0.8385222554206848, 0.7956181168556213]
-
+{'compile_metrics': {'mae': Array(0.5368782, dtype=float32)},
+ 'loss': Array(0.41702443, dtype=float32)}
 ```
 </div>
+
 That's it!

@@ -268,3 +268,8 @@ display(img)
 
 # Display mask predicted by our model
 display_mask(i)  # Note that the model only sees inputs at 150x150.
+
+"""
+## Relevant Chapters from Deep Learning with Python
+- [Chapter 11: Image segmentation](https://deeplearningwithpython.io/chapters/chapter11_image-segmentation)
+"""

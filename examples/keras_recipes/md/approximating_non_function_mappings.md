@@ -854,3 +854,7 @@ plt.show()
 ![png](/img/examples/keras_recipes/approximating_non_function_mappings/approximating_non_function_mappings_37_0.png)
     
 
+
+---
+## Relevant Chapters from Deep Learning with Python
+- [Chapter 4: Classification and regression](https://deeplearningwithpython.io/chapters/chapter04_classification-and-regression)

@@ -32,4 +32,4 @@ base_path = scripts_path.parent
 site_path = base_path / "site"
 site_dir = site_path.absolute()
 
-os.system(f"gsutil -m rsync -R {site_dir} gs://{bucket}")
+os.system(f"gcloud storage rsync --recursive {site_dir} gs://{bucket}")

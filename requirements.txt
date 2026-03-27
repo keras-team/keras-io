@@ -7,14 +7,15 @@ requests
 mdx_truly_sane_lists
 PyYAML
 pandas
+google-pasta
 jupyter
 pydot
 boto3
-tensorflow
+tensorflow==2.19.1
 keras-cv
 keras-nlp
 keras-tuner
-tf-keras
+tf-keras==2.19.0
 keras-hub
-# temporary path for KerasRS
-git+https://github.com/keras-team/keras-rs.git
+keras-rs
+pymdown-extensions==10.20

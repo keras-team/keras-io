@@ -211,3 +211,8 @@ Epoch 5/5
 The `Conv.convolution_op()` API provides an easy and readable way to implement custom
 convolution layers. A `StandardizedConvolution` implementation using the API is quite
 terse, consisting of only four lines of code.
+
+---
+## Relevant Chapters from Deep Learning with Python
+- [Chapter 7: A deep dive on Keras](https://deeplearningwithpython.io/chapters/chapter07_deep-dive-keras)
+- [Chapter 8: Image classification](https://deeplearningwithpython.io/chapters/chapter08_image-classification)

@@ -442,3 +442,7 @@ as using `recurrent_dropout` in RNN layers.
 
 Reproducibility is subject to the environment. You'll get the same results if you
 run the notebook or the code on the same machine with the same environment.
+
+---
+## Relevant Chapters from Deep Learning with Python
+- [Chapter 6: The universal workflow of machine learning](https://deeplearningwithpython.io/chapters/chapter06_universal-workflow-of-ml)
