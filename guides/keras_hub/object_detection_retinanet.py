@@ -1,8 +1,8 @@
 """
 Title: Object Detection with KerasHub
-Authors: [Siva Sravana Kumar Neeli](https://github.com/sineeli), [Sachin Prasad](https://github.com/sachinprasadhs)
-Date created: 2025/04/28
-Last modified: 2025/04/28
+Authors: [Sachin Prasad](https://github.com/sachinprasadhs), [Siva Sravana Kumar Neeli](https://github.com/sineeli)
+Date created: 2026/03/27
+Last modified: 2026/03/27
 Description: RetinaNet Object Detection: Training, Fine-tuning, and Inference.
 Accelerator: GPU
 """
@@ -79,8 +79,6 @@ validation datasets.
 # @title Helper functions
 import logging
 import multiprocessing
-from builtins import open
-import os.path
 import xml
 
 import tensorflow_datasets as tfds
@@ -291,17 +289,14 @@ def parse_single_image(annotation_file_path):
     }
     result.update(image_annotations)
     # Labels field should be same as the 'object.label'
-    labels = list(set([o["label"] for o in result["objects"]]))
+    labels = list({o["label"] for o in result["objects"]})
     result["labels"] = sorted(labels)
     return result
 
 
 def build_metadata(data_dir, image_ids):
-    """Transpose the metadata which convert from list of dict to dict of list."""
+    """Transpose the metadata which converts from a list of dicts to a dict of lists."""
     # Parallel process all the images.
-    image_file_paths = [
-        os.path.join(data_dir, "JPEGImages", i + ".jpg") for i in image_ids
-    ]
     annotation_file_paths = tf.io.gfile.glob(
         os.path.join(data_dir, "Annotations", "*.xml")
     )
@@ -358,7 +353,7 @@ def load_voc(
         cache_dir=data_dir,
         extract=True,
     )
-    data_dir = os.path.join(get_data, extracted_dir)
+    data_dir = os.path.join(os.path.dirname(get_data), extracted_dir)
     image_ids = get_image_ids(data_dir, split)
     metadata = build_metadata(data_dir, image_ids)
     dataset = build_dataset_from_metadata(metadata)
@@ -507,10 +502,10 @@ def decode_custom_tfds(record):
 
 
 def convert_to_tuple(record):
-    """Converts a decoded TFDS record to a tuple for keras-hub.
+    """Converts a decoded TFDS record to a tuple for KerasHub.
 
     Args:
-      record: A dictionary returned by `decode_custom_tfds` or `decode_tfds`.
+      record: A dictionary returned by `decode_custom_tfds`.
 
     Returns:
       A tuple (image, bounding_boxes).
@@ -521,33 +516,7 @@ def convert_to_tuple(record):
     }
 
 
-def decode_tfds(record):
-    """Decodes a standard TFDS object detection record.
-
-    Args:
-      record: A dictionary representing a single TFDS record.
-
-    Returns:
-      A dictionary with "images" and "bounding_boxes".
-    """
-    image = record["image"]
-    image_shape = tf.shape(image)
-    height, width = image_shape[0], image_shape[1]
-    boxes = keras.utils.bounding_boxes.convert_format(
-        record["objects"]["bbox"],
-        source="rel_yxyx",
-        target=bbox_format,
-        height=height,
-        width=width,
-    )
-    labels = record["objects"]["label"]
-
-    bounding_boxes = {"boxes": boxes, "labels": labels}
-
-    return {"images": image, "bounding_boxes": bounding_boxes}
-
-
-def preprocess_tfds(ds):
+def preprocess_tfds(ds, resizing, max_box_layer, batch_size):
     """Preprocesses a TFDS dataset for object detection.
 
     Args:
@@ -570,16 +539,16 @@ Now concatenate both 2007 and 2012 VOC data
 """
 train_ds = train_ds_2007.concatenate(train_ds_2012)
 train_ds = train_ds.map(decode_custom_tfds, num_parallel_calls=tf.data.AUTOTUNE)
-train_ds = preprocess_tfds(train_ds)
+train_ds = preprocess_tfds(train_ds, resizing, max_box_layer, batch_size)
 
 """
 Load the eval data
 """
 eval_ds = eval_ds.map(decode_custom_tfds, num_parallel_calls=tf.data.AUTOTUNE)
-eval_ds = preprocess_tfds(eval_ds)
+eval_ds = preprocess_tfds(eval_ds, resizing, max_box_layer, batch_size)
 
 """
-### Let's visualize batch of training data
+### Let's visualize a batch of training data
 """
 record = next(iter(train_ds.shuffle(100).take(1)))
 keras.visualization.plot_bounding_box_gallery(
@@ -593,7 +562,7 @@ keras.visualization.plot_bounding_box_gallery(
 )
 
 """
-### Decoded TFDS record to a tuple for keras-hub
+### Decode TFDS records to a tuple for KerasHub
 """
 train_ds = train_ds.map(convert_to_tuple, num_parallel_calls=tf.data.AUTOTUNE)
 train_ds = train_ds.prefetch(tf.data.AUTOTUNE)
@@ -619,15 +588,16 @@ def get_callbacks(experiment_path):
       List of keras callback instances.
     """
     tb_logs_path = os.path.join(experiment_path, "logs")
+    backup_path = os.path.join(experiment_path, "backup")
     ckpt_path = os.path.join(experiment_path, "weights")
     return [
-        keras.callbacks.BackupAndRestore(ckpt_path, delete_checkpoint=False),
+        keras.callbacks.BackupAndRestore(backup_path, delete_checkpoint=False),
         keras.callbacks.TensorBoard(
             tb_logs_path,
             update_freq=1,
         ),
         keras.callbacks.ModelCheckpoint(
-            ckpt_path + "/{epoch:04d}-{val_loss:.2f}.weights.h5",
+            os.path.join(ckpt_path, "{epoch:04d}-{val_loss:.2f}.weights.h5"),
             save_best_only=True,
             save_weights_only=True,
             verbose=1,
@@ -679,7 +649,7 @@ model.fit(
 """
 ### Prediction on evaluation data
 
-Let's predict the model using our evaluation dataset.
+Let's make predictions using our model on the evaluation dataset.
 """
 images, y_true = next(iter(eval_ds.shuffle(50).take(1)))
 y_pred = model.predict(images)
@@ -731,7 +701,7 @@ upon it) having randomly initialized weights.
 Here we load pre-trained ResNet50 model.
 This will serve as the base for extracting image features.
 
-And then Build the RetinaNet Feature Pyramid Network (FPN) on top of the ResNet50
+And then build the RetinaNet Feature Pyramid Network (FPN) on top of the ResNet50
 backbone. The FPN creates multi-scale feature maps for better object detection
 at different sizes.
 
