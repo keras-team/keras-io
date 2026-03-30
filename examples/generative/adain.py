@@ -44,18 +44,17 @@ You can also try out the model with your own images with this
 """
 # Setup
 
-We begin with importing the necessary packages. We also set the
-seed for reproducibility. The global variables are hyperparameters
-which we can change as we like.
+We begin by importing the packages used throughout the example and
+defining a few global hyperparameters that control image size,
+batch size, and training duration.
 """
 
 import os
 import numpy as np
 import tensorflow as tf
-from tensorflow import keras
+import keras
 import matplotlib.pyplot as plt
-import tensorflow_datasets as tfds
-from tensorflow.keras import layers
+from keras import layers
 
 # Defining the global variables.
 IMAGE_SIZE = (224, 224)
@@ -63,7 +62,6 @@ BATCH_SIZE = 64
 # Training for single epoch for time constraint.
 # Please use atleast 30 epochs to see good results.
 EPOCHS = 1
-AUTOTUNE = tf.data.AUTOTUNE
 
 """
 ## Style transfer sample gallery
@@ -72,7 +70,7 @@ For Neural Style Transfer we need style images and content images. In
 this example we will use the
 [Best Artworks of All Time](https://www.kaggle.com/ikarus777/best-artworks-of-all-time)
 as our style dataset and
-[Pascal VOC](https://www.tensorflow.org/datasets/catalog/voc)
+[Pascal VOC](https://host.robots.ox.ac.uk/pascal/VOC/) images
 as our content dataset.
 
 This is a deviation from the original paper implementation by the
@@ -97,7 +95,7 @@ files.upload()
 ```
 
 - Use the following commands to move the API keys to the proper
-directory and download the dataset.
+directory and download the style dataset.
 
 ```shell
 $ mkdir ~/.kaggle
@@ -109,110 +107,153 @@ $ rm -rf images
 $ mv resized artwork
 $ rm best-artworks-of-all-time.zip artists.csv
 ```
+
+- Download Pascal VOC 2012 images and extract them under `/content/VOCdevkit/VOC2012/JPEGImages`.
 """
 
 """
-## `tf.data` pipeline
+## `PyDataset` pipeline
 
-In this section, we will build the `tf.data` pipeline for the project.
-For the style dataset, we decode, convert and resize the images from
-the folder. For the content images we are already presented with a
-`tf.data` dataset as we use the `tfds` module.
+In this section, we build a `keras.utils.PyDataset` input pipeline
+with no `tensorflow_datasets` dependency.
 
-After we have our style and content data pipeline ready, we zip the
-two together to obtain the data pipeline that our model will consume.
+Both style and content images are read from local folders, decoded, resized,
+and paired inside a custom `PyDataset` implementation.
+
+After loading image paths, we create train, validation, and test
+`PyDataset` instances that the model will consume.
 """
 
 
-def decode_and_resize(image_path):
-    """Decodes and resizes an image from the image file path.
+class StyleContentPyDataset(keras.utils.PyDataset):
+    def __init__(self, style_paths, content_paths, batch_size, image_size, shuffle=True):
+        super().__init__()
+        self.style_paths = style_paths
+        self.content_paths = content_paths
+        self.batch_size = batch_size
+        self.image_size = image_size
+        self.shuffle = shuffle
 
-    Args:
-        image_path: The image file path.
+        self.num_style = len(self.style_paths)
+        self.num_content = len(self.content_paths)
+        self.num_samples = max(self.num_style, self.num_content)
 
-    Returns:
-        A resized image.
-    """
-    image = tf.io.read_file(image_path)
-    image = tf.image.decode_jpeg(image, channels=3)
-    image = tf.image.convert_image_dtype(image, dtype="float32")
-    image = tf.image.resize(image, IMAGE_SIZE)
-    return image
+        self.indices = np.arange(self.num_samples)
+        if self.shuffle:
+            np.random.shuffle(self.indices)
+
+    def __len__(self):
+        return int(np.ceil(self.num_samples / self.batch_size))
+
+    def on_epoch_end(self):
+        if self.shuffle:
+            np.random.shuffle(self.indices)
+
+    def _load_image(self, image_path):
+        image = keras.utils.load_img(image_path, target_size=self.image_size)
+        image = keras.utils.img_to_array(image).astype("float32") / 255.0
+        return image
+
+    def __getitem__(self, index):
+        start = index * self.batch_size
+        end = min(start + self.batch_size, self.num_samples)
+        batch_indices = self.indices[start:end]
+
+        style_batch = [
+            self._load_image(self.style_paths[i % self.num_style])
+            for i in batch_indices
+        ]
+        content_batch = [
+            self._load_image(self.content_paths[i % self.num_content])
+            for i in batch_indices
+        ]
+
+        # Return x only as a length-1 tuple so fit() treats (style, content) as model input.
+        return (np.stack(style_batch), np.stack(content_batch)),
 
 
-def extract_image_from_voc(element):
-    """Extracts image from the PascalVOC dataset.
+def list_image_paths(image_root):
+    valid_exts = (".jpg", ".jpeg", ".png", ".bmp", ".webp")
+    image_paths = [
+        os.path.join(image_root, name)
+        for name in os.listdir(image_root)
+        if os.path.isfile(os.path.join(image_root, name))
+        and name.lower().endswith(valid_exts)
+    ]
+    image_paths.sort()
 
-    Args:
-        element: A dictionary of data.
-
-    Returns:
-        A resized image.
-    """
-    image = element["image"]
-    image = tf.image.convert_image_dtype(image, dtype="float32")
-    image = tf.image.resize(image, IMAGE_SIZE)
-    return image
+    if not image_paths:
+        raise ValueError(f"No images found under: {image_root}")
+    return image_paths
 
 
-# Get the image file paths for the style images.
-style_images = os.listdir("artwork/resized")
-style_images = [os.path.join("artwork/resized", path) for path in style_images]
+def split_paths(paths):
+    total = len(paths)
+    train_end = max(1, int(0.8 * total))
+    val_end = max(train_end + 1, int(0.9 * total))
 
-# split the style images in train, val and test
-total_style_images = len(style_images)
-train_style = style_images[: int(0.8 * total_style_images)]
-val_style = style_images[int(0.8 * total_style_images) : int(0.9 * total_style_images)]
-test_style = style_images[int(0.9 * total_style_images) :]
+    train = paths[:train_end]
+    val = paths[train_end:val_end]
+    test = paths[val_end:]
 
-# Build the style and content tf.data datasets.
-train_style_ds = (
-    tf.data.Dataset.from_tensor_slices(train_style)
-    .map(decode_and_resize, num_parallel_calls=AUTOTUNE)
-    .repeat()
+    # Ensure no split is empty for very small fallback datasets.
+    if not val:
+        val = train[: min(len(train), 1)]
+    if not test:
+        test = train[: min(len(train), 1)]
+
+    return train, val, test
+
+
+def ensure_fallback_image_dirs(style_root, content_root, image_size):
+    if os.path.isdir(style_root) and os.path.isdir(content_root):
+        if os.listdir(style_root) and os.listdir(content_root):
+            return style_root, content_root
+
+    fallback_style = "/tmp/adain_data/style"
+    fallback_content = "/tmp/adain_data/content"
+    os.makedirs(fallback_style, exist_ok=True)
+    os.makedirs(fallback_content, exist_ok=True)
+
+    (x_train, _), _ = keras.datasets.cifar10.load_data()
+    x_train = x_train[:1000]
+
+    for i, image in enumerate(x_train):
+        pil_img = keras.utils.array_to_img(image)
+        pil_img = pil_img.resize((image_size[1], image_size[0]))
+        if i % 2 == 0:
+            pil_img.save(os.path.join(fallback_style, f"style_{i:04d}.jpg"))
+        else:
+            pil_img.save(os.path.join(fallback_content, f"content_{i:04d}.jpg"))
+
+    print("Using fallback local data at /tmp/adain_data because /content paths were not found.")
+    return fallback_style, fallback_content
+
+
+# Dataset roots
+style_root = "/content/artwork/resized"
+content_root = "/content/VOCdevkit/VOC2012/JPEGImages"
+style_root, content_root = ensure_fallback_image_dirs(
+    style_root, content_root, IMAGE_SIZE
 )
-train_content_ds = tfds.load("voc", split="train").map(extract_image_from_voc).repeat()
 
-val_style_ds = (
-    tf.data.Dataset.from_tensor_slices(val_style)
-    .map(decode_and_resize, num_parallel_calls=AUTOTUNE)
-    .repeat()
-)
-val_content_ds = (
-    tfds.load("voc", split="validation").map(extract_image_from_voc).repeat()
-)
+# Build path lists
+style_paths = list_image_paths(style_root)
+content_paths = list_image_paths(content_root)
 
-test_style_ds = (
-    tf.data.Dataset.from_tensor_slices(test_style)
-    .map(decode_and_resize, num_parallel_calls=AUTOTUNE)
-    .repeat()
-)
-test_content_ds = (
-    tfds.load("voc", split="test")
-    .map(extract_image_from_voc, num_parallel_calls=AUTOTUNE)
-    .repeat()
-)
+# Split style/content paths
+train_style, val_style, test_style = split_paths(style_paths)
+train_content, val_content, test_content = split_paths(content_paths)
 
-# Zipping the style and content datasets.
-train_ds = (
-    tf.data.Dataset.zip((train_style_ds, train_content_ds))
-    .shuffle(BATCH_SIZE * 2)
-    .batch(BATCH_SIZE)
-    .prefetch(AUTOTUNE)
+# Build PyDataset objects
+train_ds = StyleContentPyDataset(
+    train_style, train_content, batch_size=BATCH_SIZE, image_size=IMAGE_SIZE, shuffle=True
 )
-
-val_ds = (
-    tf.data.Dataset.zip((val_style_ds, val_content_ds))
-    .shuffle(BATCH_SIZE * 2)
-    .batch(BATCH_SIZE)
-    .prefetch(AUTOTUNE)
+val_ds = StyleContentPyDataset(
+    val_style, val_content, batch_size=BATCH_SIZE, image_size=IMAGE_SIZE, shuffle=True
 )
-
-test_ds = (
-    tf.data.Dataset.zip((test_style_ds, test_content_ds))
-    .shuffle(BATCH_SIZE * 2)
-    .batch(BATCH_SIZE)
-    .prefetch(AUTOTUNE)
+test_ds = StyleContentPyDataset(
+    test_style, test_content, batch_size=BATCH_SIZE, image_size=IMAGE_SIZE, shuffle=True
 )
 
 """
@@ -223,7 +264,7 @@ the correctness of our preprocessing pipeline, we visualize 10 samples
 from our dataset.
 """
 
-style, content = next(iter(train_ds))
+((style, content),) = next(iter(train_ds))
 fig, axes = plt.subplots(nrows=10, ncols=2, figsize=(5, 30))
 [ax.axis("off") for ax in np.ravel(axes)]
 
@@ -309,8 +350,8 @@ def get_mean_std(x, epsilon=1e-5):
     axes = [1, 2]
 
     # Compute the mean and standard deviation of a tensor.
-    mean, variance = tf.nn.moments(x, axes=axes, keepdims=True)
-    standard_deviation = tf.sqrt(variance + epsilon)
+    mean, variance = keras.ops.moments(x, axes=axes, keepdims=True)
+    standard_deviation = keras.ops.sqrt(variance + epsilon)
     return mean, standard_deviation
 
 
@@ -438,12 +479,13 @@ def get_loss_net():
 ## Neural Style Transfer
 
 This is the trainer module. We wrap the encoder and decoder inside
-a `tf.keras.Model` subclass. This allows us to customize what happens
-in the `model.fit()` loop.
+a `keras.Model` subclass and migrate training logic into `compute_loss()`.
+This lets Keras run the backend-native training step while we keep
+custom loss computation for AdaIN.
 """
 
 
-class NeuralStyleTransfer(tf.keras.Model):
+class NeuralStyleTransfer(keras.Model):
     def __init__(self, encoder, decoder, loss_net, style_weight, **kwargs):
         super().__init__(**kwargs)
         self.encoder = encoder
@@ -451,99 +493,60 @@ class NeuralStyleTransfer(tf.keras.Model):
         self.loss_net = loss_net
         self.style_weight = style_weight
 
-    def compile(self, optimizer, loss_fn):
-        super().compile()
-        self.optimizer = optimizer
-        self.loss_fn = loss_fn
         self.style_loss_tracker = keras.metrics.Mean(name="style_loss")
         self.content_loss_tracker = keras.metrics.Mean(name="content_loss")
         self.total_loss_tracker = keras.metrics.Mean(name="total_loss")
 
-    def train_step(self, inputs):
+    def compile(self, optimizer, loss_fn, **kwargs):
+        super().compile(optimizer=optimizer, **kwargs)
+        self.loss_fn = loss_fn
+
+    def call(self, inputs, training=False):
         style, content = inputs
 
-        # Initialize the content and style loss.
-        loss_content = 0.0
-        loss_style = 0.0
+        # Encode style and content, then construct AdaIN target.
+        style_encoded = self.encoder(style, training=False)
+        content_encoded = self.encoder(content, training=False)
+        target_features = ada_in(style=style_encoded, content=content_encoded)
 
-        with tf.GradientTape() as tape:
-            # Encode the style and content image.
-            style_encoded = self.encoder(style)
-            content_encoded = self.encoder(content)
+        # Decode back into image space.
+        reconstructed_image = self.decoder(target_features, training=training)
 
-            # Compute the AdaIN target feature maps.
-            t = ada_in(style=style_encoded, content=content_encoded)
-
-            # Generate the neural style transferred image.
-            reconstructed_image = self.decoder(t)
-
-            # Compute the losses.
-            reconstructed_vgg_features = self.loss_net(reconstructed_image)
-            style_vgg_features = self.loss_net(style)
-            loss_content = self.loss_fn(t, reconstructed_vgg_features[-1])
-            for inp, out in zip(style_vgg_features, reconstructed_vgg_features):
-                mean_inp, std_inp = get_mean_std(inp)
-                mean_out, std_out = get_mean_std(out)
-                loss_style += self.loss_fn(mean_inp, mean_out) + self.loss_fn(
-                    std_inp, std_out
-                )
-            loss_style = self.style_weight * loss_style
-            total_loss = loss_content + loss_style
-
-        # Compute gradients and optimize the decoder.
-        trainable_vars = self.decoder.trainable_variables
-        gradients = tape.gradient(total_loss, trainable_vars)
-        self.optimizer.apply_gradients(zip(gradients, trainable_vars))
-
-        # Update the trackers.
-        self.style_loss_tracker.update_state(loss_style)
-        self.content_loss_tracker.update_state(loss_content)
-        self.total_loss_tracker.update_state(total_loss)
         return {
-            "style_loss": self.style_loss_tracker.result(),
-            "content_loss": self.content_loss_tracker.result(),
-            "total_loss": self.total_loss_tracker.result(),
+            "reconstructed_image": reconstructed_image,
+            "target_features": target_features,
+            "style": style,
         }
 
-    def test_step(self, inputs):
-        style, content = inputs
+    def compute_loss(self, x=None, y=None, y_pred=None, sample_weight=None):
+        # Loss content comes from target AdaIN features vs reconstructed features.
+        reconstructed_vgg_features = self.loss_net(
+            y_pred["reconstructed_image"], training=False
+        )
+        style_vgg_features = self.loss_net(y_pred["style"], training=False)
 
-        # Initialize the content and style loss.
-        loss_content = 0.0
+        loss_content = self.loss_fn(
+            y_pred["target_features"], reconstructed_vgg_features[-1]
+        )
+
+        # Style loss matches means/variances at each VGG feature level.
         loss_style = 0.0
-
-        # Encode the style and content image.
-        style_encoded = self.encoder(style)
-        content_encoded = self.encoder(content)
-
-        # Compute the AdaIN target feature maps.
-        t = ada_in(style=style_encoded, content=content_encoded)
-
-        # Generate the neural style transferred image.
-        reconstructed_image = self.decoder(t)
-
-        # Compute the losses.
-        recons_vgg_features = self.loss_net(reconstructed_image)
-        style_vgg_features = self.loss_net(style)
-        loss_content = self.loss_fn(t, recons_vgg_features[-1])
-        for inp, out in zip(style_vgg_features, recons_vgg_features):
+        for inp, out in zip(style_vgg_features, reconstructed_vgg_features):
             mean_inp, std_inp = get_mean_std(inp)
             mean_out, std_out = get_mean_std(out)
             loss_style += self.loss_fn(mean_inp, mean_out) + self.loss_fn(
                 std_inp, std_out
             )
         loss_style = self.style_weight * loss_style
+
         total_loss = loss_content + loss_style
 
-        # Update the trackers.
+        # Update trackers for progress logs.
         self.style_loss_tracker.update_state(loss_style)
         self.content_loss_tracker.update_state(loss_content)
         self.total_loss_tracker.update_state(total_loss)
-        return {
-            "style_loss": self.style_loss_tracker.result(),
-            "content_loss": self.content_loss_tracker.result(),
-            "total_loss": self.total_loss_tracker.result(),
-        }
+
+        return total_loss
 
     @property
     def metrics(self):
@@ -563,10 +566,10 @@ quantified properly, and is to be subjectively evaluated by an audience.
 For this reason, visualization is a key aspect of evaluating the model.
 """
 
-test_style, test_content = next(iter(test_ds))
+((test_style, test_content),) = next(iter(test_ds))
 
 
-class TrainMonitor(tf.keras.callbacks.Callback):
+class TrainMonitor(keras.callbacks.Callback):
     def on_epoch_end(self, epoch, logs=None):
         # Encode the style and content image.
         test_style_encoded = self.model.encoder(test_style)
@@ -578,13 +581,13 @@ class TrainMonitor(tf.keras.callbacks.Callback):
 
         # Plot the Style, Content and the NST image.
         fig, ax = plt.subplots(nrows=1, ncols=3, figsize=(20, 5))
-        ax[0].imshow(tf.keras.utils.array_to_img(test_style[0]))
+        ax[0].imshow(keras.utils.array_to_img(test_style[0]))
         ax[0].set_title(f"Style: {epoch:03d}")
 
-        ax[1].imshow(tf.keras.utils.array_to_img(test_content[0]))
+        ax[1].imshow(keras.utils.array_to_img(test_content[0]))
         ax[1].set_title(f"Content: {epoch:03d}")
 
-        ax[2].imshow(tf.keras.utils.array_to_img(test_reconstructed_image[0]))
+        ax[2].imshow(keras.utils.array_to_img(test_reconstructed_image[0]))
         ax[2].set_title(f"NST: {epoch:03d}")
 
         plt.show()
@@ -599,7 +602,8 @@ trainer module. We compile the trainer module with the optimizer and
 the loss function and then train it.
 
 *Note*: We train the model for a single epoch for time constraints,
-but we will need to train is for atleast 30 epochs to see good results.
+but you will typically need to train it for at least 30 epochs to see
+good results.
 """
 
 optimizer = keras.optimizers.Adam(learning_rate=1e-5)
@@ -615,12 +619,15 @@ model = NeuralStyleTransfer(
 
 model.compile(optimizer=optimizer, loss_fn=loss_fn)
 
+train_steps = min(50, len(train_ds))
+val_steps = min(50, len(val_ds))
+
 history = model.fit(
     train_ds,
     epochs=EPOCHS,
-    steps_per_epoch=50,
+    steps_per_epoch=train_steps,
     validation_data=val_ds,
-    validation_steps=50,
+    validation_steps=val_steps,
     callbacks=[TrainMonitor()],
 )
 
@@ -635,7 +642,7 @@ the output images.
 [Hugging Face demo](https://huggingface.co/spaces/ariG23498/nst).
 """
 
-for style, content in test_ds.take(1):
+for ((style, content),) in test_ds:
     style_encoded = model.encoder(style)
     content_encoded = model.encoder(content)
     t = ada_in(style=style_encoded, content=content_encoded)
@@ -653,6 +660,7 @@ for style, content in test_ds.take(1):
         ax_content.set_title("Content Image")
         ax_reconstructed.imshow(reconstructed_image)
         ax_reconstructed.set_title("NST Image")
+    break
 
 """
 ## Conclusion
