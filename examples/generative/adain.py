@@ -126,7 +126,9 @@ After loading image paths, we create train, validation, and test
 
 
 class StyleContentPyDataset(keras.utils.PyDataset):
-    def __init__(self, style_paths, content_paths, batch_size, image_size, shuffle=True):
+    def __init__(
+        self, style_paths, content_paths, batch_size, image_size, shuffle=True
+    ):
         super().__init__()
         self.style_paths = style_paths
         self.content_paths = content_paths
@@ -169,7 +171,7 @@ class StyleContentPyDataset(keras.utils.PyDataset):
         ]
 
         # Return x only as a length-1 tuple so fit() treats (style, content) as model input.
-        return (np.stack(style_batch), np.stack(content_batch)),
+        return ((np.stack(style_batch), np.stack(content_batch)),)
 
 
 def list_image_paths(image_root):
@@ -226,7 +228,9 @@ def ensure_fallback_image_dirs(style_root, content_root, image_size):
         else:
             pil_img.save(os.path.join(fallback_content, f"content_{i:04d}.jpg"))
 
-    print("Using fallback local data at /tmp/adain_data because /content paths were not found.")
+    print(
+        "Using fallback local data at /tmp/adain_data because /content paths were not found."
+    )
     return fallback_style, fallback_content
 
 
@@ -247,7 +251,11 @@ train_content, val_content, test_content = split_paths(content_paths)
 
 # Build PyDataset objects
 train_ds = StyleContentPyDataset(
-    train_style, train_content, batch_size=BATCH_SIZE, image_size=IMAGE_SIZE, shuffle=True
+    train_style,
+    train_content,
+    batch_size=BATCH_SIZE,
+    image_size=IMAGE_SIZE,
+    shuffle=True,
 )
 val_ds = StyleContentPyDataset(
     val_style, val_content, batch_size=BATCH_SIZE, image_size=IMAGE_SIZE, shuffle=True
