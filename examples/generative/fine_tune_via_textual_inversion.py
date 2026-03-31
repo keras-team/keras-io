@@ -200,18 +200,13 @@ class TextualInversionDataset(keras.utils.PyDataset):
         batch_indices = self.indices[
             idx * self.batch_size : (idx + 1) * self.batch_size
         ]
-        text_indices = [i % len(self.embedded_texts) for i in batch_indices]
-        image_indices = [i % len(self.images) for i in batch_indices]
+        text_indices = np.array([i % len(self.embedded_texts) for i in batch_indices])
+        image_indices = np.array([i % len(self.images) for i in batch_indices])
 
-        batch_images = np.array(
-            [self.images[i] for i in image_indices], dtype="float32"
-        )
-        batch_embedded_texts = np.array(
-            [self.embedded_texts[i] for i in text_indices], dtype="float32"
-        )
-        batch_pooled_embeddings = np.array(
-            [self.pooled_embeddings[i] for i in text_indices], dtype="float32"
-        )
+        # Use numpy fancy indexing for efficient batch extraction
+        batch_images = self.images[image_indices]
+        batch_embedded_texts = self.embedded_texts[text_indices]
+        batch_pooled_embeddings = self.pooled_embeddings[text_indices]
 
         batch_images = augmenter(batch_images, training=True)
         return {
@@ -447,6 +442,12 @@ In this SD3-based Textual Inversion approach, we fine-tune the diffusion model
 The placeholder token `<my-funny-cat-token>` is embedded by the SD3 text encoders
 during dataset assembly; the diffusion model learns to associate those embeddings
 with the visual concept from the training images.
+
+**Note:** This approach is adapted for Stable Diffusion 3's architecture. Unlike
+classical Textual Inversion (which trains only token embeddings while freezing the
+diffusion model), we fine-tune the diffusion model itself. This is more similar to
+DreamBooth-style fine-tuning but maintains the spirit of teaching the model a new
+visual concept through a placeholder token.
 """
 
 # Explicitly freeze the VAE as an additional safeguard.
