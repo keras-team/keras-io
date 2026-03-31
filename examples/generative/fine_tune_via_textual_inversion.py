@@ -62,9 +62,7 @@ class StableDiffusionHubWrapper:
         self.backbone = self.model.backbone
         self.diffusion_model = self.backbone.diffuser
         self.preprocessor = (
-            keras_hub.models.StableDiffusion3TextToImagePreprocessor.from_preset(
-                preset
-            )
+            keras_hub.models.StableDiffusion3TextToImagePreprocessor.from_preset(preset)
         )
 
     def text_to_image(self, prompt, batch_size=1, num_steps=50, seed=None):
@@ -664,7 +662,9 @@ plot_images(generated)
 """
 """
 
-generated = stable_diffusion.text_to_image(f"An evil {placeholder_token}.", batch_size=3)
+generated = stable_diffusion.text_to_image(
+    f"An evil {placeholder_token}.", batch_size=3
+)
 plot_images(generated)
 
 """
