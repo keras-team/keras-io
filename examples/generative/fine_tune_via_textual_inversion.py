@@ -29,11 +29,38 @@ Conceptually, textual inversion works by learning a token embedding for a new te
 token, keeping the remaining components of StableDiffusion frozen.
 
 This guide shows you how to fine-tune Stable Diffusion 3 using KerasHub
-using the Textual-Inversion algorithm.  By the end of the guide, you will be able to
-write the "Gandalf the Gray as a &lt;my-funny-cat-token&gt;".
+using a Textual-Inversion-inspired approach. By the end of the guide, you will be able to
+generate "Gandalf the Gray as a &lt;my-funny-cat-token&gt;".
 
 ![https://i.imgur.com/rcb1Yfx.png](https://i.imgur.com/rcb1Yfx.png)
 
+### Adapting Textual Inversion for Stable Diffusion 3
+
+**Important Note on Implementation:**
+The original Textual Inversion algorithm trains only new token embeddings while keeping
+the entire diffusion model frozen. However, Stable Diffusion 3's architecture presents
+some challenges for this classical approach:
+
+1. **Multi-encoder architecture:** SD3 uses three text encoders (CLIP-L, CLIP-G, and T5-XXL)
+   with complex preprocessing pipelines that are tightly coupled to their pretrained vocabularies.
+
+2. **Limited vocabulary extension:** KerasHub's SD3 implementation doesn't expose a simple
+   API to extend the tokenizer vocabulary and add custom embeddings like the original
+   KerasCV Stable Diffusion did.
+
+3. **Frozen preprocessing:** The text encoding pipeline is established at model creation
+   and isn't easily modifiable for custom tokens.
+
+Therefore, this tutorial adapts the Textual Inversion concept for SD3 by:
+- Pre-computing text embeddings for prompts containing our placeholder token using SD3's
+  existing text encoders
+- Fine-tuning the diffusion model (transformer) to associate these embeddings with our
+  visual concept
+- Keeping the text encoders and VAE frozen
+
+This approach is conceptually similar to **DreamBooth** but maintains the spirit of
+Textual Inversion: teaching the model a new visual concept through a textual placeholder.
+The end result is the same — you get a personalized model that understands your custom token!
 
 First, let's import the packages we need, and create a
 Stable Diffusion 3 instance so we can use some of its subcomponents for fine-tuning.
@@ -409,13 +436,27 @@ train_ds = assemble_dataset(
 """
 ## Preparing the Stable Diffusion 3 model for fine-tuning
 
-With SD3 and KerasHub, text conditioning is pre-computed during dataset assembly
-(see `assemble_text_features`). There is no custom tokenizer extension or embedding
-table modification — instead, we fine-tune the diffusion model (the transformer-based
-denoiser) directly on training images paired with pre-encoded SD3 text features.
+Now that we have our dataset ready, let's prepare the model for training.
 
-This is the same strategy used in the DreamBooth migration: the SD3 backbone
-(VAE + text encoders) is kept frozen and only the diffuser is updated during training.
+### Architecture Overview
+
+With SD3 and KerasHub, our training strategy differs from classical Textual Inversion:
+
+**Classical Textual Inversion (original SD):**
+- Add new token to vocabulary
+- Create trainable embedding for that token
+- Freeze everything else (diffusion model, VAE, rest of text encoder)
+- Train only the new token embedding
+
+**Our SD3 Approach:**
+- Pre-compute text features with SD3's multi-encoder system (in `assemble_text_features`)
+- Freeze text encoders and VAE
+- Fine-tune the diffusion model (transformer denoiser) to associate the pre-computed
+  text features with visual concepts from training images
+
+This adapted approach is necessary because SD3's architecture doesn't allow easy vocabulary
+extension, but it achieves the same goal: teaching the model to understand your custom
+placeholder token and generate images based on it.
 """
 
 # Confirm the SD3 components are all loaded correctly.
@@ -445,9 +486,7 @@ with the visual concept from the training images.
 
 **Note:** This approach is adapted for Stable Diffusion 3's architecture. Unlike
 classical Textual Inversion (which trains only token embeddings while freezing the
-diffusion model), we fine-tune the diffusion model itself. This is more similar to
-DreamBooth-style fine-tuning but maintains the spirit of teaching the model a new
-visual concept through a placeholder token.
+diffusion model), we fine-tune the diffusion model itself.
 """
 
 # Explicitly freeze the VAE as an additional safeguard.
