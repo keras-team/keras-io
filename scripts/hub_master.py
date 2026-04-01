@@ -3311,6 +3311,10 @@ HUB_GUIDES_MASTER = {
             "title": "Semantic Segmentation",
         },
         {
+            "path": "object_detection_retinanet",
+            "title": "Object Detection Fine-tuning with KerasHub",
+        },
+        {
             "path": "transformer_pretraining",
             "title": "Pretraining a Transformer from scratch",
         },
