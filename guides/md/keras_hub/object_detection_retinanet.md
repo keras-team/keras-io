@@ -1,8 +1,8 @@
 # Object Detection with KerasHub
 
-**Authors:** [Siva Sravana Kumar Neeli](https://github.com/sineeli), [Sachin Prasad](https://github.com/sachinprasadhs)<br>
-**Date created:** 2025/04/28<br>
-**Last modified:** 2025/04/28<br>
+**Authors:** [Sachin Prasad](https://github.com/sachinprasadhs), [Siva Sravana Kumar Neeli](https://github.com/sineeli)<br>
+**Date created:** 2026/03/27<br>
+**Last modified:** 2026/03/27<br>
 **Description:** RetinaNet Object Detection: Training, Fine-tuning, and Inference.
 
 
@@ -74,11 +74,11 @@ import tensorflow as tf
 ```
 <div class="k-default-codeblock">
 ```
-keras-nlp 0.19.0 requires keras-hub==0.19.0, but you have keras-hub 0.20.0 which is incompatible.
+keras-nlp 0.19.0 requires keras-hub==0.19.0, but you have keras-hub 0.26.0 which is incompatible.
 
 WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
-E0000 00:00:1746815719.896182    8973 cuda_dnn.cc:8310] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered
-E0000 00:00:1746815719.902635    8973 cuda_blas.cc:1418] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
+E0000 00:00:1775002035.181029    2381 cuda_dnn.cc:8310] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered
+E0000 00:00:1775002035.187532    2381 cuda_blas.cc:1418] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
 ```
 </div>
 
@@ -93,8 +93,6 @@ validation datasets.
 # @title Helper functions
 import logging
 import multiprocessing
-from builtins import open
-import os.path
 import xml
 
 import tensorflow_datasets as tfds
@@ -305,21 +303,19 @@ def parse_single_image(annotation_file_path):
     }
     result.update(image_annotations)
     # Labels field should be same as the 'object.label'
-    labels = list(set([o["label"] for o in result["objects"]]))
+    labels = list({o["label"] for o in result["objects"]})
     result["labels"] = sorted(labels)
     return result
 
 
 def build_metadata(data_dir, image_ids):
-    """Transpose the metadata which convert from list of dict to dict of list."""
+    """Transpose the metadata which converts from a list of dicts to a dict of lists."""
     # Parallel process all the images.
-    image_file_paths = [
-        os.path.join(data_dir, "JPEGImages", i + ".jpg") for i in image_ids
+    annotation_file_paths = [
+        os.path.join(data_dir, "Annotations", f"{image_id}.xml")
+        for image_id in image_ids
     ]
-    annotation_file_paths = tf.io.gfile.glob(
-        os.path.join(data_dir, "Annotations", "*.xml")
-    )
-    pool_size = 10 if len(image_ids) > 10 else len(annotation_file_paths)
+    pool_size = min(10, len(image_ids))
     with multiprocessing.Pool(pool_size) as p:
         metadata = p.map(parse_single_image, annotation_file_paths)
 
@@ -339,8 +335,8 @@ def build_metadata(data_dir, image_ids):
     for key in ["label", "bbox"]:
         values = []
         objects = [value["objects"] for value in metadata]
-        for object in objects:
-            values.append([o[key] for o in object])
+        for obj_list in objects:
+            values.append([o[key] for o in obj_list])
         result["objects/" + key] = values
     return result
 
@@ -415,15 +411,15 @@ Downloading data from http://host.robots.ox.ac.uk/pascal/VOC/voc2007/VOCtrainval
 
 460032000/460032000 ━━━━━━━━━━━━━━━━━━━━ 16s 0us/step
 
-I0000 00:00:1746815741.705068    8973 gpu_device.cc:2022] Created device /job:localhost/replica:0/task:0/device:GPU:0 with 38482 MB memory:  -> device: 0, name: NVIDIA A100-SXM4-40GB, pci bus id: 0000:00:04.0, compute capability: 8.0
+I0000 00:00:1775002057.754358    2381 gpu_device.cc:2022] Created device /job:localhost/replica:0/task:0/device:GPU:0 with 38482 MB memory:  -> device: 0, name: NVIDIA A100-SXM4-40GB, pci bus id: 0000:00:04.0, compute capability: 8.0
 
 Downloading data from http://host.robots.ox.ac.uk/pascal/VOC/voc2012/VOCtrainval_11-May-2012.tar
 
-1999639040/1999639040 ━━━━━━━━━━━━━━━━━━━━ 71s 0us/step
+1999639040/1999639040 ━━━━━━━━━━━━━━━━━━━━ 65s 0us/step
 
 Downloading data from http://host.robots.ox.ac.uk/pascal/VOC/voc2007/VOCtest_06-Nov-2007.tar
 
-451020800/451020800 ━━━━━━━━━━━━━━━━━━━━ 19s 0us/step
+451020800/451020800 ━━━━━━━━━━━━━━━━━━━━ 15s 0us/step
 ```
 </div>
 
@@ -452,6 +448,134 @@ object_detector = keras_hub.models.ImageObjectDetector.from_preset(
 )
 object_detector.summary()
 ```
+
+<div class="k-default-codeblock">
+```
+Downloading from https://www.kaggle.com/api/v1/models/keras/retinanet/keras/retinanet_resnet50_fpn_coco/4/download/config.json...
+```
+</div>
+
+  0%|                                                                                                                                                                                          | 0.00/1.59k [00:00<?, ?B/s]
+
+    
+100%|█████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 1.59k/1.59k [00:00<00:00, 3.14MB/s]
+
+    
+
+
+<div class="k-default-codeblock">
+```
+Downloading from https://www.kaggle.com/api/v1/models/keras/retinanet/keras/retinanet_resnet50_fpn_coco/4/download/task.json...
+```
+</div>
+
+  0%|                                                                                                                                                                                          | 0.00/8.54k [00:00<?, ?B/s]
+
+    
+100%|█████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 8.54k/8.54k [00:00<00:00, 18.1MB/s]
+
+    
+
+
+<div class="k-default-codeblock">
+```
+Downloading from https://www.kaggle.com/api/v1/models/keras/retinanet/keras/retinanet_resnet50_fpn_coco/4/download/task.weights.h5...
+```
+</div>
+
+  0%|                                                                                                                                                                                           | 0.00/131M [00:00<?, ?B/s]
+
+    
+  1%|█▎                                                                                                                                                                                | 1.00M/131M [00:00<00:22, 6.09MB/s]
+
+    
+  5%|████████▏                                                                                                                                                                         | 6.00M/131M [00:00<00:05, 25.2MB/s]
+
+    
+ 13%|███████████████████████▏                                                                                                                                                          | 17.0M/131M [00:00<00:02, 47.2MB/s]
+
+    
+ 21%|██████████████████████████████████████▏                                                                                                                                           | 28.0M/131M [00:00<00:01, 65.4MB/s]
+
+    
+ 27%|███████████████████████████████████████████████▋                                                                                                                                  | 35.0M/131M [00:00<00:01, 57.2MB/s]
+
+    
+ 34%|█████████████████████████████████████████████████████████████▎                                                                                                                    | 45.0M/131M [00:00<00:01, 67.8MB/s]
+
+    
+ 42%|██████████████████████████████████████████████████████████████████████████▉                                                                                                       | 55.0M/131M [00:00<00:01, 77.1MB/s]
+
+    
+ 51%|███████████████████████████████████████████████████████████████████████████████████████████▏                                                                                      | 67.0M/131M [00:01<00:00, 73.6MB/s]
+
+    
+ 60%|███████████████████████████████████████████████████████████████████████████████████████████████████████████▌                                                                      | 79.0M/131M [00:01<00:00, 84.8MB/s]
+
+    
+ 69%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████▌                                                       | 90.0M/131M [00:01<00:00, 89.0MB/s]
+
+    
+ 80%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████▏                                    | 104M/131M [00:01<00:00, 104MB/s]
+
+    
+ 89%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████▊                    | 116M/131M [00:01<00:00, 99.7MB/s]
+
+    
+ 96%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████▌      | 126M/131M [00:01<00:00, 86.8MB/s]
+
+    
+100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 131M/131M [00:01<00:00, 74.9MB/s]
+
+    
+
+
+<div class="k-default-codeblock">
+```
+Downloading from https://www.kaggle.com/api/v1/models/keras/retinanet/keras/retinanet_resnet50_fpn_coco/4/download/model.weights.h5...
+```
+</div>
+
+  0%|                                                                                                                                                                                           | 0.00/105M [00:00<?, ?B/s]
+
+    
+  1%|█▋                                                                                                                                                                                | 1.00M/105M [00:00<00:19, 5.66MB/s]
+
+    
+  4%|██████▊                                                                                                                                                                           | 4.00M/105M [00:00<00:06, 16.8MB/s]
+
+    
+ 13%|███████████████████████▋                                                                                                                                                          | 14.0M/105M [00:00<00:01, 50.3MB/s]
+
+    
+ 20%|███████████████████████████████████▌                                                                                                                                              | 21.0M/105M [00:00<00:01, 56.7MB/s]
+
+    
+ 32%|█████████████████████████████████████████████████████████▌                                                                                                                        | 34.0M/105M [00:00<00:01, 67.5MB/s]
+
+    
+ 44%|█████████████████████████████████████████████████████████████████████████████▉                                                                                                    | 46.0M/105M [00:00<00:00, 82.9MB/s]
+
+    
+ 52%|█████████████████████████████████████████████████████████████████████████████████████████████▏                                                                                    | 55.0M/105M [00:00<00:00, 82.6MB/s]
+
+    
+ 61%|████████████████████████████████████████████████████████████████████████████████████████████████████████████▍                                                                     | 64.0M/105M [00:01<00:00, 73.7MB/s]
+
+    
+ 72%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████▋                                                 | 76.0M/105M [00:01<00:00, 84.3MB/s]
+
+    
+ 83%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████▎                              | 87.0M/105M [00:01<00:00, 81.8MB/s]
+
+    
+ 95%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████▎        | 100M/105M [00:01<00:00, 92.1MB/s]
+
+    
+100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 105M/105M [00:01<00:00, 75.6MB/s]
+
+    
+
 
 
 <pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold">Preprocessor: "retina_net_object_detector_preprocessor"</span>
@@ -592,7 +716,7 @@ preprocessing layers step.
 
 ```python
 filepath = keras.utils.get_file(
-    origin="http://farm4.staticflickr.com/3755/10245052896_958cbf4766_z.jpg"
+    origin="http://images.cocodataset.org/val2017/000000039769.jpg",
 )
 image = keras.utils.load_img(filepath)
 image = keras.ops.cast(image, "float32")
@@ -611,12 +735,13 @@ keras.visualization.plot_bounding_box_gallery(
 
 <div class="k-default-codeblock">
 ```
+Downloading data from http://images.cocodataset.org/val2017/000000039769.jpg
 
 1/1 ━━━━━━━━━━━━━━━━━━━━ 8s 8s/step
 ```
 </div>
 
-![png](/img/guides/object_detection_retinanet/object_detection_retinanet_14_3.png)
+![png](/home/sachinprasad/projects/KERAS-IO/keras-io/guides/img/object_detection_retinanet/object_detection_retinanet_14_6.png)
     
 
 
@@ -660,10 +785,10 @@ def decode_custom_tfds(record):
 
 
 def convert_to_tuple(record):
-    """Converts a decoded TFDS record to a tuple for keras-hub.
+    """Converts a decoded TFDS record to a tuple for KerasHub.
 
     Args:
-      record: A dictionary returned by `decode_custom_tfds` or `decode_tfds`.
+      record: A dictionary returned by `decode_custom_tfds`.
 
     Returns:
       A tuple (image, bounding_boxes).
@@ -674,33 +799,7 @@ def convert_to_tuple(record):
     }
 
 
-def decode_tfds(record):
-    """Decodes a standard TFDS object detection record.
-
-    Args:
-      record: A dictionary representing a single TFDS record.
-
-    Returns:
-      A dictionary with "images" and "bounding_boxes".
-    """
-    image = record["image"]
-    image_shape = tf.shape(image)
-    height, width = image_shape[0], image_shape[1]
-    boxes = keras.utils.bounding_boxes.convert_format(
-        record["objects"]["bbox"],
-        source="rel_yxyx",
-        target=bbox_format,
-        height=height,
-        width=width,
-    )
-    labels = record["objects"]["label"]
-
-    bounding_boxes = {"boxes": boxes, "labels": labels}
-
-    return {"images": image, "bounding_boxes": bounding_boxes}
-
-
-def preprocess_tfds(ds):
+def preprocess_tfds(ds, resizing, max_box_layer, batch_size):
     """Preprocesses a TFDS dataset for object detection.
 
     Args:
@@ -725,7 +824,7 @@ Now concatenate both 2007 and 2012 VOC data
 ```python
 train_ds = train_ds_2007.concatenate(train_ds_2012)
 train_ds = train_ds.map(decode_custom_tfds, num_parallel_calls=tf.data.AUTOTUNE)
-train_ds = preprocess_tfds(train_ds)
+train_ds = preprocess_tfds(train_ds, resizing, max_box_layer, batch_size)
 ```
 
 Load the eval data
@@ -733,10 +832,10 @@ Load the eval data
 
 ```python
 eval_ds = eval_ds.map(decode_custom_tfds, num_parallel_calls=tf.data.AUTOTUNE)
-eval_ds = preprocess_tfds(eval_ds)
+eval_ds = preprocess_tfds(eval_ds, resizing, max_box_layer, batch_size)
 ```
 
-### Let's visualize batch of training data
+### Let's visualize a batch of training data
 
 
 ```python
@@ -754,11 +853,11 @@ keras.visualization.plot_bounding_box_gallery(
 
 
     
-![png](/img/guides/object_detection_retinanet/object_detection_retinanet_23_0.png)
+![png](/home/sachinprasad/projects/KERAS-IO/keras-io/guides/img/object_detection_retinanet/object_detection_retinanet_23_0.png)
     
 
 
-### Decoded TFDS record to a tuple for keras-hub
+### Decode TFDS records to a tuple for KerasHub
 
 
 ```python
@@ -788,15 +887,16 @@ def get_callbacks(experiment_path):
       List of keras callback instances.
     """
     tb_logs_path = os.path.join(experiment_path, "logs")
+    backup_path = os.path.join(experiment_path, "backup")
     ckpt_path = os.path.join(experiment_path, "weights")
     return [
-        keras.callbacks.BackupAndRestore(ckpt_path, delete_checkpoint=False),
+        keras.callbacks.BackupAndRestore(backup_path, delete_checkpoint=False),
         keras.callbacks.TensorBoard(
             tb_logs_path,
             update_freq=1,
         ),
         keras.callbacks.ModelCheckpoint(
-            ckpt_path + "/{epoch:04d}-{val_loss:.2f}.weights.h5",
+            os.path.join(ckpt_path, "{epoch:04d}-{val_loss:.2f}.weights.h5"),
             save_best_only=True,
             save_weights_only=True,
             verbose=1,
@@ -831,14 +931,14 @@ model.compile(box_loss=keras.losses.MeanAbsoluteError(reduction="sum"))
 
 <div class="k-default-codeblock">
 ```
-Downloading from https://www.kaggle.com/api/v1/models/keras/retinanet/keras/retinanet_resnet50_fpn_coco/3/download/preprocessor.json...
+Downloading from https://www.kaggle.com/api/v1/models/keras/retinanet/keras/retinanet_resnet50_fpn_coco/4/download/preprocessor.json...
 ```
 </div>
 
-  0%|                                                                                                                                                                                                                                          | 0.00/1.80k [00:00<?, ?B/s]
+  0%|                                                                                                                                                                                          | 0.00/1.84k [00:00<?, ?B/s]
 
     
-100%|█████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 1.80k/1.80k [00:00<00:00, 3.49MB/s]
+100%|█████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 1.84k/1.84k [00:00<00:00, 4.87MB/s]
 
     
 
@@ -866,55 +966,63 @@ model.fit(
 
 <div class="k-default-codeblock">
 ```
-
 Epoch 1/5
 
-5534/5534 ━━━━━━━━━━━━━━━━━━━━ 0s 112ms/step - bbox_regression_loss: 0.9892 - cls_logits_loss: 61.7502 - loss: 62.7394
+4137/4137 ━━━━━━━━━━━━━━━━━━━━ 0s 110ms/step - bbox_regression_loss: 1.1873 - cls_logits_loss: 95.7444 - loss: 96.9318
 
+Epoch 1: val_loss improved from None to 0.31972, saving model to fine_tuning/weights/0001-0.32.weights.h5
 
-Epoch 1: val_loss improved from inf to 0.34341, saving model to fine_tuning/weights/0001-0.34.weights.h5
+Epoch 1: finished saving model to fine_tuning/weights/0001-0.32.weights.h5
 
-5534/5534 ━━━━━━━━━━━━━━━━━━━━ 700s 119ms/step - bbox_regression_loss: 0.9891 - cls_logits_loss: 61.7406 - loss: 62.7296 - val_bbox_regression_loss: 0.2271 - val_cls_logits_loss: 0.1163 - val_loss: 0.3434
+4137/4137 ━━━━━━━━━━━━━━━━━━━━ 534s 119ms/step - bbox_regression_loss: 0.4609 - cls_logits_loss: 13.6850 - loss: 14.1459 - val_bbox_regression_loss: 0.1833 - val_cls_logits_loss: 0.1364 - val_loss: 0.3197
 
 Epoch 2/5
 
-5534/5534 ━━━━━━━━━━━━━━━━━━━━ 0s 107ms/step - bbox_regression_loss: 0.1850 - cls_logits_loss: 0.1010 - loss: 0.2860
+4137/4137 ━━━━━━━━━━━━━━━━━━━━ 0s 110ms/step - bbox_regression_loss: 0.1946 - cls_logits_loss: 0.1243 - loss: 0.3189
 
-Epoch 2: val_loss improved from 0.34341 to 0.24534, saving model to fine_tuning/weights/0002-0.25.weights.h5
+Epoch 2: val_loss improved from 0.31972 to 0.25071, saving model to fine_tuning/weights/0002-0.25.weights.h5
 
-5534/5534 ━━━━━━━━━━━━━━━━━━━━ 651s 113ms/step - bbox_regression_loss: 0.1850 - cls_logits_loss: 0.1010 - loss: 0.2860 - val_bbox_regression_loss: 0.1604 - val_cls_logits_loss: 0.0850 - val_loss: 0.2453
+Epoch 2: finished saving model to fine_tuning/weights/0002-0.25.weights.h5
+
+4137/4137 ━━━━━━━━━━━━━━━━━━━━ 491s 119ms/step - bbox_regression_loss: 0.1863 - cls_logits_loss: 0.1163 - loss: 0.3026 - val_bbox_regression_loss: 0.1518 - val_cls_logits_loss: 0.0989 - val_loss: 0.2507
 
 Epoch 3/5
 
-5534/5534 ━━━━━━━━━━━━━━━━━━━━ 0s 107ms/step - bbox_regression_loss: 0.1538 - cls_logits_loss: 0.0757 - loss: 0.2295
+4137/4137 ━━━━━━━━━━━━━━━━━━━━ 0s 111ms/step - bbox_regression_loss: 0.1741 - cls_logits_loss: 0.0943 - loss: 0.2684
 
-Epoch 3: val_loss improved from 0.24534 to 0.19833, saving model to fine_tuning/weights/0003-0.20.weights.h5
+Epoch 3: val_loss improved from 0.25071 to 0.20826, saving model to fine_tuning/weights/0003-0.21.weights.h5
 
-5534/5534 ━━━━━━━━━━━━━━━━━━━━ 624s 113ms/step - bbox_regression_loss: 0.1538 - cls_logits_loss: 0.0757 - loss: 0.2295 - val_bbox_regression_loss: 0.1347 - val_cls_logits_loss: 0.0637 - val_loss: 0.1983
+Epoch 3: finished saving model to fine_tuning/weights/0003-0.21.weights.h5
+
+4137/4137 ━━━━━━━━━━━━━━━━━━━━ 495s 120ms/step - bbox_regression_loss: 0.1695 - cls_logits_loss: 0.0902 - loss: 0.2597 - val_bbox_regression_loss: 0.1298 - val_cls_logits_loss: 0.0784 - val_loss: 0.2083
 
 Epoch 4/5
 
-5534/5534 ━━━━━━━━━━━━━━━━━━━━ 0s 107ms/step - bbox_regression_loss: 0.1282 - cls_logits_loss: 0.0573 - loss: 0.1855
+4137/4137 ━━━━━━━━━━━━━━━━━━━━ 0s 110ms/step - bbox_regression_loss: 0.1553 - cls_logits_loss: 0.0727 - loss: 0.2280
 
-Epoch 4: val_loss improved from 0.19833 to 0.16430, saving model to fine_tuning/weights/0004-0.16.weights.h5
+Epoch 4: val_loss improved from 0.20826 to 0.20306, saving model to fine_tuning/weights/0004-0.20.weights.h5
 
-5534/5534 ━━━━━━━━━━━━━━━━━━━━ 623s 112ms/step - bbox_regression_loss: 0.1282 - cls_logits_loss: 0.0573 - loss: 0.1855 - val_bbox_regression_loss: 0.1115 - val_cls_logits_loss: 0.0528 - val_loss: 0.1643
+Epoch 4: finished saving model to fine_tuning/weights/0004-0.20.weights.h5
+
+4137/4137 ━━━━━━━━━━━━━━━━━━━━ 490s 118ms/step - bbox_regression_loss: 0.1486 - cls_logits_loss: 0.0701 - loss: 0.2187 - val_bbox_regression_loss: 0.1437 - val_cls_logits_loss: 0.0593 - val_loss: 0.2031
 
 Epoch 5/5
 
-5534/5534 ━━━━━━━━━━━━━━━━━━━━ 0s 107ms/step - bbox_regression_loss: 0.1182 - cls_logits_loss: 0.0449 - loss: 0.1631
+4137/4137 ━━━━━━━━━━━━━━━━━━━━ 0s 111ms/step - bbox_regression_loss: 0.1297 - cls_logits_loss: 0.0566 - loss: 0.1863
 
-Epoch 5: val_loss did not improve from 0.16430
+Epoch 5: val_loss improved from 0.20306 to 0.17988, saving model to fine_tuning/weights/0005-0.18.weights.h5
 
-5534/5534 ━━━━━━━━━━━━━━━━━━━━ 621s 112ms/step - bbox_regression_loss: 0.1182 - cls_logits_loss: 0.0449 - loss: 0.1631 - val_bbox_regression_loss: 0.1146 - val_cls_logits_loss: 0.0518 - val_loss: 0.1664
+Epoch 5: finished saving model to fine_tuning/weights/0005-0.18.weights.h5
 
-<keras.src.callbacks.history.History at 0x7f8e3b845590>
+4137/4137 ━━━━━━━━━━━━━━━━━━━━ 492s 119ms/step - bbox_regression_loss: 0.1269 - cls_logits_loss: 0.0547 - loss: 0.1817 - val_bbox_regression_loss: 0.1297 - val_cls_logits_loss: 0.0501 - val_loss: 0.1799
+
+<keras.src.callbacks.history.History at 0x7f1cbb73a910>
 ```
 </div>
 
 ### Prediction on evaluation data
 
-Let's predict the model using our evaluation dataset.
+Let's make predictions using our model on the evaluation dataset.
 
 
 ```python
@@ -947,7 +1055,7 @@ keras.visualization.plot_bounding_box_gallery(
 
 
     
-![png](/img/guides/object_detection_retinanet/object_detection_retinanet_35_0.png)
+![png](/home/sachinprasad/projects/KERAS-IO/keras-io/guides/img/object_detection_retinanet/object_detection_retinanet_35_0.png)
     
 
 
@@ -985,7 +1093,7 @@ upon it) having randomly initialized weights.
 Here we load pre-trained ResNet50 model.
 This will serve as the base for extracting image features.
 
-And then Build the RetinaNet Feature Pyramid Network (FPN) on top of the ResNet50
+And then build the RetinaNet Feature Pyramid Network (FPN) on top of the ResNet50
 backbone. The FPN creates multi-scale feature maps for better object detection
 at different sizes.
 
@@ -1049,50 +1157,57 @@ keras.visualization.plot_bounding_box_gallery(
 
 <div class="k-default-codeblock">
 ```
-
 Epoch 1/5
 
-5534/5534 ━━━━━━━━━━━━━━━━━━━━ 0s 112ms/step - bbox_regression_loss: 0.2535 - cls_logits_loss: 15.1471 - loss: 15.4006
+4137/4137 ━━━━━━━━━━━━━━━━━━━━ 0s 109ms/step - bbox_regression_loss: 0.2777 - cls_logits_loss: 5.8220 - loss: 6.0997
 
-Epoch 1: val_loss improved from inf to 0.24793, saving model to custom_training/weights/0001-0.25.weights.h5
+Epoch 1: val_loss improved from None to 0.28498, saving model to custom_training/weights/0001-0.28.weights.h5
 
-5534/5534 ━━━━━━━━━━━━━━━━━━━━ 691s 119ms/step - bbox_regression_loss: 0.2535 - cls_logits_loss: 15.1447 - loss: 15.3982 - val_bbox_regression_loss: 0.1391 - val_cls_logits_loss: 0.1088 - val_loss: 0.2479
+Epoch 1: finished saving model to custom_training/weights/0001-0.28.weights.h5
+
+4137/4137 ━━━━━━━━━━━━━━━━━━━━ 521s 118ms/step - bbox_regression_loss: 0.2125 - cls_logits_loss: 0.8302 - loss: 1.0427 - val_bbox_regression_loss: 0.1502 - val_cls_logits_loss: 0.1348 - val_loss: 0.2850
 
 Epoch 2/5
 
-5534/5534 ━━━━━━━━━━━━━━━━━━━━ 0s 106ms/step - bbox_regression_loss: 0.1363 - cls_logits_loss: 0.1165 - loss: 0.2528
+4137/4137 ━━━━━━━━━━━━━━━━━━━━ 0s 109ms/step - bbox_regression_loss: 0.1528 - cls_logits_loss: 0.1169 - loss: 0.2697
 
-Epoch 2: val_loss improved from 0.24793 to 0.22090, saving model to custom_training/weights/0002-0.22.weights.h5
+Epoch 2: val_loss improved from 0.28498 to 0.25430, saving model to custom_training/weights/0002-0.25.weights.h5
 
-5534/5534 ━━━━━━━━━━━━━━━━━━━━ 649s 112ms/step - bbox_regression_loss: 0.1363 - cls_logits_loss: 0.1165 - loss: 0.2528 - val_bbox_regression_loss: 0.1198 - val_cls_logits_loss: 0.1011 - val_loss: 0.2209
+Epoch 2: finished saving model to custom_training/weights/0002-0.25.weights.h5
+
+4137/4137 ━━━━━━━━━━━━━━━━━━━━ 486s 118ms/step - bbox_regression_loss: 0.1453 - cls_logits_loss: 0.1176 - loss: 0.2629 - val_bbox_regression_loss: 0.1315 - val_cls_logits_loss: 0.1228 - val_loss: 0.2543
 
 Epoch 3/5
 
-5534/5534 ━━━━━━━━━━━━━━━━━━━━ 0s 106ms/step - bbox_regression_loss: 0.1168 - cls_logits_loss: 0.1009 - loss: 0.2177
+4137/4137 ━━━━━━━━━━━━━━━━━━━━ 0s 109ms/step - bbox_regression_loss: 0.1255 - cls_logits_loss: 0.0995 - loss: 0.2250
 
-Epoch 3: val_loss improved from 0.22090 to 0.20299, saving model to custom_training/weights/0003-0.20.weights.h5
+Epoch 3: val_loss improved from 0.25430 to 0.22651, saving model to custom_training/weights/0003-0.23.weights.h5
 
-5534/5534 ━━━━━━━━━━━━━━━━━━━━ 616s 111ms/step - bbox_regression_loss: 0.1168 - cls_logits_loss: 0.1009 - loss: 0.2177 - val_bbox_regression_loss: 0.1141 - val_cls_logits_loss: 0.0888 - val_loss: 0.2030
+Epoch 3: finished saving model to custom_training/weights/0003-0.23.weights.h5
+
+4137/4137 ━━━━━━━━━━━━━━━━━━━━ 485s 117ms/step - bbox_regression_loss: 0.1215 - cls_logits_loss: 0.0987 - loss: 0.2202 - val_bbox_regression_loss: 0.1270 - val_cls_logits_loss: 0.0995 - val_loss: 0.2265
 
 Epoch 4/5
 
-5534/5534 ━━━━━━━━━━━━━━━━━━━━ 0s 105ms/step - bbox_regression_loss: 0.1029 - cls_logits_loss: 0.0815 - loss: 0.1844
+4137/4137 ━━━━━━━━━━━━━━━━━━━━ 0s 109ms/step - bbox_regression_loss: 0.1095 - cls_logits_loss: 0.0803 - loss: 0.1898
 
-Epoch 4: val_loss improved from 0.20299 to 0.18108, saving model to custom_training/weights/0004-0.18.weights.h5
+Epoch 4: val_loss improved from 0.22651 to 0.18972, saving model to custom_training/weights/0004-0.19.weights.h5
 
-5534/5534 ━━━━━━━━━━━━━━━━━━━━ 612s 110ms/step - bbox_regression_loss: 0.1029 - cls_logits_loss: 0.0815 - loss: 0.1844 - val_bbox_regression_loss: 0.1016 - val_cls_logits_loss: 0.0795 - val_loss: 0.1811
+Epoch 4: finished saving model to custom_training/weights/0004-0.19.weights.h5
+
+4137/4137 ━━━━━━━━━━━━━━━━━━━━ 485s 117ms/step - bbox_regression_loss: 0.1071 - cls_logits_loss: 0.0801 - loss: 0.1872 - val_bbox_regression_loss: 0.1058 - val_cls_logits_loss: 0.0839 - val_loss: 0.1897
 
 Epoch 5/5
 
-5534/5534 ━━━━━━━━━━━━━━━━━━━━ 0s 105ms/step - bbox_regression_loss: 0.0919 - cls_logits_loss: 0.0650 - loss: 0.1569
+4137/4137 ━━━━━━━━━━━━━━━━━━━━ 0s 109ms/step - bbox_regression_loss: 0.0978 - cls_logits_loss: 0.0663 - loss: 0.1641
 
-Epoch 5: val_loss improved from 0.18108 to 0.17948, saving model to custom_training/weights/0005-0.18.weights.h5
+Epoch 5: val_loss did not improve from 0.18972
 
 1/1 ━━━━━━━━━━━━━━━━━━━━ 7s 7s/step
 ```
 </div>
 
-![png](/img/guides/object_detection_retinanet/object_detection_retinanet_41_27688.png)
+![png](/home/sachinprasad/projects/KERAS-IO/keras-io/guides/img/object_detection_retinanet/object_detection_retinanet_41_20706.png)
     
 
 
