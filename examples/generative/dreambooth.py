@@ -5,6 +5,7 @@ Date created: 2023/02/01
 Last modified: 2026/03/06
 Description: Implementing DreamBooth.
 Accelerator: GPU
+Converted to Keras 3 by: [Harshith K](https://github.com/kharshith-k/)
 """
 
 """
