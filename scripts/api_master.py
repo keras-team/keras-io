@@ -16,6 +16,7 @@ API_MASTER = {
                         "keras.KerasTensor",
                         "keras.Model.summary",
                         "keras.Model.get_layer",
+                        "keras.Model.get_quantization_layer_structure",
                         "keras.Model.get_state_tree",
                         "keras.Model.set_state_tree",
                         "keras.Model.quantize",
