@@ -61,7 +61,7 @@
     win.innerHTML =
       '<div class="chatbot-header">' +
       '  <div class="chatbot-header-title">' +
-      '    <img src="' + getBaseUrl() + 'img/favicon.ico" alt="Keras" />' +
+      '    <img src="' + getBaseUrl() + 'img/prof_keras.png" alt="Prof. Keras" />' +
       "    <div>" +
       "      <div>Prof. Keras</div>" +
       '      <div class="chatbot-header-subtitle">Keras Documentation Assistant</div>' +
