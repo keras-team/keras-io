@@ -2,8 +2,8 @@
 Title: Barlow Twins for Contrastive SSL
 Author: [Abhiraam Eranti](https://github.com/dewball345)
 Date created: 11/4/21
-Last modified: 03/06/26
-Description: A keras implementation of Barlow Twins (constrastive SSL with redundancy reduction).
+Last modified: 26/04/02
+Description: A keras implementation of Barlow Twins (contrastive SSL with redundancy reduction).
 Accelerator: GPU
 Converted to Keras 3 by: [Maitry Sinha](https://github.com/maitry63)
 """
@@ -31,7 +31,6 @@ purpose of the embeddings, as they do not learn as much about the dataset as
 possible. For other approaches, the solution to the problem was to carefully
 configure the model such that it tries not to be redundant.
 
-
 Barlow Twins is a new approach to this problem; while other solutions mainly
 tackle the first goal of invariance (similar images have similar embeddings),
 the Barlow Twins method also prioritizes the goal of reducing redundancy.
@@ -40,7 +39,6 @@ It also has the advantage of being much simpler than other methods, and its
 model architecture is symmetric, meaning that both twins in the model do the
 same thing. It is also near state-of-the-art on imagenet, even exceeding methods
 like SimCLR.
-
 
 One disadvantage of Barlow Twins is that it is heavily dependent on
 augmentation, suffering major performance decreases in accuracy without them.
@@ -58,18 +56,10 @@ This notebook can train a Barlow Twins model and reach up to
 
 """
 ![image](https://i.imgur.com/G6LnEPT.png)
-
-
-
-
-
-
 """
 
 """
 ### High-Level Theory
-
-
 """
 
 """
@@ -129,13 +119,10 @@ Reduction](https://arxiv.org/abs/2103.03230)
 Original Implementation:
  [facebookresearch/barlowtwins](https://github.com/facebookresearch/barlowtwins)
 
-
 """
-
 """
 ## Setup
 """
-
 import os
 
 # slightly faster improvements, on the first epoch 30 second decrease and a 1-2 second
@@ -143,14 +130,16 @@ import os
 
 # Allocates two threads for a gpu private which allows more operations to be
 # done faster
-os.environ["KERAS_BACKEND"] = "tensorflow"
+os.environ["KERAS_BACKEND"] = "tensorflow"  # or "jax" or "torch"
 
 import keras
 import numpy as np  # np.random.random
 import matplotlib.pyplot as plt  # graphs
-from keras import layers, random, losses, ops
+from keras import layers
+from keras import random
+from keras import losses
+from keras import ops
 from keras.utils import Sequence
-from scipy.ndimage import gaussian_filter
 
 # XLA optimization for faster performance(up to 10-15 minutes total time saved)
 # tf.config.optimizer.set_jit(True)
@@ -158,7 +147,6 @@ from scipy.ndimage import gaussian_filter
 """
 ## Load the CIFAR-10 dataset
 """
-
 [
     (train_features, train_labels),
     (test_features, test_labels),
@@ -376,7 +364,7 @@ class RandomBlur(Augmentation):
         """
         if np.random.rand() < self.prob:
             sigma = np.random.rand() * 1.0
-            x = gaussian_filter(x, sigma=(sigma, sigma, 0))
+            x = ops.image.gaussian_blur(x, sigma=(sigma, sigma, 0))
         return x
 
 
@@ -871,7 +859,7 @@ barlow_model.compile(
     loss=BarlowLoss(BATCH_SIZE),
 )
 
-history = barlow_model.fit(augment_versions, epochs=160)
+history = barlow_model.fit(augment_versions, epochs=2)
 plt.plot(history.history["loss"])
 plt.show()
 
@@ -919,36 +907,6 @@ class XYDataset(Sequence):
 xy_ds = XYDataset(train_features, train_labels, BATCH_SIZE)
 test_ds = XYDataset(test_features, test_labels, BATCH_SIZE)
 
-
-"""
-## LINEAR EVALUATION MODEL
-"""
-
-model = keras.models.Sequential(
-    [
-        barlow_model.layers[2],
-        keras.layers.Dense(
-            10,
-            activation="softmax",
-            kernel_regularizer=keras.regularizers.l2(0.02),
-        ),
-    ]
-)
-
-model.layers[0].trainable = False
-
-# chose the Lamb optimizer due to high batch sizes. Converged MUCH faster
-# than ADAM or SGD
-linear_optimizer = keras.optimizers.Lamb()
-
-model.compile(
-    optimizer=linear_optimizer,
-    loss="sparse_categorical_crossentropy",
-    metrics=["accuracy"],
-)
-
-model.fit(xy_ds, epochs=35, validation_data=test_ds)
-
 """
 ## Evaluation
 
@@ -971,9 +929,6 @@ model = keras.models.Sequential(
         ),
     ]
 )
-
-model.layers[0].trainable = False
-
 linear_optimizer = keras.optimizers.Lamb()
 model.compile(
     optimizer=linear_optimizer,
@@ -981,7 +936,8 @@ model.compile(
     metrics=["accuracy"],
 )
 
-model.fit(xy_ds, epochs=35, validation_data=test_ds)
+model.layers[0].trainable = False
+model.fit(xy_ds, epochs=2, validation_data=test_ds)
 
 """
 ## Conclusion
