@@ -67,6 +67,7 @@ class KerasIO:
         self.redirects_dir = redirects_dir
         self.refresh_guides = refresh_guides
         self.refresh_examples = refresh_examples
+        self.gemini_api_key = os.environ.get("GEMINI_API", "")
 
         self.make_examples_master()
         self.nav = self.make_nav_index()
@@ -841,7 +842,9 @@ class KerasIO:
         landing_template = jinja2.Template(
             open(Path(self.theme_dir) / "landing.html").read()
         )
-        landing_page = landing_template.render({"base_url": self.url})
+        landing_page = landing_template.render(
+            {"base_url": self.url, "gemini_api_key": self.gemini_api_key}
+        )
         autogen_utils.save_file(Path(self.site_dir) / "index.html", landing_page)
 
         # Search page
@@ -852,6 +855,7 @@ class KerasIO:
                 "nav": self.nav,
                 "base_url": self.url,
                 "main": search_main,
+                "gemini_api_key": self.gemini_api_key,
             }
         )
         autogen_utils.save_file(Path(self.site_dir) / "search.html", search_page)
@@ -869,6 +873,7 @@ class KerasIO:
                         "base_url": self.url,
                     }
                 ),
+                "gemini_api_key": self.gemini_api_key,
             }
         )
         autogen_utils.save_file(Path(self.site_dir) / "404.html", page404)
@@ -882,7 +887,11 @@ class KerasIO:
         ).read()
         content = autogen_utils.render_markdown_to_html(md_content)
         keras_core_page = keras_3_template.render(
-            {"base_url": self.url, "content": content}
+            {
+                "base_url": self.url,
+                "content": content,
+                "gemini_api_key": self.gemini_api_key,
+            }
         )
         autogen_utils.save_file(
             Path(self.site_dir) / "keras_3" / "index.html",
@@ -1049,14 +1058,78 @@ class KerasIO:
                 "base_url": self.url,
                 "main": html_docs,
                 "relative_url": relative_url,
+                "gemini_api_key": self.gemini_api_key,
             }
         )
         html_page = html_page.replace("../guides/img/", "/img/guides/")
         autogen_utils.save_file(target_path, html_page)
 
+    def generate_docs_index(self):
+        """Generate a JSON index of all documentation for the chatbot."""
+        print("Generating documentation index for chatbot...")
+        index = []
+        for root, dirs, files in os.walk(self.md_sources_dir):
+            for fname in sorted(files):
+                if not fname.endswith(".md"):
+                    continue
+                filepath = Path(root) / fname
+                try:
+                    with open(filepath, encoding="utf-8") as f:
+                        content = f.read()
+                except Exception:
+                    continue
+
+                # Extract title from first heading
+                title = ""
+                for line in content.split("\n"):
+                    if line.startswith("# "):
+                        title = line[2:].strip()
+                        break
+                if not title:
+                    continue
+
+                # Compute URL from file path
+                rel = str(filepath.relative_to(self.md_sources_dir))
+                if fname == "index.md":
+                    url = "/" + str(Path(rel).parent) + "/"
+                else:
+                    url = "/" + rel.replace(".md", "/")
+                url = url.replace("\\", "/").replace("//", "/")
+
+                # Strip markdown/HTML formatting for plain text
+                clean = content
+                clean = re.sub(r"```[\s\S]*?```", "", clean)
+                clean = re.sub(r"^#+\s+", "", clean, flags=re.MULTILINE)
+                clean = re.sub(r"\[([^\]]+)\]\([^)]+\)", r"\1", clean)
+                clean = re.sub(r"!\[[^\]]*\]\([^)]+\)", "", clean)
+                clean = re.sub(r"<[^>]+>", "", clean)
+                clean = re.sub(r"\n{3,}", "\n\n", clean)
+                clean = clean.strip()
+
+                # Chunk into ~200 word segments
+                words = clean.split()
+                chunk_size = 200
+                for i in range(0, max(len(words), 1), chunk_size):
+                    chunk_words = words[i : i + chunk_size]
+                    chunk_text = " ".join(chunk_words)
+                    if len(chunk_text.strip()) < 50:
+                        continue
+                    index.append(
+                        {
+                            "title": title,
+                            "url": url,
+                            "content": chunk_text,
+                        }
+                    )
+
+        index_path = Path(self.site_dir) / "docs_index.json"
+        autogen_utils.save_file(index_path, json.dumps(index))
+        print(f"Generated docs index with {len(index)} chunks")
+
     def make(self):
         self.make_md_sources()
         self.render_md_sources_to_html()
+        self.generate_docs_index()
         self.make_tutobook_ipynbs()
 
     def serve(self):
@@ -1242,6 +1315,7 @@ if __name__ == "__main__":
     if cmd == "make":
         keras_io.make_md_sources()
         keras_io.render_md_sources_to_html()
+        keras_io.generate_docs_index()
     elif cmd == "serve":
         keras_io.serve()
     elif cmd == "add_example":
