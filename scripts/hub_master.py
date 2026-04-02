@@ -2790,6 +2790,37 @@ MODELS_MASTER = {
             ],
         },
         {
+            "path": "video_prism/",
+            "title": "VideoPrism",
+            "toc": True,
+            "children": [
+                {
+                    "path": "video_prism_image_converter",
+                    "title": "VideoPrismImageConverter",
+                    "generate": [
+                        "keras_hub.layers.VideoPrismImageConverter",
+                        "keras_hub.layers.VideoPrismImageConverter.from_preset",
+                    ],
+                },
+                {
+                    "path": "video_prism_tokenizer",
+                    "title": "VideoPrismTokenizer",
+                    "generate": [
+                        "keras_hub.tokenizers.VideoPrismTokenizer",
+                        "keras_hub.tokenizers.VideoPrismTokenizer.from_preset",
+                    ],
+                },
+                {
+                    "path": "video_prism_backbone",
+                    "title": "VideoPrismBackbone model",
+                    "generate": [
+                        "keras_hub.models.VideoPrismBackbone",
+                        "keras_hub.models.VideoPrismBackbone.from_preset",
+                    ],
+                },
+            ],
+        },
+        {
             "path": "vit/",
             "title": "ViT",
             "toc": True,
