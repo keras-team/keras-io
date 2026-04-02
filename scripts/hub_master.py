@@ -1292,6 +1292,81 @@ MODELS_MASTER = {
             ],
         },
         {
+            "path": "gemma4/",
+            "title": "Gemma4",
+            "toc": True,
+            "children": [
+                {
+                    "path": "gemma4_tokenizer",
+                    "title": "Gemma4Tokenizer",
+                    "generate": [
+                        "keras_hub.tokenizers.Gemma4Tokenizer",
+                        "keras_hub.tokenizers.Gemma4Tokenizer.from_preset",
+                    ],
+                },
+                {
+                    "path": "gemma4_image_converter",
+                    "title": "Gemma4ImageConverter",
+                    "generate": [
+                        "keras_hub.layers.Gemma4ImageConverter",
+                        "keras_hub.layers.Gemma4ImageConverter.from_preset",
+                    ],
+                },
+                {
+                    "path": "gemma4_audio_converter",
+                    "title": "Gemma4AudioConverter",
+                    "generate": [
+                        "keras_hub.layers.Gemma4AudioConverter",
+                        "keras_hub.layers.Gemma4AudioConverter.from_preset",
+                    ],
+                },
+                {
+                    "path": "gemma4_backbone",
+                    "title": "Gemma4Backbone model",
+                    "generate": [
+                        "keras_hub.models.Gemma4Backbone",
+                        "keras_hub.models.Gemma4Backbone.from_preset",
+                        "keras_hub.models.Gemma4Backbone.token_embedding",
+                        "keras_hub.models.Gemma4Backbone.enable_lora",
+                    ],
+                },
+                {
+                    "path": "gemma4_causal_lm",
+                    "title": "Gemma4CausalLM model",
+                    "generate": [
+                        "keras_hub.models.Gemma4CausalLM",
+                        "keras_hub.models.Gemma4CausalLM.from_preset",
+                        "keras_hub.models.Gemma4CausalLM.generate",
+                        "keras_hub.models.Gemma4CausalLM.backbone",
+                        "keras_hub.models.Gemma4CausalLM.preprocessor",
+                    ],
+                },
+                {
+                    "path": "gemma4_causal_lm_preprocessor",
+                    "title": "Gemma4CausalLMPreprocessor layer",
+                    "generate": [
+                        "keras_hub.models.Gemma4CausalLMPreprocessor",
+                        "keras_hub.models.Gemma4CausalLMPreprocessor.from_preset",
+                        "keras_hub.models.Gemma4CausalLMPreprocessor.tokenizer",
+                    ],
+                },
+                {
+                    "path": "gemma4_vision_encoder",
+                    "title": "Gemma4VisionEncoder model",
+                    "generate": [
+                        "keras_hub.models.Gemma4VisionEncoder",
+                    ],
+                },
+                {
+                    "path": "gemma4_audio_encoder",
+                    "title": "Gemma4AudioEncoder model",
+                    "generate": [
+                        "keras_hub.models.Gemma4AudioEncoder",
+                    ],
+                },
+            ],
+        },
+        {
             "path": "gpt2/",
             "title": "GPT2",
             "toc": True,
