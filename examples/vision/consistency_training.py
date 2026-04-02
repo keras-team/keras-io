@@ -2,9 +2,11 @@
 Title: Consistency training with supervision
 Author: [Sayak Paul](https://twitter.com/RisingSayak)
 Date created: 2021/04/13
-Last modified: 2021/04/19
+Last modified: 2026/04/02
 Description: Training with consistency regularization for robustness against data distribution shifts.
 Accelerator: GPU
+
+Converted to Keras 3 by: [Maitry Sinha](https://github.com/maitry63)
 """
 
 """
@@ -45,30 +47,31 @@ Models, which can be installed using the following command:
 
 """
 
-"""shell
-pip install -q tf-models-official tensorflow-addons
-"""
-
 """
 ## Imports and setup
 """
 
-from official.vision.image_classification.augment import RandAugment
-from tensorflow.keras import layers
-
-import tensorflow as tf
-import tensorflow_addons as tfa
+import keras
+from keras import layers
+from keras import ops
+import numpy as np
+import random
 import matplotlib.pyplot as plt
+from keras.callbacks import ReduceLROnPlateau
+from keras.callbacks import EarlyStopping
+from keras.optimizers import Adam
 
-tf.random.set_seed(42)
+# Set seeds for reproducibility
+np.random.seed(42)
+random.seed(42)
 
 """
 ## Define hyperparameters
 """
 
-AUTO = tf.data.AUTOTUNE
 BATCH_SIZE = 128
 EPOCHS = 5
+NUM_CLASSES = 10
 
 CROP_TO = 72
 RESIZE_TO = 96
@@ -77,19 +80,20 @@ RESIZE_TO = 96
 ## Load the CIFAR-10 dataset
 """
 
-(x_train, y_train), (x_test, y_test) = tf.keras.datasets.cifar10.load_data()
-
+(x_train, y_train), (x_test, y_test) = keras.datasets.cifar10.load_data()
 val_samples = 49500
 new_train_x, new_y_train = x_train[: val_samples + 1], y_train[: val_samples + 1]
 val_x, val_y = x_train[val_samples:], y_train[val_samples:]
 
 """
-## Create TensorFlow `Dataset` objects
+## Create `Dataset` objects
 """
 
 # Initialize `RandAugment` object with 2 layers of
 # augmentation transforms and strength of 9.
-augmenter = RandAugment(num_layers=2, magnitude=9)
+rand_augment = layers.RandAugment()
+rand_augment.num_layers = 2
+rand_augment.magnitude = 9
 
 """
 For training the teacher model, we will only be using two geometric augmentation
@@ -98,24 +102,30 @@ transforms: random horizontal flip and random crop.
 
 
 def preprocess_train(image, label, noisy=True):
-    image = tf.image.random_flip_left_right(image)
-    # We first resize the original image to a larger dimension
-    # and then we take random crops from it.
-    image = tf.image.resize(image, [RESIZE_TO, RESIZE_TO])
-    image = tf.image.random_crop(image, [CROP_TO, CROP_TO, 3])
+    image = ops.cast(image, "float32")
+
+    # Random horizontal flip
+    if keras.random.uniform(()) > 0.5:
+        image = ops.flip(image, axis=1)
+
+    # Resize + random crop
+    image = keras.ops.image.resize(image, (RESIZE_TO, RESIZE_TO))
+    start_x = keras.random.randint((), 0, RESIZE_TO - CROP_TO)
+    start_y = keras.random.randint((), 0, RESIZE_TO - CROP_TO)
+    image = image[start_x : start_x + CROP_TO, start_y : start_y + CROP_TO, :]
+
+    # Apply RandAugment if noisy
     if noisy:
-        image = augmenter.distort(image)
+        image = rand_augment(image)
+
     return image, label
 
 
 def preprocess_test(image, label):
-    image = tf.image.resize(image, [CROP_TO, CROP_TO])
+    image = ops.cast(image, "float32")
+    image = keras.ops.image.resize(image, (CROP_TO, CROP_TO))
     return image, label
 
-
-train_ds = tf.data.Dataset.from_tensor_slices((new_train_x, new_y_train))
-validation_ds = tf.data.Dataset.from_tensor_slices((val_x, val_y))
-test_ds = tf.data.Dataset.from_tensor_slices((x_test, y_test))
 
 """
 We make sure `train_clean_ds` and `train_noisy_ds` are shuffled using the *same* seed to
@@ -124,40 +134,39 @@ student model.
 """
 
 # This dataset will be used to train the first model.
-train_clean_ds = (
-    train_ds.shuffle(BATCH_SIZE * 10, seed=42)
-    .map(lambda x, y: (preprocess_train(x, y, noisy=False)), num_parallel_calls=AUTO)
-    .batch(BATCH_SIZE)
-    .prefetch(AUTO)
-)
 
-# This prepares the `Dataset` object to use RandAugment.
-train_noisy_ds = (
-    train_ds.shuffle(BATCH_SIZE * 10, seed=42)
-    .map(preprocess_train, num_parallel_calls=AUTO)
-    .batch(BATCH_SIZE)
-    .prefetch(AUTO)
-)
 
-validation_ds = (
-    validation_ds.map(preprocess_test, num_parallel_calls=AUTO)
-    .batch(BATCH_SIZE)
-    .prefetch(AUTO)
-)
+def make_dataset(x, y, training=True, noisy=False):
+    dataset = []
+    for i in range(len(x)):
+        if training:
+            dataset.append(preprocess_train(x[i], y[i], noisy))
+        else:
+            dataset.append(preprocess_test(x[i], y[i]))
+    return dataset
 
-test_ds = (
-    test_ds.map(preprocess_test, num_parallel_calls=AUTO)
-    .batch(BATCH_SIZE)
-    .prefetch(AUTO)
-)
 
-# This dataset will be used to train the second model.
-consistency_training_ds = tf.data.Dataset.zip((train_clean_ds, train_noisy_ds))
+train_clean_ds = make_dataset(new_train_x, new_y_train, training=True, noisy=False)
+train_noisy_ds = make_dataset(new_train_x, new_y_train, training=True, noisy=True)
+validation_ds = make_dataset(val_x, val_y, training=False)
+test_ds = make_dataset(x_test, y_test, training=False)
+
+
+# Convert dataset to arrays
+def to_arrays(dataset):
+    X = np.array([img for img, _ in dataset])
+    Y = np.array([lbl for _, lbl in dataset])
+    return X, Y
+
+
+x_train_clean, y_train_clean = to_arrays(train_clean_ds)
+x_train_noisy, y_train_noisy = to_arrays(train_noisy_ds)
+x_val, y_val = to_arrays(validation_ds)
+x_test, y_test = to_arrays(test_ds)
 
 """
 ## Visualize the datasets
 """
-
 sample_images, sample_labels = next(iter(train_clean_ds))
 plt.figure(figsize=(10, 10))
 for i, image in enumerate(sample_images[:9]):
@@ -172,6 +181,7 @@ for i, image in enumerate(sample_images[:9]):
     plt.imshow(image.numpy().astype("int"))
     plt.axis("off")
 
+
 """
 ## Define a model building utility function
 
@@ -180,16 +190,16 @@ We now define our model building utility. Our model is based on the [ResNet50V2 
 
 
 def get_training_model(num_classes=10):
-    resnet50_v2 = tf.keras.applications.ResNet50V2(
+    base = keras.applications.ResNet50V2(
         weights=None,
         include_top=False,
         input_shape=(CROP_TO, CROP_TO, 3),
     )
-    model = tf.keras.Sequential(
+    model = keras.Sequential(
         [
             layers.Input((CROP_TO, CROP_TO, 3)),
             layers.Rescaling(scale=1.0 / 127.5, offset=-1),
-            resnet50_v2,
+            base,
             layers.GlobalAveragePooling2D(),
             layers.Dense(num_classes),
         ]
@@ -202,8 +212,12 @@ In the interest of reproducibility, we serialize the initial random weights of t
 teacher  network.
 """
 
-initial_teacher_model = get_training_model()
-initial_teacher_model.save_weights("initial_teacher_model.h5")
+teacher_model = get_training_model()
+teacher_model.compile(
+    optimizer=keras.optimizers.Adam(),
+    loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+    metrics=["accuracy"],
+)
 
 """
 ## Train the teacher model
@@ -216,34 +230,58 @@ part but for this example, we will use [Stochastic Weight Averaging](https://arx
 (SWA) which also resembles geometric ensembling.
 """
 
-# Define the callbacks.
-reduce_lr = tf.keras.callbacks.ReduceLROnPlateau(patience=3)
-early_stopping = tf.keras.callbacks.EarlyStopping(
-    patience=10, restore_best_weights=True
+# Define callbacks
+reduce_lr = ReduceLROnPlateau(patience=3, factor=0.5, monitor="val_accuracy")
+early_stopping = EarlyStopping(
+    patience=10, restore_best_weights=True, monitor="val_accuracy"
 )
 
-# Initialize SWA from tf-hub.
-SWA = tfa.optimizers.SWA
+
+class SWA(Adam):
+    """
+    Simple Stochastic Weight Averaging wrapper for Adam optimizer.
+    """
+
+    def __init__(self, optimizer, start_epoch=0, **kwargs):
+        super().__init__(**kwargs)
+        self.base_optimizer = optimizer
+        self.swa_weights = None
+        self.n = 0
+        self.start_epoch = start_epoch
+
+    def apply_swa(self, model):
+        """
+        Update SWA weights after each epoch
+        """
+        if self.swa_weights is None:
+            self.swa_weights = [ops.cast(w, "float32") for w in model.get_weights()]
+            self.n = 1
+        else:
+            for i, w in enumerate(model.get_weights()):
+                self.swa_weights[i] = (self.swa_weights[i] * self.n + w) / (self.n + 1)
+            self.n += 1
+
 
 # Compile and train the teacher model.
 teacher_model = get_training_model()
-teacher_model.load_weights("initial_teacher_model.h5")
+teacher_model.set_weights(get_training_model().get_weights())  # load initial weights
 teacher_model.compile(
     # Notice that we are wrapping our optimizer within SWA
-    optimizer=SWA(tf.keras.optimizers.Adam()),
-    loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+    optimizer=SWA(Adam()),
+    loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
     metrics=["accuracy"],
 )
 history = teacher_model.fit(
-    train_clean_ds,
+    x_train_clean,
+    y_train_clean,
+    validation_data=(x_val, y_val),
+    batch_size=BATCH_SIZE,
     epochs=EPOCHS,
-    validation_data=validation_ds,
     callbacks=[reduce_lr, early_stopping],
 )
-
-# Evaluate the teacher model on the test set.
-_, acc = teacher_model.evaluate(test_ds, verbose=0)
-print(f"Test accuracy: {acc*100}%")
+# Evaluate teacher
+_, acc = teacher_model.evaluate(x_test, y_test, verbose=0)
+print(f"Test accuracy: {acc*100:.2f}%")
 
 """
 ## Define a self-training utility
@@ -252,121 +290,77 @@ For this part, we will borrow the `Distiller` class from [this Keras Example](ht
 """
 
 
-# Majority of the code is taken from:
-# https://keras.io/examples/vision/knowledge_distillation/
-class SelfTrainer(tf.keras.Model):
-    def __init__(self, student, teacher):
-        super().__init__()
-        self.student = student
-        self.teacher = teacher
-
-    def compile(
-        self,
-        optimizer,
-        metrics,
-        student_loss_fn,
-        distillation_loss_fn,
-        temperature=3,
-    ):
-        super().compile(optimizer=optimizer, metrics=metrics)
-        self.student_loss_fn = student_loss_fn
-        self.distillation_loss_fn = distillation_loss_fn
-        self.temperature = temperature
-
-    def train_step(self, data):
-        # Since our dataset is a zip of two independent datasets,
-        # after initially parsing them, we segregate the
-        # respective images and labels next.
-        clean_ds, noisy_ds = data
-        clean_images, _ = clean_ds
-        noisy_images, y = noisy_ds
-
-        # Forward pass of teacher
-        teacher_predictions = self.teacher(clean_images, training=False)
-
-        with tf.GradientTape() as tape:
-            # Forward pass of student
-            student_predictions = self.student(noisy_images, training=True)
-
-            # Compute losses
-            student_loss = self.student_loss_fn(y, student_predictions)
-            distillation_loss = self.distillation_loss_fn(
-                tf.nn.softmax(teacher_predictions / self.temperature, axis=1),
-                tf.nn.softmax(student_predictions / self.temperature, axis=1),
-            )
-            total_loss = (student_loss + distillation_loss) / 2
-
-        # Compute gradients
-        trainable_vars = self.student.trainable_variables
-        gradients = tape.gradient(total_loss, trainable_vars)
-
-        # Update weights
-        self.optimizer.apply_gradients(zip(gradients, trainable_vars))
-
-        # Update the metrics configured in `compile()`
-        self.compiled_metrics.update_state(
-            y, tf.nn.softmax(student_predictions, axis=1)
-        )
-
-        # Return a dict of performance
-        results = {m.name: m.result() for m in self.metrics}
-        results.update({"total_loss": total_loss})
-        return results
-
-    def test_step(self, data):
-        # During inference, we only pass a dataset consisting images and labels.
-        x, y = data
-
-        # Compute predictions
-        y_prediction = self.student(x, training=False)
-
-        # Update the metrics
-        self.compiled_metrics.update_state(y, tf.nn.softmax(y_prediction, axis=1))
-
-        # Return a dict of performance
-        results = {m.name: m.result() for m in self.metrics}
-        return results
-
-
-"""
-The only difference in this implementation is the way loss is being calculated. **Instead
-of weighted the distillation loss and student loss differently we are taking their
-average following Noisy Student Training**.
-"""
-
 """
 ## Train the student model
 """
 
 # Define the callbacks.
 # We are using a larger decay factor to stabilize the training.
-reduce_lr = tf.keras.callbacks.ReduceLROnPlateau(
-    patience=3, factor=0.5, monitor="val_accuracy"
-)
-early_stopping = tf.keras.callbacks.EarlyStopping(
+reduce_lr = ReduceLROnPlateau(patience=3, factor=0.5, monitor="val_accuracy")
+early_stopping = EarlyStopping(
     patience=10, restore_best_weights=True, monitor="val_accuracy"
 )
 
-# Compile and train the student model.
-self_trainer = SelfTrainer(student=get_training_model(), teacher=teacher_model)
-self_trainer.compile(
-    # Notice we are *not* using SWA here.
-    optimizer="adam",
-    metrics=["accuracy"],
-    student_loss_fn=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
-    distillation_loss_fn=tf.keras.losses.KLDivergence(),
-    temperature=10,
+# Build student model
+student_model = get_training_model()
+
+
+# Backend-agnostic SelfTrainingModel
+class SelfTrainingModel(keras.Model):
+    def __init__(self, student, teacher, temperature=10):
+        super().__init__()
+        self.student = student
+        self.teacher = teacher
+        self.temperature = temperature
+        self.teacher.trainable = False  # freeze teacher
+
+    def call(self, inputs):
+        clean_images, noisy_images = inputs
+        teacher_preds = self.teacher(clean_images, training=False)
+        student_preds = self.student(noisy_images, training=True)
+        return student_preds, teacher_preds
+
+
+# Custom loss: average of student loss + distillation loss
+def consistency_loss(y_true, outputs, temperature=10):
+    student_preds, teacher_preds = outputs
+
+    # Supervised student loss
+    student_loss = keras.losses.sparse_categorical_crossentropy(
+        y_true, student_preds, from_logits=True
+    )
+
+    # Soft targets for distillation
+    t_soft = ops.softmax(teacher_preds / temperature, axis=-1)
+    s_soft = ops.softmax(student_preds / temperature, axis=-1)
+
+    distill_loss = keras.losses.KLDivergence()(t_soft, s_soft)
+
+    # Average the losses (Noisy Student)
+    return (student_loss + distill_loss) / 2
+
+
+# Instantiate the backend-agnostic self-training model
+self_training_model = SelfTrainingModel(student_model, teacher_model, temperature=10)
+
+# Compile the model
+self_training_model.compile(
+    optimizer=Adam(), loss=consistency_loss, metrics=["accuracy"]
 )
-history = self_trainer.fit(
-    consistency_training_ds,
+
+# Train the student model (consistency training)
+self_training_model.fit(
+    (x_train_clean, x_train_noisy),  # clean + noisy pairs
+    y_train_clean,  # supervised labels
+    validation_data=((x_val, x_val), y_val),
+    batch_size=BATCH_SIZE,
     epochs=EPOCHS,
-    validation_data=validation_ds,
     callbacks=[reduce_lr, early_stopping],
 )
 
-# Evaluate the student model.
-acc = self_trainer.evaluate(test_ds, verbose=0)
-print(f"Test accuracy from student model: {acc*100}%")
+# Evaluate the student model
+_, acc = self_training_model.evaluate((x_test, x_test), y_test, verbose=1)
+print(f"Test accuracy from student model: {acc*100:.2f}%")
 
 """
 ## Assess the robustness of the models
