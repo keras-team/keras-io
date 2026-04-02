@@ -13,7 +13,7 @@
   var conversationHistory = [];
 
   // ── Config ─────────────────────────────────────────────────────────
-  var GEMINI_MODEL = "gemini-2.5-flash";
+  var GEMINI_MODEL = "gemini-2.5-pro";
   var GEMINI_API_URL =
     "https://generativelanguage.googleapis.com/v1beta/models/" +
     GEMINI_MODEL +
@@ -34,8 +34,7 @@
     "- Use markdown formatting: backticks for code, **bold** for emphasis, bullet lists for steps.\n" +
     "- When referencing a documentation page, mention its title so the user can search for it.\n" +
     "- For Keras 3, remember it supports JAX, TensorFlow, and PyTorch backends.\n" +
-    "- Be friendly and encouraging, especially with beginners.\n" +
-    "- If a question is not related to Keras or its ecosystem, politely decline and let the user know you can only help with Keras-related topics.";
+    "- Be friendly and encouraging, especially with beginners.";
 
   // ── API Key ────────────────────────────────────────────────────────
   function getApiKey() {
