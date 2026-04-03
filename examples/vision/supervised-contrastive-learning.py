@@ -2,9 +2,10 @@
 Title: Supervised Contrastive Learning
 Author: [Khalid Salama](https://www.linkedin.com/in/khalid-salama-24403144/)
 Date created: 2020/11/30
-Last modified: 2020/11/30
+Last modified: 2026/04/04
 Description: Using supervised contrastive learning for image classification.
 Accelerator: GPU
+Converted to Keras 3 by: [LakshmiKalaKadali](https://github.com/LakshmiKalaKadali)
 """
 
 """
@@ -22,22 +23,16 @@ that representations of images in the same class will be more similar compared t
 representations of images in different classes.
 2. Training a classifier on top of the frozen encoder.
 
-Note that this example requires [TensorFlow Addons](https://www.tensorflow.org/addons),
-which you can install using the following command:
-
-```python
-pip install tensorflow-addons
-```
-
 ## Setup
 """
 
-import tensorflow as tf
-import tensorflow_addons as tfa
-import numpy as np
-from tensorflow import keras
-from tensorflow.keras import layers
+import os
 
+# Set backend: "jax", "torch", or "tensorflow"
+os.environ["KERAS_BACKEND"] = "tensorflow"
+
+import keras
+from keras import layers, ops
 """
 ## Prepare the data
 """
@@ -161,21 +156,38 @@ softmax are optimized.
 
 
 class SupervisedContrastiveLoss(keras.losses.Loss):
-    def __init__(self, temperature=1, name=None):
-        super().__init__(name=name)
+    def __init__(self, temperature=0.05, **kwargs):
+        super().__init__(**kwargs)
         self.temperature = temperature
 
-    def __call__(self, labels, feature_vectors, sample_weight=None):
-        # Normalize feature vectors
-        feature_vectors_normalized = tf.math.l2_normalize(feature_vectors, axis=1)
-        # Compute logits
-        logits = tf.divide(
-            tf.matmul(
-                feature_vectors_normalized, tf.transpose(feature_vectors_normalized)
-            ),
+    def call(self, labels, feature_vectors):
+        feature_vectors = ops.normalize(feature_vectors, axis=1)
+
+        logits = ops.divide(
+            ops.matmul(feature_vectors, ops.transpose(feature_vectors)),
             self.temperature,
         )
-        return tfa.losses.npairs_loss(tf.squeeze(labels), logits)
+
+        # Create a mask to find positive pairs (images of same class)
+        labels = ops.cast(labels, "int32")
+        mask = ops.cast(ops.equal(labels, ops.transpose(labels)), "float32")
+
+        batch_size = ops.shape(logits)[0]
+        logits_mask = 1.0 - ops.eye(batch_size)
+        mask = mask * logits_mask
+
+        logits_max = ops.max(logits, axis=1, keepdims=True)
+        logits_exp = ops.exp(logits - logits_max) * logits_mask
+
+        log_prob = (logits - logits_max) - ops.log(
+            ops.sum(logits_exp, axis=1, keepdims=True) + 1e-8
+        )
+
+        mean_log_prob_pos = ops.sum(mask * log_prob, axis=1) / (
+            ops.sum(mask, axis=1) + 1e-8
+        )
+
+        return ops.subtract(0.0, ops.mean(mean_log_prob_pos))
 
 
 def add_projection_head(encoder):
