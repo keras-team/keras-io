@@ -9,6 +9,7 @@ PyYAML
 pandas
 google-pasta
 jupyter
+tokenizers
 pydot
 boto3
 tensorflow==2.19.1
