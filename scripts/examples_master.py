@@ -486,7 +486,7 @@ EXAMPLES_MASTER = {
                     "path": "masked_image_modeling",
                     "title": "Masked image modeling with Autoencoders",
                     "subcategory": "Performance recipes",
-                    "keras_2": True,
+                    "keras_3": True,
                 },
                 {
                     "path": "supervised-contrastive-learning",
@@ -1091,7 +1091,7 @@ EXAMPLES_MASTER = {
                     "path": "gat_node_classification",
                     "title": "Graph attention network (GAT) for node classification",
                     "subcategory": "Node classification",
-                    "keras_2": True,
+                    "keras_3": True,
                 },
                 {
                     "path": "gnn_citations",
