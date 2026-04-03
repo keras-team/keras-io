@@ -20,3 +20,4 @@ tf-keras==2.19.0
 keras-hub
 keras-rs
 pymdown-extensions==10.20
+sentencepiece
