@@ -1183,11 +1183,11 @@ API_MASTER = {
                     "title": "SwapEMAWeights",
                     "generate": ["keras.callbacks.SwapEMAWeights"],
                 },
-                # {
-                #     "path": "orbax_checkpoint",
-                #     "title": "OrbaxCheckpoint",
-                #     "generate": ["keras.callbacks.OrbaxCheckpoint"],
-                # }, #Enable after 3.14 release.
+                {
+                    "path": "orbax_checkpoint",
+                    "title": "OrbaxCheckpoint",
+                    "generate": ["keras.callbacks.OrbaxCheckpoint"],
+                }, 
             ],
         },
         {
