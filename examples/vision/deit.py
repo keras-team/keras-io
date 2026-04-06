@@ -111,8 +111,16 @@ FLOWERS_URL = "https://storage.googleapis.com/download.tensorflow.org/example_im
 class FlowersDataset(keras.utils.PyDataset):
     """Backend-agnostic flowers dataset that loads images from disk each epoch."""
 
-    def __init__(self, image_paths, labels, augmenter, batch_size=BATCH_SIZE,
-                 shuffle=False, seed=42, **kwargs):
+    def __init__(
+        self,
+        image_paths,
+        labels,
+        augmenter,
+        batch_size=BATCH_SIZE,
+        shuffle=False,
+        seed=42,
+        **kwargs,
+    ):
         super().__init__(**kwargs)
         self.image_paths = np.array(image_paths)
         self.labels = np.array(labels, dtype="int32")
@@ -137,10 +145,12 @@ class FlowersDataset(keras.utils.PyDataset):
         images = []
         for i in batch_indices:
             image = keras.utils.load_img(
-                self.image_paths[i], target_size=(RESOLUTION + 20, RESOLUTION + 20))
+                self.image_paths[i], target_size=(RESOLUTION + 20, RESOLUTION + 20)
+            )
             images.append(keras.utils.img_to_array(image))
-        images = self.augmenter(np.array(images, dtype="float32"),
-                                 training=self.shuffle)
+        images = self.augmenter(
+            np.array(images, dtype="float32"), training=self.shuffle
+        )
         labels = keras.ops.one_hot(self.labels[batch_indices], num_classes=NUM_CLASSES)
         return images, labels
 
@@ -148,17 +158,25 @@ class FlowersDataset(keras.utils.PyDataset):
 def get_augmenter(is_training=True):
     if is_training:
         return keras.Sequential(
-            [layers.Resizing(RESOLUTION + 20, RESOLUTION + 20),
-             layers.RandomCrop(RESOLUTION, RESOLUTION),
-             layers.RandomFlip("horizontal")], name="train_augmentation")
+            [
+                layers.Resizing(RESOLUTION + 20, RESOLUTION + 20),
+                layers.RandomCrop(RESOLUTION, RESOLUTION),
+                layers.RandomFlip("horizontal"),
+            ],
+            name="train_augmentation",
+        )
     return keras.Sequential(
-        [layers.Resizing(RESOLUTION, RESOLUTION)], name="eval_augmentation")
+        [layers.Resizing(RESOLUTION, RESOLUTION)], name="eval_augmentation"
+    )
 
 
 def load_flower_file_paths(validation_split=0.1):
     extracted = Path(keras.utils.get_file(origin=FLOWERS_URL, untar=True))
-    data_dir = (extracted / "flower_photos" if (extracted / "flower_photos").is_dir()
-                else extracted)
+    data_dir = (
+        extracted / "flower_photos"
+        if (extracted / "flower_photos").is_dir()
+        else extracted
+    )
     class_names = sorted([p.name for p in data_dir.iterdir() if p.is_dir()])
     class_to_index = {name: idx for idx, name in enumerate(class_names)}
     train_paths, train_labels = [], []
@@ -181,9 +199,11 @@ print(f"Number of training examples: {len(train_paths)}")
 print(f"Number of validation examples: {len(val_paths)}")
 
 train_dataset = FlowersDataset(
-    train_paths, train_labels, augmenter=get_augmenter(is_training=True), shuffle=True)
+    train_paths, train_labels, augmenter=get_augmenter(is_training=True), shuffle=True
+)
 val_dataset = FlowersDataset(
-    val_paths, val_labels, augmenter=get_augmenter(is_training=False), shuffle=False)
+    val_paths, val_labels, augmenter=get_augmenter(is_training=False), shuffle=False
+)
 
 """
 ## Implementing the DeiT variants of ViT
@@ -235,9 +255,11 @@ def transformer(drop_prob: float, name: str) -> keras.Model:
     encoded_patches = layers.Input((num_patches, PROJECTION_DIM))
     x1 = layers.LayerNormalization(epsilon=LAYER_NORM_EPS)(encoded_patches)
     attention_output = layers.MultiHeadAttention(
-        num_heads=NUM_HEADS, key_dim=PROJECTION_DIM, dropout=DROPOUT_RATE)(x1, x1)
+        num_heads=NUM_HEADS, key_dim=PROJECTION_DIM, dropout=DROPOUT_RATE
+    )(x1, x1)
     attention_output = (
-        StochasticDepth(drop_prob)(attention_output) if drop_prob else attention_output)
+        StochasticDepth(drop_prob)(attention_output) if drop_prob else attention_output
+    )
     x2 = layers.Add()([attention_output, encoded_patches])
     x3 = layers.LayerNormalization(epsilon=LAYER_NORM_EPS)(x2)
     x4 = mlp(x3, hidden_units=MLP_UNITS, dropout_rate=DROPOUT_RATE)
@@ -260,15 +282,26 @@ class ViTClassifier(keras.Model):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.projection = keras.Sequential(
-            [layers.Conv2D(filters=PROJECTION_DIM, kernel_size=(PATCH_SIZE, PATCH_SIZE),
-                          strides=(PATCH_SIZE, PATCH_SIZE), padding="VALID",
-                          name="conv_projection"),
-             layers.Reshape(target_shape=(NUM_PATCHES, PROJECTION_DIM),
-                           name="flatten_projection")], name="projection")
+            [
+                layers.Conv2D(
+                    filters=PROJECTION_DIM,
+                    kernel_size=(PATCH_SIZE, PATCH_SIZE),
+                    strides=(PATCH_SIZE, PATCH_SIZE),
+                    padding="VALID",
+                    name="conv_projection",
+                ),
+                layers.Reshape(
+                    target_shape=(NUM_PATCHES, PROJECTION_DIM),
+                    name="flatten_projection",
+                ),
+            ],
+            name="projection",
+        )
         dpr = [x for x in keras.ops.linspace(0.0, DROP_PATH_RATE, NUM_LAYERS)]
         self.transformer_blocks = [
             transformer(drop_prob=dpr[i], name=f"transformer_block_{i}")
-            for i in range(NUM_LAYERS)]
+            for i in range(NUM_LAYERS)
+        ]
         self.dropout = layers.Dropout(DROPOUT_RATE)
         self.layer_norm = layers.LayerNormalization(epsilon=LAYER_NORM_EPS)
         self.head = layers.Dense(NUM_CLASSES, name="classification_head")
@@ -276,11 +309,16 @@ class ViTClassifier(keras.Model):
     def build(self, input_shape):
         self.positional_embedding = self.add_weight(
             shape=(1, NUM_PATCHES + 1, PROJECTION_DIM),
-            initializer=keras.initializers.Zeros(), trainable=True,
-            name="pos_embedding")
+            initializer=keras.initializers.Zeros(),
+            trainable=True,
+            name="pos_embedding",
+        )
         self.cls_token = self.add_weight(
-            shape=(1, 1, PROJECTION_DIM), initializer=keras.initializers.Zeros(),
-            trainable=True, name="cls")
+            shape=(1, 1, PROJECTION_DIM),
+            initializer=keras.initializers.Zeros(),
+            trainable=True,
+            name="cls",
+        )
         super().build(input_shape)
 
     def call(self, inputs, training=True):
@@ -288,7 +326,9 @@ class ViTClassifier(keras.Model):
         projected_patches = self.projection(inputs)
         cls_token = keras.ops.tile(self.cls_token, (n, 1, 1))
         cls_token = keras.ops.cast(cls_token, projected_patches.dtype)
-        projected_patches = keras.ops.concatenate([cls_token, projected_patches], axis=1)
+        projected_patches = keras.ops.concatenate(
+            [cls_token, projected_patches], axis=1
+        )
         encoded_patches = self.positional_embedding + projected_patches
         encoded_patches = self.dropout(encoded_patches)
         for transformer_module in self.transformer_blocks:
@@ -323,15 +363,23 @@ class ViTDistilled(ViTClassifier):
 
     def build(self, input_shape):
         self.cls_token = self.add_weight(
-            shape=(1, 1, PROJECTION_DIM), initializer=keras.initializers.Zeros(),
-            trainable=True, name="cls")
+            shape=(1, 1, PROJECTION_DIM),
+            initializer=keras.initializers.Zeros(),
+            trainable=True,
+            name="cls",
+        )
         self.dist_token = self.add_weight(
-            shape=(1, 1, PROJECTION_DIM), initializer=keras.initializers.Zeros(),
-            trainable=True, name="dist_token")
+            shape=(1, 1, PROJECTION_DIM),
+            initializer=keras.initializers.Zeros(),
+            trainable=True,
+            name="dist_token",
+        )
         self.positional_embedding = self.add_weight(
             shape=(1, NUM_PATCHES + self.num_tokens, PROJECTION_DIM),
-            initializer=keras.initializers.Zeros(), trainable=True,
-            name="pos_embedding")
+            initializer=keras.initializers.Zeros(),
+            trainable=True,
+            name="pos_embedding",
+        )
 
     def call(self, inputs, training=True):
         n = keras.ops.shape(inputs)[0]
@@ -341,14 +389,17 @@ class ViTDistilled(ViTClassifier):
         cls_token = keras.ops.cast(cls_token, projected_patches.dtype)
         dist_token = keras.ops.cast(dist_token, projected_patches.dtype)
         projected_patches = keras.ops.concatenate(
-            [cls_token, dist_token, projected_patches], axis=1)
+            [cls_token, dist_token, projected_patches], axis=1
+        )
         encoded_patches = self.positional_embedding + projected_patches
         encoded_patches = self.dropout(encoded_patches)
         for transformer_module in self.transformer_blocks:
             encoded_patches = transformer_module(encoded_patches)
         representation = self.layer_norm(encoded_patches)
-        x, x_dist = (self.head(representation[:, 0]),
-                     self.head_dist(representation[:, 1]))
+        x, x_dist = (
+            self.head(representation[:, 0]),
+            self.head_dist(representation[:, 1]),
+        )
         if training and not self.regular_training:
             return x, x_dist
         return (x + x_dist) / 2
@@ -415,7 +466,8 @@ class DeiT(keras.Model):
         teacher_predictions = keras.ops.softmax(teacher_logits, axis=-1)
         student_loss = self.student_loss_fn(y, cls_predictions)
         distillation_loss = self.distillation_loss_fn(
-            teacher_predictions, dist_predictions)
+            teacher_predictions, dist_predictions
+        )
         self.student_loss_tracker.update_state(student_loss)
         self.dist_loss_tracker.update_state(distillation_loss)
         student_predictions = (cls_predictions + dist_predictions) / 2
@@ -429,8 +481,11 @@ class DeiT(keras.Model):
         student_loss = self.student_loss_fn(y, y_prediction)
         self.accuracy_metric.update_state(y, y_prediction)
         self.student_loss_tracker.update_state(student_loss)
-        return {"loss": student_loss, "student_loss": self.student_loss_tracker.result(),
-                "accuracy": self.accuracy_metric.result()}
+        return {
+            "loss": student_loss,
+            "student_loss": self.student_loss_tracker.result(),
+            "accuracy": self.accuracy_metric.result(),
+        }
 
     def call(self, inputs, training=False):
         inputs_normalized = keras.ops.cast(inputs, "float32") / 255.0
@@ -452,14 +507,17 @@ so it expects raw `[0, 255]` image values. We therefore avoid adding an extra
 """
 
 teacher_backbone = keras.applications.EfficientNetV2B0(
-    include_top=False, pooling="avg", weights="imagenet")
+    include_top=False, pooling="avg", weights="imagenet"
+)
 teacher_backbone.trainable = False
 teacher_model = keras.Sequential(
-    [teacher_backbone, layers.Dense(NUM_CLASSES)], name="teacher")
+    [teacher_backbone, layers.Dense(NUM_CLASSES)], name="teacher"
+)
 teacher_model.compile(
     optimizer=keras.optimizers.AdamW(learning_rate=1e-3, weight_decay=1e-4),
     loss=keras.losses.CategoricalCrossentropy(from_logits=True),
-    metrics=[keras.metrics.CategoricalAccuracy(name="accuracy")])
+    metrics=[keras.metrics.CategoricalAccuracy(name="accuracy")],
+)
 
 print("Fine-tuning teacher head on flowers dataset...")
 teacher_model.fit(train_dataset, validation_data=val_dataset, epochs=5)
@@ -473,10 +531,14 @@ deit_tiny = ViTDistilled()
 deit_distiller = DeiT(student=deit_tiny, teacher=teacher_model)
 lr_scaled = (BASE_LR / 512) * BATCH_SIZE
 deit_distiller.compile(
-    optimizer=keras.optimizers.AdamW(weight_decay=WEIGHT_DECAY, learning_rate=lr_scaled),
+    optimizer=keras.optimizers.AdamW(
+        weight_decay=WEIGHT_DECAY, learning_rate=lr_scaled
+    ),
     student_loss_fn=keras.losses.CategoricalCrossentropy(
-        from_logits=True, label_smoothing=0.1),
-    distillation_loss_fn=keras.losses.CategoricalCrossentropy(from_logits=True))
+        from_logits=True, label_smoothing=0.1
+    ),
+    distillation_loss_fn=keras.losses.CategoricalCrossentropy(from_logits=True),
+)
 _ = deit_distiller.fit(train_dataset, validation_data=val_dataset, epochs=NUM_EPOCHS)
 
 """
