@@ -57,18 +57,6 @@ from keras import layers
 keras.utils.set_random_seed(42)
 ```
 
-<div class="k-default-codeblock">
-```
-WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
-E0000 00:00:1775457934.257376    5059 cuda_dnn.cc:8579] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered
-E0000 00:00:1775457934.261891    5059 cuda_blas.cc:1407] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
-W0000 00:00:1775457934.273383    5059 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
-W0000 00:00:1775457934.273394    5059 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
-W0000 00:00:1775457934.273395    5059 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
-W0000 00:00:1775457934.273396    5059 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
-```
-</div>
-
 ---
 ## Constants
 
@@ -223,14 +211,12 @@ val_dataset = FlowersDataset(
 ```
 
 <div class="k-default-codeblock">
-```
 Downloading data from https://storage.googleapis.com/download.tensorflow.org/example_images/flower_photos.tgz
 
 228813984/228813984 ━━━━━━━━━━━━━━━━━━━━ 1s 0us/step
 
-Number of training examples: 3306
+Number of training examples: 3306 </br>
 Number of validation examples: 364
-```
 </div>
 
 ---
@@ -568,7 +554,6 @@ teacher_model.trainable = False
 ```
 
 <div class="k-default-codeblock">
-```
 Downloading data from https://storage.googleapis.com/tensorflow/keras-applications/efficientnet_v2/efficientnetv2-b0_notop.h5
 
 24274472/24274472 ━━━━━━━━━━━━━━━━━━━━ 0s 0us/step
@@ -594,7 +579,6 @@ Epoch 4/5
 Epoch 5/5
 
 13/13 ━━━━━━━━━━━━━━━━━━━━ 15s 1s/step - accuracy: 0.8917 - loss: 0.3972 - val_accuracy: 0.8571 - val_loss: 0.4560
-```
 </div>
 
 ---
@@ -618,7 +602,6 @@ _ = deit_distiller.fit(train_dataset, validation_data=val_dataset, epochs=NUM_EP
 ```
 
 <div class="k-default-codeblock">
-```
 Epoch 1/20
 
 13/13 ━━━━━━━━━━━━━━━━━━━━ 71s 3s/step - accuracy: 0.2217 - distillation_loss: 2.1946 - loss: 2.0575 - student_loss: 1.9389 - val_accuracy: 0.1896 - val_loss: 1.4167 - val_student_loss: 1.5656
@@ -698,7 +681,6 @@ Epoch 19/20
 Epoch 20/20
 
 13/13 ━━━━━━━━━━━━━━━━━━━━ 35s 3s/step - accuracy: 0.6128 - distillation_loss: 1.1646 - loss: 1.1411 - student_loss: 1.1169 - val_accuracy: 0.6209 - val_loss: 1.2352 - val_student_loss: 1.1721
-```
 </div>
 
 In this Keras 3 setup, distillation consistently improves over training the same
