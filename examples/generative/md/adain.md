@@ -62,18 +62,18 @@ IMAGE_SIZE = (224, 224)
 BATCH_SIZE = 64
 # Training for single epoch for time constraint.
 # Please use atleast 30 epochs to see good results.
-EPOCHS = 1
+EPOCHS = 30
 ```
 
 <div class="k-default-codeblock">
 ```
 WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
-E0000 00:00:1775463259.343854   22452 cuda_dnn.cc:8579] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered
-E0000 00:00:1775463259.348205   22452 cuda_blas.cc:1407] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
-W0000 00:00:1775463259.359494   22452 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
-W0000 00:00:1775463259.359506   22452 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
-W0000 00:00:1775463259.359507   22452 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
-W0000 00:00:1775463259.359509   22452 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+E0000 00:00:1775463707.570859   24142 cuda_dnn.cc:8579] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered
+E0000 00:00:1775463707.575262   24142 cuda_blas.cc:1407] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
+W0000 00:00:1775463707.586734   24142 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1775463707.586746   24142 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1775463707.586747   24142 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1775463707.586749   24142 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
 ```
 </div>
 
@@ -282,10 +282,6 @@ test_ds = StyleContentPyDataset(
 
 <div class="k-default-codeblock">
 ```
-Downloading data from https://www.cs.toronto.edu/~kriz/cifar-10-python.tar.gz
-
-170498071/170498071 ━━━━━━━━━━━━━━━━━━━━ 12s 0us/step
-
 Using fallback local data at /tmp/adain_data because /content paths were not found.
 ```
 </div>
@@ -683,19 +679,425 @@ history = model.fit(
 
 <div class="k-default-codeblock">
 ```
-Downloading data from https://storage.googleapis.com/tensorflow/keras-applications/vgg19/vgg19_weights_tf_dim_ordering_tf_kernels_notop.h5
+Epoch 1/30
 
-7/7 ━━━━━━━━━━━━━━━━━━━━ 0s 2s/step - content_loss: 54.5753 - style_loss: 85.2095 - total_loss: 139.7848
+7/7 ━━━━━━━━━━━━━━━━━━━━ 0s 2s/step - content_loss: 69.3327 - style_loss: 140.9464 - total_loss: 210.2792
 ```
 </div>
 
-![png](/img/examples/generative/adain/adain_23_15.png)
+![png](/img/examples/generative/adain/adain_23_8.png)
     
 
 
 <div class="k-default-codeblock">
 ```
-7/7 ━━━━━━━━━━━━━━━━━━━━ 25s 3s/step - content_loss: 49.3503 - style_loss: 69.9604 - total_loss: 119.3107 - val_content_loss: 46.3482 - val_style_loss: 54.5706 - val_total_loss: 100.9188
+7/7 ━━━━━━━━━━━━━━━━━━━━ 25s 3s/step - content_loss: 64.4736 - style_loss: 129.5553 - total_loss: 194.0289 - val_content_loss: 61.5842 - val_style_loss: 121.2355 - val_total_loss: 182.8197
+
+Epoch 2/30
+
+7/7 ━━━━━━━━━━━━━━━━━━━━ 0s 2s/step - content_loss: 58.3413 - style_loss: 110.8445 - total_loss: 169.1858
+```
+</div>
+
+![png](/img/examples/generative/adain/adain_23_18.png)
+    
+
+
+<div class="k-default-codeblock">
+```
+7/7 ━━━━━━━━━━━━━━━━━━━━ 20s 3s/step - content_loss: 58.0459 - style_loss: 108.7533 - total_loss: 166.7992 - val_content_loss: 58.5479 - val_style_loss: 110.1745 - val_total_loss: 168.7224
+
+Epoch 3/30
+
+7/7 ━━━━━━━━━━━━━━━━━━━━ 0s 2s/step - content_loss: 55.2051 - style_loss: 100.6297 - total_loss: 155.8348
+```
+</div>
+
+![png](/img/examples/generative/adain/adain_23_28.png)
+    
+
+
+<div class="k-default-codeblock">
+```
+7/7 ━━━━━━━━━━━━━━━━━━━━ 20s 3s/step - content_loss: 54.5550 - style_loss: 97.7767 - total_loss: 152.3318 - val_content_loss: 56.7784 - val_style_loss: 99.6632 - val_total_loss: 156.4415
+
+Epoch 4/30
+
+7/7 ━━━━━━━━━━━━━━━━━━━━ 0s 2s/step - content_loss: 52.8162 - style_loss: 89.3740 - total_loss: 142.1902
+```
+</div>
+
+![png](/img/examples/generative/adain/adain_23_38.png)
+    
+
+
+<div class="k-default-codeblock">
+```
+7/7 ━━━━━━━━━━━━━━━━━━━━ 20s 3s/step - content_loss: 52.2626 - style_loss: 88.3876 - total_loss: 140.6502 - val_content_loss: 53.1038 - val_style_loss: 90.5593 - val_total_loss: 143.6631
+
+Epoch 5/30
+
+7/7 ━━━━━━━━━━━━━━━━━━━━ 0s 3s/step - content_loss: 48.9089 - style_loss: 79.1898 - total_loss: 128.0987
+```
+</div>
+
+![png](/img/examples/generative/adain/adain_23_48.png)
+    
+
+
+<div class="k-default-codeblock">
+```
+7/7 ━━━━━━━━━━━━━━━━━━━━ 20s 3s/step - content_loss: 48.3021 - style_loss: 77.6323 - total_loss: 125.9344 - val_content_loss: 49.3859 - val_style_loss: 76.2716 - val_total_loss: 125.6575
+
+Epoch 6/30
+
+7/7 ━━━━━━━━━━━━━━━━━━━━ 0s 2s/step - content_loss: 46.5736 - style_loss: 66.7209 - total_loss: 113.2945
+```
+</div>
+
+![png](/img/examples/generative/adain/adain_23_58.png)
+    
+
+
+<div class="k-default-codeblock">
+```
+7/7 ━━━━━━━━━━━━━━━━━━━━ 20s 3s/step - content_loss: 46.2035 - style_loss: 64.3224 - total_loss: 110.5259 - val_content_loss: 46.8296 - val_style_loss: 55.3400 - val_total_loss: 102.1695
+
+Epoch 7/30
+
+7/7 ━━━━━━━━━━━━━━━━━━━━ 0s 2s/step - content_loss: 45.0892 - style_loss: 49.0773 - total_loss: 94.1665
+```
+</div>
+
+![png](/img/examples/generative/adain/adain_23_68.png)
+    
+
+
+<div class="k-default-codeblock">
+```
+7/7 ━━━━━━━━━━━━━━━━━━━━ 20s 3s/step - content_loss: 43.8027 - style_loss: 45.6226 - total_loss: 89.4253 - val_content_loss: 44.6162 - val_style_loss: 47.6259 - val_total_loss: 92.2422
+
+Epoch 8/30
+
+7/7 ━━━━━━━━━━━━━━━━━━━━ 0s 2s/step - content_loss: 41.9670 - style_loss: 42.2324 - total_loss: 84.1994
+```
+</div>
+
+![png](/img/examples/generative/adain/adain_23_78.png)
+    
+
+
+<div class="k-default-codeblock">
+```
+7/7 ━━━━━━━━━━━━━━━━━━━━ 20s 3s/step - content_loss: 41.9080 - style_loss: 41.7055 - total_loss: 83.6135 - val_content_loss: 42.9081 - val_style_loss: 44.1262 - val_total_loss: 87.0343
+
+Epoch 9/30
+
+7/7 ━━━━━━━━━━━━━━━━━━━━ 0s 2s/step - content_loss: 41.0440 - style_loss: 39.7052 - total_loss: 80.7492
+```
+</div>
+
+![png](/img/examples/generative/adain/adain_23_88.png)
+    
+
+
+<div class="k-default-codeblock">
+```
+7/7 ━━━━━━━━━━━━━━━━━━━━ 20s 3s/step - content_loss: 40.8874 - style_loss: 38.1873 - total_loss: 79.0748 - val_content_loss: 42.6833 - val_style_loss: 38.9655 - val_total_loss: 81.6487
+
+Epoch 10/30
+
+7/7 ━━━━━━━━━━━━━━━━━━━━ 0s 2s/step - content_loss: 40.2837 - style_loss: 33.6737 - total_loss: 73.9575
+```
+</div>
+
+![png](/img/examples/generative/adain/adain_23_98.png)
+    
+
+
+<div class="k-default-codeblock">
+```
+7/7 ━━━━━━━━━━━━━━━━━━━━ 20s 3s/step - content_loss: 39.9428 - style_loss: 34.1020 - total_loss: 74.0449 - val_content_loss: 40.4202 - val_style_loss: 36.6194 - val_total_loss: 77.0396
+
+Epoch 11/30
+
+7/7 ━━━━━━━━━━━━━━━━━━━━ 0s 2s/step - content_loss: 37.7901 - style_loss: 32.1251 - total_loss: 69.9152
+```
+</div>
+
+![png](/img/examples/generative/adain/adain_23_108.png)
+    
+
+
+<div class="k-default-codeblock">
+```
+7/7 ━━━━━━━━━━━━━━━━━━━━ 20s 3s/step - content_loss: 37.6326 - style_loss: 32.0121 - total_loss: 69.6447 - val_content_loss: 38.7432 - val_style_loss: 33.8374 - val_total_loss: 72.5806
+
+Epoch 12/30
+
+7/7 ━━━━━━━━━━━━━━━━━━━━ 0s 2s/step - content_loss: 36.8127 - style_loss: 30.6076 - total_loss: 67.4203
+```
+</div>
+
+![png](/img/examples/generative/adain/adain_23_118.png)
+    
+
+
+<div class="k-default-codeblock">
+```
+7/7 ━━━━━━━━━━━━━━━━━━━━ 20s 3s/step - content_loss: 36.4167 - style_loss: 29.9773 - total_loss: 66.3941 - val_content_loss: 36.4050 - val_style_loss: 30.8240 - val_total_loss: 67.2290
+
+Epoch 13/30
+
+7/7 ━━━━━━━━━━━━━━━━━━━━ 0s 2s/step - content_loss: 33.8249 - style_loss: 27.3473 - total_loss: 61.1722
+```
+</div>
+
+![png](/img/examples/generative/adain/adain_23_128.png)
+    
+
+
+<div class="k-default-codeblock">
+```
+7/7 ━━━━━━━━━━━━━━━━━━━━ 20s 3s/step - content_loss: 33.0191 - style_loss: 26.5015 - total_loss: 59.5206 - val_content_loss: 33.8826 - val_style_loss: 28.0350 - val_total_loss: 61.9177
+
+Epoch 14/30
+
+7/7 ━━━━━━━━━━━━━━━━━━━━ 0s 2s/step - content_loss: 30.7907 - style_loss: 24.0908 - total_loss: 54.8815
+```
+</div>
+
+![png](/img/examples/generative/adain/adain_23_138.png)
+    
+
+
+<div class="k-default-codeblock">
+```
+7/7 ━━━━━━━━━━━━━━━━━━━━ 20s 3s/step - content_loss: 30.9472 - style_loss: 24.6625 - total_loss: 55.6098 - val_content_loss: 31.0826 - val_style_loss: 25.6283 - val_total_loss: 56.7110
+
+Epoch 15/30
+
+7/7 ━━━━━━━━━━━━━━━━━━━━ 0s 2s/step - content_loss: 28.0676 - style_loss: 22.0865 - total_loss: 50.1541
+```
+</div>
+
+![png](/img/examples/generative/adain/adain_23_148.png)
+    
+
+
+<div class="k-default-codeblock">
+```
+7/7 ━━━━━━━━━━━━━━━━━━━━ 20s 3s/step - content_loss: 27.8455 - style_loss: 22.1264 - total_loss: 49.9719 - val_content_loss: 28.5455 - val_style_loss: 23.5957 - val_total_loss: 52.1412
+
+Epoch 16/30
+
+7/7 ━━━━━━━━━━━━━━━━━━━━ 0s 2s/step - content_loss: 26.2761 - style_loss: 21.0945 - total_loss: 47.3706
+```
+</div>
+
+![png](/img/examples/generative/adain/adain_23_158.png)
+    
+
+
+<div class="k-default-codeblock">
+```
+7/7 ━━━━━━━━━━━━━━━━━━━━ 20s 3s/step - content_loss: 25.7858 - style_loss: 21.1223 - total_loss: 46.9081 - val_content_loss: 26.5362 - val_style_loss: 21.9274 - val_total_loss: 48.4636
+
+Epoch 17/30
+
+7/7 ━━━━━━━━━━━━━━━━━━━━ 0s 3s/step - content_loss: 23.6390 - style_loss: 18.7739 - total_loss: 42.4129
+```
+</div>
+
+![png](/img/examples/generative/adain/adain_23_168.png)
+    
+
+
+<div class="k-default-codeblock">
+```
+7/7 ━━━━━━━━━━━━━━━━━━━━ 20s 3s/step - content_loss: 23.7391 - style_loss: 19.0580 - total_loss: 42.7971 - val_content_loss: 24.9193 - val_style_loss: 20.4144 - val_total_loss: 45.3337
+
+Epoch 18/30
+
+7/7 ━━━━━━━━━━━━━━━━━━━━ 0s 3s/step - content_loss: 22.4734 - style_loss: 17.9847 - total_loss: 40.4581
+```
+</div>
+
+![png](/img/examples/generative/adain/adain_23_178.png)
+    
+
+
+<div class="k-default-codeblock">
+```
+7/7 ━━━━━━━━━━━━━━━━━━━━ 20s 3s/step - content_loss: 22.4346 - style_loss: 18.0033 - total_loss: 40.4380 - val_content_loss: 23.3949 - val_style_loss: 19.1585 - val_total_loss: 42.5533
+
+Epoch 19/30
+
+7/7 ━━━━━━━━━━━━━━━━━━━━ 0s 2s/step - content_loss: 21.3290 - style_loss: 17.0995 - total_loss: 38.4285
+```
+</div>
+
+![png](/img/examples/generative/adain/adain_23_188.png)
+    
+
+
+<div class="k-default-codeblock">
+```
+7/7 ━━━━━━━━━━━━━━━━━━━━ 20s 3s/step - content_loss: 21.0454 - style_loss: 16.8622 - total_loss: 37.9076 - val_content_loss: 22.4199 - val_style_loss: 18.0265 - val_total_loss: 40.4464
+
+Epoch 20/30
+
+7/7 ━━━━━━━━━━━━━━━━━━━━ 0s 2s/step - content_loss: 19.8949 - style_loss: 15.9196 - total_loss: 35.8146
+```
+</div>
+
+![png](/img/examples/generative/adain/adain_23_198.png)
+    
+
+
+<div class="k-default-codeblock">
+```
+7/7 ━━━━━━━━━━━━━━━━━━━━ 20s 3s/step - content_loss: 20.2994 - style_loss: 16.1616 - total_loss: 36.4610 - val_content_loss: 21.6341 - val_style_loss: 17.2532 - val_total_loss: 38.8873
+
+Epoch 21/30
+
+7/7 ━━━━━━━━━━━━━━━━━━━━ 0s 2s/step - content_loss: 19.9996 - style_loss: 15.7381 - total_loss: 35.7377
+```
+</div>
+
+![png](/img/examples/generative/adain/adain_23_208.png)
+    
+
+
+<div class="k-default-codeblock">
+```
+7/7 ━━━━━━━━━━━━━━━━━━━━ 20s 3s/step - content_loss: 19.5869 - style_loss: 15.2180 - total_loss: 34.8049 - val_content_loss: 20.7572 - val_style_loss: 16.6049 - val_total_loss: 37.3621
+
+Epoch 22/30
+
+7/7 ━━━━━━━━━━━━━━━━━━━━ 0s 2s/step - content_loss: 19.2298 - style_loss: 15.3685 - total_loss: 34.5983
+```
+</div>
+
+![png](/img/examples/generative/adain/adain_23_218.png)
+    
+
+
+<div class="k-default-codeblock">
+```
+7/7 ━━━━━━━━━━━━━━━━━━━━ 20s 3s/step - content_loss: 18.9491 - style_loss: 14.7553 - total_loss: 33.7044 - val_content_loss: 20.2151 - val_style_loss: 15.9647 - val_total_loss: 36.1798
+
+Epoch 23/30
+
+7/7 ━━━━━━━━━━━━━━━━━━━━ 0s 2s/step - content_loss: 18.6367 - style_loss: 14.3806 - total_loss: 33.0173
+```
+</div>
+
+![png](/img/examples/generative/adain/adain_23_228.png)
+    
+
+
+<div class="k-default-codeblock">
+```
+7/7 ━━━━━━━━━━━━━━━━━━━━ 20s 3s/step - content_loss: 18.5593 - style_loss: 14.2651 - total_loss: 32.8244 - val_content_loss: 19.5625 - val_style_loss: 15.5629 - val_total_loss: 35.1255
+
+Epoch 24/30
+
+7/7 ━━━━━━━━━━━━━━━━━━━━ 0s 2s/step - content_loss: 18.5452 - style_loss: 14.5071 - total_loss: 33.0524
+```
+</div>
+
+![png](/img/examples/generative/adain/adain_23_238.png)
+    
+
+
+<div class="k-default-codeblock">
+```
+7/7 ━━━━━━━━━━━━━━━━━━━━ 20s 3s/step - content_loss: 18.0261 - style_loss: 14.1054 - total_loss: 32.1316 - val_content_loss: 19.1599 - val_style_loss: 15.1159 - val_total_loss: 34.2758
+
+Epoch 25/30
+
+7/7 ━━━━━━━━━━━━━━━━━━━━ 0s 2s/step - content_loss: 17.6185 - style_loss: 13.5009 - total_loss: 31.1194
+```
+</div>
+
+![png](/img/examples/generative/adain/adain_23_248.png)
+    
+
+
+<div class="k-default-codeblock">
+```
+7/7 ━━━━━━━━━━━━━━━━━━━━ 20s 3s/step - content_loss: 17.7612 - style_loss: 13.4830 - total_loss: 31.2442 - val_content_loss: 18.9258 - val_style_loss: 14.6126 - val_total_loss: 33.5383
+
+Epoch 26/30
+
+7/7 ━━━━━━━━━━━━━━━━━━━━ 0s 3s/step - content_loss: 17.5533 - style_loss: 12.5722 - total_loss: 30.1255
+```
+</div>
+
+![png](/img/examples/generative/adain/adain_23_258.png)
+    
+
+
+<div class="k-default-codeblock">
+```
+7/7 ━━━━━━━━━━━━━━━━━━━━ 20s 3s/step - content_loss: 17.3663 - style_loss: 13.0496 - total_loss: 30.4158 - val_content_loss: 18.3139 - val_style_loss: 14.6291 - val_total_loss: 32.9430
+
+Epoch 27/30
+
+7/7 ━━━━━━━━━━━━━━━━━━━━ 0s 2s/step - content_loss: 17.6558 - style_loss: 13.8729 - total_loss: 31.5287
+```
+</div>
+
+![png](/img/examples/generative/adain/adain_23_268.png)
+    
+
+
+<div class="k-default-codeblock">
+```
+7/7 ━━━━━━━━━━━━━━━━━━━━ 20s 3s/step - content_loss: 17.2391 - style_loss: 13.4659 - total_loss: 30.7049 - val_content_loss: 18.0461 - val_style_loss: 14.3104 - val_total_loss: 32.3565
+
+Epoch 28/30
+
+7/7 ━━━━━━━━━━━━━━━━━━━━ 0s 2s/step - content_loss: 17.0192 - style_loss: 13.0646 - total_loss: 30.0838
+```
+</div>
+
+![png](/img/examples/generative/adain/adain_23_278.png)
+    
+
+
+<div class="k-default-codeblock">
+```
+7/7 ━━━━━━━━━━━━━━━━━━━━ 20s 3s/step - content_loss: 16.6298 - style_loss: 12.8305 - total_loss: 29.4603 - val_content_loss: 17.8203 - val_style_loss: 14.0111 - val_total_loss: 31.8314
+
+Epoch 29/30
+
+7/7 ━━━━━━━━━━━━━━━━━━━━ 0s 2s/step - content_loss: 16.4851 - style_loss: 12.4063 - total_loss: 28.8914
+```
+</div>
+
+![png](/img/examples/generative/adain/adain_23_288.png)
+    
+
+
+<div class="k-default-codeblock">
+```
+7/7 ━━━━━━━━━━━━━━━━━━━━ 20s 3s/step - content_loss: 16.2729 - style_loss: 12.4816 - total_loss: 28.7545 - val_content_loss: 17.5812 - val_style_loss: 13.7577 - val_total_loss: 31.3390
+
+Epoch 30/30
+
+7/7 ━━━━━━━━━━━━━━━━━━━━ 0s 3s/step - content_loss: 15.9445 - style_loss: 12.1650 - total_loss: 28.1095
+```
+</div>
+
+![png](/img/examples/generative/adain/adain_23_298.png)
+    
+
+
+<div class="k-default-codeblock">
+```
+7/7 ━━━━━━━━━━━━━━━━━━━━ 20s 3s/step - content_loss: 16.0177 - style_loss: 12.2860 - total_loss: 28.3037 - val_content_loss: 17.2777 - val_style_loss: 13.4660 - val_total_loss: 30.7437
 ```
 </div>
 

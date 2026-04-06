@@ -62,7 +62,7 @@ IMAGE_SIZE = (224, 224)
 BATCH_SIZE = 64
 # Training for single epoch for time constraint.
 # Please use atleast 30 epochs to see good results.
-EPOCHS = 1
+EPOCHS = 30
 
 """
 ## Style transfer sample gallery
