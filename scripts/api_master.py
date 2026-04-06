@@ -1418,7 +1418,7 @@ API_MASTER = {
                         "keras.ops.where",
                         "keras.ops.zeros",
                         "keras.ops.zeros_like",
-                    ]
+                    ],
                 },
                 {
                     "path": "nn/",
