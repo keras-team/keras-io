@@ -1417,7 +1417,7 @@ API_MASTER = {
                         "keras.ops.vsplit",
                         "keras.ops.where",
                         "keras.ops.zeros",
-                        "keras.ops.zeros_like"
+                        "keras.ops.zeros_like",
                     ]
                 },
                 {
