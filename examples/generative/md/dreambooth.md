@@ -255,7 +255,7 @@ Loading Stable Diffusion 3 (will be reused for training)...
 Downloading to /home/kharshith/.cache/kagglehub/models/keras/stablediffusion3/keras/stable_diffusion_3_medium/5/config.json...
 </div>
 
-  0%███████████████████████████████████████████████████████████████████████████████████████100%|
+  0%███████████████████████████████████████████████████████████████████████████████████████100%| 4.19k/4.19k [00:00<00:00, 9.05MB/s]
 
 <div class="k-default-codeblock">
 Downloading to /home/kharshith/.cache/kagglehub/models/keras/stablediffusion3/keras/stable_diffusion_3_medium/5/model.weights.h5...
@@ -298,7 +298,7 @@ Downloading to /home/kharshith/.cache/kagglehub/models/keras/stablediffusion3/ke
 <div class="k-default-codeblock">
 Encoding 2 unique prompts (instead of 400)...
 
-Text embedding shapes: (200, 154, 4096), (200, 154, 4096)
+Text embedding shapes: (200, 154, 4096), (200, 154, 4096) </br>
 Pooled embedding shapes: (200, 2048), (200, 2048)
 </div>
 
@@ -472,12 +472,12 @@ for k in sample_batch[1]:
 
 <div class="k-default-codeblock">
 dict_keys(['instance_images', 'instance_embedded_texts', 'instance_pooled_embeddings']) dict_keys(['class_images', 'class_embedded_texts', 'class_pooled_embeddings'])
-instance_images (1, 512, 512, 3)
-instance_embedded_texts (1, 154, 4096)
-instance_pooled_embeddings (1, 2048)
-class_images (1, 512, 512, 3)
-class_embedded_texts (1, 154, 4096)
-class_pooled_embeddings (1, 2048)
+</br>instance_images (1, 512, 512, 3)
+</br>instance_embedded_texts (1, 154, 4096)
+</br>instance_pooled_embeddings (1, 2048)
+</br>class_images (1, 512, 512, 3)
+</br>class_embedded_texts (1, 154, 4096)
+</br>class_pooled_embeddings (1, 2048)
 </div>
 
 During training, we make use of these keys to gather the images and text embeddings and
