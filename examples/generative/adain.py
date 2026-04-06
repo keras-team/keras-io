@@ -5,6 +5,7 @@ Date created: 2021/11/08
 Last modified: 2021/11/08
 Description: Neural Style Transfer with Adaptive Instance Normalization.
 Accelerator: GPU
+Converted to Keras 3 by: [Harshith K](https://github.com/kharshith-k/)
 """
 
 """
