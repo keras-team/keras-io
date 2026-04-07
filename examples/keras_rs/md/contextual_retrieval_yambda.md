@@ -1,13 +1,16 @@
-"""
-Title: Context-Aware Music Retrieval with Yambda and JAX Data Parallelism
-Author: [Rishiraj Acharya](https://github.com/rishiraj)
-Date created: 2026/04/01
-Last modified: 2026/04/01
-Description: Context-aware music retrieval model trained on TPU with JAX data parallelism using Yambda dataset.
-Accelerator: TPU
-"""
+# Context-Aware Music Retrieval with Yambda and JAX Data Parallelism
 
-"""
+**Author:** [Rishiraj Acharya](https://github.com/rishiraj)<br>
+**Date created:** 2026/04/01<br>
+**Last modified:** 2026/04/01<br>
+**Description:** Context-aware music retrieval model trained on TPU with JAX data parallelism using Yambda dataset.
+
+
+<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/keras_rs/ipynb/contextual_retrieval_yambda.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/keras_rs/contextual_retrieval_yambda.py)
+
+
+
+---
 ## Introduction
 
 Standard retrieval models learn a static embedding for each user. However, user behavior in the real world is highly context-dependent. A user might want completely different music tracks when they are actively browsing and searching (an *organic* context) versus when they are leaning back and listening to an algorithmic radio station (a *recommendation-driven* context).
@@ -24,14 +27,15 @@ We will:
 5. Scale our training on a TPU using the JAX backend and `keras.distribution.DataParallel`.
 
 Let's begin by installing the necessary libraries and configuring the JAX backend.
-"""
 
-"""shell
-pip install -q -U jax[tpu]>=0.7.0
-pip install -q tensorflow-cpu
-pip install -q keras-rs datasets
-"""
 
+```python
+!pip install -q -U jax[tpu]>=0.7.0
+!pip install -q tensorflow-cpu
+!pip install -q keras-rs datasets
+```
+
+```python
 import os
 
 # 💡 PRO TIP: Set the Keras backend BEFORE importing keras or any of its submodules.
@@ -44,16 +48,34 @@ import keras_rs
 import numpy as np
 import tensorflow as tf
 from datasets import load_dataset
+```
+<div class="k-default-codeblock">
+```
+[[34;49mnotice[1;39;49m][39;49m To update, run: [32;49mpip install --upgrade pip
 
-"""
+/usr/local/lib/python3.12/site-packages/jax/_src/cloud_tpu_init.py:93: UserWarning: Transparent hugepages are not enabled. TPU runtime startup and shutdown time should be significantly improved on TPU v5e and newer. If not already set, you may need to enable transparent hugepages in your VM image (sudo sh -c "echo always > /sys/kernel/mm/transparent_hugepage/enabled")
+  warnings.warn(
+
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+E0000 00:00:1775591077.176836     449 cuda_dnn.cc:8579] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered
+E0000 00:00:1775591077.181050     449 cuda_blas.cc:1407] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
+W0000 00:00:1775591077.191968     449 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1775591077.191992     449 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1775591077.191995     449 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1775591077.191997     449 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+```
+</div>
+
+---
 ## TPU Distribution Strategy
 
 To train efficiently on a TPU (such as a v5e-1 node in Google Colab), we will use synchronous data parallelism.
 With `keras.distribution.DataParallel`, each TPU core holds a complete replica of the model weights and processes a different mini-batch of the data.
 
 Gradients are calculated locally on each device and then synchronized across all devices before updating the global model weights. This allows us to scale our batch size linearly with the number of available TPU cores.
-"""
 
+
+```python
 # Detect available JAX devices (TPU cores)
 devices = jax.devices()
 print(f"Found {len(devices)} JAX devices.")
@@ -61,8 +83,20 @@ print(f"Found {len(devices)} JAX devices.")
 # Initialize the DataParallel strategy and set it globally
 data_parallel = keras.distribution.DataParallel(devices=devices)
 keras.distribution.set_distribution(data_parallel)
+```
 
-"""
+<div class="k-default-codeblock">
+```
+WARNING: Logging before InitGoogle() is written to STDERR
+E0000 00:00:1775591082.560138     449 common_lib.cc:650] Could not set metric server port: INVALID_ARGUMENT: Could not find SliceBuilder port 8471 in any of the 0 ports provided in `tpu_process_addresses`="local"
+=== Source Location Trace: === 
+learning/45eac/tfrc/runtime/common_lib.cc:238
+
+Found 8 JAX devices.
+```
+</div>
+
+---
 ## Loading and Filtering the Yambda Dataset
 
 The Yambda dataset contains multiple event types: `listen`, `like`, `dislike`, `unlike`, and `undislike`. To train a retrieval model, we only want to learn from **positive** interactions.
@@ -70,8 +104,9 @@ The Yambda dataset contains multiple event types: `listen`, `like`, `dislike`, `
 According to the Yambda documentation, an implicit `listen` is considered a positive signal if the user played more than 50% of the track (`played_ratio_pct > 50`). An explicit `like` (or reverting a dislike via `undislike`) is also a strong positive signal.
 
 To ensure this example runs quickly on a Colab instance while still providing enough data to learn meaningful embeddings, we will load a 5% slice of the 50M interactions split.
-"""
 
+
+```python
 print("Downloading Yambda dataset subset...")
 dataset = load_dataset(
     "yandex/yambda",
@@ -100,8 +135,27 @@ positive_dataset = dataset.filter(
     filter_positive_events, batched=True, batch_size=10_000
 )
 print(f"Remaining positive interactions: {len(positive_dataset)}")
+```
 
-"""
+<div class="k-default-codeblock">
+```
+Downloading Yambda dataset subset...
+
+README.md: 0.00B [00:00, ?B/s]
+
+flat/50m/multi_event.parquet:   0%|          | 0.00/384M [00:00<?, ?B/s]
+
+Generating train split: 0 examples [00:00, ? examples/s]
+
+Filtering positive interactions...
+
+Filter:   0%|          | 0/2389522 [00:00<?, ? examples/s]
+
+Remaining positive interactions: 1492025
+```
+</div>
+
+---
 ## Vocabulary Compression: Avoiding the XLA HBM OOM Error
 
 In the Yambda dataset, `item_id`s go all the way up to ~9.39 million.
@@ -109,8 +163,9 @@ If we initialize an embedding table with 9.4 million rows on a TPU, JAX's XLA co
 
 💡 **PRO TIP: Contiguous Mapping**
 In industrial recommender systems, we never use raw, sparse IDs directly in an embedding table. Our 5% subset only contains a fraction of the total catalogue. We extract the unique items and map them to a dense, contiguous range (e.g., `0` to `~150000`). This shrinks the embedding table by 98%, requiring only megabytes of RAM instead of gigabytes!
-"""
 
+
+```python
 print("Extracting unique items for vocabulary compression...")
 unique_items = np.unique(positive_dataset["item_id"])
 item_vocab_size = len(unique_items) + 1  # +1 for Out-Of-Vocabulary (OOV) token
@@ -123,8 +178,18 @@ print(
 
 # Create a Keras lookup layer to map sparse IDs to contiguous integers (0 to item_vocab_size)
 item_lookup = keras.layers.IntegerLookup(vocabulary=unique_items, mask_token=None)
+```
 
-"""
+<div class="k-default-codeblock">
+```
+Extracting unique items for vocabulary compression...
+
+Max User ID: 52500
+Unique items in subset: 138101. Compressed vocab size: 138102
+```
+</div>
+
+---
 ## Preparing a High-Performance tf.data Pipeline
 
 When working with industrial-scale datasets in Hugging Face, loading millions of rows into RAM and passing them to `tf.data.Dataset.from_tensor_slices()` is highly inefficient.
@@ -133,8 +198,9 @@ Instead, we use Hugging Face's `to_tf_dataset()`. This method creates a highly e
 
 💡 **PRO TIP: XLA Compilation and Static Shapes**
 When training on TPUs (which rely on XLA compilation via JAX), tensor shapes must remain strictly static. If the final batch of your dataset is smaller than the rest, XLA will trigger a costly recompilation step. We enforce static shapes by explicitly setting `drop_remainder=True`.
-"""
 
+
+```python
 # Define local batch size per TPU core and global batch size
 PER_REPLICA_BATCH_SIZE = 1024
 GLOBAL_BATCH_SIZE = PER_REPLICA_BATCH_SIZE * len(devices)
@@ -179,8 +245,15 @@ val_ds = full_tf_ds.skip(train_batches)
 print(
     f"Dataset split: {train_batches} Training Batches, {total_batches - train_batches} Validation Batches."
 )
+```
 
-"""
+<div class="k-default-codeblock">
+```
+Dataset split: 145 Training Batches, 37 Validation Batches.
+```
+</div>
+
+---
 ## Building the Context-Aware Model Architecture
 
 We construct a Two-Tower Retrieval model, but we augment the **Query Tower** to handle contextual flags.
@@ -198,8 +271,9 @@ However, if you attempt to run a full-corpus Top-10 retrieval against hundreds o
 
 💡 **PRO TIP: Production Architecture**
 In production, we *never* compute full-corpus retrieval during the train/val loops. We strictly evaluate the **In-Batch Contrastive Loss**. The massive retrieval layer is decoupled and reserved strictly for the final inference step (or exported to a vector database like ScANN). Notice how our `call()` method below *only* returns embeddings!
-"""
 
+
+```python
 
 class ContextualRetrievalModel(keras.Model):
     def __init__(self, max_uid, item_vocab_size, embed_dim=32, **kwargs):
@@ -270,16 +344,18 @@ class ContextualRetrievalModel(keras.Model):
         # Only track the in-batch loss during fit/evaluate
         return [self.loss_tracker]
 
+```
 
-"""
+---
 ## Training the Model
 
 We instantiate the model, compile it, and fit it using our prepared JAX DataParallel datasets.
 
 💡 **PRO TIP: Why Adagrad?**
 We use the `Adagrad` optimizer instead of Adam here. In recommender systems, categorical embeddings are highly sparse—popular items get updated millions of times, while niche items get updated rarely. Adagrad excels in this scenario because it dynamically scales the learning rate per parameter based on historical gradients, preventing popular items from overwhelming the learning process.
-"""
 
+
+```python
 # Instantiate and compile
 model = ContextualRetrievalModel(
     max_uid=max_uid, item_vocab_size=item_vocab_size, embed_dim=64
@@ -288,8 +364,35 @@ model.compile(optimizer=keras.optimizers.Adagrad(learning_rate=0.1))
 
 print("Starting distributed training...")
 history = model.fit(train_ds, validation_data=val_ds, epochs=5)
+```
 
-"""
+<div class="k-default-codeblock">
+```
+Starting distributed training...
+
+Epoch 1/5
+
+145/145 ━━━━━━━━━━━━━━━━━━━━ 196s 1s/step - loss: 9.0109 - val_loss: 9.0109
+
+Epoch 2/5
+
+145/145 ━━━━━━━━━━━━━━━━━━━━ 1s 4ms/step - loss: 9.0109 - val_loss: 9.0108
+
+Epoch 3/5
+
+145/145 ━━━━━━━━━━━━━━━━━━━━ 1s 4ms/step - loss: 9.0108 - val_loss: 9.0108
+
+Epoch 4/5
+
+145/145 ━━━━━━━━━━━━━━━━━━━━ 1s 4ms/step - loss: 9.0108 - val_loss: 9.0108
+
+Epoch 5/5
+
+145/145 ━━━━━━━━━━━━━━━━━━━━ 1s 4ms/step - loss: 9.0107 - val_loss: 9.0107
+```
+</div>
+
+---
 ## Contextual Inference
 
 Now that the model is trained, we want to perform actual retrieval. Because we decoupled the retrieval index from the training forward pass, we execute this in two clean steps. This mirrors exactly how two-tower models are served in production architectures (e.g., Vertex AI Matching Engine):
@@ -300,8 +403,9 @@ Now that the model is trained, we want to perform actual retrieval. Because we d
 Let's simulate querying the model for a single user in two different settings:
 *   `is_organic = 1`: The user is actively searching or exploring their own library.
 *   `is_organic = 0`: The user is passively listening to an algorithmic radio.
-"""
 
+
+```python
 test_user_id = 1001
 
 print(f"\nComputing recommendations for User {test_user_id}...")
@@ -322,12 +426,20 @@ query_out_algo = model(
 internal_algo_tracks = keras.ops.convert_to_numpy(
     model.retrieval(query_out_algo["query_embeddings"])[0]
 )
+```
 
-"""
+    
+<div class="k-default-codeblock">
+```
+Computing recommendations for User 1001...
+```
+</div>
+
 ### Reversing the Lookup Mapping
 Because the model was trained on our *internal* contiguous IDs, the `BruteForceRetrieval` outputs internal indices. To get the actual Yambda track IDs back (so we can look them up in a database), we reverse the mapping using our vocabulary array.
-"""
 
+
+```python
 # We add a 0 to the beginning of the vocab array to account for the OOV token at index 0
 vocab_array = np.concatenate([[0], unique_items])
 
@@ -336,11 +448,19 @@ algo_tracks_yambda_ids = vocab_array[internal_algo_tracks]
 
 print(f"Organic Context Yambda IDs:     {organic_tracks_yambda_ids}")
 print(f"Algorithmic Context Yambda IDs: {algo_tracks_yambda_ids}")
+```
 
-"""
+<div class="k-default-codeblock">
+```
+Organic Context Yambda IDs:     [9016778 8060425 6123367 6123431 3729063 5133519 2237560 6882660 6983872
+ 5390371]
+Algorithmic Context Yambda IDs: [3344425 4461258 3323941  658719 8431135 6614565 3928878 6355893 1371572
+ 5459471]
+```
+</div>
+
 Notice how the predicted item arrays differ based on the context flag!
 
 By injecting contextual data directly into the query tower, your retrieval pipeline is no longer static. You can easily extend this pattern to include other context parameters, such as the time of day, device type, or even pre-computed multimodal representations (like the audio embeddings provided natively in the Yambda dataset!).
 
 *(Note: Even for a single user, computing the Top-10 against millions of tracks using BruteForce takes a moment. To achieve millisecond latency in production, you would export `model.item_embedding.embeddings` and index them using `ScANN`, as demonstrated in the KerasRS ScANN tutorial!)*
-"""
