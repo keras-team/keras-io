@@ -49,22 +49,6 @@ import numpy as np
 import tensorflow as tf
 from datasets import load_dataset
 ```
-<div class="k-default-codeblock">
-```
-[[34;49mnotice[1;39;49m][39;49m To update, run: [32;49mpip install --upgrade pip
-
-/usr/local/lib/python3.12/site-packages/jax/_src/cloud_tpu_init.py:93: UserWarning: Transparent hugepages are not enabled. TPU runtime startup and shutdown time should be significantly improved on TPU v5e and newer. If not already set, you may need to enable transparent hugepages in your VM image (sudo sh -c "echo always > /sys/kernel/mm/transparent_hugepage/enabled")
-  warnings.warn(
-
-WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
-E0000 00:00:1775591077.176836     449 cuda_dnn.cc:8579] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered
-E0000 00:00:1775591077.181050     449 cuda_blas.cc:1407] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
-W0000 00:00:1775591077.191968     449 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
-W0000 00:00:1775591077.191992     449 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
-W0000 00:00:1775591077.191995     449 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
-W0000 00:00:1775591077.191997     449 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
-```
-</div>
 
 ---
 ## TPU Distribution Strategy
@@ -87,11 +71,6 @@ keras.distribution.set_distribution(data_parallel)
 
 <div class="k-default-codeblock">
 ```
-WARNING: Logging before InitGoogle() is written to STDERR
-E0000 00:00:1775591082.560138     449 common_lib.cc:650] Could not set metric server port: INVALID_ARGUMENT: Could not find SliceBuilder port 8471 in any of the 0 ports provided in `tpu_process_addresses`="local"
-=== Source Location Trace: === 
-learning/45eac/tfrc/runtime/common_lib.cc:238
-
 Found 8 JAX devices.
 ```
 </div>
