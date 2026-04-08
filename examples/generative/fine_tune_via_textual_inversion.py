@@ -225,11 +225,11 @@ Let's try this out with some sample images and prompts.
 
 train_ds = assemble_dataset(
     urls=[
-        "img/fine_tune_via_textual_inversion/input-data/VIedH1X.jpeg",
-        "img/fine_tune_via_textual_inversion/input-data/eBw13hE.png",
-        "img/fine_tune_via_textual_inversion/input-data/oJ3rSg7.png",
-        "img/fine_tune_via_textual_inversion/input-data/5mCL6Df.jpeg",
-        "img/fine_tune_via_textual_inversion/input-data/4Q6WWyI.jpeg",
+        "test_data/images/cat_doll_01.jpeg",
+        "test_data/images/cat_doll_02.png",
+        "test_data/images/cat_doll_03.png",
+        "test_data/images/cat_doll_04.jpeg",
+        "test_data/images/cat_doll_05.jpeg",
     ],
     prompts=[
         "a photo of a {}", "a rendering of a {}", "a cropped photo of the {}",
@@ -269,11 +269,11 @@ Keeping this in mind, we assemble our final training dataset below:
 """
 
 single_urls = [
-    "img/fine_tune_via_textual_inversion/input-data/VIedH1X.jpeg",
-    "img/fine_tune_via_textual_inversion/input-data/eBw13hE.png",
-    "img/fine_tune_via_textual_inversion/input-data/oJ3rSg7.png",
-    "img/fine_tune_via_textual_inversion/input-data/5mCL6Df.jpeg",
-    "img/fine_tune_via_textual_inversion/input-data/4Q6WWyI.jpeg",
+    "test_data/images/cat_doll_01.jpeg",
+    "test_data/images/cat_doll_02.png",
+    "test_data/images/cat_doll_03.png",
+    "test_data/images/cat_doll_04.jpeg",
+    "test_data/images/cat_doll_05.jpeg",
 ]
 
 single_prompts = [
@@ -297,9 +297,9 @@ Next, we assemble a dataset of groups of our GitHub avatars:
 """
 
 group_urls = [
-    "https://i.imgur.com/yVmZ2Qa.jpg",
-    "https://i.imgur.com/JbyFbZJ.jpg",
-    "https://i.imgur.com/CCubd3q.jpg",
+    "test_data/images/cat_doll_group_01.jpeg",
+    "test_data/images/cat_doll_group_02.jpeg",
+    "test_data/images/cat_doll_group_03.jpeg",
 ]
 
 group_prompts = [
@@ -320,8 +320,8 @@ group_prompts = [
 Finally, we merge the two URL and prompt lists into a single dataset:
 """
 
-all_urls = single_urls
-all_prompts = single_prompts
+all_urls = single_urls + group_urls
+all_prompts = single_prompts + group_prompts
 train_ds = assemble_dataset(all_urls, all_prompts, batch_size=1, repeats=5)
 
 """
