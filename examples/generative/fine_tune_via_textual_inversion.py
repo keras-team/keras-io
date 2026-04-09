@@ -88,7 +88,9 @@ class StableDiffusionHubWrapper:
         )
         self.backbone = self.model.backbone
         self.diffusion_model = self.backbone.diffuser
-        self.preprocessor = keras_hub.models.StableDiffusion3TextToImagePreprocessor.from_preset(preset)
+        self.preprocessor = (
+            keras_hub.models.StableDiffusion3TextToImagePreprocessor.from_preset(preset)
+        )
 
     def text_to_image(self, prompt, batch_size=1, num_steps=50, seed=None):
         prompts = [prompt] * batch_size if isinstance(prompt, str) else prompt
@@ -141,7 +143,9 @@ def assemble_image_array(paths):
                 raise FileNotFoundError(f"Image not found: {path}")
             files.append(path)
     resize = keras.layers.Resizing(height=512, width=512, crop_to_aspect_ratio=True)
-    images = [resize(keras.utils.img_to_array(keras.utils.load_img(img))) for img in files]
+    images = [
+        resize(keras.utils.img_to_array(keras.utils.load_img(img))) for img in files
+    ]
     return np.array(images, dtype="float32") / 127.5 - 1.0
 
 
@@ -155,9 +159,11 @@ placeholder_token = "<my-funny-cat-token>"
 def assemble_text_features(prompts):
     prompts = [prompt.format(placeholder_token) for prompt in prompts]
     token_ids = stable_diffusion.preprocessor.generate_preprocess(prompts)
-    negative_token_ids = stable_diffusion.preprocessor.generate_preprocess([""] * len(prompts))
-    positive_embeddings, _, positive_pooled, _ = stable_diffusion.backbone.encode_text_step(
-        token_ids, negative_token_ids
+    negative_token_ids = stable_diffusion.preprocessor.generate_preprocess(
+        [""] * len(prompts)
+    )
+    positive_embeddings, _, positive_pooled, _ = (
+        stable_diffusion.backbone.encode_text_step(token_ids, negative_token_ids)
     )
     return np.array(positive_embeddings), np.array(positive_pooled)
 
@@ -170,8 +176,17 @@ augmenter = keras.Sequential(
 
 
 class TextualInversionDataset(keras.utils.PyDataset):
-    def __init__(self, images, embedded_texts, pooled_embeddings, batch_size=1,
-                 repeats=5, shuffle=True, seed=1337, **kwargs):
+    def __init__(
+        self,
+        images,
+        embedded_texts,
+        pooled_embeddings,
+        batch_size=1,
+        repeats=5,
+        shuffle=True,
+        seed=1337,
+        **kwargs,
+    ):
         super().__init__(**kwargs)
         self.images = images
         self.embedded_texts = embedded_texts
@@ -192,7 +207,9 @@ class TextualInversionDataset(keras.utils.PyDataset):
             self.rng.shuffle(self.indices)
 
     def __getitem__(self, idx):
-        batch_indices = self.indices[idx * self.batch_size : (idx + 1) * self.batch_size]
+        batch_indices = self.indices[
+            idx * self.batch_size : (idx + 1) * self.batch_size
+        ]
         text_indices = batch_indices % len(self.embedded_texts)
         image_indices = batch_indices % len(self.images)
         batch_images = augmenter(self.images[image_indices], training=True)
@@ -232,15 +249,32 @@ train_ds = assemble_dataset(
         "test_data/images/cat_doll_05.jpeg",
     ],
     prompts=[
-        "a photo of a {}", "a rendering of a {}", "a cropped photo of the {}",
-        "the photo of a {}", "a photo of a clean {}", "a dark photo of the {}",
-        "a photo of my {}", "a photo of the cool {}", "a close-up photo of a {}",
-        "a bright photo of the {}", "a cropped photo of a {}", "a photo of the {}",
-        "a good photo of the {}", "a photo of one {}", "a close-up photo of the {}",
-        "a rendition of the {}", "a photo of the clean {}", "a rendition of a {}",
-        "a photo of a nice {}", "a good photo of a {}", "a photo of the nice {}",
-        "a photo of the small {}", "a photo of the weird {}", "a photo of the large {}",
-        "a photo of a cool {}", "a photo of a small {}",
+        "a photo of a {}",
+        "a rendering of a {}",
+        "a cropped photo of the {}",
+        "the photo of a {}",
+        "a photo of a clean {}",
+        "a dark photo of the {}",
+        "a photo of my {}",
+        "a photo of the cool {}",
+        "a close-up photo of a {}",
+        "a bright photo of the {}",
+        "a cropped photo of a {}",
+        "a photo of the {}",
+        "a good photo of the {}",
+        "a photo of one {}",
+        "a close-up photo of the {}",
+        "a rendition of the {}",
+        "a photo of the clean {}",
+        "a rendition of a {}",
+        "a photo of a nice {}",
+        "a good photo of a {}",
+        "a photo of the nice {}",
+        "a photo of the small {}",
+        "a photo of the weird {}",
+        "a photo of the large {}",
+        "a photo of a cool {}",
+        "a photo of a small {}",
     ],
 )
 
@@ -277,14 +311,30 @@ single_urls = [
 ]
 
 single_prompts = [
-    "a photo of a {}", "a rendering of a {}", "a cropped photo of the {}",
-    "the photo of a {}", "a photo of a clean {}", "a photo of my {}",
-    "a photo of the cool {}", "a close-up photo of a {}", "a bright photo of the {}",
-    "a cropped photo of a {}", "a photo of the {}", "a good photo of the {}",
-    "a photo of one {}", "a close-up photo of the {}", "a rendition of the {}",
-    "a photo of the clean {}", "a rendition of a {}", "a photo of a nice {}",
-    "a good photo of a {}", "a photo of the nice {}", "a photo of the small {}",
-    "a photo of the weird {}", "a photo of the large {}", "a photo of a cool {}",
+    "a photo of a {}",
+    "a rendering of a {}",
+    "a cropped photo of the {}",
+    "the photo of a {}",
+    "a photo of a clean {}",
+    "a photo of my {}",
+    "a photo of the cool {}",
+    "a close-up photo of a {}",
+    "a bright photo of the {}",
+    "a cropped photo of a {}",
+    "a photo of the {}",
+    "a good photo of the {}",
+    "a photo of one {}",
+    "a close-up photo of the {}",
+    "a rendition of the {}",
+    "a photo of the clean {}",
+    "a rendition of a {}",
+    "a photo of a nice {}",
+    "a good photo of a {}",
+    "a photo of the nice {}",
+    "a photo of the small {}",
+    "a photo of the weird {}",
+    "a photo of the large {}",
+    "a photo of a cool {}",
     "a photo of a small {}",
 ]
 
@@ -303,14 +353,30 @@ group_urls = [
 ]
 
 group_prompts = [
-    "a photo of a group of {}", "a rendering of a group of {}", "a cropped photo of the group of {}",
-    "the photo of a group of {}", "a photo of a clean group of {}", "a photo of my group of {}",
-    "a photo of a cool group of {}", "a close-up photo of a group of {}", "a bright photo of the group of {}",
-    "a cropped photo of a group of {}", "a photo of the group of {}", "a good photo of the group of {}",
-    "a photo of one group of {}", "a close-up photo of the group of {}", "a rendition of the group of {}",
-    "a photo of the clean group of {}", "a rendition of a group of {}", "a photo of a nice group of {}",
-    "a good photo of a group of {}", "a photo of the nice group of {}", "a photo of the small group of {}",
-    "a photo of the weird group of {}", "a photo of the large group of {}", "a photo of a cool group of {}",
+    "a photo of a group of {}",
+    "a rendering of a group of {}",
+    "a cropped photo of the group of {}",
+    "the photo of a group of {}",
+    "a photo of a clean group of {}",
+    "a photo of my group of {}",
+    "a photo of a cool group of {}",
+    "a close-up photo of a group of {}",
+    "a bright photo of the group of {}",
+    "a cropped photo of a group of {}",
+    "a photo of the group of {}",
+    "a good photo of the group of {}",
+    "a photo of one group of {}",
+    "a close-up photo of the group of {}",
+    "a rendition of the group of {}",
+    "a photo of the clean group of {}",
+    "a rendition of a group of {}",
+    "a photo of a nice group of {}",
+    "a good photo of a group of {}",
+    "a photo of the nice group of {}",
+    "a photo of the small group of {}",
+    "a photo of the weird group of {}",
+    "a photo of the large group of {}",
+    "a photo of a cool group of {}",
     "a photo of a small group of {}",
 ]
 
@@ -385,7 +451,9 @@ Let's confirm the proper weights are set to trainable.
 """
 
 print([w.shape for w in stable_diffusion.diffusion_model.trainable_weights][:10])
-print("Total trainable weights:", len(stable_diffusion.diffusion_model.trainable_weights))
+print(
+    "Total trainable weights:", len(stable_diffusion.diffusion_model.trainable_weights)
+)
 
 """
 ## Training the diffusion model with SD3 conditioning
@@ -501,7 +569,9 @@ progression of the learned token.
 
 
 class GenerateImages(keras.callbacks.Callback):
-    def __init__(self, stable_diffusion, prompt, steps=50, frequency=10, seed=None, **kwargs):
+    def __init__(
+        self, stable_diffusion, prompt, steps=50, frequency=10, seed=None, **kwargs
+    ):
         super().__init__(**kwargs)
         self.stable_diffusion = stable_diffusion
         self.prompt = prompt
@@ -518,9 +588,17 @@ class GenerateImages(keras.callbacks.Callback):
 
 
 cbs = [
-    GenerateImages(stable_diffusion, prompt=f"an oil painting of {placeholder_token}", seed=1337),
-    GenerateImages(stable_diffusion, prompt=f"gandalf the gray as a {placeholder_token}", seed=1337),
-    GenerateImages(stable_diffusion, prompt=f"two {placeholder_token} getting married, photorealistic, high quality", seed=1337),
+    GenerateImages(
+        stable_diffusion, prompt=f"an oil painting of {placeholder_token}", seed=1337
+    ),
+    GenerateImages(
+        stable_diffusion, prompt=f"gandalf the gray as a {placeholder_token}", seed=1337
+    ),
+    GenerateImages(
+        stable_diffusion,
+        prompt=f"two {placeholder_token} getting married, photorealistic, high quality",
+        seed=1337,
+    ),
 ]
 
 """
@@ -568,7 +646,9 @@ plot_images(generated)
 """
 """
 
-generated = stable_diffusion.text_to_image(f"An evil {placeholder_token}.", batch_size=3)
+generated = stable_diffusion.text_to_image(
+    f"An evil {placeholder_token}.", batch_size=3
+)
 plot_images(generated)
 
 """
