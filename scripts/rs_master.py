@@ -267,6 +267,10 @@ RS_EXAMPLES_MASTER = {
             "title": "Sequential retrieval using SASRec",
         },
         {
+            "path": "contextual_retrieval_yambda",
+            "title": "Context-Aware Music Retrieval with Yambda and JAX",
+        },
+        {
             "path": "distributed_embedding_jax",
             "title": "DistributedEmbedding using TPU SparseCore and JAX",
         },
