@@ -144,29 +144,16 @@ We set `sequence_length=128` to keep memory usage manageable.
 
 GEMMA4_PRESET = "gemma4_26b_a4b"
 
-tokenizer = keras_hub.models.Gemma4Tokenizer.from_preset(GEMMA4_PRESET)
+tokenizer = keras_hub.models.Gemma4Tokenizer.from_preset(
+    GEMMA4_PRESET, sequence_length=MAX_SEQUENCE_LENGTH
+)
 
 
 def tokenize_and_pad(text, label):
     """Tokenize text, truncate/pad to fixed length, and create mask."""
     token_ids = tokenizer(text)
-
-    # Truncate to MAX_SEQUENCE_LENGTH.
-    token_ids = token_ids[:MAX_SEQUENCE_LENGTH]
-
-    # Create padding mask before padding (1 for real tokens, 0 for pad).
-    real_length = tf.shape(token_ids)[0]
-    padding_mask = tf.ones(real_length, dtype="int32")
-
-    # Pad token_ids and padding_mask to MAX_SEQUENCE_LENGTH.
-    pad_length = MAX_SEQUENCE_LENGTH - real_length
-    token_ids = tf.pad(token_ids, [[0, pad_length]], constant_values=0)
-    padding_mask = tf.pad(padding_mask, [[0, pad_length]], constant_values=0)
-
-    # Ensure static shapes for batching.
-    token_ids = tf.ensure_shape(token_ids, [MAX_SEQUENCE_LENGTH])
-    padding_mask = tf.ensure_shape(padding_mask, [MAX_SEQUENCE_LENGTH])
-
+    # Create padding mask (1 for real tokens, 0 for pad).
+    padding_mask = tf.cast(tf.not_equal(token_ids, 0), "int32")
     return {"token_ids": token_ids, "padding_mask": padding_mask}, label
 
 
@@ -252,14 +239,7 @@ def build_classifier(backbone, trainable_backbone=True):
 def predict_sentiment(model, text):
     """Predict sentiment for a single text input."""
     token_ids = tokenizer(text)
-    token_ids = token_ids[:MAX_SEQUENCE_LENGTH]
-    real_length = tf.shape(token_ids)[0]
-    padding_mask = tf.ones(real_length, dtype="int32")
-    pad_length = MAX_SEQUENCE_LENGTH - real_length
-    token_ids = tf.pad(token_ids, [[0, pad_length]], constant_values=0)
-    padding_mask = tf.pad(
-        padding_mask, [[0, pad_length]], constant_values=0
-    )
+    padding_mask = tf.cast(tf.not_equal(token_ids, 0), "int32")
     inputs = {
         "token_ids": ops.expand_dims(token_ids, 0),
         "padding_mask": ops.expand_dims(padding_mask, 0),
