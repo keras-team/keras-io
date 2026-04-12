@@ -3511,6 +3511,10 @@ HUB_GUIDES_MASTER = {
             "path": "segment_anything_in_keras_hub",
             "title": "Segment Anything",
         },
+                {
+            "path": "text_classification_with_gemma4",
+            "title": "Text Classification with Gemma4",
+        },
         {
             "path": "classification_with_keras_hub",
             "title": "Image Classification",
