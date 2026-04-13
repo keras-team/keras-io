@@ -1,10 +1,11 @@
 """
 Title: MelGAN-based spectrogram inversion using feature matching
-Author: [Darshan Deshpande](https://twitter.com/getdarshan)
+Author: Darshan Deshpande
 Date created: 02/09/2021
-Last modified: 15/09/2021
+Last modified: 13/04/2026
 Description: Inversion of audio from mel-spectrograms using the MelGAN architecture and feature matching.
 Accelerator: GPU
+Converted to Keras 3 by: [Maitry Sinha](https://github.com/maitry63)
 """
 
 """
@@ -28,17 +29,16 @@ reflect padding.
 """
 ## Importing and Defining Hyperparameters
 """
-
-"""shell
-pip install -qqq tensorflow_addons
-pip install -qqq tensorflow-io
-"""
-
 import tensorflow as tf
-import tensorflow_io as tfio
-from tensorflow import keras
-from tensorflow.keras import layers
-from tensorflow_addons import layers as addon_layers
+import keras
+from keras import layers
+from keras import ops
+import os
+import glob
+import urllib.request
+import tarfile
+import numpy as np
+import soundfile as sf
 
 # Setting logger level to avoid input shape warnings
 tf.get_logger().setLevel("ERROR")
@@ -76,20 +76,51 @@ wave, one for input and one as the ground truth for comparison. The input wave w
 mapped to a spectrogram using the custom `MelSpec` layer as shown later in this example.
 """
 
+if not os.path.exists("LJSpeech-1.1"):
+    url = "https://data.keithito.com/data/speech/LJSpeech-1.1.tar.bz2"
+    filename = "LJSpeech-1.1.tar.bz2"
+    urllib.request.urlretrieve(url, filename)
+    with tarfile.open(filename, "r:bz2") as tar:
+        tar.extractall()
+    os.remove(filename)
+
 # Splitting the dataset into training and testing splits
-wavs = tf.io.gfile.glob("LJSpeech-1.1/wavs/*.wav")
+wavs = glob.glob("LJSpeech-1.1/wavs/*.wav")
 print(f"Number of audio files: {len(wavs)}")
 
 
 # Mapper function for loading the audio. This function returns two instances of the wave
 def preprocess(filename):
-    audio = tf.audio.decode_wav(tf.io.read_file(filename), 1, DESIRED_SAMPLES).audio
+    audio, sr = sf.read(filename)
+
+    # Ensure mono
+    if len(audio.shape) > 1:
+        audio = audio[:, 0]
+
+    audio = audio[:DESIRED_SAMPLES]
+
+    # Pad if needed
+    if len(audio) < DESIRED_SAMPLES:
+        pad = DESIRED_SAMPLES - len(audio)
+        audio = np.pad(audio, (0, pad))
+
+    audio = np.expand_dims(audio, axis=-1).astype("float32")
     return audio, audio
 
 
-# Create tf.data.Dataset objects and apply preprocessing
-train_dataset = tf.data.Dataset.from_tensor_slices((wavs,))
-train_dataset = train_dataset.map(preprocess, num_parallel_calls=tf.data.AUTOTUNE)
+# Create dataset
+def data_generator():
+    for f in wavs:
+        yield preprocess(f)
+
+
+train_dataset = tf.data.Dataset.from_generator(
+    data_generator,
+    output_signature=(
+        tf.TensorSpec(shape=(DESIRED_SAMPLES, 1), dtype=tf.float32),
+        tf.TensorSpec(shape=(DESIRED_SAMPLES, 1), dtype=tf.float32),
+    ),
+)
 
 """
 ## Defining custom layers for MelGAN
@@ -134,7 +165,7 @@ class MelSpec(layers.Layer):
         self.num_mel_channels = num_mel_channels
         self.freq_min = freq_min
         self.freq_max = freq_max
-        # Defining mel filter. This filter will be multiplied with the STFT output
+        # Defining mel filter. This filter will be multiplied with the STFT
         self.mel_filterbank = tf.signal.linear_to_mel_weight_matrix(
             num_mel_bins=self.num_mel_channels,
             num_spectrogram_bins=self.frame_length // 2 + 1,
@@ -149,7 +180,7 @@ class MelSpec(layers.Layer):
             # Taking the Short Time Fourier Transform. Ensure that the audio is padded.
             # In the paper, the STFT output is padded using the 'REFLECT' strategy.
             stft = tf.signal.stft(
-                tf.squeeze(audio, -1),
+                ops.squeeze(audio, -1),
                 self.frame_length,
                 self.frame_step,
                 self.fft_length,
@@ -157,12 +188,16 @@ class MelSpec(layers.Layer):
             )
 
             # Taking the magnitude of the STFT output
-            magnitude = tf.abs(stft)
+            magnitude = ops.abs(stft)
 
             # Multiplying the Mel-filterbank with the magnitude and scaling it using the db scale
-            mel = tf.matmul(tf.square(magnitude), self.mel_filterbank)
-            log_mel_spec = tfio.audio.dbscale(mel, top_db=80)
+            mel = ops.matmul(ops.square(magnitude), self.mel_filterbank)
+            log_mel_spec = 10.0 * ops.log(ops.maximum(mel, 1e-6)) / ops.log(10.0)
+            log_mel_spec = 10.0 * ops.log(ops.maximum(mel, 1e-6)) / ops.log(10.0)
+            log_mel_spec = ops.maximum(log_mel_spec, ops.amax(log_mel_spec) - 80.0)
+
             return log_mel_spec
+
         else:
             return audio
 
@@ -180,6 +215,47 @@ class MelSpec(layers.Layer):
             }
         )
         return config
+
+
+class WeightNormalization(layers.Layer):
+    def __init__(self, layer, **kwargs):
+        super().__init__(**kwargs)
+
+        config = layer.get_config()
+        config["use_bias"] = False
+        self.layer = layer.__class__.from_config(config)
+
+    def build(self, input_shape):
+        self.layer.build(input_shape)
+
+        if hasattr(self.layer, "bias") and self.layer.bias is not None:
+            self.layer.bias = None
+
+        self.kernel = self.layer.kernel
+
+        self.g = self.add_weight(
+            shape=(self.kernel.shape[-1],),
+            initializer="ones",
+            trainable=True,
+            name="wn_scale",
+        )
+
+    def call(self, inputs):
+        kernel = self.layer.kernel
+
+        norm_axes = tuple(range(len(kernel.shape) - 1))
+        norm = ops.sqrt(ops.sum(ops.square(kernel), axis=norm_axes, keepdims=True))
+
+        w = kernel * (self.g / (norm + 1e-6))
+
+        outputs = ops.conv(
+            inputs,
+            w,
+            strides=self.layer.strides,
+            padding=self.layer.padding.upper(),
+        )
+
+        return outputs
 
 
 """
@@ -203,33 +279,47 @@ def residual_stack(input, filters):
     Returns:
         Residual stack output.
     """
-    c1 = addon_layers.WeightNormalization(
-        layers.Conv1D(filters, 3, dilation_rate=1, padding="same"), data_init=False
+
+    if input.shape[-1] != filters:
+        input_proj = layers.Conv1D(filters, 1, padding="same")(input)
+    else:
+        input_proj = input
+
+    c1 = WeightNormalization(
+        layers.Conv1D(filters, 3, dilation_rate=1, padding="same", use_bias=False)
     )(input)
     lrelu1 = layers.LeakyReLU()(c1)
-    c2 = addon_layers.WeightNormalization(
-        layers.Conv1D(filters, 3, dilation_rate=1, padding="same"), data_init=False
+
+    c2 = WeightNormalization(
+        layers.Conv1D(filters, 3, dilation_rate=1, padding="same", use_bias=False)
     )(lrelu1)
-    add1 = layers.Add()([c2, input])
+
+    add1 = layers.Add()([c2, input_proj])
 
     lrelu2 = layers.LeakyReLU()(add1)
-    c3 = addon_layers.WeightNormalization(
-        layers.Conv1D(filters, 3, dilation_rate=3, padding="same"), data_init=False
+
+    c3 = WeightNormalization(
+        layers.Conv1D(filters, 3, dilation_rate=3, padding="same", use_bias=False)
     )(lrelu2)
     lrelu3 = layers.LeakyReLU()(c3)
-    c4 = addon_layers.WeightNormalization(
-        layers.Conv1D(filters, 3, dilation_rate=1, padding="same"), data_init=False
+
+    c4 = WeightNormalization(
+        layers.Conv1D(filters, 3, dilation_rate=1, padding="same", use_bias=False)
     )(lrelu3)
+
     add2 = layers.Add()([add1, c4])
 
     lrelu4 = layers.LeakyReLU()(add2)
-    c5 = addon_layers.WeightNormalization(
-        layers.Conv1D(filters, 3, dilation_rate=9, padding="same"), data_init=False
+
+    c5 = WeightNormalization(
+        layers.Conv1D(filters, 3, dilation_rate=9, padding="same", use_bias=False)
     )(lrelu4)
     lrelu5 = layers.LeakyReLU()(c5)
-    c6 = addon_layers.WeightNormalization(
-        layers.Conv1D(filters, 3, dilation_rate=1, padding="same"), data_init=False
+
+    c6 = WeightNormalization(
+        layers.Conv1D(filters, 3, dilation_rate=1, padding="same", use_bias=False)
     )(lrelu5)
+
     add3 = layers.Add()([c6, add2])
 
     return add3
@@ -253,9 +343,8 @@ def conv_block(input, conv_dim, upsampling_factor):
     Returns:
         Dilated convolution block.
     """
-    conv_t = addon_layers.WeightNormalization(
-        layers.Conv1DTranspose(conv_dim, 16, upsampling_factor, padding="same"),
-        data_init=False,
+    conv_t = WeightNormalization(
+        layers.Conv1D(conv_dim, 16, upsampling_factor, padding="same", use_bias=False)
     )(input)
     lrelu1 = layers.LeakyReLU()(conv_t)
     res_stack = residual_stack(lrelu1, conv_dim)
@@ -273,33 +362,19 @@ to compute the feature matching loss.
 
 
 def discriminator_block(input):
-    conv1 = addon_layers.WeightNormalization(
-        layers.Conv1D(16, 15, 1, "same"), data_init=False
-    )(input)
+    conv1 = WeightNormalization(layers.Conv1D(16, 15, 1, "same"))(input)
     lrelu1 = layers.LeakyReLU()(conv1)
-    conv2 = addon_layers.WeightNormalization(
-        layers.Conv1D(64, 41, 4, "same", groups=4), data_init=False
-    )(lrelu1)
+    conv2 = WeightNormalization(layers.Conv1D(64, 41, 4, "same", groups=4))(lrelu1)
     lrelu2 = layers.LeakyReLU()(conv2)
-    conv3 = addon_layers.WeightNormalization(
-        layers.Conv1D(256, 41, 4, "same", groups=16), data_init=False
-    )(lrelu2)
+    conv3 = WeightNormalization(layers.Conv1D(256, 41, 4, "same", groups=16))(lrelu2)
     lrelu3 = layers.LeakyReLU()(conv3)
-    conv4 = addon_layers.WeightNormalization(
-        layers.Conv1D(1024, 41, 4, "same", groups=64), data_init=False
-    )(lrelu3)
+    conv4 = WeightNormalization(layers.Conv1D(1024, 41, 4, "same", groups=64))(lrelu3)
     lrelu4 = layers.LeakyReLU()(conv4)
-    conv5 = addon_layers.WeightNormalization(
-        layers.Conv1D(1024, 41, 4, "same", groups=256), data_init=False
-    )(lrelu4)
+    conv5 = WeightNormalization(layers.Conv1D(1024, 41, 4, "same", groups=256))(lrelu4)
     lrelu5 = layers.LeakyReLU()(conv5)
-    conv6 = addon_layers.WeightNormalization(
-        layers.Conv1D(1024, 5, 1, "same"), data_init=False
-    )(lrelu5)
+    conv6 = WeightNormalization(layers.Conv1D(1024, 5, 1, "same"))(lrelu5)
     lrelu6 = layers.LeakyReLU()(conv6)
-    conv7 = addon_layers.WeightNormalization(
-        layers.Conv1D(1, 3, 1, "same"), data_init=False
-    )(lrelu6)
+    conv7 = WeightNormalization(layers.Conv1D(1, 3, 1, "same"))(lrelu6)
     return [lrelu1, lrelu2, lrelu3, lrelu4, lrelu5, lrelu6, conv7]
 
 
@@ -311,14 +386,18 @@ def discriminator_block(input):
 def create_generator(input_shape):
     inp = keras.Input(input_shape)
     x = MelSpec()(inp)
-    x = layers.Conv1D(512, 7, padding="same")(x)
+    x = layers.Conv1D(
+        512,
+        7,
+        padding="same",
+    )(x)
     x = layers.LeakyReLU()(x)
     x = conv_block(x, 256, 8)
     x = conv_block(x, 128, 8)
     x = conv_block(x, 64, 2)
     x = conv_block(x, 32, 2)
-    x = addon_layers.WeightNormalization(
-        layers.Conv1D(1, 7, padding="same", activation="tanh")
+    x = WeightNormalization(
+        layers.Conv1D(1, 7, padding="same", activation="tanh", use_bias=False)
     )(x)
     return keras.Model(inp, x)
 
@@ -335,9 +414,10 @@ generator.summary()
 def create_discriminator(input_shape):
     inp = keras.Input(input_shape)
     out_map1 = discriminator_block(inp)
-    pool1 = layers.AveragePooling1D()(inp)
+    pool1 = layers.AveragePooling1D(pool_size=4, padding="same")(inp)
     out_map2 = discriminator_block(pool1)
-    pool2 = layers.AveragePooling1D()(pool1)
+
+    pool2 = layers.AveragePooling1D(pool_size=4, padding="same")(pool1)
     out_map3 = discriminator_block(pool2)
     return keras.Model(inp, [out_map1, out_map2, out_map3])
 
@@ -347,6 +427,7 @@ def create_discriminator(input_shape):
 discriminator = create_discriminator((None, 1))
 
 discriminator.summary()
+
 
 """
 ## Defining the loss functions
@@ -398,9 +479,8 @@ def generator_loss(real_pred, fake_pred):
     """
     gen_loss = []
     for i in range(len(fake_pred)):
-        gen_loss.append(mse(tf.ones_like(fake_pred[i][-1]), fake_pred[i][-1]))
-
-    return tf.reduce_mean(gen_loss)
+        gen_loss.append(mse(ops.ones_like(fake_pred[i][-1]), fake_pred[i][-1]))
+    return ops.mean(ops.stack(gen_loss))
 
 
 def feature_matching_loss(real_pred, fake_pred):
@@ -417,8 +497,7 @@ def feature_matching_loss(real_pred, fake_pred):
     for i in range(len(fake_pred)):
         for j in range(len(fake_pred[i]) - 1):
             fm_loss.append(mae(real_pred[i][j], fake_pred[i][j]))
-
-    return tf.reduce_mean(fm_loss)
+    return ops.mean(ops.stack(fm_loss))
 
 
 def discriminator_loss(real_pred, fake_pred):
@@ -433,11 +512,11 @@ def discriminator_loss(real_pred, fake_pred):
     """
     real_loss, fake_loss = [], []
     for i in range(len(real_pred)):
-        real_loss.append(mse(tf.ones_like(real_pred[i][-1]), real_pred[i][-1]))
-        fake_loss.append(mse(tf.zeros_like(fake_pred[i][-1]), fake_pred[i][-1]))
+        real_loss.append(mse(ops.ones_like(real_pred[i][-1]), real_pred[i][-1]))
+        fake_loss.append(mse(ops.zeros_like(fake_pred[i][-1]), fake_pred[i][-1]))
 
     # Calculating the final discriminator loss after scaling
-    disc_loss = tf.reduce_mean(real_loss) + tf.reduce_mean(fake_loss)
+    disc_loss = ops.mean(ops.stack(real_loss)) + ops.mean(ops.stack(fake_loss))
     return disc_loss
 
 
@@ -554,10 +633,11 @@ mel_gan.compile(
     feature_matching_loss,
     discriminator_loss,
 )
-mel_gan.fit(
-    train_dataset.shuffle(200).batch(BATCH_SIZE).prefetch(tf.data.AUTOTUNE), epochs=1
-)
 
+mel_gan.fit(
+    train_dataset.shuffle(200).batch(BATCH_SIZE).prefetch(tf.data.AUTOTUNE),
+    epochs=1,
+)
 """
 ## Testing the model
 
@@ -572,7 +652,7 @@ behavior of the inference pipeline.
 """
 
 # Sampling a random tensor to mimic a batch of 128 spectrograms of shape [50, 80]
-audio_sample = tf.random.uniform([128, 50, 80])
+audio_sample = keras.random.uniform(shape=(128, 50, 80))
 
 """
 Timing the inference speed of a single sample. Running this, you can see that the average
