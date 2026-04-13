@@ -117,18 +117,13 @@ class KerasDocumentationGenerator:
                 subblocks.append(table)
 
         # Extract and render links to examples using the API
-        if hasattr(object_, "_api_export_path"):
-            apis = object_._api_export_path
-        else:
-            apis = [element]
+        apis = getattr(object_, "_api_export_path", [element])
 
         all_examples = []
         for api in apis:
-            api_examples = self.api_to_example.get(api, None)
-            if api_examples:
-                for api_example in api_examples:
-                    if api_example not in all_examples:
-                        all_examples.append(api_example)
+            for api_example in self.api_to_example.get(api, []):
+                if api_example not in all_examples:
+                    all_examples.append(api_example)
 
         if all_examples:
             subblocks.append(get_examples_block(element, all_examples))
