@@ -2,7 +2,7 @@
 
 **Author:** [Aritra Roy Gosthipaty](https://twitter.com/arig23498), [Ritwik Raha](https://twitter.com/ritwik_raha)<br>
 **Date created:** 2021/11/08<br>
-**Last modified:** 2021/11/08<br>
+**Last modified:** 2026/04/13<br>
 **Description:** Neural Style Transfer with Adaptive Instance Normalization.
 
 
@@ -52,7 +52,6 @@ batch size, and training duration.
 ```python
 import os
 import numpy as np
-import tensorflow as tf
 import keras
 import matplotlib.pyplot as plt
 from keras import layers
@@ -296,7 +295,7 @@ for axis, style_image, content_image in zip(axes, style[0:10], content[0:10]):
 
 
     
-![png](/examples/generative/img/adain/adain_8_0.png)
+![png](/img/examples/generative/adain/adain_8_0.png)
     
 
 
@@ -669,7 +668,7 @@ Epoch 1/30
 7/7 ━━━━━━━━━━━━━━━━━━━━ 0s 2s/step - content_loss: 69.3327 - style_loss: 140.9464 - total_loss: 210.2792
 </div>
 
-![png](/examples/generative/img/adain/adain_23_8.png)
+![png](/img/examples/generative/adain/adain_23_8.png)
     
 
 
@@ -681,7 +680,7 @@ Epoch 2/30
 7/7 ━━━━━━━━━━━━━━━━━━━━ 0s 2s/step - content_loss: 58.3413 - style_loss: 110.8445 - total_loss: 169.1858
 </div>
 
-![png](/examples/generative/img/adain/adain_23_18.png)
+![png](/img/examples/generative/adain/adain_23_18.png)
     
 
 
@@ -693,7 +692,7 @@ Epoch 3/30
 7/7 ━━━━━━━━━━━━━━━━━━━━ 0s 2s/step - content_loss: 55.2051 - style_loss: 100.6297 - total_loss: 155.8348
 </div>
 
-![png](/examples/generative/img/adain/adain_23_28.png)
+![png](/img/examples/generative/adain/adain_23_28.png)
     
 
 
@@ -705,7 +704,7 @@ Epoch 4/30
 7/7 ━━━━━━━━━━━━━━━━━━━━ 0s 2s/step - content_loss: 52.8162 - style_loss: 89.3740 - total_loss: 142.1902
 </div>
 
-![png](/examples/generative/img/adain/adain_23_38.png)
+![png](/img/examples/generative/adain/adain_23_38.png)
     
 
 
@@ -717,7 +716,7 @@ Epoch 5/30
 7/7 ━━━━━━━━━━━━━━━━━━━━ 0s 3s/step - content_loss: 48.9089 - style_loss: 79.1898 - total_loss: 128.0987
 </div>
 
-![png](/examples/generative/img/adain/adain_23_48.png)
+![png](/img/examples/generative/adain/adain_23_48.png)
     
 
 
@@ -729,7 +728,7 @@ Epoch 6/30
 7/7 ━━━━━━━━━━━━━━━━━━━━ 0s 2s/step - content_loss: 46.5736 - style_loss: 66.7209 - total_loss: 113.2945
 </div>
 
-![png](/examples/generative/img/adain/adain_23_58.png)
+![png](/img/examples/generative/adain/adain_23_58.png)
     
 
 
@@ -741,7 +740,7 @@ Epoch 7/30
 7/7 ━━━━━━━━━━━━━━━━━━━━ 0s 2s/step - content_loss: 45.0892 - style_loss: 49.0773 - total_loss: 94.1665
 </div>
 
-![png](/examples/generative/img/adain/adain_23_68.png)
+![png](/img/examples/generative/adain/adain_23_68.png)
     
 
 
@@ -753,7 +752,7 @@ Epoch 8/30
 7/7 ━━━━━━━━━━━━━━━━━━━━ 0s 2s/step - content_loss: 41.9670 - style_loss: 42.2324 - total_loss: 84.1994
 </div>
 
-![png](/examples/generative/img/adain/adain_23_78.png)
+![png](/img/examples/generative/adain/adain_23_78.png)
     
 
 
@@ -765,7 +764,7 @@ Epoch 9/30
 7/7 ━━━━━━━━━━━━━━━━━━━━ 0s 2s/step - content_loss: 41.0440 - style_loss: 39.7052 - total_loss: 80.7492
 </div>
 
-![png](/examples/generative/img/adain/adain_23_88.png)
+![png](/img/examples/generative/adain/adain_23_88.png)
     
 
 
@@ -777,7 +776,7 @@ Epoch 10/30
 7/7 ━━━━━━━━━━━━━━━━━━━━ 0s 2s/step - content_loss: 40.2837 - style_loss: 33.6737 - total_loss: 73.9575
 </div>
 
-![png](/examples/generative/img/adain/adain_23_98.png)
+![png](/img/examples/generative/adain/adain_23_98.png)
     
 
 
@@ -789,7 +788,7 @@ Epoch 11/30
 7/7 ━━━━━━━━━━━━━━━━━━━━ 0s 2s/step - content_loss: 37.7901 - style_loss: 32.1251 - total_loss: 69.9152
 </div>
 
-![png](/examples/generative/img/adain/adain_23_108.png)
+![png](/img/examples/generative/adain/adain_23_108.png)
     
 
 
@@ -801,7 +800,7 @@ Epoch 12/30
 7/7 ━━━━━━━━━━━━━━━━━━━━ 0s 2s/step - content_loss: 36.8127 - style_loss: 30.6076 - total_loss: 67.4203
 </div>
 
-![png](/examples/generative/img/adain/adain_23_118.png)
+![png](/img/examples/generative/adain/adain_23_118.png)
     
 
 
@@ -813,7 +812,7 @@ Epoch 13/30
 7/7 ━━━━━━━━━━━━━━━━━━━━ 0s 2s/step - content_loss: 33.8249 - style_loss: 27.3473 - total_loss: 61.1722
 </div>
 
-![png](examples/generative/img/adain/adain_23_128.png)
+![png](/img/examples/generative/adain/adain_23_128.png)
     
 
 
@@ -825,7 +824,7 @@ Epoch 14/30
 7/7 ━━━━━━━━━━━━━━━━━━━━ 0s 2s/step - content_loss: 30.7907 - style_loss: 24.0908 - total_loss: 54.8815
 </div>
 
-![png](/examples/generative/img/adain/adain_23_138.png)
+![png](/img/examples/generative/adain/adain_23_138.png)
     
 
 
@@ -837,7 +836,7 @@ Epoch 15/30
 7/7 ━━━━━━━━━━━━━━━━━━━━ 0s 2s/step - content_loss: 28.0676 - style_loss: 22.0865 - total_loss: 50.1541
 </div>
 
-![png](/examples/generative/img/adain/adain_23_148.png)
+![png](/img/examples/generative/adain/adain_23_148.png)
     
 
 
@@ -849,7 +848,7 @@ Epoch 16/30
 7/7 ━━━━━━━━━━━━━━━━━━━━ 0s 2s/step - content_loss: 26.2761 - style_loss: 21.0945 - total_loss: 47.3706
 </div>
 
-![png](/examples/generative/img/adain/adain_23_158.png)
+![png](/img/examples/generative/adain/adain_23_158.png)
     
 
 
@@ -861,7 +860,7 @@ Epoch 17/30
 7/7 ━━━━━━━━━━━━━━━━━━━━ 0s 3s/step - content_loss: 23.6390 - style_loss: 18.7739 - total_loss: 42.4129
 </div>
 
-![png](/examples/generative/img/adain/adain_23_168.png)
+![png](/img/examples/generative/adain/adain_23_168.png)
     
 
 
@@ -873,7 +872,7 @@ Epoch 18/30
 7/7 ━━━━━━━━━━━━━━━━━━━━ 0s 3s/step - content_loss: 22.4734 - style_loss: 17.9847 - total_loss: 40.4581
 </div>
 
-![png](/examples/generative/img/adain/adain_23_178.png)
+![png](/img/examples/generative/adain/adain_23_178.png)
     
 
 
@@ -885,7 +884,7 @@ Epoch 19/30
 7/7 ━━━━━━━━━━━━━━━━━━━━ 0s 2s/step - content_loss: 21.3290 - style_loss: 17.0995 - total_loss: 38.4285
 </div>
 
-![png](/examples/generative/img/adain/adain_23_188.png)
+![png](/img/examples/generative/adain/adain_23_188.png)
     
 
 
@@ -897,7 +896,7 @@ Epoch 20/30
 7/7 ━━━━━━━━━━━━━━━━━━━━ 0s 2s/step - content_loss: 19.8949 - style_loss: 15.9196 - total_loss: 35.8146
 </div>
 
-![png](/examples/generative/img/adain/adain_23_198.png)
+![png](/img/examples/generative/adain/adain_23_198.png)
     
 
 
@@ -909,7 +908,7 @@ Epoch 21/30
 7/7 ━━━━━━━━━━━━━━━━━━━━ 0s 2s/step - content_loss: 19.9996 - style_loss: 15.7381 - total_loss: 35.7377
 </div>
 
-![png](/examples/generative/img/adain/adain_23_208.png)
+![png](/img/examples/generative/adain/adain_23_208.png)
     
 
 
@@ -921,7 +920,7 @@ Epoch 22/30
 7/7 ━━━━━━━━━━━━━━━━━━━━ 0s 2s/step - content_loss: 19.2298 - style_loss: 15.3685 - total_loss: 34.5983
 </div>
 
-![png](/examples/generative/img/adain/adain_23_218.png)
+![png](/img/examples/generative/adain/adain_23_218.png)
     
 
 
@@ -935,7 +934,7 @@ Epoch 23/30
 
 </div>
 
-![png](/examples/generative/img/adain/adain_23_228.png)
+![png](/img/examples/generative/adain/adain_23_228.png)
     
 
 
@@ -949,7 +948,7 @@ Epoch 24/30
 
 </div>
 
-![png](/examples/generative/img/adain/adain_23_238.png)
+![png](/img/examples/generative/adain/adain_23_238.png)
     
 
 
@@ -963,7 +962,7 @@ Epoch 25/30
 
 </div>
 
-![png](/examples/generative/img/adain/adain_23_248.png)
+![png](/img/examples/generative/adain/adain_23_248.png)
     
 
 
@@ -977,7 +976,7 @@ Epoch 26/30
 
 </div>
 
-![png](/examples/generative/img/adain/adain_23_258.png)
+![png](/img/examples/generative/adain/adain_23_258.png)
     
 
 
@@ -991,7 +990,7 @@ Epoch 27/30
 
 </div>
 
-![png](/examples/generative/img/adain/adain_23_268.png)
+![png](/img/examples/generative/adain/adain_23_268.png)
     
 
 
@@ -1005,7 +1004,7 @@ Epoch 28/30
 
 </div>
 
-![png](/examples/generative/img/adain/adain_23_278.png)
+![png](/img/examples/generative/adain/adain_23_278.png)
     
 
 
@@ -1019,7 +1018,7 @@ Epoch 29/30
 
 </div>
 
-![png](/examples/generative/img/adain/adain_23_288.png)
+![png](/img/examples/generative/adain/adain_23_288.png)
     
 
 
@@ -1033,7 +1032,7 @@ Epoch 30/30
 
 </div>
 
-![png](/examples/generative/img/adain/adain_23_298.png)
+![png](/img/examples/generative/adain/adain_23_298.png)
     
 
 
@@ -1053,30 +1052,29 @@ the output images.
 
 
 ```python
-for ((style, content),) in test_ds:
-    style_encoded = model.encoder(style)
-    content_encoded = model.encoder(content)
-    t = ada_in(style=style_encoded, content=content_encoded)
-    reconstructed_image = model.decoder(t)
-    fig, axes = plt.subplots(nrows=10, ncols=3, figsize=(10, 30))
-    [ax.axis("off") for ax in np.ravel(axes)]
+((style, content),) = test_ds[0]
+style_encoded = model.encoder(style)
+content_encoded = model.encoder(content)
+t = ada_in(style=style_encoded, content=content_encoded)
+reconstructed_image = model.decoder(t)
+fig, axes = plt.subplots(nrows=10, ncols=3, figsize=(10, 30))
+[ax.axis("off") for ax in np.ravel(axes)]
 
-    for axis, style_image, content_image, reconstructed_image in zip(
-        axes, style[0:10], content[0:10], reconstructed_image[0:10]
-    ):
-        ax_style, ax_content, ax_reconstructed = axis
-        ax_style.imshow(style_image)
-        ax_style.set_title("Style Image")
-        ax_content.imshow(content_image)
-        ax_content.set_title("Content Image")
-        ax_reconstructed.imshow(reconstructed_image)
-        ax_reconstructed.set_title("NST Image")
-    break
+for axis, style_image, content_image, reconstructed_image in zip(
+    axes, style[0:10], content[0:10], reconstructed_image[0:10]
+):
+    ax_style, ax_content, ax_reconstructed = axis
+    ax_style.imshow(style_image)
+    ax_style.set_title("Style Image")
+    ax_content.imshow(content_image)
+    ax_content.set_title("Content Image")
+    ax_reconstructed.imshow(reconstructed_image)
+    ax_reconstructed.set_title("NST Image")
 ```
 
 
     
-![png](/examples/generative/img/adain/adain_25_0.png)
+![png](/img/examples/generative/adain/adain_25_0.png)
     
 
 
