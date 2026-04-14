@@ -933,7 +933,7 @@ EXAMPLES_MASTER = {
                     "path": "adain",
                     "title": "Neural Style Transfer with AdaIN",
                     "subcategory": "Style transfer",
-                    "keras_2": True,
+                    "keras_3": True,
                 },
                 # Text generation
                 {

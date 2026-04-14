@@ -2,7 +2,7 @@
 Title: Neural Style Transfer with AdaIN
 Author: [Aritra Roy Gosthipaty](https://twitter.com/arig23498), [Ritwik Raha](https://twitter.com/ritwik_raha)
 Date created: 2021/11/08
-Last modified: 2021/11/08
+Last modified: 2026/04/13
 Description: Neural Style Transfer with Adaptive Instance Normalization.
 Accelerator: GPU
 Converted to Keras 3 by: [Harshith K](https://github.com/kharshith-k/)
@@ -52,7 +52,6 @@ batch size, and training duration.
 
 import os
 import numpy as np
-import tensorflow as tf
 import keras
 import matplotlib.pyplot as plt
 from keras import layers
@@ -651,25 +650,24 @@ the output images.
 [Hugging Face demo](https://huggingface.co/spaces/ariG23498/nst).
 """
 
-for ((style, content),) in test_ds:
-    style_encoded = model.encoder(style)
-    content_encoded = model.encoder(content)
-    t = ada_in(style=style_encoded, content=content_encoded)
-    reconstructed_image = model.decoder(t)
-    fig, axes = plt.subplots(nrows=10, ncols=3, figsize=(10, 30))
-    [ax.axis("off") for ax in np.ravel(axes)]
+((style, content),) = test_ds[0]
+style_encoded = model.encoder(style)
+content_encoded = model.encoder(content)
+t = ada_in(style=style_encoded, content=content_encoded)
+reconstructed_image = model.decoder(t)
+fig, axes = plt.subplots(nrows=10, ncols=3, figsize=(10, 30))
+[ax.axis("off") for ax in np.ravel(axes)]
 
-    for axis, style_image, content_image, reconstructed_image in zip(
-        axes, style[0:10], content[0:10], reconstructed_image[0:10]
-    ):
-        ax_style, ax_content, ax_reconstructed = axis
-        ax_style.imshow(style_image)
-        ax_style.set_title("Style Image")
-        ax_content.imshow(content_image)
-        ax_content.set_title("Content Image")
-        ax_reconstructed.imshow(reconstructed_image)
-        ax_reconstructed.set_title("NST Image")
-    break
+for axis, style_image, content_image, reconstructed_image in zip(
+    axes, style[0:10], content[0:10], reconstructed_image[0:10]
+):
+    ax_style, ax_content, ax_reconstructed = axis
+    ax_style.imshow(style_image)
+    ax_style.set_title("Style Image")
+    ax_content.imshow(content_image)
+    ax_content.set_title("Content Image")
+    ax_reconstructed.imshow(reconstructed_image)
+    ax_reconstructed.set_title("NST Image")
 
 """
 ## Conclusion
