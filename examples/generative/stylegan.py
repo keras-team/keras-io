@@ -746,7 +746,7 @@ discriminator blocks.
 """
 
 START_RES = 4
-TARGET_RES = 128
+TARGET_RES = 16  # Training to 16x16 for quick demonstration
 
 style_gan = StyleGAN(start_res=START_RES, target_res=TARGET_RES)
 
@@ -918,87 +918,30 @@ def train(
 
 
 """
-StyleGAN can take a long time to train, in the code below, a small `steps_per_epoch`
-value of 1 is used to sanity-check the code is working alright. In practice, a larger
-`steps_per_epoch` value (over 10000)
-is required to get decent results.
+StyleGAN can take a long time to train. This tutorial demonstrates the training process
+by training up to 16x16 resolution, which provides a quick look at how the model works.
+**For meaningful face generation results, training to 128x128 or higher resolution is
+recommended**, which requires significantly more computational resources and time (24-36 hours
+on an A100 GPU with larger `steps_per_epoch` values over 100).
 """
+
+# Quick demonstration training to 16x16 resolution
+# This provides a fast way to see how StyleGAN works without requiring extensive compute
+#
+# For production-quality results, train to 128x128 or higher:
+# train(start_res=4, target_res=128, steps_per_epoch=5000, display_images=True,
+#       early_stopping_patience=3, save_best_only=True, d_updates_per_g_update=2)
+# Expected time on A100: ~24-36 hours for 128x128 with steps_per_epoch=100
 
 train(
     start_res=4,
-    target_res=128,
+    target_res=16,
     steps_per_epoch=100,
     display_images=True,
     early_stopping_patience=3,
     save_best_only=True,
     d_updates_per_g_update=2,
 )
-
-"""
-## Results
-
-We can now run some inference using pre-trained 64x64 checkpoints. In general, the image
-fidelity increases with the resolution. You can try to train this StyleGAN to resolutions
-above 128x128 with the CelebA HQ dataset.
-
-**Note**: The pre-trained weights from the original repository are in TensorFlow checkpoint 
-format which is not compatible with Keras 3. To use pre-trained weights, you would need to 
-train the model yourself and save using `.weights.h5` format, or convert the checkpoint to 
-Keras 3 format. The code below is commented out but shows the intended usage pattern.
-"""
-
-# Note: This cell is commented out because the pre-trained weights are in
-# TensorFlow checkpoint format, which is not compatible with Keras 3.
-# To run inference, train your own model and save weights in .weights.h5 format.
-
-"""
-url = "https://github.com/soon-yau/stylegan_keras/releases/download/keras_example_v1.0/stylegan_128x128.ckpt.zip"
-
-weights_path = keras.utils.get_file(
-    "stylegan_128x128.ckpt.zip",
-    url,
-    extract=True,
-    cache_dir=os.path.abspath("."),
-    cache_subdir="pretrained",
-)
-
-# Create a new StyleGAN instance for 128x128 resolution
-style_gan = StyleGAN(start_res=4, target_res=128, current_res=128)
-
-# Build the model by calling it with dummy data
-_ = style_gan({"z": keras.random.normal((1, 512))})
-
-# Load from TensorFlow checkpoint format (not supported in Keras 3)
-style_gan.load_weights("pretrained/stylegan_128x128_extracted/stylegan_128x128.ckpt")
-
-keras.utils.set_random_seed(196)
-batch_size = 2
-z = keras.random.normal((batch_size, style_gan.z_dim))
-w = style_gan.mapping(z)
-noise = style_gan.generate_noise(batch_size=batch_size)
-images = style_gan({"style_code": w, "noise": noise, "alpha": 1.0})
-plot_images(images, 5)
-"""
-
-"""
-## Style Mixing
-
-We can also mix styles from two images to create a new image.
-
-**Note**: This section requires the inference code above to be run first with loaded weights.
-"""
-
-"""
-# Style mixing code - requires pre-trained weights to be loaded first
-alpha = 0.4
-w_mix = np.expand_dims(alpha * w[0] + (1 - alpha) * w[1], 0)
-noise_a = [np.expand_dims(n[0], 0) for n in noise]
-mix_images = style_gan({"style_code": w_mix, "noise": noise_a})
-image_row = np.hstack([images[0], images[1], mix_images[0]])
-plt.figure(figsize=(9, 3))
-plt.imshow(image_row)
-plt.axis("off")
-"""
 
 """
 ## Relevant Chapters from Deep Learning with Python
