@@ -1321,6 +1321,14 @@ MODELS_MASTER = {
                     ],
                 },
                 {
+                    "path": "gemma4_video_converter",
+                    "title": "Gemma4VideoConverter",
+                    "generate": [
+                        "keras_hub.layers.Gemma4VideoConverter",
+                        "keras_hub.layers.Gemma4VideoConverter.from_preset",
+                    ],
+                },
+                {
                     "path": "gemma4_backbone",
                     "title": "Gemma4Backbone model",
                     "generate": [
