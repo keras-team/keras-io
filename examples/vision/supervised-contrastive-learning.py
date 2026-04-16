@@ -29,10 +29,11 @@ representations of images in different classes.
 import os
 
 # Set backend: "jax", "torch", or "tensorflow"
-os.environ["KERAS_BACKEND"] = "tensorflow"
+os.environ["KERAS_BACKEND"] = "jax"
 
 import keras
 from keras import layers, ops
+
 """
 ## Prepare the data
 """
@@ -134,7 +135,7 @@ encoder = create_encoder()
 classifier = create_classifier(encoder)
 classifier.summary()
 
-history = classifier.fit(x=x_train, y=y_train, batch_size=batch_size, epochs=num_epochs)
+# history = classifier.fit(x=x_train, y=y_train, batch_size=batch_size, epochs=num_epochs)
 
 accuracy = classifier.evaluate(x_test, y_test)[1]
 print(f"Test accuracy: {round(accuracy * 100, 2)}%")
@@ -170,6 +171,7 @@ class SupervisedContrastiveLoss(keras.losses.Loss):
 
         # Create a mask to find positive pairs (images of same class)
         labels = ops.cast(labels, "int32")
+        labels = ops.reshape(labels, (-1, 1))
         mask = ops.cast(ops.equal(labels, ops.transpose(labels)), "float32")
 
         batch_size = ops.shape(logits)[0]
@@ -215,7 +217,10 @@ encoder_with_projection_head.compile(
 encoder_with_projection_head.summary()
 
 history = encoder_with_projection_head.fit(
-    x=x_train, y=y_train, batch_size=batch_size, epochs=num_epochs
+    x=x_train,
+    y=y_train,
+    batch_size=batch_size,
+    epochs=num_epochs,
 )
 
 """
