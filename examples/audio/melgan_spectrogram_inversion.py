@@ -2,7 +2,7 @@
 Title: MelGAN-based spectrogram inversion using feature matching
 Author: Darshan Deshpande
 Date created: 02/09/2021
-Last modified: 13/04/2026
+Last modified: 17/04/2026
 Description: Inversion of audio from mel-spectrograms using the MelGAN architecture and feature matching.
 Accelerator: GPU
 Converted to Keras 3 by: [Maitry Sinha](https://github.com/maitry63)
@@ -122,6 +122,10 @@ train_dataset = tf.data.Dataset.from_generator(
     ),
 )
 
+train_dataset = (
+    train_dataset.shuffle(200).batch(BATCH_SIZE).repeat().prefetch(tf.data.AUTOTUNE)
+)
+
 """
 ## Defining custom layers for MelGAN
 
@@ -220,25 +224,20 @@ class MelSpec(layers.Layer):
 class WeightNormalization(layers.Layer):
     def __init__(self, layer, **kwargs):
         super().__init__(**kwargs)
-
-        config = layer.get_config()
-        config["use_bias"] = False
-        self.layer = layer.__class__.from_config(config)
+        self.layer = layer
 
     def build(self, input_shape):
         self.layer.build(input_shape)
 
-        if hasattr(self.layer, "bias") and self.layer.bias is not None:
-            self.layer.bias = None
-
-        self.kernel = self.layer.kernel
-
+        self.v = self.layer.kernel  # frozen reference
         self.g = self.add_weight(
-            shape=(self.kernel.shape[-1],),
+            name="wn_scale",
+            shape=(self.v.shape[-1],),
             initializer="ones",
             trainable=True,
-            name="wn_scale",
         )
+
+        super().build(input_shape)
 
     def call(self, inputs):
         kernel = self.layer.kernel
@@ -248,14 +247,16 @@ class WeightNormalization(layers.Layer):
 
         w = kernel * (self.g / (norm + 1e-6))
 
-        outputs = ops.conv(
+        return tf.nn.conv1d(
             inputs,
             w,
-            strides=self.layer.strides,
+            stride=self.layer.strides[0],
             padding=self.layer.padding.upper(),
+            dilations=self.layer.dilation_rate,
         )
 
-        return outputs
+    def compute_output_shape(self, input_shape):
+        return self.layer.compute_output_shape(input_shape)
 
 
 """
@@ -280,44 +281,88 @@ def residual_stack(input, filters):
         Residual stack output.
     """
 
-    if input.shape[-1] != filters:
-        input_proj = layers.Conv1D(filters, 1, padding="same")(input)
-    else:
-        input_proj = input
+    input_proj = WeightNormalization(
+        layers.Conv1D(
+            filters, 1, padding="same", use_bias=False, kernel_initializer="he_normal"
+        )
+    )(input)
 
     c1 = WeightNormalization(
-        layers.Conv1D(filters, 3, dilation_rate=1, padding="same", use_bias=False)
+        layers.Conv1D(
+            filters,
+            kernel_size=3,
+            dilation_rate=1,
+            padding="same",
+            use_bias=False,
+            kernel_initializer="he_normal",
+        )
     )(input)
+
     lrelu1 = layers.LeakyReLU()(c1)
 
     c2 = WeightNormalization(
-        layers.Conv1D(filters, 3, dilation_rate=1, padding="same", use_bias=False)
+        layers.Conv1D(
+            filters,
+            kernel_size=3,
+            dilation_rate=1,
+            padding="same",
+            use_bias=False,
+            kernel_initializer="he_normal",
+        )
     )(lrelu1)
 
     add1 = layers.Add()([c2, input_proj])
-
     lrelu2 = layers.LeakyReLU()(add1)
 
     c3 = WeightNormalization(
-        layers.Conv1D(filters, 3, dilation_rate=3, padding="same", use_bias=False)
+        layers.Conv1D(
+            filters,
+            kernel_size=3,
+            dilation_rate=1,
+            padding="same",
+            use_bias=False,
+            kernel_initializer="he_normal",
+        )
     )(lrelu2)
+
     lrelu3 = layers.LeakyReLU()(c3)
 
     c4 = WeightNormalization(
-        layers.Conv1D(filters, 3, dilation_rate=1, padding="same", use_bias=False)
+        layers.Conv1D(
+            filters,
+            kernel_size=3,
+            dilation_rate=1,
+            padding="same",
+            use_bias=False,
+            kernel_initializer="he_normal",
+        )
     )(lrelu3)
 
-    add2 = layers.Add()([add1, c4])
-
+    add2 = layers.Add()([c4, add1])
     lrelu4 = layers.LeakyReLU()(add2)
 
     c5 = WeightNormalization(
-        layers.Conv1D(filters, 3, dilation_rate=9, padding="same", use_bias=False)
+        layers.Conv1D(
+            filters,
+            kernel_size=3,
+            dilation_rate=1,
+            padding="same",
+            use_bias=False,
+            kernel_initializer="he_normal",
+        )
     )(lrelu4)
+
     lrelu5 = layers.LeakyReLU()(c5)
 
     c6 = WeightNormalization(
-        layers.Conv1D(filters, 3, dilation_rate=1, padding="same", use_bias=False)
+        layers.Conv1D(
+            filters,
+            kernel_size=3,
+            dilation_rate=1,
+            padding="same",
+            use_bias=False,
+            kernel_initializer="he_normal",
+        )
     )(lrelu5)
 
     add3 = layers.Add()([c6, add2])
@@ -344,11 +389,20 @@ def conv_block(input, conv_dim, upsampling_factor):
         Dilated convolution block.
     """
     conv_t = WeightNormalization(
-        layers.Conv1D(conv_dim, 16, upsampling_factor, padding="same", use_bias=False)
+        layers.Conv1DTranspose(
+            filters=conv_dim,
+            kernel_size=16,
+            strides=upsampling_factor,
+            padding="same",
+            use_bias=False,
+            kernel_initializer="he_normal",
+        )
     )(input)
+
     lrelu1 = layers.LeakyReLU()(conv_t)
     res_stack = residual_stack(lrelu1, conv_dim)
     lrelu2 = layers.LeakyReLU()(res_stack)
+
     return lrelu2
 
 
@@ -362,19 +416,75 @@ to compute the feature matching loss.
 
 
 def discriminator_block(input):
-    conv1 = WeightNormalization(layers.Conv1D(16, 15, 1, "same"))(input)
+
+    conv1 = WeightNormalization(
+        layers.Conv1D(16, 15, 1, "same", use_bias=False, kernel_initializer="he_normal")
+    )(input)
+
     lrelu1 = layers.LeakyReLU()(conv1)
-    conv2 = WeightNormalization(layers.Conv1D(64, 41, 4, "same", groups=4))(lrelu1)
+
+    conv2 = WeightNormalization(
+        layers.Conv1D(
+            64, 41, 4, "same", groups=4, use_bias=False, kernel_initializer="he_normal"
+        )
+    )(lrelu1)
+
     lrelu2 = layers.LeakyReLU()(conv2)
-    conv3 = WeightNormalization(layers.Conv1D(256, 41, 4, "same", groups=16))(lrelu2)
+
+    conv3 = WeightNormalization(
+        layers.Conv1D(
+            256,
+            41,
+            4,
+            "same",
+            groups=16,
+            use_bias=False,
+            kernel_initializer="he_normal",
+        )
+    )(lrelu2)
+
     lrelu3 = layers.LeakyReLU()(conv3)
-    conv4 = WeightNormalization(layers.Conv1D(1024, 41, 4, "same", groups=64))(lrelu3)
+
+    conv4 = WeightNormalization(
+        layers.Conv1D(
+            1024,
+            41,
+            4,
+            "same",
+            groups=64,
+            use_bias=False,
+            kernel_initializer="he_normal",
+        )
+    )(lrelu3)
+
     lrelu4 = layers.LeakyReLU()(conv4)
-    conv5 = WeightNormalization(layers.Conv1D(1024, 41, 4, "same", groups=256))(lrelu4)
+
+    conv5 = WeightNormalization(
+        layers.Conv1D(
+            1024,
+            41,
+            4,
+            "same",
+            groups=256,
+            use_bias=False,
+            kernel_initializer="he_normal",
+        )
+    )(lrelu4)
+
     lrelu5 = layers.LeakyReLU()(conv5)
-    conv6 = WeightNormalization(layers.Conv1D(1024, 5, 1, "same"))(lrelu5)
+
+    conv6 = WeightNormalization(
+        layers.Conv1D(
+            1024, 5, 1, "same", use_bias=False, kernel_initializer="he_normal"
+        )
+    )(lrelu5)
+
     lrelu6 = layers.LeakyReLU()(conv6)
-    conv7 = WeightNormalization(layers.Conv1D(1, 3, 1, "same"))(lrelu6)
+
+    conv7 = WeightNormalization(
+        layers.Conv1D(1, 3, 1, "same", use_bias=False, kernel_initializer="he_normal")
+    )(lrelu6)
+
     return [lrelu1, lrelu2, lrelu3, lrelu4, lrelu5, lrelu6, conv7]
 
 
@@ -417,7 +527,7 @@ def create_discriminator(input_shape):
     pool1 = layers.AveragePooling1D(pool_size=4, padding="same")(inp)
     out_map2 = discriminator_block(pool1)
 
-    pool2 = layers.AveragePooling1D(pool_size=4, padding="same")(pool1)
+    pool2 = layers.AveragePooling1D(pool_size=2, padding="same")(pool1)
     out_map3 = discriminator_block(pool2)
     return keras.Model(inp, [out_map1, out_map2, out_map3])
 
@@ -592,10 +702,14 @@ class MelGAN(keras.Model):
             disc_loss = discriminator_loss(real_pred, fake_pred)
 
         # Calculating and applying the gradients for generator and discriminator
-        grads_gen = gen_tape.gradient(gen_fm_loss, generator.trainable_weights)
-        grads_disc = disc_tape.gradient(disc_loss, discriminator.trainable_weights)
-        gen_optimizer.apply_gradients(zip(grads_gen, generator.trainable_weights))
-        disc_optimizer.apply_gradients(zip(grads_disc, discriminator.trainable_weights))
+        grads_gen = gen_tape.gradient(gen_fm_loss, self.generator.trainable_weights)
+        grads_disc = disc_tape.gradient(disc_loss, self.discriminator.trainable_weights)
+        self.gen_optimizer.apply_gradients(
+            zip(grads_gen, self.generator.trainable_weights)
+        )
+        self.disc_optimizer.apply_gradients(
+            zip(grads_disc, self.discriminator.trainable_weights)
+        )
 
         self.gen_loss_tracker.update_state(gen_fm_loss)
         self.disc_loss_tracker.update_state(disc_loss)
@@ -620,6 +734,7 @@ gen_optimizer = keras.optimizers.Adam(
 disc_optimizer = keras.optimizers.Adam(
     LEARNING_RATE_DISC, beta_1=0.5, beta_2=0.9, clipnorm=1
 )
+steps_per_epoch = len(wavs) // BATCH_SIZE
 
 # Start training
 generator = create_generator((None, 1))
@@ -633,11 +748,12 @@ mel_gan.compile(
     feature_matching_loss,
     discriminator_loss,
 )
-
 mel_gan.fit(
-    train_dataset.shuffle(200).batch(BATCH_SIZE).prefetch(tf.data.AUTOTUNE),
+    train_dataset,
     epochs=1,
+    steps_per_epoch=steps_per_epoch,
 )
+
 """
 ## Testing the model
 
@@ -659,7 +775,10 @@ Timing the inference speed of a single sample. Running this, you can see that th
 inference time per spectrogram ranges from 8 milliseconds to 10 milliseconds on a K80 GPU which is
 pretty fast.
 """
+
 pred = generator.predict(audio_sample, batch_size=32, verbose=1)
+
+
 """
 ## Conclusion
 
