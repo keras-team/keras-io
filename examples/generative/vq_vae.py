@@ -139,7 +139,14 @@ class VectorQuantizer(layers.Layer):
 **A note on straight-through estimation**:
 
 This line of code does the straight-through estimation part: `quantized = x +
-tf.stop_gradient(quantized - x)`. During backpropagation, `(quantized - x)` won't be
+tf.stop_gradient(quantized - x)`. The straight-through estimator affects the
+forward computation and backpropagation differently.
+
+During forward computation the x values cancel out and the nearest embedding `quantized`
+is passed to the decoder.
+
+During backpropagation, the `tf.stop_gradient` operator prevents the contribution
+of its inputs from being taken into account. As a result, `(quantized - x)` won't be
 included in the computation graph and the gradients obtained for `quantized`
 will be copied for `inputs`. Thanks to [this video](https://youtu.be/VZFVUrYcig0?t=1393)
 for helping me understand this technique.
