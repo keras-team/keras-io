@@ -71,7 +71,7 @@ random.seed(42)
 """
 
 BATCH_SIZE = 128
-EPOCHS = 1
+EPOCHS = 5
 NUM_CLASSES = 10
 
 CROP_TO = 72
@@ -84,8 +84,7 @@ TEMPERATURE = 10
 
 (x_train, y_train), (x_test, y_test) = keras.datasets.cifar10.load_data()
 
-# val_samples = 49500
-val_samples = 500
+val_samples = 49500
 train_x, train_y = x_train[:val_samples], y_train[:val_samples]
 val_x, val_y = x_train[val_samples:], y_train[val_samples:]
 
