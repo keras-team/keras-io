@@ -41,6 +41,16 @@ from tensorflow.keras import regularizers
 from sklearn.datasets import make_moons
 import numpy as np
 import matplotlib.pyplot as plt
+
+# Compatibility patch for TFP with Keras 3 / TF 2.19+
+try:
+    if not hasattr(tf._api.v2.compat.v2.__internal__, "register_load_context_function"):
+        tf._api.v2.compat.v2.__internal__.register_load_context_function = (
+            tf._api.v2.compat.v2.__internal__.register_call_context_function
+        )
+except AttributeError:
+    pass
+
 import tensorflow_probability as tfp
 
 """
@@ -179,48 +189,49 @@ class RealNVP(keras.Model):
 ## Model training
 """
 
-model = RealNVP(num_coupling_layers=6)
+if __name__ == "__main__":
+    model = RealNVP(num_coupling_layers=6)
 
-model.compile(optimizer=keras.optimizers.Adam(learning_rate=0.0001))
+    model.compile(optimizer=keras.optimizers.Adam(learning_rate=0.0001))
 
-history = model.fit(
-    normalized_data, batch_size=256, epochs=300, verbose=2, validation_split=0.2
-)
+    history = model.fit(
+        normalized_data, batch_size=256, epochs=300, verbose=2, validation_split=0.2
+    )
 
-"""
-## Performance evaluation
-"""
+    """
+    ## Performance evaluation
+    """
 
-plt.figure(figsize=(15, 10))
-plt.plot(history.history["loss"])
-plt.plot(history.history["val_loss"])
-plt.title("model loss")
-plt.legend(["train", "validation"], loc="upper right")
-plt.ylabel("loss")
-plt.xlabel("epoch")
+    plt.figure(figsize=(15, 10))
+    plt.plot(history.history["loss"])
+    plt.plot(history.history["val_loss"])
+    plt.title("model loss")
+    plt.legend(["train", "validation"], loc="upper right")
+    plt.ylabel("loss")
+    plt.xlabel("epoch")
 
-# From data to latent space.
-z, _ = model(normalized_data)
+    # From data to latent space.
+    z, _ = model(normalized_data)
 
-# From latent space to data.
-samples = model.distribution.sample(3000)
-x, _ = model.predict(samples)
+    # From latent space to data.
+    samples = model.distribution.sample(3000)
+    x, _ = model.predict(samples)
 
-f, axes = plt.subplots(2, 2)
-f.set_size_inches(20, 15)
+    f, axes = plt.subplots(2, 2)
+    f.set_size_inches(20, 15)
 
-axes[0, 0].scatter(normalized_data[:, 0], normalized_data[:, 1], color="r")
-axes[0, 0].set(title="Inference data space X", xlabel="x", ylabel="y")
-axes[0, 1].scatter(z[:, 0], z[:, 1], color="r")
-axes[0, 1].set(title="Inference latent space Z", xlabel="x", ylabel="y")
-axes[0, 1].set_xlim([-3.5, 4])
-axes[0, 1].set_ylim([-4, 4])
-axes[1, 0].scatter(samples[:, 0], samples[:, 1], color="g")
-axes[1, 0].set(title="Generated latent space Z", xlabel="x", ylabel="y")
-axes[1, 1].scatter(x[:, 0], x[:, 1], color="g")
-axes[1, 1].set(title="Generated data space X", label="x", ylabel="y")
-axes[1, 1].set_xlim([-2, 2])
-axes[1, 1].set_ylim([-2, 2])
+    axes[0, 0].scatter(normalized_data[:, 0], normalized_data[:, 1], color="r")
+    axes[0, 0].set(title="Inference data space X", xlabel="x", ylabel="y")
+    axes[0, 1].scatter(z[:, 0], z[:, 1], color="r")
+    axes[0, 1].set(title="Inference latent space Z", xlabel="x", ylabel="y")
+    axes[0, 1].set_xlim([-3.5, 4])
+    axes[0, 1].set_ylim([-4, 4])
+    axes[1, 0].scatter(samples[:, 0], samples[:, 1], color="g")
+    axes[1, 0].set(title="Generated latent space Z", xlabel="x", ylabel="y")
+    axes[1, 1].scatter(x[:, 0], x[:, 1], color="g")
+    axes[1, 1].set(title="Generated data space X", label="x", ylabel="y")
+    axes[1, 1].set_xlim([-2, 2])
+    axes[1, 1].set_ylim([-2, 2])
 
 """
 ## Relevant Chapters from Deep Learning with Python
