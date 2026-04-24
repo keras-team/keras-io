@@ -3,9 +3,7 @@ Title: Multimodal and Agentic Workflows with Gemma 4 in KerasHub
 Author: [Sachin Prasad](https://github.com/sachinprasadhs)
 Date created: 2026/04/14
 Last modified: 2026/04/20
-Description: A practical Gemma 4 guide covering text, image, video, audio,
-object detection, OCR, coding, function calling, thinking, and reasoning in
-KerasHub.
+Description: A comprehensive guide to multimodal and agentic workflows with Gemma 4 in KerasHub.
 Accelerator: GPU
 """
 
@@ -91,20 +89,21 @@ defaults to JAX, but you can switch to TensorFlow or PyTorch by setting
 **Note**: Since this guide exercises the full range of Gemma 4's multimodal
 capabilities (including high-resolution images and video frames), it requires
 significant GPU memory. For a smooth experience and to avoid Out-Of-Memory (OOM)
-errors, running on a high-end GPU with large memory (such as an NVIDIA H100 or
-similar) is strongly recommended.
+errors, running on a high-end GPU/TPU with large memory (such as an NVIDIA H100
+or similar) is strongly recommended.
 
 """
 
 """shell
-!pip install -q -U keras keras-hub
-!pip install -q -U soundfile scipy requests pillow matplotlib av
+pip install -q -U keras keras-hub
+pip install -q -U soundfile scipy requests pillow matplotlib av
 # Optional: Upgrade CUDA and JAX if you encounter ptxas errors
-# !pip install --upgrade nvidia-cuda-nvcc-cu12
-# !pip install -q --upgrade "jax[cuda12]"
+# pip install --upgrade nvidia-cuda-nvcc-cu12
+# pip install -q --upgrade "jax[cuda12]"
 """
 
 import os
+
 os.environ["KERAS_BACKEND"] = "jax"  # or "tensorflow" or "torch"
 
 import json
@@ -118,6 +117,9 @@ import numpy as np
 import requests
 import soundfile as sf
 from PIL import Image
+import av
+
+from IPython.display import HTML, Markdown, display
 
 AUDIO_URL = (
     "https://raw.githubusercontent.com/keras-team/keras-hub/master/"
@@ -125,8 +127,6 @@ AUDIO_URL = (
     "female_short_voice_clip_17sec.wav"
 )
 IMAGE_URL = "http://images.cocodataset.org/val2017/000000039769.jpg"
-IMAGE_URL_2 = "http://images.cocodataset.org/val2017/000000001761.jpg"
-OCR_IMAGE = None
 
 """
 ## Helper utilities
@@ -138,6 +138,7 @@ Gemma 4 may emit a short natural-language preamble before the JSON payload. The
 helper extracts the JSON block, rescales the 0-1000 coordinates back to pixel
 space, and renders boxes with `keras.visualization.draw_bounding_boxes()`.
 """
+
 
 def load_image(*sources):
     """Load one or more images from URLs or local file paths."""
@@ -184,11 +185,11 @@ def strip_prompt(output, prompt):
     if isinstance(output, list):
         output = output[0]
     if output.startswith(prompt):
-        return output[len(prompt):]
+        return output[len(prompt) :]
     for marker in ("<start_of_turn>model\n", "<|turn>model\n"):
         index = output.rfind(marker)
         if index != -1:
-            return output[index + len(marker):]
+            return output[index + len(marker) :]
     return output
 
 
@@ -216,12 +217,14 @@ def gemma_boxes_to_keras_prediction(image, detections):
             label_to_id[label] = len(label_to_id)
 
         y_min, x_min, y_max, x_max = detection["box_2d"]
-        boxes.append([
-            y_min / 1000.0 * height,
-            x_min / 1000.0 * width,
-            y_max / 1000.0 * height,
-            x_max / 1000.0 * width,
-        ])
+        boxes.append(
+            [
+                y_min / 1000.0 * height,
+                x_min / 1000.0 * width,
+                y_max / 1000.0 * height,
+                x_max / 1000.0 * width,
+            ]
+        )
         labels.append(label_to_id[label])
 
     prediction = {
@@ -254,12 +257,14 @@ def render_detection_result(image, raw_output):
     plt.show()
     return detections
 
+
 """
 ## Load the Gemma 4 preset
 
-This guide uses `gemma4_instruct_2b` from Kaggle. It is a practical starting
-point because it supports text, image, video-style prompting, and audio-enabled
-workflows in a relatively small checkpoint.
+This guide uses `gemma4_instruct_2b` (2.3B effective, 5.1B with embeddings)
+from Kaggle. It is a practical starting point because it supports text, image,
+video-style prompting, and audio-enabled workflows in a relatively small
+checkpoint.
 """
 
 print("Loading preset: gemma4_instruct_2b")
@@ -268,8 +273,6 @@ model = keras_hub.models.Gemma4CausalLM.from_preset(
     dtype="bfloat16",
 )
 
-print("audio_converter :", model.preprocessor.audio_converter)
-print("audio_encoder   :", model.backbone.audio_encoder)
 
 """
 ## 1. Text generation
@@ -280,13 +283,14 @@ prompt formatting are all working before moving into multimodal prompts.
 
 PROMPT_TEXT = (
     "<|turn>user\n"
-    "Write a short, creative pitch for a movie about a time-traveling historian who accidentally changes the recipe for pizza.<turn|>\n"
+    "Write a short, creative pitch for a movie about a time-traveling\n"
+    "historian who accidentally changes the recipe for pizza.<turn|>\n"
     "<|turn>model\n"
 )
 
 text_output = model.generate({"prompts": [PROMPT_TEXT]}, max_length=512)
-print("\n" + "="*50 + "\nModel Output:\n" + "="*50)
-print(strip_prompt(text_output, PROMPT_TEXT))
+print("\n" + "=" * 50 + "\nModel Output:\n" + "=" * 50)
+display(Markdown(strip_prompt(text_output, PROMPT_TEXT)))
 
 """
 ## 2. Image captioning
@@ -309,8 +313,8 @@ image_output = model.generate(
     {"prompts": [PROMPT_IMAGE], "images": [image]},
     max_length=2048,
 )
-print("\n" + "="*50 + "\nModel Output:\n" + "="*50)\n
-print(strip_prompt(image_output, PROMPT_IMAGE))
+print("\n" + "=" * 50 + "\nModel Output:\n" + "=" * 50)
+display(Markdown(strip_prompt(image_output, PROMPT_IMAGE)))
 
 """
 ## 3. Object detection-style localization
@@ -327,8 +331,8 @@ are rendered with Keras visualization utilities.
 PROMPT_DETECTION = (
     "<|turn>user\n"
     "<|image|>\n"
-    "Identify every cat in this image. First give one short sentence, then return a JSON array inside a ```json``` block. "
-    "Each item must contain `box_2d` and `label`, and `box_2d` must be in Gemma 4's 0-1000 coordinate space in [ymin, xmin, ymax, xmax] order.<turn|>\n"
+    "Identify every cat in this image. First give one short sentence, then\n"
+    "return a JSON array inside a ```json``` block. Each item must contain\n"
     "<|turn>model\n"
 )
 detection_output = model.generate(
@@ -336,8 +340,8 @@ detection_output = model.generate(
     max_length=2048,
 )
 raw_detection_text = strip_prompt(detection_output, PROMPT_DETECTION)
-print("\n" + "="*50 + "\nModel Output:\n" + "="*50)\n
-print(raw_detection_text)
+print("\n" + "=" * 50 + "\nModel Output:\n" + "=" * 50)
+display(Markdown(raw_detection_text))
 
 parsed_detections = render_detection_result(image, raw_detection_text)
 parsed_detections
@@ -363,7 +367,9 @@ PROMPT_AUDIO = (
     "Transcribe the following speech segment in its original language. "
     "Follow these specific instructions for formatting the answer:\n"
     "* Only output the transcription, with no newlines.\n"
-    "* When transcribing numbers, write the digits, i.e. write 1.7 and not one point seven, and write 3 instead of three.<turn|>\n"
+    "* Only output the transcription, with no newlines.\n"
+    "* When transcribing numbers, write the digits, i.e. write 1.7\n"
+    " and not one point seven, and write 3 instead of three.<turn|>\n"
     "<|turn>model\n"
 )
 
@@ -380,8 +386,8 @@ audio_output = model.generate(
     {"prompts": [PROMPT_AUDIO], "audio": [audio]},
     max_length=2048,
 )
-print("\n" + "="*50 + "\nModel Output:\n" + "="*50)\n
-print(strip_prompt(audio_output, PROMPT_AUDIO))
+print("\n" + "=" * 50 + "\nModel Output:\n" + "=" * 50)
+display(Markdown(strip_prompt(audio_output, PROMPT_AUDIO)))
 
 """
 ## 5. Function calling
@@ -396,9 +402,9 @@ PROMPT_FUNC_CALL = (
     "<|turn>system\n"
     "You are a helpful assistant."
     "<|tool>declaration:get_current_weather{"
-    "description:<|\"|>Returns the current weather for a given city.,"
+    'description:<|"|>Returns the current weather for a given city.,'
     "parameters:{"
-    "location:{type:<|\"|>string<|\"|>,description:<|\"|>The city name<|\"|>}"
+    'location:{type:<|"|>string<|"|>,description:<|"|>The city name<|"|>}'
     "}}"
     "<tool|><turn|>\n"
     "<|turn>user\n"
@@ -407,19 +413,23 @@ PROMPT_FUNC_CALL = (
 )
 
 tool_call_output = model.generate({"prompts": [PROMPT_FUNC_CALL]}, max_length=256)
-tool_call_text = tool_call_output[0] if isinstance(tool_call_output, list) else tool_call_output
+tool_call_text = (
+    tool_call_text[0] if isinstance(tool_call_text, list) else tool_call_text
+)
 tool_call_text = tool_call_text.split("<|turn>model\n")[-1]
 print(tool_call_text)
 
 PROMPT_WITH_RESPONSE = (
     PROMPT_FUNC_CALL
-    + "<|tool_call>call:get_current_weather{location:<|\"|>Paris<|\"|>}<tool_call|>"
-    + "<|tool_response>response:get_current_weather{temperature:18,weather:<|\"|>partly cloudy<|\"|>}<tool_response|>\n"
+    + '<|tool_call>call:get_current_weather{location:<|\\"|>Paris<|\\"|>}'
+    + "<tool_call|><|tool_response>response:get_current_weather{"
+    + 'temperature:18,weather:<|\\"|>partly cloudy<|\\"|>}<tool_response|>\n'
     + "<|turn>model\n"
 )
 
-final_weather_output = model.generate({"prompts": [PROMPT_WITH_RESPONSE]}, max_length=256)
-final_weather_text = final_weather_output[0] if isinstance(final_weather_output, list) else final_weather_output
+final_weather_output = model.generate(
+    {"prompts": [PROMPT_WITH_RESPONSE]}, max_length=256
+)
 final_weather_text = final_weather_text.split("<|turn>model\n")[-1]
 print(final_weather_text)
 
@@ -433,13 +443,15 @@ synthesis tasks.
 
 PROMPT_CODE = (
     "<|turn>user\n"
-    "Write a Python function named `is_palindrome` that ignores punctuation, whitespace, and letter casing. Also include a few short test calls.<turn|>\n"
+    "Write a Python function named `is_palindrome` that ignores\n"
+    "punctuation, whitespace, and letter casing. Also include a few\n"
+    "short test calls.<turn|>\n"
     "<|turn>model\n"
 )
 
 code_output = model.generate({"prompts": [PROMPT_CODE]}, max_length=512)
-print("\n" + "="*50 + "\nModel Output:\n" + "="*50)
-print(strip_prompt(code_output, PROMPT_CODE))
+print("\n" + "=" * 50 + "\nModel Output:\n" + "=" * 50)
+display(Markdown(strip_prompt(code_output, PROMPT_CODE)))
 
 """
 ## 7. HTML generation and rendering
@@ -450,13 +462,11 @@ directly, providing a visual verification of the model's output.
 
 """
 
-from IPython.display import HTML, display
-
 PROMPT_HTML = (
     "<|turn>user\n"
-    "Create a stunning, interactive Glassmorphic product card in HTML and inline CSS. "
-    "It should have a dark background for the page, a frosted-glass effect on the card (backdrop-filter: blur), "
-    "a glowing neon gradient border, a floating product image placeholder (a styled div), "
+    "Create a stunning, interactive Glassmorphic product card in HTML and\n"
+    "inline CSS. It should have a dark background for the page, a\n"
+    "frosted-glass effect on the card (backdrop-filter: blur), a glowing\n"
     "and a glowing 'Buy Now' button. "
     "Make it look like a premium UI component. "
     "Return ONLY the HTML code inside a ```html block.<turn|>\n"
@@ -467,14 +477,13 @@ html_output = model.generate({"prompts": [PROMPT_HTML]}, max_length=2048)
 html_text = strip_prompt(html_output, PROMPT_HTML)
 
 # Extract HTML from the code block
-import re
 match = re.search(r"```html\s*(.*?)\s*```", html_text, flags=re.DOTALL)
 if match:
     extracted_html = match.group(1)
     print("\nRendering generated HTML:")
     display(HTML(extracted_html))
-    print("\n" + "="*50 + "\nModel Output:\n" + "="*50)
-    print(html_text)
+    print("\n" + "=" * 50 + "\nModel Output:\n" + "=" * 50)
+    display(Markdown(html_text))
 else:
     print("\nCould not find HTML block to render.")
 
@@ -491,12 +500,11 @@ and feed the result back to the model until it completes the task.
 
 """
 
-import json
-import re
 
 # Mock tools
 def control_device(room, device, action):
     return f"Success: {device} in {room} is now {action}."
+
 
 def read_sensor(room, sensor_type):
     if sensor_type == "temperature":
@@ -505,47 +513,49 @@ def read_sensor(room, sensor_type):
         return "45%"
     return "Unknown sensor"
 
-tools = {
-    "control_device": control_device,
-    "read_sensor": read_sensor
-}
+
+tools = {"control_device": control_device, "read_sensor": read_sensor}
 
 PROMPT_AGENT = (
     "<|turn>system\n"
     "<|think|>You are a helpful smart home assistant."
     "<|tool>declaration:control_device{"
-    "description:<|\"|>Control a smart home device.<|\"|>,"
+    'description:<|"|>Control a smart home device.<|"|>,'
     "parameters:{"
-    "room:{type:<|\"|>string<|\"|>,description:<|\"|>The room name<|\"|>},"
-    "device:{type:<|\"|>string<|\"|>,description:<|\"|>The device name (e.g., lights, fan)<|\"|>},"
-    "action:{type:<|\"|>string<|\"|>,description:<|\"|>The action (on, off)<|\"|>}"
+    'room:{type:<|"|>string<|"|>,description:<|"|>The room name<|"|>},'
+    'device:{type:<|"|>string<|"|>,description:<|"|>The device name\n'
+    '(e.g., lights, fan)<|"|>},\n'
     "}}"
     "<|tool>declaration:read_sensor{"
-    "description:<|\"|>Read a sensor value.<|\"|>,"
+    'description:<|"|>Read a sensor value.<|"|>,'
     "parameters:{"
-    "room:{type:<|\"|>string<|\"|>,description:<|\"|>The room name<|\"|>},"
-    "sensor_type:{type:<|\"|>string<|\"|>,description:<|\"|>The sensor type (temperature, humidity)<|\"|>}"
+    'room:{type:<|"|>string<|"|>,description:<|"|>The room name<|"|>},'
+    'room:{type:<|"|>string<|"|>,description:<|"|>The room name<|"|>},\n'
     "}}"
     "<tool|><turn|>\n"
     "<|turn>user\n"
-    "Turn off the kitchen lights and check the temperature in the bedroom.<turn|>\n"
+    "Turn off the kitchen lights and check the\n"
+    "temperature in the bedroom.<turn|>\n"
     "<|turn>model\n"
 )
+
 
 def run_agent_loop(prompt):
     conversation = prompt
     max_turns = 5
-    
+
     for turn in range(max_turns):
         print(f"\n--- Agent Turn {turn + 1} ---")
         output = model.generate({"prompts": [conversation]}, max_length=1024)
         generated_text = strip_prompt(output, conversation)
-        
-        print("\n" + "="*50 + "\nModel Output:\n" + "="*50)
-        print(generated_text)
-        
+
+        print("\n" + "=" * 50 + "\nModel Output:\n" + "=" * 50)
+        display(Markdown(generated_text))
+
         # Check for tool call
-        match = re.search(r"<|tool_call>(.*?)<tool_call|>", generated_text, flags=re.DOTALL)
+        match = re.search(
+            r"<|tool_call>(.*?)<tool_call|>", generated_text, flags=re.DOTALL
+        )
         if match:
             call_str = match.group(1)
             call_match = re.search(r"call:(\w+)\{(.*?)\}", call_str)
@@ -553,15 +563,23 @@ def run_agent_loop(prompt):
                 tool_name = call_match.group(1)
                 args_str = call_match.group(2)
                 args = {}
-                for pair in args_str.split(","): join_pair = pair.split(":") if len(join_pair) == 2: args[join_pair[0].strip()] = join_pair[1].strip().replace('<|\\\"|>', '').replace('<|\\|>', '')
-                
+                for pair in args_str.split(","):
+                    join_pair = pair.split(":")
+                    if len(join_pair) == 2:
+                        val = join_pair[1].strip()
+                        val = val.replace('<|\\"|>', "").replace("<|\\|>", "")
+                        args[join_pair[0].strip()] = val
+
                 print(f"\nExecuting tool: {tool_name} with args {args}")
                 if tool_name in tools:
                     result = tools[tool_name](**args)
                     print(f"Tool Result: {result}")
-                    
+
                     conversation += generated_text
-                    conversation += f"<|tool_response>response:{tool_name}{{{result}}}<tool_response|>\n"
+                    conversation += (
+                        f"<|tool_response>response:{tool_name}"
+                        f"{{{result}}}<tool_response|>\n"
+                    )
                     conversation += "<|turn>model\n"
                 else:
                     print(f"Error: Tool {tool_name} not found.")
@@ -572,6 +590,7 @@ def run_agent_loop(prompt):
         else:
             print("\nAgent finished or no tool call.")
             break
+
 
 run_agent_loop(PROMPT_AGENT)
 
@@ -587,43 +606,55 @@ PROMPT_THINKING = (
     "<|turn>system\n"
     "<|think|>You are a helpful math tutor.<turn|>\n"
     "<|turn>user\n"
-    "A train travels 120 km in 1.5 hours. How long will it take to travel 200 km at the same speed?<turn|>\n"
+    "A train travels 120 km in 1.5 hours. How long\n"
+    "will it take to travel 200 km at the same speed?<turn|>\n"
     "<|turn>model\n"
 )
 
 thinking_output = model.generate({"prompts": [PROMPT_THINKING]}, max_length=512)
-thinking_text = thinking_output[0] if isinstance(thinking_output, list) else thinking_output
+thinking_text = (
+    thinking_output[0] if isinstance(thinking_output, list) else thinking_output
+)
 thinking_text = thinking_text.split("<|turn>model\n")[-1]
-print("\n" + "="*50 + "\nModel Output:\n" + "="*50)
-print(thinking_text)
+print("\n" + "=" * 50 + "\nModel Output:\n" + "=" * 50)
+display(Markdown(thinking_text))
 
 """
 ## 9. Multi-image comparison
 
-Gemma 4 can compare multiple images within a single turn. Each `<|image|>` token
-corresponds to one image in the `images` list, which makes it easy to build
-comparison, retrieval, and frame-based prompts.
+Gemma 4 can compare multiple images within a single turn. This is useful for
+comparing similar objects in different scenes or finding differences.
+
+In this section, we use two images of zebras in different environments (lush
+jungle vs. dry enclosure) and ask the model to describe the scenes and
+interactions.
 """
 
-import numpy as np
-image_1, image_2 = load_image(IMAGE_URL, IMAGE_URL_2)
-display_images([image_1, image_2], titles=["Image 1", "Image 2"])
+ZEBRA_URL_1 = "http://images.cocodataset.org/val2017/000000113354.jpg"
+ZEBRA_URL_2 = "http://images.cocodataset.org/val2017/000000104455.jpg"
+
+image_1 = load_image(ZEBRA_URL_1)
+image_2 = load_image(ZEBRA_URL_2)
+display_images([image_1, image_2], titles=["Zebra Scene 1", "Zebra Scene 2"])
 
 PROMPT_COMPARE = (
     "<|turn>user\n"
     "<|image|>\n"
     "<|image|>\n"
-    "What are the key differences between these two images? Describe each image briefly, then list the differences.<turn|>\n"
+    "These images show the same type of animal in different environments. "
+    "These images show the same type of animal in different environments.\n"
+    "Describe the differences in the scenes and how the animals appear\n"
+    "to be interacting with their surroundings.<turn|>\n"
     "<|turn>model\n"
 )
 
-# Convert PIL Images to numpy arrays to avoid TensorFlow ragged tensor iteration error
 comparison_output = model.generate(
     {"prompts": [PROMPT_COMPARE], "images": [[np.array(image_1), np.array(image_2)]]},
     max_length=2048,
 )
-print("\n" + "="*50 + "\nModel Output:\n" + "="*50)
-print(strip_prompt(comparison_output, PROMPT_COMPARE))
+print("\n" + "=" * 50 + "\nModel Output:\n" + "=" * 50)
+display(Markdown(strip_prompt(comparison_output, PROMPT_COMPARE)))
+
 
 """
 ## 10. Video prompting
@@ -639,12 +670,11 @@ responses for video inputs.
 
 """
 
-import av
-from io import BytesIO
-import requests
-import numpy as np
 
-VIDEO_URL = "https://test-videos.co.uk/vids/bigbuckbunny/mp4/h264/360/Big_Buck_Bunny_360_10s_1MB.mp4"
+VIDEO_URL = (
+    "https://test-videos.co.uk/vids/bigbuckbunny/mp4/h264/360/"
+    "Big_Buck_Bunny_360_10s_1MB.mp4"
+)
 
 # Download and decode video
 print("Downloading test video...")
@@ -656,18 +686,13 @@ video_frames = np.stack(frames)  # Shape: (T, H, W, C)
 
 print(f"Decoded {video_frames.shape[0]} frames.")
 
-# Subsample frames if needed (Gemma 4 typically expects a fixed number of frames, e.g., 32)
-num_frames = 32
 T = video_frames.shape[0]
 indices = np.arange(0, T, T / num_frames).astype(int)[:num_frames]
 video_frames_sub = video_frames[indices]
 
 print(f"Subsampled to {video_frames_sub.shape[0]} frames.")
 
-PROMPT_VIDEO = """<|turn>user
-<|video|>Describe this video.<turn|>
-<|turn>model
-"""
+PROMPT_VIDEO = "<|turn>user\n" "<|video|>Describe this video.<turn|>\n" "<|turn>model\n"
 
 # Gemma4CausalLM expects batched inputs, so we add a batch dimension to video
 video_output = model.generate(
@@ -675,36 +700,69 @@ video_output = model.generate(
     max_length=4096,
 )
 
-print("\n" + "="*50 + "\nModel Output:\n" + "="*50)
-print(strip_prompt(video_output, PROMPT_VIDEO))
+print("\n" + "=" * 50 + "\nModel Output:\n" + "=" * 50)
+display(Markdown(strip_prompt(video_output, PROMPT_VIDEO)))
 
 """
-## 11. OCR and document parsing
+## 11. OCR, translation & entity extraction
 
-Gemma 4 is strong on OCR and document understanding. For document-heavy tasks,
-the prompting pattern stays simple: pass the image, ask for exact extraction,
-and make the expected output format explicit.
+Gemma 4 is strong on OCR and document understanding. For document-heavy
+tasks, the prompting pattern stays simple: pass the image, ask for
+exact extraction, and make the expected output format explicit.
+
+In this section, we use an image of German street signs. We ask the model to
+transcribe the German text (OCR), identify the location names (entities), and
+provide their English translation.
 """
 
-if OCR_IMAGE is None:
-    print("Set OCR_IMAGE to a local path or URL to run this section.")
-else:
-    ocr_image = load_image(OCR_IMAGE)
-    display_images(ocr_image, titles=["OCR input"])
+OCR_IMAGE_URL = "http://images.cocodataset.org/val2017/000000011615.jpg"
+ocr_image = load_image(OCR_IMAGE_URL)
+display_images(ocr_image, titles=["OCR input"])
 
-    PROMPT_OCR = (
-        "<|turn>user\n"
-        "<|image|>\n"
-        "Extract all text from this document exactly as it appears, preserving the original layout as closely as possible.<turn|>\n"
-        "<|turn>model\n"
-    )
+PROMPT_OCR = (
+    "<|turn>user\n"
+    "<|image|>\n"
+    "Extract the text from this image. First, transcribe all text in its\n"
+    "original language (German). Then, identify the entities (place names\n"
+    "like 'Severins-brücke') and provide their English translation.\n"
+    "Format the output clearly.<turn|>\n"
+    "<|turn>model\n"
+)
 
-    ocr_output = model.generate(
-        {"prompts": [PROMPT_OCR], "images": [ocr_image]},
-        max_length=2048,
-    )
-    print("\n" + "="*50 + "\nModel Output:\n" + "="*50)
-    print(strip_prompt(ocr_output, PROMPT_OCR))
+ocr_output = model.generate(
+    {"prompts": [PROMPT_OCR], "images": [ocr_image]},
+    max_length=2048,
+)
+print("\n" + "=" * 50 + "\nModel Output:\n" + "=" * 50)
+display(Markdown(strip_prompt(ocr_output, PROMPT_OCR)))
+
+"""
+## 12. Travel planning from location
+
+Gemma 4's multimodal capabilities allow it to recognize famous landmarks and
+provide contextual information, such as creating travel plans based on the
+location shown in an image.
+"""
+
+LOCATION_URL = "http://images.cocodataset.org/val2017/000000036678.jpg"
+location_image = load_image(LOCATION_URL)
+display_images(location_image, titles=["Target Location"])
+
+PROMPT_TRAVEL = (
+    "<|turn>user\n"
+    "<|image|>\n"
+    "Identify the location in this image and create a 3-day travel plan\n"
+    "for it. Include top attractions and a few restaurant suggestions.\n"
+    "Format the output clearly with headings.<turn|>\n"
+    "<|turn>model\n"
+)
+
+travel_output = model.generate(
+    {"prompts": [PROMPT_TRAVEL], "images": [location_image]},
+    max_length=2048,
+)
+print("\n" + "=" * 50 + "\nModel Output:\n" + "=" * 50)
+display(Markdown(strip_prompt(travel_output, PROMPT_TRAVEL)))
 
 """
 ## Closing notes
@@ -736,4 +794,3 @@ detection post-processing.
   Keras](https://keras.io/guides/int8_quantization_in_keras/) guide.
 
 """
-
