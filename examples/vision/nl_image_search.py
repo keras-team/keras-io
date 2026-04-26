@@ -2,7 +2,7 @@
 Title: Natural language image search with a Dual Encoder
 Author: [Khalid Salama](https://www.linkedin.com/in/khalid-salama-24403144/)
 Date created: 2021/01/30
-Last modified: 2026/04/23
+Last modified: 2026/04/26
 Description: Implementation of a dual encoder model for retrieving images that match natural language queries.
 Accelerator: GPU
 Converted to Keras 3 by: [Maitry Sinha](https://github.com/maitry63)
@@ -28,8 +28,6 @@ caption embeddings are located near the embeddings of the images they describe.
 import os
 import json
 
-import zipfile
-import urllib.request
 from tqdm import tqdm
 import collections
 import numpy as np
@@ -88,22 +86,27 @@ def find_file(root, target_name):
 
 root_dir = os.path.abspath(".")
 extract_path = os.path.join(root_dir, "captions_extracted")
-images_dir = os.path.join(root_dir, "train2014_extracted")
 
-download_and_extract(
-    url="http://images.cocodataset.org/annotations/annotations_trainval2014.zip",
-    fname="captions.zip",
-    cache_dir=extract_path,
+annotation_zip_path = keras.utils.get_file(
+    fname="annotations_trainval2014.zip",
+    origin="http://images.cocodataset.org/annotations/annotations_trainval2014.zip",
+    extract=True,
+    force_download=True,
 )
 
-download_and_extract(
-    url="http://images.cocodataset.org/zips/train2014.zip",
+base_dir = os.path.dirname(annotation_zip_path)
+
+image_zip_path = keras.utils.get_file(
     fname="train2014.zip",
-    cache_dir=images_dir,
+    origin="http://images.cocodataset.org/zips/train2014.zip",
+    extract=True,
+    force_download=False,
 )
 
-annotation_json = find_file(extract_path, "captions_train2014.json")
-actual_image_folder = find_dir(images_dir, "train2014")
+image_base_dir = os.path.dirname(image_zip_path)
+
+annotation_json = find_file(base_dir, "captions_train2014.json")
+actual_image_folder = find_dir(image_base_dir, "train2014")
 
 if annotation_json is None:
     raise FileNotFoundError("captions_train2014.json not found after extraction")
@@ -364,7 +367,7 @@ In this experiment, we freeze the base encoders for text and images, and make on
 the projection head trainable.
 """
 
-num_epochs = 10  # In practice, train for at least 30 epochs
+num_epochs = 5  # In practice, train for at least 30 epochs
 batch_size = 256
 vision_encoder = create_vision_encoder(1, 256, 0.1)
 text_encoder = create_text_encoder(1, 256, 0.1)
