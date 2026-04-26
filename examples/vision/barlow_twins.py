@@ -183,6 +183,7 @@ happens 100% of the time
 *   *RandomBlur*: randomly blurs an image 20% of the time
 """
 
+
 class Augmentation(layers.Layer):
     """Base augmentation class.
 
@@ -226,7 +227,6 @@ class RandomToGrayscale(Augmentation):
         super().__init__()
         self.prob = prob
 
-
     def call(self, x):
         mask = self.random_execute(self.prob)
         # average channels to get grayscale
@@ -234,6 +234,7 @@ class RandomToGrayscale(Augmentation):
         gray = ops.repeat(gray, 3, axis=-1)
         x = ops.where(mask, gray, x)
         return x
+
 
 class RandomFlip(Augmentation):
     """RandomFlip class.
@@ -279,11 +280,7 @@ class RandomResizedCrop(Augmentation):
         shape = ops.shape(x)
         h, w = shape[0], shape[1]
 
-        crop_size = random.randint(
-            (),
-            int(0.75 * self.image_size),
-            self.image_size
-        )
+        crop_size = random.randint((), int(0.75 * self.image_size), self.image_size)
 
         top = random.randint((), 0, h - crop_size + 1)
         left = random.randint((), 0, w - crop_size + 1)
@@ -338,18 +335,19 @@ class RandomBlur(Augmentation):
     Methods:
         call: method that does random blur 20% of the time.
     """
+
     def __init__(self, prob=0.2):
         super().__init__()
         self.prob = prob
-        kernel = np.array([[1,2,1],[2,4,2],[1,2,1]], dtype="float32")
+        kernel = np.array([[1, 2, 1], [2, 4, 2], [1, 2, 1]], dtype="float32")
         self.kernel = kernel / np.sum(kernel)
 
     def call(self, x):
         mask = self.random_execute(0.2)
 
         k = ops.convert_to_tensor(self.kernel)
-        k = ops.reshape(k, (3,3,1,1))
-        k = ops.tile(k, (1,1,3,1))
+        k = ops.reshape(k, (3, 3, 1, 1))
+        k = ops.tile(k, (1, 1, 3, 1))
 
         x_exp = ops.expand_dims(x, 0)
         blurred = ops.nn.depthwise_conv(x_exp, k, strides=1, padding="SAME")[0]
@@ -388,11 +386,11 @@ class RandomAugmentor(layers.Layer):
         self.random_resized_crop = RandomResizedCrop(image_size)
         self.random_flip = RandomFlip()
         self.random_color_jitter = layers.RandomColorJitter(
-            brightness_factor=0.8,          
-            contrast_factor=(0.4, 1.6),      
+            brightness_factor=0.8,
+            contrast_factor=(0.4, 1.6),
             saturation_factor=(0.4, 1.6),
-            hue_factor=0.2,                 
-            value_range=(0, 1)
+            hue_factor=0.2,
+            value_range=(0, 1),
         )
         self.random_blur = RandomBlur()
         self.random_to_grayscale = RandomToGrayscale()
@@ -460,9 +458,7 @@ class BTDatasetCreator:
                 return int(np.ceil(len(self.x) / self.batch_size))
 
             def __getitem__(self, idx):
-                batch = self.x[
-                    idx * self.batch_size : (idx + 1) * self.batch_size
-                ]
+                batch = self.x[idx * self.batch_size : (idx + 1) * self.batch_size]
 
                 a1 = ops.stack([self.augmentor(img) for img in batch])
                 a2 = ops.stack([self.augmentor(img) for img in batch])
@@ -488,6 +484,7 @@ View examples of dataset.
 
 sample_augment_versions = iter(augment_versions)
 
+
 def plot_values(batch: tuple):
     fig, axs = plt.subplots(3, 3)
     fig1, axs1 = plt.subplots(3, 3)
@@ -495,20 +492,21 @@ def plot_values(batch: tuple):
     fig.suptitle("Augmentation 1")
     fig1.suptitle("Augmentation 2")
 
-    (a1, a2), _ = batch  
+    (a1, a2), _ = batch
     # Convert to numpy
     a1 = ops.convert_to_numpy(a1)
     a2 = ops.convert_to_numpy(a2)
 
     for i in range(3):
         for j in range(3):
-            axs[i][j].imshow(a1[3 * i + j])   # shape (32, 32, 3)
+            axs[i][j].imshow(a1[3 * i + j])  # shape (32, 32, 3)
             axs[i][j].axis("off")
 
             axs1[i][j].imshow(a2[3 * i + j])
             axs1[i][j].axis("off")
 
     plt.show()
+
 
 plot_values(next(sample_augment_versions))
 
@@ -576,6 +574,7 @@ class BarlowLoss(losses.Loss):
         cross_corr_matrix_loss: creates loss based on cross correlation
           matrix.
     """
+
     def __init__(self, batch_size, lambd=0.0051, **kwargs):
         """__init__ method.
 
@@ -641,7 +640,7 @@ class BarlowLoss(losses.Loss):
         off_diag_loss = ops.sum(ops.square(off_diag))
 
         return diag_loss + self.lambd * off_diag_loss
-    
+
     def call(self, y_true, y_pred):
         """call method.
 
@@ -670,6 +669,7 @@ class BarlowLoss(losses.Loss):
         loss = self.cross_corr_matrix_loss(c)
 
         return loss
+
 
 """
 ## Barlow Twins' Model Architecture
@@ -754,6 +754,7 @@ class ResNet34:
 Projector network:
 """
 
+
 def build_encoder():
     """build_twin method.
 
@@ -763,14 +764,13 @@ def build_encoder():
     Returns:
         returns a barlow twins model
     """
-    
+
     # encoder network
     resnet = ResNet34()()
     return keras.Model(
-        inputs=resnet.input,
-        outputs=resnet.layers[-1].output,
-        name="encoder_resnet34"
+        inputs=resnet.input, outputs=resnet.layers[-1].output, name="encoder_resnet34"
     )
+
 
 def build_projector(input_dim):
     inputs = keras.Input(shape=(input_dim,))
@@ -782,10 +782,11 @@ def build_projector(input_dim):
         x = keras.layers.ReLU()(x)
 
     outputs = keras.layers.Dense(5000)(x)
-    
+
     model = keras.Model(inputs, outputs, name="projector")
 
     return model
+
 
 def build_twin():
     """build_twin method.
@@ -817,11 +818,13 @@ def build_twin():
 
     x = keras
 
+
 """
 ## Training Loop Model
 
 See pseudocode for reference.
 """
+
 
 def build_barlow_model(image_shape=(32, 32, 3)):
     """
@@ -841,7 +844,8 @@ def build_barlow_model(image_shape=(32, 32, 3)):
 
     z = layers.Concatenate(axis=1)([z1, z2])
 
-    return keras.Model([input1, input2], z)  
+    return keras.Model([input1, input2], z)
+
 
 """
 ## Model Training
@@ -924,20 +928,19 @@ from random guessing.
 encoder = build_encoder()
 
 # Load pretrained weights
-encoder.set_weights(
-    barlow_model.get_layer("encoder_resnet34").get_weights()
-)
+encoder.set_weights(barlow_model.get_layer("encoder_resnet34").get_weights())
 # Freeze encoder
 encoder.trainable = False
 
 # Build model
-model = keras.models.Sequential([
-    encoder,
-    keras.layers.Dense(
-        10,
-        activation="softmax", kernel_regularizer=keras.regularizers.l2(0.02)
-    )
-])
+model = keras.models.Sequential(
+    [
+        encoder,
+        keras.layers.Dense(
+            10, activation="softmax", kernel_regularizer=keras.regularizers.l2(0.02)
+        ),
+    ]
+)
 
 linear_optimizer = keras.optimizers.Lamb()
 model.compile(
