@@ -133,7 +133,7 @@ import os
 os.environ["KERAS_BACKEND"] = "tensorflow"  # or "jax" or "torch"
 
 import keras
-import numpy as np  
+import numpy as np
 import matplotlib.pyplot as plt  # graphs
 from keras import layers
 from keras import random
