@@ -125,8 +125,6 @@ Original Implementation:
 """
 import os
 
-# from PIL import Image
-
 # slightly faster improvements, on the first epoch 30 second decrease and a 1-2 second
 # decrease in epoch time. Overall saves approx. 5 min of training time
 
@@ -135,7 +133,7 @@ import os
 os.environ["KERAS_BACKEND"] = "tensorflow"  # or "jax" or "torch"
 
 import keras
-import numpy as np  # np.random.random
+import numpy as np  
 import matplotlib.pyplot as plt  # graphs
 from keras import layers
 from keras import random
