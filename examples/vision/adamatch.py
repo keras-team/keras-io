@@ -2,7 +2,7 @@
 Title: Semi-supervision and domain adaptation with AdaMatch
 Author: [Sayak Paul](https://twitter.com/RisingSayak)
 Date created: 2021/06/19
-Last modified: 2026/03/26
+Last modified: 2026/04/26
 Description: Unifying semi-supervised learning and unsupervised domain adaptation with AdaMatch.
 Accelerator: GPU
 Converted to Keras 3 by: [Maitry Sinha](https://github.com/maitry63)
@@ -114,7 +114,7 @@ RESIZE_TO = 32
 
 SOURCE_BATCH_SIZE = 64
 TARGET_BATCH_SIZE = 3 * SOURCE_BATCH_SIZE  # Reference: Section 3.2
-EPOCHS = 2
+EPOCHS = 10
 STEPS_PER_EPOCH = len(mnist_x_train) // SOURCE_BATCH_SIZE
 TOTAL_STEPS = EPOCHS * STEPS_PER_EPOCH
 
@@ -415,6 +415,7 @@ def wide_basic(x, n_input_plane, n_output_plane, stride):
     #   corresponds to whether we are using the first block in
     #   each
     #   group; see `block_series()`).
+
     if n_input_plane != n_output_plane:
 
         x = layers.BatchNormalization()(x)
@@ -431,7 +432,13 @@ def wide_basic(x, n_input_plane, n_output_plane, stride):
         )(x)
 
         convs = layers.Conv2D(
-            n_output_plane, (3, 3), strides=stride, padding="same", use_bias=False
+            n_output_plane,
+            (3, 3),
+            strides=stride,
+            padding="same",
+            use_bias=False,
+            kernel_initializer=INIT,
+            kernel_regularizer=keras.regularizers.l2(WEIGHT_DECAY),
         )(x)
 
     else:
@@ -442,14 +449,26 @@ def wide_basic(x, n_input_plane, n_output_plane, stride):
         convs = layers.Activation("relu")(convs)
 
         convs = layers.Conv2D(
-            n_output_plane, (3, 3), strides=stride, padding="same", use_bias=False
+            n_output_plane,
+            (3, 3),
+            strides=stride,
+            padding="same",
+            use_bias=False,
+            kernel_initializer=INIT,
+            kernel_regularizer=keras.regularizers.l2(WEIGHT_DECAY),
         )(convs)
 
     convs = layers.BatchNormalization()(convs)
     convs = layers.Activation("relu")(convs)
 
     convs = layers.Conv2D(
-        n_output_plane, (3, 3), strides=1, padding="same", use_bias=False
+        n_output_plane,
+        (3, 3),
+        strides=1,
+        padding="same",
+        use_bias=False,
+        kernel_initializer=INIT,
+        kernel_regularizer=keras.regularizers.l2(WEIGHT_DECAY),
     )(convs)
 
     return layers.Add()([convs, shortcut])
@@ -461,7 +480,15 @@ def get_network():
     inputs = keras.Input(shape=(32, 32, 3))
 
     x = layers.Rescaling(1.0 / 255)(inputs)
-    x = layers.Conv2D(stages[0], (3, 3), padding="same", use_bias=False)(x)
+
+    x = layers.Conv2D(
+        stages[0],
+        (3, 3),
+        padding="same",
+        use_bias=False,
+        kernel_initializer=INIT,
+        kernel_regularizer=keras.regularizers.l2(WEIGHT_DECAY),
+    )(x)
 
     for i in range(1, 4):
         x = wide_basic(x, stages[i - 1], stages[i], stride=(1 if i == 1 else 2))
@@ -472,9 +499,11 @@ def get_network():
     x = layers.Activation("relu")(x)
     x = layers.GlobalAveragePooling2D()(x)
 
-    outputs = layers.Dense(10, kernel_regularizer=keras.regularizers.l2(WEIGHT_DECAY))(
-        x
-    )
+    outputs = layers.Dense(
+        10,
+        kernel_regularizer=keras.regularizers.l2(WEIGHT_DECAY),
+    )(x)
+
     return keras.Model(inputs, outputs)
 
 
@@ -510,6 +539,7 @@ adamatch_trainer.fit(train_ds, epochs=EPOCHS)
 ## Evaluation on the target and source test sets
 """
 
+# Compile the AdaMatch model to yield accuracy.
 adamatch_trained_model = adamatch_trainer.model
 adamatch_trained_model.compile(metrics=[keras.metrics.SparseCategoricalAccuracy()])
 
@@ -518,6 +548,7 @@ test_path = keras.utils.get_file(
     "http://ufldl.stanford.edu/housenumbers/test_32x32.mat",
 )
 
+# Score on the target test set.
 svhn_test = scipy.io.loadmat(test_path)
 
 x_test = np.transpose(svhn_test["X"], (3, 0, 1, 2)).astype("float32")
