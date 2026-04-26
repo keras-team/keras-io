@@ -124,7 +124,8 @@ Original Implementation:
 ## Setup
 """
 import os
-from PIL import Image
+
+# from PIL import Image
 
 # slightly faster improvements, on the first epoch 30 second decrease and a 1-2 second
 # decrease in epoch time. Overall saves approx. 5 min of training time
@@ -265,32 +266,54 @@ class RandomFlip(Augmentation):
         """
         mask = self.random_execute(self.prob)
         # flip horizontally
-        flipped = ops.flip(x, axis=1)
+        flipped = ops.flip(x, axis=2)  # batch-aware if x is (B,H,W,C)
         return ops.where(mask, flipped, x)
 
 
 class RandomResizedCrop(Augmentation):
-    """RandomResizedCrop class."""
+    """RandomResizedCrop class.
+
+    RandomResizedCrop applies a random crop to an image and then
+    resizes it back to the target image size. This is a key augmentation
+    used in self-supervised learning methods such as Barlow Twins,
+    as it encourages invariance to spatial transformations.
+
+    The crop size and position are randomly sampled, and the cropped
+    region is resized back to the original image dimensions.
+
+    Supports both single images (H, W, C) and batched inputs
+    (B, H, W, C).
+
+    Attributes:
+        image_size: Integer representing the target height and width
+            of the output image.
+
+    Methods:
+        _crop_one: Applies random resized cropping to a single image.
+        call: Applies the augmentation to either a single image or a batch.
+    """
 
     def __init__(self, image_size):
         super().__init__()
         self.image_size = image_size
 
-    def call(self, x):
-        shape = ops.shape(x)
-        h, w = shape[0], shape[1]
+    def _crop_one(self, x):
+        h, w = x.shape[0], x.shape[1]
 
         crop_size = random.randint((), int(0.75 * self.image_size), self.image_size)
 
         top = random.randint((), 0, h - crop_size + 1)
         left = random.randint((), 0, w - crop_size + 1)
 
-        crop = ops.slice(
-            x,
-            start_indices=(top, left, 0),
-            shape=(crop_size, crop_size, 3),
-        )
-        crop = ops.image.resize(crop, (self.image_size, self.image_size))
+        crop = x[top : top + crop_size, left : left + crop_size, :]
+        return ops.image.resize(crop, (self.image_size, self.image_size))
+
+    def call(self, x):
+        # x can be (H,W,C) or (B,H,W,C)
+        if len(ops.shape(x)) == 3:
+            return self._crop_one(x)
+
+        crop = ops.stack([self._crop_one(img) for img in x])
 
         return crop
 
@@ -339,18 +362,18 @@ class RandomBlur(Augmentation):
     def __init__(self, prob=0.2):
         super().__init__()
         self.prob = prob
+
         kernel = np.array([[1, 2, 1], [2, 4, 2], [1, 2, 1]], dtype="float32")
         self.kernel = kernel / np.sum(kernel)
 
     def call(self, x):
-        mask = self.random_execute(0.2)
+        mask = self.random_execute(self.prob)
 
         k = ops.convert_to_tensor(self.kernel)
         k = ops.reshape(k, (3, 3, 1, 1))
         k = ops.tile(k, (1, 1, 3, 1))
 
-        x_exp = ops.expand_dims(x, 0)
-        blurred = ops.nn.depthwise_conv(x_exp, k, strides=1, padding="SAME")[0]
+        blurred = ops.nn.depthwise_conv(x, k, strides=1, padding="SAME")
 
         return ops.where(mask, blurred, x)
 
@@ -460,11 +483,10 @@ class BTDatasetCreator:
             def __getitem__(self, idx):
                 batch = self.x[idx * self.batch_size : (idx + 1) * self.batch_size]
 
-                a1 = ops.stack([self.augmentor(img) for img in batch])
-                a2 = ops.stack([self.augmentor(img) for img in batch])
+                a1 = self.augmentor(batch)
+                a2 = self.augmentor(batch)
 
                 y_dummy = np.zeros((len(batch), 1))
-                # return (a1, a2)
                 return (a1, a2), y_dummy
 
             def on_epoch_end(self):
@@ -863,7 +885,7 @@ barlow_model.compile(
     loss=BarlowLoss(BATCH_SIZE),
 )
 
-history = barlow_model.fit(augment_versions, epochs=160)
+history = barlow_model.fit(augment_versions, epochs=2)
 plt.plot(history.history["loss"])
 plt.show()
 
@@ -950,7 +972,7 @@ model.compile(
 )
 
 model.layers[0].trainable = False
-model.fit(xy_ds, epochs=35, validation_data=test_ds)
+model.fit(xy_ds, epochs=2, validation_data=test_ds)
 
 """
 ## Conclusion
