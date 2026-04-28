@@ -97,9 +97,15 @@ or similar) is strongly recommended.
 """shell
 pip install -q -U keras keras-hub
 pip install -q -U soundfile scipy requests pillow matplotlib av
-# Optional: Upgrade CUDA and JAX if you encounter ptxas errors
-# pip install --upgrade nvidia-cuda-nvcc-cu12
-# pip install -q --upgrade "jax[cuda12]"
+"""
+
+"""
+Optional: Upgrade CUDA and JAX if you encounter ptxas errors
+"""
+
+"""shell
+pip install -q --upgrade nvidia-cuda-nvcc-cu12
+pip install -q --upgrade "jax[cuda12]"
 """
 
 import os
