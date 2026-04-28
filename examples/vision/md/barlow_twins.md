@@ -2,7 +2,7 @@
 
 **Author:** [Abhiraam Eranti](https://github.com/dewball345)<br>
 **Date created:** 11/4/21<br>
-**Last modified:** 26/04/02<br>
+**Last modified:** 26/04/28<br>
 **Description:** A keras implementation of Barlow Twins (contrastive SSL with redundancy reduction).
 
 
@@ -119,10 +119,10 @@ import os
 
 # Allocates two threads for a gpu private which allows more operations to be
 # done faster
-os.environ["KERAS_BACKEND"] = "tensorflow" #or "jax" or "torch"
+os.environ["KERAS_BACKEND"] = "tensorflow"  # or "jax" or "torch"
 
 import keras
-import numpy as np  # np.random.random
+import numpy as np
 import matplotlib.pyplot as plt  # graphs
 from keras import layers
 from keras import random
@@ -155,6 +155,7 @@ test_features = test_features / 255.0
 ```python
 # Batch size
 BATCH_SIZE = 512
+# BATCH_SIZE = 1024
 
 IMAGE_SIZE = 32
 ```
@@ -178,7 +179,7 @@ happens 100% of the time
 
 ```python
 
-class Augmentation(keras.layers.Layer):
+class Augmentation(layers.Layer):
     """Base augmentation class.
 
     Base augmentation class. Contains the random_execute method.
@@ -192,7 +193,7 @@ class Augmentation(keras.layers.Layer):
     def __init__(self):
         super().__init__()
 
-    def random_execute(self, prob: float) -> bool:
+    def random_execute(self, prob: float):
         """random_execute function.
 
         Arguments:
@@ -200,13 +201,12 @@ class Augmentation(keras.layers.Layer):
               probability.
 
         Returns:
-            returns true or false based on the probability.
+            returns a boolean mask tensor.
         """
+        return random.uniform(()) < prob
 
-        return random.uniform([], minval=0, maxval=1) < prob
 
-
-class RandomToGrayscale:
+class RandomToGrayscale(Augmentation):
     """RandomToGrayscale class.
 
     RandomToGrayscale class. Randomly makes an image
@@ -219,43 +219,19 @@ class RandomToGrayscale:
     """
 
     def __init__(self, prob=0.2):
+        super().__init__()
         self.prob = prob
 
-    def __call__(self, x):
-        if np.random.rand() < self.prob:
-            # average channels to get grayscale
-            gray = np.mean(x, axis=-1, keepdims=True)
-            x = np.repeat(gray, 3, axis=-1)
+    def call(self, x):
+        mask = self.random_execute(self.prob)
+        # average channels to get grayscale
+        gray = ops.mean(x, axis=-1, keepdims=True)
+        gray = ops.repeat(gray, 3, axis=-1)
+        x = ops.where(mask, gray, x)
         return x
 
 
-class RandomColorJitter(Augmentation):
-    """RandomColorJitter class.
-
-    RandomColorJitter class. Randomly adds color jitter to an image.
-    Color jitter means to add random brightness, contrast,
-    saturation, and hue to an image. There is a 80% chance that an
-    image will be randomly color-jittered.
-
-    Methods:
-        call: method that color-jitters an image 80% of
-          the time.
-    """
-
-    def __init__(self, prob=0.8):
-        self.prob = prob
-
-    def __call__(self, x):
-        if np.random.rand() < self.prob:
-            x = x + np.random.uniform(-0.2, 0.2)
-            x = (x - 0.5) * np.random.uniform(0.8, 1.2) + 0.5
-            gray = np.mean(x, axis=-1, keepdims=True)
-            x = gray + (x - gray) * np.random.uniform(0.8, 1.2)
-            x = np.clip(x, 0, 1)
-        return x
-
-
-class RandomFlip:
+class RandomFlip(Augmentation):
     """RandomFlip class.
 
     RandomFlip class. Randomly flips image horizontally. There is a 50%
@@ -267,9 +243,10 @@ class RandomFlip:
     """
 
     def __init__(self, prob=0.5):
+        super().__init__()
         self.prob = prob
 
-    def __call__(self, x):
+    def call(self, x):
         """call function.
 
         Randomly flips the image.
@@ -281,26 +258,58 @@ class RandomFlip:
             returns a flipped version of the image 50% of the time
               and the original image 50% of the time.
         """
-
-        if np.random.rand() < self.prob:
-            # flip horizontally
-            x = np.fliplr(x)
-        return x
+        mask = self.random_execute(self.prob)
+        # flip horizontally
+        flipped = ops.flip(x, axis=2)  # batch-aware if x is (B,H,W,C)
+        return ops.where(mask, flipped, x)
 
 
 class RandomResizedCrop(Augmentation):
-    def __init__(self, image_size):
-        self.image_size = image_size
-        self.resize_layer = layers.Resizing(image_size, image_size)
+    """RandomResizedCrop class.
 
-    def __call__(self, x):
-        h, w, _ = x.shape
-        rand_size = int(np.random.uniform(0.75 * self.image_size, self.image_size))
-        top = np.random.randint(0, max(h - rand_size + 1, 1))
-        left = np.random.randint(0, max(w - rand_size + 1, 1))
-        crop = x[top : top + rand_size, left : left + rand_size, :]
-        crop_resized = self.resize_layer(np.expand_dims(crop, 0))[0].numpy()
-        return crop_resized
+    RandomResizedCrop applies a random crop to an image and then
+    resizes it back to the target image size. This is a key augmentation
+    used in self-supervised learning methods such as Barlow Twins,
+    as it encourages invariance to spatial transformations.
+
+    The crop size and position are randomly sampled, and the cropped
+    region is resized back to the original image dimensions.
+
+    Supports both single images (H, W, C) and batched inputs
+    (B, H, W, C).
+
+    Attributes:
+        image_size: Integer representing the target height and width
+            of the output image.
+
+    Methods:
+        _crop_one: Applies random resized cropping to a single image.
+        call: Applies the augmentation to either a single image or a batch.
+    """
+
+    def __init__(self, image_size):
+        super().__init__()
+        self.image_size = image_size
+
+    def _crop_one(self, x):
+        h, w = x.shape[0], x.shape[1]
+
+        crop_size = random.randint((), int(0.75 * self.image_size), self.image_size)
+
+        top = random.randint((), 0, h - crop_size + 1)
+        left = random.randint((), 0, w - crop_size + 1)
+
+        crop = x[top : top + crop_size, left : left + crop_size, :]
+        return ops.image.resize(crop, (self.image_size, self.image_size))
+
+    def call(self, x):
+        # x can be (H,W,C) or (B,H,W,C)
+        if len(ops.shape(x)) == 3:
+            return self._crop_one(x)
+
+        crop = ops.stack([self._crop_one(img) for img in x])
+
+        return crop
 
 
 class RandomSolarize(Augmentation):
@@ -313,11 +322,12 @@ class RandomSolarize(Augmentation):
         call: method that does random solarization 20% of the time.
     """
 
-    def __init__(self, prob=0.2, threshold=0.5):
+    def __init__(self, prob=0.2, threshold=0.4):
+        super().__init__()
         self.prob = prob
         self.threshold = threshold
 
-    def __call__(self, x):
+    def call(self, x):
         """call function.
 
         Randomly solarizes the image.
@@ -329,9 +339,9 @@ class RandomSolarize(Augmentation):
             returns a solarized version of the image 20% of the time
               and the original image 80% of the time.
         """
-        if np.random.rand() < self.prob:
-            x = np.where(x < self.threshold, x, 1.0 - x)
-        return x
+        mask = self.random_execute(self.prob)
+        solarized = ops.where(x < self.threshold, x, 1.0 - x)
+        return ops.where(mask, solarized, x)
 
 
 class RandomBlur(Augmentation):
@@ -344,27 +354,25 @@ class RandomBlur(Augmentation):
     """
 
     def __init__(self, prob=0.2):
+        super().__init__()
         self.prob = prob
 
-    def __call__(self, x):
-        """call function.
+        kernel = np.array([[1, 2, 1], [2, 4, 2], [1, 2, 1]], dtype="float32")
+        self.kernel = kernel / np.sum(kernel)
 
-        Randomly solarizes the image.
+    def call(self, x):
+        mask = self.random_execute(self.prob)
 
-        Arguments:
-            x: a Tensor representing the image.
+        k = ops.convert_to_tensor(self.kernel)
+        k = ops.reshape(k, (3, 3, 1, 1))
+        k = ops.tile(k, (1, 1, 3, 1))
 
-        Returns:
-            returns a blurred version of the image 20% of the time
-              and the original image 80% of the time.
-        """
-        if np.random.rand() < self.prob:
-            sigma = np.random.rand() * 1.0
-            x = ops.image.gaussian_blur(x, sigma=(sigma, sigma, 0))
-        return x
+        blurred = ops.nn.depthwise_conv(x, k, strides=1, padding="SAME")
+
+        return ops.where(mask, blurred, x)
 
 
-class RandomAugmentor:
+class RandomAugmentor(layers.Layer):
     """RandomAugmentor class.
 
     RandomAugmentor class. Chains all the augmentations into
@@ -390,22 +398,30 @@ class RandomAugmentor:
         call: chains layers in pipeline together
     """
 
-    def __init__(self, image_size):
+    def __init__(self, image_size: int):
+        super().__init__()
         self.random_resized_crop = RandomResizedCrop(image_size)
         self.random_flip = RandomFlip()
-        self.random_color_jitter = RandomColorJitter()
+        self.random_color_jitter = layers.RandomColorJitter(
+            brightness_factor=0.8,
+            contrast_factor=(0.4, 1.6),
+            saturation_factor=(0.4, 1.6),
+            hue_factor=0.2,
+            value_range=(0, 1),
+        )
         self.random_blur = RandomBlur()
         self.random_to_grayscale = RandomToGrayscale()
         self.random_solarize = RandomSolarize()
 
-    def __call__(self, x):
+    def call(self, x):
         x = self.random_resized_crop(x)
         x = self.random_flip(x)
         x = self.random_color_jitter(x)
         x = self.random_blur(x)
         x = self.random_to_grayscale(x)
         x = self.random_solarize(x)
-        return np.clip(x, 0, 1)
+
+        return ops.clip(x, 0, 1)
 
 
 bt_augmentor = RandomAugmentor(IMAGE_SIZE)
@@ -447,10 +463,8 @@ class BTDatasetCreator:
         self.batch_size = batch_size
         self.seed = seed
 
-    def augmented_version(self, x):
-        """Return a Sequence that yields two augmented versions of each batch."""
-
-        class AugmentedSequence(Sequence):
+    def __call__(self, x):
+        class BTDataset(Sequence):
             def __init__(self, x, augmentor, batch_size, seed):
                 super().__init__()
                 self.x = x
@@ -462,11 +476,14 @@ class BTDatasetCreator:
             def __len__(self):
                 return int(np.ceil(len(self.x) / self.batch_size))
 
-            def __getitem__(self, index):
-                batch = self.x[index * self.batch_size : (index + 1) * self.batch_size]
-                a1 = np.stack([self.augmentor(xi) for xi in batch])
-                a2 = np.stack([self.augmentor(xi) for xi in batch])
-                return a1, a2
+            def __getitem__(self, idx):
+                batch = self.x[idx * self.batch_size : (idx + 1) * self.batch_size]
+
+                a1 = self.augmentor(batch)
+                a2 = self.augmentor(batch)
+
+                y_dummy = np.zeros((len(batch), 1))
+                return (a1, a2), y_dummy
 
             def on_epoch_end(self):
                 np.random.seed(self.seed)
@@ -474,37 +491,9 @@ class BTDatasetCreator:
                 np.random.shuffle(idx)
                 self.x = self.x[idx]
 
-        return AugmentedSequence(x, self.augmentor, self.batch_size, self.seed)
-
-    def __call__(self, x):
-        """Return a zipped Sequence with two augmented views per batch."""
-        seq1 = self.augmented_version(x)
-        seq2 = self.augmented_version(x)
-
-        class ZippedSequence(Sequence):
-            def __init__(self, seq1, seq2):
-                super().__init__()
-                self.seq1 = seq1
-                self.seq2 = seq2
-
-            def __len__(self):
-                return min(len(self.seq1), len(self.seq2))
-
-            def __getitem__(self, index):
-                a1, _ = self.seq1[index]
-                a2, _ = self.seq2[index]
-                batch_size = len(a1)
-                sam = np.zeros((batch_size, 1))
-                return (a1, a2), sam
-
-            def on_epoch_end(self):
-                self.seq1.on_epoch_end()
-                self.seq2.on_epoch_end()
-
-        return ZippedSequence(seq1, seq2)
+        return BTDataset(x, self.augmentor, self.batch_size, self.seed)
 
 
-bt_augmentor = RandomAugmentor(IMAGE_SIZE)
 augment_versions = BTDatasetCreator(bt_augmentor)(train_features)
 ```
 
@@ -515,18 +504,26 @@ View examples of dataset.
 sample_augment_versions = iter(augment_versions)
 
 
-def plot_values(batch):
-    (a1, a2), _ = batch
+def plot_values(batch: tuple):
+    fig, axs = plt.subplots(3, 3)
+    fig1, axs1 = plt.subplots(3, 3)
 
-    fig, axs = plt.subplots(3, 3, figsize=(6, 6))
+    fig.suptitle("Augmentation 1")
+    fig1.suptitle("Augmentation 2")
+
+    (a1, a2), _ = batch
+    # Convert to numpy
+    a1 = ops.convert_to_numpy(a1)
+    a2 = ops.convert_to_numpy(a2)
 
     for i in range(3):
         for j in range(3):
-            img = a1[3 * i + j]  # shape (32, 32, 3)
-            axs[i][j].imshow(img)
+            axs[i][j].imshow(a1[3 * i + j])  # shape (32, 32, 3)
             axs[i][j].axis("off")
 
-    plt.tight_layout()
+            axs1[i][j].imshow(a2[3 * i + j])
+            axs1[i][j].axis("off")
+
     plt.show()
 
 
@@ -536,6 +533,12 @@ plot_values(next(sample_augment_versions))
 
     
 ![png](/img/examples/vision/barlow_twins/barlow_twins_20_0.png)
+    
+
+
+
+    
+![png](/img/examples/vision/barlow_twins/barlow_twins_20_1.png)
     
 
 
@@ -657,7 +660,7 @@ class BarlowLoss(losses.Loss):
 
         # Diagonal: c_ii - 1
         diag = ops.diagonal(c)
-        diag_loss = ops.sum(ops.square(ops.subtract(diag, 1)))
+        diag_loss = ops.sum(ops.square(diag - 1))
 
         # Off-diagonal: c_ij for i != j
         off_diag = c - ops.diag(diag)
@@ -681,7 +684,6 @@ class BarlowLoss(losses.Loss):
         """
         # Normalize projections
         proj_dim = ops.shape(y_pred)[1] // 2
-
         z_a = y_pred[:, :proj_dim]
         z_b = y_pred[:, proj_dim:]
 
@@ -781,7 +783,40 @@ Projector network:
 
 ```python
 
-def build_twin() -> keras.Model:
+def build_encoder():
+    """build_twin method.
+
+    Builds a barlow twins model consisting of an encoder(resnet-34)
+    and a projector, which generates embeddings for the images
+
+    Returns:
+        returns a barlow twins model
+    """
+
+    # encoder network
+    resnet = ResNet34()()
+    return keras.Model(
+        inputs=resnet.input, outputs=resnet.layers[-1].output, name="encoder_resnet34"
+    )
+
+
+def build_projector(input_dim):
+    inputs = keras.Input(shape=(input_dim,))
+
+    x = inputs
+    for i in range(2):
+        x = keras.layers.Dense(5000)(x)
+        x = keras.layers.BatchNormalization()(x)
+        x = keras.layers.ReLU()(x)
+
+    outputs = keras.layers.Dense(5000)(x)
+
+    model = keras.Model(inputs, outputs, name="projector")
+
+    return model
+
+
+def build_twin():
     """build_twin method.
 
     Builds a barlow twins model consisting of an encoder(resnet-34)
@@ -809,10 +844,7 @@ def build_twin() -> keras.Model:
         x = keras.layers.BatchNormalization(name=f"projector_bn_{i}")(x)
         x = keras.layers.ReLU(name=f"projector_relu_{i}")(x)
 
-    x = keras.layers.Dense(n_dense_neurons, name=f"projector_dense_{n_layers}")(x)
-
-    model = keras.Model(resnet.input, x)
-    return model
+    x = keras
 
 ```
 
@@ -832,8 +864,7 @@ def build_barlow_model(image_shape=(32, 32, 3)):
     passes both through the same encoder + projector,
     then concatenates their projections.
     """
-
-    encoder = build_twin()
+    encoder = build_encoder()
 
     input1 = keras.Input(shape=image_shape)
     input2 = keras.Input(shape=image_shape)
@@ -859,13 +890,12 @@ faster than other methods.
 ```python
 # sets up model, optimizer, loss
 barlow_model = build_barlow_model()
-
 barlow_model.compile(
     optimizer=keras.optimizers.Lamb(),
     loss=BarlowLoss(BATCH_SIZE),
 )
 
-history = barlow_model.fit(augment_versions, epochs=2)
+history = barlow_model.fit(augment_versions, epochs=5)
 plt.plot(history.history["loss"])
 plt.show()
 
@@ -873,17 +903,29 @@ plt.show()
 
 <div class="k-default-codeblock">
 ```
-Epoch 1/2
+Epoch 1/5
 
-98/98 ━━━━━━━━━━━━━━━━━━━━ 1157s 12s/step - loss: 2743.9092
+98/98 ━━━━━━━━━━━━━━━━━━━━ 1606s 16s/step - loss: 345.1386
 
-Epoch 2/2
+Epoch 2/5
 
-98/98 ━━━━━━━━━━━━━━━━━━━━ 1306s 13s/step - loss: 1657.6096
+98/98 ━━━━━━━━━━━━━━━━━━━━ 1714s 17s/step - loss: 229.7889
+
+Epoch 3/5
+
+98/98 ━━━━━━━━━━━━━━━━━━━━ 1914s 19s/step - loss: 182.4243
+
+Epoch 4/5
+
+98/98 ━━━━━━━━━━━━━━━━━━━━ 1732s 18s/step - loss: 163.0861
+
+Epoch 5/5
+
+98/98 ━━━━━━━━━━━━━━━━━━━━ 1473s 15s/step - loss: 157.1498
 ```
 </div>
 
-![png](/img/examples/vision/barlow_twins/barlow_twins_34_200.png)
+![png](/img/examples/vision/barlow_twins/barlow_twins_34_500.png)
     
 
 
@@ -945,14 +987,23 @@ from random guessing.
 ```python
 # Approx: 64% accuracy with this barlow twins model.
 
+encoder = build_encoder()
+
+# Load pretrained weights
+encoder.set_weights(barlow_model.get_layer("encoder_resnet34").get_weights())
+# Freeze encoder
+encoder.trainable = False
+
+# Build model
 model = keras.models.Sequential(
     [
-        barlow_model.layers[2],
+        encoder,
         keras.layers.Dense(
             10, activation="softmax", kernel_regularizer=keras.regularizers.l2(0.02)
         ),
     ]
 )
+
 linear_optimizer = keras.optimizers.Lamb()
 model.compile(
     optimizer=linear_optimizer,
@@ -961,20 +1012,92 @@ model.compile(
 )
 
 model.layers[0].trainable = False
-model.fit(xy_ds, epochs=2, validation_data=test_ds)
+model.fit(xy_ds, epochs=20, validation_data=test_ds)
 ```
 
 <div class="k-default-codeblock">
 ```
-Epoch 1/2
+Epoch 1/20
 
-98/98 ━━━━━━━━━━━━━━━━━━━━ 139s 1s/step - accuracy: 0.2275 - loss: 2.5433 - val_accuracy: 0.3606 - val_loss: 2.1783
+98/98 ━━━━━━━━━━━━━━━━━━━━ 155s 2s/step - accuracy: 0.1576 - loss: 3.4602 - val_accuracy: 0.2131 - val_loss: 2.7183
 
-Epoch 2/2
+Epoch 2/20
 
-98/98 ━━━━━━━━━━━━━━━━━━━━ 131s 1s/step - accuracy: 0.3923 - loss: 2.0781 - val_accuracy: 0.4228 - val_loss: 1.9901
+98/98 ━━━━━━━━━━━━━━━━━━━━ 147s 2s/step - accuracy: 0.2763 - loss: 2.4487 - val_accuracy: 0.3292 - val_loss: 2.2542
 
-<keras.src.callbacks.history.History at 0x30e1e3920>
+Epoch 3/20
+
+98/98 ━━━━━━━━━━━━━━━━━━━━ 145s 1s/step - accuracy: 0.3383 - loss: 2.2019 - val_accuracy: 0.3424 - val_loss: 2.1568
+
+Epoch 4/20
+
+98/98 ━━━━━━━━━━━━━━━━━━━━ 146s 1s/step - accuracy: 0.3452 - loss: 2.1399 - val_accuracy: 0.3473 - val_loss: 2.1108
+
+Epoch 5/20
+
+98/98 ━━━━━━━━━━━━━━━━━━━━ 147s 2s/step - accuracy: 0.3472 - loss: 2.1032 - val_accuracy: 0.3468 - val_loss: 2.0822
+
+Epoch 6/20
+
+98/98 ━━━━━━━━━━━━━━━━━━━━ 143s 1s/step - accuracy: 0.3500 - loss: 2.0761 - val_accuracy: 0.3495 - val_loss: 2.0577
+
+Epoch 7/20
+
+98/98 ━━━━━━━━━━━━━━━━━━━━ 145s 1s/step - accuracy: 0.3508 - loss: 2.0512 - val_accuracy: 0.3539 - val_loss: 2.0334
+
+Epoch 8/20
+
+98/98 ━━━━━━━━━━━━━━━━━━━━ 145s 1s/step - accuracy: 0.3518 - loss: 2.0307 - val_accuracy: 0.3538 - val_loss: 2.0128
+
+Epoch 9/20
+
+98/98 ━━━━━━━━━━━━━━━━━━━━ 145s 1s/step - accuracy: 0.3543 - loss: 2.0111 - val_accuracy: 0.3530 - val_loss: 1.9935
+
+Epoch 10/20
+
+98/98 ━━━━━━━━━━━━━━━━━━━━ 145s 1s/step - accuracy: 0.3516 - loss: 1.9935 - val_accuracy: 0.3559 - val_loss: 1.9782
+
+Epoch 11/20
+
+98/98 ━━━━━━━━━━━━━━━━━━━━ 143s 1s/step - accuracy: 0.3556 - loss: 1.9781 - val_accuracy: 0.3546 - val_loss: 1.9629
+
+Epoch 12/20
+
+98/98 ━━━━━━━━━━━━━━━━━━━━ 143s 1s/step - accuracy: 0.3547 - loss: 1.9637 - val_accuracy: 0.3584 - val_loss: 1.9511
+
+Epoch 13/20
+
+98/98 ━━━━━━━━━━━━━━━━━━━━ 146s 1s/step - accuracy: 0.3580 - loss: 1.9515 - val_accuracy: 0.3597 - val_loss: 1.9353
+
+Epoch 14/20
+
+98/98 ━━━━━━━━━━━━━━━━━━━━ 147s 2s/step - accuracy: 0.3585 - loss: 1.9398 - val_accuracy: 0.3643 - val_loss: 1.9243
+
+Epoch 15/20
+
+98/98 ━━━━━━━━━━━━━━━━━━━━ 143s 1s/step - accuracy: 0.3580 - loss: 1.9294 - val_accuracy: 0.3642 - val_loss: 1.9164
+
+Epoch 16/20
+
+98/98 ━━━━━━━━━━━━━━━━━━━━ 144s 1s/step - accuracy: 0.3584 - loss: 1.9197 - val_accuracy: 0.3620 - val_loss: 1.9085
+
+Epoch 17/20
+
+98/98 ━━━━━━━━━━━━━━━━━━━━ 144s 1s/step - accuracy: 0.3589 - loss: 1.9109 - val_accuracy: 0.3640 - val_loss: 1.8994
+
+Epoch 18/20
+
+98/98 ━━━━━━━━━━━━━━━━━━━━ 144s 1s/step - accuracy: 0.3600 - loss: 1.9032 - val_accuracy: 0.3618 - val_loss: 1.8982
+
+Epoch 19/20
+
+98/98 ━━━━━━━━━━━━━━━━━━━━ 143s 1s/step - accuracy: 0.3601 - loss: 1.8966 - val_accuracy: 0.3652 - val_loss: 1.8848
+
+Epoch 20/20
+
+98/98 ━━━━━━━━━━━━━━━━━━━━ 143s 1s/step - accuracy: 0.3612 - loss: 1.8902 - val_accuracy: 0.3660 - val_loss: 1.8769
+
+<keras.src.callbacks.history.History at 0x31ecfcf20>
 ```
 </div>
 
