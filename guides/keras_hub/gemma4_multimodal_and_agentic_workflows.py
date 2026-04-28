@@ -2,7 +2,7 @@
 Title: Multimodal and Agentic Workflows with Gemma 4 in KerasHub
 Author: [Sachin Prasad](https://github.com/sachinprasadhs)
 Date created: 2026/04/14
-Last modified: 2026/04/20
+Last modified: 2026/04/28
 Description: A comprehensive guide to multimodal and agentic workflows with Gemma 4 in KerasHub.
 Accelerator: GPU
 """
@@ -414,7 +414,7 @@ PROMPT_FUNC_CALL = (
 
 tool_call_output = model.generate({"prompts": [PROMPT_FUNC_CALL]}, max_length=256)
 tool_call_text = (
-    tool_call_text[0] if isinstance(tool_call_text, list) else tool_call_text
+    tool_call_output[0] if isinstance(tool_call_output, list) else tool_call_output
 )
 tool_call_text = tool_call_text.split("<|turn>model\n")[-1]
 print(tool_call_text)
@@ -430,8 +430,14 @@ PROMPT_WITH_RESPONSE = (
 final_weather_output = model.generate(
     {"prompts": [PROMPT_WITH_RESPONSE]}, max_length=256
 )
+final_weather_text = (
+    final_weather_output[0]
+    if isinstance(final_weather_output, list)
+    else final_weather_output
+)
 final_weather_text = final_weather_text.split("<|turn>model\n")[-1]
-print(final_weather_text)
+print("\n" + "=" * 50 + "\nModel Output:\n" + "=" * 50)
+display(Markdown(final_weather_text))
 
 """
 ## 6. Coding
@@ -520,22 +526,22 @@ PROMPT_AGENT = (
     "<|turn>system\n"
     "<|think|>You are a helpful smart home assistant."
     "<|tool>declaration:control_device{"
-    'description:<|"|>Control a smart home device.<|"|>,'
+    "description:<|\"|>Control a smart home device.<|\"|>,"
     "parameters:{"
-    'room:{type:<|"|>string<|"|>,description:<|"|>The room name<|"|>},'
-    'device:{type:<|"|>string<|"|>,description:<|"|>The device name\n'
-    '(e.g., lights, fan)<|"|>},\n'
+    "room:{type:<|\"|>string<|\"|>,description:<|\"|>The room name<|\"|>},"
+    "device:{type:<|\"|>string<|\"|>,description:<|\"|>The device name (e.g., lights, fan)<|\"|>},"
+    "action:{type:<|\"|>string<|\"|>,description:<|\"|>The action (on, off)<|\"|>}"
     "}}"
     "<|tool>declaration:read_sensor{"
-    'description:<|"|>Read a sensor value.<|"|>,'
+    "description:<|\"|>Read a sensor value.<|\"|>,"
     "parameters:{"
-    'room:{type:<|"|>string<|"|>,description:<|"|>The room name<|"|>},'
-    'room:{type:<|"|>string<|"|>,description:<|"|>The room name<|"|>},\n'
+    "room:{type:<|\"|>string<|\"|>,description:<|\"|>The room name<|\"|>},"
+    "sensor_type:{type:<|\"|>string<|\"|>,description:<|\"|>The sensor type (temperature, humidity)<|\"|>}"
     "}}"
     "<tool|><turn|>\n"
     "<|turn>user\n"
-    "Turn off the kitchen lights and check the\n"
-    "temperature in the bedroom.<turn|>\n"
+    "Turn off the kitchen lights by setting action='off' and check the\n"
+    "temperature in the bedroom by setting sensor_type='temperature'.<turn|>\n"
     "<|turn>model\n"
 )
 
@@ -548,45 +554,46 @@ def run_agent_loop(prompt):
         print(f"\n--- Agent Turn {turn + 1} ---")
         output = model.generate({"prompts": [conversation]}, max_length=1024)
         generated_text = strip_prompt(output, conversation)
+        if not generated_text:
+            print("\nAgent finished or no output.")
+            break
 
         print("\n" + "=" * 50 + "\nModel Output:\n" + "=" * 50)
         display(Markdown(generated_text))
 
-        # Check for tool call
-        match = re.search(
-            r"<|tool_call>(.*?)<tool_call|>", generated_text, flags=re.DOTALL
+        # Check for tool calls
+        matches = re.findall(
+            r"<\|tool_call>(.*?)<tool_call\|>", generated_text, flags=re.DOTALL
         )
-        if match:
-            call_str = match.group(1)
-            call_match = re.search(r"call:(\w+)\{(.*?)\}", call_str)
-            if call_match:
-                tool_name = call_match.group(1)
-                args_str = call_match.group(2)
-                args = {}
-                for pair in args_str.split(","):
-                    join_pair = pair.split(":")
-                    if len(join_pair) == 2:
-                        val = join_pair[1].strip()
-                        val = val.replace('<|\\"|>', "").replace("<|\\|>", "")
-                        args[join_pair[0].strip()] = val
+        if matches:
+            conversation += generated_text
+            for call_str in matches:
+                call_match = re.search(r"call:(\w+)\{(.*?)\}", call_str)
+                if call_match:
+                    tool_name = call_match.group(1)
+                    args_str = call_match.group(2)
+                    args = {}
+                    for pair in args_str.split(","):
+                        join_pair = pair.split(":")
+                        if len(join_pair) == 2:
+                            val = join_pair[1].strip()
+                            val = val.replace('<|\\"|>', "").replace(
+                                "<|\\|>", ""
+                            )
+                            args[join_pair[0].strip()] = val
 
-                print(f"\nExecuting tool: {tool_name} with args {args}")
-                if tool_name in tools:
-                    result = tools[tool_name](**args)
-                    print(f"Tool Result: {result}")
-
-                    conversation += generated_text
-                    conversation += (
-                        f"<|tool_response>response:{tool_name}"
-                        f"{{{result}}}<tool_response|>\n"
-                    )
-                    conversation += "<|turn>model\n"
+                    print(f"\nExecuting tool: {tool_name} with args {args}")
+                    if tool_name in tools:
+                        result = tools[tool_name](**args)
+                        print(f"Tool Result: {result}")
+                        conversation += f"<|tool_response>response:{tool_name}{{{result}}}<tool_response|>\n"
+                    else:
+                        print(f"Error: Tool {tool_name} not found.")
+                        break
                 else:
-                    print(f"Error: Tool {tool_name} not found.")
+                    print("Error: Malformed tool call.")
                     break
-            else:
-                print("Error: Malformed tool call.")
-                break
+            conversation += "<|turn>model\n"
         else:
             print("\nAgent finished or no tool call.")
             break
@@ -686,6 +693,7 @@ video_frames = np.stack(frames)  # Shape: (T, H, W, C)
 
 print(f"Decoded {video_frames.shape[0]} frames.")
 
+num_frames = 32
 T = video_frames.shape[0]
 indices = np.arange(0, T, T / num_frames).astype(int)[:num_frames]
 video_frames_sub = video_frames[indices]
