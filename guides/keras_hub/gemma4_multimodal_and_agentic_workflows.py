@@ -125,7 +125,7 @@ import soundfile as sf
 from PIL import Image
 import av
 
-from IPython.display import HTML, Markdown, display
+from IPython.display import Markdown, display
 
 AUDIO_URL = (
     "https://raw.githubusercontent.com/keras-team/keras-hub/master/"
@@ -197,6 +197,21 @@ def strip_prompt(output, prompt):
         if index != -1:
             return output[index + len(marker) :]
     return output
+
+
+def display_model_response(text, title="Model response", language=None):
+    cleaned = re.sub(r"<(?:turn\||channel\|)>", "", text).strip()
+    display(Markdown(f"> **{title}**"))
+    if language:
+        display(Markdown(f"```{language}\n{cleaned}\n```"))
+        return
+
+    def demote_heading(match):
+        hashes = match.group(1)
+        return "#" * min(len(hashes) + 1, 6) + " "
+
+    cleaned = re.sub(r"^(#{1,5})\s+", demote_heading, cleaned, flags=re.MULTILINE)
+    display(Markdown(cleaned))
 
 
 def extract_json_block(text):
@@ -295,8 +310,7 @@ PROMPT_TEXT = (
 )
 
 text_output = model.generate({"prompts": [PROMPT_TEXT]}, max_length=512)
-print("\n" + "=" * 50 + "\nModel Output:\n" + "=" * 50)
-display(Markdown(strip_prompt(text_output, PROMPT_TEXT)))
+display_model_response(strip_prompt(text_output, PROMPT_TEXT))
 
 """
 ## 2. Image captioning
@@ -319,8 +333,7 @@ image_output = model.generate(
     {"prompts": [PROMPT_IMAGE], "images": [image]},
     max_length=2048,
 )
-print("\n" + "=" * 50 + "\nModel Output:\n" + "=" * 50)
-display(Markdown(strip_prompt(image_output, PROMPT_IMAGE)))
+display_model_response(strip_prompt(image_output, PROMPT_IMAGE))
 
 """
 ## 3. Object detection-style localization
@@ -346,8 +359,7 @@ detection_output = model.generate(
     max_length=2048,
 )
 raw_detection_text = strip_prompt(detection_output, PROMPT_DETECTION)
-print("\n" + "=" * 50 + "\nModel Output:\n" + "=" * 50)
-display(Markdown(raw_detection_text))
+display_model_response(raw_detection_text)
 
 parsed_detections = render_detection_result(image, raw_detection_text)
 parsed_detections
@@ -392,8 +404,7 @@ audio_output = model.generate(
     {"prompts": [PROMPT_AUDIO], "audio": [audio]},
     max_length=2048,
 )
-print("\n" + "=" * 50 + "\nModel Output:\n" + "=" * 50)
-display(Markdown(strip_prompt(audio_output, PROMPT_AUDIO)))
+display_model_response(strip_prompt(audio_output, PROMPT_AUDIO))
 
 """
 ## 5. Function calling
@@ -442,8 +453,7 @@ final_weather_text = (
     else final_weather_output
 )
 final_weather_text = final_weather_text.split("<|turn>model\n")[-1]
-print("\n" + "=" * 50 + "\nModel Output:\n" + "=" * 50)
-display(Markdown(final_weather_text))
+display_model_response(final_weather_text)
 
 """
 ## 6. Coding
@@ -462,8 +472,7 @@ PROMPT_CODE = (
 )
 
 code_output = model.generate({"prompts": [PROMPT_CODE]}, max_length=512)
-print("\n" + "=" * 50 + "\nModel Output:\n" + "=" * 50)
-display(Markdown(strip_prompt(code_output, PROMPT_CODE)))
+display_model_response(strip_prompt(code_output, PROMPT_CODE))
 
 """
 ## 7. HTML generation and rendering
@@ -492,10 +501,11 @@ html_text = strip_prompt(html_output, PROMPT_HTML)
 match = re.search(r"```html\s*(.*?)\s*```", html_text, flags=re.DOTALL)
 if match:
     extracted_html = match.group(1)
-    print("\nRendering generated HTML:")
-    display(HTML(extracted_html))
-    print("\n" + "=" * 50 + "\nModel Output:\n" + "=" * 50)
-    display(Markdown(html_text))
+    display_model_response(
+        extracted_html,
+        title="Generated HTML from the model",
+        language="html",
+    )
 else:
     print("\nCould not find HTML block to render.")
 
@@ -532,17 +542,17 @@ PROMPT_AGENT = (
     "<|turn>system\n"
     "<|think|>You are a helpful smart home assistant."
     "<|tool>declaration:control_device{"
-    "description:<|\"|>Control a smart home device.<|\"|>,"
+    'description:<|"|>Control a smart home device.<|"|>,'
     "parameters:{"
-    "room:{type:<|\"|>string<|\"|>,description:<|\"|>The room name<|\"|>},"
-    "device:{type:<|\"|>string<|\"|>,description:<|\"|>The device name (e.g., lights, fan)<|\"|>},"
-    "action:{type:<|\"|>string<|\"|>,description:<|\"|>The action (on, off)<|\"|>}"
+    'room:{type:<|"|>string<|"|>,description:<|"|>The room name<|"|>},'
+    'device:{type:<|"|>string<|"|>,description:<|"|>The device name (e.g., lights, fan)<|"|>},'
+    'action:{type:<|"|>string<|"|>,description:<|"|>The action (on, off)<|"|>}'
     "}}"
     "<|tool>declaration:read_sensor{"
-    "description:<|\"|>Read a sensor value.<|\"|>,"
+    'description:<|"|>Read a sensor value.<|"|>,'
     "parameters:{"
-    "room:{type:<|\"|>string<|\"|>,description:<|\"|>The room name<|\"|>},"
-    "sensor_type:{type:<|\"|>string<|\"|>,description:<|\"|>The sensor type (temperature, humidity)<|\"|>}"
+    'room:{type:<|"|>string<|"|>,description:<|"|>The room name<|"|>},'
+    'sensor_type:{type:<|"|>string<|"|>,description:<|"|>The sensor type (temperature, humidity)<|"|>}'
     "}}"
     "<tool|><turn|>\n"
     "<|turn>user\n"
@@ -564,8 +574,7 @@ def run_agent_loop(prompt):
             print("\nAgent finished or no output.")
             break
 
-        print("\n" + "=" * 50 + "\nModel Output:\n" + "=" * 50)
-        display(Markdown(generated_text))
+        display_model_response(generated_text, title=f"Model response, turn {turn + 1}")
 
         # Check for tool calls
         matches = re.findall(
@@ -583,9 +592,7 @@ def run_agent_loop(prompt):
                         join_pair = pair.split(":")
                         if len(join_pair) == 2:
                             val = join_pair[1].strip()
-                            val = val.replace('<|\\"|>', "").replace(
-                                "<|\\|>", ""
-                            )
+                            val = val.replace('<|\\"|>', "").replace("<|\\|>", "")
                             args[join_pair[0].strip()] = val
 
                     print(f"\nExecuting tool: {tool_name} with args {args}")
@@ -629,8 +636,7 @@ thinking_text = (
     thinking_output[0] if isinstance(thinking_output, list) else thinking_output
 )
 thinking_text = thinking_text.split("<|turn>model\n")[-1]
-print("\n" + "=" * 50 + "\nModel Output:\n" + "=" * 50)
-display(Markdown(thinking_text))
+display_model_response(thinking_text)
 
 """
 ## 9. Multi-image comparison
@@ -665,8 +671,7 @@ comparison_output = model.generate(
     {"prompts": [PROMPT_COMPARE], "images": [[np.array(image_1), np.array(image_2)]]},
     max_length=2048,
 )
-print("\n" + "=" * 50 + "\nModel Output:\n" + "=" * 50)
-display(Markdown(strip_prompt(comparison_output, PROMPT_COMPARE)))
+display_model_response(strip_prompt(comparison_output, PROMPT_COMPARE))
 
 
 """
@@ -714,8 +719,7 @@ video_output = model.generate(
     max_length=4096,
 )
 
-print("\n" + "=" * 50 + "\nModel Output:\n" + "=" * 50)
-display(Markdown(strip_prompt(video_output, PROMPT_VIDEO)))
+display_model_response(strip_prompt(video_output, PROMPT_VIDEO))
 
 """
 ## 11. OCR, translation & entity extraction
@@ -747,8 +751,7 @@ ocr_output = model.generate(
     {"prompts": [PROMPT_OCR], "images": [ocr_image]},
     max_length=2048,
 )
-print("\n" + "=" * 50 + "\nModel Output:\n" + "=" * 50)
-display(Markdown(strip_prompt(ocr_output, PROMPT_OCR)))
+display_model_response(strip_prompt(ocr_output, PROMPT_OCR))
 
 """
 ## 12. Travel planning from location
@@ -775,8 +778,7 @@ travel_output = model.generate(
     {"prompts": [PROMPT_TRAVEL], "images": [location_image]},
     max_length=2048,
 )
-print("\n" + "=" * 50 + "\nModel Output:\n" + "=" * 50)
-display(Markdown(strip_prompt(travel_output, PROMPT_TRAVEL)))
+display_model_response(strip_prompt(travel_output, PROMPT_TRAVEL))
 
 """
 ## Closing notes

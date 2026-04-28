@@ -5,6 +5,11 @@
 **Last modified:** 2026/04/28<br>
 **Description:** A comprehensive guide to multimodal and agentic workflows with Gemma 4 in KerasHub.
 
+
+<img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/guides/ipynb/keras_hub/gemma4_multimodal_and_agentic_workflows.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/guides/keras_hub/gemma4_multimodal_and_agentic_workflows.py)
+
+
+---
 ## Overview
 
 Gemma 4 is a family of multimodal open models built for long-context reasoning,
@@ -37,6 +42,8 @@ overlays, audio transcription, function calling, coding, thinking and reasoning
 mode, multi-image comparison, video-oriented prompting, OCR, and speech
 translation.
 
+
+---
 ## Prompt Structure and Special Tokens
 
 Gemma 4 introduces a new approach to prompt formatting, relying on native
@@ -67,6 +74,8 @@ having to explain them in the prompt instructions.
 This guide demonstrates how to use these tokens effectively across different
 modalities and workflows.
 
+
+---
 ## Setup
 
 Install the latest Keras and KerasHub packages first.
@@ -118,7 +127,7 @@ import soundfile as sf
 from PIL import Image
 import av
 
-from IPython.display import HTML, Markdown, display
+from IPython.display import Markdown, display
 
 AUDIO_URL = (
     "https://raw.githubusercontent.com/keras-team/keras-hub/master/"
@@ -128,6 +137,8 @@ AUDIO_URL = (
 IMAGE_URL = "http://images.cocodataset.org/val2017/000000039769.jpg"
 ```
 
+
+---
 ## Helper utilities
 
 The next cell keeps the rest of the notebook readable. In addition to loading
@@ -259,6 +270,8 @@ def render_detection_result(image, raw_output):
 
 ```
 
+
+---
 ## Load the Gemma 4 preset
 
 This guide uses `gemma4_instruct_2b` (2.3B effective, 5.1B with embeddings)
@@ -313,6 +326,8 @@ model = keras_hub.models.Gemma4CausalLM.from_preset(
     100%|██████████| 414M/414M [00:12<00:00, 35.8MB/s]
 
 
+
+---
 ## 1. Text generation
 
 Start with a simple usage example. This confirms that the preset, tokenizer, and
@@ -328,18 +343,11 @@ PROMPT_TEXT = (
 )
 
 text_output = model.generate({"prompts": [PROMPT_TEXT]}, max_length=512)
-print("\n" + "=" * 50 + "\nModel Output:\n" + "=" * 50)
 display(Markdown(strip_prompt(text_output, PROMPT_TEXT)))
 ```
+> **Model response**
 
-    
-    ==================================================
-    Model Output:
-    ==================================================
-
-
-
-## Pizza Paradox
+### Pizza Paradox
 
 **Logline:** A meticulous historian, armed with a time machine, accidentally alters the very fabric of culinary history when a misplaced ingredient sends a perfectly good Roman pizza into a bizarre, anachronistic future.
 
@@ -355,9 +363,11 @@ Suddenly, the future isn't just different; it tastes… wrong. From perfectly ba
 
 **It’s a high-concept comedy of errors, a charming adventure, and a delicious exploration of how small mistakes can reshape everything. Get ready for a pizza that changes the universe.**
 
-**Tagline:** *Some recipes are meant to stay buried.*<turn|>
+**Tagline:** *Some recipes are meant to stay buried.*
 
 
+
+---
 ## 2. Image captioning
 
 Gemma 4 supports image understanding directly through
@@ -379,22 +389,13 @@ image_output = model.generate(
     {"prompts": [PROMPT_IMAGE], "images": [image]},
     max_length=2048,
 )
-print("\n" + "=" * 50 + "\nModel Output:\n" + "=" * 50)
 display(Markdown(strip_prompt(image_output, PROMPT_IMAGE)))
 ```
 
 
     
-![png](/img/guides/gemma4_multimodal_and_agentic_workflows/gemma4_multimodal_and_agentic_workflows%20%281%29_13_0.png)
-    
-
-
-    
-    ==================================================
-    Model Output:
-    ==================================================
-
-
+![png](/img/guides/gemma4_multimodal_and_agentic_workflows/gemma4_multimodal_and_agentic_workflows_13_0.png)
+> **Model response**
 
 This image features two tabby cats lying on a bright pink surface, likely a blanket or soft fabric.
 
@@ -408,9 +409,11 @@ Here's a detailed description:
     *   A white remote control (possibly for a TV or device) is lying on the pink fabric near the left cat.
     *   A small, light-colored electronic device or remote is also visible near the right cat.
 
-**Overall Impression:** The image has a warm, cozy, and domestic feel, highlighting the relaxed state of the two cats in a bright environment.<turn|>
+**Overall Impression:** The image has a warm, cozy, and domestic feel, highlighting the relaxed state of the two cats in a bright environment.
 
 
+
+---
 ## 3. Object detection-style localization
 
 Gemma 4 can localize objects by returning structured JSON alongside natural-
@@ -435,19 +438,12 @@ detection_output = model.generate(
     max_length=2048,
 )
 raw_detection_text = strip_prompt(detection_output, PROMPT_DETECTION)
-print("\n" + "=" * 50 + "\nModel Output:\n" + "=" * 50)
 display(Markdown(raw_detection_text))
 
 parsed_detections = render_detection_result(image, raw_detection_text)
 parsed_detections
 ```
-
-    
-    ==================================================
-    Model Output:
-    ==================================================
-
-
+> **Model response**
 
 ```json
 [
@@ -459,7 +455,7 @@ parsed_detections
 
 
     
-![png](/img/guides/gemma4_multimodal_and_agentic_workflows/gemma4_multimodal_and_agentic_workflows%20%281%29_15_2.png)
+![png](/img/guides/gemma4_multimodal_and_agentic_workflows/gemma4_multimodal_and_agentic_workflows_15_2.png)
     
 
 
@@ -471,6 +467,8 @@ parsed_detections
 
 
 
+
+---
 ## 4. Audio transcription
 
 Audio input is available on the E2B and E4B Gemma 4 checkpoints. Video-style
@@ -510,22 +508,18 @@ audio_output = model.generate(
     {"prompts": [PROMPT_AUDIO], "audio": [audio]},
     max_length=2048,
 )
-print("\n" + "=" * 50 + "\nModel Output:\n" + "=" * 50)
 display(Markdown(strip_prompt(audio_output, PROMPT_AUDIO)))
 ```
 
     Downloading audio file...
     Audio shape: (282958,) dtype: float32
-    
-    ==================================================
-    Model Output:
-    ==================================================
+> **Model response**
+
+Intelligence is a multifaceted ability encompassing reasoning, learning, problem-solving, abstraction, creativity, and adaptation, allowing organisms or systems to process information, recognize patterns, form connections, and navigate complex environments efficiently.
 
 
 
-Intelligence is a multifaceted ability encompassing reasoning, learning, problem-solving, abstraction, creativity, and adaptation, allowing organisms or systems to process information, recognize patterns, form connections, and navigate complex environments efficiently.<turn|>
-
-
+---
 ## 5. Function calling
 
 Gemma 4 supports native function calling for tool-augmented workflows. The basic
@@ -573,21 +567,17 @@ final_weather_text = (
     else final_weather_output
 )
 final_weather_text = final_weather_text.split("<|turn>model\n")[-1]
-print("\n" + "=" * 50 + "\nModel Output:\n" + "=" * 50)
 display(Markdown(final_weather_text))
 ```
 
     <|tool_call>call:get_current_weather{location:<|"|>Paris<|"|>}<tool_call|><|tool_response>
-    
-    ==================================================
-    Model Output:
-    ==================================================
+> **Model response**
+
+The weather in Paris right now is partly cloudy with a temperature of 18 degrees.
 
 
 
-The weather in Paris right now is partly cloudy with a temperature of 18 degrees.<turn|>
-
-
+---
 ## 6. Coding
 
 Gemma 4 is also a strong coding model. You can use the same causal language
@@ -605,16 +595,9 @@ PROMPT_CODE = (
 )
 
 code_output = model.generate({"prompts": [PROMPT_CODE]}, max_length=512)
-print("\n" + "=" * 50 + "\nModel Output:\n" + "=" * 50)
 display(Markdown(strip_prompt(code_output, PROMPT_CODE)))
 ```
-
-    
-    ==================================================
-    Model Output:
-    ==================================================
-
-
+> **Model response**
 
 ```python
 import re
@@ -667,6 +650,8 @@ print(f"'{test4}' is a palindrome: {result4}")  # Expected: True (madamimadam)
 # Test Case 5: Empty string (should be True, as an empty string is a palindrome)
 ```
 
+
+---
 ## 7. HTML generation and rendering
 
 Gemma 4 can generate structured code like HTML. In a notebook environment like
@@ -693,149 +678,11 @@ html_text = strip_prompt(html_output, PROMPT_HTML)
 match = re.search(r"```html\s*(.*?)\s*```", html_text, flags=re.DOTALL)
 if match:
     extracted_html = match.group(1)
-    print("\nRendering generated HTML:")
-    display(HTML(extracted_html))
-    print("\n" + "=" * 50 + "\nModel Output:\n" + "=" * 50)
-    display(Markdown(html_text))
+    display(Markdown(f"```html\n{extracted_html}\n```"))
 else:
     print("\nCould not find HTML block to render.")
 ```
-
-    
-    Rendering generated HTML:
-
-
-
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Glassmorphic Product Card</title>
-    <style>
-        body {
-            background: linear-gradient(135deg, #1a0033 0%, #000000 100%);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            margin: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-
-        .glass-card {
-            width: 350px;
-            padding: 30px;
-            border-radius: 20px;
-            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
-            background: rgba(255, 255, 255, 0.15); /* Light background for glass effect */
-            backdrop-filter: blur(10px); /* The frosted glass effect */
-            -webkit-backdrop-filter: blur(10px); /* Safari support */
-            border: 1px solid rgba(255, 255, 255, 0.18); /* Subtle border for definition */
-            color: #e0e0ff;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            text-align: center;
-        }
-
-        .glass-card:hover {
-            transform: translateY(-10px);
-            box-shadow: 0 15px 40px 0 rgba(100, 149, 237, 0.5); /* Enhanced glow on hover */
-        }
-
-        .product-image {
-            width: 100%;
-            height: 200px;
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 15px;
-            margin-bottom: 20px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 1.2em;
-            color: rgba(255, 255, 255, 0.7);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-
-        h1 {
-            font-size: 1.8em;
-            margin-bottom: 10px;
-            color: #ffffff;
-            text-shadow: 0 0 10px rgba(100, 149, 237, 0.8);
-        }
-
-        p {
-            font-size: 1em;
-            margin-bottom: 25px;
-            color: rgba(220, 220, 255, 0.8);
-        }
-
-        .buy-button {
-            padding: 12px 30px;
-            font-size: 1.1em;
-            font-weight: bold;
-            color: #ffffff;
-            background: linear-gradient(45deg, #6a11cb 0%, #2575fc 100%);
-            border: none;
-            border-radius: 50px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            box-shadow: 0 0 15px rgba(106, 17, 203, 0.7); /* Initial glow */
-            position: relative;
-            overflow: hidden;
-        }
-
-        .buy-button:hover {
-            transform: scale(1.05);
-            box-shadow: 0 0 25px rgba(106, 17, 203, 1), 0 0 40px rgba(37, 117, 252, 0.8); /* Intense glow on hover */
-        }
-
-        /* Optional: Add a subtle animation for the button glow */
-        .buy-button::before {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 0;
-            height: 0;
-            background: radial-gradient(circle, rgba(255, 255, 255, 0.8) 0%, transparent 70%);
-            transform: translate(-50%, -50%);
-            transition: width 0.5s ease, height 0.5s ease;
-            opacity: 0;
-        }
-
-        .buy-button:hover::before {
-            width: 300%;
-            height: 300%;
-            opacity: 0.5;
-        }
-    </style>
-</head>
-<body>
-
-    <div class="glass-card">
-        <div class="product-image">
-            [Product Image Placeholder]
-        </div>
-        <h1>Stellar Widget Pro</h1>
-        <p>Experience the next generation of performance with our cutting-edge technology. Limited stock available!</p>
-        <button class="buy-button">Buy Now</button>
-    </div>
-
-</body>
-</html>
-
-
-    
-    ==================================================
-    Model Output:
-    ==================================================
-
-
+> **Model response**
 
 ```html
 <!DOCTYPE html>
@@ -963,6 +810,8 @@ else:
 ```
 
 
+
+---
 ## 8. Thinking mode and Agentic Workflows
 
 Thinking mode is controlled from the system prompt. Gemma 4 can emit a thought
@@ -1027,7 +876,6 @@ def run_agent_loop(prompt):
             print("\nAgent finished or no output.")
             break
 
-        print("\n" + "=" * 50 + "\nModel Output:\n" + "=" * 50)
         display(Markdown(generated_text))
 
         # Check for tool calls
@@ -1073,12 +921,7 @@ run_agent_loop(PROMPT_AGENT)
 
     
     --- Agent Turn 1 ---
-    
-    ==================================================
-    Model Output:
-    ==================================================
-
-
+> **Model response**
 
 <|channel>thought
 1. **Analyze the user request:** The user has two distinct requests:
@@ -1104,7 +947,7 @@ run_agent_loop(PROMPT_AGENT)
 
 5. **Combine the tool calls:** Since both actions can be performed independently, they should be executed concurrently or sequentially. The model should generate both tool calls in the response.
 
-6. **Final Output Generation:** Format the identified tool calls into the required JSON structure.<channel|><|tool_call>call:control_device{room:<|"|>kitchen<|"|>,device:<|"|>lights<|"|>,action:<|"|>off<|"|>}<tool_call|><|tool_call>call:read_sensor{room:<|"|>bedroom<|"|>,sensor_type:<|"|>temperature<|"|>}<tool_call|>
+6. **Final Output Generation:** Format the identified tool calls into the required JSON structure.<|tool_call>call:control_device{room:<|"|>kitchen<|"|>,device:<|"|>lights<|"|>,action:<|"|>off<|"|>}<tool_call|><|tool_call>call:read_sensor{room:<|"|>bedroom<|"|>,sensor_type:<|"|>temperature<|"|>}<tool_call|>
 
 
     
@@ -1115,14 +958,8 @@ run_agent_loop(PROMPT_AGENT)
     Tool Result: Unknown sensor
     
     --- Agent Turn 2 ---
-    
-    ==================================================
-    Model Output:
-    ==================================================
+> **Model response**
 
-
-
-<|channel>thought
 The user requested two actions:
 1. Turn off the kitchen lights.
 2. Check the temperature in the bedroom.
@@ -1136,7 +973,7 @@ Now, I need to synthesize a response based on the results of the tool calls.
 1. **Acknowledge the first request:** The kitchen lights have been turned off.
 2. **Address the second request:** The temperature reading failed or returned an unknown sensor.
 
-The model should inform the user about the outcome of both requests.<channel|>The kitchen lights have been turned off. I was unable to read the temperature in the bedroom as the sensor returned an unknown value.<turn|>
+The model should inform the user about the outcome of both requests. The kitchen lights have been turned off. I was unable to read the temperature in the bedroom as the sensor returned an unknown value.
 
 
     
@@ -1164,18 +1001,10 @@ thinking_text = (
     thinking_output[0] if isinstance(thinking_output, list) else thinking_output
 )
 thinking_text = thinking_text.split("<|turn>model\n")[-1]
-print("\n" + "=" * 50 + "\nModel Output:\n" + "=" * 50)
 display(Markdown(thinking_text))
 ```
+> **Model response**
 
-    
-    ==================================================
-    Model Output:
-    ==================================================
-
-
-
-<|channel>thought
 Here's a thinking process to solve this problem:
 
 1.  **Understand the Goal:** The request asks for the time it takes to travel 200 km, given that the train travels 120 km in 1.5 hours, and the speed remains constant.
@@ -1200,6 +1029,8 @@ Here's a thinking process to solve this problem:
     *   Calculation: $200 / 80 = 20 / 8 = 10 / 4
 
 
+
+---
 ## 9. Multi-image comparison
 
 Gemma 4 can compare multiple images within a single turn. This is useful for
@@ -1233,23 +1064,14 @@ comparison_output = model.generate(
     {"prompts": [PROMPT_COMPARE], "images": [[np.array(image_1), np.array(image_2)]]},
     max_length=2048,
 )
-print("\n" + "=" * 50 + "\nModel Output:\n" + "=" * 50)
 display(Markdown(strip_prompt(comparison_output, PROMPT_COMPARE)))
 
 ```
 
 
     
-![png](/img/guides/gemma4_multimodal_and_agentic_workflows/gemma4_multimodal_and_agentic_workflows%20%281%29_29_0.png)
-    
-
-
-    
-    ==================================================
-    Model Output:
-    ==================================================
-
-
+![png](/img/guides/gemma4_multimodal_and_agentic_workflows/gemma4_multimodal_and_agentic_workflows_29_0.png)
+> **Model response**
 
 The two images depict zebras in different settings, showcasing variations in the environment and the animals' behavior.
 
@@ -1269,9 +1091,11 @@ The two images depict zebras in different settings, showcasing variations in the
 2.  **Lighting and Atmosphere:** Image 1 has a softer, shaded atmosphere, while Image 2 is brightly lit by direct sunlight.
 3.  **Animal Activity/Focus:** In Image 1, the animals seem integrated into the dense foliage. In Image 2, the animals are situated within a defined boundary, and some are actively resting on provided bedding (hay).
 
-In summary, the first image portrays zebras in a more wild, shaded habitat, while the second image shows them in a managed, open enclosure setting.<turn|>
+In summary, the first image portrays zebras in a more wild, shaded habitat, while the second image shows them in a managed, open enclosure setting.
 
 
+
+---
 ## 10. Video prompting
 
 Gemma 4 supports native video understanding. In KerasHub, you can pass a video
@@ -1316,19 +1140,13 @@ video_output = model.generate(
     max_length=4096,
 )
 
-print("\n" + "=" * 50 + "\nModel Output:\n" + "=" * 50)
 display(Markdown(strip_prompt(video_output, PROMPT_VIDEO)))
 ```
 
     Downloading test video...
     Decoded 300 frames.
     Subsampled to 32 frames.
-    
-    ==================================================
-    Model Output:
-    ==================================================
-
-
+> **Model response**
 
 This appears to be a **still image or a sequence of stills from a 3D animation or video game scene**, depicting a **magical or naturalistic outdoor setting**.
 
@@ -1346,9 +1164,11 @@ Here's a detailed description of what is visible in the images:
 * **Stones:** Several large, rounded rocks are scattered around the base of the mound.
 
 **Overall Impression:**
-The image evokes a sense of fantasy, nature magic, or a hidden sanctuary within a vibrant, overgrown wilderness. It looks like a scene from a fantasy adventure game, a nature-themed cinematic, or a stylized digital artwork.<turn|>
+The image evokes a sense of fantasy, nature magic, or a hidden sanctuary within a vibrant, overgrown wilderness. It looks like a scene from a fantasy adventure game, a nature-themed cinematic, or a stylized digital artwork.
 
 
+
+---
 ## 11. OCR, translation & entity extraction
 
 Gemma 4 is strong on OCR and document understanding. For document-heavy
@@ -1379,40 +1199,33 @@ ocr_output = model.generate(
     {"prompts": [PROMPT_OCR], "images": [ocr_image]},
     max_length=2048,
 )
-print("\n" + "=" * 50 + "\nModel Output:\n" + "=" * 50)
 display(Markdown(strip_prompt(ocr_output, PROMPT_OCR)))
 ```
 
 
     
-![png](/img/guides/gemma4_multimodal_and_agentic_workflows/gemma4_multimodal_and_agentic_workflows%20%281%29_33_0.png)
-    
-
-
-    
-    ==================================================
-    Model Output:
-    ==================================================
-
-
+![png](/img/guides/gemma4_multimodal_and_agentic_workflows/gemma4_multimodal_and_agentic_workflows_33_0.png)
+> **Model response**
 
 Here is the extracted text, entity identification, and translation:
 
-## Extracted Text (German)
+### Extracted Text (German)
 
 * Severins-brücke
 * Koelnmesse
 * Im Sionstal
 
-## Entities and English Translations
+### Entities and English Translations
 
 | German Entity | English Translation | Type |
 | :--- | :--- | :--- |
 | Severins-brücke | Severin Bridge | Place Name |
 | Koelnmesse | Cologne Exhibition Centre (or Koelnmesse) | Place Name/Venue |
-| Im Sionstal | In the Sion Valley | Place Name |<turn|>
+| Im Sionstal | In the Sion Valley | Place Name |
 
 
+
+---
 ## 12. Travel planning from location
 
 Gemma 4's multimodal capabilities allow it to recognize famous landmarks and
@@ -1438,34 +1251,25 @@ travel_output = model.generate(
     {"prompts": [PROMPT_TRAVEL], "images": [location_image]},
     max_length=2048,
 )
-print("\n" + "=" * 50 + "\nModel Output:\n" + "=" * 50)
 display(Markdown(strip_prompt(travel_output, PROMPT_TRAVEL)))
 ```
 
 
     
-![png](/img/guides/gemma4_multimodal_and_agentic_workflows/gemma4_multimodal_and_agentic_workflows%20%281%29_35_0.png)
-    
+![png](/img/guides/gemma4_multimodal_and_agentic_workflows/gemma4_multimodal_and_agentic_workflows_35_0.png)
+> **Model response**
 
-
-    
-    ==================================================
-    Model Output:
-    ==================================================
-
-
-
-## Location Identification
+### Location Identification
 
 The image displays the **Palace of Westminster** (including the Houses of Parliament) and the **Elizabeth Tower** (housing Big Ben) on the River Thames in **London, United Kingdom**.
 
 ---
 
-## 3-Day London Travel Plan
+### 3-Day London Travel Plan
 
 This itinerary balances iconic historical sightseeing, cultural experiences, and London's vibrant atmosphere.
 
-### Day 1: Royal & Political History
+#### Day 1: Royal & Political History
 
 **Theme:** Iconic Landmarks and Westminster History
 
@@ -1479,7 +1283,7 @@ This itinerary balances iconic historical sightseeing, cultural experiences, and
 *   **The Red Lion (Near Westminster):** For classic, traditional British pub fare.
 *   **Borough Market (Lunch/Early Dinner):** Excellent for sampling various street foods and artisanal products.
 
-### Day 2: Royal Grandeur & Museum Culture
+#### Day 2: Royal Grandeur & Museum Culture
 
 **Theme:** Royal Parks, Art, and Culture
 
@@ -1493,7 +1297,7 @@ This itinerary balances iconic historical sightseeing, cultural experiences, and
 *   **The Ivy Market Grill (Covent Garden/Soho area):** Upscale, classic British dining experience.
 *   **Dishoom (Various locations, try Shoreditch or Covent Garden):** Famous for delicious, flavorful Bombay Café style food.
 
-### Day 3: History, Markets, and River Life
+#### Day 3: History, Markets, and River Life
 
 **Theme:** History, Markets, and Thames Experience
 
@@ -1509,14 +1313,16 @@ This itinerary balances iconic historical sightseeing, cultural experiences, and
 
 ---
 
-### Essential London Travel Tips
+#### Essential London Travel Tips
 
 *   **Transportation:** Utilize the **Tube (Underground)** for fast travel between major zones. Purchase an **Oyster Card** or use a contactless payment card for easy travel.
 *   **Booking:** Pre-book tickets for the Tower of London, Westminster Abbey, and the London Eye to save time.
 *   **Weather:** London weather is unpredictable. Always carry layers and a waterproof jacket, even on sunny days.
-*   **Pace:** This is a busy city. Be prepared for crowds, especially around major landmarks.<turn|>
+*   **Pace:** This is a busy city. Be prepared for crowds, especially around major landmarks.
 
 
+
+---
 ## Closing notes
 
 This guide stays close to the low-level `Gemma4CausalLM.generate()` API on
@@ -1543,13 +1349,4 @@ detection post-processing.
   fine-tuning of Gemma with LoRA and QLoRA](https://keras.io/examples/keras_reci
   pes/parameter_efficient_finetuning_of_gemma_with_lora_and_qlora/) example.
 - For quantization, refer to the [INT8 quantization in
-  Keras](https://keras.io/guides/int8_quantization_in_keras/) guide.
-
-</USER_REQUEST>
-<ADDITIONAL_METADATA>
-The current local time is: 2026-04-28T20:46:16Z.
-
-The user's current state is as follows:
-Active Document: /usr/local/google/home/sachinprasad/Projects/KERAS-IO/keras-io/guides/keras_hub/gemma4_multimodal_and_agentic_workflows.py (LANGUAGE_PYTHON)
-Cursor is on line: 5
-</ADDITIONAL_METADATA>
+    Keras](https://keras.io/guides/int8_quantization_in_keras/) guide.
