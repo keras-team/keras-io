@@ -206,8 +206,7 @@ def agent(query, max_steps=3):
         token_estimate = max(256, len(prompt) // 3 + 80)
         full = llm.generate(prompt, max_length=token_estimate)
 
-        marker = f"Q: {query}\n"
-        after = full.split(marker)[-1] if marker in full else full
+        after = full[len(prompt):]
 
         if ctx.endswith("ANSWER:"):
             answer_part = after.split("ANSWER:")[-1].split("\n")[0].strip()
