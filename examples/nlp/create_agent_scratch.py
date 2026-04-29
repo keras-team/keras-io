@@ -203,7 +203,7 @@ def agent(query, max_steps=3):
 
     for step in range(max_steps):
         prompt = make_prompt(query, ctx)
-        token_estimate = max(256, len(prompt) // 3 + 80)
+        token_estimate = min(1024, max(256, len(prompt) // 3 + 80))
         full = llm.generate(prompt, max_length=token_estimate)
 
         after = full[len(prompt):]
