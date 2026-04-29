@@ -343,7 +343,7 @@ PROMPT_TEXT = (
 )
 
 text_output = model.generate({"prompts": [PROMPT_TEXT]}, max_length=512)
-display(Markdown(strip_prompt(text_output, PROMPT_TEXT)))
+display_model_response(strip_prompt(text_output, PROMPT_TEXT))
 ```
 > **Model response**
 
@@ -389,7 +389,7 @@ image_output = model.generate(
     {"prompts": [PROMPT_IMAGE], "images": [image]},
     max_length=2048,
 )
-display(Markdown(strip_prompt(image_output, PROMPT_IMAGE)))
+display_model_response(strip_prompt(image_output, PROMPT_IMAGE))
 ```
 
 
@@ -438,7 +438,7 @@ detection_output = model.generate(
     max_length=2048,
 )
 raw_detection_text = strip_prompt(detection_output, PROMPT_DETECTION)
-display(Markdown(raw_detection_text))
+display_model_response(raw_detection_text)
 
 parsed_detections = render_detection_result(image, raw_detection_text)
 parsed_detections
@@ -489,7 +489,6 @@ PROMPT_AUDIO = (
     "Transcribe the following speech segment in its original language. "
     "Follow these specific instructions for formatting the answer:\n"
     "* Only output the transcription, with no newlines.\n"
-    "* Only output the transcription, with no newlines.\n"
     "* When transcribing numbers, write the digits, i.e. write 1.7\n"
     " and not one point seven, and write 3 instead of three.<turn|>\n"
     "<|turn>model\n"
@@ -508,7 +507,7 @@ audio_output = model.generate(
     {"prompts": [PROMPT_AUDIO], "audio": [audio]},
     max_length=2048,
 )
-display(Markdown(strip_prompt(audio_output, PROMPT_AUDIO)))
+display_model_response(strip_prompt(audio_output, PROMPT_AUDIO))
 ```
 
     Downloading audio file...
@@ -552,9 +551,9 @@ print(tool_call_text)
 
 PROMPT_WITH_RESPONSE = (
     PROMPT_FUNC_CALL
-    + '<|tool_call>call:get_current_weather{location:<|\\"|>Paris<|\\"|>}'
+    + '<|tool_call>call:get_current_weather{location:<|"|>Paris<|"|>}'
     + "<tool_call|><|tool_response>response:get_current_weather{"
-    + 'temperature:18,weather:<|\\"|>partly cloudy<|\\"|>}<tool_response|>\n'
+    + 'temperature:18,weather:<|"|>partly cloudy<|"|>}<tool_response|>\n'
     + "<|turn>model\n"
 )
 
@@ -567,7 +566,7 @@ final_weather_text = (
     else final_weather_output
 )
 final_weather_text = final_weather_text.split("<|turn>model\n")[-1]
-display(Markdown(final_weather_text))
+display_model_response(final_weather_text)
 ```
 
     <|tool_call>call:get_current_weather{location:<|"|>Paris<|"|>}<tool_call|><|tool_response>
@@ -595,7 +594,7 @@ PROMPT_CODE = (
 )
 
 code_output = model.generate({"prompts": [PROMPT_CODE]}, max_length=512)
-display(Markdown(strip_prompt(code_output, PROMPT_CODE)))
+display_model_response(strip_prompt(code_output, PROMPT_CODE))
 ```
 > **Model response**
 
@@ -678,7 +677,11 @@ html_text = strip_prompt(html_output, PROMPT_HTML)
 match = re.search(r"```html\s*(.*?)\s*```", html_text, flags=re.DOTALL)
 if match:
     extracted_html = match.group(1)
-    display(Markdown(f"```html\n{extracted_html}\n```"))
+    display_model_response(
+        extracted_html,
+        title="Generated HTML from the model",
+        language="html",
+    )
 else:
     print("\nCould not find HTML block to render.")
 ```
@@ -876,7 +879,7 @@ def run_agent_loop(prompt):
             print("\nAgent finished or no output.")
             break
 
-        display(Markdown(generated_text))
+        display_model_response(generated_text, title=f"Model response, turn {turn + 1}")
 
         # Check for tool calls
         matches = re.findall(
@@ -894,8 +897,8 @@ def run_agent_loop(prompt):
                         join_pair = pair.split(":")
                         if len(join_pair) == 2:
                             val = join_pair[1].strip()
-                            val = val.replace('<|\\"|>', "").replace(
-                                "<|\\|>", ""
+                            val = val.replace('<|"|>', "").replace(
+                                "<||>", ""
                             )
                             args[join_pair[0].strip()] = val
 
@@ -1001,7 +1004,7 @@ thinking_text = (
     thinking_output[0] if isinstance(thinking_output, list) else thinking_output
 )
 thinking_text = thinking_text.split("<|turn>model\n")[-1]
-display(Markdown(thinking_text))
+display_model_response(thinking_text)
 ```
 > **Model response**
 
@@ -1053,7 +1056,6 @@ PROMPT_COMPARE = (
     "<|turn>user\n"
     "<|image|>\n"
     "<|image|>\n"
-    "These images show the same type of animal in different environments. "
     "These images show the same type of animal in different environments.\n"
     "Describe the differences in the scenes and how the animals appear\n"
     "to be interacting with their surroundings.<turn|>\n"
@@ -1064,7 +1066,7 @@ comparison_output = model.generate(
     {"prompts": [PROMPT_COMPARE], "images": [[np.array(image_1), np.array(image_2)]]},
     max_length=2048,
 )
-display(Markdown(strip_prompt(comparison_output, PROMPT_COMPARE)))
+display_model_response(strip_prompt(comparison_output, PROMPT_COMPARE))
 
 ```
 
@@ -1140,7 +1142,7 @@ video_output = model.generate(
     max_length=4096,
 )
 
-display(Markdown(strip_prompt(video_output, PROMPT_VIDEO)))
+display_model_response(strip_prompt(video_output, PROMPT_VIDEO))
 ```
 
     Downloading test video...
@@ -1199,7 +1201,7 @@ ocr_output = model.generate(
     {"prompts": [PROMPT_OCR], "images": [ocr_image]},
     max_length=2048,
 )
-display(Markdown(strip_prompt(ocr_output, PROMPT_OCR)))
+display_model_response(strip_prompt(ocr_output, PROMPT_OCR))
 ```
 
 
@@ -1251,7 +1253,7 @@ travel_output = model.generate(
     {"prompts": [PROMPT_TRAVEL], "images": [location_image]},
     max_length=2048,
 )
-display(Markdown(strip_prompt(travel_output, PROMPT_TRAVEL)))
+display_model_response(strip_prompt(travel_output, PROMPT_TRAVEL))
 ```
 
 

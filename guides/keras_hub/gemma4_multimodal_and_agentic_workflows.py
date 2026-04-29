@@ -385,7 +385,6 @@ PROMPT_AUDIO = (
     "Transcribe the following speech segment in its original language. "
     "Follow these specific instructions for formatting the answer:\n"
     "* Only output the transcription, with no newlines.\n"
-    "* Only output the transcription, with no newlines.\n"
     "* When transcribing numbers, write the digits, i.e. write 1.7\n"
     " and not one point seven, and write 3 instead of three.<turn|>\n"
     "<|turn>model\n"
@@ -438,9 +437,9 @@ print(tool_call_text)
 
 PROMPT_WITH_RESPONSE = (
     PROMPT_FUNC_CALL
-    + '<|tool_call>call:get_current_weather{location:<|\\"|>Paris<|\\"|>}'
+    + '<|tool_call>call:get_current_weather{location:<|"|>Paris<|"|>}'
     + "<tool_call|><|tool_response>response:get_current_weather{"
-    + 'temperature:18,weather:<|\\"|>partly cloudy<|\\"|>}<tool_response|>\n'
+    + 'temperature:18,weather:<|"|>partly cloudy<|"|>}<tool_response|>\n'
     + "<|turn>model\n"
 )
 
@@ -592,7 +591,7 @@ def run_agent_loop(prompt):
                         join_pair = pair.split(":")
                         if len(join_pair) == 2:
                             val = join_pair[1].strip()
-                            val = val.replace('<|\\"|>', "").replace("<|\\|>", "")
+                            val = val.replace('<|"|>', "").replace("<||>", "")
                             args[join_pair[0].strip()] = val
 
                     print(f"\nExecuting tool: {tool_name} with args {args}")
@@ -660,7 +659,6 @@ PROMPT_COMPARE = (
     "<|turn>user\n"
     "<|image|>\n"
     "<|image|>\n"
-    "These images show the same type of animal in different environments. "
     "These images show the same type of animal in different environments.\n"
     "Describe the differences in the scenes and how the animals appear\n"
     "to be interacting with their surroundings.<turn|>\n"
