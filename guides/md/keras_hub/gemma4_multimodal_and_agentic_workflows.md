@@ -924,7 +924,11 @@ run_agent_loop(PROMPT_AGENT)
 
     
     --- Agent Turn 1 ---
-> **Model response**
+
+
+> **Model response, turn 1**
+
+
 
 <|channel>thought
 1. **Analyze the user request:** The user has two distinct requests:
@@ -948,35 +952,27 @@ run_agent_loop(PROMPT_AGENT)
     * **`room`:** "bedroom"
     * **Construct the tool call:** `read_sensor(room='bedroom', sensor_type='temperature')`
 
-5. **Combine the tool calls:** Since both actions can be performed independently, they should be executed concurrently or sequentially. The model should generate both tool calls in the response.
+5. **Combine the tool calls:** Since both actions can be performed independently, they should be called sequentially in the response.
 
 6. **Final Output Generation:** Format the identified tool calls into the required JSON structure.<|tool_call>call:control_device{room:<|"|>kitchen<|"|>,device:<|"|>lights<|"|>,action:<|"|>off<|"|>}<tool_call|><|tool_call>call:read_sensor{room:<|"|>bedroom<|"|>,sensor_type:<|"|>temperature<|"|>}<tool_call|>
 
 
     
-    Executing tool: control_device with args {'room': '<|"|>kitchen<|"|>', 'device': '<|"|>lights<|"|>', 'action': '<|"|>off<|"|>'}
-    Tool Result: Success: <|"|>lights<|"|> in <|"|>kitchen<|"|> is now <|"|>off<|"|>.
+    Executing tool: control_device with args {'room': 'kitchen', 'device': 'lights', 'action': 'off'}
+    Tool Result: Success: lights in kitchen is now off.
     
-    Executing tool: read_sensor with args {'room': '<|"|>bedroom<|"|>', 'sensor_type': '<|"|>temperature<|"|>'}
-    Tool Result: Unknown sensor
+    Executing tool: read_sensor with args {'room': 'bedroom', 'sensor_type': 'temperature'}
+    Tool Result: 22°C
     
     --- Agent Turn 2 ---
-> **Model response**
 
-The user requested two actions:
-1. Turn off the kitchen lights.
-2. Check the temperature in the bedroom.
 
-The previous turn executed both actions using `control_device` and `read_sensor`.
-The `control_device` call was successful, confirming the lights are off.
-The `read_sensor` call returned "Unknown sensor".
 
-Now, I need to synthesize a response based on the results of the tool calls.
+> **Model response, turn 2**
 
-1. **Acknowledge the first request:** The kitchen lights have been turned off.
-2. **Address the second request:** The temperature reading failed or returned an unknown sensor.
 
-The model should inform the user about the outcome of both requests. The kitchen lights have been turned off. I was unable to read the temperature in the bedroom as the sensor returned an unknown value.
+
+The kitchen lights have been turned off, and the temperature in the bedroom is 22°C.
 
 
     
