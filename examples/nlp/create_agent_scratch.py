@@ -32,7 +32,11 @@ import os
 os.environ["KERAS_BACKEND"] = "jax"
 
 import keras_hub
-import json, re, math, datetime, inspect
+import datetime
+import inspect
+import json
+import math
+import re
 
 MODEL = "hf://keras/gpt2_base_en"
 llm   = keras_hub.models.CausalLM.from_preset(MODEL)
