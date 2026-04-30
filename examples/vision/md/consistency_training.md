@@ -123,7 +123,6 @@ def preprocess_train(image, label, noisy=True):
     y = keras.random.randint((), 0, RESIZE_TO - CROP_TO)
 
     image = image[x : x + CROP_TO, y : y + CROP_TO, :]
-    # image = image[x : x + CROP_TO, y : y + CROP_TO, 0:3]
 
     if keras.random.uniform(()) > 0.5:
         image = ops.flip(image, axis=1)
@@ -282,13 +281,13 @@ plt.show()
 
 
     
-![png](/img/examples/vision/consistency_training/consistency_training_19_0.png)
+![png](examples/vision/img/consistency_training/consistency_training_19_0.png)
     
 
 
 
     
-![png](/img/examples/vision/consistency_training/consistency_training_19_1.png)
+![png](examples/vision/img/consistency_training/consistency_training_19_1)
     
 
 
