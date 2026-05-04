@@ -2,7 +2,7 @@
 Title: Metric learning for image similarity search.
 Author: [Owen Vallis](https://twitter.com/owenvallis)
 Date created: 2021/09/30
-Last modified: 2026/04/29
+Last modified: 2026/05/04
 Description: Example of using similarity metric learning on CIFAR-10 images.
 Accelerator: GPU
 
@@ -95,14 +95,19 @@ class SimilarityDataset(keras.utils.PyDataset):
         examples_per_class,
         steps_per_epoch=4000,
         class_list=None,
+        total_examples_per_class=None,
+        seed=42,
         **kwargs,
     ):
         super().__init__(**kwargs)
+
         self.x = x.astype("float32")
         self.y = y.flatten()
         self.classes_per_batch = classes_per_batch
         self.examples_per_class = examples_per_class
         self.steps_per_epoch = steps_per_epoch
+
+        rng = np.random.default_rng(seed)
 
         if class_list is not None:
             mask = np.isin(self.y, class_list)
@@ -110,9 +115,19 @@ class SimilarityDataset(keras.utils.PyDataset):
             self.y = self.y[mask]
             self.class_list = class_list
         else:
-            self.class_list = list(range(10))
+            self.class_list = list(np.unique(self.y))
 
-        self.class_indices = [np.where(self.y == i)[0] for i in self.class_list]
+        self.class_indices = []
+        for cls in self.class_list:
+            indices = np.where(self.y == cls)[0]
+
+            if total_examples_per_class is not None:
+                if len(indices) > total_examples_per_class:
+                    indices = rng.choice(
+                        indices, size=total_examples_per_class, replace=False
+                    )
+
+            self.class_indices.append(indices)
 
     def __len__(self):
         return self.steps_per_epoch
@@ -166,8 +181,8 @@ print(" Create Training Data ".center(34, "#"))
 train_ds = SimilarityDataset(
     x_train_raw,
     y_train_raw,
-    classes_per_batch=min(classes_per_batch, num_known_classes),
-    examples_per_class=examples_per_class_per_batch,
+    classes_per_batch=5,
+    examples_per_class=5,
     steps_per_epoch=4000,
     class_list=class_list,
 )
@@ -176,9 +191,10 @@ print("\n" + " Create Validation Data ".center(34, "#"))
 val_ds = SimilarityDataset(
     x_test_raw,
     y_test_raw,
-    classes_per_batch=classes_per_batch,
-    examples_per_class=2,
+    classes_per_batch=min(5, num_known_classes),
+    examples_per_class=5,
     steps_per_epoch=50,
+    total_examples_per_class=100,
 )
 
 """
@@ -241,7 +257,7 @@ x = keras.layers.GlobalMaxPool2D()(x)
 
 # MetricEmbedding logic: Dense projection followed by L2 Normalization
 x = layers.Dense(embedding_size)(x)
-outputs = layers.Lambda(lambda v: ops.normalize(v, axis=1))(x)
+outputs = layers.UnitNormalization(axis=1)(x)
 
 # building model
 model = keras.Model(inputs, outputs)
