@@ -3671,6 +3671,10 @@ HUB_GUIDES_MASTER = {
             "path": "function_gemma_with_keras",
             "title": "Native Function Calling with FunctionGemma",
         },
+        {
+            "path": "gemma4_multimodal_and_agentic_workflows",
+            "title": "Multimodal and Agentic Workflows with Gemma 4 in KerasHub",
+        },
     ],
 }
 
