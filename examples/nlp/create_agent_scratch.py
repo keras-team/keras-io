@@ -69,6 +69,7 @@ def tool(desc):
 
 @tool("Evaluate a math expression. E.g. '2**10', 'math.sqrt(9)'")
 def calculator(expression: str) -> str:
+    print(f"  ⚠️  WARNING: Executing eval() on expression: {expression}")
     ns = {k: getattr(math, k) for k in dir(math) if not k.startswith("_")}
     try:
         return str(round(eval(expression, {"__builtins__": {}}, ns), 8))
