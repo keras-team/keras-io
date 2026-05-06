@@ -4,6 +4,7 @@ Author: [Soon-Yau Cheong](https://www.linkedin.com/in/soonyau/)
 Date created: 2021/07/01
 Last modified: 2026/03/06
 Description: Implementation of StyleGAN for image generation.
+Accelerator: GPU
 """
 
 """
@@ -24,11 +25,12 @@ faster training time via compilation and distribution.
 """
 
 import os
+import pathlib
 import numpy as np
 import matplotlib.pyplot as plt
 
 from functools import partial
-
+from PIL import Image as PilImage
 
 import keras
 from keras import layers
@@ -65,31 +67,39 @@ gdown.download(url, output, quiet=True)
 with ZipFile("celeba_gan/data.zip", "r") as zipobj:
     zipobj.extractall("celeba_gan")
 
-# Create a dataset from our folder, and rescale the images to the [0-1] range:
-
-ds_train = keras.utils.image_dataset_from_directory(
-    "celeba_gan", label_mode=None, image_size=(64, 64), batch_size=32
-)
-
-
-def resize_image(res, image):
-    # Only downsampling, so use nearest neighbor that is faster to run
-    image = keras.ops.image.resize(image, (res, res), interpolation="nearest")
-    image = keras.ops.cast(image, "float32") / 127.5 - 1.0
-    return image
-
 
 def create_dataloader(res):
+    """Return an infinite numpy-array generator of CelebA images resized to `res x res`.
+
+    Uses PIL for image loading and resizing, making the data pipeline fully
+    backend-agnostic (no tf.data dependency).
+    """
     batch_size = batch_sizes[log2(res)]
-    dl = ds_train.map(lambda x: resize_image(res, x))
-    dl = (
-        dl.unbatch()
-        .shuffle(200)
-        .batch(batch_size, drop_remainder=True)
-        .prefetch(1)
-        .repeat()
+    image_dir = pathlib.Path("celeba_gan")
+    image_paths = sorted(
+        p for p in image_dir.rglob("*") if p.suffix.lower() in {".jpg", ".jpeg", ".png"}
     )
-    return dl
+
+    def preprocess(path):
+        # Downsampling only — NEAREST is fastest and avoids aliasing artifacts
+        img = PilImage.open(path).convert("RGB").resize((res, res), PilImage.NEAREST)
+        return np.array(img, dtype=np.float32) / 127.5 - 1.0
+
+    rng = np.random.default_rng()
+
+    def infinite_generator():
+        while True:
+            idxs = rng.permutation(len(image_paths))
+            for start in range(0, len(idxs) - batch_size + 1, batch_size):
+                batch = np.stack(
+                    [
+                        preprocess(image_paths[i])
+                        for i in idxs[start : start + batch_size]
+                    ]
+                )
+                yield (batch,)
+
+    return infinite_generator()
 
 
 """
@@ -167,7 +177,6 @@ class EqualizedConv(layers.Layer):
         self.out_channels = out_channels
         self.gain = gain
         self.pad = kernel != 1
-        self.conv2d = None
 
     def build(self, input_shape):
         self.in_channels = input_shape[-1]
@@ -183,24 +192,15 @@ class EqualizedConv(layers.Layer):
         )
         fan_in = self.kernel * self.kernel * self.in_channels
         self.scale = float(np.sqrt(self.gain / fan_in))
-        # Create a Conv2D layer for the actual convolution
-        self.conv2d = layers.Conv2D(
-            filters=self.out_channels,
-            kernel_size=self.kernel,
-            strides=1,
-            padding="valid",
-            use_bias=False,
-        )
-        self.conv2d.build(input_shape)
 
     def call(self, inputs):
         if self.pad:
             x = keras.ops.pad(inputs, [[0, 0], [1, 1], [1, 1], [0, 0]], mode="reflect")
         else:
             x = inputs
-        # Set the kernel weights of the Conv2D layer to the scaled weights
-        self.conv2d.kernel.assign(self.scale * self.w)
-        output = self.conv2d(x) + self.b
+        output = (
+            keras.ops.conv(x, self.scale * self.w, strides=1, padding="valid") + self.b
+        )
         return output
 
     def compute_output_shape(self, input_shape):
@@ -271,69 +271,6 @@ class AdaIN(layers.Layer):
         ys = keras.ops.reshape(self.dense_1(w), (-1, 1, 1, self.x_channels))
         yb = keras.ops.reshape(self.dense_2(w), (-1, 1, 1, self.x_channels))
         return ys * x + yb
-
-
-class SpectralNormalization(layers.Wrapper):
-    """Spectral Normalization wrapper for convolutional layers.
-    Constrains the spectral norm of the weight matrix to stabilize discriminator training.
-    Based on "Spectral Normalization for Generative Adversarial Networks" (Miyato et al., 2018).
-    """
-
-    def __init__(self, layer, power_iterations=1, **kwargs):
-        super().__init__(layer, **kwargs)
-        self.power_iterations = power_iterations
-        self.u = None
-
-    def build(self, input_shape):
-        super().build(input_shape)
-        if hasattr(self.layer, "w"):
-            weight = self.layer.w
-        elif hasattr(self.layer, "kernel"):
-            weight = self.layer.kernel
-        else:
-            raise ValueError("Layer must have 'kernel' or 'w' attribute")
-        weight_shape = weight.shape
-        width = weight_shape[-1]
-        self.u = self.add_weight(
-            shape=(1, width),
-            initializer=keras.initializers.TruncatedNormal(stddev=0.02),
-            trainable=False,
-            name="sn_u",
-            dtype=weight.dtype,
-        )
-
-    def call(self, inputs, training=None):
-        self.normalize_weights()
-        return self.layer(inputs)
-
-    def normalize_weights(self):
-        if hasattr(self.layer, "w"):
-            weight = self.layer.w
-        elif hasattr(self.layer, "kernel"):
-            weight = self.layer.kernel
-        else:
-            return
-        weight_shape = weight.shape
-        if len(weight_shape) == 4:
-            weight_mat = keras.ops.reshape(weight, (-1, weight_shape[-1]))
-        else:
-            weight_mat = weight
-        u = self.u
-        for _ in range(self.power_iterations):
-            v = keras.ops.matmul(u, keras.ops.transpose(weight_mat))
-            v = v / (keras.ops.sqrt(keras.ops.sum(v**2)) + 1e-12)
-            u = keras.ops.matmul(v, weight_mat)
-            u = u / (keras.ops.sqrt(keras.ops.sum(u**2)) + 1e-12)
-        self.u.assign(u)
-        sigma = keras.ops.sum(keras.ops.matmul(u, keras.ops.transpose(weight_mat)) * v)
-        weight_normalized = weight / (sigma + 1e-12)
-        if hasattr(self.layer, "w"):
-            self.layer.w.assign(weight_normalized)
-        elif hasattr(self.layer, "kernel"):
-            self.layer.kernel.assign(weight_normalized)
-
-    def compute_output_shape(self, input_shape):
-        return self.layer.compute_output_shape(input_shape)
 
 
 """
@@ -500,13 +437,12 @@ class Discriminator:
         for res_log2 in range(self.start_res_log2, self.target_res_log2 + 1):
             res = 2**res_log2
             filter_num = self.filter_nums[res_log2]
-            # Apply spectral normalization to from_rgb conv layers
             from_rgb = Sequential(
                 [
                     layers.InputLayer(
                         input_shape=(res, res, 3), name=f"from_rgb_input_{res}"
                     ),
-                    SpectralNormalization(EqualizedConv(filter_num, 1)),
+                    EqualizedConv(filter_num, 1),
                     layers.LeakyReLU(0.2),
                 ],
                 name=f"from_rgb_{res}",
@@ -527,8 +463,7 @@ class Discriminator:
     def build_base(self, filter_num, res):
         input_tensor = layers.Input(shape=(res, res, filter_num), name=f"d_{res}")
         x = MinibatchStd()(input_tensor)
-        # Apply spectral normalization to conv layer for stability
-        x = SpectralNormalization(EqualizedConv(filter_num, 3))(x)
+        x = EqualizedConv(filter_num, 3)(x)
         x = layers.LeakyReLU(0.2)(x)
         x = layers.Flatten()(x)
         x = EqualizedDense(filter_num)(x)
@@ -538,10 +473,9 @@ class Discriminator:
 
     def build_block(self, filter_num_1, filter_num_2, res):
         input_tensor = layers.Input(shape=(res, res, filter_num_1), name=f"d_{res}")
-        # Apply spectral normalization to all conv layers for stability
-        x = SpectralNormalization(EqualizedConv(filter_num_1, 3))(input_tensor)
+        x = EqualizedConv(filter_num_1, 3)(input_tensor)
         x = layers.LeakyReLU(0.2)(x)
-        x = SpectralNormalization(EqualizedConv(filter_num_2))(x)
+        x = EqualizedConv(filter_num_2)(x)
         x = layers.LeakyReLU(0.2)(x)
         x = layers.AveragePooling2D((2, 2))(x)
         return keras.Model(input_tensor, x, name=f"d_{res}")
@@ -653,11 +587,161 @@ class StyleGAN(keras.Model):
         loss = keras.ops.mean(keras.ops.square(loss - 1))
         return loss
 
+    # -------------------------------------------------------------------------
+    # Backend-dispatched training steps
+    #
+    # WGAN-GP requires computing ∂D(x̂)/∂x̂ (gradient of discriminator output
+    # w.r.t. an *input* tensor, not model weights).  keras.ops exposes only
+    # stop_gradient and custom_gradient — neither can compute this derivative
+    # for an arbitrary model forward pass.  We therefore dispatch to the
+    # active backend's native gradient API.  The public train_step stays clean
+    # and backend-agnostic; backend logic is isolated to _d_step / _g_step.
+    # -------------------------------------------------------------------------
+
+    def _d_step(
+        self,
+        real_images,
+        z,
+        noise,
+        alpha,
+        batch_size,
+        real_labels,
+        fake_labels,
+        const_input,
+        num_stages,
+    ):
+        """One discriminator update — backend-dispatched."""
+        d_vars = self.discriminator.trainable_variables
+        backend = keras.backend.backend()
+
+        if backend == "tensorflow":
+            import tensorflow as tf
+
+            with tf.GradientTape() as d_tape:
+                w = self.mapping(z, training=False)
+                fake_images = keras.ops.stop_gradient(
+                    self.generator(
+                        [const_input, w] + noise[:num_stages] + [alpha], training=False
+                    )
+                )
+                pred_fake = self.discriminator([fake_images, alpha], training=True)
+                pred_real = self.discriminator([real_images, alpha], training=True)
+                loss_fake = wasserstein_loss(fake_labels, pred_fake)
+                loss_real = wasserstein_loss(real_labels, pred_real)
+                # WGAN-GP: enforce Lipschitz constraint via input-gradient penalty
+                epsilon = keras.random.uniform((batch_size, 1, 1, 1))
+                interpolates = epsilon * real_images + (1 - epsilon) * fake_images
+                with tf.GradientTape() as gp_tape:
+                    gp_tape.watch(interpolates)
+                    pred_interpolates = self.discriminator(
+                        [interpolates, alpha], training=True
+                    )
+                gp_grads = gp_tape.gradient(pred_interpolates, interpolates)
+                gradient_penalty = self.loss_weights[
+                    "gradient_penalty"
+                ] * self.gradient_loss(gp_grads)
+                drift_loss = self.loss_weights["drift"] * keras.ops.mean(
+                    keras.ops.concatenate([pred_fake, pred_real], axis=0) ** 2
+                )
+                d_loss = loss_fake + loss_real + gradient_penalty + drift_loss
+            d_grads = d_tape.gradient(d_loss, d_vars)
+            self.d_optimizer.apply_gradients(zip(d_grads, d_vars))
+            return d_loss
+
+        elif backend == "torch":
+            import torch
+
+            # Zero discriminator parameter gradients
+            for v in d_vars:
+                if v.value.grad is not None:
+                    v.value.grad.zero_()
+
+            w = self.mapping(z, training=False)
+            with torch.no_grad():
+                fake_images = self.generator(
+                    [const_input, w] + noise[:num_stages] + [alpha], training=False
+                )
+            pred_fake = self.discriminator([fake_images, alpha], training=True)
+            pred_real = self.discriminator([real_images, alpha], training=True)
+            loss_fake = wasserstein_loss(fake_labels, pred_fake)
+            loss_real = wasserstein_loss(real_labels, pred_real)
+            # WGAN-GP: compute ∂D(x̂)/∂x̂ via torch.autograd.grad.
+            # create_graph=True keeps the graph so d_loss.backward() can
+            # differentiate the penalty term through D's weights correctly.
+            epsilon = keras.random.uniform((batch_size, 1, 1, 1))
+            interpolates = (
+                epsilon * real_images + (1 - epsilon) * fake_images.detach()
+            ).requires_grad_(True)
+            pred_interpolates = self.discriminator([interpolates, alpha], training=True)
+            gp_grads = torch.autograd.grad(
+                outputs=pred_interpolates.sum(),
+                inputs=interpolates,
+                create_graph=True,
+            )[0]
+            gradient_penalty = self.loss_weights[
+                "gradient_penalty"
+            ] * self.gradient_loss(gp_grads)
+            drift_loss = self.loss_weights["drift"] * keras.ops.mean(
+                keras.ops.concatenate([pred_fake, pred_real], axis=0) ** 2
+            )
+            d_loss = loss_fake + loss_real + gradient_penalty + drift_loss
+            d_loss.backward()
+            d_grads = [v.value.grad for v in d_vars]
+            self.d_optimizer.apply(d_grads, d_vars)
+            return d_loss
+
+        else:
+            raise NotImplementedError(
+                f"StyleGAN training is not implemented for backend '{backend}'. "
+                "Supported backends: 'tensorflow', 'torch'."
+            )
+
+    def _g_step(
+        self, z, noise, alpha, batch_size, real_labels, const_input, num_stages
+    ):
+        """One generator update — backend-dispatched."""
+        g_vars = self.mapping.trainable_variables + self.generator.trainable_variables
+        backend = keras.backend.backend()
+
+        if backend == "tensorflow":
+            import tensorflow as tf
+
+            with tf.GradientTape() as g_tape:
+                w = self.mapping(z, training=True)
+                fake_images = self.generator(
+                    [const_input, w] + noise[:num_stages] + [alpha], training=True
+                )
+                pred_fake = self.discriminator([fake_images, alpha], training=False)
+                g_loss = wasserstein_loss(real_labels, pred_fake)
+            g_grads = g_tape.gradient(g_loss, g_vars)
+            self.g_optimizer.apply_gradients(zip(g_grads, g_vars))
+            return g_loss
+
+        elif backend == "torch":
+            for v in g_vars:
+                if v.value.grad is not None:
+                    v.value.grad.zero_()
+            w = self.mapping(z, training=True)
+            fake_images = self.generator(
+                [const_input, w] + noise[:num_stages] + [alpha], training=True
+            )
+            pred_fake = self.discriminator([fake_images, alpha], training=False)
+            g_loss = wasserstein_loss(real_labels, pred_fake)
+            g_loss.backward()
+            g_grads = [v.value.grad for v in g_vars]
+            self.g_optimizer.apply(g_grads, g_vars)
+            return g_loss
+
+        else:
+            raise NotImplementedError(
+                f"StyleGAN training is not implemented for backend '{backend}'. "
+                "Supported backends: 'tensorflow', 'torch'."
+            )
+
     def train_step(self, real_images):
-        """
-        Backend-agnostic training step following DreamBooth pattern.
-        Keras automatically computes gradients for losses registered via self.add_loss().
-        """
+        # Unpack the tuple yielded by the generator: (batch,) -> batch
+        if isinstance(real_images, (tuple, list)):
+            real_images = real_images[0]
         self.train_step_counter.assign_add(1)
         if self.phase == "TRANSITION":
             self.alpha.assign(
@@ -669,34 +753,35 @@ class StyleGAN(keras.Model):
             self.alpha.assign(1.0)
         else:
             raise NotImplementedError
+
         alpha = keras.ops.expand_dims(self.alpha, 0)
         batch_size = keras.ops.shape(real_images)[0]
         real_labels = keras.ops.ones(batch_size)
         fake_labels = -keras.ops.ones(batch_size)
-        z = keras.random.normal((batch_size, self.z_dim))
         const_input = keras.ops.ones(tuple([batch_size] + list(self.g_input_shape)))
-        noise = self.generate_noise(batch_size)
         num_stages = self.current_res_log2 - self.start_res_log2 + 1
-        # Generator forward
-        w = self.mapping(z)
-        fake_images = self.generator([const_input, w] + noise[:num_stages] + [alpha])
-        pred_fake = self.discriminator([fake_images, alpha])
-        pred_real = self.discriminator([real_images, alpha])
-        # Losses
-        g_loss = wasserstein_loss(real_labels, pred_fake)
-        loss_fake = wasserstein_loss(fake_labels, pred_fake)
-        loss_real = wasserstein_loss(real_labels, pred_real)
-        # Gradient penalty (approximate, backend-agnostic)
-        epsilon = keras.random.uniform((batch_size, 1, 1, 1))
-        interpolates = epsilon * real_images + (1 - epsilon) * fake_images
-        pred_fake_grad = self.discriminator([interpolates, alpha])
-        gradient_penalty = 0.0
-        drift_loss = self.loss_weights["drift"] * keras.ops.mean(
-            keras.ops.concatenate([pred_fake, pred_real], axis=0) ** 2
+
+        for _ in range(self.d_updates_per_g_update):
+            z = keras.random.normal((batch_size, self.z_dim))
+            noise = self.generate_noise(batch_size)
+            d_loss = self._d_step(
+                real_images,
+                z,
+                noise,
+                alpha,
+                batch_size,
+                real_labels,
+                fake_labels,
+                const_input,
+                num_stages,
+            )
+
+        z = keras.random.normal((batch_size, self.z_dim))
+        noise = self.generate_noise(batch_size)
+        g_loss = self._g_step(
+            z, noise, alpha, batch_size, real_labels, const_input, num_stages
         )
-        d_loss = loss_fake + loss_real + gradient_penalty + drift_loss
-        self.add_loss(g_loss)
-        self.add_loss(d_loss)
+
         self.d_loss_metric.update_state(d_loss)
         self.g_loss_metric.update_state(g_loss)
         return {
@@ -746,7 +831,7 @@ discriminator blocks.
 """
 
 START_RES = 4
-TARGET_RES = 16  # Training to 16x16 for quick demonstration
+TARGET_RES = 64
 
 style_gan = StyleGAN(start_res=START_RES, target_res=TARGET_RES)
 
@@ -763,35 +848,13 @@ def train(
     target_res=TARGET_RES,
     steps_per_epoch=5000,
     display_images=True,
-    early_stopping_patience=3,  # Stop if no improvement after N phases
-    save_best_only=True,  # Only save checkpoints when model improves
-    d_updates_per_g_update=2,  # Update discriminator every N generator updates (1:2 ratio)
+    early_stopping_patience=3,
+    save_best_only=True,
+    d_updates_per_g_update=1,
 ):
-    # Stability improvements:
-    # - Spectral normalization on all discriminator conv layers (NEW - addresses fundamental instability)
-    # - Discriminator update ratio (1:2) - balances G/D training dynamics
-    # - Combined approach: spectral norm provides architectural stability + update ratio balances training
-    # Previous attempts: 1:2 ratio alone delayed divergence 3-4x but still diverged by step 1500
-    d_opt_cfg = {
-        "learning_rate": 2e-5,
-        "beta_1": 0.0,
-        "beta_2": 0.99,
-        "epsilon": 1e-8,
-        "clipnorm": 1.0,
-    }
-    g_opt_cfg = {
-        "learning_rate": 5e-5,
-        "beta_1": 0.0,
-        "beta_2": 0.99,
-        "epsilon": 1e-8,
-        "clipnorm": 1.0,
-    }
-
     val_batch_size = 16
-    val_z = keras.random.normal((val_batch_size, 512))  # 512 is z_dim default
-    # We need to access generate_noise, but style_gan is not created yet.
-    # generate_noise logic relies on start/target res.
-    # We can create a dummy helper or use the first instance.
+    # Fixed validation noise for consistent visual evaluation across training phases
+    val_z = keras.random.normal((val_batch_size, 512))
 
     start_res_log2 = int(np.log2(start_res))
     target_res_log2 = int(np.log2(target_res))
@@ -807,12 +870,20 @@ def train(
 
     global style_gan  # Make accessible to outer scope
 
-    # Track best metrics for early stopping and checkpoint saving
-    best_g_loss = float("inf")
-    phases_without_improvement = 0
-
     for res_log2 in range(start_res_log2, target_res_log2 + 1):
         res = 2**res_log2
+
+        # Resolution-adaptive LR: halve every doubling beyond 8x8.
+        # Keeps 1e-3 at 4x4/8x8, 5e-4 at 16x16, 2.5e-4 at 32x32, etc.
+        res_lr = max(1e-3 * (0.5 ** max(0, res_log2 - 3)), 2e-5)
+        # G and D use the same decayed LR — equal learning rates are
+        # required in WGAN-GP to keep discriminator and generator balanced.
+        opt_cfg = {
+            "learning_rate": res_lr,
+            "beta_1": 0.0,
+            "beta_2": 0.99,
+            "epsilon": 1e-8,
+        }
 
         # Re-instantiate model for current resolution
         style_gan = StyleGAN(
@@ -824,13 +895,16 @@ def train(
             current_res=res,
         )
 
-        # Generate validation noise using the current model instance
-        # Note: if resolution changes, noise shape changes for higher res layers.
-        # But validation noise should be consistent?
-        # StyleGAN.generate_noise creates noise for ALL stages up to target.
-        # So it's fine.
         if res_log2 == start_res_log2:
+            # Generate noise for all resolution stages once at start
             val_noise = style_gan.generate_noise(val_batch_size)
+
+        # Reset per-resolution early stopping state.
+        # In progressive growing, losses naturally spike when resolution increases,
+        # so early stopping must be tracked independently at each resolution.
+        # Metric: |d_loss + g_loss| — the WGAN convergence gap (closer to 0 = balanced).
+        best_convergence_gap = float("inf")
+        phases_without_improvement = 0
 
         for phase in ["TRANSITION", "STABLE"]:
             if res == start_res and phase == "TRANSITION":
@@ -838,20 +912,27 @@ def train(
 
             train_dl = create_dataloader(res)
 
-            steps = int(train_step_ratio[res_log2] * steps_per_epoch)
+            # Scale steps: batch-size ratio scales higher-res phases;
+            # the max() ensures lower-res phases also train long enough.
+            steps = max(
+                int(train_step_ratio[res_log2] * steps_per_epoch),
+                steps_per_epoch * (res_log2 - start_res_log2 + 1),
+            )
 
             style_gan.compile(
-                d_optimizer=keras.optimizers.Adam(**d_opt_cfg),
-                g_optimizer=keras.optimizers.Adam(**g_opt_cfg),
-                loss_weights={"gradient_penalty": 1, "drift": 0.001},
+                d_optimizer=keras.optimizers.Adam(**opt_cfg),
+                g_optimizer=keras.optimizers.Adam(**opt_cfg),
+                loss_weights={"gradient_penalty": 10, "drift": 0.001},
                 d_updates_per_g_update=d_updates_per_g_update,
                 steps_per_epoch=steps,
                 res=res,
                 phase=phase,
-                run_eagerly=True,
+                # run_eagerly is required on the TF backend: tf.GradientTape
+                # inside a compiled train_step would otherwise be traced as a
+                # graph op, which breaks the tape context-manager protocol.
+                # On other backends (torch) the model is always eager.
+                run_eagerly=(keras.backend.backend() == "tensorflow"),
             )
-
-            prefix = f"res_{res}x{res}_{style_gan.phase}"
 
             print(f"\n{phase} - {res}x{res}")
             history = style_gan.fit(
@@ -864,28 +945,23 @@ def train(
 
             print(f"Final losses - G: {final_g_loss:.4f}, D: {final_d_loss:.4f}")
 
-            # Check if this is the best model so far
-            improved = final_g_loss < best_g_loss
+            # Convergence gap: measures how balanced the WGAN game is.
+            # d_loss ≈ -(Wasserstein distance) and g_loss ≈ +(Wasserstein distance)
+            # when training is healthy, so their sum is near 0.
+            convergence_gap = abs(final_d_loss + final_g_loss)
+            improved = convergence_gap < best_convergence_gap
 
             if improved:
-                best_g_loss = final_g_loss
+                best_convergence_gap = convergence_gap
                 phases_without_improvement = 0
-                print(f"✓ New best G loss: {best_g_loss:.4f}")
-
-                # Save checkpoint (always or only when improved)
-                if not save_best_only or improved:
-                    style_gan.generator.save_weights(
-                        f"checkpoints/best_generator_{res}x{res}.weights.h5"
-                    )
-                    style_gan.discriminator.save_weights(
-                        f"checkpoints/best_discriminator_{res}x{res}.weights.h5"
-                    )
-                    print(f"✓ Checkpoint saved: best_*_{res}x{res}.weights.h5")
+                style_gan.generator.save_weights(
+                    f"checkpoints/best_generator_{res}x{res}.weights.h5"
+                )
+                style_gan.discriminator.save_weights(
+                    f"checkpoints/best_discriminator_{res}x{res}.weights.h5"
+                )
             else:
                 phases_without_improvement += 1
-                print(
-                    f"✗ No improvement ({phases_without_improvement}/{early_stopping_patience})"
-                )
 
             # Always save latest checkpoint for resume capability
             style_gan.generator.save_weights(
@@ -905,42 +981,36 @@ def train(
                 )
                 plot_images(images, res_log2)
 
-            # Early stopping check
+            # Early stopping within this resolution only
             if phases_without_improvement >= early_stopping_patience:
                 print(
-                    f"\n⚠ Early stopping triggered after {phases_without_improvement} phases without improvement"
+                    f"\nEarly stopping at {res}x{res} after "
+                    f"{phases_without_improvement} phases without improvement."
                 )
-                print(f"Best G loss achieved: {best_g_loss:.4f}")
-                return style_gan  # Return the model early
+                print(
+                    f"Best convergence gap at this resolution: {best_convergence_gap:.4f}"
+                )
+                break
 
-    print(f"\n✓ Training completed! Best G loss: {best_g_loss:.4f}")
+    print("\nTraining completed.")
     return style_gan
 
 
 """
-StyleGAN can take a long time to train. This tutorial demonstrates the training process
-by training up to 16x16 resolution, which provides a quick look at how the model works.
-**For meaningful face generation results, training to 128x128 or higher resolution is
-recommended**, which requires significantly more computational resources and time (24-36 hours
-on an A100 GPU with larger `steps_per_epoch` values over 100).
+StyleGAN can take a long time to train. This tutorial trains up to 64x64 resolution,
+which balances training time with meaningful output quality.
+**For production-quality face generation, training to 128x128 or higher is recommended**,
+which requires significantly more compute time on a GPU.
 """
-
-# Quick demonstration training to 16x16 resolution
-# This provides a fast way to see how StyleGAN works without requiring extensive compute
-#
-# For production-quality results, train to 128x128 or higher:
-# train(start_res=4, target_res=128, steps_per_epoch=5000, display_images=True,
-#       early_stopping_patience=3, save_best_only=True, d_updates_per_g_update=2)
-# Expected time on A100: ~24-36 hours for 128x128 with steps_per_epoch=100
 
 train(
     start_res=4,
-    target_res=16,
+    target_res=64,
     steps_per_epoch=100,
     display_images=True,
     early_stopping_patience=3,
     save_best_only=True,
-    d_updates_per_g_update=2,
+    d_updates_per_g_update=1,
 )
 
 """
