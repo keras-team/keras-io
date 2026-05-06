@@ -149,9 +149,7 @@ class FlowersDataset(keras.utils.PyDataset):
                 if self.shuffle
                 else (RESOLUTION, RESOLUTION)
             )
-            image = keras.utils.load_img(
-                self.image_paths[i], target_size=target_size
-            )
+            image = keras.utils.load_img(self.image_paths[i], target_size=target_size)
             images.append(keras.utils.img_to_array(image))
         images = np.array(images, dtype="float32")
         if self.augmenter is not None:
@@ -201,10 +199,18 @@ print(f"Number of training examples: {len(train_paths)}")
 print(f"Number of validation examples: {len(val_paths)}")
 
 train_dataset = FlowersDataset(
-    train_paths, train_labels, augmenter=get_augmenter(is_training=True), shuffle=True, workers=4
+    train_paths,
+    train_labels,
+    augmenter=get_augmenter(is_training=True),
+    shuffle=True,
+    workers=4,
 )
 val_dataset = FlowersDataset(
-    val_paths, val_labels, augmenter=get_augmenter(is_training=False), shuffle=False, workers=4
+    val_paths,
+    val_labels,
+    augmenter=get_augmenter(is_training=False),
+    shuffle=False,
+    workers=4,
 )
 
 """
