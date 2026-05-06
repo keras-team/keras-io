@@ -16,6 +16,6 @@ keras-cv
 keras-nlp
 keras-tuner
 tf-keras==2.19.0
-keras-hub
+keras-hub==0.28.0
 keras-rs
 pymdown-extensions==10.20
