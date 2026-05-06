@@ -144,13 +144,18 @@ class FlowersDataset(keras.utils.PyDataset):
         batch_indices = self.indices[start:end]
         images = []
         for i in batch_indices:
+            target_size = (
+                (RESOLUTION + 20, RESOLUTION + 20)
+                if self.shuffle
+                else (RESOLUTION, RESOLUTION)
+            )
             image = keras.utils.load_img(
-                self.image_paths[i], target_size=(RESOLUTION + 20, RESOLUTION + 20)
+                self.image_paths[i], target_size=target_size
             )
             images.append(keras.utils.img_to_array(image))
-        images = self.augmenter(
-            np.array(images, dtype="float32"), training=self.shuffle
-        )
+        images = np.array(images, dtype="float32")
+        if self.augmenter is not None:
+            images = self.augmenter(images, training=self.shuffle)
         labels = keras.ops.one_hot(self.labels[batch_indices], num_classes=NUM_CLASSES)
         return images, labels
 
@@ -159,15 +164,12 @@ def get_augmenter(is_training=True):
     if is_training:
         return keras.Sequential(
             [
-                layers.Resizing(RESOLUTION + 20, RESOLUTION + 20),
                 layers.RandomCrop(RESOLUTION, RESOLUTION),
                 layers.RandomFlip("horizontal"),
             ],
             name="train_augmentation",
         )
-    return keras.Sequential(
-        [layers.Resizing(RESOLUTION, RESOLUTION)], name="eval_augmentation"
-    )
+    return None
 
 
 def load_flower_file_paths(validation_split=0.1):
@@ -199,10 +201,10 @@ print(f"Number of training examples: {len(train_paths)}")
 print(f"Number of validation examples: {len(val_paths)}")
 
 train_dataset = FlowersDataset(
-    train_paths, train_labels, augmenter=get_augmenter(is_training=True), shuffle=True
+    train_paths, train_labels, augmenter=get_augmenter(is_training=True), shuffle=True, workers=4
 )
 val_dataset = FlowersDataset(
-    val_paths, val_labels, augmenter=get_augmenter(is_training=False), shuffle=False
+    val_paths, val_labels, augmenter=get_augmenter(is_training=False), shuffle=False, workers=4
 )
 
 """
