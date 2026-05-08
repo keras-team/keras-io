@@ -2,8 +2,10 @@
 Title: Denoising Diffusion Probabilistic Model
 Author: [A_K_Nain](https://twitter.com/A_K_Nain)
 Date created: 2022/11/30
-Last modified: 2022/12/07
+Last modified: 2026/05/08
 Description: Generating images of flowers with denoising diffusion probabilistic models.
+
+Converted to Keras 3 by: [Maitry Sinha](https://github.com/maitry63)
 """
 
 """
@@ -84,15 +86,18 @@ distribution.
 ## Setup
 """
 
+import os
+import tarfile
+import requests
+from pathlib import Path
 import math
+from PIL import Image
+import random
 import numpy as np
 import matplotlib.pyplot as plt
-
-# Requires TensorFlow >=2.11 for the GroupNormalization layer.
-import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras import layers
-import tensorflow_datasets as tfds
+import keras
+from keras import layers
+from keras import ops
 
 """
 ## Hyperparameters
@@ -100,7 +105,8 @@ import tensorflow_datasets as tfds
 
 batch_size = 32
 num_epochs = 1  # Just for the sake of demonstration
-total_timesteps = 1000
+# total_timesteps = 1000
+total_timesteps = 10
 norm_groups = 8  # Number of groups used in GroupNormalization layer
 learning_rate = 2e-4
 
@@ -132,15 +138,49 @@ augmenting training data, we randomly flip the images left/right.
 
 
 # Load the dataset
-(ds,) = tfds.load(dataset_name, split=splits, with_info=False, shuffle_files=True)
+dataset_url = "https://www.robots.ox.ac.uk/~vgg/data/flowers/102/102flowers.tgz"
+labels_url = "https://www.robots.ox.ac.uk/~vgg/data/flowers/102/imagelabels.mat"
+dataset_dir = "oxford_flowers102"
+
+os.makedirs(dataset_dir, exist_ok=True)
+tar_path = os.path.join(dataset_dir, "102flowers.tgz")
+
+if not os.path.exists(tar_path):
+    print("Downloading dataset...")
+    response = requests.get(dataset_url, stream=True)
+    with open(tar_path, "wb") as f:
+        for chunk in response.iter_content(chunk_size=8192):
+            if chunk:
+                f.write(chunk)
+    print("Download complete.")
+
+# Extract images
+extracted_path = os.path.join(dataset_dir, "jpg")
+if not os.path.exists(extracted_path):
+    print("Extracting images...")
+    with tarfile.open(tar_path) as tar:
+        tar.extractall(path=dataset_dir)
+    print("Extraction complete.")
+
+# Load images into a list
+image_paths = sorted(Path(extracted_path).glob("*.jpg"))
+print(f"Found {len(image_paths)} images.")
+
+images = []
+for path in image_paths:
+    img = Image.open(path).convert("RGB")
+    images.append(np.array(img))
 
 
+# Preprocessing
 def augment(img):
     """Flips an image left/right randomly."""
-    return tf.image.random_flip_left_right(img)
+    if random.random() < 0.5:
+        img = np.fliplr(img)
+    return img
 
 
-def resize_and_rescale(img, size):
+def resize_and_rescale(img, size=(img_size, img_size)):
     """Resize the image to the desired size first and then
     rescale the pixel values in the range [-1.0, 1.0].
 
@@ -150,42 +190,55 @@ def resize_and_rescale(img, size):
     Returns:
         Resized and rescaled image tensor
     """
+    h, w = img.shape[:2]
+    crop_size = min(h, w)
+    start_h = (h - crop_size) // 2
+    start_w = (w - crop_size) // 2
+    img = img[start_h : start_h + crop_size, start_w : start_w + crop_size]
 
-    height = tf.shape(img)[0]
-    width = tf.shape(img)[1]
-    crop_size = tf.minimum(height, width)
+    img = np.array(Image.fromarray(img).resize(size, Image.BILINEAR))
 
-    img = tf.image.crop_to_bounding_box(
-        img,
-        (height - crop_size) // 2,
-        (width - crop_size) // 2,
-        crop_size,
-        crop_size,
-    )
-
-    # Resize
-    img = tf.cast(img, dtype=tf.float32)
-    img = tf.image.resize(img, size=size, antialias=True)
-
-    # Rescale the pixel values
-    img = img / 127.5 - 1.0
-    img = tf.clip_by_value(img, clip_min, clip_max)
+    img = img.astype(np.float32) / 127.5 - 1.0
+    img = np.clip(img, clip_min, clip_max)
     return img
 
 
-def train_preprocessing(x):
-    img = x["image"]
-    img = resize_and_rescale(img, size=(img_size, img_size))
+def preprocess_image(img):
+    img = resize_and_rescale(img)
     img = augment(img)
     return img
 
 
-train_ds = (
-    ds.map(train_preprocessing, num_parallel_calls=tf.data.AUTOTUNE)
-    .batch(batch_size, drop_remainder=True)
-    .shuffle(batch_size * 2)
-    .prefetch(tf.data.AUTOTUNE)
-)
+# PyDataset Generator
+class PyDataset:
+    def __init__(self, images, batch_size, shuffle=True):
+        self.images = images
+        self.batch_size = batch_size
+        self.shuffle = shuffle
+        self.num_samples = len(images)
+        self.indices = np.arange(self.num_samples)
+        self.current_idx = 0
+        if shuffle:
+            np.random.shuffle(self.indices)
+
+    def __iter__(self):
+        self.current_idx = 0
+        if self.shuffle:
+            np.random.shuffle(self.indices)
+        return self
+
+    def __next__(self):
+        if self.current_idx >= self.num_samples:
+            raise StopIteration
+        idxs = self.indices[self.current_idx : self.current_idx + self.batch_size]
+        batch = np.array(
+            [preprocess_image(self.images[i]) for i in idxs], dtype=np.float32
+        )
+        self.current_idx += self.batch_size
+        return batch
+
+
+train_ds = PyDataset(images, batch_size=batch_size, shuffle=True)
 
 
 """
@@ -221,65 +274,41 @@ class GaussianDiffusion:
         self.clip_max = clip_max
 
         # Define the linear variance schedule
-        self.betas = betas = np.linspace(
-            beta_start,
-            beta_end,
-            timesteps,
-            dtype=np.float64,  # Using float64 for better precision
-        )
-        self.num_timesteps = int(timesteps)
-
+        betas = np.linspace(beta_start, beta_end, timesteps, dtype=np.float64)
         alphas = 1.0 - betas
         alphas_cumprod = np.cumprod(alphas, axis=0)
         alphas_cumprod_prev = np.append(1.0, alphas_cumprod[:-1])
 
-        self.betas = tf.constant(betas, dtype=tf.float32)
-        self.alphas_cumprod = tf.constant(alphas_cumprod, dtype=tf.float32)
-        self.alphas_cumprod_prev = tf.constant(alphas_cumprod_prev, dtype=tf.float32)
+        self.betas = betas.astype(np.float32)
+        self.alphas_cumprod = alphas_cumprod.astype(np.float32)
+        self.alphas_cumprod_prev = alphas_cumprod_prev.astype(np.float32)
 
         # Calculations for diffusion q(x_t | x_{t-1}) and others
-        self.sqrt_alphas_cumprod = tf.constant(
-            np.sqrt(alphas_cumprod), dtype=tf.float32
-        )
-
-        self.sqrt_one_minus_alphas_cumprod = tf.constant(
-            np.sqrt(1.0 - alphas_cumprod), dtype=tf.float32
-        )
-
-        self.log_one_minus_alphas_cumprod = tf.constant(
-            np.log(1.0 - alphas_cumprod), dtype=tf.float32
-        )
-
-        self.sqrt_recip_alphas_cumprod = tf.constant(
-            np.sqrt(1.0 / alphas_cumprod), dtype=tf.float32
-        )
-        self.sqrt_recipm1_alphas_cumprod = tf.constant(
-            np.sqrt(1.0 / alphas_cumprod - 1), dtype=tf.float32
-        )
+        self.sqrt_alphas_cumprod = np.sqrt(self.alphas_cumprod)
+        self.sqrt_one_minus_alphas_cumprod = np.sqrt(1.0 - self.alphas_cumprod)
+        self.log_one_minus_alphas_cumprod = np.log(1.0 - self.alphas_cumprod)
+        self.sqrt_recip_alphas_cumprod = np.sqrt(1.0 / self.alphas_cumprod)
+        self.sqrt_recipm1_alphas_cumprod = np.sqrt(1.0 / self.alphas_cumprod - 1.0)
 
         # Calculations for posterior q(x_{t-1} | x_t, x_0)
         posterior_variance = (
-            betas * (1.0 - alphas_cumprod_prev) / (1.0 - alphas_cumprod)
+            self.betas * (1.0 - alphas_cumprod_prev) / (1.0 - alphas_cumprod)
         )
-        self.posterior_variance = tf.constant(posterior_variance, dtype=tf.float32)
+        self.posterior_variance = posterior_variance
 
         # Log calculation clipped because the posterior variance is 0 at the beginning
         # of the diffusion chain
-        self.posterior_log_variance_clipped = tf.constant(
-            np.log(np.maximum(posterior_variance, 1e-20)), dtype=tf.float32
+        self.posterior_log_variance_clipped = np.log(
+            np.maximum(posterior_variance, 1e-20)
+        )
+        self.posterior_mean_coef1 = (
+            self.betas * np.sqrt(alphas_cumprod_prev) / (1.0 - alphas_cumprod)
+        )
+        self.posterior_mean_coef2 = (
+            (1.0 - alphas_cumprod_prev) * np.sqrt(alphas) / (1.0 - alphas_cumprod)
         )
 
-        self.posterior_mean_coef1 = tf.constant(
-            betas * np.sqrt(alphas_cumprod_prev) / (1.0 - alphas_cumprod),
-            dtype=tf.float32,
-        )
-
-        self.posterior_mean_coef2 = tf.constant(
-            (1.0 - alphas_cumprod_prev) * np.sqrt(alphas) / (1.0 - alphas_cumprod),
-            dtype=tf.float32,
-        )
-
-    def _extract(self, a, t, x_shape):
+    def _extract(self, a, t, batch_size):
         """Extract some coefficients at specified timesteps,
         then reshape to [batch_size, 1, 1, 1, 1, ...] for broadcasting purposes.
 
@@ -288,9 +317,9 @@ class GaussianDiffusion:
             t: Timestep for which the coefficients are to be extracted
             x_shape: Shape of the current batched samples
         """
-        batch_size = x_shape[0]
-        out = tf.gather(a, t)
-        return tf.reshape(out, [batch_size, 1, 1, 1])
+        out = a[t] if isinstance(t, int) else a[t]
+        # Reshape for broadcasting: [batch_size, 1, 1, 1]
+        return np.reshape(out, (batch_size, 1, 1, 1))
 
     def q_mean_variance(self, x_start, t):
         """Extracts the mean, and the variance at current timestep.
@@ -299,13 +328,11 @@ class GaussianDiffusion:
             x_start: Initial sample (before the first diffusion step)
             t: Current timestep
         """
-        x_start_shape = tf.shape(x_start)
-        mean = self._extract(self.sqrt_alphas_cumprod, t, x_start_shape) * x_start
-        variance = self._extract(1.0 - self.alphas_cumprod, t, x_start_shape)
-        log_variance = self._extract(
-            self.log_one_minus_alphas_cumprod, t, x_start_shape
-        )
-        return mean, variance, log_variance
+        batch_size = x_start.shape[0]
+        mean = self._extract(self.sqrt_alphas_cumprod, t, batch_size) * x_start
+        var = self._extract(1.0 - self.alphas_cumprod, t, batch_size)
+        log_var = self._extract(self.log_one_minus_alphas_cumprod, t, batch_size)
+        return mean, var, log_var
 
     def q_sample(self, x_start, t, noise):
         """Diffuse the data.
@@ -317,18 +344,17 @@ class GaussianDiffusion:
         Returns:
             Diffused samples at timestep `t`
         """
-        x_start_shape = tf.shape(x_start)
+        batch_size = x_start.shape[0]
         return (
-            self._extract(self.sqrt_alphas_cumprod, t, tf.shape(x_start)) * x_start
-            + self._extract(self.sqrt_one_minus_alphas_cumprod, t, x_start_shape)
-            * noise
+            self._extract(self.sqrt_alphas_cumprod, t, batch_size) * x_start
+            + self._extract(self.sqrt_one_minus_alphas_cumprod, t, batch_size) * noise
         )
 
     def predict_start_from_noise(self, x_t, t, noise):
-        x_t_shape = tf.shape(x_t)
+        batch_size = x_t.shape[0]
         return (
-            self._extract(self.sqrt_recip_alphas_cumprod, t, x_t_shape) * x_t
-            - self._extract(self.sqrt_recipm1_alphas_cumprod, t, x_t_shape) * noise
+            self._extract(self.sqrt_recip_alphas_cumprod, t, batch_size) * x_t
+            - self._extract(self.sqrt_recipm1_alphas_cumprod, t, batch_size) * noise
         )
 
     def q_posterior(self, x_start, x_t, t):
@@ -342,27 +368,21 @@ class GaussianDiffusion:
         Returns:
             Posterior mean and variance at current timestep
         """
-
-        x_t_shape = tf.shape(x_t)
-        posterior_mean = (
-            self._extract(self.posterior_mean_coef1, t, x_t_shape) * x_start
-            + self._extract(self.posterior_mean_coef2, t, x_t_shape) * x_t
+        batch_size = x_t.shape[0]
+        mean = (
+            self._extract(self.posterior_mean_coef1, t, batch_size) * x_start
+            + self._extract(self.posterior_mean_coef2, t, batch_size) * x_t
         )
-        posterior_variance = self._extract(self.posterior_variance, t, x_t_shape)
-        posterior_log_variance_clipped = self._extract(
-            self.posterior_log_variance_clipped, t, x_t_shape
-        )
-        return posterior_mean, posterior_variance, posterior_log_variance_clipped
+        var = self._extract(self.posterior_variance, t, batch_size)
+        log_var = self._extract(self.posterior_log_variance_clipped, t, batch_size)
+        return mean, var, log_var
 
     def p_mean_variance(self, pred_noise, x, t, clip_denoised=True):
-        x_recon = self.predict_start_from_noise(x, t=t, noise=pred_noise)
+        x_recon = self.predict_start_from_noise(x, t, pred_noise)
         if clip_denoised:
-            x_recon = tf.clip_by_value(x_recon, self.clip_min, self.clip_max)
-
-        model_mean, posterior_variance, posterior_log_variance = self.q_posterior(
-            x_start=x_recon, x_t=x, t=t
-        )
-        return model_mean, posterior_variance, posterior_log_variance
+            x_recon = np.clip(x_recon, self.clip_min, self.clip_max)
+        mean, var, log_var = self.q_posterior(x_recon, x, t)
+        return mean, var, log_var
 
     def p_sample(self, pred_noise, x, t, clip_denoised=True):
         """Sample from the diffusion model.
@@ -374,15 +394,11 @@ class GaussianDiffusion:
             clip_denoised (bool): Whether to clip the predicted noise
                 within the specified range or not.
         """
-        model_mean, _, model_log_variance = self.p_mean_variance(
-            pred_noise, x=x, t=t, clip_denoised=clip_denoised
-        )
-        noise = tf.random.normal(shape=x.shape, dtype=x.dtype)
+        mean, var, log_var = self.p_mean_variance(pred_noise, x, t, clip_denoised)
+        noise = np.random.randn(*x.shape).astype(np.float32)
         # No noise when t == 0
-        nonzero_mask = tf.reshape(
-            1 - tf.cast(tf.equal(t, 0), tf.float32), [tf.shape(x)[0], 1, 1, 1]
-        )
-        return model_mean + nonzero_mask * tf.exp(0.5 * model_log_variance) * noise
+        nonzero_mask = (t != 0).astype(np.float32).reshape(-1, 1, 1, 1)
+        return mean + nonzero_mask * np.exp(0.5 * log_var) * noise
 
 
 """
@@ -418,44 +434,64 @@ def kernel_init(scale):
 
 
 class AttentionBlock(layers.Layer):
-    """Applies self-attention.
-
-    Args:
-        units: Number of units in the dense layers
-        groups: Number of groups to be used for GroupNormalization layer
-    """
-
-    def __init__(self, units, groups=8, **kwargs):
-        self.units = units
-        self.groups = groups
+    def __init__(self, query_dim, groups=8, **kwargs):
         super().__init__(**kwargs)
+        self.query_dim = query_dim
+        self.groups = groups
 
-        self.norm = layers.GroupNormalization(groups=groups)
-        self.query = layers.Dense(units, kernel_initializer=kernel_init(1.0))
-        self.key = layers.Dense(units, kernel_initializer=kernel_init(1.0))
-        self.value = layers.Dense(units, kernel_initializer=kernel_init(1.0))
-        self.proj = layers.Dense(units, kernel_initializer=kernel_init(0.0))
+        self.group_norm = layers.GroupNormalization(groups=groups)
+        self.q_proj = layers.Dense(query_dim)
+        self.k_proj = layers.Dense(query_dim)
+        self.v_proj = layers.Dense(query_dim)
+        self.out_proj = layers.Dense(query_dim)
 
-    def call(self, inputs):
-        batch_size = tf.shape(inputs)[0]
-        height = tf.shape(inputs)[1]
-        width = tf.shape(inputs)[2]
-        scale = tf.cast(self.units, tf.float32) ** (-0.5)
+    def build(self, input_shape):
+        channels = input_shape[-1]
 
-        inputs = self.norm(inputs)
-        q = self.query(inputs)
-        k = self.key(inputs)
-        v = self.value(inputs)
+        self.group_norm.build(input_shape)
 
-        attn_score = tf.einsum("bhwc, bHWc->bhwHW", q, k) * scale
-        attn_score = tf.reshape(attn_score, [batch_size, height, width, height * width])
+        flat_shape = (input_shape[0], input_shape[1] * input_shape[2], channels)
+        self.q_proj.build(flat_shape)
+        self.k_proj.build(flat_shape)
+        self.v_proj.build(flat_shape)
+        self.out_proj.build(flat_shape)
 
-        attn_score = tf.nn.softmax(attn_score, -1)
-        attn_score = tf.reshape(attn_score, [batch_size, height, width, height, width])
+        self.built = True
 
-        proj = tf.einsum("bhwHW,bHWc->bhwc", attn_score, v)
-        proj = self.proj(proj)
-        return inputs + proj
+    def call(self, x):
+        batch_size = ops.shape(x)[0]
+        h = ops.shape(x)[1]
+        w = ops.shape(x)[2]
+
+        res = x
+        x = self.group_norm(x)
+
+        x_flat = ops.reshape(x, (batch_size, h * w, -1))
+
+        q = self.q_proj(x_flat)
+        k = self.k_proj(x_flat)
+        v = self.v_proj(x_flat)
+
+        scale = ops.cast(ops.sqrt(float(self.query_dim)), x.dtype)
+        k_t = ops.transpose(k, axes=(0, 2, 1))
+        attn_logits = ops.matmul(q, k_t) / scale
+        attn_weights = ops.softmax(attn_logits, axis=-1)
+
+        attn_out = ops.matmul(attn_weights, v)
+        x = self.out_proj(attn_out)
+        x = ops.reshape(x, (batch_size, h, w, -1))
+
+        return x + res
+
+    def get_config(self):
+        config = super().get_config()
+        config.update(
+            {
+                "query_dim": self.query_dim,
+                "groups": self.groups,
+            }
+        )
+        return config
 
 
 class TimeEmbedding(layers.Layer):
@@ -463,32 +499,37 @@ class TimeEmbedding(layers.Layer):
         super().__init__(**kwargs)
         self.dim = dim
         self.half_dim = dim // 2
-        self.emb = math.log(10000) / (self.half_dim - 1)
-        self.emb = tf.exp(tf.range(self.half_dim, dtype=tf.float32) * -self.emb)
 
-    def call(self, inputs):
-        inputs = tf.cast(inputs, dtype=tf.float32)
-        emb = inputs[:, None] * self.emb[None, :]
-        emb = tf.concat([tf.sin(emb), tf.cos(emb)], axis=-1)
-        return emb
+        # Precompute frequencies
+        inv_freq = 1.0 / (10000 ** (np.arange(self.half_dim) / self.half_dim))
+        self.inv_freq_const = inv_freq.astype("float32")
+
+    def call(self, t):
+        t = ops.cast(t, dtype="float32")
+        t = ops.expand_dims(t, axis=-1)
+        emb = t * self.inv_freq_const
+        return ops.concatenate([ops.sin(emb), ops.cos(emb)], axis=-1)
+
+    def compute_output_shape(self, input_shape):
+        return (input_shape[0], self.dim)
 
 
 def ResidualBlock(width, groups=8, activation_fn=keras.activations.swish):
     def apply(inputs):
-        x, t = inputs
+        x, t_emb = inputs
         input_width = x.shape[3]
 
-        if input_width == width:
-            residual = x
-        else:
-            residual = layers.Conv2D(
+        residual = (
+            x
+            if input_width == width
+            else layers.Conv2D(
                 width, kernel_size=1, kernel_initializer=kernel_init(1.0)
             )(x)
+        )
 
-        temb = activation_fn(t)
-        temb = layers.Dense(width, kernel_initializer=kernel_init(1.0))(temb)[
-            :, None, None, :
-        ]
+        temb = activation_fn(t_emb)
+        temb = layers.Dense(width, kernel_initializer=kernel_init(1.0))(temb)
+        temb = temb[:, None, None, :]
 
         x = layers.GroupNormalization(groups=groups)(x)
         x = activation_fn(x)
@@ -499,10 +540,10 @@ def ResidualBlock(width, groups=8, activation_fn=keras.activations.swish):
         x = layers.Add()([x, temb])
         x = layers.GroupNormalization(groups=groups)(x)
         x = activation_fn(x)
-
         x = layers.Conv2D(
             width, kernel_size=3, padding="same", kernel_initializer=kernel_init(0.0)
         )(x)
+
         x = layers.Add()([x, residual])
         return x
 
@@ -535,12 +576,12 @@ def UpSample(width, interpolation="nearest"):
 
 
 def TimeMLP(units, activation_fn=keras.activations.swish):
-    def apply(inputs):
-        temb = layers.Dense(
+    def apply(t_emb):
+        t_emb = layers.Dense(
             units, activation=activation_fn, kernel_initializer=kernel_init(1.0)
-        )(inputs)
-        temb = layers.Dense(units, kernel_initializer=kernel_init(1.0))(temb)
-        return temb
+        )(t_emb)
+        t_emb = layers.Dense(units, kernel_initializer=kernel_init(1.0))(t_emb)
+        return t_emb
 
     return apply
 
@@ -555,63 +596,60 @@ def build_model(
     interpolation="nearest",
     activation_fn=keras.activations.swish,
 ):
-    image_input = layers.Input(
-        shape=(img_size, img_size, img_channels), name="image_input"
-    )
-    time_input = keras.Input(shape=(), dtype=tf.int64, name="time_input")
+
+    image_input = layers.Input(shape=(img_size, img_size, img_channels))
+    time_input = layers.Input(shape=(), dtype=np.int32)
 
     x = layers.Conv2D(
-        first_conv_channels,
-        kernel_size=(3, 3),
-        padding="same",
-        kernel_initializer=kernel_init(1.0),
+        widths[0], kernel_size=3, padding="same", kernel_initializer=kernel_init(1.0)
     )(image_input)
 
-    temb = TimeEmbedding(dim=first_conv_channels * 4)(time_input)
-    temb = TimeMLP(units=first_conv_channels * 4, activation_fn=activation_fn)(temb)
+    t_emb = TimeEmbedding(dim=widths[0] * 4)(time_input)
+    t_emb = TimeMLP(units=widths[0] * 4, activation_fn=activation_fn)(t_emb)
 
     skips = [x]
 
     # DownBlock
-    for i in range(len(widths)):
+    for i, width in enumerate(widths):
         for _ in range(num_res_blocks):
-            x = ResidualBlock(
-                widths[i], groups=norm_groups, activation_fn=activation_fn
-            )([x, temb])
+            x = ResidualBlock(width, groups=norm_groups, activation_fn=activation_fn)(
+                [x, t_emb]
+            )
             if has_attention[i]:
-                x = AttentionBlock(widths[i], groups=norm_groups)(x)
+                x = AttentionBlock(width, groups=norm_groups)(x)
+            skips.append(x)
+        if i != len(widths) - 1:
+            x = DownSample(width)(x)
             skips.append(x)
 
-        if widths[i] != widths[-1]:
-            x = DownSample(widths[i])(x)
-            skips.append(x)
-
-    # MiddleBlock
+    # Middle block
     x = ResidualBlock(widths[-1], groups=norm_groups, activation_fn=activation_fn)(
-        [x, temb]
+        [x, t_emb]
     )
     x = AttentionBlock(widths[-1], groups=norm_groups)(x)
     x = ResidualBlock(widths[-1], groups=norm_groups, activation_fn=activation_fn)(
-        [x, temb]
+        [x, t_emb]
     )
 
-    # UpBlock
+    # Up block
     for i in reversed(range(len(widths))):
         for _ in range(num_res_blocks + 1):
             x = layers.Concatenate(axis=-1)([x, skips.pop()])
             x = ResidualBlock(
                 widths[i], groups=norm_groups, activation_fn=activation_fn
-            )([x, temb])
+            )([x, t_emb])
             if has_attention[i]:
                 x = AttentionBlock(widths[i], groups=norm_groups)(x)
-
         if i != 0:
             x = UpSample(widths[i], interpolation=interpolation)(x)
 
     # End block
     x = layers.GroupNormalization(groups=norm_groups)(x)
     x = activation_fn(x)
-    x = layers.Conv2D(3, (3, 3), padding="same", kernel_initializer=kernel_init(0.0))(x)
+    x = layers.Conv2D(
+        img_channels, kernel_size=3, padding="same", kernel_initializer=kernel_init(0.0)
+    )(x)
+
     return keras.Model([image_input, time_input], x, name="unet")
 
 
@@ -636,92 +674,88 @@ use mean absolute error or Huber loss as the loss function.
 """
 
 
-class DiffusionModel(keras.Model):
-    def __init__(self, network, ema_network, timesteps, gdf_util, ema=0.999):
-        super().__init__()
+def mse_loss(y_true, y_pred):
+    return np.mean((y_true - y_pred) ** 2)
+
+
+def update_ema(model_network, ema_network, decay=0.999):
+    model_weights = model_network.get_weights()
+    ema_weights = ema_network.get_weights()
+    new_weights = []
+    for w, ew in zip(model_weights, ema_weights):
+        new_weights.append(decay * ew + (1 - decay) * w)
+    ema_network.set_weights(new_weights)
+
+
+class DiffusionModel:
+    def __init__(self, network, ema_network, timesteps, gdf_util, ema=0.999, lr=1e-4):
         self.network = network
         self.ema_network = ema_network
         self.timesteps = timesteps
         self.gdf_util = gdf_util
         self.ema = ema
 
+        self.network.compile(
+            optimizer=keras.optimizers.Adam(learning_rate=lr), loss="mse"
+        )
+
     def train_step(self, images):
-        # 1. Get the batch size
-        batch_size = tf.shape(images)[0]
+        batch_size = np.shape(images)[0]
 
-        # 2. Sample timesteps uniformly
-        t = tf.random.uniform(
-            minval=0, maxval=self.timesteps, shape=(batch_size,), dtype=tf.int64
-        )
+        # 1. Sample timesteps
+        t = np.random.randint(0, self.timesteps, size=(batch_size,))
 
-        with tf.GradientTape() as tape:
-            # 3. Sample random noise to be added to the images in the batch
-            noise = tf.random.normal(shape=tf.shape(images), dtype=images.dtype)
+        # 2. Sample Gaussian noise
+        noise = np.random.normal(size=images.shape).astype(np.float32)
 
-            # 4. Diffuse the images with noise
-            images_t = self.gdf_util.q_sample(images, t, noise)
+        # 3. Forward diffusion (get noisy images)
+        images_t = self.gdf_util.q_sample(images, t, noise)
 
-            # 5. Pass the diffused images and time steps to the network
-            pred_noise = self.network([images_t, t], training=True)
+        # 4 & 5 & 6. Train on batch (runs forward + backprop + returns loss)
+        # This is much faster than running predict() then training separately
+        loss = self.network.train_on_batch([images_t, t], noise)
 
-            # 6. Calculate the loss
-            loss = self.loss(noise, pred_noise)
+        # 7. EMA update
+        update_ema(self.network, self.ema_network, self.ema)
 
-        # 7. Get the gradients
-        gradients = tape.gradient(loss, self.network.trainable_weights)
+        return loss
 
-        # 8. Update the weights of the network
-        self.optimizer.apply_gradients(zip(gradients, self.network.trainable_weights))
+    def generate_images(self, num_images=16, img_size=128, img_channels=3):
+        samples = np.random.normal(
+            size=(num_images, img_size, img_size, img_channels)
+        ).astype(np.float32)
 
-        # 9. Updates the weight values for the network with EMA weights
-        for weight, ema_weight in zip(self.network.weights, self.ema_network.weights):
-            ema_weight.assign(self.ema * ema_weight + (1 - self.ema) * weight)
+        for t in reversed(range(self.timesteps)):
+            tt = np.full(num_images, t, dtype=np.int64)
+            pred_noise = self.ema_network.predict([samples, tt], verbose=0)
+            samples = self.gdf_util.p_sample(pred_noise, samples, tt)
 
-        # 10. Return loss values
-        return {"loss": loss}
-
-    def generate_images(self, num_images=16):
-        # 1. Randomly sample noise (starting point for reverse process)
-        samples = tf.random.normal(
-            shape=(num_images, img_size, img_size, img_channels), dtype=tf.float32
-        )
-        # 2. Sample from the model iteratively
-        for t in reversed(range(0, self.timesteps)):
-            tt = tf.cast(tf.fill(num_images, t), dtype=tf.int64)
-            pred_noise = self.ema_network.predict(
-                [samples, tt], verbose=0, batch_size=num_images
-            )
-            samples = self.gdf_util.p_sample(
-                pred_noise, samples, tt, clip_denoised=True
-            )
-        # 3. Return generated samples
         return samples
 
-    def plot_images(
-        self, epoch=None, logs=None, num_rows=2, num_cols=8, figsize=(12, 5)
-    ):
-        """Utility to plot images using the diffusion model during training."""
-        generated_samples = self.generate_images(num_images=num_rows * num_cols)
-        generated_samples = (
-            tf.clip_by_value(generated_samples * 127.5 + 127.5, 0.0, 255.0)
-            .numpy()
-            .astype(np.uint8)
+    def plot_images(self, num_rows=2, num_cols=8, figsize=(12, 5)):
+        _, h, w, c = self.network.input_shape[0]
+        generated_samples = self.generate_images(
+            num_rows * num_cols, img_size=h, img_channels=c
         )
 
-        _, ax = plt.subplots(num_rows, num_cols, figsize=figsize)
-        for i, image in enumerate(generated_samples):
-            if num_rows == 1:
-                ax[i].imshow(image)
-                ax[i].axis("off")
-            else:
-                ax[i // num_cols, i % num_cols].imshow(image)
-                ax[i // num_cols, i % num_cols].axis("off")
+        generated_samples = np.clip((generated_samples + 1.0) * 127.5, 0, 255).astype(
+            np.uint8
+        )
 
+        fig, ax = plt.subplots(num_rows, num_cols, figsize=figsize)
+        for i, image in enumerate(generated_samples):
+            row, col = i // num_cols, i % num_cols
+            if num_rows == 1:
+                ax[col].imshow(image)
+                ax[col].axis("off")
+            else:
+                ax[row, col].imshow(image)
+                ax[row, col].axis("off")
         plt.tight_layout()
         plt.show()
 
 
-# Build the unet model
+# Build models
 network = build_model(
     img_size=img_size,
     img_channels=img_channels,
@@ -740,32 +774,32 @@ ema_network = build_model(
     norm_groups=norm_groups,
     activation_fn=keras.activations.swish,
 )
-ema_network.set_weights(network.get_weights())  # Initially the weights are the same
 
-# Get an instance of the Gaussian Diffusion utilities
-gdf_util = GaussianDiffusion(timesteps=total_timesteps)
+# Initialize EMA network with same weights
+ema_network.set_weights(network.get_weights())
 
-# Get the model
+# Initialize model wrapper
 model = DiffusionModel(
     network=network,
     ema_network=ema_network,
-    gdf_util=gdf_util,
+    gdf_util=GaussianDiffusion(timesteps=total_timesteps),
     timesteps=total_timesteps,
+    ema=0.999,
+    lr=learning_rate,
 )
 
-# Compile the model
-model.compile(
-    loss=keras.losses.MeanSquaredError(),
-    optimizer=keras.optimizers.Adam(learning_rate=learning_rate),
-)
+# Training Loop
+for epoch in range(num_epochs):
+    losses = []
+    for batch in train_ds:
+        loss = model.train_step(batch)
+        losses.append(loss)
 
-# Train the model
-model.fit(
-    train_ds,
-    epochs=num_epochs,
-    batch_size=batch_size,
-    callbacks=[keras.callbacks.LambdaCallback(on_epoch_end=model.plot_images)],
-)
+    avg_loss = np.mean(losses)
+    print(f"Epoch {epoch+1}/{num_epochs}, Loss: {avg_loss:.4f}")
+
+    if (epoch + 1) % 5 == 0:
+        model.plot_images()
 
 """
 ## Results
@@ -780,8 +814,8 @@ curl -LO https://github.com/AakashKumarNain/ddpms/releases/download/v3.0.0/check
 unzip -qq checkpoints.zip
 """
 
-# Load the model weights
-model.ema_network.load_weights("checkpoints/diffusion_model_checkpoint")
+# # Load the model weights
+# model.ema_network.load_weights("checkpoints/diffusion_model_checkpoint")
 
 # Generate and plot some samples
 model.plot_images(num_rows=4, num_cols=8)
