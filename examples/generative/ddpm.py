@@ -2,7 +2,7 @@
 Title: Denoising Diffusion Probabilistic Model
 Author: [A_K_Nain](https://twitter.com/A_K_Nain)
 Date created: 2022/11/30
-Last modified: 2026/05/08
+Last modified: 2026/05/09
 Description: Generating images of flowers with denoising diffusion probabilistic models.
 
 Converted to Keras 3 by: [Maitry Sinha](https://github.com/maitry63)
@@ -90,20 +90,23 @@ import os
 import tarfile
 import requests
 from pathlib import Path
-import math
 from PIL import Image
-import random
+import random as py_random
 import numpy as np
 import matplotlib.pyplot as plt
 import keras
+
+keras.backend.set_floatx("float32")
 from keras import layers
 from keras import ops
+from keras import random
 
 """
 ## Hyperparameters
 """
 
-batch_size = 32
+# batch_size = 32
+batch_size = 4
 num_epochs = 1  # Just for the sake of demonstration
 # total_timesteps = 1000
 total_timesteps = 10
@@ -175,7 +178,7 @@ for path in image_paths:
 # Preprocessing
 def augment(img):
     """Flips an image left/right randomly."""
-    if random.random() < 0.5:
+    if py_random.random() < 0.5:
         img = np.fliplr(img)
     return img
 
@@ -274,41 +277,49 @@ class GaussianDiffusion:
         self.clip_max = clip_max
 
         # Define the linear variance schedule
-        betas = np.linspace(beta_start, beta_end, timesteps, dtype=np.float64)
-        alphas = 1.0 - betas
-        alphas_cumprod = np.cumprod(alphas, axis=0)
-        alphas_cumprod_prev = np.append(1.0, alphas_cumprod[:-1])
+        betas = np.linspace(beta_start, beta_end, timesteps).astype("float32")
+        alphas = (1.0 - betas).astype("float32")
+        alphas_cumprod = np.cumprod(alphas, axis=0).astype("float32")
+        alphas_cumprod_prev = np.append(1.0, alphas_cumprod[:-1]).astype("float32")
 
-        self.betas = betas.astype(np.float32)
-        self.alphas_cumprod = alphas_cumprod.astype(np.float32)
-        self.alphas_cumprod_prev = alphas_cumprod_prev.astype(np.float32)
+        self.betas = betas
+        self.alphas_cumprod = alphas_cumprod
+        self.alphas_cumprod_prev = alphas_cumprod_prev
 
         # Calculations for diffusion q(x_t | x_{t-1}) and others
-        self.sqrt_alphas_cumprod = np.sqrt(self.alphas_cumprod)
-        self.sqrt_one_minus_alphas_cumprod = np.sqrt(1.0 - self.alphas_cumprod)
-        self.log_one_minus_alphas_cumprod = np.log(1.0 - self.alphas_cumprod)
-        self.sqrt_recip_alphas_cumprod = np.sqrt(1.0 / self.alphas_cumprod)
-        self.sqrt_recipm1_alphas_cumprod = np.sqrt(1.0 / self.alphas_cumprod - 1.0)
+        self.sqrt_alphas_cumprod = np.sqrt(alphas_cumprod).astype("float32")
+        self.sqrt_one_minus_alphas_cumprod = np.sqrt(1.0 - alphas_cumprod).astype(
+            "float32"
+        )
+        self.log_one_minus_alphas_cumprod = np.log(1.0 - alphas_cumprod).astype(
+            "float32"
+        )
+        self.sqrt_recip_alphas_cumprod = np.sqrt(1.0 / alphas_cumprod).astype("float32")
+        self.sqrt_recipm1_alphas_cumprod = np.sqrt(1.0 / alphas_cumprod - 1.0).astype(
+            "float32"
+        )
 
         # Calculations for posterior q(x_{t-1} | x_t, x_0)
         posterior_variance = (
-            self.betas * (1.0 - alphas_cumprod_prev) / (1.0 - alphas_cumprod)
-        )
+            betas * (1.0 - alphas_cumprod_prev) / (1.0 - alphas_cumprod)
+        ).astype("float32")
         self.posterior_variance = posterior_variance
 
         # Log calculation clipped because the posterior variance is 0 at the beginning
         # of the diffusion chain
         self.posterior_log_variance_clipped = np.log(
             np.maximum(posterior_variance, 1e-20)
-        )
+        ).astype("float32")
+
         self.posterior_mean_coef1 = (
-            self.betas * np.sqrt(alphas_cumprod_prev) / (1.0 - alphas_cumprod)
-        )
+            betas * np.sqrt(alphas_cumprod_prev) / (1.0 - alphas_cumprod)
+        ).astype("float32")
+
         self.posterior_mean_coef2 = (
             (1.0 - alphas_cumprod_prev) * np.sqrt(alphas) / (1.0 - alphas_cumprod)
-        )
+        ).astype("float32")
 
-    def _extract(self, a, t, batch_size):
+    def _extract(self, arr, t, batch_size):
         """Extract some coefficients at specified timesteps,
         then reshape to [batch_size, 1, 1, 1, 1, ...] for broadcasting purposes.
 
@@ -317,9 +328,9 @@ class GaussianDiffusion:
             t: Timestep for which the coefficients are to be extracted
             x_shape: Shape of the current batched samples
         """
-        out = a[t] if isinstance(t, int) else a[t]
+        out = ops.take(arr, t)
         # Reshape for broadcasting: [batch_size, 1, 1, 1]
-        return np.reshape(out, (batch_size, 1, 1, 1))
+        return ops.cast(ops.reshape(out, (batch_size, 1, 1, 1)), dtype="float32")
 
     def q_mean_variance(self, x_start, t):
         """Extracts the mean, and the variance at current timestep.
@@ -380,7 +391,7 @@ class GaussianDiffusion:
     def p_mean_variance(self, pred_noise, x, t, clip_denoised=True):
         x_recon = self.predict_start_from_noise(x, t, pred_noise)
         if clip_denoised:
-            x_recon = np.clip(x_recon, self.clip_min, self.clip_max)
+            x_recon = ops.clip(x_recon, self.clip_min, self.clip_max)
         mean, var, log_var = self.q_posterior(x_recon, x, t)
         return mean, var, log_var
 
@@ -395,10 +406,12 @@ class GaussianDiffusion:
                 within the specified range or not.
         """
         mean, var, log_var = self.p_mean_variance(pred_noise, x, t, clip_denoised)
-        noise = np.random.randn(*x.shape).astype(np.float32)
+        noise = keras.random.normal(shape=x.shape, dtype="float32")
         # No noise when t == 0
-        nonzero_mask = (t != 0).astype(np.float32).reshape(-1, 1, 1, 1)
-        return mean + nonzero_mask * np.exp(0.5 * log_var) * noise
+        # nonzero_mask = (t != 0).astype(x.dtype).reshape(-1, 1, 1, 1)
+        nonzero_mask = ops.cast(t != 0, dtype=ops.dtype(x))
+        nonzero_mask = ops.reshape(nonzero_mask, (-1, 1, 1, 1))
+        return mean + nonzero_mask * ops.exp(0.5 * log_var) * noise
 
 
 """
@@ -472,7 +485,7 @@ class AttentionBlock(layers.Layer):
         k = self.k_proj(x_flat)
         v = self.v_proj(x_flat)
 
-        scale = ops.cast(ops.sqrt(float(self.query_dim)), x.dtype)
+        scale = ops.sqrt(ops.cast(self.query_dim, x.dtype))
         k_t = ops.transpose(k, axes=(0, 2, 1))
         attn_logits = ops.matmul(q, k_t) / scale
         attn_weights = ops.softmax(attn_logits, axis=-1)
@@ -674,19 +687,6 @@ use mean absolute error or Huber loss as the loss function.
 """
 
 
-def mse_loss(y_true, y_pred):
-    return np.mean((y_true - y_pred) ** 2)
-
-
-def update_ema(model_network, ema_network, decay=0.999):
-    model_weights = model_network.get_weights()
-    ema_weights = ema_network.get_weights()
-    new_weights = []
-    for w, ew in zip(model_weights, ema_weights):
-        new_weights.append(decay * ew + (1 - decay) * w)
-    ema_network.set_weights(new_weights)
-
-
 class DiffusionModel:
     def __init__(self, network, ema_network, timesteps, gdf_util, ema=0.999, lr=1e-4):
         self.network = network
@@ -696,17 +696,32 @@ class DiffusionModel:
         self.ema = ema
 
         self.network.compile(
-            optimizer=keras.optimizers.Adam(learning_rate=lr), loss="mse"
+            optimizer=keras.optimizers.Adam(learning_rate=lr),
+            loss="mse",
         )
 
+    def update_ema(self):
+        model_weights = self.network.get_weights()
+        ema_weights = self.ema_network.get_weights()
+
+        new_weights = [
+            self.ema * ew + (1.0 - self.ema) * w
+            for w, ew in zip(model_weights, ema_weights)
+        ]
+        self.ema_network.set_weights(new_weights)
+
     def train_step(self, images):
-        batch_size = np.shape(images)[0]
+        batch_size = ops.shape(images)[0]
 
         # 1. Sample timesteps
-        t = np.random.randint(0, self.timesteps, size=(batch_size,))
+        t = random.randint(
+            shape=(batch_size,),
+            minval=0,
+            maxval=self.timesteps,
+        )
 
         # 2. Sample Gaussian noise
-        noise = np.random.normal(size=images.shape).astype(np.float32)
+        noise = random.normal(shape=ops.shape(images))
 
         # 3. Forward diffusion (get noisy images)
         images_t = self.gdf_util.q_sample(images, t, noise)
@@ -716,41 +731,38 @@ class DiffusionModel:
         loss = self.network.train_on_batch([images_t, t], noise)
 
         # 7. EMA update
-        update_ema(self.network, self.ema_network, self.ema)
+        self.update_ema()
 
         return loss
 
-    def generate_images(self, num_images=16, img_size=128, img_channels=3):
-        samples = np.random.normal(
-            size=(num_images, img_size, img_size, img_channels)
-        ).astype(np.float32)
+    def generate_images(self, num_images=16):
+        img_shape = self.network.input_shape[0][1:]
+
+        # Start from pure noise
+        samples = random.normal(shape=(num_images, *img_shape))
 
         for t in reversed(range(self.timesteps)):
-            tt = np.full(num_images, t, dtype=np.int64)
+            tt = ops.full((num_images,), t, dtype="int32")
+
+            # Use EMA model
             pred_noise = self.ema_network.predict([samples, tt], verbose=0)
+
+            # Reverse diffusion step
             samples = self.gdf_util.p_sample(pred_noise, samples, tt)
 
-        return samples
+        return ops.convert_to_numpy(samples)
 
     def plot_images(self, num_rows=2, num_cols=8, figsize=(12, 5)):
-        _, h, w, c = self.network.input_shape[0]
-        generated_samples = self.generate_images(
-            num_rows * num_cols, img_size=h, img_channels=c
-        )
-
-        generated_samples = np.clip((generated_samples + 1.0) * 127.5, 0, 255).astype(
-            np.uint8
-        )
+        generated = self.generate_images(num_rows * num_cols)
+        generated = np.clip((generated + 1.0) * 127.5, 0, 255).astype(np.uint8)
 
         fig, ax = plt.subplots(num_rows, num_cols, figsize=figsize)
-        for i, image in enumerate(generated_samples):
-            row, col = i // num_cols, i % num_cols
-            if num_rows == 1:
-                ax[col].imshow(image)
-                ax[col].axis("off")
-            else:
-                ax[row, col].imshow(image)
-                ax[row, col].axis("off")
+        ax = ax.flatten()
+
+        for i, img in enumerate(generated):
+            ax[i].imshow(img)
+            ax[i].axis("off")
+
         plt.tight_layout()
         plt.show()
 
