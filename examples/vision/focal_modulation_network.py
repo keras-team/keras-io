@@ -78,7 +78,9 @@ Keras 3 allows this model to run on JAX, PyTorch, or TensorFlow. We use keras.op
 import os
 
 # Set backend before importing keras
-os.environ["KERAS_BACKEND"] = "tensorflow"  # Or "torch" or "tensorflow"
+os.environ["KERAS_BACKEND"] = "tensorflow"  # or "torch" or "jax"
+# Suppress TensorFlow C++ logging (XLA messages)
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 
 import numpy as np
 import keras
@@ -86,6 +88,16 @@ from keras import layers
 from keras import ops
 from matplotlib import pyplot as plt
 from random import randint
+import warnings
+import logging
+
+# Suppress warnings
+warnings.filterwarnings("ignore", category=UserWarning)
+warnings.filterwarnings("ignore", message=".*build.*method.*")
+warnings.filterwarnings("ignore", message=".*tf.function.*retracing.*")
+
+# Suppress TensorFlow logging
+logging.getLogger("tensorflow").setLevel(logging.ERROR)
 
 # Set seed for reproducibility using Keras 3 utility.
 keras.utils.set_random_seed(42)
@@ -757,31 +769,6 @@ def display_grid(test_images, gates, modulator):
 
 
 """
-### TrainMonitor
-"""
-
-# Fetch test batch for callback
-test_batch_images, _ = test_ds[0]
-
-
-class TrainMonitor(keras.callbacks.Callback):
-    def __init__(self, epoch_interval=10):
-        super().__init__()
-        self.epoch_interval = epoch_interval
-        self.upsampler = layers.UpSampling2D(size=(4, 4), interpolation="bilinear")
-
-    def on_epoch_end(self, epoch, logs=None):
-        if (epoch + 1) % self.epoch_interval == 0:
-            _ = self.model(test_batch_images, training=False)
-            layer = self.model.basic_layers[1].blocks[-1].modulation
-            display_grid(
-                test_batch_images,
-                self.upsampler(layer.gates),
-                self.upsampler(layer.modulator),
-            )
-
-
-"""
 ### Learning Rate scheduler
 """
 
@@ -837,7 +824,6 @@ history = model.fit(
     train_ds,
     validation_data=val_ds,
     epochs=EPOCHS,
-    callbacks=[TrainMonitor(epoch_interval=5)],
 )
 
 """

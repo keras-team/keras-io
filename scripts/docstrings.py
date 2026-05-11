@@ -116,9 +116,17 @@ class KerasDocumentationGenerator:
             if table is not None:
                 subblocks.append(table)
 
-        examples = self.api_to_example.get(element, None)
-        if examples:
-            subblocks.append(get_examples_block(element, examples))
+        # Extract and render links to examples using the API
+        apis = getattr(object_, "_api_export_path", [element])
+
+        all_examples = []
+        for api in apis:
+            for api_example in self.api_to_example.get(api, []):
+                if api_example not in all_examples:
+                    all_examples.append(api_example)
+
+        if all_examples:
+            subblocks.append(get_examples_block(element, all_examples))
 
         return "\n\n".join(subblocks) + "\n\n----\n\n"
 
@@ -158,8 +166,7 @@ def make_source_link(cls, project_url):
     module_version = copy.copy(importlib.import_module(base_module).__version__)
     if ".dev" in module_version:
         module_version = project_url_version[: module_version.find(".dev")]
-    # TODO: Remove keras-rs condition, this is just a temporary thing.
-    if "keras-rs" not in project_url and module_version != project_url_version:
+    if module_version != project_url_version:
         raise RuntimeError(
             f"For project {base_module}, URL {project_url} "
             f"has version number {project_url_version} which does not match the "
