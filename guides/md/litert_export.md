@@ -138,6 +138,52 @@ model.export(
 print("Exported Float16 quantized model")
 ```
 
+### Advanced quantization with ai-edge-quantizer (recommended for LLMs)
+
+For large language models like Gemma, the built-in TFLite quantization works but
+may leave accuracy on the table. The **AI Edge Quantizer** provides
+LLM-aware recipes that preserve quality far better for generative models.
+
+Install it:
+
+```shell
+pip install -q ai-edge-quantizer
+```
+
+Run recipe-based quantization on the exported `.tflite` file:
+
+
+```python
+from ai_edge_quantizer import quantizer
+from ai_edge_quantizer.utils import tfl_interpreter_utils
+
+# Load the exported model
+qt = quantizer.Quantizer("gemma3_270m.tflite")
+
+# Use the default recipe optimized for generative (LLM) models
+qt.load_full_integer_recipe(
+    # Smaller granularity = better accuracy, slightly larger file
+    granularity=quantizer.Quantizer.Granularity.CHANNELWISE,
+    # Symmetric quantization is usually best for transformers
+    symmetric=True,
+)
+
+# Calibrate with a few representative samples
+# (In production, use real prompts from your validation set)
+def calibration_data():
+    for _ in range(10):
+        yield [np.random.randint(0, 256000, size=(1, 32)).astype(np.int32)]
+
+qt.quantize(calibration_data(), "gemma3_270m_aieq.tflite")
+
+print("Exported ai-edge-quantizer model")
+```
+
+The AI Edge Quantizer typically achieves:
+- **~4× size reduction** (similar to dynamic range INT8)
+- **Better perplexity / BLEU scores** than plain TFLite quantization on generative tasks
+- **Uniform INT8 weights + INT8/INT16 activations** tuned for transformer attention patterns
+
 ## Compare file sizes
 
 
