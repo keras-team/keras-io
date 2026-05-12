@@ -2,7 +2,7 @@
 
 **Author:** [Sayak Paul](https://twitter.com/RisingSayak)<br>
 **Date created:** 2021/06/19<br>
-**Last modified:** 2026/03/31<br>
+**Last modified:** 2026/05/12<br>
 **Description:** Unifying semi-supervised learning and unsupervised domain adaptation with AdaMatch.
 
 
@@ -422,6 +422,7 @@ def wide_basic(x, n_input_plane, n_output_plane, stride):
     #   corresponds to whether we are using the first block in
     #   each
     #   group; see `block_series()`).
+
     if n_input_plane != n_output_plane:
 
         x = layers.BatchNormalization()(x)
@@ -438,7 +439,13 @@ def wide_basic(x, n_input_plane, n_output_plane, stride):
         )(x)
 
         convs = layers.Conv2D(
-            n_output_plane, (3, 3), strides=stride, padding="same", use_bias=False
+            n_output_plane,
+            (3, 3),
+            strides=stride,
+            padding="same",
+            use_bias=False,
+            kernel_initializer=INIT,
+            kernel_regularizer=keras.regularizers.l2(WEIGHT_DECAY),
         )(x)
 
     else:
@@ -449,14 +456,26 @@ def wide_basic(x, n_input_plane, n_output_plane, stride):
         convs = layers.Activation("relu")(convs)
 
         convs = layers.Conv2D(
-            n_output_plane, (3, 3), strides=stride, padding="same", use_bias=False
+            n_output_plane,
+            (3, 3),
+            strides=stride,
+            padding="same",
+            use_bias=False,
+            kernel_initializer=INIT,
+            kernel_regularizer=keras.regularizers.l2(WEIGHT_DECAY),
         )(convs)
 
     convs = layers.BatchNormalization()(convs)
     convs = layers.Activation("relu")(convs)
 
     convs = layers.Conv2D(
-        n_output_plane, (3, 3), strides=1, padding="same", use_bias=False
+        n_output_plane,
+        (3, 3),
+        strides=1,
+        padding="same",
+        use_bias=False,
+        kernel_initializer=INIT,
+        kernel_regularizer=keras.regularizers.l2(WEIGHT_DECAY),
     )(convs)
 
     return layers.Add()([convs, shortcut])
@@ -468,7 +487,15 @@ def get_network():
     inputs = keras.Input(shape=(32, 32, 3))
 
     x = layers.Rescaling(1.0 / 255)(inputs)
-    x = layers.Conv2D(stages[0], (3, 3), padding="same", use_bias=False)(x)
+
+    x = layers.Conv2D(
+        stages[0],
+        (3, 3),
+        padding="same",
+        use_bias=False,
+        kernel_initializer=INIT,
+        kernel_regularizer=keras.regularizers.l2(WEIGHT_DECAY),
+    )(x)
 
     for i in range(1, 4):
         x = wide_basic(x, stages[i - 1], stages[i], stride=(1 if i == 1 else 2))
@@ -479,9 +506,11 @@ def get_network():
     x = layers.Activation("relu")(x)
     x = layers.GlobalAveragePooling2D()(x)
 
-    outputs = layers.Dense(10, kernel_regularizer=keras.regularizers.l2(WEIGHT_DECAY))(
-        x
-    )
+    outputs = layers.Dense(
+        10,
+        kernel_regularizer=keras.regularizers.l2(WEIGHT_DECAY),
+    )(x)
+
     return keras.Model(inputs, outputs)
 
 ```
@@ -529,13 +558,13 @@ adamatch_trainer.fit(train_ds, epochs=EPOCHS)
 ```
 Epoch 1/2
 
-937/937 ━━━━━━━━━━━━━━━━━━━━ 9596s 10s/step - loss: 34381.3828
+937/937 ━━━━━━━━━━━━━━━━━━━━ 4385s 5s/step - loss: 2604439552.0000
 
 Epoch 2/2
 
-937/937 ━━━━━━━━━━━━━━━━━━━━ 164011s 175s/step - loss: 1.2864
+937/937 ━━━━━━━━━━━━━━━━━━━━ 4841s 5s/step - loss: 1.0786
 
-<keras.src.callbacks.history.History at 0x30abfccd0>
+<keras.src.callbacks.history.History at 0x31fd8d550>
 ```
 </div>
 
@@ -567,7 +596,7 @@ print(f"SVHN Accuracy: {accuracy *100:.2f}%")
 
 <div class="k-default-codeblock">
 ```
-SVHN Accuracy: 19.41%
+SVHN Accuracy: 26.13%
 ```
 </div>
 
@@ -604,7 +633,7 @@ print(f"Accuracy on source test set: {accuracy * 100:.2f}%")
 
 <div class="k-default-codeblock">
 ```
-Accuracy on source test set: 95.51%
+Accuracy on source test set: 96.20%
 ```
 </div>
 
