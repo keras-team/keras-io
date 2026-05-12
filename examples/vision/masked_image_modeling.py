@@ -2,9 +2,10 @@
 Title: Masked image modeling with Autoencoders
 Author: [Aritra Roy Gosthipaty](https://twitter.com/arig23498), [Sayak Paul](https://twitter.com/RisingSayak)
 Date created: 2021/12/20
-Last modified: 2021/12/21
+Last modified: 2026/02/13
 Description: Implementing Masked Autoencoders for self-supervised pretraining.
 Accelerator: GPU
+Converted to Keras 3 by: [Maitry Sinha](https://github.com/maitry63)
 """
 
 """
@@ -45,17 +46,15 @@ As a reference, we reuse some of the code presented in
 """
 ## Imports
 """
+
 import os
 
 os.environ["KERAS_BACKEND"] = "tensorflow"
 
-import tensorflow as tf
 import keras
-from keras import layers
-
 import matplotlib.pyplot as plt
 import numpy as np
-import random
+from keras import layers, ops
 
 # Setting seeds for reproducibility.
 SEED = 42
@@ -72,8 +71,9 @@ heavily inspired by the design guidelines laid out by the authors in
 
 # DATA
 BUFFER_SIZE = 1024
-BATCH_SIZE = 256
-AUTO = tf.data.AUTOTUNE
+BATCH_SIZE = 32
+# BATCH_SIZE = 256
+
 INPUT_SHAPE = (32, 32, 3)
 NUM_CLASSES = 10
 
@@ -110,7 +110,7 @@ DEC_TRANSFORMER_UNITS = [
 ]
 
 """
-## Load and prepare the CIFAR-10 dataset
+## Load the Cifar-10 dataset
 """
 
 (x_train, y_train), (x_test, y_test) = keras.datasets.cifar10.load_data()
@@ -122,14 +122,34 @@ print(f"Training samples: {len(x_train)}")
 print(f"Validation samples: {len(x_val)}")
 print(f"Testing samples: {len(x_test)}")
 
-train_ds = tf.data.Dataset.from_tensor_slices(x_train)
-train_ds = train_ds.shuffle(BUFFER_SIZE).batch(BATCH_SIZE).prefetch(AUTO)
+"""
+## PyDataset Implementation
+"""
 
-val_ds = tf.data.Dataset.from_tensor_slices(x_val)
-val_ds = val_ds.batch(BATCH_SIZE).prefetch(AUTO)
 
-test_ds = tf.data.Dataset.from_tensor_slices(x_test)
-test_ds = test_ds.batch(BATCH_SIZE).prefetch(AUTO)
+class MaskedImageDataset(keras.utils.PyDataset):
+    def __init__(self, x, batch_size, shuffle=False, **kwargs):
+        super().__init__(**kwargs)
+        self.x = x
+        self.batch_size = batch_size
+        self.shuffle = shuffle
+        self.indices = np.arange(len(self.x))
+        if self.shuffle:
+            np.random.shuffle(self.indices)
+
+    def __len__(self):
+        return int(np.ceil(len(self.x) / self.batch_size))
+
+    def __getitem__(self, idx):
+        start, end = idx * self.batch_size, (idx + 1) * self.batch_size
+        batch_indices = self.indices[start:end]
+        batch_x = ops.cast(self.x[batch_indices], "float32")
+        return (batch_x,)
+
+    def on_epoch_end(self):
+        if self.shuffle:
+            np.random.shuffle(self.indices)
+
 
 """
 ## Data augmentation
@@ -189,18 +209,13 @@ class Patches(layers.Layer):
         super().__init__(**kwargs)
         self.patch_size = patch_size
 
-        # Assuming the image has three channels each patch would be
-        # of size (patch_size, patch_size, 3).
+        # Reshape the patches to (batch, num_patches, patch_area)
         self.resize = layers.Reshape((-1, patch_size * patch_size * 3))
 
     def call(self, images):
         # Create patches from the input images
-        patches = tf.image.extract_patches(
-            images=images,
-            sizes=[1, self.patch_size, self.patch_size, 1],
-            strides=[1, self.patch_size, self.patch_size, 1],
-            rates=[1, 1, 1, 1],
-            padding="VALID",
+        patches = ops.image.extract_patches(
+            images, size=self.patch_size, strides=self.patch_size, padding="valid"
         )
 
         # Reshape the patches to (batch, num_patches, patch_area) and return it.
@@ -215,20 +230,23 @@ class Patches(layers.Layer):
         print(f"Index selected: {idx}.")
 
         plt.figure(figsize=(4, 4))
-        plt.imshow(keras.utils.array_to_img(images[idx]))
+
+        # Convert to numpy/unit8 for plotting
+        img_to_show = keras.utils.array_to_img(images[idx])
+        plt.imshow(img_to_show)
+        plt.title("Original")
         plt.axis("off")
         plt.show()
 
         n = int(np.sqrt(patches.shape[1]))
         plt.figure(figsize=(4, 4))
         for i, patch in enumerate(patches[idx]):
-            ax = plt.subplot(n, n, i + 1)
-            patch_img = tf.reshape(patch, (self.patch_size, self.patch_size, 3))
-            plt.imshow(keras.utils.img_to_array(patch_img))
+            plt.subplot(n, n, i + 1)
+            patch_img = ops.reshape(patch, (self.patch_size, self.patch_size, 3))
+            plt.imshow(ops.convert_to_numpy(patch_img))
             plt.axis("off")
         plt.show()
 
-        # Return the index chosen to validate it outside the method.
         return idx
 
     # taken from https://stackoverflow.com/a/58082878/10319735
@@ -238,40 +256,12 @@ class Patches(layers.Layer):
         # monitor callback.
         num_patches = patch.shape[0]
         n = int(np.sqrt(num_patches))
-        patch = tf.reshape(patch, (num_patches, self.patch_size, self.patch_size, 3))
-        rows = tf.split(patch, n, axis=0)
-        rows = [tf.concat(tf.unstack(x), axis=1) for x in rows]
-        reconstructed = tf.concat(rows, axis=0)
+        patch = ops.reshape(patch, (num_patches, self.patch_size, self.patch_size, 3))
+        rows = ops.split(patch, n, axis=0)
+        rows = [ops.concatenate(ops.unstack(x), axis=1) for x in rows]
+        reconstructed = ops.concatenate(rows, axis=0)
         return reconstructed
 
-
-"""
-Let's visualize the image patches.
-"""
-
-# Get a batch of images.
-image_batch = next(iter(train_ds))
-
-# Augment the images.
-augmentation_model = get_train_augmentation_model()
-augmented_images = augmentation_model(image_batch)
-
-# Define the patch layer.
-patch_layer = Patches()
-
-# Get the patches from the batched images.
-patches = patch_layer(images=augmented_images)
-
-# Now pass the images and the corresponding patches
-# to the `show_patched_image` method.
-random_index = patch_layer.show_patched_image(images=augmented_images, patches=patches)
-
-# Chose the same chose image and try reconstructing the patches
-# into the original image.
-image = patch_layer.reconstruct_from_patch(patches[random_index])
-plt.imshow(image)
-plt.axis("off")
-plt.show()
 
 """
 ## Patch encoding with masking
@@ -304,19 +294,21 @@ class PatchEncoder(layers.Layer):
         **kwargs,
     ):
         super().__init__(**kwargs)
-        self.patch_size = patch_size
-        self.projection_dim = projection_dim
-        self.mask_proportion = mask_proportion
-        self.downstream = downstream
+        self.patch_size, self.projection_dim = patch_size, projection_dim
+        self.mask_proportion, self.downstream = mask_proportion, downstream
+
+        mask_token_shape = (1, patch_size * patch_size * 3)
 
         # This is a trainable mask token initialized randomly from a normal
         # distribution.
-        self.mask_token = tf.Variable(
-            tf.random.normal([1, patch_size * patch_size * 3]), trainable=True
+        self.mask_token = keras.Variable(
+            keras.random.normal(mask_token_shape),
+            trainable=True,
+            name="mask_token",
         )
 
     def build(self, input_shape):
-        _, self.num_patches, self.patch_area = input_shape
+        self.num_patches = input_shape[1] if input_shape[1] is not None else NUM_PATCHES
 
         # Create the projection layer for the patches.
         self.projection = layers.Dense(units=self.projection_dim)
@@ -330,11 +322,11 @@ class PatchEncoder(layers.Layer):
         self.num_mask = int(self.mask_proportion * self.num_patches)
 
     def call(self, patches):
+        batch_size = ops.shape(patches)[0]
         # Get the positional embeddings.
-        batch_size = tf.shape(patches)[0]
-        positions = tf.range(start=0, limit=self.num_patches, delta=1)
-        pos_embeddings = self.position_embedding(positions[tf.newaxis, ...])
-        pos_embeddings = tf.tile(
+        positions = ops.arange(start=0, stop=self.num_patches, step=1)
+        pos_embeddings = self.position_embedding(positions[None, ...])
+        pos_embeddings = ops.tile(
             pos_embeddings, [batch_size, 1, 1]
         )  # (B, num_patches, projection_dim)
 
@@ -345,46 +337,46 @@ class PatchEncoder(layers.Layer):
 
         if self.downstream:
             return patch_embeddings
-        else:
-            mask_indices, unmask_indices = self.get_random_indices(batch_size)
-            # The encoder input is the unmasked patch embeddings. Here we gather
-            # all the patches that should be unmasked.
-            unmasked_embeddings = tf.gather(
-                patch_embeddings, unmask_indices, axis=1, batch_dims=1
-            )  # (B, unmask_numbers, projection_dim)
 
-            # Get the unmasked and masked position embeddings. We will need them
-            # for the decoder.
-            unmasked_positions = tf.gather(
-                pos_embeddings, unmask_indices, axis=1, batch_dims=1
-            )  # (B, unmask_numbers, projection_dim)
-            masked_positions = tf.gather(
-                pos_embeddings, mask_indices, axis=1, batch_dims=1
-            )  # (B, mask_numbers, projection_dim)
+        mask_indices, unmask_indices = self.get_random_indices(batch_size)
+        u_idx, m_idx = unmask_indices[..., None], mask_indices[..., None]
+        # The encoder input is the unmasked patch embeddings. Here we gather
+        # all the patches that should be unmasked.
+        unmasked_embeddings = ops.take_along_axis(
+            patch_embeddings, u_idx, axis=1
+        )  # (B, unmask_numbers, projection_dim)
 
-            # Repeat the mask token number of mask times.
-            # Mask tokens replace the masks of the image.
-            mask_tokens = tf.repeat(self.mask_token, repeats=self.num_mask, axis=0)
-            mask_tokens = tf.repeat(
-                mask_tokens[tf.newaxis, ...], repeats=batch_size, axis=0
-            )
+        # Get the unmasked and masked position embeddings. We will need them
+        # for the decoder.
+        unmasked_positions = ops.take_along_axis(
+            pos_embeddings, u_idx, axis=1
+        )  # (B, unmask_numbers, projection_dim)
+        masked_positions = ops.take_along_axis(
+            pos_embeddings, m_idx, axis=1
+        )  # (B, mask_numbers, projection_dim)
 
-            # Get the masked embeddings for the tokens.
-            masked_embeddings = self.projection(mask_tokens) + masked_positions
-            return (
-                unmasked_embeddings,  # Input to the encoder.
-                masked_embeddings,  # First part of input to the decoder.
-                unmasked_positions,  # Added to the encoder outputs.
-                mask_indices,  # The indices that were masked.
-                unmask_indices,  # The indices that were unmaksed.
-            )
+        # Repeat the mask token number of mask times.
+        # Mask tokens replace the masks of the image.
+        mask_tokens = ops.repeat(self.mask_token, repeats=self.num_mask, axis=0)
+        mask_tokens = ops.repeat(mask_tokens[None, ...], repeats=batch_size, axis=0)
+
+        # Get the masked embeddings for the tokens.
+        masked_embeddings = self.projection(mask_tokens) + masked_positions
+        return (
+            unmasked_embeddings,  # Input to the encoder.
+            masked_embeddings,  # First part of input to the decoder.
+            unmasked_positions,  # Added to the encoder outputs.
+            mask_indices,  # The indices that were masked.
+            unmask_indices,  # The indices that were unmaksed.
+        )
 
     def get_random_indices(self, batch_size):
         # Create random indices from a uniform distribution and then split
         # it into mask and unmask indices.
-        rand_indices = tf.argsort(
-            tf.random.uniform(shape=(batch_size, self.num_patches)), axis=-1
+        probs = keras.random.uniform(
+            shape=(batch_size, self.num_patches),
         )
+        rand_indices = ops.argsort(probs, axis=-1)
         mask_indices = rand_indices[:, : self.num_mask]
         unmask_indices = rand_indices[:, self.num_mask :]
         return mask_indices, unmask_indices
@@ -405,12 +397,50 @@ class PatchEncoder(layers.Layer):
         return new_patch, idx
 
 
+patch_encoder = PatchEncoder(
+    patch_size=PATCH_SIZE,
+    projection_dim=ENC_PROJECTION_DIM,
+    mask_proportion=MASK_PROPORTION,
+)
+
+"""
+### Prepare the Dataset
+"""
+train_ds = MaskedImageDataset(x_train, batch_size=BATCH_SIZE, shuffle=True)
+val_ds = MaskedImageDataset(x_val, batch_size=BATCH_SIZE)
+test_ds = MaskedImageDataset(x_test, batch_size=BATCH_SIZE)
+
+"""
+### Let's visualize the image patches.
+"""
+
+# Get a batch of images.
+image_data = x_train[:BATCH_SIZE]  # Raw images (float or uint8)
+
+# Augment the images
+augmentation_model = get_train_augmentation_model()
+augmented_images = augmentation_model(image_data)
+
+# Define the patch layer
+patch_layer = Patches()
+
+# Get the patches from the batched images.
+patches = patch_layer(images=augmented_images)
+
+# Now pass the images and the corresponding patches
+# to the `show_patched_image` method.
+random_index = patch_layer.show_patched_image(images=augmented_images, patches=patches)
+
+# Chose the same chose image and try reconstructing the patches
+# into the original image.
+image = patch_layer.reconstruct_from_patch(patches[random_index])
+plt.imshow(image)
+plt.axis("off")
+plt.show()
+
 """
 Let's see the masking process in action on a sample image.
 """
-
-# Create the patch encoder layer.
-patch_encoder = PatchEncoder()
 
 # Get the embeddings and positions.
 (
@@ -447,7 +477,7 @@ This serves as the fully connected feed forward network of the transformer archi
 
 def mlp(x, dropout_rate, hidden_units):
     for units in hidden_units:
-        x = layers.Dense(units, activation=tf.nn.gelu)(x)
+        x = layers.Dense(units, activation="gelu")(x)
         x = layers.Dropout(dropout_rate)(x)
     return x
 
@@ -513,13 +543,10 @@ def create_decoder(
         attention_output = layers.MultiHeadAttention(
             num_heads=num_heads, key_dim=DEC_PROJECTION_DIM, dropout=0.1
         )(x1, x1)
-
-        # Skip connection 1.
+        # Skip connection .
         x2 = layers.Add()([attention_output, x])
 
-        # Layer normalization 2.
         x3 = layers.LayerNormalization(epsilon=LAYER_NORM_EPS)(x2)
-
         # MLP.
         x3 = mlp(x3, hidden_units=DEC_TRANSFORMER_UNITS, dropout_rate=0.1)
 
@@ -537,7 +564,7 @@ def create_decoder(
 """
 ## MAE trainer
 
-This is the trainer module. We wrap the encoder and decoder inside of a `tf.keras.Model`
+This is the trainer module. We wrap the encoder and decoder inside of a `keras.Model`
 subclass. This allows us to customize what happens in the `model.fit()` loop.
 """
 
@@ -561,12 +588,13 @@ class MaskedAutoencoder(keras.Model):
         self.encoder = encoder
         self.decoder = decoder
 
-    def calculate_loss(self, images, test=False):
+    def calculate_loss(self, images, training=True):
         # Augment the input images.
-        if test:
-            augmented_images = self.test_augmentation_model(images)
-        else:
-            augmented_images = self.train_augmentation_model(images)
+        augmented_images = (
+            self.train_augmentation_model(images)
+            if training
+            else self.test_augmentation_model(images)
+        )
 
         # Patch the augmented images.
         patches = self.patch_layer(augmented_images)
@@ -580,59 +608,66 @@ class MaskedAutoencoder(keras.Model):
             unmask_indices,
         ) = self.patch_encoder(patches)
 
-        # Pass the unmaksed patche to the encoder.
+        # Pass the unmasked patches to the encoder.
         encoder_outputs = self.encoder(unmasked_embeddings)
 
         # Create the decoder inputs.
         encoder_outputs = encoder_outputs + unmasked_positions
-        decoder_inputs = tf.concat([encoder_outputs, masked_embeddings], axis=1)
+        decoder_inputs = ops.concatenate([encoder_outputs, masked_embeddings], axis=1)
 
         # Decode the inputs.
         decoder_outputs = self.decoder(decoder_inputs)
         decoder_patches = self.patch_layer(decoder_outputs)
 
-        loss_patch = tf.gather(patches, mask_indices, axis=1, batch_dims=1)
-        loss_output = tf.gather(decoder_patches, mask_indices, axis=1, batch_dims=1)
+        # Extract only the masked patches using ops.take_along_axis
+        m_idx = mask_indices[..., None]
+        loss_patch = ops.take_along_axis(patches, m_idx, axis=1)
+        loss_output = ops.take_along_axis(decoder_patches, m_idx, axis=1)
 
         # Compute the total loss.
-        total_loss = self.compute_loss(y=loss_patch, y_pred=loss_output)
+        total_loss = ops.mean(ops.square(loss_patch - loss_output))
 
         return total_loss, loss_patch, loss_output
 
-    def train_step(self, images):
-        with tf.GradientTape() as tape:
-            total_loss, loss_patch, loss_output = self.calculate_loss(images)
+    def call(self, images, training=False):
+        # A call method to build/trace the model
+        _, _, loss_output = self.calculate_loss(images, training=training)
+        return loss_output
 
-        # Apply gradients.
-        train_vars = [
-            self.train_augmentation_model.trainable_variables,
-            self.patch_layer.trainable_variables,
-            self.patch_encoder.trainable_variables,
-            self.encoder.trainable_variables,
-            self.decoder.trainable_variables,
-        ]
-        grads = tape.gradient(total_loss, train_vars)
-        tv_list = []
-        for grad, var in zip(grads, train_vars):
-            for g, v in zip(grad, var):
-                tv_list.append((g, v))
-        self.optimizer.apply_gradients(tv_list)
+    def train_step(self, data):
+        images = data[0] if isinstance(data, (list, tuple)) else data
+        total_loss, loss_patch, loss_output = self.calculate_loss(images, training=True)
 
-        # Report progress.
+        self.add_loss(total_loss)
         results = {}
         for metric in self.metrics:
             metric.update_state(loss_patch, loss_output)
             results[metric.name] = metric.result()
+
+        if "loss" not in results:
+            results["loss"] = total_loss
+
         return results
 
-    def test_step(self, images):
-        total_loss, loss_patch, loss_output = self.calculate_loss(images, test=True)
+    def test_step(self, data):
+        if isinstance(data, (list, tuple)):
+            images = data[0]
+        else:
+            images = data
+
+        total_loss, loss_patch, loss_output = self.calculate_loss(
+            images, training=False
+        )
 
         # Update the trackers.
         results = {}
         for metric in self.metrics:
             metric.update_state(loss_patch, loss_output)
             results[metric.name] = metric.result()
+
+        if "loss" not in results:
+            results["loss"] = total_loss
+
         return results
 
 
@@ -643,7 +678,12 @@ class MaskedAutoencoder(keras.Model):
 train_augmentation_model = get_train_augmentation_model()
 test_augmentation_model = get_test_augmentation_model()
 patch_layer = Patches()
-patch_encoder = PatchEncoder()
+
+patch_encoder = PatchEncoder(
+    patch_size=PATCH_SIZE,
+    projection_dim=ENC_PROJECTION_DIM,
+    mask_proportion=MASK_PROPORTION,
+)
 encoder = create_encoder()
 decoder = create_decoder()
 
@@ -656,6 +696,9 @@ mae_model = MaskedAutoencoder(
     decoder=decoder,
 )
 
+# Taking a batch of test inputs to measure model's progress.
+test_images = next(iter(test_ds))
+
 """
 ## Training callbacks
 """
@@ -663,9 +706,6 @@ mae_model = MaskedAutoencoder(
 """
 ### Visualization callback
 """
-
-# Taking a batch of test inputs to measure model's progress.
-test_images = next(iter(test_ds))
 
 
 class TrainMonitor(keras.callbacks.Callback):
@@ -685,7 +725,7 @@ class TrainMonitor(keras.callbacks.Callback):
             ) = self.model.patch_encoder(test_patches)
             test_encoder_outputs = self.model.encoder(test_unmasked_embeddings)
             test_encoder_outputs = test_encoder_outputs + test_unmasked_positions
-            test_decoder_inputs = tf.concat(
+            test_decoder_inputs = ops.concatenate(
                 [test_encoder_outputs, test_masked_embeddings], axis=1
             )
             test_decoder_outputs = self.model.decoder(test_decoder_inputs)
@@ -733,35 +773,39 @@ class WarmUpCosine(keras.optimizers.schedules.LearningRateSchedule):
         self.total_steps = total_steps
         self.warmup_learning_rate = warmup_learning_rate
         self.warmup_steps = warmup_steps
-        self.pi = tf.constant(np.pi)
+
+        self.pi = ops.convert_to_tensor(np.pi, dtype="float32")
 
     def __call__(self, step):
+        step = ops.cast(step, dtype="float32")
         if self.total_steps < self.warmup_steps:
             raise ValueError("Total_steps must be larger or equal to warmup_steps.")
 
-        cos_annealed_lr = tf.cos(
+        # proper Warmup Rate
+        cos_annealed_lr = ops.cos(
             self.pi
-            * (tf.cast(step, tf.float32) - self.warmup_steps)
+            * (step - self.warmup_steps)
             / float(self.total_steps - self.warmup_steps)
         )
+
         learning_rate = 0.5 * self.learning_rate_base * (1 + cos_annealed_lr)
 
         if self.warmup_steps > 0:
             if self.learning_rate_base < self.warmup_learning_rate:
                 raise ValueError(
-                    "Learning_rate_base must be larger or equal to "
-                    "warmup_learning_rate."
+                    "Learning_rate_base must be larger or equal to warmup_learning_rate."
                 )
             slope = (
                 self.learning_rate_base - self.warmup_learning_rate
             ) / self.warmup_steps
-            warmup_rate = slope * tf.cast(step, tf.float32) + self.warmup_learning_rate
-            learning_rate = tf.where(
+
+            warmup_rate = slope * step + self.warmup_learning_rate
+
+            learning_rate = ops.where(
                 step < self.warmup_steps, warmup_rate, learning_rate
             )
-        return tf.where(
-            step > self.total_steps, 0.0, learning_rate, name="learning_rate"
-        )
+
+        return ops.where(step > self.total_steps, 0.0, learning_rate)
 
 
 total_steps = int((len(x_train) / BATCH_SIZE) * EPOCHS)
@@ -787,7 +831,7 @@ train_callbacks = [TrainMonitor(epoch_interval=5)]
 ## Model compilation and training
 """
 
-optimizer = keras.optimizers.AdamW(
+optimizer = keras.optimizers.Adam(
     learning_rate=scheduled_lrs, weight_decay=WEIGHT_DECAY
 )
 
@@ -803,9 +847,8 @@ history = mae_model.fit(
 )
 
 # Measure its performance.
-loss, mae = mae_model.evaluate(test_ds)
-print(f"Loss: {loss:.2f}")
-print(f"MAE: {mae:.2f}")
+metrics = mae_model.evaluate(test_ds, return_dict=True)
+print(f"Loss: {metrics['loss']:.2f}")
 
 """
 ## Evaluation with linear probing
@@ -859,30 +902,62 @@ token during the downstream tasks.
 """
 
 
-def prepare_data(images, labels, is_train=True):
-    if is_train:
-        augmentation_model = train_augmentation_model
-    else:
-        augmentation_model = test_augmentation_model
+class ClassificationDataset(keras.utils.PyDataset):
+    def __init__(
+        self, x, y, batch_size, augmentation_model=None, shuffle=False, **kwargs
+    ):
+        super().__init__(**kwargs)
+        self.x = x
+        self.y = y
+        self.batch_size = batch_size
+        self.augmentation_model = augmentation_model
+        self.shuffle = shuffle
+        self.indices = np.arange(len(self.x))
+        if self.shuffle:
+            self.on_epoch_end()
 
-    dataset = tf.data.Dataset.from_tensor_slices((images, labels))
-    if is_train:
-        dataset = dataset.shuffle(BUFFER_SIZE)
+    def __len__(self):
+        return int(np.ceil(len(self.x) / self.batch_size))
 
-    dataset = dataset.batch(BATCH_SIZE).map(
-        lambda x, y: (augmentation_model(x), y), num_parallel_calls=AUTO
+    def on_epoch_end(self):
+        """
+        Shuffle indices at the end of every epoch.
+        """
+        if self.shuffle:
+            np.random.shuffle(self.indices)
+
+    def __getitem__(self, idx):
+        start, end = idx * self.batch_size, (idx + 1) * self.batch_size
+        batch_indices = self.indices[start:end]
+
+        batch_x = ops.cast(self.x[batch_indices], "float32")
+        batch_y = ops.cast(self.y[batch_indices], "int32")
+
+        if self.augmentation_model is not None:
+            batch_x = self.augmentation_model(batch_x, training=self.shuffle)
+
+        return batch_x, batch_y
+
+
+def prepare_data(images, labels, batch_size, is_train=True):
+    aug_model = train_augmentation_model if is_train else test_augmentation_model
+
+    return ClassificationDataset(
+        x=images,
+        y=labels,
+        batch_size=batch_size,
+        augmentation_model=aug_model,
+        shuffle=is_train,
     )
-    return dataset.prefetch(AUTO)
 
 
-train_ds = prepare_data(x_train, y_train)
-val_ds = prepare_data(x_train, y_train, is_train=False)
-test_ds = prepare_data(x_test, y_test, is_train=False)
+train_ds = prepare_data(x_train, y_train, BATCH_SIZE, is_train=True)
+val_ds = prepare_data(x_val, y_val, BATCH_SIZE, is_train=False)
+test_ds = prepare_data(x_test, y_test, BATCH_SIZE, is_train=False)
 
 """
 ### Perform linear probing
 """
-
 linear_probe_epochs = 50
 linear_prob_lr = 0.1
 warm_epoch_percentage = 0.1

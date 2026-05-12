@@ -5,6 +5,7 @@ Date created: 2021/05/30
 Last modified: 2021/05/30
 Description: Implementing a graph neural network model for predicting the topic of a paper given its citations.
 Accelerator: GPU
+Converted to Keras 3 by: [LakshmiKalaKadali](https://github.com/LakshmiKalaKadali)
 """
 
 """
@@ -16,7 +17,7 @@ social and communication networks analysis, traffic prediction, and fraud detect
 [Graph representation Learning](https://www.cs.mcgill.ca/~wlh/grl_book/)
 aims to build and train models for graph datasets to be used for a variety of ML tasks.
 
-This example demonstrate a simple implementation of a [Graph Neural Network](https://arxiv.org/pdf/1901.00596.pdf)
+This example demonstrate a simple implementation of a [Graph Neural Network](https://arxiv.org/abs/1901.00596)
 (GNN) model. The model is used for a node prediction task on the [Cora dataset](https://relational.fit.cvut.cz/dataset/CORA)
 to predict the subject of a paper given its words and citations network.
 
@@ -32,31 +33,34 @@ libraries that provide rich GNN APIs, such as [Spectral](https://graphneural.net
 """
 
 import os
+
+# Choose backend: "jax", "torch", or "tensorflow"
+os.environ["KERAS_BACKEND"] = "tensorflow"
 import pandas as pd
 import numpy as np
 import networkx as nx
+import matplotlib
+
+# matplotlib.use("Agg")  # Use non-interactive backend
 import matplotlib.pyplot as plt
-import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras import layers
+import keras
+from keras import layers, ops
+
+keras.utils.set_random_seed(42)
+rng = np.random.default_rng(42)
 
 """
-## Prepare the Dataset
+## Prepare and Download the Dataset
 
 The Cora dataset consists of 2,708 scientific papers classified into one of seven classes.
 The citation network consists of 5,429 links. Each paper has a binary word vector of size
 1,433, indicating the presence of a corresponding word.
-
-### Download the dataset
-
 The dataset has two tap-separated files: `cora.cites` and `cora.content`.
 
 1. The `cora.cites` includes the citation records with two columns:
 `cited_paper_id` (target) and `citing_paper_id` (source).
 2. The `cora.content` includes the paper content records with 1,435 columns:
 `paper_id`, `subject`, and 1,433 binary features.
-
-Let's download the dataset.
 """
 
 zip_file = keras.utils.get_file(
@@ -64,11 +68,10 @@ zip_file = keras.utils.get_file(
     origin="https://linqs-data.soe.ucsc.edu/public/lbc/cora.tgz",
     extract=True,
 )
-data_dir = os.path.join(os.path.dirname(zip_file), "cora")
+data_dir = os.path.join(os.path.dirname(zip_file), "cora_extracted", "cora")
+
 """
 ### Process and visualize the dataset
-
-Then we load the citations data into a Pandas DataFrame.
 """
 
 citations = pd.read_csv(
@@ -79,12 +82,7 @@ citations = pd.read_csv(
 )
 print("Citations shape:", citations.shape)
 
-"""
-Now we display a sample of the `citations` DataFrame.
-The `target` column includes the paper ids cited by the paper ids in the `source` column.
-"""
-
-citations.sample(frac=1).head()
+citations.sample(frac=1).head()  # display a sample of the `citations` DataFrame
 
 """
 Now let's load the papers data into a Pandas DataFrame.
@@ -119,6 +117,7 @@ We convert the paper ids and the subjects into zero-based indices.
 
 class_values = sorted(papers["subject"].unique())
 class_idx = {name: id for id, name in enumerate(class_values)}
+num_classes = len(class_values)
 paper_idx = {name: idx for idx, name in enumerate(sorted(papers["paper_id"].unique()))}
 
 papers["paper_id"] = papers["paper_id"].apply(lambda name: paper_idx[name])
@@ -137,33 +136,51 @@ colors = papers["subject"].tolist()
 cora_graph = nx.from_pandas_edgelist(citations.sample(n=1500))
 subjects = list(papers[papers["paper_id"].isin(list(cora_graph.nodes))]["subject"])
 nx.draw_spring(cora_graph, node_size=15, node_color=subjects)
+plt.show()
 
 
 """
-### Split the dataset into stratified train and test sets
+### Split the dataset into stratified train, validation, and test sets
 """
 
-train_data, test_data = [], []
+train_ids, val_ids, test_ids = [], [], []
+for cls, group in papers.groupby("subject"):
+    ids = group["paper_id"].to_numpy().copy()
+    rng.shuffle(ids)
 
-for _, group_data in papers.groupby("subject"):
-    # Select around 50% of the dataset for training.
-    random_selection = np.random.rand(len(group_data.index)) <= 0.5
-    train_data.append(group_data[random_selection])
-    test_data.append(group_data[~random_selection])
+    n = len(ids)
+    n_train = int(0.50 * n)
+    n_val = int(0.15 * n)
 
-train_data = pd.concat(train_data).sample(frac=1)
-test_data = pd.concat(test_data).sample(frac=1)
+    train_ids.append(ids[:n_train])
+    val_ids.append(ids[n_train : n_train + n_val])
+    test_ids.append(ids[n_train + n_val :])
 
-print("Train data shape:", train_data.shape)
-print("Test data shape:", test_data.shape)
+train_indices = np.concatenate(train_ids).astype("int32")
+val_indices = np.concatenate(val_ids).astype("int32")
+test_indices = np.concatenate(test_ids).astype("int32")
+
+labels_by_id = papers.sort_values("paper_id")["subject"].to_numpy().astype("int32")
+train_labels = labels_by_id[train_indices]
+val_labels = labels_by_id[val_indices]
+test_labels = labels_by_id[test_indices]
+
+# Shuffle training nodes (good practice)
+perm = rng.permutation(len(train_indices))
+train_indices = train_indices[perm]
+train_labels = train_labels[perm]
+
+print("Train idx/labels:", train_indices.shape, train_labels.shape)
+print("Val   idx/labels:", val_indices.shape, val_labels.shape)
+print("Test  idx/labels:", test_indices.shape, test_labels.shape)
 
 """
 ## Implement Train and Evaluate Experiment
 """
 
 hidden_units = [32, 32]
-learning_rate = 0.01
 dropout_rate = 0.5
+learning_rate = 0.01
 num_epochs = 300
 batch_size = 256
 
@@ -172,27 +189,27 @@ This function compiles and trains an input model using the given training data.
 """
 
 
-def run_experiment(model, x_train, y_train):
-    # Compile the model.
+def run_experiment(model, x_train, y_train, x_val, y_val):
     model.compile(
-        optimizer=keras.optimizers.Adam(learning_rate),
+        optimizer=keras.optimizers.Adam(learning_rate=learning_rate),
         loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
         metrics=[keras.metrics.SparseCategoricalAccuracy(name="acc")],
     )
-    # Create an early stopping callback.
     early_stopping = keras.callbacks.EarlyStopping(
-        monitor="val_acc", patience=50, restore_best_weights=True
+        monitor="val_loss",
+        mode="min",
+        patience=50,
+        restore_best_weights=True,
     )
-    # Fit the model.
     history = model.fit(
         x=x_train,
         y=y_train,
+        validation_data=(x_val, y_val),
         epochs=num_epochs,
         batch_size=batch_size,
-        validation_split=0.15,
         callbacks=[early_stopping],
+        verbose=2,
     )
-
     return history
 
 
@@ -201,18 +218,20 @@ This function displays the loss and accuracy curves of the model during training
 """
 
 
-def display_learning_curves(history):
+def display_learning_curves(history, title=None):
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(15, 5))
+    if title:
+        fig.suptitle(title)
 
     ax1.plot(history.history["loss"])
     ax1.plot(history.history["val_loss"])
-    ax1.legend(["train", "test"], loc="upper right")
+    ax1.legend(["train", "val"], loc="upper right")
     ax1.set_xlabel("Epochs")
     ax1.set_ylabel("Loss")
 
     ax2.plot(history.history["acc"])
     ax2.plot(history.history["val_acc"])
-    ax2.legend(["train", "test"], loc="upper right")
+    ax2.legend(["train", "val"], loc="upper right")
     ax2.set_xlabel("Epochs")
     ax2.set_ylabel("Accuracy")
     plt.show()
@@ -226,14 +245,12 @@ We will use this module in the baseline and the GNN models.
 
 
 def create_ffn(hidden_units, dropout_rate, name=None):
-    fnn_layers = []
-
+    ffn_layers = []
     for units in hidden_units:
-        fnn_layers.append(layers.BatchNormalization())
-        fnn_layers.append(layers.Dropout(dropout_rate))
-        fnn_layers.append(layers.Dense(units, activation=tf.nn.gelu))
-
-    return keras.Sequential(fnn_layers, name=name)
+        ffn_layers.append(layers.BatchNormalization())
+        ffn_layers.append(layers.Dropout(dropout_rate))
+        ffn_layers.append(layers.Dense(units, activation="gelu"))
+    return keras.Sequential(ffn_layers, name=name)
 
 
 """
@@ -242,16 +259,19 @@ def create_ffn(hidden_units, dropout_rate, name=None):
 ### Prepare the data for the baseline model
 """
 
-feature_names = list(set(papers.columns) - {"paper_id", "subject"})
-num_features = len(feature_names)
-num_classes = len(class_idx)
+feature_names = [c for c in papers.columns if c not in ("paper_id", "subject")]
+node_features_np = (
+    papers.sort_values("paper_id")[feature_names].to_numpy().astype("float32")
+)
+edges_np = citations[["source", "target"]].to_numpy().T.astype("int32")
 
-# Create train and test features as a numpy array.
-x_train = train_data[feature_names].to_numpy()
-x_test = test_data[feature_names].to_numpy()
-# Create train and test targets as a numpy array.
-y_train = train_data["subject"]
-y_test = test_data["subject"]
+graph_info = (node_features_np, edges_np, None)
+
+# For the baseline, x is just the node feature row for each node index.
+x_train_base = node_features_np[train_indices]
+x_val_base = node_features_np[val_indices]
+x_test_base = node_features_np[test_indices]
+num_features = node_features_np.shape[1]
 
 """
 ### Implement a baseline classifier
@@ -263,39 +283,42 @@ roughly the same number of parameters as the GNN models to be built later.
 
 def create_baseline_model(hidden_units, num_classes, dropout_rate=0.2):
     inputs = layers.Input(shape=(num_features,), name="input_features")
-    x = create_ffn(hidden_units, dropout_rate, name=f"ffn_block1")(inputs)
+    x = create_ffn(hidden_units, dropout_rate, name="ffn_block1")(inputs)
     for block_idx in range(4):
-        # Create an FFN block.
         x1 = create_ffn(hidden_units, dropout_rate, name=f"ffn_block{block_idx + 2}")(x)
-        # Add skip connection.
         x = layers.Add(name=f"skip_connection{block_idx + 2}")([x, x1])
-    # Compute logits.
     logits = layers.Dense(num_classes, name="logits")(x)
-    # Create the model.
     return keras.Model(inputs=inputs, outputs=logits, name="baseline")
 
 
-baseline_model = create_baseline_model(hidden_units, num_classes, dropout_rate)
+baseline_model = create_baseline_model(hidden_units, num_classes, dropout_rate=0.2)
 baseline_model.summary()
 
 """
 ### Train the baseline classifier
 """
 
-history = run_experiment(baseline_model, x_train, y_train)
+baseline_history = run_experiment(
+    baseline_model,
+    x_train_base,
+    train_labels,
+    x_val_base,
+    val_labels,
+)
 
 """
 Let's plot the learning curves.
 """
 
-display_learning_curves(history)
+display_learning_curves(baseline_history, title="Baseline")
 
 """
 Now we evaluate the baseline model on the test data split.
 """
 
-_, test_accuracy = baseline_model.evaluate(x=x_test, y=y_test, verbose=0)
+_, test_accuracy = baseline_model.evaluate(x=x_test_base, y=test_labels, verbose=0)
 print(f"Test accuracy: {round(test_accuracy * 100, 2)}%")
+
 
 """
 ### Examine the baseline model predictions
@@ -306,7 +329,7 @@ the word presence probabilities.
 
 
 def generate_random_instances(num_instances):
-    token_probability = x_train.mean(axis=0)
+    token_probability = x_train_base.mean(axis=0)
     instances = []
     for _ in range(num_instances):
         probabilities = np.random.uniform(size=len(token_probability))
@@ -329,7 +352,9 @@ Now we show the baseline model predictions given these randomly generated instan
 
 new_instances = generate_random_instances(num_classes)
 logits = baseline_model.predict(new_instances)
-probabilities = keras.activations.softmax(tf.convert_to_tensor(logits)).numpy()
+probabilities = ops.convert_to_numpy(
+    keras.activations.softmax(ops.convert_to_tensor(logits))
+)
 display_class_probabilities(probabilities)
 
 """
@@ -358,10 +383,10 @@ the relationships between nodes in the graph. In this example, there are no weig
 # Create an edges array (sparse adjacency matrix) of shape [2, num_edges].
 edges = citations[["source", "target"]].to_numpy().T
 # Create an edge weights array of ones.
-edge_weights = tf.ones(shape=edges.shape[1])
+edge_weights = ops.ones(shape=edges.shape[1])
 # Create a node features array of shape [num_nodes, num_features].
-node_features = tf.cast(
-    papers.sort_values("paper_id")[feature_names].to_numpy(), dtype=tf.dtypes.float32
+node_features = ops.cast(
+    papers.sort_values("paper_id")[feature_names].to_numpy(), dtype="float32"
 )
 # Create graph info tuple with node_features, edges, and edge_weights.
 graph_info = (node_features, edges, edge_weights)
@@ -372,15 +397,15 @@ print("Nodes shape:", node_features.shape)
 """
 ### Implement a graph convolution layer
 
-We implement a graph convolution module as a [Keras Layer](https://www.tensorflow.org/api_docs/python/tf/keras/layers/Layer?version=nightly).
-Our `GraphConvLayer` performs the following steps:
+We implement the graph convolution module as a custom Keras 3 Layer. Our GraphConvLayer is designed
+to be backend-agnostic, utilizing keras.ops to perform the following three steps:
 
-1. **Prepare**: The input node representations are processed using a FFN to produce a *message*. You can simplify
-the processing by only applying linear transformation to the representations.
-2. **Aggregate**: The messages of the neighbours of each node are aggregated with
-respect to the `edge_weights` using a *permutation invariant* pooling operation, such as *sum*, *mean*, and *max*,
-to prepare a single aggregated message for each node. See, for example, [tf.math.unsorted_segment_sum](https://www.tensorflow.org/api_docs/python/tf/math/unsorted_segment_sum)
-APIs used to aggregate neighbour messages.
+1. **Prepare**: The input node representations are processed using a Feed-Forward Network (FFN) to produce a message.
+This is achieved by gathering neighbor representations using ops.take and transforming them through the ffn_prepare block.
+If edge_weights are provided, they are scaled using ops.expand_dims to ensure correct broadcasting during message transformation
+2. **Aggregate**: The messages of the neighbors for each node are aggregated using a permutation-invariant pooling operation.
+In this Keras 3 implementation, we utilize ops.segment_sum, ops.segment_mean, or ops.segment_max (replacing the legacy tf.math.unsorted_segment APIs).
+These operations efficiently aggregate neighbor information into a single message for each target node based on the graph's edge indices.
 3. **Update**: The `node_repesentations` and `aggregated_messages`—both of shape `[num_nodes, representation_dim]`—
 are combined and processed to produce the new state of the node representations (node embeddings).
 If `combination_type` is `gru`, the `node_repesentations` and `aggregated_messages` are stacked to create a sequence,
@@ -398,7 +423,7 @@ and [Message Passing Neural Networks](https://arxiv.org/abs/1704.01212).
 
 
 def create_gru(hidden_units, dropout_rate):
-    inputs = keras.layers.Input(shape=(2, hidden_units[0]))
+    inputs = layers.Input(shape=(2, hidden_units[0]))
     x = inputs
     for units in hidden_units:
         x = layers.GRU(
@@ -407,8 +432,6 @@ def create_gru(hidden_units, dropout_rate):
             recurrent_activation="sigmoid",
             return_sequences=True,
             dropout=dropout_rate,
-            return_state=False,
-            recurrent_dropout=dropout_rate,
         )(x)
     return keras.Model(inputs=inputs, outputs=x)
 
@@ -421,95 +444,76 @@ class GraphConvLayer(layers.Layer):
         aggregation_type="mean",
         combination_type="concat",
         normalize=False,
-        *args,
         **kwargs,
     ):
-        super().__init__(*args, **kwargs)
-
+        super().__init__(**kwargs)
         self.aggregation_type = aggregation_type
         self.combination_type = combination_type
         self.normalize = normalize
 
         self.ffn_prepare = create_ffn(hidden_units, dropout_rate)
-        if self.combination_type == "gru":
-            self.update_fn = create_gru(hidden_units, dropout_rate)
-        else:
-            self.update_fn = create_ffn(hidden_units, dropout_rate)
+        self.update_fn = (
+            create_gru(hidden_units, dropout_rate)
+            if combination_type == "gru"
+            else create_ffn(hidden_units, dropout_rate)
+        )
 
-    def prepare(self, node_repesentations, weights=None):
-        # node_repesentations shape is [num_edges, embedding_dim].
-        messages = self.ffn_prepare(node_repesentations)
+    def prepare(self, node_representations, weights=None, training=None):
+        messages = self.ffn_prepare(node_representations, training=training)
         if weights is not None:
-            messages = messages * tf.expand_dims(weights, -1)
+            messages = messages * ops.expand_dims(weights, -1)
         return messages
 
-    def aggregate(self, node_indices, neighbour_messages, node_repesentations):
-        # node_indices shape is [num_edges].
-        # neighbour_messages shape: [num_edges, representation_dim].
-        # node_repesentations shape is [num_nodes, representation_dim]
-        num_nodes = node_repesentations.shape[0]
+    def aggregate(self, node_indices, neighbour_messages, node_representations):
+        num_nodes = ops.shape(node_representations)[0]
         if self.aggregation_type == "sum":
-            aggregated_message = tf.math.unsorted_segment_sum(
+            return ops.segment_sum(
                 neighbour_messages, node_indices, num_segments=num_nodes
             )
         elif self.aggregation_type == "mean":
-            aggregated_message = tf.math.unsorted_segment_mean(
+            return ops.segment_mean(
                 neighbour_messages, node_indices, num_segments=num_nodes
             )
         elif self.aggregation_type == "max":
-            aggregated_message = tf.math.unsorted_segment_max(
+            return ops.segment_max(
                 neighbour_messages, node_indices, num_segments=num_nodes
             )
         else:
-            raise ValueError(f"Invalid aggregation type: {self.aggregation_type}.")
+            raise ValueError(f"Invalid aggregation type: {self.aggregation_type}")
 
-        return aggregated_message
-
-    def update(self, node_repesentations, aggregated_messages):
-        # node_repesentations shape is [num_nodes, representation_dim].
-        # aggregated_messages shape is [num_nodes, representation_dim].
+    def update(self, node_representations, aggregated_messages, training=None):
         if self.combination_type == "gru":
-            # Create a sequence of two elements for the GRU layer.
-            h = tf.stack([node_repesentations, aggregated_messages], axis=1)
+            h = ops.stack([node_representations, aggregated_messages], axis=1)
         elif self.combination_type == "concat":
-            # Concatenate the node_repesentations and aggregated_messages.
-            h = tf.concat([node_repesentations, aggregated_messages], axis=1)
+            h = ops.concatenate([node_representations, aggregated_messages], axis=-1)
         elif self.combination_type == "add":
-            # Add node_repesentations and aggregated_messages.
-            h = node_repesentations + aggregated_messages
+            h = node_representations + aggregated_messages
         else:
-            raise ValueError(f"Invalid combination type: {self.combination_type}.")
+            raise ValueError(f"Invalid combination type: {self.combination_type}")
 
-        # Apply the processing function.
-        node_embeddings = self.update_fn(h)
+        node_embeddings = self.update_fn(h, training=training)
+
         if self.combination_type == "gru":
-            node_embeddings = tf.unstack(node_embeddings, axis=1)[-1]
+            node_embeddings = ops.unstack(node_embeddings, axis=1)[-1]
 
         if self.normalize:
-            node_embeddings = tf.nn.l2_normalize(node_embeddings, axis=-1)
+            node_embeddings = ops.normalize(node_embeddings, axis=-1, order=2)
         return node_embeddings
 
-    def call(self, inputs):
-        """Process the inputs to produce the node_embeddings.
-
-        inputs: a tuple of three elements: node_repesentations, edges, edge_weights.
-        Returns: node_embeddings of shape [num_nodes, representation_dim].
-        """
-
-        node_repesentations, edges, edge_weights = inputs
-        # Get node_indices (source) and neighbour_indices (target) from edges.
+    def call(self, inputs, training=None):
+        node_representations, edges, edge_weights = inputs
         node_indices, neighbour_indices = edges[0], edges[1]
-        # neighbour_repesentations shape is [num_edges, representation_dim].
-        neighbour_repesentations = tf.gather(node_repesentations, neighbour_indices)
-
-        # Prepare the messages of the neighbours.
-        neighbour_messages = self.prepare(neighbour_repesentations, edge_weights)
-        # Aggregate the neighbour messages.
-        aggregated_messages = self.aggregate(
-            node_indices, neighbour_messages, node_repesentations
+        neighbour_representations = ops.take(
+            node_representations, neighbour_indices, axis=0
         )
-        # Update the node embedding with the neighbour messages.
-        return self.update(node_repesentations, aggregated_messages)
+
+        neighbour_messages = self.prepare(
+            neighbour_representations, edge_weights, training=training
+        )
+        aggregated_messages = self.aggregate(
+            node_indices, neighbour_messages, node_representations
+        )
+        return self.update(node_representations, aggregated_messages, training=training)
 
 
 """
@@ -518,24 +522,26 @@ class GraphConvLayer(layers.Layer):
 The GNN classification model follows the [Design Space for Graph Neural Networks](https://arxiv.org/abs/2011.08843) approach,
 as follows:
 
-1. Apply preprocessing using FFN to the node features to generate initial node representations.
-2. Apply one or more graph convolutional layer, with skip connections,  to the node representation
-to produce node embeddings.
-3. Apply post-processing using FFN to the node embeddings to generate  the final node embeddings.
-4. Feed the node embeddings in a Softmax layer to predict the node class.
+**Graph Augmentation & Stability:** In the __init__ method, the model optionally adds self-loops to the edge list.
+This ensures each node preserves its own identity during message passing. We also implement Edge Weight Normalization (Global or Per-node).
+Per-node normalization calculates the degree of each node using ops.segment_sum and scales incoming messages,
+which is critical for preventing gradient explosion in large or dense graphs.
+**Preprocessing:** A Feed-Forward Network (FFN) is applied to the raw node features to generate the initial latent representations.
+**Graph Convolutions with Skip Connections:** The model applies multiple GraphConvLayer blocks.
+To mitigate the risk of "over-smoothing" (where node embeddings become indistinguishable after several hops),
+we implement Residual (Skip) Connections, adding the input of the convolution back to its output.
+**Post-processing:** A final FFN processes the node embeddings to refine the features before classification.
+**Output Logic:** The final layer is a Dense layer that produces logits for each class.
+**Note on Data Handling:** Unlike standard models where all data is passed as input, this model stores
+the global graph structure (node_features and edges) as internal tensors converted via ops.convert_to_tensor.
+The model's call() method accepts a batch of node indices rather than the full graph.
+It uses ops.take to efficiently retrieve the specific embeddings for the requested indices,
+allowing for efficient mini-batch training on a single large graph.
 
-Each graph convolutional layer added captures information from a further level of neighbours.
-However, adding many graph convolutional layer can cause oversmoothing, where the model
-produces similar embeddings for all the nodes.
-
-Note that the `graph_info` passed to the constructor of the Keras model, and used as a *property*
-of the Keras model object, rather than input data for training or prediction.
-The model will accept a **batch** of `node_indices`, which are used to lookup the
-node features and neighbours from the `graph_info`.
 """
 
 
-class GNNNodeClassifier(tf.keras.Model):
+class GNNNodeClassifier(keras.Model):
     def __init__(
         self,
         graph_info,
@@ -543,65 +549,83 @@ class GNNNodeClassifier(tf.keras.Model):
         hidden_units,
         aggregation_type="sum",
         combination_type="concat",
-        dropout_rate=0.2,
+        dropout_rate=0.5,
         normalize=True,
-        *args,
+        add_self_loops=True,
+        edge_weight_normalization="per_node",  # "none" | "global" | "per_node"
         **kwargs,
     ):
-        super().__init__(*args, **kwargs)
+        super().__init__(**kwargs)
 
-        # Unpack graph_info to three elements: node_features, edges, and edge_weight.
         node_features, edges, edge_weights = graph_info
-        self.node_features = node_features
-        self.edges = edges
-        self.edge_weights = edge_weights
-        # Set edge_weights to ones if not provided.
-        if self.edge_weights is None:
-            self.edge_weights = tf.ones(shape=edges.shape[1])
-        # Scale edge_weights to sum to 1.
-        self.edge_weights = self.edge_weights / tf.math.reduce_sum(self.edge_weights)
+        num_nodes = node_features.shape[0]
 
-        # Create a process layer.
+        self.node_features = ops.convert_to_tensor(node_features, dtype="float32")
+
+        if add_self_loops:
+            self_loops = np.stack(
+                [np.arange(num_nodes), np.arange(num_nodes)], axis=0
+            ).astype("int32")
+            edges = np.concatenate([edges, self_loops], axis=1)
+
+        self.edges = ops.convert_to_tensor(edges, dtype="int32")
+
+        num_edges = edges.shape[1]
+        if edge_weights is None:
+            edge_weights = ops.ones(shape=(num_edges,), dtype="float32")
+        else:
+            edge_weights = ops.convert_to_tensor(edge_weights, dtype="float32")
+            if add_self_loops:
+                loop_weights = ops.ones(shape=(num_nodes,), dtype="float32")
+                edge_weights = ops.concatenate([edge_weights, loop_weights], axis=0)
+
+        if edge_weight_normalization == "global":
+            edge_weights = edge_weights / (ops.sum(edge_weights) + 1e-7)
+        elif edge_weight_normalization == "per_node":
+            node_indices = self.edges[0]
+            deg = ops.segment_sum(edge_weights, node_indices, num_segments=num_nodes)
+            deg = ops.maximum(deg, 1.0)
+            edge_weights = edge_weights / ops.take(deg, node_indices, axis=0)
+        elif edge_weight_normalization == "none":
+            pass
+        else:
+            raise ValueError(
+                "edge_weight_normalization must be 'none', 'global', or 'per_node'."
+            )
+
+        self.edge_weights = edge_weights
+
         self.preprocess = create_ffn(hidden_units, dropout_rate, name="preprocess")
-        # Create the first GraphConv layer.
         self.conv1 = GraphConvLayer(
             hidden_units,
-            dropout_rate,
-            aggregation_type,
-            combination_type,
-            normalize,
+            dropout_rate=dropout_rate,
+            aggregation_type=aggregation_type,
+            combination_type=combination_type,
+            normalize=normalize,
             name="graph_conv1",
         )
-        # Create the second GraphConv layer.
         self.conv2 = GraphConvLayer(
             hidden_units,
-            dropout_rate,
-            aggregation_type,
-            combination_type,
-            normalize,
+            dropout_rate=dropout_rate,
+            aggregation_type=aggregation_type,
+            combination_type=combination_type,
+            normalize=normalize,
             name="graph_conv2",
         )
-        # Create a postprocess layer.
         self.postprocess = create_ffn(hidden_units, dropout_rate, name="postprocess")
-        # Create a compute logits layer.
-        self.compute_logits = layers.Dense(units=num_classes, name="logits")
+        self.compute_logits = layers.Dense(num_classes, name="logits")
 
-    def call(self, input_node_indices):
-        # Preprocess the node_features to produce node representations.
-        x = self.preprocess(self.node_features)
-        # Apply the first graph conv layer.
-        x1 = self.conv1((x, self.edges, self.edge_weights))
-        # Skip connection.
-        x = x1 + x
-        # Apply the second graph conv layer.
-        x2 = self.conv2((x, self.edges, self.edge_weights))
-        # Skip connection.
-        x = x2 + x
-        # Postprocess node embedding.
-        x = self.postprocess(x)
-        # Fetch node embeddings for the input node_indices.
-        node_embeddings = tf.gather(x, input_node_indices)
-        # Compute logits
+    def call(self, input_node_indices, training=None):
+        x = self.preprocess(self.node_features, training=training)
+
+        x1 = self.conv1((x, self.edges, self.edge_weights), training=training)
+        x = x + x1
+
+        x2 = self.conv2((x, self.edges, self.edge_weights), training=training)
+        x = x + x2
+
+        x = self.postprocess(x, training=training)
+        node_embeddings = ops.take(x, input_node_indices, axis=0)
         return self.compute_logits(node_embeddings)
 
 
@@ -614,12 +638,17 @@ regardless of the size of the graph.
 gnn_model = GNNNodeClassifier(
     graph_info=graph_info,
     num_classes=num_classes,
-    hidden_units=hidden_units,
-    dropout_rate=dropout_rate,
+    hidden_units=[32, 32],
+    aggregation_type="sum",
+    combination_type="concat",
+    dropout_rate=0.5,
+    normalize=True,
+    add_self_loops=True,
+    edge_weight_normalization="per_node",
     name="gnn_model",
 )
 
-print("GNN output shape:", gnn_model([1, 10, 100]))
+print("GNN output shape:", gnn_model(ops.convert_to_tensor([0, 1, 2], dtype="int32")))
 
 gnn_model.summary()
 
@@ -632,14 +661,19 @@ that makes sure that neighbouring nodes in graph have similar representations, w
 nodes have dissimilar representations.
 """
 
-x_train = train_data.paper_id.to_numpy()
-history = run_experiment(gnn_model, x_train, y_train)
+gnn_history = run_experiment(
+    gnn_model,
+    train_indices,
+    train_labels,
+    val_indices,
+    val_labels,
+)
 
 """
 Let's plot the learning curves
 """
 
-display_learning_curves(history)
+display_learning_curves(gnn_history, title="GNN")
 
 """
 Now we evaluate the GNN model on the test data split.
@@ -647,8 +681,8 @@ The results may vary depending on the training sample, however the GNN model alw
 the baseline model in terms of the test accuracy.
 """
 
-x_test = test_data.paper_id.to_numpy()
-_, test_accuracy = gnn_model.evaluate(x=x_test, y=y_test, verbose=0)
+x_test = test_indices
+_, test_accuracy = gnn_model.evaluate(x=test_indices, y=test_labels, verbose=0)
 print(f"Test accuracy: {round(test_accuracy * 100, 2)}%")
 
 """
@@ -660,29 +694,43 @@ Let's add the new instances as nodes to the `node_features`, and generate links
 
 # First we add the N new_instances as nodes to the graph
 # by appending the new_instance to node_features.
-num_nodes = node_features.shape[0]
-new_node_features = np.concatenate([node_features, new_instances])
-# Second we add the M edges (citations) from each new node to a set
-# of existing nodes in a particular subject
-new_node_indices = [i + num_nodes for i in range(num_classes)]
+num_nodes = int(gnn_model.node_features.shape[0])
+
+new_instances = new_instances.astype("float32")
+
+new_node_features = np.concatenate(
+    [ops.convert_to_numpy(gnn_model.node_features), new_instances], axis=0
+).astype("float32")
+
+new_node_indices = np.arange(num_nodes, num_nodes + num_classes, dtype="int32")
+
 new_citations = []
 for subject_idx, group in papers.groupby("subject"):
-    subject_papers = list(group.paper_id)
-    # Select random x papers specific subject.
-    selected_paper_indices1 = np.random.choice(subject_papers, 5)
-    # Select random y papers from any subject (where y < x).
-    selected_paper_indices2 = np.random.choice(list(papers.paper_id), 2)
-    # Merge the selected paper indices.
+    subject_papers = group.paper_id.to_numpy()
+
+    selected_paper_indices1 = np.random.choice(subject_papers, 5, replace=False)
+
+    selected_paper_indices2 = np.random.choice(
+        papers.paper_id.to_numpy(), 2, replace=False
+    )
+
     selected_paper_indices = np.concatenate(
         [selected_paper_indices1, selected_paper_indices2], axis=0
     )
-    # Create edges between a citing paper idx and the selected cited papers.
-    citing_paper_indx = new_node_indices[subject_idx]
-    for cited_paper_idx in selected_paper_indices:
-        new_citations.append([citing_paper_indx, cited_paper_idx])
 
-new_citations = np.array(new_citations).T
-new_edges = np.concatenate([edges, new_citations], axis=1)
+    # Create edges between a citing paper idx and the selected cited papers.
+    citing_paper_idx = int(new_node_indices[int(subject_idx)])
+    for cited_paper_idx in selected_paper_indices:
+        new_citations.append([citing_paper_idx, int(cited_paper_idx)])
+
+new_citations = np.array(new_citations, dtype="int32").T
+new_edges = np.concatenate(
+    [ops.convert_to_numpy(gnn_model.edges), new_citations], axis=1
+).astype("int32")
+
+# Optional but recommended for consistency..add self-loops for the NEW nodes too.
+new_self_loops = np.stack([new_node_indices, new_node_indices], axis=0).astype("int32")
+new_edges = np.concatenate([new_edges, new_self_loops], axis=1)
 
 """
 Now let's update the `node_features` and the `edges` in the GNN model.
@@ -690,14 +738,20 @@ Now let's update the `node_features` and the `edges` in the GNN model.
 
 print("Original node_features shape:", gnn_model.node_features.shape)
 print("Original edges shape:", gnn_model.edges.shape)
-gnn_model.node_features = new_node_features
-gnn_model.edges = new_edges
-gnn_model.edge_weights = tf.ones(shape=new_edges.shape[1])
+
+# Update model graph
+gnn_model.node_features = ops.convert_to_tensor(new_node_features, dtype="float32")
+gnn_model.edges = ops.convert_to_tensor(new_edges, dtype="int32")
+gnn_model.edge_weights = ops.ones(shape=(new_edges.shape[1],), dtype="float32")
+
 print("New node_features shape:", gnn_model.node_features.shape)
 print("New edges shape:", gnn_model.edges.shape)
 
-logits = gnn_model.predict(tf.convert_to_tensor(new_node_indices))
-probabilities = keras.activations.softmax(tf.convert_to_tensor(logits)).numpy()
+# Predict on the new nodes
+logits = gnn_model(
+    ops.convert_to_tensor(new_node_indices, dtype="int32"), training=False
+)
+probabilities = ops.convert_to_numpy(ops.softmax(logits))
 display_class_probabilities(probabilities)
 
 """

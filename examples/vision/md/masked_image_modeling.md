@@ -2,8 +2,10 @@
 
 **Author:** [Aritra Roy Gosthipaty](https://twitter.com/arig23498), [Sayak Paul](https://twitter.com/RisingSayak)<br>
 **Date created:** 2021/12/20<br>
-**Last modified:** 2021/12/21<br>
+**Last modified:** 2026/02/15<br>
 **Description:** Implementing Masked Autoencoders for self-supervised pretraining.
+
+**Converted to Keras 3 by:** [Maitry Sinha](https://github.com/maitry63)
 
 
 <img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/vision/ipynb/masked_image_modeling.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/examples/vision/masked_image_modeling.py)
@@ -32,7 +34,6 @@ with the [CIFAR-10](https://www.cs.toronto.edu/~kriz/cifar.html) dataset. After
 pretraining a scaled down version of ViT, we also implement the linear evaluation
 pipeline on CIFAR-10.
 
-
 This implementation covers (MAE refers to Masked Autoencoder):
 
 - The masking algorithm
@@ -43,24 +44,17 @@ This implementation covers (MAE refers to Masked Autoencoder):
 As a reference, we reuse some of the code presented in
 [this example](https://keras.io/examples/vision/image_classification_with_vision_transformer/).
 
----
-## Imports
-
 
 ```python
 import os
 
 os.environ["KERAS_BACKEND"] = "tensorflow"
 
-import tensorflow as tf
 import keras
-from keras import layers
-
 import matplotlib.pyplot as plt
 import numpy as np
-import random
+from keras import layers, ops
 
-# Setting seeds for reproducibility.
 SEED = 42
 keras.utils.set_random_seed(SEED)
 ```
@@ -77,8 +71,9 @@ heavily inspired by the design guidelines laid out by the authors in
 ```python
 # DATA
 BUFFER_SIZE = 1024
-BATCH_SIZE = 256
-AUTO = tf.data.AUTOTUNE
+BATCH_SIZE = 32
+# BATCH_SIZE = 256
+
 INPUT_SHAPE = (32, 32, 3)
 NUM_CLASSES = 10
 
@@ -116,7 +111,7 @@ DEC_TRANSFORMER_UNITS = [
 ```
 
 ---
-## Load and prepare the CIFAR-10 dataset
+## Load the Cifar-10 dataset
 
 
 ```python
@@ -128,15 +123,6 @@ DEC_TRANSFORMER_UNITS = [
 print(f"Training samples: {len(x_train)}")
 print(f"Validation samples: {len(x_val)}")
 print(f"Testing samples: {len(x_test)}")
-
-train_ds = tf.data.Dataset.from_tensor_slices(x_train)
-train_ds = train_ds.shuffle(BUFFER_SIZE).batch(BATCH_SIZE).prefetch(AUTO)
-
-val_ds = tf.data.Dataset.from_tensor_slices(x_val)
-val_ds = val_ds.batch(BATCH_SIZE).prefetch(AUTO)
-
-test_ds = tf.data.Dataset.from_tensor_slices(x_test)
-test_ds = test_ds.batch(BATCH_SIZE).prefetch(AUTO)
 ```
 
 <div class="k-default-codeblock">
@@ -144,9 +130,40 @@ test_ds = test_ds.batch(BATCH_SIZE).prefetch(AUTO)
 Training samples: 40000
 Validation samples: 10000
 Testing samples: 10000
-
 ```
 </div>
+
+---
+## PyDataset Implementation
+
+
+```python
+
+class MaskedImageDataset(keras.utils.PyDataset):
+    def __init__(self, x, batch_size, shuffle=False, **kwargs):
+        super().__init__(**kwargs)
+        self.x = x
+        self.batch_size = batch_size
+        self.shuffle = shuffle
+        self.indices = np.arange(len(self.x))
+        if self.shuffle:
+            np.random.shuffle(self.indices)
+
+    def __len__(self):
+        return int(np.ceil(len(self.x) / self.batch_size))
+
+    def __getitem__(self, idx):
+        start, end = idx * self.batch_size, (idx + 1) * self.batch_size
+        batch_indices = self.indices[start:end]
+        batch_x = ops.cast(self.x[batch_indices], "float32")
+        return (batch_x,)
+
+    def on_epoch_end(self):
+        if self.shuffle:
+            np.random.shuffle(self.indices)
+
+```
+
 ---
 ## Data augmentation
 
@@ -208,18 +225,13 @@ class Patches(layers.Layer):
         super().__init__(**kwargs)
         self.patch_size = patch_size
 
-        # Assuming the image has three channels each patch would be
-        # of size (patch_size, patch_size, 3).
+        # Reshape the patches to (batch, num_patches, patch_area)
         self.resize = layers.Reshape((-1, patch_size * patch_size * 3))
 
     def call(self, images):
         # Create patches from the input images
-        patches = tf.image.extract_patches(
-            images=images,
-            sizes=[1, self.patch_size, self.patch_size, 1],
-            strides=[1, self.patch_size, self.patch_size, 1],
-            rates=[1, 1, 1, 1],
-            padding="VALID",
+        patches = ops.image.extract_patches(
+            images, size=self.patch_size, strides=self.patch_size, padding="valid"
         )
 
         # Reshape the patches to (batch, num_patches, patch_area) and return it.
@@ -234,20 +246,23 @@ class Patches(layers.Layer):
         print(f"Index selected: {idx}.")
 
         plt.figure(figsize=(4, 4))
-        plt.imshow(keras.utils.array_to_img(images[idx]))
+
+        # Convert to numpy/unit8 for plotting
+        img_to_show = keras.utils.array_to_img(images[idx])
+        plt.imshow(img_to_show)
+        plt.title("Original")
         plt.axis("off")
         plt.show()
 
         n = int(np.sqrt(patches.shape[1]))
         plt.figure(figsize=(4, 4))
         for i, patch in enumerate(patches[idx]):
-            ax = plt.subplot(n, n, i + 1)
-            patch_img = tf.reshape(patch, (self.patch_size, self.patch_size, 3))
-            plt.imshow(keras.utils.img_to_array(patch_img))
+            plt.subplot(n, n, i + 1)
+            patch_img = ops.reshape(patch, (self.patch_size, self.patch_size, 3))
+            plt.imshow(ops.convert_to_numpy(patch_img))
             plt.axis("off")
         plt.show()
 
-        # Return the index chosen to validate it outside the method.
         return idx
 
     # taken from https://stackoverflow.com/a/58082878/10319735
@@ -257,71 +272,17 @@ class Patches(layers.Layer):
         # monitor callback.
         num_patches = patch.shape[0]
         n = int(np.sqrt(num_patches))
-        patch = tf.reshape(patch, (num_patches, self.patch_size, self.patch_size, 3))
-        rows = tf.split(patch, n, axis=0)
-        rows = [tf.concat(tf.unstack(x), axis=1) for x in rows]
-        reconstructed = tf.concat(rows, axis=0)
+        patch = ops.reshape(patch, (num_patches, self.patch_size, self.patch_size, 3))
+        rows = ops.split(patch, n, axis=0)
+        rows = [ops.concatenate(ops.unstack(x), axis=1) for x in rows]
+        reconstructed = ops.concatenate(rows, axis=0)
         return reconstructed
 
 ```
 
-Let's visualize the image patches.
-
-
-```python
-# Get a batch of images.
-image_batch = next(iter(train_ds))
-
-# Augment the images.
-augmentation_model = get_train_augmentation_model()
-augmented_images = augmentation_model(image_batch)
-
-# Define the patch layer.
-patch_layer = Patches()
-
-# Get the patches from the batched images.
-patches = patch_layer(images=augmented_images)
-
-# Now pass the images and the corresponding patches
-# to the `show_patched_image` method.
-random_index = patch_layer.show_patched_image(images=augmented_images, patches=patches)
-
-# Chose the same chose image and try reconstructing the patches
-# into the original image.
-image = patch_layer.reconstruct_from_patch(patches[random_index])
-plt.imshow(image)
-plt.axis("off")
-plt.show()
-```
-
-<div class="k-default-codeblock">
-```
-Index selected: 102.
-
-```
-</div>
-    
-![png](/img/examples/vision/masked_image_modeling/masked_image_modeling_13_1.png)
-    
-
-
-
-    
-![png](/img/examples/vision/masked_image_modeling/masked_image_modeling_13_2.png)
-    
-
-
-
-    
-![png](/img/examples/vision/masked_image_modeling/masked_image_modeling_13_3.png)
-    
-
-
 ---
 ## Patch encoding with masking
-
 Quoting the paper
-
 > Following ViT, we divide an image into regular non-overlapping patches. Then we sample
 a subset of patches and mask (i.e., remove) the remaining ones. Our sampling strategy is
 straightforward: we sample random patches without replacement, following a uniform
@@ -349,19 +310,21 @@ class PatchEncoder(layers.Layer):
         **kwargs,
     ):
         super().__init__(**kwargs)
-        self.patch_size = patch_size
-        self.projection_dim = projection_dim
-        self.mask_proportion = mask_proportion
-        self.downstream = downstream
+        self.patch_size, self.projection_dim = patch_size, projection_dim
+        self.mask_proportion, self.downstream = mask_proportion, downstream
+
+        mask_token_shape = (1, patch_size * patch_size * 3)
 
         # This is a trainable mask token initialized randomly from a normal
         # distribution.
-        self.mask_token = tf.Variable(
-            tf.random.normal([1, patch_size * patch_size * 3]), trainable=True
+        self.mask_token = keras.Variable(
+            keras.random.normal(mask_token_shape),
+            trainable=True,
+            name="mask_token",
         )
 
     def build(self, input_shape):
-        (_, self.num_patches, self.patch_area) = input_shape
+        self.num_patches = input_shape[1] if input_shape[1] is not None else NUM_PATCHES
 
         # Create the projection layer for the patches.
         self.projection = layers.Dense(units=self.projection_dim)
@@ -375,11 +338,11 @@ class PatchEncoder(layers.Layer):
         self.num_mask = int(self.mask_proportion * self.num_patches)
 
     def call(self, patches):
+        batch_size = ops.shape(patches)[0]
         # Get the positional embeddings.
-        batch_size = tf.shape(patches)[0]
-        positions = tf.range(start=0, limit=self.num_patches, delta=1)
-        pos_embeddings = self.position_embedding(positions[tf.newaxis, ...])
-        pos_embeddings = tf.tile(
+        positions = ops.arange(start=0, stop=self.num_patches, step=1)
+        pos_embeddings = self.position_embedding(positions[None, ...])
+        pos_embeddings = ops.tile(
             pos_embeddings, [batch_size, 1, 1]
         )  # (B, num_patches, projection_dim)
 
@@ -390,46 +353,46 @@ class PatchEncoder(layers.Layer):
 
         if self.downstream:
             return patch_embeddings
-        else:
-            mask_indices, unmask_indices = self.get_random_indices(batch_size)
-            # The encoder input is the unmasked patch embeddings. Here we gather
-            # all the patches that should be unmasked.
-            unmasked_embeddings = tf.gather(
-                patch_embeddings, unmask_indices, axis=1, batch_dims=1
-            )  # (B, unmask_numbers, projection_dim)
 
-            # Get the unmasked and masked position embeddings. We will need them
-            # for the decoder.
-            unmasked_positions = tf.gather(
-                pos_embeddings, unmask_indices, axis=1, batch_dims=1
-            )  # (B, unmask_numbers, projection_dim)
-            masked_positions = tf.gather(
-                pos_embeddings, mask_indices, axis=1, batch_dims=1
-            )  # (B, mask_numbers, projection_dim)
+        mask_indices, unmask_indices = self.get_random_indices(batch_size)
+        u_idx, m_idx = unmask_indices[..., None], mask_indices[..., None]
+        # The encoder input is the unmasked patch embeddings. Here we gather
+        # all the patches that should be unmasked.
+        unmasked_embeddings = ops.take_along_axis(
+            patch_embeddings, u_idx, axis=1
+        )  # (B, unmask_numbers, projection_dim)
 
-            # Repeat the mask token number of mask times.
-            # Mask tokens replace the masks of the image.
-            mask_tokens = tf.repeat(self.mask_token, repeats=self.num_mask, axis=0)
-            mask_tokens = tf.repeat(
-                mask_tokens[tf.newaxis, ...], repeats=batch_size, axis=0
-            )
+        # Get the unmasked and masked position embeddings. We will need them
+        # for the decoder.
+        unmasked_positions = ops.take_along_axis(
+            pos_embeddings, u_idx, axis=1
+        )  # (B, unmask_numbers, projection_dim)
+        masked_positions = ops.take_along_axis(
+            pos_embeddings, m_idx, axis=1
+        )  # (B, mask_numbers, projection_dim)
 
-            # Get the masked embeddings for the tokens.
-            masked_embeddings = self.projection(mask_tokens) + masked_positions
-            return (
-                unmasked_embeddings,  # Input to the encoder.
-                masked_embeddings,  # First part of input to the decoder.
-                unmasked_positions,  # Added to the encoder outputs.
-                mask_indices,  # The indices that were masked.
-                unmask_indices,  # The indices that were unmaksed.
-            )
+        # Repeat the mask token number of mask times.
+        # Mask tokens replace the masks of the image.
+        mask_tokens = ops.repeat(self.mask_token, repeats=self.num_mask, axis=0)
+        mask_tokens = ops.repeat(mask_tokens[None, ...], repeats=batch_size, axis=0)
+
+        # Get the masked embeddings for the tokens.
+        masked_embeddings = self.projection(mask_tokens) + masked_positions
+        return (
+            unmasked_embeddings,  # Input to the encoder.
+            masked_embeddings,  # First part of input to the decoder.
+            unmasked_positions,  # Added to the encoder outputs.
+            mask_indices,  # The indices that were masked.
+            unmask_indices,  # The indices that were unmaksed.
+        )
 
     def get_random_indices(self, batch_size):
         # Create random indices from a uniform distribution and then split
         # it into mask and unmask indices.
-        rand_indices = tf.argsort(
-            tf.random.uniform(shape=(batch_size, self.num_patches)), axis=-1
+        probs = keras.random.uniform(
+            shape=(batch_size, self.num_patches),
         )
+        rand_indices = ops.argsort(probs, axis=-1)
         mask_indices = rand_indices[:, : self.num_mask]
         unmask_indices = rand_indices[:, self.num_mask :]
         return mask_indices, unmask_indices
@@ -449,15 +412,78 @@ class PatchEncoder(layers.Layer):
             new_patch[unmask_index[i]] = patch[unmask_index[i]]
         return new_patch, idx
 
+
+patch_encoder = PatchEncoder(
+    patch_size=PATCH_SIZE,
+    projection_dim=ENC_PROJECTION_DIM,
+    mask_proportion=MASK_PROPORTION,
+)
 ```
+
+### Prepare the Dataset
+
+
+```python
+train_ds = MaskedImageDataset(x_train, batch_size=BATCH_SIZE, shuffle=True)
+val_ds = MaskedImageDataset(x_val, batch_size=BATCH_SIZE)
+test_ds = MaskedImageDataset(x_test, batch_size=BATCH_SIZE)
+```
+
+### Let's visualize the image patches.
+
+
+```python
+# Get a batch of images.
+image_data = x_train[:BATCH_SIZE]  # Raw images (float or uint8)
+
+# Augment the images
+augmentation_model = get_train_augmentation_model()
+augmented_images = augmentation_model(image_data)
+
+# Define the patch layer
+patch_layer = Patches()
+
+# Get the patches from the batched images.
+patches = patch_layer(images=augmented_images)
+
+# Now pass the images and the corresponding patches
+# to the `show_patched_image` method.
+random_index = patch_layer.show_patched_image(images=augmented_images, patches=patches)
+
+# Chose the same chose image and try reconstructing the patches
+# into the original image.
+image = patch_layer.reconstruct_from_patch(patches[random_index])
+plt.imshow(image)
+plt.axis("off")
+plt.show()
+```
+
+<div class="k-default-codeblock">
+```
+Index selected: 27.
+```
+</div>
+
+![png](/examples/vision/img/masked_image_modeling/masked_image_modeling_18_1.png)
+    
+
+
+
+    
+![png](/examples/vision/img/masked_image_modeling/masked_image_modeling_18_2.png)
+    
+
+
+
+    
+![png](/examples/vision/img/masked_image_modeling/masked_image_modeling_18_3.png)
+    
+
 
 Let's see the masking process in action on a sample image.
 
 
 ```python
-# Create the patch encoder layer.
-patch_encoder = PatchEncoder()
-
 # Get the embeddings and positions.
 (
     unmasked_embeddings,
@@ -487,13 +513,12 @@ plt.show()
 
 
     
-![png](/img/examples/vision/masked_image_modeling/masked_image_modeling_17_0.png)
+![png](/examples/vision/img/masked_image_modeling/masked_image_modeling_20_0.png)
     
 
 
 ---
 ## MLP
-
 This serves as the fully connected feed forward network of the transformer architecture.
 
 
@@ -501,7 +526,7 @@ This serves as the fully connected feed forward network of the transformer archi
 
 def mlp(x, dropout_rate, hidden_units):
     for units in hidden_units:
-        x = layers.Dense(units, activation=tf.nn.gelu)(x)
+        x = layers.Dense(units, activation="gelu")(x)
         x = layers.Dropout(dropout_rate)(x)
     return x
 
@@ -509,7 +534,6 @@ def mlp(x, dropout_rate, hidden_units):
 
 ---
 ## MAE encoder
-
 The MAE encoder is ViT. The only point to note here is that the encoder outputs a layer
 normalized output.
 
@@ -571,13 +595,10 @@ def create_decoder(
         attention_output = layers.MultiHeadAttention(
             num_heads=num_heads, key_dim=DEC_PROJECTION_DIM, dropout=0.1
         )(x1, x1)
-
-        # Skip connection 1.
+        # Skip connection .
         x2 = layers.Add()([attention_output, x])
 
-        # Layer normalization 2.
         x3 = layers.LayerNormalization(epsilon=LAYER_NORM_EPS)(x2)
-
         # MLP.
         x3 = mlp(x3, hidden_units=DEC_TRANSFORMER_UNITS, dropout_rate=0.1)
 
@@ -596,7 +617,7 @@ def create_decoder(
 ---
 ## MAE trainer
 
-This is the trainer module. We wrap the encoder and decoder inside of a `tf.keras.Model`
+This is the trainer module. We wrap the encoder and decoder inside of a `keras.Model`
 subclass. This allows us to customize what happens in the `model.fit()` loop.
 
 
@@ -621,12 +642,13 @@ class MaskedAutoencoder(keras.Model):
         self.encoder = encoder
         self.decoder = decoder
 
-    def calculate_loss(self, images, test=False):
+    def calculate_loss(self, images, training=True):
         # Augment the input images.
-        if test:
-            augmented_images = self.test_augmentation_model(images)
-        else:
-            augmented_images = self.train_augmentation_model(images)
+        augmented_images = (
+            self.train_augmentation_model(images)
+            if training
+            else self.test_augmentation_model(images)
+        )
 
         # Patch the augmented images.
         patches = self.patch_layer(augmented_images)
@@ -640,59 +662,66 @@ class MaskedAutoencoder(keras.Model):
             unmask_indices,
         ) = self.patch_encoder(patches)
 
-        # Pass the unmaksed patche to the encoder.
+        # Pass the unmasked patches to the encoder.
         encoder_outputs = self.encoder(unmasked_embeddings)
 
         # Create the decoder inputs.
         encoder_outputs = encoder_outputs + unmasked_positions
-        decoder_inputs = tf.concat([encoder_outputs, masked_embeddings], axis=1)
+        decoder_inputs = ops.concatenate([encoder_outputs, masked_embeddings], axis=1)
 
         # Decode the inputs.
         decoder_outputs = self.decoder(decoder_inputs)
         decoder_patches = self.patch_layer(decoder_outputs)
 
-        loss_patch = tf.gather(patches, mask_indices, axis=1, batch_dims=1)
-        loss_output = tf.gather(decoder_patches, mask_indices, axis=1, batch_dims=1)
+        # Extract only the masked patches using ops.take_along_axis
+        m_idx = mask_indices[..., None]
+        loss_patch = ops.take_along_axis(patches, m_idx, axis=1)
+        loss_output = ops.take_along_axis(decoder_patches, m_idx, axis=1)
 
         # Compute the total loss.
-        total_loss = self.compute_loss(y=loss_patch, y_pred=loss_output)
+        total_loss = ops.mean(ops.square(loss_patch - loss_output))
 
         return total_loss, loss_patch, loss_output
 
-    def train_step(self, images):
-        with tf.GradientTape() as tape:
-            total_loss, loss_patch, loss_output = self.calculate_loss(images)
+    def call(self, images, training=False):
+        # A call method to build/trace the model
+        _, _, loss_output = self.calculate_loss(images, training=training)
+        return loss_output
 
-        # Apply gradients.
-        train_vars = [
-            self.train_augmentation_model.trainable_variables,
-            self.patch_layer.trainable_variables,
-            self.patch_encoder.trainable_variables,
-            self.encoder.trainable_variables,
-            self.decoder.trainable_variables,
-        ]
-        grads = tape.gradient(total_loss, train_vars)
-        tv_list = []
-        for grad, var in zip(grads, train_vars):
-            for g, v in zip(grad, var):
-                tv_list.append((g, v))
-        self.optimizer.apply_gradients(tv_list)
+    def train_step(self, data):
+        images = data[0] if isinstance(data, (list, tuple)) else data
+        total_loss, loss_patch, loss_output = self.calculate_loss(images, training=True)
 
-        # Report progress.
+        self.add_loss(total_loss)
         results = {}
         for metric in self.metrics:
             metric.update_state(loss_patch, loss_output)
             results[metric.name] = metric.result()
+
+        if "loss" not in results:
+            results["loss"] = total_loss
+
         return results
 
-    def test_step(self, images):
-        total_loss, loss_patch, loss_output = self.calculate_loss(images, test=True)
+    def test_step(self, data):
+        if isinstance(data, (list, tuple)):
+            images = data[0]
+        else:
+            images = data
+
+        total_loss, loss_patch, loss_output = self.calculate_loss(
+            images, training=False
+        )
 
         # Update the trackers.
         results = {}
         for metric in self.metrics:
             metric.update_state(loss_patch, loss_output)
             results[metric.name] = metric.result()
+
+        if "loss" not in results:
+            results["loss"] = total_loss
+
         return results
 
 ```
@@ -705,7 +734,12 @@ class MaskedAutoencoder(keras.Model):
 train_augmentation_model = get_train_augmentation_model()
 test_augmentation_model = get_test_augmentation_model()
 patch_layer = Patches()
-patch_encoder = PatchEncoder()
+
+patch_encoder = PatchEncoder(
+    patch_size=PATCH_SIZE,
+    projection_dim=ENC_PROJECTION_DIM,
+    mask_proportion=MASK_PROPORTION,
+)
 encoder = create_encoder()
 decoder = create_decoder()
 
@@ -717,6 +751,9 @@ mae_model = MaskedAutoencoder(
     encoder=encoder,
     decoder=decoder,
 )
+
+# Taking a batch of test inputs to measure model's progress.
+test_images = next(iter(test_ds))
 ```
 
 ---
@@ -726,9 +763,6 @@ mae_model = MaskedAutoencoder(
 
 
 ```python
-# Taking a batch of test inputs to measure model's progress.
-test_images = next(iter(test_ds))
-
 
 class TrainMonitor(keras.callbacks.Callback):
     def __init__(self, epoch_interval=None):
@@ -747,7 +781,7 @@ class TrainMonitor(keras.callbacks.Callback):
             ) = self.model.patch_encoder(test_patches)
             test_encoder_outputs = self.model.encoder(test_unmasked_embeddings)
             test_encoder_outputs = test_encoder_outputs + test_unmasked_positions
-            test_decoder_inputs = tf.concat(
+            test_decoder_inputs = ops.concatenate(
                 [test_encoder_outputs, test_masked_embeddings], axis=1
             )
             test_decoder_outputs = self.model.decoder(test_decoder_inputs)
@@ -796,35 +830,39 @@ class WarmUpCosine(keras.optimizers.schedules.LearningRateSchedule):
         self.total_steps = total_steps
         self.warmup_learning_rate = warmup_learning_rate
         self.warmup_steps = warmup_steps
-        self.pi = tf.constant(np.pi)
+
+        self.pi = ops.convert_to_tensor(np.pi, dtype="float32")
 
     def __call__(self, step):
+        step = ops.cast(step, dtype="float32")
         if self.total_steps < self.warmup_steps:
             raise ValueError("Total_steps must be larger or equal to warmup_steps.")
 
-        cos_annealed_lr = tf.cos(
+        # proper Warmup Rate
+        cos_annealed_lr = ops.cos(
             self.pi
-            * (tf.cast(step, tf.float32) - self.warmup_steps)
+            * (step - self.warmup_steps)
             / float(self.total_steps - self.warmup_steps)
         )
+
         learning_rate = 0.5 * self.learning_rate_base * (1 + cos_annealed_lr)
 
         if self.warmup_steps > 0:
             if self.learning_rate_base < self.warmup_learning_rate:
                 raise ValueError(
-                    "Learning_rate_base must be larger or equal to "
-                    "warmup_learning_rate."
+                    "Learning_rate_base must be larger or equal to warmup_learning_rate."
                 )
             slope = (
                 self.learning_rate_base - self.warmup_learning_rate
             ) / self.warmup_steps
-            warmup_rate = slope * tf.cast(step, tf.float32) + self.warmup_learning_rate
-            learning_rate = tf.where(
+
+            warmup_rate = slope * step + self.warmup_learning_rate
+
+            learning_rate = ops.where(
                 step < self.warmup_steps, warmup_rate, learning_rate
             )
-        return tf.where(
-            step > self.total_steps, 0.0, learning_rate, name="learning_rate"
-        )
+
+        return ops.where(step > self.total_steps, 0.0, learning_rate)
 
 
 total_steps = int((len(x_train) / BATCH_SIZE) * EPOCHS)
@@ -849,7 +887,7 @@ train_callbacks = [TrainMonitor(epoch_interval=5)]
 
 
     
-![png](/img/examples/vision/masked_image_modeling/masked_image_modeling_32_0.png)
+![png](/examples/vision/img/masked_image_modeling/masked_image_modeling_35_0.png)
     
 
 
@@ -858,7 +896,7 @@ train_callbacks = [TrainMonitor(epoch_interval=5)]
 
 
 ```python
-optimizer = keras.optimizers.AdamW(
+optimizer = keras.optimizers.Adam(
     learning_rate=scheduled_lrs, weight_decay=WEIGHT_DECAY
 )
 
@@ -874,459 +912,85 @@ history = mae_model.fit(
 )
 
 # Measure its performance.
-loss, mae = mae_model.evaluate(test_ds)
-print(f"Loss: {loss:.2f}")
-print(f"MAE: {mae:.2f}")
+metrics = mae_model.evaluate(test_ds, return_dict=True)
+print(f"Loss: {metrics['loss']:.2f}")
 ```
 
 <div class="k-default-codeblock">
 ```
-Epoch 1/100
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 0s 80ms/step - mae: 0.2035 - loss: 0.4828
-Idx chosen: 92
+Epoch 1/10
 
-```
-</div>
-    
-![png](/img/examples/vision/masked_image_modeling/masked_image_modeling_34_1.png)
-    
+1250/1250 ━━━━━━━━━━━━━━━━━━━━ 0s 84ms/step - mae: 0.2499 - loss: 0.4704
 
+/Users/maitry/Gitpush/masked/lib/python3.11/site-packages/keras/src/models/functional.py:241: UserWarning: The structure of `inputs` doesn't match the expected structure.
+Expected: keras_tensor_92
+Received: inputs=('Tensor(shape=(32, 32, 32, 3))',)
+  warnings.warn(msg)
 
-<div class="k-default-codeblock">
-```
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 47s 95ms/step - mae: 0.2033 - loss: 0.4828 - val_loss: 0.5225 - val_mae: 0.1600
-Epoch 2/100
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 83ms/step - mae: 0.1592 - loss: 0.5128 - val_loss: 0.5290 - val_mae: 0.1511
-Epoch 3/100
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 82ms/step - mae: 0.1530 - loss: 0.5193 - val_loss: 0.5336 - val_mae: 0.1478
-Epoch 4/100
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 82ms/step - mae: 0.1502 - loss: 0.5220 - val_loss: 0.5298 - val_mae: 0.1436
-Epoch 5/100
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 82ms/step - mae: 0.1458 - loss: 0.5245 - val_loss: 0.5296 - val_mae: 0.1405
-Epoch 6/100
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 0s 81ms/step - mae: 0.1414 - loss: 0.5265
-Idx chosen: 14
-
-```
-</div>
-    
-![png](/img/examples/vision/masked_image_modeling/masked_image_modeling_34_3.png)
-    
-
-
-<div class="k-default-codeblock">
-```
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 14s 88ms/step - mae: 0.1414 - loss: 0.5265 - val_loss: 0.5328 - val_mae: 0.1402
-Epoch 7/100
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 82ms/step - mae: 0.1399 - loss: 0.5278 - val_loss: 0.5361 - val_mae: 0.1360
-Epoch 8/100
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 82ms/step - mae: 0.1389 - loss: 0.5285 - val_loss: 0.5365 - val_mae: 0.1424
-Epoch 9/100
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 82ms/step - mae: 0.1379 - loss: 0.5295 - val_loss: 0.5312 - val_mae: 0.1345
-Epoch 10/100
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 82ms/step - mae: 0.1352 - loss: 0.5308 - val_loss: 0.5374 - val_mae: 0.1321
-Epoch 11/100
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 0s 81ms/step - mae: 0.1339 - loss: 0.5317
-Idx chosen: 106
-
-```
-</div>
-    
-![png](/img/examples/vision/masked_image_modeling/masked_image_modeling_34_5.png)
-    
-
-
-<div class="k-default-codeblock">
-```
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 14s 87ms/step - mae: 0.1339 - loss: 0.5317 - val_loss: 0.5392 - val_mae: 0.1330
-Epoch 12/100
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 82ms/step - mae: 0.1321 - loss: 0.5331 - val_loss: 0.5383 - val_mae: 0.1301
-Epoch 13/100
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 82ms/step - mae: 0.1317 - loss: 0.5343 - val_loss: 0.5405 - val_mae: 0.1322
-Epoch 14/100
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 82ms/step - mae: 0.1326 - loss: 0.5338 - val_loss: 0.5404 - val_mae: 0.1280
-Epoch 15/100
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 84ms/step - mae: 0.1297 - loss: 0.5343 - val_loss: 0.5444 - val_mae: 0.1261
-Epoch 16/100
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 0s 82ms/step - mae: 0.1276 - loss: 0.5361
-Idx chosen: 71
-
-```
-</div>
-    
-![png](/img/examples/vision/masked_image_modeling/masked_image_modeling_34_7.png)
-    
-
-
-<div class="k-default-codeblock">
-```
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 14s 91ms/step - mae: 0.1276 - loss: 0.5362 - val_loss: 0.5456 - val_mae: 0.1243
-Epoch 17/100
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 83ms/step - mae: 0.1262 - loss: 0.5382 - val_loss: 0.5427 - val_mae: 0.1233
-Epoch 18/100
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 81ms/step - mae: 0.1221 - loss: 0.5407 - val_loss: 0.5473 - val_mae: 0.1196
-Epoch 19/100
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 82ms/step - mae: 0.1209 - loss: 0.5412 - val_loss: 0.5511 - val_mae: 0.1176
-Epoch 20/100
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 83ms/step - mae: 0.1202 - loss: 0.5422 - val_loss: 0.5515 - val_mae: 0.1167
-Epoch 21/100
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 0s 79ms/step - mae: 0.1186 - loss: 0.5430
-Idx chosen: 188
-
-```
-</div>
-    
-![png](/img/examples/vision/masked_image_modeling/masked_image_modeling_34_9.png)
-    
-
-
-<div class="k-default-codeblock">
-```
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 85ms/step - mae: 0.1186 - loss: 0.5430 - val_loss: 0.5546 - val_mae: 0.1168
-Epoch 22/100
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 82ms/step - mae: 0.1171 - loss: 0.5446 - val_loss: 0.5500 - val_mae: 0.1155
-Epoch 23/100
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 81ms/step - mae: 0.1161 - loss: 0.5457 - val_loss: 0.5559 - val_mae: 0.1135
-Epoch 24/100
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 83ms/step - mae: 0.1135 - loss: 0.5479 - val_loss: 0.5521 - val_mae: 0.1112
-Epoch 25/100
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 82ms/step - mae: 0.1128 - loss: 0.5480 - val_loss: 0.5505 - val_mae: 0.1122
-Epoch 26/100
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 0s 79ms/step - mae: 0.1123 - loss: 0.5470
 Idx chosen: 20
-
 ```
 </div>
-    
-![png](/img/examples/vision/masked_image_modeling/masked_image_modeling_34_11.png)
+
+![png](/examples/vision/img/masked_image_modeling/masked_image_modeling_37_1253.png)
     
 
 
 <div class="k-default-codeblock">
 ```
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 86ms/step - mae: 0.1123 - loss: 0.5470 - val_loss: 0.5572 - val_mae: 0.1127
-Epoch 27/100
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 82ms/step - mae: 0.1114 - loss: 0.5487 - val_loss: 0.5555 - val_mae: 0.1092
-Epoch 28/100
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 81ms/step - mae: 0.1108 - loss: 0.5492 - val_loss: 0.5569 - val_mae: 0.1110
-Epoch 29/100
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 83ms/step - mae: 0.1104 - loss: 0.5491 - val_loss: 0.5517 - val_mae: 0.1110
-Epoch 30/100
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 82ms/step - mae: 0.1099 - loss: 0.5490 - val_loss: 0.5543 - val_mae: 0.1104
-Epoch 31/100
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 0s 79ms/step - mae: 0.1095 - loss: 0.5501
-Idx chosen: 102
+1250/1250 ━━━━━━━━━━━━━━━━━━━━ 136s 108ms/step - mae: 0.2510 - loss: 0.4699 - val_loss: 0.4739
 
+Epoch 2/10
+
+1250/1250 ━━━━━━━━━━━━━━━━━━━━ 130s 104ms/step - mae: 0.2510 - loss: 0.4699 - val_loss: 0.4741
+
+Epoch 3/10
+
+1250/1250 ━━━━━━━━━━━━━━━━━━━━ 129s 103ms/step - mae: 0.2511 - loss: 0.4699 - val_loss: 0.4737
+
+Epoch 4/10
+
+1250/1250 ━━━━━━━━━━━━━━━━━━━━ 124s 99ms/step - mae: 0.2511 - loss: 0.4698 - val_loss: 0.4739
+
+Epoch 5/10
+
+1250/1250 ━━━━━━━━━━━━━━━━━━━━ 116s 93ms/step - mae: 0.2510 - loss: 0.4700 - val_loss: 0.4740
+
+Epoch 6/10
+
+1250/1250 ━━━━━━━━━━━━━━━━━━━━ 0s 78ms/step - mae: 0.2501 - loss: 0.4706
+
+Idx chosen: 23
 ```
 </div>
-    
-![png](/img/examples/vision/masked_image_modeling/masked_image_modeling_34_13.png)
+
+![png](/examples/vision/img/masked_image_modeling/masked_image_modeling_37_7515.png)
     
 
 
 <div class="k-default-codeblock">
 ```
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 86ms/step - mae: 0.1095 - loss: 0.5501 - val_loss: 0.5578 - val_mae: 0.1108
-Epoch 32/100
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 81ms/step - mae: 0.1089 - loss: 0.5503 - val_loss: 0.5620 - val_mae: 0.1081
-Epoch 33/100
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 81ms/step - mae: 0.1079 - loss: 0.5509 - val_loss: 0.5618 - val_mae: 0.1067
-Epoch 34/100
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 83ms/step - mae: 0.1067 - loss: 0.5524 - val_loss: 0.5627 - val_mae: 0.1059
-Epoch 35/100
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 81ms/step - mae: 0.1068 - loss: 0.5515 - val_loss: 0.5576 - val_mae: 0.1050
-Epoch 36/100
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 0s 79ms/step - mae: 0.1057 - loss: 0.5526
-Idx chosen: 121
+1250/1250 ━━━━━━━━━━━━━━━━━━━━ 121s 97ms/step - mae: 0.2511 - loss: 0.4699 - val_loss: 0.4738
 
+Epoch 7/10
+
+1250/1250 ━━━━━━━━━━━━━━━━━━━━ 121s 97ms/step - mae: 0.2511 - loss: 0.4700 - val_loss: 0.4737
+
+Epoch 8/10
+
+1250/1250 ━━━━━━━━━━━━━━━━━━━━ 124s 99ms/step - mae: 0.2511 - loss: 0.4700 - val_loss: 0.4737
+
+Epoch 9/10
+
+1250/1250 ━━━━━━━━━━━━━━━━━━━━ 128s 102ms/step - mae: 0.2511 - loss: 0.4699 - val_loss: 0.4738
+
+Epoch 10/10
+
+313/313 ━━━━━━━━━━━━━━━━━━━━ 25s 81ms/step - mae: 0.2511 - loss: 0.4764
+
+Loss: 0.48
 ```
 </div>
-    
-![png](/img/examples/vision/masked_image_modeling/masked_image_modeling_34_15.png)
-    
 
-
-<div class="k-default-codeblock">
-```
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 86ms/step - mae: 0.1057 - loss: 0.5526 - val_loss: 0.5627 - val_mae: 0.1050
-Epoch 37/100
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 81ms/step - mae: 0.1065 - loss: 0.5534 - val_loss: 0.5638 - val_mae: 0.1050
-Epoch 38/100
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 83ms/step - mae: 0.1055 - loss: 0.5528 - val_loss: 0.5527 - val_mae: 0.1083
-Epoch 39/100
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 20s 82ms/step - mae: 0.1056 - loss: 0.5516 - val_loss: 0.5562 - val_mae: 0.1044
-Epoch 40/100
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 82ms/step - mae: 0.1053 - loss: 0.5528 - val_loss: 0.5567 - val_mae: 0.1051
-Epoch 41/100
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 0s 78ms/step - mae: 0.1049 - loss: 0.5533
-Idx chosen: 210
-
-```
-</div>
-    
-![png](/img/examples/vision/masked_image_modeling/masked_image_modeling_34_17.png)
-    
-
-
-<div class="k-default-codeblock">
-```
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 85ms/step - mae: 0.1049 - loss: 0.5533 - val_loss: 0.5620 - val_mae: 0.1030
-Epoch 42/100
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 83ms/step - mae: 0.1041 - loss: 0.5534 - val_loss: 0.5650 - val_mae: 0.1052
-Epoch 43/100
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 82ms/step - mae: 0.1048 - loss: 0.5526 - val_loss: 0.5619 - val_mae: 0.1027
-Epoch 44/100
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 81ms/step - mae: 0.1037 - loss: 0.5543 - val_loss: 0.5615 - val_mae: 0.1031
-Epoch 45/100
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 81ms/step - mae: 0.1036 - loss: 0.5535 - val_loss: 0.5575 - val_mae: 0.1026
-Epoch 46/100
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 0s 78ms/step - mae: 0.1032 - loss: 0.5537
-Idx chosen: 214
-
-```
-</div>
-    
-![png](/img/examples/vision/masked_image_modeling/masked_image_modeling_34_19.png)
-    
-
-
-<div class="k-default-codeblock">
-```
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 85ms/step - mae: 0.1032 - loss: 0.5537 - val_loss: 0.5549 - val_mae: 0.1037
-Epoch 47/100
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 84ms/step - mae: 0.1035 - loss: 0.5539 - val_loss: 0.5597 - val_mae: 0.1031
-Epoch 48/100
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 81ms/step - mae: 0.1033 - loss: 0.5533 - val_loss: 0.5650 - val_mae: 0.1013
-Epoch 49/100
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 82ms/step - mae: 0.1027 - loss: 0.5543 - val_loss: 0.5571 - val_mae: 0.1028
-Epoch 50/100
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 81ms/step - mae: 0.1024 - loss: 0.5548 - val_loss: 0.5592 - val_mae: 0.1018
-Epoch 51/100
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 0s 78ms/step - mae: 0.1025 - loss: 0.5543
-Idx chosen: 74
-
-```
-</div>
-    
-![png](/img/examples/vision/masked_image_modeling/masked_image_modeling_34_21.png)
-    
-
-
-<div class="k-default-codeblock">
-```
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 85ms/step - mae: 0.1025 - loss: 0.5543 - val_loss: 0.5645 - val_mae: 0.1007
-Epoch 52/100
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 83ms/step - mae: 0.1025 - loss: 0.5544 - val_loss: 0.5616 - val_mae: 0.1004
-Epoch 53/100
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 81ms/step - mae: 0.1014 - loss: 0.5547 - val_loss: 0.5594 - val_mae: 0.1007
-Epoch 54/100
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 81ms/step - mae: 0.1014 - loss: 0.5550 - val_loss: 0.5687 - val_mae: 0.1012
-Epoch 55/100
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 81ms/step - mae: 0.1022 - loss: 0.5551 - val_loss: 0.5572 - val_mae: 0.1018
-Epoch 56/100
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 0s 79ms/step - mae: 0.1015 - loss: 0.5558
-Idx chosen: 202
-
-```
-</div>
-    
-![png](/img/examples/vision/masked_image_modeling/masked_image_modeling_34_23.png)
-    
-
-
-<div class="k-default-codeblock">
-```
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 86ms/step - mae: 0.1015 - loss: 0.5558 - val_loss: 0.5619 - val_mae: 0.0996
-Epoch 57/100
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 81ms/step - mae: 0.1008 - loss: 0.5550 - val_loss: 0.5614 - val_mae: 0.0996
-Epoch 58/100
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 81ms/step - mae: 0.1004 - loss: 0.5557 - val_loss: 0.5620 - val_mae: 0.0995
-Epoch 59/100
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 81ms/step - mae: 0.1002 - loss: 0.5558 - val_loss: 0.5612 - val_mae: 0.0997
-Epoch 60/100
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 80ms/step - mae: 0.1005 - loss: 0.5563 - val_loss: 0.5598 - val_mae: 0.1000
-Epoch 61/100
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 0s 79ms/step - mae: 0.1001 - loss: 0.5564
-Idx chosen: 87
-
-```
-</div>
-    
-![png](/img/examples/vision/masked_image_modeling/masked_image_modeling_34_25.png)
-    
-
-
-<div class="k-default-codeblock">
-```
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 86ms/step - mae: 0.1001 - loss: 0.5564 - val_loss: 0.5606 - val_mae: 0.0998
-Epoch 62/100
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 86ms/step - mae: 0.0998 - loss: 0.5562 - val_loss: 0.5643 - val_mae: 0.0988
-Epoch 63/100
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 80ms/step - mae: 0.1001 - loss: 0.5556 - val_loss: 0.5657 - val_mae: 0.0985
-Epoch 64/100
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 80ms/step - mae: 0.0998 - loss: 0.5566 - val_loss: 0.5624 - val_mae: 0.0989
-Epoch 65/100
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 80ms/step - mae: 0.0994 - loss: 0.5564 - val_loss: 0.5576 - val_mae: 0.0999
-Epoch 66/100
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 0s 79ms/step - mae: 0.0993 - loss: 0.5567
-Idx chosen: 116
-
-```
-</div>
-    
-![png](/img/examples/vision/masked_image_modeling/masked_image_modeling_34_27.png)
-    
-
-
-<div class="k-default-codeblock">
-```
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 86ms/step - mae: 0.0993 - loss: 0.5567 - val_loss: 0.5572 - val_mae: 0.1000
-Epoch 67/100
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 80ms/step - mae: 0.0990 - loss: 0.5570 - val_loss: 0.5619 - val_mae: 0.0981
-Epoch 68/100
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 81ms/step - mae: 0.0987 - loss: 0.5578 - val_loss: 0.5644 - val_mae: 0.0973
-Epoch 69/100
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 80ms/step - mae: 0.0981 - loss: 0.5577 - val_loss: 0.5639 - val_mae: 0.0976
-Epoch 70/100
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 82ms/step - mae: 0.0986 - loss: 0.5563 - val_loss: 0.5601 - val_mae: 0.0989
-Epoch 71/100
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 0s 77ms/step - mae: 0.0982 - loss: 0.5578
-Idx chosen: 99
-
-```
-</div>
-    
-![png](/img/examples/vision/masked_image_modeling/masked_image_modeling_34_29.png)
-    
-
-
-<div class="k-default-codeblock">
-```
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 84ms/step - mae: 0.0982 - loss: 0.5577 - val_loss: 0.5628 - val_mae: 0.0970
-Epoch 72/100
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 80ms/step - mae: 0.0979 - loss: 0.5569 - val_loss: 0.5637 - val_mae: 0.0968
-Epoch 73/100
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 81ms/step - mae: 0.0979 - loss: 0.5575 - val_loss: 0.5606 - val_mae: 0.0975
-Epoch 74/100
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 80ms/step - mae: 0.0977 - loss: 0.5572 - val_loss: 0.5628 - val_mae: 0.0967
-Epoch 75/100
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 82ms/step - mae: 0.0975 - loss: 0.5572 - val_loss: 0.5631 - val_mae: 0.0964
-Epoch 76/100
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 0s 77ms/step - mae: 0.0973 - loss: 0.5580
-Idx chosen: 103
-
-```
-</div>
-    
-![png](/img/examples/vision/masked_image_modeling/masked_image_modeling_34_31.png)
-    
-
-
-<div class="k-default-codeblock">
-```
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 83ms/step - mae: 0.0973 - loss: 0.5579 - val_loss: 0.5628 - val_mae: 0.0967
-Epoch 77/100
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 81ms/step - mae: 0.0974 - loss: 0.5579 - val_loss: 0.5638 - val_mae: 0.0963
-Epoch 78/100
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 80ms/step - mae: 0.0968 - loss: 0.5585 - val_loss: 0.5615 - val_mae: 0.0967
-Epoch 79/100
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 80ms/step - mae: 0.0969 - loss: 0.5578 - val_loss: 0.5641 - val_mae: 0.0959
-Epoch 80/100
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 82ms/step - mae: 0.0967 - loss: 0.5584 - val_loss: 0.5619 - val_mae: 0.0962
-Epoch 81/100
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 0s 77ms/step - mae: 0.0965 - loss: 0.5578
-Idx chosen: 151
-
-```
-</div>
-    
-![png](/img/examples/vision/masked_image_modeling/masked_image_modeling_34_33.png)
-    
-
-
-<div class="k-default-codeblock">
-```
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 83ms/step - mae: 0.0965 - loss: 0.5578 - val_loss: 0.5651 - val_mae: 0.0957
-Epoch 82/100
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 81ms/step - mae: 0.0965 - loss: 0.5583 - val_loss: 0.5644 - val_mae: 0.0957
-Epoch 83/100
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 80ms/step - mae: 0.0962 - loss: 0.5584 - val_loss: 0.5649 - val_mae: 0.0954
-Epoch 84/100
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 81ms/step - mae: 0.0962 - loss: 0.5586 - val_loss: 0.5611 - val_mae: 0.0962
-Epoch 85/100
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 80ms/step - mae: 0.0961 - loss: 0.5582 - val_loss: 0.5638 - val_mae: 0.0956
-Epoch 86/100
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 0s 77ms/step - mae: 0.0961 - loss: 0.5584
-Idx chosen: 130
-
-```
-</div>
-    
-![png](/img/examples/vision/masked_image_modeling/masked_image_modeling_34_35.png)
-    
-
-
-<div class="k-default-codeblock">
-```
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 83ms/step - mae: 0.0961 - loss: 0.5584 - val_loss: 0.5641 - val_mae: 0.0954
-Epoch 87/100
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 81ms/step - mae: 0.0959 - loss: 0.5580 - val_loss: 0.5641 - val_mae: 0.0953
-Epoch 88/100
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 80ms/step - mae: 0.0960 - loss: 0.5583 - val_loss: 0.5642 - val_mae: 0.0953
-Epoch 89/100
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 82ms/step - mae: 0.0958 - loss: 0.5591 - val_loss: 0.5635 - val_mae: 0.0953
-Epoch 90/100
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 80ms/step - mae: 0.0957 - loss: 0.5587 - val_loss: 0.5648 - val_mae: 0.0948
-Epoch 91/100
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 0s 77ms/step - mae: 0.0957 - loss: 0.5585
-Idx chosen: 149
-
-```
-</div>
-    
-![png](/img/examples/vision/masked_image_modeling/masked_image_modeling_34_37.png)
-    
-
-
-<div class="k-default-codeblock">
-```
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 84ms/step - mae: 0.0957 - loss: 0.5585 - val_loss: 0.5636 - val_mae: 0.0952
-Epoch 92/100
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 81ms/step - mae: 0.0957 - loss: 0.5593 - val_loss: 0.5642 - val_mae: 0.0950
-Epoch 93/100
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 81ms/step - mae: 0.0957 - loss: 0.5598 - val_loss: 0.5635 - val_mae: 0.0950
-Epoch 94/100
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 82ms/step - mae: 0.0956 - loss: 0.5587 - val_loss: 0.5641 - val_mae: 0.0950
-Epoch 95/100
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 81ms/step - mae: 0.0955 - loss: 0.5587 - val_loss: 0.5637 - val_mae: 0.0950
-Epoch 96/100
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 0s 77ms/step - mae: 0.0956 - loss: 0.5585
-Idx chosen: 52
-
-```
-</div>
-    
-![png](/img/examples/vision/masked_image_modeling/masked_image_modeling_34_39.png)
-    
-
-
-<div class="k-default-codeblock">
-```
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 14s 87ms/step - mae: 0.0956 - loss: 0.5585 - val_loss: 0.5643 - val_mae: 0.0950
-Epoch 97/100
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 81ms/step - mae: 0.0956 - loss: 0.5587 - val_loss: 0.5642 - val_mae: 0.0950
-Epoch 98/100
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 82ms/step - mae: 0.0954 - loss: 0.5586 - val_loss: 0.5639 - val_mae: 0.0950
-Epoch 99/100
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 80ms/step - mae: 0.0954 - loss: 0.5580 - val_loss: 0.5641 - val_mae: 0.0950
-Epoch 100/100
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 13s 80ms/step - mae: 0.0955 - loss: 0.5587 - val_loss: 0.5639 - val_mae: 0.0951
- 40/40 ━━━━━━━━━━━━━━━━━━━━ 1s 13ms/step - mae: 0.0955 - loss: 0.5684
-Loss: 0.57
-MAE: 0.10
-
-```
-</div>
 ---
 ## Evaluation with linear probing
 
@@ -1374,29 +1038,29 @@ downstream_model.summary()
 
 
 
-<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━┓
-┃<span style="font-weight: bold"> Layer (type)                    </span>┃<span style="font-weight: bold"> Output Shape              </span>┃<span style="font-weight: bold">    Param # </span>┃
-┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━┩
-│ patches_1 (<span style="color: #0087ff; text-decoration-color: #0087ff">Patches</span>)             │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">64</span>, <span style="color: #00af00; text-decoration-color: #00af00">108</span>)           │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │
-├─────────────────────────────────┼───────────────────────────┼────────────┤
-│ patch_encoder_1 (<span style="color: #0087ff; text-decoration-color: #0087ff">PatchEncoder</span>)  │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">64</span>, <span style="color: #00af00; text-decoration-color: #00af00">128</span>)           │     <span style="color: #00af00; text-decoration-color: #00af00">22,144</span> │
-├─────────────────────────────────┼───────────────────────────┼────────────┤
-│ mae_encoder (<span style="color: #0087ff; text-decoration-color: #0087ff">Functional</span>)        │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">64</span>, <span style="color: #00af00; text-decoration-color: #00af00">128</span>)           │  <span style="color: #00af00; text-decoration-color: #00af00">1,981,696</span> │
-├─────────────────────────────────┼───────────────────────────┼────────────┤
-│ batch_normalization             │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">64</span>, <span style="color: #00af00; text-decoration-color: #00af00">128</span>)           │        <span style="color: #00af00; text-decoration-color: #00af00">512</span> │
-│ (<span style="color: #0087ff; text-decoration-color: #0087ff">BatchNormalization</span>)            │                           │            │
-├─────────────────────────────────┼───────────────────────────┼────────────┤
-│ global_average_pooling1d        │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">128</span>)               │          <span style="color: #00af00; text-decoration-color: #00af00">0</span> │
-│ (<span style="color: #0087ff; text-decoration-color: #0087ff">GlobalAveragePooling1D</span>)        │                           │            │
-├─────────────────────────────────┼───────────────────────────┼────────────┤
-│ dense_20 (<span style="color: #0087ff; text-decoration-color: #0087ff">Dense</span>)                │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">10</span>)                │      <span style="color: #00af00; text-decoration-color: #00af00">1,290</span> │
-└─────────────────────────────────┴───────────────────────────┴────────────┘
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━┓
+┃<span style="font-weight: bold"> Layer (type)                    </span>┃<span style="font-weight: bold"> Output Shape           </span>┃<span style="font-weight: bold">       Param # </span>┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━┩
+│ patches_1 (<span style="color: #0087ff; text-decoration-color: #0087ff">Patches</span>)             │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">64</span>, <span style="color: #00af00; text-decoration-color: #00af00">108</span>)        │             <span style="color: #00af00; text-decoration-color: #00af00">0</span> │
+├─────────────────────────────────┼────────────────────────┼───────────────┤
+│ patch_encoder_1 (<span style="color: #0087ff; text-decoration-color: #0087ff">PatchEncoder</span>)  │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">64</span>, <span style="color: #00af00; text-decoration-color: #00af00">128</span>)        │        <span style="color: #00af00; text-decoration-color: #00af00">22,252</span> │
+├─────────────────────────────────┼────────────────────────┼───────────────┤
+│ mae_encoder (<span style="color: #0087ff; text-decoration-color: #0087ff">Functional</span>)        │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">64</span>, <span style="color: #00af00; text-decoration-color: #00af00">128</span>)        │     <span style="color: #00af00; text-decoration-color: #00af00">1,981,696</span> │
+├─────────────────────────────────┼────────────────────────┼───────────────┤
+│ batch_normalization             │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">64</span>, <span style="color: #00af00; text-decoration-color: #00af00">128</span>)        │           <span style="color: #00af00; text-decoration-color: #00af00">512</span> │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">BatchNormalization</span>)            │                        │               │
+├─────────────────────────────────┼────────────────────────┼───────────────┤
+│ global_average_pooling1d        │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">128</span>)            │             <span style="color: #00af00; text-decoration-color: #00af00">0</span> │
+│ (<span style="color: #0087ff; text-decoration-color: #0087ff">GlobalAveragePooling1D</span>)        │                        │               │
+├─────────────────────────────────┼────────────────────────┼───────────────┤
+│ dense_20 (<span style="color: #0087ff; text-decoration-color: #0087ff">Dense</span>)                │ (<span style="color: #00d7ff; text-decoration-color: #00d7ff">None</span>, <span style="color: #00af00; text-decoration-color: #00af00">10</span>)             │         <span style="color: #00af00; text-decoration-color: #00af00">1,290</span> │
+└─────────────────────────────────┴────────────────────────┴───────────────┘
 </pre>
 
 
 
 
-<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Total params: </span><span style="color: #00af00; text-decoration-color: #00af00">2,005,642</span> (7.65 MB)
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Total params: </span><span style="color: #00af00; text-decoration-color: #00af00">2,005,750</span> (7.65 MB)
 </pre>
 
 
@@ -1408,7 +1072,7 @@ downstream_model.summary()
 
 
 
-<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Non-trainable params: </span><span style="color: #00af00; text-decoration-color: #00af00">2,004,352</span> (7.65 MB)
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Non-trainable params: </span><span style="color: #00af00; text-decoration-color: #00af00">2,004,460</span> (7.65 MB)
 </pre>
 
 
@@ -1423,25 +1087,55 @@ token during the downstream tasks.
 
 ```python
 
-def prepare_data(images, labels, is_train=True):
-    if is_train:
-        augmentation_model = train_augmentation_model
-    else:
-        augmentation_model = test_augmentation_model
+class ClassificationDataset(keras.utils.PyDataset):
+    def __init__(
+        self, x, y, batch_size, augmentation_model=None, shuffle=False, **kwargs
+    ):
+        super().__init__(**kwargs)
+        self.x = x
+        self.y = y
+        self.batch_size = batch_size
+        self.augmentation_model = augmentation_model
+        self.shuffle = shuffle
+        self.indices = np.arange(len(self.x))
+        if self.shuffle:
+            self.on_epoch_end()
 
-    dataset = tf.data.Dataset.from_tensor_slices((images, labels))
-    if is_train:
-        dataset = dataset.shuffle(BUFFER_SIZE)
+    def __len__(self):
+        return int(np.ceil(len(self.x) / self.batch_size))
 
-    dataset = dataset.batch(BATCH_SIZE).map(
-        lambda x, y: (augmentation_model(x), y), num_parallel_calls=AUTO
+    def on_epoch_end(self):
+        if self.shuffle:
+            np.random.shuffle(self.indices)
+
+    def __getitem__(self, idx):
+        start, end = idx * self.batch_size, (idx + 1) * self.batch_size
+        batch_indices = self.indices[start:end]
+
+        batch_x = ops.cast(self.x[batch_indices], "float32")
+        batch_y = ops.cast(self.y[batch_indices], "int32")
+
+        if self.augmentation_model is not None:
+            batch_x = self.augmentation_model(batch_x, training=self.shuffle)
+
+        return batch_x, batch_y
+
+
+def prepare_data(images, labels, batch_size, is_train=True):
+    aug_model = train_augmentation_model if is_train else test_augmentation_model
+
+    return ClassificationDataset(
+        x=images,
+        y=labels,
+        batch_size=batch_size,
+        augmentation_model=aug_model,
+        shuffle=is_train,
     )
-    return dataset.prefetch(AUTO)
 
 
-train_ds = prepare_data(x_train, y_train)
-val_ds = prepare_data(x_train, y_train, is_train=False)
-test_ds = prepare_data(x_test, y_test, is_train=False)
+train_ds = prepare_data(x_train, y_train, BATCH_SIZE, is_train=True)
+val_ds = prepare_data(x_val, y_val, BATCH_SIZE, is_train=False)
+test_ds = prepare_data(x_test, y_test, BATCH_SIZE, is_train=False)
 ```
 
 ### Perform linear probing
@@ -1474,116 +1168,30 @@ print(f"Accuracy on the test set: {accuracy}%.")
 
 <div class="k-default-codeblock">
 ```
-Epoch 1/50
-   7/157 [37m━━━━━━━━━━━━━━━━━━━━  3s 21ms/step - accuracy: 0.1183 - loss: 3.3939
+Epoch 1/5
 
-WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
-I0000 00:00:1700264823.481598   64012 device_compiler.h:187] Compiled cluster using XLA!  This line is logged at most once for the lifetime of the process.
+1250/1250 ━━━━━━━━━━━━━━━━━━━━ 278s 221ms/step - accuracy: 0.1875 - loss: 2.6296 - val_accuracy: 0.1755 - val_loss: 2.9394
 
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 70s 242ms/step - accuracy: 0.1967 - loss: 2.6073 - val_accuracy: 0.3631 - val_loss: 1.7846
-Epoch 2/50
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 5s 35ms/step - accuracy: 0.3521 - loss: 1.8063 - val_accuracy: 0.3677 - val_loss: 1.7301
-Epoch 3/50
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 5s 34ms/step - accuracy: 0.3580 - loss: 1.7580 - val_accuracy: 0.3649 - val_loss: 1.7326
-Epoch 4/50
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 5s 34ms/step - accuracy: 0.3617 - loss: 1.7471 - val_accuracy: 0.3810 - val_loss: 1.7353
-Epoch 5/50
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 6s 35ms/step - accuracy: 0.3547 - loss: 1.7728 - val_accuracy: 0.3526 - val_loss: 1.8496
-Epoch 6/50
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 6s 35ms/step - accuracy: 0.3546 - loss: 1.7866 - val_accuracy: 0.3896 - val_loss: 1.7583
-Epoch 7/50
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 6s 37ms/step - accuracy: 0.3587 - loss: 1.7924 - val_accuracy: 0.3674 - val_loss: 1.7729
-Epoch 8/50
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 6s 38ms/step - accuracy: 0.3616 - loss: 1.7912 - val_accuracy: 0.3685 - val_loss: 1.7928
-Epoch 9/50
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 6s 36ms/step - accuracy: 0.3707 - loss: 1.7543 - val_accuracy: 0.3568 - val_loss: 1.7943
-Epoch 10/50
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 5s 34ms/step - accuracy: 0.3719 - loss: 1.7451 - val_accuracy: 0.3859 - val_loss: 1.7230
-Epoch 11/50
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 5s 34ms/step - accuracy: 0.3781 - loss: 1.7384 - val_accuracy: 0.3711 - val_loss: 1.7608
-Epoch 12/50
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 6s 35ms/step - accuracy: 0.3791 - loss: 1.7249 - val_accuracy: 0.4004 - val_loss: 1.6961
-Epoch 13/50
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 5s 34ms/step - accuracy: 0.3818 - loss: 1.7303 - val_accuracy: 0.3501 - val_loss: 1.8506
-Epoch 14/50
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 5s 34ms/step - accuracy: 0.3841 - loss: 1.7179 - val_accuracy: 0.3810 - val_loss: 1.8033
-Epoch 15/50
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 5s 34ms/step - accuracy: 0.3818 - loss: 1.7172 - val_accuracy: 0.4168 - val_loss: 1.6507
-Epoch 16/50
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 6s 36ms/step - accuracy: 0.3851 - loss: 1.7059 - val_accuracy: 0.3806 - val_loss: 1.7581
-Epoch 17/50
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 5s 34ms/step - accuracy: 0.3747 - loss: 1.7356 - val_accuracy: 0.4094 - val_loss: 1.6466
-Epoch 18/50
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 5s 35ms/step - accuracy: 0.3828 - loss: 1.7221 - val_accuracy: 0.4015 - val_loss: 1.6757
-Epoch 19/50
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 5s 34ms/step - accuracy: 0.3889 - loss: 1.6939 - val_accuracy: 0.4102 - val_loss: 1.6392
-Epoch 20/50
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 5s 34ms/step - accuracy: 0.3943 - loss: 1.6857 - val_accuracy: 0.4028 - val_loss: 1.6518
-Epoch 21/50
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 5s 34ms/step - accuracy: 0.3870 - loss: 1.6970 - val_accuracy: 0.3949 - val_loss: 1.7283
-Epoch 22/50
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 5s 34ms/step - accuracy: 0.3893 - loss: 1.6838 - val_accuracy: 0.4207 - val_loss: 1.6292
-Epoch 23/50
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 5s 35ms/step - accuracy: 0.4005 - loss: 1.6606 - val_accuracy: 0.4152 - val_loss: 1.6320
-Epoch 24/50
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 5s 34ms/step - accuracy: 0.3978 - loss: 1.6556 - val_accuracy: 0.4042 - val_loss: 1.6657
-Epoch 25/50
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 5s 34ms/step - accuracy: 0.4029 - loss: 1.6464 - val_accuracy: 0.4198 - val_loss: 1.6033
-Epoch 26/50
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 5s 34ms/step - accuracy: 0.3974 - loss: 1.6638 - val_accuracy: 0.4278 - val_loss: 1.5731
-Epoch 27/50
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 6s 37ms/step - accuracy: 0.4035 - loss: 1.6370 - val_accuracy: 0.4302 - val_loss: 1.5663
-Epoch 28/50
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 5s 34ms/step - accuracy: 0.4027 - loss: 1.6349 - val_accuracy: 0.4458 - val_loss: 1.5349
-Epoch 29/50
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 5s 34ms/step - accuracy: 0.4054 - loss: 1.6196 - val_accuracy: 0.4349 - val_loss: 1.5709
-Epoch 30/50
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 5s 35ms/step - accuracy: 0.4070 - loss: 1.6061 - val_accuracy: 0.4297 - val_loss: 1.5578
-Epoch 31/50
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 5s 34ms/step - accuracy: 0.4105 - loss: 1.6172 - val_accuracy: 0.4250 - val_loss: 1.5735
-Epoch 32/50
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 5s 34ms/step - accuracy: 0.4197 - loss: 1.5960 - val_accuracy: 0.4259 - val_loss: 1.5677
-Epoch 33/50
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 5s 34ms/step - accuracy: 0.4156 - loss: 1.5989 - val_accuracy: 0.4400 - val_loss: 1.5395
-Epoch 34/50
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 5s 35ms/step - accuracy: 0.4214 - loss: 1.5862 - val_accuracy: 0.4486 - val_loss: 1.5237
-Epoch 35/50
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 5s 34ms/step - accuracy: 0.4208 - loss: 1.5763 - val_accuracy: 0.4188 - val_loss: 1.5925
-Epoch 36/50
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 5s 34ms/step - accuracy: 0.4227 - loss: 1.5803 - val_accuracy: 0.4525 - val_loss: 1.5174
-Epoch 37/50
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 5s 34ms/step - accuracy: 0.4267 - loss: 1.5700 - val_accuracy: 0.4463 - val_loss: 1.5330
-Epoch 38/50
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 6s 37ms/step - accuracy: 0.4283 - loss: 1.5649 - val_accuracy: 0.4348 - val_loss: 1.5482
-Epoch 39/50
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 5s 34ms/step - accuracy: 0.4332 - loss: 1.5581 - val_accuracy: 0.4486 - val_loss: 1.5251
-Epoch 40/50
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 5s 34ms/step - accuracy: 0.4290 - loss: 1.5596 - val_accuracy: 0.4489 - val_loss: 1.5221
-Epoch 41/50
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 5s 34ms/step - accuracy: 0.4318 - loss: 1.5589 - val_accuracy: 0.4494 - val_loss: 1.5202
-Epoch 42/50
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 5s 34ms/step - accuracy: 0.4317 - loss: 1.5514 - val_accuracy: 0.4505 - val_loss: 1.5184
-Epoch 43/50
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 5s 34ms/step - accuracy: 0.4353 - loss: 1.5504 - val_accuracy: 0.4561 - val_loss: 1.5081
-Epoch 44/50
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 5s 34ms/step - accuracy: 0.4369 - loss: 1.5510 - val_accuracy: 0.4581 - val_loss: 1.5092
-Epoch 45/50
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 6s 35ms/step - accuracy: 0.4379 - loss: 1.5428 - val_accuracy: 0.4555 - val_loss: 1.5099
-Epoch 46/50
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 5s 34ms/step - accuracy: 0.4421 - loss: 1.5475 - val_accuracy: 0.4579 - val_loss: 1.5073
-Epoch 47/50
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 5s 34ms/step - accuracy: 0.4434 - loss: 1.5390 - val_accuracy: 0.4593 - val_loss: 1.5052
-Epoch 48/50
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 5s 34ms/step - accuracy: 0.4418 - loss: 1.5373 - val_accuracy: 0.4600 - val_loss: 1.5038
-Epoch 49/50
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 6s 38ms/step - accuracy: 0.4400 - loss: 1.5367 - val_accuracy: 0.4596 - val_loss: 1.5045
-Epoch 50/50
- 157/157 ━━━━━━━━━━━━━━━━━━━━ 5s 35ms/step - accuracy: 0.4448 - loss: 1.5321 - val_accuracy: 0.4595 - val_loss: 1.5048
- 40/40 ━━━━━━━━━━━━━━━━━━━━ 3s 71ms/step - accuracy: 0.4496 - loss: 1.5088
-Accuracy on the test set: 44.66%.
+Epoch 2/5
 
+1250/1250 ━━━━━━━━━━━━━━━━━━━━ 281s 225ms/step - accuracy: 0.2174 - loss: 2.6340 - val_accuracy: 0.2193 - val_loss: 2.5160
+
+Epoch 3/5
+
+1250/1250 ━━━━━━━━━━━━━━━━━━━━ 270s 216ms/step - accuracy: 0.2320 - loss: 2.3390 - val_accuracy: 0.2126 - val_loss: 2.7522
+
+Epoch 4/5
+
+1250/1250 ━━━━━━━━━━━━━━━━━━━━ 269s 216ms/step - accuracy: 0.2623 - loss: 2.0488 - val_accuracy: 0.2145 - val_loss: 2.4208
+
+Epoch 5/5
+
+313/313 ━━━━━━━━━━━━━━━━━━━━ 52s 165ms/step - accuracy: 0.2438 - loss: 2.2430
+
+Accuracy on the test set: 24.38%.
 ```
 </div>
+
 We believe that with a more sophisticated hyperparameter tuning process and a longer
 pretraining it is possible to improve this performance further. For comparison, we took
 the encoder architecture and

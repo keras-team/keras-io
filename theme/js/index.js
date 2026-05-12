@@ -20,8 +20,8 @@ closeButton.addEventListener('click', () => {
 
 // Copy code
 function addCopyButtonsToCodeBlocks() {
-  // Find all code blocks with .codehilite class
-  const allCodeBlocks = document.querySelectorAll('.codehilite');
+  // Find all code blocks with .codehilite class, excluding those inside .k-default-codeblock
+  const allCodeBlocks = document.querySelectorAll('.codehilite:not(.k-default-codeblock .codehilite)');
   
   allCodeBlocks.forEach((block) => {
     // Skip if button already exists

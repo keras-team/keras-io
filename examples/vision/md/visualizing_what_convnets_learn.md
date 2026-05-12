@@ -108,7 +108,7 @@ center-cropping it, and restricting it to the [0, 255] range.
 
 def initialize_image():
     # We start from a gray image with some random noise
-    img = tf.random.uniform((1, img_width, img_height, 3))
+    img = tf.random.uniform((1, img_height, img_width, 3))
     # ResNet50V2 expects inputs in the range [-1, +1].
     # Here we scale our random inputs to [-0.125, +0.125]
     return (img - 0.5) * 0.25
@@ -196,16 +196,16 @@ cropped_width = img_width - 25 * 2
 cropped_height = img_height - 25 * 2
 width = n * cropped_width + (n - 1) * margin
 height = n * cropped_height + (n - 1) * margin
-stitched_filters = np.zeros((width, height, 3))
+stitched_filters = np.zeros((height, width, 3))
 
 # Fill the picture with our saved filters
 for i in range(n):
     for j in range(n):
         img = all_imgs[i * n + j]
         stitched_filters[
-            (cropped_width + margin) * i : (cropped_width + margin) * i + cropped_width,
-            (cropped_height + margin) * j : (cropped_height + margin) * j
-            + cropped_height,
+            (cropped_height + margin) * i : (cropped_height + margin) * i + cropped_height,
+            (cropped_width + margin) * j : (cropped_width + margin) * j
+            + cropped_width,
             :,
         ] = img
 keras.utils.save_img("stiched_filters.png", stitched_filters)
