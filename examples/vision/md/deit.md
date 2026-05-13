@@ -57,6 +57,18 @@ from keras import layers
 keras.utils.set_random_seed(42)
 ```
 
+<div class="k-default-codeblock">
+```
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+E0000 00:00:1778696636.585494    2411 cuda_dnn.cc:8579] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered
+E0000 00:00:1778696636.592069    2411 cuda_blas.cc:1407] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
+W0000 00:00:1778696636.608151    2411 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1778696636.608181    2411 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1778696636.608183    2411 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1778696636.608184    2411 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+```
+</div>
+
 ---
 ## Constants
 
@@ -148,13 +160,16 @@ class FlowersDataset(keras.utils.PyDataset):
         batch_indices = self.indices[start:end]
         images = []
         for i in batch_indices:
-            image = keras.utils.load_img(
-                self.image_paths[i], target_size=(RESOLUTION + 20, RESOLUTION + 20)
+            target_size = (
+                (RESOLUTION + 20, RESOLUTION + 20)
+                if self.shuffle
+                else (RESOLUTION, RESOLUTION)
             )
+            image = keras.utils.load_img(self.image_paths[i], target_size=target_size)
             images.append(keras.utils.img_to_array(image))
-        images = self.augmenter(
-            np.array(images, dtype="float32"), training=self.shuffle
-        )
+        images = np.array(images, dtype="float32")
+        if self.augmenter is not None:
+            images = self.augmenter(images, training=self.shuffle)
         labels = keras.ops.one_hot(self.labels[batch_indices], num_classes=NUM_CLASSES)
         return images, labels
 
@@ -163,15 +178,12 @@ def get_augmenter(is_training=True):
     if is_training:
         return keras.Sequential(
             [
-                layers.Resizing(RESOLUTION + 20, RESOLUTION + 20),
                 layers.RandomCrop(RESOLUTION, RESOLUTION),
                 layers.RandomFlip("horizontal"),
             ],
             name="train_augmentation",
         )
-    return keras.Sequential(
-        [layers.Resizing(RESOLUTION, RESOLUTION)], name="eval_augmentation"
-    )
+    return None
 
 
 def load_flower_file_paths(validation_split=0.1):
@@ -203,20 +215,32 @@ print(f"Number of training examples: {len(train_paths)}")
 print(f"Number of validation examples: {len(val_paths)}")
 
 train_dataset = FlowersDataset(
-    train_paths, train_labels, augmenter=get_augmenter(is_training=True), shuffle=True
+    train_paths,
+    train_labels,
+    augmenter=get_augmenter(is_training=True),
+    shuffle=True,
+    workers=4,
 )
 val_dataset = FlowersDataset(
-    val_paths, val_labels, augmenter=get_augmenter(is_training=False), shuffle=False
+    val_paths,
+    val_labels,
+    augmenter=get_augmenter(is_training=False),
+    shuffle=False,
+    workers=4,
 )
 ```
 
 <div class="k-default-codeblock">
+```
 Downloading data from https://storage.googleapis.com/download.tensorflow.org/example_images/flower_photos.tgz
 
-228813984/228813984 ━━━━━━━━━━━━━━━━━━━━ 1s 0us/step
+228813984/228813984 ━━━━━━━━━━━━━━━━━━━━ 2s 0us/step
 
-Number of training examples: 3306 </br>
+Number of training examples: 3306
 Number of validation examples: 364
+
+I0000 00:00:1778696644.640571    2411 gpu_device.cc:2019] Created device /job:localhost/replica:0/task:0/device:GPU:0 with 38482 MB memory:  -> device: 0, name: NVIDIA A100-SXM4-40GB, pci bus id: 0000:00:04.0, compute capability: 8.0
+```
 </div>
 
 ---
@@ -437,6 +461,8 @@ print(outputs.shape)
 
 <div class="k-default-codeblock">
 ```
+I0000 00:00:1778696648.330183    2411 cuda_dnn.cc:529] Loaded cuDNN version 92000
+
 (2, 5)
 ```
 </div>
@@ -554,6 +580,7 @@ teacher_model.trainable = False
 ```
 
 <div class="k-default-codeblock">
+```
 Downloading data from https://storage.googleapis.com/tensorflow/keras-applications/efficientnet_v2/efficientnetv2-b0_notop.h5
 
 24274472/24274472 ━━━━━━━━━━━━━━━━━━━━ 0s 0us/step
@@ -562,23 +589,32 @@ Fine-tuning teacher head on flowers dataset...
 
 Epoch 1/5
 
-13/13 ━━━━━━━━━━━━━━━━━━━━ 25s 1s/step - accuracy: 0.6044 - loss: 1.1873 - val_accuracy: 0.7527 - val_loss: 0.9124
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1778696668.253681    2467 service.cc:152] XLA service 0x7fddf4004780 initialized for platform CUDA (this does not guarantee that XLA will be used). Devices:
+I0000 00:00:1778696668.253740    2467 service.cc:160]   StreamExecutor device (0): NVIDIA A100-SXM4-40GB, Compute Capability 8.0
+
+ 2/13 ━━━━━━━━━━━━━━━━━━━━ 1s 97ms/step - accuracy: 0.2812 - loss: 1.5813
+
+I0000 00:00:1778696697.640091    2467 device_compiler.h:188] Compiled cluster using XLA!  This line is logged at most once for the lifetime of the process.
+
+13/13 ━━━━━━━━━━━━━━━━━━━━ 100s 5s/step - accuracy: 0.6031 - loss: 1.1777 - val_accuracy: 0.7363 - val_loss: 0.8961
 
 Epoch 2/5
 
-13/13 ━━━━━━━━━━━━━━━━━━━━ 15s 1s/step - accuracy: 0.7989 - loss: 0.7196 - val_accuracy: 0.8077 - val_loss: 0.6813
+13/13 ━━━━━━━━━━━━━━━━━━━━ 5s 303ms/step - accuracy: 0.7919 - loss: 0.7255 - val_accuracy: 0.8049 - val_loss: 0.6591
 
 Epoch 3/5
 
-13/13 ━━━━━━━━━━━━━━━━━━━━ 15s 1s/step - accuracy: 0.8454 - loss: 0.5436 - val_accuracy: 0.8407 - val_loss: 0.5644
+13/13 ━━━━━━━━━━━━━━━━━━━━ 5s 308ms/step - accuracy: 0.8436 - loss: 0.5433 - val_accuracy: 0.8462 - val_loss: 0.5433
 
 Epoch 4/5
 
-13/13 ━━━━━━━━━━━━━━━━━━━━ 15s 1s/step - accuracy: 0.8708 - loss: 0.4548 - val_accuracy: 0.8516 - val_loss: 0.4992
+13/13 ━━━━━━━━━━━━━━━━━━━━ 5s 309ms/step - accuracy: 0.8724 - loss: 0.4523 - val_accuracy: 0.8626 - val_loss: 0.4762
 
 Epoch 5/5
 
-13/13 ━━━━━━━━━━━━━━━━━━━━ 15s 1s/step - accuracy: 0.8917 - loss: 0.3972 - val_accuracy: 0.8571 - val_loss: 0.4560
+13/13 ━━━━━━━━━━━━━━━━━━━━ 5s 309ms/step - accuracy: 0.8905 - loss: 0.3986 - val_accuracy: 0.8764 - val_loss: 0.4336
+```
 </div>
 
 ---
@@ -602,85 +638,87 @@ _ = deit_distiller.fit(train_dataset, validation_data=val_dataset, epochs=NUM_EP
 ```
 
 <div class="k-default-codeblock">
+```
 Epoch 1/20
 
-13/13 ━━━━━━━━━━━━━━━━━━━━ 71s 3s/step - accuracy: 0.2217 - distillation_loss: 2.1946 - loss: 2.0575 - student_loss: 1.9389 - val_accuracy: 0.1896 - val_loss: 1.4167 - val_student_loss: 1.5656
+13/13 ━━━━━━━━━━━━━━━━━━━━ 189s 7s/step - accuracy: 0.2257 - distillation_loss: 2.1809 - loss: 2.0463 - student_loss: 1.9302 - val_accuracy: 0.1896 - val_loss: 1.4346 - val_student_loss: 1.5736
 
 Epoch 2/20
 
-13/13 ━━━━━━━━━━━━━━━━━━━━ 36s 3s/step - accuracy: 0.2151 - distillation_loss: 1.6285 - loss: 1.6218 - student_loss: 1.6151 - val_accuracy: 0.2775 - val_loss: 1.4977 - val_student_loss: 1.5740
+13/13 ━━━━━━━━━━━━━━━━━━━━ 6s 367ms/step - accuracy: 0.2184 - distillation_loss: 1.6308 - loss: 1.6227 - student_loss: 1.6147 - val_accuracy: 0.2445 - val_loss: 1.5118 - val_student_loss: 1.5775
 
 Epoch 3/20
 
-13/13 ━━━━━━━━━━━━━━━━━━━━ 36s 3s/step - accuracy: 0.2199 - distillation_loss: 1.6082 - loss: 1.6086 - student_loss: 1.6089 - val_accuracy: 0.2445 - val_loss: 1.5941 - val_student_loss: 1.6028
+13/13 ━━━━━━━━━━━━━━━━━━━━ 6s 378ms/step - accuracy: 0.2151 - distillation_loss: 1.6084 - loss: 1.6084 - student_loss: 1.6084 - val_accuracy: 0.2445 - val_loss: 1.5851 - val_student_loss: 1.6011
 
 Epoch 4/20
 
-13/13 ━━━━━━━━━━━━━━━━━━━━ 36s 3s/step - accuracy: 0.2459 - distillation_loss: 1.6071 - loss: 1.6051 - student_loss: 1.6032 - val_accuracy: 0.2170 - val_loss: 1.5477 - val_student_loss: 1.5856
+13/13 ━━━━━━━━━━━━━━━━━━━━ 6s 375ms/step - accuracy: 0.2426 - distillation_loss: 1.6073 - loss: 1.6051 - student_loss: 1.6028 - val_accuracy: 0.2170 - val_loss: 1.5452 - val_student_loss: 1.5852
 
 Epoch 5/20
 
-13/13 ━━━━━━━━━━━━━━━━━━━━ 36s 3s/step - accuracy: 0.2423 - distillation_loss: 1.6057 - loss: 1.6048 - student_loss: 1.6039 - val_accuracy: 0.2445 - val_loss: 1.5767 - val_student_loss: 1.5921
+13/13 ━━━━━━━━━━━━━━━━━━━━ 6s 368ms/step - accuracy: 0.2387 - distillation_loss: 1.6037 - loss: 1.6033 - student_loss: 1.6029 - val_accuracy: 0.2445 - val_loss: 1.5618 - val_student_loss: 1.5873
 
 Epoch 6/20
 
-13/13 ━━━━━━━━━━━━━━━━━━━━ 36s 3s/step - accuracy: 0.2483 - distillation_loss: 1.6020 - loss: 1.6026 - student_loss: 1.6032 - val_accuracy: 0.2445 - val_loss: 1.7105 - val_student_loss: 1.6356
+13/13 ━━━━━━━━━━━━━━━━━━━━ 6s 369ms/step - accuracy: 0.2489 - distillation_loss: 1.6007 - loss: 1.6008 - student_loss: 1.6008 - val_accuracy: 0.2445 - val_loss: 1.6880 - val_student_loss: 1.6270
 
 Epoch 7/20
 
-13/13 ━━━━━━━━━━━━━━━━━━━━ 36s 3s/step - accuracy: 0.2371 - distillation_loss: 1.6040 - loss: 1.6028 - student_loss: 1.6015 - val_accuracy: 0.2445 - val_loss: 1.5565 - val_student_loss: 1.5843
+13/13 ━━━━━━━━━━━━━━━━━━━━ 6s 361ms/step - accuracy: 0.2308 - distillation_loss: 1.6025 - loss: 1.6014 - student_loss: 1.6003 - val_accuracy: 0.2527 - val_loss: 1.5244 - val_student_loss: 1.5746
 
 Epoch 8/20
 
-13/13 ━━━━━━━━━━━━━━━━━━━━ 36s 3s/step - accuracy: 0.2435 - distillation_loss: 1.6024 - loss: 1.6013 - student_loss: 1.6007 - val_accuracy: 0.2857 - val_loss: 1.5354 - val_student_loss: 1.5774
+13/13 ━━━━━━━━━━━━━━━━━━━━ 6s 363ms/step - accuracy: 0.2480 - distillation_loss: 1.5985 - loss: 1.5973 - student_loss: 1.5964 - val_accuracy: 0.2857 - val_loss: 1.5183 - val_student_loss: 1.5697
 
 Epoch 9/20
 
-13/13 ━━━━━━━━━━━━━━━━━━━━ 36s 3s/step - accuracy: 0.2568 - distillation_loss: 1.5865 - loss: 1.5885 - student_loss: 1.5907 - val_accuracy: 0.2363 - val_loss: 1.5535 - val_student_loss: 1.5746
+13/13 ━━━━━━━━━━━━━━━━━━━━ 6s 361ms/step - accuracy: 0.3073 - distillation_loss: 1.5623 - loss: 1.5619 - student_loss: 1.5617 - val_accuracy: 0.3104 - val_loss: 1.5522 - val_student_loss: 1.5427
 
 Epoch 10/20
 
-13/13 ━━━━━━━━━━━━━━━━━━━━ 36s 3s/step - accuracy: 0.3261 - distillation_loss: 1.5364 - loss: 1.5331 - student_loss: 1.5301 - val_accuracy: 0.3407 - val_loss: 1.4946 - val_student_loss: 1.4944
+13/13 ━━━━━━━━━━━━━━━━━━━━ 6s 363ms/step - accuracy: 0.3657 - distillation_loss: 1.4807 - loss: 1.4769 - student_loss: 1.4729 - val_accuracy: 0.3407 - val_loss: 1.5153 - val_student_loss: 1.4909
 
 Epoch 11/20
 
-13/13 ━━━━━━━━━━━━━━━━━━━━ 35s 3s/step - accuracy: 0.3905 - distillation_loss: 1.4418 - loss: 1.4494 - student_loss: 1.4571 - val_accuracy: 0.3104 - val_loss: 1.5375 - val_student_loss: 1.4785
+13/13 ━━━━━━━━━━━━━━━━━━━━ 6s 369ms/step - accuracy: 0.3941 - distillation_loss: 1.4111 - loss: 1.4111 - student_loss: 1.4115 - val_accuracy: 0.3544 - val_loss: 1.5445 - val_student_loss: 1.4759
 
 Epoch 12/20
 
-13/13 ━━━━━━━━━━━━━━━━━━━━ 35s 3s/step - accuracy: 0.3902 - distillation_loss: 1.3951 - loss: 1.3969 - student_loss: 1.3988 - val_accuracy: 0.3929 - val_loss: 1.3460 - val_student_loss: 1.3835
+13/13 ━━━━━━━━━━━━━━━━━━━━ 6s 377ms/step - accuracy: 0.4250 - distillation_loss: 1.3679 - loss: 1.3678 - student_loss: 1.3676 - val_accuracy: 0.3929 - val_loss: 1.3185 - val_student_loss: 1.3640
 
 Epoch 13/20
 
-13/13 ━━━━━━━━━━━━━━━━━━━━ 35s 3s/step - accuracy: 0.4507 - distillation_loss: 1.3390 - loss: 1.3416 - student_loss: 1.3436 - val_accuracy: 0.4093 - val_loss: 1.4916 - val_student_loss: 1.4006
+13/13 ━━━━━━━━━━━━━━━━━━━━ 6s 367ms/step - accuracy: 0.4604 - distillation_loss: 1.3078 - loss: 1.3064 - student_loss: 1.3049 - val_accuracy: 0.4478 - val_loss: 1.5273 - val_student_loss: 1.4022
 
 Epoch 14/20
 
-13/13 ━━━━━━━━━━━━━━━━━━━━ 35s 3s/step - accuracy: 0.4894 - distillation_loss: 1.2902 - loss: 1.2843 - student_loss: 1.2785 - val_accuracy: 0.4753 - val_loss: 1.3441 - val_student_loss: 1.3380
+13/13 ━━━━━━━━━━━━━━━━━━━━ 6s 364ms/step - accuracy: 0.5094 - distillation_loss: 1.2820 - loss: 1.2736 - student_loss: 1.2653 - val_accuracy: 0.4753 - val_loss: 1.2482 - val_student_loss: 1.3120
 
 Epoch 15/20
 
-13/13 ━━━━━━━━━━━━━━━━━━━━ 35s 3s/step - accuracy: 0.4991 - distillation_loss: 1.2700 - loss: 1.2589 - student_loss: 1.2471 - val_accuracy: 0.5000 - val_loss: 1.3584 - val_student_loss: 1.2961
+13/13 ━━━━━━━━━━━━━━━━━━━━ 6s 367ms/step - accuracy: 0.5088 - distillation_loss: 1.2707 - loss: 1.2553 - student_loss: 1.2394 - val_accuracy: 0.5302 - val_loss: 1.3324 - val_student_loss: 1.2801
 
 Epoch 16/20
 
-13/13 ━━━━━━━━━━━━━━━━━━━━ 35s 3s/step - accuracy: 0.5417 - distillation_loss: 1.2405 - loss: 1.2268 - student_loss: 1.2130 - val_accuracy: 0.5632 - val_loss: 1.3444 - val_student_loss: 1.2633
+13/13 ━━━━━━━━━━━━━━━━━━━━ 6s 366ms/step - accuracy: 0.5544 - distillation_loss: 1.2321 - loss: 1.2154 - student_loss: 1.1985 - val_accuracy: 0.5385 - val_loss: 1.4207 - val_student_loss: 1.2887
 
 Epoch 17/20
 
-13/13 ━━━━━━━━━━━━━━━━━━━━ 35s 3s/step - accuracy: 0.5696 - distillation_loss: 1.2105 - loss: 1.1896 - student_loss: 1.1678 - val_accuracy: 0.5549 - val_loss: 1.1859 - val_student_loss: 1.1966
+13/13 ━━━━━━━━━━━━━━━━━━━━ 6s 377ms/step - accuracy: 0.5693 - distillation_loss: 1.2090 - loss: 1.1889 - student_loss: 1.1681 - val_accuracy: 0.5549 - val_loss: 1.1973 - val_student_loss: 1.2029
 
 Epoch 18/20
 
-13/13 ━━━━━━━━━━━━━━━━━━━━ 35s 3s/step - accuracy: 0.5895 - distillation_loss: 1.1907 - loss: 1.1708 - student_loss: 1.1506 - val_accuracy: 0.5797 - val_loss: 1.1473 - val_student_loss: 1.1748
+13/13 ━━━━━━━━━━━━━━━━━━━━ 6s 365ms/step - accuracy: 0.5941 - distillation_loss: 1.1869 - loss: 1.1691 - student_loss: 1.1510 - val_accuracy: 0.5797 - val_loss: 1.1819 - val_student_loss: 1.1792
 
 Epoch 19/20
 
-13/13 ━━━━━━━━━━━━━━━━━━━━ 35s 3s/step - accuracy: 0.5953 - distillation_loss: 1.1844 - loss: 1.1647 - student_loss: 1.1448 - val_accuracy: 0.5907 - val_loss: 1.1947 - val_student_loss: 1.1727
+13/13 ━━━━━━━━━━━━━━━━━━━━ 6s 372ms/step - accuracy: 0.6062 - distillation_loss: 1.1702 - loss: 1.1475 - student_loss: 1.1242 - val_accuracy: 0.5934 - val_loss: 1.1396 - val_student_loss: 1.1463
 
 Epoch 20/20
 
-13/13 ━━━━━━━━━━━━━━━━━━━━ 35s 3s/step - accuracy: 0.6128 - distillation_loss: 1.1646 - loss: 1.1411 - student_loss: 1.1169 - val_accuracy: 0.6209 - val_loss: 1.2352 - val_student_loss: 1.1721
+13/13 ━━━━━━━━━━━━━━━━━━━━ 6s 358ms/step - accuracy: 0.6243 - distillation_loss: 1.1581 - loss: 1.1337 - student_loss: 1.1085 - val_accuracy: 0.5934 - val_loss: 1.2590 - val_student_loss: 1.1801
+```
 </div>
 
 In this Keras 3 setup, distillation consistently improves over training the same
