@@ -2,7 +2,7 @@
 Title: Distilling Vision Transformers
 Author: [Sayak Paul](https://twitter.com/RisingSayak)
 Date created: 2022/04/05
-Last modified: 2026/03/11
+Last modified: 2026/03/13
 Description: Distillation of Vision Transformers through attention.
 Accelerator: GPU
 Converted to Keras 3 by: [Harshith K](https://github.com/kharshith-k/)
