@@ -284,7 +284,9 @@ class WGAN(keras.Model):
         # 2. Calculate the gradients w.r.t to this interpolated image.
         grads = gp_tape.gradient(pred, [interpolated])[0]
         # 3. Calculate the norm of the gradients.
-        norm = tf.sqrt(tf.reduce_sum(tf.square(grads), axis=[1, 2, 3]))
+        norm = tf.sqrt(
+            tf.reduce_sum(tf.square(grads), axis=[1, 2, 3]) + keras.backend.epsilon()
+        )
         gp = tf.reduce_mean((norm - 1.0) ** 2)
         return gp
 
