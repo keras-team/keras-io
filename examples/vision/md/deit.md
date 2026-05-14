@@ -2,7 +2,7 @@
 
 **Author:** [Sayak Paul](https://twitter.com/RisingSayak)<br>
 **Date created:** 2022/04/05<br>
-**Last modified:** 2026/03/11<br>
+**Last modified:** 2026/05/13<br>
 **Description:** Distillation of Vision Transformers through attention.
 
 
