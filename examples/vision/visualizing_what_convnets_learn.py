@@ -183,9 +183,9 @@ for i in range(n):
     for j in range(n):
         img = all_imgs[i * n + j]
         stitched_filters[
-            (cropped_height + margin) * i : (cropped_height + margin) * i + cropped_height,
-            (cropped_width + margin) * j : (cropped_width + margin) * j
-            + cropped_width,
+            (cropped_height + margin) * i : (cropped_height + margin) * i
+            + cropped_height,
+            (cropped_width + margin) * j : (cropped_width + margin) * j + cropped_width,
             :,
         ] = img
 keras.utils.save_img("stiched_filters.png", stitched_filters)

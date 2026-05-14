@@ -1,6 +1,6 @@
 # Orbax Checkpointing in Keras
 
-**Author:** [Amit Srivastava](https://github.com/amitsrivastava78)<br>
+**Author:** [Samaneh Saadat](https://github.com/SamanehSaadat/), [Amit Srivastava](https://github.com/amitsrivastava78)<br>
 **Date created:** 2025/11/20<br>
 **Last modified:** 2026/03/04<br>
 **Description:** Save and load Orbax checkpoints with distributed resharding.

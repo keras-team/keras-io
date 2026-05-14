@@ -9,6 +9,7 @@ PyYAML
 pandas
 google-pasta
 jupyter
+tokenizers
 pydot
 boto3
 tensorflow==2.19.1
@@ -19,3 +20,4 @@ tf-keras==2.19.0
 keras-hub
 keras-rs
 pymdown-extensions==10.20
+sentencepiece
