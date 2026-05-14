@@ -70,8 +70,8 @@ We fetch the vocabulary directly from the keras_hub preset to ensure
 that the Token IDs match the model weights exactly.
 """
 
-tokenizer_nlp = keras_hub.models.BertTokenizer.from_preset(PRESET)
-vocab = tokenizer_nlp.get_vocabulary()
+tokenizer = keras_hub.models.BertTokenizer.from_preset(PRESET)
+vocab = tokenizer.get_vocabulary()
 vocab_dict = {word: i for i, word in enumerate(vocab)}
 tokenizer = BertWordPieceTokenizer(vocab=vocab_dict, lowercase=True)
 
@@ -256,7 +256,11 @@ def create_model():
     end_logits = layers.Reshape((max_len,), name="end_logit")(end_logits)
 
     model = keras.Model(
-        inputs=[input_ids, token_type_ids, attention_mask],
+        inputs={
+            "input_ids": input_ids,
+            "token_type_ids": token_type_ids,
+            "attention_mask": attention_mask,
+        },
         outputs=[start_logits, end_logits],
     )
     model.compile(
@@ -310,14 +314,14 @@ class ExactMatch(keras.callbacks.Callback):
         pred_start_logits, pred_end_logits = self.model.predict(
             self.x_eval, batch_size=32
         )
-        pred_start = ops.convert_to_numpy(ops.softmax(pred_start_logits))
-        pred_end = ops.convert_to_numpy(ops.softmax(pred_end_logits))
+        pred_start = ops.convert_to_numpy(pred_start_logits)
+        pred_end = ops.convert_to_numpy(pred_end_logits)
 
         count = 0
-        for idx, (start_probs, end_probs) in enumerate(zip(pred_start, pred_end)):
+        for idx, (start_logits, end_logits) in enumerate(zip(pred_start, pred_end)):
             squad_eg = valid_data_no_skip[idx]
             offsets = squad_eg.context_token_to_char
-            start, end = np.argmax(start_probs), np.argmax(end_probs)
+            start, end = np.argmax(start_logits), np.argmax(end_logits)
             if start >= len(offsets):
                 continue
             p_start = offsets[start][0]
