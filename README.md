@@ -1,3 +1,13 @@
+## About This Fork
+
+This is a personal fork of [keras-team/keras-io](https://github.com/keras-team/keras-io) maintained for upstream documentation contributions.
+
+### Contributions
+
+- **Open:** Add guide for exporting Keras models to LiteRT (official keras.io guide)
+
+---
+
 # Keras.io documentation generator
 
 This repository hosts the code used to generate the [keras.io](https://keras.io) website.
