@@ -2,7 +2,7 @@
 Title: Natural language image search with a Dual Encoder
 Author: [Khalid Salama](https://www.linkedin.com/in/khalid-salama-24403144/)
 Date created: 2021/01/30
-Last modified: 2026/04/26
+Last modified: 2026/05/24
 Description: Implementation of a dual encoder model for retrieving images that match natural language queries.
 Accelerator: GPU
 Converted to Keras 3 by: [Maitry Sinha](https://github.com/maitry63)
@@ -367,7 +367,7 @@ In this experiment, we freeze the base encoders for text and images, and make on
 the projection head trainable.
 """
 
-num_epochs = 5  # In practice, train for at least 30 epochs
+num_epochs = 2  # In practice, train for at least 30 epochs
 batch_size = 256
 vision_encoder = create_vision_encoder(1, 256, 0.1)
 text_encoder = create_text_encoder(1, 256, 0.1)
@@ -460,11 +460,12 @@ def image_generator(image_paths, batch_size):
     for i in range(0, len(image_paths), batch_size):
         batch_paths = image_paths[i : i + batch_size]
         batch_images = np.stack([read_image(p) for p in batch_paths])
-        yield batch_images
+        yield (batch_images,)
 
 
 # Use the first 2000
 target_paths = image_paths[:2000]
+
 gen = image_generator(target_paths, batch_size)
 image_embeddings = vision_encoder.predict(
     gen,
