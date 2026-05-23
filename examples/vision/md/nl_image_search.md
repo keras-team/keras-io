@@ -468,7 +468,7 @@ plt.show()
 
 
     
-![png](/img/examples/vision/nl_image_search/nl_image_search_23_0.png)
+![png](/img/examples/vision/nl_image_search/nl_image_search_21_0.png)
     
 
 
@@ -598,7 +598,7 @@ plt.show()
 
 
     
-![png](/img/examples/vision/nl_image_search/nl_image_search_30_0.png)
+![png](/img/examples/vision/nl_image_search/nl_image_search_27_0.png)
     
 
 
