@@ -385,7 +385,7 @@ pretraining_model.fit(
 )
 
 # Save this base model for further finetuning.
-pretrained_model.save("pretrained_model.keras")
+encoder_model.save("encoder_model.keras")
 
 """
 ## Fine-tuning
