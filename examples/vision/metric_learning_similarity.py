@@ -48,6 +48,7 @@ from keras import ops
 from keras import layers
 from matplotlib import pyplot as plt
 from mpl_toolkits import axes_grid1
+from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
 
 print("Keras version:", keras.__version__)
 print("Backend:", keras.backend.backend())
@@ -117,7 +118,7 @@ class SimilarityDataset(keras.utils.PyDataset):
         else:
             self.class_list = list(np.unique(self.y))
 
-        self.class_indices = []
+        class_indices = []
         for cls in self.class_list:
             indices = np.where(self.y == cls)[0]
 
@@ -129,14 +130,18 @@ class SimilarityDataset(keras.utils.PyDataset):
                         replace=False,
                     )
 
-            self.class_indices.append(indices)
+            class_indices.append(indices)
 
         if total_examples_per_class is not None:
-            all_indices = np.concatenate(self.class_indices)
+            all_indices = np.concatenate(class_indices)
             self.x = self.x[all_indices]
             self.y = self.y[all_indices]
 
-            self.class_indices = [np.where(self.y == cls)[0] for cls in self.class_list]
+        shuffled_indices = self.rng.permutation(len(self.y))
+        self.x = self.x[shuffled_indices]
+        self.y = self.y[shuffled_indices]
+
+        self.class_indices = [np.where(self.y == cls)[0] for cls in self.class_list]
 
     def __len__(self):
         return self.steps_per_epoch
@@ -197,7 +202,7 @@ print(" Create Training Data ".center(34, "#"))
 train_ds = SimilarityDataset(
     x_train_raw,
     y_train_raw,
-    classes_per_batch=5,
+    classes_per_batch=min(5, num_known_classes),
     examples_per_class=5,
     steps_per_epoch=4000,
     class_list=class_list,
@@ -280,7 +285,7 @@ model = keras.Model(inputs, outputs)
 model.summary()
 
 
-# Helper class to replicate Index/Lookup/Calibration logic from SimilarityModel
+# Helper class to replicate Calibration logic from SimilarityModel
 class SimilarityWrapper:
     def __init__(self, model):
         self.model = model
@@ -403,7 +408,12 @@ model.compile(
     optimizer=keras.optimizers.Adam(learning_rate),
     loss=loss,
 )
-history = model.fit(train_ds, epochs=epochs, validation_data=val_ds)
+history = model.fit(
+    train_ds,
+    epochs=epochs,
+    validation_data=val_ds,
+    validation_steps=val_steps,
+)
 
 """
 ## Indexing
@@ -547,8 +557,6 @@ cutpoint = calibration["optimal_t"]
 x_confusion, y_confusion = val_ds.get_slice(0, -1)
 
 matches = sim_model.match(x_confusion, cutpoint_val=cutpoint, no_match_label=10)
-
-from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
 
 cm = confusion_matrix(y_confusion, matches, labels=list(range(11)))
 disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=labels)
