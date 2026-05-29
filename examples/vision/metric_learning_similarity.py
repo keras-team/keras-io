@@ -2,7 +2,7 @@
 Title: Metric learning for image similarity search.
 Author: [Owen Vallis](https://twitter.com/owenvallis)
 Date created: 2021/09/30
-Last modified: 2026/05/04
+Last modified: 2026/05/29
 Description: Example of using similarity metric learning on CIFAR-10 images.
 Accelerator: GPU
 
@@ -107,7 +107,7 @@ class SimilarityDataset(keras.utils.PyDataset):
         self.examples_per_class = examples_per_class
         self.steps_per_epoch = steps_per_epoch
 
-        rng = np.random.default_rng(seed)
+        self.rng = np.random.default_rng(seed)
 
         if class_list is not None:
             mask = np.isin(self.y, class_list)
@@ -123,26 +123,42 @@ class SimilarityDataset(keras.utils.PyDataset):
 
             if total_examples_per_class is not None:
                 if len(indices) > total_examples_per_class:
-                    indices = rng.choice(
-                        indices, size=total_examples_per_class, replace=False
+                    indices = self.rng.choice(
+                        indices,
+                        size=total_examples_per_class,
+                        replace=False,
                     )
 
             self.class_indices.append(indices)
+
+        if total_examples_per_class is not None:
+            all_indices = np.concatenate(self.class_indices)
+            self.x = self.x[all_indices]
+            self.y = self.y[all_indices]
+
+            self.class_indices = [np.where(self.y == cls)[0] for cls in self.class_list]
 
     def __len__(self):
         return self.steps_per_epoch
 
     def __getitem__(self, idx):
         x_batch, y_batch = [], []
-        selected_classes = np.random.choice(
-            len(self.class_indices), self.classes_per_batch, replace=False
+
+        selected_classes = self.rng.choice(
+            len(self.class_indices),
+            self.classes_per_batch,
+            replace=False,
         )
+
         for cls_idx in selected_classes:
-            indices = np.random.choice(
-                self.class_indices[cls_idx], self.examples_per_class, replace=False
+            indices = self.rng.choice(
+                self.class_indices[cls_idx],
+                self.examples_per_class,
+                replace=False,
             )
             x_batch.append(self.x[indices])
             y_batch.append(self.y[indices])
+
         return np.concatenate(x_batch), np.concatenate(y_batch)
 
     def get_slice(self, begin, size):
@@ -347,7 +363,7 @@ sim_model = SimilarityWrapper(model)
 The similarity loss expects batches containing at least 2 examples of each
 class, from which it computes the loss over the pairwise positive and negative
 distances. Here we are using `MultiSimilarityLoss()`
-([paper](ihttps://arxiv.org/abs/1904.06627)), one of several losses in
+([paper](https://arxiv.org/abs/1904.06627)), one of several losses in
 Keras. This loss
 attempts to use all informative pairs in the batch, taking into account the
 self-similarity, positive-similarity, and the negative-similarity.
