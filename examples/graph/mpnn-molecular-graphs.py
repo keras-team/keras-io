@@ -2,19 +2,17 @@
 Title: Message-passing neural network (MPNN) for molecular property prediction
 Author: [akensert](http://github.com/akensert)
 Date created: 2021/08/16
-Last modified: 2021/12/27
-Description: Implementation of an MPNN to predict blood-brain barrier
-permeability.
+Last modified: 2026/06/01
+Description: Implementation of an MPNN to predict blood-brain barrier permeability.
 Accelerator: GPU
-Converted to Keras 3 by:
-[LakshmiKalaKadali](https://github.com/LakshmiKalaKadali)
+Converted to Keras 3 by: [LakshmiKalaKadali](https://github.com/LakshmiKalaKadali)
 """
 
 """
 ## Introduction
 
 In this tutorial, we will implement a type of graph neural network (GNN)
-known as _ message passing neural network_ (MPNN) to predict graph
+known as _message passing neural network_ (MPNN) to predict graph
 properties. Specifically, we will
 implement an MPNN to predict a molecular property known as
 _blood-brain barrier permeability_ (BBBP).
