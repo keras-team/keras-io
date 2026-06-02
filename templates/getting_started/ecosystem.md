@@ -64,3 +64,31 @@ A Python library for amortized Bayesian workflows using generative neural networ
 - A user-friendly API for rapid Bayesian workflows
 - A rich collection of neural network architectures
 - Multi-backend support via Keras 3: You can use PyTorch, TensorFlow, or JAX
+
+---
+
+## NEAT
+
+[NEAT documentation](https://neat-cylu.vercel.app/) - [NEAT GitHub repository](https://github.com/ItCodinTime/NEAT)
+
+NEAT (Nash-Equilibrium Adaptive Training) is a Keras-first optimizer library for conflict-aware neural network training. 
+It provides a Keras 3 optimizer usable with `model.compile(...)`, plus a NumPy reference engine for validating the update rule.
+
+Features include:
+
+- Keras-compatible optimizer API
+- Nash-inspired conflict-aware gradient correction
+- Optional native CPU acceleration
+- Player-aware training utilities
+- Training diagnostics for conflict and update alignment
+
+```python
+import keras
+from neat_optim import NEAT
+
+model.compile(
+optimizer=NEAT(learning_rate=1e-3),
+loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+)
+```
+
