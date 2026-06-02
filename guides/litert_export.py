@@ -109,20 +109,179 @@ output = interpreter.get_tensor(output_details[0]["index"])
 print("Inference output shape:", output.shape)
 
 """
+## Working with different model types
+
+### Subclassed models
+
+For subclassed models, you must call the model on sample data before export so
+that Keras can infer the input signature and build the weights.
+"""
+
+
+class TinyModel(keras.Model):
+    def __init__(self):
+        super().__init__()
+        self.dense1 = keras.layers.Dense(16, activation="relu")
+        self.dense2 = keras.layers.Dense(1)
+
+    def call(self, x):
+        return self.dense2(self.dense1(x))
+
+
+subclass_model = TinyModel()
+# Build by calling on sample data
+subclass_model(np.zeros((1, 10), dtype="float32"))
+subclass_model.export("subclass_model.tflite", format="litert")
+print("Subclassed model exported")
+
+"""
+### Models with multiple inputs
+
+Models that accept multiple inputs or outputs are fully supported.
+"""
+
+input_a = keras.Input(shape=(10,), name="input_a")
+input_b = keras.Input(shape=(10,), name="input_b")
+merged = keras.layers.Concatenate()([input_a, input_b])
+output = keras.layers.Dense(1)(merged)
+multi_input_model = keras.Model(inputs=[input_a, input_b], outputs=output)
+
+a = np.random.random((1, 10)).astype("float32")
+b = np.random.random((1, 10)).astype("float32")
+_ = multi_input_model([a, b])
+
+multi_input_model.export("multi_input_model.tflite", format="litert")
+print("Multi-input model exported")
+
+"""
+### Models with dictionary inputs
+
+Dictionary inputs are also supported natively.
+"""
+
+input_x = keras.Input(shape=(10,), name="x")
+input_y = keras.Input(shape=(10,), name="y")
+sum_output = keras.layers.Add()([input_x, input_y])
+dict_model = keras.Model(inputs={"x": input_x, "y": input_y}, outputs=sum_output)
+
+x_val = np.random.random((1, 10)).astype("float32")
+y_val = np.random.random((1, 10)).astype("float32")
+_ = dict_model({"x": x_val, "y": y_val})
+
+dict_model.export("dict_model.tflite", format="litert")
+print("Dict-input model exported")
+
+"""
+## Runtime input resizing
+
+LiteRT interpreters support resizing input tensors at runtime, which is useful
+when you need to process different batch sizes with the same exported model.
+"""
+
+interpreter = Interpreter(model_path="model.tflite")
+interpreter.allocate_tensors()
+input_details = interpreter.get_input_details()
+
+# Resize from batch=1 to batch=4
+interpreter.resize_tensor_input(input_details[0]["index"], [4, 10])
+interpreter.allocate_tensors()
+
+batch_input = np.random.random((4, 10)).astype("float32")
+interpreter.set_tensor(input_details[0]["index"], batch_input)
+interpreter.invoke()
+resized_output = interpreter.get_tensor(interpreter.get_output_details()[0]["index"])
+print("Resized output shape:", resized_output.shape)
+
+"""
+## Signature runner
+
+Use the signature runner for cleaner inference code. Input names in the
+signature come from the model's export format; you can discover them via
+`get_signature_list()`.
+"""
+
+interpreter = Interpreter(model_path="model.tflite")
+interpreter.allocate_tensors()
+
+# Check available signatures
+print("Signatures:", interpreter.get_signature_list())
+
+# Run inference using the signature runner
+runner = interpreter.get_signature_runner("serving_default")
+sig_output = runner(args_0=sample_input)
+print("Signature runner output shape:", list(sig_output.values())[0].shape)
+
+"""
+## Custom input signature
+
+You can override the inferred input signature by passing `input_signature` to
+`export()`. This is useful when you want to enforce specific shapes or dtypes.
+"""
+
+model = keras.Sequential(
+    [
+        keras.layers.Dense(64, activation="relu", input_shape=(10,)),
+        keras.layers.Dense(10, activation="softmax"),
+    ]
+)
+model.compile()
+model(np.zeros((1, 10), dtype="float32"))
+
+# Export with a custom input signature
+custom_sig = [keras.layers.InputSpec(shape=(None, 10), dtype="float32")]
+model.export("custom_sig_model.tflite", format="litert", input_signature=custom_sig)
+print("Exported with custom input signature")
+
+"""
+## Export a KerasHub model
+
+The same API works for KerasHub presets. Here we export **Gemma 3 270M**,
+a lightweight language model that is small enough to run on edge devices.
+"""
+
+import keras_hub
+
+preset = "gemma3_270m"
+preprocessor = keras_hub.models.Gemma3CausalLMPreprocessor.from_preset(
+    preset, sequence_length=32
+)
+model = keras_hub.models.Gemma3CausalLM.from_preset(preset, preprocessor=preprocessor)
+
+print(f"Loaded {preset}")
+
+# Build weights with a sample input
+sample_text = {"prompts": ["Hello"], "responses": ["world"]}
+sample_input = preprocessor(sample_text)[0]
+_ = model(sample_input)
+
+# Export to LiteRT
+model.export("gemma3_270m.tflite", format="litert")
+print("Exported to gemma3_270m.tflite")
+
+"""
 ## Quantization for smaller models
 
 Quantization reduces model size and can speed up inference on edge devices.
 
-### Dynamic range quantization
+### Built-in dynamic range quantization
 
-The simplest approach — quantizes weights to 8-bit integers while keeping
-activations in float32. This typically gives **~4× size reduction**.
-
-You can pass `optimizations` directly to `model.export()`. This works on both
-the TensorFlow and PyTorch backends.
+The simplest approach — pass `optimizations` to `model.export()`. This works on
+both the TensorFlow and PyTorch backends and quantizes weights to 8-bit
+integers while keeping activations in float32. This typically gives
+**~4× size reduction**.
 """
 
 import tensorflow as tf
+
+model = keras.Sequential(
+    [
+        keras.layers.Dense(64, activation="relu", input_shape=(10,)),
+        keras.layers.Dense(64, activation="relu"),
+        keras.layers.Dense(10, activation="softmax"),
+    ]
+)
+model.compile()
+model(np.zeros((1, 10), dtype="float32"))
 
 model.export(
     "model_dynamic_quant.tflite",
@@ -132,31 +291,11 @@ model.export(
 print("Exported dynamically quantized model")
 
 """
-### Float16 quantization
-
-Converts weights to 16-bit floats. Gives **~2× size reduction** and is often
-faster on GPUs. This is supported on the **TensorFlow** backend via
-`target_spec`:
-
-```python
-# TensorFlow backend only
-model.export(
-    "model_float16.tflite",
-    format="litert",
-    optimizations=[tf.lite.Optimize.DEFAULT],
-    target_spec={"supported_types": [tf.float16]},
-)
-```
-
-On the **PyTorch** backend, `target_spec` is not supported. Use Float16
-quantization through `ai-edge-quantizer` instead (shown below).
-
 ### Post-export quantization with ai-edge-quantizer
 
-For finer-grained control (e.g. channel-wise symmetric INT8 weights), use the
-**AI Edge Quantizer** on the exported `.tflite` file. This works consistently
-across both backends and is especially useful for generative models where
-per-channel scaling preserves quality better.
+For finer-grained control (e.g. channel-wise symmetric INT8 weights, mixed
+precision, or per-layer recipes), use the **AI Edge Quantizer** on the
+already-exported `.tflite` file. This works consistently across both backends.
 
 Install it:
 
@@ -216,32 +355,6 @@ print(f"Dynamic INT8 : {file_size_mb('model_dynamic_quant.tflite'):.1f} MB")
 print(f"AI Edge Quant: {file_size_mb('model_aieq.tflite'):.1f} MB")
 
 """
-## Export a KerasHub model
-
-The same API works for KerasHub presets. Here we export **Gemma 3 270M**,
-a lightweight language model that is small enough to run on edge devices.
-"""
-
-import keras_hub
-
-preset = "gemma3_270m"
-preprocessor = keras_hub.models.Gemma3CausalLMPreprocessor.from_preset(
-    preset, sequence_length=32
-)
-model = keras_hub.models.Gemma3CausalLM.from_preset(preset, preprocessor=preprocessor)
-
-print(f"Loaded {preset}")
-
-# Build weights with a sample input
-sample_text = {"prompts": ["Hello"], "responses": ["world"]}
-sample_input = preprocessor(sample_text)[0]
-_ = model(sample_input)
-
-# Export to LiteRT
-model.export("gemma3_270m.tflite", format="litert")
-print("Exported to gemma3_270m.tflite")
-
-"""
 ## Backend comparison
 
 | Feature | TensorFlow backend | PyTorch backend (recommended) |
@@ -260,13 +373,13 @@ print("Exported to gemma3_270m.tflite")
    compare outputs with the original Keras model.
 2. **Use the PyTorch backend** for LiteRT export to avoid flex ops and ensure
    compatibility with the new LiteRT Android runtime.
-3. **Start with `optimizations=[tf.lite.Optimize.DEFAULT]`** for quick
+3. **Call subclassed models on sample data** before `export()` to build weights
+   and infer the input signature.
+4. **Start with `optimizations=[tf.lite.Optimize.DEFAULT]`** for quick
    dynamic-range quantization on either backend.
-4. **Use `ai-edge-quantizer`** when you need finer control (channel-wise,
+5. **Use `ai-edge-quantizer`** when you need finer control (channel-wise,
    symmetric, mixed-precision) or when targeting the PyTorch backend with
    Float16.
-5. **Build subclassed models before exporting** — call them on sample data so
-   Keras knows the input signature.
 6. **Keep models under 2 GB per TFLite file** — LiteRT uses a flatbuffer format
    with a 2 GB limit per file. If your model is larger, use the
    `litert-lm` / `litert-lm-builder` pipeline which shards the model into
@@ -279,8 +392,8 @@ print("Exported to gemma3_270m.tflite")
 | `ImportError` for `ai_edge_litert` | Run `pip install ai-edge-litert` |
 | `ImportError` for `litert_torch` | Run `pip install litert-torch` |
 | Shape mismatch at inference | Verify the input shape matches what the model expects |
-| Unsupported ops on PyTorch | Some ops may not yet be supported by `litert-torch`; try TF backend or simplify the model |
 | Subclassed model fails to export | Call the model on sample data before `export()` to build weights |
+| Unsupported ops on PyTorch | Some ops may not yet be supported by `litert-torch`; try TF backend or simplify the model |
 | Out of memory during export | Try quantization or export on a machine with more RAM |
 | Flex ops on Android | Re-export with `KERAS_BACKEND=torch` |
 
