@@ -17,24 +17,22 @@
 machine learning models on mobile devices, embedded systems, and browsers with
 low latency and small binary size.
 
-This guide shows how to export a Keras model to LiteRT format using the
-built-in `model.export()` API, run inference with the new LiteRT interpreter,
-and apply quantization for smaller file sizes.
+Keras provides a built-in `model.export()` API that converts your model to the
+LiteRT (`.tflite`) format in a single line of code. This guide covers the
+complete workflow:
 
-We recommend the **PyTorch backend** for LiteRT export because:
+1. Export a Keras model to LiteRT.
+2. Run inference with the LiteRT interpreter.
+3. Handle different model types (Sequential, Functional, subclassed, multi-input).
+4. Resize inputs at runtime.
+5. Use the signature runner for named inputs and outputs.
+6. Quantize the model for smaller size and faster inference.
 
-1. **No flex ops** — the TensorFlow backend path uses
-   `tf.lite.TFLiteConverter.from_saved_model()`, which enables
-   `SELECT_TF_OPS` (flex ops) by default. Flex ops are not supported by the
-   new LiteRT Android runtime and the `ai_edge_litert` interpreter.
-2. **Future-proof interpreter** — `tf.lite.Interpreter` is deprecated and
-   scheduled for removal. The new `ai_edge_litert.interpreter.Interpreter` is
-   the supported path, and it requires models without flex ops.
-3. **Native PyTorch-to-LiteRT pipeline** — `litert-torch` converts Keras models
-   through PyTorch's `ExportedProgram` directly to the LiteRT flatbuffer format.
-
-The same API works for any Keras model — from a simple classifier to a
-lightweight LLM like **Gemma 3 270M**.
+We will use the **PyTorch backend** because it produces models that are fully
+compatible with the new LiteRT Android runtime — no flex ops, no deprecated
+interpreter APIs. The same `model.export(..., format="litert")` API also works
+with the TensorFlow backend, which we summarize in a dedicated section at the
+end.
 
 ---
 ## Setup
@@ -72,7 +70,7 @@ Keras version: 3.15.0
 </div>
 
 ---
-## Export a simple Keras model
+## Export a simple model
 
 Build a small classifier and export it to LiteRT.
 
@@ -102,7 +100,7 @@ print("Exported to model.tflite")
 /home/pctablet505/Projects/gemmademo-litert-export/.venv/lib/python3.13/site-packages/keras/src/layers/core/dense.py:107: UserWarning: Do not pass an `input_shape`/`input_dim` argument to a layer. When using Sequential models, prefer using an `Input(shape)` object as the first layer in the model instead.
   super().__init__(activity_regularizer=activity_regularizer, **kwargs)
 WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
-I0000 00:00:1780425268.176934 1742042 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+I0000 00:00:1780426162.801915 1750144 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
 ```
 </div>
 
@@ -336,7 +334,6 @@ class TinyModel(keras.Model):
 
 
 subclass_model = TinyModel()
-# Build by calling on sample data
 subclass_model(np.zeros((1, 10), dtype="float32"))
 subclass_model.export("subclass_model.tflite", format="litert")
 print("Subclassed model exported")
@@ -515,8 +512,6 @@ Subclassed model exported
 </div>
 
 ### Models with multiple inputs
-
-Models that accept multiple inputs or outputs are fully supported.
 
 
 ```python
@@ -971,7 +966,6 @@ model = keras.Sequential(
 model.compile()
 model(np.zeros((1, 10), dtype="float32"))
 
-# Export with a custom input signature
 custom_sig = [keras.layers.InputSpec(shape=(None, 10), dtype="float32")]
 model.export("custom_sig_model.tflite", format="litert", input_signature=custom_sig)
 print("Exported with custom input signature")
@@ -1175,7 +1169,7 @@ try:
     )
     print(f"Loaded {preset}")
 
-    sample_text = {"prompts": ["Hello"], "responses": ["world"]}
+    sample_text = {"prompts": ["Hello"], "responses": [""]}
     sample_input = preprocessor(sample_text)[0]
     _ = model(sample_input)
 
@@ -1200,10 +1194,9 @@ Quantization reduces model size and can speed up inference on edge devices.
 
 ### Built-in dynamic range quantization
 
-The simplest approach — pass `optimizations` to `model.export()`. This works on
-both the TensorFlow and PyTorch backends and quantizes weights to 8-bit
-integers while keeping activations in float32. This typically gives
-**~4× size reduction**.
+Pass `optimizations` to `model.export()`. This works on both the TensorFlow and
+PyTorch backends and quantizes weights to 8-bit integers while keeping
+activations in float32. This typically gives **~4× size reduction**.
 
 
 ```python
@@ -1488,6 +1481,77 @@ AI Edge Quant: 0.0 MB
 </div>
 
 ---
+## Android dependencies
+
+To use a LiteRT model in an Android app, add one of the following dependencies
+to your `build.gradle`:
+
+### New LiteRT runtime (recommended)
+
+Use this for models exported with the PyTorch backend. No flex ops are
+required.
+
+```groovy
+implementation 'com.google.ai.edge.litert:litert:1.0.1'
+```
+
+### Legacy TensorFlow Lite runtime
+
+Use this only if you have older `.tflite` models that still require it.
+Note that `tf.lite.Interpreter` is deprecated.
+
+```groovy
+implementation 'org.tensorflow:tensorflow-lite:2.20.0'
+```
+
+If your model contains flex ops (e.g. from TF backend export), also add:
+
+```groovy
+implementation 'org.tensorflow:tensorflow-lite-select-tf-ops:2.20.0'
+```
+
+Models exported with the **PyTorch backend do not contain flex ops**, so the
+`select-tf-ops` dependency is not needed.
+
+---
+## TensorFlow backend alternative
+
+The same `model.export(..., format="litert")` API works with the TensorFlow
+backend. The differences are:
+
+1. **Converter path:** Uses `tf.lite.TFLiteConverter.from_saved_model()`.
+2. **Flex ops:** Enabled by default via `SELECT_TF_OPS`. These ops are not
+   supported by the new LiteRT Android runtime.
+3. **Interpreter:** The legacy `tf.lite.Interpreter` is deprecated. Use
+   `ai_edge_litert.interpreter.Interpreter` for new code.
+4. **Extra kwargs:** `target_spec` and `representative_dataset` are supported.
+
+Example:
+
+```python
+import os
+os.environ["KERAS_BACKEND"] = "tensorflow"
+
+import keras
+import tensorflow as tf
+
+model = keras.Sequential([
+    keras.layers.Dense(64, activation="relu", input_shape=(10,)),
+    keras.layers.Dense(10, activation="softmax"),
+])
+model.compile()
+model(np.zeros((1, 10), dtype="float32"))
+
+# Export with Float16 quantization
+model.export(
+    "model_f16.tflite",
+    format="litert",
+    optimizations=[tf.lite.Optimize.DEFAULT],
+    target_spec={"supported_types": [tf.float16]},
+)
+```
+
+---
 ## Backend comparison
 
 | Feature | TensorFlow backend | PyTorch backend (recommended) |
@@ -1498,6 +1562,7 @@ AI Edge Quant: 0.0 MB
 | Interpreter | `tf.lite.Interpreter` (deprecated) | `ai_edge_litert.interpreter.Interpreter` |
 | `optimizations` kwarg | Supported | Supported |
 | `target_spec` kwarg | Supported | **Not supported** |
+| `representative_dataset` | Supported | **Not supported** |
 | Post-export `ai-edge-quantizer` | Supported | **Supported** |
 
 ---
