@@ -33,10 +33,14 @@ end.
 
 ## Setup
 
-Install the required packages:
+Install the required packages. Since LiteRT export is under active
+development, install Keras and KerasHub from the master branch to get the
+latest fixes:
 
 ```shell
-pip install -q keras keras-hub ai-edge-litert
+pip install -q git+https://github.com/keras-team/keras.git
+pip install -q git+https://github.com/keras-team/keras-hub.git
+pip install -q ai-edge-litert
 ```
 
 > **Note:** LiteRT export with the PyTorch backend requires `litert-torch`.
@@ -167,10 +171,17 @@ dict_model.export("dict_model.tflite", format="litert")
 print("Dict-input model exported")
 
 """
-## Runtime input resizing
+## Dynamic shapes and runtime input resizing
 
-LiteRT interpreters support resizing input tensors at runtime, which is useful
-when you need to process different batch sizes with the same exported model.
+LiteRT models exported from Keras have static shapes in the graph, but the
+interpreter supports **runtime input resizing**. This means you can process
+different batch sizes with the same exported model without re-exporting.
+
+> **Note:** The PyTorch backend also accepts a `dynamic_shapes` kwarg powered
+> by `torch.export.Dim`. However, this path currently has limitations in the
+> Keras → LiteRT conversion pipeline for some layer types. The recommended
+> approach for variable batch sizes is runtime resizing, which is fully
+> supported and tested.
 """
 
 interpreter = Interpreter(model_path="model.tflite")
@@ -211,6 +222,11 @@ print("Signature runner output shape:", list(sig_output.values())[0].shape)
 
 You can override the inferred input signature by passing `input_signature` to
 `export()`. This is useful when you want to enforce specific shapes or dtypes.
+
+> **Note:** `None` in an `InputSpec` shape (e.g., `shape=(None, 10)`) tells
+> Keras that the dimension is unknown, but the exported LiteRT graph still
+> uses a concrete batch size (1) for tracing. Use runtime resizing (shown
+> above) to handle variable batch sizes at inference time.
 """
 
 model = keras.Sequential(
@@ -243,9 +259,9 @@ model = keras_hub.models.Gemma3CausalLM.from_preset(preset, preprocessor=preproc
 
 print(f"Loaded {preset}")
 
-# Build weights with a sample input. For inference export, responses can be empty.
-sample_text = {"prompts": ["Hello"], "responses": [""]}
-sample_input = preprocessor(sample_text)[0]
+# Build weights with a sample input. Use generate_preprocess for inference.
+sample_text = {"prompts": ["Hello"]}
+sample_input = preprocessor.generate_preprocess(sample_text)
 _ = model(sample_input)
 
 model.export("gemma3_270m.tflite", format="litert")
@@ -358,7 +374,7 @@ Use this for models exported with the PyTorch backend. No flex ops are
 required.
 
 ```groovy
-implementation 'com.google.ai.edge.litert:litert:1.0.1'
+implementation 'com.google.ai.edge.litert:litert:2.1.5'
 ```
 
 ### Legacy TensorFlow Lite runtime
@@ -367,13 +383,13 @@ Use this only if you have older `.tflite` models that still require it.
 Note that `tf.lite.Interpreter` is deprecated.
 
 ```groovy
-implementation 'org.tensorflow:tensorflow-lite:2.20.0'
+implementation 'org.tensorflow:tensorflow-lite:2.16.1'
 ```
 
 If your model contains flex ops (e.g. from TF backend export), also add:
 
 ```groovy
-implementation 'org.tensorflow:tensorflow-lite-select-tf-ops:2.20.0'
+implementation 'org.tensorflow:tensorflow-lite-select-tf-ops:2.16.1'
 ```
 
 Models exported with the **PyTorch backend do not contain flex ops**, so the
@@ -428,6 +444,7 @@ model.export(
 | `target_spec` kwarg | Supported | **Not supported** |
 | `representative_dataset` | Supported | **Not supported** |
 | Post-export `ai-edge-quantizer` | Supported | **Supported** |
+| Runtime input resizing | Supported | **Supported** |
 
 ## Best practices
 
@@ -437,12 +454,15 @@ model.export(
    compatibility with the new LiteRT Android runtime.
 3. **Call subclassed models on sample data** before `export()` to build weights
    and infer the input signature.
-4. **Start with `optimizations=[tf.lite.Optimize.DEFAULT]`** for quick
+4. **Use runtime input resizing** for variable batch sizes rather than
+   `dynamic_shapes`, which currently has limitations in the Keras → LiteRT
+   pipeline.
+5. **Start with `optimizations=[tf.lite.Optimize.DEFAULT]`** for quick
    dynamic-range quantization on either backend.
-5. **Use `ai-edge-quantizer`** when you need finer control (channel-wise,
+6. **Use `ai-edge-quantizer`** when you need finer control (channel-wise,
    symmetric, mixed-precision) or when targeting the PyTorch backend with
    Float16.
-6. **Keep models under 2 GB per TFLite file** — LiteRT uses a flatbuffer format
+7. **Keep models under 2 GB per TFLite file** — LiteRT uses a flatbuffer format
    with a 2 GB limit per file. If your model is larger, use the
    `litert-lm` / `litert-lm-builder` pipeline which shards the model into
    multiple sub-models inside a `.litertlm` container.
@@ -453,7 +473,7 @@ model.export(
 |---|---|
 | `ImportError` for `ai_edge_litert` | Run `pip install ai-edge-litert` |
 | `ImportError` for `litert_torch` | Run `pip install litert-torch` |
-| Shape mismatch at inference | Verify the input shape matches what the model expects |
+| Shape mismatch at inference | Verify the input shape matches what the model expects, or use `resize_tensor_input()` |
 | Subclassed model fails to export | Call the model on sample data before `export()` to build weights |
 | Unsupported ops on PyTorch | Some ops may not yet be supported by `litert-torch`; try TF backend or simplify the model |
 | Out of memory during export | Try quantization or export on a machine with more RAM |
