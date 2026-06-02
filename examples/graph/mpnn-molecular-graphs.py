@@ -2,7 +2,7 @@
 Title: Message-passing neural network (MPNN) for molecular property prediction
 Author: [akensert](http://github.com/akensert)
 Date created: 2021/08/16
-Last modified: 2026/06/01
+Last modified: 2026/06/02
 Description: Implementation of an MPNN to predict blood-brain barrier permeability.
 Accelerator: GPU
 Converted to Keras 3 by: [LakshmiKalaKadali](https://github.com/LakshmiKalaKadali)
@@ -292,6 +292,8 @@ the GPU backends to run at 100% efficiency.
 def molecule_from_smiles(smiles):
     # Standard RDKit sanitization and stereochemistry assignment
     molecule = Chem.MolFromSmiles(smiles, sanitize=False)
+    if molecule is None:
+        return None
     flag = Chem.SanitizeMol(molecule, catchErrors=True)
     if flag != Chem.SanitizeFlags.SANITIZE_NONE:
         Chem.SanitizeMol(molecule, sanitizeOps=Chem.SanitizeFlags.SANITIZE_ALL ^ flag)
@@ -304,7 +306,7 @@ def smiles_to_graph(smiles):
     Converts SMILES to a graph with fixed-size buffers for
     Keras 3 compatibility.
     """
-    mol = Chem.MolFromSmiles(smiles)
+    mol = molecule_from_smiles(smiles)
     if not mol:
         return None
 
@@ -432,15 +434,17 @@ class MPNNDataset(keras.utils.PyDataset):
             (idx + 1) * self.batch_size, len(self.indices)
         )
         batch_idx = self.indices[start:end]
+
+        current_batch_size = len(batch_idx)
         batch_atom_features = np.zeros(
-            (self.batch_size, MAX_ATOMS, atom_featurizer.dim), dtype="float32"
+            (current_batch_size, MAX_ATOMS, atom_featurizer.dim), dtype="float32"
         )
         batch_bond_features = np.zeros(
-            (self.batch_size, MAX_BONDS, bond_featurizer.dim), dtype="float32"
+            (current_batch_size, MAX_BONDS, bond_featurizer.dim), dtype="float32"
         )
-        batch_pair_indices = np.zeros((self.batch_size, MAX_BONDS, 2), dtype="int32")
-        batch_mask = np.zeros((self.batch_size, MAX_ATOMS), dtype="float32")
-        batch_labels = np.zeros((self.batch_size, 1), dtype="float32")
+        batch_pair_indices = np.zeros((current_batch_size, MAX_BONDS, 2), dtype="int32")
+        batch_mask = np.zeros((current_batch_size, MAX_ATOMS), dtype="float32")
+        batch_labels = np.zeros((current_batch_size, 1), dtype="float32")
 
         for i, real_idx in enumerate(batch_idx):
             (
@@ -461,7 +465,7 @@ class MPNNDataset(keras.utils.PyDataset):
             ),
             "pair_indices": ops.convert_to_tensor(batch_pair_indices.reshape(-1, 2)),
             "molecule_indicator": ops.convert_to_tensor(
-                np.repeat(np.arange(self.batch_size), MAX_ATOMS), dtype="int32"
+                np.repeat(np.arange(current_batch_size), MAX_ATOMS), dtype="int32"
             ),
             "mask": ops.convert_to_tensor(batch_mask.reshape(-1)),
         }, ops.convert_to_tensor(batch_labels)
@@ -583,8 +587,12 @@ class MessagePassing(layers.Layer):
         atom_feat, bond_feat, pair_idx = inputs
         atom_feat = ops.pad(
             atom_feat,
-            [(0, 0), (0, max(0, self.units - ops.shape(atom_feat)[-1]))],
+            [(0, 0), (0, max(0, self.units - atom_feat.shape[-1]))],
         )
+        # atom_feat = ops.pad(
+        #     atom_feat,
+        #     [(0, 0), (0, max(0, self.units - ops.shape(atom_feat)[-1]))],
+        # )
         for _ in range(self.steps):
             messages = self.edge_net([atom_feat, bond_feat, pair_idx])
             atom_feat, _ = self.gru(messages, atom_feat)
@@ -703,11 +711,12 @@ def MPNNModel(atom_dim, bond_dim):
 
 
 # Learning Rate: Slower warmup, lower peak
+steps_per_epoch = len(train_dataset)
 lr_schedule = keras.optimizers.schedules.CosineDecay(
     initial_learning_rate=0.0,
-    decay_steps=BATCH_SIZE * EPOCHS,
+    decay_steps=steps_per_epoch * EPOCHS,
     warmup_target=LEARNING_RATE,
-    warmup_steps=BATCH_SIZE * 5,
+    warmup_steps=steps_per_epoch * 5,
 )
 
 mpnn = MPNNModel(atom_featurizer.dim, bond_featurizer.dim)
@@ -718,7 +727,7 @@ mpnn.compile(
     ),
     metrics=[keras.metrics.AUC(name="AUC")],
 )
-# keras.utils.plot_model(mpnn, show_dtype=True, show_shapes=True)
+keras.utils.plot_model(mpnn, show_dtype=True, show_shapes=True)
 
 """
 ### Training
@@ -746,19 +755,31 @@ plt.legend()
 """
 ### Predicting
 """
-
-molecules = [Chem.MolFromSmiles(df.smiles.values[index]) for index in test_idx]
-y_true = [df.p_np.values[index] for index in test_idx]
-
 predictions = mpnn.predict(test_dataset)
-y_pred = ops.convert_to_numpy(predictions)[: len(test_idx), 0]
 
-legends = [
-    f"y_true/y_pred = {y_true[sample_index]}/{y_pred[sample_index]:.2f}"
-    for sample_index in range(len(y_true))
-]
+y_pred = ops.convert_to_numpy(predictions)[: len(test_idx), 0]
+molecules = []
+legends = []
+for i, index in enumerate(test_idx):
+    mol = Chem.MolFromSmiles(df.smiles.values[index])
+    if mol is not None:
+        molecules.append(mol)
+        legends.append(f"y_true/y_pred = {df.p_np.values[index]}/{y_pred[i]:.2f}")
 
 MolsToGridImage(molecules, molsPerRow=4, legends=legends)
+
+# molecules = [Chem.MolFromSmiles(df.smiles.values[index]) for index in test_idx]
+# y_true = [df.p_np.values[index] for index in test_idx]
+
+# predictions = mpnn.predict(test_dataset)
+# y_pred = ops.convert_to_numpy(predictions)[: len(test_idx), 0]
+
+# legends = [
+#     f"y_true/y_pred = {y_true[sample_index]}/{y_pred[sample_index]:.2f}"
+#     for sample_index in range(len(y_true))
+# ]
+
+# MolsToGridImage(molecules, molsPerRow=4, legends=legends)
 
 """
 ## Conclusions

@@ -2,7 +2,7 @@
 
 **Author:** [akensert](http://github.com/akensert)<br>
 **Date created:** 2021/08/16<br>
-**Last modified:** 2026/06/01<br>
+**Last modified:** 2026/06/02<br>
 **Description:** Implementation of an MPNN to predict blood-brain barrier permeability.
 
 
@@ -381,6 +381,8 @@ the GPU backends to run at 100% efficiency.
 def molecule_from_smiles(smiles):
     # Standard RDKit sanitization and stereochemistry assignment
     molecule = Chem.MolFromSmiles(smiles, sanitize=False)
+    if molecule is None:
+        return None
     flag = Chem.SanitizeMol(molecule, catchErrors=True)
     if flag != Chem.SanitizeFlags.SANITIZE_NONE:
         Chem.SanitizeMol(molecule, sanitizeOps=Chem.SanitizeFlags.SANITIZE_ALL ^ flag)
@@ -393,7 +395,7 @@ def smiles_to_graph(smiles):
     Converts SMILES to a graph with fixed-size buffers for
     Keras 3 compatibility.
     """
-    mol = Chem.MolFromSmiles(smiles)
+    mol = molecule_from_smiles(smiles)
     if not mol:
         return None
 
@@ -464,22 +466,22 @@ Pre-featurizing Dataset...
 ```
 </div>
 
-  0%|                                                                                                                          | 0/2050 [00:00<?, ?it/s]
+  0%|                                                                                                                                                          | 0/2050 [00:00<?, ?it/s]
 
     
- 20%|█████████████████████▉                                                                                        | 408/2050 [00:00<00:00, 4075.89it/s]
+ 20%|████████████████████████████▊                                                                                                                 | 416/2050 [00:00<00:00, 4153.02it/s]
 
     
- 40%|████████████████████████████████████████████▎                                                                 | 826/2050 [00:00<00:00, 4135.50it/s]
+ 41%|██████████████████████████████████████████████████████████▍                                                                                   | 844/2050 [00:00<00:00, 4216.62it/s]
 
     
- 60%|█████████████████████████████████████████████████████████████████▉                                           | 1240/2050 [00:00<00:00, 4021.16it/s]
+ 62%|███████████████████████████████████████████████████████████████████████████████████████                                                      | 1266/2050 [00:00<00:00, 4172.68it/s]
 
     
- 83%|██████████████████████████████████████████████████████████████████████████████████████████                   | 1695/2050 [00:00<00:00, 4225.12it/s]
+ 85%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████▎                    | 1749/2050 [00:00<00:00, 4427.60it/s]
 
     
-100%|█████████████████████████████████████████████████████████████████████████████████████████████████████████████| 2050/2050 [00:00<00:00, 4248.14it/s]
+100%|█████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 2050/2050 [00:00<00:00, 4417.68it/s]
 
     
 
@@ -563,15 +565,17 @@ class MPNNDataset(keras.utils.PyDataset):
             (idx + 1) * self.batch_size, len(self.indices)
         )
         batch_idx = self.indices[start:end]
+
+        current_batch_size = len(batch_idx)
         batch_atom_features = np.zeros(
-            (self.batch_size, MAX_ATOMS, atom_featurizer.dim), dtype="float32"
+            (current_batch_size, MAX_ATOMS, atom_featurizer.dim), dtype="float32"
         )
         batch_bond_features = np.zeros(
-            (self.batch_size, MAX_BONDS, bond_featurizer.dim), dtype="float32"
+            (current_batch_size, MAX_BONDS, bond_featurizer.dim), dtype="float32"
         )
-        batch_pair_indices = np.zeros((self.batch_size, MAX_BONDS, 2), dtype="int32")
-        batch_mask = np.zeros((self.batch_size, MAX_ATOMS), dtype="float32")
-        batch_labels = np.zeros((self.batch_size, 1), dtype="float32")
+        batch_pair_indices = np.zeros((current_batch_size, MAX_BONDS, 2), dtype="int32")
+        batch_mask = np.zeros((current_batch_size, MAX_ATOMS), dtype="float32")
+        batch_labels = np.zeros((current_batch_size, 1), dtype="float32")
 
         for i, real_idx in enumerate(batch_idx):
             (
@@ -592,7 +596,7 @@ class MPNNDataset(keras.utils.PyDataset):
             ),
             "pair_indices": ops.convert_to_tensor(batch_pair_indices.reshape(-1, 2)),
             "molecule_indicator": ops.convert_to_tensor(
-                np.repeat(np.arange(self.batch_size), MAX_ATOMS), dtype="int32"
+                np.repeat(np.arange(current_batch_size), MAX_ATOMS), dtype="int32"
             ),
             "mask": ops.convert_to_tensor(batch_mask.reshape(-1)),
         }, ops.convert_to_tensor(batch_labels)
@@ -722,8 +726,12 @@ class MessagePassing(layers.Layer):
         atom_feat, bond_feat, pair_idx = inputs
         atom_feat = ops.pad(
             atom_feat,
-            [(0, 0), (0, max(0, self.units - ops.shape(atom_feat)[-1]))],
+            [(0, 0), (0, max(0, self.units - atom_feat.shape[-1]))],
         )
+        # atom_feat = ops.pad(
+        #     atom_feat,
+        #     [(0, 0), (0, max(0, self.units - ops.shape(atom_feat)[-1]))],
+        # )
         for _ in range(self.steps):
             messages = self.edge_net([atom_feat, bond_feat, pair_idx])
             atom_feat, _ = self.gru(messages, atom_feat)
@@ -844,11 +852,12 @@ def MPNNModel(atom_dim, bond_dim):
 
 
 # Learning Rate: Slower warmup, lower peak
+steps_per_epoch = len(train_dataset)
 lr_schedule = keras.optimizers.schedules.CosineDecay(
     initial_learning_rate=0.0,
-    decay_steps=BATCH_SIZE * EPOCHS,
+    decay_steps=steps_per_epoch * EPOCHS,
     warmup_target=LEARNING_RATE,
-    warmup_steps=BATCH_SIZE * 5,
+    warmup_steps=steps_per_epoch * 5,
 )
 
 mpnn = MPNNModel(atom_featurizer.dim, bond_featurizer.dim)
@@ -859,8 +868,14 @@ mpnn.compile(
     ),
     metrics=[keras.metrics.AUC(name="AUC")],
 )
-# keras.utils.plot_model(mpnn, show_dtype=True, show_shapes=True)
+keras.utils.plot_model(mpnn, show_dtype=True, show_shapes=True)
 ```
+
+<div class="k-default-codeblock">
+```
+You must install graphviz (see instructions at https://graphviz.gitlab.io/download/) for `plot_model` to work.
+```
+</div>
 
 ### Training
 
@@ -890,165 +905,165 @@ plt.legend()
 ```
 Epoch 1/40
 
-26/26 ━━━━━━━━━━━━━━━━━━━━ 8s 246ms/step - AUC: 0.5641 - loss: 0.7656 - val_AUC: 0.4880 - val_loss: 0.9153
+26/26 ━━━━━━━━━━━━━━━━━━━━ 8s 240ms/step - AUC: 0.6122 - loss: 0.7461 - val_AUC: 0.8548 - val_loss: 0.8621
 
 Epoch 2/40
 
-26/26 ━━━━━━━━━━━━━━━━━━━━ 6s 236ms/step - AUC: 0.6871 - loss: 0.7284 - val_AUC: 0.7429 - val_loss: 0.8283
+26/26 ━━━━━━━━━━━━━━━━━━━━ 6s 229ms/step - AUC: 0.7906 - loss: 0.6745 - val_AUC: 0.9073 - val_loss: 0.7406
 
 Epoch 3/40
 
-26/26 ━━━━━━━━━━━━━━━━━━━━ 6s 237ms/step - AUC: 0.8076 - loss: 0.6689 - val_AUC: 0.8287 - val_loss: 0.7392
+26/26 ━━━━━━━━━━━━━━━━━━━━ 6s 231ms/step - AUC: 0.8744 - loss: 0.5677 - val_AUC: 0.9348 - val_loss: 0.5132
 
 Epoch 4/40
 
-26/26 ━━━━━━━━━━━━━━━━━━━━ 6s 236ms/step - AUC: 0.8719 - loss: 0.5904 - val_AUC: 0.9333 - val_loss: 0.6054
+26/26 ━━━━━━━━━━━━━━━━━━━━ 6s 236ms/step - AUC: 0.8851 - loss: 0.5229 - val_AUC: 0.9344 - val_loss: 0.5320
 
 Epoch 5/40
 
-26/26 ━━━━━━━━━━━━━━━━━━━━ 6s 237ms/step - AUC: 0.8926 - loss: 0.5386 - val_AUC: 0.8830 - val_loss: 0.6064
+26/26 ━━━━━━━━━━━━━━━━━━━━ 6s 234ms/step - AUC: 0.9200 - loss: 0.4509 - val_AUC: 0.9506 - val_loss: 0.4701
 
 Epoch 6/40
 
-26/26 ━━━━━━━━━━━━━━━━━━━━ 6s 239ms/step - AUC: 0.9056 - loss: 0.5033 - val_AUC: 0.9173 - val_loss: 0.5284
+26/26 ━━━━━━━━━━━━━━━━━━━━ 6s 235ms/step - AUC: 0.9218 - loss: 0.4320 - val_AUC: 0.9522 - val_loss: 0.4548
 
 Epoch 7/40
 
-26/26 ━━━━━━━━━━━━━━━━━━━━ 6s 240ms/step - AUC: 0.9163 - loss: 0.4654 - val_AUC: 0.8994 - val_loss: 0.5299
+26/26 ━━━━━━━━━━━━━━━━━━━━ 6s 234ms/step - AUC: 0.9239 - loss: 0.4190 - val_AUC: 0.9574 - val_loss: 0.3727
 
 Epoch 8/40
 
-26/26 ━━━━━━━━━━━━━━━━━━━━ 6s 243ms/step - AUC: 0.9198 - loss: 0.4475 - val_AUC: 0.9263 - val_loss: 0.4681
+26/26 ━━━━━━━━━━━━━━━━━━━━ 6s 233ms/step - AUC: 0.9309 - loss: 0.3941 - val_AUC: 0.9549 - val_loss: 0.4193
 
 Epoch 9/40
 
-26/26 ━━━━━━━━━━━━━━━━━━━━ 6s 241ms/step - AUC: 0.9267 - loss: 0.4245 - val_AUC: 0.9186 - val_loss: 0.4927
+26/26 ━━━━━━━━━━━━━━━━━━━━ 6s 239ms/step - AUC: 0.9404 - loss: 0.3702 - val_AUC: 0.9616 - val_loss: 0.4501
 
 Epoch 10/40
 
-26/26 ━━━━━━━━━━━━━━━━━━━━ 6s 238ms/step - AUC: 0.9296 - loss: 0.4152 - val_AUC: 0.9443 - val_loss: 0.4165
+26/26 ━━━━━━━━━━━━━━━━━━━━ 6s 234ms/step - AUC: 0.9436 - loss: 0.3571 - val_AUC: 0.9645 - val_loss: 0.3116
 
 Epoch 11/40
 
-26/26 ━━━━━━━━━━━━━━━━━━━━ 6s 243ms/step - AUC: 0.9361 - loss: 0.3933 - val_AUC: 0.9201 - val_loss: 0.4750
+26/26 ━━━━━━━━━━━━━━━━━━━━ 6s 235ms/step - AUC: 0.9458 - loss: 0.3454 - val_AUC: 0.9611 - val_loss: 0.3802
 
 Epoch 12/40
 
-26/26 ━━━━━━━━━━━━━━━━━━━━ 6s 242ms/step - AUC: 0.9311 - loss: 0.3967 - val_AUC: 0.9368 - val_loss: 0.4119
+26/26 ━━━━━━━━━━━━━━━━━━━━ 6s 235ms/step - AUC: 0.9491 - loss: 0.3273 - val_AUC: 0.9518 - val_loss: 0.3375
 
 Epoch 13/40
 
-26/26 ━━━━━━━━━━━━━━━━━━━━ 6s 245ms/step - AUC: 0.9127 - loss: 0.4392 - val_AUC: 0.9419 - val_loss: 0.3968
+26/26 ━━━━━━━━━━━━━━━━━━━━ 6s 240ms/step - AUC: 0.9399 - loss: 0.3557 - val_AUC: 0.9458 - val_loss: 0.3386
 
 Epoch 14/40
 
-26/26 ━━━━━━━━━━━━━━━━━━━━ 6s 247ms/step - AUC: 0.9151 - loss: 0.4155 - val_AUC: 0.9111 - val_loss: 0.4468
+26/26 ━━━━━━━━━━━━━━━━━━━━ 6s 249ms/step - AUC: 0.9491 - loss: 0.3253 - val_AUC: 0.9609 - val_loss: 0.3822
 
 Epoch 15/40
 
-26/26 ━━━━━━━━━━━━━━━━━━━━ 6s 250ms/step - AUC: 0.9341 - loss: 0.3654 - val_AUC: 0.9274 - val_loss: 0.4094
+26/26 ━━━━━━━━━━━━━━━━━━━━ 7s 257ms/step - AUC: 0.9595 - loss: 0.2952 - val_AUC: 0.9604 - val_loss: 0.3396
 
 Epoch 16/40
 
-26/26 ━━━━━━━━━━━━━━━━━━━━ 6s 250ms/step - AUC: 0.9417 - loss: 0.3484 - val_AUC: 0.9383 - val_loss: 0.3747
+26/26 ━━━━━━━━━━━━━━━━━━━━ 7s 267ms/step - AUC: 0.9626 - loss: 0.2803 - val_AUC: 0.9627 - val_loss: 0.2921
 
 Epoch 17/40
 
-26/26 ━━━━━━━━━━━━━━━━━━━━ 7s 255ms/step - AUC: 0.9463 - loss: 0.3399 - val_AUC: 0.9195 - val_loss: 0.4401
+26/26 ━━━━━━━━━━━━━━━━━━━━ 7s 284ms/step - AUC: 0.9618 - loss: 0.2895 - val_AUC: 0.9657 - val_loss: 0.3200
 
 Epoch 18/40
 
-26/26 ━━━━━━━━━━━━━━━━━━━━ 7s 259ms/step - AUC: 0.9507 - loss: 0.3162 - val_AUC: 0.8753 - val_loss: 0.5406
+26/26 ━━━━━━━━━━━━━━━━━━━━ 8s 304ms/step - AUC: 0.9665 - loss: 0.2658 - val_AUC: 0.9624 - val_loss: 0.3605
 
 Epoch 19/40
 
-26/26 ━━━━━━━━━━━━━━━━━━━━ 7s 268ms/step - AUC: 0.9453 - loss: 0.3283 - val_AUC: 0.9455 - val_loss: 0.3459
+26/26 ━━━━━━━━━━━━━━━━━━━━ 8s 316ms/step - AUC: 0.9697 - loss: 0.2577 - val_AUC: 0.9634 - val_loss: 0.2922
 
 Epoch 20/40
 
-26/26 ━━━━━━━━━━━━━━━━━━━━ 7s 274ms/step - AUC: 0.9525 - loss: 0.3079 - val_AUC: 0.9239 - val_loss: 0.4015
+26/26 ━━━━━━━━━━━━━━━━━━━━ 8s 327ms/step - AUC: 0.9714 - loss: 0.2454 - val_AUC: 0.9661 - val_loss: 0.3099
 
 Epoch 21/40
 
-26/26 ━━━━━━━━━━━━━━━━━━━━ 7s 286ms/step - AUC: 0.9593 - loss: 0.2843 - val_AUC: 0.9296 - val_loss: 0.3761
+26/26 ━━━━━━━━━━━━━━━━━━━━ 9s 331ms/step - AUC: 0.9770 - loss: 0.2270 - val_AUC: 0.9678 - val_loss: 0.2772
 
 Epoch 22/40
 
-26/26 ━━━━━━━━━━━━━━━━━━━━ 8s 295ms/step - AUC: 0.9607 - loss: 0.2795 - val_AUC: 0.9674 - val_loss: 0.2956
+26/26 ━━━━━━━━━━━━━━━━━━━━ 9s 340ms/step - AUC: 0.9756 - loss: 0.2284 - val_AUC: 0.9611 - val_loss: 0.2856
 
 Epoch 23/40
 
-26/26 ━━━━━━━━━━━━━━━━━━━━ 8s 304ms/step - AUC: 0.9605 - loss: 0.2784 - val_AUC: 0.9175 - val_loss: 0.4183
+26/26 ━━━━━━━━━━━━━━━━━━━━ 9s 344ms/step - AUC: 0.9782 - loss: 0.2152 - val_AUC: 0.9626 - val_loss: 0.2864
 
 Epoch 24/40
 
-26/26 ━━━━━━━━━━━━━━━━━━━━ 8s 311ms/step - AUC: 0.9624 - loss: 0.2725 - val_AUC: 0.9511 - val_loss: 0.3246
+26/26 ━━━━━━━━━━━━━━━━━━━━ 9s 349ms/step - AUC: 0.9782 - loss: 0.2165 - val_AUC: 0.9692 - val_loss: 0.2663
 
 Epoch 25/40
 
-26/26 ━━━━━━━━━━━━━━━━━━━━ 8s 316ms/step - AUC: 0.9679 - loss: 0.2516 - val_AUC: 0.9609 - val_loss: 0.3052
+26/26 ━━━━━━━━━━━━━━━━━━━━ 9s 353ms/step - AUC: 0.9814 - loss: 0.1970 - val_AUC: 0.9687 - val_loss: 0.2758
 
 Epoch 26/40
 
-26/26 ━━━━━━━━━━━━━━━━━━━━ 8s 315ms/step - AUC: 0.9726 - loss: 0.2392 - val_AUC: 0.9547 - val_loss: 0.3139
+26/26 ━━━━━━━━━━━━━━━━━━━━ 9s 351ms/step - AUC: 0.9839 - loss: 0.1883 - val_AUC: 0.9696 - val_loss: 0.2683
 
 Epoch 27/40
 
-26/26 ━━━━━━━━━━━━━━━━━━━━ 8s 327ms/step - AUC: 0.9705 - loss: 0.2384 - val_AUC: 0.9446 - val_loss: 0.3331
+26/26 ━━━━━━━━━━━━━━━━━━━━ 9s 356ms/step - AUC: 0.9843 - loss: 0.1850 - val_AUC: 0.9670 - val_loss: 0.2922
 
 Epoch 28/40
 
-26/26 ━━━━━━━━━━━━━━━━━━━━ 9s 329ms/step - AUC: 0.9734 - loss: 0.2262 - val_AUC: 0.9561 - val_loss: 0.2988
+26/26 ━━━━━━━━━━━━━━━━━━━━ 9s 349ms/step - AUC: 0.9861 - loss: 0.1752 - val_AUC: 0.9703 - val_loss: 0.2440
 
 Epoch 29/40
 
-26/26 ━━━━━━━━━━━━━━━━━━━━ 8s 318ms/step - AUC: 0.9820 - loss: 0.1992 - val_AUC: 0.9451 - val_loss: 0.3309
+26/26 ━━━━━━━━━━━━━━━━━━━━ 9s 350ms/step - AUC: 0.9892 - loss: 0.1653 - val_AUC: 0.9657 - val_loss: 0.2620
 
 Epoch 30/40
 
-26/26 ━━━━━━━━━━━━━━━━━━━━ 8s 315ms/step - AUC: 0.9802 - loss: 0.1964 - val_AUC: 0.9634 - val_loss: 0.2908
+26/26 ━━━━━━━━━━━━━━━━━━━━ 9s 345ms/step - AUC: 0.9900 - loss: 0.1592 - val_AUC: 0.9645 - val_loss: 0.2629
 
 Epoch 31/40
 
-26/26 ━━━━━━━━━━━━━━━━━━━━ 8s 314ms/step - AUC: 0.9812 - loss: 0.1918 - val_AUC: 0.9439 - val_loss: 0.3579
+26/26 ━━━━━━━━━━━━━━━━━━━━ 9s 351ms/step - AUC: 0.9894 - loss: 0.1581 - val_AUC: 0.9677 - val_loss: 0.2662
 
 Epoch 32/40
 
-26/26 ━━━━━━━━━━━━━━━━━━━━ 8s 310ms/step - AUC: 0.9813 - loss: 0.1948 - val_AUC: 0.9590 - val_loss: 0.2953
+26/26 ━━━━━━━━━━━━━━━━━━━━ 9s 355ms/step - AUC: 0.9904 - loss: 0.1506 - val_AUC: 0.9657 - val_loss: 0.2857
 
 Epoch 33/40
 
-26/26 ━━━━━━━━━━━━━━━━━━━━ 8s 309ms/step - AUC: 0.9856 - loss: 0.1737 - val_AUC: 0.9599 - val_loss: 0.2968
+26/26 ━━━━━━━━━━━━━━━━━━━━ 9s 337ms/step - AUC: 0.9923 - loss: 0.1445 - val_AUC: 0.9693 - val_loss: 0.2475
 
 Epoch 34/40
 
-26/26 ━━━━━━━━━━━━━━━━━━━━ 8s 310ms/step - AUC: 0.9867 - loss: 0.1637 - val_AUC: 0.9576 - val_loss: 0.2894
+26/26 ━━━━━━━━━━━━━━━━━━━━ 9s 339ms/step - AUC: 0.9931 - loss: 0.1389 - val_AUC: 0.9652 - val_loss: 0.2674
 
 Epoch 35/40
 
-26/26 ━━━━━━━━━━━━━━━━━━━━ 8s 308ms/step - AUC: 0.9888 - loss: 0.1587 - val_AUC: 0.9631 - val_loss: 0.2650
+26/26 ━━━━━━━━━━━━━━━━━━━━ 9s 334ms/step - AUC: 0.9938 - loss: 0.1345 - val_AUC: 0.9680 - val_loss: 0.2558
 
 Epoch 36/40
 
-26/26 ━━━━━━━━━━━━━━━━━━━━ 8s 306ms/step - AUC: 0.9863 - loss: 0.1641 - val_AUC: 0.9563 - val_loss: 0.2904
+26/26 ━━━━━━━━━━━━━━━━━━━━ 9s 340ms/step - AUC: 0.9921 - loss: 0.1349 - val_AUC: 0.9674 - val_loss: 0.2589
 
 Epoch 37/40
 
-26/26 ━━━━━━━━━━━━━━━━━━━━ 8s 306ms/step - AUC: 0.9899 - loss: 0.1467 - val_AUC: 0.9584 - val_loss: 0.2911
+26/26 ━━━━━━━━━━━━━━━━━━━━ 9s 355ms/step - AUC: 0.9943 - loss: 0.1286 - val_AUC: 0.9658 - val_loss: 0.2599
 
 Epoch 38/40
 
-26/26 ━━━━━━━━━━━━━━━━━━━━ 8s 309ms/step - AUC: 0.9904 - loss: 0.1431 - val_AUC: 0.9537 - val_loss: 0.3060
+26/26 ━━━━━━━━━━━━━━━━━━━━ 9s 350ms/step - AUC: 0.9943 - loss: 0.1294 - val_AUC: 0.9668 - val_loss: 0.2594
 
 Epoch 39/40
 
-26/26 ━━━━━━━━━━━━━━━━━━━━ 8s 305ms/step - AUC: 0.9905 - loss: 0.1420 - val_AUC: 0.9585 - val_loss: 0.2752
+26/26 ━━━━━━━━━━━━━━━━━━━━ 9s 359ms/step - AUC: 0.9944 - loss: 0.1266 - val_AUC: 0.9670 - val_loss: 0.2578
 
 Epoch 40/40
 
-26/26 ━━━━━━━━━━━━━━━━━━━━ 8s 304ms/step - AUC: 0.9923 - loss: 0.1260 - val_AUC: 0.9634 - val_loss: 0.2735
+26/26 ━━━━━━━━━━━━━━━━━━━━ 9s 345ms/step - AUC: 0.9952 - loss: 0.1227 - val_AUC: 0.9669 - val_loss: 0.2563
 
-<matplotlib.legend.Legend at 0x173dd57f0>
+<matplotlib.legend.Legend at 0x15c706d50>
 ```
 </div>
 
@@ -1060,28 +1075,41 @@ Epoch 40/40
 
 
 ```python
-molecules = [Chem.MolFromSmiles(df.smiles.values[index]) for index in test_idx]
-y_true = [df.p_np.values[index] for index in test_idx]
-
 predictions = mpnn.predict(test_dataset)
-y_pred = ops.convert_to_numpy(predictions)[: len(test_idx), 0]
 
-legends = [
-    f"y_true/y_pred = {y_true[sample_index]}/{y_pred[sample_index]:.2f}"
-    for sample_index in range(len(y_true))
-]
+y_pred = ops.convert_to_numpy(predictions)[: len(test_idx), 0]
+molecules = []
+legends = []
+for i, index in enumerate(test_idx):
+    mol = Chem.MolFromSmiles(df.smiles.values[index])
+    if mol is not None:
+        molecules.append(mol)
+        legends.append(f"y_true/y_pred = {df.p_np.values[index]}/{y_pred[i]:.2f}")
 
 MolsToGridImage(molecules, molsPerRow=4, legends=legends)
+
+# molecules = [Chem.MolFromSmiles(df.smiles.values[index]) for index in test_idx]
+# y_true = [df.p_np.values[index] for index in test_idx]
+
+# predictions = mpnn.predict(test_dataset)
+# y_pred = ops.convert_to_numpy(predictions)[: len(test_idx), 0]
+
+# legends = [
+#     f"y_true/y_pred = {y_true[sample_index]}/{y_pred[sample_index]:.2f}"
+#     for sample_index in range(len(y_true))
+# ]
+
+# MolsToGridImage(molecules, molsPerRow=4, legends=legends)
 ```
 
     
 <div class="k-default-codeblock">
 ```
-1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 227ms/step
+1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 319ms/step
 ```
 </div>
 
-![png](/examples/graph/img/mpnn-molecular-graphs/mpnn-molecular-graphs_24_2.png)
+![png](/examples/graph/img/mpnn-molecular-graphs/mpnn-molecular-graphs_24_2.png) 
     
 
 
