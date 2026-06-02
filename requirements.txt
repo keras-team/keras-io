@@ -12,11 +12,11 @@ jupyter
 tokenizers
 pydot
 boto3
-tensorflow==2.19.1
+tensorflow==2.20.0
 keras-cv
 keras-nlp
 keras-tuner
-tf-keras==2.19.0
+tf-keras==2.20.0
 keras-hub
 keras-rs
 pymdown-extensions==10.20

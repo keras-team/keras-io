@@ -2925,6 +2925,48 @@ MODELS_MASTER = {
             ],
         },
         {
+            "path": "swin_transformer/",
+            "title": "Swin Transformer",
+            "toc": True,
+            "children": [
+                {
+                    "path": "swin_transformer_image_converter",
+                    "title": "SwinTransformerImageConverter",
+                    "generate": [
+                        "keras_hub.layers.SwinTransformerImageConverter",
+                        "keras_hub.layers.SwinTransformerImageConverter.from_preset",
+                    ],
+                },
+                {
+                    "path": "swin_transformer_backbone",
+                    "title": "SwinTransformerBackbone model",
+                    "generate": [
+                        "keras_hub.models.SwinTransformerBackbone",
+                        "keras_hub.models.SwinTransformerBackbone.from_preset",
+                    ],
+                },
+                {
+                    "path": "swin_transformer_image_classifier",
+                    "title": "SwinTransformerImageClassifier model",
+                    "generate": [
+                        "keras_hub.models.SwinTransformerImageClassifier",
+                        "keras_hub.models.SwinTransformerImageClassifier.from_preset",
+                        "keras_hub.models.SwinTransformerImageClassifier.backbone",
+                        "keras_hub.models.SwinTransformerImageClassifier.preprocessor",
+                    ],
+                },
+                {
+                    "path": "swin_transformer_image_classifier_preprocessor",
+                    "title": "SwinTransformerImageClassifierPreprocessor layer",
+                    "generate": [
+                        "keras_hub.models.SwinTransformerImageClassifierPreprocessor",
+                        "keras_hub.models.SwinTransformerImageClassifierPreprocessor.from_preset",
+                        "keras_hub.models.SwinTransformerImageClassifierPreprocessor.image_converter",
+                    ],
+                },
+            ],
+        },   
+        {
             "path": "t5/",
             "title": "T5",
             "toc": True,
