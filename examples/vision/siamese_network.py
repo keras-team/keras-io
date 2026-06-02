@@ -48,7 +48,6 @@ from keras import metrics
 from keras import Model
 from keras.applications import resnet
 
-
 target_shape = (200, 200)
 
 

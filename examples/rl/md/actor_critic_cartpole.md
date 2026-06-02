@@ -2,7 +2,7 @@
 
 **Author:** [Apoorv Nandan](https://twitter.com/NandanApoorv)<br>
 **Date created:** 2020/05/13<br>
-**Last modified:** 2024/02/22<br>
+**Last modified:** 2025/01/07<br>
 **Description:** Implement Actor Critic Method in CartPole environment.
 
 
@@ -13,7 +13,7 @@
 ---
 ## Introduction
 
-This script shows an implementation of Actor Critic method on CartPole-V0 environment.
+This script shows an implementation of Actor Critic method on CartPole-V1 environment.
 
 ### Actor Critic Method
 
@@ -28,7 +28,7 @@ the observed state of the environment to two possible outputs:
 Agent and Critic learn to perform their tasks, such that the recommended actions
 from the actor maximize the rewards.
 
-### CartPole-V0
+### CartPole-V1
 
 A pole is attached to a cart placed on a frictionless track. The agent has to apply
 force to move the cart. It is rewarded for every time step the pole
@@ -40,16 +40,15 @@ remains upright. The agent, therefore, must learn to keep the pole from falling 
 - [CartPole paper](http://www.derongliu.org/adp/adp-cdrom/Barto1983.pdf)
 - [Actor Critic Method](https://hal.inria.fr/hal-00840470/document)
 
-
 ---
 ## Setup
 
 
-
 ```python
 import os
+
 os.environ["KERAS_BACKEND"] = "tensorflow"
-import gym
+import gymnasium as gym
 import numpy as np
 import keras
 from keras import ops
@@ -61,12 +60,10 @@ seed = 42
 gamma = 0.99  # Discount factor for past rewards
 max_steps_per_episode = 10000
 # Adding `render_mode='human'` will show the attempts of the agent
-env = gym.make("CartPole-v0")  # Create the environment
+env = gym.make("CartPole-v1")  # Create the environment
 env.reset(seed=seed)
 eps = np.finfo(np.float32).eps.item()  # Smallest number such that 1.0 + eps != 1.0
-
 ```
-
 ---
 ## Implement Actor Critic network
 
@@ -80,7 +77,6 @@ an estimate of total rewards in the future.
 In our implementation, they share the initial layer.
 
 
-
 ```python
 num_inputs = 4
 num_actions = 2
@@ -92,12 +88,10 @@ action = layers.Dense(num_actions, activation="softmax")(common)
 critic = layers.Dense(1)(common)
 
 model = keras.Model(inputs=inputs, outputs=[action, critic])
-
 ```
 
 ---
 ## Train
-
 
 
 ```python
@@ -110,12 +104,12 @@ running_reward = 0
 episode_count = 0
 
 while True:  # Run until solved
-    state = env.reset()[0]
+    obs, _ = env.reset()
     episode_reward = 0
     with tf.GradientTape() as tape:
         for timestep in range(1, max_steps_per_episode):
 
-            state = ops.convert_to_tensor(state)
+            state = ops.convert_to_tensor(obs)
             state = ops.expand_dims(state, 0)
 
             # Predict action probabilities and estimated future rewards
@@ -128,10 +122,11 @@ while True:  # Run until solved
             action_probs_history.append(ops.log(action_probs[0, action]))
 
             # Apply the sampled action in our environment
-            state, reward, done, *_ = env.step(action)
+            obs, reward, terminated, truncated, _ = env.step(action)
             rewards_history.append(reward)
             episode_reward += reward
 
+            done = terminated or truncated
             if done:
                 break
 
@@ -191,47 +186,31 @@ while True:  # Run until solved
     if running_reward > 195:  # Condition to consider the task solved
         print("Solved at episode {}!".format(episode_count))
         break
-
 ```
 
 <div class="k-default-codeblock">
 ```
-running reward: 8.82 at episode 10
-running reward: 23.04 at episode 20
-running reward: 28.41 at episode 30
-running reward: 53.59 at episode 40
-running reward: 53.71 at episode 50
-running reward: 77.35 at episode 60
-running reward: 74.76 at episode 70
-running reward: 57.89 at episode 80
-running reward: 46.59 at episode 90
-running reward: 43.48 at episode 100
-running reward: 63.77 at episode 110
-running reward: 111.13 at episode 120
-running reward: 142.77 at episode 130
-running reward: 127.96 at episode 140
-running reward: 113.92 at episode 150
-running reward: 128.57 at episode 160
-running reward: 139.95 at episode 170
-running reward: 154.95 at episode 180
-running reward: 171.45 at episode 190
-running reward: 171.33 at episode 200
-running reward: 177.74 at episode 210
-running reward: 184.76 at episode 220
-running reward: 190.88 at episode 230
-running reward: 154.78 at episode 240
-running reward: 114.38 at episode 250
-running reward: 107.51 at episode 260
-running reward: 128.99 at episode 270
-running reward: 157.48 at episode 280
-running reward: 174.54 at episode 290
-running reward: 184.76 at episode 300
-running reward: 190.87 at episode 310
-running reward: 194.54 at episode 320
-Solved at episode 322!
+running reward: 13.73 at episode 10
+running reward: 22.93 at episode 20
+running reward: 20.96 at episode 30
+running reward: 18.73 at episode 40
+running reward: 28.80 at episode 50
+running reward: 27.52 at episode 60
+running reward: 29.73 at episode 70
+running reward: 45.53 at episode 80
+running reward: 60.19 at episode 90
+running reward: 78.66 at episode 100
+running reward: 112.70 at episode 110
+running reward: 91.89 at episode 120
+running reward: 91.08 at episode 130
+running reward: 77.85 at episode 140
+running reward: 121.86 at episode 150
+running reward: 173.82 at episode 160
+Solved at episode 163!
 
 ```
 </div>
+
 ---
 ## Visualizations
 In early stages of training:
@@ -239,4 +218,3 @@ In early stages of training:
 
 In later stages of training:
 ![Imgur](https://i.imgur.com/5ziiZUD.gif)
-

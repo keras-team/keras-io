@@ -103,7 +103,7 @@ We set a `batch_size` parameter that will batch our samples together, use a `shu
 parameter to mix our samples together.
 """
 
-(train_ds, valid_ds, test_ds) = tfds.load(
+train_ds, valid_ds, test_ds = tfds.load(
     "oxford_iiit_pet",
     split=["train[:85%]", "train[85%:]", "test"],
     batch_size=BATCH_SIZE,
@@ -631,4 +631,9 @@ Raha](https://twitter.com/ritwik_raha) for giving a preliminary review of the ex
 I also thank the [Google Developer
 Experts](https://developers.google.com/community/experts) program.
 
+"""
+
+"""
+## Relevant Chapters from Deep Learning with Python
+- [Chapter 11: Image segmentation](https://deeplearningwithpython.io/chapters/chapter11_image-segmentation)
 """

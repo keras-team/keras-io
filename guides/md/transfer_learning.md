@@ -56,7 +56,7 @@ ImageNet dataset, and retraining it on the Kaggle "cats vs dogs" classification
  dataset.
 
 This is adapted from
-[Deep Learning with Python](https://www.manning.com/books/deep-learning-with-python)
+[Deep Learning with Python](https://deeplearningwithpython.io/)
 and the 2016 blog post
 ["building powerful image classification models using very little data"](https://blog.keras.io/building-powerful-image-classification-models-using-very-little-data.html).
 

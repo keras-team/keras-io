@@ -74,7 +74,6 @@ import matplotlib.pyplot as plt
 from nilearn import datasets, image
 import re
 
-
 """
 ## Understanding the Magic Behind RAG! ✨
 

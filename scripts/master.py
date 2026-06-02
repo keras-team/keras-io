@@ -14,7 +14,7 @@ MASTER = {
             "path": "getting_started/",
             "title": "Getting started",
             "children": [
-              {
+                {
                     "path": "about",
                     "title": "About Keras",
                 },

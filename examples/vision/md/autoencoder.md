@@ -573,3 +573,7 @@ display(noisy_test_data, predictions)
 ![png](/img/examples/vision/autoencoder/autoencoder_15_1.png)
     
 
+
+---
+## Relevant Chapters from Deep Learning with Python
+- [Chapter 17: Image generation](https://deeplearningwithpython.io/chapters/chapter17_image-generation)

@@ -178,3 +178,7 @@ Epoch 20/20
 
 ```
 </div>
+
+---
+## Relevant Chapters from Deep Learning with Python
+- [Chapter 7: A deep dive on Keras](https://deeplearningwithpython.io/chapters/chapter07_deep-dive-keras)

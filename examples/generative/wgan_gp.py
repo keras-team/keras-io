@@ -36,7 +36,6 @@ import keras
 import tensorflow as tf
 from keras import layers
 
-
 """
 ## Prepare the Fashion-MNIST data
 
@@ -285,7 +284,9 @@ class WGAN(keras.Model):
         # 2. Calculate the gradients w.r.t to this interpolated image.
         grads = gp_tape.gradient(pred, [interpolated])[0]
         # 3. Calculate the norm of the gradients.
-        norm = tf.sqrt(tf.reduce_sum(tf.square(grads), axis=[1, 2, 3]))
+        norm = tf.sqrt(
+            tf.reduce_sum(tf.square(grads), axis=[1, 2, 3]) + keras.backend.epsilon()
+        )
         gp = tf.reduce_mean((norm - 1.0) ** 2)
         return gp
 
@@ -439,3 +440,8 @@ from IPython.display import Image, display
 display(Image("generated_img_0_19.png"))
 display(Image("generated_img_1_19.png"))
 display(Image("generated_img_2_19.png"))
+
+"""
+## Relevant Chapters from Deep Learning with Python
+- [Chapter 17: Image generation](https://deeplearningwithpython.io/chapters/chapter17_image-generation)
+"""

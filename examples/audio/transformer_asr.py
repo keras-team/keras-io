@@ -40,7 +40,6 @@ import tensorflow as tf
 import keras
 from keras import layers
 
-
 """
 ## Define the Transformer Input Layer
 

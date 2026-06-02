@@ -423,3 +423,8 @@ for idx in range(sample):
         f"95% CI: [{round(upper[idx][0], 2)} - {round(lower[idx][0], 2)}]"
         f" - Actual: {targets[idx]}"
     )
+
+"""
+## Relevant Chapters from Deep Learning with Python
+- [Chapter 5: Fundamentals of machine learning](https://deeplearningwithpython.io/chapters/chapter05_fundamentals-of-ml)
+"""

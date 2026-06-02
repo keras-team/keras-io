@@ -256,3 +256,7 @@ Many ML practitioners and researchers rely on metrics that may not yet have a Te
 implementation. Keras users can still leverage the wide variety of existing metric
 implementations in other frameworks by using a Keras callback.  These metrics can be
 exported, viewed and analyzed in the TensorBoard like any other metric.
+
+---
+## Relevant Chapters from Deep Learning with Python
+- [Chapter 7: A deep dive on Keras](https://deeplearningwithpython.io/chapters/chapter07_deep-dive-keras)

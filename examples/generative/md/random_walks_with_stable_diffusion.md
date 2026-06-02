@@ -636,3 +636,7 @@ Stable Diffusion offers a lot more than just single text-to-image generation.
 Exploring the latent manifold of the text encoder and the noise space of the
 diffusion model are two fun ways to experience the power of this model, and
 KerasCV makes it easy!
+
+---
+## Relevant Chapters from Deep Learning with Python
+- [Chapter 17: Image generation](https://deeplearningwithpython.io/chapters/chapter17_image-generation)

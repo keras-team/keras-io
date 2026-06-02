@@ -860,3 +860,7 @@ other schemes like cosine scheduling and compare the performance.
 4. [Denoising Diffusion Implicit Models](https://keras.io/examples/generative/ddim/)
 5. [Annotated Diffusion Model](https://huggingface.co/blog/annotated-diffusion)
 6. [AIAIART](https://www.youtube.com/watch?v=XTs7M6TSK9I&t=14s)
+
+---
+## Relevant Chapters from Deep Learning with Python
+- [Chapter 17: Image generation](https://deeplearningwithpython.io/chapters/chapter17_image-generation)

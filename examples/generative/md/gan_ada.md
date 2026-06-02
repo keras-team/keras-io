@@ -4369,3 +4369,7 @@ Concurrent papers on discriminator data augmentation:
 [1](https://arxiv.org/abs/2006.02595), [2](https://arxiv.org/abs/2006.05338), [3](https://arxiv.org/abs/2006.10738)
 
 Recent literature overview on GANs: [talk](https://www.youtube.com/watch?v=3ktD752xq5k)
+
+---
+## Relevant Chapters from Deep Learning with Python
+- [Chapter 17: Image generation](https://deeplearningwithpython.io/chapters/chapter17_image-generation)

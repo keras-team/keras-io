@@ -45,7 +45,6 @@ import pandas as pd
 
 import math
 
-
 """
 ## Prepare the data
 """

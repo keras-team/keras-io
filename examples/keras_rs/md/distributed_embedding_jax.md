@@ -1,8 +1,8 @@
 # DistributedEmbedding using TPU SparseCore and JAX
 
-**Author:** [Fabien Hertschuh](https://github.com/hertschuh/), [Abheesht Sharma](https://github.com/abheesht17/)<br>
+**Author:** [Fabien Hertschuh](https://github.com/hertschuh/), [Abheesht Sharma](https://github.com/abheesht17/), [C. Antonio Sánchez](https://github.com/cantonios/)<br>
 **Date created:** 2025/06/03<br>
-**Last modified:** 2025/06/03<br>
+**Last modified:** 2025/09/02<br>
 **Description:** Rank movies using a two tower model with embeddings on SparseCore.
 
 
@@ -25,6 +25,13 @@ v6e.
 Let's begin by choosing JAX as the backend and importing all the necessary
 libraries.
 
+
+```python
+!pip install -q -U jax[tpu]>=0.7.0
+!pip install -q jax-tpu-embedding
+!pip install -q tensorflow-cpu
+!pip install -q keras-rs
+```
 
 ```python
 import os
@@ -57,7 +64,7 @@ keras.distribution.set_distribution(distribution)
 ---
 ## Preparing the dataset
 
-We're going to use the same Movielens data. The ratings are the objectives we
+We're going to use the same MovieLens data. The ratings are the objectives we
 are trying to predict.
 
 
@@ -73,7 +80,7 @@ index in the user embedding table.
 
 
 ```python
-users_count = (
+users_count = int(
     ratings.map(lambda x: tf.strings.to_number(x["user_id"], out_type=tf.int32))
     .reduce(tf.constant(0, tf.int32), tf.maximum)
     .numpy()
@@ -85,7 +92,7 @@ as an index in the movie embedding table.
 
 
 ```python
-movies_count = movies.cardinality().numpy()
+movies_count = int(movies.cardinality().numpy())
 ```
 
 The inputs to the model are the user IDs and movie IDs and the labels are the
@@ -157,8 +164,8 @@ Features are configured using `keras_rs.layers.FeatureConfig`, which has:
 
 - A name.
 - A table, the embedding table to use.
-- An input shape (per replica).
-- An output shape (per replica).
+- An input shape (batch size is for all TPUs).
+- An output shape (batch size is for all TPUs).
 
 We can organize features in any structure we want, which can be nested. A dict
 is often a good choice to have names for the inputs and outputs.

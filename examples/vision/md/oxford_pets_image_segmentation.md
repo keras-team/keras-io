@@ -854,3 +854,7 @@ display_mask(i)  # Note that the model only sees inputs at 150x150.
 ![png](/img/examples/vision/oxford_pets_image_segmentation/oxford_pets_image_segmentation_16_3.png)
     
 
+
+---
+## Relevant Chapters from Deep Learning with Python
+- [Chapter 11: Image segmentation](https://deeplearningwithpython.io/chapters/chapter11_image-segmentation)

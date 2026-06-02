@@ -2,7 +2,7 @@
 
 **Author:** [Aritra Roy Gosthipaty](https://twitter.com/ariG23498), [Ayush Thakur](https://twitter.com/ayushthakur0) (equal contribution)<br>
 **Date created:** 2022/01/12<br>
-**Last modified:**  2024/01/15<br>
+**Last modified:**  2025/10/16<br>
 **Description:** A Transformer-based architecture for video classification.
 
 
@@ -370,7 +370,7 @@ def run_experiment():
 
 model = run_experiment()
 ```
-
+<div class="k-default-codeblock">
 ```
 Test accuracy: 76.72%
 Test top 5 accuracy: 97.54%

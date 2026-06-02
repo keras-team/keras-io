@@ -440,3 +440,8 @@ epoch. If so, the initial learning rate/momentum is too high.
 - Smaller batch size benefit validation accuracy, possibly due to effectively providing
 regularization.
 """
+
+"""
+## Relevant Chapters from Deep Learning with Python
+- [Chapter 8: Image classification](https://deeplearningwithpython.io/chapters/chapter08_image-classification)
+"""

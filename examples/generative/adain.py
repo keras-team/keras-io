@@ -228,7 +228,7 @@ fig, axes = plt.subplots(nrows=10, ncols=2, figsize=(5, 30))
 [ax.axis("off") for ax in np.ravel(axes)]
 
 for axis, style_image, content_image in zip(axes, style[0:10], content[0:10]):
-    (ax_style, ax_content) = axis
+    ax_style, ax_content = axis
     ax_style.imshow(style_image)
     ax_style.set_title("Style Image")
 
@@ -646,7 +646,7 @@ for style, content in test_ds.take(1):
     for axis, style_image, content_image, reconstructed_image in zip(
         axes, style[0:10], content[0:10], reconstructed_image[0:10]
     ):
-        (ax_style, ax_content, ax_reconstructed) = axis
+        ax_style, ax_content, ax_reconstructed = axis
         ax_style.imshow(style_image)
         ax_style.set_title("Style Image")
         ax_content.imshow(content_image)
@@ -674,4 +674,9 @@ images.
 
 We thank [Luke Wood](https://lukewood.xyz) for his
 detailed review.
+"""
+
+"""
+## Relevant Chapters from Deep Learning with Python
+- [Chapter 17: Image generation](https://deeplearningwithpython.io/chapters/chapter17_image-generation)
 """
