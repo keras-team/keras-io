@@ -2926,7 +2926,7 @@ MODELS_MASTER = {
         },
         {
             "path": "swin_transformer/",
-            "title": "SwinTransformer",
+            "title": "Swin Transformer",
             "toc": True,
             "children": [
                 {
