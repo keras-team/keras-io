@@ -87,8 +87,8 @@ import keras
 from neat_optim import NEAT
 
 model.compile(
-optimizer=NEAT(learning_rate=1e-3),
-loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+  optimizer=NEAT(learning_rate=1e-3),
+  loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
 )
 ```
 
