@@ -30,9 +30,8 @@ We recommend the **PyTorch backend** for LiteRT export because:
 3. **Native PyTorch-to-LiteRT pipeline** — `litert-torch` converts Keras models
    through PyTorch's `ExportedProgram` directly to the LiteRT flatbuffer format.
 
-We will use a tiny transformer as our runnable example, but the same steps work
-for any Keras model — including **Gemma 3 270M**, a lightweight language model
-that is small enough to export quickly and run on edge devices.
+The same API works for any Keras model — from a simple classifier to a
+lightweight LLM like **Gemma 3 270M**.
 
 ## Setup
 
@@ -61,35 +60,23 @@ import keras
 print("Keras version:", keras.__version__)
 
 """
-## Export a Keras model
+## Export a simple Keras model
 
-Build a tiny transformer and export it to LiteRT. The same API works for
-KerasHub presets such as `gemma3_270m`.
+Build a small classifier and export it to LiteRT.
 """
 
-vocab_size = 256
-seq_length = 8
-embed_dim = 16
-num_heads = 2
-dim_feedforward = 32
-num_layers = 2
-
-inputs = keras.Input(shape=(seq_length,), dtype="int32")
-x = keras.layers.Embedding(vocab_size, embed_dim)(inputs)
-for _ in range(num_layers):
-    attn = keras.layers.MultiHeadAttention(
-        num_heads=num_heads, key_dim=embed_dim // num_heads
-    )(x, x)
-    x = keras.layers.LayerNormalization()(x + attn)
-    ffn = keras.layers.Dense(dim_feedforward, activation="relu")(x)
-    ffn = keras.layers.Dense(embed_dim)(ffn)
-    x = keras.layers.LayerNormalization()(x + ffn)
-outputs = keras.layers.Dense(vocab_size)(x)
-model = keras.Model(inputs, outputs)
-model.compile()
+# Build a simple model
+model = keras.Sequential(
+    [
+        keras.layers.Dense(64, activation="relu", input_shape=(10,)),
+        keras.layers.Dense(64, activation="relu"),
+        keras.layers.Dense(10, activation="softmax"),
+    ]
+)
+model.compile(optimizer="adam", loss="sparse_categorical_crossentropy")
 
 # Build weights with a sample input
-sample_input = np.zeros((1, seq_length), dtype="int32")
+sample_input = np.random.random((1, 10)).astype("float32")
 _ = model(sample_input)
 
 # Export to LiteRT
@@ -126,21 +113,56 @@ print("Inference output shape:", output.shape)
 
 Quantization reduces model size and can speed up inference on edge devices.
 
-### Post-export quantization with ai-edge-quantizer (recommended)
+### Dynamic range quantization
 
-For the PyTorch backend, we recommend quantizing the model **after** export
-using the **AI Edge Quantizer**. It provides finer-grained control (e.g.
-channel-wise symmetric INT8 weights) that preserves quality better for
-generative models, and does not require passing `optimizations` to the
-exporter.
+The simplest approach — quantizes weights to 8-bit integers while keeping
+activations in float32. This typically gives **~4× size reduction**.
+
+You can pass `optimizations` directly to `model.export()`. This works on both
+the TensorFlow and PyTorch backends.
+"""
+
+import tensorflow as tf
+
+model.export(
+    "model_dynamic_quant.tflite",
+    format="litert",
+    optimizations=[tf.lite.Optimize.DEFAULT],
+)
+print("Exported dynamically quantized model")
+
+"""
+### Float16 quantization
+
+Converts weights to 16-bit floats. Gives **~2× size reduction** and is often
+faster on GPUs. This is supported on the **TensorFlow** backend via
+`target_spec`:
+
+```python
+# TensorFlow backend only
+model.export(
+    "model_float16.tflite",
+    format="litert",
+    optimizations=[tf.lite.Optimize.DEFAULT],
+    target_spec={"supported_types": [tf.float16]},
+)
+```
+
+On the **PyTorch** backend, `target_spec` is not supported. Use Float16
+quantization through `ai-edge-quantizer` instead (shown below).
+
+### Post-export quantization with ai-edge-quantizer
+
+For finer-grained control (e.g. channel-wise symmetric INT8 weights), use the
+**AI Edge Quantizer** on the exported `.tflite` file. This works consistently
+across both backends and is especially useful for generative models where
+per-channel scaling preserves quality better.
 
 Install it:
 
 ```shell
 pip install -q ai-edge-quantizer
 ```
-
-Quantize the already-exported `.tflite` file:
 """
 
 from ai_edge_quantizer import quantizer, qtyping
@@ -148,8 +170,6 @@ from ai_edge_quantizer import quantizer, qtyping
 qt = quantizer.Quantizer("model.tflite")
 
 # Recipe: channel-wise symmetric INT8 weights, FP32 activations.
-# This is similar to dynamic-range quantization but uses channel-wise
-# scaling which is more accurate for transformer attention weights.
 recipe = [
     {
         "regex": ".*",
@@ -183,14 +203,6 @@ The AI Edge Quantizer typically achieves:
   channel-wise symmetric scaling
 - **No calibration required** for weight-only recipes
 
-### Why not use `optimizations` with the PyTorch backend?
-
-Passing `optimizations=[tf.lite.Optimize.DEFAULT]` to `model.export()` works on
-the **TensorFlow** backend but can fail on the **PyTorch** backend due to
-differences in how `litert-torch` handles quantized dtypes during the
-MLIR pipeline. Until this is fully stabilized, post-export quantization with
-`ai-edge-quantizer` is the safer and more accurate path.
-
 ## Compare file sizes
 """
 
@@ -200,32 +212,36 @@ def file_size_mb(path):
 
 
 print(f"\nOriginal     : {file_size_mb('model.tflite'):.1f} MB")
+print(f"Dynamic INT8 : {file_size_mb('model_dynamic_quant.tflite'):.1f} MB")
 print(f"AI Edge Quant: {file_size_mb('model_aieq.tflite'):.1f} MB")
 
 """
-## Exporting a KerasHub model
+## Export a KerasHub model
 
-The same API works for any Keras model, including KerasHub presets.
-Here is how you would export **Gemma 3 270M**:
+The same API works for KerasHub presets. Here we export **Gemma 3 270M**,
+a lightweight language model that is small enough to run on edge devices.
+"""
 
-```python
 import keras_hub
 
 preset = "gemma3_270m"
 preprocessor = keras_hub.models.Gemma3CausalLMPreprocessor.from_preset(
     preset, sequence_length=32
 )
-model = keras_hub.models.Gemma3CausalLM.from_preset(
-    preset, preprocessor=preprocessor
-)
+model = keras_hub.models.Gemma3CausalLM.from_preset(preset, preprocessor=preprocessor)
 
+print(f"Loaded {preset}")
+
+# Build weights with a sample input
 sample_text = {"prompts": ["Hello"], "responses": ["world"]}
 sample_input = preprocessor(sample_text)[0]
 _ = model(sample_input)
 
+# Export to LiteRT
 model.export("gemma3_270m.tflite", format="litert")
-```
+print("Exported to gemma3_270m.tflite")
 
+"""
 ## Backend comparison
 
 | Feature | TensorFlow backend | PyTorch backend (recommended) |
@@ -234,7 +250,8 @@ model.export("gemma3_270m.tflite", format="litert")
 | Flex ops | Enabled by default | **Not generated** |
 | Android runtime | May crash on new LiteRT | Fully compatible |
 | Interpreter | `tf.lite.Interpreter` (deprecated) | `ai_edge_litert.interpreter.Interpreter` |
-| Quantization via `optimizations` | Supported | Can fail for some models |
+| `optimizations` kwarg | Supported | Supported |
+| `target_spec` kwarg | Supported | **Not supported** |
 | Post-export `ai-edge-quantizer` | Supported | **Supported** |
 
 ## Best practices
@@ -243,11 +260,14 @@ model.export("gemma3_270m.tflite", format="litert")
    compare outputs with the original Keras model.
 2. **Use the PyTorch backend** for LiteRT export to avoid flex ops and ensure
    compatibility with the new LiteRT Android runtime.
-3. **Quantize with `ai-edge-quantizer`** after export for the best size/accuracy
-   trade-off, especially for LLMs.
-4. **Build subclassed models before exporting** — call them on sample data so
+3. **Start with `optimizations=[tf.lite.Optimize.DEFAULT]`** for quick
+   dynamic-range quantization on either backend.
+4. **Use `ai-edge-quantizer`** when you need finer control (channel-wise,
+   symmetric, mixed-precision) or when targeting the PyTorch backend with
+   Float16.
+5. **Build subclassed models before exporting** — call them on sample data so
    Keras knows the input signature.
-5. **Keep models under 2 GB per TFLite file** — LiteRT uses a flatbuffer format
+6. **Keep models under 2 GB per TFLite file** — LiteRT uses a flatbuffer format
    with a 2 GB limit per file. If your model is larger, use the
    `litert-lm` / `litert-lm-builder` pipeline which shards the model into
    multiple sub-models inside a `.litertlm` container.
@@ -259,9 +279,9 @@ model.export("gemma3_270m.tflite", format="litert")
 | `ImportError` for `ai_edge_litert` | Run `pip install ai-edge-litert` |
 | `ImportError` for `litert_torch` | Run `pip install litert-torch` |
 | Shape mismatch at inference | Verify the input shape matches what the model expects |
+| Unsupported ops on PyTorch | Some ops may not yet be supported by `litert-torch`; try TF backend or simplify the model |
 | Subclassed model fails to export | Call the model on sample data before `export()` to build weights |
 | Out of memory during export | Try quantization or export on a machine with more RAM |
-| Quantization via `optimizations` fails on PyTorch | Use `ai-edge-quantizer` as a post-export step instead |
 | Flex ops on Android | Re-export with `KERAS_BACKEND=torch` |
 
 """
