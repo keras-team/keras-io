@@ -402,10 +402,12 @@ embed_dim = 256
 latent_dim = 2048
 num_heads = 8
 
+
 # Patch TransformerDecoder to use tf.tile instead of keras.ops.tile
 # to avoid iterating over a symbolic tensor in the TF backend.
 def get_causal_attention_mask_fixed(self, inputs):
     import tensorflow as tf
+
     input_shape = ops.shape(inputs)
     batch_size, sequence_length = input_shape[0], input_shape[1]
     i = ops.arange(sequence_length)[:, None]
@@ -417,6 +419,7 @@ def get_causal_attention_mask_fixed(self, inputs):
         axis=0,
     )
     return tf.tile(mask, mult)
+
 
 TransformerDecoder.get_causal_attention_mask = get_causal_attention_mask_fixed
 
