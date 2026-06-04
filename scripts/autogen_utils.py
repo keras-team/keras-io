@@ -130,8 +130,8 @@ def find_all_symbols(path, packages):
         a collection of symbols found in the Python code, for instance
         ["keras", "keras.layers", "keras.layers.Dense"]
     """
-    with open(path, "r") as src_file:
-        src = src_file.read()
+    with open(path, encoding="utf-8") as src_file:
+            src = src_file.read()
 
     try:
         tree = pasta.parse(src)
