@@ -155,6 +155,10 @@ GUIDES_MASTER = {
             "path": "define_custom_kernel",
             "title": "Define a Custom TPU/GPU Kernel",
         },
+        {
+            "path": "litert_export",
+            "title": "Exporting Keras models to LiteRT",
+        },
         # {
         #     "path": "preprocessing_layers",
         #     "title": "Working with preprocessing layers",
