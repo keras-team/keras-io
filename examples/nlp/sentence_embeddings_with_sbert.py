@@ -333,12 +333,13 @@ AUTOTUNE = tf.data.experimental.AUTOTUNE
 
 
 def prepare_wiki_data(dataset, num_batches):
+    dataset = dataset.unbatch()
     dataset = dataset.map(
         lambda z: (
             (
-                z["Sentence1"][0],
-                z["Sentence2"][0],
-                z["Sentence3"][0],
+                z["Sentence1"],
+                z["Sentence2"],
+                z["Sentence3"],
             ),
             0,
         ),
@@ -442,7 +443,7 @@ class TripletSiamese(keras.Model):
 
         output = keras.ops.stack(
             [positive_dist, negative_dist],
-            axis=0,
+            axis=-1,
         )
 
         super().__init__(
@@ -479,10 +480,11 @@ class TripletLoss(keras.losses.Loss):
         self.margin = margin
 
     def call(self, y_true, y_pred):
-        positive_dist, negative_dist = tf.unstack(y_pred, axis=0)
+        positive_dist = y_pred[:, 0]
+        negative_dist = y_pred[:, 1]
 
         losses = keras.ops.relu(positive_dist - negative_dist + self.margin)
-        return keras.ops.mean(losses, axis=0)
+        return keras.ops.mean(losses)
 
 
 """
