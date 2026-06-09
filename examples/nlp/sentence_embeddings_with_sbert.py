@@ -118,8 +118,10 @@ VALIDATION_NUM_BATCHES = 40
 
 AUTOTUNE = tf.data.experimental.AUTOTUNE
 
+
 def change_range(x):
     return (x / 2.5) - 1
+
 
 def prepare_dataset(dataset, num_batches, batch_size):
     dataset = dataset.map(
@@ -141,6 +143,7 @@ def prepare_dataset(dataset, num_batches, batch_size):
     dataset = dataset.prefetch(AUTOTUNE)
 
     return dataset
+
 
 stsb_ds = tfds.load(
     "glue/stsb",
@@ -206,11 +209,23 @@ sentences.
 
 class RegressionSiamese(keras.Model):
     def __init__(self, encoder, **kwargs):
-        sen1 = keras.Input(shape=(), dtype="string", name="sentence1",)
-        sen2 = keras.Input(shape=(), dtype="string", name="sentence2",)
+        sen1 = keras.Input(
+            shape=(),
+            dtype="string",
+            name="sentence1",
+        )
+        sen2 = keras.Input(
+            shape=(),
+            dtype="string",
+            name="sentence2",
+        )
         u = encoder(sen1)
         v = encoder(sen2)
-        cosine_similarity_scores = keras.ops.sum(u * v, axis=-1, keepdims=True,)
+        cosine_similarity_scores = keras.ops.sum(
+            u * v,
+            axis=-1,
+            keepdims=True,
+        )
 
         super().__init__(
             inputs=[sen1, sen2],
@@ -316,10 +331,17 @@ NUM_TRAIN_BATCHES = 200
 NUM_TEST_BATCHES = 75
 AUTOTUNE = tf.data.experimental.AUTOTUNE
 
+
 def prepare_wiki_data(dataset, num_batches):
     dataset = dataset.map(
-        lambda z: ((z["Sentence1"][0], z["Sentence2"][0], z["Sentence3"][0],), 0,)
-        ,
+        lambda z: (
+            (
+                z["Sentence1"][0],
+                z["Sentence2"][0],
+                z["Sentence3"][0],
+            ),
+            0,
+        ),
         num_parallel_calls=AUTOTUNE,
     )
     dataset = dataset.batch(6)
@@ -356,15 +378,23 @@ sentence.
 
 preprocessor = keras_hub.models.RobertaPreprocessor.from_preset("roberta_base_en")
 backbone = keras_hub.models.RobertaBackbone.from_preset("roberta_base_en")
-input = keras.Input(shape=(), dtype="string",name="triplet_sentence",) # use a unique name
+input = keras.Input(
+    shape=(),
+    dtype="string",
+    name="triplet_sentence",
+)  # use a unique name
 
 x = preprocessor(input)
 h = backbone(x)
 embedding = keras.layers.GlobalAveragePooling1D(name="pooling_layer")(
-    h, mask=x["padding_mask"],
+    h,
+    mask=x["padding_mask"],
 )
 
-roberta_encoder = keras.Model(inputs=input, outputs=embedding,)
+roberta_encoder = keras.Model(
+    inputs=input,
+    outputs=embedding,
+)
 
 
 roberta_encoder.summary()
@@ -381,23 +411,48 @@ embedding for each sentence, and we will calculate the `positive_dist` and
 
 class TripletSiamese(keras.Model):
     def __init__(self, encoder, **kwargs):
-        anchor = keras.Input(shape=(), dtype="string", name="anchor",)
-        positive = keras.Input(shape=(), dtype="string", name="positive",)
-        negative = keras.Input(shape=(), dtype="string", name="negative",)
+        anchor = keras.Input(
+            shape=(),
+            dtype="string",
+            name="anchor",
+        )
+        positive = keras.Input(
+            shape=(),
+            dtype="string",
+            name="positive",
+        )
+        negative = keras.Input(
+            shape=(),
+            dtype="string",
+            name="negative",
+        )
 
         ea = encoder(anchor)
         ep = encoder(positive)
         en = encoder(negative)
 
-        positive_dist = keras.ops.sum(keras.ops.square(ea - ep), axis=-1,)
-        negative_dist = keras.ops.sum(keras.ops.square(ea - en), axis=-1,)
+        positive_dist = keras.ops.sum(
+            keras.ops.square(ea - ep),
+            axis=-1,
+        )
+        negative_dist = keras.ops.sum(
+            keras.ops.square(ea - en),
+            axis=-1,
+        )
 
         positive_dist = keras.ops.sqrt(positive_dist)
         negative_dist = keras.ops.sqrt(negative_dist)
 
-        output = keras.ops.stack([positive_dist, negative_dist], axis=0,)
+        output = keras.ops.stack(
+            [positive_dist, negative_dist],
+            axis=0,
+        )
 
-        super().__init__(inputs=[anchor, positive, negative], outputs=output, **kwargs,)
+        super().__init__(
+            inputs=[anchor, positive, negative],
+            outputs=output,
+            **kwargs,
+        )
 
         self.encoder = encoder
 
