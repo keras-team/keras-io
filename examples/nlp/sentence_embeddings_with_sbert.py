@@ -185,7 +185,7 @@ x = preprocessor(inputs)
 h = backbone(x)
 embedding = keras.layers.GlobalAveragePooling1D(name="pooling_layer")(
     h,
-    x["padding_mask"],
+    mask=x["padding_mask"],
 )
 
 n_embedding = keras.layers.UnitNormalization(axis=1)(embedding)
@@ -378,24 +378,21 @@ sentence.
 
 preprocessor = keras_hub.models.RobertaPreprocessor.from_preset("roberta_base_en")
 backbone = keras_hub.models.RobertaBackbone.from_preset("roberta_base_en")
-input = keras.Input(
+inputs = keras.Input(
     shape=(),
     dtype="string",
     name="triplet_sentence",
 )  # use a unique name
-
-x = preprocessor(input)
+x = preprocessor(inputs)
 h = backbone(x)
 embedding = keras.layers.GlobalAveragePooling1D(name="pooling_layer")(
     h,
     mask=x["padding_mask"],
 )
-
 roberta_encoder = keras.Model(
-    inputs=input,
+    inputs=inputs,
     outputs=embedding,
 )
-
 
 roberta_encoder.summary()
 
@@ -440,8 +437,8 @@ class TripletSiamese(keras.Model):
             axis=-1,
         )
 
-        positive_dist = keras.ops.sqrt(positive_dist)
-        negative_dist = keras.ops.sqrt(negative_dist)
+        positive_dist = keras.ops.sqrt(positive_dist + 1e-12)
+        negative_dist = keras.ops.sqrt(negative_dist + 1e-12)
 
         output = keras.ops.stack(
             [positive_dist, negative_dist],
