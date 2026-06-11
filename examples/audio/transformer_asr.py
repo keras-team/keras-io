@@ -291,22 +291,23 @@ takes ~5 minutes for the extraction of files.
 """
 
 pattern_wav_name = re.compile(r"([^/\\\.]+)")
-keras.utils.get_file(
+path = keras.utils.get_file(
     fname="LJSpeech-1.1.tar.bz2",
     origin="https://data.keithito.com/data/speech/LJSpeech-1.1.tar.bz2",
     extract=True,
-    cache_dir=os.path.expanduser("~/.keras"),
+    cache_dir=".",
 )
-base_dir = os.path.join(os.path.expanduser("~/.keras"), "datasets")
+
+base_dir = os.path.dirname(path)
 
 saveto = None
-for root, dirs, files in os.walk(base_dir):
-    if "metadata.csv" in files:
+for root, _, files in os.walk(base_dir):
+    if "metadata.csv" in files and "LJSpeech" in root:
         saveto = root
         break
 
 if saveto is None:
-    raise FileNotFoundError("metadata.csv not found in extracted dataset")
+    raise FileNotFoundError("metadata.csv not found after extraction")
 
 wavs = glob(os.path.join(saveto, "**", "*.wav"), recursive=True)
 
@@ -320,12 +321,14 @@ with open(os.path.join(saveto, "metadata.csv"), encoding="utf-8") as f:
 
 
 def get_data(wavs, id_to_text, maxlen=50):
-    """returns mapping of audio paths and transcription texts"""
+    """Returns mapping of audio paths and transcription texts."""
     data = []
     for w in wavs:
-        id = pattern_wav_name.split(w)[-4]
+        id = os.path.splitext(os.path.basename(w))[0]
+
         if id in id_to_text and len(id_to_text[id]) < maxlen:
             data.append({"audio": w, "text": id_to_text[id]})
+
     return data
 
 
