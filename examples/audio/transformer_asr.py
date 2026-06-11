@@ -2,7 +2,7 @@
 Title: Automatic Speech Recognition with Transformer
 Author: [Apoorv Nandan](https://twitter.com/NandanApoorv)
 Date created: 2021/01/13
-Last modified: 2021/01/13
+Last modified: 2026/06/11
 Description: Training a sequence-to-sequence Transformer for automatic speech recognition.
 Accelerator: GPU
 """
@@ -66,7 +66,7 @@ class TokenEmbedding(layers.Layer):
 
 
 class SpeechFeatureEmbedding(layers.Layer):
-    def __init__(self, num_hid=64, maxlen=100):
+    def __init__(self, num_hid=64):
         super().__init__()
         self.conv1 = keras.layers.Conv1D(
             num_hid, 11, strides=2, padding="same", activation="relu"
@@ -197,7 +197,9 @@ class Transformer(keras.Model):
         self.target_maxlen = target_maxlen
         self.num_classes = num_classes
 
-        self.enc_input = SpeechFeatureEmbedding(num_hid=num_hid, maxlen=source_maxlen)
+        self.enc_input = SpeechFeatureEmbedding(
+            num_hid=num_hid,
+        )
         self.dec_input = TokenEmbedding(
             num_vocab=num_classes, maxlen=target_maxlen, num_hid=num_hid
         )
@@ -289,34 +291,44 @@ takes ~5 minutes for the extraction of files.
 """
 
 pattern_wav_name = re.compile(r"([^/\\\.]+)")
-
-keras.utils.get_file(
-    os.path.join(os.getcwd(), "data.tar.gz"),
-    "https://data.keithito.com/data/speech/LJSpeech-1.1.tar.bz2",
+path = keras.utils.get_file(
+    fname="LJSpeech-1.1.tar.bz2",
+    origin="https://data.keithito.com/data/speech/LJSpeech-1.1.tar.bz2",
     extract=True,
-    archive_format="tar",
     cache_dir=".",
 )
 
+base_dir = os.path.dirname(path)
 
-saveto = "./datasets/LJSpeech-1.1"
-wavs = glob("{}/**/*.wav".format(saveto), recursive=True)
+saveto = None
+for root, _, files in os.walk(base_dir):
+    if "metadata.csv" in files and "LJSpeech" in root:
+        saveto = root
+        break
+
+if saveto is None:
+    raise FileNotFoundError("metadata.csv not found after extraction")
+
+wavs = glob(os.path.join(saveto, "**", "*.wav"), recursive=True)
 
 id_to_text = {}
 with open(os.path.join(saveto, "metadata.csv"), encoding="utf-8") as f:
     for line in f:
-        id = line.strip().split("|")[0]
-        text = line.strip().split("|")[2]
-        id_to_text[id] = text
+        parts = line.strip().split("|")
+        if len(parts) < 3:
+            continue
+        id_to_text[parts[0]] = parts[2]
 
 
 def get_data(wavs, id_to_text, maxlen=50):
-    """returns mapping of audio paths and transcription texts"""
+    """Returns mapping of audio paths and transcription texts."""
     data = []
     for w in wavs:
-        id = pattern_wav_name.split(w)[-4]
-        if len(id_to_text[id]) < maxlen:
+        id = os.path.splitext(os.path.basename(w))[0]
+
+        if id in id_to_text and len(id_to_text[id]) < maxlen:
             data.append({"audio": w, "text": id_to_text[id]})
+
     return data
 
 
