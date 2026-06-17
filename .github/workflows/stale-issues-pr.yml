@@ -14,7 +14,7 @@ jobs:
       pull-requests: write
     steps:
       - name: Awaiting response issues
-        uses: actions/stale@v7
+        uses: actions/stale@v10
         with:
           #Limit the No. of API calls in one run default value is 30.
           operations-per-run: 500
@@ -35,7 +35,7 @@ jobs:
           close-pr-message: "This PR was closed because it has been inactive for 28 days. Please reopen if you'd like to work on this further."
           repo-token: ${{ secrets.GITHUB_TOKEN }}
       - name: Contribution issues
-        uses: actions/stale@v7
+        uses: actions/stale@v10
         with:
           #Limit the No. of API calls in one run default value is 30.
           operations-per-run: 500
@@ -51,8 +51,8 @@ jobs:
           close-issue-message: >
             This issue was closed because it has been inactive for more than 1 year.
           repo-token: ${{ secrets.GITHUB_TOKEN }}
-      - uses: actions/checkout@v3
-      - uses: actions/github-script@v6
+      - uses: actions/checkout@v6
+      - uses: actions/github-script@v9
         with:
           script: |
             const script = require('./\.github/workflows/scripts/stale_csat.js')
