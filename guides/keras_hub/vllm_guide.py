@@ -1,9 +1,9 @@
 """
 Title: Serving KerasHub models with vLLM
-Author: Dhiraj
+Author: [Dhiraj](https://github.com/Dhiraj099)
 Date created: 2025/08/16
 Last modified: 2026/06/17
-Description: Export a KerasHub models to Hugging Face format and serve it with vLLM.
+Description: Export a KerasHub model to Hugging Face format and serve it with vLLM.
 Accelerator: TPU
 """
 
@@ -184,10 +184,10 @@ for output in outputs:
 """
 ## Conclusion
 
-Congratulations! You exported a Gemma 3 model from KerasHub to the Hugging Face safetensors format
-and served it with vLLM on a TPU, all in a single session. The same pattern
-works across various supported KerasHub model architectures, including Gemma,
-Llama, and Mistral variants.
+Congratulations! You exported a Gemma 3 model from KerasHub to the Hugging Face
+safetensors format and served it with vLLM on a TPU, all in a single session.
+The same pattern works across various supported KerasHub model architectures,
+including Gemma, Qwen, and Mistral variants.
 
 For a production deployment, run vLLM as a standalone server with
 `vllm serve <export_path>`, which exposes an OpenAI-compatible HTTP API and

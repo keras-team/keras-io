@@ -1,9 +1,9 @@
 # Serving KerasHub models with vLLM
 
-**Author:** Dhiraj<br>
+**Author:** [Dhiraj](https://github.com/Dhiraj099)<br>
 **Date created:** 2025/08/16<br>
 **Last modified:** 2026/06/17<br>
-**Description:** Export a KerasHub models to Hugging Face format and serve it with vLLM.
+**Description:** Export a KerasHub model to Hugging Face format and serve it with vLLM.
 
 ## Introduction
 
@@ -51,6 +51,7 @@ import warnings
 # Suppress noisy C++ and backend compilation warnings
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 os.environ["VLLM_LOGGING_LEVEL"] = "ERROR"
+os.environ["TQDM_DISABLE"] = "1"
 logging.getLogger("absl").setLevel(logging.ERROR)
 logging.getLogger().setLevel(logging.ERROR)
 warnings.filterwarnings("ignore")
@@ -91,12 +92,12 @@ stays free for vLLM in the next step. The export is otherwise
 backend-independent: the safetensors it writes are identical whichever backend
 you pick.
 
-> **Important Note on TPU Memory Allocation:** While you can technically use
-> the JAX or TensorFlow backends to export the model, doing so on a TPU runtime
-> will cause JAX/TF to immediately reserve the majority of the TPU's memory.
-> Because vLLM requires exclusive access to the TPU initialized in the same
-> session, pre-allocating that memory might cause vLLM to crash with a device
-> initialization or Out-Of-Memory error.
+> **Important Note on TPU Memory Allocation:** While you can technically use the
+> JAX or TensorFlow backends to export the model, doing so on a TPU runtime will
+> cause JAX/TF to immediately reserve the majority of the TPU's memory. Because
+> vLLM requires exclusive access to the TPU initialized in the same session,
+> pre-allocating that memory might cause vLLM to crash with a device initialization
+> or Out-Of-Memory error.
 
 `export_to_transformers()` writes `config.json`, the tokenizer files, and a
 `model.safetensors` file to the export directory.
@@ -115,14 +116,13 @@ gemma_lm.export_to_transformers(export_path)
 print(f"Model exported to {export_path}.")
 ```
 
+    Downloading to /root/.cache/kagglehub/models/keras/gemma3/keras/gemma3_1b/3/config.json...
+
+
     Downloading to /root/.cache/kagglehub/models/keras/gemma3/keras/gemma3_1b/3/task.json...
 
 
-      0%|          | 0.00/3.23k [00:00<?, ?B/s]
-
-    100%|██████████| 3.23k/3.23k [00:00<00:00, 11.6MB/s]
-
-    
+    Downloading to /root/.cache/kagglehub/models/keras/gemma3/keras/gemma3_1b/3/assets/tokenizer/vocabulary.spm...
 
 
     Model exported to ./gemma3_exported.
@@ -181,7 +181,7 @@ llm = LLM(
 print("vLLM engine ready.")
 ```
 
-    ERROR 06-17 21:26:41 [tpu_info.py:40] Unable to poll TPU GCE Metadata. Got status code: 404 and content: 
+    ERROR 06-18 22:00:07 [tpu_info.py:40] Unable to poll TPU GCE Metadata. Got status code: 404 and content: 
 
 
     Check failed with unknown exit code: -6.
@@ -245,15 +245,14 @@ for output in outputs:
     Solar cells work by using the energy from the sun to create electricity. The sun’s rays hit the solar
 
 
-## Summary and Next Steps
+## Conclusion
 
-Congratulations! You successfully exported a model from KerasHub to the Hugging
-Face safetensors format and served it with vLLM on a TPU. This same pattern
-applies across various supported KerasHub model architectures, including Gemma,
-Llama, and Mistral variants.
+Congratulations! You exported a Gemma 3 model from KerasHub to the Hugging Face
+safetensors format and served it with vLLM on a TPU, all in a single session.
+The same pattern works across various supported KerasHub model architectures,
+including Gemma, Qwen, and Mistral variants.
 
 For a production deployment, run vLLM as a standalone server with
 `vllm serve <export_path>`, which exposes an OpenAI-compatible HTTP API and
-removes the notebook-specific settings used above. To scale up your serving setup,
-move from a Colab TPU to a dedicated Cloud TPU VM (v5e or newer) and experiment
-with larger model presets.
+removes the notebook-specific settings used above. To scale up, move from a Colab
+TPU to a Cloud TPU VM (v5e or v6e) and select a larger preset.
