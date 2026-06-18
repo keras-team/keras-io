@@ -1,17 +1,5 @@
-import os
-import sys
-import logging
-import warnings
-
-# --- HIDDEN LAYER ---
-os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
-os.environ["VLLM_LOGGING_LEVEL"] = "ERROR"
-logging.getLogger("absl").setLevel(logging.ERROR)
-logging.getLogger().setLevel(logging.ERROR)
-warnings.filterwarnings("ignore")
-
 """
-Title: Serving KerasHub models with vLLM 
+Title: Serving KerasHub models with vLLM
 Author: Dhiraj
 Date created: 2025/08/16
 Last modified: 2026/06/17
@@ -57,6 +45,18 @@ resolves a compatible `transformers` and `numpy` automatically.
 """shell
 pip install -q vllm-tpu keras-hub keras
 """
+import os
+import sys
+import logging
+import warnings
+
+# Suppress noisy C++ and backend compilation warnings
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
+os.environ["VLLM_LOGGING_LEVEL"] = "ERROR"
+os.environ["TQDM_DISABLE"] = "1"
+logging.getLogger("absl").setLevel(logging.ERROR)
+logging.getLogger().setLevel(logging.ERROR)
+warnings.filterwarnings("ignore")
 
 """
 ## Authenticate with Kaggle
@@ -90,11 +90,11 @@ stays free for vLLM in the next step. The export is otherwise
 backend-independent: the safetensors it writes are identical whichever backend
 you pick.
 
-> **Important Note on TPU Memory Allocation:** While you can technically use the 
-> JAX or TensorFlow backends to export the model, doing so on a TPU runtime will 
-> cause JAX/TF to immediately reserve the majority of the TPU's memory. Because 
-> vLLM requires exclusive access to the TPU initialized in the same session, 
-> pre-allocating that memory might cause vLLM to crash with a device initialization 
+> **Important Note on TPU Memory Allocation:** While you can technically use the
+> JAX or TensorFlow backends to export the model, doing so on a TPU runtime will
+> cause JAX/TF to immediately reserve the majority of the TPU's memory. Because
+> vLLM requires exclusive access to the TPU initialized in the same session,
+> pre-allocating that memory might cause vLLM to crash with a device initialization
 > or Out-Of-Memory error.
 
 `export_to_transformers()` writes `config.json`, the tokenizer files, and a
@@ -186,7 +186,7 @@ for output in outputs:
 
 Congratulations! You exported a Gemma 3 model from KerasHub to the Hugging Face safetensors format
 and served it with vLLM on a TPU, all in a single session. The same pattern
-works across various supported KerasHub model architectures, including Gemma, 
+works across various supported KerasHub model architectures, including Gemma,
 Llama, and Mistral variants.
 
 For a production deployment, run vLLM as a standalone server with
