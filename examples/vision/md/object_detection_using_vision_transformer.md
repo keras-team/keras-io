@@ -154,8 +154,8 @@ def mlp(x, hidden_units, dropout_rate):
 ```python
 
 class Patches(layers.Layer):
-    def __init__(self, patch_size):
-        super().__init__()
+    def __init__(self, patch_size, **kwargs):
+        super().__init__(**kwargs)
         self.patch_size = patch_size
 
     def call(self, images):
@@ -241,27 +241,21 @@ embedding to the projected vector.
 ```python
 
 class PatchEncoder(layers.Layer):
-    def __init__(self, num_patches, projection_dim):
-        super().__init__()
+    def __init__(self, num_patches, projection_dim, **kwargs):
+        super().__init__(**kwargs)
         self.num_patches = num_patches
+        self.projection_dim = projection_dim
         self.projection = layers.Dense(units=projection_dim)
         self.position_embedding = layers.Embedding(
             input_dim=num_patches, output_dim=projection_dim
         )
 
-    # Override function to avoid error while saving model
     def get_config(self):
-        config = super().get_config().copy()
+        config = super().get_config()
         config.update(
             {
-                "input_shape": input_shape,
-                "patch_size": patch_size,
-                "num_patches": num_patches,
-                "projection_dim": projection_dim,
-                "num_heads": num_heads,
-                "transformer_units": transformer_units,
-                "transformer_layers": transformer_layers,
-                "mlp_head_units": mlp_head_units,
+                "num_patches": self.num_patches,
+                "projection_dim": self.projection_dim,
             }
         )
         return config
