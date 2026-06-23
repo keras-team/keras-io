@@ -57,8 +57,11 @@ os.environ["KERAS_BACKEND"] = "tensorflow"
 import keras
 from keras import layers
 
+import ale_py
 import gymnasium as gym
-from gymnasium.wrappers import AtariPreprocessing, FrameStack
+
+gym.register_envs(ale_py)
+from gymnasium.wrappers import AtariPreprocessing, FrameStackObservation
 import numpy as np
 import tensorflow as tf
 
@@ -81,8 +84,7 @@ env = gym.make("BreakoutNoFrameskip-v4")  # , render_mode="human")
 # Environment preprocessing
 env = AtariPreprocessing(env)
 # Stack four frames
-env = FrameStack(env, 4)
-env.seed(seed)
+env = FrameStackObservation(env, 4)
 """
 ## Implement the Deep Q-Network
 
@@ -100,13 +102,13 @@ def create_q_model():
     # Network defined by the Deepmind paper
     return keras.Sequential(
         [
+            keras.Input(shape=(4, 84, 84)),
             layers.Lambda(
                 lambda tensor: keras.ops.transpose(tensor, [0, 2, 3, 1]),
                 output_shape=(84, 84, 4),
-                input_shape=(4, 84, 84),
             ),
             # Convolutions on the frames on the screen
-            layers.Conv2D(32, 8, strides=4, activation="relu", input_shape=(4, 84, 84)),
+            layers.Conv2D(32, 8, strides=4, activation="relu"),
             layers.Conv2D(64, 4, strides=2, activation="relu"),
             layers.Conv2D(64, 3, strides=1, activation="relu"),
             layers.Flatten(),
@@ -131,7 +133,6 @@ model_target = create_q_model()
 # In the Deepmind paper they use RMSProp however then Adam optimizer
 # improves training time
 optimizer = keras.optimizers.Adam(learning_rate=0.00025, clipnorm=1.0)
-
 # Experience replay buffers
 action_history = []
 state_history = []
@@ -182,8 +183,9 @@ while True:
         epsilon = max(epsilon, epsilon_min)
 
         # Apply the sampled action in our environment
-        state_next, reward, done, _, _ = env.step(action)
-        state_next = np.array(state_next)
+        state_next, reward, terminated, truncated, info = env.step(action)
+        done = terminated or truncated
+        state_next = np.asarray(state_next, dtype=np.uint8)
 
         episode_reward += reward
 
@@ -211,7 +213,7 @@ while True:
 
             # Build the updated Q-values for the sampled future states
             # Use the target model for stability
-            future_rewards = model_target.predict(state_next_sample)
+            future_rewards = model_target(state_next_sample, training=False)
             # Q value = reward + discount factor * expected future reward
             updated_q_values = rewards_sample + gamma * keras.ops.amax(
                 future_rewards, axis=1
@@ -225,7 +227,8 @@ while True:
 
             with tf.GradientTape() as tape:
                 # Train the model on the states and updated Q-values
-                q_values = model(state_sample)
+                q_values = model(state_sample, training=True)
+                # q_values = model(state_sample)
 
                 # Apply the masks to the Q-values to get the Q-value for action taken
                 q_action = keras.ops.sum(keras.ops.multiply(q_values, masks), axis=1)
