@@ -2866,14 +2866,6 @@ MODELS_MASTER = {
             "toc": True,
             "children": [
                 {
-                    "path": "sam_image_converter",
-                    "title": "SAMImageConverter",
-                    "generate": [
-                        "keras_hub.layers.SAMImageConverter",
-                        "keras_hub.layers.SAMImageConverter.from_preset",
-                    ],
-                },
-                {
                     "path": "stable_diffusion_3_backbone",
                     "title": "StableDiffusion3Backbone model",
                     "generate": [
