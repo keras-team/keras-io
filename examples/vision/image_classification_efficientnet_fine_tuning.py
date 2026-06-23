@@ -368,8 +368,14 @@ plot_hist(hist)
 
 """
 The second step is to unfreeze a number of layers and fit the model using smaller
-learning rate. In this example we show unfreezing all layers, but depending on
-specific dataset it may be desireble to only unfreeze a fraction of all layers.
+learning rate. In this example we show unfreezing only the last block while leaving
+all other layers frozen, but depending on the specific dataset it may be desirable to
+unfreeze more or fewer layers.
+
+Because EfficientNet shortcuts connect whole blocks, it is important to unfreeze a
+block as a unit rather than individual layers. The code below demonstrates
+block-by-block fine-tuning by unfreezing the last EfficientNet block (`block7`) and
+all subsequent layers, while keeping BatchNormalization layers frozen.
 
 When the feature extraction with
 pretrained model works good enough, this step would give a very limited gain on
@@ -392,12 +398,23 @@ to `True`.
 
 
 def unfreeze_model(model):
-    # We unfreeze the top 20 layers while leaving BatchNorm layers frozen
-    for layer in model.layers[-20:]:
+    # We unfreeze the top block (block7) and all subsequent layers while leaving
+    # BatchNorm layers frozen, because EfficientNet shortcuts connect whole blocks.
+    # EfficientNet may be loaded either as a nested sub-model or with its layers
+    # directly in `model.layers`, so we look for the nested model first.
+    base_model = model
+    for layer in model.layers:
+        if layer.name.startswith("efficientnet"):
+            base_model = layer
+            break
+    for block_start_index, layer in enumerate(base_model.layers):
+        if layer.name.startswith("block7"):
+            break
+    for layer in base_model.layers[block_start_index:]:
         if not isinstance(layer, layers.BatchNormalization):
             layer.trainable = True
 
-    optimizer = keras.optimizers.Adam(learning_rate=1e-5)
+    optimizer = keras.optimizers.Adam(learning_rate=1e-4)
     model.compile(
         optimizer=optimizer, loss="categorical_crossentropy", metrics=["accuracy"]
     )
@@ -423,7 +440,9 @@ unfreezing all. This will make fine tuning much faster when going to larger mode
 B7.
 - Each block needs to be all turned on or off. This is because the architecture includes
 a shortcut from the first layer to the last layer for each block. Not respecting blocks
-also significantly harms the final performance.
+also significantly harms the final performance. The `unfreeze_model` implementation
+above demonstrates this by unfreezing `block7a` onward (the last EfficientNet block and
+all subsequent layers).
 
 Some other tips for utilizing EfficientNet:
 
