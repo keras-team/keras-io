@@ -1326,15 +1326,20 @@ to `True`.
 
 
 ```python
-def unfreeze_model(model):
-    # We unfreeze the top 20 layers while leaving BatchNorm layers frozen
-    for layer in model.layers[-20:]:
+def unfreeze_model(model: keras.Model,
+                   layers_to_unfreeze: int = 20,
+                   learning_rate: float = 1e-5,
+                   loss_func_name: str = "categorical_crossentropy",
+                   metrics: list[str] = ["accuracy"]
+                   ) -> keras.Model:
+    # We unfreeze the top `layers_to_unfreeze` layers while leaving BatchNorm layers frozen
+    for layer in model.layers[-layers_to_unfreeze:]:
         if not isinstance(layer, layers.BatchNormalization):
             layer.trainable = True
 
-    optimizer = keras.optimizers.Adam(learning_rate=1e-5)
+    optimizer = keras.optimizers.Adam(learning_rate=learning_rate)
     model.compile(
-        optimizer=optimizer, loss="categorical_crossentropy", metrics=["accuracy"]
+        optimizer=optimizer, loss=loss_func_name, metrics=metrics
     )
 
     return model
