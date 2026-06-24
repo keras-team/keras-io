@@ -392,15 +392,19 @@ to `True`.
 
 
 def unfreeze_model(model: keras.Model,
-                   layers_to_unfreeze: int = 20,
+                   layers_to_unfreeze: int | str = 20,
                    learning_rate: float = 1e-5,
                    loss_func_name: str = "categorical_crossentropy",
                    metrics: list[str] = ["accuracy"]
                    ) -> keras.Model:
-    # We unfreeze the top `layers_to_unfreeze` layers while leaving BatchNorm layers frozen
-    for layer in model.layers[-layers_to_unfreeze:]:
-        if not isinstance(layer, layers.BatchNormalization):
-            layer.trainable = True
+    if isinstance(layers_to_unfreeze, int):
+        for layer in model.layers[-layers_to_unfreeze:]:
+            if not isinstance(layer, layers.BatchNormalization):
+                layer.trainable = True
+    elif isinstance(layers_to_unfreeze, str):
+        for layer in model.layers:
+            if layers_to_unfreeze in layer.name and not isinstance(layer, layers.BatchNormalization):
+                layer.trainable = True
 
     optimizer = keras.optimizers.Adam(learning_rate=learning_rate)
     model.compile(

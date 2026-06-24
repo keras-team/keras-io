@@ -203,9 +203,9 @@ for i, (image, label) in enumerate(ds_train.take(9)):
 ```
 
 
-    
+
 ![png](/img/examples/vision/image_classification_efficientnet_fine_tuning/image_classification_efficientnet_fine_tuning_9_0.png)
-    
+
 
 
 ### Data augmentation
@@ -249,9 +249,9 @@ for image, label in ds_train.take(1):
 ```
 
 
-    
+
 ![png](/img/examples/vision/image_classification_efficientnet_fine_tuning/image_classification_efficientnet_fine_tuning_13_0.png)
-    
+
 
 
 ### Prepare inputs
@@ -1184,9 +1184,9 @@ plot_hist(hist)
 ```
 
 
-    
+
 ![png](/img/examples/vision/image_classification_efficientnet_fine_tuning/image_classification_efficientnet_fine_tuning_19_0.png)
-    
+
 
 
 ---
@@ -1297,9 +1297,9 @@ Epoch 25/25
 
 ```
 </div>
-    
+
 ![png](/img/examples/vision/image_classification_efficientnet_fine_tuning/image_classification_efficientnet_fine_tuning_23_1.png)
-    
+
 
 
 The second step is to unfreeze a number of layers and fit the model using smaller
@@ -1327,15 +1327,19 @@ to `True`.
 
 ```python
 def unfreeze_model(model: keras.Model,
-                   layers_to_unfreeze: int = 20,
+                   layers_to_unfreeze: int | str = 20,
                    learning_rate: float = 1e-5,
                    loss_func_name: str = "categorical_crossentropy",
                    metrics: list[str] = ["accuracy"]
                    ) -> keras.Model:
-    # We unfreeze the top `layers_to_unfreeze` layers while leaving BatchNorm layers frozen
-    for layer in model.layers[-layers_to_unfreeze:]:
-        if not isinstance(layer, layers.BatchNormalization):
-            layer.trainable = True
+    if isinstance(layers_to_unfreeze, int):
+        for layer in model.layers[-layers_to_unfreeze:]:
+            if not isinstance(layer, layers.BatchNormalization):
+                layer.trainable = True
+    elif isinstance(layers_to_unfreeze, str):
+        for layer in model.layers:
+            if layers_to_unfreeze in layer.name and not isinstance(layer, layers.BatchNormalization):
+                layer.trainable = True
 
     optimizer = keras.optimizers.Adam(learning_rate=learning_rate)
     model.compile(
@@ -1365,9 +1369,9 @@ Epoch 4/4
 
 ```
 </div>
-    
+
 ![png](/img/examples/vision/image_classification_efficientnet_fine_tuning/image_classification_efficientnet_fine_tuning_25_1.png)
-    
+
 
 
 ### Tips for fine tuning EfficientNet
