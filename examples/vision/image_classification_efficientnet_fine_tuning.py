@@ -402,8 +402,10 @@ def unfreeze_model(model):
         optimizer=optimizer, loss="categorical_crossentropy", metrics=["accuracy"]
     )
 
+    return model
 
-unfreeze_model(model)
+
+model = unfreeze_model(model)
 
 epochs = 4  # @param {type: "slider", min:4, max:10}
 hist = model.fit(ds_train, epochs=epochs, validation_data=ds_test)
