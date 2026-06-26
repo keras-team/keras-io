@@ -391,19 +391,30 @@ to `True`.
 """
 
 
-def unfreeze_model(model):
-    # We unfreeze the top 20 layers while leaving BatchNorm layers frozen
-    for layer in model.layers[-20:]:
-        if not isinstance(layer, layers.BatchNormalization):
-            layer.trainable = True
+def unfreeze_model(model: keras.Model,
+                   layers_to_unfreeze: int | str = 20,
+                   learning_rate: float = 1e-5,
+                   loss_func_name: str = "categorical_crossentropy",
+                   metrics: list[str] = ["accuracy"]
+                   ) -> keras.Model:
+    if isinstance(layers_to_unfreeze, int) and layers_to_unfreeze > 0:
+        for layer in model.layers[-layers_to_unfreeze:]:
+            if not isinstance(layer, layers.BatchNormalization):
+                layer.trainable = True
+    elif isinstance(layers_to_unfreeze, str):
+        for layer in model.layers:
+            if layers_to_unfreeze in layer.name and not isinstance(layer, layers.BatchNormalization):
+                layer.trainable = True
 
-    optimizer = keras.optimizers.Adam(learning_rate=1e-5)
+    optimizer = keras.optimizers.Adam(learning_rate=learning_rate)
     model.compile(
-        optimizer=optimizer, loss="categorical_crossentropy", metrics=["accuracy"]
+        optimizer=optimizer, loss=loss_func_name, metrics=metrics
     )
 
+    return model
 
-unfreeze_model(model)
+
+model = unfreeze_model(model)
 
 epochs = 4  # @param {type: "slider", min:4, max:10}
 hist = model.fit(ds_train, epochs=epochs, validation_data=ds_test)
