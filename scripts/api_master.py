@@ -86,7 +86,6 @@ API_MASTER = {
                                 "keras.export.ExportArchive.add_variable_collection",
                                 "keras.export.ExportArchive.track",
                                 "keras.export.ExportArchive.write_out",
-                                "keras.export.export_torch",
                             ],
                         },
                         {
