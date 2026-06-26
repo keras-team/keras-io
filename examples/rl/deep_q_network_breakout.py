@@ -2,7 +2,7 @@
 Title: Deep Q-Learning for Atari Breakout
 Author: [Jacob Chapman](https://twitter.com/jacoblchapman) and [Mathias Lechner](https://twitter.com/MLech20)
 Date created: 2020/05/23
-Last modified: 2024/03/17
+Last modified: 2026/06/26
 Description: Play Atari Breakout with a Deep Q-Network.
 Accelerator: None
 """
@@ -66,7 +66,6 @@ import numpy as np
 import tensorflow as tf
 
 # Configuration parameters for the whole setup
-seed = 42
 gamma = 0.99  # Discount factor for past rewards
 epsilon = 1.0  # Epsilon greedy parameter
 epsilon_min = 0.1  # Minimum epsilon greedy parameter
@@ -228,7 +227,6 @@ while True:
             with tf.GradientTape() as tape:
                 # Train the model on the states and updated Q-values
                 q_values = model(state_sample, training=True)
-                # q_values = model(state_sample)
 
                 # Apply the masks to the Q-values to get the Q-value for action taken
                 q_action = keras.ops.sum(keras.ops.multiply(q_values, masks), axis=1)
