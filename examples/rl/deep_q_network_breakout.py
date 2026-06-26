@@ -56,7 +56,6 @@ os.environ["KERAS_BACKEND"] = "tensorflow"
 
 import keras
 from keras import layers
-
 import ale_py
 import gymnasium as gym
 
