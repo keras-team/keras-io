@@ -402,18 +402,38 @@ embed_dim = 256
 latent_dim = 2048
 num_heads = 8
 
+
+# Patch TransformerDecoder to use tf.tile instead of keras.ops.tile
+# to avoid iterating over a symbolic tensor in the TF backend.
+def get_causal_attention_mask_fixed(self, inputs):
+    import tensorflow as tf
+
+    input_shape = ops.shape(inputs)
+    batch_size, sequence_length = input_shape[0], input_shape[1]
+    i = ops.arange(sequence_length)[:, None]
+    j = ops.arange(sequence_length)
+    mask = ops.cast(i >= j, dtype="int32")
+    mask = ops.reshape(mask, (1, input_shape[1], input_shape[1]))
+    mult = ops.concatenate(
+        [ops.expand_dims(batch_size, -1), ops.convert_to_tensor([1, 1], dtype="int32")],
+        axis=0,
+    )
+    return tf.tile(mask, mult)
+
+
+TransformerDecoder.get_causal_attention_mask = get_causal_attention_mask_fixed
+
 encoder_inputs = keras.Input(shape=(None,), dtype="int64", name="encoder_inputs")
 x = PositionalEmbedding(sequence_length, vocab_size, embed_dim)(encoder_inputs)
 encoder_outputs = TransformerEncoder(embed_dim, latent_dim, num_heads)(x)
 encoder = keras.Model(encoder_inputs, encoder_outputs)
 
 decoder_inputs = keras.Input(shape=(None,), dtype="int64", name="decoder_inputs")
-encoded_seq_inputs = keras.Input(shape=(None, embed_dim), name="decoder_state_inputs")
+
 x = PositionalEmbedding(sequence_length, vocab_size, embed_dim)(decoder_inputs)
 x = TransformerDecoder(embed_dim, latent_dim, num_heads)([x, encoder_outputs])
 x = layers.Dropout(0.5)(x)
 decoder_outputs = layers.Dense(vocab_size, activation="softmax")(x)
-decoder = keras.Model([decoder_inputs, encoded_seq_inputs], decoder_outputs)
 
 transformer = keras.Model(
     {"encoder_inputs": encoder_inputs, "decoder_inputs": decoder_inputs},
