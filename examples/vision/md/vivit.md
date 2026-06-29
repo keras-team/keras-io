@@ -93,6 +93,7 @@ NUM_PATCHES = (INPUT_SHAPE[0] // PATCH_SIZE[0]) ** 2
 LAYER_NORM_EPS = 1e-6
 PROJECTION_DIM = 128
 NUM_HEADS = 8
+HIDDEN_DIM = PROJECTION_DIM * NUM_HEADS
 NUM_LAYERS = 8
 ```
 
@@ -284,7 +285,7 @@ def create_vivit_classifier(
     input_shape=INPUT_SHAPE,
     transformer_layers=NUM_LAYERS,
     num_heads=NUM_HEADS,
-    embed_dim=PROJECTION_DIM,
+    embed_dim=HIDDEN_DIM,
     layer_norm_eps=LAYER_NORM_EPS,
     num_classes=NUM_CLASSES,
 ):
@@ -341,9 +342,9 @@ def run_experiment():
     # Initialize model
     model = create_vivit_classifier(
         tubelet_embedder=TubeletEmbedding(
-            embed_dim=PROJECTION_DIM, patch_size=PATCH_SIZE
+            embed_dim=HIDDEN_DIM, patch_size=PATCH_SIZE
         ),
-        positional_encoder=PositionalEncoder(embed_dim=PROJECTION_DIM),
+        positional_encoder=PositionalEncoder(embed_dim=HIDDEN_DIM),
     )
 
     # Compile the model with the optimizer, loss function
