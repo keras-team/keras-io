@@ -408,3 +408,7 @@ W0000 00:00:1700704481.358429 3339856 graph_launch.cc:671] Fallback to op-by-op 
 ![png](/img/examples/generative/vae/vae_16_1.png)
     
 
+
+---
+## Relevant Chapters from Deep Learning with Python
+- [Chapter 17: Image generation](https://deeplearningwithpython.io/chapters/chapter17_image-generation)

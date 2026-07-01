@@ -594,3 +594,8 @@ full GPT model, here are some further readings:
 
 - Attention Is All You Need [Vaswani et al., 2017](https://arxiv.org/abs/1706.03762)
 - GPT-3 Paper [Brown et al., 2020](https://arxiv.org/abs/2005.14165)
+
+---
+## Relevant Chapters from Deep Learning with Python
+- [Chapter 15: Language models and the Transformer](https://deeplearningwithpython.io/chapters/chapter15_language-models-and-the-transformer)
+- [Chapter 16: Text generation](https://deeplearningwithpython.io/chapters/chapter16_text-generation)

@@ -192,7 +192,7 @@ def graph_to_molecule(graph):
 
     # Add bonds between atoms in molecule; based on the upper triangles
     # of the [symmetric] adjacency tensor
-    (bonds_ij, atoms_i, atoms_j) = np.where(np.triu(adjacency) == 1)
+    bonds_ij, atoms_i, atoms_j = np.where(np.triu(adjacency) == 1)
     for bond_ij, atom_i, atom_j in zip(bonds_ij, atoms_i, atoms_j):
         if atom_i == atom_j or bond_ij == BOND_DIM - 1:
             continue
@@ -620,4 +620,9 @@ Example available on HuggingFace
 | Trained Model | Demo |
 | :--: | :--: |
 | [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Model-molecule%20generation%20with%20VAE-black.svg)](https://huggingface.co/keras-io/drug-molecule-generation-with-VAE) | [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Spaces-molecule%20generation%20with%20VAE-black.svg)](https://huggingface.co/spaces/keras-io/generating-drug-molecule-with-VAE) |
+"""
+
+"""
+## Relevant Chapters from Deep Learning with Python
+- [Chapter 17: Image generation](https://deeplearningwithpython.io/chapters/chapter17_image-generation)
 """

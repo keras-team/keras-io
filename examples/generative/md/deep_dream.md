@@ -302,3 +302,8 @@ display(Image(result_prefix + ".png"))
 ![png](/img/examples/generative/deep_dream/deep_dream_17_0.png)
     
 
+
+---
+## Relevant Chapters from Deep Learning with Python
+- [Chapter 10: Interpreting what ConvNets learn](https://deeplearningwithpython.io/chapters/chapter10_interpreting-what-convnets-learn)
+- [Chapter 17: Image generation](https://deeplearningwithpython.io/chapters/chapter17_image-generation)

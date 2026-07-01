@@ -727,3 +727,8 @@ Some possible next steps to follow:
 - Teach the model a style
 - Gather a dataset of your favorite pet cat or dog and teach the model about it
 """
+
+"""
+## Relevant Chapters from Deep Learning with Python
+- [Chapter 17: Image generation](https://deeplearningwithpython.io/chapters/chapter17_image-generation)
+"""

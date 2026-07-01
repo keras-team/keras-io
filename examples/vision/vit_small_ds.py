@@ -254,8 +254,8 @@ resized_image = ops.cast(
 
 # Vanilla patch maker: This takes an image and divides into
 # patches as in the original ViT paper
-(token, patch) = ShiftedPatchTokenization(vanilla=True)(resized_image / 255.0)
-(token, patch) = (token[0], patch[0])
+token, patch = ShiftedPatchTokenization(vanilla=True)(resized_image / 255.0)
+token, patch = (token[0], patch[0])
 n = patch.shape[0]
 count = 1
 plt.figure(figsize=(4, 4))
@@ -270,8 +270,8 @@ plt.show()
 
 # Shifted Patch Tokenization: This layer takes the image, shifts it
 # diagonally and then extracts patches from the concatinated images
-(token, patch) = ShiftedPatchTokenization(vanilla=False)(resized_image / 255.0)
-(token, patch) = (token[0], patch[0])
+token, patch = ShiftedPatchTokenization(vanilla=False)(resized_image / 255.0)
+token, patch = (token[0], patch[0])
 n = patch.shape[0]
 shifted_images = ["ORIGINAL", "LEFT-UP", "LEFT-DOWN", "RIGHT-UP", "RIGHT-DOWN"]
 for index, name in enumerate(shifted_images):
@@ -397,7 +397,7 @@ def create_vit_classifier(vanilla=False):
     # Augment data.
     augmented = data_augmentation(inputs)
     # Create patches.
-    (tokens, _) = ShiftedPatchTokenization(vanilla=vanilla)(augmented)
+    tokens, _ = ShiftedPatchTokenization(vanilla=vanilla)(augmented)
     # Encode patches.
     encoded_patches = PatchEncoder()(tokens)
 
@@ -549,4 +549,10 @@ generously helping with GPU credits.
 
 You can use the trained model hosted on [Hugging Face Hub](https://huggingface.co/keras-io/vit_small_ds_v2)
 and try the demo on [Hugging Face Spaces](https://huggingface.co/spaces/keras-io/vit-small-ds).
+"""
+
+"""
+## Relevant Chapters from Deep Learning with Python
+- [Chapter 8: Image classification](https://deeplearningwithpython.io/chapters/chapter08_image-classification)
+- [Chapter 15: Language models and the Transformer](https://deeplearningwithpython.io/chapters/chapter15_language-models-and-the-transformer)
 """

@@ -2,7 +2,7 @@
 Title: Text classification with Switch Transformer
 Author: [Khalid Salama](https://www.linkedin.com/in/khalid-salama-24403144/)
 Date created: 2020/05/10
-Last modified: 2021/02/15
+Last modified: 2026/02/25
 Description: Implement a Switch Transformer for text classification.
 Accelerator: GPU
 """
@@ -179,9 +179,11 @@ class Router(layers.Layer):
             * ops.squeeze(ops.one_hot(expert_index, self.num_experts), 1),
             -1,
         ) * ops.squeeze(ops.one_hot(position_in_expert, self.expert_capacity), 1)
+
         # Create binary dispatch_tensor [tokens_per_batch, num_experts, expert_capacity]
         # that is 1 if the token gets routed to the corresponding expert.
-        dispatch_tensor = ops.cast(combined_tensor, "float32")
+        # cast to float32 so it can be used in the einsum product in the Switch layer.
+        dispatch_tensor = ops.cast(combined_tensor, dtype="float32")
 
         return dispatch_tensor, combined_tensor
 
@@ -211,10 +213,11 @@ class Switch(layers.Layer):
 
         # inputs shape: [num_tokens_per_batch, embed_dim]
         inputs = ops.reshape(inputs, [num_tokens_per_batch, self.embed_dim])
-        # dispatch_tensor shape: [expert_capacity, num_experts, tokens_per_batch]
+        # dispatch_tensor shape: [tokens_per_batch, num_experts, expert_capacity]
         # combine_tensor shape: [tokens_per_batch, num_experts, expert_capacity]
         dispatch_tensor, combine_tensor = self.router(inputs)
         # expert_inputs shape: [num_experts, expert_capacity, embed_dim]
+        # "ab" = [tokens, dim], "acd" = [tokens, experts, capacity] -> "cdb" = [experts, capacity, dim]
         expert_inputs = ops.einsum("ab,acd->cdb", inputs, dispatch_tensor)
         expert_inputs = ops.reshape(
             expert_inputs, [self.num_experts, self.expert_capacity, self.embed_dim]
@@ -325,4 +328,10 @@ run_experiment(classifier)
 Compared to the standard Transformer architecture, the Switch Transformer can have a much
 larger number of parameters, leading to increased model
 capacity, while maintaining a reasonable computational cost.
+"""
+
+"""
+## Relevant Chapters from Deep Learning with Python
+- [Chapter 14: Text classification](https://deeplearningwithpython.io/chapters/chapter14_text-classification)
+- [Chapter 15: Language models and the Transformer](https://deeplearningwithpython.io/chapters/chapter15_language-models-and-the-transformer)
 """

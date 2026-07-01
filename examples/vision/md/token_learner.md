@@ -547,3 +547,7 @@ We are grateful to [JarvisLabs](https://jarvislabs.ai/) and
 program for helping with GPU credits. Also, we are thankful to Michael Ryoo (first
 author of TokenLearner) for fruitful discussions.
 
+
+---
+## Relevant Chapters from Deep Learning with Python
+- [Chapter 8: Image classification](https://deeplearningwithpython.io/chapters/chapter08_image-classification)

@@ -137,8 +137,8 @@ data = keras.utils.get_file(origin=url)
 data = np.load(data)
 images = data["images"]
 im_shape = images.shape
-(num_images, H, W, _) = images.shape
-(poses, focal) = (data["poses"], data["focal"])
+num_images, H, W, _ = images.shape
+poses, focal = (data["poses"], data["focal"])
 
 # Plot a random image from the dataset for visualization.
 plt.imshow(images[np.random.randint(low=0, high=num_images)])
@@ -301,8 +301,8 @@ def map_fn(pose):
         Tuple of flattened rays and sample points corresponding to the
         camera pose.
     """
-    (ray_origins, ray_directions) = get_rays(height=H, width=W, focal=focal, pose=pose)
-    (rays_flat, t_vals) = render_flat_rays(
+    ray_origins, ray_directions = get_rays(height=H, width=W, focal=focal, pose=pose)
+    rays_flat, t_vals = render_flat_rays(
         ray_origins=ray_origins,
         ray_directions=ray_directions,
         near=2.0,
@@ -467,8 +467,8 @@ class NeRF(keras.Model):
 
     def train_step(self, inputs):
         # Get the images and the rays.
-        (images, rays) = inputs
-        (rays_flat, t_vals) = rays
+        images, rays = inputs
+        rays_flat, t_vals = rays
 
         with tf.GradientTape() as tape:
             # Get the predictions from the model.
@@ -496,8 +496,8 @@ class NeRF(keras.Model):
 
     def test_step(self, inputs):
         # Get the images and the rays.
-        (images, rays) = inputs
-        (rays_flat, t_vals) = rays
+        images, rays = inputs
+        rays_flat, t_vals = rays
 
         # Get the predictions from the model.
         rgb, _ = render_rgb_depth(

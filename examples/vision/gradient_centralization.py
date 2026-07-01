@@ -2,10 +2,11 @@
 Title: Gradient Centralization for Better Training Performance
 Author: [Rishit Dagli](https://github.com/Rishit-dagli)
 Date created: 06/18/21
-Last modified: 07/25/23
+Last modified: 05/29/25
 Description: Implement Gradient Centralization to improve training performance of DNNs.
 Accelerator: GPU
 Converted to Keras 3 by: [Muhammad Anas Raza](https://anasrz.com)
+Debugged by: [Alberto M. Esmorís](https://github.com/albertoesmp)
 """
 
 """
@@ -41,7 +42,6 @@ from keras import ops
 
 from tensorflow import data as tf_data
 import tensorflow_datasets as tfds
-
 
 """
 ## Prepare the data
@@ -122,27 +122,30 @@ test_ds = prepare(test_ds)
 In this section we will define a Convolutional neural network.
 """
 
-model = keras.Sequential(
-    [
-        layers.Input(shape=input_shape),
-        layers.Conv2D(16, (3, 3), activation="relu"),
-        layers.MaxPooling2D(2, 2),
-        layers.Conv2D(32, (3, 3), activation="relu"),
-        layers.Dropout(0.5),
-        layers.MaxPooling2D(2, 2),
-        layers.Conv2D(64, (3, 3), activation="relu"),
-        layers.Dropout(0.5),
-        layers.MaxPooling2D(2, 2),
-        layers.Conv2D(64, (3, 3), activation="relu"),
-        layers.MaxPooling2D(2, 2),
-        layers.Conv2D(64, (3, 3), activation="relu"),
-        layers.MaxPooling2D(2, 2),
-        layers.Flatten(),
-        layers.Dropout(0.5),
-        layers.Dense(512, activation="relu"),
-        layers.Dense(1, activation="sigmoid"),
-    ]
-)
+
+def make_model():
+    return keras.Sequential(
+        [
+            layers.Input(shape=input_shape),
+            layers.Conv2D(16, (3, 3), activation="relu"),
+            layers.MaxPooling2D(2, 2),
+            layers.Conv2D(32, (3, 3), activation="relu"),
+            layers.Dropout(0.5),
+            layers.MaxPooling2D(2, 2),
+            layers.Conv2D(64, (3, 3), activation="relu"),
+            layers.Dropout(0.5),
+            layers.MaxPooling2D(2, 2),
+            layers.Conv2D(64, (3, 3), activation="relu"),
+            layers.MaxPooling2D(2, 2),
+            layers.Conv2D(64, (3, 3), activation="relu"),
+            layers.MaxPooling2D(2, 2),
+            layers.Flatten(),
+            layers.Dropout(0.5),
+            layers.Dense(512, activation="relu"),
+            layers.Dense(1, activation="sigmoid"),
+        ]
+    )
+
 
 """
 ## Implement Gradient Centralization
@@ -216,6 +219,7 @@ compare to the training performance of the model trained with Gradient Centraliz
 """
 
 time_callback_no_gc = TimeHistory()
+model = make_model()
 model.compile(
     loss="binary_crossentropy",
     optimizer=RMSprop(learning_rate=1e-4),
@@ -241,6 +245,7 @@ notice our optimizer is the one using Gradient Centralization this time.
 """
 
 time_callback_gc = TimeHistory()
+model = make_model()
 model.compile(loss="binary_crossentropy", optimizer=optimizer, metrics=["accuracy"])
 
 model.summary()

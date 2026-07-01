@@ -367,3 +367,7 @@ sources you can have your data coming from a single source thanks to TFRecord.
 This process can make storing and reading data simpler and more efficient.
 For more information, you can go to the [TFRecord and
 tf.train.Example](https://www.tensorflow.org/tutorials/load_data/tfrecord) tutorial.
+
+---
+## Relevant Chapters from Deep Learning with Python
+- [Chapter 6: The universal workflow of machine learning](https://deeplearningwithpython.io/chapters/chapter06_universal-workflow-of-ml)

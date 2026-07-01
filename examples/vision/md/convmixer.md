@@ -386,3 +386,7 @@ like self-attention. Following works are along this line of research:
 * ConViT ([d'Ascoli et al.](https://arxiv.org/abs/2103.10697))
 * CCT ([Hassani et al.](https://arxiv.org/abs/2104.05704))
 * CoAtNet ([Dai et al.](https://arxiv.org/abs/2106.04803))
+
+---
+## Relevant Chapters from Deep Learning with Python
+- [Chapter 8: Image classification](https://deeplearningwithpython.io/chapters/chapter08_image-classification)

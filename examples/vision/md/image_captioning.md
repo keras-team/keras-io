@@ -760,3 +760,8 @@ We saw that the model starts to generate reasonable captions after a few epochs.
 this example easily runnable, we have trained it with a few constraints, like a minimal
 number of attention heads. To improve the predictions, you can try changing these training
 settings and find a good model for your use case.
+
+---
+## Relevant Chapters from Deep Learning with Python
+- [Chapter 15: Language models and the Transformer](https://deeplearningwithpython.io/chapters/chapter15_language-models-and-the-transformer)
+- [Chapter 16: Text generation](https://deeplearningwithpython.io/chapters/chapter16_text-generation)

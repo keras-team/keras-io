@@ -638,3 +638,7 @@ Epoch 3/3
 ![png](/img/examples/keras_recipes/memory_efficient_embeddings/memory_efficient_embeddings_28_3.png)
     
 
+
+---
+## Relevant Chapters from Deep Learning with Python
+- [Chapter 14: Text classification](https://deeplearningwithpython.io/chapters/chapter14_text-classification)

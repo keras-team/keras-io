@@ -119,3 +119,8 @@ model.fit(x_train, y_train, batch_size=batch_size, epochs=epochs, validation_spl
 
 # Test the model
 model.evaluate(x_test, y_test)
+
+"""
+## Relevant Chapters from Deep Learning with Python
+- [Chapter 7: A deep dive on Keras](https://deeplearningwithpython.io/chapters/chapter07_deep-dive-keras)
+"""

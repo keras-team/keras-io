@@ -2,7 +2,7 @@
 
 **Author:** [Khalid Salama](https://www.linkedin.com/in/khalid-salama-24403144/)<br>
 **Date created:** 2021/05/15<br>
-**Last modified:** 2021/05/15<br>
+**Last modified:** 2026/02/04<br>
 **Description:** Implementing the node2vec model to generate embeddings for movies from the MovieLens dataset.
 
 
@@ -63,10 +63,14 @@ from zipfile import ZipFile
 from urllib.request import urlretrieve
 import numpy as np
 import pandas as pd
-import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras import layers
+import keras
+from keras import ops
+from keras import layers
 import matplotlib.pyplot as plt
+
+# Set seed for reproducibility
+keras.utils.set_random_seed(42)
+os.environ["KERAS_BACKEND"] = "jax"  # "jax", "torch", "tensorflow"
 ```
 
 ---
@@ -111,9 +115,9 @@ print("Ratings data shape:", ratings.shape)
 ```
 Movies data shape: (9742, 3)
 Ratings data shape: (100836, 4)
-
 ```
 </div>
+
 Let's inspect a sample instance of the `ratings` DataFrame.
 
 
@@ -324,12 +328,21 @@ for group in tqdm(
             pair_frequency[(x, y)] += 1
 ```
 
-<div class="k-default-codeblock">
-```
-Compute movie rating frequencies: 100%|███████████████████████████████████████████████████████████████████████████| 573/573 [00:00<00:00, 1049.83it/s]
+    
+Compute movie rating frequencies:   0%|                                                                                      | 0/573 [00:00<?, ?it/s]
 
-```
-</div>
+    
+Compute movie rating frequencies:  49%|████████████████████████████████████▌                                     | 283/573 [00:00<00:00, 2665.28it/s]
+
+    
+Compute movie rating frequencies:  96%|███████████████████████████████████████████████████████████████████████   | 550/573 [00:00<00:00, 2460.74it/s]
+
+    
+Compute movie rating frequencies: 100%|██████████████████████████████████████████████████████████████████████████| 573/573 [00:00<00:00, 2288.26it/s]
+
+    
+
+
 ### Step 2: create the graph with the nodes and the edges
 
 To reduce the number of edges between nodes, we only add an edge between movies
@@ -358,12 +371,21 @@ for pair in tqdm(
         movies_graph.add_edge(x, y, weight=weight)
 ```
 
-<div class="k-default-codeblock">
-```
-Creating the movie graph: 100%|███████████████████████████████████████████████████████████████████████████| 298586/298586 [00:00<00:00, 552893.62it/s]
+    
+Creating the movie graph:   0%|                                                                                           | 0/298586 [00:00<?, ?it/s]
 
-```
-</div>
+    
+Creating the movie graph:  46%|█████████████████████████████████▍                                       | 136673/298586 [00:00<00:00, 1366688.94it/s]
+
+    
+Creating the movie graph:  99%|████████████████████████████████████████████████████████████████████████▎| 295749/298586 [00:00<00:00, 1498456.83it/s]
+
+    
+Creating the movie graph: 100%|█████████████████████████████████████████████████████████████████████████| 298586/298586 [00:00<00:00, 1476425.78it/s]
+
+    
+
+
 Let's display the total number of nodes and edges in the graph.
 Note that the number of nodes is less than the total number of movies,
 since only the movies that have edges to other movies are added.
@@ -378,9 +400,9 @@ print("Total number of graph edges:", movies_graph.number_of_edges())
 ```
 Total number of graph nodes: 1405
 Total number of graph edges: 40043
-
 ```
 </div>
+
 Let's display the average node degree (number of neighbours) in the graph.
 
 
@@ -395,9 +417,9 @@ print("Average node degree:", round(sum(degrees) / len(degrees), 2))
 <div class="k-default-codeblock">
 ```
 Average node degree: 57.0
-
 ```
 </div>
+
 ### Step 3: Create vocabulary and a mapping from tokens to integer indices
 
 The vocabulary is the nodes (movie IDs) in the graph.
@@ -435,53 +457,38 @@ def next_step(graph, previous, current, p, q):
     neighbors = list(graph.neighbors(current))
 
     weights = []
-    # Adjust the weights of the edges to the neighbors with respect to p and q.
     for neighbor in neighbors:
         if neighbor == previous:
-            # Control the probability to return to the previous node.
             weights.append(graph[current][neighbor]["weight"] / p)
         elif graph.has_edge(neighbor, previous):
-            # The probability of visiting a local node.
             weights.append(graph[current][neighbor]["weight"])
         else:
-            # Control the probability to move forward.
             weights.append(graph[current][neighbor]["weight"] / q)
 
-    # Compute the probabilities of visiting each neighbor.
     weight_sum = sum(weights)
     probabilities = [weight / weight_sum for weight in weights]
-    # Probabilistically select a neighbor to visit.
-    next = np.random.choice(neighbors, size=1, p=probabilities)[0]
-    return next
+
+    next_node = np.random.choice(neighbors, size=1, p=probabilities)[0]
+    return next_node
 
 
 def random_walk(graph, num_walks, num_steps, p, q):
     walks = []
     nodes = list(graph.nodes())
-    # Perform multiple iterations of the random walk.
     for walk_iteration in range(num_walks):
         random.shuffle(nodes)
-
         for node in tqdm(
             nodes,
-            position=0,
-            leave=True,
-            desc=f"Random walks iteration {walk_iteration + 1} of {num_walks}",
+            desc=f"Random walks iteration {walk_iteration + 1}",
+            leave=False,
+            mininterval=1.0,
         ):
-            # Start the walk with a random node from the graph.
             walk = [node]
-            # Randomly walk for num_steps.
             while len(walk) < num_steps:
                 current = walk[-1]
                 previous = walk[-2] if len(walk) > 1 else None
-                # Compute the next node to visit.
-                next = next_step(graph, previous, current, p, q)
-                walk.append(next)
-            # Replace node ids (movie ids) in the walk with token ids.
-            walk = [vocabulary_lookup[token] for token in walk]
-            # Add the walk to the generated sequence.
-            walks.append(walk)
-
+                walk.append(next_step(graph, previous, current, p, q))
+            walks.append([vocabulary_lookup[token] for token in walk])
     return walks
 
 ```
@@ -507,30 +514,81 @@ walks = random_walk(movies_graph, num_walks, num_steps, p, q)
 print("Number of walks generated:", len(walks))
 ```
 
+    
+Random walks iteration 1:   0%|                                                                                             | 0/1405 [00:00<?, ?it/s]
+
+    
+Random walks iteration 1:  72%|█████████████████████████████████████████████████████████▌                      | 1012/1405 [00:01<00:00, 1011.26it/s]
+
+    
 <div class="k-default-codeblock">
 ```
-Random walks iteration 1 of 5: 100%|█████████████████████████████████████████████████████████████████████████████| 1405/1405 [00:04<00:00, 291.76it/s]
-Random walks iteration 2 of 5: 100%|█████████████████████████████████████████████████████████████████████████████| 1405/1405 [00:04<00:00, 302.56it/s]
-Random walks iteration 3 of 5: 100%|█████████████████████████████████████████████████████████████████████████████| 1405/1405 [00:04<00:00, 294.52it/s]
-Random walks iteration 4 of 5: 100%|█████████████████████████████████████████████████████████████████████████████| 1405/1405 [00:04<00:00, 304.06it/s]
-Random walks iteration 5 of 5: 100%|█████████████████████████████████████████████████████████████████████████████| 1405/1405 [00:04<00:00, 302.15it/s]
-
-Number of walks generated: 7025
-
+                                                                                                                                                 
 ```
 </div>
-    
 
+Random walks iteration 2:   0%|                                                                                             | 0/1405 [00:00<?, ?it/s]
+
+    
+Random walks iteration 2:  72%|█████████████████████████████████████████████████████████▊                      | 1016/1405 [00:01<00:00, 1015.77it/s]
+
+    
+<div class="k-default-codeblock">
+```
+                                                                                                                                                 
+```
+</div>
+
+Random walks iteration 3:   0%|                                                                                             | 0/1405 [00:00<?, ?it/s]
+
+    
+Random walks iteration 3:  75%|████████████████████████████████████████████████████████████                    | 1054/1405 [00:01<00:00, 1053.31it/s]
+
+    
+<div class="k-default-codeblock">
+```
+                                                                                                                                                 
+```
+</div>
+
+Random walks iteration 4:   0%|                                                                                             | 0/1405 [00:00<?, ?it/s]
+
+    
+Random walks iteration 4:  74%|██████████████████████████████████████████████████████████▊                     | 1033/1405 [00:01<00:00, 1032.74it/s]
+
+    
+<div class="k-default-codeblock">
+```
+                                                                                                                                                 
+```
+</div>
+
+Random walks iteration 5:   0%|                                                                                             | 0/1405 [00:00<?, ?it/s]
+
+    
+Random walks iteration 5:  74%|███████████████████████████████████████████████████████████                     | 1037/1405 [00:01<00:00, 1035.86it/s]
+
+    
+<div class="k-default-codeblock">
+```
+                                                                                                                                                 
+
+Number of walks generated: 7025
+```
+</div>
 
 ---
 ## Generate positive and negative examples
 
 To train a skip-gram model, we use the generated walks to create positive and
-negative training examples. Each example includes the following features:
+negative training examples. In Keras 3, the legacy preprocessing module
+has been removed. We now implement a manual skip-gram sampling function
+using NumPy to generate positive and negative training examples from our
+random walks. Each example includes the following features:
 
 1. `target`: A movie in a walk sequence.
 2. `context`: Another movie in a walk sequence.
-3. `weight`: How many times these two movies occurred in walk sequences.
+3. `weight`: How many times these two movies occurred  in walk sequences.
 4. `label`: The label is 1 if these two movies are samples from the walk sequences,
 otherwise (i.e., if randomly sampled) the label is 0.
 
@@ -539,22 +597,60 @@ otherwise (i.e., if randomly sampled) the label is 0.
 
 ```python
 
+def manual_skipgrams(sequence, vocabulary_size, window_size=5, negative_samples=4):
+    """
+    A NumPy-based replacement for the legacy keras.preprocessing.sequence.skipgrams.
+    Generates (target, context) pairs with positive and negative labels,
+    ensuring negative samples are not in the positive context window.
+    """
+    pairs = []
+    labels = []
+
+    for i, target in enumerate(sequence):
+        start = max(0, i - window_size)
+        end = min(len(sequence), i + window_size + 1)
+        positive_contexts = {sequence[j] for j in range(start, end) if i != j}
+
+        for j in range(start, end):
+            if i == j:
+                continue
+            context = sequence[j]
+
+            pairs.append([target, context])
+            labels.append(1)
+
+            for _ in range(negative_samples):
+                negative_context = np.random.randint(0, vocabulary_size)
+
+                while (
+                    negative_context == target or negative_context in positive_contexts
+                ):
+                    negative_context = np.random.randint(0, vocabulary_size)
+
+                pairs.append([target, negative_context])
+                labels.append(0)
+
+    return pairs, labels
+
+
 def generate_examples(sequences, window_size, num_negative_samples, vocabulary_size):
     example_weights = defaultdict(int)
-    # Iterate over all sequences (walks).
+
+    # Iterate over all walks
     for sequence in tqdm(
         sequences,
-        position=0,
-        leave=True,
-        desc=f"Generating positive and negative examples",
+        desc="Generating positive and negative examples",
+        leave=False,
+        mininterval=1.0,
     ):
-        # Generate positive and negative skip-gram pairs for a sequence (walk).
-        pairs, labels = keras.preprocessing.sequence.skipgrams(
+        # Use our manual skipgrams function
+        pairs, labels = manual_skipgrams(
             sequence,
             vocabulary_size=vocabulary_size,
             window_size=window_size,
             negative_samples=num_negative_samples,
         )
+
         for idx in range(len(pairs)):
             pair = pairs[idx]
             label = labels[idx]
@@ -565,17 +661,22 @@ def generate_examples(sequences, window_size, num_negative_samples, vocabulary_s
             example_weights[entry] += 1
 
     targets, contexts, labels, weights = [], [], [], []
-    for entry in example_weights:
-        weight = example_weights[entry]
+    for entry, weight in example_weights.items():
         target, context, label = entry
         targets.append(target)
         contexts.append(context)
         labels.append(label)
         weights.append(weight)
 
-    return np.array(targets), np.array(contexts), np.array(labels), np.array(weights)
+    return (
+        np.array(targets, dtype="int32"),
+        np.array(contexts, dtype="int32"),
+        np.array(labels, dtype="float32"),
+        np.array(weights, dtype="float32"),
+    )
 
 
+# Execute the generation
 num_negative_samples = 4
 targets, contexts, labels, weights = generate_examples(
     sequences=walks,
@@ -585,12 +686,31 @@ targets, contexts, labels, weights = generate_examples(
 )
 ```
 
+    
+Generating positive and negative examples:   0%|                                                                            | 0/7025 [00:00<?, ?it/s]
+
+    
+Generating positive and negative examples:  19%|███████████▊                                                   | 1320/7025 [00:01<00:04, 1319.75it/s]
+
+    
+Generating positive and negative examples:  38%|████████████████████████▏                                      | 2700/7025 [00:02<00:03, 1354.92it/s]
+
+    
+Generating positive and negative examples:  58%|████████████████████████████████████▎                          | 4055/7025 [00:03<00:02, 1351.41it/s]
+
+    
+Generating positive and negative examples:  77%|████████████████████████████████████████████████▍              | 5407/7025 [00:04<00:01, 1339.05it/s]
+
+    
+Generating positive and negative examples:  96%|████████████████████████████████████████████████████████████▌  | 6747/7025 [00:05<00:00, 1300.35it/s]
+
+    
 <div class="k-default-codeblock">
 ```
-Generating positive and negative examples: 100%|██████████████████████████████████████████████████████████████████| 7025/7025 [00:11<00:00, 617.64it/s]
-
+                                                                                                                                                 
 ```
 </div>
+
 Let's display the shapes of the outputs
 
 
@@ -603,39 +723,50 @@ print(f"Weights shape: {weights.shape}")
 
 <div class="k-default-codeblock">
 ```
-Targets shape: (881412,)
-Contexts shape: (881412,)
-Labels shape: (881412,)
-Weights shape: (881412,)
-
+Targets shape: (883654,)
+Contexts shape: (883654,)
+Labels shape: (883654,)
+Weights shape: (883654,)
 ```
 </div>
-### Convert the data into `tf.data.Dataset` objects
+
+### Data Loading with PyDataset
+
+We replace the tf.data pipeline with keras.utils.PyDataset.
+This ensures our data pipeline is fully backend-agnostic and
+avoids symbolic tensor errors when running on JAX or PyTorch.
 
 
 ```python
 batch_size = 1024
 
 
-def create_dataset(targets, contexts, labels, weights, batch_size):
-    inputs = {
-        "target": targets,
-        "context": contexts,
-    }
-    dataset = tf.data.Dataset.from_tensor_slices((inputs, labels, weights))
-    dataset = dataset.shuffle(buffer_size=batch_size * 2)
-    dataset = dataset.batch(batch_size, drop_remainder=True)
-    dataset = dataset.prefetch(tf.data.AUTOTUNE)
-    return dataset
+class MovieLensDataset(keras.utils.PyDataset):
+    def __init__(self, targets, contexts, labels, weights, batch_size, **kwargs):
+        super().__init__(**kwargs)
+        self.targets = targets
+        self.contexts = contexts
+        self.labels = labels
+        self.weights = weights
+        self.batch_size = batch_size
+
+    def __len__(self):
+        return len(self.targets) // self.batch_size
+
+    def __getitem__(self, index):
+        low = index * self.batch_size
+        high = (index + 1) * self.batch_size
+
+        target = self.targets[low:high]
+        context = self.contexts[low:high]
+        label = self.labels[low:high]
+        weight = self.weights[low:high]
+
+        return {"target": target, "context": context}, label, weight
 
 
-dataset = create_dataset(
-    targets=targets,
-    contexts=contexts,
-    labels=labels,
-    weights=weights,
-    batch_size=batch_size,
-)
+batch_size = 1024
+dataset = MovieLensDataset(targets, contexts, labels, weights, batch_size)
 ```
 
 ---
@@ -662,12 +793,9 @@ num_epochs = 10
 ```python
 
 def create_model(vocabulary_size, embedding_dim):
+    target_in = layers.Input(name="target", shape=(), dtype="int32")
+    context_in = layers.Input(name="context", shape=(), dtype="int32")
 
-    inputs = {
-        "target": layers.Input(name="target", shape=(), dtype="int32"),
-        "context": layers.Input(name="context", shape=(), dtype="int32"),
-    }
-    # Initialize item embeddings.
     embed_item = layers.Embedding(
         input_dim=vocabulary_size,
         output_dim=embedding_dim,
@@ -675,17 +803,16 @@ def create_model(vocabulary_size, embedding_dim):
         embeddings_regularizer=keras.regularizers.l2(1e-6),
         name="item_embeddings",
     )
-    # Lookup embeddings for target.
-    target_embeddings = embed_item(inputs["target"])
-    # Lookup embeddings for context.
-    context_embeddings = embed_item(inputs["context"])
-    # Compute dot similarity between target and context embeddings.
-    logits = layers.Dot(axes=1, normalize=False, name="dot_similarity")(
-        [target_embeddings, context_embeddings]
+    target_embed = embed_item(target_in)
+    context_embed = embed_item(context_in)
+
+    dot_similarity = layers.Dot(axes=1, normalize=False, name="dot_similarity")(
+        [target_embed, context_embed]
     )
-    # Create the model.
-    model = keras.Model(inputs=inputs, outputs=logits)
-    return model
+
+    output = layers.Reshape((1,))(dot_similarity)
+
+    return keras.Model(inputs=[target_in, context_in], outputs=output)
 
 ```
 
@@ -714,14 +841,11 @@ keras.utils.plot_model(
 )
 ```
 
-
-
-
-    
-![png](/img/examples/graph/node2vec_movielens/node2vec_movielens_44_0.png)
-    
-
-
+<div class="k-default-codeblock">
+```
+You must install graphviz (see instructions at https://graphviz.gitlab.io/download/) for `plot_model` to work.
+```
+</div>
 
 Now we train the model on the `dataset`.
 
@@ -733,28 +857,47 @@ history = model.fit(dataset, epochs=num_epochs)
 <div class="k-default-codeblock">
 ```
 Epoch 1/10
-860/860 [==============================] - 5s 5ms/step - loss: 2.4527
-Epoch 2/10
-860/860 [==============================] - 4s 5ms/step - loss: 2.3431
-Epoch 3/10
-860/860 [==============================] - 4s 4ms/step - loss: 2.3351
-Epoch 4/10
-860/860 [==============================] - 4s 4ms/step - loss: 2.3301
-Epoch 5/10
-860/860 [==============================] - 4s 5ms/step - loss: 2.3259
-Epoch 6/10
-860/860 [==============================] - 4s 4ms/step - loss: 2.3223
-Epoch 7/10
-860/860 [==============================] - 4s 5ms/step - loss: 2.3191
-Epoch 8/10
-860/860 [==============================] - 4s 4ms/step - loss: 2.3160
-Epoch 9/10
-860/860 [==============================] - 4s 4ms/step - loss: 2.3130
-Epoch 10/10
-860/860 [==============================] - 4s 5ms/step - loss: 2.3104
 
+862/862 ━━━━━━━━━━━━━━━━━━━━ 1s 1ms/step - loss: 2.4523
+
+Epoch 2/10
+
+862/862 ━━━━━━━━━━━━━━━━━━━━ 1s 1ms/step - loss: 2.3459
+
+Epoch 3/10
+
+862/862 ━━━━━━━━━━━━━━━━━━━━ 1s 1ms/step - loss: 2.3349
+
+Epoch 4/10
+
+862/862 ━━━━━━━━━━━━━━━━━━━━ 1s 1ms/step - loss: 2.3312
+
+Epoch 5/10
+
+862/862 ━━━━━━━━━━━━━━━━━━━━ 1s 1ms/step - loss: 2.3273
+
+Epoch 6/10
+
+862/862 ━━━━━━━━━━━━━━━━━━━━ 1s 1ms/step - loss: 2.3236
+
+Epoch 7/10
+
+862/862 ━━━━━━━━━━━━━━━━━━━━ 1s 1ms/step - loss: 2.3201
+
+Epoch 8/10
+
+862/862 ━━━━━━━━━━━━━━━━━━━━ 1s 1ms/step - loss: 2.3177
+
+Epoch 9/10
+
+862/862 ━━━━━━━━━━━━━━━━━━━━ 1s 1ms/step - loss: 2.3149
+
+Epoch 10/10
+
+862/862 ━━━━━━━━━━━━━━━━━━━━ 1s 1ms/step - loss: 2.3127
 ```
 </div>
+
 Finally we plot the learning history.
 
 
@@ -763,6 +906,7 @@ plt.plot(history.history["loss"])
 plt.ylabel("loss")
 plt.xlabel("epoch")
 plt.show()
+
 ```
 
 
@@ -783,9 +927,9 @@ print("Embeddings shape:", movie_embeddings.shape)
 <div class="k-default-codeblock">
 ```
 Embeddings shape: (1406, 50)
-
 ```
 </div>
+
 ### Find related movies
 
 Define a list with some movies called `query_movies`.
@@ -805,15 +949,12 @@ Get the embeddings of the movies in `query_movies`.
 
 
 ```python
-query_embeddings = []
+query_tokens = []
+for title in query_movies:
+    movieId = get_movie_id_by_title(title)
+    query_tokens.append(vocabulary_lookup[movieId])
 
-for movie_title in query_movies:
-    movieId = get_movie_id_by_title(movie_title)
-    token_id = vocabulary_lookup[movieId]
-    movie_embedding = movie_embeddings[token_id]
-    query_embeddings.append(movie_embedding)
-
-query_embeddings = np.array(query_embeddings)
+query_tokens = np.array(query_tokens, dtype="int32")
 ```
 
 Compute the [consine similarity](https://en.wikipedia.org/wiki/Cosine_similarity) between the embeddings of `query_movies`
@@ -821,14 +962,34 @@ and all the other movies, then pick the top k for each.
 
 
 ```python
-similarities = tf.linalg.matmul(
-    tf.math.l2_normalize(query_embeddings),
-    tf.math.l2_normalize(movie_embeddings),
-    transpose_b=True,
-)
 
-_, indices = tf.math.top_k(similarities, k=5)
-indices = indices.numpy().tolist()
+def compute_similarities(query_indices, all_embeddings):
+    # Lookup embeddings
+    query_embeds = ops.take(all_embeddings, query_indices, axis=0)
+
+    # L2 Normalize using Keras Ops
+    def l2_norm(x):
+        # Ensure x is a Keras Tensor before operations with keras.ops
+        x_tensor = ops.convert_to_tensor(x)
+        return x_tensor / ops.sqrt(
+            ops.maximum(ops.sum(ops.square(x_tensor), axis=-1, keepdims=True), 1e-12)
+        )
+
+    query_embeds = l2_norm(query_embeds)
+    all_embeddings = l2_norm(all_embeddings)
+
+    # Cosine Similarity
+    similarities = ops.matmul(query_embeds, ops.transpose(all_embeddings))
+
+    # Get Top K
+    vals, inds = ops.top_k(similarities, k=5)
+    return inds
+
+
+# Convert movie_embeddings to a Keras Tensor before calling compute_similarities
+movie_embeddings_tensor = ops.convert_to_tensor(movie_embeddings)
+indices = compute_similarities(query_tokens, movie_embeddings_tensor)
+indices = keras.ops.convert_to_numpy(indices).tolist()
 ```
 
 Display the top related movies in `query_movies`.
@@ -836,13 +997,9 @@ Display the top related movies in `query_movies`.
 
 ```python
 for idx, title in enumerate(query_movies):
-    print(title)
-    print("".rjust(len(title), "-"))
-    similar_tokens = indices[idx]
-    for token in similar_tokens:
-        similar_movieId = vocabulary[token]
-        similar_title = get_movie_title_by_id(similar_movieId)
-        print(f"- {similar_title}")
+    print(f"{title}\n{'-' * len(title)}")
+    for token in indices[idx]:
+        print(f"- {get_movie_title_by_id(vocabulary[token])}")
     print()
 ```
 
@@ -851,62 +1008,44 @@ for idx, title in enumerate(query_movies):
 Matrix, The (1999)
 ------------------
 - Matrix, The (1999)
-- Raiders of the Lost Ark (Indiana Jones and the Raiders of the Lost Ark) (1981)
-- Schindler's List (1993)
-- Star Wars: Episode IV - A New Hope (1977)
-- Lord of the Rings: The Fellowship of the Ring, The (2001)
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
+- Pulp Fiction (1994)
+- Saving Private Ryan (1998)
+- Star Wars: Episode V - The Empire Strikes Back (1980)
+- Full Metal Jacket (1987)
+
 Star Wars: Episode IV - A New Hope (1977)
 -----------------------------------------
 - Star Wars: Episode IV - A New Hope (1977)
-- Schindler's List (1993)
+- Princess Bride, The (1987)
+- Star Wars: Episode V - The Empire Strikes Back (1980)
+- Monty Python and the Holy Grail (1975)
 - Raiders of the Lost Ark (Indiana Jones and the Raiders of the Lost Ark) (1981)
-- Matrix, The (1999)
-- Pulp Fiction (1994)
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
+
 Lion King, The (1994)
 ---------------------
 - Lion King, The (1994)
-- Jurassic Park (1993)
-- Independence Day (a.k.a. ID4) (1996)
 - Beauty and the Beast (1991)
+- Speed (1994)
+- Die Hard: With a Vengeance (1995)
 - Mrs. Doubtfire (1993)
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
+
 Terminator 2: Judgment Day (1991)
 ---------------------------------
-- Schindler's List (1993)
-- Jurassic Park (1993)
 - Terminator 2: Judgment Day (1991)
-- Star Wars: Episode IV - A New Hope (1977)
-- Back to the Future (1985)
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
+- Braveheart (1995)
+- Forrest Gump (1994)
+- Star Wars: Episode V - The Empire Strikes Back (1980)
+- Shawshank Redemption, The (1994)
+
 Godfather, The (1972)
 ---------------------
-- Apocalypse Now (1979)
-- Fargo (1996)
 - Godfather, The (1972)
-- Schindler's List (1993)
-- Casablanca (1942)
+- Godfather: Part II, The (1974)
+- American Beauty (1999)
+- Dr. Strangelove or: How I Learned to Stop Worrying and Love the Bomb (1964)
+- Monty Python and the Holy Grail (1975)
 ```
 </div>
-    
-
 
 ### Visualize the embeddings using the Embedding Projector
 
@@ -914,18 +1053,35 @@ Godfather, The (1972)
 ```python
 import io
 
+# Ensure embeddings are converted to a standard format regardless of the backend
+# This is the "Keras 3 way" to access trained weights for post-processing
+embeddings_np = ops.convert_to_numpy(movie_embeddings)
+
 out_v = io.open("embeddings.tsv", "w", encoding="utf-8")
 out_m = io.open("metadata.tsv", "w", encoding="utf-8")
 
 for idx, movie_id in enumerate(vocabulary[1:]):
-    movie_title = list(movies[movies.movieId == movie_id].title)[0]
-    vector = movie_embeddings[idx]
+    # The movie_id at vocabulary[1:] corresponds to weights at index 1 and onwards
+    vector = embeddings_np[idx + 1]
+
+    # Standard Pandas/Python logic for metadata
+    movie_title = movies[movies.movieId == movie_id]["title"].values[0]
+
+    # Write tab-separated values for the projector
     out_v.write("\t".join([str(x) for x in vector]) + "\n")
     out_m.write(movie_title + "\n")
 
 out_v.close()
 out_m.close()
+
+print("Embeddings and metadata saved for projector.")
 ```
+
+<div class="k-default-codeblock">
+```
+Embeddings and metadata saved for projector.
+```
+</div>
 
 Download the `embeddings.tsv` and `metadata.tsv` to analyze the obtained embeddings
 in the [Embedding Projector](https://projector.tensorflow.org/).
@@ -935,3 +1091,7 @@ in the [Embedding Projector](https://projector.tensorflow.org/).
 | Trained Model | Demo |
 | :--: | :--: |
 | [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Model%3A%20-Node2Vec%20Movielens-black.svg)](https://huggingface.co/keras-io/Node2Vec_MovieLens) | [![Generic badge](https://img.shields.io/badge/%F0%9F%A4%97%20Spaces%3A-Node2Vec%20Movielens-black.svg)](https://huggingface.co/spaces/keras-io/Node2Vec_MovieLens) |
+
+---
+## Relevant Chapters from Deep Learning with Python
+- [Chapter 14: Text classification](https://deeplearningwithpython.io/chapters/chapter14_text-classification)

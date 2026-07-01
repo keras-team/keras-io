@@ -437,3 +437,8 @@ for score, name in zip(scores, class_names):
         "This model is %.2f percent confident that CT scan is %s"
         % ((100 * score), name)
     )
+
+"""
+## Relevant Chapters from Deep Learning with Python
+- [Chapter 8: Image classification](https://deeplearningwithpython.io/chapters/chapter08_image-classification)
+"""

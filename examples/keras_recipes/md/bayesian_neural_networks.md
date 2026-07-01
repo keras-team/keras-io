@@ -639,3 +639,7 @@ Prediction mean: 6.39, stddev: 0.78, 95% CI: [7.92 - 4.85] - Actual: 7.0
 
 ```
 </div>
+
+---
+## Relevant Chapters from Deep Learning with Python
+- [Chapter 5: Fundamentals of machine learning](https://deeplearningwithpython.io/chapters/chapter05_fundamentals-of-ml)

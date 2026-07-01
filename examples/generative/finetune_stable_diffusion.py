@@ -511,3 +511,8 @@ Google. We'd like to thank the Hugging Face team for providing the
 [fine-tuning script](https://github.com/huggingface/diffusers/blob/main/examples/text_to_image/train_text_to_image.py)
 . It's very readable and easy to understand.
 """
+
+"""
+## Relevant Chapters from Deep Learning with Python
+- [Chapter 17: Image generation](https://deeplearningwithpython.io/chapters/chapter17_image-generation)
+"""

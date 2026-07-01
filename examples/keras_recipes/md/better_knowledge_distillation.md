@@ -694,3 +694,7 @@ are encouraged to check
 [this repository](https://github.com/sayakpaul/FunMatch-Distillation)
 as it presents TPU-compatible training workflows for these recipes and can be run on
 [Kaggle Kernel](https://www.kaggle.com/kernels) leveraging their free TPU v3-8 hardware.
+
+---
+## Relevant Chapters from Deep Learning with Python
+- [Chapter 18: Best practices for the real world](https://deeplearningwithpython.io/chapters/chapter18_best-practices-for-the-real-world)

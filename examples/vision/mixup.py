@@ -52,7 +52,6 @@ from tensorflow import data as tf_data
 from tensorflow import image as tf_image
 from tensorflow.random import gamma as tf_random_gamma
 
-
 """
 ## Prepare the dataset
 

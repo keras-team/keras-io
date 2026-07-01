@@ -9,10 +9,21 @@ It spans a wide range of related initiatives that cover every step of the machin
 
 [KerasHub Documentation](/keras_hub/) - [KerasHub GitHub repository](https://github.com/keras-team/keras-hub)
 
-KerasHub is a natural language processing library that supports users through
-their entire development cycle. Our workflows are built from modular components 
-that have state-of-the-art preset weights and architectures when used 
-out-of-the-box and are easily customizable when more control is needed.
+KerasHub is a pretrained modeling library that aims to be simple, flexible, and
+fast. The library provides Keras implementations of popular model architectures,
+paired with a collection of pretrained checkpoints. Models can be used with
+text, image, and audio data for generation, classification, and many other
+built-in tasks.
+
+---
+
+## KerasRS
+
+[KerasRS Documentation](/keras_rs/) - [KerasRS GitHub repository](https://github.com/keras-team/keras-rs)
+
+Keras Recommenders is a library for building recommender systems on top of
+Keras. It provides a collection of building blocks which help with the full
+workflow of creating a recommender system.
 
 ---
 
@@ -53,3 +64,31 @@ A Python library for amortized Bayesian workflows using generative neural networ
 - A user-friendly API for rapid Bayesian workflows
 - A rich collection of neural network architectures
 - Multi-backend support via Keras 3: You can use PyTorch, TensorFlow, or JAX
+
+---
+
+## NEAT
+
+[NEAT documentation](https://neat-cylu.vercel.app/) - [NEAT GitHub repository](https://github.com/ItCodinTime/NEAT)
+
+NEAT (Nash-Equilibrium Adaptive Training) is a Keras-first optimizer library for conflict-aware neural network training. 
+It provides a Keras 3 optimizer usable with `model.compile(...)`, plus a NumPy reference engine for validating the update rule.
+
+Features include:
+
+- Keras-compatible optimizer API
+- Nash-inspired conflict-aware gradient correction
+- Optional native CPU acceleration
+- Player-aware training utilities
+- Training diagnostics for conflict and update alignment
+
+```python
+import keras
+from neat_optim import NEAT
+
+model.compile(
+  optimizer=NEAT(learning_rate=1e-3),
+  loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+)
+```
+

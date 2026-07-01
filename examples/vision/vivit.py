@@ -129,9 +129,9 @@ info = medmnist.INFO[DATASET_NAME]
 
 # Get the dataset
 prepared_dataset = download_and_prepare_dataset(info)
-(train_videos, train_labels) = prepared_dataset[0]
-(valid_videos, valid_labels) = prepared_dataset[1]
-(test_videos, test_labels) = prepared_dataset[2]
+train_videos, train_labels = prepared_dataset[0]
+valid_videos, valid_labels = prepared_dataset[1]
+test_videos, test_labels = prepared_dataset[2]
 
 """
 ### `tf.data` pipeline

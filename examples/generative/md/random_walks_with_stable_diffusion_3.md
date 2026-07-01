@@ -744,3 +744,7 @@ Stable Diffusion 3 offers a lot more than just single text-to-image generation.
 Exploring the latent manifold of the text encoder and the latent space of the
 diffusion model are two fun ways to experience the power of this model, and
 KerasHub makes it easy!
+
+---
+## Relevant Chapters from Deep Learning with Python
+- [Chapter 17: Image generation](https://deeplearningwithpython.io/chapters/chapter17_image-generation)

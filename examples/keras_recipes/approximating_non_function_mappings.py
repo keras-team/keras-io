@@ -414,3 +414,8 @@ axs[2].set_title("Mixture Density Network prediction")
 axs[2].set_xlim(xlim)
 axs[2].set_ylim(ylim)
 plt.show()
+
+"""
+## Relevant Chapters from Deep Learning with Python
+- [Chapter 4: Classification and regression](https://deeplearningwithpython.io/chapters/chapter04_classification-and-regression)
+"""

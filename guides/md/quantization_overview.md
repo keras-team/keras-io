@@ -94,14 +94,23 @@ rng = np.random.default_rng()
 x_train = rng.random((100, 10)).astype("float32")
 y_train = rng.random((100, 1)).astype("float32")
 
+
 # Build the model.
-model = keras.Sequential(
-    [
-        keras.Input(shape=(10,)),
-        keras.layers.Dense(32, activation="relu"),
-        keras.layers.Dense(1),
-    ]
-)
+def get_model():
+    """
+    Helper to build a simple sequential model.
+    """
+    return keras.Sequential(
+        [
+            keras.Input(shape=(10,)),
+            keras.layers.Dense(32, activation="relu", name="dense_1"),
+            keras.layers.Dense(1, name="output_head"),
+        ]
+    )
+
+
+# Build the model.
+model = get_model()
 
 # Compile and fit the model.
 model.compile(optimizer="adam", loss="mean_squared_error")
@@ -114,6 +123,36 @@ model.quantize("int8")
 **What this does:** Quantizes the weights of the supported layers, and re-wires their forward paths to be compatible with the quantized kernels and quantization scales.
 
 **Note**: Throughput gains depend on backend/hardware kernels; in cases where kernels fall back to dequantized matmul, you still get memory savings but smaller speedups.
+
+### Selective Quantization
+
+You can quantize only a subset of the model's layers by passing a `filters` argument to `quantize()`. This argument can be a single regex string, a list of regex strings, or a callable that takes a layer instance and returns a boolean.
+
+**Using Regex Filters:**
+
+
+```python
+
+# Quantize only layers with "dense" in the name, but skip "output"
+model = get_model()
+model.quantize("int8", filters=["dense", "^((?!output).)*$"])
+```
+
+**Using Callable Filters:**
+
+
+```python
+
+def my_filter(layer):
+    # Only quantize Dense layers that aren't the output
+    return isinstance(layer, keras.layers.Dense) and layer.name != "output_head"
+
+
+model = get_model()
+model.quantize("int8", filters=my_filter)
+```
+
+This is particularly useful when you want to avoid quantizing sensitive layers (like the first or last layers of a network) to preserve accuracy.
 
 ### Layer-wise Quantization
 

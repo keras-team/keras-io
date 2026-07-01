@@ -306,3 +306,7 @@ show_batch_predictions(image_batch)
 
 ![png](/img/examples/keras_recipes/tfrecord/tfrecord_25_1.png)
 
+
+---
+## Relevant Chapters from Deep Learning with Python
+- [Chapter 6: The universal workflow of machine learning](https://deeplearningwithpython.io/chapters/chapter06_universal-workflow-of-ml)

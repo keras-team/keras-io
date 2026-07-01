@@ -585,3 +585,7 @@ methodology can be used to predict the amount of images needed to reach a desire
 This is very useful when a smaller set of data is available, and it has been shown that
 convergence on a deep learning model is possible, but more images are needed. The image count
 prediction can be used to plan and budget for further image collection initiatives.
+
+---
+## Relevant Chapters from Deep Learning with Python
+- [Chapter 5: Fundamentals of machine learning](https://deeplearningwithpython.io/chapters/chapter05_fundamentals-of-ml)

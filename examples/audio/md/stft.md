@@ -2,7 +2,7 @@
 
 **Author:** [Mostafa M. Amin](https://mostafa-amin.com)<br>
 **Date created:** 2024/10/04<br>
-**Last modified:** 2024/10/04<br>
+**Last modified:** 2025/12/08<br>
 **Description:** Introducing the `STFTSpectrogram` layer to extract spectrograms for audio classification.
 
 
@@ -605,8 +605,7 @@ plt.show()
 
 
     
-![png](https://github.com/keras-team/keras-io/blob/master/examples/audio/img/stft/raw_audio.png)
-    
+![png](/img/examples/audio/stft/raw_audio.png)
 
 
 Plot a Spectrogram
@@ -618,7 +617,7 @@ plot_single_spectrogram(sample_wav_data)
 
 
     
-![png](https://github.com/keras-team/keras-io/blob/master/examples/audio/img/stft/spectrogram.png)
+![png](/img/examples/audio/stft/spectrogram.png)
     
 
 
@@ -631,7 +630,7 @@ plot_multi_bandwidth_spectrogram(sample_wav_data)
 
 
     
-![png](https://github.com/keras-team/keras-io/blob/master/examples/audio/img/stft/multiband_spectrogram.png)
+![png](/img/examples/audio/stft/multiband_spectrogram.png)
     
 
 
@@ -1788,7 +1787,7 @@ plt.show()
 
 
     
-![png](https://github.com/keras-team/keras-io/blob/master/examples/audio/img/stft/training.png)
+![png](/img/examples/audio/stft/training.png)
     
 
 

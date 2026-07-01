@@ -629,3 +629,8 @@ def visualize_detections(model, dataset, bounding_box_format):
 
 
 visualize_detections(yolo, dataset=val_ds, bounding_box_format="xyxy")
+
+"""
+## Relevant Chapters from Deep Learning with Python
+- [Chapter 12: Object detection](https://deeplearningwithpython.io/chapters/chapter12_object-detection)
+"""
