@@ -275,7 +275,7 @@ class TextGenerator(keras.callbacks.Callback):
             pad_len = maxlen - len(start_tokens)
             sample_index = len(start_tokens) - 1
             if pad_len < 0:
-                x = start_tokens[:maxlen]
+                x = start_tokens[-maxlen:]
                 sample_index = maxlen - 1
             elif pad_len > 0:
                 x = start_tokens + [0] * pad_len
