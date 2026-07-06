@@ -2,7 +2,7 @@
 Title: Exporting Keras models to LiteRT
 Author: [Rahul Kumar](https://github.com/pctablet505)
 Date created: 2025/12/10
-Last modified: 2026/06/02
+Last modified: 2026/07/06
 Description: Learn how to export Keras models to LiteRT for mobile and edge deployment using the PyTorch backend.
 Accelerator: None
 """
@@ -35,20 +35,19 @@ end.
 
 Install the required packages. Since LiteRT export is under active
 development, install Keras and KerasHub from the master branch to get the
-latest fixes:
+latest fixes. Also install `litert-torch` from the master branch, which is
+required for LiteRT export with the PyTorch backend:
 
-```shell
+"""
+
+"""shell
 pip install -q git+https://github.com/keras-team/keras.git
 pip install -q git+https://github.com/keras-team/keras-hub.git
+pip install -q git+https://github.com/google-ai-edge/litert-torch.git
 pip install -q ai-edge-litert
-```
+"""
 
-> **Note:** LiteRT export with the PyTorch backend requires `litert-torch`.
-> If it is not already installed, run:
-> ```shell
-> pip install -q litert-torch
-> ```
-
+"""
 Set the PyTorch backend before importing Keras:
 """
 
@@ -177,11 +176,14 @@ LiteRT models exported from Keras have static shapes in the graph, but the
 interpreter supports **runtime input resizing**. This means you can process
 different batch sizes with the same exported model without re-exporting.
 
-> **Note:** The PyTorch backend also accepts a `dynamic_shapes` kwarg powered
-> by `torch.export.Dim`. However, this path currently has limitations in the
-> Keras → LiteRT conversion pipeline for some layer types. The recommended
-> approach for variable batch sizes is runtime resizing, which is fully
-> supported and tested.
+> **Warning:** The new `ai_edge_litert.interpreter.Interpreter` does **not**
+> support graphs with dynamic shapes. Models exported with the PyTorch backend
+> and a `dynamic_shapes` argument may fail to run with this interpreter. If you
+> need variable input shapes, use runtime input resizing (shown below) instead.
+> Dynamic-shape export works when using the TensorFlow backend during
+> conversion, but the resulting model should still be executed with a TFLite
+> interpreter that supports dynamic tensors if you do not resize inputs to a
+> fixed shape first.
 """
 
 interpreter = Interpreter(model_path="model.tflite")
@@ -201,9 +203,9 @@ print("Resized output shape:", resized_output.shape)
 """
 ## Signature runner
 
-Use the signature runner for cleaner inference code. Input names in the
-signature come from the model's export format; you can discover them via
-`get_signature_list()`.
+Use the signature runner for cleaner inference code. You can discover the
+input names for a signature via `get_signature_list()`; for models exported
+with the PyTorch backend they are typically `args_0`, `args_0_0`, etc.
 """
 
 interpreter = Interpreter(model_path="model.tflite")
@@ -455,8 +457,9 @@ model.export(
 3. **Call subclassed models on sample data** before `export()` to build weights
    and infer the input signature.
 4. **Use runtime input resizing** for variable batch sizes rather than
-   `dynamic_shapes`, which currently has limitations in the Keras → LiteRT
-   pipeline.
+   `dynamic_shapes`. Graphs with dynamic shapes are not supported by the new
+   `ai_edge_litert.interpreter.Interpreter` and may fail when exported with the
+   PyTorch backend.
 5. **Start with `optimizations=[tf.lite.Optimize.DEFAULT]`** for quick
    dynamic-range quantization on either backend.
 6. **Use `ai-edge-quantizer`** when you need finer control (channel-wise,

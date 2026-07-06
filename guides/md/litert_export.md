@@ -2,12 +2,10 @@
 
 **Author:** [Rahul Kumar](https://github.com/pctablet505)<br>
 **Date created:** 2025/12/10<br>
-**Last modified:** 2026/06/02<br>
+**Last modified:** 2026/07/06<br>
 **Description:** Learn how to export Keras models to LiteRT for mobile and edge deployment using the PyTorch backend.
 
-
 <img class="k-inline-icon" src="https://colab.research.google.com/img/colab_favicon.ico"/> [**View in Colab**](https://colab.research.google.com/github/keras-team/keras-io/blob/master/guides/ipynb/litert_export.ipynb)  <span class="k-dot">•</span><img class="k-inline-icon" src="https://github.com/favicon.ico"/> [**GitHub source**](https://github.com/keras-team/keras-io/blob/master/guides/litert_export.py)
-
 
 
 ---
@@ -39,19 +37,22 @@ end.
 
 Install the required packages. Since LiteRT export is under active
 development, install Keras and KerasHub from the master branch to get the
-latest fixes:
+latest fixes. Also install `litert-torch` from the master branch, which is
+required for LiteRT export with the PyTorch backend:
 
-```shell
-pip install -q git+https://github.com/keras-team/keras.git
-pip install -q git+https://github.com/keras-team/keras-hub.git
-pip install -q ai-edge-litert
+
+```python
+!pip install -q git+https://github.com/keras-team/keras.git
+!pip install -q git+https://github.com/keras-team/keras-hub.git
+!pip install -q git+https://github.com/google-ai-edge/litert-torch.git
+!pip install -q ai-edge-litert
 ```
 
-> **Note:** LiteRT export with the PyTorch backend requires `litert-torch`.
-> If it is not already installed, run:
-> ```shell
-> pip install -q litert-torch
-> ```
+<div class="k-default-codeblock">
+```
+  Preparing metadata (setup.py) ... [?25l[?25hdone
+```
+</div>
 
 Set the PyTorch backend before importing Keras:
 
@@ -69,7 +70,7 @@ print("Keras version:", keras.__version__)
 
 <div class="k-default-codeblock">
 ```
-Keras version: 3.15.0
+Keras version: 3.16.0
 ```
 </div>
 
@@ -101,10 +102,12 @@ print("Exported to model.tflite")
 
 <div class="k-default-codeblock">
 ```
-/home/pctablet505/Projects/gemmademo-litert-export/.venv/lib/python3.13/site-packages/keras/src/layers/core/dense.py:107: UserWarning: Do not pass an `input_shape`/`input_dim` argument to a layer. When using Sequential models, prefer using an `Input(shape)` object as the first layer in the model instead.
+/usr/local/lib/python3.12/dist-packages/keras/src/layers/core/dense.py:107: UserWarning: Do not pass an `input_shape`/`input_dim` argument to a layer. When using Sequential models, prefer using an `Input(shape)` object as the first layer in the model instead.
   super().__init__(activity_regularizer=activity_regularizer, **kwargs)
-WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
-I0000 00:00:1780427573.813796 1765886 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+
+WARNING:torchao:Failed to load /usr/local/lib/python3.12/dist-packages/torchao/_C_cutlass_90a.abi3.so: Could not load this library: /usr/local/lib/python3.12/dist-packages/torchao/_C_cutlass_90a.abi3.so
+
+WARNING:torchao:Failed to load /usr/local/lib/python3.12/dist-packages/torchao/_C_mxfp8.cpython-310-x86_64-linux-gnu.so: Could not load this library: /usr/local/lib/python3.12/dist-packages/torchao/_C_mxfp8.cpython-310-x86_64-linux-gnu.so
 ```
 </div>
 
@@ -127,134 +130,126 @@ I0000 00:00:1780427573.813796 1765886 port.cc:153] oneDNN custom operations are 
 
 <div class="k-default-codeblock">
 ```
-/usr/lib/python3.13/copyreg.py:99: FutureWarning: `isinstance(treespec, LeafSpec)` is deprecated, use `isinstance(treespec, TreeSpec) and treespec.is_leaf()` instead.
+/usr/lib/python3.12/copyreg.py:99: FutureWarning: `isinstance(treespec, LeafSpec)` is deprecated, use `isinstance(treespec, TreeSpec) and treespec.is_leaf()` instead.
   return cls.__new__(cls, *args)
 ```
 </div>
 
-<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">(00:00)</span> <span style="color: #008000; text-decoration-color: #008000; font-weight: bold">[ DONE]</span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">LiteRT-Torch Convert</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> &gt; </span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">Torch Export: serving_default</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> &gt; </span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">ExportedProgram Run Decompositions</span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">(</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">+</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">00:00</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">)</span>
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">(00:01)</span> <span style="color: #008000; text-decoration-color: #008000; font-weight: bold">[ DONE]</span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">LiteRT-Torch Convert</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> &gt; </span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">Torch Export: serving_default</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> &gt; </span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">ExportedProgram Run Decompositions</span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">(</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">+</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">00:00</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">)</span>
 </pre>
 
 
 
 
-<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">(00:00)</span> <span style="color: #008000; text-decoration-color: #008000; font-weight: bold">[ DONE]</span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">LiteRT-Torch Convert</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> &gt; </span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">Torch Export: serving_default</span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">(</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">+</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">00:00</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">)</span>
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">(00:01)</span> <span style="color: #008000; text-decoration-color: #008000; font-weight: bold">[ DONE]</span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">LiteRT-Torch Convert</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> &gt; </span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">Torch Export: serving_default</span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">(</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">+</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">00:01</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">)</span>
 </pre>
 
 
 
 
-<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">(00:00)</span> <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">[START]</span> <span style="color: #000000; text-decoration-color: #000000; font-weight: bold">LiteRT-Torch Convert</span> &gt; <span style="color: #000000; text-decoration-color: #000000; font-weight: bold">Run FX Passes</span>
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">(00:01)</span> <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">[START]</span> <span style="color: #000000; text-decoration-color: #000000; font-weight: bold">LiteRT-Torch Convert</span> &gt; <span style="color: #000000; text-decoration-color: #000000; font-weight: bold">Run FX Passes</span>
 </pre>
 
 
 
 
-<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">(00:00)</span> <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">[START]</span> <span style="color: #000000; text-decoration-color: #000000; font-weight: bold">LiteRT-Torch Convert</span> &gt; <span style="color: #000000; text-decoration-color: #000000; font-weight: bold">Run FX Passes</span> &gt; <span style="color: #000000; text-decoration-color: #000000; font-weight: bold">ExportedProgram Run Decompositions</span>
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">(00:01)</span> <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">[START]</span> <span style="color: #000000; text-decoration-color: #000000; font-weight: bold">LiteRT-Torch Convert</span> &gt; <span style="color: #000000; text-decoration-color: #000000; font-weight: bold">Run FX Passes</span> &gt; <span style="color: #000000; text-decoration-color: #000000; font-weight: bold">ExportedProgram Run Decompositions</span>
 </pre>
 
 
 
 
-<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">(00:00)</span> <span style="color: #008000; text-decoration-color: #008000; font-weight: bold">[ DONE]</span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">LiteRT-Torch Convert</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> &gt; </span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">Run FX Passes</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> &gt; </span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">ExportedProgram Run Decompositions</span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">(</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">+</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">00:00</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">)</span>
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">(00:01)</span> <span style="color: #008000; text-decoration-color: #008000; font-weight: bold">[ DONE]</span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">LiteRT-Torch Convert</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> &gt; </span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">Run FX Passes</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> &gt; </span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">ExportedProgram Run Decompositions</span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">(</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">+</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">00:00</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">)</span>
 </pre>
 
 
 
 
-<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">(00:00)</span> <span style="color: #008000; text-decoration-color: #008000; font-weight: bold">[ DONE]</span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">LiteRT-Torch Convert</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> &gt; </span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">Run FX Passes</span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">(</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">+</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">00:00</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">)</span>
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">(00:01)</span> <span style="color: #008000; text-decoration-color: #008000; font-weight: bold">[ DONE]</span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">LiteRT-Torch Convert</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> &gt; </span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">Run FX Passes</span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">(</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">+</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">00:00</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">)</span>
 </pre>
 
 
 
 
-<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">(00:00)</span> <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">[START]</span> <span style="color: #000000; text-decoration-color: #000000; font-weight: bold">LiteRT-Torch Convert</span> &gt; <span style="color: #000000; text-decoration-color: #000000; font-weight: bold">Lower to MLIR: serving_default</span>
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">(00:01)</span> <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">[START]</span> <span style="color: #000000; text-decoration-color: #000000; font-weight: bold">LiteRT-Torch Convert</span> &gt; <span style="color: #000000; text-decoration-color: #000000; font-weight: bold">Lower to MLIR: serving_default</span>
 </pre>
 
 
 
 
-<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">(00:00)</span> <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">[START]</span> <span style="color: #000000; text-decoration-color: #000000; font-weight: bold">LiteRT-Torch Convert</span> &gt; <span style="color: #000000; text-decoration-color: #000000; font-weight: bold">Lower to MLIR: serving_default</span> &gt; <span style="color: #000000; text-decoration-color: #000000; font-weight: bold">ExportedProgram Run Decompositions</span>
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">(00:01)</span> <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">[START]</span> <span style="color: #000000; text-decoration-color: #000000; font-weight: bold">LiteRT-Torch Convert</span> &gt; <span style="color: #000000; text-decoration-color: #000000; font-weight: bold">Lower to MLIR: serving_default</span> &gt; <span style="color: #000000; text-decoration-color: #000000; font-weight: bold">ExportedProgram Run Decompositions</span>
 </pre>
 
 
 
 <div class="k-default-codeblock">
 ```
-/usr/lib/python3.13/copyreg.py:99: FutureWarning: `isinstance(treespec, LeafSpec)` is deprecated, use `isinstance(treespec, TreeSpec) and treespec.is_leaf()` instead.
+/usr/lib/python3.12/copyreg.py:99: FutureWarning: `isinstance(treespec, LeafSpec)` is deprecated, use `isinstance(treespec, TreeSpec) and treespec.is_leaf()` instead.
   return cls.__new__(cls, *args)
 ```
 </div>
 
-<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">(00:00)</span> <span style="color: #008000; text-decoration-color: #008000; font-weight: bold">[ DONE]</span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">LiteRT-Torch Convert</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> &gt; </span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">Lower to MLIR: serving_default</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> &gt; </span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">ExportedProgram Run Decompositions</span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">(</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">+</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">00:00</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">)</span>
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">(00:01)</span> <span style="color: #008000; text-decoration-color: #008000; font-weight: bold">[ DONE]</span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">LiteRT-Torch Convert</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> &gt; </span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">Lower to MLIR: serving_default</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> &gt; </span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">ExportedProgram Run Decompositions</span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">(</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">+</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">00:00</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">)</span>
 </pre>
 
 
 
 
-<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">(00:00)</span> <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">[START]</span> <span style="color: #000000; text-decoration-color: #000000; font-weight: bold">LiteRT-Torch Convert</span> &gt; <span style="color: #000000; text-decoration-color: #000000; font-weight: bold">Lower to MLIR: serving_default</span> &gt; <span style="color: #000000; text-decoration-color: #000000; font-weight: bold">ExportedProgram Run Decompositions</span>
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">(00:01)</span> <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">[START]</span> <span style="color: #000000; text-decoration-color: #000000; font-weight: bold">LiteRT-Torch Convert</span> &gt; <span style="color: #000000; text-decoration-color: #000000; font-weight: bold">Lower to MLIR: serving_default</span> &gt; <span style="color: #000000; text-decoration-color: #000000; font-weight: bold">ExportedProgram Run Decompositions</span>
 </pre>
 
 
 
 
-<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">(00:00)</span> <span style="color: #008000; text-decoration-color: #008000; font-weight: bold">[ DONE]</span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">LiteRT-Torch Convert</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> &gt; </span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">Lower to MLIR: serving_default</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> &gt; </span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">ExportedProgram Run Decompositions</span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">(</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">+</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">00:00</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">)</span>
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">(00:01)</span> <span style="color: #008000; text-decoration-color: #008000; font-weight: bold">[ DONE]</span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">LiteRT-Torch Convert</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> &gt; </span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">Lower to MLIR: serving_default</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> &gt; </span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">ExportedProgram Run Decompositions</span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">(</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">+</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">00:00</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">)</span>
 </pre>
 
 
 
 
-<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">(00:00)</span> <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">[START]</span> <span style="color: #000000; text-decoration-color: #000000; font-weight: bold">LiteRT-Torch Convert</span> &gt; <span style="color: #000000; text-decoration-color: #000000; font-weight: bold">Lower to MLIR: serving_default</span> &gt; <span style="color: #000000; text-decoration-color: #000000; font-weight: bold">Create MLIR Module</span>
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">(00:01)</span> <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">[START]</span> <span style="color: #000000; text-decoration-color: #000000; font-weight: bold">LiteRT-Torch Convert</span> &gt; <span style="color: #000000; text-decoration-color: #000000; font-weight: bold">Lower to MLIR: serving_default</span> &gt; <span style="color: #000000; text-decoration-color: #000000; font-weight: bold">Create MLIR Module</span>
 </pre>
 
 
 
 
-<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">(00:00)</span> <span style="color: #008000; text-decoration-color: #008000; font-weight: bold">[ DONE]</span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">LiteRT-Torch Convert</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> &gt; </span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">Lower to MLIR: serving_default</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> &gt; </span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">Create MLIR Module</span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">(</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">+</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">00:00</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">)</span>
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">(00:01)</span> <span style="color: #008000; text-decoration-color: #008000; font-weight: bold">[ DONE]</span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">LiteRT-Torch Convert</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> &gt; </span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">Lower to MLIR: serving_default</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> &gt; </span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">Create MLIR Module</span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">(</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">+</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">00:00</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">)</span>
 </pre>
 
 
 
 
-<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">(00:00)</span> <span style="color: #008000; text-decoration-color: #008000; font-weight: bold">[ DONE]</span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">LiteRT-Torch Convert</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> &gt; </span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">Lower to MLIR: serving_default</span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">(</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">+</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">00:00</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">)</span>
-</pre>
-
-
-
-<div class="k-default-codeblock">
-```
-/home/pctablet505/Projects/gemmademo-litert-export/.venv/lib/python3.13/site-packages/litert_torch/_convert/signature.py:52: FutureWarning: `treespec.children_specs` is deprecated. Use `treespec.child(index)` to access a single child, or `treespec.children()` to get all children.
-  args_spec, kwargs_spec = spec.children_specs
-/home/pctablet505/Projects/gemmademo-litert-export/.venv/lib/python3.13/site-packages/litert_torch/_convert/signature.py:58: FutureWarning: `treespec.children_specs` is deprecated. Use `treespec.child(index)` to access a single child, or `treespec.children()` to get all children.
-  kwargs_spec.children_specs, kwargs_spec.context
-```
-</div>
-
-<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">(00:00)</span> <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">[START]</span> <span style="color: #000000; text-decoration-color: #000000; font-weight: bold">LiteRT-Torch Convert</span> &gt; <span style="color: #000000; text-decoration-color: #000000; font-weight: bold">Merge MLIR Modules</span>
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">(00:01)</span> <span style="color: #008000; text-decoration-color: #008000; font-weight: bold">[ DONE]</span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">LiteRT-Torch Convert</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> &gt; </span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">Lower to MLIR: serving_default</span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">(</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">+</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">00:00</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">)</span>
 </pre>
 
 
 
 
-<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">(00:00)</span> <span style="color: #008000; text-decoration-color: #008000; font-weight: bold">[ DONE]</span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">LiteRT-Torch Convert</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> &gt; </span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">Merge MLIR Modules</span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">(</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">+</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">00:00</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">)</span>
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">(00:01)</span> <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">[START]</span> <span style="color: #000000; text-decoration-color: #000000; font-weight: bold">LiteRT-Torch Convert</span> &gt; <span style="color: #000000; text-decoration-color: #000000; font-weight: bold">Merge MLIR Modules</span>
 </pre>
 
 
 
 
-<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">(00:00)</span> <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">[START]</span> <span style="color: #000000; text-decoration-color: #000000; font-weight: bold">LiteRT-Torch Convert</span> &gt; <span style="color: #000000; text-decoration-color: #000000; font-weight: bold">Run LiteRT Converter Passes</span>
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">(00:01)</span> <span style="color: #008000; text-decoration-color: #008000; font-weight: bold">[ DONE]</span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">LiteRT-Torch Convert</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> &gt; </span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">Merge MLIR Modules</span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">(</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">+</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">00:00</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">)</span>
 </pre>
 
 
 
 
-<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">(00:00)</span> <span style="color: #008000; text-decoration-color: #008000; font-weight: bold">[ DONE]</span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">LiteRT-Torch Convert</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> &gt; </span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">Run LiteRT Converter Passes</span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">(</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">+</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">00:00</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">)</span>
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">(00:01)</span> <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">[START]</span> <span style="color: #000000; text-decoration-color: #000000; font-weight: bold">LiteRT-Torch Convert</span> &gt; <span style="color: #000000; text-decoration-color: #000000; font-weight: bold">Run LiteRT Converter Passes</span>
 </pre>
 
 
 
 
-<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">(00:00)</span> <span style="color: #008000; text-decoration-color: #008000; font-weight: bold">[ DONE]</span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">LiteRT-Torch Convert</span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">(</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">+</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">00:00</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">)</span>
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">(00:01)</span> <span style="color: #008000; text-decoration-color: #008000; font-weight: bold">[ DONE]</span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">LiteRT-Torch Convert</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> &gt; </span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">Run LiteRT Converter Passes</span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">(</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">+</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">00:00</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">)</span>
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">(00:01)</span> <span style="color: #008000; text-decoration-color: #008000; font-weight: bold">[ DONE]</span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">LiteRT-Torch Convert</span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">(</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">+</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">00:01</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">)</span>
 </pre>
 
 
@@ -311,8 +306,6 @@ print("Inference output shape:", output.shape)
 Input shape : [ 1 10]
 Output shape: [ 1 10]
 Inference output shape: (1, 10)
-
-INFO: Created TensorFlow Lite XNNPACK delegate for CPU.
 ```
 </div>
 
@@ -363,7 +356,7 @@ print("Subclassed model exported")
 
 <div class="k-default-codeblock">
 ```
-/usr/lib/python3.13/copyreg.py:99: FutureWarning: `isinstance(treespec, LeafSpec)` is deprecated, use `isinstance(treespec, TreeSpec) and treespec.is_leaf()` instead.
+/usr/lib/python3.12/copyreg.py:99: FutureWarning: `isinstance(treespec, LeafSpec)` is deprecated, use `isinstance(treespec, TreeSpec) and treespec.is_leaf()` instead.
   return cls.__new__(cls, *args)
 ```
 </div>
@@ -417,7 +410,7 @@ print("Subclassed model exported")
 
 <div class="k-default-codeblock">
 ```
-/usr/lib/python3.13/copyreg.py:99: FutureWarning: `isinstance(treespec, LeafSpec)` is deprecated, use `isinstance(treespec, TreeSpec) and treespec.is_leaf()` instead.
+/usr/lib/python3.12/copyreg.py:99: FutureWarning: `isinstance(treespec, LeafSpec)` is deprecated, use `isinstance(treespec, TreeSpec) and treespec.is_leaf()` instead.
   return cls.__new__(cls, *args)
 ```
 </div>
@@ -457,14 +450,6 @@ print("Subclassed model exported")
 
 
 
-<div class="k-default-codeblock">
-```
-/home/pctablet505/Projects/gemmademo-litert-export/.venv/lib/python3.13/site-packages/litert_torch/_convert/signature.py:52: FutureWarning: `treespec.children_specs` is deprecated. Use `treespec.child(index)` to access a single child, or `treespec.children()` to get all children.
-  args_spec, kwargs_spec = spec.children_specs
-/home/pctablet505/Projects/gemmademo-litert-export/.venv/lib/python3.13/site-packages/litert_torch/_convert/signature.py:58: FutureWarning: `treespec.children_specs` is deprecated. Use `treespec.child(index)` to access a single child, or `treespec.children()` to get all children.
-  kwargs_spec.children_specs, kwargs_spec.context
-```
-</div>
 
 <pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">(00:00)</span> <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">[START]</span> <span style="color: #000000; text-decoration-color: #000000; font-weight: bold">LiteRT-Torch Convert</span> &gt; <span style="color: #000000; text-decoration-color: #000000; font-weight: bold">Merge MLIR Modules</span>
 </pre>
@@ -553,7 +538,7 @@ print("Multi-input model exported")
 
 <div class="k-default-codeblock">
 ```
-/usr/lib/python3.13/copyreg.py:99: FutureWarning: `isinstance(treespec, LeafSpec)` is deprecated, use `isinstance(treespec, TreeSpec) and treespec.is_leaf()` instead.
+/usr/lib/python3.12/copyreg.py:99: FutureWarning: `isinstance(treespec, LeafSpec)` is deprecated, use `isinstance(treespec, TreeSpec) and treespec.is_leaf()` instead.
   return cls.__new__(cls, *args)
 ```
 </div>
@@ -607,7 +592,7 @@ print("Multi-input model exported")
 
 <div class="k-default-codeblock">
 ```
-/usr/lib/python3.13/copyreg.py:99: FutureWarning: `isinstance(treespec, LeafSpec)` is deprecated, use `isinstance(treespec, TreeSpec) and treespec.is_leaf()` instead.
+/usr/lib/python3.12/copyreg.py:99: FutureWarning: `isinstance(treespec, LeafSpec)` is deprecated, use `isinstance(treespec, TreeSpec) and treespec.is_leaf()` instead.
   return cls.__new__(cls, *args)
 ```
 </div>
@@ -636,51 +621,43 @@ print("Multi-input model exported")
 
 
 
-<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">(00:00)</span> <span style="color: #008000; text-decoration-color: #008000; font-weight: bold">[ DONE]</span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">LiteRT-Torch Convert</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> &gt; </span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">Lower to MLIR: serving_default</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> &gt; </span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">Create MLIR Module</span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">(</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">+</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">00:00</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">)</span>
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">(00:01)</span> <span style="color: #008000; text-decoration-color: #008000; font-weight: bold">[ DONE]</span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">LiteRT-Torch Convert</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> &gt; </span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">Lower to MLIR: serving_default</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> &gt; </span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">Create MLIR Module</span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">(</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">+</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">00:00</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">)</span>
 </pre>
 
 
 
 
-<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">(00:00)</span> <span style="color: #008000; text-decoration-color: #008000; font-weight: bold">[ DONE]</span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">LiteRT-Torch Convert</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> &gt; </span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">Lower to MLIR: serving_default</span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">(</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">+</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">00:00</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">)</span>
-</pre>
-
-
-
-<div class="k-default-codeblock">
-```
-/home/pctablet505/Projects/gemmademo-litert-export/.venv/lib/python3.13/site-packages/litert_torch/_convert/signature.py:52: FutureWarning: `treespec.children_specs` is deprecated. Use `treespec.child(index)` to access a single child, or `treespec.children()` to get all children.
-  args_spec, kwargs_spec = spec.children_specs
-/home/pctablet505/Projects/gemmademo-litert-export/.venv/lib/python3.13/site-packages/litert_torch/_convert/signature.py:58: FutureWarning: `treespec.children_specs` is deprecated. Use `treespec.child(index)` to access a single child, or `treespec.children()` to get all children.
-  kwargs_spec.children_specs, kwargs_spec.context
-```
-</div>
-
-<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">(00:00)</span> <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">[START]</span> <span style="color: #000000; text-decoration-color: #000000; font-weight: bold">LiteRT-Torch Convert</span> &gt; <span style="color: #000000; text-decoration-color: #000000; font-weight: bold">Merge MLIR Modules</span>
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">(00:01)</span> <span style="color: #008000; text-decoration-color: #008000; font-weight: bold">[ DONE]</span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">LiteRT-Torch Convert</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> &gt; </span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">Lower to MLIR: serving_default</span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">(</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">+</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">00:00</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">)</span>
 </pre>
 
 
 
 
-<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">(00:00)</span> <span style="color: #008000; text-decoration-color: #008000; font-weight: bold">[ DONE]</span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">LiteRT-Torch Convert</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> &gt; </span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">Merge MLIR Modules</span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">(</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">+</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">00:00</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">)</span>
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">(00:01)</span> <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">[START]</span> <span style="color: #000000; text-decoration-color: #000000; font-weight: bold">LiteRT-Torch Convert</span> &gt; <span style="color: #000000; text-decoration-color: #000000; font-weight: bold">Merge MLIR Modules</span>
 </pre>
 
 
 
 
-<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">(00:00)</span> <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">[START]</span> <span style="color: #000000; text-decoration-color: #000000; font-weight: bold">LiteRT-Torch Convert</span> &gt; <span style="color: #000000; text-decoration-color: #000000; font-weight: bold">Run LiteRT Converter Passes</span>
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">(00:01)</span> <span style="color: #008000; text-decoration-color: #008000; font-weight: bold">[ DONE]</span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">LiteRT-Torch Convert</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> &gt; </span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">Merge MLIR Modules</span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">(</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">+</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">00:00</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">)</span>
 </pre>
 
 
 
 
-<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">(00:00)</span> <span style="color: #008000; text-decoration-color: #008000; font-weight: bold">[ DONE]</span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">LiteRT-Torch Convert</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> &gt; </span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">Run LiteRT Converter Passes</span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">(</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">+</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">00:00</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">)</span>
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">(00:01)</span> <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">[START]</span> <span style="color: #000000; text-decoration-color: #000000; font-weight: bold">LiteRT-Torch Convert</span> &gt; <span style="color: #000000; text-decoration-color: #000000; font-weight: bold">Run LiteRT Converter Passes</span>
 </pre>
 
 
 
 
-<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">(00:00)</span> <span style="color: #008000; text-decoration-color: #008000; font-weight: bold">[ DONE]</span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">LiteRT-Torch Convert</span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">(</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">+</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">00:00</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">)</span>
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">(00:01)</span> <span style="color: #008000; text-decoration-color: #008000; font-weight: bold">[ DONE]</span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">LiteRT-Torch Convert</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> &gt; </span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">Run LiteRT Converter Passes</span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">(</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">+</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">00:00</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">)</span>
+</pre>
+
+
+
+
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">(00:01)</span> <span style="color: #008000; text-decoration-color: #008000; font-weight: bold">[ DONE]</span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">LiteRT-Torch Convert</span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">(</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">+</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">00:01</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">)</span>
 </pre>
 
 
@@ -744,7 +721,7 @@ print("Dict-input model exported")
 
 <div class="k-default-codeblock">
 ```
-/usr/lib/python3.13/copyreg.py:99: FutureWarning: `isinstance(treespec, LeafSpec)` is deprecated, use `isinstance(treespec, TreeSpec) and treespec.is_leaf()` instead.
+/usr/lib/python3.12/copyreg.py:99: FutureWarning: `isinstance(treespec, LeafSpec)` is deprecated, use `isinstance(treespec, TreeSpec) and treespec.is_leaf()` instead.
   return cls.__new__(cls, *args)
 ```
 </div>
@@ -798,7 +775,7 @@ print("Dict-input model exported")
 
 <div class="k-default-codeblock">
 ```
-/usr/lib/python3.13/copyreg.py:99: FutureWarning: `isinstance(treespec, LeafSpec)` is deprecated, use `isinstance(treespec, TreeSpec) and treespec.is_leaf()` instead.
+/usr/lib/python3.12/copyreg.py:99: FutureWarning: `isinstance(treespec, LeafSpec)` is deprecated, use `isinstance(treespec, TreeSpec) and treespec.is_leaf()` instead.
   return cls.__new__(cls, *args)
 ```
 </div>
@@ -838,14 +815,6 @@ print("Dict-input model exported")
 
 
 
-<div class="k-default-codeblock">
-```
-/home/pctablet505/Projects/gemmademo-litert-export/.venv/lib/python3.13/site-packages/litert_torch/_convert/signature.py:52: FutureWarning: `treespec.children_specs` is deprecated. Use `treespec.child(index)` to access a single child, or `treespec.children()` to get all children.
-  args_spec, kwargs_spec = spec.children_specs
-/home/pctablet505/Projects/gemmademo-litert-export/.venv/lib/python3.13/site-packages/litert_torch/_convert/signature.py:58: FutureWarning: `treespec.children_specs` is deprecated. Use `treespec.child(index)` to access a single child, or `treespec.children()` to get all children.
-  kwargs_spec.children_specs, kwargs_spec.context
-```
-</div>
 
 <pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">(00:00)</span> <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">[START]</span> <span style="color: #000000; text-decoration-color: #000000; font-weight: bold">LiteRT-Torch Convert</span> &gt; <span style="color: #000000; text-decoration-color: #000000; font-weight: bold">Merge MLIR Modules</span>
 </pre>
@@ -903,11 +872,14 @@ LiteRT models exported from Keras have static shapes in the graph, but the
 interpreter supports **runtime input resizing**. This means you can process
 different batch sizes with the same exported model without re-exporting.
 
-> **Note:** The PyTorch backend also accepts a `dynamic_shapes` kwarg powered
-> by `torch.export.Dim`. However, this path currently has limitations in the
-> Keras → LiteRT conversion pipeline for some layer types. The recommended
-> approach for variable batch sizes is runtime resizing, which is fully
-> supported and tested.
+> **Warning:** The new `ai_edge_litert.interpreter.Interpreter` does **not**
+> support graphs with dynamic shapes. Models exported with the PyTorch backend
+> and a `dynamic_shapes` argument may fail to run with this interpreter. If you
+> need variable input shapes, use runtime input resizing (shown below) instead.
+> Dynamic-shape export works when using the TensorFlow backend during
+> conversion, but the resulting model should still be executed with a TFLite
+> interpreter that supports dynamic tensors if you do not resize inputs to a
+> fixed shape first.
 
 
 ```python
@@ -935,9 +907,9 @@ Resized output shape: (4, 10)
 ---
 ## Signature runner
 
-Use the signature runner for cleaner inference code. Input names in the
-signature come from the model's export format; you can discover them via
-`get_signature_list()`.
+Use the signature runner for cleaner inference code. You can discover the
+input names for a signature via `get_signature_list()`; for models exported
+with the PyTorch backend they are typically `args_0`, `args_0_0`, etc.
 
 
 ```python
@@ -989,7 +961,7 @@ print("Exported with custom input signature")
 
 <div class="k-default-codeblock">
 ```
-/home/pctablet505/Projects/gemmademo-litert-export/.venv/lib/python3.13/site-packages/keras/src/layers/core/dense.py:107: UserWarning: Do not pass an `input_shape`/`input_dim` argument to a layer. When using Sequential models, prefer using an `Input(shape)` object as the first layer in the model instead.
+/usr/local/lib/python3.12/dist-packages/keras/src/layers/core/dense.py:107: UserWarning: Do not pass an `input_shape`/`input_dim` argument to a layer. When using Sequential models, prefer using an `Input(shape)` object as the first layer in the model instead.
   super().__init__(activity_regularizer=activity_regularizer, **kwargs)
 ```
 </div>
@@ -1013,7 +985,7 @@ print("Exported with custom input signature")
 
 <div class="k-default-codeblock">
 ```
-/usr/lib/python3.13/copyreg.py:99: FutureWarning: `isinstance(treespec, LeafSpec)` is deprecated, use `isinstance(treespec, TreeSpec) and treespec.is_leaf()` instead.
+/usr/lib/python3.12/copyreg.py:99: FutureWarning: `isinstance(treespec, LeafSpec)` is deprecated, use `isinstance(treespec, TreeSpec) and treespec.is_leaf()` instead.
   return cls.__new__(cls, *args)
 ```
 </div>
@@ -1067,7 +1039,7 @@ print("Exported with custom input signature")
 
 <div class="k-default-codeblock">
 ```
-/usr/lib/python3.13/copyreg.py:99: FutureWarning: `isinstance(treespec, LeafSpec)` is deprecated, use `isinstance(treespec, TreeSpec) and treespec.is_leaf()` instead.
+/usr/lib/python3.12/copyreg.py:99: FutureWarning: `isinstance(treespec, LeafSpec)` is deprecated, use `isinstance(treespec, TreeSpec) and treespec.is_leaf()` instead.
   return cls.__new__(cls, *args)
 ```
 </div>
@@ -1107,14 +1079,6 @@ print("Exported with custom input signature")
 
 
 
-<div class="k-default-codeblock">
-```
-/home/pctablet505/Projects/gemmademo-litert-export/.venv/lib/python3.13/site-packages/litert_torch/_convert/signature.py:52: FutureWarning: `treespec.children_specs` is deprecated. Use `treespec.child(index)` to access a single child, or `treespec.children()` to get all children.
-  args_spec, kwargs_spec = spec.children_specs
-/home/pctablet505/Projects/gemmademo-litert-export/.venv/lib/python3.13/site-packages/litert_torch/_convert/signature.py:58: FutureWarning: `treespec.children_specs` is deprecated. Use `treespec.child(index)` to access a single child, or `treespec.children()` to get all children.
-  kwargs_spec.children_specs, kwargs_spec.context
-```
-</div>
 
 <pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">(00:00)</span> <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">[START]</span> <span style="color: #000000; text-decoration-color: #000000; font-weight: bold">LiteRT-Torch Convert</span> &gt; <span style="color: #000000; text-decoration-color: #000000; font-weight: bold">Merge MLIR Modules</span>
 </pre>
@@ -1201,7 +1165,8 @@ except Exception as e:
 ```
 Gemma3 export skipped: 403 Client Error.
 
-You don't have permission to access resource at URL: https://api.kaggle.com/models/keras/gemma3/keras/gemma3_270m/3. Please make sure you are authenticated if you are trying to access a private resource or a resource requiring consent.
+You don't have permission to access resource at URL: https://kaggle.com/models/keras/gemma3/keras/gemma3_270m/3
+Please make sure you are authenticated if you are trying to access a private resource or a resource requiring consent.
 ```
 </div>
 
@@ -1240,7 +1205,7 @@ print("Exported dynamically quantized model")
 
 <div class="k-default-codeblock">
 ```
-/home/pctablet505/Projects/gemmademo-litert-export/.venv/lib/python3.13/site-packages/keras/src/layers/core/dense.py:107: UserWarning: Do not pass an `input_shape`/`input_dim` argument to a layer. When using Sequential models, prefer using an `Input(shape)` object as the first layer in the model instead.
+/usr/local/lib/python3.12/dist-packages/keras/src/layers/core/dense.py:107: UserWarning: Do not pass an `input_shape`/`input_dim` argument to a layer. When using Sequential models, prefer using an `Input(shape)` object as the first layer in the model instead.
   super().__init__(activity_regularizer=activity_regularizer, **kwargs)
 ```
 </div>
@@ -1264,7 +1229,7 @@ print("Exported dynamically quantized model")
 
 <div class="k-default-codeblock">
 ```
-/usr/lib/python3.13/copyreg.py:99: FutureWarning: `isinstance(treespec, LeafSpec)` is deprecated, use `isinstance(treespec, TreeSpec) and treespec.is_leaf()` instead.
+/usr/lib/python3.12/copyreg.py:99: FutureWarning: `isinstance(treespec, LeafSpec)` is deprecated, use `isinstance(treespec, TreeSpec) and treespec.is_leaf()` instead.
   return cls.__new__(cls, *args)
 ```
 </div>
@@ -1318,7 +1283,7 @@ print("Exported dynamically quantized model")
 
 <div class="k-default-codeblock">
 ```
-/usr/lib/python3.13/copyreg.py:99: FutureWarning: `isinstance(treespec, LeafSpec)` is deprecated, use `isinstance(treespec, TreeSpec) and treespec.is_leaf()` instead.
+/usr/lib/python3.12/copyreg.py:99: FutureWarning: `isinstance(treespec, LeafSpec)` is deprecated, use `isinstance(treespec, TreeSpec) and treespec.is_leaf()` instead.
   return cls.__new__(cls, *args)
 ```
 </div>
@@ -1358,14 +1323,6 @@ print("Exported dynamically quantized model")
 
 
 
-<div class="k-default-codeblock">
-```
-/home/pctablet505/Projects/gemmademo-litert-export/.venv/lib/python3.13/site-packages/litert_torch/_convert/signature.py:52: FutureWarning: `treespec.children_specs` is deprecated. Use `treespec.child(index)` to access a single child, or `treespec.children()` to get all children.
-  args_spec, kwargs_spec = spec.children_specs
-/home/pctablet505/Projects/gemmademo-litert-export/.venv/lib/python3.13/site-packages/litert_torch/_convert/signature.py:58: FutureWarning: `treespec.children_specs` is deprecated. Use `treespec.child(index)` to access a single child, or `treespec.children()` to get all children.
-  kwargs_spec.children_specs, kwargs_spec.context
-```
-</div>
 
 <pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">(00:00)</span> <span style="color: #008080; text-decoration-color: #008080; font-weight: bold">[START]</span> <span style="color: #000000; text-decoration-color: #000000; font-weight: bold">LiteRT-Torch Convert</span> &gt; <span style="color: #000000; text-decoration-color: #000000; font-weight: bold">Merge MLIR Modules</span>
 </pre>
@@ -1385,13 +1342,13 @@ print("Exported dynamically quantized model")
 
 
 
-<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">(00:00)</span> <span style="color: #008000; text-decoration-color: #008000; font-weight: bold">[ DONE]</span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">LiteRT-Torch Convert</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> &gt; </span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">Run LiteRT Converter Passes</span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">(</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">+</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">00:00</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">)</span>
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">(00:01)</span> <span style="color: #008000; text-decoration-color: #008000; font-weight: bold">[ DONE]</span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">LiteRT-Torch Convert</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f"> &gt; </span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">Run LiteRT Converter Passes</span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">(</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">+</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">00:00</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">)</span>
 </pre>
 
 
 
 
-<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">(00:00)</span> <span style="color: #008000; text-decoration-color: #008000; font-weight: bold">[ DONE]</span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">LiteRT-Torch Convert</span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">(</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">+</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">00:00</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">)</span>
+<pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">(00:01)</span> <span style="color: #008000; text-decoration-color: #008000; font-weight: bold">[ DONE]</span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">LiteRT-Torch Convert</span> <span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">(</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f">+</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">00:01</span><span style="color: #7f7f7f; text-decoration-color: #7f7f7f; font-weight: bold">)</span>
 </pre>
 
 
@@ -1464,6 +1421,11 @@ print("Exported ai-edge-quantizer model")
 
 <div class="k-default-codeblock">
 ```
+Model name: model.tflite
+Original model size: 22.68 KiB
+Quantized model size: 22.66 KiB
+Quantization Ratio: 1.00 (1.0x smaller)
+Total time: 3.40 ms
 Exported ai-edge-quantizer model
 ```
 </div>
@@ -1594,8 +1556,9 @@ model.export(
 3. **Call subclassed models on sample data** before `export()` to build weights
    and infer the input signature.
 4. **Use runtime input resizing** for variable batch sizes rather than
-   `dynamic_shapes`, which currently has limitations in the Keras → LiteRT
-   pipeline.
+   `dynamic_shapes`. Graphs with dynamic shapes are not supported by the new
+   `ai_edge_litert.interpreter.Interpreter` and may fail when exported with the
+   PyTorch backend.
 5. **Start with `optimizations=[tf.lite.Optimize.DEFAULT]`** for quick
    dynamic-range quantization on either backend.
 6. **Use `ai-edge-quantizer`** when you need finer control (channel-wise,
