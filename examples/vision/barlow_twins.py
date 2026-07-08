@@ -2,7 +2,7 @@
 Title: Barlow Twins for Contrastive SSL
 Author: [Abhiraam Eranti](https://github.com/dewball345)
 Date created: 11/4/21
-Last modified: 26/04/26
+Last modified: 08/07/26
 Description: A keras implementation of Barlow Twins (contrastive SSL with redundancy reduction).
 Accelerator: GPU
 Converted to Keras 3 by: [Maitry Sinha](https://github.com/maitry63)
@@ -775,7 +775,7 @@ Projector network:
 """
 
 
-def build_encoder():
+def build_twin():
     """build_twin method.
 
     Builds a barlow twins model consisting of an encoder(resnet-34)
@@ -793,50 +793,29 @@ def build_encoder():
 
 
 def build_projector(input_dim):
+    """Builds the projector MLP.
+
+    The projector consists of three Dense-BatchNormalization-ReLU
+    blocks that map encoder representations to embeddings used for
+    the Barlow Twins loss.
+
+    Args:
+        input_dim: Dimension of the encoder output.
+
+    Returns:
+        A Keras Model representing the projector network.
+    """
     inputs = keras.Input(shape=(input_dim,))
 
     x = inputs
-    for i in range(2):
+    for _ in range(3):
         x = keras.layers.Dense(5000)(x)
         x = keras.layers.BatchNormalization()(x)
         x = keras.layers.ReLU()(x)
 
-    outputs = keras.layers.Dense(5000)(x)
-
-    model = keras.Model(inputs, outputs, name="projector")
+    model = keras.Model(inputs, x, name="projector")
 
     return model
-
-
-def build_twin():
-    """build_twin method.
-
-    Builds a barlow twins model consisting of an encoder(resnet-34)
-    and a projector, which generates embeddings for the images
-
-    Returns:
-        returns a barlow twins model
-    """
-
-    # number of dense neurons in the projector
-    n_dense_neurons = 5000
-
-    # encoder network
-    resnet = ResNet34()()
-    last_layer = resnet.layers[-1].output
-
-    # intermediate layers of the projector network
-    n_layers = 2
-    for i in range(n_layers):
-        dense = keras.layers.Dense(n_dense_neurons, name=f"projector_dense_{i}")
-        if i == 0:
-            x = dense(last_layer)
-        else:
-            x = dense(x)
-        x = keras.layers.BatchNormalization(name=f"projector_bn_{i}")(x)
-        x = keras.layers.ReLU(name=f"projector_relu_{i}")(x)
-
-    x = keras
 
 
 """
@@ -854,17 +833,23 @@ def build_barlow_model(image_shape=(32, 32, 3)):
     passes both through the same encoder + projector,
     then concatenates their projections.
     """
-    encoder = build_encoder()
+    encoder = build_twin()
+
+    # Determine encoder output dimension
+    projector = build_projector(encoder.output_shape[-1])
 
     input1 = keras.Input(shape=image_shape)
     input2 = keras.Input(shape=image_shape)
 
-    z1 = encoder(input1)
-    z2 = encoder(input2)
+    h1 = encoder(input1)
+    h2 = encoder(input2)
 
-    z = layers.Concatenate(axis=1)([z1, z2])
+    z1 = projector(h1)
+    z2 = projector(h2)
 
-    return keras.Model([input1, input2], z)
+    outputs = layers.Concatenate(axis=1)([z1, z2])
+
+    return keras.Model([input1, input2], outputs)
 
 
 """
@@ -945,7 +930,7 @@ from random guessing.
 
 # Approx: 64% accuracy with this barlow twins model.
 
-encoder = build_encoder()
+encoder = build_twin()
 
 # Load pretrained weights
 encoder.set_weights(barlow_model.get_layer("encoder_resnet34").get_weights())
