@@ -2,7 +2,7 @@
 
 **Author:** [Abhiraam Eranti](https://github.com/dewball345)<br>
 **Date created:** 11/4/21<br>
-**Last modified:** 26/04/28<br>
+**Last modified:** 08/07/26<br>
 **Description:** A keras implementation of Barlow Twins (contrastive SSL with redundancy reduction).
 
 
@@ -783,7 +783,7 @@ Projector network:
 
 ```python
 
-def build_encoder():
+def build_twin():
     """build_twin method.
 
     Builds a barlow twins model consisting of an encoder(resnet-34)
@@ -801,50 +801,29 @@ def build_encoder():
 
 
 def build_projector(input_dim):
+    """Builds the projector MLP.
+
+    The projector consists of three Dense-BatchNormalization-ReLU
+    blocks that map encoder representations to embeddings used for
+    the Barlow Twins loss.
+
+    Args:
+        input_dim: Dimension of the encoder output.
+
+    Returns:
+        A Keras Model representing the projector network.
+    """
     inputs = keras.Input(shape=(input_dim,))
 
     x = inputs
-    for i in range(2):
+    for _ in range(3):
         x = keras.layers.Dense(5000)(x)
         x = keras.layers.BatchNormalization()(x)
         x = keras.layers.ReLU()(x)
 
-    outputs = keras.layers.Dense(5000)(x)
-
-    model = keras.Model(inputs, outputs, name="projector")
+    model = keras.Model(inputs, x, name="projector")
 
     return model
-
-
-def build_twin():
-    """build_twin method.
-
-    Builds a barlow twins model consisting of an encoder(resnet-34)
-    and a projector, which generates embeddings for the images
-
-    Returns:
-        returns a barlow twins model
-    """
-
-    # number of dense neurons in the projector
-    n_dense_neurons = 5000
-
-    # encoder network
-    resnet = ResNet34()()
-    last_layer = resnet.layers[-1].output
-
-    # intermediate layers of the projector network
-    n_layers = 2
-    for i in range(n_layers):
-        dense = keras.layers.Dense(n_dense_neurons, name=f"projector_dense_{i}")
-        if i == 0:
-            x = dense(last_layer)
-        else:
-            x = dense(x)
-        x = keras.layers.BatchNormalization(name=f"projector_bn_{i}")(x)
-        x = keras.layers.ReLU(name=f"projector_relu_{i}")(x)
-
-    x = keras
 
 ```
 
@@ -864,17 +843,23 @@ def build_barlow_model(image_shape=(32, 32, 3)):
     passes both through the same encoder + projector,
     then concatenates their projections.
     """
-    encoder = build_encoder()
+    encoder = build_twin()
+
+    # Determine encoder output dimension
+    projector = build_projector(encoder.output_shape[-1])
 
     input1 = keras.Input(shape=image_shape)
     input2 = keras.Input(shape=image_shape)
 
-    z1 = encoder(input1)
-    z2 = encoder(input2)
+    h1 = encoder(input1)
+    h2 = encoder(input2)
 
-    z = layers.Concatenate(axis=1)([z1, z2])
+    z1 = projector(h1)
+    z2 = projector(h2)
 
-    return keras.Model([input1, input2], z)
+    outputs = layers.Concatenate(axis=1)([z1, z2])
+
+    return keras.Model([input1, input2], outputs)
 
 ```
 
@@ -895,7 +880,7 @@ barlow_model.compile(
     loss=BarlowLoss(BATCH_SIZE),
 )
 
-history = barlow_model.fit(augment_versions, epochs=5)
+history = barlow_model.fit(augment_versions, epochs=2)
 plt.plot(history.history["loss"])
 plt.show()
 
@@ -903,29 +888,17 @@ plt.show()
 
 <div class="k-default-codeblock">
 ```
-Epoch 1/5
+Epoch 1/2
 
-98/98 ━━━━━━━━━━━━━━━━━━━━ 1606s 16s/step - loss: 345.1386
+98/98 ━━━━━━━━━━━━━━━━━━━━ 1117s 11s/step - loss: 4513.7461
 
-Epoch 2/5
+Epoch 2/2
 
-98/98 ━━━━━━━━━━━━━━━━━━━━ 1714s 17s/step - loss: 229.7889
-
-Epoch 3/5
-
-98/98 ━━━━━━━━━━━━━━━━━━━━ 1914s 19s/step - loss: 182.4243
-
-Epoch 4/5
-
-98/98 ━━━━━━━━━━━━━━━━━━━━ 1732s 18s/step - loss: 163.0861
-
-Epoch 5/5
-
-98/98 ━━━━━━━━━━━━━━━━━━━━ 1473s 15s/step - loss: 157.1498
+98/98 ━━━━━━━━━━━━━━━━━━━━ 1117s 11s/step - loss: 3593.2834
 ```
 </div>
 
-![png](/img/examples/vision/barlow_twins/barlow_twins_34_500.png)
+![png](/img/examples/vision/barlow_twins/barlow_twins_34_200.png)
     
 
 
@@ -987,7 +960,7 @@ from random guessing.
 ```python
 # Approx: 64% accuracy with this barlow twins model.
 
-encoder = build_encoder()
+encoder = build_twin()
 
 # Load pretrained weights
 encoder.set_weights(barlow_model.get_layer("encoder_resnet34").get_weights())
@@ -1012,92 +985,20 @@ model.compile(
 )
 
 model.layers[0].trainable = False
-model.fit(xy_ds, epochs=20, validation_data=test_ds)
+model.fit(xy_ds, epochs=2, validation_data=test_ds)
 ```
 
 <div class="k-default-codeblock">
 ```
-Epoch 1/20
+Epoch 1/2
 
-98/98 ━━━━━━━━━━━━━━━━━━━━ 155s 2s/step - accuracy: 0.1576 - loss: 3.4602 - val_accuracy: 0.2131 - val_loss: 2.7183
+98/98 ━━━━━━━━━━━━━━━━━━━━ 83s 838ms/step - accuracy: 0.1177 - loss: 3.9647 - val_accuracy: 0.1588 - val_loss: 2.8225
 
-Epoch 2/20
+Epoch 2/2
 
-98/98 ━━━━━━━━━━━━━━━━━━━━ 147s 2s/step - accuracy: 0.2763 - loss: 2.4487 - val_accuracy: 0.3292 - val_loss: 2.2542
+98/98 ━━━━━━━━━━━━━━━━━━━━ 69s 704ms/step - accuracy: 0.2065 - loss: 2.5816 - val_accuracy: 0.2418 - val_loss: 2.4518
 
-Epoch 3/20
-
-98/98 ━━━━━━━━━━━━━━━━━━━━ 145s 1s/step - accuracy: 0.3383 - loss: 2.2019 - val_accuracy: 0.3424 - val_loss: 2.1568
-
-Epoch 4/20
-
-98/98 ━━━━━━━━━━━━━━━━━━━━ 146s 1s/step - accuracy: 0.3452 - loss: 2.1399 - val_accuracy: 0.3473 - val_loss: 2.1108
-
-Epoch 5/20
-
-98/98 ━━━━━━━━━━━━━━━━━━━━ 147s 2s/step - accuracy: 0.3472 - loss: 2.1032 - val_accuracy: 0.3468 - val_loss: 2.0822
-
-Epoch 6/20
-
-98/98 ━━━━━━━━━━━━━━━━━━━━ 143s 1s/step - accuracy: 0.3500 - loss: 2.0761 - val_accuracy: 0.3495 - val_loss: 2.0577
-
-Epoch 7/20
-
-98/98 ━━━━━━━━━━━━━━━━━━━━ 145s 1s/step - accuracy: 0.3508 - loss: 2.0512 - val_accuracy: 0.3539 - val_loss: 2.0334
-
-Epoch 8/20
-
-98/98 ━━━━━━━━━━━━━━━━━━━━ 145s 1s/step - accuracy: 0.3518 - loss: 2.0307 - val_accuracy: 0.3538 - val_loss: 2.0128
-
-Epoch 9/20
-
-98/98 ━━━━━━━━━━━━━━━━━━━━ 145s 1s/step - accuracy: 0.3543 - loss: 2.0111 - val_accuracy: 0.3530 - val_loss: 1.9935
-
-Epoch 10/20
-
-98/98 ━━━━━━━━━━━━━━━━━━━━ 145s 1s/step - accuracy: 0.3516 - loss: 1.9935 - val_accuracy: 0.3559 - val_loss: 1.9782
-
-Epoch 11/20
-
-98/98 ━━━━━━━━━━━━━━━━━━━━ 143s 1s/step - accuracy: 0.3556 - loss: 1.9781 - val_accuracy: 0.3546 - val_loss: 1.9629
-
-Epoch 12/20
-
-98/98 ━━━━━━━━━━━━━━━━━━━━ 143s 1s/step - accuracy: 0.3547 - loss: 1.9637 - val_accuracy: 0.3584 - val_loss: 1.9511
-
-Epoch 13/20
-
-98/98 ━━━━━━━━━━━━━━━━━━━━ 146s 1s/step - accuracy: 0.3580 - loss: 1.9515 - val_accuracy: 0.3597 - val_loss: 1.9353
-
-Epoch 14/20
-
-98/98 ━━━━━━━━━━━━━━━━━━━━ 147s 2s/step - accuracy: 0.3585 - loss: 1.9398 - val_accuracy: 0.3643 - val_loss: 1.9243
-
-Epoch 15/20
-
-98/98 ━━━━━━━━━━━━━━━━━━━━ 143s 1s/step - accuracy: 0.3580 - loss: 1.9294 - val_accuracy: 0.3642 - val_loss: 1.9164
-
-Epoch 16/20
-
-98/98 ━━━━━━━━━━━━━━━━━━━━ 144s 1s/step - accuracy: 0.3584 - loss: 1.9197 - val_accuracy: 0.3620 - val_loss: 1.9085
-
-Epoch 17/20
-
-98/98 ━━━━━━━━━━━━━━━━━━━━ 144s 1s/step - accuracy: 0.3589 - loss: 1.9109 - val_accuracy: 0.3640 - val_loss: 1.8994
-
-Epoch 18/20
-
-98/98 ━━━━━━━━━━━━━━━━━━━━ 144s 1s/step - accuracy: 0.3600 - loss: 1.9032 - val_accuracy: 0.3618 - val_loss: 1.8982
-
-Epoch 19/20
-
-98/98 ━━━━━━━━━━━━━━━━━━━━ 143s 1s/step - accuracy: 0.3601 - loss: 1.8966 - val_accuracy: 0.3652 - val_loss: 1.8848
-
-Epoch 20/20
-
-98/98 ━━━━━━━━━━━━━━━━━━━━ 143s 1s/step - accuracy: 0.3612 - loss: 1.8902 - val_accuracy: 0.3660 - val_loss: 1.8769
-
-<keras.src.callbacks.history.History at 0x31ecfcf20>
+<keras.src.callbacks.history.History at 0x3b9322600>
 ```
 </div>
 
