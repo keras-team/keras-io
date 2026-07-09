@@ -16,7 +16,9 @@ jobs:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
         with:
           persist-credentials: false
-      - uses: actions/github-script@373c709c69115d41ff229c7e5df9f8788daa9553 # v9 zizmor: ignore[impostor-commit, mismatched-version-comment]
+      - name: Run github-script
+        # zizmor: ignore[impostor-commit, mismatched-version-comment]
+        uses: actions/github-script@373c709c69115d41ff229c7e5df9f8788daa9553 # v9
         with:
           script: |
             const script = require('./\.github/workflows/scripts/csat.js')

@@ -3,7 +3,7 @@ on:
   issues:
     types:
       - opened
-  pull_request_target: # zizmor: ignore[insecure-pull-request-target]
+  pull_request_target: # zizmor: ignore[dangerous-triggers]
     types: [opened]
 
 permissions:
@@ -20,7 +20,9 @@ jobs:
         with:
           persist-credentials: false
           ref: ${{ github.event.repository.default_branch }}
-      - uses: actions/github-script@373c709c69115d41ff229c7e5df9f8788daa9553 # v9 zizmor: ignore[impostor-commit, mismatched-version-comment]
+      - name: Run github-script
+        # zizmor: ignore[impostor-commit, mismatched-version-comment]
+        uses: actions/github-script@373c709c69115d41ff229c7e5df9f8788daa9553 # v9
         with:
           script: |
             const script = require('./\.github/workflows/scripts/auto-assignment.js')
