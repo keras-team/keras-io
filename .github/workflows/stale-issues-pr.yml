@@ -55,8 +55,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Run github-script
-        # zizmor: ignore[impostor-commit, mismatched-version-comment]
-        uses: actions/github-script@373c709c69115d41ff229c7e5df9f8788daa9553 # v9
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9
         with:
           script: |
             const script = require('./\.github/workflows/scripts/stale_csat.js')
