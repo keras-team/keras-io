@@ -205,26 +205,22 @@ print(
 )
 
 
-# Load images and labels
-def load_images_and_labels(file_list, base_dir):
-    images, labels = [], []
+# Prepare image paths and labels (lazy loading - no images loaded into memory yet)
+def prepare_paths_and_labels(file_list, base_dir):
+    image_paths, labels = [], []
     for file_path in file_list:
         class_name = file_path.split("/")[0]
         img_path = base_dir / "Images" / file_path
-        try:
-            img = Image.open(img_path).convert("RGB")
-            images.append(np.array(img))
+        if img_path.exists():
+            image_paths.append(str(img_path))
             labels.append(class_to_idx[class_name])
-        except Exception as e:
-            print(f"Warning: Could not load {img_path}: {e}")
-    return images, np.array(labels)
+    return image_paths, np.array(labels)
 
 
-print("Loading training images...")
-train_images, train_labels = load_images_and_labels(train_files, data_dir)
-print("Loading test images...")
-test_images, test_labels = load_images_and_labels(test_files, data_dir)
-print(f"Loaded {len(train_images)} train and {len(test_images)} test images")
+print("Preparing dataset paths...")
+train_image_paths, train_labels = prepare_paths_and_labels(train_files, data_dir)
+test_image_paths, test_labels = prepare_paths_and_labels(test_files, data_dir)
+print(f"Found {len(train_image_paths)} train and {len(test_image_paths)} test images")
 ```
 
 Each image can have a different shape, so we resize them to a shared input size
@@ -232,12 +228,15 @@ for EfficientNet. In Keras 3, we do this in a backend-agnostic `PyDataset` pipel
 using `keras.ops.image.resize`, which works across TensorFlow, JAX, and PyTorch backends,
 rather than the TensorFlow-specific `tf.data` mapping steps.
 
+Images are loaded lazily from disk in `__getitem__` to avoid loading all 20,580 images
+into memory at once, which would consume several gigabytes of RAM and cause OOM issues.
+
 
 ```python
 class ResizeOnlyDataset(keras.utils.PyDataset):
-    def __init__(self, images, labels, img_size, batch_size=1, **kwargs):
+    def __init__(self, image_paths, labels, img_size, batch_size=1, **kwargs):
         super().__init__(**kwargs)
-        self.images = images
+        self.image_paths = image_paths
         self.labels = labels
         self.img_size = img_size
         self.batch_size = batch_size
@@ -250,17 +249,15 @@ class ResizeOnlyDataset(keras.utils.PyDataset):
         batch_indices = self.indices[
             idx * self.batch_size : (idx + 1) * self.batch_size
         ]
-        batch_images = np.stack(
-            [
-                np.array(
-                    keras.ops.image.resize(
-                        np.array(self.images[i], dtype="float32"),
-                        (self.img_size, self.img_size),
-                    )
-                )
-                for i in batch_indices
-            ]
-        )
+        batch_images = []
+        for i in batch_indices:
+            img = Image.open(self.image_paths[i]).convert("RGB")
+            img_array = np.array(img, dtype="float32")
+            img_resized = keras.ops.image.resize(
+                img_array, (self.img_size, self.img_size)
+            )
+            batch_images.append(np.array(img_resized))
+        batch_images = np.stack(batch_images)
         batch_labels = self.labels[batch_indices]
         if self.batch_size == 1:
             return batch_images[0], batch_labels[0]
@@ -268,8 +265,10 @@ class ResizeOnlyDataset(keras.utils.PyDataset):
 
 
 # Preview stream with resized images for visualization below
-preview_train = ResizeOnlyDataset(train_images, train_labels, IMG_SIZE, batch_size=1)
-preview_test = ResizeOnlyDataset(test_images, test_labels, IMG_SIZE, batch_size=1)
+preview_train = ResizeOnlyDataset(
+    train_image_paths, train_labels, IMG_SIZE, batch_size=1
+)
+preview_test = ResizeOnlyDataset(test_image_paths, test_labels, IMG_SIZE, batch_size=1)
 ```
 
 ### Visualizing the data
@@ -363,7 +362,7 @@ and works seamlessly across TensorFlow, JAX, and PyTorch backends.
 class StanfordDogsDataset(keras.utils.PyDataset):
     def __init__(
         self,
-        images,
+        image_paths,
         labels,
         num_classes,
         img_size,
@@ -373,7 +372,7 @@ class StanfordDogsDataset(keras.utils.PyDataset):
         **kwargs,
     ):
         super().__init__(**kwargs)
-        self.images = images
+        self.image_paths = image_paths
         self.labels = labels
         self.num_classes = num_classes
         self.img_size = img_size
@@ -396,17 +395,16 @@ class StanfordDogsDataset(keras.utils.PyDataset):
             idx * self.batch_size : (idx + 1) * self.batch_size
         ]
 
-        batch_images = np.stack(
-            [
-                np.array(
-                    keras.ops.image.resize(
-                        np.array(self.images[i], dtype="float32"),
-                        (self.img_size, self.img_size),
-                    )
-                )
-                for i in batch_indices
-            ]
-        )
+        # Load images lazily from disk
+        batch_images = []
+        for i in batch_indices:
+            img = Image.open(self.image_paths[i]).convert("RGB")
+            img_array = np.array(img, dtype="float32")
+            img_resized = keras.ops.image.resize(
+                img_array, (self.img_size, self.img_size)
+            )
+            batch_images.append(np.array(img_resized))
+        batch_images = np.stack(batch_images)
 
         if self.augment:
             batch_images = np.array(img_augmentation(batch_images))
@@ -419,7 +417,7 @@ class StanfordDogsDataset(keras.utils.PyDataset):
 
 
 ds_train = StanfordDogsDataset(
-    train_images,
+    train_image_paths,
     train_labels,
     num_classes=NUM_CLASSES,
     img_size=IMG_SIZE,
@@ -431,7 +429,7 @@ ds_train = StanfordDogsDataset(
 )
 
 ds_test = StanfordDogsDataset(
-    test_images,
+    test_image_paths,
     test_labels,
     num_classes=NUM_CLASSES,
     img_size=IMG_SIZE,
@@ -1518,18 +1516,26 @@ def unfreeze_model(
     if metrics is None:
         metrics = ["accuracy"]
 
+    # Access the nested EfficientNetB0 base model
+    base_model = model.get_layer("efficientnetb0")
+    base_model.trainable = True
+
+    # First, freeze all layers in the base model
+    for layer in base_model.layers:
+        layer.trainable = False
+
     if isinstance(layers_to_unfreeze, str):
         unfreeze_from = None
-        for i, layer in enumerate(model.layers):
+        for i, layer in enumerate(base_model.layers):
             if layers_to_unfreeze in layer.name:
                 unfreeze_from = i
                 break
         if unfreeze_from is None:
             raise ValueError(f"No layer name contains {layers_to_unfreeze!r}.")
-        layers_to_process = model.layers[unfreeze_from:]
+        layers_to_process = base_model.layers[unfreeze_from:]
     elif isinstance(layers_to_unfreeze, int):
-        n_layers_to_unfreeze = min(layers_to_unfreeze, len(model.layers))
-        layers_to_process = model.layers[-n_layers_to_unfreeze:]
+        n_layers_to_unfreeze = min(layers_to_unfreeze, len(base_model.layers))
+        layers_to_process = base_model.layers[-n_layers_to_unfreeze:]
     else:
         raise TypeError(
             "layers_to_unfreeze must be an int or str, received: "
