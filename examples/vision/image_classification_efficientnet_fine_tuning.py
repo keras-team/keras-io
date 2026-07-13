@@ -2,7 +2,7 @@
 Title: Image classification via fine-tuning with EfficientNet
 Author: [Yixing Fu](https://github.com/yixingfu)
 Date created: 2020/06/30
-Last modified: 2023/07/10
+Last modified: 2026/07/13
 Description: Use EfficientNet with weights pre-trained on imagenet for Stanford Dogs classification.
 Accelerator: GPU
 """
@@ -123,10 +123,13 @@ As an end-to-end example, we will show using pre-trained EfficientNetB0 on
 ## Setup and data loading
 """
 
+import os
+import tarfile
+import urllib.request
+from pathlib import Path
 import numpy as np
-import tensorflow_datasets as tfds
-import tensorflow as tf  # For tf.data
 import matplotlib.pyplot as plt
+from PIL import Image
 import keras
 from keras import layers
 from keras.applications import EfficientNetB0
@@ -139,40 +142,131 @@ BATCH_SIZE = 64
 """
 ### Loading data
 
-Here we load data from [tensorflow_datasets](https://www.tensorflow.org/datasets)
-(hereafter TFDS).
-Stanford Dogs dataset is provided in
-TFDS as [stanford_dogs](https://www.tensorflow.org/datasets/catalog/stanford_dogs).
-It features 20,580 images that belong to 120 classes of dog breeds
+We download the Stanford Dogs dataset directly from Stanford's servers using the
+built-in `urllib` and `tarfile` modules.
+The dataset contains 20,580 images belonging to 120 classes of dog breeds
 (12,000 for training and 8,580 for testing).
 
-By simply changing `dataset_name` below, you may also try this notebook for
-other datasets in TFDS such as
-[cifar10](https://www.tensorflow.org/datasets/catalog/cifar10),
-[cifar100](https://www.tensorflow.org/datasets/catalog/cifar100),
-[food101](https://www.tensorflow.org/datasets/catalog/food101),
-etc. When the images are much smaller than the size of EfficientNet input,
-we can simply upsample the input images. It has been shown in
-[Tan and Le, 2019](https://arxiv.org/abs/1905.11946) that transfer learning
-result is better for increased resolution even if input images remain small.
+The dataset is downloaded, extracted, and loaded into lists of NumPy arrays.
+Images have variable dimensions and will be resized to a uniform size in the data pipeline.
+
+**Note:** This direct download approach eliminates dependency conflicts that can
+occur with `tensorflow_datasets` in some environments (particularly Google Colab
+with protobuf version incompatibilities).
 """
 
-dataset_name = "stanford_dogs"
-(ds_train, ds_test), ds_info = tfds.load(
-    dataset_name, split=["train", "test"], with_info=True, as_supervised=True
+# Download and extract Stanford Dogs dataset
+import scipy.io
+
+dataset_url = "http://vision.stanford.edu/aditya86/ImageNetDogs/images.tar"
+lists_url = "http://vision.stanford.edu/aditya86/ImageNetDogs/lists.tar"
+data_dir = Path("./stanford_dogs_data")
+data_dir.mkdir(exist_ok=True)
+
+
+def download_and_extract(url, extract_to):
+    filename = url.split("/")[-1]
+    filepath = data_dir / filename
+    if not filepath.exists():
+        print(f"Downloading {filename}...")
+        urllib.request.urlretrieve(url, filepath)
+        print(f"Extracting {filename}...")
+        with tarfile.open(filepath, "r") as tar:
+            tar.extractall(extract_to)
+    return extract_to
+
+
+# Download dataset
+images_dir = download_and_extract(dataset_url, data_dir)
+lists_dir = download_and_extract(lists_url, data_dir)
+
+
+# Parse train/test splits
+def load_file_list(filepath):
+    mat = scipy.io.loadmat(filepath)
+    return [item[0][0] for item in mat["file_list"]]
+
+
+train_files = load_file_list(data_dir / "train_list.mat")
+test_files = load_file_list(data_dir / "test_list.mat")
+
+# Build class name mapping
+all_files = train_files + test_files
+class_names = sorted(set([f.split("/")[0] for f in all_files]))
+class_to_idx = {name: idx for idx, name in enumerate(class_names)}
+NUM_CLASSES = len(class_names)
+
+print(
+    f"Found {NUM_CLASSES} classes, {len(train_files)} training images, {len(test_files)} test images"
 )
-NUM_CLASSES = ds_info.features["label"].num_classes
+
+
+# Load images and labels
+def load_images_and_labels(file_list, base_dir):
+    images, labels = [], []
+    for file_path in file_list:
+        class_name = file_path.split("/")[0]
+        img_path = base_dir / "Images" / file_path
+        try:
+            img = Image.open(img_path).convert("RGB")
+            images.append(np.array(img))
+            labels.append(class_to_idx[class_name])
+        except Exception as e:
+            print(f"Warning: Could not load {img_path}: {e}")
+    return images, np.array(labels)
+
+
+print("Loading training images...")
+train_images, train_labels = load_images_and_labels(train_files, data_dir)
+print("Loading test images...")
+test_images, test_labels = load_images_and_labels(test_files, data_dir)
+print(f"Loaded {len(train_images)} train and {len(test_images)} test images")
 
 
 """
-When the dataset include images with various size, we need to resize them into a
-shared size. The Stanford Dogs dataset includes only images at least 200x200
-pixels in size. Here we resize the images to the input size needed for EfficientNet.
+Each image can have a different shape, so we resize them to a shared input size
+for EfficientNet. In Keras 3, we do this in a backend-agnostic `PyDataset` pipeline
+using `keras.ops.image.resize`, which works across TensorFlow, JAX, and PyTorch backends,
+rather than the TensorFlow-specific `tf.data` mapping steps.
 """
 
-size = (IMG_SIZE, IMG_SIZE)
-ds_train = ds_train.map(lambda image, label: (tf.image.resize(image, size), label))
-ds_test = ds_test.map(lambda image, label: (tf.image.resize(image, size), label))
+
+class ResizeOnlyDataset(keras.utils.PyDataset):
+    def __init__(self, images, labels, img_size, batch_size=1, **kwargs):
+        super().__init__(**kwargs)
+        self.images = images
+        self.labels = labels
+        self.img_size = img_size
+        self.batch_size = batch_size
+        self.indices = np.arange(len(labels))
+
+    def __len__(self):
+        return int(np.ceil(len(self.labels) / self.batch_size))
+
+    def __getitem__(self, idx):
+        batch_indices = self.indices[
+            idx * self.batch_size : (idx + 1) * self.batch_size
+        ]
+        batch_images = np.stack(
+            [
+                np.array(
+                    keras.ops.image.resize(
+                        np.array(self.images[i], dtype="float32"),
+                        (self.img_size, self.img_size),
+                    )
+                )
+                for i in batch_indices
+            ]
+        )
+        batch_labels = self.labels[batch_indices]
+        if self.batch_size == 1:
+            return batch_images[0], batch_labels[0]
+        return batch_images, batch_labels
+
+
+# Preview stream with resized images for visualization below
+preview_train = ResizeOnlyDataset(train_images, train_labels, IMG_SIZE, batch_size=1)
+preview_test = ResizeOnlyDataset(test_images, test_labels, IMG_SIZE, batch_size=1)
 
 """
 ### Visualizing the data
@@ -182,14 +276,15 @@ The following code shows the first 9 images with their labels.
 
 
 def format_label(label):
-    string_label = label_info.int2str(label)
-    return string_label.split("-")[1]
+    class_name = class_names[int(label)]
+    return class_name.split("-")[1]  # Extract breed name from "n02085620-Chihuahua"
 
 
-label_info = ds_info.features["label"]
-for i, (image, label) in enumerate(ds_train.take(9)):
+for i, (image, label) in enumerate(preview_train):
+    if i >= 9:
+        break
     ax = plt.subplot(3, 3, i + 1)
-    plt.imshow(image.numpy().astype("uint8"))
+    plt.imshow(np.array(image).astype("uint8"))
     plt.title("{}".format(format_label(label)))
     plt.axis("off")
 
@@ -197,7 +292,8 @@ for i, (image, label) in enumerate(ds_train.take(9)):
 """
 ### Data augmentation
 
-We can use the preprocessing layers APIs for image augmentation.
+We can use Keras preprocessing layers for image augmentation.
+These layers are backend-agnostic and can be used during both training and inference.
 """
 
 img_augmentation_layers = [
@@ -215,64 +311,126 @@ def img_augmentation(images):
 
 
 """
-This `Sequential` model object can be used both as a part of
-the model we later build, and as a function to preprocess
-data before feeding into the model. Using them as function makes
-it easy to visualize the augmented images. Here we plot 9 examples
-of augmentation result of a given figure.
+The `img_augmentation` function can be used both as a part of the model
+we later build, and as a standalone function to preprocess data before feeding
+into the model. Using it as a function makes it easy to visualize the augmentation
+results. Here we plot 9 examples of augmentation applied to a single image.
 """
 
-for image, label in ds_train.take(1):
-    for i in range(9):
-        ax = plt.subplot(3, 3, i + 1)
-        aug_img = img_augmentation(np.expand_dims(image.numpy(), axis=0))
-        aug_img = np.array(aug_img)
-        plt.imshow(aug_img[0].astype("uint8"))
-        plt.title("{}".format(format_label(label)))
-        plt.axis("off")
+first_image, first_label = preview_train[0]
+
+for i in range(9):
+    ax = plt.subplot(3, 3, i + 1)
+    aug_img = img_augmentation(np.expand_dims(np.array(first_image), axis=0))
+    aug_img = np.array(aug_img)
+    plt.imshow(aug_img[0].astype("uint8"))
+    plt.title("{}".format(format_label(first_label)))
+    plt.axis("off")
 
 
 """
 ### Prepare inputs
 
 Once we verify the input data and augmentation are working correctly,
-we prepare dataset for training. The input data are resized to uniform
-`IMG_SIZE`. The labels are put into one-hot
-(a.k.a. categorical) encoding. The dataset is batched.
+we prepare backend-agnostic datasets for training.
 
-Note: `prefetch` and `AUTOTUNE` may in some situation improve
-performance, but depends on environment and the specific dataset used.
-See this [guide](https://www.tensorflow.org/guide/data_performance)
-for more information on data pipeline performance.
+The input images are resized to uniform `IMG_SIZE`, labels are converted to one-hot
+(categorical) encoding, and batches are produced by `keras.utils.PyDataset`.
+
+Compared to the original `tf.data` version, this Keras 3 setup is backend-agnostic
+and works seamlessly across TensorFlow, JAX, and PyTorch backends.
 """
 
 
-# One-hot / categorical encoding
-def input_preprocess_train(image, label):
-    image = img_augmentation(image)
-    label = tf.one_hot(label, NUM_CLASSES)
-    return image, label
+class StanfordDogsDataset(keras.utils.PyDataset):
+    def __init__(
+        self,
+        images,
+        labels,
+        num_classes,
+        img_size,
+        batch_size,
+        augment=False,
+        shuffle=False,
+        **kwargs,
+    ):
+        super().__init__(**kwargs)
+        self.images = images
+        self.labels = labels
+        self.num_classes = num_classes
+        self.img_size = img_size
+        self.batch_size = batch_size
+        self.augment = augment
+        self.shuffle = shuffle
+        self.indices = np.arange(len(labels))
+        self.on_epoch_end()
+
+    def __len__(self):
+        # Match previous drop_remainder=True behavior.
+        return len(self.indices) // self.batch_size
+
+    def on_epoch_end(self):
+        if self.shuffle:
+            np.random.shuffle(self.indices)
+
+    def __getitem__(self, idx):
+        batch_indices = self.indices[
+            idx * self.batch_size : (idx + 1) * self.batch_size
+        ]
+
+        batch_images = np.stack(
+            [
+                np.array(
+                    keras.ops.image.resize(
+                        np.array(self.images[i], dtype="float32"),
+                        (self.img_size, self.img_size),
+                    )
+                )
+                for i in batch_indices
+            ]
+        )
+
+        if self.augment:
+            batch_images = np.array(img_augmentation(batch_images))
+
+        batch_labels = np.array(
+            keras.ops.one_hot(self.labels[batch_indices], self.num_classes)
+        )
+
+        return batch_images, batch_labels
 
 
-def input_preprocess_test(image, label):
-    label = tf.one_hot(label, NUM_CLASSES)
-    return image, label
+ds_train = StanfordDogsDataset(
+    train_images,
+    train_labels,
+    num_classes=NUM_CLASSES,
+    img_size=IMG_SIZE,
+    batch_size=BATCH_SIZE,
+    augment=True,
+    shuffle=True,
+    workers=2,
+    use_multiprocessing=False,
+)
 
-
-ds_train = ds_train.map(input_preprocess_train, num_parallel_calls=tf.data.AUTOTUNE)
-ds_train = ds_train.batch(batch_size=BATCH_SIZE, drop_remainder=True)
-ds_train = ds_train.prefetch(tf.data.AUTOTUNE)
-
-ds_test = ds_test.map(input_preprocess_test, num_parallel_calls=tf.data.AUTOTUNE)
-ds_test = ds_test.batch(batch_size=BATCH_SIZE, drop_remainder=True)
+ds_test = StanfordDogsDataset(
+    test_images,
+    test_labels,
+    num_classes=NUM_CLASSES,
+    img_size=IMG_SIZE,
+    batch_size=BATCH_SIZE,
+    augment=False,
+    shuffle=False,
+)
 
 
 """
 ## Training a model from scratch
 
-We build an EfficientNetB0 with 120 output classes, that is initialized from scratch:
+We build an EfficientNetB0 with 120 output classes, initialized from scratch
+(no pretrained weights).
 
-Note: the accuracy will increase very slowly and may overfit.
+**Note:** Training from scratch typically shows slower convergence and may overfit
+on smaller datasets like Stanford Dogs.
 """
 
 model = EfficientNetB0(
@@ -290,13 +448,13 @@ hist = model.fit(ds_train, epochs=epochs, validation_data=ds_test)
 
 
 """
-Training the model is relatively fast. This might make it sounds easy to simply train EfficientNet on any
-dataset wanted from scratch. However, training EfficientNet on smaller datasets,
+Training the model is relatively fast (a few minutes per epoch on modern hardware).
+However, training EfficientNet on smaller datasets,
 especially those with lower resolution like CIFAR-100, faces the significant challenge of
 overfitting.
 
-Hence training from scratch requires very careful choice of hyperparameters and is
-difficult to find suitable regularization. It would also be much more demanding in resources.
+Training from scratch requires very careful choice of hyperparameters and
+suitable regularization. It is also much more demanding in computational resources.
 Plotting the training and validation accuracy
 makes it clear that validation accuracy stagnates at a low value.
 """
@@ -317,10 +475,11 @@ def plot_hist(hist):
 plot_hist(hist)
 
 """
-## Transfer learning from pre-trained weights
+## Transfer learning from pretrained weights
 
-Here we initialize the model with pre-trained ImageNet weights,
-and we fine-tune it on our own dataset.
+Here we initialize the model with pretrained ImageNet weights
+and fine-tune it on our own dataset. This is the recommended approach
+for most applications.
 """
 
 
@@ -349,15 +508,15 @@ def build_model(num_classes):
 
 
 """
-The first step to transfer learning is to freeze all layers and train only the top
+The first step in transfer learning is to freeze all base layers and train only the top
 layers. For this step, a relatively large learning rate (1e-2) can be used.
-Note that validation accuracy and loss will usually be better than training
+
+**Note:** Validation accuracy and loss will usually be better than training
 accuracy and loss. This is because the regularization is strong, which only
 suppresses training-time metrics.
 
-Note that the convergence may take up to 50 epochs depending on choice of learning rate.
-If image augmentation layers were not
-applied, the validation accuracy may only reach ~60%.
+The convergence may take up to 50 epochs depending on the choice of learning rate.
+If image augmentation layers were not applied, the validation accuracy may only reach ~60%.
 """
 
 model = build_model(num_classes=NUM_CLASSES)
@@ -367,14 +526,18 @@ hist = model.fit(ds_train, epochs=epochs, validation_data=ds_test)
 plot_hist(hist)
 
 """
-The second step is to unfreeze a number of layers and fit the model using smaller
-learning rate. In this example we show unfreezing all layers, but depending on
-specific dataset it may be desireble to only unfreeze a fraction of all layers.
+The second step is to unfreeze a number of layers and fine-tune the model using a smaller
+learning rate. In this example we unfreeze the last 20 layers, but depending on the
+specific dataset it may be desirable to only unfreeze a fraction of all layers.
 
-When the feature extraction with
-pretrained model works good enough, this step would give a very limited gain on
-validation accuracy. In our case we only see a small improvement,
-as ImageNet pretraining already exposed the model to a good amount of dogs.
+**Advanced usage:** The `unfreeze_model()` function also supports unfreezing by block name
+(e.g., `unfreeze_model(model, layers_to_unfreeze="block7")`) to respect EfficientNet's
+residual block boundaries. See the "Tips for fine-tuning EfficientNet" section below
+for why this matters.
+
+When feature extraction with the pretrained model works well enough, this step provides
+only a limited gain in validation accuracy. In our case we only see a small improvement,
+as ImageNet pretraining already exposed the model to a good amount of dog images.
 
 On the other hand, when we use pretrained weights on a dataset that is more different
 from ImageNet, this fine-tuning step can be crucial as the feature extractor also
@@ -382,7 +545,7 @@ needs to be adjusted by a considerable amount. Such a situation can be demonstra
 if choosing CIFAR-100 dataset instead, where fine-tuning boosts validation accuracy
 by about 10% to pass 80% on `EfficientNetB0`.
 
-A side note on freezing/unfreezing models: setting `trainable` of a `Model` will
+**Note on freezing/unfreezing models:** Setting `trainable` of a `Model` will
 simultaneously set all layers belonging to the `Model` to the same `trainable`
 attribute. Each layer is trainable only if both the layer itself and the model
 containing it are trainable. Hence when we need to partially freeze/unfreeze
@@ -391,53 +554,103 @@ to `True`.
 """
 
 
-def unfreeze_model(model):
-    # We unfreeze the top 20 layers while leaving BatchNorm layers frozen
-    for layer in model.layers[-20:]:
+def unfreeze_model(
+    model,
+    layers_to_unfreeze=20,
+    learning_rate=1e-5,
+    loss="categorical_crossentropy",
+    metrics=None,
+):
+    """Unfreeze part of `model` and recompile it for fine-tuning.
+
+    Args:
+        model: A `keras.Model` instance to unfreeze in place.
+        layers_to_unfreeze: Either an `int` giving the number of layers,
+            counted from the end of `model.layers`, to unfreeze, or a `str`
+            substring to match against layer names -- the first matching
+            layer and every layer after it (in `model.layers` order) are
+            unfrozen. Use a string like `"block7"` to respect EfficientNet's
+            residual block boundaries instead of an arbitrary layer count.
+            Defaults to `20`.
+        learning_rate: Learning rate for the fine-tuning `Adam` optimizer.
+            Defaults to `1e-5`.
+        loss: Loss function passed to `model.compile()`. Defaults to
+            `"categorical_crossentropy"`.
+        metrics: List of metrics passed to `model.compile()`. Defaults to
+            `["accuracy"]`.
+
+    Returns:
+        `model`, with the selected layers unfrozen (except
+        `BatchNormalization` layers, which are always kept frozen) and
+        recompiled with the new optimizer/loss/metrics.
+    """
+    if metrics is None:
+        metrics = ["accuracy"]
+
+    if isinstance(layers_to_unfreeze, str):
+        unfreeze_from = None
+        for i, layer in enumerate(model.layers):
+            if layers_to_unfreeze in layer.name:
+                unfreeze_from = i
+                break
+        if unfreeze_from is None:
+            raise ValueError(f"No layer name contains {layers_to_unfreeze!r}.")
+        layers_to_process = model.layers[unfreeze_from:]
+    elif isinstance(layers_to_unfreeze, int):
+        n_layers_to_unfreeze = min(layers_to_unfreeze, len(model.layers))
+        layers_to_process = model.layers[-n_layers_to_unfreeze:]
+    else:
+        raise TypeError(
+            "layers_to_unfreeze must be an int or str, received: "
+            f"{type(layers_to_unfreeze)}"
+        )
+
+    # We keep BatchNorm layers frozen -- see "Tips for fine-tuning
+    # EfficientNet" in the tutorial for why.
+    for layer in layers_to_process:
         if not isinstance(layer, layers.BatchNormalization):
             layer.trainable = True
 
-    optimizer = keras.optimizers.Adam(learning_rate=1e-5)
-    model.compile(
-        optimizer=optimizer, loss="categorical_crossentropy", metrics=["accuracy"]
-    )
+    optimizer = keras.optimizers.Adam(learning_rate=learning_rate)
+    model.compile(optimizer=optimizer, loss=loss, metrics=metrics)
+    return model
 
 
-unfreeze_model(model)
+model = unfreeze_model(model)
 
 epochs = 4  # @param {type: "slider", min:4, max:10}
 hist = model.fit(ds_train, epochs=epochs, validation_data=ds_test)
 plot_hist(hist)
 
 """
-### Tips for fine tuning EfficientNet
+### Tips for fine-tuning EfficientNet
 
-On unfreezing layers:
+**On unfreezing layers:**
 
 - The `BatchNormalization` layers need to be kept frozen
 ([more details](https://keras.io/guides/transfer_learning/)).
 If they are also turned to trainable, the
 first epoch after unfreezing will significantly reduce accuracy.
-- In some cases it may be beneficial to open up only a portion of layers instead of
-unfreezing all. This will make fine tuning much faster when going to larger models like
+- In some cases it may be beneficial to unfreeze only a portion of layers instead of
+unfreezing all. This will make fine-tuning much faster when going to larger models like
 B7.
 - Each block needs to be all turned on or off. This is because the architecture includes
 a shortcut from the first layer to the last layer for each block. Not respecting blocks
 also significantly harms the final performance.
 
-Some other tips for utilizing EfficientNet:
+**Some other tips for utilizing EfficientNet:**
 
 - Larger variants of EfficientNet do not guarantee improved performance, especially for
-tasks with less data or fewer classes. In such a case, the larger variant of EfficientNet
+tasks with less data or fewer classes. In such a case, the larger the variant of EfficientNet
 chosen, the harder it is to tune hyperparameters.
 - EMA (Exponential Moving Average) is very helpful in training EfficientNet from scratch,
 but not so much for transfer learning.
 - Do not use the RMSprop setup as in the original paper for transfer learning. The
 momentum and learning rate are too high for transfer learning. It will easily corrupt the
-pretrained weight and blow up the loss. A quick check is to see if loss (as categorical
+pretrained weights and blow up the loss. A quick check is to see if loss (as categorical
 cross entropy) is getting significantly larger than log(NUM_CLASSES) after the same
 epoch. If so, the initial learning rate/momentum is too high.
-- Smaller batch size benefit validation accuracy, possibly due to effectively providing
+- Smaller batch sizes benefit validation accuracy, possibly due to effectively providing
 regularization.
 """
 
