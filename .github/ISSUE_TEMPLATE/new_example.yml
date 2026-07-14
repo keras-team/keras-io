@@ -1,0 +1,73 @@
+name: New example proposal
+description: Propose a new code example for keras.io.
+labels: ["type:doc-feature"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Before proposing, check
+        [`call_for_contributions.md`](https://github.com/keras-team/keras-io/blob/master/call_for_contributions.md)
+        to see if we're already looking for this example.
+
+        Please read the
+        [contributor guide](https://github.com/keras-team/keras-io/blob/master/contributor_guide.md)
+        before submitting, so you know what we look for in an example.
+
+  - type: input
+    id: title
+    attributes:
+      label: Proposed title
+      placeholder: "e.g. Image captioning with a Transformer"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: category
+    attributes:
+      label: Category
+      options:
+        - vision
+        - nlp
+        - structured_data
+        - timeseries
+        - audio
+        - generative
+        - rl
+        - graph
+        - keras_recipes
+        - other
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: What does this example demonstrate?
+      description: One or two sentences, as it would appear in the tutobook header.
+    validations:
+      required: true
+
+  - type: textarea
+    id: why
+    attributes:
+      label: Why is this useful or interesting?
+    validations:
+      required: true
+
+  - type: textarea
+    id: references
+    attributes:
+      label: Reference implementation or paper (if any)
+      description: Links to a paper, reference implementation, or dataset this example would be based on.
+    validations:
+      required: false
+
+  - type: dropdown
+    id: intent
+    attributes:
+      label: Are you planning to submit this yourself?
+      options:
+        - "Yes, I'd like to submit a PR"
+        - "No, just suggesting it for someone else to pick up"
+    validations:
+      required: true

@@ -1,0 +1,37 @@
+name: Doc improvement
+description: Suggest an improvement to existing documentation, guides, or explanations on keras.io.
+labels: ["type:doc-feature"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this template for things that aren't *broken*, but could be
+        clearer, more complete, or better organized.
+
+        For small fixes (typos, small wording tweaks), please just send a
+        PR directly instead of opening an issue first.
+
+  - type: input
+    id: location
+    attributes:
+      label: Page URL
+      description: Link to the page on keras.io this is about.
+      placeholder: "https://keras.io/guides/..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What's unclear, missing, or wrong?
+      description: Describe the gap in the current documentation.
+    validations:
+      required: true
+
+  - type: textarea
+    id: suggestion
+    attributes:
+      label: Suggested improvement
+      description: If you have a specific fix or addition in mind, describe it here.
+    validations:
+      required: false

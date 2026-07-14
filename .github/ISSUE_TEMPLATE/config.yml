@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Usage question or support
+    url: https://discuss.tensorflow.org/tag/keras
+    about: For general "how do I..." questions, please use the TF Forum instead of opening an issue.
