@@ -1331,8 +1331,10 @@ def unfreeze_model(
     layers_to_unfreeze: int | str = 20,
     learning_rate: float = 1e-5,
     loss_func_name: str = "categorical_crossentropy",
-    metrics: list[str] = ["accuracy"],
+    metrics: list[str] | None = None,
 ) -> keras.Model:
+    if metrics is None:
+        metrics = ["accuracy"]
     if isinstance(layers_to_unfreeze, int) and layers_to_unfreeze > 0:
         for layer in model.layers[-layers_to_unfreeze:]:
             if not isinstance(layer, layers.BatchNormalization):
