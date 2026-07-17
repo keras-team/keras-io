@@ -425,6 +425,87 @@ MODELS_MASTER = {
             ],
         },
         {
+            "path": "blip2/",
+            "title": "Blip2",
+            "toc": True,
+            "children": [
+                {
+                    "path": "blip2_image_converter",
+                    "title": "BLIP2ImageConverter",
+                    "generate": [
+                        "keras_hub.layers.BLIP2ImageConverter",
+                        "keras_hub.layers.BLIP2ImageConverter.from_preset",
+                    ],
+                },
+                {
+                    "path": "blip2_flan_t5_tokenizer",
+                    "title": "BLIP2FlanT5Tokenizer",
+                    "generate": [
+                        "keras_hub.tokenizers.BLIP2FlanT5Tokenizer",
+                        "keras_hub.tokenizers.BLIP2FlanT5Tokenizer.from_preset",
+                    ],
+                },
+                {
+                    "path": "blip2_opt_tokenizer",
+                    "title": "BLIP2OPTTokenizer",
+                    "generate": [
+                        "keras_hub.tokenizers.BLIP2OPTTokenizer",
+                        "keras_hub.tokenizers.BLIP2OPTTokenizer.from_preset",
+                    ],
+                },
+                {
+                    "path": "blip2_backbone",
+                    "title": "BLIP2Backbone model",
+                    "generate": [
+                        "keras_hub.models.BLIP2Backbone",
+                        "keras_hub.models.BLIP2Backbone.from_preset",
+                    ],
+                },
+                {
+                    "path": "blip2_causal_lm",
+                    "title": "BLIP2CausalLM model",
+                    "generate": [
+                        "keras_hub.models.BLIP2CausalLM",
+                        "keras_hub.models.BLIP2CausalLM.from_preset",
+                        "keras_hub.models.BLIP2CausalLM.generate",
+                        "keras_hub.models.BLIP2CausalLM.backbone",
+                        "keras_hub.models.BLIP2CausalLM.preprocessor",
+                    ],
+                },
+                {
+                    "path": "blip2_causal_lm_preprocessor",
+                    "title": "BLIP2CausalLMPreprocessor layer",
+                    "generate": [
+                        "keras_hub.models.BLIP2CausalLMPreprocessor",
+                        "keras_hub.models.BLIP2CausalLMPreprocessor.from_preset",
+                        "keras_hub.models.BLIP2CausalLMPreprocessor.image_converter",
+                        "keras_hub.models.BLIP2CausalLMPreprocessor.tokenizer",
+                    ],
+                },
+                {
+                    "path": "blip2_seq_2_seq_lm",
+                    "title": "BLIP2Seq2SeqLM model",
+                    "generate": [
+                        "keras_hub.models.BLIP2Seq2SeqLM",
+                        "keras_hub.models.BLIP2Seq2SeqLM.from_preset",
+                        "keras_hub.models.BLIP2Seq2SeqLM.generate",
+                        "keras_hub.models.BLIP2Seq2SeqLM.backbone",
+                        "keras_hub.models.BLIP2Seq2SeqLM.preprocessor",
+                    ],
+                },
+                {
+                    "path": "blip2_seq_2_seq_lm_preprocessor",
+                    "title": "BLIP2Seq2SeqLMPreprocessor layer",
+                    "generate": [
+                        "keras_hub.models.BLIP2Seq2SeqLMPreprocessor",
+                        "keras_hub.models.BLIP2Seq2SeqLMPreprocessor.from_preset",
+                        "keras_hub.models.BLIP2Seq2SeqLMPreprocessor.image_converter",
+                        "keras_hub.models.BLIP2Seq2SeqLMPreprocessor.tokenizer",
+                    ],
+                },
+            ],
+        },
+        {
             "path": "bloom/",
             "title": "Bloom",
             "toc": True,
