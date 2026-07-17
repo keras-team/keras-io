@@ -398,6 +398,29 @@ def unfreeze_model(
     loss_func_name: str = "categorical_crossentropy",
     metrics: list[str] | None = None,
 ) -> keras.Model:
+    """Unfreeze part of `model` and recompile it for fine-tuning.
+
+    Args:
+        model: A `keras.Model` instance to unfreeze in place.
+        layers_to_unfreeze: Either an `int` giving the number of layers,
+            counted from the end of `model.layers`, to unfreeze, or a `str`
+            substring to match against layer names -- the first matching
+            layer and every layer after it (in `model.layers` order) are
+            unfrozen. Use a string like `"block7"` to respect EfficientNet's
+            residual block boundaries instead of an arbitrary layer count.
+            Defaults to `20`.
+        learning_rate: Learning rate for the fine-tuning `Adam` optimizer.
+            Defaults to `1e-5`.
+        loss_func_name: Loss function passed to `model.compile()`. Defaults to
+            `"categorical_crossentropy"`.
+        metrics: List of metrics passed to `model.compile()`. Defaults to
+            `["accuracy"]`.
+
+    Returns:
+        `model`, with the selected layers unfrozen (except
+        `BatchNormalization` layers, which are always kept frozen) and
+        recompiled with the new optimizer/loss/metrics.
+    """
     metrics = metrics or ["accuracy"]
 
     # Auto-detect a nested backbone; fall back to `model` itself if flat
