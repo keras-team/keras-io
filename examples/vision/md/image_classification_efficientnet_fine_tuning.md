@@ -1333,22 +1333,41 @@ def unfreeze_model(
     loss_func_name: str = "categorical_crossentropy",
     metrics: list[str] | None = None,
 ) -> keras.Model:
-    if metrics is None:
-        metrics = ["accuracy"]
+    metrics = metrics or ["accuracy"]
+
+    # Auto-detect a nested backbone; fall back to `model` itself if flat
+    base_model = next((L for L in model.layers if isinstance(L, keras.Model)), model)
+    # container flag must be True for any child to train:
+    if base_model is not model:
+        base_model.trainable = (
+            True
+        )
+
+    # Reset to a known state so repeated calls are predictable
+    for layer in base_model.layers:
+        if not isinstance(layer, layers.BatchNormalization):
+            layer.trainable = False
+
     if isinstance(layers_to_unfreeze, int) and layers_to_unfreeze > 0:
-        for layer in model.layers[-layers_to_unfreeze:]:
-            if not isinstance(layer, layers.BatchNormalization):
-                layer.trainable = True
+        selected = base_model.layers[-layers_to_unfreeze:]
     elif isinstance(layers_to_unfreeze, str):
-        for layer in model.layers:
-            if layers_to_unfreeze in layer.name and not isinstance(
-                layer, layers.BatchNormalization
-            ):
-                layer.trainable = True
+        selected = [L for L in base_model.layers if layers_to_unfreeze in L.name]
+        if not selected:
+            raise ValueError(f"No layer name contains {layers_to_unfreeze!r}.")
+    else:
+        raise TypeError(
+            f"layers_to_unfreeze must be a positive int or str, got {layers_to_unfreeze!r}"
+        )
 
-    optimizer = keras.optimizers.Adam(learning_rate=learning_rate)
-    model.compile(optimizer=optimizer, loss=loss_func_name, metrics=metrics)
+    for layer in selected:
+        if not isinstance(layer, layers.BatchNormalization):
+            layer.trainable = True
 
+    model.compile(
+        optimizer=keras.optimizers.Adam(learning_rate=learning_rate),
+        loss=loss_func_name,
+        metrics=metrics,
+    )
     return model
 
 
