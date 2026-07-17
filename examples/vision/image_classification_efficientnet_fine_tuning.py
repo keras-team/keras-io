@@ -391,25 +391,26 @@ to `True`.
 """
 
 
-def unfreeze_model(model: keras.Model,
-                   layers_to_unfreeze: int | str = 20,
-                   learning_rate: float = 1e-5,
-                   loss_func_name: str = "categorical_crossentropy",
-                   metrics: list[str] = ["accuracy"]
-                   ) -> keras.Model:
+def unfreeze_model(
+    model: keras.Model,
+    layers_to_unfreeze: int | str = 20,
+    learning_rate: float = 1e-5,
+    loss_func_name: str = "categorical_crossentropy",
+    metrics: list[str] = ["accuracy"],
+) -> keras.Model:
     if isinstance(layers_to_unfreeze, int) and layers_to_unfreeze > 0:
         for layer in model.layers[-layers_to_unfreeze:]:
             if not isinstance(layer, layers.BatchNormalization):
                 layer.trainable = True
     elif isinstance(layers_to_unfreeze, str):
         for layer in model.layers:
-            if layers_to_unfreeze in layer.name and not isinstance(layer, layers.BatchNormalization):
+            if layers_to_unfreeze in layer.name and not isinstance(
+                layer, layers.BatchNormalization
+            ):
                 layer.trainable = True
 
     optimizer = keras.optimizers.Adam(learning_rate=learning_rate)
-    model.compile(
-        optimizer=optimizer, loss=loss_func_name, metrics=metrics
-    )
+    model.compile(optimizer=optimizer, loss=loss_func_name, metrics=metrics)
 
     return model
 
