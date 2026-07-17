@@ -2,7 +2,7 @@
 Title: Sentence embeddings using Siamese RoBERTa-networks
 Author: [Mohammed Abu El-Nasr](https://github.com/abuelnasr0)
 Date created: 2023/07/14
-Last modified: 2026/06/09
+Last modified: 2026/07/17
 Description: Fine-tune a RoBERTa model to generate sentence embeddings using KerasHub.
 Accelerator: GPU
 """
@@ -221,12 +221,14 @@ class RegressionSiamese(keras.Model):
         )
         u = encoder(sen1)
         v = encoder(sen2)
+
+        # elementwise dot product per pair, not batch cross-similarity
         cosine_similarity_scores = keras.ops.sum(
             u * v,
             axis=-1,
             keepdims=True,
         )
-
+        # Explicitly initialize the Functional model using inputs and outputs
         super().__init__(
             inputs=[sen1, sen2],
             outputs=cosine_similarity_scores,
@@ -345,7 +347,8 @@ def prepare_wiki_data(dataset, num_batches):
         ),
         num_parallel_calls=AUTOTUNE,
     )
-    dataset = dataset.batch(6)
+    dataset = dataset.batch(TRAIN_BATCH_SIZE)
+
     dataset = dataset.take(num_batches)
     dataset = dataset.prefetch(AUTOTUNE)
     return dataset
