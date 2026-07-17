@@ -187,6 +187,28 @@ BASE_CLASSES = {
             ],
         },
         {
+            "path": "text_embedder",
+            "title": "TextEmbedder",
+            "generate": [
+                "keras_hub.models.TextEmbedder",
+                "keras_hub.models.TextEmbedder.from_preset",
+                "keras_hub.models.TextEmbedder.compile",
+                "keras_hub.models.TextEmbedder.save_to_preset",
+                "keras_hub.models.TextEmbedder.preprocessor",
+                "keras_hub.models.TextEmbedder.backbone",
+            ],
+        },
+        {
+            "path": "text_embedder_preprocessor",
+            "title": "TextEmbedderPreprocessor",
+            "generate": [
+                "keras_hub.models.TextEmbedderPreprocessor",
+                "keras_hub.models.TextEmbedderPreprocessor.from_preset",
+                "keras_hub.models.TextEmbedderPreprocessor.save_to_preset",
+                "keras_hub.models.TextEmbedderPreprocessor.tokenizer",
+            ],
+        },
+        {
             "path": "text_to_image",
             "title": "TextToImage",
             "generate": [
