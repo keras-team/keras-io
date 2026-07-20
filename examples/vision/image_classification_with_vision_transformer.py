@@ -59,9 +59,10 @@ patch_size = 6  # Size of the patches to be extract from the input images
 num_patches = (image_size // patch_size) ** 2
 projection_dim = 64
 num_heads = 4
+hidden_dim = projection_dim * num_heads
 transformer_units = [
-    projection_dim * 2,
-    projection_dim,
+    hidden_dim * 2,
+    hidden_dim,
 ]  # Size of the transformer layers
 transformer_layers = 8
 mlp_head_units = [
@@ -145,7 +146,7 @@ plt.imshow(image.astype("uint8"))
 plt.axis("off")
 
 resized_image = ops.image.resize(
-    ops.convert_to_tensor([image]), size=(image_size, image_size)
+    ops.convert_to_tensor([image], dtype="float32"), size=(image_size, image_size)
 )
 patches = Patches(patch_size)(resized_image)
 print(f"Image size: {image_size} X {image_size}")
@@ -220,7 +221,7 @@ def create_vit_classifier():
     # Create patches.
     patches = Patches(patch_size)(augmented)
     # Encode patches.
-    encoded_patches = PatchEncoder(num_patches, projection_dim)(patches)
+    encoded_patches = PatchEncoder(num_patches, hidden_dim)(patches)
 
     # Create multiple layers of the Transformer block.
     for _ in range(transformer_layers):
