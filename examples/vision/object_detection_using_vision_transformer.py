@@ -63,10 +63,19 @@ download_base_dir = os.path.dirname(path_to_downloaded_file)
 
 # Extracting tar files found inside main zip file
 shutil.unpack_archive(
-    os.path.join(download_base_dir, "caltech-101", "101_ObjectCategories.tar.gz"), "."
+    os.path.join(
+        download_base_dir,
+        "caltech_101_zipped",
+        "caltech-101",
+        "101_ObjectCategories.tar.gz",
+    ),
+    ".",
 )
 shutil.unpack_archive(
-    os.path.join(download_base_dir, "caltech-101", "Annotations.tar"), "."
+    os.path.join(
+        download_base_dir, "caltech_101_zipped", "caltech-101", "Annotations.tar"
+    ),
+    ".",
 )
 
 # list of paths to images and annotations
@@ -145,8 +154,8 @@ def mlp(x, hidden_units, dropout_rate):
 
 
 class Patches(layers.Layer):
-    def __init__(self, patch_size):
-        super().__init__()
+    def __init__(self, patch_size, **kwargs):
+        super().__init__(**kwargs)
         self.patch_size = patch_size
 
     def call(self, images):
@@ -208,27 +217,21 @@ embedding to the projected vector.
 
 
 class PatchEncoder(layers.Layer):
-    def __init__(self, num_patches, projection_dim):
-        super().__init__()
+    def __init__(self, num_patches, projection_dim, **kwargs):
+        super().__init__(**kwargs)
         self.num_patches = num_patches
+        self.projection_dim = projection_dim
         self.projection = layers.Dense(units=projection_dim)
         self.position_embedding = layers.Embedding(
             input_dim=num_patches, output_dim=projection_dim
         )
 
-    # Override function to avoid error while saving model
     def get_config(self):
-        config = super().get_config().copy()
+        config = super().get_config()
         config.update(
             {
-                "input_shape": input_shape,
-                "patch_size": patch_size,
-                "num_patches": num_patches,
-                "projection_dim": projection_dim,
-                "num_heads": num_heads,
-                "transformer_units": transformer_units,
-                "transformer_layers": transformer_layers,
-                "mlp_head_units": mlp_head_units,
+                "num_patches": self.num_patches,
+                "projection_dim": self.projection_dim,
             }
         )
         return config
@@ -264,12 +267,13 @@ def create_vit_object_detector(
     transformer_units,
     transformer_layers,
     mlp_head_units,
+    hidden_dim,
 ):
     inputs = keras.Input(shape=input_shape)
     # Create patches
     patches = Patches(patch_size)(inputs)
     # Encode patches
-    encoded_patches = PatchEncoder(num_patches, projection_dim)(patches)
+    encoded_patches = PatchEncoder(num_patches, hidden_dim)(patches)
 
     # Create multiple layers of the Transformer block.
     for _ in range(transformer_layers):
@@ -347,10 +351,11 @@ num_epochs = 100
 num_patches = (image_size // patch_size) ** 2
 projection_dim = 64
 num_heads = 4
+hidden_dim = projection_dim * num_heads
 # Size of the transformer layers
 transformer_units = [
-    projection_dim * 2,
-    projection_dim,
+    hidden_dim * 2,
+    hidden_dim,
 ]
 transformer_layers = 4
 mlp_head_units = [2048, 1024, 512, 64, 32]  # Size of the dense layers
@@ -368,6 +373,7 @@ vit_object_detector = create_vit_object_detector(
     transformer_units,
     transformer_layers,
     mlp_head_units,
+    hidden_dim,
 )
 
 # Train model
@@ -388,7 +394,6 @@ def plot_history(item):
 
 
 plot_history("loss")
-
 
 """
 ## Evaluate the model
