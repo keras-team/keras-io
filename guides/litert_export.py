@@ -41,8 +41,8 @@ required for LiteRT export with the PyTorch backend:
 """
 
 """shell
-pip install -q git+https://github.com/keras-team/keras.git
-pip install -q git+https://github.com/keras-team/keras-hub.git
+pip install -qU keras
+pip install -qU keras-hub
 pip install -q git+https://github.com/google-ai-edge/litert-torch.git
 pip install -q ai-edge-litert
 """
