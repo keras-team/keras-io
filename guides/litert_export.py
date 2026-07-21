@@ -61,9 +61,7 @@ preset = "gemma3_270m"
 preprocessor = keras_hub.models.Gemma3CausalLMPreprocessor.from_preset(
     preset, sequence_length=32
 )
-model = keras_hub.models.Gemma3CausalLM.from_preset(
-    preset, preprocessor=preprocessor
-)
+model = keras_hub.models.Gemma3CausalLM.from_preset(preset, preprocessor=preprocessor)
 
 print(f"Loaded {preset}")
 
@@ -164,11 +162,13 @@ qt.load_full_integer_recipe(
     symmetric=True,
 )
 
+
 # Calibrate with a few representative samples
 # (In production, use real prompts from your validation set)
 def calibration_data():
     for _ in range(10):
         yield [np.random.randint(0, 256000, size=(1, 32)).astype(np.int32)]
+
 
 qt.quantize(calibration_data(), "gemma3_270m_aieq.tflite")
 
