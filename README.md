@@ -2,6 +2,10 @@
 
 This repository hosts the code used to generate the [keras.io](https://keras.io) website.
 
+> **New contributor?** See [CONTRIBUTING.md](CONTRIBUTING.md) for the full
+> contributor workflow (issue/PR process, code style, and testing
+> guidance). The sections below cover the technical how-to.
+
 ## Generating a local copy of the website
 
 ```

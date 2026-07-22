@@ -1,0 +1,57 @@
+name: Bug report
+description: Report something broken on keras.io (a page, an example, or the build).
+labels: ["type:bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug!
+
+        This form is for issues with **keras.io itself** — a broken page, a
+        code example that no longer runs, or a build/rendering problem.
+
+        For general Keras usage questions and support, please use the
+        [TF Forum](https://discuss.tensorflow.org/tag/keras) instead.
+
+  - type: input
+    id: location
+    attributes:
+      label: Page or example URL
+      description: Link to the page on keras.io (or the file in this repo) where the bug occurs.
+      placeholder: "https://keras.io/examples/vision/..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: current-behavior
+    attributes:
+      label: What's broken?
+      description: Describe what you saw, including any error messages.
+      placeholder: Tell us what happened.
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected-behavior
+    attributes:
+      label: Expected behavior
+      description: What did you expect to happen instead?
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce (if applicable)
+      description: If this is a code example that fails to run, share the minimal steps or a Colab/notebook link.
+      render: shell
+    validations:
+      required: false
+
+  - type: input
+    id: keras-version
+    attributes:
+      label: Keras version
+      placeholder: "e.g. Keras 3.7"
+    validations:
+      required: false
