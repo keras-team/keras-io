@@ -152,6 +152,10 @@ GUIDES_MASTER = {
             "title": "Customizing quantization in Keras",
         },
         {
+            "path": "litert_export",
+            "title": "Exporting Keras models to LiteRT",
+        },
+        {
             "path": "define_custom_kernel",
             "title": "Define a Custom TPU/GPU Kernel",
         },
