@@ -52,9 +52,9 @@ a binary `label` indicating whether the sentences are paraphrases of one
 another.
 """
 
-train_ds, validation_ds, test_ds = tfds.load(
+train_ds, validation_ds = tfds.load(
     "glue/mrpc",
-    split=["train", "validation", "test"],
+    split=["train", "validation"],
 )
 
 """
