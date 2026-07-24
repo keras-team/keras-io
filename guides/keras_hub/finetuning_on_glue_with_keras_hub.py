@@ -106,7 +106,6 @@ straight to `fit()` -- there's no need for a separate tokenization step.
 
 train_ds = train_ds.batch(BATCH_SIZE).prefetch(tf.data.AUTOTUNE)
 validation_ds = validation_ds.batch(BATCH_SIZE).prefetch(tf.data.AUTOTUNE)
-test_ds = test_ds.batch(BATCH_SIZE).prefetch(tf.data.AUTOTUNE)
 
 classifier.compile(
     optimizer=keras.optimizers.AdamW(5e-5),
