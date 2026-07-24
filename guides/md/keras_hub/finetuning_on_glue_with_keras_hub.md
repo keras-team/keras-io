@@ -68,9 +68,9 @@ another.
 
 
 ```python
-train_ds, validation_ds, test_ds = tfds.load(
+train_ds, validation_ds = tfds.load(
     "glue/mrpc",
-    split=["train", "validation", "test"],
+    split=["train", "validation"],
 )
 ```
 
@@ -89,7 +89,6 @@ def split_features(x):
 
 train_ds = train_ds.map(split_features, num_parallel_calls=tf.data.AUTOTUNE)
 validation_ds = validation_ds.map(split_features, num_parallel_calls=tf.data.AUTOTUNE)
-test_ds = test_ds.map(split_features, num_parallel_calls=tf.data.AUTOTUNE)
 
 for features, label in train_ds.take(1):
     print(features)
@@ -134,7 +133,6 @@ straight to `fit()` -- there's no need for a separate tokenization step.
 ```python
 train_ds = train_ds.batch(BATCH_SIZE).prefetch(tf.data.AUTOTUNE)
 validation_ds = validation_ds.batch(BATCH_SIZE).prefetch(tf.data.AUTOTUNE)
-test_ds = test_ds.batch(BATCH_SIZE).prefetch(tf.data.AUTOTUNE)
 
 classifier.compile(
     optimizer=keras.optimizers.AdamW(5e-5),
@@ -152,17 +150,17 @@ classifier.fit(
 ```
 Epoch 1/3
 
-115/115 ━━━━━━━━━━━━━━━━━━━━ 87s 743ms/step - loss: 0.6129 - sparse_categorical_accuracy: 0.6868 - val_loss: 0.5975 - val_sparse_categorical_accuracy: 0.6985
+115/115 ━━━━━━━━━━━━━━━━━━━━ 114s 977ms/step - loss: 0.6176 - sparse_categorical_accuracy: 0.6737 - val_loss: 0.5952 - val_sparse_categorical_accuracy: 0.7010
 
 Epoch 2/3
 
-115/115 ━━━━━━━━━━━━━━━━━━━━ 85s 737ms/step - loss: 0.5697 - sparse_categorical_accuracy: 0.7165 - val_loss: 0.5894 - val_sparse_categorical_accuracy: 0.7083
+115/115 ━━━━━━━━━━━━━━━━━━━━ 149s 1s/step - loss: 0.5648 - sparse_categorical_accuracy: 0.7170 - val_loss: 0.5809 - val_sparse_categorical_accuracy: 0.7132
 
 Epoch 3/3
 
-115/115 ━━━━━━━━━━━━━━━━━━━━ 84s 724ms/step - loss: 0.5214 - sparse_categorical_accuracy: 0.7541 - val_loss: 0.5686 - val_sparse_categorical_accuracy: 0.7279
+115/115 ━━━━━━━━━━━━━━━━━━━━ 132s 1s/step - loss: 0.5250 - sparse_categorical_accuracy: 0.7508 - val_loss: 0.5864 - val_sparse_categorical_accuracy: 0.7255
 
-<keras.src.callbacks.history.History at 0xfffeb03080d0>
+<keras.src.callbacks.history.History at 0xfffee80e74c0>
 ```
 </div>
 
@@ -187,10 +185,10 @@ print(probabilities)
     
 <div class="k-default-codeblock">
 ```
-1/1 ━━━━━━━━━━━━━━━━━━━━ 1s 584ms/step
+1/1 ━━━━━━━━━━━━━━━━━━━━ 1s 754ms/step
 
-[[0.14576346 0.85423654]
- [0.7407407  0.25925928]]
+[[0.18662773 0.8133723 ]
+ [0.7085468  0.29145318]]
 ```
 </div>
 
