@@ -1875,6 +1875,14 @@ MODELS_MASTER = {
                     ],
                 },
                 {
+                    "path": "mistral_tekken_tokenizer",
+                    "title": "MistralTekkenTokenizer",
+                    "generate": [
+                        "keras_hub.tokenizers.MistralTekkenTokenizer",
+                        "keras_hub.tokenizers.MistralTekkenTokenizer.from_preset",
+                    ],
+                },
+                {
                     "path": "mistral_backbone",
                     "title": "MistralBackbone model",
                     "generate": [
