@@ -72,7 +72,6 @@ def split_features(x):
 
 train_ds = train_ds.map(split_features, num_parallel_calls=tf.data.AUTOTUNE)
 validation_ds = validation_ds.map(split_features, num_parallel_calls=tf.data.AUTOTUNE)
-test_ds = test_ds.map(split_features, num_parallel_calls=tf.data.AUTOTUNE)
 
 for features, label in train_ds.take(1):
     print(features)
