@@ -2349,6 +2349,51 @@ MODELS_MASTER = {
             ],
         },
         {
+            "path": "qwen3_5_moe/",
+            "title": "Qwen3.5 MoE",
+            "toc": True,
+            "children": [
+                {
+                    "path": "qwen3_5_moe_tokenizer",
+                    "title": "Qwen3_5MoeTokenizer",
+                    "generate": [
+                        "keras_hub.models.Qwen3_5MoeTokenizer",
+                        "keras_hub.models.Qwen3_5MoeTokenizer.from_preset",
+                    ],
+                },
+                {
+                    "path": "qwen3_5_moe_backbone",
+                    "title": "Qwen3_5MoeBackbone model",
+                    "generate": [
+                        "keras_hub.models.Qwen3_5MoeBackbone",
+                        "keras_hub.models.Qwen3_5MoeBackbone.from_preset",
+                        "keras_hub.models.Qwen3_5MoeBackbone.token_embedding",
+                        "keras_hub.models.Qwen3_5MoeBackbone.enable_lora",
+                    ],
+                },
+                {
+                    "path": "qwen3_5_moe_causal_lm",
+                    "title": "Qwen3_5MoeCausalLM model",
+                    "generate": [
+                        "keras_hub.models.Qwen3_5MoeCausalLM",
+                        "keras_hub.models.Qwen3_5MoeCausalLM.from_preset",
+                        "keras_hub.models.Qwen3_5MoeCausalLM.generate",
+                        "keras_hub.models.Qwen3_5MoeCausalLM.backbone",
+                        "keras_hub.models.Qwen3_5MoeCausalLM.preprocessor",
+                    ],
+                },
+                {
+                    "path": "qwen3_5_moe_causal_lm_preprocessor",
+                    "title": "Qwen3_5MoeCausalLMPreprocessor layer",
+                    "generate": [
+                        "keras_hub.models.Qwen3_5MoeCausalLMPreprocessor",
+                        "keras_hub.models.Qwen3_5MoeCausalLMPreprocessor.from_preset",
+                        "keras_hub.models.Qwen3_5MoeCausalLMPreprocessor.tokenizer",
+                    ],
+                },
+            ],
+        },
+        {
             "path": "qwen3_moe/",
             "title": "Qwen3Moe",
             "toc": True,
@@ -2957,7 +3002,7 @@ MODELS_MASTER = {
                     ],
                 },
             ],
-        },   
+        },
         {
             "path": "t5/",
             "title": "T5",
