@@ -3857,6 +3857,10 @@ HUB_GUIDES_MASTER = {
             "path": "gemma4_multimodal_and_agentic_workflows",
             "title": "Multimodal and Agentic Workflows with Gemma 4 in KerasHub",
         },
+        {
+            "path": "finetuning_on_glue_with_keras_hub",
+            "title": "Fine-tuning KerasHub Models on GLUE",
+        },
     ],
 }
 
