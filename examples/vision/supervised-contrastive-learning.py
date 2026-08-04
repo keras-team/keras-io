@@ -38,7 +38,7 @@ from keras import ops
 ## Prepare the data
 """
 
-num_classes = 10
+num_classes = 50
 input_shape = (32, 32, 3)
 
 # Load the train and test data splits
