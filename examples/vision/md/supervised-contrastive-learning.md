@@ -2,7 +2,7 @@
 
 **Author:** [Khalid Salama](https://www.linkedin.com/in/khalid-salama-24403144/)<br>
 **Date created:** 2020/11/30<br>
-**Last modified:** 2026/07/17<br>
+**Last modified:** 2026/08/04<br>
 **Description:** Using supervised contrastive learning for image classification.
 
 
@@ -32,7 +32,7 @@ representations of images in different classes.
 ```python
 import os
 
-os.environ["KERAS_BACKEND"] = "tensorflow"  # or "torch" or "jax"
+os.environ["KERAS_BACKEND"] = "jax"  # or "tensorflow" or "torch"
 
 import keras
 from keras import layers
@@ -108,7 +108,7 @@ learning_rate = 0.001
 batch_size = 265
 hidden_units = 512
 projection_units = 128
-num_epochs = 50
+num_epochs = 10
 dropout_rate = 0.5
 temperature = 0.05
 ```
@@ -246,48 +246,49 @@ print(f"Test accuracy: {round(accuracy * 100, 2)}%")
 
 
 <div class="k-default-codeblock">
-
+```
 Epoch 1/10
 
-189/189 ━━━━━━━━━━━━━━━━━━━━ 338s 2s/step - loss: 1.8879 - sparse_categorical_accuracy: 0.3117
+189/189 ━━━━━━━━━━━━━━━━━━━━ 457s 2s/step - loss: 1.8886 - sparse_categorical_accuracy: 0.3186
 
 Epoch 2/10
 
-189/189 ━━━━━━━━━━━━━━━━━━━━ 334s 2s/step - loss: 1.4350 - sparse_categorical_accuracy: 0.4810
+189/189 ━━━━━━━━━━━━━━━━━━━━ 427s 2s/step - loss: 1.4216 - sparse_categorical_accuracy: 0.4887
 
 Epoch 3/10
 
-189/189 ━━━━━━━━━━━━━━━━━━━━ 382s 2s/step - loss: 1.2653 - sparse_categorical_accuracy: 0.5535
+189/189 ━━━━━━━━━━━━━━━━━━━━ 451s 2s/step - loss: 1.2727 - sparse_categorical_accuracy: 0.5527
 
 Epoch 4/10
 
-189/189 ━━━━━━━━━━━━━━━━━━━━ 378s 2s/step - loss: 1.1236 - sparse_categorical_accuracy: 0.6110
+189/189 ━━━━━━━━━━━━━━━━━━━━ 474s 3s/step - loss: 1.1427 - sparse_categorical_accuracy: 0.6023
 
 Epoch 5/10
 
-189/189 ━━━━━━━━━━━━━━━━━━━━ 367s 2s/step - loss: 1.0701 - sparse_categorical_accuracy: 0.6298
+189/189 ━━━━━━━━━━━━━━━━━━━━ 420s 2s/step - loss: 1.0507 - sparse_categorical_accuracy: 0.6380
 
 Epoch 6/10
 
-189/189 ━━━━━━━━━━━━━━━━━━━━ 356s 2s/step - loss: 0.9885 - sparse_categorical_accuracy: 0.6613
+189/189 ━━━━━━━━━━━━━━━━━━━━ 420s 2s/step - loss: 0.9727 - sparse_categorical_accuracy: 0.6645
 
 Epoch 7/10
 
-189/189 ━━━━━━━━━━━━━━━━━━━━ 358s 2s/step - loss: 0.9539 - sparse_categorical_accuracy: 0.6722
+189/189 ━━━━━━━━━━━━━━━━━━━━ 434s 2s/step - loss: 0.9005 - sparse_categorical_accuracy: 0.6901
 
 Epoch 8/10
 
-189/189 ━━━━━━━━━━━━━━━━━━━━ 332s 2s/step - loss: 0.8355 - sparse_categorical_accuracy: 0.7145
+189/189 ━━━━━━━━━━━━━━━━━━━━ 420s 2s/step - loss: 0.8047 - sparse_categorical_accuracy: 0.7225
 
 Epoch 9/10
 
-189/189 ━━━━━━━━━━━━━━━━━━━━ 333s 2s/step - loss: 0.7450 - sparse_categorical_accuracy: 0.7443
+189/189 ━━━━━━━━━━━━━━━━━━━━ 415s 2s/step - loss: 0.7285 - sparse_categorical_accuracy: 0.7518
 
 Epoch 10/10
 
-313/313 ━━━━━━━━━━━━━━━━━━━━ 12s 36ms/step - loss: 29.7371 - sparse_categorical_accuracy: 0.5719
+313/313 ━━━━━━━━━━━━━━━━━━━━ 24s 69ms/step - loss: 1.4892 - sparse_categorical_accuracy: 0.6420
 
-Test accuracy: 57.19%
+Test accuracy: 64.2%
+```
 </div>
 
 ---
@@ -303,7 +304,6 @@ softmax are optimized.
 
 ### 1. Supervised contrastive learning loss function
 
-</div>
 
 ```python
 
@@ -415,53 +415,50 @@ history = encoder_with_projection_head.fit(
 
 
 <div class="k-default-codeblock">
-
+```
 Epoch 1/10
 
-189/189 ━━━━━━━━━━━━━━━━━━━━ 342s 2s/step - loss: 5.2947
+189/189 ━━━━━━━━━━━━━━━━━━━━ 429s 2s/step - loss: 5.3027
 
 Epoch 2/10
 
-189/189 ━━━━━━━━━━━━━━━━━━━━ 331s 2s/step - loss: 5.0729
+189/189 ━━━━━━━━━━━━━━━━━━━━ 412s 2s/step - loss: 5.0873
 
 Epoch 3/10
 
-189/189 ━━━━━━━━━━━━━━━━━━━━ 326s 2s/step - loss: 4.9302
+189/189 ━━━━━━━━━━━━━━━━━━━━ 414s 2s/step - loss: 4.9359
 
 Epoch 4/10
 
-189/189 ━━━━━━━━━━━━━━━━━━━━ 330s 2s/step - loss: 4.7937
+189/189 ━━━━━━━━━━━━━━━━━━━━ 423s 2s/step - loss: 4.8023
 
 Epoch 5/10
 
-189/189 ━━━━━━━━━━━━━━━━━━━━ 329s 2s/step - loss: 4.6833
+189/189 ━━━━━━━━━━━━━━━━━━━━ 417s 2s/step - loss: 4.6883
 
 Epoch 6/10
 
-189/189 ━━━━━━━━━━━━━━━━━━━━ 337s 2s/step - loss: 4.5920
+189/189 ━━━━━━━━━━━━━━━━━━━━ 404s 2s/step - loss: 4.5960
 
 Epoch 7/10
 
-189/189 ━━━━━━━━━━━━━━━━━━━━ 337s 2s/step - loss: 4.5021
+189/189 ━━━━━━━━━━━━━━━━━━━━ 407s 2s/step - loss: 4.5119
 
 Epoch 8/10
 
-189/189 ━━━━━━━━━━━━━━━━━━━━ 344s 2s/step - loss: 4.4262
+189/189 ━━━━━━━━━━━━━━━━━━━━ 416s 2s/step - loss: 4.4246
 
 Epoch 9/10
 
-189/189 ━━━━━━━━━━━━━━━━━━━━ 339s 2s/step - loss: 4.3658
+189/189 ━━━━━━━━━━━━━━━━━━━━ 443s 2s/step - loss: 4.3586
 
 Epoch 10/10
 
-189/189 ━━━━━━━━━━━━━━━━━━━━ 338s 2s/step - loss: 4.2944
+189/189 ━━━━━━━━━━━━━━━━━━━━ 458s 2s/step - loss: 4.3063
+```
 </div>
-
-<div class="k-default-codeblock">
 
 ### 3. Train the classifier with the frozen encoder
-
-</div>
 
 
 ```python
@@ -474,50 +471,51 @@ print(f"Test accuracy: {round(accuracy * 100, 2)}%")
 ```
 
 <div class="k-default-codeblock">
+```
 Epoch 1/10
 
-189/189 ━━━━━━━━━━━━━━━━━━━━ 32s 162ms/step - loss: 0.6944 - sparse_categorical_accuracy: 0.7882
+189/189 ━━━━━━━━━━━━━━━━━━━━ 85s 440ms/step - loss: 0.7454 - sparse_categorical_accuracy: 0.7694
 
 Epoch 2/10
 
-189/189 ━━━━━━━━━━━━━━━━━━━━ 30s 161ms/step - loss: 0.6201 - sparse_categorical_accuracy: 0.8004
+189/189 ━━━━━━━━━━━━━━━━━━━━ 81s 432ms/step - loss: 0.6565 - sparse_categorical_accuracy: 0.7838
 
 Epoch 3/10
 
-189/189 ━━━━━━━━━━━━━━━━━━━━ 30s 159ms/step - loss: 0.6107 - sparse_categorical_accuracy: 0.8021
+189/189 ━━━━━━━━━━━━━━━━━━━━ 80s 424ms/step - loss: 0.6488 - sparse_categorical_accuracy: 0.7876
 
 Epoch 4/10
 
-189/189 ━━━━━━━━━━━━━━━━━━━━ 30s 161ms/step - loss: 0.6050 - sparse_categorical_accuracy: 0.8032
+189/189 ━━━━━━━━━━━━━━━━━━━━ 70s 370ms/step - loss: 0.6420 - sparse_categorical_accuracy: 0.7888
 
 Epoch 5/10
 
-189/189 ━━━━━━━━━━━━━━━━━━━━ 31s 166ms/step - loss: 0.6005 - sparse_categorical_accuracy: 0.8026
+189/189 ━━━━━━━━━━━━━━━━━━━━ 67s 353ms/step - loss: 0.6415 - sparse_categorical_accuracy: 0.7866
 
 Epoch 6/10
 
-189/189 ━━━━━━━━━━━━━━━━━━━━ 31s 162ms/step - loss: 0.5954 - sparse_categorical_accuracy: 0.8048
+189/189 ━━━━━━━━━━━━━━━━━━━━ 73s 389ms/step - loss: 0.6352 - sparse_categorical_accuracy: 0.7893
 
 Epoch 7/10
 
-189/189 ━━━━━━━━━━━━━━━━━━━━ 30s 160ms/step - loss: 0.5964 - sparse_categorical_accuracy: 0.8045
+189/189 ━━━━━━━━━━━━━━━━━━━━ 74s 393ms/step - loss: 0.6352 - sparse_categorical_accuracy: 0.7887
 
 Epoch 8/10
 
-189/189 ━━━━━━━━━━━━━━━━━━━━ 31s 164ms/step - loss: 0.5971 - sparse_categorical_accuracy: 0.8035
+189/189 ━━━━━━━━━━━━━━━━━━━━ 68s 359ms/step - loss: 0.6356 - sparse_categorical_accuracy: 0.7876
 
 Epoch 9/10
 
-189/189 ━━━━━━━━━━━━━━━━━━━━ 30s 160ms/step - loss: 0.5912 - sparse_categorical_accuracy: 0.8042
+189/189 ━━━━━━━━━━━━━━━━━━━━ 70s 371ms/step - loss: 0.6387 - sparse_categorical_accuracy: 0.7872
 
 Epoch 10/10
 
-313/313 ━━━━━━━━━━━━━━━━━━━━ 10s 31ms/step - loss: 0.7786 - sparse_categorical_accuracy: 0.7422
+313/313 ━━━━━━━━━━━━━━━━━━━━ 19s 60ms/step - loss: 0.7974 - sparse_categorical_accuracy: 0.7298
 
-Test accuracy: 74.22%
+Test accuracy: 72.98%
+```
 </div>
 
-<div class="k-default-codeblock">
 We get to an improved test accuracy.
 
 ---
@@ -534,4 +532,3 @@ paper for more details.
 
 You can use the trained model hosted on [Hugging Face Hub](https://huggingface.co/keras-io/supervised-contrastive-learning-cifar10)
 and try the demo on [Hugging Face Spaces](https://huggingface.co/spaces/keras-io/supervised-contrastive-learning).
-</div>

@@ -2,7 +2,7 @@
 Title: Supervised Contrastive Learning
 Author: [Khalid Salama](https://www.linkedin.com/in/khalid-salama-24403144/)
 Date created: 2020/11/30
-Last modified: 2026/07/17
+Last modified: 2026/08/04
 Description: Using supervised contrastive learning for image classification.
 Accelerator: GPU
 Converted to Keras 3 by: [LakshmiKalaKadali](https://github.com/LakshmiKalaKadali)
@@ -28,7 +28,7 @@ representations of images in different classes.
 
 import os
 
-os.environ["KERAS_BACKEND"] = "tensorflow"  # or "torch" or "jax"
+os.environ["KERAS_BACKEND"] = "jax"  # or "tensorflow" or "torch"
 
 import keras
 from keras import layers
@@ -91,7 +91,7 @@ learning_rate = 0.001
 batch_size = 265
 hidden_units = 512
 projection_units = 128
-num_epochs = 50
+num_epochs = 10
 dropout_rate = 0.5
 temperature = 0.05
 
