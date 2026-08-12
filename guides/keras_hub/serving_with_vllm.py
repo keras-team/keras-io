@@ -1,6 +1,6 @@
 """
 Title: Serving KerasHub models with vLLM on TPU
-Author: [Anthony Etim](https://github.com/anthony-etim), [Divyashree Sreepathihalli](https://github.com/divyashreepathihalli)
+Author: [Anthony Etim](https://github.com/anthony-etim)
 Date created: 2026/08/10
 Last modified: 2026/08/10
 Description: An introduction to serving KerasHub models with vLLM on TPU.
@@ -9,16 +9,6 @@ Accelerator: TPU
 
 """
 # Introduction
-
-KerasHub models generate text with `CausalLM.generate()`, which decodes a fixed
-batch of prompts in one static loop. That works well for experiments and for
-scoring a dataset offline. It works less well for serving, where requests
-arrive one at a time, have different lengths, and finish at different steps. A
-static loop makes every request in the batch wait for the longest one.
-
-[vLLM](https://docs.vllm.ai/) is built for that case. It schedules requests
-continuously, keeps the KV cache in fixed-size pages so memory is not reserved
-for padding, and runs attention with a kernel written for paged memory.
 
 This guide shows how to serve a KerasHub `CausalLM` through vLLM's TPU backend.
 You do not convert the model, export the weights, or reimplement the
@@ -33,17 +23,15 @@ from keras_hub.vllm import KerasHubLLM
 llm = KerasHubLLM("keras_hub:gemma3_instruct_1b")
 ```
 
-`KerasHubLLM` is a `vllm.LLM` that understands the `keras_hub:<preset>` model
-scheme. Very little of the model behaves differently while it serves. Attention
-layers call vLLM's TPU paged-attention kernel instead of building a dense
-attention matrix, and models with learned position embeddings read vLLM's
-per-token positions instead of counting from the start of the sequence. Every
-other layer is untouched, and outside of serving even those two run their
-ordinary path, so `generate()` still works exactly as before.
+KerasHub models generate text with `CausalLM.generate()`, which decodes a fixed
+batch of prompts in one static loop. That works well for experiments and for
+scoring a dataset offline. It works less well for serving, where requests
+arrive one at a time, have different lengths, and finish at different steps. A
+static loop makes every request in the batch wait for the longest one.
 
-Everything here uses vLLM's Python `LLM` API, which batches a list of prompts
-in one process. That is the right shape for a notebook and for offline batch
-work. Standing up an HTTP endpoint is a separate topic and is not covered.
+[vLLM](https://docs.vllm.ai/) is built for that case. It schedules requests
+continuously, keeps the KV cache in fixed-size pages so memory is not reserved
+for padding, and runs attention with a kernel written for paged memory.
 
 This guide needs a TPU runtime. On Colab, pick one under
 **Runtime > Change runtime type**.
@@ -52,28 +40,30 @@ This guide needs a TPU runtime. On Colab, pick one under
 """
 # Setup
 
-Install KerasHub and the TPU build of vLLM. The `vllm-tpu` wheel brings in
-`tpu-inference`, which is the TPU backend vLLM runs on. The version of `flax` is pinned because current `tpu-inference` needs
-`flax==0.12.8`.
+Install KerasHub and the TPU build of vLLM, which brings in `tpu-inference`.
+Both pins are needed: Colab's TPU image has no `keras-hub`, and its `flax`
+0.11.2 predates what `tpu-inference` requires.
 """
 
 """shell
 pip uninstall -y torchaudio -q
 pip install -q vllm-tpu
-pip install -q keras-hub
-pip install -q flax==0.12.8
+pip install -q 'keras-hub>=0.31.0'
 pip install -q --no-deps --force-reinstall git+https://github.com/vllm-project/tpu-inference
+pip install -q flax==0.12.8
 """
 
 """
 A few environment variables have to be set before Keras or vLLM is imported.
-The first two put Keras on the JAX backend with NNX enabled. NNX is not
-optional here: it makes the backbone's variables NNX state, which is how the
-TPU runner carries the weights without a conversion step. The next two point
-JAX and vLLM at the TPU. The two after that stop JAX from preallocating the
-whole device, which would leave nothing for the vLLM KV cache. The last one
-keeps the vLLM engine in this process instead of a subprocess, so its errors
-surface in the notebook.
+Set `KERAS_BACKEND` to `jax` and `KERAS_NNX_ENABLED` to `true` to run Keras on
+the JAX backend with NNX enabled. NNX is not optional here: it makes the
+backbone's variables NNX state, which is how the TPU runner carries the weights
+without a conversion step. `JAX_PLATFORMS` and `VLLM_TARGET_DEVICE` point JAX
+and vLLM at the TPU. `XLA_PYTHON_CLIENT_PREALLOCATE` and
+`XLA_PYTHON_CLIENT_ALLOCATOR` stop JAX from preallocating the whole device,
+which would leave nothing for the vLLM KV cache.
+`VLLM_ENABLE_V1_MULTIPROCESSING` keeps the vLLM engine in this process instead
+of a subprocess, so its errors surface in the notebook.
 """
 
 import os
@@ -105,10 +95,9 @@ except ImportError:
     pass
 
 """
-One last piece of setup, and this one is worth doing. The first time a model
-runs, XLA compiles it, which takes a few minutes and dominates everything else
-on the clock. A compilation cache means you pay that once rather than once per
-session.
+One last piece of setup. The first time a model runs, XLA compiles it, which
+takes a few minutes and dominates everything else on the clock. A compilation
+cache means you pay that once rather than once per session.
 
 The cache goes in a local directory here. A local directory lasts as long as
 the runtime, so to keep the cache across sessions on Colab, mount Drive and
@@ -169,21 +158,14 @@ memory left after the model is loaded.
 """
 # Generate
 
-`generate()` takes a list of prompts and returns one `RequestOutput` per
-prompt. vLLM batches them for you, so passing three prompts at once costs
-much less than three separate calls.
+`generate()` returns one `RequestOutput` per prompt. Pass a list to batch
+several at once; vLLM schedules them together.
 """
 
-prompts = [
-    "The future of artificial intelligence is",
-    "In a shocking finding, scientists discovered",
-    "The best way to learn programming is",
-]
+prompt = "The future of artificial intelligence is"
 
-outputs = llm.generate(prompts)
-for output in outputs:
-    print("-" * 72)
-    print(output.prompt + output.outputs[0].text)
+output = llm.generate(prompt)[0]
+print(output.prompt + output.outputs[0].text)
 
 """
 # Sampling
@@ -204,10 +186,8 @@ from vllm import SamplingParams
 
 greedy = SamplingParams(temperature=0.0, max_tokens=48)
 
-outputs = llm.generate(prompts, greedy)
-for output in outputs:
-    print("-" * 72)
-    print(output.prompt + output.outputs[0].text)
+output = llm.generate(prompt, greedy)[0]
+print(output.prompt + output.outputs[0].text)
 
 """
 Explicit `SamplingParams` override the model's own settings completely. Use
@@ -273,38 +253,10 @@ instead of falling back to something slower or wrong: the serving wrapper
 counts how many attention layers dispatched to the paged kernel, and raises
 if that does not match the number of transformer layers.
 
-Most `qwen2.5` presets other than the one above currently fail to download
-from Kaggle for reasons unrelated to serving, so start with
-`qwen2.5_coder_0.5b` for that family.
-
 Two limits are worth knowing before you plan around this. Only `CausalLM`
 presets are served, since this integration targets autoregressive text
 generation. And vision-language models are not supported: the attention path
 does not currently accept the custom mask a bidirectional image encoder needs.
-"""
-
-"""
-# How it works
-
-Three pieces make this work, and none of them require a converted checkpoint.
-
-**A neutral config.** `KerasHubLLM` writes a config with its own `keras_hub`
-model type rather than borrowing a model family from Hugging Face. vLLM sizes
-the KV cache from the real backbone dimensions instead of guessing them from a
-name.
-
-**The preset's own tokenizer.** Serving tokenizes with the KerasHub tokenizer
-that shipped with the preset, registered with vLLM under
-`tokenizer_mode="keras_hub"`. There is no conversion step to a Hugging Face
-tokenizer and no chance of the two disagreeing.
-
-**A serving context.** While a request is in flight, a thread-local context is
-active, carrying the paged KV caches and vLLM's per-token positions. Routed
-attention layers check for it on entry: if it is set they call the
-paged-attention kernel, and if not they run the ordinary dense path,
-unchanged. Learned position embeddings read the same context for their
-positions. This is why the same model still works with `generate()`, and why
-the context is cleared when a step ends even if the forward raised.
 """
 
 """
