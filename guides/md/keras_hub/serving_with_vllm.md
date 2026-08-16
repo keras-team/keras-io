@@ -49,21 +49,15 @@ Both pins are needed: Colab's TPU image has no `keras-hub`, and its `flax`
 
 ```python
 !pip uninstall -y torchaudio -q
-!pip install -q vllm-tpu
-!pip install -q 'keras-hub>=0.31.0'
+!pip install -q --no-warn-conflicts vllm-tpu
+!pip install -q --no-warn-conflicts 'keras-hub>=0.31.0'
 !pip install -q --no-deps --no-warn-conflicts --force-reinstall git+https://github.com/vllm-project/tpu-inference
-!pip install -q flax==0.12.8
+!pip install -q --no-warn-conflicts flax==0.12.8
 ```
 
 <div class="k-default-codeblock">
 ```
-ERROR: pip's dependency resolver does not currently take into account all the packages that are installed. This behaviour is the source of the following dependency conflicts.
-ipython 7.34.0 requires jedi>=0.16, which is not installed.
-ERROR: pip's dependency resolver does not currently take into account all the packages that are installed. This behaviour is the source of the following dependency conflicts.
-tpu-inference 0.0.0 requires jax==0.11.0, but you have jax 0.10.2 which is incompatible.
-tpu-inference 0.0.0 requires jaxlib==0.11.0, but you have jaxlib 0.10.2 which is incompatible.
-tpu-inference 0.0.0 requires libtpu==0.0.44, but you have libtpu 0.0.43 which is incompatible.
-vllm-tpu 0.26.0 requires tpu-inference==0.26.0, but you have tpu-inference 0.0.0 which is incompatible.
+[?25h
 ```
 </div>
 
@@ -82,6 +76,10 @@ of a subprocess, so its errors surface in the notebook, and
 
 ```python
 import os
+import warnings
+
+# About the VM image rather than this guide.
+warnings.filterwarnings("ignore", message=".*hugepages.*")
 
 os.environ["KERAS_BACKEND"] = "jax"
 os.environ["KERAS_NNX_ENABLED"] = "true"
@@ -172,10 +170,7 @@ print("model loaded")
 
 <div class="k-default-codeblock">
 ```
-/usr/local/lib/python3.12/dist-packages/jax/_src/cloud_tpu_init.py:88: UserWarning: Transparent hugepages are not enabled. TPU runtime startup and shutdown time should be significantly improved on TPU v5e and newer. If not already set, you may need to enable transparent hugepages in your VM image (sudo sh -c "echo always > /sys/kernel/mm/transparent_hugepage/enabled")
-  warnings.warn(
-
-ERROR 08-16 21:08:20 [tpu_info.py:40] Unable to poll TPU GCE Metadata. Got status code: 404 and content: 
+ERROR 08-16 21:27:12 [tpu_info.py:40] Unable to poll TPU GCE Metadata. Got status code: 404 and content: 
 
 Check failed with unknown exit code: -6.
 
@@ -289,8 +284,8 @@ print(f"{generated / elapsed:.0f} output tokens/s")
 
 <div class="k-default-codeblock">
 ```
-32 requests, 2048 tokens in 0.32s
-6333 output tokens/s
+32 requests, 2048 tokens in 0.25s
+8102 output tokens/s
 ```
 </div>
 
