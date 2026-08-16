@@ -8,7 +8,7 @@ Accelerator: TPU
 """
 
 """
-# Introduction
+## Introduction
 
 This guide shows how to serve a KerasHub `CausalLM` through vLLM's TPU backend.
 You do not convert the model, export the weights, or reimplement the
@@ -38,7 +38,7 @@ This guide needs a TPU runtime. On Colab, pick one under
 """
 
 """
-# Setup
+## Setup
 
 Install KerasHub and the TPU build of vLLM, which brings in `tpu-inference`.
 Both pins are needed: Colab's TPU image has no `keras-hub`, and its `flax`
@@ -116,7 +116,7 @@ os.environ["JAX_PERSISTENT_CACHE_MIN_ENTRY_SIZE_BYTES"] = "0"
 os.environ["JAX_PERSISTENT_CACHE_MIN_COMPILE_TIME_SECS"] = "0"
 
 """
-# Load a model
+## Load a model
 
 Pass any KerasHub `CausalLM` preset with the `keras_hub:` prefix. Behind that
 call, `KerasHubLLM` writes a temporary model directory for the preset holding
@@ -156,7 +156,7 @@ memory left after the model is loaded.
 """
 
 """
-# Generate
+## Generate
 
 `generate()` returns one `RequestOutput` per prompt. Pass a list to batch
 several at once; vLLM schedules them together.
@@ -168,7 +168,7 @@ output = llm.generate(prompt)[0]
 print(output.prompt + output.outputs[0].text)
 
 """
-# Sampling
+## Sampling
 
 Called with no `SamplingParams`, `KerasHubLLM` samples the way the preset
 would sample under `CausalLM.generate()`. Every KerasHub task compiles itself
@@ -196,7 +196,7 @@ decoding, which makes the model pick the highest-probability token every step.
 """
 
 """
-# Serving many requests
+## Serving many requests
 
 The reason to serve through vLLM is what happens under load. Here 32 requests
 are submitted at once, as a rough stand-in for concurrent traffic. vLLM
@@ -233,7 +233,7 @@ should not have to pay for.
 """
 
 """
-# Supported models
+## Supported models
 
 A KerasHub model can serve through vLLM once its attention layer has a serving
 route. These families have one and have been run end to end on TPU:
@@ -260,7 +260,7 @@ does not currently accept the custom mask a bidirectional image encoder needs.
 """
 
 """
-# Next steps
+## Next steps
 
 - Try a different preset from the table above. Load one model per runtime
   session, since each engine holds the TPU for itself.
