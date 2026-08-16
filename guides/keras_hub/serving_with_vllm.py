@@ -49,7 +49,7 @@ Both pins are needed: Colab's TPU image has no `keras-hub`, and its `flax`
 pip uninstall -y torchaudio -q
 pip install -q vllm-tpu
 pip install -q 'keras-hub>=0.31.0'
-pip install -q --no-deps --force-reinstall git+https://github.com/vllm-project/tpu-inference
+pip install -q --no-deps --no-warn-conflicts --force-reinstall git+https://github.com/vllm-project/tpu-inference
 pip install -q flax==0.12.8
 """
 
@@ -63,7 +63,8 @@ and vLLM at the TPU. `XLA_PYTHON_CLIENT_PREALLOCATE` and
 `XLA_PYTHON_CLIENT_ALLOCATOR` stop JAX from preallocating the whole device,
 which would leave nothing for the vLLM KV cache.
 `VLLM_ENABLE_V1_MULTIPROCESSING` keeps the vLLM engine in this process instead
-of a subprocess, so its errors surface in the notebook.
+of a subprocess, so its errors surface in the notebook, and
+`VLLM_LOGGING_LEVEL` quietens the engine's routine progress logging.
 """
 
 import os
@@ -75,6 +76,7 @@ os.environ["VLLM_TARGET_DEVICE"] = "tpu"
 os.environ["XLA_PYTHON_CLIENT_PREALLOCATE"] = "false"
 os.environ["XLA_PYTHON_CLIENT_ALLOCATOR"] = "platform"
 os.environ["VLLM_ENABLE_V1_MULTIPROCESSING"] = "0"
+os.environ["VLLM_LOGGING_LEVEL"] = "ERROR"
 
 """
 Most presets download from Kaggle without credentials. The gated ones (Gemma
@@ -164,7 +166,7 @@ several at once; vLLM schedules them together.
 
 prompt = "The future of artificial intelligence is"
 
-output = llm.generate(prompt)[0]
+output = llm.generate(prompt, use_tqdm=False)[0]
 print(output.prompt + output.outputs[0].text)
 
 """
@@ -186,7 +188,7 @@ from vllm import SamplingParams
 
 greedy = SamplingParams(temperature=0.0, max_tokens=48)
 
-output = llm.generate(prompt, greedy)[0]
+output = llm.generate(prompt, greedy, use_tqdm=False)[0]
 print(output.prompt + output.outputs[0].text)
 
 """
@@ -215,10 +217,10 @@ many_prompts = [
 ]
 params = SamplingParams(temperature=0.0, max_tokens=64)
 
-llm.generate(many_prompts, params)
+llm.generate(many_prompts, params, use_tqdm=False)
 
 start = time.perf_counter()
-outputs = llm.generate(many_prompts, params)
+outputs = llm.generate(many_prompts, params, use_tqdm=False)
 elapsed = time.perf_counter() - start
 
 generated = sum(len(output.outputs[0].token_ids) for output in outputs)
