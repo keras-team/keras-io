@@ -47,10 +47,10 @@ Both pins are needed: Colab's TPU image has no `keras-hub`, and its `flax`
 
 """shell
 pip uninstall -y torchaudio -q
-pip install -q vllm-tpu
-pip install -q 'keras-hub>=0.31.0'
+pip install -q --no-warn-conflicts vllm-tpu
+pip install -q --no-warn-conflicts 'keras-hub>=0.31.0'
 pip install -q --no-deps --no-warn-conflicts --force-reinstall git+https://github.com/vllm-project/tpu-inference
-pip install -q flax==0.12.8
+pip install -q --no-warn-conflicts flax==0.12.8
 """
 
 """
@@ -68,6 +68,10 @@ of a subprocess, so its errors surface in the notebook, and
 """
 
 import os
+import warnings
+
+# About the VM image rather than this guide.
+warnings.filterwarnings("ignore", message=".*hugepages.*")
 
 os.environ["KERAS_BACKEND"] = "jax"
 os.environ["KERAS_NNX_ENABLED"] = "true"
