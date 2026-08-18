@@ -61,7 +61,7 @@ def get_model():
         use_bias=False,
         data_format="channels_first",
     )(x)
-    x = keras.layers.BatchNormalization(scale=False, center=True)(x)
+    x = keras.layers.BatchNormalization(axis=1, scale=False, center=True)(x)
     x = keras.layers.ReLU()(x)
     x = keras.layers.Conv2D(
         filters=24,
@@ -70,7 +70,7 @@ def get_model():
         strides=2,
         data_format="channels_first",
     )(x)
-    x = keras.layers.BatchNormalization(scale=False, center=True)(x)
+    x = keras.layers.BatchNormalization(axis=1, scale=False, center=True)(x)
     x = keras.layers.ReLU()(x)
     x = keras.layers.Conv2D(
         filters=32,
@@ -80,7 +80,7 @@ def get_model():
         name="large_k",
         data_format="channels_first",
     )(x)
-    x = keras.layers.BatchNormalization(scale=False, center=True)(x)
+    x = keras.layers.BatchNormalization(axis=1, scale=False, center=True)(x)
     x = keras.layers.ReLU()(x)
     x = keras.layers.GlobalAveragePooling2D(data_format="channels_first")(x)
     x = keras.layers.Dense(256, activation="relu")(x)
@@ -93,10 +93,9 @@ def get_dataset():
     # Load the data and split it between train and test sets
     (x_train, y_train), _ = keras.datasets.mnist.load_data()
 
-    # Convert layout from NHWC (28, 28, 1) to NCHW (1, 28, 28) for PyTorch
+    # Directly expand channel dimension to index 1 for Channels-First (NCHW)
     x_train = x_train.astype("float32")
-    x_train = np.expand_dims(x_train, -1)
-    x_train = np.transpose(x_train, (0, 3, 1, 2))
+    x_train = np.expand_dims(x_train, 1)
 
     # Ensure label targets match PyTorch int64 requirements
     y_train = y_train.astype("int64")
