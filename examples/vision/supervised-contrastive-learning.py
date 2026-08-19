@@ -2,7 +2,7 @@
 Title: Supervised Contrastive Learning
 Author: [Khalid Salama](https://www.linkedin.com/in/khalid-salama-24403144/)
 Date created: 2020/11/30
-Last modified: 2026/08/04
+Last modified: 2026/08/19
 Description: Using supervised contrastive learning for image classification.
 Accelerator: GPU
 Converted to Keras 3 by: [LakshmiKalaKadali](https://github.com/LakshmiKalaKadali)

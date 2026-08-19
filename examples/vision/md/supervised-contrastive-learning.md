@@ -2,7 +2,7 @@
 
 **Author:** [Khalid Salama](https://www.linkedin.com/in/khalid-salama-24403144/)<br>
 **Date created:** 2020/11/30<br>
-**Last modified:** 2026/08/04<br>
+**Last modified:** 2026/08/19<br>
 **Description:** Using supervised contrastive learning for image classification.
 
 
