@@ -170,7 +170,7 @@ print("model loaded")
 
 <div class="k-default-codeblock">
 ```
-ERROR 08-16 21:27:12 [tpu_info.py:40] Unable to poll TPU GCE Metadata. Got status code: 404 and content: 
+ERROR 08-16 22:34:16 [tpu_info.py:40] Unable to poll TPU GCE Metadata. Got status code: 404 and content: 
 
 Check failed with unknown exit code: -6.
 
@@ -230,7 +230,7 @@ tokens applies. That is short. Pass `SamplingParams` when you want more.
 ```python
 from vllm import SamplingParams
 
-greedy = SamplingParams(temperature=0.0, max_tokens=48)
+greedy = SamplingParams(temperature=0.0, max_tokens=140)
 
 output = llm.generate(prompt, greedy, use_tqdm=False)[0]
 print(output.prompt + output.outputs[0].text)
@@ -242,7 +242,9 @@ The future of artificial intelligence is a topic of intense debate and speculati
 
 Here's a breakdown of key aspects of AI's future:
 
-* **Narrow AI:**
+* **Narrow AI:** Currently, most AI systems are "narrow AI," meaning they excel at specific tasks. Examples include image recognition, spam filtering, and chess-playing programs.
+* **General AI (AGI):** This is a hypothetical level of AI that possesses human-level intelligence – the ability to understand, learn, and apply knowledge across a wide range of tasks.  It's a significant area of research, but currently doesn't exist.
+* **
 ```
 </div>
 
@@ -285,7 +287,7 @@ print(f"{generated / elapsed:.0f} output tokens/s")
 <div class="k-default-codeblock">
 ```
 32 requests, 2048 tokens in 0.25s
-8102 output tokens/s
+8111 output tokens/s
 ```
 </div>
 
@@ -314,11 +316,6 @@ adding a route to one attention layer. A family without one fails loudly
 instead of falling back to something slower or wrong: the serving wrapper
 counts how many attention layers dispatched to the paged kernel, and raises
 if that does not match the number of transformer layers.
-
-Two limits are worth knowing before you plan around this. Only `CausalLM`
-presets are served, since this integration targets autoregressive text
-generation. And vision-language models are not supported: the attention path
-does not currently accept the custom mask a bidirectional image encoder needs.
 
 ---
 ## Next steps
