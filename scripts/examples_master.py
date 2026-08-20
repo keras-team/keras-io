@@ -456,7 +456,7 @@ EXAMPLES_MASTER = {
                     "path": "adamatch",
                     "title": "Semi-supervision and domain adaptation with AdaMatch",
                     "subcategory": "Performance recipes",
-                    "keras_2": True,
+                    "keras_3": True,
                 },
                 {
                     "path": "barlow_twins",
@@ -468,7 +468,7 @@ EXAMPLES_MASTER = {
                     "path": "consistency_training",
                     "title": "Consistency training with supervision",
                     "subcategory": "Performance recipes",
-                    "keras_2": True,
+                    "keras_3": True,
                 },
                 {
                     "path": "deit",
@@ -830,7 +830,7 @@ EXAMPLES_MASTER = {
                     "path": "dreambooth",
                     "title": "DreamBooth",
                     "subcategory": "Image generation",
-                    "keras_2": True,
+                    "keras_3": True,
                 },
                 {
                     "path": "ddpm",
@@ -914,7 +914,7 @@ EXAMPLES_MASTER = {
                     "path": "vq_vae",
                     "title": "Vector-Quantized Variational Autoencoders",
                     "subcategory": "Image generation",
-                    "keras_2": True,
+                    "keras_3": True,
                 },
                 {
                     "path": "random_walks_with_stable_diffusion",
@@ -965,7 +965,7 @@ EXAMPLES_MASTER = {
                     "path": "text_generation_fnet",
                     "title": "Text Generation using FNet",
                     "subcategory": "Text generation",
-                    "keras_2": True,
+                    "keras_3": True,
                 },
                 # Audio / midi generation
                 {
@@ -1097,7 +1097,7 @@ EXAMPLES_MASTER = {
                     "path": "gnn_citations",
                     "title": "Node Classification with Graph Neural Networks",
                     "subcategory": "Node classification",
-                    "keras_2": True,
+                    "keras_3": True,
                 },
                 # Molecular property prediction
                 {
