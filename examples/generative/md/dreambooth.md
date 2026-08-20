@@ -2,7 +2,7 @@
 
 **Author:** [Sayak Paul](https://twitter.com/RisingSayak), [Chansung Park](https://twitter.com/algo_diver)<br>
 **Date created:** 2023/02/01<br>
-**Last modified:** 2023/02/05<br>
+**Last modified:** 2026/03/06<br>
 **Description:** Implementing DreamBooth.
 
 
@@ -25,35 +25,37 @@ for a few gotchas. This example assumes that you have basic familiarity with
 Diffusion models and how to fine-tune them. Here are some reference examples that might
 help you to get familiarized quickly:
 
-* [High-performance image generation using Stable Diffusion in KerasCV](https://keras.io/guides/keras_cv/generate_images_with_stable_diffusion/)
 * [Teach StableDiffusion new concepts via Textual Inversion](https://keras.io/examples/generative/fine_tune_via_textual_inversion/)
 * [Fine-tuning Stable Diffusion](https://keras.io/examples/generative/finetune_stable_diffusion/)
 
-First, let's install the latest versions of KerasCV and TensorFlow.
-
-
-```python
-!pip install -q -U keras_cv==0.6.0
-!pip install -q -U tensorflow
-```
-
-If you're running the code, please ensure you're using a GPU with at least 24 GBs of
-VRAM.
+This example is resource-intensive. For reliable execution, use a GPU with at least 80 GB of VRAM.
 
 ---
 ## Initial imports
 
 
 ```python
+
 import math
 
-import keras_cv
+import keras
+import keras_hub
 import matplotlib.pyplot as plt
 import numpy as np
-import tensorflow as tf
 from imutils import paths
-from tensorflow import keras
 ```
+
+<div class="k-default-codeblock">
+```
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+E0000 00:00:1775110433.373311    5778 cuda_dnn.cc:8579] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered
+E0000 00:00:1775110433.377650    5778 cuda_blas.cc:1407] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
+W0000 00:00:1775110433.388657    5778 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1775110433.388668    5778 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1775110433.388669    5778 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+W0000 00:00:1775110433.388671    5778 computation_placer.cc:177] computation placer already registered. Please check linkage and avoid linking the same target more than once.
+```
+</div>
 
 ---
 ## Usage of DreamBooth
@@ -73,79 +75,30 @@ concepts, you can
 And many other applications. We welcome you to check out the original
 [DreamBooth paper](https://arxiv.org/abs/2208.12242) in this regard.
 
----
-## Download the instance and class images
-
-DreamBooth uses a technique called "prior preservation" to meaningfully guide the
-training procedure such that the fine-tuned models can still preserve some of the prior
-semantics of the visual concept you're introducing. To know more about the idea of "prior
-preservation" refer to [this document](https://dreambooth.github.io/).
-
-Here, we need to introduce a few key terms specific to DreamBooth:
-
-* **Unique class**: Examples include "dog", "person", etc. In this example, we use "dog".
-* **Unique identifier**: A unique identifier that is prepended to the unique class while
-forming the "instance prompts". In this example, we use "sks" as this unique identifier.
-* **Instance prompt**: Denotes a prompt that best describes the "instance images". An
-example prompt could be - "f"a photo of {unique_id} {unique_class}". So, for our example,
-this becomes - "a photo  of sks dog".
-* **Class prompt**: Denotes a prompt without the unique identifier. This prompt is used
-for generating "class images" for prior preservation. For our example, this prompt is -
-"a photo of dog".
-* **Instance images**: Denote the images that represent the visual concept you're trying
-to teach aka the "instance prompt". This number is typically just 3 - 5. We typically
-gather these images ourselves.
-* **Class images**: Denote the images generated using the "class prompt" for using prior
-preservation in DreamBooth training. We leverage the pre-trained model before fine-tuning
-it to generate these class images. Typically, 200 - 300 class images are enough.
-
-In code, this generation process looks quite simply:
-
-```py
-from tqdm import tqdm
-import numpy as np
-import hashlib
-import keras_cv
-import PIL
-import os
-
-class_images_dir = "class-images"
-os.makedirs(class_images_dir, exist_ok=True)
-
-model = keras_cv.models.StableDiffusion(img_width=512, img_height=512, jit_compile=True)
-
-class_prompt = "a photo of dog"
-num_imgs_to_generate = 200
-for i in tqdm(range(num_imgs_to_generate)):
-    images = model.text_to_image(
-        class_prompt,
-        batch_size=3,
-    )
-    idx = np.random.choice(len(images))
-    selected_image = PIL.Image.fromarray(images[idx])
-    hash_image = hashlib.sha1(selected_image.tobytes()).hexdigest()
-    image_filename = os.path.join(class_images_dir, f"{hash_image}.jpg")
-    selected_image.save(image_filename)
-```
-
-To keep the runtime of this example short, the authors of this example have gone ahead
-and generated some class images using
-[this notebook](https://colab.research.google.com/gist/sayakpaul/6b5de345d29cf5860f84b6d04d958692/generate_class_priors.ipynb).
-
-**Note** that prior preservation is an optional technique used in DreamBooth, but it
-almost always helps in improving the quality of the generated images.
-
 
 ```python
-instance_images_root = tf.keras.utils.get_file(
+
+instance_images_root = keras.utils.get_file(
     origin="https://huggingface.co/datasets/sayakpaul/sample-datasets/resolve/main/instance-images.tar.gz",
     untar=True,
 )
-class_images_root = tf.keras.utils.get_file(
+class_images_root = keras.utils.get_file(
     origin="https://huggingface.co/datasets/sayakpaul/sample-datasets/resolve/main/class-images.tar.gz",
     untar=True,
 )
+
 ```
+
+<div class="k-default-codeblock">
+
+Downloading data from https://huggingface.co/datasets/sayakpaul/sample-datasets/resolve/main/instance-images.tar.gz
+
+5556967/5556967 ━━━━━━━━━━━━━━━━━━━━ 1s 0us/step
+
+Downloading data from https://huggingface.co/datasets/sayakpaul/sample-datasets/resolve/main/class-images.tar.gz
+
+9093120/9093120 ━━━━━━━━━━━━━━━━━━━━ 1s 0us/step
+</div>
 
 ---
 ## Visualize images
@@ -154,8 +107,10 @@ First, let's load the image paths.
 
 
 ```python
+
 instance_image_paths = list(paths.list_images(instance_images_root))
 class_image_paths = list(paths.list_images(class_images_root))
+
 ```
 
 Then we load the images from the paths.
@@ -189,22 +144,30 @@ def plot_images(images, title=None):
 
 
 ```python
+
 plot_images(load_images(instance_image_paths[:5]))
+
 ```
 
 
-![png](/img/examples/generative/dreambooth/dreambooth_16_0.png)
+    
+![png](/examples/generative/img/dreambooth/dreambooth_14_0.png)
+    
 
 
 **Class images**:
 
 
 ```python
+
 plot_images(load_images(class_image_paths[:5]))
+
 ```
 
 
-![png](/img/examples/generative/dreambooth/dreambooth_18_0.png)
+    
+![png](/examples/generative/img/dreambooth/dreambooth_16_0.png)
+    
 
 
 ---
@@ -217,130 +180,252 @@ images.
 
 
 ```python
-# Since we're using prior preservation, we need to match the number
-# of instance images we're using. We just repeat the instance image paths
-# to do so.
-new_instance_image_paths = []
-for index in range(len(class_image_paths)):
-    instance_image = instance_image_paths[index % len(instance_image_paths)]
-    new_instance_image_paths.append(instance_image)
 
-# We just repeat the prompts / captions per images.
+new_instance_image_paths = [
+    instance_image_paths[index % len(instance_image_paths)]
+    for index in range(len(class_image_paths))
+]
+instance_count = len(new_instance_image_paths)
+class_count = len(class_image_paths)
+
 unique_id = "sks"
 class_label = "dog"
 
 instance_prompt = f"a photo of {unique_id} {class_label}"
-instance_prompts = [instance_prompt] * len(new_instance_image_paths)
-
 class_prompt = f"a photo of {class_label}"
-class_prompts = [class_prompt] * len(class_image_paths)
+
 ```
 
 Next, we embed the prompts to save some compute.
 
 
 ```python
-import itertools
 
-# The padding token and maximum prompt length are specific to the text encoder.
-# If you're using a different text encoder be sure to change them accordingly.
-padding_token = 49407
-max_prompt_length = 77
-
-# Load the tokenizer.
-tokenizer = keras_cv.models.stable_diffusion.SimpleTokenizer()
-
-# Method to tokenize and pad the tokens.
-def process_text(caption):
-    tokens = tokenizer.encode(caption)
-    tokens = tokens + [padding_token] * (max_prompt_length - len(tokens))
-    return np.array(tokens)
-
-
-# Collate the tokenized captions into an array.
-tokenized_texts = np.empty(
-    (len(instance_prompts) + len(class_prompts), max_prompt_length)
+print("Loading Stable Diffusion 3 (will be reused for training)...")
+sd3_backbone = keras_hub.models.StableDiffusion3Backbone.from_preset(
+    "stable_diffusion_3_medium",
+    image_shape=(512, 512, 3),
+)
+sd3_preprocessor = keras_hub.models.StableDiffusion3TextToImagePreprocessor.from_preset(
+    "stable_diffusion_3_medium"
 )
 
-for i, caption in enumerate(itertools.chain(instance_prompts, class_prompts)):
-    tokenized_texts[i] = process_text(caption)
+unique_prompts = [instance_prompt, class_prompt]
+print(
+    f"Encoding {len(unique_prompts)} unique prompts (instead of {instance_count + class_count})..."
+)
+
+token_ids = sd3_preprocessor.generate_preprocess(unique_prompts)
+negative_token_ids = sd3_preprocessor.generate_preprocess(["", ""])
+
+(
+    positive_embeddings,
+    _,
+    positive_pooled,
+    _,
+) = sd3_backbone.encode_text_step(token_ids, negative_token_ids)
+
+instance_embedding = positive_embeddings[0:1]
+class_embedding = positive_embeddings[1:2]
+instance_pooled = positive_pooled[0:1]
+class_pooled_single = positive_pooled[1:2]
 
 
-# We also pre-compute the text embeddings to save some memory during training.
-POS_IDS = tf.convert_to_tensor([list(range(max_prompt_length))], dtype=tf.int32)
-text_encoder = keras_cv.models.stable_diffusion.TextEncoder(max_prompt_length)
+def repeat_embedding(embedding, count):
+    return np.repeat(embedding, count, axis=0)
 
-gpus = tf.config.list_logical_devices("GPU")
 
-# Ensure the computation takes place on a GPU.
-# Note that it's done automatically when there's a GPU present.
-# This example just attempts at showing how you can do it
-# more explicitly.
-with tf.device(gpus[0].name):
-    embedded_text = text_encoder(
-        [tf.convert_to_tensor(tokenized_texts), POS_IDS], training=False
-    ).numpy()
+instance_embedded_texts = repeat_embedding(instance_embedding, instance_count)
+class_embedded_texts = repeat_embedding(class_embedding, class_count)
+instance_pooled_embeddings = repeat_embedding(instance_pooled, instance_count)
+class_pooled_embeddings = repeat_embedding(class_pooled_single, class_count)
 
-# To ensure text_encoder doesn't occupy any GPU space.
-del text_encoder
+print(
+    f"Text embedding shapes: {instance_embedded_texts.shape}, {class_embedded_texts.shape}"
+)
+print(
+    f"Pooled embedding shapes: {instance_pooled_embeddings.shape}, {class_pooled_embeddings.shape}"
+)
+
 ```
+
+<div class="k-default-codeblock">
+Loading Stable Diffusion 3 (will be reused for training)...
+
+Downloading to /home/kharshith/.cache/kagglehub/models/keras/stablediffusion3/keras/stable_diffusion_3_medium/5/config.json...
+</div>
+
+  0%███████████████████████████████████████████████████████████████████████████████████████100%| 4.19k/4.19k [00:00<00:00, 9.05MB/s]
+
+<div class="k-default-codeblock">
+Downloading to /home/kharshith/.cache/kagglehub/models/keras/stablediffusion3/keras/stable_diffusion_3_medium/5/model.weights.h5...
+</div>
+  0%███████████████████████████████████████████████████████████████████████████████████████100%| 5.57G/5.57G [00:43<00:00, 137MB/s]
+
+    
+
+
+<div class="k-default-codeblock">
+Downloading to /home/kharshith/.cache/kagglehub/models/keras/stablediffusion3/keras/stable_diffusion_3_medium/5/preprocessor.json...
+</div>
+
+  0%███████████████████████████████████████████████████████████████████████████████████████100%| 4.08k/4.08k [00:00<00:00, 14.2MB/s]
+
+<div class="k-default-codeblock">
+Downloading to /home/kharshith/.cache/kagglehub/models/keras/stablediffusion3/keras/stable_diffusion_3_medium/5/assets/clip_l_tokenizer/vocabulary.json...
+</div>
+
+  0%███████████████████████████████████████████████████████████████████████████████████████100%| 976k/976k [00:00<00:00, 5.01MB/s]
+
+<div class="k-default-codeblock">
+Downloading to /home/kharshith/.cache/kagglehub/models/keras/stablediffusion3/keras/stable_diffusion_3_medium/5/assets/clip_l_tokenizer/merges.txt...
+</div>
+
+  0%███████████████████████████████████████████████████████████████████████████████████████100%| 512k/512k [00:00<00:00, 3.07MB/s]
+
+<div class="k-default-codeblock">
+Downloading to /home/kharshith/.cache/kagglehub/models/keras/stablediffusion3/keras/stable_diffusion_3_medium/5/assets/clip_g_tokenizer/vocabulary.json...
+</div>
+
+  0%███████████████████████████████████████████████████████████████████████████████████████100%| 976k/976k [00:00<00:00, 5.04MB/s]
+
+<div class="k-default-codeblock">
+Downloading to /home/kharshith/.cache/kagglehub/models/keras/stablediffusion3/keras/stable_diffusion_3_medium/5/assets/clip_g_tokenizer/merges.txt...
+</div>
+
+  0%███████████████████████████████████████████████████████████████████████████████████████100%| 512k/512k [00:00<00:00, 3.50MB/s]
+
+<div class="k-default-codeblock">
+Encoding 2 unique prompts (instead of 400)...
+
+Text embedding shapes: (200, 154, 4096), (200, 154, 4096) </br>
+Pooled embedding shapes: (200, 2048), (200, 2048)
+</div>
 
 ---
 ## Prepare the images
 
 
 ```python
+
 resolution = 512
-auto = tf.data.AUTOTUNE
 
 augmenter = keras.Sequential(
     layers=[
-        keras_cv.layers.CenterCrop(resolution, resolution),
-        keras_cv.layers.RandomFlip(),
+        keras.layers.CenterCrop(resolution, resolution),
+        keras.layers.RandomFlip(),
         keras.layers.Rescaling(scale=1.0 / 127.5, offset=-1),
     ]
 )
 
 
-def process_image(image_path, tokenized_text):
-    image = tf.io.read_file(image_path)
-    image = tf.io.decode_png(image, 3)
-    image = tf.image.resize(image, (resolution, resolution))
-    return image, tokenized_text
+class DreamBoothDataset(keras.utils.PyDataset):
+    """Backend-agnostic dataset for DreamBooth training.
 
+    This dataset handles both instance and class images for prior preservation.
+    """
 
-def apply_augmentation(image_batch, embedded_tokens):
-    return augmenter(image_batch), embedded_tokens
+    def __init__(
+        self,
+        instance_image_paths,
+        class_image_paths,
+        instance_embedded_texts,
+        class_embedded_texts,
+        instance_pooled_embeddings,
+        class_pooled_embeddings,
+        augmenter,
+        batch_size=1,
+        shuffle=True,
+        seed=42,
+        **kwargs,
+    ):
+        super().__init__(**kwargs)
+        self.instance_image_paths = instance_image_paths
+        self.class_image_paths = class_image_paths
+        self.instance_embedded_texts = instance_embedded_texts
+        self.class_embedded_texts = class_embedded_texts
+        self.instance_pooled_embeddings = instance_pooled_embeddings
+        self.class_pooled_embeddings = class_pooled_embeddings
+        self.augmenter = augmenter
+        self.batch_size = batch_size
+        self.shuffle = shuffle
+        self.seed = seed
+        self.rng = np.random.default_rng(seed)
 
+        self.num_samples = len(class_image_paths)
 
-def prepare_dict(instance_only=True):
-    def fn(image_batch, embedded_tokens):
-        if instance_only:
-            batch_dict = {
-                "instance_images": image_batch,
-                "instance_embedded_texts": embedded_tokens,
-            }
-            return batch_dict
-        else:
-            batch_dict = {
-                "class_images": image_batch,
-                "class_embedded_texts": embedded_tokens,
-            }
-            return batch_dict
+        self.on_epoch_end()
 
-    return fn
+    def __len__(self):
+        return int(np.ceil(self.num_samples / self.batch_size))
 
+    def on_epoch_end(self):
+        """Shuffle indices at end of epoch if shuffle=True."""
+        self.indices = np.arange(self.num_samples)
+        if self.shuffle:
+            self.rng.shuffle(self.indices)
 
-def assemble_dataset(image_paths, embedded_texts, instance_only=True, batch_size=1):
-    dataset = tf.data.Dataset.from_tensor_slices((image_paths, embedded_texts))
-    dataset = dataset.map(process_image, num_parallel_calls=auto)
-    dataset = dataset.shuffle(5, reshuffle_each_iteration=True)
-    dataset = dataset.batch(batch_size)
-    dataset = dataset.map(apply_augmentation, num_parallel_calls=auto)
+    def _get_batch_indices(self, batch_indices, num_items=None):
+        if num_items is None:
+            return batch_indices
+        return [index % num_items for index in batch_indices]
 
-    prepare_dict_fn = prepare_dict(instance_only=instance_only)
-    dataset = dataset.map(prepare_dict_fn, num_parallel_calls=auto)
-    return dataset
+    def _load_batch_images(self, image_paths, batch_indices, repeat=False):
+        indices = self._get_batch_indices(
+            batch_indices, len(image_paths) if repeat else None
+        )
+        images = [
+            keras.utils.img_to_array(
+                keras.utils.load_img(
+                    image_paths[index], target_size=(resolution, resolution)
+                )
+            )
+            for index in indices
+        ]
+        return np.array(images)
+
+    def _gather_batch(self, values, batch_indices, repeat=False):
+        indices = self._get_batch_indices(
+            batch_indices, len(values) if repeat else None
+        )
+        return np.array([values[index] for index in indices])
+
+    def __getitem__(self, idx):
+        """Generate one batch of data."""
+        batch_indices = self.indices[
+            idx * self.batch_size : (idx + 1) * self.batch_size
+        ]
+
+        instance_images = self._load_batch_images(
+            self.instance_image_paths, batch_indices, repeat=True
+        )
+        class_images = self._load_batch_images(self.class_image_paths, batch_indices)
+
+        instance_embeds = self._gather_batch(
+            self.instance_embedded_texts, batch_indices, repeat=True
+        )
+        class_embeds = self._gather_batch(self.class_embedded_texts, batch_indices)
+
+        instance_pooled = self._gather_batch(
+            self.instance_pooled_embeddings, batch_indices, repeat=True
+        )
+        class_pooled = self._gather_batch(self.class_pooled_embeddings, batch_indices)
+
+        instance_images = self.augmenter(instance_images, training=True)
+        class_images = self.augmenter(class_images, training=True)
+
+        instance_batch = {
+            "instance_images": instance_images,
+            "instance_embedded_texts": instance_embeds,
+            "instance_pooled_embeddings": instance_pooled,
+        }
+        class_batch = {
+            "class_images": class_images,
+            "class_embedded_texts": class_embeds,
+            "class_pooled_embeddings": class_pooled,
+        }
+
+        return (instance_batch, class_batch)
 
 ```
 
@@ -349,16 +434,21 @@ def assemble_dataset(image_paths, embedded_texts, instance_only=True, batch_size
 
 
 ```python
-instance_dataset = assemble_dataset(
-    new_instance_image_paths,
-    embedded_text[: len(new_instance_image_paths)],
+
+train_dataset = DreamBoothDataset(
+    instance_image_paths=new_instance_image_paths,
+    class_image_paths=class_image_paths,
+    instance_embedded_texts=instance_embedded_texts,
+    class_embedded_texts=class_embedded_texts,
+    instance_pooled_embeddings=instance_pooled_embeddings,
+    class_pooled_embeddings=class_pooled_embeddings,
+    augmenter=augmenter,
+    batch_size=1,
+    shuffle=True,
+    workers=2,
+    use_multiprocessing=False,
 )
-class_dataset = assemble_dataset(
-    class_image_paths,
-    embedded_text[len(new_instance_image_paths) :],
-    instance_only=False,
-)
-train_dataset = tf.data.Dataset.zip((instance_dataset, class_dataset))
+
 ```
 
 ---
@@ -368,6 +458,7 @@ Now that the dataset has been prepared, let's quickly check what's inside it.
 
 
 ```python
+
 sample_batch = next(iter(train_dataset))
 print(sample_batch[0].keys(), sample_batch[1].keys())
 
@@ -376,18 +467,19 @@ for k in sample_batch[0]:
 
 for k in sample_batch[1]:
     print(k, sample_batch[1][k].shape)
+
 ```
 
 <div class="k-default-codeblock">
-```
-dict_keys(['instance_images', 'instance_embedded_texts']) dict_keys(['class_images', 'class_embedded_texts'])
-instance_images (1, 512, 512, 3)
-instance_embedded_texts (1, 77, 768)
-class_images (1, 512, 512, 3)
-class_embedded_texts (1, 77, 768)
-
-```
+dict_keys(['instance_images', 'instance_embedded_texts', 'instance_pooled_embeddings']) dict_keys(['class_images', 'class_embedded_texts', 'class_pooled_embeddings'])
+</br>instance_images (1, 512, 512, 3)
+</br>instance_embedded_texts (1, 154, 4096)
+</br>instance_pooled_embeddings (1, 2048)
+</br>class_images (1, 512, 512, 3)
+</br>class_embedded_texts (1, 154, 4096)
+</br>class_pooled_embeddings (1, 2048)
 </div>
+
 During training, we make use of these keys to gather the images and text embeddings and
 concat them accordingly.
 
@@ -397,24 +489,20 @@ concat them accordingly.
 Our DreamBooth training loop is very much inspired by
 [this script](https://github.com/huggingface/diffusers/blob/main/examples/dreambooth/train_dreambooth.py)
 provided by the Diffusers team at Hugging Face. However, there is an important
-difference to note. We only fine-tune the UNet (the model responsible for predicting
-noise) and don't fine-tune the text encoder in this example. If you're looking for an
+difference to note. We only fine-tune the diffusion model (the component responsible for predicting
+noise / velocity) and don't fine-tune the text encoder in this example. If you're looking for an
 implementation that also performs the additional fine-tuning of the text encoder, refer
 to [this repository](https://github.com/sayakpaul/dreambooth-keras/).
 
 
 ```python
-import tensorflow.experimental.numpy as tnp
 
-
-class DreamBoothTrainer(tf.keras.Model):
-    # Reference:
-    # https://github.com/huggingface/diffusers/blob/main/examples/dreambooth/train_dreambooth.py
-
+class DreamBoothTrainer(keras.Model):
     def __init__(
         self,
         diffusion_model,
         vae,
+        backbone,
         noise_scheduler,
         use_mixed_precision=False,
         prior_loss_weight=1.0,
@@ -425,130 +513,107 @@ class DreamBoothTrainer(tf.keras.Model):
 
         self.diffusion_model = diffusion_model
         self.vae = vae
+        self.backbone = backbone
         self.noise_scheduler = noise_scheduler
         self.prior_loss_weight = prior_loss_weight
         self.max_grad_norm = max_grad_norm
 
         self.use_mixed_precision = use_mixed_precision
         self.vae.trainable = False
+        self.backbone.trainable = False
+        self.diffusion_model.trainable = True
 
-    def train_step(self, inputs):
-        instance_batch = inputs[0]
-        class_batch = inputs[1]
+    def call(self, inputs):
+        return inputs
+
+    def compute_loss(self, x, y, y_pred, sample_weight):
+        """Backend-agnostic loss computation override.
+
+        The default train_step calls this method inside a gradient recording scope
+        (e.g., GradientTape for TF, Autograd for Torch), so we don't need to manually
+        handle gradients.
+        """
+        instance_batch = x
+        class_batch = y
 
         instance_images = instance_batch["instance_images"]
         instance_embedded_text = instance_batch["instance_embedded_texts"]
+        instance_pooled = instance_batch["instance_pooled_embeddings"]
         class_images = class_batch["class_images"]
         class_embedded_text = class_batch["class_embedded_texts"]
+        class_pooled = class_batch["class_pooled_embeddings"]
 
-        images = tf.concat([instance_images, class_images], 0)
-        embedded_texts = tf.concat([instance_embedded_text, class_embedded_text], 0)
-        batch_size = tf.shape(images)[0]
-
-        with tf.GradientTape() as tape:
-            # Project image into the latent space and sample from it.
-            latents = self.sample_from_encoder_outputs(self.vae(images, training=False))
-            # Know more about the magic number here:
-            # https://keras.io/examples/generative/fine_tune_via_textual_inversion/
-            latents = latents * 0.18215
-
-            # Sample noise that we'll add to the latents.
-            noise = tf.random.normal(tf.shape(latents))
-
-            # Sample a random timestep for each image.
-            timesteps = tnp.random.randint(
-                0, self.noise_scheduler.train_timesteps, (batch_size,)
-            )
-
-            # Add noise to the latents according to the noise magnitude at each timestep
-            # (this is the forward diffusion process).
-            noisy_latents = self.noise_scheduler.add_noise(
-                tf.cast(latents, noise.dtype), noise, timesteps
-            )
-
-            # Get the target for loss depending on the prediction type
-            # just the sampled noise for now.
-            target = noise  # noise_schedule.predict_epsilon == True
-
-            # Predict the noise residual and compute loss.
-            timestep_embedding = tf.map_fn(
-                lambda t: self.get_timestep_embedding(t), timesteps, dtype=tf.float32
-            )
-            model_pred = self.diffusion_model(
-                [noisy_latents, timestep_embedding, embedded_texts], training=True
-            )
-            loss = self.compute_loss(target, model_pred)
-            if self.use_mixed_precision:
-                loss = self.optimizer.get_scaled_loss(loss)
-
-        # Update parameters of the diffusion model.
-        trainable_vars = self.diffusion_model.trainable_variables
-        gradients = tape.gradient(loss, trainable_vars)
-        if self.use_mixed_precision:
-            gradients = self.optimizer.get_unscaled_gradients(gradients)
-        gradients = [tf.clip_by_norm(g, self.max_grad_norm) for g in gradients]
-        self.optimizer.apply_gradients(zip(gradients, trainable_vars))
-
-        return {m.name: m.result() for m in self.metrics}
-
-    def get_timestep_embedding(self, timestep, dim=320, max_period=10000):
-        half = dim // 2
-        log_max_period = tf.math.log(tf.cast(max_period, tf.float32))
-        freqs = tf.math.exp(
-            -log_max_period * tf.range(0, half, dtype=tf.float32) / half
+        images = keras.ops.concatenate([instance_images, class_images], axis=0)
+        embedded_texts = keras.ops.concatenate(
+            [instance_embedded_text, class_embedded_text], axis=0
         )
-        args = tf.convert_to_tensor([timestep], dtype=tf.float32) * freqs
-        embedding = tf.concat([tf.math.cos(args), tf.math.sin(args)], 0)
-        return embedding
-
-    def sample_from_encoder_outputs(self, outputs):
-        mean, logvar = tf.split(outputs, 2, axis=-1)
-        logvar = tf.clip_by_value(logvar, -30.0, 20.0)
-        std = tf.exp(0.5 * logvar)
-        sample = tf.random.normal(tf.shape(mean), dtype=mean.dtype)
-        return mean + std * sample
-
-    def compute_loss(self, target, model_pred):
-        # Chunk the noise and model_pred into two parts and compute the loss
-        # on each part separately.
-        # Since the first half of the inputs has instance samples and the second half
-        # has class samples, we do the chunking accordingly.
-        model_pred, model_pred_prior = tf.split(
-            model_pred, num_or_size_splits=2, axis=0
+        pooled_embeddings = keras.ops.concatenate(
+            [instance_pooled, class_pooled], axis=0
         )
-        target, target_prior = tf.split(target, num_or_size_splits=2, axis=0)
+        batch_size = keras.ops.shape(images)[0]
 
-        # Compute instance loss.
-        loss = self.compiled_loss(target, model_pred)
+        return self._compute_dreambooth_loss(
+            images, embedded_texts, pooled_embeddings, batch_size
+        )
 
-        # Compute prior loss.
-        prior_loss = self.compiled_loss(target_prior, model_pred_prior)
+    def _compute_dreambooth_loss(
+        self, images, embedded_texts, pooled_embeddings, batch_size
+    ):
+        """Internal logic for DreamBooth loss (Flow Matching)."""
+        latents = self.backbone.encode_image_step(images)
 
-        # Add the prior loss to the instance loss.
-        loss = loss + self.prior_loss_weight * prior_loss
+        noise = keras.random.normal(keras.ops.shape(latents))
+
+        timesteps = keras.random.uniform(
+            shape=(batch_size,),
+            minval=0,
+            maxval=1,
+            dtype="float32",
+        )
+
+        noisy_latents = keras.ops.add(
+            keras.ops.multiply(
+                keras.ops.subtract(1.0, keras.ops.reshape(timesteps, (-1, 1, 1, 1))),
+                latents,
+            ),
+            keras.ops.multiply(keras.ops.reshape(timesteps, (-1, 1, 1, 1)), noise),
+        )
+
+        target = keras.ops.subtract(noise, latents)
+
+        model_pred = self.diffusion_model(
+            {
+                "latent": noisy_latents,
+                "context": embedded_texts,
+                "pooled_projection": pooled_embeddings,
+                "timestep": keras.ops.reshape(timesteps, (-1, 1)),
+            },
+            training=True,
+        )
+
+        loss = self._compute_split_loss(target, model_pred)
         return loss
 
+    def _compute_split_loss(self, target, model_pred):
+        """Compute split loss for instance and class images."""
+        model_pred, model_pred_prior = keras.ops.split(model_pred, 2, axis=0)
+        target, target_prior = keras.ops.split(target, 2, axis=0)
+
+        target = keras.ops.cast(target, "float32")
+        model_pred = keras.ops.cast(model_pred, "float32")
+        target_prior = keras.ops.cast(target_prior, "float32")
+        model_pred_prior = keras.ops.cast(model_pred_prior, "float32")
+
+        loss = keras.ops.mean(keras.ops.square(target - model_pred))
+        prior_loss = keras.ops.mean(keras.ops.square(target_prior - model_pred_prior))
+
+        return loss + self.prior_loss_weight * prior_loss
+
     def save_weights(self, filepath, overwrite=True, save_format=None, options=None):
-        # Overriding this method will allow us to use the `ModelCheckpoint`
-        # callback directly with this trainer class. In this case, it will
-        # only checkpoint the `diffusion_model` since that's what we're training
-        # during fine-tuning.
-        self.diffusion_model.save_weights(
-            filepath=filepath,
-            overwrite=overwrite,
-            save_format=save_format,
-            options=options,
-        )
+        self.diffusion_model.save_weights(filepath=filepath)
 
     def load_weights(self, filepath, by_name=False, skip_mismatch=False, options=None):
-        # Similarly override `load_weights()` so that we can directly call it on
-        # the trainer class object.
-        self.diffusion_model.load_weights(
-            filepath=filepath,
-            by_name=by_name,
-            skip_mismatch=skip_mismatch,
-            options=options,
-        )
+        self.diffusion_model.load_weights(filepath=filepath)
 
 ```
 
@@ -557,42 +622,22 @@ class DreamBoothTrainer(tf.keras.Model):
 
 
 ```python
-# Comment it if you are not using a GPU having tensor cores.
-tf.keras.mixed_precision.set_global_policy("mixed_float16")
 
-use_mp = True  # Set it to False if you're not using a GPU with tensor cores.
+use_mp = True
 
-image_encoder = keras_cv.models.stable_diffusion.ImageEncoder()
-dreambooth_trainer = DreamBoothTrainer(
-    diffusion_model=keras_cv.models.stable_diffusion.DiffusionModel(
-        resolution, resolution, max_prompt_length
-    ),
-    # Remove the top layer from the encoder, which cuts off the variance and only
-    # returns the mean.
-    vae=tf.keras.Model(
-        image_encoder.input,
-        image_encoder.layers[-2].output,
-    ),
-    noise_scheduler=keras_cv.models.stable_diffusion.NoiseScheduler(),
-    use_mixed_precision=use_mp,
-)
+keras.mixed_precision.set_global_policy("mixed_float16")
 
-# These hyperparameters come from this tutorial by Hugging Face:
-# https://github.com/huggingface/diffusers/tree/main/examples/dreambooth
-learning_rate = 5e-6
-beta_1, beta_2 = 0.9, 0.999
-weight_decay = (1e-2,)
-epsilon = 1e-08
+print("Reusing SD3 backbone from text encoding step...")
 
-optimizer = tf.keras.optimizers.experimental.AdamW(
-    learning_rate=learning_rate,
-    weight_decay=weight_decay,
-    beta_1=beta_1,
-    beta_2=beta_2,
-    epsilon=epsilon,
-)
-dreambooth_trainer.compile(optimizer=optimizer, loss="mse")
+diffusion_model = sd3_backbone.diffuser
+
+vae = sd3_backbone.vae
+
 ```
+
+<div class="k-default-codeblock">
+Reusing SD3 backbone from text encoding step...
+</div>
 
 ---
 ## Train!
@@ -601,47 +646,87 @@ We first calculate the number of epochs, we need to train for.
 
 
 ```python
-num_update_steps_per_epoch = train_dataset.cardinality()
-max_train_steps = 800
+
+num_update_steps_per_epoch = len(train_dataset)
+max_train_steps = 1200
 epochs = math.ceil(max_train_steps / num_update_steps_per_epoch)
 print(f"Training for {epochs} epochs.")
+
 ```
 
 <div class="k-default-codeblock">
-```
-Training for 4 epochs.
-
-```
+Training for 6 epochs.
 </div>
+
 And then we start training!
 
 
 ```python
-ckpt_path = "dreambooth-unet.h5"
-ckpt_callback = tf.keras.callbacks.ModelCheckpoint(
+
+dreambooth_trainer = DreamBoothTrainer(
+    diffusion_model=sd3_backbone.diffuser,
+    vae=sd3_backbone.vae,
+    backbone=sd3_backbone,
+    noise_scheduler=None,
+    use_mixed_precision=use_mp,
+    prior_loss_weight=1.0,
+)
+
+learning_rate = 1e-5
+optimizer = keras.optimizers.AdamW(
+    learning_rate=learning_rate,
+    weight_decay=0.0,
+    beta_1=0.9,
+    beta_2=0.999,
+    epsilon=1e-08,
+    clipnorm=1.0,
+)
+
+dreambooth_trainer.compile(optimizer=optimizer, loss="mse")
+
+print("Starting training (resolution: 512x512)...")
+ckpt_path = "dreambooth-unet.weights.h5"
+ckpt_callback = keras.callbacks.ModelCheckpoint(
     ckpt_path,
     save_weights_only=True,
     monitor="loss",
     mode="min",
 )
+
 dreambooth_trainer.fit(train_dataset, epochs=epochs, callbacks=[ckpt_callback])
+
 ```
 
 <div class="k-default-codeblock">
-```
-Epoch 1/4
-200/200 [==============================] - 301s 462ms/step - loss: 0.1203
-Epoch 2/4
-200/200 [==============================] - 94s 469ms/step - loss: 0.1139
-Epoch 3/4
-200/200 [==============================] - 94s 469ms/step - loss: 0.1016
-Epoch 4/4
-200/200 [==============================] - 94s 469ms/step - loss: 0.1231
+Starting training (resolution: 512x512)...
 
-<keras.callbacks.History at 0x7f19726600a0>
+Epoch 1/6
 
-```
+200/200 ━━━━━━━━━━━━━━━━━━━━ 2037s 10s/step - loss: 0.9379
+
+Epoch 2/6
+
+200/200 ━━━━━━━━━━━━━━━━━━━━ 1962s 10s/step - loss: 0.8031
+
+Epoch 3/6
+
+200/200 ━━━━━━━━━━━━━━━━━━━━ 1964s 10s/step - loss: 0.6908
+
+Epoch 4/6
+
+200/200 ━━━━━━━━━━━━━━━━━━━━ 1972s 10s/step - loss: 0.6907
+
+Epoch 5/6
+
+200/200 ━━━━━━━━━━━━━━━━━━━━ 1971s 10s/step - loss: 0.6913
+
+Epoch 6/6
+
+200/200 ━━━━━━━━━━━━━━━━━━━━ 1970s 10s/step - loss: 0.6932
+
+<keras.src.callbacks.history.History at 0x75078cdb77d0>
 </div>
+
 ---
 ## Experiments and inference
 
@@ -654,81 +739,54 @@ First, let's see how we can use the fine-tuned checkpoint for running inference.
 
 
 ```python
-# Initialize a new Stable Diffusion model.
-dreambooth_model = keras_cv.models.StableDiffusion(
-    img_width=resolution, img_height=resolution, jit_compile=True
-)
-dreambooth_model.diffusion_model.load_weights(ckpt_path)
 
-# Note how the unique identifier and the class have been used in the prompt.
+import numpy as np
+
+print("Loading Stable Diffusion 3 with 512x512 resolution (float32)...")
+dreambooth_model_512 = keras_hub.models.StableDiffusion3TextToImage.from_preset(
+    "stable_diffusion_3_medium",
+    image_shape=(512, 512, 3),
+    dtype="float32",
+)
+
+print(f"Loading fine-tuned weights from {ckpt_path}...")
+dreambooth_model_512.backbone.diffuser.load_weights(ckpt_path)
+
+```
+
+<div class="k-default-codeblock">
+Loading Stable Diffusion 3 with 512x512 resolution (float32)...
+
+Loading fine-tuned weights from dreambooth-unet.weights.h5...
+</div>
+
+The default number of steps for generating an image with Stable Diffusion 3
+is 50. Let's increase it to 100 for potentially better quality.
+
+
+```python
+
 prompt = f"A photo of {unique_id} {class_label} in a bucket"
-num_imgs_to_gen = 3
+print(f"Generating images for prompt: '{prompt}'...")
 
-images_dreamboothed = dreambooth_model.text_to_image(prompt, batch_size=num_imgs_to_gen)
-plot_images(images_dreamboothed, prompt)
+prompts = [prompt] * 3
+
+images_dreamboothed = dreambooth_model_512.generate(prompts, num_steps=100, seed=42)
+
+images_dreamboothed = np.array(images_dreamboothed)
+if images_dreamboothed.ndim == 3:
+    images_dreamboothed = np.expand_dims(images_dreamboothed, axis=0)
+
+plot_images(images_dreamboothed, title=prompt)
+
 ```
 
 <div class="k-default-codeblock">
-```
-By using this model checkpoint, you acknowledge that its usage is subject to the terms of the CreativeML Open RAIL-M license at https://raw.githubusercontent.com/CompVis/stable-diffusion/main/LICENSE
-50/50 [==============================] - 42s 160ms/step
-
-```
+Generating images for prompt: 'A photo of sks dog in a bucket'...
 </div>
-![png](/img/examples/generative/dreambooth/dreambooth_40_1.png)
 
-
-Now, let's load checkpoints from a different experiment we conducted where we also
-fine-tuned the text encoder along with the UNet:
-
-
-```python
-unet_weights = tf.keras.utils.get_file(
-    origin="https://huggingface.co/chansung/dreambooth-dog/resolve/main/lr%409e-06-max_train_steps%40200-train_text_encoder%40True-unet.h5"
-)
-text_encoder_weights = tf.keras.utils.get_file(
-    origin="https://huggingface.co/chansung/dreambooth-dog/resolve/main/lr%409e-06-max_train_steps%40200-train_text_encoder%40True-text_encoder.h5"
-)
-
-dreambooth_model.diffusion_model.load_weights(unet_weights)
-dreambooth_model.text_encoder.load_weights(text_encoder_weights)
-
-images_dreamboothed = dreambooth_model.text_to_image(prompt, batch_size=num_imgs_to_gen)
-plot_images(images_dreamboothed, prompt)
-```
-
-<div class="k-default-codeblock">
-```
-Downloading data from https://huggingface.co/chansung/dreambooth-dog/resolve/main/lr%409e-06-max_train_steps%40200-train_text_encoder%40True-unet.h5
-3439088208/3439088208 [==============================] - 67s 0us/step
-Downloading data from https://huggingface.co/chansung/dreambooth-dog/resolve/main/lr%409e-06-max_train_steps%40200-train_text_encoder%40True-text_encoder.h5
-492466760/492466760 [==============================] - 9s 0us/step
-50/50 [==============================] - 8s 159ms/step
-
-```
-</div>
-![png](/img/examples/generative/dreambooth/dreambooth_42_1.png)
-
-
-The default number of steps for generating an image in `text_to_image()`
-[is 50](https://github.com/keras-team/keras-cv/blob/3575bc3b944564fe15b46b917e6555aa6a9d7be0/keras_cv/models/stable_diffusion/stable_diffusion.py#L73).
-Let's increase it to 100.
-
-
-```python
-images_dreamboothed = dreambooth_model.text_to_image(
-    prompt, batch_size=num_imgs_to_gen, num_steps=100
-)
-plot_images(images_dreamboothed, prompt)
-```
-
-<div class="k-default-codeblock">
-```
-100/100 [==============================] - 16s 159ms/step
-
-```
-</div>
-![png](/img/examples/generative/dreambooth/dreambooth_44_1.png)
+![png](/examples/generative/img/dreambooth/dreambooth_40_1.png)
+    
 
 
 Feel free to experiment with different prompts (don't forget to add the unique identifier

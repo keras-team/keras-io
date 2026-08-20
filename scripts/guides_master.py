@@ -140,12 +140,20 @@ GUIDES_MASTER = {
             "title": "GPTQ quantization in Keras",
         },
         {
+            "path": "awq_quantization_in_keras",
+            "title": "AWQ quantization in Keras",
+        },
+        {
             "path": "writing_quantization_compatible_layers",
             "title": "Writing quantization-compatible layers in Keras",
         },
         {
             "path": "customizing_quantization",
             "title": "Customizing quantization in Keras",
+        },
+        {
+            "path": "litert_export",
+            "title": "Exporting Keras models to LiteRT",
         },
         {
             "path": "define_custom_kernel",

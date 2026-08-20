@@ -157,14 +157,14 @@ LOSSES_MASTER = {
                 "keras_rs.losses.PairwiseSoftZeroOneLoss.call",
             ],
         },
-        # {
-        #     "path": "list_mle_loss",
-        #     "title": "ListMLELoss",
-        #     "generate": [
-        #         "keras_rs.losses.ListMLELoss",
-        #         "keras_rs.losses.ListMLELoss.call",
-        #     ],
-        # },
+        {
+            "path": "list_mle_loss",
+            "title": "ListMLELoss",
+            "generate": [
+                "keras_rs.losses.ListMLELoss",
+                "keras_rs.losses.ListMLELoss.call",
+            ],
+        },
     ],
 }
 
@@ -265,6 +265,10 @@ RS_EXAMPLES_MASTER = {
         {
             "path": "sas_rec",
             "title": "Sequential retrieval using SASRec",
+        },
+        {
+            "path": "contextual_retrieval_yambda",
+            "title": "Context-Aware Music Retrieval with Yambda and JAX",
         },
         {
             "path": "distributed_embedding_jax",
