@@ -2,7 +2,7 @@
 
 **Author:** [Khalid Salama](https://www.linkedin.com/in/khalid-salama-24403144/)<br>
 **Date created:** 2020/05/10<br>
-**Last modified:** 2021/02/15<br>
+**Last modified:** 2026/02/25<br>
 **Description:** Implement a Switch Transformer for text classification.
 
 
@@ -57,9 +57,9 @@ x_val = keras.utils.pad_sequences(x_val, maxlen=num_tokens_per_example)
 ```
 25000 Training sequences
 25000 Validation sequences
-
 ```
 </div>
+
 ---
 ## Define hyperparameters
 
@@ -82,9 +82,9 @@ print(f"Number of tokens per batch: {num_tokens_per_batch}")
 <div class="k-default-codeblock">
 ```
 Number of tokens per batch: 10000
-
 ```
 </div>
+
 ---
 ## Implement token & position embedding layer
 
@@ -206,9 +206,11 @@ class Router(layers.Layer):
             * ops.squeeze(ops.one_hot(expert_index, self.num_experts), 1),
             -1,
         ) * ops.squeeze(ops.one_hot(position_in_expert, self.expert_capacity), 1)
+
         # Create binary dispatch_tensor [tokens_per_batch, num_experts, expert_capacity]
         # that is 1 if the token gets routed to the corresponding expert.
-        dispatch_tensor = ops.cast(combined_tensor, "float32")
+# cast to float32 so it can be used in the einsum product in the Switch layer.
+dispatch_tensor = ops.cast(combined_tensor, dtype="float32")
 
         return dispatch_tensor, combined_tensor
 
@@ -239,10 +241,11 @@ class Switch(layers.Layer):
 
         # inputs shape: [num_tokens_per_batch, embed_dim]
         inputs = ops.reshape(inputs, [num_tokens_per_batch, self.embed_dim])
-        # dispatch_tensor shape: [expert_capacity, num_experts, tokens_per_batch]
-        # combine_tensor shape: [tokens_per_batch, num_experts, expert_capacity]
-        dispatch_tensor, combine_tensor = self.router(inputs)
-        # expert_inputs shape: [num_experts, expert_capacity, embed_dim]
+# dispatch_tensor shape: [tokens_per_batch, num_experts, expert_capacity]
+# combine_tensor shape: [tokens_per_batch, num_experts, expert_capacity]
+dispatch_tensor, combine_tensor = self.router(inputs)
+# expert_inputs shape: [num_experts, expert_capacity, embed_dim]
+# "ab" = [tokens, dim], "acd" = [tokens, experts, capacity] -> "cdb" = [experts, capacity, dim]
         expert_inputs = ops.einsum("ab,acd->cdb", inputs, dispatch_tensor)
         expert_inputs = ops.reshape(
             expert_inputs, [self.num_experts, self.expert_capacity, self.embed_dim]
@@ -357,16 +360,21 @@ run_experiment(classifier)
 <div class="k-default-codeblock">
 ```
 Epoch 1/3
- 500/500 ━━━━━━━━━━━━━━━━━━━━ 251s 485ms/step - accuracy: 0.7121 - loss: 1.5394 - val_accuracy: 0.8748 - val_loss: 1.2891
+
+500/500 ━━━━━━━━━━━━━━━━━━━━ 237s 470ms/step - accuracy: 0.7964 - loss: 1.4334 - val_accuracy: 0.8550 - val_loss: 1.3459
+
 Epoch 2/3
- 500/500 ━━━━━━━━━━━━━━━━━━━━ 240s 480ms/step - accuracy: 0.9243 - loss: 1.2063 - val_accuracy: 0.8752 - val_loss: 1.3090
+
+500/500 ━━━━━━━━━━━━━━━━━━━━ 266s 532ms/step - accuracy: 0.9182 - loss: 1.2174 - val_accuracy: 0.8750 - val_loss: 1.3057
+
 Epoch 3/3
- 500/500 ━━━━━━━━━━━━━━━━━━━━ 242s 485ms/step - accuracy: 0.9572 - loss: 1.1222 - val_accuracy: 0.8614 - val_loss: 1.3744
 
-<keras.src.callbacks.history.History at 0x7efb79d82a90>
+500/500 ━━━━━━━━━━━━━━━━━━━━ 272s 545ms/step - accuracy: 0.9519 - loss: 1.1388 - val_accuracy: 0.8637 - val_loss: 1.3765
 
+<keras.src.callbacks.history.History at 0x176081090>
 ```
 </div>
+
 ---
 ## Conclusion
 

@@ -2,6 +2,10 @@
 @import url("icons.css");
 @import url("colors.css");
 
+html {
+  scroll-padding-top: 100px;
+}
+
 body {
   font-family: 'Montserrat', 'Open Sans', sans-serif;
   font-size: 0.95rem
