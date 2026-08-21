@@ -3128,15 +3128,6 @@ MODELS_MASTER = {
                     ],
                 },
                 {
-                    "path": "t5_preprocessor",
-                    "title": "T5Preprocessor layer",
-                    "generate": [
-                        "keras_hub.models.T5Preprocessor",
-                        "keras_hub.models.T5Preprocessor.from_preset",
-                        "keras_hub.models.T5Preprocessor.tokenizer",
-                    ],
-                },
-                {
                     "path": "t5_backbone",
                     "title": "T5Backbone model",
                     "generate": [
@@ -3146,25 +3137,12 @@ MODELS_MASTER = {
                     ],
                 },
                 {
-                    "path": "t5_seq_2_seq_lm",
-                    "title": "T5Seq2SeqLM model",
+                    "path": "t5_preprocessor",
+                    "title": "T5Preprocessor layer",
                     "generate": [
-                        "keras_hub.models.T5Seq2SeqLM",
-                        "keras_hub.models.T5Seq2SeqLM.from_preset",
-                        "keras_hub.models.T5Seq2SeqLM.generate",
-                        "keras_hub.models.T5Seq2SeqLM.backbone",
-                        "keras_hub.models.T5Seq2SeqLM.preprocessor",
-                    ],
-                },
-                {
-                    "path": "t5_seq_2_seq_lm_preprocessor",
-                    "title": "T5Seq2SeqLMPreprocessor layer",
-                    "generate": [
-                        "keras_hub.models.T5Seq2SeqLMPreprocessor",
-                        "keras_hub.models.T5Seq2SeqLMPreprocessor.from_preset",
-                        "keras_hub.models.T5Seq2SeqLMPreprocessor.generate_preprocess",
-                        "keras_hub.models.T5Seq2SeqLMPreprocessor.generate_postprocess",
-                        "keras_hub.models.T5Seq2SeqLMPreprocessor.tokenizer",
+                        "keras_hub.models.T5Preprocessor",
+                        "keras_hub.models.T5Preprocessor.from_preset",
+                        "keras_hub.models.T5Preprocessor.tokenizer",
                     ],
                 },
             ],
