@@ -245,6 +245,11 @@ style_root, content_root = ensure_fallback_image_dirs(
 style_paths = list_image_paths(style_root)
 content_paths = list_image_paths(content_root)
 
+# Shuffle before splitting so the split doesn't depend on filesystem order.
+rng = np.random.default_rng(seed=42)
+rng.shuffle(style_paths)
+rng.shuffle(content_paths)
+
 # Split style/content paths
 train_style, val_style, test_style = split_paths(style_paths)
 train_content, val_content, test_content = split_paths(content_paths)
@@ -258,7 +263,7 @@ train_ds = StyleContentPyDataset(
     shuffle=True,
 )
 val_ds = StyleContentPyDataset(
-    val_style, val_content, batch_size=BATCH_SIZE, image_size=IMAGE_SIZE, shuffle=True
+    val_style, val_content, batch_size=BATCH_SIZE, image_size=IMAGE_SIZE, shuffle=False
 )
 test_ds = StyleContentPyDataset(
     test_style, test_content, batch_size=BATCH_SIZE, image_size=IMAGE_SIZE, shuffle=True
