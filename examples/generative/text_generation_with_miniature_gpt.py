@@ -2,7 +2,7 @@
 Title: Text generation with a miniature GPT
 Author: [Apoorv Nandan](https://twitter.com/NandanApoorv)
 Date created: 2020/05/29
-Last modified: 2020/05/29
+Last modified: 2026/08/21
 Description: Implement a miniature version of GPT and train it to generate text.
 Accelerator: GPU
 """
@@ -19,9 +19,6 @@ and generate new movie reviews for a given prompt.
 When using this script with your own dataset, make sure it has at least
 1 million words.
 
-This example should be run with `tf-nightly>=2.3.0-dev20200531` or
-with TensorFlow 2.3 or higher.
-
 **References:**
 
 - [GPT](https://www.semanticscholar.org/paper/Improving-Language-Understanding-by-Generative-Radford/cd18800a0fe0b668a1cc19f2ec95b5003d0a5035)
@@ -31,25 +28,15 @@ with TensorFlow 2.3 or higher.
 """
 ## Setup
 """
-# We set the backend to TensorFlow. The code works with
-# both `tensorflow` and `torch`. It does not work with JAX
-# due to the behavior of `jax.numpy.tile` in a jit scope
-# (used in `causal_attention_mask()`: `tile` in JAX does
-# not support a dynamic `reps` argument.
-# You can make the code work in JAX by wrapping the
-# inside of the `causal_attention_mask` function in
-# a decorator to prevent jit compilation:
-# `with jax.ensure_compile_time_eval():`.
 import os
 
-os.environ["KERAS_BACKEND"] = "tensorflow"
+os.environ["KERAS_BACKEND"] = "jax"
 
 import keras
 from keras import layers
 from keras import ops
 from keras.layers import TextVectorization
 import numpy as np
-import os
 import string
 import random
 import tensorflow
@@ -59,23 +46,6 @@ import tensorflow.strings as tf_strings
 """
 ## Implement a Transformer block as a layer
 """
-
-
-def causal_attention_mask(batch_size, n_dest, n_src, dtype):
-    """
-    Mask the upper half of the dot product matrix in self attention.
-    This prevents flow of information from future tokens to current token.
-    1's in the lower triangle, counting from the lower right corner.
-    """
-    i = ops.arange(n_dest)[:, None]
-    j = ops.arange(n_src)
-    m = i >= j - n_src + n_dest
-    mask = ops.cast(m, dtype)
-    mask = ops.reshape(mask, [1, n_dest, n_src])
-    mult = ops.concatenate(
-        [ops.expand_dims(batch_size, -1), ops.convert_to_tensor([1, 1])], 0
-    )
-    return ops.tile(mask, mult)
 
 
 class TransformerBlock(layers.Layer):
@@ -94,11 +64,7 @@ class TransformerBlock(layers.Layer):
         self.dropout2 = layers.Dropout(rate)
 
     def call(self, inputs):
-        input_shape = ops.shape(inputs)
-        batch_size = input_shape[0]
-        seq_len = input_shape[1]
-        causal_mask = causal_attention_mask(batch_size, seq_len, seq_len, "bool")
-        attention_output = self.att(inputs, inputs, attention_mask=causal_mask)
+        attention_output = self.att(inputs, inputs, use_causal_mask=True)
         attention_output = self.dropout1(attention_output)
         out1 = self.layernorm1(inputs + attention_output)
         ffn_output = self.ffn(out1)
@@ -275,7 +241,7 @@ class TextGenerator(keras.callbacks.Callback):
             pad_len = maxlen - len(start_tokens)
             sample_index = len(start_tokens) - 1
             if pad_len < 0:
-                x = start_tokens[:maxlen]
+                x = start_tokens[-maxlen:]
                 sample_index = maxlen - 1
             elif pad_len > 0:
                 x = start_tokens + [0] * pad_len

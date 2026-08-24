@@ -2,7 +2,7 @@
 
 **Author:** [Apoorv Nandan](https://twitter.com/NandanApoorv)<br>
 **Date created:** 2020/05/29<br>
-**Last modified:** 2020/05/29<br>
+**Last modified:** 2026/08/21<br>
 **Description:** Implement a miniature version of GPT and train it to generate text.
 
 
@@ -22,9 +22,6 @@ and generate new movie reviews for a given prompt.
 When using this script with your own dataset, make sure it has at least
 1 million words.
 
-This example should be run with `tf-nightly>=2.3.0-dev20200531` or
-with TensorFlow 2.3 or higher.
-
 **References:**
 
 - [GPT](https://www.semanticscholar.org/paper/Improving-Language-Understanding-by-Generative-Radford/cd18800a0fe0b668a1cc19f2ec95b5003d0a5035)
@@ -36,31 +33,20 @@ with TensorFlow 2.3 or higher.
 
 
 ```python
-# We set the backend to TensorFlow. The code works with
-# both `tensorflow` and `torch`. It does not work with JAX
-# due to the behavior of `jax.numpy.tile` in a jit scope
-# (used in `causal_attention_mask()`: `tile` in JAX does
-# not support a dynamic `reps` argument.
-# You can make the code work in JAX by wrapping the
-# inside of the `causal_attention_mask` function in
-# a decorator to prevent jit compilation:
-# `with jax.ensure_compile_time_eval():`.
 import os
 
-os.environ["KERAS_BACKEND"] = "tensorflow"
+os.environ["KERAS_BACKEND"] = "jax"
 
 import keras
 from keras import layers
 from keras import ops
 from keras.layers import TextVectorization
 import numpy as np
-import os
 import string
 import random
 import tensorflow
 import tensorflow.data as tf_data
 import tensorflow.strings as tf_strings
-
 ```
 
 ---
@@ -68,23 +54,6 @@ import tensorflow.strings as tf_strings
 
 
 ```python
-
-def causal_attention_mask(batch_size, n_dest, n_src, dtype):
-    """
-    Mask the upper half of the dot product matrix in self attention.
-    This prevents flow of information from future tokens to current token.
-    1's in the lower triangle, counting from the lower right corner.
-    """
-    i = ops.arange(n_dest)[:, None]
-    j = ops.arange(n_src)
-    m = i >= j - n_src + n_dest
-    mask = ops.cast(m, dtype)
-    mask = ops.reshape(mask, [1, n_dest, n_src])
-    mult = ops.concatenate(
-        [ops.expand_dims(batch_size, -1), ops.convert_to_tensor([1, 1])], 0
-    )
-    return ops.tile(mask, mult)
-
 
 class TransformerBlock(layers.Layer):
     def __init__(self, embed_dim, num_heads, ff_dim, rate=0.1):
@@ -102,11 +71,7 @@ class TransformerBlock(layers.Layer):
         self.dropout2 = layers.Dropout(rate)
 
     def call(self, inputs):
-        input_shape = ops.shape(inputs)
-        batch_size = input_shape[0]
-        seq_len = input_shape[1]
-        causal_mask = causal_attention_mask(batch_size, seq_len, seq_len, "bool")
-        attention_output = self.att(inputs, inputs, attention_mask=causal_mask)
+        attention_output = self.att(inputs, inputs, use_causal_mask=True)
         attention_output = self.dropout1(attention_output)
         out1 = self.layernorm1(inputs + attention_output)
         ffn_output = self.ffn(out1)
@@ -180,6 +145,74 @@ generation task.
 !tar -xf aclImdb_v1.tar.gz
 ```
 
+<div class="k-default-codeblock">
+```
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+```
+</div>
+
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0
+
+    
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0
+
+    
+  0 80.2M    0 98304    0     0  62202      0  0:22:32  0:00:01  0:22:31 62178
+
+    
+  0 80.2M    0  304k    0     0   125k      0  0:10:55  0:00:02  0:10:53  125k
+
+    
+  0 80.2M    0  768k    0     0   223k      0  0:06:08  0:00:03  0:06:05  223k
+
+    
+  1 80.2M    1 1584k    0     0   355k      0  0:03:51  0:00:04  0:03:47  355k
+
+    
+  3 80.2M    3 3056k    0     0   558k      0  0:02:27  0:00:05  0:02:22  622k
+
+    
+  6 80.2M    6 5584k    0     0   860k      0  0:01:35  0:00:06  0:01:29 1118k
+
+    
+ 11 80.2M   11 9728k    0     0  1296k      0  0:01:03  0:00:07  0:00:56 1855k
+
+    
+ 19 80.2M   19 15.7M    0     0  1892k      0  0:00:43  0:00:08  0:00:35 3023k
+
+    
+ 28 80.2M   28 22.7M    0     0  2446k      0  0:00:33  0:00:09  0:00:24 4279k
+
+    
+ 37 80.2M   37 29.7M    0     0  2891k      0  0:00:28  0:00:10  0:00:18 5402k
+
+    
+ 46 80.2M   46 37.4M    0     0  3313k      0  0:00:24  0:00:11  0:00:13 6443k
+
+    
+ 55 80.2M   55 44.1M    0     0  3641k      0  0:00:22  0:00:12  0:00:10 7226k
+
+    
+ 64 80.2M   64 51.6M    0     0  3934k      0  0:00:20  0:00:13  0:00:07 7475k
+
+    
+ 72 80.2M   72 57.8M    0     0  4098k      0  0:00:20  0:00:14  0:00:06 7307k
+
+    
+ 80 80.2M   80 64.4M    0     0  4266k      0  0:00:19  0:00:15  0:00:04 7221k
+
+    
+ 88 80.2M   88 71.2M    0     0  4429k      0  0:00:18  0:00:16  0:00:02 7059k
+
+    
+ 97 80.2M   97 78.2M    0     0  4583k      0  0:00:17  0:00:17 --:--:-- 6885k
+
+    
+100 80.2M  100 80.2M    0     0  4650k      0  0:00:17  0:00:17 --:--:-- 6924k
+
+
+
 ```python
 
 batch_size = 128
@@ -242,16 +275,13 @@ text_ds = text_ds.map(prepare_lm_inputs_labels, num_parallel_calls=tf_data.AUTOT
 text_ds = text_ds.prefetch(tf_data.AUTOTUNE)
 
 ```
+
 <div class="k-default-codeblock">
 ```
-  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
-                                 Dload  Upload   Total   Spent    Left  Speed
-100 80.2M  100 80.2M    0     0  7926k      0  0:00:10  0:00:10 --:--:-- 7661k
-
 50000 files
-
 ```
 </div>
+
 ---
 ## Implement a Keras callback for generating text
 
@@ -301,7 +331,7 @@ class TextGenerator(keras.callbacks.Callback):
             pad_len = maxlen - len(start_tokens)
             sample_index = len(start_tokens) - 1
             if pad_len < 0:
-                x = start_tokens[:maxlen]
+                x = start_tokens[-maxlen:]
                 sample_index = maxlen - 1
             elif pad_len > 0:
                 x = start_tokens + [0] * pad_len
@@ -347,240 +377,186 @@ model.fit(text_ds, verbose=2, epochs=25, callbacks=[text_gen_callback])
 ```
 Epoch 1/25
 
-WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
-I0000 00:00:1699499022.078758  633491 device_compiler.h:187] Compiled cluster using XLA!  This line is logged at most once for the lifetime of the process.
-/home/mattdangerw/miniconda3/envs/keras-tensorflow/lib/python3.10/contextlib.py:153: UserWarning: Your input ran out of data; interrupting training. Make sure that your dataset or generator can generate at least `steps_per_epoch * epochs` batches. You may need to use the `.repeat()` function when building your dataset.
-  self.gen.throw(typ, value, traceback)
+/usr/local/lib/python3.13/dist-packages/keras/src/trainers/epoch_iterator.py:164: UserWarning: Your input ran out of data; interrupting training. Make sure that your dataset or generator can generate at least `steps_per_epoch * epochs` batches. You may need to use the `.repeat()` function when building your dataset.
+  self._interrupted_warning()
 
 generated text:
-this movie is a good example of the [UNK] " movies , and the movie was pretty well written , i had to say that the movie made me of the [UNK] " and was very well done . i 've seen a few
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-391/391 - 33s - 84ms/step - loss: 5.4696
+this movie is a good horror movie , and it 's not a good movie about an excellent family . it has never a few years ago , but the story and all over the movie is a good movie . it is the
+
+391/391 - 60s - 154ms/step - loss: 5.6142
+
 Epoch 2/25
+
 generated text:
-this movie is so far the worst movies i have ever seen . it is that it just a bit of a movie but i really don 't think it is a very bad movie . it is a lot and the characters in
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-391/391 - 16s - 42ms/step - loss: 4.7016
+this movie is bad , it isn 't the best film . if you were going to get a copy of the [UNK] of the movie . but it is not the only a bad movie that is a great movie that makes it
+
+391/391 - 48s - 123ms/step - loss: 4.7214
+
 Epoch 3/25
+
 generated text:
-this movie is a classic and has a good cast in a good story . the movie itself is good at best . the acting is superb , but the story is a little bit slow , the music hall , and music is
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-391/391 - 16s - 42ms/step - loss: 4.4533
+this movie is not the worst movie ! ! ! [UNK] and you 'll know what is about a good thing about this movie that makes me look like [UNK] " i can see it . i am not a big fan of the
+
+391/391 - 49s - 126ms/step - loss: 4.4726
+
 Epoch 4/25
+
 generated text:
-this movie is a good , and is not the greatest movie ever since , the director has a lot of [UNK] , but it 's just a bit of the original and the plot has some decent acting , it has a bit
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-391/391 - 16s - 42ms/step - loss: 4.2985
+this movie is a little gem . it is a movie about a group of teenagers , who enjoy themselves , who are on a journey , the [UNK] , the movie is [UNK] of an ancient [UNK] " and the film is a
+
+391/391 - 49s - 126ms/step - loss: 4.3193
+
 Epoch 5/25
+
 generated text:
-this movie is really bad , the acting in this movie is bad and bad . it 's not bad it . it 's a bad story about a bad film but i can 't imagine if it 's a bad ending . the
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-391/391 - 17s - 42ms/step - loss: 4.1787
+this movie is very very entertaining . it is not worth a look at it . if it is a true story or the plot is a very funny . it has to be funny . it doesn 't take the word from that
+
+391/391 - 49s - 126ms/step - loss: 4.2022
+
 Epoch 6/25
+
 generated text:
-this movie is so bad , the bad acting , everything is awful , the script is bad , and the only one that i just saw in the original [UNK] . i was hoping it could make up the sequel . it wasn
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-391/391 - 17s - 42ms/step - loss: 4.0807
+this movie is one of the worst movies i have ever watched . i can 't remember a little movie , but i don 't really care what i have ever seen on the first episode in the original series , but i can
+
+391/391 - 50s - 127ms/step - loss: 4.1067
+
 Epoch 7/25
+
 generated text:
-this movie is one of the best kung fu movies i 've ever seen , i have seen in my life that 's not for anyone who has to think of it , or maybe even though , i can 't find it funny
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-391/391 - 16s - 42ms/step - loss: 3.9978
+this movie is not the best film of all time . it was made on a saturday night television and i was hooked , when it first came out on tv . . . . . i was so , i went to a
+
+391/391 - 50s - 128ms/step - loss: 4.0243
+
 Epoch 8/25
+
 generated text:
-this movie is just plain boring . . . . . . . . . . . . . . . . . [UNK] , the movie [UNK] . . . [UNK] . . . . . . [UNK] is a bad , it
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-391/391 - 17s - 42ms/step - loss: 3.9236
+this movie is just terrible . the worst thing i 've seen it many films , and that you are looking for the dvd release in this movie . this is so awful that it is not a [UNK] of a horror movie .
+
+391/391 - 50s - 127ms/step - loss: 3.9527
+
 Epoch 9/25
+
 generated text:
-this movie is the only good movie i think i 've never seen it again . but it 's the only thing i feel about it . the story was about the fact that it was a very good movie . the movie has
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-391/391 - 17s - 42ms/step - loss: 3.8586
+this movie is a great movie . the story is about as simple as a family employing the old [UNK] of the old age of northern afghanistan and the other members of [UNK] , the family are very well chosen , and it is
+
+391/391 - 50s - 127ms/step - loss: 3.8885
+
 Epoch 10/25
+
 generated text:
-this movie is very well written and directed . it contains some of the best [UNK] in the genre . the story is about a group of actors , especially jamie harris and danny glover who are the only good guys that is really
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-391/391 - 17s - 42ms/step - loss: 3.8002
+this movie is so bad that it 's a good movie . i was expecting to see how bad it was , but it is not worth it . it is very good and i have seen to be one of them . the
+
+391/391 - 50s - 127ms/step - loss: 3.8317
+
 Epoch 11/25
+
 generated text:
-this movie is so terrible . i think that the movie isn 't as bad as you should go and watch it again . there were so many clichés that it 's a very bad movie in itself . there is no story line
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-391/391 - 17s - 42ms/step - loss: 3.7478
+this movie is really bad . it 's very well paced , the ending is very well made . i am so sure , but if the script had no sense of humor or intelligence to be seen by [UNK] , or not in
+
+391/391 - 82s - 210ms/step - loss: 3.7802
+
 Epoch 12/25
+
 generated text:
-this movie is a total waste of money and money . i am surprised to find it very funny , very enjoyable . the plot is totally unbelievable , the acting is horrible . the story is awful , it 's not scary at
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-391/391 - 17s - 42ms/step - loss: 3.6993
+this movie is really bad . the plot is very simple . the acting is terrible . the plot [UNK] , but the movie is so bad they could have a good thing but it 's not for everyone , but the story .
+
+391/391 - 51s - 130ms/step - loss: 3.7335
+
 Epoch 13/25
+
 generated text:
-this movie is so bad and not very good as it goes . it 's a nice movie and it 's so bad that it takes you back on your tv . i don 't really know how bad this movie is . you
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-391/391 - 17s - 42ms/step - loss: 3.6546
+this movie is so funny , and it has a funny little . . the [UNK] of the original story : a [UNK] of a bunch of [UNK] [UNK] [UNK] ) who can 't act . the whole movie makes it so good it
+
+391/391 - 49s - 126ms/step - loss: 3.6900
+
 Epoch 14/25
+
 generated text:
-this movie is a great fun story , with lots of action , and romance . if you like the action and the story is really bad . it doesn 't get the idea , but you have your heart of darkness . the
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-391/391 - 17s - 42ms/step - loss: 3.6147
+this movie is so bad i have ever seen . . bad . but i 'm a big fan of the horror genre is usually not even a bad movie . i have no idea , but i can say that i really liked
+
+391/391 - 50s - 128ms/step - loss: 3.6512
+
 Epoch 15/25
+
 generated text:
-this movie is a little more than a horror film . it 's not really a great deal , i can honestly say , a story about a group of teens that are all over the place . but this is still a fun
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-391/391 - 17s - 42ms/step - loss: 3.5769
+this movie is very good . the story line in the first film . it is very slow , plodding , dull , plodding and surprisingly tedious . it 's not really bad , dull , dull , plodding pace , but i think
+
+391/391 - 50s - 127ms/step - loss: 3.6147
+
 Epoch 16/25
+
 generated text:
-this movie is just about a guy who is supposed to be a girl in the [UNK] of a movie that doesn 't make sense . the humor is not to watch it all the way the movie is . you can 't know
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-391/391 - 17s - 42ms/step - loss: 3.5425
+this movie is not really a great idea for a film . it 's a classic that i can 't believe the main actor is in this movie that you could get better . i am still wondering who is a real movie but
+
+391/391 - 50s - 128ms/step - loss: 3.5816
+
 Epoch 17/25
+
 generated text:
-this movie is one of the best movies i 've ever seen . i was really surprised when renting it and it wasn 't even better in it , it was not even funny and i really don 't really know what i was
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-391/391 - 17s - 42ms/step - loss: 3.5099
+this movie is very bad . the first , a [UNK] , a [UNK] [UNK] " movie with [UNK] . i 'm glad to report the executives involved are at a [UNK] table , and their shows that you should have to be entertained
+
+391/391 - 50s - 127ms/step - loss: 3.5503
+
 Epoch 18/25
+
 generated text:
-this movie is so bad . i think it 's a bit overrated . i have a lot of bad movies . i have to say that this movie was just bad . i was hoping the [UNK] . the [UNK] is good "
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-391/391 - 17s - 43ms/step - loss: 3.4800
+this movie is not the worst . the script is a waste of time ! ! it has the script or plot of the movie is so bad that it 's not funny . the first of all , it has all , so
+
+391/391 - 50s - 127ms/step - loss: 3.5218
+
 Epoch 19/25
+
 generated text:
-this movie is one of the best kung fu movies i 've ever seen . it was a great movie , and for the music . the graphics are really cool . it 's like a lot more than the action scenes and action
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-391/391 - 17s - 42ms/step - loss: 3.4520
+this movie is so bad that i think it 's not a bad movie but it is so bad it 's a bad idea , the plot is simple but it 's not . the characters are all very likable and just a good
+
+391/391 - 50s - 127ms/step - loss: 3.4949
+
 Epoch 20/25
+
 generated text:
-this movie is just plain awful and stupid .i cant get the movie . i cant believe people have ever spent money and money on the [UNK] . i swear i was so embarrassed to say that i had a few lines that are
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-391/391 - 17s - 42ms/step - loss: 3.4260
+this movie is a bad , and it doesn 't work . it 's a shame that it doesn 't make much seem to be a great movie . . . . a good thing that makes it a nice to see the story
+
+391/391 - 50s - 127ms/step - loss: 3.4693
+
 Epoch 21/25
+
 generated text:
-this movie is one of those movies that i 've ever seen , and you must know that i can say that i was not impressed with this one . i found it to be an interesting one . the story of the first
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-391/391 - 17s - 42ms/step - loss: 3.4014
+this movie is not a comedy about a girl who falls in love with her love . she is also friendly , sweet , and sweet , charming . . . . but the story line with a young [UNK] woman who is now
+
+391/391 - 50s - 127ms/step - loss: 3.4459
+
 Epoch 22/25
+
 generated text:
-this movie is about a man 's life and it is a very good film and it takes a look at some sort of movie . this movie is one of the most amazing movie you have ever had to go in , so
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-391/391 - 17s - 42ms/step - loss: 3.3783
+this movie is really terrible ! i really liked [UNK] , it does not get the michigan , but it 's not funny . . [UNK] . and [UNK] ) [UNK] [UNK] is so sweet , the story of a young boy named dexter
+
+391/391 - 50s - 127ms/step - loss: 3.4238
+
 Epoch 23/25
+
 generated text:
-this movie is a great , good thing about this movie , even the worst i 've ever seen ! it doesn 't mean anything terribly , the acting and the directing is terrible . the script is bad , the plot and the
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-391/391 - 17s - 42ms/step - loss: 3.3564
+this movie is a bad movie , because of the bad acting , bad dialogue , and bad dialogue . it 's almost too cheesy sounding like some of them are not even [UNK] . [UNK] 's character was a good choice but i
+
+391/391 - 50s - 128ms/step - loss: 3.4028
+
 Epoch 24/25
+
 generated text:
-this movie is one of the best movies ever . [UNK] [UNK] ' is about the main character and a nobleman named fallon ; is stranded on an eccentric , falls in love when her island escaped . when , meanwhile , the escaped
-```
-</div>
-    
-<div class="k-default-codeblock">
-```
-391/391 - 17s - 42ms/step - loss: 3.3362
+this movie is not bad , but that bad enough . the acting is good , the special effects are so awful that you can 't see . i am very sure that this isn 't the worst film ever . this is a
+
+391/391 - 50s - 128ms/step - loss: 3.3821
+
 Epoch 25/25
+
 generated text:
-this movie is very good . the acting , especially the whole movie itself - a total of the worst . this movie had a lot to recommend it to anyone . it is not funny . the story is so lame ! the
+this movie is the only one i 've ever seen a lot in . it seems like the movie , and i can only remember it , as a child , it 's the most irritating , tender , [UNK] , and my wife
+
+391/391 - 50s - 127ms/step - loss: 3.3640
+
+<keras.src.callbacks.history.History at 0x781cac40dd30>
 ```
 </div>
-    
-<div class="k-default-codeblock">
-```
-391/391 - 17s - 42ms/step - loss: 3.3170
 
-<keras.src.callbacks.history.History at 0x7f2166975f90>
-
-```
-</div>
 ---
 ## Relevant Chapters from Deep Learning with Python
 - [Chapter 15: Language models and the Transformer](https://deeplearningwithpython.io/chapters/chapter15_language-models-and-the-transformer)
