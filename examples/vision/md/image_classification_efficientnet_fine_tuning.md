@@ -469,9 +469,6 @@ hist = model.fit(ds_train, epochs=epochs, validation_data=ds_test)
 <pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold">Model: "efficientnetb0"</span>
 </pre>
 
-
-
-
 <pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace">┏━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━┓
 ┃<span style="font-weight: bold"> Layer (type)        </span>┃<span style="font-weight: bold"> Output Shape      </span>┃<span style="font-weight: bold"> Param # </span>┃<span style="font-weight: bold"> Connected to         </span>┃
 ┡━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━┩
@@ -1196,20 +1193,11 @@ hist = model.fit(ds_train, epochs=epochs, validation_data=ds_test)
 └─────────────────────┴───────────────────┴─────────┴──────────────────────┘
 </pre>
 
-
-
-
 <pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Total params: </span><span style="color: #00af00; text-decoration-color: #00af00">4,203,291</span> (16.03 MB)
 </pre>
 
-
-
-
 <pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Trainable params: </span><span style="color: #00af00; text-decoration-color: #00af00">4,161,268</span> (15.87 MB)
 </pre>
-
-
-
 
 <pre style="white-space:pre;overflow-x:auto;line-height:normal;font-family:Menlo,'DejaVu Sans Mono',consolas,'Courier New',monospace"><span style="font-weight: bold"> Non-trainable params: </span><span style="color: #00af00; text-decoration-color: #00af00">42,023</span> (164.16 KB)
 </pre>
@@ -1495,9 +1483,9 @@ def unfreeze_model(
     Args:
         model: A `keras.Model` instance to unfreeze in place.
         layers_to_unfreeze: Either an `int` giving the number of layers,
-            counted from the end of `model.layers`, to unfreeze, or a `str`
+            counted from the end of the base model's layers, to unfreeze, or a `str`
             substring to match against layer names -- the first matching
-            layer and every layer after it (in `model.layers` order) are
+            layer and every layer after it (in the base model's layers order) are
             unfrozen. Use a string like `"block7"` to respect EfficientNet's
             residual block boundaries instead of an arbitrary layer count.
             Defaults to `20`.
@@ -1516,8 +1504,18 @@ def unfreeze_model(
     if metrics is None:
         metrics = ["accuracy"]
 
-    # Access the nested EfficientNetB0 base model
-    base_model = model.get_layer("efficientnetb0")
+    # Access the nested EfficientNet base model by finding the first layer
+    # with 'efficientnet' in its name (case-insensitive)
+    base_model = None
+    for layer in model.layers:
+        if "efficientnet" in layer.name.lower():
+            base_model = layer
+            break
+    if base_model is None:
+        raise ValueError(
+            "Could not find EfficientNet base model in the model. "
+            "Expected a layer with 'efficientnet' in its name."
+        )
     base_model.trainable = True
 
     # First, freeze all layers in the base model
@@ -1534,6 +1532,10 @@ def unfreeze_model(
             raise ValueError(f"No layer name contains {layers_to_unfreeze!r}.")
         layers_to_process = base_model.layers[unfreeze_from:]
     elif isinstance(layers_to_unfreeze, int):
+        if layers_to_unfreeze <= 0:
+            raise ValueError(
+                f"layers_to_unfreeze must be > 0, got {layers_to_unfreeze}"
+            )
         n_layers_to_unfreeze = min(layers_to_unfreeze, len(base_model.layers))
         layers_to_process = base_model.layers[-n_layers_to_unfreeze:]
     else:
@@ -1572,6 +1574,7 @@ Epoch 4/4
  187/187 ━━━━━━━━━━━━━━━━━━━━ 79s 419ms/step - accuracy: 0.6625 - loss: 1.1775 - val_accuracy: 0.7701 - val_loss: 0.8284
 
 ```
+
 </div>
     
 ![png](/img/examples/vision/image_classification_efficientnet_fine_tuning/image_classification_efficientnet_fine_tuning_25_1.png)
