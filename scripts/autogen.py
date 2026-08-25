@@ -216,11 +216,13 @@ class KerasIO:
                 nb_path = working_ipynb_dir / (name + ".ipynb")
                 md_path = Path(target_dir) / (name + ".md")
                 tutobooks.py_to_md(py_path, nb_path, md_path, img_dir)
-                md_content = open(md_path).read()
+                with open(md_path, encoding="utf-8") as f:
+                    md_content = f.read()
                 md_content = self.preprocess_tutobook_md_source(
                     md_content, fname, github_repo_dir, img_dir, site_img_dir
                 )
-                open(md_path, "w").write(md_content)
+                with open(md_path, "w", encoding="utf-8") as f:
+                    f.write(md_content)
         shutil.rmtree(working_ipynb_dir)
 
     def make_tutobook_ipynbs(self):
@@ -281,14 +283,15 @@ class KerasIO:
         tutobooks.py_to_nb(py_path, nb_path, fill_outputs=False)
         tutobooks.py_to_md(py_path, nb_path, md_path, img_dir, working_dir=working_dir)
 
-        md_content = open(md_path).read()
+        with open(md_path, encoding="utf-8") as f:
+            md_content = f.read()
         github_repo_dir = str(EXAMPLES_GH_LOCATION / folder)
         site_img_dir = os.path.join("img", "examples", folder, name)
         md_content = self.preprocess_tutobook_md_source(
             md_content, name + ".py", github_repo_dir, img_dir, site_img_dir
         )
-        open(md_path, "w").write(md_content)
-
+        with open(md_path, "w", encoding="utf-8") as f:
+            f.write(md_content)
     def add_guide(self, name, working_dir=None):
         """e.g. add_guide('functional_api')"""
 
@@ -318,14 +321,16 @@ class KerasIO:
         tutobooks.py_to_nb(py_path, nb_path, fill_outputs=False)
         tutobooks.py_to_md(py_path, nb_path, md_path, img_dir, working_dir=working_dir)
 
-        md_content = open(md_path).read()
+        with open(md_path, encoding="utf-8") as f:
+            md_content = f.read()
         md_content = md_content.replace("../guides/img/", "/img/guides/")
         github_repo_dir = str(GUIDES_GH_LOCATION)
         site_img_dir = "img/guides/" + name
         md_content = self.preprocess_tutobook_md_source(
             md_content, name + ".py", github_repo_dir, img_dir, site_img_dir
         )
-        open(md_path, "w").write(md_content)
+        with open(md_path, "w", encoding="utf-8") as f:
+            f.write(md_content)
 
     @staticmethod
     def disable_warnings():
@@ -460,7 +465,7 @@ class KerasIO:
             for example_fname in os.listdir(dir_path):
                 if example_fname.endswith(".md"):
                     md_path = dir_path / example_fname
-                    with open(md_path) as f:
+                    with open(md_path, encoding="utf-8") as f:
                         md_content = f.read()
                     example_name = (
                         section_name + "/" + example_fname.removesuffix(".md")
@@ -476,7 +481,7 @@ class KerasIO:
                             md_content_lines.insert(i, banner_text)
                             break
                     md_content = "\n".join(md_content_lines) + "\n"
-                    with open(md_path, "w") as f:
+                    with open(md_path, "w", encoding="utf-8") as f:
                         f.write(md_content)
 
     def sync_tutobook_media(self):
@@ -651,6 +656,8 @@ class KerasIO:
             if "generate" in entry:
                 for symbol in entry["generate"]:
                     object_ = docstrings.import_object(symbol)
+                    if object_ is None:
+                        continue
                     object_type = docstrings.get_type(object_)
                     object_name = symbol.split(".")[-1]
 
@@ -1153,25 +1160,30 @@ def generate_md_toc(entries, url, depth=2):
     assert url.endswith("/")
     entries = [e for e in entries if not e.get("skip_from_toc")]
     generated = ""
+
     if set(len(x.get("generate", [])) for x in entries) == {1}:
         print_generate = False
     else:
         print_generate = True
+
     for entry in entries:
         title = entry["title"]
         path = entry["path"]
+
         if not path.endswith("/"):
             path += "/"
+
         full_url = url + path
         children = entry.get("children")
         generate = entry.get("generate")
+
         if children or (print_generate and generate):
             title_prefix = "### "
         else:
             title_prefix = "- "
-        generated += title_prefix + "[{title}]({full_url})\n".format(
-            title=title, full_url=full_url
-        )
+
+        generated += f"{title_prefix}[{title}]({full_url})\n"
+
         if children:
             for child in children:
                 if child.get("skip_from_toc", False):
@@ -1179,23 +1191,34 @@ def generate_md_toc(entries, url, depth=2):
                 child_title = child["title"]
                 child_path = child["path"]
                 child_url = full_url + child_path
-                generated += "- [{child_title}]({child_url})\n".format(
-                    child_title=child_title, child_url=child_url
-                )
+                generated += f"- [{child_title}]({child_url})\n"
             generated += "\n"
+
         elif generate and print_generate:
             for gen in generate:
                 obj = docstrings.import_object(gen)
-                obj_name = docstrings.get_name(obj)
-                obj_type = docstrings.get_type(obj)
-                link = "{full_url}#{obj_name}-{obj_type}".format(
-                    full_url=full_url, obj_name=obj_name, obj_type=obj_type
-                ).lower()
+
+                #  HARD GUARD
+                if obj is None:
+                    continue
+
+                #  DOUBLE SAFE GUARD
+                if not hasattr(obj, "__name__"):
+                    continue
+
+                try:
+                    obj_name = docstrings.get_name(obj)
+                    obj_type = docstrings.get_type(obj)
+                except Exception:
+                    continue
+
+                link = f"{full_url}#{obj_name}-{obj_type}".lower()
                 name = gen.split(".")[-1]
-                generated += "- [{name} {obj_type}]({link})\n".format(
-                    name=name, obj_type=obj_type, link=link
-                )
+
+                generated += f"- [{name} {obj_type}]({link})\n"
+
             generated += "\n"
+
     return generated
 
 
