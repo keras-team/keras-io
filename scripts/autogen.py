@@ -54,20 +54,15 @@ def _build_project_url():
     """
     project_url = {}
     for module_name, repo_name in _MODULE_TO_REPO.items():
-        try:
-            mod = importlib.import_module(module_name)
-            version = mod.__version__
-            if ".dev" in version:
-                # Nightly builds have no GitHub tag; use master.
-                ref = "master"
-            else:
-                ref = f"v{version}"
-            project_url[module_name] = (
-                f"{KERAS_TEAM_GH}/{repo_name}/tree/{ref}/"
-            )
-        except (ModuleNotFoundError, AttributeError):
-            # Package not installed; skip silently.
-            pass
+        mod = importlib.import_module(module_name)
+        version = mod.__version__
+        if ".dev" in version:
+            ref = "master"
+        else:
+            ref = f"v{version}"
+        project_url[module_name] = (
+            f"{KERAS_TEAM_GH}/{repo_name}/tree/{ref}/"
+        )
     return project_url
 
 
