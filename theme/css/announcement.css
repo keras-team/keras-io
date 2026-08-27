@@ -12,6 +12,20 @@
     padding: 0 2em 2em;
 }
 
+.blog-content p {
+    margin-bottom: 1.25rem;
+    line-height: 1.65;
+}
+
+.blog-content ul {
+    margin-bottom: 1.25rem;
+}
+
+.blog-content li {
+    margin-bottom: 0.5rem;
+    line-height: 1.65;
+}
+
 strong {
     font-weight: 600;
     font-family: Arial;

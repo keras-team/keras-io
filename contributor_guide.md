@@ -59,6 +59,20 @@ Instead, mention the dependencies in the text, alongside an example of the pip c
 This example requires XYZ. You can install it via the following command: `pip install XYZ`
 ```
 
+## GitHub Actions Security Validation
+
+Pull requests modifying GitHub Actions workflows are automatically validated using Zizmor.
+Before requesting review:
+
+- **Pin Actions to True Commits:** Never use floating or annotated tags. Always pin third-party GitHub Actions to their true, underlying commit SHAs.
+- Resolve all Zizmor findings whenever possible.
+- Run Zizmor locally when modifying workflow files (e.g., using `uvx zizmor .github/` or `pipx run zizmor .github/`).
+- Use `# zizmor: ignore[rule-name]` only for verified false positives.
+  - Examples: `# zizmor: ignore[cache-poisoning]`, `# zizmor: ignore[insecure-pull-request-target]`.
+  - For a full list of rules, see the [Zizmor Rules Documentation](https://docs.zizmor.sh/audits/).
+- Every suppression must include a clear justification explaining why the finding is safe.
+- Pull requests containing undocumented suppressions may be rejected during review.
+
 ---
 
 ## Model development best practices
