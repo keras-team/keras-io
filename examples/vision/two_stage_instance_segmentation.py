@@ -118,6 +118,9 @@ def draw_image(image, boxes=None, labels=None, scores=None):
     ax = plt.gca()
     ax.set_axis_off()
     ax.imshow(image.astype("uint8"), extent=(0, 1, 1, 0))
+    boxes = boxes if boxes is not None else []
+    labels = labels if labels is not None else []
+    scores = scores if scores is not None else []
     for box, label, score in zip(boxes, labels, scores):
         draw_box(box, label, score)
 
