@@ -41,7 +41,6 @@ os.environ["KERAS_BACKEND"] = "jax"
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import colors
-import os
 
 import keras
 from keras import ops
