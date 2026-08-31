@@ -187,6 +187,28 @@ BASE_CLASSES = {
             ],
         },
         {
+            "path": "text_embedder",
+            "title": "TextEmbedder",
+            "generate": [
+                "keras_hub.models.TextEmbedder",
+                "keras_hub.models.TextEmbedder.from_preset",
+                "keras_hub.models.TextEmbedder.compile",
+                "keras_hub.models.TextEmbedder.save_to_preset",
+                "keras_hub.models.TextEmbedder.preprocessor",
+                "keras_hub.models.TextEmbedder.backbone",
+            ],
+        },
+        {
+            "path": "text_embedder_preprocessor",
+            "title": "TextEmbedderPreprocessor",
+            "generate": [
+                "keras_hub.models.TextEmbedderPreprocessor",
+                "keras_hub.models.TextEmbedderPreprocessor.from_preset",
+                "keras_hub.models.TextEmbedderPreprocessor.save_to_preset",
+                "keras_hub.models.TextEmbedderPreprocessor.tokenizer",
+            ],
+        },
+        {
             "path": "text_to_image",
             "title": "TextToImage",
             "generate": [
@@ -420,6 +442,87 @@ MODELS_MASTER = {
                         "keras_hub.models.BertMaskedLMPreprocessor",
                         "keras_hub.models.BertMaskedLMPreprocessor.from_preset",
                         "keras_hub.models.BertMaskedLMPreprocessor.tokenizer",
+                    ],
+                },
+            ],
+        },
+        {
+            "path": "blip2/",
+            "title": "Blip2",
+            "toc": True,
+            "children": [
+                {
+                    "path": "blip2_image_converter",
+                    "title": "BLIP2ImageConverter",
+                    "generate": [
+                        "keras_hub.layers.BLIP2ImageConverter",
+                        "keras_hub.layers.BLIP2ImageConverter.from_preset",
+                    ],
+                },
+                {
+                    "path": "blip2_flan_t5_tokenizer",
+                    "title": "BLIP2FlanT5Tokenizer",
+                    "generate": [
+                        "keras_hub.tokenizers.BLIP2FlanT5Tokenizer",
+                        "keras_hub.tokenizers.BLIP2FlanT5Tokenizer.from_preset",
+                    ],
+                },
+                {
+                    "path": "blip2_opt_tokenizer",
+                    "title": "BLIP2OPTTokenizer",
+                    "generate": [
+                        "keras_hub.tokenizers.BLIP2OPTTokenizer",
+                        "keras_hub.tokenizers.BLIP2OPTTokenizer.from_preset",
+                    ],
+                },
+                {
+                    "path": "blip2_backbone",
+                    "title": "BLIP2Backbone model",
+                    "generate": [
+                        "keras_hub.models.BLIP2Backbone",
+                        "keras_hub.models.BLIP2Backbone.from_preset",
+                    ],
+                },
+                {
+                    "path": "blip2_causal_lm",
+                    "title": "BLIP2CausalLM model",
+                    "generate": [
+                        "keras_hub.models.BLIP2CausalLM",
+                        "keras_hub.models.BLIP2CausalLM.from_preset",
+                        "keras_hub.models.BLIP2CausalLM.generate",
+                        "keras_hub.models.BLIP2CausalLM.backbone",
+                        "keras_hub.models.BLIP2CausalLM.preprocessor",
+                    ],
+                },
+                {
+                    "path": "blip2_causal_lm_preprocessor",
+                    "title": "BLIP2CausalLMPreprocessor layer",
+                    "generate": [
+                        "keras_hub.models.BLIP2CausalLMPreprocessor",
+                        "keras_hub.models.BLIP2CausalLMPreprocessor.from_preset",
+                        "keras_hub.models.BLIP2CausalLMPreprocessor.image_converter",
+                        "keras_hub.models.BLIP2CausalLMPreprocessor.tokenizer",
+                    ],
+                },
+                {
+                    "path": "blip2_seq_2_seq_lm",
+                    "title": "BLIP2Seq2SeqLM model",
+                    "generate": [
+                        "keras_hub.models.BLIP2Seq2SeqLM",
+                        "keras_hub.models.BLIP2Seq2SeqLM.from_preset",
+                        "keras_hub.models.BLIP2Seq2SeqLM.generate",
+                        "keras_hub.models.BLIP2Seq2SeqLM.backbone",
+                        "keras_hub.models.BLIP2Seq2SeqLM.preprocessor",
+                    ],
+                },
+                {
+                    "path": "blip2_seq_2_seq_lm_preprocessor",
+                    "title": "BLIP2Seq2SeqLMPreprocessor layer",
+                    "generate": [
+                        "keras_hub.models.BLIP2Seq2SeqLMPreprocessor",
+                        "keras_hub.models.BLIP2Seq2SeqLMPreprocessor.from_preset",
+                        "keras_hub.models.BLIP2Seq2SeqLMPreprocessor.image_converter",
+                        "keras_hub.models.BLIP2Seq2SeqLMPreprocessor.tokenizer",
                     ],
                 },
             ],
@@ -1772,6 +1875,14 @@ MODELS_MASTER = {
                     ],
                 },
                 {
+                    "path": "mistral_tekken_tokenizer",
+                    "title": "MistralTekkenTokenizer",
+                    "generate": [
+                        "keras_hub.tokenizers.MistralTekkenTokenizer",
+                        "keras_hub.tokenizers.MistralTekkenTokenizer.from_preset",
+                    ],
+                },
+                {
                     "path": "mistral_backbone",
                     "title": "MistralBackbone model",
                     "generate": [
@@ -2349,6 +2460,51 @@ MODELS_MASTER = {
             ],
         },
         {
+            "path": "qwen3_5_moe/",
+            "title": "Qwen3.5 MoE",
+            "toc": True,
+            "children": [
+                {
+                    "path": "qwen3_5_moe_tokenizer",
+                    "title": "Qwen3_5MoeTokenizer",
+                    "generate": [
+                        "keras_hub.models.Qwen3_5MoeTokenizer",
+                        "keras_hub.models.Qwen3_5MoeTokenizer.from_preset",
+                    ],
+                },
+                {
+                    "path": "qwen3_5_moe_backbone",
+                    "title": "Qwen3_5MoeBackbone model",
+                    "generate": [
+                        "keras_hub.models.Qwen3_5MoeBackbone",
+                        "keras_hub.models.Qwen3_5MoeBackbone.from_preset",
+                        "keras_hub.models.Qwen3_5MoeBackbone.token_embedding",
+                        "keras_hub.models.Qwen3_5MoeBackbone.enable_lora",
+                    ],
+                },
+                {
+                    "path": "qwen3_5_moe_causal_lm",
+                    "title": "Qwen3_5MoeCausalLM model",
+                    "generate": [
+                        "keras_hub.models.Qwen3_5MoeCausalLM",
+                        "keras_hub.models.Qwen3_5MoeCausalLM.from_preset",
+                        "keras_hub.models.Qwen3_5MoeCausalLM.generate",
+                        "keras_hub.models.Qwen3_5MoeCausalLM.backbone",
+                        "keras_hub.models.Qwen3_5MoeCausalLM.preprocessor",
+                    ],
+                },
+                {
+                    "path": "qwen3_5_moe_causal_lm_preprocessor",
+                    "title": "Qwen3_5MoeCausalLMPreprocessor layer",
+                    "generate": [
+                        "keras_hub.models.Qwen3_5MoeCausalLMPreprocessor",
+                        "keras_hub.models.Qwen3_5MoeCausalLMPreprocessor.from_preset",
+                        "keras_hub.models.Qwen3_5MoeCausalLMPreprocessor.tokenizer",
+                    ],
+                },
+            ],
+        },
+        {
             "path": "qwen3_moe/",
             "title": "Qwen3Moe",
             "toc": True,
@@ -2866,14 +3022,6 @@ MODELS_MASTER = {
             "toc": True,
             "children": [
                 {
-                    "path": "sam_image_converter",
-                    "title": "SAMImageConverter",
-                    "generate": [
-                        "keras_hub.layers.SAMImageConverter",
-                        "keras_hub.layers.SAMImageConverter.from_preset",
-                    ],
-                },
-                {
                     "path": "stable_diffusion_3_backbone",
                     "title": "StableDiffusion3Backbone model",
                     "generate": [
@@ -2920,6 +3068,48 @@ MODELS_MASTER = {
                         "keras_hub.models.StableDiffusion3Inpaint.backbone",
                         "keras_hub.models.StableDiffusion3Inpaint.generate",
                         "keras_hub.models.StableDiffusion3Inpaint.preprocessor",
+                    ],
+                },
+            ],
+        },
+        {
+            "path": "swin_transformer/",
+            "title": "Swin Transformer",
+            "toc": True,
+            "children": [
+                {
+                    "path": "swin_transformer_image_converter",
+                    "title": "SwinTransformerImageConverter",
+                    "generate": [
+                        "keras_hub.layers.SwinTransformerImageConverter",
+                        "keras_hub.layers.SwinTransformerImageConverter.from_preset",
+                    ],
+                },
+                {
+                    "path": "swin_transformer_backbone",
+                    "title": "SwinTransformerBackbone model",
+                    "generate": [
+                        "keras_hub.models.SwinTransformerBackbone",
+                        "keras_hub.models.SwinTransformerBackbone.from_preset",
+                    ],
+                },
+                {
+                    "path": "swin_transformer_image_classifier",
+                    "title": "SwinTransformerImageClassifier model",
+                    "generate": [
+                        "keras_hub.models.SwinTransformerImageClassifier",
+                        "keras_hub.models.SwinTransformerImageClassifier.from_preset",
+                        "keras_hub.models.SwinTransformerImageClassifier.backbone",
+                        "keras_hub.models.SwinTransformerImageClassifier.preprocessor",
+                    ],
+                },
+                {
+                    "path": "swin_transformer_image_classifier_preprocessor",
+                    "title": "SwinTransformerImageClassifierPreprocessor layer",
+                    "generate": [
+                        "keras_hub.models.SwinTransformerImageClassifierPreprocessor",
+                        "keras_hub.models.SwinTransformerImageClassifierPreprocessor.from_preset",
+                        "keras_hub.models.SwinTransformerImageClassifierPreprocessor.image_converter",
                     ],
                 },
             ],
@@ -3674,6 +3864,10 @@ HUB_GUIDES_MASTER = {
         {
             "path": "gemma4_multimodal_and_agentic_workflows",
             "title": "Multimodal and Agentic Workflows with Gemma 4 in KerasHub",
+        },
+        {
+            "path": "serving_with_vllm",
+            "title": "Serving KerasHub models with vLLM on TPU",
         },
     ],
 }
