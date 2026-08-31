@@ -42,6 +42,15 @@ PROJECT_URL = {
 }
 
 
+_MODULE_TO_REPO = {
+    "keras": "keras",
+    "keras_tuner": "keras-tuner",
+    "keras_hub": "keras-hub",
+    "tf_keras": "tf-keras",
+    "keras_rs": "keras-rs",
+}
+
+
 def _build_project_url():
     """Build PROJECT_URL by reading each package's installed version.
 
@@ -58,9 +67,7 @@ def _build_project_url():
             ref = "master"
         else:
             ref = f"v{version}"
-        project_url[module_name] = (
-            f"{KERAS_TEAM_GH}/{repo_name}/tree/{ref}/"
-        )
+        project_url[module_name] = f"{KERAS_TEAM_GH}/{repo_name}/tree/{ref}/"
     return project_url
 
 
