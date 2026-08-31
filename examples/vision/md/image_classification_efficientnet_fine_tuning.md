@@ -27,12 +27,6 @@ heuristics (compound-scaling, details see
 efficiency-oriented base model (B0) to surpass models at every scale, while avoiding
 extensive grid-search of hyperparameters.
 
-A summary of the latest updates on the model is available at
-[here](https://github.com/tensorflow/tpu/tree/master/models/official/efficientnet), where various
-augmentation schemes and semi-supervised learning approaches are applied to further
-improve the imagenet performance of the models. These extensions of the model can be used
-by updating weights without changing model architecture.
-
 ---
 ## B0 to B7 variants of EfficientNet
 
@@ -60,7 +54,7 @@ As a result, the depth, width and resolution of each variant of the EfficientNet
 are hand-picked and proven to produce good results, though they may be significantly
 off from the compound scaling formula.
 Therefore, the keras implementation (detailed below) only provide these 8 models, B0 to B7,
-instead of allowing arbitray choice of width / depth / resolution parameters.
+instead of allowing arbitrary choice of width / depth / resolution parameters.
 
 ---
 ## Keras implementation of EfficientNet
@@ -69,7 +63,7 @@ An implementation of EfficientNet B0 to B7 has been shipped with Keras since v2.
 use EfficientNetB0 for classifying 1000 classes of images from ImageNet, run:
 
 ```python
-from tensorflow.keras.applications import EfficientNetB0
+from keras.applications import EfficientNetB0
 model = EfficientNetB0(weights='imagenet')
 ```
 
@@ -127,13 +121,13 @@ As an end-to-end example, we will show using pre-trained EfficientNetB0 on
 
 
 ```python
-import os
 import tarfile
 import urllib.request
 from pathlib import Path
 import numpy as np
 import matplotlib.pyplot as plt
 from PIL import Image
+import scipy.io
 import keras
 from keras import layers
 from keras.applications import EfficientNetB0
@@ -160,9 +154,6 @@ with protobuf version incompatibilities).
 
 
 ```python
-# Download and extract Stanford Dogs dataset
-import scipy.io
-
 dataset_url = "http://vision.stanford.edu/aditya86/ImageNetDogs/images.tar"
 lists_url = "http://vision.stanford.edu/aditya86/ImageNetDogs/lists.tar"
 data_dir = Path("./stanford_dogs_data")
@@ -177,7 +168,7 @@ def download_and_extract(url, extract_to):
         urllib.request.urlretrieve(url, filepath)
         print(f"Extracting {filename}...")
         with tarfile.open(filepath, "r") as tar:
-            tar.extractall(extract_to)
+            tar.extractall(extract_to, filter="data")
     return extract_to
 
 
