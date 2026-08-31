@@ -19,5 +19,5 @@ keras-tuner
 tf-keras==2.20.0
 keras-hub
 keras-rs
-pymdown-extensions==10.20
-sentencepiece
+pymdown-extensions==11.0.1
+sentencepiece<0.2.2
