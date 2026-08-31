@@ -2,7 +2,7 @@
 Title: Object detection with Vision Transformers
 Author: [Karan V. Dave](https://www.linkedin.com/in/karan-dave-811413164/)
 Date created: 2022/03/27
-Last modified: 2023/11/20
+Last modified: 2026/08/31
 Description: A simple Keras implementation of object detection using Vision Transformers.
 Accelerator: GPU
 """
@@ -36,9 +36,7 @@ import keras
 from keras import layers
 from keras import ops
 import matplotlib.pyplot as plt
-import numpy as np
 import cv2
-import os
 import scipy.io
 import shutil
 
@@ -217,13 +215,13 @@ embedding to the projected vector.
 
 
 class PatchEncoder(layers.Layer):
-    def __init__(self, num_patches, projection_dim, **kwargs):
+    def __init__(self, num_patches, hidden_dim, **kwargs):
         super().__init__(**kwargs)
         self.num_patches = num_patches
-        self.projection_dim = projection_dim
-        self.projection = layers.Dense(units=projection_dim)
+        self.hidden_dim = hidden_dim
+        self.projection = layers.Dense(units=hidden_dim)
         self.position_embedding = layers.Embedding(
-            input_dim=num_patches, output_dim=projection_dim
+            input_dim=num_patches, output_dim=hidden_dim
         )
 
     def get_config(self):
@@ -231,7 +229,7 @@ class PatchEncoder(layers.Layer):
         config.update(
             {
                 "num_patches": self.num_patches,
-                "projection_dim": self.projection_dim,
+                "hidden_dim": self.hidden_dim,
             }
         )
         return config
@@ -362,7 +360,6 @@ mlp_head_units = [2048, 1024, 512, 64, 32]  # Size of the dense layers
 
 
 history = []
-num_patches = (image_size // patch_size) ** 2
 
 vit_object_detector = create_vit_object_detector(
     input_shape,
