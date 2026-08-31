@@ -12,7 +12,7 @@
 
 # Introduction
 
-[Neural Style Transfer](https://www.tensorflow.org/tutorials/generative/style_transfer)
+[Neural Style Transfer](https://en.wikipedia.org/wiki/Neural_style_transfer)
 is the process of transferring the style of one image onto the content
 of another. This was first introduced in the seminal paper
 ["A Neural Algorithm of Artistic Style"](https://arxiv.org/abs/1508.06576)
@@ -59,8 +59,7 @@ from keras import layers
 # Defining the global variables.
 IMAGE_SIZE = (224, 224)
 BATCH_SIZE = 64
-# Training for single epoch for time constraint.
-# Please use atleast 30 epochs to see good results.
+# Training for 30 epochs. Reduce for faster iteration.
 EPOCHS = 30
 ```
 
@@ -285,7 +284,7 @@ from our dataset.
 
 
 ```python
-((style, content),) = next(iter(train_ds))
+((style, content),) = train_ds[0]
 fig, axes = plt.subplots(nrows=10, ncols=2, figsize=(5, 30))
 [ax.axis("off") for ax in np.ravel(axes)]
 
@@ -483,9 +482,9 @@ where `theta` denotes the layers in VGG-19 used to compute the loss.
 In this case this corresponds to:
 
 - `block1_conv1`
-- `block1_conv2`
-- `block1_conv3`
-- `block1_conv4`
+- `block2_conv1`
+- `block3_conv1`
+- `block4_conv1`
 
 
 ```python
@@ -635,9 +634,8 @@ In this section, we define the optimizer, the loss function, and the
 trainer module. We compile the trainer module with the optimizer and
 the loss function and then train it.
 
-*Note*: We train the model for a single epoch for time constraints,
-but you will typically need to train it for at least 30 epochs to see
-good results.
+*Note*: We train the model for 30 epochs here, but you can reduce this for
+faster iteration.
 
 
 ```python
@@ -1065,7 +1063,7 @@ reconstructed_image = model.decoder(t)
 fig, axes = plt.subplots(nrows=10, ncols=3, figsize=(10, 30))
 [ax.axis("off") for ax in np.ravel(axes)]
 
-for axis, style_image, content_image, reconstructed_image in zip(
+for axis, style_image, content_image, recon_image in zip(
     axes, style[0:10], content[0:10], reconstructed_image[0:10]
 ):
     ax_style, ax_content, ax_reconstructed = axis
@@ -1073,7 +1071,7 @@ for axis, style_image, content_image, reconstructed_image in zip(
     ax_style.set_title("Style Image")
     ax_content.imshow(content_image)
     ax_content.set_title("Content Image")
-    ax_reconstructed.imshow(reconstructed_image)
+    ax_reconstructed.imshow(recon_image)
     ax_reconstructed.set_title("NST Image")
 ```
 
