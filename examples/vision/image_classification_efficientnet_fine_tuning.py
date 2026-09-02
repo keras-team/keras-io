@@ -391,19 +391,75 @@ to `True`.
 """
 
 
-def unfreeze_model(model):
-    # We unfreeze the top 20 layers while leaving BatchNorm layers frozen
-    for layer in model.layers[-20:]:
+def unfreeze_model(
+    model: keras.Model,
+    layers_to_unfreeze: int | str = 20,
+    learning_rate: float = 1e-5,
+    loss_func_name: str = "categorical_crossentropy",
+    metrics: list[str] | None = None,
+) -> keras.Model:
+    """Unfreeze part of `model` and recompile it for fine-tuning.
+
+    Args:
+        model: A `keras.Model` instance to unfreeze in place.
+        layers_to_unfreeze: Either an `int` giving the number of layers,
+            counted from the end of `model.layers`, to unfreeze, or a `str`
+            substring to match against layer names -- the first matching
+            layer and every layer after it (in `model.layers` order) are
+            unfrozen. Use a string like `"block7"` to respect EfficientNet's
+            residual block boundaries instead of an arbitrary layer count.
+            Defaults to `20`.
+        learning_rate: Learning rate for the fine-tuning `Adam` optimizer.
+            Defaults to `1e-5`.
+        loss_func_name: Loss function passed to `model.compile()`. Defaults to
+            `"categorical_crossentropy"`.
+        metrics: List of metrics passed to `model.compile()`. Defaults to
+            `["accuracy"]`.
+
+    Returns:
+        `model`, with the selected layers unfrozen (except
+        `BatchNormalization` layers, which are always kept frozen) and
+        recompiled with the new optimizer/loss/metrics.
+    """
+    metrics = metrics or ["accuracy"]
+
+    # Auto-detect a nested backbone; fall back to `model` itself if flat
+    base_model = next((L for L in model.layers if isinstance(L, keras.Model)), model)
+    # container flag must be True for any child to train:
+    if base_model is not model:
+        base_model.trainable = (
+            True
+        )
+
+    # Reset to a known state so repeated calls are predictable
+    for layer in base_model.layers:
+        if not isinstance(layer, layers.BatchNormalization):
+            layer.trainable = False
+
+    if isinstance(layers_to_unfreeze, int) and layers_to_unfreeze > 0:
+        selected = base_model.layers[-layers_to_unfreeze:]
+    elif isinstance(layers_to_unfreeze, str):
+        selected = [L for L in base_model.layers if layers_to_unfreeze in L.name]
+        if not selected:
+            raise ValueError(f"No layer name contains {layers_to_unfreeze!r}.")
+    else:
+        raise TypeError(
+            f"layers_to_unfreeze must be a positive int or str, got {layers_to_unfreeze!r}"
+        )
+
+    for layer in selected:
         if not isinstance(layer, layers.BatchNormalization):
             layer.trainable = True
 
-    optimizer = keras.optimizers.Adam(learning_rate=1e-5)
     model.compile(
-        optimizer=optimizer, loss="categorical_crossentropy", metrics=["accuracy"]
+        optimizer=keras.optimizers.Adam(learning_rate=learning_rate),
+        loss=loss_func_name,
+        metrics=metrics,
     )
+    return model
 
 
-unfreeze_model(model)
+model = unfreeze_model(model)
 
 epochs = 4  # @param {type: "slider", min:4, max:10}
 hist = model.fit(ds_train, epochs=epochs, validation_data=ds_test)
