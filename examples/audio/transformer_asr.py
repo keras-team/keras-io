@@ -2,7 +2,7 @@
 Title: Automatic Speech Recognition with Transformer
 Author: [Apoorv Nandan](https://twitter.com/NandanApoorv)
 Date created: 2021/01/13
-Last modified: 2026/06/11
+Last modified: 2026/09/02
 Description: Training a sequence-to-sequence Transformer for automatic speech recognition.
 Accelerator: GPU
 """
