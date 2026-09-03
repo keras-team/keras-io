@@ -21,6 +21,8 @@ import jinja2
 import multiprocessing
 import warnings
 
+import importlib
+
 import autogen_utils
 from master import MASTER
 from examples_master import EXAMPLES_MASTER
